@@ -35,6 +35,6 @@ link_directories(${CMAKE_BINARY_DIR}/lib)
 
 add_executable(hal_tests ${SRCS_HAL}) 
 
-target_link_libraries(hal_tests tvhal dl ${GTEST_LIBRARIES})
+target_link_libraries(hal_tests tvhal dl pthread ${GTEST_LIBRARIES})
 
 install (TARGETS hal_tests  DESTINATION bin/tests)

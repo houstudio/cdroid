@@ -17,10 +17,16 @@ aux_source_directory(./ CURLDLD_SRCS)
 add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
 link_directories(${CMAKE_BINARY_DIR}/lib)
+find_package(OpenSSL)
+find_package(MBEDTLS)
 
-if(CURL_FOUND)
+if(CURL_FOUND AND OPENSSL_FOUND AND MBEDTLS_FOUND)
   add_executable(curldownload ${CURLDLD_SRCS})
-  target_link_libraries(curldownload PRIVATE cdroid -Wl,--start-group ${MBEDTLS_LIBRARIES} ${CURL_LIBRARIES} -Wl,--end-group)
+  target_link_libraries(curldownload PRIVATE atomic cdroid -Wl,--start-group
+	  ${MBEDTLS_LIBRARIES}
+	  ${OPENSSL_LIBRARIES}
+	  ${CURL_LIBRARIES}
+	  -Wl,--end-group)
   install(TARGETS curldownload DESTINATION bin)
 endif()
 
