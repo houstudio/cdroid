@@ -401,10 +401,10 @@ INT GFXBatchBlit(HANDLE dstsurface,const GFXPoint*dest_point,HANDLE srcsurface,c
 INT GFXDestroySurface(HANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     LOGI("GFXDestroySurface %p:%llx/%p",surf,surf->kbuffer,surf->buffer);
-    if( surf->used && (surf->kbuffer==NULL)) {
-        surf->used=0;
-        free(surf->buffer);//user space memory surface
+    if( surf->used && (surf->kbuffer==NULL) ) { //user space memory surface
+        free(surf->buffer);
         surf->buffer = NULL;
     }
+    surf->used=0;
     return 0;
 }
