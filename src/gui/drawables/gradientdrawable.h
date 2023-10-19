@@ -126,6 +126,7 @@ private:
     GradientDrawable(std::shared_ptr<GradientState>state);
     void updateLocalState();
     void prepareStrokeProps(Canvas&canvas);
+    void getPatternAlpha(int& strokeAlpha,int& fillApha);
 protected:
     void onBoundsChange(const Rect& r)override;
     bool onLevelChange(int level)override;

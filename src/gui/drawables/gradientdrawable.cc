@@ -812,6 +812,25 @@ bool GradientDrawable::isOpaqueForState()const {
     return true;
 }
 
+void GradientDrawable::getPatternAlpha(int& strokeAlpha,int& fillApha){
+    strokeAlpha=255;
+    fillApha = 255;
+    if (mGradientState->mStrokeWidth >= 0 && mStrokePaint ) {
+        double r,g,b,a;
+        RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mStrokePaint);
+        pat->get_rgba(r,g,b,a);
+        strokeAlpha = int(255.f*a);
+    }
+    // Don't check opacity if we're using a gradient, as we've already
+    // checked the gradient opacity in mOpaqueOverShape.
+    if (mGradientState->mGradientColors.size() == 0) {
+        double r,g,b,a;
+        RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mFillPaint);
+        pat->get_rgba(r,g,b,a);
+        fillApha = int(255.f*a);
+    }
+}
+
 static void drawRound(Canvas&canvas,const RectF&r,const std::vector<float>&radii) {
     if(radii.size()==0)
         canvas.rectangle(r.left,r.top,r.width,r.height);
@@ -847,11 +866,21 @@ void GradientDrawable::prepareStrokeProps(Canvas&canvas) {
 void GradientDrawable::draw(Canvas&canvas) {
     if (!ensureValidRect())return; // nothing to draw
     auto st = mGradientState;
-    const bool haveStroke = /*currStrokeAlpha > 0 &&*/ mStrokePaint &&  mStrokeWidth> 0;
+    const ColorFilter* colorFilter = mColorFilter;// ? mColorFilter : mTintFilter;
+    int preStrokeAlpha,preFillAlpha;
+    getPatternAlpha(preStrokeAlpha,preFillAlpha);
+    const int currStrokeAlpha = modulateAlpha(preStrokeAlpha);
+    const int currFillAlpha = modulateAlpha(preFillAlpha);
+
+    const bool haveStroke = currStrokeAlpha > 0 && mStrokePaint &&  mStrokeWidth> 0;
+    const bool haveFill = currFillAlpha>0;
+    const bool useLayer =(haveStroke || haveFill) && (st->mShape!=LINE) &&
+	    (currStrokeAlpha<255) && ((mAlpha<255)|| colorFilter);
     const float sweep = getUseLevel()/*st->mUseLevelForShape*/ ? (360.f*getLevel()/10000.f) : 360.f;
     float rad = .0f, innerRadius = .0f;
 
     std::vector<float>radii;
+    if(useLayer)canvas.push_group();
     switch (st->mShape) {
     case RECTANGLE:
         rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
@@ -932,6 +961,10 @@ void GradientDrawable::draw(Canvas&canvas) {
         canvas.restore();
     }
     break;
+    }
+    if(useLayer){
+	canvas.pop_group_to_source();
+        canvas.paint_with_alpha(float(mAlpha)/255.f);
     }
 }
 
