@@ -61,7 +61,7 @@ LinearLayout::LinearLayout(int x,int y,int w,int h)
 void LinearLayout::initView(){
     mWeightSum   = -1.0;
     mOrientation = HORIZONTAL;
-    mGravity     = -Gravity::START | Gravity::TOP;
+    mGravity     = Gravity::START | Gravity::TOP;
     mTotalLength = 0;
     mDividerPadding = 0;
     mDivider = nullptr;
@@ -348,8 +348,7 @@ void LinearLayout::drawDividersHorizontal(Canvas& canvas){
 
 void LinearLayout::drawHorizontalDivider(Canvas& canvas, int top){
     mDivider->setBounds(getPaddingLeft() + mDividerPadding, top,
-          getWidth() - getPaddingRight() - getPaddingLeft() - 2*mDividerPadding,
-	  mDividerHeight);
+          getWidth() - getPaddingRight() - getPaddingLeft() - 2*mDividerPadding,  mDividerHeight);
     mDivider->draw(canvas);
 }
 
