@@ -199,12 +199,18 @@ void ShapeDrawable::draw(Canvas&canvas){
     const Rect&r = getBounds();
     if(mShapeState->mShape!=nullptr){
         canvas.translate(r.left,r.top);
-        if(mTintFilter)canvas.push_group();
+        if(mTintFilter){
+	    canvas.save();
+	    canvas.rectangle(0,0,r.width,r.height);
+	    canvas.clip();
+	    canvas.push_group();
+	}
         mShapeState->mShape->draw(canvas,r.left,r.top);
         if(mTintFilter){
             mTintFilter->apply(canvas,r);
             canvas.pop_group_to_source();
             canvas.paint();
+            canvas.restore();
         }
         canvas.translate(-r.left,-r.top);
     }

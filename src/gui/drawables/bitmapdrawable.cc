@@ -326,8 +326,12 @@ void BitmapDrawable::draw(Canvas&canvas){
     LOGD_IF(mBounds.empty(),"%p's(%d,%d) bounds is empty,skip drawing,otherwise will caused crash",this,mBitmapWidth,mBitmapHeight);
     if(mBounds.empty())return;
 
-    if(mTintFilter)canvas.push_group();
     canvas.save();
+    if(mTintFilter){
+	canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
+	canvas.clip();
+	canvas.push_group();
+    }
     if(mBitmapState->mTileModeX>=0||mBitmapState->mTileModeY>=0){
         RefPtr<SurfacePattern> pat =SurfacePattern::create(mBitmapState->mBitmap);
         if(mBitmapState->mTileModeX!=TileMode::DISABLED){
@@ -392,13 +396,13 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.paint_with_alpha(alpha);
         }
     }
-    canvas.restore();
 
     if(mTintFilter){
         mTintFilter->apply(canvas,mBounds);
         canvas.pop_group_to_source();
         canvas.paint();
     }
+    canvas.restore();
 }
 
 Insets BitmapDrawable::getOpticalInsets() {
