@@ -200,11 +200,11 @@ void ShapeDrawable::draw(Canvas&canvas){
     if(mShapeState->mShape!=nullptr){
         canvas.translate(r.left,r.top);
         if(mTintFilter){
-	    canvas.save();
-	    canvas.rectangle(0,0,r.width,r.height);
-	    canvas.clip();
-	    canvas.push_group();
-	}
+            canvas.save();
+            canvas.rectangle(0,0,r.width,r.height);
+            canvas.clip();
+            canvas.push_group();
+        }
         mShapeState->mShape->draw(canvas,r.left,r.top);
         if(mTintFilter){
             mTintFilter->apply(canvas,r);

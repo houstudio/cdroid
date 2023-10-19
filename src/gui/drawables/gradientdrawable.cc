@@ -882,8 +882,8 @@ void GradientDrawable::draw(Canvas&canvas) {
     std::vector<float>radii;
     if(useLayer){
         canvas.save();
-        canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
-        canvas.clip();
+        //canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
+        //canvas.clip();
         canvas.push_group();
     }
     switch (st->mShape) {

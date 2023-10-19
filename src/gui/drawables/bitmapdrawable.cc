@@ -328,9 +328,9 @@ void BitmapDrawable::draw(Canvas&canvas){
 
     canvas.save();
     if(mTintFilter){
-	canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
-	canvas.clip();
-	canvas.push_group();
+        canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
+        canvas.clip();
+        canvas.push_group();
     }
     if(mBitmapState->mTileModeX>=0||mBitmapState->mTileModeY>=0){
         RefPtr<SurfacePattern> pat =SurfacePattern::create(mBitmapState->mBitmap);
