@@ -1,5 +1,6 @@
 #include <animation/animatorset.h>
 #include <animation/objectanimator.h>
+#include <cdlog.h>
 
 namespace cdroid{
 

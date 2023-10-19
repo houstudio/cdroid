@@ -1,5 +1,7 @@
 #include <drawables/ninepatch.h>
 #include <core/context.h>
+#include <cdlog.h>
+
 using namespace Cairo;
 
 /*https://github.com/Roninsc2/NinePatchQt/blob/master/ninepatch.cpp*/

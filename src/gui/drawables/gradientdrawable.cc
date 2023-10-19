@@ -880,7 +880,13 @@ void GradientDrawable::draw(Canvas&canvas) {
     float rad = .0f, innerRadius = .0f;
 
     std::vector<float>radii;
-    if(useLayer)canvas.push_group();
+    if(useLayer){
+        Rect bound = getBounds();
+        canvas.save();
+        canvas.rectangle(bound.left,bound.top,bound.width,bound.height);
+        canvas.clip();
+        canvas.push_group();
+    }
     switch (st->mShape) {
     case RECTANGLE:
         rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
@@ -963,8 +969,9 @@ void GradientDrawable::draw(Canvas&canvas) {
     break;
     }
     if(useLayer){
-	canvas.pop_group_to_source();
+        canvas.pop_group_to_source();
         canvas.paint_with_alpha(float(mAlpha)/255.f);
+        canvas.restore();
     }
 }
 
