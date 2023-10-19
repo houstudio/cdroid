@@ -1265,7 +1265,7 @@ void AbsListView::keyPressed() {
     }
 
     Drawable* selector = mSelector;
-    Rect selectorRect = mSelectorRect;
+    const Rect& selectorRect = mSelectorRect;
     LOGD("focused=%d touchModeDrawsInPressedState=%d",isFocused(),touchModeDrawsInPressedState());
     if (selector != nullptr && (isFocused() || touchModeDrawsInPressedState())
             && !selectorRect.empty()) {

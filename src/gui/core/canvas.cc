@@ -9,6 +9,7 @@
 #include <view/gravity.h>
 #include <windowmanager.h>
 #include <cdgraph.h>
+#include <cdlog.h>
 using namespace std;
 using namespace Cairo;
 namespace cdroid{
@@ -38,7 +39,7 @@ void Canvas::set_color(UINT color){
     set_color((color>>16)&0xFF,(color>>8)&0xFF,color&0xFF,(color>>24));
 }
 
-void Canvas::set_color(BYTE r,BYTE g,BYTE b,BYTE a){
+void Canvas::set_color(uint8_t r,uint8_t g,uint8_t b,uint8_t a){
     set_source_rgba(r/255.f,g/255.f,b/255.f,a/255.f);
 }
 

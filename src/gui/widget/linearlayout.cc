@@ -61,7 +61,7 @@ LinearLayout::LinearLayout(int x,int y,int w,int h)
 void LinearLayout::initView(){
     mWeightSum   = -1.0;
     mOrientation = HORIZONTAL;
-    mGravity     = Gravity::START | Gravity::TOP;
+    mGravity     = -Gravity::START | Gravity::TOP;
     mTotalLength = 0;
     mDividerPadding = 0;
     mDivider = nullptr;
@@ -82,15 +82,17 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
   :ViewGroup(context,attrs){
     initView();
 
-    mOrientation=attrs.getInt("orientation",orientationkvs,HORIZONTAL);
-    mGravity = attrs.getGravity("gravity",mGravity);
+    int index = attrs.getInt("orientation",orientationkvs,-1);
+    if(index>=0)setOrientation(index);
+    index = attrs.getGravity("gravity",-1);
+    if(index>=0)setGravity(index);
 
     const bool baselineAligned=attrs.getBoolean("baselineAligned",true);
     if(baselineAligned)setBaselineAligned(baselineAligned);
 
     mWeightSum = attrs.getFloat("weightSum",-1.f);
     mBaselineAlignedChildIndex=attrs.getInt("baselineAlignedChildIndex",-1);
-    mUseLargestChild=attrs.getBoolean("measureWithLargestChild",false);
+    mUseLargestChild = attrs.getBoolean("measureWithLargestChild",false);
 
     mShowDividers = attrs.getInt("showDividers",std::map<const std::string,int>{
 	   {"none",SHOW_DIVIDER_NONE},
@@ -311,7 +313,7 @@ void LinearLayout::drawDividersHorizontal(Canvas& canvas){
         View* child = getVirtualChildAt(i);
         if (child != nullptr && child->getVisibility() != GONE) {
             if (hasDividerBeforeChildAt(i)) {
-                LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
+                const LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
                 int position;
                 if (bisLayoutRtl) {
                     position = child->getRight() + lp->rightMargin;
@@ -333,7 +335,7 @@ void LinearLayout::drawDividersHorizontal(Canvas& canvas){
                 position = getWidth() - getPaddingRight() - mDividerWidth;
             }
         } else {
-            LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
+            const LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
             if (bisLayoutRtl) {
                 position = child->getLeft() - lp->leftMargin - mDividerWidth;
             } else {
@@ -346,13 +348,14 @@ void LinearLayout::drawDividersHorizontal(Canvas& canvas){
 
 void LinearLayout::drawHorizontalDivider(Canvas& canvas, int top){
     mDivider->setBounds(getPaddingLeft() + mDividerPadding, top,
-            getWidth() - getPaddingRight() - mDividerPadding, mDividerHeight);
+          getWidth() - getPaddingRight() - getPaddingLeft() - 2*mDividerPadding,
+	  mDividerHeight);
     mDivider->draw(canvas);
 }
 
 void LinearLayout::drawVerticalDivider(Canvas& canvas, int left){
-    mDivider->setBounds(left, getPaddingTop() + mDividerPadding,
-            mDividerWidth, getHeight() - getPaddingBottom() -  getPaddingTop() /*mDividerPadding*/);
+    mDivider->setBounds(left, getPaddingTop() + mDividerPadding,mDividerWidth,
+          getHeight() - getPaddingBottom() -  getPaddingTop() -2*mDividerPadding);
     mDivider->draw(canvas);
 }
 
@@ -362,8 +365,8 @@ void LinearLayout::drawDividersVertical(Canvas& canvas){
         View* child = getVirtualChildAt(i);
         if (child != nullptr && child->getVisibility() != GONE) {
             if (hasDividerBeforeChildAt(i)) {
-                LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
-                int top = child->getTop() - lp->topMargin - mDividerHeight;
+                const LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
+                const int top = child->getTop() - lp->topMargin - mDividerHeight;
                 drawHorizontalDivider(canvas, top);
             }
         }

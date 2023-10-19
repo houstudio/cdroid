@@ -123,7 +123,7 @@ public:
     View* host;
     Runnable mRunner;
     long fadeStartTime;
-    int state = OFF;
+    int state;
     int mLastColor;
     Rect mScrollBarBounds;
     Rect mScrollBarTouchBounds;
@@ -140,6 +140,7 @@ public:
         scrollBarFadeDuration = ViewConfiguration::getScrollBarFadeDuration();
         fadeScrollBars = true;
         scrollBar = nullptr;
+        state = OFF;
         mScrollBarDraggingPos = 0;
         mScrollBarBounds.set(0,0,0,0);
         mScrollBarTouchBounds.set(0,0,0,0);
@@ -2462,6 +2463,7 @@ void View::onDrawScrollBars(Canvas& canvas){
             getVerticalScrollBarBounds(&bounds, nullptr);
             onDrawVerticalScrollBar(canvas, scrollBar, bounds);
             if (bInvalidate) invalidate(bounds);
+	    //LOGD("%p:%d state=%d invalidate=%d rect=(%d,%d,%d,%d)",this,mID,cache->state,bInvalidate,bounds.left,bounds.top,bounds.width,bounds.height);
         }
     }
 }

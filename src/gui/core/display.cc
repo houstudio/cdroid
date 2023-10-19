@@ -1,6 +1,5 @@
 #include <display.h>
 #include <cdgraph.h>
-#include <utility>
 
 namespace cdroid{
 
@@ -29,7 +28,7 @@ bool Display::isValid(){
 
 bool Display::getDisplayInfo(DisplayInfo&info){
     updateDisplayInfoLocked();
-    info=mDisplayInfo;
+    info = mDisplayInfo;
     return true;
 }
 
@@ -37,8 +36,11 @@ void Display::getSize(Point&outSize){
     updateDisplayInfoLocked();
     GFXGetDisplaySize(mDisplayId,(UINT*)&outSize.x,(UINT*)&outSize.y);
     const int rotation = mDisplayInfo.rotation;
-    if((rotation==ROTATION_90)||(mDisplayInfo.rotation==ROTATION_270))
-        std::swap(outSize.x,outSize.y);
+    if((rotation==ROTATION_90)||(mDisplayInfo.rotation==ROTATION_270)){
+        const int temp = outSize.x;
+        outSize.x = outSize.y;
+        outSize.y = temp;
+    }
 }
 
 void Display::getRealSize(Point&outSize){

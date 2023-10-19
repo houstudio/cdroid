@@ -29,7 +29,6 @@ private:
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;
-    virtual void onInit();
     void loadStrings(const std::string&lan);
     int addResource(const std::string&path,const std::string&name=std::string());
     int loadKeyValues(const std::string&resid,

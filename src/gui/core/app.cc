@@ -40,8 +40,8 @@ static CLA::Argument ARGS[]={
 App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions){
     int option_index=-1,c=-1;
     std::string optstring;
-    Choreographer&chograph= Choreographer::getInstance();
     LogParseModules(argc,argv);
+    onInit();
     Typeface::setContext(this);
     mQuitFlag = false;
     mExitCode = 0;
@@ -62,6 +62,7 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
         std::cout<<"params.count="<<getParamCount()<<std::endl;
         exit(0);
     }
+    Choreographer & chograph = Choreographer::getInstance();
     chograph.setFrameDelay(getArgAsInt("framedelay",chograph.getFrameDelay()));
     WindowManager::getInstance().setDisplayRotation((getArgAsInt("rotate",0)/90)%4);
     setOpacity(getArgAsInt("alpha",255));
@@ -86,6 +87,9 @@ App::~App(){
 }
 
 void App::onInit(){
+    LOGD("onInit");
+    mDisplayMetrics.setToDefaults();
+    addResource("cdroid.pak","cdroid");
     GFXInit();
 }
 
