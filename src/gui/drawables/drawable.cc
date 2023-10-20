@@ -477,7 +477,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     }
 }
 
-static Drawable*parseShapeDrawable(const AttributeSet&atts,const std::vector<AttributeSet>&props,const std::vector<std::string>&names) {
+static Drawable*parseShapeDrawable(Context*ctx,const AttributeSet&atts,const std::vector<AttributeSet>&props,const std::vector<std::string>&names) {
     const AttributeSet* corners = nullptr,*gradient = nullptr,*padding = nullptr;
     const AttributeSet* size = nullptr, *stroke = nullptr,*solid = nullptr;
 
@@ -492,24 +492,11 @@ static Drawable*parseShapeDrawable(const AttributeSet&atts,const std::vector<Att
         if(tag.compare("padding")==0) padding= &p;
     }
 
-    const int shapeType = atts.getInt("shape",std::map<const std::string,int> {
-        {"rectangle",GradientDrawable::Shape::RECTANGLE},{"oval",GradientDrawable::Shape::OVAL},
-        {"line",GradientDrawable::Shape::LINE},  	 {"ring",GradientDrawable::Shape::RING}
-    },GradientDrawable::Shape::RECTANGLE);
-
     LOGE_IF(!(gradient||solid||stroke),"stroke solid gradient property error!");
     if(gradient||solid||stroke) {
-        GradientDrawable*d = new GradientDrawable();
-        d->setShape(shapeType);
-        d->setUseLevel(atts.getBoolean("useLevel"));
+        GradientDrawable*d = (GradientDrawable*)GradientDrawable::inflate(ctx,atts);
 
         if(corners)parseCorners(d,nullptr, *corners);
-        if(shapeType == GradientDrawable::Shape::RING) {
-            d->setInnerRadius(atts.getDimensionPixelSize("innerRadius",-1));
-            d->setInnerRadiusRatio(atts.getDimensionPixelSize("innerRadiusRatio",-1));
-            d->setThickness(atts.getDimensionPixelSize("thickness",-1));
-            d->setThicknessRatio(atts.getDimensionPixelSize("thicknessRatio"));
-        }
 
         if(gradient)parseShapeGradient(d,nullptr, *gradient);
         else if(solid){
@@ -542,7 +529,7 @@ static void endElement(void *userData, const XML_Char *name) {
         pd->attrs.push_back(pitem->props);
         pd->names.push_back(pitem->name);
     } else if(pd->attrs.size()) { /*here coming shape drawable*/
-        Drawable*leaf = parseShapeDrawable(pd->items.back()->props,pd->attrs,pd->names);
+        Drawable*leaf = parseShapeDrawable(pd->ctx,pd->items.back()->props,pd->attrs,pd->names);
         pd->attrs.clear();
         pd->names.clear();
         if(pd->upperIsItem()||pd->upperIsWrapper()) {

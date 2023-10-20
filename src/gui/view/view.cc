@@ -3205,7 +3205,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     }
     while(restoreTo-- >0) {
         canvas.restore();//ToCount(restoreTo);
-        LOGD_IF(canvas.get_status()!=0,"status=%d",canvas.get_status());
+        LOGD_IF(canvas.get_status()!=0,"%p:%d status=%d",this,mID,canvas.get_status());
     }
 
     if (a != nullptr && !more) {

@@ -815,7 +815,7 @@ bool GradientDrawable::isOpaqueForState()const {
 void GradientDrawable::getPatternAlpha(int& strokeAlpha,int& fillApha){
     strokeAlpha=255;
     fillApha = 255;
-    if (mGradientState->mStrokeWidth >= 0 && mStrokePaint ) {
+    if ((mGradientState->mStrokeWidth >= 0) && mStrokePaint ) {
         double r,g,b,a;
         RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mStrokePaint);
         pat->get_rgba(r,g,b,a);
@@ -823,7 +823,7 @@ void GradientDrawable::getPatternAlpha(int& strokeAlpha,int& fillApha){
     }
     // Don't check opacity if we're using a gradient, as we've already
     // checked the gradient opacity in mOpaqueOverShape.
-    if (mGradientState->mGradientColors.size() == 0) {
+    if (mFillPaint && (mGradientState->mGradientColors.size() == 0)) {
         double r,g,b,a;
         RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mFillPaint);
         pat->get_rgba(r,g,b,a);
@@ -880,10 +880,10 @@ void GradientDrawable::draw(Canvas&canvas) {
     float rad = .0f, innerRadius = .0f;
 
     std::vector<float>radii;
+    canvas.save();
     if(useLayer){
-        canvas.save();
-        //canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
-        //canvas.clip();
+        canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
+        canvas.clip();
         canvas.push_group();
     }
     switch (st->mShape) {
@@ -912,7 +912,6 @@ void GradientDrawable::draw(Canvas&canvas) {
         }
         break;
     case OVAL:
-        canvas.save();
         rad = mRect.height/2.f;
         canvas.translate(mRect.centerX(),mRect.centerY());
         canvas.scale(float(mRect.width)/mRect.height,1.f);
@@ -929,10 +928,8 @@ void GradientDrawable::draw(Canvas&canvas) {
             canvas.set_source(mFillPaint);
             canvas.fill();
         }
-        canvas.restore();
         break;
     case RING: {
-        canvas.save();
         //inner
         innerRadius = st->mInnerRadius;
         RectF bounds= {mRect.left,mRect.top,mRect.width,mRect.height};
@@ -963,19 +960,32 @@ void GradientDrawable::draw(Canvas&canvas) {
         } else if(mFillPaint) {
             canvas.fill();
         }
-        canvas.restore();
     }
     break;
     }
     if(useLayer){
         canvas.pop_group_to_source();
         canvas.paint_with_alpha(float(mAlpha)/255.f);
-        canvas.restore();
     }
+    canvas.restore();
 }
 
 Drawable*GradientDrawable::inflate(Context*ctx,const AttributeSet&atts) {
-    return nullptr;
+    GradientDrawable*d = new GradientDrawable();
+    const int shapeType = atts.getInt("shape",std::map<const std::string,int> {
+        {"rectangle",GradientDrawable::Shape::RECTANGLE},{"oval",GradientDrawable::Shape::OVAL},
+        {"line",GradientDrawable::Shape::LINE},          {"ring",GradientDrawable::Shape::RING}
+    },GradientDrawable::Shape::RECTANGLE);
+    d->setShape(shapeType);
+    d->setUseLevel(atts.getBoolean("useLevel"));
+    if(shapeType == GradientDrawable::Shape::RING) {
+        d->setInnerRadius(atts.getDimensionPixelSize("innerRadius",-1));
+        d->setInnerRadiusRatio(atts.getDimensionPixelSize("innerRadiusRatio",-1));
+        d->setThickness(atts.getDimensionPixelSize("thickness",-1));
+        d->setThicknessRatio(atts.getDimensionPixelSize("thicknessRatio"));
+    }
+
+    return d;
 }
 
 }//end namespace

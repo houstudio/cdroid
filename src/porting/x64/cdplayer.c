@@ -63,7 +63,12 @@ DWORD SetCallback(HANDLE handle,MP_CALLBACK cbk,void*userdata) {
 DWORD MPSetWindow(HANDLE handle,int x,int y,int w,int h) {
     return 0;
 }
-
+DWORD MPGetDuration(HANDLE hanle,double*mediatime){
+}
+DWORD MPGetPosition(HANDLE handle,double*mediatime){
+}
+int MPGetStatus(HANDLE handle){
+}
 DWORD MPRotate(HANDLE handle,int rot) {
     return 0;
 }
