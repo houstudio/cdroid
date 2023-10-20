@@ -282,7 +282,6 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
                 RectF qr = RectF::Make(x1, y1, 2 * size(), 2 * size());
                 // Mask out this rect in the plot for label avoidance
                 pw->maskRect(qr, 2.0);
-
                 switch (pointStyle()) {
                 case Circle:
                     //painter->drawEllipse(qr);
@@ -365,7 +364,7 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
 		    painter.stroke();
                     break;
 
-                case Star: {
+                case Star:
 		    painter.move_to(q.x, q.y - size());
 		    painter.line_to(q.x + 0.2245 * size(), q.y - 0.309 * size());
 		    painter.line_to(q.x + size(), q.y - 0.309 * size());
@@ -382,7 +381,6 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
 		    painter.set_source(pen());
 		    painter.stroke();
                     break;
-                }
 
                 default:
                     break;

@@ -281,8 +281,11 @@ void PlotView::resetPlotMask()
 {
     Rect rc = pixRect();
     d->plotMask = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,rc.width,rc.height);//QImage(pixRect().size(), QImage::Format_ARGB32);
-    uint32_t fillColor = 0x80000000;
-    //d->plotMask.fill(fillColor.rgb());
+    Cairo::RefPtr<Cairo::Context>ctx=Cairo::Context::create(d->plotMask);
+    ctx->set_source_rgba(0,0,0,0.5);
+    ctx->rectangle(0,0,rc.width,rc.height);
+    ctx->set_operator(Cairo::Context::Operator::SOURCE);
+    ctx->fill();
 }
 
 void PlotView::resetPlot()
@@ -471,7 +474,7 @@ void PlotView::maskRect(const RectF &rf, float fvalue)
     r.set(rf.left,rf.top,rf.width,rf.height);
     r.intersect(d->pixRect);
     uint8_t*pixels = (uint8_t*)d->plotMask->get_data();
-    uint32_t stride = d->plotMask->get_stride();
+    const uint32_t stride = d->plotMask->get_stride();
     for (int ix = r.left; ix < r.right(); ++ix) {
         for (int iy = r.top; iy < r.bottom(); ++iy) {
 	    uint8_t*pixel = pixels+(iy*stride+ix*4);
@@ -497,6 +500,8 @@ void PlotView::maskAlongLine(const PointF &p1, const PointF &p2, float fvalue)
     double m = (p2.y - p1.y) / (p2.x - p1.x);
     double y0 = p1.y - m * p1.x;
 
+    uint8_t*pixels = (uint8_t*)d->plotMask->get_data();
+    const uint32_t stride = d->plotMask->get_stride();
     // Mask each pixel along the line joining p1 and p2
     if (m > 1.0 || m < -1.0) { // step in y-direction
         int y1 = int(p1.y);
@@ -505,10 +510,12 @@ void PlotView::maskAlongLine(const PointF &p1, const PointF &p2, float fvalue)
             y1 = int(p2.y);
             y2 = int(p1.y);
         }
-
         for (int y = y1; y <= y2; ++y) {
             int x = int((y - y0) / m);
             if (d->pixRect.contains(x, y)) {
+		uint8_t*pixel = pixels+(y*stride+x*4);
+		pixel[0]=100;
+		pixel[1]=std::min(pixel[1]+value,255);
                 //uint32_t newColor = uint32_t(d->plotMask.pixel(x, y));
                 //newColor.setAlpha(uint8_t(100));
                 //newColor.setRed(std::min(newColor.red() + value, 255)));
@@ -527,6 +534,9 @@ void PlotView::maskAlongLine(const PointF &p1, const PointF &p2, float fvalue)
         for (int x = x1; x <= x2; ++x) {
             int y = int(y0 + m * x);
             if (d->pixRect.contains(x, y)) {
+		uint8_t*pixel = pixels+(y*stride+x*4);
+		pixel[0]=100;
+		pixel[1]=std::min(pixel[1]+value,255);
                 uint32_t newColor = 0;//uint32_t(d->plotMask.pixel(x, y));
                 //newColor.setAlpha(uint8_t(100));
                 //newColor.setRed(uint8_t(std::min(newColor.red() + value, 255)));
@@ -534,6 +544,25 @@ void PlotView::maskAlongLine(const PointF &p1, const PointF &p2, float fvalue)
             }
         }
     }
+}
+static void drawRound(Canvas&canvas,const RectF&r,float radii) {
+    float db=180.f;
+    float pts[8];
+    double radian = M_PI;
+    pts[0]=r.left + radii;
+    pts[1]=r.top + radii;
+    pts[2]=r.right() - radii;
+    pts[3]=r.top + radii;
+    pts[4]=r.right() - radii;
+    pts[5]=r.bottom()- radii;
+    pts[6]=r.left + radii;
+    pts[7]=r.bottom()- radii;
+    canvas.begin_new_sub_path();
+    for(int i=0,j=0; i<8; i+=2,j++) {
+       canvas.arc(pts[i],pts[i+1],radii,radian,radian+M_PI/2.0);
+        radian += M_PI/2.0;
+    }
+    canvas.close_path();
 }
 
 // Determine optimal placement for a text label for point pp.  We want
@@ -556,9 +585,11 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
         return;
     }
 
+    Cairo::TextExtents ext;
     //QFontMetricsF fm(painter->font(), painter->device());
     RectF bestRect;
-    bestRect.set(int(pos.x),int(pos.y),pp->label().size()*32,32) ;// pp->label().size()*32;//fm.boundingRect(QRectF(pos.x(), pos.y(), 1, 1), textFlags, pp->label());
+    painter.get_text_extents(pp->label(),ext);
+    bestRect.set(int(pos.x),int(pos.y),int(ext.width),int(ext.height)) ;
     float xStep = 0.5 * bestRect.width;
     float yStep = 0.5 * bestRect.height;
     float maxCost = 0.05 * bestRect.width * bestRect.height;
@@ -690,17 +721,9 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
         // QPen pen = painter->pen();
         // pen.setStyle( Qt::DotLine );
         // painter->setPen( pen );
-        //painter.drawRoundedRect(bestRect, 25, 25, Qt::RelativeSize);
 	double radius = 25;
-        painter.move_to(bestRect.left+radius,bestRect.top);//x + radius, y)
-        painter.line_to(bestRect.right() - radius, bestRect.top);
-        painter.arc(bestRect.right() - radius, bestRect.top + radius, radius, -M_PI /2., 0);
-        painter.line_to(bestRect.right(), bestRect.bottom() - radius);
-        painter.arc(bestRect.right() - radius, bestRect.bottom() - radius, radius, 0, M_PI/2.);
-        painter.line_to(bestRect.left + radius, bestRect.right());
-        painter.arc(bestRect.left + radius, bestRect.bottom() - radius, radius, M_PI/2., M_PI);
-        painter.line_to(bestRect.left, bestRect.top + radius);
-        painter.arc(bestRect.left + radius, bestRect.top + radius, radius, M_PI, M_PI*1.5f);
+	drawRound(painter,bestRect,std::min(bestRect.width,bestRect.height)/4);
+	//painter.stroke();
         // Now connect the label to the point with a line.
         // The line is drawn from the center of the near edge of the rectangle
         float xline = bestRect.centerX();
@@ -719,9 +742,10 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
             yline = bestRect.bottom();
         }
 
-	painter.move_to(xline,yline);
+	/*painter.move_to(xline,yline);
 	painter.line_to(pos.x,pos.y);
-	painter.stroke();
+	painter.close_path();
+	painter.stroke();*/
     }
 
     // Mask the label's rectangle so other labels won't overlap it.
@@ -731,19 +755,30 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
 float PlotView::Private::rectCost(const RectF &r) const
 {
     RectF pmrc = {0,0,float(plotMask->get_width()),float(plotMask->get_height())};
-    if(pmrc.contains(r)) return 10000.;
+    if(!pmrc.contains(r)) return 10000.;
     //if (!plotMask.rect().contains(r.toRect())) return 10000.;
 
     // Compute sum of mask values in the rect r
+    Rect ri={int(r.left),int(r.top),int(r.width),int(r.height)};
     Cairo::RefPtr<Cairo::ImageSurface> subMask ;//= plotMask.copy(r.toRect());
     int cost = 0;
+    const uint8_t*pixels=(uint8_t*)plotMask->get_data();
+    const int stride = plotMask->get_stride();
 #if 0
     for (int ix = 0; ix < subMask->get_width(); ++ix) {
         for (int iy = 0; iy < subMask->get_height(); ++iy) {
             //cost += uint32_t(subMask.pixel(ix, iy)).red();
         }
     }
+#else
+    for(int ix = ri.left;ix<ri.right();ix++){
+	for(int iy = ri.top;iy<ri.bottom();iy++){
+            uint8_t*pixel = (uint8_t*)(pixels+(iy*stride+ix*4));
+	    cost +=pixels[1];
+	}
+    }
 #endif
+    LOGD("cost=%f",cost);
     return float(cost);
 }
 
@@ -766,7 +801,6 @@ void PlotView::onDraw(cdroid::Canvas&p)
     //p.setClipping(true);
 
     resetPlotMask();
-
     for (PlotObject *po : d->objectList) {
         po->draw(p, this);
     }
@@ -806,8 +840,8 @@ void PlotView::drawAxes(cdroid::Canvas&p)
 
     // set small font for tick labels
     //QFont f = p->font();
-    //int s = f.pointSize();
-    //f.setPointSize(s - 2);
+    //const int s = p.get_font_size();
+    //f.set_font_size(s - 2);
     //p->setFont(f);
 
     /*** BottomAxis ***/

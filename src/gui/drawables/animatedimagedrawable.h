@@ -35,6 +35,7 @@ public:
     static constexpr int REPEAT_UNDEFINED = -2;
 public:
     AnimatedImageDrawable();
+    AnimatedImageDrawable(cdroid::Context*,const std::string&res);
     void setRepeatCount(int repeatCount);
     int getRepeatCount()const;
     int getIntrinsicWidth()const override;
@@ -48,6 +49,7 @@ public:
     void registerAnimationCallback(Animatable2::AnimationCallback callback);
     bool unregisterAnimationCallback(Animatable2::AnimationCallback callback);
     void clearAnimationCallbacks();
+    static Drawable*inflate(Context*,const AttributeSet&);
 };
 
 }//end namespace

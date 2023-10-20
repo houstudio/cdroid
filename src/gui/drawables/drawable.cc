@@ -375,7 +375,8 @@ static std::map<const std::string,DrawableParser>drawableParsers= {
     {"item", Drawable::createWrappedDrawable },
     {"ripple", RippleDrawable::inflate},
     {"animated-rotate", AnimatedRotateDrawable::inflate},
-    {"animation-list", AnimationDrawable::inflate}
+    {"animation-list", AnimationDrawable::inflate},
+    {"animated-image", AnimatedImageDrawable::inflate}
 };
 
 static int parseColor(const std::string&value) {

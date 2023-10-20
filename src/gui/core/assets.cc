@@ -384,6 +384,8 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
         d = new NinePatchDrawable(this,fullresid);
     } else if (TextUtils::endWith(resname,".png")||TextUtils::endWith(resname,".jpg")) {
         d = new BitmapDrawable(this,fullresid);
+    } else if(TextUtils::endWith(resname,".gif")){
+        d = new AnimatedImageDrawable(this,fullresid);
     }
     if( (d == nullptr) && (!fullresid.empty()) ) {
         void*zfile = pak ? pak->getZipHandle(resname) : nullptr;
