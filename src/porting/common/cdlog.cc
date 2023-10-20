@@ -19,7 +19,7 @@
 #else
 #include <ucontext.h>
 #endif
-
+#define ASYNC_LOG 1
 static LogLevel sLogLevel=LOG_DEBUG;
 
 static std::string splitFileName(const std::string& str) {
@@ -40,6 +40,7 @@ static char *msgBoddy=nullptr;
 static constexpr int kMaxMessageSize=2048;
 
 static void LogInit() {
+#if ASYNC_LOG
     static std::once_flag sInit;
     std::call_once(sInit,[&]() {
         msgBoddy =new char[kMaxMessageSize];
@@ -53,13 +54,14 @@ static void LogInit() {
         });
         th.detach();
     });
+#endif
 }
 void LogPrintf(int level,const char*file,const char*func,int line,const char*format,...) {
     va_list args;
     const std::string tag=splitFileName(file);
     auto it=sModules.find(tag);
     const int module_loglevel=(it==sModules.end())?sLogLevel:it->second;
-#if 1
+#if ASYNC_LOG 
     const char*colors[]= {"\033[0m","\033[1m","\033[0;32m","\033[0;36m","\033[1;31m","\033[5;31m"};
     if(level<module_loglevel||level<0||level>LOG_FATAL)
         return;
@@ -177,8 +179,11 @@ LogMessage::~LogMessage() {
         if (!str.empty()) oss << str ;
         log_entry_ += oss.str();
         log_entry_ +="\033[0m\n";
-
+#if ASYNC_LOG
         dbgMessages.push(log_entry_);
+#else
+	printf("%s",log_entry_.c_str());
+#endif
     }
 }
 

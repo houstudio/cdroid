@@ -52,9 +52,11 @@ public:
     };
     class ConstantState{
     public:
+        std::string mResource;
+    public:
         virtual Drawable* newDrawable()=0;
         virtual int getChangingConfigurations()const=0;
-		virtual ~ConstantState();
+        virtual ~ConstantState();
     };
     enum{
         DEFAULT_TINT_MODE=SRC_IN
@@ -73,8 +75,6 @@ protected:
     virtual bool onLevelChange(int level) { return false; }
     virtual bool onLayoutDirectionChanged(int layoutDirection){return false;}
     virtual void onBoundsChange(const Rect& bounds){}
-public:
-    std::string mResourceId;
 public:
     Drawable();
     virtual ~Drawable();

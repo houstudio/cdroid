@@ -80,6 +80,7 @@ BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname)
     std::ifstream fs(resname,std::ios::binary);
     RefPtr<ImageSurface>b;
     LOGV("%s",resname.c_str());
+    mBitmapState->mResource = resname;
     if((ctx==nullptr)||fs.good()){
         b = ImageSurface::create_from_stream(fs);
     }else {
@@ -379,7 +380,7 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.scale(dw/sw,dh/sh);
             dx /= fx;       dy /= fy;
             dw /= fx;       dh /= fy;
-            LOGD_IF(mBitmapWidth*mBitmapHeight>=512*512,"bitmap scaled %dx%d->%d,%d",mBitmapWidth,mBitmapHeight,mBounds.width,mBounds.height);
+            LOGV_IF(mBitmapWidth*mBitmapHeight>=512*512,"bitmap %s scaled %dx%d->%d,%d",mBitmapState->mResource.c_str(),mBitmapWidth,mBitmapHeight,mBounds.width,mBounds.height);
         }
 
         if(needMirroring()){

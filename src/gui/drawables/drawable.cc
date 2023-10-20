@@ -354,7 +354,8 @@ Drawable*Drawable::createWrappedDrawable(Context*ctx,const AttributeSet&atts) {
         return Drawable::inflate(ctx,resname);
     }
     Drawable*dr=ctx->getDrawable(resname);
-    dr->mResourceId=resname;
+    auto cs = dr->getConstantState();
+    if(cs)cs->mResource=resname;
     return dr;
 }
 
@@ -471,8 +472,14 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 
     if(it!=drawableParsers.end()) {
         auto item = pd->items.back();
-        if(strcmp(name,"shape")||((strcmp(name,"item")==0)&&atts.hasAttribute("drawable")))
-            item->drawable=it->second(pd->ctx,atts);
+        if(strcmp(name,"shape")||((strcmp(name,"item")==0)&&atts.hasAttribute("drawable"))){
+            Drawable* d = it->second(pd->ctx,atts);
+            if(d){
+                auto cs = d->getConstantState();
+                cs->mResource =pd->resourceFile;
+            }
+	        item->drawable = d;
+        }
         LOGV("created drawable %s:%p props:%d",name,item->drawable,item->props.size());
     }
 }
@@ -617,7 +624,6 @@ Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string&
         }
     } while(rdlen);
     XML_ParserFree(parser);
-    pd.drawable->mResourceId=resname;
     LOGV("parsed drawable [%p] from %s",pd.drawable,resname.c_str());
     return pd.drawable;
 }
