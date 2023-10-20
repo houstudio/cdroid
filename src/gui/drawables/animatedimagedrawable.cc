@@ -18,9 +18,14 @@ static int gifDrawFrame(GifFileType*gif,int&current_frame,size_t pxstride, uint8
 #endif
 
 AnimatedImageDrawable::State::State(){
+    mAutoMirrored= false;
+    mCurrentFrame= 0;
+    mFrameCount  = 0;
+    mHandler = nullptr;
+    mRepeatCount = REPEAT_UNDEFINED;
 }
+
 AnimatedImageDrawable::State::~State(){
-    LOGD("===~~~STATE");
 }
 
 AnimatedImageDrawable::AnimatedImageDrawable():Drawable(){
@@ -37,6 +42,13 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
 	 loadGIF(*stm);
 	 start();
     }
+}
+
+AnimatedImageDrawable::~AnimatedImageDrawable(){
+#ifdef ENABLE_GIF
+    GifFileType*gif = (GifFileType*)mState.mHandler;
+    DGifCloseFile(gif,nullptr);
+#endif
 }
 
 Handler* AnimatedImageDrawable::getHandler() {
@@ -93,26 +105,12 @@ int AnimatedImageDrawable::loadGIF(std::istream&is){
     mState.mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,gifFileType->SWidth,gifFileType->SHeight);
     mState.mFrameCount = gifFileType->ImageCount;
     mState.mCurrentFrame = 0;
-    LOGD("gif %d frames loaded",mState.mFrameCount);
-    /*for (int i = 0; i < gifFileType->ImageCount; ++i) {
-        SavedImage frame = gifFileType->SavedImages[i];
-        for (int j = 0; j < frame.ExtensionBlockCount; ++j) {
-            if (frame.ExtensionBlocks[j].Function == GRAPHICS_EXT_FUNC_CODE) {
-                ext = &frame.ExtensionBlocks[j];
-                break;
-            }
-        }
-        if (ext) {
-            int frame_delay = 10 * (ext->Bytes[2] << 8 | ext->Bytes[1]);
-            //gifBean->delays[i] = frame_delay;
-        }
-    }*/
+    LOGD("gif %d frames loaded size(%dx%d)",mState.mFrameCount,gifFileType->SWidth,gifFileType->SHeight);
     mState.mHandler = gifFileType;
     mIntrinsicWidth = gifFileType->SWidth;
     mIntrinsicHeight= gifFileType->SHeight;
     return gifFileType->ImageCount; 
 #else
-# error ====GIF_DISABLED
     return 0;
 #endif
 }
@@ -127,10 +125,9 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
     canvas.save();
     const long nextUpdate = gifDrawFrame((GifFileType*)mState.mHandler,mState.mCurrentFrame,
              mState.mImage->get_stride(),mState.mImage->get_data(),false);
-    //nDraw(mState.mNativePtr, canvas.getNativeCanvasWrapper());
     // a value <= 0 indicates that the drawable is stopped or that renderThread
     // will manage the animation
-    LOGD("draw (%d,%d)Frame %d/%d nextUpdate=%d",mBounds.width,mBounds.height,mState.mCurrentFrame,mState.mFrameCount,nextUpdate);
+    LOGV("draw Frame %d/%d nextUpdate=%d",mState.mCurrentFrame,mState.mFrameCount,nextUpdate);
     if (nextUpdate > 0) {
         if (mRunnable == nullptr) {
             mRunnable = std::bind(&AnimatedImageDrawable::invalidateSelf,this);
@@ -225,7 +222,7 @@ static int gifDrawFrame(GifFileType*gif,int&current_frame,size_t pxstride,uint8_
     GifImageDesc *frameInfo;
     ColorMapObject *colorMap;
     uint32_t *line;
-    int width, height, x, y, j, loc, n, inc, p;
+    int width, height, x, y, j;
     uint8_t *px;
     width = gif->SWidth;
     height = gif->SHeight;
@@ -245,6 +242,7 @@ static int gifDrawFrame(GifFileType*gif,int&current_frame,size_t pxstride,uint8_
         }
     }
     // For dispose = 1, we assume its been drawn
+    px=(uint8_t*)pixels;
     if (ext && dispose(ext) == 1 && force_dispose_1 && current_frame > 0) {
         current_frame = current_frame - 1;
         gifDrawFrame(gif,current_frame,pxstride, pixels, true);
@@ -263,9 +261,7 @@ static int gifDrawFrame(GifFileType*gif,int&current_frame,size_t pxstride,uint8_
     }else current_frame=(current_frame+1)%gif->ImageCount;
     px = (uint8_t*)pixels;
     if (frameInfo->Interlace) {
-        n = 0;
-        inc = 8;
-        p = 0;
+        int n = 0, inc = 8, p = 0,loc=0;
         px = (px + pxstride * frameInfo->Top);
         for (y = frameInfo->Top; y < frameInfo->Top + frameInfo->Height; y++) {
             for (x = frameInfo->Left; x < frameInfo->Left + frameInfo->Width; x++) {
@@ -300,7 +296,7 @@ static int gifDrawFrame(GifFileType*gif,int&current_frame,size_t pxstride,uint8_
         for (y = frameInfo->Top; y < frameInfo->Top + frameInfo->Height; y++) {
             line = (uint32_t *) px;
             for (x = frameInfo->Left; x < frameInfo->Left + frameInfo->Width; x++) {
-                loc = (y - frameInfo->Top) * frameInfo->Width + (x - frameInfo->Left);
+                int loc = (y - frameInfo->Top) * frameInfo->Width + (x - frameInfo->Left);
                 if (ext && frame->RasterBits[loc] == trans_index(ext) && transparency(ext)) {
                     continue;
                 }

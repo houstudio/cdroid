@@ -8,7 +8,7 @@ class AnimatedImageDrawable:public Drawable,public Animatable2{
 private:
     class State{
     public:
-        bool mAutoMirrored = false;
+        bool mAutoMirrored;
         int mRepeatCount;
         int mCurrentFrame;
         int mFrameCount;
@@ -36,6 +36,7 @@ public:
 public:
     AnimatedImageDrawable();
     AnimatedImageDrawable(cdroid::Context*,const std::string&res);
+    ~AnimatedImageDrawable();
     void setRepeatCount(int repeatCount);
     int getRepeatCount()const;
     int getIntrinsicWidth()const override;
