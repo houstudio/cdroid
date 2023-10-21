@@ -317,7 +317,7 @@ std::vector<int> ImageView::onCreateDrawableState(){
     } else if (!mMergeState) {
         return mState;
     } else {
-		std::vector<int>sts=View::onCreateDrawableState();
+        std::vector<int>sts=View::onCreateDrawableState();
         return mergeDrawableStates(sts, mState);
     }
 }
@@ -325,7 +325,7 @@ std::vector<int> ImageView::onCreateDrawableState(){
 //SkMatrix::setRectToRect(const SkRect& src, const SkRect& dst, ScaleToFit align)
 //ScaleToFit { kFill_ScaleToFit, kStart_ScaleToFit, kCenter_ScaleToFit, kEnd_ScaleToFit, }
 static void SetRect2Rect(Matrix&m,const Rect&src,const Rect&dst,int align){
-	float tx, sx = (float)dst.width/ src.width;
+    float tx, sx = (float)dst.width/ src.width;
     float ty, sy = (float)dst.height / src.height;
     bool  xLarger = false;
     if (align != FIT_XY){//kFill_ScaleToFit) {
@@ -343,8 +343,8 @@ static void SetRect2Rect(Matrix&m,const Rect&src,const Rect&dst,int align){
         if (xLarger) tx += diff;
         else  ty += diff;
     }
-    m.scale(sx,sy);
     m.translate(tx,ty);//this->setScaleTranslate(sx, sy, tx, ty);
+    m.scale(sx,sy);
 }
 
 bool ImageView::setFrame(int l, int t, int w, int h){
