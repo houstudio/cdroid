@@ -4,24 +4,30 @@
 #include <core/handler.h>
 namespace cdroid{
 /*for drawing animated images (like GIF)*/
+class ImageReader;
 class AnimatedImageDrawable:public Drawable,public Animatable2{
 private:
-    class State{
+    class AnimatedImageState:public std::enable_shared_from_this<AnimatedImageState>,public ConstantState{
     public:
         bool mAutoMirrored;
-        int mRepeatCount;
-        int mCurrentFrame;
         int mFrameCount;
-        void*mHandler;
+	ImageReader*mReader;
 	Cairo::RefPtr<Cairo::ImageSurface>mImage;
-        State();
-        ~State();
+
+        AnimatedImageState();
+        AnimatedImageState(const AnimatedImageState& state);
+	~AnimatedImageState();
+        Drawable* newDrawable()override;
+        int getChangingConfigurations()const override;
     };
+    
     int mIntrinsicWidth;
     int mIntrinsicHeight;
     bool mStarting;
+    int mCurrentFrame;
+    int mRepeatCount;
     Handler* mHandler;
-    State mState;
+    std::shared_ptr<AnimatedImageState> mAnimatedImageState;
     Runnable mRunnable;
     ColorFilter* mColorFilter;
     std::vector<Animatable2::AnimationCallback> mAnimationCallbacks;
@@ -29,6 +35,7 @@ private:
     Handler* getHandler();
     void postOnAnimationStart();
     void postOnAnimationEnd();
+    AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state);
 public:
     static constexpr int REPEAT_INFINITE=-1;
     static constexpr int LOOP_INFINITE = REPEAT_INFINITE;
@@ -37,6 +44,7 @@ public:
     AnimatedImageDrawable();
     AnimatedImageDrawable(cdroid::Context*,const std::string&res);
     ~AnimatedImageDrawable();
+    std::shared_ptr<ConstantState>getConstantState()override;
     void setRepeatCount(int repeatCount);
     int getRepeatCount()const;
     int getIntrinsicWidth()const override;

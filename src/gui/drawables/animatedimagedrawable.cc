@@ -2,37 +2,21 @@
 #include <systemclock.h>
 #include <cdlog.h>
 #include <gui/gui_features.h>
-
+#include <drawables/imagereader.h>
 namespace cdroid{
 
-#ifdef ENABLE_GIF
-
-#include <gif_lib.h>
-#define  argb(a, r, g, b) ( ((a) & 0xff) << 24 ) | ( ((r) & 0xff) << 16 ) | ( ((g) & 0xff) << 8 ) | ((b) & 0xff)
-
-#define  dispose(ext) (((ext)->Bytes[0] & 0x1c) >> 2)
-#define  trans_index(ext) ((ext)->Bytes[3])
-#define  transparency(ext) ((ext)->Bytes[0] & 1)
-#define  delay(ext) (10*((ext)->Bytes[2] << 8 | (ext)->Bytes[1]))
-static int gifDrawFrame(GifFileType*gif,int&current_frame,size_t pxstride, uint8_t*pixels,bool force_dispose_1);
-#endif
-
-AnimatedImageDrawable::State::State(){
-    mAutoMirrored= false;
-    mCurrentFrame= 0;
-    mFrameCount  = 0;
-    mHandler = nullptr;
-    mRepeatCount = REPEAT_UNDEFINED;
-}
-
-AnimatedImageDrawable::State::~State(){
-}
-
 AnimatedImageDrawable::AnimatedImageDrawable():Drawable(){
+    mAnimatedImageState =std::make_shared<AnimatedImageState>();
     mHandler = nullptr;
     mStarting = false;
     mIntrinsicWidth = 0;
     mIntrinsicHeight= 0;
+    mCurrentFrame= 0;
+    mRepeatCount = REPEAT_UNDEFINED;
+}
+
+AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state){
+    mAnimatedImageState =state;
 }
 
 AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::string&res)
@@ -45,10 +29,10 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
 }
 
 AnimatedImageDrawable::~AnimatedImageDrawable(){
-#ifdef ENABLE_GIF
-    GifFileType*gif = (GifFileType*)mState.mHandler;
-    DGifCloseFile(gif,nullptr);
-#endif
+}
+
+std::shared_ptr<Drawable::ConstantState>AnimatedImageDrawable::getConstantState(){
+    return std::dynamic_pointer_cast<ConstantState>(mAnimatedImageState);
 }
 
 Handler* AnimatedImageDrawable::getHandler() {
@@ -62,13 +46,13 @@ void AnimatedImageDrawable::setRepeatCount(int repeatCount){
     if (repeatCount < REPEAT_INFINITE) {
          LOGE("invalid value passed to setRepeatCount %d",repeatCount);
     }
-    if (mState.mRepeatCount != repeatCount) {
-        mState.mRepeatCount = repeatCount;
+    if (mRepeatCount != repeatCount) {
+        mRepeatCount = repeatCount;
     }
 }
 
 int AnimatedImageDrawable::getRepeatCount()const{
-    return mState.mRepeatCount;
+    return mRepeatCount;
 }
 
 int AnimatedImageDrawable::getIntrinsicWidth()const{
@@ -86,33 +70,15 @@ void AnimatedImageDrawable::setAlpha(int alpha){
 int AnimatedImageDrawable::getAlpha()const{
     return 255;
 }
-#ifdef ENABLE_GIF
-static int GIFRead(GifFileType *gifFile, GifByteType *buff, int rdlen){
-    std::istream*is=(std::istream*)gifFile->UserData;
-    is->read((char*)buff,rdlen);
-    return is->gcount();
-}
-#endif
-int AnimatedImageDrawable::loadGIF(std::istream&is){
-    int err;
-#ifdef ENABLE_GIF
-    GifFileType*gifFileType = DGifOpen(&is,GIFRead,&err);
-    LOGE_IF(gifFileType==nullptr,"git load failed");
-    if(gifFileType==nullptr)return 0;
-    DGifSlurp(gifFileType);
-    ExtensionBlock *ext;
 
-    mState.mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,gifFileType->SWidth,gifFileType->SHeight);
-    mState.mFrameCount = gifFileType->ImageCount;
-    mState.mCurrentFrame = 0;
-    LOGD("gif %d frames loaded size(%dx%d)",mState.mFrameCount,gifFileType->SWidth,gifFileType->SHeight);
-    mState.mHandler = gifFileType;
-    mIntrinsicWidth = gifFileType->SWidth;
-    mIntrinsicHeight= gifFileType->SHeight;
-    return gifFileType->ImageCount; 
-#else
-    return 0;
-#endif
+int AnimatedImageDrawable::loadGIF(std::istream&is){
+    ImageReader*mReader = mAnimatedImageState->mReader;
+    mReader->load(is);
+    mAnimatedImageState->mImage =  Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mReader->getWidth(),mReader->getHeight());
+    mAnimatedImageState->mFrameCount = mReader->getFrameCount();
+    mIntrinsicWidth = mReader->getWidth();
+    mIntrinsicHeight= mReader->getHeight();
+    return mAnimatedImageState->mFrameCount; 
 }
 
 constexpr int FINISHED=-1;
@@ -121,28 +87,27 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
         mStarting = false;
         postOnAnimationStart();
     }
-#ifdef ENABLE_GIF
     canvas.save();
-    const long nextUpdate = gifDrawFrame((GifFileType*)mState.mHandler,mState.mCurrentFrame,
-             mState.mImage->get_stride(),mState.mImage->get_data(),false);
+    Cairo::RefPtr<Cairo::ImageSurface>image = mAnimatedImageState->mImage;
+    ImageReader*mReader = mAnimatedImageState->mReader;
+    const long nextDelay = mReader->readImage(image,mCurrentFrame);
     // a value <= 0 indicates that the drawable is stopped or that renderThread
     // will manage the animation
-    LOGV("draw Frame %d/%d nextUpdate=%d",mState.mCurrentFrame,mState.mFrameCount,nextUpdate);
-    if (nextUpdate > 0) {
+    LOGV("draw Frame %d/%d nextDelay=%d",mCurrentFrame,mAnimatedImageState->mFrameCount,nextDelay);
+    if (nextDelay > 0) {
         if (mRunnable == nullptr) {
             mRunnable = std::bind(&AnimatedImageDrawable::invalidateSelf,this);
         }
-        scheduleSelf(mRunnable, nextUpdate + SystemClock::uptimeMillis());
-    } else if (nextUpdate == FINISHED) {
+        scheduleSelf(mRunnable, nextDelay + SystemClock::uptimeMillis());
+    } else if (nextDelay<=0){// == FINISHED) {
         // This means the animation was drawn in software mode and ended.
         postOnAnimationEnd();
     }
-    mState.mImage->mark_dirty();
-    canvas.set_source(mState.mImage,mBounds.left,mBounds.top);
+    image->mark_dirty();
+    canvas.set_source(image,mBounds.left,mBounds.top);
     canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
     canvas.fill();
     canvas.restore();
-#endif
 }
 
 bool AnimatedImageDrawable::isRunning(){
@@ -150,21 +115,22 @@ bool AnimatedImageDrawable::isRunning(){
 }
 
 void AnimatedImageDrawable::start(){
-    /*if (mState.mNativePtr == 0) {
+    if (mAnimatedImageState->mReader == nullptr) {
         throw "called start on empty AnimatedImageDrawable";
     }
 
-    if (nStart(mState.mNativePtr))*/{
+    if ((mStarting==false)&&(mAnimatedImageState->mFrameCount>1)){
         mStarting = true;
         invalidateSelf();
     }
 }
 
 void AnimatedImageDrawable::stop(){
-    /*if (mState.mNativePtr == 0) {
+    if (mAnimatedImageState->mReader == nullptr) {
         throw "called stop on empty AnimatedImageDrawable";
     }
-    if (nStop(mState.mNativePtr))*/ {
+    if (mStarting){
+	mStarting = false;
         postOnAnimationEnd();
     }
 }
@@ -213,105 +179,6 @@ void AnimatedImageDrawable::clearAnimationCallbacks(){
     mAnimationCallbacks.clear();
 }
 
-#ifdef ENABLE_GIF
-static int gifDrawFrame(GifFileType*gif,int&current_frame,size_t pxstride,uint8_t *pixels,bool force_dispose_1) {
-    GifColorType *bg;
-    GifColorType *color;
-    SavedImage *frame;
-    ExtensionBlock *ext = nullptr;
-    GifImageDesc *frameInfo;
-    ColorMapObject *colorMap;
-    uint32_t *line;
-    int width, height, x, y, j;
-    uint8_t *px;
-    width = gif->SWidth;
-    height = gif->SHeight;
-    frame = &(gif->SavedImages[current_frame]);
-    frameInfo = &(frame->ImageDesc);
-    if (frameInfo->ColorMap) {
-        colorMap = frameInfo->ColorMap;
-    } else {
-        colorMap = gif->SColorMap;
-    }
-
-    bg = &colorMap->Colors[gif->SBackGroundColor];
-    for (j = 0; j < frame->ExtensionBlockCount; j++) {
-        if (frame->ExtensionBlocks[j].Function == GRAPHICS_EXT_FUNC_CODE) {
-            ext = &(frame->ExtensionBlocks[j]);
-            break;
-        }
-    }
-    // For dispose = 1, we assume its been drawn
-    px=(uint8_t*)pixels;
-    if (ext && dispose(ext) == 1 && force_dispose_1 && current_frame > 0) {
-        current_frame = current_frame - 1;
-        gifDrawFrame(gif,current_frame,pxstride, pixels, true);
-    } else if (ext && dispose(ext) == 2 && bg) {
-        for (y = 0; y < height; y++) {
-            line = (uint32_t *) px;
-            for (x = 0; x < width; x++) {
-                line[x] = argb(255, bg->Red, bg->Green, bg->Blue);
-            }
-            px = (px + pxstride);
-        }
-        current_frame=(current_frame+1)%gif->ImageCount;
-    } else if (ext && dispose(ext) == 3 && current_frame > 1) {
-        current_frame = current_frame - 2;
-        gifDrawFrame(gif,current_frame,pxstride, pixels, true);
-    }else current_frame=(current_frame+1)%gif->ImageCount;
-    px = (uint8_t*)pixels;
-    if (frameInfo->Interlace) {
-        int n = 0, inc = 8, p = 0,loc=0;
-        px = (px + pxstride * frameInfo->Top);
-        for (y = frameInfo->Top; y < frameInfo->Top + frameInfo->Height; y++) {
-            for (x = frameInfo->Left; x < frameInfo->Left + frameInfo->Width; x++) {
-                loc = (y - frameInfo->Top) * frameInfo->Width + (x - frameInfo->Left);
-                if (ext && frame->RasterBits[loc] == trans_index(ext) && transparency(ext)) {
-                    continue;
-                }
-                color = (ext && frame->RasterBits[loc] == trans_index(ext)) ? bg
-                        : &colorMap->Colors[frame->RasterBits[loc]];
-                if (color)
-                    line[x] = argb(255, color->Red, color->Green, color->Blue);
-            }
-            px = (px + pxstride * inc);
-            n += inc;
-            if (n >= frameInfo->Height) {
-                n = 0;
-                switch (p) {
-                case 0:
-                    px = (pixels + pxstride * (4 + frameInfo->Top));
-                    inc = 8;     p++;     break;
-                case 1:
-                    px = (pixels + pxstride * (2 + frameInfo->Top));
-                    inc = 4;     p++;     break;
-                case 2:
-                    px = (pixels + pxstride * (1 + frameInfo->Top));
-                    inc = 2;     p++;     break;
-                }
-            }
-        }
-    } else {
-        px = ( px + pxstride * frameInfo->Top);
-        for (y = frameInfo->Top; y < frameInfo->Top + frameInfo->Height; y++) {
-            line = (uint32_t *) px;
-            for (x = frameInfo->Left; x < frameInfo->Left + frameInfo->Width; x++) {
-                int loc = (y - frameInfo->Top) * frameInfo->Width + (x - frameInfo->Left);
-                if (ext && frame->RasterBits[loc] == trans_index(ext) && transparency(ext)) {
-                    continue;
-                }
-                color = (ext && frame->RasterBits[loc] == trans_index(ext)) ? bg
-                        : &colorMap->Colors[frame->RasterBits[loc]];
-                if (color)
-                    line[x] = argb(255, color->Red, color->Green, color->Blue);
-            }
-            px +=pxstride;
-        }
-    }
-    return delay(ext);
-}
-#endif
-
 Drawable*AnimatedImageDrawable::inflate(Context*ctx,const AttributeSet&atts){
     const std::string res = atts.getString("src");
     AnimatedImageDrawable*d = new AnimatedImageDrawable(ctx,res);
@@ -321,6 +188,31 @@ Drawable*AnimatedImageDrawable::inflate(Context*ctx,const AttributeSet&atts){
     if(repeatCount!=REPEAT_UNDEFINED)
 	d->setRepeatCount(repeatCount);
     return d;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(){
+    mAutoMirrored= false;
+    mFrameCount  = 0;
+    mReader = new GIFReader;
+}
+
+AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(const AnimatedImageState& state){
+    mAutoMirrored = state.mAutoMirrored;
+    mFrameCount = state.mFrameCount;
+}
+
+AnimatedImageDrawable::AnimatedImageState::~AnimatedImageState(){
+    LOGD("AnimatedImageState~AnimatedImageState");
+    delete mReader;
+}
+
+Drawable* AnimatedImageDrawable::AnimatedImageState::newDrawable(){
+    return new AnimatedImageDrawable(shared_from_this());
+}
+
+int AnimatedImageDrawable::AnimatedImageState::getChangingConfigurations()const{
+    return 0;
 }
 
 }

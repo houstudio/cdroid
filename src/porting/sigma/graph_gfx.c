@@ -90,25 +90,27 @@ int GFXInit() {
     int index =1;
     devSurfaces[0].kbuffer = devs[0].fix.smem_start;
     devSurfaces[0].msize=displayScreenSize;
-    if((devs[0].fix.smem_start>preallocedMem)&&(devs[0].fix.smem_start<=preallocedMem+allocedSize)){
+
+    if((devs[0].fix.smem_start+displayScreenSize<preallocedMem)||(devs[0].fix.smem_start>preallocedMem+allocedSize)){
+        LOGD("fbmem %x,%x is not in prealocted memory's range",devs[0].fix.smem_start,devs[0].fix.smem_start+displayScreenSize);
+        for(int i=0;i<MAX_HWSURFACE+1;i++){
+            devSurfaces[i+1].kbuffer= preallocedMem+screenSize*i;
+            devSurfaces[i+1].msize = screenSize;
+            index++;
+        }
+    }else{
         for(size_t mem = devs[0].fix.smem_start ; mem - screenSize > preallocedMem ; mem -= screenSize){
             devSurfaces[index].kbuffer = mem;
-            devSurfaces[index].msize=screenSize;
+            devSurfaces[index].msize = screenSize;
             index ++;
         }
         for(size_t mem = devs[0].fix.smem_start + displayScreenSize ; mem < preallocedMem+ allocedSize; mem += screenSize){
             devSurfaces[index].kbuffer = mem;
-            devSurfaces[index].msize=screenSize;
+            devSurfaces[index].msize = screenSize;
             index ++;
         }
-    }else{
-        LOGD("fbmem %x,%x is not in prealocted memory's range",devs[0].fix.smem_start,devs[0].fix.smem_start+displayScreenSize);
-        for(int i=0;i<MAX_HWSURFACE+1;i++){
-            devSurfaces[i+1].kbuffer=preallocedMem+screenSize*i;
-            devSurfaces[i+1].msize=screenSize;
-            index++;
-        }
     }
+
     LOGI("%d surfaces is configured for app mem=%llx size=%lu screensize=%d/%d***",index,preallocedMem,allocedSize,displayScreenSize,screenSize);
     for(int i =0;i<index;i++){
         MI_PHY phySrcBufAddr = devSurfaces[i].kbuffer;
