@@ -1,33 +1,33 @@
 #include <core/context.h>
 #include <cairomm/surface.h>
-#include <drawables/imagereader.h>
+#include <drawables/imagedecoder.h>
 #include <gui/gui_features.h>
 
 namespace cdroid{
 
-ImageReader::ImageReader(){
+ImageDecoder::ImageDecoder(){
     mImageWidth = -1;
     mImageHeight= -1;
     mFrameCount =0;
     mPrivate = nullptr;
 }
 
-ImageReader::~ImageReader(){
+ImageDecoder::~ImageDecoder(){
 }
 
-int ImageReader::getFrameCount()const{
+int ImageDecoder::getFrameCount()const{
     return mFrameCount;
 }
 
-int ImageReader::getWidth()const{
+int ImageDecoder::getWidth()const{
     return mImageWidth;
 }
 
-int ImageReader::getHeight()const{
+int ImageDecoder::getHeight()const{
     return mImageHeight;
 }
 
-GIFReader::GIFReader(){
+GIFDecoder::GIFDecoder(){
 
 }
 
@@ -41,14 +41,14 @@ static int GIFRead(GifFileType *gifFile, GifByteType *buff, int rdlen){
 static int gifDrawFrame(GifFileType*gif,int&current_frame,size_t pxstride,uint8_t *pixels,bool force_DISPOSE_1);
 #endif
 
-GIFReader::~GIFReader(){
+GIFDecoder::~GIFDecoder(){
 #ifdef ENABLE_GIF
     DGifCloseFile((GifFileType*)mPrivate,nullptr);
 #endif
 }
 
 
-bool GIFReader::load(std::istream&is){
+int GIFDecoder::load(std::istream&is){
     int err;
 #ifdef ENABLE_GIF
     GifFileType*gifFileType = DGifOpen(&is,GIFRead,&err);
@@ -62,11 +62,11 @@ bool GIFReader::load(std::istream&is){
     mImageHeight= gifFileType->SHeight;
     LOGD("GIF %d frames loaded size(%dx%d)",mFrameCount,mImageWidth,mImageHeight);
 #endif
-    return true;
+    return mFrameCount;
 }
 
 
-int GIFReader::readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int& frameIndex){
+int GIFDecoder::readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int& frameIndex){
 #ifdef ENABLE_GIF
     return gifDrawFrame((GifFileType*)mPrivate,frameIndex,image->get_stride(),image->get_data(),false);
 #else
@@ -179,19 +179,4 @@ static int gifDrawFrame(GifFileType*gif,int&current_frame,size_t pxstride,uint8_
     return DELAY(ext);
 }
 #endif
-///////////////////////////////////////////////////////////////////////////
-
-APNGReader::APNGReader(){
-}
-
-APNGReader::~APNGReader(){
-}
-
-bool APNGReader::load(std::istream&){
-    return true;
-}
-
-int APNGReader::readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int& frameIndex){
-   return 0;
-}
 }/*endof namespace*/

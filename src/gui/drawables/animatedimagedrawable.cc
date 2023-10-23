@@ -2,7 +2,7 @@
 #include <systemclock.h>
 #include <cdlog.h>
 #include <gui/gui_features.h>
-#include <drawables/imagereader.h>
+#include <drawables/imagedecoder.h>
 namespace cdroid{
 
 AnimatedImageDrawable::AnimatedImageDrawable():Drawable(){
@@ -23,9 +23,15 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
    :AnimatedImageDrawable(){
     auto stm = ctx->getInputStream(res);
     if(stm){
-	 loadGIF(*stm);
-	 start();
+        loadGIF(*stm);
+        start();
     }
+    /*auto st1=ctx->getInputStream("@w9:mipmap/apng1.png");//open_new.apng");
+    auto st1=ctx->getInputStream("@w9:mipmap/open_new.apng");
+    if(st1){
+	APNGDecoder apng;
+        apng.load(*st1);
+    }*/
 }
 
 AnimatedImageDrawable::~AnimatedImageDrawable(){
@@ -72,12 +78,12 @@ int AnimatedImageDrawable::getAlpha()const{
 }
 
 int AnimatedImageDrawable::loadGIF(std::istream&is){
-    ImageReader*mReader = mAnimatedImageState->mReader;
-    mReader->load(is);
-    mAnimatedImageState->mImage =  Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mReader->getWidth(),mReader->getHeight());
-    mAnimatedImageState->mFrameCount = mReader->getFrameCount();
-    mIntrinsicWidth = mReader->getWidth();
-    mIntrinsicHeight= mReader->getHeight();
+    ImageDecoder*mDecoder = mAnimatedImageState->mDecoder;
+    mDecoder->load(is);
+    mAnimatedImageState->mImage =  Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mDecoder->getWidth(),mDecoder->getHeight());
+    mAnimatedImageState->mFrameCount = mDecoder->getFrameCount();
+    mIntrinsicWidth = mDecoder->getWidth();
+    mIntrinsicHeight= mDecoder->getHeight();
     return mAnimatedImageState->mFrameCount; 
 }
 
@@ -89,8 +95,8 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
     }
     canvas.save();
     Cairo::RefPtr<Cairo::ImageSurface>image = mAnimatedImageState->mImage;
-    ImageReader*mReader = mAnimatedImageState->mReader;
-    const long nextDelay = mReader->readImage(image,mCurrentFrame);
+    ImageDecoder*mDecoder = mAnimatedImageState->mDecoder;
+    const long nextDelay = mDecoder->readImage(image,mCurrentFrame);
     // a value <= 0 indicates that the drawable is stopped or that renderThread
     // will manage the animation
     LOGV("draw Frame %d/%d nextDelay=%d",mCurrentFrame,mAnimatedImageState->mFrameCount,nextDelay);
@@ -115,7 +121,7 @@ bool AnimatedImageDrawable::isRunning(){
 }
 
 void AnimatedImageDrawable::start(){
-    if (mAnimatedImageState->mReader == nullptr) {
+    if (mAnimatedImageState->mDecoder == nullptr) {
         throw "called start on empty AnimatedImageDrawable";
     }
 
@@ -126,7 +132,7 @@ void AnimatedImageDrawable::start(){
 }
 
 void AnimatedImageDrawable::stop(){
-    if (mAnimatedImageState->mReader == nullptr) {
+    if (mAnimatedImageState->mDecoder == nullptr) {
         throw "called stop on empty AnimatedImageDrawable";
     }
     if (mStarting){
@@ -194,7 +200,7 @@ Drawable*AnimatedImageDrawable::inflate(Context*ctx,const AttributeSet&atts){
 AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(){
     mAutoMirrored= false;
     mFrameCount  = 0;
-    mReader = new GIFReader;
+    mDecoder = new GIFDecoder;
 }
 
 AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(const AnimatedImageState& state){
@@ -204,7 +210,7 @@ AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(const AnimatedImag
 
 AnimatedImageDrawable::AnimatedImageState::~AnimatedImageState(){
     LOGD("AnimatedImageState~AnimatedImageState");
-    delete mReader;
+    delete mDecoder;
 }
 
 Drawable* AnimatedImageDrawable::AnimatedImageState::newDrawable(){

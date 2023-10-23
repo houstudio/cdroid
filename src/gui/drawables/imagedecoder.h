@@ -2,35 +2,35 @@
 #define __IMAGE_READER_H__
 namespace cdroid{
 
-class ImageReader{
+class ImageDecoder{
 protected:
     void*mPrivate;
     int mFrameCount;
     int mImageWidth;
     int mImageHeight;
 public:
-    ImageReader();
-    virtual ~ImageReader();
-    virtual bool load(std::istream&)=0;
+    ImageDecoder();
+    virtual ~ImageDecoder();
+    virtual int load(std::istream&)=0;
     int getFrameCount()const;
     int getWidth()const;
     int getHeight()const;
     virtual int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int& frameIndex)=0;
 };
 
-class GIFReader:public ImageReader{
+class GIFDecoder:public ImageDecoder{
 public:
-    GIFReader();
-    ~GIFReader()override;
-    bool load(std::istream&)override;
+    GIFDecoder();
+    ~GIFDecoder()override;
+    int load(std::istream&)override;
     int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int& frameIndex)override;
 };
 
-class APNGReader:public ImageReader{
+class APNGDecoder:public ImageDecoder{
 public:
-    APNGReader();
-    ~APNGReader()override;
-    bool load(std::istream&)override;
+    APNGDecoder();
+    ~APNGDecoder()override;
+    int load(std::istream&)override;
     int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int& frameIndex)override;
 };
 

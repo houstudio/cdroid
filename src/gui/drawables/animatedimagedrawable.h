@@ -4,19 +4,19 @@
 #include <core/handler.h>
 namespace cdroid{
 /*for drawing animated images (like GIF)*/
-class ImageReader;
+class ImageDecoder;
 class AnimatedImageDrawable:public Drawable,public Animatable2{
 private:
     class AnimatedImageState:public std::enable_shared_from_this<AnimatedImageState>,public ConstantState{
     public:
         bool mAutoMirrored;
         int mFrameCount;
-	ImageReader*mReader;
-	Cairo::RefPtr<Cairo::ImageSurface>mImage;
+        ImageDecoder*mDecoder;
+        Cairo::RefPtr<Cairo::ImageSurface>mImage;
 
         AnimatedImageState();
         AnimatedImageState(const AnimatedImageState& state);
-	~AnimatedImageState();
+        ~AnimatedImageState();
         Drawable* newDrawable()override;
         int getChangingConfigurations()const override;
     };

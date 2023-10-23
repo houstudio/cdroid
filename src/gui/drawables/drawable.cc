@@ -477,9 +477,9 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
             Drawable* d = it->second(pd->ctx,atts);
             if(d){
                 auto cs = d->getConstantState();
-                cs->mResource =pd->resourceFile;
+                if(cs)cs->mResource =pd->resourceFile;
             }
-	        item->drawable = d;
+	    item->drawable = d;
         }
         LOGV("created drawable %s:%p props:%d",name,item->drawable,item->props.size());
     }
