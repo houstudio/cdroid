@@ -16,6 +16,8 @@ AnimatedImageDrawable::AnimatedImageDrawable():Drawable(){
 }
 
 AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state){
+    mStarting = 0;
+    mIntrinsicWidth = mIntrinsicHeight =0;
     mAnimatedImageState =state;
 }
 
@@ -24,7 +26,8 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
     LOGD("decoder=%p res=%s",mAnimatedImageState->mDecoder,res.c_str());
     ImageDecoder*decoder = ImageDecoder::create(ctx,res);
     mAnimatedImageState->mDecoder = decoder;
-    mAnimatedImageState->mImage=Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,decoder->getWidth(),decoder->getHeight());
+    mAnimatedImageState->mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,decoder->getWidth(),decoder->getHeight());
+    mAnimatedImageState->mFrameCount = decoder->getFrameCount();
 }
 
 AnimatedImageDrawable::~AnimatedImageDrawable(){
@@ -55,11 +58,13 @@ int AnimatedImageDrawable::getRepeatCount()const{
 }
 
 int AnimatedImageDrawable::getIntrinsicWidth()const{
-    return mIntrinsicWidth;
+    const ImageDecoder*decoder = mAnimatedImageState->mDecoder;
+    return decoder?decoder->getWidth():mIntrinsicWidth;
 }
 
 int AnimatedImageDrawable::getIntrinsicHeight()const{
-    return mIntrinsicHeight;
+    const ImageDecoder*decoder = mAnimatedImageState->mDecoder;
+    return decoder?decoder->getHeight():mIntrinsicHeight;
 }
 
 void AnimatedImageDrawable::setAlpha(int alpha){
@@ -83,15 +88,17 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
     mDecoder->readImage(image,mCurrentFrame);
     // a value <= 0 indicates that the drawable is stopped or that renderThread
     // will manage the animation
-    LOGV("draw Frame %d/%d nextDelay=%d",mCurrentFrame,mAnimatedImageState->mFrameCount,nextDelay);
-    if (nextDelay > 0) {
-        if (mRunnable == nullptr) {
-            mRunnable = std::bind(&AnimatedImageDrawable::invalidateSelf,this);
+    LOGV("%p draw Frame %d/%d nextDelay=%d",this,mCurrentFrame,mAnimatedImageState->mFrameCount,nextDelay);
+    if(mStarting){
+        if (nextDelay > 0) {
+            if (mRunnable == nullptr) {
+                mRunnable = std::bind(&AnimatedImageDrawable::invalidateSelf,this);
+            }
+            scheduleSelf(mRunnable, nextDelay + SystemClock::uptimeMillis());
+        } else if (nextDelay<=0){// == FINISHED) {
+            // This means the animation was drawn in software mode and ended.
+            postOnAnimationEnd();
         }
-        scheduleSelf(mRunnable, nextDelay + SystemClock::uptimeMillis());
-    } else if (nextDelay<=0){// == FINISHED) {
-        // This means the animation was drawn in software mode and ended.
-        postOnAnimationEnd();
     }
     image->mark_dirty();
     canvas.set_source(image,mBounds.left,mBounds.top);
@@ -190,6 +197,7 @@ AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(const AnimatedImag
     mAutoMirrored = state.mAutoMirrored;
     mFrameCount = state.mFrameCount;
     mDecoder = state.mDecoder;
+    mImage = state.mImage;
 }
 
 AnimatedImageDrawable::AnimatedImageState::~AnimatedImageState(){
