@@ -9,6 +9,9 @@
 #include <core/attributeset.h>
 #include <core/displaymetrics.h>
 
+#define USE(FEATURE) (defined USE_##FEATURE && USE_##FEATURE)
+#define ENABLE(FEATURE) (defined ENABLE_##FEATURE && ENABLE_##FEATURE)
+
 namespace cdroid{
 
 class Drawable;

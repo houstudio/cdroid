@@ -6,6 +6,7 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
 endif()
 aux_source_directory(core SRCS_GUICORE)
+add_subdirectory(image-decoders)
 aux_source_directory(view SRCS_VIEWS)
 aux_source_directory(widget SRCS_WIDGET)
 aux_source_directory(ext_widget SRCS_EXTWIDGET)
@@ -35,7 +36,9 @@ add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
 add_definitions(--include stdpatch.h)
 
-set(SOURCES_GUI ${SRCS_GUICORE} ${SRCS_VIEWS} 
+set(SOURCES_GUI
+    ${SRCS_GUICORE}
+    ${SRCS_VIEWS}
     ${SRCS_CAIROMM} ${SRCS_WIDGET}
     ${SRCS_EXTWIDGET} ${SRCS_DRAWABLES}
     ${SRCS_APP} ${SRCS_DIALOG}
@@ -71,12 +74,11 @@ set(PKGCONFIG_LIBS_PRIVATE "expat bzip2 libzip")
 set(NONPKG_LIBS "-l${PROJECT_NAME} -ltvhal")#non pkgconfig libraries
 set(NONPKG_LIBS_PRIVATE "-ltvhal")
 message("==CDROID_DEPLIBS=${CDROID_DEPLIBS}")
-target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal)
+target_link_libraries(cdroid image-decoders ${CDROID_DEPLIBS} tvhal)
 
 if(litehtml_FOUND)
    add_subdirectory(widget/html)
 endif()
-add_subdirectory(image-decoders)
 
 configure_file(cdroid.pc.in cdroid.pc @ONLY)
 install(TARGETS cdroid  DESTINATION lib)

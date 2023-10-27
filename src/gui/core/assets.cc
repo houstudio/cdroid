@@ -384,7 +384,8 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
         d = new NinePatchDrawable(this,fullresid);
     } else if (TextUtils::endWith(resname,".png")||TextUtils::endWith(resname,".jpg")) {
         d = new BitmapDrawable(this,fullresid);
-    } else if(TextUtils::endWith(resname,".gif")||TextUtils::endWith(resname,".apng")){
+    } else if(TextUtils::endWith(resname,".gif")||TextUtils::endWith(resname,".apng")
+		    ||TextUtils::endWith(resname,".webp")){
         d = new AnimatedImageDrawable(this,fullresid);
     }
     if( (d == nullptr) && (!fullresid.empty()) ) {
