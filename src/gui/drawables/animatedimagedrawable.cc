@@ -2,7 +2,7 @@
 #include <systemclock.h>
 #include <cdlog.h>
 #include <gui/gui_features.h>
-#include <drawables/imagedecoder.h>
+#include <image-decoders/imagedecoder.h>
 namespace cdroid{
 
 AnimatedImageDrawable::AnimatedImageDrawable():Drawable(){
@@ -189,6 +189,7 @@ AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(){
 AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(const AnimatedImageState& state){
     mAutoMirrored = state.mAutoMirrored;
     mFrameCount = state.mFrameCount;
+    mDecoder = state.mDecoder;
 }
 
 AnimatedImageDrawable::AnimatedImageState::~AnimatedImageState(){
