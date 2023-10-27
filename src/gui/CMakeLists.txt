@@ -76,6 +76,7 @@ target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal)
 if(litehtml_FOUND)
    add_subdirectory(widget/html)
 endif()
+add_subdirectory(image-decoders)
 
 configure_file(cdroid.pc.in cdroid.pc @ONLY)
 install(TARGETS cdroid  DESTINATION lib)

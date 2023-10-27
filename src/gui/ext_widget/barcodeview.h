@@ -5,7 +5,6 @@
 #include <view/view.h>
 #include <string>
 #include <zint.h>
-struct zint_symbol *symbol;
 
 namespace cdroid{
 class BarcodeView:public View{
@@ -20,22 +19,22 @@ public:
         ZintSeg(const std::string& text, const int ECIIndex = 0); // `ECIIndex` is comboBox index (not ECI value)
     };
     enum Symbologies{
-	Code11   = BARCODE_CODE11,      /*1 Code 11 */ 
-	C25Standard=BARCODE_C25STANDARD,/*2 2 of 5 Standard (Matrix) */
+        Code11   = BARCODE_CODE11,      /*1 Code 11 */ 
+        C25Standard=BARCODE_C25STANDARD,/*2 2 of 5 Standard (Matrix) */
         C25Matrix= BARCODE_C25MATRIX,   /*2 Legacy */
-	C25Inter = BARCODE_C25INTER,    /*3 2 of 5 Interleaved */
-	C25Data  = BARCODE_C25IATA,     /*4 2 of 5 IATA */
-	C25Logic = BARCODE_C25LOGIC,    /*6 2 of 5 Data Logic */
-	C25Ind   = BARCODE_C25IND,      /*7 2 of 5 Industrial */
-	Code39   = BARCODE_CODE39,      /*8 Code 39 */
-	ExCode39 = BARCODE_EXCODE39,    /*9 Extended Code 39 */
-	Eanx     = BARCODE_EANX,        /*13 EAN (European Article Number) */
-	EanxChk  = BARCODE_EANX_CHK,    /*14 EAN + Check Digit */
-	GS1128   = BARCODE_GS1_128,     /*16 GS1-128 */
-	Ean128   = BARCODE_EAN128,      /*16 Legacy */
-	CodaBar  = BARCODE_CODABAR,     /*18 Codabar */
-	Code128  = BARCODE_CODE128,     /*20 Code 128 */
-	DPLeit   = BARCODE_DPLEIT,      /*21 Deutsche Post Leitcode */
+        C25Inter = BARCODE_C25INTER,    /*3 2 of 5 Interleaved */
+        C25Data  = BARCODE_C25IATA,     /*4 2 of 5 IATA */
+        C25Logic = BARCODE_C25LOGIC,    /*6 2 of 5 Data Logic */
+        C25Ind   = BARCODE_C25IND,      /*7 2 of 5 Industrial */
+        Code39   = BARCODE_CODE39,      /*8 Code 39 */
+        ExCode39 = BARCODE_EXCODE39,    /*9 Extended Code 39 */
+        Eanx     = BARCODE_EANX,        /*13 EAN (European Article Number) */
+        EanxChk  = BARCODE_EANX_CHK,    /*14 EAN + Check Digit */
+        GS1128   = BARCODE_GS1_128,     /*16 GS1-128 */
+        Ean128   = BARCODE_EAN128,      /*16 Legacy */
+        CodaBar  = BARCODE_CODABAR,     /*18 Codabar */
+        Code128  = BARCODE_CODE128,     /*20 Code 128 */
+        DPLeit   = BARCODE_DPLEIT,      /*21 Deutsche Post Leitcode */
         DPIdent  = BARCODE_DPIDENT,     /*22 Deutsche Post Identcode */
         Code16K  = BARCODE_CODE16K,     /*23 Code 16k */
         Code49   = BARCODE_CODE49,      /*24 Code 49 */
