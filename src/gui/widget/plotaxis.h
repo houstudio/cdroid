@@ -42,6 +42,8 @@ public:
      */
     void setVisible(bool visible);
 
+    bool isTickmarkVisible()const;
+    void setTickmarkVisible(bool);
     /**
      * @return whether tick labels will be drawn for this axis
      */

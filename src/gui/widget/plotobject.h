@@ -56,6 +56,7 @@ public:
         Points = 1, ///< each PlotPoint is represented with a drawn point
         Lines = 2, ///< each PlotPoint is connected with a line
         Bars = 4, ///< each PlotPoint is shown as a vertical bar
+        Pie  = 8 ///each PlotPoint is shown as a pie
     };
     typedef PlotType PlotTypes;//Q_DECLARE_FLAGS(PlotTypes, PlotType)
 
@@ -84,8 +85,8 @@ public:
      * @param size the size to use for plotted points, in pixels
      * @param ps The PointStyle describing the shape for plotted points
      */
-    explicit PlotObject(const uint32_t &color = 0xFFFFFFFF, PlotType otype = Points, double size = 2.0, PointStyle ps = Circle);
-
+    explicit PlotObject(uint32_t color = 0xFFFFFFFF, PlotType otype = Points, double size = 2.0, PointStyle ps = Circle);
+    explicit PlotObject(uint32_t color,const PointF& center, double radius,double thicknees);
     /**
      * Destructor.
      */
@@ -115,12 +116,12 @@ public:
     void setShowBars(bool b);
 
     /**
-     * @return the size of the plotted points in this object, in pixels
+     * @return the size of the plotted points(or Pie's radius) in this object, in pixels
      */
     double size() const;
 
     /**
-     * Set the size for plotted points in this object, in pixels
+     * Set the size for plotted points(or Pie's radius) in this object, in pixels
      * @param s the new size
      */
     void setSize(double s);

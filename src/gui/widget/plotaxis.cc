@@ -28,6 +28,7 @@ public:
 
     bool m_visible : 1; // Property "visible" defines if Axis is drawn or not.
     bool m_showTickLabels : 1;
+    bool m_showTickmarks : 1;
     char m_labelFmt; // Number format for number labels, see std::string::arg()
     std::string m_label; // The label of the axis.
     int m_labelFieldWidth; // Field width for number labels, see std::string::arg()
@@ -54,6 +55,14 @@ bool PlotAxis::isVisible() const
 void PlotAxis::setVisible(bool visible)
 {
     d->m_visible = visible;
+}
+
+bool PlotAxis::isTickmarkVisible()const{
+    return d->m_showTickmarks;
+}
+
+void PlotAxis::setTickmarkVisible(bool visible){
+    d->m_showTickmarks = visible
 }
 
 bool PlotAxis::areTickLabelsShown() const

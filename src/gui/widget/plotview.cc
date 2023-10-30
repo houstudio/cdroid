@@ -51,10 +51,8 @@ public:
     ~Private()
     {
         if (autoDelete) {
-            //qDeleteAll(objectList);
 	    for(auto o:objectList)delete o;
         }
-        //qDeleteAll(axes);
 	for(auto x:axes)delete x.second;
     }
 
@@ -206,8 +204,7 @@ void PlotView::setSecondaryLimits(double x1, double x2, double y1, double y2)
     invalidate();
 }
 
-void PlotView::clearSecondaryLimits()
-{
+void PlotView::clearSecondaryLimits(){
     d->secondDataRect.set(0,0,0,0);
     axis(RightAxis)->setTickMarks(d->dataRect.top, d->dataRect.height);
     axis(TopAxis)->setTickMarks(d->dataRect.left, d->dataRect.width);
@@ -215,18 +212,15 @@ void PlotView::clearSecondaryLimits()
     invalidate();
 }
 
-RectF PlotView::dataRect() const
-{
+RectF PlotView::dataRect() const{
     return d->dataRect;
 }
 
-RectF PlotView::secondaryDataRect() const
-{
+RectF PlotView::secondaryDataRect() const{
     return d->secondDataRect;
 }
 
-void PlotView::addPlotObject(PlotObject *object)
-{
+void PlotView::addPlotObject(PlotObject *object){
     // skip null pointers
     if (!object) {
         return;
@@ -235,8 +229,7 @@ void PlotView::addPlotObject(PlotObject *object)
     invalidate();
 }
 
-void PlotView::addPlotObjects(const std::list<PlotObject *> &objects)
-{
+void PlotView::addPlotObjects(const std::list<PlotObject *> &objects){
     bool addedsome = false;
     for (PlotObject *o : objects) {
         if (!o) {
@@ -251,32 +244,27 @@ void PlotView::addPlotObjects(const std::list<PlotObject *> &objects)
     }
 }
 
-std::vector<PlotObject *> PlotView::plotObjects() const
-{
+std::vector<PlotObject *> PlotView::plotObjects() const{
     return d->objectList;
 }
 
-void PlotView::setAutoDeletePlotObjects(bool autoDelete)
-{
+void PlotView::setAutoDeletePlotObjects(bool autoDelete){
     d->autoDelete = autoDelete;
 }
 
-void PlotView::removeAllPlotObjects()
-{
+void PlotView::removeAllPlotObjects(){
     if (d->objectList.empty()) {
         return;
     }
 
     if (d->autoDelete) {
-        //qDeleteAll(d->objectList);
-	for(auto o:d->objectList)delete o;
+        for(auto o:d->objectList)delete o;
     }
     d->objectList.clear();
     invalidate();
 }
 
-void PlotView::resetPlotMask()
-{
+void PlotView::resetPlotMask(){
     Rect rc = pixRect();
     d->plotMask = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,rc.width,rc.height);//QImage(pixRect().size(), QImage::Format_ARGB32);
     Cairo::RefPtr<Cairo::Context>ctx=Cairo::Context::create(d->plotMask);
@@ -286,11 +274,9 @@ void PlotView::resetPlotMask()
     ctx->fill();
 }
 
-void PlotView::resetPlot()
-{
+void PlotView::resetPlot(){
     if (d->autoDelete) {
-        //qDeleteAll(d->objectList);
-	for(auto o:d->objectList)delete o;
+        for(auto o:d->objectList)delete o;
     }
     d->objectList.clear();
     clearSecondaryLimits();
@@ -306,8 +292,7 @@ void PlotView::resetPlot()
     resetPlotMask();
 }
 
-void PlotView::replacePlotObject(int i, PlotObject *o)
-{
+void PlotView::replacePlotObject(int i, PlotObject *o){
     // skip null pointers and invalid indexes
     if (!o || i < 0 || i >= d->objectList.size()) {
         return;
@@ -318,7 +303,6 @@ void PlotView::replacePlotObject(int i, PlotObject *o)
     if (d->autoDelete) {
         delete d->objectList.at(i);
     }
-    //d->objectList[i].replace(i, o);
     d->objectList[i] = o;
     invalidate();
 }
@@ -403,8 +387,7 @@ std::list<PlotPoint *> PlotView::pointsUnderPoint(const Point &p) const
     return pts;
 }
 
-/*bool PlotView::event(QEvent *e)
-{
+/*bool PlotView::event(QEvent *e){
     if (e->type() == QEvent::ToolTip) {
         if (d->showObjectToolTip) {
             QHelpEvent *he = static_cast<QHelpEvent *>(e);
@@ -420,31 +403,27 @@ std::list<PlotPoint *> PlotView::pointsUnderPoint(const Point &p) const
     }
 }*/
 
-void PlotView::onSizeChanged(int w,int h,int oldw,int oldh)
-{
+void PlotView::onSizeChanged(int w,int h,int oldw,int oldh){
     View::onSizeChanged(w,h,oldw,oldh);
     setPixRect();
     resetPlotMask();
 }
 
-void PlotView::setPixRect()
-{
-    int newWidth = /*contentsRect().width*/getWidth() - getPaddingLeft() - getPaddingRight();
-    int newHeight= /*contentsRect().height*/getHeight()- getPaddingTop() - getPaddingBottom();
+void PlotView::setPixRect(){
+    const int newWidth = /*contentsRect().width*/getWidth() - getPaddingLeft() - getPaddingRight();
+    const int newHeight= /*contentsRect().height*/getHeight()- getPaddingTop() - getPaddingBottom();
     // PixRect starts at (0,0) because we will translate by leftPadding(), topPadding()
-    d->pixRect.set(0, 0, newWidth, newHeight);
+    d->pixRect.set(getPaddingLeft(),getPaddingTop(), newWidth, newHeight);
 }
 
-PointF PlotView::mapToWidget(const PointF &p) const
-{
-    float px = d->pixRect.left + float(d->pixRect.width) * (p.x - d->dataRect.left) / d->dataRect.width;
-    float py = d->pixRect.top + float(d->pixRect.height) * (d->dataRect.top + d->dataRect.height -p.y) / d->dataRect.height;
+PointF PlotView::mapToWidget(const PointF &p) const{
+    const float px = d->pixRect.left + float(d->pixRect.width) * (p.x - d->dataRect.left) / d->dataRect.width;
+    const float py = d->pixRect.top + float(d->pixRect.height) * (d->dataRect.top + d->dataRect.height -p.y) / d->dataRect.height;
     return PointF{px, py};
 }
 
-void PlotView::maskRect(const RectF &rf, float fvalue)
-{
-    int value = int(fvalue);
+void PlotView::maskRect(const RectF &rf, float fvalue){
+    const int value = int(fvalue);
     Rect r;//= rf.toRect().intersected(d->pixRect);
     r.set(rf.left,rf.top,rf.width,rf.height);
     r.intersect(d->pixRect);
@@ -458,18 +437,17 @@ void PlotView::maskRect(const RectF &rf, float fvalue)
             //newColor = uint32_t(d->plotMask.pixel(ix, iy));
             //newColor.setAlpha(200);
             //newColor.setRed(qMin(newColor.red() + value, 255));
-            //d->plotMask.setPixel(ix, iy, newColor.rgba());
+            //d->plotMask.setPixel(ix, iy, newColor.rg
         }
     }
 }
 
-void PlotView::maskAlongLine(const PointF &p1, const PointF &p2, float fvalue)
-{
-    if (!d->pixRect.contains({int(p1.x),int(p1.y)}/*p1.toPoint()*/) && !d->pixRect.contains({int(p2.x),int(p2.y)}/*p2.toPoint()*/)) {
+void PlotView::maskAlongLine(const PointF &p1, const PointF &p2, float fvalue){
+    if (!d->pixRect.contains({int(p1.x),int(p1.y)}) && !d->pixRect.contains({int(p2.x),int(p2.y)})) {
         return;
     }
 
-    int value = int(fvalue);
+    const int value = int(fvalue);
 
     // Determine slope and zeropoint of line
     double m = (p2.y - p1.y) / (p2.x - p1.x);
@@ -520,20 +498,21 @@ void PlotView::maskAlongLine(const PointF &p1, const PointF &p2, float fvalue)
         }
     }
 }
+
 static void drawRound(Canvas&canvas,const RectF&r,float radii) {
-    float db=180.f;
+    float db = 180.f;
     float pts[8];
     double radian = M_PI;
-    pts[0]=r.left + radii;
-    pts[1]=r.top + radii;
-    pts[2]=r.right() - radii;
-    pts[3]=r.top + radii;
-    pts[4]=r.right() - radii;
-    pts[5]=r.bottom()- radii;
-    pts[6]=r.left + radii;
-    pts[7]=r.bottom()- radii;
+    pts[0] = r.left + radii;
+    pts[1] = r.top + radii;
+    pts[2] = r.right() - radii;
+    pts[3] = r.top + radii;
+    pts[4] = r.right() - radii;
+    pts[5] = r.bottom()- radii;
+    pts[6] = r.left + radii;
+    pts[7] = r.bottom()- radii;
     canvas.begin_new_sub_path();
-    for(int i=0,j=0; i<8; i+=2,j++) {
+    for(int i = 0,j = 0; i < 8; i += 2,j++) {
        canvas.arc(pts[i],pts[i+1],radii,radian,radian+M_PI/2.0);
         radian += M_PI/2.0;
     }
@@ -551,9 +530,8 @@ static void drawRound(Canvas&canvas,const RectF&r,float radii) {
 // values, it can get stuck in local minima.  To mitigate this, we will
 // iteratively attempt each of the initial path offset directions (up,
 // down, right, left) in the order of increasing cost at each location.
-void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
-{
-    int textFlags = Gravity::CENTER;//Qt::TextSingleLine | Qt::AlignCenter;
+void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp){
+    const int textFlags = Gravity::CENTER;//Qt::TextSingleLine | Qt::AlignCenter;
 
     PointF pos = mapToWidget(pp->position());
     if (!d->pixRect.contains(int(pos.x),int(pos.y))) {
@@ -727,8 +705,7 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
     maskRect(RectF::Make(bestRect.left,bestRect.top,bestRect.width,bestRect.height));
 }
 
-float PlotView::Private::rectCost(const RectF &r) const
-{
+float PlotView::Private::rectCost(const RectF &r) const{
     RectF pmrc = {0,0,float(plotMask->get_width()),float(plotMask->get_height())};
     if(!pmrc.contains(r)) return 10000.;
     //if (!plotMask.rect().contains(r.toRect())) return 10000.;
@@ -756,8 +733,7 @@ float PlotView::Private::rectCost(const RectF &r) const
     return float(cost);
 }
 
-void PlotView::onDraw(cdroid::Canvas&p)
-{
+void PlotView::onDraw(cdroid::Canvas&p){
     // let QFrame draw its default stuff (like the frame)
     //p.setRenderHint(QPainter::Antialiasing, d->useAntialias);
     View::onDraw(p);
@@ -786,27 +762,32 @@ void PlotView::onDraw(cdroid::Canvas&p)
     drawAxes(p);
 }
 
-void PlotView::drawAxes(cdroid::Canvas&p)
-{
+void PlotView::drawAxes(cdroid::Canvas&p){
     if (d->showGrid) {
         p.set_color(gridColor());//setPen(gridColor());
 
         // Grid lines are placed at locations of primary axes' major tickmarks
         // vertical grid lines
         const std::list<double>& majMarks = axis(BottomAxis)->majorTickMarks();
-        for (const double xx : majMarks) {
-            double px = d->pixRect.width * (xx - d->dataRect.left) / d->dataRect.width;
-	    p.move_to(px,0);
-	    p.line_to(px,d->pixRect.height);
+        if(axis(BottomAxis)->isTickmarkVisible()|| axis(TopAxis)->isTickmarkVisible()){
+            for (const double xx : majMarks) {
+                double px = d->pixRect.width * (xx - d->dataRect.left) / d->dataRect.width;
+                p.move_to(px,0);
+                p.line_to(px,d->pixRect.height);
+            }
         }
         // horizontal grid lines
         const std::list<double>&leftTickMarks = axis(LeftAxis)->majorTickMarks();
-        for (const double yy : leftTickMarks) {
-            double py = d->pixRect.height * (1.0 - (yy - d->dataRect.top) / d->dataRect.height);
-	    p.move_to(0,py);
-	    p.line_to(double(d->pixRect.width), py);
+        if(axis(LeftAxis)->isTickmarkVisible()||axis(RightAxis)->isTickmarkVisible()){
+            for (const double yy : leftTickMarks) {
+                double py = d->pixRect.height * (1.0 - (yy - d->dataRect.top) / d->dataRect.height);
+                p.move_to(0,py);
+                p.line_to(double(d->pixRect.width), py);
+            }
         }
-	p.stroke();
+        if(axis(TopAxis)->isTickmarkVisible()||axis(BottomAxis)->isTickmarkVisible()
+            ||axis(LeftAxis)->isTickmarkVisible()||axis(RightAxis)->isTickmarkVisible())
+            p.stroke();
     }
 
     p.set_color(foregroundColor());//p->setPen(foregroundColor());
@@ -822,17 +803,17 @@ void PlotView::drawAxes(cdroid::Canvas&p)
     PlotAxis *a = axis(BottomAxis);
     if (a->isVisible()) {
         // Draw axis line
-	p.move_to(0, d->pixRect.height);
-	p.line_to(d->pixRect.width,d->pixRect.height);
+        p.move_to(0, d->pixRect.height);
+        p.line_to(d->pixRect.width,d->pixRect.height);
 
         // Draw major tickmarks
         const std::list<double>& majMarks = a->majorTickMarks();
         for (const double xx : majMarks) {
             double px = d->pixRect.width * (xx - d->dataRect.left) / d->dataRect.width;
             if (px > 0 && px < d->pixRect.width) {
-		p.move_to(px, d->pixRect.height - TICKOFFSET);
-		p.line_to(px, d->pixRect.height - BIGTICKSIZE - TICKOFFSET);
-		p.stroke();
+                p.move_to(px, d->pixRect.height - TICKOFFSET);
+                p.line_to(px, d->pixRect.height - BIGTICKSIZE - TICKOFFSET);
+                p.stroke();
                 // Draw ticklabel
                 if (a->areTickLabelsShown()) {
                     Rect r={int(px) - BIGTICKSIZE, d->pixRect.height + BIGTICKSIZE, 2 * BIGTICKSIZE, BIGTICKSIZE};
@@ -846,11 +827,11 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         for (const double xx : minTickMarks) {
             double px = d->pixRect.width * (xx - d->dataRect.left) / d->dataRect.width;
             if (px > 0 && px < d->pixRect.width) {
-		p.move_to(px,d->pixRect.height - TICKOFFSET);
-		p.line_to(px,d->pixRect.height - SMALLTICKSIZE - TICKOFFSET);
+                p.move_to(px,d->pixRect.height - TICKOFFSET);
+                p.line_to(px,d->pixRect.height - SMALLTICKSIZE - TICKOFFSET);
             }
         }
-	p.stroke();
+        p.stroke();
         // Draw BottomAxis Label
         if (!a->label().empty()) {
             Rect r = {0, d->pixRect.height + 2 * YPADDING, d->pixRect.width, YPADDING};
@@ -862,17 +843,17 @@ void PlotView::drawAxes(cdroid::Canvas&p)
     a = axis(LeftAxis);
     if (a->isVisible()) {
         // Draw axis line
-	p.move_to(0,0);
-	p.line_to(0,d->pixRect.height);
+        p.move_to(0,0);
+        p.line_to(0,d->pixRect.height);
 
         // Draw major tickmarks
         const std::list<double>& majMarks = a->majorTickMarks();
         for (const double yy : majMarks) {
             double py = d->pixRect.height * (1.0 - (yy - d->dataRect.top) / d->dataRect.height);
             if (py > 0 && py < d->pixRect.height) {
-		p.move_to(TICKOFFSET,py);
-		p.line_to(TICKOFFSET + BIGTICKSIZE,py);
-		p.stroke();
+                p.move_to(TICKOFFSET,py);
+                p.line_to(TICKOFFSET + BIGTICKSIZE,py);
+                p.stroke();
                 // Draw ticklabel
                 if (a->areTickLabelsShown()) {
                     Rect r = {-2 * BIGTICKSIZE - SMALLTICKSIZE, int(py) - SMALLTICKSIZE, 2 * BIGTICKSIZE, 2 * SMALLTICKSIZE};
@@ -886,8 +867,8 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         for (const double yy : minTickMarks) {
             double py = d->pixRect.height * (1.0 - (yy - d->dataRect.top) / d->dataRect.height);
             if (py > 0 && py < d->pixRect.height) {
-		p.move_to(TICKOFFSET,py);
-		p.line_to(TICKOFFSET + SMALLTICKSIZE,py);
+                p.move_to(TICKOFFSET,py);
+                p.line_to(TICKOFFSET + SMALLTICKSIZE,py);
             }
         }p.stroke();
 
@@ -930,9 +911,9 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         for (const double xx : majMarks) {
             double px = d->pixRect.width * (xx - x0) / dw;
             if (px > 0 && px < d->pixRect.width) {
-		p.move_to(px, TICKOFFSET);
-		p.line_to(px,double(BIGTICKSIZE + TICKOFFSET));
-		p.stroke();
+                p.move_to(px, TICKOFFSET);
+                p.line_to(px,double(BIGTICKSIZE + TICKOFFSET));
+                p.stroke();
                 // Draw ticklabel
                 if (a->areTickLabelsShown()) {
                     Rect r = {int(px) - BIGTICKSIZE, (int)-1.5 * BIGTICKSIZE, 2 * BIGTICKSIZE, BIGTICKSIZE};
@@ -946,11 +927,11 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         for (const double xx : minMarks) {
             double px = d->pixRect.width * (xx - x0) / dw;
             if (px > 0 && px < d->pixRect.width) {
-		p.move_to(px, TICKOFFSET);
-		p.line_to(px,SMALLTICKSIZE + TICKOFFSET);
+                p.move_to(px, TICKOFFSET);
+                p.line_to(px,SMALLTICKSIZE + TICKOFFSET);
             }
         }
-	p.stroke();
+        p.stroke();
 
         // Draw TopAxis Label
         if (!a->label().empty()) {
@@ -963,17 +944,17 @@ void PlotView::drawAxes(cdroid::Canvas&p)
     a = axis(RightAxis);
     if (a->isVisible()) {
         // Draw axis line
-	p.move_to(d->pixRect.width, 0);
-	p.line_to(d->pixRect.width, d->pixRect.height);
+        p.move_to(d->pixRect.width, 0);
+        p.line_to(d->pixRect.width, d->pixRect.height);
 
         // Draw major tickmarks
         const std::list<double>& majMarks = a->majorTickMarks();
         for (const double yy : majMarks) {
             double py = d->pixRect.height * (1.0 - (yy - y0) / dh);
             if (py > 0 && py < d->pixRect.height) {
-		p.move_to(d->pixRect.width - TICKOFFSET,py);
-		p.line_to(d->pixRect.width - TICKOFFSET - BIGTICKSIZE,py);
-		p.stroke();
+                p.move_to(d->pixRect.width - TICKOFFSET,py);
+                p.line_to(d->pixRect.width - TICKOFFSET - BIGTICKSIZE,py);
+                p.stroke();
                 // Draw ticklabel
                 if (a->areTickLabelsShown()) {
                     Rect r = {d->pixRect.width + SMALLTICKSIZE, int(py) - SMALLTICKSIZE, 2 * BIGTICKSIZE, 2 * SMALLTICKSIZE};
@@ -987,11 +968,11 @@ void PlotView::drawAxes(cdroid::Canvas&p)
         for (const double yy : minMarks) {
             double py = d->pixRect.height * (1.0 - (yy - y0) / dh);
             if (py > 0 && py < d->pixRect.height) {
-		p.move_to(d->pixRect.width ,py);
-		p.line_to(d->pixRect.width - SMALLTICKSIZE,py);
+                p.move_to(d->pixRect.width ,py);
+                p.line_to(d->pixRect.width - SMALLTICKSIZE,py);
             }
         }
-	p.stroke();
+        p.stroke();
 
         // Draw RightAxis Label.  We need to draw the text sideways.
         if (!a->label().empty()) {
