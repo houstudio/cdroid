@@ -62,7 +62,7 @@ bool PlotAxis::isTickmarkVisible()const{
 }
 
 void PlotAxis::setTickmarkVisible(bool visible){
-    d->m_showTickmarks = visible
+    d->m_showTickmarks = visible;
 }
 
 bool PlotAxis::areTickLabelsShown() const
