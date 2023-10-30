@@ -282,11 +282,12 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
                 RectF qr = RectF::Make(x1, y1, 2 * size(), 2 * size());
                 // Mask out this rect in the plot for label avoidance
                 pw->maskRect(qr, 2.0);
+
                 switch (pointStyle()) {
                 case Circle:
                     //painter->drawEllipse(qr);
-		    painter.arc(q.x,q.y,size(),0,M_PI*2.f);
-		    painter.stroke();
+                    painter.arc(q.x,q.y,size(),0,M_PI*2.f);
+                    painter.stroke();
                     break;
 
                 case Letter:
@@ -294,93 +295,91 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw)
                     painter.draw_text(Rect::Make(qr.left, qr.top, 2 * size(), 2 * size()),pp->label(),cdroid::Gravity::CENTER);
                     break;
 
-                case Triangle: {
-		    painter.set_source(brush());
-		    painter.move_to(q.x - size(), q.y + size());
-		    painter.line_to(q.x, q.y - size());
-		    painter.line_to(q.x + size(), q.y + size());
-		    painter.line_to(q.x - size(), q.y + size());
-		    painter.line_to(q.x - size(), q.y + size());//line to 1st point(closepath)
-		    painter.fill_preserve();
-		    painter.set_source(pen());
-		    painter.stroke();
+                case Triangle:
+                    painter.set_source(brush());
+                    painter.move_to(q.x - size(), q.y + size());
+                    painter.line_to(q.x, q.y - size());
+                    painter.line_to(q.x + size(), q.y + size());
+                    painter.line_to(q.x - size(), q.y + size());
+                    painter.line_to(q.x - size(), q.y + size());//line to 1st point(closepath)
+                    painter.fill_preserve();
+                    painter.set_source(pen());
+                    painter.stroke();
                     break;
-                }
 
                 case Square:
-		    painter.rectangle(qr.left,qr.top,qr.width,qr.height);
-		    painter.set_source(brush());
-		    painter.fill_preserve();
-		    painter.set_source(pen());
-		    painter.stroke();
+                    painter.rectangle(qr.left,qr.top,qr.width,qr.height);
+                    painter.set_source(brush());
+                    painter.fill_preserve();
+                    painter.set_source(pen());
+                    painter.stroke();
                     break;
 
-                case Pentagon: {
-		    painter.move_to(q.x, q.y - size());
-		    painter.line_to(q.x + size(), q.y - 0.309 * size());
-		    painter.line_to(q.x + 0.588 * size(), q.y + size());
-		    painter.line_to(q.x - 0.588 * size(), q.y + size());
-		    painter.line_to(q.x - size(), q.y - 0.309 * size());
-		    painter.line_to(q.x, q.y - size());//line to 1st point(closepath)
+                case Pentagon:
+                    painter.move_to(q.x, q.y - size());
+                    painter.line_to(q.x + size(), q.y - 0.309 * size());
+                    painter.line_to(q.x + 0.588 * size(), q.y + size());
+                    painter.line_to(q.x - 0.588 * size(), q.y + size());
+                    painter.line_to(q.x - size(), q.y - 0.309 * size());
+                    painter.line_to(q.x, q.y - size());//line to 1st point(closepath)
 
-		    painter.set_source(brush());
-		    painter.fill_preserve();
-		    painter.set_source(pen());
-		    painter.stroke();		    
+                    painter.set_source(brush());
+                    painter.fill_preserve();
+                    painter.set_source(pen());
+                    painter.stroke();		    
                     break;
-                }
 
-                case Hexagon: {
-		    painter.move_to(q.x, q.y + size());
-		    painter.line_to(q.x + size(), q.y + 0.5 * size());
-		    painter.line_to(q.x + size(), q.y - 0.5 * size());
-		    painter.line_to(q.x, q.y - size());
-		    painter.line_to(q.x - size(), q.y + 0.5 * size());
-		    painter.line_to(q.x - size(), q.y - 0.5 * size());
-		    painter.line_to(q.x, q.y + size());//line to 1st point(closepath)
-		    painter.fill_preserve();
-		    painter.set_source(pen());
-		    painter.stroke();
+                case Hexagon:
+                    painter.move_to(q.x, q.y + size());
+                    painter.line_to(q.x + size(), q.y + 0.5 * size());
+                    painter.line_to(q.x + size(), q.y - 0.5 * size());
+                    painter.line_to(q.x, q.y - size());
+                    painter.line_to(q.x - size(), q.y + 0.5 * size());
+                    painter.line_to(q.x - size(), q.y - 0.5 * size());
+                    painter.line_to(q.x, q.y + size());//line to 1st point(closepath)
+                    painter.fill_preserve();
+                    painter.set_source(pen());
+                    painter.stroke();
                     break;
-                }
 
                 case Asterisk:
-	            painter.move_to(q.x,q.y);
-		    painter.line_to(q.x, q.y + size());
-		    painter.move_to(q.x,q.y);
-		    painter.line_to(q.x + size(), q.y - 0.5 * size());
-		    painter.move_to(q.x,q.y);
-		    painter.line_to(q.x + size(), q.y - 0.5 * size());
-		    painter.move_to(q.x,q.y);
-		    painter.line_to(q.x, q.y - size());
-		    painter.move_to(q.x,q.y);
-		    painter.line_to(q.x - size(), q.y + 0.5 * size());
-		    painter.move_to(q.x,q.y);
-		    painter.line_to(q.x - size(), q.y - 0.5 * size());
-		    painter.line_to(q.x,q.y);//line to 1st point(closepath)
-		    painter.set_source(brush());
-		    painter.fill_preserve();
-		    painter.set_source(pen());
-		    painter.stroke();
+                    painter.move_to(q.x,q.y);
+                    painter.line_to(q.x, q.y + size());
+                    painter.move_to(q.x,q.y);
+                    painter.line_to(q.x + size(), q.y - 0.5 * size());
+                    painter.move_to(q.x,q.y);
+                    painter.line_to(q.x + size(), q.y - 0.5 * size());
+                    painter.move_to(q.x,q.y);
+                    painter.line_to(q.x, q.y - size());
+                    painter.move_to(q.x,q.y);
+                    painter.line_to(q.x - size(), q.y + 0.5 * size());
+                    painter.move_to(q.x,q.y);
+                    painter.line_to(q.x - size(), q.y - 0.5 * size());
+                    painter.line_to(q.x,q.y);//line to 1st point(closepath)
+                    painter.set_source(brush());
+                    painter.fill_preserve();
+                    painter.set_source(pen());
+                    painter.stroke();
                     break;
 
                 case Star:
-		    painter.move_to(q.x, q.y - size());
-		    painter.line_to(q.x + 0.2245 * size(), q.y - 0.309 * size());
-		    painter.line_to(q.x + size(), q.y - 0.309 * size());
-		    painter.line_to(q.x + 0.363 * size(), q.y + 0.118 * size());
-		    painter.line_to(q.x + 0.588 * size(), q.y + size());
-		    painter.line_to(q.x, q.y + 0.382 * size());
-		    painter.line_to(q.x - 0.588 * size(), q.y + size());
-		    painter.line_to(q.x - 0.363 * size(), q.y + 0.118 * size());
-		    painter.line_to(q.x - size(), q.y - 0.309 * size());
-		    painter.line_to(q.x - 0.2245 * size(), q.y - 0.309 * size());
-		    painter.line_to(q.x, q.y - size());//line to 1st point(closepath)
-		    painter.set_source(brush());
-		    painter.fill_preserve();
-		    painter.set_source(pen());
-		    painter.stroke();
+                    painter.move_to(q.x, q.y - size());
+                    painter.line_to(q.x + 0.2245 * size(), q.y - 0.309 * size());
+                    painter.line_to(q.x + size(), q.y - 0.309 * size());
+                    painter.line_to(q.x + 0.363 * size(), q.y + 0.118 * size());
+                    painter.line_to(q.x + 0.588 * size(), q.y + size());
+                    painter.line_to(q.x, q.y + 0.382 * size());
+                    painter.line_to(q.x - 0.588 * size(), q.y + size());
+                    painter.line_to(q.x - 0.363 * size(), q.y + 0.118 * size());
+                    painter.line_to(q.x - size(), q.y - 0.309 * size());
+                    painter.line_to(q.x - 0.2245 * size(), q.y - 0.309 * size());
+                    painter.line_to(q.x, q.y - size());//line to 1st point(closepath)
+                    painter.set_source(brush());
+                    painter.fill_preserve();
+                    painter.set_source(pen());
+                    painter.stroke();
                     break;
+
 
                 default:
                     break;

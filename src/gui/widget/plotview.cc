@@ -28,7 +28,6 @@ class PlotView::Private
 public:
     Private(PlotView *qq)
         : q(qq)
-        , cBackground(cdroid::Color::BLACK)
         , cForeground(cdroid::Color::WHITE)
         , cGrid(cdroid::Color::GRAY)
         , showGrid(false)
@@ -73,14 +72,13 @@ public:
     float rectCost(const RectF &r) const;
 
     // Colors
-    uint32_t cBackground, cForeground, cGrid;
+    uint32_t cForeground, cGrid;
     // draw options
     bool showGrid;
     bool showObjectToolTip;
     bool useAntialias;
     bool autoDelete;
     // padding
-    int leftPadding, rightPadding, topPadding, bottomPadding;
     // hashmap with the axes we have
     std::map<Axis, PlotAxis *> axes;
     // List of PlotObjects
@@ -97,7 +95,7 @@ PlotView::PlotView(int w,int h):View(w,h),d(new Private(this)){
     d->secondDataRect.set(0,0,0,0); // default: no secondary data rect
     // sets the default limits
     d->calcDataRectLimits(0.0, 1.0, 0.0, 1.0);
-    setDefaultPaddings();
+    setPadding(0,0,0,0);
 }
 
 PlotView::PlotView(cdroid::Context*ctx,const cdroid::AttributeSet&atts)
@@ -107,7 +105,7 @@ PlotView::PlotView(cdroid::Context*ctx,const cdroid::AttributeSet&atts)
     // sets the default limits
     d->calcDataRectLimits(0.0, 1.0, 0.0, 1.0);
 
-    setDefaultPaddings();
+    setPadding(0,0,0,0);
 }
 
 PlotView::~PlotView()
@@ -325,85 +323,62 @@ void PlotView::replacePlotObject(int i, PlotObject *o)
     invalidate();
 }
 
-uint32_t PlotView::backgroundColor() const
-{
-    return d->cBackground;
-}
-
-uint32_t PlotView::foregroundColor() const
-{
-    return d->cForeground;
-}
-
-uint32_t PlotView::gridColor() const
-{
+uint32_t PlotView::gridColor() const{
     return d->cGrid;
 }
 
-void PlotView::setBackgroundColor(const uint32_t bg)
-{
-    d->cBackground = bg;
-    invalidate();
-}
-
-void PlotView::setForegroundColor(const uint32_t fg)
-{
-    d->cForeground = fg;
-    invalidate();
-}
-
-void PlotView::setGridColor(const uint32_t &gc)
-{
+void PlotView::setGridColor(const uint32_t &gc){
     d->cGrid = gc;
     invalidate();
 }
 
-bool PlotView::isGridShown() const
-{
+
+uint32_t PlotView::foregroundColor()const{
+    return d->cForeground;
+}
+
+void PlotView::setForegroundColor(const uint32_t fg){
+    d->cForeground = fg;
+    invalidate();
+}
+
+bool PlotView::isGridShown() const{
     return d->showGrid;
 }
 
-bool PlotView::isObjectToolTipShown() const
-{
+bool PlotView::isObjectToolTipShown() const{
     return d->showObjectToolTip;
 }
 
-bool PlotView::antialiasing() const
-{
+bool PlotView::antialiasing() const{
     return d->useAntialias;
 }
 
-void PlotView::setAntialiasing(bool b)
-{
+void PlotView::setAntialiasing(bool b){
     d->useAntialias = b;
     invalidate();
 }
 
-void PlotView::setShowGrid(bool show)
-{
+void PlotView::setShowGrid(bool show){
     d->showGrid = show;
     invalidate();
 }
 
-void PlotView::setObjectToolTipShown(bool show)
-{
+void PlotView::setObjectToolTipShown(bool show){
     d->showObjectToolTip = show;
 }
 
-PlotAxis *PlotView::axis(Axis type)
-{
+PlotAxis *PlotView::axis(Axis type){
     auto it = d->axes.find(type);
     return it != d->axes.end() ? it->second : nullptr;
 }
 
-const PlotAxis *PlotView::axis(Axis type) const
-{
+const PlotAxis *PlotView::axis(Axis type) const{
     auto it = d->axes.find(type);
     return it != d->axes.end() ? it->second : nullptr;
 }
 
-Rect PlotView::pixRect() const
-{
+Rect PlotView::pixRect() const{
     return d->pixRect;
 }
 
@@ -454,16 +429,16 @@ void PlotView::onSizeChanged(int w,int h,int oldw,int oldh)
 
 void PlotView::setPixRect()
 {
-    int newWidth = /*contentsRect().width*/getWidth() - leftPadding() - rightPadding();
-    int newHeight= /*contentsRect().height*/getHeight()- topPadding() - bottomPadding();
+    int newWidth = /*contentsRect().width*/getWidth() - getPaddingLeft() - getPaddingRight();
+    int newHeight= /*contentsRect().height*/getHeight()- getPaddingTop() - getPaddingBottom();
     // PixRect starts at (0,0) because we will translate by leftPadding(), topPadding()
     d->pixRect.set(0, 0, newWidth, newHeight);
 }
 
 PointF PlotView::mapToWidget(const PointF &p) const
 {
-    float px = d->pixRect.left + d->pixRect.width * (p.x - d->dataRect.left) / d->dataRect.width;
-    float py = d->pixRect.top + d->pixRect.height * (d->dataRect.top + d->dataRect.height - p.y) / d->dataRect.height;
+    float px = d->pixRect.left + float(d->pixRect.width) * (p.x - d->dataRect.left) / d->dataRect.width;
+    float py = d->pixRect.top + float(d->pixRect.height) * (d->dataRect.top + d->dataRect.height -p.y) / d->dataRect.height;
     return PointF{px, py};
 }
 
@@ -513,9 +488,9 @@ void PlotView::maskAlongLine(const PointF &p1, const PointF &p2, float fvalue)
         for (int y = y1; y <= y2; ++y) {
             int x = int((y - y0) / m);
             if (d->pixRect.contains(x, y)) {
-		uint8_t*pixel = pixels+(y*stride+x*4);
-		pixel[0]=100;
-		pixel[1]=std::min(pixel[1]+value,255);
+                uint8_t*pixel = pixels+(y*stride+x*4);
+                pixel[0]=100;
+                pixel[1]=std::min(pixel[1]+value,255);
                 //uint32_t newColor = uint32_t(d->plotMask.pixel(x, y));
                 //newColor.setAlpha(uint8_t(100));
                 //newColor.setRed(std::min(newColor.red() + value, 255)));
@@ -534,9 +509,9 @@ void PlotView::maskAlongLine(const PointF &p1, const PointF &p2, float fvalue)
         for (int x = x1; x <= x2; ++x) {
             int y = int(y0 + m * x);
             if (d->pixRect.contains(x, y)) {
-		uint8_t*pixel = pixels+(y*stride+x*4);
-		pixel[0]=100;
-		pixel[1]=std::min(pixel[1]+value,255);
+                uint8_t*pixel = pixels+(y*stride+x*4);
+                pixel[0]=100;
+                pixel[1]=std::min(pixel[1]+value,255);
                 uint32_t newColor = 0;//uint32_t(d->plotMask.pixel(x, y));
                 //newColor.setAlpha(uint8_t(100));
                 //newColor.setRed(uint8_t(std::min(newColor.red() + value, 255)));
@@ -721,9 +696,9 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp)
         // QPen pen = painter->pen();
         // pen.setStyle( Qt::DotLine );
         // painter->setPen( pen );
-	double radius = 25;
-	drawRound(painter,bestRect,std::min(bestRect.width,bestRect.height)/4);
-	//painter.stroke();
+        double radius = 25;
+        drawRound(painter,bestRect,std::min(bestRect.width,bestRect.height)/4);
+        //painter.stroke();
         // Now connect the label to the point with a line.
         // The line is drawn from the center of the near edge of the rectangle
         float xline = bestRect.centerX();
@@ -778,7 +753,6 @@ float PlotView::Private::rectCost(const RectF &r) const
 	}
     }
 #endif
-    LOGD("cost=%f",cost);
     return float(cost);
 }
 
@@ -786,12 +760,11 @@ void PlotView::onDraw(cdroid::Canvas&p)
 {
     // let QFrame draw its default stuff (like the frame)
     //p.setRenderHint(QPainter::Antialiasing, d->useAntialias);
+    View::onDraw(p);
     Rect r = getBound();
-    p.set_color(backgroundColor());
-    p.rectangle(r.left,r.top,r.width,r.height);
-    p.fill();
+
     //p.fillRect(rect(), backgroundColor());
-    p.translate(leftPadding() + 0.5, topPadding() + 0.5);
+    p.translate(getPaddingLeft() + 0.5, getPaddingTop() + 0.5);
 
     setPixRect();
     r= d->pixRect;
@@ -801,6 +774,7 @@ void PlotView::onDraw(cdroid::Canvas&p)
     //p.setClipping(true);
 
     resetPlotMask();
+
     for (PlotObject *po : d->objectList) {
         po->draw(p, this);
     }
@@ -1036,79 +1010,4 @@ void PlotView::drawAxes(cdroid::Canvas&p)
     } // End of RightAxis
 }
 
-int PlotView::leftPadding() const
-{
-    if (d->leftPadding >= 0) {
-        return d->leftPadding;
-    }
-    const PlotAxis *a = axis(LeftAxis);
-    if (a && a->isVisible() && a->areTickLabelsShown()) {
-        return !a->label().empty() ? 3 * XPADDING : 2 * XPADDING;
-    }
-    return XPADDING;
-}
-
-int PlotView::rightPadding() const
-{
-    if (d->rightPadding >= 0) {
-        return d->rightPadding;
-    }
-    const PlotAxis *a = axis(RightAxis);
-    if (a && a->isVisible() && a->areTickLabelsShown()) {
-        return !a->label().empty() ? 3 * XPADDING : 2 * XPADDING;
-    }
-    return XPADDING;
-}
-
-int PlotView::topPadding() const
-{
-    if (d->topPadding >= 0) {
-        return d->topPadding;
-    }
-    const PlotAxis *a = axis(TopAxis);
-    if (a && a->isVisible() && a->areTickLabelsShown()) {
-        return !a->label().empty() ? 3 * YPADDING : 2 * YPADDING;
-    }
-    return YPADDING;
-}
-
-int PlotView::bottomPadding() const
-{
-    if (d->bottomPadding >= 0) {
-        return d->bottomPadding;
-    }
-    const PlotAxis *a = axis(BottomAxis);
-    if (a && a->isVisible() && a->areTickLabelsShown()) {
-        return !a->label().empty() ? 3 * YPADDING : 2 * YPADDING;
-    }
-    return YPADDING;
-}
-
-void PlotView::setLeftPadding(int padding)
-{
-    d->leftPadding = padding;
-}
-
-void PlotView::setRightPadding(int padding)
-{
-    d->rightPadding = padding;
-}
-
-void PlotView::setTopPadding(int padding)
-{
-    d->topPadding = padding;
-}
-
-void PlotView::setBottomPadding(int padding)
-{
-    d->bottomPadding = padding;
-}
-
-void PlotView::setDefaultPaddings()
-{
-    d->leftPadding = -1;
-    d->rightPadding = -1;
-    d->topPadding = -1;
-    d->bottomPadding = -1;
-}
 }//endof namespace

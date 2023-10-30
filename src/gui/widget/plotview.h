@@ -216,13 +216,6 @@ public:
     void replacePlotObject(int i, PlotObject *o);
 
     /**
-     * @return the background color of the plot.
-     *
-     * The default color is black.
-     */
-    uint32_t backgroundColor() const;
-
-    /**
      * @return the foreground color, used for axes, tickmarks and associated
      * labels.
      *
@@ -236,12 +229,6 @@ public:
      * The default color is gray.
      */
     uint32_t gridColor() const;
-
-    /**
-     * Set the background color
-     * @param bg the new background color
-     */
-    void setBackgroundColor(const uint32_t bg);
 
     /**
      * Set the foreground color
@@ -278,69 +265,6 @@ public:
      * @param b if true, the plot graphics will be antialiased.
      */
     void setAntialiasing(bool b);
-
-    /**
-     * @return the number of pixels to the left of the plot area.
-     *
-     * Padding values are set to -1 by default; if unchanged, this
-     * function will try to guess a good value, based on whether
-     * ticklabels and/or axis labels need to be drawn.
-     */
-    int leftPadding() const;
-
-    /**
-     * @return the number of pixels to the right of the plot area.
-     * Padding values are set to -1 by default; if unchanged, this
-     * function will try to guess a good value, based on whether
-     * ticklabels and/or axis labels are to be drawn.
-     */
-    int rightPadding() const;
-
-    /**
-     * @return the number of pixels above the plot area.
-     * Padding values are set to -1 by default; if unchanged, this
-     * function will try to guess a good value, based on whether
-     * ticklabels and/or axis labels are to be drawn.
-     */
-    int topPadding() const;
-
-    /**
-     * @return the number of pixels below the plot area.
-     * Padding values are set to -1 by default; if unchanged, this
-     * function will try to guess a good value, based on whether
-     * ticklabels and/or axis labels are to be drawn.
-     */
-    int bottomPadding() const;
-
-    /**
-     * @short Set the number of pixels to the left of the plot area.
-     * Set this to -1 to revert to automatic determination of padding values.
-     */
-    void setLeftPadding(int padding);
-
-    /**
-     * @short Set the number of pixels to the right of the plot area.
-     * Set this to -1 to revert to automatic determination of padding values.
-     */
-    void setRightPadding(int padding);
-
-    /**
-     * @short Set the number of pixels above the plot area.
-     * Set this to -1 to revert to automatic determination of padding values.
-     */
-    void setTopPadding(int padding);
-
-    /**
-     * @short Set the number of pixels below the plot area.
-     * Set this to -1 to revert to automatic determination of padding values.
-     */
-    void setBottomPadding(int padding);
-
-    /**
-     * @short Revert all four padding values to -1, so that they will be
-     * automatically determined.
-     */
-    void setDefaultPaddings();
 
     /**
      * @short Map a coordinate @param p from the data rect to the physical
