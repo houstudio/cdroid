@@ -10,9 +10,8 @@
 
 #include <string>
 #include <core/rect.h>
-
+#include <widget/plotobject.h>
 namespace cdroid{
-
 /**
  * @class PlotPoint
  * @short Encapsulates a point in the plot.
@@ -23,14 +22,13 @@ namespace cdroid{
  * bar-widths are omitted, then the widths will be set automatically,
  * based on the halfway-mark between adjacent points.
  */
-class PlotPoint
-{
+class PlotPoint{
+    friend class PlotObject;
 public:
     /**
      * Default constructor.
      */
     explicit PlotPoint();
-
     /**
      * Constructor.  Sets the PlotPoint according to the given arguments
      * @param x the X-position for the point, in Data units
@@ -51,7 +49,6 @@ public:
      * plots of type KPlotObject::Bars)
      */
     explicit PlotPoint(const PointF &p, const std::string &label = std::string(), double width = 0.0);
-
     /**
      * Destructor
      */
@@ -111,6 +108,7 @@ public:
 private:
     class Private;
     Private *const d;
+    void setPlot(PlotObject*);
 };
 }//endof namespace
 #endif

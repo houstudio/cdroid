@@ -137,6 +137,16 @@ std::string& TextUtils::trim(std::string&s){
     return s;
 }
 
+int TextUtils::replace(std::string&str,const std::string&sfind,const std::string&sreplace){
+    size_t pos;
+    int count=0;
+    while((pos=str.find_first_of(sfind))!=std::string::npos){
+        str.replace(pos,pos+sfind.length(),sreplace);
+        count++;
+    }
+    return count;
+}
+
 long TextUtils::strtol(const std::string&value){
     if(value.empty())return 0;
     if(value[0]=='#')return std::strtoul(value.c_str()+1,nullptr,16);

@@ -372,12 +372,12 @@ RefPtr<ImageSurface> ImageSurface::create_from_stream(std::istream& stream){
 
     for(int i=0;i<sizeof(head);i++)stream.unget();
     if(memcmp("jpg",ftype,3)==0){
-       cairo_surface_t* cobject=nullptr;
+       cairo_surface_t* cobject = nullptr;
 #ifdef ENABLE_TURBOJPEG
-       cobject=cairo_image_surface_create_from_turbojpeg_stdstream(stream);
+       cobject = cairo_image_surface_create_from_turbojpeg_stdstream(stream);
 #endif
 #ifdef ENABLE_JPEG
-       if(nullptr==cobject )cairo_image_surface_create_from_jpeg_stdstream(stream);
+       if(nullptr==cobject )cobject=cairo_image_surface_create_from_jpeg_stdstream(stream);
 #endif
        img=RefPtr<ImageSurface>(new ImageSurface(cobject, true /* has reference */));
     }else if(memcmp("png",ftype,3)==0){

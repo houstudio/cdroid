@@ -218,14 +218,14 @@ public:
      * @note if @param barWidth is left at its default value of 0.0, then the width will be
      * automatically set to the distance between this point and the one to its right.
      */
-    void addPoint(const PointF &p, const std::string &label = std::string(), double barWidth = 0.0);
+    PlotPoint& addPoint(const PointF &p, const std::string &label = std::string(), double barWidth = 0.0);
 
     /**
      * Add a given PlotPoint to the object's list of points.
      * @overload
      * @param p pointer to the PlotPoint to add.
      */
-    void addPoint(PlotPoint *p);
+    PlotPoint& addPoint(PlotPoint *p);
 
     /**
      * Add a point to the object's list of points, using input data to construct a PlotPoint.
@@ -237,7 +237,7 @@ public:
      * @note if @param barWidth is left at its default value of 0.0, then the width will be
      * automatically set to the distance between this point and the one to its right.
      */
-    void addPoint(double x, double y, const std::string &label = std::string(), double barWidth = 0.0);
+    PlotPoint& addPoint(double x, double y, const std::string &label = std::string(), double barWidth = 0.0);
 
     /**
      * Remove the QPointF at position index from the list of points

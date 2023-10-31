@@ -27,7 +27,7 @@ endif()
 
 find_package(PNG REQUIRED)
 find_package(JPEG REQUIRED)
-find_package(TurboJPEG)
+#find_package(TurboJPEG)
 find_package(ZLIB REQUIRED)
 find_package(ZIP REQUIRED)
 find_package(Freetype2 REQUIRED)

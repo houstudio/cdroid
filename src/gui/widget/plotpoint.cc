@@ -6,6 +6,7 @@
 */
 
 #include <widget/plotpoint.h>
+#include <widget/plotobject.h>
 #include <core/rect.h>
 #include <algorithm>
 
@@ -21,9 +22,9 @@ public:
         , barWidth(bw)
     {
     }
-
+    
     PlotPoint *q;
-
+    PlotObject*plot;
     PointF point;
     std::string label;
     double barWidth;
@@ -42,6 +43,10 @@ PlotPoint::PlotPoint(double x, double y, const std::string &label, double barWid
 PlotPoint::PlotPoint(const PointF &p, const std::string &label, double barWidth)
     : d(new Private(this, p, label, barWidth))
 {
+}
+
+void PlotPoint::setPlot(PlotObject*p){
+    d->plot = p;
 }
 
 PlotPoint::~PlotPoint()

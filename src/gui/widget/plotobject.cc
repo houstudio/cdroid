@@ -171,18 +171,22 @@ std::list<PlotPoint *> PlotObject::points() const{
     return d->pList;
 }
 
-void PlotObject::addPoint(const PointF &p, const std::string &label, double barWidth){
-    addPoint(new PlotPoint(p.x, p.y, label, barWidth));
+PlotPoint& PlotObject::addPoint(const PointF &p, const std::string &label, double barWidth){
+    return addPoint(new PlotPoint(p.x, p.y, label, barWidth));
 }
 
-void PlotObject::addPoint(PlotPoint *p){
+PlotPoint& PlotObject::addPoint(PlotPoint *p){
     if (!p) {
-        return;
+        throw "PlotPoint cant be nullptr";
     }
-    d->pList.push_back(p);}
+    d->pList.push_back(p);
+    p->setPlot(this);
+    return *p;
+}
 
-void PlotObject::addPoint(double x, double y, const std::string &label, double barWidth){
-    addPoint(new PlotPoint(x, y, label, barWidth));}
+PlotPoint& PlotObject::addPoint(double x, double y, const std::string &label, double barWidth){
+    return addPoint(new PlotPoint(x, y, label, barWidth));
+}
 
 void PlotObject::removePoint(int index){
     if ((index < 0) || (index >= d->pList.size())) {
@@ -225,7 +229,7 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw){
             PointF sp1 = pw->mapToWidget(p1);
             PointF sp2 = pw->mapToWidget(p2);
 
-            const RectF barRect = RectF::Make(sp1.x, sp1.y, sp2.x - sp1.x, sp2.y - sp1.y);//.normalized();
+            const RectF barRect = RectF::Make(sp1.x, sp1.y, sp2.x - sp1.x, sp2.y - sp1.y);
             painter.rectangle(sp1.x, sp1.y, barRect.width,barRect.height);
             painter.set_source(barBrush());
             painter.fill_preserve();
@@ -252,9 +256,11 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw){
             PointF pp =(*it)->position();
             PointF sp1= pw->mapToWidget(pp);
             PointF pc = pw->mapToWidget(d->mCenter);
-            painter.arc(pc.x,pc.y,d->size,sp1.x*M_PI*2.f,(sp1.x+sp1.y)*M_PI*2.f);
-            if(d->thickness!=0.f){
-                painter.arc_negative(pc.x,pc.y,d->size-d->thickness,(sp1.x+sp1.y)*M_PI*2.f,sp1.y*M_PI*2.f);
+            PointF ps = pw->mapToWidget({float(d->size),0});
+            RectF dr = pw->dataRect();
+            painter.arc(pc.x,pc.y,d->size,pp.x*M_PI/180.f,(pp.x+pp.y)*M_PI/180.f);
+            if(d->thickness!=0.f){d->thickness=d->size-20;
+                painter.arc_negative(pc.x,pc.y,d->size-d->thickness,(pp.x+pp.y)*M_PI/180.f,(pp.x*M_PI)/180.f);
             }
             painter.set_source(barBrush());
             painter.fill_preserve();
@@ -402,7 +408,7 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw){
     painter.set_source(labelPen());
 
     for (PlotPoint *pp : d->pList) {
-        PointF q = pw->mapToWidget(pp->position());//.toPoint();
+        const PointF q = pw->mapToWidget(pp->position());
         if (pw->pointInView(q.x,q.y, 1) && !pp->label().empty()) {
             pw->placeLabel(painter, pp);
         }
