@@ -229,6 +229,7 @@ protected:
         PointerCoords coord;
         PointerProperties prop; 
     }TouchPoint;
+    int32_t mLastDownX,mLastDownY;
     std::map<int, TouchPoint>mPointMAP;
     void setAxisValue(int index,int axis,int value,bool isRelative);
 public:

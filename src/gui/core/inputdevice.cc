@@ -39,14 +39,16 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
     mKeyboardType = KEYBOARD_TYPE_NONE;
     InputGetDeviceInfo(fdev,&devInfos);
     di.name = devInfos.name;
-    di.product = devInfos.product;
+    di.product= devInfos.product;
     di.vendor = devInfos.vendor;
     mDeviceInfo.initialize(fdev,0,0,di,devInfos.name,0,0);
 
     WindowManager::getInstance().getDefaultDisplay().getRealSize(sz);
     mScreenWidth  = sz.x;
     mScreenHeight = sz.y;//ScreenSize is screen size in no roration
-
+    LOGI("screenSize(%dx%d)",sz.x,sz.y);
+    LOGD("device[%d].Props=%02x%02x%02x%02x",fdev,devInfos.propBitMask[0],
+          devInfos.propBitMask[1],devInfos.propBitMask[2],devInfos.propBitMask[3]);
     for(int j=0;(j<ABS_CNT) && (j<sizeof(devInfos.axis)/sizeof(INPUTAXISINFO));j++){
 	 const INPUTAXISINFO*axis = devInfos.axis+j;
 	 if(axis->maximum != axis->minimum)
@@ -245,15 +247,17 @@ int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
 
 TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mPointSlot = 0;
-    const InputDeviceInfo::MotionRange*range = mDeviceInfo.getMotionRange(ABS_X,0);
-    if(range==nullptr) range= mDeviceInfo.getMotionRange(ABS_MT_POSITION_X,0);
-    mTPWidth  = range ? (range->max-range->min) : mScreenWidth;
-    mRangeXMin= range ? range->min : 0;
+    #define ISRANGEVALID(range) (range&&(range->max-range->min))
+    const InputDeviceInfo::MotionRange*rangeX = mDeviceInfo.getMotionRange(ABS_X,0);
+    if(rangeX==nullptr) rangeX = mDeviceInfo.getMotionRange(ABS_MT_POSITION_X,0);
+    mTPWidth  = ISRANGEVALID(rangeX)? (rangeX->max-rangeX->min) : mScreenWidth;
+    mRangeXMin= ISRANGEVALID(rangeX) ? rangeX->min : 0;
 
-    range = mDeviceInfo.getMotionRange(ABS_Y,0);
-    if(range==nullptr) range = mDeviceInfo.getMotionRange(ABS_MT_POSITION_Y,0);
-    mTPHeight = range ? (range->max-range->min) : mScreenHeight;
-    mRangeYMin= range ? range->min : 0;
+    const InputDeviceInfo::MotionRange*rangeY = mDeviceInfo.getMotionRange(ABS_Y,0);
+    if(rangeY==nullptr) rangeY = mDeviceInfo.getMotionRange(ABS_MT_POSITION_Y,0);
+    mTPHeight = ISRANGEVALID(rangeY) ? (rangeY->max-rangeY->min) : mScreenHeight;
+    mRangeYMin= ISRANGEVALID(rangeY) ? rangeY->min : 0;
+    LOGI("screen(%d,%d) TP(%d,%d) Range(%d,%d)",mScreenWidth, mScreenHeight,mTPWidth,mTPHeight, mRangeXMin, mRangeYMin);
 }
 
 static int ABS2AXIS(int absaxis){
@@ -347,7 +351,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
     case EV_ABS:
         switch(code){
         case ABS_X ... ABS_Z : 
-            mMoveTime =tv.tv_sec * 1000000 + tv.tv_usec;
+            mMoveTime = tv.tv_sec * 1000000 + tv.tv_usec;
             setAxisValue(0,code,value,false) ; break;
         //case ABS_PRESSURE  : setAxisValue(0,code,value,false) ; break;
         case ABS_MT_SLOT    : mPointSlot = value ; break;
@@ -374,17 +378,25 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case SYN_MT_REPORT:
             mMoveTime =(tv.tv_sec * 1000000 + tv.tv_usec);
             mEvent.initialize(getId(),getSources(),mEvent.getAction(),mEvent.getActionButton(),
-                0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,
-                0/*xOffset*/,0/*yOffset*/ , 0/*xPrecision*/, 0/*yPrecision*/ ,
-                mDownTime , mMoveTime , 0 , nullptr , nullptr);
+                 0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,
+                 0/*xOffset*/,0/*yOffset*/ , 0/*xPrecision*/, 0/*yPrecision*/ ,
+                 mDownTime , mMoveTime , 0 , nullptr , nullptr);
             for(auto p:mPointMAP){
                 mEvent.addSample(mMoveTime,p.second.prop,p.second.coord);
             }
             LOGV_IF(mEvent.getAction()==MotionEvent::ACTION_UP,"%s pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
-                mPointMAP.begin()->second.coord.getX(),mEvent.getX(),mEvent.getY());
+            mPointMAP.begin()->second.coord.getX(),mEvent.getX(),mEvent.getY());
+            if(mEvent.getAction()==MotionEvent::ACTION_DOWN){
+                mLastDownX = mEvent.getX();
+                mLastDownY = mEvent.getY();
+            }else if(mEvent.getAction()==MotionEvent::ACTION_MOVE){
+                if((mMoveTime-mDownTime<50*1000) && (mLastDownX==mEvent.getX()) && (mLastDownY==mEvent.getY())){
+                    //the same positioned moveing ,skip this event
+                    break;
+                }
+            }
             if(listener)listener(mEvent);
-            //if(mEvent.getAction()==MotionEvent::ACTION_UP)
-			//mPointMAP.clear();
+            //if(mEvent.getAction()==MotionEvent::ACTION_UP) mPointMAP.clear();
             mEvent.setAction(MotionEvent::ACTION_MOVE);
         }break;
     }

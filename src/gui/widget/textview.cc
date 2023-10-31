@@ -366,7 +366,10 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
 TextView::TextView(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initView();
-    setText(ctx->getString(attrs.getString("text")));
+    std::string text = ctx->getString(attrs.getString("text"));
+    TextUtils::replace(text,"\\n","\n");
+    TextUtils::replace(text,"\\r","\r");
+    setText(text);
     
     Drawable* left = attrs.getDrawable("drawableLeft");
     Drawable*right = attrs.getDrawable("drawableRight");
@@ -377,7 +380,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
 
     setCompoundDrawablesWithIntrinsicBounds(left,top,right,bottom);
     if(mDrawables){
-        mDrawables->mTintList =attrs.getColorStateList("drawableTint");
+        mDrawables->mTintList = attrs.getColorStateList("drawableTint");
     }
     setRelativeDrawablesIfNeeded(start, end);
 
@@ -395,17 +398,17 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
              attrs.getFloat("lineSpacingMultiplier",1.f) );
 
     TextAppearanceAttributes attributes;
-    const std::string appearance=attrs.getString("textAppearance");
+    const std::string appearance = attrs.getString("textAppearance");
     if(appearance.empty()==false){
-        AttributeSet tmp =attrs;
-        AttributeSet attrs2=ctx->obtainStyledAttributes(appearance);
+        AttributeSet tmp = attrs;
+        AttributeSet attrs2 = ctx->obtainStyledAttributes(appearance);
         tmp.inherit(attrs2);
         attributes.readTextAppearance(ctx,tmp);
     }else{
         attributes.readTextAppearance(ctx,attrs);
     }
     applyTextAppearance(&attributes);
-    const std::string txtColor=attrs.getString("textColor");
+    const std::string txtColor = attrs.getString("textColor");
     if(!txtColor.empty())
         setTextColor(ctx->getColorStateList(txtColor));
     setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",mMarqueeRepeatLimit));
