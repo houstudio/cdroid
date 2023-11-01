@@ -42,7 +42,7 @@ class CDROIDHandler( xml.sax.ContentHandler ):
                 if self.isMyNS(value):
                     self.addID(value)
             if 'string/' in value:
-                value = self.normalizeXMLString(value)
+                #value = self.normalizeXMLString(value),this is done in cdroid Assets::getString
                 self.addString(value)
 
     def addID(self,name):

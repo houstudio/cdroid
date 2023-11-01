@@ -301,21 +301,20 @@ int Assets::getNextAutofillId(){
     return mNextAutofillViewId++;
 }
 
-const std::string& Assets::getString(const std::string& resid,const std::string&lan) {
+const std::string Assets::getString(const std::string& resid,const std::string&lan) {
     if((!lan.empty())&&(mLanguage!=lan)) {
         loadStrings(lan);
     }
+    std::string str = resid;
     std::string pkg,name=resid;
     parseResource(resid,&name,&pkg);
     name = AttributeSet::normalize(pkg,resid);
     auto itr = mStrings.find(name);
     if(itr != mStrings.end()) {
-        std::string str=itr->second;
-        TextUtils::replace("\\n","\n");
-        TextUtils::replace("\\r","\r");
-        return str;
+        str = itr->second;
     }
-    return resid;
+    TextUtils::replace(str,"\\n","\n");
+    return str;
 }
 
 int Assets::getArray(const std::string&resid,std::vector<int>&out) {

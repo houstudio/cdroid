@@ -137,14 +137,14 @@ std::string& TextUtils::trim(std::string&s){
     return s;
 }
 
-int TextUtils::replace(std::string&str,const std::string&sfind,const std::string&sreplace){
-    size_t pos;
-    int count=0;
-    while((pos=str.find_first_of(sfind))!=std::string::npos){
-        str.replace(pos,pos+sfind.length(),sreplace);
-        count++;
+std::string& TextUtils::replace(std::string&src,const std::string&old_value,const std::string&new_value){
+    for (std::string::size_type pos(0); pos != std::string::npos; pos += new_value.length()) {
+        if ((pos = src.find(old_value, pos)) != std::string::npos) {
+             src.replace(pos, old_value.length(), new_value);
+        }
+        else break;
     }
-    return count;
+    return src;
 }
 
 long TextUtils::strtol(const std::string&value){

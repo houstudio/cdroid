@@ -24,7 +24,7 @@ public:
     virtual const DisplayMetrics&getDisplayMetrics()const=0;
     virtual int getId(const std::string&)const=0;
     virtual int getNextAutofillId()=0;
-    virtual const std::string& getString(const std::string&id,const std::string&lan="")=0;
+    virtual const std::string getString(const std::string&id,const std::string&lan="")=0;
     static Cairo::RefPtr<Cairo::ImageSurface> loadImage( std::istream&istream ){
         return Cairo::ImageSurface::create_from_stream(istream);
     }

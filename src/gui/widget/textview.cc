@@ -366,14 +366,9 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
 TextView::TextView(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initView();
-    std::string text = ctx->getString(attrs.getString("text"));
-    TextUtils::replace(text,"\\n","\n");
-    TextUtils::replace(text,"\\r","\r");
-    setText(text);
-	text = ctx->getString(attrs.getString("hint"));
-    TextUtils::replace(text,"\\n","\n");
-    TextUtils::replace(text,"\\r","\r");
-	setHint(text);
+
+    setText(ctx->getString(attrs.getString("text")));
+    setHint(ctx->getString(attrs.getString("hint")));
     
     Drawable* left = attrs.getDrawable("drawableLeft");
     Drawable*right = attrs.getDrawable("drawableRight");
