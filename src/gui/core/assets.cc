@@ -309,8 +309,11 @@ const std::string& Assets::getString(const std::string& resid,const std::string&
     parseResource(resid,&name,&pkg);
     name = AttributeSet::normalize(pkg,resid);
     auto itr = mStrings.find(name);
-    if(itr != mStrings.end()/* && ! itr->second.empty()*/) {
-        return itr->second;
+    if(itr != mStrings.end()) {
+        std::string str=itr->second;
+        TextUtils::replace("\\n","\n");
+        TextUtils::replace("\\r","\r");
+        return str;
     }
     return resid;
 }
