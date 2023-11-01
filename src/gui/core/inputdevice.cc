@@ -394,6 +394,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                     //the same positioned moveing ,skip this event
                     break;
                 }
+                mDownTime = mMoveTime;
             }
             if(listener)listener(mEvent);
             //if(mEvent.getAction()==MotionEvent::ACTION_UP) mPointMAP.clear();
