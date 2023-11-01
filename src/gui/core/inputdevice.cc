@@ -394,6 +394,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                     //the same positioned moveing ,skip this event
                     break;
                 }
+		mLastDownX= mEvent.getX();
+		mLastDownY= mEvent.getY();
                 mDownTime = mMoveTime;
             }
             if(listener)listener(mEvent);

@@ -370,6 +370,10 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     TextUtils::replace(text,"\\n","\n");
     TextUtils::replace(text,"\\r","\r");
     setText(text);
+	text = ctx->getString(attrs.getString("hint"));
+    TextUtils::replace(text,"\\n","\n");
+    TextUtils::replace(text,"\\r","\r");
+	setHint(text);
     
     Drawable* left = attrs.getDrawable("drawableLeft");
     Drawable*right = attrs.getDrawable("drawableRight");
