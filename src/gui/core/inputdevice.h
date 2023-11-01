@@ -210,6 +210,7 @@ protected:
     int msckey;
     KeyEvent mEvent;
     nsecs_t mDownTime;
+    int isValidEvent(int type,int code,int value)override;
 public:
     KeyDevice(int fd);
     virtual int putRawEvent(const struct timeval&tv,int type,int code,int value);
@@ -232,6 +233,7 @@ protected:
     int32_t mLastDownX,mLastDownY;
     std::map<int, TouchPoint>mPointMAP;
     void setAxisValue(int index,int axis,int value,bool isRelative);
+    int isValidEvent(int type,int code,int value)override;
 public:
     TouchDevice(int fd);
     virtual int putRawEvent(const struct timeval&tv,int type,int code,int value);
@@ -239,7 +241,9 @@ public:
 
 class MouseDevice:public TouchDevice{
 protected:
-    uint8_t buttonstats[16];
+    uint8_t mButtonStates[16];
+    int32_t mX,mY,mZ;
+    int isValidEvent(int type,int code,int value)override;
 public:
     MouseDevice(int fd);
     virtual int putRawEvent(const timeval&tv,int type,int code,int value);

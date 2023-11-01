@@ -120,6 +120,7 @@ int ImageView::resolveAdjustedSize(int desiredSize, int maxSize,int measureSpec)
     }
     return result;
 }
+
 void ImageView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int w,h;
     resolveUri();

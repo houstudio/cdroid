@@ -90,6 +90,7 @@ BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname)
 }
 
 BitmapDrawable::~BitmapDrawable(){
+    LOGD("%p:%p %s",this,mBitmapState->mBitmap.get(),mBitmapState->mResource.c_str());
     delete  mTintFilter;
 }
 

@@ -216,6 +216,10 @@ KeyDevice::KeyDevice(int fd)
    KeyLayoutMap::load(fname,kmap);
 }
 
+int KeyDevice::isValidEvent(int type,int code,int value){
+    return (type==EV_KEY)||(type==EV_SYN);
+}
+
 int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
     int flags  =0;
     int keycode=code;
@@ -320,6 +324,10 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
     it->second.coord.setAxisValue(axis,value);
 }
 
+int TouchDevice::isValidEvent(int type,int code,int value){
+    return (type==EV_KEY)||(type==EV_ABS)||(type==EV_SYN)||true;
+}
+
 int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
     LOGV("%lu:%04u %d,%d,%d",tv.tv_sec,tv.tv_usec,type,code,value);
@@ -407,7 +415,12 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
 }
 
 MouseDevice::MouseDevice(int fd):TouchDevice(fd){
-    memset(buttonstats,0,sizeof(buttonstats));
+    mX = mY = 0;
+    memset(mButtonStates,0,sizeof(mButtonStates));
+}
+
+int MouseDevice::isValidEvent(int type,int code,int value){
+    return (type==EV_KEY)||(type==EV_REL)||(type==EV_SYN)||true;
 }
 
 int MouseDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){

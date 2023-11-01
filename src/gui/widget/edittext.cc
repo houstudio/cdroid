@@ -109,7 +109,7 @@ bool EditText::match(){
     if(mInputPattern.empty())
        return true;
     try{
-        std::wstring& wText=getEditable();
+        std::wstring& wText = getEditable();
         std::wregex reg(mInputPattern);
         return std::regex_match(wText,reg);
     }catch(std::exception &ex){
@@ -184,10 +184,10 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
     case KEY_UP:
         return (!isSingleLine())&&moveCaret2Line(line-1);
     case KEY_BACKSPACE:
-        if( (mCaretPos>0) && (mCaretPos<wText.size()) ){
-            wchar_t wc0=wText[mCaretPos];
+        if(wText.size() && (mCaretPos>0) && (mCaretPos<=wText.size()) ){
+            wchar_t wc0 = wText[mCaretPos-1];
             wText.erase(mCaretPos-1,1);
-            changed=match();
+            changed = match();
             if(changed){
                 setCaretPos(mCaretPos-1);
                 mLayout->relayout(true);
