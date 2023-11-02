@@ -43,7 +43,7 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
     di.vendor = devInfos.vendor;
     mDeviceInfo.initialize(fdev,0,0,di,devInfos.name,0,0);
 
-    const Display display =  WindowManager::getInstance().getDefaultDisplay();
+    Display display =  WindowManager::getInstance().getDefaultDisplay();
     display.getRealSize(sz);
     mScreenWidth  = sz.x;
     mScreenHeight = sz.y;//ScreenSize is screen size in no roration
@@ -51,10 +51,10 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
     LOGD("device[%d].Props=%02x%02x%02x%02x",fdev,devInfos.propBitMask[0],
           devInfos.propBitMask[1],devInfos.propBitMask[2],devInfos.propBitMask[3]);
     for(int j=0;(j<ABS_CNT) && (j<sizeof(devInfos.axis)/sizeof(INPUTAXISINFO));j++){
-	 const INPUTAXISINFO*axis = devInfos.axis+j;
-	 if(axis->maximum != axis->minimum)
-  	    mDeviceInfo.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
-	 LOGV_IF(axis->maximum!=axis->minimum,"devfd=%d axis[%d] range=%d,%d",fdev,axis->axis,axis->minimum,axis->maximum);
+        const INPUTAXISINFO*axis = devInfos.axis+j;
+        if(axis->maximum != axis->minimum)
+            mDeviceInfo.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
+        LOGV_IF(axis->maximum!=axis->minimum,"devfd=%d axis[%d] range=%d,%d",fdev,axis->axis,axis->minimum,axis->maximum);
     }
 
     // See if this is a keyboard.  Ignore everything in the button range except for
@@ -254,7 +254,7 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mPointSlot = 0;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
     const InputDeviceInfo::MotionRange*rangeX = mDeviceInfo.getMotionRange(ABS_X,0);
-    const Display display =  WindowManager::getInstance().getDefaultDisplay();
+    Display display =  WindowManager::getInstance().getDefaultDisplay();
     if(rangeX==nullptr) rangeX = mDeviceInfo.getMotionRange(ABS_MT_POSITION_X,0);
     mTPWidth  = ISRANGEVALID(rangeX)? (rangeX->max-rangeX->min) : mScreenWidth;
     mRangeXMin= ISRANGEVALID(rangeX) ? rangeX->min : 0;
