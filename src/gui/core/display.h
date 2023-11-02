@@ -28,7 +28,7 @@ struct DisplayInfo{
 
     /** Number of overscan pixels on the bottom side of the display. */
     int overscanBottom;
-    int rotation;/*Surface's Rotation*/
+    int rotation;/*Surface's Rotation in anticlockwise*/
     int logicalDensityDpi;
     float physicalXDpi;
     float physicalYDpi;

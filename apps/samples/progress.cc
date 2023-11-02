@@ -5,7 +5,7 @@
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     cdroid::Context*ctx=&app;
-    Window*w=new Window(0,0,1280,800);
+    Window*w=new Window(0,0,-1,-1);
     w->setId(1);
     Drawable*d=nullptr;
 ///////////////////////////////////////////////////////////

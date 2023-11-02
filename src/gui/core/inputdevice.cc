@@ -43,10 +43,11 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
     di.vendor = devInfos.vendor;
     mDeviceInfo.initialize(fdev,0,0,di,devInfos.name,0,0);
 
-    WindowManager::getInstance().getDefaultDisplay().getRealSize(sz);
+    const Display display =  WindowManager::getInstance().getDefaultDisplay();
+    display.getRealSize(sz);
     mScreenWidth  = sz.x;
     mScreenHeight = sz.y;//ScreenSize is screen size in no roration
-    LOGI("screenSize(%dx%d)",sz.x,sz.y);
+    LOGI("screenSize(%dx%d) rotation=%d",sz.x,sz.y,display.getRotation());
     LOGD("device[%d].Props=%02x%02x%02x%02x",fdev,devInfos.propBitMask[0],
           devInfos.propBitMask[1],devInfos.propBitMask[2],devInfos.propBitMask[3]);
     for(int j=0;(j<ABS_CNT) && (j<sizeof(devInfos.axis)/sizeof(INPUTAXISINFO));j++){
@@ -253,6 +254,7 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mPointSlot = 0;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
     const InputDeviceInfo::MotionRange*rangeX = mDeviceInfo.getMotionRange(ABS_X,0);
+    const Display display =  WindowManager::getInstance().getDefaultDisplay();
     if(rangeX==nullptr) rangeX = mDeviceInfo.getMotionRange(ABS_MT_POSITION_X,0);
     mTPWidth  = ISRANGEVALID(rangeX)? (rangeX->max-rangeX->min) : mScreenWidth;
     mRangeXMin= ISRANGEVALID(rangeX) ? rangeX->min : 0;
@@ -261,7 +263,25 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     if(rangeY==nullptr) rangeY = mDeviceInfo.getMotionRange(ABS_MT_POSITION_Y,0);
     mTPHeight = ISRANGEVALID(rangeY) ? (rangeY->max-rangeY->min) : mScreenHeight;
     mRangeYMin= ISRANGEVALID(rangeY) ? rangeY->min : 0;
-    LOGI("screen(%d,%d) TP(%d,%d) Range(%d,%d)",mScreenWidth, mScreenHeight,mTPWidth,mTPHeight, mRangeXMin, mRangeYMin);
+    LOGI("screen(%d,%d) rotation=%d TP(%d,%d) Range(%d,%d)",mScreenWidth, mScreenHeight,display.getRotation(),mTPWidth,mTPHeight, mRangeXMin, mRangeYMin);
+
+    mMatrix = Cairo::identity_matrix();
+    //display rotation is defined as anticlockwise,but cairo use clockwise
+    switch(display.getRotation()){
+    case Display::ROTATION_0:/*do nothing*/break;
+    case Display::ROTATION_270:
+	   mMatrix.rotate(-M_PI/2.f);
+	   mMatrix.translate(-int(mScreenWidth),0);
+	   break;
+    case Display::ROTATION_180:mMatrix.translate(mScreenWidth,mScreenHeight);
+	   mMatrix.scale(-1,-1);
+	   break;
+    case Display::ROTATION_90 :
+	   mMatrix.translate(mScreenHeight,0);
+	   mMatrix.rotate(M_PI/2.f);
+	   break;
+    default:/**do nothing*/break;
+    }
 }
 
 static int ABS2AXIS(int absaxis){
@@ -292,22 +312,10 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
     axis = ABS2AXIS(axis);
     switch(axis){
     case MotionEvent::AXIS_X:
-       switch(rotation){
-       case Display::ROTATION_0  : break;
-       case Display::ROTATION_90 : axis = MotionEvent::AXIS_Y; break; /*value=value;*/
-       case Display::ROTATION_180: value= mTPWidth - value; break;
-       case Display::ROTATION_270: axis = MotionEvent::AXIS_Y; value = mTPWidth - value; break;
-       }
        if(mScreenWidth != mTPWidth)
 	   value = (value - mRangeXMin) * mScreenWidth/mTPWidth;
        break;
     case MotionEvent::AXIS_Y:
-       switch(rotation){
-       case Display::ROTATION_0  : break;
-       case Display::ROTATION_90 : axis = MotionEvent::AXIS_X; value = mTPHeight - value; break;
-       case Display::ROTATION_180: value= mTPHeight - value; break;
-       case Display::ROTATION_270: axis = MotionEvent::AXIS_X; break; /*value=value;*/
-       }
        if(mScreenHeight != mTPHeight)
 	   value = (value - mRangeYMin) * mScreenHeight/mTPHeight;
        break;
@@ -406,7 +414,10 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                 mLastDownY= mEvent.getY();
                 mDownTime = mMoveTime;
             }
-            if(listener)listener(mEvent);
+            if(listener){
+                mEvent.transform(mMatrix);
+                listener(mEvent);
+            }
             //if(mEvent.getAction()==MotionEvent::ACTION_UP) mPointMAP.clear();
             mEvent.setAction(MotionEvent::ACTION_MOVE);
         }break;
