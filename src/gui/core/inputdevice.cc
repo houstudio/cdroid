@@ -30,6 +30,8 @@ static bool containsNonZeroByte(const uint8_t* array, uint32_t startIndex, uint3
 #define TEST_BIT(bit, array)    ((array)[(bit)/8] & (1<<((bit)%8)))
 #define SIZEOF_BITS(bits)  (((bits) + 7) / 8)
 
+Preferences InputDevice::mPrefs;
+
 InputDevice::InputDevice(int fdev):listener(nullptr){
     INPUTDEVICEINFO devInfos;
     InputDeviceIdentifier di;
@@ -47,8 +49,11 @@ InputDevice::InputDevice(int fdev):listener(nullptr){
     display.getRealSize(sz);
     mScreenWidth  = sz.x;
     mScreenHeight = sz.y;//ScreenSize is screen size in no roration
+    if(mPrefs.getSectionCount()==0){
+        mPrefs.load(App::getInstance().getDataPath() + std::string("input-devices.xml"));
+    }
     LOGI("screenSize(%dx%d) rotation=%d",sz.x,sz.y,display.getRotation());
-    LOGD("device[%d].Props=%02x%02x%02x%02x",fdev,devInfos.propBitMask[0],
+    LOGD("%d:[%s] Props=%02x%02x%02x%02x",fdev,devInfos.name,devInfos.propBitMask[0],
           devInfos.propBitMask[1],devInfos.propBitMask[2],devInfos.propBitMask[3]);
     for(int j=0;(j<ABS_CNT) && (j<sizeof(devInfos.axis)/sizeof(INPUTAXISINFO));j++){
         const INPUTAXISINFO*axis = devInfos.axis+j;
@@ -257,13 +262,30 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     Display display =  WindowManager::getInstance().getDefaultDisplay();
     if(rangeX==nullptr) rangeX = mDeviceInfo.getMotionRange(ABS_MT_POSITION_X,0);
     mTPWidth  = ISRANGEVALID(rangeX)? (rangeX->max-rangeX->min) : mScreenWidth;
-    mRangeXMin= ISRANGEVALID(rangeX) ? rangeX->min : 0;
+    mMinX = ISRANGEVALID(rangeX) ? rangeX->min : 0;
+    mMaxX = ISRANGEVALID(rangeX) ? rangeX->max : 0;
 
     const InputDeviceInfo::MotionRange*rangeY = mDeviceInfo.getMotionRange(ABS_Y,0);
     if(rangeY==nullptr) rangeY = mDeviceInfo.getMotionRange(ABS_MT_POSITION_Y,0);
     mTPHeight = ISRANGEVALID(rangeY) ? (rangeY->max-rangeY->min) : mScreenHeight;
-    mRangeYMin= ISRANGEVALID(rangeY) ? rangeY->min : 0;
-    LOGI("screen(%d,%d) rotation=%d TP(%d,%d) Range(%d,%d)",mScreenWidth, mScreenHeight,display.getRotation(),mTPWidth,mTPHeight, mRangeXMin, mRangeYMin);
+    mMinY = ISRANGEVALID(rangeY) ? rangeY->min : 0;
+    mMaxY = ISRANGEVALID(rangeY) ? rangeY->max : 0;
+
+    const std::string section = getName();
+    mInvertX = mInvertY = mSwitchXY = false;
+    if(mPrefs.hasSection(section)){
+        mMinX = mPrefs.getInt(section,"minX",mMinX);
+        mMaxX = mPrefs.getInt(section,"maxX",mMaxX);
+        mMinY = mPrefs.getInt(section,"minY",mMinY);
+        mMaxY = mPrefs.getInt(section,"maxY",mMaxY);
+        mInvertX = mPrefs.getBool(section,"invertX",false);
+        mInvertY = mPrefs.getBool(section,"invertY",false);
+        mSwitchXY= mPrefs.getBool(section,"switchXY",false);
+    }
+    mTPWidth = (mMaxX!=mMinX)?std::abs(mMaxX - mMinX):mScreenWidth;
+    mTPHeight= (mMaxY!=mMinY)?std::abs(mMaxY - mMinY):mScreenHeight;
+    LOGI("screen(%d,%d) rotation=%d [%s] X(%d,%d) Y(%d,%d) invert=%d,%d switchXY=%d",mScreenWidth, mScreenHeight,
+        display.getRotation(),section.c_str(),mMinX,mMaxX,mMinY,mMaxY,mInvertX,mInvertY,mSwitchXY);
 
     mMatrix = Cairo::identity_matrix();
     //display rotation is defined as anticlockwise,but cairo use clockwise
@@ -313,11 +335,15 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
     switch(axis){
     case MotionEvent::AXIS_X:
        if(mScreenWidth != mTPWidth)
-	   value = (value - mRangeXMin) * mScreenWidth/mTPWidth;
+	   value = (value - mMinX) * mScreenWidth/mTPWidth;
+       if(mInvertX)value = mTPWidth - value;
+       if(mSwitchXY)axis= MotionEvent::AXIS_Y;
        break;
     case MotionEvent::AXIS_Y:
        if(mScreenHeight != mTPHeight)
-	   value = (value - mRangeYMin) * mScreenHeight/mTPHeight;
+	   value = (value - mMinY) * mScreenHeight/mTPHeight;
+       if(mInvertY)value = mTPHeight - value;
+       if(mSwitchXY)axis= MotionEvent::AXIS_X;
        break;
     case MotionEvent::AXIS_Z:break;
     default:return;
@@ -540,7 +566,7 @@ std::string getInputDeviceConfigurationFilePathByName(const std::string& name,co
 
     // Search user repository.
     // TODO Should only look here if not in safe mode.
-    path=getenv("ANDROID_DATA");
+    path = getenv("ANDROID_DATA");
     path.append("/system/devices/");
     appendInputDeviceConfigurationFileRelativePath(path, name, type);
     if (!stat(path.c_str(),&st)){

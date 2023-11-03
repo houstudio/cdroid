@@ -38,23 +38,20 @@ static CLA::Argument ARGS[]={
 };
 
 App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions){
-    int option_index=-1,c=-1;
+    int option_index = -1,c = -1;
     std::string optstring;
     LogParseModules(argc,argv);
-    onInit();
     Typeface::setContext(this);
     mQuitFlag = false;
     mExitCode = 0;
     mInst = this;
-    if(argc>0){
-        const char*p = strrchr(argv[0],'/');
-        if(p)setName(p+1);
-    }
     LOGI("App [%s] started c++=%d",(argc&&argv)?argv[0]:"",__cplusplus);
     cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
     cla.addArguments(extoptions.data(),extoptions.size());
     cla.setSwitchChars("-");
     cla.parse(argc,argv);
+    onInit();
+    setName(std::string(argv[0]));
 	
     ViewGroup::DEBUG_DRAW = View::DEBUG_DRAW = hasSwitch("debug");
     if(hasSwitch("help")){
@@ -89,7 +86,7 @@ App::~App(){
 void App::onInit(){
     LOGD("onInit");
     mDisplayMetrics.setToDefaults();
-    addResource("cdroid.pak","cdroid");
+    addResource(getDataPath()+std::string("cdroid.pak"),"cdroid");
     GFXInit();
 }
 
@@ -101,12 +98,12 @@ const std::string App::getDataPath()const{
 
 App& App::getInstance(){
     if(mInst==nullptr)
-        mInst=new App;
+        mInst = new App;
     return *mInst;
 }
 
 const std::string App::getArg(const std::string&key,const std::string&def)const{
-    std::string value=def;
+    std::string value = def;
     cla.find(key,value);
     return value;
 }
@@ -124,19 +121,19 @@ void App::setArg(const std::string&key,const std::string&value){
 }
 
 int App::getArgAsInt(const std::string&key,int def)const{
-    int value=def;
+    int value = def;
     cla.find(key,value);
     return value;
 }
 
 float App::getArgAsFloat(const std::string&key,float def)const{
-    float value=def;
+    float value = def;
     cla.find(key,value);
     return value;
 }
 
 double App::getArgAsDouble(const std::string&key,double def)const{
-    double value=def;
+    double value = def;
     cla.find(key,value);
     return value;
 }
@@ -146,22 +143,13 @@ int App::getParamCount()const{
 }
 
 std::string App::getParam(int idx,const std::string&def)const{
-    std::string value=def;
+    std::string value = def;
     cla.getParam(idx,value);
     return value;
 }
 void App::setOpacity(unsigned char alpha){
     GFXSurfaceSetOpacity(GraphDevice::getInstance().getPrimarySurface(),alpha);
     LOGD("alpha=%d",alpha);
-}
-
-const std::string App::getAssetsPath(){
-    std::string path=mName;
-    size_t pos = path.find_last_of("\\/");
-    if(pos!=std::string::npos)
-        path=path.substr(pos+1);
-    path=getDataPath()+path+".pak";
-    return path;
 }
 
 void App::addEventHandler(const EventHandler*handler){
@@ -184,7 +172,10 @@ void App::exit(int code){
 
 void App::setName(const std::string&appname){
     mName = appname;
-    addResource(getAssetsPath());
+    size_t pos = mName.find_last_of("/");
+    if(pos!=std::string::npos)
+        mName = mName.substr(pos+1);
+    addResource(getDataPath()+mName+std::string(".pak"));
 }
 
 const std::string& App::getName(){

@@ -22,6 +22,7 @@ public:
    int getSectionCount()const;
    int getSections(std::vector<std::string>&mbs);
    void removeSection(const std::string&section);
+   bool hasSection(const std::string&)const;
    int getUpdates()const;
    bool getBool(const std::string&section,const std::string&key,bool def=false);
    int getInt(const std::string&section,const std::string&key,int def=0);

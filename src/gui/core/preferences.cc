@@ -131,6 +131,10 @@ void Preferences::removeSection(const std::string&section){
     }
 }
 
+bool Preferences::hasSection(const std::string&section)const{
+    return mPrefs.find(section) != mPrefs.end();
+}
+
 int Preferences::getUpdates()const{
     return updates;
 }

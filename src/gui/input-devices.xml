@@ -1,0 +1,11 @@
+<sections>
+  <section name="devicename">
+    <item name="minX">0</item>
+    <item name="maxX">1280</item>
+    <item name="minY">0</item>
+    <item name="maxY">720</item>
+    <item name="invertX">false</item>
+    <item name="invertY">false</item>
+    <item name="switchXY">false</item>
+  </section>
+</sections>

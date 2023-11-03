@@ -14,7 +14,6 @@ namespace cdroid{
 
 class App:public Assets{
 private:
-    const std::string getAssetsPath();
     bool mQuitFlag;
     int mExitCode;
 protected:

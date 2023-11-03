@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include <time.h>
+#include <core/preferences.h>
 namespace cdroid{
 struct InputDeviceIdentifier {
     InputDeviceIdentifier() :
@@ -82,7 +83,6 @@ public:
     inline const std::vector<MotionRange>& getMotionRanges() const {
         return mMotionRanges;
     }
-
 private:
     int32_t mId;
     int32_t mGeneration;
@@ -186,6 +186,7 @@ protected:
     InputDeviceInfo mDeviceInfo;
     EventListener listener;
     class KeyLayoutMap*kmap;
+    static Preferences mPrefs;
     virtual int isValidEvent(int type,int code,int value);
 public:
     InputDevice(int fdev);
@@ -224,13 +225,16 @@ protected:
     int mPointSlot;
     int mTPWidth;
     int mTPHeight;
-    int mRangeXMin;
-    int mRangeYMin;
     typedef struct{
         PointerCoords coord;
         PointerProperties prop; 
     }TouchPoint;
     int32_t mLastDownX,mLastDownY;
+    int32_t mMinX,mMaxX;
+    int32_t mMinY,mMaxY;
+    bool mSwitchXY;
+    bool mInvertX;
+    bool mInvertY;
     Cairo::Matrix mMatrix;
     std::map<int, TouchPoint>mPointMAP;
     void setAxisValue(int index,int axis,int value,bool isRelative);
