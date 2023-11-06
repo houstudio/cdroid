@@ -59,7 +59,7 @@ Typeface::Typeface(FcPattern & font) {
         oss<<(const char*)s;
         s = nullptr;
     }
-	mStyleName = oss.str();
+    mStyleName = oss.str();
     mStyle = parseStyle(oss.str(),mStyleName);
     LOGV("Style=%s/%d",mStyleName.c_str(),mStyle);
     s = nullptr;
@@ -131,7 +131,7 @@ int Typeface::getWeight()const {
 }
 
 int Typeface::getStyle() const {
-    return mStyle;
+    return mStyle&STYLE_MASK;
 }
 
 bool Typeface::isBold() const {
@@ -173,8 +173,8 @@ Typeface* Typeface::create(Typeface*family, int style) {
     int bestMactched=0;
     for(auto it= sSystemFontMap.begin(); it!= sSystemFontMap.end(); it++) {
         Typeface* face = it->second;
-        const int match= it->second->getStyle()==family->getStyle();
-        if((it->second->getStyle()==style)&&(match>bestMactched)) {
+        const int match= (face->getStyle()==style)+(face->getFamily().compare(family->getFamily())==0);
+        if((face->getStyle()==style)&&(match>=bestMactched)) {
             typeface = face;
             bestMactched=match;
         }
@@ -185,8 +185,9 @@ Typeface* Typeface::create(Typeface*family, int style) {
 
 Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
     Typeface*face = Typeface::DEFAULT;
+    Typeface*bestFace = Typeface::DEFAULT;
     std::string wantFamily = familyName;
-    int familyMatched = 0;
+    int bestMatched = 0;
     int supportLangs  = 0;
     if(!wantFamily.empty()) {
         if(wantFamily[0]=='@')
@@ -196,6 +197,7 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
     }
     for(auto i= sSystemFontMap.begin(); i!= sSystemFontMap.end(); i++) {
         Typeface*tf = i->second;
+        int familyMatched = 0;
         const std::string fontKey= i->first;
         const std::string family = tf->getFamily();
         std::vector<std::string>families = TextUtils::split(family,";");
@@ -205,13 +207,18 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
             face = tf;
             familyMatched++;
             break;
-        } else if((familyMatched==0)&&(tf->mStyle&SYSLANG_MATCHED)) {
+        }else if((familyMatched==0)&&(tf->mStyle&SYSLANG_MATCHED)) {
             face = tf;
         }
+        if(familyMatched>bestMatched){
+            bestMatched = familyMatched;
+            bestFace = face;
+        }
     }
-    LOGV_IF(face&&familyName.size(),"want %s got %s/%s style=%x",familyName.c_str(),
-            face->getFamily().c_str(),wantFamily.c_str(),face->mStyle);
-    return face;
+    face = bestFace;
+    LOGV_IF(face&&familyName.size(),"want %s got %s/%s style=[%x]%s",familyName.c_str(),
+            face->getFamily().c_str(),wantFamily.c_str(),face->mStyle,face->mStyleName.c_str());
+    return bestFace;
 }
 
 Typeface* Typeface::create(cdroid::Typeface*family, int weight, bool italic) {
