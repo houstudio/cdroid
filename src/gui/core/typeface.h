@@ -34,6 +34,7 @@ private:
     Runnable mCleaner;
     std::string mFallbackFamilyName;
     std::string mFamily;
+    std::string mStyleName;
     int mStyle;
     int mWeight;
     int mItalic;
@@ -51,8 +52,8 @@ private:
     static Typeface* createWeightStyle(Typeface* base,int weight, bool italic);
     static Typeface* getSystemDefaultTypeface(const std::string& familyName);
     Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face);
-    Typeface(FcPattern&,const std::string&);
-    static int parseStyle(const std::string&style);
+    Typeface(FcPattern&);
+    static int parseStyle(const std::string&style,std::string&normalizedName);
     void fetchProps(FT_Face);
 public:
     int getWeight()const;
@@ -60,6 +61,7 @@ public:
     bool isBold() const;
     bool isItalic() const;
     std::string getFamily()const;
+    std::string getStyleName()const;
     Cairo::RefPtr<Cairo::FtScaledFont>getFontFace()const;
     static void setContext(cdroid::Context*);
     //static Typeface* createFromResources(cdroid::Context*context,const std::string& path);

@@ -109,6 +109,9 @@ void Window::bringToFront(){
 }
 
 void Window::draw(){
+    if(mVisibleRgn&&mVisibleRgn->get_num_rectangles()==0){
+        return;
+    }
     RefPtr<Canvas>canvas = getCanvas();
     mAttachInfo->mDrawingTime = SystemClock::uptimeMillis();
     ViewGroup::draw(*canvas);

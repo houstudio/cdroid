@@ -28,7 +28,8 @@ namespace cdroid {
 WindowManager* WindowManager::mInst = nullptr;
 
 WindowManager::WindowManager(){
-     mActiveWindow = nullptr;
+    mActiveWindow = nullptr;
+    mDisplayRotation =0;
 }
 
 WindowManager&WindowManager::getInstance(){

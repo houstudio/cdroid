@@ -70,7 +70,7 @@ INT InputInit() {
     dev.maxfd = dev.pipe[0];
     int rc = fcntl(dev.pipe[0],F_SETFL,O_NONBLOCK);
     struct dirent **namelist=nullptr;
-    LOGD("cplusplus=%di fcntl=%d fd[0]=%d input_event.size=%d %d",__cplusplus,rc,dev.fds[0],sizeof(struct input_event),sizeof(struct timeval));
+    LOGD("cplusplus=%d fcntl=%d fd[0]=%d input_event.size=%d %d",__cplusplus,rc,dev.fds[0],sizeof(struct input_event),sizeof(struct timeval));
     int nf=scandir(WATCHED_PATH,&namelist,[&dev](const struct dirent * ent)->int{
         char fname[256];
         int fd = -1;
@@ -132,13 +132,17 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
         SET_BIT(devinfo->absBitMask,ABS_X);
         SET_BIT(devinfo->absBitMask,ABS_Y);
         SET_BIT(devinfo->keyBitMask,BTN_TOUCH);
+        SET_BIT(devinfo->propBitMask,INPUT_PROP_POINTER);
+        SET_BIT(devinfo->propBitMask,INPUT_PROP_DIRECT);
         break;
     case INJECTDEV_MOUSE:
         strcpy(devinfo->name,"Touch-Inject");
         devinfo->vendor = INJECTDEV_MOUSE>>16;
         devinfo->product= INJECTDEV_MOUSE&0xFF;
+        SET_BIT(devinfo->keyBitMask,BTN_MOUSE);
         SET_BIT(devinfo->relBitMask,REL_X);
         SET_BIT(devinfo->relBitMask,REL_Y);
+        SET_BIT(devinfo->propBitMask,INPUT_PROP_POINTER);
         break;
     case INJECTDEV_KEY:
         strcpy(devinfo->name,"qwerty");
@@ -146,6 +150,7 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
         devinfo->product= INJECTDEV_KEY&0xFF;
         SET_BIT(devinfo->keyBitMask,BTN_MISC);
         SET_BIT(devinfo->keyBitMask,KEY_OK);
+        SET_BIT(devinfo->propBitMask,0);
         break;
     default:
         break;
