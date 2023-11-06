@@ -41,9 +41,11 @@ Typeface::Typeface(FcPattern & font) {
     int i,ret, weight=0;
     double pixelSize=.0f;
     FcChar8* s = FcNameUnparse(&font);
-    //LOGV("Font= %s",s);
     s = nullptr;
-
+    if(FcPatternGetString(&font, FC_FILE, 0, &s) == FcResultMatch){
+        mFileName=std::string((const char*)s);
+        s= nullptr;
+    }
     std::ostringstream oss;
     for(int i=0;FcPatternGetString(&font,FC_FAMILY,i,&s)==FcResultMatch;i++){
         if(!oss.str().empty())oss<<";";
@@ -179,8 +181,8 @@ Typeface* Typeface::create(Typeface*family, int style) {
             bestMactched=match;
         }
     }
-    LOGD("typeface=%p family=%p name=%s style=[%x/%x]%s",typeface,family,
-       typeface->mFamily.c_str(),style,typeface->mStyle,typeface->mStyleName.c_str());
+    LOGD("typeface=%p family=%p name=%s style=[%x/%x]%s fontfile=%s",typeface,family,
+       typeface->mFamily.c_str(),style,typeface->mStyle,typeface->mStyleName.c_str(),typeface->mFileName.c_str());
     return typeface;
 }
 

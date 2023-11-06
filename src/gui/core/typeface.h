@@ -35,6 +35,7 @@ private:
     std::string mFallbackFamilyName;
     std::string mFamily;
     std::string mStyleName;
+    std::string mFileName;
     int mStyle;
     int mWeight;
     int mItalic;
