@@ -355,8 +355,7 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
     mShadowRadius = atts.getFloat("shadowRadius",mShadowRadius);
     mTypefaceIndex= atts.getInt("typeface",-1);
     mFontFamily   = atts.getString("fontFamily","");
-    mFontTypeface = Typeface::create(mFontFamily,0);
-    mTextStyle = atts.getInt("textStyle",-1);
+    mFontTypeface = Typeface::create(mFontFamily,mTextStyle);
     mFontWeight= atts.getInt("textFontWeight",-1);
     mAllCaps   = atts.getBoolean("textAllCaps",false);
 }

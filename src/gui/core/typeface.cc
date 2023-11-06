@@ -198,6 +198,12 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
         if(wantFamily.find(":")==std::string::npos)
             wantFamily = mContext->getPackageName()+":"+wantFamily;
     }
+    if(wantFamily.find(":")!=std::string::npos){
+	//only for family @font/font-name
+        auto it =sSystemFontMap.find(wantFamily);
+	if(it!=sSystemFontMap.end())
+            return it->second;
+    }
     for(auto i= sSystemFontMap.begin(); i!= sSystemFontMap.end(); i++) {
         Typeface*tf = i->second;
         int familyMatched = 0;
@@ -235,7 +241,8 @@ Typeface* Typeface::create(cdroid::Typeface*family, int weight, bool italic) {
 Typeface* Typeface::create(const std::string& familyName,int style) {
     if(sSystemFontMap.empty())
         loadPreinstalledSystemFontMap();
-    return create(getSystemDefaultTypeface(familyName), style);
+    Typeface* face = getSystemDefaultTypeface(familyName);
+    return (familyName.find(":")!=std::string::npos)?face:create(face, style);
 }
 
 Typeface* Typeface::defaultFromStyle(int style) {
@@ -365,21 +372,18 @@ int Typeface::loadFromFontConfig() {
     for (int i=0; fs && i < fs->nfont; i++) {
         FcPattern *pat = fs->fonts[i];//FcPatternDuplicate(fs->fonts[i]);
         Typeface   *tf = new Typeface(*pat);
-        FcChar8* fontFile = nullptr;
         const std::string family = tf->getFamily();
         const std::string style = tf->getStyleName();
-        if(FcPatternGetString(pat, FC_FILE, 0, &fontFile) == FcResultMatch){
-            std::string font((char*)fontFile);
-            size_t pos = font.find_last_of(".");
-            if(pos!=std::string::npos)
-                font = font.substr(0,pos);
-            pos = font.find_last_of(PATH_SEPARATOR);
-            if(pos!=std::string::npos)
-                font = font.substr(pos+1);
-            LOGV("%d filename=%s/%s  family=%s style=%s",i,fontFile,font.c_str(),family.c_str(),style.c_str());
-            std::string fontKey = mContext->getPackageName()+":font/"+font;
-            sSystemFontMap.insert({fontKey,tf});
-        }
+        std::string font = tf->mFileName;
+        size_t pos = font.find_last_of(".");
+        if(pos!=std::string::npos)
+            font = font.substr(0,pos);
+        pos = font.find_last_of(PATH_SEPARATOR);
+        if(pos!=std::string::npos)
+            font = font.substr(pos+1);
+        std::string fontKey = mContext->getPackageName()+":font/"+font;
+        LOGD("%d filename=%s  family=%s style=%s",i,fontKey.c_str(),family.c_str(),style.c_str());
+        sSystemFontMap.insert({fontKey,tf});
         std::vector<std::string>families = TextUtils::split(family,";");
         for(std::string fm:families)
             sSystemFontMap.insert({fm,tf});
