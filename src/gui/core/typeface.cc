@@ -179,8 +179,9 @@ Typeface* Typeface::create(Typeface*family, int style) {
             bestMactched=match;
         }
     }
-    LOGV("typeface=%p family=%p",typeface,family);
-    return typeface?typeface:family;
+    LOGD("typeface=%p family=%p name=%s style=[%x/%x]%s",typeface,family,
+       typeface->mFamily.c_str(),style,typeface->mStyle,typeface->mStyleName.c_str());
+    return typeface;
 }
 
 Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
@@ -216,7 +217,7 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
         }
     }
     face = bestFace;
-    LOGV_IF(face&&familyName.size(),"want %s got %s/%s style=[%x]%s",familyName.c_str(),
+    LOGD_IF(face&&familyName.size(),"want %s got %s/%s style=[%x]%s",familyName.c_str(),
             face->getFamily().c_str(),wantFamily.c_str(),face->mStyle,face->mStyleName.c_str());
     return bestFace;
 }
