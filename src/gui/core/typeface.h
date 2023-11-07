@@ -32,7 +32,7 @@ public:
     static Typeface* MONOSPACE;
 private:
     Runnable mCleaner;
-    std::string mFallbackFamilyName;
+    static std::string mFallbackFamilyName;
     std::string mFamily;
     std::string mStyleName;
     std::string mFileName;
@@ -65,6 +65,7 @@ public:
     std::string getStyleName()const;
     Cairo::RefPtr<Cairo::FtScaledFont>getFontFace()const;
     static void setContext(cdroid::Context*);
+    static void setFallback(const std::string&);
     //static Typeface* createFromResources(cdroid::Context*context,const std::string& path);
     static void buildSystemFallback(const std::string xmlPath,const std::string& fontDir,
            std::unordered_map<std::string, Typeface*>& fontMap, 

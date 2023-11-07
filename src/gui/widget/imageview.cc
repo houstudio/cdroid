@@ -92,7 +92,7 @@ void ImageView::resolveUri(){
                 loaded ++;
             }
         }
-        LOGW_IF(loaded==0,"Unable to find resource: %s",mResource.c_str());
+        LOGW_IF((loaded==0)&&mResource.compare("@null"),"Unable to find resource: %s",mResource.c_str());
     }
     updateDrawable(d);
 }

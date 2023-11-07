@@ -162,6 +162,7 @@ void ViewGroup::initGroup(){
     mOnHierarchyChangeListener = nullptr;
     mLayoutAnimationController = nullptr;
     mHoveredSelf=false;
+    mTooltipHoveredSelf = false;
     mChildCountWithTransientState= 0;
     mChildUnhandledKeyListeners  = 0;
     mInvalidRgn=Region::create();
