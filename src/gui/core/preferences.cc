@@ -79,6 +79,7 @@ void Preferences::load(std::istream&istream){
     XML_SetUserData(parser,&kvp);
     XML_SetElementHandler(parser, startElement, endElement);
     XML_SetCharacterDataHandler(parser,CharacterHandler);
+    if(!istream.good())return;
     do {
         std::string str;
         std::getline(istream,str);

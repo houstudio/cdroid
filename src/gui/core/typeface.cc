@@ -243,7 +243,9 @@ Typeface* Typeface::create(cdroid::Typeface*family, int weight, bool italic) {
 Typeface* Typeface::create(const std::string& familyName,int style) {
     if(sSystemFontMap.empty())
         loadPreinstalledSystemFontMap();
-    return create(getSystemDefaultTypeface(familyName), style);
+    Typeface*tf = getSystemDefaultTypeface(familyName);
+    if(familyName.find("/")!=std::string::npos)return tf;
+    return create(tf, style);
 }
 
 Typeface* Typeface::defaultFromStyle(int style) {
@@ -441,18 +443,16 @@ int Typeface::loadFromFontConfig() {
     }
     FcConfigSubstitute (0, pat, FcMatchPattern);
     FcDefaultSubstitute (pat);
-    {
-	FcResult result;
-	FcChar8*s=NULL;
-	FcFontSet* fs = FcFontSetCreate ();
-	FcPattern*match = FcFontMatch (0, pat, &result);
-	FcPatternGetString(match, FC_FILE, 0, &s);
-	LOGD("match=%p:%d nfontss=====%d",match,result,fs->nfont);
-	LOGD("%s",(const char*)s);
-	for(int i=0;FcPatternGetString(match,FC_FAMILY,i,&s)==FcResultMatch;i++)
-	LOGD("family[%d]=%s",i,s);
-	setDefault(new Typeface(*match));//sDefaultTypeface
-    }
+    FcResult result;
+    FcChar8*s = NULL;
+    FcFontSet* fsdef = FcFontSetCreate ();
+    FcPattern*match = FcFontMatch (0, pat, &result);
+    FcPatternGetString(match, FC_FILE, 0, &s);
+    LOGD("match=%p:%d nfonts=%d %s",match,result,fsdef->nfont,s);
+    if(match)
+        setDefault(new Typeface(*match));
+    FcPatternDestroy(pat);
+    FcFontSetDestroy(fsdef);
 
     if(fs)FcFontSetDestroy(fs);
     FcConfigDestroy(config);
