@@ -514,7 +514,7 @@ static Drawable*parseShapeDrawable(Context*ctx,const AttributeSet&atts,const std
         if(size)d->setSize(size->getDimensionPixelSize("width",-1),size->getDimensionPixelSize("height",-1));
 
         if(stroke) {
-            d->setStroke(stroke->getDimensionPixelSize("width",1),stroke->getColor("color",0),
+            d->setStroke(stroke->getDimensionPixelSize("width",1),stroke->getColorStateList("color"),
                         stroke->getDimensionPixelSize("dashWidth"),stroke->getDimensionPixelSize("dashGap"));
         }
         if(padding)d->setPadding(padding->getInt("left"),padding->getInt("top"),
