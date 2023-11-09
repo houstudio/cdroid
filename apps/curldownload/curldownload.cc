@@ -89,6 +89,8 @@ int CurlDownloader::PollCallback(int fd, int events, void*data){
     if(events&Looper::EVENT_INPUT){
 	 CURL *curl = (CURL*)data;
     }
+    LOGD("fd=%d events=%d",fd,events);
+    return 1;
 }
 
 int CurlDownloader::TimerCallback(int fd, int events, void* data){
@@ -98,6 +100,7 @@ int CurlDownloader::TimerCallback(int fd, int events, void* data){
          CURL_SOCKET_TIMEOUT,0,&still_running);
     LOGD("errm=%d runnings=%d",errm,still_running);
     thiz->cleanup(still_running);
+    return still_running;
 }
 
 int CurlDownloader::ClockCallback(int fd, int events, void* data){
@@ -108,6 +111,7 @@ int CurlDownloader::ClockCallback(int fd, int events, void* data){
 
     //evtimer_add(instance->getClockEv(), &timeout);
     thiz->check_for_timeout();
+    return 1;
 }
 
 void CurlDownloader::check_for_timeout() {
@@ -222,6 +226,7 @@ int CurlDownloader::EventHandler(int fd, int events, void *arg){
         LOGD("calling curl_multi_socket_action for fd %d <AFTER> runnings=%d", fd,running_handles);
     } while (errm == CURLM_CALL_MULTI_PERFORM && max_retry-- > 0);
     thiz->cleanup(running_handles);
+    return 0;
 }
 
 void CurlDownloader::setsock(SockInfo*f, curl_socket_t s, CURL*e, int act){
@@ -253,6 +258,7 @@ void CurlDownloader::remove_sock(SockInfo *fdp) {
     if (fdp->evset) {
         //event_del(&fdp->ev);
     }
+    LOGD("remove socket");
     free(fdp);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -275,6 +281,7 @@ CurlDownloader::ConnectionData::~ConnectionData() {
 const std::string CurlDownloader::ConnectionData::getUrl()const{
     return url;
 }
+
 int CurlDownloader::ConnectionData::getHttpStatus() const{
     return httpStatus;
 }
