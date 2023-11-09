@@ -12,6 +12,7 @@ ExpandableLayout::ExpandableLayout(int w,int h):FrameLayout(w,h){
 
 ExpandableLayout::ExpandableLayout(Context* context, const AttributeSet& attrs)
 	:FrameLayout(context, attrs){
+    initView();
     mDuration = attrs.getInt("duration", DEFAULT_DURATION);
     mExpansion = attrs.getBoolean("expanded", false) ? 1 : 0;
     mOrientation = attrs.getInt("orientation", VERTICAL);

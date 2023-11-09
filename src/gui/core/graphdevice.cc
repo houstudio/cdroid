@@ -262,7 +262,7 @@ void GraphDevice::composeSurfaces(){
             mPrimaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
             mPrimaryContext->fill();
         }
-        wins[i]->mPendingRgn->subtract(wins[i]->mPendingRgn);
+        rgn->subtract(rgn);//wins[i]->mPendingRgn->subtract(wins[i]->mPendingRgn);
     }/*endif for wSurfaces.size*/
     GFXFlip(mPrimarySurface); 
     mLastComposeTime = SystemClock::uptimeMillis();

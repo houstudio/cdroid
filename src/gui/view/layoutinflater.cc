@@ -157,7 +157,10 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         parent->addView(v,lp);
     } else if (dynamic_cast<ViewGroup*>(v)) {
         LayoutParams*lp = ((ViewGroup*)v)->generateLayoutParams(atts);
-        ((ViewGroup*)v)->setLayoutParams(lp);
+        v->setLayoutParams(lp);
+    } else if(pd->root){
+        LayoutParams*lp = pd->root->generateLayoutParams(atts);
+        v->setLayoutParams(lp);
     }
 }
 

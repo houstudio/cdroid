@@ -20,6 +20,7 @@
 #include <cla.h>
 void spt_init(int argc, char *argv[]);
 void setproctitle(const char *fmt, ...);
+extern "C" char *__progname;
 namespace cdroid{
 
 App*App::mInst=nullptr;
@@ -45,13 +46,13 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     mQuitFlag = false;
     mExitCode = 0;
     mInst = this;
-    LOGI("App [%s] started c++=%d",(argc&&argv)?argv[0]:"",__cplusplus);
     cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
     cla.addArguments(extoptions.data(),extoptions.size());
     cla.setSwitchChars("-");
     cla.parse(argc,argv);
     onInit();
-    setName(std::string(argv[0]));
+    setName(std::string(argc?argv[0]:__progname));
+    LOGI("App [%s] started c++=%d",mName.c_str(),__cplusplus);
 	
     ViewGroup::DEBUG_DRAW = View::DEBUG_DRAW = hasSwitch("debug");
     if(hasSwitch("help")){

@@ -56,6 +56,7 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     mTabBackgroundResId= atts.getString("tabBackground");
     mContentInsetStart  = atts.getDimensionPixelSize("tabContentStart", 0);
     mMode = atts.getInt("tabMode",std::map<const std::string,int>{{"scrollable",0},{"fixed",1}},mMode);
+    mSmoothScroll = atts.getBoolean("smoothScroll",true);
     mTabGravity =atts.getGravity("tabGravity",0);
     mInlineLabel=atts.getBoolean("tabInlineLabel",false);
     applyModeAndGravity();
@@ -358,7 +359,7 @@ void TabLayout::setupWithViewPager(ViewPager* viewPager, bool autoRefresh, bool 
         // Now we'll add a tab selected listener to set ViewPager's current item
         mCurrentVpSelectedListener.onTabSelected=[this](Tab&tab){
             LOGV("selectTab %d/%d",tab.getPosition(),getTabCount());
-            mViewPager->setCurrentItem(tab.getPosition());
+            mViewPager->setCurrentItem(tab.getPosition(),mSmoothScroll);
         };
         addOnTabSelectedListener(mCurrentVpSelectedListener);
 

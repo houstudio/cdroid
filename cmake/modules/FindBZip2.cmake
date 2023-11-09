@@ -8,7 +8,7 @@ find_path(BZIP2_INCLUDE_DIRS
 )
 
 find_library(BZIP2_LIBRARIES
-    NAMES bz2 bz2d
+    NAMES bz2
     HINTS ${PC_BZIP2_LIBDIR}
     ${PC_BZIP2_LIBRARY_DIRS}
 )

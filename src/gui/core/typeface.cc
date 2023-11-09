@@ -310,16 +310,16 @@ void Typeface::loadPreinstalledSystemFontMap() {
         }
     }*/
     
-    DEFAULT      = create("", 0);
-    DEFAULT_BOLD = create("", Typeface::BOLD);
-    SANS_SERIF   = create("sans-serif", 0);
-    SERIF        = create("serif", 0);
-    MONOSPACE    = create("monospace", 0);
-    LOGD("DEFAULT=%p [%s]%s",DEFAULT,DEFAULT->mFamily.c_str(),DEFAULT->mFileName.c_str());
-    LOGD("DEFAULT_BOLD=%p [%s]%s",DEFAULT_BOLD,DEFAULT_BOLD->mFamily.c_str(),DEFAULT_BOLD->mFileName.c_str());
-    LOGD("SANS_SERIF=%p [%s]%s",SANS_SERIF,SANS_SERIF->mFamily.c_str(),SANS_SERIF->mFileName.c_str());
-    LOGD("SERIF=%p [%s]%s",SERIF,SERIF->mFamily.c_str(),SERIF->mFileName.c_str());
-    LOGD("MONOSPACE=%p [%s]%s",MONOSPACE,MONOSPACE->mFamily.c_str(),MONOSPACE->mFileName.c_str());
+    DEFAULT      = create("", NORMAL);
+    DEFAULT_BOLD = create("", BOLD);
+    SANS_SERIF   = create("sans-serif",NORMAL);
+    SERIF        = create("serif",NORMAL);
+    MONOSPACE    = create("monospace",NORMAL);
+    LOGD("DEFAULT=%p [%s] style:%d %s",DEFAULT,DEFAULT->mFamily.c_str(),DEFAULT->getStyle(),DEFAULT->mFileName.c_str());
+    LOGD("DEFAULT_BOLD=%p [%s] style:%d %s",DEFAULT_BOLD,DEFAULT_BOLD->mFamily.c_str(),DEFAULT->getStyle(),DEFAULT_BOLD->mFileName.c_str());
+    LOGD("SANS_SERIF=%p [%s] style:%d %s",SANS_SERIF,SANS_SERIF->mFamily.c_str(),DEFAULT->getStyle(),SANS_SERIF->mFileName.c_str());
+    LOGD("SERIF=%p [%s]style:%d %s",SERIF,SERIF->mFamily.c_str(),DEFAULT->getStyle(),SERIF->mFileName.c_str());
+    LOGD("MONOSPACE=%p [%s]style:%d %s",MONOSPACE,MONOSPACE->mFamily.c_str(),DEFAULT->getStyle(),MONOSPACE->mFileName.c_str());
 }
 
 static FT_Library ftLibrary = nullptr;
@@ -403,7 +403,7 @@ int Typeface::loadFromFontConfig() {
         if(pos!=std::string::npos)
             font = font.substr(pos+1);
         std::string fontKey = mContext->getPackageName()+":font/"+font;
-        LOGD("%d filename=%s  family=%s style=%s",i,tf->mFileName.c_str(),family.c_str(),style.c_str());
+        LOGV("%d family=%s style=%s",i,family.c_str(),style.c_str(),tf->mFileName.c_str());
         sSystemFontMap.insert({fontKey,tf});
         std::vector<std::string>families = TextUtils::split(family,";");
         for(std::string fm:families)

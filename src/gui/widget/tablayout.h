@@ -209,6 +209,7 @@ protected:
     int  mTabIndicatorAnimationDuration;
     int  mTabIndicatorGravity;
     int  mMode;
+    bool mSmoothScroll;/*used for viewpage item switch*/
     bool mInlineLabel;
     std::vector<OnTabSelectedListener> mSelectedListeners;
     OnTabSelectedListener mCurrentVpSelectedListener;

@@ -74,19 +74,19 @@ static void istream_png_reader(png_structp png_ptr, png_bytep png_data, png_size
 int APNGDecoder::load(std::istream&istream) {
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr) {
-        std::cerr << "Error creating read struct" << std::endl;
+        LOGE("Error creating read struct");
         return false;
     }
 
     png_infop info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr) {
-        std::cerr << "Error creating info struct" << std::endl;
+        LOGE("Error creating info struct");
         png_destroy_read_struct(&png_ptr, NULL, NULL);
         return false;
     }
 
     if (setjmp(png_jmpbuf(png_ptr))) {
-        std::cerr << "Error during libpng init_io" << std::endl;
+        LOGE("Error during libpng init_io");
         png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         return false;
     }
