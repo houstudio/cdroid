@@ -9,7 +9,7 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,-1,-1);
     CurlDownloader dld;
     CurlDownloader::ConnectionData cnn(argc<=1?"https://www.baidu.com/":argv[1]);
-	dld.addConnection(&cnn);
+    dld.addConnection(&cnn);
     return app.exec();
 }
 

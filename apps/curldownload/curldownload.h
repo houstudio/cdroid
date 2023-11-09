@@ -27,14 +27,12 @@ public:
 	void onConnectionComplete(double time, CURLcode r, int status, int stoppedByTimeout);
     };
 private:
-    int mTimerFD,mClockFD;
-    CURLM *mMultiHandle;
+    int mTimerFD;
+    CURLM *mMulti;
     int mActiveHandles;
     std::vector<CURL*>mEasys;
     static int SocketCallback(CURL *easy, curl_socket_t s, int action, void *userp, void *socketp);
-    static int PollCallback(int fd, int events, void*data);
     static int TimerCallback(int fd, int events, void* data);
-    static int ClockCallback(int fd, int events, void* data);
     static int MultiTimeCallback(CURLM *multi, long timeout_ms, void * data);
     static int EventHandler(int fd, int events, void *data);
     static size_t WriteHandler(char *ptr, size_t size, size_t nmemb, void *userdata);
