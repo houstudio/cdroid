@@ -98,7 +98,7 @@ int CurlDownloader::TimerCallback(int fd, int events, void* data){
     CurlDownloader*thiz =(CurlDownloader*)data;
     CURLMcode errm = curl_multi_socket_action(thiz->mMultiHandle,
          CURL_SOCKET_TIMEOUT,0,&still_running);
-    LOGD("errm=%d runnings=%d",errm,still_running);
+    LOGV("errm=%d runnings=%d",errm,still_running);
     thiz->cleanup(still_running);
     return still_running;
 }
@@ -155,7 +155,7 @@ void CurlDownloader::cleanup(int still_running) {
     }
 
     if (still_running != -1) {
-        LOGD("CLEANUP running = %d , left = %d", still_running,mActiveHandles);
+        LOGV("CLEANUP running = %d , left = %d", still_running,mActiveHandles);
     }
 
     if (mActiveHandles== 0) {
@@ -223,10 +223,10 @@ int CurlDownloader::EventHandler(int fd, int events, void *arg){
         LOGD("calling curl_multi_socket_action for fd %d <BEFORE>", fd);
         errm = curl_multi_socket_action(thiz->mMultiHandle, fd, 0, &running_handles);
         LOGE_IF(errm,"curl_multi_socket_action", errm);
-        LOGD("calling curl_multi_socket_action for fd %d <AFTER> runnings=%d", fd,running_handles);
+        LOGD("calling curl_multi_socket_action for fd %d <AFTER> runnings=%d errm=%d", fd,running_handles,errm);
     } while (errm == CURLM_CALL_MULTI_PERFORM && max_retry-- > 0);
     thiz->cleanup(running_handles);
-    return 0;
+    return errm==CURLM_OK;//return 0 will caused fd removed by Looper
 }
 
 void CurlDownloader::setsock(SockInfo*f, curl_socket_t s, CURL*e, int act){
@@ -257,8 +257,9 @@ void CurlDownloader::addsock(curl_socket_t s, CURL *easy, int action) {
 void CurlDownloader::remove_sock(SockInfo *fdp) {
     if (fdp->evset) {
         //event_del(&fdp->ev);
+        Looper::getDefault()->removeFd(fdp->sockfd);
     }
-    LOGD("remove socket");
+    LOGD("remove socket %d evset=%d",fdp->sockfd,fdp->evset);
     free(fdp);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////
