@@ -60,6 +60,7 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
         std::cout<<"params.count="<<getParamCount()<<std::endl;
         exit(0);
     }
+    Looper::prepare(0);
     Choreographer & chograph = Choreographer::getInstance();
     chograph.setFrameDelay(getArgAsInt("framedelay",chograph.getFrameDelay()));
     WindowManager::getInstance().setDisplayRotation((getArgAsInt("rotate",0)/90)%4);
@@ -86,9 +87,9 @@ App::~App(){
 
 void App::onInit(){
     LOGD("onInit");
+    GFXInit();
     mDisplayMetrics.setToDefaults();
     addResource(getDataPath()+std::string("cdroid.pak"),"cdroid");
-    GFXInit();
 }
 
 const std::string App::getDataPath()const{
