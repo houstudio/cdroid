@@ -59,14 +59,14 @@ void Preferences::load(const std::string&fname){
     if(fin.good()){
         mFileName=fname;
         load(fin);
-    }else{
-        load(fname.c_str(),fname.length());
     }
 }
 
 void Preferences::load(const char*buf,size_t len){
-    MemoryInputStream stream(buf,len);
-    load(stream);
+    if(buf&&len){
+        MemoryInputStream stream(buf,len);
+        load(stream);
+    }
 }
 
 void Preferences::load(std::istream&istream){
@@ -79,7 +79,7 @@ void Preferences::load(std::istream&istream){
     XML_SetUserData(parser,&kvp);
     XML_SetElementHandler(parser, startElement, endElement);
     XML_SetCharacterDataHandler(parser,CharacterHandler);
-    if(!istream.good())return;
+    if((istream.good()==false)||istream.eof())return;
     do {
         std::string str;
         std::getline(istream,str);

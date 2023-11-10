@@ -36,6 +36,7 @@ private:
     static int MultiTimeCallback(CURLM *multi, long timeout_ms, void * data);
     static int EventHandler(int fd, int events, void *data);
     static size_t WriteHandler(char *ptr, size_t size, size_t nmemb, void *userdata);
+    static int ProgressCallback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow);
     void setsock(SockInfo*f, curl_socket_t s, CURL*e, int act);
     void addsock(curl_socket_t s, CURL *easy, int action);
     void remove_sock(SockInfo *fdp);
