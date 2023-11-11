@@ -61,7 +61,6 @@ INT GFXInit() {
     if(x11Display)return E_OK;
     XInitThreads();
     x11Display=XOpenDisplay(NULL);
-    LOGI("x11Display init =%p",x11Display);
     if(x11Display) {
         pthread_t tid;
         XSetWindowAttributes winattrs;
@@ -76,6 +75,7 @@ INT GFXInit() {
         x11Window=XCreateSimpleWindow(x11Display, RootWindow(x11Display, screen), 0, 0,width,height,
                                       1, BlackPixel(x11Display, screen), WhitePixel(x11Display, screen));
 
+        LOGI("x11Display init =%p screenSize=%dx%d",x11Display,width,height);
         sizehints.flags = PMinSize | PMaxSize;
         sizehints.min_width = width;
         sizehints.max_width = width;

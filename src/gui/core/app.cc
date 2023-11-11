@@ -60,7 +60,7 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
         std::cout<<"params.count="<<getParamCount()<<std::endl;
         exit(0);
     }
-    Looper::prepare(0);
+    Looper::prepare(false);
     Choreographer & chograph = Choreographer::getInstance();
     chograph.setFrameDelay(getArgAsInt("framedelay",chograph.getFrameDelay()));
     WindowManager::getInstance().setDisplayRotation((getArgAsInt("rotate",0)/90)%4);

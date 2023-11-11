@@ -92,10 +92,10 @@ void ImageView::resolveUri(){
                 setImageBitmap(bitmap);
                 loaded ++;
             }
-        }
+        }else updateDrawable(d);
         LOGW_IF((loaded==0)&&bNotNull,"Unable to find resource: %s",mResource.c_str());
     }
-    updateDrawable(d);
+    //updateDrawable(d);
 }
 
 int ImageView::resolveAdjustedSize(int desiredSize, int maxSize,int measureSpec){

@@ -26,6 +26,8 @@ namespace cdroid{
 static constexpr int EPOLL_SIZE_HINT = 8;
 // Maximum number of file descriptors for which to retrieve poll events each iteration.
 static constexpr int EPOLL_MAX_EVENTS = 16;
+static pthread_once_t gTLSOnce = PTHREAD_ONCE_INIT;
+static pthread_key_t  gTLSKey = 0;
 
 static int toMillisecondTimeoutDelay(nsecs_t referenceTime, nsecs_t timeoutTime){
     nsecs_t timeoutDelayMillis;
@@ -72,13 +74,47 @@ Looper::~Looper() {
         delete hdl;
     }mEventHandlers.clear();
 }
-Looper*Looper::getDefault(){
-    static thread_local Looper*mInst=nullptr;
-    if(mInst==nullptr){
-	mInst=new Looper(false);
-        //LOGI("*Looper::getDefault=%p",mInst);
+
+void Looper::initTLSKey() {
+    int error = pthread_key_create(&gTLSKey, threadDestructor);
+    LOGE_IF(error != 0, "Could not allocate TLS key: %s", strerror(error));
+}
+
+void Looper::threadDestructor(void *st) {
+    Looper* const self = static_cast<Looper*>(st);
+    if (self != nullptr) {
+        //self->decStrong((void*)threadDestructor);
+	delete self;
     }
-    return mInst;
+}
+
+Looper*Looper::getDefault(){
+    return getForThread();
+}
+
+Looper*Looper::prepare(int opts){
+    Looper* looper = getForThread();
+    const bool allowNonCallbacks = opts & PREPARE_ALLOW_NON_CALLBACKS;
+    if(looper==nullptr){
+	looper = new Looper(allowNonCallbacks);
+	setForThread(looper);
+    }
+    LOGW_IF(looper->getAllowNonCallbacks()!=allowNonCallbacks,"Looper already prepared for this thread with a different"
+	    " value for the LOOPER_PREPARE_ALLOW_NON_CALLBACKS option.");
+    return looper;
+}
+
+void Looper::setForThread(Looper* looper){
+    Looper*old = getForThread();
+    delete old;
+    pthread_setspecific(gTLSKey,looper);
+}
+
+Looper*Looper::getForThread(){
+   int result = pthread_once(&gTLSOnce,initTLSKey);
+   LOGW_IF(result!=0,"pthread_once failed");
+   Looper*looper =(Looper*)pthread_getspecific(gTLSKey);
+   return looper;
 }
 
 bool Looper::getAllowNonCallbacks() const {

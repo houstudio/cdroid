@@ -134,6 +134,8 @@ private:
     void scheduleEpollRebuildLocked();
     void doIdleHandlers();
     void removeEventHandlers();
+    static void initTLSKey();
+    static void threadDestructor(void*);
 protected:
 public:
     enum {
@@ -157,6 +159,9 @@ public:
     Looper(bool allowNonCallbacks=false);
     virtual ~Looper();
     static Looper*getDefault();
+    static Looper*prepare(int opts);
+    static void setForThread(Looper* looper);
+    static Looper* getForThread();
     bool getAllowNonCallbacks() const;
     int pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData);
     inline int pollOnce(int timeoutMillis) {
