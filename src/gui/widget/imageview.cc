@@ -81,19 +81,18 @@ void ImageView::resolveUri(){
     if (mDrawable != nullptr) {
         return;
     }
-    Drawable* d = nullptr;
     if (!mResource.empty()) {
-        d = getContext()->getDrawable(mResource);
-        int loaded = d!=nullptr;
-        const int bNotNull = mResource.compare("@null");
-        if((d==nullptr)&&bNotNull){
+        if(strpbrk(mResource.c_str(),"@:")==nullptr){
             RefPtr<Cairo::ImageSurface>bitmap = getContext()->getImage(mResource);
-            if(bitmap){
-                setImageBitmap(bitmap);
-                loaded ++;
-            }
-        }else updateDrawable(d);
-        LOGW_IF((loaded==0)&&bNotNull,"Unable to find resource: %s",mResource.c_str());
+            setImageBitmap(bitmap);
+            LOGW_IF(bitmap==nullptr,"Unable to find resource: %s",mResource.c_str());
+        }else if(mResource.compare("@null")){
+            Drawable* d = getContext()->getDrawable(mResource);
+            LOGW_IF(d==nullptr,"Unable to find resource: %s",mResource.c_str());
+            updateDrawable(d);
+        }else{
+            updateDrawable(nullptr);
+        }
     }
     //updateDrawable(d);
 }
@@ -625,8 +624,6 @@ void ImageView::updateDrawable(Drawable*d){
         if ( !sameDrawable && isAttachedToWindow()) {
             mDrawable->setVisible(false, false);
         }
-        if(!sameDrawable)
-            delete mDrawable;
     }
 
     mDrawable = d;
