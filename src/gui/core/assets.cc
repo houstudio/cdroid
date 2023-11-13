@@ -271,13 +271,14 @@ RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid) {
     void*zfile = pak ? pak->getZipHandle(resname):nullptr;
     ZipInputStream zipis(zfile);
     RefPtr<ImageSurface>img;
-    if(!zipis.good()) {
+    if(zfile==nullptr) {
         std::ifstream fi(fullresid);
         img = loadImage(fi);
-        LOGD_IF(zfile == nullptr&&fi.good()==false,"pak=%p %s open failed ",pak,resname.c_str());
+        LOGD_IF(img==nullptr,"pak=%p %s open failed",pak,resname.c_str());
         return img;
+    }else if(zfile){
+        img = loadImage(zipis);
     }
-    img = loadImage(zipis);
     LOGV_IF(img,"image %s size=%dx%d",fullresid.c_str(),img->get_width(),img->get_height());
     return img;
 }
