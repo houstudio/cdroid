@@ -392,17 +392,16 @@ void ImageView::configureBounds(){
             float scale , dx = 0, dy = 0;
             mDrawMatrix = mMatrix;
 
-            if (dwidth < vwidth && dheight <=vheight) {
-                scale = 1.0f;
+            if (dwidth * vheight > vwidth * dheight) {
+                scale = (float) vheight / (float) dheight;
+                dx = (vwidth - dwidth * scale) * 0.5f;
             } else {
-                scale = std::min(float(vwidth) /float(dwidth),
-				float(vheight)/float(dheight));
+                scale = (float) vwidth / (float) dwidth;
+                dy = (vheight - dheight * scale) * 0.5f;
             }
-            dx = (vwidth - dwidth*scale) *0.5f;
-            dy = (vheight- dheight * scale) * 0.5f;
 
-            mDrawMatrix.scale(scale, scale);
             mDrawMatrix.translate(round(dx), round(dy));
+            mDrawMatrix.scale(scale, scale);
         } else if (ScaleType::CENTER_INSIDE == mScaleType) {
             float scale , dx, dy;
             mDrawMatrix = mMatrix;

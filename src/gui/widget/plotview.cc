@@ -413,7 +413,7 @@ void PlotView::setPixRect(){
     const int newWidth = /*contentsRect().width*/getWidth() - getPaddingLeft() - getPaddingRight();
     const int newHeight= /*contentsRect().height*/getHeight()- getPaddingTop() - getPaddingBottom();
     // PixRect starts at (0,0) because we will translate by leftPadding(), topPadding()
-    d->pixRect.set(getPaddingLeft(),getPaddingTop(), newWidth, newHeight);
+    d->pixRect.set(0,0, newWidth, newHeight);
 }
 
 PointF PlotView::mapToWidget(const PointF &p) const{
@@ -740,7 +740,7 @@ void PlotView::onDraw(cdroid::Canvas&p){
     Rect r = getBound();
 
     //p.fillRect(rect(), backgroundColor());
-    p.translate(getPaddingLeft() + 0.5, getPaddingTop() + 0.5);
+    p.translate(getPaddingLeft(), getPaddingTop());
 
     setPixRect();
     r= d->pixRect;

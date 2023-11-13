@@ -54,7 +54,8 @@ public:
      * @param b if true, tick labels will be drawn.
      */
     void setTickLabelsShown(bool b);
-
+    float fontSize()const;
+    void setFontSize(float);
     /**
      * Sets the axis label.
      * Set the label to an empty string to omit the axis label.

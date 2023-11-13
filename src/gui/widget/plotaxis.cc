@@ -21,6 +21,7 @@ public:
         , m_labelFmt('g')
         , m_labelFieldWidth(0)
         , m_labelPrec(-1)
+        , m_fontSize(16)
     {
     }
 
@@ -33,6 +34,7 @@ public:
     std::string m_label; // The label of the axis.
     int m_labelFieldWidth; // Field width for number labels, see std::string::arg()
     int m_labelPrec; // Number precision for number labels, see std::string::arg()
+    int m_fontSize;//text size
     std::list<double> m_MajorTickMarks, m_MinorTickMarks;
 };
 
@@ -65,50 +67,48 @@ void PlotAxis::setTickmarkVisible(bool visible){
     d->m_showTickmarks = visible;
 }
 
-bool PlotAxis::areTickLabelsShown() const
-{
+bool PlotAxis::areTickLabelsShown() const{
     return d->m_showTickLabels;
 }
 
-void PlotAxis::setTickLabelsShown(bool b)
-{
+void PlotAxis::setTickLabelsShown(bool b){
     d->m_showTickLabels = b;
 }
 
-void PlotAxis::setLabel(const std::string &label)
-{
+void PlotAxis::setLabel(const std::string &label){
     d->m_label = label;
 }
 
-std::string PlotAxis::label() const
-{
+std::string PlotAxis::label() const{
     return d->m_label;
 }
 
-void PlotAxis::setTickLabelFormat(char format, int fieldWidth, int precision)
-{
+void PlotAxis::setTickLabelFormat(char format, int fieldWidth, int precision){
     d->m_labelFieldWidth = fieldWidth;
     d->m_labelFmt = format;
     d->m_labelPrec = precision;
 }
 
-int PlotAxis::tickLabelWidth() const
-{
+float PlotAxis::fontSize()const{
+    return d->m_fontSize;
+}
+void PlotAxis::setFontSize(float sz){
+    d->m_fontSize = sz;
+}
+
+int PlotAxis::tickLabelWidth() const{
     return d->m_labelFieldWidth;
 }
 
-char PlotAxis::tickLabelFormat() const
-{
+char PlotAxis::tickLabelFormat() const{
     return d->m_labelFmt;
 }
 
-int PlotAxis::tickLabelPrecision() const
-{
+int PlotAxis::tickLabelPrecision() const{
     return d->m_labelPrec;
 }
 
-void PlotAxis::setTickMarks(double x0, double length)
-{
+void PlotAxis::setTickMarks(double x0, double length){
     d->m_MajorTickMarks.clear();
     d->m_MinorTickMarks.clear();
 
@@ -174,8 +174,7 @@ void PlotAxis::setTickMarks(double x0, double length)
     }
 }
 
-std::string PlotAxis::tickLabel(double val) const
-{
+std::string PlotAxis::tickLabel(double val) const{
     char sbuf[32];
     if (d->m_labelFmt == 't') {
         while (val < 0.0) {
@@ -198,13 +197,11 @@ std::string PlotAxis::tickLabel(double val) const
     return std::string(sbuf);//QStringLiteral("%1").arg(val, d->m_labelFieldWidth, d->m_labelFmt, d->m_labelPrec);
 }
 
-std::list<double> PlotAxis::majorTickMarks() const
-{
+std::list<double> PlotAxis::majorTickMarks() const{
     return d->m_MajorTickMarks;
 }
 
-std::list<double> PlotAxis::minorTickMarks() const
-{
+std::list<double> PlotAxis::minorTickMarks() const{
     return d->m_MinorTickMarks;
 }
 

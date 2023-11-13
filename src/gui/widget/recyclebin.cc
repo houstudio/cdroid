@@ -26,7 +26,7 @@ void RecycleBin::setViewTypeCount(int viewTypeCount) {
 }
 
 void RecycleBin::markChildrenDirty() {
-    int typeCount = mScrapViews.size();//mViewTypeCount;
+    const int typeCount = mScrapViews.size();//mViewTypeCount;
     for (int i = 0; i < typeCount; i++) {
  	    std::vector<View*>& scrap = mScrapViews[i];
         int scrapCount = scrap.size();
@@ -379,7 +379,7 @@ void RecycleBin::clearScrap(std::vector<View*>& scrap) {
         View*v=scrap[scrapCount - 1 - j];
         scrap.erase(scrap.begin()+scrapCount - 1 - j);
         removeDetachedView(v, false);
-        delete v;
+        //delete v;when we destroy the listview'spage,if listview is fling,delete v will caused crash
     }
 }
 

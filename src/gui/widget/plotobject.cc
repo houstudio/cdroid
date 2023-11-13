@@ -18,12 +18,12 @@ class PlotObject::Private
 public:
     Private(PlotObject *qq)
         :q(qq){
-	    type = UnknownType;
-	    pointStyle = NoPoints;
+        type = UnknownType;
+        pointStyle = NoPoints;
     }
 
     ~Private(){
-	    for(auto i:pList)delete i;
+        for(auto i:pList)delete i;
     }
 
     PlotObject *q;
