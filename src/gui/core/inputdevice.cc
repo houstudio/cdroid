@@ -334,15 +334,29 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
     axis = ABS2AXIS(axis);
     switch(axis){
     case MotionEvent::AXIS_X:
+       switch(rotation){
+       case Display::ROTATION_0  : value -= mMinX ;break;
+       case Display::ROTATION_90 : axis = MotionEvent::AXIS_Y; value -= mMinX; break; /*value=value;*/
+       case Display::ROTATION_180: value= mMaxX - value; break;
+       case Display::ROTATION_270: axis = MotionEvent::AXIS_Y; value = mMaxX - value; break;//tested
+       }
+
        if(mScreenWidth != mTPWidth)
-	   value = (value - mMinX) * mScreenWidth/mTPWidth;
-       if(mInvertX)value = mTPWidth - value;
+	   value = (value * mScreenWidth)/mTPWidth;
+       if(mInvertX)value = mScreenWidth - value;
        if(mSwitchXY)axis= MotionEvent::AXIS_Y;
        break;
     case MotionEvent::AXIS_Y:
+       switch(rotation){
+       case Display::ROTATION_0  : value -= mMinY; break;
+       case Display::ROTATION_90 : axis = MotionEvent::AXIS_X; value = mMaxY - value; break;
+       case Display::ROTATION_180: value= mMaxY - value; break;
+       case Display::ROTATION_270: axis = MotionEvent::AXIS_X; value -= mMinY ;break; /*value=value;*/
+       }
+
        if(mScreenHeight != mTPHeight)
-	   value = (value - mMinY) * mScreenHeight/mTPHeight;
-       if(mInvertY)value = mTPHeight - value;
+	   value = (value * mScreenHeight)/mTPHeight;
+       if(mInvertY)value = mScreenHeight - value;
        if(mSwitchXY)axis= MotionEvent::AXIS_X;
        break;
     case MotionEvent::AXIS_Z:break;
@@ -441,7 +455,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                 mDownTime = mMoveTime;
             }
             if(listener){
-                mEvent.transform(mMatrix);
+                //mEvent.transform(mMatrix);
                 listener(mEvent);
             }
             //if(mEvent.getAction()==MotionEvent::ACTION_UP) mPointMAP.clear();
