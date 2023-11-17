@@ -21,8 +21,8 @@ InputEventSource::InputEventSource(){
     mLastInputEventTime = mLastPlaybackEventTime;
     auto func=[this](){
         while(1){
-            INPUTEVENT es[32];
-            const int count = InputGetEvents(es,32,10);
+            INPUTEVENT es[128];
+            const int count = InputGetEvents(es,sizeof(es)/sizeof(INPUTEVENT),20);
             std::lock_guard<std::mutex> lock(mtxEvents);
             if(count)mLastInputEventTime = SystemClock::uptimeMillis();
             LOGV_IF(count,"rcv %d rawEvents",count);
