@@ -106,7 +106,7 @@ protected:
         void startWithOffset(int position, int offset)override;
         void startWithOffset(int position, int offset, int duration)override;
         void stop()override;
-        void operator()();
+        void doScroll();
     };
 private:
 
@@ -204,6 +204,7 @@ private:
     FlingRunnable mFlingRunnable;
     Runnable mTouchModeReset;
     Runnable mClearScrollingCache;
+    Runnable mPostScrollRunner;
     bool mHasPerformedLongPress;
     bool mScrollProfilingStarted = false;
     bool mFlingProfilingStarted =false;

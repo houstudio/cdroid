@@ -237,6 +237,40 @@ void ImageView::setScaleType(int st){
     }
 }
 
+static bool operator==(const Cairo::Matrix& m1, const Cairo::Matrix& m2) {
+    return (m1.xx == m2.xx && m1.yx == m2.yx && m1.xy == m2.xy && m1.yy == m2.yy && m1.x0 == m2.x0 && m1.y0 == m2.y0);
+}
+static bool operator!=(const Cairo::Matrix& m1, const Cairo::Matrix& m2) {
+    return (m1.xx != m2.xx) || (m1.yx != m2.yx) || (m1.xy != m2.xy) || (m1.yy == m2.yy) || (m1.x0 == m2.x0) ||( m1.y0 == m2.y0);
+}
+
+void ImageView::setImageMatrix(const Cairo::Matrix& matrix) {
+    // collapse null and identity to just null
+#if 0
+    if (matrix != null && matrix.isIdentity()) {
+        matrix = null;
+    }
+
+    // don't invalidate unless we're actually changing our matrix
+    if (matrix == null && !IsIdentity(mMatrix) ||
+            matrix != null && !(mMatrix==matrix)) {
+        mMatrix =matrix;
+        configureBounds();
+        invalidate();
+    }
+#else
+    if(/*!IsIdentity(mMatrix) &&*/ (mMatrix!=matrix)){
+	mMatrix =matrix;
+	configureBounds();
+	invalidate();
+    }
+#endif
+}
+
+Cairo::Matrix ImageView::getImageMatrix() const{
+    return mDrawMatrix;
+}
+
 bool ImageView::getCropToPadding()const{
     return mCropToPadding;
 }
@@ -364,7 +398,6 @@ void ImageView::configureBounds(){
     const int vwidth = getWidth() - mPaddingLeft - mPaddingRight;
     const int vheight = getHeight() - mPaddingTop - mPaddingBottom;
     
-
     const bool fits = (dwidth < 0 || vwidth == dwidth) && (dheight < 0 || vheight == dheight);
 
     if (dwidth <= 0 || dheight <= 0 || ScaleType::FIT_XY == mScaleType) {
@@ -380,7 +413,9 @@ void ImageView::configureBounds(){
             // Use the specified matrix as-is.
             if (!IsIdentity(mMatrix)){
                 mDrawMatrix = mMatrix;
-            }else mDrawMatrix=identity_matrix();
+            }else{
+                mDrawMatrix = identity_matrix();
+            }
         } else if (fits) {
             // The bitmap fits exactly, no transform needed.
             mDrawMatrix = identity_matrix();
@@ -426,7 +461,7 @@ void ImageView::configureBounds(){
         }
     }
     LOGV("%p:%d ScaleType=%d DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",this,mID,mScaleType,
-	mDrawMatrix.xx,mDrawMatrix.yx,mDrawMatrix.xy,mDrawMatrix.yy,mDrawMatrix.x0,mDrawMatrix.y0);
+	    mDrawMatrix.xx,mDrawMatrix.yx,mDrawMatrix.xy,mDrawMatrix.yy,mDrawMatrix.x0,mDrawMatrix.y0);
 }
 
 void ImageView::drawableStateChanged(){
@@ -562,6 +597,42 @@ void ImageView::setImageAlpha(int alpha){
 }
 int  ImageView::getImageAlpha()const{
     return mAlpha;
+}
+
+bool ImageView::isOpaque() const{
+    return View::isOpaque() || mDrawable /*&& mXfermode == null*/
+            && mDrawable->getOpacity() == PixelFormat::OPAQUE
+            && mAlpha * mViewAlphaScale >> 8 == 255
+            && isFilledByImage();
+}
+
+static bool isRectilinear(const Cairo::Matrix& matrix) {
+    // 判断矩阵是否保持矩形形状
+    if ((matrix.xx == 0) || (matrix.yy == 0) || (matrix.yx != 0) || (matrix.xy != 0) ) {
+        return false;
+    }
+
+    return true;
+}
+
+bool ImageView::isFilledByImage() const{
+    if (mDrawable == nullptr) {
+        return false;
+    }
+
+    Rect bounds = mDrawable->getBounds();
+    Matrix matrix = mDrawMatrix;
+    if (IsIdentity(mDrawMatrix)) {
+        return bounds.left <= 0 && bounds.top <= 0 && bounds.width >= getWidth()
+                && bounds.height >= getHeight();
+    } else if (isRectilinear(matrix)){//matrix.rectStaysRect()) {
+        Rect boundsDst = bounds;
+        matrix.transform_rectangle((Cairo::RectangleInt&)boundsDst);
+        return boundsDst.left <= 0 && boundsDst.top <= 0 && boundsDst.width >= getWidth()
+                && boundsDst.height >= getHeight();
+    }
+    // If the matrix doesn't map to a rectangle, assume the worst.
+    return false;
 }
 
 void ImageView::applyImageTint() {
@@ -721,10 +792,10 @@ void ImageView::onDraw(Canvas& canvas) {
             canvas.clip();
         }
         LOGV("%p:%d DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",this,mID,mDrawMatrix.xx,mDrawMatrix.yx,
-		mDrawMatrix.xy,mDrawMatrix.yy,mDrawMatrix.x0,mDrawMatrix.y0);
+            mDrawMatrix.xy,mDrawMatrix.yy,mDrawMatrix.x0,mDrawMatrix.y0);
         canvas.translate(mPaddingLeft, mPaddingTop);
         canvas.transform(mDrawMatrix);
-    
+
         mDrawable->draw(canvas);
         canvas.restore();
     }

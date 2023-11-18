@@ -30,6 +30,7 @@ private:
     int resolveAdjustedSize(int desiredSize, int maxSize,int measureSpec);
     void applyImageTint();
     void applyColorMod();
+    bool isFilledByImage()const;
 protected:
     std::string mResource;
     int mScaleType;
@@ -68,6 +69,9 @@ public:
     std::vector<int> onCreateDrawableState()override;
     int getScaleType()const;
     void setScaleType(int st);
+    void setImageMatrix(const Cairo::Matrix& matrix);
+    Cairo::Matrix getImageMatrix()const;
+
     bool getCropToPadding()const;
     void setCropToPadding(bool cropToPadding);
     void setMaxWidth(int);
@@ -96,6 +100,7 @@ public:
     ColorFilter* getColorFilter();
     void setImageAlpha(int alpha);
     int getImageAlpha()const;
+    bool isOpaque()const override;
     void setImageLevel(int level);
     void setSelected(bool selected)override;
     void setCornerRadii(int radius);

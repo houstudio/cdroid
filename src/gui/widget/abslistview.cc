@@ -3283,7 +3283,8 @@ void AbsListView::clearScrollingCache() {
 
 AbsListView::PositionScroller::PositionScroller(AbsListView*lv) {
     mExtraScroll = ViewConfiguration::get(lv->getContext()).getScaledFadingEdgeLength();
-    mLV=lv;
+    mLV = lv;
+    mLV->mPostScrollRunner = [this](){doScroll();};
 }
 
 void AbsListView::PositionScroller::start(int position) {
@@ -3327,8 +3328,7 @@ void AbsListView::PositionScroller::start(int position) {
     mTargetPos = clampedPosition;
     mBoundPos = INVALID_POSITION;
     mLastSeenPos = INVALID_POSITION;
-    Runnable run([this](){(*this)();});
-    mLV->postOnAnimation(run);
+    mLV->postOnAnimation(mLV->mPostScrollRunner);
 }
 
 void AbsListView::PositionScroller::start(int position, int boundPosition) {
@@ -3403,8 +3403,7 @@ void AbsListView::PositionScroller::start(int position, int boundPosition) {
     mTargetPos = clampedPosition;
     mBoundPos = boundPosition;
     mLastSeenPos = INVALID_POSITION;
-
-    mLV->postOnAnimation(*this);
+    mLV->postOnAnimation(mLV->mPostScrollRunner);
 }
 
 void AbsListView::PositionScroller::startWithOffset(int position, int offset) {
@@ -3456,7 +3455,7 @@ void AbsListView::PositionScroller::startWithOffset(int position, int offset, in
     mScrollDuration = (screenTravelCount < 1) ?  duration : (int) (duration / screenTravelCount);
     mLastSeenPos = INVALID_POSITION;
 
-    mLV->postOnAnimation(*this);
+    mLV->postOnAnimation(mLV->mPostScrollRunner);
 }
 
 /**
@@ -3513,10 +3512,10 @@ void AbsListView::PositionScroller::scrollToVisible(int targetPos, int boundPos,
 }
 
 void AbsListView::PositionScroller::stop() {
-    mLV->removeCallbacks(*this);
+    mLV->removeCallbacks(mLV->mPostScrollRunner);
 }
 
-void AbsListView::PositionScroller::operator()() {
+void AbsListView::PositionScroller::doScroll() {
     const int listHeight = mLV->getHeight();
     const int firstPos = mLV->mFirstPosition;
     const int childCount = mLV->getChildCount();
@@ -3547,7 +3546,7 @@ void AbsListView::PositionScroller::operator()() {
 
         mLastSeenPos = lastPos;
         if (lastPos < mTargetPos) {
-            mLV->postOnAnimation(*this);
+            mLV->postOnAnimation(mLV->mPostScrollRunner);
         }
         break;
     }
@@ -3592,7 +3591,7 @@ void AbsListView::PositionScroller::operator()() {
     case MOVE_UP_POS: {
         if (firstPos == mLastSeenPos) {
             // No new views, let things keep going.
-            mLV->postOnAnimation(*this);
+            mLV->postOnAnimation(mLV->mPostScrollRunner);
             return;
         }
 
@@ -3610,7 +3609,7 @@ void AbsListView::PositionScroller::operator()() {
         mLastSeenPos = firstPos;
 
         if (firstPos > mTargetPos) {
-            mLV->postOnAnimation(*this);
+            mLV->postOnAnimation(mLV->mPostScrollRunner);
         }
         break;
     }
@@ -3624,7 +3623,7 @@ void AbsListView::PositionScroller::operator()() {
 
         if (lastPos == mLastSeenPos) {
             // No new views, let things keep going.
-            mLV->postOnAnimation(*this);
+            mLV->postOnAnimation(mLV->mPostScrollRunner);
             return;
         }
 
@@ -3636,7 +3635,7 @@ void AbsListView::PositionScroller::operator()() {
         mLastSeenPos = lastPos;
         if (lastPos > mBoundPos) {
             mLV->smoothScrollBy(-(lastViewPixelsShowing - extraScroll), mScrollDuration, true,true);
-            mLV->postOnAnimation(*this);
+            mLV->postOnAnimation(mLV->mPostScrollRunner);
         } else {
             const int bottom = listHeight - extraScroll;
             const int lastViewBottom = lastViewTop + lastViewHeight;
@@ -3652,7 +3651,7 @@ void AbsListView::PositionScroller::operator()() {
     case MOVE_OFFSET: {
         if (mLastSeenPos == firstPos) {
             // No new views, let things keep going.
-            mLV->postOnAnimation(*this);
+            mLV->postOnAnimation(mLV->mPostScrollRunner);
             return;
         }
 
@@ -3688,12 +3687,12 @@ void AbsListView::PositionScroller::operator()() {
             const int distance = (int) (-mLV->getHeight() * modifier);
             const int duration = (int) (mScrollDuration * modifier);
             mLV->smoothScrollBy(distance, duration, true, true);
-            mLV->postOnAnimation(*this);
+            mLV->postOnAnimation(mLV->mPostScrollRunner);
         } else if (position > lastPos) {
             const int distance = (int) (mLV->getHeight() * modifier);
             const int duration = (int) (mScrollDuration * modifier);
             mLV->smoothScrollBy(distance, duration, true, true);
-            mLV->postOnAnimation(*this);
+            mLV->postOnAnimation(mLV->mPostScrollRunner);
         } else {
             // On-screen, just scroll.
             const int targetTop = mLV->getChildAt(position - firstPos)->getTop();
