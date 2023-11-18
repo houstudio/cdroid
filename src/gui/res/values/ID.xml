@@ -33,11 +33,19 @@
   <id name="closekeyboard">0x00000406</id>
   <id name="predict1">0x00000407</id>
   <id name="keyboardview">0x00000408</id>
-  <id name="increment">0x00000409</id>
-  <id name="numberpicker_input">0x0000040a</id>
-  <id name="decrement">0x0000040b</id>
-  <id name="body">0x0000040c</id>
-  <id name="select_dialog_listview">0x0000040d</id>
-  <id name="text1">0x0000040e</id>
+  <id name="prev">0x00000409</id>
+  <id name="rew">0x0000040a</id>
+  <id name="pause">0x0000040b</id>
+  <id name="ffwd">0x0000040c</id>
+  <id name="next">0x0000040d</id>
+  <id name="time_current">0x0000040e</id>
+  <id name="mediacontroller_progress">0x0000040f</id>
+  <id name="time">0x00000410</id>
+  <id name="increment">0x00000411</id>
+  <id name="numberpicker_input">0x00000412</id>
+  <id name="decrement">0x00000413</id>
+  <id name="body">0x00000414</id>
+  <id name="select_dialog_listview">0x00000415</id>
+  <id name="text1">0x00000416</id>
 </resources>
 

@@ -3530,7 +3530,7 @@ void AbsListView::PositionScroller::doScroll() {
 
         if (lastPos == mLastSeenPos) {
             // No new views, let things keep going.
-            mLV->postOnAnimation(*this);
+            mLV->postOnAnimation(mLV->mPostScrollRunner);
             return;
         }
 
@@ -3563,7 +3563,7 @@ void AbsListView::PositionScroller::doScroll() {
 
         if (nextPos == mLastSeenPos) {
             // No new views, let things keep going.
-            mLV->postOnAnimation(*this);
+            mLV->postOnAnimation(mLV->mPostScrollRunner);
             return;
         }
 
@@ -3577,7 +3577,7 @@ void AbsListView::PositionScroller::doScroll() {
 
             mLastSeenPos = nextPos;
 
-            mLV->postOnAnimation(*this);
+            mLV->postOnAnimation(mLV->mPostScrollRunner);
         } else  {
             if (nextViewTop > extraScroll) {
                 mLV->smoothScrollBy(nextViewTop - extraScroll, mScrollDuration, true, false);
@@ -3697,8 +3697,7 @@ void AbsListView::PositionScroller::doScroll() {
             // On-screen, just scroll.
             const int targetTop = mLV->getChildAt(position - firstPos)->getTop();
             const int distance = targetTop - mOffsetFromTop;
-            const int duration = (int) (mScrollDuration *
-                                        ((float) std::abs(distance) / mLV->getHeight()));
+            const int duration = (int) (mScrollDuration * ((float) std::abs(distance) / mLV->getHeight()));
             mLV->smoothScrollBy(distance, duration, true, false);
         }
         break;
@@ -3896,7 +3895,7 @@ void AbsListView::FlingRunnable::start(int initialVelocity) {
 
     mLV->mTouchMode = TOUCH_MODE_FLING;
     mSuppressIdleStateChangeCall = false;
-    mLV->postOnAnimation(*this);
+    mLV->postOnAnimation(mLV->mFlingRunnable);
     if (PROFILE_FLINGING) {
         if (!mLV->mFlingProfilingStarted) {
             mLV->mFlingProfilingStarted = true;
@@ -3912,7 +3911,7 @@ void AbsListView::FlingRunnable::startSpringback() {
     if (mScroller->springBack(0, mLV->mScrollY, 0, 0, 0, 0)) {
         mLV->mTouchMode = TOUCH_MODE_OVERFLING;
         mLV->invalidate();
-        mLV->postOnAnimation(*this);
+        mLV->postOnAnimation(mLV->mFlingRunnable);
     } else {
         mLV->mTouchMode = TOUCH_MODE_REST;
         mLV->reportScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
@@ -3925,7 +3924,7 @@ void AbsListView::FlingRunnable::startOverfling(int initialVelocity) {
     mLV->mTouchMode = TOUCH_MODE_OVERFLING;
     mSuppressIdleStateChangeCall = false;
     mLV->invalidate();
-    mLV->postOnAnimation(*this);
+    mLV->postOnAnimation(mLV->mFlingRunnable);
 }
 
 void AbsListView::FlingRunnable::edgeReached(int delta) {
@@ -3942,7 +3941,7 @@ void AbsListView::FlingRunnable::edgeReached(int delta) {
             mLV->mPositionScroller->stop();
     }
     mLV->invalidate();
-    mLV->postOnAnimation(*this);
+    mLV->postOnAnimation(mLV->mFlingRunnable);
 }
 
 void AbsListView::FlingRunnable::startScroll(int distance, int duration, bool linear, bool suppressEndFlingStateChangeCall) {
@@ -3952,13 +3951,13 @@ void AbsListView::FlingRunnable::startScroll(int distance, int duration, bool li
     mScroller->startScroll(0, initialY, 0, distance, duration);
     mLV->mTouchMode = TOUCH_MODE_FLING;
     mSuppressIdleStateChangeCall = suppressEndFlingStateChangeCall;
-    mLV->postOnAnimation(*this);
+    mLV->postOnAnimation(mLV->mFlingRunnable);
 }
 
 void AbsListView::FlingRunnable::endFling() {
     mLV->mTouchMode = TOUCH_MODE_REST;
 
-    mLV->removeCallbacks(*this);
+    mLV->removeCallbacks(mLV->mFlingRunnable);
     mLV->removeCallbacks(mCheckFlywheel);
 
     if (!mSuppressIdleStateChangeCall)
@@ -4038,7 +4037,7 @@ void AbsListView::FlingRunnable::run() {
         if (more && !atEnd) {
             if (atEdge) mLV->invalidate();
             mLastFlingY = y;
-            mLV->postOnAnimation(*this);
+            mLV->postOnAnimation(mLV->mFlingRunnable);
         } else {
             endFling();
             if (PROFILE_FLINGING) {
@@ -4072,7 +4071,7 @@ void AbsListView::FlingRunnable::run() {
                 }
             } else {
                 mLV->invalidate();
-                mLV->postOnAnimation(*this);
+                mLV->postOnAnimation(mLV->mFlingRunnable);
             }
         } else {
             endFling();

@@ -39,21 +39,23 @@ namespace R{
          static constexpr int closekeyboard           = 0x00000406 ;/*1030*/
          static constexpr int predict1                = 0x00000407 ;/*1031*/
          static constexpr int keyboardview            = 0x00000408 ;/*1032*/
-         static constexpr int increment               = 0x00000409 ;/*1033*/
-         static constexpr int numberpicker_input      = 0x0000040A ;/*1034*/
-         static constexpr int decrement               = 0x0000040B ;/*1035*/
-         static constexpr int body                    = 0x0000040C ;/*1036*/
-         static constexpr int select_dialog_listview  = 0x0000040D ;/*1037*/
-         static constexpr int text1                   = 0x0000040E ;/*1038*/
+         static constexpr int prev                    = 0x00000409 ;/*1033*/
+         static constexpr int rew                     = 0x0000040A ;/*1034*/
+         static constexpr int pause                   = 0x0000040B ;/*1035*/
+         static constexpr int ffwd                    = 0x0000040C ;/*1036*/
+         static constexpr int next                    = 0x0000040D ;/*1037*/
+         static constexpr int time_current            = 0x0000040E ;/*1038*/
+         static constexpr int mediacontroller_progress= 0x0000040F ;/*1039*/
+         static constexpr int time                    = 0x00000410 ;/*1040*/
+         static constexpr int increment               = 0x00000411 ;/*1041*/
+         static constexpr int numberpicker_input      = 0x00000412 ;/*1042*/
+         static constexpr int decrement               = 0x00000413 ;/*1043*/
+         static constexpr int body                    = 0x00000414 ;/*1044*/
+         static constexpr int select_dialog_listview  = 0x00000415 ;/*1045*/
+         static constexpr int text1                   = 0x00000416 ;/*1046*/
     };/*namespace id*/
 
     namespace strings{
-          static constexpr int number_picker_increment_button= 0x000003E8 ;/*1000*/
-          static constexpr int number_picker_decrement_button= 0x000003E9 ;/*1001*/
-          static constexpr int row1                    = 0x000003EA ;/*1002*/
-          static constexpr int row2                    = 0x000003EB ;/*1003*/
-          static constexpr int row3                    = 0x000003EC ;/*1004*/
-          static constexpr int row4                    = 0x000003ED ;/*1005*/
     };/*namespace strings*/
 
 };//endof namespace R

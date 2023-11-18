@@ -50,7 +50,7 @@ int main(int argc,const char*argv[]){
     lv->setVerticalScrollBarEnabled(true);
     lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     lv->setDividerHeight(1);
-    for(int i=0;i<32;i++){
+    for(int i=0;i<64;i++){
         adapter->add("");
     }
     lv->addHeaderView(createHeader(),nullptr,false);
@@ -59,8 +59,10 @@ int main(int argc,const char*argv[]){
     adapter->notifyDataSetChanged();
     lv->setSelector(new ColorDrawable(0x8800FF00));
     lv->setSelection(2);
-    lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
+    lv->setOnItemClickListener([adapter](AdapterView&lv,View&v,int pos,long id){
         LOGD("clicked %d",pos);
+	if(pos==60)
+	   ((AbsListView&)lv).smoothScrollToPosition(0);
     });
     lv->requestLayout();
     app.exec();

@@ -2463,7 +2463,6 @@ void View::onDrawScrollBars(Canvas& canvas){
             getVerticalScrollBarBounds(&bounds, nullptr);
             onDrawVerticalScrollBar(canvas, scrollBar, bounds);
             if (bInvalidate) invalidate(bounds);
-	    //LOGD("%p:%d state=%d invalidate=%d rect=(%d,%d,%d,%d)",this,mID,cache->state,bInvalidate,bounds.left,bounds.top,bounds.width,bounds.height);
         }
     }
 }
