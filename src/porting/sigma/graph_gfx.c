@@ -115,6 +115,18 @@ int GFXInit() {
     for(int i =0;i<index;i++){
         MI_PHY phySrcBufAddr = devSurfaces[i].kbuffer;
         MI_SYS_Mmap(phySrcBufAddr,devSurfaces[i].msize, (void**)&devSurfaces[i].buffer, FALSE);
+        if (i == 0 && access("logo.dat", F_OK) == 0) {            
+            size_t rlen, tlen = 0;
+            char *buf         = devSurfaces[i].buffer;
+            size_t blen       = devSurfaces[i].msize;
+            FILE *fo          = fopen("logo.dat", "rb");
+#define __tmin__(a,b) ((a)>(b)?(b):(a))
+            while (tlen < blen && (rlen = fread(buf + tlen, 1, __tmin__(blen - tlen, 4096), fo)) > 0) {
+                tlen += rlen;
+            }
+            fclose(fo);
+            LOGI("Logo buf=%p blen=%u tlen=%u", buf, blen, tlen);
+        }
         LOGI("Surface[%d]buffer=%llx/%p %d",i,phySrcBufAddr,devSurfaces[i].buffer,devSurfaces[i].msize);
     }
     LOGI("%d surfaces is configured for app usage",index);
@@ -302,12 +314,12 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
             memset(surf->buffer,0,surf->msize);
         }
     }
-    if(surf->kbuffer)MI_SYS_MemsetPa(surf->kbuffer,0x000000,surf->msize);
+    if(surf->kbuffer && !hwsurface) MI_SYS_MemsetPa(surf->kbuffer,0x000000,surf->msize);
     surf->orig_buffer=surf->buffer;
     if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;
     surf->alpha=255;
-    LOGI("Surface=%p buf=%llx/%p size=%dx%d/%d hw=%d\r\n",surf,surf->kbuffer,surf->buffer,surf->width,surf->height,surf->msize,hwsurface);
+    LOGI("Surface=%p buf=%llx/%p size=%dx%d/%d hw=%d",surf,surf->kbuffer,surf->buffer,surf->width,surf->height,surf->msize,hwsurface);
     *surface=surf;
     return E_OK;
 }

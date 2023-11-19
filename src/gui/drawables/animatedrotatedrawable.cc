@@ -44,8 +44,14 @@ AnimatedRotateDrawable::AnimatedRotateDrawable(std::shared_ptr<AnimatedRotateSta
     updateLocalState();
     mNextFrame = [this](){
         mCurrentDegrees += mIncrement;
-        if (mCurrentDegrees > (360.0f - mIncrement)) {
-            mCurrentDegrees = 0.0f;
+        if (mIncrement < 0) {
+            if (mCurrentDegrees < -1 * (360.0f + mIncrement)) {
+                mCurrentDegrees = 0.0f;
+            }
+        } else {
+            if (mCurrentDegrees > (360.0f - mIncrement)) {
+                mCurrentDegrees = 0.0f;
+            }
         }
         invalidateSelf();
         nextFrame();
@@ -165,7 +171,7 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
 
     float px = bounds.left+(mState->mPivotXRel ? (w * mState->mPivotX) : mState->mPivotX);
     float py = bounds.top+(mState->mPivotYRel ? (h * mState->mPivotY) : mState->mPivotY);
-    LOGV("%p bounds(%d,%d %d,%d) pivot=%f,%f pxy=%f,%f degrees=%f",this,bounds.left,bounds.top,bounds.width,bounds.height, 
+    LOGV("%p bounds(%d,%d %d,%d) pivot=%f,%f pxy=%f,%f degrees=%f",this,bounds.left,bounds.top,bounds.width,bounds.height,
          mState->mPivotX, mState->mPivotY,px,py,mCurrentDegrees);
 
     const float radians=M_PI*2.f*mCurrentDegrees/360.f;
@@ -199,7 +205,6 @@ Drawable*AnimatedRotateDrawable::inflate(Context*ctx,const AttributeSet&atts){
     Drawable*child = createWrappedDrawable(ctx,atts);
     ad->setDrawable(child);
     return ad;
-    
-}
-}
 
+}
+}
