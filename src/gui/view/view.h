@@ -640,12 +640,6 @@ protected:
     int getSuggestedMinimumHeight();
     void setMeasuredDimension(int measuredWidth, int measuredHeight);
     bool handleScrollBarDragging(MotionEvent& event);
-    void setSoundEffectsEnabled(bool soundEffectsEnabled);
-    bool isSoundEffectsEnabled()const;
-    void playSoundEffect(int soundConstant);
-    void setHapticFeedbackEnabled(bool hapticFeedbackEnabled);
-    bool isHapticFeedbackEnabled()const;
-    bool performHapticFeedback(int feedbackConstant, int flags=0);
     bool performButtonActionOnTouchDown(MotionEvent&);
 
     void onAnimationStart();
@@ -753,6 +747,13 @@ public:
     void startAnimation(Animation* animation);
     void clearAnimation();
     void setAnimation(Animation* animation);
+
+    void setSoundEffectsEnabled(bool soundEffectsEnabled);
+    bool isSoundEffectsEnabled()const;
+    void playSoundEffect(int soundConstant);
+    void setHapticFeedbackEnabled(bool hapticFeedbackEnabled);
+    bool isHapticFeedbackEnabled()const;
+    bool performHapticFeedback(int feedbackConstant, int flags=0);
 
     void setDrawingCacheEnabled(bool);
     bool isDrawingCacheEnabled()const;

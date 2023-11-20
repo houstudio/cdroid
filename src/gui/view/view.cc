@@ -207,11 +207,11 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setVisibility(attrs.getInt("visibility",std::map<const std::string,int>{
            {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}   },(int)VISIBLE));
 
-    if(attrs.getBoolean("soundEffectsEnabled",true)){
+    if(!attrs.getBoolean("soundEffectsEnabled",true)){
         viewFlagValues &= ~SOUND_EFFECTS_ENABLED;
         viewFlagMasks |= SOUND_EFFECTS_ENABLED;
     }
-    if(attrs.getBoolean("hapticFeedbackEnabled",true)){
+    if(!attrs.getBoolean("hapticFeedbackEnabled",true)){
         viewFlagValues &= ~HAPTIC_FEEDBACK_ENABLED;
         viewFlagMasks |= HAPTIC_FEEDBACK_ENABLED;
     }
@@ -479,7 +479,7 @@ void View::initView(){
     mBoundsChangedmDefaultFocusHighlightSizeChanged = false;
 
     mOldWidthMeasureSpec = mOldHeightMeasureSpec = INT_MIN;
-    mViewFlags = ENABLED|VISIBLE|FOCUSABLE_AUTO;
+    mViewFlags = SOUND_EFFECTS_ENABLED | HAPTIC_FEEDBACK_ENABLED | ENABLED|VISIBLE|FOCUSABLE_AUTO;
     mPrivateFlags = mPrivateFlags2 = mPrivateFlags3 = 0;
     mPrivateFlags2 = (LAYOUT_DIRECTION_DEFAULT << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT) |
                  (TEXT_DIRECTION_DEFAULT << PFLAG2_TEXT_DIRECTION_MASK_SHIFT) |
@@ -6741,6 +6741,7 @@ bool View::isSoundEffectsEnabled()const{
 }
 
 void View::playSoundEffect(int soundConstant){
+    LOGD_IF(mAttachInfo&&mAttachInfo->mPlaySoundEffect,"%p:%d fun=%p soundConstant=%d enabled=%d",this,mID,mAttachInfo->mPlaySoundEffect,soundConstant,isSoundEffectsEnabled());
     if(mAttachInfo==nullptr||mAttachInfo->mPlaySoundEffect==nullptr||isSoundEffectsEnabled()==false)
 	return ;
     mAttachInfo->mPlaySoundEffect(soundConstant);

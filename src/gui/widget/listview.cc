@@ -1816,7 +1816,7 @@ bool  ListView::arrowScroll(int direction) {
     mInLayout = true;
     const bool handled=arrowScrollImpl(direction);
     if(handled)
-	playSoundEffect(SoundEffectConstants::getContantForFocusDirection(direction));
+        playSoundEffect(SoundEffectConstants::getContantForFocusDirection(direction));
     mInLayout=false;
     return handled;
 }
