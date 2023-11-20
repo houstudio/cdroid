@@ -720,7 +720,8 @@ void ImageView::updateDrawable(Drawable*d){
 }
 
 void ImageView::setImageBitmap(RefPtr<ImageSurface>bitmap){
-    delete mDrawable;
+    if(mDrawable!=mRecycleableBitmapDrawable)
+	delete mDrawable;
     mDrawable = nullptr;
     if (mRecycleableBitmapDrawable == nullptr) {
         mRecycleableBitmapDrawable = new BitmapDrawable(bitmap);
