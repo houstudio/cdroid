@@ -56,8 +56,8 @@ static void endElement(void *userData, const XML_Char *name){
 }
 
 void Preferences::load(const std::string&fname){
-    std::ifstream fin(fname);
     if(access(fname.c_str(),F_OK)==0){
+        std::ifstream fin(fname);
         mFileName=fname;
         load(fin);
     }else if(fname.find("<sections>")!=std::string::npos){

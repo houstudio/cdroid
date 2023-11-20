@@ -1814,7 +1814,9 @@ bool ListView::handleHorizontalFocusWithinListItem(int direction) {
 
 bool  ListView::arrowScroll(int direction) {
     mInLayout = true;
-    bool handled=arrowScrollImpl(direction);
+    const bool handled=arrowScrollImpl(direction);
+    if(handled)
+	playSoundEffect(SoundEffectConstants::getContantForFocusDirection(direction));
     mInLayout=false;
     return handled;
 }

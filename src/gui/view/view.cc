@@ -6070,8 +6070,10 @@ void View::setHovered(bool hovered) {
 }
 
 bool View::performClick(){
-    if(mListenerInfo && mListenerInfo->mOnClickListener) 
+    if(mListenerInfo && mListenerInfo->mOnClickListener){
+         playSoundEffect(SoundEffectConstants::CLICK);
          mListenerInfo->mOnClickListener(*this);
+    }
     return mListenerInfo!=nullptr && mListenerInfo->mOnClickListener!=nullptr;
 }
 
