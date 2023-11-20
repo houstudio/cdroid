@@ -3304,8 +3304,8 @@ void AbsListView::PositionScroller::start(int position) {
         return;
     }
 
-    int firstPos = mLV->mFirstPosition;
-    int lastPos = firstPos + childCount - 1;
+    const int firstPos = mLV->mFirstPosition;
+    const int lastPos = firstPos + childCount - 1;
 
     int viewTravelCount;
     int clampedPosition = std::max(0, std::min(mLV->getCount() - 1, position));

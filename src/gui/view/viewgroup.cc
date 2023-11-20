@@ -1556,15 +1556,15 @@ void ViewGroup::removeAllViewsInLayout() {
 
     if (bclearChildFocus) {
         clearChildFocus(focused);
-        /*if (!rootViewRequestFocus()) {
+        if (!rootViewRequestFocus()) {
             notifyGlobalFocusCleared(focused);
-        }*/
+        }
     }
     mChildren.clear();
 }
 
 bool ViewGroup::removeViewInternal(View* view){
-    int index = indexOfChild(view);
+    const int index = indexOfChild(view);
     if (index >= 0) {
         removeViewInternal(index, view);
         return true;
@@ -1604,7 +1604,7 @@ void ViewGroup::removeViewInternal(int index, View* view){
 
     if (_clearChildFocus) {
         clearChildFocus(view);
-        //if (!rootViewRequestFocus())notifyGlobalFocusCleared(this);
+        if (!rootViewRequestFocus()) notifyGlobalFocusCleared(this);
     }
     dispatchViewRemoved(view);
 
@@ -1670,7 +1670,7 @@ void ViewGroup::removeViewsInternal(int start, int count){
     }
     if (_clearChildFocus) {
         clearChildFocus(focused);
-        //if (!rootViewRequestFocus()) notifyGlobalFocusCleared(focused);
+        if (!rootViewRequestFocus()) notifyGlobalFocusCleared(focused);
     }
 }
 

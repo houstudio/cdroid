@@ -5221,9 +5221,18 @@ void View::clearFocusInternal(View* focused, bool propagate, bool refocus){
          invalidate(true);
          refreshDrawableState();
 
-         //if (propagate && (!refocus || !rootViewRequestFocus())) notifyGlobalFocusCleared(this);
-         
+         if (propagate && (!refocus || !rootViewRequestFocus())) notifyGlobalFocusCleared(this);        
     }
+}
+
+void View::notifyGlobalFocusCleared(View*oldFocus){
+    if(oldFocus && mAttachInfo)
+	mAttachInfo->mTreeObserver->dispatchOnGlobalFocusChange(oldFocus,nullptr);
+}
+
+bool View::rootViewRequestFocus() {
+    View* root = getRootView();
+    return root && root->requestFocus();
 }
 
 void View::handleFocusGainInternal(int direction,Rect*previouslyFocusedRect){
@@ -6741,7 +6750,6 @@ bool View::isSoundEffectsEnabled()const{
 }
 
 void View::playSoundEffect(int soundConstant){
-    LOGD_IF(mAttachInfo&&mAttachInfo->mPlaySoundEffect,"%p:%d fun=%p soundConstant=%d enabled=%d",this,mID,mAttachInfo->mPlaySoundEffect,soundConstant,isSoundEffectsEnabled());
     if(mAttachInfo==nullptr||mAttachInfo->mPlaySoundEffect==nullptr||isSoundEffectsEnabled()==false)
 	return ;
     mAttachInfo->mPlaySoundEffect(soundConstant);

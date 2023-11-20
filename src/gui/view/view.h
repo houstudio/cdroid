@@ -988,6 +988,8 @@ public:
     bool isFocusable()const;
     void setFocusable(bool);
     int  getFocusable()const;
+    void notifyGlobalFocusCleared(View* oldFocus);
+    bool rootViewRequestFocus();
     virtual void unFocus(View*);
     virtual bool hasFocus()const;
     virtual bool restoreFocusInCluster(int direction);
