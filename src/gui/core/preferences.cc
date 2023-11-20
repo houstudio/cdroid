@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <unistd.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <expat.h>
@@ -56,9 +57,11 @@ static void endElement(void *userData, const XML_Char *name){
 
 void Preferences::load(const std::string&fname){
     std::ifstream fin(fname);
-    if(fin.good()){
+    if(access(fname.c_str(),F_OK)==0){
         mFileName=fname;
         load(fin);
+    }else if(fname.find("<sections>")!=std::string::npos){
+        load(fname.c_str(),fname.length());
     }
 }
 

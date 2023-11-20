@@ -607,7 +607,7 @@ bool ImageView::isOpaque() const{
 }
 
 static bool isRectilinear(const Cairo::Matrix& matrix) {
-    // 判断矩阵是否保持矩形形状
+    // 鍒ゆ柇鐭╅樀鏄惁淇濇寔鐭╁舰褰㈢姸
     if ((matrix.xx == 0) || (matrix.yy == 0) || (matrix.yx != 0) || (matrix.xy != 0) ) {
         return false;
     }
@@ -721,7 +721,7 @@ void ImageView::updateDrawable(Drawable*d){
 
 void ImageView::setImageBitmap(RefPtr<ImageSurface>bitmap){
     if(mDrawable!=mRecycleableBitmapDrawable)
-	delete mDrawable;
+        delete mDrawable;
     mDrawable = nullptr;
     if (mRecycleableBitmapDrawable == nullptr) {
         mRecycleableBitmapDrawable = new BitmapDrawable(bitmap);

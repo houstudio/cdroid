@@ -44,14 +44,10 @@ AnimatedRotateDrawable::AnimatedRotateDrawable(std::shared_ptr<AnimatedRotateSta
     updateLocalState();
     mNextFrame = [this](){
         mCurrentDegrees += mIncrement;
-        if (mIncrement < 0) {
-            if (mCurrentDegrees < -1 * (360.0f + mIncrement)) {
-                mCurrentDegrees = 0.0f;
-            }
-        } else {
-            if (mCurrentDegrees > (360.0f - mIncrement)) {
-                mCurrentDegrees = 0.0f;
-            }
+        if( (mIncrement < 0) && (mCurrentDegrees < -360.f - mIncrement) ){
+            mCurrentDegrees = 0.f;
+        }else if ((mIncrement > 0) && (mCurrentDegrees > 360.0f - mIncrement)) {
+            mCurrentDegrees = 0.0f;
         }
         invalidateSelf();
         nextFrame();
@@ -205,6 +201,6 @@ Drawable*AnimatedRotateDrawable::inflate(Context*ctx,const AttributeSet&atts){
     Drawable*child = createWrappedDrawable(ctx,atts);
     ad->setDrawable(child);
     return ad;
+}
+}
 
-}
-}

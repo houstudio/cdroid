@@ -64,7 +64,7 @@ Window::Window(int x,int y,int width,int height,int type)
     WindowManager::getInstance().getDefaultDisplay().getSize(size);
     if(width<0)  width = size.x;
     if(height<0) height= size.y;
-   
+    setBackground(nullptr);
     setFrame(x, y, width, height);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setFocusable(true);
