@@ -1550,6 +1550,7 @@ void ViewGroup::removeAllViewsInLayout() {
         mChildren[i] = nullptr;//cant delete mChilden[i]
     }
 
+    mChildren.clear();
     if (mDefaultFocus)  clearDefaultFocus(mDefaultFocus);
 
     if (mFocusedInCluster) clearFocusedInCluster(mFocusedInCluster);
@@ -1560,7 +1561,6 @@ void ViewGroup::removeAllViewsInLayout() {
             notifyGlobalFocusCleared(focused);
         }
     }
-    mChildren.clear();
 }
 
 bool ViewGroup::removeViewInternal(View* view){
