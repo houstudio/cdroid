@@ -530,7 +530,8 @@ void Layout::relayout(bool force){
         case WORDBREAK_BREAK:{
             word.append(1,mText[i]);
             measureSize(word,extents);
-            int outofwidth=(total_width + extents.x_advance >mWidth);
+            if(iscntrl(mText[i]))extents.x_advance=0;
+            const int outofwidth=(total_width + extents.x_advance >mWidth);
             if( (( (breaks[0]==WORDBREAK_BREAK) && ( outofwidth && (mBreakStrategy==0) ))||(linebreak==LINEBREAK_MUSTBREAK))){
                 pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
@@ -593,17 +594,17 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         int lineStart = getLineStart(lineNum);
         int lineEnd = getLineEnd(lineNum);
         std::wstring line = getLineText(lineNum);
-        const size_t last = line.length()-1;
-        if(line[last]=='\n')
-           line[last] =' ';
+        const int last = line.back();
+        if((last=='\n')||(last=='\r'))
+           line.pop_back();
         measureSize(line.substr(0,1),te,nullptr);
         switch(mAlignment){
         case ALIGN_NORMAL:
         case ALIGN_LEFT  : 
         default          : x = 0 ; break;
-        case ALIGN_CENTER: x = (mWidth-lw)/2 ; break;
+        case ALIGN_CENTER: x = (mWidth - lw)/2 ; break;
         case ALIGN_OPPOSITE:
-        case ALIGN_RIGHT : x = mWidth-lw ; break;
+        case ALIGN_RIGHT : x = mWidth - lw ; break;
         }
         LOGV("line[%d](%d,%d) layoutWidth=%d [%s](%d).width=%d fontsize=%.f alignment=%x abearing=%f",
              lineNum,x,y,mWidth,TextUtils::unicode2utf8(line).c_str(),line.size(),lw,mFontSize,mAlignment,te.x_bearing);
