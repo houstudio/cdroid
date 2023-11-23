@@ -19,6 +19,7 @@ private:
     std::mutex mtxEvents;
     ScreenSaver mScreenSaver;
     int mScreenSaveTimeOut;
+    bool mRunning;
     bool mIsPlayback;
     bool mIsScreenSaveActived;
     nsecs_t mLastPlaybackEventTime;/*for event record and playback*/
