@@ -136,8 +136,8 @@ ViewGroup::ViewGroup(int w,int h)
 
 ViewGroup::ViewGroup(int x,int y,int w,int h)
 :View(w,h){
-    mLeft=x;
-    mTop=y;
+    mLeft = x;
+    mTop  = y;
     initGroup();
 }
 
@@ -159,9 +159,9 @@ void ViewGroup::initGroup(){
     mFirstTouchTarget = nullptr;
     mFirstHoverTarget = nullptr;
     mTooltipHoverTarget = nullptr;
-    mOnHierarchyChangeListener = nullptr;
     mLayoutAnimationController = nullptr;
-    mHoveredSelf=false;
+    mHoveredSelf = false;
+    mIsInterestedInDrag = false;
     mTooltipHoveredSelf = false;
     mChildCountWithTransientState= 0;
     mChildUnhandledKeyListeners  = 0;
@@ -589,7 +589,7 @@ bool ViewGroup::canViewReceivePointerEvents(View& child) {
     return (child.mViewFlags & VISIBILITY_MASK) == VISIBLE || child.getAnimation();
 }
 
-void ViewGroup::setOnHierarchyChangeListener(OnHierarchyChangeListener listener){
+void ViewGroup::setOnHierarchyChangeListener(const OnHierarchyChangeListener& listener){
     mOnHierarchyChangeListener =listener;
 }
 
@@ -688,14 +688,14 @@ void ViewGroup::childHasTransientStateChanged(View* child, bool childHasTransien
 
 void ViewGroup::dispatchViewAdded(View*v){
     onViewAdded(v);
-    if(mOnHierarchyChangeListener)
-        mOnHierarchyChangeListener(*this,v,true);
+    if(mOnHierarchyChangeListener.onChildViewAdded)
+        mOnHierarchyChangeListener.onChildViewAdded(*this,v);
 }
 
 void ViewGroup::dispatchViewRemoved(View*v){
     onViewRemoved(v);
-    if(mOnHierarchyChangeListener)
-        mOnHierarchyChangeListener(*this,v,false);
+    if(mOnHierarchyChangeListener.onChildViewRemoved)
+        mOnHierarchyChangeListener.onChildViewRemoved(*this,v);
 }
 
 void ViewGroup::removeDetachedView(View* child, bool animate){
@@ -705,7 +705,7 @@ void ViewGroup::removeDetachedView(View* child, bool animate){
     if (child == mDefaultFocus) clearDefaultFocus(child);
     if (child == mFocusedInCluster) clearFocusedInCluster(child);
 
-    //child->clearAccessibilityFocus();
+    child->clearAccessibilityFocus();
 
     cancelTouchTarget(child);
     cancelHoverTarget(child);
@@ -1528,7 +1528,7 @@ void ViewGroup::removeAllViewsInLayout() {
             bclearChildFocus = true;
         }
 
-        //view->clearAccessibilityFocus();
+        view->clearAccessibilityFocus();
 
         cancelTouchTarget(view);
         cancelHoverTarget(view);
@@ -1582,7 +1582,7 @@ void ViewGroup::removeViewInternal(int index, View* view){
     }
     if (view == mFocusedInCluster)clearFocusedInCluster(view);
 
-    //view->clearAccessibilityFocus();
+    view->clearAccessibilityFocus();
 
     cancelTouchTarget(view);
     cancelHoverTarget(view);
@@ -1617,7 +1617,10 @@ void ViewGroup::removeViewInternal(int index, View* view){
             mTransientIndices[i]=oldIndex-1;//mTransientIndices.set(i, oldIndex - 1);
         }
     }
-    //if (mCurrentDragStartEvent != nullptr)  mChildrenInterestedInDrag->remove(view);
+    /*if (mCurrentDragStartEvent != nullptr){
+        auto it =std::find(mChildrenInterestedInDrag.begin(),mChildrenInterestedInDrag.end(),view);
+        if(it!=mChildrenInterestedInDrag.end())mChildrenInterestedInDrag.erase(it);
+    }*/
 }
 
 void ViewGroup::removeViewsInternal(int start, int count){
@@ -1644,7 +1647,7 @@ void ViewGroup::removeViewsInternal(int start, int count){
         if (view == mDefaultFocus)_clearDefaultFocus = view;
         if (view == mFocusedInCluster) clearFocusedInCluster(view);
 
-        //view->clearAccessibilityFocus();
+        view->clearAccessibilityFocus();
 
         cancelTouchTarget(view);
         cancelHoverTarget(view);
@@ -3141,9 +3144,9 @@ void ViewGroup::dispatchDetachedFromWindow(){
     mLayoutCalledWhileSuppressed = false;
 
     // Tear down our drag tracking
-    /*mChildrenInterestedInDrag = null;
+    mChildrenInterestedInDrag.clear();// = null;
     mIsInterestedInDrag = false;
-    if (mCurrentDragStartEvent != null) {
+    /*if (mCurrentDragStartEvent != null) {
         mCurrentDragStartEvent.recycle();
         mCurrentDragStartEvent = null;
     }*/

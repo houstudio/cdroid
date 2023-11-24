@@ -6,7 +6,7 @@
 #include <uievents.h>
 #include <thread>
 #include <chrono>
-#include<tokenizer.h>
+#include <tokenizer.h>
 #include <systemclock.h>
 
 namespace cdroid{
@@ -21,8 +21,13 @@ InputEventSource::InputEventSource(){
     mLastPlaybackEventTime = SystemClock::uptimeMillis();
     mLastInputEventTime = mLastPlaybackEventTime;
     auto func=[this](){
+        INPUTEVENT es[128];
         while(1){
-            INPUTEVENT es[128];
+            if(mRunning==false){
+                std::chrono::milliseconds dur(50);
+                std::this_thread::sleep_for(dur);
+                continue;
+            }
             const int count = InputGetEvents(es,sizeof(es)/sizeof(INPUTEVENT),20);
             std::lock_guard<std::mutex> lock(mtxEvents);
             if(count)mLastInputEventTime = SystemClock::uptimeMillis();
@@ -32,7 +37,6 @@ InputEventSource::InputEventSource(){
                     onDeviceChanged(es+i);
                     continue;
                 }
-		if(mRunning==false)break;
                 mRawEvents.push(es[i]);
             }
         }
@@ -103,7 +107,7 @@ int InputEventSource::checkEvents(){
     std::lock_guard<std::mutex> lock(mtxEvents);
     nsecs_t now = SystemClock::uptimeMillis();
     if(mRunning==false)
-	mRunning = true;
+        mRunning = true;
     if( ((now - mLastInputEventTime) > mScreenSaveTimeOut) && (mScreenSaveTimeOut>0)
             && ( mIsScreenSaveActived == false ) && mScreenSaver){
         mScreenSaver(true);

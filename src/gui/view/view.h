@@ -20,6 +20,7 @@
 #include <view/viewtreeobserver.h>
 #include <view/soundeffectconstants.h>
 #include <view/hapticfeedbackconstants.h>
+#include <view/accessibility/accessibilityevent.h>
 #include <animation/animation.h>
 #include <animation/statelistanimator.h>
 #include <set>
@@ -444,6 +445,7 @@ private:
     void applyBackgroundTint();
     void applyForegroundTint();
     View* findViewInsideOutShouldExist(View* root, int id)const;
+    void sendAccessibilityHoverEvent(int eventType);
     bool requestFocusNoSearch(int direction,Rect*previouslyFocusedRect);
     bool hasAncestorThatBlocksDescendantFocus()const;
 	
@@ -523,6 +525,7 @@ protected:
     bool mRightPaddingDefined;
     bool mCachingFailed;
     bool mLastIsOpaque;
+    bool mSendingHoverAccessibilityEvents;
     Rect mClipBounds;
     std::string mHint;
     std::string mContentDescription;
@@ -895,6 +898,8 @@ public:
     virtual bool hasTransientState();
     void setHasTransientState(bool hasTransientState);
 
+    static int generateViewId();
+    static bool isViewIdGenerated(int id);
     View& setId(int id);
     int  getId()const;
     int  getAccessibilityViewId();
@@ -950,7 +955,10 @@ public:
    // Attribute
     virtual View& clearFlag(int flag);
     bool isAccessibilityFocused()const;
+    View& sendAccessibilityEvent(int eventType);
     bool requestAccessibilityFocus();
+    View& clearAccessibilityFocus();
+    View& clearAccessibilityFocusNoCallbacks(int action);
     bool isAccessibilityFocusedViewOrHost();
     virtual bool isFocused()const;
     virtual bool isInEditMode()const;

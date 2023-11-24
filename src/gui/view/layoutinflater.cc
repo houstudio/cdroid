@@ -59,7 +59,7 @@ LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name)
     return (it!=maps.end())?it->second:nullptr;
 }
 
-bool LayoutInflater::registe(const std::string&name,const std::string&defstyle,LayoutInflater::ViewInflater inflater) {
+bool LayoutInflater::registerInflater(const std::string&name,const std::string&defstyle,LayoutInflater::ViewInflater inflater) {
     LayoutInflater::INFLATERMAPPER& maps = getInflaterMap();
     if(maps.find(name) != maps.end() )
         return false;

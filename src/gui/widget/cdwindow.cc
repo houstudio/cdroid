@@ -349,7 +349,7 @@ bool Window::onKeyDown(int keyCode,KeyEvent& evt){
 }
 
 bool Window::onKeyUp(int keyCode,KeyEvent& evt){
-    LOGD("recv %d %s flags=%x track=%d cance=%d",keyCode,evt.getLabel(),evt.getFlags(),evt.isTracking(),evt.isCanceled());
+    LOGV("recv %d %s flags=%x track=%d cance=%d",keyCode,evt.getLabel(),evt.getFlags(),evt.isTracking(),evt.isCanceled());
     switch(keyCode){
     case KEY_ESCAPE:
         if(evt.isTracking()&&!evt.isCanceled()){

@@ -46,7 +46,8 @@ public:
     int getId(const std::string&)const override;
     int getNextAutofillId()override;
     const std::string getString(const std::string&id,const std::string&lan="")override;
-    Cairo::RefPtr<Cairo::ImageSurface> getImage(const std::string&resname)override;
+    Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname)override;
+    Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&, int, int, int)override;
     std::vector<std::string> getStringArray(const std::string&resname,const std::string&arrayname)const;
     std::unique_ptr<std::istream> getInputStream(const std::string&resname,std::string*outpkg=nullptr)override;
     Drawable * getDrawable(const std::string&resid)override;

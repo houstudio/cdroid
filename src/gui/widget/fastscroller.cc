@@ -53,9 +53,11 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
         mOverlay->add(mPrimaryText);
         mOverlay->add(mSecondaryText);
     }
-    mOverlay->getOverlayView()->setOnHierarchyChangeListener([](ViewGroup&container,View *view,bool addorremove){
-        if(addorremove==false) delete view;
-    });
+    ViewGroup::OnHierarchyChangeListener hls;
+    hls.onChildViewRemoved=[](ViewGroup&container,View *view){
+        delete view;
+    };
+    mOverlay->getOverlayView()->setOnHierarchyChangeListener(hls);
     getSectionsFromIndexer();
     updateLongList(mOldChildCount, mOldItemCount);
     setScrollbarPosition(listView->getVerticalScrollbarPosition());

@@ -15,8 +15,8 @@ RadioGroup::RadioGroup(int w,int h):LinearLayout(w,h){
 
 RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
     :LinearLayout(context,attrs){
-    mCheckedId = attrs.getInt("checkedButton",NO_ID);
-
+    mCheckedId = mContext->getId(attrs.getString("id"));
+    mInitialCheckedId = (mCheckedId!=View::NO_ID);
     setOrientation(attrs.getInt("orientation",VERTICAL));
     init();
 }
@@ -44,22 +44,42 @@ void RadioGroup::onRadioChecked(CompoundButton&c,bool checked){
     setCheckedId(c.getId());
 }
 
-void RadioGroup::OnHierarchyChange(ViewGroup&parent,View*c,bool add){
-    if(add){
-        auto fun=std::bind(&RadioGroup::onRadioChecked,this,
-                std::placeholders::_1,std::placeholders::_2);
-        ((RadioButton*)c)->setOnCheckedChangeWidgetListener(fun);
+void RadioGroup::onChildViewAdded(ViewGroup& parent, View* child){
+    if((&parent==this)&&dynamic_cast<RadioButton*>(child)){
+	int id = child->getId();
+	if(id==View::NO_ID){
+	    id = child->generateViewId();
+	    child->setId(id);
+	}
+	((RadioButton*)child)->setOnCheckedChangeWidgetListener(mChildOnCheckedChangeListener);
+        if(mOnHierarchyChangeListener.onChildViewAdded)
+            mOnHierarchyChangeListener.onChildViewAdded(parent, child);
     }
 }
 
+void RadioGroup::onChildViewRemoved(ViewGroup& parent, View* child){
+    if((&parent==this)&&dynamic_cast<RadioButton*>(child)){
+	((RadioButton*)child)->setOnCheckedChangeWidgetListener(nullptr);
+    }
+    if(mOnHierarchyChangeListener.onChildViewRemoved)
+        mOnHierarchyChangeListener.onChildViewRemoved(parent, child);
+}
+
 void RadioGroup::init(){
-    auto fun=std::bind(&RadioGroup::OnHierarchyChange,this,std::placeholders::_1,
-                       std::placeholders::_2,std::placeholders::_3);
-    LinearLayout::setOnHierarchyChangeListener(fun);
+    ViewGroup::OnHierarchyChangeListener lhs;
+    mChildOnCheckedChangeListener=std::bind(&RadioGroup::onRadioChecked,this,std::placeholders::_1,std::placeholders::_2);
+    lhs.onChildViewAdded  = std::bind(&RadioGroup::onChildViewAdded,this,std::placeholders::_1,std::placeholders::_2);
+    lhs.onChildViewRemoved= std::bind(&RadioGroup::onChildViewRemoved,this,std::placeholders::_1,std::placeholders::_2);
+    LinearLayout::setOnHierarchyChangeListener(lhs);
+}
+
+void RadioGroup::setOnHierarchyChangeListener(const ViewGroup::OnHierarchyChangeListener& listener) {
+        // the user listener is delegated to our pass-through listener
+     mOnHierarchyChangeListener = listener;
 }
 
 void RadioGroup::setOnCheckedChangeListener(CompoundButton::OnCheckedChangeListener listener){
-    mOnCheckedChangeListener=listener;
+    mOnCheckedChangeListener = listener;
 }
 
 int RadioGroup::getCheckedRadioButtonId()const{
@@ -81,7 +101,7 @@ void RadioGroup::setCheckedStateForView(int viewId, bool checked){
 }
 
 void RadioGroup::check(int id){
-     if (id != -1 && (id == mCheckedId)) {
+    if ((id != -1) && (id == mCheckedId)) {
         return;
     }
 
@@ -97,6 +117,18 @@ void RadioGroup::check(int id){
 
 void RadioGroup::clearCheck(){
     check(-1);
+}
+
+void RadioGroup::onFinishInflate() {
+    LinearLayout::onFinishInflate();
+
+    // checks the appropriate radio button as requested in the XML file
+    if (mCheckedId != -1) {
+        mProtectFromCheckedChange = true;
+        setCheckedStateForView(mCheckedId, true);
+        mProtectFromCheckedChange = false;
+        setCheckedId(mCheckedId);
+    }
 }
 
 View& RadioGroup::addView(View* child, int index,ViewGroup::LayoutParams* params){

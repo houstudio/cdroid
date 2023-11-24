@@ -83,7 +83,7 @@ void ImageView::resolveUri(){
     }
     if (!mResource.empty()) {
         if(strpbrk(mResource.c_str(),"@:")==nullptr){
-            RefPtr<Cairo::ImageSurface>bitmap = getContext()->getImage(mResource);
+            RefPtr<Cairo::ImageSurface>bitmap = getContext()->loadImage(mResource);
             setImageBitmap(bitmap);
             LOGW_IF(bitmap==nullptr,"Unable to find resource: %s",mResource.c_str());
         }else if(mResource.compare("@null")){
@@ -694,6 +694,8 @@ void ImageView::updateDrawable(Drawable*d){
         if ( !sameDrawable && isAttachedToWindow()) {
             mDrawable->setVisible(false, false);
         }
+        if(mRecycleableBitmapDrawable!=mDrawable)
+            delete mDrawable;
     }
 
     mDrawable = d;
@@ -739,7 +741,7 @@ void ImageView::setImageState(const std::vector<int>&state, bool merge){
         if (h < 0) h = mDrawableHeight;
         if (w != mDrawableWidth || h != mDrawableHeight) {
             mDrawableWidth = w;
-            mDrawableHeight = h;
+            mDrawableHeight= h;
             requestLayout();
         }
     }
@@ -770,7 +772,7 @@ void ImageView::onDraw(Canvas& canvas) {
     const double degrees = M_PI / 180.f;
 
     const int width = getWidth();
-    const int height =getHeight();
+    const int height= getHeight();
     if(mRadii[0]||mRadii[1]||mRadii[2]||mRadii[3]){
 	canvas.begin_new_sub_path();
         canvas.arc( width - mRadii[1], mRadii[1], mRadii[1], -90 * degrees, 0 * degrees);

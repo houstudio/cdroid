@@ -13,38 +13,36 @@ namespace cdroid{
 #define CHECK_POSITION_SEARCH_DISTANCE 20
 
 class AbsListView:public AdapterView,Filter::FilterListener{
+private:
+    static constexpr float FLING_DESTRETCH_FACTOR = 4.f;
 public:
     friend RecycleBin;
-    enum ChoiceMode{
-        CHOICE_MODE_NONE=0,
-        CHOICE_MODE_SINGLE=1,
-        CHOICE_MODE_MULTIPLE=2,
-        CHOICE_MODE_MULTIPLE_MODAL=3
-    };
-    enum TouchMode{
-        TOUCH_MODE_REST=-1,
-        TOUCH_MODE_DOWN=0,
-        TOUCH_MODE_TAP=1,
-        TOUCH_MODE_DONE_WAITING=2,
-        TOUCH_MODE_SCROLL=3,
-        TOUCH_MODE_FLING=4,
-        TOUCH_MODE_OVERSCROLL=5,
-        TOUCH_MODE_OVERFLING =6
-    };
-    enum{
-        TRANSCRIPT_MODE_DISABLED=0,
-        TRANSCRIPT_MODE_NORMAL=1,
-        TRANSCRIPT_MODE_ALWAYS_SCROLL=2
-    };
-    enum{
-        LAYOUT_NORMAL =0,
-        LAYOUT_FORCE_TOP =1,
-        LAYOUT_SET_SELECTION =2,
-        LAYOUT_FORCE_BOTTOM =3,
-        LAYOUT_SPECIFIC =4,
-        LAYOUT_SYNC =5,
-        LAYOUT_MOVE_SELECTION =6
-    };
+    static constexpr int CHOICE_MODE_NONE=0;
+    static constexpr int CHOICE_MODE_SINGLE=1;
+    static constexpr int CHOICE_MODE_MULTIPLE=2;
+    static constexpr int CHOICE_MODE_MULTIPLE_MODAL=3;
+
+    static constexpr int TOUCH_MODE_REST=-1;
+    static constexpr int TOUCH_MODE_DOWN=0;
+    static constexpr int TOUCH_MODE_TAP=1;
+    static constexpr int TOUCH_MODE_DONE_WAITING=2;
+    static constexpr int TOUCH_MODE_SCROLL=3;
+    static constexpr int TOUCH_MODE_FLING=4;
+    static constexpr int TOUCH_MODE_OVERSCROLL=5;
+    static constexpr int TOUCH_MODE_OVERFLING =6;
+
+    static constexpr int TRANSCRIPT_MODE_DISABLED=0;
+    static constexpr int TRANSCRIPT_MODE_NORMAL=1;
+    static constexpr int TRANSCRIPT_MODE_ALWAYS_SCROLL=2;
+
+    static constexpr int LAYOUT_NORMAL =0;
+    static constexpr int LAYOUT_FORCE_TOP =1;
+    static constexpr int LAYOUT_SET_SELECTION =2;
+    static constexpr int LAYOUT_FORCE_BOTTOM =3;
+    static constexpr int LAYOUT_SPECIFIC =4;
+    static constexpr int LAYOUT_SYNC =5;
+    static constexpr int LAYOUT_MOVE_SELECTION =6;
+
     class LayoutParams:public ViewGroup::LayoutParams{
     private:
         void init();
@@ -200,6 +198,8 @@ private:
     CheckForLongPress mPendingCheckForLongPress;
     CheckForTap mPendingCheckForTap;
     CheckForKeyLongPress mPendingCheckForKeyLongPress;
+    ViewTreeObserver::OnGlobalLayoutListener mGlobalLayoutListener;
+    ViewTreeObserver::OnTouchModeChangeListener mTouchModeChangeListener;
     AbsListView::PerformClick mPerformClick;
     FlingRunnable mFlingRunnable;
     Runnable mTouchModeReset;
@@ -236,6 +236,7 @@ private:
     void setFastScrollerAlwaysVisibleUiThread(bool alwaysShow);
     int  releaseGlow(int deltaY, int x);
     bool isGlowActive()const;
+    bool doesTouchStopStretch();
     void invalidateTopGlow();
     void invalidateBottomGlow();
     void finishGlows();
@@ -247,6 +248,8 @@ private:
     bool acceptFilter()const;
     void createTextFilter(bool animateEntrance);
     EditText* getTextFilterInput();
+    void onTouchModeChanged(bool isInTouchMode);//called by ViewTreeObserver
+    void onGlobalLayout();
 protected:
     int mChoiceMode;
     int mCheckedItemCount;
@@ -399,6 +402,7 @@ public:
 
     void clearChoices();
     void setDrawSelectorOnTop(bool onTop);
+    bool isDrawSelectorOnTop()const;
     Drawable*getSelector();
     void setSelector(Drawable*drawable);
     void setSelector(const std::string&resid);
@@ -430,7 +434,6 @@ public:
     bool onInterceptTouchEvent(MotionEvent& ev)override;
     bool onTouchEvent(MotionEvent& ev)override;
     void onRtlPropertiesChanged(int layoutDirection)override;
-    void onTouchModeChanged(bool isInTouchMode);//called by ViewTreeObserver
     bool onGenericMotionEvent(MotionEvent& event)override;
     void fling(int velocity);
     bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes);
@@ -450,6 +453,9 @@ public:
     int getListPaddingRight()const;
     void setTranscriptMode(int);
     int getTranscriptMode()const;
+
+    bool isSelectedChildViewEnabled()const;
+    void setSelectedChildViewEnabled(bool selectedChildViewEnabled);
 
     void setFriction(float friction);
     void setVelocityScale(float scale);

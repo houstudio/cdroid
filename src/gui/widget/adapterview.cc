@@ -467,7 +467,7 @@ bool AdapterView::performItemClick(View& view, int position, long id){
         result = true;
     }
 
-    //if (view != nullptr) view.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_CLICKED);
+    view.sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_CLICKED);
     return result;
 }
 

@@ -11,6 +11,7 @@ private:
         float mFraction;
         int mDimension;
         int getDimension(int boundSize)const;
+        void set(float,int);
     };
     class InsetState:public DrawableWrapper::DrawableWrapperState{
     private:

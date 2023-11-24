@@ -2,6 +2,11 @@
 #include <cdlog.h>
 namespace cdroid{
 
+void InsetDrawable::InsetValue::set(float f,int d){
+    mFraction = f;
+    mDimension= d;
+}
+
 int InsetDrawable::InsetValue::getDimension(int boundSize)const{
     return (int) (boundSize * mFraction) + mDimension;
 }
@@ -12,7 +17,11 @@ InsetDrawable::InsetState::InsetState():DrawableWrapperState(){
 
 InsetDrawable::InsetState::InsetState(const InsetState& orig)
     :DrawableWrapperState(orig){
-    mInset=orig.mInset;
+    mInset = orig.mInset;
+    mInsetLeft = orig.mInsetLeft;
+    mInsetRight= orig.mInsetRight;
+    mInsetTop  = orig.mInsetTop;
+    mInsetBottom=orig.mInsetBottom;
 }
 
 void InsetDrawable::InsetState::applyDensityScaling(int sourceDensity, int targetDensity){
@@ -26,22 +35,25 @@ Drawable*InsetDrawable::InsetState::newDrawable(){
 }
 
 InsetDrawable::InsetDrawable(){
-    mState=std::make_shared<InsetState>();
+    mState = std::make_shared<InsetState>();
 }
 
 InsetDrawable::InsetDrawable(std::shared_ptr<InsetState>state):DrawableWrapper(state){
-    mState=state;
+    mState = state;
 }
 
 InsetDrawable::InsetDrawable(Drawable*drawable,int inset)
-    :InsetDrawable(std::make_shared<InsetState>()){
-    setDrawable(drawable);
-    mState->mInset.set(inset,inset,inset,inset);
+    :InsetDrawable(drawable,inset,inset,inset,inset){
 }
 
 InsetDrawable::InsetDrawable(Drawable* drawable,int insetLeft,int insetTop,int insetRight,int insetBottom)
-    :InsetDrawable(drawable,0){
+    :InsetDrawable(std::make_shared<InsetState>()){
+    setDrawable(drawable);
     mState->mInset.set(insetLeft,insetTop,insetRight,insetBottom);
+    mState->mInsetLeft.set(0.f, insetLeft);
+    mState->mInsetTop.set(0.f, insetTop);
+    mState->mInsetRight.set(0.f, insetRight);
+    mState->mInsetBottom.set(0.f, insetBottom);
 }
 
 std::shared_ptr<DrawableWrapper::DrawableWrapperState> InsetDrawable::mutateConstantState(){

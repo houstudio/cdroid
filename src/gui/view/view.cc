@@ -3243,12 +3243,27 @@ void View::getFocusedRect(Rect&r){
 }
 
 View& View::setId(int id){
-    mID=id;
+    mID = id;
+    if((mID==View::NO_ID)){// && (mLabelForId!=View::NO_ID)){
+        mID = generateViewId();
+    }
     return *this;
 }
 
 int View::getId() const{
     return mID;
+}
+
+int View::generateViewId(){
+    static int sNextGeneratedId = 0x0;
+    int newValue = sNextGeneratedId + 1;
+    if(newValue>0xFFFFFF)newValue=1;
+    sNextGeneratedId = newValue;
+    return newValue|0xFF000000;
+}
+
+bool View::isViewIdGenerated(int id){
+    return (id&0xFF000000)==0xFF000000;
 }
 
 int View::getNextFocusLeftId()const{
@@ -4237,7 +4252,7 @@ View& View::setFlags(int flags,int mask) {
                 clearFocus();
                 mParent->clearFocusedInCluster();
             }
-            //clearAccessibilityFocus();
+            clearAccessibilityFocus();
             destroyDrawingCache();
             // GONE views noop invalidation, so invalidate the parent
             if(mParent)mParent->invalidate();
@@ -4262,7 +4277,7 @@ View& View::setFlags(int flags,int mask) {
                     clearFocus();
                     mParent->clearFocusedInCluster();
                 }
-                //clearAccessibilityFocus();
+                clearAccessibilityFocus();
             }
         }
         if(mAttachInfo)mAttachInfo->mViewVisibilityChanged = true;
@@ -4415,7 +4430,7 @@ bool View::requestAccessibilityFocus(){
         ViewGroup* viewRootImpl = getRootView();
         //if (viewRootImpl) viewRootImpl->setAccessibilityFocus(this, nullptr);
         invalidate();
-        //sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED);
+        sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED);
         return true;
     }
     return false;
@@ -5117,6 +5132,21 @@ bool View::requestRectangleOnScreen(Rect& rectangle, bool immediate){
         parent = child->getParent();
     }
     return scrolled;
+}
+
+View& View::clearAccessibilityFocus(){
+    return *this;
+}
+
+void View::sendAccessibilityHoverEvent(int eventType){
+}
+
+View& View::clearAccessibilityFocusNoCallbacks(int action){
+    return *this;
+}
+
+View& View::sendAccessibilityEvent(int eventType){
+    return *this;
 }
 
 bool View::requestFocus(int direction){
@@ -5993,23 +6023,23 @@ bool View::onHoverEvent(MotionEvent& event){
     // The root view may receive hover (or touch) events that are outside the bounds of
     // the window.  This code ensures that we only send accessibility events for
     // hovers that are actually within the bounds of the root view.
-    int action = event.getActionMasked();
-    /*if (!mSendingHoverAccessibilityEvents) {
+    const int action = event.getActionMasked();
+    if (!mSendingHoverAccessibilityEvents) {
         if ((action == MotionEvent::ACTION_HOVER_ENTER
                 || action == MotionEvent::ACTION_HOVER_MOVE)
                 && !hasHoveredChild()
                 && pointInView(event.getX(), event.getY(),0)) {
-            //sendAccessibilityHoverEvent(AccessibilityEvent.TYPE_VIEW_HOVER_ENTER);
-            //mSendingHoverAccessibilityEvents = true;
+            sendAccessibilityHoverEvent(AccessibilityEvent::TYPE_VIEW_HOVER_ENTER);
+            mSendingHoverAccessibilityEvents = true;
         }
     } else {
         if (action == MotionEvent::ACTION_HOVER_EXIT
                 || (action == MotionEvent::ACTION_HOVER_MOVE
                         && !pointInView(event.getX(), event.getY(),0))) {
-            //mSendingHoverAccessibilityEvents = false;
-            //sendAccessibilityHoverEvent(AccessibilityEvent.TYPE_VIEW_HOVER_EXIT);
+            mSendingHoverAccessibilityEvents = false;
+            sendAccessibilityHoverEvent(AccessibilityEvent::TYPE_VIEW_HOVER_EXIT);
         }
-    }*/
+    }
 
     if ((action == MotionEvent::ACTION_HOVER_ENTER || action == MotionEvent::ACTION_HOVER_MOVE)
             && event.isFromSource(InputDevice::SOURCE_MOUSE)
@@ -6118,7 +6148,7 @@ bool View::performContextClick(float x, float y) {
 }
 
 bool View::performContextClick() {
-    //sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_CONTEXT_CLICKED);
+    sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_CONTEXT_CLICKED);
     bool handled = false;
     if (mListenerInfo && mListenerInfo->mOnContextClickListener) {
         handled = mListenerInfo->mOnContextClickListener(*this);
@@ -7142,11 +7172,11 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
     // Optimize layout by avoiding an extra EXACTLY pass when the view is
     // already measured as the correct size. In API 23 and below, this
     // extra pass is required to make LinearLayout re-distribute weight.
-    const bool specChanged = widthMeasureSpec != mOldWidthMeasureSpec  || heightMeasureSpec != mOldHeightMeasureSpec;
-    const bool isSpecExactly = MeasureSpec::getMode(widthMeasureSpec) == MeasureSpec::EXACTLY
-                && MeasureSpec::getMode(heightMeasureSpec) == MeasureSpec::EXACTLY;
-    const bool matchesSpecSize = getMeasuredWidth() == MeasureSpec::getSize(widthMeasureSpec)
-                && getMeasuredHeight() == MeasureSpec::getSize(heightMeasureSpec);
+    const bool specChanged = (widthMeasureSpec != mOldWidthMeasureSpec)  || (heightMeasureSpec != mOldHeightMeasureSpec);
+    const bool isSpecExactly = (MeasureSpec::getMode(widthMeasureSpec) == MeasureSpec::EXACTLY)
+                && (MeasureSpec::getMode(heightMeasureSpec) == MeasureSpec::EXACTLY);
+    const bool matchesSpecSize = (getMeasuredWidth() == MeasureSpec::getSize(widthMeasureSpec))
+                && (getMeasuredHeight() == MeasureSpec::getSize(heightMeasureSpec));
     const bool needsLayout = specChanged  && ( sAlwaysRemeasureExactly || !isSpecExactly || !matchesSpecSize);
 
     if (forceLayout || needsLayout) {

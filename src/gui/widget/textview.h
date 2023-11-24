@@ -95,6 +95,7 @@ private:
     float mSpacingAdd;
     bool mSingleLine;
     bool mHorizontallyScrolling;
+    bool mNeedsAutoSizeText;
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
     int mFontWeightAdjustment;
@@ -125,6 +126,8 @@ private:
     void updateTextColors();
     int  getDesiredHeight();
     int  getDesiredHeight( Layout* layout, bool cap);
+    void checkForRelayout();
+    void autoSizeText();
     static int desired(Layout*);
     int  getBoxHeight(Layout* l);
     void prepareDrawableForDisplay(Drawable*d);

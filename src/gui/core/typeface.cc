@@ -45,35 +45,28 @@ Typeface::Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face) {
 Typeface::Typeface(FcPattern & font) {
     int i,ret, weight=0;
     double pixelSize=.0f;
-    FcChar8* s = FcNameUnparse(&font);
-    s = nullptr;
+    FcChar8* s =nullptr;
     if(FcPatternGetString(&font, FC_FILE, 0, &s) == FcResultMatch){
         mFileName=std::string((const char*)s);
-        s= nullptr;
     }
     std::ostringstream oss;
     for(int i=0;FcPatternGetString(&font,FC_FAMILY,i,&s)==FcResultMatch;i++){
         if(!oss.str().empty())oss<<";";
         oss<<(const char*)s;
-        s = nullptr;
     }
     mFamily = oss.str();
     LOGV("family=%s",mFamily.c_str());
-    mStyle = 0 ;
     oss.clear();
     for(i=0; FcPatternGetString(&font, FC_STYLE, i, &s)==FcResultMatch;i++){
         if(!oss.str().empty())oss<<",";
         oss<<(const char*)s;
-        s = nullptr;
     }
     mStyleName = oss.str();
     mStyle = parseStyle(oss.str(),mStyleName);
     LOGV("Style=%s/%d",mStyleName.c_str(),mStyle);
-    s = nullptr;
 
     ret = FcPatternGetString(&font,FC_SLANT,0,&s);
     LOGV_IF(ret == FcResultMatch,"Slant=%s",s);
-    s = nullptr;
 
     ret = FcPatternGetInteger(&font,FC_WEIGHT,0,&weight);
     LOGV_IF(ret == FcResultMatch,"weight =%d",weight);
@@ -91,10 +84,7 @@ Typeface::Typeface(FcPattern & font) {
     ret = FcLangSetHasLang(langset,(const FcChar8*)mSystemLang.c_str());
     if(ret == 0)
         mStyle |= SYSLANG_MATCHED;
-    //FcLangSetDestroy(langset);
-    //it seems langset is destroied by FcPattern iteself,destroied  here willc aused crash
     LOGV("has %s=%d",mSystemLang.c_str(),ret);
-    s = nullptr;
 
     Cairo::Matrix matrix = Cairo::identity_matrix();
     Cairo::Matrix ctm = Cairo::identity_matrix();
@@ -109,9 +99,10 @@ int Typeface::parseStyle(const std::string&styleName,std::string&normalizedName)
         int styleProp;
     } stlMAP[]= {
         {"(?=.*\\bregular\\b)", "Normal",NORMAL},
-        {"(?=.*\\bnormal\\b)", "Normal",NORMAL},
-        {"(?=.*\\bitalic\\b)", "Italic",ITALIC},
-        {"(?=.*\\boblique\\b)","Italic",ITALIC},
+        {"(?=.*\\bnormal\\b)" , "Normal",NORMAL},
+        {"(?=.*\\bstandard\\b)","Normal",NORMAL},
+        {"(?=.*\\bitalic\\b)", "Italic" ,ITALIC},
+        {"(?=.*\\boblique\\b)","Italic" ,ITALIC},
         {"(?=.*\\bbold\\b)", "Bold",BOLD},
         {NULL,0}
     };
@@ -449,13 +440,16 @@ int Typeface::loadFromFontConfig() {
     FcPattern*match = FcFontMatch (0, pat, &result);
     FcPatternGetString(match, FC_FILE, 0, &s);
     LOGD("match=%p:%d nfonts=%d %s",match,result,fsdef->nfont,s);
-    if(match)
+    if(match){
         setDefault(new Typeface(*match));
+        FcPatternDestroy(match);
+    }
     FcPatternDestroy(pat);
     FcFontSetDestroy(fsdef);
 
     if(fs)FcFontSetDestroy(fs);
     FcConfigDestroy(config);
+    FcObjectSetDestroy(os);
     LOGI("load %d font sSystemFontMap.size=%d",loadedFont,sSystemFontMap.size());
     return loadedFont;
 }

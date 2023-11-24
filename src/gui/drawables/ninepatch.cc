@@ -18,7 +18,7 @@ NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
 }
 
 NinePatch::NinePatch(Context*ctx,const std::string&resid){
-    mImage= ctx->getImage(resid);
+    mImage= ctx->loadImage(resid);
     mContentArea = getContentArea();
     getResizeArea();
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {

@@ -84,7 +84,7 @@ BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname)
     if((ctx==nullptr)||fs.good()){
         b = ImageSurface::create_from_stream(fs);
     }else {
-        b = ctx->getImage(resname);
+        b = ctx->loadImage(resname);
     }
     setBitmap(b);
 }

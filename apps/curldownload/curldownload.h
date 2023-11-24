@@ -50,7 +50,7 @@ private:
         double total_time,int res, int httpStatus, int stoppedByTimeout);
     void*createConnection(ConnectionData* connection);
 public:
-    CurlDownloader(cdroid::Looper*looper==nullptr);
+    CurlDownloader(cdroid::Looper*looper=nullptr);
     ~CurlDownloader();
     int addConnection(ConnectionData* connections); 
 };

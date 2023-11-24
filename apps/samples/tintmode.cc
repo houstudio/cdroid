@@ -27,7 +27,7 @@ public:
 	addView(new Button("Button",100,40)).setPos(0,0).setOnClickListener([this](View&){
 	    mTintMode=(mTintMode+1)%opCount;
 	    this->invalidate();
-	    np=new NinePatch(mContext->getImage(images[mImageIndex%imageCount]));
+	    np=new NinePatch(mContext->loadImage(images[mImageIndex%imageCount]));
 	    d=mContext->getDrawable(images[mImageIndex%imageCount]);
 	    LOGD("images=%s",images[mImageIndex%imageCount]);
 	    mImageIndex+=1;

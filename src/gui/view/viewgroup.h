@@ -29,8 +29,11 @@ class ViewGroup : public View {
 public:
     typedef cdroid::LayoutParams LayoutParams;
     typedef cdroid::MarginLayoutParams MarginLayoutParams;
+    typedef struct{
+        CallbackBase<void,ViewGroup&/*parent*/,View* /*child*/>onChildViewAdded;
+        CallbackBase<void,ViewGroup&/*parent*/,View* /*child*/>onChildViewRemoved;
+    }OnHierarchyChangeListener;
     DECLARE_UIEVENT(void,OnAnimationFinished);
-    DECLARE_UIEVENT(void,OnHierarchyChangeListener,ViewGroup&,View*,bool addremove);
     enum{
         FLAG_CLIP_CHILDREN   = 0x01,
         FLAG_CLIP_TO_PADDING = 0x02,
@@ -103,6 +106,7 @@ private:
     int mChildCountWithTransientState;
     int mChildUnhandledKeyListeners;
     bool mLayoutCalledWhileSuppressed;
+    bool mIsInterestedInDrag;
     Animation::AnimationListener mAnimationListener;
     LayoutTransition::TransitionListener mLayoutTransitionListener;
     class LayoutAnimationController* mLayoutAnimationController;
@@ -161,7 +165,8 @@ protected:
     int mGroupFlags;
     int mPersistentDrawingCache;
     std::vector<View*> mChildren;
-    std::vector<View*>mDisappearingChildren;
+    std::vector<View*> mDisappearingChildren;
+    std::vector<View*> mChildrenInterestedInDrag;
     Cairo::RefPtr<Cairo::Region>mInvalidRgn;
     Transformation*mInvalidationTransformation;
     LONGLONG time_lastframe;
@@ -298,7 +303,7 @@ public:
     void addFocusables(std::vector<View*>& views, int direction, int focusableMode)override;
     void addKeyboardNavigationClusters(std::vector<View*>&views,int drection)override;
     void setTouchscreenBlocksFocus(bool touchscreenBlocksFocus);
-    void setOnHierarchyChangeListener(OnHierarchyChangeListener listener);
+    virtual void setOnHierarchyChangeListener(const OnHierarchyChangeListener& listener);
     bool restoreFocusNotInCluster();
     View*keyboardNavigationClusterSearch(View* currentCluster,int direction)override;
     bool requestFocus(int direction=FOCUS_DOWN,Rect*previouslyFocusedRect=nullptr)override;

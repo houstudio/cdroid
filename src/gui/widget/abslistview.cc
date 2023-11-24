@@ -98,17 +98,19 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     setSmoothScrollbarEnabled(atts.getBoolean("smoothScrollbar",true));
     setTextFilterEnabled(atts.getBoolean("textFilterEnabled",false));
     setChoiceMode(atts.getInt("choiceMode",std::map<const std::string,int> {
-        {"none",CHOICE_MODE_NONE},
-        {"singleChoice",CHOICE_MODE_SINGLE},
-        {"multipleChoice",CHOICE_MODE_MULTIPLE}
-    },CHOICE_MODE_NONE));
+        {"none",(int)CHOICE_MODE_NONE},
+        {"singleChoice",(int)CHOICE_MODE_SINGLE},
+        {"multipleChoice",(int)CHOICE_MODE_MULTIPLE}
+    },(int)CHOICE_MODE_NONE));
     setTranscriptMode(atts.getInt("transcriptMode",std::map<const std::string,int>{
-        {"disabled",TRANSCRIPT_MODE_DISABLED},
-        {"normal",TRANSCRIPT_MODE_NORMAL},
-        {"alwaysScroll",TRANSCRIPT_MODE_ALWAYS_SCROLL}},TRANSCRIPT_MODE_DISABLED));
+        {"disabled",(int)TRANSCRIPT_MODE_DISABLED},
+        {"normal",(int)TRANSCRIPT_MODE_NORMAL},
+        {"alwaysScroll",(int)TRANSCRIPT_MODE_ALWAYS_SCROLL}},(int)TRANSCRIPT_MODE_DISABLED));
     setFastScrollEnabled(atts.getBoolean("fastScrollEnabled",false));
     setFastScrollStyle(atts.getString("fastScrollStyle"));
     setFastScrollAlwaysVisible(atts.getBoolean("fastScrollAlwaysVisible",false));
+    mGlobalLayoutListener = std::bind(&AbsListView::onGlobalLayout,this);
+    mTouchModeChangeListener = std::bind(&AbsListView::onTouchModeChanged,this,std::placeholders::_1);
 }
 
 AbsListView::~AbsListView() {
@@ -797,6 +799,21 @@ bool AbsListView::hasTextFilter() const {
     return mFiltered;
 }
 
+void AbsListView::onGlobalLayout() {
+    LOGD("%p:%d",this,mID);
+    if (isShown()) {
+        // Show the popup if we are filtered
+        if (mFiltered && mPopup  && !mPopup->isShowing() && !mPopupHidden) {
+            showPopup();
+        }
+    } else {
+        // Hide the popup when we are no longer visible
+        if (mPopup && mPopup->isShowing()) {
+            dismissPopup();
+        }
+    }
+}
+
 const std::string AbsListView::getTextFilter()const {
     if (mTextFilterEnabled && mTextFilter) {
         return mTextFilter->getText();
@@ -845,6 +862,10 @@ void AbsListView::onFilterComplete(int count) {
 
 void AbsListView::setDrawSelectorOnTop(bool onTop) {
     mDrawSelectorOnTop = onTop;
+}
+
+bool AbsListView::isDrawSelectorOnTop()const{
+    return mDrawSelectorOnTop;
 }
 
 Drawable*AbsListView::getSelector() {
@@ -1761,11 +1782,11 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
                 break;
             } else {
                 count++;
-                int position = firstPosition + i;
+                const int position = firstPosition + i;
                 if (position >= headerViewsCount && position < footerViewsStart) {
                     // The view will be rebound to new data, clear any
                     // system-managed transient state.
-                    //child->clearAccessibilityFocus();
+                    child->clearAccessibilityFocus();
                     mRecycler->addScrapView(child, position);
                 }
             }
@@ -1786,7 +1807,7 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
                 if (position >= headerViewsCount && position < footerViewsStart) {
                     // The view will be rebound to new data, clear any
                     // system-managed transient state.
-                    //child->clearAccessibilityFocus();
+                    child->clearAccessibilityFocus();
                     mRecycler->addScrapView(child, position);
                 }
             }
@@ -1840,6 +1861,14 @@ bool AbsListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
     return false;
 }
 
+bool AbsListView::isSelectedChildViewEnabled()const{
+    return mIsChildViewEnabled;
+}
+
+void AbsListView::setSelectedChildViewEnabled(bool selectedChildViewEnabled){
+    mIsChildViewEnabled = selectedChildViewEnabled;
+}
+
 void AbsListView::dispatchDraw(Canvas& canvas) {
     const bool clipToPadding = (mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK;
     if (clipToPadding) {
@@ -1875,10 +1904,10 @@ void AbsListView::jumpDrawablesToCurrentState() {
 void AbsListView::onAttachedToWindow() {
     AdapterView::onAttachedToWindow();
 
-    //ViewTreeObserver* treeObserver = getViewTreeObserver();
-    //treeObserver->addOnTouchModeChangeListener(this);
+    ViewTreeObserver* treeObserver = getViewTreeObserver();
+    treeObserver->addOnTouchModeChangeListener(mTouchModeChangeListener);
     if (mTextFilterEnabled && mPopup  && !mGlobalLayoutListenerAddedFilter) {
-        //treeObserver->addOnGlobalLayoutListener(this);
+        treeObserver->addOnGlobalLayoutListener(mGlobalLayoutListener);
     }
     if (mAdapter && mDataSetObserver==nullptr) {
         mDataSetObserver = new AdapterDataSetObserver(this);
@@ -1902,10 +1931,10 @@ void AbsListView::onDetachedFromWindow() {
     // Detach any view left in the scrap heap
     mRecycler->clear();
 
-    //ViewTreeObserver treeObserver = getViewTreeObserver();
-    //treeObserver.removeOnTouchModeChangeListener(this);
+    ViewTreeObserver* treeObserver = getViewTreeObserver();
+    treeObserver->removeOnTouchModeChangeListener(mTouchModeChangeListener);
     if (mTextFilterEnabled && mPopup != nullptr) {
-        //treeObserver.removeOnGlobalLayoutListener(this);
+        treeObserver->removeOnGlobalLayoutListener(mGlobalLayoutListener);
         mGlobalLayoutListenerAddedFilter = false;
     }
 
@@ -2221,7 +2250,10 @@ bool AbsListView::onInterceptTouchEvent(MotionEvent& ev) {
         mActivePointerId = ev.getPointerId(0);
 
         const int motionPosition = findMotionRow(y);
-        if (mTouchMode != TOUCH_MODE_FLING && motionPosition >= 0) {
+        if(doesTouchStopStretch()){
+            // Pressed during edge effect, so this is considered the same as a fling catch.
+            mTouchMode = TOUCH_MODE_FLING;
+        }else if (mTouchMode != TOUCH_MODE_FLING && motionPosition >= 0) {
             // User clicked on an actual view (and was not stopping a fling).
             // Remember where the motion event started
             v = getChildAt(motionPosition - mFirstPosition);
@@ -2699,6 +2731,11 @@ int AbsListView::releaseGlow(int deltaY, int x) {
  */
 bool AbsListView::isGlowActive()const {
     return mEdgeGlowBottom->getDistance() != 0 || mEdgeGlowTop->getDistance() != 0;
+}
+
+bool AbsListView::doesTouchStopStretch() {
+    return (mEdgeGlowBottom->getDistance() != 0 && !canScrollDown())
+            || (mEdgeGlowTop->getDistance() != 0 && !canScrollUp());
 }
 
 void AbsListView::invalidateTopGlow() {
@@ -3206,10 +3243,9 @@ void AbsListView::smoothScrollBy(int distance, int duration, bool linear,bool su
     const int topLimit = getPaddingTop();
     const int bottomLimit = getHeight() - getPaddingBottom();
 
-    if (distance == 0 || mItemCount == 0 || childCount == 0 ||
-            (mFirstPosition == 0 && getChildAt(0)->getTop() == topLimit && distance < 0) ||
-            (lastPos == mItemCount &&
-                    getChildAt(childCount - 1)->getBottom() == bottomLimit && distance > 0)) {
+    if ( (distance == 0) || (mItemCount == 0) || (childCount == 0) ||
+        ( (mFirstPosition == 0) && (getChildAt(0)->getTop() == topLimit) && (distance < 0) ) ||
+        ( (lastPos == mItemCount) && (getChildAt(childCount - 1)->getBottom() == bottomLimit) && (distance > 0) )) {
         mFlingRunnable.endFling();
         if (mPositionScroller != nullptr) {
             mPositionScroller->stop();
@@ -3309,6 +3345,7 @@ void AbsListView::PositionScroller::start(int position) {
 
     int viewTravelCount;
     int clampedPosition = std::max(0, std::min(mLV->getCount() - 1, position));
+    LOGD("clampedPosition=%d,firstPos=%d lastPos=%d position=%d count=%d/%d",clampedPosition,firstPos,lastPos,position,childCount,mLV->getCount());
     if (clampedPosition < firstPos) {
         viewTravelCount = firstPos - clampedPosition + 1;
         mMode = MOVE_UP_POS;
@@ -3605,9 +3642,7 @@ void AbsListView::PositionScroller::doScroll() {
 
         mLV->smoothScrollBy(firstViewTop - extraScroll, mScrollDuration, true,
                             firstPos > mTargetPos);
-
         mLastSeenPos = firstPos;
-
         if (firstPos > mTargetPos) {
             mLV->postOnAnimation(mLV->mPostScrollRunner);
         }

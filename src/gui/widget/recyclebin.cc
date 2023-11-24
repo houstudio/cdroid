@@ -15,6 +15,7 @@ RecycleBin::RecycleBin(AbsListView*lv){
 Adapter*RecycleBin::getAdapter(){
     return LV->mAdapter;
 }
+
 void RecycleBin::setViewTypeCount(int viewTypeCount) {
     LOGE_IF(viewTypeCount < 1,"Can't have a viewTypeCount(%d) < 1",viewTypeCount);
     //noinspection unchecked
@@ -374,18 +375,19 @@ View* RecycleBin::retrieveFromScrap(std::vector<View*>& scrapViews, int position
 }
 
 void RecycleBin::clearScrap(std::vector<View*>& scrap) {
-    int scrapCount = scrap.size();
+    const int scrapCount = scrap.size();
+    LOGD_IF(scrapCount,"%p:%d remove %d View",LV,LV->getId(),scrapCount);
     for (int j = 0; j < scrapCount; j++) {
         View*v=scrap[scrapCount - 1 - j];
         scrap.erase(scrap.begin()+scrapCount - 1 - j);
         removeDetachedView(v, false);
-        //delete v;when we destroy the listview'spage,if listview is fling,delete v will caused crash
+        delete v;//when we destroy the listview'spage,if listview is fling,delete v will caused crash
     }
 }
 
 void RecycleBin::clearScrapForRebind(View* view) {
     LOGV("view=%p %d",view,mScrapViews[0].size());
-    //view->clearAccessibilityFocus();
+    view->clearAccessibilityFocus();
     //view->setAccessibilityDelegate(nullptr);
 }
 

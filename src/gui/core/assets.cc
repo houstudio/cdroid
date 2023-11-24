@@ -263,7 +263,11 @@ void Assets::loadStrings(const std::string&lan) {
     }
 }
 
-RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid) {
+static Cairo::RefPtr<Cairo::ImageSurface> LoadImage( std::istream&istream ){
+    return Cairo::ImageSurface::create_from_stream(istream);
+}
+
+RefPtr<ImageSurface>Assets::loadImage(const std::string&fullresid) {
     size_t capacity = 0;
     std::string resname;
     ZIPArchive*pak = getResource(fullresid,&resname,nullptr);
@@ -273,14 +277,18 @@ RefPtr<ImageSurface>Assets::getImage(const std::string&fullresid) {
     RefPtr<ImageSurface>img;
     if(zfile==nullptr) {
         std::ifstream fi(fullresid);
-        img = loadImage(fi);
+        img = LoadImage(fi);
         LOGD_IF(img==nullptr,"pak=%p %s open failed",pak,resname.c_str());
         return img;
     }else if(zfile){
-        img = loadImage(zipis);
+        img = LoadImage(zipis);
     }
     LOGV_IF(img,"image %s size=%dx%d",fullresid.c_str(),img->get_width(),img->get_height());
     return img;
+}
+
+Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(const std::string&resname,int width,int height,int scaleType){
+    return nullptr;
 }
 
 int Assets::getId(const std::string&resname)const {

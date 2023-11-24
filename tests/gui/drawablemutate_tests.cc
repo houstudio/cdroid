@@ -44,8 +44,7 @@ TEST_F(MUTATE,bitmap){
 }
 
 TEST_F(MUTATE,bitmap2){
-    std::ifstream stm("/home/houzh/Miniwin/src/gui/res/mipmap/seek_thumb_selected.png");
-    RefPtr<ImageSurface>img=cdroid::Context::loadImage(stm);
+    RefPtr<ImageSurface>img;//=cdroid::Context::loadImage("/home/houzh/Miniwin/src/gui/res/mipmap/seek_thumb_selected.png");
     BitmapDrawable*d1=new BitmapDrawable(img);
     BitmapDrawable*d2=(BitmapDrawable*)d1->getConstantState()->newDrawable();
     ASSERT_NE(dynamic_cast<BitmapDrawable*>(d2),(void*)nullptr);
@@ -58,8 +57,7 @@ TEST_F(MUTATE,bitmap2){
 }
 
 TEST_F(MUTATE,ninepatch){
-    std::ifstream stm("/home/houzh/Miniwin/src/gui/res/mipmap/btn_default_pressed.9.png");
-    RefPtr<ImageSurface>img=cdroid::Context::loadImage(stm);
+    RefPtr<ImageSurface>img;//=cdroid::Context::loadImage("/home/houzh/Miniwin/src/gui/res/mipmap/btn_default_pressed.9.png");
     NinePatchDrawable*d1=new NinePatchDrawable(img);
     NinePatchDrawable*d2=(NinePatchDrawable*)d1->getConstantState()->newDrawable();
     printf("intrinsicsize d1=%dx%d d2=%dx%d\r\n",d1->getIntrinsicWidth(),d1->getIntrinsicHeight(),

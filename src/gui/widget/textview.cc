@@ -637,13 +637,16 @@ int TextView::getHorizontalOffsetForDrawables()const{
 }
 
 void TextView::setText(const std::string&txt){
-    if(mLayout->setText(txt)||isDirty()){
+    if(mLayout->setText(txt)){// && (getVisibility()==View::VISIBLE)){
         std::wstring&ws=getEditable();
         if(mCaretPos<ws.length())
-            mCaretPos=ws.length()-1;
+            mCaretPos = ws.length()-1;
         mLayout->setCaretPos(mCaretPos);
-        invalidate();
-        requestLayout();
+        //checkForRelayout();
+        if(getVisibility()==View::VISIBLE){
+            invalidate();
+            requestLayout();
+        }
     }
     mLayout->relayout();//use to fix getBaselineError for empty text
 }
@@ -721,15 +724,69 @@ void TextView::onSizeChanged(int w,int h,int ow,int oh){
     //mHintLayout->setWidth(w-mPaddingLeft-mPaddingRight);
 }
 
+void TextView::checkForRelayout() {
+    // If we have a fixed width, we can just swap in a new text layout
+    // if the text height stays the same or if the view height is fixed.
+    if(mLayoutParams==nullptr) return;
+    if (( (mLayoutParams->width != LayoutParams::WRAP_CONTENT)
+            || (mMaxWidthMode == mMinWidthMode && mMaxWidth == mMinWidth))
+            && (/*mHint == nullptr ||*/ mHintLayout != nullptr)
+            && (mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight() > 0)) {
+        // Static width, so try making a new text layout.
+
+        int oldht = mLayout->getHeight();
+        int want = mLayout->getMaxLineWidth();
+        int hintWant = mHintLayout ?mHintLayout->getMaxLineWidth():0;
+
+        /*
+         * No need to bring the text into view, since the size is not
+         * changing (unless we do the requestLayout(), in which case it
+         * will happen at measure).
+         */
+        /*makeNewLayout(want, hintWant, UNKNOWN_BORING, UNKNOWN_BORING,
+                      mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight(),
+                      false);*/
+
+        if (mEllipsize != Layout::ELLIPSIS_MARQUEE){//TextUtils.TruncateAt.MARQUEE) {
+            // In a fixed-height view, so use our new text layout.
+            if (mLayoutParams->height != LayoutParams::WRAP_CONTENT
+                    && mLayoutParams->height != LayoutParams::MATCH_PARENT) {
+                autoSizeText();
+                invalidate();
+                return;
+            }
+
+            // Dynamic height, but height has stayed the same,
+            // so use our new text layout.
+            if ( (mLayout->getHeight() == oldht) && ((mHintLayout == nullptr) || (mHintLayout->getHeight() == oldht))) {
+                autoSizeText();
+                invalidate();
+                return;
+            }
+        }
+
+        // We lose: the height has changed and we have a dynamic height.
+        // Request a new view layout using our new text layout.
+        requestLayout();
+        invalidate();
+    } else {
+        // Dynamic width, so we have no choice but to request a new
+        // view layout with a new text layout.
+        //nullLayouts();
+        requestLayout();
+        invalidate();
+    }
+}
+
 void TextView::onLayout(bool changed, int left, int top, int width, int height){
-   View::onLayout(changed, left, top, width, height);
-   if (mDeferScroll >= 0) {
-      int curs = mDeferScroll;
-      mDeferScroll = -1;
-      //bringPointIntoView(std::min(curs, mText.length()));
-   }
-   // Call auto-size after the width and height have been calculated.
-   //autoSizeText();
+    View::onLayout(changed, left, top, width, height);
+    if (mDeferScroll >= 0) {
+       int curs = mDeferScroll;
+       mDeferScroll = -1;
+       //bringPointIntoView(std::min(curs, mText.length()));
+    }
+    // Call auto-size after the width and height have been calculated.
+    autoSizeText();
 }
 
 void TextView::onFocusChanged(bool focused, int direction, Rect* previouslyFocusedRect){
@@ -852,6 +909,47 @@ int TextView::getLineHeight()const{
 
 void TextView::setLineHeight(int h){
     setLineSpacing(h-getLineHeight(),1.f); 
+}
+
+void TextView::autoSizeText() {
+    if (1){//!isAutoSizeEnabled()) {
+        return;
+    }
+
+    if (mNeedsAutoSizeText) {
+        if (getMeasuredWidth() <= 0 || getMeasuredHeight() <= 0) {
+            return;
+        }
+
+        const int availableWidth = mHorizontallyScrolling  ? VERY_WIDE
+                : getMeasuredWidth() //- getTotalPaddingLeft() - getTotalPaddingRight();
+				 - getCompoundPaddingLeft()-getCompoundPaddingRight();
+        const int availableHeight = getMeasuredHeight() - getExtendedPaddingBottom()
+                    - getExtendedPaddingTop();
+
+        if (availableWidth <= 0 || availableHeight <= 0) {
+            return;
+        }
+#if 0
+        synchronized (TEMP_RECTF) {
+            TEMP_RECTF.setEmpty();
+            TEMP_RECTF.right = availableWidth;
+            TEMP_RECTF.bottom = availableHeight;
+            final float optimalTextSize = findLargestTextSizeWhichFits(TEMP_RECTF);
+            if (optimalTextSize != getTextSize()) {
+                setTextSizeInternal(TypedValue.COMPLEX_UNIT_PX, optimalTextSize,
+                        false /* shouldRequestLayout */);
+
+                makeNewLayout(availableWidth, 0 /* hintWidth */, UNKNOWN_BORING, UNKNOWN_BORING,
+                        mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight(),
+                        false /* bringIntoView */);
+            }
+        }
+#endif
+    }
+    // Always try to auto-size if enabled. Functions that do not want to trigger auto-sizing
+    // after the next layout pass should set this to false.
+    mNeedsAutoSizeText = true;
 }
 
 int TextView::getDesiredHeight(){
