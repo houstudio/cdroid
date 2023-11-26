@@ -25,6 +25,7 @@ protected:
     void setConstantState(std::shared_ptr<DrawableContainerState>state)override;
 public:
     StateListDrawable();
+    StateListDrawable(const ColorStateList&);
     void addState(const std::vector<int>&stateSet,Drawable*drawable);
     bool isStateful()const override{return true;}
     bool hasFocusStateSpecified()const override;

@@ -21,8 +21,10 @@ private:
          TransitionState(TransitionState* orig, TransitionDrawable* owner);
          Drawable*newDrawable()override;
     };
+
     TransitionDrawable(std::shared_ptr<TransitionState> state);
-    LayerDrawable::LayerState* createConstantState(LayerState* state)override;
+    std::shared_ptr<LayerDrawable::LayerState> createConstantState(LayerState* state)override;
+    TransitionDrawable(Context*,const AttributeSet&);
 public:
     TransitionDrawable();
     TransitionDrawable(const std::vector<Drawable*>drawables);
@@ -32,7 +34,7 @@ public:
     bool isCrossFadeEnabled()const;
     void setCrossFadeEnabled(bool enabled);
     void draw(Canvas&canvas)override;
-	static Drawable*inflate(Context*ctx,const AttributeSet&atts);
+    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };
 
 }

@@ -8,7 +8,7 @@
 #include <map>
 #include <cdtypes.h>
 #include <cdlog.h>
-
+#include <unistd.h>
 
 namespace cdroid{
 
@@ -28,6 +28,9 @@ ColorStateList::ColorStateList(const std::vector<std::vector<int>>&states,const 
     mColors = colors;
     mChangingConfigurations = 0;
     onColorsChanged();
+}
+
+ColorStateList::~ColorStateList(){
 }
 
 void ColorStateList::dump()const{
@@ -102,6 +105,10 @@ int ColorStateList::getDefaultColor()const{
     return mDefaultColor;
 }
 
+const std::vector<std::vector<int>>& ColorStateList::getStates()const{
+    return mStateSpecs;
+}
+
 void ColorStateList::onColorsChanged(){
     int defaultColor = Color::RED;//DEFAULT_COLOR;
     bool isOpaque = true;
@@ -144,7 +151,7 @@ ColorStateList*ColorStateList::valueOf(int color){
     return new ColorStateList(EMPTY,colors);
 }
 
-const std::vector<int> ColorStateList::getColors()const{
+const std::vector<int>& ColorStateList::getColors()const{
     return mColors;
 }
 
@@ -157,7 +164,7 @@ bool ColorStateList::hasState(int state)const{
     return false;
 }
 struct ColorsParserData{
-    ColorStateList colors;
+    ColorStateList* colors;
     Context*ctx;
     std::string package;
 };
@@ -170,7 +177,9 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         std::vector<int>states;
         int color = cd->ctx->getColor(atts.getString("color"));
         StateSet::parseState(states,atts);
-        cd->colors.addStateColor(states,color);
+	if(cd->colors==nullptr)
+           cd->colors = new ColorStateList();
+        cd->colors->addStateColor(states,color);
     }
 }
 
@@ -180,6 +189,7 @@ ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const 
     XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
     ColorsParserData cd;
     cd.ctx = ctx;
+    cd.colors = nullptr;
     XML_SetUserData(parser,&cd);
     XML_SetElementHandler(parser, startElement, nullptr/*endElement*/);
     do {
@@ -193,9 +203,7 @@ ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const 
        }
     } while(!done);
     XML_ParserFree(parser);
-    if(cd.colors.getColors().size())
-        return new ColorStateList(cd.colors);
-    return nullptr;
+    return cd.colors;
 }
 
 ColorStateList*ColorStateList::inflate(Context*ctx,const std::string&resname){

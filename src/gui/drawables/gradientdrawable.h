@@ -87,6 +87,7 @@ private:
        GradientState();
        GradientState(Orientation orientation, const std::vector<int>&gradientColors);
        GradientState(const GradientState& orig);
+       ~GradientState();
        void setDensity(int targetDensity);
        bool hasCenterColor()const;
        void applyDensityScaling(int sourceDensity, int targetDensity);

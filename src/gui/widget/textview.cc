@@ -1640,7 +1640,7 @@ void TextView::setTextColor(int color){
 void TextView::setTextColor(ColorStateList* colors){
     if((colors!=nullptr)&&(colors!=mTextColor)){
         delete mTextColor;
-        mTextColor = colors;
+        mTextColor = new ColorStateList(*colors);
         updateTextColors();
     }
 }
@@ -1681,7 +1681,7 @@ void TextView::setHintTextColor(int color){
 void TextView::setHintTextColor(ColorStateList* colors){
     if(colors!=nullptr){
         delete mHintTextColor;
-        mHintTextColor=colors;
+        mHintTextColor = new ColorStateList(*colors);
         updateTextColors();
     }
 }
@@ -1704,7 +1704,7 @@ void TextView::setLinkTextColor(int color){
 void TextView::setLinkTextColor(ColorStateList* colors){
     if(colors){
         delete mLinkTextColor;
-        mLinkTextColor=colors;
+        mLinkTextColor = new ColorStateList(*colors);
         updateTextColors();
     }
 }

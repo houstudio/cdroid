@@ -8,6 +8,9 @@ namespace cdroid{
 #define TRANSITION_RUNNING  1
 #define TRANSITION_NONE     2
 
+/*TransitionDrawable::TransitionState::TransitionState(const Context*ctx,const AttributeSet&atts){   
+}*/
+
 TransitionDrawable::TransitionState::TransitionState(TransitionState* orig, TransitionDrawable* owner)
     :LayerState::LayerState(orig,owner){
 }
@@ -17,10 +20,15 @@ Drawable*TransitionDrawable::TransitionState::newDrawable(){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-TransitionDrawable::TransitionDrawable(){
-    mAlpha=0;
-    mCrossFade =false;
-    mTransitionState=TRANSITION_NONE;
+TransitionDrawable::TransitionDrawable()
+    :LayerDrawable(std::make_shared<TransitionState>(nullptr,this)){
+}
+
+TransitionDrawable::TransitionDrawable(Context*ctx,const AttributeSet&atts)
+   :LayerDrawable(std::make_shared<TransitionState>(nullptr,this)){
+    mAlpha = 0;
+    mCrossFade = false;
+    mTransitionState = TRANSITION_NONE;
 }
 
 TransitionDrawable::TransitionDrawable(const std::vector<Drawable*>drawables)
@@ -37,8 +45,8 @@ TransitionDrawable::TransitionDrawable(std::shared_ptr<TransitionState> state)
     mTransitionState=TRANSITION_NONE;
 }
 
-LayerDrawable::LayerState* TransitionDrawable::createConstantState(LayerState* state){
-    return new TransitionState((TransitionState*) state, this);
+std::shared_ptr<LayerDrawable::LayerState> TransitionDrawable::createConstantState(LayerState* state){
+    return std::make_shared<TransitionState>((TransitionState*) state, this);
 }
 
 void TransitionDrawable::startTransition(int durationMillis) {
@@ -138,7 +146,7 @@ void TransitionDrawable::draw(Canvas&canvas){
 }
 
 Drawable*TransitionDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    return new TransitionDrawable();
+    return new TransitionDrawable(ctx,atts);
 }
 
 }

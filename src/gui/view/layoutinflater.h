@@ -16,13 +16,12 @@ private:
     typedef std::map<const std::string,const std::string>STYLEMAPPER;
     static INFLATERMAPPER& getInflaterMap();
     static STYLEMAPPER& getStyleMap();
-protected:
-    View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*);
 public:
     static LayoutInflater*from(Context*context);
     static ViewInflater getInflater(const std::string&);
     static bool registerInflater(const std::string&name,const std::string&,ViewInflater fun);
     const std::string getDefaultStyle(const std::string&name)const;
+    View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*);
     View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot=true,AttributeSet*atts=nullptr);
 };
 

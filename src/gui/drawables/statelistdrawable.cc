@@ -1,4 +1,5 @@
 #include <drawables/statelistdrawable.h>
+#include <drawables/colordrawable.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 namespace cdroid{
@@ -40,6 +41,16 @@ bool StateListDrawable::StateListState::hasFocusStateSpecified()const{
 StateListDrawable::StateListDrawable(){
     auto state=std::make_shared<StateListState>(nullptr,this);
     setConstantState(state);
+}
+
+StateListDrawable::StateListDrawable(const ColorStateList&cls){
+    auto state=std::make_shared<StateListState>(nullptr,this);
+    setConstantState(state);
+    const std::vector<int>&colors = cls.getColors();
+    const std::vector<std::vector<int>>& states = cls.getStates();
+    for(int i=0;i<states.size();i++){
+	addState(states[i],new ColorDrawable(colors[i]));
+    }
 }
 
 StateListDrawable::StateListDrawable(std::shared_ptr<StateListState>state){

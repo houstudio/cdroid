@@ -45,10 +45,10 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig) {
     mGradient = orig.mGradient;
     mAngle = orig.mAngle;
     mOrientation = orig.mOrientation;
-    mSolidColors = orig.mSolidColors;
+    mSolidColors = orig.mSolidColors ? new ColorStateList(*orig.mSolidColors):nullptr;
     mGradientColors = orig.mGradientColors;
     mPositions = orig.mPositions;
-    mStrokeColors = orig.mStrokeColors;
+    mStrokeColors = orig.mStrokeColors?new ColorStateList(*orig.mStrokeColors):nullptr;
     mStrokeWidth = orig.mStrokeWidth;
     mStrokeDashWidth = orig.mStrokeDashWidth;
     mStrokeDashGap = orig.mStrokeDashGap;
@@ -71,7 +71,7 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig) {
     mUseLevelForShape = orig.mUseLevelForShape;
     mOpaqueOverBounds = orig.mOpaqueOverBounds;
     mOpaqueOverShape = orig.mOpaqueOverShape;
-    mTint = orig.mTint;
+    mTint = orig.mTint?new ColorStateList(*orig.mTint):nullptr;
     mTintMode = orig.mTintMode;
     //mThemeAttrs = orig.mThemeAttrs;
     mAttrSize = orig.mAttrSize;
@@ -85,6 +85,12 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig) {
     if (orig.mDensity != mDensity) {
         applyDensityScaling(orig.mDensity, mDensity);
     }
+}
+
+GradientDrawable::GradientState::~GradientState(){
+    delete mTint;
+    delete mStrokeColors;
+    delete mSolidColors;
 }
 
 void GradientDrawable::GradientState::setDensity(int targetDensity) {
@@ -152,7 +158,10 @@ void GradientDrawable::GradientState::setShape( int shape) {
 
 void GradientDrawable::GradientState::setSolidColors(ColorStateList*colors) {
     mGradientColors.clear();
-    mSolidColors = colors;
+    delete mSolidColors;
+    mSolidColors = nullptr;
+    if(colors)
+        mSolidColors = new ColorStateList(*colors);
     computeOpacity();
 }
 
@@ -191,9 +200,12 @@ void GradientDrawable::GradientState::computeOpacity() {
     mOpaqueOverBounds = mShape == RECTANGLE && mRadius <= 0  && mRadiusArray.size()==0;
 }
 
-void GradientDrawable::GradientState::setStroke(int width,/*@Nullable*/ColorStateList*colors, float dashWidth,float dashGap) {
+void GradientDrawable::GradientState::setStroke(int width,ColorStateList*colors, float dashWidth,float dashGap) {
     mStrokeWidth = width;
-    mStrokeColors = colors;
+    delete mStrokeColors;
+    mStrokeColors = nullptr;
+    if(colors)
+        mStrokeColors = new ColorStateList(*colors);
     mStrokeDashWidth = dashWidth;
     mStrokeDashGap = dashGap;
     computeOpacity();
@@ -265,7 +277,7 @@ void GradientDrawable::updateLocalState() {
             auto cls = state->mStrokeColors;
             strokeStateColor = cls->getColorForState(currentState,0);
         }
-        setStroke(state->mStrokeWidth,state->mStrokeColors,state->mStrokeDashWidth,state->mStrokeDashGap);
+        setStroke(state->mStrokeWidth,strokeStateColor,state->mStrokeDashWidth,state->mStrokeDashGap);
     }
     state->computeOpacity();
 }

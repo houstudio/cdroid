@@ -204,13 +204,13 @@ LayerDrawable::LayerDrawable(const std::vector<Drawable*>&drawables)
     refreshPadding();
 }
 
-LayerDrawable::LayerState* LayerDrawable::createConstantState(LayerState* state){
-    return new LayerState(state, this);
+std::shared_ptr<LayerDrawable::LayerState> LayerDrawable::createConstantState(LayerState* state){
+    return std::make_shared<LayerState>(state, this);
 }
 
 LayerDrawable::LayerDrawable(std::shared_ptr<LayerState>state){
     mMutated = false;
-    mLayerState.reset(createConstantState(state.get()));
+    mLayerState = createConstantState(state.get());
     if (mLayerState->mChildren.size()) {
         ensurePadding();
         refreshPadding();
@@ -936,7 +936,7 @@ Drawable* LayerDrawable::getFirstNonNullDrawable()const{
 
 Drawable*LayerDrawable::mutate(){
     if (!mMutated && Drawable::mutate() == this) {
-        mLayerState=std::make_shared<LayerState>(createConstantState(mLayerState.get()),nullptr);
+        mLayerState = createConstantState(mLayerState.get());
         for (auto child:mLayerState->mChildren) {
             Drawable*dr=child->mDrawable;
             if (dr != nullptr) {

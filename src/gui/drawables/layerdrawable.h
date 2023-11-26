@@ -74,7 +74,7 @@ private:
     ChildDrawable* createLayer(Drawable* dr);
     Drawable*getFirstNonNullDrawable()const;
 protected:
-    virtual LayerState* createConstantState(LayerState* state);
+    virtual std::shared_ptr<LayerState> createConstantState(LayerState* state);
     void onBoundsChange(const Rect& bounds)override;
     bool onLevelChange(int level)override;
     bool onStateChange(const std::vector<int>& state)override;

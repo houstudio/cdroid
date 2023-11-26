@@ -26,8 +26,10 @@ public:
     ColorStateList();
     ColorStateList(const ColorStateList&other);
     ColorStateList(const std::vector<std::vector<int>>&states,const std::vector<int>&colors);
+    ~ColorStateList();
     int addStateColor(const std::vector<int>&stateSet,int color);
     int getDefaultColor()const override;
+    const std::vector<std::vector<int>>& getStates()const;
     bool isOpaque()const;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const;
@@ -38,7 +40,7 @@ public:
     int getChangingConfigurations()const;
     int getColorForState(const std::vector<int>&stateSet, int defaultColor)const;
 
-    const std::vector<int>getColors()const;
+    const std::vector<int>& getColors()const;
     bool hasState(int state)const ;
     void dump()const;
     static ColorStateList*valueOf(int color);

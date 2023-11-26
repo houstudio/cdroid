@@ -21,8 +21,8 @@ private:
     std::map<const std::string,std::weak_ptr<Drawable::ConstantState>>mDrawables;
     std::map<const std::string,class ZIPArchive*>mResources;
     std::map<const std::string,AttributeSet>mStyles;
-    struct COMPLEXCOLOR;
-    std::map<const std::string,std::unique_ptr<COMPLEXCOLOR>>mColors;
+    std::map<const std::string,uint32_t>mColors;
+    std::map<const std::string,ColorStateList*>mStateColors;
     const std::string parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value);
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid,std::string*package)const;
