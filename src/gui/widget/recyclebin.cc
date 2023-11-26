@@ -376,7 +376,6 @@ View* RecycleBin::retrieveFromScrap(std::vector<View*>& scrapViews, int position
 
 void RecycleBin::clearScrap(std::vector<View*>& scrap) {
     const int scrapCount = scrap.size();
-    LOGD_IF(scrapCount,"%p:%d remove %d View",LV,LV->getId(),scrapCount);
     for (int j = 0; j < scrapCount; j++) {
         View*v=scrap[scrapCount - 1 - j];
         scrap.erase(scrap.begin()+scrapCount - 1 - j);

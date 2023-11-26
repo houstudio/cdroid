@@ -169,7 +169,7 @@ public:
 };
 
 bool View::DEBUG_DRAW = false;
-
+static int mViewCount=0;
 View::View(int w,int h){
     initView();
     mContext=&App::getInstance();
@@ -440,6 +440,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
 }
 
 void View::initView(){
+    mViewCount ++;
+    LOGD("mViewCount=%d",mViewCount);
     mID       = NO_ID;
     mAutofillViewId =NO_ID;
     mAccessibilityViewId = NO_ID;
@@ -516,6 +518,8 @@ void View::initView(){
 }
 
 View::~View(){
+    mViewCount --;
+    LOGD("mViewCount=%d",mViewCount);
     if(mParent)
         mParent->removeViewInternal(this);
     if(isAttachedToWindow())onDetachedFromWindow();

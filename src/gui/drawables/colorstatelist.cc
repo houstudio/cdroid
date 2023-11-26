@@ -8,7 +8,6 @@
 #include <map>
 #include <cdtypes.h>
 #include <cdlog.h>
-#include <unistd.h>
 
 namespace cdroid{
 
@@ -28,9 +27,6 @@ ColorStateList::ColorStateList(const std::vector<std::vector<int>>&states,const 
     mColors = colors;
     mChangingConfigurations = 0;
     onColorsChanged();
-}
-
-ColorStateList::~ColorStateList(){
 }
 
 void ColorStateList::dump()const{
@@ -177,7 +173,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         std::vector<int>states;
         int color = cd->ctx->getColor(atts.getString("color"));
         StateSet::parseState(states,atts);
-	if(cd->colors==nullptr)
+        if(cd->colors==nullptr)
            cd->colors = new ColorStateList();
         cd->colors->addStateColor(states,color);
     }

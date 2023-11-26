@@ -90,8 +90,7 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             const std::string name=atts[0].getString("name");
             uint32_t color = Color::parseColor(value);
             LOGV("%s:color/%s:%s",package.c_str(),name.c_str(),value.c_str());
-            mColors.insert(std::pair<const std::string,uint32_t>
-                   (package+":color/"+name,color));
+            mColors.insert(std::pair<const std::string,uint32_t>(package+":color/"+name,color));
         } else if(tag0.compare("string")==0) {
             const std::string name= atts[0].getString("name");
             const std::string key = package+":string/"+name;
@@ -368,20 +367,20 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
     if(resname[0]=='#'||resname[1]=='x'|| resname[1]=='X'){
         LOGV("color %s",fullresid.c_str());
         d = new ColorDrawable(Color::parseColor(resname));
-	mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
-	return d;
+        mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
+        return d;
     }
     if(resname.find("color/")!=std::string::npos){
         auto itc = mColors.find(fullresid);
         auto its = mStateColors.find(fullresid);
         if(itc!=mColors.end()){
 	    const uint32_t cc = (uint32_t)getColor(fullresid);
-	    LOGE("%s use colors as drawable",fullresid.c_str());
+            LOGV("%s use colors as drawable",fullresid.c_str());
             d = new ColorDrawable(cc);
             mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
-	    return d;
+            return d;
         } else if(its!=mStateColors.end()){
-	    LOGE("%s use colorstatelist as drawable",fullresid.c_str());
+            LOGV("%s use colorstatelist as drawable",fullresid.c_str());
             d = new StateListDrawable(*its->second);
             mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
             return d;
@@ -450,27 +449,27 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
     if( its!=mStateColors.end())
         return its->second;
     else if(itc != mColors.end()){
-	ColorStateList* cls = ColorStateList::valueOf(itc->second);
-	mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
-	return cls;
+        ColorStateList* cls = ColorStateList::valueOf(itc->second);
+        mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
+        return cls;
     }else if( (itc == mColors.end()) && (name.empty()==false) ) {
         size_t slashpos = fullresid.find("/");
         if( (fullresid[0]=='#') || (slashpos==std::string::npos) ) {/*digital colors*/
             const int color = Color::parseColor(fullresid);
             ColorStateList* cls = ColorStateList::valueOf(color);
-	    mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
-	    return cls;
+            mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
+            return cls;
         }
         if( slashpos==std::string::npos ) {/*for color wolrds*/
             std::string realName;
             parseResource(fullresid,&realName,nullptr);
             realName = mTheme.getString(realName);
             itc = mColors.find(realName);
-	    if(itc != mColors.end()){
+            if(itc != mColors.end()){
                 ColorStateList* cls = ColorStateList::valueOf(itc->second);
-		mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
-		return cls;
-	    }
+                mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
+                return cls;
+            }
         }
     } else if(fullresid.find("attr")!=std::string::npos) {
         size_t slashpos=fullresid.find("/");
