@@ -1583,17 +1583,17 @@ void TextView::invalidateDrawable(Drawable& drawable){
 void TextView::updateTextColors(){
     bool inval = false;
     const std::vector<int>&drawableState = getDrawableState();
-    int color = mTextColor->getColorForState(drawableState,0);
-    if (color != mCurTextColor) {
+    if (mCurTextColor) {
+        const int color = mTextColor->getColorForState(drawableState,0);
         LOGV("%p:%d change color %x->%x",this,mID,color,mCurTextColor);
         mCurTextColor = color;
         inval = true;
     }
-    if (mLinkTextColor != nullptr) {
+    if (mLinkTextColor) {
         color = mLinkTextColor->getColorForState(drawableState,0);
         inval = true;
     }
-    if (mHintTextColor != nullptr) {
+    if (mHintTextColor) {
         color = mHintTextColor->getColorForState(drawableState,0);
         if (color != mCurHintTextColor) {
             mCurHintTextColor = color;
@@ -1632,9 +1632,8 @@ void TextView::setEllipsize(int where){
 }
 
 void TextView::setTextColor(int color){
-    delete mTextColor;
-    mTextColor = ColorStateList::valueOf(color);
-    updateTextColors();
+    ColorStateList cls(color);
+    setTextColor(&cls);
 }
 
 void TextView::setTextColor(const ColorStateList* colors){
