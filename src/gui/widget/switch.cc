@@ -47,7 +47,7 @@ Switch::Switch(Context* context,const AttributeSet& a)
 
     ColorStateList* trackTintList = context->getColorStateList("trackTint");
     if (trackTintList) {
-        mTrackTintList = trackTintList;
+        mTrackTintList = new ColorStateList(*trackTintList);
         mHasTrackTint = true;
     }
     /*BlendMode trackTintMode = Drawable.parseBlendMode(a.getInt(com.android.internal.R.styleable.Switch_trackTintMode, -1), null);
@@ -233,7 +233,10 @@ Drawable* Switch::getTrackDrawable() {
 }
 
 void Switch::setTrackTintList(ColorStateList* tint){
-    mTrackTintList = tint;
+    delete mTrackTintList;
+	mTrackTintList = nullptr;
+	if(tint)
+        mTrackTintList = new ColorStateList(*tint);
     mHasTrackTint = true;
     applyTrackTint();
 }
