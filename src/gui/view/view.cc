@@ -441,7 +441,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
 
 void View::initView(){
     mViewCount ++;
-    LOGD_IF(View::VIEW_DEBUG,"mViewCount=%d",mViewCount);
+    LOGV_IF(View::VIEW_DEBUG,"mViewCount=%d",mViewCount);
     mID = NO_ID;
     mAutofillViewId =NO_ID;
     mAccessibilityViewId = NO_ID;
@@ -519,7 +519,7 @@ void View::initView(){
 
 View::~View(){
     mViewCount --;
-    LOGD_IF(View::VIEW_DEBUG,"mViewCount=%d",mViewCount);
+    LOGV_IF(View::VIEW_DEBUG,"mViewCount=%d",mViewCount);
     if(mParent)
         mParent->removeViewInternal(this);
     if(isAttachedToWindow())onDetachedFromWindow();

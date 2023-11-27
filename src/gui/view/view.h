@@ -47,6 +47,7 @@ typedef std::string Parcelable;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 public:
     static bool VIEW_DEBUG;
+    static int mViewCount;
     constexpr static int DEBUG_CORNERS_COLOR    = 0xFF3f7fff;
     constexpr static int DEBUG_CORNERS_SIZE_DIP = 8;
     constexpr static int NO_ID =-1;
@@ -371,7 +372,6 @@ public:
 private:
     friend ViewGroup;
     friend ViewPropertyAnimator;
-    static int mViewCount;
     int mMinWidth;
     int mMinHeight;
     int mDrawingCacheBackgroundColor;

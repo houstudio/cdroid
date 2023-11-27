@@ -444,8 +444,6 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
     name = AttributeSet::normalize(pkg,name);
     auto itc= mColors.find(name);
     auto its = mStateColors.find(name);
-    if(fullresid.compare("#313431")==0)
-	LOGI("");
     if( its!=mStateColors.end())
         return its->second;
     else if(itc != mColors.end()){

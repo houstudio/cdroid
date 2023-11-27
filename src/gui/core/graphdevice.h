@@ -18,6 +18,7 @@ private:
     int mFormat;
     int mComposing;
     int mPendingCompose;
+    int mLastViewCount;
     bool mQuitFlag;
     bool mShowFPS;
     uint64_t mLastComposeTime;
