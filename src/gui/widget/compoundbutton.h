@@ -33,7 +33,7 @@ public:
     bool performClick()override;
     Drawable* getButtonDrawable()const;
     void jumpDrawablesToCurrentState()override;
-    void setButtonTintList(ColorStateList* tint);
+    void setButtonTintList(const ColorStateList* tint);
     ColorStateList* getButtonTintList()const;
     void setButtonTintMode(PorterDuffMode tintMode);
     PorterDuffMode getButtonTintMode()const;

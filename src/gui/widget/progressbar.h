@@ -125,15 +125,15 @@ public:
     void setIndeterminateDrawableTiled(Drawable* d);
     Drawable*getIndeterminateDrawable()const;
 
-    void setProgressTintList(ColorStateList*tint);
+    void setProgressTintList(const ColorStateList*tint);
     ColorStateList*getProgressTintList()const;
     void setProgressTintMode(int);
     int getProgressTintMode()const;
-    void setProgressBackgroundTintList(ColorStateList*tint);
+    void setProgressBackgroundTintList(const ColorStateList*tint);
     ColorStateList*getProgressBackgroundTintList()const;
     void setProgressBackgroundTintMode(int);
     int getProgressBackgroundTintMode()const;
-    void setSecondaryProgressTintList(ColorStateList*tintt);
+    void setSecondaryProgressTintList(const ColorStateList*tintt);
     ColorStateList*getSecondaryProgressTintList()const;
     void setSecondaryProgressTintMode(int tintMode);
     int getSecondaryProgressTintMode()const;

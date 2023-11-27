@@ -1637,12 +1637,15 @@ void TextView::setTextColor(int color){
     updateTextColors();
 }
 
-void TextView::setTextColor(ColorStateList* colors){
-    if((colors!=nullptr)&&(colors!=mTextColor)){
+void TextView::setTextColor(const ColorStateList* colors){
+    if(colors==nullptr){
         delete mTextColor;
-        mTextColor = new ColorStateList(*colors);
-        updateTextColors();
+        mTextColor = nullptr;
+    }else{
+        if(mTextColor) *mTextColor =*colors;
+        else mTextColor = new ColorStateList(*colors);
     }
+    updateTextColors();
 }
 
 ColorStateList* TextView::getTextColors()const{
@@ -1673,17 +1676,19 @@ int TextView::getHighlightColor()const{
 }
 
 void TextView::setHintTextColor(int color){
-    delete mHintTextColor;
-    mHintTextColor = ColorStateList::valueOf(color);
-    updateTextColors();
+    ColorStateList cls(color);
+    setHintTextColor(&cls);
 }
 
-void TextView::setHintTextColor(ColorStateList* colors){
-    if(colors!=nullptr){
+void TextView::setHintTextColor(const ColorStateList* colors){
+    if(colors==nullptr){
         delete mHintTextColor;
-        mHintTextColor = new ColorStateList(*colors);
-        updateTextColors();
+        mHintTextColor = nullptr;
+    }else{
+        if(mHintTextColor) *mHintTextColor=*colors;
+        else mHintTextColor = new ColorStateList(*colors);
     }
+    updateTextColors();
 }
 
 ColorStateList* TextView::getHintTextColors()const{
@@ -1696,17 +1701,19 @@ int TextView::getCurrentHintTextColor()const{
 
 
 void TextView::setLinkTextColor(int color){
-    delete mLinkTextColor;
-    mLinkTextColor = ColorStateList::valueOf(color);
-    updateTextColors();
+    ColorStateList cls(color);
+    setLinkTextColor(&cls);
 }
 
-void TextView::setLinkTextColor(ColorStateList* colors){
-    if(colors){
+void TextView::setLinkTextColor(const ColorStateList* colors){
+    if(colors==nullptr){
         delete mLinkTextColor;
-        mLinkTextColor = new ColorStateList(*colors);
-        updateTextColors();
+        mLinkTextColor=nullptr;
+    }else{
+        if(mLinkTextColor) *mLinkTextColor=*colors;
+        else mLinkTextColor = new ColorStateList(*colors);
     }
+    updateTextColors();
 }
 
 ColorStateList* TextView::getLinkTextColors()const{
@@ -1848,12 +1855,17 @@ int TextView::getExtendedPaddingBottom(){
     return getCompoundPaddingBottom();
 }
 
-void TextView::setCompoundDrawableTintList(ColorStateList* tint){
+void TextView::setCompoundDrawableTintList(const ColorStateList* tint){
     if (mDrawables == nullptr) {
         mDrawables = new Drawables(getContext());
     }
-    mDrawables->mTintList = tint;
-
+    if(tint==nullptr){
+        delete mDrawables->mTintList;
+        mDrawables->mTintList = nullptr;
+    }else{
+        if(mDrawables->mTintList) *mDrawables->mTintList=*tint;
+        else mDrawables->mTintList = new ColorStateList(*tint);
+    }
     applyCompoundDrawableTint();
 }
 

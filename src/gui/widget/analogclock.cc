@@ -83,9 +83,17 @@ void AnalogClock::setDial(Icon icon) {
     requestLayout();
 }
 
-void AnalogClock::setDialTintList(ColorStateList* tint) {
-    mDialTintInfo->mTintList = tint;
-    mDialTintInfo->mHasTintList = true;
+void AnalogClock::setDialTintList(const ColorStateList* tint) {
+    if(tint==nullptr){
+        delete mDialTintInfo->mTintList;
+        mDialTintInfo->mTintList = nullptr;
+    }else{
+        if(mDialTintInfo->mTintList)
+            *mDialTintInfo->mTintList=*tint;
+        else
+            mDialTintInfo->mTintList = new ColorStateList(*tint);
+    }
+    mDialTintInfo->mHasTintList = (tint!=nullptr);
     mDial = apply(mDialTintInfo,mDial);
 }
 
@@ -103,9 +111,15 @@ void AnalogClock::setHourHand(Icon icon) {
     requestLayout();
 }
 
-void AnalogClock::setHourHandTintList(ColorStateList* tint) {
-    mHourHandTintInfo->mTintList = tint;
-    mHourHandTintInfo->mHasTintList = true;
+void AnalogClock::setHourHandTintList(const ColorStateList* tint) {
+    if(tint==nullptr){
+        delete mHourHandTintInfo->mTintList;
+        mHourHandTintInfo->mTintList=nullptr;
+    }else{
+        if(mHourHandTintInfo->mTintList)*mHourHandTintInfo->mTintList=*tint;
+        else mHourHandTintInfo->mTintList = new ColorStateList(*tint);
+    }
+    mHourHandTintInfo->mHasTintList = (tint!=nullptr);
     mHourHand = apply(mHourHandTintInfo,mHourHand);
 }
 
@@ -133,9 +147,15 @@ void AnalogClock::setSecondHand(Icon icon) {
     invalidate();
 }
 
-void AnalogClock::setMinuteHandTintList(ColorStateList* tint) {
-    mMinuteHandTintInfo->mTintList = tint;
-    mMinuteHandTintInfo->mHasTintList = true;
+void AnalogClock::setMinuteHandTintList(const ColorStateList* tint) {
+    if(tint==nullptr){
+        delete mMinuteHandTintInfo->mTintList;
+        mMinuteHandTintInfo->mTintList = nullptr;
+    }else{
+        if(mMinuteHandTintInfo->mTintList) *mMinuteHandTintInfo->mTintList=*tint; 
+        else mMinuteHandTintInfo->mTintList = new ColorStateList(*tint);
+    }
+    mMinuteHandTintInfo->mHasTintList = (tint!=nullptr);
     mMinuteHand = apply(mMinuteHandTintInfo,mMinuteHand);
 }
 

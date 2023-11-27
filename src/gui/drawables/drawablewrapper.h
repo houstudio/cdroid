@@ -54,7 +54,7 @@ public:
     int getAlpha()const override;
     void setColorFilter(ColorFilter*)override;
     ColorFilter*getColorFilter()override;
-    void setTintList(ColorStateList*)override;
+    void setTintList(const ColorStateList*)override;
     void setTintMode(int)override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;

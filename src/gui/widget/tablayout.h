@@ -270,7 +270,7 @@ public:
     void setTabIndicatorFullWidth(bool tabIndicatorFullWidth);
     bool isInlineLabel()const;
     void setInlineLabel(bool);
-    void setTabTextColors(ColorStateList* textColor);
+    void setTabTextColors(const ColorStateList* textColor);
     ColorStateList* getTabTextColors()const;
     void setTabTextColors(int normalColor, int selectedColor);
     void setupWithViewPager(ViewPager* viewPager);

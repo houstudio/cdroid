@@ -94,6 +94,7 @@ Switch::~Switch(){
     delete mTextColors;
     delete mThumbDrawable;
     delete mTrackTintList;
+    delete mThumbTintList;
     delete mOnLayout;
     delete mOffLayout;
     mVelocityTracker->recycle();
@@ -232,12 +233,15 @@ Drawable* Switch::getTrackDrawable() {
     return mTrackDrawable;
 }
 
-void Switch::setTrackTintList(ColorStateList* tint){
-    delete mTrackTintList;
-	mTrackTintList = nullptr;
-	if(tint)
-        mTrackTintList = new ColorStateList(*tint);
-    mHasTrackTint = true;
+void Switch::setTrackTintList(const ColorStateList* tint){
+    if(tint ==nullptr){
+        delete mTrackTintList;
+        mTrackTintList = nullptr;
+    }else{
+        if(mTrackTintList)   *mTrackTintList=*tint;
+        else mTrackTintList = new ColorStateList(*tint);
+    }
+    mHasTrackTint = (tint!=nullptr);
     applyTrackTint();
 }
 
@@ -292,8 +296,14 @@ Drawable* Switch::getThumbDrawable(){
     return mThumbDrawable;
 }
 
-void Switch::setThumbTintList(ColorStateList* tint){
-    mThumbTintList = tint;
+void Switch::setThumbTintList(const ColorStateList* tint){
+    if(tint==nullptr){
+        delete mThumbTintList;
+        mThumbTintList = nullptr;
+    }else{
+        if(mThumbTintList) *mThumbTintList = *tint;
+        else mThumbTintList = new ColorStateList(*tint);
+    }
     mHasThumbTint = true;
 
     applyThumbTint();

@@ -545,9 +545,15 @@ void ImageView::setImageResource(const std::string& resId) {
     invalidate(true);
 }
 
-void ImageView::setImageTintList(ColorStateList*tint){
-    mDrawableTintList = tint;
-    mHasDrawableTint = true;
+void ImageView::setImageTintList(const ColorStateList*tint){
+    if(tint==nullptr){
+        delete mDrawableTintList;
+        mDrawableTintList = nullptr;
+    }else{
+        if(mDrawableTintList) *mDrawableTintList=*tint;
+        else mDrawableTintList = new ColorStateList(*tint);
+    }
+    mHasDrawableTint = (tint!=nullptr);
     applyImageTint();
 }
 

@@ -42,7 +42,7 @@ public:
     Drawable* getCheckMarkDrawable()const;
     void setCheckMarkDrawable(const std::string&resId);
     void setCheckMarkDrawable(Drawable* d);
-    void setCheckMarkTintList(ColorStateList*tint);
+    void setCheckMarkTintList(const ColorStateList*tint);
     ColorStateList* getCheckMarkTintList()const;
     View& setVisibility(int visibility)override;     
     void jumpDrawablesToCurrentState()override;

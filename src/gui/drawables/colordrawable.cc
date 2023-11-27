@@ -99,13 +99,13 @@ int ColorDrawable::getChangingConfigurations()const{
     return Drawable::getChangingConfigurations() | mColorState->getChangingConfigurations();
 }
 
-void ColorDrawable::setTintList(ColorStateList* tint){
+void ColorDrawable::setTintList(const ColorStateList* tint){
     if( tint ==nullptr){
         delete mColorState->mTint;
         mColorState->mTint = nullptr;
         delete mTintFilter;
     }else{
-	    if(mColorState->mTint) *mColorState->mTint = *tint;
+        if(mColorState->mTint) *mColorState->mTint = *tint;
         else mColorState->mTint =new ColorStateList(*tint);
         mTintFilter = updateTintFilter(mTintFilter, tint, mColorState->mTintMode);
     }

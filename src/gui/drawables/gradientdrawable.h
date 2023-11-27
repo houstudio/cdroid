@@ -97,8 +97,8 @@ private:
        void setGradientType(int gradient);
        void setGradientCenter(float x, float y);
        void setGradientColors(const std::vector<int>&colors);
-       void setSolidColors(ColorStateList* colors);
-       void setStroke(int width,ColorStateList* colors,float dashWidth,float dashGap);
+       void setSolidColors(const ColorStateList* colors);
+       void setStroke(int width,const ColorStateList* colors,float dashWidth,float dashGap);
        void setCornerRadius(float radius);
        void setCornerRadii(const std::vector<float>& radii);
        void setSize(int width, int height);
@@ -142,9 +142,9 @@ public:
     void setCornerRadius(float radius);
     float getCornerRadius()const;
     void setStroke(int width,int color);
-    void setStroke(int width, ColorStateList* colorStateList);
+    void setStroke(int width, const ColorStateList* colorStateList);
     void setStroke(int width,int color, float dashWidth, float dashGap);
-    void setStroke(int width, ColorStateList* colorStateList, float dashWidth, float dashGap);
+    void setStroke(int width, const ColorStateList* colorStateList, float dashWidth, float dashGap);
     void setInnerRadiusRatio(float innerRadiusRatio);
     float getInnerRadiusRatio()const;
     void setInnerRadius(int innerRadius);
@@ -175,7 +175,7 @@ public:
     void setColors(const std::vector<int>&colors,const std::vector<float>&offsets);
     const std::vector<int>&getColors()const;
     void setColor(int argb);
-    void setColor(ColorStateList* colorStateList);
+    void setColor(const ColorStateList* colorStateList);
     ColorStateList* getColor();
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;

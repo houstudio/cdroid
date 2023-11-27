@@ -88,19 +88,19 @@ int SimpleMonthView::getCellWidth()const{
     return mCellWidth;
 }
 
-void SimpleMonthView::setMonthTextColor(ColorStateList* monthTextColor){
+void SimpleMonthView::setMonthTextColor(const ColorStateList* monthTextColor){
 }
 
-void SimpleMonthView::setDayOfWeekTextColor(ColorStateList* dayOfWeekTextColor){
+void SimpleMonthView::setDayOfWeekTextColor(const ColorStateList* dayOfWeekTextColor){
 }
 
-void SimpleMonthView::setDayTextColor(ColorStateList* dayTextColor){
+void SimpleMonthView::setDayTextColor(const ColorStateList* dayTextColor){
 }
 
-void SimpleMonthView::setDaySelectorColor(ColorStateList* dayBackgroundColor){
+void SimpleMonthView::setDaySelectorColor(const ColorStateList* dayBackgroundColor){
 }
 
-void SimpleMonthView::setDayHighlightColor(ColorStateList* dayHighlightColor){
+void SimpleMonthView::setDayHighlightColor(const ColorStateList* dayHighlightColor){
 }
 
 void SimpleMonthView::setOnDayClickListener(OnDayClickListener listener){

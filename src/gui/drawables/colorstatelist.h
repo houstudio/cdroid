@@ -24,6 +24,7 @@ private:
     int modulateColorAlpha(int baseColor, float alphaMod)const;
 public:
     ColorStateList();
+    ColorStateList(int color);
     ColorStateList(const ColorStateList&other);
     ColorStateList(const std::vector<std::vector<int>>&states,const std::vector<int>&colors);
     int addStateColor(const std::vector<int>&stateSet,int color);

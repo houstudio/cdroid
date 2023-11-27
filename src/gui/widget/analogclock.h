@@ -41,19 +41,19 @@ public:
     AnalogClock(Context*ctx,const AttributeSet& attrs);
     ~AnalogClock();
     void setDial(Icon icon);
-    void setDialTintList(ColorStateList*);
+    void setDialTintList(const ColorStateList*);
     ColorStateList*getDialTintList()const;
 
     void setHourHand(Icon icon);
-    void setHourHandTintList(ColorStateList*);
+    void setHourHandTintList(const ColorStateList*);
     ColorStateList* getHourHandTintList()const;
 
     void setMinuteHand(Icon icon);
-    void setMinuteHandTintList(ColorStateList*);
+    void setMinuteHandTintList(const ColorStateList*);
     ColorStateList* getMinuteHandTintList()const;
 
     void setSecondHand(Icon icon);
-    void setSecondHandTintList(ColorStateList*);
+    void setSecondHandTintList(const ColorStateList*);
     ColorStateList* getSecondHandTintList()const;
 
     void onVisibilityAggregated(bool isVisible)override;

@@ -316,11 +316,15 @@ void TabLayout::setInlineLabel(bool v){
     }
 }
 
-void TabLayout::setTabTextColors(ColorStateList* textColor) {
-    if (mTabTextColors != textColor) {
-        mTabTextColors = textColor;
-        updateAllTabs();
+void TabLayout::setTabTextColors(const ColorStateList* textColor) {
+    if (textColor==nullptr){
+        delete mTabTextColors;
+        mTabTextColors = nullptr;
+    }else{
+        if(mTabTextColors) *mTabTextColors=*textColor;
+        else mTabTextColors = new ColorStateList(*textColor);
     }
+    updateAllTabs();
 }
 
 ColorStateList* TabLayout::getTabTextColors()const{

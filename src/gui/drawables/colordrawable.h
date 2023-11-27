@@ -31,7 +31,7 @@ public:
     int getAlpha()const;
     void setAlpha(int a)override;
     int getOpacity()override;
-    void setTintList(ColorStateList* tint)override;
+    void setTintList(const ColorStateList* tint)override;
     void setTintMode(int tintMode)override;
     bool isStateful()const override;
     int getChangingConfigurations()const override;

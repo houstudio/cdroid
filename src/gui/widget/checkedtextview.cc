@@ -39,7 +39,7 @@ void CheckedTextView::toggle() {
 }
 
 bool CheckedTextView::isChecked()const{
-        return mChecked;
+   return mChecked;
 }
 
 void CheckedTextView::setChecked(bool checked) {
@@ -95,9 +95,15 @@ void CheckedTextView::setCheckMarkDrawableInternal(Drawable* d,const std::string
     resolvePadding();
 }
 
-void CheckedTextView::setCheckMarkTintList(ColorStateList*tint){
-    mCheckMarkTintList = tint;
-    mHasCheckMarkTint = true;
+void CheckedTextView::setCheckMarkTintList(const ColorStateList*tint){
+    if(tint==nullptr){
+        delete mCheckMarkTintList;
+        mCheckMarkTintList = nullptr;
+    }else{
+        if(mCheckMarkTintList)*mCheckMarkTintList=*tint;
+        else mCheckMarkTintList = new ColorStateList(*tint);
+    }
+    mHasCheckMarkTint = (tint!=nullptr);
 
     applyCheckMarkTint();
 }

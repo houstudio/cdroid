@@ -70,7 +70,7 @@ protected:
     ColorFilter*mColorFilter;
     Callback*mCallback;
     std::vector<int>mStateSet;
-    PorterDuffColorFilter *updateTintFilter(PorterDuffColorFilter* tintFilter,ColorStateList* tint,int tintMode);
+    PorterDuffColorFilter *updateTintFilter(PorterDuffColorFilter* tintFilter,const ColorStateList* tint,int tintMode);
     virtual bool onStateChange(const std::vector<int>&) { return false;}
     virtual bool onLevelChange(int level) { return false; }
     virtual bool onLayoutDirectionChanged(int layoutDirection){return false;}
@@ -93,7 +93,7 @@ public:
      * To make memory manager simple,
      * The Drawable must deep copy from the tint,and own the new instance 
      * */
-    virtual void setTintList(ColorStateList* tint);
+    virtual void setTintList(const ColorStateList* tint);
     virtual void setTintMode(int);
     bool setState(const std::vector<int>&state);
     const std::vector<int>& getState()const;

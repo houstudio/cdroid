@@ -21,6 +21,7 @@ private:
         int mMaxRadius;
         ColorStateList*mColor;
         RippleState(LayerState* orig, RippleDrawable* owner);
+        ~RippleState();
         void onDensityChanged(int sourceDensity, int targetDensity)override;
         void applyDensityScaling(int sourceDensity, int targetDensity);
         Drawable*newDrawable()override;
@@ -63,14 +64,14 @@ protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
     void onBoundsChange(const Rect& bounds)override;
 public:
-    RippleDrawable(ColorStateList* color,Drawable* content,Drawable* mask);
+    RippleDrawable(const ColorStateList* color,Drawable* content,Drawable* mask);
     void jumpToCurrentState()override;
     int  getOpacity()override;
     bool setVisible(bool visible, bool restart)override;
     bool isProjected();
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
-    void setColor(ColorStateList* color);
+    void setColor(const ColorStateList* color);
     void setRadius(int radius);
     int  getRadius()const;
     bool setDrawableByLayerId(int id, Drawable* drawable)override;

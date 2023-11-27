@@ -103,11 +103,11 @@ public:
     void setDayOfWeekTextAppearance(const std::string& resId);
     void setDayTextAppearance(const std::string& resId);
 
-    void setMonthTextColor(ColorStateList* monthTextColor);
-    void setDayOfWeekTextColor(ColorStateList* dayOfWeekTextColor);
-    void setDayTextColor(ColorStateList* dayTextColor);
-    void setDaySelectorColor(ColorStateList* dayBackgroundColor);
-    void setDayHighlightColor(ColorStateList* dayHighlightColor);
+    void setMonthTextColor(const ColorStateList* monthTextColor);
+    void setDayOfWeekTextColor(const ColorStateList* dayOfWeekTextColor);
+    void setDayTextColor(const ColorStateList* dayTextColor);
+    void setDaySelectorColor(const ColorStateList* dayBackgroundColor);
+    void setDayHighlightColor(const ColorStateList* dayHighlightColor);
     void setOnDayClickListener(OnDayClickListener listener);
     bool onTouchEvent(MotionEvent& event)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;

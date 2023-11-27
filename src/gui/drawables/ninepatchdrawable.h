@@ -49,7 +49,7 @@ public:
     void setAlpha(int alpha)override;
     bool getPadding(Rect& padding) override;
     int getAlpha()const override;
-    void setTintList(ColorStateList* tint)override;
+    void setTintList(const ColorStateList* tint)override;
     void setTintMode(int mode)override;
     void setAutoMirrored(bool mirrored)override;
     bool isAutoMirrored()override;

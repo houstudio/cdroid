@@ -133,7 +133,7 @@ int ShapeDrawable::getOpacity(){
     }
 }
 
-void ShapeDrawable::setTintList(ColorStateList*tint){
+void ShapeDrawable::setTintList(const ColorStateList*tint){
     if( tint ==nullptr){
         delete mShapeState->mTint;
         mShapeState->mTint = nullptr;

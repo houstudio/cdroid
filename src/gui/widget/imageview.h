@@ -89,7 +89,7 @@ public:
     void setImageResource(const std::string&resid);
     void setImageDrawable(Drawable* drawable);
     void setImageBitmap(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
-    void setImageTintList(ColorStateList*tint);
+    void setImageTintList(const ColorStateList*tint);
     ColorStateList* getImageTintList();
     void setImageTintMode(int mode);
     int getImageTintMode()const;

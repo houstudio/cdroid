@@ -14,6 +14,7 @@
         cdroid:textAppearance="@style/TextAppearance.Large.Inverse.NumberPickerInputText"
         cdroid:gravity="center"
         cdroid:singleLine="true"
+        cdroid:visibility="invisible"
         cdroid:background="@drawable/numberpicker_input" />
     <ImageButton cdroid:id="@+id/decrement"
         cdroid:layout_width="fill_parent"

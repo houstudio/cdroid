@@ -106,7 +106,7 @@ public:
     int getMinimumHeight()const override;
 
     void setColorFilter(ColorFilter*colorFilter)override;
-    void setTintList(ColorStateList*tint)override;
+    void setTintList(const ColorStateList*tint)override;
     void setTintMode(int)override;
     void setEnterFadeDuration(int ms);
     void setExitFadeDuration(int ms);

@@ -17,6 +17,10 @@ ColorStateList::ColorStateList(){
     mChangingConfigurations=0;
 }
 
+ColorStateList::ColorStateList(int color)
+    :ColorStateList(EMPTY,{color}){
+}
+
 ColorStateList::ColorStateList(const ColorStateList&other)
 	:ColorStateList(other.mStateSpecs,other.mColors){
     mIsOpaque = other.mIsOpaque;
@@ -143,8 +147,7 @@ int ColorStateList::getColorForState(const std::vector<int>&stateSet, int defaul
 }
 
 ColorStateList*ColorStateList::valueOf(int color){
-    std::vector<int>colors = {color};
-    return new ColorStateList(EMPTY,colors);
+    return new ColorStateList(color);
 }
 
 const std::vector<int>& ColorStateList::getColors()const{

@@ -413,7 +413,7 @@ void DrawableContainer::setColorFilter(ColorFilter*colorFilter){
     }
 }
 
-void DrawableContainer::setTintList(ColorStateList*tint){
+void DrawableContainer::setTintList(const ColorStateList*tint){
     if( tint == nullptr ){
         delete mDrawableContainerState->mTintList;
         mDrawableContainerState->mTintList = nullptr;
@@ -422,9 +422,9 @@ void DrawableContainer::setTintList(ColorStateList*tint){
             *mDrawableContainerState->mTintList = *tint;
         else
             mDrawableContainerState->mTintList = new ColorStateList(*tint);
-        if(mCurrDrawable)
-	    mCurrDrawable->setTintList(tint);
     }
+    if(mCurrDrawable)
+        mCurrDrawable->setTintList(tint);
     /*if (mDrawableContainerState->mTintList != tint) {
         mDrawableContainerState->mTintList = tint;
 

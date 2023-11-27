@@ -4,14 +4,19 @@ namespace cdroid{
 RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner)
     :LayerDrawable::LayerState(orig,owner){
     //mTouchThemeAttrs = orig->mTouchThemeAttrs;
+    mColor = nullptr;
     if(dynamic_cast<RippleState*>(orig)){
         RippleState* origs = (RippleState*) orig;
-        mColor = origs->mColor;
+        if(mColor) mColor = new ColorStateList(*origs->mColor);
         mMaxRadius = origs->mMaxRadius;
         if (orig->mDensity != mDensity) {
             applyDensityScaling(orig->mDensity, mDensity);
         }
     }
+}
+
+RippleDrawable::RippleState::~RippleState(){
+    delete mColor;
 }
 
 void RippleDrawable::RippleState::onDensityChanged(int sourceDensity, int targetDensity){
@@ -52,7 +57,7 @@ RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
     updateLocalState();
 }
 
-RippleDrawable::RippleDrawable(ColorStateList* color,Drawable* content,Drawable* mask)
+RippleDrawable::RippleDrawable(const ColorStateList* color,Drawable* content,Drawable* mask)
   :RippleDrawable(std::make_shared<RippleState>(nullptr,nullptr)){
     if(content)addLayer(content,{0},-1,0,0,0,0);
     if(mask)addLayer(mask,{0},MASK_LAYER_ID,0,0,0,0); 
@@ -203,8 +208,14 @@ bool RippleDrawable::hasFocusStateSpecified()const{
     return true;
 }
 
-void RippleDrawable::setColor(ColorStateList* color){
-    mState->mColor = color;
+void RippleDrawable::setColor(const ColorStateList* color){
+    if(color==nullptr){
+        delete mState->mColor;
+        mState->mColor = nullptr;
+    }else{
+        if(mState->mColor)*mState->mColor = *color;
+        else mState->mColor=new ColorStateList(*color);
+    }
     invalidateSelf(false);
 }
 

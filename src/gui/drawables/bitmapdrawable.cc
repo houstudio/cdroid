@@ -207,17 +207,15 @@ int BitmapDrawable::getOpacity(){
     return mBitmapState->mTransparency;
 }
 
-void BitmapDrawable::setTintList(ColorStateList*tint){
+void BitmapDrawable::setTintList(const ColorStateList*tint){
     if( tint == nullptr ){
-	    delete mBitmapState->mTint;
-	    mBitmapState->mTint = nullptr;
-	    delete mTintFilter;
-	    mTintFilter = nullptr;
+        delete mBitmapState->mTint;
+        mBitmapState->mTint = nullptr;
+        delete mTintFilter;
+        mTintFilter = nullptr;
     }else{
-	if(mBitmapState->mTint)
-	    *mBitmapState->mTint = *tint;
-	else
-	    mBitmapState->mTint = new ColorStateList(*tint);
+        if(mBitmapState->mTint) *mBitmapState->mTint = *tint;
+        else mBitmapState->mTint = new ColorStateList(*tint);
 	mTintFilter = updateTintFilter(mTintFilter, tint, mBitmapState->mTintMode);
     }LOGD("%p tint=%p",this,tint);
     invalidateSelf();

@@ -875,7 +875,7 @@ public:
     bool isForegroundInsidePadding()const;
     int getForegroundGravity()const;
     View& setForegroundGravity(int gravity);
-    View& setForegroundTintList(ColorStateList* tint);
+    View& setForegroundTintList(const ColorStateList* tint);
     View& setForegroundTintMode(int tintMode);
     ColorStateList* getForegroundTintList();
     virtual void onResolveDrawables(int layoutDirection);
@@ -885,7 +885,7 @@ public:
     virtual View& setBackground(Drawable*background);
     View& setBackgroundColor(int color);
     View& setBackgroundResource(const std::string&resid);
-    View& setBackgroundTintList(ColorStateList* tint);
+    View& setBackgroundTintList(const ColorStateList* tint);
     View& setBackgroundTintMode(int tintMode);
     ColorStateList* getBackgroundTintList()const;
     virtual int getSolidColor()const;

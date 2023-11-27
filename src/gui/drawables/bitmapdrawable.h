@@ -72,7 +72,7 @@ public:
     void setTileModeXY(int,int);
     void setAutoMirrored(bool mirrored)override;
     bool isAutoMirrored()override;
-    void setTintList(ColorStateList*lst)override;
+    void setTintList(const ColorStateList*lst)override;
     void setTintMode(int mode)override;
     int getTintMode()const;
     Drawable*mutate()override;

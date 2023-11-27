@@ -112,7 +112,7 @@ int NinePatchDrawable::getAlpha()const{
     return mAlpha;
 }
 
-void NinePatchDrawable::setTintList(ColorStateList* tint){
+void NinePatchDrawable::setTintList(const ColorStateList* tint){
     if( tint == nullptr ){
         delete mNinePatchState->mTint;
         delete  mTintFilter;

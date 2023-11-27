@@ -45,14 +45,15 @@ private:
     int getPositionForDay(Calendar* day);
 public:
     DayPickerPagerAdapter(Context* context,const std::string&layoutResId,int calendarViewId);
+    ~DayPickerPagerAdapter();
     void setRange(Calendar& min,Calendar& max);
     void setFirstDayOfWeek(int weekStart);
     int getFirstDayOfWeek()const;
     bool getBoundsForDate(Calendar& day, Rect& outBounds);
     void setSelectedDay(Calendar* day);
     void setOnDaySelectedListener(OnDaySelectedListener listener);
-    void setCalendarTextColor(ColorStateList* calendarTextColor);
-    void setDaySelectorColor(ColorStateList* selectorColor);
+    void setCalendarTextColor(const ColorStateList* calendarTextColor);
+    void setDaySelectorColor(const ColorStateList* selectorColor);
 
     void setMonthTextAppearance(const std::string& resId);
     void setDayOfWeekTextAppearance(const std::string& resId);

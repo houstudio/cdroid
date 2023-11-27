@@ -3968,12 +3968,18 @@ View& View::setBackgroundColor(int color){
     return *this;
 }
 
-View& View::setBackgroundTintList(ColorStateList* tint){
+View& View::setBackgroundTintList(const ColorStateList* tint){
     if (mBackgroundTint == nullptr) {
         mBackgroundTint = new TintInfo();
     }
-    mBackgroundTint->mTintList = tint;
-    mBackgroundTint->mHasTintList = true;
+    if(tint==nullptr){
+        delete mBackgroundTint->mTintList;
+        mBackgroundTint->mTintList=nullptr;
+    }else{
+        if(mBackgroundTint->mTintList)*mBackgroundTint->mTintList = *tint;
+	else mBackgroundTint->mTintList=new ColorStateList(*tint);
+    }
+    mBackgroundTint->mHasTintList = (tint!=nullptr);
 
     applyBackgroundTint();
     return *this;
@@ -4072,16 +4078,23 @@ View& View::setForegroundGravity(int gravity){
     return *this;
 }
 
-View& View::setForegroundTintList(ColorStateList* tint){
+View& View::setForegroundTintList(const ColorStateList* tint){
     if (mForegroundInfo == nullptr) {
         mForegroundInfo = new ForegroundInfo();
     }
     if (mForegroundInfo->mTintInfo == nullptr) {
         mForegroundInfo->mTintInfo = new TintInfo();
     }
-    mForegroundInfo->mTintInfo->mTintList = tint;
-    mForegroundInfo->mTintInfo->mHasTintList = true;
-
+    if(tint == nullptr){
+	delete mForegroundInfo->mTintInfo->mTintList;
+	mForegroundInfo->mTintInfo->mTintList=nullptr;
+    }else{
+        if(mForegroundInfo->mTintInfo->mTintList)
+            *mForegroundInfo->mTintInfo->mTintList = *tint;
+        else
+            mForegroundInfo->mTintInfo->mTintList=new ColorStateList(*tint);
+    }
+    mForegroundInfo->mTintInfo->mHasTintList = (tint!=nullptr);
     applyForegroundTint();
     return *this;
 }

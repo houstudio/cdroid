@@ -118,14 +118,14 @@ public:
     void setTrackDrawable(Drawable* track);
     void setTrackResource(const std::string& resId);
     Drawable* getTrackDrawable();
-    void setTrackTintList(ColorStateList* tint);
+    void setTrackTintList(const ColorStateList* tint);
     ColorStateList* getTrackTintList();
     void setTrackTintMode(PorterDuffMode tintMode);
     PorterDuffMode getTrackTintMode()const;
     void setThumbDrawable(Drawable* thumb);
     void setThumbResource(const std::string& resId);
     Drawable* getThumbDrawable();
-    void setThumbTintList(ColorStateList* tint);
+    void setThumbTintList(const ColorStateList* tint);
     ColorStateList* getThumbTintList()const;
     void setThumbTintMode(PorterDuffMode tintMode);
     PorterDuffMode getThumbTintMode()const;

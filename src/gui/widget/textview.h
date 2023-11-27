@@ -210,7 +210,7 @@ public:
     void setTextSize(int unit, float size);
     float getTextSize()const;
     void setTextColor(int color);
-    void setTextColor(ColorStateList* colors);
+    void setTextColor(const ColorStateList* colors);
     Layout* getLayout()const;
     Layout* getHintLayout()const;
     void setShadowLayer(float radius, float dx, float dy, int color);
@@ -232,11 +232,11 @@ public:
     void setHighlightColor(int color);
     int getHighlightColor()const;
     void setHintTextColor(int color);
-    void setHintTextColor(ColorStateList* colors);
+    void setHintTextColor(const ColorStateList* colors);
     ColorStateList* getHintTextColors()const;
     int getCurrentHintTextColor()const;
     void setLinkTextColor(int color);
-    void setLinkTextColor(ColorStateList* colors);
+    void setLinkTextColor(const ColorStateList* colors);
     ColorStateList* getLinkTextColors()const;
     void setMinWidth(int minPixels);
     int getMinWidth()const;
@@ -273,7 +273,7 @@ public:
     void setCompoundDrawablePadding(int pad);
     int getCompoundDrawablePadding()const;
     std::vector<Drawable*>getCompoundDrawables();
-    void setCompoundDrawableTintList(ColorStateList* tint);
+    void setCompoundDrawableTintList(const ColorStateList* tint);
     ColorStateList* getCompoundDrawableTintList();
     void drawableHotspotChanged(float x,float y)override;
     void setCompoundDrawableTintMode(int tintMode);

@@ -43,7 +43,7 @@ public:
     void setAlpha(int alpha)override;
     int getAlpha()const override;
     int getOpacity()override;
-    void setTintList(ColorStateList*)override;
+    void setTintList(const ColorStateList*)override;
     void setTintMode(int tintMode)override;
     void setColorFilter(ColorFilter*colorFilter)override;
     int getIntrinsicWidth()const;

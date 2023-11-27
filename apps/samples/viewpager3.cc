@@ -26,7 +26,7 @@ public:
         //iv->setScaleType(FIT_XY);
         RefPtr<Cairo::ImageSurface>img;
         if(imgs.find(position)==imgs.end()){
-            img=container->getContext()->getImage(urls[position]);
+            img=container->getContext()->loadImage(urls[position]);
             imgs[position]=img;
         }else img=imgs[position];
         iv->setImageBitmap(img);

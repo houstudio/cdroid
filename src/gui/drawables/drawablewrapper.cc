@@ -215,7 +215,7 @@ ColorFilter*DrawableWrapper::getColorFilter(){
     return Drawable::getColorFilter(); 
 }
 
-void DrawableWrapper::setTintList(ColorStateList*tint){
+void DrawableWrapper::setTintList(const ColorStateList*tint){
     if(mDrawable)mDrawable->setTintList(tint);
 }
 
