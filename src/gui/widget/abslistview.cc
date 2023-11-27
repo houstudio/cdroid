@@ -593,7 +593,11 @@ void AbsListView::setMultiChoiceModeListener(MultiChoiceModeListener listener) {
 }
 
 void AbsListView::resetList() {
+    std::vector<View*>children = mChildren;
     removeAllViewsInLayout();
+    for(auto child:children){
+        delete child;
+    }
     mFirstPosition = 0;
     mDataChanged = false;
     mPositionScrollAfterLayout = nullptr;
