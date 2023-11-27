@@ -1584,7 +1584,7 @@ void TextView::updateTextColors(){
     bool inval = false;
     int color;
     const std::vector<int>&drawableState = getDrawableState();
-    if (mCurTextColor) {
+    if (mTextColor) {
         color = mTextColor->getColorForState(drawableState,0);
         LOGV("%p:%d change color %x->%x",this,mID,color,mCurTextColor);
         mCurTextColor = color;
