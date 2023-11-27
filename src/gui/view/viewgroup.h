@@ -86,7 +86,6 @@ public:
         LAYOUT_MODE_OPTICAL_BOUNDS=1,
         LAYOUT_MODE_DEFAULT = LAYOUT_MODE_CLIP_BOUNDS
     };
-    static bool DEBUG_DRAW;
 private:
     friend class View;
     friend class UIEventSource;

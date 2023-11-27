@@ -54,7 +54,7 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     setName(std::string(argc?argv[0]:__progname));
     LOGI("App [%s] started c++=%d",mName.c_str(),__cplusplus);
 	
-    ViewGroup::DEBUG_DRAW = View::DEBUG_DRAW = hasSwitch("debug");
+    View::VIEW_DEBUG = hasSwitch("debug");
     if(hasSwitch("help")){
         std::cout<<cla.getUsageString()<<std::endl;
         std::cout<<"params.count="<<getParamCount()<<std::endl;

@@ -168,8 +168,8 @@ public:
     }
 };
 
-bool View::DEBUG_DRAW = false;
-static int mViewCount=0;
+bool View::VIEW_DEBUG = false;
+int View::mViewCount = 0;
 View::View(int w,int h){
     initView();
     mContext=&App::getInstance();
@@ -441,8 +441,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
 
 void View::initView(){
     mViewCount ++;
-    LOGD("mViewCount=%d",mViewCount);
-    mID       = NO_ID;
+    LOGD_IF(View::VIEW_DEBUG,"mViewCount=%d",mViewCount);
+    mID = NO_ID;
     mAutofillViewId =NO_ID;
     mAccessibilityViewId = NO_ID;
     mDrawingCacheBackgroundColor = 0;
@@ -519,7 +519,7 @@ void View::initView(){
 
 View::~View(){
     mViewCount --;
-    LOGD("mViewCount=%d",mViewCount);
+    LOGD_IF(View::VIEW_DEBUG,"mViewCount=%d",mViewCount);
     if(mParent)
         mParent->removeViewInternal(this);
     if(isAttachedToWindow())onDetachedFromWindow();
@@ -547,7 +547,7 @@ View::~View(){
 }
 
 bool View::isShowingLayoutBounds()const{
-    return DEBUG_DRAW || mAttachInfo && mAttachInfo->mDebugLayout;
+    return View::VIEW_DEBUG || mAttachInfo && mAttachInfo->mDebugLayout;
 }
 
 void View::setShowingLayoutBounds(bool debugLayout){
@@ -557,7 +557,7 @@ void View::setShowingLayoutBounds(bool debugLayout){
 }
 
 bool View::debugDraw()const {
-    return DEBUG_DRAW|| (mAttachInfo && mAttachInfo->mDebugLayout);
+    return View::VIEW_DEBUG|| (mAttachInfo && mAttachInfo->mDebugLayout);
 }
 
 int View::dipsToPixels(int dips)const{
@@ -3977,7 +3977,7 @@ View& View::setBackgroundTintList(const ColorStateList* tint){
         mBackgroundTint->mTintList=nullptr;
     }else{
         if(mBackgroundTint->mTintList)*mBackgroundTint->mTintList = *tint;
-	else mBackgroundTint->mTintList=new ColorStateList(*tint);
+        else mBackgroundTint->mTintList=new ColorStateList(*tint);
     }
     mBackgroundTint->mHasTintList = (tint!=nullptr);
 
@@ -4086,8 +4086,8 @@ View& View::setForegroundTintList(const ColorStateList* tint){
         mForegroundInfo->mTintInfo = new TintInfo();
     }
     if(tint == nullptr){
-	delete mForegroundInfo->mTintInfo->mTintList;
-	mForegroundInfo->mTintInfo->mTintList=nullptr;
+        delete mForegroundInfo->mTintInfo->mTintList;
+        mForegroundInfo->mTintInfo->mTintList=nullptr;
     }else{
         if(mForegroundInfo->mTintInfo->mTintList)
             *mForegroundInfo->mTintInfo->mTintList = *tint;
