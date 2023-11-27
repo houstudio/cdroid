@@ -23,7 +23,7 @@ private:
     };
 
     TransitionDrawable(std::shared_ptr<TransitionState> state);
-    std::shared_ptr<LayerDrawable::LayerState> createConstantState(LayerState* state)override;
+    std::shared_ptr<LayerDrawable::LayerState> createConstantState(LayerState* state,const AttributeSet*)override;
     TransitionDrawable(Context*,const AttributeSet&);
 public:
     TransitionDrawable();

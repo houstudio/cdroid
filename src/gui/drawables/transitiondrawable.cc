@@ -45,7 +45,7 @@ TransitionDrawable::TransitionDrawable(std::shared_ptr<TransitionState> state)
     mTransitionState=TRANSITION_NONE;
 }
 
-std::shared_ptr<LayerDrawable::LayerState> TransitionDrawable::createConstantState(LayerState* state){
+std::shared_ptr<LayerDrawable::LayerState> TransitionDrawable::createConstantState(LayerState* state,const AttributeSet*attrs){
     return std::make_shared<TransitionState>((TransitionState*) state, this);
 }
 
