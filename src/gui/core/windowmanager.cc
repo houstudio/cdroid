@@ -295,11 +295,11 @@ void WindowManager::onMotion(MotionEvent&event) {
        auto w = (*itr);
        ViewTreeObserver*obv = w->getViewTreeObserver();
        if(event.getAction()==MotionEvent::ACTION_DOWN){
-           obv->dispatchOnTouchModeChanged(true);
            w->mAttachInfo->mInTouchMode=true;
+           obv->dispatchOnTouchModeChanged(true);
        }else if(event.getAction()==MotionEvent::ACTION_UP){
-           obv->dispatchOnTouchModeChanged(false);
            w->mAttachInfo->mInTouchMode=false;
+           obv->dispatchOnTouchModeChanged(false);
        }
        if ((w->getVisibility()==View::VISIBLE) && w->getBound().contains(x,y)) {
            event.offsetLocation(-w->getLeft(),-w->getTop());
