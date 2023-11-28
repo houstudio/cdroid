@@ -340,7 +340,8 @@ void GradientDrawable::setStroke(int width, const ColorStateList*colorStateList)
 }
 
 void GradientDrawable::setStroke(int width,int color, float dashWidth, float dashGap) {
-    mGradientState->setStroke(width, ColorStateList::valueOf(color), dashWidth, dashGap);
+    ColorStateList cls(color);
+    mGradientState->setStroke(width, &cls, dashWidth, dashGap);
     setStrokeInternal(width, color, dashWidth, dashGap);
 }
 
