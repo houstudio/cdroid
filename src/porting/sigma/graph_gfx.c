@@ -89,7 +89,6 @@ int GFXInit() {
     ret = MI_SYS_MMA_Alloc("mma_heap_name0",allocedSize,&preallocedMem);
     int index = 1;
     devSurfaces[0].kbuffer = devs[0].fix.smem_start;
-    devSurfaces[0].orig_buffer = devs[0].fix.smem_start;
     devSurfaces[0].msize = displayScreenSize;
 
     if((devs[0].fix.smem_start+displayScreenSize<preallocedMem)||(devs[0].fix.smem_start>preallocedMem+allocedSize)){
@@ -97,20 +96,17 @@ int GFXInit() {
         for(int i=0;i<MAX_HWSURFACE+1;i++){
             devSurfaces[i+1].kbuffer= preallocedMem+screenSize*i;
             devSurfaces[i+1].msize = screenSize;
-            devSurfaces[i+1].orig_buffer = NULL;
             index++;
         }
     }else{
         for(size_t mem = devs[0].fix.smem_start ; mem - screenSize > preallocedMem ; mem -= screenSize){
             devSurfaces[index].kbuffer = mem;
             devSurfaces[index].msize = screenSize;
-            devSurfaces[index].orig_buffer = NULL;
             index ++;
         }
         for(size_t mem = devs[0].fix.smem_start + displayScreenSize ; mem < preallocedMem+ allocedSize; mem += screenSize){
             devSurfaces[index].kbuffer = mem;
             devSurfaces[index].msize = screenSize;
-            devSurfaces[index].orig_buffer = NULL;
             index ++;
         }
     }
@@ -231,12 +227,11 @@ INT GFXFlip(HANDLE surface) {
     const size_t screen_size=surf->height*surf->pitch;
     if(surf->ishw && (surf->msize>screen_size) ) {
         FBDEVICE*dev=&devs[surf->dispid];
-        LOGI("screensize=%dx%dx%dbpp current=%d",dev->var.xres,dev->var.yres,dev->var.bits_per_pixel,surf->current);
         FBSURFACE dstSurf=*surf;
         if(surf->current==0) {
             LOGI_IF(dev->fix.smem_start!=surf->kbuffer,"kbuffer error1");
             dstSurf.kbuffer=surf->kbuffer+screen_size;
-#if DMAFLIP
+#if defined(DMAFLIP)&&DMAFLIP
             MI_SYS_MemcpyPa(surf->kbuffer+screen_size,surf->kbuffer,screen_size);
 #else
             GFXBlit(&dstSurf,0,0,surf,NULL);
@@ -247,7 +242,7 @@ INT GFXFlip(HANDLE surface) {
         } else {
             LOGI_IF(dev->fix.smem_start!=surf->kbuffer-screen_size,"kbuffer error2");
             dstSurf.kbuffer=surf->kbuffer-screen_size;
-#if DMAFLIP
+#if defined(DMAFLIP)&&DMAFLIP
             MI_SYS_MemcpyPa(surf->kbuffer-screen_size,surf->kbuffer,screen_size);
 #else
             GFXBlit(&dstSurf,0,0,surf,NULL);
