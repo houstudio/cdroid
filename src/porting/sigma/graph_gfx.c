@@ -89,8 +89,11 @@ int GFXInit() {
     ret = MI_SYS_MMA_Alloc("mma_heap_name0",allocedSize,&preallocedMem);
     int index = 1;
     devSurfaces[0].kbuffer = devs[0].fix.smem_start;
+#if defined(DOUBLE_BUFFER)&&DOUBLE_BUFFER
+    devSurfaces[0].msize = dev->fix.smem_len;
+#else
     devSurfaces[0].msize = displayScreenSize;
-
+#endif
     if((devs[0].fix.smem_start+displayScreenSize<preallocedMem)||(devs[0].fix.smem_start>preallocedMem+allocedSize)){
         LOGD("fbmem %x,%x is not in prealocted memory's range",devs[0].fix.smem_start,devs[0].fix.smem_start+displayScreenSize);
         for(int i=0;i<MAX_HWSURFACE+1;i++){
@@ -252,8 +255,9 @@ INT GFXFlip(HANDLE surface) {
             surf->kbuffer-=screen_size;
         }
         surf->current=(surf->current+1)%2;
+        int sync = ioctl(dev->fb, FBIO_WAITFORVSYNC, NULL);
         int ret=ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var);
-        LOGI_IF(ret<0,"FBIOPAN_DISPLAY=%d yoffset=%d res=%dx%d dev=%p fb=%d",ret,dev->var.yoffset,dev->var.xres,dev->var.yres,dev,dev->fb);
+        LOGI_IF(ret<0||sync<0,"FBIOPAN_DISPLAY=%d yoffset=%d res=%dx%d dev=%p fb=%d,sync=%d",ret,dev->var.yoffset,dev->var.xres,dev->var.yres,dev,dev->fb,sync);
     }
     return 0;
 }
@@ -307,12 +311,11 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     surf->ishw = hwsurface;
     surf->pitch= surf->width*4;
     surf->current = 0;
+#if !defined(DOUBLE_BUFFER)||(DOUBLE_BUFFER==0)    
     surf->msize= surf->pitch*surf->height;
+#endif
     MI_S32 ret=0;
     if(hwsurface) {
-#if defined(DOUBLE_BUFFER)&&DOUBLE_BUFFER
-        surf->msize*= 2;
-#endif
 #if !defined(DOUBLE_BUFFER)||(DOUBLE_BUFFER==0)
         dev->var.yoffset=0;
         LOGI("ioctl offset(0)=%d dev=%p ret=%d",ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var),dev,ret);

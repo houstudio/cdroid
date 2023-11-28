@@ -293,6 +293,11 @@ void WindowManager::onMotion(MotionEvent&event) {
    const int y = event.getY();
    for (auto itr = mWindows.rbegin();itr != mWindows.rend();itr++) {
        auto w = (*itr);
+       ViewTreeObserver*obv = w->getViewTreeObserver();
+       if(event.getAction()==MotionEvent::ACTION_DOWN)
+           obv->dispatchOnTouchModeChanged(true);
+       else if(event.getAction()==MotionEvent::ACTION_UP)
+           obv->dispatchOnTouchModeChanged(false);
        if ((w->getVisibility()==View::VISIBLE) && w->getBound().contains(x,y)) {
            event.offsetLocation(-w->getLeft(),-w->getTop());
            w->dispatchTouchEvent(event);
