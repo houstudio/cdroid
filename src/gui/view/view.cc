@@ -1075,14 +1075,14 @@ void View::clearAnimation() {
     if (mCurrentAnimation ) {
         mCurrentAnimation->detach();
     }
-    //delete mCurrentAnimation;
+    delete mCurrentAnimation;
     mCurrentAnimation = nullptr;
     invalidateParentIfNeeded();
     invalidate();
 }
 
 void View::setAnimation(Animation* animation) {
-    //delete mCurrentAnimation;
+    delete mCurrentAnimation;
     mCurrentAnimation = animation;
     if (animation) {
         // If the screen is off assume the animation start time is now instead of
@@ -1536,8 +1536,7 @@ void View::onDetachedFromWindowInternal() {
     destroyDrawingCache();
 
     cleanupDraw();
-    if(mCurrentAnimation)mCurrentAnimation->detach();
-    //delete mCurrentAnimation;
+    delete mCurrentAnimation;
     mCurrentAnimation = nullptr;
 
     if ((mViewFlags & TOOLTIP) == TOOLTIP) {
@@ -5638,7 +5637,7 @@ void View::layout(int l, int t, int w, int h){
     int oldH = mBottom-mTop;
     mPrivateFlags &= ~PFLAG_FORCE_LAYOUT;
     mPrivateFlags3 |= PFLAG3_IS_LAID_OUT;
-    bool changed=setFrame(l,t,w,h);
+    bool changed = setFrame(l,t,w,h);
     if(changed|| ((mPrivateFlags & PFLAG_LAYOUT_REQUIRED) == PFLAG_LAYOUT_REQUIRED)){
         onLayout(changed, l, t, w, h);
         if (shouldDrawRoundScrollbar()) {
@@ -5652,6 +5651,7 @@ void View::layout(int l, int t, int w, int h){
                 ls(*this,l, t, w, h,oldL,oldT,oldW,oldH);
             }
         }
+        mPrivateFlags &= (~PFLAG_LAYOUT_REQUIRED);
     }
 
     const bool wasLayoutValid = isLayoutValid();
