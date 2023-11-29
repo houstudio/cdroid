@@ -135,6 +135,17 @@ int GFXInit() {
 #if defined(DOUBLE_BUFFER)&&DOUBLE_BUFFER
     MI_SYS_MemcpyPa(devSurfaces[0].kbuffer+screenSize,devSurfaces[0].kbuffer,screenSize);
 #endif
+#if 0/*double buffer swap test*/
+    for(int i=0;i<10000;i++){
+        unsigned int colors[]={0xFFFF0000,0xFF00FF00,0xFF0000FF,0xFFFFFF00,0xFF00FFFF,0xFFFFFFFF};
+        FBSURFACE*fbs = &devSurfaces[0];
+        dev->var.yoffset = (i%2)*dev->var.yres;
+        MI_SYS_MemsetPa(fbs->kbuffer+displayScreenSize*(i%2?0:1),colors[i%6],(displayScreenSize));
+        ioctl(dev->fb, FBIO_WAITFORVSYNC, NULL);
+        ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var);
+        usleep(16000);
+    }
+#endif
     LOGI("%d surfaces is configured for app usage",index);
     return E_OK;
 }
