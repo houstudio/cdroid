@@ -91,10 +91,10 @@ void Switch::init(){
 }
 
 Switch::~Switch(){
-    delete mTextColors;
+    //delete mTextColors;
     delete mThumbDrawable;
-    delete mTrackTintList;
-    delete mThumbTintList;
+    //delete mTrackTintList;
+    //delete mThumbTintList;
     delete mOnLayout;
     delete mOffLayout;
     mVelocityTracker->recycle();
