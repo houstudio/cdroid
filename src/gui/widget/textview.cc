@@ -1691,8 +1691,7 @@ int TextView::getCurrentHintTextColor()const{
 
 
 void TextView::setLinkTextColor(int color){
-    ColorStateList cls(color);
-    setLinkTextColor(&cls);
+    setLinkTextColor(ColorStateList::valueOf(color));
 }
 
 void TextView::setLinkTextColor(const ColorStateList* colors){

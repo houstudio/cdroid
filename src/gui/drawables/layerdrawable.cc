@@ -74,6 +74,22 @@ void LayerDrawable::ChildDrawable::applyDensityScaling(int sourceDensity, int ta
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 LayerDrawable::LayerState::LayerState(){
+#if 0
+    if(attrs){
+        mPaddingTop  = attrs->getInt("paddingTop");
+        mPaddingLeft = attrs->getInt("paddingLeft");
+        mPaddingRight= attrs->getInt("paddingRight");
+        mPaddingBottom=attrs->getInt("paddingBottom");
+        mPaddingStart =attrs->getInt("paddingStart");
+        mPaddingEnd  = attrs->getInt("paddingEnd");
+        mPaddingMode = attrs->getInt("paddingMode",std::map<const std::string,int>{
+	        {"nest",PADDING_MODE_NEST},
+	        {"inner",PADDING_MODE_INNER},
+	        {"stack",PADDING_MODE_STACK}
+        },PADDING_MODE_NEST);
+        mAutoMirrored= attrs->getBoolean("paddingMode");
+    }else
+#endif
     mDensity = -1;
     mPaddingTop  = mPaddingBottom= -1;
     mPaddingLeft = mPaddingRight = -1;

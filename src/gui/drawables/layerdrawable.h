@@ -5,6 +5,10 @@ namespace cdroid{
 
 
 class LayerDrawable:public Drawable,public Drawable::Callback {
+public:
+    static constexpr int PADDING_MODE_NEST=0;
+    static constexpr int PADDING_MODE_INNER=1;
+    static constexpr int PADDING_MODE_STACK=2;
 protected:
     class ChildDrawable{
     public:
@@ -86,10 +90,6 @@ protected:
     LayerDrawable(std::shared_ptr<LayerState>state);
     ChildDrawable* addLayer(Drawable* dr,const std::vector<int>&themeAttrs,int id,int left,int top,int right,int bottom);
 public:
-    enum PaddingMode{
-        PADDING_MODE_NEST=0,
-        PADDING_MODE_STACK=1
-    };
     LayerDrawable();
     LayerDrawable(const std::vector<Drawable*>&drawables);
 

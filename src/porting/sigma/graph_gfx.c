@@ -141,8 +141,9 @@ int GFXInit() {
         FBSURFACE*fbs = &devSurfaces[0];
         dev->var.yoffset = (i%2)*dev->var.yres;
         MI_SYS_MemsetPa(fbs->kbuffer+displayScreenSize*(i%2?0:1),colors[i%6],(displayScreenSize));
-        ioctl(dev->fb, FBIO_WAITFORVSYNC, NULL);
-        ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var);
+        int ret1=ioctl(dev->fb, FBIO_WAITFORVSYNC, NULL);
+        int ret2=ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var);
+        LOGD("ioctl ret=%d,%d",ret1,ret2);
         usleep(16000);
     }
 #endif
@@ -390,7 +391,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     toMIGFX(ndst,&gfxdst);
     bzero(&opt,sizeof(opt));
 
-    opt.u32GlobalSrcConstColor = 0xFF000000;//nsrc->alpha<<24;
+    opt.u32GlobalSrcConstColor = nsrc->alpha<<24;
     opt.u32GlobalDstConstColor = 0xFF000000;
     opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
     opt.eDstDfbBldOp = E_MI_GFX_DFB_BLD_ZERO;
