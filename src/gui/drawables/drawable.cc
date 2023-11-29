@@ -109,8 +109,7 @@ void Drawable::setColorFilter(int color,PorterDuffMode mode) {
 }
 
 void Drawable::setTint(int color) {
-    ColorStateList cls(color);
-    setTintList(&cls);
+    setTintList(ColorStateList::valueOf(color));
 }
 
 PorterDuffColorFilter *Drawable::updateTintFilter(PorterDuffColorFilter* tintFilter,const ColorStateList* tint,int tintMode) {

@@ -447,14 +447,14 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
     if( its!=mStateColors.end())
         return its->second;
     else if(itc != mColors.end()){
-        ColorStateList* cls = ColorStateList::valueOf(itc->second);
+        ColorStateList* cls = new ColorStateList(itc->second);
         mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
         return cls;
     }else if( (itc == mColors.end()) && (name.empty()==false) ) {
         size_t slashpos = fullresid.find("/");
         if( (fullresid[0]=='#') || (slashpos==std::string::npos) ) {/*digital colors*/
             const int color = Color::parseColor(fullresid);
-            ColorStateList* cls = ColorStateList::valueOf(color);
+            ColorStateList* cls = new ColorStateList(color);
             mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
             return cls;
         }
@@ -464,7 +464,7 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
             realName = mTheme.getString(realName);
             itc = mColors.find(realName);
             if(itc != mColors.end()){
-                ColorStateList* cls = ColorStateList::valueOf(itc->second);
+                ColorStateList* cls = new ColorStateList(itc->second);
                 mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
                 return cls;
             }

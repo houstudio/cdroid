@@ -173,7 +173,7 @@ protected:
 
     class TintInfo{
     public:
-        ColorStateList*mTintList;
+        const ColorStateList*mTintList;
         int mBlendMode;
         int mTintMode;
         bool mHasTintMode;
@@ -878,7 +878,7 @@ public:
     View& setForegroundGravity(int gravity);
     View& setForegroundTintList(const ColorStateList* tint);
     View& setForegroundTintMode(int tintMode);
-    ColorStateList* getForegroundTintList();
+    const ColorStateList* getForegroundTintList();
     virtual void onResolveDrawables(int layoutDirection);
 
     virtual void jumpDrawablesToCurrentState();
@@ -888,7 +888,7 @@ public:
     View& setBackgroundResource(const std::string&resid);
     View& setBackgroundTintList(const ColorStateList* tint);
     View& setBackgroundTintMode(int tintMode);
-    ColorStateList* getBackgroundTintList()const;
+    const ColorStateList* getBackgroundTintList()const;
     virtual int getSolidColor()const;
 
     bool isTemporarilyDetached()const;

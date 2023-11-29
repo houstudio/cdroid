@@ -30,9 +30,9 @@ private:
     std::string mDayOfWeekTextAppearance;
     std::string mDayTextAppearance;
 
-    ColorStateList* mCalendarTextColor;
-    ColorStateList* mDaySelectorColor;
-    ColorStateList* mDayHighlightColor;
+    const ColorStateList* mCalendarTextColor;
+    const ColorStateList* mDaySelectorColor;
+    const ColorStateList* mDayHighlightColor;
 
     SimpleMonthView::OnDayClickListener mOnDayClickListener;
     OnDaySelectedListener mOnDaySelectedListener;

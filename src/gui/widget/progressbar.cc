@@ -13,17 +13,17 @@ public:
     bool mHasIndeterminateTint;
     bool mHasIndeterminateTintMode;
 
-    ColorStateList* mProgressTintList;
+    const ColorStateList* mProgressTintList;
     PorterDuffMode mProgressTintMode;
     bool mHasProgressTint;
     bool mHasProgressTintMode;
 
-    ColorStateList* mProgressBackgroundTintList;
+    const ColorStateList* mProgressBackgroundTintList;
     PorterDuffMode mProgressBackgroundTintMode;
     bool mHasProgressBackgroundTint;
     bool mHasProgressBackgroundTintMode;
 
-    ColorStateList* mSecondaryProgressTintList;
+    const ColorStateList* mSecondaryProgressTintList;
     PorterDuffMode mSecondaryProgressTintMode;
     bool mHasSecondaryProgressTint;
     bool mHasSecondaryProgressTintMode;
@@ -33,11 +33,6 @@ public:
         mProgressBackgroundTintList = nullptr;
         mSecondaryProgressTintList = nullptr;
     }
-    ~ProgressTintInfo(){
-        delete mProgressTintList;
-        delete mProgressBackgroundTintList;
-        delete mSecondaryProgressTintList;
-    }    
 };
 
 DECLARE_WIDGET(ProgressBar)
@@ -844,21 +839,17 @@ void ProgressBar::setProgressTintList(const ColorStateList*tint){
     if (mProgressTintInfo == nullptr) {
         mProgressTintInfo = new ProgressTintInfo();
     }
-    if(tint ==nullptr){
-        delete mProgressTintInfo->mProgressTintList;
-        mProgressTintInfo->mProgressTintList = nullptr;
-    }else{
-        if(mProgressTintInfo->mProgressTintList) *mProgressTintInfo->mProgressTintList=*tint;
-        else mProgressTintInfo->mProgressTintList = new ColorStateList(*tint);
+    if(mProgressTintInfo->mProgressTintList!=tint){
+        mProgressTintInfo->mProgressTintList = tint;
+        mProgressTintInfo->mHasProgressTint = (tint!=nullptr);
     }
-    mProgressTintInfo->mHasProgressTint = (tint!=nullptr);
 
     if (mProgressDrawable ) {
         applyPrimaryProgressTint();
     }
 }
 
-ColorStateList* ProgressBar::getProgressTintList()const{
+const ColorStateList* ProgressBar::getProgressTintList()const{
     return mProgressTintInfo  ? mProgressTintInfo->mProgressTintList : nullptr;
 }
 
@@ -882,23 +873,17 @@ void ProgressBar::setProgressBackgroundTintList(const ColorStateList* tint) {
     if (mProgressTintInfo == nullptr) {
         mProgressTintInfo = new ProgressTintInfo();
     }
-    if(tint == nullptr){
-        delete mProgressTintInfo->mProgressBackgroundTintList;
-        mProgressTintInfo->mProgressBackgroundTintList = nullptr;
-    }else{
-        if(mProgressTintInfo->mProgressBackgroundTintList)
-	        *mProgressTintInfo->mProgressBackgroundTintList=*tint;
-        else 
-            mProgressTintInfo->mProgressBackgroundTintList = new ColorStateList(*tint);
+    if(mProgressTintInfo->mProgressBackgroundTintList!=tint ){
+        mProgressTintInfo->mProgressBackgroundTintList = tint;
+        mProgressTintInfo->mHasProgressBackgroundTint = (tint!=nullptr);
     }
-    mProgressTintInfo->mHasProgressBackgroundTint = (tint!=nullptr);
 
     if (mProgressDrawable != nullptr) {
         applyProgressBackgroundTint();
     }
 }
 
-ColorStateList*ProgressBar::getProgressBackgroundTintList()const{
+const ColorStateList*ProgressBar::getProgressBackgroundTintList()const{
     return mProgressTintInfo ? mProgressTintInfo->mProgressBackgroundTintList : nullptr;
 }
 
@@ -922,23 +907,17 @@ void ProgressBar::setSecondaryProgressTintList(const ColorStateList* tint) {
     if (mProgressTintInfo == nullptr) {
         mProgressTintInfo = new ProgressTintInfo();
     }
-    if(tint == nullptr){
-        delete mProgressTintInfo->mSecondaryProgressTintList;
-        mProgressTintInfo->mSecondaryProgressTintList=nullptr;
-    }else{
-        if(mProgressTintInfo->mSecondaryProgressTintList)
-            *mProgressTintInfo->mSecondaryProgressTintList=*tint;
-        else
-            mProgressTintInfo->mSecondaryProgressTintList = new  ColorStateList(*tint);
+    if( mProgressTintInfo->mSecondaryProgressTintList!=tint ){
+        mProgressTintInfo->mSecondaryProgressTintList = tint;
+        mProgressTintInfo->mHasSecondaryProgressTint = (tint!=nullptr);
     }
-    mProgressTintInfo->mHasSecondaryProgressTint = (tint!=nullptr);
 
     if (mProgressDrawable != nullptr) {
         applySecondaryProgressTint();
     }
 }
 
-ColorStateList* ProgressBar::getSecondaryProgressTintList()const{
+const ColorStateList* ProgressBar::getSecondaryProgressTintList()const{
     return mProgressTintInfo ? mProgressTintInfo->mSecondaryProgressTintList : nullptr;
 }
 

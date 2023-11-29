@@ -10,7 +10,7 @@ private:
 
     std::string mCheckMarkResource;
     Drawable* mCheckMarkDrawable;
-    ColorStateList* mCheckMarkTintList = nullptr;
+    const ColorStateList* mCheckMarkTintList;
     //BlendMode mCheckMarkBlendMode = null;
     bool mHasCheckMarkTint = false;
     bool mHasCheckMarkTintMode = false;
@@ -43,7 +43,7 @@ public:
     void setCheckMarkDrawable(const std::string&resId);
     void setCheckMarkDrawable(Drawable* d);
     void setCheckMarkTintList(const ColorStateList*tint);
-    ColorStateList* getCheckMarkTintList()const;
+    const ColorStateList* getCheckMarkTintList()const;
     View& setVisibility(int visibility)override;     
     void jumpDrawablesToCurrentState()override;
     void onRtlPropertiesChanged(int layoutDirection)override;

@@ -36,7 +36,7 @@ protected:
         bool mAutoMirrored;
         int mTintMode;
         ColorFilter*mColorFilter;
-        ColorStateList*mTintList;
+        const ColorStateList*mTintList;
         std::vector<Drawable* >mDrawables;
         std::map<int,std::shared_ptr<ConstantState> >mDrawableFutures;
         DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own);

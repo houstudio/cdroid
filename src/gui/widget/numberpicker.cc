@@ -91,7 +91,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     setTextColor(atts.getColor("textColor"));
     setTextColor(mTextColor,atts.getColor("textColor2",mTextColor));
     setSelectedTextColor(atts.getColor("selectedTextColor"));
-    ColorStateList*colors = mSelectedText->getTextColors();
+    const ColorStateList*colors = mSelectedText->getTextColors();
     if(colors->isStateful())
         setSelectedTextColor(colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),mSelectedTextColor));
     updateInputTextView();

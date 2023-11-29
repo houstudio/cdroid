@@ -47,7 +47,7 @@ Switch::Switch(Context* context,const AttributeSet& a)
 
     ColorStateList* trackTintList = context->getColorStateList("trackTint");
     if (trackTintList) {
-        mTrackTintList = new ColorStateList(*trackTintList);
+        mTrackTintList = trackTintList;
         mHasTrackTint = true;
     }
     /*BlendMode trackTintMode = Drawable.parseBlendMode(a.getInt(com.android.internal.R.styleable.Switch_trackTintMode, -1), null);
@@ -234,18 +234,14 @@ Drawable* Switch::getTrackDrawable() {
 }
 
 void Switch::setTrackTintList(const ColorStateList* tint){
-    if(tint ==nullptr){
-        delete mTrackTintList;
-        mTrackTintList = nullptr;
-    }else{
-        if(mTrackTintList)   *mTrackTintList=*tint;
-        else mTrackTintList = new ColorStateList(*tint);
+    if(mTrackTintList!=tint){
+        mTrackTintList = tint;
+        mHasTrackTint = (tint!=nullptr);
+        applyTrackTint();
     }
-    mHasTrackTint = (tint!=nullptr);
-    applyTrackTint();
 }
 
-ColorStateList* Switch::getTrackTintList() {
+const ColorStateList* Switch::getTrackTintList() {
     return mTrackTintList;
 }
 
@@ -297,19 +293,14 @@ Drawable* Switch::getThumbDrawable(){
 }
 
 void Switch::setThumbTintList(const ColorStateList* tint){
-    if(tint==nullptr){
-        delete mThumbTintList;
-        mThumbTintList = nullptr;
-    }else{
-        if(mThumbTintList) *mThumbTintList = *tint;
-        else mThumbTintList = new ColorStateList(*tint);
+    if(mThumbTintList!=tint){
+        mThumbTintList = tint;
+        mHasThumbTint = (tint!=nullptr);
+        applyThumbTint();
     }
-    mHasThumbTint = true;
-
-    applyThumbTint();
 }
 
-ColorStateList* Switch::getThumbTintList()const{
+const ColorStateList* Switch::getThumbTintList()const{
     return mThumbTintList;
 }
 

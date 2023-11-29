@@ -317,17 +317,13 @@ void TabLayout::setInlineLabel(bool v){
 }
 
 void TabLayout::setTabTextColors(const ColorStateList* textColor) {
-    if (textColor==nullptr){
-        delete mTabTextColors;
-        mTabTextColors = nullptr;
-    }else{
-        if(mTabTextColors) *mTabTextColors=*textColor;
-        else mTabTextColors = new ColorStateList(*textColor);
+    if (mTabTextColors!=textColor){
+        mTabTextColors = textColor;
+        updateAllTabs();
     }
-    updateAllTabs();
 }
 
-ColorStateList* TabLayout::getTabTextColors()const{
+const ColorStateList* TabLayout::getTabTextColors()const{
     return mTabTextColors;
 }
 
@@ -1121,7 +1117,7 @@ void TabLayout::TabView::update() {
         }
         //mTextView->setTextAppearance(mTabTextAppearance);
         if (mParent->mTabTextColors) {
-            mTextView->setTextColor(new ColorStateList(*mParent->mTabTextColors));
+            mTextView->setTextColor(mParent->mTabTextColors);
         }
         updateTextAndIcon(mTextView, mIconView);
     } else {

@@ -6,6 +6,8 @@ namespace cdroid{
 DECLARE_WIDGET(ViewAnimator)
 
 ViewAnimator::ViewAnimator(int w,int h):FrameLayout(w,h){
+    mInAnimation = nullptr;
+    mOutAnimation= nullptr;
 }
 
 ViewAnimator::ViewAnimator(Context* context,const AttributeSet& attrs)
@@ -155,7 +157,7 @@ Animation* ViewAnimator::getOutAnimation(){
     return mOutAnimation;
 }
 void ViewAnimator::setOutAnimation(Animation* outAnimation){
-    mOutAnimation=outAnimation;
+    mOutAnimation = outAnimation;
 }
 
 bool ViewAnimator::getAnimateFirstView() const{

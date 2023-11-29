@@ -52,7 +52,7 @@ public:
         bool mIsRtlCompatibilityMode;
         bool mOverride;
         bool mHasTint, mHasTintMode;
-        ColorStateList* mTintList;
+        const ColorStateList* mTintList;
         int mTintMode;
         int mDrawableSizeTop, mDrawableSizeBottom, mDrawableSizeLeft, mDrawableSizeRight;
         int mDrawableSizeStart, mDrawableSizeEnd, mDrawableSizeError, mDrawableSizeTemp;
@@ -101,9 +101,9 @@ private:
     int mFontWeightAdjustment;
     Typeface* mOriginalTypeface;
 
-    ColorStateList *mTextColor;
-    ColorStateList *mHintTextColor;
-    ColorStateList *mLinkTextColor;
+    const ColorStateList *mTextColor;
+    const ColorStateList *mHintTextColor;
+    const ColorStateList *mLinkTextColor;
     int mCurTextColor;
     int mCurHintTextColor;
     int mHighlightColor;
@@ -227,17 +227,17 @@ public:
     int  getEllipsize() const;
     void setEllipsize(int ellipsize);
 
-    ColorStateList* getTextColors()const;
+    const ColorStateList* getTextColors()const;
     int getCurrentTextColor()const;
     void setHighlightColor(int color);
     int getHighlightColor()const;
     void setHintTextColor(int color);
     void setHintTextColor(const ColorStateList* colors);
-    ColorStateList* getHintTextColors()const;
+    const ColorStateList* getHintTextColors()const;
     int getCurrentHintTextColor()const;
     void setLinkTextColor(int color);
     void setLinkTextColor(const ColorStateList* colors);
-    ColorStateList* getLinkTextColors()const;
+    const ColorStateList* getLinkTextColors()const;
     void setMinWidth(int minPixels);
     int getMinWidth()const;
     void setMaxWidth(int maxPixels);
@@ -274,7 +274,7 @@ public:
     int getCompoundDrawablePadding()const;
     std::vector<Drawable*>getCompoundDrawables();
     void setCompoundDrawableTintList(const ColorStateList* tint);
-    ColorStateList* getCompoundDrawableTintList();
+    const ColorStateList* getCompoundDrawableTintList();
     void drawableHotspotChanged(float x,float y)override;
     void setCompoundDrawableTintMode(int tintMode);
     int getCompoundDrawableTintMode();

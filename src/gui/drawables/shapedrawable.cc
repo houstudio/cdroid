@@ -134,19 +134,11 @@ int ShapeDrawable::getOpacity(){
 }
 
 void ShapeDrawable::setTintList(const ColorStateList*tint){
-    if( tint ==nullptr){
-        delete mShapeState->mTint;
-        mShapeState->mTint = nullptr;
-        delete mTintFilter;
-    }else{
-        if(mShapeState->mTint)*mShapeState->mTint=*tint;
-        else mShapeState->mTint = new ColorStateList(*tint);
+    if( mShapeState->mTint!=tint ){
+        mShapeState->mTint =tint;
         mTintFilter = updateTintFilter(mTintFilter,tint,mShapeState->mTintMode); 
+        invalidateSelf();
     }
-    invalidateSelf();
-    /*mShapeState->mTint = tint;
-    mTintFilter = updateTintFilter(mTintFilter,tint,mShapeState->mTintMode); 
-    invalidateSelf();*/
 }
 
 void ShapeDrawable::setTintMode(int tintMode){

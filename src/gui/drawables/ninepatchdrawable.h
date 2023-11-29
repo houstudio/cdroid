@@ -16,8 +16,8 @@ private:
         Insets mOpticalInsets;
         int mTintMode;
         int mChangingConfigurations;
-        ColorStateList*mTint;
-	Cairo::RefPtr<NinePatch>mNinePatch;
+        const ColorStateList*mTint;
+        Cairo::RefPtr<NinePatch>mNinePatch;
         NinePatchState();
         NinePatchState(const NinePatchState&state);
         NinePatchState(Cairo::RefPtr<Cairo::ImageSurface>bitmap,const Rect*padding=nullptr);

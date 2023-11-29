@@ -100,19 +100,11 @@ int ColorDrawable::getChangingConfigurations()const{
 }
 
 void ColorDrawable::setTintList(const ColorStateList* tint){
-    if( tint ==nullptr){
-        delete mColorState->mTint;
-        mColorState->mTint = nullptr;
-        delete mTintFilter;
-    }else{
-        if(mColorState->mTint) *mColorState->mTint = *tint;
-        else mColorState->mTint =new ColorStateList(*tint);
+    if( mColorState->mTint!=tint ){
+        mColorState->mTint = tint;
         mTintFilter = updateTintFilter(mTintFilter, tint, mColorState->mTintMode);
+        invalidateSelf();
     }
-    invalidateSelf();
-    /*mColorState->mTint = tint;
-    mTintFilter = updateTintFilter(mTintFilter, tint, mColorState->mTintMode);
-    invalidateSelf();*/
 }
 
 void ColorDrawable::setTintMode(int tintMode) {

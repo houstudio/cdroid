@@ -42,15 +42,15 @@ public:
     ~AnalogClock();
     void setDial(Icon icon);
     void setDialTintList(const ColorStateList*);
-    ColorStateList*getDialTintList()const;
+    const ColorStateList*getDialTintList()const;
 
     void setHourHand(Icon icon);
     void setHourHandTintList(const ColorStateList*);
-    ColorStateList* getHourHandTintList()const;
+    const ColorStateList* getHourHandTintList()const;
 
     void setMinuteHand(Icon icon);
     void setMinuteHandTintList(const ColorStateList*);
-    ColorStateList* getMinuteHandTintList()const;
+    const ColorStateList* getMinuteHandTintList()const;
 
     void setSecondHand(Icon icon);
     void setSecondHandTintList(const ColorStateList*);

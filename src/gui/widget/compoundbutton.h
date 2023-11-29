@@ -12,7 +12,7 @@ private:
     bool mCheckedFromResource;
     int  mButtonTintMode;
     Drawable* mButtonDrawable;
-    ColorStateList*mButtonTintList;
+    const ColorStateList*mButtonTintList;
     OnCheckedChangeListener mOnCheckedChangeListener;
     OnCheckedChangeListener mOnCheckedChangeWidgetListener;
     void initCompoundButton();
@@ -34,7 +34,7 @@ public:
     Drawable* getButtonDrawable()const;
     void jumpDrawablesToCurrentState()override;
     void setButtonTintList(const ColorStateList* tint);
-    ColorStateList* getButtonTintList()const;
+    const ColorStateList* getButtonTintList()const;
     void setButtonTintMode(PorterDuffMode tintMode);
     PorterDuffMode getButtonTintMode()const;
     int getCompoundPaddingLeft()override;

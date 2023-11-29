@@ -1,5 +1,6 @@
 #include <drawables/colorstatelist.h>
-#include <color.h>
+#include <core/color.h>
+#include <core/app.h>
 #include <drawables/stateset.h>
 #include <attributeset.h>
 #include <expat.h>
@@ -31,6 +32,10 @@ ColorStateList::ColorStateList(const std::vector<std::vector<int>>&states,const 
     mColors = colors;
     mChangingConfigurations = 0;
     onColorsChanged();
+}
+
+ColorStateList::~ColorStateList(){
+    LOGV("%p====",this);
 }
 
 void ColorStateList::dump()const{
@@ -147,7 +152,9 @@ int ColorStateList::getColorForState(const std::vector<int>&stateSet, int defaul
 }
 
 ColorStateList*ColorStateList::valueOf(int color){
-    return new ColorStateList(color);
+    char buf[32];
+    sprintf(buf,"#%06x",color);
+    return App::getInstance().getColorStateList(buf); 
 }
 
 const std::vector<int>& ColorStateList::getColors()const{

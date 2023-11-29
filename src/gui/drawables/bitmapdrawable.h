@@ -22,7 +22,7 @@ private:
         bool mAutoMirrored;
         int mChangingConfigurations;
         std::vector<int>mThemeAttrs;
-        ColorStateList* mTint;
+        const ColorStateList* mTint;
         int mTintMode;
         int mTileModeX;
         int mTileModeY;

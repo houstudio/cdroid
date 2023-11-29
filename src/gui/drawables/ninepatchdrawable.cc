@@ -113,21 +113,11 @@ int NinePatchDrawable::getAlpha()const{
 }
 
 void NinePatchDrawable::setTintList(const ColorStateList* tint){
-    if( tint == nullptr ){
-        delete mNinePatchState->mTint;
-        delete  mTintFilter;
-        mNinePatchState->mTint = nullptr;
-    }else{
-        if(mNinePatchState->mTint)
-           *mNinePatchState->mTint = *tint;
-        else
-           mNinePatchState->mTint = new ColorStateList(*tint);
+    if( mNinePatchState->mTint!=tint ){
+        mNinePatchState->mTint = tint;
         mTintFilter = updateTintFilter(mTintFilter, tint, mNinePatchState->mTintMode);
+        invalidateSelf();
     }
-    invalidateSelf();
-    /*mNinePatchState->mTint = tint;
-    mTintFilter = updateTintFilter(mTintFilter, tint, mNinePatchState->mTintMode);
-    invalidateSelf();*/
 }
 
 void NinePatchDrawable::setTintMode(int tintMode) {

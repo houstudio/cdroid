@@ -196,9 +196,9 @@ protected:
     int  mTabPaddingEnd;
     int  mTabPaddingBottom;
     int  mTabTextAppearance;
-    ColorStateList* mTabTextColors;
-    ColorStateList* mTabIconTint;
-    ColorStateList* mTabRippleColorStateList;
+    const ColorStateList* mTabTextColors;
+    const ColorStateList* mTabIconTint;
+    const ColorStateList* mTabRippleColorStateList;
     Drawable* mTabSelectedIndicator;
     float mTabTextSize;
     float mTabTextMultiLineSize;
@@ -271,7 +271,7 @@ public:
     bool isInlineLabel()const;
     void setInlineLabel(bool);
     void setTabTextColors(const ColorStateList* textColor);
-    ColorStateList* getTabTextColors()const;
+    const ColorStateList* getTabTextColors()const;
     void setTabTextColors(int normalColor, int selectedColor);
     void setupWithViewPager(ViewPager* viewPager);
     void setupWithViewPager(ViewPager* viewPager, bool autoRefresh);

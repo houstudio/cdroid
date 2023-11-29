@@ -9,7 +9,7 @@ private:
     public:
         uint32_t mBaseColor;// base color, independent of setAlpha()
         uint32_t mUseColor; // basecolor modulated by setAlpha()
-        ColorStateList*mTint;
+        const ColorStateList*mTint;
         int mTintMode;
         ColorState();
         ColorState(const ColorState& state);

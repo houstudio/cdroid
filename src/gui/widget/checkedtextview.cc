@@ -18,8 +18,8 @@ CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):TextVie
     }
 
     if (a.hasAttribute("checkMarkTint")) {
-        //mCheckMarkTintList = a.getColorStateList("checkMarkTint");
-        //mHasCheckMarkTint = true;
+        mCheckMarkTintList = a.getColorStateList("checkMarkTint");
+        mHasCheckMarkTint = (mCheckMarkTintList!=nullptr);
     }
 
     mCheckMarkGravity = a.getGravity("checkMarkGravity", Gravity::END);
@@ -96,19 +96,14 @@ void CheckedTextView::setCheckMarkDrawableInternal(Drawable* d,const std::string
 }
 
 void CheckedTextView::setCheckMarkTintList(const ColorStateList*tint){
-    if(tint==nullptr){
-        delete mCheckMarkTintList;
-        mCheckMarkTintList = nullptr;
-    }else{
-        if(mCheckMarkTintList)*mCheckMarkTintList=*tint;
-        else mCheckMarkTintList = new ColorStateList(*tint);
+    if(mCheckMarkTintList!=tint){
+        mCheckMarkTintList = tint;
+        mHasCheckMarkTint = (tint!=nullptr);
+        applyCheckMarkTint();
     }
-    mHasCheckMarkTint = (tint!=nullptr);
-
-    applyCheckMarkTint();
 }
 
-ColorStateList* CheckedTextView::getCheckMarkTintList()const{
+const ColorStateList* CheckedTextView::getCheckMarkTintList()const{
     return mCheckMarkTintList;
 }
 

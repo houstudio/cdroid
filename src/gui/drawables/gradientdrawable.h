@@ -48,8 +48,8 @@ private:
        int mGradient;// = LINEAR_GRADIENT
        int mAngle;
        Orientation mOrientation;
-       ColorStateList* mSolidColors;
-       ColorStateList* mStrokeColors;
+       const ColorStateList* mSolidColors;
+       const ColorStateList* mStrokeColors;
        std::vector<int>mGradientColors;
        std::vector<float>mPositions;
        int mStrokeWidth;
@@ -74,7 +74,7 @@ private:
        bool mUseLevelForShape;
        bool mOpaqueOverBounds;
        bool mOpaqueOverShape;
-       ColorStateList*mTint;
+       const ColorStateList*mTint;
        int mTintMode;
        int mDensity;
        std::vector<int>mAttrSize;
@@ -176,7 +176,7 @@ public:
     const std::vector<int>&getColors()const;
     void setColor(int argb);
     void setColor(const ColorStateList* colorStateList);
-    ColorStateList* getColor();
+    const ColorStateList* getColor();
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
     int getChangingConfigurations()const override;

@@ -1501,6 +1501,34 @@ static int constrain(int amount, int low, int high) {//get the
     return amount < low ? low : (amount > high ? high : amount);
 }
 
+int ListView::lookForSelectablePosition(int position, bool lookDown) {
+    Adapter* adapter = mAdapter;
+    if (adapter == nullptr || isInTouchMode()) {
+        return INVALID_POSITION;
+    }
+
+    const int count = adapter->getCount();
+    if (!mAreAllItemsSelectable) {
+        if (lookDown) {
+            position = std::max(0, position);
+            while (position < count && !adapter->isEnabled(position)) {
+                position++;
+            }
+        } else {
+            position = std::min(position, count - 1);
+            while (position >= 0 && !adapter->isEnabled(position)) {
+                position--;
+            }
+        }
+    }
+
+    if (position < 0 || position >= count) {
+        return INVALID_POSITION;
+    }
+
+    return position;
+}
+
 int ListView::lookForSelectablePositionAfter(int current, int position, bool lookDown) {
     if (mAdapter == nullptr || isInTouchMode()) {
         return INVALID_POSITION;

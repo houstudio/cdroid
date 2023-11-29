@@ -25,9 +25,9 @@ DayPickerPagerAdapter::DayPickerPagerAdapter(Context* context,const std::string&
 }
 
 DayPickerPagerAdapter::~DayPickerPagerAdapter(){
-    delete mCalendarTextColor;
-    delete mDaySelectorColor;
-    delete mDayHighlightColor;
+    //delete mCalendarTextColor;
+    //delete mDaySelectorColor;
+    //delete mDayHighlightColor;
 }
 
 void DayPickerPagerAdapter::setRange(Calendar& min,Calendar& max) {
@@ -96,25 +96,17 @@ void DayPickerPagerAdapter::setOnDaySelectedListener(OnDaySelectedListener liste
 }
 
 void DayPickerPagerAdapter::setCalendarTextColor(const ColorStateList* calendarTextColor) {
-    if(calendarTextColor==nullptr){
-        delete mCalendarTextColor;
-        mCalendarTextColor = nullptr;
-    }else{
-        if(mCalendarTextColor) *mCalendarTextColor=*calendarTextColor;
-        else mCalendarTextColor = new ColorStateList(*calendarTextColor);
+    if(mCalendarTextColor!=calendarTextColor){
+        mCalendarTextColor = calendarTextColor;
+        notifyDataSetChanged();
     }
-    notifyDataSetChanged();
 }
 
 void DayPickerPagerAdapter::setDaySelectorColor(const ColorStateList* selectorColor) {
-    if(selectorColor==nullptr){
-        delete mDaySelectorColor;
-        mDaySelectorColor = nullptr;
-    }else{
-        if(mDaySelectorColor) *mDaySelectorColor=*selectorColor;
-        else mDaySelectorColor = new ColorStateList(*selectorColor);
+    if(mDaySelectorColor!=selectorColor){
+        mDaySelectorColor = selectorColor;
+        notifyDataSetChanged();
     }
-    notifyDataSetChanged();
 }
 
 void DayPickerPagerAdapter::setMonthTextAppearance(const std::string& resId) {

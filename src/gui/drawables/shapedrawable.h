@@ -10,7 +10,7 @@ private:
     class ShapeState:public std::enable_shared_from_this<ShapeState>,public ConstantState{
     public:
         Shape*mShape;
-        ColorStateList* mTint;
+        const ColorStateList* mTint;
         int mTintMode;
         Rect mPadding;
         int mChangingConfigurations;

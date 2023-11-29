@@ -47,7 +47,7 @@ protected:
     std::vector<int>mState;
     Drawable*mDrawable;
     ColorFilter*mColorFilter;
-    ColorStateList*mDrawableTintList;
+    const ColorStateList*mDrawableTintList;
     int mDrawableTintMode;
     BitmapDrawable*mRecycleableBitmapDrawable;
     Matrix mMatrix;
@@ -90,7 +90,7 @@ public:
     void setImageDrawable(Drawable* drawable);
     void setImageBitmap(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
     void setImageTintList(const ColorStateList*tint);
-    ColorStateList* getImageTintList();
+    const ColorStateList* getImageTintList();
     void setImageTintMode(int mode);
     int getImageTintMode()const;
     void setColorFilter(int color,int mode);

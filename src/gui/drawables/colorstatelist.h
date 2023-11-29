@@ -27,6 +27,7 @@ public:
     ColorStateList(int color);
     ColorStateList(const ColorStateList&other);
     ColorStateList(const std::vector<std::vector<int>>&states,const std::vector<int>&colors);
+    ~ColorStateList();
     int addStateColor(const std::vector<int>&stateSet,int color);
     int getDefaultColor()const override;
     bool isOpaque()const;

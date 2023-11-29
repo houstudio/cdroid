@@ -171,6 +171,7 @@ public:
     Drawable* getOverscrollFooter()const;
     int measureHeightOfChildren(int widthMeasureSpec, int startPosition, int endPosition,
             int maxHeight, int disallowPartialChildPosition);
+    int lookForSelectablePosition(int position, bool lookDown)override;
     void addHeaderView(View* v,void* data, bool isSelectable);
     void addHeaderView(View* v);
     int getHeaderViewsCount()const;

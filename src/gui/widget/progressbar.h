@@ -126,15 +126,15 @@ public:
     Drawable*getIndeterminateDrawable()const;
 
     void setProgressTintList(const ColorStateList*tint);
-    ColorStateList*getProgressTintList()const;
+    const ColorStateList*getProgressTintList()const;
     void setProgressTintMode(int);
     int getProgressTintMode()const;
     void setProgressBackgroundTintList(const ColorStateList*tint);
-    ColorStateList*getProgressBackgroundTintList()const;
+    const ColorStateList*getProgressBackgroundTintList()const;
     void setProgressBackgroundTintMode(int);
     int getProgressBackgroundTintMode()const;
     void setSecondaryProgressTintList(const ColorStateList*tintt);
-    ColorStateList*getSecondaryProgressTintList()const;
+    const ColorStateList*getSecondaryProgressTintList()const;
     void setSecondaryProgressTintMode(int tintMode);
     int getSecondaryProgressTintMode()const;
     Drawable* getTintTarget(int layerId, bool shouldFallback);

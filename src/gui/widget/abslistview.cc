@@ -1983,7 +1983,7 @@ void AbsListView::onDetachedFromWindow() {
 void AbsListView::onWindowFocusChanged(bool hasWindowFocus) {
     AdapterView::onWindowFocusChanged(hasWindowFocus);
 
-    int touchMode = isInTouchMode() ? TOUCH_MODE_ON : TOUCH_MODE_OFF;
+    const int touchMode = isInTouchMode() ? TOUCH_MODE_ON : TOUCH_MODE_OFF;
 
     if (!hasWindowFocus) {
         setChildrenDrawingCacheEnabled(false);
@@ -2333,6 +2333,7 @@ void AbsListView::onSecondaryPointerUp(MotionEvent& ev) {
 }
 
 void AbsListView::onTouchModeChanged(bool isInTouchMode) {
+    LOGV("%p:%d mTouchMode=%d isInTouchMode=%d",this,mID,mTouchMode,isInTouchMode);
     if (isInTouchMode) {
         // Get rid of the selection when we enter touch mode
         hideSelector();

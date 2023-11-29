@@ -45,10 +45,10 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig) {
     mGradient = orig.mGradient;
     mAngle = orig.mAngle;
     mOrientation = orig.mOrientation;
-    mSolidColors = orig.mSolidColors ? new ColorStateList(*orig.mSolidColors):nullptr;
+    mSolidColors = orig.mSolidColors;
     mGradientColors = orig.mGradientColors;
     mPositions = orig.mPositions;
-    mStrokeColors = orig.mStrokeColors?new ColorStateList(*orig.mStrokeColors):nullptr;
+    mStrokeColors = orig.mStrokeColors;
     mStrokeWidth = orig.mStrokeWidth;
     mStrokeDashWidth = orig.mStrokeDashWidth;
     mStrokeDashGap = orig.mStrokeDashGap;
@@ -88,9 +88,9 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig) {
 }
 
 GradientDrawable::GradientState::~GradientState(){
-    delete mTint;
-    delete mStrokeColors;
-    delete mSolidColors;
+    //delete mTint;
+    //delete mStrokeColors;
+    //delete mSolidColors;
 }
 
 void GradientDrawable::GradientState::setDensity(int targetDensity) {
@@ -158,12 +158,8 @@ void GradientDrawable::GradientState::setShape( int shape) {
 
 void GradientDrawable::GradientState::setSolidColors(const ColorStateList*colors) {
     mGradientColors.clear();
-    if(colors==nullptr){
-        delete mSolidColors;
-        mSolidColors = nullptr;
-    }else{
-        if(mSolidColors)*mSolidColors=*colors;
-        else mSolidColors = new ColorStateList(*colors);
+    if(mSolidColors!=colors){
+        mSolidColors = colors;
     }
     computeOpacity();
 }
@@ -205,12 +201,8 @@ void GradientDrawable::GradientState::computeOpacity() {
 
 void GradientDrawable::GradientState::setStroke(int width,const ColorStateList*colors, float dashWidth,float dashGap) {
     mStrokeWidth = width;
-    if(colors==nullptr){
-        delete mStrokeColors;
-        mStrokeColors = nullptr;
-    }else{
-        if(mStrokeColors)*mStrokeColors=*colors;
-        else mStrokeColors = new ColorStateList(*colors);
+    if(mStrokeColors!=colors){
+        mStrokeColors = colors;
     }
     mStrokeDashWidth = dashWidth;
     mStrokeDashGap = dashGap;
@@ -340,8 +332,7 @@ void GradientDrawable::setStroke(int width, const ColorStateList*colorStateList)
 }
 
 void GradientDrawable::setStroke(int width,int color, float dashWidth, float dashGap) {
-    ColorStateList cls(color);
-    mGradientState->setStroke(width, &cls, dashWidth, dashGap);
+    mGradientState->setStroke(width, ColorStateList::valueOf(color), dashWidth, dashGap);
     setStrokeInternal(width, color, dashWidth, dashGap);
 }
 
@@ -547,8 +538,7 @@ void GradientDrawable::buildPathIfDirty() {
 
 void GradientDrawable::setColor(int argb) {
     Color c(argb);
-    ColorStateList cls(argb);
-    mGradientState->setSolidColors(&cls);
+    mGradientState->setSolidColors(ColorStateList::valueOf(argb));
     mFillPaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
     invalidateSelf();
 }
@@ -567,7 +557,7 @@ void GradientDrawable::setColor(const ColorStateList* colorStateList) {
     invalidateSelf();
 }
 
-ColorStateList* GradientDrawable::getColor() {
+const ColorStateList* GradientDrawable::getColor() {
     return mGradientState->mSolidColors;
 }
 
@@ -575,7 +565,7 @@ bool GradientDrawable::onStateChange(const std::vector<int>& stateSet) {
     bool bInvalidateSelf = false;
 
     GradientState& s = *mGradientState;
-    ColorStateList* solidColors = s.mSolidColors;
+    const ColorStateList* solidColors = s.mSolidColors;
     double r,g,b,a;
     if (solidColors != nullptr) {
         RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mFillPaint);
@@ -590,7 +580,7 @@ bool GradientDrawable::onStateChange(const std::vector<int>& stateSet) {
     }
 
     if (mStrokePaint != nullptr) {
-        ColorStateList* strokeColors = s.mStrokeColors;
+        const ColorStateList* strokeColors = s.mStrokeColors;
         if (strokeColors ) {
             RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mStrokePaint);
             pat->get_rgba(r,g,b,a);

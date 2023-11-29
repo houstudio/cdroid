@@ -1075,14 +1075,14 @@ void View::clearAnimation() {
     if (mCurrentAnimation ) {
         mCurrentAnimation->detach();
     }
-    delete mCurrentAnimation;
+    //delete mCurrentAnimation;
     mCurrentAnimation = nullptr;
     invalidateParentIfNeeded();
     invalidate();
 }
 
 void View::setAnimation(Animation* animation) {
-    delete mCurrentAnimation;
+    //delete mCurrentAnimation;
     mCurrentAnimation = animation;
     if (animation) {
         // If the screen is off assume the animation start time is now instead of
@@ -1536,7 +1536,8 @@ void View::onDetachedFromWindowInternal() {
     destroyDrawingCache();
 
     cleanupDraw();
-    delete mCurrentAnimation;
+    if(mCurrentAnimation)mCurrentAnimation->detach();
+    //delete mCurrentAnimation;
     mCurrentAnimation = nullptr;
 
     if ((mViewFlags & TOOLTIP) == TOOLTIP) {
@@ -3972,20 +3973,15 @@ View& View::setBackgroundTintList(const ColorStateList* tint){
     if (mBackgroundTint == nullptr) {
         mBackgroundTint = new TintInfo();
     }
-    if(tint==nullptr){
-        delete mBackgroundTint->mTintList;
-        mBackgroundTint->mTintList=nullptr;
-    }else{
-        if(mBackgroundTint->mTintList)*mBackgroundTint->mTintList = *tint;
-        else mBackgroundTint->mTintList=new ColorStateList(*tint);
+    if(mBackgroundTint->mTintList!=tint){
+        mBackgroundTint->mTintList = tint;
+        mBackgroundTint->mHasTintList = (tint!=nullptr);
+        applyBackgroundTint();
     }
-    mBackgroundTint->mHasTintList = (tint!=nullptr);
-
-    applyBackgroundTint();
     return *this;
 }
 
-ColorStateList* View::getBackgroundTintList()const{
+const ColorStateList* View::getBackgroundTintList()const{
     return mBackgroundTint != nullptr ? mBackgroundTint->mTintList : nullptr;
 }
 
@@ -4085,17 +4081,11 @@ View& View::setForegroundTintList(const ColorStateList* tint){
     if (mForegroundInfo->mTintInfo == nullptr) {
         mForegroundInfo->mTintInfo = new TintInfo();
     }
-    if(tint == nullptr){
-        delete mForegroundInfo->mTintInfo->mTintList;
-        mForegroundInfo->mTintInfo->mTintList=nullptr;
-    }else{
-        if(mForegroundInfo->mTintInfo->mTintList)
-            *mForegroundInfo->mTintInfo->mTintList = *tint;
-        else
-            mForegroundInfo->mTintInfo->mTintList=new ColorStateList(*tint);
+    if(mForegroundInfo->mTintInfo->mTintList!=tint){
+        mForegroundInfo->mTintInfo->mTintList = tint;
+        mForegroundInfo->mTintInfo->mHasTintList = (tint!=nullptr);
+        applyForegroundTint();
     }
-    mForegroundInfo->mTintInfo->mHasTintList = (tint!=nullptr);
-    applyForegroundTint();
     return *this;
 }
 
@@ -4113,7 +4103,7 @@ View& View::setForegroundTintMode(int tintMode){
     return *this;
 }
 
-ColorStateList* View::getForegroundTintList(){
+const ColorStateList* View::getForegroundTintList(){
     return mForegroundInfo != nullptr && mForegroundInfo->mTintInfo != nullptr
                 ? mForegroundInfo->mTintInfo->mTintList : nullptr;
 }
