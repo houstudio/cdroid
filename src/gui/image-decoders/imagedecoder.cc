@@ -18,10 +18,6 @@ ImageDecoder::ImageDecoder(){
 }
 
 ImageDecoder::~ImageDecoder(){
-    for(auto f:mFrames){
-	delete []f->pixels;
-	delete f;
-    }
 }
 
 int ImageDecoder::getWidth()const{
@@ -37,7 +33,7 @@ int ImageDecoder::getFrameCount()const{
 }
 
 int ImageDecoder::getFrameDuration(int idx)const{
-    int duration = ( (idx>=0) && (idx<mFrameCount) ) ? mFrames[idx]->duration:INT_MAX;
+    int duration = 0;//( (idx>=0) && (idx<mFrameCount) ) ? mFrames[idx]->duration:INT_MAX;
     // Many annoying ads specify a 0 duration to make an image flash as quickly as possible.
     // We follow Firefox's behavior and use a duration of 100 ms for any frames that specify
     // a duration of <= 10 ms. See <rdar://problem/7689300> and <http://webkit.org/b/36082>

@@ -77,22 +77,25 @@ int AnimatedImageDrawable::getAlpha()const{
 
 constexpr int FINISHED=-1;
 void AnimatedImageDrawable::draw(Canvas& canvas){
-    if (mStarting) {
-        mStarting = false;
+    if (!mStarting) {
+        mStarting = true;
         postOnAnimationStart();
     }
     canvas.save();
     Cairo::RefPtr<Cairo::ImageSurface>image = mAnimatedImageState->mImage;
     ImageDecoder*mDecoder = mAnimatedImageState->mDecoder;
-    const long nextDelay = mDecoder->getFrameDuration(mCurrentFrame);
     mDecoder->readImage(image,mCurrentFrame);
+    const long nextDelay = mDecoder->getFrameDuration(mCurrentFrame);
     // a value <= 0 indicates that the drawable is stopped or that renderThread
     // will manage the animation
     LOGV("%p draw Frame %d/%d nextDelay=%d",this,mCurrentFrame,mAnimatedImageState->mFrameCount,nextDelay);
     if(mStarting){
         if (nextDelay > 0) {
             if (mRunnable == nullptr) {
-                mRunnable = std::bind(&AnimatedImageDrawable::invalidateSelf,this);
+                mRunnable = [this](){
+                    invalidateSelf();
+                    mCurrentFrame=(mCurrentFrame+1)%mAnimatedImageState->mFrameCount;
+		};
             }
             scheduleSelf(mRunnable, nextDelay + SystemClock::uptimeMillis());
         } else if (nextDelay<=0){// == FINISHED) {
