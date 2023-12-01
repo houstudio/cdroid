@@ -1077,13 +1077,12 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         //mLayout->setWidth(width- getCompoundPaddingLeft() - getCompoundPaddingRight());
     } else {
         int txtWidth,txtHeight;
-        mLayout->setWidth(INT_MAX);//mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight());
+        mLayout->setWidth(widthSize/*mRight - mLeft*/ - getCompoundPaddingLeft() - getCompoundPaddingRight());
         mLayout->relayout();
         mHintLayout->relayout();
-        txtWidth = desired(mLayout);
+        txtWidth = mLayout->getMaxLineWidth();//desired(mLayout);
         txtHeight= mLayout->getHeight();
-        LOGV("%p:%d Measuredsize=%dx%d fontsize=%d",this,mID,txtWidth,txtHeight,getFontSize());
-        width = txtWidth+getPaddingLeft()+getPaddingRight();;
+        width = txtWidth+getPaddingLeft() + getPaddingRight();
         Drawables* dr = mDrawables;
         if (dr != nullptr) {
             width = std::max(width, dr->mDrawableWidthTop);
@@ -1112,7 +1111,7 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int hintWant = want;
     int hintWidth = (mHintLayout == nullptr) ? hintWant : mHintLayout->getMaxLineWidth();
 
-    mLayout->setWidth(width);
+    mLayout->setWidth(want);
     if (heightMode == MeasureSpec::EXACTLY) {
         // Parent has told us how big to be. So be it.
         height = heightSize;
