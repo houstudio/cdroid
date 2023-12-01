@@ -263,13 +263,13 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     if(rangeX==nullptr) rangeX = mDeviceInfo.getMotionRange(ABS_MT_POSITION_X,0);
     mTPWidth  = ISRANGEVALID(rangeX)? (rangeX->max-rangeX->min) : mScreenWidth;
     mMinX = ISRANGEVALID(rangeX) ? rangeX->min : 0;
-    mMaxX = ISRANGEVALID(rangeX) ? rangeX->max : 0;
+    mMaxX = ISRANGEVALID(rangeX) ? rangeX->max : mScreenWidth;
 
     const InputDeviceInfo::MotionRange*rangeY = mDeviceInfo.getMotionRange(ABS_Y,0);
     if(rangeY==nullptr) rangeY = mDeviceInfo.getMotionRange(ABS_MT_POSITION_Y,0);
     mTPHeight = ISRANGEVALID(rangeY) ? (rangeY->max-rangeY->min) : mScreenHeight;
     mMinY = ISRANGEVALID(rangeY) ? rangeY->min : 0;
-    mMaxY = ISRANGEVALID(rangeY) ? rangeY->max : 0;
+    mMaxY = ISRANGEVALID(rangeY) ? rangeY->max : mScreenHeight;
 
     const std::string section = getName();
     mInvertX = mInvertY = mSwitchXY = false;
@@ -286,24 +286,6 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mTPHeight= (mMaxY!=mMinY)?std::abs(mMaxY - mMinY):mScreenHeight;
     LOGI("screen(%d,%d) rotation=%d [%s] X(%d,%d) Y(%d,%d) invert=%d,%d switchXY=%d",mScreenWidth, mScreenHeight,
         display.getRotation(),section.c_str(),mMinX,mMaxX,mMinY,mMaxY,mInvertX,mInvertY,mSwitchXY);
-
-    mMatrix = Cairo::identity_matrix();
-    //display rotation is defined as anticlockwise,but cairo use clockwise
-    switch(display.getRotation()){
-    case Display::ROTATION_0:/*do nothing*/break;
-    case Display::ROTATION_270:
-	   mMatrix.rotate(-M_PI/2.f);
-	   mMatrix.translate(-int(mScreenWidth),0);
-	   break;
-    case Display::ROTATION_180:mMatrix.translate(mScreenWidth,mScreenHeight);
-	   mMatrix.scale(-1,-1);
-	   break;
-    case Display::ROTATION_90 :
-	   mMatrix.translate(mScreenHeight,0);
-	   mMatrix.rotate(M_PI/2.f);
-	   break;
-    default:/**do nothing*/break;
-    }
 }
 
 static int ABS2AXIS(int absaxis){

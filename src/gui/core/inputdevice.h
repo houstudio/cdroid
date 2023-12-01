@@ -235,7 +235,6 @@ protected:
     bool mSwitchXY;
     bool mInvertX;
     bool mInvertY;
-    Cairo::Matrix mMatrix;
     std::map<int, TouchPoint>mPointMAP;
     void setAxisValue(int index,int axis,int value,bool isRelative);
     int isValidEvent(int type,int code,int value)override;
