@@ -116,8 +116,10 @@ bool AnimatedRotateDrawable::isRunning() {
 
 void AnimatedRotateDrawable::nextFrame() {
     unscheduleSelf(mNextFrame);
-    scheduleSelf(mNextFrame,SystemClock::uptimeMillis()+mState->mFrameDuration);
-    mCurrentDegrees += mIncrement;
+    if(mRunning){
+        scheduleSelf(mNextFrame,SystemClock::uptimeMillis()+mState->mFrameDuration);
+        mCurrentDegrees += mIncrement;
+    }
 }
 
 bool AnimatedRotateDrawable::setVisible(bool visible, bool restart){
