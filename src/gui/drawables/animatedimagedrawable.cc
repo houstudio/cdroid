@@ -3,34 +3,47 @@
 #include <cdlog.h>
 #include <gui/gui_features.h>
 #include <image-decoders/imagedecoder.h>
+#include <porting/cdgraph.h>
 namespace cdroid{
-
-AnimatedImageDrawable::AnimatedImageDrawable():Drawable(){
-    mAnimatedImageState = std::make_shared<AnimatedImageState>();
-    mHandler = nullptr;
-    mStarting = false;
-    mIntrinsicWidth = 0;
-    mIntrinsicHeight= 0;
-    mCurrentFrame= 0;
-    mRepeatCount = REPEAT_UNDEFINED;
+#define ENEBLE_DMABLIT 0
+AnimatedImageDrawable::AnimatedImageDrawable()
+  :AnimatedImageDrawable(std::make_shared<AnimatedImageState>()){
 }
 
-AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state){
+AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state)
+   :Drawable(){
     mStarting = 0;
-    mIntrinsicWidth = mIntrinsicHeight =0;
-    mAnimatedImageState =state;
+	mHandler = nullptr;
+    mRepeatCount = REPEAT_UNDEFINED;
+    mIntrinsicWidth = mIntrinsicHeight = 0;
+    mAnimatedImageState = state;
+    mCurrentFrame= 0;
+    mImageHandler = nullptr;
 }
 
 AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::string&res)
    :AnimatedImageDrawable(){
+    uint8_t*buffer;
+    uint32_t pitch;
     LOGD("decoder=%p res=%s",mAnimatedImageState->mDecoder,res.c_str());
     ImageDecoder*decoder = ImageDecoder::create(ctx,res);
     mAnimatedImageState->mDecoder = decoder;
+#if ENABLE(DMABLIT)
+    GFXCreateSurface(0,&mImageHandler,decoder->getWidth(),decoder->getHeight(),0,0);
+    GFXLockSurface(mImageHandler,(void**)&buffer,&pitch);
+    mAnimatedImageState->mImage = Cairo::ImageSurface::create(buffer,Cairo::Surface::Format::ARGB32,decoder->getWidth(),decoder->getHeight(),pitch);
+#else
     mAnimatedImageState->mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,decoder->getWidth(),decoder->getHeight());
+#endif
+    LOGI("image %dx%dx%d hwsurface.buffer=%p",decoder->getWidth(),decoder->getHeight(),pitch,buffer);
     mAnimatedImageState->mFrameCount = decoder->getFrameCount();
 }
 
 AnimatedImageDrawable::~AnimatedImageDrawable(){
+    if(mImageHandler){
+        GFXDestroySurface(mImageHandler);
+        mImageHandler = nullptr;
+    }
 }
 
 std::shared_ptr<Drawable::ConstantState>AnimatedImageDrawable::getConstantState(){
@@ -95,7 +108,7 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
                 mRunnable = [this](){
                     invalidateSelf();
                     mCurrentFrame=(mCurrentFrame+1)%mAnimatedImageState->mFrameCount;
-		};
+                };
             }
             scheduleSelf(mRunnable, nextDelay + SystemClock::uptimeMillis());
         } else if (nextDelay<=0){// == FINISHED) {
@@ -104,9 +117,18 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
         }
     }
     image->mark_dirty();
-    canvas.set_source(image,mBounds.left,mBounds.top);
-    canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
-    canvas.fill();
+    void*handler = canvas.getHandler();
+    if((mImageHandler==nullptr)||(handler==nullptr)){
+        canvas.set_source(image,mBounds.left,mBounds.top);
+        canvas.set_operator(Cairo::Context::Operator::SOURCE);
+        canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
+        canvas.fill();
+    }else{
+#if ENABLE(DMABLIT)
+        Rect rd={0,0,mBounds.width,mBounds.height};
+        GFXBlit(handler,(const GFXRect*)&rd,mImageHandler,nullptr,0);
+#endif
+    }
     canvas.restore();
 }
 

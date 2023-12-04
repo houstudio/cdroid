@@ -7,12 +7,15 @@ namespace cdroid{
 
 LayoutAnimationController::LayoutAnimationController(Context* context, const AttributeSet& attrs){
     mDelay = attrs.getFloat("delay");
-    mOrder = attrs.getInt("animationOrder",ORDER_NORMAL);
+    mOrder = attrs.getInt("animationOrder",std::map<const std::string,int>{
+       {"normal" ,(int)ORDER_NORMAL},
+       {"reverse",(int)ORDER_REVERSE},
+       {"random" ,(int)ORDER_RANDOM}
+    },ORDER_NORMAL);
     std::string resource = attrs.getString("animation");
     mAnimation    = nullptr;
     mInterpolator = nullptr;
     mMaxDelay  = LONG_MIN;
-    mOrder     =0;
     setAnimation(context,resource);
     resource   = attrs.getString("interpolator");
     setInterpolator(context,resource);
@@ -99,7 +102,7 @@ Animation* LayoutAnimationController::getAnimationForView(View* view){
 }
 
 bool LayoutAnimationController::isDone()const{
-    return SystemClock::uptimeMillis()>//AnimationUtils.currentAnimationTimeMillis() >
+    return AnimationUtils::currentAnimationTimeMillis() >
                 mAnimation->getStartTime() + mMaxDelay + mDuration;
 }
 

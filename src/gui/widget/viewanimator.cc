@@ -62,13 +62,13 @@ void ViewAnimator::showOnly(int childIndex, bool animate) {
        if (i == childIndex) {
            LOGV("set %d Visible",i);
            if (animate && mInAnimation != nullptr) {
-               child->startAnimation(mInAnimation);
+               child->startAnimation(mInAnimation->clone());
            }
            child->setVisibility(View::VISIBLE);
            mFirstTime = false;
        } else {
            if (animate && mOutAnimation != nullptr && child->getVisibility() == View::VISIBLE) {
-               child->startAnimation(mOutAnimation);
+               child->startAnimation(mOutAnimation->clone());
            } else if (child->getAnimation() == mInAnimation){
                child->clearAnimation();
            }

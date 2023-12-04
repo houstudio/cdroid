@@ -25,7 +25,8 @@ private:
     nsecs_t mLastPlaybackEventTime;/*for event record and playback*/
     nsecs_t mLastInputEventTime;/*for screensaver*/
     std::ofstream frecord;
-    std::queue<InputEvent*>mInputEvents;
+    std::queue<MotionEvent*>mMotionEvents;
+    std::vector<KeyEvent*>mKeyEvents;
     std::queue<INPUTEVENT> mRawEvents;
     std::unordered_map<int,std::shared_ptr<InputDevice>>mDevices;
     std::shared_ptr<InputDevice>getdevice(int fd);

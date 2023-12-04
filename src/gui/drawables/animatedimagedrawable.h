@@ -31,8 +31,8 @@ private:
     Runnable mRunnable;
     ColorFilter* mColorFilter;
     std::vector<Animatable2::AnimationCallback> mAnimationCallbacks;
-    int loadGIF(std::istream&);
     Handler* getHandler();
+    void* mImageHandler;
     void postOnAnimationStart();
     void postOnAnimationEnd();
     AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state);

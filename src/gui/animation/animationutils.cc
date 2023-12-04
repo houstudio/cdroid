@@ -11,42 +11,44 @@ long AnimationUtils::currentAnimationTimeMillis(){
 }
 
 typedef struct{
-   Animation*anim;
-   AttributeSet attr;
-}ANIMDATA;
-
-typedef struct{
    Context*context;
    std::string package;
-   int index;
-   ANIMDATA data[8];
+   Animation*animation;
+   std::vector<Animation*>animations;
 }ANIMPARSERDATA;
 
 static void startAnimation(void *userData, const XML_Char *xname, const XML_Char **satts){
-    ANIMPARSERDATA*pd=(ANIMPARSERDATA*)userData;
+    ANIMPARSERDATA*pd = (ANIMPARSERDATA*)userData;
     AttributeSet attrs(pd->context,pd->package);
-    std::string name=xname;
-    Animation*anim=nullptr;
+    std::string name = xname;
     attrs.set(satts);
     if (0==name.compare("set")) {
-        anim = new AnimationSet(pd->context, attrs);
+        pd->animation= new AnimationSet(pd->context, attrs);
         //createAnimationFromXml(c, parser, (AnimationSet)anim, attrs);
     } else if (0==name.compare("alpha")) {
-        anim = new AlphaAnimation(pd->context, attrs);
+        pd->animation = new AlphaAnimation(pd->context, attrs);
     } else if (0==name.compare("scale")) {
-        anim = new ScaleAnimation(pd->context, attrs);
+        pd->animation = new ScaleAnimation(pd->context, attrs);
     }  else if (0==name.compare("rotate")) {
-        anim = new RotateAnimation(pd->context, attrs);
+        pd->animation = new RotateAnimation(pd->context, attrs);
     }  else if (0==name.compare("translate")) {
-        anim = new TranslateAnimation(pd->context, attrs);
+        pd->animation = new TranslateAnimation(pd->context, attrs);
     } else if (0==name.compare("cliprect")) {
-        anim = new ClipRectAnimation(pd->context, attrs);
+        pd->animation = new ClipRectAnimation(pd->context, attrs);
     } else {
         LOGE("Unknown animation name: %s" ,xname);
     }
+    pd->animations.push_back(pd->animation);
 }
 
 static void endAnimation(void *userData, const XML_Char *name){
+    ANIMPARSERDATA*pd = (ANIMPARSERDATA*)userData;
+    Animation*last = pd->animations.back();
+    pd->animations.pop_back();
+    if( pd->animations.size()){
+        AnimationSet*aset=(AnimationSet*)pd->animations.back();
+        aset->addAnimation(last);
+    }
 }
 
 Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resid){
@@ -55,39 +57,63 @@ Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resi
     int index=0;
     ANIMPARSERDATA pd;
     void*parseParams[2];
-    pd.index = 0;
     pd.context = context;
-    XML_Parser parser=XML_ParserCreate(nullptr);
+    XML_Parser parser = XML_ParserCreate(nullptr);
     XML_SetElementHandler(parser, startAnimation, endAnimation);
     XML_SetUserData(parser,(void*)&pd);
-    std::unique_ptr<std::istream>stream=context->getInputStream(resid,&pd.package);
+    std::unique_ptr<std::istream> stream = context->getInputStream(resid,&pd.package);
     do {
         stream->read(buf,sizeof(buf));
-        rdlen=stream->gcount();
+        rdlen = stream->gcount();
         if (XML_Parse(parser, buf,rdlen,!rdlen) == XML_STATUS_ERROR) {
-            const char*es=XML_ErrorString(XML_GetErrorCode(parser));
+            const char*es = XML_ErrorString(XML_GetErrorCode(parser));
             LOGE("%s at %s:line %ld",es, resid.c_str(),XML_GetCurrentLineNumber(parser));
             XML_ParserFree(parser);
             break;
         }
     } while(rdlen);
     XML_ParserFree(parser);
-    return nullptr;
+    return pd.animation;
+}
+
+typedef struct{
+    Context*context;
+    LayoutAnimationController*controller;
+    std::string package;
+}LACDATA;
+
+static void startAnimationController(void *userData, const XML_Char *xname, const XML_Char **satts){
+    LACDATA*pd =(LACDATA*)userData;
+    AttributeSet attrs(pd->context,pd->package);
+    if(strcmp(xname,"layoutAnimation")==0){
+        pd->controller= new  LayoutAnimationController(pd->context, attrs);
+    }else if(strcmp(xname,"gridLayoutAnimation")==0){
+        pd->controller= new GridLayoutAnimationController(pd->context, attrs);
+    }else{
+        FATAL("unknown layout animation name %s",xname);
+    }
 }
 
 LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
-    return nullptr;
+    LACDATA data;
+    XML_Parser parser = XML_ParserCreate(nullptr);
+    data.context = context;
+    XML_SetElementHandler(parser, startAnimationController, nullptr);
+    XML_SetUserData(parser,&data);
+    std::unique_ptr<std::istream> stream = context->getInputStream(resid,&data.package);
+
+    return data.controller;
 }
 
 Animation* AnimationUtils::makeInAnimation(Context* c, bool fromLeft){
-    Animation*a=loadAnimation(c,fromLeft?"cdroid:anim/slide_in_left.xml":"cdroid:anim/slide_in_right.xml");
+    Animation*a = loadAnimation(c,fromLeft?"cdroid:anim/slide_in_left.xml":"cdroid:anim/slide_in_right.xml");
     a->setInterpolator(new DecelerateInterpolator());
     a->setStartTime(currentAnimationTimeMillis());
     return a;
 }
 
 Animation* AnimationUtils::makeOutAnimation(Context* c, bool toRight){
-    Animation*a=loadAnimation(c,toRight?"cdroid:anim/slide_out_right.xml":"cdroid:anim/slide_out_left.xml");
+    Animation*a = loadAnimation(c,toRight?"cdroid:anim/slide_out_right.xml":"cdroid:anim/slide_out_left.xml");
     a->setInterpolator(new AccelerateInterpolator());
     a->setStartTime(currentAnimationTimeMillis());
     return a;
@@ -101,9 +127,9 @@ Animation* AnimationUtils::makeInChildBottomAnimation(Context* c){
 }
 
 static void startPolator(void *userData, const XML_Char *xname, const XML_Char **satts){
-    Interpolator**interpolator=(Interpolator**)userData;
+    Interpolator**interpolator = (Interpolator**)userData;
     AttributeSet attrs;
-    std::string name=xname;
+    std::string name = xname;
     Context*ctx;
     attrs.set(satts);
     if (0==name.compare("linearInterpolator")) {
@@ -134,14 +160,14 @@ static void startPolator(void *userData, const XML_Char *xname, const XML_Char *
 Interpolator* AnimationUtils::loadInterpolator(Context* context,const std::string&resid){
     int rdlen;
     char buf[256];
-    Interpolator*interpolator=nullptr;
-    XML_Parser parser=XML_ParserCreate(nullptr);
+    Interpolator*interpolator = nullptr;
+    XML_Parser parser = XML_ParserCreate(nullptr);
     XML_SetElementHandler(parser, startPolator,nullptr);
     XML_SetUserData(parser,&interpolator);
-    std::unique_ptr<std::istream>stream=context->getInputStream(resid);
+    std::unique_ptr<std::istream> stream = context->getInputStream(resid);
     do{
         stream->read(buf,sizeof(buf));
-        rdlen=stream->gcount();
+        rdlen = stream->gcount();
         if (XML_Parse(parser, buf,rdlen,!rdlen) == XML_STATUS_ERROR) {
             const char*es=XML_ErrorString(XML_GetErrorCode(parser));
             LOGE("%s at %s:line %ld",es, resid.c_str(),XML_GetCurrentLineNumber(parser));

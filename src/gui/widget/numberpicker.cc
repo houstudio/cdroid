@@ -160,7 +160,7 @@ void NumberPicker::setWheelItemCount(int count) {
 }
 
 void NumberPicker::initView(){
-    ViewConfiguration&config=ViewConfiguration::get(mContext);
+    ViewConfiguration&config= ViewConfiguration::get(mContext);
     mDisplayedDrawableCount = 0;
     mDisplayedDrawableSize = 0;
     mSelectedText = nullptr;
@@ -177,16 +177,17 @@ void NumberPicker::initView(){
     mDividerColor =DEFAULT_DIVIDER_COLOR;
     mWheelMiddleItemIndex = 0;
     mDividerDrawable  = nullptr;
-    mDividerLength =2;
+    mDividerLength = 2;
     mDividerThickness =2;
+    mBottomSelectionDividerBottom = 0;
     mDividerType = SIDE_LINES;
-    mLastHandledDownDpadKeyCode =-1;
+    mLastHandledDownDpadKeyCode = -1;
     mWrapSelectorWheel= false;
-    mWrapSelectorWheelPreferred =true;
+    mWrapSelectorWheelPreferred = true;
     mSelectionDividerHeight = UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT;
-    mPreviousScrollerY   =0;
-    mCurrentScrollOffset =0;
-    mInitialScrollOffset =0;
+    mPreviousScrollerY   = 0;
+    mCurrentScrollOffset = 0;
+    mInitialScrollOffset = 0;
     mLongPressUpdateInterval = DEFAULT_LONG_PRESS_UPDATE_INTERVAL;
     mMinHeight = SIZE_UNSPECIFIED;
     mMaxHeight = SIZE_UNSPECIFIED;
@@ -196,7 +197,7 @@ void NumberPicker::initView(){
     mMinValue = 0;
     mMaxValue = 0;
     mSelectorTextGapHeight = 0;
-    mSelectorElementSize =0;
+    mSelectorElementSize = 0;
     mSelectionDividersDistance =UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE;
     mVelocityTracker = nullptr;
 
@@ -206,7 +207,7 @@ void NumberPicker::initView(){
     mFlingScroller  = new Scroller(getContext(), nullptr, true);
     mAdjustScroller = new Scroller(getContext(), new DecelerateInterpolator(2.5f));
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
-    mHideWheelUntilFocused=false;
+    mHideWheelUntilFocused = false;
     mWheelItemCount = DEFAULT_WHEEL_ITEM_COUNT;
     mRealWheelItemCount= DEFAULT_WHEEL_ITEM_COUNT;
     mSelectorIndices.resize(mWheelItemCount);

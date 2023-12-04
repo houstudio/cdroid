@@ -38,14 +38,18 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     }else{
         LOGE("Unknown animator name:%s",name);
     }
-    if(pd->animators.empty())
-        pd->result = anim;
+    pd->result = anim;
     pd->animators.push_back(anim);
 }
 
 static void endElement(void *userData, const XML_Char *name){
     ParseData*pd =(ParseData*)userData;
- 
+    Animator*anim=pd->animators.back();
+    pd->animators.pop_back();
+    if(pd->animators.size()){
+        AnimatorSet*aset=(AnimatorSet*)pd->animators.back();
+        //aset->addAnimator(anim);
+    }
 }
 
 Animator* AnimatorInflater::createAnimatorFromXml(Context*ctx,const std::string&resid){
