@@ -86,10 +86,10 @@ INT InputInit() {
         return fd>0;
     },nullptr);
     free(namelist);
-    dev.inotify = inotify_init();
+    dev.inotify = inotify_init();//inotify_init1(IN_NONBLOCK);
     dev.maxfd = std::max(dev.maxfd,dev.inotify);
-    inotify_add_watch (dev.inotify,WATCHED_PATH,IN_CREATE | IN_DELETE);
-    LOGD("maxfd=%d numfd=%d\r\n",dev.maxfd,nf+1);
+    inotify_add_watch (dev.inotify,WATCHED_PATH,IN_CREATE | IN_DELETE|IN_OPEN | IN_CLOSE);
+    LOGD("maxfd=%d numfd=%d inotify=%d\r\n",dev.maxfd,nf+1,dev.inotify);
     return 0;
 }
 
@@ -183,6 +183,7 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
     tv.tv_usec= (timeout%1000)*1000;//1000L*timeout;
     tv.tv_sec = timeout/1000;
     FD_ZERO(&rfds);
+    FD_SET(dev.inotify,&rfds);
     for(int i = 0; i < dev.fds.size(); i++) {
         FD_SET(dev.fds[i].fd,&rfds);
     }
@@ -193,13 +194,14 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
     std::vector<DEVICENODE> fds = dev.fds;
     for(int i=0; i < fds.size(); i++) {
         if(!FD_ISSET(dev.fds[i].fd,&rfds))continue;
-         if(dev.fds[i].fd == dev.pipe[0]){ //for pipe
+        if(dev.fds[i].fd == dev.pipe[0]){ //for pipe
             rc = read(dev.fds[i].fd,e, (max-count)*sizeof(INPUTEVENT));
             e += rc/sizeof(INPUTEVENT);
             count += rc/sizeof(INPUTEVENT);
         }else if(dev.fds[i].fd == dev.inotify){
             struct inotify_event*ievent=(struct inotify_event*)inotifyBuffer;
             rc = read(dev.inotify,inotifyBuffer,sizeof(inotifyBuffer));
+            LOGI("read(dev.inotify=%d",rc);
             if(rc<sizeof(struct inotify_event))
                 continue;
              while(rc>=sizeof(struct inotify_event)){

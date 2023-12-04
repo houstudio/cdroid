@@ -22,7 +22,6 @@ static void startAnimation(void *userData, const XML_Char *xname, const XML_Char
     AttributeSet attrs(pd->context,pd->package);
     std::string name = xname;
     attrs.set(satts);
-    LOGV("animation %s",xname);
     if (0==name.compare("set")) {
         pd->animation= new AnimationSet(pd->context, attrs);
         //createAnimationFromXml(c, parser, (AnimationSet)anim, attrs);

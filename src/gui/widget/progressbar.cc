@@ -585,7 +585,7 @@ void ProgressBar::updateDrawableState(){
 }
 
 void ProgressBar::startAnimation() {
-    if (getVisibility() != VISIBLE){// || getWindowVisibility() != VISIBLE) {
+    if ((getVisibility() != VISIBLE) ||(getWindowVisibility() != VISIBLE)) {
         return;
     }
     if (dynamic_cast<Animatable*>(mIndeterminateDrawable)) {
