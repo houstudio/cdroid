@@ -22,6 +22,7 @@ static void startAnimation(void *userData, const XML_Char *xname, const XML_Char
     AttributeSet attrs(pd->context,pd->package);
     std::string name = xname;
     attrs.set(satts);
+    LOGV("animation %s",xname);
     if (0==name.compare("set")) {
         pd->animation= new AnimationSet(pd->context, attrs);
         //createAnimationFromXml(c, parser, (AnimationSet)anim, attrs);
@@ -58,6 +59,7 @@ Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resi
     ANIMPARSERDATA pd;
     void*parseParams[2];
     pd.context = context;
+    pd.animation=nullptr;
     XML_Parser parser = XML_ParserCreate(nullptr);
     XML_SetElementHandler(parser, startAnimation, endAnimation);
     XML_SetUserData(parser,(void*)&pd);
@@ -98,6 +100,7 @@ LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,
     LACDATA data;
     XML_Parser parser = XML_ParserCreate(nullptr);
     data.context = context;
+    data.controller = nullptr;
     XML_SetElementHandler(parser, startAnimationController, nullptr);
     XML_SetUserData(parser,&data);
     std::unique_ptr<std::istream> stream = context->getInputStream(resid,&data.package);
