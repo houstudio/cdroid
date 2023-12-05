@@ -183,7 +183,6 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
     tv.tv_usec= (timeout%1000)*1000;//1000L*timeout;
     tv.tv_sec = timeout/1000;
     FD_ZERO(&rfds);
-    std::remove_if(dev.fds.begin(),dev.fds.end(),[](const  DEVICENODE& nd){return nd.fd==-1;});
     for(int i = 0; i < dev.fds.size(); i++) {
         FD_SET(dev.fds[i].fd,&rfds);
     }
@@ -223,13 +222,13 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
                     e->device = open(path.c_str(),O_RDWR);
                     e->type = EV_ADD;
                     dev.fds.push_back({e->device,path});
-		    dev.maxfd=std::max(dev.maxfd,e->device);
+                    dev.maxfd=std::max(dev.maxfd,e->device);
                     LOGI("device %s:%d created",path.c_str(),e->device);
                     e++;
                 }else{
                     LOGI("device %s:%d event=%x rc=%d",path.c_str(),ievent->wd,ievent->mask,IN_CREATE,IN_DELETE,rc);
                 }
-		elen+=(sizeof(struct inotify_event)+ievent->len);
+                elen+=(sizeof(struct inotify_event)+ievent->len);
             }
         }else {/*for input devices*/
             rc = read(FDS[i].fd,events, sizeof(events)/sizeof(struct input_event));

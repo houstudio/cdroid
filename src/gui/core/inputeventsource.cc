@@ -85,7 +85,7 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
     std::shared_ptr<InputDevice>dev;
     auto itr = mDevices.find(fd);
     if(itr == mDevices.end()){
-        InputDevice tmpdev(fd);LOGI("device %d classes=%x",fd,tmpdev.getClasses());
+        InputDevice tmpdev(fd);
         if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_TOUCH|INPUT_DEVICE_CLASS_TOUCH_MT)){
             dev.reset(new MouseDevice(fd));
             dev->setEventConsumeListener([&](const InputEvent&e){
