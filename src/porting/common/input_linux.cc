@@ -77,7 +77,7 @@ INT InputInit() {
         snprintf(fname,sizeof(fname),WATCHED_PATH"/%s",ent->d_name);
         if(ent->d_type!=DT_DIR) {
             fd = open(fname,O_RDWR);
-            LOGD("%s fd=%d",fname,fd);
+            LOGI("%s fd=%d",fname,fd);
             if(fd>0) {
                 dev.maxfd=std::max(dev.maxfd,fd);
                 dev.fds.push_back({fd,fname});
@@ -86,10 +86,10 @@ INT InputInit() {
         return fd>0;
     },nullptr);
     free(namelist);
-    dev.inotify = inotify_init();//inotify_init1(IN_NONBLOCK);
-    dev.maxfd = std::max(dev.maxfd,dev.inotify);
-    inotify_add_watch (dev.inotify,WATCHED_PATH,IN_CREATE | IN_DELETE|IN_OPEN | IN_CLOSE);
-    LOGD("maxfd=%d numfd=%d inotify=%d\r\n",dev.maxfd,nf+1,dev.inotify);
+    dev.inotify = inotify_init1(IN_NONBLOCK);
+    dev.fds.push_back({dev.inotify,WATCHED_PATH});
+    inotify_add_watch (dev.inotify,WATCHED_PATH,IN_CREATE | IN_DELETE);//|IN_OPEN | IN_CLOSE|IN_MODIFY);
+    LOGI("maxfd=%d numfd=%d inotify=%d\r\n",dev.maxfd,nf+1,dev.inotify);
     return 0;
 }
 
@@ -183,7 +183,7 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
     tv.tv_usec= (timeout%1000)*1000;//1000L*timeout;
     tv.tv_sec = timeout/1000;
     FD_ZERO(&rfds);
-    FD_SET(dev.inotify,&rfds);
+    std::remove_if(dev.fds.begin(),dev.fds.end(),[](const  DEVICENODE& nd){return nd.fd==-1;});
     for(int i = 0; i < dev.fds.size(); i++) {
         FD_SET(dev.fds[i].fd,&rfds);
     }
@@ -191,53 +191,60 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
         LOGD("select error");
         return E_ERROR;
     }
-    std::vector<DEVICENODE> fds = dev.fds;
-    for(int i=0; i < fds.size(); i++) {
-        if(!FD_ISSET(dev.fds[i].fd,&rfds))continue;
-        if(dev.fds[i].fd == dev.pipe[0]){ //for pipe
-            rc = read(dev.fds[i].fd,e, (max-count)*sizeof(INPUTEVENT));
+    std::vector<DEVICENODE> FDS = dev.fds;
+    for(int i=0; i < FDS.size(); i++) {
+        if(!FD_ISSET(FDS[i].fd,&rfds))continue;
+        if(FDS[i].fd == dev.pipe[0]){ //for pipe
+            rc = read(FDS[i].fd,e, (max-count)*sizeof(INPUTEVENT));
             e += rc/sizeof(INPUTEVENT);
             count += rc/sizeof(INPUTEVENT);
-        }else if(dev.fds[i].fd == dev.inotify){
+        }else if(FDS[i].fd == dev.inotify){
+            int elen=0;
             struct inotify_event*ievent=(struct inotify_event*)inotifyBuffer;
-            rc = read(dev.inotify,inotifyBuffer,sizeof(inotifyBuffer));
-            LOGI("read(dev.inotify=%d",rc);
-            if(rc<sizeof(struct inotify_event))
+            const int total = read(dev.inotify,inotifyBuffer,sizeof(inotifyBuffer));
+            LOGI("read(dev.inotify=%d/%d)",total,sizeof(struct inotify_event));
+            if(total<sizeof(struct inotify_event))
                 continue;
-             while(rc>=sizeof(struct inotify_event)){
+             while(elen<total){
                 ievent = (struct inotify_event*)(inotifyBuffer+event_pos);
                 std::string path = WATCHED_PATH;
                 path.append("/").append(ievent->name);
-                LOGI("device %s:%d %s",path.c_str(),ievent->wd,((ievent->mask&IN_CREATE)?"added":"removed"));
                 const int eventsize = sizeof(struct inotify_event)+ievent->len;
                 rc -= eventsize;
                 event_pos += eventsize;
-                e->type = (ievent->mask & IN_CREATE) ? EV_ADD : EV_REMOVE;
                 if(ievent->mask & IN_DELETE){
                     auto it = dev.findByPath(path);
-                    if(it!=dev.fds.end())dev.fds.erase(it);
                     e->device = it->fd;
-                }else{
+                    e->type = EV_REMOVE;
+                    LOGI("..device %s:%d/%d deleted found=%d",path.c_str(),ievent->wd,it->fd,(it!=dev.fds.end()));
+                    if(it!=dev.fds.end()){close(it->fd);dev.fds.erase(it);}
+                    e++;
+                }else if(ievent->mask & IN_CREATE){
                     e->device = open(path.c_str(),O_RDWR);
+                    e->type = EV_ADD;
                     dev.fds.push_back({e->device,path});
-                    LOGE_IF(e->device<0,"%s open failed",path.c_str());
+		    dev.maxfd=std::max(dev.maxfd,e->device);
+                    LOGI("device %s:%d created",path.c_str(),e->device);
+                    e++;
+                }else{
+                    LOGI("device %s:%d event=%x rc=%d",path.c_str(),ievent->wd,ievent->mask,IN_CREATE,IN_DELETE,rc);
                 }
-                e++;
+		elen+=(sizeof(struct inotify_event)+ievent->len);
             }
         }else {/*for input devices*/
-            rc = read(dev.fds[i].fd,events, sizeof(events)/sizeof(struct input_event));
+            rc = read(FDS[i].fd,events, sizeof(events)/sizeof(struct input_event));
             for(int j=0; j<rc/sizeof(struct input_event)&&(count<max); j++,e++,count++) {
                 e->tv_sec = events[j].time.tv_sec;
                 e->tv_usec= events[j].time.tv_usec;
                 e->type = events[j].type;
                 e->code = events[j].code;
                 e->value= events[j].value;
-                e->device = dev.fds[i].fd;
-                LOGV_IF(e->type<EV_SW,"fd:%d [%s]%02x,%02x,%02x time=%ld.%06ld time2=%ld.%ld",dev.fds[i].fd,
+                e->device = FDS[i].fd;
+                LOGV_IF(e->type<EV_SW,"fd:%d [%s]%02x,%02x,%02x time=%ld.%06ld time2=%ld.%ld",FDS[i].fd,
                      type2name[e->type],e->type,e->code,e->value,e->tv_sec,e->tv_usec,events[j].time.tv_sec,events[j].time.tv_usec);
             }
         }
-        LOGV_IF(rc,"fd %d read %d bytes ispipe=%d",dev.fds[i],rc,dev.fds[i].fd==dev.pipe[0]);
+        LOGV_IF(rc,"fd %d read %d bytes ispipe=%d",FDS[i],rc,FDS[i].fd==dev.pipe[0]);
     }
     return e-outevents;
 }

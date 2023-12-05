@@ -58,11 +58,13 @@ void InputEventSource::onDeviceChanged(const INPUTEVENT*es){
     case EV_ADD:
         /*noting todo*/
         LOGI("device %d is added",es->device);
+        for(auto d:mDevices)LOGI("device %d %s",d.first,d.second->getName().c_str());
+        getdevice(es->device);
+        for(auto d:mDevices)LOGI("::device %d classes=%x %s",d.first,d.second->getClasses(),d.second->getName().c_str());
         break;
     case EV_REMOVE:
         if(itr!=mDevices.end())dev = itr->second;
-        LOGI("device %s:%d/%d is removed",
-        dev->getName().c_str(), es->device,dev->getId());
+        LOGI("device %s:%d/%d is removed", dev->getName().c_str(), es->device,dev->getId());
         mDevices.erase(itr);
 	break;
     }
@@ -83,7 +85,7 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
     std::shared_ptr<InputDevice>dev;
     auto itr = mDevices.find(fd);
     if(itr == mDevices.end()){
-        InputDevice tmpdev(fd);LOGD("device %d classes=%x",fd,tmpdev.getClasses());
+        InputDevice tmpdev(fd);LOGI("device %d classes=%x",fd,tmpdev.getClasses());
         if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_TOUCH|INPUT_DEVICE_CLASS_TOUCH_MT)){
             dev.reset(new MouseDevice(fd));
             dev->setEventConsumeListener([&](const InputEvent&e){
