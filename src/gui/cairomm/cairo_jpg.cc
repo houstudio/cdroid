@@ -49,6 +49,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <setjmp.h>
 #include <cairo.h>
 #include <jpeglib.h>
 #include <turbojpeg.h>
@@ -104,7 +105,7 @@ static boolean fill_buffer (j_decompress_ptr cinfo) {
     src->pub.next_input_byte = src->buffer;
     src->pub.bytes_in_buffer = src->stream->gcount();// How many yo could read
 
-    return (!src->stream->eof())||src->pub.bytes_in_buffer;
+    return (!src->stream->eof())&&src->pub.bytes_in_buffer;
 }
 
 static void skip (j_decompress_ptr cinfo, long num_bytes) {
@@ -358,14 +359,27 @@ cairo_status_t cairo_image_surface_write_to_jpeg(cairo_surface_t *sfc, const cha
  * @return Returns a pointer to a cairo_surface_t structure. It should be
  * checked with cairo_surface_status() for errors. */
 #define MIN(a,b)((a)>(b)?(b):(a))
+struct decoder_error_mgr {
+    struct jpeg_error_mgr pub; // "public" fields for IJG library
+    jmp_buf setjmp_buffer;     // For handling catastropic errors
+};
+
+static void handle_jpeg_error(j_common_ptr cinfo) {
+    struct decoder_error_mgr *err = (struct decoder_error_mgr*)(cinfo->err);
+    longjmp(err->setjmp_buffer, 1);
+}
 cairo_surface_t *cairo_image_surface_create_from_jpeg_stdstream(std::istream&is) {
     struct jpeg_decompress_struct cinfo;
-    struct jpeg_error_mgr jerr;
+    struct decoder_error_mgr jerr;
     JSAMPROW row_pointer[1];
     cairo_surface_t *sfc;
-
     // initialize jpeg decompression structures
-    cinfo.err = jpeg_std_error(&jerr);
+    if (setjmp(jerr.setjmp_buffer)){
+        LOGE("JPEG read/write error");
+        return sfc;
+    }
+    cinfo.err = jpeg_std_error(&jerr.pub);
+    jerr.pub.error_exit = handle_jpeg_error;
     jpeg_create_decompress(&cinfo);
     make_jpeg_stream(&cinfo,&is);
     (void) jpeg_read_header(&cinfo, TRUE);
@@ -397,7 +411,7 @@ cairo_surface_t *cairo_image_surface_create_from_jpeg_stdstream(std::istream&is)
         unsigned char *row_address = cairo_image_surface_get_data(sfc) +
                                      (cinfo.output_scanline * cairo_image_surface_get_stride(sfc));
         row_pointer[0] = row_address;
-        (void) jpeg_read_scanlines(&cinfo, row_pointer, 1);
+        if(0==jpeg_read_scanlines(&cinfo, row_pointer, 1))break;
 #ifndef LIBJPEG_TURBO_VERSION
         pix_conv(row_address, 4, row_address, 3, cinfo.output_width);
 #endif

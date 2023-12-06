@@ -360,7 +360,7 @@ static const char*pakGetFileType(const char*filebuf) {
 }
 
 using namespace std::chrono;
-RefPtr<ImageSurface> ImageSurface::create_from_stream(std::istream& stream){
+RefPtr<ImageSurface>ImageSurface:: create_from_stream(std::istream& stream){
     unsigned char head[8]={0};
     RefPtr<ImageSurface>img;
     steady_clock::time_point t2,t1=steady_clock::now();
@@ -377,9 +377,9 @@ RefPtr<ImageSurface> ImageSurface::create_from_stream(std::istream& stream){
        cobject = cairo_image_surface_create_from_turbojpeg_stdstream(stream);
 #endif
 #ifdef ENABLE_JPEG
-       if(nullptr==cobject )cobject=cairo_image_surface_create_from_jpeg_stdstream(stream);
+       if(nullptr==cobject )cobject = cairo_image_surface_create_from_jpeg_stdstream(stream);
 #endif
-       img=RefPtr<ImageSurface>(new ImageSurface(cobject, true /* has reference */));
+       if(cobject) img = RefPtr<ImageSurface>(new ImageSurface(cobject, true /* has reference */));
     }else if(memcmp("png",ftype,3)==0){
         img=create_from_png(stream_read,&stream);
     }/*else if(memcmp("bmp",ftype,3)==0){
