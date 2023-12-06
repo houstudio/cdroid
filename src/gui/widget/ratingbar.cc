@@ -5,10 +5,23 @@ namespace cdroid{
 DECLARE_WIDGET2(RatingBar,"cdroid:attr/ratingBarStyle")
 
 RatingBar::RatingBar(int w,int h):AbsSeekBar(w,h){
+    mTouchProgressOffset = 0.6f;
 }
 
 RatingBar::RatingBar(Context*ctx,const AttributeSet&atts)
     :AbsSeekBar(ctx,atts){
+    setIsIndicator(atts.getBoolean("isIndicator",!mIsUserSeekable));
+    const int numStars  = atts.getInt("numStars",mNumStars);
+    const float rating  = atts.getFloat("rating",-1);
+    const float stepSize= atts.getFloat("stepSize",-1);
+    if( (numStars>0) && (numStars!=mNumStars) )
+        setNumStars(numStars);
+    setStepSize((stepSize>=0)?stepSize:0.5f);
+    if(rating>=0)setRating(rating);
+
+    // A touch inside a star fill up to that fractional area (slightly more
+    // than 0.5 so boundaries round up).
+    mTouchProgressOffset = 0.6f;
 }
 
 void RatingBar::setOnRatingBarChangeListener(OnRatingBarChangeListener listener){
