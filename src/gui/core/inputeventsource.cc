@@ -58,15 +58,15 @@ void InputEventSource::onDeviceChanged(const INPUTEVENT*es){
     case EV_ADD:
         /*noting todo*/
         LOGI("device %d is added",es->device);
-        for(auto d:mDevices)LOGI("device %d %s",d.first,d.second->getName().c_str());
         getdevice(es->device);
-        for(auto d:mDevices)LOGI("::device %d classes=%x %s",d.first,d.second->getClasses(),d.second->getName().c_str());
         break;
     case EV_REMOVE:
         if(itr!=mDevices.end())dev = itr->second;
-        LOGI("device %s:%d/%d is removed", dev->getName().c_str(), es->device,dev->getId());
-        mDevices.erase(itr);
+        LOGI_IF(dev,"device %s:%d/%d is removed", dev->getName().c_str(), es->device,dev->getId());
+        LOGI_IF(dev==nullptr,"remove unknwon dev %s:%d",dev->getName().c_str(), es->device);
+        if(itr!=mDevices.end())mDevices.erase(itr);
 	break;
+    default:LOGI("dev %d unknown event %d",es->device,es->type);break;
     }
 }
 

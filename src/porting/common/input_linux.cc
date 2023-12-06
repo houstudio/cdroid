@@ -204,7 +204,7 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
             LOGI("read(dev.inotify=%d/%d)",total,sizeof(struct inotify_event));
             if(total<sizeof(struct inotify_event))
                 continue;
-             while(elen<total){
+            while(elen<total){
                 ievent = (struct inotify_event*)(inotifyBuffer+event_pos);
                 std::string path = WATCHED_PATH;
                 path.append("/").append(ievent->name);
@@ -216,7 +216,7 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
                     e->device = it->fd;
                     e->type = EV_REMOVE;
                     LOGI("..device %s:%d/%d deleted found=%d",path.c_str(),ievent->wd,it->fd,(it!=dev.fds.end()));
-                    if(it!=dev.fds.end()){close(it->fd);dev.fds.erase(it);}
+                    if(it!=dev.fds.end()){FD_CLR(it->fd,&rfds);close(it->fd);dev.fds.erase(it);}
                     e++;
                 }else if(ievent->mask & IN_CREATE){
                     e->device = open(path.c_str(),O_RDWR);
@@ -232,7 +232,7 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
             }
         }else {/*for input devices*/
             rc = read(FDS[i].fd,events, sizeof(events)/sizeof(struct input_event));
-            for(int j=0; j<rc/sizeof(struct input_event)&&(count<max); j++,e++,count++) {
+            for(int j=0; (rc>0)&&j<rc/sizeof(struct input_event)&&(count<max); j++,e++,count++) {
                 e->tv_sec = events[j].time.tv_sec;
                 e->tv_usec= events[j].time.tv_usec;
                 e->type = events[j].type;
