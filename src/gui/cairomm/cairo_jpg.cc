@@ -367,6 +367,7 @@ struct decoder_error_mgr {
 static void handle_jpeg_error(j_common_ptr cinfo) {
     struct decoder_error_mgr *err = (struct decoder_error_mgr*)(cinfo->err);
     longjmp(err->setjmp_buffer, 1);
+    LOGE("JPEG read/write error");
 }
 cairo_surface_t *cairo_image_surface_create_from_jpeg_stdstream(std::istream&is) {
     struct jpeg_decompress_struct cinfo;
@@ -375,7 +376,6 @@ cairo_surface_t *cairo_image_surface_create_from_jpeg_stdstream(std::istream&is)
     cairo_surface_t *sfc;
     // initialize jpeg decompression structures
     if (setjmp(jerr.setjmp_buffer)){
-        LOGE("JPEG read/write error");
         return sfc;
     }
     cinfo.err = jpeg_std_error(&jerr.pub);
