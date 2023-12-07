@@ -243,6 +243,7 @@ INT GFXFlip(HANDLE surface) {
     if(surf->ishw && (surf->msize>screen_size) ) {
         FBDEVICE*dev=&devs[surf->dispid];
         FBSURFACE dstSurf=*surf;
+        int sync = ioctl(dev->fb, FBIO_WAITFORVSYNC, NULL);
         if(surf->current==0) {
             LOGI_IF(dev->fix.smem_start!=surf->kbuffer,"kbuffer error1");
             dstSurf.kbuffer=surf->kbuffer+screen_size;
@@ -267,7 +268,6 @@ INT GFXFlip(HANDLE surface) {
             surf->kbuffer-=screen_size;
         }
         surf->current=(surf->current+1)%2;
-        int sync = ioctl(dev->fb, FBIO_WAITFORVSYNC, NULL);
         int ret=ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var);
         LOGI_IF(ret<0||sync<0,"FBIOPAN_DISPLAY=%d yoffset=%d res=%dx%d dev=%p fb=%d,sync=%d",ret,dev->var.yoffset,dev->var.xres,dev->var.yres,dev,dev->fb,sync);
     }
