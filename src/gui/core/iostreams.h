@@ -46,6 +46,7 @@ public:
     std::streambuf::pos_type  seekoff(std::streambuf::off_type off, std::ios_base::seekdir way,
         std::ios_base::openmode mode/*ios_base::in | ios_base::out*/)override;
 };
+
 struct MemoryInputStream: virtual MemoryBuf, std::istream {
     MemoryInputStream(char const* base, size_t size)
         : MemoryBuf(base, size)

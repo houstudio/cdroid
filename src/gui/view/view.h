@@ -194,8 +194,20 @@ protected:
         ForegroundInfo();
         ~ForegroundInfo();
     };    
+public:
     class AttachInfo{
     public:
+        class InvalidateInfo{
+        private:
+            static std::vector<InvalidateInfo*>sPool;
+        public:
+            View* target;
+            Rect rect;
+            static InvalidateInfo*obtain();
+            InvalidateInfo();
+            void recycle();
+        };
+	    
         ViewGroup*mRootView;
         bool mHardwareAccelerated;
         float mApplicationScale;
@@ -687,6 +699,9 @@ public:
 
     bool isDirty()const;
     void postInvalidate();
+    void postInvalidate(int left, int top, int width, int height);
+    void postInvalidateDelayed(long delayMilliseconds);
+    void postInvalidateDelayed(long delayMilliseconds, int left, int top,int width, int height);
     void postInvalidateOnAnimation();
     void postInvalidateOnAnimation(int left, int top, int width, int height);
     void invalidateDrawable(Drawable& who)override;

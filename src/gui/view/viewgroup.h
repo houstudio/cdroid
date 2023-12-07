@@ -261,6 +261,7 @@ public:
     ViewGroup(int x,int y,int w,int h);
     ViewGroup(Context*ctx,const AttributeSet& attrs);
     virtual ~ViewGroup();
+    virtual bool ensureTouchMode(bool);
     bool getTouchscreenBlocksFocus()const;
     bool shouldBlockFocusForTouchscreen()const;
     int getDescendantFocusability()const;
@@ -395,6 +396,8 @@ public:
 
     virtual void dispatchInvalidateOnAnimation(View* view);
     virtual void dispatchInvalidateRectOnAnimation(View*,const Rect&);
+    virtual void dispatchInvalidateDelayed(View*,long delay);
+    virtual void dispatchInvalidateRectDelayed(const AttachInfo::InvalidateInfo*,long delay);
     virtual void cancelInvalidate(View* view);
     virtual bool showContextMenuForChild(View* originalView);
     virtual bool showContextMenuForChild(View* originalView, float x, float y);

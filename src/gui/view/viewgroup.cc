@@ -253,6 +253,10 @@ int ViewGroup::getTextAlignment()const{
     return View::TEXT_ALIGNMENT_RESOLVED_DEFAULT;
 }
 
+bool ViewGroup::ensureTouchMode(bool){
+    return false;
+}
+
 void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){
     if (mFirstTouchTarget==nullptr)return;
  
@@ -890,7 +894,13 @@ void ViewGroup::finishAnimatingView(View* view, Animation* animation) {
 void ViewGroup::dispatchInvalidateOnAnimation(View* view){
 }
 
-void ViewGroup::dispatchInvalidateRectOnAnimation(View*,const Rect&){
+void ViewGroup::dispatchInvalidateRectOnAnimation(View*view,const Rect&rect){
+}
+
+void ViewGroup::dispatchInvalidateDelayed(View* view,long){
+}
+
+void ViewGroup::dispatchInvalidateRectDelayed(const AttachInfo::InvalidateInfo*,long){
 }
 
 void ViewGroup::cancelInvalidate(View* view){

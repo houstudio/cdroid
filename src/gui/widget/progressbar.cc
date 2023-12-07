@@ -219,6 +219,7 @@ void ProgressBar::initProgressBar(){
     mHasAnimation = false;
     mInDrawing    = false;
     mAggregatedIsVisible = false;
+    mShouldStartAnimationDrawable = false;
     mRefreshIsPosted = false;
     mDatas.insert(std::pair<int,RefreshData>(R::id::progress,RefreshData()));
     mDatas.insert(std::pair<int,RefreshData>(R::id::secondaryProgress,RefreshData()));

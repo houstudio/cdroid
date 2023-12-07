@@ -14,17 +14,13 @@ protected:
     friend class WindowManager;
     friend class GraphDevice;
     friend class UIEventSource;
-     struct InvalidateInfo{
-         View* target;
-         Rect rect;
-     };
     class InvalidateOnAnimationRunnable:public Runnable{
     private:
         bool mPosted;
         Window*mOwner;
-        std::vector<InvalidateInfo>mInvalidateViews;
+        std::vector<AttachInfo::InvalidateInfo*>mInvalidateViews;
         void postIfNeededLocked();
-        std::vector<InvalidateInfo>::iterator find(View*v);
+        std::vector<AttachInfo::InvalidateInfo*>::iterator find(View*v);
     public:
         InvalidateOnAnimationRunnable();
         void setOwner(Window*w);
@@ -48,6 +44,10 @@ private:
     void doLayout();
     bool performFocusNavigation(KeyEvent& event);
     static View*inflate(Context*ctx,std::istream&stream);
+    static ViewGroup*findAncestorToTakeFocusInTouchMode(View* focused);
+    bool ensureTouchModeLocally(bool);
+    bool enterTouchMode();
+    bool leaveTouchMode();
 protected:
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;
@@ -93,6 +93,7 @@ public:
     virtual void setText(const std::string&);
     const std::string getText()const;
     virtual View& setPos(int x,int y)override;
+    bool ensureTouchMode(bool inTouchMode)override;
     View& setAlpha(float a);
     void sendToBack();
     void bringToFront();
@@ -108,6 +109,8 @@ public:
     bool removeCallbacks(const Runnable& what)override;
     void dispatchInvalidateOnAnimation(View* view)override;
     void dispatchInvalidateRectOnAnimation(View*,const Rect&)override;
+    void dispatchInvalidateDelayed(View*, long delayMilliseconds)override;
+    void dispatchInvalidateRectDelayed(const AttachInfo::InvalidateInfo*,long delayMilliseconds)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
     void cancelInvalidate(View* view)override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet&)const override;

@@ -4973,7 +4973,32 @@ void View::invalidate(bool invalidateCache){
 }
  
 void View::postInvalidate(){
-    postDelayed([this](){ invalidate(true);},30);
+    postInvalidateDelayed(0);
+}
+
+void View::postInvalidate(int left,int top,int width,int height){
+    postInvalidateDelayed(0,left,top,width,height);
+}
+
+void View::postInvalidateDelayed(long delayMilliseconds) {
+    // We try only with the AttachInfo because there's no point in invalidating
+    // if we are not attached to our window
+    if (mAttachInfo) {
+        mAttachInfo->mRootView->dispatchInvalidateDelayed(this, delayMilliseconds);
+    }
+}
+
+void View::postInvalidateDelayed(long delayMilliseconds, int left, int top,
+            int width, int height) {
+
+    // We try only with the AttachInfo because there's no point in invalidating
+    // if we are not attached to our window
+    if (mAttachInfo) {
+        AttachInfo::InvalidateInfo* info = AttachInfo::InvalidateInfo::obtain();
+        info->target= this;
+        info->rect.set(left,top,width,height);
+        mAttachInfo->mRootView->dispatchInvalidateRectDelayed(info, delayMilliseconds);
+    }
 }
 
 void View::cleanupDraw(){
@@ -5215,7 +5240,7 @@ bool View::requestFocusNoSearch(int direction,Rect*previouslyFocusedRect) {
 bool View::requestFocusFromTouch(){
    if(isInTouchMode()){
        ViewGroup* viewRoot = (ViewGroup*)getRootView();
-       //if(viewRoot)viewRoot->ensureTouchMode(false);
+       if(viewRoot)viewRoot->ensureTouchMode(false);
    }
    return requestFocus(View::FOCUS_DOWN);
 }
@@ -7216,6 +7241,28 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
     Size szMeasured = { mMeasuredWidth , mMeasuredHeight };
     mMeasureCache[key] = szMeasured;//
     //mMeasureCache.insert(std::pair<Size,Size>(key,szMeasured)); // suppress sign extension
+}
+
+View::AttachInfo::InvalidateInfo::InvalidateInfo(){
+    target = nullptr;
+    rect.set(0,0,0,0);
+}
+std::vector<View::AttachInfo::InvalidateInfo*>View::AttachInfo::InvalidateInfo::sPool;
+
+View::AttachInfo::InvalidateInfo*View::AttachInfo::InvalidateInfo::obtain(){
+    AttachInfo::InvalidateInfo*ret = nullptr;
+    if(sPool.empty()){
+	ret = new AttachInfo::InvalidateInfo();
+    }else{
+        ret = sPool.back();
+        sPool.pop_back();
+    }
+    ret->rect.set(0,0,0,0);
+    return ret;
+}
+
+void View::AttachInfo::InvalidateInfo::recycle(){
+    sPool.push_back(this);
 }
 
 View::AttachInfo::AttachInfo(Context*ctx){

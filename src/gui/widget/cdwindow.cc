@@ -108,6 +108,94 @@ void Window::bringToFront(){
     WindowManager::getInstance().bringToFront(this);
 }
 
+bool Window::ensureTouchMode(bool inTouchMode) {
+    LOGD("ensureTouchMode( %d), current touch mode is ",inTouchMode, mAttachInfo->mInTouchMode);
+    if (mAttachInfo->mInTouchMode == inTouchMode) return false;
+    // tell the window manager
+    /*try {
+        IWindowManager windowManager = WindowManagerGlobal.getWindowManagerService();
+        windowManager.setInTouchMode(inTouchMode, getDisplayId());
+    } catch (RemoteException e) {
+        throw new RuntimeException(e);
+    }*/
+    // handle the change
+    return ensureTouchModeLocally(inTouchMode);
+}
+
+bool Window::ensureTouchModeLocally(bool inTouchMode) {
+    LOGD("ensureTouchModeLocally(%d), current touch mode is ",inTouchMode, mAttachInfo->mInTouchMode);
+
+    if (mAttachInfo->mInTouchMode == inTouchMode) return false;
+
+    mAttachInfo->mInTouchMode = inTouchMode;
+    mAttachInfo->mTreeObserver->dispatchOnTouchModeChanged(inTouchMode);
+
+    return (inTouchMode) ? enterTouchMode() : leaveTouchMode();
+}
+
+ViewGroup*Window::findAncestorToTakeFocusInTouchMode(View* focused) {
+    ViewGroup* parent = focused->getParent();
+    while (parent){
+        ViewGroup* vgParent = (ViewGroup*) parent;
+        if (vgParent->getDescendantFocusability() == ViewGroup::FOCUS_AFTER_DESCENDANTS
+                && vgParent->isFocusableInTouchMode()) {
+            return vgParent;
+        }
+        /*if (vgParent->isRootNamespace()) {
+            return nullptr;
+        } else */{
+            parent = vgParent->getParent();
+        }
+    }
+    return nullptr;
+}
+
+bool Window::enterTouchMode() {
+    if (hasFocus()) {
+        // note: not relying on mFocusedView here because this could
+        // be when the window is first being added, and mFocused isn't
+        // set yet.
+        View* focused = findFocus();
+        if (focused && !focused->isFocusableInTouchMode()) {
+            ViewGroup* ancestorToTakeFocus = findAncestorToTakeFocusInTouchMode(focused);
+            if (ancestorToTakeFocus != nullptr) {
+                // there is an ancestor that wants focus after its
+                // descendants that is focusable in touch mode.. give it
+                // focus
+                return ancestorToTakeFocus->requestFocus();
+            } else {
+                // There's nothing to focus. Clear and propagate through the
+                // hierarchy, but don't attempt to place new focus.
+                //focused->clearFocusInternal(nullptr, true, false);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool Window::leaveTouchMode() {
+    if (mChildren.size()) {
+        if (hasFocus()) {
+            View* focusedView = findFocus();
+            if (dynamic_cast<ViewGroup*>(focusedView)==nullptr) {
+                // some view has focus, let it keep it
+                return false;
+            } else if (((ViewGroup*) focusedView)->getDescendantFocusability() !=
+                    ViewGroup::FOCUS_AFTER_DESCENDANTS) {
+                // some view group has focus, and doesn't prefer its children
+                // over itself for focus, so let them keep it.
+                return false;
+            }
+        }
+
+        // find the best view to give focus to in this brave new non-touch-mode
+        // world
+        return restoreDefaultFocus();
+    }
+    return false;
+}
+
 void Window::draw(){
     if(mVisibleRgn&&mVisibleRgn->get_num_rectangles()==0){
         return;
@@ -416,22 +504,32 @@ void Window::dispatchInvalidateRectOnAnimation(View*view,const Rect&rect){
     mInvalidateOnAnimationRunnable.addViewRect(view,rect);
 }
 
+void Window::dispatchInvalidateDelayed(View*view, long delayMilliseconds){
+    LOGW_IF(delayMilliseconds,"Delay is NOT IMPLEMENTED");
+	if(0==delayMilliseconds) dispatchInvalidateOnAnimation(view);
+}
+
+void Window::dispatchInvalidateRectDelayed(const AttachInfo::InvalidateInfo*info,long delayMilliseconds){
+    LOGW_IF(delayMilliseconds,"Delay is NOT IMPLEMENTED");
+	if(0==delayMilliseconds) dispatchInvalidateRectOnAnimation(info->target,info->rect);
+}
+
 void Window::cancelInvalidate(View* view){
     mInvalidateOnAnimationRunnable.removeView(view);
 }
 
 Window::InvalidateOnAnimationRunnable::InvalidateOnAnimationRunnable(){
-    mOwner =nullptr;
-    mPosted=false;
+    mOwner = nullptr;
+    mPosted= false;
 }
 
 void Window::InvalidateOnAnimationRunnable::setOwner(Window*w){
     mOwner=w;
 }
 
-std::vector<Window::InvalidateInfo>::iterator Window::InvalidateOnAnimationRunnable::find(View*v){
+std::vector<View::AttachInfo::InvalidateInfo*>::iterator Window::InvalidateOnAnimationRunnable::find(View*v){
     for(auto it=mInvalidateViews.begin();it!=mInvalidateViews.end();it++){
-        if((*it).target == v)
+        if((*it)->target == v)
             return it;
     }
     return mInvalidateViews.end();
@@ -440,13 +538,13 @@ std::vector<Window::InvalidateInfo>::iterator Window::InvalidateOnAnimationRunna
 void Window::InvalidateOnAnimationRunnable::addView(View* view){
     auto it=find(view);
     if(it==mInvalidateViews.end()){
-        InvalidateInfo info;
-        info.target = view;
-        info.rect.set(0,0,0,0);
+        AttachInfo::InvalidateInfo* info = AttachInfo::InvalidateInfo::obtain();
+        info->target = view;
+        info->rect.set(0,0,0,0);
         mInvalidateViews.push_back(info);
     }else{
-        InvalidateInfo& info=(*it);
-        info.rect.set(0,0,0,0);
+        AttachInfo::InvalidateInfo* info=(*it);
+        info->rect.set(0,0,0,0);
     }
     postIfNeededLocked();
 }
@@ -454,14 +552,14 @@ void Window::InvalidateOnAnimationRunnable::addView(View* view){
 void Window::InvalidateOnAnimationRunnable::addViewRect(View* view,const Rect&rect){
     auto it=find(view);
     if(it == mInvalidateViews.end()){
-        InvalidateInfo info;
-        info.target =view;
-        info.rect = rect;
+        AttachInfo::InvalidateInfo* info = AttachInfo::InvalidateInfo::obtain();
+        info->target =view;
+        info->rect = rect;
         mInvalidateViews.push_back(info);
     }else{
-        InvalidateInfo& info=(*it);
-        if(!info.rect.empty())
-            info.rect.Union(rect);
+        AttachInfo::InvalidateInfo* info=(*it);
+        if(!info->rect.empty())
+            info->rect.Union(rect);
     }
     postIfNeededLocked();
 }
@@ -478,11 +576,11 @@ void Window::InvalidateOnAnimationRunnable::removeView(View* view){
 
 void Window::InvalidateOnAnimationRunnable::run(){
     mPosted = false;
-    std::vector<InvalidateInfo>temp = mInvalidateViews;
+    std::vector<View::AttachInfo::InvalidateInfo*>&temp = mInvalidateViews;
     mInvalidateViews.clear();
     for (auto i:temp){
-        Rect&r = i.rect;
-        View*v = i.target;
+        Rect&r = i->rect;
+        View*v = i->target;
         if(r.width<=0||r.height<=0) v->invalidate();
         else  v->invalidate(r.left,r.top,r.width,r.height);
     }
@@ -491,7 +589,8 @@ void Window::InvalidateOnAnimationRunnable::run(){
 void Window::InvalidateOnAnimationRunnable::postIfNeededLocked() {
     if (!mPosted) {
         //Choreographer::getInstance().postCallback(Choreographer::CALLBACK_ANIMATION,nullptr,this);
-        Runnable run;run=std::bind(&InvalidateOnAnimationRunnable::run,this);
+        Runnable run;
+        run=std::bind(&InvalidateOnAnimationRunnable::run,this);
         mOwner->postDelayed(run,AnimationHandler::getFrameDelay());
         mPosted = true;
     }
