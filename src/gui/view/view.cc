@@ -1,7 +1,7 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <view/viewoverlay.h>
-#include <widget/roundscrollbarrenderer.h>
+#include <view/roundscrollbarrenderer.h>
 #include <widget/edgeeffect.h>
 #include <animation/animationutils.h>
 #include <cdlog.h>
