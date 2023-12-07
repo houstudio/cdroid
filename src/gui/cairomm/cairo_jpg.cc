@@ -105,7 +105,7 @@ static boolean fill_buffer (j_decompress_ptr cinfo) {
     src->pub.next_input_byte = src->buffer;
     src->pub.bytes_in_buffer = src->stream->gcount();// How many yo could read
 
-    return (!src->stream->eof())&&src->pub.bytes_in_buffer;
+    return (!src->stream->eof())||src->pub.bytes_in_buffer;
 }
 
 static void skip (j_decompress_ptr cinfo, long num_bytes) {
@@ -366,7 +366,6 @@ struct decoder_error_mgr {
 
 static void handle_jpeg_error(j_common_ptr cinfo) {
     struct decoder_error_mgr *err = (struct decoder_error_mgr*)(cinfo->err);
-    jpeg_finish_decompress((j_decompress_ptr)cinfo);
     jpeg_destroy_decompress((j_decompress_ptr)cinfo);
     longjmp(err->setjmp_buffer, 1);
     LOGE("JPEG read/write error");
@@ -413,7 +412,10 @@ cairo_surface_t *cairo_image_surface_create_from_jpeg_stdstream(std::istream&is)
         unsigned char *row_address = cairo_image_surface_get_data(sfc) +
                                      (cinfo.output_scanline * cairo_image_surface_get_stride(sfc));
         row_pointer[0] = row_address;
-        if(0==jpeg_read_scanlines(&cinfo, row_pointer, 1))break;
+        if(jpeg_read_scanlines(&cinfo, row_pointer, 1)!=1){
+	   LOGD("jpeg data corrupt at scanline=%d/%d",cinfo.output_scanline,cinfo.output_height);
+	   break;
+	}
 #ifndef LIBJPEG_TURBO_VERSION
         pix_conv(row_address, 4, row_address, 3, cinfo.output_width);
 #endif
