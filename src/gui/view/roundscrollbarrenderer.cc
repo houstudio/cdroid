@@ -1,4 +1,4 @@
-#include <widget/roundscrollbarrenderer.h>
+#include <view/roundscrollbarrenderer.h>
 #include <color.h>
 #include <cdlog.h>
 
