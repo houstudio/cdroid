@@ -327,13 +327,19 @@ void  BarcodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int width,height;
     if(widthMode == MeasureSpec::EXACTLY){
 	 width = widthSize;
-	 height= heightSize;
     }else{	    
-	 if(mSymbol->vector){ 
+	 if(mSymbol->vector){
 	     width = mSymbol->vector->width * mSymbol->scale;
-	     height= mSymbol->vector->height* mSymbol->scale;
 	 }else{
 	     width = mSymbol->width * mSymbol->scale;
+	 }
+    }
+    if(heightMode == MeasureSpec::EXACTLY){
+	 height= heightSize;
+    }else{
+	 if(mSymbol->vector){
+	     height= mSymbol->vector->height* mSymbol->scale;
+	 }else{
 	     height= mSymbol->height* mSymbol->scale;
 	 }
     }
