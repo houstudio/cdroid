@@ -366,6 +366,8 @@ struct decoder_error_mgr {
 
 static void handle_jpeg_error(j_common_ptr cinfo) {
     struct decoder_error_mgr *err = (struct decoder_error_mgr*)(cinfo->err);
+    jpeg_finish_decompress((j_decompress_ptr)cinfo);
+    jpeg_destroy_decompress((j_decompress_ptr)cinfo);
     longjmp(err->setjmp_buffer, 1);
     LOGE("JPEG read/write error");
 }
