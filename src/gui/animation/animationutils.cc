@@ -97,13 +97,26 @@ static void startAnimationController(void *userData, const XML_Char *xname, cons
 
 LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
     LACDATA data;
-    XML_Parser parser = XML_ParserCreate(nullptr);
+    char buf[256];
+    int rdlen = 0;
     data.context = context;
     data.controller = nullptr;
+    std::unique_ptr<std::istream> stream = context->getInputStream(resid,&data.package);
+    if(stream==nullptr)return nullptr;
+    XML_Parser parser = XML_ParserCreate(nullptr);
     XML_SetElementHandler(parser, startAnimationController, nullptr);
     XML_SetUserData(parser,&data);
-    std::unique_ptr<std::istream> stream = context->getInputStream(resid,&data.package);
-
+    do {
+        stream->read(buf,sizeof(buf));
+        rdlen = stream->gcount();
+        if (XML_Parse(parser, buf,rdlen,!rdlen) == XML_STATUS_ERROR) {
+            const char*es=XML_ErrorString(XML_GetErrorCode(parser));
+            LOGE("%s at %s:line %ld",es, resid.c_str(),XML_GetCurrentLineNumber(parser));
+            XML_ParserFree(parser);
+            return nullptr;
+        }
+    } while(rdlen);
+    XML_ParserFree(parser);
     return data.controller;
 }
 

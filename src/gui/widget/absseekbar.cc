@@ -49,6 +49,11 @@ void AbsSeekBar::initSeekBar(){
     setFocusable(true);
 }
 
+AbsSeekBar::~AbsSeekBar(){
+    delete mThumb;
+    delete mTickMark;
+}
+
 void AbsSeekBar::setMin(int min) {
     ProgressBar::setMin(min);
     int range = getMax() - getMin();
