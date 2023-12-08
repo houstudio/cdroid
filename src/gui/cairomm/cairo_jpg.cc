@@ -413,9 +413,9 @@ cairo_surface_t *cairo_image_surface_create_from_jpeg_stdstream(std::istream&is)
                                      (cinfo.output_scanline * cairo_image_surface_get_stride(sfc));
         row_pointer[0] = row_address;
         if(jpeg_read_scanlines(&cinfo, row_pointer, 1)!=1){
-	   LOGD("jpeg data corrupt at scanline=%d/%d",cinfo.output_scanline,cinfo.output_height);
-	   break;
-	}
+            LOGD("jpeg data corrupt at scanline=%d/%d",cinfo.output_scanline,cinfo.output_height);
+            break;
+        }
 #ifndef LIBJPEG_TURBO_VERSION
         pix_conv(row_address, 4, row_address, 3, cinfo.output_width);
 #endif

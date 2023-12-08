@@ -6141,11 +6141,13 @@ void View::setHovered(bool hovered) {
 }
 
 bool View::performClick(){
+    bool result = false;
     if(mListenerInfo && mListenerInfo->mOnClickListener){
          playSoundEffect(SoundEffectConstants::CLICK);
          mListenerInfo->mOnClickListener(*this);
+         result = true;
     }
-    return mListenerInfo!=nullptr && mListenerInfo->mOnClickListener!=nullptr;
+    return result;
 }
 
 bool View::performLongClickInternal(float x, float y){
