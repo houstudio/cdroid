@@ -591,10 +591,11 @@ void TextView::sendOnTextChanged(const std::wstring& text, int start, int before
 }
 
 void TextView::setRawTextSize(float size, bool shouldRequestLayout){
-    mLayout->setFontSize(size);
-    mHintLayout->setFontSize(size);
-    if(shouldRequestLayout)
+    if((size!=mLayout->getFontSize())&&shouldRequestLayout){
+        mLayout->setFontSize(size);
+        mHintLayout->setFontSize(size);
         requestLayout();
+    }
 }
 
 void TextView::setTextAppearance(const std::string&appearance){

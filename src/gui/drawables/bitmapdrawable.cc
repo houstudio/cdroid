@@ -99,10 +99,9 @@ RefPtr<ImageSurface> BitmapDrawable::getBitmap()const{
 }
 
 void BitmapDrawable::setBitmap(RefPtr<ImageSurface>bmp){
-    mBitmapState->mBitmap=bmp;
+    mBitmapState->mBitmap = bmp;
     mBitmapState->mTransparency = computeTransparency(bmp);
-    LOGV("setbitmap %p",bmp.get());
-    mDstRectAndInsetsDirty=true;
+    mDstRectAndInsetsDirty = true;
     computeBitmapSize();
     invalidateSelf();
 }
@@ -112,7 +111,7 @@ int BitmapDrawable::getAlpha()const{
 }
 
 void BitmapDrawable::setAlpha(int alpha){
-    mBitmapState->mAlpha=alpha&0xFF;
+    mBitmapState->mAlpha = alpha&0xFF;
 }
 
 int BitmapDrawable::getGravity()const{
@@ -375,6 +374,9 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.translate(mDstRect.width,0);
             canvas.scale(-1.f,1.f);
         }
+	if(getOpacity()==PixelFormat::OPAQUE){
+	    canvas.set_operator(Cairo::Context::Operator::SOURCE);
+	}
         canvas.set_source(mBitmapState->mBitmap, dx, dy);
         if(alpha==1.f){
             canvas.rectangle(dx,dy,dw,dh);

@@ -33,28 +33,28 @@ ViewConfiguration::ViewConfiguration(){
 
 ViewConfiguration::ViewConfiguration(Context* context):ViewConfiguration(){
     DisplayMetrics metrics;
-	AttributeSet atts(context,"");
+    AttributeSet atts(context,"");
     WindowManager::getInstance().getDefaultDisplay().getMetrics(metrics);
     const float sizeAndDensity = metrics.density;
     mEdgeSlop = (int) (sizeAndDensity * EDGE_SLOP + 0.5f);
-	mFadingEdgeLength = int(sizeAndDensity*FADING_EDGE_LENGTH + 0.5f);
+    mFadingEdgeLength = int(sizeAndDensity*FADING_EDGE_LENGTH + 0.5f);
 	
     mDoubleTapSlop = (int) (sizeAndDensity * DOUBLE_TAP_SLOP + 0.5f);
     mWindowTouchSlop = (int) (sizeAndDensity * WINDOW_TOUCH_SLOP + 0.5f);	
-	mMaximumDrawingCacheSize = 4 * metrics.widthPixels * metrics.heightPixels;
+    mMaximumDrawingCacheSize = 4 * metrics.widthPixels * metrics.heightPixels;
     mOverscrollDistance = (int) (sizeAndDensity * OVERSCROLL_DISTANCE + 0.5f);
     mOverflingDistance = (int) (sizeAndDensity * OVERFLING_DISTANCE + 0.5f);
 
     if(atts.size()){
-	    mScrollbarSize = atts.getDimensionPixelSize("config_scrollbarSize");
+        mScrollbarSize = atts.getDimensionPixelSize("config_scrollbarSize");
         mFadingMarqueeEnabled = atts.getBoolean("config_ui_enableFadingMarquee");
         mTouchSlop = atts.getDimensionPixelSize("config_viewConfigurationTouchSlop");
         mHoverSlop = atts.getDimensionPixelSize("config_viewConfigurationHoverSlop");
         mMinScrollbarTouchTarget = atts.getDimensionPixelSize("config_minScrollbarTouchTarget");
-	}
+    }
 	
-	mPagingTouchSlop = mTouchSlop * 2;
-	mDoubleTapTouchSlop = mTouchSlop;
+    mPagingTouchSlop = mTouchSlop * 2;
+    mDoubleTapTouchSlop = mTouchSlop;
     if(atts.size()){
         mMinimumFlingVelocity = atts.getDimensionPixelSize("config_viewMinFlingVelocity");
         mMaximumFlingVelocity = atts.getDimensionPixelSize("config_viewMaxFlingVelocity");
