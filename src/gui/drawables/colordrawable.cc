@@ -141,10 +141,15 @@ void ColorDrawable::draw(Canvas&canvas){
         canvas.set_color(mColorState->mUseColor);
         if(mTintFilter)
             canvas.set_operator((Cairo::Context::Operator)ColorFilter::tintMode2CairoOperator(mTintFilter->getMode()));
-	else if((mTintFilter==nullptr)&&(mColorState->mTintMode!=NOOP))
-            canvas.set_operator((Cairo::Context::Operator)ColorFilter::tintMode2CairoOperator(mColorState->mTintMode));
-        canvas.rectangle(getBounds());
-        canvas.fill();
+        else if((mTintFilter==nullptr)&&(mColorState->mTintMode!=NOOP))
+            ;//canvas.set_operator((Cairo::Context::Operator)ColorFilter::tintMode2CairoOperator(mColorState->mTintMode));
+        /*HANDLE handler = canvas.getHandler();
+        if(handler&&(mBounds.width==1024||mBounds.width==600)){
+            GFXFillRect(handler,nullptr,mColorState->mUseColor);
+        }else*/{
+            canvas.rectangle(getBounds());
+            canvas.fill();
+        }
     }
     if(mTintFilter)
         mTintFilter->apply(canvas,mBounds);
