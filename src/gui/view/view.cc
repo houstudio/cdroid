@@ -339,23 +339,24 @@ View::View(Context*ctx,const AttributeSet&attrs){
     if(viewFlagMasks)
         setFlags(viewFlagValues, viewFlagMasks);
 
-    setBackground(attrs.getDrawable("background"));
     ColorStateList*csl = attrs.getColorStateList("backgroundTint");
     if( (mBackgroundTint == nullptr) && csl){
         mBackgroundTint = new TintInfo;
         mBackgroundTint->mTintList = csl;
         mBackgroundTint->mHasTintList = true;
     }
-    const int blendMode = attrs.getInt("backgroundTintMode",std::map<const std::string,int>({
+    const int tintMode = attrs.getInt("backgroundTintMode",std::map<const std::string,int>({
            {"add",TintMode::ADD},          {"multiply",TintMode::MULTIPLY},
            {"screen",TintMode::SCREEN},    {"src_atop",TintMode::SRC_ATOP},
-           {"src_in",TintMode::SRC_IN},    {"src_over",TintMode::SRC_OVER} 
+           {"src_in",TintMode::SRC_IN},    {"src_over",TintMode::SRC_OVER},
+           {"src",TintMode::SRC}
         }),TintMode::NOOP);
-    if( blendMode != -1 ){
+    if( tintMode != TintMode::NOOP ){
         if(mBackgroundTint == nullptr) mBackgroundTint=new TintInfo;
-        mBackgroundTint->mBlendMode = blendMode;
+        mBackgroundTint->mTintMode = tintMode;
         mBackgroundTint->mHasTintMode = true;
     }
+    setBackground(attrs.getDrawable("background"));
 
     setForeground(attrs.getDrawable("foreground"));
     setForegroundGravity(attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY));
@@ -3982,6 +3983,21 @@ View& View::setBackgroundTintList(const ColorStateList* tint){
 
 const ColorStateList* View::getBackgroundTintList()const{
     return mBackgroundTint != nullptr ? mBackgroundTint->mTintList : nullptr;
+}
+
+View& View::setBackgroundTintMode(int tintMode) {
+    if (mBackgroundTint == nullptr) {
+        mBackgroundTint = new TintInfo();
+    }
+    mBackgroundTint->mTintMode = tintMode;
+    mBackgroundTint->mHasTintMode = true;
+
+    applyBackgroundTint();
+    return *this;
+}
+
+int View::getBackgroundTintMode() const{
+    return mBackgroundTint ? mBackgroundTint->mTintMode : -1;
 }
 
 void View::onFocusChanged(bool gainFocus,int direct,Rect*previouslyFocusedRect){

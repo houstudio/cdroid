@@ -370,6 +370,7 @@ static void handle_jpeg_error(j_common_ptr cinfo) {
     longjmp(err->setjmp_buffer, 1);
     LOGE("JPEG read/write error");
 }
+
 cairo_surface_t *cairo_image_surface_create_from_jpeg_stdstream(std::istream&is) {
     struct jpeg_decompress_struct cinfo;
     struct decoder_error_mgr jerr;

@@ -643,11 +643,7 @@ void TextView::setText(const std::string&txt){
         if(mCaretPos<ws.length())
             mCaretPos = ws.length()-1;
         mLayout->setCaretPos(mCaretPos);
-        //checkForRelayout();
-        if(getVisibility()==View::VISIBLE){
-            invalidate();
-            requestLayout();
-        }
+        checkForRelayout();
     }
     mLayout->relayout();//use to fix getBaselineError for empty text
 }
@@ -659,8 +655,7 @@ const std::string TextView::getText()const{
 View& TextView::setHint(const std::string& hint){
     View::setHint(hint);
     mHintLayout->setText(hint);
-    if(getEditable().empty())
-        invalidate();
+    checkForRelayout();
     return *this;
 }
 
@@ -731,13 +726,13 @@ void TextView::checkForRelayout() {
     if(mLayoutParams==nullptr) return;
     if (( (mLayoutParams->width != LayoutParams::WRAP_CONTENT)
             || (mMaxWidthMode == mMinWidthMode && mMaxWidth == mMinWidth))
-            && (/*mHint == nullptr ||*/ mHintLayout != nullptr)
+            && (mHintLayout || mHintLayout->getText().empty())
             && (mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight() > 0)) {
         // Static width, so try making a new text layout.
 
-        int oldht = mLayout->getHeight();
-        int want = mLayout->getMaxLineWidth();
-        int hintWant = mHintLayout ?mHintLayout->getMaxLineWidth():0;
+        const int oldht = mLayout->getHeight();
+        const int want = mLayout->getMaxLineWidth();
+        const int hintWant = mHintLayout ?mHintLayout->getMaxLineWidth():0;
 
         /*
          * No need to bring the text into view, since the size is not
@@ -759,7 +754,7 @@ void TextView::checkForRelayout() {
 
             // Dynamic height, but height has stayed the same,
             // so use our new text layout.
-            if ( (mLayout->getHeight() == oldht) && ((mHintLayout == nullptr) || (mHintLayout->getHeight() == oldht))) {
+            if ( (mLayout->getHeight() == oldht) && (mHintLayout->getText().empty() || (mHintLayout->getHeight() == oldht))) {
                 autoSizeText();
                 invalidate();
                 return;

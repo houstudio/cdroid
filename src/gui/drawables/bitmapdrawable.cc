@@ -383,22 +383,13 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.translate(mDstRect.width,0);
             canvas.scale(-1.f,1.f);
         }
+        canvas.set_source(mBitmapState->mBitmap, dx, dy);
         if(getOpacity()==PixelFormat::OPAQUE){
             canvas.set_operator(Cairo::Context::Operator::SOURCE);
-            Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
-            if(spat)spat->set_filter(filterMode);
         }
-        canvas.set_source(mBitmapState->mBitmap, dx, dy);
-        if(alpha==1.f){
-            Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
-            if(spat)spat->set_filter(filterMode);
-            canvas.rectangle(dx,dy,dw,dh);
-            canvas.fill();
-        }else{
-            Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
-            if(spat)spat->set_filter(filterMode);
-            canvas.paint_with_alpha(alpha);
-        }
+        Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
+        if(spat)spat->set_filter(filterMode);
+        canvas.paint_with_alpha(alpha);
     }
 
     if(mTintFilter){

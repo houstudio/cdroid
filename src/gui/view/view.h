@@ -903,6 +903,7 @@ public:
     View& setBackgroundResource(const std::string&resid);
     View& setBackgroundTintList(const ColorStateList* tint);
     View& setBackgroundTintMode(int tintMode);
+    int getBackgroundTintMode() const;
     const ColorStateList* getBackgroundTintList()const;
     virtual int getSolidColor()const;
 

@@ -110,7 +110,7 @@ void ColorDrawable::setTintList(const ColorStateList* tint){
 void ColorDrawable::setTintMode(int tintMode) {
     mColorState->mTintMode = tintMode;
     mTintFilter = updateTintFilter(mTintFilter, mColorState->mTint, tintMode);
-    LOGD("%p tintmode=%d",this,tintMode);
+    LOGV("tintmode=%d",tintMode);
     invalidateSelf();
 }
 
