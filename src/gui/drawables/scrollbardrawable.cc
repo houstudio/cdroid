@@ -69,20 +69,20 @@ void ScrollBarDrawable::draw(Canvas&canvas) {
     }
 
     Rect r = getBounds();
-    std::vector<Cairo::Rectangle>rects;
-    canvas.copy_clip_rectangle_list(rects);
-    Cairo::RefPtr<Cairo::Region> regions=Cairo::Region::create();
-    for(Cairo::Rectangle r:rects)
-	regions->do_union({int(r.x),int(r.y),int(r.width),int(r.height)});
-    if(regions->get_num_rectangles()&&regions->contains_rectangle((Cairo::RectangleInt&)r)==Cairo::Region::Overlap::OUT)return;
+
+    double x1,y1,x2,y2;
+    canvas.get_clip_extents(x1,y1,x2,y2);
+    Rect rcClip;
+    rcClip.set(int(x1),int(y1),int(std::abs(x2-x1)),int(std::abs(y2-y1)));
+    if(!rcClip.intersect(r))return;
 
     if (bdrawTrack)drawTrack(canvas, r, mVertical);
 
     if (bdrawThumb) {
-        int scrollBarLength = mVertical ? r.height : r.width;
-        int thickness   = mVertical ? r.width : r.height;
-        int thumbLength = ViewConfiguration::getThumbLength(scrollBarLength, thickness, mExtent, mRange);
-        int thumbOffset = ViewConfiguration::getThumbOffset(scrollBarLength, thumbLength, mExtent, mRange,mOffset);
+        const int scrollBarLength = mVertical ? r.height : r.width;
+        const int thickness   = mVertical ? r.width : r.height;
+        const int thumbLength = ViewConfiguration::getThumbLength(scrollBarLength, thickness, mExtent, mRange);
+        const int thumbOffset = ViewConfiguration::getThumbOffset(scrollBarLength, thumbLength, mExtent, mRange,mOffset);
         drawThumb(canvas, r, thumbOffset, thumbLength, mVertical);
     }
 }
