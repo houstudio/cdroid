@@ -110,6 +110,7 @@ void ColorDrawable::setTintList(const ColorStateList* tint){
 void ColorDrawable::setTintMode(int tintMode) {
     mColorState->mTintMode = tintMode;
     mTintFilter = updateTintFilter(mTintFilter, mColorState->mTint, tintMode);
+    LOGD("%p tintmode=%d",this,tintMode);
     invalidateSelf();
 }
 
@@ -135,14 +136,19 @@ int ColorDrawable::getOpacity() {
 void ColorDrawable::draw(Canvas&canvas){
     LOGV("%p color=%x  bounds=%d,%d-%d,%d mTintFilter=%p",this,mColorState->mUseColor,
 	mBounds.left,mBounds.top,mBounds.width,mBounds.height,mTintFilter);
+    canvas.save();
     if((mColorState->mUseColor>>24)||mTintFilter){
         canvas.set_color(mColorState->mUseColor);
-        if(mTintFilter)canvas.set_operator((Cairo::Context::Operator)ColorFilter::tintMode2CairoOperator(mTintFilter->getMode()));
+        if(mTintFilter)
+            canvas.set_operator((Cairo::Context::Operator)ColorFilter::tintMode2CairoOperator(mTintFilter->getMode()));
+	else if((mTintFilter==nullptr)&&(mColorState->mTintMode!=NOOP))
+            canvas.set_operator((Cairo::Context::Operator)ColorFilter::tintMode2CairoOperator(mColorState->mTintMode));
         canvas.rectangle(getBounds());
         canvas.fill();
     }
     if(mTintFilter)
         mTintFilter->apply(canvas,mBounds);
+    canvas.restore();
 }
 
 Drawable*ColorDrawable::inflate(Context*ctx,const AttributeSet&atts){

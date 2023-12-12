@@ -304,6 +304,13 @@ static void setPatternByTileMode(RefPtr<SurfacePattern>pat,int tileMode){
     }
 }
 
+static int getRotateAngle(Canvas&canvas){
+    double xx, yx, xy, yy, x0, y0;
+    Cairo::Matrix ctx=canvas.get_matrix();
+    double radians = atan2(ctx.yy, ctx.xy);
+    return int(radians*180.f/M_PI);
+}
+
 void BitmapDrawable::draw(Canvas&canvas){
     if(mBitmapState->mBitmap==nullptr) return;
     updateDstRectAndInsetsIfDirty();
@@ -359,7 +366,9 @@ void BitmapDrawable::draw(Canvas&canvas){
         float dx = mBounds.left    , dy = mBounds.top;
         float dw = mBounds.width   , dh = mBounds.height;
         const float fx = dw / sw   , fy = dh / sh;
-        const float alpha=mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
+        const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
+        const int angle_degrees = getRotateAngle(canvas);
+        const Cairo::SurfacePattern::Filter filterMode = (angle_degrees%90==0)?SurfacePattern::Filter::FAST:SurfacePattern::Filter::GOOD;
 
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
@@ -374,16 +383,20 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.translate(mDstRect.width,0);
             canvas.scale(-1.f,1.f);
         }
-	if(getOpacity()==PixelFormat::OPAQUE){
-	    canvas.set_operator(Cairo::Context::Operator::SOURCE);
-	}
+        if(getOpacity()==PixelFormat::OPAQUE){
+            canvas.set_operator(Cairo::Context::Operator::SOURCE);
+            Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
+            if(spat)spat->set_filter(filterMode);
+        }
         canvas.set_source(mBitmapState->mBitmap, dx, dy);
         if(alpha==1.f){
+            Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
+            if(spat)spat->set_filter(filterMode);
             canvas.rectangle(dx,dy,dw,dh);
             canvas.fill();
         }else{
             Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
-            if(spat)spat->set_filter(SurfacePattern::Filter::GOOD);
+            if(spat)spat->set_filter(filterMode);
             canvas.paint_with_alpha(alpha);
         }
     }
