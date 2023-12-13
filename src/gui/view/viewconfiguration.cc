@@ -9,6 +9,7 @@ namespace cdroid{
 ViewConfiguration*ViewConfiguration::mInst=nullptr;
 ViewConfiguration::ViewConfiguration(){
     mEdgeSlop = EDGE_SLOP;
+    mIsScreenRound = false;
     mFadingEdgeLength = FADING_EDGE_LENGTH;
     mMinimumFlingVelocity = MINIMUM_FLING_VELOCITY;
     mMaximumFlingVelocity = MAXIMUM_FLING_VELOCITY;
@@ -36,6 +37,9 @@ ViewConfiguration::ViewConfiguration(Context* context):ViewConfiguration(){
     AttributeSet atts(context,"");
     WindowManager::getInstance().getDefaultDisplay().getMetrics(metrics);
     const float sizeAndDensity = metrics.density;
+    atts = context->obtainStyledAttributes("@style/view_Configuration");
+    if(atts.size()==0)
+        atts = context->obtainStyledAttributes("cdroid:style/view_Configuration");
     mEdgeSlop = (int) (sizeAndDensity * EDGE_SLOP + 0.5f);
     mFadingEdgeLength = int(sizeAndDensity*FADING_EDGE_LENGTH + 0.5f);
 	
@@ -46,31 +50,33 @@ ViewConfiguration::ViewConfiguration(Context* context):ViewConfiguration(){
     mOverflingDistance = (int) (sizeAndDensity * OVERFLING_DISTANCE + 0.5f);
 
     if(atts.size()){
-        mScrollbarSize = atts.getDimensionPixelSize("config_scrollbarSize");
-        mFadingMarqueeEnabled = atts.getBoolean("config_ui_enableFadingMarquee");
-        mTouchSlop = atts.getDimensionPixelSize("config_viewConfigurationTouchSlop");
-        mHoverSlop = atts.getDimensionPixelSize("config_viewConfigurationHoverSlop");
-        mMinScrollbarTouchTarget = atts.getDimensionPixelSize("config_minScrollbarTouchTarget");
+        mIsScreenRound = atts.getBoolean("config_isScreenRound",false);
+        mScrollbarSize = atts.getDimensionPixelSize("config_scrollbarSize",mScrollbarSize);
+        mFadingMarqueeEnabled = atts.getBoolean("config_ui_enableFadingMarquee",mFadingMarqueeEnabled);
+        mTouchSlop = atts.getDimensionPixelSize("config_viewConfigurationTouchSlop",mTouchSlop);
+        mHoverSlop = atts.getDimensionPixelSize("config_viewConfigurationHoverSlop",mHoverSlop);
+        mMinScrollbarTouchTarget = atts.getDimensionPixelSize("config_minScrollbarTouchTarget",mMinScrollbarTouchTarget);
+        mGlobalActionsKeyTimeout = atts.getInt("config_globalActionsKeyTimeout",mGlobalActionsKeyTimeout);
     }
 	
     mPagingTouchSlop = mTouchSlop * 2;
     mDoubleTapTouchSlop = mTouchSlop;
     if(atts.size()){
-        mMinimumFlingVelocity = atts.getDimensionPixelSize("config_viewMinFlingVelocity");
-        mMaximumFlingVelocity = atts.getDimensionPixelSize("config_viewMaxFlingVelocity");
-        mHorizontalScrollFactor = atts.getDimensionPixelSize("config_horizontalScrollFactor");
-        mVerticalScrollFactor = atts.getDimensionPixelSize("config_verticalScrollFactor");
+        mMinimumFlingVelocity = atts.getDimensionPixelSize("config_viewMinFlingVelocity",mMinimumFlingVelocity);
+        mMaximumFlingVelocity = atts.getDimensionPixelSize("config_viewMaxFlingVelocity",mMaximumFlingVelocity);
+        mHorizontalScrollFactor = atts.getDimensionPixelSize("config_horizontalScrollFactor",mHorizontalScrollFactor);
+        mVerticalScrollFactor = atts.getDimensionPixelSize("config_verticalScrollFactor",mVerticalScrollFactor);
     }
 }
 
 ViewConfiguration& ViewConfiguration::get(Context*context){
-    if(mInst==nullptr)
-        mInst=new ViewConfiguration(context);
+    if(mInst == nullptr)
+        mInst = new ViewConfiguration(context);
     return *mInst;
 }
 
 bool ViewConfiguration::isScreenRound(){
-    return false;
+    return mInst && mInst->mIsScreenRound;
 }
 
 int ViewConfiguration::getThumbLength(int size, int thickness, int extent, int range) {

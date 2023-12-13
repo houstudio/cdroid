@@ -188,6 +188,7 @@ private:
     bool mShowMenuShortcutsWhenKeyboardPresent;
     bool sHasPermanentMenuKey;
     bool sHasPermanentMenuKeySet;
+    bool mIsScreenRound;
     static ViewConfiguration*mInst;
     ViewConfiguration(Context*context);
 public:
