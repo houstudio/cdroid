@@ -953,6 +953,13 @@ void ViewGroup::attachViewToParent(View* child, int index, LayoutParams* params)
     //notifySubtreeAccessibilityStateChangedIfNeeded();
 }
 
+void ViewGroup::dispatchVisibilityChanged(View& changedView, int visibility) {
+    View::dispatchVisibilityChanged(changedView, visibility);
+    for (View*child:mChildren) {
+        child->dispatchVisibilityChanged(changedView, visibility);
+    }
+}
+
 bool ViewGroup::isAlwaysDrawnWithCacheEnabled()const{
     return (mGroupFlags & FLAG_ALWAYS_DRAWN_WITH_CACHE) == FLAG_ALWAYS_DRAWN_WITH_CACHE;
 }

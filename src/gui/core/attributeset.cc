@@ -77,12 +77,14 @@ int AttributeSet::inherit(const AttributeSet&other){
 }
 
 bool AttributeSet::add(const std::string&key,const std::string&value){
-    if(mAttrs.find(key)!=mAttrs.end())
-        return false;
+    auto itr = mAttrs.find(key);
     std::string ks = key;
     size_t pos =ks.find(' ');
     if(pos!=std::string::npos)ks=ks.substr(pos+1);
-    mAttrs.insert({(std::string)ks,normalize(mPackage,value)});
+    if(itr == mAttrs.end())
+        mAttrs.insert({(std::string)ks,normalize(mPackage,value)});
+    else
+        itr->second = value;
     return true;
 }
 

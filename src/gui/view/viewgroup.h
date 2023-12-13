@@ -255,6 +255,7 @@ protected:
     bool isViewTransitioning(View* view);
     void attachLayoutAnimationParameters(View* child,LayoutParams* params, int index, int count);
     virtual void onChildVisibilityChanged(View* child, int oldVisibility, int newVisibility);
+    void dispatchVisibilityChanged(View& changedView, int visibility)override;
     void resetResolvedDrawables()override;
 public:
     ViewGroup(int w,int h);
