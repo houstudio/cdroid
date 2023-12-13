@@ -68,8 +68,10 @@ Layout::Layout(const Layout&l){
 }
 
 void Layout::setWidth(int width){
-    mWidth = width;
-    mLayout++;
+    if(mWidth!=width){
+        mWidth = width;
+        mLayout++;
+    }
 }
 
 int  Layout::getWidth()const{
@@ -316,9 +318,11 @@ int Layout::getEllipsisCount(int line)const{
 }
 
 void Layout::setLineSpacing(int spacingAdd, float spacingMult){
-    mSpacingMult=spacingMult;
-    mSpacingAdd =spacingAdd;
-    mLayout++;
+    if((mSpacingMult!=spacingMult)||(mSpacingAdd!=spacingAdd)){
+	mSpacingMult = spacingMult;
+        mSpacingAdd = spacingAdd;
+        mLayout++;
+    }
 }
 
 static int bsearch(int *widths,int size,int find){
