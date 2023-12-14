@@ -232,7 +232,7 @@ int RippleDrawable::getRadius()const{
 
 bool RippleDrawable::setDrawableByLayerId(int id, Drawable* drawable){
     if (LayerDrawable::setDrawableByLayerId(id, drawable)) {
-        if (id == MASK_LAYER_ID/*R.id.mask*/) {
+        if (id == cdroid::R::id::mask) {
             mMask = drawable;
             mHasValidMask = false;
         }
@@ -393,7 +393,7 @@ void RippleDrawable::drawContent(Canvas& canvas) {
     std::vector<ChildDrawable*> &array = mLayerState->mChildren;
     const int count = mLayerState->mChildren.size();
     for (int i = 0; i < count; i++) {
-        if (array[i]->mId != MASK_LAYER_ID) {
+        if (array[i]->mId != cdroid::R::id::mask) {
             array[i]->mDrawable->draw(canvas);
         }
     }
@@ -471,6 +471,6 @@ Drawable*RippleDrawable::inflate(Context*ctx,const AttributeSet&atts){
 
 void RippleDrawable::updateLocalState() {
     // Initialize from constant state.
-    mMask = findDrawableByLayerId(MASK_LAYER_ID);//R.id.mask);
+    mMask = findDrawableByLayerId(cdroid::R::id::mask);
 }
 }
