@@ -868,15 +868,19 @@ void View::setOpticalInsets(const Insets& insets) {
 }
 
 void View::setPadding(int left, int top, int right, int bottom){
-    mPaddingLeft=left;
-    mPaddingRight=right;
-    mPaddingTop=top;
-    mPaddingBottom=bottom;
+    resetResolvedPaddingInternal();
+    mUserPaddingStart = UNDEFINED_PADDING;
+    mUserPaddingEnd = UNDEFINED_PADDING;
+    mUserPaddingLeftInitial = left;
+    mUserPaddingRightInitial = right;
+    mLeftPaddingDefined = true;
+    mRightPaddingDefined = true;
+
     internalSetPadding(left,top,right,bottom);
 }
 
 void View::setPaddingRelative(int start,int top,int end,int bottom){
-    mPrivateFlags2 &= ~PFLAG2_PADDING_RESOLVED;//resetResolvedPaddingInternal();
+    resetResolvedPaddingInternal();
     mUserPaddingStart = start;
     mUserPaddingEnd =end;
     mLeftPaddingDefined  =true;
@@ -3892,7 +3896,7 @@ View& View::setBackground(Drawable*background){
         background->setLayoutDirection(getLayoutDirection());  
        
         if(background->getPadding(padding)){
-            resetResolvedDrawablesInternal();
+            resetResolvedPaddingInternal();
             switch (background->getLayoutDirection()) {
             case LAYOUT_DIRECTION_RTL:
                 mUserPaddingLeftInitial = padding.width;
@@ -6745,6 +6749,10 @@ bool View::canResolveLayoutDirection()const{
 }
 
 void View::resetResolvedPadding(){
+    resetResolvedPaddingInternal();
+}
+
+void View::resetResolvedPaddingInternal() {
     mPrivateFlags2 &= ~PFLAG2_PADDING_RESOLVED;
 }
 

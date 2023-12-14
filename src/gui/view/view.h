@@ -1100,6 +1100,7 @@ public:
     void resetRtlProperties();
     void resetResolvedTextDirection();
     void resetResolvedLayoutDirection();
+    void resetResolvedPaddingInternal();
     virtual void resetResolvedPadding();
     const Display* getDisplay()const;
     void measure(int widthMeasureSpec, int heightMeasureSpec);
