@@ -44,8 +44,8 @@ void RippleForeground::onTargetRadiusChanged(float targetRadius){
 }
 
 void RippleForeground::drawSoftware(Canvas& c,float origAlpha) {
-    int alpha = (int) (origAlpha * mOpacity + 0.5f);
-    float radius = getCurrentRadius();
+    const int alpha = (int) (origAlpha * mOpacity + 0.5f);
+    const float radius = getCurrentRadius();
     if (alpha > 0 && radius > 0) {
         const float x = getCurrentX();
         const float y = getCurrentY();

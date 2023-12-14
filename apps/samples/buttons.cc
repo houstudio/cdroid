@@ -8,14 +8,14 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,-1,-1);
     w->setId(1);
     Drawable*d=nullptr;
-    StateListDrawable*sd;
+    StateListDrawable*sld;
     CompoundButton*chk;
     LOGD("test LOGF %d",__LINE__);
     LOG(DEBUG)<<"Test Stream(DEBUG)";
 #if 10
     Button *btn=new Button("Button",120,60);
     d=ctx->getDrawable("cdroid:drawable/btn_default.xml");
-    sd=dynamic_cast<StateListDrawable*>(d);
+    sld=dynamic_cast<StateListDrawable*>(d);
     w->setBackgroundColor(0xFF101112);
     btn->setOnTouchListener([](View&v,MotionEvent&e){
         const bool down=e.getAction()==MotionEvent::ACTION_DOWN;
@@ -25,7 +25,8 @@ int main(int argc,const char*argv[]){
 	v.setScaleY(down?0.8f:1.f);
 	return false;
     });
-    LOGD("%p statecount=%d",sd,sd->getStateCount());
+    
+    LOGD("%p statecount=%d",sld,sld->getStateCount());
     btn->setBackground(d);
     btn->setBackgroundTintList(ctx->getColorStateList("cdroid:color/textview"));
     btn->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
@@ -33,19 +34,30 @@ int main(int argc,const char*argv[]){
     btn->setOnLongClickListener([](View&v)->bool{LOGD(" Button LongClicked ");return true;});
     w->addView(btn).setId(100).setPos(50,60);
 
+    ShapeDrawable*sd=new ShapeDrawable();
+    sd->setShape(new ArcShape(0,360));
+    sd->getShape()->setGradientColors({0x20FFFFFF,0xFFFFFFFF,0x00FFFFFF});//setSolidColor(0x800000FF);
+    RippleDrawable*rp=new RippleDrawable(ColorStateList::valueOf(0x80222222),
+       new ColorDrawable(0x8000FF00),sd);
+    btn=new Button("RippleButton",300,64);
+    btn->setMinimumHeight(64);
+    btn->setBackground(rp);
+    btn->setClickable(true);
+    w->addView(btn).setId(101).setPos(200,60);
+
     btn=new ToggleButton(120,40);
     d=ctx->getDrawable("cdroid:drawable/btn_toggle_bg.xml");
     btn->setBackground(d);
     btn->setTextColor(ctx->getColorStateList("cdroid:color/textview"));
     ((ToggleButton*)btn)->setTextOn("ON");
     ((ToggleButton*)btn)->setTextOff("Off");
-    w->addView(btn).setId(101).setPos(200,70).setClickable(true);
+    w->addView(btn).setId(101).setPos(200,150).setClickable(true);
 
     chk=new CheckBox("CheckME",200,60);
     d=ctx->getDrawable("cdroid:drawable/btn_check.xml");
     chk->setButtonDrawable(d);
     chk->setChecked(true);
-    w->addView(chk).setPos(350,60);
+    w->addView(chk).setPos(350,150);
 	
     /*AnalogClock*clk=new AnalogClock(300,300);
     d=ctx->getDrawable("cdroid:drawable/analog.xml");
@@ -59,7 +71,7 @@ int main(int argc,const char*argv[]){
     Drawable*dr=ctx->getDrawable("cdroid:drawable/btn_radio.xml");
     chk->setButtonDrawable(dr);
     chk->setChecked(true);
-    w->addView(chk).setPos(600,60);
+    w->addView(chk).setPos(600,150);
 	
     EditText*edt=new EditText("Edit Me!",200,60);
     d=ctx->getDrawable("cdroid:drawable/edit_text.xml");//editbox_background.xml");
