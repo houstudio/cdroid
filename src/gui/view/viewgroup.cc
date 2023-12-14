@@ -828,6 +828,24 @@ void ViewGroup::removeTransientView(View*view){
     }
 }
 
+int ViewGroup::getTransientViewCount() const{
+    return mTransientIndices.size();
+}
+
+int ViewGroup::getTransientViewIndex(int position) const{
+    if ((position < 0) || (position >= mTransientIndices.size())) {
+        return -1;
+    }
+    return mTransientIndices.at(position);
+}
+
+View* ViewGroup::getTransientView(int position) const{
+    if ((position < 0) || (position >= mTransientViews.size())) {
+        return nullptr;
+    }
+    return mTransientViews.at(position);
+}
+
 void ViewGroup::addDisappearingView(View* v) {
     mDisappearingChildren.push_back(v);
 }

@@ -326,7 +326,9 @@ public:
     bool addViewInLayout(View* child, int index,LayoutParams* params,bool preventRequestLayout);
     void addTransientView(View*view,int index);
     void removeTransientView(View*);
-
+    int getTransientViewCount() const;
+    int getTransientViewIndex(int position)const;
+    View*getTransientView(int position) const;
     bool canResolveLayoutDirection()const override;
     bool isLayoutDirectionResolved()const override;
     int getLayoutDirection()const override;
