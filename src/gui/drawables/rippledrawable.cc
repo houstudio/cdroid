@@ -5,6 +5,7 @@ RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner
     :LayerDrawable::LayerState(orig,owner){
     //mTouchThemeAttrs = orig->mTouchThemeAttrs;
     mColor = nullptr;
+    mMaxRadius = RADIUS_AUTO;
     if(dynamic_cast<RippleState*>(orig)){
         RippleState* origs = (RippleState*) orig;
         if(mColor) mColor = new ColorStateList(*origs->mColor);
