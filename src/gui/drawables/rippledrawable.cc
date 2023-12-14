@@ -1,4 +1,5 @@
 #include <drawables/rippledrawable.h>
+#include <widget/R.h>
 namespace cdroid{
 
 RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner)
@@ -61,7 +62,7 @@ RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
 RippleDrawable::RippleDrawable(const ColorStateList* color,Drawable* content,Drawable* mask)
   :RippleDrawable(std::make_shared<RippleState>(nullptr,nullptr)){
     if(content)addLayer(content,{0},-1,0,0,0,0);
-    if(mask)addLayer(mask,{0},MASK_LAYER_ID,0,0,0,0); 
+    if(mask)addLayer(mask,{0},cdroid::R::id::mask,0,0,0,0);
     setColor(color);
     ensurePadding();
     refreshPadding();

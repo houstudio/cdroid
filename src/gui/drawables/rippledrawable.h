@@ -13,7 +13,6 @@ public:
     static constexpr int MASK_CONTENT = 1;
     static constexpr int MASK_EXPLICIT = 2;
     static constexpr int MAX_RIPPLES = 10;
-    static constexpr int MASK_LAYER_ID=0;
 private:
     class RippleState:public LayerDrawable::LayerState{
     public:

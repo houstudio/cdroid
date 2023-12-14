@@ -44,6 +44,8 @@ class CDROIDHandler( xml.sax.ContentHandler ):
             if 'string/' in value:
                 #value = self.normalizeXMLString(value),this is done in cdroid Assets::getString
                 self.addString(value)
+        if 'type' in attributes and 'name' in attributes:
+            self.addID("@id/"+attributes.get('name'))
 
     def addID(self,name):
         pos=name.find('/')
@@ -74,7 +76,7 @@ class IDGenerater(object):
     def __init__(self,idstart,namespace):
         self.idstart=idstart
         self.namespace=namespace
-        self.processDirs=['layout','drawable','navigation']
+        self.processDirs=['layout','drawable','navigation','values']
         self.parser = xml.sax.make_parser()
         self.parser.setFeature(xml.sax.handler.feature_namespaces, 0)
         self.Handler = CDROIDHandler(namespace)
