@@ -13,7 +13,8 @@ namespace cdroid{
 ImageDecoder::ImageDecoder(){
     mImageWidth = -1;
     mImageHeight= -1;
-    mFrameCount =0;
+    mFrameCount = 0;
+    mScale = 1.f;
     mPrivate = nullptr;
 }
 
@@ -30,6 +31,14 @@ int ImageDecoder::getHeight()const{
 
 int ImageDecoder::getFrameCount()const{
     return mFrameCount;
+}
+
+float ImageDecoder::getScale()const{
+    return mScale;
+}
+
+void ImageDecoder::setScale(float s){
+    mScale =s;
 }
 
 int ImageDecoder::getFrameDuration(int idx)const{
@@ -103,9 +112,9 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
     if (matchesICOSignature(contents) || matchesCURSignature(contents))
         return ICOImageDecoder::create(alphaOption, gammaAndColorProfileOption);
 #endif
-#if USE(JPEG)
+#if ENABLE(JPEG)
     if (matchesJPEGSignature(contents))
-        return JPEGImageDecoder::create(alphaOption, gammaAndColorProfileOption);
+        decoder = new JPEGDecoder();//::create(alphaOption, gammaAndColorProfileOption);
 #endif
 #if USE(OPENJPEG)
     if (matchesJP2Signature(contents))

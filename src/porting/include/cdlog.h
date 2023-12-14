@@ -1,14 +1,9 @@
 #ifndef __CDLOG_H__
 #define __CDLOG_H__
 
-#include <stdio.h>
-#include <sys/types.h>
-
-typedef unsigned char BYTE;
-
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif 
 
 typedef enum{
   LOG_VERBOSE,
@@ -20,7 +15,7 @@ typedef enum{
 }LogLevel;
 
 void LogPrintf(int level,const char*tag,const char*func,int line,const char*format,...);
-void LogDump  (int level,const char*tag,const char*func,int line,const char*label,const BYTE*data,int len);
+void LogDump  (int level,const char*tag,const char*func,int line,const char*label,const unsigned char*data,int len);
 void LogSetModuleLevel(const char*module,int level);
 void LogParseModule(const char*module);
 void LogParseModules(int argc,const char*argv[]);

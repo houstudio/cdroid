@@ -454,7 +454,9 @@ void TextView::initView(){
     mFontWeightAdjustment= INT_MAX;
     mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
     mHorizontallyScrolling =false;
+    mNeedsAutoSizeText = false;
     mEllipsize = Layout::ELLIPSIS_NONE;
+    mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_NONE;
     mLayout = new Layout(18,1);
     mHintLayout = new Layout(mLayout->getFontSize(),1);
     mGravity = Gravity::NO_GRAVITY;
@@ -644,8 +646,8 @@ void TextView::setText(const std::string&txt){
             mCaretPos = ws.length()-1;
         mLayout->setCaretPos(mCaretPos);
         checkForRelayout();
+        mLayout->relayout();//use to fix getBaselineError for empty text
     }
-    mLayout->relayout();//use to fix getBaselineError for empty text
 }
 
 const std::string TextView::getText()const{
@@ -742,7 +744,7 @@ void TextView::checkForRelayout() {
         /*makeNewLayout(want, hintWant, UNKNOWN_BORING, UNKNOWN_BORING,
                       mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight(),
                       false);*/
-
+        mLayout->relayout();
         if (mEllipsize != Layout::ELLIPSIS_MARQUEE){//TextUtils.TruncateAt.MARQUEE) {
             // In a fixed-height view, so use our new text layout.
             if (mLayoutParams->height != LayoutParams::WRAP_CONTENT
@@ -907,8 +909,16 @@ void TextView::setLineHeight(int h){
     setLineSpacing(h-getLineHeight(),1.f); 
 }
 
+bool TextView::isAutoSizeEnabled() const{
+    return supportsAutoSizeText() && mAutoSizeTextType != AUTO_SIZE_TEXT_TYPE_NONE;
+}
+
+bool TextView::supportsAutoSizeText()const {
+    return true;
+}
+
 void TextView::autoSizeText() {
-    if (1){//!isAutoSizeEnabled()) {
+    if (!isAutoSizeEnabled()) {
         return;
     }
 
@@ -2129,9 +2139,8 @@ void TextView::onDraw(Canvas& canvas) {
     int clipRight = getWidth() - compoundPaddingRight+ mScrollX;
     int clipBottom= getHeight() + mScrollY - ((mScrollY == maxScrollY) ? 0 : extendedPaddingBottom);
     LOGV_IF(dr!=nullptr,"%p rect=%d,%d-%d,%d ==>%d,%d-%d,%d paddings=%d,%d,%d,%d",this,
-                  rect.left,rect.top,rect.width,rect.height, clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop,
-                compoundPaddingLeft,compoundPaddingTop,compoundPaddingRight,compoundPaddingBottom);
-
+          rect.left,rect.top,rect.width,rect.height, clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop,
+          compoundPaddingLeft,compoundPaddingTop,compoundPaddingRight,compoundPaddingBottom);
 
     if (mShadowRadius != 0) {
         clipLeft += std::min(.0f, mShadowDx - mShadowRadius);
@@ -2140,8 +2149,8 @@ void TextView::onDraw(Canvas& canvas) {
         clipTop   += std::min(.0f, mShadowDy - mShadowRadius);
         clipBottom+= std::max(.0f, mShadowDy + mShadowRadius);
     }
-    //canvas.rectangle(clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop);
-    //canvas.clip();
+    canvas.rectangle(clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop);
+    canvas.clip();
     int voffsetText = 0;
     int voffsetCursor = 0;
 

@@ -7,7 +7,7 @@ int main(int argc,const char*argv[]){
     cdroid::Context*ctx=&app;
     Window*w=new Window(0,0,-1,-1);
     w->setId(1);
-	Drawable*d=nullptr;
+    Drawable*d=nullptr;
     StateListDrawable*sd;
     CompoundButton*chk;
     LOGD("test LOGF %d",__LINE__);
@@ -16,6 +16,15 @@ int main(int argc,const char*argv[]){
     Button *btn=new Button("Button",120,60);
     d=ctx->getDrawable("cdroid:drawable/btn_default.xml");
     sd=dynamic_cast<StateListDrawable*>(d);
+    w->setBackgroundColor(0xFF101112);
+    btn->setOnTouchListener([](View&v,MotionEvent&e){
+        const bool down=e.getAction()==MotionEvent::ACTION_DOWN;
+	v.setTranslationX(down?0.1f*v.getWidth():0);
+	v.setTranslationY(down?0.1f*v.getHeight():0);
+	v.setScaleX(down?0.8f:1.f);
+	v.setScaleY(down?0.8f:1.f);
+	return false;
+    });
     LOGD("%p statecount=%d",sd,sd->getStateCount());
     btn->setBackground(d);
     btn->setBackgroundTintList(ctx->getColorStateList("cdroid:color/textview"));

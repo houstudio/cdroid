@@ -31,6 +31,8 @@ private:
     static constexpr int SERIF= 2;
     static constexpr int MONOSPACE = 3;
 public:
+    static constexpr int AUTO_SIZE_TEXT_TYPE_NONE = 0;
+    static constexpr int AUTO_SIZE_TEXT_TYPE_UNIFORM = 1;
     class Drawables {
     public:
         enum{
@@ -90,6 +92,7 @@ private:
     int mDesiredHeightAtMeasure;
     int mShadowColor;
     int mDeferScroll;
+    int mAutoSizeTextType;
     float mShadowRadius, mShadowDx, mShadowDy;
     float mSpacingMult;
     float mSpacingAdd;
@@ -132,6 +135,7 @@ private:
     int  getBoxHeight(Layout* l);
     void prepareDrawableForDisplay(Drawable*d);
 
+    bool isAutoSizeEnabled()const;
     bool isMarqueeFadeEnabled();
     bool canMarquee();
     void startMarquee();
@@ -163,6 +167,7 @@ protected:
     void onDetachedFromWindowInternal()override;
     bool verifyDrawable(Drawable* who)const override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
+    bool supportsAutoSizeText()const;
     bool isPaddingOffsetRequired()override;
     int getLeftPaddingOffset()override;
     int getTopPaddingOffset()override;

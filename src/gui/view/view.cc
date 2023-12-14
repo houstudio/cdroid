@@ -1105,19 +1105,18 @@ bool View::getDefaultFocusHighlightEnabled()const{
 }
 
 bool View::isDefaultFocusHighlightNeeded(const Drawable* background,const Drawable* foreground)const{
-    bool lackFocusState = (background == nullptr || !background->isStateful()
-            || !background->hasFocusStateSpecified())
-            && (foreground == nullptr || !foreground->isStateful()
-            || !foreground->hasFocusStateSpecified());
+    const bool lackFocusState = 
+	    ((background == nullptr) || (false==background->isStateful())|| !background->hasFocusStateSpecified())
+            && ((foreground == nullptr) || (false==foreground->isStateful()) || (false==foreground->hasFocusStateSpecified()));
     return !isInTouchMode() && getDefaultFocusHighlightEnabled() 
 	           && lackFocusState && isAttachedToWindow();// && sUseDefaultFocusHighlight;
 }
 
 void View::switchDefaultFocusHighlight() {
     if (isFocused()) {
-        bool needed = isDefaultFocusHighlightNeeded(mBackground,
-                mForegroundInfo == nullptr ? nullptr : mForegroundInfo->mDrawable);
-        bool active = mDefaultFocusHighlight != nullptr;
+        const bool needed = isDefaultFocusHighlightNeeded(mBackground,
+                mForegroundInfo ? mForegroundInfo->mDrawable:nullptr);
+        const bool active = mDefaultFocusHighlight != nullptr;
         if (needed && !active) {
             setDefaultFocusHighlight(getDefaultFocusHighlightDrawable());
         } else if (!needed && active) {
@@ -1450,6 +1449,10 @@ bool View::isNestedScrollingEnabled()const{
 int View::combineVisibility(int vis1, int vis2) {
     // This works because VISIBLE < INVISIBLE < GONE.
     return std::max(vis1, vis2);
+}
+
+const Display* View::getDisplay() const{
+    return mAttachInfo ? mAttachInfo->mDisplay : nullptr;
 }
 
 void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
@@ -7001,6 +7004,7 @@ void View::setScaleX(float x){
         invalidateViewProperty(true,false);
         mRenderNode->setScaleX((x==.0f)?.00001f:x);//scale cant be zero
         invalidateViewProperty(false,true);
+        invalidateParentIfNeededAndWasQuickRejected();
     }
 }
 
@@ -7013,6 +7017,7 @@ void View::setScaleY(float y){
         invalidateViewProperty(true,false);
         mRenderNode->setScaleY((y==.0f)?.00001f:y);//scale cant be zero
         invalidateViewProperty(false,true);
+        invalidateParentIfNeededAndWasQuickRejected();
     }
 }
 
@@ -7284,6 +7289,7 @@ void View::AttachInfo::InvalidateInfo::recycle(){
 }
 
 View::AttachInfo::AttachInfo(Context*ctx){
+    mDisplay = nullptr;
     mHardwareAccelerated =false;
     mWindowVisibility = VISIBLE;
     mHasWindowFocus   = true;

@@ -9,6 +9,7 @@
 #include <core/attributeset.h>
 #include <core/context.h>
 #include <core/intent.h>
+#include <core/display.h>
 #include <view/gravity.h>
 #include <view/layoutparams.h>
 #include <view/rendernode.h>
@@ -207,7 +208,7 @@ public:
             InvalidateInfo();
             void recycle();
         };
-	    
+        Display*mDisplay;	
         ViewGroup*mRootView;
         bool mHardwareAccelerated;
         float mApplicationScale;
@@ -1100,6 +1101,7 @@ public:
     void resetResolvedTextDirection();
     void resetResolvedLayoutDirection();
     virtual void resetResolvedPadding();
+    const Display* getDisplay()const;
     void measure(int widthMeasureSpec, int heightMeasureSpec);
     int  getMeasuredWidth()const;
     int  getMeasuredWidthAndState()const;

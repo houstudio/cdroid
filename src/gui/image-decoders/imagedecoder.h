@@ -14,12 +14,15 @@ protected:
     int mFrameCount;
     int mImageWidth;
     int mImageHeight;
+    float mScale;
 public:
     ImageDecoder();
     virtual ~ImageDecoder();
     virtual int load(std::istream&)=0;
     int getWidth()const;
     int getHeight()const;
+    float getScale()const;
+    void setScale(float);
     virtual int getFrameCount()const;
     virtual int getFrameDuration(int)const;
     virtual int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)=0;
@@ -33,6 +36,13 @@ public:
     ~GIFDecoder()override;
     int load(std::istream&)override;
     virtual int getFrameDuration(int)const;
+    int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)override;
+};
+
+class JPEGDecoder:public ImageDecoder{
+public:
+    JPEGDecoder();
+    int load(std::istream&)override;
     int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)override;
 };
 

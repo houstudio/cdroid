@@ -1,7 +1,7 @@
 /* This file is part of cairomm. */
 
 /* Defined when the --enable-api-exceptions configure argument was given */
-//#define CAIROMM_EXCEPTIONS_ENABLED 1
+#define CAIROMM_EXCEPTIONS_ENABLED 1
 
 /* Major version number of cairomm. */
 #define CAIROMM_MAJOR_VERSION 1

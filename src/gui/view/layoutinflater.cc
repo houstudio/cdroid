@@ -206,7 +206,7 @@ View* LayoutInflater::inflate(const std::string&package,std::istream&stream,View
         root->requestLayout();
         root->startLayoutAnimation();
     }
-    LOGV("usedtime %dms parsed %d views",SystemClock::uptimeMillis() - tstart, pd.parsedView);
+    LOGV("usedtime %ldms [%p]parsed %d views ",long(SystemClock::uptimeMillis() - tstart),&pd, pd.parsedView);
     return pd.returnedView;
 }
 

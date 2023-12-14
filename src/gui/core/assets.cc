@@ -549,9 +549,9 @@ void Assets::clearStyles() {
     mStyles.clear();
 }
 
-AttributeSet Assets::obtainStyledAttributes(const std::string&refname) {
+AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
     AttributeSet atts;
-    std::string pkg,name = refname;
+    std::string pkg,name = resname;
     size_t pos = name.find("attr");
     while(pos!=std::string::npos) {
         name = name.replace(pos,4,"style");

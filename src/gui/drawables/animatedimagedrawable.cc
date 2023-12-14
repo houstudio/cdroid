@@ -5,7 +5,7 @@
 #include <image-decoders/imagedecoder.h>
 #include <porting/cdgraph.h>
 namespace cdroid{
-#define ENEBLE_DMABLIT 0
+#define ENABLE_DMABLIT 1
 AnimatedImageDrawable::AnimatedImageDrawable()
   :AnimatedImageDrawable(std::make_shared<AnimatedImageState>()){
 }
@@ -126,7 +126,7 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
     }else{
 #if ENABLE(DMABLIT)
         Rect rd={0,0,mBounds.width,mBounds.height};
-        GFXBlit(handler,(const GFXRect*)&rd,mImageHandler,nullptr,0);
+        GFXBlit(handler,0,0,mImageHandler,nullptr);
 #endif
     }
     canvas.restore();

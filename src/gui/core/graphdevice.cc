@@ -228,7 +228,7 @@ void GraphDevice::composeSurfaces(){
     mPrimaryContext->set_operator(Cairo::Context::Operator::SOURCE);
     for(int i=0;i< wSurfaces.size();i++){
         Rect rcw = wBounds[i];
-        RefPtr<Region> rgn = wins[i]->mPendingRgn;//winVisibleRgns[i];//wins[i]->mVisibleRgn;
+        RefPtr<Region> rgn = wins[i]->mPendingRgn;
         HANDLE hdlSurface  = wSurfaces[i]->mHandle;
         if(rgn->empty())continue; 
         rgn->intersect(wins[i]->mVisibleRgn);/*it is already empty*/
@@ -262,7 +262,7 @@ void GraphDevice::composeSurfaces(){
             mPrimaryContext->set_source(wSurfaces[i]->get_target(),rcw.left,rcw.top);
             mPrimaryContext->fill();
         }
-        rgn->subtract(rgn);//wins[i]->mPendingRgn->subtract(wins[i]->mPendingRgn);
+        rgn->subtract(rgn);
     }/*endif for wSurfaces.size*/
     GFXFlip(mPrimarySurface); 
     mLastComposeTime = SystemClock::uptimeMillis();
