@@ -551,7 +551,6 @@ protected:
     TransformationInfo* mTransformationInfo;
     Animation* mCurrentAnimation;
     std::vector<int> mDrawableState;
-    float mClickScale;
 
     int mTop,mLeft,mRight,mBottom;
     ViewGroup * mParent;
@@ -1168,7 +1167,6 @@ public:
     void forceLayout();
     virtual void resolveLayoutParams();
     void layout(int l, int t, int r, int b);
-    void setClickScale(float clickScale);
 };
 }//endof namespace cdroid
 

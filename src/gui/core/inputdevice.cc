@@ -342,7 +342,7 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
            value = (value * mScreenWidth)/mTPHeight;
            axis= MotionEvent::AXIS_Y;
        }else if(mScreenWidth != mTPWidth){
-	   value = (value * mScreenWidth)/mTPWidth;
+           value = (value * mScreenWidth)/mTPWidth;
        }
        break;
     case MotionEvent::AXIS_Y:
@@ -358,7 +358,7 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
 	   value = (value * mScreenHeight)/mTPWidth;
            axis= MotionEvent::AXIS_X;
        }else{
-	   value = (value * mScreenHeight)/mTPHeight;
+           value = (value * mScreenHeight)/mTPHeight;
        }
        break;
     case MotionEvent::AXIS_Z:break;

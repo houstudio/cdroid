@@ -438,8 +438,6 @@ View::View(Context*ctx,const AttributeSet&attrs){
     if(scrollIndicators) initializeScrollIndicatorsInternal();
     if(scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) recomputePadding();
     computeOpaqueFlags();
-
-    mClickScale = attrs.getFloat("clickScale");
 }
 
 void View::initView(){
@@ -518,7 +516,6 @@ void View::initView(){
     mTransformationInfo = nullptr;
     mNestedScrollingParent = nullptr;
     mFloatingTreeObserver = nullptr;
-    mClickScale = 0;
 }
 
 View::~View(){
@@ -6054,26 +6051,6 @@ bool View::dispatchTouchEvent(MotionEvent&event){
 
     if(!result&& onTouchEvent(event)){
         result=true;
-        if (mClickScale > 0 && mClickScale != 1.0 && mListenerInfo->mOnClickListener) {
-            if (event.getAction() == MotionEvent::ACTION_DOWN) {
-                int w = getWidth();
-                int h = getHeight();
-                setScaleX(mClickScale);
-                setScaleY(mClickScale);
-                if (mClickScale > 1.0) {
-                    setTranslationX(-w*(mClickScale - 1.0)/2);
-                    setTranslationY(-h*(mClickScale - 1.0)/2);
-                } else {
-                    setTranslationX(w*(1.0 - mClickScale)/2);
-                    setTranslationY(h*(1.0 - mClickScale)/2);
-                }
-            } else if (event.getAction() == MotionEvent::ACTION_UP){
-                setScaleX(1.0);
-                setScaleY(1.0);
-                setTranslationX(0);
-                setTranslationY(0);
-            }
-        }
     }
 
     if (actionMasked == MotionEvent::ACTION_UP ||
@@ -7295,10 +7272,6 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
     Size szMeasured = { mMeasuredWidth , mMeasuredHeight };
     mMeasureCache[key] = szMeasured;//
     //mMeasureCache.insert(std::pair<Size,Size>(key,szMeasured)); // suppress sign extension
-}
-
-void View::setClickScale(float clickScale) {
-    mClickScale = clickScale;
 }
 
 View::AttachInfo::InvalidateInfo::InvalidateInfo(){

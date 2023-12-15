@@ -2128,7 +2128,7 @@ void TextView::onDraw(Canvas& canvas) {
         }
     }
     // Text
-    //canvas.save();
+    canvas.save();
     const int extendedPaddingTop = getExtendedPaddingTop();
     const int extendedPaddingBottom = getExtendedPaddingBottom();
 
@@ -2151,6 +2151,7 @@ void TextView::onDraw(Canvas& canvas) {
     }
     canvas.rectangle(clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop);
     canvas.clip();
+
     int voffsetText = 0;
     int voffsetCursor = 0;
 
@@ -2166,11 +2167,6 @@ void TextView::onDraw(Canvas& canvas) {
         color = mCurHintTextColor;
         layout= mHintLayout;
         mHintLayout->relayout();
-    }
-    canvas.save();
-    if(getRotation()==.0f){
-        canvas.rectangle(clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop);
-        canvas.clip();//the content will be cutted in rotation 
     }
 
     canvas.translate(compoundPaddingLeft , extendedPaddingTop + voffsetText);
