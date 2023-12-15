@@ -53,13 +53,14 @@ public:
     // A context-specific coefficient adjusted to physical values.
     float mPhysicalCoeff;
 private:
+    friend class OverScroller;
     static void sInit();
     float getDeceleration(int velocity);
     void adjustDuration(int start, int oldFinal, int newFinal);
     void startSpringback(int start, int end, int velocity);
-    double getSplineDeceleration(int velocity);
-    double getSplineFlingDistance(int velocity);
-    int getSplineFlingDuration(int velocity);
+    double getSplineDeceleration(int velocity)const;
+    double getSplineFlingDistance(int velocity)const;
+    int getSplineFlingDuration(int velocity)const;
     void fitOnBounceCurve(int start, int end, int velocity);
     void startBounceAfterEdge(int start, int end, int velocity);
     void startAfterEdge(int start, int min, int max, int velocity);
@@ -117,6 +118,7 @@ public:
     void abortAnimation();
     int timePassed()const;
     bool isScrollingInDirection(float xvel, float yvel)const;
+    double getSplineFlingDistance(int velocity)const;
 };
 
 }//endnamespace

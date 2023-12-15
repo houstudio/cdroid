@@ -213,6 +213,20 @@ const std::string&InputDevice::getName()const{
     return mDeviceInfo.getIdentifier().name;
 }
 
+int InputDevice::getEventCount()const{
+    return mEvents.size();
+}
+
+void InputDevice::pushEvent(InputEvent*e){
+    mEvents.push(e);
+}
+
+InputEvent*InputDevice::popEvent(){
+    InputEvent*event=mEvents.front();
+    mEvents.pop();
+    return event;
+}
+
 KeyDevice::KeyDevice(int fd)
    :InputDevice(fd){
    msckey=0;
@@ -323,10 +337,13 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
        case Display::ROTATION_270: axis = MotionEvent::AXIS_Y; value = mMaxX - value; break;//tested
        }
 
-       if(mScreenWidth != mTPWidth)
+       if(mInvertX)value = mMaxX - value + mMinX;
+       if(mSwitchXY){
+           value = (value * mScreenWidth)/mTPHeight;
+           axis= MotionEvent::AXIS_Y;
+       }else if(mScreenWidth != mTPWidth){
 	   value = (value * mScreenWidth)/mTPWidth;
-       if(mInvertX)value = mScreenWidth - value;
-       if(mSwitchXY)axis= MotionEvent::AXIS_Y;
+       }
        break;
     case MotionEvent::AXIS_Y:
        switch(rotation){
@@ -336,10 +353,13 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
        case Display::ROTATION_270: axis = MotionEvent::AXIS_X; value -= mMinY ;break; /*value=value;*/
        }
 
-       if(mScreenHeight != mTPHeight)
+       if(mInvertY)value = mMaxY - value + mMinY;
+       if(mSwitchXY){
+	   value = (value * mScreenHeight)/mTPWidth;
+           axis= MotionEvent::AXIS_X;
+       }else{
 	   value = (value * mScreenHeight)/mTPHeight;
-       if(mInvertY)value = mScreenHeight - value;
-       if(mSwitchXY)axis= MotionEvent::AXIS_X;
+       }
        break;
     case MotionEvent::AXIS_Z:break;
     default:return;
@@ -356,6 +376,10 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
 
 int TouchDevice::isValidEvent(int type,int code,int value){
     return (type==EV_KEY)||(type==EV_ABS)||(type==EV_SYN)||true;
+}
+
+static int square(float num) {
+  return int(num * num);
 }
 
 int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
@@ -422,13 +446,13 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             for(auto p:mPointMAP){
                 mEvent.addSample(mMoveTime,p.second.prop,p.second.coord);
             }
-            LOGV_IF(mEvent.getAction()==MotionEvent::ACTION_UP,"%s pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
-            mPointMAP.begin()->second.coord.getX(),mEvent.getX(),mEvent.getY());
             if(mEvent.getAction()==MotionEvent::ACTION_DOWN){
                 mLastDownX = mEvent.getX();
                 mLastDownY = mEvent.getY();
             }else if(mEvent.getAction()==MotionEvent::ACTION_MOVE){
-                if((mMoveTime-mDownTime<50*1000) && (mLastDownX==mEvent.getX()) && (mLastDownY==mEvent.getY())){
+                if((mMoveTime-mDownTime<10*1000) 
+		   //&& (square(mLastDownX-mEvent.getX()) +square (mLastDownY-mEvent.getY()))<500
+		   && (mLastDownX==mEvent.getX())&&mLastDownY==mEvent.getY()){
                     //the same positioned moveing ,skip this event
                     break;
                 }
@@ -437,6 +461,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                 mDownTime = mMoveTime;
             }
             if(listener){
+                LOGV_IF(mEvent.getAction()==MotionEvent::ACTION_UP,"%s pos=%.f,%.f",
+                    MotionEvent::actionToString(mEvent.getAction()).c_str(),mEvent.getX(),mEvent.getY());
                 //mEvent.transform(mMatrix);
                 listener(mEvent);
             }

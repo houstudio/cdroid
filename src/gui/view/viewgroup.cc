@@ -619,7 +619,7 @@ void ViewGroup::dispatchAttachedToWindow(AttachInfo* info, int visibility){
 }
 
 bool ViewGroup::dispatchGenericPointerEvent(MotionEvent& event) {
-        // Send the event to the child under the pointer.
+    // Send the event to the child under the pointer.
     const int childrenCount = mChildren.size();
     if (childrenCount != 0) {
         const float x = event.getX();

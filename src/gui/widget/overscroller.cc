@@ -75,7 +75,7 @@ float OverScroller::SplineOverScroller::getDeceleration(int velocity) {
     return velocity > 0 ? -GRAVITY : GRAVITY;
 }
 
-double OverScroller::SplineOverScroller::getSplineDeceleration(int velocity) {
+double OverScroller::SplineOverScroller::getSplineDeceleration(int velocity) const{
      return log(INFLEXION * abs(velocity) / (mFlingFriction * mPhysicalCoeff));
 }
 
@@ -99,12 +99,12 @@ void OverScroller::SplineOverScroller::setFinalPosition(int position) {
     mFinished = false;
 }
 
-double OverScroller::SplineOverScroller::getSplineFlingDistance(int velocity) {
+double OverScroller::SplineOverScroller::getSplineFlingDistance(int velocity) const{
     const double l = getSplineDeceleration(velocity);
     const double decelMinusOne = DECELERATION_RATE - 1.0;
     return mFlingFriction * mPhysicalCoeff * exp(DECELERATION_RATE / decelMinusOne * l);
 }
-int OverScroller::SplineOverScroller::getSplineFlingDuration(int velocity) {
+int OverScroller::SplineOverScroller::getSplineFlingDuration(int velocity) const{
     const double l = getSplineDeceleration(velocity);
     const double decelMinusOne = DECELERATION_RATE - 1.0;
     return (int) (1000.0 * exp(l / decelMinusOne));
@@ -533,4 +533,9 @@ bool OverScroller::isScrollingInDirection(float xvel, float yvel)const{
     int dy = mScrollerY->mFinal - mScrollerY->mStart;
     return !isFinished() && signum(xvel) == signum(dx) && signum(yvel) == signum(dy);
 }
+
+double OverScroller::getSplineFlingDistance(int velocity)const{
+    return mScrollerY->getSplineFlingDistance(velocity);
+}
+
 }//namespace

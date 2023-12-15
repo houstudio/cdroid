@@ -38,7 +38,7 @@ typedef struct {
     MI_PHY kbuffer;/*kernel buffer address,MI_PHY unsigned long long,nullptr for usermemory surface()*/
 } FBSURFACE;
 
-#define DOUBLE_BUFFER 1
+#define DOUBLE_BUFFER 0
 #define MAX_HWSURFACE 4
 static FBDEVICE devs[2]= {-1};
 static FBSURFACE *primarySurface;
@@ -50,6 +50,17 @@ static void gfxexit() {
     LOGI("gfxexit");
     MI_GFX_Close();
     MI_SYS_Exit();
+}
+
+void GFXSuspend(){
+    int ret1,ret2;
+    ret1=MI_GFX_Close();
+    ret2=MI_SYS_Exit();
+    printf("prepared to suspend gfxclose=%d sysexit=%d\r\n",ret1,ret2);
+    system("/customer/suspend.sh");
+    ret1=MI_SYS_Init();
+    ret2=MI_GFX_Open();
+    printf("suspend end,we are wake up now. sysinit=%d,gfxopen=%d\r\nd",ret1,ret2);
 }
 
 int GFXInit() {
@@ -136,12 +147,12 @@ int GFXInit() {
     MI_SYS_MemcpyPa(devSurfaces[0].kbuffer+screenSize,devSurfaces[0].kbuffer,screenSize);
 #endif
 #if 0/*double buffer swap test*/
-    for(int i=0;i<10000;i++){
+    for(int i=0;i<1000;i++){
         unsigned int colors[]={0xFFFF0000,0xFF00FF00,0xFF0000FF,0xFFFFFF00,0xFF00FFFF,0xFFFFFFFF};
         FBSURFACE*fbs = &devSurfaces[0];
+        int ret1=ioctl(dev->fb, FBIO_WAITFORVSYNC, NULL);
         dev->var.yoffset = (i%2)*dev->var.yres;
         MI_SYS_MemsetPa(fbs->kbuffer+displayScreenSize*(i%2?0:1),colors[i%6],(displayScreenSize));
-        int ret1=ioctl(dev->fb, FBIO_WAITFORVSYNC, NULL);
         int ret2=ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var);
         LOGD("ioctl ret=%d,%d",ret1,ret2);
         usleep(16000);
@@ -268,7 +279,7 @@ INT GFXFlip(HANDLE surface) {
             surf->kbuffer-=screen_size;
         }
         surf->current=(surf->current+1)%2;
-        int ret=ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var);
+        int ret = ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var);
         LOGI_IF(ret<0||sync<0,"FBIOPAN_DISPLAY=%d yoffset=%d res=%dx%d dev=%p fb=%d,sync=%d",ret,dev->var.yoffset,dev->var.xres,dev->var.yres,dev,dev->fb,sync);
     }
     return 0;
@@ -400,9 +411,24 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     opt.stClipRect.s32Ypos = dy+screenMargin.y*(ndst->ishw?1:0);
     opt.stClipRect.u32Width= rs.w;
     opt.stClipRect.u32Height=rs.h;
-    //if(nsrc->alpha!=255)
-    //    opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_SRC_PREMULTCOLOR;
+    if(nsrc->alpha!=255){
+	opt.u32GlobalSrcConstColor = 0x00FFFFFF|(0xa0<<24);//(nsrc->alpha<<24);
 
+        opt.u32GlobalDstConstColor = 0xFFFFFFFF;
+
+        opt.eSrcDfbBldOp  = E_MI_GFX_DFB_BLD_ONE;// 透叠
+        opt.eDstDfbBldOp  = E_MI_GFX_DFB_BLD_INVSRCALPHA;
+
+	opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_COLORALPHA
+	      | E_MI_GFX_DFB_BLEND_ALPHACHANNEL
+              | E_MI_GFX_DFB_BLEND_SRC_PREMULTIPLY;
+    }else{
+        opt.u32GlobalSrcConstColor = 0xFFFFFFFF;
+        opt.u32GlobalDstConstColor = 0xFFFFFFFF;
+        opt.eSrcDfbBldOp  = E_MI_GFX_DFB_BLD_ONE;  // 透叠
+        //opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_COLORALPHA;E_MI_GFX_DFB_BLEND_COLORIZE
+        opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_SRC_PREMULTIPLY;
+    }
     opt.eMirror = E_MI_GFX_MIRROR_NONE;
     opt.eRotate = E_MI_GFX_ROTATE_0;
 

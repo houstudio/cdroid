@@ -187,6 +187,7 @@ protected:
     EventListener listener;
     class KeyLayoutMap*kmap;
     static Preferences mPrefs;
+    std::queue<InputEvent*>mEvents;
     virtual int isValidEvent(int type,int code,int value);
 public:
     InputDevice(int fdev);
@@ -200,6 +201,9 @@ public:
     bool supportsSource(int source)const;
     int getSources()const;
     int getClasses()const;
+    int getEventCount()const;
+    void pushEvent(InputEvent*);
+    InputEvent*popEvent();
     const std::string&getName()const;
 };
 

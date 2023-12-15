@@ -319,7 +319,7 @@ int Layout::getEllipsisCount(int line)const{
 
 void Layout::setLineSpacing(int spacingAdd, float spacingMult){
     if((mSpacingMult!=spacingMult)||(mSpacingAdd!=spacingAdd)){
-	mSpacingMult = spacingMult;
+        mSpacingMult = spacingMult;
         mSpacingAdd = spacingAdd;
         mLayout++;
     }

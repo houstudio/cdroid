@@ -141,7 +141,7 @@ int InputEventSource::handleEvents(){
             const int dev = e->getDeviceId();
             const int key = e->getKeyCode();
             const int act = e->getAction();
-	    LOGV("dev=%d key=%d act=%d %d",dev,key,act,mKeyEvents.size());
+            LOGV("dev=%d key=%d act=%d %d",dev,key,act,mKeyEvents.size());
             if( (lastKey !=-1) || (lastKey==key) ){
                 numDown+= (act==KeyEvent::ACTION_DOWN);
                 numUp  += (act==KeyEvent::ACTION_UP);

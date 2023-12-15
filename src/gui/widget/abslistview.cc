@@ -3074,6 +3074,45 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
     }*/
 }
 
+bool AbsListView::shouldAbsorb(EdgeEffect* edgeEffect, int velocity) {
+    if (velocity > 0) {
+        return true;
+    }
+    const float distance = edgeEffect->getDistance() * getHeight();
+
+    // This is flinging without the spring, so let's see if it will fling past the overscroll
+    /*if (mFlingRunnable == nullptr) {
+        mFlingRunnable = new FlingRunnable();
+    }*/
+    const float flingDistance = mFlingRunnable.getSplineFlingDistance(-velocity);
+
+    return flingDistance < distance;
+}
+
+int AbsListView::consumeFlingInStretch(int unconsumed) {
+    if (unconsumed < 0 && mEdgeGlowTop && mEdgeGlowTop->getDistance() != 0.f) {
+        const int size = getHeight();
+        const float deltaDistance = unconsumed * FLING_DESTRETCH_FACTOR / size;
+        const int consumed = std::round(size / FLING_DESTRETCH_FACTOR
+                * mEdgeGlowTop->onPullDistance(deltaDistance, 0.5f));
+        if (consumed != unconsumed) {
+            mEdgeGlowTop->finish();
+        }
+        return unconsumed - consumed;
+    }
+    if (unconsumed > 0 && mEdgeGlowBottom && mEdgeGlowBottom->getDistance() != 0.f) {
+        const int size = getHeight();
+        const float deltaDistance = -unconsumed * FLING_DESTRETCH_FACTOR / size;
+        const int consumed = std::round(-size / FLING_DESTRETCH_FACTOR
+                * mEdgeGlowBottom->onPullDistance(deltaDistance, 0.5f));
+        if (consumed != unconsumed) {
+            mEdgeGlowBottom->finish();
+        }
+        return unconsumed - consumed;
+    }
+    return unconsumed;
+}
+
 bool AbsListView::shouldDisplayEdgeEffects()const {
     return getOverScrollMode() != OVER_SCROLL_NEVER;
 }
@@ -3927,6 +3966,10 @@ AbsListView::FlingRunnable::~FlingRunnable() {
     delete mScroller;
 }
 
+float AbsListView::FlingRunnable::getSplineFlingDistance(int velocity) const{
+    return (float) mScroller->getSplineFlingDistance(velocity);
+}
+
 void AbsListView::FlingRunnable::start(int initialVelocity) {
     const int initialY = initialVelocity < 0 ? INT_MAX : 0;
     mLastFlingY = initialY;
@@ -3935,6 +3978,7 @@ void AbsListView::FlingRunnable::start(int initialVelocity) {
 
     mLV->mTouchMode = TOUCH_MODE_FLING;
     mSuppressIdleStateChangeCall = false;
+    mLV->removeCallbacks(mLV->mFlingRunnable);
     mLV->postOnAnimation(mLV->mFlingRunnable);
     if (PROFILE_FLINGING) {
         if (!mLV->mFlingProfilingStarted) {
@@ -4034,7 +4078,7 @@ void AbsListView::FlingRunnable::run() {
         const int y = mScroller->getCurrY();
         // Flip sign to convert finger direction to list items direction
         // (e.g. finger moving down means list is moving towards the top)
-        int delta = mLastFlingY - y;
+        int delta = mLV->consumeFlingInStretch(mLastFlingY - y);
         // Pretend that each frame of a fling scroll is a touch scroll
         if (delta > 0) {
             // List is moving towards the top. Use first view as mMotionPosition

@@ -157,6 +157,7 @@ private:
     public:
         FlingRunnable();
         ~FlingRunnable()override;
+        float getSplineFlingDistance(int velocity)const;
         void setList(AbsListView*)override;
         void start(int initialVelocity);
         void startSpringback();
@@ -225,6 +226,8 @@ private:
     void onTouchUp(MotionEvent& ev);
     void onTouchDown(MotionEvent& ev);
     void onTouchMove(MotionEvent&,MotionEvent&);
+    bool shouldAbsorb(EdgeEffect* edgeEffect, int velocity);
+    int consumeFlingInStretch(int unconsumed);
     bool shouldDisplayEdgeEffects()const;
     void onTouchCancel();
     void onSecondaryPointerUp(MotionEvent&);
