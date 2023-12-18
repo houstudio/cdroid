@@ -3738,7 +3738,7 @@ void AbsListView::PositionScroller::doScroll() {
 
         const int position = mTargetPos;
         const int lastPos = firstPos + childCount - 1;
-
+        if(childCount==0) return;
         // Account for the visible "portion" of the first / last child when we estimate
         // how many screens we should travel to reach our target
         const View* firstChild = mLV->getChildAt(0);
@@ -4136,7 +4136,7 @@ void AbsListView::FlingRunnable::run() {
         }
         break;
     }
-    case TOUCH_MODE_OVERFLING: {//6
+    case TOUCH_MODE_OVERFLING://6
         if (mScroller->computeScrollOffset()) {
             const int scrollY = mLV->mScrollY;
             const int currY = mScroller->getCurrY();
@@ -4161,7 +4161,6 @@ void AbsListView::FlingRunnable::run() {
             endFling();
         }
         break;
-    }
     }
 }
 

@@ -63,8 +63,8 @@ public:
         FLAG_SPLIT_MOTION_EVENTS= 0x200000,
         FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW =0x400000,
         FLAG_LAYOUT_MODE_WAS_EXPLICITLY_SET      =0x800000,
-        FLAGS_IS_TRANSITION_GROUP    = 0x1000000,
-        FLAGS_IS_TRANSITION_GROUP_SET= 0x2000000,
+        FLAG_IS_TRANSITION_GROUP    = 0x1000000,
+        FLAG_IS_TRANSITION_GROUP_SET= 0x2000000,
         FLAG_TOUCHSCREEN_BLOCKS_FOCUS= 0x4000000,
     };
     enum{
@@ -388,6 +388,8 @@ public:
     bool dispatchTouchEvent(MotionEvent& event)override;
     bool dispatchHoverEvent(MotionEvent&event)override;
     void dispatchWindowFocusChanged(bool hasFocus)override;
+    bool isTransitionGroup();
+    void setTransitionGroup(bool isTransitionGroup);
     virtual void requestDisallowInterceptTouchEvent(bool disallowIntercept);
     bool onInterceptTouchEvent(MotionEvent& evt)override;
     virtual void onDescendantInvalidated(View* child,View* target);

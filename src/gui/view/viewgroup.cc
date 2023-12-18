@@ -187,7 +187,7 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
     setClipChildren(atts.getBoolean("clipChildren",true));
     setClipToPadding(atts.getBoolean("clipToPadding",true));
     //setAnimationCacheEnabled
-    std::string resid=atts.getString("layoutAnimation");
+    std::string resid = atts.getString("layoutAnimation");
     setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,resid));
 
     const int flags=atts.getInt("descendantFocusability",std::map<const std::string,int>{
@@ -200,7 +200,13 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
     setMotionEventSplittingEnabled(atts.getBoolean("splitMotionEvents",false));
     if(atts.getBoolean("animateLayoutChanges",false))
         setLayoutTransition(new LayoutTransition());
-    setLayoutMode(0);
+    const int layoutMode = atts.getInt("layoutMode",std::map<const std::string,int>{
+        {"undefined",LAYOUT_MODE_UNDEFINED},
+        {"clipBounds",LAYOUT_MODE_CLIP_BOUNDS},
+        {"opticalBounds",LAYOUT_MODE_OPTICAL_BOUNDS}
+    },LAYOUT_MODE_UNDEFINED);
+    setLayoutMode(layoutMode);
+    setTransitionGroup(atts.getBoolean("transitionGroup",false));
     setTouchscreenBlocksFocus(atts.getBoolean("touchscreenBlocksFocus",false));
 }
 
@@ -2752,6 +2758,26 @@ void ViewGroup::setMotionEventSplittingEnabled(bool split) {
 
 bool ViewGroup::isMotionEventSplittingEnabled()const{
    return (mGroupFlags & FLAG_SPLIT_MOTION_EVENTS) == FLAG_SPLIT_MOTION_EVENTS;
+}
+
+bool ViewGroup::isTransitionGroup() {
+    if ((mGroupFlags & FLAG_IS_TRANSITION_GROUP_SET) != 0) {
+        return ((mGroupFlags & FLAG_IS_TRANSITION_GROUP) != 0);
+    } else {
+        /*ViewOutlineProvider outlineProvider = getOutlineProvider();
+        return getBackground() != null || getTransitionName() != null ||
+                (outlineProvider != null && outlineProvider != ViewOutlineProvider.BACKGROUND);*/
+        return false;
+    }
+}
+
+void ViewGroup::setTransitionGroup(bool isTransitionGroup) {
+    mGroupFlags |= FLAG_IS_TRANSITION_GROUP_SET;
+    if (isTransitionGroup) {
+        mGroupFlags |= FLAG_IS_TRANSITION_GROUP;
+    } else {
+        mGroupFlags &= ~FLAG_IS_TRANSITION_GROUP;
+    }
 }
 
 void ViewGroup::requestDisallowInterceptTouchEvent(bool disallowIntercept){
