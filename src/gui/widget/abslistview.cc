@@ -3168,9 +3168,33 @@ bool AbsListView::onGenericMotionEvent(MotionEvent& event) {
 
         delta = std::round(axisValue * mVerticalScrollFactor);
         if (delta != 0) {
+            // If we're moving down, we want the top item. If we're moving up, bottom item.
+            const int motionIndex = delta > 0 ? 0 : getChildCount() - 1;
+	    int motionViewPrevTop = 0;
+	    View* motionView = getChildAt(motionIndex);
+            if (motionView ) {
+                motionViewPrevTop = motionView->getTop();
+            }
+
+            const int overscrollMode = getOverScrollMode();
             if (!trackMotionScroll(delta, delta)) {
                 return true;
-            }
+            }else if (!event.isFromSource(InputDevice::SOURCE_MOUSE) && motionView
+                       && (overscrollMode == OVER_SCROLL_ALWAYS
+                       || (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS
+                       && !contentFits()))) {
+                const int motionViewRealTop = motionView->getTop();
+                const float overscroll = (delta - (motionViewRealTop - motionViewPrevTop)) / ((float) getHeight());
+                if (delta > 0) {
+                    mEdgeGlowTop->onPullDistance(overscroll, 0.5f);
+                    mEdgeGlowTop->onRelease();
+                } else {
+                    mEdgeGlowBottom->onPullDistance(-overscroll, 0.5f);
+                    mEdgeGlowBottom->onRelease();
+                }
+                invalidate();
+                return true;
+	    }
         }
         break;
     case MotionEvent::ACTION_BUTTON_PRESS:
