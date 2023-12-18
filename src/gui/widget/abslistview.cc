@@ -3170,8 +3170,8 @@ bool AbsListView::onGenericMotionEvent(MotionEvent& event) {
         if (delta != 0) {
             // If we're moving down, we want the top item. If we're moving up, bottom item.
             const int motionIndex = delta > 0 ? 0 : getChildCount() - 1;
-	    int motionViewPrevTop = 0;
-	    View* motionView = getChildAt(motionIndex);
+            int motionViewPrevTop = 0;
+            View* motionView = getChildAt(motionIndex);
             if (motionView ) {
                 motionViewPrevTop = motionView->getTop();
             }
@@ -3194,7 +3194,7 @@ bool AbsListView::onGenericMotionEvent(MotionEvent& event) {
                 }
                 invalidate();
                 return true;
-	    }
+            }
         }
         break;
     case MotionEvent::ACTION_BUTTON_PRESS:

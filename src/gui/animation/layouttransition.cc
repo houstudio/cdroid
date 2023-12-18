@@ -15,6 +15,53 @@ TimeInterpolator* LayoutTransition::sChangingInterpolator            = DECEL_INT
 Animator* LayoutTransition::defaultChange   = nullptr ;
 Animator* LayoutTransition::defaultChangeIn = nullptr ;
 Animator* LayoutTransition::defaultChangeOut= nullptr ;
+Animator* LayoutTransition::defaultFadeIn = nullptr;
+Animator* LayoutTransition::defaultFadeOut= nullptr;
+
+LayoutTransition::LayoutTransition() {
+    if (defaultChangeIn == nullptr) {
+        // "left" is just a placeholder; we'll put real properties/values in when needed
+        PropertyValuesHolder* pvhLeft = PropertyValuesHolder::ofInt("left",{0, 1});
+        PropertyValuesHolder* pvhTop = PropertyValuesHolder::ofInt("top", {0, 1});
+        PropertyValuesHolder* pvhRight = PropertyValuesHolder::ofInt("right",{0, 1});
+        PropertyValuesHolder* pvhBottom = PropertyValuesHolder::ofInt("bottom",{0, 1});
+        PropertyValuesHolder* pvhScrollX = PropertyValuesHolder::ofInt("scrollX",{0, 1});
+        PropertyValuesHolder* pvhScrollY = PropertyValuesHolder::ofInt("scrollY",{0, 1});
+        defaultChangeIn = ObjectAnimator::ofPropertyValuesHolder(nullptr,
+			{pvhLeft, pvhTop, pvhRight, pvhBottom, pvhScrollX, pvhScrollY});
+        defaultChangeIn->setDuration(DEFAULT_DURATION);
+        defaultChangeIn->setStartDelay(mChangingAppearingDelay);
+        defaultChangeIn->setInterpolator(mChangingAppearingInterpolator);
+        defaultChangeOut = defaultChangeIn->clone();
+        defaultChangeOut->setStartDelay(mChangingDisappearingDelay);
+        defaultChangeOut->setInterpolator(mChangingDisappearingInterpolator);
+        defaultChange = defaultChangeIn->clone();
+        defaultChange->setStartDelay(mChangingDelay);
+        defaultChange->setInterpolator(mChangingInterpolator);
+
+        defaultFadeIn = ObjectAnimator::ofFloat(nullptr, "alpha",{0.f, 1.f});
+        defaultFadeIn->setDuration(DEFAULT_DURATION);
+        defaultFadeIn->setStartDelay(mAppearingDelay);
+        defaultFadeIn->setInterpolator(mAppearingInterpolator);
+        defaultFadeOut = ObjectAnimator::ofFloat(nullptr, "alpha",{1.f, 0.f});
+        defaultFadeOut->setDuration(DEFAULT_DURATION);
+        defaultFadeOut->setStartDelay(mDisappearingDelay);
+        defaultFadeOut->setInterpolator(mDisappearingInterpolator);
+    }
+    mChangingAppearingAnim = defaultChangeIn;
+    mChangingDisappearingAnim = defaultChangeOut;
+    mChangingAnim = defaultChange;
+    mAppearingAnim = defaultFadeIn;
+    mDisappearingAnim = defaultFadeOut;
+}
+
+LayoutTransition::~LayoutTransition(){
+    if(mChangingAppearingAnim!=defaultChangeIn)delete mChangingAppearingAnim;
+    if(mChangingDisappearingAnim!=defaultChangeOut)delete mChangingDisappearingAnim;
+    if(mChangingAnim!=defaultChange)delete mChangingAnim;
+    if(mAppearingAnim!=defaultFadeIn)delete mAppearingAnim;
+    if(mDisappearingAnim!=defaultFadeOut)delete mDisappearingAnim;
+}
 
 void LayoutTransition::setDuration(long duration) {
     mChangingAppearingDuration = duration;

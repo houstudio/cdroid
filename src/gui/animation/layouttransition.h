@@ -106,6 +106,8 @@ private:
     void addChild(ViewGroup* parent, View* child, bool changesLayout);
     void removeChild(ViewGroup* parent, View* child, bool changesLayout);
 public:
+    LayoutTransition();
+    ~LayoutTransition();
     void setDuration(long duration);
     void setDuration(int transitionType, long duration);
     long getDuration(int transitionType);
