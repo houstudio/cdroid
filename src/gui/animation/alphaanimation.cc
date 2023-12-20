@@ -2,6 +2,12 @@
 
 namespace cdroid{
 
+AlphaAnimation::AlphaAnimation(const AlphaAnimation&o)
+	:Animation(o){
+    mFromAlpha = o.mFromAlpha;
+    mToAlpha = o.mToAlpha;
+}
+
 AlphaAnimation::AlphaAnimation(Context* context,const AttributeSet& attrs):Animation(context,attrs){
     mFromAlpha = attrs.getFloat("fromAlpha",1.f);
     mToAlpha   = attrs.getFloat("toAlpha",1.f);
@@ -27,4 +33,9 @@ bool AlphaAnimation::willChangeBounds()const{
 bool AlphaAnimation::hasAlpha(){
     return true;
 }
+
+Animation*AlphaAnimation::clone(){
+    return new AlphaAnimation(*this);
+}
+
 }
