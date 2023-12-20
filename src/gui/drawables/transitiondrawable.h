@@ -19,7 +19,7 @@ private:
     class TransitionState:public LayerDrawable::LayerState{
     public:
          TransitionState(TransitionState* orig, TransitionDrawable* owner);
-         Drawable*newDrawable()override;
+         TransitionDrawable*newDrawable()override;
     };
 
     TransitionDrawable(std::shared_ptr<TransitionState> state);

@@ -49,7 +49,7 @@ BitmapDrawable::BitmapState::~BitmapState(){
     delete mTint;
 }
 
-Drawable* BitmapDrawable::BitmapState::newDrawable(){
+BitmapDrawable* BitmapDrawable::BitmapState::newDrawable(){
     return new BitmapDrawable(shared_from_this());    
 }
 
@@ -282,7 +282,7 @@ bool BitmapDrawable::onStateChange(const std::vector<int>&){
     return false;    
 }
 
-Drawable*BitmapDrawable::mutate(){
+BitmapDrawable*BitmapDrawable::mutate(){
     if (!mMutated && Drawable::mutate() == this) {
         mBitmapState=std::make_shared<BitmapState>(*mBitmapState);
         mMutated = true;

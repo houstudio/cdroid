@@ -23,7 +23,7 @@ private:
         ~RippleState();
         void onDensityChanged(int sourceDensity, int targetDensity)override;
         void applyDensityScaling(int sourceDensity, int targetDensity);
-        Drawable*newDrawable()override;
+        RippleDrawable*newDrawable()override;
         int getChangingConfigurations()const override;
     };
 

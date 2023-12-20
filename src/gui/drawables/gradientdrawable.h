@@ -91,7 +91,7 @@ private:
        void setDensity(int targetDensity);
        bool hasCenterColor()const;
        void applyDensityScaling(int sourceDensity, int targetDensity);
-       Drawable* newDrawable()override;
+       GradientDrawable* newDrawable()override;
        int getChangingConfigurations()const;
        void setShape(int shape);
        void setGradientType(int gradient);
@@ -186,7 +186,7 @@ public:
     int getOpacity()const;
     void getGradientCenter(float&x,float&y)const;
     std::shared_ptr<ConstantState>getConstantState()override;
-    Drawable*mutate()override;
+    GradientDrawable*mutate()override;
     void clearMutated()override;
     void draw(Canvas&canvas)override;
     static Drawable*inflate(Context*ctx,const AttributeSet&atts);

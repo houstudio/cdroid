@@ -20,7 +20,7 @@ ScaleDrawable::ScaleState::ScaleState(const ScaleState& orig)
     mInitialLevel = orig.mInitialLevel;
 }
 
-Drawable* ScaleDrawable::ScaleState::newDrawable(){
+ScaleDrawable* ScaleDrawable::ScaleState::newDrawable(){
     return new ScaleDrawable(std::dynamic_pointer_cast<ScaleState>(shared_from_this()));
 }
 

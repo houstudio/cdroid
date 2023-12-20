@@ -16,7 +16,7 @@ private:
        bool mPivotYRel;
        RotateState();
        RotateState(const RotateState& orig);
-       Drawable*newDrawable()override;
+       RotateDrawable*newDrawable()override;
     };
     std::shared_ptr<RotateState>mState;
     RotateDrawable(std::shared_ptr<RotateState>state);

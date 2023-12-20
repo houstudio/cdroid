@@ -11,7 +11,7 @@ StateListDrawable::StateListState::StateListState(const StateListState*orig,Stat
     }
 }
 
-Drawable*StateListDrawable::StateListState::newDrawable(){
+StateListDrawable*StateListDrawable::StateListState::newDrawable(){
     return new StateListDrawable(std::dynamic_pointer_cast<StateListState>(shared_from_this()));
 }
 
@@ -63,7 +63,7 @@ std::shared_ptr<DrawableContainer::DrawableContainerState>StateListDrawable::clo
     return std::make_shared<StateListState>(mStateListState.get(),this);
 }
 
-Drawable*StateListDrawable::mutate(){
+StateListDrawable*StateListDrawable::mutate(){
     if (!mMutated && DrawableContainer::mutate() == this) {
         mStateListState->mutate();
         mMutated = true;

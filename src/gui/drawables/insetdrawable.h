@@ -25,7 +25,7 @@ private:
         InsetState();
         InsetState(const InsetState& orig);
         void onDensityChanged(int sourceDensity, int targetDensity)override;
-        Drawable*newDrawable()override;
+        InsetDrawable*newDrawable()override;
     };
     std::shared_ptr<InsetState>mState;
     InsetDrawable(std::shared_ptr<InsetState>state);

@@ -20,7 +20,7 @@ private:
         ShapeState();
         ShapeState(const ShapeState&orig);
         ~ShapeState();
-        Drawable* newDrawable()override;
+        ShapeDrawable* newDrawable()override;
         int getChangingConfigurations()const override;
     };
     bool mMutated;
@@ -53,7 +53,7 @@ public:
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
     std::shared_ptr<ConstantState>getConstantState()override;
-    Drawable*mutate()override;
+    ShapeDrawable*mutate()override;
     void clearMutated()override;
     void draw(Canvas&canvas)override;
     static Drawable*inflate(Context*ctx,const AttributeSet&atts);

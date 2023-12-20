@@ -27,7 +27,7 @@ int LevelListDrawable::LevelListState::indexOfLevel(int level)const{
     return -1;
 }
 
-Drawable*LevelListDrawable::LevelListState::newDrawable(){
+LevelListDrawable*LevelListDrawable::LevelListState::newDrawable(){
     return new LevelListDrawable(std::dynamic_pointer_cast<LevelListState>(shared_from_this()));
 }
 
@@ -61,7 +61,7 @@ void LevelListDrawable::setConstantState(std::shared_ptr<DrawableContainerState>
     mLevelListState = std::dynamic_pointer_cast<LevelListState>(state);
 }
 
-Drawable*LevelListDrawable::mutate(){
+LevelListDrawable*LevelListDrawable::mutate(){
     if (!mMutated && DrawableContainer::mutate() == this) {
          mLevelListState->mutate();
          mMutated = true;

@@ -17,10 +17,9 @@ private:
         AnimatedImageState();
         AnimatedImageState(const AnimatedImageState& state);
         ~AnimatedImageState();
-        Drawable* newDrawable()override;
+        AnimatedImageDrawable* newDrawable()override;
         int getChangingConfigurations()const override;
     };
-    
     int mIntrinsicWidth;
     int mIntrinsicHeight;
     bool mStarting;
@@ -35,11 +34,11 @@ private:
     void* mImageHandler;
     void postOnAnimationStart();
     void postOnAnimationEnd();
-    AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state);
 public:
     static constexpr int REPEAT_INFINITE=-1;
     static constexpr int LOOP_INFINITE = REPEAT_INFINITE;
     static constexpr int REPEAT_UNDEFINED = -2;
+    AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state);
 public:
     AnimatedImageDrawable();
     AnimatedImageDrawable(cdroid::Context*,const std::string&res);

@@ -14,7 +14,7 @@ private:
         bool mUseIntrinsicSizeAsMin;
         ScaleState();
         ScaleState(const ScaleState& orig);
-        Drawable* newDrawable()override;
+        ScaleDrawable* newDrawable()override;
     };
     std::shared_ptr<ScaleState>mState;
     ScaleDrawable(std::shared_ptr<ScaleState> state);

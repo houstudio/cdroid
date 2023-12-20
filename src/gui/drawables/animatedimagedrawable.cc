@@ -10,10 +10,10 @@ AnimatedImageDrawable::AnimatedImageDrawable()
   :AnimatedImageDrawable(std::make_shared<AnimatedImageState>()){
 }
 
-AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state)
+AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageDrawable::AnimatedImageState> state)
    :Drawable(){
     mStarting = 0;
-	mHandler = nullptr;
+    mHandler = nullptr;
     mRepeatCount = REPEAT_UNDEFINED;
     mIntrinsicWidth = mIntrinsicHeight = 0;
     mAnimatedImageState = state;
@@ -230,8 +230,8 @@ AnimatedImageDrawable::AnimatedImageState::~AnimatedImageState(){
     delete mDecoder;
 }
 
-Drawable* AnimatedImageDrawable::AnimatedImageState::newDrawable(){
-    return new AnimatedImageDrawable(shared_from_this());
+AnimatedImageDrawable* AnimatedImageDrawable::AnimatedImageState::newDrawable(){
+    return new AnimatedImageDrawable(std::dynamic_pointer_cast<AnimatedImageState>(shared_from_this()));
 }
 
 int AnimatedImageDrawable::AnimatedImageState::getChangingConfigurations()const{

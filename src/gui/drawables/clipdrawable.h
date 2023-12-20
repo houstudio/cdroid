@@ -10,7 +10,7 @@ private:
         int mGravity;
         ClipState();
         ClipState(const ClipState& state);
-        Drawable*newDrawable()override;
+        ClipDrawable*newDrawable()override;
     };
     std::shared_ptr<ClipState>mState;
     ClipDrawable(std::shared_ptr<ClipState>state);

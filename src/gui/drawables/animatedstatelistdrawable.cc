@@ -146,7 +146,7 @@ void AnimatedStateListDrawable::jumpToCurrentState(){
     }
 }
 
-Drawable* AnimatedStateListDrawable::mutate() {
+AnimatedStateListDrawable* AnimatedStateListDrawable::mutate() {
     if (!mMutated && StateListDrawable::mutate() == this) {
         mState->mutate();
         mMutated = true;
@@ -239,7 +239,7 @@ bool AnimatedStateListDrawable::AnimatedStateListState::transitionHasReversibleF
 }
 
 //bool canApplyTheme() {return mAnimThemeAttrs != null || super.canApplyTheme();}
-Drawable* AnimatedStateListDrawable::AnimatedStateListState::newDrawable() {
+AnimatedStateListDrawable* AnimatedStateListDrawable::AnimatedStateListState::newDrawable(){
     return new AnimatedStateListDrawable(std::dynamic_pointer_cast<AnimatedStateListState>(shared_from_this()));
 }
 

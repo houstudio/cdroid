@@ -13,7 +13,7 @@ private:
         int mTintMode;
         ColorState();
         ColorState(const ColorState& state);
-        Drawable* newDrawable()override;
+        ColorDrawable* newDrawable()override;
         int getChangingConfigurations()const override;
     };
 private:
@@ -35,7 +35,7 @@ public:
     void setTintMode(int tintMode)override;
     bool isStateful()const override;
     int getChangingConfigurations()const override;
-    Drawable*mutate()override;
+    ColorDrawable*mutate()override;
     void clearMutated()override;
     bool hasFocusStateSpecified()const override;
     std::shared_ptr<ConstantState>getConstantState()override;

@@ -34,7 +34,7 @@ int DrawableWrapper::DrawableWrapperState::getChangingConfigurations()const{
 void DrawableWrapper::DrawableWrapperState::onDensityChanged(int sourceDensity, int targetDensity){
 }
 
-Drawable*DrawableWrapper::DrawableWrapperState::newDrawable(){
+DrawableWrapper*DrawableWrapper::DrawableWrapperState::newDrawable(){
     return new DrawableWrapper(shared_from_this());
 }
 
@@ -128,7 +128,7 @@ std::shared_ptr<DrawableWrapper::DrawableWrapperState> DrawableWrapper::mutateCo
     return std::make_shared<DrawableWrapperState>(*mState);
 }
 
-Drawable*DrawableWrapper::mutate(){
+DrawableWrapper*DrawableWrapper::mutate(){
     if (!mMutated && Drawable::mutate() == this) {
         mState=mutateConstantState();
         if (mDrawable != nullptr) {

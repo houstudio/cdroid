@@ -32,8 +32,8 @@ private:
         BitmapState();
         BitmapState(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
         BitmapState(const BitmapState&bitmapState);
-		~BitmapState()override;
-        Drawable* newDrawable()override;
+        ~BitmapState()override;
+        BitmapDrawable* newDrawable()override;
        int getChangingConfigurations()const override;
     };
     int mBitmapWidth;
@@ -75,7 +75,7 @@ public:
     void setTintList(const ColorStateList*lst)override;
     void setTintMode(int mode)override;
     int getTintMode()const;
-    Drawable*mutate()override;
+    BitmapDrawable*mutate()override;
     void clearMutated()override;
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas&canvas)override;

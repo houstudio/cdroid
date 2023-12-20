@@ -41,7 +41,7 @@ protected:
         std::map<int,std::shared_ptr<ConstantState> >mDrawableFutures;
         DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own);
         ~DrawableContainerState();
-        Drawable*newDrawable()override{return nullptr;}//must be overrided by inherited
+        DrawableContainer*newDrawable()override{return nullptr;}//must be overrided by inherited
         int addChild(Drawable* dr);
         int getChildCount()const;
         Drawable*getChild(int index);
@@ -120,7 +120,7 @@ public:
     void scheduleDrawable(Drawable&who,Runnable what, long when)override;
     void unscheduleDrawable(Drawable& who,Runnable what)override;
     std::shared_ptr<ConstantState>getConstantState()override;
-    Drawable*mutate()override;
+    DrawableContainer*mutate()override;
     void clearMutated()override;
     void draw(Canvas&canvas)override;
 };

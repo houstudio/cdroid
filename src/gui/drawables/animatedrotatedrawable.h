@@ -17,7 +17,7 @@ private:
         int mFramesCount;
         AnimatedRotateState();
         AnimatedRotateState(const AnimatedRotateState& orig);
-        Drawable* newDrawable()override;
+        AnimatedRotateDrawable* newDrawable()override;
         int getChangingConfigurations()const override;
     };
     Runnable mNextFrame;

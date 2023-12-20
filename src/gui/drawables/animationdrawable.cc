@@ -118,7 +118,7 @@ void AnimationDrawable::setFrame(int frame,bool unschedule,bool animate){
     }
 }
 
-Drawable* AnimationDrawable::mutate(){
+AnimationDrawable* AnimationDrawable::mutate(){
     if(!mMutated && DrawableContainer::mutate()==this){
         mAnimationState->mutate();
         mMutated = true; 
@@ -155,7 +155,7 @@ AnimationDrawable::AnimationState::AnimationState(const AnimationState*orig,Anim
 void AnimationDrawable::AnimationState::mutate(){
 }
 
-Drawable*AnimationDrawable::AnimationState::newDrawable(){
+AnimationDrawable*AnimationDrawable::AnimationState::newDrawable(){
     return new AnimationDrawable(std::dynamic_pointer_cast<AnimationState>(shared_from_this()));
 }
 

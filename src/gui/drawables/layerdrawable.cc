@@ -136,7 +136,7 @@ LayerDrawable::LayerState::~LayerState(){
     mChildren.clear();
 }
 
-Drawable*LayerDrawable::LayerState::newDrawable(){
+LayerDrawable*LayerDrawable::LayerState::newDrawable(){
     return new LayerDrawable(shared_from_this());
 }
 
@@ -950,7 +950,7 @@ Drawable* LayerDrawable::getFirstNonNullDrawable()const{
     return nullptr;
 }
 
-Drawable*LayerDrawable::mutate(){
+LayerDrawable*LayerDrawable::mutate(){
     if (!mMutated && Drawable::mutate() == this) {
         mLayerState = createConstantState(mLayerState.get(),nullptr);
         for (auto child:mLayerState->mChildren) {

@@ -45,7 +45,7 @@ protected:
         LayerState();
         LayerState(const LayerState*state,LayerDrawable*owner);
         ~LayerState();
-        Drawable*newDrawable()override;
+        LayerDrawable*newDrawable()override;
         int getChangingConfigurations()const override;
         bool isStateful()const;
         bool hasFocusStateSpecified()const;
@@ -153,7 +153,7 @@ public:
     int  getAlpha()const override;
     void setOpacity(int opacity);
     int  getOpacity()override;
-    Drawable*mutate()override;
+    LayerDrawable*mutate()override;
     void clearMutated()override;
     bool onLayoutDirectionChanged(int layoutDirection)override;
     std::shared_ptr<ConstantState>getConstantState()override;

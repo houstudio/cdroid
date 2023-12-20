@@ -24,7 +24,7 @@ ShapeDrawable::ShapeState::ShapeState(const ShapeState&orig)
     mTintMode =orig.mTintMode;
 }
 
-Drawable* ShapeDrawable::ShapeState::newDrawable(){
+ShapeDrawable* ShapeDrawable::ShapeState::newDrawable(){
     return new ShapeDrawable(shared_from_this());
 }
 
@@ -173,7 +173,7 @@ void ShapeDrawable::updateLocalState(){
     mTintFilter = updateTintFilter(mTintFilter, mShapeState->mTint, mShapeState->mTintMode);
 }
 
-Drawable*ShapeDrawable::mutate(){
+ShapeDrawable*ShapeDrawable::mutate(){
     if (!mMutated && Drawable::mutate() == this) {
         mShapeState=std::make_shared<ShapeState>(*mShapeState);
         updateLocalState();

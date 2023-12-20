@@ -17,7 +17,7 @@ protected:
         DrawableWrapperState(const DrawableWrapperState& orig);
         void setDensity(int targetDensity);
         virtual void onDensityChanged(int sourceDensity, int targetDensity);
-        Drawable* newDrawable()override;
+        DrawableWrapper* newDrawable()override;
         int getChangingConfigurations()const override;
         virtual bool canConstantState()const;
     };
@@ -40,7 +40,7 @@ public:
     int getChangingConfigurations()const override;
     void setDrawable(Drawable* dr);
     Drawable* getDrawable();
-    Drawable*mutate()override;
+    DrawableWrapper*mutate()override;
     void clearMutated()override;
     std::shared_ptr<ConstantState>getConstantState()override;
     void invalidateDrawable(Drawable& who)override;

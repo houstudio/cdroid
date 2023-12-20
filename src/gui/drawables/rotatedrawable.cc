@@ -24,7 +24,7 @@ RotateDrawable::RotateState::RotateState(const RotateState& orig)
     mCurrentDegrees=orig.mCurrentDegrees;
 }
 
-Drawable*RotateDrawable::RotateState::newDrawable(){
+RotateDrawable*RotateDrawable::RotateState::newDrawable(){
     return new RotateDrawable(std::dynamic_pointer_cast<RotateState>(shared_from_this()));
 }
 

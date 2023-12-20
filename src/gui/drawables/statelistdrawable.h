@@ -10,7 +10,7 @@ protected:
         std::vector<std::vector<int>>mStateSets;
         StateListState(const StateListState*orig,StateListDrawable*own);
         void mutate();
-        Drawable*newDrawable()override;
+        StateListDrawable*newDrawable()override;
         int addStateSet(const std::vector<int>&stateSet, Drawable*drawable);
         int indexOfStateSet(const std::vector<int>&stateSet);
         bool hasFocusStateSpecified()const;
@@ -29,7 +29,7 @@ public:
     void addState(const std::vector<int>&stateSet,Drawable*drawable);
     bool isStateful()const override{return true;}
     bool hasFocusStateSpecified()const override;
-    Drawable*mutate()override;
+    StateListDrawable*mutate()override;
     void clearMutated()override;
     int getStateCount()const;
     const std::vector<int>&getStateSet(int idx)const;

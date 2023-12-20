@@ -26,7 +26,7 @@ protected:
         int indexOfTransition(int fromId, int toId);
         bool isTransitionReversed(int fromId, int toId);
         bool transitionHasReversibleFlag(int fromId, int toId);
-        Drawable* newDrawable()override;
+        AnimatedStateListDrawable* newDrawable()override;
         static int64_t generateTransitionKey(int fromId, int toId);
     };
     class FrameInterpolator:public TimeInterpolator {
@@ -123,7 +123,7 @@ public:
     void addTransition(int fromId, int toId,Transition* transition, bool reversible);
     bool isStateful()const override;
     void jumpToCurrentState()override;
-    Drawable* mutate()override;
+    AnimatedStateListDrawable* mutate()override;
     void clearMutated()override;
 };
 

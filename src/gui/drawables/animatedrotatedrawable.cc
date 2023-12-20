@@ -24,7 +24,7 @@ AnimatedRotateDrawable::AnimatedRotateState::AnimatedRotateState(const AnimatedR
     mFrameDuration = orig.mFrameDuration;
 }
 
-Drawable* AnimatedRotateDrawable::AnimatedRotateState::newDrawable(){
+AnimatedRotateDrawable* AnimatedRotateDrawable::AnimatedRotateState::newDrawable(){
     return new AnimatedRotateDrawable(std::dynamic_pointer_cast<AnimatedRotateState>(shared_from_this()));
 }
 int  AnimatedRotateDrawable::AnimatedRotateState::getChangingConfigurations()const{

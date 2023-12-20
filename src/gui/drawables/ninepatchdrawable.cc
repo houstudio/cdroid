@@ -146,7 +146,7 @@ int NinePatchDrawable::getIntrinsicHeight()const {
     return mBitmapHeight;
 }
 
-Drawable* NinePatchDrawable::mutate() {
+NinePatchDrawable* NinePatchDrawable::mutate() {
     if (!mMutated && Drawable::mutate() == this) {
         mNinePatchState=std::make_shared<NinePatchState>(*mNinePatchState);
         mMutated = true;
@@ -249,7 +249,7 @@ NinePatchDrawable::NinePatchState::NinePatchState(const NinePatchState&orig){
     //mThemeAttrs = orig.mThemeAttrs;
 }
 
-Drawable*NinePatchDrawable::NinePatchState::newDrawable(){
+NinePatchDrawable*NinePatchDrawable::NinePatchState::newDrawable(){
     return new NinePatchDrawable(shared_from_this());
 }
 

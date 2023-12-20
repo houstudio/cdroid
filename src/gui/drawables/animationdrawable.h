@@ -10,7 +10,7 @@ private:
         std::vector<int>mDurations;
         AnimationState(const AnimationState*,AnimationDrawable*owner);
         void mutate();
-        Drawable*newDrawable()override;
+        AnimationDrawable*newDrawable()override;
         void addFrame(Drawable*,int dur);
     };
     std::shared_ptr<AnimationState>mAnimationState;
@@ -41,7 +41,7 @@ public:
     void setOneShot(bool oneShot);
     void addFrame(Drawable*frame,int duration);
     void nextFrame(bool unschedule);
-    Drawable*mutate()override;
+    AnimationDrawable*mutate()override;
     void clearMutated()override;
     static Drawable*inflate(Context*ctx,const AttributeSet&);
 };

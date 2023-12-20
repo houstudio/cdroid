@@ -33,7 +33,7 @@ void RippleDrawable::RippleState::applyDensityScaling(int sourceDensity, int tar
     }
 }
 
-Drawable* RippleDrawable::RippleState::newDrawable() {
+RippleDrawable* RippleDrawable::RippleState::newDrawable(){
     return new RippleDrawable(std::dynamic_pointer_cast<RippleState>(shared_from_this()));//, nullptr);
 }
 

@@ -262,7 +262,7 @@ void DrawableContainer::setConstantState(std::shared_ptr<DrawableContainerState>
      }
 }
 
-Drawable*DrawableContainer::mutate(){
+DrawableContainer*DrawableContainer::mutate(){
     if (!mMutated && Drawable::mutate() == this) {
         std::shared_ptr<DrawableContainerState> clone=cloneConstantState();
         LOGV("DrawableContainerState %p cloned  from %p",clone.get(),mDrawableContainerState.get());

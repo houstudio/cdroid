@@ -12,7 +12,7 @@ private:
         LevelListState(const LevelListState&state);
         void mutate();
         int indexOfLevel(int level)const;
-        Drawable*newDrawable()override;
+        LevelListDrawable*newDrawable()override;
     };
     bool mMutated;
     std::shared_ptr<LevelListState>mLevelListState;
@@ -24,7 +24,7 @@ protected:
 public:
     LevelListDrawable();
     void addLevel(int low, int high, Drawable* drawable);
-    Drawable* mutate()override;
+    LevelListDrawable* mutate()override;
     void clearMutated()override;
     static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };

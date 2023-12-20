@@ -30,7 +30,7 @@ void InsetDrawable::InsetState::applyDensityScaling(int sourceDensity, int targe
 void InsetDrawable::InsetState::onDensityChanged(int sourceDensity, int targetDensity){
 }
 
-Drawable*InsetDrawable::InsetState::newDrawable(){
+InsetDrawable*InsetDrawable::InsetState::newDrawable(){
     return new InsetDrawable(std::dynamic_pointer_cast<InsetState>(shared_from_this()));
 }
 

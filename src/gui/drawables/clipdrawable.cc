@@ -14,7 +14,7 @@ ClipDrawable::ClipState::ClipState(const ClipState& state)
     mGravity = state.mGravity;
 }
 
-Drawable*ClipDrawable::ClipState::newDrawable(){
+ClipDrawable*ClipDrawable::ClipState::newDrawable(){
     return new ClipDrawable(std::dynamic_pointer_cast<ClipState>(shared_from_this()));
 }
 

@@ -143,7 +143,7 @@ void GradientDrawable::GradientState::applyDensityScaling(int sourceDensity, int
 }
 
 
-Drawable* GradientDrawable::GradientState::newDrawable() {
+GradientDrawable* GradientDrawable::GradientState::newDrawable() {
     return new GradientDrawable(shared_from_this());
 }
 
@@ -280,7 +280,7 @@ void GradientDrawable::updateLocalState() {
     state->computeOpacity();
 }
 
-Drawable* GradientDrawable::mutate() {
+GradientDrawable* GradientDrawable::mutate() {
     if (!mMutated && Drawable::mutate() == this) {
         mGradientState=std::make_shared<GradientState>(*mGradientState);
         updateLocalState();

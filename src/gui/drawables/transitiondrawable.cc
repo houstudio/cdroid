@@ -15,7 +15,7 @@ TransitionDrawable::TransitionState::TransitionState(TransitionState* orig, Tran
     :LayerState::LayerState(orig,owner){
 }
 
-Drawable*TransitionDrawable::TransitionState::newDrawable(){
+TransitionDrawable*TransitionDrawable::TransitionState::newDrawable(){
     return new TransitionDrawable(std::dynamic_pointer_cast<TransitionState>(shared_from_this()));
 }
 

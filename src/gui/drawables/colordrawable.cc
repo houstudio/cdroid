@@ -19,7 +19,7 @@ ColorDrawable::ColorState::ColorState(const ColorState& state){
     mTintMode=state.mTintMode;
 }
 
-Drawable* ColorDrawable::ColorState::newDrawable(){
+ColorDrawable* ColorDrawable::ColorState::newDrawable(){
     return new ColorDrawable(shared_from_this());
 }
 
@@ -48,7 +48,7 @@ std::shared_ptr<Drawable::ConstantState>ColorDrawable::getConstantState(){
     return std::dynamic_pointer_cast<ConstantState>(mColorState);
 }
 
-Drawable*ColorDrawable::mutate(){
+ColorDrawable*ColorDrawable::mutate(){
     if (!mMutated && Drawable::mutate() == this) {
         mColorState=std::make_shared<ColorState>(*mColorState);
         mMutated = true;
