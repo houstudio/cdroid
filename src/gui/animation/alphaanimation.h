@@ -16,7 +16,7 @@ public:
     bool willChangeTransformationMatrix()const override;
     bool willChangeBounds()const override;
     bool hasAlpha() override;
-    Animation*clone()override;
+    AlphaAnimation*clone()const override;
 };
 }
 #endif//__ALPHA_ANIMAION_H__

@@ -47,7 +47,7 @@ AnimationSet::~AnimationSet(){
     }
 }
 
-Animation* AnimationSet::clone(){
+AnimationSet* AnimationSet::clone()const{
     AnimationSet* animation =new AnimationSet(false);// (AnimationSet) super.clone();
     for (auto a:mAnimations){
         animation->mAnimations.push_back(a->clone());

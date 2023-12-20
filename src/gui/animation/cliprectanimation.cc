@@ -44,7 +44,7 @@ ClipRectAnimation::ClipRectAnimation(int fromL, int fromT, int fromR, int fromB,
 : ClipRectAnimation(Rect::MakeLTRB(fromL, fromT, fromR, fromB),Rect::MakeLTRB(toL, toT, toR, toB)){
 }
 
-Animation* ClipRectAnimation::clone(){
+ClipRectAnimation* ClipRectAnimation::clone()const{
     return new ClipRectAnimation(*this);
 }
 

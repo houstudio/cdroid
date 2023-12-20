@@ -26,7 +26,7 @@ public:
     TranslateAnimation(int fromXType, float fromXValue, int toXType, float toXValue,
             int fromYType, float fromYValue, int toYType, float toYValue);
     void initialize(int width, int height, int parentWidth, int parentHeight)override;
-    Animation*clone()override;
+    TranslateAnimation*clone()const override;
 };
 
 class TranslateXAnimation :public TranslateAnimation{

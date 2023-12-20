@@ -78,7 +78,7 @@ public:
     void detach();
     bool isInitialized()const;
     virtual void initialize(int width, int height, int parentWidth, int parentHeight);
-    virtual Animation* clone();
+    virtual Animation* clone()const;
     //void setListenerHandler(Handler handler);
     virtual void setInterpolator(Context* context,const std::string& resID) ;
     virtual void setInterpolator(Interpolator* i);

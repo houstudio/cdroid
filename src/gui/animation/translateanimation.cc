@@ -69,7 +69,7 @@ void TranslateAnimation::initialize(int width, int height, int parentWidth, int 
     mToYDelta = resolveSize(mToYType, mToYValue, height, parentHeight);
 }
 
-Animation*TranslateAnimation::clone(){
+TranslateAnimation*TranslateAnimation::clone()const{
     TranslateAnimation*anim=new TranslateAnimation(*this);
     return anim;     
 }

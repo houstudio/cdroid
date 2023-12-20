@@ -42,7 +42,7 @@ public:
     ScaleAnimation(float fromX, float toX, float fromY, float toY,
             int pivotXType, float pivotXValue, int pivotYType, float pivotYValue);
     void initialize(int width, int height, int parentWidth, int parentHeight)override;
-    Animation*clone()override;
+    ScaleAnimation*clone()const override;
 };
 
 }

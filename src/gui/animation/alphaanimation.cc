@@ -34,7 +34,7 @@ bool AlphaAnimation::hasAlpha(){
     return true;
 }
 
-Animation*AlphaAnimation::clone(){
+AlphaAnimation*AlphaAnimation::clone()const{
     return new AlphaAnimation(*this);
 }
 

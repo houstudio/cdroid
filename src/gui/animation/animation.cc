@@ -69,7 +69,7 @@ float Animation::getPivotType(const std::string&v,int &type){
     return ret;
 }
 
-Animation* Animation::clone(){
+Animation* Animation::clone()const{
     Animation* animation = new Animation(*this);
     //animation->mPreviousRegion = new RectF();
     //animation->mRegion = new RectF();

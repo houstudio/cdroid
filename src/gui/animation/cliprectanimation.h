@@ -36,7 +36,7 @@ public:
             int toL, int toT, int toR, int toB);
     bool willChangeTransformationMatrix()const override;
     void initialize(int width, int height, int parentWidth, int parentHeight)override;
-    Animation*clone()override;
+    ClipRectAnimation*clone()const override;
 };
 
 }//endif namespace

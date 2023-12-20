@@ -19,7 +19,7 @@ public:
     AnimationSet(Context* context,const AttributeSet& attrs);
     AnimationSet(bool shareInterpolator);
     ~AnimationSet()override;
-    Animation* clone()override;
+    AnimationSet* clone()const override;
     void setFillAfter(bool fillAfter);
     void setFillBefore(bool fillBefore);
     void setRepeatMode(int repeatMode);

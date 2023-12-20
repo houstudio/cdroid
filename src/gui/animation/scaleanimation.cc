@@ -64,7 +64,7 @@ ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY,
     initializePivotPoint();
 }
 
-Animation* ScaleAnimation::clone(){
+ScaleAnimation* ScaleAnimation::clone()const{
     return new ScaleAnimation(*this);
 }
 

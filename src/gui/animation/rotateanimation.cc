@@ -51,7 +51,7 @@ RotateAnimation::RotateAnimation(float fromDegrees, float toDegrees, int pivotXT
     initializePivotPoint();
 }
 
-Animation*RotateAnimation::clone(){
+RotateAnimation*RotateAnimation::clone()const{
     return new RotateAnimation(*this);
 }
 
