@@ -9,12 +9,14 @@ private:
     int mFlags = 0;
     bool mDirty;
     bool mHasAlpha;
-    std::vector<Animation*> mAnimations ;;
+    std::vector<Animation*> mAnimations ;
     long mLastEnd;
     std::vector<long>mStoredOffsets;
  
     void setFlag(int mask, bool value);
     void init();
+protected:
+    AnimationSet(const AnimationSet&);
 public:
     AnimationSet(Context* context,const AttributeSet& attrs);
     AnimationSet(bool shareInterpolator);

@@ -11,6 +11,13 @@ static constexpr int PROPERTY_DURATION_MASK           = 0x20;
 static constexpr int PROPERTY_MORPH_MATRIX_MASK       = 0x40;
 static constexpr int PROPERTY_CHANGE_BOUNDS_MASK      = 0x80;
 
+AnimationSet::AnimationSet(const AnimationSet&o)
+    :Animation(o){
+    init();
+    mFlags = o.mFlags;
+    mHasAlpha = o.mHasAlpha;
+}
+
 AnimationSet::AnimationSet(Context* context,const AttributeSet& attrs)
  :Animation(context, attrs){
 
@@ -48,7 +55,7 @@ AnimationSet::~AnimationSet(){
 }
 
 AnimationSet* AnimationSet::clone()const{
-    AnimationSet* animation =new AnimationSet(false);// (AnimationSet) super.clone();
+    AnimationSet* animation =new AnimationSet(*this);
     for (auto a:mAnimations){
         animation->mAnimations.push_back(a->clone());
     }
@@ -65,6 +72,7 @@ void AnimationSet::setFlag(int mask, bool value){
 
 void AnimationSet::init(){
     mStartTime = 0;
+    mFlags = 0;
 }
 
 void AnimationSet::setFillAfter(bool fillAfter){
@@ -108,14 +116,12 @@ void AnimationSet::setDuration(long durationMillis){
 
 void AnimationSet::addAnimation(Animation* a){
     mAnimations.push_back(a);
-
-    bool noMatrix = (mFlags & PROPERTY_MORPH_MATRIX_MASK) == 0;
+    const bool noMatrix = (mFlags & PROPERTY_MORPH_MATRIX_MASK) == 0;
     if (noMatrix && a->willChangeTransformationMatrix()) {
         mFlags |= PROPERTY_MORPH_MATRIX_MASK;
     }
 
-    bool changeBounds = (mFlags & PROPERTY_CHANGE_BOUNDS_MASK) == 0;
-
+    const bool changeBounds = (mFlags & PROPERTY_CHANGE_BOUNDS_MASK) == 0;
 
     if (changeBounds && a->willChangeBounds()) {
         mFlags |= PROPERTY_CHANGE_BOUNDS_MASK;
@@ -220,7 +226,6 @@ bool AnimationSet::getTransformation(long currentTime, Transformation& t){
         temp.clear();
         more = a->getTransformation(currentTime, temp, getScaleFactor()) || more;
         t.compose(temp);
-
         started = started || a->hasStarted();
         ended = a->hasEnded() && ended;
     }

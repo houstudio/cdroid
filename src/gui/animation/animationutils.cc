@@ -45,6 +45,7 @@ static void endAnimation(void *userData, const XML_Char *name){
     ANIMPARSERDATA*pd = (ANIMPARSERDATA*)userData;
     Animation*last = pd->animations.back();
     pd->animations.pop_back();
+    pd->animation = last;
     if( pd->animations.size()){
         AnimationSet*aset=(AnimationSet*)pd->animations.back();
         aset->addAnimation(last);

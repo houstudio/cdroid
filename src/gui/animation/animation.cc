@@ -189,7 +189,7 @@ void Animation::start() {
 }
 
 void Animation::startNow() {
-    setStartTime(SystemClock::uptimeMillis());//AnimationUtils.currentAnimationTimeMillis());
+    setStartTime(AnimationUtils::currentAnimationTimeMillis());
 }
 
 void Animation::setRepeatMode(int repeatMode) {
