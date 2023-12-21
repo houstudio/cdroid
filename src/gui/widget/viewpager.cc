@@ -64,6 +64,7 @@ void ViewPager::initViewPager(){
     mExpectedAdapterCount=0;
     mTopPageBounds   = 0;
     mBottomPageBounds= 0;
+    mPageTransformerLayerType = View::LAYER_TYPE_NONE;
     mLastMotionX = mLastMotionY = 0;
     mInitialMotionX = mInitialMotionY = 0;
     ViewConfiguration configuration = ViewConfiguration::get(context);
@@ -86,6 +87,10 @@ void ViewPager::initViewPager(){
     mCloseEnough   = (int) (CLOSE_ENOUGH * density);
     mDefaultGutterSize = (int) (DEFAULT_GUTTER_SIZE * density);
     mGutterSize = 0;
+    mEndScrollRunnable=[this](){
+        setScrollState(SCROLL_STATE_IDLE);
+        populate();	
+    };
 }
 
 ViewPager::ItemInfo::ItemInfo(){
@@ -96,6 +101,15 @@ ViewPager::ItemInfo::ItemInfo(){
     offset=.0f;
 }
 
+void ViewPager::onDetachedFromWindow() {
+    removeCallbacks(mEndScrollRunnable);
+    // To be on the safe side, abort the scroller
+    if (mScroller && (mScroller->isFinished()==false)) {
+        mScroller->abortAnimation();
+    }
+    ViewGroup::onDetachedFromWindow();
+}
+
 void ViewPager::setScrollState(int newState){
     if (mScrollState == newState) {
         return;
@@ -104,7 +118,7 @@ void ViewPager::setScrollState(int newState){
     mScrollState = newState;
     if (mPageTransformer != nullptr) {
         // PageTransformers can do complex things that benefit from hardware layers.
-        //enableLayers(newState != SCROLL_STATE_IDLE);
+        enableLayers(newState != SCROLL_STATE_IDLE);
     }
     dispatchOnScrollStateChanged(newState);
 }
@@ -351,10 +365,10 @@ int ViewPager::getPageMargin()const{
 }
 
 void ViewPager::setPageMargin(int marginPixels){
-    int oldMargin = mPageMargin;
+    const int oldMargin = mPageMargin;
     mPageMargin = marginPixels;
 
-    int width = getWidth();
+    const int width = getWidth();
     recomputeScrollPosition(width, width, marginPixels, oldMargin);
     requestLayout();
 }
@@ -1204,12 +1218,10 @@ void ViewPager::completeScroll(bool postEvents){
         }
     }
     if (needPopulate) {
-        Runnable endScrollRunnable;
-        endScrollRunnable=[this](){setScrollState(SCROLL_STATE_IDLE);populate();};
         if (postEvents) 
-            postOnAnimation(endScrollRunnable);
+            postOnAnimation(mEndScrollRunnable);
         else
-            endScrollRunnable();
+            mEndScrollRunnable();
     }
 }
 
@@ -1217,6 +1229,13 @@ bool ViewPager::isGutterDrag(float x, float dx){
     return (x < mGutterSize && dx > 0) || (x > getWidth() - mGutterSize && dx < 0);
 }
 
+void ViewPager::enableLayers(bool enable) {
+    const int childCount = getChildCount();
+    for (int i = 0; i < childCount; i++) {
+        const int layerType = enable ? mPageTransformerLayerType : View::LAYER_TYPE_NONE;
+        getChildAt(i)->setLayerType(layerType);//, nullptr);
+    }
+}
 
 bool ViewPager::onInterceptTouchEvent(MotionEvent& ev){
     int action = ev.getAction() & MotionEvent::ACTION_MASK;

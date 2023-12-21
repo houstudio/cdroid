@@ -81,8 +81,8 @@ protected:
     };
     int mCurItem;
 private:
-
     Interpolator* mInterpolator;
+    Runnable mEndScrollRunnable;
     int mExpectedAdapterCount;
     std::vector<ItemInfo*>mItems ;
     ItemInfo mTempItem;
@@ -104,6 +104,7 @@ private:
     float mLastOffset ;//Float.MAX_VALUE;
     int mChildWidthMeasureSpec;
     int mChildHeightMeasureSpec;
+    int mPageTransformerLayerType;
     bool mInLayout;
     std::vector<OnPageChangeListener> mOnPageChangeListeners;
     OnPageChangeListener mInternalPageChangeListener;
@@ -175,12 +176,14 @@ private:
     void dispatchOnPageScrolled(int position, float offset, int offsetPixels);
     void dispatchOnPageSelected(int position);
     void dispatchOnScrollStateChanged(int state);
+    void enableLayers(bool enable);
 protected:
     ItemInfo* infoForChild(View* child);
     ItemInfo* infoForAnyChild(View* child);
     ItemInfo* infoForPosition(int position)const;
     void initViewPager();
     int getChildDrawingOrder(int childCount, int i)override;
+    void onDetachedFromWindow()override;
     void setScrollState(int newState);
     void setCurrentItemInternal(int item, bool smoothScroll, bool always,int velocity=0);
     void drawableStateChanged()override;
