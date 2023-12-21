@@ -59,7 +59,7 @@ Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resi
     void*parseParams[2];
     pd.context = context;
     pd.animation=nullptr;
-    XML_Parser parser = XML_ParserCreate(nullptr);
+    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
     XML_SetElementHandler(parser, startAnimation, endAnimation);
     XML_SetUserData(parser,(void*)&pd);
     std::unique_ptr<std::istream> stream = context->getInputStream(resid,&pd.package);
