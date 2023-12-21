@@ -170,8 +170,11 @@ void ViewGroup::initGroup(){
     mPersistentDrawingCache = PERSISTENT_SCROLLING_CACHE;
     setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
     mLayoutTransitionListener.startTransition=[this](LayoutTransition&transition,ViewGroup*container,View*view,int transitionType){
+         // We only care about disappearing items, since we need special logic to keep
+         // those items visible after they've been 'removed'
          if(transitionType==LayoutTransition::DISAPPEARING)
              startViewTransition(view);
+         LOGD("%p:%d,startViewTransition(%p:%d)transitionType=%d",this,mID,view,view->getId(),transitionType);
     };
     mLayoutTransitionListener.endTransition=[this](LayoutTransition&transition,ViewGroup*container,View*view,int transitionType){
          if(mLayoutCalledWhileSuppressed && !transition.isChangingLayout()){
@@ -678,7 +681,7 @@ bool ViewGroup::dispatchTransformedGenericPointerEvent(MotionEvent& event, View*
 }
 
 bool ViewGroup::dispatchUnhandledMove(View* focused, int direction){
-    return mFocused &&  mFocused->dispatchUnhandledMove(focused, direction);
+    return mFocused && mFocused->dispatchUnhandledMove(focused, direction);
 }
 
 void ViewGroup::childHasTransientStateChanged(View* child, bool childHasTransientState){
@@ -1615,6 +1618,7 @@ void ViewGroup::removeViewInternal(int index, View* view){
     if (mTransition)mTransition->removeChild(this, view);
 
     bool _clearChildFocus = false;
+    if(view==nullptr) return ;
     if (view == mFocused) {
         view->unFocus(nullptr);
         _clearChildFocus = true;
@@ -2487,6 +2491,11 @@ LayoutAnimationController*ViewGroup::getLayoutAnimation() {
 
 void ViewGroup::setLayoutAnimationListener(Animation::AnimationListener animationListener){
     mAnimationListener = animationListener;
+}
+
+void ViewGroup::requestTransitionStart(LayoutTransition* transition){
+    ViewGroup*root = getRootView();
+    if(root)root->requestTransitionStart(transition);
 }
 
 Animation::AnimationListener ViewGroup::getLayoutAnimationListener(){

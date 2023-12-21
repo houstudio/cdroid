@@ -792,7 +792,7 @@ void AnimatorSet::addAnimationCallback(long delay) {
     AnimationHandler::getInstance().addAnimationFrameCallback(this, delay);
 }
 
-Animator*AnimatorSet::clone(){
+Animator*AnimatorSet::clone()const{
     return nullptr;
 }
 

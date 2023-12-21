@@ -520,7 +520,7 @@ void View::initView(){
 
 View::~View(){
     mViewCount --;
-    LOGV_IF(View::VIEW_DEBUG,"mViewCount=%d",mViewCount);
+    LOGD_IF(View::VIEW_DEBUG,"mViewCount=%d destroy %p:%d",mViewCount,this,mID);
     if(mParent)
         mParent->removeViewInternal(this);
     if(isAttachedToWindow())onDetachedFromWindow();
@@ -568,6 +568,11 @@ int View::dipsToPixels(int dips)const{
 
 View* View::findViewById(int id){
     if(id==mID)return (View*)this;
+    return nullptr;
+}
+
+View* View::findViewTraversal(int id){
+    if(id==mID)return this;
     return nullptr;
 }
 

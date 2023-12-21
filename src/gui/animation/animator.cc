@@ -3,7 +3,7 @@
 namespace cdroid{
 Animator::~Animator(){
 }
-Animator*Animator::clone(){
+Animator*Animator::clone()const{
     return nullptr;
 }
 

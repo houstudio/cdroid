@@ -38,6 +38,7 @@ private:
     bool mSuppressSelfPulseRequested = false;
     float mDurationScale = -1.f;
     TimeInterpolator* mInterpolator = nullptr;
+    static TimeInterpolator* sDefaultInterpolator;
     std::vector<AnimatorUpdateListener> mUpdateListeners;
 protected:
     long mStartTime = -1;
@@ -71,6 +72,7 @@ protected:
     bool pulseAnimationFrame(long frameTime);
 public:
     ValueAnimator();
+    ValueAnimator(const ValueAnimator&);
     ~ValueAnimator()override;
     static void setDurationScale(float durationScale);
     static float getDurationScale();
@@ -122,6 +124,7 @@ public:
     void commitAnimationFrame(long frameTime)override;
     bool doAnimationFrame(long frameTime)override;
     float getAnimatedFraction();
+    ValueAnimator* clone()const override;
     AnimationHandler& getAnimationHandler()const;
 };
 

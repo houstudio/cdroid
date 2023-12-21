@@ -6,6 +6,8 @@
 
 namespace cdroid{
 
+TimeInterpolator* ValueAnimator::sDefaultInterpolator = new AccelerateDecelerateInterpolator();
+
 ValueAnimator::ValueAnimator(){
     mReversing = false;
     mRepeatMode = RESTART;
@@ -27,7 +29,38 @@ ValueAnimator::ValueAnimator(){
     mStartDelay = 0;
     mRepeatCount = 0;
     mDurationScale = -1.f;
-    mInterpolator=new AccelerateDecelerateInterpolator();
+    mInterpolator = sDefaultInterpolator;//new AccelerateDecelerateInterpolator();
+}
+
+ValueAnimator::ValueAnimator(const ValueAnimator&o){
+    mSeekFraction = -1;
+    mReversing = false;
+    mInitialized = false;
+    mStarted = false;
+    mRunning = false;
+    mPaused = false;
+    mResumed = false;
+    mStartListenersCalled = false;
+    mStartTime = -1;
+    mStartTimeCommitted = false;
+    mAnimationEndRequested = false;
+    mPauseTime = -1;
+    mLastFrameTime = -1;
+    mFirstFrameTime = -1;
+    mOverallFraction = 0;
+    mCurrentFraction = 0;
+    mSelfPulse = true;
+    mSuppressSelfPulseRequested = false;
+    mInterpolator = sDefaultInterpolator;
+    auto& oldValues = o.mValues;
+    if (oldValues.size()) {
+        const int numValues = oldValues.size();
+        for (int i = 0; i < numValues; ++i) {
+            PropertyValuesHolder* newValuesHolder = new PropertyValuesHolder(*oldValues[i]);//.clone();
+            mValues.push_back(newValuesHolder);
+            mValuesMap.insert({newValuesHolder->getPropertyName(), newValuesHolder});
+        }
+    }
 }
 
 ValueAnimator::~ValueAnimator(){
@@ -35,7 +68,7 @@ ValueAnimator::~ValueAnimator(){
         delete v;
     mValues.clear();
     removeAnimationCallback();
-    delete mInterpolator;
+    if(mInterpolator!=sDefaultInterpolator)delete mInterpolator;
 }
 
 void ValueAnimator::setDurationScale(float durationScale) {
@@ -303,7 +336,8 @@ void ValueAnimator::removeAllUpdateListeners(){
 }
 
 void ValueAnimator::setInterpolator(TimeInterpolator* value){
-    delete mInterpolator;
+    if(mInterpolator!=sDefaultInterpolator)
+        delete mInterpolator;
     if(value)
         mInterpolator = value;
     else
@@ -397,7 +431,8 @@ void ValueAnimator::cancel(){
             notifyStartListeners();
         }
         for (AnimatorListener ls : mListeners) {
-            if(ls.onAnimationCancel)ls.onAnimationCancel(*this);
+            if(ls.onAnimationCancel)
+            ls.onAnimationCancel(*this);
         }
     }
     endAnimation();
@@ -685,6 +720,46 @@ void ValueAnimator::animateValue(float fraction) {
     for (auto l:mUpdateListeners) {
         l(*this);
     }
+}
+
+ValueAnimator*ValueAnimator::clone()const {
+    return new ValueAnimator(*this);// anim = (ValueAnimator*) Animator::clone();
+#if 0
+    if (mUpdateListeners != null) {
+        anim->mUpdateListeners = new ArrayList<AnimatorUpdateListener>(mUpdateListeners);
+    }
+    anim->mSeekFraction = -1;
+    anim->mReversing = false;
+    anim->mInitialized = false;
+    anim->mStarted = false;
+    anim->mRunning = false;
+    anim->mPaused = false;
+    anim->mResumed = false;
+    anim->mStartListenersCalled = false;
+    anim->mStartTime = -1;
+    anim->mStartTimeCommitted = false;
+    anim->mAnimationEndRequested = false;
+    anim->mPauseTime = -1;
+    anim->mLastFrameTime = -1;
+    anim->mFirstFrameTime = -1;
+    anim->mOverallFraction = 0;
+    anim->mCurrentFraction = 0;
+    anim->mSelfPulse = true;
+    anim->mSuppressSelfPulseRequested = false;
+
+    PropertyValuesHolder[] oldValues = mValues;
+    if (oldValues != null) {
+        int numValues = oldValues.length;
+        anim.mValues = new PropertyValuesHolder[numValues];
+        anim.mValuesMap = new HashMap<String, PropertyValuesHolder>(numValues);
+        for (int i = 0; i < numValues; ++i) {
+            PropertyValuesHolder newValuesHolder = oldValues[i].clone();
+            anim.mValues[i] = newValuesHolder;
+            anim.mValuesMap.put(newValuesHolder.getPropertyName(), newValuesHolder);
+        }
+    }
+    return anim;
+#endif
 }
 
 AnimationHandler& ValueAnimator::getAnimationHandler()const{

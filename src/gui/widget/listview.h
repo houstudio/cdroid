@@ -122,6 +122,9 @@ protected:
     void resetList()override;
     void onDetachedFromWindow()override;
     void layoutChildren()override;
+    void onFinishInflate()override;
+    View* findViewTraversal(int id)override;
+    View* findViewInHeadersOrFooters(const std::vector<FixedViewInfo*>& where, int id);
     View*findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)override;
     View* findViewByPredicateInHeadersOrFooters(const std::vector<FixedViewInfo*>&where,
             std::function<bool(const View*)>predicate, View* childToSkip);

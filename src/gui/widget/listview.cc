@@ -2727,6 +2727,50 @@ void ListView::onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocu
     }
 }
 
+void ListView::onFinishInflate() {
+    AbsListView::onFinishInflate();
+
+    const int count = getChildCount();
+    if (count > 0) {
+        for (int i = 0; i < count; ++i) {
+            addHeaderView(getChildAt(i));
+        }
+        removeAllViews();
+    }
+}
+
+View* ListView::findViewTraversal(int id) {
+    // First look in our children, then in any header and footer views that
+    // may be scrolled off.
+    View* v = AbsListView::findViewTraversal(id);
+    if (v == nullptr) {
+        v = findViewInHeadersOrFooters(mHeaderViewInfos, id);
+        if (v != nullptr) {
+            return v;
+        }
+        v = findViewInHeadersOrFooters(mFooterViewInfos, id);
+        if (v != nullptr) {
+            return v;
+        }
+    }
+    return v;
+}
+
+View* ListView::findViewInHeadersOrFooters(const std::vector<FixedViewInfo*>& where, int id) {
+    // Look in the passed in list of headers or footers for the view.
+    const int len = where.size();
+    for (int i = 0; i < len; i++) {
+        View*v = where.at(i)->view;
+        //if (!v.isRootNamespace()) {
+            v = v->findViewById(id);
+            if (v != nullptr) {
+                return v;
+            }
+        //}
+    }
+    return nullptr;
+}
+
 View* ListView::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip) {
     View* v = AbsListView::findViewByPredicateTraversal(predicate, childToSkip);
     if (v == nullptr) {

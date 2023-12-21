@@ -42,7 +42,7 @@ namespace cdroid{
 
 class ViewGroup;
 class ViewOverlay;
-
+class Window;
 typedef std::string Parcelable;
 
 class View:public Drawable::Callback,public KeyEvent::Callback{
@@ -125,6 +125,12 @@ protected:
         PFLAG2_TEXT_ALIGNMENT_RESOLVED      = 0x00000008 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT ,
         PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT ,
         PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT = TEXT_ALIGNMENT_RESOLVED_DEFAULT << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT ,
+        PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT =20,
+        IMPORTANT_FOR_ACCESSIBILITY_AUTO = 0x00000000,
+        IMPORTANT_FOR_ACCESSIBILITY_YES = 0x00000001,
+        IMPORTANT_FOR_ACCESSIBILITY_NO = 0x00000002,
+        IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS = 0x00000004,
+        IMPORTANT_FOR_ACCESSIBILITY_DEFAULT = IMPORTANT_FOR_ACCESSIBILITY_AUTO,
         PFLAG2_ACCESSIBILITY_FOCUSED   = 0x04000000 ,
         PFLAG2_VIEW_QUICK_REJECTED     = 0x10000000 ,
         PFLAG2_PADDING_RESOLVED        = 0x20000000 ,
@@ -136,7 +142,10 @@ protected:
         PFLAG2_LAYOUT_DIRECTION_RESOLVED     = 8 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT ,
         PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK= 0x0000000C<< PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT ,
         ALL_RTL_PROPERTIES_RESOLVED = PFLAG2_LAYOUT_DIRECTION_RESOLVED |  PFLAG2_TEXT_DIRECTION_RESOLVED 
-               | PFLAG2_TEXT_ALIGNMENT_RESOLVED | PFLAG2_PADDING_RESOLVED | PFLAG2_DRAWABLE_RESOLVED
+               | PFLAG2_TEXT_ALIGNMENT_RESOLVED | PFLAG2_PADDING_RESOLVED | PFLAG2_DRAWABLE_RESOLVED,
+        PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_MASK = (IMPORTANT_FOR_ACCESSIBILITY_AUTO
+               | IMPORTANT_FOR_ACCESSIBILITY_YES | IMPORTANT_FOR_ACCESSIBILITY_NO
+               | IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS) << PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT
     };
     enum PFLAGS3{//FLAGS in mPrivateFlags3
         PFLAG3_VIEW_IS_ANIMATING_TRANSFORM = 0x0001 ,
@@ -384,6 +393,7 @@ public:
     }OnAttachStateChangeListener;
 private:
     friend ViewGroup;
+    friend Window;
     friend ViewPropertyAnimator;
     int mMinWidth;
     int mMinHeight;
@@ -853,7 +863,7 @@ public:
 
     void  setRevealOnFocusHint(bool revealOnFocus);
     bool  getRevealOnFocusHint()const;
-    bool  isAttachedToWindow()const;
+    virtual bool isAttachedToWindow()const;
     bool  isLaidOut()const;
     bool  willNotDraw()const;
     void  setWillNotDraw(bool willNotDraw);
@@ -1043,6 +1053,7 @@ public:
 
     virtual View* findViewById(int id);
     virtual View* findViewWithTag(void*);
+    virtual View* findViewTraversal(int);
     virtual View* findViewByPredicateTraversal(std::function<bool(const View*)>,View* childToSkip);
     virtual View* findViewWithTagTraversal(void* tag);
     View* findViewByPredicate(std::function<bool(const View*)>);

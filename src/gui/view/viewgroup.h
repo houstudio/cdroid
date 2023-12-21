@@ -208,7 +208,7 @@ protected:
     void attachViewToParent(View* child, int index, LayoutParams* params);
     void dispatchViewAdded(View* child);
     void dispatchViewRemoved(View* child);
-    void removeDetachedView(View* child, bool animate);
+    virtual void removeDetachedView(View* child, bool animate);
     void detachViewsFromParent(int start, int count);
     void detachViewFromParent(View* child);
     void detachAllViewsFromParent();
@@ -274,8 +274,8 @@ public:
     virtual void bringChildToFront(View*);
     bool getClipChildren()const;
     void setClipChildren(bool clipChildren);
-    bool getClipToPadding()const;
-    void setClipToPadding(bool clipToPadding);
+    virtual bool getClipToPadding()const;
+    virtual void setClipToPadding(bool clipToPadding);
     void dispatchStartTemporaryDetach() override;
     void dispatchFinishTemporaryDetach()override;
     void dispatchSetSelected(bool selected)override;
@@ -344,6 +344,7 @@ public:
     void setLayoutAnimation(LayoutAnimationController*);
     LayoutAnimationController* getLayoutAnimation();
     void setLayoutAnimationListener(Animation::AnimationListener animationListener);
+    virtual void requestTransitionStart(LayoutTransition* transition);
     Animation::AnimationListener getLayoutAnimationListener();
     void setLayoutTransition(LayoutTransition*);
     LayoutTransition*getLayoutTransition()const; 

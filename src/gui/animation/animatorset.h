@@ -167,7 +167,7 @@ public:
     bool doAnimationFrame(long frameTime)override;
     void commitAnimationFrame(long frameTime)override;
     bool pulseAnimationFrame(long frameTime)override;
-    Animator* clone()override;
+    Animator* clone()const override;
     bool canReverse()override;
     void reverse()override;
     bool shouldPlayTogether();

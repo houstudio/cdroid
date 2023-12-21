@@ -73,7 +73,7 @@ public:
     virtual void pause();
     virtual void resume();
     bool isPaused();
-    virtual Animator*clone();
+    virtual Animator*clone()const;
     virtual long getStartDelay()=0;
     virtual void setStartDelay(long startDelay)=0;
     virtual Animator& setDuration(long duration)=0;
