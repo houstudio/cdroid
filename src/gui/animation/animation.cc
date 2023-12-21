@@ -66,7 +66,7 @@ float Animation::getPivotType(const std::string&v,int &type){
     if(v.find("%p")!=std::string::npos)type = RELATIVE_TO_PARENT;
     else if(v.find("%")!=std::string::npos)type= RELATIVE_TO_SELF;
     else type = ABSOLUTE;
-    return ret;
+    return (type==ABSOLUTE)?ret:(ret/100.f);
 }
 
 Animation* Animation::clone()const{
