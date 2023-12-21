@@ -47,18 +47,18 @@ void ViewPager::initViewPager(){
     mInterpolator=new VPInterpolator();
     mVelocityTracker = nullptr;
     mScroller = new Scroller(context, mInterpolator);
+    mFakeDragging = false;
     mIsScrollStarted = false;
     mPopulatePending = false;
     mIsBeingDragged  = false;
     mIsUnableToDrag  = false;
+    mScrollingCacheEnabled = false;
     mScrollState = SCROLL_STATE_IDLE;
     mAdapter  = nullptr;
     mObserver = nullptr;
     mInLayout = false;
     mFirstLayout = true;
     mPageTransformer = nullptr;
-    mFakeDragging = false;
-    mScrollingCacheEnabled = false;
     mDrawingOrder = DRAW_ORDER_DEFAULT;
     mActivePointerId =INVALID_POINTER;
     mExpectedAdapterCount=0;
@@ -1324,6 +1324,12 @@ bool ViewPager::onInterceptTouchEvent(MotionEvent& ev){
 }
 
 bool ViewPager::onTouchEvent(MotionEvent& ev){
+    if (mFakeDragging) {
+        // A fake drag is in progress already, ignore this real one
+        // but still eat the touch events.
+        // (It is likely that the user is multi-touching the screen.)
+        return true;
+    }
     if (ev.getAction() == MotionEvent::ACTION_DOWN && ev.getEdgeFlags() != 0) {
         // Don't handle edge touches immediately -- they may actually belong to one of our
         // descendants.
@@ -1657,6 +1663,97 @@ void ViewPager::onDraw(Canvas& canvas) {
             }
         }
     }
+}
+
+bool ViewPager::beginFakeDrag(){
+    if (mIsBeingDragged) {
+        return false;
+    }
+    mFakeDragging = true;
+    setScrollState(SCROLL_STATE_DRAGGING);
+    mInitialMotionX = mLastMotionX = 0;
+    if (mVelocityTracker == nullptr) {
+        mVelocityTracker = VelocityTracker::obtain();
+    } else {
+        mVelocityTracker->clear();
+    }
+    const long time = SystemClock::uptimeMillis();
+    MotionEvent* ev = MotionEvent::obtain(time, time, MotionEvent::ACTION_DOWN, 0, 0, 0);
+    mVelocityTracker->addMovement(*ev);
+    ev->recycle();
+    mFakeDragBeginTime = time;
+    return true;
+}
+
+void ViewPager::endFakeDrag(){
+    LOGE_IF(!mFakeDragging,"No fake drag in progress. Call beginFakeDrag first.");
+
+    if (mAdapter != nullptr) {
+        mVelocityTracker->computeCurrentVelocity(1000, mMaximumVelocity);
+        int initialVelocity = (int) mVelocityTracker->getXVelocity(mActivePointerId);
+        mPopulatePending = true;
+        const int width = getClientWidth();
+        const int scrollX = getScrollX();
+        const ItemInfo* ii = infoForCurrentScrollPosition();
+        const int currentPage = ii->position;
+        const float pageOffset = (((float) scrollX / width) - ii->offset) / ii->widthFactor;
+        const int totalDelta = (int) (mLastMotionX - mInitialMotionX);
+        int nextPage = determineTargetPage(currentPage, pageOffset, initialVelocity,
+                totalDelta);
+        setCurrentItemInternal(nextPage, true, true, initialVelocity);
+    }
+    endDrag();
+
+    mFakeDragging = false;
+}
+
+void ViewPager::fakeDragBy(float xOffset){
+    if (!mFakeDragging) {
+        LOGE("No fake drag in progress. Call beginFakeDrag first.");
+    }
+
+    if (mAdapter == nullptr)  {
+        return;
+    }
+
+    mLastMotionX += xOffset;
+
+    float oldScrollX = getScrollX();
+    float scrollX = oldScrollX - xOffset;
+    const int width = getClientWidth();
+
+    float leftBound = width * mFirstOffset;
+    float rightBound = width * mLastOffset;
+
+    const ItemInfo* firstItem = mItems.at(0);
+    const ItemInfo* lastItem = mItems.at(mItems.size() - 1);
+    if (firstItem->position != 0) {
+        leftBound = firstItem->offset * width;
+    }
+    if (lastItem->position != mAdapter->getCount() - 1) {
+        rightBound = lastItem->offset * width;
+    }
+
+    if (scrollX < leftBound) {
+        scrollX = leftBound;
+    } else if (scrollX > rightBound) {
+        scrollX = rightBound;
+    }
+    // Don't lose the rounded component
+    mLastMotionX += scrollX - (int) scrollX;
+    scrollTo((int) scrollX, getScrollY());
+    pageScrolled((int) scrollX);
+
+    // Synthesize an event for the VelocityTracker.
+    const long time = SystemClock::uptimeMillis();
+    MotionEvent* ev = MotionEvent::obtain(mFakeDragBeginTime, time, MotionEvent::ACTION_MOVE,
+            mLastMotionX, 0, 0);
+    mVelocityTracker->addMovement(*ev);
+    ev->recycle();
+}
+
+bool ViewPager::isFakeDragging()const{
+    return mFakeDragging;
 }
 
 void ViewPager::onSecondaryPointerUp(MotionEvent&ev){

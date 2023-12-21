@@ -240,6 +240,11 @@ public:
     void addTouchables(std::vector<View*>& views)override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs);
     void onRtlPropertiesChanged(int layoutDirection)override;
+
+    bool beginFakeDrag();
+    void endFakeDrag();
+    void fakeDragBy(float xOffset);
+    bool isFakeDragging()const;
 };
 
 }//endof namespace
