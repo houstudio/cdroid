@@ -21,8 +21,9 @@ ScaleAnimation::ScaleAnimation(Context* context,const AttributeSet& attrs)
     mToX  = attrs.getFloat("toXScale",.0f);
     mFromY= attrs.getFloat("fromYScale",.0f);
     mToY  = attrs.getFloat("toYScale",.0f);
-    getPivotType(attrs.getString("pivotX"),mPivotXType);
-    getPivotType(attrs.getString("pivotY"),mPivotYType);
+    mPivotXValue = getPivotType(attrs.getString("pivotX"),mPivotXType);
+    mPivotYValue = getPivotType(attrs.getString("pivotY"),mPivotYType);
+    initializePivotPoint();
 }
 
 ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY) {
