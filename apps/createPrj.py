@@ -62,7 +62,7 @@ typeDir   = ['.vscode','3rdpart','assets','conf','docs','fonts','src']
 createDir(project_name,typeDir)
 assetsDir = ['anim','color','drawable','layout','mipmap','values']
 createDir(os.path.join(project_name,'assets'),assetsDir)
-srcDir    = ['common','data','function','net','page','protocol','uart','viewlibs']
+srcDir    = ['common','data','function','net','protocol','uart','viewlibs','windows']
 createDir(os.path.join(project_name,'src'),srcDir)
 
 img = "useless"
@@ -131,10 +131,10 @@ include_directories(
     ./src/data
     ./src/function
     ./src/net
-    ./src/page
     ./src/protocol
     ./src/uart
     ./src/viewlibs
+    ./src/windows
 
     ${CDROID_INCLUDE_DIRS}
     ${CDROID_DEPINCLUDES}
@@ -157,10 +157,10 @@ aux_source_directory(./src/common PRJ_SRC_COMM)
 aux_source_directory(./src/data PRJ_SRC_DATA)
 aux_source_directory(./src/function PRJ_SRC_FUN)
 aux_source_directory(./src/net PRJ_SRC_NET)
-aux_source_directory(./src/page PRJ_SRC_PAGE)
 aux_source_directory(./src/protocol PRJ_SRC_PROTOCOL)
 aux_source_directory(./src/uart PRJ_SRC_UART)
 aux_source_directory(./src/viewlibs PRJ_SRC_VIEWLIB)
+aux_source_directory(./src/windows PRJ_SRC_WINDOWS)
 file(GLOB_RECURSE PRJ_SRCS ${CMAKE_CURRENT_SOURCE_DIR} *.cc)
 
 
@@ -169,7 +169,7 @@ file(GLOB_RECURSE PRJ_SRCS ${CMAKE_CURRENT_SOURCE_DIR} *.cc)
 
 message("PROJECT_NAME=${PROJECT_NAME}")
 
-add_executable(${PROJECT_NAME} ${PRJ_SRCS} ${PRJ_SRC_COMM} ${PRJ_SRC_DATA} ${PRJ_SRC_FUN} ${PRJ_SRC_NET} ${PRJ_SRC_PAGE} ${PRJ_SRC_PROTOCOL} ${PRJ_SRC_UART} ${PRJ_SRC_VIEWLIB})
+add_executable(${PROJECT_NAME} ${PRJ_SRCS} ${PRJ_SRC_COMM} ${PRJ_SRC_DATA} ${PRJ_SRC_FUN} ${PRJ_SRC_NET} ${PRJ_SRC_VIEWLIB} ${PRJ_SRC_PROTOCOL} ${PRJ_SRC_UART} ${PRJ_SRC_WINDOWS})
 
 
 CreatePAK(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.pak ${PROJECT_SOURCE_DIR}/R.h)
@@ -208,10 +208,10 @@ __CREATETIME__
 - - data      数据存储
 - - function  功能函数
 - - net       网络相关
-- - page      页面函数
 - - protocol  通信协议
 - - uart      串口相关
 - - viewlibs  自定义页面
+- - windows   页面函数
 ~~~
 
 ## 声明
@@ -259,7 +259,7 @@ public:
 #endif
 '''
 
-writeFile(os.path.join(project_name,'src','page','wind_home.h'),mWindHomeH);
+writeFile(os.path.join(project_name,'src','windows','wind_home.h'),mWindHomeH);
 
 mWindHomeC = '''#include <wind_home.h>
 
@@ -271,7 +271,7 @@ HomeWindow::~HomeWindow() {
 }
 '''
 
-writeFile(os.path.join(project_name,'src','page','wind_home.cc'),mWindHomeC);
+writeFile(os.path.join(project_name,'src','windows','wind_home.cc'),mWindHomeC);
 
 
 mWindHomeXML = '''<?xml version="1.0" encoding="utf-8"?>
@@ -407,10 +407,10 @@ mVSCodeConfig = """{
                 "${workspaceFolder}/src/data/**",
                 "${workspaceFolder}/src/function/**",
                 "${workspaceFolder}/src/net/**",
-                "${workspaceFolder}/src/page/**",
                 "${workspaceFolder}/src/protocol/**",
                 "${workspaceFolder}/src/uart/**",
                 "${workspaceFolder}/src/viewlibs/**",
+                "${workspaceFolder}/src/windows/**",
                 "~/cdroid/outX64-Debug/include/**",
                 "~/cdroid/outX64-Debug/include/gui/**",
                 "~/cdroid/src/**",
@@ -428,6 +428,13 @@ mVSCodeConfig = """{
 
 writeFile(os.path.join(project_name,'.vscode','c_cpp_properties.json'),mVSCodeConfig);
 
+
+mGitIgnore = """src/common/*
+assets/values/ID.xml
+R.h
+"""
+
+writeFile(os.path.join(project_name,'.gitignore'),mGitIgnore);
 
 touch_file("CMakeLists.txt")
 print(f"项目 '{project_name}' 初始化完成！")
