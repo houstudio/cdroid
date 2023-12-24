@@ -429,7 +429,9 @@ mVSCodeConfig = """{
 writeFile(os.path.join(project_name,'.vscode','c_cpp_properties.json'),mVSCodeConfig);
 
 
-mGitIgnore = """src/common/*
+mGitIgnore = """src/common/hv_version.h
+src/common/hv_defualt_config.h
+src/common/hv_series_conf.h
 assets/values/ID.xml
 R.h
 """
