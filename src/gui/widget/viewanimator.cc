@@ -12,7 +12,8 @@ ViewAnimator::ViewAnimator(int w,int h):FrameLayout(w,h){
 
 ViewAnimator::ViewAnimator(Context* context,const AttributeSet& attrs)
   :FrameLayout(context,attrs){
-   
+    mInAnimation = nullptr;
+    mOutAnimation= nullptr;
 }
 ViewAnimator::~ViewAnimator(){
     delete mInAnimation;
