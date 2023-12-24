@@ -54,7 +54,7 @@ Animation::Animation(Context* context, const AttributeSet& attrs){
     setRepeatMode (attrs.getInt("repeatMode",RESTART));
     //setBackgroundColor(Color::parseColor(attrs.getString("background")));
     const std::string resid=attrs.getString("interpolator");
-    if(!resid.empty())setInterpolator(context,resid);
+    if(!resid.empty())setInterpolator(context,resid);else mInterpolator=nullptr;
 }
 
 Animation::~Animation(){
