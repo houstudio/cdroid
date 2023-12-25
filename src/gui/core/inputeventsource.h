@@ -25,15 +25,10 @@ private:
     nsecs_t mLastPlaybackEventTime;/*for event record and playback*/
     nsecs_t mLastInputEventTime;/*for screensaver*/
     std::ofstream frecord;
-    std::queue<MotionEvent*>mMotionEvents;
-    std::vector<KeyEvent*>mKeyEvents;
-    std::queue<INPUTEVENT> mRawEvents;
     std::unordered_map<int,std::shared_ptr<InputDevice>>mDevices;
     std::shared_ptr<InputDevice>getdevice(int fd);
 protected:
     InputEventSource();
-    int pushEvent(InputEvent*evt);
-    int process();
     void onDeviceChanged(const INPUTEVENT*es);
 public:
     static InputEventSource& getInstance();

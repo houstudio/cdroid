@@ -177,22 +177,19 @@ public:
     static constexpr int KEYBOARD_TYPE_NONE = 0;
     static constexpr int KEYBOARD_TYPE_NON_ALPHABETIC = 1;
     static constexpr int KEYBOARD_TYPE_ALPHABETIC = 2;
-    typedef std::function<void(const InputEvent&)>EventListener;
 protected:
     int mDeviceClasses;
     int mKeyboardType;
     unsigned int mScreenWidth;
     unsigned int mScreenHeight;
     InputDeviceInfo mDeviceInfo;
-    EventListener listener;
     class KeyLayoutMap*kmap;
     static Preferences mPrefs;
-    std::queue<InputEvent*>mEvents;
+    std::deque<InputEvent*>mEvents;
     virtual int isValidEvent(int type,int code,int value);
 public:
     InputDevice(int fdev);
     virtual int putRawEvent(const struct timeval&tv,int type,int code,int value){return 0;}//PENDING need more rawevent OK,wecan getevent now
-    void setEventConsumeListener(EventListener ls){listener=ls;}
     int getId()const;
     int getProductId()const;
     int getVendorId()const;

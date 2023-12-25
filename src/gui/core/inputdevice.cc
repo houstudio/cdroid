@@ -32,7 +32,7 @@ static bool containsNonZeroByte(const uint8_t* array, uint32_t startIndex, uint3
 
 Preferences InputDevice::mPrefs;
 
-InputDevice::InputDevice(int fdev):listener(nullptr){
+InputDevice::InputDevice(int fdev){
     INPUTDEVICEINFO devInfos;
     InputDeviceIdentifier di;
     Point sz;
@@ -218,12 +218,12 @@ int InputDevice::getEventCount()const{
 }
 
 void InputDevice::pushEvent(InputEvent*e){
-    mEvents.push(e);
+    mEvents.push_back(e);
 }
 
 InputEvent*InputDevice::popEvent(){
-    InputEvent*event=mEvents.front();
-    mEvents.pop();
+    InputEvent*event = mEvents.front();
+    mEvents.pop_front();
     return event;
 }
 
@@ -259,7 +259,8 @@ int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
         mEvent.initialize(getId(),getSources(),(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
               keycode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeMicros()/*eventtime*/);
         LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keycode, mEvent.getLabel(),value,flags);
-        if(listener)listener(mEvent); 
+        //if(listener)listener(mEvent); 
+		mEvents.push_back(KeyEvent::obtain(mEvent));
         break;
     case EV_SYN:
         LOGV("fd[%d].SYN value=%d code=%d",getId(),value,code);
@@ -439,34 +440,33 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case SYN_REPORT:
         case SYN_MT_REPORT:
             mMoveTime =(tv.tv_sec * 1000000 + tv.tv_usec);
-            mEvent.initialize(getId(),getSources(),mEvent.getAction(),mEvent.getActionButton(),
-                 0/*flags*/, 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,
-                 0/*xOffset*/,0/*yOffset*/ , 0/*xPrecision*/, 0/*yPrecision*/ ,
-                 mDownTime , mMoveTime , 0 , nullptr , nullptr);
+            mEvent.initialize(getId(),getSources(),mEvent.getAction(),mEvent.getActionButton()
+			    , 0/*flags*/ , 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,0/*xOffset*/,0/*yOffset*/
+				, 0/*xPrecision*/ , 0/*yPrecision*/ , mDownTime , mMoveTime , 0 , nullptr , nullptr);
             for(auto p:mPointMAP){
                 mEvent.addSample(mMoveTime,p.second.prop,p.second.coord);
             }
-            if(mEvent.getAction()==MotionEvent::ACTION_DOWN){
+            LOGV_IF(mEvent.getAction()==MotionEvent::ACTION_UP,"%s pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
+                mPointMAP.begin()->second.coord.getX(),mEvent.getX(),mEvent.getY());
+            if(mEvent.getAction()!=MotionEvent::ACTION_MOVE){
                 mLastDownX = mEvent.getX();
                 mLastDownY = mEvent.getY();
+				mEvents.push_back(MotionEvent::obtain(mEvent));
             }else if(mEvent.getAction()==MotionEvent::ACTION_MOVE){
-                if((mMoveTime-mDownTime<10*1000) 
-		   //&& (square(mLastDownX-mEvent.getX()) +square (mLastDownY-mEvent.getY()))<500
-		   && (mLastDownX==mEvent.getX())&&mLastDownY==mEvent.getY()){
+                MotionEvent*last = mEvents.size()?(MotionEvent*)mEvents.back():nullptr;
+                if(last&&(last->getAction()==MotionEvent::ACTION_MOVE)&&(mMoveTime-last->getEventTime()<20*1000)){
                     //the same positioned moveing ,skip this event
-                    break;
+                    mEvents.pop_back();
+					mEvents.push_back(MotionEvent::obtain(last->getDownTime(),last->getEventTime(),last->getAction(),
+					     mEvent.getX(),mEvent.getY(),last->getMetaState()));
+					last->recycle();
+					LOGV("%lld,%lld,%d events",mMoveTime,last->getEventTime(),mEvents.size());
+					break;
                 }
                 mLastDownX= mEvent.getX();
                 mLastDownY= mEvent.getY();
-                mDownTime = mMoveTime;
+                mEvents.push_back(MotionEvent::obtain(mEvent));
             }
-            if(listener){
-                LOGV_IF(mEvent.getAction()==MotionEvent::ACTION_UP,"%s pos=%.f,%.f",
-                    MotionEvent::actionToString(mEvent.getAction()).c_str(),mEvent.getX(),mEvent.getY());
-                //mEvent.transform(mMatrix);
-                listener(mEvent);
-            }
-            //if(mEvent.getAction()==MotionEvent::ACTION_UP) mPointMAP.clear();
             mEvent.setAction(MotionEvent::ACTION_MOVE);
         }break;
     }

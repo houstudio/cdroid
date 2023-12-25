@@ -40,8 +40,10 @@ static void InjectKey(int type,int code,int value) {
 }
 static void InjectABS(ULONG time,int type,int axis,int value) {
     INPUTEVENT i= {0};
-    i.tv_sec=time/1000;
-    i.tv_usec=(time%1000)*1000;
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC,&ts);
+    i.tv_sec=ts.tv_sec;
+    i.tv_usec=ts.tv_nsec/1000;
     i.type=type;
     i.code=axis;
     i.value=value;

@@ -32,44 +32,45 @@ constexpr int FINISH_NOT_HANDLED = 2;
 
 Window::Window(Context*ctx,const AttributeSet&atts)
   :ViewGroup(ctx,atts){
-#if USE_UIEVENTHANDLER
-    mUIEventHandler = new UIEventHandler(this,[this](){ doLayout(); });
-#else
-    mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });     
-#endif
+    initWindow();
     Point pt;
     WindowManager::getInstance().getDefaultDisplay().getSize(pt);
     setFrame(0,0,pt.x,pt.y);
-    setFocusable(true);
-    mInLayout = false;
-    setKeyboardNavigationCluster(true);
-    setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     WindowManager::getInstance().addWindow(this);
-    mPendingRgn = Cairo::Region::create();
 }
 
 Window::Window(int x,int y,int width,int height,int type)
   : ViewGroup(width,height),window_type(type){
+    initWindow();
     // Set the boundary
     // Do the resizing at first time in order to invoke the OnLayout
-#if USE_UIEVENTHANDLER   
-    mUIEventHandler = new UIEventHandler(this,[this](){ doLayout(); });
-#else
-    mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });
-#endif
-    mPendingRgn = Cairo::Region::create();
     mContext = &App::getInstance();
-    mInLayout= false;
     Point size;
     WindowManager::getInstance().getDefaultDisplay().getSize(size);
     if(width<0)  width = size.x;
     if(height<0) height= size.y;
-    setBackground(nullptr);
     setFrame(x, y, width, height);
+    WindowManager::getInstance().addWindow(this);
+}
+
+void Window::initWindow(){
+#if USE_UIEVENTHANDLER
+    mUIEventHandler = new UIEventHandler(this,[this](){ doLayout(); });
+#else
+    mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });
+#endif
+    mInLayout= false;
+    mPendingRgn = Cairo::Region::create();
+    setBackground(nullptr);
+  /*mLayoutRequested = false;
+    mTraversalScheduled = false;
+    mTraversalRunnable = [this](){
+        LOGD("mTraversalRunnable.run");
+        doTraversal();
+    };*/
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setFocusable(true);
     setKeyboardNavigationCluster(true);
-    WindowManager::getInstance().addWindow(this);
 }
 
 Window::~Window(){
@@ -90,6 +91,12 @@ ViewGroup::LayoutParams* Window::generateLayoutParams(const ViewGroup::LayoutPar
 
 ViewGroup::LayoutParams* Window::generateLayoutParams(const AttributeSet&atts)const{
     return new MarginLayoutParams(getContext(),atts);
+}
+
+void Window::requestTransitionStart(LayoutTransition* transition){
+    auto it = std::find(mPendingTransitions.begin(),mPendingTransitions.end(),transition);
+    if(it==mPendingTransitions.end())
+        mPendingTransitions.push_back(transition);
 }
 
 void Window::setText(const std::string&txt){
@@ -166,7 +173,7 @@ bool Window::enterTouchMode() {
             } else {
                 // There's nothing to focus. Clear and propagate through the
                 // hierarchy, but don't attempt to place new focus.
-                //focused->clearFocusInternal(nullptr, true, false);
+                focused->clearFocusInternal(nullptr, true, false);
                 return true;
             }
         }
@@ -481,7 +488,7 @@ void Window::doLayout(){
         view->layout (lp->leftMargin,lp->topMargin,view->getMeasuredWidth(),view->getMeasuredHeight());
     }
     mPrivateFlags&=~PFLAG_FORCE_LAYOUT;
-    mInLayout=false;
+    mInLayout = false;  
 }
 
 

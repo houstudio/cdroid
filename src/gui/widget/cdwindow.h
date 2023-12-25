@@ -41,10 +41,12 @@ private:
     bool mInLayout;
     bool mHandingLayoutInLayoutRequest;
     Rect mRectOfFocusedView;
+    std::vector<LayoutTransition*> mPendingTransitions;
     void doLayout();
     bool performFocusNavigation(KeyEvent& event);
     static View*inflate(Context*ctx,std::istream&stream);
     static ViewGroup*findAncestorToTakeFocusInTouchMode(View* focused);
+    void initWindow();
     bool ensureTouchModeLocally(bool);
     bool enterTouchMode();
     bool leaveTouchMode();
@@ -114,6 +116,7 @@ public:
     bool dispatchTouchEvent(MotionEvent& event)override;
     void cancelInvalidate(View* view)override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet&)const override;
+    void requestTransitionStart(LayoutTransition* transition)override;
     void close();
 protected:
 };

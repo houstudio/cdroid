@@ -11,7 +11,6 @@
 
 namespace cdroid{
 
-
 InputEventSource::InputEventSource(){
     InputInit();
     mScreenSaveTimeOut = -1;
@@ -33,11 +32,15 @@ InputEventSource::InputEventSource(){
             if(count)mLastInputEventTime = SystemClock::uptimeMillis();
             LOGV_IF(count,"rcv %d rawEvents",count);
             for(int i = 0 ; i < count ; i ++){
+                const INPUTEVENT*e = es+i;
+				struct timeval  tv = {(time_t)e->tv_sec,e->tv_usec};
+				auto it = mDevices.find(e->device);
                 if(es[i].type > EV_CNT){
                     onDeviceChanged(es+i);
                     continue;
                 }
-                mRawEvents.push(es[i]);
+				if(it==mDevices.end()){getdevice(es->device);continue;}
+                it->second->putRawEvent(tv,e->type,e->code,e->value);
             }
         }
     };
@@ -88,16 +91,8 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
         InputDevice tmpdev(fd);
         if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_TOUCH|INPUT_DEVICE_CLASS_TOUCH_MT)){
             dev.reset(new MouseDevice(fd));
-            dev->setEventConsumeListener([&](const InputEvent&e){
-               MotionEvent*mt=MotionEvent::obtain((MotionEvent&)e);
-               mMotionEvents.push(mt);
-            });
         }else if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_KEYBOARD)){
             dev.reset(new KeyDevice(fd));
-            dev->setEventConsumeListener([&](const InputEvent&e){
-               KeyEvent*key=KeyEvent::obtain((KeyEvent&)e);
-               mKeyEvents.push_back(key);
-            });
         }
         mDevices.emplace(fd,dev);
         return dev;
@@ -108,6 +103,10 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
 int InputEventSource::checkEvents(){
     std::lock_guard<std::mutex> lock(mtxEvents);
     nsecs_t now = SystemClock::uptimeMillis();
+	int count = 0;
+	for(auto dev:mDevices){
+        count += dev.second->getEventCount();
+	}
     if(mRunning==false)
         mRunning = true;
     if( ((now - mLastInputEventTime) > mScreenSaveTimeOut) && (mScreenSaveTimeOut>0)
@@ -115,12 +114,11 @@ int InputEventSource::checkEvents(){
         mScreenSaver(true);
         mIsScreenSaveActived = true;
     }
-    process();
-    if(mMotionEvents.size() && mIsScreenSaveActived && mScreenSaver){
+    if(count && mIsScreenSaveActived && mScreenSaver){
         mScreenSaver(false);
         mLastInputEventTime = now;
     }
-    return mMotionEvents.size()+mKeyEvents.size();
+    return count;
 }
 
 void InputEventSource::closeScreenSaver(){
@@ -133,89 +131,26 @@ bool InputEventSource::isScreenSaverActived()const{
 
 int InputEventSource::handleEvents(){
     std::lock_guard<std::mutex> lock(mtxEvents);
-    int ret = mKeyEvents.size() + mMotionEvents.size();
-    while(mKeyEvents.size()){
-        int lastDev = -1,lastKey = -1;
-        int numDown = 0 ,numUp = 0;
-        for(KeyEvent*e:mKeyEvents){
-            const int dev = e->getDeviceId();
-            const int key = e->getKeyCode();
-            const int act = e->getAction();
-            LOGV("dev=%d key=%d act=%d %d",dev,key,act,mKeyEvents.size());
-            if( (lastKey !=-1) || (lastKey==key) ){
-                numDown+= (act==KeyEvent::ACTION_DOWN);
-                numUp  += (act==KeyEvent::ACTION_UP);
-                lastKey = dev;  lastKey = key;
-            }else{
-                numDown = numUp =0;
-                lastKey = -1;   lastDev = -1;
-                break;
-            }
-        }
-        if((numDown>1)&&(numUp>1)){
-            int repeat = std::min(numDown,numUp);
-            KeyEvent*e = mKeyEvents.front();
-            KeyEvent*kMulti = KeyEvent::obtain(e->getDownTime(),e->getEventTime(),KeyEvent::ACTION_MULTIPLE,
-            e->getKeyCode(),repeat,e->getMetaState(),e->getDeviceId(),
-            e->getScanCode(),e->getFlags(),e->getSource());
-            LOGD("key %d repeat %d",e->getKeyCode(),repeat);
-            WindowManager::getInstance().processEvent(*kMulti);
-            kMulti->recycle();
-            repeat<<=1;
-            for(int i=0;i<repeat;i++){
-                e = mKeyEvents.front();
-                e->recycle();
-                mKeyEvents.erase(mKeyEvents.begin());
-            }
-            continue;
-        }
-        KeyEvent*e1 = mKeyEvents.front();
-        WindowManager::getInstance().processEvent(*e1);
-        e1->recycle();
-        LOGV("key %d  repeat=%d/%d",e1->getKeyCode(),numDown,numUp);
-        mKeyEvents.erase(mKeyEvents.begin());
-    }
-    while(mMotionEvents.size()){
-        MotionEvent* e = mMotionEvents.front();
-        WindowManager::getInstance().processEvent(*e);
-        if((!mIsPlayback)&& frecord.is_open() && dynamic_cast<KeyEvent*>(e) ){
-            nsecs_t eventTime=SystemClock::uptimeMillis();
-            KeyEvent*key=dynamic_cast<KeyEvent*>(e);
-            frecord<<"delay("<<eventTime - mLastPlaybackEventTime<<")"<<std::endl;
-            frecord<<"key("<<KeyEvent::actionToString(key->getAction())<<","
-                  <<KeyEvent::getLabel(key->getKeyCode())<<")"<<std::endl;
-            mLastPlaybackEventTime = eventTime;
-        }
-        e->recycle();
-        mMotionEvents.pop();
-    }
+    int ret = 0;
+	for(auto it:mDevices){
+	   auto dev = it.second;
+	   if(dev->getEventCount()==0)continue;
+	   ret += dev->getEventCount();
+	   if(dev->getClasses()&(INPUT_DEVICE_CLASS_TOUCH|INPUT_DEVICE_CLASS_TOUCH_MT)){
+	       while(dev->getEventCount()){
+	          MotionEvent*e = (MotionEvent*)dev->popEvent();
+	          WindowManager::getInstance().processEvent(*e);
+			  e->recycle();
+		   }
+	   }else if(dev->getClasses()&INPUT_DEVICE_CLASS_KEYBOARD){
+	       while(dev->getEventCount()){
+	          KeyEvent*e = (KeyEvent*)dev->popEvent();
+	          WindowManager::getInstance().processEvent(*e);
+			  e->recycle();
+		   }	       
+	   }
+	}
     return ret;
-}
-
-int  InputEventSource::process(){
-    LOGV_IF(mRawEvents.size(),"%p  recv %d events ",this,mRawEvents.size());
-    while(mRawEvents.size()){
-        const INPUTEVENT e = mRawEvents.front();
-        struct timeval  tv = {(time_t)e.tv_sec,e.tv_usec};
-        std::shared_ptr<InputDevice>dev = getdevice(e.device);
-        mRawEvents.pop();
-        if(dev == nullptr){
-            LOGD("%d,%d,%d device=%d ",e.type,e.code,e.value,e.device);
-            continue;
-        }
-        dev->putRawEvent(tv,e.type,e.code,e.value);
-    }
-    return 0;
-}
-
-int InputEventSource::pushEvent(InputEvent*evt){
-    std::lock_guard<std::mutex> lock(mtxEvents);
-    if(evt->getType()==InputEvent::EVENT_TYPE_MOTION){
-        mMotionEvents.push((MotionEvent*)evt);
-    }else if(evt->getType()==InputEvent::EVENT_TYPE_KEY){
-        mKeyEvents.push_back((KeyEvent*)evt);
-    }
-    return mMotionEvents.size() + mKeyEvents.size();
 }
 
 void InputEventSource::playback(const std::string&fname){
@@ -249,7 +184,7 @@ void InputEventSource::playback(const std::string&fname){
                  int keycode = KeyEvent::getKeyCodeFromLabel(word.c_str());
                  KeyEvent*key= KeyEvent::obtain(evttime,evttime,action,keycode,1,0/*metastate*/,
                        0/*deviceid*/,keycode/*scancode*/,0/*flags*/,0/*source*/);
-                 mKeyEvents.push_back(key);
+                 //mKeyEvents.push_back(key);
              }
              if(in.gcount() == 0){
                  in.close();
