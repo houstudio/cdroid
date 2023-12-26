@@ -239,11 +239,10 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
                 e->code = events[j].code;
                 e->value= events[j].value;
                 e->device = FDS[i].fd;
-                LOGV_IF(e->type<EV_SW,"fd:%d [%s]%02x,%02x,%02x time=%ld.%06ld time2=%ld.%ld",FDS[i].fd,
-                     type2name[e->type],e->type,e->code,e->value,e->tv_sec,e->tv_usec,events[j].time.tv_sec,events[j].time.tv_usec);
+                LOGV_IF(e->type<EV_SW,"fd:%d [%s]%02x,%02x,%02x time=%ld.%06ld",FDS[i].fd,
+                     type2name[e->type],e->type,e->code,e->value,e->tv_sec,e->tv_usec);
             }
         }
-        LOGV_IF(rc,"fd %d read %d bytes ispipe=%d",FDS[i],rc,FDS[i].fd==dev.pipe[0]);
     }
     return e-outevents;
 }

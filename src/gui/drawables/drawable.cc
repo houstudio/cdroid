@@ -352,8 +352,10 @@ Drawable*Drawable::createWrappedDrawable(Context*ctx,const AttributeSet&atts) {
         return Drawable::inflate(ctx,resname);
     }
     Drawable*dr=ctx->getDrawable(resname);
-    auto cs = dr->getConstantState();
-    if(cs)cs->mResource=resname;
+    if(dr){
+        auto cs = dr->getConstantState();
+        if(cs)cs->mResource=resname;
+    }
     return dr;
 }
 
