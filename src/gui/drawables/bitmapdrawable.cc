@@ -376,7 +376,7 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.scale(dw/sw,dh/sh);
             dx /= fx;       dy /= fy;
             dw /= fx;       dh /= fy;
-            LOGV_IF((mBitmapWidth*mBitmapHeight>=512*512)||(dw/sw>4.0f)||(dh/sh>4.0f)||(dw/sw<0.25f)||(dh/sh<0.25f),
+            LOGD_IF((mBitmapWidth*mBitmapHeight>=512*512)||(std::min(fx,fy)<0.1f)||(std::max(fx,fy)>10.f),
                 "bitmap %s scaled %dx%d->%d,%d",mBitmapState->mResource.c_str() ,mBitmapWidth,mBitmapHeight,mBounds.width,mBounds.height);
         }
 

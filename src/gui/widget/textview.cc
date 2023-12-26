@@ -459,6 +459,8 @@ void TextView::initView(){
     mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_NONE;
     mLayout = new Layout(18,1);
     mHintLayout = new Layout(mLayout->getFontSize(),1);
+    mLayout->setMultiline(!mSingleLine);
+    mHintLayout->setMultiline(!mSingleLine);
     mGravity = Gravity::NO_GRAVITY;
     mTextColor = mHintTextColor = mLinkTextColor =nullptr;
     mHighlightColor= 0x6633B5E5;
