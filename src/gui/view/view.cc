@@ -520,7 +520,7 @@ void View::initView(){
 
 View::~View(){
     mViewCount --;
-    LOGD_IF(View::VIEW_DEBUG,"mViewCount=%d destroy %p:%d",mViewCount,this,mID);
+    LOGV_IF(View::VIEW_DEBUG,"mViewCount=%d",mViewCount);
     if(mParent)
         mParent->removeViewInternal(this);
     if(isAttachedToWindow())onDetachedFromWindow();
@@ -5273,6 +5273,64 @@ bool View::requestFocusFromTouch(){
    return requestFocus(View::FOCUS_DOWN);
 }
 
+int View::getImportantForAccessibility() {
+    return (mPrivateFlags2 & PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_MASK)
+            >> PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT;
+}
+
+void View::setImportantForAccessibility(int mode){
+    const int oldMode = getImportantForAccessibility();
+    if (mode != oldMode) {
+        const bool hideDescendants = mode == IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS;
+
+        // If this node or its descendants are no longer important, try to
+        // clear accessibility focus.
+        if (mode == IMPORTANT_FOR_ACCESSIBILITY_NO || hideDescendants) {
+            View* focusHost = nullptr;//findAccessibilityFocusHost(hideDescendants);
+            if (focusHost) {
+                focusHost->clearAccessibilityFocus();
+            }
+        }
+
+        // If we're moving between AUTO and another state, we might not need
+        // to send a subtree changed notification. We'll store the computed
+        // importance, since we'll need to check it later to make sure.
+        const bool maySkipNotify = oldMode == IMPORTANT_FOR_ACCESSIBILITY_AUTO
+                || mode == IMPORTANT_FOR_ACCESSIBILITY_AUTO;
+        const bool oldIncludeForAccessibility = maySkipNotify ;//&& includeForAccessibility();
+        mPrivateFlags2 &= ~PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_MASK;
+        mPrivateFlags2 |= (mode << PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT)
+                & PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_MASK;
+        /*if (!maySkipNotify || oldIncludeForAccessibility != includeForAccessibility()) {
+            notifySubtreeAccessibilityStateChangedIfNeeded();
+        } else {
+            notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+        }*/
+    }
+}
+
+bool View::isImportantForAccessibility()const{
+    const int mode = (mPrivateFlags2 & PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_MASK) >> PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT;
+    if ((mode == IMPORTANT_FOR_ACCESSIBILITY_NO) || (mode == IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS)) {
+        return false;
+    }
+
+    // Check parent mode to ensure we're not hidden.
+    ViewGroup* parent = mParent;
+    while (parent){// instanceof View) {
+        if (((View*) parent)->getImportantForAccessibility()
+                == IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS) {
+            return false;
+        }
+        parent = parent->getParent();
+    }
+
+    return mode == IMPORTANT_FOR_ACCESSIBILITY_YES;
+/*	    || isActionableForAccessibility()
+        || hasListenersForAccessibility() || getAccessibilityNodeProvider() != null
+        || getAccessibilityLiveRegion() != ACCESSIBILITY_LIVE_REGION_NONE || isAccessibilityPane();*/
+}
+
 bool View::hasAncestorThatBlocksDescendantFocus()const{
    const  bool focusableInTouchMode = isFocusableInTouchMode();
    ViewGroup* ancestor =mParent;
@@ -5295,7 +5353,6 @@ bool View::hasFocus()const{
 void View::unFocus(View*focused){
     clearFocusInternal(focused, false, false);
 }
-
 
 void View::clearFocusInternal(View* focused, bool propagate, bool refocus){
     if ((mPrivateFlags & PFLAG_FOCUSED) != 0) {

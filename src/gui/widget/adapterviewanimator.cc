@@ -194,9 +194,9 @@ void AdapterViewAnimator::refreshChildren() {
         // get the fresh child from the adapter
         View* updatedChild = mAdapter->getView(modulo(i, adapterCount), nullptr, this);
 
-        /*if (updatedChild->getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+        if (updatedChild->getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
             updatedChild->setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
-        }*/
+        }
         auto it = mViewsMap.find(index);
         if (mViewsMap.end()!=it) {
             FrameLayout* fl = (FrameLayout*) it->second->view;

@@ -255,6 +255,11 @@ public:
     };
 public:
     enum ViewFlags{//public common View Flags
+        IMPORTANT_FOR_AUTOFILL_AUTO = 0x0,
+        IMPORTANT_FOR_AUTOFILL_YES = 0x1,
+        IMPORTANT_FOR_AUTOFILL_NO = 0x2,
+        IMPORTANT_FOR_AUTOFILL_YES_EXCLUDE_DESCENDANTS = 0x4,
+        IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS = 0x8,
         ENABLED        = 0x00 ,
         DISABLED       = 0x01 ,
         ENABLED_MASK   = 0x01 ,
@@ -1036,6 +1041,9 @@ public:
     virtual View*findFocus();
     bool requestFocus(int direction=FOCUS_DOWN);
     bool requestFocusFromTouch();
+    int getImportantForAccessibility();
+    void setImportantForAccessibility(int mode);
+    bool isImportantForAccessibility()const;
     virtual bool requestFocus(int direction,Rect* previouslyFocusedRect);
     bool hasFocusable()const{ return hasFocusable(true, false); }
     virtual bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const;

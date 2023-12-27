@@ -973,14 +973,14 @@ bool TabLayout::TabView::performClick(){
 }
 
 void TabLayout::TabView::setSelected(bool selected) {
-    bool changed = isSelected() != selected;
+    const bool changed = isSelected() != selected;
 
     LinearLayout::setSelected(selected);
 
-    /*if (changed && selected && Build.VERSION.SDK_INT < 16) {
+    if (changed && selected /*&& Build.VERSION.SDK_INT < 16*/) {
         // Pre-JB we need to manually send the TYPE_VIEW_SELECTED event
-        sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_SELECTED);
-    }*/
+        sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
+    }
 
     // Always dispatch this to the child views, regardless of whether the value has changed
     if (mTextView)  mTextView->setSelected(selected);

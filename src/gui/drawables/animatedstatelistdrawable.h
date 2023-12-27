@@ -42,10 +42,11 @@ protected:
     };
 
     class Transition {
+    protected:
+        Drawable*mDrawable;
     public:
         virtual void start()=0;
         virtual void stop()=0;
-
         virtual void reverse();
         // Not supported by default.
         virtual bool canReverse();
@@ -62,7 +63,6 @@ protected:
     class AnimationDrawableTransition:public Transition {
     private:
         ObjectAnimator* mAnim;
-
         // Even AnimationDrawable is always reversible technically, but
         // we should obey the XML's android:reversible flag.
         bool mHasReversibleFlag;

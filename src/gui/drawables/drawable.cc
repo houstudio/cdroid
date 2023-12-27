@@ -312,7 +312,9 @@ class ParseData {
         items.push_back(item);
     }
     bool upperIsItem()const {
-        return (items.size()>1) && (items.at(items.size()-2)->name.compare("item")==0);
+        const int idx = items.size()-2;
+        return (items.size()>1) && ((items.at(idx)->name.compare("item")==0)
+            ||(items.at(idx)->name.compare("transition")==0));
     }
     bool upperIsShape()const {
         return (items.size()>1) && (items.at(items.size()-2)->name.compare("shape")==0);

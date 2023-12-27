@@ -120,7 +120,8 @@ private:
 
     static VelocityTrackerStrategy* createStrategy(const char* strategy);
 };
-const char* VelocityTrackerImpl::DEFAULT_STRATEGY = "lsq2";//"impulse";//"lsq2";
+
+const char* VelocityTrackerImpl::DEFAULT_STRATEGY = "impulse";//"impulse";//"lsq2";
 
 VelocityTrackerImpl::VelocityTrackerImpl(const char* strategy) :
     mLastEventTime(0), mCurrentPointerIdBits(0), mActivePointerId(-1) {

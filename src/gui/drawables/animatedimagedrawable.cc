@@ -5,15 +5,15 @@
 #include <image-decoders/imagedecoder.h>
 #include <porting/cdgraph.h>
 namespace cdroid{
-#define ENABLE_DMABLIT 1
+#define ENABLE_DMABLIT 0
+
 AnimatedImageDrawable::AnimatedImageDrawable()
   :AnimatedImageDrawable(std::make_shared<AnimatedImageState>()){
 }
 
-AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageDrawable::AnimatedImageState> state)
+AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state)
    :Drawable(){
     mStarting = 0;
-    mHandler = nullptr;
     mRepeatCount = REPEAT_UNDEFINED;
     mIntrinsicWidth = mIntrinsicHeight = 0;
     mAnimatedImageState = state;
@@ -50,13 +50,6 @@ std::shared_ptr<Drawable::ConstantState>AnimatedImageDrawable::getConstantState(
     return std::dynamic_pointer_cast<ConstantState>(mAnimatedImageState);
 }
 
-Handler* AnimatedImageDrawable::getHandler() {
-    if (mHandler == nullptr) {
-        mHandler = new Handler();//Looper.getMainLooper());
-    }
-    return mHandler;
-}
-
 void AnimatedImageDrawable::setRepeatCount(int repeatCount){
     if (repeatCount < REPEAT_INFINITE) {
          LOGE("invalid value passed to setRepeatCount %d",repeatCount);
@@ -88,7 +81,6 @@ int AnimatedImageDrawable::getAlpha()const{
     return 255;
 }
 
-constexpr int FINISHED=-1;
 void AnimatedImageDrawable::draw(Canvas& canvas){
     if (!mStarting) {
         mStarting = true;
@@ -125,7 +117,10 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
         canvas.fill();
     }else{
 #if ENABLE(DMABLIT)
-        Rect rd={0,0,mBounds.width,mBounds.height};
+        Rect rd = {0,0,mBounds.width,mBounds.height};
+        Cairo::Matrix mtx = canvas.get_matrix();
+        double angle = std::atan2(mtx.xx,-mtx.xy)*180.0/M_PI;
+        LOGD("canvas.angle=%d",(int(angle)-90)%360);
         GFXBlit(handler,0,0,mImageHandler,nullptr);
 #endif
     }
@@ -166,8 +161,8 @@ static bool operator==(const Animatable2::AnimationCallback&a,const Animatable2:
 }
 
 bool AnimatedImageDrawable::unregisterAnimationCallback(Animatable2::AnimationCallback callback){
-    auto it=std::find(mAnimationCallbacks.begin(),mAnimationCallbacks.end(),callback);
-    bool rc=(it!=mAnimationCallbacks.end());
+    auto it = std::find(mAnimationCallbacks.begin(),mAnimationCallbacks.end(),callback);
+    const bool rc = (it!=mAnimationCallbacks.end());
     if(rc)
         mAnimationCallbacks.erase(it);
     return rc;
@@ -182,7 +177,6 @@ void AnimatedImageDrawable::postOnAnimationStart(){
             callback.onAnimationStart(*this);
         }
     });
-    getHandler()->post(r);
 }
 
 void AnimatedImageDrawable::postOnAnimationEnd(){
@@ -194,7 +188,6 @@ void AnimatedImageDrawable::postOnAnimationEnd(){
             callback.onAnimationEnd(*this);
         }
     });
-    getHandler()->post(r);
 }
 
 void AnimatedImageDrawable::clearAnimationCallbacks(){

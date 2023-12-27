@@ -3,11 +3,10 @@
 #include <type_traits>
 #include <atomic>
 #include <memory>
+#include <core/object.h>
 
 namespace cdroid{
 
-class Object{
-};
 template<typename R,typename... Args>
 class CallbackBase{
 protected:
@@ -64,8 +63,8 @@ public:
         mID = other.mID;
     }
     EventSet& operator=(const EventSet&other){
-	mID = other.mID;
-	return *this;
+        mID = other.mID;
+        return *this;
     }
     bool operator == (const EventSet&other){
         return mID == other.mID;

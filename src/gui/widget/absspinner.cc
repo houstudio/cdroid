@@ -146,9 +146,9 @@ void AbsSpinner::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         if (view == nullptr) {
             // Make a new one
             view = mAdapter->getView(selectedPosition, nullptr, this);
-            /*if (view->getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+            if (view->getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
                 view->setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
-            }*/
+            }
         }
         if (view) {
             // Put in recycler for re-measuring and/or layout

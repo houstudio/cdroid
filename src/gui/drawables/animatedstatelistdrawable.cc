@@ -29,19 +29,15 @@ bool AnimatedStateListDrawable::setVisible(bool visible, bool restart){
 }
 
 void AnimatedStateListDrawable::addState(const std::vector<int>&stateSet,Drawable* drawable, int id){
-    if (drawable == nullptr) {
-        throw "Drawable must not be null";
-    }
+    FATAL_IF(drawable==nullptr,"Drawable must not be null");
     mState->addStateSet(stateSet, drawable, id);
     onStateChange(getState());
 }
 
 void AnimatedStateListDrawable::addTransition(int fromId, int toId,AnimatedStateListDrawable::Transition* transition, bool reversible){
-    if (transition == nullptr) {
-        throw "Transition drawable must not be null";
-    }
+    FATAL_IF(transition==nullptr,"Transition drawable must not be null");
 
-    mState->addTransition(fromId, toId, dynamic_cast<Drawable*>(transition), reversible);
+    mState->addTransition(fromId, toId,(Drawable*)transition, reversible);
 }
 
 bool AnimatedStateListDrawable::isStateful()const {
@@ -116,10 +112,10 @@ bool AnimatedStateListDrawable::selectTransition(int toIndex){
     if (dynamic_cast<AnimationDrawable*>(d)) {
         bool reversed = mState->isTransitionReversed(fromId, toId);
         transition = new AnimationDrawableTransition((AnimationDrawable*) d,reversed, hasReversibleFlag);
-    }/* else if (dynamic_cast<AnimatedVectorDrawable*>(d)) {
+    } else if (dynamic_cast<AnimatedVectorDrawable*>(d)) {
         bool reversed = mState->isTransitionReversed(fromId, toId);
         transition = new AnimatedVectorDrawableTransition((AnimatedVectorDrawable*) d, reversed, hasReversibleFlag);
-    }*/ else if (dynamic_cast<Animatable*>(d)) {
+    } else if (dynamic_cast<Animatable*>(d)) {
         transition = new AnimatableTransition((Animatable*) d);
     } else {
         // We don't know how to animate this transition.
@@ -173,6 +169,7 @@ void AnimatedStateListDrawable::setConstantState(std::shared_ptr<DrawableContain
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 void AnimatedStateListDrawable::Transition::reverse(){
+    //NOTHING
 }
 
 bool AnimatedStateListDrawable::Transition::canReverse(){
@@ -191,10 +188,8 @@ void AnimatedStateListDrawable::AnimatedStateListState::mutate() {
 int AnimatedStateListDrawable::AnimatedStateListState::addTransition(int fromId, int toId,Drawable* anim, bool reversible){
     const int pos = addChild(anim);
     const long keyFromTo = generateTransitionKey(fromId, toId);
-    int64_t reversibleBit = 0;
-    if (reversible) {
-        reversibleBit = REVERSIBLE_FLAG_BIT;
-    }
+    const int64_t reversibleBit = reversible ? REVERSIBLE_FLAG_BIT : 0;
+
     mTransitions.put(keyFromTo, pos | reversibleBit);//append
 
     if (reversible) {
@@ -297,6 +292,7 @@ float AnimatedStateListDrawable::FrameInterpolator::getInterpolation(float input
 //----------------------------------------------------------------------------------------------------------
 AnimatedStateListDrawable::AnimatableTransition::AnimatableTransition(Animatable* a) {
     mA = a;
+	mDrawable = dynamic_cast<Drawable*>(mA); 
 }
 
 void AnimatedStateListDrawable::AnimatableTransition::start() {
@@ -319,6 +315,7 @@ AnimatedStateListDrawable::AnimationDrawableTransition::AnimationDrawableTransit
      anim->setInterpolator(interp);
      mHasReversibleFlag = hasReversibleFlag;
      mAnim = anim;
+	 mDrawable = ad;
 }
 
 bool AnimatedStateListDrawable::AnimationDrawableTransition::canReverse() {
@@ -340,6 +337,7 @@ void AnimatedStateListDrawable::AnimationDrawableTransition::stop() {
 /***************************/
 AnimatedStateListDrawable::AnimatedVectorDrawableTransition::AnimatedVectorDrawableTransition(AnimatedVectorDrawable* avd,bool reversed, bool hasReversibleFlag){
     mAvd = avd;
+	mDrawable = mAvd;
     mReversed = reversed;
     mHasReversibleFlag = hasReversibleFlag;
 }

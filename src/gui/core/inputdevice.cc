@@ -441,8 +441,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case SYN_MT_REPORT:
             mMoveTime =(tv.tv_sec * 1000000 + tv.tv_usec);
             mEvent.initialize(getId(),getSources(),mEvent.getAction(),mEvent.getActionButton()
-			    , 0/*flags*/ , 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,0/*xOffset*/,0/*yOffset*/
-				, 0/*xPrecision*/ , 0/*yPrecision*/ , mDownTime , mMoveTime , 0 , nullptr , nullptr);
+			    , 0/*flags*/ , 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,0,0/*x/yOffset*/
+				, 0 ,0 /*x/yPrecision*/ , mDownTime , mMoveTime , 0 , nullptr , nullptr);
             for(auto p:mPointMAP){
                 mEvent.addSample(mMoveTime,p.second.prop,p.second.coord);
             }
@@ -451,17 +451,17 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             if(mEvent.getAction()!=MotionEvent::ACTION_MOVE){
                 mLastDownX = mEvent.getX();
                 mLastDownY = mEvent.getY();
-				mEvents.push_back(MotionEvent::obtain(mEvent));
+                mEvents.push_back(MotionEvent::obtain(mEvent));
             }else if(mEvent.getAction()==MotionEvent::ACTION_MOVE){
                 MotionEvent*last = mEvents.size()?(MotionEvent*)mEvents.back():nullptr;
                 if(last&&(last->getAction()==MotionEvent::ACTION_MOVE)&&(mMoveTime-last->getEventTime()<20*1000)){
                     //the same positioned moveing ,skip this event
                     mEvents.pop_back();
-					mEvents.push_back(MotionEvent::obtain(last->getDownTime(),last->getEventTime(),last->getAction(),
-					     mEvent.getX(),mEvent.getY(),last->getMetaState()));
-					last->recycle();
-					LOGV("%lld,%lld,%d events",mMoveTime,last->getEventTime(),mEvents.size());
-					break;
+                    mEvents.push_back(MotionEvent::obtain(last->getDownTime(),last->getEventTime(),last->getAction(),
+                           mEvent.getX(),mEvent.getY(),last->getMetaState()));
+                    last->recycle();
+                    LOGV("%lld,%lld,%d events",mMoveTime,last->getEventTime(),mEvents.size());
+                    break;
                 }
                 mLastDownX= mEvent.getX();
                 mLastDownY= mEvent.getY();

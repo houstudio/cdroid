@@ -1564,9 +1564,9 @@ View*AbsListView::obtainView(int position, bool*outMetadata) {
 
     if (mCacheColorHint != 0) child->setDrawingCacheBackgroundColor(mCacheColorHint);
 
-    /*if (child->getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+    if (child->getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         child->setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
-    }*/
+    }
     setItemViewLayoutParams(child, position);
 
     /*if (AccessibilityManager.getInstance(mContext).isEnabled()) {

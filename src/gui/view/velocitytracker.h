@@ -68,8 +68,6 @@ public:
     void recycle(); 
 };
     
-
-
 class VelocityTrackerStrategy {
 protected:
     VelocityTrackerStrategy() { }
