@@ -1,5 +1,6 @@
 #include <systemclock.h>
 #include <chrono>
+#include <sys/time.h>
 
 namespace cdroid{
 
@@ -28,6 +29,13 @@ LONGLONG SystemClock::currentTimeMillis(){
     auto duration = now.time_since_epoch(); 
     auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
     return millis;
+}
+
+bool SystemClock::setCurrentTimeMillis(LONGLONG millis){
+    struct timeval tv;
+    tv.tv_sec = millis/1000;
+    tv.tv_usec= (millis%1000)*1000;
+    return settimeofday(&tv,nullptr)==0;
 }
 
 LONGLONG SystemClock::currentTimeSeconds(){

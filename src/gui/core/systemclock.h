@@ -13,6 +13,7 @@ public:
     /*Returns milliseconds since January 1, 1970 00:00:00.0 UTC*/
     static LONGLONG currentTimeMillis();
     static LONGLONG currentTimeSeconds();
+    static bool setCurrentTimeMillis(LONGLONG millis);
     static LONGLONG elapsedRealtime();
 };
 
