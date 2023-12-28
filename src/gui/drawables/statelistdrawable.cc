@@ -44,7 +44,9 @@ StateListDrawable::StateListDrawable(){
 }
 
 StateListDrawable::StateListDrawable(Context*ctx,const AttributeSet&atts)
-   :DrawableContainer(ctx,atts){
+   :StateListDrawable(){//DrawableContainer(ctx,atts){
+    mStateListState->setConstantSize(atts.getBoolean("constantSize"));
+    mStateListState->setVariablePadding(atts.getBoolean("variablePadding"));
 }
 
 StateListDrawable::StateListDrawable(const ColorStateList&cls){
