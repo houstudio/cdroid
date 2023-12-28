@@ -34,7 +34,7 @@ void AnimatedStateListDrawable::addState(const std::vector<int>&stateSet,Drawabl
     onStateChange(getState());
 }
 
-void AnimatedStateListDrawable::addTransition(int fromId, int toId,AnimatedStateListDrawable::Transition* transition, bool reversible){
+void AnimatedStateListDrawable::addTransition(int fromId, int toId,Drawable* transition, bool reversible){
     FATAL_IF(transition==nullptr,"Transition drawable must not be null");
 
     mState->addTransition(fromId, toId,(Drawable*)transition, reversible);
@@ -365,6 +365,14 @@ void AnimatedStateListDrawable::AnimatedVectorDrawableTransition::reverse(){
 
 void AnimatedStateListDrawable::AnimatedVectorDrawableTransition::stop(){
     //mAvd->stop();
+}
+
+Drawable*AnimatedStateListDrawable::inflate(Context*ctx,const AttributeSet&atts){
+    AnimatedStateListDrawable*asd=new AnimatedStateListDrawable();
+    asd->mState->setConstantSize(atts.getBoolean("constantSize"));
+    asd->mState->setVariablePadding(atts.getBoolean("variablePadding"));
+    //android:variablePadding=["true" | "false"] >
+    return asd;
 }
 
 }//endof namespace

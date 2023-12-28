@@ -573,7 +573,7 @@ void ImageView::setColorFilter(int color,int mode){
 }
 
 void ImageView::setColorFilter(int color){
-    setColorFilter(color, SRC_ATOP);
+    setColorFilter(color, PorterDuff::Mode::SRC_ATOP);
 }
 
 void ImageView::setColorFilter(ColorFilter* cf){

@@ -2,34 +2,12 @@
 #define __COLOR_FILTERS_H__
 #include <drawables/colormatrix.h>
 #include <core/canvas.h>
+#include <core/porterduff.h>
 namespace cdroid{
-enum TintMode{
-    NOOP  = -1,
-    CLEAR = 0,
-    SRC   = 1,
-    DST   = 2,
-    SRC_OVER=3,
-    DST_OVER=4,
-    SRC_IN  =5,
-    DST_IN  =6,
-    SRC_OUT =7,
-    DST_OUT =8,
-    SRC_ATOP=9,
-    DST_ATOP=10,
-    XOR     =11,
-    ADD     =12,
-    MULTIPLY=13,
-    SCREEN  =14,
-    OVERLAY =15,
-    DARKEN  =16,
-    LIGHTEN =17,
-};
-typedef TintMode PorterDuffMode;
 
 class ColorFilter{
 public:
     virtual void apply(Canvas&canvas,const Rect&)=0;
-    static int tintMode2CairoOperator(int tintMode);
 };
 
 class ColorMatrixColorFilter:public ColorFilter{

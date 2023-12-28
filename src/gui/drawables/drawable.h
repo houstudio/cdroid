@@ -59,7 +59,7 @@ public:
         virtual ~ConstantState();
     };
     enum{
-        DEFAULT_TINT_MODE=SRC_IN
+        DEFAULT_TINT_MODE=PorterDuff::Mode::SRC_IN
     };
 protected:
     int mLevel;
@@ -86,7 +86,7 @@ public:
     virtual void clearMutated();
     virtual void setColorFilter(ColorFilter*);
     virtual ColorFilter*getColorFilter();
-    void setColorFilter(int color,PorterDuffMode mode);
+    void setColorFilter(int color,PorterDuff::Mode mode);
     void clearColorFilter();
     void setTint(int color);
     /*
@@ -138,6 +138,7 @@ public:
     virtual void draw(Canvas&ctx)=0;
     static int resolveOpacity(int op1,int op2);
     static int resolveDensity(int parentDensity);
+    static PorterDuff::Mode parseTintMode(int value, PorterDuff::Mode defaultMode);
     static float scaleFromDensity(float pixels, int sourceDensity, int targetDensity);
     static int scaleFromDensity(int pixels, int sourceDensity, int targetDensity, bool isSize);
     static Drawable*createWrappedDrawable(Context* ctx,const AttributeSet&atts);

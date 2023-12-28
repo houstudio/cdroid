@@ -129,7 +129,8 @@ bool StateListDrawable::onStateChange(const std::vector<int>&stateSet){
 
 Drawable*StateListDrawable::inflate(Context*ctx,const AttributeSet&atts){
     StateListDrawable*sd=new StateListDrawable();
-    //setConstantSize(atts.getBoolean("constantSize"));=["true" | "false"]
+    sd->mStateListState->setConstantSize(atts.getBoolean("constantSize"));
+    sd->mStateListState->setVariablePadding(atts.getBoolean("variablePadding"));
     //android:dither=["true" | "false"]
     //android:variablePadding=["true" | "false"] >
     return sd;

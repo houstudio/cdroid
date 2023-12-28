@@ -27,7 +27,7 @@ View::TintInfo::TintInfo(){
     mTintList = nullptr;
     mHasTintList = false;
     mHasTintMode = false;
-    mTintMode = SRC_IN;
+    mTintMode = PorterDuff::Mode::SRC_IN;
 }
 
 View::TintInfo::~TintInfo(){
@@ -345,21 +345,23 @@ View::View(Context*ctx,const AttributeSet&attrs){
         mBackgroundTint->mTintList = csl;
         mBackgroundTint->mHasTintList = true;
     }
-    const int tintMode = attrs.getInt("backgroundTintMode",std::map<const std::string,int>({
-           {"add",TintMode::ADD},          {"multiply",TintMode::MULTIPLY},
-           {"screen",TintMode::SCREEN},    {"src_atop",TintMode::SRC_ATOP},
-           {"src_in",TintMode::SRC_IN},    {"src_over",TintMode::SRC_OVER},
-           {"src",TintMode::SRC}
-        }),TintMode::NOOP);
-    if( tintMode != TintMode::NOOP ){
+    const std::map<const std::string,int>tintModes={
+           {"add",PorterDuff::Mode::ADD},          {"multiply",PorterDuff::Mode::MULTIPLY},
+           {"screen",PorterDuff::Mode::SCREEN},    {"src_atop",PorterDuff::Mode::SRC_ATOP},
+           {"src_in",PorterDuff::Mode::SRC_IN},    {"src_over",PorterDuff::Mode::SRC_OVER}
+        };
+    const int bgTintMode = Drawable::parseTintMode(attrs.getInt("backgroundTintMode",tintModes,PorterDuff::Mode::NOOP),PorterDuff::Mode::NOOP);
+    if( bgTintMode != PorterDuff::Mode::NOOP ){
         if(mBackgroundTint == nullptr) mBackgroundTint=new TintInfo;
-        mBackgroundTint->mTintMode = tintMode;
+        mBackgroundTint->mTintMode = bgTintMode;
         mBackgroundTint->mHasTintMode = true;
     }
     setBackground(attrs.getDrawable("background"));
 
     setForeground(attrs.getDrawable("foreground"));
-    setForegroundGravity(attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY));
+    //setForegroundGravity(attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY));
+    const int fgTintMode = Drawable::parseTintMode(attrs.getInt("foregroundTintMode",tintModes,PorterDuff::Mode::NOOP),PorterDuff::Mode::NOOP);
+    setForegroundTintMode(fgTintMode);
 
     int leftPadding,topPadding,rightPadding,bottomPadding;
     const int padding = attrs.getDimensionPixelSize("padding",-1);

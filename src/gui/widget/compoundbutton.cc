@@ -23,7 +23,7 @@ void CompoundButton::initCompoundButton(){
     mButtonDrawable = nullptr;
     mOnCheckedChangeListener = nullptr;
     mOnCheckedChangeWidgetListener = nullptr;
-    mButtonTintMode = TintMode::NOOP;
+    mButtonTintMode = PorterDuff::Mode::NOOP;
     mButtonTintList = nullptr;
 #if FUNCTION_AS_CHECKABLE
     isChecked = [this]()->bool{
@@ -152,14 +152,14 @@ PorterDuffMode CompoundButton::getButtonTintMode() const {
 }
 
 void CompoundButton::applyButtonTint() {
-    if (mButtonDrawable  && (mButtonTintList || mButtonTintMode!=TintMode::NOOP)) {
+    if (mButtonDrawable  && (mButtonTintList || mButtonTintMode!=PorterDuff::Mode::NOOP)) {
         mButtonDrawable = mButtonDrawable->mutate();
 
         if (mButtonTintList) {
             mButtonDrawable->setTintList(mButtonTintList);
         }
 
-        if (mButtonTintMode!=TintMode::NOOP) {
+        if (mButtonTintMode!=PorterDuff::Mode::NOOP) {
             mButtonDrawable->setTintMode(mButtonTintMode);
         }
 

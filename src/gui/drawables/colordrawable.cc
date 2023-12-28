@@ -88,7 +88,7 @@ void ColorDrawable::setAlpha(int alpha){
 }
 
 bool ColorDrawable::onStateChange(const std::vector<int>&stateSet){
-    if (mColorState->mTint && mColorState->mTintMode != TintMode::NOOP) {
+    if (mColorState->mTint && mColorState->mTintMode != PorterDuff::Mode::NOOP) {
         mTintFilter = updateTintFilter(mTintFilter, mColorState->mTint, mColorState->mTintMode);
         return true;
     }
@@ -140,9 +140,9 @@ void ColorDrawable::draw(Canvas&canvas){
     if((mColorState->mUseColor>>24)||mTintFilter){
         canvas.set_color(mColorState->mUseColor);
         if(mTintFilter)
-            canvas.set_operator((Cairo::Context::Operator)ColorFilter::tintMode2CairoOperator(mTintFilter->getMode()));
-        else if(mTintFilter&&(mColorState->mTintMode!=NOOP))
-            canvas.set_operator((Cairo::Context::Operator)ColorFilter::tintMode2CairoOperator(mColorState->mTintMode));
+            canvas.set_operator((Cairo::Context::Operator)PorterDuff::toOperator(mTintFilter->getMode()));
+        else if(mTintFilter&&(mColorState->mTintMode!=PorterDuff::Mode::NOOP))
+            canvas.set_operator((Cairo::Context::Operator)PorterDuff::toOperator(mColorState->mTintMode));
         /*HANDLE handler = canvas.getHandler();
         if(handler&&(mBounds.width==1024||mBounds.width==600)){
             GFXFillRect(handler,nullptr,mColorState->mUseColor);

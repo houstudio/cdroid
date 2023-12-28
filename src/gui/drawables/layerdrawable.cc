@@ -978,11 +978,11 @@ void LayerDrawable::clearMutated() {
 void LayerDrawable::draw(Canvas&canvas){
     for (auto child:mLayerState->mChildren) {
         Drawable* dr = child->mDrawable;
-        canvas.save();
+        //canvas.save();
         if (dr != nullptr){
             dr->draw(canvas);
         }
-        canvas.restore();
+        //canvas.restore();
     }
 }
 

@@ -113,7 +113,7 @@ void Drawable::setTint(int color) {
 }
 
 PorterDuffColorFilter *Drawable::updateTintFilter(PorterDuffColorFilter* tintFilter,const ColorStateList* tint,int tintMode) {
-    if ( (tint == nullptr) || (tintMode == TintMode::NOOP) ) {
+    if ( (tint == nullptr) || (tintMode == PorterDuff::Mode::NOOP) ) {
         return nullptr;
     }
 
@@ -259,6 +259,18 @@ int Drawable::resolveDensity(int parentDensity){
     return densityDpi == 0 ? DisplayMetrics::DENSITY_DEFAULT : densityDpi;
 }
 
+PorterDuff::Mode Drawable::parseTintMode(int value, PorterDuff::Mode defaultMode) {
+    switch (value) {
+    case 3: return PorterDuff::Mode::SRC_OVER;
+    case 5: return PorterDuff::Mode::SRC_IN;
+    case 9: return PorterDuff::Mode::SRC_ATOP;
+    case 14: return PorterDuff::Mode::MULTIPLY;
+    case 15: return PorterDuff::Mode::SCREEN;
+    case 16: return PorterDuff::Mode::ADD;
+    default: return defaultMode;
+    }
+}
+
 float Drawable::scaleFromDensity(float pixels, int sourceDensity, int targetDensity) {
     return pixels * targetDensity / sourceDensity;
 }
@@ -324,9 +336,10 @@ class ParseData {
         auto upper = items.at(items.size()-2);
         return upper->drawable && dynamic_cast<DrawableWrapper*>(upper->drawable);
     }
-    bool _upperIsContainer() {
+    bool upperIsContainer() {
         if(items.size()<=1)return false;
         auto upper = items.at(items.size()-2);
+        return upper->drawable;
     }
     void pop2Upper(Drawable*d) {
         auto upper=items.at(items.size()-2);
@@ -374,6 +387,7 @@ static std::map<const std::string,DrawableParser>drawableParsers= {
     {"layer-list", LayerDrawable::inflate},
     {"level-list", LevelListDrawable::inflate},
     {"selector", StateListDrawable::inflate},
+    {"animated-selector",AnimatedStateListDrawable::inflate},
     {"item", Drawable::createWrappedDrawable },
     {"ripple", RippleDrawable::inflate},
     {"animated-rotate", AnimatedRotateDrawable::inflate},
@@ -482,6 +496,8 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
                 if(cs)cs->mResource =pd->resourceFile;
             }
             item->drawable = d;
+        }else if(strcmp(name,"transition")==0){
+            LOGD("");
         }
         LOGV("created drawable %s:%p props:%d",name,item->drawable,item->props.size());
     }

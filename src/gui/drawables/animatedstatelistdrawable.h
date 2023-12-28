@@ -120,11 +120,12 @@ public:
     bool setVisible(bool visible, bool restart)override;
     void addState(const std::vector<int>&stateSet,Drawable* drawable, int id);
     /* transition must derived from Drawable & Animatable*/
-    void addTransition(int fromId, int toId,Transition* transition, bool reversible);
+    void addTransition(int fromId, int toId,Drawable* transition, bool reversible);
     bool isStateful()const override;
     void jumpToCurrentState()override;
     AnimatedStateListDrawable* mutate()override;
     void clearMutated()override;
+    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };
 
 }//endof namespace
