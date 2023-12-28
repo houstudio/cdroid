@@ -6,6 +6,10 @@ namespace cdroid{
 AnimatedStateListDrawable::AnimatedStateListDrawable():StateListDrawable(){
 }
 
+AnimatedStateListDrawable::AnimatedStateListDrawable(Context*ctx,const AttributeSet&atts)
+   :StateListDrawable(ctx,atts){
+}
+
 AnimatedStateListDrawable::AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListDrawable::AnimatedStateListState> state)
   :StateListDrawable(state){
     std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(state.get(), this);
@@ -368,10 +372,7 @@ void AnimatedStateListDrawable::AnimatedVectorDrawableTransition::stop(){
 }
 
 Drawable*AnimatedStateListDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    AnimatedStateListDrawable*asd=new AnimatedStateListDrawable();
-    asd->mState->setConstantSize(atts.getBoolean("constantSize"));
-    asd->mState->setVariablePadding(atts.getBoolean("variablePadding"));
-    //android:variablePadding=["true" | "false"] >
+    AnimatedStateListDrawable*asd=new AnimatedStateListDrawable(ctx,atts);
     return asd;
 }
 

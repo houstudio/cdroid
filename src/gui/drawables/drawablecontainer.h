@@ -81,6 +81,7 @@ protected:
 
     Drawable* mCurrDrawable;
     Drawable* mLastDrawable;
+    DrawableContainer(Context*ctx,const AttributeSet&atts);
     bool needsMirroring();
     virtual std::shared_ptr<DrawableContainerState> cloneConstantState();
     virtual void setConstantState(std::shared_ptr<DrawableContainerState>state);

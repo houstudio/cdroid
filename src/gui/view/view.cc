@@ -346,10 +346,10 @@ View::View(Context*ctx,const AttributeSet&attrs){
         mBackgroundTint->mHasTintList = true;
     }
     const std::map<const std::string,int>tintModes={
-           {"add",PorterDuff::Mode::ADD},          {"multiply",PorterDuff::Mode::MULTIPLY},
-           {"screen",PorterDuff::Mode::SCREEN},    {"src_atop",PorterDuff::Mode::SRC_ATOP},
-           {"src_in",PorterDuff::Mode::SRC_IN},    {"src_over",PorterDuff::Mode::SRC_OVER}
-        };
+           {"add",PorterDuff::Mode::ADD},       {"multiply",PorterDuff::Mode::MULTIPLY},
+           {"screen",PorterDuff::Mode::SCREEN}, {"src_atop",PorterDuff::Mode::SRC_ATOP},
+           {"src_in",PorterDuff::Mode::SRC_IN}, {"src_over",PorterDuff::Mode::SRC_OVER} };
+
     const int bgTintMode = Drawable::parseTintMode(attrs.getInt("backgroundTintMode",tintModes,PorterDuff::Mode::NOOP),PorterDuff::Mode::NOOP);
     if( bgTintMode != PorterDuff::Mode::NOOP ){
         if(mBackgroundTint == nullptr) mBackgroundTint=new TintInfo;
@@ -362,6 +362,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     //setForegroundGravity(attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY));
     const int fgTintMode = Drawable::parseTintMode(attrs.getInt("foregroundTintMode",tintModes,PorterDuff::Mode::NOOP),PorterDuff::Mode::NOOP);
     setForegroundTintMode(fgTintMode);
+    mForegroundInfo->mInsidePadding = attrs.getBoolean("foregroundInsidePadding",mForegroundInfo->mInsidePadding);
 
     int leftPadding,topPadding,rightPadding,bottomPadding;
     const int padding = attrs.getDimensionPixelSize("padding",-1);

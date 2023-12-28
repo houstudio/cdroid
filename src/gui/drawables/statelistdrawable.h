@@ -18,6 +18,7 @@ protected:
 private:
     std::shared_ptr<StateListState>mStateListState;
 protected:
+    StateListDrawable(Context*,const AttributeSet&);
     StateListDrawable(std::shared_ptr<StateListState>state);
     int indexOfStateSet(const std::vector<int>&states)const;
     bool onStateChange(const std::vector<int>&stateSet)override;

@@ -43,6 +43,10 @@ StateListDrawable::StateListDrawable(){
     setConstantState(state);
 }
 
+StateListDrawable::StateListDrawable(Context*ctx,const AttributeSet&atts)
+   :DrawableContainer(ctx,atts){
+}
+
 StateListDrawable::StateListDrawable(const ColorStateList&cls){
     auto state=std::make_shared<StateListState>(nullptr,this);
     setConstantState(state);
@@ -128,11 +132,7 @@ bool StateListDrawable::onStateChange(const std::vector<int>&stateSet){
 }
 
 Drawable*StateListDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    StateListDrawable*sd=new StateListDrawable();
-    sd->mStateListState->setConstantSize(atts.getBoolean("constantSize"));
-    sd->mStateListState->setVariablePadding(atts.getBoolean("variablePadding"));
-    //android:dither=["true" | "false"]
-    //android:variablePadding=["true" | "false"] >
+    StateListDrawable*sd=new StateListDrawable(ctx,atts);
     return sd;
 }
 

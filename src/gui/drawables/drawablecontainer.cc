@@ -344,14 +344,19 @@ bool DrawableContainer::DrawableContainerState::isStateful(){
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 DrawableContainer::DrawableContainer(){
-    mDrawableContainerState=std::make_shared<DrawableContainerState>(nullptr,this);
+    mDrawableContainerState= std::make_shared<DrawableContainerState>(nullptr,this);
     mHasAlpha = false;
     mMutated  = false;
     mCurIndex = mLastIndex = -1;
     mCurrDrawable = mLastDrawable = nullptr;
     mBlockInvalidateCallback = nullptr;
-    mExitAnimationEnd =0;
-    mEnterAnimationEnd=0;
+    mExitAnimationEnd = 0;
+    mEnterAnimationEnd= 0;
+}
+
+DrawableContainer::DrawableContainer(Context*ctx,const AttributeSet&atts):DrawableContainer(){
+    mDrawableContainerState->setConstantSize(atts.getBoolean("constantSize"));
+    mDrawableContainerState->setVariablePadding(atts.getBoolean("variablePadding")); 
 }
 
 DrawableContainer::~DrawableContainer(){
