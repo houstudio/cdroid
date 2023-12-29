@@ -2115,7 +2115,7 @@ bool AbsListView::performItemClick(View& view, int position, long id) {
 
         if (mChoiceMode == CHOICE_MODE_MULTIPLE ||
                 (mChoiceMode == CHOICE_MODE_MULTIPLE_MODAL && mChoiceActionMode != nullptr)) {
-            bool checked = !mCheckStates.get(position, false);
+            const bool checked = !mCheckStates.get(position, false);
             mCheckStates.put(position, checked);
             if (mCheckedIdStates.size() && mAdapter->hasStableIds()) {
                 if (checked) {
@@ -2136,7 +2136,7 @@ bool AbsListView::performItemClick(View& view, int position, long id) {
             }
             checkedStateChanged = true;
         } else if (mChoiceMode == CHOICE_MODE_SINGLE) {
-            bool checked = !mCheckStates.get(position, false);
+            const bool checked = !mCheckStates.get(position, false);
             if (checked) {
                 mCheckStates.clear();
                 mCheckStates.put(position, true);
@@ -2968,7 +2968,7 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
                             child->setPressed(false);
                             setPressed(false);
                             if (!mDataChanged && !mIsDetaching && isAttachedToWindow()) {
-                                mPerformClick();//doClick(mMotionPosition);//performClick.run();
+                                mPerformClick.run();
                             }
                         };
                         postDelayed(mTouchModeReset,ViewConfiguration::getPressedStateDuration());

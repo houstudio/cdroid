@@ -437,8 +437,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         }break;
     case EV_SYN:
         switch(code){
+        case SYN_MT_REPORT:break;
         case SYN_REPORT:
-        case SYN_MT_REPORT:
             mMoveTime =(tv.tv_sec * 1000000 + tv.tv_usec);
             mEvent.initialize(getId(),getSources(),mEvent.getAction(),mEvent.getActionButton()
 			    , 0/*flags*/ , 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,0,0/*x/yOffset*/

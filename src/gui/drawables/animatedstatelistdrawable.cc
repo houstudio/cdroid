@@ -7,7 +7,9 @@ AnimatedStateListDrawable::AnimatedStateListDrawable():StateListDrawable(){
 }
 
 AnimatedStateListDrawable::AnimatedStateListDrawable(Context*ctx,const AttributeSet&atts)
-   :StateListDrawable(ctx,atts){
+   :StateListDrawable(){
+    mState->setConstantSize(atts.getBoolean("constantSize"));
+    mState->setVariablePadding(atts.getBoolean("variablePadding"));
 }
 
 AnimatedStateListDrawable::AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListDrawable::AnimatedStateListState> state)
