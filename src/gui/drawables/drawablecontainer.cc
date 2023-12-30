@@ -262,7 +262,7 @@ void DrawableContainer::setConstantState(std::shared_ptr<DrawableContainerState>
          }
      }
      mLastIndex = -1;
-     mLastDrawble = nullptr;
+     mLastDrawable = nullptr;
 }
 
 DrawableContainer*DrawableContainer::mutate(){
@@ -344,6 +344,24 @@ bool DrawableContainer::DrawableContainerState::isStateful(){
     mStateful = isStateful;
     mCheckedStateful = true;
     return isStateful;
+}
+
+int DrawableContainer::DrawableContainerState::getOpacity(){
+    if (mCheckedOpacity) {
+        return mOpacity;
+    }
+
+    createAllFutures();
+
+    const int N = mDrawables.size();
+    int op = (N > 0) ? mDrawables[0]->getOpacity() : PixelFormat::TRANSPARENT;
+    for (int i = 1; i < N; i++) {
+        op = Drawable::resolveOpacity(op, mDrawables[i]->getOpacity());
+    }
+
+    mOpacity = op;
+    mCheckedOpacity = true;
+    return op;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 DrawableContainer::DrawableContainer(){
@@ -492,6 +510,12 @@ bool DrawableContainer::onLevelChange(int level) {
     return false;
 }
 
+bool DrawableContainer::onLayoutDirectionChanged(int layoutDirection) {
+    // Let the container handle setting its own layout direction. Otherwise,
+    // we're accessing potentially unused states.
+    return mDrawableContainerState->setLayoutDirection(layoutDirection, getCurrentIndex());
+}
+
 bool DrawableContainer::isStateful()const{
     return mDrawableContainerState->isStateful();
 }
@@ -621,7 +645,9 @@ void DrawableContainer::animate(bool schedule) {
     } else {
         mExitAnimationEnd = 0;
     }
-
+    LOGV_IF(mCurrDrawable&&mLastDrawable,"%p Cur %d:%p alpha=%d ; Last %d:%p alpha=%d",this,
+		mCurIndex,mCurrDrawable,mCurrDrawable->getAlpha(),
+		mLastIndex,mLastDrawable,mLastDrawable->getAlpha());
     if (schedule && animating) {
         scheduleSelf(mAnimationRunnable, now + 1000 / 60);
     }
@@ -742,13 +768,29 @@ void DrawableContainer::invalidateDrawable(Drawable& who){
 }
 
 void DrawableContainer::scheduleDrawable(Drawable&who,Runnable what, long when){
-    if (mCallback != nullptr)
+    if ((&who == mCurrDrawable)&&(mCallback != nullptr))
         mCallback->scheduleDrawable(who, what, when);
 }
 
 void DrawableContainer::unscheduleDrawable(Drawable& who,Runnable what){
-    if (mCallback != nullptr) 
+    if ((&who == mCurrDrawable)&&(mCallback != nullptr)) 
         mCallback->unscheduleDrawable(who, what);
+}
+
+bool DrawableContainer::setVisible(bool visible, bool restart) {
+    bool changed = Drawable::setVisible(visible, restart);
+    if (mLastDrawable != nullptr) {
+        mLastDrawable->setVisible(visible, restart);
+    }
+    if (mCurrDrawable != nullptr) {
+        mCurrDrawable->setVisible(visible, restart);
+    }
+    return changed;
+}
+
+int DrawableContainer::getOpacity() {
+    return mCurrDrawable == nullptr || !mCurrDrawable->isVisible() ? PixelFormat::TRANSPARENT :
+            mDrawableContainerState->getOpacity();
 }
 
 void DrawableContainer::draw(Canvas&canvas){

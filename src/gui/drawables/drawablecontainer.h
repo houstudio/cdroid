@@ -66,6 +66,7 @@ protected:
         void setEnterFadeDuration(int duration) {mEnterFadeDuration = duration; }
         int getExitFadeDuration()const {return mExitFadeDuration; }
         void setExitFadeDuration(int duration) {mExitFadeDuration = duration;}
+	int getOpacity();
     };
     class BlockInvalidateCallback*mBlockInvalidateCallback;
     void initializeDrawableForDisplay(Drawable*d);
@@ -90,6 +91,7 @@ protected:
     void onBoundsChange(const Rect&bounds)override;
     bool onStateChange(const std::vector<int>&state)override;
     bool onLevelChange(int level)override;
+    bool onLayoutDirectionChanged(int layoutDirection);
 public:
     DrawableContainer();
     ~DrawableContainer()override;
@@ -105,6 +107,7 @@ public:
     int getChangingConfigurations()const override;
     void setAlpha(int)override;
     int getAlpha()const override;
+    int getOpacity()override;
     int getIntrinsicWidth() const override;
     int getIntrinsicHeight()const override;
     int getMinimumWidth() const override;
@@ -124,6 +127,7 @@ public:
     void invalidateDrawable(Drawable& who)override;
     void scheduleDrawable(Drawable&who,Runnable what, long when)override;
     void unscheduleDrawable(Drawable& who,Runnable what)override;
+    bool setVisible(bool visible, bool restart)override;
     std::shared_ptr<ConstantState>getConstantState()override;
     DrawableContainer*mutate()override;
     void clearMutated()override;
