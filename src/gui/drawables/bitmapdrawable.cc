@@ -43,6 +43,7 @@ BitmapDrawable::BitmapState::BitmapState(const BitmapState&bitmapState){
     mTransparency = bitmapState.mTransparency;
     //mRebuildShader = bitmapState.mRebuildShader;
     mAutoMirrored = bitmapState.mAutoMirrored;
+    mResource = bitmapState.mResource;
 }
 
 BitmapDrawable::BitmapState::~BitmapState(){

@@ -489,21 +489,23 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 
     if(it!=drawableParsers.end()) {
         auto item = pd->items.back();
-        if(strcmp(name,"shape")||((strcmp(name,"item")==0)&&atts.hasAttribute("drawable"))){
+        if( strcmp(name,"shape")||(((strcmp(name,"item")==0)||(strcmp(name,"transition")==0))&&atts.hasAttribute("drawable"))){
             Drawable* d = it->second(pd->ctx,atts);
             if(d){
                 auto cs = d->getConstantState();
-                if(cs)cs->mResource =pd->resourceFile;
+                if(cs){
+                   cs->mResource = atts.getString("drawable");
+		   LOGD_IF(atts.hasAttribute("drawable"),"%p.res=%s",cs->mResource.c_str());
+		}
             }
             item->drawable = d;
-        }else if(strcmp(name,"transition")==0){
-            LOGD("");
         }
         LOGV("created drawable %s:%p props:%d",name,item->drawable,item->props.size());
     }
 }
 
-static Drawable*parseShapeDrawable(Context*ctx,const AttributeSet&atts,const std::vector<AttributeSet>&props,const std::vector<std::string>&names) {
+static Drawable*parseShapeDrawable(Context*ctx,const AttributeSet&atts,
+	const std::vector<AttributeSet>&props,const std::vector<std::string>&names) {
     const AttributeSet* corners = nullptr,*gradient = nullptr,*padding = nullptr;
     const AttributeSet* size = nullptr, *stroke = nullptr,*solid = nullptr;
 

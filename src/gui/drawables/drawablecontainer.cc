@@ -430,7 +430,7 @@ int DrawableContainer::getChangingConfigurations()const{
 }
 
 void DrawableContainer::setAlpha(int alpha) {
-    if (!mHasAlpha || mAlpha != alpha) {
+    if (!mHasAlpha || (mAlpha != alpha)) {
         mHasAlpha = true;
         mAlpha = alpha;
         if (mCurrDrawable != nullptr) {
@@ -645,9 +645,9 @@ void DrawableContainer::animate(bool schedule) {
     } else {
         mExitAnimationEnd = 0;
     }
-    LOGV_IF(mCurrDrawable&&mLastDrawable,"%p Cur %d:%p alpha=%d ; Last %d:%p alpha=%d",this,
-		mCurIndex,mCurrDrawable,mCurrDrawable->getAlpha(),
-		mLastIndex,mLastDrawable,mLastDrawable->getAlpha());
+    LOGD_IF(mCurrDrawable&&mLastDrawable,"%p \nCur %d:%p[%s] alpha=%d\nLast %d:%p[%s] alpha=%d",this,
+		mCurIndex,mCurrDrawable,mCurrDrawable->getConstantState()->mResource.c_str(),mCurrDrawable->getAlpha(),
+		mLastIndex,mLastDrawable,mLastDrawable->getConstantState()->mResource.c_str(),mLastDrawable->getAlpha());
     if (schedule && animating) {
         scheduleSelf(mAnimationRunnable, now + 1000 / 60);
     }
