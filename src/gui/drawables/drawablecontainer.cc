@@ -645,7 +645,7 @@ void DrawableContainer::animate(bool schedule) {
     } else {
         mExitAnimationEnd = 0;
     }
-    LOGD_IF(mCurrDrawable&&mLastDrawable,"%p \nCur %d:%p[%s] alpha=%d\nLast %d:%p[%s] alpha=%d",this,
+    LOGV_IF(mCurrDrawable&&mLastDrawable,"%p \nCur %d:%p[%s] alpha=%d\nLast %d:%p[%s] alpha=%d",this,
 		mCurIndex,mCurrDrawable,mCurrDrawable->getConstantState()->mResource.c_str(),mCurrDrawable->getAlpha(),
 		mLastIndex,mLastDrawable,mLastDrawable->getConstantState()->mResource.c_str(),mLastDrawable->getAlpha());
     if (schedule && animating) {
