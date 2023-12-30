@@ -554,7 +554,7 @@ bool ImpulseVelocityTrackerStrategy::getEstimator(uint32_t id,
     do {
         const Movement& movement = mMovements[index];
         if (!movement.idBits.hasBit(id)) {
-            LOGD("hasbit(%d)failed",id);break;
+            break;
         }
 
         nsecs_t age = newestMovement.eventTime - movement.eventTime;

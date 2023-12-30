@@ -47,6 +47,8 @@ StateListDrawable::StateListDrawable(Context*ctx,const AttributeSet&atts)
    :StateListDrawable(){//DrawableContainer(ctx,atts){
     mStateListState->setConstantSize(atts.getBoolean("constantSize"));
     mStateListState->setVariablePadding(atts.getBoolean("variablePadding"));
+    mStateListState->setEnterFadeDuration(atts.getInt("enterFadeDuration"));
+    mStateListState->setExitFadeDuration(atts.getInt("exitFadeDuration"));
 }
 
 StateListDrawable::StateListDrawable(const ColorStateList&cls){
@@ -124,13 +126,11 @@ int StateListDrawable::getStateDrawableIndex(const std::vector<int>&stateSet)con
 }
 
 bool StateListDrawable::onStateChange(const std::vector<int>&stateSet){
-    bool changed = DrawableContainer::onStateChange(stateSet);
+    const bool changed = DrawableContainer::onStateChange(stateSet);
     int  idx = mStateListState->indexOfStateSet(stateSet);
     if(idx<0)idx = mStateListState->indexOfStateSet(StateSet::WILD_CARD);
     LOGV("%p set stateIndex[%d/%d]=%p",this,idx,getChildCount(),getChild(idx));
-    changed |= selectDrawable(idx);
-    if(mCurrDrawable)mCurrDrawable->setState(stateSet);
-    return  changed;
+    return selectDrawable(idx)||changed;
 }
 
 Drawable*StateListDrawable::inflate(Context*ctx,const AttributeSet&atts){

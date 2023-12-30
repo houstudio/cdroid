@@ -76,6 +76,7 @@ protected:
     int mCurIndex;
     int mLastIndex;
     bool mMutated;
+    Runnable mAnimationRunnable;
     long mEnterAnimationEnd;
     long mExitAnimationEnd;
 
@@ -83,6 +84,7 @@ protected:
     Drawable* mLastDrawable;
     DrawableContainer(Context*ctx,const AttributeSet&atts);
     bool needsMirroring();
+    void animate(bool schedule);
     virtual std::shared_ptr<DrawableContainerState> cloneConstantState();
     virtual void setConstantState(std::shared_ptr<DrawableContainerState>state);
     void onBoundsChange(const Rect&bounds)override;
@@ -94,13 +96,15 @@ public:
     int getCurrentIndex()const;
     virtual void setCurrentIndex(int index);
     virtual bool selectDrawable(int index);
+    Drawable*getCurrent()override;
     int addChild(Drawable*);
     int getChildCount()const;
     Drawable*getChild(int index);
     bool getPadding(Rect&padding)override;
     Insets getOpticalInsets()override;
     int getChangingConfigurations()const override;
-
+    void setAlpha(int)override;
+    int getAlpha()const override;
     int getIntrinsicWidth() const override;
     int getIntrinsicHeight()const override;
     int getMinimumWidth() const override;

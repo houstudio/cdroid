@@ -4,12 +4,18 @@
 namespace cdroid{
 
 AnimatedStateListDrawable::AnimatedStateListDrawable():StateListDrawable(){
+    std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(nullptr,this);
+    setConstantState(newState);
+    onStateChange(getState());
+    jumpToCurrentState();
 }
 
 AnimatedStateListDrawable::AnimatedStateListDrawable(Context*ctx,const AttributeSet&atts)
-   :StateListDrawable(){
+   :AnimatedStateListDrawable(){
     mState->setConstantSize(atts.getBoolean("constantSize"));
     mState->setVariablePadding(atts.getBoolean("variablePadding"));
+    mState->setEnterFadeDuration(atts.getInt("enterFadeDuration"));
+    mState->setExitFadeDuration(atts.getInt("exitFadeDuration"));
 }
 
 AnimatedStateListDrawable::AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListDrawable::AnimatedStateListState> state)

@@ -1,4 +1,5 @@
 #include <drawables/drawablecontainer.h>
+#include <core/systemclock.h>
 #include <cdlog.h>
 namespace cdroid{
 
@@ -252,7 +253,7 @@ std::shared_ptr<DrawableContainer::DrawableContainerState> DrawableContainer::cl
 }
 
 void DrawableContainer::setConstantState(std::shared_ptr<DrawableContainerState>state){
-     mDrawableContainerState=state;
+     mDrawableContainerState = state;
      // The locally cached drawables may have changed.
      if (mCurIndex >= 0) {
          mCurrDrawable = state->getChild(mCurIndex);
@@ -260,6 +261,8 @@ void DrawableContainer::setConstantState(std::shared_ptr<DrawableContainerState>
             initializeDrawableForDisplay(mCurrDrawable);
          }
      }
+     mLastIndex = -1;
+     mLastDrawble = nullptr;
 }
 
 DrawableContainer*DrawableContainer::mutate(){
@@ -347,6 +350,7 @@ DrawableContainer::DrawableContainer(){
     mDrawableContainerState= std::make_shared<DrawableContainerState>(nullptr,this);
     mHasAlpha = false;
     mMutated  = false;
+    mAlpha = 0xFF;
     mCurIndex = mLastIndex = -1;
     mCurrDrawable = mLastDrawable = nullptr;
     mBlockInvalidateCallback = nullptr;
@@ -405,6 +409,24 @@ Insets DrawableContainer::getOpticalInsets(){
 int DrawableContainer::getChangingConfigurations()const{
     return Drawable::getChangingConfigurations()
              | mDrawableContainerState->getChangingConfigurations();
+}
+
+void DrawableContainer::setAlpha(int alpha) {
+    if (!mHasAlpha || mAlpha != alpha) {
+        mHasAlpha = true;
+        mAlpha = alpha;
+        if (mCurrDrawable != nullptr) {
+            if (mEnterAnimationEnd == 0) {
+                mCurrDrawable->setAlpha(alpha);
+            } else {
+                animate(false);
+            }
+        }
+    }
+}
+
+int DrawableContainer::getAlpha() const{
+    return mAlpha;
 }
 
 void DrawableContainer::setColorFilter(ColorFilter*colorFilter){
@@ -558,12 +580,73 @@ int DrawableContainer::getCurrentIndex()const{
     return mCurIndex;
 }
 
+Drawable*DrawableContainer::getCurrent(){
+    return mCurrDrawable;
+}
+
+void DrawableContainer::animate(bool schedule) {
+    mHasAlpha = true;
+
+    const long now = SystemClock::uptimeMillis();
+    bool animating = false;
+    if (mCurrDrawable != nullptr) {
+        if (mEnterAnimationEnd != 0) {
+            if (mEnterAnimationEnd <= now) {
+                mCurrDrawable->setAlpha(mAlpha);
+                mEnterAnimationEnd = 0;
+            } else {
+                const int animAlpha = (int)((mEnterAnimationEnd-now)*255)
+                        / mDrawableContainerState->mEnterFadeDuration;
+                mCurrDrawable->setAlpha(((255-animAlpha)*mAlpha)/255);
+                animating = true;
+            }
+        }
+    } else {
+        mEnterAnimationEnd = 0;
+    }
+    if (mLastDrawable != nullptr) {
+        if (mExitAnimationEnd != 0) {
+            if (mExitAnimationEnd <= now) {
+                mLastDrawable->setVisible(false, false);
+                mLastDrawable = nullptr;
+                mLastIndex = -1;
+                mExitAnimationEnd = 0;
+            } else {
+                const int animAlpha = (int)((mExitAnimationEnd-now)*255)
+                        / mDrawableContainerState->mExitFadeDuration;
+                mLastDrawable->setAlpha((animAlpha*mAlpha)/255);
+                animating = true;
+            }
+        }
+    } else {
+        mExitAnimationEnd = 0;
+    }
+
+    if (schedule && animating) {
+        scheduleSelf(mAnimationRunnable, now + 1000 / 60);
+    }
+}
+
 void DrawableContainer::initializeDrawableForDisplay(Drawable*d){
     if (mBlockInvalidateCallback == nullptr)
         mBlockInvalidateCallback = new BlockInvalidateCallback();
 
     d->setCallback(mBlockInvalidateCallback->wrap(d->getCallback()));
 
+    if(mDrawableContainerState->mEnterFadeDuration <= 0 && mHasAlpha){
+        d->setAlpha(mAlpha);
+    }
+    /*if (mDrawableContainerState->mHasColorFilter) {
+        // Color filter always overrides tint.
+        d->setColorFilter(mDrawableContainerState->mColorFilter);
+    } else {
+        if (mDrawableContainerState->mHasTintList) {
+            d->setTintList(mDrawableContainerState->mTintList);
+        }
+        if (mDrawableContainerState->mHasTintMode) {
+            d->setTintBlendMode(mDrawableContainerState->mBlendMode);
+        }
+    }*/
     d->setVisible(isVisible(), true);
     //d->setDither(mDither);
     d->setState(getState());
@@ -580,17 +663,51 @@ void DrawableContainer::setCurrentIndex(int index){
 
 bool DrawableContainer::selectDrawable(int index){
     if(index==mCurIndex)return false;
-    if (mCurrDrawable != nullptr) {
+    const long now = SystemClock::uptimeMillis();
+    if(mDrawableContainerState->mExitFadeDuration>0){
+        if (mLastDrawable != nullptr) {
+            mLastDrawable->setVisible(false, false);
+        }
+	if(mCurrDrawable!=nullptr){
+	    mLastDrawable = mCurrDrawable;
+	    mLastIndex = mCurIndex;
+	    mExitAnimationEnd = now + mDrawableContainerState->mExitFadeDuration;
+	}else{
+	    mLastDrawable = nullptr;
+	    mLastIndex = -1;
+	    mExitAnimationEnd = 0;
+	}
+    }else if(mCurrDrawable!=nullptr){
         mCurrDrawable->setVisible(false, false);
     }
-    if(index>=0&&index<getChildCount()){
+    if( (index>=0) && (index<getChildCount()) ){
         mCurIndex = index;
         mCurrDrawable = mDrawableContainerState->getChild(index);
-        initializeDrawableForDisplay(mCurrDrawable);
-        return true;
+        if(mCurrDrawable){
+	    if(mDrawableContainerState->mEnterFadeDuration>0){
+		mEnterAnimationEnd = now + mDrawableContainerState->mEnterFadeDuration;
+	    }
+            initializeDrawableForDisplay(mCurrDrawable);
+        }
+    }else{
+        mCurrDrawable = nullptr;
+	mCurIndex = -1;
+    }
+
+    if (mEnterAnimationEnd != 0 || mExitAnimationEnd != 0) {
+        if (mAnimationRunnable == nullptr) {
+            mAnimationRunnable = [this](){
+                animate(true);
+                invalidateSelf();
+            };
+        } else {
+            unscheduleSelf(mAnimationRunnable);
+        }
+        // Compute first frame and schedule next animation.
+        animate(true);
     }
     invalidateSelf();
-    return false;
+    return true;
 }
 
 int DrawableContainer::addChild(Drawable*d){
