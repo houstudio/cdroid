@@ -589,7 +589,7 @@ TEST_F(DRAWABLE,gradient_rectangle){
             gd->setCornerRadius(20-i);
             gd->draw(*ctx);
             ctx->get_target()->write_to_png("gradient1.png");
-             postCompose();
+            postCompose();
             usleep(100000);
         }
    }

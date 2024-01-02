@@ -495,7 +495,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
                 auto cs = d->getConstantState();
                 if(cs){
                    cs->mResource = atts.getString("drawable");
-                   LOGD_IF(atts.hasAttribute("drawable"),"%p.res=%s",cs->mResource.c_str());
+                   LOGV_IF(atts.hasAttribute("drawable"),"%p.res=%s",cs->mResource.c_str());
                 }
             }
             item->drawable = d;

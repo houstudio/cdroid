@@ -107,68 +107,13 @@ protected:
         void doScroll();
     };
 private:
-
-    class AbsRunnable:public Runnable{
-    protected:
-        AbsListView*mLV;
-    public:
-        AbsRunnable();
-        virtual void setList(AbsListView*); 
-        virtual void run()=0;
-    };
-    class CheckForTap:public AbsRunnable{
-    public:
-        float x,y;
-        void run()override;
-    };
-    class WindowRunnable:public AbsRunnable{
-    protected:
-        int mOriginalAttachCount;
-    public:
-        WindowRunnable();
-        void rememberWindowAttachCount();
-        bool sameWindow();
-    };
-    class PerformClick:public WindowRunnable{
-    public:
-        int mClickMotionPosition;
-        void run()override;
-    };
-    class CheckForLongPress:public WindowRunnable{
-    private:
-        static constexpr int INVALID_COORD=-1;
-        float mX ,mY;
-    public:
-        void setCoords(float x, float y);
-        void run()override;
-    };
-    class CheckForKeyLongPress:public WindowRunnable{
-    public:
-        void run()override;
-    };
-    class FlingRunnable:public AbsRunnable{
-    public:
-        static constexpr int FLYWHEEL_TIMEOUT = 40;
-        OverScroller* mScroller;
-        int mLastFlingY;
-        bool mSuppressIdleStateChangeCall;
-        Runnable mCheckFlywheel;
-        void checkFlyWheel();
-    public:
-        FlingRunnable();
-        ~FlingRunnable()override;
-        float getSplineFlingDistance(int velocity)const;
-        void setList(AbsListView*)override;
-        void start(int initialVelocity);
-        void startSpringback();
-        void startOverfling(int initialVelocity);
-        void edgeReached(int delta);
-        void startScroll(int distance, int duration, bool linear,
-                bool suppressEndFlingStateChangeCall);
-        void endFling();
-        void flywheelTouch();
-        void run()override;
-    };
+    class AbsRunnable;
+    class CheckForTap;
+    class WindowRunnable;
+    class PerformClick;
+    class CheckForLongPress;
+    class CheckForKeyLongPress;
+    class FlingRunnable;
 private:
     constexpr static int FLYWHEEL_TIMEOUT =40;
     constexpr static bool PROFILE_SCROLLING = false;
@@ -196,13 +141,13 @@ private:
     int mLastScrollState;
     bool mIsChildViewEnabled;
     bool mForceTranscriptScroll;
-    CheckForLongPress mPendingCheckForLongPress;
-    CheckForTap mPendingCheckForTap;
-    CheckForKeyLongPress mPendingCheckForKeyLongPress;
+    CheckForLongPress* mPendingCheckForLongPress;
+    CheckForTap* mPendingCheckForTap;
+    CheckForKeyLongPress* mPendingCheckForKeyLongPress;
     ViewTreeObserver::OnGlobalLayoutListener mGlobalLayoutListener;
     ViewTreeObserver::OnTouchModeChangeListener mTouchModeChangeListener;
-    AbsListView::PerformClick mPerformClick;
-    FlingRunnable mFlingRunnable;
+    AbsListView::PerformClick* mPerformClick;
+    FlingRunnable* mFlingRunnable;
     Runnable mTouchModeReset;
     Runnable mClearScrollingCache;
     Runnable mPostScrollRunner;
@@ -474,5 +419,78 @@ public:
     void reclaimViews(std::vector<View*>& views);
 };
 
+class AbsListView::AbsRunnable{
+protected:
+    AbsListView*mLV;
+    Runnable mRunnable;
+public:
+    AbsRunnable(AbsListView*);
+    virtual void run()=0;
+    void postDelayed(long);
+    void removeCallbacks();
+};
+
+class AbsListView::CheckForTap:public AbsRunnable{
+public:
+    CheckForTap(AbsListView*);
+    float x,y;
+    void run()override;
+};
+
+class AbsListView::WindowRunnable:public AbsRunnable{
+protected:
+    int mOriginalAttachCount;
+public:
+    WindowRunnable(AbsListView*);
+    void rememberWindowAttachCount();
+    bool sameWindow();
+};
+
+class AbsListView::PerformClick:public WindowRunnable{
+public:
+    PerformClick(AbsListView*lv);
+    int mClickMotionPosition;
+    void run()override;
+};
+
+class AbsListView::CheckForLongPress:public WindowRunnable{
+private:
+    static constexpr int INVALID_COORD=-1;
+    float mX ,mY;
+public:
+    CheckForLongPress(AbsListView*);
+    void setCoords(float x, float y);
+    void run()override;
+};
+
+class AbsListView::CheckForKeyLongPress:public WindowRunnable{
+public:
+    CheckForKeyLongPress(AbsListView*lv);
+    void run()override;
+};
+
+class AbsListView::FlingRunnable:public AbsRunnable{
+public:
+    static constexpr int FLYWHEEL_TIMEOUT = 40;
+    OverScroller* mScroller;
+    int mLastFlingY;
+    bool mSuppressIdleStateChangeCall;
+    Runnable mCheckFlywheel;
+    void checkFlyWheel();
+public:
+    FlingRunnable(AbsListView*lv);
+    ~FlingRunnable();
+    float getSplineFlingDistance(int velocity)const;
+    void start(int initialVelocity);
+    void startSpringback();
+    void startOverfling(int initialVelocity);
+    void edgeReached(int delta);
+    void startScroll(int distance, int duration, bool linear,
+            bool suppressEndFlingStateChangeCall);
+    void endFling();
+    void flywheelTouch();
+    void run()override;
+    void postOnAnimation();
+};
 }//namespace
 #endif

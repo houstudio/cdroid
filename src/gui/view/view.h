@@ -10,6 +10,7 @@
 #include <core/context.h>
 #include <core/intent.h>
 #include <core/display.h>
+#include <cairomm/pattern.h>
 #include <view/gravity.h>
 #include <view/layoutparams.h>
 #include <view/rendernode.h>
@@ -171,88 +172,11 @@ protected:
         PFLAG3_NO_REVEAL_ON_FOCUS      = 0x4000000 ,
         PFLAG3_AGGREGATED_VISIBLE      = 0x20000000
     };
-
-    class TransformationInfo{
-    public:
-        Matrix mMatrix;
-        Matrix mInverseMatrix;
-        float mAlpha = 1.f;
-        float mTransitionAlpha = 1.f;
-        TransformationInfo();
-    };
-
-    class TintInfo{
-    public:
-        const ColorStateList*mTintList;
-        int mBlendMode;
-        int mTintMode;
-        bool mHasTintMode;
-        bool mHasTintList;
-        TintInfo();
-        ~TintInfo();
-    };
-    class ForegroundInfo {
-    public:
-        Drawable* mDrawable;
-        TintInfo* mTintInfo;
-        int mGravity;
-        bool mInsidePadding;
-        bool mBoundsChanged;
-        Rect mSelfBounds;
-        Rect mOverlayBounds;
-    public:
-        ForegroundInfo();
-        ~ForegroundInfo();
-    };    
-public:
-    class AttachInfo{
-    public:
-        class InvalidateInfo{
-        private:
-            static std::vector<InvalidateInfo*>sPool;
-        public:
-            View* target;
-            Rect rect;
-            static InvalidateInfo*obtain();
-            InvalidateInfo();
-            void recycle();
-        };
-        Display*mDisplay;	
-        ViewGroup*mRootView;
-        bool mHardwareAccelerated;
-        float mApplicationScale;
-        int mWindowLeft;
-        int mWindowTop;
-        Rect mOverscanInsets;
-        Rect mContentInsets;
-        Rect mVisibleInsets;
-        Rect mStableInsets;
-        Rect mOutsets;
-        KeyEvent::DispatcherState mKeyDispatchState;
-        bool mAlwaysConsumeNavBar;
-        bool mAlwaysConsumeSystemBars;
-        bool mHasWindowFocus;
-        bool mScalingRequired;
-        bool mUse32BitDrawingCache;
-        bool mViewVisibilityChanged;
-        bool mIgnoreDirtyState;
-        int mWindowVisibility;
-        long mDrawingTime;
-        bool mInTouchMode;
-        bool mKeepScreenOn;
-        bool mDebugLayout;
-        bool mDisplayState;/*true display is on*/
-        std::function<void(int)>mPlaySoundEffect;
-        std::function<bool(int,bool)>mPerformHapticFeedback;
-        Cairo::RefPtr<Canvas> mCanvas;
-        Drawable*mAutofilledDrawable;
-        View* mTooltipHost;
-        View* mViewRequestingLayout;
-        ViewTreeObserver* mTreeObserver;
-        std::vector<View*> mScrollContainers;
-        AttachInfo(Context*ctx);
-        ~AttachInfo();	
-    };
+    class AttachInfo;
+    class TransformationInfo;
+    class TintInfo;
+    class ForegroundInfo;
+    class ListenerInfo;
 public:
     enum ViewFlags{//public common View Flags
         IMPORTANT_FOR_AUTOFILL_AUTO = 0x0,
@@ -330,7 +254,7 @@ public:
         LAYOUT_DIRECTION_INHERIT= LayoutDirection::INHERIT ,
         LAYOUT_DIRECTION_LOCALE = LayoutDirection::LOCAL ,
         LAYOUT_DIRECTION_DEFAULT= LAYOUT_DIRECTION_INHERIT ,
-	LAYOUT_DIRECTION_RESOLVED_DEFAULT = LAYOUT_DIRECTION_LTR,
+        LAYOUT_DIRECTION_RESOLVED_DEFAULT = LAYOUT_DIRECTION_LTR,
   
        //ScrollBarPosition
         SCROLLBAR_POSITION_DEFAULT= 0 ,
@@ -400,6 +324,10 @@ private:
     friend ViewGroup;
     friend Window;
     friend ViewPropertyAnimator;
+    class TooltipInfo;
+    class CheckForTap;
+    class CheckForLongPress;
+    class ScrollabilityCache;
     int mMinWidth;
     int mMinHeight;
     int mDrawingCacheBackgroundColor;
@@ -418,7 +346,6 @@ private:
     bool mInContextButtonPress;
     bool mHasPerformedLongPress;
     bool mIgnoreNextUpEvent;
-    bool mOriginalPressedState;
 	
     bool mBackgroundSizeChanged;
     bool mDefaultFocusHighlightSizeChanged;
@@ -432,17 +359,17 @@ private:
     ViewGroup* mNestedScrollingParent;
     std::map<Size,Size>mMeasureCache;
     std::string mStartActivityRequestWho;
-    class ScrollabilityCache*mScrollCache;
+    ScrollabilityCache*mScrollCache;
 
     Drawable* mBackground;
     Drawable* mDefaultFocusHighlight;
     Drawable* mDefaultFocusHighlightCache;
     Drawable* mScrollIndicatorDrawable;
 	
-    Runnable* mPendingCheckForTap;
-    Runnable* mPerformClick;
-    Runnable* mPendingCheckForLongPress;
-    Runnable* mUnsetPressedState;	
+    CheckForTap* mPendingCheckForTap;
+    Runnable mPerformClick;
+    CheckForLongPress* mPendingCheckForLongPress;
+    Runnable mUnsetPressedState;
     class RoundScrollbarRenderer* mRoundScrollbarRenderer;
     class TintInfo* mBackgroundTint;
     class ForegroundInfo* mForegroundInfo;
@@ -451,9 +378,6 @@ private:
     View&operator=(const View&) = delete;
     //Temporary values used to hold (x,y) coordinates when delegating from the
     // two-arg performLongClick() method to the legacy no-arg version
-    void checkForTapCallback(int x,int y);//for mPendingCheckForTap
-    void checkLongPressCallback(int x,int y);//for mPendingCheckForLongPress
-    void unsetPressedCallback();//for mUnsetPressedState
 
     void removeTapCallback();
     void removeLongPressCallback();
@@ -571,7 +495,7 @@ protected:
     ViewGroup * mParent;
     AttachInfo* mAttachInfo;
     RenderNode* mRenderNode;
-    class ListenerInfo* mListenerInfo;
+    ListenerInfo* mListenerInfo;
     class TooltipInfo* mTooltipInfo;
     ListenerInfo*getListenerInfo();
 protected:
@@ -1187,6 +1111,184 @@ public:
     virtual void resolveLayoutParams();
     void layout(int l, int t, int r, int b);
 };
+
+class View::AttachInfo{
+public:
+    class InvalidateInfo{
+    private:
+        static std::vector<InvalidateInfo*>sPool;
+    public:
+        View* target;
+        Rect rect;
+        static InvalidateInfo*obtain();
+        InvalidateInfo();
+        void recycle();
+    };
+    Display*mDisplay;
+    ViewGroup*mRootView;
+    bool mHardwareAccelerated;
+    float mApplicationScale;
+    int mWindowLeft;
+    int mWindowTop;
+    Rect mOverscanInsets;
+    Rect mContentInsets;
+    Rect mVisibleInsets;
+    Rect mStableInsets;
+    Rect mOutsets;
+    KeyEvent::DispatcherState mKeyDispatchState;
+    bool mAlwaysConsumeNavBar;
+    bool mAlwaysConsumeSystemBars;
+    bool mHasWindowFocus;
+    bool mScalingRequired;
+    bool mUse32BitDrawingCache;
+    bool mViewVisibilityChanged;
+    bool mIgnoreDirtyState;
+    int mWindowVisibility;
+    long mDrawingTime;
+    bool mInTouchMode;
+    bool mKeepScreenOn;
+    bool mDebugLayout;
+    bool mDisplayState;/*true display is on*/
+    std::function<void(int)>mPlaySoundEffect;
+    std::function<bool(int,bool)>mPerformHapticFeedback;
+    Cairo::RefPtr<Canvas> mCanvas;
+    Drawable*mAutofilledDrawable;
+    View* mTooltipHost;
+    View* mViewRequestingLayout;
+    ViewTreeObserver* mTreeObserver;
+    std::vector<View*> mScrollContainers;
+    AttachInfo(Context*ctx);
+    ~AttachInfo();
+};
+
+class View::TransformationInfo{
+public:
+    Matrix mMatrix;
+    Matrix mInverseMatrix;
+    float mAlpha = 1.f;
+    float mTransitionAlpha = 1.f;
+    TransformationInfo();
+};
+
+class View::TintInfo{
+public:
+    const ColorStateList*mTintList;
+    int mBlendMode;
+    int mTintMode;
+    bool mHasTintMode;
+    bool mHasTintList;
+    TintInfo();
+    ~TintInfo();
+};
+class View::ForegroundInfo {
+public:
+    Drawable* mDrawable;
+    TintInfo* mTintInfo;
+    int mGravity;
+    bool mInsidePadding;
+    bool mBoundsChanged;
+    Rect mSelfBounds;
+    Rect mOverlayBounds;
+public:
+    ForegroundInfo();
+    ~ForegroundInfo();
+};
+
+class View::ListenerInfo{
+public:
+    View::OnFocusChangeListener  mOnFocusChangeListener;
+    std::vector<View::OnLayoutChangeListener> mOnLayoutChangeListeners;
+    std::vector<View::OnAttachStateChangeListener> mOnAttachStateChangeListeners;
+    View::OnScrollChangeListener mOnScrollChangeListener;
+    View::OnClickListener mOnClickListener;
+    View::OnLongClickListener mOnLongClickListener;
+    View::OnContextClickListener mOnContextClickListener;
+    //OnCreateContextMenuListener mOnCreateContextMenuListener;
+    View::OnKeyListener mOnKeyListener;
+    View::OnTouchListener mOnTouchListener;
+    View::OnHoverListener mOnHoverListener;
+    View::OnGenericMotionListener mOnGenericMotionListener;
+    std::vector<View::OnUnhandledKeyEventListener> mUnhandledKeyListeners;
+    //View::OnDragListener mOnDragListener;
+};
+
+class View::CheckForTap{
+protected:
+    View*mView;
+    float mX,mY;
+    Runnable mRunnable;
+public:
+    CheckForTap(View*v);
+    void setAnchor(float,float);
+    virtual void run();
+    void postDelayed(long);
+    void removeCallbacks();
+};
+
+class View::CheckForLongPress:public CheckForTap{
+private:
+    int mOriginalWindowAttachCount;
+    bool mOriginalPressedState;
+public:
+    CheckForLongPress(View*v);
+    void run()override;
+    void rememberWindowAttachCount();
+    void rememberPressedState();
+};
+
+class View::TooltipInfo{
+public:
+    std::string mTooltipText;
+    int mAnchorX,mAnchorY;
+    /*TooltipPopup*/void* mTooltipPopup;
+    bool mTooltipFromLongClick;
+    Runnable mShowTooltipRunnable;
+    Runnable mHideTooltipRunnable;
+    int mHoverSlop;
+public:
+    bool updateAnchorPos(MotionEvent&event);
+    void clearAnchorPos();
+};
+
+class View::ScrollabilityCache:public Runnable{
+private:
+    static constexpr float OPAQUE[] = { 255 };
+    static constexpr float TRANSPARENT[] = { 0.0f };
+public:
+    static constexpr int OFF =0;
+    static constexpr int ON  =1;
+    static constexpr int FADING=2;
+
+    static constexpr int NOT_DRAGGING = 0;
+    static constexpr int DRAGGING_VERTICAL_SCROLL_BAR = 1;
+    static constexpr int DRAGGING_HORIZONTAL_SCROLL_BAR = 2;
+
+    bool fadeScrollBars;
+    int fadingEdgeLength;
+    int scrollBarDefaultDelayBeforeFade;
+    int scrollBarFadeDuration;
+
+    int scrollBarSize;
+    int scrollBarMinTouchTarget;
+
+    ScrollBarDrawable*scrollBar;
+    View* host;
+    Runnable mRunner;
+    long fadeStartTime;
+    int state;
+    int mLastColor;
+    Rect mScrollBarBounds;
+    Rect mScrollBarTouchBounds;
+
+    int mScrollBarDraggingState = NOT_DRAGGING;
+    int mScrollBarDraggingPos;
+    Cairo::RefPtr<Cairo::LinearGradient> shader;
+public:
+    ScrollabilityCache(ViewConfiguration&configuration,View*host);
+    virtual ~ScrollabilityCache();
+    void run();
+};
+
 }//endof namespace cdroid
 
 using namespace cdroid;

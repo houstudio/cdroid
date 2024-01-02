@@ -23,151 +23,6 @@ bool View::sIgnoreMeasureCache = false;//targetSdkVersion < Build.VERSION_CODES.
 bool View::sAlwaysRemeasureExactly = false;//targetSdkVersion <= Build.VERSION_CODES.M;
 bool View::sPreserveMarginParamsInLayoutParamConversion = true;
 
-View::TintInfo::TintInfo(){
-    mTintList = nullptr;
-    mHasTintList = false;
-    mHasTintMode = false;
-    mTintMode = PorterDuff::Mode::SRC_IN;
-}
-
-View::TintInfo::~TintInfo(){
-    delete mTintList;
-}
-
-View::ForegroundInfo::ForegroundInfo(){
-    mInsidePadding = mBoundsChanged = true;
-    mGravity = Gravity::FILL;
-    mSelfBounds.set(0,0,0,0);
-    mOverlayBounds.set(0,0,0,0);
-    mTintInfo = nullptr;
-    mDrawable = nullptr;
-}
-
-View::ForegroundInfo::~ForegroundInfo(){
-    delete mDrawable;
-    delete mTintInfo;
-}
-
-class ListenerInfo{
-public:
-    View::OnFocusChangeListener  mOnFocusChangeListener;
-    std::vector<View::OnLayoutChangeListener> mOnLayoutChangeListeners;
-    std::vector<View::OnAttachStateChangeListener> mOnAttachStateChangeListeners;
-    View::OnScrollChangeListener mOnScrollChangeListener;
-    View::OnClickListener mOnClickListener;
-    View::OnLongClickListener mOnLongClickListener;
-    View::OnContextClickListener mOnContextClickListener;
-    //OnCreateContextMenuListener mOnCreateContextMenuListener;
-    View::OnKeyListener mOnKeyListener;
-    View::OnTouchListener mOnTouchListener;
-    View::OnHoverListener mOnHoverListener;
-    View::OnGenericMotionListener mOnGenericMotionListener;
-    std::vector<View::OnUnhandledKeyEventListener> mUnhandledKeyListeners;
-    //View::OnDragListener mOnDragListener;
-};
-
-class TooltipInfo{
-public:
-    std::string mTooltipText;
-    int mAnchorX,mAnchorY;
-    /*TooltipPopup*/void* mTooltipPopup;
-    bool mTooltipFromLongClick;
-    Runnable mShowTooltipRunnable;
-    Runnable mHideTooltipRunnable;
-    int mHoverSlop;
-public:
-    bool updateAnchorPos(MotionEvent&event){
-        const int newAnchorX = event.getX();
-        const int newAnchorY = event.getY();
-        if((std::abs(newAnchorX-mAnchorX)<=mHoverSlop)&& (std::abs(newAnchorY-mAnchorY)<=mHoverSlop))
-            return false;
-	mAnchorX = newAnchorX;
-	mAnchorY = newAnchorY;
-	return true;
-    }
-    void clearAnchorPos(){
-        mAnchorX = INT_MAX;
-	mAnchorY = INT_MAX;
-    }
-};
-
-View::TransformationInfo::TransformationInfo(){
-    mMatrix=identity_matrix();
-    mInverseMatrix=identity_matrix();
-    mAlpha=1.f;
-    mTransitionAlpha =1.f;
-}
-
-class ScrollabilityCache:public Runnable{
-private:
-    static constexpr float OPAQUE[] = { 255 };
-    static constexpr float TRANSPARENT[] = { 0.0f };
-public:
-    static constexpr int OFF =0;
-    static constexpr int ON  =1;
-    static constexpr int FADING=2;
-
-    static constexpr int NOT_DRAGGING = 0;
-    static constexpr int DRAGGING_VERTICAL_SCROLL_BAR = 1;
-    static constexpr int DRAGGING_HORIZONTAL_SCROLL_BAR = 2;
-
-    bool fadeScrollBars;
-    int fadingEdgeLength;
-    int scrollBarDefaultDelayBeforeFade;
-    int scrollBarFadeDuration;
-
-    int scrollBarSize;
-    int scrollBarMinTouchTarget;
-
-    ScrollBarDrawable*scrollBar;
-    View* host;
-    Runnable mRunner;
-    long fadeStartTime;
-    int state;
-    int mLastColor;
-    Rect mScrollBarBounds;
-    Rect mScrollBarTouchBounds;
-
-    int mScrollBarDraggingState = NOT_DRAGGING;
-    int mScrollBarDraggingPos;
-    Cairo::RefPtr<LinearGradient> shader;
-public:
-    ScrollabilityCache(ViewConfiguration&configuration,View*host){//int sz){
-        fadingEdgeLength = configuration.getScaledFadingEdgeLength();
-        scrollBarSize = configuration.getScaledScrollBarSize();
-        scrollBarMinTouchTarget = configuration.getScaledMinScrollbarTouchTarget();
-        scrollBarDefaultDelayBeforeFade = ViewConfiguration::getScrollDefaultDelay();
-        scrollBarFadeDuration = ViewConfiguration::getScrollBarFadeDuration();
-        fadeScrollBars = true;
-        scrollBar = nullptr;
-        state = OFF;
-        mScrollBarDraggingPos = 0;
-        mScrollBarBounds.set(0,0,0,0);
-        mScrollBarTouchBounds.set(0,0,0,0);
-        shader = LinearGradient::create(0,0,0,1);
-        shader->add_color_stop_rgba(0.f,0,0,0,1.f);
-        shader->add_color_stop_rgba(1.f,0,0,0,0.f);
-        this->host=host;
-        mRunner =[this](){
-           run();
-        };
-    }
-    virtual ~ScrollabilityCache(){
-        delete scrollBar;
-    }
-    void run(){
-        long now = AnimationUtils::currentAnimationTimeMillis();
-        if (host && (now >= fadeStartTime)) {
-            // the animation fades the scrollbars out by changing
-            // the opacity (alpha) from fully opaque to fully
-            // transparent
-            state = FADING;
-            // Kick off the fade animation
-            host->invalidate(mScrollBarBounds);
-        }
-    }
-};
-
 bool View::VIEW_DEBUG = false;
 int View::mViewCount = 0;
 View::View(int w,int h){
@@ -529,9 +384,8 @@ View::~View(){
     if(isAttachedToWindow())onDetachedFromWindow();
     if(mBackground)mBackground->setCallback(nullptr);
     delete mForegroundInfo;
-    delete mPerformClick;
+    //delete mPerformClick;
     delete mPendingCheckForTap;
-    delete mUnsetPressedState;
     delete mPendingCheckForLongPress;
     delete mRenderNode;
     delete mListenerInfo;
@@ -1863,7 +1717,7 @@ void View::initializeScrollBarDrawable(){
     }
 }
 
-ScrollabilityCache*View::getScrollCache(){
+View::ScrollabilityCache*View::getScrollCache(){
     initScrollCache();
     return mScrollCache;
 }
@@ -2508,7 +2362,7 @@ bool View::isInScrollingContainer()const{
     return false;
 }
 
-ListenerInfo*View::getListenerInfo(){
+View::ListenerInfo*View::getListenerInfo(){
     if(mListenerInfo==nullptr)
         mListenerInfo = new ListenerInfo();
     return mListenerInfo;
@@ -6299,47 +6153,28 @@ bool View::performButtonActionOnTouchDown(MotionEvent& event) {
     return false;
 }
 
-void View::checkLongPressCallback(int x,int y){
-    if(mOriginalPressedState==isPressed()){
-        if (performLongClick(x, y)) {
-            mHasPerformedLongPress = true;
-        }
-    }
-}
-
 void View::checkForLongClick(int delayOffset,int x,int y){
     //LOGV("%p:%d checkForLongClick longclickable=%d",this,mID,(mViewFlags & LONG_CLICKABLE) == LONG_CLICKABLE );
     if ((mViewFlags & LONG_CLICKABLE) == LONG_CLICKABLE || (mViewFlags & TOOLTIP) == TOOLTIP) {
         mHasPerformedLongPress = false;
         if (mPendingCheckForLongPress == nullptr) {
-            mPendingCheckForLongPress = new Runnable;
+            mPendingCheckForLongPress = new CheckForLongPress(this);//new Runnable;
         }
-        mOriginalPressedState=isPressed();
-        *mPendingCheckForLongPress=std::bind(&View::checkLongPressCallback,this,x,y);
-        postDelayed(*mPendingCheckForLongPress,ViewConfiguration::getLongPressTimeout()-delayOffset);
-    }
-}
-
-void View::checkForTapCallback(int x,int y){
-    mPrivateFlags &= ~PFLAG_PREPRESSED;
-    setPressed(true,x,y);
-    checkForLongClick(ViewConfiguration::getTapTimeout(), x, y);
-}
-
-void View::unsetPressedCallback(){
-    //LOGV("unsetPressedCallback pressed=%x",(mPrivateFlags & PFLAG_PRESSED));
-    if ((mPrivateFlags & PFLAG_PRESSED) != 0 && mUnsetPressedState != nullptr) {
-        setPressed(false);
-        removeCallbacks(*mUnsetPressedState);
-        delete mUnsetPressedState;
-        mUnsetPressedState=nullptr;
+        mPendingCheckForLongPress->setAnchor(x,y);
+        mPendingCheckForLongPress->rememberWindowAttachCount();
+        mPendingCheckForLongPress->rememberPressedState();
+        mPendingCheckForLongPress->postDelayed(ViewConfiguration::getLongPressTimeout()-delayOffset);
+        //mOriginalPressedState=isPressed();
+        //*mPendingCheckForLongPress=std::bind(&View::checkLongPressCallback,this,x,y);
+        //postDelayed(mPendingCheckForLongPress->getRunnable(),ViewConfiguration::getLongPressTimeout()-delayOffset);
     }
 }
 
 void View::removeTapCallback() {
     if (mPendingCheckForTap != nullptr) {
         mPrivateFlags &= ~PFLAG_PREPRESSED;
-        removeCallbacks(*mPendingCheckForTap);
+        //removeCallbacks(mPendingCheckForTap->getRunnable());
+        mPendingCheckForTap->removeCallbacks();
         delete mPendingCheckForTap;
         mPendingCheckForTap=nullptr;
     }
@@ -6355,17 +6190,13 @@ void View::cancelLongPress() {
 
 void View::removeLongPressCallback() {
     if (mPendingCheckForLongPress != nullptr) {
-        removeCallbacks(*mPendingCheckForLongPress);
-        delete mPendingCheckForLongPress;
-        mPendingCheckForLongPress=nullptr;
+        mPendingCheckForLongPress->removeCallbacks();
     }
 }
 
 void View::removePerformClickCallback(){
     if(mPerformClick!=nullptr){
-        removeCallbacks(*mPerformClick);
-        delete mPerformClick;
-        mPerformClick=nullptr;
+        removeCallbacks(mPerformClick);
     } 
 }
 
@@ -6373,9 +6204,7 @@ void View::removeUnsetPressCallback() {
     //LOGV("removeUnsetPressCallback pressed=%d",mPrivateFlags & PFLAG_PRESSED);
     if ((mPrivateFlags & PFLAG_PRESSED) != 0 && mUnsetPressedState != nullptr) {
         setPressed(false);
-        removeCallbacks(*mUnsetPressedState);
-        delete mUnsetPressedState;
-        mUnsetPressedState=nullptr;
+        removeCallbacks(mUnsetPressedState);
     }
 }
 
@@ -6518,17 +6347,15 @@ bool View::onTouchEvent(MotionEvent& event){
                 removeLongPressCallback();
                 if (!focusTaken){
                     if(mPerformClick == nullptr){
-                        mPerformClick = new Runnable;
-                        *mPerformClick= [this](){performClickInternal();};
+                        mPerformClick= [this](){performClickInternal();};
                     }
-                    if(!post(*mPerformClick))performClickInternal();
+                    if(!post(mPerformClick))performClickInternal();
                 }
             }
             if(mUnsetPressedState == nullptr){
-                mUnsetPressedState= new Runnable;
-                *mUnsetPressedState=std::bind(&View::unsetPressedCallback,this);
+                mUnsetPressedState=[this]{setPressed(false);};
             }
-            postDelayed(*mUnsetPressedState,ViewConfiguration::getPressedStateDuration());
+            postDelayed(mUnsetPressedState,ViewConfiguration::getPressedStateDuration());
 
             removeTapCallback();
         }
@@ -6546,10 +6373,11 @@ bool View::onTouchEvent(MotionEvent& event){
         if(isInScrollingContainer()){
             mPrivateFlags |= PFLAG_PREPRESSED;
             if(mPendingCheckForTap == nullptr){
-                mPendingCheckForTap = new Runnable;
-                *mPendingCheckForTap=std::bind(&View::checkForTapCallback,this,x,y);
+                mPendingCheckForTap = new CheckForTap(this);//Runnable;
+                mPendingCheckForTap->setAnchor(x,y);
             }
-            postDelayed(*mPendingCheckForTap,ViewConfiguration::getTapTimeout());
+            mPendingCheckForTap->postDelayed(ViewConfiguration::getTapTimeout());
+            //postDelayed(mPendingCheckForTap->getRunnable(),ViewConfiguration::getTapTimeout());
         }else{
             setPressed(true,x,y);
             checkForLongClick(0, x, y);
@@ -7389,6 +7217,134 @@ View::AttachInfo::AttachInfo(Context*ctx){
 View::AttachInfo::~AttachInfo(){
     delete mTreeObserver;
     delete mAutofilledDrawable; 
+}
+
+View::CheckForTap::CheckForTap(View*v)
+    :mView(v){
+    mRunnable = std::bind(&CheckForTap::run,this);
+}
+void View::CheckForTap::setAnchor(float x,float y){
+    mX = x;
+    mY = y;
+}
+
+void View::CheckForTap::run(){
+    mView->mPrivateFlags &= ~PFLAG_PRESSED;
+    mView->setPressed(true,mX,mY);
+    mView->checkForLongClick(ViewConfiguration::getTapTimeout(),mX, mY);
+    LOGD("View::CheckForTap %p:%d",mView,mView->mID);
+}
+
+void View::CheckForTap::postDelayed(long ms){
+    mView->postDelayed(mRunnable,ms);
+}
+
+void View::CheckForTap::removeCallbacks(){
+    mView->removeCallbacks(mRunnable);
+}
+
+View::CheckForLongPress::CheckForLongPress(View*v)
+   :CheckForTap(v){
+    mRunnable = std::bind(&CheckForLongPress::run,this);
+}
+
+void View::CheckForLongPress::rememberWindowAttachCount(){
+    mOriginalWindowAttachCount = mView->mWindowAttachCount;
+}
+
+void View::CheckForLongPress::rememberPressedState(){
+    mOriginalPressedState = mView->isPressed();
+}
+
+void View::CheckForLongPress::run(){
+    LOGD("View::CheckForLongPress %p:%d",mView,mView->mID);
+    if( (mOriginalPressedState == mView->isPressed()) && mView->mParent
+        && (mOriginalWindowAttachCount == mView->mWindowAttachCount)){
+        if(mView->performLongClick(mX,mY)){
+	    mView->mHasPerformedLongPress = true;
+	}
+    }
+}
+
+View::TintInfo::TintInfo(){
+    mTintList = nullptr;
+    mHasTintList = false;
+    mHasTintMode = false;
+    mTintMode = PorterDuff::Mode::SRC_IN;
+}
+
+View::TintInfo::~TintInfo(){
+    delete mTintList;
+}
+
+View::ForegroundInfo::ForegroundInfo(){
+    mInsidePadding = mBoundsChanged = true;
+    mGravity = Gravity::FILL;
+    mSelfBounds.set(0,0,0,0);
+    mOverlayBounds.set(0,0,0,0);
+    mTintInfo = nullptr;
+    mDrawable = nullptr;
+}
+
+View::ForegroundInfo::~ForegroundInfo(){
+    delete mDrawable;
+    delete mTintInfo;
+}
+
+bool View::TooltipInfo::updateAnchorPos(MotionEvent&event){
+    const int newAnchorX = event.getX();
+    const int newAnchorY = event.getY();
+    if((std::abs(newAnchorX-mAnchorX)<=mHoverSlop)&& (std::abs(newAnchorY-mAnchorY)<=mHoverSlop))
+        return false;
+    mAnchorX = newAnchorX;
+    mAnchorY = newAnchorY;
+    return true;
+}
+void View::TooltipInfo::clearAnchorPos(){
+    mAnchorX = INT_MAX;
+    mAnchorY = INT_MAX;
+}
+
+View::TransformationInfo::TransformationInfo(){
+    mMatrix=identity_matrix();
+    mInverseMatrix=identity_matrix();
+    mAlpha=1.f;
+    mTransitionAlpha =1.f;
+}
+
+View::ScrollabilityCache::ScrollabilityCache(ViewConfiguration&configuration,View*host){//int sz){
+    fadingEdgeLength = configuration.getScaledFadingEdgeLength();
+    scrollBarSize = configuration.getScaledScrollBarSize();
+    scrollBarMinTouchTarget = configuration.getScaledMinScrollbarTouchTarget();
+    scrollBarDefaultDelayBeforeFade = ViewConfiguration::getScrollDefaultDelay();
+    scrollBarFadeDuration = ViewConfiguration::getScrollBarFadeDuration();
+    fadeScrollBars = true;
+    scrollBar = nullptr;
+    state = OFF;
+    mScrollBarDraggingPos = 0;
+    mScrollBarBounds.set(0,0,0,0);
+    mScrollBarTouchBounds.set(0,0,0,0);
+    shader = LinearGradient::create(0,0,0,1);
+    shader->add_color_stop_rgba(0.f,0,0,0,1.f);
+    shader->add_color_stop_rgba(1.f,0,0,0,0.f);
+    this->host=host;
+    mRunner =[this](){
+       run();
+    };
+}
+View::ScrollabilityCache::~ScrollabilityCache(){
+    delete scrollBar;
+}
+void View::ScrollabilityCache::run(){
+    long now = AnimationUtils::currentAnimationTimeMillis();
+    if (host && (now >= fadeStartTime)) {
+        // the animation fades the scrollbars out by changing
+        // the opacity (alpha) from fully opaque to fully
+        // transparent
+        state = FADING;
+        // Kick off the fade animation
+        host->invalidate(mScrollBarBounds);
+    }
 }
 
 }//endof namespace

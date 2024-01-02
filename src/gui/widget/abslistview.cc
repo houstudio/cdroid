@@ -50,11 +50,11 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mEdgeGlowBottom = new EdgeEffect(mContext);
     mEdgeGlowTop = new EdgeEffect(mContext);
 
-    mPendingCheckForLongPress.setList(this);
-    mPendingCheckForTap.setList(this);
-    mPendingCheckForKeyLongPress.setList(this);
-    mPerformClick.setList(this);
-    mFlingRunnable.setList(this);
+    mPendingCheckForLongPress = nullptr;
+    mPendingCheckForTap = nullptr;
+    mPendingCheckForKeyLongPress = nullptr;
+    mPerformClick = nullptr;
+    mFlingRunnable = nullptr;//new FlingRunnable(this);
 
     mSelector  = nullptr;
     mDirection = 0;
@@ -125,6 +125,12 @@ AbsListView::~AbsListView() {
     delete mEdgeGlowBottom;
     delete mPositionScroller;
     delete mDataSetObserver;
+
+    delete mPendingCheckForLongPress;
+    delete mPendingCheckForTap;
+    delete mPendingCheckForKeyLongPress;
+    delete mPerformClick;
+    delete mFlingRunnable;
 }
 
 void AbsListView::updateScrollIndicators() {
@@ -1217,7 +1223,7 @@ bool AbsListView::resurrectSelection() {
     }
 
     mResurrectToPosition = INVALID_POSITION;
-    removeCallbacks(mFlingRunnable);
+    mFlingRunnable->removeCallbacks();
     if (mPositionScroller) mPositionScroller->stop();
 
     mTouchMode = TOUCH_MODE_REST;
@@ -1313,8 +1319,10 @@ void AbsListView::keyPressed() {
             }
         }
         if (longClickable && !mDataChanged) {
-            mPendingCheckForKeyLongPress.rememberWindowAttachCount();
-            postDelayed(mPendingCheckForKeyLongPress,ViewConfiguration::getLongPressTimeout());
+            if(mPendingCheckForKeyLongPress==nullptr)
+                mPendingCheckForKeyLongPress = new CheckForKeyLongPress(this);
+            mPendingCheckForKeyLongPress->rememberWindowAttachCount();
+            mPendingCheckForKeyLongPress->postDelayed(ViewConfiguration::getLongPressTimeout());
         }
     }
 }
@@ -1958,7 +1966,7 @@ void AbsListView::onDetachedFromWindow() {
         mFlingStrictSpan = nullptr;
     }*/
 
-    removeCallbacks(mFlingRunnable);
+    if(mFlingRunnable)mFlingRunnable->removeCallbacks();
 
     if (mPositionScroller != nullptr) {
         mPositionScroller->stop();
@@ -1969,7 +1977,7 @@ void AbsListView::onDetachedFromWindow() {
     }
 
     if (mPerformClick != nullptr) {
-        removeCallbacks(mPerformClick);
+        mPerformClick->removeCallbacks();
     }
 
     if (mTouchModeReset != nullptr) {
@@ -1988,11 +1996,11 @@ void AbsListView::onWindowFocusChanged(bool hasWindowFocus) {
     if (!hasWindowFocus) {
         setChildrenDrawingCacheEnabled(false);
         if (mFlingRunnable != nullptr) {
-            removeCallbacks(mFlingRunnable);
+            mFlingRunnable->removeCallbacks();
             // let the fling runnable report its new state which
             // should be idle
-            mFlingRunnable.mSuppressIdleStateChangeCall = false;
-            mFlingRunnable.endFling();
+            mFlingRunnable->mSuppressIdleStateChangeCall = false;
+            mFlingRunnable->endFling();
             if (mPositionScroller != nullptr) {
                 mPositionScroller->stop();
             }
@@ -2037,16 +2045,16 @@ void AbsListView::onWindowFocusChanged(bool hasWindowFocus) {
 void AbsListView::onCancelPendingInputEvents() {
     AdapterView::onCancelPendingInputEvents();
     if (mPerformClick != nullptr) {
-        removeCallbacks(mPerformClick);
+        mPerformClick->removeCallbacks();
     }
     if (mPendingCheckForTap != nullptr) {
-        removeCallbacks(mPendingCheckForTap);
+        mPendingCheckForTap->removeCallbacks();
     }
     if (mPendingCheckForLongPress != nullptr) {
-        removeCallbacks(mPendingCheckForLongPress);
+        mPendingCheckForLongPress->removeCallbacks();
     }
     if (mPendingCheckForKeyLongPress != nullptr) {
-        removeCallbacks(mPendingCheckForKeyLongPress);
+        mPendingCheckForKeyLongPress->removeCallbacks();
     }
 }
 
@@ -2348,7 +2356,8 @@ void AbsListView::onTouchModeChanged(bool isInTouchMode) {
         updateSelectorState();
     } else {
         if (mTouchMode == TOUCH_MODE_OVERSCROLL || mTouchMode == TOUCH_MODE_OVERFLING) {
-            mFlingRunnable.endFling();
+            if(mFlingRunnable)
+                mFlingRunnable->endFling();
             if (mPositionScroller)
                 mPositionScroller->stop();
 
@@ -2515,7 +2524,8 @@ bool AbsListView::startScrollIfNeeded(int x, int y, MotionEvent* vtev) {
             mTouchMode = TOUCH_MODE_SCROLL;
             mMotionCorrection = deltaY > 0 ? mTouchSlop : -mTouchSlop;
         }
-        removeCallbacks(mPendingCheckForLongPress);
+        if(mPendingCheckForLongPress)
+            mPendingCheckForLongPress->removeCallbacks();
         setPressed(false);
         View* motionView = getChildAt(mMotionPosition - mFirstPosition);
         if (motionView) motionView->setPressed(false);
@@ -2775,7 +2785,7 @@ void AbsListView::onTouchDown(MotionEvent& ev) {
 
     if (mTouchMode == TOUCH_MODE_OVERFLING) {
         // Stopped the fling. It is a scroll.
-        mFlingRunnable.endFling();
+        mFlingRunnable->endFling();
         if (mPositionScroller)  mPositionScroller->stop();
 
         mTouchMode = TOUCH_MODE_OVERSCROLL;
@@ -2796,7 +2806,7 @@ void AbsListView::onTouchDown(MotionEvent& ev) {
                 mTouchMode = TOUCH_MODE_SCROLL;
                 mMotionCorrection = 0;
                 motionPosition = findMotionRow(y);
-                mFlingRunnable.flywheelTouch();
+                mFlingRunnable->flywheelTouch();
             } else if ((motionPosition >= 0) && getAdapter()->isEnabled(motionPosition)) {
                 // User clicked on an actual view (and was not stopping a fling).
                 // It might be a click or a scroll. Assume it is a
@@ -2804,9 +2814,11 @@ void AbsListView::onTouchDown(MotionEvent& ev) {
                 mTouchMode = TOUCH_MODE_DOWN;
 
                 // FIXME Debounce
-                mPendingCheckForTap.x= x;
-                mPendingCheckForTap.y= y;
-                postDelayed(mPendingCheckForTap,ViewConfiguration::getTapTimeout());
+                if(mPendingCheckForTap==nullptr)
+                    mPendingCheckForTap=new CheckForTap(this);
+                mPendingCheckForTap->x= x;
+                mPendingCheckForTap->y= y;
+                mPendingCheckForTap->postDelayed(ViewConfiguration::getTapTimeout());
             }
         }
 
@@ -2823,7 +2835,7 @@ void AbsListView::onTouchDown(MotionEvent& ev) {
     }
     if (mTouchMode == TOUCH_MODE_DOWN && mMotionPosition != INVALID_POSITION
             && performButtonActionOnTouchDown(ev)) {
-        removeCallbacks(mPendingCheckForTap);
+        mPendingCheckForTap->removeCallbacks();
     }
 }
 
@@ -2862,8 +2874,8 @@ void AbsListView::onTouchMove(MotionEvent&ev, MotionEvent&vtev) {
         if (!pointInView(x, y, mTouchSlop)) {
             setPressed(false);
             if (motionView) motionView->setPressed(false);
-            if(mTouchMode == TOUCH_MODE_DOWN)removeCallbacks(mPendingCheckForTap);
-            else removeCallbacks(mPendingCheckForLongPress);
+            if(mTouchMode == TOUCH_MODE_DOWN)mPendingCheckForTap->removeCallbacks();
+            else if(mPendingCheckForLongPress)mPendingCheckForLongPress->removeCallbacks();
             mTouchMode = TOUCH_MODE_DONE_WAITING;
             updateSelectorState();
         } else if (motionView != nullptr) {
@@ -2937,13 +2949,14 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
             const float y = ev.getY();
             const bool inList = x > mListPadding.left && x < getWidth() - mListPadding.width;
             if (inList && !child->hasExplicitFocusable()) {
-                mPerformClick.mClickMotionPosition = mMotionPosition;
-                mPerformClick.rememberWindowAttachCount();
+                if(mPerformClick==nullptr)mPerformClick=new PerformClick(this);
+                mPerformClick->mClickMotionPosition = mMotionPosition;
+                mPerformClick->rememberWindowAttachCount();
                 mResurrectToPosition = mMotionPosition;
 
                 if (mTouchMode == TOUCH_MODE_DOWN || mTouchMode == TOUCH_MODE_TAP) {
-                    if(mTouchMode == TOUCH_MODE_DOWN)removeCallbacks(mPendingCheckForTap);
-                    else removeCallbacks(mPendingCheckForLongPress);
+                    if(mTouchMode == TOUCH_MODE_DOWN)mPendingCheckForTap->removeCallbacks();
+                    else if(mPendingCheckForLongPress)mPendingCheckForLongPress->removeCallbacks();
                     mLayoutMode = LAYOUT_NORMAL;
                     if (!mDataChanged && mAdapter->isEnabled(mMotionPosition)) {
                         mTouchMode = TOUCH_MODE_TAP;
@@ -2968,7 +2981,7 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
                             child->setPressed(false);
                             setPressed(false);
                             if (!mDataChanged && !mIsDetaching && isAttachedToWindow()) {
-                                mPerformClick.run();
+                                mPerformClick->run();
                             }
                         };
                         postDelayed(mTouchModeReset,ViewConfiguration::getPressedStateDuration());
@@ -2978,7 +2991,7 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
                     }
                     return;
                 } else if (!mDataChanged && mAdapter->isEnabled(mMotionPosition)) {
-                    mPerformClick.run();
+                    mPerformClick->run();
                 }
             }
         }
@@ -3010,8 +3023,10 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
                         (mFirstPosition + childCount == mItemCount &&
                         lastBottom == contentBottom + mOverscrollDistance))) {
                     if (!dispatchNestedPreFling(0, -initialVelocity)) {
+                        if(mFlingRunnable==nullptr)
+                            mFlingRunnable = new FlingRunnable(this);
                         reportScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
-                        mFlingRunnable.start(-initialVelocity);
+                        mFlingRunnable->start(-initialVelocity);
                         dispatchNestedFling(0, -initialVelocity, true);
                     } else {
                         mTouchMode = TOUCH_MODE_REST;
@@ -3021,7 +3036,7 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
                     mTouchMode = TOUCH_MODE_REST;
                     reportScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
                     if (mFlingRunnable) {
-                        mFlingRunnable.endFling();
+                        mFlingRunnable->endFling();
                     }
                     if (mPositionScroller) mPositionScroller->stop();
                     if (flingVelocity && !dispatchNestedPreFling(0, -initialVelocity)) {
@@ -3036,14 +3051,16 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
         break;
 
     case TOUCH_MODE_OVERSCROLL:/*5*/
+        if(mFlingRunnable==nullptr)
+            mFlingRunnable = new FlingRunnable(this);
         mVelocityTracker->computeCurrentVelocity(1000, mMaximumVelocity);
         const int initialVelocity = mVelocityTracker->getYVelocity(mActivePointerId);
 
         reportScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
         if (std::abs(initialVelocity) > mMinimumVelocity) {
-            mFlingRunnable.startOverfling(-initialVelocity);
+            mFlingRunnable->startOverfling(-initialVelocity);
         } else {
-            mFlingRunnable.startSpringback();
+            mFlingRunnable->startSpringback();
         }
 
         break;
@@ -3057,7 +3074,8 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
     }
     // Need to redraw since we probably aren't drawing the selector anymore
     invalidate();
-    removeCallbacks(mPendingCheckForLongPress);
+    if(mPendingCheckForLongPress)
+        mPendingCheckForLongPress->removeCallbacks();
     recycleVelocityTracker();
 
     mActivePointerId = INVALID_POINTER;
@@ -3081,10 +3099,10 @@ bool AbsListView::shouldAbsorb(EdgeEffect* edgeEffect, int velocity) {
     const float distance = edgeEffect->getDistance() * getHeight();
 
     // This is flinging without the spring, so let's see if it will fling past the overscroll
-    /*if (mFlingRunnable == nullptr) {
-        mFlingRunnable = new FlingRunnable();
-    }*/
-    const float flingDistance = mFlingRunnable.getSplineFlingDistance(-velocity);
+    if (mFlingRunnable == nullptr) {
+        mFlingRunnable = new FlingRunnable(this);
+    }
+    const float flingDistance = mFlingRunnable->getSplineFlingDistance(-velocity);
 
     return flingDistance < distance;
 }
@@ -3120,7 +3138,9 @@ bool AbsListView::shouldDisplayEdgeEffects()const {
 void AbsListView::onTouchCancel() {
     switch (mTouchMode) {
     case TOUCH_MODE_OVERSCROLL:
-        mFlingRunnable.startSpringback();
+        if(mFlingRunnable==nullptr)
+            mFlingRunnable = new FlingRunnable(this);
+        mFlingRunnable->startSpringback();
         break;
 
     case TOUCH_MODE_OVERFLING:// Do nothing - let it play out.
@@ -3134,7 +3154,8 @@ void AbsListView::onTouchCancel() {
             motionView->setPressed(false);
         }
         clearScrollingCache();
-        removeCallbacks(mPendingCheckForLongPress);
+        if(mPendingCheckForLongPress)
+            mPendingCheckForLongPress->removeCallbacks();
         recycleVelocityTracker();
     }
     if (shouldDisplayEdgeEffects()) {
@@ -3204,8 +3225,9 @@ bool AbsListView::onGenericMotionEvent(MotionEvent& event) {
                     || actionButton == MotionEvent::BUTTON_SECONDARY)
                     && (mTouchMode == TOUCH_MODE_DOWN || mTouchMode == TOUCH_MODE_TAP)) {
                 if (performStylusButtonPressAction(event)) {
-                    removeCallbacks(mPendingCheckForLongPress);
-                    removeCallbacks(mPendingCheckForTap);
+                    if(mPendingCheckForLongPress)
+                        mPendingCheckForLongPress->removeCallbacks();
+                    mPendingCheckForTap->removeCallbacks();
                 }
             }
         }
@@ -3215,8 +3237,10 @@ bool AbsListView::onGenericMotionEvent(MotionEvent& event) {
 }
 
 void AbsListView::fling(int velocity) {
+    if(mFlingRunnable == nullptr)
+        mFlingRunnable = new FlingRunnable(this);
     reportScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
-    mFlingRunnable.start(velocity);
+    mFlingRunnable->start(velocity);
 }
 
 bool AbsListView::onStartNestedScroll(View* child, View* target, int nestedScrollAxes) {
@@ -3251,8 +3275,10 @@ bool AbsListView::onNestedFling(View* target, float velocityX, float velocityY, 
     if (!consumed && childCount > 0 && canScrollList((int) velocityY) &&
             std::abs(velocityY) > mMinimumVelocity) {
         reportScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
+        if(mFlingRunnable==nullptr)
+            mFlingRunnable = new FlingRunnable(this);
         if (!dispatchNestedPreFling( 0 , velocityY)) {
-            mFlingRunnable.start(velocityY);
+            mFlingRunnable->start(velocityY);
         }
         return true;
     }
@@ -3260,8 +3286,10 @@ bool AbsListView::onNestedFling(View* target, float velocityX, float velocityY, 
 }
 
 void AbsListView::setFriction(float friction) {
-    if(mFlingRunnable.mScroller)
-        mFlingRunnable.mScroller->setFriction(friction);
+    if(mFlingRunnable==nullptr)
+        mFlingRunnable = new FlingRunnable(this);
+    if(mFlingRunnable->mScroller)
+        mFlingRunnable->mScroller->setFriction(friction);
 }
 
 void AbsListView::setVelocityScale(float scale) {
@@ -3310,17 +3338,18 @@ void AbsListView::smoothScrollBy(int distance, int duration, bool linear,bool su
     const int lastPos = mFirstPosition + childCount;
     const int topLimit = getPaddingTop();
     const int bottomLimit = getHeight() - getPaddingBottom();
-
+    if(mFlingRunnable==nullptr)
+        mFlingRunnable = new FlingRunnable(this);	    
     if ( (distance == 0) || (mItemCount == 0) || (childCount == 0) ||
         ( (mFirstPosition == 0) && (getChildAt(0)->getTop() == topLimit) && (distance < 0) ) ||
         ( (lastPos == mItemCount) && (getChildAt(childCount - 1)->getBottom() == bottomLimit) && (distance > 0) )) {
-        mFlingRunnable.endFling();
+        mFlingRunnable->endFling();
         if (mPositionScroller != nullptr) {
             mPositionScroller->stop();
         }
     } else {
         reportScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
-        mFlingRunnable.startScroll(distance, duration, linear, suppressEndFlingStateChangeCall);
+        mFlingRunnable->startScroll(distance, duration, linear, suppressEndFlingStateChangeCall);
     }
 }
 
@@ -3841,16 +3870,22 @@ AbsListView::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):Vie
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-AbsListView::AbsRunnable::AbsRunnable():Runnable() {
-    (*mFunctor)=std::bind(&AbsRunnable::run,this);
-}
-void AbsListView::AbsRunnable::setList(AbsListView*lv) {
+AbsListView::AbsRunnable::AbsRunnable(AbsListView*lv){
+    //(*mFunctor)=std::bind(&AbsRunnable::run,this);
     mLV = lv;
+    mRunnable = std::bind(&AbsRunnable::run,this);
 }
 
-AbsListView::WindowRunnable::WindowRunnable():AbsRunnable() {
+void AbsListView::AbsRunnable::postDelayed(long ms) {
+    mLV->postDelayed(mRunnable,ms);
+}
+
+void AbsListView::AbsRunnable::removeCallbacks(){
+    mLV->removeCallbacks(mRunnable);
+}
+
+AbsListView::WindowRunnable::WindowRunnable(AbsListView*lv):AbsRunnable(lv) {
     mOriginalAttachCount=0;
-    mLV= nullptr;
 }
 void AbsListView::WindowRunnable::rememberWindowAttachCount() {
     mOriginalAttachCount = mLV->getWindowAttachCount();
@@ -3858,6 +3893,10 @@ void AbsListView::WindowRunnable::rememberWindowAttachCount() {
 
 bool AbsListView::WindowRunnable::sameWindow() {
     return mLV->getWindowAttachCount() == mOriginalAttachCount;
+}
+
+AbsListView::PerformClick::PerformClick(AbsListView*lv)
+   :WindowRunnable(lv){
 }
 
 void AbsListView::PerformClick::run() {
@@ -3874,6 +3913,10 @@ void AbsListView::PerformClick::run() {
             mLV->performItemClick(*view, motionPosition, adapter->getItemId(motionPosition));
         }
     }
+}
+
+AbsListView::CheckForLongPress::CheckForLongPress(AbsListView*lv)
+   :WindowRunnable(lv){
 }
 
 void AbsListView::CheckForLongPress::setCoords(float x, float y) {
@@ -3907,6 +3950,10 @@ void AbsListView::CheckForLongPress::run() {
     }
 }
 
+AbsListView::CheckForKeyLongPress::CheckForKeyLongPress(AbsListView*lv)
+   :WindowRunnable(lv){
+}
+
 void AbsListView::CheckForKeyLongPress::run() {
     if (mLV->isPressed() && mLV->mSelectedPosition >= 0) {
         const int index = mLV->mSelectedPosition - mLV->mFirstPosition;
@@ -3925,6 +3972,10 @@ void AbsListView::CheckForKeyLongPress::run() {
             if (v != nullptr) v->setPressed(false);
         }
     }
+}
+
+AbsListView::CheckForTap::CheckForTap(AbsListView*lv)
+   :AbsRunnable(lv){
 }
 
 void AbsListView::CheckForTap::run() {
@@ -3946,8 +3997,8 @@ void AbsListView::CheckForTap::run() {
             mLV->positionSelector(mLV->mMotionPosition,child);
             mLV->refreshDrawableState();
 
-            int longPressTimeout = ViewConfiguration::getLongPressTimeout();
-            bool longClickable = mLV->isLongClickable();
+            const int longPressTimeout = ViewConfiguration::getLongPressTimeout();
+            const bool longClickable = mLV->isLongClickable();
 
             if (mLV->mSelector != nullptr) {
                 Drawable* d = mLV->mSelector->getCurrent();
@@ -3962,9 +4013,11 @@ void AbsListView::CheckForTap::run() {
             }
 
             if (longClickable) {
-                mLV->mPendingCheckForLongPress.setCoords(x, y);
-                mLV->mPendingCheckForLongPress.rememberWindowAttachCount();
-                mLV->postDelayed(mLV->mPendingCheckForLongPress, longPressTimeout);
+                if(mLV->mPendingCheckForLongPress==nullptr)
+                    mLV->mPendingCheckForLongPress = new AbsListView::CheckForLongPress(mLV);
+                mLV->mPendingCheckForLongPress->setCoords(x, y);
+                mLV->mPendingCheckForLongPress->rememberWindowAttachCount();
+                mLV->mPendingCheckForLongPress->postDelayed(longPressTimeout);
             } else {
                 mLV->mTouchMode = TOUCH_MODE_DONE_WAITING;
             }
@@ -3974,14 +4027,10 @@ void AbsListView::CheckForTap::run() {
     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////
-AbsListView::FlingRunnable::FlingRunnable() {
-    mLV = nullptr;
+AbsListView::FlingRunnable::FlingRunnable(AbsListView*lv):AbsRunnable(lv){
+    mLV = lv;
     mScroller = nullptr;
     mSuppressIdleStateChangeCall = false;
-}
-
-void AbsListView::FlingRunnable::setList(AbsListView*lv) {
-    mLV = lv;
     mScroller = new OverScroller(mLV->getContext());
     mCheckFlywheel = std::bind(&FlingRunnable::checkFlyWheel,this);
 }
@@ -4002,8 +4051,7 @@ void AbsListView::FlingRunnable::start(int initialVelocity) {
 
     mLV->mTouchMode = TOUCH_MODE_FLING;
     mSuppressIdleStateChangeCall = false;
-    mLV->removeCallbacks(mLV->mFlingRunnable);
-    mLV->postOnAnimation(mLV->mFlingRunnable);
+    postOnAnimation();//mLV->postOnAnimation(mLV->mFlingRunnable);
     if (PROFILE_FLINGING) {
         if (!mLV->mFlingProfilingStarted) {
             mLV->mFlingProfilingStarted = true;
@@ -4019,7 +4067,7 @@ void AbsListView::FlingRunnable::startSpringback() {
     if (mScroller->springBack(0, mLV->mScrollY, 0, 0, 0, 0)) {
         mLV->mTouchMode = TOUCH_MODE_OVERFLING;
         mLV->invalidate();
-        mLV->postOnAnimation(mLV->mFlingRunnable);
+        postOnAnimation();//mLV->postOnAnimation(mLV->mFlingRunnable);
     } else {
         mLV->mTouchMode = TOUCH_MODE_REST;
         mLV->reportScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
@@ -4032,7 +4080,7 @@ void AbsListView::FlingRunnable::startOverfling(int initialVelocity) {
     mLV->mTouchMode = TOUCH_MODE_OVERFLING;
     mSuppressIdleStateChangeCall = false;
     mLV->invalidate();
-    mLV->postOnAnimation(mLV->mFlingRunnable);
+    postOnAnimation();//mLV->postOnAnimation(mLV->mFlingRunnable);
 }
 
 void AbsListView::FlingRunnable::edgeReached(int delta) {
@@ -4049,7 +4097,7 @@ void AbsListView::FlingRunnable::edgeReached(int delta) {
             mLV->mPositionScroller->stop();
     }
     mLV->invalidate();
-    mLV->postOnAnimation(mLV->mFlingRunnable);
+    postOnAnimation();//mLV->postOnAnimation(mLV->mFlingRunnable);
 }
 
 void AbsListView::FlingRunnable::startScroll(int distance, int duration, bool linear, bool suppressEndFlingStateChangeCall) {
@@ -4059,13 +4107,13 @@ void AbsListView::FlingRunnable::startScroll(int distance, int duration, bool li
     mScroller->startScroll(0, initialY, 0, distance, duration);
     mLV->mTouchMode = TOUCH_MODE_FLING;
     mSuppressIdleStateChangeCall = suppressEndFlingStateChangeCall;
-    mLV->postOnAnimation(mLV->mFlingRunnable);
+    postOnAnimation();//mLV->postOnAnimation(mLV->mFlingRunnable);
 }
 
 void AbsListView::FlingRunnable::endFling() {
     mLV->mTouchMode = TOUCH_MODE_REST;
 
-    mLV->removeCallbacks(mLV->mFlingRunnable);
+    removeCallbacks();//mLV->removeCallbacks(mLV->mFlingRunnable);
     mLV->removeCallbacks(mCheckFlywheel);
 
     if (!mSuppressIdleStateChangeCall)
@@ -4082,6 +4130,10 @@ void AbsListView::FlingRunnable::endFling() {
 
 void AbsListView::FlingRunnable::flywheelTouch() {
     mLV->postDelayed(mCheckFlywheel, FLYWHEEL_TIMEOUT);
+}
+
+void AbsListView::FlingRunnable::postOnAnimation(){
+    mLV->postOnAnimation(mRunnable);
 }
 
 void AbsListView::FlingRunnable::run() {
@@ -4145,7 +4197,7 @@ void AbsListView::FlingRunnable::run() {
         if (more && !atEnd) {
             if (atEdge) mLV->invalidate();
             mLastFlingY = y;
-            mLV->postOnAnimation(mLV->mFlingRunnable);
+            postOnAnimation();//mLV->mFlingRunnable);
         } else {
             endFling();
             if (PROFILE_FLINGING) {
@@ -4179,7 +4231,7 @@ void AbsListView::FlingRunnable::run() {
                 }
             } else {
                 mLV->invalidate();
-                mLV->postOnAnimation(mLV->mFlingRunnable);
+                postOnAnimation();
             }
         } else {
             endFling();
