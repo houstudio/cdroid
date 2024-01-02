@@ -4,10 +4,14 @@
 namespace cdroid{
 
 class ClipDrawable:public DrawableWrapper{
+public:
+    static constexpr int HORIZONTAL = 1;
+    static constexpr int VERTICAL = 2;
 private:
     class ClipState:public DrawableWrapperState{
     public:
         int mGravity;
+        int mOrientation;
         ClipState();
         ClipState(const ClipState& state);
         ClipDrawable*newDrawable()override;
@@ -19,9 +23,10 @@ protected:
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;
 public:
     ClipDrawable();
-    ClipDrawable(Drawable* drawable, int gravity);
+    ClipDrawable(Drawable* drawable, int gravity,int orientation);
     int getOpacity()override;
     int getGravity()const;
+    int getOrientation()const;
     void draw(Canvas& canvas)override;
     static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };

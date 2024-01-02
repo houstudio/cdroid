@@ -12,6 +12,7 @@ ClipDrawable::ClipState::ClipState():DrawableWrapperState(){
 ClipDrawable::ClipState::ClipState(const ClipState& state)
     :DrawableWrapperState(state){
     mGravity = state.mGravity;
+    mOrientation =state.mOrientation;
 }
 
 ClipDrawable*ClipDrawable::ClipState::newDrawable(){
@@ -25,12 +26,13 @@ ClipDrawable::ClipDrawable()
 }
 
 ClipDrawable::ClipDrawable(std::shared_ptr<ClipState>state):DrawableWrapper(state){
-    mState=state;
+    mState = state;
 }
 
-ClipDrawable::ClipDrawable(Drawable* drawable, int gravity)
+ClipDrawable::ClipDrawable(Drawable* drawable, int gravity,int orientation)
     :ClipDrawable(std::make_shared<ClipState>()){
     mState->mGravity = gravity;
+    mState->mOrientation = orientation;
     setDrawable(drawable);
 }
 
@@ -40,6 +42,10 @@ std::shared_ptr<DrawableWrapper::DrawableWrapperState> ClipDrawable::mutateConst
 
 int ClipDrawable::getGravity()const{
     return mState->mGravity;
+}
+
+int ClipDrawable::getOrientation()const{
+    return mState->mOrientation;
 }
 
 int ClipDrawable::getOpacity(){
@@ -70,13 +76,13 @@ void ClipDrawable::draw(Canvas& canvas){
 
     int w = bounds.width;
     const int iw = 0;
-    if (Gravity::isHorizontal(mState->mGravity)){
+    if (mState->mOrientation&HORIZONTAL){
         w -= (w - iw) * (MAX_LEVEL - level) / MAX_LEVEL;
     }
 
     int h = bounds.height;
     const int ih = 0;
-    if (Gravity::isVertical(mState->mGravity)){
+    if (mState->mOrientation&VERTICAL){
         h -= (h - ih) * (MAX_LEVEL - level) / MAX_LEVEL;
     }
 
@@ -96,8 +102,10 @@ void ClipDrawable::draw(Canvas& canvas){
 Drawable*ClipDrawable::inflate(Context*ctx,const AttributeSet&atts){
     Drawable*d = Drawable::createWrappedDrawable(ctx,atts);
     const int gravity= atts.getGravity("gravity",Gravity::LEFT);
-    const std::string sOrientation = atts.getString("clipOrientation");
-    d = new ClipDrawable(d,gravity);
+    const int orientation = atts.getInt("clipOrientation",std::map<const std::string,int>{
+        {"horizontal",(int)HORIZONTAL},{"vertical",(int)VERTICAL}
+    },HORIZONTAL);
+    d = new ClipDrawable(d,gravity,orientation);
     LOGV("%p gravity=%d horizontal=%d",d,gravity,Gravity::isHorizontal(gravity));
     return d;
 }

@@ -18,6 +18,15 @@ AnimationDrawable::AnimationDrawable(std::shared_ptr<AnimationDrawable::Animatio
     mRunnable=std::bind(&AnimationDrawable::run,this);
 }
 
+AnimationDrawable::AnimationDrawable(Context*ctx,const AttributeSet&atts)
+    :AnimationDrawable(){
+    mAnimationState->setConstantSize(atts.getBoolean("constantSize"));
+    mAnimationState->setVariablePadding(atts.getBoolean("variablePadding"));
+    mAnimationState->setEnterFadeDuration(atts.getInt("enterFadeDuration"));
+    mAnimationState->setExitFadeDuration(atts.getInt("exitFadeDuration"));
+    mAnimationState->mOneShot = atts.getBoolean("oneshot",false);
+}
+
 AnimationDrawable::~AnimationDrawable(){
     mRunnable.reset();
 }
@@ -136,8 +145,7 @@ void AnimationDrawable::clearMutated(){
 }
 
 Drawable*AnimationDrawable::inflate(Context*ctx,const AttributeSet&attrs){
-    AnimationDrawable*d=new AnimationDrawable();
-    d->setOneShot(attrs.getBoolean("oneshot",false));
+    AnimationDrawable*d=new AnimationDrawable(ctx,attrs);
     return d;
 }
 

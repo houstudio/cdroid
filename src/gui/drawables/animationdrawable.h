@@ -22,6 +22,7 @@ private:
 private:
     void setFrame(int frame,bool unschedule,bool animate);
     AnimationDrawable(std::shared_ptr<AnimationState>);
+    AnimationDrawable(Context*,const AttributeSet&);
 protected:
     void setConstantState(std::shared_ptr<DrawableContainerState>state)override;
     void run();

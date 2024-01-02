@@ -66,7 +66,7 @@ protected:
         void setEnterFadeDuration(int duration) {mEnterFadeDuration = duration; }
         int getExitFadeDuration()const {return mExitFadeDuration; }
         void setExitFadeDuration(int duration) {mExitFadeDuration = duration;}
-	int getOpacity();
+        int getOpacity();
     };
     class BlockInvalidateCallback*mBlockInvalidateCallback;
     void initializeDrawableForDisplay(Drawable*d);

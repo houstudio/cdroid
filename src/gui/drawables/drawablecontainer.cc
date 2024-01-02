@@ -690,19 +690,19 @@ void DrawableContainer::setCurrentIndex(int index){
 bool DrawableContainer::selectDrawable(int index){
     if(index==mCurIndex)return false;
     const long now = SystemClock::uptimeMillis();
-    if(mDrawableContainerState->mExitFadeDuration>0){
+    if(mDrawableContainerState->mExitFadeDuration > 0){
         if (mLastDrawable != nullptr) {
             mLastDrawable->setVisible(false, false);
         }
-	if(mCurrDrawable!=nullptr){
-	    mLastDrawable = mCurrDrawable;
-	    mLastIndex = mCurIndex;
-	    mExitAnimationEnd = now + mDrawableContainerState->mExitFadeDuration;
-	}else{
-	    mLastDrawable = nullptr;
-	    mLastIndex = -1;
-	    mExitAnimationEnd = 0;
-	}
+        if(mCurrDrawable!=nullptr){
+            mLastDrawable = mCurrDrawable;
+            mLastIndex = mCurIndex;
+            mExitAnimationEnd = now + mDrawableContainerState->mExitFadeDuration;
+        }else{
+            mLastDrawable = nullptr;
+            mLastIndex = -1;
+            mExitAnimationEnd = 0;
+        }
     }else if(mCurrDrawable!=nullptr){
         mCurrDrawable->setVisible(false, false);
     }
@@ -710,14 +710,14 @@ bool DrawableContainer::selectDrawable(int index){
         mCurIndex = index;
         mCurrDrawable = mDrawableContainerState->getChild(index);
         if(mCurrDrawable){
-	    if(mDrawableContainerState->mEnterFadeDuration>0){
-		mEnterAnimationEnd = now + mDrawableContainerState->mEnterFadeDuration;
-	    }
+            if(mDrawableContainerState->mEnterFadeDuration>0){
+                mEnterAnimationEnd = now + mDrawableContainerState->mEnterFadeDuration;
+            }
             initializeDrawableForDisplay(mCurrDrawable);
         }
     }else{
         mCurrDrawable = nullptr;
-	mCurIndex = -1;
+        mCurIndex = -1;
     }
 
     if (mEnterAnimationEnd != 0 || mExitAnimationEnd != 0) {

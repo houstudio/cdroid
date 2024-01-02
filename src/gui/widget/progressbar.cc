@@ -168,7 +168,7 @@ Drawable* ProgressBar::tileify(Drawable* drawable, bool clip){
             mSampleWidth = clone->getIntrinsicWidth();
         }
         if (clip) {
-            return new ClipDrawable(clone, Gravity::LEFT);
+            return new ClipDrawable(clone, Gravity::LEFT,ClipDrawable::HORIZONTAL);
         } else {
             return clone;
         }

@@ -495,8 +495,8 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
                 auto cs = d->getConstantState();
                 if(cs){
                    cs->mResource = atts.getString("drawable");
-		   LOGD_IF(atts.hasAttribute("drawable"),"%p.res=%s",cs->mResource.c_str());
-		}
+                   LOGD_IF(atts.hasAttribute("drawable"),"%p.res=%s",cs->mResource.c_str());
+                }
             }
             item->drawable = d;
         }
@@ -505,7 +505,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 }
 
 static Drawable*parseShapeDrawable(Context*ctx,const AttributeSet&atts,
-	const std::vector<AttributeSet>&props,const std::vector<std::string>&names) {
+	    const std::vector<AttributeSet>&props,const std::vector<std::string>&names) {
     const AttributeSet* corners = nullptr,*gradient = nullptr,*padding = nullptr;
     const AttributeSet* size = nullptr, *stroke = nullptr,*solid = nullptr;
 
