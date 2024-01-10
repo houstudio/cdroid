@@ -710,6 +710,10 @@ float MotionEvent::getRawAxisValue(int32_t axis, size_t pointerIndex) const {
     return getRawPointerCoords(pointerIndex)->getAxisValue(axis);
 }
 
+float MotionEvent::getAxisValue(int axis)const {
+    return getAxisValue(axis, 0);
+}
+
 float MotionEvent::getAxisValue(int32_t axis, size_t pointerIndex) const {
     float value =getRawPointerCoords(pointerIndex)->getAxisValue(axis);
     switch (axis) {

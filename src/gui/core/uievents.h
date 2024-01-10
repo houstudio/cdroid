@@ -462,6 +462,7 @@ public:
     inline float getRawY(size_t pointerIndex) const {
         return getRawAxisValue(AXIS_Y, pointerIndex);
     }
+    float getAxisValue(int32_t axis)const;
     float getAxisValue(int32_t axis, size_t pointerIndex)const;
     float getX(size_t pointer=0)const{return getAxisValue(AXIS_X,pointer);}
     float getY(size_t pointer=0)const{return getAxisValue(AXIS_Y,pointer);}

@@ -1,5 +1,5 @@
 #if ENABLE_PLPLOT
-#include <ext_widget/plotview.h>
+#include <widgetEx/plotview.h>
 #include <plstream.h>
 namespace cdroid{
 

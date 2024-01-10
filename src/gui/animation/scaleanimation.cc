@@ -5,13 +5,22 @@ namespace cdroid{
 
 ScaleAnimation::ScaleAnimation(const ScaleAnimation&o):Animation(o){
     mFromX  = o.mFromX;
+    mFromXType = o.mFromXType;
     mToX    = o.mToX;
+    mToXType= o.mToXType;
     mFromY  = o.mFromY;
+    mFromYType=o.mFromYType;
     mToY    = o.mToY;
+    mToYType= o.mToYType;
     mPivotXValue = o.mPivotXValue;
     mPivotXType  = o.mPivotXType;
     mPivotYValue = o.mPivotYValue;
     mPivotYType  = o.mPivotYType;
+
+    mFromXData = o.mFromXData;
+    mFromYData = o.mFromYData;
+    mToXData = o.mToXData;
+    mToYData = o.mToYData;
     initializePivotPoint();
 }
 
@@ -34,6 +43,9 @@ ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY) {
     mToY   = toY;
     mPivotX= 0;
     mPivotY= 0;
+    mFromXType = mFromYType = 0;
+    mToXType = mToYType = 0;
+    mPivotXType = mPivotYType = 0;
 }
 
 ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY,

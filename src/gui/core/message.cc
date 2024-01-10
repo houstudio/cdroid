@@ -31,7 +31,7 @@ Message*Message::obtain(const Message&orig){
     m->what = orig.what;
     m->arg1 = orig.arg1;
     m->arg2 = orig.arg2;
-    m->obj  = orig.obj;
+    m->obj = orig.obj;
     m->target = orig.target;
     m->callback = orig.callback;
     /*m->replyTo = orig.replyTo;

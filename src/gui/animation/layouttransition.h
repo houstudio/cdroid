@@ -70,6 +70,9 @@ private:
     std::map<View*, Animator*> currentAppearingAnimations;
     std::map<View*, Animator*> currentDisappearingAnimations;
     std::map<View*, View::OnLayoutChangeListener> layoutChangeListenerMap;
+    CallbackBase<bool>mOnPreDraw;
+    View::OnAttachStateChangeListener mOnAttachStateChange;
+    View::OnLayoutChangeListener mOnLayoutChange;
 public :
     /**
      * A flag indicating the animation that runs on those items that are changing
@@ -105,6 +108,10 @@ private:
     void runDisappearingTransition(ViewGroup* parent,View* child);
     void addChild(ViewGroup* parent, View* child, bool changesLayout);
     void removeChild(ViewGroup* parent, View* child, bool changesLayout);
+    void cleanup(ViewGroup*);
+    void doLayoutChange(View& v, int left, int top, int right, int height,
+	      int oldLeft, int oldTop, int oldWidth, int oldHieight,Animator*anim,
+	      ViewGroup*parent,View*child,int changeReason,int duration);
 public:
     LayoutTransition();
     ~LayoutTransition();

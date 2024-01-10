@@ -5,7 +5,7 @@
 
 namespace cdroid{
 
-template<class T,T ValueIfKeyNotFound>
+template<class T,T ValueIfKeyNotFound=nullptr>
 class SparseArray{
 private:
     std::vector<int>mKeys;

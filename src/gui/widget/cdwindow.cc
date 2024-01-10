@@ -37,6 +37,7 @@ Window::Window(Context*ctx,const AttributeSet&atts)
     WindowManager::getInstance().getDefaultDisplay().getSize(pt);
     setFrame(0,0,pt.x,pt.y);
     WindowManager::getInstance().addWindow(this);
+    mAttachInfo->mPlaySoundEffect = std::bind(&Window::playSoundImpl,this,std::placeholders::_1);
 }
 
 Window::Window(int x,int y,int width,int height,int type)
@@ -51,6 +52,7 @@ Window::Window(int x,int y,int width,int height,int type)
     if(height<0) height= size.y;
     setFrame(x, y, width, height);
     WindowManager::getInstance().addWindow(this);
+    mAttachInfo->mPlaySoundEffect = std::bind(&Window::playSoundImpl,this,std::placeholders::_1);
 }
 
 void Window::initWindow(){
@@ -75,6 +77,10 @@ void Window::initWindow(){
 
 Window::~Window(){
     LOGD("%p:%d destroied!",this,mID);
+}
+
+void Window::playSoundImpl(int effectId){
+    LOGD("%d",effectId);
 }
 
 ViewGroup::LayoutParams* Window::generateDefaultLayoutParams()const{

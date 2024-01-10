@@ -211,7 +211,7 @@ void AdapterViewAnimator::refreshChildren() {
 }
 
 FrameLayout* AdapterViewAnimator::getFrameForChild() {
-    return new FrameLayout(mContext,AttributeSet());
+    return new FrameLayout(mContext,AttributeSet(mContext,mContext->getPackageName()));
 }
 
 void AdapterViewAnimator::showOnly(int childIndex, bool animate) {

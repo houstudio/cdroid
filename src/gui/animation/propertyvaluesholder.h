@@ -49,6 +49,7 @@ protected:
     virtual void evaluate(AnimateValue& out, const AnimateValue& from, const AnimateValue& to, float fraction)const;
 public:
     PropertyValuesHolder();
+    PropertyValuesHolder(const PropertyValuesHolder&);
     virtual ~PropertyValuesHolder();
     PropertyValuesHolder(Property*prop);
     PropertyValuesHolder(const std::string&name);

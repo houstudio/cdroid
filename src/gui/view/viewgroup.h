@@ -185,10 +185,10 @@ protected:
     void dispatchCancelPendingInputEvents()override;
     void internalSetPadding(int left, int top, int width, int height)override;
 
-    void dispatchSaveInstanceState(std::map<int,Parcelable>& container)override;
-    void dispatchFreezeSelfOnly(std::map<int,Parcelable>& container);
-    void dispatchRestoreInstanceState(std::map<int,Parcelable>& container)override;
-    void dispatchThawSelfOnly(std::map<int,Parcelable>& container);
+    void dispatchSaveInstanceState(SparseArray<Parcelable*>& container)override;
+    void dispatchFreezeSelfOnly(SparseArray<Parcelable*>& container);
+    void dispatchRestoreInstanceState(SparseArray<Parcelable*>& container)override;
+    void dispatchThawSelfOnly(SparseArray<Parcelable*>& container);
 
     bool dispatchGenericPointerEvent(MotionEvent&event)override;
     bool dispatchGenericFocusedEvent(MotionEvent&event)override;
@@ -209,6 +209,7 @@ protected:
     void dispatchViewAdded(View* child);
     void dispatchViewRemoved(View* child);
     virtual void removeDetachedView(View* child, bool animate);
+    void detachViewFromParent(int index);
     void detachViewsFromParent(int start, int count);
     void detachViewFromParent(View* child);
     void detachAllViewsFromParent();
@@ -282,7 +283,7 @@ public:
     void dispatchSetActivated(bool activated)override;
     virtual std::vector<View*> buildTouchDispatchChildList();
     bool dispatchActivityResult(const std::string& who, int requestCode, int resultCode, Intent data)override;
-    virtual View*focusSearch(View*focused,int direction)const;
+    virtual View*focusSearch(View*focused,int direction);
     View*getFocusedChild();
     bool hasFocus()const override;
     View*findFocus()override;

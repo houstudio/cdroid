@@ -9,9 +9,9 @@ aux_source_directory(core SRCS_GUICORE)
 add_subdirectory(image-decoders)
 aux_source_directory(view SRCS_VIEWS)
 aux_source_directory(widget SRCS_WIDGET)
-aux_source_directory(ext_widget SRCS_EXTWIDGET)
+file(GLOB_RECURSE SRCS_WIDGETEX RELATIVE "${PROJECT_SOURCE_DIR}" "widgetEx/*")
 aux_source_directory(drawables SRCS_DRAWABLES)
-aux_source_directory(cairomm   SRCS_CAIROMM)
+aux_source_directory(cairomm  SRCS_CAIROMM)
 aux_source_directory(app SRCS_APP)
 aux_source_directory(animation SRCS_ANIMATION)
 aux_source_directory(private SRCS_PRIVATE)
@@ -40,7 +40,7 @@ set(SOURCES_GUI
     ${SRCS_GUICORE}
     ${SRCS_VIEWS}
     ${SRCS_CAIROMM} ${SRCS_WIDGET}
-    ${SRCS_EXTWIDGET} ${SRCS_DRAWABLES}
+    ${SRCS_WIDGETEX} ${SRCS_DRAWABLES}
     ${SRCS_APP} ${SRCS_DIALOG}
     #${SRCS_PRIVATE}
     ${SRCS_UTILS}
@@ -62,10 +62,7 @@ foreach( each_file ${allfiles} )
   install(FILES  ${PROJECT_SOURCE_DIR}/${each_file} DESTINATION "${CMAKE_BINARY_DIR}/include/gui/${FILE_PATH}")
 endforeach(each_file)
 
-configure_file(
-        "cdroid.pc.in"
-        "cdroid.pc"
-        @ONLY)
+configure_file("cdroid.pc.in"  "cdroid.pc"  @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc"
 	DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
 

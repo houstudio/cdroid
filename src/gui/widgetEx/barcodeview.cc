@@ -1,7 +1,7 @@
 #if ENABLE_BARCODE
 #include <zint.h>
 #include <string.h>
-#include <ext_widget/barcodeview.h>
+#include <widgetEx/barcodeview.h>
 #include <cdlog.h>
 
 //REF:https://github.com/zint/zint-gpl-only/blob/master/backend_qt4/qzint.h/cpp
@@ -328,20 +328,20 @@ void  BarcodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if(widthMode == MeasureSpec::EXACTLY){
 	 width = widthSize;
     }else{	    
-	 if(mSymbol->vector){
-	     width = mSymbol->vector->width * mSymbol->scale;
-	 }else{
-	     width = mSymbol->width * mSymbol->scale;
-	 }
+        if(mSymbol->vector){ 
+            width = mSymbol->vector->width * mSymbol->scale;
+        }else{
+            width = mSymbol->width * mSymbol->scale;
+	    }
     }
     if(heightMode == MeasureSpec::EXACTLY){
-	 height= heightSize;
-    }else{
-	 if(mSymbol->vector){
-	     height= mSymbol->vector->height* mSymbol->scale;
-	 }else{
-	     height= mSymbol->height* mSymbol->scale;
-	 }
+        height= heightSize;
+    }else{	    
+        if(mSymbol->vector){ 
+            height= mSymbol->vector->height* mSymbol->scale;
+        }else{
+            height= mSymbol->height* mSymbol->scale;
+        }
     }
     LOGD("setMeasuredDimension(%d,%d)",width,height);
     setMeasuredDimension(width, height);

@@ -6,13 +6,22 @@ PropertyValuesHolder::PropertyValuesHolder(){
     mProperty=nullptr;
 }
 
+PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
+    mPropertyName = o.mPropertyName;
+    mDataSource = o.mDataSource;
+    mStartValue = o.mStartValue;
+    mEndValue = o.mEndValue;
+    mAnimateValue= o.mAnimateValue;
+    mProperty = nullptr;
+}
+
 PropertyValuesHolder::PropertyValuesHolder(Property*prop){
     mProperty=prop;
 }
 
 PropertyValuesHolder::PropertyValuesHolder(const std::string&name){
-    mPropertyName=name;
-    mProperty=nullptr;
+    mPropertyName = name;
+    mProperty = nullptr;
 }
 
 PropertyValuesHolder::~PropertyValuesHolder(){
@@ -20,7 +29,7 @@ PropertyValuesHolder::~PropertyValuesHolder(){
 }
 
 void PropertyValuesHolder::setPropertyName(const std::string& propertyName){
-    mPropertyName=propertyName;
+    mPropertyName = propertyName;
 }
 
 const std::string PropertyValuesHolder::getPropertyName()const{
@@ -28,7 +37,7 @@ const std::string PropertyValuesHolder::getPropertyName()const{
 }
 
 void PropertyValuesHolder::setProperty(Property*p){
-    mProperty =p;
+    mProperty = p;
 }
 
 Property*PropertyValuesHolder::getProperty(){

@@ -115,7 +115,6 @@ private:
     class CheckForKeyLongPress;
     class FlingRunnable;
 private:
-    constexpr static int FLYWHEEL_TIMEOUT =40;
     constexpr static bool PROFILE_SCROLLING = false;
     static const bool PROFILE_FLINGING = true;
     enum{

@@ -174,7 +174,6 @@ void ViewGroup::initGroup(){
          // those items visible after they've been 'removed'
          if(transitionType==LayoutTransition::DISAPPEARING)
              startViewTransition(view);
-         LOGD("%p:%d,startViewTransition(%p:%d)transitionType=%d",this,mID,view,view->getId(),transitionType);
     };
     mLayoutTransitionListener.endTransition=[this](LayoutTransition&transition,ViewGroup*container,View*view,int transitionType){
          if(mLayoutCalledWhileSuppressed && !transition.isChangingLayout()){
@@ -734,6 +733,10 @@ void ViewGroup::removeDetachedView(View* child, bool animate){
 
 void ViewGroup::detachViewFromParent(View* child){
     removeFromArray(indexOfChild(child));
+}
+
+void ViewGroup::detachViewFromParent(int index){
+    removeFromArray(index);
 }
 
 void ViewGroup::detachViewsFromParent(int start, int count){
@@ -2312,7 +2315,7 @@ bool ViewGroup::dispatchActivityResult(const std::string& who, int requestCode, 
     return false;
 }
 
-View* ViewGroup::focusSearch(View* focused, int direction)const{
+View* ViewGroup::focusSearch(View* focused, int direction){
     if (nullptr==mParent){//isRootNamespace()) {
         // root namespace means we should consider ourselves the top of the
         // tree for focus searching; otherwise we could be focus searching
@@ -3246,7 +3249,7 @@ void ViewGroup::internalSetPadding(int left, int top, int width, int height){
     }
 }
 
-void ViewGroup::dispatchSaveInstanceState(std::map<int,Parcelable>& container){
+void ViewGroup::dispatchSaveInstanceState(SparseArray<Parcelable*>& container){
     View::dispatchSaveInstanceState(container);
     for (View*c:mChildren){
         if ((c->mViewFlags & PARENT_SAVE_DISABLED_MASK) != PARENT_SAVE_DISABLED) {
@@ -3255,11 +3258,11 @@ void ViewGroup::dispatchSaveInstanceState(std::map<int,Parcelable>& container){
     }
 }
 
-void ViewGroup::dispatchFreezeSelfOnly(std::map<int,Parcelable>& container){
+void ViewGroup::dispatchFreezeSelfOnly(SparseArray<Parcelable*>& container){
     View::dispatchSaveInstanceState(container);
 }
 
-void ViewGroup::dispatchRestoreInstanceState(std::map<int,Parcelable>& container){
+void ViewGroup::dispatchRestoreInstanceState(SparseArray<Parcelable*>& container){
     View::dispatchRestoreInstanceState(container);
     for (View*c:mChildren){
         if ((c->mViewFlags & PARENT_SAVE_DISABLED_MASK) != PARENT_SAVE_DISABLED) {
@@ -3268,7 +3271,7 @@ void ViewGroup::dispatchRestoreInstanceState(std::map<int,Parcelable>& container
     }
 }
 
-void ViewGroup::dispatchThawSelfOnly(std::map<int,Parcelable>& container){
+void ViewGroup::dispatchThawSelfOnly(SparseArray<Parcelable*>& container){
     View:;dispatchRestoreInstanceState(container);
 }
 

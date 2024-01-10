@@ -50,6 +50,7 @@ private:
     bool ensureTouchModeLocally(bool);
     bool enterTouchMode();
     bool leaveTouchMode();
+    void playSoundImpl(int);
 protected:
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;

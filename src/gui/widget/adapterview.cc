@@ -532,7 +532,7 @@ void AdapterDataSetObserver::onInvalidated() {
         // Remember the current state for the case where our hosting activity is being
         // stopped and later restarted
         //mInstanceState = AdapterView.this.onSaveInstanceState();
-        adv->mInstanceState = adv->onSaveInstanceState();
+        //adv->mInstanceState = adv->onSaveInstanceState();
     }
     // Data is invalid so we should reset our state
     adv->mOldItemCount = adv->mItemCount;

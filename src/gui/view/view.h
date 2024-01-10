@@ -10,6 +10,8 @@
 #include <core/context.h>
 #include <core/intent.h>
 #include <core/display.h>
+#include <core/parcel.h>
+#include <core/parcelable.h>
 #include <cairomm/pattern.h>
 #include <view/gravity.h>
 #include <view/layoutparams.h>
@@ -44,7 +46,6 @@ namespace cdroid{
 class ViewGroup;
 class ViewOverlay;
 class Window;
-typedef std::string Parcelable;
 
 class View:public Drawable::Callback,public KeyEvent::Callback{
 public:
@@ -577,11 +578,11 @@ protected:
     virtual bool hasHoveredChild();
     virtual bool pointInHoveredChild(MotionEvent& event);
 
-    virtual void saveHierarchyState(std::map<int,Parcelable>& container);
-    virtual void dispatchSaveInstanceState(std::map<int,Parcelable>& container);
-    virtual Parcelable onSaveInstanceState();
-    virtual void restoreHierarchyState(std::map<int,Parcelable>& container);
-    virtual void dispatchRestoreInstanceState(std::map<int,Parcelable>& container);
+    virtual void saveHierarchyState(SparseArray<Parcelable*>& container);
+    virtual void dispatchSaveInstanceState(SparseArray<Parcelable*>& container);
+    virtual Parcelable* onSaveInstanceState();
+    virtual void restoreHierarchyState(SparseArray<Parcelable*>& container);
+    virtual void dispatchRestoreInstanceState(SparseArray<Parcelable*>& container);
     virtual void onRestoreInstanceState(Parcelable& state);
 
     static int combineMeasuredStates(int curState, int newState);
@@ -871,7 +872,7 @@ public:
     std::string getContentDescription()const;
     void setIsRootNamespace(bool);
     bool isRootNamespace()const;
-    Context*getContext()const;
+    cdroid::Context*getContext()const;
     virtual void scrollTo(int x,int y);
     virtual void scrollBy(int dx,int dy);
     void setScrollX(int x);

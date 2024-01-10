@@ -1432,26 +1432,28 @@ void View::onCancelPendingInputEvents() {
     mPrivateFlags3 |= PFLAG3_CALLED_SUPER;
 }
 
-void View::saveHierarchyState(std::map<int,Parcelable>& container){
+void View::saveHierarchyState(SparseArray<Parcelable*>& container){
     dispatchSaveInstanceState(container);
 }
 
-void View::dispatchSaveInstanceState(std::map<int,Parcelable>& container){
+void View::dispatchSaveInstanceState(SparseArray<Parcelable*>& container){
     if (mID != NO_ID && (mViewFlags & SAVE_DISABLED_MASK) == 0) {
         mPrivateFlags &= ~PFLAG_SAVE_STATE_CALLED;
-        Parcelable state = onSaveInstanceState();
+#if 0
+	Parcelable* state = onSaveInstanceState();
         if ((mPrivateFlags & PFLAG_SAVE_STATE_CALLED) == 0) {
             throw "Derived class did not call super.onSaveInstanceState()";
         }
-        if (!state.empty()) {//state!=nullptr
+        if (state!=nullptr){
             // Log.i("View", "Freezing #" + Integer.toHexString(mID)
             // + ": " + state);
             container.insert(std::pair<int,Parcelable>(mID, state));
         }
+#endif
     }
 }
 
-Parcelable View::onSaveInstanceState(){
+Parcelable* View::onSaveInstanceState(){
 #if 0
     mPrivateFlags |= PFLAG_SAVE_STATE_CALLED;
     if (mStartActivityRequestWho != null || isAutofilled()
@@ -1477,15 +1479,16 @@ Parcelable View::onSaveInstanceState(){
     }
     return BaseSavedState.EMPTY_STATE;
 #endif
-    return Parcelable();
+    return nullptr;//Parcelable();
 }
 
-void View::restoreHierarchyState(std::map<int,Parcelable>& container){
+void View::restoreHierarchyState(SparseArray<Parcelable*>& container){
     dispatchRestoreInstanceState(container);
 }
 
-void View::dispatchRestoreInstanceState(std::map<int,Parcelable>& container){
+void View::dispatchRestoreInstanceState(SparseArray<Parcelable*>& container){
     if (mID != NO_ID) {
+#if 0
         auto it= container.find(mID);
         if (it!=container.end()){//state != null) {
             Parcelable state = it->second;//container.get(mID);
@@ -1493,9 +1496,10 @@ void View::dispatchRestoreInstanceState(std::map<int,Parcelable>& container){
             mPrivateFlags &= ~PFLAG_SAVE_STATE_CALLED;
             onRestoreInstanceState(state);
             if ((mPrivateFlags & PFLAG_SAVE_STATE_CALLED) == 0) {
-                throw "Derived class did not call super.onRestoreInstanceState()";
+                FATAL("Derived class did not call super.onRestoreInstanceState()");
             }
         }
+#endif
     }
 }
 
@@ -3297,7 +3301,7 @@ bool View::isRootNamespace()const {
     return (mPrivateFlags&PFLAG_IS_ROOT_NAMESPACE) != 0;
 }
 
-Context*View::getContext()const{
+cdroid::Context*View::getContext()const{
     return mContext;
 }
 
