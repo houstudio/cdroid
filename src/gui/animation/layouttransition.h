@@ -110,8 +110,8 @@ private:
     void removeChild(ViewGroup* parent, View* child, bool changesLayout);
     void cleanup(ViewGroup*);
     void doLayoutChange(View& v, int left, int top, int right, int height,
-	      int oldLeft, int oldTop, int oldWidth, int oldHieight,Animator*anim,
-	      ViewGroup*parent,View*child,int changeReason,int duration);
+        int oldLeft, int oldTop, int oldWidth, int oldHieight,Animator*anim,
+        ViewGroup*parent,View*child,int changeReason,int duration);
 public:
     LayoutTransition();
     ~LayoutTransition();

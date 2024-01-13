@@ -110,9 +110,25 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
     setNestedScrollingEnabled(nestedScrollingEnabled);
 }
 
+RecyclerView::~RecyclerView(){
+    delete mState;
+    delete mViewInfoStore;
+    delete mViewFlinger;
+    delete mItemAnimator;
+    delete mRecycler;
+    delete mObserver;
+    delete mLeftGlow;
+    delete mTopGlow;
+    delete mRightGlow;
+    delete mBottomGlow;
+    delete mEdgeEffectFactory;
+    delete (ViewInfoStore::ProcessCallback*)mViewInfoProcessCallback;
+}
 void RecyclerView::initRecyclerView(){
     mLayoutFrozen = false;
-    mIsAttached = false;
+    mIsAttached   = false;
+    mHasFixedSize = true;
+    mEnableFastScroller = false;
     mIgnoreMotionEventTillDown = false;
     mEatenAccessibilityChangeFlags =0;
     mState = new State();
@@ -178,6 +194,7 @@ void RecyclerView::initAutofill() {
         setImportantForAutofill(View::IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
     }*/
 } 
+
 //Runnable mUpdateChildViewsRunnable 
 void RecyclerView::doUpdateChildViews(){
     if (!mFirstLayoutComplete || isLayoutRequested()) {
@@ -1427,7 +1444,7 @@ bool RecyclerView::isPreferredNextFocus(View* focused, View* next, int direction
 }
 
 void RecyclerView::requestChildFocus(View* child, View* focused) {
-    if (!mLayout->onRequestChildFocus(this, *mState, child, focused) && focused != nullptr) {
+    if (!mLayout->onRequestChildFocus(*this, *mState, *child, focused) && focused != nullptr) {
         requestChildOnScreen(child, focused);
     }
     ViewGroup::requestChildFocus(child, focused);
@@ -1457,16 +1474,16 @@ void RecyclerView::requestChildOnScreen(View* child,View* focused) {
         offsetDescendantRectToMyCoords(focused, mTempRect);
         offsetRectIntoDescendantCoords(child, mTempRect);
     }
-    mLayout->requestChildRectangleOnScreen(this, child, mTempRect, !mFirstLayoutComplete,
+    mLayout->requestChildRectangleOnScreen(*this, *child, mTempRect, !mFirstLayoutComplete,
             (focused == nullptr));
 }
 
 bool RecyclerView::requestChildRectangleOnScreen(View* child, Rect& rect, bool immediate) {
-    return mLayout->requestChildRectangleOnScreen(this, child, rect, immediate);
+    return mLayout->requestChildRectangleOnScreen(*this, *child, rect, immediate);
 }
 
 void RecyclerView::addFocusables(std::vector<View*>& views, int direction, int focusableMode) {
-    if (mLayout == nullptr || !mLayout->onAddFocusables(this, views, direction, focusableMode)) {
+    if (mLayout == nullptr || !mLayout->onAddFocusables(*this, views, direction, focusableMode)) {
 	    ViewGroup::addFocusables(views, direction, focusableMode);
     }
 }
@@ -1970,7 +1987,7 @@ void RecyclerView::onMeasure(int widthSpec, int heightSpec) {
          * override {@link LayoutManager#onMeasure(int, int)} when
          * {@link LayoutManager#isAutoMeasureEnabled()} returns true.
          */
-        mLayout->onMeasure(mRecycler, *mState, widthSpec, heightSpec);
+        mLayout->onMeasure(*mRecycler, *mState, widthSpec, heightSpec);
 
         const bool measureSpecModeIsExactly = widthMode == MeasureSpec::EXACTLY && heightMode == MeasureSpec::EXACTLY;
         if (measureSpecModeIsExactly || mAdapter == nullptr) {
@@ -2002,7 +2019,7 @@ void RecyclerView::onMeasure(int widthSpec, int heightSpec) {
         }
     } else {
         if (mHasFixedSize) {
-            mLayout->onMeasure(mRecycler, *mState, widthSpec, heightSpec);
+            mLayout->onMeasure(*mRecycler, *mState, widthSpec, heightSpec);
             return;
         }
         // custom onMeasure
@@ -2037,7 +2054,7 @@ void RecyclerView::onMeasure(int widthSpec, int heightSpec) {
             mState->mItemCount = 0;
         }
         startInterceptRequestLayout();
-        mLayout->onMeasure(mRecycler, *mState, widthSpec, heightSpec);
+        mLayout->onMeasure(*mRecycler, *mState, widthSpec, heightSpec);
         stopInterceptRequestLayout(false);
         mState->mInPreLayout = false; // clear
     }
@@ -5569,14 +5586,14 @@ View* RecyclerView::LayoutManager::onInterceptFocusSearch(View* focused, int dir
     return nullptr;
 }
 
-void RecyclerView::LayoutManager::getChildRectangleOnScreenScrollAmount(RecyclerView* parent, View* child,
-         Rect rect, bool immediate,int out[2]) {
+void RecyclerView::LayoutManager::getChildRectangleOnScreenScrollAmount(RecyclerView& parent, View& child,
+         const Rect& rect, bool immediate,int out[2]) {
     const int parentLeft = getPaddingLeft();
     const int parentTop = getPaddingTop();
     const int parentRight = getWidth() - getPaddingRight();
     const int parentBottom = getHeight() - getPaddingBottom();
-    const int childLeft = child->getLeft() + rect.left - child->getScrollX();
-    const int childTop = child->getTop() + rect.top - child->getScrollY();
+    const int childLeft = child.getLeft() + rect.left - child.getScrollX();
+    const int childTop = child.getTop() + rect.top - child.getScrollY();
     const int childRight = childLeft + rect.width;
     const int childBottom = childTop + rect.height;
 
@@ -5605,13 +5622,13 @@ void RecyclerView::LayoutManager::getChildRectangleOnScreenScrollAmount(Recycler
     out[1] = dy;
 }
 
-bool RecyclerView::LayoutManager::requestChildRectangleOnScreen(RecyclerView* parent,
-        View* child, Rect rect, bool immediate) {
+bool RecyclerView::LayoutManager::requestChildRectangleOnScreen(RecyclerView& parent,
+        View& child,const Rect& rect, bool immediate) {
     return requestChildRectangleOnScreen(parent, child, rect, immediate, false);
 }
 
-bool RecyclerView::LayoutManager::requestChildRectangleOnScreen(RecyclerView* parent,
-        View* child, Rect rect, bool immediate,bool focusedChildVisible) {
+bool RecyclerView::LayoutManager::requestChildRectangleOnScreen(RecyclerView& parent,
+        View& child,const Rect& rect, bool immediate,bool focusedChildVisible) {
     int dx,dy,scrollAmount[2];
     getChildRectangleOnScreenScrollAmount(parent, child, rect,immediate,scrollAmount);
     dx = scrollAmount[0];
@@ -5619,9 +5636,9 @@ bool RecyclerView::LayoutManager::requestChildRectangleOnScreen(RecyclerView* pa
     if (!focusedChildVisible || isFocusedChildVisibleAfterScrolling(parent, dx, dy)) {
         if (dx != 0 || dy != 0) {
             if (immediate) {
-                parent->scrollBy(dx, dy);
+                parent.scrollBy(dx, dy);
             } else {
-                parent->smoothScrollBy(dx, dy);
+                parent.smoothScrollBy(dx, dy);
             }
             return true;
         }
@@ -5642,8 +5659,8 @@ bool RecyclerView::LayoutManager::isViewPartiallyVisible(View* child, bool compl
     }
 }
 
-bool RecyclerView::LayoutManager::isFocusedChildVisibleAfterScrolling(RecyclerView* parent, int dx, int dy) {
-    View* focusedChild = parent->getFocusedChild();
+bool RecyclerView::LayoutManager::isFocusedChildVisibleAfterScrolling(RecyclerView& parent, int dx, int dy) {
+    View* focusedChild = parent.getFocusedChild();
     if (focusedChild == nullptr) {
         return false;
     }
@@ -5661,21 +5678,21 @@ bool RecyclerView::LayoutManager::isFocusedChildVisibleAfterScrolling(RecyclerVi
     return true;
 }
 
-bool RecyclerView::LayoutManager::onRequestChildFocus(RecyclerView* parent, View* child,
+bool RecyclerView::LayoutManager::onRequestChildFocus(RecyclerView& parent, View& child,
         View* focused) {
     // eat the request if we are in the middle of a scroll or layout
-    return isSmoothScrolling() || parent->isComputingLayout();
+    return isSmoothScrolling() || parent.isComputingLayout();
 }
 
-bool RecyclerView::LayoutManager::onRequestChildFocus(RecyclerView* parent, State& state,
-        View* child, View* focused) {
+bool RecyclerView::LayoutManager::onRequestChildFocus(RecyclerView& parent, State& state,
+        View& child, View* focused) {
     return onRequestChildFocus(parent, child, focused);
 }
 
 void RecyclerView::LayoutManager::onAdapterChanged(Adapter* oldAdapter, Adapter* newAdapter) {
 }
 
-bool RecyclerView::LayoutManager::onAddFocusables(RecyclerView* recyclerView,
+bool RecyclerView::LayoutManager::onAddFocusables(RecyclerView& recyclerView,
         std::vector<View*>& views, int direction, int focusableMode) {
     return false;
 }
@@ -5728,7 +5745,7 @@ int RecyclerView::LayoutManager::computeVerticalScrollRange(State& state) {
     return 0;
 }
 
-void RecyclerView::LayoutManager::onMeasure(Recycler* recycler, State& state, int widthSpec,int heightSpec) {
+void RecyclerView::LayoutManager::onMeasure(Recycler& recycler, State& state, int widthSpec,int heightSpec) {
     mRecyclerView->defaultOnMeasure(widthSpec, heightSpec);
 }
 

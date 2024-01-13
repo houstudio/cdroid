@@ -86,7 +86,7 @@ protected:
     void validateChildOrder();
 protected:
     int getExtraLayoutSpace(RecyclerView::State& state);
-    void calculateExtraLayoutSpace(RecyclerView::State& state,int extraLayoutSpace[2]);
+    virtual void calculateExtraLayoutSpace(RecyclerView::State& state,int extraLayoutSpace[2]);
     virtual void onAnchorReady(RecyclerView::Recycler& recycler, RecyclerView::State& state,
             AnchorInfo& anchorInfo, int firstLayoutItemDirection);
     bool resolveIsInfinite();

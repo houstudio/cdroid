@@ -1,4 +1,4 @@
-#include <widgetEx/recyclerview/snaphelper.h>
+#include <widgetEx/recyclerview/pagersnaphelper.h>
 #include <widgetEx/recyclerview/linearsmoothscroller.h>
 #include <widgetEx/recyclerview/orientationhelper.h>
 

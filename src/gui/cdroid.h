@@ -41,4 +41,17 @@
 #include <widget/toast.h>
 #include <core/app.h>
 #include <widget/seekbar.h>
+
+#include <widgetEx/recyclerview/recyclerview.h>
+#include <widgetEx/recyclerview/linearlayoutmanager.h>
+#include <widgetEx/recyclerview/gridlayoutmanager.h>
+#include <widgetEx/recyclerview/staggeredgridlayoutmanager.h>
+#include <widgetEx/recyclerview/scrollbarhelper.h>
+#include <widgetEx/recyclerview/linearsmoothscroller.h>
+#include <widgetEx/recyclerview/defaultitemanimator.h>
+#include <widgetEx/recyclerview/linearsnaphelper.h>
+#include <widgetEx/recyclerview/pagersnaphelper.h>
+#include <widgetEx/recyclerview/divideritemdecoration.h>
+#include <widgetEx/recyclerview/orientationhelper.h>
+
 using namespace cdroid;

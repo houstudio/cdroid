@@ -36,54 +36,5 @@ public:
     virtual int findTargetSnapPosition(RecyclerView::LayoutManager& layoutManager, int velocityX,
             int velocityY)=0;
 };
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class LinearSnapHelper:public SnapHelper {
-private:
-    static constexpr float INVALID_DISTANCE = 1.f;
-
-    // Orientation helpers are lazily created per LayoutManager.
-    OrientationHelper* mVerticalHelper;
-    OrientationHelper* mHorizontalHelper;
-private:
-    int distanceToCenter(RecyclerView::LayoutManager& layoutManager, View& targetView, OrientationHelper& helper);
-    int estimateNextPositionDiffForFling(RecyclerView::LayoutManager& layoutManager,
-            OrientationHelper& helper, int velocityX, int velocityY);
-    View* findCenterView(RecyclerView::LayoutManager& layoutManager, OrientationHelper& helper);
-    float computeDistancePerChild(RecyclerView::LayoutManager& layoutManager, OrientationHelper& helper);
-    OrientationHelper& getVerticalHelper(RecyclerView::LayoutManager& layoutManager);
-    OrientationHelper& getHorizontalHelper(RecyclerView::LayoutManager& layoutManager);
-public:
-    LinearSnapHelper();
-    ~LinearSnapHelper()override;
-    void calculateDistanceToFinalSnap(RecyclerView::LayoutManager& layoutManager,View& targetView,int distance[2])override;
-    int findTargetSnapPosition(RecyclerView::LayoutManager& layoutManager, int velocityX,int velocityY)override;
-    View* findSnapView(RecyclerView::LayoutManager& layoutManager)override;
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class PagerSnapHelper:public SnapHelper {
-public:
-    static constexpr int MAX_SCROLL_ON_FLING_DURATION = 100; // ms
-private:
-    OrientationHelper* mVerticalHelper;
-    OrientationHelper* mHorizontalHelper;
-private:
-    int distanceToCenter(RecyclerView::LayoutManager& layoutManager, View& targetView, OrientationHelper& helper);
-    View* findCenterView(RecyclerView::LayoutManager& layoutManager, OrientationHelper& helper);
-    View* findStartView(RecyclerView::LayoutManager& layoutManager, OrientationHelper& helper);
-    OrientationHelper& getVerticalHelper(RecyclerView::LayoutManager& layoutManager);
-    OrientationHelper& getHorizontalHelper(RecyclerView::LayoutManager& layoutManager);
-protected:
-    LinearSmoothScroller* createSnapScroller(RecyclerView::LayoutManager& layoutManager);
-public:
-    PagerSnapHelper();
-    ~PagerSnapHelper()override;
-    void calculateDistanceToFinalSnap(RecyclerView::LayoutManager& layoutManager, View& targetView,int distance[2])override;
-    View* findSnapView(RecyclerView::LayoutManager& layoutManager)override;
-    int findTargetSnapPosition(RecyclerView::LayoutManager& layoutManager, int velocityX,int velocityY)override;
-};
 }/*endof namespace*/
-#endif
+#endif/*__SNAP_HELPER_H__*/

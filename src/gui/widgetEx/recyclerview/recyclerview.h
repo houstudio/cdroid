@@ -453,6 +453,7 @@ private:
 public:
     RecyclerView(int w,int h);
     RecyclerView(Context* context,const AttributeSet& attrs);
+    ~RecyclerView()override;
     RecyclerViewAccessibilityDelegate* getCompatAccessibilityDelegate();
     void setAccessibilityDelegate(RecyclerViewAccessibilityDelegate* accessibilityDelegate);
     void setHasFixedSize(bool hasFixedSize);
@@ -512,7 +513,7 @@ public:
     void setEdgeEffectFactory(EdgeEffectFactory* edgeEffectFactory);
     EdgeEffectFactory* getEdgeEffectFactory();
     View* focusSearch(View* focused, int direction)override;
-    void requestChildFocus(View* child, View* focused);
+    void requestChildFocus(View* child, View* focused)override;
     bool requestChildRectangleOnScreen(View* child, Rect& rect, bool immediate)override;
     void addFocusables(std::vector<View*>& views, int direction, int focusableMode)override;
     bool isAttachedToWindow()const override;
@@ -592,9 +593,9 @@ private:
     void detachViewInternal(int index,View* view);
     void scrapOrRecycleView(Recycler& recycler, int index, View* view);
     static bool isMeasurementUpToDate(int childSize, int spec, int dimension);
-    void getChildRectangleOnScreenScrollAmount(RecyclerView* parent, View* child,
-            Rect rect, bool immediate,int out[2]);
-    bool isFocusedChildVisibleAfterScrolling(RecyclerView* parent, int dx, int dy);
+    void getChildRectangleOnScreenScrollAmount(RecyclerView& parent, View& child,
+            const Rect& rect, bool immediate,int out[2]);
+    bool isFocusedChildVisibleAfterScrolling(RecyclerView& parent, int dx, int dy);
     void onSmoothScrollerStopped(SmoothScroller* smoothScroller);
 protected:
     ChildHelper* mChildHelper;
@@ -744,13 +745,13 @@ public:
     int getRightDecorationWidth(View* child);
     virtual View* onFocusSearchFailed(View* focused, int direction,Recycler& recycler,State& state);
     virtual View* onInterceptFocusSearch(View* focused, int direction);
-    bool requestChildRectangleOnScreen(RecyclerView* parent,View* child, Rect rect, bool immediate);
-    bool requestChildRectangleOnScreen(RecyclerView* parent,View* child, Rect rect, bool immediate,bool focusedChildVisible);
+    virtual bool requestChildRectangleOnScreen(RecyclerView& parent,View& child,const Rect& rect, bool immediate);
+    virtual bool requestChildRectangleOnScreen(RecyclerView& parent,View& child,const Rect& rect, bool immediate,bool focusedChildVisible);
     bool isViewPartiallyVisible(View* child, bool completelyVisible,bool acceptEndPointInclusion);
-    virtual bool onRequestChildFocus(RecyclerView* parent, View* child,View* focused);
-    virtual bool onRequestChildFocus(RecyclerView* parent, State& state,View* child, View* focused);
+    virtual bool onRequestChildFocus(RecyclerView& parent, View& child,View* focused);
+    virtual bool onRequestChildFocus(RecyclerView& parent, State& state,View& child, View* focused);
     virtual void onAdapterChanged(Adapter* oldAdapter, Adapter* newAdapter);
-    virtual bool onAddFocusables(RecyclerView* recyclerView,std::vector<View*>& views, int direction, int focusableMode);
+    virtual bool onAddFocusables(RecyclerView& recyclerView,std::vector<View*>& views, int direction, int focusableMode);
     virtual void onItemsChanged(RecyclerView& recyclerView);
     virtual void onItemsAdded(RecyclerView& recyclerView, int positionStart,int itemCount);
     virtual void onItemsRemoved(RecyclerView& recyclerView, int positionStart,int itemCount);
@@ -763,7 +764,7 @@ public:
     virtual int computeVerticalScrollExtent(State& state);
     virtual int computeVerticalScrollOffset(State& state);
     virtual int computeVerticalScrollRange(State& state);
-    virtual void onMeasure(Recycler* recycler, State& state, int widthSpec,int heightSpec);
+    virtual void onMeasure(Recycler& recycler, State& state, int widthSpec,int heightSpec);
     void setMeasuredDimension(int widthSize, int heightSize);
     int getMinimumWidth();
     int getMinimumHeight();

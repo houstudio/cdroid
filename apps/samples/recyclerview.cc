@@ -10,7 +10,7 @@ public:
     public:
         TextView* textView;
         ViewHolder(View* itemView):RecyclerView::ViewHolder(itemView){
-            textView =(TextView*)itemView;// (itemView.findViewById(R.id.textView);
+            textView =(TextView*)itemView;// (itemView.findViewById(R.id.textView)
         }
     };
 
@@ -20,6 +20,7 @@ public:
     }
     MyAdapter::ViewHolder* onCreateViewHolder(ViewGroup* parent, int viewType) {
         TextView* view = new TextView("",200,40);
+	view->setBackgroundColor(0x80234567);
 	//LayoutInflater.from(parent.getContext()).inflate(R.layout.item_layout, parent, false);
         return new ViewHolder(view);
     }

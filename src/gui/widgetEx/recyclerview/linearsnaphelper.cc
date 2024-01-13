@@ -1,4 +1,4 @@
-#include <widgetEx/recyclerview/snaphelper.h>
+#include <widgetEx/recyclerview/linearsnaphelper.h>
 #include <widgetEx/recyclerview/orientationhelper.h>
 
 namespace cdroid{
