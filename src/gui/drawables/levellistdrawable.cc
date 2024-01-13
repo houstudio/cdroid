@@ -45,7 +45,8 @@ LevelListDrawable::LevelListDrawable(std::shared_ptr<LevelListState>state){
 }
 
 bool LevelListDrawable::onLevelChange(int level){
-    int idx = mLevelListState->indexOfLevel(level);
+    const int idx = mLevelListState->indexOfLevel(level);
+    LOGV("%p level %d.index=%d",this,level,idx);
     if (selectDrawable(idx)) {
         return true;
     }

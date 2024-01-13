@@ -39,7 +39,7 @@ public:
     int getIntrinsicHeight()const override;
     int getChangingConfigurations()const override;
     void setDrawable(Drawable* dr);
-    Drawable* getDrawable();
+    Drawable* getDrawable()const;
     DrawableWrapper*mutate()override;
     void clearMutated()override;
     std::shared_ptr<ConstantState>getConstantState()override;

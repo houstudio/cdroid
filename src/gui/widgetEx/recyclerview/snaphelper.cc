@@ -6,6 +6,8 @@ namespace cdroid{
 
 SnapHelper::SnapHelper(){
     mScrolled = false;
+    mRecyclerView = nullptr;
+    mGravityScroller = nullptr;
     mScrollListener.onScrollStateChanged=[this](RecyclerView& recyclerView, int newState) {
         //super is null;super.onScrollStateChanged(recyclerView, newState);
         if (newState == RecyclerView::SCROLL_STATE_IDLE && mScrolled) {

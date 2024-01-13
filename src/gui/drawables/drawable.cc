@@ -535,10 +535,10 @@ static Drawable*parseShapeDrawable(Context*ctx,const AttributeSet&atts,
 
         if(stroke) {
             d->setStroke(stroke->getDimensionPixelSize("width",1),stroke->getColorStateList("color"),
-                        stroke->getDimensionPixelSize("dashWidth"),stroke->getDimensionPixelSize("dashGap"));
+                stroke->getDimensionPixelSize("dashWidth"),stroke->getDimensionPixelSize("dashGap"));
         }
-        if(padding)d->setPadding(padding->getInt("left"),padding->getInt("top"),
-                        padding->getInt("right"),padding->getInt("bottom"));
+        if(padding)d->setPadding(padding->getDimensionPixelSize("left"),padding->getDimensionPixelSize("top"),
+                padding->getDimensionPixelSize("right"),padding->getDimensionPixelSize("bottom"));
         return d;
     } else {
         ShapeDrawable*sd=new ShapeDrawable();
