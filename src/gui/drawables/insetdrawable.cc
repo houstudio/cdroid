@@ -116,7 +116,7 @@ void InsetDrawable::onBoundsChange(const Rect&bounds){
 
 int InsetDrawable::getIntrinsicWidth()const {
     const int childWidth = getDrawable()->getIntrinsicWidth();
-    const float fraction = mState->mInsetLeft->mFraction + mState->mInsetRight.mFraction;
+    const float fraction = mState->mInsetLeft.mFraction + mState->mInsetRight.mFraction;
     if (childWidth < 0 || fraction >= 1) {
         return -1;
     }

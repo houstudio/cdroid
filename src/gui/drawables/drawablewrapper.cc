@@ -85,7 +85,7 @@ void DrawableWrapper::setDrawable(Drawable*dr){
     invalidateSelf();
 }
 
-Drawable*DrawableWrapper::getDrawable(){
+Drawable*DrawableWrapper::getDrawable()const{
     return mDrawable;
 }
 

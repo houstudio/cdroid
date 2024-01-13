@@ -723,7 +723,7 @@ public:
     virtual bool isLayoutDirectionResolved()const;
     virtual int getLayoutDirection()const;
     virtual bool isOpaque()const;
-    View&setLayoutDirection(int layoutDirection);
+    virtual View&setLayoutDirection(int layoutDirection);
     bool isLayoutRtl()const;
     bool isFocusableInTouchMode()const;
     virtual void setFocusable(int focusable);
