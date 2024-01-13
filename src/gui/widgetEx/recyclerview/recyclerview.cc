@@ -142,6 +142,11 @@ void RecyclerView::initRecyclerView(){
     mVelocityTracker = nullptr;
     mLayout = nullptr;
     mAdapter= nullptr;
+    mMinMaxLayoutPositions[0] = mMinMaxLayoutPositions[1] = 0;
+    mScrollOffset[0] = mScrollOffset[1] = 0;
+    mScrollConsumed[0] = mScrollConsumed[1] = 0;
+    mNestedOffsets[0] = mNestedOffsets[1] = 0;
+    mScrollStepConsumed[0] = mScrollStepConsumed[1] = 0;
     mScrollingChildHelper = nullptr;
     mFirstLayoutComplete = false;
     mEdgeEffectFactory = new EdgeEffectFactory();
