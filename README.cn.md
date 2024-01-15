@@ -1,14 +1,15 @@
 # **Introduction**
-**CDroid** is a android like GUI toolkit base on C++11,It is a cross-platform GUI engine for embedded system.
-* Main repository: [https://gitee.com/houstudio/cdroid](https://gitee.com/houstudio/cdroid)
-* Mirrored repository: [https://github.com/houstudio/cdroid](https://github.com/houstudio/cdroid)
+**CDroid** 是一套基于C++11开发的高仿安卓的跨平台GUI引擎，设计目标针对中高端嵌入式设备.旨在为中高端设备提供媲美安卓的UI设计效果。同时也让安卓开发者能轻松切入到嵌入式开发领域。
+* 运行环境：32M以上内存的嵌入式系统。
+* 主仓库: [https://gitee.com/houstudio/cdroid](https://gitee.com/houstudio/cdroid)
+* 镜像仓库: [https://github.com/houstudio/cdroid](https://github.com/houstudio/cdroid)
 # **Features:**
 * Multi Layer/Multi Window 
-* Integrated with 40+ UI Components and 20+ Drawables(compatible with android)
-* All UI Components(Layouts,Drawables...)can be designed in **AndroidStudio or Eclipse** 
-* Vector Graph supported via **Cairo**
+* 集成40+ 安卓箭筒的UI组件和20+ Drawables
+* 所有UI组件(Layouts,Drawables...)可以在安卓兼容的开发环境(**AndroidStudio or Eclipse**)中进行设计 
+* 基于 **Cairo**的矢量图形引擎
 # **Quick Start**
-* Start experimenting now with X86 Simulator https://gitee.com/jiangcheng/cdroidX64
+* X86快速体验模拟器地址： https://gitee.com/jiangcheng/cdroidX64
 # **IDE(AndroidStudio/Eclipse)** 
 ![IDE](https://gitee.com/jiangcheng/cdroidX64/raw/master/apps/images/asd61236_ide.png)
 
