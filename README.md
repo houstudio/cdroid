@@ -86,7 +86,7 @@
 
 # **Building CDROID:**
 ###  1.install dependencs:
- sudo apt install autoconf libtool build-essential cmake gdb pkg-config zip gettext libx11-dev bison python>=3.7
+ sudo apt install autoconf libtool build-essential cmake gdb pkg-config zip gettext libx11-dev bison python>=3.7 pip3-python meson
 ###  2.install vcpkg:
 * git clone https://gitee.com/houstudio/vcpkg.git
 * cd vcpkg
@@ -104,7 +104,7 @@
 ### 6.prepare system and app resource
 *The cdroid.pak and yourapp's pak must be in your working directory*
 * cp src/gui/cdroid.pak ./
-* cp apps/${your_app}/${your_app}.pak ./
+* cp apps/appname/appname.pak ./
 ### 7.run samples(in directory outX64-Debug
 * apps/samples/helloworld
 * apps/uidemo1/uidemo1

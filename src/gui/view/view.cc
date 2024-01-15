@@ -401,7 +401,7 @@ View::~View(){
     delete mCurrentAnimation;
     delete mTransformationInfo;
     delete mOverlay;
-	delete mAnimator;
+    delete mAnimator;
     delete mFloatingTreeObserver;
 }
 
