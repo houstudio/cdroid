@@ -401,6 +401,7 @@ View::~View(){
     delete mCurrentAnimation;
     delete mTransformationInfo;
     delete mOverlay;
+	delete mAnimator;
     delete mFloatingTreeObserver;
 }
 
@@ -7112,6 +7113,13 @@ static bool operator<(const Size&a,const Size&b){
     else if(a.y!=b.y)
        return a.y<b.y;
     return  false;
+}
+
+ViewPropertyAnimator& View::animate() {
+   if (mAnimator == nullptr) {
+       mAnimator = new ViewPropertyAnimator(this);
+   }
+   return *mAnimator;
 }
 
 void View::measure(int widthMeasureSpec, int heightMeasureSpec){

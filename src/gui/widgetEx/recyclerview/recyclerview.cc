@@ -14,13 +14,16 @@ namespace cdroid{
 //public class RecyclerView extends ViewGroup implements ScrollingView, NestedScrollingChild2 {
 static constexpr int TYPE_TOUCH = 0;
 static constexpr int TYPE_NON_TOUCH = 1;
-
-static Interpolator* sQuinticInterpolator = nullptr/*new Interpolator() {
-    public float getInterpolation(float t) {
+class QuinticInterpolator:public Interpolator{
+public:
+    float getInterpolation(float t)override{
         t -= 1.0f;
         return t * t * t * t * t + 1.0f;
     }
-}*/;
+};
+
+Interpolator* RecyclerView::sQuinticInterpolator = new QuinticInterpolator(); 
+
 DECLARE_WIDGET2(RecyclerView,"cdroid:attr/recyclerviewStyle")
 
 RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
@@ -188,10 +191,6 @@ void RecyclerView::initRecyclerView(){
     mViewInfoProcessCallback = visCBK;
     mUpdateChildViewsRunnable = std::bind(&RecyclerView::doUpdateChildViews,this);
     mItemAnimatorRunner = std::bind(&RecyclerView::doItemAnimator,this);
-}
-
-std::string RecyclerView::exceptionLabel() {
-    return " ";
 }
 
 void RecyclerView::initAutofill() {
@@ -365,7 +364,7 @@ void RecyclerView::initChildrenHelper() {
     mChildHelper = new ChildHelper(cbk);
 }
 
-void RecyclerView::dispatchUpdate(/*AdapterHelper::UpdateOp*/void* paramsOP) {
+void RecyclerView::dispatchUpdate(void* /*AdapterHelper::UpdateOp*/ paramsOP) {
     const AdapterHelper::UpdateOp* op=(AdapterHelper::UpdateOp*)paramsOP;
     switch (op->cmd) {
     case AdapterHelper::UpdateOp::ADD:
@@ -592,8 +591,7 @@ void RecyclerView::setLayoutManager(LayoutManager* layout) {
     mLayout = layout;
     if (layout != nullptr) {
         if (layout->mRecyclerView != nullptr) {
-            FATAL("LayoutManager %p is already attached to a RecyclerView:",layout,
-                    layout->mRecyclerView->exceptionLabel());
+            FATAL("LayoutManager %p is already attached to a RecyclerView:",layout);
         }
         mLayout->setRecyclerView(this);
         if (mIsAttached) {
@@ -1021,7 +1019,7 @@ void RecyclerView::stopInterceptRequestLayout(bool performLayoutChildren) {
     if (mInterceptRequestLayoutDepth < 1) {
         //noinspection PointlessBooleanExpression
         LOGD_IF(_DEBUG,"stopInterceptRequestLayout was called more "
-              "times than startInterceptRequestLayout."/*+ exceptionLabel()*/);
+            "times than startInterceptRequestLayout.");
         mInterceptRequestLayoutDepth = 1;
     }
     if (!performLayoutChildren && !mLayoutFrozen) {
@@ -1092,7 +1090,7 @@ void RecyclerView::smoothScrollBy(int dx,int dy,Interpolator* interpolator) {
 bool RecyclerView::fling(int velocityX, int velocityY) {
     if (mLayout == nullptr) {
         LOGE("Cannot fling without a LayoutManager set. "
-              "Call setLayoutManager with a non-null argument.");
+            "Call setLayoutManager with a non-null argument.");
         return false;
     }
     if (mLayoutFrozen) {
@@ -1444,7 +1442,7 @@ bool RecyclerView::isPreferredNextFocus(View* focused, View* next, int direction
     case View::FOCUS_FORWARD:return downness > 0 || (downness == 0 && rightness * rtl >= 0);
     case View::FOCUS_BACKWARD:return downness < 0 || (downness == 0 && rightness * rtl <= 0);
     }
-    FATAL("Invalid direction: %d %s",direction,exceptionLabel().c_str());
+    FATAL("Invalid direction: %d",direction);
     return false;
 }
 
@@ -1565,7 +1563,7 @@ bool RecyclerView::isAttachedToWindow()const {
 void RecyclerView::assertInLayoutOrScroll(const std::string& message) {
     if (!isComputingLayout()) {
         LOGE_IF(message.empty(),"Cannot call this method unless RecyclerView is "
-                   "computing a layout or scrolling"/* + exceptionLabel()*/);
+            "computing a layout or scrolling");
         //throw new IllegalStateException(message + exceptionLabel());
     }
 }
@@ -1573,7 +1571,7 @@ void RecyclerView::assertInLayoutOrScroll(const std::string& message) {
 void RecyclerView::assertNotInLayoutOrScroll(const std::string& message) {
     if (isComputingLayout()) {
         LOGE_IF(message.empty(),"Cannot call this method while RecyclerView is "
-                   "computing a layout or scrolling"/*+exceptionLabel()*/);
+            "computing a layout or scrolling");
         //throw new IllegalStateException(message);
     }
     if (mDispatchScrollCounter > 0) {
@@ -1710,7 +1708,7 @@ bool RecyclerView::onInterceptTouchEvent(MotionEvent& e) {
             const int index = e.findPointerIndex(mScrollPointerId);
             if (index < 0) {
                 LOGE("Error processing scroll; pointer index for id %d"
-                         " not found. Did any MotionEvents get skipped?",mScrollPointerId);
+                     " not found. Did any MotionEvents get skipped?",mScrollPointerId);
                 return false;
             }
 
@@ -2106,8 +2104,7 @@ void RecyclerView::onExitLayoutOrScroll(bool enableChangeEvents) {
     mLayoutOrScrollCounter--;
     if (mLayoutOrScrollCounter < 1) {
         if (mLayoutOrScrollCounter < 0) {
-            LOGE("layout or scroll counter cannot go below zero."
-                   "Some calls are not matching"/* + exceptionLabel()*/);
+            LOGE("layout or scroll counter cannot go below zero.Some calls are not matching");
         }
         mLayoutOrScrollCounter = 0;
         if (enableChangeEvents) {
@@ -2587,24 +2584,22 @@ void RecyclerView::handleMissingPreInfoForChangeError(long key,
         }
         long otherKey = getChangedHolderKey(*other);
         if (otherKey == key) {
-            /*if (mAdapter && mAdapter->hasStableIds()) {
+            if (mAdapter && mAdapter->hasStableIds()) {
                 LOGE("Two different ViewHolders have the same stable"
-                       " ID. Stable IDs in your adapter MUST BE unique and SHOULD NOT"
-                       " change.\n ViewHolder 1:" + other + " \n View Holder 2:" + holder
-                        + exceptionLabel());
+                     " ID. Stable IDs in your adapter MUST BE unique and SHOULD NOT"
+                     " change.\n ViewHolder 1:%p ViewHolder 2:%p %s",other,holder);
             } else {
-                throw new IllegalStateException("Two different ViewHolders have the same change"
-                        + " ID. This might happen due to inconsistent Adapter update events or"
-                        + " if the LayoutManager lays out the same View multiple times."
-                        + "\n ViewHolder 1:" + other + " \n View Holder 2:" + holder
-                        + exceptionLabel());
-            }*/
+                LOGE("Two different ViewHolders have the same change"
+                     " ID. This might happen due to inconsistent Adapter update events or"
+                     " if the LayoutManager lays out the same View multiple times."
+                     "\n ViewHolder 1:%p ViewHolder2:%p",other,holder);
+            }
         }
     }
     // Very unlikely to happen but if it does, notify the developer.
     LOGE("Problem while matching changed view holders with the new"
            "ones. The pre-layout information for the change holder %p "
-           " cannot be found but it is necessary for %p ",oldChangeViewHolder, holder/* + exceptionLabel()*/);
+           " cannot be found but it is necessary for %p",oldChangeViewHolder, holder);
 }
 
 void RecyclerView::recordAnimationInfoIfBouncedHiddenView(ViewHolder* viewHolder,
@@ -2658,7 +2653,7 @@ void RecyclerView::removeDetachedView(View* child, bool animate) {
             vh->clearTmpDetachFlag();
         } else if (!vh->shouldIgnore()) {
             LOGE("Called removeDetachedView with a view which"
-                  " is not flagged as tmp detached.%p",vh /*+ exceptionLabel()*/);
+                 " is not flagged as tmp detached.%p %s",vh);
         }
     }
 
@@ -2806,17 +2801,17 @@ bool RecyclerView::checkLayoutParams(const ViewGroup::LayoutParams* p)const {
 }
 
 ViewGroup::LayoutParams* RecyclerView::generateDefaultLayoutParams()const {
-    LOGE_IF(mLayout == nullptr,"RecyclerView has no LayoutManager"/*+ exceptionLabel()*/);
+    LOGE_IF(mLayout == nullptr,"RecyclerView has no LayoutManager");
     return(ViewGroup::LayoutParams*)mLayout->generateDefaultLayoutParams();
 }
 
 ViewGroup::LayoutParams* RecyclerView::generateLayoutParams(const AttributeSet& attrs)const {
-    LOGE_IF(mLayout == nullptr,"RecyclerView has no LayoutManager"/*+ exceptionLabel()*/);
+    LOGE_IF(mLayout == nullptr,"RecyclerView has no LayoutManager");
     return mLayout->generateLayoutParams(getContext(), attrs);
 }
 
 ViewGroup::LayoutParams* RecyclerView::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
-    LOGE_IF(mLayout == nullptr,"RecyclerView has no LayoutManager"/*+ exceptionLabel()*/);
+    LOGE_IF(mLayout == nullptr,"RecyclerView has no LayoutManager");
     return mLayout->generateLayoutParams(*p);
 }
 
@@ -2829,7 +2824,7 @@ void RecyclerView::saveOldPositions() {
     for (int i = 0; i < childCount; i++) {
         ViewHolder* holder = getChildViewHolderInt(mChildHelper->getUnfilteredChildAt(i));
         if (_DEBUG && holder->mPosition == -1 && !holder->isRemoved()) {
-            LOGE("view holder cannot have position -1 unless it is removed"/*+ exceptionLabel()*/);
+            LOGE("view holder cannot have position -1 unless it is removed %p");
         }
         if (!holder->shouldIgnore()) {
             holder->saveOldPosition();
@@ -3745,12 +3740,12 @@ bool RecyclerView::Recycler::validateViewHolderForOffsetPosition(ViewHolder* hol
     // if it is not removed, verify the type and id.
     if (holder->isRemoved()) {
         if (_DEBUG && !mRV->mState->isPreLayout()) {
-            LOGE("should not receive a removed view unless it is pre layout" /*+exceptionLabel()*/);
+            LOGE("should not receive a removed view unless it is pre layout");
         }
         return mRV->mState->isPreLayout();
     }
     if (holder->mPosition < 0 || holder->mPosition >= mRV->mAdapter->getItemCount()) {
-        LOGE("Inconsistency detected. Invalid view holder %p adapter position",holder/*+ exceptionLabel()*/);
+        LOGE("Inconsistency detected. Invalid view holder %p adapter position",holder);
     }
     if (!mRV->mState->isPreLayout()) {
         // don't check type if it is pre-layout.
@@ -3787,14 +3782,12 @@ bool RecyclerView::Recycler::tryBindViewHolderByDeadline(ViewHolder& holder, int
 
 void RecyclerView::Recycler::bindViewToPosition(View* view, int position) {
     ViewHolder* holder = getChildViewHolderInt(view);
-    LOGE_IF(holder == nullptr,"The view does not have a ViewHolder. You cannot"
-                " pass arbitrary views to this method, they should be created by the "
-                "Adapter"/* + exceptionLabel()*/);
+    LOGE_IF(holder == nullptr,"The view does not have a ViewHolder. You cannot pass"
+                " arbitrary views to this method, they should be created by the Adapter");
     const int offsetPosition = mRV->mAdapterHelper->findPositionOffset(position);
     if (offsetPosition < 0 || offsetPosition >= mRV->mAdapter->getItemCount()) {
-        //throw new IndexOutOfBoundsException("Inconsistency detected. Invalid item "
-        //        + "position " + position + "(offset:" + offsetPosition + ")."
-        //        + "state:" + mState->getItemCount() + exceptionLabel());
+        LOGE("Inconsistency detected. Invalid item position %d (offset:%d).state:%d",
+             position,offsetPosition,mRV->mState->getItemCount());
     }
     tryBindViewHolderByDeadline(*holder, offsetPosition, position, FOREVER_NS);
 
@@ -3816,8 +3809,7 @@ void RecyclerView::Recycler::bindViewToPosition(View* view, int position) {
 
 int RecyclerView::Recycler::convertPreLayoutPositionToPostLayout(int position) {
     if (position < 0 || position >= mRV->mState->getItemCount()) {
-       //throw new IndexOutOfBoundsException("invalid position " + position + ". State "
-       //        + "item count is " + mState->getItemCount() + exceptionLabel());
+        LOGE("invalid position %d . State item count is %d",position,mRV->mState->getItemCount());
     }
     if (!mRV->mState->isPreLayout()) {
        return position;
@@ -3836,9 +3828,7 @@ View* RecyclerView::Recycler::getViewForPosition(int position, bool dryRun) {
 RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByDeadline(int position,
         bool dryRun, long deadlineNs) {
     if (position < 0 || position >= mRV->mState->getItemCount()) {
-        //throw new IndexOutOfBoundsException("Invalid item position " + position
-        //        + "(" + position + "). Item count:" + mState->getItemCount()
-        //        + exceptionLabel());
+        LOGE("Invalid item position %d . Item count:%d",position, mRV->mState->getItemCount());
     }
     bool fromScrapOrHiddenOrCache = false;
     ViewHolder* holder = nullptr;
@@ -3874,9 +3864,8 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
     if (holder == nullptr) {
         int offsetPosition = mRV->mAdapterHelper->findPositionOffset(position);
         if (offsetPosition < 0 || offsetPosition >= mRV->mAdapter->getItemCount()) {
-            //throw new IndexOutOfBoundsException("Inconsistency detected. Invalid item "
-            //        + "position " + position + "(offset:" + offsetPosition + ")."
-            //        + "state:" + mState.getItemCount() + exceptionLabel());
+            LOGE("Inconsistency detected. Invalid item position %d (offset:%d) state:%d",
+                position,offsetPosition,mRV->mState->getItemCount());
         }
         const int type = mRV->mAdapter->getItemViewType(offsetPosition);
         // 2) Find from scrap/cache via stable ids, if exists
@@ -3895,11 +3884,10 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
             if (view != nullptr) {
                 holder = mRV->getChildViewHolder(view);
                 if (holder == nullptr) {
-                    LOGE("getViewForPositionAndType returned"
-                          " a view which does not have a ViewHolder"/*+ exceptionLabel()*/);
+                    LOGE("getViewForPositionAndType returned a view which does not have a ViewHolder");
                 } else if (holder->shouldIgnore()) {
                     LOGE("getViewForPositionAndType returned a view that is ignored."
-		         " You must call stopIgnoring before returning this view."/*+ exceptionLabel()*/);
+                         " You must call stopIgnoring before returning this view.");
                 }
             }
         }
@@ -3956,7 +3944,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
     } else if (!holder->isBound() || holder->needsUpdate() || holder->isInvalid()) {
         if (_DEBUG && holder->isRemoved()) {
             LOGE("Removed holder should be bound and it should"
-                  " come here only in pre-layout. Holder: %p",holder/*+ exceptionLabel()*/);
+                 " come here only in pre-layout. Holder: %p",holder);
         }
         const int offsetPosition = mRV->mAdapterHelper->findPositionOffset(position);
         bound = tryBindViewHolderByDeadline(*holder, offsetPosition, position, deadlineNs);
@@ -4061,18 +4049,18 @@ void RecyclerView::Recycler::recycleCachedViewAt(int cachedViewIndex) {
 
 void RecyclerView::Recycler::recycleViewHolderInternal(ViewHolder& holder) {
     if (holder.isScrap() || holder.itemView->getParent() != nullptr) {
-        LOGE("Scrapped or attached views may not be recycled. isScrap:%d isAttached:%d"
-              ,holder.isScrap(),(holder.itemView->getParent() != nullptr)/* + exceptionLabel()*/);
+        LOGE("Scrapped or attached views may not be recycled. isScrap:%d isAttached:%d",
+              holder.isScrap(),(holder.itemView->getParent() != nullptr));
     }
 
     if (holder.isTmpDetached()) {
         LOGE("Tmp detached view should be removed from RecyclerView "
-	   "before it can be recycled: %p",&holder/* + exceptionLabel()*/);
+	   "before it can be recycled: %p",&holder);
     }
 
     if (holder.shouldIgnore()) {
         LOGE("Trying to recycle an ignored view holder. You should "
-	  "first call stopIgnoringView(view) before calling recycle."/*+ exceptionLabel()*/);
+	         "first call stopIgnoringView(view) before calling recycle.");
     }
     //noinspection unchecked
     const bool transientStatePreventsRecycling = holder.doesTransientStatePreventRecycling();
@@ -4082,7 +4070,7 @@ void RecyclerView::Recycler::recycleViewHolderInternal(ViewHolder& holder) {
     bool recycled = false;
     auto it = std::find(mCachedViews.begin(),mCachedViews.end(),&holder);
     if (_DEBUG && it!=mCachedViews.end()){//mCachedViews.contains(holder)) {
-        LOGE("cached view received recycle internal? %p",&holder/*+ exceptionLabel()*/);
+        LOGE("cached view received recycle internal? %p",&holder);
     }
     if (forceRecycle || holder.isRecyclable()) {
         if (mViewCacheMax > 0
@@ -4126,7 +4114,7 @@ void RecyclerView::Recycler::recycleViewHolderInternal(ViewHolder& holder) {
         // TODO: consider cancelling an animation when an item is removed scrollBy,
         // to return it to the pool faster
         LOGD("trying to recycle a non-recycleable holder. Hopefully, it will "
-           "re-visit here. We are still removing it from animation lists"/*+ exceptionLabel()*/);
+             "re-visit here. We are still removing it from animation lists");
     }
     // even if the holder is not removed, we still call this method so that it is removed
     // from view holder lists.
@@ -4163,7 +4151,7 @@ void RecyclerView::Recycler::scrapView(View* view) {
             || !holder->isUpdated() || mRV->canReuseUpdatedViewHolder(*holder)) {
         if (holder->isInvalid() && !holder->isRemoved() && !mRV->mAdapter->hasStableIds()) {
             LOGE("Called scrap view with an invalid view. Invalid views cannot be "
-	       "reused from scrap, they should rebound from recycler pool."/* + exceptionLabel()*/);
+                 "reused from scrap, they should rebound from recycler pool.");
         }
         holder->setScrapContainer(this, false);
         mAttachedScrap.push_back(holder);
@@ -4653,12 +4641,6 @@ void RecyclerView::dispatchChildAttached(View* child) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//public abstract static class LayoutManager {
-//        ChildHelper mChildHelper;
-//        RecyclerView mRecyclerView;
-
-//private final ViewBoundsCheck.Callback mHorizontalBoundCheckCallback =
-//new ViewBoundsCheck.Callback() {
 RecyclerView::LayoutManager::LayoutManager(){
     mHorizontalBoundCheckCallback.getChildCount=[this]()->int {
         return this->getChildCount();
@@ -5032,7 +5014,7 @@ void RecyclerView::LayoutManager::addViewInt(View* child, int index, bool disapp
         if (currentIndex == -1) {
             LOGE("Added View has RecyclerView as parent but"
                  " view is not a real child. Unfiltered index:%d",
-                 mRecyclerView->indexOfChild(child)/* + mRecyclerView.exceptionLabel()*/);
+                 mRecyclerView->indexOfChild(child));
         }
         if (currentIndex != index) {
             mRecyclerView->mLayout->moveView(currentIndex, index);
@@ -6464,6 +6446,12 @@ void RecyclerView::AdapterDataObserver::onItemRangeMoved(int fromPosition, int t
 //////////////////////////////////////RecyclerView::SmoothScroller/////////////////////////////////////
 
 RecyclerView::SmoothScroller::SmoothScroller() {
+    mStarted = false;
+    mRunning = false;
+    mPendingInitialRun = false;
+    mTargetPosition = RecyclerView::NO_POSITION;
+    mRecyclerView = nullptr;
+    mLayoutManager = nullptr;
     mRecyclingAction = new Action(0, 0);
 }
 

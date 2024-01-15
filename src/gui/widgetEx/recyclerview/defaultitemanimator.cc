@@ -1,6 +1,8 @@
 #include <widgetEx/recyclerview/defaultitemanimator.h>
 namespace cdroid{
 
+TimeInterpolator* DefaultItemAnimator::sDefaultInterpolator = nullptr;
+
 DefaultItemAnimator::MoveInfo::MoveInfo(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY) {
     this->holder = &holder;
     this->fromX = fromX;
@@ -115,21 +117,21 @@ bool DefaultItemAnimator::animateRemove(RecyclerView::ViewHolder& holder) {
 void DefaultItemAnimator::animateRemoveImpl(RecyclerView::ViewHolder& holder) {
  
     View* view = holder.itemView;
-    ViewPropertyAnimator* animation;// = view->animate();
+    ViewPropertyAnimator& animation = view->animate();
     mRemoveAnimations.push_back(&holder);//add(holder);
     //AnimatorListenerAdapter
     Animator::AnimatorListener al;
     al.onAnimationStart=[this,&holder](Animator&animator,bool isReverse){
         dispatchRemoveStarting(holder);
     };
-    al.onAnimationEnd=[this,animation,&holder](Animator& animator,bool isReverse){
-        animation->setListener({});
+    al.onAnimationEnd=[this,&animation,&holder](Animator& animator,bool isReverse){
+        animation.setListener({});
         holder.itemView->setAlpha(1);
         dispatchRemoveFinished(holder);
         //mRemoveAnimations.remove(holder);
         dispatchFinishedWhenDone();
     };
-    animation->setDuration(getRemoveDuration()).alpha(0).setListener(al).start();
+    animation.setDuration(getRemoveDuration()).alpha(0).setListener(al).start();
 }
 
 bool DefaultItemAnimator::animateAdd(RecyclerView::ViewHolder& holder) {
@@ -141,7 +143,7 @@ bool DefaultItemAnimator::animateAdd(RecyclerView::ViewHolder& holder) {
 
 void DefaultItemAnimator::animateAddImpl(RecyclerView::ViewHolder& holder) {
     View* view = holder.itemView;
-    ViewPropertyAnimator* animation;// = view.animate();
+    ViewPropertyAnimator& animation = view->animate();
     mAddAnimations.push_back(&holder);//add(holder);
     Animator::AnimatorListener al;
     al.onAnimationStart=[this,&holder](Animator&animator,bool isReverse){
@@ -150,13 +152,13 @@ void DefaultItemAnimator::animateAddImpl(RecyclerView::ViewHolder& holder) {
     al.onAnimationCancel=[&holder](Animator&){
         holder.itemView->setAlpha(1); 
     };
-    al.onAnimationEnd=[this,&holder,animation](Animator& animator,bool isReverse){
-        animation->setListener({});
+    al.onAnimationEnd=[this,&holder,&animation](Animator& animator,bool isReverse){
+        animation.setListener({});
         dispatchAddFinished(holder);
         //mAddAnimations.remove(holder);
         dispatchFinishedWhenDone();
     };
-    animation->alpha(1).setDuration(getAddDuration()).setListener(al).start();
+    animation.alpha(1).setDuration(getAddDuration()).setListener(al).start();
 }
 
 bool DefaultItemAnimator::animateMove(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY) {
@@ -185,15 +187,15 @@ void DefaultItemAnimator::animateMoveImpl(RecyclerView::ViewHolder& holder, int 
     int deltaX = toX - fromX;
     int deltaY = toY - fromY;
     if (deltaX != 0) {
-        //view->animate()->translationX(0);
+        view->animate().translationX(0);
     }
     if (deltaY != 0) {
-        //view->animate()->translationY(0);
+        view->animate().translationY(0);
     }
     // TODO: make EndActions end listeners instead, since end actions aren't called when
     // vpas are canceled (and can't end them. why?)
     // need listener functionality in VPACompat for this. Ick.
-    ViewPropertyAnimator* animation;// = view->animate();
+    ViewPropertyAnimator& animation = view->animate();
     mMoveAnimations.push_back(&holder);//add(holder);
     Animator::AnimatorListener al;
 
@@ -208,13 +210,13 @@ void DefaultItemAnimator::animateMoveImpl(RecyclerView::ViewHolder& holder, int 
             view->setTranslationY(0);
         }
     };
-    al.onAnimationEnd=[this,animation,&holder](Animator& animator,bool isReverse) {
-        animation->setListener({});
+    al.onAnimationEnd=[this,&animation,&holder](Animator& animator,bool isReverse) {
+        animation.setListener({});
         dispatchMoveFinished(holder);
         //mMoveAnimations.remove(holder);
         dispatchFinishedWhenDone();
     };
-    animation->setDuration(getMoveDuration()).setListener(al).start();
+    animation.setDuration(getMoveDuration()).setListener(al).start();
 }
 
 bool DefaultItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder,
@@ -251,17 +253,17 @@ void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
     RecyclerView::ViewHolder* newHolder = changeInfo.newHolder;
     View* newView = newHolder != nullptr ? newHolder->itemView : nullptr;
     if (view != nullptr) {
-        ViewPropertyAnimator* oldViewAnim;// = view->animate().setDuration(getChangeDuration());
+        ViewPropertyAnimator& oldViewAnim = view->animate().setDuration(getChangeDuration());
         mChangeAnimations.push_back(changeInfo.oldHolder);
-        oldViewAnim->translationX(changeInfo.toX - changeInfo.fromX);
-        oldViewAnim->translationY(changeInfo.toY - changeInfo.fromY);
+        oldViewAnim.translationX(changeInfo.toX - changeInfo.fromX);
+        oldViewAnim.translationY(changeInfo.toY - changeInfo.fromY);
  
         Animator::AnimatorListener al;
         al.onAnimationStart=[this,&changeInfo](Animator& animator,bool isReverse) {
             dispatchChangeStarting(*changeInfo.oldHolder, true);
         };
-        al.onAnimationEnd=[this,view,&changeInfo,oldViewAnim](Animator& animator,bool isReverse) {
-            oldViewAnim->setListener({});
+        al.onAnimationEnd=[this,view,&changeInfo,&oldViewAnim](Animator& animator,bool isReverse) {
+            oldViewAnim.setListener({});
             view->setAlpha(1);
             view->setTranslationX(0);
             view->setTranslationY(0);
@@ -270,17 +272,17 @@ void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
             mChangeAnimations.erase(it);//remove(*changeInfo.oldHolder);
             dispatchFinishedWhenDone();
         };
-        oldViewAnim->alpha(0).setListener(al).start();
+        oldViewAnim.alpha(0).setListener(al).start();
     }
     if (newView != nullptr) {
-        ViewPropertyAnimator* newViewAnimation;// = newView->animate();
+        ViewPropertyAnimator& newViewAnimation = newView->animate();
         mChangeAnimations.push_back(changeInfo.newHolder);
         Animator::AnimatorListener al;
         al.onAnimationStart=[this,&changeInfo](Animator& animator,bool isReverse) {
             dispatchChangeStarting(*changeInfo.newHolder, false);
         };
-        al.onAnimationEnd=[this,newView,newViewAnimation,&changeInfo](Animator& animator,bool isReverse) {
-            newViewAnimation->setListener({});
+        al.onAnimationEnd=[this,newView,&newViewAnimation,&changeInfo](Animator& animator,bool isReverse) {
+            newViewAnimation.setListener({});
             newView->setAlpha(1);
             newView->setTranslationX(0);
             newView->setTranslationY(0);
@@ -289,7 +291,7 @@ void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
             mChangeAnimations.erase(it);//remove(changeInfo.newHolder);
             dispatchFinishedWhenDone();
         };
-        newViewAnimation->translationX(0).translationY(0).setDuration(getChangeDuration())
+        newViewAnimation.translationX(0).translationY(0).setDuration(getChangeDuration())
                 .alpha(1).setListener(al).start();
     }
 }
@@ -334,7 +336,7 @@ bool DefaultItemAnimator::endChangeAnimationIfNecessary(ChangeInfo& changeInfo, 
 void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
     View* view = item.itemView;
     // this will trigger end callback which should set properties to their target values.
-    //view->animate().cancel();
+    view->animate().cancel();
     // TODO if some other animations are chained to end, how do we cancel them as well?
     for (int i = mPendingMoves.size() - 1; i >= 0; i--) {
         MoveInfo* moveInfo = mPendingMoves.at(i);
@@ -420,9 +422,9 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
 
 void DefaultItemAnimator::resetAnimation(RecyclerView::ViewHolder& holder) {
     if (sDefaultInterpolator == nullptr) {
-        //sDefaultInterpolator = new ValueAnimator()->getInterpolator();
+        sDefaultInterpolator = new AccelerateDecelerateInterpolator();//ValueAnimator()->getInterpolator();
     }
-    //holder.itemView->animate().setInterpolator(sDefaultInterpolator);
+    holder.itemView->animate().setInterpolator(sDefaultInterpolator);
     endAnimation(holder);
 }
 
@@ -532,7 +534,7 @@ void DefaultItemAnimator::endAnimations() {
 
 void DefaultItemAnimator::cancelAll(std::vector<RecyclerView::ViewHolder*>& viewHolders) {
     for (int i = viewHolders.size() - 1; i >= 0; i--) {
-        //viewHolders.at(i)->itemView->animate().cancel();
+        viewHolders.at(i)->itemView->animate().cancel();
     }
 }
 

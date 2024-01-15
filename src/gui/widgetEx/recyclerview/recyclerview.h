@@ -274,12 +274,13 @@ private:/*private variables*/
     int mScrollStepConsumed[2];
 
     Runnable mItemAnimatorRunner;
-    /*ViewInfoStore_ProcessCallback*/void* mViewInfoProcessCallback;
+    static Interpolator* sQuinticInterpolator;
+    void*/*ViewInfoStore_ProcessCallback*/ mViewInfoProcessCallback;
     void initRecyclerView();
     void doItemAnimator();
     void doUpdateChildViews();
     void doAnimatorFinished(ViewHolder&holder);/*binding for ItemAnimatorRestoreListerner::onAnimationFinished*/
-    void dispatchUpdate(/*AdapterHelper::UpdateOp*/void* op);
+    void dispatchUpdate(void*/*AdapterHelper::UpdateOp*/ op);
     void initAutofill();
     void createLayoutManager(Context* context,const std::string& className,
             const AttributeSet& attrs/*,int defStyleAttr, int defStyleRes*/);
@@ -352,7 +353,6 @@ protected:
     RecyclerViewAccessibilityDelegate* mAccessibilityDelegate;
     std::vector<ViewHolder*> mPendingAccessibilityImportanceChange;
 
-    std::string exceptionLabel();
     void initAdapterManager();
     Parcelable* onSaveInstanceState()override;
     void onRestoreInstanceState(Parcelable& state);

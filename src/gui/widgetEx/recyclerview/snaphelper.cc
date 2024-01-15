@@ -36,7 +36,7 @@ bool SnapHelper::onFling(int velocityX, int velocityY) {
     if (adapter == nullptr) {
         return false;
     }
-    int minFlingVelocity = mRecyclerView->getMinFlingVelocity();
+    const int minFlingVelocity = mRecyclerView->getMinFlingVelocity();
     return (std::abs(velocityY) > minFlingVelocity || std::abs(velocityX) > minFlingVelocity)
             && snapFromFling(*layoutManager, velocityX, velocityY);
 }
@@ -62,7 +62,8 @@ void SnapHelper::setupCallbacks(){
         FATAL("An instance of OnFlingListener already set.");
     }
     mRecyclerView->addOnScrollListener(mScrollListener);
-    LOGE("mRecyclerView->setOnFlingListener(this);TOBE OPENED");
+    auto fun = std::bind(&SnapHelper::onFling,this,std::placeholders::_1,std::placeholders::_2);
+    mRecyclerView->setOnFlingListener(fun);
 }
 
 void SnapHelper::destroyCallbacks() {

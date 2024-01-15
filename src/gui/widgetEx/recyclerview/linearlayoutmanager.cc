@@ -114,7 +114,7 @@ bool LinearLayoutManager::canScrollVertically()const{
 }
 
 void LinearLayoutManager::setStackFromEnd(bool stackFromEnd) {
-    assertNotInLayoutOrScroll("");//null);
+    assertNotInLayoutOrScroll("");
     if (mStackFromEnd == stackFromEnd) {
         return;
     }
@@ -135,7 +135,7 @@ void LinearLayoutManager::setOrientation(int orientation) {
         FATAL("invalid orientation:%d",orientation);
     }
 
-    assertNotInLayoutOrScroll("");//nullptr);
+    assertNotInLayoutOrScroll("");
 
     if (orientation != mOrientation || mOrientationHelper == nullptr) {
         mOrientationHelper =  OrientationHelper::createOrientationHelper(this, orientation);
@@ -160,7 +160,7 @@ bool  LinearLayoutManager::getReverseLayout()const {
 }
 
 void  LinearLayoutManager::setReverseLayout(bool reverseLayout) {
-    assertNotInLayoutOrScroll("");//null);
+    assertNotInLayoutOrScroll("");
     if (reverseLayout == mReverseLayout) {
         return;
     }
