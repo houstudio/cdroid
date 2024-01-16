@@ -133,7 +133,10 @@ void RecyclerView::initRecyclerView(){
     mHasFixedSize = true;
     mEnableFastScroller = false;
     mIgnoreMotionEventTillDown = false;
+    mPostedAnimatorRunner = false;
+    mDataSetHasChangedAfterLayout = false;
     mEatenAccessibilityChangeFlags =0;
+    mInterceptRequestLayoutDepth = 0;
     mState = new State();
     mViewInfoStore = new ViewInfoStore();
     mViewFlinger = new ViewFlinger(this);
@@ -169,14 +172,17 @@ void RecyclerView::initRecyclerView(){
     ViewInfoStore::ProcessCallback* visCBK = new ViewInfoStore::ProcessCallback;
     visCBK->processDisappeared=[this](ViewHolder* viewHolder,ItemAnimator::ItemHolderInfo* info, ItemAnimator::ItemHolderInfo* postInfo){
         mRecycler->unscrapView(*viewHolder);
+        LOGD("processDisappeared");
         animateDisappearance(*viewHolder, *info, postInfo);
     };
     visCBK->processAppeared=[this](ViewHolder* viewHolder, ItemAnimator::ItemHolderInfo* preInfo, ItemAnimator::ItemHolderInfo* info){
+        LOGD("processAppeared");
         animateAppearance(*viewHolder, preInfo, *info);
     };
 
     visCBK->processPersistent=[this](ViewHolder* viewHolder,ItemAnimator::ItemHolderInfo* preInfo,ItemAnimator::ItemHolderInfo* postInfo){
         viewHolder->setIsRecyclable(false);
+        LOGD("processPersistent");
         if (mDataSetHasChangedAfterLayout) {
             if (mItemAnimator->animateChange(*viewHolder, *viewHolder, *preInfo, *postInfo)) {
                 postAnimationRunner();
@@ -186,6 +192,7 @@ void RecyclerView::initRecyclerView(){
         }
     };
     visCBK->unused=[this](ViewHolder* viewHolder){
+        LOGD("unused");
         mLayout->removeAndRecycleView(viewHolder->itemView, *mRecycler);
     };
     mViewInfoProcessCallback = visCBK;
@@ -2188,9 +2195,9 @@ void RecyclerView::processAdapterUpdatesAndSetAnimationFlags() {
     } else {
         mAdapterHelper->consumeUpdatesInOnePass();
     }
-    bool animationTypeSupported = mItemsAddedOrRemoved || mItemsChanged;
+    const bool animationTypeSupported = mItemsAddedOrRemoved || mItemsChanged;
     mState->mRunSimpleAnimations = mFirstLayoutComplete
-            && mItemAnimator != nullptr
+            && (mItemAnimator != nullptr)
             && (mDataSetHasChangedAfterLayout
             || animationTypeSupported
             || mLayout->mRequestedSimpleAnimations)
@@ -2382,6 +2389,7 @@ void RecyclerView::fillRemainingScrollValues(State& state) {
 }
 
 void RecyclerView::dispatchLayoutStep1() {
+    LOGE("dispatchLayoutStep1");
     mState->assertLayoutStep(State::STEP_START);
     fillRemainingScrollValues(*mState);
     mState->mIsMeasuring = false;
@@ -2467,6 +2475,7 @@ void RecyclerView::dispatchLayoutStep1() {
 }
 
 void RecyclerView::dispatchLayoutStep2() {
+    LOGE("dispatchLayoutStep2");
     startInterceptRequestLayout();
     onEnterLayoutOrScroll();
     mState->assertLayoutStep(State::STEP_LAYOUT | State::STEP_ANIMATIONS);
@@ -2489,6 +2498,7 @@ void RecyclerView::dispatchLayoutStep2() {
 }
 
 void RecyclerView::dispatchLayoutStep3() {
+    LOGE("dispatchLayoutStep3");
     mState->assertLayoutStep(State::STEP_ANIMATIONS);
     startInterceptRequestLayout();
     onEnterLayoutOrScroll();
@@ -3483,7 +3493,7 @@ RecyclerView::RecyclerViewDataObserver::RecyclerViewDataObserver(RecyclerView*rv
 }
 
 void RecyclerView::RecyclerViewDataObserver::onChanged() {
-    mRV->assertNotInLayoutOrScroll(nullptr);
+    mRV->assertNotInLayoutOrScroll(std::string());
     mRV->mState->mStructureChanged = true;
 
     mRV->processDataSetCompletelyChanged(true);
@@ -3493,28 +3503,28 @@ void RecyclerView::RecyclerViewDataObserver::onChanged() {
 }
 
 void RecyclerView::RecyclerViewDataObserver::onItemRangeChanged(int positionStart, int itemCount, Object* payload) {
-    mRV->assertNotInLayoutOrScroll(nullptr);
+    mRV->assertNotInLayoutOrScroll(std::string());
     if (mRV->mAdapterHelper->onItemRangeChanged(positionStart, itemCount, payload)) {
         triggerUpdateProcessor();
     }
 }
 
 void RecyclerView::RecyclerViewDataObserver::onItemRangeInserted(int positionStart, int itemCount) {
-    mRV->assertNotInLayoutOrScroll(nullptr);
+    mRV->assertNotInLayoutOrScroll(std::string());
     if (mRV->mAdapterHelper->onItemRangeInserted(positionStart, itemCount)) {
         triggerUpdateProcessor();
     }
 }
 
 void RecyclerView::RecyclerViewDataObserver::onItemRangeRemoved(int positionStart, int itemCount) {
-    mRV->assertNotInLayoutOrScroll(nullptr);
+    mRV->assertNotInLayoutOrScroll(std::string());
     if (mRV->mAdapterHelper->onItemRangeRemoved(positionStart, itemCount)) {
         triggerUpdateProcessor();
     }
 }
 
 void RecyclerView::RecyclerViewDataObserver::onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
-    mRV->assertNotInLayoutOrScroll(nullptr);
+    mRV->assertNotInLayoutOrScroll(std::string());
     if (mRV->mAdapterHelper->onItemRangeMoved(fromPosition, toPosition, itemCount)) {
         triggerUpdateProcessor();
     }
@@ -4707,6 +4717,7 @@ RecyclerView::LayoutManager::LayoutManager(){
     mSmoothScroller = nullptr;
     mChildHelper = nullptr;
     mRecyclerView = nullptr;
+    mAutoMeasure = false;
     mPrefetchMaxObservedInInitialPrefetch = false;
 }/*endof RecyclerView::LayoutManager::LayoutManager*/
 

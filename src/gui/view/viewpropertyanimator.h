@@ -45,9 +45,9 @@ protected:
 private:
     View* mView;
     long mDuration;
-    bool mDurationSet = false;
-    long mStartDelay = 0;
-    bool mStartDelaySet = false;
+    bool mDurationSet;
+    long mStartDelay;
+    bool mStartDelaySet;
     TimeInterpolator* mInterpolator;
     bool mInterpolatorSet = false;
     Animator::AnimatorListener mListener;

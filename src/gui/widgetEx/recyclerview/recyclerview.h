@@ -235,7 +235,7 @@ public:/*public classes*/
     };
 private:/*private variables*/
     OnItemTouchListener mActiveOnItemTouchListener;
-    int mInterceptRequestLayoutDepth=0;
+    int mInterceptRequestLayoutDepth;
     bool mIgnoreMotionEventTillDown;
     int mEatenAccessibilityChangeFlags;
     //AccessibilityManager mAccessibilityManager;

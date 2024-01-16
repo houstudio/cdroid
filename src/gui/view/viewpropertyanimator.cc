@@ -6,21 +6,25 @@ namespace cdroid{
 
 ViewPropertyAnimator::ViewPropertyAnimator(View* view){
     mView = view;
+    mDurationSet = false;
+    mStartDelaySet = false;
     mInterpolator = nullptr;
+    mInterpolatorSet = false;
     mAnimationStarter = [this](){
        startAnimation();
     };
 
     mAnimatorEventListener.onAnimationStart = [this](Animator&animation,bool reverse){
         auto it = mAnimatorSetupMap.find(&animation);
-        if ( (it!=mAnimatorSetupMap.end()) && it->second) {
-            it->second();
+        LOGD("%p onAnimationStart",&animation);
+        if (it!=mAnimatorSetupMap.end()){
+            if(it->second)it->second();
+            mAnimatorSetupMap.erase(it);
         }
-        mAnimatorSetupMap.erase(it);
         
         it = mAnimatorOnStartMap.find(&animation);
-        if ((it!=mAnimatorOnStartMap.end()) && it->second) {
-            it->second();
+        if (it!=mAnimatorOnStartMap.end()) {
+	    if(it->second)it->second();
             mAnimatorOnStartMap.erase(it);
         }
         if (mListener.onAnimationStart) {
@@ -29,6 +33,7 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
     };
 
     mAnimatorEventListener.onAnimationCancel = [this](Animator&animation){
+        LOGD("%p onAnimationCancel",&animation);
         if (mListener.onAnimationCancel) {
             mListener.onAnimationCancel(animation);
         }
@@ -39,12 +44,14 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
     };
 
     mAnimatorEventListener.onAnimationRepeat = [this](Animator&animation){
+        LOGD("%p onAnimationRepeat",&animation);
         if (mListener.onAnimationRepeat) {
             mListener.onAnimationRepeat(animation);
         }
     };
 
     mAnimatorEventListener.onAnimationEnd = [this](Animator&animation,bool reverse){
+        LOGD("%p onAnimationEnd",&animation);
         mView->setHasTransientState(false);
         auto it = mAnimatorCleanupMap.find(&animation);
         if ( (it!=mAnimatorCleanupMap.end()) && it->second) {
@@ -92,9 +99,11 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
         const int count = valueList.size();
         for (int i = 0; i < count; ++i) {
             NameValuesHolder& values = valueList.at(i);
-            float value = values.mFromValue + fraction * values.mDeltaValue;
+            const float value = values.mFromValue + fraction * values.mDeltaValue;
+            LOGD("View %p:%f alpha %f->%f fraction=%f delta=%f handled=%d",mView,mView->getAlpha(),
+			    values.mFromValue,value,fraction,values.mDeltaValue,alphaHandled);
             if (values.mNameConstant == ALPHA) {
-                alphaHandled = false;//mView->setAlphaNoInvalidation(value);
+                alphaHandled = mView->setAlphaNoInvalidation(value);
             } else {
                 setValue(values.mNameConstant, value);
             }
@@ -460,6 +469,7 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
     case Z:  node->setTranslationZ(value - node->getElevation());   break;
     case ALPHA:
              info->mAlpha = value;
+             LOGD("setAlpha %f",value);
              node->setAlpha(value);
              break;
     }

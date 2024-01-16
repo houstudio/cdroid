@@ -402,7 +402,8 @@ private:
     void sendAccessibilityHoverEvent(int eventType);
     bool requestFocusNoSearch(int direction,Rect*previouslyFocusedRect);
     bool hasAncestorThatBlocksDescendantFocus()const;
-	
+    void setAlphaInternal(float);
+    float getFinalAlpha()const;
     void debugDrawFocus(Canvas&canvas);
     Drawable* getDefaultFocusHighlightDrawable();
     void setDefaultFocusHighlight(Drawable* highlight);
@@ -601,7 +602,7 @@ protected:
 
     void onAnimationStart();
     void onAnimationEnd();
-    bool onSetAlpha(int alpha);
+    virtual bool onSetAlpha(int alpha);
 
     bool isVerticalScrollBarHidden()const;
     bool shouldDrawRoundScrollbar()const;
@@ -1085,6 +1086,9 @@ public:
     void  resetPivot();
     float getAlpha()const;
     void  setAlpha(float);
+    bool setAlphaNoInvalidation(float);
+    float getTransitionAlpha()const;
+    void setTransitionAlpha(float);
 
     float getRotation()const;
     void  setRotation(float rotation);

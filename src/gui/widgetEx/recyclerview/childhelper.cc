@@ -44,7 +44,7 @@ void ChildHelper::addView(View* child, int index, bool hidden){
 
 int ChildHelper::getOffset(int index){
     if (index < 0) {
-            return -1; //anything below 0 won't work as diff will be undefined.
+        return -1; //anything below 0 won't work as diff will be undefined.
     }
     const int limit = mCallback.getChildCount();
     int offset = index;

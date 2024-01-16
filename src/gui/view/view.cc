@@ -323,6 +323,7 @@ void View::initView(){
     mScrollX  = mScrollY = 0;
     mMinWidth = mMinHeight = 0;
     mLayerType= LAYER_TYPE_NONE;
+    mTransientStateCount = 0;
     mWindowAttachCount = 0;
     mClipBounds.setEmpty();
 
@@ -2971,7 +2972,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
         }
     }
 
-    float alpha = getAlpha();//drawingWithRenderNode ? 1 : (getAlpha() * getTransitionAlpha());
+    float alpha = drawingWithRenderNode ? 1 : (getAlpha() * getTransitionAlpha());//getAlpha()
     if (transformToApply != nullptr || alpha < 1 || !hasIdentityMatrix()
             || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA) != 0) {
         if (transformToApply != nullptr || !childHasIdentityMatrix) {
@@ -3273,7 +3274,6 @@ bool View::hasTransientState(){
 
 void View::setHasTransientState(bool hasState){
     const bool oldHasTransientState = hasTransientState();
-    int mTransientStateCount =0;
     mTransientStateCount= hasState ? mTransientStateCount + 1 :mTransientStateCount - 1;
     if (mTransientStateCount < 0) {
         mTransientStateCount = 0;
@@ -4773,10 +4773,10 @@ void View::invalidateViewProperty(bool invalidateParent, bool forceRedraw) {
     if (!isHardwareAccelerated()//|| !mRenderNode->isValid()
              || (mPrivateFlags & PFLAG_DRAW_ANIMATION) != 0) {
         if (invalidateParent) {
-             invalidateParentCaches();
+            invalidateParentCaches();
         }
         if (forceRedraw) {
-             mPrivateFlags |= PFLAG_DRAWN; // force another invalidation with the new orientation
+            mPrivateFlags |= PFLAG_DRAWN; // force another invalidation with the new orientation
         }
         invalidate(false);
     } else {
@@ -7043,16 +7043,64 @@ float View::getAlpha()const{
     return mTransformationInfo  ? mTransformationInfo->mAlpha : 1.f;
 }
 
-void View::setAlpha(float a){
+void View::setAlpha(float alpha){
     ensureTransformationInfo();
-    if(mTransformationInfo->mAlpha != a){
-       mTransformationInfo->mAlpha= a;
-       if(onSetAlpha((int)(a*255))){
-           mPrivateFlags |= PFLAG_ALPHA_SET;
-       }else{
-           mPrivateFlags &= ~PFLAG_ALPHA_SET;
-       }
-       invalidate();
+    if(mTransformationInfo->mAlpha != alpha){
+        setAlphaInternal(alpha);
+        if(onSetAlpha((int)(alpha*255))){
+            mPrivateFlags |= PFLAG_ALPHA_SET;
+            invalidateParentCaches();
+            invalidate(true);
+        }else{
+            mPrivateFlags &= ~PFLAG_ALPHA_SET;
+            invalidateViewProperty(true,false);
+            mRenderNode->setAlpha(getFinalAlpha());
+        }
+        invalidate();
+    }
+}
+
+bool View::setAlphaNoInvalidation(float alpha){
+    ensureTransformationInfo();
+    if(mTransformationInfo->mAlpha != alpha){
+        setAlphaInternal(alpha);
+        const bool subclassHandlesAlpha = onSetAlpha(int(alpha*255));
+        if(subclassHandlesAlpha){
+            mPrivateFlags |= PFLAG_ALPHA_SET;
+            return true;
+        }else{
+            mPrivateFlags &= ~PFLAG_ALPHA_SET;
+            mRenderNode->setAlpha(getFinalAlpha());
+        }
+    }
+    return false;
+}
+
+void View::setAlphaInternal(float alpha){
+    const float oldAlpha = mTransformationInfo->mAlpha;
+    mTransformationInfo->mAlpha = alpha;
+    if((alpha==0)^(oldAlpha==0)){
+	    //notifySubtreeAccessibilityStateChangedIfNeeded();
+    }
+}
+
+float View::getFinalAlpha()const{
+    if(mTransformationInfo)
+        return mTransformationInfo->mAlpha*mTransformationInfo->mTransitionAlpha;
+    return 1;
+}
+
+float View::getTransitionAlpha()const{
+    return mTransformationInfo?mTransformationInfo->mTransitionAlpha:1;
+}
+
+void View::setTransitionAlpha(float alpha){
+    ensureTransformationInfo();
+    if(mTransformationInfo->mTransitionAlpha!=alpha){
+        mTransformationInfo->mTransitionAlpha = alpha;
+        mPrivateFlags &= ~PFLAG_ALPHA_SET;
+        invalidateViewProperty(true,false);
+        mRenderNode->setAlpha(getFinalAlpha());
     }
 }
 

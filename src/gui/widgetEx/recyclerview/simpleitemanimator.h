@@ -6,7 +6,7 @@ namespace cdroid{
 
 class SimpleItemAnimator:public RecyclerView::ItemAnimator {
 private:
-    static constexpr bool _DEBUG = false;
+    static constexpr bool _DEBUG = true;
 protected:
     bool mSupportsChangeAnimations = true;
 public:

@@ -1,6 +1,7 @@
 #ifndef __POOLS_H__
 #define __POOLS_H__
 #include <vector>
+#include <mutex>
 namespace cdroid{
 class Pools final{
 private:
@@ -54,33 +55,25 @@ public:
             return false;
         }
     };
-#if 0
-    class SynchronizedPool<T> extends SimplePool<T> {
-    private:
-	Object mLock;
-    public:
-	SynchronizedPool(int maxPoolSize, Object lock) {
-            super(maxPoolSize);
-            mLock = lock;
-        }
 
-        SynchronizedPool(int maxPoolSize) {
-            this(maxPoolSize, new Object());
+    template<typename T>
+    class SynchronizedPool:public SimplePool<T> {
+    private:
+	 std::mutex mutex;
+    public:
+	SynchronizedPool(int maxPoolSize):SimplePool<T>(maxPoolSize){
         }
 
         T acquire() {
-            synchronized (mLock) {
-                return super.acquire();
-            }
+            std::lock_guard<std::mutex> lock(mutex);
+            return SimplePool<T>::acquire();
         }
 
         bool release(T element) {
-            synchronized (mLock) {
-                return super.release(element);
-            }
+            std::lock_guard<std::mutex> lock(mutex);
+            return SimplePool<T>::release(element);
         }
     };
-#endif
 };
 }/*endof namespace*/
 #endif/*__POOLS_H__*/

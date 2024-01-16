@@ -10,7 +10,7 @@ LinearLayoutManager::LinearLayoutManager(Context* context)
    :LinearLayoutManager(context, RecyclerView::DEFAULT_ORIENTATION, false){
 }
 
-LinearLayoutManager::LinearLayoutManager(Context* context,int orientation,bool reverseLayout) {
+LinearLayoutManager::LinearLayoutManager(Context* context,int orientation,bool reverseLayout):RecyclerView::LayoutManager(){
     mPendingSavedState = nullptr;
     mLayoutState = nullptr;
     mOrientationHelper = nullptr;
