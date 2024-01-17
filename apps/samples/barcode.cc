@@ -1,6 +1,6 @@
 #include <cdroid.h>
 #if ENABLE_BARCODE
-#include <ext_widget/barcodeview.h>
+#include <widgetEx/barcodeview.h>
 #endif
 
 int main(int argc,const char*argv[]){

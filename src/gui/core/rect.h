@@ -51,12 +51,16 @@ struct CRect{
         width =w;
         height=h;
     }
-
+	
+    void inflate(T dx,T dy){
+        left-=dx;
+        top -=dy;
+        width+=(dx+dx);
+        height+=(dy+dy);
+    }
+	
     void inset(T dx,T dy){
-        left +=dx;
-        top +=dy;
-        width-=(dx+dx);
-        height-=(dy+dy);
+        inflate(-dx,-dy);
     }
 
     bool empty()const{
