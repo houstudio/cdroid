@@ -2911,6 +2911,9 @@ StaggeredGridLayoutManager::BitSet& StaggeredGridLayoutManager::BitSet::operator
         /*System.arraycopy(set.words, wordsInCommon,
                          words, wordsInCommon,
                          wordsInUse - wordsInCommon);*/
+		std::copy(set.words+wordsInCommon,
+		    set.words+wordsInCommon+wordsInUse - wordsInCommon,
+			words+wordsInCommon);
     }
     // recalculateWordsInUse() is unnecessary
     checkInvariants();
@@ -2934,6 +2937,9 @@ StaggeredGridLayoutManager::BitSet& StaggeredGridLayoutManager::BitSet::operator
         /*System.arraycopy(set.words, wordsInCommon,
                          words, wordsInCommon,
                          set.wordsInUse - wordsInCommon);*/
+		std::copy(set.words+wordsInCommon,
+		    set.words+wordsInCommon+set.wordsInUse - wordsInCommon,
+			words+wordsInCommon);
     }
     recalculateWordsInUse();
     checkInvariants();
