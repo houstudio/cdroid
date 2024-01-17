@@ -59,6 +59,13 @@ struct CRect{
         height+=(dy+dy);
     }
 
+    void inset(T dx,T dy){
+        left +=dx;
+        top +=dy;
+        width-=(dx+dx);
+        height-=(dy+dy);
+    }
+
     bool empty()const{
         return width<=0||height<=0;
     }

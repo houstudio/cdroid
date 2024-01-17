@@ -425,7 +425,7 @@ void Animation::getInvalidateRegion(int left, int top, int width, int height,
     invalidate.set(left, top, width, height);
     transformation.getMatrix().transform_rectangle((RectangleInt&)invalidate);
     // Enlarge the invalidate region to account for rounding errors
-    invalidate.inflate(1,1);//inset(-1.0f, -1.0f);
+    invalidate.inset(-1.0f, -1.0f);
     tempRegion = invalidate;//.set(invalidate);
     invalidate.Union(previousRegion);
 
@@ -443,7 +443,7 @@ void Animation::initializeInvalidateRegion(int left, int top, int width, int hei
     Rect region = mPreviousRegion;
     region.set(left, top, width, height);
     // Enlarge the invalidate region to account for rounding errors
-    region.inflate(1,1);//inset(-1.0f, -1.0f);
+    region.inset(-1.0f, -1.0f);
     if (mFillBefore) {
         Transformation previousTransformation = mPreviousTransformation;
         applyTransformation(mInterpolator->getInterpolation(0.0f), previousTransformation);

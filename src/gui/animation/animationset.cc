@@ -190,7 +190,7 @@ long AnimationSet::computeDurationHint(){
 void AnimationSet::initializeInvalidateRegion(int left, int top, int right, int bottom){
     Rect& region = mPreviousRegion;
     region.set(left, top, right, bottom);
-    region.inflate(-1,-1);//inset(-1.0f, -1.0f);
+    region.inset(-1.0f, -1.0f);
 
     if (mFillBefore) {
         const int count = mAnimations.size();
