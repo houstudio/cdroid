@@ -97,9 +97,11 @@ int GFXInit() {
     const size_t allocedSize = displayScreenSize + screenSize * MAX_HWSURFACE;
 
     MI_PHY preallocedMem;
+    void* preallocedVMem;
     ret = MI_SYS_MMA_Alloc("mma_heap_name0",allocedSize,&preallocedMem);
     int index = 1;
     devSurfaces[0].kbuffer = devs[0].fix.smem_start;
+    MI_SYS_Mmap(preallocedMem,allocedSize, (void**)&preallocedVMem, FALSE);
 #if defined(DOUBLE_BUFFER)&&DOUBLE_BUFFER
     devSurfaces[0].msize = dev->fix.smem_len;
 #else
@@ -126,9 +128,11 @@ int GFXInit() {
     }
 
     LOGI("%d surfaces is configured for app mem=%llx size=%lu screensize=%d/%d***",index,preallocedMem,allocedSize,displayScreenSize,screenSize);
-    for(int i =0;i<index;i++){
+    for(int i =1,offset=0;i<index;i++){
         MI_PHY phySrcBufAddr = devSurfaces[i].kbuffer;
-        MI_SYS_Mmap(phySrcBufAddr,devSurfaces[i].msize, (void**)&devSurfaces[i].buffer, FALSE);
+        devSurfaces[i].buffer= preallocedVMem + offset;
+        offset += devSurfaces[i].msize;
+        //MI_SYS_Mmap(phySrcBufAddr,devSurfaces[i].msize, (void**)&devSurfaces[i].buffer, FALSE);
         if (i == 0 && access("logo.dat", F_OK) == 0) {            
             size_t rlen, tlen = 0;
             char *buf         = devSurfaces[i].buffer;
