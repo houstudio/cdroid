@@ -2372,7 +2372,7 @@ void StaggeredGridLayoutManager::LazySpanLookup::addFullSpanItem(FullSpanItem* f
     for (int i = 0; i < size; i++) {
         FullSpanItem* other = mFullSpanItems.at(i);
         if (other->mPosition == fullSpanItem->mPosition) {
-            if (DEBUG) {
+            if (_DEBUG) {
                 FATAL("two fsis for same position");
             } else {
                 mFullSpanItems.erase(mFullSpanItems.begin()+i);//.remove(i);
@@ -2874,10 +2874,10 @@ int StaggeredGridLayoutManager::BitSet::cardinality()const{
         sum += numberOfSetBits(words[i]);//Long.bitCount(words[i]);
     return sum;
 }
-#if 0
-void StaggeredGridLayoutManager::BitSet::and(BitSet set) {
-    if (this == set)
-        return;
+
+StaggeredGridLayoutManager::BitSet& StaggeredGridLayoutManager::BitSet::operator&&(const BitSet& set) {
+    if (this == &set)
+        return *this;
 
     while (wordsInUse > set.wordsInUse)
         words[--wordsInUse] = 0;
@@ -2888,13 +2888,14 @@ void StaggeredGridLayoutManager::BitSet::and(BitSet set) {
 
     recalculateWordsInUse();
     checkInvariants();
+    return *this;
 }
 
-void StaggeredGridLayoutManager::BitSet::or(const BitSet& set) {
-    if (this == set)
-        return;
+StaggeredGridLayoutManager::BitSet& StaggeredGridLayoutManager::BitSet::operator||(const BitSet& set) {
+    if (this == &set)
+        return *this;
 
-    int wordsInCommon = Math.min(wordsInUse, set.wordsInUse);
+    int wordsInCommon = std::min(wordsInUse, set.wordsInUse);
 
     if (wordsInUse < set.wordsInUse) {
         ensureCapacity(set.wordsInUse);
@@ -2906,16 +2907,17 @@ void StaggeredGridLayoutManager::BitSet::or(const BitSet& set) {
         words[i] |= set.words[i];
 
     // Copy any remaining words
-    if (wordsInCommon < set.wordsInUse)
-        System.arraycopy(set.words, wordsInCommon,
+    if (wordsInCommon < set.wordsInUse){
+        /*System.arraycopy(set.words, wordsInCommon,
                          words, wordsInCommon,
-                         wordsInUse - wordsInCommon);
-
+                         wordsInUse - wordsInCommon);*/
+    }
     // recalculateWordsInUse() is unnecessary
     checkInvariants();
+    return *this;
 }
 
-void StaggeredGridLayoutManager::BitSet::xor(const BitSet& set) {
+StaggeredGridLayoutManager::BitSet& StaggeredGridLayoutManager::BitSet::operator^(const BitSet& set) {
     int wordsInCommon = std::min(wordsInUse, set.wordsInUse);
 
     if (wordsInUse < set.wordsInUse) {
@@ -2928,15 +2930,16 @@ void StaggeredGridLayoutManager::BitSet::xor(const BitSet& set) {
         words[i] ^= set.words[i];
 
     // Copy any remaining words
-    if (wordsInCommon < set.wordsInUse)
-        System.arraycopy(set.words, wordsInCommon,
+    if (wordsInCommon < set.wordsInUse){
+        /*System.arraycopy(set.words, wordsInCommon,
                          words, wordsInCommon,
-                         set.wordsInUse - wordsInCommon);
-
+                         set.wordsInUse - wordsInCommon);*/
+    }
     recalculateWordsInUse();
     checkInvariants();
+    return *this;
 }
-
+#if 0
 void StaggeredGridLayoutManager::BitSet::andNot(const BitSet& set) {
     // Perform logical (a & !b) on words in common
     for (int i = std::min(wordsInUse, set.wordsInUse) - 1; i >= 0; i--)
