@@ -5,10 +5,12 @@ void onClick(View&v){
    View*hello=root->findViewById(0x12345);
    hello->setLayerType(View::LAYER_TYPE_SOFTWARE);
    LOGD("click %d",v.getId());
+   int* tag=(int*)v.getTag();
    switch(v.getId()){
-   case 1:hello->animate().alpha(0.2f).setDuration(2000).start();break;
-   case 2:hello->animate().x(-600).setDuration(2000).start();break;
+   case 1:hello->animate().alpha(0.2f).setDuration(1000).start();break;
+   case 2:hello->animate().x(tag==0?-600:0).setDuration(1000).start();break;
    }
+   v.setTag((tag==0)?(void*)1:(void*)0);
 }
 int main(int argc,const char*argv[]){
     App app(argc,argv);

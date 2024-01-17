@@ -45,7 +45,7 @@ namespace cdroid{
 
         // Draw the track and the scroll bar.
         mRect = bounds;
-        mRect.inflate(-thumbWidth /2,0);
+        mRect.inset(thumbWidth/2,0);//inflate(-thumbWidth /2,0);
 
         const double radius = double(mRect.width)/2.0;
         canvas.save();
