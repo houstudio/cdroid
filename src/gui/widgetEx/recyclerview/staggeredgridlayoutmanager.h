@@ -376,7 +376,7 @@ public:
     BitSet& operator&&(const BitSet& set);
     BitSet& operator||(const BitSet& set);
     BitSet& operator^(const BitSet& set);
-    //void andNot(const BitSet& set);
+    BitSet& andNot(const BitSet& set);
     int hashCode()const;
     int size()const;
 };

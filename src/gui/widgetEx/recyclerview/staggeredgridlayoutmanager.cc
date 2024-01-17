@@ -2912,8 +2912,8 @@ StaggeredGridLayoutManager::BitSet& StaggeredGridLayoutManager::BitSet::operator
                          words, wordsInCommon,
                          wordsInUse - wordsInCommon);*/
 		std::copy(set.words+wordsInCommon,
-		    set.words+wordsInCommon+wordsInUse - wordsInCommon,
-			words+wordsInCommon);
+		    set.words+wordsInCommon + wordsInUse - wordsInCommon,
+			words + wordsInCommon);
     }
     // recalculateWordsInUse() is unnecessary
     checkInvariants();
@@ -2938,26 +2938,27 @@ StaggeredGridLayoutManager::BitSet& StaggeredGridLayoutManager::BitSet::operator
                          words, wordsInCommon,
                          set.wordsInUse - wordsInCommon);*/
 		std::copy(set.words+wordsInCommon,
-		    set.words+wordsInCommon+set.wordsInUse - wordsInCommon,
-			words+wordsInCommon);
+		    set.words + wordsInCommon + set.wordsInUse - wordsInCommon,
+			words + wordsInCommon);
     }
     recalculateWordsInUse();
     checkInvariants();
     return *this;
 }
-#if 0
-void StaggeredGridLayoutManager::BitSet::andNot(const BitSet& set) {
+
+StaggeredGridLayoutManager::BitSet& StaggeredGridLayoutManager::BitSet::andNot(const BitSet& set) {
     // Perform logical (a & !b) on words in common
     for (int i = std::min(wordsInUse, set.wordsInUse) - 1; i >= 0; i--)
         words[i] &= ~set.words[i];
 
     recalculateWordsInUse();
     checkInvariants();
+	return *this;
 }
-#endif
+
 
 int StaggeredGridLayoutManager::BitSet::hashCode()const{
-    long h = 1234;
+    long long h = 1234;
     for (int i = wordsInUse; --i >= 0; )
         h ^= words[i] * (i + 1);
 
