@@ -627,7 +627,7 @@ void NumberPicker::setValue(int value) {
 }
 
 float NumberPicker::getMaxTextSize()const {
-    return std::max(mTextSize, mSelectedTextSize);
+    return std::max(std::max(mTextSize,mDisplayedDrawableSize), mSelectedTextSize);
 }
 
 bool NumberPicker::performClick() {
@@ -853,8 +853,8 @@ void  NumberPicker::setDisplayedValues(const std::vector<std::string>&displayedV
         Drawable*dr = mContext->getDrawable(s);
         mDisplayedDrawables.push_back(dr);
         if(dr){
-	        drsize += (isHorizontalMode()?dr->getIntrinsicWidth():dr->getIntrinsicHeight());
-	        mDisplayedDrawableCount++;
+            drsize += (isHorizontalMode()?dr->getIntrinsicWidth():dr->getIntrinsicHeight());
+            mDisplayedDrawableCount++;
         }
     }
     if(mDisplayedDrawableCount==mDisplayedValues.size())
