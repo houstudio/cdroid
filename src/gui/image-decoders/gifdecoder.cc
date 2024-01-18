@@ -7,21 +7,19 @@
 
 namespace cdroid{
 
-typedef struct {
+struct PRIVATE{
     std::vector<int>delays;
     GifFileType*gif;
 }GIFPrivate;
 
-GIFDecoder::GIFDecoder(){
-    GIFPrivate*priv = new GIFPrivate;
-    priv->gif=nullptr;
-    mPrivate=priv;
+GIFDecoder::GIFDecoder(std::unique_ptr<std::istream>stm):ImageDecoder(std::move(stm)){
+    mPrivate = new PRIVATE;
+    mPrivate->gif=nullptr;
 }
 
 GIFDecoder::~GIFDecoder(){
-    GIFPrivate*priv=(GIFPrivate*)mPrivate;
-    DGifCloseFile((GifFileType*)priv->gif,nullptr);
-    delete priv;
+    DGifCloseFile(mPrivate->gif,nullptr);
+    delete mPrivate;
 }
 
 #define  ARGB(a, r, g, b) ( ((a) & 0xff) << 24 ) | ( ((r) & 0xff) << 16 ) | ( ((g) & 0xff) << 8 ) | ((b) & 0xff)
@@ -36,17 +34,17 @@ static int GIFRead(GifFileType *gifFile, GifByteType *buff, int rdlen){
     return is->gcount();
 }
 
-static int gifDrawFrame(GifFileType*gif,int&current_frame,size_t pxstride,uint8_t *pixels,bool force_DISPOSE_1);
+static int gifDrawFrame(GifFileType*gif,int current_frame,size_t pxstride,uint8_t *pixels,bool force_DISPOSE_1);
 
-int GIFDecoder::load(std::istream&is){
+int GIFDecoder::load(){
     int err;
-    GifFileType*gifFileType = DGifOpen(&is,GIFRead,&err);
+    GifFileType*gifFileType = DGifOpen(istream.get(),GIFRead,&err);
     LOGE_IF(gifFileType==nullptr,"git load failed");
     if(gifFileType==nullptr)return 0;
     DGifSlurp(gifFileType);
 
     mFrameCount = gifFileType->ImageCount;
-    ((GIFPrivate*)mPrivate)->gif = gifFileType;
+    mPrivate->gif = gifFileType;
     mImageWidth = gifFileType->SWidth;
     mImageHeight= gifFileType->SHeight;
     LOGD("GIF %d frames loaded size(%dx%d)",mFrameCount,mImageWidth,mImageHeight);
@@ -54,20 +52,18 @@ int GIFDecoder::load(std::istream&is){
 }
 
 int GIFDecoder::readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex){
-    GIFPrivate*priv=(GIFPrivate*)mPrivate;
-    const int duration=gifDrawFrame(priv->gif,frameIndex,image->get_stride(),image->get_data(),false);
-    if(priv->delays.size()<frameIndex+1){
-	priv->delays.push_back(duration);
+    const int duration = gifDrawFrame(mPrivate->gif,frameIndex,image->get_stride(),image->get_data(),false);
+    if(frameIndex>=mPrivate->delays.size()){
+        mPrivate->delays.push_back(duration);
     }
     return duration;
 }
 
 int GIFDecoder::getFrameDuration(int frameIndex)const{
-    GIFPrivate*priv=(GIFPrivate*)mPrivate;
-    return priv->delays.at(frameIndex);
+    return mPrivate->delays.at(frameIndex);
 }
 
-static int gifDrawFrame(GifFileType*gif,int&current_frame,size_t pxstride,uint8_t *pixels,bool force_DISPOSE_1) {
+static int gifDrawFrame(GifFileType*gif,int current_frame,size_t pxstride,uint8_t *pixels,bool force_DISPOSE_1) {
     GifColorType *bg;
     GifColorType *color;
     SavedImage *frame;

@@ -8,7 +8,7 @@
 
 namespace cdroid{
 
-JPEGDecoder::JPEGDecoder(){
+JPEGDecoder::JPEGDecoder(std::unique_ptr<std::istream>stm):ImageDecoder(std::move(stm)){
 }
 
 struct decoder_error_mgr {
@@ -156,7 +156,7 @@ int JPEGDecoder::readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameInde
     return 0;//sfc;
 }
 
-int JPEGDecoder::load(std::istream&){
+int JPEGDecoder::load(){
     return 0;
 }
 }/*endof namespacee*/

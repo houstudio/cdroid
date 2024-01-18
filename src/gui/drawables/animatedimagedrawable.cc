@@ -28,6 +28,7 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
     LOGD("decoder=%p res=%s",mAnimatedImageState->mDecoder,res.c_str());
     ImageDecoder*decoder = ImageDecoder::create(ctx,res);
     mAnimatedImageState->mDecoder = decoder;
+    decoder->load();
 #if ENABLE(DMABLIT)
     GFXCreateSurface(0,&mImageHandler,decoder->getWidth(),decoder->getHeight(),0,0);
     GFXLockSurface(mImageHandler,(void**)&buffer,&pitch);
@@ -82,8 +83,8 @@ int AnimatedImageDrawable::getAlpha()const{
 }
 
 void AnimatedImageDrawable::draw(Canvas& canvas){
-    if (!mStarting) {
-        mStarting = true;
+    if (mStarting) {
+        mStarting = false;
         postOnAnimationStart();
     }
     canvas.save();
@@ -177,6 +178,7 @@ void AnimatedImageDrawable::postOnAnimationStart(){
             callback.onAnimationStart(*this);
         }
     });
+    //todo post callback
 }
 
 void AnimatedImageDrawable::postOnAnimationEnd(){

@@ -10,15 +10,16 @@ namespace cdroid{
 
 class ImageDecoder{
 protected:
-    void*mPrivate;
+    struct PRIVATE*mPrivate;
     int mFrameCount;
     int mImageWidth;
     int mImageHeight;
     float mScale;
+    std::unique_ptr<std::istream>istream;
 public:
-    ImageDecoder();
+    ImageDecoder(std::unique_ptr<std::istream>);
     virtual ~ImageDecoder();
-    virtual int load(std::istream&)=0;
+    virtual int load()=0;
     int getWidth()const;
     int getHeight()const;
     float getScale()const;
@@ -32,33 +33,33 @@ public:
 
 class GIFDecoder:public ImageDecoder{
 public:
-    GIFDecoder();
+    GIFDecoder(std::unique_ptr<std::istream>);
     ~GIFDecoder()override;
-    int load(std::istream&)override;
+    int load()override;
     virtual int getFrameDuration(int)const;
     int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)override;
 };
 
 class JPEGDecoder:public ImageDecoder{
 public:
-    JPEGDecoder();
-    int load(std::istream&)override;
+    JPEGDecoder(std::unique_ptr<std::istream>);
+    int load()override;
     int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)override;
 };
 
 class APNGDecoder:public ImageDecoder{
 public:
-    APNGDecoder();
+    APNGDecoder(std::unique_ptr<std::istream>);
     ~APNGDecoder()override;
-    int load(std::istream&)override;
+    int load()override;
     int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)override;
 };
 
 class WebpDecoder:public ImageDecoder{
 public:
-    WebpDecoder();
+    WebpDecoder(std::unique_ptr<std::istream>);
     ~WebpDecoder();
-    int load(std::istream&)override;
+    int load()override;
     int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)override;
 };
 }/*endof namespace*/

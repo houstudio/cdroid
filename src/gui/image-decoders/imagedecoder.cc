@@ -1,6 +1,5 @@
 #include <memory>
 #include <cstring>
-#include <fstream>
 #include <drawables/drawable.h>
 #include <drawables/bitmapdrawable.h>
 #include <drawables/ninepatchdrawable.h>
@@ -11,12 +10,13 @@
 
 namespace cdroid{
 
-ImageDecoder::ImageDecoder(){
+ImageDecoder::ImageDecoder(std::unique_ptr<std::istream>stm){
     mImageWidth = -1;
     mImageHeight= -1;
     mFrameCount = 0;
     mScale = 1.f;
     mPrivate = nullptr;
+    istream = std::move(stm);
 }
 
 ImageDecoder::~ImageDecoder(){
@@ -97,25 +97,25 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
     constexpr unsigned lengthOfLongestSignature = 14; /* To wit: "RIFF????WEBPVP"*/
     char contents[lengthOfLongestSignature];
     ImageDecoder*decoder = nullptr;
-    auto stream = ctx?ctx->getInputStream(resourceId):std::make_unique<std::ifstream>(resourceId,std::ios::in);
-    stream->read(contents,lengthOfLongestSignature);
-    unsigned length =  stream->gcount();
+    std::unique_ptr<std::istream>istm = ctx->getInputStream(resourceId);
+    istm->read(contents,lengthOfLongestSignature);
+    unsigned length = istm->gcount();
     if (length < lengthOfLongestSignature)
         return nullptr;
-    stream->seekg(0,std::ios::beg);
+    istm->seekg(0,std::ios::beg);
 #if ENABLE(GIF)
     if (matchesGIFSignature(contents))
-        decoder = new GIFDecoder();//::create(alphaOption, gammaAndColorProfileOption);
+        decoder = new GIFDecoder(std::move(istm));
 #endif
     if (matchesPNGSignature(contents))
-        decoder = new APNGDecoder();//::create(alphaOption, gammaAndColorProfileOption);
+        decoder = new APNGDecoder(std::move(istm));
 #if USE(ICO)
     if (matchesICOSignature(contents) || matchesCURSignature(contents))
         return ICOImageDecoder::create(alphaOption, gammaAndColorProfileOption);
 #endif
 #if ENABLE(JPEG)
     if (matchesJPEGSignature(contents))
-        decoder = new JPEGDecoder();//::create(alphaOption, gammaAndColorProfileOption);
+        decoder = new JPEGDecoder(std::move(istm));
 #endif
 #if USE(OPENJPEG)
     if (matchesJP2Signature(contents))
@@ -127,13 +127,12 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
 
 #if ENABLE(WEBP)
     if (matchesWebPSignature(contents))
-        return new WebpDecoder();//WEBPImageDecoder::create(alphaOption, gammaAndColorProfileOption);
+        return new WebpDecoder(std::move(istm));
 #endif
 #if USE(BITMAP)
     if (matchesBMPSignature(contents))
         return BMPImageDecoder::create(alphaOption, gammaAndColorProfileOption);
 #endif
-    if(decoder)decoder->load(*stream);
     return decoder;
 }
 

@@ -416,15 +416,15 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     opt.stClipRect.u32Width= rs.w;
     opt.stClipRect.u32Height=rs.h;
     if(nsrc->alpha!=255){
-	opt.u32GlobalSrcConstColor = 0x00FFFFFF|(0xa0<<24);//(nsrc->alpha<<24);
+        opt.u32GlobalSrcConstColor = 0x00FFFFFF|(0xa0<<24);//(nsrc->alpha<<24);
 
         opt.u32GlobalDstConstColor = 0xFFFFFFFF;
 
         opt.eSrcDfbBldOp  = E_MI_GFX_DFB_BLD_ONE;// 透叠
         opt.eDstDfbBldOp  = E_MI_GFX_DFB_BLD_INVSRCALPHA;
 
-	opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_COLORALPHA
-	      | E_MI_GFX_DFB_BLEND_ALPHACHANNEL
+        opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_COLORALPHA
+	          | E_MI_GFX_DFB_BLEND_ALPHACHANNEL
               | E_MI_GFX_DFB_BLEND_SRC_PREMULTIPLY;
     }else{
         opt.u32GlobalSrcConstColor = 0xFFFFFFFF;
