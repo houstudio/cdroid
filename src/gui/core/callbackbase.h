@@ -57,7 +57,7 @@ protected:
     std::shared_ptr<void*>mID;
 public:
     EventSet(){
-        mID=std::make_shared<void*>(this);
+        mID = std::make_shared<void*>(this);
     }
     EventSet(const EventSet&other){
         mID = other.mID;
@@ -66,10 +66,10 @@ public:
         mID = other.mID;
         return *this;
     }
-    bool operator == (const EventSet&other){
+    bool operator == (const EventSet&other)const{
         return mID == other.mID;
     }
-    bool operator != (const EventSet&other){
+    bool operator != (const EventSet&other)const{
         return mID != other.mID;
     }
 };

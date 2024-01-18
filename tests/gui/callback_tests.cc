@@ -67,6 +67,21 @@ TEST_F(CALLBACK,EventSet){
     ASSERT_TRUE(cc==bb);
     ASSERT_TRUE(aa==bb);
 }
+class MyListener:public cdroid::EventSet{
+public:
+   CallbackBase<void>onInit;
+   CallbackBase<void>onDestroy;
+};
+
+TEST_F(CALLBACK,EventSetEqual){
+    MyListener ls,ls2;
+    ls.onInit=[](){LOGD("onInit");};
+    ls.onDestroy=[](){LOGD("onDestroy");};
+    ls2=ls;
+    ASSERT_EQ(ls2,ls);
+    ASSERT_EQ(ls2.onInit,ls.onInit);
+    ASSERT_EQ(ls2.onDestroy,ls.onDestroy);
+}
 
 class MyRunner:public Runnable{
 private:
