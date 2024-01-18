@@ -49,7 +49,7 @@ public:
     void lock();
     void unlock();
     void composeSurfaces();
-    bool needCompose();
+    bool needCompose()const;
     Canvas*getPrimaryContext();
     void showFPS(bool);
     void invalidate(const Rect&);

@@ -63,7 +63,7 @@ public:
 };
 
 class EventHandler{
-private:
+protected:
     int mRemoved=0;
     friend class Looper;
 protected:

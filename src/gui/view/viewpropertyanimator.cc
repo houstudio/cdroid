@@ -16,7 +16,6 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
 
     mAnimatorEventListener.onAnimationStart = [this](Animator&animation,bool reverse){
         auto it = mAnimatorSetupMap.find(&animation);
-        LOGD("%p onAnimationStart",&animation);
         if (it!=mAnimatorSetupMap.end()){
             if(it->second)it->second();
             mAnimatorSetupMap.erase(it);
@@ -33,7 +32,6 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
     };
 
     mAnimatorEventListener.onAnimationCancel = [this](Animator&animation){
-        LOGD("%p onAnimationCancel",&animation);
         if (mListener.onAnimationCancel) {
             mListener.onAnimationCancel(animation);
         }
@@ -44,14 +42,12 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
     };
 
     mAnimatorEventListener.onAnimationRepeat = [this](Animator&animation){
-        LOGD("%p onAnimationRepeat",&animation);
         if (mListener.onAnimationRepeat) {
             mListener.onAnimationRepeat(animation);
         }
     };
 
     mAnimatorEventListener.onAnimationEnd = [this](Animator&animation,bool reverse){
-        LOGD("%p onAnimationEnd",&animation);
         mView->setHasTransientState(false);
         auto it = mAnimatorCleanupMap.find(&animation);
         if ( (it!=mAnimatorCleanupMap.end()) && it->second) {
@@ -100,8 +96,6 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
         for (int i = 0; i < count; ++i) {
             NameValuesHolder& values = valueList.at(i);
             const float value = values.mFromValue + fraction * values.mDeltaValue;
-            LOGD("View %p:%f alpha %f->%f fraction=%f delta=%f handled=%d",mView,mView->getAlpha(),
-			    values.mFromValue,value,fraction,values.mDeltaValue,alphaHandled);
             if (values.mNameConstant == ALPHA) {
                 alphaHandled = mView->setAlphaNoInvalidation(value);
             } else {

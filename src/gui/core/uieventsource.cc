@@ -4,7 +4,6 @@
 #include <systemclock.h>
 #include <list>
 
-
 namespace cdroid{
 
 UIEventSource::UIEventSource(View*v,std::function<void()>r){
@@ -18,16 +17,16 @@ UIEventSource::~UIEventSource(){
 int UIEventSource::checkEvents(){
     return hasDelayedRunners()||(mAttachedView&&mAttachedView->isDirty())
            ||mAttachedView->isLayoutRequested()
-	   //||mAttachInfo->mViewRequestingLayout
-	   ||GraphDevice::getInstance().needCompose();
+           //||mAttachInfo->mViewRequestingLayout
+           ||GraphDevice::getInstance().needCompose();
 }
 
 int UIEventSource::handleEvents(){
     GraphDevice::getInstance().lock();
-    if (mAttachedView && mAttachedView->isAttachedToWindow()){
+    if ( (mRemoved==false) && mAttachedView && mAttachedView->isAttachedToWindow()){
         if(mAttachedView->isLayoutRequested())
             mLayoutRunner();
-        if(mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
+        if((mRemoved==false) && mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
             ((Window*)mAttachedView)->draw();
             GraphDevice::getInstance().flip();
         }
@@ -43,9 +42,11 @@ int UIEventSource::handleEvents(){
     mRunnables.remove_if([](const RUNNER&r)->bool{
         return r.removed;
     });
-    if(hasDelayedRunners()){
+    const nsecs_t nowms = SystemClock::uptimeMillis();
+    while(!mRunnables.empty()){
         //maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
-        RUNNER runner=mRunnables.front();
+        RUNNER runner = mRunnables.front();
+        if(runner.time>nowms)break;
         mRunnables.pop_front(); 
         if(runner.run)runner.run();
     }
@@ -58,12 +59,12 @@ int UIEventSource::handleEvents(){
 //codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
 bool UIEventSource::postDelayed(Runnable& run,uint32_t delayedtime){
     RUNNER runner;
-    runner.removed=false;
-    runner.time=SystemClock::uptimeMillis()+delayedtime;
-    runner.run=run;
+    runner.removed = false;
+    runner.time = SystemClock::uptimeMillis() + delayedtime;
+    runner.run = run;
 	
-    for(auto itr=mRunnables.begin();itr!=mRunnables.end();itr++){
-        if(runner.time<itr->time){
+    for(auto itr = mRunnables.begin();itr != mRunnables.end();itr++){
+        if(runner.time < itr->time){
             mRunnables.insert(itr,runner);
             return true;
         }
@@ -75,16 +76,16 @@ bool UIEventSource::postDelayed(Runnable& run,uint32_t delayedtime){
 
 bool UIEventSource::hasDelayedRunners()const{
     if(mRunnables.empty())return false;
-    nsecs_t nowms=SystemClock::uptimeMillis();
-    RUNNER runner=mRunnables.front();
-    return runner.time<nowms;
+    nsecs_t nowms = SystemClock::uptimeMillis();
+    RUNNER runner = mRunnables.front();
+    return runner.time < nowms;
 }
 
 int UIEventSource::removeCallbacks(const Runnable& what){
     int count=0;
-    for(auto it=mRunnables.begin();it!=mRunnables.end();it++){ 
-        if((it->run==what)&&(it->removed==false)){
-            it->removed=true;
+    for(auto it = mRunnables.begin();it != mRunnables.end();it++){
+        if((it->run == what)&&(it->removed == false)){
+            it->removed = true;
             count++;
         }
     }

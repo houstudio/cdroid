@@ -123,7 +123,7 @@ void GraphDevice::flip(){
     mPendingCompose++;
 }
 
-bool GraphDevice::needCompose(){
+bool GraphDevice::needCompose()const{
     return mPendingCompose&&(mComposing==0);
 }
 
