@@ -293,10 +293,6 @@ static int setfbinfo(FBSURFACE*surf) {
     int rc=-1;
     FBDEVICE*dev=&devs[surf->dispid];
     struct fb_var_screeninfo*v=&dev->var;
-    v->xres = surf->width;
-    v->yres = surf->height;
-    v->xres_virtual = surf->width;
-    v->yres_virtual = surf->height;
     v->bits_per_pixel=32;
     switch(surf->format) {
     case GPF_ARGB:
