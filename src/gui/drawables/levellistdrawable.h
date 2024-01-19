@@ -11,6 +11,7 @@ private:
         LevelListState(const LevelListState*orig,LevelListDrawable*own);
         LevelListState(const LevelListState&state);
         void mutate();
+        void addLevel(int low,int high,Drawable*drawable);
         int indexOfLevel(int level)const;
         LevelListDrawable*newDrawable()override;
     };

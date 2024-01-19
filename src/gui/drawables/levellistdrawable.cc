@@ -17,6 +17,12 @@ void LevelListDrawable::LevelListState::mutate(){
     // mHighs = mHighs.clone();
 }
 
+void LevelListDrawable::LevelListState::addLevel(int low,int high,Drawable*drawable){
+    const int pos = addChild(drawable);
+    mLows.push_back(low);
+    mHighs.push_back(high);
+}
+
 int LevelListDrawable::LevelListState::indexOfLevel(int level)const{
     const int N = getChildCount();
     for (int i = 0; i < N; i++) {
@@ -32,7 +38,7 @@ LevelListDrawable*LevelListDrawable::LevelListState::newDrawable(){
 }
 
 LevelListDrawable::LevelListDrawable():DrawableContainer(){
-    mMutated=true;
+    mMutated = false;
     auto state=std::make_shared<LevelListState>(nullptr,this);
     setConstantState(state);
     onLevelChange(getLevel());
@@ -40,6 +46,7 @@ LevelListDrawable::LevelListDrawable():DrawableContainer(){
 
 LevelListDrawable::LevelListDrawable(std::shared_ptr<LevelListState>state){
     auto newState=std::make_shared<LevelListState>(state.get(),this);
+    mMutated = false;
     setConstantState(newState);
     onLevelChange(getLevel());
 }
@@ -76,12 +83,10 @@ void LevelListDrawable::clearMutated(){
 }
 
 void LevelListDrawable::addLevel(int low,int high,Drawable* drawable) {
-    if(mLevelListState.use_count()>1)
-        mutate();
-    int pos = addChild(drawable);
-    mLevelListState->mLows.push_back(low);
-    mLevelListState->mHighs.push_back(high);
-    onLevelChange(getLevel());
+    if(drawable){
+        mLevelListState->addLevel(low,high,drawable);
+        onLevelChange(getLevel());
+    }
 }
 
 Drawable*LevelListDrawable::inflate(Context*ctx,const AttributeSet&atts){
