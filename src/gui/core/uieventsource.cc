@@ -26,6 +26,17 @@ int UIEventSource::handleEvents(){
     if ( (mRemoved==false) && mAttachedView && mAttachedView->isAttachedToWindow()){
         if(mAttachedView->isLayoutRequested())
             mLayoutRunner();
+        mRunnables.remove_if([](const RUNNER&r)->bool{
+            return r.removed;
+        });
+        const nsecs_t nowms = SystemClock::uptimeMillis();
+        //maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
+        while(mRunnables.size() && (mRemoved==false)){
+            RUNNER runner = mRunnables.front();
+            if(runner.time > nowms)break;
+            mRunnables.pop_front();
+            if(runner.run)runner.run();
+        }
         if((mRemoved==false) && mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
             ((Window*)mAttachedView)->draw();
             GraphDevice::getInstance().flip();
@@ -39,17 +50,6 @@ int UIEventSource::handleEvents(){
     GraphDevice::getInstance().composeSurfaces();
 #endif
     GraphDevice::getInstance().lock();
-    mRunnables.remove_if([](const RUNNER&r)->bool{
-        return r.removed;
-    });
-    const nsecs_t nowms = SystemClock::uptimeMillis();
-    while(!mRunnables.empty()){
-        //maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
-        RUNNER runner = mRunnables.front();
-        if(runner.time > nowms)break;
-        mRunnables.pop_front(); 
-        if(runner.run)runner.run();
-    }
     GraphDevice::getInstance().unlock();
     return 0;
 }
