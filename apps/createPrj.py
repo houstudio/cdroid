@@ -22,7 +22,7 @@ def touch_file(file_path):
         os.utime(file_path, None)
         
 print("\nAuthor: Ricken - ricken.cn")
-print("Update: 2023/12/23 21:12")
+print("Update: 2024/01/19 15:35")
 print("About:  A script for quickly building the Cdroid project framework\n")
 
 project_name = ""
@@ -146,7 +146,7 @@ include_directories(
 find_package(jsoncpp CONFIG REQUIRED)
 find_package(CURL REQUIRED)
 
-
+add_definitions(-DCDROID_RUNNING)
 if (CDROID_CHIPSET STREQUAL sigma)
     add_definitions(-DCDROID_SIGMA)
 elseif(CDROID_CHIPSET STREQUAL x64)
@@ -401,18 +401,7 @@ mVSCodeConfig = """{
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/*",
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/src/common/**",
-                "${workspaceFolder}/src/data/**",
-                "${workspaceFolder}/src/function/**",
-                "${workspaceFolder}/src/net/**",
-                "${workspaceFolder}/src/protocol/**",
-                "${workspaceFolder}/src/uart/**",
-                "${workspaceFolder}/src/viewlibs/**",
-                "${workspaceFolder}/src/windows/**",
-                "~/cdroid/outX64-Debug/include/**",
-                "~/cdroid/outX64-Debug/include/gui/**",
                 "~/cdroid/src/**",
                 "/opt/vcpkg/packages/**"
             ],
