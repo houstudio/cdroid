@@ -126,6 +126,7 @@ endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/src/gui/gui_features.h.cmake")
    configure_file(src/gui/gui_features.h.cmake  ${CMAKE_BINARY_DIR}/include/gui/gui_features.h)
+   configure_file(src/gui/gui_features.h.cmake  ${CMAKE_SOURCE_DIR}/src/gui/gui_features.h)
 endif()
 set(SKIP_INSTALL_EXPORT TRUE)
 

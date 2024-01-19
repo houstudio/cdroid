@@ -162,7 +162,8 @@ private:/*private classes*/
         void triggerUpdateProcessor();
     };
 public:/*public classes*/
-    struct OnScrollListener {
+    class OnScrollListener:public EventSet{
+    public:
         CallbackBase<void,RecyclerView&,int>onScrollStateChanged;//(RecyclerView& recyclerView, int newState){};
         CallbackBase<void,RecyclerView&,int,int>onScrolled;//(RecyclerView& recyclerView, int dx, int dy){};
     };
@@ -228,13 +229,14 @@ public:/*public classes*/
         virtual void onDrawOver(Canvas& c,RecyclerView& parent,State& state);
         virtual void getItemOffsets(Rect& outRect, View& view,RecyclerView& parent, State& state);
     };
-    struct OnItemTouchListener:public EventSet{
+    class OnItemTouchListener:public EventSet{
+    public:
         CallbackBase<bool,RecyclerView&,MotionEvent&>onInterceptTouchEvent;//(RecyclerView& rv,MotionEvent& e);
         CallbackBase<void,RecyclerView&,MotionEvent&>onTouchEvent;//(RecyclerView& rv,MotionEvent& e);
         CallbackBase<void,bool>onRequestDisallowInterceptTouchEvent;//(bool disallowIntercept);
     };
 private:/*private variables*/
-    OnItemTouchListener mActiveOnItemTouchListener;
+    OnItemTouchListener* mActiveOnItemTouchListener;
     int mInterceptRequestLayoutDepth;
     bool mIgnoreMotionEventTillDown;
     int mEatenAccessibilityChangeFlags;
@@ -487,9 +489,9 @@ public:
     void removeItemDecorationAt(int index);
     void removeItemDecoration(ItemDecoration* decor);
     void setChildDrawingOrderCallback(ChildDrawingOrderCallback childDrawingOrderCallback);
-    void setOnScrollListener(OnScrollListener listener);
-    void addOnScrollListener(OnScrollListener listener);
-    void removeOnScrollListener(OnScrollListener listener);
+    void setOnScrollListener(const OnScrollListener& listener);
+    void addOnScrollListener(const OnScrollListener& listener);
+    void removeOnScrollListener(const OnScrollListener& listener);
     void clearOnScrollListeners();
     void scrollToPosition(int position);
     void jumpToPositionForSmoothScroller(int position);

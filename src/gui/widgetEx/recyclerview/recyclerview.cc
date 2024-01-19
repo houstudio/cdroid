@@ -148,6 +148,7 @@ void RecyclerView::initRecyclerView(){
     mVelocityTracker = nullptr;
     mLayout = nullptr;
     mAdapter= nullptr;
+    mActiveOnItemTouchListener = nullptr;
     mMinMaxLayoutPositions[0] = mMinMaxLayoutPositions[1] = 0;
     mScrollOffset[0] = mScrollOffset[1] = 0;
     mScrollConsumed[0] = mScrollConsumed[1] = 0;
@@ -172,17 +173,14 @@ void RecyclerView::initRecyclerView(){
     ViewInfoStore::ProcessCallback* visCBK = new ViewInfoStore::ProcessCallback;
     visCBK->processDisappeared=[this](ViewHolder* viewHolder,ItemAnimator::ItemHolderInfo* info, ItemAnimator::ItemHolderInfo* postInfo){
         mRecycler->unscrapView(*viewHolder);
-        LOGD("processDisappeared");
         animateDisappearance(*viewHolder, *info, postInfo);
     };
     visCBK->processAppeared=[this](ViewHolder* viewHolder, ItemAnimator::ItemHolderInfo* preInfo, ItemAnimator::ItemHolderInfo* info){
-        LOGD("processAppeared");
         animateAppearance(*viewHolder, preInfo, *info);
     };
 
     visCBK->processPersistent=[this](ViewHolder* viewHolder,ItemAnimator::ItemHolderInfo* preInfo,ItemAnimator::ItemHolderInfo* postInfo){
         viewHolder->setIsRecyclable(false);
-        LOGD("processPersistent");
         if (mDataSetHasChangedAfterLayout) {
             if (mItemAnimator->animateChange(*viewHolder, *viewHolder, *preInfo, *postInfo)) {
                 postAnimationRunner();
@@ -192,7 +190,6 @@ void RecyclerView::initRecyclerView(){
         }
     };
     visCBK->unused=[this](ViewHolder* viewHolder){
-        LOGD("unused");
         mLayout->removeAndRecycleView(viewHolder->itemView, *mRecycler);
     };
     mViewInfoProcessCallback = visCBK;
@@ -782,21 +779,18 @@ void RecyclerView::setChildDrawingOrderCallback(ChildDrawingOrderCallback childD
     setChildrenDrawingOrderEnabled(mChildDrawingOrderCallback != nullptr);
 }
 
-void RecyclerView::setOnScrollListener(OnScrollListener listener) {
+void RecyclerView::setOnScrollListener(const OnScrollListener& listener) {
     mScrollListener = listener;
 }
 
-void  RecyclerView::addOnScrollListener(OnScrollListener listener) {
-    /*if (mScrollListeners == null) {
-        mScrollListeners = new ArrayList<>();
-    }*/
-    mScrollListeners.push_back(listener);
+void  RecyclerView::addOnScrollListener(const OnScrollListener& listener) {
+    auto it = std::find(mScrollListeners.begin(),mScrollListeners.end(),listener);
+    if(it==mScrollListeners.end())mScrollListeners.push_back(listener);
 }
 
-void RecyclerView::removeOnScrollListener(OnScrollListener listener) {
-    /*if (mScrollListeners != nullptr) {
-        mScrollListeners.remove(listener);
-    }*/
+void RecyclerView::removeOnScrollListener(const OnScrollListener& listener) {
+    auto it = std::find(mScrollListeners.begin(),mScrollListeners.end(),listener);
+    if(it!=mScrollListeners.end())mScrollListeners.erase(it);
 }
 
 void RecyclerView::clearOnScrollListeners() {
@@ -1592,29 +1586,33 @@ void RecyclerView::assertNotInLayoutOrScroll(const std::string& message) {
 }
 
 void RecyclerView::addOnItemTouchListener(OnItemTouchListener listener) {
+    auto it =std::find(mOnItemTouchListeners.begin(),mOnItemTouchListeners.end(),listener);
+    if(it==mOnItemTouchListeners.end())
     mOnItemTouchListeners.push_back(listener);
 }
 
 void RecyclerView::removeOnItemTouchListener(OnItemTouchListener listener) {
     //mOnItemTouchListeners.remove(listener);
     auto it = std::find(mOnItemTouchListeners.begin(),mOnItemTouchListeners.end(),listener);
-    if(mOnItemTouchListeners.end()!=it)mOnItemTouchListeners.erase(it);
-    if (mActiveOnItemTouchListener == listener) {
-        LOGD("mActiveOnItemTouchListener = nullptr;TOBEOPENED");
+    if(mOnItemTouchListeners.end()!=it){
+        if (mActiveOnItemTouchListener == &(*it)) {
+            mActiveOnItemTouchListener = nullptr;
+        }
     }
+    mOnItemTouchListeners.erase(it);
 }
 
 bool RecyclerView::dispatchOnItemTouchIntercept(MotionEvent& e) {
     const int action = e.getAction();
     if (action == MotionEvent::ACTION_CANCEL || action == MotionEvent::ACTION_DOWN) {
-        LOGD("mActiveOnItemTouchListener = nullptr;TOBE OPENED");
+        mActiveOnItemTouchListener = nullptr;
     }
 
     const int listenerCount = mOnItemTouchListeners.size();
     for (int i = 0; i < listenerCount; i++) {
         OnItemTouchListener& listener = mOnItemTouchListeners.at(i);
         if (listener.onInterceptTouchEvent(*this, e) && action != MotionEvent::ACTION_CANCEL) {
-            mActiveOnItemTouchListener = listener;
+            mActiveOnItemTouchListener = &listener;
             return true;
         }
     }
@@ -1623,15 +1621,15 @@ bool RecyclerView::dispatchOnItemTouchIntercept(MotionEvent& e) {
 
 bool RecyclerView::dispatchOnItemTouch(MotionEvent& e) {
     const int action = e.getAction();
-    if (0/*mActiveOnItemTouchListener != nullptr zhhou*/) {
+    if (mActiveOnItemTouchListener) {
         if (action == MotionEvent::ACTION_DOWN) {
             // Stale state from a previous gesture, we're starting a new one. Clear it.
-            LOGD("mActiveOnItemTouchListener = null;TOBE OPENED");
+            mActiveOnItemTouchListener = nullptr;
         } else {
-            mActiveOnItemTouchListener.onTouchEvent(*this, e);
+            mActiveOnItemTouchListener->onTouchEvent(*this, e);
             if (action == MotionEvent::ACTION_CANCEL || action == MotionEvent::ACTION_UP) {
                 // Clean up for the next gesture.
-                LOGD("mActiveOnItemTouchListener = nullptr;TOBE OPENED");
+                mActiveOnItemTouchListener = nullptr;
             }
             return true;
         }
@@ -1642,9 +1640,9 @@ bool RecyclerView::dispatchOnItemTouch(MotionEvent& e) {
     if (action != MotionEvent::ACTION_DOWN) {
         const int listenerCount = mOnItemTouchListeners.size();
         for (int i = 0; i < listenerCount; i++) {
-            OnItemTouchListener listener = mOnItemTouchListeners.at(i);
+            OnItemTouchListener& listener = mOnItemTouchListeners.at(i);
             if (listener.onInterceptTouchEvent(*this, e)) {
-                mActiveOnItemTouchListener = listener;
+                mActiveOnItemTouchListener = &listener;
                 return true;
             }
         }
@@ -2389,7 +2387,6 @@ void RecyclerView::fillRemainingScrollValues(State& state) {
 }
 
 void RecyclerView::dispatchLayoutStep1() {
-    LOGE("dispatchLayoutStep1");
     mState->assertLayoutStep(State::STEP_START);
     fillRemainingScrollValues(*mState);
     mState->mIsMeasuring = false;
@@ -2475,7 +2472,6 @@ void RecyclerView::dispatchLayoutStep1() {
 }
 
 void RecyclerView::dispatchLayoutStep2() {
-    LOGE("dispatchLayoutStep2");
     startInterceptRequestLayout();
     onEnterLayoutOrScroll();
     mState->assertLayoutStep(State::STEP_LAYOUT | State::STEP_ANIMATIONS);
@@ -2498,7 +2494,6 @@ void RecyclerView::dispatchLayoutStep2() {
 }
 
 void RecyclerView::dispatchLayoutStep3() {
-    LOGE("dispatchLayoutStep3");
     mState->assertLayoutStep(State::STEP_ANIMATIONS);
     startInterceptRequestLayout();
     onEnterLayoutOrScroll();

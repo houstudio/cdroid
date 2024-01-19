@@ -21,7 +21,20 @@ int UIEventSource::checkEvents(){
            ||GraphDevice::getInstance().needCompose();
 }
 
-int UIEventSource::handleEvents(){
+void UIEventSource::handleCompose(){
+    GraphDevice::getInstance().lock();
+#if COMPOSE_ASYNC
+    if(GraphDevice::getInstance().needCompose())
+        GraphDevice::getInstance().requestCompose();
+#else
+    GraphDevice::getInstance().composeSurfaces();
+#endif
+
+    GraphDevice::getInstance().unlock();
+}
+
+int UIEventSource::handleRunnables(){
+    int count=0;
     GraphDevice::getInstance().lock();
     if ( (mRemoved==false) && mAttachedView && mAttachedView->isAttachedToWindow()){
         if(mAttachedView->isLayoutRequested())
@@ -36,6 +49,7 @@ int UIEventSource::handleEvents(){
             if(runner.time > nowms)break;
             mRunnables.pop_front();
             if(runner.run)runner.run();
+			count++;
         }
         if((mRemoved==false) && mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
             ((Window*)mAttachedView)->draw();
@@ -43,14 +57,12 @@ int UIEventSource::handleEvents(){
         }
     }
     GraphDevice::getInstance().unlock();
-#if COMPOSE_ASYNC
-    if(GraphDevice::getInstance().needCompose())
-        GraphDevice::getInstance().requestCompose();
-#else
-    GraphDevice::getInstance().composeSurfaces();
-#endif
-    GraphDevice::getInstance().lock();
-    GraphDevice::getInstance().unlock();
+    return count;
+}
+
+int UIEventSource::handleEvents(){
+    handleRunnables();
+    handleCompose();
     return 0;
 }
 
