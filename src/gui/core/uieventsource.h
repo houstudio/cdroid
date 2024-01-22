@@ -17,8 +17,8 @@ private:
     std::function<void()> mLayoutRunner;
     ViewGroup*mAttachedView;
     bool hasDelayedRunners()const;
-	void handleCompose();
-	int handleRunnables();
+    void handleCompose();
+    int handleRunnables();
 public:
     UIEventSource(View*,std::function<void()>run);
     ~UIEventSource();

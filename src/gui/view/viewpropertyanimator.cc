@@ -463,7 +463,6 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
     case Z:  node->setTranslationZ(value - node->getElevation());   break;
     case ALPHA:
              info->mAlpha = value;
-             LOGD("setAlpha %f",value);
              node->setAlpha(value);
              break;
     }

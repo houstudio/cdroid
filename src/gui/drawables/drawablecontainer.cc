@@ -109,8 +109,8 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
     // drawable doesn't have a constant state, then we can't clone
     // it and we'll have to reference the original.
     for(int i=0;i<orig->mDrawables.size();i++){
-        Drawable*d=orig->mDrawables[i];
-        if(d==nullptr)continue;
+        Drawable*d = orig->mDrawables[i];
+        if(d == nullptr)continue;
         std::shared_ptr<ConstantState> cs=d->getConstantState();
         if(cs)
             mDrawableFutures[i]=cs;
@@ -135,11 +135,11 @@ int DrawableContainer::DrawableContainerState::getChildCount()const{
 }
 
 Drawable*DrawableContainer::DrawableContainerState::getChild(int index){
-    Drawable*dr=mDrawables.at(index);
+    Drawable*dr = mDrawables.at(index);
     if(dr)return dr;
     if (mDrawableFutures.size()) {
-        auto it=mDrawableFutures.find(index);
-        if (it!=mDrawableFutures.end()) {
+        auto it = mDrawableFutures.find(index);
+        if (it != mDrawableFutures.end()) {
             auto cs = it->second;
             Drawable* prepared = prepareDrawable(cs->newDrawable());
             mDrawables[index] = prepared;
@@ -152,7 +152,7 @@ Drawable*DrawableContainer::DrawableContainerState::getChild(int index){
 
 
 int DrawableContainer::DrawableContainerState::addChild(Drawable* dr){
-    const int pos=mDrawables.size();
+    const int pos = mDrawables.size();
     dr->mutate();
     dr->setVisible(false, true);
     dr->setCallback(mOwner);
@@ -176,7 +176,6 @@ void DrawableContainer::DrawableContainerState::invalidateCache(){
 }
 
 void DrawableContainer::DrawableContainerState::mutate(){
-    int i=0;
     for (auto dr:mDrawables) {
        if (dr!= nullptr)dr->mutate();
     }

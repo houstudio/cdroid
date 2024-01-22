@@ -14,7 +14,7 @@ LevelListDrawable::LevelListState::LevelListState(const LevelListState*orig,Leve
 
 void LevelListDrawable::LevelListState::mutate(){
     //mLows = mLows.clone();
-    // mHighs = mHighs.clone();
+    //mHighs = mHighs.clone();
 }
 
 void LevelListDrawable::LevelListState::addLevel(int low,int high,Drawable*drawable){
@@ -71,8 +71,8 @@ void LevelListDrawable::setConstantState(std::shared_ptr<DrawableContainerState>
 
 LevelListDrawable*LevelListDrawable::mutate(){
     if (!mMutated && DrawableContainer::mutate() == this) {
-         mLevelListState->mutate();
-         mMutated = true;
+        mLevelListState->mutate();
+        mMutated = true;
     }
     return this; 
 }

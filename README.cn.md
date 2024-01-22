@@ -5,7 +5,7 @@
 * 镜像仓库: [https://github.com/houstudio/cdroid](https://github.com/houstudio/cdroid)
 # **Features:**
 * Multi Layer/Multi Window 
-* 集成40+ 安卓箭筒的UI组件和20+ Drawables
+* 集成40+ 安卓兼容的UI组件和20+ Drawables
 * 所有UI组件(Layouts,Drawables...)可以在安卓兼容的开发环境(**AndroidStudio or Eclipse**)中进行设计 
 * 基于 **Cairo**的矢量图形引擎
 # **Quick Start**
