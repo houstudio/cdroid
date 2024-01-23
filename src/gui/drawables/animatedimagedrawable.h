@@ -26,6 +26,7 @@ private:
     bool mStarting;
     int mCurrentFrame;
     int mRepeatCount;
+    int mRepeated;/*repeated played rounds*/
     std::shared_ptr<AnimatedImageState> mAnimatedImageState;
     Runnable mRunnable;
     ColorFilter* mColorFilter;

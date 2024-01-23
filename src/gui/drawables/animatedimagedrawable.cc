@@ -13,7 +13,8 @@ AnimatedImageDrawable::AnimatedImageDrawable()
 
 AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state)
    :Drawable(){
-    mStarting = 0;
+    mStarting = false;
+    mRepeated = 0;
     mRepeatCount = REPEAT_UNDEFINED;
     mIntrinsicWidth = mIntrinsicHeight = 0;
     mAnimatedImageState = state;
@@ -53,7 +54,7 @@ std::shared_ptr<Drawable::ConstantState>AnimatedImageDrawable::getConstantState(
 
 void AnimatedImageDrawable::setRepeatCount(int repeatCount){
     if (repeatCount < REPEAT_INFINITE) {
-         LOGE("invalid value passed to setRepeatCount %d",repeatCount);
+        LOGE("invalid value passed to setRepeatCount %d",repeatCount);
     }
     if (mRepeatCount != repeatCount) {
         mRepeatCount = repeatCount;
@@ -83,8 +84,7 @@ int AnimatedImageDrawable::getAlpha()const{
 }
 
 void AnimatedImageDrawable::draw(Canvas& canvas){
-    if (mStarting) {
-        mStarting = false;
+    if (mStarting && (mCurrentFrame==0) ) {
         postOnAnimationStart();
     }
     canvas.save();
@@ -94,17 +94,24 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
     const long nextDelay = mDecoder->getFrameDuration(mCurrentFrame);
     // a value <= 0 indicates that the drawable is stopped or that renderThread
     // will manage the animation
-    LOGV("%p draw Frame %d/%d nextDelay=%d",this,mCurrentFrame,mAnimatedImageState->mFrameCount,nextDelay);
-    if(mStarting){
+    LOGV("%p draw Frame %d/%d repeat=%d/%d nextDelay=%d",this,mCurrentFrame,
+          mAnimatedImageState->mFrameCount,mRepeated,mRepeatCount,nextDelay);
+    if(mStarting && ((mRepeated<mRepeatCount) || (mRepeatCount==REPEAT_INFINITE))){
         if (nextDelay > 0) {
             if (mRunnable == nullptr) {
                 mRunnable = [this](){
                     invalidateSelf();
                     mCurrentFrame=(mCurrentFrame+1)%mAnimatedImageState->mFrameCount;
+                    if(mCurrentFrame==mAnimatedImageState->mFrameCount-1){
+                        mRepeated++;
+                        mStarting = (mRepeated>=mRepeatCount);
+                    }
                 };
             }
+            unscheduleSelf(mRunnable);
             scheduleSelf(mRunnable, nextDelay + SystemClock::uptimeMillis());
-        } else if (nextDelay<=0){// == FINISHED) {
+        }
+        if ( mCurrentFrame==mAnimatedImageState->mFrameCount-1){// == FINISHED) {
             // This means the animation was drawn in software mode and ended.
             postOnAnimationEnd();
         }
