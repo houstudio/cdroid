@@ -67,7 +67,6 @@ private:
     //ItemTouchHelperGestureListener mItemTouchHelperGestureListener;
 
     RecyclerView::OnItemTouchListener mOnItemTouchListener;
-    //Rect mTmpRect;
 
     long mDragScrollStartTimeInMs;
     static bool hitTest(View& child, float x, float y, float left, float top);
@@ -84,7 +83,7 @@ private:
     bool scrollIfNecessary();
     std::vector<RecyclerView::ViewHolder*> findSwapTargets(RecyclerView::ViewHolder* viewHolder);
     void moveIfNecessary(RecyclerView::ViewHolder& viewHolder);
-    void endRecoverAnimation(RecyclerView::ViewHolder& viewHolder, bool override);
+    void endRecoverAnimation(RecyclerView::ViewHolder& viewHolder, bool overrided);
     void obtainVelocityTracker();
     void releaseVelocityTracker();
     RecyclerView::ViewHolder* findSwipedView(MotionEvent& motionEvent);
@@ -92,7 +91,7 @@ private:
          View* findChildView(MotionEvent& event);
     RecoverAnimation* findAnimation(MotionEvent& event);
     void updateDxDy(MotionEvent& ev, int directionFlags, int pointerIndex);
-    int swipeIfNecessary(RecyclerView::ViewHolder viewHolder);
+    int swipeIfNecessary(RecyclerView::ViewHolder& viewHolder);
     int checkHorizontalSwipe(RecyclerView::ViewHolder& viewHolder, int flags);
     int checkVerticalSwipe(RecyclerView::ViewHolder& viewHolder, int flags);
     void addChildDrawingOrderCallback();
@@ -102,10 +101,9 @@ public:
     void attachToRecyclerView(RecyclerView* recyclerView);
     void onDrawOver(Canvas& c, RecyclerView& parent, RecyclerView::State& state)override;
     void onDraw(Canvas& c, RecyclerView& parent, RecyclerView::State& state)override;
-    void onChildViewAttachedToWindow(View* view)override;
-    void onChildViewDetachedFromWindow(View* view)override;
-    void getItemOffsets(Rect& outRect, View* view, RecyclerView& parent,
-            RecyclerView::State& state)override;
+    void onChildViewAttachedToWindow(View* view);
+    void onChildViewDetachedFromWindow(View* view);
+    void getItemOffsets(Rect& outRect, View* view, RecyclerView& parent, RecyclerView::State& state);
     void startDrag(RecyclerView::ViewHolder& viewHolder);
     void startSwipe(RecyclerView::ViewHolder& viewHolder);
 
@@ -126,6 +124,7 @@ public:
     static constexpr int RELATIVE_DIR_FLAGS = START | END  | ((START | END) << DIRECTION_FLAG_COUNT)
             | ((START | END) << (2 * DIRECTION_FLAG_COUNT));
 private:
+    friend ItemTouchHelper;
     static Interpolator *sDragScrollInterpolator;
     static Interpolator *sDragViewScrollCapInterpolator;
     int mCachedMaxScrollSpeed = -1;
@@ -133,11 +132,11 @@ private:
 protected:
     int getAbsoluteMovementFlags(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder);
     bool hasDragFlag(RecyclerView& recyclerView, RecyclerView::ViewHolder& viewHolder);
-    bool hasSwipeFlag(RecyclerView recyclerView, RecyclerView::ViewHolder& viewHolder);
+    bool hasSwipeFlag(RecyclerView& recyclerView, RecyclerView::ViewHolder& viewHolder);
     void onDraw(Canvas& c, RecyclerView& parent, RecyclerView::ViewHolder& selected,
-         std::vector<ItemTouchHelper::RecoverAnimation>& recoverAnimationList,int actionState, float dX, float dY);
+         std::vector<ItemTouchHelper::RecoverAnimation*>& recoverAnimationList,int actionState, float dX, float dY);
     void onDrawOver(Canvas& c, RecyclerView* parent, RecyclerView::ViewHolder& selected,
-         std::vector<ItemTouchHelper::RecoverAnimation>& recoverAnimationList, int actionState, float dX, float dY);
+         std::vector<ItemTouchHelper::RecoverAnimation*>& recoverAnimationList, int actionState, float dX, float dY);
 public:
     static ItemTouchUIUtil getDefaultUIUtil() {
         return ItemTouchUIUtilImpl.INSTANCE;
@@ -174,6 +173,7 @@ public:
 
 class ItemTouchHelper::SimpleCallback:public ItemTouchHelper::Callback{// ItemTouchHelper::Callback {
 private:
+    friend ItemTouchHelper;
     int mDefaultSwipeDirs;
     int mDefaultDragDirs;
 public:
@@ -199,6 +199,7 @@ public:
 
 class ItemTouchHelper::RecoverAnimation:public Animator::AnimatorListener {
 protected:
+    friend ItemTouchHelper;
     float mStartDx;
     float mStartDy;
     float mTargetX;

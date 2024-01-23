@@ -19,33 +19,35 @@ InputEventSource::InputEventSource(){
     mIsScreenSaveActived = false;
     mLastPlaybackEventTime = SystemClock::uptimeMillis();
     mLastInputEventTime = mLastPlaybackEventTime;
-    auto func=[this](){
-        INPUTEVENT es[128];
-        while(1){
-            if(mRunning==false){
-                std::chrono::milliseconds dur(50);
-                std::this_thread::sleep_for(dur);
-                continue;
-            }
-            const int count = InputGetEvents(es,sizeof(es)/sizeof(INPUTEVENT),20);
-            std::lock_guard<std::mutex> lock(mtxEvents);
-            if(count)mLastInputEventTime = SystemClock::uptimeMillis();
-            LOGV_IF(count,"rcv %d rawEvents",count);
-            for(int i = 0 ; i < count ; i ++){
-                const INPUTEVENT*e = es+i;
-                struct timeval  tv = {(time_t)e->tv_sec,e->tv_usec};
-                auto it = mDevices.find(e->device);
-                if(es[i].type > EV_CNT){
-                    onDeviceChanged(es+i);
-                    continue;
-                }
-                if(it==mDevices.end()){getdevice(es->device);continue;}
-                it->second->putRawEvent(tv,e->type,e->code,e->value);
-            }
-        }
-    };
+    auto func = std::bind(&InputEventSource::doEventsConsume,this);
     std::thread th(func);
     th.detach();
+}
+
+void InputEventSource::doEventsConsume(){
+    INPUTEVENT es[128];
+    while(1){
+        if(mRunning==false){
+            std::chrono::milliseconds dur(50);
+            std::this_thread::sleep_for(dur);
+            continue;
+        }
+        const int count = InputGetEvents(es,sizeof(es)/sizeof(INPUTEVENT),20);
+        std::lock_guard<std::mutex> lock(mtxEvents);
+        if(count)mLastInputEventTime = SystemClock::uptimeMillis();
+        LOGV_IF(count,"rcv %d rawEvents",count);
+        for(int i = 0 ; i < count ; i ++){
+            const INPUTEVENT*e = es+i;
+            struct timeval  tv = {(time_t)e->tv_sec,e->tv_usec};
+            auto it = mDevices.find(e->device);
+            if(es[i].type > EV_CNT){
+                onDeviceChanged(es+i);
+                continue;
+            }
+            if(it==mDevices.end()){getdevice(es->device);continue;}
+            it->second->putRawEvent(tv,e->type,e->code,e->value);
+        }
+    }
 }
 
 InputEventSource::~InputEventSource(){

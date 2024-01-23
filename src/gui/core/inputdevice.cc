@@ -448,23 +448,21 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             }
             LOGV_IF(mEvent.getAction()==MotionEvent::ACTION_UP,"%s pos=%.f,%.f",MotionEvent::actionToString(mEvent.getAction()).c_str(),
                 mPointMAP.begin()->second.coord.getX(),mEvent.getX(),mEvent.getY());
-            if(mEvent.getAction()==MotionEvent::ACTION_MOVE){
-                MotionEvent*last = mEvents.size()?(MotionEvent*)mEvents.back():nullptr;
+            if( mEvent.getAction() == MotionEvent::ACTION_MOVE ) {
+                MotionEvent*last = mEvents.size() ? (MotionEvent*)mEvents.back() : nullptr;
                 if(last&&(last->getAction()==MotionEvent::ACTION_MOVE)&&(mMoveTime-last->getEventTime()<20*1000)){
                     //the same positioned moveing ,skip this event
                     mEvents.pop_back();
-                    mEvents.push_back(MotionEvent::obtain(last->getDownTime(),last->getEventTime(),last->getAction(),
-                           mEvent.getX(),mEvent.getY(),last->getMetaState()));
+                    mEvents.push_back(MotionEvent::obtain(last->getDownTime(),last->getEventTime(),
+                           last->getAction(),mEvent.getX(),mEvent.getY(),last->getMetaState()));
                     last->recycle();
                     LOGV("%lld,%lld,%d events",mMoveTime,last->getEventTime(),mEvents.size());
                     break;
                 }
+            }
+            if( int(mEvent.getHistorySize())>=0 ){
                 mLastDownX= mEvent.getX();
                 mLastDownY= mEvent.getY();
-                mEvents.push_back(MotionEvent::obtain(mEvent));
-            }else if( (int(mEvent.getHistorySize())>=0) && (mEvent.getAction()!=MotionEvent::ACTION_MOVE) ){
-                mLastDownX = mEvent.getX();
-                mLastDownY = mEvent.getY();
                 mEvents.push_back(MotionEvent::obtain(mEvent));
             }
             mEvent.setAction(MotionEvent::ACTION_MOVE);

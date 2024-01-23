@@ -27,6 +27,7 @@ private:
     std::ofstream frecord;
     std::unordered_map<int,std::shared_ptr<InputDevice>>mDevices;
     std::shared_ptr<InputDevice>getdevice(int fd);
+    void doEventsConsume();
 protected:
     InputEventSource();
     void onDeviceChanged(const INPUTEVENT*es);
