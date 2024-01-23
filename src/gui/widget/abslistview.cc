@@ -1223,7 +1223,8 @@ bool AbsListView::resurrectSelection() {
     }
 
     mResurrectToPosition = INVALID_POSITION;
-    mFlingRunnable->removeCallbacks();
+    if(mFlingRunnable)
+	mFlingRunnable->removeCallbacks();
     if (mPositionScroller) mPositionScroller->stop();
 
     mTouchMode = TOUCH_MODE_REST;
