@@ -379,7 +379,7 @@ void View::initView(){
 
 View::~View(){
     mViewCount --;
-    LOGV_IF(View::VIEW_DEBUG,"mViewCount=%d",mViewCount);
+    LOGD_IF(View::VIEW_DEBUG||(mViewCount>1000),"Destroy %p:%d mViewCount=%d",this,mID,mViewCount);
     if(mParent)
         mParent->removeViewInternal(this);
     if(isAttachedToWindow())onDetachedFromWindow();

@@ -989,6 +989,7 @@ public:
     View*itemView;
 public:
     ViewHolder(View* itemView);
+    virtual ~ViewHolder();
     int getPosition()const;// final;
     int getLayoutPosition() const;// final;
     int getAdapterPosition();// final;

@@ -3542,7 +3542,8 @@ EdgeEffect* RecyclerView::EdgeEffectFactory::createEdgeEffect(RecyclerView* view
 void RecyclerView::RecycledViewPool::clear() {
     for (int i = 0; i < mScrap.size(); i++) {
         ScrapData* data = mScrap.valueAt(i);
-        data->mScrapHeap.clear();
+        std::vector<ViewHolder*>& vhs = data->mScrapHeap;
+        for(int j=0;j<vhs.size();j++)delete vhs.at(j);
     }
 }
 
@@ -3712,6 +3713,7 @@ RecyclerView::Recycler::Recycler(RecyclerView*rv){
 }
 
 RecyclerView::Recycler::~Recycler(){
+    LOGD("mCachedViews.size=%d",mCachedViews.size());
     delete mRecyclerPool;
 }
 
@@ -6002,6 +6004,10 @@ RecyclerView::ViewHolder::ViewHolder(View* itemView) {
     mShadowingHolder= nullptr;
     mOwnerRecyclerView = nullptr;
     mNestedRecyclerView= nullptr;
+}
+
+RecyclerView::ViewHolder::~ViewHolder(){
+    delete itemView;
 }
 
 void RecyclerView::ViewHolder::flagRemovedAndOffsetPosition(int mNewPosition, int offset, bool applyToPreLayout) {
