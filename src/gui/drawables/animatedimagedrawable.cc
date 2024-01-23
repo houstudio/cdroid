@@ -204,7 +204,7 @@ void AnimatedImageDrawable::clearAnimationCallbacks(){
 }
 
 Drawable*AnimatedImageDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    const std::string res = atts.getString("src");
+    const std::string res = atts.getString("drawable");
     AnimatedImageDrawable*d = new AnimatedImageDrawable(ctx,res);
     const bool autoStart = atts.getBoolean("autoStart");
     const int repeatCount =atts.getInt("repeatCount",REPEAT_UNDEFINED);
