@@ -2,7 +2,7 @@ project (sigma C CXX)
 
 set(SIGMA_SRCS ../common/cdlog.cc
         ../common/input_linux.cc
-	mediaplayer.c)
+	mediaplayer.c misc.c)
 find_package(DirectFB)
 include(CheckIncludeFile)
 

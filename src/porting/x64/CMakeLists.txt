@@ -3,7 +3,7 @@ project (x86 C CXX)
 set(X64_SRCS
      ../common/cdlog.cc
      ../common/input_linux.cc
-     cdplayer.c
+     cdplayer.c misc.c
     )
 
 if (ENABLE_DTV)

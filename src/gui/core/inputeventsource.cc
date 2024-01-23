@@ -27,7 +27,7 @@ InputEventSource::InputEventSource(){
 void InputEventSource::doEventsConsume(){
     INPUTEVENT es[128];
     while(1){
-        if(mRunning==false){
+        if(mRunning == false){
             std::chrono::milliseconds dur(50);
             std::this_thread::sleep_for(dur);
             continue;
