@@ -60,12 +60,14 @@ public:
     void recycle();
     uint8_t readByte();
     int readInt();
+    bool readBoolean();
     float readFloat();
     double readDouble();
     std::string readString();
 
     void writeByte(uint8_t val);
     void writeInt(int32_t val);
+    void writeBoolean(bool);
     void writeFloat(float val);
     void writeDouble(double val);
     void writeString(const std::string& val);

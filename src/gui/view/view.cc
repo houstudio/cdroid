@@ -1448,7 +1448,7 @@ void View::saveHierarchyState(SparseArray<Parcelable*>& container){
 void View::dispatchSaveInstanceState(SparseArray<Parcelable*>& container){
     if (mID != NO_ID && (mViewFlags & SAVE_DISABLED_MASK) == 0) {
         mPrivateFlags &= ~PFLAG_SAVE_STATE_CALLED;
-	Parcelable* state = onSaveInstanceState();
+        Parcelable* state = onSaveInstanceState();
         if ((mPrivateFlags & PFLAG_SAVE_STATE_CALLED) == 0) {
             LOGE("Derived class did not call super.onSaveInstanceState()");
         }
@@ -1461,29 +1461,30 @@ void View::dispatchSaveInstanceState(SparseArray<Parcelable*>& container){
 
 Parcelable* View::onSaveInstanceState(){
 #if 0
+#define LAST_APP_AUTOFILL_ID 100000
     mPrivateFlags |= PFLAG_SAVE_STATE_CALLED;
-    if (mStartActivityRequestWho != null || isAutofilled()
+    if (mStartActivityRequestWho.size() || isAutofilled()
             || mAutofillViewId > LAST_APP_AUTOFILL_ID) {
-        BaseSavedState state = new BaseSavedState(AbsSavedState.EMPTY_STATE);
+        BaseSavedState* state = new BaseSavedState(&AbsSavedState::EMPTY_STATE);
 
-        if (mStartActivityRequestWho != null) {
-            state.mSavedData |= BaseSavedState.START_ACTIVITY_REQUESTED_WHO_SAVED;
+        if (mStartActivityRequestWho.size()) {
+            state->mSavedData |= BaseSavedState::START_ACTIVITY_REQUESTED_WHO_SAVED;
         }
 
         if (isAutofilled()) {
-            state.mSavedData |= BaseSavedState.IS_AUTOFILLED;
+            state->mSavedData |= BaseSavedState::IS_AUTOFILLED;
         }
 
         if (mAutofillViewId > LAST_APP_AUTOFILL_ID) {
-            state.mSavedData |= BaseSavedState.AUTOFILL_ID;
+            state->mSavedData |= BaseSavedState::AUTOFILL_ID;
         }
 
-        state.mStartActivityRequestWhoSaved = mStartActivityRequestWho;
-        state.mIsAutofilled = isAutofilled();
-        state.mAutofillViewId = mAutofillViewId;
+        state->mStartActivityRequestWhoSaved = mStartActivityRequestWho;
+        state->mIsAutofilled = isAutofilled();
+        state->mAutofillViewId = mAutofillViewId;
         return state;
     }
-    return BaseSavedState.EMPTY_STATE;
+    return &BaseSavedState::EMPTY_STATE;
 #endif
     return nullptr;//Parcelable();
 }
@@ -1495,12 +1496,11 @@ void View::restoreHierarchyState(SparseArray<Parcelable*>& container){
 void View::dispatchRestoreInstanceState(SparseArray<Parcelable*>& container){
     if (mID != NO_ID) {
 #if 0
-        auto it= container.find(mID);
-        if (it!=container.end()){//state != null) {
-            Parcelable state = it->second;//container.get(mID);
-            LOGD("View %p:%d Restoreing #",this,mID,state.c_str());
+        auto state= container.get(mID);
+        if (state != nullptr) {
+            LOGD("View %p:%d Restoreing #",this,mID,state);
             mPrivateFlags &= ~PFLAG_SAVE_STATE_CALLED;
-            onRestoreInstanceState(state);
+            onRestoreInstanceState(*state);
             if ((mPrivateFlags & PFLAG_SAVE_STATE_CALLED) == 0) {
                 FATAL("Derived class did not call super.onRestoreInstanceState()");
             }
@@ -6447,7 +6447,7 @@ bool View::postDelayed(const std::function<void()>&what,uint32_t delay){
 
 bool View::removeCallbacks(const Runnable& what){
     View*root = getRootView();
-    if(root&&(root!=this))
+    if( root && (root!=this) )
         return root->removeCallbacks(what);
     return false;
 }
@@ -6476,7 +6476,7 @@ void View::requestLayout(){
     if (mParent != nullptr && !mParent->isLayoutRequested()) {
         mParent->requestLayout();
     }
-    if (mAttachInfo && mAttachInfo->mViewRequestingLayout == this) {
+    if ( mAttachInfo && (mAttachInfo->mViewRequestingLayout == this) ) {
          mAttachInfo->mViewRequestingLayout = nullptr;
     }
 }
@@ -7455,4 +7455,25 @@ const std::string View::MeasureSpec::toString(int measureSpec) {
     return sb.str();
 }
 
+View::BaseSavedState::BaseSavedState(Parcel& source)
+    :AbsSavedState(source){
+    mSavedData = source.readInt();
+    mStartActivityRequestWhoSaved = source.readString();
+    mIsAutofilled = source.readBoolean();
+    mHideHighlight = source.readBoolean();
+    mAutofillViewId = source.readInt();
+}
+
+View::BaseSavedState::BaseSavedState(Parcelable* superState)
+   :AbsSavedState(superState){
+}
+
+void View::BaseSavedState::writeToParcel(Parcel& out, int flags) {
+    AbsSavedState::writeToParcel(out, flags);
+    out.writeInt(mSavedData);
+    out.writeString(mStartActivityRequestWhoSaved);
+    out.writeBoolean(mIsAutofilled);
+    out.writeBoolean(mHideHighlight);
+    out.writeInt(mAutofillViewId);
+}
 }//endof namespace

@@ -1,5 +1,6 @@
 #ifndef __PARCELABLE_H__
 #define __PARCELABLE_H__
+class Parcel;
 namespace cdroid{
 class Parcelable {
 public:

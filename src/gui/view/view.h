@@ -13,6 +13,7 @@
 #include <core/parcel.h>
 #include <core/parcelable.h>
 #include <cairomm/pattern.h>
+#include <view/abssavedstate.h>
 #include <view/gravity.h>
 #include <view/layoutparams.h>
 #include <view/rendernode.h>
@@ -51,6 +52,7 @@ public:
     static bool VIEW_DEBUG;
     static int mViewCount;
     class MeasureSpec;
+    class BaseSavedState;
     constexpr static int DEBUG_CORNERS_COLOR    = 0xFF3f7fff;
     constexpr static int DEBUG_CORNERS_SIZE_DIP = 8;
     constexpr static int NO_ID =-1;
@@ -1313,6 +1315,24 @@ public:
     static const std::string toString(int measureSpec) ;
 };
 using MeasureSpec=View::MeasureSpec;
+
+class View::BaseSavedState:public AbsSavedState {
+public:
+    static constexpr int START_ACTIVITY_REQUESTED_WHO_SAVED = 0b1;
+    static constexpr int IS_AUTOFILLED = 0b10;
+    static constexpr int AUTOFILL_ID = 0b100;
+public:
+    // Flags that describe what data in this state is valid
+    int mSavedData;
+    std::string mStartActivityRequestWhoSaved;
+    bool mIsAutofilled;
+    bool mHideHighlight;
+    int mAutofillViewId;
+public:
+    BaseSavedState(Parcel& source);
+    BaseSavedState(Parcelable* superState);
+    void writeToParcel(Parcel& out, int flags);
+};
 }//endof namespace cdroid
 
 using namespace cdroid;
