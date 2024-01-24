@@ -473,7 +473,7 @@ bool Window::postDelayed(Runnable& what,uint32_t delay){
 
 bool Window::removeCallbacks(const Runnable& what){
     if(mUIEventHandler)
-        mUIEventHandler->removeCallbacks((Runnable&)what);
+        return mUIEventHandler->removeCallbacks((Runnable&)what);
     return !(mUIEventHandler==nullptr);
 }
 

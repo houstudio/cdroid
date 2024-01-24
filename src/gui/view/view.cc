@@ -337,7 +337,7 @@ void View::initView(){
     mInContextButtonPress  = false;
     mIgnoreNextUpEvent     = false;
     mDefaultFocusHighlightEnabled = false;
-    mDefaultFocusHighlightSizeChanged =false;
+    mDefaultFocusHighlightSizeChanged = false;
     mBoundsChangedmDefaultFocusHighlightSizeChanged = false;
 
     mOldWidthMeasureSpec = mOldHeightMeasureSpec = INT_MIN;
@@ -347,7 +347,7 @@ void View::initView(){
                  (TEXT_DIRECTION_DEFAULT << PFLAG2_TEXT_DIRECTION_MASK_SHIFT) |
                  (PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT) |
                  (TEXT_ALIGNMENT_DEFAULT << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT) |
-                 (PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT) ;
+                 (PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT);
                  //(IMPORTANT_FOR_ACCESSIBILITY_DEFAULT << PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT);
     mScrollCache  = nullptr;
     mRoundScrollbarRenderer=nullptr;
@@ -380,12 +380,19 @@ void View::initView(){
 View::~View(){
     mViewCount --;
     LOGD_IF(View::VIEW_DEBUG||(mViewCount>1000),"%p:%d mViewCount=%d",this,mID,mViewCount);
+
+    removeTapCallback();
+    removeLongPressCallback();
+    removePerformClickCallback();
+    removeUnsetPressCallback();
+
+    delete mScrollCache;
+    mScrollCache = nullptr;
     if(mParent)
         mParent->removeViewInternal(this);
-	if(mPendingCheckForTap)mPendingCheckForTap->removeCallbacks();
-	if(mPendingCheckForLongPress)mPendingCheckForLongPress->removeCallbacks();
     if(isAttachedToWindow())onDetachedFromWindow();
     if(mBackground)mBackground->setCallback(nullptr);
+
     delete mForegroundInfo;
     delete mPendingCheckForTap;
     delete mPendingCheckForLongPress;
@@ -394,7 +401,7 @@ View::~View(){
     delete mTooltipInfo;
     delete mScrollIndicatorDrawable;
     delete mDefaultFocusHighlight;
-    delete mScrollCache;
+
     delete mBackground;
     delete mBackgroundTint;
     delete mLayoutParams;
@@ -421,17 +428,17 @@ bool View::debugDraw()const {
 }
 
 int View::dipsToPixels(int dips)const{
-    float scale=1.f;
-    return (int)(dips*scale+0.5f); 
+    const float scale = getContext()->getDisplayMetrics().density;
+    return (int)(dips*scale + 0.5f);
 }
 
 View* View::findViewById(int id){
-    if(id==mID)return (View*)this;
+    if( id == mID )return (View*)this;
     return nullptr;
 }
 
 View* View::findViewTraversal(int id){
-    if(id==mID)return this;
+    if( id == mID )return this;
     return nullptr;
 }
 
@@ -441,7 +448,7 @@ View* View::findViewWithTag(void*tag){
 
 View* View::findViewInsideOutShouldExist(View* root, int id)const{
     View* result = root->findViewByPredicateInsideOut((View*)this,[id](const View*v)->bool{
-        return v->mID==id;
+        return v->mID == id;
     }); 
     return result;
 }
@@ -462,7 +469,7 @@ View* View::findViewByPredicateInsideOut(View*start,std::function<bool(const Vie
     View* childToSkip = nullptr;
     for (;;) {
         View*view = start->findViewByPredicateTraversal(predicate, childToSkip);
-        if (view || start == this) {
+        if (view || (start == this)) {
             return view;
         }
 
@@ -528,7 +535,7 @@ void View::setTop(int top){
             int minTop;
             int yLoc;
             if (top < mTop) {
-                 minTop = top;
+                minTop = top;
                 yLoc = top - mTop;
             } else {
                 minTop = mTop;
@@ -1412,7 +1419,7 @@ void View::onDetachedFromWindowInternal() {
     mCurrentAnimation = nullptr;
 
     if ((mViewFlags & TOOLTIP) == TOOLTIP) {
-        //hideTooltip();
+        hideTooltip();
     }
 }
 
@@ -1441,17 +1448,14 @@ void View::saveHierarchyState(SparseArray<Parcelable*>& container){
 void View::dispatchSaveInstanceState(SparseArray<Parcelable*>& container){
     if (mID != NO_ID && (mViewFlags & SAVE_DISABLED_MASK) == 0) {
         mPrivateFlags &= ~PFLAG_SAVE_STATE_CALLED;
-#if 0
 	Parcelable* state = onSaveInstanceState();
         if ((mPrivateFlags & PFLAG_SAVE_STATE_CALLED) == 0) {
-            throw "Derived class did not call super.onSaveInstanceState()";
+            LOGE("Derived class did not call super.onSaveInstanceState()");
         }
         if (state!=nullptr){
-            // Log.i("View", "Freezing #" + Integer.toHexString(mID)
-            // + ": " + state);
-            container.insert(std::pair<int,Parcelable>(mID, state));
+            LOGI("Freezing %d %p",mID,state);
+            container.put(mID, state);
         }
-#endif
     }
 }
 
@@ -5837,8 +5841,8 @@ bool View::onKeyUp(int keycode,KeyEvent& event){
             if (!mHasPerformedLongPress) {
                 // This is a tap, so remove the longpress check
                 removeLongPressCallback();
-                //if (!event.isCanceled()) return performClickInternal();
-                performClickInternal();return true;
+                if (!event.isCanceled())
+                    return performClickInternal();
             }
         }
 
@@ -6169,16 +6173,12 @@ void View::checkForLongClick(int delayOffset,int x,int y){
         mPendingCheckForLongPress->rememberWindowAttachCount();
         mPendingCheckForLongPress->rememberPressedState();
         mPendingCheckForLongPress->postDelayed(ViewConfiguration::getLongPressTimeout()-delayOffset);
-        //mOriginalPressedState=isPressed();
-        //*mPendingCheckForLongPress=std::bind(&View::checkLongPressCallback,this,x,y);
-        //postDelayed(mPendingCheckForLongPress->getRunnable(),ViewConfiguration::getLongPressTimeout()-delayOffset);
     }
 }
 
 void View::removeTapCallback() {
     if (mPendingCheckForTap != nullptr) {
         mPrivateFlags &= ~PFLAG_PREPRESSED;
-        //removeCallbacks(mPendingCheckForTap->getRunnable());
         mPendingCheckForTap->removeCallbacks();
         delete mPendingCheckForTap;
         mPendingCheckForTap=nullptr;
@@ -6214,10 +6214,10 @@ void View::removeUnsetPressCallback() {
 }
 
 bool View::handleScrollBarDragging(MotionEvent& event) {
-    if (mScrollCache == nullptr)  return false;
-    float x = event.getX();
-    float y = event.getY();
-    int action = event.getAction();
+    const float x = event.getX();
+    const float y = event.getY();
+    const int action = event.getAction();
+    if (mScrollCache == nullptr) return false;
     if ((mScrollCache->mScrollBarDraggingState == ScrollabilityCache::NOT_DRAGGING
             && action != MotionEvent::ACTION_DOWN)
             || !event.isFromSource(InputDevice::SOURCE_MOUSE)
@@ -6228,29 +6228,28 @@ bool View::handleScrollBarDragging(MotionEvent& event) {
 
     switch (action) {
     case MotionEvent::ACTION_MOVE:
-        if (mScrollCache->mScrollBarDraggingState == ScrollabilityCache::NOT_DRAGGING) {
+        if (mScrollCache->mScrollBarDraggingState == ScrollabilityCache::NOT_DRAGGING){
             return false;
         }
-        if (mScrollCache->mScrollBarDraggingState
-                == ScrollabilityCache::DRAGGING_VERTICAL_SCROLL_BAR) {
+        if (mScrollCache->mScrollBarDraggingState == ScrollabilityCache::DRAGGING_VERTICAL_SCROLL_BAR){
             Rect& bounds = mScrollCache->mScrollBarBounds;
             getVerticalScrollBarBounds(&bounds, nullptr);
-            int range = computeVerticalScrollRange();
-            int offset = computeVerticalScrollOffset();
-            int extent = computeVerticalScrollExtent();
+            const int range = computeVerticalScrollRange();
+            const int offset = computeVerticalScrollOffset();
+            const int extent = computeVerticalScrollExtent();
 
-            int thumbLength = ViewConfiguration::getThumbLength(
+            const int thumbLength = ViewConfiguration::getThumbLength(
                     bounds.height, bounds.width, extent, range);
-            int thumbOffset = ViewConfiguration::getThumbOffset(
+            const int thumbOffset = ViewConfiguration::getThumbOffset(
                             bounds.height, thumbLength, extent, range, offset);
 
-            float diff = y - mScrollCache->mScrollBarDraggingPos;
-            float maxThumbOffset = bounds.height - thumbLength;
-            float newThumbOffset =std::min(std::max(thumbOffset + diff, 0.0f), maxThumbOffset);
-            int height = getHeight();
+            const float diff = y - mScrollCache->mScrollBarDraggingPos;
+            const float maxThumbOffset = bounds.height - thumbLength;
+            const float newThumbOffset =std::min(std::max(thumbOffset + diff, 0.0f), maxThumbOffset);
+            const int height = getHeight();
             if (std::round(newThumbOffset) != thumbOffset && maxThumbOffset > 0
                     && height > 0 && extent > 0) {
-                int newY = std::round((range - extent)
+                const int newY = std::round((range - extent)
                         / ((float)extent / height) * (newThumbOffset / maxThumbOffset));
                 if (newY != getScrollY()) {
                     mScrollCache->mScrollBarDraggingPos = y;
@@ -6357,12 +6356,13 @@ bool View::onTouchEvent(MotionEvent& event){
                     if(!post(mPerformClick))performClickInternal();
                 }
             }
-            if(mUnsetPressedState == nullptr){
-                mUnsetPressedState=[this]{setPressed(false);};
+            if(isAttachedToWindow()){
+                if(mUnsetPressedState == nullptr){
+                    mUnsetPressedState=[this]{setPressed(false);};
+                }
+                postDelayed(mUnsetPressedState,ViewConfiguration::getPressedStateDuration());
+                removeTapCallback();
             }
-            postDelayed(mUnsetPressedState,ViewConfiguration::getPressedStateDuration());
-
-            removeTapCallback();
         }
         mIgnoreNextUpEvent=false;
         break; 
@@ -6427,7 +6427,7 @@ bool View::post(Runnable& what){
 }
 
 bool  View::postDelayed(Runnable& what,uint32_t delay){
-    View*root=getRootView();
+    View*root = getRootView();
     if(root&&(root!=this))
         return root->postDelayed(what,delay);
     return false;
@@ -6435,7 +6435,7 @@ bool  View::postDelayed(Runnable& what,uint32_t delay){
 
 bool View::post(const std::function<void()>&what){
     Runnable r;
-    r=what;
+    r = what;
     return post(r);
 }
 
@@ -6446,7 +6446,7 @@ bool View::postDelayed(const std::function<void()>&what,uint32_t delay){
 }
 
 bool View::removeCallbacks(const Runnable& what){
-    View*root=getRootView();
+    View*root = getRootView();
     if(root&&(root!=this))
         return root->removeCallbacks(what);
     return false;
@@ -7393,6 +7393,7 @@ View::ScrollabilityCache::ScrollabilityCache(ViewConfiguration&configuration,Vie
 }
 
 View::ScrollabilityCache::~ScrollabilityCache(){
+    host->removeCallbacks(mRunner);
     delete scrollBar;
 }
 
