@@ -379,13 +379,14 @@ void View::initView(){
 
 View::~View(){
     mViewCount --;
-    LOGD_IF(View::VIEW_DEBUG||(mViewCount>1000),"Destroy %p:%d mViewCount=%d",this,mID,mViewCount);
+    LOGD_IF(View::VIEW_DEBUG||(mViewCount>1000),"%p:%d mViewCount=%d",this,mID,mViewCount);
     if(mParent)
         mParent->removeViewInternal(this);
+	if(mPendingCheckForTap)mPendingCheckForTap->removeCallbacks();
+	if(mPendingCheckForLongPress)mPendingCheckForLongPress->removeCallbacks();
     if(isAttachedToWindow())onDetachedFromWindow();
     if(mBackground)mBackground->setCallback(nullptr);
     delete mForegroundInfo;
-    //delete mPerformClick;
     delete mPendingCheckForTap;
     delete mPendingCheckForLongPress;
     delete mRenderNode;
@@ -396,8 +397,7 @@ View::~View(){
     delete mScrollCache;
     delete mBackground;
     delete mBackgroundTint;
-    if(mLayoutParams)
-        delete mLayoutParams;
+    delete mLayoutParams;
     delete mRoundScrollbarRenderer;
     delete mCurrentAnimation;
     delete mTransformationInfo;
@@ -496,8 +496,8 @@ void View::setLeft(int left){
         invalidate(true);
     }
 
-    int oldWidth = mRight - mLeft;
-    int height = mBottom - mTop;
+    const int oldWidth = mRight - mLeft;
+    const int height = mBottom - mTop;
 
     mLeft = left;
     mRenderNode->setLeft(left);
@@ -541,8 +541,8 @@ void View::setTop(int top){
         invalidate(true);
     }
 
-    int width = mRight - mLeft;
-    int oldHeight = mBottom - mTop;
+    const int width = mRight - mLeft;
+    const int oldHeight = mBottom - mTop;
 
     mTop = top;
     mRenderNode->setTop(mTop);
@@ -583,8 +583,8 @@ void View::setRight(int right){
         invalidate(true);
     }
 
-    int oldWidth = mRight - mLeft;
-    int height = mBottom - mTop;
+    const int oldWidth = mRight - mLeft;
+    const int height = mBottom - mTop;
 
     mRight = right;
     mRenderNode->setRight(mRight);
@@ -625,8 +625,8 @@ void View::setBottom(int bottom){
         invalidate(true);
     }
     
-    int width = mRight - mLeft;
-    int oldHeight = mBottom - mTop;
+    const int width = mRight - mLeft;
+    const int oldHeight = mBottom - mTop;
     
     mBottom = bottom;
     mRenderNode->setBottom(mBottom);
@@ -746,19 +746,19 @@ void View::setPadding(int left, int top, int right, int bottom){
 void View::setPaddingRelative(int start,int top,int end,int bottom){
     resetResolvedPaddingInternal();
     mUserPaddingStart = start;
-    mUserPaddingEnd =end;
-    mLeftPaddingDefined  =true;
-    mRightPaddingDefined =true;
+    mUserPaddingEnd = end;
+    mLeftPaddingDefined  = true;
+    mRightPaddingDefined = true;
     switch(getLayoutDirection()){
     case LAYOUT_DIRECTION_RTL:
-        mUserPaddingLeftInitial  =end;
-        mUserPaddingRightInitial =start;
+        mUserPaddingLeftInitial  = end;
+        mUserPaddingRightInitial = start;
         internalSetPadding(end,top,start,bottom);
         break;
     case LAYOUT_DIRECTION_LTR:
     default:
-        mUserPaddingLeftInitial =start;
-        mUserPaddingRightInitial=end;
+        mUserPaddingLeftInitial = start;
+        mUserPaddingRightInitial= end;
         internalSetPadding(start,top,end,bottom);
         break;
     }
@@ -833,7 +833,7 @@ bool View::isLayoutDirectionResolved()const{
 }
 
 void View::resolvePadding(){
-    int resolvedLayoutDirection = getLayoutDirection();
+    const int resolvedLayoutDirection = getLayoutDirection();
 
     if (!isRtlCompatibilityMode()) {
         // Post Jelly Bean MR1 case: we need to take the resolved layout direction into account.
@@ -1908,12 +1908,12 @@ void View::getHorizontalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
     Rect* bounds = drawBounds != nullptr ? drawBounds : touchBounds;
     if (bounds == nullptr)return;
 
-    int inside = (mViewFlags & SCROLLBARS_OUTSIDE_MASK) == 0 ? ~0 : 0;
-    bool drawVerticalScrollBar = isVerticalScrollBarEnabled()&& !isVerticalScrollBarHidden();
-    int size   = getHorizontalScrollbarHeight();
-    int verticalScrollBarGap = drawVerticalScrollBar ? getVerticalScrollbarWidth() : 0;
-    int width  = getWidth();
-    int height =getHeight();
+    const int inside = (mViewFlags & SCROLLBARS_OUTSIDE_MASK) == 0 ? ~0 : 0;
+    const bool drawVerticalScrollBar = isVerticalScrollBarEnabled()&& !isVerticalScrollBarHidden();
+    const int size   = getHorizontalScrollbarHeight();
+    const int verticalScrollBarGap = drawVerticalScrollBar ? getVerticalScrollbarWidth() : 0;
+    const int width  = getWidth();
+    const int height = getHeight();
     bounds->top   = mScrollY + height - size - (mUserPaddingBottom & inside);
     bounds->left  = mScrollX + (mPaddingLeft & inside);
     bounds->width = width - (mPaddingLeft & inside) - (mUserPaddingRight & inside) - verticalScrollBarGap;
@@ -1925,12 +1925,12 @@ void View::getHorizontalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
     }
     int minTouchTarget = mScrollCache->scrollBarMinTouchTarget;
     if (touchBounds->height < minTouchTarget) {
-        int adjust = (minTouchTarget - touchBounds->height) / 2;
+        const int adjust = (minTouchTarget - touchBounds->height) / 2;
         touchBounds->height = std::min(touchBounds->height + adjust,height);
         touchBounds->top = touchBounds->bottom() - minTouchTarget;
     }
     if (touchBounds->width < minTouchTarget) {
-        int adjust = (minTouchTarget - touchBounds->width) / 2;
+        const int adjust = (minTouchTarget - touchBounds->width) / 2;
         touchBounds->left -= adjust;
         touchBounds->width =  minTouchTarget;
     }
@@ -1966,8 +1966,8 @@ void View::setVerticalFadingEdgeEnabled(bool verticalFadingEdgeEnabled){
 void View::getStraightVerticalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
     Rect*bounds = drawBounds != nullptr ? drawBounds : touchBounds;
     if (bounds == nullptr) return;
-    int inside = (mViewFlags & SCROLLBARS_OUTSIDE_MASK) == 0 ? ~0 : 0;
-    int size = getVerticalScrollbarWidth();
+    const int inside = (mViewFlags & SCROLLBARS_OUTSIDE_MASK) == 0 ? ~0 : 0;
+    const int size = getVerticalScrollbarWidth();
     int verticalScrollbarPosition = mVerticalScrollbarPosition;
     if (verticalScrollbarPosition ==SCROLLBAR_POSITION_DEFAULT) {
         verticalScrollbarPosition = isLayoutRtl() ? SCROLLBAR_POSITION_LEFT : SCROLLBAR_POSITION_RIGHT;
@@ -1991,7 +1991,7 @@ void View::getStraightVerticalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
     }
     int minTouchTarget = mScrollCache->scrollBarMinTouchTarget;
     if (touchBounds->width < minTouchTarget) {
-        int adjust = (minTouchTarget - touchBounds->width) / 2;
+        const int adjust = (minTouchTarget - touchBounds->width) / 2;
         if (verticalScrollbarPosition == SCROLLBAR_POSITION_RIGHT) {
             touchBounds->width= std::min(touchBounds->width + adjust, getWidth());
             touchBounds->left = touchBounds->width - minTouchTarget;
@@ -2001,7 +2001,7 @@ void View::getStraightVerticalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
         }
     }
     if (touchBounds->height < minTouchTarget) {
-        int adjust = (minTouchTarget - touchBounds->height) / 2;
+        const int adjust = (minTouchTarget - touchBounds->height) / 2;
         touchBounds->top -= adjust;
         touchBounds->height = minTouchTarget;
     }
@@ -2086,8 +2086,8 @@ int View::computeVerticalScrollExtent(){
 }
 
 bool View::canScrollHorizontally(int direction){
-    int offset = computeHorizontalScrollOffset();
-    int range = computeHorizontalScrollRange() - computeHorizontalScrollExtent();
+    const int offset = computeHorizontalScrollOffset();
+    const int range = computeHorizontalScrollRange() - computeHorizontalScrollExtent();
     if (range == 0) return false;
     if (direction < 0) {
         return offset > 0;
@@ -2097,8 +2097,8 @@ bool View::canScrollHorizontally(int direction){
 }
 
 bool View::canScrollVertically(int direction){
-    int offset = computeVerticalScrollOffset();
-    int range = computeVerticalScrollRange() - computeVerticalScrollExtent();
+    const int offset = computeVerticalScrollOffset();
+    const int range = computeVerticalScrollRange() - computeVerticalScrollExtent();
     if (range == 0) return false;
     if (direction < 0) {
         return offset > 0;
@@ -2141,13 +2141,13 @@ bool View::isOnVerticalScrollbarThumb(int x,int y){
         Rect& bounds = mScrollCache->mScrollBarBounds;
         Rect& touchBounds = mScrollCache->mScrollBarTouchBounds;
         getVerticalScrollBarBounds(&bounds, &touchBounds);
-        int range = computeVerticalScrollRange();
-        int offset = computeVerticalScrollOffset();
-        int extent = computeVerticalScrollExtent();
-        int thumbLength = ViewConfiguration::getThumbLength(bounds.height, bounds.width,extent, range);
-        int thumbOffset = ViewConfiguration::getThumbOffset(bounds.height, thumbLength, extent, range, offset);
-        int thumbTop = bounds.top + thumbOffset;
-        int adjust = std::max(mScrollCache->scrollBarMinTouchTarget - thumbLength, 0) / 2;
+        const int range = computeVerticalScrollRange();
+        const int offset = computeVerticalScrollOffset();
+        const int extent = computeVerticalScrollExtent();
+        const int thumbLength = ViewConfiguration::getThumbLength(bounds.height, bounds.width,extent, range);
+        const int thumbOffset = ViewConfiguration::getThumbOffset(bounds.height, thumbLength, extent, range, offset);
+        const int thumbTop = bounds.top + thumbOffset;
+        const int adjust = std::max(mScrollCache->scrollBarMinTouchTarget - thumbLength, 0) / 2;
         if (x >= touchBounds.left && x <= touchBounds.right()
                 && y >= thumbTop - adjust && y <= thumbTop + thumbLength + adjust) {
             return true;
@@ -2165,13 +2165,13 @@ bool View::isOnHorizontalScrollbarThumb(int x,int y){
         Rect& bounds = mScrollCache->mScrollBarBounds;
         Rect& touchBounds = mScrollCache->mScrollBarTouchBounds;
         getHorizontalScrollBarBounds(&bounds, &touchBounds);
-        int range = computeHorizontalScrollRange();
-        int offset = computeHorizontalScrollOffset();
-        int extent = computeHorizontalScrollExtent();
-        int thumbLength = ViewConfiguration::getThumbLength(bounds.width, bounds.height,extent, range);
-        int thumbOffset = ViewConfiguration::getThumbOffset(bounds.width, thumbLength,extent, range, offset);
-        int thumbLeft = bounds.left + thumbOffset;
-        int adjust = std::max(mScrollCache->scrollBarMinTouchTarget - thumbLength, 0) / 2;
+        const int range = computeHorizontalScrollRange();
+        const int offset = computeHorizontalScrollOffset();
+        const int extent = computeHorizontalScrollExtent();
+        const int thumbLength = ViewConfiguration::getThumbLength(bounds.width, bounds.height,extent, range);
+        const int thumbOffset = ViewConfiguration::getThumbOffset(bounds.width, thumbLength,extent, range, offset);
+        const int thumbLeft = bounds.left + thumbOffset;
+        const int adjust = std::max(mScrollCache->scrollBarMinTouchTarget - thumbLength, 0) / 2;
         if (x >= thumbLeft - adjust && x <= thumbLeft + thumbLength + adjust
                 && y >= touchBounds.top && y <= touchBounds.bottom()) {
             return true;
@@ -2238,8 +2238,8 @@ void View::onDrawScrollIndicators(Canvas& canvas){
         return;// Scroll indicators aren't supported here.
 
     Rect rect ;
-    int h = dr->getIntrinsicHeight();
-    int w = dr->getIntrinsicWidth();
+    const int h = dr->getIntrinsicHeight();
+    const int w = dr->getIntrinsicWidth();
 
     getScrollIndicatorBounds(rect);
     if ((mPrivateFlags3 & PFLAG3_SCROLL_INDICATOR_TOP) != 0) {
@@ -2268,7 +2268,7 @@ void View::onDrawScrollIndicators(Canvas& canvas){
         rightRtl = PFLAG3_SCROLL_INDICATOR_END;
     }
 
-    int leftMask = PFLAG3_SCROLL_INDICATOR_LEFT | leftRtl;
+    const int leftMask = PFLAG3_SCROLL_INDICATOR_LEFT | leftRtl;
     if ((mPrivateFlags3 & leftMask) != 0) {
         bool canScrollLeft = canScrollHorizontally(-1);
         if (canScrollLeft) {
@@ -2277,9 +2277,9 @@ void View::onDrawScrollIndicators(Canvas& canvas){
         }
     }
 
-    int rightMask = PFLAG3_SCROLL_INDICATOR_RIGHT | rightRtl;
+    const int rightMask = PFLAG3_SCROLL_INDICATOR_RIGHT | rightRtl;
     if ((mPrivateFlags3 & rightMask) != 0) {
-        bool canScrollRight = canScrollHorizontally(1);
+        const bool canScrollRight = canScrollHorizontally(1);
         if (canScrollRight) {
             dr->setBounds(rect.right() - w, rect.top,w, rect.height);
             dr->draw(canvas);
@@ -2424,8 +2424,8 @@ void View::removeOnAttachStateChangeListener(OnAttachStateChangeListener listene
         return;
     }
     std::vector<OnAttachStateChangeListener>&ls = mListenerInfo->mOnAttachStateChangeListeners;
-    auto it=std::find(ls.begin(),ls.end(),listener);
-    if(it!=ls.end()){
+    auto it = std::find(ls.begin(),ls.end(),listener);
+    if(it != ls.end()){
         mListenerInfo->mOnAttachStateChangeListeners.erase(it);
     }
 }
@@ -2628,11 +2628,11 @@ void View::onDrawForeground(Canvas& canvas){
 
 bool View::applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* a, bool scalingRequired) {
     Transformation* invalidationTransform;
-    int flags = parent->mGroupFlags;
-    bool initialized = a->isInitialized();
+    const int flags = parent->mGroupFlags;
+    const bool initialized = a->isInitialized();
     if (!initialized) {
         a->initialize(mRight-mLeft, mBottom-mTop, parent->getWidth(), parent->getHeight());
-        a->initializeInvalidateRegion(0, 0, mRight-mLeft, mBottom-mTop);
+        a->initializeInvalidateRegion(0, 0, mRight - mLeft, mBottom - mTop);
         //if (mAttachInfo != nullptr) a->setListenerHandler(mAttachInfo->mHandler);
         onAnimationStart();
     }
@@ -3274,7 +3274,7 @@ bool View::hasTransientState(){
 
 void View::setHasTransientState(bool hasState){
     const bool oldHasTransientState = hasTransientState();
-    mTransientStateCount= hasState ? mTransientStateCount + 1 :mTransientStateCount - 1;
+    mTransientStateCount = hasState ? mTransientStateCount + 1 :mTransientStateCount - 1;
     if (mTransientStateCount < 0) {
         mTransientStateCount = 0;
         LOGE("hasTransientState decremented below 0: unmatched pair of setHasTransientState calls");
@@ -3307,7 +3307,7 @@ cdroid::Context*View::getContext()const{
 }
 
 int View::getWidth()const{
-    return mRight-mLeft;
+    return mRight - mLeft;
 }
 
 int View::getHeight()const{
@@ -3337,13 +3337,13 @@ bool View::getLocalVisibleRect(Rect& r) {
 }
 
 void View::offsetTopAndBottom(int offset){
-    mTop+=offset;
-    mBottom+=offset;
+    mTop += offset;
+    mBottom += offset;
 }
 
 void View::offsetLeftAndRight(int offset){
-    mLeft+=offset;
-    mRight+=offset;
+    mLeft += offset;
+    mRight += offset;
 }
 
 int View::getRawTextDirection()const{
@@ -6263,22 +6263,22 @@ bool View::handleScrollBarDragging(MotionEvent& event) {
                 == ScrollabilityCache::DRAGGING_HORIZONTAL_SCROLL_BAR) {
             Rect& bounds = mScrollCache->mScrollBarBounds;
             getHorizontalScrollBarBounds(&bounds, nullptr);
-            int range = computeHorizontalScrollRange();
-            int offset = computeHorizontalScrollOffset();
-            int extent = computeHorizontalScrollExtent();
+            const int range = computeHorizontalScrollRange();
+            const int offset = computeHorizontalScrollOffset();
+            const int extent = computeHorizontalScrollExtent();
 
-            int thumbLength = ViewConfiguration::getThumbLength(
+            const int thumbLength = ViewConfiguration::getThumbLength(
                     bounds.width, bounds.height, extent, range);
-            int thumbOffset = ViewConfiguration::getThumbOffset(
+            const int thumbOffset = ViewConfiguration::getThumbOffset(
                             bounds.width, thumbLength, extent, range, offset);
 
-            float diff = x - mScrollCache->mScrollBarDraggingPos;
-            float maxThumbOffset = bounds.width - thumbLength;
-            float newThumbOffset = std::min(std::max(thumbOffset + diff, 0.0f), maxThumbOffset);
-            int width = getWidth();
+            const float diff = x - mScrollCache->mScrollBarDraggingPos;
+            const float maxThumbOffset = bounds.width - thumbLength;
+            const float newThumbOffset = std::min(std::max(thumbOffset + diff, 0.0f), maxThumbOffset);
+            const int width = getWidth();
             if (std::round(newThumbOffset) != thumbOffset && maxThumbOffset > 0
                     && width > 0 && extent > 0) {
-                int newX = std::round((range - extent)
+                const int newX = std::round((range - extent)
                         / ((float)extent / width) * (newThumbOffset / maxThumbOffset));
                 if (newX != getScrollX()) {
                     mScrollCache->mScrollBarDraggingPos = x;
@@ -6293,13 +6293,13 @@ bool View::handleScrollBarDragging(MotionEvent& event) {
         }
         if (isOnVerticalScrollbarThumb(x, y)) {
             mScrollCache->mScrollBarDraggingState =
-                   ScrollabilityCache::DRAGGING_VERTICAL_SCROLL_BAR;
+                 ScrollabilityCache::DRAGGING_VERTICAL_SCROLL_BAR;
             mScrollCache->mScrollBarDraggingPos = y;
             return true;
         }
         if (isOnHorizontalScrollbarThumb(x, y)) {
             mScrollCache->mScrollBarDraggingState =
-                  ScrollabilityCache::DRAGGING_HORIZONTAL_SCROLL_BAR;
+                 ScrollabilityCache::DRAGGING_HORIZONTAL_SCROLL_BAR;
             mScrollCache->mScrollBarDraggingPos = x;
             return true;
         }
@@ -6382,7 +6382,6 @@ bool View::onTouchEvent(MotionEvent& event){
                 mPendingCheckForTap->setAnchor(x,y);
             }
             mPendingCheckForTap->postDelayed(ViewConfiguration::getTapTimeout());
-            //postDelayed(mPendingCheckForTap->getRunnable(),ViewConfiguration::getTapTimeout());
         }else{
             setPressed(true,x,y);
             checkForLongClick(0, x, y);
@@ -6692,8 +6691,8 @@ void View::resetRtlProperties(){
 
 int View::getDefaultSize(int size, int measureSpec) {
     int result = size;
-    int specMode = MeasureSpec::getMode(measureSpec);
-    int specSize = MeasureSpec::getSize(measureSpec);
+    const int specMode = MeasureSpec::getMode(measureSpec);
+    const int specSize = MeasureSpec::getSize(measureSpec);
 
     switch (specMode) {
     case MeasureSpec::UNSPECIFIED:  result = size;  break;
@@ -6739,8 +6738,8 @@ bool View::isSoundEffectsEnabled()const{
 }
 
 void View::playSoundEffect(int soundConstant){
-    if(mAttachInfo==nullptr||mAttachInfo->mPlaySoundEffect==nullptr||isSoundEffectsEnabled()==false)
-	return ;
+    if((mAttachInfo==nullptr)||(mAttachInfo->mPlaySoundEffect==nullptr)||(isSoundEffectsEnabled()==false))
+        return ;
     mAttachInfo->mPlaySoundEffect(soundConstant);
 }
 
@@ -6792,7 +6791,7 @@ void View::getDrawingRect(Rect& outRect) const {
     outRect.left  = mScrollX;
     outRect.top   = mScrollY;
     outRect.width = getWidth();
-    outRect.height=getHeight();
+    outRect.height= getHeight();
 }
 
 long View::getDrawingTime() const{
@@ -7047,7 +7046,7 @@ void View::setAlpha(float alpha){
     ensureTransformationInfo();
     if(mTransformationInfo->mAlpha != alpha){
         setAlphaInternal(alpha);
-        if(onSetAlpha((int)(alpha*255))){
+        if(onSetAlpha(int(alpha*255))){
             mPrivateFlags |= PFLAG_ALPHA_SET;
             invalidateParentCaches();
             invalidate(true);
@@ -7129,7 +7128,7 @@ LayoutParams*View::getLayoutParams(){
 }
 
 void View::setLayoutParams(LayoutParams*params){
-    if(mLayoutParams&&(params!=mLayoutParams))
+    if( mLayoutParams && (params!=mLayoutParams) )
         delete mLayoutParams;
     mLayoutParams = params;
     resolveLayoutParams();
@@ -7321,8 +7320,8 @@ void View::CheckForLongPress::run(){
     if( (mOriginalPressedState == mView->isPressed()) && mView->mParent
         && (mOriginalWindowAttachCount == mView->mWindowAttachCount)){
         if(mView->performLongClick(mX,mY)){
-	    mView->mHasPerformedLongPress = true;
-	}
+            mView->mHasPerformedLongPress = true;
+        }
     }
 }
 
@@ -7366,10 +7365,10 @@ void View::TooltipInfo::clearAnchorPos(){
 }
 
 View::TransformationInfo::TransformationInfo(){
-    mMatrix=identity_matrix();
-    mInverseMatrix=identity_matrix();
-    mAlpha=1.f;
-    mTransitionAlpha =1.f;
+    mMatrix = identity_matrix();
+    mInverseMatrix = identity_matrix();
+    mAlpha = 1.f;
+    mTransitionAlpha = 1.f;
 }
 
 View::ScrollabilityCache::ScrollabilityCache(ViewConfiguration&configuration,View*host){//int sz){
@@ -7387,14 +7386,16 @@ View::ScrollabilityCache::ScrollabilityCache(ViewConfiguration&configuration,Vie
     shader = LinearGradient::create(0,0,0,1);
     shader->add_color_stop_rgba(0.f,0,0,0,1.f);
     shader->add_color_stop_rgba(1.f,0,0,0,0.f);
-    this->host=host;
-    mRunner =[this](){
+    this->host = host;
+    mRunner = [this](){
        run();
     };
 }
+
 View::ScrollabilityCache::~ScrollabilityCache(){
     delete scrollBar;
 }
+
 void View::ScrollabilityCache::run(){
     long now = AnimationUtils::currentAnimationTimeMillis();
     if (host && (now >= fadeStartTime)) {
@@ -7405,6 +7406,52 @@ void View::ScrollabilityCache::run(){
         // Kick off the fade animation
         host->invalidate(mScrollBarBounds);
     }
+}
+
+int View::MeasureSpec::makeMeasureSpec(int size,int mode){
+    return (size & ~MODE_MASK) | (mode & MODE_MASK);
+}
+
+int View::MeasureSpec::makeSafeMeasureSpec(int size, int mode){
+    return makeMeasureSpec(size,mode);
+}
+
+int View::MeasureSpec::getMode(int measureSpec){
+    //noinspection ResourceType
+    return (measureSpec & MODE_MASK);
+}
+
+int View::MeasureSpec::getSize(int measureSpec){
+    return (measureSpec & ~MODE_MASK);
+}
+
+int View::MeasureSpec::adjust(int measureSpec, int delta) {
+    int mode = getMode(measureSpec);
+    int size = getSize(measureSpec);
+    if (mode == UNSPECIFIED) {
+        // No need to adjust size for UNSPECIFIED mode.
+        return makeMeasureSpec(size, UNSPECIFIED);
+    }
+    size += delta;
+    if (size < 0) {
+        LOGE("MeasureSpec.adjust: new size would be negative! (%d) spec:%s  delta:%d",size,
+                                toString(measureSpec).c_str(),delta);
+        size = 0;
+    }
+    return makeMeasureSpec(size, mode);
+}
+
+const std::string View::MeasureSpec::toString(int measureSpec) {
+    int mode = getMode(measureSpec);
+    int size = getSize(measureSpec);
+
+        std::ostringstream sb;
+    if (mode == UNSPECIFIED)  sb<<"UNSPECIFIED ";
+    else if (mode == EXACTLY) sb<<"EXACTLY ";
+    else if (mode == AT_MOST) sb<<"AT_MOST ";
+    else     sb<<mode<<" ";
+    sb<<size;
+    return sb.str();
 }
 
 }//endof namespace

@@ -20,7 +20,6 @@
 #include <view/layoutinflater.h>
 #include <view/viewpropertyanimator.h>
 #include <view/viewconfiguration.h>
-#include <view/measurespec.h>
 #include <view/viewtreeobserver.h>
 #include <view/soundeffectconstants.h>
 #include <view/hapticfeedbackconstants.h>
@@ -51,6 +50,7 @@ class View:public Drawable::Callback,public KeyEvent::Callback{
 public:
     static bool VIEW_DEBUG;
     static int mViewCount;
+    class MeasureSpec;
     constexpr static int DEBUG_CORNERS_COLOR    = 0xFF3f7fff;
     constexpr static int DEBUG_CORNERS_SIZE_DIP = 8;
     constexpr static int NO_ID =-1;
@@ -1295,6 +1295,24 @@ public:
     void run();
 };
 
+class View::MeasureSpec{
+public:
+    enum{
+        MODE_SHIFT = 30,
+        MODE_MASK  = 3 << MODE_SHIFT,
+        UNSPECIFIED= 0,
+        EXACTLY = 1 << MODE_SHIFT,
+        AT_MOST = 2 << MODE_SHIFT
+    };
+public:
+    static int makeMeasureSpec(int size,int mode);
+    static int makeSafeMeasureSpec(int size, int mode);
+    static int getMode(int measureSpec);
+    static int getSize(int measureSpec);
+    static int adjust(int measureSpec, int delta);
+    static const std::string toString(int measureSpec) ;
+};
+using MeasureSpec=View::MeasureSpec;
 }//endof namespace cdroid
 
 using namespace cdroid;
