@@ -118,6 +118,12 @@ AbsListView::~AbsListView() {
         mVelocityTracker->recycle();
         mVelocityTracker = nullptr;
     }
+    if(mPerformClick)mPerformClick->removeCallbacks();
+    if(mPendingCheckForLongPress)mPendingCheckForLongPress->removeCallbacks();
+    if(mPendingCheckForTap)mPendingCheckForTap->removeCallbacks();
+    if(mPendingCheckForKeyLongPress)mPendingCheckForKeyLongPress->removeCallbacks();
+	if(mFlingRunnable)mFlingRunnable->removeCallbacks();
+	
     delete mSelector;
     delete mFastScroll;
     delete mRecycler;
