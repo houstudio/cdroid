@@ -4,7 +4,6 @@
 #include <widgetEx/recyclerview/linearsmoothscroller.h>
 
 namespace cdroid{
-static constexpr int _DEBUG=1;
 
 LinearLayoutManager::LinearLayoutManager(Context* context)
    :LinearLayoutManager(context, RecyclerView::DEFAULT_ORIENTATION, false){
@@ -15,6 +14,7 @@ LinearLayoutManager::LinearLayoutManager(Context* context,int orientation,bool r
     mLayoutState = nullptr;
     mOrientationHelper = nullptr;
     mLastStackFromEnd = false;
+    mRecycleChildrenOnDetach = true;
     mAnchorInfo = new AnchorInfo();
     mLayoutChunkResult = new LayoutChunkResult();
     setOrientation(orientation);

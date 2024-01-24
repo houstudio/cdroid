@@ -292,8 +292,8 @@ INT GFXFlip(HANDLE surface) {
 static int setfbinfo(FBSURFACE*surf) {
     int rc=-1;
     FBDEVICE*dev=&devs[surf->dispid];
-    struct fb_var_screeninfo*v=&dev->var;
-    v->bits_per_pixel=32;
+    struct fb_var_screeninfo*v = &dev->var;
+    v->bits_per_pixel = 32;
     switch(surf->format) {
     case GPF_ARGB:
         v->transp.offset=24;  v->transp.length=8;

@@ -685,7 +685,7 @@ RecyclerView::LayoutManager* RecyclerView::getLayoutManager() {
     return mLayout;
 }
 
-RecyclerView::RecycledViewPool* RecyclerView::getRecycledViewPool() {
+RecyclerView::RecycledViewPool& RecyclerView::getRecycledViewPool() {
     return mRecycler->getRecycledViewPool();
 }
 
@@ -3539,11 +3539,24 @@ EdgeEffect* RecyclerView::EdgeEffectFactory::createEdgeEffect(RecyclerView* view
 }
 
 /////////////RecycledViewPool///////////////////
+
+RecyclerView::RecycledViewPool::RecycledViewPool(){
+}
+
+RecyclerView::RecycledViewPool::~RecycledViewPool(){
+    clear();
+    for (int i = 0; i < mScrap.size(); i++) {
+        ScrapData* data = mScrap.valueAt(i);
+        delete data;
+    }
+}
+
 void RecyclerView::RecycledViewPool::clear() {
     for (int i = 0; i < mScrap.size(); i++) {
         ScrapData* data = mScrap.valueAt(i);
         std::vector<ViewHolder*>& vhs = data->mScrapHeap;
         for(int j=0;j<vhs.size();j++)delete vhs.at(j);
+		vhs.clear();
     }
 }
 
@@ -3552,7 +3565,9 @@ void RecyclerView::RecycledViewPool::setMaxRecycledViews(int viewType, int max) 
     scrapData->mMaxScrap = max;
     std::vector<ViewHolder*>& scrapHeap = scrapData->mScrapHeap;
     while (scrapHeap.size() > max) {
-        scrapHeap.pop_back();//remove(scrapHeap.size() - 1);
+        ViewHolder*holder =  scrapHeap.back();
+        scrapHeap.pop_back();
+        delete holder;
     }
 }
 
@@ -3564,9 +3579,8 @@ RecyclerView::ViewHolder* RecyclerView::RecycledViewPool::getRecycledView(int vi
     ScrapData* scrapData = mScrap.get(viewType);
     if (scrapData != nullptr && !scrapData->mScrapHeap.empty()) {
         std::vector<ViewHolder*>& scrapHeap = scrapData->mScrapHeap;
-        //return scrapHeap.remove(scrapHeap.size() - 1);
-        ViewHolder*ret =scrapHeap.back();
-	scrapHeap.pop_back();
+        ViewHolder*ret = scrapHeap.back();
+        scrapHeap.pop_back();
         return ret;	
     }
     return nullptr;
@@ -3587,7 +3601,7 @@ void RecyclerView::RecycledViewPool::putRecycledView(ViewHolder* scrap) {
     if (mScrap.get(viewType)->mMaxScrap <= scrapHeap.size()) {
         return;
     }
-    if (_DEBUG){// && scrapHeap.contains(scrap)) {
+    if (_DEBUG){
         auto it =std::find(scrapHeap.begin(),scrapHeap.end(),scrap);
         LOGD_IF(it!=scrapHeap.end(),"this scrap item already exists");
     }
@@ -3605,13 +3619,13 @@ long RecyclerView::RecycledViewPool::runningAverage(long oldAverage, long newVal
 void RecyclerView::RecycledViewPool::factorInCreateTime(int viewType, long createTimeNs) {
     ScrapData* scrapData = getScrapDataForType(viewType);
     scrapData->mCreateRunningAverageNs = runningAverage(
-            scrapData->mCreateRunningAverageNs, createTimeNs);
+        scrapData->mCreateRunningAverageNs, createTimeNs);
 }
 
 void RecyclerView::RecycledViewPool::factorInBindTime(int viewType, long bindTimeNs) {
     ScrapData* scrapData = getScrapDataForType(viewType);
     scrapData->mBindRunningAverageNs = runningAverage(
-            scrapData->mBindRunningAverageNs, bindTimeNs);
+        scrapData->mBindRunningAverageNs, bindTimeNs);
 }
 
 bool RecyclerView::RecycledViewPool::willCreateInTime(int viewType, long approxCurrentNs, long deadlineNs) {
@@ -3707,13 +3721,13 @@ long RecyclerView::getNanoTime() {
 
 RecyclerView::Recycler::Recycler(RecyclerView*rv){
     mRV = rv;
+    mViewCacheMax = DEFAULT_CACHE_SIZE;
     mChangedScrap = nullptr;
     mViewCacheExtension = nullptr;
     mRecyclerPool = nullptr;
 }
 
 RecyclerView::Recycler::~Recycler(){
-    LOGD("mCachedViews.size=%d",mCachedViews.size());
     delete mRecyclerPool;
 }
 
@@ -3728,12 +3742,11 @@ void RecyclerView::Recycler::setViewCacheSize(int viewCount) {
 }
 
 void RecyclerView::Recycler::updateViewCacheSize() {
-    int extraCache = mRV->mLayout ? mRV->mLayout->mPrefetchMaxCountObserved : 0;
+    const int extraCache = mRV->mLayout ? mRV->mLayout->mPrefetchMaxCountObserved : 0;
     mViewCacheMax = mRequestedCacheMax + extraCache;
 
     // first, try the views that can be recycled
-    for (int i = mCachedViews.size() - 1;
-            i >= 0 && mCachedViews.size() > mViewCacheMax; i--) {
+    for (int i = mCachedViews.size() - 1;i >= 0 && mCachedViews.size() > mViewCacheMax; i--) {
         recycleCachedViewAt(i);
     }
 }
@@ -3900,7 +3913,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
         }
         if (holder == nullptr) { // fallback to pool
             LOGD("tryGetViewHolderForPositionByDeadline(%d) fetching from shared pool",position);
-            holder = getRecycledViewPool()->getRecycledView(type);
+            holder = getRecycledViewPool().getRecycledView(type);
             if (holder != nullptr) {
                 holder->resetInternal();
                 if (FORCE_INVALIDATE_DISPLAY_LIST) {
@@ -4141,7 +4154,7 @@ void RecyclerView::Recycler::addViewHolderToRecycledViewPool(ViewHolder& holder,
         dispatchViewRecycled(holder);
     }
     holder.mOwnerRecyclerView = nullptr;
-    getRecycledViewPool()->putRecycledView(&holder);
+    getRecycledViewPool().putRecycledView(&holder);
 }
 
 void RecyclerView::Recycler::quickRecycleScrapView(View* view) {
@@ -4345,7 +4358,7 @@ void RecyclerView::Recycler::dispatchViewRecycled(ViewHolder& holder) {
 void RecyclerView::Recycler::onAdapterChanged(Adapter* oldAdapter, Adapter* newAdapter,
         bool compatibleWithPrevious) {
     clear();
-    mRV->getRecycledViewPool()->onAdapterChanged(oldAdapter, newAdapter, compatibleWithPrevious);
+    mRV->getRecycledViewPool().onAdapterChanged(oldAdapter, newAdapter, compatibleWithPrevious);
 }
 
 void RecyclerView::Recycler::offsetPositionRecordsForMove(int from, int to) {
@@ -4417,11 +4430,11 @@ void RecyclerView::Recycler::setRecycledViewPool(RecycledViewPool* pool) {
     }
 }
 
-RecyclerView::RecycledViewPool* RecyclerView::Recycler::getRecycledViewPool() {
+RecyclerView::RecycledViewPool& RecyclerView::Recycler::getRecycledViewPool() {
     if (mRecyclerPool == nullptr) {
         mRecyclerPool = new RecycledViewPool();
     }
-    return mRecyclerPool;
+    return *mRecyclerPool;
 }
 
 void RecyclerView::Recycler::viewRangeUpdate(int positionStart, int itemCount) {
@@ -4715,6 +4728,7 @@ RecyclerView::LayoutManager::LayoutManager(){
     mChildHelper = nullptr;
     mRecyclerView = nullptr;
     mAutoMeasure = false;
+    mPrefetchMaxCountObserved = 0;
     mPrefetchMaxObservedInInitialPrefetch = false;
 }/*endof RecyclerView::LayoutManager::LayoutManager*/
 
@@ -5988,7 +6002,6 @@ void RecyclerView::ItemDecoration::getItemOffsets(Rect& outRect, View& view,Recy
 }*/
 
 ////////////////////////////////////////////////Beginning of ViewHolder///////////////////////////////////////
-
 std::vector<Object*> RecyclerView::ViewHolder::FULLUPDATE_PAYLOADS;
 RecyclerView::ViewHolder::ViewHolder(View* itemView) {
     FATAL_IF(itemView == nullptr,"itemView may not be null");

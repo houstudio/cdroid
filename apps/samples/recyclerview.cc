@@ -51,6 +51,7 @@ int main(int argc,const char*argv[]){
     w->setBackgroundColor(0xFF112233);
     RecyclerView*rv=new RecyclerView(800,600);
     MyAdapter*adapter=new MyAdapter();
+    rv->getRecycledViewPool().setMaxRecycledViews(0,64);
     adapter->setHasStableIds(true);
     rv->setAdapter(adapter);
     DividerItemDecoration* decoration = new DividerItemDecoration(&app, LinearLayout::VERTICAL);

@@ -476,7 +476,7 @@ public:
     LayoutManager* getLayoutManager();
     void setOnFlingListener(OnFlingListener onFlingListener);
     OnFlingListener getOnFlingListener();
-    RecycledViewPool* getRecycledViewPool();
+    RecycledViewPool& getRecycledViewPool();
     void setRecycledViewPool(RecycledViewPool* pool);
     void setViewCacheExtension(ViewCacheExtension* extension);
     void setItemViewCacheSize(int size);
@@ -828,7 +828,7 @@ private:
 protected:
     class ScrapData {
     public:
-	std::vector<ViewHolder*> mScrapHeap;// = new ArrayList<>();
+        std::vector<ViewHolder*> mScrapHeap;
         int mMaxScrap = DEFAULT_MAX_SCRAP;
         long mCreateRunningAverageNs = 0;
         long mBindRunningAverageNs = 0;
@@ -846,6 +846,8 @@ protected:
     ScrapData* getScrapDataForType(int viewType);
 public:
     static constexpr int DEFAULT_MAX_SCRAP = 5;
+    RecycledViewPool();
+    virtual ~RecycledViewPool();
     void clear();
     void setMaxRecycledViews(int viewType, int max);
     int getRecycledViewCount(int viewType);
@@ -868,7 +870,7 @@ private:
     void invalidateDisplayListInt(ViewHolder& holder);
     void invalidateDisplayListInt(ViewGroup& viewGroup, bool invalidateThis);
 protected:
-    int mViewCacheMax = DEFAULT_CACHE_SIZE;;
+    int mViewCacheMax = DEFAULT_CACHE_SIZE;
     std::vector<ViewHolder*> mAttachedScrap;
     std::vector<ViewHolder*>* mChangedScrap;
     std::vector<ViewHolder*> mCachedViews;
@@ -898,7 +900,7 @@ protected:
     void offsetPositionRecordsForRemove(int removedFrom, int count, bool applyToPreLayout);
     void setViewCacheExtension(ViewCacheExtension* extension);
     void setRecycledViewPool(RecycledViewPool* pool);
-    RecycledViewPool* getRecycledViewPool();
+    RecycledViewPool& getRecycledViewPool();
     void viewRangeUpdate(int positionStart, int itemCount);
     void markKnownViewsInvalid();
     void clearOldPositions();
