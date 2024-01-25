@@ -394,10 +394,10 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             mEvent.setActionButton(MotionEvent::BUTTON_PRIMARY);
             mEvent.setAction(value ? MotionEvent::ACTION_DOWN : MotionEvent::ACTION_UP);
             if(value){
-                mMoveTime = mDownTime = tv.tv_sec * 1000000 + tv.tv_usec;
+                mMoveTime = mDownTime = tv.tv_sec * 1000LL + tv.tv_usec/1000;
                 mEvent.setButtonState(MotionEvent::BUTTON_PRIMARY);
             }else{
-                mMoveTime = tv.tv_sec * 1000000 + tv.tv_usec;;
+                mMoveTime = tv.tv_sec * 1000 + tv.tv_usec/1000;
                 mEvent.setButtonState(mEvent.getButtonState()&(~MotionEvent::BUTTON_PRIMARY));
             }
             break;
@@ -414,7 +414,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
     case EV_ABS:
         switch(code){
         case ABS_X ... ABS_Z : 
-            mMoveTime = tv.tv_sec * 1000000 + tv.tv_usec;
+            mMoveTime = tv.tv_sec * 1000LL + tv.tv_usec/1000;
             setAxisValue(0,code,value,false) ; break;
         //case ABS_PRESSURE  : setAxisValue(0,code,value,false) ; break;
         case ABS_MT_SLOT    : mPointSlot = value ; break;
@@ -439,7 +439,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         switch(code){
         case SYN_MT_REPORT:break;
         case SYN_REPORT:
-            mMoveTime =(tv.tv_sec * 1000000 + tv.tv_usec);
+            mMoveTime =(tv.tv_sec * 1000 + tv.tv_usec/1000);
             mEvent.initialize(getId(),getSources(),mEvent.getAction(),mEvent.getActionButton()
 			    , 0/*flags*/ , 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,0,0/*x/yOffset*/
 				, 0 ,0 /*x/yPrecision*/ , mDownTime , mMoveTime , 0 , nullptr , nullptr);
@@ -450,7 +450,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                 mPointMAP.begin()->second.coord.getX(),mEvent.getX(),mEvent.getY());
             if( mEvent.getAction() == MotionEvent::ACTION_MOVE ) {
                 MotionEvent*last = mEvents.size() ? (MotionEvent*)mEvents.back() : nullptr;
-                if(last&&(last->getAction()==MotionEvent::ACTION_MOVE)&&(mMoveTime-last->getEventTime()<20*1000)){
+                if(last&&(last->getAction()==MotionEvent::ACTION_MOVE)&&(mMoveTime-last->getEventTime()<20)){
                     //the same positioned moveing ,skip this event
                     mEvents.pop_back();
                     mEvents.push_back(MotionEvent::obtain(last->getDownTime(),last->getEventTime(),

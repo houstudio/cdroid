@@ -11,9 +11,10 @@ namespace cdroid{
 // Some input devices do not send ACTION_MOVE events in the case where a pointer has
 // stopped.  We need to detect this case so that we can accurately predict the
 // velocity after the pointer starts moving again.
-
-static const nsecs_t ASSUME_POINTER_STOPPED_TIME = 40*1000;/*Millisecond*/
-
+static const nsecs_t NANOS_PER_MS = 1000000;
+static const nsecs_t ASSUME_POINTER_STOPPED_TIME = 40*NANOS_PER_MS;/*Millisecond*/
+//#define DEBUG_VELOCITY 1
+//#define DEBUG_STRATEGY 1
 static float vectorDot(const float* a, const float* b, uint32_t m) {
     float r = 0;
     for (size_t i = 0; i < m; i++) {
@@ -228,8 +229,7 @@ void VelocityTrackerImpl::addMovement(nsecs_t eventTime, BitSet32 idBits, const 
     if ((mCurrentPointerIdBits.value & idBits.value)
             && eventTime >= mLastEventTime + ASSUME_POINTER_STOPPED_TIME) {
 #if DEBUG_VELOCITY
-        LOGD("VelocityTracker: stopped for %0.3f ms, clearing state. eventTime=%lld mLastEventTime=%lld",
-                (eventTime - mLastEventTime) * 0.001f,eventTime,mLastEventTime);
+        LOGD("VelocityTracker: stopped for %0.3f ms, clearing state.",(eventTime - mLastEventTime) * 0.000001f);
 #endif
         // We have not received any movements for too long.  Assume that all pointers
         // have stopped.
@@ -316,7 +316,7 @@ void VelocityTrackerImpl::addMovement(const MotionEvent& event) {
     size_t historySize = event.getHistorySize();
     memset(positions,0,sizeof(positions));
     for (size_t h = 0; h < historySize; h++) {
-        eventTime = event.getHistoricalEventTime(h);
+        eventTime = event.getHistoricalEventTimeNano(h);
         for (size_t i = 0; i < pointerCount; i++) {
             uint32_t index = pointerIndex[i];
             positions[index].x = event.getHistoricalRawX(i, h);
@@ -325,7 +325,7 @@ void VelocityTrackerImpl::addMovement(const MotionEvent& event) {
         addMovement(eventTime, idBits, positions);
     }
 
-    eventTime = event.getEventTime();
+    eventTime = event.getEventTimeNano();
     for (size_t i = 0; i < pointerCount; i++) {
         uint32_t index = pointerIndex[i];
         positions[index].x = event.getRawX(i);
@@ -419,7 +419,7 @@ void IntegratingVelocityTrackerStrategy::updateState(State& state,
         return;
     }
 
-    float dt = (eventTime - state.updateTime) *0.000001f;//0.000000001f;
+    float dt = (eventTime - state.updateTime) *0.000000001f;
     state.updateTime = eventTime;
 
     float xvel = (xpos - state.xpos) / dt;
@@ -508,7 +508,7 @@ static float kineticEnergyToVelocity(float work) {
 static float calculateImpulseVelocity(const nsecs_t* t, const float* x, size_t count) {
     // The input should be in reversed time order (most recent sample at index i=0)
     // t[i] is in nanoseconds, but due to FP arithmetic, convert to seconds inside this function
-    static constexpr float SECONDS_PER_MICRO = 1E-6;//android use nanosecond used value 1E-9;
+    static constexpr float SECONDS_PER_NANO = 1E-9;
 
     if (count < 2) {
         return 0; // if 0 or 1 points, velocity is zero
@@ -521,7 +521,7 @@ static float calculateImpulseVelocity(const nsecs_t* t, const float* x, size_t c
             LOGE("Events have identical time stamps t=%lld, setting velocity = 0", t[0]);
             return 0;
         }
-        return (x[1] - x[0]) / (SECONDS_PER_MICRO * (t[1] - t[0]));
+        return (x[1] - x[0]) / (SECONDS_PER_NANO * (t[1] - t[0]));
     }
     // Guaranteed to have at least 3 points here
     float work = 0;
@@ -531,7 +531,7 @@ static float calculateImpulseVelocity(const nsecs_t* t, const float* x, size_t c
             continue;
         }
         float vprev = kineticEnergyToVelocity(work); // v[i-1]
-        float vcurr = (x[i] - x[i-1]) / (SECONDS_PER_MICRO * (t[i] - t[i-1])); // v[i]
+        float vcurr = (x[i] - x[i-1]) / (SECONDS_PER_NANO * (t[i] - t[i-1])); // v[i]
         work += (vcurr - vprev) * fabsf(vcurr);
         if (i == count - 1) {
             work *= 0.5; // initial condition, case 2) above
@@ -809,7 +809,7 @@ bool LeastSquaresVelocityTrackerStrategy::getEstimator(uint32_t id,
         x[m] = position.x;
         y[m] = position.y;
         w[m] = chooseWeight(index);
-        time[m] = -age * 0.000001f;//android nanosecond use 0.000000001f;
+        time[m] = -age * 0.000000001f;
         index = (index == 0 ? HISTORY_SIZE : index) - 1;
     } while (++m < HISTORY_SIZE);
 
@@ -874,7 +874,7 @@ float LeastSquaresVelocityTrackerStrategy::chooseWeight(uint32_t index) const {
 
         uint32_t nextIndex = (index + 1) % HISTORY_SIZE;
         float deltaMillis = (mMovements[nextIndex].eventTime- mMovements[index].eventTime)
-                *0.001f;/*cdroid use us android usens 0.000001f*/;
+                *0.000001f;
         if (deltaMillis < 0 ) return 0.5f;
         if (deltaMillis < 10) return 0.5f + deltaMillis * 0.05;
         return 1.0f;
@@ -898,7 +898,7 @@ float LeastSquaresVelocityTrackerStrategy::chooseWeight(uint32_t index) const {
         // Weight points based on their age, weighing older points less.
         // age   0ms: 1.0  , age  50ms: 1.0 ,  age 100ms: 0.5
         float ageMillis = (mMovements[mIndex].eventTime - mMovements[index].eventTime)
-                *0.001f;/*android use ns 0.000001f*/;
+                *0.000001f;
         if (ageMillis < 50) {
             return 1.0f;
         }

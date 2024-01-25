@@ -501,7 +501,7 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
             VelocityTracker* velocityTracker = mVelocityTracker;
             velocityTracker->computeCurrentVelocity(1000, mMaximumVelocity);
             const int initialVelocity = (int) velocityTracker->getYVelocity(mActivePointerId);
-            LOGV("initialVelocity=%d/%d",initialVelocity,mMinimumVelocity);
+            LOGV("initialVelocity=%d/%d/%d",initialVelocity,mMinimumVelocity,mMaximumVelocity);
             if ((std::abs(initialVelocity) > mMinimumVelocity)) {
                 flingWithNestedDispatch(-initialVelocity);
             } else if (mScroller->springBack(mScrollX, mScrollY, 0, 0, 0,getScrollRange())) {

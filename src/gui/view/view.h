@@ -56,6 +56,7 @@ public:
     constexpr static int DEBUG_CORNERS_COLOR    = 0xFF3f7fff;
     constexpr static int DEBUG_CORNERS_SIZE_DIP = 8;
     constexpr static int NO_ID =-1;
+    constexpr static int LAST_APP_AUTOFILL_ID = INT_MAX/2;
     enum TextAlignment{
         TEXT_ALIGNMENT_INHERIT   = 0 ,
         TEXT_ALIGNMENT_GRAVITY   = 1 ,

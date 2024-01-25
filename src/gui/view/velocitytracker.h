@@ -137,7 +137,7 @@ private:
     // Sample horizon.
     // We don't use too much history by default since we want to react to quick
     // changes in direction.
-    static const nsecs_t HORIZON = 100000; //Millisecond
+    static const nsecs_t HORIZON = 100*1000000; //100ms
     // Number of samples to keep.
     static const uint32_t HISTORY_SIZE = 20;
     struct Movement {
@@ -172,7 +172,7 @@ private:
     // Sample horizon.
     // We don't use too much history by default since we want to react to quick
     // changes in direction.
-    static constexpr nsecs_t HORIZON = 100000; //Millisecond
+    static constexpr nsecs_t HORIZON = 100*1000000; //ms
 
     // Number of samples to keep.
     static constexpr size_t HISTORY_SIZE = 20;

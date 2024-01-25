@@ -1460,8 +1460,6 @@ void View::dispatchSaveInstanceState(SparseArray<Parcelable*>& container){
 }
 
 Parcelable* View::onSaveInstanceState(){
-#if 0
-#define LAST_APP_AUTOFILL_ID 100000
     mPrivateFlags |= PFLAG_SAVE_STATE_CALLED;
     if (mStartActivityRequestWho.size() || isAutofilled()
             || mAutofillViewId > LAST_APP_AUTOFILL_ID) {
@@ -1485,8 +1483,6 @@ Parcelable* View::onSaveInstanceState(){
         return state;
     }
     return &BaseSavedState::EMPTY_STATE;
-#endif
-    return nullptr;//Parcelable();
 }
 
 void View::restoreHierarchyState(SparseArray<Parcelable*>& container){
@@ -1495,7 +1491,6 @@ void View::restoreHierarchyState(SparseArray<Parcelable*>& container){
 
 void View::dispatchRestoreInstanceState(SparseArray<Parcelable*>& container){
     if (mID != NO_ID) {
-#if 0
         auto state= container.get(mID);
         if (state != nullptr) {
             LOGD("View %p:%d Restoreing #",this,mID,state);
@@ -1505,7 +1500,6 @@ void View::dispatchRestoreInstanceState(SparseArray<Parcelable*>& container){
                 FATAL("Derived class did not call super.onRestoreInstanceState()");
             }
         }
-#endif
     }
 }
 

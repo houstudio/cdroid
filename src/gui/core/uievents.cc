@@ -572,6 +572,7 @@ void MotionEvent::initialize(
     mXPrecision = xPrecision;
     mYPrecision = yPrecision;
     mDownTime = downTime;
+	mEventTime= eventTime;
     mPointerProperties.clear();
 
     mSampleEventTimes.clear();
@@ -597,6 +598,7 @@ void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
     mXPrecision = other->mXPrecision;
     mYPrecision = other->mYPrecision;
     mDownTime = other->mDownTime;
+	mEventTime= other->mEventTime;
     mPointerProperties = other->mPointerProperties;
 
     if (keepHistory) {
@@ -731,7 +733,17 @@ nsecs_t MotionEvent::getHistoricalEventTime(size_t historyPos) const{
     }else{
         const size_t historySize = getHistorySize();
         if(historyPos<0||historyPos>=historySize)return 0;
-         return mSampleEventTimes[historyPos];
+        return mSampleEventTimes[historyPos];
+    }
+}
+
+nsecs_t MotionEvent::getHistoricalEventTimeNano(size_t historyPos) const{
+    if(historyPos==HISTORY_CURRENT){
+         return getEventTimeNano();
+    }else{
+        const size_t historySize = getHistorySize();
+        if(historyPos<0||historyPos>=historySize)return 0;
+        return mSampleEventTimes[historyPos]*NS_PER_MS;
     }
 }
 

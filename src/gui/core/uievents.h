@@ -74,10 +74,11 @@ struct PointerProperties {
 
 class InputEvent{
 protected:
+    static constexpr long NS_PER_MS = 1000000;
     int mDeviceId;
     int mSource;
     long mSeq;
-    nsecs_t mEventTime;//SystemClock#uptimeMicros
+    nsecs_t mEventTime;//SystemClock#uptimeMillis
 public:   
     enum{
         EVENT_TYPE_KEY = 1,
@@ -94,7 +95,8 @@ public:
     bool isFromSource(int s)const;
     int getDeviceId(){return mDeviceId;}
     long getSequenceNumber()const{return mSeq;}
-    virtual nsecs_t getEventTime() const { return mEventTime; }
+    virtual nsecs_t getEventTimeNano() const { return mEventTime*NS_PER_MS; }
+    virtual nsecs_t getEventTime()const{ return mEventTime;}
     virtual void recycle();/*only obtained event can call recycle*/
 };
 
@@ -106,7 +108,7 @@ private:
     int32_t mScanCode;
     int32_t mMetaState;
     int32_t mRepeatCount;
-    nsecs_t mDownTime;//SystemClock#uptimeNanos
+    nsecs_t mDownTime;//SystemClock#uptimeMillis
     static int metaStateFilterDirectionalModifiers(int metaState,int modifiers, int basic, int left, int right);
     static KeyEvent*obtain();
 public:
@@ -419,6 +421,7 @@ public:
     inline float getYPrecision() const { return mYPrecision; }
     inline size_t getHistorySize() const { return mSampleEventTimes.size() - 1; }
     nsecs_t getHistoricalEventTime(size_t historicalIndex) const;
+    nsecs_t getHistoricalEventTimeNano(size_t historicalIndex) const;
     void getPointerCoords(int pointerIndex, PointerCoords& outPointerCoords){
         getHistoricalRawPointerCoords(pointerIndex,HISTORY_CURRENT,outPointerCoords);
     }
