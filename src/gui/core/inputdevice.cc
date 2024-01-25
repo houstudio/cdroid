@@ -259,8 +259,7 @@ int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
         mEvent.initialize(getId(),getSources(),(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
               keycode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeMicros()/*eventtime*/);
         LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keycode, mEvent.getLabel(),value,flags);
-        //if(listener)listener(mEvent); 
-		mEvents.push_back(KeyEvent::obtain(mEvent));
+        mEvents.push_back(KeyEvent::obtain(mEvent));
         break;
     case EV_SYN:
         LOGV("fd[%d].SYN value=%d code=%d",getId(),value,code);
@@ -394,7 +393,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             mEvent.setActionButton(MotionEvent::BUTTON_PRIMARY);
             mEvent.setAction(value ? MotionEvent::ACTION_DOWN : MotionEvent::ACTION_UP);
             if(value){
-                mMoveTime = mDownTime = tv.tv_sec * 1000LL + tv.tv_usec/1000;
+                mMoveTime = mDownTime = tv.tv_sec * 1000 + tv.tv_usec/1000;
                 mEvent.setButtonState(MotionEvent::BUTTON_PRIMARY);
             }else{
                 mMoveTime = tv.tv_sec * 1000 + tv.tv_usec/1000;
@@ -441,8 +440,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case SYN_REPORT:
             mMoveTime =(tv.tv_sec * 1000 + tv.tv_usec/1000);
             mEvent.initialize(getId(),getSources(),mEvent.getAction(),mEvent.getActionButton()
-			    , 0/*flags*/ , 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,0,0/*x/yOffset*/
-				, 0 ,0 /*x/yPrecision*/ , mDownTime , mMoveTime , 0 , nullptr , nullptr);
+                , 0/*flags*/ , 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,0,0/*x/yOffset*/
+                , 0 ,0 /*x/yPrecision*/ , mDownTime , mMoveTime , 0 , nullptr , nullptr);
             for(auto p:mPointMAP){
                 mEvent.addSample(mMoveTime,p.second.prop,p.second.coord);
             }
