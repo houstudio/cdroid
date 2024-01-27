@@ -1902,7 +1902,7 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     // Only use the preordered list if not HW accelerated, since the HW pipeline will do the
     // draw reordering internally
     std::vector<View*> preorderedList=buildOrderedChildList();
-    const bool customOrder = preorderedList.size() && isChildrenDrawingOrderEnabled();
+    const bool customOrder = preorderedList.empty() && isChildrenDrawingOrderEnabled();
     for (int i = 0; i < childrenCount; i++) {
         while (transientIndex >= 0 && mTransientIndices.at(transientIndex) == i) {
             View* transientChild = mTransientViews.at(transientIndex);
