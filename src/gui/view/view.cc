@@ -1369,6 +1369,15 @@ void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
 }
 
 void View::dispatchDetachedFromWindow(){
+    if(mAttachInfo!=nullptr){
+        const int vis = mAttachInfo->mWindowVisibility;
+        if(vis !=GONE){
+            onWindowVisibilityChanged(GONE);
+            if(isShown()){
+                onVisibilityAggregated(false);
+            }
+        }
+    }
     onDetachedFromWindow();
     onDetachedFromWindowInternal();
     InputMethodManager&imm=InputMethodManager::getInstance();
@@ -3785,7 +3794,7 @@ View& View::setBackground(Drawable*background){
         if(background->isStateful())
             background->setState(getDrawableState());
         if(isAttachedToWindow())
-            background->setVisible(getVisibility()==VISIBLE,false);
+            background->setVisible((getWindowVisibility() == VISIBLE) && isShown(),false);
         applyBackgroundTint();
         background->setCallback(this);
         if( (mPrivateFlags & PFLAG_SKIP_DRAW)!=0 ){
@@ -3921,7 +3930,7 @@ View& View::setForeground(Drawable* foreground){
         }
         applyForegroundTint();
         if (isAttachedToWindow()) {
-            foreground->setVisible(isShown(), false);
+            foreground->setVisible((getWindowVisibility() == VISIBLE) && isShown(), false);
         }
             // Set callback last, since the view may still be initializing.
         foreground->setCallback(this);
@@ -4196,7 +4205,7 @@ View& View::setFlags(int flags,int mask) {
             // or the parent is not a ViewGroup (and therefore assumed to be a ViewRoot),
             // discounting clipping or overlapping. This makes it a good place
             // to change animation states.
-            if (mParent  && mParent->isShown()) {
+            if (mParent  && (getWindowVisibility() == VISIBLE) && mParent->isShown()) {
                 dispatchVisibilityAggregated(newVisibility == VISIBLE);
             }
             //notifySubtreeAccessibilityStateChangedIfNeeded();
