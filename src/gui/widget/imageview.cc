@@ -534,7 +534,6 @@ void ImageView::setImageResource(const std::string& resId) {
     const int oldWidth = mDrawableWidth;
     const int oldHeight = mDrawableHeight;
 
-    if(mResource==resId) return;
     updateDrawable(nullptr);
     mResource = resId;
     resolveUri();
