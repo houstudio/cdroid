@@ -42,6 +42,10 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
 }
 
 AnimatedImageDrawable::~AnimatedImageDrawable(){
+    mStarting = false;
+    if(mRunnable)
+        unscheduleSelf(mRunnable);
+    mRunnable = nullptr;
     if(mImageHandler){
         GFXDestroySurface(mImageHandler);
         mImageHandler = nullptr;
@@ -94,13 +98,14 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
     const long nextDelay = mDecoder->getFrameDuration(mCurrentFrame);
     // a value <= 0 indicates that the drawable is stopped or that renderThread
     // will manage the animation
-    LOGV("%p draw Frame %d/%d repeat=%d/%d nextDelay=%d",this,mCurrentFrame,
-          mAnimatedImageState->mFrameCount,mRepeated,mRepeatCount,nextDelay);
-    if(mStarting && ((mRepeated<mRepeatCount) || (mRepeatCount==REPEAT_INFINITE))){
+    LOGV("%p draw Frame %d/%d started=%d repeat=%d/%d nextDelay=%d",this,mCurrentFrame,
+          mAnimatedImageState->mFrameCount,mStarting,mRepeated,mRepeatCount,nextDelay);
+    if(mStarting && ((mRepeated<mRepeatCount) || (mRepeatCount<0))){
         if (nextDelay > 0) {
             if (mRunnable == nullptr) {
                 mRunnable = [this](){
-                    invalidateSelf();
+                    if(mStarting)
+                        invalidateSelf();
                     mCurrentFrame=(mCurrentFrame+1)%mAnimatedImageState->mFrameCount;
                     if(mCurrentFrame==mAnimatedImageState->mFrameCount-1){
                         mRepeated++;
@@ -228,7 +233,6 @@ AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(const AnimatedImag
 }
 
 AnimatedImageDrawable::AnimatedImageState::~AnimatedImageState(){
-    LOGD("AnimatedImageState~AnimatedImageState");
     delete mDecoder;
 }
 

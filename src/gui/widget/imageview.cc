@@ -709,7 +709,7 @@ void ImageView::updateDrawable(Drawable*d){
             d->setState(getDrawableState());
         }
         if (!sameDrawable ) {
-            const bool visible = getVisibility() == VISIBLE;
+            const bool visible = isAttachedToWindow() && (getWindowVisibility() == VISIBLE) && isShown();
             d->setVisible(visible, true);
         }
         d->setLevel(mLevel);

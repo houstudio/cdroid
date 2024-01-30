@@ -3556,7 +3556,7 @@ void RecyclerView::RecycledViewPool::clear() {
         ScrapData* data = mScrap.valueAt(i);
         std::vector<ViewHolder*>& vhs = data->mScrapHeap;
         for(int j=0;j<vhs.size();j++)delete vhs.at(j);
-		vhs.clear();
+            vhs.clear();
     }
 }
 
