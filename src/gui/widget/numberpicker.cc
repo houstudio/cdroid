@@ -1377,11 +1377,12 @@ void NumberPicker::ensureCachedScrollSelectorValue(int selectorIndex) {
     } else {
         if (mDisplayedValues.size()){
             const int displayedValueIndex = selectorIndex - mMinValue;
-            if(displayedValueIndex >=mDisplayedValues.size()){
+            if(cache.size()&&(displayedValueIndex >=mDisplayedValues.size())){
                 cache.erase(itr);
                 return;
             }
-            scrollSelectorValue = mDisplayedValues[displayedValueIndex];
+            if((displayedValueIndex>=0)&&(displayedValueIndex<mDisplayedValues.size()))
+                scrollSelectorValue = mDisplayedValues[displayedValueIndex];
         } else {
             scrollSelectorValue = formatNumber(selectorIndex);
         }
