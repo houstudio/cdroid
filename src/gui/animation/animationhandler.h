@@ -2,6 +2,7 @@
 #define __ANIMATION_HANDLER__
 #include <unordered_map>
 #include <core/looper.h>
+#include <core/neverdestroyed.h>
 #include <view/choreographer.h>
 
 namespace cdroid{
@@ -33,13 +34,13 @@ private:
     bool mListDirty;
     AnimationFrameCallbackProvider* mProvider;
     Choreographer::FrameCallback mFrameCallback;
-    static AnimationHandler*mInst;
     std::list<AnimationFrameCallback*> mAnimationCallbacks;
     std::list<AnimationFrameCallback*> mCommitCallbacks;
     std::unordered_map<AnimationFrameCallback* ,long>mDelayedCallbackStartTime;
+    friend NeverDestroyed<AnimationHandler>;
+    AnimationHandler();
 private:
     AnimationFrameCallbackProvider* getProvider();
-    AnimationHandler();
     ~AnimationHandler();
     void doFrame(long);
     void doAnimationFrame(long frameTime);

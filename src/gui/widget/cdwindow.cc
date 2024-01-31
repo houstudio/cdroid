@@ -64,7 +64,7 @@ void Window::initWindow(){
     mInLayout= false;
     mPendingRgn = Cairo::Region::create();
     setBackground(nullptr);
-  /*mLayoutRequested = false;
+    /*mLayoutRequested = false;
     mTraversalScheduled = false;
     mTraversalRunnable = [this](){
         LOGD("mTraversalRunnable.run");

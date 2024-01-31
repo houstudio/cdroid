@@ -31,7 +31,6 @@ private:
     std::string mFPSText;
     HANDLE mPrimarySurface;
     class Canvas*mPrimaryContext;
-    //Cairo::RefPtr<Cairo::Region>mInvalidateRgn;
     static GraphDevice*mInst;
     GraphDevice(int format=-1);
     void trackFPS(Canvas&);

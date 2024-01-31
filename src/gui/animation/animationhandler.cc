@@ -25,7 +25,6 @@ void AnimationHandler::MyFrameCallbackProvider::setFrameDelay(long delay) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-AnimationHandler*AnimationHandler::mInst=nullptr;
 
 AnimationHandler::AnimationHandler(){
     mProvider  = nullptr;
@@ -48,6 +47,7 @@ int AnimationHandler::handleEvents(){
 }
 
 void AnimationHandler::doFrame(long){
+    LOGD("not used,frame refresh callback");
 }
 
 void AnimationHandler::doAnimationFrame(long frameTime){
@@ -100,11 +100,8 @@ void AnimationHandler::cleanUpList(){
     }
 }
 
+static NeverDestroyed<AnimationHandler>mInst;
 AnimationHandler&AnimationHandler::getInstance(){
-    if(mInst==nullptr){
-        mInst=new AnimationHandler();
-        Looper::getDefault()->addEventHandler(mInst);
-    }
     return *mInst;
 }
 
@@ -161,7 +158,7 @@ int AnimationHandler::getCallbackSize()const{
 }
 
 int AnimationHandler::getAnimationCount(){
-    return mInst?mInst->getCallbackSize():0;
+    return mInst->getCallbackSize();
 }    
 
 void AnimationHandler::setFrameDelay(long delay){

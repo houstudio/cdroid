@@ -25,5 +25,5 @@ TEST_F(VELOCITY,test1){
    }
    vc->computeCurrentVelocity(1000,8000.0f);
    int velocity=vc->getYVelocity(0);
-   printf("=====velocity=%d\r\n",velocity);
+   printf("velocity=%d\r\n",velocity);
 }

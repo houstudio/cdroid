@@ -136,7 +136,6 @@ private:
     void rebuildEpollLocked();
     void scheduleEpollRebuildLocked();
     void doIdleHandlers();
-    void removeEventHandlers();
     static void initTLSKey();
     static void threadDestructor(void*);
 protected:

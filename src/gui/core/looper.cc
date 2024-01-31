@@ -320,9 +320,11 @@ int Looper::pollInner(int timeoutMillis) {
         EventHandler*es=(*it);
         if(es&&((es->mFlags&1)==0)&&(es->checkEvents()>0)){ 
             es->handleEvents();
+	    if(es->mFlags&1) it = mEventHandlers.erase(it);
+	    if((es->mFlags&3)==3) delete es;//EventHandler owned by looper must be freed here
         }
     }
-    removeEventHandlers();
+    //removeEventHandlers();
     long elapsedMillis = SystemClock::uptimeMillis()-t1;
 
     // Acquire lock.
@@ -377,7 +379,7 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
         } while (result == POLL_CALLBACK);
         return result;
     } else {
-        nsecs_t endTime =SystemClock::uptimeMillis()+timeoutMillis;
+        nsecs_t endTime = SystemClock::uptimeMillis() + timeoutMillis;
 
         for (;;) {
             int result = pollOnce(timeoutMillis, outFd, outEvents, outData);
@@ -619,8 +621,8 @@ void Looper::removeHandler(MessageHandler*handler){
     for(auto it=mHandlers.begin();it!=mHandlers.end();it++){
         if((*it)==handler){
             handler->mFlags|=1;
-			if((handler->mFlags&2)==0)//handler is not owned by looper,erase at once
-			   mHandlers.erase(it);
+	    if((handler->mFlags&2)==0)//handler is not owned by looper,erase at once
+                mHandlers.erase(it);
             break;
         }
     }
@@ -628,25 +630,16 @@ void Looper::removeHandler(MessageHandler*handler){
 
 void Looper::addEventHandler(const EventHandler*handler){
     mEventHandlers.insert(mEventHandlers.begin(),(EventHandler*)handler);
+    LOGE_IF(mEventHandlers.size()>32,"Too many eventhandlers %d",mEventHandlers.size());
 }
 
 void Looper::removeEventHandler(const EventHandler*handler){
     for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();it++){
         if((*it)==handler){
-            (*it)->mFlags |=1;
+            (*it)->mFlags |=1;//set removed flags
             if((handler->mFlags&2)==0)//handler is not owned by looper,erase at once
                 mEventHandlers.erase(it);
             break;
-        }
-    }
-}
-
-void Looper::removeEventHandlers(){
-    for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();it++){
-        const int flags = (*it)->mFlags;
-        if(flags&1){
-            delete (*it);
-            it = mEventHandlers.erase(it);
         }
     }
 }

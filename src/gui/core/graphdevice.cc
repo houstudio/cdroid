@@ -47,7 +47,6 @@ GraphDevice::GraphDevice(int fmt){
     
     mLastComposeTime = SystemClock::uptimeMillis();
 
-    //mInvalidateRgn = Region::create();
     mComposing = 0;
     mQuitFlag  = false;
     mShowFPS = false;
