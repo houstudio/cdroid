@@ -75,9 +75,8 @@ void InputEventSource::onDeviceChanged(const INPUTEVENT*es){
     }
 }
 
+static NeverDestroyed<InputEventSource>mInst;
 InputEventSource& InputEventSource::getInstance(){
-    static InputEventSource* mInst = nullptr;
-    if(mInst == nullptr)mInst = new InputEventSource();
     return *mInst;
 }
 

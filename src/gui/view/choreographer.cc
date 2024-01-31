@@ -98,7 +98,6 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-Choreographer*Choreographer::mInst=nullptr;
 long Choreographer::sFrameDelay = DEFAULT_FRAME_DELAY;
 
 Choreographer::Choreographer(){
@@ -110,9 +109,8 @@ Choreographer::Choreographer(){
     mCallbackQueues[i]=new CallbackQueue;
 }
 
+static NeverDestroyed<Choreographer>mInst;
 Choreographer&Choreographer::getInstance(){
-    if(mInst==nullptr)
-    mInst=new Choreographer();
     return *mInst;
 }   
 

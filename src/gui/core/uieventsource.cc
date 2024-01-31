@@ -9,6 +9,7 @@ namespace cdroid{
 UIEventSource::UIEventSource(View*v,std::function<void()>r){
     mAttachedView = dynamic_cast<ViewGroup*>(v);
     mLayoutRunner = r;
+    setOwned(true);
 }
 
 UIEventSource::~UIEventSource(){
@@ -36,7 +37,7 @@ void UIEventSource::handleCompose(){
 int UIEventSource::handleRunnables(){
     int count=0;
     GraphDevice::getInstance().lock();
-    if ( (mRemoved==false) && mAttachedView && mAttachedView->isAttachedToWindow()){
+    if ( ((mFlags&1)==0) && mAttachedView && mAttachedView->isAttachedToWindow()){
         if(mAttachedView->isLayoutRequested())
             mLayoutRunner();
         mRunnables.remove_if([](const RUNNER&r)->bool{
@@ -44,14 +45,14 @@ int UIEventSource::handleRunnables(){
         });
         const nsecs_t nowms = SystemClock::uptimeMillis();
         //maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
-        while(mRunnables.size() && (mRemoved==false)){
+        while(mRunnables.size() && ((mFlags&1)==0)){
             RUNNER runner = mRunnables.front();
             if(runner.time > nowms)break;
             mRunnables.pop_front();
             if(runner.run)runner.run();
-			count++;
+            count++;
         }
-        if((mRemoved==false) && mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
+        if(((mFlags&1)==0) && mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
             ((Window*)mAttachedView)->draw();
             GraphDevice::getInstance().flip();
         }

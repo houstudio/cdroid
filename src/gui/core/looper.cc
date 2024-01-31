@@ -318,7 +318,7 @@ int Looper::pollInner(int timeoutMillis) {
     }
     for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();it++){
         EventHandler*es=(*it);
-        if(es&&(es->mRemoved==0)&&(es->checkEvents()>0)){ 
+        if(es&&((es->mFlags&1)==0)&&(es->checkEvents()>0)){ 
             es->handleEvents();
         }
     }
@@ -396,9 +396,10 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
 
 void Looper::doIdleHandlers(){
     for(auto it=mHandlers.begin();it!=mHandlers.end();it++){
-        if((*it)->mFlags==1){
+        const int flags = (*it)->mFlags;
+        if(flags&1){
             LOGD("delete Handler %p",(*it));
-            delete *it;
+            if(flags&2)delete *it;
             it= mHandlers.erase(it);
             continue;
         }
@@ -617,7 +618,9 @@ void Looper::addHandler(MessageHandler*handler){
 void Looper::removeHandler(MessageHandler*handler){
     for(auto it=mHandlers.begin();it!=mHandlers.end();it++){
         if((*it)==handler){
-            handler->mFlags=1;
+            handler->mFlags|=1;
+			if((handler->mFlags&2)==0)//handler is not owned by looper,erase at once
+			   mHandlers.erase(it);
             break;
         }
     }
@@ -630,19 +633,22 @@ void Looper::addEventHandler(const EventHandler*handler){
 void Looper::removeEventHandler(const EventHandler*handler){
     for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();it++){
         if((*it)==handler){
-            (*it)->mRemoved =true;
+            (*it)->mFlags |=1;
+            if((handler->mFlags&2)==0)//handler is not owned by looper,erase at once
+                mEventHandlers.erase(it);
             break;
         }
     }
 }
 
 void Looper::removeEventHandlers(){
-     for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();it++){
-          if((*it)->mRemoved){
-              delete (*it);
-              it = mEventHandlers.erase(it);
-          }
-      }
+    for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();it++){
+        const int flags = (*it)->mFlags;
+        if(flags&1){
+            delete (*it);
+            it = mEventHandlers.erase(it);
+        }
+    }
 }
 
 void Looper::removeMessages(const MessageHandler* handler) {
@@ -705,10 +711,24 @@ MessageHandler::MessageHandler(){
 MessageHandler::~MessageHandler(){
 }
 
+void MessageHandler::setOwned(bool looper){
+    if(looper)mFlags|=2;
+    else mFlags&=~2;
+}
+
 void MessageHandler::handleIdle(){
 }
 
+EventHandler::EventHandler(){
+    mFlags = 0;
+}
+
 EventHandler::~EventHandler(){
+}
+
+void EventHandler::setOwned(bool looper){
+    if(looper)mFlags|=2;
+    else mFlags&=~2;
 }
 
 }

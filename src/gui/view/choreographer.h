@@ -1,6 +1,7 @@
 #ifndef __CHOREO_GRAPHER_H__
 #define __CHOREO_GRAPHER_H__
 #include <core/looper.h>
+#include <core/neverdestroyed.h>
 #include <drawables/drawable.h>
 namespace cdroid{
 class Choreographer{
@@ -19,8 +20,8 @@ private:
     long mLastFrameTimeNanos;
     long mFrameIntervalNanos;
     class CallbackQueue* mCallbackQueues[CALLBACK_LAST];
-    static Choreographer *mInst;
     static long sFrameDelay;
+    friend NeverDestroyed<Choreographer>;
     Choreographer();
     void removeCallbacksInternal(int callbackType,const Runnable* action, void* token);
     void postCallbackDelayedInternal(int callbackType,void* action, void* token, long delayMillis);

@@ -7,6 +7,7 @@
 #include <core/looper.h>
 #include <core/uievents.h>
 #include <core/inputdevice.h>
+#include <core/neverdestroyed.h>
 #include <unordered_map>
 #include <mutex>
 
@@ -30,6 +31,7 @@ private:
     void doEventsConsume();
 protected:
     InputEventSource();
+    friend NeverDestroyed<InputEventSource>;
     void onDeviceChanged(const INPUTEVENT*es);
 public:
     static InputEventSource& getInstance();

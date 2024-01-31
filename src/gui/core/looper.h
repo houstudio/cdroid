@@ -56,6 +56,7 @@ private:
     friend class Looper;
 protected:
     MessageHandler();
+    void setOwned(bool looper);
     virtual ~MessageHandler();
 public:
     virtual void handleMessage(Message& message)=0;
@@ -64,10 +65,12 @@ public:
 
 class EventHandler{
 protected:
-    int mRemoved=0;
+    int mFlags;
     friend class Looper;
 protected:
+    EventHandler();
     virtual ~EventHandler();
+    void setOwned(bool looper);
 public:
     virtual int checkEvents()=0;
     virtual int handleEvents()=0;
