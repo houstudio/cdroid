@@ -504,7 +504,7 @@ void ImageView::invalidateDrawable(Drawable& dr){
 
 void ImageView::setImageDrawable(Drawable*drawable){
    if (mDrawable != drawable) {
-        //mResource = 0;
+        mResource.clear();
         //mUri = null;
 
         const int oldWidth = mDrawableWidth;
@@ -533,7 +533,7 @@ void ImageView::setImageResource(const std::string& resId) {
     // try to load the resource even if the resId hasn't changed.
     const int oldWidth = mDrawableWidth;
     const int oldHeight = mDrawableHeight;
-
+    if(mResource==resId)return;
     updateDrawable(nullptr);
     mResource = resId;
     resolveUri();

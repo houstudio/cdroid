@@ -1,4 +1,5 @@
 #include <view/view.h>
+#include <view/viewgroup.h>
 #include <view/viewpropertyanimator.h>
 #include "cdlog.h"
 
@@ -96,9 +97,9 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
         for (int i = 0; i < count; ++i) {
             NameValuesHolder& values = valueList.at(i);
             const float value = values.mFromValue + fraction * values.mDeltaValue;
-            if (values.mNameConstant == ALPHA) {
+            /*if (values.mNameConstant == ALPHA) {//must be setted in setValue
                 alphaHandled = mView->setAlphaNoInvalidation(value);
-            } else {
+            } else */{
                 setValue(values.mNameConstant, value);
             }
         }
@@ -449,6 +450,11 @@ void ViewPropertyAnimator::animatePropertyBy(int constantName, float startValue,
 void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
     View::TransformationInfo* info = mView->mTransformationInfo;
     RenderNode* node = mView->mRenderNode;
+    Matrix matrix;
+    Rect rect;
+    node->getMatrix(matrix);
+    rect.set(mView->getLeft(),mView->getTop(),mView->getWidth(),mView->getHeight());
+    matrix.transform_rectangle((Cairo::RectangleInt&)rect);
     switch (propertyConstant) {
     case TRANSLATION_X: node->setTranslationX(value);     break;
     case TRANSLATION_Y: node->setTranslationY(value);     break;
@@ -466,6 +472,9 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
              node->setAlpha(value);
              break;
     }
+    rect.inflate(1,1);
+    if(mView->mParent)
+        mView->mParent->invalidate(rect);
 }
 
 float ViewPropertyAnimator::getValue(int propertyConstant)const{

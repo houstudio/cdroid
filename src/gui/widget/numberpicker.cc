@@ -513,7 +513,6 @@ void NumberPicker::computeScroll() {
     } else {
         invalidate();
     }
-    
 }
 
 View& NumberPicker::setEnabled(bool enabled) {

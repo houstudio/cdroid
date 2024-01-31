@@ -104,9 +104,10 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
         if (nextDelay > 0) {
             if (mRunnable == nullptr) {
                 mRunnable = [this](){
-                    if(mStarting)
+                    if(mStarting && mAnimatedImageState->mFrameCount){
                         invalidateSelf();
-                    mCurrentFrame=(mCurrentFrame+1)%mAnimatedImageState->mFrameCount;
+                        mCurrentFrame=(mCurrentFrame+1)%mAnimatedImageState->mFrameCount;
+                    }
                     if(mCurrentFrame==mAnimatedImageState->mFrameCount-1){
                         mRepeated++;
                         mStarting = (mRepeated>=mRepeatCount);

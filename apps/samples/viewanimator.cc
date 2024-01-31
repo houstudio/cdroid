@@ -4,11 +4,11 @@ void onClick(View&v){
    ViewGroup*root=v.getParent()->getParent();
    View*hello=root->findViewById(0x12345);
    hello->setLayerType(View::LAYER_TYPE_SOFTWARE);
-   LOGD("click %d",v.getId());
+   LOGD("click %d tag=%p",v.getId(),v.getTag());
    int* tag=(int*)v.getTag();
    switch(v.getId()){
-   case 1:hello->animate().alpha(0.2f).setDuration(1000).start();break;
-   case 2:hello->animate().x(tag==0?-600:0).setDuration(1000).start();break;
+   case 1:hello->animate().alpha(tag==0?0.2f:1.f).setDuration(1000).start();break;
+   case 2:hello->animate().x((tag==0)?-600:0).setDuration(1000).start();break;
    }
    v.setTag((tag==0)?(void*)1:(void*)0);
 }
