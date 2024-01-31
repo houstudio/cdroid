@@ -1370,7 +1370,7 @@ void NumberPicker::ensureCachedScrollSelectorValue(int selectorIndex) {
     std::map<int,std::string>& cache = mSelectorIndexToStringCache;
     auto itr= cache.find(selectorIndex);
 
-    if (itr != cache.end()) return;
+    if (itr == cache.end()) return;
 
     if (selectorIndex < mMinValue || selectorIndex > mMaxValue) {
         scrollSelectorValue = "";
