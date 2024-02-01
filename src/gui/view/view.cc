@@ -381,11 +381,6 @@ View::~View(){
     mViewCount --;
     LOGD_IF(View::VIEW_DEBUG||(mViewCount>1000),"%p:%d mViewCount=%d",this,mID,mViewCount);
 
-    removeTapCallback();
-    removeLongPressCallback();
-    removePerformClickCallback();
-    removeUnsetPressCallback();
-
     delete mScrollCache;
     mScrollCache = nullptr;
     if(mParent)
@@ -1411,6 +1406,7 @@ void View::onDetachedFromWindowInternal() {
     mPrivateFlags3 &= ~PFLAG3_IS_LAID_OUT;
     mPrivateFlags3 &= ~PFLAG3_TEMPORARY_DETACH;
 
+    removeTapCallback();
     removeUnsetPressCallback();
     removeLongPressCallback();
     removePerformClickCallback();

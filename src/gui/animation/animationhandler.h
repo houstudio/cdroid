@@ -32,6 +32,7 @@ private:
         void setFrameDelay(long delay)override;
     };
     bool mListDirty;
+	bool mInLooper;
     AnimationFrameCallbackProvider* mProvider;
     Choreographer::FrameCallback mFrameCallback;
     std::list<AnimationFrameCallback*> mAnimationCallbacks;

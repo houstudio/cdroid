@@ -49,7 +49,7 @@ int UIEventSource::handleRunnables(){
             RUNNER runner = mRunnables.front();
             if(runner.time > nowms)break;
             mRunnables.pop_front();
-            if(runner.run)runner.run();
+            if(runner.run&&(runner.removed==false))runner.run();
             count++;
         }
         if(((mFlags&1)==0) && mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){

@@ -118,12 +118,6 @@ AbsListView::~AbsListView() {
         mVelocityTracker->recycle();
         mVelocityTracker = nullptr;
     }
-    if(mPerformClick)mPerformClick->removeCallbacks();
-    if(mPendingCheckForLongPress)mPendingCheckForLongPress->removeCallbacks();
-    if(mPendingCheckForTap)mPendingCheckForTap->removeCallbacks();
-    if(mPendingCheckForKeyLongPress)mPendingCheckForKeyLongPress->removeCallbacks();
-	if(mFlingRunnable)mFlingRunnable->removeCallbacks();
-	
     delete mSelector;
     delete mFastScroll;
     delete mRecycler;
@@ -1942,6 +1936,11 @@ void AbsListView::onAttachedToWindow() {
 void AbsListView::onDetachedFromWindow() {
     AdapterView::onDetachedFromWindow();
 
+    if(mPerformClick)mPerformClick->removeCallbacks();
+    if(mPendingCheckForLongPress)mPendingCheckForLongPress->removeCallbacks();
+    if(mPendingCheckForTap)mPendingCheckForTap->removeCallbacks();
+    if(mPendingCheckForKeyLongPress)mPendingCheckForKeyLongPress->removeCallbacks();
+    if(mFlingRunnable)mFlingRunnable->removeCallbacks();
     mIsDetaching = true;
 
     // Dismiss the popup in case onSaveInstanceState() was not invoked
