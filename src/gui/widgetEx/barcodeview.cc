@@ -148,7 +148,6 @@ int  BarcodeView::getBorderType()const{
 }
 
 int BarcodeView::getSymbology()const{
-    
     return mSymbol->symbology;
 }
 
@@ -158,7 +157,7 @@ void BarcodeView::setSymbology(int code){
     if(rc!=0){
 	mSymbology = code;
         mSymbol->symbology = code;
-        if(!mText.empty()) invalidate();
+        if(!mText.empty()) requestLayout();
     }
 }
 
@@ -206,7 +205,7 @@ bool BarcodeView::getSHRT()const{
 void  BarcodeView::setZoom(float zoom){
     mSymbol->scale = zoom;
     mZoom = zoom;
-    invalidate();
+    requestLayout();
 }
 
 float  BarcodeView::getZoom()const{

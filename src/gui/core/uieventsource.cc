@@ -40,9 +40,6 @@ int UIEventSource::handleRunnables(){
     if ( ((mFlags&1)==0) && mAttachedView && mAttachedView->isAttachedToWindow()){
         if(mAttachedView->isLayoutRequested())
             mLayoutRunner();
-        mRunnables.remove_if([](const RUNNER&r)->bool{
-            return r.removed;
-        });
         const nsecs_t nowms = SystemClock::uptimeMillis();
         //maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
         while(mRunnables.size() && ((mFlags&1)==0)){
