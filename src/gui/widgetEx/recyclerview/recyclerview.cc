@@ -41,7 +41,6 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
     //        .getSystemService(Context.ACCESSIBILITY_SERVICE);
     //setAccessibilityDelegateCompat(new RecyclerViewAccessibilityDelegate(this));
     // Create the layoutManager if specified.
-    bool nestedScrollingEnabled = true;
 
     int defStyleRes = 0;
     AttributeSet attrs(getContext(),getContext()->getPackageName());
@@ -59,10 +58,7 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
         initFastScroller(verticalThumbDrawable, verticalTrackDrawable, horizontalThumbDrawable, horizontalTrackDrawable,attrs);
     }
     createLayoutManager(getContext(), layoutManagerName, attrs);//, defStyle, defStyleRes);
-    /*if (Build.VERSION.SDK_INT >= 21) {
-        a = context.obtainStyledAttributes(attrs, NESTED_SCROLLING_ATTRS,defStyle, defStyleRes);
-        nestedScrollingEnabled = a.getBoolean(0, true);
-    }*/
+    bool nestedScrollingEnabled = attrs.getBoolean("nestedScrollingEnabled", true);
     setDescendantFocusability(descendantFocusability==-1?ViewGroup::FOCUS_AFTER_DESCENDANTS:ViewGroup::FOCUS_AFTER_DESCENDANTS);
 
     // Re-set whether nested scrolling is enabled so that it is set on all API levels
@@ -73,7 +69,7 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
    :ViewGroup(context, attrs){
 
     //TypedArray a = context.obtainStyledAttributes(attrs, CLIP_TO_PADDING_ATTR, defStyle, 0);
-    //mClipToPadding = a.getBoolean(0, true);
+    mClipToPadding = attrs.getBoolean("clipToPadding", true);
     initRecyclerView();
     initAdapterManager();
     initChildrenHelper();
@@ -115,6 +111,11 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
 }
 
 RecyclerView::~RecyclerView(){
+    while(!mItemDecorations.empty()){
+        ItemDecoration*id = mItemDecorations.back();
+        delete id;
+        mItemDecorations.pop_back();
+    }
     delete mState;
     delete mViewInfoStore;
     delete mViewFlinger;
@@ -764,8 +765,10 @@ void RecyclerView::removeItemDecoration(ItemDecoration* decor) {
         mLayout->assertNotInLayoutOrScroll("Cannot remove item decoration during a scroll  or layout");
     }
     auto it = std::find(mItemDecorations.begin(),mItemDecorations.end(),decor);
-    mItemDecorations.erase(it);//remove(decor);
-    if (mItemDecorations.empty()){//isEmpty()) {
+    if(it != mItemDecorations.end())
+        mItemDecorations.erase(it);
+    delete decor;
+    if (mItemDecorations.empty()){
         setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
     }
     markItemDecorInsetsDirty();
@@ -786,12 +789,12 @@ void RecyclerView::setOnScrollListener(const OnScrollListener& listener) {
 
 void  RecyclerView::addOnScrollListener(const OnScrollListener& listener) {
     auto it = std::find(mScrollListeners.begin(),mScrollListeners.end(),listener);
-    if(it==mScrollListeners.end())mScrollListeners.push_back(listener);
+    if(it == mScrollListeners.end())mScrollListeners.push_back(listener);
 }
 
 void RecyclerView::removeOnScrollListener(const OnScrollListener& listener) {
     auto it = std::find(mScrollListeners.begin(),mScrollListeners.end(),listener);
-    if(it!=mScrollListeners.end())mScrollListeners.erase(it);
+    if(it != mScrollListeners.end())mScrollListeners.erase(it);
 }
 
 void RecyclerView::clearOnScrollListeners() {

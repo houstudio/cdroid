@@ -64,6 +64,7 @@ RecyclerView::FastScroller::~FastScroller(){
     delete mVerticalTrackDrawable;
     delete mHorizontalThumbDrawable;
     delete mHorizontalTrackDrawable;
+    delete mShowHideAnimator;
 }
 
 void RecyclerView::FastScroller::attachToRecyclerView(RecyclerView* recyclerView) {
@@ -431,38 +432,5 @@ void RecyclerView::FastScroller::getHorizontalRange(int out[2]) {
     out[1] = mHorizontalRange[1] = mRecyclerViewWidth - mMargin;
 }
 
-/*private class AnimatorListener extends AnimatorListenerAdapter {
-    private bool mCanceled = false;
-    @Override
-    public void onAnimationEnd(Animator animation) {
-        // Cancel is always followed by a new directive, so don't update state.
-        if (mCanceled) {
-            mCanceled = false;
-            return;
-        }
-        if ((float) mShowHideAnimator.getAnimatedValue() == 0) {
-            mAnimationState = ANIMATION_STATE_OUT;
-            setState(STATE_HIDDEN);
-        } else {
-            mAnimationState = ANIMATION_STATE_IN;
-            requestRedraw();
-        }
-    }
-
-    @Override
-    public void onAnimationCancel(Animator animation) {
-        mCanceled = true;
-    }
-}
-
-private class AnimatorUpdater implements AnimatorUpdateListener {
-    @Override
-    public void onAnimationUpdate(ValueAnimator valueAnimator) {
-        int alpha = (int) (SCROLLBAR_FULL_OPAQUE * ((float) valueAnimator.getAnimatedValue()));
-        mVerticalThumbDrawable.setAlpha(alpha);
-        mVerticalTrackDrawable.setAlpha(alpha);
-        requestRedraw();
-    }
-}*/
 
 }/*endof namespace*/

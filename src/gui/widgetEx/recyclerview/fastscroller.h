@@ -26,8 +26,6 @@ private:
     static constexpr int HIDE_DURATION_MS = 500;
     static constexpr int SCROLLBAR_FULL_OPAQUE = 255;
 private:
-    //static constexpr int[] PRESSED_STATE_SET = new int[]{android.R.attr.state_pressed};
-    //static constexpr int[] EMPTY_STATE_SET = new int[]{};
     bool mCanceled;/*used by AniamtionUpdateListener*/
     int mScrollbarMinimumRange;
     int mMargin;
@@ -54,7 +52,7 @@ private:
     int mAnimationState = ANIMATION_STATE_OUT;
     int mVerticalRange[2];
     int mHorizontalRange[2];
-    ValueAnimator* mShowHideAnimator;// = ValueAnimator.ofFloat(0, 1);
+    ValueAnimator* mShowHideAnimator;
     Runnable mHideRunnable;
     RecyclerView::OnItemTouchListener mOnItemTouchListener;
     RecyclerView::OnScrollListener mOnScrollListener;
