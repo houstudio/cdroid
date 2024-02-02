@@ -42,10 +42,9 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
     //setAccessibilityDelegateCompat(new RecyclerViewAccessibilityDelegate(this));
     // Create the layoutManager if specified.
 
-    int defStyleRes = 0;
     AttributeSet attrs(getContext(),getContext()->getPackageName());
     std::string layoutManagerName = attrs.getString("layoutManager","LinearLayoutManager");
-    int descendantFocusability = attrs.getInt("descendantFocusability", -1);
+    const int descendantFocusability = attrs.getInt("descendantFocusability", -1);
     if (descendantFocusability == -1) {
         setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
     }
@@ -58,17 +57,15 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
         initFastScroller(verticalThumbDrawable, verticalTrackDrawable, horizontalThumbDrawable, horizontalTrackDrawable,attrs);
     }
     createLayoutManager(getContext(), layoutManagerName, attrs);//, defStyle, defStyleRes);
-    bool nestedScrollingEnabled = attrs.getBoolean("nestedScrollingEnabled", true);
     setDescendantFocusability(descendantFocusability==-1?ViewGroup::FOCUS_AFTER_DESCENDANTS:ViewGroup::FOCUS_AFTER_DESCENDANTS);
 
     // Re-set whether nested scrolling is enabled so that it is set on all API levels
-    setNestedScrollingEnabled(nestedScrollingEnabled);
+    setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled", true));
 }
 
 RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
    :ViewGroup(context, attrs){
 
-    //TypedArray a = context.obtainStyledAttributes(attrs, CLIP_TO_PADDING_ATTR, defStyle, 0);
     mClipToPadding = attrs.getBoolean("clipToPadding", true);
     initRecyclerView();
     initAdapterManager();
@@ -83,11 +80,9 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
     //        .getSystemService(Context.ACCESSIBILITY_SERVICE);
     //setAccessibilityDelegateCompat(new RecyclerViewAccessibilityDelegate(this));
     // Create the layoutManager if specified.
-    bool nestedScrollingEnabled = true;
 
-    int defStyleRes = 0;
     std::string layoutManagerName = attrs.getString("layoutManager");
-    int descendantFocusability = attrs.getInt("descendantFocusability", -1);
+    const int descendantFocusability = attrs.getInt("descendantFocusability", -1);
     if (descendantFocusability == -1) {
         setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
     }
@@ -100,14 +95,10 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
         initFastScroller(verticalThumbDrawable, verticalTrackDrawable, horizontalThumbDrawable, horizontalTrackDrawable,attrs);
     }
     createLayoutManager(context, layoutManagerName, attrs);//, defStyle, defStyleRes);
-    /*if (Build.VERSION.SDK_INT >= 21) {
-        a = context.obtainStyledAttributes(attrs, NESTED_SCROLLING_ATTRS,defStyle, defStyleRes);
-        nestedScrollingEnabled = a.getBoolean(0, true);
-    }*/
     setDescendantFocusability(descendantFocusability==-1?ViewGroup::FOCUS_AFTER_DESCENDANTS:ViewGroup::FOCUS_AFTER_DESCENDANTS);
 
     // Re-set whether nested scrolling is enabled so that it is set on all API levels
-    setNestedScrollingEnabled(nestedScrollingEnabled);
+    setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled", true));
 }
 
 RecyclerView::~RecyclerView(){
