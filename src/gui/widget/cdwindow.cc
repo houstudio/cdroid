@@ -21,7 +21,6 @@
 #include <uieventsource.h>
 #include <expat.h>
 #include <systemclock.h>
-#include <view/swipehelper.h>
 #include <fstream>
 
 using namespace Cairo;
@@ -504,7 +503,6 @@ void Window::close(){
 }
 
 bool Window::dispatchTouchEvent(MotionEvent& event){
-    //const bool rc=SwipeHelper::get(mContext).onTouchEvent(event);
     return ViewGroup::dispatchTouchEvent(event);
 }
 

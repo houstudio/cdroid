@@ -20,6 +20,7 @@ private:
     static constexpr bool _DEBUG=true;
 public:
     class SmoothScroller;
+    class FastScroller;
     class Adapter;
     class ViewHolder;
     class Recycler;

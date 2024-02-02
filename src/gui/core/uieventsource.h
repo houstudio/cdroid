@@ -10,7 +10,6 @@ class UIEventSource:public EventHandler{
 private:
     typedef struct{
         nsecs_t  time;
-        bool removed;
         Runnable run;
     }RUNNER;
     std::list<RUNNER>mRunnables;

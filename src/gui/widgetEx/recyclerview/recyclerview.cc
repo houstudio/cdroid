@@ -6,6 +6,7 @@
 #include <widgetEx/recyclerview/gridlayoutmanager.h>
 #include <widgetEx/recyclerview/staggeredgridlayoutmanager.h>
 #include <widgetEx/recyclerview/defaultitemanimator.h>
+#include <widgetEx/recyclerview/fastscroller.h>
 #include <view/focusfinder.h>
 #include <cassert>
 
@@ -6314,17 +6315,15 @@ int RecyclerView::getAdapterPositionFor(ViewHolder* viewHolder) {
 
 void RecyclerView::initFastScroller(StateListDrawable* verticalThumb, Drawable* verticalTrack,
    StateListDrawable* horizontalThumb,Drawable* horizontalTrack,const AttributeSet&atts) {
-#if 0
     if (verticalThumb == nullptr || verticalTrack == nullptr
             || horizontalThumb == nullptr || horizontalTrack == nullptr) {
         throw "Trying to set fast scroller without both required drawables.";
     }
     //Resources resources = getContext().getResources();
     new FastScroller(this, verticalThumb, verticalTrack, horizontalThumb, horizontalTrack,
-            atts.getDimensionPixelSize("default_thickness"),//R.dimen.fastscroll_default_thickness),
-            atts.getDimensionPixelSize("minimum_range"),//R.dimen.fastscroll_minimum_range),
+            atts.getDimensionPixelSize("default_thickness",4),//R.dimen.fastscroll_default_thickness),
+            atts.getDimensionPixelSize("minimum_range",32),//R.dimen.fastscroll_minimum_range),
             atts.getDimensionPixelOffset("margin"));//R.dimen.fastscroll_margin));
-#endif
 }
 
 //////////////////////////////RecyclerView::NestedScrollingChild//////////////////////////////////////

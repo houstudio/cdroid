@@ -46,7 +46,7 @@ int UIEventSource::handleRunnables(){
             RUNNER runner = mRunnables.front();
             if(runner.time > nowms)break;
             mRunnables.pop_front();
-            if(runner.run&&(runner.removed==false))runner.run();
+            if(runner.run)runner.run();
             count++;
         }
         if(((mFlags&1)==0) && mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
@@ -69,7 +69,6 @@ int UIEventSource::handleEvents(){
 //codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
 bool UIEventSource::postDelayed(Runnable& run,uint32_t delayedtime){
     RUNNER runner;
-    runner.removed = false;
     runner.time = SystemClock::uptimeMillis() + delayedtime;
     runner.run = run;
 	
@@ -94,8 +93,8 @@ bool UIEventSource::hasDelayedRunners()const{
 int UIEventSource::removeCallbacks(const Runnable& what){
     int count=0;
     for(auto it = mRunnables.begin();it != mRunnables.end();it++){
-        if((it->run == what)&&(it->removed == false)){
-            it->removed = true;
+        if(it->run == what){
+            it = mRunnables.erase(it);
             count++;
         }
     }
