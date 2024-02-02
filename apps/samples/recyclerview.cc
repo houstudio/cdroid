@@ -1,9 +1,10 @@
 #include <cdroid.h>
 #include <widgetEx/recyclerview/recyclerview.h>
 #include <widgetEx/recyclerview/divideritemdecoration.h>
-class MyAdapter:public RecyclerView::Adapter{//<MyAdapter.ViewHolder> {
+class MyAdapter:public RecyclerView::Adapter,RecyclerView::AdapterDataObserver{//<MyAdapter.ViewHolder> {
 private:
     std::vector<std::string> items;
+    RecyclerView*mRV;
 public:
     class ViewHolder:public RecyclerView::ViewHolder {
     public:
@@ -13,7 +14,9 @@ public:
         }
     };
 
-    MyAdapter(){}
+    MyAdapter(){
+        registerAdapterDataObserver(this);
+    }
     MyAdapter(const std::vector<std::string>& items) {
         this->items = items;
     }
@@ -44,6 +47,12 @@ public:
         return items.size();
     }
     long getItemId(int position)override {return position;}
+    void onItemRangeChanged(int positionStart, int itemCount, Object* payload)override{
+        LOGD("positionStart=%d itemCount=%d",positionStart,itemCount);
+    }
+    void onItemRangeInserted(int positionStart, int itemCount)override{
+        LOGD("positionStart=%d itemCount=%d",positionStart,itemCount);
+    }
 };
 int main(int argc,const char*argv[]){
     App app(argc,argv);
@@ -52,7 +61,7 @@ int main(int argc,const char*argv[]){
     RecyclerView*rv=new RecyclerView(800,600);
     MyAdapter*adapter=new MyAdapter();
     rv->getRecycledViewPool().setMaxRecycledViews(0,64);
-    adapter->setHasStableIds(true);
+    //adapter->setHasStableIds(true);
     rv->setAdapter(adapter);
     DividerItemDecoration* decoration = new DividerItemDecoration(&app, LinearLayout::VERTICAL);
 
@@ -68,5 +77,7 @@ int main(int argc,const char*argv[]){
     rv->addItemDecoration(decoration);
     w->addView(rv);
     w->requestLayout();
+    Runnable run([&](){adapter->add("1000");adapter->notifyItemInserted(100);});
+    w->postDelayed(run,4000);
     app.exec();
 }
