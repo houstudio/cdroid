@@ -318,6 +318,9 @@ void View::initView(){
     mPendingCheckForTap = nullptr;
     mUnsetPressedState = nullptr;;
     mPendingCheckForLongPress = nullptr;
+    mInputEventConsistencyVerifier = nullptr;
+    if(InputEventConsistencyVerifier::isInstrumentationEnabled())
+        mInputEventConsistencyVerifier = new InputEventConsistencyVerifier(nullptr,0);
 
     mRenderNode  = new  RenderNode();
     mScrollX  = mScrollY = 0;
@@ -396,6 +399,7 @@ View::~View(){
     delete mTooltipInfo;
     delete mScrollIndicatorDrawable;
     delete mDefaultFocusHighlight;
+    delete mInputEventConsistencyVerifier;
 
     delete mBackground;
     delete mBackgroundTint;
@@ -5713,12 +5717,16 @@ KeyEvent::DispatcherState* View::getKeyDispatcherState()const{
 }
 
 bool View::dispatchKeyEvent(KeyEvent&event){
+    if(mInputEventConsistencyVerifier)
+	mInputEventConsistencyVerifier->onKeyEvent(event,0);
     if (mListenerInfo && mListenerInfo->mOnKeyListener && (mViewFlags & ENABLED_MASK) == ENABLED
             && mListenerInfo->mOnKeyListener(*this, event.getKeyCode(), event)) {
         return true;
     }
     const bool result = event.dispatch(this,(mAttachInfo? &mAttachInfo->mKeyDispatchState : nullptr),this);
     LOGV("%s.%s=%d",event.getLabel(event.getKeyCode()),KeyEvent::actionToString(event.getAction()).c_str(),result);
+    if(mInputEventConsistencyVerifier && (result==false))
+        mInputEventConsistencyVerifier->onUnhandledEvent(event, 0);
     return result;
 }
 
@@ -5899,6 +5907,8 @@ bool View::dispatchGenericMotionEventInternal(MotionEvent& event){
         }
         break;
     }
+    if(mInputEventConsistencyVerifier)
+        mInputEventConsistencyVerifier->onUnhandledEvent(event, 0);
     return false;
 }
 
@@ -5936,7 +5946,9 @@ bool View::pointInHoveredChild(MotionEvent& event) {
 }
 
 bool View::dispatchGenericMotionEvent(MotionEvent&event){
-    int source = event.getSource();
+    const int source = event.getSource();
+    if (mInputEventConsistencyVerifier)
+         mInputEventConsistencyVerifier->onGenericMotionEvent(event, 0);
     if ((source & InputDevice::SOURCE_CLASS_POINTER) != 0) {
         int action = event.getAction();
         if (action == MotionEvent::ACTION_HOVER_ENTER
@@ -5954,12 +5966,17 @@ bool View::dispatchGenericMotionEvent(MotionEvent&event){
     if (dispatchGenericMotionEventInternal(event)) {
         return true;
     }
+    if (mInputEventConsistencyVerifier)
+        mInputEventConsistencyVerifier->onUnhandledEvent(event, 0);
     return false;
 }
 
 bool View::dispatchTouchEvent(MotionEvent&event){
     bool result = false;
     const int actionMasked = event.getActionMasked();
+    if (mInputEventConsistencyVerifier)
+        mInputEventConsistencyVerifier->onTouchEvent(event, 0);
+
     if (actionMasked == MotionEvent::ACTION_UP ||
             actionMasked == MotionEvent::ACTION_CANCEL ||
             (actionMasked == MotionEvent::ACTION_DOWN && !result)) {
@@ -5979,7 +5996,8 @@ bool View::dispatchTouchEvent(MotionEvent&event){
     if(!result&& onTouchEvent(event)){
         result=true;
     }
-
+    if (!result && mInputEventConsistencyVerifier)
+        mInputEventConsistencyVerifier->onUnhandledEvent(event, 0);
     if (actionMasked == MotionEvent::ACTION_UP ||
          actionMasked == MotionEvent::ACTION_CANCEL ||
          (actionMasked == MotionEvent::ACTION_DOWN && !result)) {

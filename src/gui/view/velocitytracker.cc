@@ -316,7 +316,7 @@ void VelocityTrackerImpl::addMovement(const MotionEvent& event) {
     size_t historySize = event.getHistorySize();
     memset(positions,0,sizeof(positions));
     for (size_t h = 0; h < historySize; h++) {
-        eventTime = event.getHistoricalEventTimeNano(h);
+        eventTime = event.getHistoricalEventTimeNanos(h);
         for (size_t i = 0; i < pointerCount; i++) {
             uint32_t index = pointerIndex[i];
             positions[index].x = event.getHistoricalRawX(i, h);
@@ -325,7 +325,7 @@ void VelocityTrackerImpl::addMovement(const MotionEvent& event) {
         addMovement(eventTime, idBits, positions);
     }
 
-    eventTime = event.getEventTimeNano();
+    eventTime = event.getEventTimeNanos();
     for (size_t i = 0; i < pointerCount; i++) {
         uint32_t index = pointerIndex[i];
         positions[index].x = event.getRawX(i);

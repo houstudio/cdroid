@@ -2843,6 +2843,8 @@ void ViewGroup::onDescendantInvalidated(View* child,View* target){
 }
 
 bool ViewGroup::dispatchKeyEvent(KeyEvent&event){
+    if (mInputEventConsistencyVerifier)
+        mInputEventConsistencyVerifier->onKeyEvent(event, 1);
     if ((mPrivateFlags & (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS))
           == (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS)) {
         if (View::dispatchKeyEvent(event)) {
@@ -2854,6 +2856,8 @@ bool ViewGroup::dispatchKeyEvent(KeyEvent&event){
             return true;
         }
     }
+    if (mInputEventConsistencyVerifier)
+        mInputEventConsistencyVerifier->onUnhandledEvent(event, 1);
     return View::dispatchKeyEvent(event);
 }
 
@@ -2875,6 +2879,9 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
     const float yf = ev.getY();
     const float scrolledXFloat = xf + mScrollX;
     const float scrolledYFloat = yf + mScrollY;
+
+    if (mInputEventConsistencyVerifier)
+        mInputEventConsistencyVerifier->onTouchEvent(ev, 1);
 
     if (ev.isTargetAccessibilityFocus() && isAccessibilityFocusedViewOrHost()) {
          ev.setTargetAccessibilityFocus(false);
@@ -3010,7 +3017,8 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
         int idBitsToRemove = 1 << ev.getPointerId(actionIndex);
         removePointersFromTouchTargets(idBitsToRemove);
     } 
-
+    if (!handled && mInputEventConsistencyVerifier)
+        mInputEventConsistencyVerifier->onUnhandledEvent(ev, 1);
     return handled;
 }
 

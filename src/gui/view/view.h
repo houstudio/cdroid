@@ -25,6 +25,7 @@
 #include <view/soundeffectconstants.h>
 #include <view/hapticfeedbackconstants.h>
 #include <view/accessibility/accessibilityevent.h>
+#include <view/inputeventconsistencyverifier.h>
 #include <animation/animation.h>
 #include <animation/statelistanimator.h>
 #include <set>
@@ -357,6 +358,7 @@ private:
     bool mBoundsChangedmDefaultFocusHighlightSizeChanged;
 
     ViewOverlay* mOverlay;
+    InputEventConsistencyVerifier* mInputEventConsistencyVerifier;
     ViewTreeObserver* mFloatingTreeObserver;
     StateListAnimator* mStateListAnimator;
     ViewPropertyAnimator* mAnimator;

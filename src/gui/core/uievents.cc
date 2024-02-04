@@ -737,9 +737,9 @@ nsecs_t MotionEvent::getHistoricalEventTime(size_t historyPos) const{
     }
 }
 
-nsecs_t MotionEvent::getHistoricalEventTimeNano(size_t historyPos) const{
+nsecs_t MotionEvent::getHistoricalEventTimeNanos(size_t historyPos) const{
     if(historyPos==HISTORY_CURRENT){
-         return getEventTimeNano();
+         return getEventTimeNanos();
     }else{
         const size_t historySize = getHistorySize();
         if(historyPos<0||historyPos>=historySize)return 0;

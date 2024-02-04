@@ -88,14 +88,17 @@ public:
     InputEvent();
     virtual ~InputEvent();
     virtual int getType()const=0;
+    virtual InputEvent*copy()const=0;
     void initialize(int32_t deviceId, int32_t source);
     void initialize(const InputEvent& from);
     void setSource(int source){mSource=source;}
     int getSource()const{return mSource;}
     bool isFromSource(int s)const;
-    int getDeviceId(){return mDeviceId;}
+    int getDeviceId()const{return mDeviceId;}
     long getSequenceNumber()const{return mSeq;}
-    virtual nsecs_t getEventTimeNano() const { return mEventTime*NS_PER_MS; }
+    virtual bool isTainted()const=0;
+    virtual void setTainted(bool)=0;
+    virtual nsecs_t getEventTimeNanos() const { return mEventTime*NS_PER_MS; }
     virtual nsecs_t getEventTime()const{ return mEventTime;}
     virtual void recycle();/*only obtained event can call recycle*/
 };
@@ -219,9 +222,15 @@ public:
                    int deviceId, int scancode, int flags, int source/*,std::string characters*/);
     static KeyEvent* obtain(const KeyEvent& other);
     virtual int getType()const {return EV_KEY;}
+    KeyEvent*copy()const override{return obtain(*this);}
     int getKeyCode()const {return mKeyCode;}
     void setKeyCode(int k){mKeyCode=k;}
     int getFlags()const{return mFlags;}
+    inline bool isTainted()const{return (mFlags&FLAG_TAINTED)!=0;}
+    inline void setTainted(bool tainted){
+        if(tainted)mFlags|=FLAG_TAINTED;
+        else mFlags&=~FLAG_TAINTED;
+    }
     inline int32_t getScanCode() const { return mScanCode; }
     inline int32_t getMetaState() const { return mMetaState; } 
     int getAction()const{return mAction;}//key up-->0 down-->1
@@ -346,6 +355,12 @@ public:
         FLAG_IS_GENERATED_GESTURE = 0x8,
         FLAG_TAINTED = 0x80000000,
         FLAG_TARGET_ACCESSIBILITY_FOCUS = 0x40000000,
+        CLASSIFICATION_NONE = 0,
+        CLASSIFICATION_AMBIGUOUS_GESTURE = 1,
+        CLASSIFICATION_DEEP_PRESS = 2,
+        CLASSIFICATION_TWO_FINGER_SWIPE = 3,
+        CLASSIFICATION_MULTI_FINGER_SWIPE = 4,
+        CLASSIFICATION_PINCH = 5,
     };
 private:
     static const int HISTORY_CURRENT = -0x80000000;
@@ -368,7 +383,7 @@ protected:
 public:
     MotionEvent();
     MotionEvent(const MotionEvent&m);
-   
+    MotionEvent*copy()const override{return obtain(*this);} 
     void initialize(int deviceId,int source,int action,int actionButton,
             int flags, int edgeFlags,int metaState,   int buttonState,
             float xOffset, float yOffset, float xPrecision, float yPrecision,
@@ -401,6 +416,11 @@ public:
     inline nsecs_t getDownTime()const{return mDownTime;}
     inline int32_t getFlags() const { return mFlags; }
     inline void setFlags(int32_t flags) { mFlags = flags; }
+    inline bool isTainted()const{return (mFlags&FLAG_TAINTED)!=0;}
+    inline void setTainted(bool tainted){
+        if(tainted)mFlags|=FLAG_TAINTED;
+        else mFlags&=~FLAG_TAINTED;
+    }
     inline int32_t getEdgeFlags() const { return mEdgeFlags; }
     inline void setEdgeFlags(int32_t edgeFlags) { mEdgeFlags = edgeFlags; }
     inline bool isHoverExitPending()const{return getFlags()&FLAG_HOVER_EXIT_PENDING!=0;}
@@ -421,7 +441,7 @@ public:
     inline float getYPrecision() const { return mYPrecision; }
     inline size_t getHistorySize() const { return mSampleEventTimes.size() - 1; }
     nsecs_t getHistoricalEventTime(size_t historicalIndex) const;
-    nsecs_t getHistoricalEventTimeNano(size_t historicalIndex) const;
+    nsecs_t getHistoricalEventTimeNanos(size_t historicalIndex) const;
     void getPointerCoords(int pointerIndex, PointerCoords& outPointerCoords){
         getHistoricalRawPointerCoords(pointerIndex,HISTORY_CURRENT,outPointerCoords);
     }
