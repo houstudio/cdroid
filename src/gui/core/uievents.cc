@@ -117,9 +117,18 @@ void PointerProperties::copyFrom(const PointerProperties& other) {
 
 InputEvent::InputEvent(){
    mSource = InputDevice::SOURCE_UNKNOWN;
+   mDisplayId = 0;
 }
 
 InputEvent::~InputEvent(){
+}
+
+int InputEvent::getDisplayId()const{
+    return mDisplayId;
+}
+
+void InputEvent::setDisplayId(int id){
+    mDisplayId = id;
 }
 
 void InputEvent::initialize(int32_t deviceId, int32_t source) {
@@ -146,7 +155,7 @@ KeyEvent* KeyEvent::obtain(){
 }
 
 KeyEvent* KeyEvent::obtain(nsecs_t downTime, nsecs_t eventTime, int action,int code, int repeat, int metaState,
-              int deviceId, int scancode, int flags, int source/*, std::string characters*/){
+          int deviceId, int scancode, int flags, int source,int displayId/*, std::string characters*/){
     KeyEvent* ev = obtain();
     ev->mDownTime = downTime;
     ev->mEventTime = eventTime;
@@ -158,6 +167,7 @@ KeyEvent* KeyEvent::obtain(nsecs_t downTime, nsecs_t eventTime, int action,int c
     ev->mScanCode = scancode;
     ev->mFlags = flags;
     ev->mSource = source;
+    ev->mDisplayId = displayId;
     //ev->mCharacters = characters;
     return ev;
 }
@@ -174,6 +184,7 @@ KeyEvent* KeyEvent::obtain(const KeyEvent& other){
     ev->mScanCode = other.mScanCode;
     ev->mFlags = other.mFlags;
     ev->mSource = other.mSource;
+    ev->mDisplayId = other.mDisplayId;
     //ev->mCharacters = other.mCharacters;
     return ev;    
 }
@@ -279,6 +290,7 @@ void KeyEvent::initialize(const KeyEvent& from) {
     mFlags = from.mFlags;
     mKeyCode = from.mKeyCode;
     mScanCode = from.mScanCode;
+    mDisplayId = from.mDisplayId;
     mMetaState = from.mMetaState;
     mRepeatCount = from.mRepeatCount;
     mDownTime = from.mDownTime;
@@ -483,6 +495,26 @@ void KeyEvent::DispatcherState::handleUpEvent(KeyEvent& event){
    
 }
 
+std::ostream& operator<<(std::ostream& os,const InputEvent&e){
+    e.toStream(os);
+    return os;
+}
+
+void KeyEvent::toStream(std::ostream& os)const{
+    os<<"KeyEvent { action="<<actionToString(mAction);
+    os<<", keyCode="<<mKeyCode;//keyCodeToString(mKeyCode);
+    os<<", scanCode="<<mScanCode;
+    //if (mCharacters != null) os<<", characters=\""<<mCharacters<<"\"";
+    os<<", metaState="<<metaStateToString(mMetaState);
+    os<<", flags=0x"<<std::hex<<mFlags<<std::dec;
+    os<<", repeatCount="<<mRepeatCount;
+    os<<", eventTime="<<mEventTime;
+    os<<", downTime="<<mDownTime;
+    os<<", deviceId="<<mDeviceId;
+    os<<", source=0x"<<std::hex<<mSource<<std::dec;
+    os<<", displayId="<<mDisplayId;
+    os<<" }";
+}
 //-------------------MotionEvent------------
 MotionEvent::MotionEvent(){
     mPointerProperties.clear();
@@ -500,7 +532,7 @@ MotionEvent*MotionEvent::obtain(nsecs_t downTime, nsecs_t eventTime,
             float xPrecision, float yPrecision, int deviceId,
             int edgeFlags, int source, int flags){
     MotionEvent* ev = obtain();
-    ev->initialize(deviceId, source, action,0/*actionbutton*/, flags, edgeFlags, metaState, buttonState,
+    ev->initialize(deviceId, source,0, action,0/*actionbutton*/, flags, edgeFlags, metaState, buttonState,
                 0, 0, xPrecision, yPrecision, downTime, eventTime,
                 pointerCount, pointerProperties, pointerCoords);
     return ev;
@@ -520,7 +552,7 @@ MotionEvent* MotionEvent::obtain(nsecs_t downTime,nsecs_t eventTime, int action,
     pc.setAxisValue(AXIS_Y,y);
     pc.setAxisValue(AXIS_PRESSURE,pressure);
     pc.setAxisValue(AXIS_SIZE,size);
-    ev->initialize(deviceId, InputDevice::SOURCE_UNKNOWN, action, 0/*actionButton*/,0/*flags*/, edgeFlags, metaState, 0,
+    ev->initialize(deviceId, InputDevice::SOURCE_UNKNOWN,0, action, 0/*actionButton*/,0/*flags*/, edgeFlags, metaState, 0,
             0, 0, xPrecision, yPrecision, downTime , eventTime, 1, &pp,&pc);
     return ev;
 }
@@ -545,6 +577,7 @@ MotionEvent* MotionEvent::obtainNoHistory(MotionEvent& other){
 void MotionEvent::initialize(
         int deviceId,
         int source,
+	int displayId,
         int action,
         int actionButton,
         int flags,
@@ -572,7 +605,8 @@ void MotionEvent::initialize(
     mXPrecision = xPrecision;
     mYPrecision = yPrecision;
     mDownTime = downTime;
-	mEventTime= eventTime;
+    mEventTime= eventTime;
+    mDisplayId = displayId;
     mPointerProperties.clear();
 
     mSampleEventTimes.clear();
@@ -598,7 +632,9 @@ void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
     mXPrecision = other->mXPrecision;
     mYPrecision = other->mYPrecision;
     mDownTime = other->mDownTime;
-	mEventTime= other->mEventTime;
+    mEventTime= other->mEventTime;
+    mSource = other->mSource;
+    mDisplayId =other->mDisplayId;
     mPointerProperties = other->mPointerProperties;
 
     if (keepHistory) {
@@ -672,7 +708,7 @@ MotionEvent*MotionEvent::split(int idBits){
 
         long eventTimeNanos = getHistoricalEventTime(historyPos);
         if (h == 0) {
-            ev->initialize( getDeviceId(),getSource(),  newAction, 0,
+            ev->initialize( getDeviceId(),getSource(),0/*displayId*/, newAction, 0,
                     getFlags(),   getEdgeFlags(), getMetaState(),
                     getButtonState(), getXOffset(), getYOffset(),
                     getXPrecision(), getYPrecision(), mDownTime,
@@ -924,6 +960,47 @@ float MotionEvent::getHistoricalRawAxisValue(int32_t axis, size_t pointerIndex,
     PointerCoords pc;
     getHistoricalRawPointerCoords(pointerIndex,historicalIndex,pc);
     return pc.getAxisValue(axis);
+}
+
+template <typename T>
+static void appendUnless(T defValue, std::ostringstream& os,const std::string& key, T value) {
+    if (/*DEBUG_CONCISE_TOSTRING &&*/ defValue==value) return;
+    os<<key<<value;
+}
+void MotionEvent::toStream(std::ostream& os)const{
+    os<<"MotionEvent { action="<<actionToString(getAction());
+    //appendUnless("0", msg, ", actionButton=", buttonStateToString(getActionButton()));
+
+    const int pointerCount = getPointerCount();
+    for (int i = 0; i < pointerCount; i++) {
+        //appendUnless(i, os, ", id[" + i + "]=", getPointerId(i));
+        float x = getX(i);
+        float y = getY(i);
+        if (/*!DEBUG_CONCISE_TOSTRING ||*/ x != 0.f || y != 0.f) {
+            os<<", x["<<i<<"]="<<x;
+            os<<", y["<<i<<"]="<<y;
+        }
+        //appendUnless(TOOL_TYPE_SYMBOLIC_NAMES.get(TOOL_TYPE_FINGER),
+        //    os, ", toolType[" + i + "]=", toolTypeToString(getToolType(i)));
+    }
+
+    //appendUnless("0", os, ", buttonState=", buttonStateToString(getButtonState()));
+    //appendUnless(classificationToString(CLASSIFICATION_NONE), os, ", classification=",classificationToString(getClassification()));
+    os<<", metaState="<<KeyEvent::metaStateToString(getMetaState());
+    //appendUnless("0", os, ", metaState=", KeyEvent::metaStateToString(getMetaState()));
+    os<<", flags=0x"<<std::hex<<getFlags();//appendUnless("0", os, ", flags=0x", Integer.toHexString(getFlags()));
+    os<<", edgeFlags=0x"<<std::hex<<getEdgeFlags()<<std::dec;//appendUnless("0", os, ", edgeFlags=0x", Integer.toHexString(getEdgeFlags()));
+    os<<", pointerCount="<<pointerCount;//appendUnless(1, os, ", pointerCount=", pointerCount);
+    os<<", historySize="<<getHistorySize();//appendUnless(0, os, ", historySize=", getHistorySize());
+    os<<", eventTime="<<getEventTime();
+    if (true){//!DEBUG_CONCISE_TOSTRING) {
+        os<<", downTime="<<getDownTime();
+        os<<", deviceId="<<getDeviceId();
+        os<<", source=0x"<<std::hex<<getSource()<<std::dec;
+        os<<", displayId="<<getDisplayId();
+        //os<<", eventId="<<getId();
+    }
+    os<<" }";
 }
 // --- PooledInputEventFactory ---
 PooledInputEventFactory*PooledInputEventFactory::mInst=nullptr;

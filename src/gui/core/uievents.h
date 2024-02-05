@@ -76,6 +76,7 @@ class InputEvent{
 protected:
     static constexpr long NS_PER_MS = 1000000;
     int mDeviceId;
+    int mDisplayId;
     int mSource;
     long mSeq;
     nsecs_t mEventTime;//SystemClock#uptimeMillis
@@ -87,6 +88,9 @@ public:
     };
     InputEvent();
     virtual ~InputEvent();
+    int getDeviceId()const{return mDeviceId;}
+    int getDisplayId()const;
+    void setDisplayId(int);
     virtual int getType()const=0;
     virtual InputEvent*copy()const=0;
     void initialize(int32_t deviceId, int32_t source);
@@ -94,13 +98,14 @@ public:
     void setSource(int source){mSource=source;}
     int getSource()const{return mSource;}
     bool isFromSource(int s)const;
-    int getDeviceId()const{return mDeviceId;}
     long getSequenceNumber()const{return mSeq;}
     virtual bool isTainted()const=0;
     virtual void setTainted(bool)=0;
     virtual nsecs_t getEventTimeNanos() const { return mEventTime*NS_PER_MS; }
     virtual nsecs_t getEventTime()const{ return mEventTime;}
     virtual void recycle();/*only obtained event can call recycle*/
+    virtual void toStream(std::ostream& os)const=0;
+    friend std::ostream& operator<<( std::ostream&,const InputEvent&);
 };
 
 class KeyEvent:public InputEvent{
@@ -219,7 +224,7 @@ public:
             nsecs_t eventTime);
     void initialize(const KeyEvent& from);
     static KeyEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,int code, int repeat, int metaState,
-                   int deviceId, int scancode, int flags, int source/*,std::string characters*/);
+               int deviceId, int scancode, int flags, int source,int displayId=0/*,std::string characters*/);
     static KeyEvent* obtain(const KeyEvent& other);
     virtual int getType()const {return EV_KEY;}
     KeyEvent*copy()const override{return obtain(*this);}
@@ -262,6 +267,7 @@ public:
     static bool metaStateHasModifiers(int metaState, int modifiers);
     static const std::string metaStateToString(int metaState);
     static const std::string actionToString(int action);
+    void toStream(std::ostream& os)const override;
 };
 
 class MotionEvent:public InputEvent{
@@ -384,7 +390,7 @@ public:
     MotionEvent();
     MotionEvent(const MotionEvent&m);
     MotionEvent*copy()const override{return obtain(*this);} 
-    void initialize(int deviceId,int source,int action,int actionButton,
+    void initialize(int deviceId,int source,int displayId,int action,int actionButton,
             int flags, int edgeFlags,int metaState,   int buttonState,
             float xOffset, float yOffset, float xPrecision, float yPrecision,
             nsecs_t downTime, nsecs_t eventTime, size_t pointerCount,
@@ -521,6 +527,7 @@ public:
             mFlags&=~FLAG_TARGET_ACCESSIBILITY_FOCUS; 
     }
     static const std::string actionToString(int action);
+    void toStream(std::ostream& os)const;
 };
 /*
  * Input event factory.

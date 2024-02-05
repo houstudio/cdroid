@@ -86,49 +86,45 @@ void InputEventConsistencyVerifier::onKeyEvent(KeyEvent& event, int nestingLevel
         return;
     }
 
-    try {
-        ensureMetaStateIsNormalized(event.getMetaState());
+    ensureMetaStateIsNormalized(event.getMetaState());
 
-        const int action = event.getAction();
-        const int deviceId = event.getDeviceId();
-        const int source = event.getSource();
-        const int keyCode = event.getKeyCode();
-        switch (action) {
-        case KeyEvent::ACTION_DOWN: {
-            KeyState* state = findKeyState(deviceId, source, keyCode, /*remove*/ false);
-            if (state != nullptr) {
-                // If the key is already down, ensure it is a repeat.
-                // We don't perform this check when processing raw device input
-                // because the input dispatcher itself is responsible for setting
-                // the key repeat count before it delivers input events.
-                if (state->unhandled) {
-                    state->unhandled = false;
-                } else if ((mFlags & FLAG_RAW_DEVICE_INPUT) == 0
-                        && event.getRepeatCount() == 0) {
-                    problem("ACTION_DOWN but key is already down and this event is not a key repeat.");
-                }
-            } else {
-                addKeyState(deviceId, source, keyCode);
+    const int action = event.getAction();
+    const int deviceId = event.getDeviceId();
+    const int source = event.getSource();
+    const int keyCode = event.getKeyCode();
+    switch (action) {
+    case KeyEvent::ACTION_DOWN: {
+        KeyState* state = findKeyState(deviceId, source, keyCode, /*remove*/ false);
+        if (state != nullptr) {
+            // If the key is already down, ensure it is a repeat.
+            // We don't perform this check when processing raw device input
+            // because the input dispatcher itself is responsible for setting
+            // the key repeat count before it delivers input events.
+            if (state->unhandled) {
+                state->unhandled = false;
+            } else if ((mFlags & FLAG_RAW_DEVICE_INPUT) == 0
+                    && event.getRepeatCount() == 0) {
+                problem("ACTION_DOWN but key is already down and this event is not a key repeat.");
             }
-            break;
+        } else {
+            addKeyState(deviceId, source, keyCode);
         }
-        case KeyEvent::ACTION_UP: {
-            KeyState* state = findKeyState(deviceId, source, keyCode, /*remove*/ true);
-            if (state == nullptr) {
-                problem("ACTION_UP but key was not down.");
-            } else {
-                state->recycle();
-            }
-            break;
-            }
-        case KeyEvent::ACTION_MULTIPLE:
-            break;
-        default:
-            problem("Invalid action " + KeyEvent::actionToString(action)
-                    + " for key event.");
-                break;
+        break;
+    }
+    case KeyEvent::ACTION_UP: {
+        KeyState* state = findKeyState(deviceId, source, keyCode, /*remove*/ true);
+        if (state == nullptr) {
+            problem("ACTION_UP but key was not down.");
+        } else {
+            state->recycle();
         }
-    }catch(std::exception&e){
+        break;
+        }
+    case KeyEvent::ACTION_MULTIPLE:
+        break;
+    default:
+        problem("Invalid action %s for key event" ,KeyEvent::actionToString(action));
+            break;
     }
     finishEvent();
 }
@@ -147,51 +143,48 @@ void InputEventConsistencyVerifier::onTrackballEvent(MotionEvent& event, int nes
         return;
     }
 
-    try {
-        ensureMetaStateIsNormalized(event.getMetaState());
+    ensureMetaStateIsNormalized(event.getMetaState());
 
-        const int action = event.getAction();
-        const int source = event.getSource();
-        if ((source & InputDevice::SOURCE_CLASS_TRACKBALL) != 0) {
-            switch (action) {
-            case MotionEvent::ACTION_DOWN:
-                if (mTrackballDown && !mTrackballUnhandled) {
-                    problem("ACTION_DOWN but trackball is already down.");
-                } else {
-                    mTrackballDown = true;
-                    mTrackballUnhandled = false;
-                }
-                ensureHistorySizeIsZeroForThisAction(event);
-                ensurePointerCountIsOneForThisAction(event);
-                break;
-    	case MotionEvent::ACTION_UP:
-                if (!mTrackballDown) {
-                    problem("ACTION_UP but trackball is not down.");
-                } else {
-                    mTrackballDown = false;
-                    mTrackballUnhandled = false;
-                }
-                ensureHistorySizeIsZeroForThisAction(event);
-                ensurePointerCountIsOneForThisAction(event);
-                break;
-    	case MotionEvent::ACTION_MOVE:
-                ensurePointerCountIsOneForThisAction(event);
-                break;
-            default:
-                problem("Invalid action " + MotionEvent::actionToString(action)
-                        + " for trackball event.");
-                break;
+    const int action = event.getAction();
+    const int source = event.getSource();
+    if ((source & InputDevice::SOURCE_CLASS_TRACKBALL) != 0) {
+        switch (action) {
+        case MotionEvent::ACTION_DOWN:
+            if (mTrackballDown && !mTrackballUnhandled) {
+                problem("ACTION_DOWN but trackball is already down.");
+            } else {
+                mTrackballDown = true;
+                mTrackballUnhandled = false;
             }
-
-            if (mTrackballDown && event.getPressure(0) <= 0.f) {
-                problem("Trackball is down but pressure is not greater than 0.");
-            } else if (!mTrackballDown && event.getPressure(0) != 0) {
-                problem("Trackball is up but pressure is not equal to 0.");
+            ensureHistorySizeIsZeroForThisAction(event);
+            ensurePointerCountIsOneForThisAction(event);
+            break;
+	case MotionEvent::ACTION_UP:
+            if (!mTrackballDown) {
+                problem("ACTION_UP but trackball is not down.");
+            } else {
+                mTrackballDown = false;
+                mTrackballUnhandled = false;
             }
-        } else {
-            problem("Source was not SOURCE_CLASS_TRACKBALL.");
+            ensureHistorySizeIsZeroForThisAction(event);
+            ensurePointerCountIsOneForThisAction(event);
+            break;
+	case MotionEvent::ACTION_MOVE:
+            ensurePointerCountIsOneForThisAction(event);
+            break;
+        default:
+            problem("Invalid action " + MotionEvent::actionToString(action)
+                    + " for trackball event.");
+            break;
         }
-    }catch(std::exception&e){
+
+        if (mTrackballDown && event.getPressure(0) <= 0.f) {
+            problem("Trackball is down but pressure is not greater than 0.");
+        } else if (!mTrackballDown && event.getPressure(0) != 0) {
+            problem("Trackball is up but pressure is not equal to 0.");
+        }
+    } else {
+        problem("Source was not SOURCE_CLASS_TRACKBALL.");
     }
     finishEvent();
 }
@@ -230,108 +223,105 @@ void InputEventConsistencyVerifier::onTouchEvent(MotionEvent& event, int nesting
         event.setTainted(true);
     }
 
-    try {
-        ensureMetaStateIsNormalized(event.getMetaState());
+    ensureMetaStateIsNormalized(event.getMetaState());
 
-        const int deviceId = event.getDeviceId();
-        const int source = event.getSource();
+    const int deviceId = event.getDeviceId();
+    const int source = event.getSource();
 
-        if (!newStream && mTouchEventStreamDeviceId != -1
-                && (mTouchEventStreamDeviceId != deviceId
-                        || mTouchEventStreamSource != source)) {
-            problem("Touch event stream contains events from multiple sources: previous device id %d"
-                    ", previous source %x, new device id %d, new source %x",
-		   mTouchEventStreamDeviceId,mTouchEventStreamSource,deviceId,source);
-        }
-        mTouchEventStreamDeviceId = deviceId;
-        mTouchEventStreamSource = source;
+    if (!newStream && mTouchEventStreamDeviceId != -1
+            && (mTouchEventStreamDeviceId != deviceId
+                    || mTouchEventStreamSource != source)) {
+        problem("Touch event stream contains events from multiple sources: previous device id %d"
+                ", previous source %x, new device id %d, new source %x",
+    	   mTouchEventStreamDeviceId,mTouchEventStreamSource,deviceId,source);
+    }
+    mTouchEventStreamDeviceId = deviceId;
+    mTouchEventStreamSource = source;
 
-        const int pointerCount = event.getPointerCount();
-        if ((source & InputDevice::SOURCE_CLASS_POINTER) != 0) {
-            switch (action) {
-            case MotionEvent::ACTION_DOWN:
-                if (mTouchEventStreamPointers != 0) {
-                    problem("ACTION_DOWN but pointers are already down.  "
-                            "Probably missing ACTION_UP from previous gesture.");
-                }
-                ensureHistorySizeIsZeroForThisAction(event);
-                ensurePointerCountIsOneForThisAction(event);
-                mTouchEventStreamPointers = 1 << event.getPointerId(0);
-                break;
-    	case MotionEvent::ACTION_UP:
-                ensureHistorySizeIsZeroForThisAction(event);
-                ensurePointerCountIsOneForThisAction(event);
-                mTouchEventStreamPointers = 0;
-                mTouchEventStreamIsTainted = false;
-                break;
-    	case MotionEvent::ACTION_MOVE: {
-                const int expectedPointerCount = bitCount(mTouchEventStreamPointers);
-                if (pointerCount != expectedPointerCount) {
-                    problem("ACTION_MOVE contained %d pointers but there are currently %d pointers down.",pointerCount,expectedPointerCount);
-                    mTouchEventStreamIsTainted = true;
-                }
-                break;
+    const int pointerCount = event.getPointerCount();
+    if ((source & InputDevice::SOURCE_CLASS_POINTER) != 0) {
+        switch (action) {
+        case MotionEvent::ACTION_DOWN:
+            if (mTouchEventStreamPointers != 0) {
+                problem("ACTION_DOWN but pointers are already down.  "
+                        "Probably missing ACTION_UP from previous gesture.");
             }
-    	case MotionEvent::ACTION_CANCEL:
-                mTouchEventStreamPointers = 0;
-                mTouchEventStreamIsTainted = false;
-                break;
-    	case MotionEvent::ACTION_OUTSIDE:
-                if (mTouchEventStreamPointers != 0) {
-                    problem("ACTION_OUTSIDE but pointers are still down.");
-                }
-                ensureHistorySizeIsZeroForThisAction(event);
-                ensurePointerCountIsOneForThisAction(event);
-                mTouchEventStreamIsTainted = false;
-                break;
-            default: {
-                    const int actionMasked = event.getActionMasked();
-                    const int actionIndex = event.getActionIndex();
-                    if (actionMasked == MotionEvent::ACTION_POINTER_DOWN) {
-                        if (mTouchEventStreamPointers == 0) {
-                            problem("ACTION_POINTER_DOWN but no other pointers were down.");
-                            mTouchEventStreamIsTainted = true;
-                        }
-                        if (actionIndex < 0 || actionIndex >= pointerCount) {
-                            problem("ACTION_POINTER_DOWN index is %d but the pointer count is %d.",
-			         actionIndex,pointerCount);
-                            mTouchEventStreamIsTainted = true;
-                        } else {
-                            const int id = event.getPointerId(actionIndex);
-                            const int idBit = 1 << id;
-                            if ((mTouchEventStreamPointers & idBit) != 0) {
-                                problem("ACTION_POINTER_DOWN specified pointer id %d which is already down.",id);
-                                mTouchEventStreamIsTainted = true;
-                            } else {
-                                mTouchEventStreamPointers |= idBit;
-                            }
-                        }
-                        ensureHistorySizeIsZeroForThisAction(event);
-                    } else if (actionMasked == MotionEvent::ACTION_POINTER_UP) {
-                        if (actionIndex < 0 || actionIndex >= pointerCount) {
-                            problem("ACTION_POINTER_UP index is % but the pointer count is %d.",actionIndex,pointerCount);
-                            mTouchEventStreamIsTainted = true;
-                        } else {
-                            const int id = event.getPointerId(actionIndex);
-                            const int idBit = 1 << id;
-                            if ((mTouchEventStreamPointers & idBit) == 0) {
-                                problem("ACTION_POINTER_UP specified pointer id %d which is not currently down.",id);
-                                mTouchEventStreamIsTainted = true;
-                            } else {
-                                mTouchEventStreamPointers &= ~idBit;
-                            }
-                        }
-                        ensureHistorySizeIsZeroForThisAction(event);
-                    } else {
-                        problem("Invalid action %s for touch event.",MotionEvent::actionToString(action));
+            ensureHistorySizeIsZeroForThisAction(event);
+            ensurePointerCountIsOneForThisAction(event);
+            mTouchEventStreamPointers = 1 << event.getPointerId(0);
+            break;
+	    case MotionEvent::ACTION_UP:
+            ensureHistorySizeIsZeroForThisAction(event);
+            ensurePointerCountIsOneForThisAction(event);
+            mTouchEventStreamPointers = 0;
+            mTouchEventStreamIsTainted = false;
+            break;
+	    case MotionEvent::ACTION_MOVE: {
+            const int expectedPointerCount = bitCount(mTouchEventStreamPointers);
+            if (pointerCount != expectedPointerCount) {
+                problem("ACTION_MOVE contained %d pointers but there are currently %d pointers down.",pointerCount,expectedPointerCount);
+                mTouchEventStreamIsTainted = true;
+            }
+            break;
+        }
+	    case MotionEvent::ACTION_CANCEL:
+            mTouchEventStreamPointers = 0;
+            mTouchEventStreamIsTainted = false;
+            break;
+	    case MotionEvent::ACTION_OUTSIDE:
+            if (mTouchEventStreamPointers != 0) {
+                problem("ACTION_OUTSIDE but pointers are still down.");
+            }
+            ensureHistorySizeIsZeroForThisAction(event);
+            ensurePointerCountIsOneForThisAction(event);
+            mTouchEventStreamIsTainted = false;
+            break;
+        default: {
+                const int actionMasked = event.getActionMasked();
+                const int actionIndex = event.getActionIndex();
+                if (actionMasked == MotionEvent::ACTION_POINTER_DOWN) {
+                    if (mTouchEventStreamPointers == 0) {
+                        problem("ACTION_POINTER_DOWN but no other pointers were down.");
+                        mTouchEventStreamIsTainted = true;
                     }
-                    break;
+                    if (actionIndex < 0 || actionIndex >= pointerCount) {
+                        problem("ACTION_POINTER_DOWN index is %d but the pointer count is %d.",
+    		         actionIndex,pointerCount);
+                        mTouchEventStreamIsTainted = true;
+                    } else {
+                        const int id = event.getPointerId(actionIndex);
+                        const int idBit = 1 << id;
+                        if ((mTouchEventStreamPointers & idBit) != 0) {
+                            problem("ACTION_POINTER_DOWN specified pointer id %d which is already down.",id);
+                            mTouchEventStreamIsTainted = true;
+                        } else {
+                            mTouchEventStreamPointers |= idBit;
+                        }
+                    }
+                    ensureHistorySizeIsZeroForThisAction(event);
+                } else if (actionMasked == MotionEvent::ACTION_POINTER_UP) {
+                    if (actionIndex < 0 || actionIndex >= pointerCount) {
+                        problem("ACTION_POINTER_UP index is % but the pointer count is %d.",actionIndex,pointerCount);
+                        mTouchEventStreamIsTainted = true;
+                    } else {
+                        const int id = event.getPointerId(actionIndex);
+                        const int idBit = 1 << id;
+                        if ((mTouchEventStreamPointers & idBit) == 0) {
+                            problem("ACTION_POINTER_UP specified pointer id %d which is not currently down.",id);
+                            mTouchEventStreamIsTainted = true;
+                        } else {
+                            mTouchEventStreamPointers &= ~idBit;
+                        }
+                    }
+                    ensureHistorySizeIsZeroForThisAction(event);
+                } else {
+                    problem("Invalid action %s for touch event.",MotionEvent::actionToString(action));
                 }
+                break;
             }
-        } else {
-            problem("Source was not SOURCE_CLASS_POINTER.");
         }
-    }catch(std::exception&e){
+    } else {
+        problem("Source %d was not SOURCE_CLASS_POINTER.",source);
     }
     finishEvent();
 }
@@ -350,103 +340,100 @@ void InputEventConsistencyVerifier::onGenericMotionEvent(MotionEvent& event, int
         return;
     }
 
-    try {
-        ensureMetaStateIsNormalized(event.getMetaState());
+    ensureMetaStateIsNormalized(event.getMetaState());
 
-        const int action = event.getAction();
-        const int source = event.getSource();
-        const int buttonState = event.getButtonState();
-        const int actionButton = event.getActionButton();
-        if ((source & InputDevice::SOURCE_CLASS_POINTER) != 0) {
-            switch (action) {
-            case MotionEvent::ACTION_HOVER_ENTER:
-                ensurePointerCountIsOneForThisAction(event);
-                mHoverEntered = true;
-                break;
-    	case MotionEvent::ACTION_HOVER_MOVE:
-                ensurePointerCountIsOneForThisAction(event);
-                break;
-    	case MotionEvent::ACTION_HOVER_EXIT:
-                ensurePointerCountIsOneForThisAction(event);
-                if (!mHoverEntered) {
-                    problem("ACTION_HOVER_EXIT without prior ACTION_HOVER_ENTER");
-                }
-                mHoverEntered = false;
-                break;
-    	case MotionEvent::ACTION_SCROLL:
-                ensureHistorySizeIsZeroForThisAction(event);
-                ensurePointerCountIsOneForThisAction(event);
-                break;
-    	case MotionEvent::ACTION_BUTTON_PRESS:
-                ensureActionButtonIsNonZeroForThisAction(event);
-                if ((mButtonsPressed & actionButton) != 0) {
-                    problem("Action button for ACTION_BUTTON_PRESS event is %d"
-                            ", but it has already been pressed and "
-                            "has yet to be released.",actionButton);
-                }
-
-                mButtonsPressed |= actionButton;
-                // The system will automatically mirror the stylus buttons onto the button
-                // state as the old set of generic buttons for apps targeting pre-M. If
-                // it looks this has happened, go ahead and set the generic buttons as
-                // pressed to prevent spurious errors.
-                if (actionButton == MotionEvent::BUTTON_STYLUS_PRIMARY &&
-                        (buttonState & MotionEvent::BUTTON_SECONDARY) != 0) {
-                    mButtonsPressed |= MotionEvent::BUTTON_SECONDARY;
-                } else if (actionButton == MotionEvent::BUTTON_STYLUS_SECONDARY &&
-                        (buttonState & MotionEvent::BUTTON_TERTIARY) != 0) {
-                    mButtonsPressed |= MotionEvent::BUTTON_TERTIARY;
-                }
-
-                if (mButtonsPressed != buttonState) {
-                    problem("Reported button state differs from expect button state "
-			 "based on press and release events. Is 0x%08x but expected 0x%08x.",
-                         buttonState, mButtonsPressed);
-                }
-                break;
-    	case MotionEvent::ACTION_BUTTON_RELEASE:
-                ensureActionButtonIsNonZeroForThisAction(event);
-                if ((mButtonsPressed & actionButton) != actionButton) {
-                    problem("Action button for ACTION_BUTTON_RELEASE event is %d"
-                            ", but it was either never pressed or has "
-                            "already been released.",actionButton);
-                }
-
-                mButtonsPressed &= ~actionButton;
-                // The system will automatically mirror the stylus buttons onto the button
-                // state as the old set of generic buttons for apps targeting pre-M. If
-                // it looks this has happened, go ahead and set the generic buttons as
-                // released to prevent spurious errors.
-                if (actionButton == MotionEvent::BUTTON_STYLUS_PRIMARY &&
-                        (buttonState & MotionEvent::BUTTON_SECONDARY) == 0) {
-                    mButtonsPressed &= ~MotionEvent::BUTTON_SECONDARY;
-                } else if (actionButton == MotionEvent::BUTTON_STYLUS_SECONDARY &&
-                        (buttonState & MotionEvent::BUTTON_TERTIARY) == 0) {
-                    mButtonsPressed &= ~MotionEvent::BUTTON_TERTIARY;
-                }
-
-                if (mButtonsPressed != buttonState) {
-                    problem("Reported button state differs from "
-                            "expected button state based on press and release events. "
-                            "Is 0x%08x but expected 0x%08x.",
-                            buttonState, mButtonsPressed);
-                }
-                break;
-            default:
-                problem("Invalid action for generic pointer event.");
-                break;
+    const int action = event.getAction();
+    const int source = event.getSource();
+    const int buttonState = event.getButtonState();
+    const int actionButton = event.getActionButton();
+    if ((source & InputDevice::SOURCE_CLASS_POINTER) != 0) {
+        switch (action) {
+        case MotionEvent::ACTION_HOVER_ENTER:
+            ensurePointerCountIsOneForThisAction(event);
+            mHoverEntered = true;
+            break;
+	case MotionEvent::ACTION_HOVER_MOVE:
+            ensurePointerCountIsOneForThisAction(event);
+            break;
+	case MotionEvent::ACTION_HOVER_EXIT:
+            ensurePointerCountIsOneForThisAction(event);
+            if (!mHoverEntered) {
+                problem("ACTION_HOVER_EXIT without prior ACTION_HOVER_ENTER");
             }
-        } else if ((source & InputDevice::SOURCE_CLASS_JOYSTICK) != 0) {
-            switch (action) {
-            case MotionEvent::ACTION_MOVE:
-                ensurePointerCountIsOneForThisAction(event);
-                break;
-            default:
-                problem("Invalid action for generic joystick event.");
-                break;
+            mHoverEntered = false;
+            break;
+	case MotionEvent::ACTION_SCROLL:
+            ensureHistorySizeIsZeroForThisAction(event);
+            ensurePointerCountIsOneForThisAction(event);
+            break;
+	case MotionEvent::ACTION_BUTTON_PRESS:
+            ensureActionButtonIsNonZeroForThisAction(event);
+            if ((mButtonsPressed & actionButton) != 0) {
+                problem("Action button for ACTION_BUTTON_PRESS event is %d"
+                        ", but it has already been pressed and "
+                        "has yet to be released.",actionButton);
             }
+
+            mButtonsPressed |= actionButton;
+            // The system will automatically mirror the stylus buttons onto the button
+            // state as the old set of generic buttons for apps targeting pre-M. If
+            // it looks this has happened, go ahead and set the generic buttons as
+            // pressed to prevent spurious errors.
+            if (actionButton == MotionEvent::BUTTON_STYLUS_PRIMARY &&
+                    (buttonState & MotionEvent::BUTTON_SECONDARY) != 0) {
+                mButtonsPressed |= MotionEvent::BUTTON_SECONDARY;
+            } else if (actionButton == MotionEvent::BUTTON_STYLUS_SECONDARY &&
+                    (buttonState & MotionEvent::BUTTON_TERTIARY) != 0) {
+                mButtonsPressed |= MotionEvent::BUTTON_TERTIARY;
+            }
+
+            if (mButtonsPressed != buttonState) {
+                problem("Reported button state differs from expect button state "
+    		 "based on press and release events. Is 0x%08x but expected 0x%08x.",
+                     buttonState, mButtonsPressed);
+            }
+            break;
+	case MotionEvent::ACTION_BUTTON_RELEASE:
+            ensureActionButtonIsNonZeroForThisAction(event);
+            if ((mButtonsPressed & actionButton) != actionButton) {
+                problem("Action button for ACTION_BUTTON_RELEASE event is %d"
+                        ", but it was either never pressed or has "
+                        "already been released.",actionButton);
+            }
+
+            mButtonsPressed &= ~actionButton;
+            // The system will automatically mirror the stylus buttons onto the button
+            // state as the old set of generic buttons for apps targeting pre-M. If
+            // it looks this has happened, go ahead and set the generic buttons as
+            // released to prevent spurious errors.
+            if (actionButton == MotionEvent::BUTTON_STYLUS_PRIMARY &&
+                    (buttonState & MotionEvent::BUTTON_SECONDARY) == 0) {
+                mButtonsPressed &= ~MotionEvent::BUTTON_SECONDARY;
+            } else if (actionButton == MotionEvent::BUTTON_STYLUS_SECONDARY &&
+                    (buttonState & MotionEvent::BUTTON_TERTIARY) == 0) {
+                mButtonsPressed &= ~MotionEvent::BUTTON_TERTIARY;
+            }
+
+            if (mButtonsPressed != buttonState) {
+                problem("Reported button state differs from "
+                        "expected button state based on press and release events. "
+                        "Is 0x%08x but expected 0x%08x.",
+                        buttonState, mButtonsPressed);
+            }
+            break;
+        default:
+            problem("Invalid action for generic pointer event.");
+            break;
         }
-    }catch(std::exception&){
+    } else if ((source & InputDevice::SOURCE_CLASS_JOYSTICK) != 0) {
+        switch (action) {
+        case MotionEvent::ACTION_MOVE:
+            ensurePointerCountIsOneForThisAction(event);
+            break;
+        default:
+            problem("Invalid action for generic joystick event.");
+            break;
+        }
     }
     finishEvent();
 }
@@ -605,20 +592,21 @@ void InputEventConsistencyVerifier::appendEvent(std::ostringstream& message, int
     if (unhandled) {
         message<<"(unhandled) ";
     }
-    //message<<event;
+    event.toStream(message);
 }
 
 void InputEventConsistencyVerifier::problem(const std::string& message,...) {
     va_list args;
+    char buffer [512];
     va_start(args, message);
-    LogPrintf(0,"tag","fun",0,message.c_str(),args);
+    vsnprintf(buffer,sizeof(buffer),message.c_str(),args);
     va_end(args);
     if (mViolationMessage.str().length() == 0) {
         mViolationMessage<<mCurrentEventType<<": ";
     } else {
         mViolationMessage<<"\n  ";
     }
-    mViolationMessage<<message;
+    mViolationMessage<<buffer;
 }
 
 InputEventConsistencyVerifier::KeyState* InputEventConsistencyVerifier::findKeyState(int deviceId, int source, int keyCode, bool remove) {

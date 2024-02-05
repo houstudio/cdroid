@@ -44,8 +44,11 @@ void InputEventSource::doEventsConsume(){
                 onDeviceChanged(es+i);
                 continue;
             }
-            if(it==mDevices.end()){getdevice(es->device);continue;}
-            it->second->putRawEvent(tv,e->type,e->code,e->value);
+            if(it==mDevices.end()){
+                getdevice(es->device)->putRawEvent(tv,e->type,e->code,e->value);
+		continue;
+	    }
+	    it->second->putRawEvent(tv,e->type,e->code,e->value);
         }
     }
 }
@@ -184,7 +187,7 @@ void InputEventSource::playback(const std::string&fname){
                  nsecs_t evttime = SystemClock::uptimeMillis();
                  int keycode = KeyEvent::getKeyCodeFromLabel(word.c_str());
                  KeyEvent*key= KeyEvent::obtain(evttime,evttime,action,keycode,1,0/*metastate*/,
-                       0/*deviceid*/,keycode/*scancode*/,0/*flags*/,0/*source*/);
+                       0/*deviceid*/,keycode/*scancode*/,0/*flags*/,0/*source*/,0/*displayId*/);
                  //mKeyEvents.push_back(key);
              }
              if(in.gcount() == 0){

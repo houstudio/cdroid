@@ -229,9 +229,10 @@ InputEvent*InputDevice::popEvent(){
 
 KeyDevice::KeyDevice(int fd)
    :InputDevice(fd){
-   msckey=0;
-   mLastDownKey=-1;
-   mRepeatCount=0;
+   msckey = 0;
+   mLastDownKey = -1;
+   mRepeatCount = 0;
+   mDeviceInfo.addSource(SOURCE_KEYBOARD);
    const std::string fname=App::getInstance().getDataPath()+getName()+".kl";
    KeyLayoutMap::load(fname,kmap);
 }
@@ -298,6 +299,7 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     }
     mTPWidth = (mMaxX!=mMinX)?std::abs(mMaxX - mMinX):mScreenWidth;
     mTPHeight= (mMaxY!=mMinY)?std::abs(mMaxY - mMinY):mScreenHeight;
+    mDeviceInfo.addSource(SOURCE_CLASS_POINTER);
     LOGI("screen(%d,%d) rotation=%d [%s] X(%d,%d) Y(%d,%d) invert=%d,%d switchXY=%d",mScreenWidth, mScreenHeight,
         display.getRotation(),section.c_str(),mMinX,mMaxX,mMinY,mMaxY,mInvertX,mInvertY,mSwitchXY);
 }
@@ -439,7 +441,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case SYN_MT_REPORT:break;
         case SYN_REPORT:
             mMoveTime =(tv.tv_sec * 1000 + tv.tv_usec/1000);
-            mEvent.initialize(getId(),getSources(),mEvent.getAction(),mEvent.getActionButton()
+            mEvent.initialize(getId(),getSources(),0/*displayId*/,mEvent.getAction(),mEvent.getActionButton()
                 , 0/*flags*/ , 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,0,0/*x/yOffset*/
                 , 0 ,0 /*x/yPrecision*/ , mDownTime , mMoveTime , 0 , nullptr , nullptr);
             for(auto p:mPointMAP){
