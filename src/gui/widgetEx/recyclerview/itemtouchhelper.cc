@@ -111,7 +111,7 @@ private:
 #endif
 ItemTouchHelper::ItemTouchHelper(Callback& callback) {
     mCallback = callback;
-    mScrollRunnable=[this]() {
+    mScrollRunnable = [this]() {
         if (mSelected != nullptr && scrollIfNecessary()) {
             if (mSelected != nullptr) { //it might be lost during scrolling
                 moveIfNecessary(*mSelected);

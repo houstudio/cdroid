@@ -577,7 +577,7 @@ MotionEvent* MotionEvent::obtainNoHistory(MotionEvent& other){
 void MotionEvent::initialize(
         int deviceId,
         int source,
-	int displayId,
+        int displayId,
         int action,
         int actionButton,
         int flags,

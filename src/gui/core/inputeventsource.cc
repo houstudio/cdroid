@@ -46,9 +46,9 @@ void InputEventSource::doEventsConsume(){
             }
             if(it==mDevices.end()){
                 getdevice(es->device)->putRawEvent(tv,e->type,e->code,e->value);
-		continue;
-	    }
-	    it->second->putRawEvent(tv,e->type,e->code,e->value);
+                continue;
+            }
+            it->second->putRawEvent(tv,e->type,e->code,e->value);
         }
     }
 }
