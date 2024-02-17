@@ -1,115 +1,111 @@
-#if 0
 #include <widgetEx/recyclerview/itemtouchhelper.h>
+#include <core/neverdestroyed.h>
+
 namespace cdroid{
-#if 0
-class ItemTouchHelper：public RecyclerView::ItemDecoration
-    implements RecyclerView.OnChildAttachStateChangeListener {
-private:
-    OnItemTouchListener mOnItemTouchListener;
-    //= new OnItemTouchListener() {
-    bool onInterceptTouchEvent(RecyclerView& recyclerView,MotionEvent& event) {
-        mGestureDetector.onTouchEvent(event);
-        LOG_IF(_DEBUG,"intercept: x:%.f ,y:%.f",event.getX(),event.getY());
-        const int action = event.getActionMasked();
-        if (action == MotionEvent::ACTION_DOWN) {
-            mActivePointerId = event.getPointerId(0);
-            mInitialTouchX = event.getX();
-            mInitialTouchY = event.getY();
-            obtainVelocityTracker();
-            if (mSelected == null) {
-                final RecoverAnimation animation = findAnimation(event);
-                if (animation != null) {
-                    mInitialTouchX -= animation.mX;
-                    mInitialTouchY -= animation.mY;
-                    endRecoverAnimation(animation.mViewHolder, true);
-                    if (mPendingCleanup.remove(animation.mViewHolder.itemView)) {
-                        mCallback->clearView(mRecyclerView, animation.mViewHolder);
-                    }
-                    select(animation.mViewHolder, animation.mActionState);
-                    updateDxDy(event, mSelectedFlags, 0);
-                }
-            }
-        } else if (action == MotionEvent::ACTION_CANCEL || action == MotionEvent::ACTION_UP) {
-            mActivePointerId = ACTIVE_POINTER_ID_NONE;
-            select(nullptr, ACTION_STATE_IDLE);
-        } else if (mActivePointerId != ACTIVE_POINTER_ID_NONE) {
-            // in a non scroll orientation, if distance change is above threshold, we
-            // can select the item
-            final int index = event.findPointerIndex(mActivePointerId);
-            LOGD_IF(_DEBUG,"pointer index %d",index);
-            if (index >= 0) {
-                checkSelectForSwipe(action, event, index);
-            }
-        }
-        if (mVelocityTracker != nullptr) {
-            mVelocityTracker->addMovement(event);
-        }
-        return mSelected != nullptr;
-    }
 
-    void onTouchEvent(RecyclerView& recyclerView,MotionEvent& event) {
-        //mGestureDetector.onTouchEvent(event);
-        LOGD_IF(_DEBUG,"on touch: x:%d,y:%d",mInitialTouchX,mInitialTouchY);
-        if (mVelocityTracker != nullptr) {
-            mVelocityTracker->addMovement(event);
+bool ItemTouchHelper::onInterceptTouchEvent(RecyclerView& recyclerView,MotionEvent& event) {
+    //mGestureDetector.onTouchEvent(event);
+    LOGD_IF(_DEBUG,"intercept: x:%.f ,y:%.f",event.getX(),event.getY());
+    const int action = event.getActionMasked();
+    if (action == MotionEvent::ACTION_DOWN) {
+        mActivePointerId = event.getPointerId(0);
+        mInitialTouchX = event.getX();
+        mInitialTouchY = event.getY();
+        obtainVelocityTracker();
+        if (mSelected == nullptr) {
+            RecoverAnimation* animation = findAnimation(event);
+            if (animation != nullptr) {
+                mInitialTouchX -= animation->mX;
+                mInitialTouchY -= animation->mY;
+                endRecoverAnimation(*animation->mViewHolder, true);
+    	    auto it=std::find(mPendingCleanup.begin(),mPendingCleanup.end(),animation->mViewHolder->itemView);
+                if (it!=mPendingCleanup.end()){//remove(animation->mViewHolder->itemView)) {
+    		mPendingCleanup.erase(it);
+                    mCallback->clearView(*mRecyclerView, *animation->mViewHolder);
+                }
+                select(animation->mViewHolder, animation->mActionState);
+                updateDxDy(event, mSelectedFlags, 0);
+            }
         }
-        if (mActivePointerId == ACTIVE_POINTER_ID_NONE) {
-            return;
+    } else if (action == MotionEvent::ACTION_CANCEL || action == MotionEvent::ACTION_UP) {
+        mActivePointerId = ACTIVE_POINTER_ID_NONE;
+        select(nullptr, ACTION_STATE_IDLE);
+    } else if (mActivePointerId != ACTIVE_POINTER_ID_NONE) {
+        // in a non scroll orientation, if distance change is above threshold, we
+        // can select the item
+        const int index = event.findPointerIndex(mActivePointerId);
+        LOGD_IF(_DEBUG,"pointer index %d",index);
+        if (index >= 0) {
+            checkSelectForSwipe(action, event, index);
         }
-        const int action = event.getActionMasked();
-        const int activePointerIndex = event.findPointerIndex(mActivePointerId);
+    }
+    if (mVelocityTracker != nullptr) {
+        mVelocityTracker->addMovement(event);
+    }
+    return mSelected != nullptr;
+}
+
+void ItemTouchHelper::onTouchEvent(RecyclerView& recyclerView,MotionEvent& event) {
+    //mGestureDetector.onTouchEvent(event);
+    LOGD_IF(_DEBUG,"on touch: x:%d,y:%d",mInitialTouchX,mInitialTouchY);
+    if (mVelocityTracker != nullptr) {
+        mVelocityTracker->addMovement(event);
+    }
+    if (mActivePointerId == ACTIVE_POINTER_ID_NONE) {
+        return;
+    }
+    const int action = event.getActionMasked();
+    const int activePointerIndex = event.findPointerIndex(mActivePointerId);
+    if (activePointerIndex >= 0) {
+        checkSelectForSwipe(action, event, activePointerIndex);
+    }
+    RecyclerView::ViewHolder* viewHolder = mSelected;
+    if (viewHolder == nullptr) {
+        return;
+    }
+    switch (action) {
+    case MotionEvent::ACTION_MOVE:
+        // Find the index of the active pointer and fetch its position
         if (activePointerIndex >= 0) {
-            checkSelectForSwipe(action, event, activePointerIndex);
+            updateDxDy(event, mSelectedFlags, activePointerIndex);
+            moveIfNecessary(*viewHolder);
+            mRecyclerView->removeCallbacks(mScrollRunnable);
+            mScrollRunnable();//.run();
+            mRecyclerView->invalidate();
         }
-        ViewHolder* viewHolder = mSelected;
-        if (viewHolder == nullptr) {
-            return;
+        break;
+    case MotionEvent::ACTION_CANCEL:
+        if (mVelocityTracker != nullptr) {
+            mVelocityTracker->clear();
         }
-        switch (action) {
-        case MotionEvent::ACTION_MOVE: {
-                // Find the index of the active pointer and fetch its position
-                if (activePointerIndex >= 0) {
-                    updateDxDy(event, mSelectedFlags, activePointerIndex);
-                    moveIfNecessary(viewHolder);
-                    mRecyclerView->removeCallbacks(mScrollRunnable);
-                    mScrollRunnable.run();
-                    mRecyclerView->invalidate();
-                }
-                break;
+        // fall through
+    case MotionEvent::ACTION_UP:
+        select(nullptr, ACTION_STATE_IDLE);
+        mActivePointerId = ACTIVE_POINTER_ID_NONE;
+        break;
+    case MotionEvent::ACTION_POINTER_UP: {
+            const int pointerIndex = event.getActionIndex();
+            const int pointerId = event.getPointerId(pointerIndex);
+            if (pointerId == mActivePointerId) {
+                // This was our active pointer going up. Choose a new
+                // active pointer and adjust accordingly.
+                const int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+                mActivePointerId = event.getPointerId(newPointerIndex);
+                updateDxDy(event, mSelectedFlags, pointerIndex);
             }
-        case MotionEvent::ACTION_CANCEL:
-            if (mVelocityTracker != nullptr) {
-                mVelocityTracker->clear();
-            }
-            // fall through
-        case MotionEvent::ACTION_UP:
-            select(null, ACTION_STATE_IDLE);
-            mActivePointerId = ACTIVE_POINTER_ID_NONE;
             break;
-        case MotionEvent::ACTION_POINTER_UP: {
-                const int pointerIndex = event.getActionIndex();
-                const int pointerId = event.getPointerId(pointerIndex);
-                if (pointerId == mActivePointerId) {
-                    // This was our active pointer going up. Choose a new
-                    // active pointer and adjust accordingly.
-                    final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-                    mActivePointerId = event.getPointerId(newPointerIndex);
-                    updateDxDy(event, mSelectedFlags, pointerIndex);
-                }
-                break;
-            }
         }
     }
+}
 
-    void onRequestDisallowInterceptTouchEvent(bool disallowIntercept) {
-        if (!disallowIntercept) {
-            return;
-        }
-        select(null, ACTION_STATE_IDLE);
+void ItemTouchHelper::onRequestDisallowInterceptTouchEvent(bool disallowIntercept) {
+    if (!disallowIntercept) {
+        return;
     }
-};
-#endif
-ItemTouchHelper::ItemTouchHelper(Callback& callback) {
+    select(nullptr, ACTION_STATE_IDLE);
+}
+
+ItemTouchHelper::ItemTouchHelper(Callback* callback) {
     mCallback = callback;
     mScrollRunnable = [this]() {
         if (mSelected != nullptr && scrollIfNecessary()) {
@@ -120,6 +116,9 @@ ItemTouchHelper::ItemTouchHelper(Callback& callback) {
             mRecyclerView->postOnAnimation(mScrollRunnable);
         }
     };
+    mOnItemTouchListener.onInterceptTouchEvent = std::bind(&ItemTouchHelper::onInterceptTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
+    mOnItemTouchListener.onTouchEvent = std::bind(&ItemTouchHelper::onTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
+    mOnItemTouchListener.onRequestDisallowInterceptTouchEvent = std::bind(&ItemTouchHelper::onRequestDisallowInterceptTouchEvent,this,std::placeholders::_1);
 }
 
 bool ItemTouchHelper::hitTest(View& child, float x, float y, float left, float top) {
@@ -150,14 +149,14 @@ void ItemTouchHelper::setupCallbacks() {
     mSlop = vc.getScaledTouchSlop();
     mRecyclerView->addItemDecoration(this);
     mRecyclerView->addOnItemTouchListener(mOnItemTouchListener);
-    mRecyclerView->addOnChildAttachStateChangeListener(*this);
+    LOGD("TOBEOPENED");//mRecyclerView->addOnChildAttachStateChangeListener(*this);
     startGestureDetection();
 }
 
 void ItemTouchHelper::destroyCallbacks() {
     mRecyclerView->removeItemDecoration(this);
     mRecyclerView->removeOnItemTouchListener(mOnItemTouchListener);
-    mRecyclerView->removeOnChildAttachStateChangeListener(*this);
+    LOGD("TOBEOPENED");//mRecyclerView->removeOnChildAttachStateChangeListener(*this);
     // clean all attached
     const int recoverAnimSize = mRecoverAnimations.size();
     for (int i = recoverAnimSize - 1; i >= 0; i--) {
@@ -207,7 +206,7 @@ void ItemTouchHelper::onDrawOver(Canvas& c, RecyclerView& parent, RecyclerView::
         dx = mTmpPosition[0];
         dy = mTmpPosition[1];
     }
-    mCallback->onDrawOver(c, &parent, *mSelected, mRecoverAnimations, mActionState, dx, dy);
+    mCallback->onDrawOver(c, parent, mSelected, mRecoverAnimations, mActionState, dx, dy);
 }
 
 void ItemTouchHelper::onDraw(Canvas& c, RecyclerView& parent, RecyclerView::State& state) {
@@ -347,7 +346,7 @@ void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState
 
 void ItemTouchHelper::postDispatchSwipe(RecoverAnimation* anim,int swipeDir) {
     // wait until animations are complete.
-    const Runnable r=[this,anim,r,swipeDir]() {
+    const Runnable r([this,anim,r,swipeDir]() {
         if (mRecyclerView != nullptr && mRecyclerView->isAttachedToWindow() && !anim->mOverridden
                 && anim->mViewHolder->getAdapterPosition() != RecyclerView::NO_POSITION) {
             RecyclerView::ItemAnimator* animator = mRecyclerView->getItemAnimator();
@@ -361,7 +360,7 @@ void ItemTouchHelper::postDispatchSwipe(RecoverAnimation* anim,int swipeDir) {
                 mRecyclerView->post(r);
             }
         }
-    };
+    });
     mRecyclerView->post(r);
 }
 
@@ -871,23 +870,11 @@ void ItemTouchHelper::removeChildDrawingOrderCallbackIfNecessary(View* view) {
     }
 }
 /*************************************************************************************************/
-/*public abstract static class ItemTouchHelper::Callback {
+//public abstract static class ItemTouchHelper::Callback {
 
-private static final Interpolator sDragScrollInterpolator = new Interpolator() {
-    public float getInterpolation(float t) {
-        return t * t * t * t * t;
-    }
-};
-
-private static final Interpolator sDragViewScrollCapInterpolator = new Interpolator() {
-    public float getInterpolation(float t) {
-        t -= 1.0f;
-        return t * t * t * t * t + 1.0f;
-    }
-};*/
-
-static ItemTouchUIUtil getDefaultUIUtil() {
-    return ItemTouchUIUtilImpl.INSTANCE;
+static NeverDestroyed<ItemTouchUIUtilImpl>INSTANCE;
+ItemTouchUIUtil& ItemTouchHelper::Callback::getDefaultUIUtil() {
+    return *INSTANCE;
 }
 
 int ItemTouchHelper::Callback::convertToRelativeDirection(int flags, int layoutDirection) {
@@ -1043,7 +1030,7 @@ RecyclerView::ViewHolder* ItemTouchHelper::Callback::chooseDropTarget(RecyclerVi
 
 void ItemTouchHelper::Callback::onSelectedChanged(RecyclerView::ViewHolder* viewHolder, int actionState) {
     if (viewHolder != nullptr) {
-        ItemTouchUIUtilImpl.INSTANCE.onSelected(viewHolder->itemView);
+        getDefaultUIUtil().onSelected(*viewHolder->itemView);
     }
 }
 
@@ -1106,20 +1093,19 @@ void ItemTouchHelper::Callback::onDraw(Canvas& c, RecyclerView& parent, Recycler
     }
 }
 
-void ItemTouchHelper::Callback::onDrawOver(Canvas& c, RecyclerView& parent, RecyclerView::ViewHolder& selected,
+void ItemTouchHelper::Callback::onDrawOver(Canvas& c, RecyclerView& parent, RecyclerView::ViewHolder* selected,
         std::vector<ItemTouchHelper::RecoverAnimation*>& recoverAnimationList,
         int actionState, float dX, float dY) {
     const int recoverAnimSize = recoverAnimationList.size();
     for (int i = 0; i < recoverAnimSize; i++) {
         ItemTouchHelper::RecoverAnimation* anim = recoverAnimationList.at(i);
         c.save();
-        onChildDrawOver(c, parent, anim->mViewHolder, anim->mX, anim->mY, anim->mActionState,
-                false);
+        onChildDrawOver(c, parent, *anim->mViewHolder, anim->mX, anim->mY, anim->mActionState, false);
         c.restore();
     }
-    if (&selected != nullptr) {
+    if (selected != nullptr) {
         c.save();
-        onChildDrawOver(c, parent, selected, dX, dY, actionState, true);
+        onChildDrawOver(c, parent, *selected, dX, dY, actionState, true);
         c.restore();
     }
     bool hasRunningAnimation = false;
@@ -1137,19 +1123,17 @@ void ItemTouchHelper::Callback::onDrawOver(Canvas& c, RecyclerView& parent, Recy
 }
 
 void ItemTouchHelper::Callback::clearView(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder) {
-    ItemTouchUIUtilImpl.INSTANCE.clearView(viewHolder.itemView);
+    getDefaultUIUtil().clearView(*viewHolder.itemView);
 }
 
 void ItemTouchHelper::Callback::onChildDraw(Canvas& c,RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder,
         float dX, float dY, int actionState, bool isCurrentlyActive) {
-    ItemTouchUIUtilImpl.INSTANCE.onDraw(c, recyclerView, viewHolder.itemView, dX, dY,
-            actionState, isCurrentlyActive);
+    getDefaultUIUtil().onDraw(c, recyclerView, *viewHolder.itemView, dX, dY, actionState, isCurrentlyActive);
 }
 
 void ItemTouchHelper::Callback::onChildDrawOver(Canvas& c,RecyclerView& recyclerView, RecyclerView::ViewHolder& viewHolder,
         float dX, float dY, int actionState, bool isCurrentlyActive) {
-    ItemTouchUIUtilImpl.INSTANCE.onDrawOver(c, recyclerView, viewHolder.itemView, dX, dY,
-            actionState, isCurrentlyActive);
+    getDefaultUIUtil().onDrawOver(c, recyclerView, *viewHolder.itemView, dX, dY, actionState, isCurrentlyActive);
 }
 
 long ItemTouchHelper::Callback::getAnimationDuration(RecyclerView& recyclerView, int animationType,
@@ -1171,15 +1155,17 @@ int ItemTouchHelper::Callback::interpolateOutOfBoundsScroll(RecyclerView& recycl
     const int direction = (int) signum(viewSizeOutOfBounds);
     // might be negative if other direction
     float outOfBoundsRatio = std::min(1.f, 1.f * absOutOfBounds / viewSize);
-    const int cappedScroll = (int) (direction * maxScroll
-            * sDragViewScrollCapInterpolator->getInterpolation(outOfBoundsRatio));
+    outOfBoundsRatio -=1.f;
+    outOfBoundsRatio = outOfBoundsRatio*outOfBoundsRatio*outOfBoundsRatio*outOfBoundsRatio*outOfBoundsRatio+1.f;
+    const int cappedScroll = (int) (direction * maxScroll*outOfBoundsRatio);//* sDragViewScrollCapInterpolator->getInterpolation(outOfBoundsRatio));
     float timeRatio;
     if (msSinceStartScroll > DRAG_SCROLL_ACCELERATION_LIMIT_TIME_MS) {
         timeRatio = 1.f;
     } else {
         timeRatio = (float) msSinceStartScroll / DRAG_SCROLL_ACCELERATION_LIMIT_TIME_MS;
     }
-    const int value = (int) (cappedScroll * sDragScrollInterpolator->getInterpolation(timeRatio));
+    timeRatio = timeRatio*timeRatio*timeRatio*timeRatio*timeRatio;
+    const int value = (int) (cappedScroll * timeRatio);/*sDragScrollInterpolator->getInterpolation(timeRatio)*/;
     if (value == 0) {
         return viewSizeOutOfBounds > 0 ? 1 : -1;
     }
@@ -1279,12 +1265,12 @@ ItemTouchHelper::RecoverAnimation::RecoverAnimation(RecyclerView::ViewHolder* vi
     mTargetY = targetY;
     mValueAnimator = ValueAnimator::ofFloat({0.f, 1.f});
     ValueAnimator::AnimatorUpdateListener ls;
-    ls.onAnimationUpdate=[](ValueAnimator& animation) {
+    ls/*onAnimationUpdate*/ = [this](ValueAnimator& animation) {
        setFraction(animation.getAnimatedFraction());
     };
     mValueAnimator->addUpdateListener(ls);
     mValueAnimator->setTarget(viewHolder->itemView);
-    mValueAnimator->addListener(this);
+    mValueAnimator->addListener(*this);
     setFraction(0.f);
 }
 
@@ -1338,5 +1324,4 @@ void ItemTouchHelper::RecoverAnimation::onAnimationRepeat(Animator& animation) {
 }
 
 }/*endof namespace*/
-#endif
 

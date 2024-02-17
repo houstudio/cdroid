@@ -1,6 +1,7 @@
 #ifndef __ITEMTOUCH_HELPER_H__
 #define __ITEMTOUCH_HELPER_H__
 #include <widgetEx/recyclerview/recyclerview.h>
+#include <widgetEx/recyclerview/itemtouchuiutil.h>
 namespace cdroid{
 
 class ItemTouchHelper:public RecyclerView::ItemDecoration{
@@ -96,8 +97,12 @@ private:
     int checkVerticalSwipe(RecyclerView::ViewHolder& viewHolder, int flags);
     void addChildDrawingOrderCallback();
     void removeChildDrawingOrderCallbackIfNecessary(View* view);
+    /*binding functions for mOnItemTouchListener*/
+    bool onInterceptTouchEvent(RecyclerView& recyclerView,MotionEvent& event);
+    void onTouchEvent(RecyclerView& recyclerView,MotionEvent& event);
+    void onRequestDisallowInterceptTouchEvent(bool disallowIntercept);
 public:
-    ItemTouchHelper(Callback& callback);
+    ItemTouchHelper(Callback* callback);
     void attachToRecyclerView(RecyclerView* recyclerView);
     void onDrawOver(Canvas& c, RecyclerView& parent, RecyclerView::State& state)override;
     void onDraw(Canvas& c, RecyclerView& parent, RecyclerView::State& state)override;
@@ -135,12 +140,10 @@ protected:
     bool hasSwipeFlag(RecyclerView& recyclerView, RecyclerView::ViewHolder& viewHolder);
     void onDraw(Canvas& c, RecyclerView& parent, RecyclerView::ViewHolder& selected,
          std::vector<ItemTouchHelper::RecoverAnimation*>& recoverAnimationList,int actionState, float dX, float dY);
-    void onDrawOver(Canvas& c, RecyclerView* parent, RecyclerView::ViewHolder& selected,
+    void onDrawOver(Canvas& c, RecyclerView& parent, RecyclerView::ViewHolder* selected,
          std::vector<ItemTouchHelper::RecoverAnimation*>& recoverAnimationList, int actionState, float dX, float dY);
 public:
-    static ItemTouchUIUtil getDefaultUIUtil() {
-        return ItemTouchUIUtilImpl.INSTANCE;
-    }
+    static ItemTouchUIUtil& getDefaultUIUtil();
     static int convertToRelativeDirection(int flags, int layoutDirection);
     static int makeMovementFlags(int dragFlags, int swipeFlags);
     static int makeFlag(int actionState, int directions);
