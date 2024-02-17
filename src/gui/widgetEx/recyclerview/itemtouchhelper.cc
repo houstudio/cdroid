@@ -116,6 +116,9 @@ ItemTouchHelper::ItemTouchHelper(Callback* callback) {
             mRecyclerView->postOnAnimation(mScrollRunnable);
         }
     };
+    mOnChildAttachStateChangeListener.onChildViewAttachedToWindow = std::bind(&ItemTouchHelper::onChildViewAttachedToWindow,this,std::placeholders::_1);
+    mOnChildAttachStateChangeListener.onChildViewDetachedFromWindow = std::bind(&ItemTouchHelper::onChildViewDetachedFromWindow,this,std::placeholders::_1);
+
     mOnItemTouchListener.onInterceptTouchEvent = std::bind(&ItemTouchHelper::onInterceptTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
     mOnItemTouchListener.onTouchEvent = std::bind(&ItemTouchHelper::onTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
     mOnItemTouchListener.onRequestDisallowInterceptTouchEvent = std::bind(&ItemTouchHelper::onRequestDisallowInterceptTouchEvent,this,std::placeholders::_1);
@@ -149,14 +152,14 @@ void ItemTouchHelper::setupCallbacks() {
     mSlop = vc.getScaledTouchSlop();
     mRecyclerView->addItemDecoration(this);
     mRecyclerView->addOnItemTouchListener(mOnItemTouchListener);
-    LOGD("TOBEOPENED");//mRecyclerView->addOnChildAttachStateChangeListener(*this);
+    mRecyclerView->addOnChildAttachStateChangeListener(mOnChildAttachStateChangeListener);
     startGestureDetection();
 }
 
 void ItemTouchHelper::destroyCallbacks() {
     mRecyclerView->removeItemDecoration(this);
     mRecyclerView->removeOnItemTouchListener(mOnItemTouchListener);
-    LOGD("TOBEOPENED");//mRecyclerView->removeOnChildAttachStateChangeListener(*this);
+    mRecyclerView->removeOnChildAttachStateChangeListener(mOnChildAttachStateChangeListener);
     // clean all attached
     const int recoverAnimSize = mRecoverAnimations.size();
     for (int i = recoverAnimSize - 1; i >= 0; i--) {
@@ -521,12 +524,12 @@ void ItemTouchHelper::moveIfNecessary(RecyclerView::ViewHolder& viewHolder) {
 }
 
 
-void ItemTouchHelper::onChildViewAttachedToWindow(View* view) {
+void ItemTouchHelper::onChildViewAttachedToWindow(View& view) {
 }
 
-void ItemTouchHelper::onChildViewDetachedFromWindow(View* view) {
-    removeChildDrawingOrderCallbackIfNecessary(view);
-    RecyclerView::ViewHolder* holder = mRecyclerView->getChildViewHolder(view);
+void ItemTouchHelper::onChildViewDetachedFromWindow(View& view) {
+    removeChildDrawingOrderCallbackIfNecessary(&view);
+    RecyclerView::ViewHolder* holder = mRecyclerView->getChildViewHolder(&view);
     if (holder == nullptr) {
         return;
     }
@@ -559,7 +562,7 @@ void ItemTouchHelper::endRecoverAnimation(RecyclerView::ViewHolder& viewHolder, 
     }
 }
 
-void ItemTouchHelper::getItemOffsets(Rect& outRect, View* view, RecyclerView& parent,
+void ItemTouchHelper::getItemOffsets(Rect& outRect, View& view, RecyclerView& parent,
         RecyclerView::State& state) {
     outRect.setEmpty();
 }

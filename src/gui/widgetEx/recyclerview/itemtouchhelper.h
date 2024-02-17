@@ -68,7 +68,7 @@ private:
     //ItemTouchHelperGestureListener mItemTouchHelperGestureListener;
 
     RecyclerView::OnItemTouchListener mOnItemTouchListener;
-
+    RecyclerView::OnChildAttachStateChangeListener mOnChildAttachStateChangeListener;
     long mDragScrollStartTimeInMs;
     static bool hitTest(View& child, float x, float y, float left, float top);
 
@@ -106,9 +106,9 @@ public:
     void attachToRecyclerView(RecyclerView* recyclerView);
     void onDrawOver(Canvas& c, RecyclerView& parent, RecyclerView::State& state)override;
     void onDraw(Canvas& c, RecyclerView& parent, RecyclerView::State& state)override;
-    void onChildViewAttachedToWindow(View* view);
-    void onChildViewDetachedFromWindow(View* view);
-    void getItemOffsets(Rect& outRect, View* view, RecyclerView& parent, RecyclerView::State& state);
+    void onChildViewAttachedToWindow(View& view);
+    void onChildViewDetachedFromWindow(View& view);
+    void getItemOffsets(Rect& outRect, View& view, RecyclerView& parent, RecyclerView::State& state)override;
     void startDrag(RecyclerView::ViewHolder& viewHolder);
     void startSwipe(RecyclerView::ViewHolder& viewHolder);
 
@@ -185,7 +185,7 @@ public:
     void setDefaultDragDirs(int defaultDragDirs);
     int getSwipeDirs(RecyclerView& recyclerView, RecyclerView::ViewHolder& viewHolder);
     int getDragDirs(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder);
-    int getMovementFlags(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder);
+    int getMovementFlags(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder)override;
 };
 
 #if 0
