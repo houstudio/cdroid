@@ -48,10 +48,10 @@ public:
     }
     long getItemId(int position)override {return position;}
     void onItemRangeChanged(int positionStart, int itemCount, Object* payload)override{
-        LOGD("positionStart=%d itemCount=%d",positionStart,itemCount);
+        LOGV("positionStart=%d itemCount=%d",positionStart,itemCount);
     }
     void onItemRangeInserted(int positionStart, int itemCount)override{
-        LOGD("positionStart=%d itemCount=%d",positionStart,itemCount);
+        LOGV("positionStart=%d itemCount=%d",positionStart,itemCount);
     }
 };
 int main(int argc,const char*argv[]){
@@ -65,9 +65,9 @@ int main(int argc,const char*argv[]){
     rv->setAdapter(adapter);
     DividerItemDecoration* decoration = new DividerItemDecoration(&app, LinearLayout::VERTICAL);
 
-     auto anim=rv->getItemAnimator();
-     anim->setRemoveDuration(1000);
-     anim->setAddDuration(1000);
+    auto anim=rv->getItemAnimator();
+    anim->setRemoveDuration(100);
+    anim->setAddDuration(100);
     rv->getLayoutManager()->requestSimpleAnimationsInNextLayout();
     for(int i=0;i<100;i++){
         adapter->add(std::string("string ")+std::to_string(i));
@@ -77,7 +77,5 @@ int main(int argc,const char*argv[]){
     rv->addItemDecoration(decoration);
     w->addView(rv);
     w->requestLayout();
-    Runnable run([&](){adapter->add("1000");adapter->notifyItemInserted(100);});
-    w->postDelayed(run,4000);
     app.exec();
 }

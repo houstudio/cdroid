@@ -40,7 +40,7 @@ bool SimpleItemAnimator::animateAppearance(RecyclerView::ViewHolder& viewHolder,
         return animateMove(viewHolder, preLayoutInfo->left, preLayoutInfo->top,
                 postLayoutInfo.left, postLayoutInfo.top);
     } else {
-        LOGD_IF(_DEBUG,"ADDED: %p with view %p",viewHolder,viewHolder);
+        LOGD_IF(_DEBUG,"ADDED: %p with view %p",&viewHolder,&viewHolder);
         return animateAdd(viewHolder);
     }
 }
