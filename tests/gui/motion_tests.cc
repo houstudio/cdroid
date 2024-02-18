@@ -29,7 +29,7 @@ TEST_F(EVENT,Alloc_Free){
    }
    for(int i=0;i<100;i++){
       MotionEvent*m=new MotionEvent();
-      m->initialize(0,0,0,0,0,0,0,0,.0f,.0f,.0f,.0f,0,0,i%32,ptprops,coords);
+      m->initialize(0,0,0,0,0,0,0,0,0,.0f,.0f,.0f,.0f,0,0,i%32,ptprops,coords);
       delete m;
    }
 }
@@ -41,7 +41,7 @@ TEST_F(EVENT,EventPool){
     PointerProperties ptprops[128];
     for(int i=0;i<10000;i++){
         MotionEvent*m=pool.createMotionEvent();
-        m->initialize(0,0,0,0,0,0,0,0,.0f,.0f,.0f,.0f,0,0,i%32,ptprops,coords);
+        m->initialize(0,0,0,0,0,0,0,0,0,.0f,.0f,.0f,.0f,0,0,i%32,ptprops,coords);
         pool.recycle(m);
     }
 }

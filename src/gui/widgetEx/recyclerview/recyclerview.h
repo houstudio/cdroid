@@ -278,7 +278,6 @@ private:/*private variables*/
     int mScrollStepConsumed[2];
 
     Runnable mItemAnimatorRunner;
-    Interpolator* mQuinticInterpolator;
     void*/*ViewInfoStore_ProcessCallback*/ mViewInfoProcessCallback;
     void initRecyclerView();
     void doItemAnimator();

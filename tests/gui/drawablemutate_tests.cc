@@ -1,9 +1,6 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
 #include <core/assets.h>
-#include <ngl_os.h>
-#include <ngl_timer.h>
-#include <ngl_misc.h>
 #include <drawables.h>
 #include <fstream>
 #include <sstream>

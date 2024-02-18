@@ -1,5 +1,5 @@
 #include <widget/viewdraghelper.h>
-
+#include <core/neverdestroyed.h>
 namespace cdroid{
 
 class VDInterpolator:public Interpolator {
@@ -9,6 +9,8 @@ public:
         return t * t * t * t * t + 1.0f;
     }
 };
+
+static NeverDestroyed<VDInterpolator> sInterpolator;
 
 ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* cb){
     LOGE_IF(forParent == nullptr||cb==nullptr,"Parent view & Callback view may not be null");
@@ -20,14 +22,13 @@ ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* c
     mEdgeSize = (int) (EDGE_SIZE * density + 0.5f);
     mCapturedView = nullptr;
     mPointersDown = INVALID_POINTER;
-    sInterpolator = new VDInterpolator();
 
     mDragState = STATE_IDLE;
     mVelocityTracker = nullptr;
     mTouchSlop = vc.getScaledTouchSlop();
     mMaxVelocity = vc.getScaledMaximumFlingVelocity();
     mMinVelocity = vc.getScaledMinimumFlingVelocity();
-    mScroller = new OverScroller(context, sInterpolator,true);
+    mScroller = new OverScroller(context, (VDInterpolator*)sInterpolator,true);
     mSetIdleRunnable = [this](){
         setDragState(STATE_IDLE);
     };

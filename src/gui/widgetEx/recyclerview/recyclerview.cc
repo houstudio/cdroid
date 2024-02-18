@@ -8,6 +8,7 @@
 #include <widgetEx/recyclerview/defaultitemanimator.h>
 #include <widgetEx/recyclerview/fastscroller.h>
 #include <view/focusfinder.h>
+#include <core/neverdestroyed.h>
 #include <cassert>
 
 namespace cdroid{
@@ -22,6 +23,8 @@ public:
         return t * t * t * t * t + 1.0f;
     }
 };
+
+static NeverDestroyed<QuinticInterpolator> sQuinticInterpolator;
 
 DECLARE_WIDGET2(RecyclerView,"cdroid:attr/recyclerviewStyle")
 
@@ -116,7 +119,6 @@ RecyclerView::~RecyclerView(){
     delete mRightGlow;
     delete mBottomGlow;
     delete mEdgeEffectFactory;
-    delete mQuinticInterpolator;
     delete (ViewInfoStore::ProcessCallback*)mViewInfoProcessCallback;
 }
 void RecyclerView::initRecyclerView(){
@@ -131,7 +133,6 @@ void RecyclerView::initRecyclerView(){
     mInterceptRequestLayoutDepth = 0;
     mState = new State();
     mViewInfoStore = new ViewInfoStore();
-    mQuinticInterpolator = new QuinticInterpolator(); 
     mViewFlinger = new ViewFlinger(this);
     mItemAnimator= new DefaultItemAnimator();
     mRecycler = new Recycler(this);
@@ -3243,7 +3244,7 @@ RecyclerView::ViewFlinger::ViewFlinger(RecyclerView*rv) {
     mReSchedulePostAnimationCallback = false;
     mRV = rv;
     mRunnable = std::bind(&ViewFlinger::run,this);
-    mScroller = new OverScroller(mRV->getContext(), mRV->mQuinticInterpolator);
+    mScroller = new OverScroller(mRV->getContext(), sQuinticInterpolator.get());
 }
 
 RecyclerView::ViewFlinger::~ViewFlinger(){
@@ -3433,18 +3434,17 @@ int RecyclerView::ViewFlinger::computeScrollDuration(int dx, int dy, int vx, int
 }
 
 void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy, int duration) {
-    smoothScrollBy(dx, dy, duration, mRV->mQuinticInterpolator);
+    smoothScrollBy(dx, dy, duration, sQuinticInterpolator.get());
 }
 
 void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy, Interpolator* interpolator) {
     smoothScrollBy(dx, dy, computeScrollDuration(dx, dy, 0, 0),
-            interpolator == nullptr ? mRV->mQuinticInterpolator : interpolator);
+            interpolator == nullptr ? sQuinticInterpolator.get() : interpolator);
 }
 
 void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy, int duration, Interpolator* interpolator) {
     if (mInterpolator != interpolator) {
         mInterpolator = interpolator;
-        //mScroller = new OverScroller(mRV->getContext(), interpolator);
         mScroller->setInterpolator(mInterpolator);
     }
     mRV->setScrollState(SCROLL_STATE_SETTLING);

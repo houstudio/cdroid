@@ -3,11 +3,13 @@
 #include <widget/recyclebin.h>
 #include <widget/fastscroller.h>
 #include <widget/edittext.h>
+#include <core/neverdestroyed.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 
 namespace cdroid {
 
+static NeverDestroyed<LinearInterpolator> sLinearInterpolator;
 AbsListView::AbsListView(int w,int h):AdapterView(w,h) {
     AttributeSet atts=mContext->obtainStyledAttributes("cdroid:attr/absListViewStyle");
     initAbsListView(atts);
@@ -4109,7 +4111,7 @@ void AbsListView::FlingRunnable::edgeReached(int delta) {
 void AbsListView::FlingRunnable::startScroll(int distance, int duration, bool linear, bool suppressEndFlingStateChangeCall) {
     const int initialY = distance < 0 ? INT_MAX : 0;
     mLastFlingY = initialY;
-    mScroller->setInterpolator(linear ? new LinearInterpolator() : nullptr);
+    mScroller->setInterpolator(linear ? sLinearInterpolator.get() : nullptr);
     mScroller->startScroll(0, initialY, 0, distance, duration);
     mLV->mTouchMode = TOUCH_MODE_FLING;
     mSuppressIdleStateChangeCall = suppressEndFlingStateChangeCall;
