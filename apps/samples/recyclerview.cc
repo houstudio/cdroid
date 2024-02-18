@@ -66,8 +66,10 @@ int main(int argc,const char*argv[]){
     DividerItemDecoration* decoration = new DividerItemDecoration(&app, LinearLayout::VERTICAL);
 
     auto anim=rv->getItemAnimator();
-    anim->setRemoveDuration(100);
-    anim->setAddDuration(100);
+    anim->setRemoveDuration(200);
+    anim->setAddDuration(200);
+    anim->setMoveDuration(200);
+    anim->setChangeDuration(200);
     rv->getLayoutManager()->requestSimpleAnimationsInNextLayout();
     for(int i=0;i<100;i++){
         adapter->add(std::string("string ")+std::to_string(i));

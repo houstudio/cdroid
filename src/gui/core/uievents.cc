@@ -335,6 +335,7 @@ static const char*META_SYMBOLIC_NAMES[]={
 const std::string KeyEvent::metaStateToString(int metaState){
     std::string result;
     int i=0;
+    if(metaState==0) result = "0";
     while (metaState != 0) {
         bool isSet = (metaState & 1) != 0;
         metaState >>= 1; // unsigned shift!

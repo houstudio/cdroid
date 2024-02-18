@@ -231,7 +231,7 @@ void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState
     if (selected == mSelected && actionState == mActionState) {
         return;
     }
-    mDragScrollStartTimeInMs = LLONG_MIN;//Long.MIN_VALUE;
+    mDragScrollStartTimeInMs = LONG_MIN;//Long.MIN_VALUE;
     const int prevActionState = mActionState;
     // prevent duplicate animations
     endRecoverAnimation(*selected, true);
@@ -382,12 +382,12 @@ bool ItemTouchHelper::hasRunningRecoverAnim() {
  */
 bool ItemTouchHelper::scrollIfNecessary() {
     if (mSelected == nullptr) {
-        mDragScrollStartTimeInMs = LLONG_MIN;//Long.MIN_VALUE;
+        mDragScrollStartTimeInMs = LONG_MIN;//Long.MIN_VALUE;
         return false;
     }
     const long now = SystemClock::currentTimeMillis();
     const long scrollDuration = mDragScrollStartTimeInMs
-            == LLONG_MIN ? 0 : now - mDragScrollStartTimeInMs;
+            == LONG_MIN ? 0 : now - mDragScrollStartTimeInMs;
     RecyclerView::LayoutManager* lm = mRecyclerView->getLayoutManager();
     Rect mTmpRect;
     int scrollX = 0;
@@ -430,13 +430,13 @@ bool ItemTouchHelper::scrollIfNecessary() {
                 mRecyclerView->getHeight(), scrollDuration);
     }
     if (scrollX != 0 || scrollY != 0) {
-        if (mDragScrollStartTimeInMs == LLONG_MIN) {
+        if (mDragScrollStartTimeInMs == LONG_MIN) {
             mDragScrollStartTimeInMs = now;
         }
         mRecyclerView->scrollBy(scrollX, scrollY);
         return true;
     }
-    mDragScrollStartTimeInMs = LLONG_MIN;//Long.MIN_VALUE;
+    mDragScrollStartTimeInMs = LONG_MIN;//Long.MIN_VALUE;
     return false;
 }
 
