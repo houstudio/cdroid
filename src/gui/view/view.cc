@@ -319,7 +319,7 @@ void View::initView(){
     mUnsetPressedState = nullptr;;
     mPendingCheckForLongPress = nullptr;
     mInputEventConsistencyVerifier = nullptr;
-    if(InputEventConsistencyVerifier::isInstrumentationEnabled())
+    if(InputEventConsistencyVerifier::isInstrumentationEnabled()&&View::VIEW_DEBUG)
         mInputEventConsistencyVerifier = new InputEventConsistencyVerifier(nullptr,0);
 
     mRenderNode  = new  RenderNode();

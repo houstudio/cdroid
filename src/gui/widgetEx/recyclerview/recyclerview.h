@@ -138,6 +138,7 @@ private:/*private classes*/
         int computeScrollDuration(int dx, int dy, int vx, int vy);
     public:
         ViewFlinger(RecyclerView*v);
+        ~ViewFlinger();
         void run();
         void disableRunOnAnimationRequests();
         void enableRunOnAnimationRequests();
@@ -277,7 +278,7 @@ private:/*private variables*/
     int mScrollStepConsumed[2];
 
     Runnable mItemAnimatorRunner;
-    static Interpolator* sQuinticInterpolator;
+    Interpolator* mQuinticInterpolator;
     void*/*ViewInfoStore_ProcessCallback*/ mViewInfoProcessCallback;
     void initRecyclerView();
     void doItemAnimator();

@@ -3,6 +3,13 @@ namespace cdroid{
 
 LinearSmoothScroller::LinearSmoothScroller(Context* context) {
     //MILLISECONDS_PER_PX = calculateSpeedPerPixel(context.getResources().getDisplayMetrics());
+    mLinearInterpolator = new LinearInterpolator();
+    mDecelerateInterpolator = new DecelerateInterpolator();
+}
+
+LinearSmoothScroller::~LinearSmoothScroller(){
+    delete mLinearInterpolator;
+    delete mDecelerateInterpolator;
 }
 
 void LinearSmoothScroller::onStart() {

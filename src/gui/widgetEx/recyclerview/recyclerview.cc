@@ -23,8 +23,6 @@ public:
     }
 };
 
-Interpolator* RecyclerView::sQuinticInterpolator = new QuinticInterpolator(); 
-
 DECLARE_WIDGET2(RecyclerView,"cdroid:attr/recyclerviewStyle")
 
 RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
@@ -118,6 +116,7 @@ RecyclerView::~RecyclerView(){
     delete mRightGlow;
     delete mBottomGlow;
     delete mEdgeEffectFactory;
+    delete mQuinticInterpolator;
     delete (ViewInfoStore::ProcessCallback*)mViewInfoProcessCallback;
 }
 void RecyclerView::initRecyclerView(){
@@ -132,6 +131,7 @@ void RecyclerView::initRecyclerView(){
     mInterceptRequestLayoutDepth = 0;
     mState = new State();
     mViewInfoStore = new ViewInfoStore();
+    mQuinticInterpolator = new QuinticInterpolator(); 
     mViewFlinger = new ViewFlinger(this);
     mItemAnimator= new DefaultItemAnimator();
     mRecycler = new Recycler(this);
@@ -3243,7 +3243,11 @@ RecyclerView::ViewFlinger::ViewFlinger(RecyclerView*rv) {
     mReSchedulePostAnimationCallback = false;
     mRV = rv;
     mRunnable = std::bind(&ViewFlinger::run,this);
-    mScroller = new OverScroller(mRV->getContext(), sQuinticInterpolator);
+    mScroller = new OverScroller(mRV->getContext(), mRV->mQuinticInterpolator);
+}
+
+RecyclerView::ViewFlinger::~ViewFlinger(){
+    delete mScroller;
 }
 
 void RecyclerView::ViewFlinger::run() {
@@ -3429,18 +3433,19 @@ int RecyclerView::ViewFlinger::computeScrollDuration(int dx, int dy, int vx, int
 }
 
 void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy, int duration) {
-    smoothScrollBy(dx, dy, duration, sQuinticInterpolator);
+    smoothScrollBy(dx, dy, duration, mRV->mQuinticInterpolator);
 }
 
 void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy, Interpolator* interpolator) {
     smoothScrollBy(dx, dy, computeScrollDuration(dx, dy, 0, 0),
-            interpolator == nullptr ? sQuinticInterpolator : interpolator);
+            interpolator == nullptr ? mRV->mQuinticInterpolator : interpolator);
 }
 
 void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy, int duration, Interpolator* interpolator) {
     if (mInterpolator != interpolator) {
         mInterpolator = interpolator;
-        mScroller = new OverScroller(mRV->getContext(), interpolator);
+        //mScroller = new OverScroller(mRV->getContext(), interpolator);
+        mScroller->setInterpolator(mInterpolator);
     }
     mRV->setScrollState(SCROLL_STATE_SETTLING);
     mLastFlingX = mLastFlingY = 0;

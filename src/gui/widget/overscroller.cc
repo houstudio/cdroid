@@ -363,6 +363,7 @@ OverScroller::OverScroller(Context* context, Interpolator* interpolator, bool fl
     } else {
         mInterpolator = interpolator;
     }
+    mOwnedInterpolator=(interpolator==nullptr);
     mFlywheel = flywheel;
     mScrollerX = new SplineOverScroller(context);
     mScrollerY = new SplineOverScroller(context);
@@ -371,16 +372,19 @@ OverScroller::OverScroller(Context* context, Interpolator* interpolator, bool fl
 OverScroller::~OverScroller(){
     delete mScrollerX;
     delete mScrollerY;
-    delete mInterpolator;
+    if(mOwnedInterpolator)
+        delete mInterpolator;
 }
 
 void OverScroller::setInterpolator(Interpolator* interpolator) {
-    delete mInterpolator;
+    if((interpolator!=mInterpolator)&&mOwnedInterpolator)
+        delete mInterpolator;
     if (interpolator == nullptr) {
         mInterpolator = new Scroller::ViscousFluidInterpolator();
     } else {
         mInterpolator = interpolator;
     }
+    mOwnedInterpolator=(interpolator==nullptr);
 }
 
 void OverScroller::setFriction(float friction) {

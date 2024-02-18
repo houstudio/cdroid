@@ -89,6 +89,7 @@ private:
 
     Interpolator* mInterpolator;
     bool mFlywheel;
+    bool mOwnedInterpolator;
 public:
     OverScroller(Context* context);
     OverScroller(Context* context, Interpolator* interpolator, bool flywheel=true);

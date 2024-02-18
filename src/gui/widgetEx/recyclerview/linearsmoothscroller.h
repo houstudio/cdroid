@@ -20,6 +20,7 @@ protected:
     bool mTargetVectorUsable;
 public:
     LinearSmoothScroller(Context* context);
+    ~LinearSmoothScroller();
     void onStart();
     void onTargetFound(View* targetView, RecyclerView::State& state, Action& action);
     void onSeekTargetStep(int dx, int dy, RecyclerView::State& state, Action& action);
