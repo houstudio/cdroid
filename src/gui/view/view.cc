@@ -307,6 +307,7 @@ void View::initView(){
     mDrawingCacheBackgroundColor = 0;
     mContext  = nullptr;
     mParent   = nullptr;
+    mKeyedTags = nullptr;
     mAttachInfo  = nullptr;
     mListenerInfo= nullptr;
     mTooltipInfo = nullptr;
@@ -391,6 +392,7 @@ View::~View(){
     if(isAttachedToWindow())onDetachedFromWindow();
     if(mBackground)mBackground->setCallback(nullptr);
 
+    delete mKeyedTags;
     delete mForegroundInfo;
     delete mPendingCheckForTap;
     delete mPendingCheckForLongPress;
@@ -3222,15 +3224,29 @@ void*View::getTag()const{
 }
 
 void View::setTag(int key,void*tag){
-    mTag = tag;
+    //FATAL_IF((key>>24)<2,"The key must be an application-specific resource id.";
+    setKeyedTag(key,tag);
 }
 
-void*View::getTag(int key)const{
+void* View::getTag(int key)const{
+    if (mKeyedTags != nullptr)
+        return mKeyedTags->get(key);
     return nullptr;
 }
 
+void View::setTagInternal(int key, void* tag) {
+    //FATAL_IF(((key >> 24) != 0x1,"The key must be a framework-specific resource id.";
+    setKeyedTag(key, tag);
+}
+
+void View::setKeyedTag(int key,void* tag){
+    if(mKeyedTags ==nullptr)
+        mKeyedTags = new SparseArray<void*>();
+    mKeyedTags->put(key,tag);
+}
+
 View& View::setHint(const std::string&hint){
-    mHint=hint;
+    mHint = hint;
     invalidate(true);
     return *this;
 }

@@ -384,7 +384,7 @@ private:
     View&operator=(const View&) = delete;
     //Temporary values used to hold (x,y) coordinates when delegating from the
     // two-arg performLongClick() method to the legacy no-arg version
-
+    void setKeyedTag(int key,void* tag);
     void removeTapCallback();
     void removeLongPressCallback();
     void removePerformClickCallback();
@@ -495,6 +495,7 @@ protected:
     Context* mContext;
     LayoutParams* mLayoutParams;
     TransformationInfo* mTransformationInfo;
+    SparseArray<void*>* mKeyedTags;
     Animation* mCurrentAnimation;
     std::vector<int> mDrawableState;
 
@@ -872,6 +873,7 @@ public:
     void*getTag()const;
     void setTag(int key,void*tag);
     void*getTag(int key)const;
+    void setTagInternal(int key, void* tag);
     virtual View& setHint(const std::string&hint);
     const std::string&getHint()const;
     void setContentDescription(const std::string&);
