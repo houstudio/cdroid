@@ -14,7 +14,7 @@ protected:
         static constexpr int64_t REVERSED_BIT = 0x100000000l;
         static constexpr int64_t REVERSIBLE_FLAG_BIT = 0x200000000l;
     protected:
-        LongSparseArray mTransitions;
+        LongSparseLongArray mTransitions;
         SparseIntArray mStateIds;
     public:
         AnimatedStateListState(const AnimatedStateListState* orig,AnimatedStateListDrawable* owner);

@@ -2,8 +2,8 @@
 #include <bitset.h>
 namespace cdroid{
 
-const std::vector<int>StateSet::NOTHING={0};
-const std::vector<int>StateSet::WILD_CARD={};
+const std::vector<int> StateSet::NOTHING = {0};
+const std::vector<int> StateSet::WILD_CARD = {};
 
 std::vector<int>StateSet::VIEW_STATE_IDS={
     WINDOW_FOCUSED , VIEW_STATE_WINDOW_FOCUSED,
@@ -24,31 +24,31 @@ void StateSet::trimStateSet(std::vector<int>&states,int newsize){
 }
 
 std::vector<int> StateSet::get(int mask){
-    std::vector<int>states;
-    for( int i=0 ; i<VIEW_STATE_IDS.size() ; i+=2 ){
+    std::vector<int> states;
+    for( int i = 0 ; i < VIEW_STATE_IDS.size() ; i += 2 ){
         if( mask & VIEW_STATE_IDS[i+1] )
            states.push_back(VIEW_STATE_IDS[i]);
     }
     return states;
 }
 
-bool StateSet::isWildCard(const std::vector<int>&stateSetOrSpec){
-    return stateSetOrSpec.size() == 0 || stateSetOrSpec[0] == 0;
+bool StateSet::isWildCard(const std::vector<int>& stateSetOrSpec){
+    return (stateSetOrSpec.size() == 0) || (stateSetOrSpec[0] == 0);
 }
 
-bool StateSet::stateSetMatches(const std::vector<int>&stateSpec,const std::vector<int>&stateSet){
+bool StateSet::stateSetMatches(const std::vector<int>& stateSpec,const std::vector<int>& stateSet){
     
     if (stateSet.size()==0)
-        return stateSpec.size()==0 || isWildCard(stateSpec);
+        return (stateSpec.size()==0) || isWildCard(stateSpec);
 
-    const int stateSpecSize=stateSpec.size();
-    const int stateSetSize=stateSet.size();
+    const int stateSpecSize = stateSpec.size();
+    const int stateSetSize = stateSet.size();
     for (int i = 0; i < stateSpecSize; i++) {
         int stateSpecState = stateSpec[i];
         if (stateSpecState == 0) { // We've reached the end of the cases to match against.
             return true;
         }
-        const bool mustMatch=(stateSpecState > 0);
+        const bool mustMatch = (stateSpecState > 0);
         if (stateSpecState<0) { // We use negative values to indicate must-NOT-match states.
             stateSpecState = -stateSpecState;
         }
@@ -80,8 +80,8 @@ bool StateSet::stateSetMatches(const std::vector<int>&stateSpec,const std::vecto
     return true;
 }
 
-bool StateSet::stateSetMatches(const std::vector<int>&stateSpec,int state){
-    const int stateSpecSize=stateSpec.size();
+bool StateSet::stateSetMatches(const std::vector<int>& stateSpec,int state){
+    const int stateSpecSize = stateSpec.size();
     for (int i = 0; i < stateSpecSize; i++) {
         int stateSpecState = stateSpec[i];
         if (stateSpecState == 0)// We've reached the end of the cases to match against.
@@ -97,7 +97,7 @@ bool StateSet::stateSetMatches(const std::vector<int>&stateSpec,int state){
     return true;
 }
 
-bool StateSet::containsAttribute(const std::vector<std::vector<int>>&stateSpecs,int attr){
+bool StateSet::containsAttribute(const std::vector<std::vector<int>>& stateSpecs,int attr){
     for (auto spec : stateSpecs) {
         if (spec.empty())  break;
         for (int specAttr : spec) {
@@ -108,9 +108,9 @@ bool StateSet::containsAttribute(const std::vector<std::vector<int>>&stateSpecs,
     return false;    
 }
 
-void StateSet::appendState(std::vector<int>&states,const std::string&s,int value){
+void StateSet::appendState(std::vector<int>& states,const std::string&s,int value){
     if(s.empty())return;
-    states.push_back(s.compare("true")?-value:value);
+    states.push_back(s.compare("true") ? -value : value);
 }
 
 int StateSet::parseState(std::vector<int>&states,const AttributeSet&atts){

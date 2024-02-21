@@ -5,13 +5,13 @@
 
 namespace cdroid{
 
-template<class T,T ValueIfKeyNotFound=nullptr>
-class SparseArray{
+template<typename K,typename T,T ValueIfKeyNotFound=nullptr>
+class SparseArrayImpl{
 private:
-    std::vector<int>mKeys;
+    std::vector<K>mKeys;
     std::vector<T>mValues;
 public:
-    SparseArray(){}
+    SparseArrayImpl(){}
     int size()const{
         return mKeys.size();
     }
@@ -61,10 +61,16 @@ public:
 	mValues.erase(mValues.begin()+idx);
     }
 };
+template<typename T,T ValueIfKeyNotFound = nullptr>
+using SparseArray = SparseArrayImpl<int,T, ValueIfKeyNotFound>;
 
-typedef SparseArray<bool,false>SparseBooleanArray;
-typedef SparseArray<int ,0 > SparseIntArray;
-typedef SparseArray<long,0 > SparseLongArray;
-typedef SparseArray<long,0 > LongSparseArray;
+using SparseBooleanArray = SparseArrayImpl<int, bool, false>;
+using SparseIntArray = SparseArrayImpl<int,int,0>;
+using SparseLongArray= SparseArrayImpl<int,long,0>;
+
+template<typename T,T ValueIfKeyNotFound = nullptr>
+using LongSparseArray= SparseArrayImpl<long,T,ValueIfKeyNotFound>;
+
+using LongSparseLongArray=LongSparseArray<long,0>;
 }
 #endif
