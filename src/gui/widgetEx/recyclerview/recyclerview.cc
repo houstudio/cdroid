@@ -2715,7 +2715,7 @@ void RecyclerView::onLayout(bool changed, int l, int t, int w, int h) {
 }
 
 void RecyclerView::requestLayout() {
-    if (mInterceptRequestLayoutDepth == 0 && !mLayoutFrozen) {
+    if ((mInterceptRequestLayoutDepth == 0) && !mLayoutFrozen) {
         ViewGroup::requestLayout();
     } else {
         mLayoutWasDefered = true;
@@ -3395,6 +3395,7 @@ void RecyclerView::ViewFlinger::fling(int velocityX, int velocityY) {
     mLastFlingX = mLastFlingY = 0;
     mScroller->fling(0, 0, velocityX, velocityY, INT_MIN, INT_MAX, INT_MIN, INT_MAX);
     postOnAnimation();
+    LOGD("velocityxy=%d,%d",velocityX,velocityY);
 }
 
 void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy) {
@@ -3450,12 +3451,12 @@ void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy, int duration, Int
     mRV->setScrollState(SCROLL_STATE_SETTLING);
     mLastFlingX = mLastFlingY = 0;
     mScroller->startScroll(0, 0, dx, dy, duration);
-    if (Build.VERSION.SDK_INT < 23) {/*<Android 6*/
+    /*if (Build.VERSION.SDK_INT < 23) {//Android 6
         // b/64931938 before API 23, startScroll() does not reset getCurX()/getCurY()
         // to start values, which causes fillRemainingScrollValues() put in obsolete values
         // for LayoutManager.onLayoutChildren().
         mScroller->computeScrollOffset();
-    }
+    }*/
     postOnAnimation();
 }
 
