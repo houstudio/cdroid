@@ -481,7 +481,7 @@ public:
     void setRecycledViewPool(RecycledViewPool* pool);
     void setViewCacheExtension(ViewCacheExtension* extension);
     void setItemViewCacheSize(int size);
-    int getScrollState();
+    int getScrollState()const;
     void setScrollState(int state);
     void addItemDecoration(ItemDecoration* decor, int index);
     void addItemDecoration(ItemDecoration* decor);

@@ -695,7 +695,7 @@ void RecyclerView::setItemViewCacheSize(int size) {
     mRecycler->setViewCacheSize(size);
 }
 
-int RecyclerView::getScrollState() {
+int RecyclerView::getScrollState() const{
     return mScrollState;
 }
 
@@ -1196,8 +1196,8 @@ void RecyclerView::releaseGlows() {
     if (mBottomGlow != nullptr) {
         mBottomGlow->onRelease();
         needsInvalidate |= mBottomGlow->isFinished();
-    }
-    if (needsInvalidate) {
+    }LOGE(".........%p needsInvalidate=%d",this,needsInvalidate);
+    if (needsInvalidate||1) {
         postInvalidateOnAnimation();
     }
 }
@@ -2742,9 +2742,9 @@ void RecyclerView::draw(Canvas& c) {
     // need find children closest to edges. Not sure if it is worth the effort.
     bool needsInvalidate = false;
     if (mLeftGlow  && !mLeftGlow->isFinished()) {
-        c.save();
         const int padding = mClipToPadding ? getPaddingBottom() : 0;
-        c.rotate(270);
+        c.save();
+        c.rotate_degrees(270);
         c.translate(-getHeight() + padding, 0);
         needsInvalidate = mLeftGlow && mLeftGlow->draw(c);
         c.restore();
@@ -2758,17 +2758,17 @@ void RecyclerView::draw(Canvas& c) {
         c.restore();
     }
     if (mRightGlow && !mRightGlow->isFinished()) {
-        c.save();
-        int width = getWidth();
+        const int width = getWidth();
         const int padding = mClipToPadding ? getPaddingTop() : 0;
-        c.rotate(90);
+        c.save();
+        c.rotate_degrees(90);
         c.translate(-padding, -width);
         needsInvalidate |= mRightGlow && mRightGlow->draw(c);
         c.restore();
     }
     if (mBottomGlow && !mBottomGlow->isFinished()) {
         c.save();
-        c.rotate(180);
+        c.rotate_degrees(180);
         if (mClipToPadding) {
             c.translate(-getWidth() + getPaddingRight(), -getHeight() + getPaddingBottom());
         } else {
@@ -2782,7 +2782,7 @@ void RecyclerView::draw(Canvas& c) {
             && mItemAnimator->isRunning()) {
         needsInvalidate = true;
     }
-
+    LOGD("%p draw needdrawedge=%d",this,needsInvalidate);
     if (needsInvalidate) {
         postInvalidateOnAnimation();
     }
@@ -3450,12 +3450,12 @@ void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy, int duration, Int
     mRV->setScrollState(SCROLL_STATE_SETTLING);
     mLastFlingX = mLastFlingY = 0;
     mScroller->startScroll(0, 0, dx, dy, duration);
-    /*if (Build.VERSION.SDK_INT < 23) {
+    if (Build.VERSION.SDK_INT < 23) {/*<Android 6*/
         // b/64931938 before API 23, startScroll() does not reset getCurX()/getCurY()
         // to start values, which causes fillRemainingScrollValues() put in obsolete values
         // for LayoutManager.onLayoutChildren().
         mScroller->computeScrollOffset();
-    }*/
+    }
     postOnAnimation();
 }
 

@@ -84,9 +84,9 @@ void EdgeEffect::onPull(float deltaDistance, float displacement){
     }
     if (mState != STATE_PULL) {
         if (edgeEffectBehavior == TYPE_STRETCH)
-             mPullDistance = mDistance;
+            mPullDistance = mDistance;
         else
-             mGlowScaleY = std::max(PULL_GLOW_BEGIN, mGlowScaleY);
+            mGlowScaleY = std::max(PULL_GLOW_BEGIN, mGlowScaleY);
     }
     mState = STATE_PULL;
 
@@ -230,11 +230,11 @@ bool EdgeEffect::draw(Canvas& canvas){
         mVelocity = 0;
     } 
     bool oneLastFrame = false;
-    if (mState == STATE_RECEDE && mDistance ==0 && mVelocity == 0) {
+    if ((mState == STATE_RECEDE) && (mDistance ==0) && (mVelocity == 0)) {
         mState = STATE_IDLE;
         oneLastFrame = true;
     }
-    return mState != STATE_IDLE || oneLastFrame;
+    return (mState != STATE_IDLE) || oneLastFrame;
 }
 
 int EdgeEffect::getMaxHeight()const{
