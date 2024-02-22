@@ -349,45 +349,46 @@ RefPtr<MeshPattern>MeshPattern::create(){
 #define blendWithoutPremultiply blend
 SweepGradient::SweepGradient(double cx,double cy,double r,double angleRadians,const std::vector<ColorStop>&stopColors)
   :MeshPattern(){
-    std::vector<ColorStop>stops=stopColors;
+    std::vector<ColorStop>stops = stopColors;
+    ColorStop front = stops.front();
+    ColorStop back  = stops.back();
     auto interpolatedStop = [&] (double fraction) -> ColorStop {
-            auto offset = blend(stops.front().offset, stops.back().offset, fraction);
-            auto r = blendWithoutPremultiply(stops.front().red, stops.back().red, fraction);
-            auto g = blendWithoutPremultiply(stops.front().green, stops.back().green, fraction);
-            auto b = blendWithoutPremultiply(stops.front().blue, stops.back().blue, fraction);
-            auto a = blendWithoutPremultiply(stops.front().alpha, stops.back().alpha, fraction);
-            return { offset, r,g,b,a };
+            //auto offset = blend(front.offset, back.offset, fraction);
+            auto r = blendWithoutPremultiply(front.red, back.red, fraction);
+            auto g = blendWithoutPremultiply(front.green, back.green, fraction);
+            auto b = blendWithoutPremultiply(front.blue, back.blue, fraction);
+            auto a = blendWithoutPremultiply(front.alpha, back.alpha, fraction);
+            return { fraction, r,g,b,a };
         };
-    if (stops.size() == 1)
-        stops = { stops.front(), stops.front() };
-
+    if (stops.size() == 1){
+        back.alpha=front.alpha!=0.f?0.f:1.f;
+        stops = { front, back };
+    }
     // It's not possible to paint an entire circle with a single Bezier curve.
     // To have a good approximation to a circle it's necessary to use at least four Bezier curves.
     // So add three additional interpolated stops, allowing for four Bezier curves.
     if (stops.size() == 2) {
         // The first two checks avoid degenerated interpolations. These interpolations
         // may cause Cairo to enter really slow operations with huge bezier parameters.
-        if (stops.front().offset == 1.0) {
-            auto first = stops.front();
-            for(int i=0;i<3;i++)stops.push_back(first);
+        if (front.offset == 1.0) {
+            back.offset = 0.f;
+            for(int i=0;i<3;i++)stops.push_back(front);
             for(int i=0;i<4;i++)stops.at(i).offset=.25f*i;
-        } else if (stops.back().offset == 0.0) {
-            auto last = stops.back();
-            for(int i=0;i<3;i++)stops.push_back(last);
-            for(int i=1;i<5;i++)stops.at(i).offset=.25f*i;
+        } else if (back.offset == 0.0) {
+            front.offset = 1.f;
+            for(int i=0;i<3;i++)stops.push_back(back);
         } else {
             for(int i=0;i<3;i++)stops.push_back(stops.back());
-            for(int i=1;i<5;i++){
-                auto s= interpolatedStop(.25f*i);
-                stops.at(i)=s;
-            }
-            //stops = { stops.first(), interpolatedStop(0.25), interpolatedStop(0.5), interpolatedStop(0.75), stops.last() };
         }
-    }else{
-        //stops.insert(stops.begin()+3);
-        //stops.insert(stops.begin()+1,stops.front());
-        for(int i=0;i<stops.size();i++)
-           stops.at(i).offset=0.25f*i;
+        for(int i=0;i<5;i++){
+            ColorStop& c=stops.at(i);
+            c = interpolatedStop(.25f*i);
+        }
+    }else{//3 colorstops
+        for(int i=0;i<stops.size();i++){
+           ColorStop& c=stops.at(i);
+           c.offset=float(i)/(stops.size()-1);
+        }
     }
 
     auto first=stops.front();

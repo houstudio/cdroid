@@ -747,7 +747,7 @@ bool GradientDrawable::ensureValidRect() {
                 if (st.mGradientRadiusType == RADIUS_TYPE_FRACTION) {
                     // Fall back to parent width or height if intrinsic size is not specified.
                     const float width = st.mWidth >= 0 ? st.mWidth   :r.width;
-                    const float height = st.mHeight >= 0?st.mHeight:r.height;
+                    const float height = st.mHeight >= 0? st.mHeight : r.height;
                     radius *= std::min(width, height);
                 } else if (st.mGradientRadiusType == RADIUS_TYPE_FRACTION_PARENT) {
                     radius *= std::min(r.width, r.height);
@@ -761,7 +761,7 @@ bool GradientDrawable::ensureValidRect() {
                     // let's have a very, very small radius.
                     radius = 0.001f;
                 }
-                RefPtr<Cairo::RadialGradient>pat=RadialGradient::create( x0, y0, radius,x0,y0,0);
+                RefPtr<Cairo::RadialGradient>pat = RadialGradient::create( x0, y0, radius,x0,y0,0);
                 for(int i=0; i<gradientColors.size(); i++) {
                     Color c((uint32_t)gradientColors[i]);
                     pat->add_color_stop_rgba(st.mPositions[i],c.red(),c.green(),c.blue(),c.alpha());
@@ -769,26 +769,14 @@ bool GradientDrawable::ensureValidRect() {
                 mFillPaint=pat;
             } else if (st.mGradient == SWEEP_GRADIENT) {
                 const double RADIUS = std::min(mRect.width,mRect.height);
-                std::vector<Cairo::ColorStop>stops;
+                std::vector<Cairo::ColorStop> stops;
                 for(int i=0; i<gradientColors.size(); i++) {
                     Color c = gradientColors[i];
                     stops.push_back({0,c.red(),c.green(),c.blue(),c.alpha()});
                 }
-                RefPtr<SweepGradient>pat=SweepGradient::create(x0, y0,RADIUS,M_PI*2.f,stops);
-                double c = RADIUS*0.5f;
                 x0 = r.left+ r.width * st.mCenterX;
                 y0 = r.top + r.height * st.mCenterY;
-                pat->begin_patch();
-                pat->move_to(x0+RADIUS,y0);
-                pat->curve_to(x0+RADIUS, y0 +c, x0 + c,y0 + RADIUS,x0,y0+RADIUS);
-                pat->curve_to(x0-c, y0 +RADIUS, x0 -RADIUS,y0 +c,x0-RADIUS,y0);
-                pat->curve_to(x0-RADIUS, y0-c, x0 - c,y0-RADIUS,x0,y0-RADIUS);
-                pat->curve_to(x0+c, y0 -RADIUS, x0 + RADIUS,y0 -c,x0+RADIUS,y0);
-                for(int i=0; i < gradientColors.size(); i++) {
-                    Color c = gradientColors[i];
-                    pat->set_corner_color_rgba(i,c.red(),c.green(),c.blue(),c.alpha());
-                }
-                pat->end_patch();
+                RefPtr<SweepGradient>pat = SweepGradient::create(x0, y0,RADIUS,M_PI/2.f,stops);
                 mFillPaint=pat;
             }
 
@@ -923,11 +911,10 @@ void GradientDrawable::draw(Canvas&canvas) {
         break;
     case OVAL:
         rad = mRect.height/2.f;
-        canvas.translate(mRect.centerX(),mRect.centerY());
         canvas.scale(float(mRect.width)/mRect.height,1.f);
         LOGV("%p size=%.fx%.f radius=%f strokewidth=%d",this,mRect.width,mRect.height,(float)st->mRadius,st->mStrokeWidth);
         canvas.begin_new_sub_path();
-        canvas.arc(0,0,rad,0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
+        canvas.arc(mRect.centerX(),mRect.centerY(),rad,0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
 		
         if(mFillPaint)canvas.set_source(mFillPaint);
         if (haveStroke) {
@@ -945,12 +932,12 @@ void GradientDrawable::draw(Canvas&canvas) {
         RectF bounds= {mRect.left,mRect.top,mRect.width,mRect.height};
         float thickness = st->mThickness!=-1 ? st->mThickness:bounds.width/st->mThicknessRatio;
         float radius = st->mInnerRadius!=-1 ? st->mInnerRadius :bounds.width/st->mInnerRadiusRatio;
+        canvas.scale(bounds.width/bounds.height,1.f);
         RectF innerBounds = bounds;
-        float x= bounds.width/2.f;
-        float y= bounds.height/2.f;
+        const float x= bounds.centerX();
+        const float y= bounds.centerY();
         if(innerRadius<=0.f)
             innerRadius=std::min(mRect.width,mRect.height)/2.f-thickness;
-        //canvas.translate(x,y);
         canvas.begin_new_sub_path();
         if( sweep<360.f && sweep>-360.f ) {
             canvas.arc(x,y,innerRadius,0,M_PI*2*sweep/360.f);
