@@ -56,7 +56,7 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mPendingCheckForTap = nullptr;
     mPendingCheckForKeyLongPress = nullptr;
     mPerformClick = nullptr;
-    mFlingRunnable = nullptr;//new FlingRunnable(this);
+    mFlingRunnable = new FlingRunnable(this);
 
     mSelector  = nullptr;
     mDirection = 0;
@@ -3031,8 +3031,6 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
                         (mFirstPosition + childCount == mItemCount &&
                         lastBottom == contentBottom + mOverscrollDistance))) {
                     if (!dispatchNestedPreFling(0, -initialVelocity)) {
-                        if(mFlingRunnable==nullptr)
-                            mFlingRunnable = new FlingRunnable(this);
                         reportScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
                         mFlingRunnable->start(-initialVelocity);
                         dispatchNestedFling(0, -initialVelocity, true);
@@ -3059,8 +3057,6 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
         break;
 
     case TOUCH_MODE_OVERSCROLL:/*5*/
-        if(mFlingRunnable==nullptr)
-            mFlingRunnable = new FlingRunnable(this);
         mVelocityTracker->computeCurrentVelocity(1000, mMaximumVelocity);
         const int initialVelocity = mVelocityTracker->getYVelocity(mActivePointerId);
 
@@ -3107,9 +3103,6 @@ bool AbsListView::shouldAbsorb(EdgeEffect* edgeEffect, int velocity) {
     const float distance = edgeEffect->getDistance() * getHeight();
 
     // This is flinging without the spring, so let's see if it will fling past the overscroll
-    if (mFlingRunnable == nullptr) {
-        mFlingRunnable = new FlingRunnable(this);
-    }
     const float flingDistance = mFlingRunnable->getSplineFlingDistance(-velocity);
 
     return flingDistance < distance;
@@ -3146,8 +3139,6 @@ bool AbsListView::shouldDisplayEdgeEffects()const {
 void AbsListView::onTouchCancel() {
     switch (mTouchMode) {
     case TOUCH_MODE_OVERSCROLL:
-        if(mFlingRunnable==nullptr)
-            mFlingRunnable = new FlingRunnable(this);
         mFlingRunnable->startSpringback();
         break;
 
@@ -3245,8 +3236,6 @@ bool AbsListView::onGenericMotionEvent(MotionEvent& event) {
 }
 
 void AbsListView::fling(int velocity) {
-    if(mFlingRunnable == nullptr)
-        mFlingRunnable = new FlingRunnable(this);
     reportScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
     mFlingRunnable->start(velocity);
 }
@@ -3283,8 +3272,6 @@ bool AbsListView::onNestedFling(View* target, float velocityX, float velocityY, 
     if (!consumed && childCount > 0 && canScrollList((int) velocityY) &&
             std::abs(velocityY) > mMinimumVelocity) {
         reportScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
-        if(mFlingRunnable==nullptr)
-            mFlingRunnable = new FlingRunnable(this);
         if (!dispatchNestedPreFling( 0 , velocityY)) {
             mFlingRunnable->start(velocityY);
         }
@@ -3294,8 +3281,6 @@ bool AbsListView::onNestedFling(View* target, float velocityX, float velocityY, 
 }
 
 void AbsListView::setFriction(float friction) {
-    if(mFlingRunnable==nullptr)
-        mFlingRunnable = new FlingRunnable(this);
     if(mFlingRunnable->mScroller)
         mFlingRunnable->mScroller->setFriction(friction);
 }
@@ -3346,8 +3331,6 @@ void AbsListView::smoothScrollBy(int distance, int duration, bool linear,bool su
     const int lastPos = mFirstPosition + childCount;
     const int topLimit = getPaddingTop();
     const int bottomLimit = getHeight() - getPaddingBottom();
-    if(mFlingRunnable==nullptr)
-        mFlingRunnable = new FlingRunnable(this);	    
     if ( (distance == 0) || (mItemCount == 0) || (childCount == 0) ||
         ( (mFirstPosition == 0) && (getChildAt(0)->getTop() == topLimit) && (distance < 0) ) ||
         ( (lastPos == mItemCount) && (getChildAt(childCount - 1)->getBottom() == bottomLimit) && (distance > 0) )) {
