@@ -52,10 +52,10 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mEdgeGlowBottom = new EdgeEffect(mContext);
     mEdgeGlowTop = new EdgeEffect(mContext);
 
-    mPendingCheckForLongPress = nullptr;
-    mPendingCheckForTap = nullptr;
-    mPendingCheckForKeyLongPress = nullptr;
-    mPerformClick = nullptr;
+    mPendingCheckForLongPress = new CheckForLongPress(this);
+    mPendingCheckForTap = new CheckForTap(this);;
+    mPendingCheckForKeyLongPress = new CheckForKeyLongPress(this);
+    mPerformClick = new PerformClick(this);
     mFlingRunnable = new FlingRunnable(this);
 
     mSelector  = nullptr;
@@ -1322,8 +1322,6 @@ void AbsListView::keyPressed() {
             }
         }
         if (longClickable && !mDataChanged) {
-            if(mPendingCheckForKeyLongPress==nullptr)
-                mPendingCheckForKeyLongPress = new CheckForKeyLongPress(this);
             mPendingCheckForKeyLongPress->rememberWindowAttachCount();
             mPendingCheckForKeyLongPress->postDelayed(ViewConfiguration::getLongPressTimeout());
         }
@@ -1938,11 +1936,11 @@ void AbsListView::onAttachedToWindow() {
 void AbsListView::onDetachedFromWindow() {
     AdapterView::onDetachedFromWindow();
 
-    if(mPerformClick)mPerformClick->removeCallbacks();
-    if(mPendingCheckForLongPress)mPendingCheckForLongPress->removeCallbacks();
-    if(mPendingCheckForTap)mPendingCheckForTap->removeCallbacks();
-    if(mPendingCheckForKeyLongPress)mPendingCheckForKeyLongPress->removeCallbacks();
-    if(mFlingRunnable)mFlingRunnable->removeCallbacks();
+    mPerformClick->removeCallbacks();
+    mPendingCheckForLongPress->removeCallbacks();
+    mPendingCheckForTap->removeCallbacks();
+    mPendingCheckForKeyLongPress->removeCallbacks();
+    mFlingRunnable->removeCallbacks();
     mIsDetaching = true;
 
     // Dismiss the popup in case onSaveInstanceState() was not invoked
@@ -1984,9 +1982,7 @@ void AbsListView::onDetachedFromWindow() {
         removeCallbacks(mClearScrollingCache);
     }
 
-    if (mPerformClick != nullptr) {
-        mPerformClick->removeCallbacks();
-    }
+    mPerformClick->removeCallbacks();
 
     if (mTouchModeReset != nullptr) {
         removeCallbacks(mTouchModeReset);
@@ -2052,18 +2048,10 @@ void AbsListView::onWindowFocusChanged(bool hasWindowFocus) {
 
 void AbsListView::onCancelPendingInputEvents() {
     AdapterView::onCancelPendingInputEvents();
-    if (mPerformClick != nullptr) {
-        mPerformClick->removeCallbacks();
-    }
-    if (mPendingCheckForTap != nullptr) {
-        mPendingCheckForTap->removeCallbacks();
-    }
-    if (mPendingCheckForLongPress != nullptr) {
-        mPendingCheckForLongPress->removeCallbacks();
-    }
-    if (mPendingCheckForKeyLongPress != nullptr) {
-        mPendingCheckForKeyLongPress->removeCallbacks();
-    }
+    mPerformClick->removeCallbacks();
+    mPendingCheckForTap->removeCallbacks();
+    mPendingCheckForLongPress->removeCallbacks();
+    mPendingCheckForKeyLongPress->removeCallbacks();
 }
 
 void AbsListView::onRtlPropertiesChanged(int layoutDirection) {
@@ -2532,8 +2520,7 @@ bool AbsListView::startScrollIfNeeded(int x, int y, MotionEvent* vtev) {
             mTouchMode = TOUCH_MODE_SCROLL;
             mMotionCorrection = deltaY > 0 ? mTouchSlop : -mTouchSlop;
         }
-        if(mPendingCheckForLongPress)
-            mPendingCheckForLongPress->removeCallbacks();
+        mPendingCheckForLongPress->removeCallbacks();
         setPressed(false);
         View* motionView = getChildAt(mMotionPosition - mFirstPosition);
         if (motionView) motionView->setPressed(false);
@@ -2822,8 +2809,6 @@ void AbsListView::onTouchDown(MotionEvent& ev) {
                 mTouchMode = TOUCH_MODE_DOWN;
 
                 // FIXME Debounce
-                if(mPendingCheckForTap==nullptr)
-                    mPendingCheckForTap=new CheckForTap(this);
                 mPendingCheckForTap->x= x;
                 mPendingCheckForTap->y= y;
                 mPendingCheckForTap->postDelayed(ViewConfiguration::getTapTimeout());
@@ -2883,7 +2868,7 @@ void AbsListView::onTouchMove(MotionEvent&ev, MotionEvent&vtev) {
             setPressed(false);
             if (motionView) motionView->setPressed(false);
             if(mTouchMode == TOUCH_MODE_DOWN)mPendingCheckForTap->removeCallbacks();
-            else if(mPendingCheckForLongPress)mPendingCheckForLongPress->removeCallbacks();
+            else mPendingCheckForLongPress->removeCallbacks();
             mTouchMode = TOUCH_MODE_DONE_WAITING;
             updateSelectorState();
         } else if (motionView != nullptr) {
@@ -2957,14 +2942,13 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
             const float y = ev.getY();
             const bool inList = x > mListPadding.left && x < getWidth() - mListPadding.width;
             if (inList && !child->hasExplicitFocusable()) {
-                if(mPerformClick==nullptr)mPerformClick=new PerformClick(this);
                 mPerformClick->mClickMotionPosition = mMotionPosition;
                 mPerformClick->rememberWindowAttachCount();
                 mResurrectToPosition = mMotionPosition;
 
                 if (mTouchMode == TOUCH_MODE_DOWN || mTouchMode == TOUCH_MODE_TAP) {
                     if(mTouchMode == TOUCH_MODE_DOWN)mPendingCheckForTap->removeCallbacks();
-                    else if(mPendingCheckForLongPress)mPendingCheckForLongPress->removeCallbacks();
+                    else mPendingCheckForLongPress->removeCallbacks();
                     mLayoutMode = LAYOUT_NORMAL;
                     if (!mDataChanged && mAdapter->isEnabled(mMotionPosition)) {
                         mTouchMode = TOUCH_MODE_TAP;
@@ -3078,8 +3062,7 @@ void AbsListView::onTouchUp(MotionEvent&ev) {
     }
     // Need to redraw since we probably aren't drawing the selector anymore
     invalidate();
-    if(mPendingCheckForLongPress)
-        mPendingCheckForLongPress->removeCallbacks();
+    mPendingCheckForLongPress->removeCallbacks();
     recycleVelocityTracker();
 
     mActivePointerId = INVALID_POINTER;
@@ -3153,8 +3136,7 @@ void AbsListView::onTouchCancel() {
             motionView->setPressed(false);
         }
         clearScrollingCache();
-        if(mPendingCheckForLongPress)
-            mPendingCheckForLongPress->removeCallbacks();
+        mPendingCheckForLongPress->removeCallbacks();
         recycleVelocityTracker();
     }
     if (shouldDisplayEdgeEffects()) {
@@ -3224,8 +3206,7 @@ bool AbsListView::onGenericMotionEvent(MotionEvent& event) {
                     || actionButton == MotionEvent::BUTTON_SECONDARY)
                     && (mTouchMode == TOUCH_MODE_DOWN || mTouchMode == TOUCH_MODE_TAP)) {
                 if (performStylusButtonPressAction(event)) {
-                    if(mPendingCheckForLongPress)
-                        mPendingCheckForLongPress->removeCallbacks();
+                    mPendingCheckForLongPress->removeCallbacks();
                     mPendingCheckForTap->removeCallbacks();
                 }
             }
@@ -4004,8 +3985,6 @@ void AbsListView::CheckForTap::run() {
             }
 
             if (longClickable) {
-                if(mLV->mPendingCheckForLongPress==nullptr)
-                    mLV->mPendingCheckForLongPress = new AbsListView::CheckForLongPress(mLV);
                 mLV->mPendingCheckForLongPress->setCoords(x, y);
                 mLV->mPendingCheckForLongPress->rememberWindowAttachCount();
                 mLV->mPendingCheckForLongPress->postDelayed(longPressTimeout);
