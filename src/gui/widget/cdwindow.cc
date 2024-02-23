@@ -518,12 +518,12 @@ void Window::dispatchInvalidateRectOnAnimation(View*view,const Rect&rect){
 
 void Window::dispatchInvalidateDelayed(View*view, long delayMilliseconds){
     LOGW_IF(delayMilliseconds,"Delay is NOT IMPLEMENTED");
-	if(0==delayMilliseconds) dispatchInvalidateOnAnimation(view);
+    if(0==delayMilliseconds) dispatchInvalidateOnAnimation(view);
 }
 
 void Window::dispatchInvalidateRectDelayed(const AttachInfo::InvalidateInfo*info,long delayMilliseconds){
     LOGW_IF(delayMilliseconds,"Delay is NOT IMPLEMENTED");
-	if(0==delayMilliseconds) dispatchInvalidateRectOnAnimation(info->target,info->rect);
+    if(0==delayMilliseconds) dispatchInvalidateRectOnAnimation(info->target,info->rect);
 }
 
 void Window::cancelInvalidate(View* view){
@@ -562,7 +562,7 @@ void Window::InvalidateOnAnimationRunnable::addView(View* view){
 }
 
 void Window::InvalidateOnAnimationRunnable::addViewRect(View* view,const Rect&rect){
-    auto it=find(view);
+    auto it = find(view);
     if(it == mInvalidateViews.end()){
         AttachInfo::InvalidateInfo* info = AttachInfo::InvalidateInfo::obtain();
         info->target =view;
@@ -577,7 +577,7 @@ void Window::InvalidateOnAnimationRunnable::addViewRect(View* view,const Rect&re
 }
 
 void Window::InvalidateOnAnimationRunnable::removeView(View* view){
-    auto it=find(view);
+    auto it = find(view);
     if(it != mInvalidateViews.end()){
         mInvalidateViews.erase(it);
     }
@@ -588,21 +588,20 @@ void Window::InvalidateOnAnimationRunnable::removeView(View* view){
 
 void Window::InvalidateOnAnimationRunnable::run(){
     mPosted = false;
-    std::vector<View::AttachInfo::InvalidateInfo*>&temp = mInvalidateViews;
-    mInvalidateViews.clear();
+    std::vector<View::AttachInfo::InvalidateInfo*>& temp = mInvalidateViews;
     for (auto i:temp){
         Rect&r = i->rect;
         View*v = i->target;
         if(r.width<=0||r.height<=0) v->invalidate();
         else  v->invalidate(r.left,r.top,r.width,r.height);
     }
+    mInvalidateViews.clear();
 }
 
 void Window::InvalidateOnAnimationRunnable::postIfNeededLocked() {
     if (!mPosted) {
         //Choreographer::getInstance().postCallback(Choreographer::CALLBACK_ANIMATION,nullptr,this);
-        Runnable run;
-        run=std::bind(&InvalidateOnAnimationRunnable::run,this);
+        Runnable run(std::bind(&InvalidateOnAnimationRunnable::run,this));
         mOwner->postDelayed(run,AnimationHandler::getFrameDelay());
         mPosted = true;
     }

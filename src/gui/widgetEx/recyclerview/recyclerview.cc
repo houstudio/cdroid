@@ -1153,28 +1153,28 @@ int RecyclerView::getMaxFlingVelocity() const{
 }
 
 void RecyclerView::pullGlows(float x, float overscrollX, float y, float overscrollY) {
-    bool invalidate = false;
+    bool bInvalidate = false;
     if (overscrollX < 0) {
         ensureLeftGlow();
         mLeftGlow->onPull(-overscrollX / getWidth(), 1.f - y  / getHeight());
-        invalidate = true;
+        bInvalidate = true;
     } else if (overscrollX > 0) {
         ensureRightGlow();
         mRightGlow->onPull(overscrollX / getWidth(), y / getHeight());
-        invalidate = true;
+        bInvalidate = true;
     }
 
     if (overscrollY < 0) {
         ensureTopGlow();
         mTopGlow->onPull(-overscrollY / getHeight(), x / getWidth());
-        invalidate = true;
+        bInvalidate = true;
     } else if (overscrollY > 0) {
         ensureBottomGlow();
         mBottomGlow->onPull(overscrollY / getHeight(), 1.f - x / getWidth());
-        invalidate = true;
+        bInvalidate = true;
     }
 
-    if (invalidate || overscrollX != 0 || overscrollY != 0) {
+    if (bInvalidate || (overscrollX != 0) || (overscrollY != 0)) {
         postInvalidateOnAnimation();
     }
 }
@@ -1196,8 +1196,8 @@ void RecyclerView::releaseGlows() {
     if (mBottomGlow != nullptr) {
         mBottomGlow->onRelease();
         needsInvalidate |= mBottomGlow->isFinished();
-    }LOGE(".........%p needsInvalidate=%d",this,needsInvalidate);
-    if (needsInvalidate||1) {
+    }
+    if (needsInvalidate) {
         postInvalidateOnAnimation();
     }
 }
@@ -1242,7 +1242,7 @@ void RecyclerView::absorbGlows(int velocityX, int velocityY) {
         mBottomGlow->onAbsorb(velocityY);
     }
 
-    if (velocityX != 0 || velocityY != 0) {
+    if ((velocityX != 0) || (velocityY != 0)) {
         postInvalidateOnAnimation();
     }
 }
@@ -1771,8 +1771,8 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
         return false;
     }
 
-    const bool canScrollHorizontally = mLayout->canScrollHorizontally();
-    const bool canScrollVertically = mLayout->canScrollVertically();
+    const bool bCanScrollHorizontally = mLayout->canScrollHorizontally();
+    const bool bCanScrollVertically = mLayout->canScrollVertically();
 
     if (mVelocityTracker == nullptr) {
         mVelocityTracker = VelocityTracker::obtain();
@@ -1795,10 +1795,10 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
             mInitialTouchY = mLastTouchY = (int) (e.getY() + 0.5f);
 
             int nestedScrollAxis = View::SCROLL_AXIS_NONE;
-            if (canScrollHorizontally) {
+            if (bCanScrollHorizontally) {
                 nestedScrollAxis |= View::SCROLL_AXIS_HORIZONTAL;
             }
-            if (canScrollVertically) {
+            if (bCanScrollVertically) {
                 nestedScrollAxis |= View::SCROLL_AXIS_VERTICAL;
             }
             startNestedScroll(nestedScrollAxis, TYPE_TOUCH);
@@ -1834,7 +1834,7 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
 
             if (mScrollState != SCROLL_STATE_DRAGGING) {
                 bool startScroll = false;
-                if (canScrollHorizontally && std::abs(dx) > mTouchSlop) {
+                if (bCanScrollHorizontally && std::abs(dx) > mTouchSlop) {
                     if (dx > 0) {
                         dx -= mTouchSlop;
                     } else {
@@ -1842,7 +1842,7 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
                     }
                     startScroll = true;
                 }
-                if (canScrollVertically && std::abs(dy) > mTouchSlop) {
+                if (bCanScrollVertically && std::abs(dy) > mTouchSlop) {
                     if (dy > 0) {
                         dy -= mTouchSlop;
                     } else {
@@ -1860,8 +1860,8 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
                 mLastTouchY = y - mScrollOffset[1];
 
                 if (scrollByInternal(
-                        canScrollHorizontally ? dx : 0,
-                        canScrollVertically ? dy : 0,
+                        bCanScrollHorizontally ? dx : 0,
+                        bCanScrollVertically ? dy : 0,
                         vtev)) {
                     getParent()->requestDisallowInterceptTouchEvent(true);
                 }
@@ -1879,11 +1879,9 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
             mVelocityTracker->addMovement(*vtev);
             eventAddedToVelocityTracker = true;
             mVelocityTracker->computeCurrentVelocity(1000, mMaxFlingVelocity);
-            const float xvel = canScrollHorizontally
-                    ? -mVelocityTracker->getXVelocity(mScrollPointerId) : 0;
-            const float yvel = canScrollVertically
-                    ? -mVelocityTracker->getYVelocity(mScrollPointerId) : 0;
-            if (!((xvel != 0 || yvel != 0) && fling((int) xvel, (int) yvel))) {
+            const float xvel = bCanScrollHorizontally ? -mVelocityTracker->getXVelocity(mScrollPointerId) : 0;
+            const float yvel = bCanScrollVertically ? -mVelocityTracker->getYVelocity(mScrollPointerId) : 0;
+            if (!(((xvel != 0) || (yvel != 0)) && fling((int) xvel, (int) yvel))) {
                 setScrollState(SCROLL_STATE_IDLE);
             }
             resetTouch();
@@ -2782,7 +2780,6 @@ void RecyclerView::draw(Canvas& c) {
             && mItemAnimator->isRunning()) {
         needsInvalidate = true;
     }
-    LOGD("%p draw needdrawedge=%d",this,needsInvalidate);
     if (needsInvalidate) {
         postInvalidateOnAnimation();
     }
@@ -3395,7 +3392,6 @@ void RecyclerView::ViewFlinger::fling(int velocityX, int velocityY) {
     mLastFlingX = mLastFlingY = 0;
     mScroller->fling(0, 0, velocityX, velocityY, INT_MIN, INT_MAX, INT_MIN, INT_MAX);
     postOnAnimation();
-    LOGD("velocityxy=%d,%d",velocityX,velocityY);
 }
 
 void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy) {
