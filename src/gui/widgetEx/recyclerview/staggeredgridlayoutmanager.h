@@ -9,7 +9,7 @@ class StaggeredGridLayoutManager:public RecyclerView::LayoutManager{
 private:
     static constexpr float MAX_SCROLL_FACTOR = 1.f / 3.f;
 public:
-    static constexpr bool _DEBUG = true;
+    static constexpr bool _DEBUG = false;
     static constexpr int HORIZONTAL = RecyclerView::HORIZONTAL;
     static constexpr int VERTICAL = RecyclerView::VERTICAL;
     static constexpr int GAP_HANDLING_NONE = 0;

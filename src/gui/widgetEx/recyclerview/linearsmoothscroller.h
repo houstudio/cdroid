@@ -21,10 +21,10 @@ protected:
 public:
     LinearSmoothScroller(Context* context);
     ~LinearSmoothScroller();
-    void onStart();
-    void onTargetFound(View* targetView, RecyclerView::State& state, Action& action);
-    void onSeekTargetStep(int dx, int dy, RecyclerView::State& state, Action& action);
-    void onStop();
+    void onStart()override;
+    void onTargetFound(View* targetView, RecyclerView::State& state, Action& action)override;
+    void onSeekTargetStep(int dx, int dy, RecyclerView::State& state, Action& action)override;
+    void onStop()override;
     float calculateSpeedPerPixel(DisplayMetrics& displayMetrics);
     int calculateTimeForDeceleration(int dx);
     int calculateTimeForScrolling(int dx);

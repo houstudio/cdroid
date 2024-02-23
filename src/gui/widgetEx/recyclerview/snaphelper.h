@@ -25,7 +25,7 @@ protected:
     LinearSmoothScroller* createSnapScroller(RecyclerView::LayoutManager& layoutManager);
 public:
     SnapHelper();
-	virtual ~SnapHelper();
+    virtual ~SnapHelper();
     bool onFling(int velocityX, int velocityY);
     void attachToRecyclerView(RecyclerView* recyclerView);
 

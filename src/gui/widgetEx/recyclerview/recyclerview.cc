@@ -250,7 +250,6 @@ void RecyclerView::setAccessibilityDelegate(RecyclerViewAccessibilityDelegate* a
 
 void RecyclerView::createLayoutManager(Context* context,const std::string& className,
 	const AttributeSet& attrs/*,int defStyleAttr, int defStyleRes*/) {
-    LOGD("%s",className.c_str());
     if(!className.compare("LinearLayoutManager")){
         setLayoutManager(new LinearLayoutManager(context,attrs));
     }else if(!className.compare("GridLayoutManager")){
@@ -703,7 +702,7 @@ void RecyclerView::setScrollState(int state) {
     if (state == mScrollState) {
         return;
     }
-    LOGD("setting scroll state from %d to %d",mScrollState,state);
+    LOGD_IF(_DEBUG,"setting scroll state from %d to %d",mScrollState,state);
     mScrollState = state;
     if (state != SCROLL_STATE_SETTLING) {
         stopScrollersInternal();
@@ -1094,32 +1093,32 @@ bool RecyclerView::fling(int velocityX, int velocityY) {
         return false;
     }
 
-    bool canScrollHorizontal = mLayout->canScrollHorizontally();
-    bool canScrollVertical = mLayout->canScrollVertically();
+    const bool bCanScrollHorizontal = mLayout->canScrollHorizontally();
+    const bool bCanScrollVertical = mLayout->canScrollVertically();
 
-    if (!canScrollHorizontal || std::abs(velocityX) < mMinFlingVelocity) {
-        velocityX = 0;
+    if ((bCanScrollHorizontal==false) || (std::abs(velocityX) < mMinFlingVelocity)) {
+        //velocityX = 0;
     }
-    if (!canScrollVertical || std::abs(velocityY) < mMinFlingVelocity) {
-        velocityY = 0;
+    if ((bCanScrollVertical==false) || (std::abs(velocityY) < mMinFlingVelocity)) {
+        //velocityY = 0;
     }
-    if (velocityX == 0 && velocityY == 0) {
+    if ((velocityX == 0) && (velocityY == 0)) {
         // If we don't have any velocity, return false
         return false;
     }
 
     if (!dispatchNestedPreFling(velocityX, velocityY)) {
-        const bool canScroll = canScrollHorizontal || canScrollVertical;
+        const bool canScroll = bCanScrollHorizontal || bCanScrollVertical;
         dispatchNestedFling(velocityX, velocityY, canScroll);
         if (mOnFlingListener && mOnFlingListener(velocityX, velocityY)){//->onFling(velocityX, velocityY)) {
             return true;
         }
         if (canScroll) {
             int nestedScrollAxis = View::SCROLL_AXIS_NONE;
-            if (canScrollHorizontal) {
+            if (bCanScrollHorizontal) {
                 nestedScrollAxis |= View::SCROLL_AXIS_HORIZONTAL;
             }
-            if (canScrollVertical) {
+            if (bCanScrollVertical) {
                 nestedScrollAxis |= View::SCROLL_AXIS_VERTICAL;
             }
             startNestedScroll(nestedScrollAxis, TYPE_NON_TOUCH);
@@ -1881,6 +1880,7 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
             mVelocityTracker->computeCurrentVelocity(1000, mMaxFlingVelocity);
             const float xvel = bCanScrollHorizontally ? -mVelocityTracker->getXVelocity(mScrollPointerId) : 0;
             const float yvel = bCanScrollVertically ? -mVelocityTracker->getYVelocity(mScrollPointerId) : 0;
+	    LOGD("xvel=%.2f yvel=%.2f",xvel,yvel);
             if (!(((xvel != 0) || (yvel != 0)) && fling((int) xvel, (int) yvel))) {
                 setScrollState(SCROLL_STATE_IDLE);
             }
@@ -3909,7 +3909,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
             }
         }
         if (holder == nullptr) { // fallback to pool
-            LOGD("tryGetViewHolderForPositionByDeadline(%d) fetching from shared pool",position);
+            LOGD_IF(_DEBUG,"tryGetViewHolderForPositionByDeadline(%d) fetching from shared pool",position);
             holder = getRecycledViewPool().getRecycledView(type);
             if (holder != nullptr) {
                 holder->resetInternal();
@@ -3935,7 +3935,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
             }
             const long end = mRV->getNanoTime();
             mRecyclerPool->factorInCreateTime(type, end - start);
-            LOGD("tryGetViewHolderForPositionByDeadline created new ViewHolder");
+            LOGD_IF(_DEBUG,"tryGetViewHolderForPositionByDeadline created new ViewHolder");
         }
     }
 
@@ -3959,10 +3959,8 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
         // do not update unless we absolutely have to.
         holder->mPreLayoutPosition = position;
     } else if (!holder->isBound() || holder->needsUpdate() || holder->isInvalid()) {
-        if (_DEBUG && holder->isRemoved()) {
-            LOGE("Removed holder should be bound and it should"
+        LOGE_IF(_DEBUG && holder->isRemoved(),"Removed holder should be bound and it should"
                  " come here only in pre-layout. Holder: %p",holder);
-        }
         const int offsetPosition = mRV->mAdapterHelper->findPositionOffset(position);
         bound = tryBindViewHolderByDeadline(*holder, offsetPosition, position, deadlineNs);
     }
@@ -4057,9 +4055,9 @@ void RecyclerView::Recycler::recycleAndClearCachedViews() {
 }
 
 void RecyclerView::Recycler::recycleCachedViewAt(int cachedViewIndex) {
-    LOGD("Recycling cached view at index %d" ,cachedViewIndex);
+    LOGD_IF(_DEBUG,"Recycling cached view at index %d" ,cachedViewIndex);
     ViewHolder* viewHolder = mCachedViews.at(cachedViewIndex);
-    LOGD("CachedViewHolder to be recycled:%p ", viewHolder);
+    LOGD_IF(_DEBUG,"CachedViewHolder to be recycled:%p ", viewHolder);
     addViewHolderToRecycledViewPool(*viewHolder, true);
     mCachedViews.erase(mCachedViews.begin()+cachedViewIndex);//remove(cachedViewIndex);
 }
@@ -4279,7 +4277,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::getScrapOrHiddenOrCachedHolder
             if (!dryRun) {
                 mCachedViews.erase(mCachedViews.begin()+i);//remove(i);
             }
-            LOGD("getScrapOrHiddenOrCachedHolderForPosition(%d) found match in cache:%p",position,holder);
+            LOGD_IF(_DEBUG,"getScrapOrHiddenOrCachedHolderForPosition(%d) found match in cache:%p",position,holder);
             return holder;
         }
     }
@@ -4349,7 +4347,7 @@ void RecyclerView::Recycler::dispatchViewRecycled(ViewHolder& holder) {
     if (mRV->mState != nullptr) {
         mRV->mViewInfoStore->removeViewHolder(&holder);
     }
-    LOGD("dispatchViewRecycled: %p" ,&holder);
+    LOGD_IF(_DEBUG,"dispatchViewRecycled: %p" ,&holder);
 }
 
 void RecyclerView::Recycler::onAdapterChanged(Adapter* oldAdapter, Adapter* newAdapter,

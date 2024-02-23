@@ -134,13 +134,25 @@ void RotateDrawable::draw(Canvas& canvas) {
     float px = mState->mPivotXRel ? (w * mState->mPivotX) : mState->mPivotX;
     float py = mState->mPivotYRel ? (h * mState->mPivotY) : mState->mPivotY;
 
+#if 1
+    d->setBounds(bounds);
+    canvas.save();
+    canvas.translate(px,py);
+    canvas.rotate_degrees(mState->mCurrentDegrees);
+    Rect rd = d->getBounds();
+    rd.offset(-w/2,-h/2);
+    d->setBounds(rd);
+    d->draw(canvas);
+    rd.offset(w/2,h/2);
+    d->setBounds(rd);
+    //LOGD("pos=%d,%d/%.f,%.f level=%d degress=%d",bounds.left,bounds.top,px,py,getLevel(),int(mState->mCurrentDegrees));
+    canvas.restore();
+#else
     const float radians=M_PI*2.f*mState->mCurrentDegrees/360.f;
     const float fsin=sin(radians);
     const float fcos=cos(radians);
-#if 0//Anti clockwise
-    Matrix mtx(fcos,-fsin, fsin,fcos, sdot(-fsin,py,1-fcos,px), sdot(fsin,px,1-fcos,py));
-#else//Clockwise
-    Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));
+    Matrix mtx(fcos,-fsin, fsin,fcos, sdot(-fsin,py,1-fcos,px), sdot(fsin,px,1-fcos,py));//Anti clockwise
+    Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));//Clockwise
     canvas.save();
     canvas.translate(bounds.left,bounds.top);
     canvas.transform(mtx);
@@ -156,10 +168,12 @@ void RotateDrawable::draw(Canvas& canvas) {
 Drawable*RotateDrawable::inflate(Context*ctx,const AttributeSet&atts){
     Drawable*d = createWrappedDrawable(ctx,atts);
     RotateDrawable*rd = new RotateDrawable(d);
-    rd->setPivotX(atts.getFraction("pivotX",1,1,0));
-    rd->setPivotY(atts.getFraction("pivotY",1,1,0));
-    //rd->setPivotXRelative();
-    //rd->setPivotYRelative();
+    const float px = atts.getFraction("pivotX",1,1,0.5f);
+    const float py = atts.getFraction("pivotY",1,1,0.5f);
+    rd->setPivotX(px);
+    rd->setPivotY(py);
+    rd->setPivotXRelative(px<=1.f);
+    rd->setPivotYRelative(py<=1.f);
     rd->setFromDegrees(atts.getFloat("fromDegrees",0));
     rd->setToDegrees(atts.getFloat("toDegrees",360.0));
     rd->onLevelChange(0);

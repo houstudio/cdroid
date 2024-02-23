@@ -7,7 +7,7 @@ namespace cdroid{
 class GridLayoutManager;
 class LinearLayoutManager:public RecyclerView::LayoutManager{
 private:
-    static constexpr int _DEBUG=1;
+    static constexpr bool _DEBUG=false;
     static constexpr float MAX_SCROLL_FACTOR = 1.f / 3.f;
 public:
     static constexpr int HORIZONTAL = RecyclerView::HORIZONTAL;

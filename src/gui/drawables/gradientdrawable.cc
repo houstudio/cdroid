@@ -874,7 +874,7 @@ void GradientDrawable::draw(Canvas&canvas) {
     const bool haveFill = currFillAlpha>0;
     const bool useLayer =(haveStroke || haveFill) && (st->mShape!=LINE) &&
 	    (currStrokeAlpha<255) && ((mAlpha<255)|| colorFilter);
-    const float sweep = getUseLevel()/*st->mUseLevelForShape*/ ? (360.f*getLevel()/10000.f) : 360.f;
+    const float sweep = st->mUseLevelForShape ? (360.f*getLevel()/10000.f) : 360.f;
     float rad = .0f, innerRadius = .0f;
 
     std::vector<float>radii;
@@ -940,9 +940,17 @@ void GradientDrawable::draw(Canvas&canvas) {
             innerRadius=std::min(mRect.width,mRect.height)/2.f-thickness;
         canvas.begin_new_sub_path();
         if( sweep<360.f && sweep>-360.f ) {
-            canvas.arc(x,y,innerRadius,0,M_PI*2*sweep/360.f);
-            canvas.begin_new_sub_path();
-            canvas.arc_negative(x,y,innerRadius+thickness,sweep*M_PI*2.f/360.f,0.f);
+            double ddd = (thickness/2)/(innerRadius+thickness/2);
+            double end_angle = M_PI*2*sweep/360.f-ddd;
+            double cx = x + (innerRadius+thickness/2) * std::cos(end_angle);
+            double cy = y + (innerRadius+thickness/2) * std::sin(end_angle);
+            //canvas.set_fill_rule(Cairo::Context::FillRule::WINDING);//EVEN_ODD);//WINDING);
+            canvas.move_to(x+innerRadius,y);
+            canvas.arc(x,y,innerRadius,0.f+ddd,end_angle);
+            canvas.arc(cx,cy,thickness/2,end_angle,end_angle+M_PI);
+            canvas.arc_negative(x,y,innerRadius+thickness,end_angle,0.f+ddd);
+            canvas.arc_negative(x+innerRadius+thickness/2,y,thickness/2,0.f+ddd,M_PI+ddd);
+            canvas.close_path();
         } else {
             //canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
             canvas.arc(x,y,innerRadius,0,M_PI*2.f);

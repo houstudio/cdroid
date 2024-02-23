@@ -2,7 +2,6 @@
 #include <widgetEx/recyclerview/childhelper.h>
 
 namespace cdroid{
-static constexpr int _DEBUG=1;
 ChildHelper::ChildHelper(ChildHelper::Callback& callback){
     mCallback = callback;
     mBucket = new Bucket();
@@ -39,7 +38,7 @@ void ChildHelper::addView(View* child, int index, bool hidden){
         hideViewInternal(child);
     }
     mCallback.addView(child, offset);
-    LOGD("addViewAt %d,h:%d",index,hidden);
+    LOGD_IF(_DEBUG,"addViewAt %d,h:%d",index,hidden);
 }
 
 int ChildHelper::getOffset(int index){
@@ -72,7 +71,7 @@ void ChildHelper::removeView(View* view){
         unhideViewInternal(view);
     }
     mCallback.removeViewAt(index);
-    LOGD("remove View off:%d",index);
+    LOGD_IF(_DEBUG,"remove View off:%d",index);
 }
 
 void ChildHelper::removeViewAt(int index){
@@ -85,7 +84,7 @@ void ChildHelper::removeViewAt(int index){
         unhideViewInternal(view);
     }
     mCallback.removeViewAt(offset);
-    LOGD("removeViewAt %d off:%d",index,offset);
+    LOGD_IF(_DEBUG,"removeViewAt %d off:%d",index,offset);
 }
 
 View* ChildHelper::getChildAt(int index){
@@ -101,7 +100,7 @@ void ChildHelper::removeAllViewsUnfiltered(){
     }
     mHiddenViews.clear();
     mCallback.removeAllViews();
-    LOGD("removeAllViewsUnfiltered");
+    LOGD_IF(_DEBUG,"removeAllViewsUnfiltered");
 }
 
 View* ChildHelper::findHiddenNonRemovedView(int position){
@@ -131,7 +130,7 @@ void ChildHelper::attachViewToParent(View* child, int index, ViewGroup::LayoutPa
         hideViewInternal(child);
     }
     mCallback.attachViewToParent(child, offset, layoutParams);
-    LOGD("attach view to parent index:%d off:%d h:%d ",index,offset,hidden);
+    LOGD_IF(_DEBUG,"attach view to parent index:%d off:%d h:%d ",index,offset,hidden);
 }
 
 int ChildHelper::getChildCount(){
@@ -150,7 +149,7 @@ void ChildHelper::detachViewFromParent(int index){
     const int offset = getOffset(index);
     mBucket->remove(offset);
     mCallback.detachViewFromParent(offset);
-    LOGD("detach view from parent %d of:%d",index,offset);
+    LOGD_IF(_DEBUG,"detach view from parent %d of:%d",index,offset);
 }
 
 int ChildHelper::indexOfChild(View* child){
@@ -184,7 +183,7 @@ void ChildHelper::hide(View* view){
     }
     mBucket->set(offset);
     hideViewInternal(view);
-    LOGD("hiding child %p at offset",view,offset);
+    LOGD_IF(_DEBUG,"hiding child %p at offset",view,offset);
 }
 
 void ChildHelper::unhide(View* view){

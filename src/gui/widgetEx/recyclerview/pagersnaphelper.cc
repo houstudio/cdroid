@@ -7,25 +7,22 @@ namespace cdroid{
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 PagerSnapHelper::PagerSnapHelper(){
     mVerticalHelper = nullptr;
-	mHorizontalHelper = nullptr;
+    mHorizontalHelper = nullptr;
 }
 PagerSnapHelper::~PagerSnapHelper(){
     delete mVerticalHelper;
-	delete mHorizontalHelper;
+    delete mHorizontalHelper;
 }
 
 void PagerSnapHelper::calculateDistanceToFinalSnap(RecyclerView::LayoutManager& layoutManager,
        View& targetView,int out[2]) {
+    out[0] = out[1] = 0;
     if (layoutManager.canScrollHorizontally()) {
         out[0] = distanceToCenter(layoutManager, targetView,getHorizontalHelper(layoutManager));
-    } else {
-        out[0] = 0;
     }
 
     if (layoutManager.canScrollVertically()) {
         out[1] = distanceToCenter(layoutManager, targetView,getVerticalHelper(layoutManager));
-    } else {
-        out[1] = 0;
     }
 }
 

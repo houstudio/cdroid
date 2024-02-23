@@ -240,7 +240,7 @@ void LinearLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, Rec
     // 3) fill towards end, stacking from top
     // 4) scroll to fulfill requirements like stack from bottom.
     // create layout state
-    LOGD("is pre layout:%d",state.isPreLayout());
+    LOGD_IF(_DEBUG,"is pre layout:%d",state.isPreLayout());
     if (mPendingSavedState  || mPendingScrollPosition != RecyclerView::NO_POSITION) {
         if (state.getItemCount() == 0) {
             removeAndRecycleAllViews(recycler);
@@ -281,7 +281,7 @@ void LinearLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, Rec
         // child which can change between layout passes).
         mAnchorInfo->assignFromViewAndKeepVisibleRect(focused, getPosition(focused));
     }
-    LOGD("Anchor info:%p",mAnchorInfo);
+    LOGD_IF(_DEBUG,"Anchor info:%p",mAnchorInfo);
 
     // LLM may decide to layout items for "extra" pixels to account for scrolling target,
     // caching or predictive animations.
