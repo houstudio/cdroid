@@ -1,5 +1,6 @@
 #include <cdroid.h>
 #include <widgetEx/recyclerview/recyclerview.h>
+#include <widgetEx/recyclerview/carousellayoutmanager.h>
 #include <widgetEx/recyclerview/divideritemdecoration.h>
 class MyAdapter:public RecyclerView::Adapter,RecyclerView::AdapterDataObserver{//<MyAdapter.ViewHolder> {
 private:
@@ -21,9 +22,10 @@ public:
         this->items = items;
     }
     MyAdapter::ViewHolder* onCreateViewHolder(ViewGroup* parent, int viewType) {
-        TextView* view = new TextView("",200,40);
-        view->setBackgroundColor(0x80234567);
-        view->setLayoutParams(new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
+        TextView* view = new TextView("",200,64);
+        view->setBackgroundColor(0xff234567);
+	view->setGravity(Gravity::CENTER);
+        view->setLayoutParams(new LayoutParams(280,240));//LayoutParams::MATCH_PARENT,240));//LayoutParams::WRAP_CONTENT));
         return new ViewHolder(view);
     }
 
@@ -59,9 +61,12 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,-1,-1);
     w->setBackgroundColor(0xFF112233);
     RecyclerView*rv=new RecyclerView(800,600);
+    CarouselLayoutManager*carousel=new CarouselLayoutManager(CarouselLayoutManager::HORIZONTAL);//VERTICAL);//HORIZONTAL);
+    rv->setLayoutManager(carousel);
     MyAdapter*adapter=new MyAdapter();
     rv->getRecycledViewPool().setMaxRecycledViews(0,64);
     //adapter->setHasStableIds(true);
+    rv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     rv->setAdapter(adapter);
     DividerItemDecoration* decoration = new DividerItemDecoration(&app, LinearLayout::VERTICAL);
 

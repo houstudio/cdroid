@@ -1,7 +1,10 @@
 #include <widgetEx/recyclerview/carousellayoutmanager.h>
 #include <widgetEx/recyclerview/linearsmoothscroller.h>
 
-//REF[https://github.com/Azoft/CarouselLayoutManager]
+/*REF:
+*https://gitee.com/Cserfox/Awesome-RecyclerView-LayoutManager
+*https://github.com/Azoft/CarouselLayoutManager
+*/
 
 namespace cdroid{
 
@@ -23,6 +26,7 @@ CarouselLayoutManager::CarouselLayoutManager(int orientation, bool circleLayout)
     mOrientation = orientation;
     mCircleLayout = circleLayout;
     mPendingScrollPosition = INVALID_POSITION;
+    mLayoutHelper = new LayoutHelper(MAX_VISIBLE_ITEMS);
 }
 
 /**
@@ -164,7 +168,7 @@ bool CarouselLayoutManager::computeScrollVectorForPosition(int targetPosition,Po
     return getChildCount()>0;
 }
 
-float CarouselLayoutManager::getScrollDirection(int targetPosition) {
+float CarouselLayoutManager::getScrollDirection(int targetPosition) const{
     float currentScrollPosition = makeScrollPositionInRange0ToCount(getCurrentScrollPosition(), mItemsCount);
 
     if (mCircleLayout) {
@@ -407,7 +411,7 @@ void CarouselLayoutManager::fillChildItem(int start, int top, int end, int botto
         transformation = mViewPostLayout(*view, layoutOrder.mItemPositionDiff, mOrientation, layoutOrder.mItemAdapterPosition);
     }
     if (nullptr == transformation) {
-        view->layout(start, top, end, bottom);
+        view->layout(start, top, end-start, bottom-top);
     } else {
         view->layout(std::round(start + transformation->mTranslationX), std::round(top + transformation->mTranslationY),
                 std::round(end + transformation->mTranslationX), std::round(bottom + transformation->mTranslationY));
@@ -421,7 +425,7 @@ void CarouselLayoutManager::fillChildItem(int start, int top, int end, int botto
  * @return current scroll position of center item. this value can be in any range if it is cycle layout.
  * if this is not, that then it is in [0, {@link #mItemsCount - 1}]
  */
-float CarouselLayoutManager::getCurrentScrollPosition() {
+float CarouselLayoutManager::getCurrentScrollPosition() const{
     int fullScrollSize = getMaxScrollOffset();
     if (0 == fullScrollSize) {
         return 0;
@@ -432,7 +436,7 @@ float CarouselLayoutManager::getCurrentScrollPosition() {
 /**
  * @return maximum scroll value to fill up all items in layout. Generally this is only needed for non cycle layouts.
  */
-int CarouselLayoutManager::getMaxScrollOffset() {
+int CarouselLayoutManager::getMaxScrollOffset() const{
     return getScrollItemSize() * (mItemsCount - 1);
 }
 
@@ -579,7 +583,7 @@ double CarouselLayoutManager::convertItemPositionDiffToSmoothPositionDiff(float 
 /**
  * @return full item size
  */
-int CarouselLayoutManager::getScrollItemSize() {
+int CarouselLayoutManager::getScrollItemSize() const{
     if (VERTICAL == mOrientation) {
         return mDecoratedChildHeight;
     } else {
@@ -626,7 +630,7 @@ int CarouselLayoutManager::getOffsetForCurrentView(View& view) {
  * @param count                 adapter items count
  * @return good scroll position in range of [0, count)
  */
-float CarouselLayoutManager::makeScrollPositionInRange0ToCount(float currentScrollPosition, int count) {
+float CarouselLayoutManager::makeScrollPositionInRange0ToCount(float currentScrollPosition, int count){
     float absCurrentScrollPosition = currentScrollPosition;
     while (0 > absCurrentScrollPosition) {
         absCurrentScrollPosition += count;
@@ -638,20 +642,11 @@ float CarouselLayoutManager::makeScrollPositionInRange0ToCount(float currentScro
 }
 #if 0
     public abstract static class PostLayoutListener {
-        public ItemTransformation transformChild(
-                @NonNull View child,
-                float itemPositionToCenterDiff,
-                int orientation,
-                int itemPositionInAdapter
-        ) {
+        ItemTransformation transformChild(View& child,float itemPositionToCenterDiff,
+                int orientation, int itemPositionInAdapter) {
             return transformChild(child, itemPositionToCenterDiff, orientation);
         }
-
-        public ItemTransformation transformChild(
-                @NonNull View child,
-                float itemPositionToCenterDiff,
-                int orientation
-        ) {
+        ItemTransformation transformChild(View& child, float itemPositionToCenterDiff,int orientation ) {
             throw new IllegalStateException("at least one transformChild should be implemented");
         }
     }

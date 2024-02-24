@@ -44,7 +44,7 @@ private:
     bool mDecoratedChildSizeInvalid;
     bool mCircleLayout;
 
-    LayoutHelper* mLayoutHelper;// = new LayoutHelper(MAX_VISIBLE_ITEMS);
+    LayoutHelper* mLayoutHelper;
     PostLayoutListener mViewPostLayout;
     std::vector<OnCenterItemSelectionListener> mOnCenterItemSelectionListeners;
     int mCenterItemPosition = INVALID_POSITION;
@@ -62,12 +62,12 @@ private:
      * @return current scroll position of center item. this value can be in any range if it is cycle layout.
      * if this is not, that then it is in [0, {@link #mItemsCount - 1}]
      */
-    float getCurrentScrollPosition();
+    float getCurrentScrollPosition()const;
     /**
      * @return maximum scroll value to fill up all items in layout. Generally this is only needed for non cycle layouts.
      */
-    int getMaxScrollOffset();
-    float getScrollDirection(int targetPosition);
+    int getMaxScrollOffset()const;
+    float getScrollDirection(int targetPosition)const;
     void generateLayoutOrder(float currentScrollPosition,RecyclerView::State& state);
     View* bindChild(int position, RecyclerView::Recycler& recycler);
     void recyclerOldViews(RecyclerView::Recycler& recycler);
@@ -78,7 +78,7 @@ protected:
     int scrollBy(int diff,RecyclerView::Recycler& recycler, RecyclerView::State& state);
     int getCardOffsetByPositionDiff(float itemPositionDiff);
     double convertItemPositionDiffToSmoothPositionDiff(float itemPositionDiff);
-    int getScrollItemSize();
+    int getScrollItemSize()const;
     int getOffsetCenterView();
     int getOffsetForCurrentView(View& view);
 public:
