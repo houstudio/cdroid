@@ -1736,7 +1736,7 @@ bool StaggeredGridLayoutManager::checkLayoutParams(const RecyclerView::LayoutPar
     return dynamic_cast<const LayoutParams*>(lp);
 }
 
-int StaggeredGridLayoutManager::getOrientation() {
+int StaggeredGridLayoutManager::getOrientation() const{
     return mOrientation;
 }
 

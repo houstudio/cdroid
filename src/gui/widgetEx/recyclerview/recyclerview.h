@@ -704,7 +704,7 @@ public:
     void detachAndScrapViewAt(int index,Recycler& recycler);
     void removeAndRecycleView(View* child, Recycler& recycler);
     void removeAndRecycleViewAt(int index,Recycler& recycler);
-    int getChildCount();
+    int getChildCount()const;
     View* getChildAt(int index);
     int getWidthMode();
     int getHeightMode();

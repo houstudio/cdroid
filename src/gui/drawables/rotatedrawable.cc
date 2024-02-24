@@ -6,22 +6,22 @@ namespace cdroid{
 #define MAX_LEVEL 10000
 RotateDrawable::RotateState::RotateState()
     :DrawableWrapperState(){
-    mFromDegrees=.0;
-    mToDegrees=360.0;
-    mPivotX=mPivotY=0.5;
-    mPivotXRel=mPivotYRel=true;
-    mCurrentDegrees=0;
+    mFromDegrees =.0;
+    mToDegrees = 360.0;
+    mPivotX = mPivotY = 0.5;
+    mPivotXRel = mPivotYRel = true;
+    mCurrentDegrees = 0;
 }
 
 RotateDrawable::RotateState::RotateState(const RotateState& orig)
     :DrawableWrapperState(orig){
-    mFromDegrees=orig.mFromDegrees;
-    mToDegrees  =orig.mToDegrees;
-    mPivotX =orig.mPivotX;
-    mPivotY =orig.mPivotY;
-    mPivotXRel=orig.mPivotXRel;
-    mPivotYRel=orig.mPivotYRel;
-    mCurrentDegrees=orig.mCurrentDegrees;
+    mFromDegrees= orig.mFromDegrees;
+    mToDegrees  = orig.mToDegrees;
+    mPivotX = orig.mPivotX;
+    mPivotY = orig.mPivotY;
+    mPivotXRel= orig.mPivotXRel;
+    mPivotYRel= orig.mPivotYRel;
+    mCurrentDegrees = orig.mCurrentDegrees;
 }
 
 RotateDrawable*RotateDrawable::RotateState::newDrawable(){
@@ -30,12 +30,12 @@ RotateDrawable*RotateDrawable::RotateState::newDrawable(){
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<DrawableWrapper::DrawableWrapperState> RotateDrawable::mutateConstantState(){
-    mState=std::make_shared<RotateState>(*mState);
+    mState = std::make_shared<RotateState>(*mState);
     return mState;
 }
 
 RotateDrawable::RotateDrawable(std::shared_ptr<RotateState>state):DrawableWrapper(state){
-    mState=state;
+    mState = state;
 }
 
 RotateDrawable::RotateDrawable(Drawable*d)
@@ -129,22 +129,21 @@ static inline float sdot(float a,float b,float c,float d){
 void RotateDrawable::draw(Canvas& canvas) {
     Drawable*d = getDrawable();
     const Rect& bounds = getBounds();
-    int w = bounds.width;
-    int h = bounds.height;
-    float px = mState->mPivotXRel ? (w * mState->mPivotX) : mState->mPivotX;
-    float py = mState->mPivotYRel ? (h * mState->mPivotY) : mState->mPivotY;
-
+    const int w = bounds.width;
+    const int h = bounds.height;
+    const float px = mState->mPivotXRel ? (w * mState->mPivotX) : mState->mPivotX;
+    const float py = mState->mPivotYRel ? (h * mState->mPivotY) : mState->mPivotY;
 #if 1
     d->setBounds(bounds);
     canvas.save();
     canvas.translate(px,py);
     canvas.rotate_degrees(mState->mCurrentDegrees);
-    Rect rd = d->getBounds();
-    rd.offset(-w/2,-h/2);
-    d->setBounds(rd);
+    Rect rect = bounds;
+    rect.offset(-w/2,-h/2);
+    d->setBounds(rect);
     d->draw(canvas);
-    rd.offset(w/2,h/2);
-    d->setBounds(rd);
+    rect.offset(w/2,h/2);
+    d->setBounds(rect);
     //LOGD("pos=%d,%d/%.f,%.f level=%d degress=%d",bounds.left,bounds.top,px,py,getLevel(),int(mState->mCurrentDegrees));
     canvas.restore();
 #else

@@ -37,7 +37,7 @@ public:
     View* findHiddenNonRemovedView(int position);
     void attachViewToParent(View* child, int index, ViewGroup::LayoutParams* layoutParams,
             bool hidden);
-    int getChildCount();
+    int getChildCount()const;
     int getUnfilteredChildCount();
     View* getUnfilteredChildAt(int index);
     void detachViewFromParent(int index);

@@ -133,7 +133,7 @@ void ChildHelper::attachViewToParent(View* child, int index, ViewGroup::LayoutPa
     LOGD_IF(_DEBUG,"attach view to parent index:%d off:%d h:%d ",index,offset,hidden);
 }
 
-int ChildHelper::getChildCount(){
+int ChildHelper::getChildCount()const{
     return mCallback.getChildCount() - mHiddenViews.size();
 }
 

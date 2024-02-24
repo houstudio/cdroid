@@ -169,7 +169,7 @@ public:
     RecyclerView::LayoutParams* generateLayoutParams(Context* c,const AttributeSet& attrs)const override;
     RecyclerView::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams& lp)const override;
     bool checkLayoutParams(const RecyclerView::LayoutParams* lp)const override;
-    int getOrientation();
+    int getOrientation()const;
     View* onFocusSearchFailed(View* focused, int direction, RecyclerView::Recycler& recycler, RecyclerView::State& state);
 };/*StaggeredGridLayoutManager*/
 

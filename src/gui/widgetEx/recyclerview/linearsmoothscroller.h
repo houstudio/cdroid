@@ -35,8 +35,8 @@ public:
     int calculateDtToFit(int viewStart, int viewEnd, int boxStart, int boxEnd, int
         snapPreference);
 
-    int calculateDyToMakeVisible(View* view, int snapPreference);
-    int calculateDxToMakeVisible(View* view, int snapPreference);
+    virtual int calculateDyToMakeVisible(View* view, int snapPreference);
+    virtual int calculateDxToMakeVisible(View* view, int snapPreference);
 };
 }/*endof namespace*/
 #endif/*__LINEAR_SMOOTH_SCROLLER_H__*/

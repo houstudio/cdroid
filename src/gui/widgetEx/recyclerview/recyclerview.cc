@@ -317,14 +317,13 @@ void RecyclerView::initChildrenHelper() {
         return getChildViewHolderInt(view);
     };
 
-    cbk.attachViewToParent=[this](View* child, int index,
-            ViewGroup::LayoutParams* layoutParams) {
+    cbk.attachViewToParent=[this](View* child, int index, ViewGroup::LayoutParams* layoutParams) {
         ViewHolder* vh = getChildViewHolderInt(child);
         if (vh != nullptr) {
             if (!vh->isTmpDetached() && !vh->shouldIgnore()) {
                 LOGE("Called attach on a child which is not detached: %p",vh);
             }
-            LOGD("reAttach %p",vh);
+            LOGD_IF(_DEBUG,"reAttach %p",vh);
             vh->clearTmpDetachFlag();
         }
         attachViewToParent(child, index, layoutParams);
@@ -338,7 +337,7 @@ void RecyclerView::initChildrenHelper() {
                 if (vh->isTmpDetached() && !vh->shouldIgnore()) {
                     LOGE("called detach on an already detached child %p",vh);
                 }
-                LOGD("tmpDetach =%p",vh);
+                LOGD_IF(_DEBUG,"tmpDetach =%p",vh);
                 vh->addFlags(ViewHolder::FLAG_TMP_DETACHED);
             }
         }
@@ -1880,7 +1879,7 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
             mVelocityTracker->computeCurrentVelocity(1000, mMaxFlingVelocity);
             const float xvel = bCanScrollHorizontally ? -mVelocityTracker->getXVelocity(mScrollPointerId) : 0;
             const float yvel = bCanScrollVertically ? -mVelocityTracker->getYVelocity(mScrollPointerId) : 0;
-	    LOGD("xvel=%.2f yvel=%.2f",xvel,yvel);
+	    LOGV("xvel=%.2f yvel=%.2f",xvel,yvel);
             if (!(((xvel != 0) || (yvel != 0)) && fling((int) xvel, (int) yvel))) {
                 setScrollState(SCROLL_STATE_IDLE);
             }
@@ -5184,7 +5183,7 @@ void RecyclerView::LayoutManager::removeAndRecycleViewAt(int index,Recycler& rec
     recycler.recycleView(view);
 }
 
-int RecyclerView::LayoutManager::getChildCount() {
+int RecyclerView::LayoutManager::getChildCount() const{
     return mChildHelper ? mChildHelper->getChildCount() : 0;
 }
 
