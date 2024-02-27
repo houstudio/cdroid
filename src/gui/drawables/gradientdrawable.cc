@@ -664,6 +664,24 @@ bool GradientDrawable::onLevelChange(int level) {
     return true;
 }
 
+static double distance(float x1, float y1, float x2, float y2) {
+    return std::sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+}
+
+static double getRadius(const RectF& r, int x, int y) {
+    PointF topLeft = {r.left, r.top};
+    PointF topRight = {r.left + r.width, r.top};
+    PointF bottomRight = {r.left + r.width, r.top + r.height};
+    PointF bottomLeft = {r.left, r.top + r.height};
+
+    double dist1 = distance(x, y, topLeft.x, topLeft.y); // 左上角
+    double dist2 = distance(x, y, topRight.x, topRight.y); // 右上角
+    double dist3 = distance(x, y, bottomRight.x, bottomRight.y); // 右下角
+    double dist4 = distance(x, y, bottomLeft.x, bottomLeft.y); // 左下角
+
+    return std::max({dist1, dist2, dist3, dist4});
+}
+
 bool GradientDrawable::ensureValidRect() {
     if (mGradientIsDirty) {
         mGradientIsDirty = false;
@@ -738,7 +756,7 @@ bool GradientDrawable::ensureValidRect() {
                     Color c((uint32_t)gradientColors[i]);
                     pat->add_color_stop_rgba(st.mPositions[i],c.red(),c.green(),c.blue(),c.alpha());
                 }
-                mFillPaint=pat;
+                mFillPaint = pat;
             } else if (st.mGradient == RADIAL_GRADIENT) {
                 x0 = r.left + r.width* st.mCenterX;
                 y0 = r.top + r.height * st.mCenterY;
@@ -766,18 +784,18 @@ bool GradientDrawable::ensureValidRect() {
                     Color c((uint32_t)gradientColors[i]);
                     pat->add_color_stop_rgba(st.mPositions[i],c.red(),c.green(),c.blue(),c.alpha());
                 }//gradientColors, null, Shader.TileMode.CLAMP));
-                mFillPaint=pat;
+                mFillPaint = pat;
             } else if (st.mGradient == SWEEP_GRADIENT) {
-                const double RADIUS = std::min(mRect.width,mRect.height);
+                x0 = mRect.left+ mRect.width * st.mCenterX;
+                y0 = mRect.top + mRect.height * st.mCenterY;
+                const double RADIUS = getRadius(mRect,x0,y0);
                 std::vector<Cairo::ColorStop> stops;
                 for(int i=0; i<gradientColors.size(); i++) {
                     Color c = gradientColors[i];
                     stops.push_back({0,c.red(),c.green(),c.blue(),c.alpha()});
                 }
-                x0 = r.left+ r.width * st.mCenterX;
-                y0 = r.top + r.height * st.mCenterY;
                 RefPtr<SweepGradient>pat = SweepGradient::create(x0, y0,RADIUS,M_PI/2.f,stops);
-                mFillPaint=pat;
+                mFillPaint = pat;
             }
 
             // If we don't have a solid color, the alpha channel must be
@@ -940,16 +958,13 @@ void GradientDrawable::draw(Canvas&canvas) {
             innerRadius=std::min(mRect.width,mRect.height)/2.f-thickness;
         canvas.begin_new_sub_path();
         if( sweep<360.f && sweep>-360.f ) {
-            double ddd = (thickness/2)/(innerRadius+thickness/2);
-            double end_angle = M_PI*2*sweep/360.f-ddd;
-            double cx = x + (innerRadius+thickness/2) * std::cos(end_angle);
-            double cy = y + (innerRadius+thickness/2) * std::sin(end_angle);
-            //canvas.set_fill_rule(Cairo::Context::FillRule::WINDING);//EVEN_ODD);//WINDING);
+            const double end_angle = M_PI*2*sweep/360.f;
+            const double cx = x + (innerRadius+thickness/2) * std::cos(end_angle);
+            const double cy = y + (innerRadius+thickness/2) * std::sin(end_angle);
+            canvas.set_fill_rule(Cairo::Context::FillRule::WINDING);//EVEN_ODD);//WINDING);
             canvas.move_to(x+innerRadius,y);
-            canvas.arc(x,y,innerRadius,0.f+ddd,end_angle);
-            canvas.arc(cx,cy,thickness/2,end_angle,end_angle+M_PI);
-            canvas.arc_negative(x,y,innerRadius+thickness,end_angle,0.f+ddd);
-            canvas.arc_negative(x+innerRadius+thickness/2,y,thickness/2,0.f+ddd,M_PI+ddd);
+            canvas.arc(x,y,innerRadius,0.f,end_angle);
+            canvas.arc_negative(x,y,innerRadius+thickness,end_angle,0.f);
             canvas.close_path();
         } else {
             //canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);

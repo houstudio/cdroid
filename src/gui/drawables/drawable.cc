@@ -457,7 +457,7 @@ static void parseShapeGradient(GradientDrawable*gd,ShapeDrawable*sd,const Attrib
             gd->setGradientRadius(atts.getDimensionPixelSize("gradientRadius"));
             break;
         case GradientDrawable::SWEEP_GRADIENT:
-            center.set( atts.getFloat("centerX"), atts.getFloat("centerY") );
+            center.set( atts.getFloat("centerX",0.5f), atts.getFloat("centerY",0.5f) );
             LOGD("center=(%f,%f)",center.x,center.y);
             gd->setGradientCenter(center.x,center.y);
             break;
