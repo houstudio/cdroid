@@ -25,6 +25,9 @@ CarouselLayoutManager::CarouselLayoutManager(int orientation, bool circleLayout)
     }
     mOrientation = orientation;
     mCircleLayout = circleLayout;
+    mDecoratedChildWidth  = INT_MIN;
+    mDecoratedChildHeight = INT_MIN;
+    mDecoratedChildSizeInvalid = false;
     mPendingScrollPosition = INVALID_POSITION;
     mLayoutHelper = new LayoutHelper(MAX_VISIBLE_ITEMS);
 }
@@ -286,8 +289,8 @@ void CarouselLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, R
         }
         measureChildWithMargins(view, 0, 0);
 
-        int decoratedChildWidth = getDecoratedMeasuredWidth(view);
-        int decoratedChildHeight = getDecoratedMeasuredHeight(view);
+        const int decoratedChildWidth = getDecoratedMeasuredWidth(view);
+        const int decoratedChildHeight = getDecoratedMeasuredHeight(view);
         if (shouldRecycle) {
             detachAndScrapView(view, recycler);
         }
@@ -331,14 +334,14 @@ int CarouselLayoutManager::calculateScrollForSelectingPosition(int itemPosition,
 }
 
 void CarouselLayoutManager::fillData(RecyclerView::Recycler& recycler, RecyclerView::State& state) {
-    float currentScrollPosition = getCurrentScrollPosition();
+    const float currentScrollPosition = getCurrentScrollPosition();
 
     generateLayoutOrder(currentScrollPosition, state);
     detachAndScrapAttachedViews(recycler);
     recyclerOldViews(recycler);
 
-    int width = getWidthNoPadding();
-    int height = getHeightNoPadding();
+    const int width = getWidthNoPadding();
+    const int height = getHeightNoPadding();
     if (VERTICAL == mOrientation) {
         fillDataVertical(recycler, width, height);
     } else {
@@ -373,51 +376,42 @@ void CarouselLayoutManager::selectItemCenterPosition(int centerItem) {
 
 void CarouselLayoutManager::fillDataVertical(RecyclerView::Recycler& recycler, int width, int height) {
     int start = (width - mDecoratedChildWidth) / 2;
-    int end = start + mDecoratedChildWidth;
 
     int centerViewTop = (height - mDecoratedChildHeight) / 2;
 
     for (int i = 0, count = mLayoutHelper->mLayoutOrder.size(); i < count; ++i) {
-        LayoutOrder* layoutOrder = mLayoutHelper->mLayoutOrder[i];
-        int offset = getCardOffsetByPositionDiff(layoutOrder->mItemPositionDiff);
-        int top = centerViewTop + offset;
-        int bottom = top + mDecoratedChildHeight;
-        fillChildItem(start, top, end, bottom, *layoutOrder, recycler, i);
+        std::shared_ptr<LayoutOrder> layoutOrder = mLayoutHelper->mLayoutOrder[i];
+        const int offset = getCardOffsetByPositionDiff(layoutOrder->mItemPositionDiff);
+        const int top = centerViewTop + offset;
+        fillChildItem(start, top, mDecoratedChildWidth, mDecoratedChildHeight, *layoutOrder, recycler, i);
     }
 }
 
 void CarouselLayoutManager::fillDataHorizontal(RecyclerView::Recycler& recycler, int width, int height) {
     int top = (height - mDecoratedChildHeight) / 2;
-    int bottom = top + mDecoratedChildHeight;
 
     int centerViewStart = (width - mDecoratedChildWidth) / 2;
-
+LOGD("count=%d",mLayoutHelper->mLayoutOrder.size());
     for (int i = 0, count = mLayoutHelper->mLayoutOrder.size(); i < count; ++i) {
-        LayoutOrder* layoutOrder = mLayoutHelper->mLayoutOrder[i];
-        int offset = getCardOffsetByPositionDiff(layoutOrder->mItemPositionDiff);
-        int start = centerViewStart + offset;
-        int end = start + mDecoratedChildWidth;
-        fillChildItem(start, top, end, bottom, *layoutOrder, recycler, i);
+        std::shared_ptr<LayoutOrder> layoutOrder = mLayoutHelper->mLayoutOrder[i];
+        const int offset = getCardOffsetByPositionDiff(layoutOrder->mItemPositionDiff);
+        const int start = centerViewStart + offset;
+        fillChildItem(start, top, mDecoratedChildWidth,mDecoratedChildHeight, *layoutOrder, recycler, i);
     }
 }
 
 
-void CarouselLayoutManager::fillChildItem(int start, int top, int end, int bottom,
+void CarouselLayoutManager::fillChildItem(int start, int top, int width, int height,
 		LayoutOrder& layoutOrder, RecyclerView::Recycler& recycler, int i) {
     View* view = bindChild(layoutOrder.mItemAdapterPosition, recycler);
     view->setElevation(i);
-    ItemTransformation* transformation = nullptr;
-    if (mViewPostLayout) {
-        transformation = mViewPostLayout(*view, layoutOrder.mItemPositionDiff, mOrientation, layoutOrder.mItemAdapterPosition);
-    }
-    if (nullptr == transformation) {
-        view->layout(start, top, end-start, bottom-top);
-    } else {
-        view->layout(std::round(start + transformation->mTranslationX), std::round(top + transformation->mTranslationY),
-                std::round(end + transformation->mTranslationX), std::round(bottom + transformation->mTranslationY));
-
-        view->setScaleX(transformation->mScaleX);
-        view->setScaleY(transformation->mScaleY);
+    ItemTransformation transformation = {1,1,0,0};
+    view->layout(start, top, width,height);
+    if ((mViewPostLayout&&mViewPostLayout(*view,transformation,layoutOrder.mItemPositionDiff, mOrientation, layoutOrder.mItemAdapterPosition))){
+	view->setTranslationX(transformation.mTranslationX);
+	view->setTranslationY(transformation.mTranslationY);
+        view->setScaleX(transformation.mScaleX);
+        view->setScaleY(transformation.mScaleY);
     }
 }
 
@@ -453,11 +447,11 @@ int CarouselLayoutManager::getMaxScrollOffset() const{
  */
 void CarouselLayoutManager::generateLayoutOrder(float currentScrollPosition, RecyclerView::State& state) {
     mItemsCount = state.getItemCount();
-    float absCurrentScrollPosition = makeScrollPositionInRange0ToCount(currentScrollPosition, mItemsCount);
-    int centerItem = std::round(absCurrentScrollPosition);
+    const float absCurrentScrollPosition = makeScrollPositionInRange0ToCount(currentScrollPosition, mItemsCount);
+    const int centerItem = std::round(absCurrentScrollPosition);
 
     if (mCircleLayout && 1 < mItemsCount) {
-        int layoutCount = std::min(mLayoutHelper->mMaxVisibleItems * 2 + 1, mItemsCount);
+        const int layoutCount = std::min(mLayoutHelper->mMaxVisibleItems * 2 + 1, mItemsCount);
 
         mLayoutHelper->initLayoutOrder(layoutCount);
 
@@ -475,9 +469,9 @@ void CarouselLayoutManager::generateLayoutOrder(float currentScrollPosition, Rec
         mLayoutHelper->setLayoutOrder(layoutCount - 1, centerItem, centerItem - absCurrentScrollPosition);
 
     } else {
-        int firstVisible = std::max(centerItem - mLayoutHelper->mMaxVisibleItems, 0);
-        int lastVisible = std::min(centerItem + mLayoutHelper->mMaxVisibleItems, mItemsCount - 1);
-        int layoutCount = lastVisible - firstVisible + 1;
+        const int firstVisible = std::max(centerItem - mLayoutHelper->mMaxVisibleItems, 0);
+        const int lastVisible = std::min(centerItem + mLayoutHelper->mMaxVisibleItems, mItemsCount - 1);
+        const int layoutCount = lastVisible - firstVisible + 1;
 
         mLayoutHelper->initLayoutOrder(layoutCount);
 
@@ -515,7 +509,7 @@ void CarouselLayoutManager::recyclerOldViews(RecyclerView::Recycler& recycler) {
     for (RecyclerView::ViewHolder* viewHolder : scrapList) {
         int adapterPosition = viewHolder->getAdapterPosition();
         bool found = false;
-        for (LayoutOrder* layoutOrder : mLayoutHelper->mLayoutOrder) {
+        for (std::shared_ptr<LayoutOrder> layoutOrder : mLayoutHelper->mLayoutOrder) {
             if (layoutOrder->mItemAdapterPosition == adapterPosition) {
                 found = true;
                 break;
@@ -542,7 +536,7 @@ void CarouselLayoutManager::recyclerOldViews(RecyclerView::Recycler& recycler) {
  * @return offset in scroll px coordinates.
  */
 int CarouselLayoutManager::getCardOffsetByPositionDiff(float itemPositionDiff) {
-    double smoothPosition = convertItemPositionDiffToSmoothPositionDiff(itemPositionDiff);
+    const double smoothPosition = convertItemPositionDiffToSmoothPositionDiff(itemPositionDiff);
 
     int dimenDiff;
     if (VERTICAL == mOrientation) {
@@ -567,12 +561,12 @@ int CarouselLayoutManager::getCardOffsetByPositionDiff(float itemPositionDiff) {
  */
 double CarouselLayoutManager::convertItemPositionDiffToSmoothPositionDiff(float itemPositionDiff) {
     // generally item moves the same way above center and bellow it. So we don't care about diff sign.
-    float absIemPositionDiff = std::abs(itemPositionDiff);
+    const float absIemPositionDiff = std::abs(itemPositionDiff);
 
     // we detect if this item is close for center or not. We use (1 / maxVisibleItem) ^ (1/3) as close definer.
-    if (absIemPositionDiff > std::pow(1.0f / mLayoutHelper->mMaxVisibleItems, 1.0f / 3)) {
+    if (absIemPositionDiff > std::pow(1.0f / mLayoutHelper->mMaxVisibleItems, 1.0f / 3.f)) {
         // this item is far from center line, so we should make it move like square root function
-        return std::pow(absIemPositionDiff / mLayoutHelper->mMaxVisibleItems, 1 / 2.0f);
+        return std::pow(absIemPositionDiff / mLayoutHelper->mMaxVisibleItems, 1.0f / 2.0f);
     } else {
         // this item is close from center line. we should slow it down and don't make it speed up very quick.
         // so square function in range of [0, (1/maxVisible)^(1/3)] is quite good in it;
@@ -640,17 +634,6 @@ float CarouselLayoutManager::makeScrollPositionInRange0ToCount(float currentScro
     }
     return absCurrentScrollPosition;
 }
-#if 0
-    public abstract static class PostLayoutListener {
-        ItemTransformation transformChild(View& child,float itemPositionToCenterDiff,
-                int orientation, int itemPositionInAdapter) {
-            return transformChild(child, itemPositionToCenterDiff, orientation);
-        }
-        ItemTransformation transformChild(View& child, float itemPositionToCenterDiff,int orientation ) {
-            throw new IllegalStateException("at least one transformChild should be implemented");
-        }
-    }
-#endif
 
 CarouselLayoutManager::LayoutHelper::LayoutHelper(int maxVisibleItems) {
     mMaxVisibleItems = maxVisibleItems;
@@ -672,7 +655,7 @@ void CarouselLayoutManager::LayoutHelper::initLayoutOrder(int layoutCount) {
 }
 
 void CarouselLayoutManager::LayoutHelper::setLayoutOrder(int arrayPosition, int itemAdapterPosition, float itemPositionDiff) {
-    LayoutOrder* item = mLayoutOrder[arrayPosition];
+    std::shared_ptr<LayoutOrder> item = mLayoutOrder[arrayPosition];
     item->mItemAdapterPosition = itemAdapterPosition;
     item->mItemPositionDiff = itemPositionDiff;
 }
@@ -685,7 +668,7 @@ void CarouselLayoutManager::LayoutHelper::setLayoutOrder(int arrayPosition, int 
  */
 bool CarouselLayoutManager::LayoutHelper::hasAdapterPosition(int adapterPosition) {
     if (mLayoutOrder.size()) {
-        for (LayoutOrder* layoutOrder : mLayoutOrder) {
+        for (std::shared_ptr<LayoutOrder> layoutOrder : mLayoutOrder) {
             if (layoutOrder->mItemAdapterPosition == adapterPosition) {
                 return true;
             }
@@ -694,10 +677,10 @@ bool CarouselLayoutManager::LayoutHelper::hasAdapterPosition(int adapterPosition
     return false;
 }
 
-void CarouselLayoutManager::LayoutHelper::recycleItems(const std::vector<LayoutOrder*>&layoutOrders) {
-    for (LayoutOrder* layoutOrder : layoutOrders) {
+void CarouselLayoutManager::LayoutHelper::recycleItems(const std::vector<std::shared_ptr<LayoutOrder>>&layoutOrders) {
+    for (std::shared_ptr<LayoutOrder> layoutOrder : layoutOrders) {
         //noinspection ObjectAllocationInLoop
-        mReusedItems.push_back(layoutOrder);//add(new WeakReference<>(layoutOrder));
+        mReusedItems.push_back(std::weak_ptr<LayoutOrder>(layoutOrder));//add(new WeakReference<>(layoutOrder));
     }
 }
 
@@ -709,7 +692,7 @@ void CarouselLayoutManager::LayoutHelper::fillLayoutOrder() {
     }
 }
 
-CarouselLayoutManager::LayoutOrder* CarouselLayoutManager::LayoutHelper::createLayoutOrder() {
+std::shared_ptr<CarouselLayoutManager::LayoutOrder> CarouselLayoutManager::LayoutHelper::createLayoutOrder() {
     /*Iterator<LayoutOrder*> iterator = mReusedItems.iterator();
     while (iterator.hasNext()) {
         WeakReference<LayoutOrder> layoutOrderWeakReference = iterator.next();
@@ -719,7 +702,14 @@ CarouselLayoutManager::LayoutOrder* CarouselLayoutManager::LayoutHelper::createL
             return layoutOrder;
         }
     }*/
-    return new LayoutOrder();
+    for(auto it=mReusedItems.begin();it!=mReusedItems.end();it++){
+       std::weak_ptr<LayoutOrder>layoutOrder = *it;
+       it = mReusedItems.erase(it);
+       if(!layoutOrder.expired()){
+	   return layoutOrder.lock();//it = mReusedItems.erase(it);
+       }
+    }
+    return std::make_shared<LayoutOrder>();
 }
 
 CarouselLayoutManager::CarouselSavedState::CarouselSavedState(Parcelable* superState) {

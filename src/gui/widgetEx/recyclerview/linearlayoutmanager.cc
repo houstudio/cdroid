@@ -154,7 +154,6 @@ void  LinearLayoutManager::resolveShouldLayoutReverse() {
     }
 }
 
-
 bool  LinearLayoutManager::getReverseLayout()const {
     return mReverseLayout;
 }

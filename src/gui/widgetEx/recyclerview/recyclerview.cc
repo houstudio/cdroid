@@ -1096,10 +1096,10 @@ bool RecyclerView::fling(int velocityX, int velocityY) {
     const bool bCanScrollVertical = mLayout->canScrollVertically();
 
     if ((bCanScrollHorizontal==false) || (std::abs(velocityX) < mMinFlingVelocity)) {
-        //velocityX = 0;
+        velocityX = 0;
     }
     if ((bCanScrollVertical==false) || (std::abs(velocityY) < mMinFlingVelocity)) {
-        //velocityY = 0;
+        velocityY = 0;
     }
     if ((velocityX == 0) && (velocityY == 0)) {
         // If we don't have any velocity, return false
@@ -1879,7 +1879,6 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
             mVelocityTracker->computeCurrentVelocity(1000, mMaxFlingVelocity);
             const float xvel = bCanScrollHorizontally ? -mVelocityTracker->getXVelocity(mScrollPointerId) : 0;
             const float yvel = bCanScrollVertically ? -mVelocityTracker->getYVelocity(mScrollPointerId) : 0;
-	    LOGV("xvel=%.2f yvel=%.2f",xvel,yvel);
             if (!(((xvel != 0) || (yvel != 0)) && fling((int) xvel, (int) yvel))) {
                 setScrollState(SCROLL_STATE_IDLE);
             }

@@ -30,7 +30,7 @@ public:
     * @param orientation              layoutManager orientation {@link #getLayoutDirection()}
     * @param itemPositionInAdapter    item position inside adapter for this layout pass
     */
-    typedef CallbackBase<ItemTransformation*,View&,float,int,int>PostLayoutListener;
+    DECLARE_UIEVENT(bool,PostLayoutListener,View&,ItemTransformation&,float,int,int);
 private:
     static constexpr bool CIRCLE_LAYOUT = false;
     struct LayoutOrder;
@@ -57,7 +57,7 @@ private:
     void selectItemCenterPosition(int centerItem);
     void fillDataVertical(RecyclerView::Recycler& recycler, int width, int height);
     void fillDataHorizontal(RecyclerView::Recycler& recycler, int width, int height);
-    void fillChildItem(int start, int top, int end, int bottom, LayoutOrder& layoutOrder, RecyclerView::Recycler& recycler, int i);
+    void fillChildItem(int start, int top, int width, int height, LayoutOrder& layoutOrder, RecyclerView::Recycler& recycler, int i);
     /**
      * @return current scroll position of center item. this value can be in any range if it is cycle layout.
      * if this is not, that then it is in [0, {@link #mItemsCount - 1}]
@@ -176,12 +176,12 @@ private :
     friend CarouselLayoutManager;
     int mMaxVisibleItems;
     int mScrollOffset;
-    std::vector<LayoutOrder*> mLayoutOrder;
-    std::vector<LayoutOrder*> mReusedItems;
+    std::vector<std::shared_ptr<LayoutOrder>> mLayoutOrder;
+    std::vector<std::weak_ptr<LayoutOrder>> mReusedItems;
 private:
-    void recycleItems(const std::vector<LayoutOrder*>& layoutOrders);
+    void recycleItems(const std::vector<std::shared_ptr<LayoutOrder>>& layoutOrders);
     void fillLayoutOrder();
-    LayoutOrder* createLayoutOrder();
+    std::shared_ptr<LayoutOrder> createLayoutOrder();
 public:
     LayoutHelper(int maxVisibleItems);
 
