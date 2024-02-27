@@ -241,8 +241,8 @@ GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state) {
     mPadding.set(0,0,0,0);
     mGradientState = state;
     mMutated = false;
-    mGradientRadius = 0;
-    mStrokeWidth =1.f;
+    mGradientRadius = 0.5f;
+    mStrokeWidth =-1;
     mAlpha = 255;
     updateLocalState();
 }
@@ -788,7 +788,7 @@ bool GradientDrawable::ensureValidRect() {
             } else if (st.mGradient == SWEEP_GRADIENT) {
                 x0 = mRect.left+ mRect.width * st.mCenterX;
                 y0 = mRect.top + mRect.height * st.mCenterY;
-                const double RADIUS = getRadius(mRect,x0,y0);
+                const double RADIUS = getRadius(mRect,x0,y0)+11.f;
                 std::vector<Cairo::ColorStop> stops;
                 for(int i=0; i<gradientColors.size(); i++) {
                     Color c = gradientColors[i];
@@ -959,18 +959,16 @@ void GradientDrawable::draw(Canvas&canvas) {
         canvas.begin_new_sub_path();
         if( sweep<360.f && sweep>-360.f ) {
             const double end_angle = M_PI*2*sweep/360.f;
-            const double cx = x + (innerRadius+thickness/2) * std::cos(end_angle);
-            const double cy = y + (innerRadius+thickness/2) * std::sin(end_angle);
             canvas.set_fill_rule(Cairo::Context::FillRule::WINDING);//EVEN_ODD);//WINDING);
-            canvas.move_to(x+innerRadius,y);
-            canvas.arc(x,y,innerRadius,0.f,end_angle);
-            canvas.arc_negative(x,y,innerRadius+thickness,end_angle,0.f);
+            canvas.move_to(x + radius,y);
+            canvas.arc(x,y,radius + thickness,0.f,end_angle);
+            canvas.arc_negative(x,y,radius,end_angle,0.f);
             canvas.close_path();
         } else {
             //canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
-            canvas.arc(x,y,innerRadius,0,M_PI*2.f);
+            canvas.arc(x,y,radius + thickness,0,M_PI*2.f);
             canvas.begin_new_sub_path();
-            canvas.arc_negative(x,y,innerRadius+thickness,M_PI*2.f,0.f);
+            canvas.arc_negative(x,y,radius,M_PI*2.f,0.f);
         }
         if(mFillPaint)canvas.set_source(mFillPaint);
         if (haveStroke) {
