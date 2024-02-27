@@ -12,6 +12,7 @@ private:
     float mRotationX,mRotationY,mRotation;
     float mPivotX,mPivotY;
     float mTranslationX,mTranslationY,mTranslationZ;
+    float mLeft,mTop,mRight,mBottom;
     Cairo::Matrix mMatrix;
 public:
     RenderNode();

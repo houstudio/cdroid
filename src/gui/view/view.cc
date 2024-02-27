@@ -4308,8 +4308,6 @@ void View::onAttachedToWindow(){
         InputMethodManager&imm=InputMethodManager::getInstance();
         imm.focusIn((View*)this);
     } 
-    mRenderNode->setPivotX((float)getWidth()/2.f);
-    mRenderNode->setPivotY((float)getHeight()/2.f);
 }
 
 void View::onDetachedFromWindow(){

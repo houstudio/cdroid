@@ -1,4 +1,5 @@
 #include <view/rendernode.h>
+#include <float.h>
 using namespace Cairo;
 namespace cdroid{
 
@@ -11,7 +12,7 @@ RenderNode::RenderNode(){
     mTranslationX = .0f;
     mTranslationY = .0f;
     mTranslationZ = .0f;
-    mPivotX = mPivotY = std::numeric_limits<float>::min();
+    mPivotX = mPivotY = FLT_MIN;//std::numeric_limits<float>::min();
     mRotation  = .0f;
     mRotationX = .0f;
     mRotationY = .0f;
@@ -31,14 +32,13 @@ static inline float sdot(float a,float b,float c,float d){
 
 void RenderNode::getMatrix(Matrix&outMatrix)const{
     outMatrix = identity_matrix();
-    outMatrix.translate(mTranslationX,mTranslationY);
+    const float px = (mPivotX==FLT_MIN) ? (mRight - mLeft)/2.f : mPivotX;
+    const float py = (mPivotY==FLT_MIN) ? (mBottom- mTop)/2.f : mPivotY;
+    outMatrix.translate(px,py);
     outMatrix.scale(mScaleX,mScaleY);
-
-    const float radians = mRotation*M_PI/180.f;
-    const float fsin = sin(radians);
-    const float fcos = cos(radians);
-    Matrix rt(fcos,-fsin, fsin,fcos, sdot(-fsin,mPivotY,1.f-fcos,mPivotX),sdot(fsin,mPivotX,1.f-fcos,mPivotY));
-    outMatrix.multiply(outMatrix,rt);
+    outMatrix.rotate(mRotation*M_PI/180.f);
+    outMatrix.translate(mTranslationX - px,mTranslationY - py);
+    //outMatrix.translate((mTranslationX-px)/mScaleX,(mTranslationY-py)/mScaleY);
 }
 
 void RenderNode::getInverseMatrix(Matrix&outMatrix)const{
@@ -147,19 +147,27 @@ bool RenderNode::isPivotExplicitlySet()const{
                mPivotY!=std::numeric_limits<float>::min();
 }
 
-void RenderNode::setLeft(float){
+void RenderNode::setLeft(float left){
+    mLeft = left;
 }
 
-void RenderNode::setTop(float){
+void RenderNode::setTop(float top){
+    mTop = top;
 }
 
-void RenderNode::setRight(float){
+void RenderNode::setRight(float right){
+    mRight = right;
 }
 
-void RenderNode::setBottom(float){
+void RenderNode::setBottom(float bottom){
+    mBottom = bottom;
 }
 
 void RenderNode::setLeftTopRightBottom(float left,float top,float right,float bottom){
+    mLeft = left;
+    mTop = top;
+    mRight = right;
+    mBottom= bottom;
 }
 
 }

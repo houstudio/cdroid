@@ -1985,7 +1985,6 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
 
     int location[2]={child->mLeft,child->mTop};
 
-    Matrix childMatrix = child->getMatrix();
     if (child->mLayerType != LAYER_TYPE_NONE){
         mPrivateFlags |= PFLAG_INVALIDATED;
         mPrivateFlags &= ~PFLAG_DRAWING_CACHE_VALID;
@@ -1994,9 +1993,10 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
     Rect boundingRect = dirty;
     if(!child->hasIdentityMatrix()||(mGroupFlags & FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0){
          Matrix transformMatrix;
+         Matrix childMatrix = child->getMatrix();
          if((mGroupFlags & FLAG_SUPPORT_STATIC_TRANSFORMATIONS)!=0){
              Transformation t;
-             bool transformed = getChildStaticTransformation(child,&t);
+             const bool transformed = getChildStaticTransformation(child,&t);
              if(transformed){
                  transformMatrix = t.getMatrix();
                  if(!child->hasIdentityMatrix())
