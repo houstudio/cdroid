@@ -788,7 +788,7 @@ bool GradientDrawable::ensureValidRect() {
             } else if (st.mGradient == SWEEP_GRADIENT) {
                 x0 = mRect.left+ mRect.width * st.mCenterX;
                 y0 = mRect.top + mRect.height * st.mCenterY;
-                const double RADIUS = getRadius(mRect,x0,y0)+11.f;
+                const double RADIUS = getRadius(mRect,x0,y0);
                 std::vector<Cairo::ColorStop> stops;
                 for(int i=0; i<gradientColors.size(); i++) {
                     Color c = gradientColors[i];
