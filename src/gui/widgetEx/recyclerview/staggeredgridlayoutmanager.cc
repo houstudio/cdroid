@@ -1560,17 +1560,15 @@ int StaggeredGridLayoutManager::calculateScrollDirectionForPosition(int position
     return position < firstChildPos != mShouldReverseLayout ? LayoutState::LAYOUT_START : LayoutState::LAYOUT_END;
 }
 
-bool StaggeredGridLayoutManager::computeScrollVectorForPosition(int targetPosition,PointF*outVector) {
+bool StaggeredGridLayoutManager::computeScrollVectorForPosition(int targetPosition,PointF&outVector) {
     const int direction = calculateScrollDirectionForPosition(targetPosition);
     if (direction == 0) {
         return false;
     }
-    if(outVector){
-        if (mOrientation == HORIZONTAL) {
-            outVector->set(direction,0);
-        } else {
-            outVector->set(0,direction);
-        }
+    if (mOrientation == HORIZONTAL) {
+        outVector.set(direction,0);
+    } else {
+        outVector.set(0,direction);
     }
     return true;
 }

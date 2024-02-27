@@ -145,7 +145,7 @@ public:
     void scrollToPosition(int position) override;
 
     void smoothScrollToPosition(RecyclerView& recyclerView, RecyclerView::State& state, int position)override;
-    bool computeScrollVectorForPosition(int targetPosition,PointF*)override;
+    bool computeScrollVectorForPosition(int targetPosition,PointF&scrollVector)override;
     int scrollVerticallyBy(int dy, RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     int scrollHorizontallyBy(int dx, RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     void onMeasure(RecyclerView::Recycler& recycler, RecyclerView::State& state, int widthSpec, int heightSpec)override;

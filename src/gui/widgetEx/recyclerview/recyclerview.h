@@ -676,7 +676,7 @@ public:
     virtual bool canScrollVertically()const;
     virtual void scrollToPosition(int position);
     virtual void smoothScrollToPosition(RecyclerView& recyclerView, State& state,int position);
-    virtual bool computeScrollVectorForPosition(int targetPosition,PointF*);
+    virtual bool computeScrollVectorForPosition(int targetPosition,PointF&scrollVector);
     void startSmoothScroll(SmoothScroller* smoothScroller);
     bool isSmoothScrolling();
     int getLayoutDirection();
@@ -1034,7 +1034,7 @@ protected:
 public:
     SmoothScroller();
     void setTargetPosition(int targetPosition);
-    bool computeScrollVectorForPosition(int targetPosition,PointF*);
+    bool computeScrollVectorForPosition(int targetPosition,PointF&scrollVector);
     RecyclerView::LayoutManager* getLayoutManager();
     bool isPendingInitialRun();
     bool isRunning();

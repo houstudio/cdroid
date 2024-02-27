@@ -17,7 +17,7 @@ SnapHelper::SnapHelper(){
     };
 
     mScrollListener.onScrolled=[this](RecyclerView& recyclerView, int dx, int dy) {
-        if (dx != 0 || dy != 0) {
+        if ((dx != 0) || (dy != 0)) {
             mScrolled = true;
         }
     };
@@ -79,8 +79,8 @@ void SnapHelper::calculateScrollDistance(int velocityX, int velocityY,int snapDi
 }
 
 bool SnapHelper::snapFromFling(RecyclerView::LayoutManager& layoutManager, int velocityX,int velocityY) {
-    //if (!(layoutManager instanceof RecyclerView.SmoothScroller.ScrollVectorProvider)) {
-    if(!layoutManager.computeScrollVectorForPosition(0,nullptr)){
+    PointF scrollVector;
+    if(!layoutManager.computeScrollVectorForPosition(0,scrollVector)){
         return false;
     }
 
@@ -156,7 +156,8 @@ public:
 };
 
 LinearSmoothScroller* SnapHelper::createSnapScroller(RecyclerView::LayoutManager& layoutManager) {
-    if(!layoutManager.computeScrollVectorForPosition(0,nullptr)){
+    PointF scrollVector;
+    if(!layoutManager.computeScrollVectorForPosition(0,scrollVector)){
         return nullptr;
     }
     return new MyLinearSmoothScroller(this,mRecyclerView);

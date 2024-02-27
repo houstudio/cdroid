@@ -129,7 +129,7 @@ public:
     void setReverseLayout(bool reverseLayout);
     View* findViewByPosition(int position)override;
     void smoothScrollToPosition(RecyclerView& recyclerView, RecyclerView::State& state,int position)override;
-    bool computeScrollVectorForPosition(int targetPosition,PointF*point)override;
+    bool computeScrollVectorForPosition(int targetPosition,PointF&point)override;
     void onLayoutChildren(RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     void onLayoutCompleted(RecyclerView::State& state)override;
     void scrollToPosition(int position)override;

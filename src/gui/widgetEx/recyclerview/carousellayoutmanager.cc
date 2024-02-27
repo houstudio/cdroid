@@ -158,15 +158,15 @@ T signum(T x) {
     return (T(0) < x) - (x < T(0));
 }
 
-bool CarouselLayoutManager::computeScrollVectorForPosition(int targetPosition,PointF*pt) {
-    float directionDistance = getScrollDirection(targetPosition);
+bool CarouselLayoutManager::computeScrollVectorForPosition(int targetPosition,PointF&pt) {
+    const float directionDistance = getScrollDirection(targetPosition);
     //noinspection NumericCastThatLosesPrecision
-    int direction = (int) -signum(directionDistance);
-    if(pt)pt->x = pt->y = 0;
+    const int direction = (int) -signum(directionDistance);
+    pt.x = pt.y = 0;
     if (HORIZONTAL == mOrientation) {
-        pt->x = direction;
+        pt.x = direction;
     } else {
-        pt->y = direction;
+        pt.y = direction;
     }
     return getChildCount()>0;
 }

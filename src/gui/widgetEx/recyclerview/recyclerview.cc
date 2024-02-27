@@ -4967,7 +4967,7 @@ void RecyclerView::LayoutManager::startSmoothScroll(SmoothScroller* smoothScroll
     mSmoothScroller->start(mRecyclerView, this);
 }
 
-bool RecyclerView::LayoutManager::computeScrollVectorForPosition(int targetPosition,PointF* point){
+bool RecyclerView::LayoutManager::computeScrollVectorForPosition(int targetPosition,PointF& point){
     return false;
 }
 
@@ -6497,7 +6497,7 @@ void RecyclerView::SmoothScroller::setTargetPosition(int targetPosition) {
     mTargetPosition = targetPosition;
 }
 
-bool RecyclerView::SmoothScroller::computeScrollVectorForPosition(int targetPosition,PointF*point) {
+bool RecyclerView::SmoothScroller::computeScrollVectorForPosition(int targetPosition,PointF&point) {
     LayoutManager* layoutManager = getLayoutManager();
     return layoutManager->computeScrollVectorForPosition(targetPosition,point);
 }
@@ -6556,7 +6556,7 @@ void RecyclerView::SmoothScroller::onAnimation(int dx, int dy) {
     // false if it was true).
     if (mPendingInitialRun && mTargetView == nullptr && mLayoutManager != nullptr) {
         PointF pointF;
-	const bool rc = computeScrollVectorForPosition(mTargetPosition,&pointF);
+        const bool rc = computeScrollVectorForPosition(mTargetPosition,pointF);
         if (rc && (pointF.x != 0 || pointF.y != 0)) {
             recyclerView->scrollStep(
                     (int) signum(pointF.x),

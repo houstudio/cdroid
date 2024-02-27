@@ -159,7 +159,7 @@ public:
     bool canScrollHorizontally()const override;
     int scrollHorizontallyBy(int dx, RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     int scrollVerticallyBy(int dy, RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
-    bool computeScrollVectorForPosition(int targetPosition,PointF*)override;
+    bool computeScrollVectorForPosition(int targetPosition,PointF&)override;
     void smoothScrollToPosition(RecyclerView& recyclerView, RecyclerView::State& state,int position)override;
     void scrollToPosition(int position)override;
     void scrollToPositionWithOffset(int position, int offset);

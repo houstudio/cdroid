@@ -65,7 +65,7 @@ int PagerSnapHelper::findTargetSnapPosition(RecyclerView::LayoutManager& layoutM
     }
     bool reverseLayout = false;
     PointF vectorForEnd;
-    if (layoutManager.computeScrollVectorForPosition(itemCount - 1,&vectorForEnd)){
+    if (layoutManager.computeScrollVectorForPosition(itemCount - 1,vectorForEnd)){
         reverseLayout = vectorForEnd.x < 0 || vectorForEnd.y < 0;
     }
     return reverseLayout
@@ -107,7 +107,8 @@ protected:
 };
 
 LinearSmoothScroller* PagerSnapHelper::createSnapScroller(RecyclerView::LayoutManager& layoutManager) {
-    if(!layoutManager.computeScrollVectorForPosition(0,nullptr)){
+    PointF scrollVector;
+    if(!layoutManager.computeScrollVectorForPosition(0,scrollVector)){
         return nullptr;
     }
     return new MyPageSmoothScroller(this,mRecyclerView);

@@ -674,10 +674,10 @@ static double getRadius(const RectF& r, int x, int y) {
     PointF bottomRight = {r.left + r.width, r.top + r.height};
     PointF bottomLeft = {r.left, r.top + r.height};
 
-    double dist1 = distance(x, y, topLeft.x, topLeft.y); // 左上角
-    double dist2 = distance(x, y, topRight.x, topRight.y); // 右上角
-    double dist3 = distance(x, y, bottomRight.x, bottomRight.y); // 右下角
-    double dist4 = distance(x, y, bottomLeft.x, bottomLeft.y); // 左下角
+    double dist1 = distance(x, y, topLeft.x, topLeft.y);
+    double dist2 = distance(x, y, topRight.x, topRight.y);
+    double dist3 = distance(x, y, bottomRight.x, bottomRight.y);
+    double dist4 = distance(x, y, bottomLeft.x, bottomLeft.y);
 
     return std::max({dist1, dist2, dist3, dist4});
 }

@@ -34,7 +34,7 @@ int LinearSnapHelper::findTargetSnapPosition(RecyclerView::LayoutManager& layout
     if (itemCount == 0) {
         return RecyclerView::NO_POSITION;
     }
-    if(!layoutManager.computeScrollVectorForPosition(itemCount - 1,&vectorForEnd)){
+    if(!layoutManager.computeScrollVectorForPosition(itemCount - 1,vectorForEnd)){
         return RecyclerView::NO_POSITION;
     }
     View* currentView = findSnapView(layoutManager);

@@ -215,18 +215,16 @@ void LinearLayoutManager::smoothScrollToPosition(RecyclerView& recyclerView, Rec
     startSmoothScroll(linearSmoothScroller);
 }
 
-bool LinearLayoutManager::computeScrollVectorForPosition(int targetPosition,PointF*point) {
+bool LinearLayoutManager::computeScrollVectorForPosition(int targetPosition,PointF&point) {
     if (getChildCount() == 0) {
         return false;
     }
     const int firstChildPos = getPosition(getChildAt(0));
     const int direction = targetPosition < firstChildPos != mShouldReverseLayout ? -1 : 1;
-    if(point){
-        if (mOrientation == HORIZONTAL) {
-            point->set(direction, 0);
-        } else {
-            point->set(0, direction);
-        }
+    if (mOrientation == HORIZONTAL) {
+        point.set(direction, 0);
+    } else {
+        point.set(0, direction);
     }
     return true;
 }
