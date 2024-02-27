@@ -133,8 +133,7 @@ void RotateDrawable::draw(Canvas& canvas) {
     const int h = bounds.height;
     const float px = mState->mPivotXRel ? (w * mState->mPivotX) : mState->mPivotX;
     const float py = mState->mPivotYRel ? (h * mState->mPivotY) : mState->mPivotY;
-#if 1
-    d->setBounds(bounds);
+
     canvas.save();
     canvas.translate(px,py);
     canvas.rotate_degrees(mState->mCurrentDegrees);
@@ -144,24 +143,8 @@ void RotateDrawable::draw(Canvas& canvas) {
     d->draw(canvas);
     rect.offset(w/2,h/2);
     d->setBounds(rect);
+    canvas.restore();
     //LOGD("pos=%d,%d/%.f,%.f level=%d degress=%d",bounds.left,bounds.top,px,py,getLevel(),int(mState->mCurrentDegrees));
-    canvas.restore();
-#else
-    const float radians=M_PI*2.f*mState->mCurrentDegrees/360.f;
-    const float fsin=sin(radians);
-    const float fcos=cos(radians);
-    Matrix mtx(fcos,-fsin, fsin,fcos, sdot(-fsin,py,1-fcos,px), sdot(fsin,px,1-fcos,py));//Anti clockwise
-    Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));//Clockwise
-    canvas.save();
-    canvas.translate(bounds.left,bounds.top);
-    canvas.transform(mtx);
-    d->setBounds(0,0,w,h);
-    d->draw(canvas);
-    d->setBounds(bounds);
-    canvas.translate(-bounds.left,-bounds.top);
-    canvas.restore();
-    LOGV("Bounds(%d,%d,%d,%d) pxy=%f,%f degrees=%f",bounds.left,bounds.top,bounds.width,bounds.height,px,py,mState->mCurrentDegrees);
-#endif
 }
 
 Drawable*RotateDrawable::inflate(Context*ctx,const AttributeSet&atts){
