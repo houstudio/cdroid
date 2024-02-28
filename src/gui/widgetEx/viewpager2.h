@@ -1,14 +1,18 @@
 #ifndef __VIEWPAGER2_H__
 #define __VIEWPAGER2_H__
+#include <view/viewgroup.h>
 #include <widgetEx/recyclerview/recyclerview.h>
 #include <widgetEx/recyclerview/linearlayoutmanager.h>
 #include <widgetEx/recyclerview/pagersnaphelper.h>
+
 namespace cdroid{
+
 class PagerSnapHelper;
 class FakeDrag;
 class ScrollEventAdapter;
 class CompositeOnPageChangeCallback;
 class PageTransformerAdapter;
+
 class ViewPager2:public ViewGroup {
 public:
     class PageTransformer {
@@ -24,6 +28,7 @@ public:
 protected:
     /** Feature flag while stabilizing enhanced a11y */
     static constexpr bool sFeatureEnhancedA11yEnabled = true;
+    class SavedState;
 public:
     static constexpr int ORIENTATION_HORIZONTAL = RecyclerView::HORIZONTAL;
     static constexpr int ORIENTATION_VERTICAL = RecyclerView::VERTICAL;
@@ -62,25 +67,26 @@ protected:
 private:
     class RecyclerViewImpl;
     void initialize(Context* context, const AttributeSet& attrs);
-    //RecyclerView::OnChildAttachStateChangeListener enforceChildFillListener();
+    RecyclerView::OnChildAttachStateChangeListener enforceChildFillListener();
     void setOrientation(Context* context,const AttributeSet& attrs);
     void restorePendingState();
     void unregisterCurrentItemDataSetTracker(RecyclerView::Adapter*adapter);
 protected:
     friend class FakeDrag;
     friend class ScrollEventAdapter;
-    //Parcelable* onSaveInstanceState()override;
-    //void onRestoreInstanceState(Parcelable& state)override;
-    //void dispatchRestoreInstanceState(SparseArray<Parcelable*>& container)override;
+    Parcelable* onSaveInstanceState()override;
+    void onRestoreInstanceState(Parcelable& state)override;
+    void dispatchRestoreInstanceState(SparseArray<Parcelable*>& container)override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int l, int t, int w, int h)override;
 
     void onViewAdded(View* child)override;
     void updateCurrentItem();
-    int getPageSize();
+    int getPageSize()const;
     void setCurrentItemInternal(int item, bool smoothScroll);
     void snapToPage();
 public:
+    ViewPager2(int w,int h);
     ViewPager2(Context* context, const AttributeSet& attrs);
     //CharSequence getAccessibilityClassName()override;
 
@@ -88,19 +94,19 @@ public:
     void registerCurrentItemDataSetTracker(RecyclerView::Adapter* adapter);
     RecyclerView::Adapter* getAdapter();
     void setOrientation(int orientation);
-    int getOrientation();
-    bool isRtl();
+    int getOrientation()const;
+    bool isRtl()const;
     void setCurrentItem(int item);
     void setCurrentItem(int item, bool smoothScroll);
     int getCurrentItem()const;
-    int getScrollState();
+    int getScrollState()const;
     bool beginFakeDrag();
     bool fakeDragBy(float offsetPxFloat);
     bool endFakeDrag();
     bool isFakeDragging();
     void setUserInputEnabled(bool enabled);
 
-    bool isUserInputEnabled();
+    bool isUserInputEnabled()const;
 
     void setOffscreenPageLimit(int limit);
     int getOffscreenPageLimit()const;
@@ -112,15 +118,12 @@ public:
     void requestTransform();
     View&setLayoutDirection(int layoutDirection)override;
     //void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info)override;
-    bool performAccessibilityAction(int action, Bundle arguments);
-
-#if 0
-#endif
+    //bool performAccessibilityAction(int action, Bundle arguments);
 
     void addItemDecoration(RecyclerView::ItemDecoration* decor);
     void addItemDecoration(RecyclerView::ItemDecoration* decor, int index);
     RecyclerView::ItemDecoration* getItemDecorationAt(int index);
-    int getItemDecorationCount();
+    int getItemDecorationCount()const;
     void invalidateItemDecorations();
     void removeItemDecorationAt(int index);
     void removeItemDecoration(RecyclerView::ItemDecoration* decor);
@@ -206,8 +209,8 @@ public:
     };
 #endif
 };/*endof ViewPager2*/
-#if 0
-class ViewPager2::SavedState:public AbsSavedState{//BaseSavedState {
+
+class ViewPager2::SavedState:public BaseSavedState {
 protected:
     int mRecyclerViewId;
     int mCurrentItem;
@@ -219,7 +222,7 @@ public:
     //void readValues(Parcel source, ClassLoader loader);//private
     void writeToParcel(Parcel& out, int flags);
 };
-#endif
+
 class ViewPager2::RecyclerViewImpl:public RecyclerView {
 private:
     friend ViewPager2;
@@ -227,7 +230,7 @@ private:
 public:
     RecyclerViewImpl(Context* context,const AttributeSet&);
     //CharSequence getAccessibilityClassName()override;
-    //void onInitializeAccessibilityEvent(AccessibilityEvent event)override;
+    //void onInitializeAccessibilityEvent(AccessibilityEvent& event)override;
     bool onTouchEvent(MotionEvent& event)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;
 };

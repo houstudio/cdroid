@@ -486,7 +486,7 @@ public:
     void addItemDecoration(ItemDecoration* decor, int index);
     void addItemDecoration(ItemDecoration* decor);
     ItemDecoration* getItemDecorationAt(int index);
-    int getItemDecorationCount();
+    int getItemDecorationCount()const;
     void removeItemDecorationAt(int index);
     void removeItemDecoration(ItemDecoration* decor);
     void setChildDrawingOrderCallback(ChildDrawingOrderCallback childDrawingOrderCallback);

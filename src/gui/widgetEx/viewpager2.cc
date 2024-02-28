@@ -3,7 +3,11 @@
 #include <widgetEx/scrolleventadapter.h>
 #include <widgetEx/fakedrag.h>
 #include <widgetEx/compositeonpagechangecallback.h>
+
 namespace cdroid{
+
+DECLARE_WIDGET(ViewPager2)
+
 class PageTransformerAdapter:public ViewPager2::OnPageChangeCallback {
 private:
     LinearLayoutManager* mLayoutManager;
@@ -27,7 +31,8 @@ public:
             const float transformOffset = -positionOffset;
             for(int i = 0; i < mLayoutManager->getChildCount(); ++i) {
                 View* view = mLayoutManager->getChildAt(i);
-                FATAL_IF(view==nullptr,"LayoutManager returned a null child at pos %d/%d while transforming pages", i, mLayoutManager->getChildCount());
+                FATAL_IF(view==nullptr,"LayoutManager returned a null child at pos %d/%d while transforming pages",
+				i, mLayoutManager->getChildCount());
                 const int currPos = mLayoutManager->getPosition(view);
                 const float viewOffset = transformOffset + (float)(currPos - position);
                 mPageTransformer->transformPage(*view, viewOffset);
@@ -36,6 +41,10 @@ public:
         }
     }
 };
+
+ViewPager2::ViewPager2(int w,int h):ViewGroup(w,h){
+    initialize(mContext, AttributeSet(mContext,""));
+}
 
 ViewPager2::ViewPager2(Context* context,const AttributeSet& attrs)
     :ViewGroup(context, attrs){
@@ -46,7 +55,7 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     /*mAccessibilityProvider = sFeatureEnhancedA11yEnabled
             ? new PageAwareAccessibilityProvider()
             : new BasicAccessibilityProvider();*/
-
+    mCurrentItemDataSetChangeObserver = nullptr;
     mRecyclerView = new RecyclerViewImpl(context,attrs);
     mRecyclerView->mVP =this;
     mRecyclerView->setId(View::generateViewId());
@@ -59,6 +68,8 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
 
     mRecyclerView->setLayoutParams(
             new ViewGroup::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::MATCH_PARENT));
+    attachViewToParent(mRecyclerView, 0, mRecyclerView->getLayoutParams());
+
     RecyclerView::OnChildAttachStateChangeListener ls;
     ls.onChildViewAttachedToWindow=[](View&view){
         RecyclerView::LayoutParams* layoutParams = (RecyclerView::LayoutParams*) view.getLayoutParams();
@@ -118,6 +129,7 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     // Allow a11y to register its listeners after currentItemUpdater (so it has the
     // right data). TODO: replace ordering comments with a test.
     //mAccessibilityProvider->onInitialize(mPageChangeEventDispatcher, mRecyclerView);
+    mExternalPageChangeCallbacks = new CompositeOnPageChangeCallback(0);
     mPageChangeEventDispatcher->addOnPageChangeCallback(*mExternalPageChangeCallbacks);
 
     // Add mPageTransformerAdapter after mExternalPageChangeCallbacks, because page transform
@@ -125,12 +137,13 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     mPageTransformerAdapter = new PageTransformerAdapter(mLayoutManager);
     mPageChangeEventDispatcher->addOnPageChangeCallback(*mPageTransformerAdapter);
 
-    attachViewToParent(mRecyclerView, 0, mRecyclerView->getLayoutParams());
+    //attachViewToParent(mRecyclerView, 0, mRecyclerView->getLayoutParams());
+
 }
 
-#if 0
+
 RecyclerView::OnChildAttachStateChangeListener ViewPager2::enforceChildFillListener() {
-    return nullptr;/*new RecyclerView::OnChildAttachStateChangeListener() {
+    return {};/*new RecyclerView::OnChildAttachStateChangeListener() {
         public void onChildViewAttachedToWindow(View* view) {
             RecyclerView::LayoutParams* layoutParams = (RecyclerView::LayoutParams*) view->getLayoutParams();
             if (layoutParams->width != LayoutParams::MATCH_PARENT
@@ -144,6 +157,7 @@ RecyclerView::OnChildAttachStateChangeListener ViewPager2::enforceChildFillListe
         }
     };*/
 }
+#if 0
 CharSequence ViewPager2::getAccessibilityClassName() {
     if (mAccessibilityProvider.handlesGetAccessibilityClassName()) {
         return mAccessibilityProvider.onGetAccessibilityClassName();
@@ -156,7 +170,7 @@ void ViewPager2::setOrientation(Context* context,const AttributeSet& attrs) {
     setOrientation(ORIENTATION_HORIZONTAL);
           //a.getInt(R.styleable.ViewPager2_android_orientation, ORIENTATION_HORIZONTAL));
 }
-#if 0
+
 Parcelable* ViewPager2::onSaveInstanceState() {
     Parcelable* superState = ViewGroup::onSaveInstanceState();
     SavedState* ss = new SavedState(*superState);
@@ -187,7 +201,7 @@ void ViewPager2::onRestoreInstanceState(Parcelable& state) {
     mPendingCurrentItem = ss.mCurrentItem;
     mPendingAdapterState = ss.mAdapterState;
 }
-#endif
+
 void ViewPager2::restorePendingState() {
     if (mPendingCurrentItem == RecyclerView::NO_POSITION) {
         // No state to restore, or state is already restored
@@ -209,7 +223,7 @@ void ViewPager2::restorePendingState() {
     mRecyclerView->scrollToPosition(mCurrentItem);
     //mAccessibilityProvider.onRestorePendingState();
 }
-#if 0
+
 void ViewPager2::dispatchRestoreInstanceState(SparseArray<Parcelable*>& container) {
     // RecyclerView changed an id, so we need to reflect that in the saved state
     Parcelable* state = container.get(getId());
@@ -226,28 +240,6 @@ void ViewPager2::dispatchRestoreInstanceState(SparseArray<Parcelable*>& containe
     restorePendingState();
 }
 
-ViewPager2::SavedState::SavedState(Parcel& source) {
-    //super(source);
-    //readValues(source, nullptr);
-}
-
-ViewPager2::SavedState::SavedState(Parcelable superState) {
-    //super(superState);
-}
-
-/*void ViewPager2::SavedState::readValues(Parcel& source, ClassLoader loader) {
-    mRecyclerViewId = source.readInt();
-    mCurrentItem = source.readInt();
-    mAdapterState = source.readParcelable(loader);
-}*/
-
-void ViewPager2::SavedState::writeToParcel(Parcel& out, int flags) {
-    //ViewGroup::writeToParcel(out, flags);
-    out.writeInt(mRecyclerViewId);
-    out.writeInt(mCurrentItem);
-    out.writeParcelable(mAdapterState, flags);
-}
-#endif
 void ViewPager2::setAdapter(RecyclerView::Adapter* adapter) {
     RecyclerView::Adapter*currentAdapter = mRecyclerView->getAdapter();
     //mAccessibilityProvider.onDetachAdapter(currentAdapter);
@@ -260,7 +252,7 @@ void ViewPager2::setAdapter(RecyclerView::Adapter* adapter) {
 }
 
 void ViewPager2::registerCurrentItemDataSetTracker(RecyclerView::Adapter*adapter) {
-    if (adapter != nullptr) {
+    if (adapter && mCurrentItemDataSetChangeObserver) {
         adapter->registerAdapterDataObserver(mCurrentItemDataSetChangeObserver);
     }
 }
@@ -336,7 +328,7 @@ void ViewPager2::updateCurrentItem() {
     mCurrentItemDirty = false;
 }
 
-int ViewPager2::getPageSize() {
+int ViewPager2::getPageSize()const{
     RecyclerView* rv = mRecyclerView;
     return getOrientation() == ORIENTATION_HORIZONTAL
             ? rv->getWidth() - rv->getPaddingLeft() - rv->getPaddingRight()
@@ -348,11 +340,11 @@ void ViewPager2::setOrientation(int orientation) {
     //mAccessibilityProvider.onSetOrientation();
 }
 
-int ViewPager2::getOrientation() {
+int ViewPager2::getOrientation()const{
     return mLayoutManager->getOrientation();
 }
 
-bool ViewPager2::isRtl() {
+bool ViewPager2::isRtl()const{
     return mLayoutManager->getLayoutDirection() == View::LAYOUT_DIRECTION_RTL;
 }
 
@@ -433,7 +425,7 @@ int ViewPager2::getCurrentItem() const{
     return mCurrentItem;
 }
 
-int ViewPager2::getScrollState() {
+int ViewPager2::getScrollState() const{
     return mScrollEventAdapter->getScrollState();
 }
 
@@ -474,7 +466,7 @@ void ViewPager2::setUserInputEnabled(bool enabled) {
     //mAccessibilityProvider.onSetUserInputEnabled();
 }
 
-bool ViewPager2::isUserInputEnabled() {
+bool ViewPager2::isUserInputEnabled()const{
     return mUserInputEnabled;
 }
 
@@ -547,6 +539,7 @@ View& ViewPager2::setLayoutDirection(int layoutDirection) {
     //mAccessibilityProvider.onSetLayoutDirection();
     return *this;
 }
+
 #if 0
 void ViewPager2::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
     super.onInitializeAccessibilityNodeInfo(info);
@@ -560,9 +553,11 @@ bool ViewPager2::performAccessibilityAction(int action, Bundle arguments) {
     return super.performAccessibilityAction(action, arguments);
 }
 #endif
+
 ViewPager2::RecyclerViewImpl::RecyclerViewImpl(Context* context,const AttributeSet&attr)
     :RecyclerView(context,attr){
 }
+
 #if 0
 CharSequence ViewPager2::RecyclerViewImpl::getAccessibilityClassName() {
     if (mAccessibilityProvider.handlesRvGetAccessibilityClassName()) {
@@ -571,13 +566,14 @@ CharSequence ViewPager2::RecyclerViewImpl::getAccessibilityClassName() {
     return super.getAccessibilityClassName();
 }
 
-void ViewPager2::RecyclerViewImpl::onInitializeAccessibilityEvent(@NonNull AccessibilityEvent event) {
+void ViewPager2::RecyclerViewImpl::onInitializeAccessibilityEvent(AccessibilityEvent& event) {
     super.onInitializeAccessibilityEvent(event);
     event.setFromIndex(mCurrentItem);
     event.setToIndex(mCurrentItem);
-    mAccessibilityProvider.onRvInitializeAccessibilityEvent(event);
+    mAccessibilityProvider.onRvInitializeAccessibilityEvent(event);*/
 }
 #endif
+
 bool ViewPager2::RecyclerViewImpl::onTouchEvent(MotionEvent& event) {
     return mVP->isUserInputEnabled() && RecyclerView::onTouchEvent(event);
 }
@@ -586,10 +582,13 @@ bool ViewPager2::RecyclerViewImpl::onInterceptTouchEvent(MotionEvent& ev) {
     return mVP->isUserInputEnabled() && RecyclerView::onInterceptTouchEvent(ev);
 }
 
+/////////////////////////////////////////////////LinearLayoutManagerImpl/////////////////////////////////////////////////////
+
 ViewPager2::LinearLayoutManagerImpl::LinearLayoutManagerImpl(Context* context,ViewPager2*vp)
     :LinearLayoutManager(context){
     mVP = vp;
 }
+
 #if 0 
 bool ViewPager2::LinearLayoutManagerImpl::performAccessibilityAction(@NonNull RecyclerView::Recycler recycler,
         @NonNull RecyclerView::State state, int action, @Nullable Bundle args) {
@@ -605,6 +604,7 @@ void ViewPager2::LinearLayoutManagerImpl::onInitializeAccessibilityNodeInfo(@Non
     mAccessibilityProvider.onLmInitializeAccessibilityNodeInfo(info);
 }
 #endif
+
 void ViewPager2::LinearLayoutManagerImpl::calculateExtraLayoutSpace(RecyclerView::State& state,
         int extraLayoutSpace[2]) {
     const int pageLimit = mVP->getOffscreenPageLimit();
@@ -625,6 +625,7 @@ bool ViewPager2::LinearLayoutManagerImpl::requestChildRectangleOnScreen(Recycler
 
 ViewPager2::PagerSnapHelperImpl::PagerSnapHelperImpl():PagerSnapHelper(){
 }
+
 View* ViewPager2::PagerSnapHelperImpl::findSnapView(RecyclerView::LayoutManager& layoutManager) {
     // When interrupting a smooth scroll with a fake drag, we stop RecyclerView's scroll
     // animation, which fires a scroll state change to IDLE. PagerSnapHelper then kicks in
@@ -647,7 +648,7 @@ RecyclerView::ItemDecoration* ViewPager2::getItemDecorationAt(int index) {
     return mRecyclerView->getItemDecorationAt(index);
 }
 
-int ViewPager2::getItemDecorationCount() {
+int ViewPager2::getItemDecorationCount() const{
     return mRecyclerView->getItemDecorationCount();
 }
 
@@ -662,6 +663,27 @@ void ViewPager2::removeItemDecorationAt(int index) {
 void ViewPager2::removeItemDecoration(RecyclerView::ItemDecoration* decor) {
     mRecyclerView->removeItemDecoration(decor);
 }
+
+ViewPager2::SavedState::SavedState(Parcel& source):BaseSavedState(source){
+    //readValues(source, nullptr);
+}
+
+ViewPager2::SavedState::SavedState(Parcelable& superState):BaseSavedState(&superState){
+}
+
+/*void ViewPager2::SavedState::readValues(Parcel& source, ClassLoader loader) {
+    mRecyclerViewId = source.readInt();
+    mCurrentItem = source.readInt();
+    mAdapterState = source.readParcelable(loader);
+}*/
+
+void ViewPager2::SavedState::writeToParcel(Parcel& out, int flags) {
+    //ViewGroup::writeToParcel(out, flags);
+    out.writeInt(mRecyclerViewId);
+    out.writeInt(mCurrentItem);
+    //out.writeParcelable(mAdapterState, flags);
+}
+
 #if 0
     // TODO(b/141956012): Suppressed during upgrade to AGP 3.6.
     class BasicAccessibilityProvider extends AccessibilityProvider {

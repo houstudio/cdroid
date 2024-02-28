@@ -737,7 +737,7 @@ RecyclerView::ItemDecoration* RecyclerView::getItemDecorationAt(int index) {
     return mItemDecorations.at(index);
 }
 
-int RecyclerView::getItemDecorationCount() {
+int RecyclerView::getItemDecorationCount() const{
     return mItemDecorations.size();
 }
 
@@ -3238,6 +3238,7 @@ RecyclerView::ViewFlinger::ViewFlinger(RecyclerView*rv) {
     mEatRunOnAnimationRequest = false;
     mReSchedulePostAnimationCallback = false;
     mRV = rv;
+    mInterpolator = nullptr;
     mRunnable = std::bind(&ViewFlinger::run,this);
     mScroller = new OverScroller(mRV->getContext(), sQuinticInterpolator.get());
 }
