@@ -1061,8 +1061,7 @@ bool View::awakenScrollBars(int startDelay, bool invalidate){
 
         if (invalidate) {
             // Invalidate to show the scrollbars
-            const Rect&r = mScrollCache->mScrollBarBounds;
-            postInvalidateOnAnimation(r.left,r.top,r.width,r.height);
+            postInvalidateOnAnimation();
         }
 
         if (mScrollCache->state == ScrollabilityCache::OFF) {
