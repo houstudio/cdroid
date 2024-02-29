@@ -896,6 +896,7 @@ void GradientDrawable::draw(Canvas&canvas) {
     float rad = .0f, innerRadius = .0f;
 
     std::vector<float>radii;
+    if( (mFillPaint==nullptr) && (haveStroke==false) )return;
     canvas.save();
     if(useLayer){
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
@@ -948,12 +949,12 @@ void GradientDrawable::draw(Canvas&canvas) {
         //inner
         innerRadius = st->mInnerRadius;
         RectF bounds= {mRect.left,mRect.top,mRect.width,mRect.height};
-        float thickness = st->mThickness!=-1 ? st->mThickness:bounds.width/st->mThicknessRatio;
-        float radius = st->mInnerRadius!=-1 ? st->mInnerRadius :bounds.width/st->mInnerRadiusRatio;
+        float thickness = st->mThickness!=-1 ? st->mThickness:(bounds.width/st->mThicknessRatio);
+        float radius = st->mInnerRadius!=-1 ? st->mInnerRadius :(bounds.width/st->mInnerRadiusRatio);
         canvas.scale(bounds.width/bounds.height,1.f);
         RectF innerBounds = bounds;
-        const float x= bounds.centerX();
-        const float y= bounds.centerY();
+        const float x = bounds.centerX();
+        const float y = bounds.centerY();
         if(innerRadius<=0.f)
             innerRadius=std::min(mRect.width,mRect.height)/2.f-thickness;
         canvas.begin_new_sub_path();

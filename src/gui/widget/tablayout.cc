@@ -1028,7 +1028,7 @@ void TabLayout::TabView::onMeasure(int origWidthMeasureSpec,int origHeightMeasur
 
         float curTextSize= mTextView->getTextSize();
         int curLineCount = mTextView->getLineCount();
-        int curMaxLines  = mTextView->getMaxLines();// TextViewCompat.getMaxLines(mTextView);
+        int curMaxLines  = mTextView->getMaxLines();
 
         if (textSize != curTextSize || (curMaxLines >= 0 && maxLines != curMaxLines)) {
              // We've got a new text size and/or max lines...
@@ -1048,7 +1048,7 @@ void TabLayout::TabView::onMeasure(int origWidthMeasureSpec,int origHeightMeasur
             }
 
             if (updateTextView) {
-                mTextView->setTextSize(textSize);//TypedValue.COMPLEX_UNIT_PX, textSize);
+                mTextView->setTextSize(TypedValue::COMPLEX_UNIT_PX, textSize);
                 mTextView->setMaxLines(maxLines);
                 LinearLayout::onMeasure(widthMeasureSpec, heightMeasureSpec);
             }
