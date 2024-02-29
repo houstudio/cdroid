@@ -30,9 +30,18 @@ NinePatch::NinePatch(Context*ctx,const std::string&resid){
 NinePatch::~NinePatch() {
 }
 
+static int getRotateAngle(Canvas&canvas){
+    double xx, yx, xy, yy, x0, y0;
+    Cairo::Matrix ctx=canvas.get_matrix();
+    double radians = atan2(ctx.yy, ctx.xy);
+    return int(radians*180.f/M_PI);
+}
+
 void NinePatch::draw(Canvas& painter, int  x, int  y) {
+    const int angle_degrees = getRotateAngle(painter);
     painter.save();
     painter.translate(x,y);
+    const Cairo::SurfacePattern::Filter filterMode = (angle_degrees%90==0)&&(getOpacity()==PixelFormat::OPAQUE)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
     painter.set_source(mCachedImage,0,0);
     painter.rectangle(0,0,mCachedImage->get_width(),mCachedImage->get_height());
     painter.clip();

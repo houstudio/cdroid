@@ -369,7 +369,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         const float fx = dw / sw   , fy = dh / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
         const int angle_degrees = getRotateAngle(canvas);
-        const Cairo::SurfacePattern::Filter filterMode = (angle_degrees%90==0)&&(getOpacity()==PixelFormat::OPAQUE)?SurfacePattern::Filter::FAST:SurfacePattern::Filter::GOOD;
+        const Cairo::SurfacePattern::Filter filterMode = (angle_degrees%90==0)&&(getOpacity()==PixelFormat::OPAQUE)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
 
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
