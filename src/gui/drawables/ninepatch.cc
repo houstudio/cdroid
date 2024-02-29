@@ -1,5 +1,6 @@
 #include <drawables/ninepatch.h>
 #include <core/context.h>
+#include <drawables/bitmapdrawable.h>
 #include <cdlog.h>
 
 using namespace Cairo;
@@ -10,6 +11,7 @@ namespace cdroid{
 NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
     : mImage(image){
     mContentArea = getContentArea();
+    mOpacity = INT_MAX;
     getResizeArea();
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
         //throw new ExceptionNot9Patch;
@@ -20,6 +22,7 @@ NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
 NinePatch::NinePatch(Context*ctx,const std::string&resid){
     mImage= ctx->loadImage(resid);
     mContentArea = getContentArea();
+    mOpacity = INT_MAX;
     getResizeArea();
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
         //throw new ExceptionNot9Patch;
@@ -41,7 +44,10 @@ void NinePatch::draw(Canvas& painter, int  x, int  y) {
     const int angle_degrees = getRotateAngle(painter);
     painter.save();
     painter.translate(x,y);
-    const Cairo::SurfacePattern::Filter filterMode = (angle_degrees%90==0)&&(getOpacity()==PixelFormat::OPAQUE)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
+    if(mOpacity ==INT_MAX){
+        mOpacity = BitmapDrawable::computeTransparency(mCachedImage);
+    }
+    const Cairo::SurfacePattern::Filter filterMode = (angle_degrees%90==0)&&(mOpacity==PixelFormat::OPAQUE)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
     painter.set_source(mCachedImage,0,0);
     painter.rectangle(0,0,mCachedImage->get_width(),mCachedImage->get_height());
     painter.clip();

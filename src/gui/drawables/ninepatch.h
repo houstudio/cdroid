@@ -10,6 +10,7 @@ private:
     int mHeight= -1;/*CacheImage.Height*/
     Rect mContentArea;
     Rect mPadding;
+    int mOpacity;
     std::vector<std::pair< int, int >>mResizeDistancesY;
     std::vector<std::pair< int, int >>mResizeDistancesX;
     Cairo::RefPtr<Cairo::ImageSurface> mCachedImage;
