@@ -12,7 +12,7 @@ RenderNode::RenderNode(){
     mTranslationX = .0f;
     mTranslationY = .0f;
     mTranslationZ = .0f;
-    mPivotX = mPivotY = FLT_MIN;//std::numeric_limits<float>::min();
+    mPivotX = mPivotY = 0.5f;
     mRotation  = .0f;
     mRotationX = .0f;
     mRotationY = .0f;
@@ -32,13 +32,12 @@ static inline float sdot(float a,float b,float c,float d){
 
 void RenderNode::getMatrix(Matrix&outMatrix)const{
     outMatrix = identity_matrix();
-    const float px = (mPivotX==FLT_MIN) ? (mRight - mLeft)/2.f : mPivotX;
-    const float py = (mPivotY==FLT_MIN) ? (mBottom- mTop)/2.f : mPivotY;
+    const float px = (mRight - mLeft)*mPivotX;
+    const float py = (mBottom- mTop)*mPivotY;
     outMatrix.translate(px,py);
     outMatrix.scale(mScaleX,mScaleY);
     outMatrix.rotate(mRotation*M_PI/180.f);
     outMatrix.translate(mTranslationX - px,mTranslationY - py);
-    //outMatrix.translate((mTranslationX-px)/mScaleX,(mTranslationY-py)/mScaleY);
 }
 
 void RenderNode::getInverseMatrix(Matrix&outMatrix)const{

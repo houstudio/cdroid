@@ -118,8 +118,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setRotationY( attrs.getFloat("rotationY",0) );
     setScaleX( attrs.getFloat("scaleX",1.f) );
     setScaleY( attrs.getFloat("scaleY",1.f) );
-    setPivotX( attrs.getDimensionPixelSize("transformPivotX",0));
-    setPivotY( attrs.getDimensionPixelSize("transformPivotY",0));
+    setPivotX( attrs.getFloat("transformPivotX",0.5));
+    setPivotY( attrs.getFloat("transformPivotY",0.5));
 
     setKeyboardNavigationCluster( attrs.getBoolean("keyboardNavigationCluster",false) );
  
