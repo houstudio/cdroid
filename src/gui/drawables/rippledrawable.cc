@@ -342,21 +342,14 @@ void RippleDrawable::invalidateSelf(bool invalidateMask) {
 }
 
 void RippleDrawable::pruneRipples() {
-    int remaining = 0;
-
-    // Move remaining entries into pruned spaces.
-    const int count = mExitingRipples.size();
-    for (int i = 0; i < count; i++) {
-        if (!mExitingRipples[i]->hasFinishedExit()) {
-            mExitingRipples[remaining++] = mExitingRipples[i];
+    for(auto it = mExitingRipples.begin();it!=mExitingRipples.end();it++){
+        RippleForeground*fg = *it;
+        if(fg->hasFinishedExit()){
+            it = mExitingRipples.erase(it);
+            delete fg;
+            if(it==mExitingRipples.end())break;
         }
     }
-    
-    // Null out the remaining entries.
-    for (int i = remaining; i < count; i++) {
-        delete mExitingRipples[i];
-    }
-    mExitingRipples.resize(remaining);
 }
 
 int  RippleDrawable::getMaskType(){

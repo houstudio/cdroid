@@ -375,4 +375,13 @@ FastOutLinearInInterpolator::FastOutLinearInInterpolator()
  :LookupTableInterpolator(VALUES3,sizeof(VALUES3)/sizeof(float)){
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const NeverDestroyed<LinearInterpolator>LinearInterpolator::gLinearInterpolator;
+const NeverDestroyed<DecelerateInterpolator>DecelerateInterpolator::gDecelerateInterpolator(1.f);
+const NeverDestroyed<FastOutSlowInInterpolator>FastOutSlowInInterpolator::gFastOutSlowInInterpolator;
+const NeverDestroyed<LinearOutSlowInInterpolator>LinearOutSlowInInterpolator::gLinearOutSlowInInterpolator;
+const NeverDestroyed<FastOutLinearInInterpolator>FastOutLinearInInterpolator::gFastOutLinearInInterpolator;
+const NeverDestroyed<AccelerateInterpolator>AccelerateInterpolator::gAccelerateInterpolator(1.f);
+const NeverDestroyed<AccelerateDecelerateInterpolator>AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator;
+
 }//endof namespace

@@ -4,8 +4,8 @@
 
 namespace cdroid{
 
-TimeInterpolator* LayoutTransition::ACCEL_DECEL_INTERPOLATOR         = new AccelerateDecelerateInterpolator();
-TimeInterpolator* LayoutTransition::DECEL_INTERPOLATOR               = new DecelerateInterpolator();
+TimeInterpolator* LayoutTransition::ACCEL_DECEL_INTERPOLATOR         = AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
+TimeInterpolator* LayoutTransition::DECEL_INTERPOLATOR               = DecelerateInterpolator::gDecelerateInterpolator.get();
 TimeInterpolator* LayoutTransition::sAppearingInterpolator           = ACCEL_DECEL_INTERPOLATOR;
 TimeInterpolator* LayoutTransition::sDisappearingInterpolator        = ACCEL_DECEL_INTERPOLATOR;
 TimeInterpolator* LayoutTransition::sChangingAppearingInterpolator   = DECEL_INTERPOLATOR;

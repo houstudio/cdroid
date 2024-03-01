@@ -98,7 +98,6 @@ private:
 
     ViewGroup* mParentView;
     Runnable mSetIdleRunnable;
-    Interpolator* sInterpolator;
 private:
     ViewDragHelper(Context* context,ViewGroup* forParent,Callback* cb);
     bool forceSettleCapturedViewAt(int finalLeft, int finalTop, int xvel, int yvel);

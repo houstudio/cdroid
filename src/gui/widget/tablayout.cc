@@ -615,7 +615,7 @@ void TabLayout::animateToTab(int newPosition){
 void TabLayout::ensureScrollAnimator(){
      if (mScrollAnimator == nullptr) {
         mScrollAnimator = new ValueAnimator();
-        mScrollAnimator->setInterpolator(new FastOutSlowInInterpolator());
+        mScrollAnimator->setInterpolator(FastOutSlowInInterpolator::gFastOutSlowInInterpolator.get());
         mScrollAnimator->setDuration(ANIMATION_DURATION);
         mScrollAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim) {
            PropertyValuesHolder*ip=anim.getValues()[0]; 
@@ -1414,7 +1414,7 @@ void TabLayout::SlidingTabStrip::animateIndicatorToPosition(int position, int du
 
         if( mIndicatorAnimator==nullptr){ 
             mIndicatorAnimator = new ValueAnimator();
-            mIndicatorAnimator->setInterpolator(new FastOutSlowInInterpolator());
+            mIndicatorAnimator->setInterpolator(FastOutSlowInInterpolator::gFastOutSlowInInterpolator.get());
             mIndicatorAnimator->setFloatValues({.0f,1.f});
         }
         if (startLeft != targetLeft || startRight != targetRight) {

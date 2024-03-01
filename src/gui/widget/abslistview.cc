@@ -9,7 +9,6 @@
 
 namespace cdroid {
 
-static NeverDestroyed<LinearInterpolator> sLinearInterpolator;
 AbsListView::AbsListView(int w,int h):AdapterView(w,h) {
     AttributeSet atts=mContext->obtainStyledAttributes("cdroid:attr/absListViewStyle");
     initAbsListView(atts);
@@ -4073,7 +4072,7 @@ void AbsListView::FlingRunnable::edgeReached(int delta) {
 void AbsListView::FlingRunnable::startScroll(int distance, int duration, bool linear, bool suppressEndFlingStateChangeCall) {
     const int initialY = distance < 0 ? INT_MAX : 0;
     mLastFlingY = initialY;
-    mScroller->setInterpolator(linear ? sLinearInterpolator.get() : nullptr);
+    mScroller->setInterpolator(linear ? LinearInterpolator::gLinearInterpolator.get() : nullptr);
     mScroller->startScroll(0, initialY, 0, distance, duration);
     mLV->mTouchMode = TOUCH_MODE_FLING;
     mSuppressIdleStateChangeCall = suppressEndFlingStateChangeCall;

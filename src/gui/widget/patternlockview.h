@@ -125,7 +125,7 @@ private:
     Rect mInvalidate;
     Rect mTempInvalidateRect;
 
-    Interpolator* mFastOutSlowInInterpolator;
+    //Interpolator* mFastOutSlowInInterpolator;
     Interpolator* mLinearOutSlowInInterpolator;
 private:
     void initView();

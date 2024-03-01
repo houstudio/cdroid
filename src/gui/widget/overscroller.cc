@@ -359,11 +359,10 @@ OverScroller::OverScroller(Context* context):OverScroller(context,nullptr,true){
 
 OverScroller::OverScroller(Context* context, Interpolator* interpolator, bool flywheel) {
     if (interpolator == nullptr) {
-        mInterpolator = new Scroller::ViscousFluidInterpolator();
+        mInterpolator = Scroller::gViscousFluidInterpolator.get();
     } else {
         mInterpolator = interpolator;
     }
-    mOwnedInterpolator=(interpolator==nullptr);
     mFlywheel = flywheel;
     mScrollerX = new SplineOverScroller(context);
     mScrollerY = new SplineOverScroller(context);
@@ -372,19 +371,14 @@ OverScroller::OverScroller(Context* context, Interpolator* interpolator, bool fl
 OverScroller::~OverScroller(){
     delete mScrollerX;
     delete mScrollerY;
-    if(mOwnedInterpolator)
-        delete mInterpolator;
 }
 
 void OverScroller::setInterpolator(Interpolator* interpolator) {
-    if((interpolator!=mInterpolator)&&mOwnedInterpolator)
-        delete mInterpolator;
     if (interpolator == nullptr) {
-        mInterpolator = new Scroller::ViscousFluidInterpolator();
+        mInterpolator = Scroller::gViscousFluidInterpolator.get();
     } else {
         mInterpolator = interpolator;
     }
-    mOwnedInterpolator=(interpolator==nullptr);
 }
 
 void OverScroller::setFriction(float friction) {

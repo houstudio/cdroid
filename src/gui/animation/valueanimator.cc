@@ -68,7 +68,7 @@ ValueAnimator::~ValueAnimator(){
         delete v;
     mValues.clear();
     removeAnimationCallback();
-    if(mInterpolator!=sDefaultInterpolator)delete mInterpolator;
+    //if(mInterpolator!=sDefaultInterpolator)delete mInterpolator;
 }
 
 void ValueAnimator::setDurationScale(float durationScale) {

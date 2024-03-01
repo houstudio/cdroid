@@ -58,7 +58,6 @@ Animation::Animation(Context* context, const AttributeSet& attrs){
 }
 
 Animation::~Animation(){
-    delete mInterpolator;
 }
 
 float Animation::getPivotType(const std::string&v,int &type){
@@ -124,7 +123,6 @@ void Animation::setInterpolator(Context* context,const std::string&resID) {
 }
 
 void Animation::setInterpolator(Interpolator* i) {
-    delete mInterpolator;
     mInterpolator = i;
 }
 

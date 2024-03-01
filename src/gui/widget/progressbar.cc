@@ -340,7 +340,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
             mAnimator = ObjectAnimator::ofFloat(this,"progress",{mVisualProgress,scale});
             mAnimator->setAutoCancel(true);
             mAnimator->setDuration(PROGRESS_ANIM_DURATION);
-            mAnimator->setInterpolator(new  DecelerateInterpolator());
+            mAnimator->setInterpolator(DecelerateInterpolator::gDecelerateInterpolator.get());
             mAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
                 setVisualProgress(R::id::progress,GET_VARIANT(anim.getAnimatedValue(),float));
             }));
@@ -595,7 +595,7 @@ void ProgressBar::startAnimation() {
     }else{
         mHasAnimation = true;
         if (mInterpolator == nullptr) {
-            mInterpolator = new LinearInterpolator();
+            mInterpolator = LinearInterpolator::gLinearInterpolator.get();
         }
 
         if (mTransformation == nullptr) {

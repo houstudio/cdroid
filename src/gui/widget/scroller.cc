@@ -13,6 +13,8 @@ template <typename T> int signum(T val) {
 float Scroller::SPLINE_POSITION [NB_SAMPLES + 1];
 float Scroller::SPLINE_TIME [NB_SAMPLES + 1];
 
+const NeverDestroyed<Scroller::ViscousFluidInterpolator>Scroller::gViscousFluidInterpolator;
+
 Scroller::Scroller(Context* context):Scroller(context,nullptr,true){
 }
 
@@ -31,7 +33,7 @@ Scroller::Scroller(Context* context, Interpolator* interpolator, bool flywheel) 
     mFinished = true;
     mDurationReciprocal=1.f;
     if (interpolator == nullptr) {
-        mInterpolator = new ViscousFluidInterpolator();
+        mInterpolator = gViscousFluidInterpolator.get();//new ViscousFluidInterpolator();
     } else {
         mInterpolator = interpolator;
     }
@@ -43,7 +45,6 @@ Scroller::Scroller(Context* context, Interpolator* interpolator, bool flywheel) 
 }
 
 Scroller::~Scroller(){
-    delete mInterpolator;
 }
 
 void Scroller::sInit(){

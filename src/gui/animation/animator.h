@@ -40,14 +40,14 @@ private:
 public: 
     static constexpr long DURATION_INFINITE = -1;
     
-    class AnimatorListener:public EventSet{
+    class AnimatorListener:virtual public EventSet{
     public:
         CallbackBase<void,Animator& /*animation*/, bool/*isReverse*/>onAnimationStart;
         CallbackBase<void,Animator& /*animation*/, bool/*isReverse*/>onAnimationEnd;
         CallbackBase<void,Animator& /*animation*/>onAnimationCancel;
         CallbackBase<void,Animator& /*animation*/>onAnimationRepeat;
     };
-    class AnimatorPauseListener:public EventSet{
+    class AnimatorPauseListener:virtual public EventSet{
     public:
          CallbackBase<void,Animator&> onAnimationPause;
          CallbackBase<void,Animator&> onAnimationResume;

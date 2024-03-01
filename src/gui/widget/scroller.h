@@ -2,6 +2,7 @@
 #define __SCROLLER_H__
 #include <animation/interpolators.h>
 #include <core/context.h>
+#include <core/neverdestroyed.h>
 #include <math.h>
 
 namespace cdroid{
@@ -97,6 +98,7 @@ public:
     public:
         float getInterpolation(float input)override;
     };
+    static const NeverDestroyed<ViscousFluidInterpolator>gViscousFluidInterpolator;
 };//Scroller
 }//end namespace
 #endif

@@ -611,7 +611,7 @@ void PatternLockView::startLineEndAnimation(DotState state,
         }
 
     });*/
-    valueAnimator->setInterpolator(mFastOutSlowInInterpolator);
+    valueAnimator->setInterpolator(FastOutSlowInInterpolator::gFastOutSlowInInterpolator.get());
     valueAnimator->setDuration(mPathEndAnimationDuration);
     valueAnimator->start();
     state.mLineAnimator = valueAnimator;

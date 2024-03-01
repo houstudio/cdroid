@@ -304,7 +304,7 @@ float AnimatedStateListDrawable::FrameInterpolator::getInterpolation(float input
 //----------------------------------------------------------------------------------------------------------
 AnimatedStateListDrawable::AnimatableTransition::AnimatableTransition(Animatable* a) {
     mA = a;
-	mDrawable = dynamic_cast<Drawable*>(mA); 
+    mDrawable = dynamic_cast<Drawable*>(mA);
 }
 
 void AnimatedStateListDrawable::AnimatableTransition::start() {
@@ -317,17 +317,17 @@ void AnimatedStateListDrawable::AnimatableTransition::stop() {
 
 /***************************/
 AnimatedStateListDrawable::AnimationDrawableTransition::AnimationDrawableTransition(AnimationDrawable* ad, bool reversed, bool hasReversibleFlag){
-     const int frameCount = ad->getNumberOfFrames();
-     const int fromFrame = reversed ? frameCount - 1 : 0;
-     const int toFrame = reversed ? 0 : frameCount - 1;
-     FrameInterpolator* interp = new FrameInterpolator(ad, reversed);
-     ObjectAnimator* anim = ObjectAnimator::ofInt(ad, "currentIndex",{fromFrame, toFrame});
-     anim->setAutoCancel(true);
-     anim->setDuration(interp->getTotalDuration());
-     anim->setInterpolator(interp);
-     mHasReversibleFlag = hasReversibleFlag;
-     mAnim = anim;
-	 mDrawable = ad;
+    const int frameCount = ad->getNumberOfFrames();
+    const int fromFrame = reversed ? frameCount - 1 : 0;
+    const int toFrame = reversed ? 0 : frameCount - 1;
+    FrameInterpolator* interp = new FrameInterpolator(ad, reversed);
+    ObjectAnimator* anim = ObjectAnimator::ofInt(ad, "currentIndex",{fromFrame, toFrame});
+    anim->setAutoCancel(true);
+    anim->setDuration(interp->getTotalDuration());
+    anim->setInterpolator(interp);
+    mHasReversibleFlag = hasReversibleFlag;
+    mAnim = anim;
+    mDrawable = ad;
 }
 
 bool AnimatedStateListDrawable::AnimationDrawableTransition::canReverse() {
@@ -349,7 +349,7 @@ void AnimatedStateListDrawable::AnimationDrawableTransition::stop() {
 /***************************/
 AnimatedStateListDrawable::AnimatedVectorDrawableTransition::AnimatedVectorDrawableTransition(AnimatedVectorDrawable* avd,bool reversed, bool hasReversibleFlag){
     mAvd = avd;
-	mDrawable = mAvd;
+    mDrawable = mAvd;
     mReversed = reversed;
     mHasReversibleFlag = hasReversibleFlag;
 }

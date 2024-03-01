@@ -3,9 +3,10 @@
 #include <math.h>
 #include <vector>
 #include <core/attributeset.h>
-
+#include <core/neverdestroyed.h>
 namespace cdroid{
 class Context;
+
 class TimeInterpolator{
 public:
     virtual float getInterpolation(float input)=0;
@@ -26,6 +27,7 @@ public:
 
 class LinearInterpolator:public BaseInterpolator{
 public:
+    static const NeverDestroyed<LinearInterpolator>gLinearInterpolator;
     float getInterpolation(float input){return input;}
 };
 
@@ -34,6 +36,7 @@ private:
     float mFactor;
     double mDoubleFactor;
 public:
+    static const NeverDestroyed<AccelerateInterpolator>gAccelerateInterpolator;
     AccelerateInterpolator(Context*ctx,const AttributeSet&);
     AccelerateInterpolator(double f=1.);
     float getInterpolation(float input)override;
@@ -43,6 +46,7 @@ class DecelerateInterpolator:public BaseInterpolator{
 private:
     float mFactor;
 public:
+    static const NeverDestroyed<DecelerateInterpolator>gDecelerateInterpolator;
     DecelerateInterpolator(Context*ctx,const AttributeSet&);
     DecelerateInterpolator(float factor=1.0);
     float getInterpolation(float input)override;
@@ -100,6 +104,7 @@ public:
 
 class AccelerateDecelerateInterpolator:public BaseInterpolator{
 public:
+    static const NeverDestroyed<AccelerateDecelerateInterpolator>gAccelerateDecelerateInterpolator;
     float getInterpolation(float input)override;
 };
 
@@ -135,16 +140,19 @@ public:
 
 class FastOutSlowInInterpolator :public LookupTableInterpolator{
 public:
+    static const NeverDestroyed<FastOutSlowInInterpolator>gFastOutSlowInInterpolator;
     FastOutSlowInInterpolator();
 };
 
 class LinearOutSlowInInterpolator:public LookupTableInterpolator{
 public:
+    static const NeverDestroyed<LinearOutSlowInInterpolator>gLinearOutSlowInInterpolator;
     LinearOutSlowInInterpolator();
 };
 
 class FastOutLinearInInterpolator:public LookupTableInterpolator{
 public:
+    static const NeverDestroyed<FastOutLinearInInterpolator>gFastOutLinearInInterpolator;
     FastOutLinearInInterpolator();
 };
 }//namespace 
