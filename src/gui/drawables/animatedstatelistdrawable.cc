@@ -330,7 +330,7 @@ AnimatedStateListDrawable::AnimationDrawableTransition::AnimationDrawableTransit
     mDrawable = ad;
 }
 
-AnimatedStateListDrawable::~(){
+AnimatedStateListDrawable::AnimationDrawableTransition::~AnimationDrawableTransition(){
     delete mFrameInterpolator;
 	delete mAnim;
 	delete mDrawable;

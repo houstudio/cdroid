@@ -63,12 +63,15 @@ protected:
     class AnimationDrawableTransition:public Transition {
     private:
         ObjectAnimator* mAnim;
+        FrameInterpolator*mFrameInterpolator;
+		
         // Even AnimationDrawable is always reversible technically, but
         // we should obey the XML's android:reversible flag.
         bool mHasReversibleFlag;
     public:
         AnimationDrawableTransition(AnimationDrawable* ad,
               bool reversed, bool hasReversibleFlag);
+		~AnimationDrawableTransition();
         bool canReverse()override;
         void start()override;
         void reverse()override;
@@ -97,7 +100,6 @@ protected:
     };
 private:
     std::shared_ptr<AnimatedStateListState> mState;
-    Interpolator*mFrameInterpolator;
     /** The currently running transition, if any. */
     Transition* mTransition;
 
@@ -118,7 +120,6 @@ protected:
     std::shared_ptr<DrawableContainerState>cloneConstantState()override;
 public:
     AnimatedStateListDrawable();
-	~AnimatedStateListDrawable();
     bool setVisible(bool visible, bool restart)override;
     void addState(const std::vector<int>&stateSet,Drawable* drawable, int id);
     /* transition must derived from Drawable & Animatable*/
