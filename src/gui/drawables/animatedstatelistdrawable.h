@@ -97,7 +97,7 @@ protected:
     };
 private:
     std::shared_ptr<AnimatedStateListState> mState;
-
+    Interpolator*mFrameInterpolator;
     /** The currently running transition, if any. */
     Transition* mTransition;
 
@@ -118,6 +118,7 @@ protected:
     std::shared_ptr<DrawableContainerState>cloneConstantState()override;
 public:
     AnimatedStateListDrawable();
+	~AnimatedStateListDrawable();
     bool setVisible(bool visible, bool restart)override;
     void addState(const std::vector<int>&stateSet,Drawable* drawable, int id);
     /* transition must derived from Drawable & Animatable*/

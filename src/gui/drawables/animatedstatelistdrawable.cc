@@ -320,14 +320,20 @@ AnimatedStateListDrawable::AnimationDrawableTransition::AnimationDrawableTransit
     const int frameCount = ad->getNumberOfFrames();
     const int fromFrame = reversed ? frameCount - 1 : 0;
     const int toFrame = reversed ? 0 : frameCount - 1;
-    FrameInterpolator* interp = new FrameInterpolator(ad, reversed);
+    mFrameInterpolator = new FrameInterpolator(ad, reversed);
     ObjectAnimator* anim = ObjectAnimator::ofInt(ad, "currentIndex",{fromFrame, toFrame});
     anim->setAutoCancel(true);
-    anim->setDuration(interp->getTotalDuration());
-    anim->setInterpolator(interp);
+    anim->setDuration(mFrameInterpolator->getTotalDuration());
+    anim->setInterpolator(mFrameInterpolator);
     mHasReversibleFlag = hasReversibleFlag;
     mAnim = anim;
     mDrawable = ad;
+}
+
+AnimatedStateListDrawable::~(){
+    delete mFrameInterpolator;
+	delete mAnim;
+	delete mDrawable;
 }
 
 bool AnimatedStateListDrawable::AnimationDrawableTransition::canReverse() {
