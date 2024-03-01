@@ -854,6 +854,16 @@ static void drawRound(Canvas&canvas,const RectF&r,const std::vector<float>&radii
         float db=180.f;
         float pts[8];
         double radian = M_PI;
+        if((r.width<radii[0]+radii[1])||(r.height<radii[0]+radii[1])){
+            const float d = (radii[0]+radii[1]-r.width)/2;
+            const float dd= sqrt(radii[0]*radii[0]-d*d)*2;
+            const bool insetHoriz =r.width>r.height;
+            RectF rclip = r;
+            if(insetHoriz==false)rclip.inset(0,(r.height-dd)/2.f); 
+            else rclip.inset((r.width-dd)/2.f,0);
+            canvas.rectangle(rclip.left,rclip.top,rclip.width,rclip.height);
+            canvas.clip();
+        }
         pts[0]=r.left + radii[0];
         pts[1]=r.top + radii[0];
         pts[2]=r.right() - radii[1];
@@ -862,12 +872,12 @@ static void drawRound(Canvas&canvas,const RectF&r,const std::vector<float>&radii
         pts[5]=r.bottom()- radii[2];
         pts[6]=r.left + radii[3];
         pts[7]=r.bottom()- radii[3];
-        canvas.begin_new_sub_path();
+        //canvas.begin_new_sub_path();
         for(int i=0,j=0; i<8; i+=2,j++) {
             canvas.arc(pts[i],pts[i+1],radii[j],radian,radian+M_PI/2.0);
             radian += M_PI/2.0;
         }
-        canvas.close_path();
+        //canvas.close_path();
     }
 }
 
