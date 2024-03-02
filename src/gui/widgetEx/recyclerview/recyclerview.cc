@@ -6555,7 +6555,7 @@ void RecyclerView::SmoothScroller::onAnimation(int dx, int dy) {
     // prevent an initial scroll distance from scrolling past the view, which causes a
     // jittery looking animation. (This block also necessarily sets mPendingInitialRun to
     // false if it was true).
-    if (mPendingInitialRun && mTargetView == nullptr && mLayoutManager != nullptr) {
+    if (mPendingInitialRun && (mTargetView == nullptr) && mLayoutManager) {
         PointF pointF;
         const bool rc = computeScrollVectorForPosition(mTargetPosition,pointF);
         if (rc && (pointF.x != 0 || pointF.y != 0)) {

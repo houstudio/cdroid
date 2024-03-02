@@ -315,12 +315,12 @@ void ProgressBar::setVisualProgress(int id, float progress){
     Drawable* d = mCurrentDrawable;
     if (dynamic_cast<LayerDrawable*>(d)) {
         d = ((LayerDrawable*) d)->findDrawableByLayerId(id);
+        LOGD_IF((d==nullptr)&&(id==R::id::progress),"LayerDrawable lost layer id=%d",id);
         if (d == nullptr) {
             // If we can't find the requested layer, fall back to setting
             // the level of the entire drawable. This will break if
             // progress is set on multiple elements, but the theme-default
             // drawable will always have all layer IDs present.
-	    LOGD_IF((d==nullptr)&&(id==R::id::progress),"LayerDrawable lost layer id=%d",id);
             d = mCurrentDrawable;
         }
     }

@@ -75,7 +75,7 @@ void Drawable::setHotspotBounds(int left,int top,int width,int height) {
 }
 
 void Drawable::getHotspotBounds(Rect&outRect) {
-    outRect=mBounds;
+    outRect = mBounds;
 }
 
 std::shared_ptr<Drawable::ConstantState>Drawable::getConstantState() {

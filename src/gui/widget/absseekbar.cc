@@ -354,53 +354,50 @@ void AbsSeekBar::setThumbPos(int wh, Drawable* thumb, float scale, int offset){
 
     const int thumbPos = (int) (scale * available + 0.5f);
 
-    int left,top;
+    int left,right,top,bottom;
     const int progressGravity = Gravity::getAbsoluteGravity(getProgressGravity(),getLayoutDirection());
     if(getProgressOrientation()==HORIZONTAL){
         const int absGravity = progressGravity & Gravity::HORIZONTAL_GRAVITY_MASK;
         if (offset == INT_MIN) {
             const Rect oldBounds = thumb->getBounds();
             top = oldBounds.top;
+            bottom = oldBounds.bottom();
         } else {
             top = offset;
+            bottom = offset + thumbHeight;
         }
 
         left = ((isLayoutRtl() && mMirrorForRtl)||(absGravity==Gravity::RIGHT)) ? available - thumbPos : thumbPos;
-
+        right = left + thumbWidth;
         Drawable* background = getBackground();
         if (background != nullptr) {
             const int offsetX = mPaddingLeft - mThumbOffset;
             const int offsetY = mPaddingTop;
-            background->setHotspotBounds(left + offsetX, top + offsetY,thumbWidth,thumbHeight);
+            //background->setHotspotBounds(left + offsetX, top + offsetY,thumbWidth,thumbHeight);
+            background->setHotspotBounds(left + offsetX, top + offsetY, right-left,bottom-top);
         }
         // Canvas will be translated, so 0,0 is where we start drawing
-        thumb->setBounds(left, top,thumbWidth,thumbHeight);
+        thumb->setBounds(left, top,right-left,bottom-top);//thumbWidth,thumbHeight);
     }else{
         const int absGravity = progressGravity & Gravity::VERTICAL_GRAVITY_MASK;
         if(offset == INT_MIN){
             const Rect oldBounds = thumb->getBounds();
-	    left = oldBounds.left;
+            left = oldBounds.left;
+            right= oldBounds.right();
         }else{
             left = offset;
+            right= offset + thumbWidth;
         }
         top =  (absGravity==Gravity::BOTTOM)?(available - thumbPos):thumbPos;
+        bottom= top+ thumbHeight;
         Drawable* background = getBackground();
         if (background != nullptr) {
             const int offsetX = mPaddingLeft; - mThumbOffset;
             const int offsetY = mPaddingTop + mThumbOffset;
-            background->setHotspotBounds(left , top + offsetY,thumbWidth,thumbHeight);
+            background->setHotspotBounds(left , top + offsetY,right-left,bottom-top);//thumbWidth,thumbHeight);
         }
-        thumb->setBounds(left, top,thumbWidth,thumbHeight);
+        thumb->setBounds(left, top,right-left,bottom-top);//thumbWidth,thumbHeight);
     }
-
-    /*Drawable* background = getBackground();
-    if (background != nullptr) {
-        const int offsetX = mPaddingLeft - mThumbOffset;
-        const int offsetY = mPaddingTop;
-        background->setHotspotBounds(left + offsetX, top + offsetY,thumbWidth,thumbHeight);
-    }
-    // Canvas will be translated, so 0,0 is where we start drawing
-    thumb->setBounds(left, top,thumbWidth,thumbHeight);*/
 }
 
 

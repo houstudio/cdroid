@@ -68,6 +68,7 @@ protected:
         void setExitFadeDuration(int duration) {mExitFadeDuration = duration;}
         int getOpacity();
     };
+    Rect mHotspotBounds;
     class BlockInvalidateCallback*mBlockInvalidateCallback;
     void initializeDrawableForDisplay(Drawable*d);
     std::shared_ptr<DrawableContainerState>mDrawableContainerState;
@@ -112,7 +113,8 @@ public:
     int getIntrinsicHeight()const override;
     int getMinimumWidth() const override;
     int getMinimumHeight()const override;
-
+    void getHotspotBounds(Rect& outRect) override;
+    void setHotspotBounds(int left, int top, int width, int height)override;
     void setColorFilter(ColorFilter*colorFilter)override;
     void setTintList(const ColorStateList*tint)override;
     void setTintMode(int)override;

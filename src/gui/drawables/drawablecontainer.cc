@@ -368,6 +368,7 @@ DrawableContainer::DrawableContainer(){
     mHasAlpha = false;
     mMutated  = false;
     mAlpha = 0xFF;
+    mHotspotBounds.set(0,0,0,0);
     mCurIndex = mLastIndex = -1;
     mCurrDrawable = mLastDrawable = nullptr;
     mBlockInvalidateCallback = nullptr;
@@ -597,6 +598,18 @@ int DrawableContainer::getMinimumHeight()const{
         return mDrawableContainerState->getConstantMinimumHeight();
     }
     return mCurrDrawable != nullptr ? mCurrDrawable->getMinimumHeight() : 0;
+}
+
+void DrawableContainer::setHotspotBounds(int left, int top, int width, int height) {
+    mHotspotBounds.set(left, top, width, height);
+    if (mCurrDrawable) {
+        mCurrDrawable->setHotspotBounds(left, top,width,height);
+    }
+}
+
+void DrawableContainer::getHotspotBounds(Rect& outRect){
+    if(mHotspotBounds.empty())outRect = mHotspotBounds;
+    else Drawable::getHotspotBounds(mBounds);
 }
 
 int DrawableContainer::getCurrentIndex()const{

@@ -124,6 +124,11 @@ int DrawableWrapper::getIntrinsicHeight()const {
     return mDrawable != nullptr ? mDrawable->getIntrinsicHeight() : -1;
 }
 
+void DrawableWrapper::getHotspotBounds(Rect& outRect){
+    if(mDrawable)mDrawable->getHotspotBounds(outRect);
+    else outRect = mBounds;
+}
+
 std::shared_ptr<DrawableWrapper::DrawableWrapperState> DrawableWrapper::mutateConstantState(){
     return std::make_shared<DrawableWrapperState>(*mState);
 }

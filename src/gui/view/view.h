@@ -817,6 +817,8 @@ public:
     virtual bool performClick();
     virtual bool performLongClick();
     virtual bool performLongClick(float x,float y);
+    void getHotspotBounds(Rect& outRect);
+    void getBoundsOnScreen(Rect& outRect, bool clipToParent=false);
     void cancelPendingInputEvents();
     void cancelLongPress();
     bool  performContextClick(float x, float y);

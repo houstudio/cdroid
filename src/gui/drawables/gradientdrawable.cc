@@ -846,39 +846,32 @@ void GradientDrawable::getPatternAlpha(int& strokeAlpha,int& fillApha){
         fillApha = int(255.f*a);
     }
 }
+static void drawRoundedRect(Canvas& cr,const RectF&rect,
+                double topLeftRadius, double topRightRadius, double bottomRightRadius, double bottomLeftRadius) {
+    const double x = rect.left;
+	const double y = rect.top;
+	const double width = rect.width;
+	const double height= rect.height;
+    double maxTopRadius = std::min(width / 2, topLeftRadius + topRightRadius);
+    double maxBottomRadius = std::min(width / 2, bottomLeftRadius + bottomRightRadius);
+    double maxLeftRadius = std::min(height / 2, topLeftRadius + bottomLeftRadius);
+    double maxRightRadius = std::min(height / 2, topRightRadius + bottomRightRadius);
 
-static void drawRound(Canvas&canvas,const RectF&r,const std::vector<float>&radii) {
-    if(radii.size()==0)
-        canvas.rectangle(r.left,r.top,r.width,r.height);
-    else {
-        float db=180.f;
-        float pts[8];
-        double radian = M_PI;
-        if((r.width<radii[0]+radii[1])||(r.height<radii[0]+radii[1])){
-            const float d = (radii[0]+radii[1]-r.width)/2;
-            const float dd= sqrt(radii[0]*radii[0]-d*d)*2;
-            const bool insetHoriz =r.width>r.height;
-            RectF rclip = r;
-            if(insetHoriz==false)rclip.inset(0,(r.height-dd)/2.f); 
-            else rclip.inset((r.width-dd)/2.f,0);
-            canvas.rectangle(rclip.left,rclip.top,rclip.width,rclip.height);
-            canvas.clip();
-        }
-        pts[0]=r.left + radii[0];
-        pts[1]=r.top + radii[0];
-        pts[2]=r.right() - radii[1];
-        pts[3]=r.top + radii[1];
-        pts[4]=r.right() - radii[2];
-        pts[5]=r.bottom()- radii[2];
-        pts[6]=r.left + radii[3];
-        pts[7]=r.bottom()- radii[3];
-        //canvas.begin_new_sub_path();
-        for(int i=0,j=0; i<8; i+=2,j++) {
-            canvas.arc(pts[i],pts[i+1],radii[j],radian,radian+M_PI/2.0);
-            radian += M_PI/2.0;
-        }
-        //canvas.close_path();
-    }
+    double topLeftRadiusClipped = std::min(topLeftRadius, std::min(maxTopRadius, maxLeftRadius));
+    double topRightRadiusClipped = std::min(topRightRadius, std::min(maxTopRadius, maxRightRadius));
+    double bottomLeftRadiusClipped = std::min(bottomLeftRadius, std::min(maxBottomRadius, maxLeftRadius));
+    double bottomRightRadiusClipped = std::min(bottomRightRadius, std::min(maxBottomRadius, maxRightRadius));
+
+    cr.move_to(x + topLeftRadiusClipped, y);
+    cr.line_to(x + width - topRightRadiusClipped, y);
+    cr.arc(x + width - topRightRadiusClipped, y + topRightRadiusClipped, topRightRadiusClipped, -M_PI_2, 0);
+    cr.line_to(x + width, y + height - bottomRightRadiusClipped);
+    cr.arc(x + width - bottomRightRadiusClipped, y + height - bottomRightRadiusClipped, bottomRightRadiusClipped, 0, M_PI_2);
+    cr.line_to(x + bottomLeftRadiusClipped, y + height);
+    cr.arc(x + bottomLeftRadiusClipped, y + height - bottomLeftRadiusClipped, bottomLeftRadiusClipped, M_PI_2, M_PI);
+    cr.line_to(x, y + topLeftRadiusClipped);
+    cr.arc(x + topLeftRadiusClipped, y + topLeftRadiusClipped, topLeftRadiusClipped, M_PI, -M_PI_2);
+    cr.close_path();
 }
 
 void GradientDrawable::prepareStrokeProps(Canvas&canvas) {
@@ -918,8 +911,8 @@ void GradientDrawable::draw(Canvas&canvas) {
         rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
         if(st->mRadiusArray.size())radii=st->mRadiusArray;
         if(st->mRadius > 0.0f)radii= {rad,rad,rad,rad};
-        drawRound(canvas,mRect,radii);
-
+        if(radii.size())drawRoundedRect(canvas,mRect,radii[0],radii[1],radii[2],radii[3]);
+        else canvas.rectangle(mRect.left,mRect.top,mRect.width,mRect.height);
         if(mFillPaint)canvas.set_source(mFillPaint);
         if (haveStroke) {
             if(mFillPaint)canvas.fill_preserve();

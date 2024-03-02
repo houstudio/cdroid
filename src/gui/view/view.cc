@@ -6182,6 +6182,26 @@ bool View::showContextMenu(float x, float y){
     return mParent->showContextMenuForChild(this, x, y);
 }
 
+void View::getHotspotBounds(Rect& outRect) {
+    if (mBackground) {
+        mBackground->getHotspotBounds(outRect);
+    } else {
+        getBoundsOnScreen(outRect);
+    }
+}
+
+void View::getBoundsOnScreen(Rect& outRect, bool clipToParent) {
+    if (mAttachInfo == nullptr) {
+        return;
+    }
+    Rect position;// = mAttachInfo->mTmpTransformRect;
+    position.set(0, 0, mRight - mLeft, mBottom - mTop);
+    mapRectFromViewToScreenCoords(position, clipToParent);
+    outRect.set(std::round(position.left), std::round(position.top),
+            std::round(position.width), std::round(position.height));
+    //may be Rect(left,top,right,bottom) is right way used to  transform
+}
+
 bool View::performButtonActionOnTouchDown(MotionEvent& event) {
     if (event.isFromSource(InputDevice::SOURCE_MOUSE) &&
         (event.getButtonState() & MotionEvent::BUTTON_SECONDARY) != 0) {
