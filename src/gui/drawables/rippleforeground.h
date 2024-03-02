@@ -39,7 +39,7 @@ private:
     bool mForceSoftware;
     float mStartRadius = 0;
     std::vector<Animator*> mRunningSwAnimators;
-    AnimatorListenerAdapter mAnimationListener;
+    Animator::AnimatorListener mAnimationListener;
 private:
     float getCurrentX();
     float getCurrentY();
@@ -50,7 +50,7 @@ private:
     void onAnimationPropertyChanged();
     void pruneSwFinished();
 protected:
-    void onTargetRadiusChanged(float targetRadius);
+    void onTargetRadiusChanged(float targetRadius)override;
     void clampStartingPosition();
 public:
     RippleForeground(RippleDrawable* owner,const Rect& bounds, float startingX, float startingY, bool forceSoftware);

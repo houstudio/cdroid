@@ -13,11 +13,15 @@ public:
     static constexpr int MASK_CONTENT = 1;
     static constexpr int MASK_EXPLICIT = 2;
     static constexpr int MAX_RIPPLES = 10;
+    static constexpr int STYLE_SOLID = 0;
+    static constexpr int STYLE_PATTERNED = 1;
+    static constexpr bool FORCE_PATTERNED_STYLE = true;
 private:
     class RippleState:public LayerDrawable::LayerState{
     public:
         std::vector<int>mTouchThemeAttrs;
         int mMaxRadius;
+        int mRippleStyle=FORCE_PATTERNED_STYLE?STYLE_PATTERNED:STYLE_SOLID;
         ColorStateList*mColor;
         RippleState(LayerState* orig, RippleDrawable* owner);
         ~RippleState();
@@ -31,19 +35,25 @@ private:
     Rect mDrawingBounds;
     Rect mDirtyBounds;
     std::shared_ptr<RippleState>mState;
-    Drawable* mMask;
+    Drawable* mMask;/*The masking layer, e.g. the layer with id R.id.mask. */
     RippleBackground* mBackground;
  
     bool mHasValidMask;
     bool mRippleActive;
-    RippleForeground* mRipple;
+    bool mHasPending;
+    bool mOverrideBounds;
     float mPendingX;
     float mPendingY;
-    bool mHasPending;
     std::vector<RippleForeground*>mExitingRipples;
     int  mDensity;
-    bool mOverrideBounds;
+    float mBackgroundOpacity;
+    float mTargetBackgroundOpacity;
     bool mForceSoftware;
+    bool mAddRipple;
+    bool mRunBackgroundAnimation;
+    bool mExitingAnimation;
+    RippleForeground* mRipple;
+    ValueAnimator*mBackgroundAnimation;
 private:
     RippleDrawable(std::shared_ptr<RippleState> state);
     void cancelExitingRipples();
@@ -59,10 +69,19 @@ private:
     void drawContent(Canvas& canvas);
     void drawBackgroundAndRipples(Canvas& canvas);
     void drawMask(Canvas& canvas);
+    void drawSolid(Canvas& canvas);
+    void exitPatternedBackgroundAnimation();
+    void startPatternedAnimation();
+    void exitPatternedAnimation();
+    void enterPatternedBackgroundAnimation(bool focused, bool hovered);
+    void startBackgroundAnimation();
+    void drawPatterned(Canvas& canvas);
+    void drawPatternedBackground(Canvas& c, float cx, float cy);
 protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
     void onBoundsChange(const Rect& bounds)override;
 public:
+    RippleDrawable();
     RippleDrawable(const ColorStateList* color,Drawable* content,Drawable* mask);
     void jumpToCurrentState()override;
     int  getOpacity()override;
@@ -76,7 +95,7 @@ public:
     bool setDrawableByLayerId(int id, Drawable* drawable)override;
     void setPaddingMode(int mode);
     bool canApplyTheme()override;
-    void getHotspotBounds(Rect&out)override;
+    void getHotspotBounds(Rect&out)const override;
     void setHotspot(float x,float y)override;
     void setHotspotBounds(int left,int top,int w,int h)override;
     void draw(Canvas& canvas);

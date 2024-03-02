@@ -124,7 +124,7 @@ int DrawableWrapper::getIntrinsicHeight()const {
     return mDrawable != nullptr ? mDrawable->getIntrinsicHeight() : -1;
 }
 
-void DrawableWrapper::getHotspotBounds(Rect& outRect){
+void DrawableWrapper::getHotspotBounds(Rect& outRect)const{
     if(mDrawable)mDrawable->getHotspotBounds(outRect);
     else outRect = mBounds;
 }

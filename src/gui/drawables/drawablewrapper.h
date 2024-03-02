@@ -38,7 +38,7 @@ public:
     int getIntrinsicWidth ()const override;
     int getIntrinsicHeight()const override;
     int getChangingConfigurations()const override;
-    void getHotspotBounds(Rect& outRect) override;
+    void getHotspotBounds(Rect& outRect)const override;
     void setDrawable(Drawable* dr);
     Drawable* getDrawable()const;
     DrawableWrapper*mutate()override;

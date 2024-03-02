@@ -74,7 +74,7 @@ void Drawable::setHotspot(float x,float y) {
 void Drawable::setHotspotBounds(int left,int top,int width,int height) {
 }
 
-void Drawable::getHotspotBounds(Rect&outRect) {
+void Drawable::getHotspotBounds(Rect&outRect)const{
     outRect = mBounds;
 }
 

@@ -607,9 +607,9 @@ void DrawableContainer::setHotspotBounds(int left, int top, int width, int heigh
     }
 }
 
-void DrawableContainer::getHotspotBounds(Rect& outRect){
+void DrawableContainer::getHotspotBounds(Rect& outRect)const{
     if(mHotspotBounds.empty())outRect = mHotspotBounds;
-    else Drawable::getHotspotBounds(mBounds);
+    else Drawable::getHotspotBounds(outRect);
 }
 
 int DrawableContainer::getCurrentIndex()const{

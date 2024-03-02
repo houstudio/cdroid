@@ -113,7 +113,7 @@ public:
     int getIntrinsicHeight()const override;
     int getMinimumWidth() const override;
     int getMinimumHeight()const override;
-    void getHotspotBounds(Rect& outRect) override;
+    void getHotspotBounds(Rect& outRect)const override;
     void setHotspotBounds(int left, int top, int width, int height)override;
     void setColorFilter(ColorFilter*colorFilter)override;
     void setTintList(const ColorStateList*tint)override;

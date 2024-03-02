@@ -575,7 +575,7 @@ void LayerDrawable::setHotspotBounds(int left,int top,int width,int height){
     mHotspotBounds.set(left, top, width,height);
 }
 
-void LayerDrawable::getHotspotBounds(Rect& outRect){
+void LayerDrawable::getHotspotBounds(Rect& outRect)const{
     if (!mHotspotBounds.empty()) {
          outRect = mHotspotBounds;
     } else {
