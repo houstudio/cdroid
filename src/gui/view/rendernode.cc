@@ -28,13 +28,13 @@ bool RenderNode::hasIdentityMatrix()const{
 
 
 void RenderNode::getMatrix(Matrix&outMatrix)const{
-    outMatrix = identity_matrix();
-#if 1
     const float px = (mPivotX==FLT_MIN)?(mRight - mLeft)/2:mPivotX;
     const float py = (mPivotY==FLT_MIN)?(mBottom- mTop)/2:mPivotY;
+    outMatrix = identity_matrix();
+#if 1
     outMatrix.translate(px,py);
-    outMatrix.rotate(mRotation*M_PI/180.f);
     outMatrix.scale(mScaleX,mScaleY);
+    outMatrix.rotate(mRotation*M_PI/180.f);
     outMatrix.translate(-px,-py);
     Matrix rt = identity_matrix();
     rt.translate(mTranslationX,mTranslationY);
@@ -49,7 +49,7 @@ void RenderNode::getMatrix(Matrix&outMatrix)const{
     const float radians = mRotation*M_PI/180.f;
     const float fsin = sin(radians);
     const float fcos = cos(radians);
-    Matrix rt(fcos,-fsin, fsin,fcos, sdot(-fsin,mPivotY,1.f-fcos,mPivotX),sdot(fsin,mPivotX,1.f-fcos,mPivotY));
+    Matrix rt(fcos,-fsin, fsin,fcos, sdot(-fsin,px,1.f-fcos,py),sdot(fsin,px,1.f-fcos,py));
     outMatrix.multiply(outMatrix,rt);
 #endif
 }
