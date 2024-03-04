@@ -111,6 +111,8 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
 
 NumberPicker::~NumberPicker(){
     delete mDividerDrawable;
+    delete mFlingScroller;
+    delete mAdjustScroller;
     for(auto d:mDisplayedDrawables)delete d;
 }
 

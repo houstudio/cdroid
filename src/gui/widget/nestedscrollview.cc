@@ -19,6 +19,14 @@ NestedScrollView::NestedScrollView(Context* context,const AttributeSet&attrs):Fr
     LOGE("NestedScrollView cant scroll,do not use it");
 }
 
+NestedScrollView::~NestedScrollView(){
+    delete mScroller;
+    delete mParentHelper;
+    delete mChildHelper;
+    delete mEdgeGlowTop;
+    delete mEdgeGlowBottom;
+}
+
 bool NestedScrollView::startNestedScroll(int axes, int type){
     return mChildHelper->startNestedScroll(axes, type);
 }
@@ -1472,6 +1480,8 @@ void NestedScrollView::ensureGlows() {
             mEdgeGlowBottom = new EdgeEffect(context);
         }
     } else {
+        delete mEdgeGlowTop;
+        delete mEdgeGlowBottom;
         mEdgeGlowTop = nullptr;
         mEdgeGlowBottom = nullptr;
     }
@@ -1487,10 +1497,10 @@ void NestedScrollView::draw(Canvas& canvas) {
             int xTranslation = 0;
             int yTranslation = std::min(0, scrollY);
             canvas.save();
-            /*if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP || getClipToPadding()) {
+            if (/*Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP ||*/ getClipToPadding()) {
                 width -= getPaddingLeft() + getPaddingRight();
                 xTranslation += getPaddingLeft();
-            }*/
+            }
             if (/*Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&*/ getClipToPadding()) {
                 height -= getPaddingTop() + getPaddingBottom();
                 yTranslation += getPaddingTop();
@@ -1500,7 +1510,7 @@ void NestedScrollView::draw(Canvas& canvas) {
             if (mEdgeGlowTop->draw(canvas)) {
                 this->postInvalidateOnAnimation();
             }
-            canvas.restore();//ToCount(restoreCount);
+            canvas.restore();
         }
         if (!mEdgeGlowBottom->isFinished()) {
             int width = getWidth();
@@ -1508,10 +1518,10 @@ void NestedScrollView::draw(Canvas& canvas) {
             int xTranslation = 0;
             int yTranslation = std::max(getScrollRange(), scrollY) + height;
             canvas.save();
-            /*if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP || getClipToPadding()) {
+            if (/*Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP ||*/ getClipToPadding()) {
                 width -= getPaddingLeft() + getPaddingRight();
                 xTranslation += getPaddingLeft();
-            }*/
+            }
             if (/*Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && */getClipToPadding()) {
                 height -= getPaddingTop() + getPaddingBottom();
                 yTranslation -= getPaddingBottom();
@@ -1522,7 +1532,7 @@ void NestedScrollView::draw(Canvas& canvas) {
             if (mEdgeGlowBottom->draw(canvas)) {
                 this->postInvalidateOnAnimation();
             }
-            canvas.restore();//ToCount(restoreCount);
+            canvas.restore();
         }
     }
 }

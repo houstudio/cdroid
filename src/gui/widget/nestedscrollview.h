@@ -83,6 +83,7 @@ protected:
 public:
     NestedScrollView(int w,int h);
     NestedScrollView(Context* context,const AttributeSet&attrs);
+    ~NestedScrollView();
     bool startNestedScroll(int axes, int type);
     void stopNestedScroll(int type);
     bool hasNestedScrollingParent(int type);
