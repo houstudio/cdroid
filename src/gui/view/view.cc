@@ -121,7 +121,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     if(attrs.hasAttribute("transformPivotX"))
         setPivotX(attrs.getDimensionPixelSize("transformPivotX",0));
     if(attrs.hasAttribute("transformPivotY"))
-	setPivotY(attrs.getDimensionPixelSize("transformPivotY",0));
+        setPivotY(attrs.getDimensionPixelSize("transformPivotY",0));
 
     setKeyboardNavigationCluster( attrs.getBoolean("keyboardNavigationCluster",false) );
  
