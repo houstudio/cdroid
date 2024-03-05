@@ -580,6 +580,7 @@ protected:
     virtual void onCancelPendingInputEvents();
     bool canReceivePointerEvents()const;
     virtual bool dispatchHoverEvent(MotionEvent&event);
+    virtual bool dispatchTrackballEvent(MotionEvent& event);
     virtual bool dispatchGenericPointerEvent(MotionEvent& event);
     virtual bool dispatchGenericFocusedEvent(MotionEvent& event);
     virtual bool hasHoveredChild();
@@ -1037,6 +1038,7 @@ public:
     virtual bool onInterceptTouchEvent(MotionEvent& evt);
     virtual bool onTouchEvent(MotionEvent& evt);
     virtual bool onHoverEvent(MotionEvent& evt);
+    virtual bool onTrackballEvent(MotionEvent& event);
     virtual bool onGenericMotionEvent(MotionEvent& event);
     virtual void onHoverChanged(bool hovered);
 	

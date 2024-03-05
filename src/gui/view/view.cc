@@ -5888,6 +5888,13 @@ bool View::canReceivePointerEvents()const{
     return (mViewFlags & VISIBILITY_MASK) == VISIBLE || getAnimation() != nullptr;
 }
 
+bool View::dispatchTrackballEvent(MotionEvent& event){
+   if (mInputEventConsistencyVerifier) {
+       mInputEventConsistencyVerifier->onTrackballEvent(event, 0);
+   }
+   return onTrackballEvent(event);
+}
+
 bool View::dispatchGenericMotionEventInternal(MotionEvent& event){
     if (mListenerInfo && mListenerInfo->mOnGenericMotionListener
           && (mViewFlags & ENABLED_MASK) == ENABLED
@@ -6023,6 +6030,10 @@ bool View::dispatchTouchEvent(MotionEvent&event){
 }
 
 bool View::onInterceptTouchEvent(MotionEvent&event){
+    return false;
+}
+
+bool View::onTrackballEvent(MotionEvent& event){
     return false;
 }
 
