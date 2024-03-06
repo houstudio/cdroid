@@ -267,36 +267,36 @@ RefPtr<Canvas>Window::getCanvas(){
     RefPtr<Canvas> canvas;
     //for children's canvas is allcated by it slef and delete by drawing thread(UIEventSource)
     if(mAttachInfo == nullptr)
-	return nullptr;
+        return nullptr;
     canvas = mAttachInfo->mCanvas;
     if((canvas==nullptr)&&(getVisibility()==VISIBLE)){	
-	const int rotation  = WindowManager::getInstance().getDefaultDisplay().getRotation();
-	const int swapeWH = (rotation == Display::ROTATION_90)||(rotation == Display::ROTATION_270);
-	const int canvasWidth = swapeWH?getHeight():getWidth();
-	const int canvasHeight= swapeWH?getWidth():getHeight();
+        const int rotation  = WindowManager::getInstance().getDefaultDisplay().getRotation();
+        const int swapeWH = (rotation == Display::ROTATION_90)||(rotation == Display::ROTATION_270);
+        const int canvasWidth = swapeWH?getHeight():getWidth();
+        const int canvasHeight= swapeWH?getWidth():getHeight();
 
-	canvas = make_refptr_for_instance<Canvas>(new Canvas(canvasWidth,canvasHeight));
+        canvas = make_refptr_for_instance<Canvas>(new Canvas(canvasWidth,canvasHeight));
         mAttachInfo->mCanvas = canvas;
-	Cairo::Matrix matrix = Cairo::identity_matrix();
-	LOGV("rotation=%d window.size=%dx%d canvas.size=%dx%d",rotation*90,getWidth(),getHeight(),canvasWidth,canvasHeight);
-	switch(rotation){
+        Cairo::Matrix matrix = Cairo::identity_matrix();
+        LOGV("rotation=%d window.size=%dx%d canvas.size=%dx%d",rotation*90,getWidth(),getHeight(),canvasWidth,canvasHeight);
+        switch(rotation){
         case Display::ROTATION_0:break;
         case Display::ROTATION_90:
-	   matrix.rotate(-90.*M_PI/180.);
-           matrix.translate(-canvasHeight,0);
-	   canvas->transform(matrix);
-	   break;
+            matrix.rotate(-M_PI/2);
+            matrix.translate(-canvasHeight,0);
+            canvas->transform(matrix);
+            break;
         case Display::ROTATION_180:
-	   matrix.translate(canvasWidth,canvasHeight);
-	   matrix.scale(-1,-1);
-	   canvas->transform(matrix);
-	   break;
+            matrix.translate(canvasWidth,canvasHeight);
+            matrix.scale(-1,-1);
+            canvas->transform(matrix);
+            break;
         case Display::ROTATION_270:
-	   matrix.translate(canvasWidth,0);
-	   matrix.rotate(90.*M_PI/180.);
-	   canvas->transform(matrix);
-	   break;
-	}
+            matrix.translate(canvasWidth,0);
+            matrix.rotate(M_PI/2);
+            canvas->transform(matrix);
+            break;
+        }
     }
     const int num = mInvalidRgn->get_num_rectangles();
     canvas->reset_clip();

@@ -72,8 +72,8 @@ void GraphDevice::showLogo(const std::string&fileName,int rotation){
     switch(rotation){
     case Display::ROTATION_0:break;
     case Display::ROTATION_90:
-       matrix.rotate(M_PI/2.f);
-       matrix.translate(0,-mScreenHeight);//getHeight());
+       matrix.rotate(-M_PI/2);
+       matrix.translate(-mScreenHeight,0);
        mPrimaryContext->transform(matrix);
        break;
     case Display::ROTATION_180:
@@ -82,15 +82,15 @@ void GraphDevice::showLogo(const std::string&fileName,int rotation){
        mPrimaryContext->transform(matrix);
        break;
     case Display::ROTATION_270:
-       matrix.rotate(M_PI*1.5);
-       matrix.translate(-mScreenWidth,0);//getWidth(),0);
+       matrix.translate(mScreenWidth,0);
+       matrix.rotate(M_PI/2);
        mPrimaryContext->transform(matrix);
        break;
     }
     if(img==nullptr)return;
     mPrimaryContext->set_source(img,0,0);
     mPrimaryContext->paint();
-    LOG(DEBUG)<<fileName<<"rotation="<<rotation;
+    LOG(DEBUG)<<fileName<<" rotation="<<rotation;
     GFXFlip(mPrimarySurface);
 }
 
