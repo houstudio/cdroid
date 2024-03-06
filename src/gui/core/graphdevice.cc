@@ -14,12 +14,12 @@
 #include <thread>
 #include <sys/time.h>
 #include <sys/resource.h>
-
+#include <fstream>
 using namespace Cairo;
 
 namespace cdroid{
 
-GraphDevice*GraphDevice::mInst=nullptr;
+GraphDevice*GraphDevice::mInst = nullptr;
 
 GraphDevice&GraphDevice::GraphDevice::getInstance(){
     if(nullptr==mInst)
@@ -42,7 +42,6 @@ GraphDevice::GraphDevice(int fmt){
     LOGD("PrimarySurface=%p size=%dx%d",mPrimarySurface,mScreenWidth,mScreenHeight);
     RefPtr<Surface>surf = ImageSurface::create(buffer,Surface::Format::ARGB32,mScreenWidth,mScreenHeight,pitch);
     mPrimaryContext = new Canvas(surf);
-
     mRectBanner.set(0,0,400,40);
     
     mLastComposeTime = SystemClock::uptimeMillis();
@@ -64,6 +63,35 @@ GraphDevice::~GraphDevice(){
     delete mPrimaryContext;
     GFXDestroySurface(mPrimarySurface);
     LOGD("%p Destroied",this);
+}
+
+void GraphDevice::showLogo(const std::string&fileName,int rotation){
+    std::ifstream fs(fileName);
+    Cairo::Matrix matrix = Cairo::identity_matrix();
+    auto img = Cairo::ImageSurface::create_from_stream(fs);
+    switch(rotation){
+    case Display::ROTATION_0:break;
+    case Display::ROTATION_90:
+       matrix.rotate(M_PI/2.f);
+       matrix.translate(0,-mScreenHeight);//getHeight());
+       mPrimaryContext->transform(matrix);
+       break;
+    case Display::ROTATION_180:
+       matrix.translate(mScreenWidth,mScreenHeight);
+       matrix.scale(-1,-1);
+       mPrimaryContext->transform(matrix);
+       break;
+    case Display::ROTATION_270:
+       matrix.rotate(M_PI*1.5);
+       matrix.translate(-mScreenWidth,0);//getWidth(),0);
+       mPrimaryContext->transform(matrix);
+       break;
+    }
+    if(img==nullptr)return;
+    mPrimaryContext->set_source(img,0,0);
+    mPrimaryContext->paint();
+    LOG(DEBUG)<<fileName<<"rotation="<<rotation;
+    GFXFlip(mPrimarySurface);
 }
 
 HANDLE GraphDevice::getPrimarySurface()const{
@@ -105,16 +133,16 @@ void GraphDevice::trackFPS(Canvas& canvas) {
     canvas.restore(); 
 }
 
-void GraphDevice::getScreenSize(int &w,int&h){
+void GraphDevice::getScreenSize(int &w,int&h)const{
     w = mScreenWidth;
     h = mScreenHeight;
 }
 
-int GraphDevice::getScreenWidth(){
+int GraphDevice::getScreenWidth()const{
     return mScreenWidth;
 }
 
-int GraphDevice::getScreenHeight(){
+int GraphDevice::getScreenHeight()const{
     return mScreenHeight;
 }
 

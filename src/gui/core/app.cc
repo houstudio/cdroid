@@ -35,12 +35,13 @@ static CLA::Argument ARGS[]={
    {CLA::EntryType::Option, "f", "framedelay","animation frame delay",CLA::ValueType::Int,   (int)CLA::EntryFlags::Optional},
    {CLA::EntryType::Switch, "h", "help", "display help info ", CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
    {CLA::EntryType::Switch, "d", "debug", "open debug", CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
+   {CLA::EntryType::Option, "l", "logo" , "show logo" , CLA::ValueType::String, (int)CLA::EntryFlags::Optional},
    {CLA::EntryType::Switch, "", "fps"  , "Show FPS ",CLA::ValueType::None,   (int)CLA::EntryFlags::Optional}
 };
 
 App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions){
-    int option_index = -1,c = -1;
-    std::string optstring;
+    int rotation;
+    std::string logo;
     LogParseModules(argc,argv);
     Typeface::setContext(this);
     mQuitFlag = false;
@@ -50,6 +51,8 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     cla.addArguments(extoptions.data(),extoptions.size());
     cla.setSwitchChars("-");
     cla.parse(argc,argv);
+    rotation = (getArgAsInt("rotate",0)/90)%4;
+    logo = getArg("logo");
     onInit();
     setName(std::string(argc?argv[0]:__progname));
     LOGI("App [%s] started c++=%d",mName.c_str(),__cplusplus);
@@ -63,9 +66,11 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     Looper::prepare(false);
     Choreographer & chograph = Choreographer::getInstance();
     chograph.setFrameDelay(getArgAsInt("framedelay",chograph.getFrameDelay()));
-    WindowManager::getInstance().setDisplayRotation((getArgAsInt("rotate",0)/90)%4);
+    WindowManager::getInstance().setDisplayRotation(rotation);
     setOpacity(getArgAsInt("alpha",255));
     GraphDevice::getInstance().showFPS(hasSwitch("fps"));
+    if(!logo.empty())
+        GraphDevice::getInstance().showLogo(logo,rotation);
     DisplayMetrics::DENSITY_DEVICE = getArgAsInt("density",DisplayMetrics::getDeviceDensity());
     InputEventSource*inputsource=&InputEventSource::getInstance();//(getArg("record",""));
     addEventHandler(inputsource);

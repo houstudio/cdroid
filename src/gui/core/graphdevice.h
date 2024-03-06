@@ -40,9 +40,10 @@ private:
 public:
     static GraphDevice&getInstance();
     ~GraphDevice();
-    void getScreenSize(int &w,int&h);
-    int getScreenWidth();
-    int getScreenHeight();
+    void showLogo(const std::string&,int rotation=0);
+    void getScreenSize(int &w,int&h)const;
+    int getScreenWidth()const;
+    int getScreenHeight()const;
     void flip();
     void requestCompose();
     void lock();
