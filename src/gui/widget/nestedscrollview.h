@@ -76,7 +76,9 @@ protected:
     bool overScrollByCompat(int deltaX, int deltaY, int scrollX, int scrollY,
         int scrollRangeX, int scrollRangeY,int maxOverScrollX, int maxOverScrollY,bool isTouchEvent);
     int getScrollRange();
-    void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec);
+    void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec)override;
+    void measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,
+            int parentHeightMeasureSpec, int heightUsed)override;
     int computeScrollDeltaToGetChildRectOnScreen(Rect rect);
     void onLayout(bool changed, int l, int t, int w, int h);
     void onSizeChanged(int w, int h, int oldw, int oldh);

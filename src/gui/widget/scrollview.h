@@ -71,9 +71,9 @@ protected:
     void initOrResetVelocityTracker();
     void initVelocityTrackerIfNotExists();
     void recycleVelocityTracker();
-    void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec);
+    void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec)override;
     void measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,
-            int parentHeightMeasureSpec, int heightUsed);
+            int parentHeightMeasureSpec, int heightUsed)override;
     int computeScrollDeltaToGetChildRectOnScreen(Rect& rect);
     bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect)override;
     bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate)override;

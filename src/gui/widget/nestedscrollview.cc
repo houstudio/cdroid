@@ -225,6 +225,10 @@ void NestedScrollView::initScrollView() {
     mLastScrollerY = 0;
     mNestedYOffset = 0;
     mLastScroll    = 0;
+    mScrollOffset[0] = 0;
+    mScrollOffset[1] = 0;
+    mScrollConsumed[0] = 0;
+    mScrollConsumed[1] = 0;
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
     ViewConfiguration& configuration = ViewConfiguration::get(getContext());
@@ -1155,6 +1159,21 @@ void NestedScrollView::measureChild(View* child, int parentWidthMeasureSpec,  in
             + getPaddingRight(), lp->width);
 
     childHeightMeasureSpec = MeasureSpec::makeMeasureSpec(0, MeasureSpec::UNSPECIFIED);
+
+    child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
+}
+
+void NestedScrollView::measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,
+        int parentHeightMeasureSpec, int heightUsed) {
+    const MarginLayoutParams* lp = (const MarginLayoutParams*) child->getLayoutParams();
+
+    const int usedTotal = mPaddingTop + mPaddingBottom + lp->topMargin + lp->bottomMargin +  heightUsed;
+    const int childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec,
+                               mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin
+                               + widthUsed, lp->width);
+    const int childHeightMeasureSpec = MeasureSpec::makeSafeMeasureSpec(
+                                std::max(0, MeasureSpec::getSize(parentHeightMeasureSpec) - usedTotal),
+                                MeasureSpec::UNSPECIFIED);
 
     child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
 }

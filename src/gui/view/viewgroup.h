@@ -228,7 +228,7 @@ protected:
     View* dispatchUnhandledKeyEvent(KeyEvent& evt)override;
     
     void measureChildren(int widthMeasureSpec, int heightMeasureSpec);
-    void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec);
+    virtual void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec);
 
     virtual void measureChildWithMargins(View* child,int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed);
