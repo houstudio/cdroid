@@ -38,6 +38,9 @@ public:
     };
     static const std::vector<int>NOTHING;
     static const std::vector<int>WILD_CARD;
+    static const std::vector<int>ENABLED_STATE_SET;
+    static const std::vector<int>PRESSED_STATE_SET;
+    static const std::vector<int>CHECKED_STATE_SET;
 public:
     static void trimStateSet(std::vector<int>&states,int newsize);
     static bool isWildCard(const std::vector<int>&stateSetOrSpec);

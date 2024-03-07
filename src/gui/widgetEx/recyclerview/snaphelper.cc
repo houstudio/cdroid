@@ -10,6 +10,7 @@ SnapHelper::SnapHelper(){
     mGravityScroller = nullptr;
     mScrollListener.onScrollStateChanged=[this](RecyclerView& recyclerView, int newState) {
         //super is null;super.onScrollStateChanged(recyclerView, newState);
+        LOGD("onScrollStateChanged,newState=%d(IDLE=%d)mScrolled=%d",newState,RecyclerView::SCROLL_STATE_IDLE,mScrolled);
         if (newState == RecyclerView::SCROLL_STATE_IDLE && mScrolled) {
             mScrolled = false;
             snapToTargetExistingView();
@@ -52,7 +53,7 @@ void SnapHelper::attachToRecyclerView(RecyclerView* recyclerView){
     if (mRecyclerView != nullptr) {
         setupCallbacks();
         mGravityScroller = new Scroller(mRecyclerView->getContext(),
-                new DecelerateInterpolator());
+                DecelerateInterpolator::gDecelerateInterpolator.get());
         snapToTargetExistingView();
     }
 }
@@ -113,7 +114,7 @@ void SnapHelper::snapToTargetExistingView() {
     }
     int snapDistance[2];
     calculateDistanceToFinalSnap(*layoutManager, *snapView,snapDistance);
-    if (snapDistance[0] != 0 || snapDistance[1] != 0) {
+    if (snapDistance[0] || snapDistance[1]) {
         mRecyclerView->smoothScrollBy(snapDistance[0], snapDistance[1]);
     }
 }
@@ -133,9 +134,9 @@ protected:
             // The associated RecyclerView has been removed so there is no action to take.
             return;
         }
-        int snapDistances[2];
-	RecyclerView::LayoutManager*layoutManager = mRecyclerView->getLayoutManager();
-	mSnapHelper->calculateDistanceToFinalSnap(*layoutManager,*targetView,snapDistances);
+        int snapDistances[2]={0,0};
+        RecyclerView::LayoutManager*layoutManager = mRecyclerView->getLayoutManager();
+        mSnapHelper->calculateDistanceToFinalSnap(*layoutManager,*targetView,snapDistances);
         const int dx = snapDistances[0];
         const int dy = snapDistances[1];
         const int time = calculateTimeForDeceleration(std::max(std::abs(dx), std::abs(dy)));

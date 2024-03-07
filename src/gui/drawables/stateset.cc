@@ -4,6 +4,9 @@ namespace cdroid{
 
 const std::vector<int> StateSet::NOTHING = {0};
 const std::vector<int> StateSet::WILD_CARD = {};
+const std::vector<int>StateSet::PRESSED_STATE_SET = {VIEW_STATE_PRESSED};
+const std::vector<int>StateSet::ENABLED_STATE_SET = {VIEW_STATE_ENABLED};
+const std::vector<int>StateSet::CHECKED_STATE_SET = {VIEW_STATE_CHECKED};
 
 std::vector<int>StateSet::VIEW_STATE_IDS={
     WINDOW_FOCUSED , VIEW_STATE_WINDOW_FOCUSED,

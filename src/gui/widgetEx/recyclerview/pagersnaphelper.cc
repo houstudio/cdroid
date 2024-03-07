@@ -38,39 +38,79 @@ View* PagerSnapHelper::findSnapView(RecyclerView::LayoutManager& layoutManager) 
 int PagerSnapHelper::findTargetSnapPosition(RecyclerView::LayoutManager& layoutManager, int velocityX,
         int velocityY) {
     const int itemCount = layoutManager.getItemCount();
-    if (itemCount == 0) {
+    OrientationHelper* orientationHelper = getOrientationHelper(layoutManager);
+    if ((itemCount == 0)||(orientationHelper==nullptr)) {
         return RecyclerView::NO_POSITION;
     }
 
-    View* mStartMostChildView = nullptr;
-    if (layoutManager.canScrollVertically()) {
-        mStartMostChildView = findStartView(layoutManager, getVerticalHelper(layoutManager));
-    } else if (layoutManager.canScrollHorizontally()) {
-        mStartMostChildView = findStartView(layoutManager, getHorizontalHelper(layoutManager));
+    // A child that is exactly in the center is eligible for both before and after
+    View* closestChildBeforeCenter = nullptr;
+    int distanceBefore = INT_MIN;
+    View* closestChildAfterCenter = nullptr;
+    int distanceAfter = INT_MAX;
+
+    // Find the first view before the center, and the first view after the center
+    const int childCount = layoutManager.getChildCount();
+    for (int i = 0; i < childCount; i++) {
+        View* child = layoutManager.getChildAt(i);
+        if (child == nullptr) {
+            continue;
+        }
+        const int distance = distanceToCenter(layoutManager, *child, *orientationHelper);
+
+        if (distance <= 0 && distance > distanceBefore) {
+            // Child is before the center and closer then the previous best
+            distanceBefore = distance;
+            closestChildBeforeCenter = child;
+        }
+        if (distance >= 0 && distance < distanceAfter) {
+            // Child is after the center and closer then the previous best
+            distanceAfter = distance;
+            closestChildAfterCenter = child;
+        }
     }
 
-    if (mStartMostChildView == nullptr) {
-        return RecyclerView::NO_POSITION;
-    }
-    const int centerPosition = layoutManager.getPosition(mStartMostChildView);
-    if (centerPosition == RecyclerView::NO_POSITION) {
-        return RecyclerView::NO_POSITION;
+    // Return the position of the first child from the center, in the direction of the fling
+    const bool forwardDirection = isForwardFling(layoutManager, velocityX, velocityY);
+    if (forwardDirection && closestChildAfterCenter != nullptr) {
+        return layoutManager.getPosition(closestChildAfterCenter);
+    } else if (!forwardDirection && closestChildBeforeCenter != nullptr) {
+        return layoutManager.getPosition(closestChildBeforeCenter);
     }
 
-    bool forwardDirection;
+    // There is no child in the direction of the fling. Either it doesn't exist (start/end of
+    // the list), or it is not yet attached (very rare case when children are larger then the
+    // viewport). Extrapolate from the child that is visible to get the position of the view to
+    // snap to.
+    View* visibleView = forwardDirection ? closestChildBeforeCenter : closestChildAfterCenter;
+    if (visibleView == nullptr) {
+        return RecyclerView::NO_POSITION;
+    }
+    int visiblePosition = layoutManager.getPosition(visibleView);
+    int snapToPosition = visiblePosition
+            + (isReverseLayout(layoutManager) == forwardDirection ? -1 : +1);
+
+    if (snapToPosition < 0 || snapToPosition >= itemCount) {
+        return RecyclerView::NO_POSITION;
+    }
+    return snapToPosition;    
+}
+
+bool PagerSnapHelper::isForwardFling(RecyclerView::LayoutManager& layoutManager, int velocityX,int velocityY)const {
     if (layoutManager.canScrollHorizontally()) {
-        forwardDirection = velocityX > 0;
+        return velocityX > 0;
     } else {
-        forwardDirection = velocityY > 0;
+        return velocityY > 0;
     }
-    bool reverseLayout = false;
+}
+
+bool PagerSnapHelper::isReverseLayout(RecyclerView::LayoutManager& layoutManager)const {
+    const int itemCount = layoutManager.getItemCount();
     PointF vectorForEnd;
     if (layoutManager.computeScrollVectorForPosition(itemCount - 1,vectorForEnd)){
-        reverseLayout = vectorForEnd.x < 0 || vectorForEnd.y < 0;
+        return vectorForEnd.x < 0 || vectorForEnd.y < 0;
     }
-    return reverseLayout
-            ? (forwardDirection ? centerPosition - 1 : centerPosition)
-            : (forwardDirection ? centerPosition + 1 : centerPosition);
+    return false;
 }
 
 class MyPageSmoothScroller:public LinearSmoothScroller{
@@ -130,7 +170,7 @@ int PagerSnapHelper::distanceToCenter(RecyclerView::LayoutManager& layoutManager
 
 View* PagerSnapHelper::findCenterView(RecyclerView::LayoutManager& layoutManager,
         OrientationHelper& helper) {
-    int childCount = layoutManager.getChildCount();
+    const int childCount = layoutManager.getChildCount();
     if (childCount == 0) {
         return nullptr;
     }
@@ -179,6 +219,16 @@ View* PagerSnapHelper::findStartView(RecyclerView::LayoutManager& layoutManager,
         }
     }
     return closestChild;
+}
+
+OrientationHelper* PagerSnapHelper::getOrientationHelper(RecyclerView::LayoutManager& layoutManager){
+    if (layoutManager.canScrollVertically()) {
+        return &getVerticalHelper(layoutManager);
+    } else if (layoutManager.canScrollHorizontally()) {
+        return &getHorizontalHelper(layoutManager);
+    } else {
+        return nullptr;
+    }
 }
 
 OrientationHelper& PagerSnapHelper::getVerticalHelper(RecyclerView::LayoutManager& layoutManager) {

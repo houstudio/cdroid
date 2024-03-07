@@ -9,9 +9,12 @@ private:
     OrientationHelper* mVerticalHelper;
     OrientationHelper* mHorizontalHelper;
 private:
+    bool isForwardFling(RecyclerView::LayoutManager& layoutManager, int velocityX,int velocityY)const;
+    bool isReverseLayout(RecyclerView::LayoutManager& layoutManager)const;
     int distanceToCenter(RecyclerView::LayoutManager& layoutManager, View& targetView, OrientationHelper& helper);
     View* findCenterView(RecyclerView::LayoutManager& layoutManager, OrientationHelper& helper);
     View* findStartView(RecyclerView::LayoutManager& layoutManager, OrientationHelper& helper);
+    OrientationHelper* getOrientationHelper(RecyclerView::LayoutManager& layoutManager);
     OrientationHelper& getVerticalHelper(RecyclerView::LayoutManager& layoutManager);
     OrientationHelper& getHorizontalHelper(RecyclerView::LayoutManager& layoutManager);
 protected:

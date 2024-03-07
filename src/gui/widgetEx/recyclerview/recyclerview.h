@@ -200,11 +200,11 @@ public:/*public classes*/
         void onBindViewHolder(ViewHolder& holder, int position,std::vector<Object*>& payloads);
         ViewHolder*createViewHolder(ViewGroup* parent, int viewType);
         void bindViewHolder(ViewHolder& holder, int position);
-        int getItemViewType(int position);
+        virtual int getItemViewType(int position);
         void setHasStableIds(bool hasStableIds);
         virtual long getItemId(int position);
         virtual int getItemCount()=0;
-        bool hasStableIds();
+        virtual bool hasStableIds();
         virtual void onViewRecycled(ViewHolder& holder);
         virtual bool onFailedToRecycleView(ViewHolder& holder);
         virtual void onViewAttachedToWindow(ViewHolder& holder);
