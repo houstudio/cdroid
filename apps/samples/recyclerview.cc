@@ -24,8 +24,10 @@ public:
     MyAdapter::ViewHolder* onCreateViewHolder(ViewGroup* parent, int viewType) {
         TextView* view = new TextView("",200,64);
         view->setBackgroundColor(0xff234567);
-	view->setGravity(Gravity::CENTER);
-        view->setLayoutParams(new LayoutParams(280,240));//LayoutParams::MATCH_PARENT,240));//LayoutParams::WRAP_CONTENT));
+        view->setGravity(Gravity::CENTER);
+        //view->setLayoutParams(new LayoutParams(LayoutParams::MATCH_PARENT,80));//LayoutParams::WRAP_CONTENT));
+        view->setLayoutParams(new LayoutParams(120,LayoutParams::MATCH_PARENT));//LayoutParams::WRAP_CONTENT));
+        //view->setLayoutParams(new LayoutParams(640,LayoutParams::MATCH_PARENT));
         return new ViewHolder(view);
     }
 
@@ -60,10 +62,37 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
     w->setBackgroundColor(0xFF112233);
-    RecyclerView*rv=new RecyclerView(800,600);
+    RecyclerView*rv=new RecyclerView(800,480);
+    auto ps = new LinearSnapHelper();//PagerSnapHelper();
+    ps->attachToRecyclerView(rv);
     CarouselLayoutManager*carousel=new CarouselLayoutManager(CarouselLayoutManager::HORIZONTAL);//VERTICAL);//HORIZONTAL);
-    rv->setLayoutManager(carousel);
+    //rv->setLayoutManager(carousel);
+    ((LinearLayoutManager*)rv->getLayoutManager())->setOrientation(LinearLayoutManager::HORIZONTAL);
+    carousel->setPostLayoutListener([carousel](View& child,CarouselLayoutManager::ItemTransformation&ti,float itemPositionToCenterDiff,int orientation,int itemPositionInAdapter)->bool{
+        const float mScaleMultiplier =0.1f;
+        const float scale = 1.f - mScaleMultiplier*std::abs(itemPositionToCenterDiff);
+
+        // because scaling will make view smaller in its center, then we should move this item to the top or bottom to make it visible
+        float translateY,translateX,translateGeneral;
+        float sig = itemPositionToCenterDiff>0.f?1.f:-1.f;
+        if (CarouselLayoutManager::VERTICAL == orientation) {
+            translateGeneral = child.getMeasuredHeight() * (1.f - scale) / 2.f;
+            translateY = sig * translateGeneral;
+            translateX = 0;
+        } else {
+            translateGeneral = child.getMeasuredHeight()*itemPositionToCenterDiff* (1.f-scale);
+            translateX =  translateGeneral;
+            translateY = 0;//(child.getMeasuredHeight()*(1.f-scale))/2.f;
+        }
+        ti.mScaleX = ti.mScaleY = scale;
+        ti.mTranslationX = translateX;
+        ti.mTranslationY = translateY;
+        //LOGD("orientation=%d centeritem=%d itemdiff=%.f translateGeneral=%.f scale=%f X=%d transX/Y=%.f,%.f",
+        //   orientation,carousel->getCenterItemPosition(),itemPositionToCenterDiff,translateGeneral,scale,child.getLeft(),translateX,translateY);
+        return true;
+    });
     MyAdapter*adapter=new MyAdapter();
+    rv->setHasFixedSize(true);
     rv->getRecycledViewPool().setMaxRecycledViews(0,64);
     //adapter->setHasStableIds(true);
     rv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);

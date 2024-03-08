@@ -1,6 +1,7 @@
 #include <cdroid.h>
 #include <dirent.h>
 #include <widget/pagetransformers.h>
+#include <cdlog.h>
 using namespace Cairo;
 class MyPageAdapter:public PagerAdapter{
     std::vector<std::string>urls;
@@ -12,7 +13,7 @@ public:
         while(dir&&(ent=readdir(dir))){
             std::string fullpath=path+"/"+ent->d_name;
             if(ent->d_type==DT_REG/*||ent->d_type!=DT_DIR*/)  urls.push_back(fullpath);
-	    printf("%s\r\n",fullpath.c_str());
+            LOGV("%s",fullpath.c_str());
         }
         if(dir)closedir(dir);
     }
@@ -38,7 +39,7 @@ public:
         container->removeView((View*)object);
         delete (View*)object;
     }
-    float getPageWidth(int position)override{return .2f;}
+    float getPageWidth(int position)override{return 0.2f;}
 
     std::string getPageTitle(int position){
         std::string url=urls[position];
@@ -119,6 +120,7 @@ int main(int argc,const char*argv[]){
     pager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     if(app.getParamCount()>1){
         ViewPager::PageTransformer*pt=nullptr;
+        LOGD("choice=%d",atoi(app.getParam(1,"0").c_str()));
         switch(atoi(app.getParam(1,"0").c_str())){
         case  0:pt=new ScaleInOutTransformer(); break;
         case  1:pt=new AccordionTransformer();  break;

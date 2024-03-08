@@ -4,12 +4,14 @@ static const char*texts[]={"Creates 中国智造"," the specified format and dim
             "Initially the surface contents"," are set to 0.","(Specifically, within each pixel,",
             " each color or alpha channel","belonging to format will be 0.","The contents","of bits within a pixel,",
             " but not belonging","必须使用UTF8编码 " };
-
 class MWindow:public Window{
 private:
    int dx,dy;
+   static int id=0;
 public:
-   MWindow(int x,int y,int w,int h):Window(x,y,w,h){dx=dy=50;}
+   MWindow(int x,int y,int w,int h):Window(x,y,w,h){dx=dy=50;
+      mID=1000+id++;
+   }
    virtual bool onMessage(DWORD msgid,DWORD wp,ULONG lp){
       if(1000==msgid){
          //sendMessage(msgid,wp,lp,lp);
@@ -29,6 +31,15 @@ public:
        //setBgColor(0xFF000000|rand());
        Window::onDraw(c); 
    }
+   void onCreate()override{
+      LOGD("%p:%d",this,mID);
+   }
+   void onActive()override{
+      LOGD("%p:%d",this,mID);
+   }
+   void onDeactive()override{
+      LOGD("%p:%d",this,mID);
+   }
    void setDir(int x,int y){dx=x;dy=y;}
 };
 
@@ -42,7 +53,7 @@ int main(int argc,const char*argv[]){
     ArrayAdapter<std::string>*mAdapter=new  ArrayAdapter<std::string>();
     ListView *lv1=new ListView(600,200);
     ListView *lv2=new ListView(400,200);
-    lv1->setAdapter(mAdapter);
+    //lv1->setAdapter(mAdapter);
 
     for(int j=0;j<8;j++){
         mAdapter->add(texts[j]);

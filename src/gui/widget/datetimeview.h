@@ -18,12 +18,18 @@ private:
     //static final ThreadLocal<ReceiverInfo> sReceiverInfo = new ThreadLocal<ReceiverInfo>();
     std::string mNowText;
     bool mShowRelativeTime;
+private:
+    void updateRelativeTime();
+    long computeNextMidnight(TimeZone timeZone);
 protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
+    void update();
 public:
-    DateTimeView(Context context,const AttributeSet& attrs);
+    DateTimeView(Context* context,const AttributeSet& attrs);
     void setTime(long timeMillis);
+    void setShowRelativeTime(bool showRelativeTime);
+    void setVisibility(int visibility)override;
 };
 
 }/*endof namespace*/

@@ -665,10 +665,10 @@ void NumberPicker::tryComputeMaxWidth(){
         return;
     }
     int maxTextWidth = 0;
+    Layout l(mTextSize,-1);
+    l.setTypeface(mSelectedText->getTypeface());
     if (mDisplayedValues.size() == 0) {
         float maxDigitWidth = 0;
-        Layout l(mTextSize,-1);
-        l.setTypeface(mSelectedText->getTypeface());
         for (int i = 0; i <= 9; i++) {
             l.setText(std::to_string(i));
             l.relayout();
@@ -686,8 +686,6 @@ void NumberPicker::tryComputeMaxWidth(){
         maxTextWidth = (int) (numberOfDigits * maxDigitWidth);
     } else {
         const int valueCount = mDisplayedValues.size();
-        Layout l(mTextSize,-1);
-        l.setTypeface(mSelectedText->getTypeface());
         for (int i = 0; i < valueCount; i++) {
             l.setText(mDisplayedValues[i]);
             l.relayout();

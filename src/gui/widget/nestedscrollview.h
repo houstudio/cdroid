@@ -73,8 +73,8 @@ protected:
     void onScrollChanged(int l, int t, int oldl, int oldt);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec);
     void onOverScrolled(int scrollX, int scrollY,bool clampedX, bool clampedY);
-    bool overScrollByCompat(int deltaX, int deltaY, int scrollX, int scrollY,
-        int scrollRangeX, int scrollRangeY,int maxOverScrollX, int maxOverScrollY,bool isTouchEvent);
+    bool overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY,
+        int scrollRangeX, int scrollRangeY,int maxOverScrollX, int maxOverScrollY,bool isTouchEvent)override;
     int getScrollRange();
     void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec)override;
     void measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,

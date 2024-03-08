@@ -353,7 +353,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
             memset(surf->buffer,0,surf->msize);
         }
     }
-    if(surf->kbuffer && !hwsurface) MI_SYS_MemsetPa(surf->kbuffer,0x000000,surf->msize);
+    if(surf->kbuffer && !hwsurface) MI_SYS_MemsetPa(surf->kbuffer,0xFF000000,surf->msize);
     surf->orig_buffer=surf->buffer;
     if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;

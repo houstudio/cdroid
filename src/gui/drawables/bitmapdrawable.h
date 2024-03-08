@@ -20,6 +20,7 @@ private:
         int mGravity;
         int mTransparency;
         bool mAutoMirrored;
+	bool mAntiAlias;
         int mChangingConfigurations;
         std::vector<int>mThemeAttrs;
         const ColorStateList* mTint;
@@ -62,6 +63,8 @@ public:
     int getAlpha()const override;
     int getGravity()const;
     void setGravity(int gravity);
+    void setAntiAlias(bool aa);
+    bool hasAntiAlias()const;
     int getIntrinsicWidth()const override;
     int getIntrinsicHeight()const override;
     int getOpacity()override;

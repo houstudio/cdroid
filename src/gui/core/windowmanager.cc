@@ -86,7 +86,8 @@ void WindowManager::addWindow(Window*win){
         LOGV("%p window %p[%s] type=%d layer=%d",win,w,w->getText().c_str(),w->window_type,w->mLayer);
     }
     if(mActiveWindow){
-        mActiveWindow->post(std::bind(&Window::onDeactive,mActiveWindow));
+        Window*deactWin = mActiveWindow;
+        mActiveWindow->post([deactWin](){deactWin->onDeactive();});
         mActiveWindow->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
     }
 
@@ -99,8 +100,8 @@ void WindowManager::addWindow(Window*win){
 #else
     Looper::getDefault()->addEventHandler(win->mUIEventHandler);
 #endif
-    win->post(std::bind(&Window::onCreate,win));
-    win->post(std::bind(&Window::onActive,win));
+    win->post([win](){win->onCreate();});
+    //the first create only call onCreate,no onActive 
     win->post([info](){
         info->mTreeObserver->dispatchOnWindowFocusChange(true);
     });
@@ -230,6 +231,7 @@ Window*WindowManager::getActiveWindow()const{
 
 void WindowManager::sendToBack(Window*win){
     win->mLayer = (win->window_type<<16);
+    if(mActiveWindow==win) return;
     std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
         return (w2->mLayer - w1->mLayer)>0;
     });
@@ -240,11 +242,17 @@ void WindowManager::sendToBack(Window*win){
     }
     mActiveWindow = mWindows.back();
     win->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
+    win->post([win](){win->onDeactive();});
+    Window*newActWin = mActiveWindow;
+    mActiveWindow->post([newActWin](){
+        newActWin->onActive();
+    });
     GraphDevice::getInstance().flip();
 }
 
 void WindowManager::bringToFront(Window*win){
     win->mLayer = (win->window_type<<16)|0x7FFF;
+    if(mActiveWindow==win) return;
     std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
         return (w2->mLayer - w1->mLayer)>0;
     });
@@ -253,6 +261,12 @@ void WindowManager::bringToFront(Window*win){
         Window *w = mWindows.at(idx);
         w->mLayer = (w->window_type<<16)|(idx+1);
     }
+    win->post([win](){win->onActive();});
+
+    Window*deactWin= mActiveWindow;
+    mActiveWindow->post([deactWin](){
+        deactWin->onDeactive();
+    });
     mActiveWindow = win;
     win->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
     GraphDevice::getInstance().flip();

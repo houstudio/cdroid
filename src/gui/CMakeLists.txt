@@ -16,6 +16,7 @@ aux_source_directory(app SRCS_APP)
 aux_source_directory(animation SRCS_ANIMATION)
 aux_source_directory(private SRCS_PRIVATE)
 aux_source_directory(utils SRCS_UTILS)
+aux_source_directory(transition SRCS_TRANSITION)
 include_directories(
     ${PROJECT_SOURCE_DIR}/
     ${PROJECT_SOURCE_DIR}/private
@@ -45,6 +46,7 @@ set(SOURCES_GUI
     #${SRCS_PRIVATE}
     ${SRCS_UTILS}
     ${SRCS_ANIMATION}
+    ${SRCS_TRANSITION}
 )
 
 add_library(cdroid SHARED ${SOURCES_GUI})

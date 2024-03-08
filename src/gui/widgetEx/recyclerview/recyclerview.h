@@ -725,10 +725,10 @@ public:
     void ignoreView(View* view);
     void stopIgnoringView(View* view);
     void detachAndScrapAttachedViews(Recycler& recycler);
-    void measureChild(View* child, int widthUsed, int heightUsed);
-    bool isMeasurementCacheEnabled();
+    virtual void measureChild(View* child, int widthUsed, int heightUsed);
+    bool isMeasurementCacheEnabled()const;
     void setMeasurementCacheEnabled(bool measurementCacheEnabled);
-    void measureChildWithMargins(View* child, int widthUsed, int heightUsed);
+    virtual void measureChildWithMargins(View* child, int widthUsed, int heightUsed);
     static int getChildMeasureSpec(int parentSize, int padding, int childDimension,bool canScroll);
     static int getChildMeasureSpec(int parentSize, int parentMode, int padding,int childDimension, bool canScroll);
     int getDecoratedMeasuredWidth(View* child);

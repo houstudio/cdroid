@@ -5366,7 +5366,7 @@ bool RecyclerView::LayoutManager::shouldMeasureChild(View* child, int widthSpec,
             || !isMeasurementUpToDate(child->getHeight(), heightSpec, lp->height);
 }
 
-bool RecyclerView::LayoutManager::isMeasurementCacheEnabled() {
+bool RecyclerView::LayoutManager::isMeasurementCacheEnabled() const{
     return mMeasurementCacheEnabled;
 }
 

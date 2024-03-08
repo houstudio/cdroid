@@ -10,7 +10,6 @@ SnapHelper::SnapHelper(){
     mGravityScroller = nullptr;
     mScrollListener.onScrollStateChanged=[this](RecyclerView& recyclerView, int newState) {
         //super is null;super.onScrollStateChanged(recyclerView, newState);
-        LOGD("onScrollStateChanged,newState=%d(IDLE=%d)mScrolled=%d",newState,RecyclerView::SCROLL_STATE_IDLE,mScrolled);
         if (newState == RecyclerView::SCROLL_STATE_IDLE && mScrolled) {
             mScrolled = false;
             snapToTargetExistingView();

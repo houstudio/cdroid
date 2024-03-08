@@ -19,7 +19,7 @@
 #else
 #include <ucontext.h>
 #endif
-#define ASYNC_LOG 1
+#define ASYNC_LOG 0
 static LogLevel sLogLevel=LOG_DEBUG;
 
 static std::string splitFileName(const std::string& str) {

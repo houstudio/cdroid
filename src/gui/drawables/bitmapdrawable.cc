@@ -239,6 +239,14 @@ void BitmapDrawable::setGravity(int gravity){
     }
 }
 
+void BitmapDrawable::setAntiAlias(bool aa) {
+    mBitmapState->mAntiAlias;
+    invalidateSelf();
+}
+bool BitmapDrawable::hasAntiAlias() const{
+    return mBitmapState->mAntiAlias;
+}
+
 void BitmapDrawable::computeBitmapSize() {
     if (mBitmapState->mBitmap != nullptr) {
         mBitmapWidth = mBitmapState->mBitmap->get_width();//getScaledWidth(mTargetDensity);

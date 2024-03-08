@@ -8,7 +8,8 @@
 
 #ifndef WPA_CTRL_H
 #define WPA_CTRL_H
-
+#include <stdint.h>
+#include <stddef.h>
 #ifdef  __cplusplus
 extern "C" {
 #endif
@@ -408,7 +409,6 @@ int wpa_ctrl_detach(struct wpa_ctrl *ctrl);
  * This function will receive a pending control interface message. The received
  * response will be written to reply and reply_len is set to the actual length
  * of the reply.
-
  * wpa_ctrl_recv() is only used for event messages, i.e., wpa_ctrl_attach()
  * must have been used to register the control interface as an event monitor.
  */
@@ -470,3 +470,4 @@ char * wpa_ctrl_get_remote_ifname(struct wpa_ctrl *ctrl);
 #endif
 
 #endif /* WPA_CTRL_H */
+

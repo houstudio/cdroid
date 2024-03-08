@@ -9,7 +9,7 @@ LinearSnapHelper::LinearSnapHelper(){
 }
 LinearSnapHelper::~LinearSnapHelper(){
     delete mVerticalHelper;
-	delete mHorizontalHelper;
+    delete mHorizontalHelper;
 }
 
 void LinearSnapHelper::calculateDistanceToFinalSnap(

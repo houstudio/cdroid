@@ -40,7 +40,7 @@ static int getRotateAngle(Canvas&canvas){
     return int(radians*180.f/M_PI);
 }
 
-void NinePatch::draw(Canvas& painter, int  x, int  y) {
+void NinePatch::draw(Canvas& painter, int  x, int  y,float alpha) {
     const int angle_degrees = getRotateAngle(painter);
     painter.save();
     painter.translate(x,y);
@@ -85,16 +85,16 @@ void NinePatch::setImageSize(int width, int height) {
     }
 }
 
-RECT NinePatch::getContentArea(int  width, int  height) {
-    return RECT{mContentArea.left, mContentArea.top, (width - (mImage->get_width() - 2 -mContentArea.width)),
+Rect NinePatch::getContentArea(int  width, int  height) {
+    return Rect{mContentArea.left, mContentArea.top, (width - (mImage->get_width() - 2 -mContentArea.width)),
                   (height - (mImage->get_height() - 2 -mContentArea.height))};
 }
 
-RECT NinePatch::getPadding()const{
+Rect NinePatch::getPadding()const{
     return mPadding;
 }
 
-void NinePatch::drawScaledPart(const RECT& oldRect, const RECT& newRect,Cairo::Context&painter) {
+void NinePatch::drawScaledPart(const Rect& oldRect, const Rect& newRect,Cairo::Context&painter) {
     if (newRect.width && newRect.height) {
 	const double scaleX=(double)newRect.width/oldRect.width;
 	const double scaleY=(double)newRect.height/oldRect.height;
@@ -117,7 +117,7 @@ void NinePatch::drawScaledPart(const RECT& oldRect, const RECT& newRect,Cairo::C
     }
 }
 
-void NinePatch::drawConstPart(const RECT& oldRect, const RECT& newRect,Cairo::Context&painter) {
+void NinePatch::drawConstPart(const Rect& oldRect, const Rect& newRect,Cairo::Context&painter) {
     painter.save();
     painter.rectangle(newRect.left,newRect.top,newRect.width,newRect.height);
     painter.clip();
@@ -138,7 +138,7 @@ static inline bool IsColorBlack(Cairo::RefPtr<ImageSurface>img,int i,int j) {
     return (r < 128 && g < 128 && b < 128);
 }
 
-RECT NinePatch::getContentArea() {
+Rect NinePatch::getContentArea() {
     int  j = mImage->get_height() - 1;
     int  left = 0 ,  right = 0;
 
@@ -170,7 +170,7 @@ RECT NinePatch::getContentArea() {
 
     mPadding.set(left, top , mImage->get_width()-right-2, mImage->get_height()-2-bot);
     LOGV("%p padding=(%d,%d,%d,%d)",this,left, top,mPadding.width,mPadding.height);
-    return RECT{left, top, right - left, bot - top};
+    return Rect{left, top, right - left, bot - top};
 }
 
 void NinePatch::getResizeArea() {
@@ -244,8 +244,8 @@ void NinePatch::updateCachedImage(int width, int height) {
             widthResize = mResizeDistancesX[i].first - x1;
             heightResize = mResizeDistancesY[j].first - y1;
 
-            drawConstPart(RECT{x1 + 1, y1 + 1, widthResize, heightResize},
-                 RECT{x1 + offsetX, y1 + offsetY, widthResize, heightResize}, painter);
+            drawConstPart(Rect{x1 + 1, y1 + 1, widthResize, heightResize},
+                 Rect{x1 + offsetX, y1 + offsetY, widthResize, heightResize}, painter);
 
             int  y2 = mResizeDistancesY[j].first;
             heightResize = mResizeDistancesY[j].second;
@@ -255,8 +255,8 @@ void NinePatch::updateCachedImage(int width, int height) {
                 if (lostY < 0) {  resizeY += 1;   lostY += 1.0; }
 	       	else { resizeY -= 1;  lostY -= 1.0; }
             }
-            drawScaledPart(RECT{x1 + 1, y2 + 1, widthResize, heightResize},
-                RECT{x1 + offsetX, y2 + offsetY, widthResize, resizeY}, painter);
+            drawScaledPart(Rect{x1 + 1, y2 + 1, widthResize, heightResize},
+                Rect{x1 + offsetX, y2 + offsetY, widthResize, resizeY}, painter);
 
             int  x2 = mResizeDistancesX[i].first;
             widthResize = mResizeDistancesX[i].second;
@@ -267,12 +267,12 @@ void NinePatch::updateCachedImage(int width, int height) {
                 if (lostX < 0) { resizeX += 1; lostX += 1.0;}
                 else { resizeX -= 1; lostX -= 1.0; }
             }
-            drawScaledPart(RECT{x2 + 1, y1 + 1, widthResize, heightResize},
-                RECT{x2 + offsetX, y1 + offsetY, resizeX, heightResize}, painter);
+            drawScaledPart(Rect{x2 + 1, y1 + 1, widthResize, heightResize},
+                Rect{x2 + offsetX, y1 + offsetY, resizeX, heightResize}, painter);
 
             heightResize = mResizeDistancesY[j].second;
-            drawScaledPart(RECT{x2 + 1, y2 + 1, widthResize, heightResize},
-                RECT{x2 + offsetX, y2 + offsetY, resizeX, resizeY}, painter);
+            drawScaledPart(Rect{x2 + 1, y2 + 1, widthResize, heightResize},
+                Rect{x2 + offsetX, y2 + offsetY, resizeX, resizeY}, painter);
 
             y1 = mResizeDistancesY[j].first + mResizeDistancesY[j].second;
             offsetY += resizeY - mResizeDistancesY[j].second;
@@ -287,8 +287,8 @@ void NinePatch::updateCachedImage(int width, int height) {
     lostY = 0.0;
     offsetY = 0;
     for (int i = 0; i < mResizeDistancesY.size(); i++) {
-        drawConstPart(RECT{x1 + 1, y1 + 1, widthResize, mResizeDistancesY[i].first - y1},
-            RECT{x1 + offsetX, y1 + offsetY, widthResize, mResizeDistancesY[i].first - y1}, painter);
+        drawConstPart(Rect{x1 + 1, y1 + 1, widthResize, mResizeDistancesY[i].first - y1},
+            Rect{x1 + offsetX, y1 + offsetY, widthResize, mResizeDistancesY[i].first - y1}, painter);
         y1 = mResizeDistancesY[i].first;
         resizeY = round((double)mResizeDistancesY[i].second * factorY);
         lostY += resizeY - ((double)mResizeDistancesY[i].second * factorY);
@@ -296,8 +296,8 @@ void NinePatch::updateCachedImage(int width, int height) {
             if (lostY < 0) { resizeY += 1;  lostY += 1.0; }
             else { resizeY -= 1;  lostY -= 1.0; }
         }
-        drawScaledPart(RECT{x1 + 1, y1 + 1, widthResize, mResizeDistancesY[i].second},
-            RECT{x1 + offsetX, y1 + offsetY, widthResize, resizeY}, painter);
+        drawScaledPart(Rect{x1 + 1, y1 + 1, widthResize, mResizeDistancesY[i].second},
+            Rect{x1 + offsetX, y1 + offsetY, widthResize, resizeY}, painter);
         y1 = mResizeDistancesY[i].first + mResizeDistancesY[i].second;
         offsetY += resizeY - mResizeDistancesY[i].second;
     }
@@ -306,8 +306,8 @@ void NinePatch::updateCachedImage(int width, int height) {
     x1 = 0;
     offsetX = 0;
     for (int i = 0; i < mResizeDistancesX.size(); i++) {
-        drawConstPart(RECT{x1 + 1, y1 + 1, mResizeDistancesX[i].first - x1, heightResize},
-            RECT{x1 + offsetX, y1 + offsetY, mResizeDistancesX[i].first - x1, heightResize}, painter);
+        drawConstPart(Rect{x1 + 1, y1 + 1, mResizeDistancesX[i].first - x1, heightResize},
+            Rect{x1 + offsetX, y1 + offsetY, mResizeDistancesX[i].first - x1, heightResize}, painter);
         x1 = mResizeDistancesX[i].first;
         resizeX = round((double)mResizeDistancesX[i].second * factorX);
         lostX += resizeX - ((double)mResizeDistancesX[i].second * factorX);
@@ -315,8 +315,8 @@ void NinePatch::updateCachedImage(int width, int height) {
             if (lostX < 0) {  resizeX += 1;  lostX += 1.0; }
 	    else { resizeX -= 1;  lostX += 1.0; }
         }
-        drawScaledPart(RECT{x1 + 1, y1 + 1, mResizeDistancesX[i].second, heightResize},
-            RECT{x1 + offsetX, y1 + offsetY, resizeX, heightResize}, painter);
+        drawScaledPart(Rect{x1 + 1, y1 + 1, mResizeDistancesX[i].second, heightResize},
+            Rect{x1 + offsetX, y1 + offsetY, resizeX, heightResize}, painter);
         x1 = mResizeDistancesX[i].first + mResizeDistancesX[i].second;
         offsetX += resizeX - mResizeDistancesX[i].second;
     }
@@ -324,8 +324,8 @@ void NinePatch::updateCachedImage(int width, int height) {
     widthResize = mImage->get_width() - x1 - 2;
     y1 = mResizeDistancesY[mResizeDistancesY.size() - 1].first + mResizeDistancesY[mResizeDistancesY.size() - 1].second;
     heightResize = mImage->get_height() - y1 - 2;
-    drawConstPart(RECT{x1 + 1, y1 + 1, widthResize, heightResize},
-         RECT{x1 + offsetX, y1 + offsetY, widthResize, heightResize}, painter);
+    drawConstPart(Rect{x1 + 1, y1 + 1, widthResize, heightResize},
+         Rect{x1 + offsetX, y1 + offsetY, widthResize, heightResize}, painter);
 }
 
 }/*endof namespace*/

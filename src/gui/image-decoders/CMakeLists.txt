@@ -11,7 +11,7 @@ include_directories(
 if(ENABLE_JPEG)
    list(APPEND IMAGE_DEPLIBS ${JPEG_LIBRARIES})
 endif()
-if(ENABLE_GIF)
+if(ENABLE_GIF AND GIF_FOUND)
    list(APPEND IMAGE_DEPLIBS ${GIF_LIBRARIES})
 endif()
 if(ENABLE_WEBP)

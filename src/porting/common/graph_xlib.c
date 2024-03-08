@@ -8,6 +8,7 @@
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
+#include <X11/extensions/Xrender.h>
 #include <pthread.h>
 #include <string.h>
 #include <core/eventcodes.h>
@@ -15,7 +16,8 @@
 
 static Display*x11Display=NULL;
 static Window x11Window=0;
-static Visual *x11Visual=NULL;
+static Picture picture;
+static Visual* x11Visual;
 static Atom WM_DELETE_WINDOW;
 static GC mainGC=0;
 static XImage*mainSurface=NULL;
@@ -69,8 +71,8 @@ INT GFXInit() {
         XGCValues values;
         XSizeHints sizehints;
         int width,height;
-        int screen=DefaultScreen(x11Display);
-        x11Visual = DefaultVisual(x11Display, screen);
+        int screen= DefaultScreen(x11Display);
+	x11Visual=DefaultVisual(x11Display, screen);
         GFXGetDisplaySize(0,&width,&height);
         width += screenMargin.x + screenMargin.w;
         height+= screenMargin.y + screenMargin.h;
@@ -78,7 +80,15 @@ INT GFXInit() {
                                       1, BlackPixel(x11Display, screen), WhitePixel(x11Display, screen));
 
         LOGI("x11Display init =%p screenSize=%dx%d",x11Display,width,height);
-        sizehints.flags = PMinSize | PMaxSize;
+#if 1
+	XRenderPictureAttributes pict_attrs;
+        XRenderPictFormat* pict_format = XRenderFindVisualFormat(x11Display, x11Visual);
+        pict_attrs.poly_edge = PolyEdgeSmooth;
+        pict_attrs.poly_mode = PolyModeImprecise;
+
+        picture = XRenderCreatePicture(x11Display, x11Window, pict_format, CPPolyEdge | CPPolyMode, &pict_attrs);
+#endif
+	sizehints.flags = PMinSize | PMaxSize;
         sizehints.min_width = width;
         sizehints.max_width = width;
         sizehints.min_height = height;
@@ -152,7 +162,10 @@ static void  X11Expose(int x,int y,int w,int h) {
     e.height=h;
     e.count=1;
     if(x11Display&&mainSurface) {
+        //XRenderSetPictureTransform(x11Display, picture, NULL);
+	//XRenderComposite(x11Display, PictOpSrc, picture, None, picture, 0, 0, 0, 0, 0, 0,1280,720);// width, height);
         XPutImage(x11Display,x11Window,mainGC,mainSurface,x,y,x,y,w,h);
+	XFlush(x11Display);
         //XSendEvent(x11Display,x11Window,False,0,(XEvent*)&e);
         //XPutBackEvent(x11Display,(XEvent*)&e);
     }
@@ -182,7 +195,7 @@ INT GFXFlip(HANDLE surface) {
     XImage *img=(XImage*)surface;
     if(mainSurface==surface) {
         GFXRect rect= {0,0,img->width,img->height};
-        //X11Expose(0,0,img->width,img->height);
+        X11Expose(0,0,img->width,img->height);
     }
     return 0;
 }

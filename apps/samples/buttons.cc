@@ -19,11 +19,9 @@ int main(int argc,const char*argv[]){
     w->setBackgroundColor(0xFF101112);
     btn->setOnTouchListener([](View&v,MotionEvent&e){
         const bool down=e.getAction()==MotionEvent::ACTION_DOWN;
-	v.setTranslationX(down?0.1f*v.getWidth():0);
-	v.setTranslationY(down?0.1f*v.getHeight():0);
-	v.setScaleX(down?0.8f:1.f);
-	v.setScaleY(down?0.8f:1.f);
-	return false;
+        v.setScaleX(down?0.5f:1.f);
+        v.setScaleY(down?0.8f:1.f);
+        return false;
     });
     
     LOGD("%p statecount=%d",sld,sld->getStateCount());
@@ -37,8 +35,7 @@ int main(int argc,const char*argv[]){
     ShapeDrawable*sd=new ShapeDrawable();
     sd->setShape(new ArcShape(0,360));
     sd->getShape()->setGradientColors({0x20FFFFFF,0xFFFFFFFF,0x00FFFFFF});//setSolidColor(0x800000FF);
-    RippleDrawable*rp=new RippleDrawable(ColorStateList::valueOf(0x80222222),
-       new ColorDrawable(0x8000FF00),sd);
+    RippleDrawable*rp=new RippleDrawable(ColorStateList::valueOf(0x80222222),new ColorDrawable(0x8000FF00),sd);
     btn=new Button("RippleButton",300,64);
     btn->setMinimumHeight(64);
     btn->setBackground(rp);

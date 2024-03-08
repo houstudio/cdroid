@@ -22,10 +22,10 @@ public:
     }
 };
 
-View*createHeader(){
+View*createHeader(int id){
     LinearLayout*ll=new LinearLayout(-1,200);
-    ll->setOrientation(LinearLayout::VERTICAL);
-    for(int i=0;i<4;i++){
+    ll->setOrientation(LinearLayout::HORIZONTAL);
+    for(int i=0;i<1;i++){
         std::string txt;
         TextView*tv;
         if(i%2){
@@ -38,11 +38,12 @@ View*createHeader(){
         }
         ll->addView(tv);
     }
+    ll->setId(id);
     return ll;
 }
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(50,50,1200,640);
+    Window*w=new Window(0,0,-1,-1);
     MyAdapter*adapter=new MyAdapter();
     ListView*lv=(ListView*)&w->addView(new ListView(460,500));
     lv->setPos(10,10);
@@ -53,18 +54,29 @@ int main(int argc,const char*argv[]){
     for(int i=0;i<64;i++){
         adapter->add("");
     }
-    lv->addHeaderView(createHeader(),nullptr,false);
-    lv->addFooterView(createHeader(),nullptr,true);
     lv->setAdapter(adapter);
     adapter->notifyDataSetChanged();
     lv->setSelector(new ColorDrawable(0x8800FF00));
     lv->setSelection(2);
     lv->setOnItemClickListener([adapter](AdapterView&lv,View&v,int pos,long id){
         LOGD("clicked %d",pos);
-	if(pos==60)
-	   ((AbsListView&)lv).smoothScrollToPosition(0);
+        if(pos==60)
+            ((AbsListView&)lv).smoothScrollToPosition(0);
     });
     lv->requestLayout();
+    Button*add=new Button("Add Header",200,60);
+    add->setOnClickListener([lv,adapter](View&){
+        lv->addHeaderView(createHeader(888888),nullptr,false);
+	adapter->notifyDataSetChanged();
+    });
+    w->addView(add).setPos(480,10);
+    Button*del=new Button("Remove Header",200,60);
+    del->setOnClickListener([lv,adapter](View&){
+	View*header=lv->findViewById(888888);
+        lv->removeHeaderView(header);
+        adapter->notifyDataSetChanged();
+    });
+    w->addView(del).setPos(480,80);
     app.exec();
     return 0;
 };

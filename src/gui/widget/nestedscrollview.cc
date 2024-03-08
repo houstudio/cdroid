@@ -663,9 +663,9 @@ bool NestedScrollView::onTouchEvent(MotionEvent& ev) {
                 bool canOverscroll = overscrollMode == View::OVER_SCROLL_ALWAYS
                         || (overscrollMode == View::OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
 
-                // Calling overScrollByCompat will call onOverScrolled, which
+                // Calling overScrollBy will call onOverScrolled, which
                 // calls onScrollChanged if applicable.
-                if (overScrollByCompat(0, deltaY, 0, getScrollY(), 0, range, 0,
+                if (overScrollBy(0, deltaY, 0, getScrollY(), 0, range, 0,
                         0, true) && !hasNestedScrollingParent(TYPE_TOUCH)) {
                     // Break our velocity if we hit a scroll barrier.
                     mVelocityTracker->clear();
@@ -802,7 +802,7 @@ void NestedScrollView::onOverScrolled(int scrollX, int scrollY, bool clampedX, b
     FrameLayout::scrollTo(scrollX, scrollY);
 }
 
-bool NestedScrollView::overScrollByCompat(int deltaX, int deltaY,int scrollX, int scrollY,
+bool NestedScrollView::overScrollBy(int deltaX, int deltaY,int scrollX, int scrollY,
         int scrollRangeX, int scrollRangeY, int maxOverScrollX, int maxOverScrollY,  bool isTouchEvent) {
     int overScrollMode = getOverScrollMode();
     bool canScrollHorizontal =
@@ -1194,7 +1194,7 @@ void NestedScrollView::computeScroll() {
             int range = getScrollRange();
             int oldScrollY = getScrollY();
 
-            overScrollByCompat(0, dy, getScrollX(), oldScrollY, 0, range, 0, 0, false);
+            overScrollBy(0, dy, getScrollX(), oldScrollY, 0, range, 0, 0, false);
 
             int scrolledDeltaY = getScrollY() - oldScrollY;
             int unconsumedY = dy - scrolledDeltaY;

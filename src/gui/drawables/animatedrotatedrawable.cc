@@ -153,7 +153,7 @@ void AnimatedRotateDrawable::updateLocalState(){
     if (drawable != nullptr) {
         //drawable->setFilterBitmap(true);
         if (dynamic_cast<BitmapDrawable*>(drawable)) {
-            //((BitmapDrawable*)drawable)->setAntiAlias(true);
+            ((BitmapDrawable*)drawable)->setAntiAlias(true);
         }
     }
 }

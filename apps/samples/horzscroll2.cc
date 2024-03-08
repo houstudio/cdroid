@@ -7,12 +7,12 @@ static std::vector<CLA::Argument> ARGS={
 int main(int argc,const char*argv[]){
     App app(argc,argv,ARGS);
     Window*w=new Window(0,0,-1,-1);
-    HorizontalScrollView* hs=new HorizontalScrollView(1280,400);
+    HorizontalScrollView* hs=new HorizontalScrollView(-1,-1);
     hs->setOverScrollMode(app.hasSwitch("scroll")?View::OVER_SCROLL_ALWAYS:View::OVER_SCROLL_NEVER);
     hs->setHorizontalFadingEdgeEnabled(true);
     hs->setFadingEdgeLength(200);
-
-    LinearLayout*layout=new LinearLayout(1280,100);
+    hs->setHorizontalScrollBarEnabled(true);
+    LinearLayout*layout=new LinearLayout(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);
     layout->setOrientation(LinearLayout::HORIZONTAL);
 
     auto click=[](View&v){

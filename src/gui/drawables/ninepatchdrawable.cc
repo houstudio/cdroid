@@ -264,7 +264,7 @@ void NinePatchDrawable::NinePatchState::draw(Canvas&canvas,const Rect&rect){
     mNinePatch->draw(canvas,rect.left,rect.top);
 #else
     mNinePatch->setImageSize(rect.width, rect.height);
-    mNinePatch->draw(canvas,rect.left,rect.top);
+    mNinePatch->draw(canvas,rect.left,rect.top,1.f);
 #endif
 }
 

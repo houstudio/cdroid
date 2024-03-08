@@ -62,9 +62,9 @@ protected:
     void onOverScrolled(int scrollX, int scrollY,bool clampedX, bool clampedY)override;
     int computeHorizontalScrollRange()override;
     int computeHorizontalScrollOffset()override;
-    void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec);
+    void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec)override;
     void measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,
-            int parentHeightMeasureSpec, int heightUsed);
+            int parentHeightMeasureSpec, int heightUsed)override;
     int computeScrollDeltaToGetChildRectOnScreen(Rect& rect);
     bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect)override;
     void onLayout(bool changed, int l, int t, int w, int h)override;
