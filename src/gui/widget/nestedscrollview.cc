@@ -178,8 +178,8 @@ float NestedScrollView::getTopFadingEdgeStrength() {
         return 0.0f;
     }
 
-    int length = getVerticalFadingEdgeLength();
-    int scrollY = getScrollY();
+    const int length = getVerticalFadingEdgeLength();
+    const int scrollY = getScrollY();
     if (scrollY < length) {
         return scrollY / (float) length;
     }
@@ -195,9 +195,9 @@ float NestedScrollView::getBottomFadingEdgeStrength() {
 
     View* child = getChildAt(0);
     NestedScrollView::LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
-    int length = getVerticalFadingEdgeLength();
-    int bottomEdge = getHeight() - getPaddingBottom();
-    int span = child->getBottom() + lp->bottomMargin - getScrollY() - bottomEdge;
+    const int length = getVerticalFadingEdgeLength();
+    const int bottomEdge = getHeight() - getPaddingBottom();
+    const int span = child->getBottom() + lp->bottomMargin - getScrollY() - bottomEdge;
     if (span < length) {
         return span / (float) length;
     }
@@ -540,7 +540,7 @@ bool NestedScrollView::onInterceptTouchEvent(MotionEvent& ev) {
         case MotionEvent::ACTION_DOWN: {
             int y = (int) ev.getY();
             if (!inChild((int) ev.getX(), y)) {
-                mIsBeingDragged = false;
+                mIsBeingDragged = stopGlowAnimations(ev)||(!mScroller->isFinished());
                 recycleVelocityTracker();
                 break;
             }
@@ -561,7 +561,7 @@ bool NestedScrollView::onInterceptTouchEvent(MotionEvent& ev) {
              * isFinished() is correct.
             */
             mScroller->computeScrollOffset();
-            mIsBeingDragged = !mScroller->isFinished();
+            mIsBeingDragged = stopGlowAnimations(ev)||(!mScroller->isFinished());
             startNestedScroll(View::SCROLL_AXIS_VERTICAL, TYPE_TOUCH);
             break;
         }
@@ -704,8 +704,12 @@ bool NestedScrollView::onTouchEvent(MotionEvent& ev) {
                 VelocityTracker* velocityTracker = mVelocityTracker;
                 velocityTracker->computeCurrentVelocity(1000, mMaximumVelocity);
                 int initialVelocity = (int) velocityTracker->getYVelocity(mActivePointerId);
-                if ((std::abs(initialVelocity) > mMinimumVelocity)) {
-                    flingWithNestedDispatch(-initialVelocity);
+                if ((std::abs(initialVelocity) >= mMinimumVelocity)) {
+                    if(!edgeEffectFling(initialVelocity) && !dispatchNestedPreFling(0,-initialVelocity)){
+			dispatchNestedFling(0, -initialVelocity, true);
+                        fling(-initialVelocity);
+                        //flingWithNestedDispatch(-initialVelocity);
+		    }
                 } else if (mScroller->springBack(getScrollX(), getScrollY(), 0, 0, 0,
                         getScrollRange())) {
                     this->postInvalidateOnAnimation();
@@ -740,6 +744,31 @@ bool NestedScrollView::onTouchEvent(MotionEvent& ev) {
     }
     vtev->recycle();
     return true;
+}
+
+bool NestedScrollView::edgeEffectFling(int velocityY) {
+    bool consumed = true;
+    if (mEdgeGlowTop->getDistance() != 0) {
+        mEdgeGlowTop->onAbsorb(velocityY);
+    } else if (mEdgeGlowBottom->getDistance() != 0) {
+        mEdgeGlowBottom->onAbsorb(-velocityY);
+    } else {
+        consumed = false;
+    }
+    return consumed;
+}
+
+bool NestedScrollView::stopGlowAnimations(MotionEvent& e) {
+    bool stopped = false;
+    if (mEdgeGlowTop->getDistance() != 0) {
+        mEdgeGlowTop->onPullDistance(0, e.getY() / getHeight());
+        stopped = true;
+    }
+    if (mEdgeGlowBottom->getDistance() != 0) {
+        mEdgeGlowBottom->onPullDistance(0, 1 - e.getY() / getHeight());
+        stopped = true;
+    }
+    return stopped;
 }
 
 void NestedScrollView::onSecondaryPointerUp(MotionEvent& ev) {
@@ -1447,14 +1476,14 @@ void NestedScrollView::fling(int velocityY) {
                 INT_MIN, INT_MAX, // y
                 0, 0); // overscroll
         mLastScrollerY = getScrollY();
-	LOGD("mLastScrollerY=%d",mLastScrollerY);
+	LOGV("mLastScrollerY=%d",mLastScrollerY);
         this->postInvalidateOnAnimation();
     }
 }
 
 void NestedScrollView::flingWithNestedDispatch(int velocityY) {
-    int scrollY = getScrollY();
-    bool canFling = (scrollY > 0 || velocityY > 0)
+    const int scrollY = getScrollY();
+    const bool canFling = (scrollY > 0 || velocityY > 0)
             && (scrollY < getScrollRange() || velocityY < 0);
     if (!dispatchNestedPreFling(0, velocityY)) {
          dispatchNestedFling(0, velocityY, canFling);
@@ -1545,8 +1574,8 @@ void NestedScrollView::draw(Canvas& canvas) {
                 height -= getPaddingTop() + getPaddingBottom();
                 yTranslation -= getPaddingBottom();
             }
-            canvas.translate(xTranslation - width, yTranslation);
-            //canvas.rotate(180, width, 0);
+            canvas.translate(width - xTranslation, yTranslation);
+            canvas.rotate_degrees(180);
             mEdgeGlowBottom->setSize(width, height);
             if (mEdgeGlowBottom->draw(canvas)) {
                 this->postInvalidateOnAnimation();

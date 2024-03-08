@@ -52,6 +52,8 @@ private:
     void initOrResetVelocityTracker();
     void initVelocityTrackerIfNotExists();
     void recycleVelocityTracker();
+    bool edgeEffectFling(int velocityY);
+    bool stopGlowAnimations(MotionEvent& e);
     void onSecondaryPointerUp(MotionEvent& ev);
     float getVerticalScrollFactorCompat();
     View* findFocusableViewInBounds(bool topFocus, int top, int bottom);
