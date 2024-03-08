@@ -3678,6 +3678,10 @@ void View::jumpDrawablesToCurrentState(){
 }
 
 std::vector<int>View::onCreateDrawableState(){
+    if (((mViewFlags & DUPLICATE_PARENT_STATE) == DUPLICATE_PARENT_STATE) &&  mParent) {
+        return mParent->onCreateDrawableState();
+    }
+
     int viewStateIndex = 0;
 
     if(isFocused()) viewStateIndex |= StateSet::VIEW_STATE_FOCUSED;
