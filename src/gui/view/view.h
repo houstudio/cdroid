@@ -616,7 +616,7 @@ protected:
 
     bool isOnScrollbar(int x,int y);
     bool isOnScrollbarThumb(int x,int y);
-    virtual bool overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX, 
+    virtual bool overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX,
               int  scrollRangeY, int maxOverScrollX, int maxOverScrollY, bool isTouchEvent);
     virtual void onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY);
     virtual float getTopFadingEdgeStrength();

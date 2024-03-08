@@ -706,10 +706,10 @@ bool NestedScrollView::onTouchEvent(MotionEvent& ev) {
                 int initialVelocity = (int) velocityTracker->getYVelocity(mActivePointerId);
                 if ((std::abs(initialVelocity) >= mMinimumVelocity)) {
                     if(!edgeEffectFling(initialVelocity) && !dispatchNestedPreFling(0,-initialVelocity)){
-			dispatchNestedFling(0, -initialVelocity, true);
+                        dispatchNestedFling(0, -initialVelocity, true);
                         fling(-initialVelocity);
                         //flingWithNestedDispatch(-initialVelocity);
-		    }
+                    }
                 } else if (mScroller->springBack(getScrollX(), getScrollY(), 0, 0, 0,
                         getScrollRange())) {
                     this->postInvalidateOnAnimation();
@@ -1476,7 +1476,7 @@ void NestedScrollView::fling(int velocityY) {
                 INT_MIN, INT_MAX, // y
                 0, 0); // overscroll
         mLastScrollerY = getScrollY();
-	LOGV("mLastScrollerY=%d",mLastScrollerY);
+        LOGV("mLastScrollerY=%d",mLastScrollerY);
         this->postInvalidateOnAnimation();
     }
 }
