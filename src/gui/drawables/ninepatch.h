@@ -25,7 +25,7 @@ public:
     NinePatch(Cairo::RefPtr<Cairo::ImageSurface> image);
     NinePatch(cdroid::Context*ctx,const std::string&resid);
     ~NinePatch();
-    void draw(Canvas& painter, int x, int y,float alpha);
+    void draw(Canvas& painter, int x, int y,float alpha=1.f);
     void drawScaledPart(const Rect& oldRect,const Rect& newRect,Cairo::Context&painter);
     void drawConstPart (const Rect& oldRect,const Rect& newRect,Cairo::Context&painter);
     void setImageSize(int width, int height);
