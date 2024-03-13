@@ -127,25 +127,26 @@ int GFXInit() {
     if(isFBmemNotInAllocedMemRange){
         for(int i=0;i<MAX_HWSURFACE+1;i++){
             devSurfaces[i+1].kbuffer= preallocedMem+screenSize*i;
-			devSurfaces[i+1].buffer= preallocedVMem+screenSize*i;
+            devSurfaces[i+1].buffer= preallocedVMem+screenSize*i;
             devSurfaces[i+1].msize = screenSize;
         }
     }else{
-  	    LOGI("fbmem %x is in preallocted memory range(%llx,%llx)",devs[0].fix.smem_start,preallocedMem,preallocedMem+allocedSize);
-		MI_PHY pmem= preallocedMem;
-		void*vmem  = preallocedVMem;
+        LOGI("fbmem %x is in preallocted memory range(%llx,%llx)",devs[0].fix.smem_start,preallocedMem,preallocedMem+allocedSize);
+        MI_PHY pmem= preallocedMem;
+        void*vmem  = preallocedVMem;
         for(int i=0; pmem < preallocedMem +allocedSize;i++){
             devSurfaces[i].kbuffer = pmem;
             devSurfaces[i].msize = screenSize;
             devSurfaces[i].buffer= vmem;
-			const int isfbmem=(pmem!=devs[0].fix.smem_start);
-		    vmem+=isfbmem?displayScreenSize:screenSize;
-		    pmem+=isfbmem?displayScreenSize:screenSize;
-			LOGI("[%d]mem=%llx,%p",i,pmem,vmem);
+            const int isfbmem=(pmem!=devs[0].fix.smem_start);
+            vmem+=isfbmem?displayScreenSize:screenSize;
+            pmem+=isfbmem?displayScreenSize:screenSize;
+            LOGI("[%d]mem=%llx,%p",i,pmem,vmem);
         }
     }
     //devSurfaces[0].buffer=(char*)mmap( dev->fix.smem_start,dev->fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0 );
-	MI_SYS_Mmap(dev->fix.smem_start,dev->fix.smem_len, (void**)&devSurfaces[0].buffer, FALSE);
+    MI_SYS_Mmap(dev->fix.smem_start,dev->fix.smem_len, (void**)&devSurfaces[0].buffer, FALSE);
+    MI_SYS_MemsetPa(devSurfaces[0].kbuffer,0xFF000000,displayScreenSize);
     showLogo(&devSurfaces[0],"logo.dat");
     for(int i =0;devSurfaces[i].kbuffer;i++){
         LOGI("Surface[%d]buffer=%llx/%p %d",i,devSurfaces[i].kbuffer,devSurfaces[i].buffer,devSurfaces[i].msize);
