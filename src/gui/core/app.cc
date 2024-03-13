@@ -41,18 +41,16 @@ static CLA::Argument ARGS[]={
 
 App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions){
     int rotation;
-    std::string logo;
     LogParseModules(argc,argv);
-    Typeface::setContext(this);
     mQuitFlag = false;
     mExitCode = 0;
     mInst = this;
+    Typeface::setContext(this);
     cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
     cla.addArguments(extoptions.data(),extoptions.size());
     cla.setSwitchChars("-");
     cla.parse(argc,argv);
     rotation = (getArgAsInt("rotate",0)/90)%4;
-    logo = getArg("logo");
     onInit();
     setName(std::string(argc?argv[0]:__progname));
     LOGI("App [%s] started c++=%d",mName.c_str(),__cplusplus);
@@ -67,10 +65,10 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     Choreographer & chograph = Choreographer::getInstance();
     chograph.setFrameDelay(getArgAsInt("framedelay",chograph.getFrameDelay()));
     WindowManager::getInstance().setDisplayRotation(rotation);
+    GraphDevice::getInstance().setRotation(rotation).setLogo(getArg("logo")).showFPS(hasSwitch("fps")).init();
+    Typeface::loadPreinstalledSystemFontMap();
     setOpacity(getArgAsInt("alpha",255));
-    GraphDevice::getInstance().showFPS(hasSwitch("fps"));
-    if(!logo.empty())
-        GraphDevice::getInstance().showLogo(logo,rotation);
+    Typeface::loadFaceFromResource(this);
     DisplayMetrics::DENSITY_DEVICE = getArgAsInt("density",DisplayMetrics::getDeviceDensity());
     InputEventSource*inputsource=&InputEventSource::getInstance();//(getArg("record",""));
     addEventHandler(inputsource);

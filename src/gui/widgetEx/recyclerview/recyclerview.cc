@@ -6848,6 +6848,7 @@ RecyclerView::State& RecyclerView::State::reset() {
     mItemCount = 0;
     mStructureChanged = false;
     mIsMeasuring = false;
+    mInPreLayout = false;
     return *this;
 }
 

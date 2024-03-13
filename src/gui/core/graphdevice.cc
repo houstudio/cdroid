@@ -27,25 +27,59 @@ GraphDevice&GraphDevice::GraphDevice::getInstance(){
     return *mInst;
 }
 
-GraphDevice::GraphDevice(int fmt){
-    BYTE*buffer;
-    UINT pitch;
+GraphDevice::GraphDevice(){
+    mFormat = GPF_ARGB;
     mInst = this;
+    mRotation=0;
+}
+
+GraphDevice& GraphDevice::setFormat(int format){
+    mFormat = format<0?GPF_ARGB:format;
+    return *this;
+}
+
+GraphDevice& GraphDevice::setLogo(const std::string&logo){
+    mLogo = logo;
+    return *this;
+}
+
+GraphDevice & GraphDevice::setRotation(int rotation){
+    mRotation = rotation;
+    LOGD("");
+    return *this;
+}
+
+int GraphDevice::init(){
+    HANDLE logoSurface;
+    uint8_t*buffer,*logoBuffer;
+    uint32_t pitch;
     mPendingCompose = 0;
-    mFpsStartTime = mFpsPrevTime = 0;
     mFpsNumFrames = 0;
+    mFpsStartTime = mFpsPrevTime = 0;
+    Cairo::RefPtr<Cairo::ImageSurface> img= nullptr;
+    if(!mLogo.empty()){
+        std::ifstream fs(mLogo.c_str());
+	img = Cairo::ImageSurface::create_from_stream(fs);
+    }
     GFXInit();
+
     GFXGetDisplaySize(0,(UINT*)&mScreenWidth,(UINT*)&mScreenHeight);
-    mFormat = fmt < 0 ? GPF_ARGB : fmt;
     GFXCreateSurface(0,&mPrimarySurface,mScreenWidth,mScreenHeight,mFormat,1);
     GFXLockSurface(mPrimarySurface,(void**)&buffer,&pitch);
-    LOGD("PrimarySurface=%p size=%dx%d",mPrimarySurface,mScreenWidth,mScreenHeight);
+    LOGI("PrimarySurface=%p size=%dx%d buffer=%p",mPrimarySurface,mScreenWidth,mScreenHeight,buffer);
     RefPtr<Surface>surf = ImageSurface::create(buffer,Surface::Format::ARGB32,mScreenWidth,mScreenHeight,pitch);
     mPrimaryContext = new Canvas(surf);
     mRectBanner.set(0,0,400,40);
-    
-    mLastComposeTime = SystemClock::uptimeMillis();
 
+    GFXCreateSurface(0,&logoSurface,mScreenWidth,mScreenHeight,mFormat,0);
+    GFXLockSurface(logoSurface,(void**)&logoBuffer,&pitch);
+    RefPtr<Surface>logoSurf = ImageSurface::create(logoBuffer,Surface::Format::ARGB32,mScreenWidth,mScreenHeight,pitch);
+    RefPtr<Cairo::Context>logoContext=Cairo::Context::create(logoSurf);
+    showLogo(logoContext.get(),img);
+    GFXBlit(mPrimarySurface,0,0,logoSurface,nullptr);
+    GFXDestroySurface(logoSurface);
+
+    mLastComposeTime = SystemClock::uptimeMillis();
     mComposing = 0;
     mQuitFlag  = false;
     mShowFPS = false;
@@ -54,6 +88,7 @@ GraphDevice::GraphDevice(int fmt){
     std::thread t([this](){doCompose();});
     t.detach();
 #endif
+    return 0;
 }
 
 GraphDevice::~GraphDevice(){
@@ -65,33 +100,45 @@ GraphDevice::~GraphDevice(){
     LOGD("%p Destroied",this);
 }
 
-void GraphDevice::showLogo(const std::string&fileName,int rotation){
-    std::ifstream fs(fileName);
+void GraphDevice::showLogo(Cairo::Context*context,Cairo::RefPtr<Cairo::ImageSurface> img){
+    TextExtents te;
+    const std::string copyRight("Powered by cdroid.");
     Cairo::Matrix matrix = Cairo::identity_matrix();
-    auto img = Cairo::ImageSurface::create_from_stream(fs);
-    switch(rotation){
+    Rect rc={0,0,mScreenWidth,mScreenHeight};
+    switch(mRotation){
     case Display::ROTATION_0:break;
     case Display::ROTATION_90:
        matrix.rotate(-M_PI/2);
        matrix.translate(-mScreenHeight,0);
-       mPrimaryContext->transform(matrix);
+       context->transform(matrix);
+       rc.set(0,0,mScreenHeight,mScreenWidth);
        break;
     case Display::ROTATION_180:
        matrix.translate(mScreenWidth,mScreenHeight);
        matrix.scale(-1,-1);
-       mPrimaryContext->transform(matrix);
+       context->transform(matrix);
        break;
     case Display::ROTATION_270:
        matrix.translate(mScreenWidth,0);
        matrix.rotate(M_PI/2);
-       mPrimaryContext->transform(matrix);
+       context->transform(matrix);
+       rc.set(0,0,mScreenHeight,mScreenWidth);
        break;
     }
-    if(img==nullptr)return;
-    mPrimaryContext->set_source(img,0,0);
-    mPrimaryContext->paint();
-    LOG(DEBUG)<<fileName<<" rotation="<<rotation;
-    GFXFlip(mPrimarySurface);
+    if(img){
+        context->set_source(img,0,0);
+        context->paint();
+    }
+    context->set_font_size(20);
+    context->get_text_extents(copyRight,te);
+    auto pat= Cairo::LinearGradient::create(rc.width-te.x_advance,0,rc.width,0);
+    pat->add_color_stop_rgb(0, .1, .05, 0.05);   // 黄色
+    pat->add_color_stop_rgb(0.618, 1.0, 1.0, 1.); // 橙色
+    pat->add_color_stop_rgb(1, .1, .1, .1); 
+    context->set_source(pat);
+    context->move_to(rc.width-te.x_advance-32,rc.height-10);
+    context->show_text(copyRight);
+    context->fill();
 }
 
 HANDLE GraphDevice::getPrimarySurface()const{
@@ -158,8 +205,9 @@ Canvas*GraphDevice::getPrimaryContext(){
     return mPrimaryContext;
 }
 
-void GraphDevice::showFPS(bool value){
-    mShowFPS=value;
+GraphDevice& GraphDevice::showFPS(bool value){
+    mShowFPS = value;
+    return *this;
 }
 
 void GraphDevice::doCompose(){

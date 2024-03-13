@@ -1372,7 +1372,7 @@ void NumberPicker::ensureCachedScrollSelectorValue(int selectorIndex) {
 
     if (cache.size()&&(itr != cache.end())) return;
 
-    if (selectorIndex < mMinValue || selectorIndex > mMaxValue) {
+    if ((selectorIndex < mMinValue)||(selectorIndex > mMaxValue)||(mMinValue==mMaxValue)) {
         scrollSelectorValue = "";
     } else {
         if (mDisplayedValues.size()){

@@ -63,16 +63,29 @@ void GFXSuspend(){
     printf("suspend end,we are wake up now. sysinit=%d,gfxopen=%d\r\nd",ret1,ret2);
 }
 
+static void showLogo(const FBSURFACE*fb,const char*fileName){
+    #define __tmin__(a,b) ((a)>(b)?(b):(a))
+    if (access(fileName, F_OK) == 0) {            
+        size_t rlen, tlen = 0;
+        size_t blen = fb->msize;
+        FILE *fo  = fopen(fileName, "rb");
+        while (tlen < blen && (rlen = fread(fb->buffer + tlen, 1, __tmin__(blen - tlen, 4096), fo)) > 0) {
+            tlen += rlen;
+        }
+        fclose(fo);
+        LOGI("Logo buf=%p blen=%u tlen=%u", fb->buffer, blen, tlen);
+    }
+}
 int GFXInit() {
     int ret;
     FBDEVICE*dev=&devs[0];
     if(dev->fb>=0)return E_OK;
     memset(devs,0,sizeof(devs));
-    ret=MI_SYS_Init();
+    ret = MI_SYS_Init();
     LOGI("SYS_Init=%d",ret);
-    ret=MI_GFX_Open();
+    ret = MI_GFX_Open();
     LOGI("MI_GFX_Open=%d",ret);
-    devs[0].fb=open("/dev/fb0", O_RDWR);
+    devs[0].fb = open("/dev/fb0", O_RDWR);
     // Get fixed screen information
     if(ioctl(dev->fb, FBIOGET_FSCREENINFO, &dev->fix) == -1) {
         LOGE("Error reading fixed information fd=%d",dev->fb);
@@ -99,70 +112,47 @@ int GFXInit() {
     MI_PHY preallocedMem;
     void* preallocedVMem;
     ret = MI_SYS_MMA_Alloc("mma_heap_name0",allocedSize,&preallocedMem);
-    int index = 1;
-    devSurfaces[0].kbuffer = devs[0].fix.smem_start;
+
     MI_SYS_Mmap(preallocedMem,allocedSize, (void**)&preallocedVMem, FALSE);
+    devSurfaces[0].kbuffer= devs[0].fix.smem_start;
 #if defined(DOUBLE_BUFFER)&&DOUBLE_BUFFER
     devSurfaces[0].msize = dev->fix.smem_len;
 #else
     devSurfaces[0].msize = displayScreenSize;
 #endif
-    if((devs[0].fix.smem_start+displayScreenSize<preallocedMem)||(devs[0].fix.smem_start>preallocedMem+allocedSize)){
-        LOGD("fbmem %x,%x is not in prealocted memory's range",devs[0].fix.smem_start,devs[0].fix.smem_start+displayScreenSize);
+    const int isFBmemNotInAllocedMemRange =(devs[0].fix.smem_start+displayScreenSize<preallocedMem)
+         ||(devs[0].fix.smem_start>preallocedMem+allocedSize);
+    LOGI("fbmem %x is %s in prealocted memory's range(%llx,%llx)",devs[0].fix.smem_start,
+	     (isFBmemNotInAllocedMemRange?"not":""),preallocedMem,preallocedMem+allocedSize);
+    if(isFBmemNotInAllocedMemRange){
         for(int i=0;i<MAX_HWSURFACE+1;i++){
             devSurfaces[i+1].kbuffer= preallocedMem+screenSize*i;
+			devSurfaces[i+1].buffer= preallocedVMem+screenSize*i;
             devSurfaces[i+1].msize = screenSize;
-            index++;
         }
     }else{
-        for(size_t mem = devs[0].fix.smem_start ; mem - screenSize > preallocedMem ; mem -= screenSize){
-            devSurfaces[index].kbuffer = mem;
-            devSurfaces[index].msize = screenSize;
-            index ++;
-        }
-        for(size_t mem = devs[0].fix.smem_start + displayScreenSize ; mem < preallocedMem+ allocedSize; mem += screenSize){
-            devSurfaces[index].kbuffer = mem;
-            devSurfaces[index].msize = screenSize;
-            index ++;
+  	    LOGI("fbmem %x is in preallocted memory range(%llx,%llx)",devs[0].fix.smem_start,preallocedMem,preallocedMem+allocedSize);
+		MI_PHY pmem= preallocedMem;
+		void*vmem  = preallocedVMem;
+        for(int i=0; pmem < preallocedMem +allocedSize;i++){
+            devSurfaces[i].kbuffer = pmem;
+            devSurfaces[i].msize = screenSize;
+            devSurfaces[i].buffer= vmem;
+			const int isfbmem=(pmem!=devs[0].fix.smem_start);
+		    vmem+=isfbmem?displayScreenSize:screenSize;
+		    pmem+=isfbmem?displayScreenSize:screenSize;
+			LOGI("[%d]mem=%llx,%p",i,pmem,vmem);
         }
     }
-
-    LOGI("%d surfaces is configured for app mem=%llx size=%lu screensize=%d/%d***",index,preallocedMem,allocedSize,displayScreenSize,screenSize);
-    for(int i =1,offset=0;i<index;i++){
-        MI_PHY phySrcBufAddr = devSurfaces[i].kbuffer;
-        devSurfaces[i].buffer= preallocedVMem + offset;
-        offset += devSurfaces[i].msize;
-        //MI_SYS_Mmap(phySrcBufAddr,devSurfaces[i].msize, (void**)&devSurfaces[i].buffer, FALSE);
-        if (i == 0 && access("logo.dat", F_OK) == 0) {            
-            size_t rlen, tlen = 0;
-            char *buf         = devSurfaces[i].buffer;
-            size_t blen       = devSurfaces[i].msize;
-            FILE *fo          = fopen("logo.dat", "rb");
-#define __tmin__(a,b) ((a)>(b)?(b):(a))
-            while (tlen < blen && (rlen = fread(buf + tlen, 1, __tmin__(blen - tlen, 4096), fo)) > 0) {
-                tlen += rlen;
-            }
-            fclose(fo);
-            LOGI("Logo buf=%p blen=%u tlen=%u", buf, blen, tlen);
-        }
-        LOGI("Surface[%d]buffer=%llx/%p %d",i,phySrcBufAddr,devSurfaces[i].buffer,devSurfaces[i].msize);
+    //devSurfaces[0].buffer=(char*)mmap( dev->fix.smem_start,dev->fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0 );
+	MI_SYS_Mmap(dev->fix.smem_start,dev->fix.smem_len, (void**)&devSurfaces[0].buffer, FALSE);
+    showLogo(&devSurfaces[0],"logo.dat");
+    for(int i =0;devSurfaces[i].kbuffer;i++){
+        LOGI("Surface[%d]buffer=%llx/%p %d",i,devSurfaces[i].kbuffer,devSurfaces[i].buffer,devSurfaces[i].msize);
     }
 #if defined(DOUBLE_BUFFER)&&DOUBLE_BUFFER
     MI_SYS_MemcpyPa(devSurfaces[0].kbuffer+screenSize,devSurfaces[0].kbuffer,screenSize);
 #endif
-#if 0/*double buffer swap test*/
-    for(int i=0;i<1000;i++){
-        unsigned int colors[]={0xFFFF0000,0xFF00FF00,0xFF0000FF,0xFFFFFF00,0xFF00FFFF,0xFFFFFFFF};
-        FBSURFACE*fbs = &devSurfaces[0];
-        int ret1=ioctl(dev->fb, FBIO_WAITFORVSYNC, NULL);
-        dev->var.yoffset = (i%2)*dev->var.yres;
-        MI_SYS_MemsetPa(fbs->kbuffer+displayScreenSize*(i%2?0:1),colors[i%6],(displayScreenSize));
-        int ret2=ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var);
-        LOGD("ioctl ret=%d,%d",ret1,ret2);
-        usleep(16000);
-    }
-#endif
-    LOGI("%d surfaces is configured for app usage",index);
     return E_OK;
 }
 
@@ -353,7 +343,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
             memset(surf->buffer,0,surf->msize);
         }
     }
-    if(surf->kbuffer && !hwsurface) MI_SYS_MemsetPa(surf->kbuffer,0xFF000000,surf->msize);
+    if(surf->kbuffer) MI_SYS_MemsetPa(surf->kbuffer,0xFF000000,surf->msize);
     surf->orig_buffer=surf->buffer;
     if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;
@@ -411,14 +401,11 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     opt.stClipRect.s32Ypos = dy+screenMargin.y*(ndst->ishw?1:0);
     opt.stClipRect.u32Width= rs.w;
     opt.stClipRect.u32Height=rs.h;
-    if(nsrc->alpha!=255){
+    /*if(nsrc->alpha!=255){
         opt.u32GlobalSrcConstColor = 0x00FFFFFF|(0xa0<<24);//(nsrc->alpha<<24);
-
         opt.u32GlobalDstConstColor = 0xFFFFFFFF;
-
         opt.eSrcDfbBldOp  = E_MI_GFX_DFB_BLD_ONE;// 透叠
         opt.eDstDfbBldOp  = E_MI_GFX_DFB_BLD_INVSRCALPHA;
-
         opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_COLORALPHA
 	          | E_MI_GFX_DFB_BLEND_ALPHACHANNEL
               | E_MI_GFX_DFB_BLEND_SRC_PREMULTIPLY;
@@ -428,7 +415,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
         opt.eSrcDfbBldOp  = E_MI_GFX_DFB_BLD_ONE;  // 透叠
         //opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_COLORALPHA;E_MI_GFX_DFB_BLEND_COLORIZE
         opt.eDFBBlendFlag = E_MI_GFX_DFB_BLEND_SRC_PREMULTIPLY;
-    }
+    }*/
     opt.eMirror = E_MI_GFX_MIRROR_NONE;
     opt.eRotate = E_MI_GFX_ROTATE_0;
 

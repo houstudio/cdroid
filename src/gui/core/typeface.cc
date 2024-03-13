@@ -277,29 +277,7 @@ void Typeface::loadPreinstalledSystemFontMap() {
         return;
     loadFromFontConfig();
     //loadFromPath("");
-    loadFaceFromResource(mContext);
-    auto it=sSystemFontMap.find(DEFAULT_FAMILY);
-    /*mFallbackFamilyName="lianchuang3gold:font/Arial-Regular";
-    if (it!=sSystemFontMap.end()) {
-        setDefault(it->second);
-    }else if(!mFallbackFamilyName.empty()){
-        it = sSystemFontMap.find(mFallbackFamilyName);
-        if(it!=sSystemFontMap.end())setDefault(it->second);
-        else for(it=sSystemFontMap.begin();it!=sSystemFontMap.end();it++){//find(mFallbackFamilyName);
-                 if(it->second->mFamily.compare(mFallbackFamilyName)==0&&it->second->mStyle==SYSLANG_MATCHED){
-		            setDefault(it->second);
-		           break;
-             }
-        }
-    }else{
-        for(auto it= sSystemFontMap.begin(); it!= sSystemFontMap.end(); it++) {
-            Typeface*tf=it->second;
-            if(tf->mStyle==(NORMAL|SYSLANG_MATCHED)){
-                sDefaultTypeface = tf;
-                break;
-            }
-        }
-    }*/
+    //loadFaceFromResource(mContext);
     
     DEFAULT      = create("", NORMAL);
     DEFAULT_BOLD = create("", BOLD);
@@ -518,6 +496,7 @@ int Typeface::loadFaceFromResource(cdroid::Context*context) {
         sSystemFontMap.insert({typeface->getFamily(),typeface});
 #endif
     }
+    LOGI("%d font loaded from resource",fonts.size());
     return fonts.size();
 }
 

@@ -9,6 +9,8 @@
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/Xrender.h>
+#include <X11/extensions/XShm.h>
+#include <sys/ipc.h>
 #include <pthread.h>
 #include <string.h>
 #include <core/eventcodes.h>
@@ -16,18 +18,22 @@
 
 static Display*x11Display=NULL;
 static Window x11Window=0;
-static Picture picture;
-static Visual* x11Visual;
+static Visual *x11Visual=NULL;
 static Atom WM_DELETE_WINDOW;
+static XShmSegmentInfo shminfo;
 static GC mainGC=0;
 static XImage*mainSurface=NULL;
 static void* X11EventProc(void*p);
 static GFXRect screenMargin= {0}; //{60,0,60,0};
 
 #define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
+#if 1
 #define SENDMOUSE(time,x,y)  {InjectABS(time,EV_ABS,0,x);\
-            InjectABS(time,EV_ABS,1,y);InjectABS(time,EV_SYN,SYN_REPORT,0);}
-
+      InjectABS(time,EV_ABS,1,y);InjectABS(time,EV_SYN,SYN_REPORT,0);}
+#else
+#define SENDMOUSE(time,x,y)  {InjectREL(time,EV_REL,0,x);\
+      InjectREL(time,EV_REL,1,y);InjectREL(time,EV_SYN,SYN_REPORT,0);}
+#endif
 static void InjectKey(int type,int code,int value) {
     INPUTEVENT i= {0};
     struct timespec ts;
@@ -52,6 +58,18 @@ static void InjectABS(ULONG time,int type,int axis,int value) {
     i.device=INJECTDEV_TOUCH;
     InputInjectEvents(&i,1,1);
 }
+static void InjectREL(ULONG time,int type,int axis,int value) {
+    INPUTEVENT i= {0};
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC,&ts);
+    i.tv_sec=ts.tv_sec;
+    i.tv_usec=ts.tv_nsec/1000;
+    i.type=type;
+    i.code=axis;
+    i.value=value;
+    i.device=INJECTDEV_MOUSE;
+    InputInjectEvents(&i,1,1);
+}
 static void onExit() {
     LOGD("X11 Graph shutdown!");
     if(x11Display) {
@@ -71,30 +89,28 @@ INT GFXInit() {
         XGCValues values;
         XSizeHints sizehints;
         int width,height;
-        int screen= DefaultScreen(x11Display);
-	x11Visual=DefaultVisual(x11Display, screen);
+        int screen=DefaultScreen(x11Display);
+        x11Visual = DefaultVisual(x11Display, screen);
         GFXGetDisplaySize(0,&width,&height);
         width += screenMargin.x + screenMargin.w;
         height+= screenMargin.y + screenMargin.h;
         x11Window=XCreateSimpleWindow(x11Display, RootWindow(x11Display, screen), 0, 0,width,height,
                                       1, BlackPixel(x11Display, screen), WhitePixel(x11Display, screen));
-
-        LOGI("x11Display init =%p screenSize=%dx%d",x11Display,width,height);
-#if 1
-	XRenderPictureAttributes pict_attrs;
-        XRenderPictFormat* pict_format = XRenderFindVisualFormat(x11Display, x11Visual);
-        pict_attrs.poly_edge = PolyEdgeSmooth;
-        pict_attrs.poly_mode = PolyModeImprecise;
-
-        picture = XRenderCreatePicture(x11Display, x11Window, pict_format, CPPolyEdge | CPPolyMode, &pict_attrs);
-#endif
-	sizehints.flags = PMinSize | PMaxSize;
+#if 0
+        sizehints.flags = PMinSize | PMaxSize;
         sizehints.min_width = width;
         sizehints.max_width = width;
         sizehints.min_height = height;
         sizehints.max_height = height;
         XSetWMNormalHints(x11Display,x11Window,&sizehints);
 
+        XRenderPictFormat* pictFormat = XRenderFindVisualFormat(x11Display, x11Visual);
+        Picture picture = XRenderCreatePicture(x11Display, x11Window, pictFormat, 0, NULL);
+        shminfo.shmid = shmget(IPC_PRIVATE, width*height*4, IPC_CREAT | 0666);
+        shminfo.shmaddr = shmat(shminfo.shmid, 0, 0);
+        shminfo.readOnly = False;
+        XShmAttach(x11Display, &shminfo);
+#endif
         WM_DELETE_WINDOW = XInternAtom(x11Display, "WM_DELETE_WINDOW", False);
         XSetWMProtocols(x11Display,x11Window, &WM_DELETE_WINDOW, 1);
         mainGC = XCreateGC(x11Display,x11Window,0, &values);
@@ -162,10 +178,7 @@ static void  X11Expose(int x,int y,int w,int h) {
     e.height=h;
     e.count=1;
     if(x11Display&&mainSurface) {
-        //XRenderSetPictureTransform(x11Display, picture, NULL);
-	//XRenderComposite(x11Display, PictOpSrc, picture, None, picture, 0, 0, 0, 0, 0, 0,1280,720);// width, height);
         XPutImage(x11Display,x11Window,mainGC,mainSurface,x,y,x,y,w,h);
-	XFlush(x11Display);
         //XSendEvent(x11Display,x11Window,False,0,(XEvent*)&e);
         //XPutBackEvent(x11Display,(XEvent*)&e);
     }

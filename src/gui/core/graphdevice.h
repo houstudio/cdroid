@@ -19,6 +19,7 @@ private:
     int mComposing;
     int mPendingCompose;
     int mLastViewCount;
+    int mRotation;
     bool mQuitFlag;
     bool mShowFPS;
     uint64_t mLastComposeTime;
@@ -29,18 +30,24 @@ private:
     std::mutex mMutex;
     std::condition_variable mCV;
     std::string mFPSText;
+    std::string mLogo;
     HANDLE mPrimarySurface;
     class Canvas*mPrimaryContext;
     static GraphDevice*mInst;
-    GraphDevice(int format=-1);
+    GraphDevice();
     void trackFPS(Canvas&);
     void doCompose();
     void computeVisibleRegion(std::vector<class Window*>&windows,std::vector<Cairo::RefPtr<Cairo::Region>>&regions);
     void rotateRectInWindow(const Rect&rcw,const Rect&rs,Rect&rd,int&dx,int&dy,int rotation);
+    void showLogo(Cairo::Context*,Cairo::RefPtr<Cairo::ImageSurface>);
 public:
     static GraphDevice&getInstance();
     ~GraphDevice();
-    void showLogo(const std::string&,int rotation=0);
+    GraphDevice& setFormat(int format);
+    GraphDevice& setLogo(const std::string&);
+    GraphDevice& setRotation(int rotation);
+    GraphDevice& showFPS(bool);
+    int init();
     void getScreenSize(int &w,int&h)const;
     int getScreenWidth()const;
     int getScreenHeight()const;
@@ -51,7 +58,6 @@ public:
     void composeSurfaces();
     bool needCompose()const;
     Canvas*getPrimaryContext();
-    void showFPS(bool);
     void invalidate(const Rect&);
     HANDLE getPrimarySurface()const;
 };
