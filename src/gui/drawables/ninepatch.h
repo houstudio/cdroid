@@ -11,6 +11,7 @@ private:
     Rect mContentArea;
     Rect mPadding;
     int mOpacity;
+    float mAlpha;
     std::vector<std::pair< int, int >>mResizeDistancesY;
     std::vector<std::pair< int, int >>mResizeDistancesX;
     Cairo::RefPtr<Cairo::ImageSurface> mCachedImage;
@@ -20,12 +21,13 @@ private:
     Rect getContentArea();
     void getResizeArea();
     void getFactor(int width, int height, double& factorX, double& factorY);
-    void updateCachedImage(int width, int height);
+    void updateCachedImage(int width, int height,Cairo::Context*);
 public:
     NinePatch(Cairo::RefPtr<Cairo::ImageSurface> image);
     NinePatch(cdroid::Context*ctx,const std::string&resid);
     ~NinePatch();
     void draw(Canvas& painter, int x, int y,float alpha=1.f);
+    void draw(Canvas& painter, const Rect&,float alpha=1.f);
     void drawScaledPart(const Rect& oldRect,const Rect& newRect,Cairo::Context&painter);
     void drawConstPart (const Rect& oldRect,const Rect& newRect,Cairo::Context&painter);
     void setImageSize(int width, int height);

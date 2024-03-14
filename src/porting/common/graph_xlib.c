@@ -8,8 +8,6 @@
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
-#include <X11/extensions/Xrender.h>
-#include <X11/extensions/XShm.h>
 #include <sys/ipc.h>
 #include <pthread.h>
 #include <string.h>
@@ -20,7 +18,6 @@ static Display*x11Display=NULL;
 static Window x11Window=0;
 static Visual *x11Visual=NULL;
 static Atom WM_DELETE_WINDOW;
-static XShmSegmentInfo shminfo;
 static GC mainGC=0;
 static XImage*mainSurface=NULL;
 static void* X11EventProc(void*p);

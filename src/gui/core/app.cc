@@ -153,8 +153,11 @@ std::string App::getParam(int idx,const std::string&def)const{
     return value;
 }
 void App::setOpacity(unsigned char alpha){
-    GFXSurfaceSetOpacity(GraphDevice::getInstance().getPrimarySurface(),alpha);
-    LOGD("alpha=%d",alpha);
+    auto primarySurface = GraphDevice::getInstance().getPrimarySurface();
+    if(primarySurface){
+        GFXSurfaceSetOpacity(primarySurface,alpha);
+        LOGD("alpha=%d",alpha);
+    }
 }
 
 void App::addEventHandler(const EventHandler*handler){

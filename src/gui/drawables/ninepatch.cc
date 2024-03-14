@@ -45,14 +45,52 @@ void NinePatch::draw(Canvas& painter, int  x, int  y,float alpha) {
     painter.save();
     painter.translate(x,y);
     if(mOpacity ==INT_MAX){
-        mOpacity = BitmapDrawable::computeTransparency(mCachedImage);
+        mOpacity = BitmapDrawable::computeTransparency(mImage);
     }
+    mAlpha = alpha;
     const Cairo::SurfacePattern::Filter filterMode = (angle_degrees%90==0)&&(mOpacity==PixelFormat::OPAQUE)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
     painter.set_source(mCachedImage,0,0);
     painter.rectangle(0,0,mCachedImage->get_width(),mCachedImage->get_height());
     painter.clip();
     painter.paint();
     painter.restore();
+}
+
+void NinePatch::draw(Canvas& painter, const Rect&rect,float alpha){
+    const int angle_degrees = getRotateAngle(painter);
+    int resizeWidth = 0,resizeHeight = 0;
+    const int width = rect.width;
+    const int height= rect.height;
+    std::ostringstream oss;
+    painter.save();
+    painter.translate(rect.left,rect.top);
+    if(mOpacity ==INT_MAX){
+        mOpacity = BitmapDrawable::computeTransparency(mImage);
+    }
+    mAlpha = alpha;
+    const Cairo::SurfacePattern::Filter filterMode = (angle_degrees%90==0)&&(mOpacity==PixelFormat::OPAQUE)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
+    for (int i = 0; i < mResizeDistancesX.size(); i++) {
+        resizeWidth += mResizeDistancesX[i].second;
+    }
+    for (int i = 0; i < mResizeDistancesY.size(); i++) {
+        resizeHeight += mResizeDistancesY[i].second;
+    }
+
+    if (width < (mImage->get_width() - 2 - resizeWidth) && height < (mImage->get_height() - 2 - resizeHeight)) {
+        oss<<"IncorrectWidth("<<width<<") must>="<<mImage->get_width()<<"(image.width)-2-"<<resizeWidth<<"(resizeWidth) && incorrectHeight("
+                <<height<<")>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight))";
+    }
+    if (width < (mImage->get_width() - 2 - resizeWidth)) {
+        oss<<"IncorrectWidth("<<width<<"must>="<<mImage->get_width()<<"image.width)-2-"<<resizeWidth<<"(resizeWidth)";
+    }
+    if (height < (mImage->get_height() - 2 - resizeHeight)) {
+        oss<<"IncorrectHeight("<<height<<"must>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight)";
+    }
+    const bool hasErrors = (oss.str().empty()==false);
+    LOGE_IF(hasErrors,"%s",oss.str());
+    mWidth = rect.width;
+    mHeight= rect.height;
+    updateCachedImage(mWidth,mHeight,&painter);
 }
 
 void NinePatch::setImageSize(int width, int height) {
@@ -78,10 +116,11 @@ void NinePatch::setImageSize(int width, int height) {
     }
     if(oss.str().empty()==false)
         LOG(ERROR)<<oss.str();
+    LOGD("%p %dx%d->%dx%d",this,mWidth,mHeight,width,height);
     if (width != mWidth || height != mHeight) {
         mWidth = width;
         mHeight = height;
-        updateCachedImage(width, height);
+        updateCachedImage(width, height,nullptr);
     }
 }
 
@@ -112,7 +151,7 @@ void NinePatch::drawScaledPart(const Rect& oldRect, const Rect& newRect,Cairo::C
 	/*default filtertype:Good cannot be use here*/
 	Cairo::RefPtr<SurfacePattern>spat = painter.get_source_for_surface();
 	if(spat)spat->set_filter(SurfacePattern::Filter::NEAREST);
-	painter.paint_with_alpha(1.0f);
+	painter.paint_with_alpha(mAlpha);
 	painter.restore();
     }
 }
@@ -124,7 +163,7 @@ void NinePatch::drawConstPart(const Rect& oldRect, const Rect& newRect,Cairo::Co
     painter.set_source(mImage,newRect.left-oldRect.left,newRect.top-oldRect.top);
     Cairo::RefPtr<SurfacePattern>spat = painter.get_source_for_surface();
     if(spat)spat->set_filter(SurfacePattern::Filter::FAST);
-    painter.paint_with_alpha(1.f);
+    painter.paint_with_alpha(mAlpha);
     painter.restore();
 }
 
@@ -219,22 +258,25 @@ void NinePatch::getFactor(int width, int height, double& factorX, double& factor
     factorY = (double)leftResize / factorY;
 }
 
-void NinePatch::updateCachedImage(int width, int height) {
+void NinePatch::updateCachedImage(int width, int height,Cairo::Context*painterIn) {
     double lostX  = 0.f, lostY  = 0.f;
     double factorX= 0.f, factorY= 0.f;
     int x1 = 0 , y1 = 0; //for image parts X/Y
     int widthResize,heightResize; //width/height for image parts
     int resizeX = 0 , resizeY = 0;
     int offsetX = 0 , offsetY = 0;
-
-    mCachedImage =  ImageSurface::create(Surface::Format::ARGB32,width,height);
-    RefPtr<Cairo::Context> ppainter=Cairo::Context::create(mCachedImage);
+    
+    RefPtr<Cairo::Context> imgPainter;
+    Cairo::Context*ppainter = painterIn;
+    if(painterIn==nullptr){
+        mCachedImage =  ImageSurface::create(Surface::Format::ARGB32,width,height);
+        imgPainter=Cairo::Context::create(mCachedImage);
+        imgPainter->set_operator(Cairo::Context::Operator::CLEAR);
+        imgPainter->rectangle(0,0,width,height);
+        imgPainter->fill();
+	ppainter=imgPainter.get();
+    }
     Cairo::Context&painter=*ppainter;
-    painter.save();
-    painter.set_operator(Cairo::Context::Operator::CLEAR);
-    painter.rectangle(0,0,width,height);
-    painter.fill();
-    painter.restore();
     getFactor(width, height, factorX, factorY);
     for (int  i = 0; i < mResizeDistancesX.size(); i++) {
         y1 = 0;
