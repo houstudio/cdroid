@@ -399,7 +399,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
 	   {"balanced",(int)Layout::BREAK_STRATEGY_BALANCED},
 	   {"high_quality",(int)Layout::BREAK_STRATEGY_HIGH_QUALITY},
         },Layout::BREAK_STRATEGY_SIMPLE);
-    setBreakStrategy(breakStrategy+1);
+    setBreakStrategy(breakStrategy);
 
     TextAppearanceAttributes attributes;
     const std::string appearance = attrs.getString("textAppearance");
