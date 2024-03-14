@@ -394,6 +394,12 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
 
     setLineSpacing( attrs.getDimensionPixelSize("lineSpacingExtra",0),
              attrs.getFloat("lineSpacingMultiplier",1.f) );
+    const int breakStrategy = attrs.getInt("breakStrategy",std::map<const std::string,int>{
+           {"simple"  ,(int)Layout::BREAK_STRATEGY_SIMPLE},
+	   {"balanced",(int)Layout::BREAK_STRATEGY_BALANCED},
+	   {"high_quality",(int)Layout::BREAK_STRATEGY_HIGH_QUALITY},
+        },Layout::BREAK_STRATEGY_SIMPLE);
+    setBreakStrategy(breakStrategy+1);
 
     TextAppearanceAttributes attributes;
     const std::string appearance = attrs.getString("textAppearance");
