@@ -20,7 +20,7 @@ private:
         int mGravity;
         int mTransparency;
         bool mAutoMirrored;
-	bool mAntiAlias;
+        bool mAntiAlias;
         int mChangingConfigurations;
         std::vector<int>mThemeAttrs;
         const ColorStateList* mTint;

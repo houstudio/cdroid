@@ -116,7 +116,7 @@ void NinePatch::setImageSize(int width, int height) {
     }
     if(oss.str().empty()==false)
         LOG(ERROR)<<oss.str();
-    LOGD("%p %dx%d->%dx%d",this,mWidth,mHeight,width,height);
+    LOGV("%p %dx%d->%dx%d",this,mWidth,mHeight,width,height);
     if (width != mWidth || height != mHeight) {
         mWidth = width;
         mHeight = height;
@@ -274,7 +274,7 @@ void NinePatch::updateCachedImage(int width, int height,Cairo::Context*painterIn
         imgPainter->set_operator(Cairo::Context::Operator::CLEAR);
         imgPainter->rectangle(0,0,width,height);
         imgPainter->fill();
-	ppainter=imgPainter.get();
+        ppainter=imgPainter.get();
     }
     Cairo::Context&painter=*ppainter;
     getFactor(width, height, factorX, factorY);

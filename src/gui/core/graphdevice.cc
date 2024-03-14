@@ -132,8 +132,8 @@ void GraphDevice::showLogo(Cairo::Context*context,Cairo::RefPtr<Cairo::ImageSurf
     context->set_font_size(20);
     context->get_text_extents(copyRight,te);
     auto pat= Cairo::LinearGradient::create(rc.width-te.x_advance*1.2,0,rc.width,0);
-    pat->add_color_stop_rgb(0, .2, .2, 0);   // 黄色
-    pat->add_color_stop_rgb(0.618, 1.0, 1.0, 1.); // 橙色
+    pat->add_color_stop_rgb(0, .2, .2, 0); //yellow
+    pat->add_color_stop_rgb(0.618, 1.0, 1.0, 1.);//orange
     pat->add_color_stop_rgb(1, .1, .1, .1); 
     context->set_source(pat);
     context->move_to(rc.width-te.x_advance-32,rc.height-10);

@@ -4,10 +4,10 @@ static const char*texts[]={"Creates 中国智造"," the specified format and dim
             "Initially the surface contents"," are set to 0.","(Specifically, within each pixel,",
             " each color or alpha channel","belonging to format will be 0.","The contents","of bits within a pixel,",
             " but not belonging","必须使用UTF8编码 " };
+static int id=0;
 class MWindow:public Window{
 private:
    int dx,dy;
-   static int id=0;
 public:
    MWindow(int x,int y,int w,int h):Window(x,y,w,h){dx=dy=50;
       mID=1000+id++;

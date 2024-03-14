@@ -12,6 +12,7 @@ AnimatedRotateDrawable::AnimatedRotateState::AnimatedRotateState(){
     mPivotXRel=mPivotYRel=false;
     mFrameDuration=150;
     mFramesCount=12;
+    mAntiAlias = false;
 }
 
 AnimatedRotateDrawable::AnimatedRotateState::AnimatedRotateState(const AnimatedRotateState& orig)
@@ -22,6 +23,7 @@ AnimatedRotateDrawable::AnimatedRotateState::AnimatedRotateState(const AnimatedR
     mPivotY = orig.mPivotY;
     mFramesCount = orig.mFramesCount;
     mFrameDuration = orig.mFrameDuration;
+    mAntiAlias = orig.mAntiAlias;
 }
 
 AnimatedRotateDrawable* AnimatedRotateDrawable::AnimatedRotateState::newDrawable(){
