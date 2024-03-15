@@ -6,13 +6,12 @@ PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs){
     init();
     mContext = context;
     //mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+    //final TypedArray a = context.obtainStyledAttributes(
+    //            attrs, R.styleable.PopupWindow, defStyleAttr, defStyleRes);
+    Drawable* bg = attrs.getDrawable("popupBackground");
+    mElevation = attrs.getFloat/*Dimension*/("popupElevation", 0);
+    mOverlapAnchor = attrs.getBoolean("overlapAnchor", false);
 #if 0 
-    final TypedArray a = context.obtainStyledAttributes(
-                attrs, R.styleable.PopupWindow, defStyleAttr, defStyleRes);
-    Drawable* bg = a.getDrawable(R.styleable.PopupWindow_popupBackground);
-    mElevation = a.getDimension(R.styleable.PopupWindow_popupElevation, 0);
-    mOverlapAnchor = a.getBoolean(R.styleable.PopupWindow_overlapAnchor, false);
-
     // Preserve default behavior from Gingerbread. If the animation is
     // undefined or explicitly specifies the Gingerbread animation style,
     // use a sentinel value.
@@ -27,9 +26,9 @@ PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs){
         mAnimationStyle = ANIMATION_STYLE_DEFAULT;
     }
 
-    final Transition enterTransition = getTransition(a.getResourceId(
+    Transition enterTransition = getTransition(a.getResourceId(
             R.styleable.PopupWindow_popupEnterTransition, 0));
-    final Transition exitTransition;
+    Transition exitTransition;
     if (a.hasValueOrEmpty(R.styleable.PopupWindow_popupExitTransition)) {
         exitTransition = getTransition(a.getResourceId(
                 R.styleable.PopupWindow_popupExitTransition, 0));
@@ -41,8 +40,8 @@ PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs){
 
     setEnterTransition(enterTransition);
     setExitTransition(exitTransition);
-    setBackgroundDrawable(bg);
 #endif
+    setBackgroundDrawable(bg);
 }
 
 PopupWindow::PopupWindow(View* contentView, int width, int height, bool focusable) {
@@ -69,17 +68,21 @@ void PopupWindow::init(){
     mIsShowing = false;
     mIsDropdown= false;
     mFocusable = true;
-    mTouchable = false;
+    mTouchable = true;
     mOutsideTouchable = false;
     mClippingEnabled  = true;
     mSplitTouchEnabled= -1;
+    mGravity = Gravity::NO_GRAVITY;
+    mInputMethodMode = INPUT_METHOD_FROM_FOCUSABLE;
     mIsTransitioningToDismiss = false;
     mAllowScrollingAnchorParent= true;
     mLayoutInsetDecor = false;
-    mAttachedInDecor  = false;
+    mAttachedInDecor  = true;
     mAttachedInDecorSet= false;
     mEpicenterBounds.set(0,0,0,0);
 
+    mWidth = LayoutParams::WRAP_CONTENT;
+    mHeight = LayoutParams::WRAP_CONTENT;
     mParentRootView = nullptr;
     mAnchor = nullptr;
     mAnchorRoot = nullptr;
@@ -88,7 +91,8 @@ void PopupWindow::init(){
     mAboveAnchorBackgroundDrawable = nullptr;
     mBelowAnchorBackgroundDrawable = nullptr;
 
-    mOnLayoutChangeListener=[this](View&v,int,int,int,int,int,int,int,int){
+    mOnScrollChangedListener= [this](){alignToAnchor();};
+    mOnLayoutChangeListener = [this](View&v,int,int,int,int,int,int,int,int){
         alignToAnchor();
     };
     mOnAnchorDetachedListener.onViewAttachedToWindow=[this](View&){ alignToAnchor();};
@@ -118,7 +122,7 @@ void PopupWindow::setBackgroundDrawable(Drawable* background) {
 
         // Now, for the below-anchor view, look for any other drawable specified in the
         // StateListDrawable which is not for the above-anchor state and use that.
-        int count = stateList->getStateCount();
+        const int count = stateList->getStateCount();
         int belowAnchorStateIndex = -1;
         for (int i = 0; i < count; i++) {
             if (i != aboveAnchorStateIndex) {
@@ -1060,8 +1064,8 @@ WindowManager::LayoutParams* PopupWindow::getDecorViewLayoutParams() {
 void PopupWindow::detachFromAnchor(){
     View* anchor = mAnchor;//getAnchor();
     if (anchor) {
-        //ViewTreeObserver vto = anchor.getViewTreeObserver();
-        //vto->removeOnScrollChangedListener(mOnScrollChangedListener);
+        ViewTreeObserver* vto = anchor->getViewTreeObserver();
+        vto->removeOnScrollChangedListener(mOnScrollChangedListener);
         anchor->removeOnAttachStateChangeListener(mOnAnchorDetachedListener);
     }
 
@@ -1079,10 +1083,10 @@ void PopupWindow::detachFromAnchor(){
 void PopupWindow::attachToAnchor(View* anchor, int xoff, int yoff, int gravity){
     detachFromAnchor();
 
-    /*ViewTreeObserver vto = anchor.getViewTreeObserver();
+    ViewTreeObserver* vto = anchor->getViewTreeObserver();
     if (vto) {
-        vto.addOnScrollChangedListener(mOnScrollChangedListener);
-    }*/
+        vto->addOnScrollChangedListener(mOnScrollChangedListener);
+    }
     anchor->addOnAttachStateChangeListener(mOnAnchorDetachedListener);
 
     View* anchorRoot = anchor->getRootView();
@@ -1163,6 +1167,6 @@ bool PopupWindow::PopupDecorView::onTouchEvent(MotionEvent& event){
 }
 
 PopupWindow::PopupBackgroundView::PopupBackgroundView(Context* context)
-:FrameLayout(context,AttributeSet()){
+:FrameLayout(context,AttributeSet(context,"")){
 }
 }

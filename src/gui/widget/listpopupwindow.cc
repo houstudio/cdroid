@@ -51,14 +51,14 @@ void ListPopupWindow::initPopupWindow(){
     mDropDownGravity= Gravity::NO_GRAVITY;
     mPromptPosition = POSITION_PROMPT_ABOVE;
     mHandler = new Handler();
-    mPopup =new PopupWindow(mContext,AttributeSet());
+    mPopup =new PopupWindow(mContext,AttributeSet(mContext,""));
     mHideSelector = [this](){
         clearListSelection();
     };
     mTouchInterceptor =[this](View& v, MotionEvent& event){
-        int action = event.getAction();
-        int x = (int) event.getX();
-        int y = (int) event.getY();
+        const int action = event.getAction();
+        const int x = (int) event.getX();
+        const int y = (int) event.getY();
         if (action == MotionEvent::ACTION_DOWN && mPopup && mPopup->isShowing() &&
             (x >= 0 && x < mPopup->getWidth() && y >= 0 && y < mPopup->getHeight())) {
                 mHandler->postDelayed(mResizePopupRunnable, EXPAND_LIST_TIMEOUT);

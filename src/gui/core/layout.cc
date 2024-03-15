@@ -536,7 +536,7 @@ void Layout::relayout(bool force){
             measureSize(word,extents);
             if(mText[i]==10)extents.x_advance=0;
             const int outofwidth=(total_width + extents.x_advance >mWidth);
-            if( (( (breaks[0]==WORDBREAK_BREAK) && ( outofwidth && (mBreakStrategy==0) ))||(linebreak==LINEBREAK_MUSTBREAK))){
+            if( (( (breaks[0]==WORDBREAK_BREAK) && ( outofwidth && mBreakStrategy ))||(linebreak==LINEBREAK_MUSTBREAK))){
                 pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount ++;

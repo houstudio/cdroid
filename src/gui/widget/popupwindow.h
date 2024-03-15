@@ -47,26 +47,26 @@ private:
 
     bool mFocusable;
     int mInputMethodMode = INPUT_METHOD_FROM_FOCUSABLE;
-    int mSoftInputMode ;//= WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED;
-    bool mTouchable = true;
-    bool mOutsideTouchable = false;
-    bool mClippingEnabled = true;
-    int mSplitTouchEnabled = -1;
+    int mSoftInputMode;//= WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED;
+    bool mTouchable;
+    bool mOutsideTouchable;
+    bool mClippingEnabled;
+    int mSplitTouchEnabled;
     bool mLayoutInScreen;
     bool mClipToScreen;
-    bool mAllowScrollingAnchorParent = true;
-    bool mLayoutInsetDecor = false;
+    bool mAllowScrollingAnchorParent;
+    bool mLayoutInsetDecor;
     bool mNotTouchModal;
-    bool mAttachedInDecor = true;
-    bool mAttachedInDecorSet = false;
+    bool mAttachedInDecor;
+    bool mAttachedInDecorSet;
 
     View::OnTouchListener mTouchInterceptor;
 
     int mWidthMode;
-    int mWidth = LayoutParams::WRAP_CONTENT;
+    int mWidth;
     int mLastWidth;
     int mHeightMode;
-    int mHeight = LayoutParams::WRAP_CONTENT;
+    int mHeight;
     int mLastHeight;
 
     float mElevation;
@@ -86,12 +86,12 @@ private:
     bool mIgnoreCheekPress = false;
 
     int mAnimationStyle = ANIMATION_STYLE_DEFAULT;
-    int mGravity = Gravity::NO_GRAVITY;
+    int mGravity;
     View* mAnchor;
     View* mAnchorRoot;
     View::OnAttachStateChangeListener mOnAnchorDetachedListener;
     View::OnAttachStateChangeListener mOnAnchorRootDetachedListener;
-    //View::OnScrollChangedListener mOnScrollChangedListener; 
+    ViewTreeObserver::OnScrollChangedListener mOnScrollChangedListener;
     View::OnLayoutChangeListener mOnLayoutChangeListener;
     bool mIsAnchorRootAttached;
     int mAnchorXoff;

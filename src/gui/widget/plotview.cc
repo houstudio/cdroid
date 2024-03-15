@@ -23,6 +23,8 @@
 //kf5plotting: https://invent.kde.org/frameworks/kplotting
 namespace cdroid{
 
+DECLARE_WIDGET(PlotView)
+
 class PlotView::Private
 {
 public:
