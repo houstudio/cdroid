@@ -3,7 +3,7 @@
 
 namespace cdroid{
 
-DropDownListView::DropDownListView(Context*context,bool hijackfocus):ListView(context,AttributeSet()){
+DropDownListView::DropDownListView(Context*context,bool hijackfocus):ListView(context,AttributeSet(context,"")){
     mScrollHelper = nullptr;
 }
 
@@ -25,7 +25,7 @@ bool DropDownListView::onTouchEvent(MotionEvent& ev){
 }
 
 bool DropDownListView::onHoverEvent(MotionEvent& ev){
-    int action = ev.getActionMasked();
+    const int action = ev.getActionMasked();
     if (action == MotionEvent::ACTION_HOVER_EXIT && mResolveHoverRunnable == nullptr) {
         // This may be transitioning to TOUCH_DOWN. Postpone drawable state
         // updates until either the next frame or the next touch event.

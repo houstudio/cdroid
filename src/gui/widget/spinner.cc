@@ -330,7 +330,7 @@ int Spinner::measureContentWidth(Adapter* adapter, Drawable* background){
 }
 
 bool Spinner::onTouchEvent(MotionEvent& event){
-    if (mForwardingListener && mForwardingListener->onTouch(this, event)) {
+    if (mForwardingListener && mForwardingListener->onTouch(*this, event)) {
         return true;
     }
     return AbsSpinner::onTouchEvent(event);
@@ -347,7 +347,7 @@ Spinner::DropdownPopup::DropdownPopup(Context*context,Spinner*sp)
     setOnItemClickListener([this](AdapterView& parent, View& v, int position, long id) {
          mSpinner->setSelection(position);
          if (mSpinner->mOnItemClickListener != nullptr) {
-             //mSpinner->performItemClick(v, position, mAdapter->getItemId(position));
+             mSpinner->performItemClick(v, position, mAdapter->getItemId(position));
          }
          dismiss();
     });

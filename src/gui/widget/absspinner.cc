@@ -120,7 +120,7 @@ void AbsSpinner::recycleAllViews() {
 void AbsSpinner::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int widthSize;
     int heightSize;
-    int widthMode = MeasureSpec::getMode(widthMeasureSpec);
+    const int widthMode = MeasureSpec::getMode(widthMeasureSpec);
 
     mSpinnerPadding.left = mPaddingLeft > mSelectionLeftPadding ? mPaddingLeft
             : mSelectionLeftPadding;
@@ -139,7 +139,7 @@ void AbsSpinner::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int preferredWidth = 0;
     bool needsMeasuring = true;
 
-    int selectedPosition = getSelectedItemPosition();
+    const int selectedPosition = getSelectedItemPosition();
     if (selectedPosition >= 0 && mAdapter != nullptr && selectedPosition < mAdapter->getCount()) {
         // Try looking in the recycler. (Maybe we were measured once already)
         View* view = mRecycler->get(selectedPosition);
@@ -214,7 +214,7 @@ View* AbsSpinner::getSelectedView() {
 }
 
 int AbsSpinner::pointToPosition(int x, int y) {
-    int count = getChildCount();
+    const int count = getChildCount();
     for (int i = count - 1; i >= 0; i--) {
         Rect frame;
         View* child = getChildAt(i);

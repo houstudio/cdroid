@@ -5,8 +5,12 @@ namespace cdroid{
 
 ForwardingListener::ForwardingListener(View* src){
     mSrc = src;
-    //src->setLongClickable(true);
-    //src->addOnAttachStateChangeListener(this);
+    mForwarding = false;
+    src->setLongClickable(true);
+    View::OnAttachStateChangeListener scl;
+    scl.onViewAttachedToWindow  = [this](View&v){onViewAttachedToWindow(v);};
+    scl.onViewDetachedFromWindow= [this](View&v){onViewDetachedFromWindow(v);};
+    src->addOnAttachStateChangeListener(scl);
 
     mScaledTouchSlop = ViewConfiguration::get(src->getContext()).getScaledTouchSlop();
     mTapTimeout = ViewConfiguration::getTapTimeout();
@@ -23,17 +27,16 @@ ForwardingListener::ForwardingListener(View* src){
     mLongPressTimeout = (mTapTimeout + ViewConfiguration::getLongPressTimeout()) / 2;
 }
 
-bool ForwardingListener::onTouch(View* v, MotionEvent& event){
-    bool wasForwarding = mForwarding;
+bool ForwardingListener::onTouch(View& v, MotionEvent& event){
+    const bool wasForwarding = mForwarding;
     bool forwarding;
     if (wasForwarding) {
         forwarding = onTouchForwarded(event) || !onForwardingStopped();
     } else {
         forwarding = onTouchObserved(event) && onForwardingStarted();
-
         if (forwarding) {
             // Make sure we cancel any ongoing source event stream.
-            long now = SystemClock::uptimeMillis();
+            const long now = SystemClock::uptimeMillis();
             MotionEvent* e = MotionEvent::obtain(now, now, MotionEvent::ACTION_CANCEL,0.0f, 0.0f, 0);
             mSrc->onTouchEvent(*e);
             e->recycle();
@@ -43,10 +46,10 @@ bool ForwardingListener::onTouch(View* v, MotionEvent& event){
     return forwarding || wasForwarding;
 }
 
-void ForwardingListener::onViewAttachedToWindow(View* v){
+void ForwardingListener::onViewAttachedToWindow(View& v){
 }
 
-void ForwardingListener::onViewDetachedFromWindow(View*v){
+void ForwardingListener::onViewDetachedFromWindow(View&v){
     mForwarding = false;
     mActivePointerId = MotionEvent::INVALID_POINTER_ID;
 
@@ -77,24 +80,21 @@ bool ForwardingListener::onTouchObserved(MotionEvent& srcEvent){
         return false;
     }
     int activePointerIndex = -1;
-    int actionMasked = srcEvent.getActionMasked();
+    const int actionMasked = srcEvent.getActionMasked();
     switch (actionMasked) {
     case MotionEvent::ACTION_DOWN:
          mActivePointerId = srcEvent.getPointerId(0);
-
          src->postDelayed(mDisallowIntercept, mTapTimeout);
          src->postDelayed(mTriggerLongPress, mLongPressTimeout);
          break;
      case MotionEvent::ACTION_MOVE:
          activePointerIndex = srcEvent.findPointerIndex(mActivePointerId);
          if (activePointerIndex >= 0) {
-             float x = srcEvent.getX(activePointerIndex);
-             float y = srcEvent.getY(activePointerIndex);
-
+             const float x = srcEvent.getX(activePointerIndex);
+             const float y = srcEvent.getY(activePointerIndex);
              // Has the pointer moved outside of the view?
              if (!src->pointInView(x, y, mScaledTouchSlop)) {
                  clearCallbacks();
-
                  // Don't let the parent intercept our events.
                  src->getParent()->requestDisallowInterceptTouchEvent(true);
                  return true;
@@ -136,7 +136,7 @@ void ForwardingListener::onLongPress() {
     mSrc->getParent()->requestDisallowInterceptTouchEvent(true);
 
     // Make sure we cancel any ongoing source event stream.
-    long now = SystemClock::uptimeMillis();
+    const long now = SystemClock::uptimeMillis();
     MotionEvent* e = MotionEvent::obtain(now, now, MotionEvent::ACTION_CANCEL, 0, 0, 0);
     mSrc->onTouchEvent(*e);
     e->recycle();
@@ -160,11 +160,11 @@ bool ForwardingListener::onTouchForwarded(MotionEvent& srcEvent){
     dst->toLocalMotionEvent(*dstEvent);
 
     // Forward converted event to destination view, then recycle it.
-    bool handled = dst->onForwardedEvent(*dstEvent, mActivePointerId);
+    const bool handled = dst->onForwardedEvent(*dstEvent, mActivePointerId);
     dstEvent->recycle();
 
      // Always cancel forwarding when the touch stream ends.
-    int action = srcEvent.getActionMasked();
+    const int action = srcEvent.getActionMasked();
     bool keepForwarding = action != MotionEvent::ACTION_UP
              && action != MotionEvent::ACTION_CANCEL;
     return handled && keepForwarding;

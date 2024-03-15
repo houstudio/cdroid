@@ -43,6 +43,9 @@ void ListPopupWindow::initPopupWindow(){
     mDropDownHorizontalOffset = 0;
     mDropDownVerticalOffset = 0;
     mDropDownList   = nullptr;
+    mPromptView = nullptr;
+    mDropDownAnchorView = nullptr;
+    mDropDownListHighlight = nullptr;
     mDropDownWidth  = LayoutParams::WRAP_CONTENT;
     mDropDownHeight = LayoutParams::WRAP_CONTENT;
     mDropDownGravity= Gravity::NO_GRAVITY;
