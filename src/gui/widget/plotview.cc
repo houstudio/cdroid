@@ -95,6 +95,7 @@ PlotView::PlotView(int w,int h):View(w,h),d(new Private(this)){
     d->secondDataRect.set(0,0,0,0); // default: no secondary data rect
     // sets the default limits
     d->calcDataRectLimits(0.0, 1.0, 0.0, 1.0);
+    d->pixRect.set(0,0,getWidth(),getHeight());
     setPadding(0,0,0,0);
 }
 
