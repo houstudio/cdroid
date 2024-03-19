@@ -186,6 +186,8 @@ void NumberPicker::initView(){
     mLastHandledDownDpadKeyCode = -1;
     mWrapSelectorWheel= false;
     mWrapSelectorWheelPreferred = true;
+    mIncrementVirtualButtonPressed = false;
+    mDecrementVirtualButtonPressed = false;
     mSelectionDividerHeight = UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT;
     mPreviousScrollerY   = 0;
     mCurrentScrollOffset = 0;
@@ -471,9 +473,7 @@ bool NumberPicker::dispatchKeyEvent(KeyEvent& event){
             requestFocus();
             mLastHandledDownDpadKeyCode = keyCode;
             removeAllCallbacks();
-            if (mFlingScroller->isFinished()) {
-                changeValueByOne(keyCode == KEY_DPAD_DOWN);
-            }
+            changeValueByOne(keyCode == KEY_DPAD_DOWN);
             return true;
         }break;
         case KeyEvent::ACTION_UP:
@@ -1237,7 +1237,11 @@ void NumberPicker::changeValueByOne(bool increment){
     if (!moveToFinalScrollerPosition(mFlingScroller)) {
         moveToFinalScrollerPosition(mAdjustScroller);
     }
-    smoothScroll(increment,1);
+    if(mFlingScroller->isFinished()){
+        smoothScroll(increment,1);
+    }else{
+        setValueInternal(mValue+(increment?1:-1),true);
+    }
 }
 
 void NumberPicker::smoothScrollToPosition(int position) {

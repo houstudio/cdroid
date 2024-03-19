@@ -25,7 +25,7 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
         
         it = mAnimatorOnStartMap.find(&animation);
         if (it!=mAnimatorOnStartMap.end()) {
-	    if(it->second)it->second();
+            if(it->second)it->second();
             mAnimatorOnStartMap.erase(it);
         }
         if (mListener.onAnimationStart) {
