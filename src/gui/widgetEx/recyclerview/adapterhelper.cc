@@ -10,7 +10,7 @@ AdapterHelper::AdapterHelper(Callback callback, bool disableRecycler) {
     mCallback = callback;
     mDisableRecycler = disableRecycler;
     mOpReorderer = nullptr;//new OpReorderer(this);
-    mUpdateOpPool = new Pools::SimplePool<UpdateOp*>(UpdateOp::POOL_SIZE);
+    mUpdateOpPool = new Pools::SimplePool<UpdateOp>(UpdateOp::POOL_SIZE);
 }
 
 AdapterHelper& AdapterHelper::addUpdateOp(const std::vector<UpdateOp*>&ops) {
@@ -554,6 +554,11 @@ void AdapterHelper::recycleUpdateOpsAndClearList(std::vector<UpdateOp*>& ops) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+AdapterHelper::UpdateOp::UpdateOp(){
+    cmd =0;
+    itemCount=0;
+    payload =nullptr;
+}
 
 AdapterHelper::UpdateOp::UpdateOp(int cmd, int positionStart, int itemCount, Object* payload) {
     this->cmd = cmd;

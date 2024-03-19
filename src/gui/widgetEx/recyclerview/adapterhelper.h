@@ -20,8 +20,9 @@ public:
         // holds the target position if this is a MOVE
         int itemCount;
     public:
+        UpdateOp();
         UpdateOp(int cmd, int positionStart, int itemCount, Object* payload);
-	int hashCode();
+        int hashCode();
     };	
     struct Callback {
         std::function<RecyclerView::ViewHolder*(int)> findViewHolder;//(int position)
@@ -36,7 +37,7 @@ public:
 private:
     friend RecyclerView;
     int mExistingUpdateTypes;
-    Pools::SimplePool<UpdateOp*>* mUpdateOpPool;// = new Pools.SimplePool<UpdateOp>(UpdateOp.POOL_SIZE)
+    Pools::SimplePool<UpdateOp>* mUpdateOpPool;// = new Pools.SimplePool<UpdateOp>(UpdateOp.POOL_SIZE)
 private:
     void applyMove(UpdateOp* op);
     void applyRemove(UpdateOp* op);

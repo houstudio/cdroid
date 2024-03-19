@@ -10,6 +10,7 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
     mDurationSet = false;
     mStartDelaySet = false;
     mInterpolator = nullptr;
+    mTempValueAnimator = nullptr;
     mInterpolatorSet = false;
     mAnimationStarter = [this](){
        startAnimation();

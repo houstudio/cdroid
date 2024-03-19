@@ -19,23 +19,23 @@ public:
     template<typename T>
     class SimplePool:public Pool<T>{
     private:
-	int maxPoolSize;
-	std::vector<T> mPool;
+	    int maxPoolSize;
+	    std::vector<T*> mPool;
     public:
-	SimplePool(int maxPoolSize) {
-            if (maxPoolSize <= 0) {
-                throw "The max pool size must be > 0";
-            }
+	    SimplePool(int maxPoolSize) {
+            LOGE_IF(maxPoolSize <= 0,"The max pool size must be > 0");
+	        this->maxPoolSize = maxPoolSize;
+	        for(int i=0;i<maxPoolSize;i++)mPool.push_back(new T());
         }
-        T acquire() {
+        T* acquire() {
             if (!mPool.empty()) {
-                T instance = (T) mPool.back();
+                T* instance = (T*) mPool.back();
                 mPool.pop_back();
                 return instance;
             }
             return nullptr;
         }
-        bool release(T instance) {
+        bool release(T* instance) {
             if (isInPool(instance)) {
                 throw "Already in the pool!";
             }
@@ -46,7 +46,7 @@ public:
             return false;
         }
     private:
-	bool isInPool(T instance) {
+	    bool isInPool(T* instance) {
             for (int i = 0; i < mPool.size(); i++) {
                 if (mPool[i] == instance) {
                     return true;

@@ -5984,7 +5984,7 @@ void RecyclerView::ItemDecoration::onDrawOver(Canvas& c,RecyclerView& parent,Sta
 
 void RecyclerView::ItemDecoration::getItemOffsets(Rect& outRect, View& view,RecyclerView& parent, State& state) {
     outRect.set(0,0,0,0);
-	//getItemOffsets(outRect, ((LayoutParams*) view.getLayoutParams())->getViewLayoutPosition(),parent);
+    //getItemOffsets(outRect, ((LayoutParams*) view.getLayoutParams())->getViewLayoutPosition(),parent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

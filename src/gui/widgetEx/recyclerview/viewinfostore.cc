@@ -185,13 +185,19 @@ void ViewInfoStore::onViewDetached(RecyclerView::ViewHolder* viewHolder) {
     removeFromDisappearedInLayout(viewHolder);
 }
 
-Pools::SimplePool<ViewInfoStore::InfoRecord*> ViewInfoStore::InfoRecord::sPool(20);//=new Pools.SimplePool<>(20);
+Pools::SimplePool<ViewInfoStore::InfoRecord> ViewInfoStore::InfoRecord::sPool(20);
 
 ViewInfoStore::InfoRecord::InfoRecord() {
+    preInfo = nullptr;
+    postInfo = nullptr;
+    flags = 0;
 }
 
 ViewInfoStore::InfoRecord* ViewInfoStore::InfoRecord::obtain() {
     InfoRecord* record = sPool.acquire();
+    record->preInfo = nullptr;
+    record->postInfo = nullptr;
+    record->flags = 0;
     return record == nullptr ? new InfoRecord() : record;
 }
 

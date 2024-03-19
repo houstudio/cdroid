@@ -205,7 +205,7 @@ INT GFXFlip(HANDLE surface) {
     XImage *img=(XImage*)surface;
     if(mainSurface==surface) {
         GFXRect rect= {0,0,img->width,img->height};
-        X11Expose(0,0,img->width,img->height);
+        //X11Expose(0,0,img->width,img->height);//very slowly
     }
     return 0;
 }

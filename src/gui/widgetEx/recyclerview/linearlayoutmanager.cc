@@ -482,6 +482,7 @@ void LinearLayoutManager::layoutForPredictiveAnimations(RecyclerView::Recycler& 
         mLayoutState->assignPositionFromScrapList();
         fill(recycler, *mLayoutState, state, false);
     }
+    mLayoutState->mScrapList.clear();
     LOGW("mLayoutState->mScrapList = nullptr;TOBE OPENED");
 }
 

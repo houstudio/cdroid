@@ -29,11 +29,11 @@ public:
         int flags;
         RecyclerView::ItemAnimator::ItemHolderInfo* preInfo;
         RecyclerView::ItemAnimator::ItemHolderInfo* postInfo;
-        static Pools::SimplePool<InfoRecord*> sPool;// = new Pools.SimplePool<>(20);
+        static Pools::SimplePool<InfoRecord> sPool;
     private:
-	friend ViewInfoStore;
-	InfoRecord();
+        friend ViewInfoStore;
     public:
+        InfoRecord();
         static InfoRecord* obtain();
         static void recycle(InfoRecord* record);
         static void drainCache();
