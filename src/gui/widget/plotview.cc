@@ -48,8 +48,7 @@ public:
         axes.insert({RightAxis, rightAxis});
         PlotAxis *topAxis = new PlotAxis();
         axes.insert({TopAxis, topAxis});
-        tickMarkTextSize = 16;
-        tickMarkTextColor= 0xFFFFFFFF;
+        tickLabelSize = 16;
     }
 
     ~Private()
@@ -80,8 +79,7 @@ public:
     bool showObjectToolTip;
     bool useAntialias;
     bool autoDelete;
-    int tickMarkTextSize;
-    int tickMarkTextColor;
+    int tickLabelSize;
     // padding
     // hashmap with the axes we have
     std::map<Axis, PlotAxis *> axes;
@@ -108,9 +106,24 @@ PlotView::PlotView(cdroid::Context*ctx,const cdroid::AttributeSet&atts)
     d->secondDataRect.set(0,0,0,0); // default: no secondary data rect
     // sets the default limits
     d->calcDataRectLimits(0.0, 1.0, 0.0, 1.0);
-
+    const std::map<const std::string,int>dirs={{"left",1},{"top",2},{"right",4},{"bottom",8},
+	    {"horizontal",5},{"vertical",10},{"all",15}};
     d->showGrid = atts.getBoolean("showGrid",false);
-    d->tickMarkTextSize = atts.getDimensionPixelSize("tickMarkSize",d->tickMarkTextSize);
+    d->cGrid = atts.getInt("gridColor",d->cGrid);
+    d->tickLabelSize = atts.getDimensionPixelSize("tickLabelSize",d->tickLabelSize);
+
+    const int tickMarks = atts.getInt("tickMarks",dirs,15);
+    const int tickLabels= atts.getInt("tickLabels",dirs,0);
+
+    axis(LeftAxis)->setTickmarkVisible(tickMarks&1);
+    axis(TopAxis)->setTickmarkVisible(tickMarks&2);
+    axis(RightAxis)->setTickmarkVisible(tickMarks&4);
+    axis(BottomAxis)->setTickmarkVisible(tickMarks&8);
+
+    axis(LeftAxis)->setTickLabelsShown(tickLabels&1);
+    axis(TopAxis)->setTickLabelsShown(tickLabels&2);
+    axis(RightAxis)->setTickLabelsShown(tickLabels&4);
+    axis(BottomAxis)->setTickLabelsShown(tickLabels&8);
     //d->tickMarkTextColor= atts.getInt("tickMarkColor",d->tickMarkTextColor);
 }
 
@@ -799,7 +812,7 @@ void PlotView::drawAxes(cdroid::Canvas&p){
     //p->setBrush(Qt::NoBrush);
 
     // set small font for tick labels
-    p.set_font_size(d->tickMarkTextSize);
+    p.set_font_size(d->tickLabelSize);
     //p->setFont(f);
 
     /*** BottomAxis ***/

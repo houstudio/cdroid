@@ -92,6 +92,7 @@ void PlotAxis::setTickLabelFormat(char format, int fieldWidth, int precision){
 float PlotAxis::fontSize()const{
     return d->m_fontSize;
 }
+
 void PlotAxis::setFontSize(float sz){
     d->m_fontSize = sz;
 }
