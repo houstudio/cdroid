@@ -9,6 +9,7 @@ int main(int argc,char*srgv[]){
    Window*w=new Window(0,0,-1,-1);
    PlotView*plot=new PlotView(400,400);
    w->addView(plot);
+   plot->setPadding(20,20,20,20);
    plot->setShowGrid(true);
    
    plot->invalidate();
@@ -21,6 +22,8 @@ void slotSelectPlot(PlotView*plot,int n)
     plot->resetPlot();
     PlotObject* po1;
     PlotObject* po2;
+    plot->axis(PlotView::LeftAxis)->setTickLabelsShown(true);
+    plot->axis(PlotView::RightAxis)->setTickLabelsShown(true);
     switch (n) {
     case 0: { // Points plot
         plot->setLimits(-6.0, 11.0, -10.0, 110.0);

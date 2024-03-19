@@ -48,6 +48,8 @@ public:
         axes.insert({RightAxis, rightAxis});
         PlotAxis *topAxis = new PlotAxis();
         axes.insert({TopAxis, topAxis});
+        tickMarkTextSize = 16;
+        tickMarkTextColor= 0xFFFFFFFF;
     }
 
     ~Private()
@@ -78,6 +80,8 @@ public:
     bool showObjectToolTip;
     bool useAntialias;
     bool autoDelete;
+    int tickMarkTextSize;
+    int tickMarkTextColor;
     // padding
     // hashmap with the axes we have
     std::map<Axis, PlotAxis *> axes;
@@ -96,7 +100,6 @@ PlotView::PlotView(int w,int h):View(w,h),d(new Private(this)){
     // sets the default limits
     d->calcDataRectLimits(0.0, 1.0, 0.0, 1.0);
     d->pixRect.set(0,0,getWidth(),getHeight());
-    setPadding(0,0,0,0);
 }
 
 PlotView::PlotView(cdroid::Context*ctx,const cdroid::AttributeSet&atts)
@@ -106,7 +109,9 @@ PlotView::PlotView(cdroid::Context*ctx,const cdroid::AttributeSet&atts)
     // sets the default limits
     d->calcDataRectLimits(0.0, 1.0, 0.0, 1.0);
 
-    setPadding(0,0,0,0);
+    d->showGrid = atts.getBoolean("showGrid",false);
+    d->tickMarkTextSize = atts.getDimensionPixelSize("tickMarkSize",d->tickMarkTextSize);
+    //d->tickMarkTextColor= atts.getInt("tickMarkColor",d->tickMarkTextColor);
 }
 
 PlotView::~PlotView()
@@ -747,21 +752,18 @@ void PlotView::onDraw(cdroid::Canvas&p){
 
     setPixRect();
     r= d->pixRect;
+
+    p.save();
     p.rectangle(r.left,r.top,r.width,r.height);
     p.clip();
-    //p.setClipRect(d->pixRect);
-    //p.setClipping(true);
 
     resetPlotMask();
 
     for (PlotObject *po : d->objectList) {
         po->draw(p, this);
     }
+    p.restore();//This save/restore used to reset clip area
 
-    // DEBUG: Draw the plot mask
-    //    p.drawImage( 0, 0, d->plotMask );
-
-    //p.setClipping(false);
     drawAxes(p);
 }
 
@@ -797,9 +799,7 @@ void PlotView::drawAxes(cdroid::Canvas&p){
     //p->setBrush(Qt::NoBrush);
 
     // set small font for tick labels
-    //QFont f = p->font();
-    //const int s = p.get_font_size();
-    //f.set_font_size(s - 2);
+    p.set_font_size(d->tickMarkTextSize);
     //p->setFont(f);
 
     /*** BottomAxis ***/
