@@ -19,6 +19,31 @@ if(ZLIB_INCLUDE_DIRS AND ZLIB_LIBRARIES)
     set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
     set(ZLIB_INCLUDE_DIR ${ZLIB_INCLUDE_DIRS})
     set(ZLIB_VERSION ${PC_ZLIB_VERSION})
+
+    if(NOT TARGET ZLIB::ZLIB)
+      add_library(ZLIB::ZLIB UNKNOWN IMPORTED)
+      set_target_properties(ZLIB::ZLIB PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${ZLIB_INCLUDE_DIRS}")
+
+      if(ZLIB_LIBRARY_RELEASE)
+        set_property(TARGET ZLIB::ZLIB APPEND PROPERTY
+          IMPORTED_CONFIGURATIONS RELEASE)
+        set_target_properties(ZLIB::ZLIB PROPERTIES
+          IMPORTED_LOCATION_RELEASE "${ZLIB_LIBRARY_RELEASE}")
+      endif()
+
+      if(ZLIB_LIBRARY_DEBUG)
+        set_property(TARGET ZLIB::ZLIB APPEND PROPERTY
+          IMPORTED_CONFIGURATIONS DEBUG)
+        set_target_properties(ZLIB::ZLIB PROPERTIES
+          IMPORTED_LOCATION_DEBUG "${ZLIB_LIBRARY_DEBUG}")
+      endif()
+
+      if(NOT ZLIB_LIBRARY_RELEASE AND NOT ZLIB_LIBRARY_DEBUG)
+        set_property(TARGET ZLIB::ZLIB APPEND PROPERTY
+          IMPORTED_LOCATION "${ZLIB_LIBRARY}")
+      endif()
+    endif()
 endif()
 
 include(FindPackageHandleStandardArgs)

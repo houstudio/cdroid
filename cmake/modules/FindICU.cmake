@@ -45,6 +45,14 @@ if (ICU_INCLUDE_DIR AND ICU_LIBRARY)
 
     set(ICU_VERSION "${ICU_MAJOR_VERSION}.${ICU_MINOR_VERSION}")
 
+    if(NOT TARGET ICU::uc)
+        add_library(ICU::uc UNKNOWN IMPORTED)
+        set_target_properties(ICU::uc PROPERTIES
+           INTERFACE_INCLUDE_DIRECTORIES "${ICU_INCLUDE_DIRS}")
+        set_property(TARGET ICU::uc APPEND PROPERTY
+           IMPORTED_LOCATION "${ICU_LIBRARY}")
+    endif()
+
     # Look for the ICU internationalization libraries
     find_library(
         ICU_I18N_LIBRARY
@@ -55,6 +63,13 @@ if (ICU_INCLUDE_DIR AND ICU_LIBRARY)
     if (ICU_I18N_LIBRARY)
         set(ICU_I18N_FOUND 1)
         set(ICU_I18N_LIBRARIES ${ICU_I18N_LIBRARY})
+        if(NOT TARGET ICU::i18n)
+            add_library(ICU::i18n UNKNOWN IMPORTED)
+            set_target_properties(ICU::i18n PROPERTIES
+               INTERFACE_INCLUDE_DIRECTORIES "${ICU_INCLUDE_DIRS}")
+            set_property(TARGET ICU::i18n APPEND PROPERTY
+               IMPORTED_LOCATION "${ICU_I18N_LIBRARY}")
+        endif()
     else ()
         set(ICU_I18N_FOUND 0)
         set(ICU_I18N_LIBRARIES)
@@ -64,6 +79,13 @@ if (ICU_INCLUDE_DIR AND ICU_LIBRARY)
     if(ICU_DATA_LIBRARY)
 	set(ICU_DATA_LIBRARIES ${ICU_DATA_LIBRARY})
 	set(ICU_DATA_FOUND 1)
+	if(NOT TARGET ICU::data)
+	    add_library(ICU::data UNKNOWN IMPORTED)
+            set_target_properties(ICU::data PROPERTIES
+               INTERFACE_INCLUDE_DIRECTORIES "${ICU_INCLUDE_DIRS}")
+            set_property(TARGET ICU::data APPEND PROPERTY
+ 	       IMPORTED_LOCATION "${ICU_DATA_LIBRARY}")
+        endif()
     endif(ICU_DATA_LIBRARY)
 else ()
     set(ICU_FOUND 0)

@@ -94,3 +94,34 @@ mark_as_advanced(
     FREETYPE2_LIBRARIES
     FREETYPE2_ROOT_INCLUDE_DIR
 )
+
+if(VERSION_OK)
+  if(NOT TARGET Freetype::Freetype)
+    add_library(Freetype::Freetype UNKNOWN IMPORTED)
+    set_target_properties(Freetype::Freetype PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${FREETYPE2_INCLUDE_DIRS}")
+
+    if(FREETYPE2_LIBRARY_RELEASE)
+      set_property(TARGET Freetype::Freetype APPEND PROPERTY
+        IMPORTED_CONFIGURATIONS RELEASE)
+      set_target_properties(Freetype::Freetype PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "C"
+        IMPORTED_LOCATION_RELEASE "${FREETYPE2_LIBRARY_RELEASE}")
+    endif()
+
+    if(FREETYPE2_LIBRARY_DEBUG)
+      set_property(TARGET Freetype::Freetype APPEND PROPERTY
+        IMPORTED_CONFIGURATIONS DEBUG)
+      set_target_properties(Freetype::Freetype PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG "C"
+        IMPORTED_LOCATION_DEBUG "${FREETYPE2_LIBRARY_DEBUG}")
+    endif()
+
+    if(NOT FREETYPE2_LIBRARY_RELEASE AND NOT FREETYPE2_LIBRARY_DEBUG)
+      set_target_properties(Freetype::Freetype PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+	IMPORTED_LOCATION "${FREETYPE2_LIBRARIES}")
+    endif()
+  endif()
+endif()
+
