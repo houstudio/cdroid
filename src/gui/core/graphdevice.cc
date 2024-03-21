@@ -31,6 +31,7 @@ GraphDevice::GraphDevice(){
     mFormat = GPF_ARGB;
     mInst = this;
     mRotation=0;
+    mShowFPS = false;
 }
 
 GraphDevice& GraphDevice::setFormat(int format){
@@ -82,7 +83,6 @@ int GraphDevice::init(){
     mLastComposeTime = SystemClock::uptimeMillis();
     mComposing = 0;
     mQuitFlag  = false;
-    mShowFPS = false;
 
 #if COMPOSE_ASYNC
     std::thread t([this](){doCompose();});
