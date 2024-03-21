@@ -109,6 +109,7 @@ RecyclerView::~RecyclerView(){
         mItemDecorations.pop_back();
     }
     delete mState;
+    delete mAdapterHelper;
     delete mViewInfoStore;
     delete mViewFlinger;
     delete mItemAnimator;
@@ -119,6 +120,7 @@ RecyclerView::~RecyclerView(){
     delete mRightGlow;
     delete mBottomGlow;
     delete mEdgeEffectFactory;
+    delete mScrollingChildHelper;
     delete (ViewInfoStore::ProcessCallback*)mViewInfoProcessCallback;
 }
 void RecyclerView::initRecyclerView(){
@@ -132,6 +134,7 @@ void RecyclerView::initRecyclerView(){
     mEatenAccessibilityChangeFlags =0;
     mInterceptRequestLayoutDepth = 0;
     mState = new State();
+    mAdapterHelper = nullptr;
     mViewInfoStore = new ViewInfoStore();
     mViewFlinger = new ViewFlinger(this);
     mItemAnimator= new DefaultItemAnimator();
