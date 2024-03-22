@@ -579,6 +579,7 @@ void Window::InvalidateOnAnimationRunnable::addViewRect(View* view,const Rect&re
 void Window::InvalidateOnAnimationRunnable::removeView(View* view){
     auto it = find(view);
     if(it != mInvalidateViews.end()){
+        (*it)->recycle();
         mInvalidateViews.erase(it);
     }
     if(mInvalidateViews.size()==0){
@@ -594,6 +595,7 @@ void Window::InvalidateOnAnimationRunnable::run(){
         View*v = i->target;
         if(r.width<=0||r.height<=0) v->invalidate();
         else  v->invalidate(r.left,r.top,r.width,r.height);
+        i->recycle();
     }
     mInvalidateViews.clear();
 }
