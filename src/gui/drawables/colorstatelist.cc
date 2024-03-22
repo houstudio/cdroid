@@ -181,7 +181,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     atts.set(props);
     if(strcmp(name,"item") == 0){
         std::vector<int>states;
-        int color = cd->ctx->getColor(atts.getString("color"));
+        const int color = cd->ctx->getColor(atts.getString("color"));
         StateSet::parseState(states,atts);
         if(cd->colors==nullptr)
            cd->colors = new ColorStateList();
@@ -196,6 +196,7 @@ ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const 
     ColorsParserData cd;
     cd.ctx = ctx;
     cd.colors = nullptr;
+    cd.package= package;
     XML_SetUserData(parser,&cd);
     XML_SetElementHandler(parser, startElement, nullptr/*endElement*/);
     do {

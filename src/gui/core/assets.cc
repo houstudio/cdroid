@@ -156,7 +156,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     int count=0;
     pak->forEachEntry([this,package,&count](const std::string&res) {
         count++;
-        if((res.size()>7)&&TextUtils::startWith(res,"values")) {
+        if((res.size()>6)&&(TextUtils::startWith(res,"values")||TextUtils::startWith(res,"color"))) {
             LOGV("LoadKeyValues from:%s ...",res.c_str());
             const std::string resid=package+":"+res;
             loadKeyValues(resid,std::bind(&Assets::parseItem,this,package,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
@@ -167,7 +167,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         setTheme("cdroid:style/Theme");
     pak->forEachEntry([this,package,&count](const std::string&res) {
         if((res.size()>6)&&TextUtils::startWith(res,"color")) {
-            LOGV("LoadKeyValues from:%s ...",res.c_str());
+            LOGV("LoadKeyValues from:%s:%s ...",package.c_str(),res.c_str());
             std::string resid = package+":"+res.substr(0,res.find(".xml"));
             ColorStateList*cls = ColorStateList::inflate(this,resid);
             mStateColors.insert(std::pair<const std::string,ColorStateList*>(resid,cls));
