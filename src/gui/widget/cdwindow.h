@@ -23,6 +23,7 @@ protected:
         std::vector<AttachInfo::InvalidateInfo*>::iterator find(View*v);
     public:
         InvalidateOnAnimationRunnable();
+        ~InvalidateOnAnimationRunnable();
         void setOwner(Window*w);
         void addView(View* view);
         void addViewRect(View*view,const Rect&);

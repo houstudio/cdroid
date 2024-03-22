@@ -535,6 +535,17 @@ Window::InvalidateOnAnimationRunnable::InvalidateOnAnimationRunnable(){
     mPosted= false;
 }
 
+Window::InvalidateOnAnimationRunnable::~InvalidateOnAnimationRunnable(){
+    for (auto i:mInvalidateViews){
+        Rect&r = i->rect;
+        View*v = i->target;
+        if(r.width<=0||r.height<=0) v->invalidate();
+        else  v->invalidate(r);
+        i->recycle();
+    }
+    mInvalidateViews.clear();
+}
+
 void Window::InvalidateOnAnimationRunnable::setOwner(Window*w){
     mOwner=w;
 }
@@ -594,7 +605,7 @@ void Window::InvalidateOnAnimationRunnable::run(){
         Rect&r = i->rect;
         View*v = i->target;
         if(r.width<=0||r.height<=0) v->invalidate();
-        else  v->invalidate(r.left,r.top,r.width,r.height);
+        else  v->invalidate(r);
         i->recycle();
     }
     mInvalidateViews.clear();
