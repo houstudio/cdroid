@@ -389,6 +389,7 @@ View::~View(){
 
     delete mScrollCache;
     mScrollCache = nullptr;
+    mMeasureCache.clear();
     if(mParent)
         mParent->removeViewInternal(this);
     if(isAttachedToWindow())onDetachedFromWindow();
@@ -7247,7 +7248,7 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
     }
 
     // Suppress sign extension for the low bytes
-    Size key ={widthMeasureSpec,heightMeasureSpec};
+    const uint64_t key =(uint64_t(widthMeasureSpec)<<32)|heightMeasureSpec;
 
     const bool forceLayout = (mPrivateFlags & PFLAG_FORCE_LAYOUT) == PFLAG_FORCE_LAYOUT;
 
@@ -7272,9 +7273,9 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
             onMeasure(widthMeasureSpec, heightMeasureSpec);
             mPrivateFlags3 &= ~PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;
         } else {
-            Size value =itc->second;// mMeasureCache.valueAt(cacheIndex);
+            uint64_t value =itc->second;// mMeasureCache.valueAt(cacheIndex);
             // Casting a long to int drops the high 32 bits, no mask needed
-            setMeasuredDimensionRaw(value.x,value.y);
+            setMeasuredDimensionRaw((value>>32),(value&0xFFFFFFFF));
             mPrivateFlags3 |= PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;
         }
 
@@ -7288,13 +7289,14 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
 
     mOldWidthMeasureSpec = widthMeasureSpec;
     mOldHeightMeasureSpec = heightMeasureSpec;
-    Size szMeasured = { mMeasuredWidth , mMeasuredHeight };
+    const uint64_t szMeasured = (uint64_t(mMeasuredWidth)<<32)| mMeasuredHeight;
     mMeasureCache[key] = szMeasured;//
     //mMeasureCache.insert(std::pair<Size,Size>(key,szMeasured)); // suppress sign extension
 }
 
 View::AttachInfo::InvalidateInfo::InvalidateInfo(){
     target = nullptr;
+    time = 0;
     rect.set(0,0,0,0);
 }
 std::vector<View::AttachInfo::InvalidateInfo*>View::AttachInfo::InvalidateInfo::sPool;
@@ -7400,7 +7402,7 @@ View::TintInfo::TintInfo(){
 }
 
 View::TintInfo::~TintInfo(){
-    delete mTintList;
+    //delete mTintList;//tintlist cant be destroyed.
 }
 
 View::ForegroundInfo::ForegroundInfo(){

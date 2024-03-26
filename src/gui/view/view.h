@@ -363,7 +363,7 @@ private:
     StateListAnimator* mStateListAnimator;
     ViewPropertyAnimator* mAnimator;
     ViewGroup* mNestedScrollingParent;
-    std::map<Size,Size>mMeasureCache;
+    std::map<uint64_t,uint64_t>mMeasureCache;
     std::string mStartActivityRequestWho;
     ScrollabilityCache*mScrollCache;
 
@@ -1136,6 +1136,7 @@ public:
         static std::vector<InvalidateInfo*>sPool;
     public:
         View* target;
+        nsecs_t time;
         Rect rect;
         static InvalidateInfo*obtain();
         InvalidateInfo();

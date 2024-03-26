@@ -40,6 +40,8 @@ public:
     static const std::vector<int>WILD_CARD;
     static const std::vector<int>ENABLED_STATE_SET;
     static const std::vector<int>PRESSED_STATE_SET;
+    static const std::vector<int>FOCUSED_STATE_SET;
+    static const std::vector<int>SELECTED_STATE_SET;
     static const std::vector<int>CHECKED_STATE_SET;
 public:
     static void trimStateSet(std::vector<int>&states,int newsize);
