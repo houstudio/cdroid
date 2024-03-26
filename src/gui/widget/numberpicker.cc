@@ -3,6 +3,7 @@
 #include <color.h>
 #include <textutils.h>
 #include <cdlog.h>
+#include <core/neverdestroyed.h>
 
 //https://gitee.com/awang/WheelView/blob/master/src/com/wangjie/wheelview/WheelView.java
 
@@ -161,6 +162,8 @@ void NumberPicker::setWheelItemCount(int count) {
     mSelectorIndices.resize(mWheelItemCount);
 }
 
+const NeverDestroyed<DecelerateInterpolator>gDecelerateInterpolator(2.5);
+
 void NumberPicker::initView(){
     ViewConfiguration&config= ViewConfiguration::get(mContext);
     mDisplayedDrawableCount = 0;
@@ -209,7 +212,7 @@ void NumberPicker::initView(){
     mMinimumFlingVelocity = config.getScaledMinimumFlingVelocity();
     mMaximumFlingVelocity = config.getScaledMaximumFlingVelocity()/ SELECTOR_MAX_FLING_VELOCITY_ADJUSTMENT;
     mFlingScroller  = new Scroller(getContext(), nullptr, true);
-    mAdjustScroller = new Scroller(getContext(), new DecelerateInterpolator(2.5f));
+    mAdjustScroller = new Scroller(getContext(), gDecelerateInterpolator.get());
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     mHideWheelUntilFocused = false;
     mWheelItemCount = DEFAULT_WHEEL_ITEM_COUNT;
@@ -1053,8 +1056,13 @@ void NumberPicker::onDraw(Canvas&canvas){
             Drawable*dr = nullptr;
             if(selectorIndex<mDisplayedDrawables.size() && (dr = mDisplayedDrawables.at(selectorIndex))){
                 Rect outRect;
+                const ColorStateList*cl = getForegroundTintList();
                 Gravity::apply(textGravity,dr->getIntrinsicWidth(),dr->getIntrinsicHeight(),recText,outRect,getLayoutDirection());
                 dr->setBounds(outRect);
+                if(cl){
+                    const int color =cl->getColorForState((i != mWheelMiddleItemIndex?StateSet::NOTHING:StateSet::SELECTED_STATE_SET),0xFFFFFFFF);
+                    dr->setTint(color);
+                }
                 dr->draw(canvas);
             }else{
                 canvas.draw_text(recText,scrollSelectorValue,textGravity);
@@ -1381,10 +1389,10 @@ void NumberPicker::ensureCachedScrollSelectorValue(int selectorIndex) {
     } else {
         if (mDisplayedValues.size()){
             const int displayedValueIndex = selectorIndex - mMinValue;
-            if(cache.size()&&(displayedValueIndex >=mDisplayedValues.size())){
+            /*if(cache.size()&&(displayedValueIndex >=mDisplayedValues.size())){
                 cache.erase(itr);
                 return;
-            }
+            }*/
             if((displayedValueIndex>=0)&&(displayedValueIndex<mDisplayedValues.size()))
                 scrollSelectorValue = mDisplayedValues[displayedValueIndex];
         } else {

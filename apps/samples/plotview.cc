@@ -72,7 +72,7 @@ void slotSelectPlot(PlotView*plot,int n)
         //po1->setBarBrush(0xFF00FF00);//QBrush(Qt::green, Qt::Dense4Pattern));
 
         for (float x = -6.5; x <= 6.5; x += 0.5) {
-            po1->addPoint(x, 100 * exp(-0.5 * x * x), std::string(""), 0.5);
+            po1->addPoint(x, 100 * exp(-0.5 * x * x), std::string(""), 0.48);
         }
 
         plot->addPlotObject(po1);

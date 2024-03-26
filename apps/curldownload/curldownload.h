@@ -10,24 +10,24 @@ class CurlDownloader{
 public:
     class ConnectionData {
     private:
-	std::string url;
-	char* data;
-	double totalTime;
-	int nbBytes;
-	int res;
-	int httpStatus;
-	time_t startTime;
-	int stopppedByTimeout;
+	    std::string url;
+	    char* data;
+	    double totalTime;
+	    int nbBytes;
+	    int res;
+	    int httpStatus;
+	    time_t startTime;
+	    int stopppedByTimeout;
     public:
-	ConnectionData(const std::string&url);
-	virtual ~ConnectionData();
-	const std::string getUrl()const;
-	int getHttpStatus() const;
-	int getNbBytes()const;
-	int hasElapsed(long timeout);
-	int isStoppedByTimeout() const;
-	void onDataRead(char* input, size_t size);
-	void onConnectionComplete(double time,int r, int status, int stoppedByTimeout);
+	    ConnectionData(const std::string&url);
+	    virtual ~ConnectionData();
+	    const std::string getUrl()const;
+	    int getHttpStatus() const;
+	    int getNbBytes()const;
+	    int hasElapsed(long timeout);
+	    int isStoppedByTimeout() const;
+	    void onDataRead(char* input, size_t size);
+	    void onConnectionComplete(double time,int r, int status, int stoppedByTimeout);
     };
 private:
     int mTimerFD;

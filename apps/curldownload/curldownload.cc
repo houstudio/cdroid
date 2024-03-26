@@ -105,12 +105,13 @@ void CurlDownloader::check_for_timeout() {
 void CurlDownloader::cleanup_one_connection(ConnectionData* priv, CURL *easy,
         double total_time,int res, int httpStatus, int stoppedByTimeout) {
     priv->onConnectionComplete(total_time, res, httpStatus, stoppedByTimeout);
+
+    auto it = std::find(mEasys.begin(),mEasys.end(),easy);
+    if(it!=mEasys.end())mEasys.erase(it);
     curl_multi_remove_handle(mMulti, easy);
     curl_easy_cleanup(easy);
     mActiveHandles--;
-    auto it = std::find(mEasys.begin(),mEasys.end(),easy);
-    if(it!=mEasys.end())mEasys.erase(it);
-    LOGV("mEasys.size=%d/%d",mEasys.size(),mActiveHandles);
+	LOGV("mEasys.size=%d/%d",mEasys.size(),mActiveHandles);
 }
 
 void CurlDownloader::cleanup(int still_running) {
@@ -125,11 +126,11 @@ void CurlDownloader::cleanup(int still_running) {
         easy = curlm_msg->easy_handle;
         res = curlm_msg->data.result;
         curl_easy_getinfo(easy, CURLINFO_PRIVATE, &priv);
-	curl_easy_getinfo(easy, CURLINFO_TOTAL_TIME, &total_time);
-	curl_easy_getinfo(easy, CURLINFO_RESPONSE_CODE, &httpStatus);
-	if (curlm_msg->msg == CURLMSG_DONE) {
-	    cleanup_one_connection(priv, easy, total_time, res, httpStatus, 0);
-	}
+        curl_easy_getinfo(easy, CURLINFO_TOTAL_TIME, &total_time);
+        curl_easy_getinfo(easy, CURLINFO_RESPONSE_CODE, &httpStatus);
+        if (curlm_msg->msg == CURLMSG_DONE) {
+            cleanup_one_connection(priv, easy, total_time, res, httpStatus, 0);
+        }
     }
 
     LOGV_IF(still_running!=-1,"CLEANUP running = %d , left = %d", still_running,mActiveHandles);
