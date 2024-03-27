@@ -9,7 +9,9 @@
 * 所有UI组件(Layouts,Drawables...)可以在安卓兼容的开发环境(**AndroidStudio or Eclipse**)中进行设计 
 * 基于 **Cairo**的矢量图形引擎
 # **Quick Start**
-* X86快速体验模拟器地址： https://gitee.com/jiangcheng/cdroidX64
+* 虚拟机体验：https://pan.baidu.com/s/1-v-rLcHxo5W5TXvJ2NUWxA 提取码：spux （虚拟机登录用户:cdroid 密码:123456）
+* 登录自会后请重新pull cdroid更新代码
+* 每次更新代码建议干掉cdroid/outXXXX 然后重走 build.sh构建流程。
 # **IDE(AndroidStudio/Eclipse)** 
 ![IDE](https://gitee.com/jiangcheng/cdroidX64/raw/master/apps/images/asd61236_ide.png)
 
@@ -110,10 +112,6 @@
 ### 7.run samples(in directory outX64-Debug
 * apps/samples/helloworld
 * apps/uidemo1/uidemo1
-### 8.QuickStart
-* 虚拟机体验：https://pan.baidu.com/s/1-v-rLcHxo5W5TXvJ2NUWxA 提取码：spux （虚拟机登录用户:cdroid 密码:123456）
-* 登录自会后请重新pull cdroid更新代码
-* 每次更新代码建议干掉cdroid/outXXXX 然后重走 build.sh构建流程。
 
   
  

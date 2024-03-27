@@ -8,7 +8,9 @@
 * All UI Components(Layouts,Drawables...)can be designed in **AndroidStudio or Eclipse** 
 * Vector Graph supported via **Cairo**
 # **Quick Start**
-* Start experimenting now with X86 Simulator https://gitee.com/jiangcheng/cdroidX64
+* VM(Ware):https://pan.baidu.com/s/1-v-rLcHxo5W5TXvJ2NUWxA fetchcode：spux (VM Ubuntu User:cdroid password:123456）
+* After login pls run git pull to get new version of cdroid
+* You'd better remove outXXX and run build.sh to rebuild makefiles after each git pull.
 # **IDE(AndroidStudio/Eclipse)** 
 ![IDE](https://gitee.com/jiangcheng/cdroidX64/raw/master/apps/images/asd61236_ide.png)
 
@@ -109,10 +111,6 @@
 ### 7.run samples(in directory outX64-Debug
 * apps/samples/helloworld
 * apps/uidemo1/uidemo1
-### 8.QuickStart
-* VM(Ware):https://pan.baidu.com/s/1-v-rLcHxo5W5TXvJ2NUWxA fetchcode：spux (VM Ubuntu User:cdroid password:123456）
-* After login pls run git pull to get new version of cdroid
-* You'd better remove outXXX and run build.sh to rebuild makefiles after each git pull.
 
   
  
