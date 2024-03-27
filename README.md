@@ -109,7 +109,10 @@
 ### 7.run samples(in directory outX64-Debug
 * apps/samples/helloworld
 * apps/uidemo1/uidemo1
-
+### 8.QuickStart
+VM(Ware):https://pan.baidu.com/s/1-v-rLcHxo5W5TXvJ2NUWxA fetchcode：spux (VM Ubuntu User:cdroid password:123456）
+after login pls run git pull to get new version of cdroid
+you'd better rm outXXX and run build.sh to rebuild makefiles after every git pull.
 
   
  
