@@ -5886,7 +5886,7 @@ int RecyclerView::LayoutManager::getColumnCountForAccessibility(Recycler& recycl
     return canScrollHorizontally() ? mRecyclerView->mAdapter->getItemCount() : 1;
 }
 
-bool RecyclerView::LayoutManager::isLayoutHierarchical(Recycler recycler,State state) {
+bool RecyclerView::LayoutManager::isLayoutHierarchical(Recycler recycler,State& state) {
     return false;
 }
 #if 0

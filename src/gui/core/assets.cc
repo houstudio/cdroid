@@ -255,7 +255,7 @@ RefPtr<ImageSurface>Assets::loadImage(const std::string&fullresid) {
     size_t capacity = 0;
     std::string resname;
     ZIPArchive*pak = getResource(fullresid,&resname,nullptr);
-
+    if(pak)guessExtension(pak,resname);
     void*zfile = pak ? pak->getZipHandle(resname):nullptr;
     ZipInputStream zipis(zfile);
     RefPtr<ImageSurface>img;

@@ -175,6 +175,7 @@ void NumberPicker::initView(){
     mScrollState = OnScrollListener::SCROLL_STATE_IDLE;
     mTextSize   = 24;
     mItemSpacing= 0;
+    mTopSelectionDividerTop = 0;
     mSelectedTextSize = 24;
     mSelectedTextColor = 0xFFFFFFFF;
     mSelectedTypeface = nullptr;

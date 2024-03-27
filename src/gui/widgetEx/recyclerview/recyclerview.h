@@ -783,7 +783,7 @@ public:
     int getSelectionModeForAccessibility(Recycler& recycler,State& state);
     virtual int getRowCountForAccessibility(Recycler& recycler, State& state);
     virtual int getColumnCountForAccessibility(Recycler& recycler,State& state);
-    bool isLayoutHierarchical(Recycler recycler,State state);
+    bool isLayoutHierarchical(Recycler recycler,State& state);
     //bool performAccessibilityAction(Recycler& recycler, State& state,int action, Bundle args);
     //bool performAccessibilityActionForItem(Recycler& recycler,State& state, View* view, int action, Bundle args);
     static Properties* getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes);
