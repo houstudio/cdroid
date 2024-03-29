@@ -1,5 +1,6 @@
 #include <memory>
 #include <cstring>
+#include <fstream>
 #include <drawables/drawable.h>
 #include <drawables/bitmapdrawable.h>
 #include <drawables/ninepatchdrawable.h>
@@ -97,7 +98,11 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
     constexpr unsigned lengthOfLongestSignature = 14; /* To wit: "RIFF????WEBPVP"*/
     char contents[lengthOfLongestSignature];
     ImageDecoder*decoder = nullptr;
-    std::unique_ptr<std::istream>istm = ctx->getInputStream(resourceId);
+    std::unique_ptr<std::istream>istm;
+    if(ctx)
+        istm = ctx->getInputStream(resourceId);
+    else
+	istm = std::move(std::make_unique<std::ifstream>(resourceId));
     istm->read(contents,lengthOfLongestSignature);
     unsigned length = istm->gcount();
     if (length < lengthOfLongestSignature)
