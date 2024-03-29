@@ -73,7 +73,7 @@ ImageView::~ImageView() {
     if(mDrawable!=mRecycleableBitmapDrawable)
         delete mRecycleableBitmapDrawable;
     delete mDrawable;
-    delete mDrawableTintList;
+    //delete mDrawableTintList;//cant destroy.
     delete mColorFilter;
 }
 

@@ -216,7 +216,8 @@ void Window::draw(){
     mAttachInfo->mDrawingTime = SystemClock::uptimeMillis();
     ViewGroup::draw(*canvas);
     if(View::VIEW_DEBUG)drawInvalidateRegion(*canvas);
-    LOGI_IF(View::VIEW_DEBUG,"%p:%d used %dms",this,mID,SystemClock::uptimeMillis() - mAttachInfo->mDrawingTime);
+    LOGI_IF(View::VIEW_DEBUG,"%p:%d used %dms %d invalidateRects time=%lld",this,mID,SystemClock::uptimeMillis() - mAttachInfo->mDrawingTime,
+		    mInvalidRgn->get_num_rectangles(), mAttachInfo->mDrawingTime);
     mPendingRgn->do_union(mInvalidRgn);
     mInvalidRgn->subtract(mInvalidRgn);
     GraphDevice::getInstance().flip();

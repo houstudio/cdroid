@@ -1880,7 +1880,7 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     }
 
     int clipSaveCount = 0;
-    bool clipToPadding = (flags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK;
+    const bool clipToPadding = (flags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK;
     if (clipToPadding) {
         canvas.save();
         clipSaveCount++;
@@ -1916,7 +1916,7 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
             }
         }
 
-        int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
+        const int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
         View* child = getAndVerifyPreorderedView(preorderedList, mChildren, childIndex);
         if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE || child->getAnimation() != nullptr) {
             more |= drawChild(canvas, child, drawingTime);
@@ -1983,7 +1983,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
 
     int opaqueFlag = isOpaque ? PFLAG_DIRTY_OPAQUE : PFLAG_DIRTY;
 
-    int location[2]={child->mLeft,child->mTop};
+    int location[2] = {child->mLeft,child->mTop};
 
     if (child->mLayerType != LAYER_TYPE_NONE){
         mPrivateFlags |= PFLAG_INVALIDATED;

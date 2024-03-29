@@ -70,6 +70,7 @@ TEST_F(CANVAS,clip3){
 }
 
 TEST_F(CANVAS,clip4){
+/*this test used to comfirm all clips is intersected as final result*/
    Canvas c(1280,600);
    double x1,y1,x2,y2;
    c.reset_clip();

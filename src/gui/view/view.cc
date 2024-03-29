@@ -3347,7 +3347,7 @@ bool View::getGlobalVisibleRect(Rect& r, Point* globalOffset) {
         if (globalOffset) {
             globalOffset->set(-mScrollX, -mScrollY);
         }
-        return mParent == nullptr || mParent->getChildVisibleRect(this, r, globalOffset);
+        return (mParent == nullptr) || mParent->getChildVisibleRect(this, r, globalOffset);
     }
     return false;
 }
