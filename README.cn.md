@@ -17,10 +17,14 @@
 
 # **ScreenShots**
 ![demo0](https://gitee.com/jiangcheng/cdroidX64/raw/master/apps/images/asd61236.gif)
-![demo1](https://gitee.com/houstudio/cdroid/raw/master/docs/videos/uidemo1.gif)
-![demo2](https://gitee.com/houstudio/cdroid/raw/master/docs/videos/uidemo2.gif)
+![输入图片说明](https://foruda.gitee.com/images/1696897258873801535/181bd53c_8310459.png "coffee1.png")
+![输入图片说明](https://foruda.gitee.com/images/1696897274979265997/cb22d7c6_8310459.png "coffee2.png")
+![输入图片说明](https://foruda.gitee.com/images/1696897128191287720/7754542e_8310459.png "kdz10.png")
+![输入图片说明](https://foruda.gitee.com/images/1696897669710472636/454e7f63_8310459.png "asd1.png")
+![输入图片说明](https://foruda.gitee.com/images/1696897695571432137/8f6d2169_8310459.png "asd2.png")
+![输入图片说明](https://foruda.gitee.com/images/1696897705672262478/c8736598_8310459.png "asd3.png")
+![输入图片说明](https://foruda.gitee.com/images/1696897716776731960/47e420c7_8310459.png "asd4.png")
 ![Pott](https://gitee.com/houstudio/cdroid/raw/master/docs/images/screenshots/plot.png)
-![ListView+Progress](https://gitee.com/houstudio/cdroid/raw/master/docs/videos/list_with_progress.gif)
 
 # **UI Components:**
    * View
