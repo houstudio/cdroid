@@ -449,13 +449,13 @@ void ViewPropertyAnimator::animatePropertyBy(int constantName, float startValue,
 }
 
 void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
-    View::TransformationInfo* info = mView->mTransformationInfo;
     RenderNode* node = mView->mRenderNode;
     Matrix matrix;
     Rect rect;
     node->getMatrix(matrix);
     rect.set(mView->getLeft(),mView->getTop(),mView->getWidth(),mView->getHeight());
     matrix.transform_rectangle((Cairo::RectangleInt&)rect);
+    mView->ensureTransformationInfo();
     switch (propertyConstant) {
     case TRANSLATION_X: node->setTranslationX(value);     break;
     case TRANSLATION_Y: node->setTranslationY(value);     break;
@@ -469,7 +469,7 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
     case Y:  node->setTranslationY(value - mView->mTop);  break;
     case Z:  node->setTranslationZ(value - node->getElevation());   break;
     case ALPHA:
-             info->mAlpha = value;
+             mView->mTransformationInfo->mAlpha = value;
              node->setAlpha(value);
              break;
     }
@@ -480,6 +480,7 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
 
 float ViewPropertyAnimator::getValue(int propertyConstant)const{
     RenderNode* node = mView->mRenderNode;
+    mView->ensureTransformationInfo();
     switch (propertyConstant) {
     case TRANSLATION_X: return node->getTranslationX();
     case TRANSLATION_Y: return node->getTranslationY();

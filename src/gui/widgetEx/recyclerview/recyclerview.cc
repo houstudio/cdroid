@@ -6252,7 +6252,6 @@ void RecyclerView::ViewHolder::setIsRecyclable(bool recyclable) {
     } else if (recyclable && mIsRecyclableCount == 0) {
         mFlags &= ~FLAG_NOT_RECYCLABLE;
     }
-    LOGD("%p.setIsRecyclable val :%d",this,recyclable);
 }
 
 bool RecyclerView::ViewHolder::isRecyclable() const{

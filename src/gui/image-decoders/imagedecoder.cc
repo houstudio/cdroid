@@ -102,7 +102,7 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
     if(ctx)
         istm = ctx->getInputStream(resourceId);
     else
-	istm = std::move(std::make_unique<std::ifstream>(resourceId));
+        istm = std::move(std::make_unique<std::ifstream>(resourceId));
     istm->read(contents,lengthOfLongestSignature);
     unsigned length = istm->gcount();
     if (length < lengthOfLongestSignature)
