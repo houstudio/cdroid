@@ -16,7 +16,7 @@ typedef struct{
 }NGL_PLAYER;
 static void MPCallbackFunc( enum aui_mp_message msg, void *data, void *user_data );
 #if 0
-HANDLE nglMPOpen(const char*fname){
+HANDLE MPOpen(const char*fname){
     aui_hdl hdl;
     NGL_PLAYER *mp=(NGL_PLAYER*)malloc(sizeof(NGL_PLAYER));
     char*p=strchr(fname,':');
@@ -40,7 +40,7 @@ HANDLE nglMPOpen(const char*fname){
     return mp;
 }
 
-DWORD nglMPPlay(HANDLE handle){
+int MPPlay(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     LOGD("hdl=%p",mp);
     int rc=aui_mp_set_buffering_time(mp->hplayer,10,5,30);
@@ -52,27 +52,27 @@ DWORD nglMPPlay(HANDLE handle){
     return E_OK;
 }
 
-DWORD nglMPStop(HANDLE handle){
+int nglMPStop(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     int rc=aui_mp_stop(mp->hplayer);
     LOGD("rc=%d hdl=%p",rc,mp);
     return E_OK;
 }
 
-DWORD nglMPResume(HANDLE handle){
+int MPResume(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     int rc=aui_mp_resume(mp->hplayer);
     LOGD("rc=%d hdl=%p",rc,mp);
     return E_OK;
 }
-DWORD nglMPPause(HANDLE handle){
+int MPPause(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     int rc=aui_mp_pause(mp->hplayer);
     LOGD("rc=%d hdl=%p",rc,mp);
     return E_OK;
 }
 
-DWORD nglMPClose(HANDLE handle){
+int nglMPClose(HANDLE handle){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     int rc=aui_mp_close(&mp->attr,&mp->hplayer);
     LOGD("rc=%d hdl=%p",rc,mp);
@@ -80,7 +80,7 @@ DWORD nglMPClose(HANDLE handle){
     return E_OK;
 }
 
-DWORD nglMPGetTime(HANDLE handle,UINT*curtime,UINT*timems){
+int MPGetTime(HANDLE handle,UINT*curtime,UINT*timems){
     aui_hdl hdl=(aui_hdl)handle;
     UINT t1,t2;
     int rc=0;
@@ -91,26 +91,26 @@ DWORD nglMPGetTime(HANDLE handle,UINT*curtime,UINT*timems){
     LOGD("rc=%d hdl=%p times=%d/%d",rc,hdl,t1,t2);
     return E_OK;
 }
-DWORD nglMPSeek(HANDLE handle,UINT timems){
+int MPSeek(HANDLE handle,UINT timems){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     //mpg_cmd_set_speed
 }
 
-DWORD nglMPSetCallback(HANDLE handle,MP_CALLBACK cbk,void*userdata){
+int MPSetCallback(HANDLE handle,MP_CALLBACK cbk,void*userdata){
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     mp->cbk=cbk;
     mp->userdata=userdata;
 }
 #else
-HANDLE nglMPOpen(const char*fname){}
-DWORD nglMPPlay(HANDLE handle){}
-DWORD nglMPStop(HANDLE handle){}
-DWORD nglMPResume(HANDLE handle){}
-DWORD nglMPPause(HANDLE handle){}
-DWORD nglMPClose(HANDLE handle){}
-DWORD nglMPSeek(HANDLE handle,UINT timems){}
-DWORD nglMPGetTime(HANDLE handle,UINT*curtime,UINT*timems){}
-DWORD nglMPSetCallback(HANDLE handle,MP_CALLBACK cbk,void*userdata){}
+HANDLE MPOpen(const char*fname){}
+int MPPlay(HANDLE handle){}
+int MPStop(HANDLE handle){}
+int MPResume(HANDLE handle){}
+int MPPause(HANDLE handle){}
+int MPClose(HANDLE handle){}
+int MPSeek(HANDLE handle,UINT timems){}
+int MPGetTime(HANDLE handle,UINT*curtime,UINT*timems){}
+int MPSetCallback(HANDLE handle,MP_CALLBACK cbk,void*userdata){}
 
 #endif
 static void MPCallbackFunc( enum aui_mp_message msg, void *data, void *user_data )

@@ -18,19 +18,19 @@ typedef enum{
 typedef void(*MP_CALLBACK)(HANDLE,MPMESSAGE msg,LONG param,void*userdata);
 
 HANDLE MPOpen(const char*fname);
-DWORD  MPPlay(HANDLE handle);
-DWORD  MPStop(HANDLE handle);
-DWORD  MPClose(HANDLE handle);
-DWORD  MPResume(HANDLE handle);
-DWORD  MPPause(HANDLE handle);
+int MPPlay(HANDLE handle);
+int MPStop(HANDLE handle);
+int MPClose(HANDLE handle);
+int MPResume(HANDLE handle);
+int MPPause(HANDLE handle);
 
-DWORD  MPGetDuration(HANDLE handle,double*mediatime);
-DWORD  MPGetPosition(HANDLE handle,double*position);
-DWORD  MPSeek(HANDLE handle,double seektime);
-DWORD  MPSetCallback(HANDLE,MP_CALLBACK,void*userdata);
-DWORD  MPSetVolume(HANDLE,int colume);
-DWORD  MPSetWindow(HANDLE,int x,int y,int width,int height);
-DWORD  MPRotate(HANDLE handle, int type);
+int MPGetDuration(HANDLE handle,double*mediatime);
+int MPGetPosition(HANDLE handle,double*position);
+int MPSeek(HANDLE handle,double seektime);
+int MPSetCallback(HANDLE,MP_CALLBACK,void*userdata);
+int MPSetVolume(HANDLE,int colume);
+int MPSetWindow(HANDLE,int x,int y,int width,int height);
+int MPRotate(HANDLE handle, int type);
 int MPGetStatus(HANDLE handle);
 int MPFlushScreen(bool enable);
 

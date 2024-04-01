@@ -21,54 +21,54 @@ HANDLE MPOpen(const char*fname) {
     return mp;
 }
 
-DWORD MPPlay(HANDLE handle) {
+int MPPlay(HANDLE handle) {
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     return E_OK;
 }
 
-DWORD MPStop(HANDLE handle) {
+int MPStop(HANDLE handle) {
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     return E_OK;
 }
 
-DWORD MPResume(HANDLE handle) {
+int MPResume(HANDLE handle) {
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     return E_OK;
 }
 
-DWORD MPPause(HANDLE handle) {
+int MPPause(HANDLE handle) {
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     return E_OK;
 }
 
-DWORD MPClose(HANDLE handle) {
+int MPClose(HANDLE handle) {
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     return E_OK;
 }
 
-DWORD MPGetTime(HANDLE handle,UINT*curtime,UINT*timems) {
+int MPGetTime(HANDLE handle,UINT*curtime,UINT*timems) {
     return E_OK;
 }
-DWORD MPSeek(HANDLE handle,double timems) {
+int MPSeek(HANDLE handle,double timems) {
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     //mpg_cmd_set_speed
 }
 
-DWORD SetCallback(HANDLE handle,MP_CALLBACK cbk,void*userdata) {
+int SetCallback(HANDLE handle,MP_CALLBACK cbk,void*userdata) {
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     mp->cbk=cbk;
     mp->userdata=userdata;
 }
 
-DWORD MPSetWindow(HANDLE handle,int x,int y,int w,int h) {
+int MPSetWindow(HANDLE handle,int x,int y,int w,int h) {
     return 0;
 }
-DWORD MPGetDuration(HANDLE hanle,double*mediatime){
+int MPGetDuration(HANDLE hanle,double*mediatime){
 }
-DWORD MPGetPosition(HANDLE handle,double*mediatime){
+int MPGetPosition(HANDLE handle,double*mediatime){
 }
 int MPGetStatus(HANDLE handle){
 }
-DWORD MPRotate(HANDLE handle,int rot) {
+int MPRotate(HANDLE handle,int rot) {
     return 0;
 }
