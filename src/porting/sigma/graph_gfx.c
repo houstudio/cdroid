@@ -63,25 +63,33 @@ void GFXSuspend(){
     printf("suspend end,we are wake up now. sysinit=%d,gfxopen=%d\r\nd",ret1,ret2);
 }
 
-static void showLogo(const FBSURFACE*fb,const char*fileName){
+static void* loadLogo(const char*fileName){
     #define __tmin__(a,b) ((a)>(b)?(b):(a))
-    if (access(fileName, F_OK) == 0) {            
+    struct stat st;
+    if (fstat(fileName,&st) == 0) {            
         size_t rlen, tlen = 0;
-        size_t blen = fb->msize;
         FILE *fo  = fopen(fileName, "rb");
-        while (tlen < blen && (rlen = fread(fb->buffer + tlen, 1, __tmin__(blen - tlen, 4096), fo)) > 0) {
+        void*buffer=malloc(st.st_size);
+        while (tlen < st.st_size && (rlen = fread(buffer + tlen, 1, __tmin__(st.st_size - tlen, 4096), fo)) > 0) {
             tlen += rlen;
         }
         fclose(fo);
-        LOGI("Logo buf=%p blen=%u tlen=%u", fb->buffer, blen, tlen);
+        LOGI("Logo buf=%p blen=%u tlen=%u", buffer,st.st_size, tlen);
+        return buffer;
     }
+    return NULL;
+}
+static void showLogo(FBSURFACE*dst,void*buffer){
+    memcpy(dst->buffer,buffer,dst->height*dst->pitch);
 }
 int GFXInit() {
     int ret;
+    char*logoBuffer;
     FBDEVICE*dev=&devs[0];
     if(dev->fb>=0)return E_OK;
     memset(devs,0,sizeof(devs));
     ret = MI_SYS_Init();
+	logoBuffer = loadLogo("logo.dat");
     LOGI("SYS_Init=%d",ret);
     ret = MI_GFX_Open();
     LOGI("MI_GFX_Open=%d",ret);
@@ -146,8 +154,10 @@ int GFXInit() {
     }
     //devSurfaces[0].buffer=(char*)mmap( dev->fix.smem_start,dev->fix.smem_len,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0 );
     MI_SYS_Mmap(dev->fix.smem_start,dev->fix.smem_len, (void**)&devSurfaces[0].buffer, FALSE);
-    MI_SYS_MemsetPa(devSurfaces[0].kbuffer,0xFF000000,displayScreenSize);
-    showLogo(&devSurfaces[0],"logo.dat");
+    if(logoBuffer){
+        showLogo(&devSurfaces[0],logoBuffer);
+        free(logoBuffer);
+    }//showLogo(&devSurfaces[0],"logo.dat");
     for(int i =0;devSurfaces[i].kbuffer;i++){
         LOGI("Surface[%d]buffer=%llx/%p %d",i,devSurfaces[i].kbuffer,devSurfaces[i].buffer,devSurfaces[i].msize);
     }
@@ -344,7 +354,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
             memset(surf->buffer,0,surf->msize);
         }
     }
-    if(surf->kbuffer) MI_SYS_MemsetPa(surf->kbuffer,0xFF000000,surf->msize);
+    //if(surf->kbuffer) MI_SYS_MemsetPa(surf->kbuffer,0xFF000000,surf->msize);
     surf->orig_buffer=surf->buffer;
     if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;

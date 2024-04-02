@@ -20,7 +20,7 @@ typedef struct{
 
 static timer_t timerid=0;
 
-static void timer_handler(int signum,siginfo_t*, void*) {
+static void timer_handler(int signum/*,siginfo_t*, void**/) {
     LOGV("TODO:add mediaplayer callback here");
 }
 
