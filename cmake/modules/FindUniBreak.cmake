@@ -19,6 +19,18 @@ if(UNIBREAK_INCLUDE_DIRS AND UNIBREAK_LIBRARIES)
     set(UNIBREAK_LIBRARY ${UNIBREAK_LIBRARIES})
     set(UNIBREAK_INCLUDE_DIR ${UNIBREAK_INCLUDE_DIRS})
     set(UNIBREAK_VERSION "5.0.0")
+    if(NOT TARGET libunibreak::libunibreak)
+        add_library(libunibreak::libunibreak UNKNOWN IMPORTED)
+        set_target_properties(libunibreak::libunibreak PROPERTIES
+          INTERFACE_COMPILE_DEFINITIONS "${_PNG_COMPILE_DEFINITIONS}"
+	  INTERFACE_INCLUDE_DIRECTORIES "${UNIBREAK_INCLUDE_DIRS}")
+
+	if(EXISTS "${UNIBREAK_LIBRARY}")
+          set_target_properties(libunibreak::libunibreak PROPERTIES
+            IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+	    IMPORTED_LOCATION "${UNIBREAK_LIBRARY}")
+        endif()
+    endif()    
 endif()
 
 include(FindPackageHandleStandardArgs)

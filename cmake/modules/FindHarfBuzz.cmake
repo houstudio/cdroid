@@ -70,7 +70,7 @@ if ("${PC_HARFBUZZ_VERSION}" VERSION_GREATER "0.9.17")
 endif ()
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(HarfBuzz DEFAULT_MSG HARFBUZZ_INCLUDE_DIRS HARFBUZZ_LIBRARIES)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(HarfBuzz DEFAULT_MSG HARFBUZZ_INCLUDE_DIRS HARFBUZZ_LIBRARIES HARFBUZZ_FOUND)
 
 mark_as_advanced(
     HARFBUZZ_INCLUDE_DIRS
@@ -78,6 +78,26 @@ mark_as_advanced(
 )
 if( HARFBUZZ_INCLUDE_DIRS )#AND NOT HARFBUZZ_LIBRARIES)
    set(HARFBUZZ_LIBRARIES harfbuzz)
+   set HARFBUZZ_FOUND TRUE)
+   if(NOT TARGET harfbuzz::harfbuzz)
+      add_library(harfbuzz::harfbuzz UNKNOWN IMPORTED)
+      set_target_properties(harfbuzz::harfbuzz PROPERTIES
+	      INTERFACE_INCLUDE_DIRECTORIES "${HARFBUZZ_INCLUDE_DIRS}")
+
+      if(HARFBUZZ_LIBRARY_RELEASE)
+        set_property(TARGET harfbuzz::harfbuzz APPEND PROPERTY
+          IMPORTED_CONFIGURATIONS RELEASE)
+        set_target_properties(harfbuzz::harfbuzz PROPERTIES
+		IMPORTED_LOCATION_RELEASE "${HARFBUZZ_LIBRARY_RELEASE}")
+      endif()
+
+      if(HARFBUZZ_LIBRARY_DEBUG)
+        set_property(TARGET harfbuzz::harfbuzz APPEND PROPERTY
+          IMPORTED_CONFIGURATIONS DEBUG)
+        set_target_properties(harfbuzz::harfbuzz PROPERTIES
+		IMPORTED_LOCATION_DEBUG "${HARFBUZZ_LIBRARY_DEBUG}")
+      endif()
+   endif()
 endif()
 set(HarfBuzz_INCLUDE_DIRS ${HARFBUZZ_INCLUDE_DIRS})
 set(HarfBuzz_LIBRARIES ${HARFBUZZ_LIBRARIES})
