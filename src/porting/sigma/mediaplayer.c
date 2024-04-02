@@ -63,7 +63,7 @@ HANDLE MPOpen(const char*fname){
     MP_PLAYER *mp=(MP_PLAYER*)malloc(sizeof(MP_PLAYER));
     memset(mp,0,sizeof(MP_PLAYER));
     mp->mediaURL=strdup(fname);//
-    if(timerid==0)timerid=initTimer();
+    //if(timerid==0)timerid=initTimer();
     return mp;
 }
 

@@ -89,7 +89,7 @@ int GFXInit() {
     if(dev->fb>=0)return E_OK;
     memset(devs,0,sizeof(devs));
     ret = MI_SYS_Init();
-	logoBuffer = loadLogo("logo.dat");
+    logoBuffer = loadLogo("logo.dat");
     LOGI("SYS_Init=%d",ret);
     ret = MI_GFX_Open();
     LOGI("MI_GFX_Open=%d",ret);
