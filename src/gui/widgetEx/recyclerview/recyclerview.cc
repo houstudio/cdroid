@@ -6475,11 +6475,8 @@ RecyclerView::SmoothScroller::SmoothScroller() {
 }
 
 void RecyclerView::SmoothScroller::start(RecyclerView* recyclerView, LayoutManager* layoutManager) {
-    if (mStarted) {
-        LOGW("An instance of %s was started more than once. Each instance of %s "
-                "is intended to only be used once. You should create a new instance for "
-                "each use.");//,this.getClass().getSimpleName(),this.getClass().getSimpleName());
-    }
+    LOGW_IF(mStarted,"An instance of SmoothScroller was started more than once. Each instance of SmoothScroller "
+                "is intended to only be used once. You should create a new instance for each use.");
 
     mRecyclerView = recyclerView;
     mLayoutManager = layoutManager;
@@ -6640,8 +6637,11 @@ RecyclerView::SmoothScroller::Action::Action(int dx, int dy, int duration):Actio
 RecyclerView::SmoothScroller::Action::Action(int dx, int dy, int duration,Interpolator* interpolator) {
     mDx = dx;
     mDy = dy;
+    mChanged = false;
     mDuration = duration;
     mInterpolator = interpolator;
+    mConsecutiveUpdates = 0;
+    mJumpToPosition = NO_POSITION;
 }
 
 void RecyclerView::SmoothScroller::Action::jumpTo(int targetPosition) {

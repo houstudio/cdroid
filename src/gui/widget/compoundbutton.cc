@@ -52,7 +52,7 @@ void CompoundButton::toggle(){
 
 CompoundButton::~CompoundButton(){
     delete mButtonDrawable;
-    delete mButtonTintList;
+    //delete mButtonTintList;tintlist cant be deleted
 }
 
 std::vector<int>CompoundButton::onCreateDrawableState(){

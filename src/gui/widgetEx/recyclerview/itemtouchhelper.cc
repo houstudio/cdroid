@@ -285,9 +285,9 @@ void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState
             getSelectedDxDy(mTmpPosition);
             const float currentTranslateX = mTmpPosition[0];
             const float currentTranslateY = mTmpPosition[1];
-            RecoverAnimation* rv =nullptr;/* new RecoverAnimation(prevSelected, animationType,
+            RecoverAnimation* rv =new RecoverAnimation(prevSelected, animationType,
                     prevActionState, currentTranslateX, currentTranslateY,
-                    targetTranslateX, targetTranslateY) {
+                    targetTranslateX, targetTranslateY);/*{
                 public void onAnimationEnd(Animator animation) {
                     super.onAnimationEnd(animation);
                     if (this.mOverridden) {

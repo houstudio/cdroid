@@ -736,7 +736,7 @@ void TextView::checkForRelayout() {
     if(mLayoutParams==nullptr) return;
     if (( (mLayoutParams->width != LayoutParams::WRAP_CONTENT)
             || (mMaxWidthMode == mMinWidthMode && mMaxWidth == mMinWidth))
-            && (mHintLayout || mHintLayout->getText().empty())
+            && ((mHintLayout==nullptr) || mHintLayout->getText().empty())
             && (mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight() > 0)) {
         // Static width, so try making a new text layout.
 

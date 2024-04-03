@@ -2,6 +2,7 @@
 #include <fstream>
 #include <cdtypes.h>
 #include <cdlog.h>
+#include <framesequence.h>
 int main(int argc,char*argv[]){
     std::unique_ptr<std::ifstream> fstrm = std::make_unique<std::ifstream>(argv[1]);
     std::unique_ptr<std::istream> istm = std::move(fstrm);
@@ -16,5 +17,7 @@ int main(int argc,char*argv[]){
 	    dec->readImage(image,i);
 	LOGD("loop %d",loop);
     }
+    std::ifstream fin(argv[1]);
+    cdroid::FrameSequence*seq=cdroid::FrameSequence::create(&fin);
     return 0;
 }
