@@ -270,6 +270,7 @@ Drawable*LinearLayout::getDividerDrawable(){
 
 void LinearLayout::setDividerDrawable(Drawable*divider){
     if (divider == mDivider) return;
+    delete mDivider;
     mDivider = divider;
     if (divider != nullptr) {
         mDividerWidth = divider->getIntrinsicWidth();

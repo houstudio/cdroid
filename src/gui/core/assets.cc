@@ -235,9 +235,11 @@ ZIPArchive*Assets::getResource(const std::string&fullResId,std::string*relativeR
 std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid,std::string*outpkg) {
     std::string resname;
     ZIPArchive*pak = getResource(fullresid,&resname,outpkg);
-    std::istream*stream = pak ? pak->getInputStream(resname) : nullptr;
-    std::unique_ptr<std::istream>is(stream);
-    return is;
+    if(pak){
+	std::istream*stream = pak->getInputStream(resname);
+	if(stream)return std::unique_ptr<std::istream>(stream);
+    }
+    return std::make_unique<std::ifstream>(fullresid);
 }
 
 void Assets::loadStrings(const std::string&lan) {
