@@ -157,7 +157,7 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
 }
 
 bool AnimatedImageDrawable::isRunning(){
-    return true;    
+    return mStarting;
 }
 
 void AnimatedImageDrawable::start(){
