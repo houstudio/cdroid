@@ -331,9 +331,8 @@ long WebPFrameSequence::WebPFrameSequenceState::drawFrame(int frameNr,
         prevIter = currIter;
         ok = WebPDemuxGetFrame(demux, i + 1, &currIter);  // Get ith frame.
         LOGE_IF(!ok, "Could not retrieve frame# %d", i);
-        LOGV("producing frame %d (has_alpha = %d, dispose = %s, blend = %s, duration = %d)",
-              i, currIter.has_alpha,
-              (currIter.dispose_method == WEBP_MUX_DISPOSE_NONE) ? "none" : "background",
+        LOGV("producing frame %d (has_alpha = %d, dispose = %s, blend = %s, duration = %d)", i ,
+              currIter.has_alpha, (currIter.dispose_method == WEBP_MUX_DISPOSE_NONE) ? "none" : "background",
               (currIter.blend_method == WEBP_MUX_BLEND) ? "yes" : "no", currIter.duration);
         // We swap the prev/curr buffers as we go.
         uint32_t* tmpBuffer = prevBuffer;
@@ -344,8 +343,7 @@ long WebPFrameSequence::WebPFrameSequenceState::drawFrame(int frameNr,
         prevStride = currStride;
         currStride = tmpStride;
 
-        LOGV("prev = %p, curr = %p, out = %p, tmp = %p",
-              prevBuffer, currBuffer, outputPtr, mPreservedBuffer);
+        LOGV("prev = %p, curr = %p, out = %p, tmp = %p", prevBuffer, currBuffer, outputPtr, mPreservedBuffer);
         // Process this frame.
         initializeFrame(currIter, currBuffer, currStride, prevIter, prevBuffer, prevStride);
 

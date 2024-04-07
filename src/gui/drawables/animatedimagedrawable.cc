@@ -3,6 +3,7 @@
 #include <cdlog.h>
 #include <gui/gui_features.h>
 #include <image-decoders/imagedecoder.h>
+#include <image-decoders/framesequence.h>
 #include <porting/cdgraph.h>
 namespace cdroid{
 #define ENABLE_DMABLIT 0
@@ -18,27 +19,34 @@ AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState>
     mRepeatCount = REPEAT_UNDEFINED;
     mIntrinsicWidth = mIntrinsicHeight = 0;
     mAnimatedImageState = state;
-    mCurrentFrame= 0;
+    mCurrentFrame= -1;
+    mNextFrame= 0;
+    mFrameScheduled = false;
     mImageHandler = nullptr;
+    mFrameSequenceState = nullptr;
 }
 
 AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::string&res)
    :AnimatedImageDrawable(){
     uint8_t*buffer;
     uint32_t pitch;
-    LOGD("decoder=%p res=%s",mAnimatedImageState->mDecoder,res.c_str());
-    ImageDecoder*decoder = ImageDecoder::create(ctx,res);
-    mAnimatedImageState->mDecoder = decoder;
-    decoder->load();
+    auto istm = ctx->getInputStream(res);
+    auto frmSequence = FrameSequence::create(istm.get());
+    mAnimatedImageState->mFrameSequence = frmSequence;
+    LOGD("decoder=%p res=%s",frmSequence,res.c_str());
+    mRepeatCount = frmSequence->getDefaultLoopCount();
+    if(mRepeatCount<=0)
+        mRepeatCount = REPEAT_UNDEFINED;
+    mFrameSequenceState = frmSequence->createState();
 #if ENABLE(DMABLIT)
-    GFXCreateSurface(0,&mImageHandler,decoder->getWidth(),decoder->getHeight(),0,0);
+    GFXCreateSurface(0,&mImageHandler,frmSequence->getWidth(),frmSequence->getHeight(),0,0);
     GFXLockSurface(mImageHandler,(void**)&buffer,&pitch);
-    mAnimatedImageState->mImage = Cairo::ImageSurface::create(buffer,Cairo::Surface::Format::ARGB32,decoder->getWidth(),decoder->getHeight(),pitch);
+    mImage = Cairo::ImageSurface::create(buffer,Cairo::Surface::Format::ARGB32,frmSequence->getWidth(),frmSequence->getHeight(),pitch);
 #else
-    mAnimatedImageState->mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,decoder->getWidth(),decoder->getHeight());
+    mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,frmSequence->getWidth(),frmSequence->getHeight());
 #endif
-    LOGI("image %dx%dx%d hwsurface.buffer=%p",decoder->getWidth(),decoder->getHeight(),pitch,buffer);
-    mAnimatedImageState->mFrameCount = decoder->getFrameCount();
+    LOGI("image %dx%dx%d hwsurface.buffer=%p",frmSequence->getWidth(),frmSequence->getHeight(),pitch,buffer);
+    mAnimatedImageState->mFrameCount = frmSequence->getFrameCount();
 }
 
 AnimatedImageDrawable::~AnimatedImageDrawable(){
@@ -46,6 +54,7 @@ AnimatedImageDrawable::~AnimatedImageDrawable(){
     if(mRunnable)
         unscheduleSelf(mRunnable);
     mRunnable = nullptr;
+    delete mFrameSequenceState;
     if(mImageHandler){
         GFXDestroySurface(mImageHandler);
         mImageHandler = nullptr;
@@ -66,17 +75,18 @@ void AnimatedImageDrawable::setRepeatCount(int repeatCount){
 }
 
 int AnimatedImageDrawable::getRepeatCount()const{
+    auto frameSequence = mAnimatedImageState->mFrameSequence;
     return mRepeatCount;
 }
 
 int AnimatedImageDrawable::getIntrinsicWidth()const{
-    const ImageDecoder*decoder = mAnimatedImageState->mDecoder;
-    return decoder?decoder->getWidth():mIntrinsicWidth;
+    auto frameSequence = mAnimatedImageState->mFrameSequence;
+    return frameSequence ? frameSequence->getWidth():mIntrinsicWidth;
 }
 
 int AnimatedImageDrawable::getIntrinsicHeight()const{
-    const ImageDecoder*decoder = mAnimatedImageState->mDecoder;
-    return decoder?decoder->getHeight():mIntrinsicHeight;
+    auto frameSequence = mAnimatedImageState->mFrameSequence;
+    return frameSequence ? frameSequence->getHeight():mIntrinsicHeight;
 }
 
 void AnimatedImageDrawable::setAlpha(int alpha){
@@ -92,40 +102,45 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
         postOnAnimationStart();
     }
     canvas.save();
-    Cairo::RefPtr<Cairo::ImageSurface>image = mAnimatedImageState->mImage;
-    ImageDecoder*mDecoder = mAnimatedImageState->mDecoder;
-    mDecoder->readImage(image,mCurrentFrame);
-    const long nextDelay = mDecoder->getFrameDuration(mCurrentFrame);
+    auto frmSequence = mAnimatedImageState->mFrameSequence;
+    if( (mCurrentFrame!=mNextFrame) && mAnimatedImageState->mFrameCount){
+        mFrameDelay = mFrameSequenceState->drawFrame(mNextFrame,(uint32_t*)mImage->get_data(),mImage->get_stride()>>2,mCurrentFrame);
+        mCurrentFrame = mNextFrame;
+        mImage->mark_dirty();
+    }
     // a value <= 0 indicates that the drawable is stopped or that renderThread
     // will manage the animation
     LOGV("%p draw Frame %d/%d started=%d repeat=%d/%d nextDelay=%d",this,mCurrentFrame,
-          mAnimatedImageState->mFrameCount,mStarting,mRepeated,mRepeatCount,nextDelay);
+          mAnimatedImageState->mFrameCount,mStarting,mRepeated,mRepeatCount,mFrameDelay);
     if(mStarting && ((mRepeated<mRepeatCount) || (mRepeatCount<0))){
-        if (nextDelay > 0) {
+        if (mFrameDelay > 0) {
             if (mRunnable == nullptr) {
                 mRunnable = [this](){
                     if(mStarting && mAnimatedImageState->mFrameCount){
                         invalidateSelf();
-                        mCurrentFrame=(mCurrentFrame+1)%mAnimatedImageState->mFrameCount;
+                        mNextFrame = (mCurrentFrame+1)%mAnimatedImageState->mFrameCount;
                     }
-                    if(mCurrentFrame==mAnimatedImageState->mFrameCount-1){
+                    if(mNextFrame==mAnimatedImageState->mFrameCount-1){
                         mRepeated++;
                         mStarting = (mRepeated>=mRepeatCount);
                     }
+                    mFrameScheduled = false;
                 };
             }
-            unscheduleSelf(mRunnable);
-            scheduleSelf(mRunnable, nextDelay + SystemClock::uptimeMillis());
+            if(!mFrameScheduled){
+                unscheduleSelf(mRunnable);
+                scheduleSelf(mRunnable, SystemClock::uptimeMillis() + mFrameDelay);
+                mFrameScheduled=true;
+            }
         }
         if ( mCurrentFrame==mAnimatedImageState->mFrameCount-1){// == FINISHED) {
             // This means the animation was drawn in software mode and ended.
             postOnAnimationEnd();
         }
     }
-    image->mark_dirty();
     void*handler = canvas.getHandler();
     if((mImageHandler==nullptr)||(handler==nullptr)){
-        canvas.set_source(image,mBounds.left,mBounds.top);
+        canvas.set_source(mImage,mBounds.left,mBounds.top);
         canvas.set_operator(Cairo::Context::Operator::SOURCE);
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.fill();
@@ -146,7 +161,7 @@ bool AnimatedImageDrawable::isRunning(){
 }
 
 void AnimatedImageDrawable::start(){
-    if (mAnimatedImageState->mDecoder == nullptr) {
+    if (mAnimatedImageState->mFrameSequence == nullptr) {
         throw "called start on empty AnimatedImageDrawable";
     }
 
@@ -157,7 +172,7 @@ void AnimatedImageDrawable::start(){
 }
 
 void AnimatedImageDrawable::stop(){
-    if (mAnimatedImageState->mDecoder == nullptr) {
+    if (mAnimatedImageState->mFrameSequence == nullptr) {
         throw "called stop on empty AnimatedImageDrawable";
     }
     if (mStarting){
@@ -229,12 +244,11 @@ AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(){
 AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(const AnimatedImageState& state){
     mAutoMirrored = state.mAutoMirrored;
     mFrameCount = state.mFrameCount;
-    mDecoder = state.mDecoder;
-    mImage = state.mImage;
+    mFrameSequence = state.mFrameSequence;
 }
 
 AnimatedImageDrawable::AnimatedImageState::~AnimatedImageState(){
-    delete mDecoder;
+    delete mFrameSequence;
 }
 
 AnimatedImageDrawable* AnimatedImageDrawable::AnimatedImageState::newDrawable(){

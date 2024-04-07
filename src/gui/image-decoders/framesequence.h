@@ -73,7 +73,7 @@ struct FrameSequence::RegistryEntry {
 class FrameSequence::Registry {
 public:
     Registry(const RegistryEntry& entry);
-    static const RegistryEntry* Find(std::istream* stream);
+    static const RegistryEntry* find(std::istream* stream);
 private:
     RegistryEntry mImpl;
     Registry* mNext;

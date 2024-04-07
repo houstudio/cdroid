@@ -131,8 +131,8 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
 #endif
 
 #if ENABLE(WEBP)
-    if (matchesWebPSignature(contents))
-        return new WebpDecoder(std::move(istm));
+    //if (matchesWebPSignature(contents))
+    //    return new WebpDecoder(std::move(istm));
 #endif
 #if USE(BITMAP)
     if (matchesBMPSignature(contents))

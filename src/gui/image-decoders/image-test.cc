@@ -3,7 +3,11 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <framesequence.h>
-int main(int argc,char*argv[]){
+#include <gui/cdroid.h>
+#include <core/app.h>
+int main(int argc,const char*argv[]){
+    cdroid::App app(argc,argv);
+#if 0
     std::unique_ptr<std::ifstream> fstrm = std::make_unique<std::ifstream>(argv[1]);
     std::unique_ptr<std::istream> istm = std::move(fstrm);
     cdroid::GIFDecoder*dec = new cdroid::GIFDecoder(std::move(istm));
@@ -17,7 +21,22 @@ int main(int argc,char*argv[]){
 	    dec->readImage(image,i);
 	LOGD("loop %d",loop);
     }
-    std::ifstream fin(argv[1]);
+    
     cdroid::FrameSequence*seq=cdroid::FrameSequence::create(&fin);
-    return 0;
+#else
+    Window*w=new Window(0,0,-1,-1);
+    AnimatedImageDrawable*ad=new AnimatedImageDrawable(&app,"./Honeycam1.gif");
+    cdroid::TextView*tv=new cdroid::TextView("Hello World!",100,100);
+    w->addView(tv);
+    tv->setBackground(ad);
+    ad->start();
+    Runnable r;
+    r=[&](){w->invalidate();};
+    w->postDelayed(r,100);
+    w->setOnClickListener([w,tv,ad](View&v){
+       tv->invalidate();
+       LOGD("invalidate");
+    });
+#endif
+    return app.exec();
 }

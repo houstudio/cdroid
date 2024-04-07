@@ -10,6 +10,10 @@ DividerItemDecoration::DividerItemDecoration(Context* context, int orientation) 
     setOrientation(orientation);
 }
 
+DividerItemDecoration::~DividerItemDecoration(){
+    delete mDivider;
+}
+
 void DividerItemDecoration::setOrientation(int orientation) {
     if (orientation != HORIZONTAL && orientation != VERTICAL) {
         FATAL("Invalid orientation. It should be either HORIZONTAL or VERTICAL");
@@ -19,6 +23,7 @@ void DividerItemDecoration::setOrientation(int orientation) {
 
 void DividerItemDecoration::setDrawable(Drawable* drawable) {
     FATAL_IF(drawable==nullptr,"Drawable cannot be null.");
+    delete mDivider;
     mDivider = drawable;
 }
 

@@ -6,7 +6,6 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
 endif()
 aux_source_directory(core SRCS_GUICORE)
-add_subdirectory(image-decoders)
 aux_source_directory(view SRCS_VIEWS)
 aux_source_directory(widget SRCS_WIDGET)
 file(GLOB_RECURSE SRCS_WIDGETEX RELATIVE "${PROJECT_SOURCE_DIR}" "widgetEx/*")
@@ -17,12 +16,15 @@ aux_source_directory(animation SRCS_ANIMATION)
 aux_source_directory(private SRCS_PRIVATE)
 aux_source_directory(utils SRCS_UTILS)
 aux_source_directory(transition SRCS_TRANSITION)
+add_subdirectory(image-decoders)
+aux_source_directory(image-decoders SRCS_IMAGEDECODERS)
 include_directories(
     ${PROJECT_SOURCE_DIR}/
     ${PROJECT_SOURCE_DIR}/private
     ${PROJECT_SOURCE_DIR}/core
     ${PROJECT_SOURCE_DIR}/view
     ${PROJECT_SOURCE_DIR}/cairomm
+    ${PROJECT_SOURCE_DIR}/image-decoders
     ${PROJECT_SOURCE_DIR}/../porting/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include
     ${CMAKE_BINARY_DIR}/include
@@ -43,10 +45,10 @@ set(SOURCES_GUI
     ${SRCS_CAIROMM} ${SRCS_WIDGET}
     ${SRCS_WIDGETEX} ${SRCS_DRAWABLES}
     ${SRCS_APP} ${SRCS_DIALOG}
-    #${SRCS_PRIVATE}
     ${SRCS_UTILS}
     ${SRCS_ANIMATION}
     ${SRCS_TRANSITION}
+    ${SRCS_IMAGEDECODERS}
 )
 
 add_library(cdroid SHARED ${SOURCES_GUI})
@@ -73,7 +75,7 @@ set(PKGCONFIG_LIBS_PRIVATE "expat bzip2 libzip")
 set(NONPKG_LIBS "-l${PROJECT_NAME} -ltvhal")#non pkgconfig libraries
 set(NONPKG_LIBS_PRIVATE "-ltvhal")
 message("==CDROID_DEPLIBS=${CDROID_DEPLIBS}")
-target_link_libraries(cdroid image-decoders ${CDROID_DEPLIBS} tvhal)
+target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal)
 
 if(litehtml_FOUND)
    add_subdirectory(widget/html)

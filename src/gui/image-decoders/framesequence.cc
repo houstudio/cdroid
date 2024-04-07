@@ -29,7 +29,7 @@ FrameSequence::Registry::Registry(const RegistryEntry& entry) {
     }
 }
 
-const FrameSequence::RegistryEntry* FrameSequence::Registry::Find(std::istream* stream) {
+const FrameSequence::RegistryEntry* FrameSequence::Registry::find(std::istream* stream) {
     Registry* registry = mHead;
     const int headerSize = mHeaderBytesRequired;
     char header[headerSize];
@@ -46,7 +46,7 @@ const FrameSequence::RegistryEntry* FrameSequence::Registry::Find(std::istream* 
 }
 
 FrameSequence* FrameSequence::create(std::istream* stream) {
-    const RegistryEntry* entry = Registry::Find(stream);
+    const RegistryEntry* entry = Registry::find(stream);
 
     if (!entry) return NULL;
 
@@ -62,7 +62,7 @@ FrameSequence* FrameSequence::create(std::istream* stream) {
 }
 
 bool FrameSequence::isSupport(std::istream* stream) {
-    const RegistryEntry* entry = Registry::Find(stream);
+    const RegistryEntry* entry = Registry::find(stream);
     return entry!=nullptr;
 }
 }/*endof namespace*/

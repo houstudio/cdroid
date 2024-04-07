@@ -1,7 +1,7 @@
 /*gui_features.h.cmake  Generated from configure.ac by autoheader.*/
 #define ENABLE_GIF   1     
 /* #undef ENABLE_JPEG */
-/* #undef ENABLE_WEBP */
+#define ENABLE_WEBP  1
 /* #undef ENABLE_TURBOJPEG */
 #define ENABLE_MBEDTLS   1
 /* #undef ENABLE_UPNP */

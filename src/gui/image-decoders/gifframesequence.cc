@@ -33,10 +33,6 @@ static uint32_t gifColorToColor8888(const GifColorType& color) {
     return ARGB_TO_COLOR8888(0xff, color.Red, color.Green, color.Blue);
 }
 
-static long getDelayMs(GraphicsControlBlock& gcb) {
-    return gcb.DelayTime * 10;
-}
-
 static bool willBeCleared(const GraphicsControlBlock& gcb) {
     return gcb.DisposalMode == DISPOSE_BACKGROUND || gcb.DisposalMode == DISPOSE_PREVIOUS;
 }
@@ -79,8 +75,7 @@ GifFrameSequence::GifFrameSequence(std::istream* stream) :
                     && !memcmp((const char*)(eb1->Bytes), "NETSCAPE2.0", 11)
                     // verify extension contents and get loop count
                     && eb2->Function == CONTINUE_EXT_FUNC_CODE
-                    && eb2->ByteCount == 3
-                    && eb2->Bytes[0] == 1) {
+                    && eb2->ByteCount == 3 && eb2->Bytes[0] == 1) {
                 mLoopCount = (int)(eb2->Bytes[2] << 8) + (int)(eb2->Bytes[1]);
             }
         }
@@ -88,7 +83,7 @@ GifFrameSequence::GifFrameSequence(std::istream* stream) :
         DGifSavedExtensionToGCB(mGif, i, &gcb);
 
         // timing
-        durationMs += getDelayMs(gcb);
+        durationMs += gcb.DelayTime * 10;//getDelayMs(gcb);
 
         // preserve logic
         mPreservedFrames[i] = false;
@@ -238,8 +233,7 @@ long GifFrameSequence::GifFrameSequenceState::drawFrame(int frameNr,
         return -1;
     }
 
-    LOGV("drawFrame on %p nr %d on addr %p, previous frame nr %d",
-            this, frameNr, outputPtr, previousFrameNr);
+    LOGV("drawFrame on %p nr %d on addr %p, previous frame nr %d",this, frameNr, outputPtr, previousFrameNr);
 
     const int height = mFrameSequence.getHeight();
     const int width = mFrameSequence.getWidth();
@@ -316,13 +310,12 @@ long GifFrameSequence::GifFrameSequenceState::drawFrame(int frameNr,
                 cmap = frame.ImageDesc.ColorMap;
             }
 
-            if (cmap == NULL || cmap->ColorCount != (1 << cmap->BitsPerPixel)) {
-                LOGW("Warning: potentially corrupt color map");
-            }
+            LOGW_IF((cmap == nullptr)||(cmap->ColorCount != (1 << cmap->BitsPerPixel)),
+                "Warning: potentially corrupt color map");
 
             const unsigned char* src = (unsigned char*)frame.RasterBits;
             uint32_t* dst = outputPtr + frame.ImageDesc.Left +
-                    frame.ImageDesc.Top * outputPixelStride;
+                frame.ImageDesc.Top * outputPixelStride;
             GifWord copyWidth, copyHeight;
             getCopySize(frame.ImageDesc, width, height, copyWidth, copyHeight);
             for (; copyHeight > 0; copyHeight--) {
@@ -337,7 +330,7 @@ long GifFrameSequence::GifFrameSequenceState::drawFrame(int frameNr,
     const int maxFrame = gif->ImageCount;
     const int lastFrame = (frameNr + maxFrame - 1) % maxFrame;
     DGifSavedExtensionToGCB(gif, lastFrame, &gcb);
-    return getDelayMs(gcb);
+    return gcb.DelayTime * 10;//getDelayMs(gcb);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

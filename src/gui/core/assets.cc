@@ -236,8 +236,8 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
     std::string resname;
     ZIPArchive*pak = getResource(fullresid,&resname,outpkg);
     if(pak){
-	std::istream*stream = pak->getInputStream(resname);
-	if(stream)return std::unique_ptr<std::istream>(stream);
+        std::istream*stream = pak->getInputStream(resname);
+        if(stream)return std::unique_ptr<std::istream>(stream);
     }
     return std::make_unique<std::ifstream>(fullresid);
 }

@@ -30,7 +30,7 @@ if(UNIBREAK_INCLUDE_DIRS AND UNIBREAK_LIBRARIES)
             IMPORTED_LINK_INTERFACE_LANGUAGES "C"
 	    IMPORTED_LOCATION "${UNIBREAK_LIBRARY}")
         endif()
-    endif()    
+    endif()
 endif()
 
 include(FindPackageHandleStandardArgs)

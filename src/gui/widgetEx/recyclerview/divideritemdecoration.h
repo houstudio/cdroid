@@ -17,6 +17,7 @@ private:
     void drawHorizontal(Canvas& canvas, RecyclerView& parent);
 public:
     DividerItemDecoration(Context* context, int orientation);
+    virtual ~DividerItemDecoration();
     void setOrientation(int orientation);
     void setDrawable(Drawable* drawable);
     void onDraw(Canvas& c, RecyclerView& parent, RecyclerView::State& state)override;

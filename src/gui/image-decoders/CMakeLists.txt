@@ -20,7 +20,7 @@ endif()
 #endif()
 #message(FATAL_ERROR "WEBP_FOUND=${WEBP_FOUND} GIF_FOUND=${GIF_FOUND} IMAGE_DEPLIBS=${IMAGE_DEPLIBS}")
 add_library(image-decoders STATIC ${DECODER_SRCS})
-target_link_libraries(image-decoders ${IMAGE_DEPLIBS})
+target_link_libraries(image-decoders ${IMAGE_DEPLIBS} ${WEBP_LIBRAIRES})
 
 add_executable(imagetest image-test.cc)
 target_link_libraries(imagetest tvhal cdroid ${IMAGE_DEPLIBS} ${JPEG_LIBRARIES} image-decoders)

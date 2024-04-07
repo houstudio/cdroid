@@ -2,18 +2,16 @@
 #define __ANIMATED_IMAGE_DRAWABLE_H__
 #include <drawables/drawable.h>
 #include <core/handler.h>
+#include <image-decoders/framesequence.h>
 namespace cdroid{
 /*for drawing animated images (like GIF)*/
-class ImageDecoder;
 class AnimatedImageDrawable:public Drawable,public Animatable2{
 private:
     class AnimatedImageState:public std::enable_shared_from_this<AnimatedImageState>,public ConstantState{
     public:
         bool mAutoMirrored;
         int mFrameCount;
-        ImageDecoder*mDecoder;
-        Cairo::RefPtr<Cairo::ImageSurface>mImage;
-
+        FrameSequence*mFrameSequence;
         AnimatedImageState();
         AnimatedImageState(const AnimatedImageState& state);
         ~AnimatedImageState();
@@ -24,10 +22,15 @@ private:
     int mIntrinsicWidth;
     int mIntrinsicHeight;
     bool mStarting;
+    bool mFrameScheduled;
     int mCurrentFrame;
+    int mNextFrame;
+    int mFrameDelay;
     int mRepeatCount;
     int mRepeated;/*repeated played rounds*/
     std::shared_ptr<AnimatedImageState> mAnimatedImageState;
+    Cairo::RefPtr<Cairo::ImageSurface>mImage;
+    FrameSequence::FrameSequenceState*mFrameSequenceState;
     Runnable mRunnable;
     ColorFilter* mColorFilter;
     std::vector<Animatable2::AnimationCallback> mAnimationCallbacks;
