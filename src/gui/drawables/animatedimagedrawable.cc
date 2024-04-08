@@ -45,7 +45,7 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
 #else
     mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,frmSequence->getWidth(),frmSequence->getHeight());
 #endif
-    LOGI("image %dx%dx%d hwsurface.buffer=%p",frmSequence->getWidth(),frmSequence->getHeight(),pitch,buffer);
+    LOGI("image %dx%dx%d hwsurface.buffer=%p",frmSequence->getWidth(),frmSequence->getHeight(),frmSequence->getFrameCount(),buffer);
     mAnimatedImageState->mFrameCount = frmSequence->getFrameCount();
 }
 
@@ -118,12 +118,13 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
                 mRunnable = [this](){
                     if(mStarting && mAnimatedImageState->mFrameCount){
                         invalidateSelf();
-                        mNextFrame = (mCurrentFrame+1)%mAnimatedImageState->mFrameCount;
+                        mNextFrame = (mNextFrame+1)%mAnimatedImageState->mFrameCount;
                     }
                     if(mNextFrame==mAnimatedImageState->mFrameCount-1){
                         mRepeated++;
                         mStarting = (mRepeated>=mRepeatCount);
                     }
+                    mCurrentFrame=(mNextFrame-1)%mAnimatedImageState->mFrameCount;
                     mFrameScheduled = false;
                 };
             }
