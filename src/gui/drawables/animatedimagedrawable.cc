@@ -24,6 +24,11 @@ AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState>
     mFrameScheduled = false;
     mImageHandler = nullptr;
     mFrameSequenceState = nullptr;
+    auto frmSequence = mAnimatedImageState->mFrameSequence;
+    if(frmSequence){
+        mFrameSequenceState = frmSequence->createState();
+        mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,frmSequence->getWidth(),frmSequence->getHeight());
+    }
 }
 
 AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::string&res)
@@ -98,6 +103,7 @@ int AnimatedImageDrawable::getAlpha()const{
 }
 
 void AnimatedImageDrawable::draw(Canvas& canvas){
+    if(mImage==nullptr)return;
     if (mStarting && (mCurrentFrame==0) ) {
         postOnAnimationStart();
     }
@@ -240,6 +246,7 @@ Drawable*AnimatedImageDrawable::inflate(Context*ctx,const AttributeSet&atts){
 AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(){
     mAutoMirrored= false;
     mFrameCount  = 0;
+    mFrameSequence = nullptr;
 }
 
 AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(const AnimatedImageState& state){
