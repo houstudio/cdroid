@@ -30,7 +30,7 @@ ShapeDrawable* ShapeDrawable::ShapeState::newDrawable(){
 
 ShapeDrawable::ShapeState::~ShapeState(){
     delete mShape;
-    delete mTint;
+    //delete mTint;mTint cant be destroied
 }
 
 int ShapeDrawable::ShapeState::getChangingConfigurations()const{

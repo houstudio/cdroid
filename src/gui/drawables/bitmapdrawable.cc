@@ -47,7 +47,7 @@ BitmapDrawable::BitmapState::BitmapState(const BitmapState&bitmapState){
 }
 
 BitmapDrawable::BitmapState::~BitmapState(){
-    //delete mTint;//tint cant destroyed
+    //delete mTint;//tint cant be destroied
 }
 
 BitmapDrawable* BitmapDrawable::BitmapState::newDrawable(){
