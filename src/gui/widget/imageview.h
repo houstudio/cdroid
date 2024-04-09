@@ -67,6 +67,7 @@ public:
     void jumpDrawablesToCurrentState();
     void invalidateDrawable(Drawable& dr)override;
     std::vector<int> onCreateDrawableState()override;
+    void onRtlPropertiesChanged(int layoutDirection)override;
     int getScaleType()const;
     void setScaleType(int st);
     void setImageMatrix(const Cairo::Matrix& matrix);

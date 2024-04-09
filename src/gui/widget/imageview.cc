@@ -73,7 +73,7 @@ ImageView::~ImageView() {
     if(mDrawable!=mRecycleableBitmapDrawable)
         delete mRecycleableBitmapDrawable;
     delete mDrawable;
-    //delete mDrawableTintList;//cant destroy.
+    //delete mDrawableTintList;//cant be destroied.
     delete mColorFilter;
 }
 
@@ -344,6 +344,8 @@ bool ImageView::verifyDrawable(Drawable* dr)const{
 }
 
 void ImageView::jumpDrawablesToCurrentState(){
+    View::jumpDrawablesToCurrentState();
+    if (mDrawable) mDrawable->jumpToCurrentState();
 }
 
 std::vector<int> ImageView::onCreateDrawableState(){
@@ -520,7 +522,7 @@ void ImageView::setImageDrawable(Drawable*drawable){
 }
 
 void ImageView::setImageLevel(int level){
-	mLevel = level;
+    mLevel = level;
     if (mDrawable != nullptr) {
         mDrawable->setLevel(level);
         resizeFromDrawable();
@@ -678,6 +680,14 @@ void ImageView::resizeFromDrawable(){
             mDrawableHeight = h;
             requestLayout();
         }
+    }
+}
+
+void ImageView::onRtlPropertiesChanged(int layoutDirection) {
+    View::onRtlPropertiesChanged(layoutDirection);
+
+    if (mDrawable != nullptr) {
+        mDrawable->setLayoutDirection(layoutDirection);
     }
 }
 
