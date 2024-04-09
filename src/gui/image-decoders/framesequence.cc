@@ -31,10 +31,10 @@ FrameSequence::Registry::Registry(const RegistryEntry& entry) {
 
 const FrameSequence::RegistryEntry* FrameSequence::Registry::find(std::istream* stream) {
     Registry* registry = mHead;
-    const int headerSize = mHeaderBytesRequired;
+    const off_t headerSize = mHeaderBytesRequired;
     char header[headerSize];
     stream->read(header, headerSize);
-    stream->seekg(-headerSize, std::ios_base::cur);
+    stream->seekg(0);
     while (registry) {
         if (headerSize >= registry->mImpl.requiredHeaderBytes
                 && registry->mImpl.checkHeader(header, headerSize)) {
@@ -49,7 +49,6 @@ FrameSequence* FrameSequence::create(std::istream* stream) {
     const RegistryEntry* entry = Registry::find(stream);
 
     if (!entry) return NULL;
-
     FrameSequence* frameSequence = entry->createFrameSequence(stream);
     if (!frameSequence->getFrameCount() ||
             !frameSequence->getWidth() || !frameSequence->getHeight()) {

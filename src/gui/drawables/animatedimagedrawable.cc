@@ -38,7 +38,6 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
     auto istm = ctx->getInputStream(res);
     auto frmSequence = FrameSequence::create(istm.get());
     mAnimatedImageState->mFrameSequence = frmSequence;
-    LOGD("decoder=%p res=%s",frmSequence,res.c_str());
     mRepeatCount = frmSequence->getDefaultLoopCount();
     if(mRepeatCount<=0)
         mRepeatCount = REPEAT_UNDEFINED;
@@ -50,7 +49,7 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
 #else
     mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,frmSequence->getWidth(),frmSequence->getHeight());
 #endif
-    LOGI("image %dx%dx%d hwsurface.buffer=%p",frmSequence->getWidth(),frmSequence->getHeight(),frmSequence->getFrameCount(),buffer);
+    LOGD("%s image %dx%dx%d",res.c_str(),frmSequence->getWidth(),frmSequence->getHeight(),frmSequence->getFrameCount());
     mAnimatedImageState->mFrameCount = frmSequence->getFrameCount();
 }
 

@@ -8,7 +8,7 @@
 
 namespace cdroid{
 
-JPEGDecoder::JPEGDecoder(std::unique_ptr<std::istream>stm):ImageDecoder(std::move(stm)){
+JPEGDecoder::JPEGDecoder(std::istream&stm):ImageDecoder(stm){
 }
 
 struct decoder_error_mgr {
@@ -104,7 +104,7 @@ int JPEGDecoder::readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameInde
     cinfo.err = jpeg_std_error(&jerr.pub);
     jerr.pub.error_exit = handle_jpeg_error;
     jpeg_create_decompress(&cinfo);
-    make_jpeg_stream(&cinfo,nullptr);//&is);
+    make_jpeg_stream(&cinfo,istream);
     jpeg_read_header(&cinfo, TRUE);
 
     decimalToFraction(mScale,scale_num,scale_denom);

@@ -15,9 +15,9 @@ protected:
     int mImageWidth;
     int mImageHeight;
     float mScale;
-    std::unique_ptr<std::istream>istream;
+    std::istream*istream;
 public:
-    ImageDecoder(std::unique_ptr<std::istream>);
+    ImageDecoder(std::istream&);
     virtual ~ImageDecoder();
     virtual int load()=0;
     int getWidth()const;
@@ -33,7 +33,7 @@ public:
 
 class GIFDecoder:public ImageDecoder{
 public:
-    GIFDecoder(std::unique_ptr<std::istream>);
+    GIFDecoder(std::istream&);
     ~GIFDecoder()override;
     int load()override;
     virtual int getFrameDuration(int)const;
@@ -42,14 +42,14 @@ public:
 
 class JPEGDecoder:public ImageDecoder{
 public:
-    JPEGDecoder(std::unique_ptr<std::istream>);
+    JPEGDecoder(std::istream&);
     int load()override;
     int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)override;
 };
 
 class APNGDecoder:public ImageDecoder{
 public:
-    APNGDecoder(std::unique_ptr<std::istream>);
+    APNGDecoder(std::istream&);
     ~APNGDecoder()override;
     int load()override;
     int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)override;
@@ -57,7 +57,7 @@ public:
 
 class WebpDecoder:public ImageDecoder{
 public:
-    WebpDecoder(std::unique_ptr<std::istream>);
+    WebpDecoder(std::istream&);
     ~WebpDecoder();
     int load()override;
     int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)override;

@@ -11,13 +11,13 @@
 
 namespace cdroid{
 
-ImageDecoder::ImageDecoder(std::unique_ptr<std::istream>stm){
+ImageDecoder::ImageDecoder(std::istream&stm){
     mImageWidth = -1;
     mImageHeight= -1;
     mFrameCount = 0;
     mScale = 1.f;
     mPrivate = nullptr;
-    istream = std::move(stm);
+    istream = &stm;
 }
 
 ImageDecoder::~ImageDecoder(){
@@ -108,19 +108,19 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
     if (length < lengthOfLongestSignature)
         return nullptr;
     istm->seekg(0,std::ios::beg);
-#if ENABLE(GIF)
+#if ENABLE(GIF)&&0
     if (matchesGIFSignature(contents))
-        decoder = new GIFDecoder(std::move(istm));
+        decoder = new GIFDecoder(*istm);
 #endif
     if (matchesPNGSignature(contents))
-        decoder = new APNGDecoder(std::move(istm));
+        decoder = new APNGDecoder(*istm);
 #if USE(ICO)
     if (matchesICOSignature(contents) || matchesCURSignature(contents))
         return ICOImageDecoder::create(alphaOption, gammaAndColorProfileOption);
 #endif
 #if ENABLE(JPEG)
     if (matchesJPEGSignature(contents))
-        decoder = new JPEGDecoder(std::move(istm));
+        decoder = new JPEGDecoder(*istm);
 #endif
 #if USE(OPENJPEG)
     if (matchesJP2Signature(contents))
@@ -130,10 +130,6 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
         return JPEG2000ImageDecoder::create(JPEG2000ImageDecoder::Format::J2K, alphaOption, gammaAndColorProfileOption);
 #endif
 
-#if ENABLE(WEBP)
-    //if (matchesWebPSignature(contents))
-    //    return new WebpDecoder(std::move(istm));
-#endif
 #if USE(BITMAP)
     if (matchesBMPSignature(contents))
         return BMPImageDecoder::create(alphaOption, gammaAndColorProfileOption);
@@ -142,16 +138,19 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
 }
 
 Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){
-    int frameIndex = 0;
     ImageDecoder*decoder = create(ctx,resourceId);
-    if(decoder->getFrameCount()>1){
-        return new AnimatedImageDrawable(ctx,resourceId);    	    
+    if(decoder){
+        Cairo::RefPtr<Cairo::ImageSurface>image = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,decoder->getWidth(),decoder->getHeight());
+        decoder->readImage(image,0);
+        delete decoder;
+        if(TextUtils::endWith(resourceId,"9.png"))
+	    return new NinePatchDrawable(image);
+        else if(TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg"))
+            return new BitmapDrawable(image);
     }
-    Cairo::RefPtr<Cairo::ImageSurface>image=Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,decoder->getWidth(),decoder->getHeight());
-    decoder->readImage(image,frameIndex);
-    if(TextUtils::endWith(resourceId,"9.png"))
-	return new NinePatchDrawable(image);
-    return new BitmapDrawable(image);
+    if(TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp"))
+	return new AnimatedImageDrawable(ctx,resourceId);
+    return nullptr;
 }
 
 }/*endof namespace*/

@@ -21,7 +21,7 @@ struct PRIVATE{
     png_structp png_ptr;
     png_infop info_ptr;
 };
-APNGDecoder::APNGDecoder(std::unique_ptr<std::istream>stm):ImageDecoder(std::move(stm)) {
+APNGDecoder::APNGDecoder(std::istream&stm):ImageDecoder(stm) {
     mPrivate = new PRIVATE();
 }
 
@@ -91,7 +91,7 @@ int APNGDecoder::load() {
         return false;
     }
 
-    png_set_read_fn(png_ptr,(void*)istream.get(),istream_png_reader);
+    png_set_read_fn(png_ptr,(void*)istream,istream_png_reader);
     png_read_info(png_ptr, info_ptr);
 
     int bit_depth, color_type;

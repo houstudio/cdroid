@@ -12,7 +12,7 @@ struct PRIVATE{
     GifFileType*gif;
 }GIFPrivate;
 
-GIFDecoder::GIFDecoder(std::unique_ptr<std::istream>stm):ImageDecoder(std::move(stm)){
+GIFDecoder::GIFDecoder(std::istream&stm):ImageDecoder(stm){
     mPrivate = new PRIVATE;
     mPrivate->gif=nullptr;
 }
@@ -38,7 +38,7 @@ static int gifDrawFrame(GifFileType*gif,int current_frame,size_t pxstride,uint8_
 
 int GIFDecoder::load(){
     int err;
-    GifFileType*gifFileType = DGifOpen(istream.get(),GIFRead,&err);
+    GifFileType*gifFileType = DGifOpen(istream,GIFRead,&err);
     LOGE_IF(gifFileType==nullptr,"git load failed");
     if(gifFileType==nullptr)return 0;
     DGifSlurp(gifFileType);

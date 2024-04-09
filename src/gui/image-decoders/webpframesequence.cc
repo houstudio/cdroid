@@ -197,8 +197,9 @@ static void copyFrame(const uint32_t* src, int srcStride, uint32_t* dst, int dst
 WebPFrameSequence::WebPFrameSequenceState::WebPFrameSequenceState(const WebPFrameSequence& frameSequence) :
         mFrameSequence(frameSequence) {
     WebPInitDecoderConfig(&mDecoderConfig);
+    mDecoderConfig.options.use_threads = 1;
     mDecoderConfig.output.is_external_memory = 1;
-    mDecoderConfig.output.colorspace = MODE_BGRA;//MODE_rgbA;  // Pre-multiplied alpha mode.
+    mDecoderConfig.output.colorspace = MODE_BGRA;//MODE_rgbA;//Pre-multiplied alpha mode.
     const int canvasWidth = mFrameSequence.getWidth();
     const int canvasHeight = mFrameSequence.getHeight();
     mPreservedBuffer = new uint32_t[canvasWidth * canvasHeight];

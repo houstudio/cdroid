@@ -179,17 +179,16 @@ int Assets::addResource(const std::string&path,const std::string&name) {
 }
 
 static bool guessExtension(ZIPArchive*pak,std::string&ioname) {
-    bool ret=(ioname.find('.')!=std::string::npos);
-    if(ret)return ret;
-    if(TextUtils::startWith(ioname,"mipmap")) {
-        if(ret=pak->hasEntry(ioname+".png",false)) ioname+=".png";
-        else if(ret=pak->hasEntry(ioname+".9.png",false))ioname+=".9.png";
-        else if(ret=pak->hasEntry(ioname+".jpg",false))ioname+=".jpg";
-    } else {
-        if(ret=pak->hasEntry(ioname+".xml",false))
-            ioname+=".xml";
+    static const char* exts[]={".xml",".png",".9.png",".jpg",".gif",".apng",".webp",nullptr};
+    if(ioname.find('.')!=std::string::npos)
+        return true;
+    for(int i=0;exts[i];i++){
+        if(pak->hasEntry(ioname+exts[i],false)){
+            ioname += exts[i];
+            return true;
+        }
     }
-    return ret;
+    return false;
 }
 
 //"@[package:][+]id/filname"
