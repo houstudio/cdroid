@@ -34,7 +34,7 @@ const FrameSequence::RegistryEntry* FrameSequence::Registry::find(std::istream* 
     const off_t headerSize = mHeaderBytesRequired;
     char header[headerSize];
     stream->read(header, headerSize);
-    stream->seekg(0);
+    stream->seekg(-headerSize,std::ios::cur);
     while (registry) {
         if (headerSize >= registry->mImpl.requiredHeaderBytes
                 && registry->mImpl.checkHeader(header, headerSize)) {
