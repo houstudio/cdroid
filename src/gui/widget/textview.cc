@@ -51,7 +51,7 @@ TextView::Drawables::~Drawables(){
     for(int i=0;i<4;i++){
         delete mShowing[i];
     }
-    delete mTintList;
+    //delete mTintList;//tintlist cant destroied!
 }
 
 bool TextView::Drawables::hasMetadata()const{
@@ -380,6 +380,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     if(mDrawables){
         mDrawables->mTintList = attrs.getColorStateList("drawableTint");
     }
+    applyCompoundDrawableTint();
     setRelativeDrawablesIfNeeded(start, end);
 
     setCompoundDrawablePadding(attrs.getDimensionPixelSize("drawablePadding",0));
