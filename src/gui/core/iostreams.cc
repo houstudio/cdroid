@@ -10,18 +10,21 @@
 namespace cdroid {
 
 ZipStreamBuf::ZipStreamBuf()
-    : _select(false)
-    , zipfile(NULL)
-    , buffer(NULL) {
+    : zipfile(nullptr)
+    , buffer(nullptr)
+    , bufferPosition(0){
 }
 
 ZipStreamBuf::~ZipStreamBuf() {
-    close();
+    if(zipfile){
+        zip_fclose((zip_file_t*)zipfile);
+        zipfile = nullptr;
+    }
 }
 
 ZipStreamBuf* ZipStreamBuf::select(void* zfile) {
-    if (is_open()||zfile==NULL) 
-        return NULL;
+    if (zfile==nullptr) 
+        return nullptr;
     this->zipfile = zfile;
     // allocate buffer
     buffer = new char_type[BUFSIZ];
@@ -29,25 +32,8 @@ ZipStreamBuf* ZipStreamBuf::select(void* zfile) {
     return this;
 }
 
-ZipStreamBuf* ZipStreamBuf::close() {
-    if (!is_open())
-        return NULL;
-
-    if (buffer) {
-        delete[] buffer;
-        buffer = NULL;
-        setg(0, 0, 0);
-    }
-
-    if ( zip_fclose((zip_file_t*)zipfile) != ZIP_ER_OK)
-        return NULL;
-    zipfile = NULL;
-
-    return this;
-}
-
 std::streambuf::int_type ZipStreamBuf::underflow() {//Unbuffered get
-    if (!is_open())
+    if (zipfile==nullptr)
         return traits_type::eof();
 
     if (gptr() < egptr()) {
@@ -66,15 +52,44 @@ std::streambuf::int_type ZipStreamBuf::underflow() {//Unbuffered get
 
 std::streambuf::pos_type  ZipStreamBuf::seekoff(std::streambuf::off_type off, std::ios_base::seekdir way,
     std::ios_base::openmode mode/*ios_base::in | ios_base::out*/){
-    int whence=SEEK_SET;
-    switch(way){
-    case std::ios_base::beg: whence=SEEK_SET; break;
-    case std::ios_base::cur: whence=SEEK_CUR; break;
-    case std::ios_base::end: whence=SEEK_END; break; 
+    zip_int64_t currentPos,newPos,size;
+    if(mode&std::ios_base::in){
+        switch(way){
+        case std::ios_base::beg:
+            zip_fseek((zip_file_t*)zipfile, off, SEEK_SET);
+            // Reset buffer
+            setg(buffer, buffer, buffer);
+            bufferPosition = off;
+            break;
+        case std::ios_base::cur:
+            currentPos = zip_ftell((zip_file_t*)zipfile);
+            // Calculate new position after offset
+            newPos = currentPos + off;
+
+            // Check if newPos is still within the current buffer
+            if (newPos >= bufferPosition && newPos < bufferPosition + BUFFER_SIZE) {
+                // Update buffer pointers accordingly
+                setg(buffer, gptr() + off, buffer + BUFFER_SIZE);
+            } else {
+                // If newPos is outside of current buffer, seek to newPos
+                zip_fseek((zip_file_t*)zipfile, newPos, SEEK_SET);
+                // Reset buffer
+                setg(buffer, buffer, buffer);
+                bufferPosition = newPos;
+            }
+            break;
+        case std::ios_base::end:
+            size = zip_fseek((zip_file_t*)zipfile, 0, SEEK_END);
+            zip_fseek((zip_file_t*)zipfile, size + off, SEEK_SET);
+            // Reset buffer
+            setg(buffer, buffer, buffer);
+            bufferPosition = size + off;
+            break;
+        }
+    }else if (mode & std::ios_base::out) {
+        LOGE("Output operations not supported, so do nothing");
     }
-    int rc=zip_fseek((zip_file_t*)zipfile,off,whence);//only worked for uncompressed data
     off=zip_ftell((zip_file_t*)zipfile);
-    setg(buffer,buffer,buffer);
     return off;
 }
 
@@ -94,31 +109,18 @@ MemoryBuf::MemoryBuf(char const* base, size_t size){
 std::streambuf::pos_type  MemoryBuf::seekoff(std::streambuf::off_type off, std::ios_base::seekdir way,
     std::ios_base::openmode mode/*ios_base::in | ios_base::out*/){
     switch(way){
-    case std::ios_base::beg: buffpos=off; break;
-    case std::ios_base::cur: buffpos+=off; break;
-    case std::ios_base::end: buffpos=buffersize-off; break;
+    case std::ios_base::beg: buffpos = off; break;
+    case std::ios_base::cur: buffpos +=off; break;
+    case std::ios_base::end: buffpos = buffersize - off; break;
     }
-    setg(pbase()+buffpos,pbase()+buffpos,pbase()+buffersize);
+    setg(pbase() + buffpos,pbase() + buffpos,pbase() + buffersize);
     return buffpos;
 }
 
-ZipInputStream::ZipInputStream(void*zfile) : std::istream(NULL) {
+ZipInputStream::ZipInputStream(void*zfile) : std::istream(nullptr) {
     init(&_sb);
-    select(zfile);
-}
-
-void ZipInputStream::select(void*zfile) {
-    if (!_sb.select(zfile)) {
-        setstate(std::ios_base::failbit);
-    } else {
-        clear();
-    }
-}
-
-void ZipInputStream::close() {
-    if (!_sb.close()) {
-        setstate(std::ios_base::failbit);
-    }
+    if(!_sb.select(zfile))setstate(std::ios_base::failbit);
+    else clear();
 }
 
 }//namespace
