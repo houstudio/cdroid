@@ -2,6 +2,7 @@
 #include <systemclock.h>
 #include <cdlog.h>
 #include <gui/gui_features.h>
+#include <view/view.h>
 #include <image-decoders/imagedecoder.h>
 #include <image-decoders/framesequence.h>
 #include <porting/cdgraph.h>
@@ -94,11 +95,40 @@ int AnimatedImageDrawable::getIntrinsicHeight()const{
 }
 
 void AnimatedImageDrawable::setAlpha(int alpha){
-    
+    mAnimatedImageState->mAlpha = alpha&0xFF;
+    invalidateSelf();
 }
 
 int AnimatedImageDrawable::getAlpha()const{
-    return 255;
+    return mAnimatedImageState->mAlpha;
+}
+
+int AnimatedImageDrawable::getOpacity(){
+    return PixelFormat::TRANSLUCENT;
+}
+
+void AnimatedImageDrawable::setAutoMirrored(bool mirrored) {
+    if (mAnimatedImageState->mAutoMirrored != mirrored) {
+        mAnimatedImageState->mAutoMirrored = mirrored;
+        if (getLayoutDirection() == View::LAYOUT_DIRECTION_RTL) {
+            //nSetMirrored(mState.mNativePtr, mirrored);
+            invalidateSelf();
+        }
+    }
+}
+
+bool AnimatedImageDrawable::isAutoMirrored() const{
+    return mAnimatedImageState->mAutoMirrored;
+}
+
+bool AnimatedImageDrawable::onLayoutDirectionChanged(int layoutDirection) {
+    if (!mAnimatedImageState->mAutoMirrored) {
+        return false;
+    }
+
+    const bool mirror = layoutDirection == View::LAYOUT_DIRECTION_RTL;
+    mAnimatedImageState->mAutoMirrored= mirror;
+    return true;
 }
 
 void AnimatedImageDrawable::draw(Canvas& canvas){
@@ -127,7 +157,7 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
                     }
                     if(mNextFrame==mAnimatedImageState->mFrameCount-1){
                         mRepeated++;
-                        mStarting = (mRepeated>=mRepeatCount);
+                        mStarting = (mRepeated<mRepeatCount)||(mRepeatCount<0);
                     }
                     mCurrentFrame=(mNextFrame-1)%mAnimatedImageState->mFrameCount;
                     mFrameScheduled = false;
@@ -228,6 +258,12 @@ void AnimatedImageDrawable::postOnAnimationEnd(){
 
 void AnimatedImageDrawable::clearAnimationCallbacks(){
     mAnimationCallbacks.clear();
+}
+
+void AnimatedImageDrawable::onBoundsChange(const Rect& bounds) {
+    /*if (mAnimatedImageState.mNativePtr != 0) {
+        nSetBounds(mState.mNativePtr, bounds);
+    }*/
 }
 
 Drawable*AnimatedImageDrawable::inflate(Context*ctx,const AttributeSet&atts){

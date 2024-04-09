@@ -11,6 +11,7 @@ private:
     public:
         bool mAutoMirrored;
         int mFrameCount;
+	int mAlpha;
         FrameSequence*mFrameSequence;
         AnimatedImageState();
         AnimatedImageState(const AnimatedImageState& state);
@@ -38,6 +39,8 @@ private:
     void postOnAnimationStart();
     void postOnAnimationEnd();
     AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state);
+protected:
+    void onBoundsChange(const Rect& bounds)override;
 public:
     static constexpr int REPEAT_INFINITE=-1;
     static constexpr int LOOP_INFINITE = REPEAT_INFINITE;
@@ -53,6 +56,10 @@ public:
     int getIntrinsicHeight()const override;
     void setAlpha(int alpha)override;
     int getAlpha()const override;
+    int getOpacity()override;
+    void setAutoMirrored(bool);
+    bool isAutoMirrored()const;
+    bool onLayoutDirectionChanged(int layoutDirection)override;
     void draw(Canvas& canvas)override;
     bool isRunning()override;
     void start()override;
