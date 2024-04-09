@@ -122,7 +122,7 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
 DrawableContainer::DrawableContainerState::~DrawableContainerState(){
     for_each( mDrawables.begin(), mDrawables.end(),[](Drawable*d){delete d;});
     mDrawables.clear();
-    delete mTintList;
+    //delete mTintList;//tintlist cant be destroied
     delete mColorFilter;
 }
 
