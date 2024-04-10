@@ -33,6 +33,7 @@ typedef struct {
     int alpha;
     size_t msize;
     int used;
+    int hasLogo;
     char*buffer;//drawbuffer
     char*orig_buffer;/*used only in double buffer*/
     MI_PHY kbuffer;/*kernel buffer address,MI_PHY unsigned long long,nullptr for usermemory surface()*/
@@ -156,6 +157,7 @@ int GFXInit() {
     MI_SYS_Mmap(dev->fix.smem_start,dev->fix.smem_len, (void**)&devSurfaces[0].buffer, FALSE);
     if(logoBuffer){
         showLogo(&devSurfaces[0],logoBuffer);
+        devSurfaces[0].hasLogo=1;
         free(logoBuffer);
     }//showLogo(&devSurfaces[0],"logo.dat");
     for(int i =0;devSurfaces[i].kbuffer;i++){
@@ -354,7 +356,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
             memset(surf->buffer,0,surf->msize);
         }
     }
-    //if(surf->kbuffer) MI_SYS_MemsetPa(surf->kbuffer,0xFF000000,surf->msize);
+    if(surf->kbuffer&&(surf->hasLogo==0)) MI_SYS_MemsetPa(surf->kbuffer,0xFF000000,surf->msize);
     surf->orig_buffer=surf->buffer;
     if(hwsurface)  setfbinfo(surf);
     surf->ishw=hwsurface;
