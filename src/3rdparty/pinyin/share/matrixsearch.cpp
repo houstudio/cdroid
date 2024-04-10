@@ -454,7 +454,7 @@ size_t MatrixSearch::search(const char *py, size_t py_len) {
 
   // If there are too many spellings, remove the last letter until the spelling
   // number is acceptable.
-  while (spl_id_num_ > 9) {
+  while (spl_id_num_ > 26) {
     py_len--;
     reset_search(py_len, false, false, false);
     pys_[py_len] = '\0';
@@ -669,7 +669,9 @@ bool MatrixSearch::add_lma_to_userdict(uint16 lma_fr, uint16 lma_to,
 
     uint16 tmp = get_lemma_str(lma_id, word_str + spl_id_fr,
                                kMaxLemmaSize + 1 - spl_id_fr);
-    assert(tmp == lma_len);
+    if (tmp != lma_len) {
+      return false;
+    }
 
     tmp = get_lemma_splids(lma_id, spl_ids + spl_id_fr, lma_len, true);
     if (tmp != lma_len) {
@@ -848,6 +850,7 @@ size_t MatrixSearch::choose(size_t cand_id) {
 
   PoolPosType step_to_dmi_fr = match_dmi(step_to,
                                          spl_id_ + fixed_hzs_, cand_len);
+  // crash here
   assert(step_to_dmi_fr != static_cast<PoolPosType>(-1));
 
   extend_mtrx_nd(matrix_[step_fr].mtrx_nd_fixed, &lpi_item, 1,
@@ -1426,7 +1429,7 @@ size_t MatrixSearch::extend_dmi(DictExtPara *dep, DictMatchInfo *dmi_s) {
     from_h[1] = dmi_s->dict_handles[1];
   }
 
-  // 2. Begin exgtending in the system dictionary
+  // 2. Begin extending in the system dictionary
   size_t lpi_num = 0;
   MileStoneHandle handles[2];
   handles[0] = handles[1] = 0;
@@ -1438,7 +1441,7 @@ size_t MatrixSearch::extend_dmi(DictExtPara *dep, DictMatchInfo *dmi_s) {
     lpi_total_ = lpi_num;
 
   if (NULL == dmi_s) {  // from root
-    assert(0 != handles[0]);
+    // assert(0 != handles[0]);
     mtrx_dmi_fr = dmi_pool_used_;
   }
 
@@ -1604,6 +1607,26 @@ PoolPosType MatrixSearch::match_dmi(size_t step_to, uint16 spl_ids[],
       return matrix_[step_to].dmi_pos + dmi_pos;
     }
   }
+  //try with less check
+  for (PoolPosType dmi_pos = 0; dmi_pos < matrix_[step_to].dmi_num; dmi_pos++) {
+    DictMatchInfo *dmi = dmi_pool_ + matrix_[step_to].dmi_pos + dmi_pos;
+
+    bool matched = true;
+
+    for (uint16 spl_pos = 0; spl_pos < dmi->dict_level; spl_pos++) {
+      if (spl_ids[spl_id_num - spl_pos - 1] != dmi->spl_id) {
+        matched = false;
+        break;
+      }
+
+      if (dmi->dmi_fr != (PoolPosType)~0)
+       dmi = dmi_pool_ + dmi->dmi_fr;
+
+    }
+    if (matched) {
+      return matrix_[step_to].dmi_pos + dmi_pos;
+    }
+  }
 
   return static_cast<PoolPosType>(-1);
 }
@@ -1702,7 +1725,7 @@ size_t MatrixSearch::get_lpis(const uint16* splid_str, size_t splid_str_len,
     LmaPsbStrItem *lpsis = reinterpret_cast<LmaPsbStrItem*>(lma_buf + num);
     size_t lpsi_num = (max_lma_buf - num) * sizeof(LmaPsbItem) /
         sizeof(LmaPsbStrItem);
-    assert(lpsi_num > num);
+    //assert(lpsi_num > num);
     if (num > lpsi_num) num = lpsi_num;
     lpsi_num = num;
 
@@ -1715,6 +1738,9 @@ size_t MatrixSearch::get_lpis(const uint16* splid_str, size_t splid_str_len,
 
     size_t remain_num = 0;
     for (size_t pos = 0; pos < lpsi_num; pos++) {
+      if (NULL != pfullsent && utf16_strcmp(lpsis[pos].str, pfullsent) == 0)
+        continue;
+
       if (pos > 0 && utf16_strcmp(lpsis[pos].str, lpsis[pos - 1].str) == 0) {
         if (lpsis[pos].lpi.psb < lpsis[pos - 1].lpi.psb) {
           assert(remain_num > 0);
@@ -1722,8 +1748,6 @@ size_t MatrixSearch::get_lpis(const uint16* splid_str, size_t splid_str_len,
         }
         continue;
       }
-      if (NULL != pfullsent && utf16_strcmp(lpsis[pos].str, pfullsent) == 0)
-        continue;
 
       lma_buf[remain_num] = lpsis[pos].lpi;
       remain_num++;

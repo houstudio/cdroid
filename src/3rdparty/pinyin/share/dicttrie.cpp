@@ -831,7 +831,7 @@ size_t DictTrie::get_lpis(const uint16* splid_str, uint16 splid_str_len,
         lma_buf[ch_pos].psb =
             static_cast<LmaScoreType>(ngram.get_uni_psb(lma_buf[ch_pos].id));
 
-        if (lma_num + homo_pos >= max_lma_buf - 1)
+        if (ch_pos >= max_lma_buf - 1)
           break;
       }
     }

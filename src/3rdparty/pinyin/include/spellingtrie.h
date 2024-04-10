@@ -30,8 +30,8 @@ struct SpellingNode {
   SpellingNode *first_son;
   // The spelling id for each node. If you need more bits to store
   // spelling id, please adjust this structure.
-  uint16 spelling_idx:11;
-  uint16  num_of_son:5;
+  uint32 spelling_idx:27;
+  uint32 num_of_son:5;
   char char_this_node;
   unsigned char score;
 };

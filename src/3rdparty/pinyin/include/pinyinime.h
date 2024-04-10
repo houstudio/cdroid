@@ -135,7 +135,8 @@ extern "C" {
    * @param max_len The maximum length of the buffer.
    * @return cand_str if succeeds, otherwise NULL.
    */
-  char16* im_get_candidate(void*hime,size_t cand_id, char16* cand_str,size_t max_len);
+  char16* im_get_candidate(void*hime,size_t cand_id, char16* cand_str,
+                           size_t max_len);
 
   /**
    * Get the segmentation information(the starting positions) of the spelling

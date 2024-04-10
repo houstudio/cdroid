@@ -27,7 +27,7 @@ namespace ime_pinyin {
 
 class DictTrie : AtomDictBase {
  private:
-  typedef struct ParsingMark {
+  struct ParsingMark {
     size_t node_offset:24;
     size_t node_num:8;           // Number of nodes with this spelling id given
                                  // by spl_id. If spl_id is a Shengmu, for nodes
@@ -36,7 +36,7 @@ class DictTrie : AtomDictBase {
                                  // nodes which are not in the first layer,
                                  // node_num < SpellingTrie::shm2full_num().
                                  // For a full spelling id, node_num = 1;
-  }PARSINGMARK;
+  };
 
   // Used to indicate an extended mile stone.
   // An extended mile stone is used to mark a partial match in the dictionary

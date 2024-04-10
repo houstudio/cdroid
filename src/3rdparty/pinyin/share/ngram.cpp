@@ -111,7 +111,7 @@ void iterate_codes(double freqs[], size_t num, double code_book[],
     double delta = recalculate_kernel(freqs, num, code_book, code_idx);
 
     if (kPrintDebug0) {
-      printf("---Unigram codebook iteration: %d : %d, %.9f\n",
+      printf("---Unigram codebook iteration: %zd : %zd, %.9f\n",
              iter_num, changed, delta);
     }
     iter_num++;
@@ -328,7 +328,7 @@ bool NGram::build_unigram(LemmaEntry *lemma_arr, size_t lemma_num,
     double log_score = log(freq_codes_df_[code_pos]);
     float final_score = convert_psb_to_score(freq_codes_df_[code_pos]);
     if (kPrintDebug0) {
-      printf("code:%d, probability:%.9f, log score:%.3f, final score: %.3f\n",
+      printf("code:%zd, probability:%.9f, log score:%.3f, final score: %.3f\n",
              code_pos, freq_codes_df_[code_pos], log_score, final_score);
     }
     freq_codes_[code_pos] = static_cast<LmaScoreType>(final_score);

@@ -20,7 +20,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-//#include <cutils/log.h>
+#ifdef ___DEBUG_PERF___
+#include <cutils/log.h>
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>

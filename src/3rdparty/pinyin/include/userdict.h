@@ -24,6 +24,7 @@
 // Debug performance for operations
 // #define ___DEBUG_PERF___
 
+#include <sys/time.h>
 #include <pthread.h>
 #include "atomdictbase.h"
 

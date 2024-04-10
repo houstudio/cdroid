@@ -558,7 +558,7 @@ void InputEventConsistencyVerifier::finishEvent() {
                 }
             }
 
-            LOGD("%s",mViolationMessage.str().c_str());
+            LOGV("%s",mViolationMessage.str().c_str());
 
             // Taint the event so that we do not generate additional violations from it
             // further downstream.
