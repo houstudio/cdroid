@@ -674,17 +674,17 @@ void DrawableContainer::initializeDrawableForDisplay(Drawable*d){
     if(mDrawableContainerState->mEnterFadeDuration <= 0 && mHasAlpha){
         d->setAlpha(mAlpha);
     }
-    /*if (mDrawableContainerState->mHasColorFilter) {
+    if (mDrawableContainerState->mColorFilter) {
         // Color filter always overrides tint.
         d->setColorFilter(mDrawableContainerState->mColorFilter);
     } else {
-        if (mDrawableContainerState->mHasTintList) {
+        if (mDrawableContainerState->mTintList) {
             d->setTintList(mDrawableContainerState->mTintList);
         }
-        if (mDrawableContainerState->mHasTintMode) {
+        /*if (mDrawableContainerState->mHasTintMode) {
             d->setTintBlendMode(mDrawableContainerState->mBlendMode);
-        }
-    }*/
+        }*/
+    }
     d->setVisible(isVisible(), true);
     //d->setDither(mDither);
     d->setState(getState());
