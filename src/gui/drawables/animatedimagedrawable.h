@@ -11,7 +11,7 @@ private:
     public:
         bool mAutoMirrored;
         int mFrameCount;
-	int mAlpha;
+        int mAlpha;
         FrameSequence*mFrameSequence;
         AnimatedImageState();
         AnimatedImageState(const AnimatedImageState& state);

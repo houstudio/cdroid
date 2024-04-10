@@ -483,17 +483,22 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
 }
 
 typedef struct {
+    XML_Parser parser;
+    cdroid::Context*context;
     std::vector<std::string> tags;
     std::vector<AttributeSet> attrs;
     std::string content;
+    std::string resourceId;
+    std::string package;
     std::function<void(const std::vector<std::string>&,const std::vector<AttributeSet>&attrs,const std::string&)>func;
 } KVPARSER;
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts) {
     KVPARSER* kvp = (KVPARSER*)userData;
     if(strcmp(name,"resources")) { //root node is not in KVPARSER::attrs
-        AttributeSet atts;
+        AttributeSet atts(kvp->context,kvp->package);
         atts.set(satts);
+        atts.add("resourceId",kvp->resourceId);
         kvp->tags.push_back(name);
         kvp->attrs.push_back(atts);
         kvp->content = std::string();
@@ -529,7 +534,12 @@ int Assets::loadKeyValues(const std::string&fullresid,std::function<void(const s
     std::string curKey;
     std::string curValue;
     KVPARSER kvp;
+    auto pos = fullresid.find(".xml");
+    kvp.context = this;
+    kvp.parser = parser;
+    kvp.resourceId = fullresid.substr(0,pos);
     kvp.func = func;
+    parseResource(fullresid,nullptr,&kvp.package);
     XML_SetUserData(parser,&kvp);
     XML_SetElementHandler(parser, startElement, endElement);
     XML_SetCharacterDataHandler(parser,CharacterHandler);

@@ -22,6 +22,13 @@ ColorStateList::ColorStateList(int color)
     :ColorStateList(EMPTY,{color}){
 }
 
+int ColorStateList::addStateColor(cdroid::Context*ctx,const AttributeSet&atts){
+    std::vector<int>states;
+    const int color = ctx->getColor(atts.getString("color"));
+    StateSet::parseState(states,atts);
+    return addStateColor(states,color);
+}
+
 ColorStateList::ColorStateList(const ColorStateList&other)
 	:ColorStateList(other.mStateSpecs,other.mColors){
     mIsOpaque = other.mIsOpaque;

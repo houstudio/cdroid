@@ -74,6 +74,19 @@ InputDevice::InputDevice(int fdev){
 
     if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask) &&TEST_BIT(REL_X,devInfos.relBitMask) &&TEST_BIT(REL_Y,devInfos.relBitMask))
         mDeviceClasses = INPUT_DEVICE_CLASS_CURSOR;
+    if(TEST_BIT(ABS_DISTANCE, devInfos.absBitMask)){
+        //Proximity sensor
+    }
+    if(TEST_BIT(ABS_X, devInfos.absBitMask) && TEST_BIT(ABS_Y, devInfos.absBitMask) && TEST_BIT(ABS_Z, devInfos.absBitMask)){
+        //Accelerometer sensor
+    }
+    if(TEST_BIT(ABS_RX, devInfos.absBitMask) && TEST_BIT(ABS_RY, devInfos.absBitMask) && TEST_BIT(ABS_RZ, devInfos.absBitMask)){
+        //Gyroscope sensor
+    }
+    if(TEST_BIT(ABS_HAT0X, devInfos.absBitMask) && TEST_BIT(ABS_HAT0Y, devInfos.absBitMask) 
+             && TEST_BIT(ABS_HAT1X, devInfos.absBitMask) && TEST_BIT(ABS_HAT1Y, devInfos.absBitMask)){
+        //Magnetometer sensor
+    }
     if(TEST_BIT(ABS_MT_POSITION_X, devInfos.absBitMask) && TEST_BIT(ABS_MT_POSITION_Y, devInfos.absBitMask)) {
         // Some joysticks such as the PS3 controller report axes that conflict
         // with the ABS_MT range.  Try to confirm that the device really is a touch screen.
@@ -81,9 +94,10 @@ InputDevice::InputDevice(int fdev){
             mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH | INPUT_DEVICE_CLASS_TOUCH_MT;
         }
         // Is this an old style single-touch driver?
-    } else if (TEST_BIT(BTN_TOUCH, devInfos.keyBitMask)
-            && TEST_BIT(ABS_X, devInfos.absBitMask) && TEST_BIT(ABS_Y, devInfos.absBitMask)) {
-        mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH;
+    } else if ( TEST_BIT(ABS_X, devInfos.absBitMask) && TEST_BIT(ABS_Y, devInfos.absBitMask) ) {
+        if(TEST_BIT(BTN_TOUCH, devInfos.keyBitMask)) mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH;
+        else mDeviceClasses |= INPUT_DEVICE_CLASS_ROTARY_ENCODER;
+        LOGD("%s",TEST_BIT(BTN_TOUCH, devInfos.keyBitMask)?"Touch Device":"Rotaty Encoder");
         // Is this a BT stylus?
     } else if ((TEST_BIT(ABS_PRESSURE, devInfos.absBitMask) || TEST_BIT(BTN_TOUCH, devInfos.keyBitMask))
             && !TEST_BIT(ABS_X, devInfos.absBitMask) && !TEST_BIT(ABS_Y, devInfos.absBitMask)) {

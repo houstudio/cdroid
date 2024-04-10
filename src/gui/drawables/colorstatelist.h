@@ -29,6 +29,7 @@ public:
     ColorStateList(const std::vector<std::vector<int>>&states,const std::vector<int>&colors);
     ~ColorStateList();
     int addStateColor(const std::vector<int>&stateSet,int color);
+    int addStateColor(cdroid::Context*,const AttributeSet&);
     int getDefaultColor()const override;
     bool isOpaque()const;
     bool isStateful()const override;
