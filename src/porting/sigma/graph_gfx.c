@@ -4,6 +4,7 @@
 #include <linux/fb.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <stdlib.h>
@@ -67,7 +68,7 @@ void GFXSuspend(){
 static void* loadLogo(const char*fileName){
     #define __tmin__(a,b) ((a)>(b)?(b):(a))
     struct stat st;
-    if (fstat(fileName,&st) == 0) {            
+    if (lstat(fileName,&st) == 0) {            
         size_t rlen, tlen = 0;
         FILE *fo  = fopen(fileName, "rb");
         void*buffer=malloc(st.st_size);
@@ -85,7 +86,7 @@ static void showLogo(FBSURFACE*dst,void*buffer){
 }
 int GFXInit() {
     int ret;
-    char*logoBuffer;
+    char*logoBuffer,*strMargin;
     FBDEVICE*dev=&devs[0];
     if(dev->fb>=0)return E_OK;
     memset(devs,0,sizeof(devs));
@@ -106,6 +107,17 @@ int GFXInit() {
     if(ioctl(dev->fb, FBIOGET_VSCREENINFO, &dev->var) == -1) {
         LOGE("Error reading variable information");
         return E_ERROR;
+    }
+    strMargin = getenv("SCREEN_MARGINS");
+    if(strMargin){
+        char*token=strtok(strMargin,",;");
+	screenMargin.x=atoi(token);
+	token=strtok(NULL,",;");
+	screenMargin.y=atoi(token);
+	token=strtok(NULL,",;");
+        screenMargin.w=atoi(token);
+        token=strtok(NULL,",;");
+        screenMargin.h=atoi(token);
     }
     devs[0].var.yoffset=0;//set first screen memory for display
     ret=ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var);
@@ -159,7 +171,8 @@ int GFXInit() {
         showLogo(&devSurfaces[0],logoBuffer);
         devSurfaces[0].hasLogo=1;
         free(logoBuffer);
-    }//showLogo(&devSurfaces[0],"logo.dat");
+    }
+
     for(int i =0;devSurfaces[i].kbuffer;i++){
         LOGI("Surface[%d]buffer=%llx/%p %d",i,devSurfaces[i].kbuffer,devSurfaces[i].buffer,devSurfaces[i].msize);
     }

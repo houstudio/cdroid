@@ -87,12 +87,24 @@ INT GFXInit() {
         XSizeHints sizehints;
         int width,height;
         int screen=DefaultScreen(x11Display);
+	char*strMargin=getenv("SCREEN_MARGINS");
+        if(strMargin){
+            char*token=strtok(strMargin,",;");
+            screenMargin.x=atoi(token);
+            token=strtok(NULL,",;");
+            screenMargin.y=atoi(token);
+            token=strtok(NULL,",;");
+            screenMargin.w=atoi(token);
+            token=strtok(NULL,",;");
+            screenMargin.h=atoi(token);
+        }
         x11Visual = DefaultVisual(x11Display, screen);
         GFXGetDisplaySize(0,&width,&height);
         width += screenMargin.x + screenMargin.w;
         height+= screenMargin.y + screenMargin.h;
         x11Window=XCreateSimpleWindow(x11Display, RootWindow(x11Display, screen), 0, 0,width,height,
                                       1, BlackPixel(x11Display, screen), WhitePixel(x11Display, screen));
+	strMargin = getenv("SCREEN_MARGINS");
 #if 0
         sizehints.flags = PMinSize | PMaxSize;
         sizehints.min_width = width;
