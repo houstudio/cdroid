@@ -24,15 +24,15 @@ private:
     std::map<const std::string,uint32_t>mColors;
     std::map<const std::string,ColorStateList*>mStateColors;
     const std::string parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
-    void parseItem(const std::string&package,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value);
+    void parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value,void*);
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid,std::string*package)const;
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;
     void loadStrings(const std::string&lan);
     int addResource(const std::string&path,const std::string&name=std::string());
-    int loadKeyValues(const std::string&resid,
-        std::function<void(const std::vector<std::string>&tags,const std::vector<AttributeSet>&,const std::string&)>func);
+    int loadKeyValues(const std::string&resid,void*pending,
+        std::function<void(const std::vector<std::string>&tags,const std::vector<AttributeSet>&,const std::string&,void*)>func);
 public:
     Assets();
     Assets(const std::string&path);

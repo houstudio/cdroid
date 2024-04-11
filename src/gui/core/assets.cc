@@ -67,6 +67,11 @@ void Assets::setTheme(const std::string&theme) {
     }
 }
 
+typedef struct{
+    std::map<const std::string,const std::string>colors;
+	std::map<const std::string,std::vector<AttributeSet>>colorStateList;
+}PENDINGRESOURCE;
+
 static std::string convertXmlToCString(const std::string& xml) {
     size_t pos;
     std::string result = xml;
@@ -79,8 +84,9 @@ static std::string convertXmlToCString(const std::string& xml) {
     return result;
 }
 
-void Assets::parseItem(const std::string&package,const std::vector<std::string>&tags,std::vector<AttributeSet>atts,const std::string&value) {
+void Assets::parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tags,std::vector<AttributeSet>atts,const std::string&value,void*p) {
     const std::string&tag0=tags[0];
+    PENDINGRESOURCE*pending =(PENDINGRESOURCE*)p;
     if(atts.size()==1) {
         if(tag0.compare("id")==0) {
             const std::string name=package+":id/"+atts.back().getString("name");
@@ -88,9 +94,14 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             LOGV("%s=%s",name.c_str(),value.c_str());
         } else if(tag0.compare("color")==0) {
             const std::string name=atts[0].getString("name");
-            uint32_t color = Color::parseColor(value);
-            LOGV("%s:color/%s:%s",package.c_str(),name.c_str(),value.c_str());
-            mColors.insert(std::pair<const std::string,uint32_t>(package+":color/"+name,color));
+			const std::string colorRes=AttributeSet::normalize(package,value);
+            auto itc = mColors.find(colorRes);
+			if((value[0]=='#')||(itc!=mColors.end())){
+                const uint32_t color = (value[0]=='#')?Color::parseColor(value):itc->second;
+                mColors.insert(std::pair<const std::string,uint32_t>(package+":color/"+name,color));
+			}else if (itc==mColors.end()){
+                pending->colors.insert({package+":color/"+name,colorRes});
+            }
         } else if(tag0.compare("string")==0) {
             const std::string name= atts[0].getString("name");
             const std::string key = package+":string/"+name;
@@ -98,7 +109,19 @@ void Assets::parseItem(const std::string&package,const std::vector<std::string>&
             mStrings[key] = convertXmlToCString(value);
         }
     } else  if(atts.size()==2) {
-        if(tag0.compare("style")==0) {
+        std::string resource = package+":"+resid;//atts[0].getString("resourceId");
+        if((tag0.compare("selector")==0) && (resource.find("drawable")==std::string::npos)){
+            auto pos1 = resource.find(":");
+            auto pos2 = resource.find("/");
+            if(pos1!=std::string::npos&&pos2!=std::string::npos)
+            resource.replace(pos1+1,pos2-pos1-1,"color");
+            //resource= package+":"+resource;//AttributeSet::normalize(package,resource);
+            auto it = pending->colorStateList.find(resource);//mStateColors.find(resource);
+            const bool found = it!=pending->colorStateList.end();//mStateColors.end();
+			if(!found)it=pending->colorStateList.insert({resource,std::vector<AttributeSet>()}).first;
+            std::vector<AttributeSet>&cls = it->second;
+            cls.push_back(atts[1]);
+        }else if(tag0.compare("style")==0) {
             AttributeSet&attStyle=atts[0];
             const std::string styleName  =package+":style/"+attStyle.getString("name");
             const std::string styleParent=attStyle.getString("parent");
@@ -154,15 +177,30 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     mResources.insert({package,pak});
 
     int count=0;
-    pak->forEachEntry([this,package,&count](const std::string&res) {
+    PENDINGRESOURCE pending;
+    pak->forEachEntry([this,package,&count,&pending](const std::string&res) {
         count++;
         if((res.size()>6)&&(TextUtils::startWith(res,"values")||TextUtils::startWith(res,"color"))) {
             LOGV("LoadKeyValues from:%s ...",res.c_str());
-            const std::string resid=package+":"+res;
-            loadKeyValues(resid,std::bind(&Assets::parseItem,this,package,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
+            std::string resid = AttributeSet::normalize(package,res);//package+":"+res;
+            resid = resid.substr(0,resid.find(".xml"));
+            loadKeyValues(package+":"+res,&pending,std::bind(&Assets::parseItem,this,package,resid,std::placeholders::_1,
+                std::placeholders::_2,std::placeholders::_3,std::placeholders::_4));
         }
         return 0;
     });
+    for(auto c:pending.colors){
+        auto it = mColors.find(c.second);
+        LOGD_IF(it==mColors.end(),"color %s losting refto %s",c.first.c_str(),c.second.c_str());
+        if(it!=mColors.end()){
+            mColors.insert({c.first,it->second});
+        }
+    }
+    for(auto cs:pending.colorStateList){
+        ColorStateList*cls=new ColorStateList();
+        for(auto attr:cs.second)cls->addStateColor(this,attr);
+        mStateColors.insert({cs.first,cls});
+    }
     if(name.compare("cdroid")==0)
         setTheme("cdroid:style/Theme");
     pak->forEachEntry([this,package,&count](const std::string&res) {
@@ -246,7 +284,8 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
 void Assets::loadStrings(const std::string&lan) {
     for(auto a:mResources) {
         const std::string fname = "strings/strings-"+lan+".xml";
-        loadKeyValues(fname,std::bind(&Assets::parseItem,this,a.first,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3));
+        loadKeyValues(fname,nullptr,std::bind(&Assets::parseItem,this,a.first,fname,std::placeholders::_1,
+            std::placeholders::_2,std::placeholders::_3,std::placeholders::_4));
     }
 }
 
@@ -488,17 +527,17 @@ typedef struct {
     std::vector<std::string> tags;
     std::vector<AttributeSet> attrs;
     std::string content;
-    std::string resourceId;
     std::string package;
-    std::function<void(const std::vector<std::string>&,const std::vector<AttributeSet>&attrs,const std::string&)>func;
+    std::function<void(const std::vector<std::string>&,const std::vector<AttributeSet>&attrs,const std::string&,void*)>func;
+	void*pendingResources;
 } KVPARSER;
+
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts) {
     KVPARSER* kvp = (KVPARSER*)userData;
     if(strcmp(name,"resources")) { //root node is not in KVPARSER::attrs
         AttributeSet atts(kvp->context,kvp->package);
         atts.set(satts);
-        atts.add("resourceId",kvp->resourceId);
         kvp->tags.push_back(name);
         kvp->attrs.push_back(atts);
         kvp->content = std::string();
@@ -514,15 +553,15 @@ static void endElement(void *userData, const XML_Char *name) {
     KVPARSER*kvp = (KVPARSER*)userData;
     if(strcmp(name,"resources")) { //root node is not in KVPARSER::attrs
 	//we need to keep whitespace in xml's textarea,so we cant strip space(TextUtils::trim(kvp->content)
-        kvp->func(kvp->tags,kvp->attrs,kvp->content);
+        kvp->func(kvp->tags,kvp->attrs,kvp->content,kvp->pendingResources);
         kvp->attrs.pop_back();
         kvp->tags.pop_back();
         kvp->content=std::string();
     }
 }
 
-int Assets::loadKeyValues(const std::string&fullresid,std::function<void(const std::vector<std::string>&,
-                          const std::vector<AttributeSet>&atts,const std::string&)>func) {
+int Assets::loadKeyValues(const std::string&fullresid,void*pending,std::function<void(const std::vector<std::string>&,
+                          const std::vector<AttributeSet>&atts,const std::string&,void*p)>func) {
     int len = 0;
     char buf[256];
 
@@ -530,15 +569,15 @@ int Assets::loadKeyValues(const std::string&fullresid,std::function<void(const s
     LOGE_IF(stream == nullptr,"%s load failed",fullresid.c_str());
     if(stream == nullptr)
         return 0;
-    XML_Parser parser = XML_ParserCreate(nullptr);
+    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');//XML_ParserCreate(nullptr);
     std::string curKey;
     std::string curValue;
     KVPARSER kvp;
     auto pos = fullresid.find(".xml");
     kvp.context = this;
     kvp.parser = parser;
-    kvp.resourceId = fullresid.substr(0,pos);
     kvp.func = func;
+	kvp.pendingResources=pending;
     parseResource(fullresid,nullptr,&kvp.package);
     XML_SetUserData(parser,&kvp);
     XML_SetElementHandler(parser, startElement, endElement);
