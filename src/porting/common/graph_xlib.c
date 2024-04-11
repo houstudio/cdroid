@@ -104,7 +104,6 @@ INT GFXInit() {
         height+= screenMargin.y + screenMargin.h;
         x11Window=XCreateSimpleWindow(x11Display, RootWindow(x11Display, screen), 0, 0,width,height,
                                       1, BlackPixel(x11Display, screen), WhitePixel(x11Display, screen));
-	strMargin = getenv("SCREEN_MARGINS");
 #if 0
         sizehints.flags = PMinSize | PMaxSize;
         sizehints.min_width = width;
