@@ -109,14 +109,15 @@ int GFXInit() {
         return E_ERROR;
     }
     strMargin = getenv("SCREEN_MARGINS");
+    const char* DELIM=",;";
     if(strMargin){
-        char*token=strtok(strMargin,",;");
-	screenMargin.x=atoi(token);
-	token=strtok(NULL,",;");
-	screenMargin.y=atoi(token);
-	token=strtok(NULL,",;");
+        char*token=strtok(strMargin,DELIM);
+        screenMargin.x=atoi(token);
+        token=strtok(NULL,DELIM);
+        screenMargin.y=atoi(token);
+        token=strtok(NULL,DELIM);
         screenMargin.w=atoi(token);
-        token=strtok(NULL,",;");
+        token=strtok(NULL,DELIM);
         screenMargin.h=atoi(token);
     }
     devs[0].var.yoffset=0;//set first screen memory for display

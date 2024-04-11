@@ -22,6 +22,7 @@ private:
     std::map<const std::string,class ZIPArchive*>mResources;
     std::map<const std::string,AttributeSet>mStyles;
     std::map<const std::string,uint32_t>mColors;
+    std::map<const std::string,int>mDimensions;
     std::map<const std::string,ColorStateList*>mStateColors;
     const std::string parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value,void*);
@@ -52,6 +53,7 @@ public:
     std::unique_ptr<std::istream> getInputStream(const std::string&resname,std::string*outpkg=nullptr)override;
     Drawable * getDrawable(const std::string&resid)override;
     int getColor(const std::string&resid)override;
+    int getDimension(const std::string&resid)override;
     int getArray(const std::string&resid,std::vector<int>&)override;
     int getArray(const std::string&resid,std::vector<std::string>&)override;
     ColorStateList* getColorStateList(const std::string&resid)override;

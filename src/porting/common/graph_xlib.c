@@ -87,15 +87,16 @@ INT GFXInit() {
         XSizeHints sizehints;
         int width,height;
         int screen=DefaultScreen(x11Display);
-	char*strMargin=getenv("SCREEN_MARGINS");
+        char*strMargin=getenv("SCREEN_MARGINS");
+        const char* DELIM=",;";	
         if(strMargin){
-            char*token=strtok(strMargin,",;");
+            char*token=strtok(strMargin,DELIM);
             screenMargin.x=atoi(token);
-            token=strtok(NULL,",;");
+            token=strtok(NULL,DELIM);
             screenMargin.y=atoi(token);
-            token=strtok(NULL,",;");
+            token=strtok(NULL,DELIM);
             screenMargin.w=atoi(token);
-            token=strtok(NULL,",;");
+            token=strtok(NULL,DELIM);
             screenMargin.h=atoi(token);
         }
         x11Visual = DefaultVisual(x11Display, screen);

@@ -10,6 +10,7 @@
 #include <textutils.h>
 #include <expat.h>
 #include <limits.h>
+#include <core/systemclock.h>
 using namespace Cairo;
 namespace cdroid {
 
@@ -69,7 +70,8 @@ void Assets::setTheme(const std::string&theme) {
 
 typedef struct{
     std::map<const std::string,const std::string>colors;
-	std::map<const std::string,std::vector<AttributeSet>>colorStateList;
+    std::map<const std::string,const std::string>dimens;
+    std::map<const std::string,std::vector<AttributeSet>>colorStateList;
 }PENDINGRESOURCE;
 
 static std::string convertXmlToCString(const std::string& xml) {
@@ -90,16 +92,34 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
     if(atts.size()==1) {
         if(tag0.compare("id")==0) {
             const std::string name=package+":id/"+atts.back().getString("name");
-            mIDS[name]=TextUtils::strtol(value);
+            mIDS[name] = TextUtils::strtol(value);
             LOGV("%s=%s",name.c_str(),value.c_str());
+        }else if(tag0.compare("dimen")==0){
+            const std::string name = atts[0].getString("name");
+            const std::string dimenRes = AttributeSet::normalize(package,value);
+            auto itc = mDimensions.find(dimenRes);
+            if( (value.find("/") == std::string::npos) ){
+                int v = std::strtol(value.c_str(),nullptr,10);
+                const char* p = strpbrk(value.c_str(),"sdp");
+                if(p){
+                    const DisplayMetrics& dm = getDisplayMetrics();
+                    if(strncmp(p,"sp",2)==0) v = (dm.scaledDensity * v /*+0.5f*/);
+                    else if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)v=(dm.density * v /*+0.5f*/);
+                }
+                mDimensions.insert({package+":dimen/"+name,v});
+            }else if(itc!=mDimensions.end()){
+                mDimensions.insert({package+":dimen/"+name,itc->second});
+            }else{
+                pending->dimens.insert({package+":dimen/"+name,dimenRes});
+            }
         } else if(tag0.compare("color")==0) {
-            const std::string name=atts[0].getString("name");
-			const std::string colorRes=AttributeSet::normalize(package,value);
+            const std::string name = atts[0].getString("name");
+            const std::string colorRes = AttributeSet::normalize(package,value);
             auto itc = mColors.find(colorRes);
-			if((value[0]=='#')||(itc!=mColors.end())){
+            if((value[0]=='#')||(itc!=mColors.end())){
                 const uint32_t color = (value[0]=='#')?Color::parseColor(value):itc->second;
-                mColors.insert(std::pair<const std::string,uint32_t>(package+":color/"+name,color));
-			}else if (itc==mColors.end()){
+                mColors.insert({package+":color/"+name,color});
+            }else if (itc==mColors.end()){
                 pending->colors.insert({package+":color/"+name,colorRes});
             }
         } else if(tag0.compare("string")==0) {
@@ -109,16 +129,15 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
             mStrings[key] = convertXmlToCString(value);
         }
     } else  if(atts.size()==2) {
-        std::string resource = package+":"+resid;//atts[0].getString("resourceId");
+        std::string resource = package+":"+resid;
         if((tag0.compare("selector")==0) && (resource.find("drawable")==std::string::npos)){
             auto pos1 = resource.find(":");
             auto pos2 = resource.find("/");
             if(pos1!=std::string::npos&&pos2!=std::string::npos)
             resource.replace(pos1+1,pos2-pos1-1,"color");
-            //resource= package+":"+resource;//AttributeSet::normalize(package,resource);
-            auto it = pending->colorStateList.find(resource);//mStateColors.find(resource);
-            const bool found = it!=pending->colorStateList.end();//mStateColors.end();
-			if(!found)it=pending->colorStateList.insert({resource,std::vector<AttributeSet>()}).first;
+            auto it = pending->colorStateList.find(resource);
+            const bool found = it!=pending->colorStateList.end();
+            if(!found)it=pending->colorStateList.insert({resource,std::vector<AttributeSet>()}).first;
             std::vector<AttributeSet>&cls = it->second;
             cls.push_back(atts[1]);
         }else if(tag0.compare("style")==0) {
@@ -178,6 +197,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
 
     int count=0;
     PENDINGRESOURCE pending;
+    auto sttm=SystemClock::uptimeMillis();
     pak->forEachEntry([this,package,&count,&pending](const std::string&res) {
         count++;
         if((res.size()>6)&&(TextUtils::startWith(res,"values")||TextUtils::startWith(res,"color"))) {
@@ -192,27 +212,22 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     for(auto c:pending.colors){
         auto it = mColors.find(c.second);
         LOGD_IF(it==mColors.end(),"color %s losting refto %s",c.first.c_str(),c.second.c_str());
-        if(it!=mColors.end()){
-            mColors.insert({c.first,it->second});
-        }
+        if( it != mColors.end() ) mColors.insert({c.first,it->second});
+    }
+    for(auto d:pending.dimens){
+        auto it = mDimensions.find(d.second);
+        LOGD_IF(it==mDimensions.end(),"dimen %s losting refto %s",d.first.c_str(),d.second.c_str());
+        if(it != mDimensions.end()) mDimensions.insert({d.first,it->second});
     }
     for(auto cs:pending.colorStateList){
-        ColorStateList*cls=new ColorStateList();
-        for(auto attr:cs.second)cls->addStateColor(this,attr);
+        ColorStateList*cls = new ColorStateList();
+        for(auto attr:cs.second) cls->addStateColor(this,attr);
         mStateColors.insert({cs.first,cls});
     }
     if(name.compare("cdroid")==0)
         setTheme("cdroid:style/Theme");
-    pak->forEachEntry([this,package,&count](const std::string&res) {
-        if((res.size()>6)&&TextUtils::startWith(res,"color")) {
-            LOGV("LoadKeyValues from:%s:%s ...",package.c_str(),res.c_str());
-            std::string resid = package+":"+res.substr(0,res.find(".xml"));
-            ColorStateList*cls = ColorStateList::inflate(this,resid);
-            mStateColors.insert(std::pair<const std::string,ColorStateList*>(resid,cls));
-        }
-        return 0;
-    });
-    LOGD("%s %d resource,[id:%d arraies:%d Styles:%d Strings:%d]",name.c_str(),count,mIDS.size(),mArraies.size(),mStyles.size(),mStrings.size());
+    LOGI("%s %d resource,[%did,%darray,%dstyle,%dstring,%ddimens] used %dms",package.c_str(),count,mIDS.size(),mArraies.size(),
+         mStyles.size(),mStrings.size(),mDimensions.size(),SystemClock::uptimeMillis()-sttm);
     return pak?0:-1;
 }
 
@@ -235,22 +250,22 @@ const std::string Assets::parseResource(const std::string&fullResId,std::string*
     std::string relname= fullResId;
     std::string fullid = fullResId;
 
-    size_t pos=fullid.find_last_of("@+");
+    size_t pos = fullid.find_last_of("@+");
     if(pos!=std::string::npos)fullid =fullid.erase(0,pos+1);
 
     pos= fullid.find(":");
     if(pos != std::string::npos) {
         pkg = fullid.substr(0,pos);
-        relname= fullid.substr(pos+1);
+        relname = fullid.substr(pos+1);
     } else { //id/xxx
         pos = mName.find_last_of('/');
         if(pos != std::string::npos)
             pkg = mName.substr(pos+1);
         relname = fullid;
     }
-    if(pkg=="android") pkg="cdroid";
+    if(pkg =="android") pkg="cdroid";
     if( ns) *ns = pkg;
-    if(res)*res= relname;
+    if(res)*res = relname;
     return pkg+":"+relname;
 }
 
@@ -301,10 +316,10 @@ RefPtr<ImageSurface>Assets::loadImage(const std::string&fullresid) {
     void*zfile = pak ? pak->getZipHandle(resname):nullptr;
     ZipInputStream zipis(zfile);
     RefPtr<ImageSurface>img;
-    if(zfile==nullptr) {
+    if(zfile == nullptr) {
         std::ifstream fi(fullresid);
         img = LoadImage(fi);
-        LOGD_IF(img==nullptr,"pak=%p %s open failed",pak,resname.c_str());
+        LOGD_IF(img == nullptr,"pak=%p %s open failed",pak,resname.c_str());
         return img;
     }else if(zfile){
         img = LoadImage(zipis);
@@ -341,7 +356,7 @@ const std::string Assets::getString(const std::string& resid,const std::string&l
         loadStrings(lan);
     }
     std::string str = resid;
-    std::string pkg,name=resid;
+    std::string pkg,name = resid;
     parseResource(resid,&name,&pkg);
     name = AttributeSet::normalize(pkg,resid);
     auto itr = mStrings.find(name);
@@ -366,7 +381,7 @@ int Assets::getArray(const std::string&resid,std::vector<int>&out) {
 
 int Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
     std::string pkg,name = resid;
-    std::string fullname=parseResource(resid,&name,&pkg);
+    std::string fullname = parseResource(resid,&name,&pkg);
     auto it = mArraies.find(fullname);
     if(it != mArraies.end()) {
         for(auto itm:it->second){
@@ -415,13 +430,13 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
     if(resname.find("color/")!=std::string::npos){
         auto itc = mColors.find(fullresid);
         auto its = mStateColors.find(fullresid);
-        if(itc!=mColors.end()){
+        if( itc != mColors.end() ){
 	    const uint32_t cc = (uint32_t)getColor(fullresid);
             LOGV("%s use colors as drawable",fullresid.c_str());
             d = new ColorDrawable(cc);
             mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
             return d;
-        } else if(its!=mStateColors.end()){
+        } else if(its != mStateColors.end()){
             LOGV("%s use colorstatelist as drawable",fullresid.c_str());
             d = new StateListDrawable(*its->second);
             mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
@@ -460,6 +475,16 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
     return d;
 }
 
+int Assets::getDimension(const std::string&refid){
+    std::string pkg,name = refid;
+    parseResource(name,nullptr,&pkg);
+    name = AttributeSet::normalize(pkg,name);
+    auto it = mDimensions.find(name);
+    if(it != mDimensions.end()) 
+        return it->second;
+    return 0;
+}
+
 #pragma GCC push_options
 #pragma GCC optimize("O0")
 //codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
@@ -484,9 +509,9 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
     std::string pkg,name = fullresid;
     parseResource(name,nullptr,&pkg);
     name = AttributeSet::normalize(pkg,name);
-    auto itc= mColors.find(name);
+    auto itc = mColors.find(name);
     auto its = mStateColors.find(name);
-    if( its!=mStateColors.end())
+    if( its != mStateColors.end())
         return its->second;
     else if(itc != mColors.end()){
         ColorStateList* cls = new ColorStateList(itc->second);
@@ -500,7 +525,7 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
             mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
             return cls;
         }
-        if( slashpos==std::string::npos ) {/*for color wolrds*/
+        if( slashpos == std::string::npos ) {/*for color wolrds*/
             std::string realName;
             parseResource(fullresid,&realName,nullptr);
             realName = mTheme.getString(realName);
@@ -512,7 +537,7 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
             }
         }
     } else if(fullresid.find("attr")!=std::string::npos) {
-        size_t slashpos=fullresid.find("/");
+        const size_t slashpos = fullresid.find("/");
         std::string name = fullresid.substr(slashpos+1);
         name = mTheme.getString(name);
         if(!name.empty())return getColorStateList(name);
