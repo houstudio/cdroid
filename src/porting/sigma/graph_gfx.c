@@ -111,7 +111,8 @@ int GFXInit() {
     strMargin = getenv("SCREEN_MARGINS");
     const char* DELIM=",;";
     if(strMargin){
-        char*token=strtok(strMargin,DELIM);
+        char *sm=strdup(strMargin);
+        char*token=strtok(sm,DELIM);
         screenMargin.x=atoi(token);
         token=strtok(NULL,DELIM);
         screenMargin.y=atoi(token);
@@ -119,12 +120,13 @@ int GFXInit() {
         screenMargin.w=atoi(token);
         token=strtok(NULL,DELIM);
         screenMargin.h=atoi(token);
+        free(sm);
     }
     devs[0].var.yoffset=0;//set first screen memory for display
     ret=ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var);
     LOGI("FBIOPUT_VSCREENINFO=%d",ret);
-    LOGI("fb solution=%dx%d accel_flags=0x%x ScreenMargin=(%d,%d,%d,%d)",dev->var.xres,dev->var.yres,
-        dev->var.accel_flags, screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h);
+    LOGI("fb solution=%dx%d accel_flags=0x%x ScreenMargin=(%d,%d,%d,%d)[%s]",dev->var.xres,dev->var.yres,
+        dev->var.accel_flags, screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h,strMargin);
     memset(devSurfaces,0,sizeof(devSurfaces));
 
     const size_t displayScreenSize=(dev->var.yres * dev->fix.line_length);
@@ -137,6 +139,9 @@ int GFXInit() {
 
     MI_SYS_Mmap(preallocedMem,allocedSize, (void**)&preallocedVMem, FALSE);
     devSurfaces[0].kbuffer= devs[0].fix.smem_start;
+    devSurfaces[0].width = dev->var.xres;
+    devSurfaces[0].height = dev->var.yres;
+    devSurfaces[0].pitch = dev->fix.line_length;
 #if defined(DOUBLE_BUFFER)&&DOUBLE_BUFFER
     devSurfaces[0].msize = dev->fix.smem_len;
 #else

@@ -36,14 +36,13 @@ static std::string splitFileName(const std::string& str) {
 
 static std::map<const std::string,int>sModules;
 static shared_queue<std::string>dbgMessages;
-static char *msgBoddy=nullptr;
 static constexpr int kMaxMessageSize=2048;
+static char msgBoddy[kMaxMessageSize];
 
 static void LogInit() {
 #if defined(ASYNC_LOG)&&ASYNC_LOG
     static std::once_flag sInit;
     std::call_once(sInit,[&]() {
-        msgBoddy =new char[kMaxMessageSize];
         std::thread th([]() {
             while(1) {
                 std::string msg;
@@ -59,13 +58,12 @@ static void LogInit() {
 void LogPrintf(int level,const char*file,const char*func,int line,const char*format,...) {
     va_list args;
     const std::string tag=splitFileName(file);
-    auto it=sModules.find(tag);
+    auto it = sModules.find(tag);
     const int module_loglevel=(it==sModules.end())?sLogLevel:it->second;
-#if defined(ASYNC_LOG )&&ASYNC_LOG
-    const char*colors[]= {"\033[0m","\033[1m","\033[0;32m","\033[0;36m","\033[1;31m","\033[5;31m"};
     if(level<module_loglevel||level<0||level>LOG_FATAL)
         return;
     LogInit();
+    const char*colors[]= {"\033[0m","\033[1m","\033[0;32m","\033[0;36m","\033[1;31m","\033[5;31m"};
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC,&ts);
     int len1=snprintf(msgBoddy,kMaxMessageSize,"%010ld.%06ld \033[0;32m[%s]\033[0;34m \%s:%d %s",
@@ -74,15 +72,10 @@ void LogPrintf(int level,const char*file,const char*func,int line,const char*for
     len1+=vsnprintf(msgBoddy+len1,kMaxMessageSize-len1,format, args);
     va_end(args);
     strcat(msgBoddy+len1,"\033[0m\r\n");
+#if defined(ASYNC_LOG )&&ASYNC_LOG
     dbgMessages.push(msgBoddy);
 #else
-    if(level<module_loglevel) {
-        va_list args;
-        cdlog::LogMessage log(tag,line,func,level);
-        va_start(args, format);
-        log.messageSave(format,args);
-        va_end(args);
-    }
+    printf("%s",msgBoddy);
 #endif
 }
 
