@@ -40,8 +40,8 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
             }
             break;
     case AXIS_PULL_AFTER<<AXIS_X_SHIFT:
-            outRect.width = container.width-xAdj;//outRect.right = container.right - xAdj;
-            outRect.left  = outRect.right()-w;//outRect.left = outRect.right - w;
+            outRect.left  = container.right()-w-xAdj;
+            outRect.width = w;
             if ((gravity&(AXIS_CLIP<<AXIS_X_SHIFT))== (AXIS_CLIP<<AXIS_X_SHIFT)) {
                 if (outRect.left < container.left) {
                     outRect.left = container.left;
