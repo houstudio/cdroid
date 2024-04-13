@@ -17,6 +17,7 @@ StaggeredGridLayoutManager::StaggeredGridLayoutManager(Context* context,const At
     setSpanCount(properties->spanCount);
     setReverseLayout(properties->reverseLayout);
     createOrientationHelpers();
+    delete properties;
 }
 
 StaggeredGridLayoutManager::StaggeredGridLayoutManager(int spanCount, int orientation) {

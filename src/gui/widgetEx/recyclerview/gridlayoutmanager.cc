@@ -8,7 +8,7 @@ GridLayoutManager::GridLayoutManager(Context* context,const AttributeSet& attrs)
     Properties* properties = getProperties(context, attrs,0,0);// defStyleAttr, defStyleRes);
     mSpanSizeLookup = new DefaultSpanSizeLookup();
     setSpanCount(properties->spanCount);
-	delete properties;
+    delete properties;
 }
 
 GridLayoutManager::GridLayoutManager(Context* context, int spanCount)

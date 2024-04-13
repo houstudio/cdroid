@@ -27,6 +27,7 @@ LinearLayoutManager::LinearLayoutManager(Context* context, const AttributeSet& a
     setOrientation(properties->orientation);
     setReverseLayout(properties->reverseLayout);
     setStackFromEnd(properties->stackFromEnd);
+    delete properties;
 }
 
 LinearLayoutManager::~LinearLayoutManager(){

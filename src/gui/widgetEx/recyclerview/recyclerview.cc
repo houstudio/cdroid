@@ -67,11 +67,11 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
 RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
    :ViewGroup(context, attrs){
 
-    mClipToPadding = attrs.getBoolean("clipToPadding", true);
     initRecyclerView();
     initAdapterManager();
     initChildrenHelper();
     initAutofill();
+    mClipToPadding = attrs.getBoolean("clipToPadding", true);
     // If not explicitly specified this view is important for accessibility.
     if (getImportantForAccessibility()
             == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
@@ -128,6 +128,7 @@ void RecyclerView::initRecyclerView(){
     mIsAttached   = false;
     mHasFixedSize = true;
     mEnableFastScroller = false;
+    mClipToPadding = true;
     mIgnoreMotionEventTillDown = false;
     mPostedAnimatorRunner = false;
     mDataSetHasChangedAfterLayout = false;

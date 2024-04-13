@@ -19,13 +19,17 @@ public:
     template<typename T>
     class SimplePool:public Pool<T>{
     private:
-	    int maxPoolSize;
-	    std::vector<T*> mPool;
+        int maxPoolSize;
+        std::vector<T*> mPool;
     public:
-	    SimplePool(int maxPoolSize) {
+        SimplePool(int maxPoolSize) {
             LOGE_IF(maxPoolSize <= 0,"The max pool size must be > 0");
-	        this->maxPoolSize = maxPoolSize;
-	        for(int i=0;i<maxPoolSize;i++)mPool.push_back(new T());
+            this->maxPoolSize = maxPoolSize;
+            for(int i=0;i<maxPoolSize;i++)mPool.push_back(new T());
+        }
+        ~SimplePool(){
+            for(int i=0;i<maxPoolSize;i++)delete mPool.at(i);
+            mPool.clear();
         }
         T* acquire() {
             if (!mPool.empty()) {
