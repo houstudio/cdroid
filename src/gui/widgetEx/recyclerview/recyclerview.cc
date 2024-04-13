@@ -3730,6 +3730,7 @@ RecyclerView::Recycler::Recycler(RecyclerView*rv){
 
 RecyclerView::Recycler::~Recycler(){
     delete mRecyclerPool;
+    delete mChangedScrap;
 }
 
 void RecyclerView::Recycler::clear() {
@@ -4175,6 +4176,9 @@ void RecyclerView::Recycler::scrapView(View* view) {
         holder->setScrapContainer(this, false);
         mAttachedScrap.push_back(holder);
     } else {
+        if(mChangedScrap == nullptr){
+            mChangedScrap = new std::vector<ViewHolder*>;
+        }
         holder->setScrapContainer(this, true);
         mChangedScrap->push_back(holder);
     }
