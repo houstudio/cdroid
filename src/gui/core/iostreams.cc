@@ -11,11 +11,12 @@ namespace cdroid {
 
 ZipStreamBuf::ZipStreamBuf()
     : zipfile(nullptr)
-    , buffer(nullptr)
     , bufferPosition(0){
+    buffer = new char_type[BUFSIZ];
 }
 
 ZipStreamBuf::~ZipStreamBuf() {
+    delete []buffer;
     if(zipfile){
         zip_fclose((zip_file_t*)zipfile);
         zipfile = nullptr;
@@ -27,7 +28,6 @@ ZipStreamBuf* ZipStreamBuf::select(void* zfile) {
         return nullptr;
     this->zipfile = zfile;
     // allocate buffer
-    buffer = new char_type[BUFSIZ];
     setg(buffer, buffer, buffer);
     return this;
 }
