@@ -299,7 +299,7 @@ void Animation::setAnimationListener(AnimationListener listener) {
 
 void Animation::ensureInterpolator() {
     if (mInterpolator == nullptr) {
-        mInterpolator = new AccelerateDecelerateInterpolator();
+        mInterpolator = AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
     }
 }
 
