@@ -80,6 +80,7 @@ private:
     void startAnimation();
 public:
     ViewPropertyAnimator(View* view);
+    ~ViewPropertyAnimator();
     ViewPropertyAnimator& setDuration(long duration);
     long getDuration();
     ViewPropertyAnimator& setStartDelay(long startDelay);

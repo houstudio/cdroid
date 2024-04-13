@@ -123,6 +123,13 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
     }; 
 }
 
+ViewPropertyAnimator::~ViewPropertyAnimator(){
+    delete mTempValueAnimator;
+    for(auto am:mAnimatorMap){
+        delete am.first;
+    }
+}
+
 ViewPropertyAnimator& ViewPropertyAnimator::setDuration(long duration) {
     LOGE_IF(duration<0,"Animators cannot have negative duration:%d" ,duration);
     mDurationSet = true;
