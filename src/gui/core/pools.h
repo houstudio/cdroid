@@ -23,7 +23,6 @@ public:
         std::vector<T*> mPool;
     public:
         SimplePool(int maxPoolSize) {
-            LOGE_IF(maxPoolSize <= 0,"The max pool size must be > 0");
             this->maxPoolSize = maxPoolSize;
             for(int i=0;i<maxPoolSize;i++)mPool.push_back(new T());
         }

@@ -70,7 +70,7 @@ static std::string matrixToString(const float* a, uint32_t m, uint32_t n, bool r
 #endif
 class VelocityTrackerImpl {//from VelocityTracker.cpp
 public:
-
+    friend VelocityTracker;
     // Creates a velocity tracker using the specified strategy.
     // If strategy is NULL, uses the default strategy for the platform.
     VelocityTrackerImpl(const char* strategy = nullptr);
@@ -915,10 +915,12 @@ float LeastSquaresVelocityTrackerStrategy::chooseWeight(uint32_t index) const {
 }
 
 ///////////////////////////////////////from VelocityTracker.java/////////////////////////////////////
+Pools::SimplePool<VelocityTracker>VelocityTracker::sPool(4);
+VelocityTracker::VelocityTracker():VelocityTracker(nullptr){
+}
 
-std::queue<VelocityTracker*>VelocityTracker::sPool;
 VelocityTracker::VelocityTracker(const char* strategy):mActivePointerId(-1) {
-    mVelocityTracker=new VelocityTrackerImpl(strategy);
+    mVelocityTracker = new VelocityTrackerImpl(strategy);
     mCalculatedIdBits.clear();
     bzero(mCalculatedVelocity,sizeof(mCalculatedVelocity));
 }
@@ -1013,14 +1015,20 @@ bool VelocityTracker::getEstimator(int32_t id,Estimator* outEstimator) {
 }
 
 void VelocityTracker::recycle(){
-    sPool.push(this);
+    if(mVelocityTracker->mStrategy){
+        clear();
+        sPool.release(this);
+    }
+}
+
+VelocityTracker*VelocityTracker::obtain() {
+    VelocityTracker* instance = sPool.acquire();
+    return (instance != nullptr) ? instance : new VelocityTracker(nullptr);
 }
 
 VelocityTracker*VelocityTracker::obtain(const char*strategy){
-    if(sPool.size()){
-        VelocityTracker*vt=sPool.front();
-        sPool.pop();
-        return vt; 
+    if(strategy==nullptr){
+        return obtain(); 
     }
     return new VelocityTracker(strategy);
 }

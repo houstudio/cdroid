@@ -1,7 +1,7 @@
 #ifndef __VELOCITY_TRACKER_H__
 #define __VELOCITY_TRACKER_H__
 
-#include <queue>
+#include <core/pools.h>
 #include <core/uievents.h>
 namespace cdroid{
 typedef int64_t nsecs_t;
@@ -23,7 +23,7 @@ private:
     int32_t mActivePointerId;
     BitSet32 mCalculatedIdBits;
     Velocity mCalculatedVelocity[MAX_POINTERS];
-    static std::queue<VelocityTracker*>sPool;
+    static Pools::SimplePool<VelocityTracker>sPool;
 public:
     struct Position {
         float x, y;
@@ -52,6 +52,7 @@ public:
     };
 
 public:
+    VelocityTracker();
     explicit VelocityTracker(const char* strategy);
     ~VelocityTracker();
     void clear();
@@ -64,7 +65,8 @@ public:
     float getXVelocity(int);
     float getYVelocity();
     float getYVelocity(int);
-    static VelocityTracker*obtain(const char*name=nullptr);
+    static VelocityTracker*obtain();
+    static VelocityTracker*obtain(const char*name);
     void recycle(); 
 };
     
