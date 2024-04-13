@@ -124,6 +124,7 @@ void GraphDevice::showLogo(Cairo::Context*context,Cairo::RefPtr<Cairo::ImageSurf
        rc.set(0,0,mScreenHeight,mScreenWidth);
        break;
     }
+    context->save();
     if(img){
         context->set_source(img,0,0);
         context->paint();
@@ -138,6 +139,7 @@ void GraphDevice::showLogo(Cairo::Context*context,Cairo::RefPtr<Cairo::ImageSurf
     context->move_to(rc.width-te.x_advance-32,rc.height-10);
     context->show_text(copyRight);
     context->fill();
+    context->restore();
 }
 
 HANDLE GraphDevice::getPrimarySurface()const{

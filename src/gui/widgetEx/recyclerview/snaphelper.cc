@@ -72,8 +72,7 @@ void SnapHelper::destroyCallbacks() {
 }
 
 void SnapHelper::calculateScrollDistance(int velocityX, int velocityY,int snapDistance[2]) {
-    mGravityScroller->fling(0, 0, velocityX, velocityY,
-            INT_MIN, INT_MAX, INT_MIN, INT_MAX);
+    mGravityScroller->fling(0, 0, velocityX, velocityY, INT_MIN, INT_MAX, INT_MIN, INT_MAX);
     snapDistance[0] = mGravityScroller->getFinalX();
     snapDistance[1] = mGravityScroller->getFinalY();
 }
@@ -125,7 +124,7 @@ RecyclerView::SmoothScroller* SnapHelper::createScroller(RecyclerView::LayoutMan
 
 class MyLinearSmoothScroller:public LinearSmoothScroller{
 private:
-    SnapHelper*mSnapHelper;
+    SnapHelper* mSnapHelper;
     RecyclerView* mRecyclerView;
 protected:
     void onTargetFound(View* targetView, RecyclerView::State& state, RecyclerView::SmoothScroller::Action& action) {

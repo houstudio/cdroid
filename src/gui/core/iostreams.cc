@@ -24,9 +24,8 @@ ZipStreamBuf::~ZipStreamBuf() {
 }
 
 ZipStreamBuf* ZipStreamBuf::select(void* zfile) {
-    if (zfile==nullptr) 
-        return nullptr;
-    this->zipfile = zfile;
+    if (zfile == nullptr) return nullptr;
+    zipfile = zfile;
     // allocate buffer
     setg(buffer, buffer, buffer);
     return this;
