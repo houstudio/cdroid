@@ -7360,7 +7360,6 @@ void View::CheckForTap::run(){
     mView->mPrivateFlags &= ~PFLAG_PRESSED;
     mView->setPressed(true,mX,mY);
     mView->checkForLongClick(ViewConfiguration::getTapTimeout(),mX, mY);
-    LOGD("View::CheckForTap %p:%d",mView,mView->mID);
 }
 
 void View::CheckForTap::postDelayed(long ms){

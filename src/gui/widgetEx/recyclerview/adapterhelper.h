@@ -73,6 +73,7 @@ protected:
 public:
     AdapterHelper(Callback callback);
     AdapterHelper(Callback callback, bool disableRecycler);
+    ~AdapterHelper();
     AdapterHelper& addUpdateOp(const std::vector<UpdateOp*>&);
     int applyPendingUpdatesToPosition(int position);
     UpdateOp* obtainUpdateOp(int cmd, int positionStart, int itemCount, Object* payload);

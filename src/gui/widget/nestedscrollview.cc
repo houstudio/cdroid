@@ -11,12 +11,10 @@ DECLARE_WIDGET2(NestedScrollView,"cdroid:attr/scrollViewStyle")
 
 NestedScrollView::NestedScrollView(int w,int h):FrameLayout(w,h){
     initScrollView();
-    LOGD("NestedScrollView cant scroll,do not use it");
 }
 
 NestedScrollView::NestedScrollView(Context* context,const AttributeSet&attrs):FrameLayout(context,attrs){
     initScrollView();
-    LOGE("NestedScrollView cant scroll,do not use it");
 }
 
 NestedScrollView::~NestedScrollView(){

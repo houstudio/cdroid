@@ -13,6 +13,11 @@ AdapterHelper::AdapterHelper(Callback callback, bool disableRecycler) {
     mUpdateOpPool = new Pools::SimplePool<UpdateOp>(UpdateOp::POOL_SIZE);
 }
 
+AdapterHelper::~AdapterHelper(){
+    delete mOpReorderer;
+    delete mUpdateOpPool;
+}
+
 AdapterHelper& AdapterHelper::addUpdateOp(const std::vector<UpdateOp*>&ops) {
     //Collections.addAll(mPendingUpdates, ops);
     mPendingUpdates.insert(mPendingUpdates.end(),ops.begin(),ops.end());

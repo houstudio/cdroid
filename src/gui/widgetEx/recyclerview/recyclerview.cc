@@ -2085,6 +2085,7 @@ void RecyclerView::setItemAnimator(ItemAnimator* animator) {
     if (mItemAnimator != nullptr) {
         mItemAnimator->endAnimations();
         mItemAnimator->setListener(nullptr);
+        delete mItemAnimator;
     }
     mItemAnimator = animator;
     if (mItemAnimator != nullptr) {
