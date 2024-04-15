@@ -349,14 +349,13 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
 	   {"italic",(int)Typeface::ITALIC}
 	},Typeface::NORMAL);
     mFontWeight  = atts.getInt("textfontWeight",-1);
-    mShadowColor = atts.getInt("shadowColor",mShadowColor);
+    mShadowColor = atts.getColor("shadowColor",mShadowColor);
     mShadowDx = atts.getFloat("shadowDx",mShadowDx);
     mShadowDy = atts.getFloat("shadowDy",mShadowDy);
     mShadowRadius = atts.getFloat("shadowRadius",mShadowRadius);
     mTypefaceIndex= atts.getInt("typeface",-1);
     mFontFamily   = atts.getString("fontFamily","");
     mFontTypeface = Typeface::create(mFontFamily,mTextStyle);
-    mFontWeight= atts.getInt("textFontWeight",-1);
     mAllCaps   = atts.getBoolean("textAllCaps",false);
 }
 
