@@ -900,6 +900,7 @@ void Switch::jumpDrawablesToCurrentState() {
 
     if (mPositionAnimator && mPositionAnimator->isStarted()) {
         mPositionAnimator->end();
+        delete mPositionAnimator;
         mPositionAnimator = nullptr;
     }
 }
