@@ -897,7 +897,7 @@ void View::resolvePadding(){
 }
 
 bool View::isOpaque()const{
-    return (mPrivateFlags & PFLAG_OPAQUE_MASK) == PFLAG_OPAQUE_MASK ;//&&  getFinalAlpha() >= 1.0f;
+    return ((mPrivateFlags & PFLAG_OPAQUE_MASK) == PFLAG_OPAQUE_MASK) &&  (getFinalAlpha() >= 1.0f);
 }
 
 void View::computeOpaqueFlags(){
@@ -7147,7 +7147,7 @@ void View::setAlphaInternal(float alpha){
     const float oldAlpha = mTransformationInfo->mAlpha;
     mTransformationInfo->mAlpha = alpha;
     if((alpha==0)^(oldAlpha==0)){
-	    //notifySubtreeAccessibilityStateChangedIfNeeded();
+        //notifySubtreeAccessibilityStateChangedIfNeeded();
     }
 }
 
