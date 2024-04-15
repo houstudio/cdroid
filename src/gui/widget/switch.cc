@@ -59,10 +59,10 @@ Switch::Switch(Context* context,const AttributeSet& a)
         applyTrackTint();
     }
 
-    /*appearance = a.getResourceId( com.android.internal.R.styleable.Switch_switchTextAppearance, 0);
-    if (appearance != 0) {
+    const std::string appearance = a.getString("switchTextAppearance");
+    if (!appearance.empty()){
         setSwitchTextAppearance(context, appearance);
-    }*/
+    }
     ViewConfiguration& config = ViewConfiguration::get(context);
     mTouchSlop = config.getScaledTouchSlop();
     mMinFlingVelocity = config.getScaledMinimumFlingVelocity();
@@ -104,10 +104,7 @@ Switch::~Switch(){
 void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
     AttributeSet atts = context->obtainStyledAttributes(resid);//com.android.internal.R.styleable.TextAppearance);
 
-    int ts;
-    ColorStateList* colors = nullptr;
-
-    colors = atts.getColorStateList("textColor");//com.android.internal.R.styleable.TextAppearance_textColor);
+    ColorStateList* colors = atts.getColorStateList("textColor");//com.android.internal.R.styleable.TextAppearance_textColor);
     if (colors) {
         mTextColors = colors;
     } else {
@@ -115,7 +112,7 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
         mTextColors = getTextColors();
     }
 
-    ts = atts.getDimensionPixelSize("textSize", 0);
+    int ts = atts.getDimensionPixelSize("textSize", 0);
     if (ts != 0) {
         if (ts != mOnLayout->getFontSize()){//mTextPaint.getTextSize()) {
             //mTextPaint.setTextSize(ts);
