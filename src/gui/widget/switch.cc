@@ -95,6 +95,7 @@ Switch::~Switch(){
     delete mThumbDrawable;
     //delete mTrackTintList;
     //delete mThumbTintList;
+    delete mPositionAnimator;
     delete mOnLayout;
     delete mOffLayout;
     mVelocityTracker->recycle();
