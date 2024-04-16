@@ -108,6 +108,7 @@ RecyclerView::~RecyclerView(){
         delete id;
         mItemDecorations.pop_back();
     }
+    delete mChildHelper;
     delete mState;
     delete mAdapterHelper;
     delete mViewInfoStore;
@@ -4739,7 +4740,6 @@ RecyclerView::LayoutManager::~LayoutManager(){
     delete mHorizontalBoundCheck;
     delete mVerticalBoundCheck;
     delete mSmoothScroller;
-    delete mChildHelper;
 }
 
 void RecyclerView::LayoutManager::setRecyclerView(RecyclerView* recyclerView) {
