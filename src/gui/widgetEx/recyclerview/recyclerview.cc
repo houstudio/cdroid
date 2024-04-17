@@ -124,6 +124,7 @@ RecyclerView::~RecyclerView(){
     delete mScrollingChildHelper;
     delete (ViewInfoStore::ProcessCallback*)mViewInfoProcessCallback;
 }
+
 void RecyclerView::initRecyclerView(){
     mLayoutFrozen = false;
     mIsAttached   = false;

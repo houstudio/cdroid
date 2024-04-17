@@ -124,7 +124,9 @@ float RenderNode::getRotationY()const{
 }
 
 void RenderNode::setScaleX(float scale){
-    mScaleX = scale;
+    const float EPSILON = 0.0000001f;
+    const float sign = (scale >= 0) ? 1.0f : -1.0f;
+    mScaleX = (std::abs(scale)<EPSILON)?sign*EPSILON:scale;
 }
 
 float RenderNode::getScaleX()const{
@@ -132,7 +134,9 @@ float RenderNode::getScaleX()const{
 }
 
 void RenderNode::setScaleY(float scale){
-    mScaleY = scale;
+    const float EPSILON = 0.0000001f;
+    const float sign = (scale >= 0) ? 1.0f : -1.0f;
+    mScaleY = (std::abs(scale)<EPSILON)?sign*EPSILON:scale;
 }
 
 float RenderNode::getScaleY()const{

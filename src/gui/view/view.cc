@@ -1225,7 +1225,7 @@ void View::transformFromViewToWindowSpace(int*inOutLocation){
         position[0] -= view->mScrollX;
         position[1] -= view->mScrollY;
         if (!view->hasIdentityMatrix()) {
-             view->getMatrix().transform_point(position[0],position[1]);
+            view->getMatrix().transform_point(position[0],position[1]);
         }
         position[0] += view->mLeft;
         position[1] += view->mTop;
@@ -6977,7 +6977,7 @@ void View::setY(float y){
 void View::setScaleX(float x){
     if(x != getScaleX()){
         invalidateViewProperty(true,false);
-        mRenderNode->setScaleX((x==.0f)?.00001f:x);//scale cant be zero
+        mRenderNode->setScaleX(x);//scale cant be zero
         invalidateViewProperty(false,true);
         invalidateParentIfNeededAndWasQuickRejected();
     }
@@ -6990,7 +6990,7 @@ float View::getScaleX()const{
 void View::setScaleY(float y){
     if(y!=getScaleY()){
         invalidateViewProperty(true,false);
-        mRenderNode->setScaleY((y==.0f)?.00001f:y);//scale cant be zero
+        mRenderNode->setScaleY(y);//scale cant be zero
         invalidateViewProperty(false,true);
         invalidateParentIfNeededAndWasQuickRejected();
     }

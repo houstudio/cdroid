@@ -411,7 +411,7 @@ void ViewTreeObserver::dispatchOnDraw() {
 }
 
 void ViewTreeObserver::dispatchOnTouchModeChanged(bool inTouchMode) {
-    auto& listeners =   mOnTouchModeChangeListeners;
+    auto& listeners = mOnTouchModeChangeListeners;
     for (OnTouchModeChangeListener listener : listeners) {
         listener(inTouchMode);//.onTouchModeChanged(inTouchMode);
     }
@@ -425,7 +425,7 @@ void ViewTreeObserver::dispatchOnScrollChanged() {
 }
 
 bool ViewTreeObserver::hasComputeInternalInsetsListeners() {
-    auto listeners =  mOnComputeInternalInsetsListeners;
+    auto listeners = mOnComputeInternalInsetsListeners;
     return listeners.size() > 0;
 }
 
