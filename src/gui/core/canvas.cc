@@ -108,7 +108,7 @@ void Canvas::draw_image(const RefPtr<ImageSurface>& img,const Rect& dst,const Re
     restore();
 }
 
-void Canvas::dump2png(const char*fname){
+void Canvas::dump2png(const std::string& fname){
 #ifdef CAIRO_HAS_PNG_FUNCTIONS
     get_target()->write_to_png(fname);
 #else

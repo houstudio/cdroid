@@ -30,8 +30,7 @@ public:
     void rectangle(int x,int y,int w,int h);
     void rectangle(const Rect &r);
     void draw_image(const Cairo::RefPtr<Cairo::ImageSurface>&img,const Rect& dst,const Rect* src);
-    //void rotate(float degrees,float px,float py);
-    void dump2png(const char*fname);
+    void dump2png(const std::string& fname);
 };
 extern void DumpRegion(const std::string&label,const Cairo::RefPtr<Cairo::Region>&rgn);
 }//namspace

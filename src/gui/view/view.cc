@@ -1210,23 +1210,25 @@ void View::setFadingEdgeLength(int length){
 
 void View::transformFromViewToWindowSpace(int*inOutLocation){
     View* view = this;
-    Matrix matrix;
     double position[2]={(double)inOutLocation[0],(double)inOutLocation[1]};
-    if(!hasIdentityMatrix()){
-        matrix = getMatrix();
-        matrix.transform_point(position[0],position[1]);
+    if(mAttachInfo==nullptr){
+        inOutLocation[0] = inOutLocation[1] = 0;
+        return;
     }
+    if(!hasIdentityMatrix()){
+        getMatrix().transform_point(position[0],position[1]);
+    }
+    position[0] += mLeft;
+    position[1] += mTop;
+    view = mParent;
     while (view) {
         position[0] -= view->mScrollX;
         position[1] -= view->mScrollY;
         if (!view->hasIdentityMatrix()) {
-             matrix = view->getMatrix();
-             matrix.transform_point(position[0],position[1]);
+             view->getMatrix().transform_point(position[0],position[1]);
         }
-        if(view->mParent){
-            position[0] += view->mLeft;
-            position[1] += view->mTop;
-        }
+        position[0] += view->mLeft;
+        position[1] += view->mTop;
         view = view->mParent;
     }
     inOutLocation[0]=(int)position[0];
