@@ -107,7 +107,7 @@ int main(int argc,const char*argv[]){
     rv->getLayoutManager()->requestSimpleAnimationsInNextLayout();
     for(int i=0;i<100;i++){
         adapter->add(std::string("string ")+std::to_string(i));
-        adapter->notifyItemInserted(i);
+        //adapter->notifyItemInserted(i);//Notice:call notifyItemInserted before layout will cause memleak.
     }
     decoration->setDrawable(new ColorDrawable(0xFFFF0000));
     rv->addItemDecoration(decoration);

@@ -163,7 +163,7 @@ std::shared_ptr<Drawable::ConstantState>DrawableWrapper::getConstantState(){
 int DrawableWrapper::getChangingConfigurations()const{
     return Drawable::getChangingConfigurations()
                 | (mState != nullptr ? mState->getChangingConfigurations() : 0)
-                | mDrawable->getChangingConfigurations();
+                | (mDrawable&&mDrawable->getChangingConfigurations());
 }
 
 void DrawableWrapper::invalidateDrawable(Drawable& who){

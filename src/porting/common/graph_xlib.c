@@ -25,8 +25,10 @@ static GFXRect screenMargin= {0}; //{60,0,60,0};
 
 #define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
 #if 1
-#define SENDMOUSE(time,x,y)  {InjectABS(time,EV_ABS,0,x);\
-      InjectABS(time,EV_ABS,1,y);InjectABS(time,EV_SYN,SYN_REPORT,0);}
+#define SENDMOUSE(time,x,y)  {\
+      InjectABS(time,EV_ABS,ABS_X,x);\
+      InjectABS(time,EV_ABS,ABS_Y,y);\
+      InjectABS(time,EV_SYN,SYN_REPORT,0);}
 #else
 #define SENDMOUSE(time,x,y)  {InjectREL(time,EV_REL,0,x);\
       InjectREL(time,EV_REL,1,y);InjectREL(time,EV_SYN,SYN_REPORT,0);}
@@ -136,7 +138,7 @@ INT GFXInit() {
 }
 
 INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
-    const char*env= getenv("SCREENSIZE");
+    const char*env= getenv("SCREEN_SIZE");
     if(env==NULL) {
         *width=1280;//dispCfg.width;
         *height=720;//dispCfg.height;

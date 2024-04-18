@@ -59,7 +59,7 @@ int GraphDevice::init(){
     Cairo::RefPtr<Cairo::ImageSurface> img= nullptr;
     if(!mLogo.empty()){
         std::ifstream fs(mLogo.c_str());
-	img = Cairo::ImageSurface::create_from_stream(fs);
+        img = Cairo::ImageSurface::create_from_stream(fs);
     }
     GFXInit();
 
@@ -71,13 +71,17 @@ int GraphDevice::init(){
     mPrimaryContext = new Canvas(surf);
     mRectBanner.set(0,0,400,40);
 
-    GFXCreateSurface(0,&logoSurface,mScreenWidth,mScreenHeight,mFormat,0);
-    GFXLockSurface(logoSurface,(void**)&logoBuffer,&pitch);
-    RefPtr<Surface>logoSurf = ImageSurface::create(logoBuffer,Surface::Format::ARGB32,mScreenWidth,mScreenHeight,pitch);
-    RefPtr<Cairo::Context>logoContext=Cairo::Context::create(logoSurf);
-    showLogo(logoContext.get(),img);
-    GFXBlit(mPrimarySurface,0,0,logoSurface,nullptr);
-    GFXDestroySurface(logoSurface);
+    if(img){
+        GFXCreateSurface(0,&logoSurface,mScreenWidth,mScreenHeight,mFormat,0);
+        GFXLockSurface(logoSurface,(void**)&logoBuffer,&pitch);
+        RefPtr<Surface>logoSurf = ImageSurface::create(logoBuffer,Surface::Format::ARGB32,mScreenWidth,mScreenHeight,pitch);
+        RefPtr<Cairo::Context>logoContext=Cairo::Context::create(logoSurf);
+        showLogo(logoContext.get(),img);
+        GFXBlit(mPrimarySurface,0,0,logoSurface,nullptr);
+        GFXDestroySurface(logoSurface);
+    }else{
+        showLogo(mPrimaryContext,img);
+    }
 
     mLastComposeTime = SystemClock::uptimeMillis();
     mComposing = 0;

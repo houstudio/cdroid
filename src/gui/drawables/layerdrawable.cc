@@ -209,6 +209,7 @@ LayerDrawable::LayerDrawable():LayerDrawable(nullptr){
 
 LayerDrawable::LayerDrawable(const std::vector<Drawable*>&drawables)
         :LayerDrawable(){
+    mHotspotBounds.set(0,0,0,0);
     for(auto d:drawables){
         ChildDrawable*child=new ChildDrawable(0);
         child->mDrawable=d;
