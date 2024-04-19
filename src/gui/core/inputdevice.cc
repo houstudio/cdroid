@@ -483,6 +483,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                     break;
                 }
             }
+	    mTrack2Slot.clear();
             if( int(mEvent.getHistorySize())>=0 ){
                 mLastDownX= mEvent.getX();
                 mLastDownY= mEvent.getY();
