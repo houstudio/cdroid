@@ -205,7 +205,7 @@ void NumberPicker::initView(){
     mMinValue = 0;
     mMaxValue = 0;
     mSelectorTextGapHeight = 0;
-    mSelectorElementSize = 0;
+    mSelectorElementSize = 1;//avoid divide by zero.
     mSelectionDividersDistance =UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE;
     mVelocityTracker = nullptr;
 
