@@ -285,7 +285,7 @@ int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
 }
 
 TouchDevice::TouchDevice(int fd):InputDevice(fd){
-    mPointSlot = 0;
+    mTrackID = mSlotID = 0;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
     const InputDeviceInfo::MotionRange*rangeX = mDeviceInfo.getMotionRange(ABS_X,0);
     Display display =  WindowManager::getInstance().getDefaultDisplay();
@@ -340,10 +340,9 @@ static int ABS2AXIS(int absaxis){
     }
 }
 
-void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
+void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
-    auto it = mPointMAP.find(index);
-    axis = ABS2AXIS(axis);
+    int axis = ABS2AXIS(raw_axis);
     switch(axis){
     case MotionEvent::AXIS_X:
        switch(rotation){
@@ -378,13 +377,22 @@ void TouchDevice::setAxisValue(int index,int axis,int value,bool isRelative){
        }
        break;
     case MotionEvent::AXIS_Z:break;
-    default:return;
+    default:if(raw_axis==ABS_MT_TRACKING_ID){
+            auto it=mTrack2Slot.find(value);/*value is trackid*/
+	    if( it == mTrack2Slot.end() ){
+                it = mTrack2Slot.insert({value,mTrack2Slot.size()}).first;
+		mPointMAP.insert({value,{}});
+	    }
+	    mSlotID=it->second;
+	    mTrackID=value;
+        }
     }
+    auto it = mPointMAP.find(mSlotID);
     if(it == mPointMAP.end()){
         TouchPoint tp;
         tp.coord.clear();
-        tp.prop.id= mPointMAP.size();
-        auto it2 = mPointMAP.insert(std::pair<int,TouchPoint>(index,tp));
+        tp.prop.id= mTrackID;
+        auto it2 = mPointMAP.insert(std::pair<int,TouchPoint>(mSlotID,tp));
         it = it2.first;
     }
     it->second.coord.setAxisValue(axis,value);
@@ -430,14 +438,14 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         switch(code){
         case ABS_X ... ABS_Z : 
             mMoveTime = tv.tv_sec * 1000LL + tv.tv_usec/1000;
-            setAxisValue(0,code,value,false) ; break;
+            setAxisValue(code,value,false) ; break;
         //case ABS_PRESSURE  : setAxisValue(0,code,value,false) ; break;
-        case ABS_MT_SLOT    : mPointSlot = value ; break;
+        case ABS_MT_SLOT    : mTypeB = true; break;
         case ABS_MT_TRACKING_ID:
         case ABS_MT_TOUCH_MAJOR:
         case ABS_MT_POSITION_X :
         case ABS_MT_POSITION_Y :
-             setAxisValue(mPointSlot,code,value,false);break;
+             setAxisValue(code,value,false);break;
         case ABS_MT_WIDTH_MINOR:
         case ABS_MT_PRESSURE :
         case ABS_MT_DISTANCE :
@@ -448,7 +456,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         switch(code){
         case REL_X:
         case REL_Y://LOGD("EV_REL code %x,%x",code,value);
-        case REL_Z:setAxisValue(0,code,value,true);break;
+        case REL_Z:setAxisValue(code,value,true);break;
         }break;
     case EV_SYN:
         switch(code){
