@@ -401,7 +401,9 @@ mVSCodeConfig = """{
         {
             "name": "Linux",
             "includePath": [
+                "${workspaceFolder}/*",
                 "${workspaceFolder}/**",
+                "~/cdroid/src/*",
                 "~/cdroid/src/**",
                 "/opt/vcpkg/packages/**"
             ],
