@@ -1,6 +1,7 @@
 #ifndef __INPUT_DEVICE_H__
 #define __INPUT_DEVICE_H__
 #include <core/uievents.h>
+#include <core/bitset.h>
 #include <functional>
 #include <map>
 #include <memory>
@@ -237,7 +238,7 @@ protected:
     bool mSwitchXY;
     bool mInvertX;
     bool mInvertY;
-    bool mTypeB;
+    BitSet32 mLastBits,mCurrBits;
     std::map<int,int>mTrack2Slot;
     std::map<int,TouchPoint>mPointMAP;
     void setAxisValue(int axis,int value,bool isRelative);

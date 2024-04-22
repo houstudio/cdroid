@@ -592,7 +592,7 @@ bool NestedScrollView::onTouchEvent(MotionEvent& ev) {
 
     MotionEvent* vtev = MotionEvent::obtain(ev);
 
-    int actionMasked = ev.getActionMasked();
+    const int actionMasked = ev.getActionMasked();
 
     if (actionMasked == MotionEvent::ACTION_DOWN) {
         mNestedYOffset = 0;
@@ -613,8 +613,7 @@ bool NestedScrollView::onTouchEvent(MotionEvent& ev) {
 
             /*
              * If being flinged and user touches, stop the fling. isFinished
-             * will be false if being flinged.
-             */
+             * will be false if being flinged. */
             if (!mScroller->isFinished()) {
                 mScroller->abortAnimation();
             }
@@ -706,11 +705,10 @@ bool NestedScrollView::onTouchEvent(MotionEvent& ev) {
                     if(!edgeEffectFling(initialVelocity) && !dispatchNestedPreFling(0,-initialVelocity)){
                         dispatchNestedFling(0, -initialVelocity, true);
                         fling(-initialVelocity);
-                        //flingWithNestedDispatch(-initialVelocity);
                     }
                 } else if (mScroller->springBack(getScrollX(), getScrollY(), 0, 0, 0,
                         getScrollRange())) {
-                    this->postInvalidateOnAnimation();
+                    postInvalidateOnAnimation();
                 }
                 mActivePointerId = INVALID_POINTER;
                 endDrag();
@@ -719,7 +717,7 @@ bool NestedScrollView::onTouchEvent(MotionEvent& ev) {
             if (mIsBeingDragged && getChildCount() > 0) {
                 if (mScroller->springBack(getScrollX(), getScrollY(), 0, 0, 0,
                         getScrollRange())) {
-                    this->postInvalidateOnAnimation();
+                    postInvalidateOnAnimation();
                 }
             }
             mActivePointerId = INVALID_POINTER;

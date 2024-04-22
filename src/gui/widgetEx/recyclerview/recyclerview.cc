@@ -737,9 +737,7 @@ void RecyclerView::addItemDecoration(ItemDecoration* decor) {
 
 RecyclerView::ItemDecoration* RecyclerView::getItemDecorationAt(int index) {
     const int size = getItemDecorationCount();
-    if (index < 0 || index >= size) {
-        FATAL("%d is an invalid index for size %d",index,size);
-    }
+    FATAL_IF((index < 0)||(index >= size),"%d is an invalid index for size %d",index,size);
     return mItemDecorations.at(index);
 }
 
