@@ -520,7 +520,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                 mEvents.push_back(MotionEvent::obtain(mEvent));
             }
             mLastBits.value = mCurrBits.value;
-            mCurrBits.clear();
+            if(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)mCurrBits.clear();
             mEvent.setAction(MotionEvent::ACTION_MOVE);
         }break;
     }
