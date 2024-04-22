@@ -361,6 +361,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
        }else if(mScreenWidth != mTPWidth){
            value = (value * mScreenWidth)/mTPWidth;
        }
+       mSlotID=0;mTrackID=0;
        break;
     case MotionEvent::AXIS_Y:
        switch(rotation){
@@ -377,6 +378,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
        }else{
            value = (value * mScreenHeight)/mTPHeight;
        }
+       mSlotID=0;mTrackID=0;
        break;
     case MotionEvent::AXIS_Z:break;
     default:if(raw_axis==ABS_MT_TRACKING_ID){
@@ -416,10 +418,9 @@ int TouchDevice::isValidEvent(int type,int code,int value){
 }
 
 static int getActionByBits(BitSet32&last,BitSet32&cur,int& pointIndex){
-    uint32_t diffbits = last.value^cur.value;
-    pointIndex = BitSet32::firstMarkedBit(diffbits);
+    const uint32_t diffbits = last.value^cur.value;
+    pointIndex = BitSet32::firstMarkedBit(diffbits?diffbits:cur.value);
     if(last.count()==cur.count()){
-	pointIndex= BitSet32::firstMarkedBit(cur.value);
         return MotionEvent::ACTION_MOVE;
     }else if(last.count()<cur.count()){
         return cur.count()>1?MotionEvent::ACTION_POINTER_DOWN:MotionEvent::ACTION_DOWN;
@@ -441,7 +442,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case BTN_TOUCH :
         case BTN_STYLUS:
             mEvent.setActionButton(MotionEvent::BUTTON_PRIMARY);
-            mEvent.setAction(value ? MotionEvent::ACTION_DOWN : MotionEvent::ACTION_UP);
+            //mEvent.setAction(value ? MotionEvent::ACTION_DOWN : MotionEvent::ACTION_UP);
+	    if(value)mCurrBits.markBit(0);else mCurrBits.clearBit(0);
             if(value){
                 mMoveTime = mDownTime = tv.tv_sec * 1000 + tv.tv_usec/1000;
                 mEvent.setButtonState(MotionEvent::BUTTON_PRIMARY);
@@ -462,7 +464,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         }break;
     case EV_ABS:
         switch(code){
-        case ABS_X ... ABS_Z : 
+        case ABS_X ... ABS_Z :
             mMoveTime = tv.tv_sec * 1000LL + tv.tv_usec/1000;
             setAxisValue(code,value,false) ; break;
         //case ABS_PRESSURE  : setAxisValue(0,code,value,false) ; break;
