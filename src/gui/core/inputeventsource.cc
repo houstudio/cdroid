@@ -93,11 +93,11 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
     auto itr = mDevices.find(fd);
     if(itr == mDevices.end()){
         InputDevice tmpdev(fd);
-        if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_TOUCH|INPUT_DEVICE_CLASS_TOUCH_MT)){
+        if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_TOUCH)/*|INPUT_DEVICE_CLASS_TOUCH_MT)*/){
             dev.reset(new MouseDevice(fd));
         }else if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_KEYBOARD)){
             dev.reset(new KeyDevice(fd));
-        }
+        }else dev.reset(new InputDevice(fd));
         mDevices.emplace(fd,dev);
         return dev;
     }
