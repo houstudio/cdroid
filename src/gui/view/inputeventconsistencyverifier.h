@@ -1,6 +1,7 @@
 #ifndef __INPUTEVENT_CONSISTENCYVERIFIER_H__
 #define __INPUTEVENT_CONSISTENCYVERIFIER_H__
-#include <core/uievents.h>
+#include <view/keyevent.h>
+#include <view/motionevent.h>
 #include <sstream>
 #include <stdarg.h>
 namespace cdroid{

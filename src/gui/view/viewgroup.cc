@@ -19,7 +19,6 @@
 #include <animation/layouttransition.h>
 #include <animation/layoutanimationcontroller.h>
 #include <cdlog.h>
-#include <uievents.h>
 #include <focusfinder.h>
 #include <systemclock.h>
 

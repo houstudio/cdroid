@@ -1,6 +1,5 @@
 #include <view/inputeventconsistencyverifier.h>
 #include <core/inputdevice.h>
-#include <core/uievents.h>
 
 namespace cdroid{
 static const char* EVENT_TYPE_KEY = "KeyEvent";

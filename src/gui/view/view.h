@@ -1,7 +1,6 @@
 #ifndef __CDROID_VIEW_H__
 #define __CDROID_VIEW_H__
 #include <core/eventcodes.h>
-#include <core/uievents.h>
 #include <core/inputdevice.h>
 #include <core/canvas.h>
 #include <core/insets.h>
@@ -13,6 +12,8 @@
 #include <core/parcel.h>
 #include <core/parcelable.h>
 #include <cairomm/pattern.h>
+#include <view/keyevent.h>
+#include <view/motionevent.h>
 #include <view/abssavedstate.h>
 #include <view/gravity.h>
 #include <view/layoutparams.h>

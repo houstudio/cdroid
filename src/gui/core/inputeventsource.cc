@@ -1,9 +1,8 @@
 #include <inputeventsource.h>
-#include <uievents.h>
 #include <cdlog.h>
 #include <unordered_map>
 #include <windowmanager.h>
-#include <uievents.h>
+//#include <uievents.h>
 #include <thread>
 #include <chrono>
 #include <tokenizer.h>

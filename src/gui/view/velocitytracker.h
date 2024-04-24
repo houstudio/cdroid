@@ -2,7 +2,8 @@
 #define __VELOCITY_TRACKER_H__
 
 #include <core/pools.h>
-#include <core/uievents.h>
+//#include <core/uievents.h>
+#include <view/motionevent.h>
 namespace cdroid{
 typedef int64_t nsecs_t;
 class VelocityTrackerStrategy;

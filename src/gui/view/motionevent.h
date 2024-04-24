@@ -1,16 +1,8 @@
-#ifndef __CDROID_UIEVENTS_H__
-#define __CDROID_UIEVENTS_H__
-#include <string>
-#include <core/eventcodes.h>
-#include <core/sparsearray.h>
-#include <core/bitset.h>
+#ifndef __MOTION_EVENT_H__
+#define __MOTION_EVENT_H__
+#include <view/inputevent.h>
 #include <cairomm/matrix.h>
-#include <stdint.h>
-#include <vector>
-#include <queue>
-
-typedef __int64_t nsecs_t;
-
+#include <core/bitset.h>
 namespace cdroid{
 
 struct PointerCoords {
@@ -37,7 +29,7 @@ struct PointerCoords {
     void scale(float scale);
     void applyOffset(float xOffset, float yOffset);
 
-    float getX() const; 
+    float getX() const;
     float getY() const;
 
     bool operator==(const PointerCoords& other) const;
@@ -72,210 +64,12 @@ struct PointerProperties {
     void copyFrom(const PointerProperties& other);
 };
 
-class InputEvent{
-protected:
-    static constexpr long NS_PER_MS = 1000000;
-    int mDeviceId;
-    int mDisplayId;
-    int mSource;
-    long mSeq;
-    nsecs_t mEventTime;//SystemClock#uptimeMillis
-public:   
-    enum{
-        EVENT_TYPE_KEY = 1,
-        EVENT_TYPE_MOTION = 2,
-        EVENT_TYPE_FOCUS = 3
-    };
-    InputEvent();
-    virtual ~InputEvent();
-    int getDeviceId()const{return mDeviceId;}
-    int getDisplayId()const;
-    void setDisplayId(int);
-    virtual int getType()const=0;
-    virtual InputEvent*copy()const=0;
-    void initialize(int32_t deviceId, int32_t source);
-    void initialize(const InputEvent& from);
-    void setSource(int source){mSource=source;}
-    int getSource()const{return mSource;}
-    bool isFromSource(int s)const;
-    long getSequenceNumber()const{return mSeq;}
-    virtual bool isTainted()const=0;
-    virtual void setTainted(bool)=0;
-    virtual nsecs_t getEventTimeNanos() const { return mEventTime*NS_PER_MS; }
-    virtual nsecs_t getEventTime()const{ return mEventTime;}
-    virtual void recycle();/*only obtained event can call recycle*/
-    virtual void toStream(std::ostream& os)const=0;
-    friend std::ostream& operator<<( std::ostream&,const InputEvent&);
-};
-
-class KeyEvent:public InputEvent{
-private:
-    int32_t mAction;
-    int32_t mFlags;
-    int32_t mKeyCode;
-    int32_t mScanCode;
-    int32_t mMetaState;
-    int32_t mRepeatCount;
-    nsecs_t mDownTime;//SystemClock#uptimeMillis
-    static int metaStateFilterDirectionalModifiers(int metaState,int modifiers, int basic, int left, int right);
-    static KeyEvent*obtain();
-public:
-    enum{
-        ACTION_DOWN = 0,
-        ACTION_UP = 1,
-        ACTION_MULTIPLE = 2
-    };
-    enum{
-        STATE_UNKNOWN = -1,
-        STATE_UP = 0,
-        STATE_DOWN = 1,
-        STATE_VIRTUAL = 2
-    };
-    enum{
-        META_SHIFT_ON      =0x01,
-        META_SHIFT_LEFT_ON =0x40,
-        META_SHIFT_RIGHT_ON=0x80,
-        META_SHIFT_MASK    = META_SHIFT_ON | META_SHIFT_LEFT_ON | META_SHIFT_RIGHT_ON,
-
-        META_ALT_ON      =0x02,
-        META_ALT_LEFT_ON =0x10,
-        META_ALT_RIGHT_ON=0x20,
-        META_ALT_MASK    = META_ALT_ON | META_ALT_LEFT_ON | META_ALT_RIGHT_ON,
-
-        META_SYM_ON      = 0x4,
-        META_FUNCTION_ON =0x08,
-        META_CAP_LOCKED = 0x100,
-        META_ALT_LOCKED = 0x200,
-        META_SYM_LOCKED = 0x400,
-        META_SELECTING  = 0x800,
-
-        META_CTRL_ON      =0x1000,
-        META_CTRL_LEFT_ON =0x2000,
-        META_CTRL_RIGHT_ON=0x4000,
-        META_CTRL_MASK   =META_CTRL_ON | META_CTRL_LEFT_ON | META_CTRL_RIGHT_ON,
-
-        META_META_ON      = 0x10000,
-        META_META_LEFT_ON =0x20000,
-        META_META_RIGHT_ON=0x40000,
-        META_META_MASK    = META_META_ON | META_META_LEFT_ON | META_META_RIGHT_ON,
-
-        META_CAPS_LOCK_ON = 0x100000,
-        META_NUM_LOCK_ON  = 0x200000,
-        META_SCROLL_LOCK_ON = 0x400000,
-        META_LOCK_MASK =   META_CAPS_LOCK_ON | META_NUM_LOCK_ON | META_SCROLL_LOCK_ON,
-
-        META_SYNTHETIC_MASK = META_CAP_LOCKED | META_ALT_LOCKED | META_SYM_LOCKED | META_SELECTING,
-        META_INVALID_MODIFIER_MASK = META_LOCK_MASK | META_SYNTHETIC_MASK,
-
-        META_MODIFIER_MASK =  META_SHIFT_ON | META_SHIFT_LEFT_ON | META_SHIFT_RIGHT_ON
-             | META_ALT_ON | META_ALT_LEFT_ON | META_ALT_RIGHT_ON | META_CTRL_ON 
-             | META_CTRL_LEFT_ON | META_CTRL_RIGHT_ON | META_META_ON | META_META_LEFT_ON 
-             | META_META_RIGHT_ON | META_SYM_ON | META_FUNCTION_ON,
-        META_ALL_MASK = META_MODIFIER_MASK | META_LOCK_MASK,
-    };
-    enum{
-        FLAG_WOKE_HERE       = 0x1,
-        FLAG_SOFT_KEYBOARD   = 0x2,
-        FLAG_KEEP_TOUCH_MODE = 0x4,
-        FLAG_FROM_SYSTEM     = 0x8,
-        FLAG_EDITOR_ACTION   = 0x10,
-        FLAG_CANCELED        = 0x20,
-        FLAG_VIRTUAL_HARD_KEY= 0x40,
-        FLAG_LONG_PRESS      = 0x80,
-        FLAG_CANCELED_LONG_PRESS = 0x100,
-        FLAG_TRACKING       = 0x200,
-        FLAG_FALLBACK       = 0x400,
-        FLAG_PREDISPATCH    = 0x20000000,
-        FLAG_START_TRACKING = 0x40000000,
-        FLAG_TAINTED        = 0x80000000,	   
-    };
-    class Callback{
-    public:
-        virtual bool onKeyDown(int keyCode, KeyEvent& event)=0;
-        virtual bool onKeyLongPress(int keyCode, KeyEvent& event)=0;
-        virtual bool onKeyUp(int keyCode, KeyEvent& event)=0;
-        virtual bool onKeyMultiple(int keyCode, int count, KeyEvent& event)=0;
-    };
-    class DispatcherState{
-    protected:
-        int mDownKeyCode;
-        void* mDownTarget;
-        SparseIntArray  mActiveLongPresses;
-    public:
-        DispatcherState();
-        void reset();
-        void reset(void* target);
-        void startTracking(KeyEvent& event,void* target);
-        bool isTracking(KeyEvent& event);
-        void performedLongPress(KeyEvent& event);
-        void handleUpEvent(KeyEvent& event);
-    };
-public:
-    void initialize(
-            int32_t deviceId,
-            int32_t source,
-            int32_t action,
-            int32_t flags,
-            int32_t keyCode,
-            int32_t scanCode,
-            int32_t metaState,
-            int32_t repeatCount,
-            nsecs_t downTime,
-            nsecs_t eventTime);
-    void initialize(const KeyEvent& from);
-    static KeyEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,int code, int repeat, int metaState,
-               int deviceId, int scancode, int flags, int source,int displayId=0/*,std::string characters*/);
-    static KeyEvent* obtain(const KeyEvent& other);
-    virtual int getType()const {return EV_KEY;}
-    KeyEvent*copy()const override{return obtain(*this);}
-    int getKeyCode()const {return mKeyCode;}
-    void setKeyCode(int k){mKeyCode=k;}
-    int getFlags()const{return mFlags;}
-    inline bool isTainted()const{return (mFlags&FLAG_TAINTED)!=0;}
-    inline void setTainted(bool tainted){
-        if(tainted)mFlags|=FLAG_TAINTED;
-        else mFlags&=~FLAG_TAINTED;
-    }
-    inline int32_t getScanCode() const { return mScanCode; }
-    inline int32_t getMetaState() const { return mMetaState; } 
-    int getAction()const{return mAction;}//key up-->0 down-->1
-    int getRepeatCount()const {return mRepeatCount;}
-    inline nsecs_t getDownTime() const { return mDownTime; }
-    bool hasNoModifiers()const;
-    bool hasModifiers(int modifiers)const;
-    bool dispatch(Callback* caller,DispatcherState*state,void*target);
-    bool isAltPressed () const{ return (mMetaState & META_ALT_ON) != 0;  }
-    bool isShiftPressed()const{ return (mMetaState & META_SHIFT_ON) != 0;}
-    bool isCtrlPressed() const{ return (mMetaState & META_CTRL_ON) != 0; }
-    bool isMetaPressed() const{ return (mMetaState & META_META_ON) != 0; }
-    bool isFunctionPressed()const{return (mMetaState & META_FUNCTION_ON) != 0; } 
-    bool isCapsLockOn() const{  return (mMetaState & META_CAPS_LOCK_ON) != 0;  }
-    bool isNumLockOn() const{   return (mMetaState & META_NUM_LOCK_ON) != 0;   }
-    bool isScrollLockOn() const{return (mMetaState & META_SCROLL_LOCK_ON) != 0;}
-    bool isCanceled()const { return (mFlags&FLAG_CANCELED) != 0; }
-    void cancel() { mFlags |= FLAG_CANCELED;}
-    void startTracking() { mFlags |= FLAG_START_TRACKING; }
-    bool isTracking()const{ return (mFlags&FLAG_TRACKING) != 0;}
-    bool isLongPress() { return (mFlags&FLAG_LONG_PRESS) != 0; }
-    const char*getLabel(){return getLabel(mKeyCode);}
-    static const char*getLabel(int key);
-    static int getKeyCodeFromLabel(const char*label);
-    static bool isModifierKey(int keyCode);
-    static bool isConfirmKey(int keyCode);
-    static int normalizeMetaState(int metaState);
-    static bool metaStateHasNoModifiers(int metaState);
-    static bool metaStateHasModifiers(int metaState, int modifiers);
-    static const std::string metaStateToString(int metaState);
-    static const std::string actionToString(int action);
-    void toStream(std::ostream& os)const override;
-};
-
 class MotionEvent:public InputEvent{
 public:
     enum{
         ACTION_MASK = 0xff,
         ACTION_POINTER_INDEX_MASK = 0xff00,
-        ACTION_POINTER_INDEX_SHIFT=8, 
+        ACTION_POINTER_INDEX_SHIFT=8,
         ACTION_DOWN = 0,
         ACTION_UP = 1,
         ACTION_MOVE = 2,
@@ -389,18 +183,18 @@ protected:
 public:
     MotionEvent();
     MotionEvent(const MotionEvent&m);
-    MotionEvent*copy()const override{return obtain(*this);} 
+    MotionEvent*copy()const override{return obtain(*this);}
     void initialize(int deviceId,int source,int displayId,int action,int actionButton,
             int flags, int edgeFlags,int metaState,   int buttonState,
             float xOffset, float yOffset, float xPrecision, float yPrecision,
             nsecs_t downTime, nsecs_t eventTime, size_t pointerCount,
             const PointerProperties* pointerProperties,const PointerCoords* pointerCoords);
-   
-    static MotionEvent*obtain(nsecs_t downTime, nsecs_t eventTime, int action, 
+
+    static MotionEvent*obtain(nsecs_t downTime, nsecs_t eventTime, int action,
             int pointerCount, const PointerProperties* pointerProperties,const PointerCoords* pointerCoords,
-	        int metaState, int buttonState, float xPrecision, float yPrecision, int deviceId,
+                int metaState, int buttonState, float xPrecision, float yPrecision, int deviceId,
             int edgeFlags, int source, int flags);
-   
+
     static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,
             float x, float y, float pressure, float size, int metaState,
             float xPrecision, float yPrecision, int deviceId, int edgeFlags);
@@ -411,8 +205,8 @@ public:
     static bool isTouchEvent(int32_t source, int32_t action);
     void copyFrom(const MotionEvent* other, bool keepHistory);
     MotionEvent*split(int idBits);
-    virtual int getType()const{return EV_ABS;}
-    inline int32_t getAction() const { return mAction;}  
+    virtual int getType()const{return 0/*EV_ABS*/;}
+    inline int32_t getAction() const { return mAction;}
     inline void setAction(int32_t action) { mAction = action; }
     inline int32_t getActionMasked() const { return mAction &ACTION_MASK; }
     int getActionIndex()const{
@@ -524,58 +318,10 @@ public:
         if(targetsFocus)
             mFlags|=FLAG_TARGET_ACCESSIBILITY_FOCUS;
         else
-            mFlags&=~FLAG_TARGET_ACCESSIBILITY_FOCUS; 
+            mFlags&=~FLAG_TARGET_ACCESSIBILITY_FOCUS;
     }
     static const std::string actionToString(int action);
     void toStream(std::ostream& os)const;
 };
-/*
- * Input event factory.
- */
-class InputEventFactoryInterface {
-protected:
-    virtual ~InputEventFactoryInterface() { }
-
-public:
-    InputEventFactoryInterface() { }
-
-    virtual KeyEvent* createKeyEvent() = 0;
-    virtual MotionEvent* createMotionEvent() = 0;
-};
-
-/* A simple input event factory implementation that uses a single preallocated instance
- * of each type of input event that are reused for each request.*/
-class PreallocatedInputEventFactory : public InputEventFactoryInterface {
-public:
-    PreallocatedInputEventFactory() { }
-    virtual ~PreallocatedInputEventFactory() { }
-
-    virtual KeyEvent* createKeyEvent() { return & mKeyEvent; }
-    virtual MotionEvent* createMotionEvent() { return & mMotionEvent; }
-
-private:
-    KeyEvent mKeyEvent;
-    MotionEvent mMotionEvent;
-};
-
-/*
- * An input event factory implementation that maintains a pool of input events.
- */
-class PooledInputEventFactory : public InputEventFactoryInterface {
-public:
-    PooledInputEventFactory(size_t maxPoolSize = 20);
-    virtual ~PooledInputEventFactory();
-
-    virtual KeyEvent* createKeyEvent();
-    virtual MotionEvent* createMotionEvent();
-
-    void recycle(InputEvent* event);
-    static PooledInputEventFactory& getInstance();
-private:
-    const size_t mMaxPoolSize;
-    static PooledInputEventFactory*mInst;
-    std::queue<KeyEvent*> mKeyEventPool;
-    std::queue<MotionEvent*> mMotionEventPool;
-};
-}
-#endif
+}/*endof namespace*/
+#endif/*__MOTION_EVENT_H__*/

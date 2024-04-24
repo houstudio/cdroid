@@ -1,6 +1,8 @@
 #ifndef __INPUT_DEVICE_H__
 #define __INPUT_DEVICE_H__
-#include <core/uievents.h>
+//#include <core/uievents.h>
+#include <view/keyevent.h>
+#include <view/motionevent.h>
 #include <core/bitset.h>
 #include <functional>
 #include <map>
