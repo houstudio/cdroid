@@ -285,6 +285,7 @@ int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
 }
 
 TouchDevice::TouchDevice(int fd):InputDevice(fd){
+    mTypeB = false;
     mTrackID = mSlotID = 0;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
     const InputDeviceInfo::MotionRange*rangeX = mDeviceInfo.getMotionRange(ABS_X,0);
@@ -468,7 +469,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case ABS_X ... ABS_Z :
             mMoveTime = tv.tv_sec * 1000LL + tv.tv_usec/1000;
             setAxisValue(code,value,false) ; break;
-        case ABS_MT_SLOT    :   break;
+        case ABS_MT_SLOT    : mTypeB = true; mCurrBits.markBit(value); break;
         case ABS_MT_TRACKING_ID:
         case ABS_MT_TOUCH_MAJOR:
         case ABS_MT_POSITION_X :
@@ -509,7 +510,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                     mEvents.push_back(MotionEvent::obtain(last->getDownTime(),last->getEventTime(),
                            last->getAction(),mEvent.getX(),mEvent.getY(),last->getMetaState()));
                     last->recycle();
-                    LOGD("%lld,%lld,%d events",mMoveTime,last->getEventTime(),mEvents.size());
+                    LOGV("%lld,%lld,%d events",mMoveTime,last->getEventTime(),mEvents.size());
                     break;
                 }
             }
@@ -519,7 +520,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                 mEvents.push_back(MotionEvent::obtain(mEvent));
             }
             mLastBits.value = mCurrBits.value;
-            if(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT){
+            if((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)&&(mTypeB==false)){
                 mCurrBits.clear();//only typeA
                 mTrack2Slot.clear();
             }

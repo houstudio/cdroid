@@ -238,6 +238,7 @@ protected:
     bool mSwitchXY;
     bool mInvertX;
     bool mInvertY;
+    bool mTypeB;
     BitSet32 mLastBits,mCurrBits;
     std::map<int,int>mTrack2Slot;
     std::map<int,TouchPoint>mPointMAP;
