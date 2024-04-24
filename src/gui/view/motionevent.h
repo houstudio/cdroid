@@ -205,7 +205,7 @@ public:
     static bool isTouchEvent(int32_t source, int32_t action);
     void copyFrom(const MotionEvent* other, bool keepHistory);
     MotionEvent*split(int idBits);
-    virtual int getType()const{return 0/*EV_ABS*/;}
+    virtual int getType()const{return 3/*EV_ABS*/;}
     inline int32_t getAction() const { return mAction;}
     inline void setAction(int32_t action) { mAction = action; }
     inline int32_t getActionMasked() const { return mAction &ACTION_MASK; }
