@@ -123,7 +123,7 @@ public:
     static KeyEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,int code, int repeat, int metaState,
                int deviceId, int scancode, int flags, int source,int displayId=0/*,std::string characters*/);
     static KeyEvent* obtain(const KeyEvent& other);
-    virtual int getType()const {return EV_KEY;}
+    virtual int getType()const {return INPUT_EVENT_TYPE_KEY;}
     KeyEvent*copy()const override{return obtain(*this);}
     int getKeyCode()const {return mKeyCode;}
     void setKeyCode(int k){mKeyCode=k;}

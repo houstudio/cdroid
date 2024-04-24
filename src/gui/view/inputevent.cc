@@ -85,13 +85,13 @@ MotionEvent* PooledInputEventFactory::createMotionEvent() {
 
 void PooledInputEventFactory::recycle(InputEvent* event) {
     switch (event->getType()) {
-    case EV_KEY:
+    case InputEvent::INPUT_EVENT_TYPE_KEY:
         if (mKeyEventPool.size() < mMaxPoolSize) {
             mKeyEventPool.push(static_cast<KeyEvent*>(event));
             return;
         }
         break;
-    case EV_ABS:
+    case InputEvent::INPUT_EVENT_TYPE_MOTION:
         if (mMotionEventPool.size() < mMaxPoolSize) {
             mMotionEventPool.push(static_cast<MotionEvent*>(event));
             return;

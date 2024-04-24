@@ -17,9 +17,9 @@ protected:
     nsecs_t mEventTime;//SystemClock#uptimeMillis
 public:
     enum{
-        EVENT_TYPE_KEY = 1,
-        EVENT_TYPE_MOTION = 2,
-        EVENT_TYPE_FOCUS = 3
+        INPUT_EVENT_TYPE_KEY = 1,
+        INPUT_EVENT_TYPE_MOTION = 2,
+        INPUT_EVENT_TYPE_FOCUS = 3
     };
     InputEvent();
     virtual ~InputEvent();

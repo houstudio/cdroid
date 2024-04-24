@@ -294,8 +294,8 @@ int WindowManager::getVisibleWindows(std::vector<Window*>&wins){
 
 void WindowManager::processEvent(InputEvent&e){
    switch(e.getType()){
-   case EV_KEY: onKeyEvent((KeyEvent&)e); break;
-   case EV_ABS: onMotion((MotionEvent&)e);break;
+   case InputEvent::INPUT_EVENT_TYPE_KEY: onKeyEvent((KeyEvent&)e); break;
+   case InputEvent::INPUT_EVENT_TYPE_MOTION: onMotion((MotionEvent&)e);break;
    default:break;
    }
 }
