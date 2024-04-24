@@ -11,7 +11,8 @@
 #include <sys/ipc.h>
 #include <pthread.h>
 #include <string.h>
-#include <core/eventcodes.h>
+//#include <core/eventcodes.h>
+#include <linux/input.h>
 #include <time.h>
 
 static Display*x11Display=NULL;
@@ -321,6 +322,7 @@ static void* X11EventProc(void*p) {
         case KeyPress:/* 当检测到键盘按键,退出消息循环 */
         case KeyRelease:
             down=event.type==KeyPress;
+#if 0
             switch(event.xkey.keycode) {
             case 0x13:
                 SENDKEY(KEY_0,down);
@@ -464,6 +466,7 @@ static void* X11EventProc(void*p) {
                 SENDKEY(KEY_M,down);
                 break;
             }
+#endif
             LOGV("%d",event.xkey.keycode);
             break;
         case ButtonPress:
