@@ -1197,7 +1197,7 @@ void DrawerLayout::cancelChildViewTouch() {
 }
 
 bool DrawerLayout::onKeyDown(int keyCode, KeyEvent& event) {
-    if (keyCode == KEY_BACK && hasVisibleDrawer()) {
+    if (keyCode == KeyEvent::KEYCODE_BACK && hasVisibleDrawer()) {
         event.startTracking();
         return true;
     }
@@ -1205,7 +1205,7 @@ bool DrawerLayout::onKeyDown(int keyCode, KeyEvent& event) {
 }
 
 bool DrawerLayout::onKeyUp(int keyCode, KeyEvent& event) {
-    if (keyCode == KEY_BACK) {
+    if (keyCode == KeyEvent::KEYCODE_BACK) {
         View* visibleDrawer = findVisibleDrawer();
         if (visibleDrawer && getDrawerLockMode(visibleDrawer) == LOCK_MODE_UNLOCKED) {
             closeDrawers();

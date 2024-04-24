@@ -458,7 +458,7 @@ bool ListPopupWindow::onKeyDown(int keyCode,KeyEvent& event){
         // also if selection is not currently in the drop down, then don't
         // let center or enter presses go there since that would cause it
         // to select one of its items
-        if (keyCode != KEY_SPACE
+        if (keyCode != KeyEvent::KEYCODE_SPACE
                 && (mDropDownList->getSelectedItemPosition() >= 0
                 || !KeyEvent::isConfirmKey(keyCode))) {
             int curIndex = mDropDownList->getSelectedItemPosition();
@@ -480,8 +480,8 @@ bool ListPopupWindow::onKeyDown(int keyCode,KeyEvent& event){
                        mDropDownList->lookForSelectablePosition(adapter->getCount() - 1, false);
             }
 
-            if ((below && keyCode == KEY_DPAD_UP && curIndex <= firstItem) ||
-                   (!below && keyCode == KEY_DPAD_DOWN && curIndex >= lastItem)) {
+            if ((below && keyCode == KeyEvent::KEYCODE_DPAD_UP && curIndex <= firstItem) ||
+                   (!below && keyCode == KeyEvent::KEYCODE_DPAD_DOWN && curIndex >= lastItem)) {
                 // When the selection is at the top, we block the key
                 // event to prevent focus from moving.
                 clearListSelection();
@@ -511,20 +511,20 @@ bool ListPopupWindow::onKeyDown(int keyCode,KeyEvent& event){
                 switch (keyCode) {
                 // avoid passing the focus from the text view to the
                 // next component
-                case KEY_ENTER:
-                case KEY_DPAD_CENTER:
-                case KEY_DPAD_DOWN:
-                case KEY_DPAD_UP:
+                case KeyEvent::KEYCODE_ENTER:
+                case KeyEvent::KEYCODE_DPAD_CENTER:
+                case KeyEvent::KEYCODE_DPAD_DOWN:
+                case KeyEvent::KEYCODE_DPAD_UP:
                      return true;
                 }
             } else {
-                if (below && keyCode == KEY_DPAD_DOWN) {
+                if (below && keyCode == KeyEvent::KEYCODE_DPAD_DOWN) {
                     // when the selection is at the bottom, we block the
                     // event to avoid going to the next focusable widget
                     if (curIndex == lastItem) {
                         return true;
                     }
-                } else if (!below && keyCode == KEY_DPAD_UP &&
+                } else if (!below && keyCode == KeyEvent::KEYCODE_DPAD_UP &&
                         curIndex == firstItem) {
                     return true;
                 }

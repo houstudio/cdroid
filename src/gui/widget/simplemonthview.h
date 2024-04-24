@@ -2,6 +2,7 @@
 #define __SIMPLE_MONTHVIEW_H__
 #include <view/view.h>
 #include <core/calendar.h>
+#include <core/typeface.h>
 namespace cdroid{
 
 class SimpleMonthView:public View{
@@ -16,6 +17,16 @@ private:
 
     Calendar mCalendar;
     std::string mDayOfWeekLabels[7];
+    Typeface*mDayTypeface;
+    Typeface*mMonthTypeface;
+    Typeface*mDayOfWeekTypeface;
+    int mDayTextSize;
+    int mMonthTextSize;
+    int mDayOfWeekTextSize;
+
+    const ColorStateList* mDayTextColor;
+    const ColorStateList* mMonthTextColor;
+    const ColorStateList* mDayOfWeekTextColor;
     int mDesiredMonthHeight;
     int mDesiredDayOfWeekHeight;
     int mDesiredDayHeight;
@@ -57,15 +68,14 @@ private:
     /** Optional listener for handling day click actions. */
     OnDayClickListener mOnDayClickListener;
 
-    ColorStateList* mDayTextColor;
-
     int mHighlightedDay = -1;
     int mPreviouslyHighlightedDay = -1;
     bool mIsTouchHighlighted = false;
 private:
+    void initMonthView();
     void updateMonthYearLabel();
     void updateDayOfWeekLabels();
-    ColorStateList*applyTextAppearance(const std::string& resId);
+    ColorStateList*applyTextAppearance(Typeface*&face,int& txtSize,const std::string& resId);
     bool moveOneDay(bool positive);
     int findClosestRow(const Rect* previouslyFocusedRect);
     int findClosestColumn(const Rect*previouslyFocusedRect);

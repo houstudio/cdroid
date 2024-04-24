@@ -1,6 +1,5 @@
 #ifndef __CDROID_VIEW_H__
 #define __CDROID_VIEW_H__
-#include <core/eventcodes.h>
 #include <core/inputdevice.h>
 #include <core/canvas.h>
 #include <core/insets.h>

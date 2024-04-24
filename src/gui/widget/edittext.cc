@@ -169,21 +169,21 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
     std::wstring& wText=getEditable();
     int line=mLayout->getLineForOffset(mCaretPos);
     switch(keyCode){
-    case KEY_LEFT:
+    case KeyEvent::KEYCODE_LEFT:
         if(mCaretPos>0){
             setCaretPos(mCaretPos-1);
             return true;
         }break;
-    case KEY_RIGHT:
+    case KeyEvent::KEYCODE_RIGHT:
         if(mCaretPos<(int)wText.size()){
             setCaretPos(mCaretPos+1);
             return true;
         }break;
-    case KEY_DOWN:
+    case KeyEvent::KEYCODE_DPAD_DOWN:
         return (!isSingleLine())&&moveCaret2Line(line+1);
-    case KEY_UP:
+    case KeyEvent::KEYCODE_DPAD_UP:
         return (!isSingleLine())&&moveCaret2Line(line-1);
-    case KEY_BACKSPACE:
+    case KeyEvent::KEYCODE_BACKSPACE:
         if(wText.size() && (mCaretPos>0) && (mCaretPos<=wText.size()) ){
             wchar_t wc0 = wText[mCaretPos-1];
             wText.erase(mCaretPos-1,1);
@@ -196,7 +196,7 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
             ret=true;
         }else setCaretPos(wText.size()-1);
         break;
-    case KEY_DELETE:
+    case KeyEvent::KEYCODE_DEL:
         if(mCaretPos<wText.size()){
             wchar_t wc0=wText[mCaretPos];
             wText.erase(mCaretPos,1);
@@ -205,17 +205,19 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
             else mLayout->relayout(true);
             ret=true; 
         }break;
-    case KEY_INSERT:
+    case KeyEvent::KEYCODE_INSERT:
          mEditMode=!mEditMode;
          invalidate(true);
          break;
-    case KEY_OK:
+#if 0
+    case KeyEvent::KEYCODE_OK:
          if(nullptr!=afterChanged)
              afterChanged(*this);
          return false;
-    case KEY_MENU:
+#endif
+    case KeyEvent::KEYCODE_MENU:
         return true;
-    case KEY_ENTER:
+    case KeyEvent::KEYCODE_ENTER:
         if(!isSingleLine()){
             if(mCaretPos<wText.length()) wText.insert(mCaretPos,1,'\n');
             else wText.append(1,'\n');

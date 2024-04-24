@@ -5,21 +5,15 @@
 namespace cdroid{
 
 SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
-    mOnDayClickListener=nullptr;
-    mDayTextColor=nullptr;
-    mDesiredMonthHeight=30;
-    mDesiredDayHeight=30;
-    mDesiredDayOfWeekHeight=30;
-    mDesiredDaySelectorRadius=15;
     setFocusable(true);
-
+    initMonthView();
     mPaddedWidth = w;
     mPaddedHeight = h;
 
     // We may have been laid out smaller than our preferred size. If so,
     // scale all dimensions to fit.
     int measuredPaddedHeight = h;// - paddingTop - paddingBottom;
-    float scaleH = 1.0f;//paddedHeight / (float) measuredPaddedHeight;
+    const float scaleH = 1.0f;//paddedHeight / (float) measuredPaddedHeight;
     int monthHeight = (int) (mDesiredMonthHeight * scaleH);
     int cellWidth = mPaddedWidth / DAYS_IN_WEEK;
     mMonthHeight = monthHeight;
@@ -38,11 +32,36 @@ SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
 
 SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
    :View(ctx,atts){
+    initMonthView();
     mDesiredMonthHeight = atts.getDimensionPixelSize("month_height");
     mDesiredDayOfWeekHeight =atts.getDimensionPixelSize("day_of_week_height");
     mDesiredDayHeight = atts.getDimensionPixelSize("day_height");
     mDesiredCellWidth  = atts.getDimensionPixelSize("day_width");
     mDesiredDaySelectorRadius=atts.getDimensionPixelSize("day_selector_radius");
+    std::string res = atts.getString("monthTextAppearance");
+    if(!res.empty())setMonthTextAppearance(res);
+    res = atts.getString("dayOfWeekTextAppearance");
+    if(!res.empty())setDayOfWeekTextAppearance(res);
+    res = atts.getString("dayTextAppearance");
+    if(!res.empty())setDayTextAppearance(res);
+}
+
+void SimpleMonthView::initMonthView(){
+    mOnDayClickListener = nullptr;
+    mDayTextColor = nullptr;
+    mDesiredMonthHeight = 30;
+    mDesiredDayHeight = 30;
+    mDesiredDayOfWeekHeight = 30;
+    mDesiredDaySelectorRadius= 15;
+    mDayTypeface = nullptr;
+    mMonthTypeface = nullptr;
+    mDayOfWeekTypeface = nullptr;
+    mMonth = 0;
+    mPaddedWidth = 0;
+    mPaddedHeight= 0;
+    mDayTextSize = 18;
+    mMonthTextSize=24;
+    mDayOfWeekTextSize=18;
 }
 
 void SimpleMonthView::updateMonthYearLabel(){
@@ -56,23 +75,28 @@ void SimpleMonthView::updateDayOfWeekLabels(){
     }
 }
 
-ColorStateList* SimpleMonthView::applyTextAppearance(const std::string& resId){
-    return nullptr;
+ColorStateList* SimpleMonthView::applyTextAppearance(Typeface*&face,int& textSize,const std::string& resId){
+    AttributeSet attrs = mContext->obtainStyledAttributes(resId);
+    std::string fontFamily = attrs.getString("fontFamily");
+    textSize = attrs.getDimensionPixelSize("textSize",textSize);
+    ColorStateList* textColor = attrs.getColorStateList("textColor");
+    if(!fontFamily.empty()) face = Typeface::create(fontFamily,0);
+    return textColor;
 }
 
 void SimpleMonthView::setMonthTextAppearance(const std::string& resId) {
-    applyTextAppearance(resId);
+    mMonthTextColor = applyTextAppearance(mMonthTypeface,mMonthTextSize,resId);
 
     invalidate();
 }
 
 void SimpleMonthView::setDayOfWeekTextAppearance(const std::string& resId) {
-    applyTextAppearance(resId);
+    mDayOfWeekTextColor = applyTextAppearance(mDayOfWeekTypeface,mDayOfWeekTextSize,resId);
     invalidate();
 }
 
 void SimpleMonthView::setDayTextAppearance(const std::string& resId) {
-    ColorStateList* textColor = applyTextAppearance(resId);
+    ColorStateList* textColor = applyTextAppearance(mDayTypeface,mDayTextSize,resId);
     if (textColor != nullptr) {
         mDayTextColor = textColor;
     }
@@ -89,18 +113,27 @@ int SimpleMonthView::getCellWidth()const{
 }
 
 void SimpleMonthView::setMonthTextColor(const ColorStateList* monthTextColor){
+    mMonthTextColor = monthTextColor;
+    invalidate();
 }
 
 void SimpleMonthView::setDayOfWeekTextColor(const ColorStateList* dayOfWeekTextColor){
+    mDayOfWeekTextColor = dayOfWeekTextColor;
+    invalidate();
 }
 
 void SimpleMonthView::setDayTextColor(const ColorStateList* dayTextColor){
+    mDayTextColor = dayTextColor;
+    invalidate();
 }
 
 void SimpleMonthView::setDaySelectorColor(const ColorStateList* dayBackgroundColor){
+    //mHighlightTextColor = dayBackgroundColor;
+    invalidate();
 }
 
 void SimpleMonthView::setDayHighlightColor(const ColorStateList* dayHighlightColor){
+
 }
 
 void SimpleMonthView::setOnDayClickListener(OnDayClickListener listener){
@@ -151,17 +184,17 @@ bool SimpleMonthView::onKeyDown(int keyCode, KeyEvent& event){
     // to the next focusable View in the hierarchy.
     bool focusChanged = false;
     switch (event.getKeyCode()) {
-    case KEY_DPAD_LEFT:
+    case KeyEvent::KEYCODE_DPAD_LEFT:
         if (event.hasNoModifiers()) {
             focusChanged = moveOneDay(isLayoutRtl());
         }
         break;
-    case KEY_DPAD_RIGHT:
+    case KeyEvent::KEYCODE_DPAD_RIGHT:
         if (event.hasNoModifiers()) {
             focusChanged = moveOneDay(!isLayoutRtl());
         }
         break;
-    case KEY_DPAD_UP:
+    case KeyEvent::KEYCODE_DPAD_UP:
         if (event.hasNoModifiers()) {
             ensureFocusedDay();
             if (mHighlightedDay > 7) {
@@ -170,7 +203,7 @@ bool SimpleMonthView::onKeyDown(int keyCode, KeyEvent& event){
             }
         }
         break;
-    case KEY_DPAD_DOWN:
+    case KeyEvent::KEYCODE_DPAD_DOWN:
         if (event.hasNoModifiers()) {
             ensureFocusedDay();
             if (mHighlightedDay <= mDaysInMonth - 7) {
@@ -179,14 +212,14 @@ bool SimpleMonthView::onKeyDown(int keyCode, KeyEvent& event){
             }
         }
         break;
-    case KEY_DPAD_CENTER:
-    case KEY_ENTER:
+    case KeyEvent::KEYCODE_DPAD_CENTER:
+    case KeyEvent::KEYCODE_ENTER:
         if (mHighlightedDay != -1) {
             onDayClicked(mHighlightedDay);
             return true;
         }
         break;
-    case KEY_TAB: {
+    case KeyEvent::KEYCODE_TAB: {
         int focusChangeDirection = 0;
         if (event.hasNoModifiers()) {
             focusChangeDirection = View::FOCUS_FORWARD;
@@ -382,9 +415,9 @@ const std::string SimpleMonthView::getMonthYearLabel(){
 }
 
 void SimpleMonthView::drawDaysOfWeek(Canvas& canvas){
-    int headerHeight = mMonthHeight;
-    int rowHeight = mDayOfWeekHeight;
-    int colWidth = mCellWidth;
+    const int headerHeight = mMonthHeight;
+    const int rowHeight = mDayOfWeekHeight;
+    const int colWidth = mCellWidth;
 
     // Text is vertically centered within the day of week height.
     int rowCenter = headerHeight + rowHeight / 2;
@@ -393,6 +426,9 @@ void SimpleMonthView::drawDaysOfWeek(Canvas& canvas){
     canvas.move_to(0,headerHeight);
     canvas.line_to(mRight-mLeft,headerHeight);
     canvas.stroke();
+    canvas.set_font_size(mDayOfWeekTextSize);
+    if(mDayOfWeekTypeface)
+	canvas.set_font_face(mDayOfWeekTypeface->getFontFace()->get_font_face());
     Rect rctxt={0,headerHeight,mCellWidth,rowHeight};
     for (int col = 0; col < DAYS_IN_WEEK; col++) {
         int colCenter = colWidth * col + colWidth / 2;
@@ -432,17 +468,17 @@ void SimpleMonthView::drawDays(Canvas& canvas){
 
         int stateMask = 0;
 
-        bool bDayEnabled = isDayEnabled(day);
+        const bool bDayEnabled = isDayEnabled(day);
         if (bDayEnabled) {
             stateMask |= StateSet::VIEW_STATE_ENABLED;
         }
 
-        bool isDayActivated = mActivatedDay == day;
-        bool isDayHighlighted = mHighlightedDay == day;
+        const bool isDayActivated = mActivatedDay == day;
+        const bool isDayHighlighted = mHighlightedDay == day;
         canvas.set_color(0x8000FF00);
         if (isDayActivated) {
             stateMask |= StateSet::VIEW_STATE_ACTIVATED;
-
+            //ColorStateList* cls= isDayActivated?mDayHilight:mDaySelector;
             // Adjust the circle to be centered on the row.
             canvas.arc(colCenterRtl, rowCenter, mDaySelectorRadius, 0,2*M_PI);
             canvas.fill();
@@ -461,7 +497,7 @@ void SimpleMonthView::drawDays(Canvas& canvas){
             dayTextColor = 0xFF00FF00;//mDaySelectorPaint.getColor();
         } else {
             std::vector<int> stateSet = StateSet::get(stateMask);
-            dayTextColor =0xFFFFFFFF;// mDayTextColor->getColorForState(stateSet, 0);
+            dayTextColor = 0xFFFFFFFF;// mDayTextColor->getColorForState(stateSet, 0);
         }
         canvas.set_color(dayTextColor);
         rctxt.left=colWidth * col;
@@ -582,13 +618,13 @@ bool SimpleMonthView::sameDay(int day, Calendar& today){
 }
 
 void SimpleMonthView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
-    int preferredHeight = mDesiredDayHeight * MAX_WEEKS_IN_MONTH
+    const int preferredHeight = mDesiredDayHeight * MAX_WEEKS_IN_MONTH
                 + mDesiredDayOfWeekHeight + mDesiredMonthHeight
                 + getPaddingTop() + getPaddingBottom();
-    int preferredWidth = mDesiredCellWidth * DAYS_IN_WEEK
+    const int preferredWidth = mDesiredCellWidth * DAYS_IN_WEEK
                 + getPaddingStart() + getPaddingEnd();
-    int resolvedWidth = resolveSize(preferredWidth, widthMeasureSpec);
-    int resolvedHeight = resolveSize(preferredHeight, heightMeasureSpec);
+    const int resolvedWidth = resolveSize(preferredWidth, widthMeasureSpec);
+    const int resolvedHeight = resolveSize(preferredHeight, heightMeasureSpec);
     setMeasuredDimension(resolvedWidth, resolvedHeight);
 }
 
@@ -596,14 +632,14 @@ void SimpleMonthView::onLayout(bool changed, int left, int top, int w, int h){
     if (!changed) return;
 
     // Let's initialize a completely reasonable number of variables.
-    int paddingLeft = getPaddingLeft();
-    int paddingTop = getPaddingTop();
-    int paddingRight = getPaddingRight();
-    int paddingBottom = getPaddingBottom();
-    int paddedRight = w - paddingRight;
-    int paddedBottom = h - paddingBottom;
-    int paddedWidth = paddedRight - paddingLeft;
-    int paddedHeight = paddedBottom - paddingTop;
+    const int paddingLeft = getPaddingLeft();
+    const int paddingTop = getPaddingTop();
+    const int paddingRight = getPaddingRight();
+    const int paddingBottom = getPaddingBottom();
+    const int paddedRight = w - paddingRight;
+    const int paddedBottom = h - paddingBottom;
+    const int paddedWidth = paddedRight - paddingLeft;
+    const int paddedHeight = paddedBottom - paddingTop;
     if (paddedWidth == mPaddedWidth || paddedHeight == mPaddedHeight) {
         return;
     }
@@ -613,10 +649,10 @@ void SimpleMonthView::onLayout(bool changed, int left, int top, int w, int h){
 
     // We may have been laid out smaller than our preferred size. If so,
     // scale all dimensions to fit.
-    int measuredPaddedHeight = getMeasuredHeight() - paddingTop - paddingBottom;
-    float scaleH = paddedHeight / (float) measuredPaddedHeight;
-    int monthHeight = (int) (mDesiredMonthHeight * scaleH);
-    int cellWidth = mPaddedWidth / DAYS_IN_WEEK;
+    const int measuredPaddedHeight = getMeasuredHeight() - paddingTop - paddingBottom;
+    const float scaleH = paddedHeight / (float) measuredPaddedHeight;
+    const int monthHeight = (int) (mDesiredMonthHeight * scaleH);
+    const int cellWidth = mPaddedWidth / DAYS_IN_WEEK;
     mMonthHeight = monthHeight;
     mDayOfWeekHeight = (int) (mDesiredDayOfWeekHeight * scaleH);
     mDayHeight = (int) (mDesiredDayHeight * scaleH);
@@ -624,8 +660,8 @@ void SimpleMonthView::onLayout(bool changed, int left, int top, int w, int h){
 
     // Compute the largest day selector radius that's still within the clip
     // bounds and desired selector radius.
-    int maxSelectorWidth = cellWidth / 2 + std::min(paddingLeft, paddingRight);
-    int maxSelectorHeight = mDayHeight / 2 + paddingBottom;
+    const int maxSelectorWidth = cellWidth / 2 + std::min(paddingLeft, paddingRight);
+    const int maxSelectorHeight = mDayHeight / 2 + paddingBottom;
     mDaySelectorRadius = std::min(mDesiredDaySelectorRadius,
                                   std::min(maxSelectorWidth, maxSelectorHeight));
 
@@ -634,7 +670,7 @@ void SimpleMonthView::onLayout(bool changed, int left, int top, int w, int h){
 }
 
 int SimpleMonthView::findDayOffset(){
-    int offset = mDayOfWeekStart - mWeekStart;
+    const int offset = mDayOfWeekStart - mWeekStart;
     if (mDayOfWeekStart < mWeekStart) {
         return offset + DAYS_IN_WEEK;
     }
@@ -642,29 +678,24 @@ int SimpleMonthView::findDayOffset(){
 }
 
 int SimpleMonthView::getDayAtLocation(int x, int y) {
-    int paddedX = x - getPaddingLeft();
+    const int paddedX = x - getPaddingLeft();
     if (paddedX < 0 || paddedX >= mPaddedWidth) {
         return -1;
     }
 
-    int headerHeight = mMonthHeight + mDayOfWeekHeight;
-    int paddedY = y - getPaddingTop();
+    const int headerHeight = mMonthHeight + mDayOfWeekHeight;
+    const int paddedY = y - getPaddingTop();
     if (paddedY < headerHeight || paddedY >= mPaddedHeight) {
         return -1;
     }
 
     // Adjust for RTL after applying padding.
-    int paddedXRtl;
-    if (isLayoutRtl()) {
-        paddedXRtl = mPaddedWidth - paddedX;
-    } else {
-        paddedXRtl = paddedX;
-    }
+    const int paddedXRtl = isLayoutRtl()?(mPaddedWidth - paddedX):paddedX;
 
-    int row = (paddedY - headerHeight) / mDayHeight;
-    int col = (paddedXRtl * DAYS_IN_WEEK) / mPaddedWidth;
-    int index = col + row * DAYS_IN_WEEK;
-    int day = index + 1 - findDayOffset();
+    const int row = (paddedY - headerHeight) / mDayHeight;
+    const int col = (paddedXRtl * DAYS_IN_WEEK) / mPaddedWidth;
+    const int index = col + row * DAYS_IN_WEEK;
+    const int day = index + 1 - findDayOffset();
     if (!isValidDayOfMonth(day)) {
         return -1;
     }
@@ -677,11 +708,11 @@ bool SimpleMonthView::getBoundsForDay(int id,Rect&outBounds){
         return false;
     }
 
-    int index = id - 1 + findDayOffset();
+    const int index = id - 1 + findDayOffset();
 
     // Compute left edge, taking into account RTL.
-    int col = index % DAYS_IN_WEEK;
-    int colWidth = mCellWidth;
+    const int col = index % DAYS_IN_WEEK;
+    const int colWidth = mCellWidth;
     int left;
     if (isLayoutRtl()) {
         left = getWidth() - getPaddingRight() - (col + 1) * colWidth;
@@ -690,10 +721,10 @@ bool SimpleMonthView::getBoundsForDay(int id,Rect&outBounds){
     }
 
     // Compute top edge.
-    int row = index / DAYS_IN_WEEK;
-    int rowHeight = mDayHeight;
-    int headerHeight = mMonthHeight + mDayOfWeekHeight;
-    int top = getPaddingTop() + headerHeight + row * rowHeight;
+    const int row = index / DAYS_IN_WEEK;
+    const int rowHeight = mDayHeight;
+    const int headerHeight = mMonthHeight + mDayOfWeekHeight;
+    const int top = getPaddingTop() + headerHeight + row * rowHeight;
 
     outBounds.set(left, top,colWidth,rowHeight);
 

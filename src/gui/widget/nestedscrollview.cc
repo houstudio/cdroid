@@ -401,7 +401,7 @@ bool NestedScrollView::executeKeyEvent(KeyEvent& event) {
     mTempRect.setEmpty();
 
     if (!canScroll()) {
-        if (isFocused() && event.getKeyCode() != KEY_BACK) {
+        if (isFocused() && event.getKeyCode() != KeyEvent::KEYCODE_BACK) {
             View* currentFocused = findFocus();
             if (currentFocused == this) currentFocused = nullptr;
             View* nextFocused = FocusFinder::getInstance().findNextFocus(this,
@@ -415,21 +415,21 @@ bool NestedScrollView::executeKeyEvent(KeyEvent& event) {
     bool handled = false;
     if (event.getAction() == KeyEvent::ACTION_DOWN) {
         switch (event.getKeyCode()) {
-        case KEY_DPAD_UP:
+        case KeyEvent::KEYCODE_DPAD_UP:
             if (!event.isAltPressed()) {
                 handled = arrowScroll(View::FOCUS_UP);
             } else {
                 handled = fullScroll(View::FOCUS_UP);
             }
             break;
-        case KEY_DPAD_DOWN:
+        case KeyEvent::KEYCODE_DPAD_DOWN:
             if (!event.isAltPressed()) {
                 handled = arrowScroll(View::FOCUS_DOWN);
             } else {
                 handled = fullScroll(View::FOCUS_DOWN);
             }
             break;
-        case KEY_SPACE:
+        case KeyEvent::KEYCODE_SPACE:
             pageScroll(event.isShiftPressed() ? FOCUS_UP : FOCUS_DOWN);
             break;
         }

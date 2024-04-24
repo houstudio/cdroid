@@ -333,10 +333,10 @@ int Window::processKeyEvent(KeyEvent&event){
     int handled = FINISH_NOT_HANDLED;
     int groupNavigationDirection = 0;
     const int action = event.getAction();
-    LOGV_IF(action==KeyEvent::ACTION_DOWN,"key:0x%x %s %x",event.getKeyCode(),KeyEvent::getLabel(event.getKeyCode()),KEY_DPAD_DOWN);
+    LOGV_IF(action==KeyEvent::ACTION_DOWN,"key:0x%x %s %x",event.getKeyCode(),KeyEvent::getLabel(event.getKeyCode()),KeyEvent::KEYCODE_DPAD_DOWN);
     if(dispatchKeyEvent(event))
         return FINISH_HANDLED;
-    if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KEY_TAB) {
+    if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KeyEvent::KEYCODE_TAB) {
         if (KeyEvent::metaStateHasModifiers(event.getMetaState(), KeyEvent::META_META_ON)) {
             groupNavigationDirection = View::FOCUS_FORWARD;
         } else if (KeyEvent::metaStateHasModifiers(event.getMetaState(),
@@ -364,7 +364,7 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
     if(focused && focused->dispatchKeyEvent(event))
         return true;
     int groupNavigationDirection = 0;
-    if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KEY_TAB) {
+    if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KeyEvent::KEYCODE_TAB) {
         if (KeyEvent::metaStateHasModifiers(event.getMetaState(), KeyEvent::META_META_ON)) {
             groupNavigationDirection = View::FOCUS_FORWARD;
         } else if (KeyEvent::metaStateHasModifiers(event.getMetaState(),
@@ -391,11 +391,11 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
 bool Window::performFocusNavigation(KeyEvent& event){
     int direction = -1;
     switch (event.getKeyCode()) {
-    case KEY_DPAD_LEFT:  direction = View::FOCUS_LEFT;    break;
-    case KEY_DPAD_RIGHT: direction = View::FOCUS_RIGHT;   break;
-    case KEY_DPAD_UP:    direction = View::FOCUS_UP;      break;
-    case KEY_DPAD_DOWN:  direction = View::FOCUS_DOWN;    break;
-    case KEY_TAB:
+    case KeyEvent::KEYCODE_DPAD_LEFT:  direction = View::FOCUS_LEFT;    break;
+    case KeyEvent::KEYCODE_DPAD_RIGHT: direction = View::FOCUS_RIGHT;   break;
+    case KeyEvent::KEYCODE_DPAD_UP:    direction = View::FOCUS_UP;      break;
+    case KeyEvent::KEYCODE_DPAD_DOWN:  direction = View::FOCUS_DOWN;    break;
+    case KeyEvent::KEYCODE_TAB:
         if (event.hasNoModifiers()) {
             direction = View::FOCUS_FORWARD;
         } else if (event.hasModifiers(KeyEvent::META_SHIFT_ON)) {
@@ -437,7 +437,7 @@ bool Window::performFocusNavigation(KeyEvent& event){
 
 bool Window::onKeyDown(int keyCode,KeyEvent& evt){
     switch(keyCode){
-    case KEY_ESCAPE:
+    case KeyEvent::KEYCODE_ESCAPE:
         evt.startTracking();
         LOGD("recv %d %s flags=%x",keyCode,evt.getLabel(),evt.getFlags());
         return true;
@@ -452,7 +452,7 @@ bool Window::onKeyDown(int keyCode,KeyEvent& evt){
 bool Window::onKeyUp(int keyCode,KeyEvent& evt){
     LOGV("recv %d %s flags=%x track=%d cance=%d",keyCode,evt.getLabel(),evt.getFlags(),evt.isTracking(),evt.isCanceled());
     switch(keyCode){
-    case KEY_ESCAPE:
+    case KeyEvent::KEYCODE_ESCAPE:
         if(evt.isTracking()&&!evt.isCanceled()){
             onBackPressed();
             return true;

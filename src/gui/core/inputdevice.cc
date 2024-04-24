@@ -12,6 +12,8 @@
 #include <keylayoutmap.h>
 #include <core/app.h>
 #include <core/windowmanager.h>
+//#include <core/eventcodes.h>
+#include <linux/input.h>
 
 using namespace std;
 namespace cdroid{

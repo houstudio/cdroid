@@ -3407,7 +3407,7 @@ bool ViewGroup::performKeyboardGroupNavigation(int direction){
 }
 
 static int isExcludedKeys(int key){
-   return key==KEY_MENU||key==KEY_ESCAPE;//||key==KEY_EXIT;
+   return key==KeyEvent::KEYCODE_MENU||key==KeyEvent::KEYCODE_ESCAPE;//||key==KEY_EXIT;
 }
 
 void ViewGroup::drawableStateChanged(){

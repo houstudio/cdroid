@@ -1,8 +1,5 @@
-#define LOG_TAG "KeyCharacterMap"
-
 #include <stdlib.h>
 #include <string.h>
-#include <eventcodes.h>
 #include <inputeventlabels.h>
 #include <keycharactermap.h>
 #include <tokenizer.h>
@@ -342,7 +339,7 @@ int KeyCharacterMap::mapKey(int32_t scanCode, int32_t usageCode, int32_t* outKey
 #if DEBUG_MAPPING
     LOGD("mapKey: scanCode=%d, usageCode=0x%08x ~ Failed.", scanCode, usageCode);
 #endif
-    *outKeyCode = KEY_UNKNOWN;//AKEYCODE_UNKNOWN;
+    *outKeyCode = KeyEvent::KEYCODE_UNKNOWN;//AKEYCODE_UNKNOWN;
     return -1;//NAME_NOT_FOUND;
 }
 

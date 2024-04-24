@@ -292,9 +292,9 @@ bool MediaController::dispatchKeyEvent(KeyEvent& event) {
     const int keyCode = event.getKeyCode();
     bool uniqueDown = event.getRepeatCount() == 0
             && event.getAction() == KeyEvent::ACTION_DOWN;
-    if (keyCode ==  KEY_HEADSETHOOK
-            || keyCode == KEY_MEDIA_PLAY_PAUSE
-            || keyCode == KEY_SPACE) {
+    if (keyCode ==  KeyEvent::KEYCODE_HEADSETHOOK
+            || keyCode == KeyEvent::KEYCODE_MEDIA_PLAY_PAUSE
+            || keyCode == KeyEvent::KEYCODE_SPACE) {
         if (uniqueDown) {
             doPauseResume();
             show(sDefaultTimeout);
@@ -303,28 +303,28 @@ bool MediaController::dispatchKeyEvent(KeyEvent& event) {
             }
         }
         return true;
-    } else if (keyCode == KEY_MEDIA_PLAY) {
+    } else if (keyCode == KeyEvent::KEYCODE_MEDIA_PLAY) {
         if (uniqueDown && !mPlayer.isPlaying()) {
             mPlayer.start();
             updatePausePlay();
             show(sDefaultTimeout);
         }
         return true;
-    } else if (keyCode ==KEY_MEDIA_STOP
-            || keyCode == KEY_MEDIA_PAUSE) {
+    } else if (keyCode ==KeyEvent::KEYCODE_MEDIA_STOP
+            || keyCode == KeyEvent::KEYCODE_MEDIA_PAUSE) {
         if (uniqueDown && mPlayer.isPlaying()) {
             mPlayer.pause();
             updatePausePlay();
             show(sDefaultTimeout);
         }
         return true;
-    } else if (keyCode == KEY_VOLUME_DOWN
-            || keyCode == KEY_VOLUME_UP
-            || keyCode == KEY_VOLUME_MUTE
-            || keyCode == KEY_CAMERA) {
+    } else if (keyCode == KeyEvent::KEYCODE_VOLUME_DOWN
+            || keyCode == KeyEvent::KEYCODE_VOLUME_UP
+            || keyCode == KeyEvent::KEYCODE_VOLUME_MUTE
+            || keyCode == KeyEvent::KEYCODE_CAMERA) {
         // don't show the controls for volume adjustment
         return FrameLayout::dispatchKeyEvent(event);
-    } else if (keyCode == KEY_BACK || keyCode == KEY_MENU) {
+    } else if (keyCode == KeyEvent::KEYCODE_BACK || keyCode == KeyEvent::KEYCODE_MENU) {
         if (uniqueDown) {
             hide();
         }

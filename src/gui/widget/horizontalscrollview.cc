@@ -205,21 +205,21 @@ bool HorizontalScrollView::executeKeyEvent(KeyEvent& event) {
     bool handled = false;
     if (event.getAction() == KeyEvent::ACTION_DOWN) {
         switch (event.getKeyCode()) {
-        case KEY_DPAD_LEFT:
+        case KeyEvent::KEYCODE_DPAD_LEFT:
             if (!event.isAltPressed()) {
                 handled = arrowScroll(View::FOCUS_LEFT);
             } else {
                 handled = fullScroll(View::FOCUS_LEFT);
             }
             break;
-        case KEY_DPAD_RIGHT:
+        case KeyEvent::KEYCODE_DPAD_RIGHT:
             if (!event.isAltPressed()) {
                 handled = arrowScroll(View::FOCUS_RIGHT);
             } else {
                 handled = fullScroll(View::FOCUS_RIGHT);
             }
             break;
-        case KEY_SPACE:
+        case KeyEvent::KEYCODE_SPACE:
             pageScroll(event.isShiftPressed() ? View::FOCUS_LEFT : View::FOCUS_RIGHT);
             break;
         }

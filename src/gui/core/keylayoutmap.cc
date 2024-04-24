@@ -55,7 +55,7 @@ int KeyLayoutMap::mapKey(int32_t scanCode,int32_t usageCode,int32_t* outKeyCode,
 #if DEBUG_MAPPING
         LOGD("mapKey: scanCode=%d, usageCode=0x%08x ~ Failed.", scanCode, usageCode);
 #endif
-        *outKeyCode =KEY_UNKNOWN;
+        *outKeyCode =KeyEvent::KEYCODE_UNKNOWN;
         *outFlags = 0;
         return -1;//NAME_NOT_FOUND;
     }

@@ -193,7 +193,7 @@ bool ScrollView::dispatchKeyEvent(KeyEvent& event) {
 
 bool ScrollView::executeKeyEvent(KeyEvent& event) {
     if (!canScroll()) {
-        if (isFocused() && event.getKeyCode() !=KEY_BACK) {
+        if (isFocused() && event.getKeyCode() !=KeyEvent::KEYCODE_BACK) {
             View* currentFocused = findFocus();
             if (currentFocused == this) currentFocused = nullptr;
             View* nextFocused = FocusFinder::getInstance().findNextFocus(this, currentFocused, View::FOCUS_DOWN);
@@ -206,21 +206,21 @@ bool ScrollView::executeKeyEvent(KeyEvent& event) {
     bool handled = false;
     if (event.getAction() == KeyEvent::ACTION_DOWN) {
         switch (event.getKeyCode()) {
-        case KEY_DPAD_UP:
+        case KeyEvent::KEYCODE_DPAD_UP:
             if (!event.isAltPressed()) {
                 handled = arrowScroll(View::FOCUS_UP);
             } else {
                 handled = fullScroll(View::FOCUS_UP);
             }
             break;
-        case KEY_DPAD_DOWN:
+        case KeyEvent::KEYCODE_DPAD_DOWN:
             if (!event.isAltPressed()) {
                 handled = arrowScroll(View::FOCUS_DOWN);
             } else {
                 handled = fullScroll(View::FOCUS_DOWN);
             }
             break;
-        case KEY_SPACE:
+        case KeyEvent::KEYCODE_SPACE:
             pageScroll(event.isShiftPressed() ? View::FOCUS_UP : View::FOCUS_DOWN);
             break;
         }

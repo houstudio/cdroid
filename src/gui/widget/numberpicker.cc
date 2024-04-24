@@ -464,20 +464,20 @@ bool NumberPicker::dispatchTouchEvent(MotionEvent& event){
 bool NumberPicker::dispatchKeyEvent(KeyEvent& event){
     int keyCode = event.getKeyCode();
     switch (keyCode) {
-    case KEY_DPAD_CENTER:
-    case KEY_ENTER:
+    case KeyEvent::KEYCODE_DPAD_CENTER:
+    case KeyEvent::KEYCODE_ENTER:
         removeAllCallbacks();
         break;
-    case KEY_DPAD_DOWN:
-    case KEY_DPAD_UP:
+    case KeyEvent::KEYCODE_DPAD_DOWN:
+    case KeyEvent::KEYCODE_DPAD_UP:
         switch (event.getAction()) {
         case KeyEvent::ACTION_DOWN:
-            if (mWrapSelectorWheel || ((keyCode == KEY_DPAD_DOWN)
+            if (mWrapSelectorWheel || ((keyCode == KeyEvent::KEYCODE_DPAD_DOWN)
                     ? getValue() < getMaxValue() : getValue() > getMinValue())) {
             requestFocus();
             mLastHandledDownDpadKeyCode = keyCode;
             removeAllCallbacks();
-            changeValueByOne(keyCode == KEY_DPAD_DOWN);
+            changeValueByOne(keyCode == KeyEvent::KEYCODE_DPAD_DOWN);
             return true;
         }break;
         case KeyEvent::ACTION_UP:

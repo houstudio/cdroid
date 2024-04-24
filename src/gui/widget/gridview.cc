@@ -1267,19 +1267,19 @@ bool GridView::commonKey(int keyCode, int count, KeyEvent& event) {
 
     if (!handled && action != KeyEvent::ACTION_UP) {
         switch (keyCode) {
-        case KEY_DPAD_LEFT:
+        case KeyEvent::KEYCODE_DPAD_LEFT:
             if (event.hasNoModifiers()) {
                  handled = resurrectSelectionIfNeeded() || arrowScroll(FOCUS_LEFT);
             }
             break;
 
-        case KEY_DPAD_RIGHT:
+        case KeyEvent::KEYCODE_DPAD_RIGHT:
             if (event.hasNoModifiers()) {
                  handled = resurrectSelectionIfNeeded() || arrowScroll(FOCUS_RIGHT);
             }
             break;
 
-        case KEY_DPAD_UP:
+        case KeyEvent::KEYCODE_DPAD_UP:
             if (event.hasNoModifiers()) {
                 handled = resurrectSelectionIfNeeded() || arrowScroll(FOCUS_UP);
             } else if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
@@ -1287,7 +1287,7 @@ bool GridView::commonKey(int keyCode, int count, KeyEvent& event) {
             }
             break;
 
-        case KEY_DPAD_DOWN:
+        case KeyEvent::KEYCODE_DPAD_DOWN:
             if (event.hasNoModifiers()) {
                 handled = resurrectSelectionIfNeeded() || arrowScroll(FOCUS_DOWN);
             } else if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
@@ -1295,7 +1295,7 @@ bool GridView::commonKey(int keyCode, int count, KeyEvent& event) {
             }
             break;
 
-        case KEY_PAGE_UP:
+        case KeyEvent::KEYCODE_PAGE_UP:
             if (event.hasNoModifiers()) {
                 handled = resurrectSelectionIfNeeded() || pageScroll(FOCUS_UP);
             } else if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
@@ -1303,7 +1303,7 @@ bool GridView::commonKey(int keyCode, int count, KeyEvent& event) {
             }
             break;
 
-        case KEY_PAGE_DOWN:
+        case KeyEvent::KEYCODE_PAGE_DOWN:
             if (event.hasNoModifiers()) {
                 handled = resurrectSelectionIfNeeded() || pageScroll(FOCUS_DOWN);
             } else if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
@@ -1311,19 +1311,19 @@ bool GridView::commonKey(int keyCode, int count, KeyEvent& event) {
             }
             break;
 
-        case KEY_MOVE_HOME:
+        case KeyEvent::KEYCODE_MOVE_HOME:
             if (event.hasNoModifiers()) {
                 handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_UP);
             }
             break;
 
-        case KEY_MOVE_END:
+        case KeyEvent::KEYCODE_MOVE_END:
             if (event.hasNoModifiers()) {
                  handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_DOWN);
             }
             break;
 
-        case KEY_TAB:
+        case KeyEvent::KEYCODE_TAB:
             // TODO: Sometimes it is useful to be able to TAB through the items in
             //     a GridView sequentially.  Unfortunately this can create an
             //     asymmetry in TAB navigation order unless the list selection

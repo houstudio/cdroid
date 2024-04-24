@@ -2,7 +2,6 @@
 #include <cdlog.h>
 #include <unordered_map>
 #include <windowmanager.h>
-//#include <uievents.h>
 #include <thread>
 #include <chrono>
 #include <tokenizer.h>
@@ -39,7 +38,7 @@ void InputEventSource::doEventsConsume(){
             const INPUTEVENT*e = es+i;
             struct timeval  tv = {(time_t)e->tv_sec,e->tv_usec};
             auto it = mDevices.find(e->device);
-            if(es[i].type > EV_CNT){
+            if(es[i].type > 0x20/*EV_CNT*/){
                 onDeviceChanged(es+i);
                 continue;
             }

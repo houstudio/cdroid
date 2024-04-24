@@ -359,7 +359,7 @@ void KeyboardView::detectAndSendKey(int index, int x, int y, long eventTime){
             // Multi-tap
             if (mInMultiTap) {
                 if (mTapCount != -1) {
-                    mKeyboardActionListener.onKey(Keyboard::KEYCODE_DELETE, {KEY_DELETE});
+                    mKeyboardActionListener.onKey(Keyboard::KEYCODE_DELETE, {KeyEvent::KEYCODE_DEL});
                 } else {
                     mTapCount = 0;
                 }

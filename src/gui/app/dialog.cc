@@ -170,7 +170,7 @@ bool Dialog::onKeyLongPress(int keyCode,KeyEvent& event){
 }
 
 bool Dialog::onKeyUp(int keyCode,KeyEvent& event){
-    if (keyCode == KEY_BACK && event.isTracking() && !event.isCanceled()) {
+    if (keyCode == KeyEvent::KEYCODE_BACK && event.isTracking() && !event.isCanceled()) {
         onBackPressed();
         return true;
     }

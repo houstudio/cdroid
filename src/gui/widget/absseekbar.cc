@@ -487,12 +487,12 @@ void AbsSeekBar::onDraw(Canvas&canvas){
 
 bool AbsSeekBar::onKeyDown(int keyCode,KeyEvent&event){
     switch(keyCode){
-    case KEY_LEFT :
-    case KEY_MINUS:
+    case KeyEvent::KEYCODE_LEFT :
+    case KeyEvent::KEYCODE_MINUS:
          setProgressInternal(getProgress()-mKeyProgressIncrement,true);
          return true;
-    case KEY_RIGHT:
-    case KEY_PLUS :
+    case KeyEvent::KEYCODE_RIGHT:
+    case KeyEvent::KEYCODE_PLUS :
          setProgressInternal(getProgress()+mKeyProgressIncrement,true);
          return true;
     default:return ProgressBar::onKeyDown(keyCode,event);

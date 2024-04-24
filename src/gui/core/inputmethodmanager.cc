@@ -36,7 +36,7 @@ public:
    bool onKeyUp(int keyCode,KeyEvent& evt)override{
        LOGV("...%d flags=%x",keyCode,evt.getFlags());
        switch(keyCode){
-       case KEY_ESCAPE:setVisibility(View::INVISIBLE);return true;
+       case KeyEvent::KEYCODE_ESCAPE:setVisibility(View::INVISIBLE);return true;
        default: return Window::onKeyDown(keyCode,evt);
        }
    }
@@ -95,7 +95,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
         case Keyboard::KEYCODE_BACKSPACE:
         case Keyboard::KEYCODE_DELETE:
              keyEvent.initialize(0,0,KeyEvent::ACTION_UP/*action*/,0,
-             KEY_BACK,0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
+             KeyEvent::KEYCODE_BACK,0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
              /*sendKeyEvent(keyEvent);*/break;
         case -101:break;
         default:
@@ -127,7 +127,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
         case Keyboard::KEYCODE_DONE     :  break;
         case Keyboard::KEYCODE_DELETE:
         case Keyboard::KEYCODE_BACKSPACE:
-             keyEvent.initialize(0,0,KeyEvent::ACTION_UP/*action*/,0,KEY_BACK,
+             keyEvent.initialize(0,0,KeyEvent::ACTION_UP/*action*/,0,KeyEvent::KEYCODE_BACK,
 		   0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
              imm.sendKeyEvent(keyEvent);break;
 	}

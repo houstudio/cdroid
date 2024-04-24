@@ -1858,21 +1858,21 @@ bool  ViewPager::executeKeyEvent(KeyEvent& event){
     bool handled = false;
     if (event.getAction() == KeyEvent::ACTION_DOWN) {
         switch (event.getKeyCode()) {
-        case KEY_DPAD_LEFT:
+        case KeyEvent::KEYCODE_DPAD_LEFT:
             if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
                 handled = pageLeft();
             } else {
                 handled = arrowScroll(FOCUS_LEFT);
             }
             break;
-        case KEY_DPAD_RIGHT:
+        case KeyEvent::KEYCODE_DPAD_RIGHT:
             if (event.hasModifiers(KeyEvent::META_ALT_ON)) {
                 handled = pageRight();
             } else {
                 handled = arrowScroll(FOCUS_RIGHT);
             }
             break;
-        case KEY_TAB:
+        case KeyEvent::KEYCODE_TAB:
             if (event.hasNoModifiers()) {
                 handled = arrowScroll(FOCUS_FORWARD);
             } else if (event.hasModifiers(KeyEvent::META_SHIFT_ON)) {

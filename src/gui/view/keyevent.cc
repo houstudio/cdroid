@@ -1,4 +1,6 @@
 #include<view/keyevent.h>
+//#include <core/eventcodes.h>
+#include <linux/input.h>
 #include <inputeventlabels.h>
 namespace cdroid{
 
@@ -69,7 +71,7 @@ bool KeyEvent::dispatch(KeyEvent::Callback* receiver,KeyEvent::DispatcherState*s
         if (receiver->onKeyMultiple(mKeyCode, mRepeatCount, *this)) {
             return true;
         }
-        if (mKeyCode != KEY_UNKNOWN) {
+        if (mKeyCode != KEYCODE_UNKNOWN) {
             int count=mRepeatCount;
             mAction = ACTION_DOWN;
             mRepeatCount = 0;
@@ -98,26 +100,26 @@ int32_t KeyEvent::getKeyCodeFromLabel(const char* label) {
 
 bool KeyEvent::isModifierKey(int keyCode){
     switch (keyCode) {
-    case KEY_SHIFT_LEFT:
-    case KEY_SHIFT_RIGHT:
-    case KEY_ALT_LEFT:
-    case KEY_ALT_RIGHT:
-    case KEY_CTRL_LEFT:
-    case KEY_CTRL_RIGHT:
-    case KEY_META_LEFT:
-    case KEY_META_RIGHT:
-    case KEY_SYM:
-    case KEY_NUM:
-    case KEY_FUNCTION:return true;
+    case KEYCODE_SHIFT_LEFT:
+    case KEYCODE_SHIFT_RIGHT:
+    case KEYCODE_ALT_LEFT:
+    case KEYCODE_ALT_RIGHT:
+    case KEYCODE_CTRL_LEFT:
+    case KEYCODE_CTRL_RIGHT:
+    case KEYCODE_META_LEFT:
+    case KEYCODE_META_RIGHT:
+    case KEYCODE_SYM:
+    case KEYCODE_NUM:
+    case KEYCODE_FUNCTION:return true;
     default:return false;
     }
 }
 
 bool KeyEvent::isConfirmKey(int keyCode){
     switch(keyCode){
-    case KEY_ENTER:
-    case KEY_DPAD_CENTER:
-    case KEY_NUMPAD_ENTER:
+    case KEYCODE_ENTER:
+    case KEYCODE_DPAD_CENTER:
+    case KEYCODE_NUMPAD_ENTER:
         return true;
     default:return false;
     }

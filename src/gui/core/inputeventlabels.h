@@ -1,12 +1,11 @@
 #ifndef __INPUT_EVENT_LABE_H__
 #define __INPUT_EVENT_LABE_H__
-//#include <input.h>
-#include <core/keycodes.h>
+#include <view/keyevent.h>
 #include <string.h>
 #include <stdint.h>
-#define DEFINE_KEYCODE(key) { #key, KEY_##key }
+#define DEFINE_KEYCODE(key) { #key, KeyEvent::KEYCODE_##key }
 #define DEFINE_AXIS(axis) { #axis, MOTION_EVENT_AXIS_##axis }
-#define DEFINE_LED(led) { #led, LED_##led }
+#define DEFINE_LED(led) { #led, KeyEvent::ALED_##led }
 #define DEFINE_FLAG(flag) { #flag, POLICY_FLAG_##flag }
 
 namespace cdroid{
@@ -245,12 +244,12 @@ static const InputEventLabel KEYCODES[] = {
     DEFINE_KEYCODE(SLEEP),
     DEFINE_KEYCODE(WAKEUP),
 //////////////////////////////////////
+#if 0
     DEFINE_KEYCODE(OK),
     DEFINE_KEYCODE(EPG),
     DEFINE_KEYCODE(TELETEXT),
     DEFINE_KEYCODE(SUBTITLE),
     DEFINE_KEYCODE(AUDIO),
-#if 0
     DEFINE_KEYCODE(PAIRING),
     DEFINE_KEYCODE(MEDIA_TOP_MENU),
     DEFINE_KEYCODE(11),
@@ -377,10 +376,10 @@ static const InputEventLabel LEDS[] = {
     DEFINE_LED(MISC),
     DEFINE_LED(MAIL),
     DEFINE_LED(CHARGING),
-   //DEFINE_LED(CONTROLLER_1),
-   // DEFINE_LED(CONTROLLER_2),
-   // DEFINE_LED(CONTROLLER_3),
-   // DEFINE_LED(CONTROLLER_4),
+    DEFINE_LED(CONTROLLER_1),
+    DEFINE_LED(CONTROLLER_2),
+    DEFINE_LED(CONTROLLER_3),
+    DEFINE_LED(CONTROLLER_4),
 
     // NOTE: If you add new LEDs here, you must also add them to Input.h
     { NULL, 0 }

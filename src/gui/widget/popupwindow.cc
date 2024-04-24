@@ -1119,7 +1119,7 @@ PopupWindow::PopupDecorView::PopupDecorView(int w,int h)
 }
 
 bool PopupWindow::PopupDecorView::dispatchKeyEvent(KeyEvent& event){
-     if (event.getKeyCode() == KEY_BACK) {
+     if (event.getKeyCode() == KeyEvent::KEYCODE_BACK) {
         if (getKeyDispatcherState() == nullptr) {
             return Window::dispatchKeyEvent(event);
         }
