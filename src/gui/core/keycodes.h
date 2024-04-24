@@ -4,9 +4,7 @@
 extern "C" {
 #endif
 
-/*
- * Key codes.
- */
+/* Key codes. */
 enum {
     KEY_UNKNOWN         = 0,
     KEY_SOFT_LEFT       = 1,

@@ -686,11 +686,11 @@ MotionEvent*MotionEvent::split(int idBits){
     }
 
     int newAction;
-    if (oldActionMasked == ACTION_POINTER_DOWN || oldActionMasked == ACTION_POINTER_UP) {
+    if ((oldActionMasked == ACTION_POINTER_DOWN) || (oldActionMasked == ACTION_POINTER_UP)) {
         if (newActionPointerIndex < 0) {   // An unrelated pointer changed.
             newAction = ACTION_MOVE;
         } else if (newPointerCount == 1) { // The first/last pointer went down/up.
-            newAction = oldActionMasked == ACTION_POINTER_DOWN ? ACTION_DOWN : ACTION_UP;
+            newAction = (oldActionMasked == ACTION_POINTER_DOWN) ? ACTION_DOWN : ACTION_UP;
         } else { // A secondary pointer went down/up.
             newAction = oldActionMasked | (newActionPointerIndex << ACTION_POINTER_INDEX_SHIFT);
         }

@@ -2915,8 +2915,8 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
     bool alreadyDispatchedToNewTouchTarget = false;
 
     if(!canceled && !intercepted){
-        if(actionMasked == MotionEvent::ACTION_DOWN || (split &&  actionMasked == MotionEvent::ACTION_POINTER_DOWN)
-           || actionMasked == MotionEvent::ACTION_HOVER_MOVE){
+        if( (actionMasked == MotionEvent::ACTION_DOWN) || (split && (actionMasked == MotionEvent::ACTION_POINTER_DOWN))
+           || (actionMasked == MotionEvent::ACTION_HOVER_MOVE) ){
             const int actionIndex = ev.getActionIndex(); // always 0 for down
             const int idBitsToAssign = split ? 1 << ev.getPointerId(actionIndex): TouchTarget::ALL_POINTER_IDS;
 
