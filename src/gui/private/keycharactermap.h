@@ -2,7 +2,7 @@
 #define __KEY_CHARACTER_MAP_H__
 
 #include <stdint.h>
-#include <uievents.h>
+#include <view/keyevent.h>
 #include <string>
 #include <map>
 #include <vector>

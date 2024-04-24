@@ -91,6 +91,11 @@ bool KeyEvent::dispatch(KeyEvent::Callback* receiver,KeyEvent::DispatcherState*s
 const char* KeyEvent::getLabel(int keyCode) {
     return getLabelByKeyCode(keyCode);
 }
+
+int32_t KeyEvent::getKeyCodeFromLabel(const char* label) {
+    return getKeyCodeByLabel(label);
+}
+
 bool KeyEvent::isModifierKey(int keyCode){
     switch (keyCode) {
     case KEY_SHIFT_LEFT:
@@ -214,6 +219,11 @@ const std::string KeyEvent::actionToString(int action){
     default:return std::to_string(action);
     }
 }
+
+bool KeyEvent::metaStateHasNoModifiers(int metaState) {
+    return (normalizeMetaState(metaState) & META_MODIFIER_MASK) == 0;
+}
+
 bool KeyEvent::hasNoModifiers()const{
     return metaStateHasNoModifiers(mMetaState);
 }
