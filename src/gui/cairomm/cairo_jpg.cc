@@ -1,44 +1,20 @@
-/* Copyright 2018 Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
+/* Copyright (C) 2020 The CDROID Development Team
  *
- * This file is part of Cairo_JPG.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
  *
- * Cairo_JPG is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Cairo_JPG is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Cairo_JPG.  If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
  */
-
-/*! \file cairo_jpg.c
- * This file contains two functions for reading and writing JPEG files from
- * and to Cairo image surfaces. It uses the functions from the libjpeg.
- * Most of the code is directly derived from the online example at
- * http://libjpeg-turbo.virtualgl.org/Documentation/Documentation
- *
- * All prototypes are defined in cairo_jpg.h All functions and their parameters
- * and return values are described below directly at the functions. You may
- * also have a look at the preprocessor macros defined below.
- *
- * To compile this code you need to have installed the packages libcairo2-dev
- * and libjpeg-dev. Compile with the following to create an object file to link
- * with your code:
- * gcc -std=c99 -Wall -c `pkg-config cairo libjpeg --cflags --libs` cairo_jpg.c
- * Use the following command to include the main() function and create an
- * executable for testing of this code:
- * gcc -std=c99 -Wall -o cairo_jpg -DCAIRO_JPEG_MAIN `pkg-config cairo libjpeg --cflags --libs` cairo_jpg.c
- *
- * @author Bernhard R. Fischer, 4096R/8E24F29D bf@abenteuerland.at
- * @version 2018/12/11
- * @license LGPL3.
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -58,10 +34,6 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 
-
-/*! Macro to activate main() function. This is only used for testing. Comment
- * it out (#undef) if you link this file to your own program. */
-//#define CAIRO_JPEG_MAIN
 //
 /*! Define this to use an alternate implementation of
  * cairo_image_surface_create_from_jpeg() which fstat(3)s the file before
@@ -81,12 +53,6 @@
 #define CAIRO_JPEG_USE_FSTAT
 #endif
 
-/*! Define this to test jpeg creation with non-image surfaces. This is only for
- * testing and is to be used together with CAIRO_JPEG_MAIN. */
-#undef CAIRO_JPEG_TEST_SIMILAR
-#if defined(CAIRO_JPEG_TEST_SIMILAR) && defined(CAIRO_JPEG_MAIN)
-#include <cairo-pdf.h>
-#endif
 
 #if defined(ENABLE_JPEG)||defined(ENABLE_TURBOJPEG)
 struct JpegStream {
@@ -691,80 +657,5 @@ cairo_surface_t *cairo_image_surface_create_from_jpeg(const char *filename) {
 }
 
 #endif
-
-
-#ifdef CAIRO_JPEG_MAIN
-#include <string.h>
-#include <strings.h>
-
-int strrcasecmp(const char *s1, const char *s2) {
-    int off = (int) strlen(s1) - (int) strlen(s2); // typecast size_t to int because size_t typically is unsigned
-    return strcasecmp(s1 + (off < 0 ? 0 : off), s2);
-}
-
-/*! Main routine, only for testing. #undef CAIRO_JPEG_MAIN or simply delete
- * this part if you link this file to your own program. */
-int main(int argc, char **argv) {
-    cairo_surface_t *sfc;
-
-#ifndef CAIRO_JPEG_TEST_SIMILAR
-    if (argc < 3) {
-        fprintf(stderr, "usage: %s <infile> <outfile>\n", argv[0]);
-        return 1;
-    }
-
-    // test input file type and read file
-    if (!strrcasecmp(argv[1], ".png")) {
-        // read PNG file
-        sfc = cairo_image_surface_create_from_png(argv[1]);
-    } else if (!strrcasecmp(argv[1], ".jpg")) {
-        // read JPEG file
-        sfc = cairo_image_surface_create_from_jpeg(argv[1]);
-    } else {
-        fprintf(stderr, "source file is neither JPG nor PNG\n");
-        return 1;
-    }
-
-    // check surface status
-    if (cairo_surface_status(sfc) != CAIRO_STATUS_SUCCESS) {
-        fprintf(stderr, "error loading image: %s", cairo_status_to_string(cairo_surface_status(sfc)));
-        return 2;
-    }
-
-    // test output file type and write file
-    if (!strrcasecmp(argv[2], ".png")) {
-        // write PNG file
-        cairo_surface_write_to_png(sfc, argv[2]);
-    } else if (!strrcasecmp(argv[2], ".jpg")) {
-        // write JPEG file
-        cairo_image_surface_write_to_jpeg(sfc, argv[2], 90);
-    } else {
-        fprintf(stderr, "destination file is neither JPG nor PNG\n");
-        return 1;
-    }
-
-    cairo_surface_destroy(sfc);
-
-#else
-    sfc = cairo_pdf_surface_create("xyz.pdf", 595.276, 841.890);
-
-    cairo_t *ctx = cairo_create(sfc);
-    cairo_set_source_rgb(ctx, 1, 1, 1);
-    cairo_paint(ctx);
-    cairo_move_to(ctx, 100, 100);
-    cairo_set_source_rgb(ctx, 1, 0, 0);
-    cairo_set_line_width(ctx, 3);
-    cairo_line_to(ctx, 400, 400);
-    cairo_stroke(ctx);
-    cairo_destroy(ctx);
-
-    cairo_image_surface_write_to_jpeg(sfc, "xyz.jpg", 90);
-    cairo_surface_destroy(sfc);
-#endif
-
-    return 0;
-}
-
-#endif //CAIRO_JPEG_MAIN
 #endif //define(ENABLE_JPEG)||defined(ENABLE_TURBOJPEG)
 
