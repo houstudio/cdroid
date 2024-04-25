@@ -41,6 +41,7 @@ public:
     void playback(const std::string&fname);
     int checkEvents()override;
     int handleEvents()override;
+    void sendEvent(InputEvent&);
 };
 }
 #endif

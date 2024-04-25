@@ -125,6 +125,7 @@ int InputEventSource::checkEvents(){
 
 void InputEventSource::closeScreenSaver(){
     mIsScreenSaveActived = false;
+    mLastInputEventTime = SystemClock::uptimeMillis();
 }
 
 bool InputEventSource::isScreenSaverActived()const{
@@ -142,17 +143,21 @@ int InputEventSource::handleEvents(){
 	       while(dev->getEventCount()){
 	          MotionEvent*e = (MotionEvent*)dev->popEvent();
 	          WindowManager::getInstance().processEvent(*e);
-			  e->recycle();
-		   }
+                  e->recycle();
+               }
 	   }else if(dev->getClasses()&INPUT_DEVICE_CLASS_KEYBOARD){
 	       while(dev->getEventCount()){
 	          KeyEvent*e = (KeyEvent*)dev->popEvent();
 	          WindowManager::getInstance().processEvent(*e);
-			  e->recycle();
-		   }	       
+                  e->recycle();
+               }	       
 	   }
 	}
     return ret;
+}
+
+void InputEventSource::sendEvent(InputEvent&event){
+    WindowManager::getInstance().processEvent(event);
 }
 
 void InputEventSource::playback(const std::string&fname){
