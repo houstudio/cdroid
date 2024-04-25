@@ -169,12 +169,12 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
     std::wstring& wText=getEditable();
     int line=mLayout->getLineForOffset(mCaretPos);
     switch(keyCode){
-    case KeyEvent::KEYCODE_LEFT:
+    case KeyEvent::KEYCODE_DPAD_LEFT:
         if(mCaretPos>0){
             setCaretPos(mCaretPos-1);
             return true;
         }break;
-    case KeyEvent::KEYCODE_RIGHT:
+    case KeyEvent::KEYCODE_DPAD_RIGHT:
         if(mCaretPos<(int)wText.size()){
             setCaretPos(mCaretPos+1);
             return true;

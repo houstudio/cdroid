@@ -166,9 +166,7 @@ public:
     void toStream(std::ostream& os)const override;
 enum{
     KEYCODE_UNKNOWN         = 0,
-    KEYCODE_LEFT            = 1,
     KEYCODE_SOFT_LEFT       = 1,
-    KEYCODE_RIGHT           = 2,
     KEYCODE_SOFT_RIGHT      = 2,
     KEYCODE_HOME            = 3,
     KEYCODE_BACK            = 4,

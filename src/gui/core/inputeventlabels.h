@@ -1,10 +1,11 @@
 #ifndef __INPUT_EVENT_LABE_H__
 #define __INPUT_EVENT_LABE_H__
 #include <view/keyevent.h>
+#include <view/motionevent.h>
 #include <string.h>
 #include <stdint.h>
 #define DEFINE_KEYCODE(key) { #key, KeyEvent::KEYCODE_##key }
-#define DEFINE_AXIS(axis) { #axis, MOTION_EVENT_AXIS_##axis }
+#define DEFINE_AXIS(axis) { #axis, MotionEvent::AXIS_##axis }
 #define DEFINE_LED(led) { #led, KeyEvent::ALED_##led }
 #define DEFINE_FLAG(flag) { #flag, POLICY_FLAG_##flag }
 
@@ -244,12 +245,11 @@ static const InputEventLabel KEYCODES[] = {
     DEFINE_KEYCODE(SLEEP),
     DEFINE_KEYCODE(WAKEUP),
 //////////////////////////////////////
-#if 0
-    DEFINE_KEYCODE(OK),
-    DEFINE_KEYCODE(EPG),
-    DEFINE_KEYCODE(TELETEXT),
-    DEFINE_KEYCODE(SUBTITLE),
-    DEFINE_KEYCODE(AUDIO),
+//    DEFINE_KEYCODE(OK),
+//    DEFINE_KEYCODE(EPG),
+//    DEFINE_KEYCODE(TELETEXT),
+//    DEFINE_KEYCODE(SUBTITLE),
+//    DEFINE_KEYCODE(AUDIO),
     DEFINE_KEYCODE(PAIRING),
     DEFINE_KEYCODE(MEDIA_TOP_MENU),
     DEFINE_KEYCODE(11),
@@ -285,10 +285,10 @@ static const InputEventLabel KEYCODES[] = {
     DEFINE_KEYCODE(TV_MEDIA_CONTEXT_MENU),
     DEFINE_KEYCODE(TV_TIMER_PROGRAMMING),
     DEFINE_KEYCODE(HELP),
-    DEFINE_KEYCODE(NAVIGATE_PREVIOUS),
-    DEFINE_KEYCODE(NAVIGATE_NEXT),
-    DEFINE_KEYCODE(NAVIGATE_IN),
-    DEFINE_KEYCODE(NAVIGATE_OUT),
+//    DEFINE_KEYCODE(NAVIGATE_PREVIOUS),
+//    DEFINE_KEYCODE(NAVIGATE_NEXT),
+//    DEFINE_KEYCODE(NAVIGATE_IN),
+//    DEFINE_KEYCODE(NAVIGATE_OUT),
     DEFINE_KEYCODE(STEM_PRIMARY),
     DEFINE_KEYCODE(STEM_1),
     DEFINE_KEYCODE(STEM_2),
@@ -311,10 +311,9 @@ static const InputEventLabel KEYCODES[] = {
     DEFINE_KEYCODE(SYSTEM_NAVIGATION_RIGHT),
     DEFINE_KEYCODE(ALL_APPS),
     DEFINE_KEYCODE(REFRESH),
-#endif
     { NULL, 0 }
 };
-/*
+
 static const InputEventLabel AXES[] = {
     DEFINE_AXIS(X),
     DEFINE_AXIS(Y),
@@ -363,7 +362,7 @@ static const InputEventLabel AXES[] = {
     //       Refer to frameworks/base/core/java/android/view/MotionEvent.java for the full list.
     { NULL, 0 }
 };
-*/
+
 static const InputEventLabel LEDS[] = {
     DEFINE_LED(NUM_LOCK),
     DEFINE_LED(CAPS_LOCK),
