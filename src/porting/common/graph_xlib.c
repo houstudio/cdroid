@@ -11,7 +11,6 @@
 #include <sys/ipc.h>
 #include <pthread.h>
 #include <string.h>
-//#include <core/eventcodes.h>
 #include <linux/input.h>
 #include <time.h>
 
@@ -304,9 +303,19 @@ INT GFXDestroySurface(HANDLE surface) {
     return 0;
 }
 
+static struct{int xkey;int key;}X11KEY2CD[]={
+   {XK_0,7},{XK_1,8},{XK_2,9},{XK_3,10},{XK_4,11},{XK_5,12},{XK_6,13},{XK_7,14},{XK_8,15},{XK_9,16},
+   {XK_F1,131},{XK_F2,132},{XK_F3,133},{XK_F4,134},{XK_F5,135},{XK_F6,136},{XK_F7,137},{XK_F8,138}, {XK_F9,139},{XK_F10,140},{XK_F11,141},{XK_F12,142},
+   {XK_KP_Left,21},{XK_KP_Right,22},{XK_KP_Up,19},{XK_KP_Down,20},{XK_Home,122},{XK_End,123},{XK_Page_Up,92},{XK_Page_Down,93},
+   {XK_Insert,124},{XK_Delete,67},{XK_KP_Enter,23/*DPAD_CENTER*/},{XK_Escape,111},{XK_Return,66},{XK_KP_Space,62},{XK_BackSpace,112},{XK_Menu,82},
+   {XK_q,45},{XK_w,51},{XK_e,33},{XK_r,46},{XK_t,48},{XK_y,53/*Y*/},{XK_u,49},{XK_i,37},{XK_o,43},{XK_p,44},
+   {XK_a,29},{XK_s,47},{XK_d,32},{XK_f,34},{XK_g,35},{XK_h,36},{XK_j,38},{XK_k,39},{XK_l,40},
+   {XK_z,54},{XK_x,52},{XK_c,31},{XK_v,50},{XK_b,30},{XK_n,42},{XK_m,41}
+};
+
 static void* X11EventProc(void*p) {
     XEvent event;
-    int down;
+    int i,keysym,key=0,down;
     while(x11Display) {
         int rc=XNextEvent(x11Display, &event);
         switch(event.type) {
@@ -322,150 +331,14 @@ static void* X11EventProc(void*p) {
         case KeyPress:/* 当检测到键盘按键,退出消息循环 */
         case KeyRelease:
             down=event.type==KeyPress;
-            switch(event.xkey.keycode) {
-            case 0x13:
-                SENDKEY(7/*KEY_0*/,down);
-                break;
-            case 0x0a ... 0x12:
-                SENDKEY(8/*KEY_1*/+event.xkey.keycode-0x0a,down);
-                break;
-            case 0x43 ... 0x4d:
-                SENDKEY(131/*KEY_F1*/+event.xkey.keycode-0x43,down);
-                break;
-            case 0x5F ... 0x60:
-                SENDKEY(141/*F11*/+event.xkey.keycode-0x5F,down);
-                break;
-            case 0x64 :
-                SENDKEY(21/*LEFT*/,down) ;
-                break;
-            case 0x66 :
-                SENDKEY(22/*RIGHT*/,down);
-                break;
-            case 0x61 :
-                SENDKEY(122/*MOVE_HOME*/,down) ;
-                break;
-            case 0x62 :
-                SENDKEY(19/*UP*/,down)   ;
-                break;
-            case 0x63 :
-                SENDKEY(92/*PAGEUP*/,down);
-                break;
-            case 0x67 :
-                SENDKEY(123/*MOVE_END*/,down);
-                break;
-            case 0x68 :
-                SENDKEY(20/*DOWN*/,down) ;
-                break;
-            case 0x69 :
-                SENDKEY(93/*PAGE_DOWN*/,down);
-                break;
-            case 0x6A :
-                SENDKEY(124/*KEY_INSERT*/,down);
-                break;
-            case 0x6B :
-                SENDKEY(67/*DELETE*/,down);
-                break;
-            case 0x6C :
-                SENDKEY(23/*DPAD_CENTER*/,down);
-                break;
-            case 0x09 :
-                SENDKEY(111/*KEY_ESCAPE*/,down);
-                break;
-            case 0x24 :
-                SENDKEY(66/*ENTER*/,down);
-                break;
-            case 0x41 :
-                SENDKEY(62/*SPACE*/,down);
-                break;
-            case 0x16 :
-                SENDKEY(112/*BACKSPACE*/,down);
-                break;
-            case 0x75 :
-                SENDKEY(82/*MENU*/,down) ;
-                break;
-
-            case 0x18 :
-                SENDKEY(45/*Q*/,down);
-                break;
-            case 0x19 :
-                SENDKEY(51/*W*/,down);
-                break;
-            case 0x1A :
-                SENDKEY(33/*E*/,down);
-                break;
-            case 0x1B :
-                SENDKEY(46/*R*/,down);
-                break;
-            case 0x1C :
-                SENDKEY(48/*T*/,down);
-                break;
-            case 0x1D :
-                SENDKEY(53/*Y*/,down);
-                break;
-            case 0x1E :
-                SENDKEY(49/*U*/,down);
-                break;
-            case 0x1F :
-                SENDKEY(37/*I*/,down);
-                break;
-            case 0x20 :
-                SENDKEY(43/*O*/,down);
-                break;
-            case 0x21 :
-                SENDKEY(44/*P*/,down);
-                break;
-
-            case 0x26 :
-                SENDKEY(29/*A*/,down);
-                break;
-            case 0x27 :
-                SENDKEY(47/*S*/,down);
-                break;
-            case 0x28 :
-                SENDKEY(32/*D*/,down);
-                break;
-            case 0x29 :
-                SENDKEY(34/*F*/,down);
-                break;
-            case 0x2A :
-                SENDKEY(35/*G*/,down);
-                break;
-            case 0x2B :
-                SENDKEY(36/*H*/,down);
-                break;
-            case 0x2C :
-                SENDKEY(38/*J*/,down);
-                break;
-            case 0x2D :
-                SENDKEY(39/*K*/,down);
-                break;
-            case 0x2E :
-                SENDKEY(40/*L*/,down);
-                break;
-
-            case 0x34 :
-                SENDKEY(54/*Z*/,down);
-                break;
-            case 0x35 :
-                SENDKEY(52/*X*/,down);
-                break;
-            case 0x36 :
-                SENDKEY(31/*C*/,down);
-                break;
-            case 0x37 :
-                SENDKEY(50/*V*/,down);
-                break;
-            case 0x38 :
-                SENDKEY(30/*B*/,down);
-                break;
-            case 0x39 :
-                SENDKEY(42/*N*/,down);
-                break;
-            case 0x3A :
-                SENDKEY(41/*M*/,down);
-                break;
+            keysym=XLookupKeysym(&event,0);
+            for(i=0;i<sizeof(X11KEY2CD)/sizeof(X11KEY2CD[0]);i++){
+		if(keysym==X11KEY2CD[i].xkey){
+		    SENDKEY((key=X11KEY2CD[i].key),down);
+		    break;
+		}
             }
-            LOGV("%d",event.xkey.keycode);
+            LOGV("keycode:%d sym:%d %d",event.xkey.keycode,keysym,key);
             break;
         case ButtonPress:
         case ButtonRelease:
