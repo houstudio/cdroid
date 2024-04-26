@@ -2,9 +2,8 @@
 #include <cdroid.h>
 #include <ngl_os.h>
 #include <sys/time.h>
-#include <core/inputeventlabels.h>
-#include <core/eventcodes.h>
 #include <porting/cdinput.h>
+#include <linux/input.h>
 
 class EVENT:public testing::Test{
 

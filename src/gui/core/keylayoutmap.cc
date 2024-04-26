@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <inputeventlabels.h>
+#include <private/inputeventlabels.h>
 #include <tokenizer.h>
 #include <keylayoutmap.h>
 #include <cdtypes.h>

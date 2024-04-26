@@ -1,7 +1,5 @@
 #include<view/keyevent.h>
-//#include <core/eventcodes.h>
-#include <linux/input.h>
-#include <inputeventlabels.h>
+#include <private/inputeventlabels.h>
 namespace cdroid{
 
 KeyEvent* KeyEvent::obtain(){

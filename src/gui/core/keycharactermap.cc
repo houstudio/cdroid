@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include <inputeventlabels.h>
+#include <private/inputeventlabels.h>
 #include <keycharactermap.h>
 #include <tokenizer.h>
 #include <cdtypes.h>

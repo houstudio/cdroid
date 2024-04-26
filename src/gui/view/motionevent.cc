@@ -1,5 +1,5 @@
 #include <view/motionevent.h>
-#include <inputeventlabels.h>
+#include <private/inputeventlabels.h>
 #include <inputdevice.h>
 namespace cdroid{
 

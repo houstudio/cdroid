@@ -470,29 +470,31 @@ enum{
     KEYCODE_DEMO_APP_3 = 303,
     KEYCODE_DEMO_APP_4 = 304
 };/*endof KEYCODES*/
-enum {
+//enum class LED:int{
     /**
      * Constants for LEDs. Hidden from the API since we don't actually expose a way to interact
      * with LEDs to developers
      *
      * NOTE: If you add LEDs here, you must also add them to InputEventLabels.h
      */
-    ALED_NUM_LOCK = 0x00,
-    ALED_CAPS_LOCK = 0x01,
-    ALED_SCROLL_LOCK = 0x02,
-    ALED_COMPOSE = 0x03,
-    ALED_KANA = 0x04,
-    ALED_SLEEP = 0x05,
-    ALED_SUSPEND = 0x06,
-    ALED_MUTE = 0x07,
-    ALED_MISC = 0x08,
-    ALED_MAIL = 0x09,
-    ALED_CHARGING = 0x0a,
-    ALED_CONTROLLER_1 = 0x10,
-    ALED_CONTROLLER_2 = 0x11,
-    ALED_CONTROLLER_3 = 0x12,
-    ALED_CONTROLLER_4 = 0x13
+enum{
+    LED_NUM_LOCK = 0x00,
+    LED_CAPS_LOCK = 0x01,
+    LED_SCROLL_LOCK = 0x02,
+    LED_COMPOSE = 0x03,
+    LED_KANA = 0x04,
+    LED_SLEEP = 0x05,
+    LED_SUSPEND = 0x06,
+    LED_MUTE = 0x07,
+    LED_MISC = 0x08,
+    LED_MAIL = 0x09,
+    LED_CHARGING = 0x0a,
+    LED_CONTROLLER_1 = 0x10,
+    LED_CONTROLLER_2 = 0x11,
+    LED_CONTROLLER_3 = 0x12,
+    LED_CONTROLLER_4 = 0x13
 };
+//};
 
 };/*endof class KeyEvent*/
 }/*endof namespace*/
