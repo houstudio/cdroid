@@ -301,19 +301,19 @@ void GameWindow::initBoard(uint16_t size) {
 bool GameWindow::onKeyUp(int keyCode,KeyEvent&k) {
     bool success=false;
     switch(keyCode) {
-    case KEY_UP   :
+    case KeyEvent::KEYCODE_DPAD_UP   :
         success=moveUp();
         break;
-    case KEY_DOWN :
+    case KeyEvent::KEYCODE_DPAD_DOWN :
         success=moveDown();
         break;
-    case KEY_LEFT :
+    case KeyEvent::KEYCODE_DPAD_LEFT :
         success=moveLeft();
         break;
-    case KEY_RIGHT:
+    case KeyEvent::KEYCODE_DPAD_RIGHT:
         success=moveRight();
         break;
-    case KEY_ENTER:
+    case KeyEvent::KEYCODE_ENTER:
         if(gameEnded()){
 	    setScore(0);
 	    initBoard(4);

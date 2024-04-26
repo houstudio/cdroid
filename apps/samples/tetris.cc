@@ -253,20 +253,20 @@ bool TetrisWindow::onKeyUp(int keyCode,KeyEvent&event){
       return  Window::onKeyUp(keyCode,event);
   switch(keyCode)
     {
-    case KEY_UP:
+    case KeyEvent::KEYCODE_DPAD_UP:
         BlockMove(UP);
         break;
-    case KEY_DOWN:
+    case KeyEvent::KEYCODE_DPAD_DOWN:
         BlockMove(DOWN);
         break;
-    case KEY_LEFT:
+    case KeyEvent::KEYCODE_DPAD_LEFT:
         BlockMove(LEFT);
         break;
-    case KEY_RIGHT:
+    case KeyEvent::KEYCODE_DPAD_RIGHT:
         BlockMove(RIGHT);
         break;
-    case KEY_SPACE:
-    case KEY_OK:
+    case KeyEvent::KEYCODE_SPACE:
+    case KeyEvent::KEYCODE_ENTER:
         BlockMove(SPACE);
         break;
     default:return Window::onKeyUp(keyCode,event);

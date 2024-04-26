@@ -28,6 +28,8 @@ private:
     std::unordered_map<int,std::shared_ptr<InputDevice>>mDevices;
     std::shared_ptr<InputDevice>getdevice(int fd);
     void doEventsConsume();
+    void recordEvent(InputEvent&);
+    InputEvent*parseEvent(const char*);
 protected:
     InputEventSource();
     friend NeverDestroyed<InputEventSource>;

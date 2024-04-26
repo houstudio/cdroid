@@ -244,6 +244,7 @@ protected:
     BitSet32 mLastBits,mCurrBits;
     std::map<int,int>mTrack2Slot;
     std::map<int,TouchPoint>mPointMAP;
+    int getActionByBits(int&pointIndex);
     void setAxisValue(int axis,int value,bool isRelative);
     int isValidEvent(int type,int code,int value)override;
 public:

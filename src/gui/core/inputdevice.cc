@@ -258,8 +258,8 @@ int KeyDevice::isValidEvent(int type,int code,int value){
 }
 
 int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
-    int flags  =0;
-    int keycode=code;
+    int flags  = 0;
+    int keycode= code;
     if(!isValidEvent(type,code,value)){
          LOGD("invalid event type %x source=%x",type,mDeviceInfo.getSources());
          return -1;
@@ -364,14 +364,14 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
        }else if(mScreenWidth != mTPWidth){
            value = (value * mScreenWidth)/mTPWidth;
        }
-       mSlotID=0;mTrackID=0;
+       mSlotID = 0 ; mTrackID = 0 ;
        break;
     case MotionEvent::AXIS_Y:
        switch(rotation){
        case Display::ROTATION_0  : value -= mMinY; break;
        case Display::ROTATION_90 : axis = MotionEvent::AXIS_X; value = mMaxY - value; break;
        case Display::ROTATION_180: value= mMaxY - value; break;
-       case Display::ROTATION_270: axis = MotionEvent::AXIS_X; value -= mMinY ;break; /*value=value;*/
+       case Display::ROTATION_270: axis = MotionEvent::AXIS_X; value -= mMinY ; break;
        }
 
        if(mInvertY)value = mMaxY - value + mMinY;
@@ -381,31 +381,34 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
        }else{
            value = (value * mScreenHeight)/mTPHeight;
        }
-       mSlotID=0;mTrackID=0;
+       mSlotID = 0 ; mTrackID = 0 ;
        break;
-    case MotionEvent::AXIS_Z:break;
-    default:if(raw_axis==ABS_MT_TRACKING_ID){
-            auto it = mTrack2Slot.find(value);/*value is trackid*/
-            if( (it == mTrack2Slot.end()) && (value!=-1) ){
-                mCurrBits.markBit(mTrack2Slot.size());
-                mSlotID = mTrack2Slot.size();
-                it = mTrack2Slot.insert({value,mTrack2Slot.size()}).first;
-                mPointMAP.insert({value,{}});
-                LOGV("TRACKID=%d %08x,%08x",value,mLastBits.value,mCurrBits.value);
-            }else if(value==-1){
-                const uint32_t pointIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
-		LOGV("clearbits %d %08x,%08x",pointIndex,mLastBits.value,mCurrBits.value);
-                mCurrBits.clearBit(pointIndex);
-                auto it = mTrack2Slot.find(value);
-                if(it!=mTrack2Slot.end())mTrack2Slot.erase(it);
-	    }
-            if(value!=-1){
-                mSlotID = it->second;
-                mTrackID= value;
-            }
-        }
+    default:/*MotionEvent::AXIS_Z:*/break;
     }/*endof switch(axis)*/
-    if(raw_axis!=ABS_MT_TRACKING_ID){
+    switch(raw_axis){
+    case ABS_MT_TRACKING_ID:{
+        auto it = mTrack2Slot.find(value);/*value is trackid*/
+        if( (it == mTrack2Slot.end()) && (value!=-1) ){
+            mSlotID = mTrack2Slot.size();
+            mCurrBits.markBit(mSlotID);
+            it = mTrack2Slot.insert({value,mTrack2Slot.size()}).first;
+            mPointMAP.insert({value,{}});
+            LOGV("TRACKID=%d %08x,%08x",value,mLastBits.value,mCurrBits.value);
+        }else if(value==-1){
+            const uint32_t pointIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
+            LOGV("clearbits %d %08x,%08x",pointIndex,mLastBits.value,mCurrBits.value);
+            mCurrBits.clearBit(pointIndex);
+            auto it = mTrack2Slot.find(value);
+            if(it!=mTrack2Slot.end())mTrack2Slot.erase(it);
+        }
+        if(value!=-1){
+            mSlotID = it->second;
+            mTrackID= value;
+        }
+    }break;
+    case ABS_MT_POSITION_X:
+    case ABS_MT_POSITION_Y:
+    default:if(raw_axis!=ABS_MT_TRACKING_ID){
         auto it = mPointMAP.find(mSlotID);
         if(it == mPointMAP.end()){
             TouchPoint tp;
@@ -416,23 +419,24 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
         }
         it->second.coord.setAxisValue(axis,value);
     }
+    }
 }
 
 int TouchDevice::isValidEvent(int type,int code,int value){
     return (type==EV_KEY)||(type==EV_ABS)||(type==EV_SYN)||true;
 }
 
-static int getActionByBits(BitSet32&last,BitSet32&cur,int& pointIndex){
-    const uint32_t diffbits = last.value^cur.value;
-    pointIndex = BitSet32::firstMarkedBit(diffbits?diffbits:cur.value);
-    if(last.count()==cur.count()){
+int TouchDevice::getActionByBits(int& pointIndex){
+    const uint32_t diffBits = mLastBits.value^mCurrBits.value;
+    pointIndex = diffBits?BitSet32::firstMarkedBit(diffBits):mSlotID;
+    if(mLastBits.count()==mCurrBits.count()){
         return MotionEvent::ACTION_MOVE;
-    }else if(last.count()<cur.count()){
-        return cur.count()>1?MotionEvent::ACTION_POINTER_DOWN:MotionEvent::ACTION_DOWN;
-    }else if(last.count()>cur.count()){
-        return cur.count()>0?MotionEvent::ACTION_POINTER_UP:MotionEvent::ACTION_UP;
+    }else if(mLastBits.count()<mCurrBits.count()){
+        return mCurrBits.count()>1?MotionEvent::ACTION_POINTER_DOWN:MotionEvent::ACTION_DOWN;
+    }else if(mLastBits.count()>mCurrBits.count()){
+        return mCurrBits.count()>0?MotionEvent::ACTION_POINTER_UP:MotionEvent::ACTION_UP;
     }else{
-        if(last.count()&&(cur.count()==0))return MotionEvent::ACTION_UP;
+        if(mLastBits.count()&&(mCurrBits.count()==0))return MotionEvent::ACTION_UP;
     }
     return MotionEvent::ACTION_MOVE;
 }
@@ -468,20 +472,10 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         }break;
     case EV_ABS:
         switch(code){
-        case ABS_X ... ABS_Z :
-            mMoveTime = tv.tv_sec * 1000LL + tv.tv_usec/1000;
-            setAxisValue(code,value,false) ; break;
-        case ABS_MT_SLOT    : mTypeB = true; mCurrBits.markBit(value); break;
-        case ABS_MT_TRACKING_ID:
-        case ABS_MT_TOUCH_MAJOR:
-        case ABS_MT_POSITION_X :
-        case ABS_MT_POSITION_Y :
+        case ABS_X ... ABS_Z : setAxisValue(code,value,false) ; break;
+        case ABS_MT_SLOT     : mTypeB = true; mCurrBits.markBit(value); break;
+        case ABS_MT_TOUCH_MAJOR...ABS_MT_TOOL_Y:/*for all MT Events*/
              setAxisValue(code,value,false);break;
-        case ABS_MT_WIDTH_MINOR:
-        case ABS_MT_PRESSURE :
-        case ABS_MT_DISTANCE :
-        case ABS_MT_TOOL_TYPE:
-        case ABS_MT_ORIENTATION:break; 
         }break;
     case EV_REL:
         switch(code){
@@ -493,9 +487,9 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         switch(code){
         case SYN_MT_REPORT:break;
         case SYN_REPORT:
-            eventAction = getActionByBits(mLastBits,mCurrBits,pointIndex);
+            eventAction = getActionByBits(pointIndex);
             LOGV("mask=%08x,%08x eventAction=%d pointIndex=%d",mLastBits.value,mCurrBits.value,eventAction,pointIndex);
-            mMoveTime =(tv.tv_sec * 1000 + tv.tv_usec/1000);
+            mMoveTime =(tv.tv_sec * 1000LL + tv.tv_usec/1000);
             mEvent.initialize(getId(),getSources(),0/*displayId*/,eventAction|pointIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT,
                 mEvent.getActionButton(), 0/*flags*/ , 0/*edgeFlags*/, 0/*metaState*/, mEvent.getButtonState() ,0,0/*x/yOffset*/
                 , 0 ,0 /*x/yPrecision*/ , mDownTime , mMoveTime , 0 , nullptr , nullptr);

@@ -23,9 +23,9 @@
  * This file contains all prototypes for the Cairo-JPEG functions implemented
  * in cairo_jpg.c. See there for the function documentation.
  *
- * @author Bernhard R. Fischer, 4096R/8E24F29D <bf@abenteuerland.at>
- * @version 2018/12/11
- * @license LGPL3
+ * @author <houzh@msn.com>
+ * @version 2020/02/02
+ * @license LGPL2
  */
 
 #ifdef HAVE_CONFIG_H
