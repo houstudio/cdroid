@@ -8,7 +8,7 @@
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <string.h>
-#include <core/eventcodes.h>
+#include <linux/input.h>
 #include <cdinput.h>
 typedef struct {
     int fb;
@@ -28,7 +28,7 @@ typedef struct {
 } FBSURFACE;
 
 static FBDEVICE devs[2]= {-1};
-
+static GFXRect screenMargin= {0};
 
 INT GFXInit() {
     if(devs[0].fb>=0)return E_OK;
@@ -46,6 +46,21 @@ INT GFXInit() {
     if(ioctl(dev->fb, FBIOGET_VSCREENINFO, &dev->var) == -1) {
         LOGE("Error reading variable information");
         return E_ERROR;
+    }
+
+    const char*strMargin=getenv("SCREEN_MARGINS");
+    const char* DELIM=",;";
+    if(strMargin){
+        char *sm=strdup(strMargin);
+        char*token=strtok(sm,DELIM);
+        screenMargin.x=atoi(token);
+        token=strtok(NULL,DELIM);
+        screenMargin.y=atoi(token);
+        token=strtok(NULL,DELIM);
+        screenMargin.w=atoi(token);
+        token=strtok(NULL,DELIM);
+        screenMargin.h=atoi(token);
+        free(sm);
     }
 
     dev->var.yoffset=0;//set first screen memory for display
@@ -66,6 +81,10 @@ INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
     if( (dev->var.xres==0) || (dev->var.yres==0)) {
         *width=800;
         *height=640;
+    } else {
+        *width -=(screenMargin.x + screenMargin.w);
+        *height-=(screenMargin.y + screenMargin.h);
+        if(*height<=0)exit(-1);
     }
     LOGD("screensize=%dx%d",*width,*height);
     return E_OK;

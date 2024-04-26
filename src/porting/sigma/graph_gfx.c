@@ -9,7 +9,6 @@
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <string.h>
-#include <core/eventcodes.h>
 #include <cdinput.h>
 #include <memory.h>
 #include <stdio.h>
