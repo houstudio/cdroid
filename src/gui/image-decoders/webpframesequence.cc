@@ -151,7 +151,7 @@ WebPFrameSequence::~WebPFrameSequence() {
     delete[] mDataBytes;
 }
 
-FrameSequence::FrameSequenceState* WebPFrameSequence::createState() const {
+FrameSequenceState* WebPFrameSequence::createState() const {
     return new WebPFrameSequenceState(*this);
 }
 

@@ -55,8 +55,24 @@ add_library(cdroid SHARED ${SOURCES_GUI})
 CreatePAK(cdroid ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)
 
 file(GLOB_RECURSE allfiles RELATIVE "${PROJECT_SOURCE_DIR}/" "*.h")
-list(REMOVE_ITEM allfiles "private/*.h")
-foreach( each_file ${allfiles} )
+
+SET(exclude_dirs private image-decoders)
+set(filtered_files "")
+
+foreach(file ${allfiles})
+    set(abs_file "${PROJECT_SOURCE_DIR}/${file}")
+    set(should_exclude FALSE)
+    foreach(exclude_dir ${exclude_dirs})
+        if(abs_file MATCHES "^${PROJECT_SOURCE_DIR}/${exclude_dir}/")
+            set(should_exclude TRUE)
+            break()
+        endif()
+    endforeach()
+    if(NOT should_exclude)
+        list(APPEND filtered_files ${file})
+    endif()
+endforeach()
+foreach( each_file ${filtered_files} )
   STRING(REGEX REPLACE ".*/\(.*\)" "\\1" FILE_PATH ${each_file})
   STRING(LENGTH ${each_file} LEN0)
   STRING(LENGTH ${FILE_PATH} LEN1)
@@ -85,7 +101,4 @@ configure_file(cdroid.pc.in cdroid.pc @ONLY)
 install(TARGETS cdroid  DESTINATION lib)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc
 	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
-install (DIRECTORY ${PROJECT_SOURCE_DIR} DESTINATION include/  FILES_MATCHING PATTERN "*.h"
-    PATTERN "view" EXCLUDE 
-    PATTERN "core" EXCLUDE)
 

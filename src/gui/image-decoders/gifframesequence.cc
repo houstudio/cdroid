@@ -139,7 +139,7 @@ int GifFrameSequence::getFrameCount() const {
     return mGif ? mGif->ImageCount : 0;
 }
 
-FrameSequence::FrameSequenceState* GifFrameSequence::createState() const {
+FrameSequenceState* GifFrameSequence::createState() const {
     return new GifFrameSequenceState(*this);
 }
 

@@ -2,8 +2,10 @@
 #define __ANIMATED_IMAGE_DRAWABLE_H__
 #include <drawables/drawable.h>
 #include <core/handler.h>
-#include <image-decoders/framesequence.h>
+//#include <image-decoders/framesequence.h>
 namespace cdroid{
+class FrameSequence;
+class FrameSequenceState;
 /*for drawing animated images (like GIF)*/
 class AnimatedImageDrawable:public Drawable,public Animatable2{
 private:
@@ -31,7 +33,7 @@ private:
     int mRepeated;/*repeated played rounds*/
     std::shared_ptr<AnimatedImageState> mAnimatedImageState;
     Cairo::RefPtr<Cairo::ImageSurface>mImage;
-    FrameSequence::FrameSequenceState*mFrameSequenceState;
+    FrameSequenceState*mFrameSequenceState;
     Runnable mRunnable;
     ColorFilter* mColorFilter;
     std::vector<Animatable2::AnimationCallback> mAnimationCallbacks;

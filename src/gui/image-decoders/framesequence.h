@@ -23,12 +23,11 @@
 #define  COLOR_TRANSPARENT 0x0
 
 namespace cdroid{
-
+class FrameSequenceState;
 class FrameSequence {
 public:
     struct RegistryEntry;
     class Registry;
-    class FrameSequenceState;
 private:
     static Registry*mHead;
     static int mHeaderBytesRequired;
@@ -51,7 +50,7 @@ public:
     virtual FrameSequenceState* createState() const = 0;
 };
 
-class FrameSequence::FrameSequenceState {
+class FrameSequenceState {
 public:
     /**
     * Produces a frame of animation in the output buffer, drawing (at minimum) the delta since
