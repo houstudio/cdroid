@@ -35,7 +35,7 @@ void InputEventSource::doEventsConsume(){
         LOGV_IF(count,"rcv %d rawEvents",count);
         for(int i = 0 ; i < count ; i ++){
             const INPUTEVENT*e = es+i;
-            struct timeval  tv = {(time_t)e->tv_sec,e->tv_usec};
+            struct timeval tv = {(time_t)e->tv_sec,e->tv_usec};
             auto it = mDevices.find(e->device);
             if(es[i].type >= EV_ADD){
                 onDeviceChanged(es+i);
@@ -149,7 +149,12 @@ int InputEventSource::handleEvents(){
                 WindowManager::getInstance().processEvent(*e);
                 e->recycle();
             }
-	    }
+        }else{
+            while(dev->getEventCount()){
+                InputEvent*e=dev->popEvent();
+                e->recycle();
+            }
+        }
     }
     return ret;
 }
@@ -207,7 +212,6 @@ InputEvent*InputEventSource::parseEvent(const char*line){
 }
 
 void InputEventSource::playback(const std::string&fname){
-    #define DELIMITERS "(),"
     auto func = [this](const std::string&fname){
          std::fstream in(fname);
          std::this_thread::sleep_for(std::chrono::milliseconds(10000));

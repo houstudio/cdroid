@@ -37,7 +37,8 @@ Preferences InputDevice::mPrefs;
 InputDevice::InputDevice(int fdev){
     INPUTDEVICEINFO devInfos;
     InputDeviceIdentifier di;
-    Point sz;
+    Point displaySize;
+    std::ostringstream oss;
 
     mDeviceClasses= 0;
     mKeyboardType = KEYBOARD_TYPE_NONE;
@@ -48,21 +49,13 @@ InputDevice::InputDevice(int fdev){
     mDeviceInfo.initialize(fdev,0,0,di,devInfos.name,0,0);
 
     Display display =  WindowManager::getInstance().getDefaultDisplay();
-    display.getRealSize(sz);
-    mScreenWidth  = sz.x;
-    mScreenHeight = sz.y;//ScreenSize is screen size in no roration
+    display.getRealSize(displaySize);
+    mScreenWidth  = displaySize.x;
+    mScreenHeight = displaySize.y;//ScreenSize is screen size in no roration
     if(mPrefs.getSectionCount()==0){
         mPrefs.load(App::getInstance().getDataPath() + std::string("input-devices.xml"));
     }
-    LOGI("screenSize(%dx%d) rotation=%d",sz.x,sz.y,display.getRotation());
-    LOGD("%d:[%s] Props=%02x%02x%02x%02x",fdev,devInfos.name,devInfos.propBitMask[0],
-          devInfos.propBitMask[1],devInfos.propBitMask[2],devInfos.propBitMask[3]);
-    for(int j=0;(j<ABS_CNT) && (j<sizeof(devInfos.axis)/sizeof(INPUTAXISINFO));j++){
-        const INPUTAXISINFO*axis = devInfos.axis+j;
-        if(axis->maximum != axis->minimum)
-            mDeviceInfo.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
-        LOGV_IF(axis->maximum!=axis->minimum,"devfd=%d axis[%d] range=%d,%d",fdev,axis->axis,axis->minimum,axis->maximum);
-    }
+    LOGI("screenSize(%dx%d) rotation=%d",displaySize.x,displaySize.y,display.getRotation());
 
     // See if this is a keyboard.  Ignore everything in the button range except for
     // joystick and gamepad buttons which are handled like keyboards for the most part.
@@ -72,34 +65,36 @@ InputDevice::InputDevice(int fdev){
             || containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(BTN_JOYSTICK), SIZEOF_BITS(BTN_DIGI));
     if (haveKeyboardKeys || haveGamepadButtons) {
         mDeviceClasses |= INPUT_DEVICE_CLASS_KEYBOARD;
+        oss<<"Keyboard";
     }
 
     if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask) &&TEST_BIT(REL_X,devInfos.relBitMask) &&TEST_BIT(REL_Y,devInfos.relBitMask))
         mDeviceClasses = INPUT_DEVICE_CLASS_CURSOR;
     if(TEST_BIT(ABS_DISTANCE, devInfos.absBitMask)){
-        //Proximity sensor
+        oss<<"Proximity";//Proximity sensor
     }
     if(TEST_BIT(ABS_X, devInfos.absBitMask) && TEST_BIT(ABS_Y, devInfos.absBitMask) && TEST_BIT(ABS_Z, devInfos.absBitMask)){
-        //Accelerometer sensor
+        oss<<"Accelerometer";//Accelerometer sensor
     }
     if(TEST_BIT(ABS_RX, devInfos.absBitMask) && TEST_BIT(ABS_RY, devInfos.absBitMask) && TEST_BIT(ABS_RZ, devInfos.absBitMask)){
-        //Gyroscope sensor
+        oss<<"Gyroscope";//Gyroscope sensor
     }
     if(TEST_BIT(ABS_HAT0X, devInfos.absBitMask) && TEST_BIT(ABS_HAT0Y, devInfos.absBitMask) 
              && TEST_BIT(ABS_HAT1X, devInfos.absBitMask) && TEST_BIT(ABS_HAT1Y, devInfos.absBitMask)){
-        //Magnetometer sensor
+        oss<<"Magnetometer";//Magnetometer sensor
     }
     if(TEST_BIT(ABS_MT_POSITION_X, devInfos.absBitMask) && TEST_BIT(ABS_MT_POSITION_Y, devInfos.absBitMask)) {
         // Some joysticks such as the PS3 controller report axes that conflict
         // with the ABS_MT range.  Try to confirm that the device really is a touch screen.
         if (TEST_BIT(BTN_TOUCH, devInfos.keyBitMask) || !haveGamepadButtons) {
             mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH | INPUT_DEVICE_CLASS_TOUCH_MT;
+	    oss<<"MTouch";
         }
         // Is this an old style single-touch driver?
     } else if ( TEST_BIT(ABS_X, devInfos.absBitMask) && TEST_BIT(ABS_Y, devInfos.absBitMask) ) {
         if(TEST_BIT(BTN_TOUCH, devInfos.keyBitMask)) mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH;
         else mDeviceClasses |= INPUT_DEVICE_CLASS_ROTARY_ENCODER;
-        LOGD("%s",TEST_BIT(BTN_TOUCH, devInfos.keyBitMask)?"Touch Device":"Rotaty Encoder");
+        oss<<(TEST_BIT(BTN_TOUCH, devInfos.keyBitMask)?"STouch":"Rotaty Encoder");
         // Is this a BT stylus?
     } else if ((TEST_BIT(ABS_PRESSURE, devInfos.absBitMask) || TEST_BIT(BTN_TOUCH, devInfos.keyBitMask))
             && !TEST_BIT(ABS_X, devInfos.absBitMask) && !TEST_BIT(ABS_Y, devInfos.absBitMask)) {
@@ -128,6 +123,7 @@ InputDevice::InputDevice(int fdev){
     for (int i = 0; i <= SW_MAX; i++) {
         if (TEST_BIT(i, devInfos.swBitMask)) {
             mDeviceClasses |= INPUT_DEVICE_CLASS_SWITCH;
+            oss<<"Switch";
             break;
         }
     }
@@ -135,6 +131,7 @@ InputDevice::InputDevice(int fdev){
     // Check whether this device supports the vibrator.
     if (TEST_BIT(FF_RUMBLE, devInfos.ffBitMask)) {
         mDeviceClasses |= INPUT_DEVICE_CLASS_VIBRATOR;
+        oss<<"Vibrator";
     }
 
     // Configure virtual keys.
@@ -147,6 +144,14 @@ InputDevice::InputDevice(int fdev){
         }
     } 
     kmap = nullptr;
+    LOGI("%d:[%s] Props=%02x%02x%02x%02x[%s]",fdev,devInfos.name,devInfos.propBitMask[0],
+          devInfos.propBitMask[1],devInfos.propBitMask[2],devInfos.propBitMask[3],oss.str().c_str());
+    for(int j=0;(j<ABS_CNT) && (j<sizeof(devInfos.axis)/sizeof(INPUTAXISINFO));j++){
+        const INPUTAXISINFO*axis = devInfos.axis+j;
+        if(axis->maximum != axis->minimum)
+            mDeviceInfo.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
+        LOGV_IF(axis->maximum!=axis->minimum,"devfd=%d axis[%d] range=%d,%d",fdev,axis->axis,axis->minimum,axis->maximum);
+    }
 }
 
 uint32_t getAbsAxisUsage(int32_t axis, uint32_t mDeviceClasses) {
