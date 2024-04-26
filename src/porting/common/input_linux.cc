@@ -129,9 +129,15 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
         strcpy(devinfo->name,"Touch-Inject");
         devinfo->vendor = INJECTDEV_TOUCH>>16;
         devinfo->product= INJECTDEV_TOUCH&0xFF;
+#if 0
+        SET_BIT(devinfo->keyBitMask,BTN_TOUCH);
         SET_BIT(devinfo->absBitMask,ABS_X);
         SET_BIT(devinfo->absBitMask,ABS_Y);
+#else
         SET_BIT(devinfo->keyBitMask,BTN_TOUCH);
+        SET_BIT(devinfo->absBitMask,ABS_MT_POSITION_X);
+        SET_BIT(devinfo->absBitMask,ABS_MT_POSITION_Y);
+#endif
         SET_BIT(devinfo->propBitMask,INPUT_PROP_POINTER);
         SET_BIT(devinfo->propBitMask,INPUT_PROP_DIRECT);
         break;
