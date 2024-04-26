@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include <cdinput.h>
+#include <linux/input.h>
 #include <fcntl.h>
-#include <core/eventcodes.h>
 class INPUT:public testing::Test{
    public :
    virtual void SetUp(){

@@ -139,15 +139,6 @@ TEST_F(EVENT,MT){
    }
 }
 
-TEST_F(EVENT,keylabel){
- 
-    for(int i=0;i<sizeof(KEYCODES)/sizeof(KEYCODES[0])-1;i++){
-        const char*label=getLabelByKeyCode(KEYCODES[i].value);
-        printf("%d:%s:%d\r\n",i,label,KEYCODES[i].value);
-        EXPECT_STRCASEEQ(label,KEYCODES[i].literal);
-        ASSERT_EQ(KeyEvent::getKeyCodeFromLabel(label),KEYCODES[i].value);
-    }
-}
 TEST_F(EVENT,exec){
    static const char*args[]={"arg1","alpha",NULL};
    App app(2,args);
