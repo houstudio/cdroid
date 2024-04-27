@@ -35,7 +35,7 @@ public:
     bool onTouchEvent(MotionEvent&event)override{
         switch(event.getActionMasked()){
         case MotionEvent::ACTION_UP:
-            mClear = event.getActionMasked()==MotionEvent::ACTION_UP;
+            mClear = event.getActionMasked()==MotionEvent::ACTION_UP&&(event.getX()<20)&&(event.getY()<20);
             invalidate();
 	    break;
         case MotionEvent::ACTION_DOWN:
@@ -54,6 +54,15 @@ public:
 		}
 		invalidate();
 	    }break;
+	case MotionEvent::ACTION_MOVE:{
+                for(int i=0;i<event.getPointerCount();i++){
+		     auto it = mTouchPoints.find(i);
+		     if(it!=mTouchPoints.end()){
+		         it->second.x1=event.getX(i);
+			 it->second.y1=event.getY(i);
+		     }
+		}invalidate();
+            }break;
 	default:break;
 	}
 	return true;
