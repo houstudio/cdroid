@@ -17,13 +17,13 @@ int PointerCoords::setAxisValue(int32_t axis, float value) {
         return -1;//NAME_NOT_FOUND;
     }
 
-    uint32_t index = BitSet64::getIndexOfBit(bits, axis);
+    const uint32_t index = BitSet64::getIndexOfBit(bits, axis);
     if (!BitSet64::hasBit(bits, axis)) {
         if (value == 0) {
             return 0;//OK; // axes with value 0 do not need to be stored
         }
 
-        uint32_t count = BitSet64::count(bits);
+        const uint32_t count = BitSet64::count(bits);
         if (count >= MAX_AXES) {
             tooManyAxes(axis);
             return -1;//NO_MEMORY;
@@ -46,7 +46,7 @@ float PointerCoords::getY()const{
 }
 
 static inline void scaleAxisValue(PointerCoords& c, int axis, float scaleFactor) {
-    float value = c.getAxisValue(axis);
+    const float value = c.getAxisValue(axis);
     if (value != 0) {
         c.setAxisValue(axis, value * scaleFactor);
     }
@@ -77,7 +77,7 @@ bool PointerCoords::operator==(const PointerCoords& other) const {
     if (bits != other.bits) {
         return false;
     }
-    uint32_t count = BitSet64::count(bits);
+    const uint32_t count = BitSet64::count(bits);
     for (uint32_t i = 0; i < count; i++) {
         if (values[i] != other.values[i]) {
             return false;
@@ -88,7 +88,7 @@ bool PointerCoords::operator==(const PointerCoords& other) const {
 
 void PointerCoords::copyFrom(const PointerCoords& other) {
     bits = other.bits;
-    uint32_t count = BitSet64::count(bits);
+    const uint32_t count = BitSet64::count(bits);
     for (uint32_t i = 0; i < count; i++) {
         values[i] = other.values[i];
     }
@@ -97,8 +97,7 @@ void PointerCoords::copyFrom(const PointerCoords& other) {
 // --- PointerProperties ---
 
 bool PointerProperties::operator==(const PointerProperties& other) const {
-    return id == other.id
-            && toolType == other.toolType;
+    return (id == other.id) && (toolType == other.toolType);
 }
 
 void PointerProperties::copyFrom(const PointerProperties& other) {
@@ -202,7 +201,7 @@ void MotionEvent::initialize(
     mSampleEventTimes.clear();
     mSamplePointerCoords.clear();
     for(int i=0;i<pointerCount;i++)
-       addSample(eventTime,pointerProperties[i], pointerCoords[i]);
+       addSample(eventTime,pointerCoords[i]);
 }
 
 MotionEvent::MotionEvent(const MotionEvent&other){
@@ -234,8 +233,8 @@ void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
         mSampleEventTimes.clear();
         mSampleEventTimes.push_back(other->getEventTime());
         mSamplePointerCoords.clear();
-        size_t pointerCount = other->getPointerCount();
-        size_t historySize = other->getHistorySize();
+        const size_t pointerCount = other->getPointerCount();
+        const size_t historySize = other->getHistorySize();
 
         mSamplePointerCoords.resize(pointerCount);
         for(int i=0;i<pointerCount;i++)
@@ -250,15 +249,15 @@ MotionEvent*MotionEvent::split(int idBits){
     PointerCoords pc[oldPointerCount];// = gSharedTempPointerCoords;
     int map[oldPointerCount];// = gSharedTempPointerIndexMap;
 
-    int oldAction = getAction();
-    int oldActionMasked = oldAction & ACTION_MASK;
-    int oldActionPointerIndex = (oldAction & ACTION_POINTER_INDEX_MASK)
+    const int oldAction = getAction();
+    const int oldActionMasked = oldAction & ACTION_MASK;
+    const int oldActionPointerIndex = (oldAction & ACTION_POINTER_INDEX_MASK)
             >> ACTION_POINTER_INDEX_SHIFT;
     int newActionPointerIndex = -1;
     int newPointerCount = 0;
     int newIdBits = 0;
     for (int i = 0; i < oldPointerCount; i++) {
-        getPointerProperties(i, &pp[newPointerCount]);
+        pp[newPointerCount] = getPointerProperties(i);
         int idBit = 1 << pp[newPointerCount].id;
         if ((idBit & idBits) != 0) {
             if (i == oldActionPointerIndex) {
@@ -287,16 +286,16 @@ MotionEvent*MotionEvent::split(int idBits){
         newAction = oldAction;
     }
 
-    int historySize = getHistorySize();
+    const int historySize = getHistorySize();
     for (int h = 0; h <= historySize; h++) {
-        int historyPos = h == historySize ? HISTORY_CURRENT : h;
+        const int historyPos = h == historySize ? HISTORY_CURRENT : h;
 
         for (int i = 0; i < newPointerCount; i++) {
             //getPointerCoords(map[i], historyPos, &pc[i]);
             getHistoricalRawPointerCoords(map[i], historyPos, pc[i]);
         }
 
-        long eventTimeNanos = getHistoricalEventTime(historyPos);
+        const long eventTimeNanos = getHistoricalEventTime(historyPos);
         if (h == 0) {
             ev->initialize( getDeviceId(),getSource(),0/*displayId*/, newAction, 0,
                     getFlags(),   getEdgeFlags(), getMetaState(),
@@ -305,7 +304,7 @@ MotionEvent*MotionEvent::split(int idBits){
                     eventTimeNanos,  newPointerCount, pp, pc);
         } else {
             //nativeAddBatch(ev.mNativePtr, eventTimeNanos, pc, 0);
-            ev->addSample(eventTimeNanos,pp[h],pc[h]);
+            ev->addSample(eventTimeNanos,pc[h]);
         }
     }
     return ev;
@@ -315,9 +314,8 @@ bool MotionEvent::isButtonPressed(int button)const{
     return (button!=0)&&((getButtonState() & button) == button);
 }
 
-void MotionEvent::addSample(nsecs_t eventTime,const PointerProperties&prop, const PointerCoords&coord) {
+void MotionEvent::addSample(nsecs_t eventTime, const PointerCoords&coord) {
     mSampleEventTimes.push_back(eventTime);
-    mPointerProperties.push_back(prop);
     mSamplePointerCoords.push_back(coord);
 }
 
@@ -327,7 +325,7 @@ const PointerCoords* MotionEvent::getRawPointerCoords(size_t pointerIndex) const
 
 int MotionEvent::getPointerIdBits()const{
     int idBits = 0;
-    int pointerCount = getPointerCount();
+    const int pointerCount = getPointerCount();
     for (int i = 0; i < pointerCount; i++) {
         idBits |= 1 << getPointerId(i);
     }
@@ -343,7 +341,7 @@ float MotionEvent::getAxisValue(int axis)const {
 }
 
 float MotionEvent::getAxisValue(int32_t axis, size_t pointerIndex) const {
-    float value =getRawPointerCoords(pointerIndex)->getAxisValue(axis);
+    const float value = getRawPointerCoords(pointerIndex)->getAxisValue(axis);
     switch (axis) {
     case AXIS_X://AMOTION_EVENT_AXIS_X:
         return value + mXOffset;
@@ -374,7 +372,7 @@ nsecs_t MotionEvent::getHistoricalEventTimeNanos(size_t historyPos) const{
 }
 
 ssize_t MotionEvent::findPointerIndex(int32_t pointerId) const {
-    size_t pointerCount = mPointerProperties.size();
+    const size_t pointerCount = mPointerProperties.size();
     for (size_t i = 0; i < pointerCount; i++) {
         if (mPointerProperties[i].id == pointerId) {
             return i;

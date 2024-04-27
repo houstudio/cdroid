@@ -77,76 +77,76 @@ TEST_F(EVENT,MT){
      {EV_KEY,BTN_TOUCH,1},          //ACTION_DOWN
      {EV_ABS,ABS_MT_TRACKING_ID,45},
      {EV_ABS,ABS_MT_POSITION_X ,10},
-     {EV_ABS,ABS_MT_POSITION_X ,20},
+     {EV_ABS,ABS_MT_POSITION_Y ,20},
      {EV_SYN,SYN_MT_REPORT,0},
      {EV_SYN,SYN_REPORT,0},
 
      {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_MOVE
      {EV_ABS,ABS_MT_POSITION_X ,14},
-     {EV_ABS,ABS_MT_POSITION_X ,20},
+     {EV_ABS,ABS_MT_POSITION_Y ,20},
      {EV_SYN,SYN_MT_REPORT,0},
      {EV_SYN,SYN_REPORT,0},
      
      {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_POINTER_DOWN finger 0
      {EV_ABS,ABS_MT_POSITION_X ,14},
-     {EV_ABS,ABS_MT_POSITION_X ,20},
+     {EV_ABS,ABS_MT_POSITION_Y ,20},
      {EV_SYN,SYN_MT_REPORT,0},
      {EV_ABS,ABS_MT_TRACKING_ID,46},//ACTION_POINTER_DOWN finger 1
      {EV_ABS,ABS_MT_POSITION_X ,10},
-     {EV_ABS,ABS_MT_POSITION_X ,200},
+     {EV_ABS,ABS_MT_POSITION_Y ,200},
      {EV_SYN,SYN_MT_REPORT,0},
      {EV_SYN,SYN_REPORT,0},
 
      {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_POINTER_DOWN finger 0
      {EV_ABS,ABS_MT_POSITION_X ,14},
-     {EV_ABS,ABS_MT_POSITION_X ,20},
+     {EV_ABS,ABS_MT_POSITION_Y ,20},
      {EV_SYN,SYN_MT_REPORT,0},
      {EV_ABS,ABS_MT_TRACKING_ID,46},//ACTION_POINTER_DOWN finger 1
      {EV_ABS,ABS_MT_POSITION_X ,10},
-     {EV_ABS,ABS_MT_POSITION_X ,200},
+     {EV_ABS,ABS_MT_POSITION_Y ,200},
      {EV_SYN,SYN_MT_REPORT,0},
      {EV_ABS,ABS_MT_TRACKING_ID,47},//ACTION_POINTER_DOWN finger 2
      {EV_ABS,ABS_MT_POSITION_X ,200},
-     {EV_ABS,ABS_MT_POSITION_X ,300},
+     {EV_ABS,ABS_MT_POSITION_Y ,300},
      {EV_SYN,SYN_MT_REPORT,0},
      {EV_SYN,SYN_REPORT,0},
 
      {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_POINTER_UP finger 2
      {EV_ABS,ABS_MT_POSITION_X ,16},
-     {EV_ABS,ABS_MT_POSITION_X ,20},
+     {EV_ABS,ABS_MT_POSITION_Y ,20},
      {EV_SYN,SYN_MT_REPORT,0},
      {EV_ABS,ABS_MT_TRACKING_ID,46},
      {EV_ABS,ABS_MT_POSITION_X ,6},
-     {EV_ABS,ABS_MT_POSITION_X ,200},
+     {EV_ABS,ABS_MT_POSITION_Y ,200},
      {EV_SYN,SYN_MT_REPORT,0},
      //{EV_ABS,ABS_MT_TRACKING_ID,-1},
      {EV_SYN,SYN_REPORT,0},
 #if 10//2 moveevents
      {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_POINTER_UP finger 2
      {EV_ABS,ABS_MT_POSITION_X ,18},
-     {EV_ABS,ABS_MT_POSITION_X ,20},
+     {EV_ABS,ABS_MT_POSITION_Y ,20},
      {EV_SYN,SYN_MT_REPORT,0},
      {EV_ABS,ABS_MT_TRACKING_ID,46},
      {EV_ABS,ABS_MT_POSITION_X ,8},
-     {EV_ABS,ABS_MT_POSITION_X ,200},
+     {EV_ABS,ABS_MT_POSITION_Y ,200},
      {EV_SYN,SYN_MT_REPORT,0},
      //{EV_ABS,ABS_MT_TRACKING_ID,-1},
      {EV_SYN,SYN_REPORT,0},
 
      {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_POINTER_UP finger 2
      {EV_ABS,ABS_MT_POSITION_X ,19},
-     {EV_ABS,ABS_MT_POSITION_X ,20},
+     {EV_ABS,ABS_MT_POSITION_Y ,20},
      {EV_SYN,SYN_MT_REPORT,0},
      {EV_ABS,ABS_MT_TRACKING_ID,46},
      {EV_ABS,ABS_MT_POSITION_X ,10},
-     {EV_ABS,ABS_MT_POSITION_X ,200},
+     {EV_ABS,ABS_MT_POSITION_Y ,200},
      {EV_SYN,SYN_MT_REPORT,0},
      //{EV_ABS,ABS_MT_TRACKING_ID,-1},
      {EV_SYN,SYN_REPORT,0},
 #endif
      {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_POINTER_UP finger 1
      {EV_ABS,ABS_MT_POSITION_X ,18},
-     {EV_ABS,ABS_MT_POSITION_X ,20},
+     {EV_ABS,ABS_MT_POSITION_Y ,20},
      {EV_SYN,SYN_MT_REPORT,0},
      //{EV_ABS,ABS_MT_TRACKING_ID,-1},
      {EV_SYN,SYN_MT_REPORT,0},
@@ -159,6 +159,13 @@ TEST_F(EVENT,MT){
    for(int i=0;i<sizeof(mts)/sizeof(MTEvent);i++){
        int32_t tmEVT = i*20*100000;
        d.putRawEvent({0,tmEVT},mts[i].type,mts[i].code,mts[i].value);
+   }
+   for(int i=0;i<d.getEventCount();i++){
+       MotionEvent*e=(MotionEvent*)d.popEvent();
+       LOGD("Event[%d].Action=%d history=%d",i,e->getActionMasked(),e->getHistorySize());
+       for(int j=0;j<e->getPointerCount();j++){
+          LOGD("     Point[%d](%d)=(%.f,%.f)",j,e->getPointerId(j),e->getX(j),e->getY(j));
+       }
    }
 }
 

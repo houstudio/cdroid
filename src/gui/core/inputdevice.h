@@ -223,7 +223,7 @@ public:
 
 class TouchDevice:public InputDevice{
 protected:
-    MotionEvent mEvent;
+    MotionEvent* mEvent;
     nsecs_t mDownTime;
     nsecs_t mMoveTime;
     int mSlotID;

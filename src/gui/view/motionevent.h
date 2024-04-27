@@ -256,10 +256,10 @@ public:
     }
 
     inline size_t getPointerCount() const { return mPointerProperties.size(); }
-    inline void getPointerProperties(size_t pointerIndex,PointerProperties*out) const {
-        *out=mPointerProperties[pointerIndex];
+    inline const PointerProperties& getPointerProperties(size_t pointerIndex) const {
+        return mPointerProperties[pointerIndex];
     }
-    void addSample(nsecs_t eventTime,const PointerProperties&, const PointerCoords&);
+    void addSample(nsecs_t eventTime,const PointerCoords&);
     void offsetLocation(float xOffset, float yOffset);
     void setLocation(float x,float y);
     void scale(float scaleFactor);
