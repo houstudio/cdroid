@@ -27,37 +27,35 @@ public:
 	 mGridSize =10;
 	 mClear = false;
     }
-
+#define R 6
     bool onTouchEvent(MotionEvent&event)override{
+        const int pointer = event.getActionIndex();
+	const int x = event.getX(pointer);
+	const int y = event.getY(pointer);
         switch(event.getActionMasked()){
         case MotionEvent::ACTION_UP:
             mClear = event.getActionMasked()==MotionEvent::ACTION_UP&&(event.getX()<20)&&(event.getY()<20);
-            invalidate();
+            if(mClear)invalidate();
+            else invalidate(x-R,y-R,R*2,R*2);
 	    break;
         case MotionEvent::ACTION_DOWN:
 	case MotionEvent::ACTION_POINTER_DOWN:{
-	        int pointer = event.getActionIndex();
 		auto it = mTouchPoints.find(pointer);
 		if(it==mTouchPoints.end()){
-		    Point pt;
-		    pt.x=event.getX(pointer);
-		    pt.y=event.getY(pointer);
-                    it=mTouchPoints.insert({pointer,pt}).first;
+                    it=mTouchPoints.insert({pointer,{x,y}}).first;
 		}else{
 		    Point& npt=it->second;
-                    npt.x=event.getX(pointer);
-		    npt.y=event.getY(pointer);
+                    npt.set(x,y);
 		}
-		invalidate();
+		invalidate(x-R,y-R,R*2,R*2);
 	    }break;
 	case MotionEvent::ACTION_MOVE:
             for(int i=0;i<event.getPointerCount();i++){
 	        auto it = mTouchPoints.find(i);
 		if(it!=mTouchPoints.end()){
-		    it->second.x=event.getX(i);
-                    it->second.y=event.getY(i);
+		    it->second.set(x,y);
 		}
-            }invalidate();
+            }invalidate(x-R,y-R,R*2,R*2);
             break;
 	default:break;
 	}
@@ -72,8 +70,7 @@ public:
 	for(auto it=mTouchPoints.begin();it!=mTouchPoints.end();it++){
 	    Point& pt = it->second;
 	    canvas.set_source_rgb(0,1,float(it->first)/mTouchPoints.size());
-	    canvas.arc(pt.x,pt.y,6,0,M_PI*2.f);
-	    LOGD("(%d,%d)clear=%d",pt.x,pt.y,mClear);
+	    canvas.arc(pt.x,pt.y,R,0,M_PI*2.f);
 	    canvas.fill();
 	}
     }

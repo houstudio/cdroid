@@ -164,13 +164,13 @@ TEST_F(EVENT,MT){
        MotionEvent*e=(MotionEvent*)d.popEvent();
        const int pointerCount=e->getPointerCount();
        const int hisCount = e->getHistorySize();
-       LOGD("Event[%d].Action=%d pointers=%d history=%d",i,e->getActionMasked(),pointerCount,hisCount);
+       LOGI("Event[%d].Action=%d pointers=%d history=%d",i,e->getActionMasked(),pointerCount,hisCount);
        for(int j=0;j<pointerCount;j++){
 	  std::ostringstream oss;
 	  for(int k=0;k<hisCount;k++){
 	     oss<<"["<<e->getHistoricalRawX(j,k)<<","<<e->getHistoricalRawY(j,k)<<"],";
 	  }
-          LOGD("     Point[%d](%d)=(%.f,%.f)[%s]",j,e->getPointerId(j),e->getX(j),e->getY(j),oss.str().c_str());
+          LOGI("     Point[%d](%d)=(%.f,%.f)[%s]",j,e->getPointerId(j),e->getX(j),e->getY(j),oss.str().c_str());
        }
    }
 }
