@@ -4,11 +4,7 @@
 #include <linux/input.h>
 class TouchWindow:public Window{
 private:
-    struct TouchPoint{
-        int x0,y0;
-	int x1,y1;
-    };
-    std::map<int,TouchPoint> mTouchPoints;
+    std::map<int,Point> mTouchPoints;
     int mGridSize;
     bool mClear;
 protected:
@@ -29,7 +25,7 @@ protected:
 public:
     TouchWindow(int w,int h):Window(0,0,w,h){
 	 mGridSize =10;
-	 mClear =true;
+	 mClear = false;
     }
 
     bool onTouchEvent(MotionEvent&event)override{
@@ -43,26 +39,26 @@ public:
 	        int pointer = event.getActionIndex();
 		auto it = mTouchPoints.find(pointer);
 		if(it==mTouchPoints.end()){
-		    TouchPoint pt={-1,-1,-1,-1};
-		    pt.x1=event.getX(pointer);
-		    pt.y1=event.getY(pointer);
+		    Point pt;
+		    pt.x=event.getX(pointer);
+		    pt.y=event.getY(pointer);
                     it=mTouchPoints.insert({pointer,pt}).first;
 		}else{
-		    TouchPoint& npt=it->second;
-                    npt.x1=event.getX(pointer);
-		    npt.y1=event.getY(pointer);
+		    Point& npt=it->second;
+                    npt.x=event.getX(pointer);
+		    npt.y=event.getY(pointer);
 		}
 		invalidate();
 	    }break;
-	case MotionEvent::ACTION_MOVE:{
-                for(int i=0;i<event.getPointerCount();i++){
-		     auto it = mTouchPoints.find(i);
-		     if(it!=mTouchPoints.end()){
-		         it->second.x1=event.getX(i);
-			 it->second.y1=event.getY(i);
-		     }
-		}invalidate();
-            }break;
+	case MotionEvent::ACTION_MOVE:
+            for(int i=0;i<event.getPointerCount();i++){
+	        auto it = mTouchPoints.find(i);
+		if(it!=mTouchPoints.end()){
+		    it->second.x=event.getX(i);
+                    it->second.y=event.getY(i);
+		}
+            }invalidate();
+            break;
 	default:break;
 	}
 	return true;
@@ -74,15 +70,11 @@ public:
 	}
 	drawGrid(canvas);
 	for(auto it=mTouchPoints.begin();it!=mTouchPoints.end();it++){
-	    TouchPoint& pt = it->second;
-	    if( (pt.x0>=0) && (pt.y0>=0) ){
-	        canvas.set_source_rgb(0,1,float(it->first)/mTouchPoints.size());
-		canvas.move_to(pt.x0,pt.y0);
-	        canvas.line_to(pt.x1,pt.y1);
-	        canvas.stroke();
-	    }
-	    pt.x0 = pt.x1;
-	    pt.y0 = pt.y1;
+	    Point& pt = it->second;
+	    canvas.set_source_rgb(0,1,float(it->first)/mTouchPoints.size());
+	    canvas.arc(pt.x,pt.y,6,0,M_PI*2.f);
+	    LOGD("(%d,%d)clear=%d",pt.x,pt.y,mClear);
+	    canvas.fill();
 	}
     }
 };
