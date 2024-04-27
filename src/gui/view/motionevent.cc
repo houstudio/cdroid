@@ -105,6 +105,14 @@ void PointerProperties::copyFrom(const PointerProperties& other) {
     toolType = other.toolType;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+PointerCoords* MotionEvent::gSharedTempPointerCoords=nullptr;
+PointerProperties* MotionEvent::gSharedTempPointerProperties=nullptr;
+int* MotionEvent::gSharedTempPointerIndexMap=nullptr;
+
+void MotionEvent::ensureSharedTempPointerCapacity(int desiredCapacity){
+}
+
 MotionEvent::MotionEvent(){
     mPointerProperties.clear();
     mSamplePointerCoords.clear();
@@ -112,18 +120,20 @@ MotionEvent::MotionEvent(){
 }
 
 MotionEvent*MotionEvent::obtain(){
-    return PooledInputEventFactory::getInstance().createMotionEvent();
+    MotionEvent*ev = PooledInputEventFactory::getInstance().createMotionEvent();
+    ev->mPointerProperties.clear();
+    ev->mSamplePointerCoords.clear();
+    ev->mSampleEventTimes.clear();
+    return ev;
 }
 
-MotionEvent*MotionEvent::obtain(nsecs_t downTime, nsecs_t eventTime,
-            int action, int pointerCount, const PointerProperties* pointerProperties,
-            const PointerCoords* pointerCoords, int metaState, int buttonState,
-            float xPrecision, float yPrecision, int deviceId,
-            int edgeFlags, int source, int flags){
+MotionEvent*MotionEvent::obtain(nsecs_t downTime , nsecs_t eventTime, int action, int pointerCount,
+        const PointerProperties* pointerProperties,const PointerCoords* pointerCoords,int metaState,
+        int buttonState,float xPrecision,float yPrecision,int deviceId,int edgeFlags,int source,int flags){
     MotionEvent* ev = obtain();
-    ev->initialize(deviceId, source,0, action,0/*actionbutton*/, flags, edgeFlags, metaState, buttonState,
-                0, 0, xPrecision, yPrecision, downTime, eventTime,
-                pointerCount, pointerProperties, pointerCoords);
+    ev->initialize(deviceId, source,0, action,0/*actionbutton*/, flags, edgeFlags,
+         metaState, buttonState, 0, 0, xPrecision, yPrecision, downTime, eventTime,
+         pointerCount, pointerProperties, pointerCoords);
     return ev;
 }
 
@@ -131,6 +141,7 @@ MotionEvent* MotionEvent::obtain(nsecs_t downTime,nsecs_t eventTime, int action,
             float x, float y, float pressure, float size, int metaState,
             float xPrecision, float yPrecision, int deviceId, int edgeFlags){
     MotionEvent* ev = obtain();
+    ensureSharedTempPointerCapacity(1);
     PointerProperties pp;
     pp.clear();
     pp.id = 0;
@@ -141,14 +152,13 @@ MotionEvent* MotionEvent::obtain(nsecs_t downTime,nsecs_t eventTime, int action,
     pc.setAxisValue(AXIS_Y,y);
     pc.setAxisValue(AXIS_PRESSURE,pressure);
     pc.setAxisValue(AXIS_SIZE,size);
-    ev->initialize(deviceId, InputDevice::SOURCE_UNKNOWN,0, action, 0/*actionButton*/,0/*flags*/, edgeFlags, metaState, 0,
-            0, 0, xPrecision, yPrecision, downTime , eventTime, 1, &pp,&pc);
+    ev->initialize(deviceId, InputDevice::SOURCE_UNKNOWN,0, action, 0/*actionButton*/,0/*flags*/,
+        edgeFlags, metaState, 0, 0, 0, xPrecision, yPrecision, downTime , eventTime, 1, &pp,&pc);
     return ev;
 }
 
 MotionEvent* MotionEvent::obtain(nsecs_t downTime, nsecs_t eventTime, int action, float x, float y, int metaState){
-    return obtain(downTime, eventTime, action, x, y, 1.0f, 1.0f,
-                metaState, 1.0f, 1.0f, 0, 0);
+    return obtain(downTime, eventTime, action, x, y, 1.f, 1.f,metaState, 1.f, 1.f, 0, 0);
 }
 
 MotionEvent* MotionEvent::obtain(const MotionEvent& other) {
@@ -202,8 +212,8 @@ void MotionEvent::initialize(
     mSamplePointerCoords.clear();
     for(int i=0;i<pointerCount;i++){
        mPointerProperties.push_back(pointerProperties[i]);
-       addSample(eventTime,pointerCoords[i]);
     }
+    addSample(eventTime,pointerCoords);
 }
 
 MotionEvent::MotionEvent(const MotionEvent&other){
@@ -246,21 +256,21 @@ void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
 
 MotionEvent*MotionEvent::split(int idBits){
     MotionEvent*ev = obtain();
-    int oldPointerCount = getPointerCount();
+    const int oldPointerCount = getPointerCount();
+    ensureSharedTempPointerCapacity(oldPointerCount);
     PointerProperties pp[oldPointerCount];// = gSharedTempPointerProperties;
     PointerCoords pc[oldPointerCount];// = gSharedTempPointerCoords;
     int map[oldPointerCount];// = gSharedTempPointerIndexMap;
 
     const int oldAction = getAction();
     const int oldActionMasked = oldAction & ACTION_MASK;
-    const int oldActionPointerIndex = (oldAction & ACTION_POINTER_INDEX_MASK)
-            >> ACTION_POINTER_INDEX_SHIFT;
+    const int oldActionPointerIndex = (oldAction & ACTION_POINTER_INDEX_MASK)>>ACTION_POINTER_INDEX_SHIFT;
     int newActionPointerIndex = -1;
     int newPointerCount = 0;
     int newIdBits = 0;
     for (int i = 0; i < oldPointerCount; i++) {
         pp[newPointerCount] = getPointerProperties(i);
-        int idBit = 1 << pp[newPointerCount].id;
+        const int idBit = 1 << pp[newPointerCount].id;
         if ((idBit & idBits) != 0) {
             if (i == oldActionPointerIndex) {
                 newActionPointerIndex = newPointerCount;
@@ -277,36 +287,32 @@ MotionEvent*MotionEvent::split(int idBits){
 
     int newAction;
     if ((oldActionMasked == ACTION_POINTER_DOWN) || (oldActionMasked == ACTION_POINTER_UP)) {
-        if (newActionPointerIndex < 0) {   // An unrelated pointer changed.
+        if (newActionPointerIndex < 0) { // An unrelated pointer changed.
             newAction = ACTION_MOVE;
         } else if (newPointerCount == 1) { // The first/last pointer went down/up.
             newAction = (oldActionMasked == ACTION_POINTER_DOWN) ? ACTION_DOWN : ACTION_UP;
         } else { // A secondary pointer went down/up.
             newAction = oldActionMasked | (newActionPointerIndex << ACTION_POINTER_INDEX_SHIFT);
         }
-    } else {    // Simple up/down/cancel/move or other motion action.
+    } else { // Simple up/down/cancel/move or other motion action.
         newAction = oldAction;
     }
 
     const int historySize = getHistorySize();
     for (int h = 0; h <= historySize; h++) {
         const int historyPos = h == historySize ? HISTORY_CURRENT : h;
-
         for (int i = 0; i < newPointerCount; i++) {
             //getPointerCoords(map[i], historyPos, &pc[i]);
             getHistoricalRawPointerCoords(map[i], historyPos, pc[i]);
         }
-
         const long eventTimeNanos = getHistoricalEventTime(historyPos);
         if (h == 0) {
-            ev->initialize( getDeviceId(),getSource(),0/*displayId*/, newAction, 0,
-                    getFlags(),   getEdgeFlags(), getMetaState(),
-                    getButtonState(), getXOffset(), getYOffset(),
-                    getXPrecision(), getYPrecision(), mDownTime,
-                    eventTimeNanos,  newPointerCount, pp, pc);
+            ev->initialize( getDeviceId(),getSource(),0/*displayId*/, newAction, 0, getFlags(),
+                getEdgeFlags(), getMetaState() , getButtonState(), getXOffset(), getYOffset(),
+                getXPrecision(), getYPrecision(),mDownTime, eventTimeNanos,  newPointerCount, pp, pc);
         } else {
             //nativeAddBatch(ev.mNativePtr, eventTimeNanos, pc, 0);
-            ev->addSample(eventTimeNanos,pc[h]);
+            ev->addSample(eventTimeNanos,pc);
         }
     }
     return ev;
@@ -316,13 +322,37 @@ bool MotionEvent::isButtonPressed(int button)const{
     return (button!=0)&&((getButtonState() & button) == button);
 }
 
-void MotionEvent::addSample(nsecs_t eventTime, const PointerCoords&coord) {
+void MotionEvent::addSample(nsecs_t eventTime, const PointerCoords*coords) {
     mSampleEventTimes.push_back(eventTime);
-    mSamplePointerCoords.push_back(coord);
+    mSamplePointerCoords.insert(mSamplePointerCoords.end(),
+        &coords[0],&coords[getPointerCount()]);
 }
 
 const PointerCoords& MotionEvent::getRawPointerCoords(size_t pointerIndex) const {
     return mSamplePointerCoords[getHistorySize() * getPointerCount() + pointerIndex];
+}
+
+static float clamp(float value, float low, float high) {
+    if (value < low) return low;
+    else if (value > high)return high;
+    return value;
+}
+
+MotionEvent* MotionEvent::clampNoHistory(float left, float top, float right, float bottom){
+    MotionEvent*ev = obtain();
+    const int pointerCount = getPointerCount();
+    ensureSharedTempPointerCapacity(pointerCount);
+#if 0
+    PointerProperties*pp = gSharedTempPointerProperties;
+    PointerCoords* pc = gSharedTempPointerCoords;
+    for (int i = 0; i < pointerCount; i++) {
+        pp[i] = mPointerProperties[i];//nativeGetPointerProperties(mNativePtr,i,pp[i]);
+        getPointerCoords(i,pc[i]);//nativeGetPointerCoords(mNativePtr,i,HISTORY_CURRENT,pc[i]);
+	pc[i].x = clamp(pc[i].x, left, right);
+        pc[i].y = clamp(pc[i].y, top, bottom);
+    }
+#endif
+    return ev;
 }
 
 int MotionEvent::getPointerIdBits()const{

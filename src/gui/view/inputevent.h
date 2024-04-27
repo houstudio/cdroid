@@ -13,8 +13,12 @@ protected:
     int mDeviceId;
     int mDisplayId;
     int mSource;
+    int mId;
     long mSeq;
+    static int mNextSeq;
     nsecs_t mEventTime;//SystemClock#uptimeMillis
+protected:
+    void prepareForReuse();
 public:
     enum{
         INPUT_EVENT_TYPE_KEY = 1,

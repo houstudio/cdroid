@@ -40,6 +40,7 @@ InputDevice::InputDevice(int fdev){
     Point displaySize;
     std::ostringstream oss;
 
+    mSeqID = 0;
     mDeviceClasses= 0;
     mKeyboardType = KEYBOARD_TYPE_NONE;
     InputGetDeviceInfo(fdev,&devInfos);
@@ -492,28 +493,22 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case SYN_MT_REPORT:break;
         case SYN_REPORT:
             eventAction = getActionByBits(pointIndex);
-            LOGD("mask=%08x,%08x eventAction=%d pointIndex=%d",mLastBits.value,mCurrBits.value,eventAction,pointIndex);
+            LOGD_IF(eventAction!=2,"mask=%08x,%08x eventAction=%d pointIndex=%d",mLastBits.value,mCurrBits.value,eventAction,pointIndex);
             mMoveTime =(tv.tv_sec * 1000LL + tv.tv_usec/1000);
-            if(eventAction==MotionEvent::ACTION_DOWN){
-                int pointerCount=0;
+            {
+                int pointerCount = 0;
                 PointerCoords coords[16];
                 PointerProperties props[16];
                 for(auto p:mPointMAP){
                     coords[pointerCount] = p.second.coord;
                     props [pointerCount] = p.second.prop;
-                    pointerCount++;
+                    pointerCount ++;
                 }
-                mEvent=MotionEvent::obtain(mMoveTime,mMoveTime,eventAction,pointerCount,props,coords,
-                    0/*metaState*/, 0/*buttonState*/,.0,.0/*x/yPrecision*/,getId()/*deviceId*/,
-                    0/*edgeFlags*/, getSources(), 0/*flags*/);
-            }else{
-                if(eventAction!=MotionEvent::ACTION_MOVE){
-                    MotionEvent*newEvent = MotionEvent::obtain(*mEvent);
-                    mEvent->recycle();
-                    mEvent = newEvent;
-                }
-                mEvent->setAction(eventAction|(pointIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
-                for(auto p:mPointMAP)mEvent->addSample(mMoveTime,p.second.coord);
+		if(mEvent!=nullptr)mEvent->recycle();
+                mEvent = MotionEvent::obtain(mMoveTime,mMoveTime,
+                    eventAction|(pointIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT),
+                    pointerCount,props,coords, 0/*metaState*/, 0/*buttonState*/,.0,.0/*x/yPrecision*/,
+                    getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
             }
             LOGD_IF(eventAction!=MotionEvent::ACTION_MOVE,"%s pos=%.f,%.f",MotionEvent::actionToString(eventAction).c_str(),
                 mEvent->getX(pointIndex),mEvent->getY(pointIndex));
@@ -534,9 +529,9 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                 LOGV("clearbits %d %08x,%08x",pointerIndex,mLastBits.value,mCurrBits.value);
                 mCurrBits.clearBit(pointIndex);
                 auto it = mTrack2Slot.find(pointerIndex);
-                if(it!=mTrack2Slot.end())mTrack2Slot.erase(it);
+                if( it != mTrack2Slot.end() )mTrack2Slot.erase(it);
                 auto it2 = mPointMAP.find(pointIndex);
-                if(it2!=mPointMAP.end())mPointMAP.erase(it2);
+                if( it2 != mPointMAP.end() )mPointMAP.erase(it2);
             }
 
             if( int(mEvent->getHistorySize())>=0 ){
@@ -545,12 +540,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                 MotionEvent*e = MotionEvent::obtain(*mEvent);
                 mEvents.push_back(e);
             }
-            if(eventAction==MotionEvent::ACTION_UP){
-                mEvent->recycle();
-                mEvent=nullptr;
-            }
             mLastBits.value = mCurrBits.value;
-            if((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)&&(mTypeB==false)){
+            if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mTypeB==false) ){
                 mCurrBits.clear();//only typeA
                 mTrack2Slot.clear();
             }

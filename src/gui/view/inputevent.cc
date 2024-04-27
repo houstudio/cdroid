@@ -5,12 +5,19 @@
 // --- InputEvent ---
 namespace cdroid{
 
+int InputEvent::mNextSeq=0;
+
 InputEvent::InputEvent(){
    mSource = InputDevice::SOURCE_UNKNOWN;
    mDisplayId = 0;
+   mSeq = mNextSeq++;
 }
 
 InputEvent::~InputEvent(){
+}
+
+void InputEvent::prepareForReuse(){
+   mSeq = mNextSeq++;
 }
 
 int InputEvent::getDisplayId()const{
@@ -33,6 +40,7 @@ bool InputEvent::isFromSource(int source)const{
 void InputEvent::initialize(const InputEvent& from) {
     mDeviceId = from.mDeviceId;
     mSource = from.mSource;
+    mId = from.mId;
 }
 
 void InputEvent::recycle(){
@@ -46,7 +54,7 @@ PooledInputEventFactory*PooledInputEventFactory::mInst=nullptr;
 
 PooledInputEventFactory& PooledInputEventFactory::getInstance(){
     if(nullptr==mInst)
-        mInst=new PooledInputEventFactory(20);
+        mInst = new PooledInputEventFactory(20);
     return *mInst;
 }
 
@@ -90,12 +98,14 @@ void PooledInputEventFactory::recycle(InputEvent* event) {
             mKeyEventPool.push(static_cast<KeyEvent*>(event));
             return;
         }
+        LOGD("outOf KeyPool %d/%d",mKeyEventPool.size(),mMaxPoolSize);
         break;
     case InputEvent::INPUT_EVENT_TYPE_MOTION:
         if (mMotionEventPool.size() < mMaxPoolSize) {
             mMotionEventPool.push(static_cast<MotionEvent*>(event));
             return;
         }
+        LOGD("outOf MotionPool %d/%d",mMotionEventPool.size(),mMaxPoolSize);
         break;
     }
     delete event;

@@ -164,7 +164,11 @@ public:
     };
 private:
     static const int HISTORY_CURRENT = -0x80000000;
+    static PointerCoords* gSharedTempPointerCoords;
+    static PointerProperties* gSharedTempPointerProperties;
+    static int* gSharedTempPointerIndexMap;
     static MotionEvent*obtain();
+    static void ensureSharedTempPointerCapacity(int desiredCapacity);
 protected:
     int32_t mAction;
     int32_t mActionButton;
@@ -185,9 +189,8 @@ public:
     MotionEvent(const MotionEvent&m);
     MotionEvent*copy()const override{return obtain(*this);}
     void initialize(int deviceId,int source,int displayId,int action,int actionButton,
-            int flags, int edgeFlags,int metaState,   int buttonState,
-            float xOffset, float yOffset, float xPrecision, float yPrecision,
-            nsecs_t downTime, nsecs_t eventTime, size_t pointerCount,
+           int flags, int edgeFlags,int metaState, int buttonState, float xOffset, float yOffset,
+	    float xPrecision, float yPrecision,nsecs_t downTime, nsecs_t eventTime, size_t pointerCount,
             const PointerProperties* pointerProperties,const PointerCoords* pointerCoords);
 
     static MotionEvent*obtain(nsecs_t downTime, nsecs_t eventTime, int action,
@@ -261,7 +264,7 @@ public:
     inline const PointerProperties& getPointerProperties(size_t pointerIndex) const {
         return mPointerProperties[pointerIndex];
     }
-    void addSample(nsecs_t eventTime,const PointerCoords&);
+    void addSample(nsecs_t eventTime,const PointerCoords*);
     void offsetLocation(float xOffset, float yOffset);
     void setLocation(float x,float y);
     void scale(float scaleFactor);
@@ -273,6 +276,7 @@ public:
     inline int32_t getPointerId(size_t pointerIndex) const {
         return mPointerProperties[pointerIndex].id;
     }
+    MotionEvent*clampNoHistory(float left, float top, float right, float bottom);
     int getPointerIdBits()const;
     inline int32_t getToolType(size_t pointerIndex) const {
         return mPointerProperties[pointerIndex].toolType;

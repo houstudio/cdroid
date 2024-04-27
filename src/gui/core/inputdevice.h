@@ -185,6 +185,7 @@ protected:
     int mKeyboardType;
     unsigned int mScreenWidth;
     unsigned int mScreenHeight;
+    int mSeqID;
     InputDeviceInfo mDeviceInfo;
     class KeyLayoutMap*kmap;
     static Preferences mPrefs;

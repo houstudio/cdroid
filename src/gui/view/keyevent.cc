@@ -3,7 +3,9 @@
 namespace cdroid{
 
 KeyEvent* KeyEvent::obtain(){
-    return PooledInputEventFactory::getInstance().createKeyEvent();
+    KeyEvent*ev = PooledInputEventFactory::getInstance().createKeyEvent();
+    ev->prepareForReuse();
+    return ev;
 }
 
 KeyEvent* KeyEvent::obtain(nsecs_t downTime, nsecs_t eventTime, int action,int code, int repeat, int metaState,
