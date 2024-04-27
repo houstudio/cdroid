@@ -162,9 +162,15 @@ TEST_F(EVENT,MT){
    }
    for(int i=0;i<d.getEventCount();i++){
        MotionEvent*e=(MotionEvent*)d.popEvent();
-       LOGD("Event[%d].Action=%d history=%d",i,e->getActionMasked(),e->getHistorySize());
-       for(int j=0;j<e->getPointerCount();j++){
-          LOGD("     Point[%d](%d)=(%.f,%.f)",j,e->getPointerId(j),e->getX(j),e->getY(j));
+       const int pointerCount=e->getPointerCount();
+       const int hisCount = e->getHistorySize();
+       LOGD("Event[%d].Action=%d pointers=%d history=%d",i,e->getActionMasked(),pointerCount,hisCount);
+       for(int j=0;j<pointerCount;j++){
+	  std::ostringstream oss;
+	  for(int k=0;k<hisCount;k++){
+	     oss<<"["<<e->getHistoricalRawX(j,k)<<","<<e->getHistoricalRawY(j,k)<<"],";
+	  }
+          LOGD("     Point[%d](%d)=(%.f,%.f)[%s]",j,e->getPointerId(j),e->getX(j),e->getY(j),oss.str().c_str());
        }
    }
 }

@@ -200,8 +200,10 @@ void MotionEvent::initialize(
 
     mSampleEventTimes.clear();
     mSamplePointerCoords.clear();
-    for(int i=0;i<pointerCount;i++)
+    for(int i=0;i<pointerCount;i++){
+       mPointerProperties.push_back(pointerProperties[i]);
        addSample(eventTime,pointerCoords[i]);
+    }
 }
 
 MotionEvent::MotionEvent(const MotionEvent&other){
@@ -319,8 +321,8 @@ void MotionEvent::addSample(nsecs_t eventTime, const PointerCoords&coord) {
     mSamplePointerCoords.push_back(coord);
 }
 
-const PointerCoords* MotionEvent::getRawPointerCoords(size_t pointerIndex) const {
-    return &mSamplePointerCoords[getHistorySize() * getPointerCount() + pointerIndex];
+const PointerCoords& MotionEvent::getRawPointerCoords(size_t pointerIndex) const {
+    return mSamplePointerCoords[getHistorySize() * getPointerCount() + pointerIndex];
 }
 
 int MotionEvent::getPointerIdBits()const{
@@ -333,7 +335,7 @@ int MotionEvent::getPointerIdBits()const{
 }
 
 float MotionEvent::getRawAxisValue(int32_t axis, size_t pointerIndex) const {
-    return getRawPointerCoords(pointerIndex)->getAxisValue(axis);
+    return getRawPointerCoords(pointerIndex).getAxisValue(axis);
 }
 
 float MotionEvent::getAxisValue(int axis)const {
@@ -341,7 +343,7 @@ float MotionEvent::getAxisValue(int axis)const {
 }
 
 float MotionEvent::getAxisValue(int32_t axis, size_t pointerIndex) const {
-    const float value = getRawPointerCoords(pointerIndex)->getAxisValue(axis);
+    const float value = getRawPointerCoords(pointerIndex).getAxisValue(axis);
     switch (axis) {
     case AXIS_X://AMOTION_EVENT_AXIS_X:
         return value + mXOffset;

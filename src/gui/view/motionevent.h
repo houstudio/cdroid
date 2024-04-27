@@ -214,6 +214,8 @@ public:
     }
     bool isTouchEvent()const;
     inline nsecs_t getDownTime()const{return mDownTime;}
+    inline void setDownTime(nsecs_t downTime){mDownTime = downTime;}
+    inline size_t getPointerCount() const { return mPointerProperties.size(); }
     inline int32_t getFlags() const { return mFlags; }
     inline void setFlags(int32_t flags) { mFlags = flags; }
     inline bool isTainted()const{return (mFlags&FLAG_TAINTED)!=0;}
@@ -240,6 +242,7 @@ public:
     inline float getXPrecision() const { return mXPrecision; }
     inline float getYPrecision() const { return mYPrecision; }
     inline size_t getHistorySize() const { return mSampleEventTimes.size() - 1; }
+
     nsecs_t getHistoricalEventTime(size_t historicalIndex) const;
     nsecs_t getHistoricalEventTimeNanos(size_t historicalIndex) const;
     void getPointerCoords(int pointerIndex, PointerCoords& outPointerCoords){
@@ -255,7 +258,6 @@ public:
         return getHistoricalRawAxisValue(AXIS_Y, pointerIndex, historicalIndex);
     }
 
-    inline size_t getPointerCount() const { return mPointerProperties.size(); }
     inline const PointerProperties& getPointerProperties(size_t pointerIndex) const {
         return mPointerProperties[pointerIndex];
     }
@@ -276,7 +278,7 @@ public:
         return mPointerProperties[pointerIndex].toolType;
     }
     inline nsecs_t getEventTime() const override{ return mSampleEventTimes[getHistorySize()]; }
-    const PointerCoords* getRawPointerCoords(size_t pointerIndex) const;
+    const PointerCoords& getRawPointerCoords(size_t pointerIndex) const;
     float getRawAxisValue(int32_t axis, size_t pointerIndex) const;
     inline float getRawX(size_t pointerIndex) const {
         return getRawAxisValue(AXIS_X, pointerIndex);
