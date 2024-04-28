@@ -238,6 +238,8 @@ protected:
     int32_t mLastDownX,mLastDownY;
     int32_t mMinX,mMaxX;
     int32_t mMinY,mMaxY;
+    int32_t mActionButton;
+    int32_t mButtonState;
     bool mSwitchXY;
     bool mInvertX;
     bool mInvertY;
