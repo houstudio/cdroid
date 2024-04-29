@@ -59,7 +59,7 @@ public:
                     maxX=std::max(x,maxX);
                     maxY=std::max(y,maxY);
                 }
-                invalidate(minX,minY,maxX-mminX+1,maxY-minY+1);
+                invalidate(minX,minY,maxX-minX+1,maxY-minY+1);
             }
             break;
         default:break;
