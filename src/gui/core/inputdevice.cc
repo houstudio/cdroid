@@ -505,14 +505,13 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                     props [pointerCount] = p.second.prop;
                     pointerCount ++;
                 }
-		if( (mEvent==nullptr)||(mEvent && (action!=MotionEvent::ACTION_MOVE)) ){
+                if( (mEvent==nullptr)||(mEvent && (action!=MotionEvent::ACTION_MOVE)) ){
                     if(mEvent) mEvent->recycle();
-                    mEvent = MotionEvent::obtain(mMoveTime,mMoveTime,
-                        action|(pointIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT),
-                        pointerCount,props,coords, 0/*metaState*/,mButtonState,.0,.0/*x/yPrecision*/,
+                    mEvent = MotionEvent::obtain(mMoveTime,mMoveTime,action,pointerCount,
+                        props,coords, 0/*metaState*/,mButtonState,.0,.0/*x/yPrecision*/,
                         getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
                     mEvent->setActionButton(mActionButton);
-		}else {
+                }else {
 #if 0
                     MotionEvent*ne = MotionEvent::obtain(*mEvent);
                     mEvent->recycle();
@@ -521,17 +520,18 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
 #else
                     MotionEvent*ne = mEvents.size()?(MotionEvent*)mEvents.back():nullptr;
                     if(ne&&ne->getActionMasked()==MotionEvent::ACTION_MOVE){
-		        mEvent->addSample(mMoveTime,coords);
-		        goto CLEAR_END;
+                        mEvent->addSample(mMoveTime,coords);
+                        goto CLEAR_END;
                     }else{
-                        ne = MotionEvent::obtain(*mEvent);
+                        ne = MotionEvent::obtainNoHistory(*mEvent);
                         mEvent->recycle();
                         mEvent = ne;
                         mEvent->addSample(mMoveTime,coords);
                     }
 #endif
-		}
-		mEvent->setAction(action|(pointIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
+                }
+                mEvent->setActionButton(mActionButton);
+                mEvent->setAction(action|(pointIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
             }
             LOGD_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x action=%d Poiter[%d]=(%.f,%.f)",mLastBits.value,
                 mCurrBits.value,action,pointIndex,mEvent->getX(pointIndex),mEvent->getY(pointIndex));
