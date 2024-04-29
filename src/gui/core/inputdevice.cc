@@ -12,7 +12,6 @@
 #include <keylayoutmap.h>
 #include <core/app.h>
 #include <core/windowmanager.h>
-//#include <core/eventcodes.h>
 #include <linux/input.h>
 
 using namespace std;
@@ -505,14 +504,14 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                     props [pointerCount] = p.second.prop;
                     pointerCount ++;
                 }
-                if( (mEvent==nullptr)||(mEvent && (action!=MotionEvent::ACTION_MOVE)) ){
+                if( (mEvent==nullptr)||(action!=MotionEvent::ACTION_MOVE) ){
                     if(mEvent) mEvent->recycle();
                     mEvent = MotionEvent::obtain(mMoveTime,mMoveTime,action,pointerCount,
                         props,coords, 0/*metaState*/,mButtonState,.0,.0/*x/yPrecision*/,
                         getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
                     mEvent->setActionButton(mActionButton);
                 }else {
-#if 0
+#if 1
                     MotionEvent*ne = MotionEvent::obtain(*mEvent);
                     mEvent->recycle();
                     mEvent = ne;
