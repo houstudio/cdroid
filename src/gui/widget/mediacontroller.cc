@@ -4,6 +4,8 @@
 #include <widget/R.h>
 namespace cdroid{
 
+DECLARE_WIDGET(MediaController)
+
 MediaController::MediaController(Context* context,const AttributeSet& attrs)
  :FrameLayout(context,attrs){
     mRoot = this;

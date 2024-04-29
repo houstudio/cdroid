@@ -32,11 +32,13 @@ public:
 #define R 6
     bool onTouchEvent(MotionEvent&event)override{
         const int pointer = event.getActionIndex();
-
+        int minX=INT_MAX,minY=INT_MAX;
+        int maxX=INT_MIN,maxY=INT_MIN;
         switch(event.getActionMasked()){
         case MotionEvent::ACTION_UP:
             mClear = event.getActionMasked()==MotionEvent::ACTION_UP&&(event.getX()<20)&&(event.getY()<20);
             if(mClear)invalidate();
+            break;
         case MotionEvent::ACTION_DOWN:
         case MotionEvent::ACTION_POINTER_DOWN:
         case MotionEvent::ACTION_MOVE:
@@ -44,23 +46,26 @@ public:
                 auto it = mTouchPoints.find(i);
                 int x = event.getX(i);
                 int y = event.getY(i);
-                int minX = x,minY = y;
-                int maxX = x,maxY = y;
-                if(it==mTouchPoints.end()){
-                   it=mTouchPoints.insert({i,std::list<Point>()}).first;
+                minX = std::min(x,minX);
+                minY = std::min(y,minY);
+                maxX = std::max(x,maxX);
+                maxY = std::max(y,maxY);
+                if(it == mTouchPoints.end()){
+                   it = mTouchPoints.insert({i,std::list<Point>()}).first;
                 }
-                LOGD("Pointer[%d] %d",i,event.getHistorySize());
+                it->second.push_back({x,y});
+                //LOGD("Pointer[%d] %d",i,event.getHistorySize());
                 for(int j=0;j<event.getHistorySize();j++){
-                    x=event.getHistoricalRawX(i,j);
-                    y=event.getHistoricalRawY(i,j);
+                    x = event.getHistoricalRawX(i,j);
+                    y = event.getHistoricalRawY(i,j);
                     it->second.push_back({x,y});
-                    minX=std::min(x,minX);
-                    minY=std::min(y,minY);
-                    maxX=std::max(x,maxX);
-                    maxY=std::max(y,maxY);
+                    minX = std::min(x,minX);
+                    minY = std::min(y,minY);
+                    maxX = std::max(x,maxX);
+                    maxY = std::max(y,maxY);
                 }
-                invalidate(minX,minY,maxX-minX+1,maxY-minY+1);
             }
+            invalidate(minX,minY,maxX-minX+1,maxY-minY+1);
             break;
         default:break;
         }
@@ -75,9 +80,10 @@ public:
         for(auto it=mTouchPoints.begin();it!=mTouchPoints.end();it++){
             std::list<Point>& pts = it->second;
             canvas.set_source_rgb(0,1,float(it->first)/mTouchPoints.size());
-            for(auto p:pts)
+            for(auto p:pts){
                 canvas.arc(p.x,p.y,R,0,M_PI*2.f);
-            canvas.fill();
+                canvas.fill();
+            }
             pts.clear();
         }
     }

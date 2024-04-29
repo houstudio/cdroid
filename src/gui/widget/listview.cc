@@ -1603,7 +1603,7 @@ bool ListView::commonKey(int keyCode, int count, KeyEvent& event) {
     if (mDataChanged) layoutChildren();
 
     bool handled = false;
-    int action = event.getAction();
+    const int action = event.getAction();
     if (KeyEvent::isConfirmKey(keyCode)
             && event.hasNoModifiers() && action != KeyEvent::ACTION_UP) {
         handled = resurrectSelectionIfNeeded();

@@ -1269,13 +1269,13 @@ bool GridView::commonKey(int keyCode, int count, KeyEvent& event) {
         switch (keyCode) {
         case KeyEvent::KEYCODE_DPAD_LEFT:
             if (event.hasNoModifiers()) {
-                 handled = resurrectSelectionIfNeeded() || arrowScroll(FOCUS_LEFT);
+                handled = resurrectSelectionIfNeeded() || arrowScroll(FOCUS_LEFT);
             }
             break;
 
         case KeyEvent::KEYCODE_DPAD_RIGHT:
             if (event.hasNoModifiers()) {
-                 handled = resurrectSelectionIfNeeded() || arrowScroll(FOCUS_RIGHT);
+                handled = resurrectSelectionIfNeeded() || arrowScroll(FOCUS_RIGHT);
             }
             break;
 
@@ -1319,7 +1319,7 @@ bool GridView::commonKey(int keyCode, int count, KeyEvent& event) {
 
         case KeyEvent::KEYCODE_MOVE_END:
             if (event.hasNoModifiers()) {
-                 handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_DOWN);
+                handled = resurrectSelectionIfNeeded() || fullScroll(FOCUS_DOWN);
             }
             break;
 
@@ -1330,15 +1330,13 @@ bool GridView::commonKey(int keyCode, int count, KeyEvent& event) {
             //     always reverts to the top or bottom when receiving TAB focus from
             //     another widget.
             if (event.hasNoModifiers()) {
-                handled = resurrectSelectionIfNeeded()
-                      || sequenceScroll(FOCUS_FORWARD);
+                handled = resurrectSelectionIfNeeded() || sequenceScroll(FOCUS_FORWARD);
             } else if (event.hasModifiers(KeyEvent::META_SHIFT_ON)) {
-                handled = resurrectSelectionIfNeeded()
-                      || sequenceScroll(FOCUS_BACKWARD);
+                handled = resurrectSelectionIfNeeded() || sequenceScroll(FOCUS_BACKWARD);
             }
             break;
         }
-   }
+    }
 
     if (handled) {
         return true;
