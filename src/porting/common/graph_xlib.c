@@ -333,10 +333,10 @@ static void* X11EventProc(void*p) {
             down=event.type==KeyPress;
             keysym=XLookupKeysym(&event,0);
             for(i=0;i<sizeof(X11KEY2CD)/sizeof(X11KEY2CD[0]);i++){
-		if(keysym==X11KEY2CD[i].xkey){
-		    SENDKEY((key=X11KEY2CD[i].key),down);
-		    break;
-		}
+                if(keysym==X11KEY2CD[i].xkey){
+                    SENDKEY((key=X11KEY2CD[i].key),down);
+                    break;
+                }
             }
             LOGV("keycode:%d sym:%d %d",event.xkey.keycode,keysym,key);
             break;

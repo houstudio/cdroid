@@ -2,7 +2,6 @@
 #define __ANIMATED_IMAGE_DRAWABLE_H__
 #include <drawables/drawable.h>
 #include <core/handler.h>
-//#include <image-decoders/framesequence.h>
 namespace cdroid{
 class FrameSequence;
 class FrameSequenceState;
