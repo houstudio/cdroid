@@ -230,7 +230,6 @@ protected:
     int mTrackID;
     int mTPWidth;
     int mTPHeight;
-    int32_t mLastDownX,mLastDownY;
     int32_t mMinX,mMaxX;
     int32_t mMinY,mMaxY;
     int32_t mActionButton;

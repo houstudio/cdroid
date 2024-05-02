@@ -19,9 +19,11 @@ public:
    }
    int sendEvents(InputDevice&d,MTEvent*mts,int size,MotionEvent**eventOut){
       int eventCount = 0;
+      int32_t tmEVT = 0;
       for(int i=0;i<size;i++){
-         int32_t tmEVT = i*20*100000;
          d.putRawEvent({0,tmEVT},mts[i].type,mts[i].code,mts[i].value);
+	 if((mts[i].type==EV_SYN)&&(mts[i].code==SYN_REPORT))
+             tmEVT+=6*1000000;
       }
       eventCount = d.getEventCount();
       LOGI("%d Events",eventCount);

@@ -511,40 +511,38 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         }break;
     case EV_SYN:
         switch(code){
-        case SYN_MT_REPORT:
-            if(!mCoord.isEmpty()){
-                auto it = mTrack2Slot.find(mProp.id);  
-                int slot = (it!=mTrack2Slot.end())?it->second:0;
-		LOGD("track %d' slot=%d mTrack2Slot.size=%d",mProp.id,slot,mTrack2Slot.size());
-                mPointerProps [slot] = mProp;
-		mPointerCoords[slot] = mCoord;
-            }break;
         case SYN_REPORT:
+        case SYN_MT_REPORT:
 	    if(!mCoord.isEmpty()&&(mProp.id==-1)){
-		//mCurrBits.value = mLastBits.value;
-	        mProp.id = mTrackID;
-		mPointerProps[0] = mProp;
-		mPointerCoords[0]= mCoord;
+                //mCurrBits.value = mLastBits.value;
+                mProp.id = mTrackID;
+                mPointerProps[0] = mProp;
+                mPointerCoords[0]= mCoord;
+	    }else if(!mCoord.isEmpty()){
+                auto it = mTrack2Slot.find(mProp.id);
+                const int slot = (it!=mTrack2Slot.end())?it->second:0;
+                mPointerProps [slot] = mProp;
+                mPointerCoords[slot] = mCoord;
 	    }
+	    if(code==SYN_MT_REPORT)break;
             action = getActionByBits(pointIndex);
             mMoveTime =(tv.tv_sec * 1000LL + tv.tv_usec/1000);
             lastEvent = mEvents.size()>1?(MotionEvent*)mEvents.back():nullptr;
             pointerCount =(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)?std::max(mLastBits.count(),mCurrBits.count()):1;
-            if(0&&lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)){
+            if(lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)&&(mMoveTime-lastEvent->getEventTime()<5000)){
                 lastEvent->addSample(mMoveTime,mPointerCoords.data());
-                LOGI("%s",printEvent(mEvent).c_str());
-		//goto CLEAR_END;
+                LOGD("%s",printEvent(mEvent).c_str());
+		goto CLEAR_END;
             }else {
 		const bool useBackupProps = ((action==MotionEvent::ACTION_UP)||(action==MotionEvent::ACTION_POINTER_UP))&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT);
                 const PointerCoords  *coords = useBackupProps ? mPointerCoordsBak.data(): mPointerCoords.data();
                 const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
                 mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
                      0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
-                LOGI_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x prop.id=%d/%d]\n%s",mLastBits.value,mCurrBits.value,mProp.id,
-		   mTrackID,printEvent(mEvent).c_str());
+                LOGD_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x\n%s",mLastBits.value,mCurrBits.value,printEvent(mEvent).c_str());
             }
-                mEvent->setActionButton(mActionButton);
-                mEvent->setAction(action|(pointIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
+            mEvent->setActionButton(mActionButton);
+            mEvent->setAction(action|(pointIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
 
             LOGD_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x action=%d Poiter[%d]=(%.f,%.f)",mLastBits.value,
                 mCurrBits.value,action,pointIndex,mEvent->getX(pointIndex),mEvent->getY(pointIndex));
@@ -566,8 +564,6 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
 	    }
 
             if( int(mEvent->getHistorySize())>=0 ){
-                mLastDownX = mEvent->getX();
-                mLastDownY = mEvent->getY();
                 MotionEvent*e = MotionEvent::obtain(*mEvent);
                 mEvents.push_back(e);
             }
@@ -617,8 +613,7 @@ InputDeviceInfo::~InputDeviceInfo() {
 }
 
 void InputDeviceInfo::initialize(int32_t id, int32_t generation, int32_t controllerNumber,
-        const InputDeviceIdentifier& identifier, const std::string& alias, bool isExternal,
-        bool hasMic) {
+       const InputDeviceIdentifier& identifier, const std::string& alias, bool isExternal,bool hasMic) {
     mId = id;
     mGeneration = generation;
     mControllerNumber = controllerNumber;
@@ -649,7 +644,7 @@ void InputDeviceInfo::addSource(uint32_t source) {
 }
 
 void InputDeviceInfo::addMotionRange(int32_t axis, uint32_t source, float vmin, float vmax,
-        float flat, float fuzz, float resolution) {
+       float flat, float fuzz, float resolution) {
     MotionRange range;
     range.axis = axis;
     range.source = source;
@@ -709,7 +704,7 @@ std::string getInputDeviceConfigurationFilePathByName(const std::string& name,co
 }
 
 std::string getInputDeviceConfigurationFilePathByDeviceIdentifier(
-        const InputDeviceIdentifier& deviceIdentifier,const std::string& type) {
+      const InputDeviceIdentifier& deviceIdentifier,const std::string& type) {
     if (deviceIdentifier.vendor !=0 && deviceIdentifier.product != 0) {
         if (deviceIdentifier.version != 0) {// Try vendor product version.
             std::ostringstream name;
