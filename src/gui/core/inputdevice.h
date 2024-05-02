@@ -1,6 +1,5 @@
 #ifndef __INPUT_DEVICE_H__
 #define __INPUT_DEVICE_H__
-//#include <core/uievents.h>
 #include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <core/bitset.h>
@@ -231,10 +230,6 @@ protected:
     int mTrackID;
     int mTPWidth;
     int mTPHeight;
-    typedef struct{
-        PointerCoords coord;
-        PointerProperties prop; 
-    }TouchPoint;
     int32_t mLastDownX,mLastDownY;
     int32_t mMinX,mMaxX;
     int32_t mMinY,mMaxY;
@@ -246,7 +241,12 @@ protected:
     bool mTypeB;
     BitSet32 mLastBits,mCurrBits;
     std::map<int,int>mTrack2Slot;
-    std::map<int,TouchPoint>mPointMAP;
+    PointerCoords mCoord;
+    PointerProperties mProp;
+    std::vector<PointerCoords>mPointerCoords;
+    std::vector<PointerCoords>mPointerCoordsBak;
+    std::vector<PointerProperties>mPointerProps;
+    std::vector<PointerProperties>mPointerPropsBak;
     int getActionByBits(int&pointIndex);
     void setAxisValue(int axis,int value,bool isRelative);
     int isValidEvent(int type,int code,int value)override;

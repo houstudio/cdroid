@@ -65,7 +65,7 @@ public:
                     maxY = std::max(y,maxY);
                 }
             }
-            invalidate(minX,minY,maxX-minX+1,maxY-minY+1);
+            invalidate(minX-R,minY-R,maxX-minX+R+R,maxY-minY+R+R);
             break;
         default:break;
         }
@@ -98,7 +98,7 @@ int main(int argc,const char*argv[]){
     w->invalidate();
     Runnable run;
     run=[](){sendEvents();};
-    w->postDelayed(run,5000);
+    //w->postDelayed(run,5000);
     return app.exec();
 }
 

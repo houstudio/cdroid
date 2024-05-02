@@ -668,7 +668,6 @@ void Looper::removeMessages(const MessageHandler* handler, int what) {
         std::lock_guard<std::recursive_mutex> _l(mLock);
 
         for( auto it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
-            LOGD("what=%d,%d",it->message.what,what);
             if((it->handler==handler) && (it->message.what==what)){
                 it=mMessageEnvelopes.erase(it);
             }
