@@ -583,6 +583,26 @@ float MotionEvent::getHistoricalRawAxisValue(int32_t axis, size_t pointerIndex,
     return pc.getAxisValue(axis);
 }
 
+float MotionEvent::getHistoricalRawX(size_t pointerIndex, size_t historicalIndex) const {
+    return getHistoricalRawAxisValue(AXIS_X, pointerIndex, historicalIndex);
+}
+
+float MotionEvent::getHistoricalRawY(size_t pointerIndex, size_t historicalIndex) const {
+    return getHistoricalRawAxisValue(AXIS_Y, pointerIndex, historicalIndex);
+}
+
+float MotionEvent::getHistoricalAxisValue(int axis,size_t pointerIndex,size_t historicalIndex)const{
+    PointerCoords pc;
+    getHistoricalRawPointerCoords(pointerIndex,historicalIndex,pc);
+    return pc.getAxisValue(axis);
+}
+float MotionEvent::getHistoricalX(size_t pointerIndex, size_t historicalIndex) const{
+     return getHistoricalRawAxisValue(AXIS_X, pointerIndex, historicalIndex);
+}
+float MotionEvent::getHistoricalY(size_t pointerIndex, size_t historicalIndex) const{
+     return getHistoricalRawAxisValue(AXIS_Y, pointerIndex, historicalIndex);
+}
+
 template <typename T>
 static void appendUnless(T defValue, std::ostringstream& os,const std::string& key, T value) {
     if (/*DEBUG_CONCISE_TOSTRING &&*/ defValue==value) return;

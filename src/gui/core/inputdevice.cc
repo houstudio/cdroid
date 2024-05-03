@@ -362,7 +362,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     switch(axis){
     case MotionEvent::AXIS_X:
        switch(rotation){
-       case Display::ROTATION_0  : value -= mMinX ;break;
+       case Display::ROTATION_0  : value -= mMinX ; break;
        case Display::ROTATION_90 : axis = MotionEvent::AXIS_Y; value -= mMinX; break; /*value=value;*/
        case Display::ROTATION_180: value= mMaxX - value; break;
        case Display::ROTATION_270: axis = MotionEvent::AXIS_Y; value = mMaxX - value; break;//tested
@@ -394,8 +394,8 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
        }mCoord.setAxisValue(axis,value);
        break;
     case MotionEvent::AXIS_PRESSURE:
-       mCoord.setAxisValue(axis,value);break;
-    default:/*MotionEvent::AXIS_Z:*/break;
+       mCoord.setAxisValue(axis,value); break;
+    default:/*MotionEvent::AXIS_Z:*/ break;
     }/*endof switch(axis)*/
     switch(raw_axis){
     case ABS_X ... ABS_Z :
@@ -461,7 +461,7 @@ static std::string printEvent(MotionEvent*e){
        oss<<std::endl<<"   Pointer["<<i<<"].id="<<e->getPointerId(i)<<" ";
        oss<<"("<<e->getX(i)<<","<<e->getY(i)<<") {";
        for(int j=0;j<e->getHistorySize();j++){
-          oss<<"("<<e->getHistoricalRawX(i,j)<<","<<e->getHistoricalRawX(i,j)<<")";
+          oss<<"("<<e->getHistoricalX(i,j)<<","<<e->getHistoricalX(i,j)<<")";
        }
        oss<<"}";
     }
@@ -514,8 +514,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case SYN_REPORT:
         case SYN_MT_REPORT:
 	    if(!mCoord.isEmpty()&&(mProp.id==-1)){
-                //mCurrBits.value = mLastBits.value;
-                mProp.id = mTrackID;
+                //mProp.id = mTrackID;
                 mPointerProps[0] = mProp;
                 mPointerCoords[0]= mCoord;
 	    }else if(!mCoord.isEmpty()){
@@ -540,12 +539,10 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                 mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
                      0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
                 LOGD_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x\n%s",mLastBits.value,mCurrBits.value,printEvent(mEvent).c_str());
+                mEvent->setActionButton(mActionButton);
+                mEvent->setAction(action|(pointIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
             }
-            mEvent->setActionButton(mActionButton);
-            mEvent->setAction(action|(pointIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
 
-            LOGD_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x action=%d Poiter[%d]=(%.f,%.f)",mLastBits.value,
-                mCurrBits.value,action,pointIndex,mEvent->getX(pointIndex),mEvent->getY(pointIndex));
             if( mLastBits.count() > mCurrBits.count() ){
                 const uint32_t pointerIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
                 LOGD("clearbits %d %08x,%08x",pointerIndex,mLastBits.value,mCurrBits.value);
@@ -568,10 +565,10 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                 mEvents.push_back(e);
             }
 CLEAR_END:
-	    mCoord.clear();mProp.clear();
             mLastBits.value = mCurrBits.value;
+            mCoord.clear();mProp.clear();
             if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mTypeB==false) ){
-                mCurrBits.clear();//only typeA
+                mCurrBits.clear(); //only typeA
                 mTrack2Slot.clear();
 		for(int i=0;i<pointerCount;i++){mPointerCoords[i].clear();mPointerCoords[i].clear();};
             }/*endofSYN_REPORT*/

@@ -251,15 +251,16 @@ public:
     void getPointerCoords(int pointerIndex, PointerCoords& outPointerCoords){
         getHistoricalRawPointerCoords(pointerIndex,HISTORY_CURRENT,outPointerCoords);
     }
+    /*Raw AXIS Properties*/
     void getHistoricalRawPointerCoords(size_t pointerIndex, size_t historicalIndex,PointerCoords& outPointerCoords) const;
     float getHistoricalRawAxisValue(int32_t axis, size_t pointerIndex,size_t historicalIndex) const;
-    inline float getHistoricalRawX(size_t pointerIndex, size_t historicalIndex) const {
-        return getHistoricalRawAxisValue(AXIS_X, pointerIndex, historicalIndex);
-    }
+    float getHistoricalRawX(size_t pointerIndex, size_t historicalIndex) const;
+    float getHistoricalRawY(size_t pointerIndex, size_t historicalIndex) const;
 
-    inline float getHistoricalRawY(size_t pointerIndex, size_t historicalIndex) const {
-        return getHistoricalRawAxisValue(AXIS_Y, pointerIndex, historicalIndex);
-    }
+    /*AXIS Properties has been transformed*/
+    float getHistoricalAxisValue(int axis, size_t pointerIndex,size_t historicalIndex) const;
+    float getHistoricalX(size_t pointerIndex, size_t historicalIndex) const;
+    float getHistoricalY(size_t pointerIndex, size_t historicalIndex) const;
 
     inline const PointerProperties& getPointerProperties(size_t pointerIndex) const {
         return mPointerProperties[pointerIndex];
