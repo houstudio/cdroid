@@ -400,14 +400,16 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     switch(raw_axis){
     case ABS_X ... ABS_Z :
         mSlotID = 0 ; mTrackID = 0;
-        mDeviceClasses&=~INPUT_DEVICE_CLASS_TOUCH_MT;
+        mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
 	//mCurrBits.markBit(0);
         break;
     case ABS_MT_POSITION_X...ABS_MT_POSITION_Y:
-	mDeviceClasses|=INPUT_DEVICE_CLASS_TOUCH_MT;
+	mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH_MT;
 	break;
     case ABS_MT_SLOT:
-        mTypeB = true; mCurrBits.markBit(value);
+        mTypeB = true;
+        mSlotID = value ;
+        mCurrBits.markBit(value);
         break;
     case ABS_MT_TRACKING_ID:{
         mProp.id = value;
@@ -417,13 +419,11 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
             mCurrBits.markBit(mSlotID);
             it = mTrack2Slot.insert({value,mSlotID}).first;
 	    mPointerProps[mSlotID].id = value;
-            LOGV("TRACKID=%d %08x,%08x",value,mLastBits.value,mCurrBits.value);
-        }else if(value==-1){
-            const uint32_t pointerIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
+            LOGV("Slot=%d TRACKID=%d %08x,%08x",mSlotID,value,mLastBits.value,mCurrBits.value);
+        }else if((value==-1)&&mTypeB){//for TypeB
+            const uint32_t pointerIndex = mSlotID;//BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
             LOGV("clearbits %d %08x,%08x",pointerIndex,mLastBits.value,mCurrBits.value);
             mCurrBits.clearBit(pointerIndex);
-            //auto it = mTrack2Slot.find(value);
-            //if(it!=mTrack2Slot.end())mTrack2Slot.erase(it);
         }
         if(value!=-1){
             mSlotID = it->second;
@@ -502,7 +502,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
     case EV_ABS:
         switch(code){
         case ABS_X ... ABS_Z :
-        case ABS_MT_TOUCH_MAJOR...ABS_MT_TOOL_Y:
+        case ABS_MT_SLOT ... ABS_MT_TOOL_Y://MT_TOUCH_MAJOR...MT_TOOL_Y
              setAxisValue(code,value,false);break;
         }break;
     case EV_REL:
