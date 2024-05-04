@@ -169,7 +169,7 @@ TEST_F(INPUTDEVICE,MTA){//TypeA Events
       {EV_SYN,SYN_MT_REPORT,0},
       {EV_SYN,SYN_REPORT,0},//35
 
-      {EV_ABS,ABS_MT_TRACKING_ID,2},//36
+      {EV_ABS,ABS_MT_TRACKING_ID,2},//36 POINTER_UP finger 1(tracckid 1) isup
       {EV_ABS,ABS_MT_POSITION_X ,120},
       {EV_ABS,ABS_MT_POSITION_Y ,130},
       {EV_SYN,SYN_MT_REPORT,0},
@@ -225,6 +225,24 @@ TEST_F(INPUTDEVICE,MTA){//TypeA Events
    ASSERT_EQ(OutEvents[3]->getY(0),mts[29].value);//30
    ASSERT_EQ(OutEvents[3]->getX(1),mts[32].value);//120
    ASSERT_EQ(OutEvents[3]->getY(1),mts[33].value);//130
+
+   ASSERT_EQ(OutEvents[4]->getActionMasked(),MotionEvent::ACTION_POINTER_UP);
+   ASSERT_EQ(OutEvents[4]->getActionIndex(),1);
+   ASSERT_EQ(OutEvents[4]->getPointerCount(),2);
+   ASSERT_EQ(OutEvents[4]->getX(0),mts[28].value);//123
+   ASSERT_EQ(OutEvents[4]->getY(0),mts[29].value);//134
+
+   ASSERT_EQ(OutEvents[5]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[5]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[5]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[5]->getX(0),mts[42].value);//123
+   ASSERT_EQ(OutEvents[5]->getY(0),mts[43].value);//134
+
+   ASSERT_EQ(OutEvents[6]->getActionMasked(),MotionEvent::ACTION_UP);
+   ASSERT_EQ(OutEvents[6]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[6]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[6]->getX(0),mts[42].value);//123
+   ASSERT_EQ(OutEvents[6]->getY(0),mts[43].value);//134
 }
 
 TEST_F(INPUTDEVICE,MTB){//Type B Events
