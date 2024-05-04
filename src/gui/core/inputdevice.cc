@@ -349,9 +349,10 @@ static int ABS2AXIS(int absaxis){
     case ABS_RZ:/*REL_RZ*/return MotionEvent::AXIS_RZ;
 
     case ABS_MT_PRESSURE:
-    case ABS_PRESSURE:return MotionEvent::AXIS_PRESSURE;
-    
-    case ABS_WHEEL:/*REL_WHEEL*/ return MotionEvent::AXIS_PRESSURE;
+    case ABS_PRESSURE: return MotionEvent::AXIS_PRESSURE;
+    case ABS_TOOL_WIDTH:
+    case ABS_MT_TOUCH_MAJOR: return MotionEvent::AXIS_SIZE;
+    case ABS_WHEEL:/*REL_WHEEL*/ return MotionEvent::AXIS_WHEEL;
     default:return  -1; 
     }
 }
