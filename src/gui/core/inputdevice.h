@@ -8,6 +8,7 @@
 #include <memory>
 #include <time.h>
 #include <core/preferences.h>
+#include <core/sparsearray.h>
 namespace cdroid{
 struct InputDeviceIdentifier {
     InputDeviceIdentifier() :
@@ -239,7 +240,7 @@ protected:
     bool mInvertY;
     bool mTypeB;
     BitSet32 mLastBits,mCurrBits;
-    std::map<int,int>mTrack2Slot;
+    SparseArray<int,-1>mTrack2Slot;
     PointerCoords mCoord;
     PointerProperties mProp;
     std::vector<PointerCoords>mPointerCoords;
