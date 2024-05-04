@@ -501,3 +501,128 @@ TEST_F(INPUTDEVICE,MTB2){//Type B Events
    ASSERT_EQ(OutEvents[6]->getY(0),mts[39].value);
 
 }
+
+TEST_F(INPUTDEVICE,MTB3){//Type B Events,test SLOT not start from 0
+   TouchDevice d(INJECTDEV_TOUCH);
+   MTEvent mts[]={
+     {EV_KEY,BTN_TOUCH,1},          //ACTION_DOWN
+     {EV_ABS,ABS_MT_SLOT,10},
+     {EV_ABS,ABS_MT_TRACKING_ID,45},
+     {EV_ABS,ABS_MT_POSITION_X ,10},
+     {EV_ABS,ABS_MT_POSITION_Y ,20},
+     {EV_SYN,SYN_MT_REPORT,0},//5
+     {EV_SYN,SYN_REPORT,0},
+
+     {EV_ABS,ABS_MT_SLOT,10},//7
+     {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_MOVE
+     {EV_ABS,ABS_MT_POSITION_X ,20},
+     {EV_ABS,ABS_MT_POSITION_Y ,30},//10
+     {EV_SYN,SYN_MT_REPORT,0},
+     {EV_SYN,SYN_REPORT,0},
+
+     {EV_ABS,ABS_MT_SLOT,10},//13
+     {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_POINTER_DOWN finger 0
+     {EV_ABS,ABS_MT_POSITION_X ,20},//15
+     {EV_ABS,ABS_MT_POSITION_Y ,30},
+     {EV_SYN,SYN_MT_REPORT,0},
+     {EV_ABS,ABS_MT_SLOT,11},
+     {EV_ABS,ABS_MT_TRACKING_ID,46},//19 ACTION_POINTER_DOWN finger 1
+     {EV_ABS,ABS_MT_POSITION_X ,40},//20
+     {EV_ABS,ABS_MT_POSITION_Y ,100},
+     {EV_SYN,SYN_MT_REPORT,0},
+     {EV_SYN,SYN_REPORT,0},
+
+     {EV_ABS,ABS_MT_SLOT,10},//24  ACTION_MOVE
+     {EV_ABS,ABS_MT_TRACKING_ID,45},//25 finger 0 moving
+     {EV_ABS,ABS_MT_POSITION_X ,22},
+     {EV_ABS,ABS_MT_POSITION_Y ,32},
+     {EV_SYN,SYN_MT_REPORT,0},
+     {EV_SYN,SYN_REPORT,0},
+
+     {EV_ABS,ABS_MT_SLOT,11},//30 ACTION_MOVE
+     {EV_ABS,ABS_MT_TRACKING_ID,46},//fingler 1
+     {EV_ABS,ABS_MT_POSITION_X ,42},
+     {EV_ABS,ABS_MT_POSITION_Y ,102},
+     {EV_SYN,SYN_MT_REPORT,0},
+     {EV_SYN,SYN_REPORT,0},
+
+     {EV_ABS,ABS_MT_SLOT,10},//36
+     {EV_ABS,ABS_MT_TRACKING_ID,45},//37 ACTION_POINTER_UP finger 1
+     {EV_ABS,ABS_MT_POSITION_X ,22},
+     {EV_ABS,ABS_MT_POSITION_Y ,32},
+     {EV_SYN,SYN_MT_REPORT,0},//40
+     {EV_ABS,ABS_MT_SLOT,11},//fingler 1 is up
+     {EV_ABS,ABS_MT_TRACKING_ID,-1},
+     {EV_SYN,SYN_MT_REPORT,0},
+     {EV_SYN,SYN_REPORT,0},
+
+     {EV_ABS,ABS_MT_SLOT,10},//45 ACTION_UP
+     {EV_ABS,ABS_MT_TRACKING_ID,-1},//finger 0 us up
+     {EV_SYN,SYN_MT_REPORT,0},//50
+     {EV_SYN,SYN_REPORT,0},
+   };
+
+   EventCount = sendEvents(d,mts,sizeof(mts)/sizeof(MTEvent),OutEvents);
+   ASSERT_EQ(EventCount,7);
+   ASSERT_EQ(OutEvents[0]->getActionMasked(),MotionEvent::ACTION_DOWN);
+   ASSERT_EQ(OutEvents[0]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[0]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[0]->getPointerId(0),mts[2].value);
+   ASSERT_EQ(OutEvents[0]->getX(),mts[3].value);
+   ASSERT_EQ(OutEvents[0]->getY(),mts[4].value);
+
+   ASSERT_EQ(OutEvents[1]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[1]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[1]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[1]->getPointerId(0),mts[8].value);
+   ASSERT_EQ(OutEvents[1]->getX(),mts[9].value);
+   ASSERT_EQ(OutEvents[1]->getY(),mts[10].value);
+
+   ASSERT_EQ(OutEvents[2]->getActionMasked(),MotionEvent::ACTION_POINTER_DOWN);
+   ASSERT_EQ(OutEvents[2]->getActionIndex(),1);
+   ASSERT_EQ(OutEvents[2]->getPointerCount(),2);
+   ASSERT_EQ(OutEvents[2]->getPointerId(0),mts[14].value);
+   ASSERT_EQ(OutEvents[2]->getPointerId(1),mts[19].value);
+   ASSERT_EQ(OutEvents[2]->getX(0),mts[15].value);
+   ASSERT_EQ(OutEvents[2]->getY(0),mts[16].value);
+   ASSERT_EQ(OutEvents[2]->getX(1),mts[20].value);
+   ASSERT_EQ(OutEvents[2]->getY(1),mts[21].value);
+
+   ASSERT_EQ(OutEvents[3]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[3]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[3]->getPointerCount(),2);
+   ASSERT_EQ(OutEvents[3]->getPointerId(0),mts[14].value);
+   ASSERT_EQ(OutEvents[3]->getPointerId(1),mts[19].value);
+   ASSERT_EQ(OutEvents[3]->getX(0),mts[26].value);
+   ASSERT_EQ(OutEvents[3]->getY(0),mts[27].value);
+   ASSERT_EQ(OutEvents[3]->getX(1),mts[20].value);
+   ASSERT_EQ(OutEvents[3]->getY(1),mts[21].value);
+
+   ASSERT_EQ(OutEvents[4]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[4]->getActionIndex(),1);
+   ASSERT_EQ(OutEvents[4]->getPointerCount(),2);
+   ASSERT_EQ(OutEvents[4]->getPointerId(0),mts[14].value);
+   ASSERT_EQ(OutEvents[4]->getPointerId(1),mts[31].value);
+   ASSERT_EQ(OutEvents[4]->getX(0),mts[26].value);
+   ASSERT_EQ(OutEvents[4]->getY(0),mts[27].value);
+   ASSERT_EQ(OutEvents[4]->getX(1),mts[32].value);
+   ASSERT_EQ(OutEvents[4]->getY(1),mts[33].value);
+
+   ASSERT_EQ(OutEvents[5]->getActionMasked(),MotionEvent::ACTION_POINTER_UP);
+   ASSERT_EQ(OutEvents[5]->getActionIndex(),1);
+   ASSERT_EQ(OutEvents[5]->getPointerCount(),2);
+   ASSERT_EQ(OutEvents[5]->getPointerId(0),mts[14].value);
+   ASSERT_EQ(OutEvents[5]->getPointerId(1),mts[19].value);
+   ASSERT_EQ(OutEvents[5]->getX(0),mts[38].value);
+   ASSERT_EQ(OutEvents[5]->getY(0),mts[39].value);
+   ASSERT_EQ(OutEvents[5]->getX(1),mts[32].value);
+   ASSERT_EQ(OutEvents[5]->getY(1),mts[33].value);
+
+   ASSERT_EQ(OutEvents[6]->getActionMasked(),MotionEvent::ACTION_UP);
+   ASSERT_EQ(OutEvents[6]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[6]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[6]->getPointerId(0),mts[37].value);
+   ASSERT_EQ(OutEvents[6]->getX(0),mts[38].value);
+   ASSERT_EQ(OutEvents[6]->getY(0),mts[39].value);
+
+}
