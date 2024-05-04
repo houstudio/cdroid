@@ -475,7 +475,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
     LOGV("%lu:%04u %d,%d,%d",tv.tv_sec,tv.tv_usec,type,code,value);
     switch(type){
     case EV_KEY:
-        if(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)break;
+        //if(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)break;
         switch(code){
         case BTN_TOUCH :
         case BTN_STYLUS:
@@ -513,11 +513,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         switch(code){
         case SYN_REPORT:
         case SYN_MT_REPORT:
-	    if(!mCoord.isEmpty()&&(mProp.id==-1)){
-                //mProp.id = mTrackID;
-                mPointerProps[0] = mProp;
-                mPointerCoords[0]= mCoord;
-	    }else if(!mCoord.isEmpty()){
+	    {
                 auto it = mTrack2Slot.find(mProp.id);
                 const int slot = (it!=mTrack2Slot.end())?it->second:0;
                 mPointerProps [slot] = mProp;
