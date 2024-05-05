@@ -2199,7 +2199,7 @@ void TextView::onDraw(Canvas& canvas) {
     }
 
     const int cursorOffsetVertical = voffsetCursor - voffsetText;
-    if( (mShadowDx>0.05f)||(mShadowDy>0.05f)){
+    if( (std::abs(mShadowDx)>0.05f)||(std::abs(mShadowDy)>0.05f)){
         canvas.set_color(mShadowColor);
         canvas.translate(mShadowDx,mShadowDy);
         layout->draw(canvas);
