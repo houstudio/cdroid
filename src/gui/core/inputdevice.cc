@@ -403,7 +403,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     switch(raw_axis){
     case ABS_X ... ABS_Z :
         mSlotID = 0 ; mTrackID = 0;
-	mProp.id = 0;
+        mProp.id = 0;
         mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
         break;
     case ABS_MT_POSITION_X...ABS_MT_POSITION_Y:
@@ -527,7 +527,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             pointerCount =(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)?std::max(mLastBits.count(),mCurrBits.count()):1;
             if(lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)&&(mMoveTime-lastEvent->getEventTime()<5000)){
                 lastEvent->addSample(mMoveTime,mPointerCoords.data());
-                LOGD("%s",printEvent(mEvent).c_str());
+                LOGV("%s",printEvent(lastEvent).c_str());
 		goto CLEAR_END;
             }else {
 		const bool useBackupProps = ((action==MotionEvent::ACTION_UP)||(action==MotionEvent::ACTION_POINTER_UP))&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT);
@@ -535,14 +535,14 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                 const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
                 mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
                      0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
-                LOGD_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x\n%s",mLastBits.value,mCurrBits.value,printEvent(mEvent).c_str());
+                LOGV_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x\n%s",mLastBits.value,mCurrBits.value,printEvent(mEvent).c_str());
                 mEvent->setActionButton(mActionButton);
                 mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
             }
 
             if( mLastBits.count() > mCurrBits.count() ){
                 const uint32_t pointerIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
-                LOGD("clearbits %d %08x,%08x trackslot.size=%d",pointerIndex,mLastBits.value,mCurrBits.value, mTrack2Slot.size());
+                LOGV("clearbits %d %08x,%08x trackslot.size=%d",pointerIndex,mLastBits.value,mCurrBits.value, mTrack2Slot.size());
                 if(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) mCurrBits.clearBit(pointerIndex);
                 if( pointerIndex<mTrack2Slot.size())
                     mTrack2Slot.removeAt(pointerIndex);

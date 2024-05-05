@@ -209,11 +209,11 @@ public:/*public classes*/
         virtual bool onFailedToRecycleView(ViewHolder& holder);
         virtual void onViewAttachedToWindow(ViewHolder& holder);
         virtual void onViewDetachedFromWindow(ViewHolder& holder);
-        virtual bool hasObservers()const final;
+        bool hasObservers()const final;
         void registerAdapterDataObserver(AdapterDataObserver* observer);
         void unregisterAdapterDataObserver(AdapterDataObserver* observer);
-        void onAttachedToRecyclerView(RecyclerView& recyclerView);
-        void onDetachedFromRecyclerView(RecyclerView& recyclerView);
+        virtual void onAttachedToRecyclerView(RecyclerView& recyclerView);
+        virtual void onDetachedFromRecyclerView(RecyclerView& recyclerView);
         virtual void notifyDataSetChanged()final;
         virtual void notifyItemChanged(int position)final;
         virtual void notifyItemChanged(int position,Object* payload)final;

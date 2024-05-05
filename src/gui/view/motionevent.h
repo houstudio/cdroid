@@ -248,20 +248,31 @@ public:
 
     nsecs_t getHistoricalEventTime(size_t historicalIndex) const;
     nsecs_t getHistoricalEventTimeNanos(size_t historicalIndex) const;
-    void getPointerCoords(int pointerIndex, PointerCoords& outPointerCoords){
-        getHistoricalRawPointerCoords(pointerIndex,HISTORY_CURRENT,outPointerCoords);
-    }
-    /*Raw AXIS Properties*/
+
+    ////////////////////////////////// Raw AXIS Properties ///////////////////////////////////
+    const PointerCoords& getRawPointerCoords(size_t pointerIndex) const;
     void getHistoricalRawPointerCoords(size_t pointerIndex, size_t historicalIndex,PointerCoords& outPointerCoords) const;
     float getHistoricalRawAxisValue(int32_t axis, size_t pointerIndex,size_t historicalIndex) const;
     float getHistoricalRawX(size_t pointerIndex, size_t historicalIndex) const;
     float getHistoricalRawY(size_t pointerIndex, size_t historicalIndex) const;
+    float getRawAxisValue(int32_t axis, size_t pointerIndex) const;
+    inline float getRawX(size_t pointerIndex) const { return getRawAxisValue(AXIS_X, pointerIndex); }
+    inline float getRawY(size_t pointerIndex) const { return getRawAxisValue(AXIS_Y, pointerIndex); }
 
-    /*AXIS Properties has been transformed*/
+    /////////////////////// AXIS Properties has been transformed //////////////////////////////
+    void getPointerCoords(int pointerIndex, PointerCoords& outPointerCoords)const{
+        getHistoricalRawPointerCoords(pointerIndex,HISTORY_CURRENT,outPointerCoords);
+    }
+    void getHistoricalPointerCoords(size_t pointerIndex, size_t historicalIndex,PointerCoords& outPointerCoords) const;
     float getHistoricalAxisValue(int axis, size_t pointerIndex,size_t historicalIndex) const;
     float getHistoricalX(size_t pointerIndex, size_t historicalIndex) const;
     float getHistoricalY(size_t pointerIndex, size_t historicalIndex) const;
+    float getAxisValue(int32_t axis)const;
+    float getAxisValue(int32_t axis, size_t pointerIndex)const;
+    float getX(size_t pointerIndex=0) const { return getAxisValue(AXIS_X,pointerIndex); }
+    float getY(size_t pointerIndex=0) const { return getAxisValue(AXIS_Y,pointerIndex); }
 
+    //////////////////////////////////////////////////////////////////////////////////////////    
     inline const PointerProperties& getPointerProperties(size_t pointerIndex) const {
         return mPointerProperties[pointerIndex];
     }
@@ -283,19 +294,6 @@ public:
         return mPointerProperties[pointerIndex].toolType;
     }
     inline nsecs_t getEventTime() const override{ return mSampleEventTimes[getHistorySize()]; }
-    const PointerCoords& getRawPointerCoords(size_t pointerIndex) const;
-    float getRawAxisValue(int32_t axis, size_t pointerIndex) const;
-    inline float getRawX(size_t pointerIndex) const {
-        return getRawAxisValue(AXIS_X, pointerIndex);
-    }
-
-    inline float getRawY(size_t pointerIndex) const {
-        return getRawAxisValue(AXIS_Y, pointerIndex);
-    }
-    float getAxisValue(int32_t axis)const;
-    float getAxisValue(int32_t axis, size_t pointerIndex)const;
-    float getX(size_t pointer=0)const{return getAxisValue(AXIS_X,pointer);}
-    float getY(size_t pointer=0)const{return getAxisValue(AXIS_Y,pointer);}
     inline float getPressure(size_t pointerIndex) const {
         return getAxisValue(AXIS_PRESSURE, pointerIndex);
     }
