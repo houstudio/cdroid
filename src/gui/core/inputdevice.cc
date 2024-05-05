@@ -328,7 +328,8 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mButtonState  = 0;
     mPointerCoords.resize(16);
     mPointerProps.resize(16);
-    mCoord.clear();mProp.clear();
+    mCoord.clear();
+    mProp.clear();
     mDeviceInfo.addSource(SOURCE_CLASS_POINTER);
     LOGI("screen(%d,%d) rotation=%d [%s] X(%d,%d) Y(%d,%d) invert=%d,%d switchXY=%d",mScreenWidth, mScreenHeight,
         display.getRotation(),section.c_str(),mMinX,mMaxX,mMinY,mMaxY,mInvertX,mInvertY,mSwitchXY);
@@ -359,7 +360,7 @@ static int ABS2AXIS(int absaxis){
 
 void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
-    int axis = ABS2AXIS(raw_axis);
+    int slot, axis = ABS2AXIS(raw_axis);
     switch(axis){
     case MotionEvent::AXIS_X:
        switch(rotation){
@@ -398,6 +399,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
        mCoord.setAxisValue(axis,value); break;
     default:/*MotionEvent::AXIS_Z:*/ break;
     }/*endof switch(axis)*/
+
     switch(raw_axis){
     case ABS_X ... ABS_Z :
         mSlotID = 0 ; mTrackID = 0;
@@ -410,25 +412,22 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
         mTypeB = true;
         mSlotID = value ;
         break;
-    case ABS_MT_TRACKING_ID:{
+    case ABS_MT_TRACKING_ID:
         mProp.id = value;
-        int slot=mTrack2Slot.get(value,-1);/*value is trackid*/
+        slot = mTrack2Slot.get(value,-1);/*value is trackid*/
         if( (slot ==-1) && (value!=-1) ){
             int index = mTrack2Slot.size();
             mCurrBits.markBit(index);
             mTrack2Slot.put(value,(mTypeB?mSlotID:index));
             mPointerProps[index].id = value;
+	    if( mTypeB==false ) mSlotID = index;
             LOGV("Slot=%d TRACKID=%d %08x,%08x",mSlotID,value,mLastBits.value,mCurrBits.value);
         }else if((value==-1)&&mTypeB){//for TypeB
             const uint32_t pointerIndex = mTrack2Slot.indexOfValue(mSlotID);//BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
             LOGV("clearbits %d %08x,%08x",pointerIndex,mLastBits.value,mCurrBits.value);
             mCurrBits.clearBit(pointerIndex);
         }
-        if(value!=-1){
-            mSlotID = mTrack2Slot.get(value);
-            mTrackID= value;
-        }
-    }break;
+        break;
     default:break;
     }
 }
@@ -560,6 +559,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             if( int(mEvent->getHistorySize())>=0 ){
                 MotionEvent*e = MotionEvent::obtain(*mEvent);
                 mEvents.push_back(e);
+                mEvent->recycle();
             }
 CLEAR_END:
             mLastBits.value = mCurrBits.value;
@@ -567,7 +567,7 @@ CLEAR_END:
             if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mTypeB==false) ){
                 mCurrBits.clear(); //only typeA
                 mTrack2Slot.clear();
-		for(int i=0;i<pointerCount;i++){mPointerCoords[i].clear();mPointerCoords[i].clear();};
+                for(int i=0;i<pointerCount;i++){mPointerCoords[i].clear();mPointerCoords[i].clear();};
             }/*endofSYN_REPORT*/
         }break;/*caseof EV_SYN*/
     }

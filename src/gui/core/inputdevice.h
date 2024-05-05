@@ -4,7 +4,6 @@
 #include <view/motionevent.h>
 #include <core/bitset.h>
 #include <functional>
-#include <map>
 #include <memory>
 #include <time.h>
 #include <core/preferences.h>
