@@ -1932,6 +1932,7 @@ void TextView::setShadowLayer(float radius, float dx, float dy, int color){
     mShadowDx = dx;
     mShadowDy = dy;
     mShadowColor = color;
+    invalidate();
 }
 
 float TextView::getShadowRadius()const{
@@ -2198,6 +2199,12 @@ void TextView::onDraw(Canvas& canvas) {
     }
 
     const int cursorOffsetVertical = voffsetCursor - voffsetText;
+    if( (mShadowDx>0.05f)||(mShadowDy>0.05f)){
+        canvas.set_color(mShadowColor);
+        canvas.translate(mShadowDx,mShadowDy);
+        layout->draw(canvas);
+        canvas.translate(-mShadowDx,-mShadowDy);
+    }
     canvas.set_color(color);
     layout->draw(canvas);
     mLayout->getCaretRect(mCaretRect);
