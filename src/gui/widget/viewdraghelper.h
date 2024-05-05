@@ -73,13 +73,13 @@ private:
 
     // Last known position/pointer tracking
     int mActivePointerId = INVALID_POINTER;
-    std::vector<float> mInitialMotionX;
-    std::vector<float> mInitialMotionY;
-    std::vector<float> mLastMotionX;
-    std::vector<float> mLastMotionY;
-    std::vector<int> mInitialEdgesTouched;
-    std::vector<int> mEdgeDragsInProgress;
-    std::vector<int> mEdgeDragsLocked;
+    std::map<int,float> mInitialMotionX;
+    std::map<int,float> mInitialMotionY;
+    std::map<int,float> mLastMotionX;
+    std::map<int,float> mLastMotionY;
+    std::map<int,int> mInitialEdgesTouched;
+    std::map<int,int> mEdgeDragsInProgress;
+    std::map<int,int> mEdgeDragsLocked;
     int mPointersDown;
 
     VelocityTracker* mVelocityTracker;

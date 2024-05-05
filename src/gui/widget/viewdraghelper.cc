@@ -294,13 +294,13 @@ void ViewDragHelper::clearMotionHistory(int pointerId) {
 
 void ViewDragHelper::ensureMotionHistorySizeForId(int pointerId) {
     if (mInitialMotionX.size() <= pointerId) {
-        mInitialMotionX.resize(pointerId + 1);// = imx;
-        mInitialMotionY.resize(pointerId + 1);// = imy;
-        mLastMotionX.resize(pointerId + 1);// = lmx;
-        mLastMotionY.resize(pointerId + 1);// = lmy;
-        mInitialEdgesTouched.resize(pointerId + 1);// = iit;
-        mEdgeDragsInProgress.resize(pointerId + 1);// = edip;
-        mEdgeDragsLocked.resize(pointerId + 1);// = edl;
+        //mInitialMotionX.resize(pointerId + 1);// = imx;
+        //mInitialMotionY.resize(pointerId + 1);// = imy;
+        //mLastMotionX.resize(pointerId + 1);// = lmx;
+        //mLastMotionY.resize(pointerId + 1);// = lmy;
+        //mInitialEdgesTouched.resize(pointerId + 1);// = iit;
+        //mEdgeDragsInProgress.resize(pointerId + 1);// = edip;
+        //mEdgeDragsLocked.resize(pointerId + 1);// = edl;
     }
 }
 
@@ -748,7 +748,8 @@ bool ViewDragHelper::isEdgeTouched(int edges)const{
 }
 
 bool ViewDragHelper::isEdgeTouched(int edges, int pointerId)const{
-        return isPointerDown(pointerId) && (mInitialEdgesTouched[pointerId] & edges) != 0;
+    auto it = mInitialEdgesTouched.find(pointerId);
+    return isPointerDown(pointerId) && (it->second & edges) != 0;
 }
 
 void ViewDragHelper::releaseViewForPointerUp() {
