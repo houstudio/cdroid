@@ -1873,9 +1873,9 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
             }
         } break;
 
-    case MotionEvent::ACTION_POINTER_UP: {
-            onPointerUp(e);
-        } break;
+    case MotionEvent::ACTION_POINTER_UP:
+        onPointerUp(e);
+        break;
 
     case MotionEvent::ACTION_UP: {
             mVelocityTracker->addMovement(*vtev);
@@ -1889,9 +1889,9 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
             resetTouch();
         } break;
 
-    case MotionEvent::ACTION_CANCEL: {
-            cancelTouch();
-        } break;
+    case MotionEvent::ACTION_CANCEL:
+        cancelTouch();
+        break;
     }
 
     if (!eventAddedToVelocityTracker) {

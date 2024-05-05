@@ -209,7 +209,7 @@ public:/*public classes*/
         virtual bool onFailedToRecycleView(ViewHolder& holder);
         virtual void onViewAttachedToWindow(ViewHolder& holder);
         virtual void onViewDetachedFromWindow(ViewHolder& holder);
-        bool hasObservers()const final;
+        bool hasObservers()const;
         void registerAdapterDataObserver(AdapterDataObserver* observer);
         void unregisterAdapterDataObserver(AdapterDataObserver* observer);
         virtual void onAttachedToRecyclerView(RecyclerView& recyclerView);
