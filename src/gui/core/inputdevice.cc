@@ -371,45 +371,49 @@ int TouchDevice::ABS2AXIS(int absaxis){
     }
 }
 
+#define USE_TRACKINGID_AS_POINTERID 0
+/*Android use 0->PointerCount as PointerID
+ *other PointerID will caused many crashes */
+
 void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
     int slot, axis = ABS2AXIS(raw_axis);
     switch(axis){
     case MotionEvent::AXIS_X:
-       switch(rotation){
-       case Display::ROTATION_0  : value -= mMinX ; break;
-       case Display::ROTATION_90 : axis = MotionEvent::AXIS_Y; value -= mMinX; break; /*value=value;*/
-       case Display::ROTATION_180: value= mMaxX - value; break;
-       case Display::ROTATION_270: axis = MotionEvent::AXIS_Y; value = mMaxX - value; break;//tested
-       }
+        switch(rotation){
+        case Display::ROTATION_0  : value -= mMinX ; break;
+        case Display::ROTATION_90 : axis = MotionEvent::AXIS_Y; value -= mMinX; break; /*value=value;*/
+        case Display::ROTATION_180: value= mMaxX - value; break;
+        case Display::ROTATION_270: axis = MotionEvent::AXIS_Y; value = mMaxX - value; break;//tested
+        }
 
-       if(mInvertX)value = mMaxX - value + mMinX;
-       if(mSwitchXY){
-           value = (value * mScreenWidth)/mTPHeight;
-           axis= MotionEvent::AXIS_Y;
-       }else if(mScreenWidth != mTPWidth){
-           value = (value * mScreenWidth)/mTPWidth;
-       }
-       mCoord.setAxisValue(axis,value);
-       break;
+        if(mInvertX)value = mMaxX - value + mMinX;
+        if(mSwitchXY){
+            value = (value * mScreenWidth)/mTPHeight;
+            axis= MotionEvent::AXIS_Y;
+        }else if(mScreenWidth != mTPWidth){
+            value = (value * mScreenWidth)/mTPWidth;
+        }
+        mCoord.setAxisValue(axis,value);
+        break;
     case MotionEvent::AXIS_Y:
-       switch(rotation){
-       case Display::ROTATION_0  : value -= mMinY; break;
-       case Display::ROTATION_90 : axis = MotionEvent::AXIS_X; value = mMaxY - value; break;
-       case Display::ROTATION_180: value= mMaxY - value; break;
-       case Display::ROTATION_270: axis = MotionEvent::AXIS_X; value -= mMinY ; break;
-       }
+        switch(rotation){
+        case Display::ROTATION_0  : value -= mMinY; break;
+        case Display::ROTATION_90 : axis = MotionEvent::AXIS_X; value = mMaxY - value; break;
+        case Display::ROTATION_180: value= mMaxY - value; break;
+        case Display::ROTATION_270: axis = MotionEvent::AXIS_X; value -= mMinY ; break;
+        }
 
-       if(mInvertY)value = mMaxY - value + mMinY;
-       if(mSwitchXY){
-	   value = (value * mScreenHeight)/mTPWidth;
-           axis= MotionEvent::AXIS_X;
-       }else{
-           value = (value * mScreenHeight)/mTPHeight;
-       }mCoord.setAxisValue(axis,value);
-       break;
+        if(mInvertY)value = mMaxY - value + mMinY;
+        if(mSwitchXY){
+            value = (value * mScreenHeight)/mTPWidth;
+            axis= MotionEvent::AXIS_X;
+        }else{
+            value = (value * mScreenHeight)/mTPHeight;
+        }mCoord.setAxisValue(axis,value);
+        break;
     case MotionEvent::AXIS_PRESSURE:
-       mCoord.setAxisValue(axis,value); break;
+        mCoord.setAxisValue(axis,value); break;
     default:/*MotionEvent::AXIS_Z:*/ break;
     }/*endof switch(axis)*/
 
@@ -420,27 +424,31 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
         mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
         break;
     case ABS_MT_POSITION_X...ABS_MT_POSITION_Y:
-	mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH_MT;
+        mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH_MT;
 	break;
     case ABS_MT_SLOT:
         mTypeB = true;
         mSlotID = value ;
         break;
     case ABS_MT_TRACKING_ID:
-        mProp.id = value;
-        slot = mTrack2Slot.get(value,-1);/*value is trackid*/
+        slot = mTrack2Slot.get(mTrackID = value,-1);/*value is trackid*/
         if( (slot ==-1) && (value!=-1) ){
-            int index = mTrack2Slot.size();
+            const int index = mTrack2Slot.size();
             mCurrBits.markBit(index);
-            mTrack2Slot.put(value,(mTypeB?mSlotID:index));
-            mPointerProps[index].id = value;
-	    if( mTypeB==false ) mSlotID = index;
+            mTrack2Slot.put(mTrackID,(mTypeB?mSlotID:index));
+            if( mTypeB==false ) mSlotID = index;
+            slot = index;
             LOGV("Slot=%d TRACKID=%d %08x,%08x",mSlotID,value,mLastBits.value,mCurrBits.value);
         }else if((value==-1)&&mTypeB){//for TypeB
-            const uint32_t pointerIndex = mTrack2Slot.indexOfValue(mSlotID);//BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
+            const uint32_t pointerIndex = mTrack2Slot.indexOfValue(mSlotID);
             LOGV("clearbits %d %08x,%08x",pointerIndex,mLastBits.value,mCurrBits.value);
             mCurrBits.clearBit(pointerIndex);
         }
+#if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
+		mProp.id = mTrackID;
+#else
+		mProp.id = slot;
+#endif
         break;
     default:break;
     }
@@ -454,7 +462,7 @@ int TouchDevice::getActionByBits(int& pointIndex){
     const uint32_t diffBits = mLastBits.value^mCurrBits.value;
     pointIndex = diffBits?BitSet32::firstMarkedBit(diffBits):mTrack2Slot.indexOfValue(mSlotID);
     if((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)
-        pointIndex=0;
+        pointIndex = 0;
     if(mLastBits.count()==mCurrBits.count()){
         return MotionEvent::ACTION_MOVE;
     }else if(mLastBits.count()<mCurrBits.count()){
@@ -470,12 +478,12 @@ int TouchDevice::getActionByBits(int& pointIndex){
 static std::string printEvent(MotionEvent*e){
     std::ostringstream oss;
     oss<<"MotionEvent::Acion="<<e->getActionMasked()<<" Index="<<e->getActionIndex()<<" eventTime:"<<e->getEventTime();
-    oss<<" ("<<e->getX()<<","<<e->getY()<<"}"<<" historySize="<<e->getHistorySize();
+    oss<<" ("<<int(e->getX())<<","<<int(e->getY())<<"}"<<" historySize="<<e->getHistorySize();
     for(int i=0;i<e->getPointerCount();i++){
        oss<<std::endl<<"   Pointer["<<i<<"].id="<<e->getPointerId(i)<<" ";
-       oss<<"("<<e->getX(i)<<","<<e->getY(i)<<") {";
+       oss<<"("<<int(e->getX(i))<<","<<int(e->getY(i))<<") {";
        for(int j=0;j<e->getHistorySize();j++){
-          oss<<"("<<e->getHistoricalX(i,j)<<","<<e->getHistoricalX(i,j)<<")";
+          oss<<"("<<int(e->getHistoricalX(i,j))<<","<<int(e->getHistoricalY(i,j))<<")";
        }
        oss<<"}";
     }
@@ -483,7 +491,7 @@ static std::string printEvent(MotionEvent*e){
 }
 
 int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
-    int pointerCount,pointerIndex,action;
+    int slot,pointerCount,pointerIndex,action;
     MotionEvent*lastEvent;
     if(!isValidEvent(type,code,value))return -1;
     LOGV("%lu:%04u %d,%d,%d",tv.tv_sec,tv.tv_usec,type,code,value);
@@ -524,67 +532,64 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             setAxisValue(code,value,true);
         }break;
     case EV_SYN:
-        switch(code){
-        case SYN_REPORT:
-        case SYN_MT_REPORT:
-	    {
-                int slot = mTrack2Slot.indexOfKey(mProp.id);
-                slot = slot>=0?slot:0;
-                mPointerProps [slot] = mProp;
-                mPointerCoords[slot] = mCoord;
-	    }
+        if((code!=SYN_REPORT) && (code!=SYN_MT_REPORT))break;
+#if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
+	    slot = mTrack2Slot.indexOfKey(mProp.id);
+#else
+	    slot = mProp.id;
+#endif
+        slot = slot>=0?slot:0;
+        mPointerProps [slot] = mProp;
+        mPointerCoords[slot] = mCoord;
 	    if(code==SYN_MT_REPORT)break;
-            action = getActionByBits(pointerIndex);
-            mMoveTime =(tv.tv_sec * 1000LL + tv.tv_usec/1000);
-            lastEvent = mEvents.size()>1?(MotionEvent*)mEvents.back():nullptr;
-            pointerCount =(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)?std::max(mLastBits.count(),mCurrBits.count()):1;
-            if(lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)&&(mMoveTime-lastEvent->getEventTime()<10)){
-                auto lastTime = lastEvent->getEventTime();
-                lastEvent->addSample(mMoveTime,mPointerCoords.data());
-                LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
-                goto CLEAR_END;
-            }else {
-                const bool useBackupProps = ((action==MotionEvent::ACTION_UP)||(action==MotionEvent::ACTION_POINTER_UP))&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT);
-                const PointerCoords  *coords = useBackupProps ? mPointerCoordsBak.data(): mPointerCoords.data();
-                const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
-                mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
-                     0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
-                LOGV_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
-                mEvent->setActionButton(mActionButton);
-                mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
-            }
+        action = getActionByBits(pointerIndex);
+        mMoveTime =(tv.tv_sec * 1000LL + tv.tv_usec/1000);
+        lastEvent = mEvents.size()>1?(MotionEvent*)mEvents.back():nullptr;
+        pointerCount =(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)?std::max(mLastBits.count(),mCurrBits.count()):1;
+        if(lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)&&(action==MotionEvent::ACTION_MOVE)&&(mMoveTime-lastEvent->getDownTime()<10)){
+            auto lastTime = lastEvent->getDownTime();
+            lastEvent->addSample(mMoveTime,mPointerCoords.data());
+            LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
+        }else {
+            const bool useBackupProps = ((action==MotionEvent::ACTION_UP)||(action==MotionEvent::ACTION_POINTER_UP))&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT);
+            const PointerCoords  *coords = useBackupProps ? mPointerCoordsBak.data(): mPointerCoords.data();
+            const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
+            mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
+                 0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
+            LOGV_IF(action!=MotionEvent::ACTION_MOVE||1,"mask=%08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
+            mEvent->setActionButton(mActionButton);
+            mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
 
-            if( mLastBits.count() > mCurrBits.count() ){
-                const uint32_t pointerIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
-                LOGV("clearbits %d %08x,%08x trackslot.size=%d",pointerIndex,mLastBits.value,mCurrBits.value, mTrack2Slot.size());
-                if(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) mCurrBits.clearBit(pointerIndex);
-                if( pointerIndex<mTrack2Slot.size())
-                    mTrack2Slot.removeAt(pointerIndex);
-                mPointerProps.erase (mPointerProps.begin() + pointerIndex);
-                mPointerCoords.erase(mPointerCoords.begin()+ pointerIndex);
-                mPointerProps.resize(mPointerProps.size()+1);
-                mPointerCoords.resize(mPointerCoords.size()+1);
-            }else {
-                mPointerCoordsBak.clear();
-                mPointerCoordsBak.assign(mPointerCoords.begin(),mPointerCoords.begin() + pointerCount);
-                mPointerPropsBak.clear();
-                mPointerPropsBak.assign(mPointerProps.begin(),mPointerProps.begin() + pointerCount);
-            }
+            MotionEvent*e = MotionEvent::obtain(*mEvent);
+            mEvents.push_back(e);
+            mEvent->recycle();
+        }
 
-            if( int(mEvent->getHistorySize())>=0 ){
-                MotionEvent*e = MotionEvent::obtain(*mEvent);
-                mEvents.push_back(e);
-                mEvent->recycle();
-            }
-CLEAR_END:
-            mLastBits.value = mCurrBits.value;
-            mCoord.clear();mProp.clear();
-            if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mTypeB==false) ){
-                mCurrBits.clear(); //only typeA
-                mTrack2Slot.clear();
-                for(int i=0;i<pointerCount;i++){mPointerCoords[i].clear();mPointerCoords[i].clear();};
-            }/*endofSYN_REPORT*/
-        }break;/*caseof EV_SYN*/
+        if( mLastBits.count() > mCurrBits.count() ){
+            const uint32_t pointerIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
+            LOGV("clearbits %d %08x,%08x trackslot.size=%d",pointerIndex,mLastBits.value,mCurrBits.value, mTrack2Slot.size());
+            if(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) mCurrBits.clearBit(pointerIndex);
+            if( pointerIndex<mTrack2Slot.size())
+                mTrack2Slot.removeAt(pointerIndex);
+            mPointerProps.erase (mPointerProps.begin() + pointerIndex);
+            mPointerCoords.erase(mPointerCoords.begin()+ pointerIndex);
+            mPointerProps.resize(mPointerProps.size()+1);
+            mPointerCoords.resize(mPointerCoords.size()+1);
+        }else {
+            mPointerCoordsBak.clear();
+            mPointerCoordsBak.assign(mPointerCoords.begin(),mPointerCoords.begin() + pointerCount);
+            mPointerPropsBak.clear();
+            mPointerPropsBak.assign(mPointerProps.begin(),mPointerProps.begin() + pointerCount);
+        }
+
+        mLastBits.value = mCurrBits.value;
+        mCoord.clear();mProp.clear();
+        if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mTypeB==false) ){
+            mCurrBits.clear(); //only typeA
+            mTrack2Slot.clear();
+            for(int i=0;i<pointerCount;i++){mPointerCoords[i].clear();mPointerCoords[i].clear();};
+        }
+        break;/*caseof EV_SYN*/
     }
     return 0;
 }

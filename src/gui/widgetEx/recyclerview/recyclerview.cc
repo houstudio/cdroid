@@ -1815,8 +1815,8 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
     case MotionEvent::ACTION_MOVE: {
             const int index = e.findPointerIndex(mScrollPointerId);
             if (index < 0) {
-                LOGE("Error processing scroll; pointer index for id %d"
-                     " not found. Did any MotionEvents get skipped?",mScrollPointerId);
+                LOGE("Error processing scroll; pointer index for id %d=%d"
+                     " not found. Did any MotionEvents get skipped?",mScrollPointerId,index);
                 return false;
             }
 

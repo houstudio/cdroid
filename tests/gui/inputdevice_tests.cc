@@ -14,7 +14,7 @@ public:
    }
    virtual void TearDown(){
       for(int i=0;i<EventCount;i++){
-	  OutEvents[i]->recycle();
+         OutEvents[i]->recycle();
       }
    }
    int sendEvents(InputDevice&d,MTEvent*mts,int size,MotionEvent**eventOut){
@@ -22,7 +22,7 @@ public:
       int32_t tmEVT = 0;
       for(int i=0;i<size;i++){
          d.putRawEvent({0,tmEVT},mts[i].type,mts[i].code,mts[i].value);
-	 if((mts[i].type==EV_SYN)&&(mts[i].code==SYN_REPORT))
+         if((mts[i].type==EV_SYN)&&(mts[i].code==SYN_REPORT))
              tmEVT+=6*1000000;
       }
       eventCount = d.getEventCount();
@@ -31,14 +31,14 @@ public:
           MotionEvent*e=(MotionEvent*)d.popEvent();
           const int pointerCount=e->getPointerCount();
           const int hisCount = e->getHistorySize();
-	  if(eventOut)eventOut[i]=e;
+          if(eventOut)eventOut[i] = e;
           LOGI("Event[%d].Action=%d/%d pointers=%d history=%d",i,e->getActionMasked(),e->getActionIndex(),pointerCount,hisCount);
           for(int j=0;j<pointerCount;j++){
              std::ostringstream oss;
              for(int k=0;k<hisCount;k++){
-                oss<<"["<<e->getHistoricalRawX(j,k)<<","<<e->getHistoricalRawY(j,k)<<"],";
+                oss<<"("<<e->getHistoricalRawX(j,k)<<","<<e->getHistoricalRawY(j,k)<<"),";
              }
-             LOGI("     Point[%d](%d)=(%.f,%.f)[%s]",j,e->getPointerId(j),e->getX(j),e->getY(j),oss.str().c_str());
+             LOGI("     Point[%d](%d)=(%.f,%.f){%s}",j,e->getPointerId(j),e->getX(j),e->getY(j),oss.str().c_str());
           }
       }
       return eventCount;
@@ -243,6 +243,53 @@ TEST_F(INPUTDEVICE,MTA){//TypeA Events
    ASSERT_EQ(OutEvents[6]->getPointerCount(),1);
    ASSERT_EQ(OutEvents[6]->getX(0),mts[42].value);//123
    ASSERT_EQ(OutEvents[6]->getY(0),mts[43].value);//134
+}
+
+TEST_F(INPUTDEVICE,MTA2){
+   TouchDevice d(INJECTDEV_TOUCH);
+   MTEvent mts[]={
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//0
+      {EV_ABS,ABS_MT_POSITION_X ,20},
+      {EV_ABS,ABS_MT_POSITION_Y ,30},
+      {EV_SYN,SYN_MT_REPORT,0},
+      {EV_SYN,SYN_REPORT,0},
+
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//5
+      {EV_ABS,ABS_MT_POSITION_X ,22},
+      {EV_ABS,ABS_MT_POSITION_Y ,32},
+      {EV_SYN,SYN_MT_REPORT,0},
+      {EV_SYN,SYN_REPORT,0},
+
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//14
+      {EV_ABS,ABS_MT_POSITION_X ,24},//15
+      {EV_ABS,ABS_MT_POSITION_Y ,34},
+      {EV_SYN,SYN_MT_REPORT,0},
+      {EV_SYN,SYN_REPORT,0},
+
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//27 POINTER_UP finger 2(trackid 3) is up
+      {EV_ABS,ABS_MT_POSITION_X ,26},
+      {EV_ABS,ABS_MT_POSITION_Y ,36},
+      {EV_SYN,SYN_MT_REPORT,0},     //30
+      {EV_SYN,SYN_REPORT,0},//35
+
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//36 POINTER_UP finger 1(tracckid 1) isup
+      {EV_ABS,ABS_MT_POSITION_X ,28},
+      {EV_ABS,ABS_MT_POSITION_Y ,38},
+      {EV_SYN,SYN_MT_REPORT,0},
+      {EV_SYN,SYN_REPORT,0},//40
+
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//41
+      {EV_ABS,ABS_MT_POSITION_X ,30},
+      {EV_ABS,ABS_MT_POSITION_Y ,40},
+      {EV_SYN,SYN_MT_REPORT,0},
+      {EV_SYN,SYN_REPORT,0},//45
+
+      {EV_ABS,ABS_MT_TRACKING_ID,-1},//46
+      {EV_KEY,BTN_TOUCH,0},//20
+      {EV_SYN,SYN_REPORT,0}
+   };
+   EventCount = sendEvents(d,mts,sizeof(mts)/sizeof(MTEvent),OutEvents);
+   ASSERT_EQ(EventCount,7);
 }
 
 TEST_F(INPUTDEVICE,MTB){//Type B Events
