@@ -164,9 +164,6 @@ public:
     };
 private:
     static const int HISTORY_CURRENT = -0x80000000;
-    static PointerCoords* gSharedTempPointerCoords;
-    static PointerProperties* gSharedTempPointerProperties;
-    static int* gSharedTempPointerIndexMap;
     static MotionEvent*obtain();
     static void ensureSharedTempPointerCapacity(int desiredCapacity);
 protected:

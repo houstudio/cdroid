@@ -477,13 +477,13 @@ int TouchDevice::getActionByBits(int& pointIndex){
 
 static std::string printEvent(MotionEvent*e){
     std::ostringstream oss;
-    oss<<"MotionEvent::Acion="<<e->getActionMasked()<<" Index="<<e->getActionIndex()<<" eventTime:"<<e->getEventTime();
+    oss<<"MotionEvent::Acion="<<e->getActionMasked()<<" Index="<<e->getActionIndex()<<" eventTime:"<<e->getDownTime()<<"/"<<e->getEventTime();
     oss<<" ("<<int(e->getX())<<","<<int(e->getY())<<"}"<<" historySize="<<e->getHistorySize();
     for(int i=0;i<e->getPointerCount();i++){
        oss<<std::endl<<"   Pointer["<<i<<"].id="<<e->getPointerId(i)<<" ";
        oss<<"("<<int(e->getX(i))<<","<<int(e->getY(i))<<") {";
        for(int j=0;j<e->getHistorySize();j++){
-          oss<<"("<<int(e->getHistoricalX(i,j))<<","<<int(e->getHistoricalY(i,j))<<")";
+          oss<<"("<<e->getHistoricalEventTime(j)<<":"<<int(e->getHistoricalX(i,j))<<","<<int(e->getHistoricalY(i,j))<<")";
        }
        oss<<"}";
     }
@@ -534,19 +534,19 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
     case EV_SYN:
         if((code!=SYN_REPORT) && (code!=SYN_MT_REPORT))break;
 #if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
-	    slot = mTrack2Slot.indexOfKey(mProp.id);
+        slot = mTrack2Slot.indexOfKey(mProp.id);
 #else
-	    slot = mProp.id;
+        slot = mProp.id;
 #endif
         slot = slot>=0?slot:0;
         mPointerProps [slot] = mProp;
         mPointerCoords[slot] = mCoord;
-	    if(code==SYN_MT_REPORT)break;
+        if(code==SYN_MT_REPORT)break;
         action = getActionByBits(pointerIndex);
         mMoveTime =(tv.tv_sec * 1000LL + tv.tv_usec/1000);
         lastEvent = mEvents.size()>1?(MotionEvent*)mEvents.back():nullptr;
         pointerCount =(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)?std::max(mLastBits.count(),mCurrBits.count()):1;
-        if(lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)&&(action==MotionEvent::ACTION_MOVE)&&(mMoveTime-lastEvent->getDownTime()<10)){
+        if(lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)&&(action==MotionEvent::ACTION_MOVE)&&(mMoveTime-lastEvent->getDownTime()<100)){
             auto lastTime = lastEvent->getDownTime();
             lastEvent->addSample(mMoveTime,mPointerCoords.data());
             LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
@@ -556,7 +556,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
             mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
                  0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
-            LOGV_IF(action!=MotionEvent::ACTION_MOVE||1,"mask=%08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
+            LOGV_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
             mEvent->setActionButton(mActionButton);
             mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
 
@@ -587,7 +587,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mTypeB==false) ){
             mCurrBits.clear(); //only typeA
             mTrack2Slot.clear();
-            for(int i=0;i<pointerCount;i++){mPointerCoords[i].clear();mPointerCoords[i].clear();};
+            for(int i = 0;i < pointerCount;i++){mPointerCoords[i].clear();mPointerCoords[i].clear();};
         }
         break;/*caseof EV_SYN*/
     }

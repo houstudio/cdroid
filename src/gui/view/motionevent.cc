@@ -106,9 +106,6 @@ void PointerProperties::copyFrom(const PointerProperties& other) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-PointerCoords* MotionEvent::gSharedTempPointerCoords=nullptr;
-PointerProperties* MotionEvent::gSharedTempPointerProperties=nullptr;
-int* MotionEvent::gSharedTempPointerIndexMap=nullptr;
 
 void MotionEvent::ensureSharedTempPointerCapacity(int desiredCapacity){
 }
@@ -235,7 +232,7 @@ void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
     mDownTime = other->mDownTime;
     mEventTime= other->mEventTime;
     mSource = other->mSource;
-    mDisplayId =other->mDisplayId;
+    mDisplayId = other->mDisplayId;
     mPointerProperties = other->mPointerProperties;
 
     if (keepHistory) {
@@ -348,7 +345,7 @@ MotionEvent* MotionEvent::clampNoHistory(float left, float top, float right, flo
     for (int i = 0; i < pointerCount; i++) {
         pp[i] = mPointerProperties[i];//nativeGetPointerProperties(mNativePtr,i,pp[i]);
         getPointerCoords(i,pc[i]);//nativeGetPointerCoords(mNativePtr,i,HISTORY_CURRENT,pc[i]);
-	pc[i].x = clamp(pc[i].x, left, right);
+        pc[i].x = clamp(pc[i].x, left, right);
         pc[i].y = clamp(pc[i].y, top, bottom);
     }
 #endif
@@ -388,17 +385,17 @@ nsecs_t MotionEvent::getHistoricalEventTime(size_t historyPos) const{
          return getEventTime();
     }else{
         const size_t historySize = getHistorySize();
-        if(historyPos<0||historyPos>=historySize)return 0;
+        if((historyPos<0)||(historyPos>=historySize))return 0;
         return mSampleEventTimes[historyPos];
     }
 }
 
 nsecs_t MotionEvent::getHistoricalEventTimeNanos(size_t historyPos) const{
     if(historyPos==HISTORY_CURRENT){
-         return getEventTimeNanos();
+        return getEventTimeNanos();
     }else{
         const size_t historySize = getHistorySize();
-        if(historyPos<0||historyPos>=historySize)return 0;
+        if((historyPos<0)||(historyPos>=historySize))return 0;
         return mSampleEventTimes[historyPos]*NS_PER_MS;
     }
 }

@@ -122,7 +122,7 @@ private:
     static VelocityTrackerStrategy* createStrategy(const char* strategy);
 };
 
-const char* VelocityTrackerImpl::DEFAULT_STRATEGY = "impulse";//"impulse";//"lsq2";
+const char* VelocityTrackerImpl::DEFAULT_STRATEGY = "lsq2";//"impulse";//"lsq2";
 
 VelocityTrackerImpl::VelocityTrackerImpl(const char* strategy) :
     mLastEventTime(0), mCurrentPointerIdBits(0), mActivePointerId(-1) {
@@ -514,7 +514,7 @@ static float calculateImpulseVelocity(const nsecs_t* t, const float* x, size_t c
         return 0; // if 0 or 1 points, velocity is zero
     }
     if (t[1] > t[0]) { // Algorithm will still work, but not perfectly
-        LOGE("Samples provided to calculateImpulseVelocity in the wrong order");
+        LOGE("Samples(%lld,%lld) provided to calculateImpulseVelocity in the wrong order",t[1],t[0]);
     }
     if (count == 2) { // if 2 points, basic linear calculation
         if (t[1] == t[0]) {
