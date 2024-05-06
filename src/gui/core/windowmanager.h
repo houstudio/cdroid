@@ -31,7 +31,7 @@ private:
     int mDisplayRotation;
     Window*mActiveWindow;/*activeWindow*/
     std::vector< Window* > mWindows;
-    std::vector<Display>mDisplays;
+    std::vector< Display > mDisplays;
     static WindowManager* mInst;
 private:
     friend class GraphDevice;

@@ -109,7 +109,7 @@ InputDevice::InputDevice(int fdev){
     // Assumes that joysticks always have gamepad buttons in order to distinguish them
     // from other devices such as accelerometers that also have absolute axes.
     if (haveGamepadButtons) {
-        uint32_t assumedClasses = mDeviceClasses | INPUT_DEVICE_CLASS_JOYSTICK;
+        const uint32_t assumedClasses = mDeviceClasses | INPUT_DEVICE_CLASS_JOYSTICK;
         for (int i = 0; i <= ABS_MAX; i++) {
             if (TEST_BIT(i, devInfos.absBitMask)
                     && (getAbsAxisUsage(i, assumedClasses) & INPUT_DEVICE_CLASS_JOYSTICK)) {
@@ -152,6 +152,14 @@ InputDevice::InputDevice(int fdev){
             mDeviceInfo.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
         LOGV_IF(axis->maximum!=axis->minimum,"devfd=%d axis[%d] range=%d,%d",fdev,axis->axis,axis->minimum,axis->maximum);
     }
+}
+
+void InputDevice::bindDisplay(int id){
+    Point displaySize;
+    Display display =  WindowManager::getInstance().getDefaultDisplay();
+    display.getRealSize(displaySize);
+    mScreenWidth  = displaySize.x;
+    mScreenHeight = displaySize.y;//ScreenSize is screen size in no roration
 }
 
 uint32_t getAbsAxisUsage(int32_t axis, uint32_t mDeviceClasses) {
@@ -295,15 +303,20 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mTypeB = false;
     mTrackID = mSlotID = -1;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
-    const InputDeviceInfo::MotionRange*rangeX = mDeviceInfo.getMotionRange(ABS_X,0);
+    std::vector<InputDeviceInfo::MotionRange>&mr =mDeviceInfo.getMotionRanges();
+    for(int i=0;i<mr.size();i++){
+        InputDeviceInfo::MotionRange&range=mr.at(i);
+        const int axis = ABS2AXIS(range.axis);
+        if(axis>=0)range.axis = axis;
+        range = mr.at(i);
+    }
+    const InputDeviceInfo::MotionRange*rangeX = mDeviceInfo.getMotionRange(MotionEvent::AXIS_X,0);
     Display display =  WindowManager::getInstance().getDefaultDisplay();
-    if(rangeX==nullptr) rangeX = mDeviceInfo.getMotionRange(ABS_MT_POSITION_X,0);
     mTPWidth  = ISRANGEVALID(rangeX)? (rangeX->max-rangeX->min) : mScreenWidth;
     mMinX = ISRANGEVALID(rangeX) ? rangeX->min : 0;
     mMaxX = ISRANGEVALID(rangeX) ? rangeX->max : mScreenWidth;
 
-    const InputDeviceInfo::MotionRange*rangeY = mDeviceInfo.getMotionRange(ABS_Y,0);
-    if(rangeY==nullptr) rangeY = mDeviceInfo.getMotionRange(ABS_MT_POSITION_Y,0);
+    const InputDeviceInfo::MotionRange*rangeY = mDeviceInfo.getMotionRange(MotionEvent::AXIS_Y,0);
     mTPHeight = ISRANGEVALID(rangeY) ? (rangeY->max-rangeY->min) : mScreenHeight;
     mMinY = ISRANGEVALID(rangeY) ? rangeY->min : 0;
     mMaxY = ISRANGEVALID(rangeY) ? rangeY->max : mScreenHeight;
@@ -335,7 +348,7 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
         display.getRotation(),section.c_str(),mMinX,mMaxX,mMinY,mMaxY,mInvertX,mInvertY,mSwitchXY);
 }
 
-static int ABS2AXIS(int absaxis){
+int TouchDevice::ABS2AXIS(int absaxis){
     switch(absaxis){
     case ABS_MT_POSITION_X:
     case ABS_X:/*REL_X*/ return MotionEvent::AXIS_X;
@@ -456,7 +469,7 @@ int TouchDevice::getActionByBits(int& pointIndex){
 
 static std::string printEvent(MotionEvent*e){
     std::ostringstream oss;
-    oss<<"MotionEvent::Acion="<<e->getActionMasked()<<" Index="<<e->getActionIndex();
+    oss<<"MotionEvent::Acion="<<e->getActionMasked()<<" Index="<<e->getActionIndex()<<" eventTime:"<<e->getEventTime();
     oss<<" ("<<e->getX()<<","<<e->getY()<<"}"<<" historySize="<<e->getHistorySize();
     for(int i=0;i<e->getPointerCount();i++){
        oss<<std::endl<<"   Pointer["<<i<<"].id="<<e->getPointerId(i)<<" ";
@@ -525,17 +538,18 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             mMoveTime =(tv.tv_sec * 1000LL + tv.tv_usec/1000);
             lastEvent = mEvents.size()>1?(MotionEvent*)mEvents.back():nullptr;
             pointerCount =(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)?std::max(mLastBits.count(),mCurrBits.count()):1;
-            if(lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)&&(mMoveTime-lastEvent->getEventTime()<5000)){
+            if(lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)&&(mMoveTime-lastEvent->getEventTime()<10)){
+                auto lastTime = lastEvent->getEventTime();
                 lastEvent->addSample(mMoveTime,mPointerCoords.data());
-                LOGV("%s",printEvent(lastEvent).c_str());
-		goto CLEAR_END;
+                LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
+                goto CLEAR_END;
             }else {
-		const bool useBackupProps = ((action==MotionEvent::ACTION_UP)||(action==MotionEvent::ACTION_POINTER_UP))&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT);
+                const bool useBackupProps = ((action==MotionEvent::ACTION_UP)||(action==MotionEvent::ACTION_POINTER_UP))&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT);
                 const PointerCoords  *coords = useBackupProps ? mPointerCoordsBak.data(): mPointerCoords.data();
                 const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
                 mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
                      0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
-                LOGV_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x\n%s",mLastBits.value,mCurrBits.value,printEvent(mEvent).c_str());
+                LOGI_IF(action!=MotionEvent::ACTION_MOVE||1,"mask=%08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
                 mEvent->setActionButton(mActionButton);
                 mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
             }
@@ -551,11 +565,11 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
                 mPointerProps.resize(mPointerProps.size()+1);
                 mPointerCoords.resize(mPointerCoords.size()+1);
             }else {
-		mPointerCoordsBak.clear();
-		mPointerCoordsBak.assign(mPointerCoords.begin(),mPointerCoords.begin() + pointerCount);
-		mPointerPropsBak.clear();
-		mPointerPropsBak.assign(mPointerProps.begin(),mPointerProps.begin() + pointerCount);
-	    }
+                mPointerCoordsBak.clear();
+                mPointerCoordsBak.assign(mPointerCoords.begin(),mPointerCoords.begin() + pointerCount);
+                mPointerPropsBak.clear();
+                mPointerPropsBak.assign(mPointerProps.begin(),mPointerProps.begin() + pointerCount);
+            }
 
             if( int(mEvent->getHistorySize())>=0 ){
                 MotionEvent*e = MotionEvent::obtain(*mEvent);

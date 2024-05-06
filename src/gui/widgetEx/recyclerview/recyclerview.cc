@@ -1806,11 +1806,11 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
             startNestedScroll(nestedScrollAxis, TYPE_TOUCH);
         } break;
 
-    case MotionEvent::ACTION_POINTER_DOWN: {
-            mScrollPointerId = e.getPointerId(actionIndex);
-            mInitialTouchX = mLastTouchX = (int) (e.getX(actionIndex) + 0.5f);
-            mInitialTouchY = mLastTouchY = (int) (e.getY(actionIndex) + 0.5f);
-        } break;
+    case MotionEvent::ACTION_POINTER_DOWN:
+        mScrollPointerId = e.getPointerId(actionIndex);
+        mInitialTouchX = mLastTouchX = (int) (e.getX(actionIndex) + 0.5f);
+        mInitialTouchY = mLastTouchY = (int) (e.getY(actionIndex) + 0.5f);
+        break;
 
     case MotionEvent::ACTION_MOVE: {
             const int index = e.findPointerIndex(mScrollPointerId);

@@ -82,7 +82,7 @@ public:
     inline void setButtonUnderPad(bool hasButton) { mHasButtonUnderPad = hasButton; }
     inline bool hasButtonUnderPad() const { return mHasButtonUnderPad; }
 
-    inline const std::vector<MotionRange>& getMotionRanges() const {
+    inline std::vector<MotionRange>& getMotionRanges() {
         return mMotionRanges;
     }
 private:
@@ -182,8 +182,9 @@ public:
 protected:
     int mDeviceClasses;
     int mKeyboardType;
-    unsigned int mScreenWidth;
-    unsigned int mScreenHeight;
+    uint32_t mScreenWidth;
+    uint32_t mScreenHeight;
+    int mScreenRotation;
     int mSeqID;
     InputDeviceInfo mDeviceInfo;
     class KeyLayoutMap*kmap;
@@ -205,6 +206,7 @@ public:
     void pushEvent(InputEvent*);
     InputEvent*popEvent();
     const std::string&getName()const;
+    void bindDisplay(int);
 };
 
 class KeyDevice:public InputDevice{
@@ -249,6 +251,7 @@ protected:
     int getActionByBits(int&pointIndex);
     void setAxisValue(int axis,int value,bool isRelative);
     int isValidEvent(int type,int code,int value)override;
+    int ABS2AXIS(int absaxis);
 public:
     TouchDevice(int fd);
     virtual int putRawEvent(const struct timeval&tv,int type,int code,int value);
