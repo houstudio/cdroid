@@ -640,7 +640,7 @@ void Looper::addEventHandler(const EventHandler*handler){
 }
 
 void Looper::removeEventHandler(const EventHandler*handler){
-    for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();it++){
+    for(auto it = mEventHandlers.begin();it != mEventHandlers.end();it++){
         if((*it)==handler){
             (*it)->mFlags |=1;//set removed flags
             if((handler->mFlags&2)==0)//handler is not owned by looper,erase at once
@@ -655,9 +655,11 @@ void Looper::removeMessages(const MessageHandler* handler) {
     { // acquire lock
         std::lock_guard<std::recursive_mutex> _l(mLock);
 
-        for( auto it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
-            if(it->handler==handler)
-               it=mMessageEnvelopes.erase(it);
+        for( auto it = mMessageEnvelopes.begin();it != mMessageEnvelopes.end();){
+            if(it->handler==handler){
+               it = mMessageEnvelopes.erase(it);
+               continue;
+            }it++;
         } 
     } // release lock
 }
@@ -667,20 +669,22 @@ void Looper::removeMessages(const MessageHandler* handler, int what) {
     { // acquire lock
         std::lock_guard<std::recursive_mutex> _l(mLock);
 
-        for( auto it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
+        for( auto it = mMessageEnvelopes.begin();it != mMessageEnvelopes.end();){
             if((it->handler==handler) && (it->message.what==what)){
-                it=mMessageEnvelopes.erase(it);
-            }
+                it = mMessageEnvelopes.erase(it);
+                continue;
+            }it++;
         }
     } // release lock
 }
 
 void Looper::removeCallbacks(const MessageHandler* handler,Runnable r){
     std::lock_guard<std::recursive_mutex> _l(mLock);
-    for( auto it = mMessageEnvelopes.begin();it != mMessageEnvelopes.end();it++){
+    for( auto it = mMessageEnvelopes.begin();it != mMessageEnvelopes.end();){
         if((it->handler==handler) && (it->message.callback==r)){
             it = mMessageEnvelopes.erase(it);
-        }
+            continue;
+        }it++;
     }
 }
 
