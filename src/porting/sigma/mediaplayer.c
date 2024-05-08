@@ -17,7 +17,7 @@ typedef struct{
    void*userdata;
    GFXRect viewPort;
 }MP_PLAYER;
-
+#if 0
 static timer_t timerid=0;
 
 static void timer_handler(int signum/*,siginfo_t*, void**/) {
@@ -58,7 +58,7 @@ static timer_t initTimer(){
     }
     return timerid;
 }
-
+#endif
 HANDLE MPOpen(const char*fname){
     MP_PLAYER *mp=(MP_PLAYER*)malloc(sizeof(MP_PLAYER));
     memset(mp,0,sizeof(MP_PLAYER));

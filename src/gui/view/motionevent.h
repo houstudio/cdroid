@@ -10,13 +10,14 @@ struct PointerCoords {
 
     // Bitfield of axes that are present in this structure.
     uint64_t bits __attribute__((aligned(8)));
-
+    bool isResampled;
     // Values of axes that are stored in this structure packed in order by axis id
     // for each axis that is present in the structure according to 'bits'.
     float values[MAX_AXES];
 
     inline void clear() {
         BitSet64::clear(bits);
+        isResampled = false;
     }
 
     bool isEmpty() const {
@@ -245,22 +246,20 @@ public:
 
     nsecs_t getHistoricalEventTime(size_t historicalIndex) const;
     nsecs_t getHistoricalEventTimeNanos(size_t historicalIndex) const;
-
+private:
     ////////////////////////////////// Raw AXIS Properties ///////////////////////////////////
     const PointerCoords& getRawPointerCoords(size_t pointerIndex) const;
-    void getHistoricalRawPointerCoords(size_t pointerIndex, size_t historicalIndex,PointerCoords& outPointerCoords) const;
+    const PointerCoords& getHistoricalRawPointerCoords(size_t pointerIndex, size_t historicalIndex) const;
     float getHistoricalRawAxisValue(int32_t axis, size_t pointerIndex,size_t historicalIndex) const;
     float getHistoricalRawX(size_t pointerIndex, size_t historicalIndex) const;
     float getHistoricalRawY(size_t pointerIndex, size_t historicalIndex) const;
     float getRawAxisValue(int32_t axis, size_t pointerIndex) const;
     inline float getRawX(size_t pointerIndex) const { return getRawAxisValue(AXIS_X, pointerIndex); }
     inline float getRawY(size_t pointerIndex) const { return getRawAxisValue(AXIS_Y, pointerIndex); }
-
+public:
     /////////////////////// AXIS Properties has been transformed //////////////////////////////
-    void getPointerCoords(int pointerIndex, PointerCoords& outPointerCoords)const{
-        getHistoricalRawPointerCoords(pointerIndex,HISTORY_CURRENT,outPointerCoords);
-    }
-    void getHistoricalPointerCoords(size_t pointerIndex, size_t historicalIndex,PointerCoords& outPointerCoords) const;
+    const PointerCoords& getPointerCoords(int pointerIndex)const;
+    const PointerCoords& getHistoricalPointerCoords(size_t pointerIndex, size_t historicalIndex) const;
     float getHistoricalAxisValue(int axis, size_t pointerIndex,size_t historicalIndex) const;
     float getHistoricalX(size_t pointerIndex, size_t historicalIndex) const;
     float getHistoricalY(size_t pointerIndex, size_t historicalIndex) const;
@@ -312,6 +311,7 @@ public:
     inline float getOrientation(size_t pointerIndex) const {
         return getAxisValue(AXIS_ORIENTATION, pointerIndex);
     }
+    bool isResampled(size_t pointerIndex, size_t historicalIndex) const;
     ssize_t findPointerIndex(int32_t pointerId) const;
     inline bool isTargetAccessibilityFocus()const{
         return (mFlags & FLAG_TARGET_ACCESSIBILITY_FOCUS) != 0;

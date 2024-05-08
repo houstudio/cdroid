@@ -83,6 +83,7 @@ bool PointerCoords::operator==(const PointerCoords& other) const {
             return false;
         }
     }
+    if(isResampled != other.isResampled)return false;
     return true;
 }
 
@@ -300,7 +301,7 @@ MotionEvent*MotionEvent::split(int idBits){
         const int historyPos = h == historySize ? HISTORY_CURRENT : h;
         for (int i = 0; i < newPointerCount; i++) {
             //getPointerCoords(map[i], historyPos, &pc[i]);
-            getHistoricalRawPointerCoords(map[i], historyPos, pc[i]);
+            pc[i] = getHistoricalRawPointerCoords(map[i], historyPos);
         }
         const long eventTimeNanos = getHistoricalEventTime(historyPos);
         if (h == 0) {
@@ -362,7 +363,7 @@ int MotionEvent::getPointerIdBits()const{
 }
 
 float MotionEvent::getRawAxisValue(int32_t axis, size_t pointerIndex) const {
-    return getRawPointerCoords(pointerIndex).getAxisValue(axis);
+    return getHistoricalRawAxisValue(axis,pointerIndex,getHistorySize());
 }
 
 float MotionEvent::getAxisValue(int axis)const {
@@ -370,7 +371,7 @@ float MotionEvent::getAxisValue(int axis)const {
 }
 
 float MotionEvent::getAxisValue(int32_t axis, size_t pointerIndex) const {
-    const float value = getRawPointerCoords(pointerIndex).getAxisValue(axis);
+    const float value = getHistoricalAxisValue(axis,pointerIndex,getHistorySize());
     switch (axis) {
     case AXIS_X://AMOTION_EVENT_AXIS_X:
         return value + mXOffset;
@@ -384,8 +385,6 @@ nsecs_t MotionEvent::getHistoricalEventTime(size_t historyPos) const{
     if(historyPos==HISTORY_CURRENT){
          return getEventTime();
     }else{
-        const size_t historySize = getHistorySize();
-        if((historyPos<0)||(historyPos>=historySize))return 0;
         return mSampleEventTimes[historyPos];
     }
 }
@@ -394,8 +393,6 @@ nsecs_t MotionEvent::getHistoricalEventTimeNanos(size_t historyPos) const{
     if(historyPos==HISTORY_CURRENT){
         return getEventTimeNanos();
     }else{
-        const size_t historySize = getHistorySize();
-        if((historyPos<0)||(historyPos>=historySize))return 0;
         return mSampleEventTimes[historyPos]*NS_PER_MS;
     }
 }
@@ -425,6 +422,10 @@ bool  MotionEvent::isTouchEvent(int32_t source, int32_t action){
         }
     }
     return false;
+}
+
+bool MotionEvent::isResampled(size_t pointerIndex, size_t historicalIndex) const {
+    return getHistoricalRawPointerCoords(pointerIndex, historicalIndex).isResampled;
 }
 
 bool MotionEvent::isTouchEvent()const{
@@ -562,22 +563,21 @@ void MotionEvent::transform(const Cairo::Matrix& matrix){
     transform(f9);
 }
 
-void MotionEvent::getHistoricalRawPointerCoords(
-        size_t pointerIndex, size_t historicalIndex,PointerCoords&out) const {
+const PointerCoords& MotionEvent::getHistoricalRawPointerCoords(
+        size_t pointerIndex, size_t historicalIndex) const {
     const size_t pointerCount = getPointerCount();
-    if(pointerIndex<0||pointerIndex>=pointerCount)return;
+    if(pointerIndex<0||pointerIndex>=pointerCount)throw "outof Range";
     if(historicalIndex==HISTORY_CURRENT){
-        out = mSamplePointerCoords[pointerIndex];
+        return mSamplePointerCoords[pointerIndex];
     }else{
-        out = mSamplePointerCoords[historicalIndex * getPointerCount() + pointerIndex];
+        const size_t position = historicalIndex * getPointerCount() + pointerIndex;
+        return mSamplePointerCoords[position];
     }
 }
 
 float MotionEvent::getHistoricalRawAxisValue(int32_t axis, size_t pointerIndex,
         size_t historicalIndex) const {
-    PointerCoords pc;
-    getHistoricalRawPointerCoords(pointerIndex,historicalIndex,pc);
-    return pc.getAxisValue(axis);
+    return getHistoricalRawPointerCoords(pointerIndex,historicalIndex).getAxisValue(axis);
 }
 
 float MotionEvent::getHistoricalRawX(size_t pointerIndex, size_t historicalIndex) const {
@@ -587,15 +587,22 @@ float MotionEvent::getHistoricalRawX(size_t pointerIndex, size_t historicalIndex
 float MotionEvent::getHistoricalRawY(size_t pointerIndex, size_t historicalIndex) const {
     return getHistoricalRawAxisValue(AXIS_Y, pointerIndex, historicalIndex);
 }
+const PointerCoords& MotionEvent::getPointerCoords(int pointerIndex)const{
+    return getHistoricalRawPointerCoords(pointerIndex,HISTORY_CURRENT);
+}
+
+const PointerCoords& MotionEvent::getHistoricalPointerCoords(size_t pointerIndex, size_t historicalIndex) const{
+    return getHistoricalRawPointerCoords(pointerIndex,historicalIndex);
+}
 
 float MotionEvent::getHistoricalAxisValue(int axis,size_t pointerIndex,size_t historicalIndex)const{
-    PointerCoords pc;
-    getHistoricalRawPointerCoords(pointerIndex,historicalIndex,pc);
-    return pc.getAxisValue(axis);
+    return getHistoricalRawPointerCoords(pointerIndex,historicalIndex).getAxisValue(axis);
 }
+
 float MotionEvent::getHistoricalX(size_t pointerIndex, size_t historicalIndex) const{
      return getHistoricalRawAxisValue(AXIS_X, pointerIndex, historicalIndex);
 }
+
 float MotionEvent::getHistoricalY(size_t pointerIndex, size_t historicalIndex) const{
      return getHistoricalRawAxisValue(AXIS_Y, pointerIndex, historicalIndex);
 }

@@ -24,14 +24,18 @@ static void* X11EventProc(void*p);
 static GFXRect screenMargin= {0}; //{60,0,60,0};
 
 #define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
-#if 1
-#define SENDMOUSE(time,x,y)  {\
+#if 0
+   #define SENDMOUSE(time,x,y)  {\
+      InjectABS(time,EV_ABS,ABS_MT_TRACKING_ID,12);\
+      InjectABS(time,EV_ABS,ABS_MT_POSITION_X,x);\
+      InjectABS(time,EV_ABS,ABS_MT_POSITION_Y,y);\
+      InjectABS(time,EV_ABS,SYN_MT_REPORT,0);\
+      InjectABS(time,EV_SYN,SYN_REPORT,0);}
+#else
+   #define SENDMOUSE(time,x,y)  {\
       InjectABS(time,EV_ABS,ABS_X,x);\
       InjectABS(time,EV_ABS,ABS_Y,y);\
       InjectABS(time,EV_SYN,SYN_REPORT,0);}
-#else
-#define SENDMOUSE(time,x,y)  {InjectREL(time,EV_REL,0,x);\
-      InjectREL(time,EV_REL,1,y);InjectREL(time,EV_SYN,SYN_REPORT,0);}
 #endif
 static void InjectKey(int type,int code,int value) {
     INPUTEVENT i= {0};

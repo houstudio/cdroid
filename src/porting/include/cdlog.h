@@ -67,8 +67,8 @@ public:
 
 #ifndef DEBUG
     #define LOGV(...)
-    #define LOGD(...)
     #define LOGV_IF(x,...)
+    #define LOGD(...)
     #define LOGD_IF(x,...)
     #define LOG_DUMP(tag,data,len)
 #else

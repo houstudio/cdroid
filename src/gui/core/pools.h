@@ -19,21 +19,22 @@ public:
     template<typename T>
     class SimplePool:public Pool<T>{
     private:
-        int maxPoolSize;
+        int mPoolSize;
         std::vector<T*> mPool;
     public:
         SimplePool(int maxPoolSize) {
-            this->maxPoolSize = maxPoolSize;
-            for(int i=0;i<maxPoolSize;i++)mPool.push_back(new T());
+            mPool.resize(maxPoolSize);
+            mPoolSize = 0;
         }
         ~SimplePool(){
-            for(int i=0;i<maxPoolSize;i++)delete mPool.at(i);
+            for(auto elem:mPool)
+                delete elem;
             mPool.clear();
         }
         T* acquire() {
-            if (!mPool.empty()) {
-                T* instance = (T*) mPool.back();
-                mPool.pop_back();
+            if (mPoolSize>0) {
+                T* instance = (T*) mPool[mPoolSize-1];
+                mPool[--mPoolSize] = nullptr;
                 return instance;
             }
             return nullptr;
@@ -42,15 +43,15 @@ public:
             if (isInPool(instance)) {
                 throw "Already in the pool!";
             }
-            if (maxPoolSize > mPool.size()) {
-                mPool.push_back(instance);
+            if (mPoolSize < mPool.size()) {
+                mPool[mPoolSize++] = instance;
                 return true;
             }
             return false;
         }
     private:
-	    bool isInPool(T* instance) {
-            for (int i = 0; i < mPool.size(); i++) {
+        bool isInPool(T* instance) {
+            for (int i = 0; i < mPoolSize; i++) {
                 if (mPool[i] == instance) {
                     return true;
                 }
@@ -64,7 +65,7 @@ public:
     private:
 	 std::mutex mutex;
     public:
-	SynchronizedPool(int maxPoolSize):SimplePool<T>(maxPoolSize){
+        SynchronizedPool(int maxPoolSize):SimplePool<T>(maxPoolSize){
         }
 
         T acquire() {
