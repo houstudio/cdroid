@@ -298,7 +298,7 @@ void VelocityTrackerImpl::addMovement(const MotionEvent& event) {
 
     const size_t historySize = event.getHistorySize();
     for (size_t h = 0; h <= historySize; h++) {
-        const nsecs_t eventTime = event.getHistoricalEventTime(h);
+        const nsecs_t eventTime = event.getHistoricalEventTime(h)*NANOS_PER_MS;
         for (size_t i = 0; i < event.getPointerCount(); i++) {
             if (event.isResampled(i, h)) {
                 continue; // skip resampled samples
