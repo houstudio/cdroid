@@ -436,6 +436,10 @@ void VelocityTracker::clear(){
     mTrackerState->clear();
 }
 
+bool VelocityTracker::isAxisSupported(int axis)const{
+    return VelocityTrackerImpl::isAxisSupported(axis);
+}
+
 void VelocityTracker::addMovement(const MotionEvent& event){
     mTrackerState->addMovement(event);
 }

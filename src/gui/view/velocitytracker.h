@@ -109,6 +109,7 @@ public:
     static VelocityTracker*obtain(int strategy);
     void recycle();
     void clear();
+    bool isAxisSupported(int axis)const;
     void addMovement(const MotionEvent& event);
     void computeCurrentVelocity(int units);
     void computeCurrentVelocity(int units,float maxVelocity);
