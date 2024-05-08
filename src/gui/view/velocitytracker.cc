@@ -412,7 +412,7 @@ void IntegratingVelocityTrackerStrategy::initState(State& state,
 
 void IntegratingVelocityTrackerStrategy::updateState(State& state,
         nsecs_t eventTime, float xpos, float ypos) const {
-    const nsecs_t MIN_TIME_DELTA = 2*1000 ;
+    const nsecs_t MIN_TIME_DELTA = 2*NANOS_PER_MS ;
     const float FILTER_TIME_CONSTANT = 0.010f; // 10 milliseconds
 
     if (eventTime <= state.updateTime + MIN_TIME_DELTA) {
