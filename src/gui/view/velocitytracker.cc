@@ -436,7 +436,7 @@ void VelocityTracker::clear(){
     mTrackerState->clear();
 }
 
-bool VelocityTracker::isAxisSupported(int axis)const{
+bool VelocityTracker::isAxisSupported(int axis){
     return VelocityTrackerImpl::isAxisSupported(axis);
 }
 
