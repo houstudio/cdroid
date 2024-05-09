@@ -49,7 +49,7 @@ find_package(UniBreak REQUIRED)
 find_package(litehtml CONFIG)
 find_package(PLPLOT)
 find_package(zint CONFIG) #barcode generater
-
+find_package(Fribidi)
 list(APPEND CDROID_DEPLIBS
     ${CAIRO_LIBRARIES}
     ${PIXMAN_LIBRARIES}
@@ -96,9 +96,10 @@ if (zint_FOUND)
     add_definitions(-DENABLE_BARCODE=1)
 endif()
 
-if(ENABLE_FRIBIDI)
+if(ENABLE_FRIBIDI OR FRIBIDI_FOUND)
   find_package(Fribidi REQUIRED)
   list(APPEND CDROID_DEPLIBS ${FRIBIDI_LIBRARIES})
+  add_definitions(-DENABLE_FRIBIDI=1)
 endif(ENABLE_FRIBIDI)
 
 list(APPEND CDROID_DEPINCLUDES
