@@ -132,14 +132,17 @@ bool AnimatedImageDrawable::onLayoutDirectionChanged(int layoutDirection) {
 }
 
 void AnimatedImageDrawable::draw(Canvas& canvas){
-    if(mImage==nullptr)return;
-    if (mStarting && (mCurrentFrame==0) ) {
+    if(mImage == nullptr)return;
+    if (mStarting && (mCurrentFrame == 0) ) {
         postOnAnimationStart();
     }
     canvas.save();
     auto frmSequence = mAnimatedImageState->mFrameSequence;
-    if( (mCurrentFrame!=mNextFrame) && mAnimatedImageState->mFrameCount){
+    if( (mCurrentFrame != mNextFrame) && mAnimatedImageState->mFrameCount){
+        const long startTime  = SystemClock::uptimeMillis();
         mFrameDelay = mFrameSequenceState->drawFrame(mNextFrame,(uint32_t*)mImage->get_data(),mImage->get_stride()>>2,mCurrentFrame);
+        const long decodeTime = SystemClock::uptimeMillis() - startTime;
+        mFrameDelay = (decodeTime >= mFrameDelay)?(mFrameDelay/2):(mFrameDelay - decodeTime);
         mCurrentFrame = mNextFrame;
         mImage->mark_dirty();
     }
@@ -147,35 +150,35 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
     // will manage the animation
     LOGV("%p draw Frame %d/%d started=%d repeat=%d/%d nextDelay=%d",this,mCurrentFrame,
           mAnimatedImageState->mFrameCount,mStarting,mRepeated,mRepeatCount,mFrameDelay);
-    if(mStarting && ((mRepeated<mRepeatCount) || (mRepeatCount<0))){
+    if( mStarting && ( (mRepeated < mRepeatCount) || (mRepeatCount < 0))){
         if (mFrameDelay > 0) {
             if (mRunnable == nullptr) {
                 mRunnable = [this](){
                     if(mStarting && mAnimatedImageState->mFrameCount){
                         invalidateSelf();
-                        mNextFrame = (mNextFrame+1)%mAnimatedImageState->mFrameCount;
+                        mNextFrame = (mNextFrame + 1)%mAnimatedImageState->mFrameCount;
                     }
-                    if(mNextFrame==mAnimatedImageState->mFrameCount-1){
-                        mRepeated++;
-                        mStarting = (mRepeated<mRepeatCount)||(mRepeatCount<0);
+                    if( mNextFrame == mAnimatedImageState->mFrameCount - 1){
+                        mRepeated ++;
+                        mStarting = (mRepeated < mRepeatCount)||(mRepeatCount < 0);
                     }
-                    mCurrentFrame=(mNextFrame-1)%mAnimatedImageState->mFrameCount;
+                    mCurrentFrame = (mNextFrame - 1) % mAnimatedImageState->mFrameCount;
                     mFrameScheduled = false;
                 };
             }
             if(!mFrameScheduled){
                 unscheduleSelf(mRunnable);
                 scheduleSelf(mRunnable, SystemClock::uptimeMillis() + mFrameDelay);
-                mFrameScheduled=true;
+                mFrameScheduled = true;
             }
         }
-        if ( mCurrentFrame==mAnimatedImageState->mFrameCount-1){// == FINISHED) {
+        if ( mCurrentFrame == mAnimatedImageState->mFrameCount - 1){// == FINISHED) {
             // This means the animation was drawn in software mode and ended.
             postOnAnimationEnd();
         }
     }
-    void*handler = canvas.getHandler();
-    if((mImageHandler==nullptr)||(handler==nullptr)){
+    void *handler = canvas.getHandler();
+    if( (mImageHandler == nullptr) || (handler == nullptr) ){
         canvas.set_source(mImage,mBounds.left,mBounds.top);
         canvas.set_operator(Cairo::Context::Operator::SOURCE);
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
@@ -185,7 +188,7 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
         Rect rd = {0,0,mBounds.width,mBounds.height};
         Cairo::Matrix mtx = canvas.get_matrix();
         double angle = std::atan2(mtx.xx,-mtx.xy)*180.0/M_PI;
-        LOGD("canvas.angle=%d",(int(angle)-90)%360);
+        LOGD("canvas.angle = %d",(int(angle) - 90) % 360);
         GFXBlit(handler,0,0,mImageHandler,nullptr);
 #endif
     }
