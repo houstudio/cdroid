@@ -56,8 +56,8 @@ public:
                 it->second.push_back({x,y});
                 //LOGD("Pointer[%d] %d",i,event.getHistorySize());
                 for(int j=0;j<event.getHistorySize();j++){
-                    x = event.getHistoricalRawX(i,j);
-                    y = event.getHistoricalRawY(i,j);
+                    x = event.getHistoricalX(i,j);
+                    y = event.getHistoricalY(i,j);
                     it->second.push_back({x,y});
                     minX = std::min(x,minX);
                     minY = std::min(y,minY);

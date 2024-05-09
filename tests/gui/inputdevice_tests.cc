@@ -36,7 +36,7 @@ public:
           for(int j=0;j<pointerCount;j++){
              std::ostringstream oss;
              for(int k=0;k<hisCount;k++){
-                oss<<"("<<e->getHistoricalRawX(j,k)<<","<<e->getHistoricalRawY(j,k)<<"),";
+                oss<<"("<<e->getHistoricalX(j,k)<<","<<e->getHistoricalY(j,k)<<"),";
              }
              LOGI("     Point[%d](%d)=(%.f,%.f){%s}",j,e->getPointerId(j),e->getX(j),e->getY(j),oss.str().c_str());
           }

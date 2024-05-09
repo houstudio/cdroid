@@ -225,7 +225,7 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
     const int msrdHght = getMeasuredHeight();
 
     // Input text centered horizontally.
-    const int inptTxtMsrdWdth = mSelectedText->getMeasuredWidth();
+    const int inptTxtMsrdWdth = isHorizontalMode()?mSelectorElementSize:mSelectedText->getMeasuredWidth();
     const int inptTxtMsrdHght = mSelectedText->getMeasuredHeight();
     const int inptTxtLeft= (msrdWdth - inptTxtMsrdWdth) /2;
     const int inptTxtTop = (msrdHght - inptTxtMsrdHght)/2;
@@ -241,6 +241,7 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
             mLeftDividerLeft = (getWidth()-mDividerDistance)/2 - mDividerThickness;
             mRightDividerRight= mLeftDividerLeft + dividerDistence;
             mBottomDividerBottom = getHeight();
+            mSelectedText->layout(inptTxtLeft, inptTxtTop,std::max(inptTxtMsrdWdth,mSelectorElementSize), inptTxtMsrdHght);
         }else{
             mTopDividerTop = (getHeight() - mDividerDistance)/2 - mDividerThickness;
             mBottomDividerBottom = mTopDividerTop + dividerDistence;
