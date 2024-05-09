@@ -498,5 +498,5 @@ enum{
 
 };/*endof class KeyEvent*/
 }/*endof namespace*/
-
+#include <view/keycodes.h>
 #endif/*__KEY_EVENT_H__*/
