@@ -3,6 +3,8 @@
 #include <view/inputevent.h>
 #include <cairomm/matrix.h>
 #include <core/bitset.h>
+
+#define USE_TRACKINGID_AS_POINTERID 0
 namespace cdroid{
 
 struct PointerCoords {

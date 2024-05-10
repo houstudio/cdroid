@@ -371,7 +371,6 @@ int TouchDevice::ABS2AXIS(int absaxis){
     }
 }
 
-#define USE_TRACKINGID_AS_POINTERID 0
 /*Android use 0->PointerCount as PointerID
  *other PointerID will caused many crashes */
 
@@ -431,7 +430,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
         mSlotID = value ;
         break;
     case ABS_MT_TRACKING_ID:
-        slot = mTrack2Slot.get(mTrackID = value,-1);/*value is trackid*/
+        slot = mTrack2Slot.indexOfKey(mTrackID = value);
         if( (slot ==-1) && (value!=-1) ){
             const int index = mTrack2Slot.size();
             mCurrBits.markBit(index);
@@ -445,9 +444,9 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
             mCurrBits.clearBit(pointerIndex);
         }
 #if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
-		mProp.id = mTrackID;
+        mProp.id = mTrackID;
 #else
-		mProp.id = slot;
+        mProp.id = slot;
 #endif
         break;
     default:break;
