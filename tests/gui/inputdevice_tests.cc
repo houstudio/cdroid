@@ -243,7 +243,7 @@ TEST_F(INPUTDEVICE,MTA){//TypeA Events
 
    ASSERT_EQ(OutEvents[5]->getActionMasked(),MotionEvent::ACTION_MOVE);
    ASSERT_EQ(OutEvents[5]->getActionIndex(),0);
-   ASSERT_EQ(OutEvents[5]->getPointerId(0),POINTERID(mts[27].value,0));
+   ASSERT_EQ(OutEvents[5]->getPointerId(0),POINTERID(mts[31].value,0));
    ASSERT_EQ(OutEvents[5]->getPointerCount(),1);
    ASSERT_EQ(OutEvents[5]->getX(0),mts[42].value);//123
    ASSERT_EQ(OutEvents[5]->getY(0),mts[43].value);//134
