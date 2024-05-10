@@ -263,6 +263,13 @@ public:
     float getHistoricalAxisValue(int axis, size_t pointerIndex,size_t historicalIndex) const;
     float getHistoricalX(size_t pointerIndex, size_t historicalIndex) const;
     float getHistoricalY(size_t pointerIndex, size_t historicalIndex) const;
+    float getHistoricalPressure(size_t pointerIndex, size_t historicalIndex) const;
+    float getHistoricalSize(size_t pointerIndex, size_t historicalIndex) const;
+    float getHistoricalTouchMajor(size_t pointerIndex, size_t historicalIndex) const;
+    float getHistoricalTouchMinor(size_t pointerIndex, size_t historicalIndex) const;
+    float getHistoricalToolMajor(size_t pointerIndex, size_t historicalIndex) const;
+    float getHistoricalToolMinor(size_t pointerIndex, size_t historicalIndex) const;
+    float getHistoricalOrientation(size_t pointerIndex, size_t historicalIndex) const;
     float getAxisValue(int32_t axis)const;
     float getAxisValue(int32_t axis, size_t pointerIndex)const;
     float getX(size_t pointerIndex=0) const { return getAxisValue(AXIS_X,pointerIndex); }

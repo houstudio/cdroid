@@ -300,13 +300,13 @@ void Assets::loadStrings(const std::string&lan) {
     const std::string suffix = "/strings-"+lan+".xml";
     for(auto a:mResources) {
         std::vector<std::string>files;
-	a.second->getEntries(files);
-	for(auto fileName:files){
+        a.second->getEntries(files);
+        for(auto fileName:files){
             if( (TextUtils::endWith(fileName,".xml") && TextUtils::endWith(fileName,suffix) )==false)continue;
             loadKeyValues(fileName,nullptr,std::bind(&Assets::parseItem,this,a.first,fileName,std::placeholders::_1,
                 std::placeholders::_2,std::placeholders::_3,std::placeholders::_4));
             LOGD("load %s for '%s'",fileName.c_str(),lan.c_str());
-	}
+        }
     }
 }
 

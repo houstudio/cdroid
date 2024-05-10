@@ -604,7 +604,35 @@ float MotionEvent::getHistoricalX(size_t pointerIndex, size_t historicalIndex) c
 }
 
 float MotionEvent::getHistoricalY(size_t pointerIndex, size_t historicalIndex) const{
-     return getHistoricalRawAxisValue(AXIS_Y, pointerIndex, historicalIndex);
+    return getHistoricalRawAxisValue(AXIS_Y, pointerIndex, historicalIndex);
+}
+
+float MotionEvent::getHistoricalPressure(size_t pointerIndex, size_t historicalIndex) const{
+    return getHistoricalRawAxisValue(AXIS_PRESSURE, pointerIndex, historicalIndex);     
+}
+
+float MotionEvent::getHistoricalSize(size_t pointerIndex, size_t historicalIndex) const{
+    return getHistoricalRawAxisValue(AXIS_SIZE, pointerIndex, historicalIndex);
+}
+
+float MotionEvent::getHistoricalTouchMajor(size_t pointerIndex, size_t historicalIndex) const{
+    return getHistoricalRawAxisValue(AXIS_TOUCH_MAJOR, pointerIndex, historicalIndex);
+}
+
+float MotionEvent::getHistoricalTouchMinor(size_t pointerIndex, size_t historicalIndex) const{
+    return getHistoricalRawAxisValue(AXIS_TOUCH_MINOR, pointerIndex, historicalIndex);
+}
+
+float MotionEvent::getHistoricalToolMajor(size_t pointerIndex, size_t historicalIndex) const{
+    return getHistoricalRawAxisValue(AXIS_TOOL_MAJOR, pointerIndex, historicalIndex);
+}
+
+float MotionEvent::getHistoricalToolMinor(size_t pointerIndex, size_t historicalIndex) const{
+    return getHistoricalRawAxisValue(AXIS_TOOL_MINOR, pointerIndex, historicalIndex);
+}
+
+float MotionEvent::getHistoricalOrientation(size_t pointerIndex, size_t historicalIndex) const{
+    return getHistoricalRawAxisValue(AXIS_ORIENTATION, pointerIndex, historicalIndex);
 }
 
 template <typename T>
@@ -612,6 +640,7 @@ static void appendUnless(T defValue, std::ostringstream& os,const std::string& k
     if (/*DEBUG_CONCISE_TOSTRING &&*/ defValue==value) return;
     os<<key<<value;
 }
+
 void MotionEvent::toStream(std::ostream& os)const{
     os<<"MotionEvent { action="<<actionToString(getAction());
     //appendUnless("0", msg, ", actionButton=", buttonStateToString(getActionButton()));
