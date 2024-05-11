@@ -213,7 +213,7 @@ cairo_status_t cairo_image_surface_write_to_jpeg_mem(cairo_surface_t *sfc, unsig
     cinfo.in_color_space = cairo_image_surface_get_format(sfc) == CAIRO_FORMAT_ARGB32 ? JCS_EXT_ARGB : JCS_EXT_XRGB;
 #endif
     cinfo.input_components = 4;
-#else
+#else//LIBJPEG_TURBO_VERSION
     cinfo.in_color_space = JCS_RGB;
     cinfo.input_components = 3;
 #endif
@@ -368,7 +368,7 @@ cairo_surface_t *cairo_image_surface_create_from_jpeg_stdstream(std::istream&is)
     // start decompressor
     (void) jpeg_start_decompress(&cinfo);
     // create Cairo image surface
-    sfc = cairo_image_surface_create(CAIRO_FORMAT_RGB24, cinfo.output_width, cinfo.output_height);
+    sfc = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, cinfo.output_width, cinfo.output_height);
     if (cairo_surface_status(sfc) != CAIRO_STATUS_SUCCESS) {
         jpeg_destroy_decompress(&cinfo);
         return sfc;
@@ -449,6 +449,7 @@ cairo_surface_t *cairo_image_surface_create_from_turbojpeg_stdstream(std::istrea
           TJPF_RGBX,TJFLAG_FASTDCT);
 #endif
 decend:
+    cairo_surface_set_mime_data(sfc, CAIRO_MIME_TYPE_JPEG, NULL, 0, NULL,NULL);
     if(handle)tjDestroy(handle);
     if(buffer)free(buffer);
     return sfc;
