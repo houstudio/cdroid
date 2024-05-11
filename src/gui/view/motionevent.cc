@@ -600,7 +600,7 @@ float MotionEvent::getHistoricalAxisValue(int axis,size_t pointerIndex,size_t hi
 }
 
 float MotionEvent::getHistoricalX(size_t pointerIndex, size_t historicalIndex) const{
-     return getHistoricalRawAxisValue(AXIS_X, pointerIndex, historicalIndex);
+    return getHistoricalRawAxisValue(AXIS_X, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalY(size_t pointerIndex, size_t historicalIndex) const{
