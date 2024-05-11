@@ -76,14 +76,37 @@ static void make_jpeg_stream (j_decompress_ptr cinfo, std::istream* in) {
     src->pub.next_input_byte = NULL; /* until buffer loaded */
 }
 
+#ifndef LIBJPEG_TURBO_VERSION
+static void pix_conv(unsigned char *dst, int dw, const unsigned char *src, int sw, int num) {
+    int si, di;
+
+    // safety check
+    if (dw < 3 || sw < 3 || dst == NULL || src == NULL)
+        return;
+
+    num--;
+    for (si = num * sw, di = num * dw; si >= 0; si -= sw, di -= dw) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        dst[di + 2] = src[si    ];
+        dst[di + 1] = src[si + 1];
+        dst[di + 0] = src[si + 2];
+#else
+        // FIXME: This is untested, it may be wrong.
+        dst[di - 3] = src[si - 3];
+        dst[di - 2] = src[si - 2];
+        dst[di - 1] = src[si - 1];
+#endif
+    }
+}
+#endif
+
 static int gcd(int a, int b) {
     if (b == 0) return a;
     return gcd(b, a % b);
 }
 
-// 定义一个函数，将小数转换为最简分数形式
 static void decimalToFraction(double decimal,int& scale_num,int& scale_denom) {
-    const int precision = 1000000;  // 精度，可以根据需要调整
+    const int precision = 1000000;
     const int numerator = decimal * precision;
     const int denominator = precision;
     const int commonDivisor = gcd(numerator, denominator);

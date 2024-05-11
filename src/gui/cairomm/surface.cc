@@ -371,7 +371,7 @@ RefPtr<ImageSurface>ImageSurface:: create_from_stream(std::istream& stream){
     if(!stream.good())return nullptr;
 
     for(int i=0;i<sizeof(head);i++)stream.unget();
-    if(memcmp("jpg",ftype,3)==0){
+    if( memcmp("jpg",ftype,3) == 0 ){
        cairo_surface_t* cobject = nullptr;
 #ifdef ENABLE_TURBOJPEG
        cobject = cairo_image_surface_create_from_turbojpeg_stdstream(stream);
@@ -380,13 +380,13 @@ RefPtr<ImageSurface>ImageSurface:: create_from_stream(std::istream& stream){
        if(nullptr==cobject )cobject = cairo_image_surface_create_from_jpeg_stdstream(stream);
 #endif
        if(cobject) img = RefPtr<ImageSurface>(new ImageSurface(cobject, true /* has reference */));
-    }else if(memcmp("png",ftype,3)==0){
-        img=create_from_png(stream_read,&stream);
+    }else if( memcmp("png",ftype,3) == 0 ){
+        img = create_from_png(stream_read,&stream);
     }/*else if(memcmp("bmp",ftype,3)==0){
         Bitmap bmp;;
         bmp.ReadFromStream(stream);
         img=(RefPtr<ImageSurface>)bmp;
-    }*/else if(memcmp("svg",ftype,3)==0){
+    }*/else if( memcmp("svg",ftype,3) == 0 ){
 #ifdef ENABLE_CAIROSVG
          svg_cairo_t *svg;
          unsigned int width,height;
@@ -399,16 +399,16 @@ RefPtr<ImageSurface>ImageSurface:: create_from_stream(std::istream& stream){
          }
          svg_cairo_parse_chunk_end(svg);
          svg_cairo_get_size(svg,&width,&height);
-         LOGD("svg.viewport=%dx%d",width,height);
-         if(width>0&&height>0){
-             img=ImageSurface::create(Surface::Format::ARGB32,width,height);
-             RefPtr<Context>ctx=Context::create(img);
+         LOGD("svg.viewport = %dx%d",width,height);
+         if( (width > 0) && ( height > 0) ){
+             img = ImageSurface::create(Surface::Format::ARGB32,width,height);
+             RefPtr<Context>ctx = Context::create(img);
              svg_cairo_render(svg,(cairo_t*)ctx->cobj());
          }
          svg_cairo_destroy(svg);
 #endif
     }
-    t2=steady_clock::now();
+    t2 = steady_clock::now();
     LOGV_IF(img.get(),"img.size=%dx%d used %.5f stype=%s",img->get_width(),img->get_height(),duration_cast<duration<double>>(t2 - t1),ftype);
     return img;
 }

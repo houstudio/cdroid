@@ -24,7 +24,7 @@ static void* X11EventProc(void*p);
 static GFXRect screenMargin= {0}; //{60,0,60,0};
 
 #define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
-#if 0
+#if 1
    #define SENDMOUSE(time,x,y)  {\
       InjectABS(time,EV_ABS,ABS_MT_TRACKING_ID,12);\
       InjectABS(time,EV_ABS,ABS_MT_POSITION_X,x);\

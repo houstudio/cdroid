@@ -92,13 +92,10 @@ BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname)
     DisplayMetrics dm = ctx->getDisplayMetrics();
     const size_t fullScreenSize=dm.widthPixels*dm.heightPixels;
     const size_t bitmapSize = b->get_width()*b->get_height();
-    char mime[32] = {0};
-    size_t len = 0;
-    b->get_mime_data(mime,len);
-    LOGD_IF( ( (mBitmapState->mTransparency!=PixelFormat::OPAQUE)&&(bitmapSize>=fullScreenSize/4) )
-	   || (b->get_stride()<b->get_width()*4),
-        "is %-12s bpp:%d %s/%d '%s' maby cause compose more slowly" , tNames[mBitmapState->mTransparency],
-	b->get_stride()/b->get_width(), mime,len,mBitmapState->mResource.c_str());
+    LOGI_IF( ( (mBitmapState->mTransparency!=PixelFormat::OPAQUE) && (bitmapSize>=fullScreenSize/4) )
+	   || (b->get_stride()<b->get_width()*4||(b->get_format()!=Cairo::Surface::Format::ARGB32)),
+        "is %-12s %d*%d*%d format=%d '%s' maby cause compose more slowly" , tNames[mBitmapState->mTransparency],
+	b->get_width(),b->get_height(),b->get_stride()/b->get_width(),b->get_format(),mBitmapState->mResource.c_str());
 #endif
 }
 
