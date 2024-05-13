@@ -80,6 +80,7 @@ InputEventSource& InputEventSource::getInstance(){
 }
 
 void InputEventSource::setScreenSaver(ScreenSaver func,int timeout){
+    if(mScreenSaver)mScreenSaver(false);
     mScreenSaver = func;
     mScreenSaveTimeOut = timeout;
 }
@@ -124,6 +125,7 @@ int InputEventSource::checkEvents(){
 void InputEventSource::closeScreenSaver(){
     mIsScreenSaveActived = false;
     mLastInputEventTime = SystemClock::uptimeMillis();
+    if(mScreenSaver)mScreenSaver(false);
 }
 
 bool InputEventSource::isScreenSaverActived()const{
