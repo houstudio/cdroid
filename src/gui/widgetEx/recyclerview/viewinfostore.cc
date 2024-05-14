@@ -195,10 +195,11 @@ ViewInfoStore::InfoRecord::InfoRecord() {
 
 ViewInfoStore::InfoRecord* ViewInfoStore::InfoRecord::obtain() {
     InfoRecord* record = sPool.acquire();
+    if(record==nullptr)record = new InfoRecord();
     record->preInfo = nullptr;
     record->postInfo = nullptr;
     record->flags = 0;
-    return record == nullptr ? new InfoRecord() : record;
+    return record;
 }
 
 void ViewInfoStore::InfoRecord::recycle(InfoRecord* record) {
