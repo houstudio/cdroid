@@ -104,10 +104,10 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
 int InputEventSource::checkEvents(){
     std::lock_guard<std::mutex> lock(mtxEvents);
     nsecs_t now = SystemClock::uptimeMillis();
-	int count = 0;
-	for(auto dev:mDevices){
+    int count = 0;
+    for(auto dev:mDevices){
         count += dev.second->getEventCount();
-	}
+    }
     if(mRunning==false)
         mRunning = true;
     if( ((now - mLastInputEventTime) > mScreenSaveTimeOut) && (mScreenSaveTimeOut>0)
@@ -123,9 +123,11 @@ int InputEventSource::checkEvents(){
 }
 
 void InputEventSource::closeScreenSaver(){
-    mIsScreenSaveActived = false;
+    if(mIsScreenSaveActived){
+        mIsScreenSaveActived = false;
+        if(mScreenSaver)mScreenSaver(false);
+    }
     mLastInputEventTime = SystemClock::uptimeMillis();
-    if(mScreenSaver)mScreenSaver(false);
 }
 
 bool InputEventSource::isScreenSaverActived()const{

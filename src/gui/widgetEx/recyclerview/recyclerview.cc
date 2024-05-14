@@ -385,7 +385,7 @@ void RecyclerView::dispatchUpdate(void* /*AdapterHelper::UpdateOp*/ paramsOP) {
 }
 void RecyclerView::initAdapterManager() {
     AdapterHelper::Callback cbk;
-    cbk.findViewHolder=[this](int position)->ViewHolder*{
+    cbk.findViewHolder = [this](int position)->ViewHolder*{
         ViewHolder* vh = findViewHolderForPosition(position, true);
         if (vh == nullptr) {
             return nullptr;
@@ -399,35 +399,35 @@ void RecyclerView::initAdapterManager() {
         return vh;
     };
 
-    cbk.offsetPositionsForRemovingInvisible=[this](int start, int count) {
+    cbk.offsetPositionsForRemovingInvisible = [this](int start, int count) {
         offsetPositionRecordsForRemove(start, count, true);
         mItemsAddedOrRemoved = true;
         mState->mDeletedInvisibleItemCountSincePreviousLayout += count;
     };
 
-    cbk.offsetPositionsForRemovingLaidOutOrNewView=[this](int positionStart, int itemCount) {
+    cbk.offsetPositionsForRemovingLaidOutOrNewView = [this](int positionStart, int itemCount) {
         offsetPositionRecordsForRemove(positionStart, itemCount, false);
         mItemsAddedOrRemoved = true;
     };
 
-    cbk.markViewHoldersUpdated=[this](int positionStart, int itemCount, Object* payload) {
+    cbk.markViewHoldersUpdated = [this](int positionStart, int itemCount, Object* payload) {
         viewRangeUpdate(positionStart, itemCount, payload);
         mItemsChanged = true;
     };
 
-    cbk.onDispatchFirstPass=[this](AdapterHelper::UpdateOp* op) {
+    cbk.onDispatchFirstPass = [this](AdapterHelper::UpdateOp* op) {
         dispatchUpdate(op);
     };
 
-    cbk.onDispatchSecondPass=[this](AdapterHelper::UpdateOp* op) {
+    cbk.onDispatchSecondPass = [this](AdapterHelper::UpdateOp* op) {
         dispatchUpdate(op);
     };
-    cbk.offsetPositionsForAdd=[this](int positionStart, int itemCount) {
+    cbk.offsetPositionsForAdd = [this](int positionStart, int itemCount) {
         offsetPositionRecordsForInsert(positionStart, itemCount);
         mItemsAddedOrRemoved = true;
     };
 
-    cbk.offsetPositionsForMove=[this](int from, int to) {
+    cbk.offsetPositionsForMove = [this](int from, int to) {
         offsetPositionRecordsForMove(from, to);
         // should we create mItemsMoved ?
         mItemsAddedOrRemoved = true;
@@ -876,36 +876,36 @@ void RecyclerView::scrollStep(int dx, int dy,int* consumed) {
 }
 
 void RecyclerView::consumePendingUpdateOperations() {
-        if (!mFirstLayoutComplete || mDataSetHasChangedAfterLayout) {
-            dispatchLayout();
-            return;
-        }
-        if (!mAdapterHelper->hasPendingUpdates()) {
-            return;
-        }
-
-        // if it is only an item change (no add-remove-notifyDataSetChanged) we can check if any
-        // of the visible items is affected and if not, just ignore the change.
-        if (mAdapterHelper->hasAnyUpdateTypes(AdapterHelper::UpdateOp::UPDATE) && !mAdapterHelper
-                ->hasAnyUpdateTypes(AdapterHelper::UpdateOp::ADD | AdapterHelper::UpdateOp::REMOVE
-                        | AdapterHelper::UpdateOp::MOVE)) {
-            startInterceptRequestLayout();
-            onEnterLayoutOrScroll();
-            mAdapterHelper->preProcess();
-            if (!mLayoutWasDefered) {
-                if (hasUpdatedView()) {
-                    dispatchLayout();
-                } else {
-                    // no need to layout, clean state
-                    mAdapterHelper->consumePostponedUpdates();
-                }
-            }
-            stopInterceptRequestLayout(true);
-            onExitLayoutOrScroll();
-        } else if (mAdapterHelper->hasPendingUpdates()) {
-            dispatchLayout();
-        }
+    if (!mFirstLayoutComplete || mDataSetHasChangedAfterLayout) {
+        dispatchLayout();
+        return;
     }
+    if (!mAdapterHelper->hasPendingUpdates()) {
+        return;
+    }
+
+    // if it is only an item change (no add-remove-notifyDataSetChanged) we can check if any
+    // of the visible items is affected and if not, just ignore the change.
+    if (mAdapterHelper->hasAnyUpdateTypes(AdapterHelper::UpdateOp::UPDATE) && !mAdapterHelper
+            ->hasAnyUpdateTypes(AdapterHelper::UpdateOp::ADD | AdapterHelper::UpdateOp::REMOVE
+                    | AdapterHelper::UpdateOp::MOVE)) {
+        startInterceptRequestLayout();
+        onEnterLayoutOrScroll();
+        mAdapterHelper->preProcess();
+        if (!mLayoutWasDefered) {
+            if (hasUpdatedView()) {
+                dispatchLayout();
+            } else {
+                // no need to layout, clean state
+                mAdapterHelper->consumePostponedUpdates();
+            }
+        }
+        stopInterceptRequestLayout(true);
+        onExitLayoutOrScroll();
+    } else if (mAdapterHelper->hasPendingUpdates()) {
+        dispatchLayout();
+    }
+}
 
 /**
  * @return True if an existing view holder needs to be updated
@@ -2859,7 +2859,7 @@ void RecyclerView::offsetPositionRecordsForMove(int from, int to) {
 
     for (int i = 0; i < childCount; i++) {
         ViewHolder* holder = getChildViewHolderInt(mChildHelper->getUnfilteredChildAt(i));
-        if (holder == nullptr || holder->mPosition < start || holder->mPosition > end) {
+        if ( (holder == nullptr) || (holder->mPosition < start) || (holder->mPosition > end) ) {
             continue;
         }
         LOGD("offsetPositionRecordsForMove attached child %d holder %p",i, holder);
@@ -2879,8 +2879,8 @@ void RecyclerView::offsetPositionRecordsForInsert(int positionStart, int itemCou
     const int childCount = mChildHelper->getUnfilteredChildCount();
     for (int i = 0; i < childCount; i++) {
         ViewHolder* holder = getChildViewHolderInt(mChildHelper->getUnfilteredChildAt(i));
-        if (holder != nullptr && !holder->shouldIgnore() && holder->mPosition >= positionStart) {
-            LOGE("offsetPositionRecordsForInsert attached child %d holder %p  now at position "
+        if ( (holder != nullptr) && !holder->shouldIgnore() && (holder->mPosition >= positionStart) ) {
+            LOGE("offsetPositionRecordsForInsert attached child %d holder %p  now at position %d"
                        ,i,holder, (holder->mPosition + itemCount));
             holder->offsetPosition(itemCount, false);
             mState->mStructureChanged = true;
@@ -2922,7 +2922,7 @@ void RecyclerView::viewRangeUpdate(int positionStart, int itemCount, Object* pay
         if (holder == nullptr || holder->shouldIgnore()) {
             continue;
         }
-        if (holder->mPosition >= positionStart && holder->mPosition < positionEnd) {
+        if ( (holder->mPosition >= positionStart) && (holder->mPosition < positionEnd) ) {
             // We re-bind these view holders after pre-processing is complete so that
             // ViewHolders have their final positions assigned.
             holder->addFlags(ViewHolder::FLAG_UPDATE);
@@ -2935,7 +2935,7 @@ void RecyclerView::viewRangeUpdate(int positionStart, int itemCount, Object* pay
 }
 
 bool RecyclerView::canReuseUpdatedViewHolder(ViewHolder& viewHolder) {
-    return mItemAnimator == nullptr || mItemAnimator->canReuseUpdatedViewHolder(viewHolder,
+    return (mItemAnimator == nullptr) || mItemAnimator->canReuseUpdatedViewHolder(viewHolder,
             *viewHolder.getUnmodifiedPayloads());
 }
 
@@ -2995,7 +2995,7 @@ View* RecyclerView::findContainingItemView(View* view) {
 
 RecyclerView::ViewHolder* RecyclerView::findContainingViewHolder(View* view) {
     View* itemView = findContainingItemView(view);
-    return itemView == nullptr ? nullptr : getChildViewHolder(itemView);
+    return (itemView == nullptr) ? nullptr : getChildViewHolder(itemView);
 }
 
 
@@ -3084,14 +3084,14 @@ RecyclerView::ViewHolder* RecyclerView::findViewHolderForPosition(int position, 
 }
 
 RecyclerView::ViewHolder* RecyclerView::findViewHolderForItemId(long id) {
-    if (mAdapter == nullptr || !mAdapter->hasStableIds()) {
+    if ( (mAdapter == nullptr) || !mAdapter->hasStableIds()) {
         return nullptr;
     }
     const int childCount = mChildHelper->getUnfilteredChildCount();
     ViewHolder* hidden = nullptr;
     for (int i = 0; i < childCount; i++) {
         ViewHolder* holder = getChildViewHolderInt(mChildHelper->getUnfilteredChildAt(i));
-        if (holder && !holder->isRemoved() && holder->getItemId() == id) {
+        if (holder && !holder->isRemoved() && (holder->getItemId() == id) ) {
             if (mChildHelper->isHidden(holder->itemView)) {
                 hidden = holder;
             } else {
@@ -3578,7 +3578,7 @@ int RecyclerView::RecycledViewPool::getRecycledViewCount(int viewType) {
 
 RecyclerView::ViewHolder* RecyclerView::RecycledViewPool::getRecycledView(int viewType) {
     ScrapData* scrapData = mScrap.get(viewType);
-    if (scrapData != nullptr && !scrapData->mScrapHeap.empty()) {
+    if ( (scrapData != nullptr) && !scrapData->mScrapHeap.empty()) {
         std::vector<ViewHolder*>& scrapHeap = scrapData->mScrapHeap;
         ViewHolder*ret = scrapHeap.back();
         scrapHeap.pop_back();
@@ -3630,13 +3630,13 @@ void RecyclerView::RecycledViewPool::factorInBindTime(int viewType, long bindTim
 }
 
 bool RecyclerView::RecycledViewPool::willCreateInTime(int viewType, long approxCurrentNs, long deadlineNs) {
-    long expectedDurationNs = getScrapDataForType(viewType)->mCreateRunningAverageNs;
-    return expectedDurationNs == 0 || (approxCurrentNs + expectedDurationNs < deadlineNs);
+    const long expectedDurationNs = getScrapDataForType(viewType)->mCreateRunningAverageNs;
+    return (expectedDurationNs == 0) || (approxCurrentNs + expectedDurationNs < deadlineNs);
 }
 
 bool RecyclerView::RecycledViewPool::willBindInTime(int viewType, long approxCurrentNs, long deadlineNs) {
-    long expectedDurationNs = getScrapDataForType(viewType)->mBindRunningAverageNs;
-    return expectedDurationNs == 0 || (approxCurrentNs + expectedDurationNs < deadlineNs);
+    const long expectedDurationNs = getScrapDataForType(viewType)->mBindRunningAverageNs;
+    return (expectedDurationNs == 0) || (approxCurrentNs + expectedDurationNs < deadlineNs);
 }
 
 void RecyclerView::RecycledViewPool::attach() {
