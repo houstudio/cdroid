@@ -48,8 +48,8 @@ protected:
     void onMoveAnimationStart(RecyclerView::ViewHolder*,Animator& animator,bool isReverse);
     void onMoveAnimationCancel(int deltaX,int deltaY,RecyclerView::ViewHolder*,Animator& animator,bool isReverse);
     void onMoveAnimationEnd(RecyclerView::ViewHolder*,Animator& animator,bool isReverse);
-    void onChangeAnimationStart(RecyclerView::ViewHolder*,Animator& animator,bool isReverse);
-    void onChangeAnimationEnd(RecyclerView::ViewHolder*,Animator& animator,bool isReverse);
+    void onChangeAnimationStart(bool,ChangeInfo*,Animator& animator,bool isReverse);
+    void onChangeAnimationEnd(bool,ChangeInfo*,Animator& animator,bool isReverse);
 protected:
     void animateRemoveImpl(RecyclerView::ViewHolder& holder);
     void endChangeAnimation(std::vector<ChangeInfo*>& infoList, RecyclerView::ViewHolder& item);

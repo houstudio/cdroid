@@ -148,7 +148,7 @@ int JPEGDecoder::readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameInde
     // start decompressor
     (void) jpeg_start_decompress(&cinfo);
     // create Cairo image surface
-    sfc = cairo_image_surface_create(CAIRO_FORMAT_RGB24, cinfo.output_width, cinfo.output_height);
+    sfc = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, cinfo.output_width, cinfo.output_height);
     if (cairo_surface_status(sfc) != CAIRO_STATUS_SUCCESS) {
         jpeg_destroy_decompress(&cinfo);
         return 0;//sfc;

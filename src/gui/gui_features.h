@@ -7,7 +7,7 @@
 /* #undef ENABLE_UPNP */
 /* #undef ENABLE_GESTURE */
 /* #undef ENABLE_MP3ID3 */
-/* #undef ENABLE_FRIBIDI */
+#define ENABLE_FRIBIDI  1
 #define ENABLE_PINYIN2HZ 1
 /* #undef ENABLE_PLPLOT */
 /* #undef ENABLE_BARCODE */

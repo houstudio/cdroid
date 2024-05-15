@@ -25,18 +25,11 @@ int main(int argc,const char*argv[]){
     cdroid::FrameSequence*seq=cdroid::FrameSequence::create(&fin);
 #else
     Window*w=new Window(0,0,-1,-1);
-    AnimatedImageDrawable*ad=new AnimatedImageDrawable(&app,"./Honeycam1.gif");
+    AnimatedImageDrawable*ad=new AnimatedImageDrawable(&app,app.getParam(0,"./Honeycam1.gif"));
     cdroid::TextView*tv=new cdroid::TextView("Hello World!",100,100);
     w->addView(tv);
     tv->setBackground(ad);
     ad->start();
-    Runnable r;
-    r=[&](){w->invalidate();};
-    w->postDelayed(r,100);
-    w->setOnClickListener([w,tv,ad](View&v){
-       tv->invalidate();
-       LOGD("invalidate");
-    });
 #endif
     return app.exec();
 }

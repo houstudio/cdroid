@@ -262,13 +262,33 @@ bool DefaultItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder, Rec
     return true;
 }
 
-void DefaultItemAnimator::onChangeAnimationStart(RecyclerView::ViewHolder*,Animator& animator,bool isReverse){
+void DefaultItemAnimator::onChangeAnimationStart(bool old,ChangeInfo*changeInfo,Animator& animator,bool isReverse){
+    RecyclerView::ViewHolder* holder = old?changeInfo->oldHolder:changeInfo->oldHolder;
+    View*view = holder == nullptr ? nullptr : holder->itemView;
+    if(view&&holder)dispatchChangeStarting(*holder, true);
 }
-void DefaultItemAnimator::onChangeAnimationEnd(RecyclerView::ViewHolder*,Animator& animator,bool isReverse){
+
+void DefaultItemAnimator::onChangeAnimationEnd(bool old,ChangeInfo*changeInfo,Animator& animator,bool isReverse){
+    RecyclerView::ViewHolder* holder = old?changeInfo->oldHolder:changeInfo->oldHolder;
+    View*view = holder == nullptr ? nullptr : holder->itemView;
+    if(view&&holder){
+        ViewPropertyAnimator& animator = view->animate();
+	animator.setListener({});
+        view->setAlpha(1);
+        view->setTranslationX(0);
+        view->setTranslationY(0);
+        dispatchChangeFinished(*holder, old);
+        auto it = std::find(mChangeAnimations.begin(),mChangeAnimations.end(),holder);
+        mChangeAnimations.erase(it);//remove(*changeInfo.oldHolder);
+        dispatchFinishedWhenDone();
+    }
+
 }
+
 void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
     RecyclerView::ViewHolder* holder = changeInfo.oldHolder;
     View* view = holder == nullptr ? nullptr : holder->itemView;
+    
     RecyclerView::ViewHolder* newHolder = changeInfo.newHolder;
     View* newView = newHolder != nullptr ? newHolder->itemView : nullptr;
     if (view != nullptr) {
@@ -278,10 +298,12 @@ void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
         oldViewAnim.translationY(changeInfo.toY - changeInfo.fromY);
  
         Animator::AnimatorListener al;
-        al.onAnimationStart = [this,&changeInfo](Animator& animator,bool isReverse) {
+        al.onAnimationStart = std::bind(&DefaultItemAnimator::onChangeAnimationStart,this,true,&changeInfo,std::placeholders::_1,std::placeholders::_2);
+	/*[this,&changeInfo](Animator& animator,bool isReverse) {
             dispatchChangeStarting(*changeInfo.oldHolder, true);
-        };
-        al.onAnimationEnd = [this,view,&changeInfo,&oldViewAnim](Animator& animator,bool isReverse) {
+        };*/
+        al.onAnimationEnd = std::bind(&DefaultItemAnimator::onChangeAnimationStart,this,true,&changeInfo,std::placeholders::_1,std::placeholders::_2);
+	/*[this,view,&changeInfo,&oldViewAnim](Animator& animator,bool isReverse) {
             oldViewAnim.setListener({});
             view->setAlpha(1);
             view->setTranslationX(0);
@@ -290,17 +312,19 @@ void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
             auto it = std::find(mChangeAnimations.begin(),mChangeAnimations.end(),changeInfo.oldHolder);
             mChangeAnimations.erase(it);//remove(*changeInfo.oldHolder);
             dispatchFinishedWhenDone();
-        };
+        };*/
         oldViewAnim.alpha(0).setListener(al).start();
     }
     if (newView != nullptr) {
         ViewPropertyAnimator& newViewAnimation = newView->animate();
         mChangeAnimations.push_back(changeInfo.newHolder);
         Animator::AnimatorListener al;
-        al.onAnimationStart = [this,&changeInfo](Animator& animator,bool isReverse) {
+        al.onAnimationStart = std::bind(&DefaultItemAnimator::onChangeAnimationStart,this,false,&changeInfo,std::placeholders::_1,std::placeholders::_2);
+	/*[this,&changeInfo](Animator& animator,bool isReverse) {
             dispatchChangeStarting(*changeInfo.newHolder, false);
-        };
-        al.onAnimationEnd = [this,newView,&newViewAnimation,&changeInfo](Animator& animator,bool isReverse) {
+        };*/
+        al.onAnimationEnd = std::bind(&DefaultItemAnimator::onChangeAnimationStart,this,false,&changeInfo,std::placeholders::_1,std::placeholders::_2);
+	/*[this,newView,&newViewAnimation,&changeInfo](Animator& animator,bool isReverse) {
             newViewAnimation.setListener({});
             newView->setAlpha(1);
             newView->setTranslationX(0);
@@ -309,7 +333,7 @@ void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
             auto it = std::find(mChangeAnimations.begin(),mChangeAnimations.end(),changeInfo.newHolder);
             mChangeAnimations.erase(it);//remove(changeInfo.newHolder);
             dispatchFinishedWhenDone();
-        };
+        };*/
         newViewAnimation.translationX(0).translationY(0).setDuration(getChangeDuration())
                 .alpha(1).setListener(al).start();
     }

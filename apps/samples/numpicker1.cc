@@ -8,14 +8,15 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,size.x,size.y);
 
     LinearLayout*layout=new LinearLayout(size.x,size.y);
-    for(int i=0;i<3;i++){
-        NumberPicker*np1=new NumberPicker(200,600);
+    for(int i=0;i<1;i++){
+        NumberPicker*np1=new NumberPicker(600,60);
         EditText*edt =(EditText*)np1->findViewById(cdroid::R::id::numberpicker_input);
 	if(edt){
 	   edt->setBackgroundColor(0xFFFF1100+(i*33)+11);
 	   edt->setTextColor(0xFFFFFFFF);
 	   edt->setTextSize(40);
         }
+	np1->setTextColor(0xFFFFFFFF);
         np1->setMinValue(1);
         np1->setMaxValue(12);
         np1->setSelector(7);
