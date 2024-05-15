@@ -351,16 +351,16 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
         }
     }
     endChangeAnimation(mPendingChanges, item);
-	auto it = std::find(mPendingRemovals.begin(),mPendingRemovals.end(),&item);
+    auto it = std::find(mPendingRemovals.begin(),mPendingRemovals.end(),&item);
     if (it!=mPendingRemovals.end()){//if(mPendingRemovals.remove(item)){
         view->setAlpha(1);
-		mPendingRemovals.erase(it);
+        mPendingRemovals.erase(it);
         dispatchRemoveFinished(item);
     }
-	it = std::find(mPendingAdditions.begin(),mPendingAdditions.end(),&item);
+    it = std::find(mPendingAdditions.begin(),mPendingAdditions.end(),&item);
     if (it!=mPendingAdditions.end()){//mPendingAdditions.remove(item)) {
         view->setAlpha(1);
-		mPendingAdditions.erase(it);
+        mPendingAdditions.erase(it);
         dispatchAddFinished(item);
     }
 
@@ -389,10 +389,10 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
     }
     for (int i = mAdditionsList.size() - 1; i >= 0; i--) {
         std::vector<RecyclerView::ViewHolder*> additions = mAdditionsList.at(i);
-		it = std::find(additions.begin(),additions.end(),&item);
+        it = std::find(additions.begin(),additions.end(),&item);
         if (it!=additions.end()){//additions.remove(item)) {
             view->setAlpha(1);
-			additions.erase(it);
+            additions.erase(it);
             dispatchAddFinished(item);
             if (additions.empty()) {
                 mAdditionsList.erase(mAdditionsList.begin()+i);//.remove(i);

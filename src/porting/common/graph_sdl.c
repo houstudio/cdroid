@@ -8,7 +8,7 @@
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <string.h>
-#include <core/eventcodes.h>
+#include <linux/input.h>
 #include <cdinput.h>
 
 static SDL_Window *sdlWindow = NULL;
@@ -267,206 +267,21 @@ static void SendMouseEvent(SDL_Event*event) {
 }
 
 static void SendKeyEvent(SDL_Event*event) {
-    int keycode=event->key.keysym.sym;
-    switch(event->key.keysym.sym) {
-    case SDLK_0 :
-        keycode=KEY_0 ;
-        break;
-    case SDLK_1 :
-        keycode=KEY_1 ;
-        break;
-    case SDLK_2 :
-        keycode=KEY_2 ;
-        break;
-    case SDLK_3 :
-        keycode=KEY_3 ;
-        break;
-    case SDLK_4 :
-        keycode=KEY_4 ;
-        break;
-    case SDLK_5 :
-        keycode=KEY_5 ;
-        break;
-    case SDLK_6 :
-        keycode=KEY_6 ;
-        break;
-    case SDLK_7 :
-        keycode=KEY_7 ;
-        break;
-    case SDLK_8 :
-        keycode=KEY_8 ;
-        break;
-    case SDLK_9 :
-        keycode=KEY_9 ;
-        break;
-
-    case SDLK_F1 :
-        keycode=KEY_F1 ;
-        break;
-    case SDLK_F2 :
-        keycode=KEY_F2 ;
-        break;
-    case SDLK_F3 :
-        keycode=KEY_F3 ;
-        break;
-    case SDLK_F4 :
-        keycode=KEY_F4 ;
-        break;
-    case SDLK_F5 :
-        keycode=KEY_F5 ;
-        break;
-    case SDLK_F6 :
-        keycode=KEY_F6 ;
-        break;
-    case SDLK_F7 :
-        keycode=KEY_F7 ;
-        break;
-    case SDLK_F8 :
-        keycode=KEY_F8 ;
-        break;
-    case SDLK_F9 :
-        keycode=KEY_F9 ;
-        break;
-    case SDLK_F10:
-        keycode=KEY_F10;
-        break;
-    case SDLK_F11:
-        keycode=KEY_F11;
-        break;
-    case SDLK_F12:
-        keycode=KEY_F12;
-        break;
-
-    case SDLK_TAB:
-        keycode=KEY_TAB;
-        break;
-    case SDLK_ESCAPE:
-        keycode=KEY_ESCAPE;
-        break;
-    case SDLK_RETURN:
-        keycode=KEY_ENTER;
-        break;
-    case SDLK_PAGEDOWN:
-        keycode=KEY_PAGEDOWN;
-        break;
-    case SDLK_PAGEUP:
-        keycode=KEY_PAGEUP;
-        break;
-    case SDLK_LEFT:
-        keycode=KEY_LEFT;
-        break;
-    case SDLK_RIGHT:
-        keycode=KEY_RIGHT;
-        break;
-    case SDLK_UP:
-        keycode=KEY_UP;
-        break;
-    case SDLK_DOWN:
-        keycode=KEY_DOWN;
-        break;
-    case SDLK_MENU:
-        keycode=KEY_MENU;
-        break;
-    case SDLK_POWER:
-        keycode=KEY_POWER;
-        break;
-    case SDLK_DELETE:
-        keycode=KEY_DELETE;
-        break;
-    case SDLK_BACKSPACE:
-        keycode=KEY_BACKSPACE;
-        break;
-    case SDLK_VOLUMEDOWN:
-        keycode=KEY_VOLUMEDOWN;
-        break;
-    case SDLK_VOLUMEUP:
-        keycode=KEY_VOLUMEUP;
-        break;
-    case SDLK_MUTE:
-        keycode=KEY_MUTE;
-        break;
-
-    case SDLK_a:
-        keycode=KEY_A;
-        break;
-    case SDLK_b:
-        keycode=KEY_B;
-        break;
-    case SDLK_c:
-        keycode=KEY_C;
-        break;
-    case SDLK_d:
-        keycode=KEY_D;
-        break;
-    case SDLK_e:
-        keycode=KEY_E;
-        break;
-    case SDLK_f:
-        keycode=KEY_F;
-        break;
-    case SDLK_g:
-        keycode=KEY_G;
-        break;
-    case SDLK_h:
-        keycode=KEY_H;
-        break;
-    case SDLK_i:
-        keycode=KEY_I;
-        break;
-    case SDLK_j:
-        keycode=KEY_J;
-        break;
-    case SDLK_k:
-        keycode=KEY_K;
-        break;
-    case SDLK_l:
-        keycode=KEY_L;
-        break;
-    case SDLK_m:
-        keycode=KEY_M;
-        break;
-    case SDLK_n:
-        keycode=KEY_N;
-        break;
-    case SDLK_o:
-        keycode=KEY_O;
-        break;
-    case SDLK_p:
-        keycode=KEY_P;
-        break;
-    case SDLK_q:
-        keycode=KEY_Q;
-        break;
-    case SDLK_r:
-        keycode=KEY_R;
-        break;
-    case SDLK_s:
-        keycode=KEY_S;
-        break;
-    case SDLK_t:
-        keycode=KEY_T;
-        break;
-    case SDLK_u:
-        keycode=KEY_U;
-        break;
-    case SDLK_v:
-        keycode=KEY_V;
-        break;
-    case SDLK_w:
-        keycode=KEY_W;
-        break;
-    case SDLK_x:
-        keycode=KEY_X;
-        break;
-    case SDLK_y:
-        keycode=KEY_Y;
-        break;
-    case SDLK_z:
-        keycode=KEY_Z;
-        break;
-    default:
-        return;
+    int keycode = event->key.keysym.sym;
+    struct {int sdlk;int key}KEYS[]={
+	{SDLK_0,7},{SDLK_1,8},{SDLK_2,9},{SDLK_3,10},{SDLK_4,11},{SDLK_5,12},{SDLK_6,13},{SDLK_7,14},{SDLK_8,15},{SDLK_9,16},
+	{SDLK_F1,131},{SDLK_F2,132},{SDLK_F3,133},{SDLK_F4,134},{SDLK_F5,135},{SDLK_F6,136},{SDLK_F7,137},{SDLK_F8,138}, {SDLK_F9,139},{SDLK_F10,140},{SDLK_F11,141},{SDLK_F12,142},
+        {SDLK_LEFT,21},{SDLK_RIGHT,22},{SDLK_UP,19},{SDLK_DOWN,20},{SDLK_HOME,122},{SDLK_END,123},{SDLK_PAGEUP,92},{SDLK_PAGEDOWN,93},
+        {SDLK_INSERT,124},{SDLK_DELETE,67},{SDLK_KP_ENTER,23/*DPAD_CENTER*/},{SDLK_ESCAPE,111},{SDLK_RETURN,66},{SDLK_SPACE,62},{SDLK_BACKSPACE,112},{SDLK_MENU,82},
+        {SDLK_q,45},{SDLK_w,51},{SDLK_e,33},{SDLK_r,46},{SDLK_t,48},{SDLK_y,53/*Y*/},{SDLK_u,49},{SDLK_i,37},{SDLK_o,43},{SDLK_p,44},
+        {SDLK_a,29},{SDLK_s,47},{SDLK_d,32},{SDLK_f,34},{SDLK_g,35},{SDLK_h,36},{SDLK_j,38},{SDLK_k,39},{SDLK_l,40},
+        {SDLK_z,54},{SDLK_x,52},{SDLK_c,31},{SDLK_v,50},{SDLK_b,30},{SDLK_n,42},{SDLK_m,41}
+    };
+    for(int i=0;i<sizeof(KEYS)/sizeof(KEYS[0]);i++){
+	if(event->key.keysym.sym == KEYS[i].sdlk){
+            InjectEvent(EV_KEY,KEYS[i].key,(event->type==SDL_KEYDOWN),INJECTDEV_KEY);
+	    break;
+	}
     }
-    InjectEvent(EV_KEY,keycode,(event->type==SDL_KEYDOWN),INJECTDEV_KEY);
 }
 
