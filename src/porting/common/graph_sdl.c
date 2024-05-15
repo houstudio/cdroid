@@ -23,7 +23,7 @@ typedef struct {
     SDL_Surface*surface;
     SDL_Texture*texture;
 } FBSURFACE;
-
+static GFXRect screenMargin={0,0,0,0};
 #define REFRESH_EVENT 0x4321
 static int SDLProc(void*params);
 static void SendKeyEvent(SDL_Event*event);
@@ -55,20 +55,18 @@ INT GFXGetDisplayCount() {
 }
 
 INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
-    const char*env= getenv("SCREENSIZE");
-    if(dispid<0||dispid>=GFXGetDisplayCount())return E_ERROR;
+    const char*env= getenv("SCREEN_SIZE");
     if(env==NULL) {
-        SDL_DisplayMode displayMode;
-        SDL_GetCurrentDisplayMode(0, &displayMode);
-        *width = displayMode.w;
-        *height= displayMode.h;
+        *width=1280;//dispCfg.width;
+        *height=720;//dispCfg.height;
     } else {
-        *width=atoi(env);//- screenMargin.x - screenMargin.w;
+        *width=atoi(env)- screenMargin.x - screenMargin.w;
         env=strpbrk(env,"x*,");
         if((*width<=0)||(env==NULL))exit(-1);
-        *height=atoi(env+1);//- screenMargin.y - screenMargin.h;
+        *height=atoi(env+1)- screenMargin.y - screenMargin.h;
         if(*height<=0)exit(-1);
     }
+
     LOGV("screensize=%dx%d",*width,*height);
     return E_OK;
 }
