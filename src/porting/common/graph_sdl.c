@@ -279,6 +279,7 @@ static void SendKeyEvent(SDL_Event*event) {
     };
     for(int i=0;i<sizeof(KEYS)/sizeof(KEYS[0]);i++){
 	if(event->key.keysym.sym == KEYS[i].sdlk){
+            LOGV("sdlkey=%d,%x => %d",event->key.keysym.sym,event->key.keysym.sym,KEYS[i].key);
             InjectEvent(EV_KEY,KEYS[i].key,(event->type==SDL_KEYDOWN),INJECTDEV_KEY);
 	    break;
 	}
