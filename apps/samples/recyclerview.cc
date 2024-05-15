@@ -25,8 +25,8 @@ public:
         TextView* view = new TextView("",200,64);
         view->setBackgroundColor(0xff234567);
         view->setGravity(Gravity::CENTER);
-        //view->setLayoutParams(new LayoutParams(LayoutParams::MATCH_PARENT,80));//LayoutParams::WRAP_CONTENT));
-        view->setLayoutParams(new LayoutParams(120,LayoutParams::MATCH_PARENT));//LayoutParams::WRAP_CONTENT));
+        view->setLayoutParams(new LayoutParams(LayoutParams::MATCH_PARENT,80));//LayoutParams::WRAP_CONTENT));
+        //view->setLayoutParams(new LayoutParams(120,LayoutParams::MATCH_PARENT));//LayoutParams::WRAP_CONTENT));
         //view->setLayoutParams(new LayoutParams(640,LayoutParams::MATCH_PARENT));
         return new ViewHolder(view);
     }
@@ -43,6 +43,9 @@ public:
 	    int pos= mgr->getPosition(&v);
 	    LOGD("click item positon=%d holder lp",position,lp);
 	});
+    }
+    void remove(int idx){
+        items.erase(items.begin()+idx);
     }
     void add(const std::string&str){
         items.push_back(str);
@@ -65,32 +68,6 @@ int main(int argc,const char*argv[]){
     RecyclerView*rv=new RecyclerView(800,480);
     auto ps = new LinearSnapHelper();//PagerSnapHelper();
     ps->attachToRecyclerView(rv);
-    CarouselLayoutManager*carousel=new CarouselLayoutManager(CarouselLayoutManager::HORIZONTAL);//VERTICAL);//HORIZONTAL);
-    //rv->setLayoutManager(carousel);
-    ((LinearLayoutManager*)rv->getLayoutManager())->setOrientation(LinearLayoutManager::HORIZONTAL);
-    carousel->setPostLayoutListener([carousel](View& child,CarouselLayoutManager::ItemTransformation&ti,float itemPositionToCenterDiff,int orientation,int itemPositionInAdapter)->bool{
-        const float mScaleMultiplier =0.1f;
-        const float scale = 1.f - mScaleMultiplier*std::abs(itemPositionToCenterDiff);
-
-        // because scaling will make view smaller in its center, then we should move this item to the top or bottom to make it visible
-        float translateY,translateX,translateGeneral;
-        float sig = itemPositionToCenterDiff>0.f?1.f:-1.f;
-        if (CarouselLayoutManager::VERTICAL == orientation) {
-            translateGeneral = child.getMeasuredHeight() * (1.f - scale) / 2.f;
-            translateY = sig * translateGeneral;
-            translateX = 0;
-        } else {
-            translateGeneral = child.getMeasuredHeight()*itemPositionToCenterDiff* (1.f-scale);
-            translateX =  translateGeneral;
-            translateY = 0;//(child.getMeasuredHeight()*(1.f-scale))/2.f;
-        }
-        ti.mScaleX = ti.mScaleY = scale;
-        ti.mTranslationX = translateX;
-        ti.mTranslationY = translateY;
-        //LOGD("orientation=%d centeritem=%d itemdiff=%.f translateGeneral=%.f scale=%f X=%d transX/Y=%.f,%.f",
-        //   orientation,carousel->getCenterItemPosition(),itemPositionToCenterDiff,translateGeneral,scale,child.getLeft(),translateX,translateY);
-        return true;
-    });
     MyAdapter*adapter=new MyAdapter();
     rv->setHasFixedSize(true);
     rv->getRecycledViewPool().setMaxRecycledViews(0,64);
@@ -98,20 +75,20 @@ int main(int argc,const char*argv[]){
     rv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     rv->setAdapter(adapter);
     DividerItemDecoration* decoration = new DividerItemDecoration(&app, LinearLayout::VERTICAL);
-
-    auto anim=rv->getItemAnimator();
-    anim->setRemoveDuration(200);
-    anim->setAddDuration(200);
-    anim->setMoveDuration(200);
-    anim->setChangeDuration(200);
-    rv->getLayoutManager()->requestSimpleAnimationsInNextLayout();
     for(int i=0;i<100;i++){
         adapter->add(std::string("string ")+std::to_string(i));
         //adapter->notifyItemInserted(i);//Notice:call notifyItemInserted before layout will cause memleak.
     }
+
     decoration->setDrawable(new ColorDrawable(0xFFFF0000));
     rv->addItemDecoration(decoration);
     w->addView(rv);
     w->requestLayout();
+    Runnable r;
+    r=[&](){
+        adapter->remove(4);
+	adapter->notifyItemRemoved(4);
+    };
+    w->postDelayed(r,8000);
     app.exec();
 }

@@ -41,7 +41,7 @@ void DefaultItemAnimator::runPendingAnimations() {
     // Next, move stuff
     if (movesPending) {
         mMovesList.push_back(mPendingMoves);
-        std::vector<MoveInfo*>&moves=mMovesList.back();
+        std::vector<MoveInfo*>&moves = mMovesList.back();
         mPendingMoves.clear();
         Runnable mover;
         mover=[this,&moves]() {
@@ -84,7 +84,7 @@ void DefaultItemAnimator::runPendingAnimations() {
     // Next, add stuff
     if (additionsPending) {
        mAdditionsList.push_back(mPendingAdditions);
-       std::vector<RecyclerView::ViewHolder*>& additions=mAdditionsList.back();
+       std::vector<RecyclerView::ViewHolder*>& additions = mAdditionsList.back();
        mPendingAdditions.clear();
        Runnable adder;
        adder = [this,&additions]() {
@@ -114,6 +114,22 @@ bool DefaultItemAnimator::animateRemove(RecyclerView::ViewHolder& holder) {
     return true;
 }
 
+void DefaultItemAnimator::onRemoveAnimationStart(RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
+    dispatchRemoveStarting(*holder);
+}
+
+void DefaultItemAnimator::onRemoveAnimationEnd(RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
+    
+    ViewPropertyAnimator& animation = holder->itemView->animate();
+    animation.setListener({});
+    holder->itemView->setAlpha(1);
+    dispatchRemoveFinished(*holder);
+    auto it = std::find(mRemoveAnimations.begin(),mRemoveAnimations.end(),holder);
+    if(it!=mRemoveAnimations.end())mRemoveAnimations.erase(it);//mRemoveAnimations.remove(holder);
+    else LOGE("not found.....");
+    dispatchFinishedWhenDone();
+}
+
 void DefaultItemAnimator::animateRemoveImpl(RecyclerView::ViewHolder& holder) {
  
     View* view = holder.itemView;
@@ -121,18 +137,8 @@ void DefaultItemAnimator::animateRemoveImpl(RecyclerView::ViewHolder& holder) {
     mRemoveAnimations.push_back(&holder);//add(holder);
     //AnimatorListenerAdapter
     Animator::AnimatorListener al;
-    al.onAnimationStart=[this,&holder](Animator&animator,bool isReverse){
-        dispatchRemoveStarting(holder);
-    };
-    al.onAnimationEnd=[this,&animation,&holder](Animator& animator,bool isReverse){
-        animation.setListener({});
-        holder.itemView->setAlpha(1);
-        dispatchRemoveFinished(holder);
-        auto it = std::find(mRemoveAnimations.begin(),mRemoveAnimations.end(),&holder);
-        if(it!=mRemoveAnimations.end())mRemoveAnimations.erase(it);//mRemoveAnimations.remove(holder);
-	else LOGE("not found.....");
-        dispatchFinishedWhenDone();
-    };
+    al.onAnimationStart=std::bind(&DefaultItemAnimator::onRemoveAnimationStart,this,&holder,std::placeholders::_1,std::placeholders::_2);
+    al.onAnimationEnd = std::bind(&DefaultItemAnimator::onRemoveAnimationEnd,this,&holder,std::placeholders::_1,std::placeholders::_2);
     animation.setDuration(getRemoveDuration()).alpha(0).setListener(al).start();
 }
 
@@ -185,10 +191,30 @@ bool DefaultItemAnimator::animateMove(RecyclerView::ViewHolder& holder, int from
     return true;
 }
 
+void DefaultItemAnimator::onMoveAnimationStart(RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
+    dispatchMoveStarting(*holder);
+}
+void DefaultItemAnimator::onMoveAnimationCancel(int deltaX,int deltaY,RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
+    if (deltaX != 0) {
+        holder->itemView->setTranslationX(0);
+    }
+    if (deltaY != 0) {
+        holder->itemView->setTranslationY(0);
+    }
+}
+void DefaultItemAnimator::onMoveAnimationEnd(RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
+    ViewPropertyAnimator& animation = holder->itemView->animate();
+    animation.setListener({});
+    dispatchMoveFinished(*holder);
+    auto it =std::find(mMoveAnimations.begin(),mMoveAnimations.end(),holder);
+    mMoveAnimations.erase(it);//mMoveAnimations.remove(holder);
+    dispatchFinishedWhenDone();
+}
+
 void DefaultItemAnimator::animateMoveImpl(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY) {
     View* view = holder.itemView;
-    int deltaX = toX - fromX;
-    int deltaY = toY - fromY;
+    const int deltaX = toX - fromX;
+    const int deltaY = toY - fromY;
     if (deltaX != 0) {
         view->animate().translationX(0);
     }
@@ -202,24 +228,9 @@ void DefaultItemAnimator::animateMoveImpl(RecyclerView::ViewHolder& holder, int 
     mMoveAnimations.push_back(&holder);//add(holder);
     Animator::AnimatorListener al;
 
-    al.onAnimationStart = [this,&holder](Animator& animator,bool isReverse) {
-        dispatchMoveStarting(holder);
-    };
-    al.onAnimationCancel = [this,view,deltaX,deltaY](Animator& animator) {
-        if (deltaX != 0) {
-            view->setTranslationX(0);
-        }
-        if (deltaY != 0) {
-            view->setTranslationY(0);
-        }
-    };
-    al.onAnimationEnd = [this,&animation,&holder](Animator& animator,bool isReverse) {
-        animation.setListener({});
-        dispatchMoveFinished(holder);
-        auto it =std::find(mMoveAnimations.begin(),mMoveAnimations.end(),&holder);
-        mMoveAnimations.erase(it);//mMoveAnimations.remove(holder);
-        dispatchFinishedWhenDone();
-    };
+    al.onAnimationStart = std::bind(&DefaultItemAnimator::onMoveAnimationStart,this,&holder,std::placeholders::_1,std::placeholders::_2);
+    //al.onAnimationCancel = std::bind(&DefaultItemAnimator::onMoveAnimationCancel,this,deltaX,deltaY,&holder,std::placeholders::_1,std::placeholders::_2);
+    al.onAnimationEnd = std::bind(&DefaultItemAnimator::onMoveAnimationEnd,this,&holder,std::placeholders::_1,std::placeholders::_2);
     animation.setDuration(getMoveDuration()).setListener(al).start();
 }
 
@@ -251,6 +262,10 @@ bool DefaultItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder, Rec
     return true;
 }
 
+void DefaultItemAnimator::onChangeAnimationStart(RecyclerView::ViewHolder*,Animator& animator,bool isReverse){
+}
+void DefaultItemAnimator::onChangeAnimationEnd(RecyclerView::ViewHolder*,Animator& animator,bool isReverse){
+}
 void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
     RecyclerView::ViewHolder* holder = changeInfo.oldHolder;
     View* view = holder == nullptr ? nullptr : holder->itemView;
