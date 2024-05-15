@@ -2897,12 +2897,12 @@ void RecyclerView::offsetPositionRecordsForRemove(int positionStart, int itemCou
         ViewHolder* holder = getChildViewHolderInt(mChildHelper->getUnfilteredChildAt(i));
         if (holder && !holder->shouldIgnore()) {
             if (holder->mPosition >= positionEnd) {
-                LOGD("offsetPositionRecordsForRemove attached child %d hold %p now at position %d",i
-                           ,holder, (holder->mPosition - itemCount));
+                LOGD("offsetPositionRecordsForRemove attached child %d(%p) hold %p now at position %d",
+                    i,holder->itemView ,holder, (holder->mPosition - itemCount));
                 holder->offsetPosition(-itemCount, applyToPreLayout);
                 mState->mStructureChanged = true;
             } else if (holder->mPosition >= positionStart) {
-                LOGD("offsetPositionRecordsForRemove attached child %d holder %p now REMOVED",i,holder);
+                LOGD("offsetPositionRecordsForRemove attached child %d(%p) holder %p now REMOVED",i,holder->itemView,holder);
                 holder->flagRemovedAndOffsetPosition(positionStart - 1, -itemCount,applyToPreLayout);
                 mState->mStructureChanged = true;
             }
@@ -6009,6 +6009,8 @@ RecyclerView::ViewHolder::ViewHolder(View* itemView) {
     FATAL_IF(itemView == nullptr,"itemView may not be null");
     this->itemView = itemView;
     mFlags = 0;
+    mIsRecyclableCount = 0;
+    mInChangeScrap = false;
     mPosition = NO_POSITION;
     mOldPosition = NO_POSITION;
     mPreLayoutPosition = NO_POSITION;

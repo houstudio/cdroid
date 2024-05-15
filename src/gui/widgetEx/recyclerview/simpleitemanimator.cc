@@ -23,10 +23,10 @@ bool SimpleItemAnimator::animateDisappearance(RecyclerView::ViewHolder& viewHold
         disappearingItemView->layout(newLeft, newTop,
                 newLeft + disappearingItemView->getWidth(),
                 newTop + disappearingItemView->getHeight());
-        LOGD_IF(_DEBUG,"DISAPPEARING: %p with view %p",viewHolder,disappearingItemView);
+        LOGD_IF(_DEBUG,"DISAPPEARING: %p with view %p",&viewHolder,disappearingItemView);
         return animateMove(viewHolder, oldLeft, oldTop, newLeft, newTop);
     } else {
-        LOGD_IF(_DEBUG,"REMOVED:  %p with view %p",viewHolder,disappearingItemView);
+        LOGD_IF(_DEBUG,"REMOVED:  %p with view %p",&viewHolder,disappearingItemView);
         return animateRemove(viewHolder);
     }
 }
@@ -36,7 +36,7 @@ bool SimpleItemAnimator::animateAppearance(RecyclerView::ViewHolder& viewHolder,
     if (preLayoutInfo != nullptr && (preLayoutInfo->left != postLayoutInfo.left
             || preLayoutInfo->top != postLayoutInfo.top)) {
         // slide items in if before/after locations differ
-        LOGD_IF(_DEBUG,"APPEARING: %p with view %p" ,viewHolder,viewHolder);
+        LOGD_IF(_DEBUG,"APPEARING: %p with view %p" ,&viewHolder,viewHolder.itemView);
         return animateMove(viewHolder, preLayoutInfo->left, preLayoutInfo->top,
                 postLayoutInfo.left, postLayoutInfo.top);
     } else {
@@ -48,7 +48,7 @@ bool SimpleItemAnimator::animateAppearance(RecyclerView::ViewHolder& viewHolder,
 bool SimpleItemAnimator::animatePersistence(RecyclerView::ViewHolder& viewHolder,
         ItemHolderInfo& preInfo, ItemHolderInfo& postInfo) {
     if (preInfo.left != postInfo.left || preInfo.top != postInfo.top) {
-        LOGD_IF(_DEBUG,"PERSISTENT: %p with view %p",viewHolder,viewHolder.itemView);
+        LOGD_IF(_DEBUG,"PERSISTENT: %p with view %p",&viewHolder,viewHolder.itemView);
         return animateMove(viewHolder, preInfo.left, preInfo.top, postInfo.left, postInfo.top);
     }
     dispatchMoveFinished(viewHolder);
@@ -57,7 +57,7 @@ bool SimpleItemAnimator::animatePersistence(RecyclerView::ViewHolder& viewHolder
 
 bool SimpleItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder,
         ItemHolderInfo& preInfo, ItemHolderInfo& postInfo) {
-    LOGD_IF(_DEBUG,"CHANGED: %p with view %p",oldHolder,oldHolder.itemView);
+    LOGD_IF(_DEBUG,"CHANGED: %p with view %p",&oldHolder,oldHolder.itemView);
     const int fromLeft = preInfo.left;
     const int fromTop = preInfo.top;
     int toLeft, toTop;
