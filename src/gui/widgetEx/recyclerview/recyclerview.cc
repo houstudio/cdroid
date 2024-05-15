@@ -140,7 +140,7 @@ void RecyclerView::initRecyclerView(){
     mAdapterHelper = nullptr;
     mViewInfoStore = new ViewInfoStore();
     mViewFlinger = new ViewFlinger(this);
-    mItemAnimator= new DefaultItemAnimator();
+    mItemAnimator= nullptr;
     mRecycler = new Recycler(this);
     mObserver = new RecyclerViewDataObserver(this);
     mLeftGlow = mTopGlow = nullptr;
@@ -158,7 +158,9 @@ void RecyclerView::initRecyclerView(){
     mFirstLayoutComplete = false;
     mEdgeEffectFactory = new EdgeEffectFactory();
     mItemAnimatorListener = std::bind(&RecyclerView::doAnimatorFinished,this,std::placeholders::_1);
-    mItemAnimator->setListener(mItemAnimatorListener);
+    //mItemAnimator->setListener(mItemAnimatorListener);
+    setItemAnimator(new DefaultItemAnimator());
+    LOGD("mItemAnimator = %p",mItemAnimator);
 
     setScrollContainer(true);
     setFocusableInTouchMode(true);

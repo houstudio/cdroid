@@ -10,19 +10,19 @@ protected:
     class MoveInfo;
     class ChangeInfo;
 private:
-    std::vector<RecyclerView::ViewHolder*> mPendingRemovals;// = new ArrayList<>();
-    std::vector<RecyclerView::ViewHolder*> mPendingAdditions;// = new ArrayList<>();
-    std::vector<MoveInfo*> mPendingMoves;// = new ArrayList<>();
-    std::vector<ChangeInfo*> mPendingChanges;// = new ArrayList<>();
+    std::vector<RecyclerView::ViewHolder*> mPendingRemovals;
+    std::vector<RecyclerView::ViewHolder*> mPendingAdditions;
+    std::vector<MoveInfo*> mPendingMoves;
+    std::vector<ChangeInfo*> mPendingChanges;
 protected:
-    std::vector<std::vector<RecyclerView::ViewHolder*>> mAdditionsList;// = new ArrayList<>();
-    std::vector<std::vector<MoveInfo*>> mMovesList;// = new ArrayList<>();
-    std::vector<std::vector<ChangeInfo*>> mChangesList;// = new ArrayList<>();
+    std::vector<std::vector<RecyclerView::ViewHolder*>> mAdditionsList;
+    std::vector<std::vector<MoveInfo*>> mMovesList;
+    std::vector<std::vector<ChangeInfo*>> mChangesList;
 
-    std::vector<RecyclerView::ViewHolder*> mAddAnimations;// = new ArrayList<>();
-    std::vector<RecyclerView::ViewHolder*> mMoveAnimations;// = new ArrayList<>();
-    std::vector<RecyclerView::ViewHolder*> mRemoveAnimations;// = new ArrayList<>();
-    std::vector<RecyclerView::ViewHolder*> mChangeAnimations;// = new ArrayList<>();
+    std::vector<RecyclerView::ViewHolder*> mAddAnimations;
+    std::vector<RecyclerView::ViewHolder*> mMoveAnimations;
+    std::vector<RecyclerView::ViewHolder*> mRemoveAnimations;
+    std::vector<RecyclerView::ViewHolder*> mChangeAnimations;
 
     class MoveInfo {
     public:

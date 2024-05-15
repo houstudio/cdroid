@@ -38,14 +38,14 @@ public:
     void dispatchMoveStarting(RecyclerView::ViewHolder& item);
     void dispatchAddStarting(RecyclerView::ViewHolder& item);
     void dispatchChangeStarting(RecyclerView::ViewHolder& item, bool oldItem);
-    void onRemoveStarting(RecyclerView::ViewHolder& item);
-    void onRemoveFinished(RecyclerView::ViewHolder& item);
-    void onAddStarting(RecyclerView::ViewHolder& item);
-    void onAddFinished(RecyclerView::ViewHolder& item);
-    void onMoveStarting(RecyclerView::ViewHolder& item);
-    void onMoveFinished(RecyclerView::ViewHolder& item);
-    void onChangeStarting(RecyclerView::ViewHolder& item, bool oldItem);
-    void onChangeFinished(RecyclerView::ViewHolder& item, bool oldItem);
+    virtual void onRemoveStarting(RecyclerView::ViewHolder& item);
+    virtual void onRemoveFinished(RecyclerView::ViewHolder& item);
+    virtual void onAddStarting(RecyclerView::ViewHolder& item);
+    virtual void onAddFinished(RecyclerView::ViewHolder& item);
+    virtual void onMoveStarting(RecyclerView::ViewHolder& item);
+    virtual void onMoveFinished(RecyclerView::ViewHolder& item);
+    virtual void onChangeStarting(RecyclerView::ViewHolder& item, bool oldItem);
+    virtual void onChangeFinished(RecyclerView::ViewHolder& item, bool oldItem);
 };
 }/*endof namespace*/
 #endif/*__SIMPLE_ITEM_ANIMATOR_H__*/

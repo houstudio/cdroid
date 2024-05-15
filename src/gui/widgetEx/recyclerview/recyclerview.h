@@ -100,14 +100,14 @@ public:
        virtual void endAnimation(ViewHolder& item)=0;
        virtual void endAnimations()=0;
        virtual bool isRunning()=0;
-       void dispatchAnimationFinished(ViewHolder& viewHolder);
+       void dispatchAnimationFinished(ViewHolder& viewHolder);/*final*/
        virtual void onAnimationFinished(ViewHolder& viewHolder);
-       void dispatchAnimationStarted(ViewHolder& viewHolder);
+       void dispatchAnimationStarted(ViewHolder& viewHolder);/*final*/
        virtual void onAnimationStarted(ViewHolder& viewHolder);
-       bool isRunning(ItemAnimatorFinishedListener listener);
+       bool isRunning(ItemAnimatorFinishedListener listener);/*final*/
        virtual bool canReuseUpdatedViewHolder(ViewHolder& viewHolder);
        virtual bool canReuseUpdatedViewHolder(ViewHolder& viewHolder,std::vector<Object*>& payloads);
-       void dispatchAnimationsFinished();
+       void dispatchAnimationsFinished();/*final*/
        ItemHolderInfo* obtainHolderInfo();
     };
 private:

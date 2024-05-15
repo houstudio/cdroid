@@ -129,7 +129,8 @@ void DefaultItemAnimator::animateRemoveImpl(RecyclerView::ViewHolder& holder) {
         holder.itemView->setAlpha(1);
         dispatchRemoveFinished(holder);
         auto it = std::find(mRemoveAnimations.begin(),mRemoveAnimations.end(),&holder);
-        mRemoveAnimations.erase(it);//mRemoveAnimations.remove(holder);
+        if(it!=mRemoveAnimations.end())mRemoveAnimations.erase(it);//mRemoveAnimations.remove(holder);
+	else LOGE("not found.....");
         dispatchFinishedWhenDone();
     };
     animation.setDuration(getRemoveDuration()).alpha(0).setListener(al).start();
