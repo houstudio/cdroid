@@ -511,39 +511,38 @@ void Layout::relayout(bool force){
     for(int i=0; mMultiline && ( i<mText.length() );i++){
         char breaks[2];
         wchar_t wch[2];
-        wch[0]=mText[i];
-        wch[1]=mText[i+1]; 
+        wch[0] = mText[i];
+        wch[1] = mText[i+1];
         set_wordbreaks_utf32((utf32_t*)wch,2,"",breaks);
         int linebreak = is_line_breakable(wch[0],wch[1],"");
-        wch[1]=0;
+        wch[1] = 0;
         switch(breaks[0]){
         case WORDBREAK_NOBREAK:
             word.append(1,mText[i]);
-            measureSize(word,extents);
-            if(mBreakStrategy && (total_width + extents.x_advance > mWidth)){
+            measureSize(wch,extents);
+            if( (mBreakStrategy==0) && (total_width + extents.x_advance > mWidth)){
                 pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount++;
                 word.erase();
                 total_width=0 ; start=i;
-            }else if(mBreakStrategy){
-                total_width += extents.x_advance;
             }
-            if(mBreakStrategy)word.erase();
+            total_width += extents.x_advance;
+            //if(mBreakStrategy==0)word.erase();
             break;
         case WORDBREAK_BREAK:{
             word.append(1,mText[i]);
-            measureSize(word,extents);
+            measureSize(wch,extents);
             if(mText[i]==10)extents.x_advance=0;
-            const int outofwidth=(total_width + extents.x_advance >mWidth);
+            const int outofwidth = (total_width + extents.x_advance >mWidth);
             if( (( (breaks[0]==WORDBREAK_BREAK) && ( outofwidth && mBreakStrategy ))||(linebreak==LINEBREAK_MUSTBREAK))){
                 pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount ++;
-                total_width = 0;
                 start = i+1;
                 if(outofwidth)//char[i] is wordbreak char must be in old lines
                     start = i - (word.length() - 1);
+                total_width = 0;
             }
             total_width += extents.x_advance;
             word.erase();

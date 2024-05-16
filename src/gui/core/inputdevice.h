@@ -8,6 +8,7 @@
 #include <time.h>
 #include <core/preferences.h>
 #include <core/sparsearray.h>
+#include <sys/time.h>
 namespace cdroid{
 struct InputDeviceIdentifier {
     InputDeviceIdentifier() :
