@@ -498,57 +498,59 @@ void Layout::pushLineData(int start,int ytop,int descent,int width){
 }
 
 void Layout::relayout(bool force){
-    TextExtents extents;
+    TextExtents extents,tee;
     FontExtents fontextents;
     double total_width = 0,word_width = 0;
-    int start=0,ytop=0;
+    int start = 0,ytop = 0;
     std::wstring word;
     if(!(force||mLayout)) return;
     mLineCount=0;
     mLines.clear();
     measureSize(L"",extents,&fontextents);
     mLineHeight = fontextents.height*mSpacingMult+mSpacingAdd;
-    for(int i=0; mMultiline && ( i<mText.length() );i++){
+    for(int i = 0; mMultiline && (i < mText.length());i++){
         char breaks[2];
         wchar_t wch[2];
+	float line_width=0;
         wch[0] = mText[i];
         wch[1] = mText[i+1];
         set_wordbreaks_utf32((utf32_t*)wch,2,"",breaks);
-        int linebreak = is_line_breakable(wch[0],wch[1],"");
+        const int linebreak = is_line_breakable(wch[0],wch[1],"");
         wch[1] = 0;
+        //measureSize(mText.substr(start,i-start+1),tee);
         switch(breaks[0]){
         case WORDBREAK_NOBREAK:
             word.append(1,mText[i]);
             measureSize(wch,extents);
-	    word_width += extents.x_advance;
-            if(total_width + word_width > mWidth){
+            word_width += extents.x_advance;
+            line_width = total_width + word_width;
+            if(line_width > mWidth){
                 pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount++;
-		start = i-word.length();
-                word.erase();
+		start = i -((std::ceil(line_width)<=mWidth)?0:word.length());
+                //word.erase();
+		if(std::ceil(line_width)<=mWidth)word_width=0;
 		total_width = word_width;
-		word_width =0;
             }
             break;
-        case WORDBREAK_BREAK:{
+        case WORDBREAK_BREAK:
             word.append(1,mText[i]);
             measureSize(wch,extents);
             if(mText[i]==10)extents.x_advance=0;
 	    word_width += extents.x_advance;
-            const int outofwidth = (total_width + word_width >mWidth);
-            if( (outofwidth && mBreakStrategy) || (linebreak==LINEBREAK_MUSTBREAK) ){
+            line_width = total_width + word_width;
+            if( (std::ceil(line_width)>mWidth && mBreakStrategy) || (linebreak==LINEBREAK_MUSTBREAK) ){
                 pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount ++;
                 //char[i] is wordbreak char must be in old lines
-                start = outofwidth ? (i - word.length()) : (i+1);
+                start = std::ceil(line_width)>mWidth ? (i -word.length()): (i+1);
 		total_width = 0;
             }
             total_width += word_width;
 	    word_width = 0;
             word.erase();
-            }
             break;
         case WORDBREAK_INSIDEACHAR: break;
         default:break;
@@ -592,7 +594,7 @@ static const std::string processBidi(const std::wstring&logstr){
 
 void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
     mCaretRect.setEmpty();
-    LOGD("%playoutWidth=%d fontSize=%.f alignment=%x breakStrategy=%d",this,mWidth,mFontSize,mAlignment,mBreakStrategy);
+    LOGV("%p layoutWidth=%d fontSize=%.f alignment=%x breakStrategy=%d",this,mWidth,mFontSize,mAlignment,mBreakStrategy);
     for (int lineNum = firstLine; lineNum < lastLine; lineNum++) {
         int x = 0,lw = getLineWidth(lineNum,true);
         TextExtents te,te2;
