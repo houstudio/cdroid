@@ -520,12 +520,13 @@ void Layout::relayout(bool force){
         case WORDBREAK_NOBREAK:
             word.append(1,mText[i]);
             measureSize(wch,extents);
-            if( (mBreakStrategy==0) && (total_width + extents.x_advance > mWidth)){
+            if(total_width + extents.x_advance > mWidth){
                 pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount++;
+                total_width = 0 ;
+		start = mBreakStrategy?(i - word.length()):i;
                 word.erase();
-                total_width=0 ; start=i;
             }
             total_width += extents.x_advance;
             //if(mBreakStrategy==0)word.erase();
@@ -535,7 +536,7 @@ void Layout::relayout(bool force){
             measureSize(wch,extents);
             if(mText[i]==10)extents.x_advance=0;
             const int outofwidth = (total_width + extents.x_advance >mWidth);
-            if( (( (breaks[0]==WORDBREAK_BREAK) && ( outofwidth && mBreakStrategy ))||(linebreak==LINEBREAK_MUSTBREAK))){
+            if( (outofwidth && mBreakStrategy) || (linebreak==LINEBREAK_MUSTBREAK) ){
                 pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount ++;
@@ -590,6 +591,7 @@ static const std::string processBidi(const std::wstring&logstr){
 
 void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
     mCaretRect.setEmpty();
+    LOGD("%playoutWidth=%d fontSize=%.f alignment=%x breakStrategy=%d",this,mWidth,mFontSize,mAlignment,mBreakStrategy);
     for (int lineNum = firstLine; lineNum < lastLine; lineNum++) {
         int x = 0,lw = getLineWidth(lineNum,true);
         TextExtents te;
@@ -609,8 +611,8 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         case ALIGN_OPPOSITE:
         case ALIGN_RIGHT : x = mWidth - lw ; break;
         }
-        LOGV("line[%d/%d](%d,%d) layoutWidth=%d [%s](%d).width=%d fontsize=%.f alignment=%x abearing=%f",
-             lineNum,mLineCount,x,y,mWidth,TextUtils::unicode2utf8(line).c_str(),line.size(),lw,mFontSize,mAlignment,te.x_bearing);
+        LOGV("line[%d/%d](%d,%d) [%s](%d).width=%d abearing=%f",
+             lineNum,mLineCount,x,y,TextUtils::unicode2utf8(line).c_str(),line.size(),lw,te.x_bearing);
         canvas.move_to(x - te.x_bearing,y);
         canvas.show_text(processBidi(line));
         if(mCaretPos>=lineStart&&mCaretPos<lineEnd){
