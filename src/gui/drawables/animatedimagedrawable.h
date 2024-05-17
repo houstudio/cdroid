@@ -12,6 +12,7 @@ private:
     public:
         bool mAutoMirrored;
         int mFrameCount;
+        int mRepeatCount;
         int mAlpha;
         FrameSequence*mFrameSequence;
         AnimatedImageState();
@@ -65,6 +66,7 @@ public:
     bool isRunning()override;
     void start()override;
     void stop()override;
+    void restart(int fromFrame=0);
     void registerAnimationCallback(Animatable2::AnimationCallback callback);
     bool unregisterAnimationCallback(Animatable2::AnimationCallback callback);
     void clearAnimationCallbacks();

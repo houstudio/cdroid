@@ -17,7 +17,7 @@ AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState>
    :Drawable(){
     mStarting = false;
     mRepeated = 0;
-    mRepeatCount = REPEAT_UNDEFINED;
+    mRepeatCount = state?state->mRepeatCount:REPEAT_UNDEFINED;
     mIntrinsicWidth = mIntrinsicHeight = 0;
     mAnimatedImageState = state;
     mCurrentFrame= -1;
@@ -206,6 +206,15 @@ void AnimatedImageDrawable::start(){
 
     if ((mStarting==false)&&(mAnimatedImageState->mFrameCount>1)){
         mStarting = true;
+        mRepeated = 0;
+        invalidateSelf();
+    }
+}
+
+void AnimatedImageDrawable::restart(int fromFrame){
+    mCurrentFrame=-1;
+    mNextFrame = fromFrame;
+    if((mStarting==false)&&mAnimatedImageState->mFrameCount){
         invalidateSelf();
     }
 }
@@ -275,8 +284,10 @@ Drawable*AnimatedImageDrawable::inflate(Context*ctx,const AttributeSet&atts){
     const bool autoStart = atts.getBoolean("autoStart");
     const int repeatCount =atts.getInt("repeatCount",REPEAT_UNDEFINED);
     if(autoStart)d->start();
-    if(repeatCount!=REPEAT_UNDEFINED)
+    if(repeatCount!=REPEAT_UNDEFINED){
+	d->mAnimatedImageState->mRepeatCount = repeatCount;
 	d->setRepeatCount(repeatCount);
+    }
     return d;
 }
 
