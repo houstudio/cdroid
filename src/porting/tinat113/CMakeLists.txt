@@ -27,8 +27,6 @@ endif()
 list(APPEND TINAT113_INCLUDE_DIRS ../common)
 list(APPEND TINAT113_INCLUDE_DIRS ../include)
 
-add_subdirectory(lib2d)
-link_directories(${PROJECT_SOURCE_DIR} ./lib2d)
 include_directories(./
     ../common ../include
     ${CMAKE_SOURCE_DIR}/src/gui/

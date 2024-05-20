@@ -1,9 +1,0 @@
-menuconfig APP_lib2d
-    bool "lib2d (2d 硬件加速模块接口)"
-    default n
-
-config APP_ingenic2d_cmd
-    bool "2d shell 命令"
-    default y
-
-endmenu
