@@ -225,6 +225,7 @@ void AnimatedImageDrawable::stop(){
     if (mAnimatedImageState->mFrameSequence == nullptr) {
         throw "called stop on empty AnimatedImageDrawable";
     }
+    if(mRunnable)unscheduleSelf(mRunnable);
     if (mStarting){
 	mStarting = false;
         postOnAnimationEnd();
@@ -253,7 +254,7 @@ void AnimatedImageDrawable::postOnAnimationStart(){
     }
     Runnable r([this](){
         for (Animatable2::AnimationCallback callback : mAnimationCallbacks) {
-            callback.onAnimationStart(*this);
+            if(callback.onAnimationStart)callback.onAnimationStart(*this);
         }
     });
     //todo post callback
@@ -265,7 +266,7 @@ void AnimatedImageDrawable::postOnAnimationEnd(){
     }
     Runnable r([this]{
         for (Animatable2::AnimationCallback callback : mAnimationCallbacks) {
-            callback.onAnimationEnd(*this);
+            if(callback.onAnimationEnd)callback.onAnimationEnd(*this);
         }
     });
 }

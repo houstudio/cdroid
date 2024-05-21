@@ -210,7 +210,7 @@ void Drawable::setChangingConfigurations(int configs) {
 }
 
 void Drawable::setCallback(Drawable::Callback*cbk) {
-    mCallback=cbk;
+    mCallback = cbk;
 }
 
 Drawable::Callback* Drawable::getCallback()const {
