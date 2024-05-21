@@ -78,7 +78,7 @@ void WebPFrameSequence::constructDependencyChain() {
     WebPDemuxReleaseIterator(&prev);
     WebPDemuxReleaseIterator(&curr);
     for(size_t i=0;i<frameCount;i++){
-        LOGD("Frame# %zu: %s", i, mIsKeyFrame[i] ? "Key frame" : "NOT a key frame");
+        LOGV("Frame# %zu: %s", i, mIsKeyFrame[i] ? "Key frame" : "NOT a key frame");
     }
 }
 
@@ -204,7 +204,7 @@ WebPFrameSequence::WebPFrameSequenceState::WebPFrameSequenceState(const WebPFram
     WebPInitDecoderConfig(&mDecoderConfig);
     mDecoderConfig.options.use_threads = 1;
     mDecoderConfig.output.is_external_memory = 1;
-    mDecoderConfig.output.colorspace = MODE_BGRA;//MODE_rgbA;//Pre-multiplied alpha mode.
+    mDecoderConfig.output.colorspace = MODE_bgrA;//Pre-multiplied alpha mode.
     const int canvasWidth = mFrameSequence.getWidth();
     const int canvasHeight = mFrameSequence.getHeight();
     mPreservedBuffer = new uint32_t[canvasWidth * canvasHeight];

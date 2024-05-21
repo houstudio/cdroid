@@ -179,8 +179,9 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
     }
     void *handler = canvas.getHandler();
     if( (mImageHandler == nullptr) || (handler == nullptr) ){
+        const bool isOpaque = mAnimatedImageState->mFrameSequence->isOpaque();
         canvas.set_source(mImage,mBounds.left,mBounds.top);
-        canvas.set_operator(Cairo::Context::Operator::SOURCE);
+        canvas.set_operator(isOpaque?Cairo::Context::Operator::SOURCE:Cairo::Context::Operator::OVER);
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.fill();
     }else{
