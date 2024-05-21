@@ -524,14 +524,18 @@ void Layout::relayout(bool force){
             measureSize(wch,extents);
             word_width += extents.x_advance;
             line_width = total_width + word_width;
-            if(line_width > mWidth){
+            if(std::ceil(line_width) > mWidth){
                 pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount++;
-		start = i -((std::ceil(line_width)<=mWidth)?0:word.length());
-                //word.erase();
-		if(std::ceil(line_width)<=mWidth)word_width=0;
-		total_width = word_width;
+		if(mBreakStrategy==0){
+		    start = (i - 1);
+		    total_width = extents.x_advance;
+		}else{
+                    start = (i - word.length() + 1);
+		    total_width = word_width - extents.x_advance;
+		}
+		//if(std::ceil(line_width)<=mWidth)word_width=0;
             }
             break;
         case WORDBREAK_BREAK:
