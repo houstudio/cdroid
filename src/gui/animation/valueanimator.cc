@@ -562,7 +562,7 @@ bool ValueAnimator::animateBasedOnTime(long currentTime){
         } else if (newIteration && !lastIterationFinished) {
             // Time to repeat
             for (AnimatorListener l:mListeners) {
-                l.onAnimationRepeat(*this);
+                if(l.onAnimationRepeat)l.onAnimationRepeat(*this);
             }
         } else if (lastIterationFinished) {
             done = true;
