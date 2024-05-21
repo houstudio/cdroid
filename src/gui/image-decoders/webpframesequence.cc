@@ -275,17 +275,7 @@ bool WebPFrameSequence::WebPFrameSequenceState::decodeFrame(const WebPIterator& 
                     if (!(currPixel & COLOR_8888_ALPHA_MASK)) {
                         const uint32_t prevPixel = prevBuffer[canvasY * prevStride + canvasX];
                         currPixel = prevPixel;
-                    }else{
-                        uint8_t*sp = (uint8_t*)&prevBuffer[canvasY * prevStride + canvasX];
-                        uint8_t*dp = (uint8_t*)&currPixel;
-                        int u = sp[3]*255;
-                        int v = (255-sp[3])*dp[3];
-                        int al = u + v;
-                        dp[0] = (sp[0]*u + dp[0]*v)/al;
-                        dp[1] = (sp[1]*u + dp[1]*v)/al;
-                        dp[2] = (sp[2]*u + dp[2]*v)/al;
-                        dp[3] = al/255;
-		    }
+                    }
                 }
             }
         } else {  // prevIter.dispose_method == WEBP_MUX_DISPOSE_BACKGROUND
@@ -303,17 +293,7 @@ bool WebPFrameSequence::WebPFrameSequenceState::decodeFrame(const WebPIterator& 
                             && !FrameContainsPixel(prevIter, canvasX, canvasY)) {
                         const uint32_t prevPixel = prevBuffer[canvasY * prevStride + canvasX];
                         currPixel = prevPixel;
-                    }else{
-                        uint8_t*sp = (uint8_t*)&prevBuffer[canvasY * prevStride + canvasX];
-                        uint8_t*dp = (uint8_t*)&currPixel;
-                        int u = sp[3]*255;
-                        int v = (255-sp[3])*dp[3];
-                        int al = u + v;
-                        dp[0] = (sp[0]*u + dp[0]*v)/al;
-                        dp[1] = (sp[1]*u + dp[1]*v)/al;
-                        dp[2] = (sp[2]*u + dp[2]*v)/al;
-                        dp[3] = al/255;
-		    }
+                    }
                 }
             }
         }
