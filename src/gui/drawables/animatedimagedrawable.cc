@@ -216,6 +216,7 @@ void AnimatedImageDrawable::restart(int fromFrame){
     mNextFrame = fromFrame;
     if((mStarting==false)&&mAnimatedImageState->mFrameCount){
         invalidateSelf();
+        postOnAnimationStart();
     }
 }
 
