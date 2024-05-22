@@ -517,14 +517,14 @@ void Layout::relayout(bool force){
         set_wordbreaks_utf32((utf32_t*)wch,2,"",breaks);
         const int linebreak = is_line_breakable(wch[0],wch[1],"");
         wch[1] = 0;
-        measureSize(mText.substr(start,i-start+1),tee);
+        //measureSize(mText.substr(start,i-start+1),tee);
         switch(breaks[0]){
         case WORDBREAK_NOBREAK:
             word.append(1,mText[i]);
             measureSize(wch,extents);
             word_width += extents.x_advance;
             line_width = total_width + word_width;
-            if(std::floor(line_width) > mWidth){
+            if(std::ceil(line_width) > mWidth){
                 pushLineData(start,ytop,fontextents.descent,std::ceil(line_width - extents.x_advance));
                 ytop += mLineHeight;
                 mLineCount++;
@@ -544,12 +544,12 @@ void Layout::relayout(bool force){
             if(mText[i]==10)extents.x_advance=0;
 	    word_width += extents.x_advance;
             line_width = total_width + word_width;
-            if( (std::floor(line_width)>mWidth && mBreakStrategy) || (linebreak==LINEBREAK_MUSTBREAK) ){
+            if( (std::ceil(line_width)>mWidth/* && mBreakStrategy*/) || (linebreak==LINEBREAK_MUSTBREAK) ){
                 pushLineData(start,ytop,fontextents.descent,std::ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount ++;
                 //char[i] is wordbreak char must be in old lines
-                start = i - word.length();//std::floor(line_width)>mWidth ? (i - word.length()): (i+1);
+                start = i - word.length() + 1;//std::floor(line_width)>mWidth ? (i - word.length()): (i+1);
 		total_width = 0;
             }
             total_width += word_width;
