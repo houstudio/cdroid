@@ -525,7 +525,7 @@ void Layout::relayout(bool force){
             word_width += extents.x_advance;
             line_width = total_width + word_width;
             if(std::floor(line_width) > mWidth){
-                pushLineData(start,ytop,fontextents.descent,ceil(line_width-extents.x_advance));
+                pushLineData(start,ytop,fontextents.descent,std::ceil(line_width - extents.x_advance));
                 ytop += mLineHeight;
                 mLineCount++;
 		if(mBreakStrategy==0){
@@ -545,7 +545,7 @@ void Layout::relayout(bool force){
 	    word_width += extents.x_advance;
             line_width = total_width + word_width;
             if( (std::floor(line_width)>mWidth && mBreakStrategy) || (linebreak==LINEBREAK_MUSTBREAK) ){
-                pushLineData(start,ytop,fontextents.descent,ceil(total_width));
+                pushLineData(start,ytop,fontextents.descent,std::ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount ++;
                 //char[i] is wordbreak char must be in old lines
@@ -601,7 +601,7 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
     LOGV("%p layoutWidth=%d fontSize=%.f alignment=%x breakStrategy=%d",this,mWidth,mFontSize,mAlignment,mBreakStrategy);
     for (int lineNum = firstLine; lineNum < lastLine; lineNum++) {
         int x = 0,lw = getLineWidth(lineNum,true);
-        TextExtents te;
+        TextExtents te = {0};
         int y = getLineBaseline(lineNum);
         int lineStart = getLineStart(lineNum);
         int lineEnd = getLineEnd(lineNum);
@@ -618,9 +618,9 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         case ALIGN_RIGHT : x = mWidth - lw ; break;
         }
         //measureSize(line,te);
-        LOGV("line[%d/%d](%d,%d) [%s](%d).width=%d",lineNum,mLineCount,x,y,TextUtils::unicode2utf8(line).c_str(),
-            line.size(),lw/*,int(te.x_bearing)*/);
-        canvas.move_to(x - te.x_bearing,y);
+        LOGV("line[%d/%d](%d,%d) [%s](%d).width=%d/%d",lineNum,mLineCount,x,y,TextUtils::unicode2utf8(line).c_str(),
+            line.size(),lw,int(te.x_advance));
+        canvas.move_to(x,y);
         canvas.show_text(processBidi(line));
         if(mCaretPos>=lineStart&&mCaretPos<lineEnd){
             measureSize(line.substr(0,mCaretPos-lineStart),te,nullptr);
