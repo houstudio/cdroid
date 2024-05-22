@@ -517,19 +517,19 @@ void Layout::relayout(bool force){
         set_wordbreaks_utf32((utf32_t*)wch,2,"",breaks);
         const int linebreak = is_line_breakable(wch[0],wch[1],"");
         wch[1] = 0;
-        //measureSize(mText.substr(start,i-start+1),tee);
+        measureSize(mText.substr(start,i-start+1),tee);
         switch(breaks[0]){
         case WORDBREAK_NOBREAK:
             word.append(1,mText[i]);
             measureSize(wch,extents);
             word_width += extents.x_advance;
             line_width = total_width + word_width;
-            if(std::ceil(line_width) > mWidth){
-                pushLineData(start,ytop,fontextents.descent,ceil(total_width));
+            if(std::floor(line_width) > mWidth){
+                pushLineData(start,ytop,fontextents.descent,ceil(line_width-extents.x_advance));
                 ytop += mLineHeight;
                 mLineCount++;
 		if(mBreakStrategy==0){
-		    start = (i - 1);
+		    start = i;
 		    total_width = extents.x_advance;
 		}else{
                     start = (i - word.length() + 1);
@@ -544,12 +544,12 @@ void Layout::relayout(bool force){
             if(mText[i]==10)extents.x_advance=0;
 	    word_width += extents.x_advance;
             line_width = total_width + word_width;
-            if( (std::ceil(line_width)>mWidth && mBreakStrategy) || (linebreak==LINEBREAK_MUSTBREAK) ){
+            if( (std::floor(line_width)>mWidth && mBreakStrategy) || (linebreak==LINEBREAK_MUSTBREAK) ){
                 pushLineData(start,ytop,fontextents.descent,ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount ++;
                 //char[i] is wordbreak char must be in old lines
-                start = std::ceil(line_width)>mWidth ? (i -word.length()): (i+1);
+                start = i - word.length();//std::floor(line_width)>mWidth ? (i - word.length()): (i+1);
 		total_width = 0;
             }
             total_width += word_width;
@@ -601,7 +601,7 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
     LOGV("%p layoutWidth=%d fontSize=%.f alignment=%x breakStrategy=%d",this,mWidth,mFontSize,mAlignment,mBreakStrategy);
     for (int lineNum = firstLine; lineNum < lastLine; lineNum++) {
         int x = 0,lw = getLineWidth(lineNum,true);
-        TextExtents te,te2;
+        TextExtents te;
         int y = getLineBaseline(lineNum);
         int lineStart = getLineStart(lineNum);
         int lineEnd = getLineEnd(lineNum);
@@ -609,7 +609,6 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         const int last = line.back();
         if((last=='\n')||(last=='\r'))
            line.pop_back();
-        measureSize(line.substr(0,1),te,nullptr);
         switch(mAlignment){
         case ALIGN_NORMAL:
         case ALIGN_LEFT  : 
@@ -618,9 +617,9 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         case ALIGN_OPPOSITE:
         case ALIGN_RIGHT : x = mWidth - lw ; break;
         }
-	measureSize(line,te2);
-        LOGV("line[%d/%d](%d,%d) [%s](%d).width=%d/%d abearing=%f",
-             lineNum,mLineCount,x,y,TextUtils::unicode2utf8(line).c_str(),line.size(),lw,int(te2.x_advance),te.x_bearing);
+        //measureSize(line,te);
+        LOGV("line[%d/%d](%d,%d) [%s](%d).width=%d",lineNum,mLineCount,x,y,TextUtils::unicode2utf8(line).c_str(),
+            line.size(),lw/*,int(te.x_bearing)*/);
         canvas.move_to(x - te.x_bearing,y);
         canvas.show_text(processBidi(line));
         if(mCaretPos>=lineStart&&mCaretPos<lineEnd){
