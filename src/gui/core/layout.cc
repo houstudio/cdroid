@@ -616,10 +616,10 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         case ALIGN_OPPOSITE:
         case ALIGN_RIGHT : x = mWidth - lw ; break;
         }
-        measureSize(line.substr(0,1),te);
-        LOGV("line[%d/%d](%d,%d) [%s](%d).width=%d/%d xbearing=%f",lineNum,mLineCount,x,y,TextUtils::unicode2utf8(line).c_str(),
-            line.size(),lw,int(te.x_advance),te.x_bearing);
-        canvas.move_to(x + te.x_bearing,y);
+        //measureSize(line,te);
+        LOGV("line[%d/%d](%d,%d) [%s](%d).width=%d/%d",lineNum,mLineCount,x,y,TextUtils::unicode2utf8(line).c_str(),
+            line.size(),lw,int(te.x_advance));
+        canvas.move_to(x,y);
         canvas.show_text(processBidi(line));
         if(mCaretPos>=lineStart&&mCaretPos<lineEnd){
             measureSize(line.substr(0,mCaretPos-lineStart),te,nullptr);
