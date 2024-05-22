@@ -511,7 +511,7 @@ void Layout::relayout(bool force){
     for(int i = 0; mMultiline && (i < mText.length());i++){
         char breaks[2];
         wchar_t wch[2];
-	float line_width=0;
+        float line_width=0;
         wch[0] = mText[i];
         wch[1] = mText[i+1];
         set_wordbreaks_utf32((utf32_t*)wch,2,"",breaks);
@@ -528,32 +528,32 @@ void Layout::relayout(bool force){
                 pushLineData(start,ytop,fontextents.descent,std::ceil(line_width - extents.x_advance));
                 ytop += mLineHeight;
                 mLineCount++;
-		if(mBreakStrategy==0){
-		    start = i;
-		    total_width = extents.x_advance;
-		}else{
+                if(mBreakStrategy==0){
+                    start = i;
+                    total_width = extents.x_advance;
+                }else{
                     start = (i - word.length() + 1);
-		    total_width = word_width - extents.x_advance;
-		}
-		//if(std::ceil(line_width)<=mWidth)word_width=0;
+                    total_width = word_width - extents.x_advance;
+                }
+                //if(std::ceil(line_width)<=mWidth)word_width=0;
             }
             break;
         case WORDBREAK_BREAK:
             word.append(1,mText[i]);
             measureSize(wch,extents);
             if(mText[i]==10)extents.x_advance=0;
-	    word_width += extents.x_advance;
+            word_width += extents.x_advance;
             line_width = total_width + word_width;
-            if( (std::ceil(line_width)>mWidth/* && mBreakStrategy*/) || (linebreak==LINEBREAK_MUSTBREAK) ){
+            if( (std::ceil(line_width)>mWidth) || (linebreak==LINEBREAK_MUSTBREAK) ){
                 pushLineData(start,ytop,fontextents.descent,std::ceil(total_width));
                 ytop += mLineHeight;
                 mLineCount ++;
                 //char[i] is wordbreak char must be in old lines
                 start = i - word.length() + 1;//std::floor(line_width)>mWidth ? (i - word.length()): (i+1);
-		total_width = 0;
+                total_width = 0;
             }
             total_width += word_width;
-	    word_width = 0;
+            word_width = 0;
             word.erase();
             break;
         case WORDBREAK_INSIDEACHAR: break;
