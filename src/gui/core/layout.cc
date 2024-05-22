@@ -125,7 +125,6 @@ double Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe
     mContext->set_font_size(mFontSize);
     mContext->get_text_extents(utext,te);
     if(fe)mContext->get_font_extents(*fe);
-    if(te.width>te.x_advance)te.x_advance = te.width;
     return te.x_advance;
 }
 
