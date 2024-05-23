@@ -157,7 +157,7 @@ public:
     int findLastCompletelyVisibleItemPosition();
     View* onFocusSearchFailed(View* focused, int focusDirection,
             RecyclerView::Recycler& recycler, RecyclerView::State& state);
-    bool supportsPredictiveItemAnimations();
+    bool supportsPredictiveItemAnimations()override;
     void prepareForDrop(View* view,View* target, int x, int y);
 };
 

@@ -9,6 +9,7 @@ GridLayoutManager::GridLayoutManager(Context* context,const AttributeSet& attrs)
     mSpanSizeLookup = new DefaultSpanSizeLookup();
     setSpanCount(properties->spanCount);
     delete properties;
+    mPendingSpanCountChange = false;
 }
 
 GridLayoutManager::GridLayoutManager(Context* context, int spanCount)

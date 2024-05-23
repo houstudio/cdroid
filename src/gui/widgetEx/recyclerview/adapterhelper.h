@@ -23,6 +23,7 @@ public:
         UpdateOp();
         UpdateOp(int cmd, int positionStart, int itemCount, Object* payload);
         int hashCode();
+        const std::string toString()const;
     };	
     struct Callback {
         std::function<RecyclerView::ViewHolder*(int)> findViewHolder;//(int position)

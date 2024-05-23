@@ -29,12 +29,12 @@ StaggeredGridLayoutManager::StaggeredGridLayoutManager(int spanCount, int orient
 
 StaggeredGridLayoutManager::~StaggeredGridLayoutManager(){
     delete mPendingSavedState;
-	delete mPrimaryOrientation;
-	delete mSecondaryOrientation;
-	delete mRemainingSpans;
-	delete mAnchorInfo;
-	delete mLazySpanLookup;
-	delete mLayoutState;
+    delete mPrimaryOrientation;
+    delete mSecondaryOrientation;
+    delete mRemainingSpans;
+    delete mAnchorInfo;
+    delete mLazySpanLookup;
+    delete mLayoutState;
 }
 
 void StaggeredGridLayoutManager::initLayoutManager(){

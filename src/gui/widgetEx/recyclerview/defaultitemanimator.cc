@@ -149,24 +149,43 @@ bool DefaultItemAnimator::animateAdd(RecyclerView::ViewHolder& holder) {
     return true;
 }
 
+void DefaultItemAnimator::onAddAnimationStart(RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
+    dispatchAddStarting(*holder);
+}
+void DefaultItemAnimator::onAddAnimationCancel(RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
+    holder->itemView->setAlpha(1);
+}
+void DefaultItemAnimator::onAddAnimationEnd(RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
+    View* view = holder->itemView;
+    ViewPropertyAnimator& animation = view->animate();
+    animation.setListener({});
+    dispatchAddFinished(*holder);
+    auto it = std::find(mAddAnimations.begin(), mAddAnimations.end(),holder);
+    mAddAnimations.erase(it);//mAddAnimations.remove(holder);
+    dispatchFinishedWhenDone();
+}
+
 void DefaultItemAnimator::animateAddImpl(RecyclerView::ViewHolder& holder) {
     View* view = holder.itemView;
     ViewPropertyAnimator& animation = view->animate();
     mAddAnimations.push_back(&holder);//add(holder);
     Animator::AnimatorListener al;
-    al.onAnimationStart = [this,&holder](Animator&animator,bool isReverse){
+    al.onAnimationStart = std::bind(&DefaultItemAnimator::onAddAnimationStart,this,&holder,std::placeholders::_1,std::placeholders::_2);
+    /*[this,&holder](Animator&animator,bool isReverse){
         dispatchAddStarting(holder);
-    };
-    al.onAnimationCancel=[&holder](Animator&){
+    };*/
+    //al.onAnimationCancel= std::bind(&DefaultItemAnimator::onAddAnimationCancel,this,&holder,std::placeholders::_1,std::placeholders::_2);
+    /*[&holder](Animator&){
         holder.itemView->setAlpha(1); 
-    };
-    al.onAnimationEnd = [this,&holder,&animation](Animator& animator,bool isReverse){
+    };*/
+    al.onAnimationEnd = std::bind(&DefaultItemAnimator::onAddAnimationEnd,this,&holder,std::placeholders::_1,std::placeholders::_2);
+    /*[this,&holder,&animation](Animator& animator,bool isReverse){
         animation.setListener({});
         dispatchAddFinished(holder);
         auto it = std::find(mAddAnimations.begin(), mAddAnimations.end(),&holder);
         mAddAnimations.erase(it);//mAddAnimations.remove(holder);
         dispatchFinishedWhenDone();
-    };
+    };*/
     animation.alpha(1).setDuration(getAddDuration()).setListener(al).start();
 }
 

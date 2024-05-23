@@ -36,6 +36,7 @@ public:
 	TextView*textView = ((MyAdapter::ViewHolder&)holder).textView;
         textView->setText(item);
 	textView->setId(position);
+	LOGD("%p:%d",textView,position);
 	textView->setOnClickListener([position](View&v){
 	    RecyclerView*rv =  (RecyclerView*)v.getParent();
 	    RecyclerView::LayoutManager*mgr = rv->getLayoutManager();
@@ -88,6 +89,7 @@ int main(int argc,const char*argv[]){
     r=[&](){
         adapter->remove(4);
 	adapter->notifyItemRemoved(4);
+	w->postDelayed(r,3000);
     };
     w->postDelayed(r,8000);
     app.exec();

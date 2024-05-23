@@ -32,12 +32,12 @@ Keyboard::Key::Key(void*parent,int x,int y,Context*context,const AttributeSet&at
     this->x = x;
     this->y = y;
     Keyboard::Row*row=(Keyboard::Row*)parent;
-    Keyboard*keyboard =row->parent;
+    Keyboard*keyboard = row->parent;
     width = getDimensionOrFraction(attrs,"keyWidth" , keyboard->mDisplayWidth,  row->defaultWidth );
     height= getDimensionOrFraction(attrs,"keyHeight", keyboard->mDisplayHeight, row->defaultHeight);
     gap   = getDimensionOrFraction(attrs,"horizontalGap", keyboard->mDisplayWidth, row->defaultHorizontalGap);
     edgeFlags =row->rowEdgeFlags | attrs.getInt("keyEdgeFlags",edgeFlagKVS,0);
-    this->x+=gap;
+    this->x += gap;
     const std::string resicon=attrs.getString("keyIcon");
     icon  = resicon.empty()?nullptr:context->getDrawable(resicon);
     label = attrs.getString("keyLabel");
@@ -50,18 +50,19 @@ Keyboard::Key::Key(void*parent,int x,int y,Context*context,const AttributeSet&at
         std::wstring ws=TextUtils::utf8tounicode(label);
         codes.push_back(ws[0]);
     }
+    LOGV("Key[%x]%s(%d,%d,%d,%d) gap=%d",codes[0],label.c_str(),x,y,width,height,gap);
 }
 
 Keyboard::Key::Key(void*p){
-    parent =p;
-    Row*row=(Row*)parent;
-    sticky =modifier=0;
+    parent = p;
+    Row*row= (Row*)parent;
+    sticky = modifier = 0;
     x=  y  = gap =0;
-    width    = row->defaultWidth;
-    height   = row->defaultHeight;
-    edgeFlags= row->rowEdgeFlags;
+    width  = row->defaultWidth;
+    height = row->defaultHeight;
+    edgeFlags = row->rowEdgeFlags;
     on = false;
-    pressed=false;
+    pressed = false;
 }
 
 void Keyboard::Key::onPressed() {
@@ -90,10 +91,10 @@ int Keyboard::Key::parseCSV(const std::string& value,std::vector<int>& codes){
 }
 
 bool Keyboard::Key::isInside(int x, int y) {
-    bool leftEdge = (edgeFlags & EDGE_LEFT) > 0;
-    bool rightEdge = (edgeFlags & EDGE_RIGHT) > 0;
-    bool topEdge = (edgeFlags & EDGE_TOP) > 0;
-    bool bottomEdge = (edgeFlags & EDGE_BOTTOM) > 0;
+    const bool leftEdge = (edgeFlags & EDGE_LEFT) > 0;
+    const bool rightEdge = (edgeFlags & EDGE_RIGHT) > 0;
+    const bool topEdge = (edgeFlags & EDGE_TOP) > 0;
+    const bool bottomEdge = (edgeFlags & EDGE_BOTTOM) > 0;
     if ((x >= this->x || (leftEdge && x <= this->x + this->width))
             && (x < this->x + this->width || (rightEdge && x >= this->x))
             && (y >= this->y || (topEdge && y <= this->y + this->height))
@@ -105,8 +106,8 @@ bool Keyboard::Key::isInside(int x, int y) {
 }
 
 int Keyboard::Key::squaredDistanceFrom(int x, int y){
-   int xDist = this->x + width / 2 - x;
-   int yDist = this->y + height / 2 - y;
+   const int xDist = this->x + width / 2 - x;
+   const int yDist = this->y + height / 2 - y;
    return xDist * xDist + yDist * yDist;
 }
 
@@ -255,7 +256,7 @@ static void endTag(void *userData, const XML_Char *name){
                 keyboard->getModifierKeys().push_back(key);
         }
     }else if(0==strcmp(name,"Row")){
-        pd->y += row->defaultHeight+row->verticalGap;
+        pd->y += (row->defaultHeight + row->verticalGap);
         pd->minWidth = std::max(pd->x,pd->minWidth);
         pd->x = 0;
         if(row->mode == pd->keyboardMode)
@@ -293,11 +294,11 @@ void Keyboard::loadKeyboard(Context*context,const std::string&resid){
         } while(len!=0);
     }
     XML_ParserFree(parser);
-    mTotalHeight= pd.y-mDefaultVerticalGap;
+    mTotalHeight= pd.y - mDefaultVerticalGap;
     mTotalWidth = pd.minWidth;
     mProximityThreshold = mDefaultWidth*.6f;//SEARCH_DISTANCE;
     mProximityThreshold*= mProximityThreshold;
-    LOGD("%s endof loadkeyboard %d rows %d keys gaps=%d,%d parsed size=%dx%d display=%dx%d",
+    LOGD("%s endof loadkeyboard %d rows %d keys gaps=%d,%d parsed.Size=%dx%d display=%dx%d",
 	resid.c_str(),rows.size(),mKeys.size(), getHorizontalGap(),getVerticalGap(),
 	mTotalWidth,mTotalHeight,mDisplayWidth,mDisplayHeight);
 }
@@ -435,7 +436,7 @@ void Keyboard::computeNearestNeighbors() {
 std::vector<int> Keyboard::getNearestKeys(int x, int y){
     if (mGridNeighbors.size() ==0) computeNearestNeighbors();
     if (x >= 0 && x < getMinWidth() && y >= 0 && y < getHeight()) {
-        int index = (y / mCellHeight) * GRID_WIDTH + (x / mCellWidth);
+        const int index = (y / mCellHeight) * GRID_WIDTH + (x / mCellWidth);
         if (index < GRID_SIZE) {
             return mGridNeighbors[index];
         }

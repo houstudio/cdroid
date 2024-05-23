@@ -43,6 +43,9 @@ protected:
                 int fromX, int fromY, int toX, int toY);
     };
 protected:
+    void onAddAnimationStart(RecyclerView::ViewHolder*,Animator& animator,bool isReverse);
+    void onAddAnimationCancel(RecyclerView::ViewHolder*,Animator& animator,bool isReverse);
+    void onAddAnimationEnd(RecyclerView::ViewHolder*,Animator& animator,bool isReverse);
     void onRemoveAnimationStart(RecyclerView::ViewHolder*,Animator& animator,bool isReverse);
     void onRemoveAnimationEnd(RecyclerView::ViewHolder*,Animator& animator,bool isReverse);
     void onMoveAnimationStart(RecyclerView::ViewHolder*,Animator& animator,bool isReverse);

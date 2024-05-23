@@ -9,7 +9,11 @@ AdapterHelper::AdapterHelper(Callback callback)
 AdapterHelper::AdapterHelper(Callback callback, bool disableRecycler) {
     mCallback = callback;
     mDisableRecycler = disableRecycler;
-    mOpReorderer = nullptr;//new OpReorderer(this);
+    OpReorderer::Callback cbk;
+    cbk.obtainUpdateOp = std::bind(&AdapterHelper::obtainUpdateOp,this,std::placeholders::_1,
+	std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
+    cbk.recycleUpdateOp= std::bind(&AdapterHelper::recycleUpdateOp,this,std::placeholders::_1);
+    mOpReorderer = new OpReorderer(cbk);
     mUpdateOpPool = new Pools::SimplePool<UpdateOp>(UpdateOp::POOL_SIZE);
 }
 
@@ -19,7 +23,6 @@ AdapterHelper::~AdapterHelper(){
 }
 
 AdapterHelper& AdapterHelper::addUpdateOp(const std::vector<UpdateOp*>&ops) {
-    //Collections.addAll(mPendingUpdates, ops);
     mPendingUpdates.insert(mPendingUpdates.end(),ops.begin(),ops.end());
     return *this;
 }
@@ -164,19 +167,19 @@ void AdapterHelper::dispatchAndUpdateViewHolders(UpdateOp* op) {
     if (op->cmd == UpdateOp::ADD || op->cmd == UpdateOp::MOVE) {
         throw "should not dispatch add or move for pre layout";
     }
-    /*if (_DEBUG) {
-        LOGD("dispatch (pre)" + op);
-        Log.d(TAG, "postponed state before:");
-        for (UpdateOp updateOp : mPostponedList) {
-            Log.d(TAG, updateOp.toString());
+    if (_DEBUG) {
+        LOGD("dispatch (pre)%p" ,op);
+        LOGD("postponed state before:");
+        for (UpdateOp* updateOp : mPostponedList) {
+            LOGD("%s",updateOp->toString().c_str());
         }
-        Log.d(TAG, "----");
-    }*/
+        LOGD("----");
+    }
 
     // handle each pos 1 by 1 to ensure continuity. If it breaks, dispatch partial
     // TODO Since move ops are pushed to end, we should not need this anymore
     int tmpStart = updatePositionWithPostponed(op->positionStart, op->cmd);
-    LOGD_IF(_DEBUG,"pos:%d,updatedPos:%d",op->positionStart,tmpStart);
+    LOGD_IF(_DEBUG,"pos:%d,updatedPos:%d mPostponedList.size=%d",op->positionStart,tmpStart,mPostponedList.size());
     int tmpCnt = 1;
     int offsetPositionForPartial = op->positionStart;
     int positionMultiplier;
@@ -221,7 +224,7 @@ void AdapterHelper::dispatchAndUpdateViewHolders(UpdateOp* op) {
         LOGD("post dispatch");
         LOGD("postponed state after:");
         for (UpdateOp* updateOp : mPostponedList) {
-            //Log.d(TAG, updateOp.toString());
+            LOGD("%s",updateOp->toString().c_str());
         }
         LOGD("----");
     }
@@ -297,14 +300,14 @@ int AdapterHelper::updatePositionWithPostponed(int pos, int cmd) {
                 }
             }
         }
-        /*if (_DEBUG) {
-            Log.d(TAG, "dispath (step" + i + ")");
-            Log.d(TAG, "postponed state:" + i + ", pos:" + pos);
+        if (_DEBUG) {
+            LOGD("dispath (step %d)",i);
+            LOGD("postponed state:%d, pos:%d",i,pos);
             for (UpdateOp* updateOp : mPostponedList) {
-                Log.d(TAG, updateOp.toString());
+                LOGD(updateOp->toString().c_str());
             }
-            Log.d(TAG, "----");
-        }*/
+            LOGD("----");
+        }
     }
     for (int i = mPostponedList.size() - 1; i >= 0; i--) {
         UpdateOp* op = mPostponedList.at(i);
@@ -346,10 +349,8 @@ void AdapterHelper::applyAdd(UpdateOp* op) {
 }
 
 void AdapterHelper::postponeAndUpdateViewHolders(UpdateOp* op) {
-    if (_DEBUG) {
-        LOGD("postponing %d",op->cmd);
-    }
     mPostponedList.push_back(op);//add(op);
+    LOGD_IF(_DEBUG,"postponing op->%p:%d mPostponedList.size=%d",op,op->cmd,mPostponedList.size());
     switch (op->cmd) {
    case UpdateOp::ADD:
         mCallback.offsetPositionsForAdd(op->positionStart, op->itemCount);
@@ -560,9 +561,9 @@ void AdapterHelper::recycleUpdateOpsAndClearList(std::vector<UpdateOp*>& ops) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 AdapterHelper::UpdateOp::UpdateOp(){
-    cmd =0;
-    itemCount=0;
-    payload =nullptr;
+    cmd = 0;
+    itemCount = 0;
+    payload = nullptr;
 }
 
 AdapterHelper::UpdateOp::UpdateOp(int cmd, int positionStart, int itemCount, Object* payload) {
@@ -578,4 +579,13 @@ int AdapterHelper::UpdateOp::hashCode() {
     result = 31 * result + itemCount;
     return result;
 }
+
+const std::string AdapterHelper::UpdateOp::toString()const{
+    std::ostringstream oss;
+    const char*cmds[]={"add","rm","up","mv"};
+    const int idx = __builtin_clz(cmd);
+    oss<<cmds[idx]<<",s:"<<positionStart<<" c:"<<itemCount;
+    return oss.str();
+}
+
 }/*endof namespace*/

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string.h>
 #include <limits.h>
+#include <float.h>
 
 namespace cdroid{
 
@@ -680,13 +681,13 @@ void  KeyboardView::SwipeTracker::addPoint(float x,float y,long time){
 }
 
 void  KeyboardView::SwipeTracker::computeCurrentVelocity(int units){
-    //computeCurrentVelocity(units,FLT_MAX);
+    computeCurrentVelocity(units,FLT_MAX);
 }
 
 void  KeyboardView::SwipeTracker::computeCurrentVelocity(int units,float maxVelocity){
-    float oldestX = mPastX[0];//pastX[0];
-    float oldestY = mPastY[0];//pastY[0];
-    long oldestTime = mPastTime[0];//pastTime[0];
+    float oldestX = mPastX[0];
+    float oldestY = mPastY[0];
+    long oldestTime = mPastTime[0];
     float accumX = 0;
     float accumY = 0;
     int N=0;

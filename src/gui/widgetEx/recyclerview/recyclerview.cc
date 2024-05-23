@@ -136,6 +136,7 @@ void RecyclerView::initRecyclerView(){
     mDataSetHasChangedAfterLayout = false;
     mEatenAccessibilityChangeFlags =0;
     mInterceptRequestLayoutDepth = 0;
+    mAdapterUpdateDuringMeasure = false;
     mState = new State();
     mAdapterHelper = nullptr;
     mViewInfoStore = new ViewInfoStore();
@@ -332,7 +333,7 @@ void RecyclerView::initChildrenHelper() {
             if (!vh->isTmpDetached() && !vh->shouldIgnore()) {
                 LOGE("Called attach on a child which is not detached: %p",vh);
             }
-            LOGD_IF(_DEBUG,"reAttach %p",vh);
+            LOGD_IF(_DEBUG,"reAttach %p %p:%d",vh,vh->itemView,vh->itemView->getId());
             vh->clearTmpDetachFlag();
         }
         attachViewToParent(child, index, layoutParams);
@@ -346,7 +347,7 @@ void RecyclerView::initChildrenHelper() {
                 if (vh->isTmpDetached() && !vh->shouldIgnore()) {
                     LOGE("called detach on an already detached child %p",vh);
                 }
-                LOGD_IF(_DEBUG,"tmpDetach =%p",vh);
+                LOGD_IF(_DEBUG,"tmpDetach =%p %p:%d",vh,vh->itemView,vh->itemView->getId());
                 vh->addFlags(ViewHolder::FLAG_TMP_DETACHED);
             }
         }
@@ -3795,7 +3796,24 @@ bool RecyclerView::Recycler::tryBindViewHolderByDeadline(ViewHolder& holder, int
         // abort - we have a deadline we can't meet
         return false;
     }
+    // Holders being bound should be either fully attached or fully detached.
+    // We don't want to bind with views that are temporarily detached, because that
+    // creates a situation in which they are unable to reason about their attach state
+    // properly.
+    // For example, isAttachedToWindow will return true, but the itemView will lack a
+    // parent. This breaks, among other possible issues, anything involving traversing
+    // the view tree, such as ViewTreeLifecycleOwner.
+    // Thus, we temporarily reattach any temp-detached holders for the bind operation.
+    // See https://issuetracker.google.com/265347515 for additional details on problems
+    // resulting from this
+    bool reattachedForBind = false;
+    if (holder.isTmpDetached()) {
+        mRV->attachViewToParent(holder.itemView, mRV->getChildCount(), holder.itemView->getLayoutParams());
+        reattachedForBind = true;
+    }
     mRV->mAdapter->bindViewHolder(holder, offsetPosition);
+    if(reattachedForBind)
+        mRV->detachViewFromParent(holder.itemView);
     long endBindNs = mRV->getNanoTime();
     mRecyclerPool->factorInBindTime(holder.getItemViewType(), endBindNs - startBindNs);
     attachAccessibilityDelegateOnBind(holder);
@@ -4045,6 +4063,27 @@ void RecyclerView::Recycler::recycleView(View* view) {
         holder->clearReturnedFromScrapFlag();
     }
     recycleViewHolderInternal(*holder);
+    // If the ViewHolder is running ItemAnimator, we want the recycleView() in scroll pass
+    // to stop the ItemAnimator and put ViewHolder back in cache or Pool.
+    // There are three situations:
+    // 1. If the custom Adapter clears ViewPropertyAnimator in view detach like the
+    //    leanback (TV) app does, the ItemAnimator is likely to be stopped and
+    //    recycleViewHolderInternal will succeed.
+    // 2. If the custom Adapter clears ViewPropertyAnimator, but the ItemAnimator uses
+    //    "pending runnable" and ViewPropertyAnimator has not started yet, the ItemAnimator
+    //    on the view will not be cleared. See b/73552923.
+    // 3. If the custom Adapter does not clear ViewPropertyAnimator in view detach, the
+    //    ItemAnimator will not be cleared.
+    // Since both 2&3 lead to failure of recycleViewHolderInternal(), we just explicitly end
+    // the ItemAnimator, the callback of ItemAnimator.endAnimations() will recycle the View.
+    //
+    // Note the order: we must call endAnimation() after recycleViewHolderInternal()
+    // to avoid recycle twice. If ViewHolder isRecyclable is false,
+    // recycleViewHolderInternal() will not recycle it, endAnimation() will reset
+    // isRecyclable flag and recycle the view.
+    if (mRV->mItemAnimator && !holder->isRecyclable()) {
+        mRV->mItemAnimator->endAnimation(*holder);
+    }
 }
 
 void RecyclerView::Recycler::recycleViewInternal(View* view) {
@@ -6253,10 +6292,10 @@ void RecyclerView::ViewHolder::setIsRecyclable(bool recyclable) {
     mIsRecyclableCount = recyclable ? mIsRecyclableCount - 1 : mIsRecyclableCount + 1;
     if (mIsRecyclableCount < 0) {
         mIsRecyclableCount = 0;
-        LOGE_IF(_DEBUG,"isRecyclable decremented below 0: "
-             "unmatched pair of setIsRecyable() calls for %p" , this);
-        LOGE("isRecyclable decremented below 0: "
-              "unmatched pair of setIsRecyable() calls for %p" , this);
+        LOGE_IF(_DEBUG,"isRecyclable decremented to %d is below 0: "
+             "unmatched pair of setIsRecyable() calls for %p" , mIsRecyclableCount,this);
+        LOGE("isRecyclable decremented to %d is below 0: "
+              "unmatched pair of setIsRecyable() calls for %p" ,mIsRecyclableCount, this);
     } else if (!recyclable && mIsRecyclableCount == 1) {
         mFlags |= FLAG_NOT_RECYCLABLE;
     } else if (recyclable && mIsRecyclableCount == 0) {
@@ -7035,7 +7074,8 @@ bool RecyclerView::ItemAnimator::canReuseUpdatedViewHolder(ViewHolder& viewHolde
 void RecyclerView::ItemAnimator::dispatchAnimationsFinished() {
     const int count = mFinishedListeners.size();
     for (int i = 0; i < count; ++i) {
-        mFinishedListeners.at(i)();//.onAnimationsFinished();
+        auto ls = mFinishedListeners.at(i);
+        if(ls)ls();//.onAnimationsFinished();
     }
     mFinishedListeners.clear();
 }
