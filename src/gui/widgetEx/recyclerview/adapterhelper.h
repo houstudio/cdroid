@@ -16,13 +16,12 @@ public:
         static constexpr int POOL_SIZE = 30;
         int cmd;
         int positionStart;
-        Object* payload;
         // holds the target position if this is a MOVE
         int itemCount;
+        Object* payload;
     public:
         UpdateOp();
         UpdateOp(int cmd, int positionStart, int itemCount, Object* payload);
-        int hashCode();
         const std::string toString()const;
     };	
     struct Callback {

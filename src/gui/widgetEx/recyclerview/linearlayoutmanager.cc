@@ -15,6 +15,7 @@ LinearLayoutManager::LinearLayoutManager(Context* context,int orientation,bool r
     mOrientationHelper = nullptr;
     mLastStackFromEnd = false;
     mStackFromEnd = false;
+    mShouldReverseLayout = false;
     mRecycleChildrenOnDetach = true;
     mAnchorInfo = new AnchorInfo();
     mLayoutChunkResult = new LayoutChunkResult();

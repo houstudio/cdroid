@@ -406,10 +406,10 @@ void Layout::calculateEllipsis(int line,int nChars){
 const std::wstring Layout::getLineText(int line,bool expandEllipsis)const{
     int start;
     int count;
-    int ellipsis=mEllipsis;
+    int ellipsis = mEllipsis;
     std::wstring result;
     if(getEllipsisCount(line)==0)
-        ellipsis=ELLIPSIS_NONE;
+        ellipsis = ELLIPSIS_NONE;
     switch(ellipsis){
     case ELLIPSIS_NONE:
         start = getLineStart(line);
@@ -419,7 +419,7 @@ const std::wstring Layout::getLineText(int line,bool expandEllipsis)const{
     case ELLIPSIS_START:
         start = getEllipsisStart(line);
         count = getLineEnd(line) - start;
-        result = L"..."+mText.substr(start,count);
+        result= L"..."+mText.substr(start,count);
         break;
     case ELLIPSIS_MIDDLE:
         start = getLineStart(line);
@@ -429,9 +429,9 @@ const std::wstring Layout::getLineText(int line,bool expandEllipsis)const{
         result += mText.substr(getEllipsisStart(line) + getEllipsisCount(line),count);
         break;
     case ELLIPSIS_END:
-        start=getLineStart(line);
-        count=getEllipsisStart(line)-start;
-        result=mText.substr(start,count);
+        start = getLineStart(line);
+        count = getEllipsisStart(line)-start;
+        result= mText.substr(start,count);
         result.append(L"...");
         break;
     }
@@ -531,9 +531,9 @@ void Layout::relayout(bool force){
                     total_width = extents.x_advance;
                 }else{
                     start = (i - word.length() + 1);
+		    start +=!!(mText[start]=='\n');
                     total_width = word_width - extents.x_advance;
                 }
-                //if(std::ceil(line_width)<=mWidth)word_width=0;
             }
             break;
         case WORDBREAK_BREAK:
@@ -548,6 +548,7 @@ void Layout::relayout(bool force){
                 mLineCount ++;
                 //char[i] is wordbreak char must be in old lines
                 start = i - word.length() + 1;//std::floor(line_width)>mWidth ? (i - word.length()): (i+1);
+		start +=!!(mText[start]=='\n');
                 total_width = 0;
             }
             total_width += word_width;

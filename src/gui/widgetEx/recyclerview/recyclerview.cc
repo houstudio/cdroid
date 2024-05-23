@@ -5553,8 +5553,8 @@ void RecyclerView::LayoutManager::layoutDecorated(View* child, int left, int top
 
 void RecyclerView::LayoutManager::layoutDecoratedWithMargins(View* child, int left, int top, int width,
         int height) {
-    LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
-    Rect& insets = lp->mDecorInsets;
+    const LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
+    const Rect& insets = lp->mDecorInsets;
     child->layout(left + insets.left + lp->leftMargin, top + insets.top + lp->topMargin,
             width - insets.left - insets.width - lp->rightMargin,
             height - insets.top - insets.height - lp->bottomMargin);

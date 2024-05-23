@@ -321,6 +321,7 @@ int AdapterHelper::updatePositionWithPostponed(int pos, int cmd) {
             recycleUpdateOp(op);
         }
     }
+    LOGD("mPostponedList.size %d->%d",count,mPostponedList.size());
     return pos;
 }
 
@@ -382,7 +383,7 @@ int AdapterHelper::findPositionOffset(int position) {
 }
 
 int AdapterHelper::findPositionOffset(int position, int firstPostponedItem) {
-    int count = mPostponedList.size();
+    const int count = mPostponedList.size();
     for (int i = firstPostponedItem; i < count; ++i) {
         UpdateOp* op = mPostponedList.at(i);
         if (op->cmd == UpdateOp::MOVE) {
@@ -571,13 +572,6 @@ AdapterHelper::UpdateOp::UpdateOp(int cmd, int positionStart, int itemCount, Obj
     this->positionStart = positionStart;
     this->itemCount = itemCount;
     this->payload = payload;
-}
-
-int AdapterHelper::UpdateOp::hashCode() {
-    int result = cmd;
-    result = 31 * result + positionStart;
-    result = 31 * result + itemCount;
-    return result;
 }
 
 const std::string AdapterHelper::UpdateOp::toString()const{
