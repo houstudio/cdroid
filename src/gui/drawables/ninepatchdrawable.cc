@@ -188,7 +188,7 @@ void NinePatchDrawable::draw(Canvas&canvas){
             canvas.scale(-1.f,1.f);
             canvas.translate(cx,cy);
         }
-        mNinePatchState->draw(canvas,mBounds);
+        mNinePatchState->draw(canvas,mBounds,mAlpha);
         if(mTintFilter){
             mTintFilter->apply(canvas,mBounds);
             canvas.pop_group_to_source();
@@ -257,14 +257,14 @@ int NinePatchDrawable::NinePatchState::getChangingConfigurations()const{
    return mChangingConfigurations|(mTint ? mTint->getChangingConfigurations() : 0);
 }
 
-void NinePatchDrawable::NinePatchState::draw(Canvas&canvas,const Rect&rect){
+void NinePatchDrawable::NinePatchState::draw(Canvas&canvas,const Rect&rect,int alpha){
 #if 0
     mNinePatch->setImageSize(rect.width+mPadding.left+mPadding.width,
 		    rect.height+mPadding.top+mPadding.height);
     mNinePatch->draw(canvas,rect.left,rect.top);
 #else
     mNinePatch->setImageSize(rect.width, rect.height);
-    mNinePatch->draw(canvas,rect.left,rect.top,1.f);
+    mNinePatch->draw(canvas,rect.left,rect.top,float(alpha)/255.f);
 #endif
 }
 

@@ -12,10 +12,11 @@ NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
     : mImage(image){
     mContentArea = getContentArea();
     mOpacity = INT_MAX;
+    mAlpha =1.f;
     getResizeArea();
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
         //throw new ExceptionNot9Patch;
-	throw "Not ninepatch image!";
+        throw "Not ninepatch image!";
     }
 }
 
@@ -23,6 +24,7 @@ NinePatch::NinePatch(Context*ctx,const std::string&resid){
     mImage= ctx->loadImage(resid);
     mContentArea = getContentArea();
     mOpacity = INT_MAX;
+    mAlpha = 1.0f;
     getResizeArea();
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
         //throw new ExceptionNot9Patch;
@@ -90,7 +92,10 @@ void NinePatch::draw(Canvas& painter, const Rect&rect,float alpha){
     LOGE_IF(hasErrors,"%s",oss.str());
     mWidth = rect.width;
     mHeight= rect.height;
+	painter.save();
+	painter.translate(rect.left,rect.top);
     updateCachedImage(mWidth,mHeight,&painter);
+	painter.restore();
 }
 
 void NinePatch::setImageSize(int width, int height) {
@@ -109,14 +114,13 @@ void NinePatch::setImageSize(int width, int height) {
 		<<height<<")>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight))";
     }
     if (width < (mImage->get_width() - 2 - resizeWidth)) {
-	oss<<"IncorrectWidth("<<width<<"must>="<<mImage->get_width()<<"image.width)-2-"<<resizeWidth<<"(resizeWidth)";
+		oss<<"IncorrectWidth("<<width<<"must>="<<mImage->get_width()<<"image.width)-2-"<<resizeWidth<<"(resizeWidth)";
     }
     if (height < (mImage->get_height() - 2 - resizeHeight)) {
         oss<<"IncorrectHeight("<<height<<"must>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight)";
     }
     if(oss.str().empty()==false)
         LOG(ERROR)<<oss.str();
-    LOGV("%p %dx%d->%dx%d",this,mWidth,mHeight,width,height);
     if (width != mWidth || height != mHeight) {
         mWidth = width;
         mHeight = height;
@@ -135,24 +139,24 @@ Rect NinePatch::getPadding()const{
 
 void NinePatch::drawScaledPart(const Rect& oldRect, const Rect& newRect,Cairo::Context&painter) {
     if (newRect.width && newRect.height) {
-	const double scaleX=(double)newRect.width/oldRect.width;
-	const double scaleY=(double)newRect.height/oldRect.height;
-	double dx = newRect.left;
-	double dy = newRect.top;
-	painter.save();
-	painter.rectangle(dx,dy,newRect.width,newRect.height);
-	if( (newRect.width!=oldRect.width) || (newRect.height!=oldRect.height) ){
-     	    painter.scale(scaleX,scaleY);
-	    dx/=scaleX;
-	    dy/=scaleY;
-	}
-	painter.clip();
-	painter.set_source(mImage,dx-oldRect.left,dy-oldRect.top);
-	/*default filtertype:Good cannot be use here*/
-	Cairo::RefPtr<SurfacePattern>spat = painter.get_source_for_surface();
-	if(spat)spat->set_filter(SurfacePattern::Filter::NEAREST);
-	painter.paint_with_alpha(mAlpha);
-	painter.restore();
+        const double scaleX=(double)newRect.width/oldRect.width;
+        const double scaleY=(double)newRect.height/oldRect.height;
+        double dx = newRect.left;
+        double dy = newRect.top;
+        painter.save();
+        painter.rectangle(dx,dy,newRect.width,newRect.height);
+        if( (newRect.width!=oldRect.width) || (newRect.height!=oldRect.height) ){
+            painter.scale(scaleX,scaleY);
+	        dx/=scaleX;
+            dy/=scaleY;
+        }
+        painter.clip();
+        painter.set_source(mImage,dx-oldRect.left,dy-oldRect.top);
+        /*default filtertype:Good cannot be use here*/
+        Cairo::RefPtr<SurfacePattern>spat = painter.get_source_for_surface();
+        if(spat)spat->set_filter(SurfacePattern::Filter::NEAREST);
+        painter.paint_with_alpha(mAlpha);
+        painter.restore();
     }
 }
 
@@ -269,14 +273,20 @@ void NinePatch::updateCachedImage(int width, int height,Cairo::Context*painterIn
     RefPtr<Cairo::Context> imgPainter;
     Cairo::Context*ppainter = painterIn;
     if(painterIn==nullptr){
-        mCachedImage =  ImageSurface::create(Surface::Format::ARGB32,width,height);
+        mCachedImage = ImageSurface::create(Surface::Format::ARGB32,width,height);
         imgPainter=Cairo::Context::create(mCachedImage);
+		imgPainter->save();
         imgPainter->set_operator(Cairo::Context::Operator::CLEAR);
         imgPainter->rectangle(0,0,width,height);
         imgPainter->fill();
+		imgPainter->restore();
         ppainter=imgPainter.get();
-    }
-    Cairo::Context&painter=*ppainter;
+    }else{
+	    painterIn->set_source(mCachedImage,0,0);
+		painterIn->rectangle(0,0,width,height);
+		painterIn->paint();
+	}
+    Cairo::Context&painter=*imgPainter.get();
     getFactor(width, height, factorX, factorY);
     for (int  i = 0; i < mResizeDistancesX.size(); i++) {
         y1 = 0;
@@ -295,7 +305,7 @@ void NinePatch::updateCachedImage(int width, int height,Cairo::Context*painterIn
             lostY += resizeY - ((double)heightResize * factorY);
             if (fabs(lostY) >= 1.f) {
                 if (lostY < 0) {  resizeY += 1;   lostY += 1.0; }
-	       	else { resizeY -= 1;  lostY -= 1.0; }
+                else { resizeY -= 1;  lostY -= 1.0; }
             }
             drawScaledPart(Rect{x1 + 1, y2 + 1, widthResize, heightResize},
                 Rect{x1 + offsetX, y2 + offsetY, widthResize, resizeY}, painter);
@@ -355,7 +365,7 @@ void NinePatch::updateCachedImage(int width, int height,Cairo::Context*painterIn
         lostX += resizeX - ((double)mResizeDistancesX[i].second * factorX);
         if (fabs(lostX) >= 1.f) {
             if (lostX < 0) {  resizeX += 1;  lostX += 1.0; }
-	    else { resizeX -= 1;  lostX += 1.0; }
+            else { resizeX -= 1;  lostX += 1.0; }
         }
         drawScaledPart(Rect{x1 + 1, y1 + 1, mResizeDistancesX[i].second, heightResize},
             Rect{x1 + offsetX, y1 + offsetY, resizeX, heightResize}, painter);
@@ -368,6 +378,7 @@ void NinePatch::updateCachedImage(int width, int height,Cairo::Context*painterIn
     heightResize = mImage->get_height() - y1 - 2;
     drawConstPart(Rect{x1 + 1, y1 + 1, widthResize, heightResize},
          Rect{x1 + offsetX, y1 + offsetY, widthResize, heightResize}, painter);
+    mCachedImage->write_to_png("n9.png");
 }
 
 }/*endof namespace*/

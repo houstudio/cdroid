@@ -23,7 +23,7 @@ private:
         NinePatchState(Cairo::RefPtr<Cairo::ImageSurface>bitmap,const Rect*padding=nullptr);
         NinePatchState(Context*ctx,const std::string&resid);
         NinePatchDrawable*newDrawable()override;
-        void draw(Canvas&canvas,const Rect&rect);
+        void draw(Canvas&canvas,const Rect&rect,int alpha);
         int getChangingConfigurations()const override;
     };
     int mAlpha;
