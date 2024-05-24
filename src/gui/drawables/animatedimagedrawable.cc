@@ -218,7 +218,7 @@ void AnimatedImageDrawable::restart(int fromFrame){
     mFrameScheduled = false;
     if((mStarting==false)&&mAnimatedImageState->mFrameCount){
         invalidateSelf();
-	mStarting = true;
+        mStarting = true;
         postOnAnimationStart();
     }
 }
@@ -229,7 +229,8 @@ void AnimatedImageDrawable::stop(){
     }
     if(mRunnable)unscheduleSelf(mRunnable);
     if (mStarting){
-	mStarting = false;
+        mStarting = false;
+        mFrameScheduled = false;
         postOnAnimationEnd();
     }
 }
