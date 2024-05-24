@@ -232,7 +232,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
 }
 
 static bool guessExtension(ZIPArchive*pak,std::string&ioname) {
-    static const char* exts[]={".xml",".png",".9.png",".jpg",".gif",".apng",".webp",nullptr};
+    static const char* exts[]={".xml",".9.png",".png",".jpg",".gif",".apng",".webp",nullptr};
     if(ioname.find('.')!=std::string::npos)
         return true;
     for(int i=0;exts[i];i++){

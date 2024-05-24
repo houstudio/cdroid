@@ -531,7 +531,7 @@ void Layout::relayout(bool force){
                     total_width = extents.x_advance;
                 }else{
                     start = (i - word.length() + 1);
-		    start +=!!(mText[start]=='\n');
+                    start +=!!(mText[start]=='\n');
                     total_width = word_width - extents.x_advance;
                 }
             }
@@ -548,7 +548,7 @@ void Layout::relayout(bool force){
                 mLineCount ++;
                 //char[i] is wordbreak char must be in old lines
                 start = i - word.length() + 1;//std::floor(line_width)>mWidth ? (i - word.length()): (i+1);
-		start +=!!(mText[start]=='\n');
+                start +=!!(mText[start]=='\n');
                 total_width = 0;
             }
             total_width += word_width;
