@@ -281,11 +281,7 @@ void NinePatch::updateCachedImage(int width, int height,Cairo::Context*painterIn
         imgPainter->fill();
 		imgPainter->restore();
         ppainter=imgPainter.get();
-    }else{
-	    painterIn->set_source(mCachedImage,0,0);
-		painterIn->rectangle(0,0,width,height);
-		painterIn->paint();
-	}
+    }
     Cairo::Context&painter=*imgPainter.get();
     getFactor(width, height, factorX, factorY);
     for (int  i = 0; i < mResizeDistancesX.size(); i++) {

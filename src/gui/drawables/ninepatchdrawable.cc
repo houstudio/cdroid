@@ -258,14 +258,8 @@ int NinePatchDrawable::NinePatchState::getChangingConfigurations()const{
 }
 
 void NinePatchDrawable::NinePatchState::draw(Canvas&canvas,const Rect&rect,int alpha){
-#if 0
-    mNinePatch->setImageSize(rect.width+mPadding.left+mPadding.width,
-		    rect.height+mPadding.top+mPadding.height);
-    mNinePatch->draw(canvas,rect.left,rect.top);
-#else
     mNinePatch->setImageSize(rect.width, rect.height);
     mNinePatch->draw(canvas,rect.left,rect.top,float(alpha)/255.f);
-#endif
 }
 
 }
