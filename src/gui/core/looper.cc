@@ -417,6 +417,13 @@ void Looper::doIdleHandlers(){
 }
 
 //TEMP_FAILURE_RETRY defined in <unistd.h>
+#ifndef TEMP_FAILURE_RETRY
+#define TEMP_FAILURE_RETRY(expression) \
+  ({ long int __result; \
+     do __result = (long int)(expression); \
+     while (__result == -1 && errno == EINTR); \
+     __result; })
+#endif
 void Looper::wake() {
     LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  wake", this);
 
