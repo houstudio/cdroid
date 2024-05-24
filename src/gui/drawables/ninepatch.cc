@@ -378,7 +378,6 @@ void NinePatch::updateCachedImage(int width, int height,Cairo::Context*painterIn
     heightResize = mImage->get_height() - y1 - 2;
     drawConstPart(Rect{x1 + 1, y1 + 1, widthResize, heightResize},
          Rect{x1 + offsetX, y1 + offsetY, widthResize, heightResize}, painter);
-    mCachedImage->write_to_png("n9.png");
 }
 
 }/*endof namespace*/
