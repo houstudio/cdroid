@@ -3770,7 +3770,7 @@ bool RecyclerView::Recycler::validateViewHolderForOffsetPosition(ViewHolder* hol
         }
         return mRV->mState->isPreLayout();
     }
-    if (holder->mPosition < 0 || holder->mPosition >= mRV->mAdapter->getItemCount()) {
+    if ( (holder->mPosition < 0) || (holder->mPosition >= mRV->mAdapter->getItemCount()) ) {
         LOGE("Inconsistency detected. Invalid view holder %p adapter position",holder);
     }
     if (!mRV->mState->isPreLayout()) {
@@ -5014,6 +5014,7 @@ void RecyclerView::LayoutManager::startSmoothScroll(SmoothScroller* smoothScroll
             && mSmoothScroller->isRunning()) {
         mSmoothScroller->stop();
     }
+    delete mSmoothScroller;
     mSmoothScroller = smoothScroller;
     mSmoothScroller->start(mRecyclerView, this);
 }
