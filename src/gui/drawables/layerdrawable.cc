@@ -321,7 +321,7 @@ int LayerDrawable::getLayerInsetTop(int index)const {
 
 void LayerDrawable::setLayerInsetBottom(int index, int b) {
     ChildDrawable* childDrawable = mLayerState->mChildren[index];
-    childDrawable->mInsetR = b;
+    childDrawable->mInsetB = b;
 }
 
 int LayerDrawable::getLayerInsetBottom(int index)const {
