@@ -144,11 +144,46 @@ int LayerDrawable::LayerState::getChangingConfigurations()const{
    return mChangingConfigurations | mChildrenChangingConfigurations;
 }
 
+int LayerDrawable::LayerState::getOpacity(){
+    if (mCheckedOpacity) {
+         return mOpacity;
+     }
+
+     // Seek to the first non-null drawable.
+     int firstIndex = -1;
+     const size_t N = mChildren.size();
+     for (int i = 0; i < N; i++) {
+         if (mChildren[i]->mDrawable) {
+             firstIndex = i;
+             break;
+         }
+     }
+
+     int op;
+     if (firstIndex >= 0) {
+         op = mChildren[firstIndex]->mDrawable->getOpacity();
+     } else {
+         op = PixelFormat::TRANSPARENT;
+     }
+
+     // Merge all remaining non-null drawables.
+     for (int i = firstIndex + 1; i < N; i++) {
+         Drawable* dr = mChildren[i]->mDrawable;
+         if (dr != nullptr) {
+             op = Drawable::resolveOpacity(op, dr->getOpacity());
+         }
+     }
+
+     mOpacity = op;
+     mCheckedOpacity = true;
+     return op;
+}
+
 bool LayerDrawable::LayerState::isStateful()const{
     bool isStateful = false;
     for (auto child:mChildren) {
-        Drawable*dr=child->mDrawable;
-        if (dr != nullptr && dr->isStateful()) {
+        Drawable*dr = child->mDrawable;
+        if (dr && dr->isStateful()) {
             isStateful = true;
             break;
         }
@@ -165,7 +200,7 @@ bool LayerDrawable::LayerState::hasFocusStateSpecified()const{
     return false;
 }
 
-bool LayerDrawable::LayerState::canConstantState() {
+bool LayerDrawable::LayerState::canConstantState() const{
     for (auto child:mChildren) {
         Drawable* dr = child->mDrawable;
         if (dr  && dr->getConstantState() == nullptr) {
@@ -628,7 +663,7 @@ bool LayerDrawable::refreshChildPadding(int i, ChildDrawable* r) {
             mPaddingT[i] = rect.top;
             mPaddingR[i] = rect.width;
             mPaddingB[i] = rect.height;
-	    LOGV("layer[%d].padding=(%d,%d,%d,%d)",i,rect.left,rect.top,rect.width,rect.height);
+            LOGV("layer[%d].padding=(%d,%d,%d,%d)",i,rect.left,rect.top,rect.width,rect.height);
             return true;
         }
     }
@@ -940,12 +975,12 @@ int LayerDrawable::getOpacity() {
     if (mLayerState->mOpacityOverride != PixelFormat::UNKNOWN) {
         return mLayerState->mOpacityOverride;
     }
-    return mLayerState->mOpacity;//getOpacity();
+    return mLayerState->getOpacity();
 }
 
 Drawable* LayerDrawable::getFirstNonNullDrawable()const{
     for(auto child:mLayerState->mChildren){
-        Drawable*dr=child->mDrawable;
+        Drawable*dr = child->mDrawable;
         if(dr)return dr;
     }
     return nullptr;
@@ -955,10 +990,8 @@ LayerDrawable*LayerDrawable::mutate(){
     if (!mMutated && Drawable::mutate() == this) {
         mLayerState = createConstantState(mLayerState.get(),nullptr);
         for (auto child:mLayerState->mChildren) {
-            Drawable*dr=child->mDrawable;
-            if (dr != nullptr) {
-                dr->mutate();
-            }
+            Drawable*dr = child->mDrawable;
+            if (dr)dr->mutate();
         }
         mMutated = true;
     }
@@ -970,8 +1003,7 @@ void LayerDrawable::clearMutated() {
 
     for (auto child:mLayerState->mChildren) {
         Drawable* dr = child->mDrawable;
-        if (dr) 
-            dr->clearMutated();
+        if (dr)dr->clearMutated();
     }
     mMutated = false;
 }

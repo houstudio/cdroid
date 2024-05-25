@@ -47,9 +47,10 @@ protected:
         ~LayerState();
         LayerDrawable*newDrawable()override;
         int getChangingConfigurations()const override;
+        int getOpacity();
         bool isStateful()const;
         bool hasFocusStateSpecified()const;
-        bool canConstantState();
+        bool canConstantState()const;
         void invalidateCache();
         void setDensity(int targetDensity);
         virtual void onDensityChanged(int sourceDensity, int targetDensity);
