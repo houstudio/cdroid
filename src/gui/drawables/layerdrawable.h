@@ -115,7 +115,7 @@ public:
     void setLayerInsetStart(int index, int s);
     int getLayerInsetEnd(int index)const;
     void setLayerInsetEnd(int index, int e);
-    int getId(int index);
+    int getId(int index)const;
     void setId(int index, int id);
     int getNumberOfLayers()const;
 
@@ -131,7 +131,7 @@ public:
     Drawable*findDrawableByLayerId(int id);
     virtual bool setDrawableByLayerId(int id, Drawable* drawable);
     int findIndexByLayerId(int id)const;
-    Drawable* getDrawable(int index);
+    Drawable* getDrawable(int index)const;
     void setDrawable(int index, Drawable* drawable);
     bool getPadding(Rect& padding)override;
     void setPadding(int left, int top, int right, int bottom);

@@ -426,7 +426,7 @@ LayerDrawable::ChildDrawable* LayerDrawable::addLayer(Drawable* dr,const std::ve
     return childDrawable;
 }
 
-int LayerDrawable::getId(int index){
+int LayerDrawable::getId(int index)const{
     if (index >= mLayerState->mChildren.size())
         return -1;//throw new IndexOutOfBoundsException();
     return mLayerState->mChildren[index]->mId;
@@ -468,7 +468,7 @@ int LayerDrawable::findIndexByLayerId(int id)const{
     return -1;
 }
 
-Drawable* LayerDrawable::getDrawable(int index){
+Drawable* LayerDrawable::getDrawable(int index)const{
     if(index>=mLayerState->mChildren.size())return nullptr;
     return mLayerState->mChildren[index]->mDrawable;
 }
@@ -715,8 +715,7 @@ bool LayerDrawable::onStateChange(const std::vector<int>& state){
 }
 
 void LayerDrawable::suspendChildInvalidation(){
-    mSuspendChildInvalidation = false;
-    mChildRequestedInvalidation=false;
+    mSuspendChildInvalidation = true;
 }
 
 void LayerDrawable::resumeChildInvalidation(){
