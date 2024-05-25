@@ -65,6 +65,7 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
             mAnimatorOnEndMap.erase(it);
         }
         auto it2 = mAnimatorMap.find(&animation);
+        delete it2->first;
         mAnimatorMap.erase(it2);
     };
 
