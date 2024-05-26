@@ -12,6 +12,7 @@ private:
         void mutate();
         AnimationDrawable*newDrawable()override;
         void addFrame(Drawable*,int dur);
+        long getTotalDuration()const;
     };
     std::shared_ptr<AnimationState>mAnimationState;
     int  mCurFrame;
@@ -35,10 +36,11 @@ public:
     void stop()override;
     bool isRunning()override;
     void unscheduleSelf(Runnable& what);
-    int getNumberOfFrames();
-    Drawable*getFrame(int index);
-    int getDuration(int);
-    bool isOneShot();
+    int getNumberOfFrames()const;
+    Drawable*getFrame(int index)const;
+    int getDuration(int)const;
+    long getTotalDuration()const;
+    bool isOneShot()const;
     void setOneShot(bool oneShot);
     void addFrame(Drawable*frame,int duration);
     void nextFrame(bool unschedule);

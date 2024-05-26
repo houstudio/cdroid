@@ -77,19 +77,23 @@ void AnimationDrawable::unscheduleSelf(Runnable&what){
     DrawableContainer::unscheduleSelf(what);
 }
 
-int AnimationDrawable::getNumberOfFrames(){
+int AnimationDrawable::getNumberOfFrames()const{
     return mAnimationState->getChildCount();
 }
 
-Drawable* AnimationDrawable::getFrame(int index){
+Drawable* AnimationDrawable::getFrame(int index)const{
     return mAnimationState->getChild(index);
 }
 
-int AnimationDrawable::getDuration(int i){
+int AnimationDrawable::getDuration(int i)const{
     return mAnimationState->mDurations[i];
 }
 
-bool AnimationDrawable::isOneShot(){
+long AnimationDrawable::getTotalDuration()const{
+    return mAnimationState->getTotalDuration();
+}
+
+bool AnimationDrawable::isOneShot()const{
     return mAnimationState->mOneShot;
 }
 
@@ -145,7 +149,7 @@ void AnimationDrawable::clearMutated(){
 }
 
 Drawable*AnimationDrawable::inflate(Context*ctx,const AttributeSet&attrs){
-    AnimationDrawable*d=new AnimationDrawable(ctx,attrs);
+    AnimationDrawable*d = new AnimationDrawable(ctx,attrs);
     return d;
 }
 
@@ -153,8 +157,8 @@ Drawable*AnimationDrawable::inflate(Context*ctx,const AttributeSet&attrs){
 AnimationDrawable::AnimationState::AnimationState(const AnimationState*orig,AnimationDrawable*owner)
     :DrawableContainer::DrawableContainerState(orig,owner){
     if(orig){
-        mDurations=orig->mDurations;
-        mOneShot  =orig->mOneShot; 
+        mDurations= orig->mDurations;
+        mOneShot  = orig->mOneShot;
     }else{
         mOneShot = false;
     }
@@ -168,10 +172,19 @@ AnimationDrawable*AnimationDrawable::AnimationState::newDrawable(){
 }
 
 void AnimationDrawable::AnimationState::addFrame(Drawable*dr,int dur){
-    int pos=DrawableContainer::DrawableContainerState::addChild(dr);
-    if( mDurations.size()<getChildCount())
+    const int pos = DrawableContainer::DrawableContainerState::addChild(dr);
+    if( mDurations.size() < getChildCount())
        mDurations.resize(getChildCount());
-    mDurations[pos]=dur;
+    mDurations[pos] = dur;
 }
+
+long AnimationDrawable::AnimationState::getTotalDuration()const{
+    int total = 0;
+    for (int dur : mDurations) {
+        total += dur;
+    }
+    return total;
+}
+
 #pragma GCC pop_options
 }
