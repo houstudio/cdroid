@@ -20,3 +20,10 @@ int SYSSuspend(){
     return ret1+ret1;
 }
 
+int SYSGetSerialNo(char*sn,int max_size){
+    MI_U64 u64Uuid;
+    MI_S32 s32Ret = MI_ERR_SYS_FAILED;
+    s32Ret = MI_SYS_ReadUuid (&u64Uuid);
+    sprintf(sn,"%llx",u64Uuid);
+    return s32Ret;
+}

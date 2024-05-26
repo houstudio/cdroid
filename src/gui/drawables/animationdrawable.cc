@@ -10,10 +10,10 @@ AnimationDrawable::AnimationDrawable():AnimationDrawable(nullptr){
 AnimationDrawable::AnimationDrawable(std::shared_ptr<AnimationDrawable::AnimationState>state){
     std::shared_ptr<AnimationState>as =std::make_shared<AnimationState>(state.get(),this);
     setConstantState(as);
-    mRunning  =false;
-    mCurFrame =0;
-    mMutated  =false;
-    mAnimating=false;
+    mRunning  = false;
+    mCurFrame = 0;
+    mMutated  = false;
+    mAnimating= false;
     if(state)setFrame(0,true,false);
     mRunnable=std::bind(&AnimationDrawable::run,this);
 }
@@ -33,7 +33,7 @@ AnimationDrawable::~AnimationDrawable(){
 
 void AnimationDrawable::setConstantState(std::shared_ptr<DrawableContainerState>state){
     DrawableContainer::setConstantState(state);
-    mAnimationState=std::dynamic_pointer_cast<AnimationState>(state);
+    mAnimationState = std::dynamic_pointer_cast<AnimationState>(state);
 }
 
 bool AnimationDrawable::setVisible(bool visible,bool restart){
@@ -41,7 +41,7 @@ bool AnimationDrawable::setVisible(bool visible,bool restart){
     if(visible){
         if(restart||changed){
             const bool startFromZero =restart||(!mRunning&&!mAnimationState->mOneShot)||
-                mCurFrame>=mAnimationState->getChildCount();
+                (mCurFrame >= mAnimationState->getChildCount() );
             setFrame((startFromZero?0:mCurFrame),true,mAnimating);     
         }
     }else{

@@ -291,8 +291,8 @@ Drawable*AnimatedImageDrawable::inflate(Context*ctx,const AttributeSet&atts){
     const int repeatCount =atts.getInt("repeatCount",REPEAT_UNDEFINED);
     if(autoStart)d->start();
     if(repeatCount!=REPEAT_UNDEFINED){
-	d->mAnimatedImageState->mRepeatCount = repeatCount;
-	d->setRepeatCount(repeatCount);
+        d->mAnimatedImageState->mRepeatCount = repeatCount;
+        d->setRepeatCount(repeatCount);
     }
     return d;
 }

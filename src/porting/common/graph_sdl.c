@@ -280,14 +280,14 @@ static void SendKeyEvent(SDL_Event*event) {
         {SDL_SCANCODE_A,29},{SDL_SCANCODE_S,47},{SDL_SCANCODE_D,32},{SDL_SCANCODE_F,34},{SDL_SCANCODE_G,35},
         {SDL_SCANCODE_H,36},{SDL_SCANCODE_J,38},{SDL_SCANCODE_K,39},{SDL_SCANCODE_L,40},
         {SDL_SCANCODE_Z,54},{SDL_SCANCODE_X,52},{SDL_SCANCODE_C,31},{SDL_SCANCODE_V,50},
-	{SDL_SCANCODE_B,30},{SDL_SCANCODE_N,42},{SDL_SCANCODE_M,41}
+        {SDL_SCANCODE_B,30},{SDL_SCANCODE_N,42},{SDL_SCANCODE_M,41}
     };
     for(int i=0;i<sizeof(KEYS)/sizeof(KEYS[0]);i++){
-	if(event->key.keysym.scancode == KEYS[i].sdlk){
-	    LOGD("key %d,%d==>%x",event->key.keysym.scancode,event->key.keysym.scancode,KEYS[i].sdlk);
+        if(event->key.keysym.scancode == KEYS[i].sdlk){
+            LOGD("key %d,%d==>%x",event->key.keysym.scancode,event->key.keysym.scancode,KEYS[i].sdlk);
             InjectEvent(EV_KEY,KEYS[i].key,(event->type==SDL_KEYDOWN),INJECTDEV_KEY);
-	    break;
-	}
+            break;
+        }
     }
 }
 
