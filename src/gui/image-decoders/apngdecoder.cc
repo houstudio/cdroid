@@ -21,12 +21,14 @@ struct PRIVATE{
     png_structp png_ptr;
     png_infop info_ptr;
 };
+
 APNGDecoder::APNGDecoder(std::istream&stm):ImageDecoder(stm) {
     mPrivate = new PRIVATE();
 }
 
 APNGDecoder::~APNGDecoder() {
 }
+
 int APNGDecoder::readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex) {
     png_uint_16 delay_num , delay_den;
     png_byte dispose_op , blend_op;
@@ -71,7 +73,7 @@ static void istream_png_reader(png_structp png_ptr, png_bytep png_data, png_size
     is->read(reinterpret_cast<char*>(png_data), data_size);
 }
 
-int APNGDecoder::load() {
+int APNGDecoder::decode(bool sizeOnly) {
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr) {
         std::cerr << "Error creating read struct" << std::endl;

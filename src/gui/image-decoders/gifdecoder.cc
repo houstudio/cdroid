@@ -36,7 +36,7 @@ static int GIFRead(GifFileType *gifFile, GifByteType *buff, int rdlen){
 
 static int gifDrawFrame(GifFileType*gif,int current_frame,size_t pxstride,uint8_t *pixels,bool force_DISPOSE_1);
 
-int GIFDecoder::load(){
+int GIFDecoder::decode(bool sizeOnly){
     int err;
     GifFileType*gifFileType = DGifOpen(istream,GIFRead,&err);
     LOGE_IF(gifFileType==nullptr,"git load failed");

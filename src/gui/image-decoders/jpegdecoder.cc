@@ -179,7 +179,7 @@ int JPEGDecoder::readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameInde
     return 0;//sfc;
 }
 
-int JPEGDecoder::load(){
+int JPEGDecoder::decode(bool sizeOnly){
     return 0;
 }
 }/*endof namespacee*/
