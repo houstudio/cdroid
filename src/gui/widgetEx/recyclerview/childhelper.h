@@ -6,16 +6,16 @@ class ChildHelper{
 public:
     struct Callback{
         std::function<int()>getChildCount;
-	std::function<void(View*,int)> addView;//(View* child, int index);
-	std::function<int(View*)> indexOfChild;//(View* view);
-	std::function<void(int)> removeViewAt;//(int index);
-	std::function<View*(int)> getChildAt;//(int offset);
-	std::function<void()> removeAllViews;
-	std::function<RecyclerView::ViewHolder*(View*)> getChildViewHolder;//(View* view);
-	std::function<void(View*,int,ViewGroup::LayoutParams*)> attachViewToParent;//(View* child, int index, ViewGroup::LayoutParams* layoutParams);
-	std::function<void(int)> detachViewFromParent;//(int offset);
-	std::function<void(View*)> onEnteredHiddenState;//(View* child);
-	std::function<void(View*)> onLeftHiddenState;//(View* child);
+        std::function<void(View*,int)> addView;//(View* child, int index);
+        std::function<int(View*)> indexOfChild;//(View* view);
+        std::function<void(int)> removeViewAt;//(int index);
+        std::function<View*(int)> getChildAt;//(int offset);
+        std::function<void()> removeAllViews;
+        std::function<RecyclerView::ViewHolder*(View*)> getChildViewHolder;//(View* view);
+        std::function<void(View*,int,ViewGroup::LayoutParams*)> attachViewToParent;//(View* child, int index, ViewGroup::LayoutParams* layoutParams);
+        std::function<void(int)> detachViewFromParent;//(int offset);
+        std::function<void(View*)> onEnteredHiddenState;//(View* child);
+        std::function<void(View*)> onLeftHiddenState;//(View* child);
     };
     class Bucket;
     Callback mCallback;
@@ -28,6 +28,7 @@ private:
     int getOffset(int index);
 public:
     ChildHelper(Callback& callback);
+    virtual ~ChildHelper();
     void addView(View* child, bool hidden);
     void addView(View* child, int index, bool hidden);
     void removeView(View* view);

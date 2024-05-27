@@ -7,6 +7,10 @@ ChildHelper::ChildHelper(ChildHelper::Callback& callback){
     mBucket = new Bucket();
 }
 
+ChildHelper::~ChildHelper(){
+    delete mBucket;
+}
+
 void ChildHelper::hideViewInternal(View* child){
     mHiddenViews.push_back(child);
     mCallback.onEnteredHiddenState(child);
