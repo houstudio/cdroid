@@ -83,13 +83,13 @@ bool SnapHelper::snapFromFling(RecyclerView::LayoutManager& layoutManager, int v
         return false;
     }
 
-    RecyclerView::SmoothScroller* smoothScroller = createScroller(layoutManager);
-    if (smoothScroller == nullptr) {
+    const int targetPosition = findTargetSnapPosition(layoutManager, velocityX, velocityY);
+    if (targetPosition == RecyclerView::NO_POSITION) {
         return false;
     }
 
-    int targetPosition = findTargetSnapPosition(layoutManager, velocityX, velocityY);
-    if (targetPosition == RecyclerView::NO_POSITION) {
+    RecyclerView::SmoothScroller* smoothScroller = createScroller(layoutManager);
+    if (smoothScroller == nullptr) {
         return false;
     }
 
