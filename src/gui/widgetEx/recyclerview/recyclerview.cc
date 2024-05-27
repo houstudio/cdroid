@@ -108,6 +108,8 @@ RecyclerView::~RecyclerView(){
         delete id;
         mItemDecorations.pop_back();
     }
+    if(mVelocityTracker)
+        mVelocityTracker->recycle();
     delete mChildHelper;
     delete mState;
     delete mAdapterHelper;
