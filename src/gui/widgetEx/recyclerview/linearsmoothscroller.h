@@ -32,7 +32,7 @@ public:
     int getVerticalSnapPreference();
     void updateActionForInterimTarget(Action action);
     int clampApplyScroll(int tmpDt, int dt);
-    int calculateDtToFit(int viewStart, int viewEnd, int boxStart, int boxEnd, int
+    virtual int calculateDtToFit(int viewStart, int viewEnd, int boxStart, int boxEnd, int
         snapPreference);
 
     virtual int calculateDyToMakeVisible(View* view, int snapPreference);
