@@ -1,16 +1,17 @@
 #include <widgetEx/recyclerview/itemtouchuiutil.h>
+#include <widget/R.h>
 namespace cdroid{
 void ItemTouchUIUtilImpl::onDraw(Canvas& c, RecyclerView& recyclerView, View& view, float dX, float dY,
         int actionState, bool isCurrentlyActive){
-    /*if (isCurrentlyActive) {
-        Object* originalElevation = view.getTag(R.id.item_touch_helper_previous_elevation);
-        if (originalElevation == null) {
-            originalElevation = ciew.getElevation();
-            float newElevation = 1.f + findMaxElevation(recyclerView, view);
+    if (isCurrentlyActive) {
+        void* tag = view.getTag(R::id::item_touch_helper_previous_elevation);
+        if (tag == nullptr) {
+            long originalElevation = long(view.getElevation());
+            int newElevation = 1.f + findMaxElevation(recyclerView, view);
             view.setElevation(newElevation);
-            view.setTag(R.id.item_touch_helper_previous_elevation, originalElevation);
+            view.setTag(R::id::item_touch_helper_previous_elevation, (void*)originalElevation);
         }
-    }*/
+    }
     view.setTranslationX(dX);
     view.setTranslationY(dY);
 }
@@ -36,12 +37,11 @@ void ItemTouchUIUtilImpl::onDrawOver(Canvas& c, RecyclerView& recyclerView, View
 }
 
 void ItemTouchUIUtilImpl::clearView(View& view){
-    /*Object* tag = view.getTag(R.id.item_touch_helper_previous_elevation);
-    if (tag != nullptr && tag instanceof Float) {
-        view.setElevation((Float) tag);
+    const long* tag = (const long*)view.getTag(R::id::item_touch_helper_previous_elevation);
+    if (tag != nullptr/* && tag instanceof Float*/) {
+        view.setElevation(float(*tag));
     }
-    view.setTag(R.id.item_touch_helper_previous_elevation, null);
-    */
+    view.setTag(R::id::item_touch_helper_previous_elevation, nullptr);
 
     view.setTranslationX(0.f);
     view.setTranslationY(0.f);
