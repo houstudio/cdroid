@@ -484,7 +484,7 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
 
 void DefaultItemAnimator::resetAnimation(RecyclerView::ViewHolder& holder) {
     if (sDefaultInterpolator == nullptr) {
-        sDefaultInterpolator = new AccelerateDecelerateInterpolator();//ValueAnimator()->getInterpolator();
+        sDefaultInterpolator = AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
     }
     holder.itemView->animate().setInterpolator(sDefaultInterpolator);
     endAnimation(holder);

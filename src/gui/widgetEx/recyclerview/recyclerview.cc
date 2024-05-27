@@ -4228,11 +4228,11 @@ void RecyclerView::Recycler::scrapView(View* view) {
 
 void RecyclerView::Recycler::unscrapView(ViewHolder& holder) {
     if (holder.mInChangeScrap) {
-	auto it = std::find(mChangedScrap->begin(),mChangedScrap->end(),&holder);
-        mChangedScrap->erase(it);//remove(holder);
+        auto it = std::find(mChangedScrap->begin(),mChangedScrap->end(),&holder);
+        if(it!=mChangedScrap->end())mChangedScrap->erase(it);
     } else {
-	auto it = std::find(mAttachedScrap.begin(),mAttachedScrap.end(),&holder);
-        mAttachedScrap.erase(it);//remove(holder);
+        auto it = std::find(mAttachedScrap.begin(),mAttachedScrap.end(),&holder);
+        if(it!=mAttachedScrap.end())mAttachedScrap.erase(it);
     }
     holder.mScrapContainer = nullptr;
     holder.mInChangeScrap = false;
@@ -4257,13 +4257,13 @@ void RecyclerView::Recycler::clearScrap() {
 RecyclerView::ViewHolder* RecyclerView::Recycler::getChangedScrapViewForPosition(int position) {
     // If pre-layout, check the changed scrap for an exact match.
     int changedScrapSize;
-    if (mChangedScrap == nullptr || (changedScrapSize = mChangedScrap->size()) == 0) {
+    if ((mChangedScrap == nullptr) || ((changedScrapSize = mChangedScrap->size()) == 0) ) {
         return nullptr;
     }
     // find by position
     for (int i = 0; i < changedScrapSize; i++) {
         ViewHolder* holder = mChangedScrap->at(i);
-        if (!holder->wasReturnedFromScrap() && holder->getLayoutPosition() == position) {
+        if (!holder->wasReturnedFromScrap() && (holder->getLayoutPosition() == position) ) {
             holder->addFlags(ViewHolder::FLAG_RETURNED_FROM_SCRAP);
             return holder;
         }
@@ -4271,11 +4271,11 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::getChangedScrapViewForPosition
     // find by id
     if (mRV->mAdapter->hasStableIds()) {
         const int offsetPosition = mRV->mAdapterHelper->findPositionOffset(position);
-        if (offsetPosition > 0 && offsetPosition < mRV->mAdapter->getItemCount()) {
+        if ((offsetPosition > 0) && (offsetPosition < mRV->mAdapter->getItemCount())) {
             const long id = mRV->mAdapter->getItemId(offsetPosition);
             for (int i = 0; i < changedScrapSize; i++) {
                 ViewHolder* holder = mChangedScrap->at(i);
-                if (!holder->wasReturnedFromScrap() && holder->getItemId() == id) {
+                if (!holder->wasReturnedFromScrap() && (holder->getItemId() == id)) {
                     holder->addFlags(ViewHolder::FLAG_RETURNED_FROM_SCRAP);
                     return holder;
                 }
@@ -4291,7 +4291,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::getScrapOrHiddenOrCachedHolder
     // Try first for an exact, non-invalid match from scrap.
     for (int i = 0; i < scrapCount; i++) {
         ViewHolder* holder = mAttachedScrap.at(i);
-        if (!holder->wasReturnedFromScrap() && holder->getLayoutPosition() == position
+        if (!holder->wasReturnedFromScrap() && (holder->getLayoutPosition() == position)
                 && !holder->isInvalid() && (mRV->mState->mInPreLayout || !holder->isRemoved())) {
             holder->addFlags(ViewHolder::FLAG_RETURNED_FROM_SCRAP);
             return holder;
@@ -4323,7 +4323,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::getScrapOrHiddenOrCachedHolder
         ViewHolder* holder = mCachedViews.at(i);
         // invalid view holders may be in cache if adapter has stable ids as they can be
         // retrieved via getScrapOrCachedViewForId
-        if (!holder->isInvalid() && holder->getLayoutPosition() == position) {
+        if (!holder->isInvalid() && (holder->getLayoutPosition() == position)) {
             if (!dryRun) {
                 mCachedViews.erase(mCachedViews.begin()+i);//remove(i);
             }
@@ -4339,7 +4339,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::getScrapOrCachedViewForId(long
     const int count = mAttachedScrap.size();
     for (int i = count - 1; i >= 0; i--) {
         ViewHolder* holder = mAttachedScrap.at(i);
-        if (holder->getItemId() == id && !holder->wasReturnedFromScrap()) {
+        if ((holder->getItemId() == id) && !holder->wasReturnedFromScrap()) {
             if (type == holder->getItemViewType()) {
                 holder->addFlags(ViewHolder::FLAG_RETURNED_FROM_SCRAP);
                 if (holder->isRemoved()) {
@@ -4420,7 +4420,7 @@ void RecyclerView::Recycler::offsetPositionRecordsForMove(int from, int to) {
     const int cachedCount = mCachedViews.size();
     for (int i = 0; i < cachedCount; i++) {
         ViewHolder* holder = mCachedViews.at(i);
-        if (holder == nullptr || holder->mPosition < start || holder->mPosition > end) {
+        if ((holder == nullptr) || (holder->mPosition < start) || (holder->mPosition > end)) {
             continue;
         }
         if (holder->mPosition == from) {
@@ -4470,7 +4470,7 @@ void RecyclerView::Recycler::setRecycledViewPool(RecycledViewPool* pool) {
         mRecyclerPool->detach();
     }
     mRecyclerPool = pool;
-    if (mRecyclerPool != nullptr && mRV->getAdapter() != nullptr) {
+    if (mRecyclerPool && (mRV->getAdapter() != nullptr)) {
         mRecyclerPool->attach();
     }
 }
@@ -4511,7 +4511,7 @@ void RecyclerView::Recycler::markKnownViewsInvalid() {
         }
     }
 
-    if (mRV->mAdapter == nullptr || !mRV->mAdapter->hasStableIds()) {
+    if ((mRV->mAdapter == nullptr) || !mRV->mAdapter->hasStableIds()) {
         // we cannot re-use cached views in this case. Recycle them all
         recycleAndClearCachedViews();
     }
