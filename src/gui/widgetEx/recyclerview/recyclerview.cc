@@ -5013,8 +5013,8 @@ void RecyclerView::LayoutManager::startSmoothScroll(SmoothScroller* smoothScroll
     if (mSmoothScroller && smoothScroller != mSmoothScroller
             && mSmoothScroller->isRunning()) {
         mSmoothScroller->stop();
+        delete mSmoothScroller;
     }
-    delete mSmoothScroller;
     mSmoothScroller = smoothScroller;
     mSmoothScroller->start(mRecyclerView, this);
 }

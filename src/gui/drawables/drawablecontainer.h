@@ -40,7 +40,7 @@ protected:
         std::vector<Drawable* >mDrawables;
         std::map<int,std::shared_ptr<ConstantState> >mDrawableFutures;
         DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own);
-        ~DrawableContainerState();
+        ~DrawableContainerState()override;
         DrawableContainer*newDrawable()override{return nullptr;}//must be overrided by inherited
         int addChild(Drawable* dr);
         int getChildCount()const;
