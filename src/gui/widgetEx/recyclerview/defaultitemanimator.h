@@ -26,7 +26,7 @@ protected:
 
     class MoveInfo {
     public:
-	RecyclerView::ViewHolder* holder;
+        RecyclerView::ViewHolder* holder;
         int fromX, fromY, toX, toY;
     public:
         MoveInfo(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY);
@@ -34,7 +34,7 @@ protected:
 
     class ChangeInfo {
     public:
-	RecyclerView::ViewHolder* oldHolder, *newHolder;
+        RecyclerView::ViewHolder* oldHolder, *newHolder;
         int fromX, fromY, toX, toY;
     private:
        	ChangeInfo(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder);

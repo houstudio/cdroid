@@ -12,9 +12,7 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
     mInterpolator = nullptr;
     mTempValueAnimator = nullptr;
     mInterpolatorSet = false;
-    mAnimationStarter = [this](){
-       startAnimation();
-    };
+    mAnimationStarter = std::bind(&ViewPropertyAnimator::startAnimation,this);
 
     mAnimatorEventListener.onAnimationStart = [this](Animator&animation,bool reverse){
         auto it = mAnimatorSetupMap.find(&animation);

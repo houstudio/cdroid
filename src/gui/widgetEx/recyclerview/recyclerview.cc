@@ -159,9 +159,7 @@ void RecyclerView::initRecyclerView(){
     mFirstLayoutComplete = false;
     mEdgeEffectFactory = new EdgeEffectFactory();
     mItemAnimatorListener = std::bind(&RecyclerView::doAnimatorFinished,this,std::placeholders::_1);
-#ifdef DEBUG
     setItemAnimator(new DefaultItemAnimator());
-#endif
     LOGD("mItemAnimator = %p",mItemAnimator);
 
     setScrollContainer(true);
