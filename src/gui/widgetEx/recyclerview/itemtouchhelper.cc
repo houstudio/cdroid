@@ -18,8 +18,8 @@ bool ItemTouchHelper::onInterceptTouchEvent(RecyclerView& recyclerView,MotionEve
                 mInitialTouchX -= animation->mX;
                 mInitialTouchY -= animation->mY;
                 endRecoverAnimation(*animation->mViewHolder, true);
-                auto it=std::find(mPendingCleanup.begin(),mPendingCleanup.end(),animation->mViewHolder->itemView);
-                if (it!=mPendingCleanup.end()){//remove(animation->mViewHolder->itemView)) {
+                auto it = std::find(mPendingCleanup.begin(),mPendingCleanup.end(),animation->mViewHolder->itemView);
+                if (it != mPendingCleanup.end()){//remove(animation->mViewHolder->itemView)) {
                     mPendingCleanup.erase(it);
                     mCallback->clearView(*mRecyclerView, *animation->mViewHolder);
                 }
