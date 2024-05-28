@@ -18,9 +18,9 @@ bool ItemTouchHelper::onInterceptTouchEvent(RecyclerView& recyclerView,MotionEve
                 mInitialTouchX -= animation->mX;
                 mInitialTouchY -= animation->mY;
                 endRecoverAnimation(*animation->mViewHolder, true);
-    	    auto it=std::find(mPendingCleanup.begin(),mPendingCleanup.end(),animation->mViewHolder->itemView);
+                auto it=std::find(mPendingCleanup.begin(),mPendingCleanup.end(),animation->mViewHolder->itemView);
                 if (it!=mPendingCleanup.end()){//remove(animation->mViewHolder->itemView)) {
-    		mPendingCleanup.erase(it);
+                    mPendingCleanup.erase(it);
                     mCallback->clearView(*mRecyclerView, *animation->mViewHolder);
                 }
                 select(animation->mViewHolder, animation->mActionState);
@@ -165,6 +165,7 @@ void ItemTouchHelper::destroyCallbacks() {
     for (int i = recoverAnimSize - 1; i >= 0; i--) {
         RecoverAnimation* recoverAnimation = mRecoverAnimations.at(0);
         mCallback->clearView(*mRecyclerView, *recoverAnimation->mViewHolder);
+        delete recoverAnimation;
     }
     mRecoverAnimations.clear();
     mOverdrawChild = nullptr;
@@ -250,7 +251,7 @@ void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState
     bool preventLayout = false;
 
     if (mSelected != nullptr) {
-	RecyclerView::ViewHolder* prevSelected = mSelected;
+        RecyclerView::ViewHolder* prevSelected = mSelected;
         if (prevSelected->itemView->getParent()) {
             const int swipeDir = prevActionState == ACTION_STATE_DRAG ? 0
                     : swipeIfNecessary(*prevSelected);
@@ -557,6 +558,7 @@ void ItemTouchHelper::endRecoverAnimation(RecyclerView::ViewHolder& viewHolder, 
                 anim->cancel();
             }
             mRecoverAnimations.erase(mRecoverAnimations.begin()+i);//remove(i);
+            delete anim;
             return;
         }
     }

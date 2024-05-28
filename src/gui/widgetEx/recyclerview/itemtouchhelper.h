@@ -174,7 +174,7 @@ public:
             int viewSize, int viewSizeOutOfBounds,int totalSize, long msSinceStartScroll);
 };
 
-class ItemTouchHelper::SimpleCallback:public ItemTouchHelper::Callback{// ItemTouchHelper::Callback {
+class ItemTouchHelper::SimpleCallback:public ItemTouchHelper::Callback{
 private:
     friend ItemTouchHelper;
     int mDefaultSwipeDirs;
@@ -232,5 +232,3 @@ public:
 };
 }/*endof namespace*/
 #endif/*__ITEMTOUCH_HELPER_H__*/
-
-
