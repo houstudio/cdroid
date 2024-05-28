@@ -2,10 +2,11 @@
 namespace cdroid{
 
 LinearSmoothScroller::LinearSmoothScroller(Context* context) {
-    DisplayMetrics dm = context->getDisplayMetrics();
-    MILLISECONDS_PER_PX = calculateSpeedPerPixel(dm);
+    mDisplayMetrics = context->getDisplayMetrics();
     mLinearInterpolator = new LinearInterpolator();
     mDecelerateInterpolator = new DecelerateInterpolator();
+    mTargetVectorUsable = false;
+    mHasCalculatedMillisPerPixel = false;
 }
 
 LinearSmoothScroller::~LinearSmoothScroller(){
@@ -36,8 +37,7 @@ void LinearSmoothScroller::onSeekTargetStep(int dx, int dy, RecyclerView::State&
         return;
     }
     //noinspection PointlessBooleanExpression
-    if(mTargetVectorUsable/*mTargetVector != nullptr*/
-            && ((mTargetVector.x * dx < 0 || mTargetVector.y * dy < 0))) {
+    if( mTargetVectorUsable/*TargetVector != nullptr*/ && ((mTargetVector.x * dx < 0 || mTargetVector.y * dy < 0))) {
         FATAL("Scroll happened in the opposite direction"
               " of the target. Some calculations are wrong");
     }
@@ -53,7 +53,19 @@ void LinearSmoothScroller::onSeekTargetStep(int dx, int dy, RecyclerView::State&
 void LinearSmoothScroller::onStop() {
     mInterimTargetDx = mInterimTargetDy = 0;
     mTargetVector.set(0,0);// = nullptr;
-    mTargetVectorUsable=false;
+    mTargetVectorUsable = false;
+}
+
+float LinearSmoothScroller::calculateSpeedPerPixel(const DisplayMetrics& displayMetrics) const{
+    return MILLISECONDS_PER_INCH / displayMetrics.densityDpi;
+}
+
+float LinearSmoothScroller::getSpeedPerPixel(){
+    if (!mHasCalculatedMillisPerPixel) {
+        mMillisPerPixel = calculateSpeedPerPixel(mDisplayMetrics);
+        mHasCalculatedMillisPerPixel = true;
+    }
+    return mMillisPerPixel;
 }
 
 float LinearSmoothScroller::calculateSpeedPerPixel(DisplayMetrics& displayMetrics) {
@@ -73,7 +85,7 @@ int LinearSmoothScroller::calculateTimeForScrolling(int dx) {
     // In a case where dx is very small, rounding may return 0 although dx > 0.
     // To avoid that issue, ceil the result so that if dx > 0, we'll always return positive
     // time.
-    return (int) std::ceil(std::abs(dx) * MILLISECONDS_PER_PX);
+    return (int) std::ceil(std::abs(dx) * getSpeedPerPixel());
 }
 
 int LinearSmoothScroller::getHorizontalSnapPreference() {

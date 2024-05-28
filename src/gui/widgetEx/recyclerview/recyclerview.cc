@@ -5008,14 +5008,22 @@ void RecyclerView::LayoutManager::smoothScrollToPosition(RecyclerView& recyclerV
         int position) {
     LOGE("You must override smoothScrollToPosition to support smooth scrolling");
 }
-
+/**
+ * Starts a smooth scroll using the provided {@link SmoothScroller}.
+ *
+ * <p>Each instance of SmoothScroller is intended to only be used once. Provide a new
+ * SmoothScroller instance each time this method is called.
+ *
+ * <p>Calling this method will cancel any previous smooth scroll request.
+ *
+ * @param smoothScroller Instance which defines how smooth scroll should be animated
+ */
 void RecyclerView::LayoutManager::startSmoothScroll(SmoothScroller* smoothScroller) {
     if (mSmoothScroller && smoothScroller != mSmoothScroller
             && mSmoothScroller->isRunning()) {
         mSmoothScroller->stop();
     }
-    if(smoothScroller != mSmoothScroller)
-        delete mSmoothScroller;
+    delete mSmoothScroller;
     mSmoothScroller = smoothScroller;
     mSmoothScroller->start(mRecyclerView, this);
 }
@@ -6595,7 +6603,7 @@ void RecyclerView::SmoothScroller::onAnimation(int dx, int dy) {
     // is false. Also, if recyclerView is null, we call stop, and stop assumes recyclerView
     // is not null (as does the code following this block).  This should be cleaned up.
     RecyclerView* recyclerView = mRecyclerView;
-    if (!mRunning || mTargetPosition == RecyclerView::NO_POSITION || recyclerView == nullptr) {
+    if (!mRunning || (mTargetPosition == RecyclerView::NO_POSITION) || (recyclerView == nullptr)) {
         stop();
     }
 

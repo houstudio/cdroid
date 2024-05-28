@@ -7,17 +7,24 @@ private:
     static constexpr float MILLISECONDS_PER_INCH = 25.f;
     static constexpr int TARGET_SEEK_SCROLL_DISTANCE_PX = 10000;
     static constexpr float TARGET_SEEK_EXTRA_SCROLL_RATIO = 1.2f;
-    float MILLISECONDS_PER_PX;
+    float mMillisPerPixel;
+    DisplayMetrics mDisplayMetrics;
 public:
     static constexpr int SNAP_TO_START = -1;
     static constexpr int SNAP_TO_END = 1;
     static constexpr int SNAP_TO_ANY = 0;
 protected:
-    LinearInterpolator* mLinearInterpolator;// = new LinearInterpolator();
-    DecelerateInterpolator* mDecelerateInterpolator;// = new DecelerateInterpolator();
+    LinearInterpolator* mLinearInterpolator;
+    DecelerateInterpolator* mDecelerateInterpolator;
     PointF mTargetVector;
-    int mInterimTargetDx = 0, mInterimTargetDy = 0;
+    int mInterimTargetDx = 0;
+    int mInterimTargetDy = 0;
+    bool mHasCalculatedMillisPerPixel;
     bool mTargetVectorUsable;
+private:
+    float getSpeedPerPixel();
+protected:
+    float calculateSpeedPerPixel(const DisplayMetrics& displayMetrics) const;
 public:
     LinearSmoothScroller(Context* context);
     ~LinearSmoothScroller();
