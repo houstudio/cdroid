@@ -428,7 +428,7 @@ void Looper::wake() {
     LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  wake", this);
 
     uint64_t inc = 1;
-    ssize_t nWrite = TEMP_FAILURE_RETRY(write(mWakeEventFd, &inc, sizeof(uint64_t)));
+    const ssize_t nWrite = TEMP_FAILURE_RETRY(write(mWakeEventFd, &inc, sizeof(uint64_t)));
     if (nWrite != sizeof(uint64_t)) {
         LOGE_IF(errno!=EAGAIN,"Could not write wake signal to fd %d: %s",mWakeEventFd, strerror(errno));
     }
@@ -589,13 +589,13 @@ int Looper::removeFd(int fd, int seq) {
 }
 
 void Looper::sendMessage(const MessageHandler* handler, const Message& message) {
-    nsecs_t now = SystemClock::uptimeMillis();
+    const nsecs_t now = SystemClock::uptimeMillis();
     sendMessageAtTime(now, handler, message);
 }
 
 void Looper::sendMessageDelayed(nsecs_t uptimeDelay, const MessageHandler* handler,
         const Message& message) {
-    nsecs_t now = SystemClock::uptimeMillis();
+    const nsecs_t now = SystemClock::uptimeMillis();
     sendMessageAtTime(now + uptimeDelay, handler, message);
 }
 
@@ -624,7 +624,7 @@ void Looper::sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,
     } // release lock
 
     // Wake the poll loop only when we enqueue a new message at the head.
-    if (i == 0)  wake();
+    if (i == 0) wake();
 }
 
 void Looper::addHandler(MessageHandler*handler){
@@ -702,8 +702,8 @@ bool Looper::isPolling() const {
 LooperCallback::~LooperCallback(){
 }
 
-SimpleLooperCallback::SimpleLooperCallback(Looper_callbackFunc callback) :
-        mCallback(callback) {
+SimpleLooperCallback::SimpleLooperCallback(Looper_callbackFunc callback)
+    :mCallback(callback) {
 }
 
 SimpleLooperCallback::~SimpleLooperCallback() {

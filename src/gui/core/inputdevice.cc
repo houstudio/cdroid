@@ -419,7 +419,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     switch(raw_axis){
     case ABS_X ... ABS_Z :
         mSlotID = 0 ; mTrackID = 0;
-        mProp.id = 0;
+        mProp.id= 0;
         mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
         break;
     case ABS_MT_POSITION_X...ABS_MT_POSITION_Y:
@@ -427,7 +427,16 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
 	break;
     case ABS_MT_SLOT:
         mTypeB = true;
-        mSlotID = value ;
+        mSlotID= value;
+        slot = mTrack2Slot.indexOfValue(value);
+        if(slot>=0){
+#if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
+            mTrackID = mTrack2Slot.keyAt(slot);
+            mProp.id = mTrackID;
+#else
+            mProp.id = slot;
+#endif
+        }
         break;
     case ABS_MT_TRACKING_ID:
         slot = mTrack2Slot.indexOfKey(mTrackID = value);
