@@ -101,12 +101,12 @@ public:
 long Choreographer::sFrameDelay = DEFAULT_FRAME_DELAY;
 
 Choreographer::Choreographer(){
-    mFrameScheduled=false;
-    mCallbacksRunning=false;
-    mLastFrameTimeNanos=0;
-    mFrameIntervalNanos=0;
-    for(int i=0;i<CALLBACK_LAST;i++)
-    mCallbackQueues[i]=new CallbackQueue;
+    mFrameScheduled  = false;
+    mCallbacksRunning= false;
+    mLastFrameTimeNanos = 0;
+    mFrameIntervalNanos = 0;
+    for(int i = 0;i < CALLBACK_LAST;i++)
+        mCallbackQueues[i] = new CallbackQueue;
 }
 
 static NeverDestroyed<Choreographer>mInst;
@@ -142,8 +142,8 @@ void Choreographer::postCallbackDelayedInternal(int callbackType,void* action, v
     LOGD("PostCallback: type=%d ,action=%d,token=%d ,delayMillis=%d",
          callbackType,action,token,delayMillis);
 
-    long now = SystemClock::uptimeMillis();
-    long dueTime = now + delayMillis;
+    const long now = SystemClock::uptimeMillis();
+    const long dueTime = now + delayMillis;
     /*mCallbackQueues[callbackType]->addCallbackLocked(dueTime, action, token);
     
     if (dueTime <= now) {

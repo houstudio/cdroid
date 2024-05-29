@@ -35,9 +35,10 @@ ScaleAnimation::ScaleAnimation(Context* context,const AttributeSet& attrs)
     initializePivotPoint();
 }
 
-ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY) {
+ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY)
+    :ScaleAnimation(fromX,toX,fromY,toY,0,0){
     //mResources = nullptr;
-    mFromX = fromX;
+    /*mFromX = fromX;
     mToX   = toX;
     mFromY = fromY;
     mToY   = toY;
@@ -45,13 +46,13 @@ ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY) {
     mPivotY= 0;
     mFromXType = mFromYType = 0;
     mToXType = mToYType = 0;
-    mPivotXType = mPivotYType = 0;
+    mPivotXType = mPivotYType = 0;*/
 }
 
-ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY,
-            float pivotX, float pivotY) {
+ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY, float pivotX, float pivotY)
+    :ScaleAnimation(fromX,toX,fromY,toY,ABSOLUTE,pivotX,ABSOLUTE,pivotY){
     //mResources = null;
-    mFromX = fromX;
+    /*mFromX = fromX;
     mToX   = toX;
     mFromY = fromY;
     mToY   = toY;
@@ -60,15 +61,15 @@ ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY,
     mPivotYType  = ABSOLUTE;
     mPivotXValue = pivotX;
     mPivotYValue = pivotY;
-    initializePivotPoint();
+    initializePivotPoint();*/
 }
 ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY,
             int pivotXType, float pivotXValue, int pivotYType, float pivotYValue) {
     //mResources = null;
-    mFromX = fromX;
-    mToX   = toX;
-    mFromY = fromY;
-    mToY   = toY;
+    mFromX = (fromX==0.f)?0.0001:fromX;
+    mToX   = (toX==0.f)?0.0001:toX;
+    mFromY = (fromY==0.f)?0.0001:fromY;
+    mToY   = (toY==0.f)?0.0001:toY;
 
     mPivotXValue = pivotXValue;
     mPivotXType  = pivotXType;

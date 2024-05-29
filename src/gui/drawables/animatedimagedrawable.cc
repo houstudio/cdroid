@@ -38,6 +38,7 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
     uint32_t pitch;
     auto istm = ctx->getInputStream(res);
     auto frmSequence = FrameSequence::create(istm.get());
+    if(frmSequence==nullptr)return;
     mAnimatedImageState->mFrameSequence = frmSequence;
     mRepeatCount = frmSequence->getDefaultLoopCount();
     if(mRepeatCount<=0)
@@ -202,7 +203,8 @@ bool AnimatedImageDrawable::isRunning(){
 
 void AnimatedImageDrawable::start(){
     if (mAnimatedImageState->mFrameSequence == nullptr) {
-        throw "called start on empty AnimatedImageDrawable";
+        LOGE("called start on empty AnimatedImageDrawable");
+        return ;
     }
 
     if ((mStarting==false)&&(mAnimatedImageState->mFrameCount>1)){
@@ -225,7 +227,8 @@ void AnimatedImageDrawable::restart(int fromFrame){
 
 void AnimatedImageDrawable::stop(){
     if (mAnimatedImageState->mFrameSequence == nullptr) {
-        throw "called stop on empty AnimatedImageDrawable";
+        LOGE("called stop on empty AnimatedImageDrawable");
+        return;
     }
     if(mRunnable)unscheduleSelf(mRunnable);
     if (mStarting){

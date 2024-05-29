@@ -4190,7 +4190,7 @@ void RecyclerView::Recycler::addViewHolderToRecycledViewPool(ViewHolder& holder,
     clearNestedRecyclerViewIfNotNested(holder);
     if (holder.hasAnyOfTheFlags(ViewHolder::FLAG_SET_A11Y_ITEM_DELEGATE)) {
         holder.setFlags(0, ViewHolder::FLAG_SET_A11Y_ITEM_DELEGATE);
-        //holder.itemView->setAccessibilityDelegate(null);
+        //holder.itemView->setAccessibilityDelegate(nullptr);
     }
     if (dispatchRecycled) {
         dispatchViewRecycled(holder);
