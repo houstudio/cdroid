@@ -423,7 +423,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
         mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
         break;
     case ABS_MT_POSITION_X...ABS_MT_POSITION_Y:
-        mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH_MT;
+        //mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH_MT;
 	break;
     case ABS_MT_SLOT:
         mTypeB = true;
