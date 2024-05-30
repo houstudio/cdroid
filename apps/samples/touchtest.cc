@@ -6,7 +6,8 @@
 #include <sstream>
 class TouchWindow:public Window{
 private:
-    std::map<int,std::list<Point>> mTouchPoints;
+    typedef struct{int x;int y;int pressure;}TOUCHPOINT;
+    std::map<int,std::list<TOUCHPOINT>> mTouchPoints;
     int mGridSize;
     bool mClear;
 protected:
@@ -46,19 +47,21 @@ public:
                 auto it = mTouchPoints.find(i);
                 int x = event.getX(i);
                 int y = event.getY(i);
+                int pressure =event.getPressure(i);
                 minX = std::min(x,minX);
                 minY = std::min(y,minY);
                 maxX = std::max(x,maxX);
                 maxY = std::max(y,maxY);
                 if(it == mTouchPoints.end()){
-                   it = mTouchPoints.insert({i,std::list<Point>()}).first;
+                   it = mTouchPoints.insert({i,std::list<TOUCHPOINT>()}).first;
                 }
-                it->second.push_back({x,y});
+                it->second.push_back({x,y,pressure});
                 //LOGD("Pointer[%d] %d",i,event.getHistorySize());
                 for(int j=0;j<event.getHistorySize();j++){
                     x = event.getHistoricalX(i,j);
                     y = event.getHistoricalY(i,j);
-                    it->second.push_back({x,y});
+                    pressure=event.getHistoricalPressure(i,j);
+                    it->second.push_back({x,y,pressure});
                     minX = std::min(x,minX);
                     minY = std::min(y,minY);
                     maxX = std::max(x,maxX);
@@ -78,17 +81,17 @@ public:
         }
         drawGrid(canvas);
         for(auto it=mTouchPoints.begin();it!=mTouchPoints.end();it++){
-            std::list<Point>& pts = it->second;
+            std::list<TOUCHPOINT>& pts = it->second;
             canvas.set_source_rgb(0,1,float(it->first)/mTouchPoints.size());
             for(auto p:pts){
-                canvas.arc(p.x,p.y,R,0,M_PI*2.f);
+                canvas.arc(p.x,p.y,R+p.pressure,0,M_PI*2.f);
                 canvas.fill();
             }
             pts.clear();
         }
     }
 };
-void sendEvents();
+
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Point sz;
@@ -96,105 +99,6 @@ int main(int argc,const char*argv[]){
     LOGI("DisplaySize=%dx%d",sz.x,sz.y);
     Window*w=new TouchWindow(-1,-1);
     w->invalidate();
-    Runnable run;
-    run=[](){sendEvents();};
-    //w->postDelayed(run,5000);
     return app.exec();
-}
-
-void sendEvents(){
-   TouchDevice d(INJECTDEV_TOUCH);
-   struct MTEvent{int type,code,value;};
-   MTEvent mts[]={
-     {EV_KEY,BTN_TOUCH,1},          //ACTION_DOWN
-     {EV_ABS,ABS_MT_TRACKING_ID,45},
-     {EV_ABS,ABS_MT_POSITION_X ,10},
-     {EV_ABS,ABS_MT_POSITION_Y ,20},
-     {EV_SYN,SYN_MT_REPORT,0},
-     {EV_SYN,SYN_REPORT,0},
-
-     {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_MOVE
-     {EV_ABS,ABS_MT_POSITION_X ,20},
-     {EV_ABS,ABS_MT_POSITION_Y ,30},
-     {EV_SYN,SYN_MT_REPORT,0},
-     {EV_SYN,SYN_REPORT,0},
-
-     {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_POINTER_DOWN finger 0
-     {EV_ABS,ABS_MT_POSITION_X ,20},
-     {EV_ABS,ABS_MT_POSITION_Y ,30},
-     {EV_SYN,SYN_MT_REPORT,0},
-     {EV_ABS,ABS_MT_TRACKING_ID,46},//ACTION_POINTER_DOWN finger 1
-     {EV_ABS,ABS_MT_POSITION_X ,40},
-     {EV_ABS,ABS_MT_POSITION_Y ,100},
-     {EV_SYN,SYN_MT_REPORT,0},
-     {EV_SYN,SYN_REPORT,0},
-
-     {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_POINTER_DOWN finger 0
-     {EV_ABS,ABS_MT_POSITION_X ,20},
-     {EV_ABS,ABS_MT_POSITION_Y ,30},
-     {EV_SYN,SYN_MT_REPORT,0},
-     {EV_ABS,ABS_MT_TRACKING_ID,46},//ACTION_POINTER_DOWN finger 1
-     {EV_ABS,ABS_MT_POSITION_X ,40},
-     {EV_ABS,ABS_MT_POSITION_Y ,100},
-     {EV_SYN,SYN_MT_REPORT,0},
-     {EV_ABS,ABS_MT_TRACKING_ID,47},//ACTION_POINTER_DOWN finger 2
-     {EV_ABS,ABS_MT_POSITION_X ,200},
-     {EV_ABS,ABS_MT_POSITION_Y ,300},
-     {EV_SYN,SYN_MT_REPORT,0},
-     {EV_SYN,SYN_REPORT,0},
-
-     {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_POINTER_UP finger 2
-     {EV_ABS,ABS_MT_POSITION_X ,20},
-     {EV_ABS,ABS_MT_POSITION_Y ,30},
-     {EV_SYN,SYN_MT_REPORT,0},
-     {EV_ABS,ABS_MT_TRACKING_ID,46},
-     {EV_ABS,ABS_MT_POSITION_X ,40},
-     {EV_ABS,ABS_MT_POSITION_Y ,100},
-     {EV_SYN,SYN_MT_REPORT,0},
-     //{EV_ABS,ABS_MT_TRACKING_ID,-1},
-     {EV_SYN,SYN_REPORT,0},
-#if 10//2 moveevents
-     {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_POINTER_UP finger 2
-     {EV_ABS,ABS_MT_POSITION_X ,20},
-     {EV_ABS,ABS_MT_POSITION_Y ,30},
-     {EV_SYN,SYN_MT_REPORT,0},
-     {EV_ABS,ABS_MT_TRACKING_ID,46},
-     {EV_ABS,ABS_MT_POSITION_X ,40},
-     {EV_ABS,ABS_MT_POSITION_Y ,100},
-     {EV_SYN,SYN_MT_REPORT,0},
-     //{EV_ABS,ABS_MT_TRACKING_ID,-1},
-     {EV_SYN,SYN_REPORT,0},
-
-     {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_MOVE finger 1
-     {EV_ABS,ABS_MT_POSITION_X ,20},
-     {EV_ABS,ABS_MT_POSITION_Y ,30},
-     {EV_SYN,SYN_MT_REPORT,0},
-     {EV_ABS,ABS_MT_TRACKING_ID,46},
-     {EV_ABS,ABS_MT_POSITION_X ,60},
-     {EV_ABS,ABS_MT_POSITION_Y ,120},
-     {EV_SYN,SYN_MT_REPORT,0},
-     //{EV_ABS,ABS_MT_TRACKING_ID,-1},
-     {EV_SYN,SYN_REPORT,0},
-#endif
-     {EV_ABS,ABS_MT_TRACKING_ID,45},//ACTION_POINTER_UP finger 1
-     {EV_ABS,ABS_MT_POSITION_X ,20},
-     {EV_ABS,ABS_MT_POSITION_Y ,30},
-     {EV_SYN,SYN_MT_REPORT,0},
-     //{EV_ABS,ABS_MT_TRACKING_ID,-1},
-     {EV_SYN,SYN_MT_REPORT,0},
-     {EV_SYN,SYN_REPORT,0},
-
-     {EV_ABS,ABS_MT_TRACKING_ID,-1},
-     {EV_SYN,SYN_MT_REPORT,0},
-     {EV_SYN,SYN_REPORT,0},
-   };
-   for(int i=0;i<sizeof(mts)/sizeof(MTEvent);i++){
-       int32_t tmEVT = i*20*100000;
-       d.putRawEvent({0,tmEVT},mts[i].type,mts[i].code,mts[i].value);
-   }
-   for(int i=0;i<d.getEventCount();i++){
-       MotionEvent*e=(MotionEvent*)d.popEvent();
-       InputEventSource::getInstance().sendEvent(*e);
-   }
 }
 
