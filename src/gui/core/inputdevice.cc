@@ -510,10 +510,9 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
     int slot,pointerCount,pointerIndex,action;
     MotionEvent*lastEvent;
     if(!isValidEvent(type,code,value))return -1;
-    LOGV("%lu:%04u %d,%d,%d",tv.tv_sec,tv.tv_usec,type,code,value);
+    //LOGV("%lu:%04u %d,%d,%d",tv.tv_sec,tv.tv_usec,type,code,value);
     switch(type){
     case EV_KEY:
-        //if(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)break;
         switch(code){
         case BTN_TOUCH :
         case BTN_STYLUS:
@@ -574,7 +573,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
             mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
                  0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
-            LOGV_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
+            LOGV_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
+                 mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
             mEvent->setActionButton(mActionButton);
             mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
 

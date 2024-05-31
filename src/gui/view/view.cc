@@ -4950,11 +4950,11 @@ int View::getWindowAttachCount()const{
 
 void View::postInvalidateOnAnimation(){
     if(mAttachInfo){
-	ViewGroup*w=dynamic_cast<ViewGroup*>(mAttachInfo->mRootView);
-	w->dispatchInvalidateOnAnimation(this);
+        ViewGroup*w = dynamic_cast<ViewGroup*>(mAttachInfo->mRootView);
+        w->dispatchInvalidateOnAnimation(this);
     }else{//else is tobe removed
         invalidate(true);
-        ViewGroup*root=getRootView();
+        ViewGroup*root = getRootView();
         if(root)root->dispatchInvalidateOnAnimation(this);
     }
 }
@@ -4963,8 +4963,8 @@ void View::postInvalidateOnAnimation(int left, int top, int width, int height) {
     // We try only with the AttachInfo because there's no point in invalidating
     // if we are not attached to our window
     if (mAttachInfo) {
-        const Rect rect={left,top,width,height};
-        ViewGroup*root=mAttachInfo->mRootView;
+        const Rect rect= {left,top,width,height};
+        ViewGroup*root = mAttachInfo->mRootView;
         root->dispatchInvalidateRectOnAnimation(this,rect);
     }
 }
@@ -4975,7 +4975,7 @@ void View::invalidateDrawable(Drawable& who){
 }
 
 void View::scheduleDrawable(Drawable& who,Runnable what, long when){
-    long delay = when - SystemClock::uptimeMillis();
+    const long delay = when - SystemClock::uptimeMillis();
     postDelayed(what,delay);
 }
 
