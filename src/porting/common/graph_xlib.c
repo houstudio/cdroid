@@ -352,7 +352,7 @@ static void* X11EventProc(void*p) {
             }
             break;
         case MotionNotify:
-            if(event.xmotion.state==0x100) {
+            if(event.xmotion.state&Button1MotionMask) {
                 SENDMOUSE(event.xmotion.time,event.xmotion.x - screenMargin.x, event.xmotion.y - screenMargin.y);
             }
             break;
