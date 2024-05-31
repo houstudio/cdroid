@@ -303,7 +303,7 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mTypeB = false;
     mTrackID = mSlotID = -1;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
-    std::vector<InputDeviceInfo::MotionRange>&mr =mDeviceInfo.getMotionRanges();
+    std::vector<InputDeviceInfo::MotionRange>&mr = mDeviceInfo.getMotionRanges();
     for(int i=0;i<mr.size();i++){
         InputDeviceInfo::MotionRange&range=mr.at(i);
         const int axis = ABS2AXIS(range.axis);
@@ -312,7 +312,7 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     }
     const InputDeviceInfo::MotionRange*rangeX = mDeviceInfo.getMotionRange(MotionEvent::AXIS_X,0);
     Display display =  WindowManager::getInstance().getDefaultDisplay();
-    mTPWidth  = ISRANGEVALID(rangeX)? (rangeX->max-rangeX->min) : mScreenWidth;
+    mTPWidth  = ISRANGEVALID(rangeX) ? (rangeX->max-rangeX->min) : mScreenWidth;
     mMinX = ISRANGEVALID(rangeX) ? rangeX->min : 0;
     mMaxX = ISRANGEVALID(rangeX) ? rangeX->max : mScreenWidth;
 
@@ -320,6 +320,10 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mTPHeight = ISRANGEVALID(rangeY) ? (rangeY->max-rangeY->min) : mScreenHeight;
     mMinY = ISRANGEVALID(rangeY) ? rangeY->min : 0;
     mMaxY = ISRANGEVALID(rangeY) ? rangeY->max : mScreenHeight;
+
+    const InputDeviceInfo::MotionRange*rangePressure =  mDeviceInfo.getMotionRange(MotionEvent::AXIS_PRESSURE,0);
+    mPressureMin = ISRANGEVALID(rangePressure) ? rangePressure->min : 0;
+    mPressureMax = ISRANGEVALID(rangePressure) ? rangePressure->max : 0;
 
     const std::string section = getName();
     mInvertX = mInvertY = mSwitchXY = false;
@@ -377,6 +381,7 @@ int TouchDevice::ABS2AXIS(int absaxis){
 void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
     int slot, axis = ABS2AXIS(raw_axis);
+    int tmp;
     switch(axis){
     case MotionEvent::AXIS_X:
         switch(rotation){
@@ -412,7 +417,10 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
         }mCoord.setAxisValue(axis,value);
         break;
     case MotionEvent::AXIS_PRESSURE:
-        mCoord.setAxisValue(axis,value); break;
+        tmp = mPressureMax - mPressureMin;
+        if(tmp == 0)tmp = 1;
+        mCoord.setAxisValue(axis,float(value - mPressureMin)/tmp);
+        break;
     default:/*MotionEvent::AXIS_Z:*/ break;
     }/*endof switch(axis)*/
 
@@ -545,16 +553,17 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         slot = mTrack2Slot.indexOfKey(mProp.id);
 #else
         slot = mProp.id;
-        if( (mProp.id==-1) /*&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0*/)mProp.id=0;
+        if( (mProp.id==-1) && ((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) )
+            mProp.id = 0;
 #endif
         slot = slot>=0?slot:0;
         mPointerProps [slot] = mProp;
         mPointerCoords[slot] = mCoord;
-        if(code==SYN_MT_REPORT)break;
+        if( code == SYN_MT_REPORT )break;
         action = getActionByBits(pointerIndex);
-        mMoveTime =(tv.tv_sec * 1000LL + tv.tv_usec/1000);
-        lastEvent = mEvents.size()>1?(MotionEvent*)mEvents.back():nullptr;
-        pointerCount =(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)?std::max(mLastBits.count(),mCurrBits.count()):1;
+        mMoveTime = (tv.tv_sec * 1000LL + tv.tv_usec/1000);
+        lastEvent = (mEvents.size()>1) ? (MotionEvent*)mEvents.back() : nullptr;
+        pointerCount = (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) ? std::max(mLastBits.count(),mCurrBits.count()) : 1;
         if(lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)&&(action==MotionEvent::ACTION_MOVE)&&(mMoveTime-lastEvent->getDownTime()<100)){
             auto lastTime = lastEvent->getDownTime();
             lastEvent->addSample(mMoveTime,mPointerCoords.data());
@@ -681,6 +690,55 @@ void InputDeviceInfo::addMotionRange(int32_t axis, uint32_t source, float vmin, 
 
 void InputDeviceInfo::addMotionRange(const MotionRange& range) {
     mMotionRanges.push_back(range);
+}
+
+void InputDeviceInfo::addSensorInfo(const InputDeviceSensorInfo& info) {
+    auto it = mSensors.find(info.type);
+    if (it != mSensors.end()) {
+        //LOGW("Sensor type %s already exists, will be replaced by new sensor added.",
+        //      ftl::enum_string(info.type).c_str());
+        it->second = info;
+    }else{
+        mSensors.insert({info.type, info});
+    }
+}
+
+void InputDeviceInfo::addBatteryInfo(const InputDeviceBatteryInfo& info) {
+    auto it = mBatteries.find(info.id);
+    if (it != mBatteries.end()) {
+        LOGW("Battery id %d already exists, will be replaced by new battery added.", info.id);
+        it->second = info; 
+    }else{
+        mBatteries.insert({info.id, info});
+    }
+}
+
+void InputDeviceInfo::addLightInfo(const InputDeviceLightInfo& info) {
+    auto it = mLights.find(info.id);
+    if (it != mLights.end()) {
+        LOGW("Light id %d already exists, will be replaced by new light added.", info.id);
+        it->second = info;
+    }else{
+        mLights.insert({info.id, info});
+    }
+}
+
+std::vector<InputDeviceSensorInfo> InputDeviceInfo::getSensors()const{
+    std::vector<InputDeviceSensorInfo> infos;
+    infos.reserve(mSensors.size());
+    for (const auto&info : mSensors) {
+        infos.push_back(info.second);
+    }
+    return infos;
+}
+
+std::vector<InputDeviceLightInfo> InputDeviceInfo::getLights() const{
+    std::vector<InputDeviceLightInfo> infos;
+    infos.reserve(mLights.size());
+    for (const auto& info: mLights) {
+        infos.push_back(info.second);
+    }
+    return infos;
 }
 
 static bool isValidNameChar(char ch) {

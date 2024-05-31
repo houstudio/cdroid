@@ -566,7 +566,8 @@ void MotionEvent::transform(const Cairo::Matrix& matrix){
 const PointerCoords& MotionEvent::getHistoricalRawPointerCoords(
         size_t pointerIndex, size_t historicalIndex) const {
     const size_t pointerCount = getPointerCount();
-    if(pointerIndex<0||pointerIndex>=pointerCount)throw "outof Range";
+    if((pointerIndex<0)||(pointerIndex>=pointerCount))
+        LOGE("outof Range pointerIndex=%d/%d",pointerIndex,pointerCount);
     if(historicalIndex==HISTORY_CURRENT){
         return mSamplePointerCoords[pointerIndex];
     }else{

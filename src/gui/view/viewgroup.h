@@ -367,7 +367,7 @@ public:
     virtual void removeViewInLayout(View* view);
     virtual void removeViewsInLayout(int start,int count);
     void removeAllViewsInLayout();
-    virtual View* findViewById(int id);
+    virtual View* findViewById(int id)override;
     View* findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)override;
     View* findViewWithTagTraversal(void*tag)override;
     virtual void resetResolvedPadding()override;
