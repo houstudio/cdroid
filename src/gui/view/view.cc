@@ -4976,13 +4976,15 @@ void View::invalidateDrawable(Drawable& who){
 
 void View::scheduleDrawable(Drawable& who,Runnable what, long when){
     const long delay = when - SystemClock::uptimeMillis();
-    postDelayed(what,delay);
+    Choreographer::getInstance().postCallbackDelayed(Choreographer::CALLBACK_ANIMATION, what,&who,
+           Choreographer::subtractFrameDelay(delay));
+    //postDelayed(what,delay);
 }
 
 void View::unscheduleDrawable(Drawable& who,Runnable what){
     if(verifyDrawable(&who)&&what!=nullptr){
         Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&what,&who); 
-        removeCallbacks(what);
+        //removeCallbacks(what);
     }
 }
 
@@ -4995,8 +4997,8 @@ ViewGroup*View::getParent()const{
 }
 
 void View::assignParent(ViewGroup*parent){
-    if(mParent ==nullptr)mParent=parent;
-    else if(parent==nullptr)mParent=nullptr;
+    if(mParent == nullptr)mParent = parent;
+    else if(parent == nullptr)mParent = nullptr;
     else{
         LOGE("View %p:%d being added but it already has a parent",this,mID);
     }
@@ -5005,7 +5007,7 @@ void View::assignParent(ViewGroup*parent){
 ViewTreeObserver*View::getViewTreeObserver(){
     if(mAttachInfo)return mAttachInfo->mTreeObserver;
     if(mFloatingTreeObserver)
-	mFloatingTreeObserver = new ViewTreeObserver(mContext);
+        mFloatingTreeObserver = new ViewTreeObserver(mContext);
     return mFloatingTreeObserver;
 }
 

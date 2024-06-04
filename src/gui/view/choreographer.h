@@ -4,33 +4,65 @@
 #include <core/neverdestroyed.h>
 #include <drawables/drawable.h>
 namespace cdroid{
-class Choreographer{
+class Choreographer:protected EventHandler{
 public:
     enum CallbackType{
-        CALLBACK_INPUT=0,
+        CALLBACK_INPUT = 0,
         CALLBACK_ANIMATION=1,
         CALLBACK_TRAVERSAL=2,
-        CALLBACK_COMMIT=3,
-        CALLBACK_LAST=CALLBACK_COMMIT
+        CALLBACK_COMMIT= 3,
+        CALLBACK_LAST  = CALLBACK_COMMIT
     };
-typedef std::function<void(long)>FrameCallback;
+    typedef CallbackBase<void,long>FrameCallback;
 private:
+    class CallbackRecord{
+    public:
+        CallbackRecord*next;
+        long dueTime;
+        Runnable action; //Runnable or FrameCallback
+        FrameCallback frameCallback;
+        void* token;
+    public:
+        CallbackRecord();
+        void run(long frameTimeNanos);
+    };
+    class CallbackQueue{
+    public:
+        Choreographer*mChoreographer;
+        CallbackRecord*mHead;
+    public:
+        CallbackQueue(Choreographer*choreographer);
+        bool hasDueCallbacksLocked(long now)const;
+        CallbackRecord* extractDueCallbacksLocked(long now);
+        void addCallbackLocked(long dueTime, void* action,void* token);
+        void removeCallbacksLocked(void* action, void* token);
+    };
+private:
+    Looper *mLooper;
     bool mFrameScheduled;
     bool mCallbacksRunning;
-    long mLastFrameTimeNanos;
+    nsecs_t mLastFrameTimeNanos;
     long mFrameIntervalNanos;
-    class CallbackQueue* mCallbackQueues[CALLBACK_LAST];
+    CallbackRecord* mCallbackPool;
+    CallbackQueue* mCallbackQueues[CALLBACK_LAST+1];
     static long sFrameDelay;
     friend NeverDestroyed<Choreographer>;
     Choreographer();
-    void removeCallbacksInternal(int callbackType,const Runnable* action, void* token);
+    static float getRefreshRate();
+    CallbackRecord* obtainCallbackLocked(long dueTime,void* action,void* token);
+    void recycleCallbackLocked(CallbackRecord* callback);
+    void removeCallbacksInternal(int callbackType,void* action, void* token);
     void postCallbackDelayedInternal(int callbackType,void* action, void* token, long delayMillis);
     void scheduleFrameLocked(long);
 protected:
-    void doCallbacks(int callbackType, long frameTimeNanos);
+    int checkEvents()override;
+    int handleEvents()override;
+    void doFrame(long frameTimeNanos,int frame);
+    void doCallbacks(int callbackType, long frameTimeMillis);
 public:
     static Choreographer& getInstance();
     static long getFrameDelay();
+    static long subtractFrameDelay(long delayMillis);
     static void setFrameDelay(long frameDelay);
     long getFrameTimeNanos();
     long getLastFrameTimeNanos();

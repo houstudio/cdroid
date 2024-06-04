@@ -106,6 +106,7 @@ void WindowManager::addWindow(Window*win){
         info->mTreeObserver->dispatchOnWindowFocusChange(true);
     });
     mActiveWindow = win;
+    win->invalidate();
     LOGV("win=%p Handler=%p windows.size=%d",win,win->mUIEventHandler,mWindows.size());
 }
 
