@@ -94,6 +94,7 @@ void WindowManager::addWindow(Window*win){
     View::AttachInfo*info = new View::AttachInfo(win->getContext());
     info->mContentInsets.setEmpty();
     info->mRootView = win;
+    info->mEventSource=win->mUIEventHandler;
     win->dispatchAttachedToWindow(info,win->getVisibility());
 #if USE_UIEVENTHANDLER    
     Looper::getDefault()->addHandler(win->mUIEventHandler);

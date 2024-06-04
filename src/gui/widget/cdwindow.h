@@ -109,8 +109,8 @@ public:
     virtual void onDeactive();
     bool dispatchKeyEvent(KeyEvent&event)override;
     bool isInLayout()const override;
-    bool postDelayed(Runnable& what,uint32_t delay)override;
-    bool removeCallbacks(const Runnable& what)override;
+    //bool postDelayed(Runnable& what,long delay)override;
+    //bool removeCallbacks(const Runnable& what)override;
     void dispatchInvalidateOnAnimation(View* view)override;
     void dispatchInvalidateRectOnAnimation(View*,const Rect&)override;
     void dispatchInvalidateDelayed(View*, long delayMilliseconds)override;

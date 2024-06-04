@@ -312,7 +312,7 @@ void Choreographer::CallbackQueue::removeCallbacksLocked(void* action, void* tok
             predecessor = callback;
         }
         callback = next;
-    }LOGD("action:%p token:%p",action,token);
+    }
 }
 
 }//endof namespace

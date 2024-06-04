@@ -63,7 +63,8 @@ namespace cdroid{
 class ViewGroup;
 class ViewOverlay;
 class Window;
-
+class UIEventSource;
+class HandlerActionQueue;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 public:
     static bool VIEW_DEBUG;
@@ -374,6 +375,7 @@ private:
     bool mBoundsChangedmDefaultFocusHighlightSizeChanged;
 
     ViewOverlay* mOverlay;
+    HandlerActionQueue*mRunQueue;
     InputEventConsistencyVerifier* mInputEventConsistencyVerifier;
     ViewTreeObserver* mFloatingTreeObserver;
     StateListAnimator* mStateListAnimator;
@@ -405,6 +407,7 @@ private:
     void removeLongPressCallback();
     void removePerformClickCallback();
     void removeUnsetPressCallback();
+    HandlerActionQueue* getRunQueue();
 
     void checkForLongClick(int delayOffset,int x,int y);
     bool performClickInternal();
@@ -1059,11 +1062,11 @@ public:
     virtual void onHoverChanged(bool hovered);
 	
     void postOnAnimation(Runnable& action);
-    void postOnAnimationDelayed(Runnable& action, uint32_t delayMillis);
+    void postOnAnimationDelayed(Runnable& action, long delayMillis);
     bool post(Runnable& what);
     bool post(const std::function<void()>&what);
-    bool postDelayed(const std::function<void()>&what,uint32_t delay=0);
-    virtual bool postDelayed(Runnable& what,uint32_t delay=0);
+    bool postDelayed(const std::function<void()>&what,long delay=0);
+    virtual bool postDelayed(Runnable& what,long delay=0);
     virtual bool removeCallbacks(const Runnable& what);
 
     virtual int getBaseline();
@@ -1183,6 +1186,7 @@ public:
     bool mKeepScreenOn;
     bool mDebugLayout;
     bool mDisplayState;/*true display is on*/
+    UIEventSource*mEventSource;
     std::function<void(int)>mPlaySoundEffect;
     std::function<bool(int,bool)>mPerformHapticFeedback;
     Cairo::RefPtr<Canvas> mCanvas;

@@ -67,7 +67,7 @@ int UIEventSource::handleEvents(){
 #pragma GCC push_options
 #pragma GCC optimize("O0")
 //codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
-bool UIEventSource::postDelayed(Runnable& run,uint32_t delayedtime){
+bool UIEventSource::postDelayed(const Runnable& run,long delayedtime){
     RUNNER runner;
     runner.time = SystemClock::uptimeMillis() + delayedtime;
     runner.run = run;

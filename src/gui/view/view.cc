@@ -19,6 +19,7 @@
 #include <view/viewgroup.h>
 #include <view/viewoverlay.h>
 #include <view/roundscrollbarrenderer.h>
+#include <view/handleractionqueue.h>
 #include <widget/edgeeffect.h>
 #include <animation/animationutils.h>
 #include <cdlog.h>
@@ -332,6 +333,7 @@ void View::initView(){
     mTooltipInfo = nullptr;
     mOverlay  = nullptr;
     mAnimator = nullptr;
+    mRunQueue = nullptr;
     mTag = nullptr;
     mStateListAnimator = nullptr;
     mPerformClick = nullptr;
@@ -404,6 +406,7 @@ View::~View(){
     mViewCount --;
     LOGD_IF(View::VIEW_DEBUG||(mViewCount>1000),"%p:%d mViewCount=%d",this,mID,mViewCount);
 
+    delete mRunQueue;
     delete mScrollCache;
     mScrollCache = nullptr;
     mMeasureCache.clear();
@@ -1378,6 +1381,12 @@ void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
     if ((mPrivateFlags&PFLAG_SCROLL_CONTAINER) != 0) {
         mAttachInfo->mScrollContainers.push_back(this);
         mPrivateFlags |= PFLAG_SCROLL_CONTAINER_ADDED;
+    }
+    // Transfer all pending runnables.
+    if (mRunQueue != nullptr) {
+        mRunQueue->executeActions(*info->mEventSource);
+        delete mRunQueue;
+        mRunQueue = nullptr;
     }
     // Send onVisibilityChanged directly instead of dispatchVisibilityChanged.
     // As all views in the subtree will already receive dispatchAttachedToWindow
@@ -6495,7 +6504,7 @@ bool View::onTouchEvent(MotionEvent& event){
         removeTapCallback();
         removeLongPressCallback();
         mInContextButtonPress = false;
-        mHasPerformedLongPress = false;
+        mHasPerformedLongPress= false;
         mIgnoreNextUpEvent = false;
         mPrivateFlags3 &= ~PFLAG3_FINGER_DOWN;
         break;
@@ -6507,37 +6516,44 @@ void View::postOnAnimation(Runnable& action){
     postDelayed(action,0);
 }
 
-void View::postOnAnimationDelayed(Runnable& action, uint32_t delayMillis){
+void View::postOnAnimationDelayed(Runnable& action, long delayMillis){
     postDelayed(action,delayMillis);
+}
+
+HandlerActionQueue* View::getRunQueue() {
+    if (mRunQueue == nullptr) {
+         mRunQueue = new HandlerActionQueue();
+    }
+    return mRunQueue;
 }
 
 bool View::post(Runnable& what){
     return postDelayed(what,0);
 }
 
-bool  View::postDelayed(Runnable& what,uint32_t delay){
-    View*root = getRootView();
-    if(root&&(root!=this))
-        return root->postDelayed(what,delay);
+bool  View::postDelayed(Runnable& what,long delay){
+    //View*root = getRootView();
+    //if(root&&(root!=this)) return root->postDelayed(what,delay);
+    if(mAttachInfo)mAttachInfo->mEventSource->postDelayed(what,delay);
+    else getRunQueue()->postDelayed(what,delay);
     return false;
 }
 
 bool View::post(const std::function<void()>&what){
-    Runnable r;
-    r = what;
+    Runnable r = what;
     return post(r);
 }
 
-bool View::postDelayed(const std::function<void()>&what,uint32_t delay){
-    Runnable r;
-    r=what;
+bool View::postDelayed(const std::function<void()>&what,long delay){
+    Runnable r = what;
     return postDelayed(r,delay);    
 }
 
 bool View::removeCallbacks(const Runnable& what){
-    View*root = getRootView();
-    if( root && (root!=this) )
-        return root->removeCallbacks(what);
+    //View*root = getRootView();
+    //if( root && (root!=this) ) return root->removeCallbacks(what);
+    if(mAttachInfo)mAttachInfo->mEventSource->removeCallbacks(what);
+    else getRunQueue()->removeCallbacks(what);
     return false;
 }
 
@@ -6554,7 +6570,7 @@ ViewOverlay*View::getOverlay(){
 
 void View::requestLayout(){
     if(mAttachInfo && mAttachInfo->mViewRequestingLayout==nullptr){
-        ViewGroup*viewRoot= getRootView();
+        ViewGroup*viewRoot = getRootView();
         if(viewRoot && viewRoot->isInLayout()){
             if(!viewRoot->requestLayoutDuringLayout(this))return ;
         }
@@ -7356,6 +7372,7 @@ View::AttachInfo::AttachInfo(Context*ctx){
     mCanvas       = nullptr;
     mDisplayState = true;
     mTooltipHost  = nullptr;
+    mEventSource  = nullptr;
     mViewRequestingLayout = nullptr;
     mAutofilledDrawable = nullptr;
     mTreeObserver = new ViewTreeObserver(ctx);
