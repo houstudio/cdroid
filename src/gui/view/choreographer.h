@@ -19,7 +19,7 @@ private:
     public:
         CallbackRecord*next;
         long dueTime;
-        Runnable action; //Runnable or FrameCallback
+        Runnable action;
         FrameCallback frameCallback;
         void* token;
     public:
@@ -64,12 +64,12 @@ public:
     static long getFrameDelay();
     static long subtractFrameDelay(long delayMillis);
     static void setFrameDelay(long frameDelay);
-    long getFrameTimeNanos();
-    long getLastFrameTimeNanos();
-    long getFrameTime();
-    long getFrameIntervalNanos();
-    void postCallback(int callbackType, Runnable& action, void* token);
-    void postCallbackDelayed(int callbackType,Runnable& action,void*token,long delayMillis);
+    long getFrameTimeNanos()const;
+    long getLastFrameTimeNanos()const;
+    long getFrameTime()const;
+    long getFrameIntervalNanos()const;
+    void postCallback(int callbackType,const Runnable& action, void* token);
+    void postCallbackDelayed(int callbackType,const Runnable& action,void*token,long delayMillis);
     void removeCallbacks(int callbackType, const Runnable* action,void*token);
     void removeFrameCallback(const FrameCallback& callback);
     void postFrameCallbackDelayed(const FrameCallback& callback, long delayMillis);

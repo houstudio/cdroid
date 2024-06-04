@@ -6522,7 +6522,7 @@ void View::postOnAnimationDelayed(Runnable& action, long delayMillis){
 
 HandlerActionQueue* View::getRunQueue() {
     if (mRunQueue == nullptr) {
-         mRunQueue = new HandlerActionQueue();
+        mRunQueue = new HandlerActionQueue();
     }
     return mRunQueue;
 }

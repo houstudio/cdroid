@@ -23,7 +23,7 @@ Choreographer::Choreographer(){
 float Choreographer::getRefreshRate() {
 #if 0
     DisplayInfo di = DisplayManagerGlobal.getInstance().getDisplayInfo(
-            Display.DEFAULT_DISPLAY);
+            Display::DEFAULT_DISPLAY);
     return di.getMode().getRefreshRate();
 #else
     return 20.f;
@@ -48,7 +48,7 @@ void Choreographer::setFrameDelay(long frameDelay){
     sFrameDelay = frameDelay;
 }
 
-long Choreographer::getFrameTime(){
+long Choreographer::getFrameTime()const{
     return SystemClock::uptimeMillis();
 }
 
@@ -57,15 +57,15 @@ long Choreographer::subtractFrameDelay(long delayMillis) {
     return delayMillis <= frameDelay ? 0 : delayMillis - frameDelay;
 }
 
-long Choreographer::getFrameTimeNanos(){
+long Choreographer::getFrameTimeNanos()const{
     return SystemClock::uptimeMillis();    
 }
 
-long Choreographer::getLastFrameTimeNanos(){
+long Choreographer::getLastFrameTimeNanos()const{
     return mLastFrameTimeNanos;
 }
 
-long Choreographer::getFrameIntervalNanos() {
+long Choreographer::getFrameIntervalNanos()const{
     return mFrameIntervalNanos;
 }
 
@@ -119,11 +119,11 @@ void Choreographer::removeCallbacksInternal(int callbackType,void* action, void*
     mCallbackQueues[callbackType]->removeCallbacksLocked(action,token);
 }
 
-void Choreographer::postCallback(int callbackType,Runnable& action, void* token){
+void Choreographer::postCallback(int callbackType,const Runnable& action, void* token){
      postCallbackDelayed(callbackType,action,token,0);
 }
 
-void Choreographer::postCallbackDelayed(int callbackType,Runnable& action,void*token,long delayMillis){
+void Choreographer::postCallbackDelayed(int callbackType,const Runnable& action,void*token,long delayMillis){
     postCallbackDelayedInternal(callbackType,(void*)&action, token, delayMillis);
 }
 

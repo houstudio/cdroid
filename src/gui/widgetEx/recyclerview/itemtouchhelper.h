@@ -113,7 +113,6 @@ public:
     void startSwipe(RecyclerView::ViewHolder& viewHolder);
 
     /*public interface ViewDropHandler {
-
         void prepareForDrop(View& view,View& target, int x, int y);
     };*/
 };/*endof ItemTouchHelper*/
@@ -126,7 +125,7 @@ private:
 public:
     static constexpr int DEFAULT_DRAG_ANIMATION_DURATION = 200;
     static constexpr int DEFAULT_SWIPE_ANIMATION_DURATION = 250;
-    static constexpr int RELATIVE_DIR_FLAGS = START | END  | ((START | END) << DIRECTION_FLAG_COUNT)
+    static constexpr int RELATIVE_DIR_FLAGS = START | END | ((START | END) << DIRECTION_FLAG_COUNT)
             | ((START | END) << (2 * DIRECTION_FLAG_COUNT));
 private:
     friend ItemTouchHelper;
