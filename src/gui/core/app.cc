@@ -84,7 +84,7 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
 App::~App(){
     WindowManager::getInstance().shutDown();
     InputMethodManager::getInstance().shutDown();
-    delete Looper::getDefault();
+    delete Looper::getMainLooper();
     delete &GraphDevice::getInstance();
 }
 
@@ -161,15 +161,15 @@ void App::setOpacity(unsigned char alpha){
 }
 
 void App::addEventHandler(const EventHandler*handler){
-    Looper::getDefault()->addEventHandler(handler);
+    Looper::getMainLooper()->addEventHandler(handler);
 }
 
 void App::removeEventHandler(const EventHandler*handler){
-    Looper::getDefault()->removeEventHandler(handler);
+    Looper::getMainLooper()->removeEventHandler(handler);
 }
 
 int App::exec(){
-    while(!mQuitFlag)Looper::getDefault()->pollAll(1);
+    while(!mQuitFlag)Looper::getMainLooper()->pollAll(1);
     return mExitCode;
 }
 

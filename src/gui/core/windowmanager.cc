@@ -97,9 +97,9 @@ void WindowManager::addWindow(Window*win){
     info->mEventSource=win->mUIEventHandler;
     win->dispatchAttachedToWindow(info,win->getVisibility());
 #if USE_UIEVENTHANDLER    
-    Looper::getDefault()->addHandler(win->mUIEventHandler);
+    Looper::getMainLooper()->addHandler(win->mUIEventHandler);
 #else
-    Looper::getDefault()->addEventHandler(win->mUIEventHandler);
+    Looper::getMainLooper()->addEventHandler(win->mUIEventHandler);
 #endif
     win->post([win](){win->onCreate();});
     //the first create only call onCreate,no onActive 
@@ -131,9 +131,9 @@ void WindowManager::removeWindow(Window*w){
         w1->mPendingRgn->do_union({rc.left,rc.top,rc.width,rc.height});
     }
 #if USE_UIEVENTHANDLER
-    Looper::getDefault()->removeHandler(w->mUIEventHandler);
+    Looper::getMainLooper()->removeHandler(w->mUIEventHandler);
 #else
-    Looper::getDefault()->removeEventHandler(w->mUIEventHandler);
+    Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
 #endif
     View::AttachInfo*info = w->mAttachInfo;
     w->dispatchDetachedFromWindow();
@@ -168,7 +168,7 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
         auto itw = std::find(mWindows.begin(),mWindows.end(),w);
         const Rect rw = w->getBound();
         mWindows.erase(itw);
-	rgn->do_union({rw.left,rw.top,rw.width,rw.height});
+        rgn->do_union({rw.left,rw.top,rw.width,rw.height});
         for(auto itr=mWindows.begin();itr!=mWindows.end();itr++){
             Window*w1 = (*itr);
             Rect rc = w1->getBound();
@@ -178,9 +178,9 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
             w1->mPendingRgn->do_union({rc.left,rc.top,rc.width,rc.height});
         }
     #if USE_UIEVENTHANDLER
-        Looper::getDefault()->removeHandler(w->mUIEventHandler);
+        Looper::getMainLooper()->removeHandler(w->mUIEventHandler);
     #else
-        Looper::getDefault()->removeEventHandler(w->mUIEventHandler);
+        Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
     #endif
         View::AttachInfo*info = w->mAttachInfo;
         w->dispatchDetachedFromWindow();

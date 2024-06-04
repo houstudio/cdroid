@@ -34,7 +34,7 @@ static NeverDestroyed<Choreographer>mInst;
 
 Choreographer& Choreographer::getInstance(){
     if(mInst->mLooper==nullptr){
-        mInst->mLooper = Looper::getDefault();
+        mInst->mLooper = Looper::getMainLooper();
         mInst->mLooper->addEventHandler(mInst.get());
     }
     return *mInst;

@@ -4,7 +4,7 @@
 namespace cdroid{
 
 Handler::Handler(){
-    mLooper = Looper::getDefault();
+    mLooper = Looper::getMainLooper();
     mLooper->addHandler(this);
 }
 

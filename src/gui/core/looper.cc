@@ -84,7 +84,7 @@ void Looper::threadDestructor(void *st) {
     Looper* const self = static_cast<Looper*>(st);
     if (self != nullptr) {
         //self->decStrong((void*)threadDestructor);
-	delete self;
+	    delete self;
     }
 }
 
@@ -92,12 +92,20 @@ Looper*Looper::getDefault(){
     return getForThread();
 }
 
+Looper*Looper::getMainLooper(){
+    return getForThread(); 
+}
+
+Looper*Looper::myLooper(){
+    return getForThread();
+}
+
 Looper*Looper::prepare(int opts){
     Looper* looper = getForThread();
     const bool allowNonCallbacks = opts & PREPARE_ALLOW_NON_CALLBACKS;
     if(looper==nullptr){
-	looper = new Looper(allowNonCallbacks);
-	setForThread(looper);
+        looper = new Looper(allowNonCallbacks);
+        setForThread(looper);
     }
     LOGW_IF(looper->getAllowNonCallbacks()!=allowNonCallbacks,"Looper already prepared for this thread with a different"
 	    " value for the LOOPER_PREPARE_ALLOW_NON_CALLBACKS option.");
@@ -207,12 +215,12 @@ int Looper::pollEvents(int timeoutMillis){
         pfd.events=r.second.events;
         pollfds.push_back(pfd);
     }
-    eventCount=poll(pollfds.data(),pollfds.size(),timeoutMillis);
-    j=0;
+    eventCount = poll(pollfds.data(),pollfds.size(),timeoutMillis);
+    j = 0;
     for(auto f:pollfds){
         if(f.revents==0)continue;
-        eventItems[j].data.fd=f.fd;
-        eventItems[j].events=f.revents;
+        eventItems[j].data.fd= f.fd;
+        eventItems[j].events = f.revents;
         j++;
     }
 #endif
@@ -404,12 +412,12 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
 }
 
 void Looper::doIdleHandlers(){
-    for(auto it=mHandlers.begin();it!=mHandlers.end();it++){
+    for(auto it = mHandlers.begin();it != mHandlers.end();it++){
         const int flags = (*it)->mFlags;
         if(flags&1){
             LOGD("delete Handler %p",(*it));
             if(flags&2)delete *it;
-            it= mHandlers.erase(it);
+            it = mHandlers.erase(it);
             continue;
         }
         (*it)->handleIdle();
@@ -426,7 +434,6 @@ void Looper::doIdleHandlers(){
 #endif
 void Looper::wake() {
     LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  wake", this);
-
     uint64_t inc = 1;
     const ssize_t nWrite = TEMP_FAILURE_RETRY(write(mWakeEventFd, &inc, sizeof(uint64_t)));
     if (nWrite != sizeof(uint64_t)) {
@@ -436,7 +443,6 @@ void Looper::wake() {
 
 void Looper::awoken() {
     LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  awoken", this);
-
     uint64_t counter;
     TEMP_FAILURE_RETRY(read(mWakeEventFd, &counter, sizeof(uint64_t)));
 }
@@ -455,7 +461,7 @@ int Looper::addFd(int fd, int ident, int events, Looper_callbackFunc callback, v
 int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, void* data) {
     LOGD_IF(DEBUG_CALLBACKS,"%p  addFd - fd=%d, ident=%d, events=0x%x, callback=%p, data=%p", this, fd, ident, events, callback, data);
 
-    if (callback==nullptr) {
+    if (callback == nullptr) {
         if (! mAllowNonCallbacks) {
             LOGE("Invalid attempt to set NULL callback but not allowed for this looper.");
             return -1;
@@ -485,7 +491,7 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
         request.initEventItem(&eventItem);
 
         auto itfd = mRequests.find(fd);//indexOfKey(fd);
-        if (itfd==mRequests.end()) {
+        if (itfd == mRequests.end()) {
 #if USED_POLL ==EPOLL     
             int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, fd, & eventItem);
             if (epollResult < 0) {
@@ -541,13 +547,13 @@ int Looper::removeFd(int fd, int seq) {
 
     { // acquire lock
         std::lock_guard<std::recursive_mutex>  _l(mLock);
-        auto itr= mRequests.find(fd);//indexOfKey(fd);
-        if (itr==mRequests.end()) {
+        auto itr = mRequests.find(fd);//indexOfKey(fd);
+        if (itr == mRequests.end()) {
             return 0;
         }
 
         // Check the sequence number if one was given.
-        if (seq != -1 && itr->second.seq != seq) {
+        if ( (seq != -1) && (itr->second.seq != seq) ) {
             LOGD_IF(DEBUG_CALLBACKS,"%p  removeFd - sequence number mismatch, oldSeq=%d", this, itr->second.seq);
             return 0;
         }
@@ -632,9 +638,9 @@ void Looper::addHandler(MessageHandler*handler){
 }
 
 void Looper::removeHandler(MessageHandler*handler){
-    for(auto it=mHandlers.begin();it!=mHandlers.end();it++){
-        if((*it)==handler){
-            handler->mFlags|=1;
+    for(auto it = mHandlers.begin();it != mHandlers.end();it++){
+        if( (*it) == handler){
+            handler->mFlags |= 1;
             if((handler->mFlags&2)==0)//handler is not owned by looper,erase at once
                 mHandlers.erase(it);
             break;
@@ -648,7 +654,7 @@ void Looper::addEventHandler(const EventHandler*handler){
 
 void Looper::removeEventHandler(const EventHandler*handler){
     for(auto it = mEventHandlers.begin();it != mEventHandlers.end();it++){
-        if((*it)==handler){
+        if( (*it) ==handler){
             (*it)->mFlags |=1;//set removed flags
             if((handler->mFlags&2)==0)//handler is not owned by looper,erase at once
                 mEventHandlers.erase(it);

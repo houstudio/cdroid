@@ -160,7 +160,10 @@ public:
 public:
     Looper(bool allowNonCallbacks=false);
     virtual ~Looper();
+    [[deprecated("This function is deprecated, please use myLooper() or getMainLooper() instead.")]]
     static Looper*getDefault();
+    static Looper*getMainLooper();
+    static Looper*myLooper();
     static Looper*prepare(int opts);
     static void setForThread(Looper* looper);
     static Looper* getForThread();
