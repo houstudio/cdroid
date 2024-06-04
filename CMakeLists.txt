@@ -33,26 +33,30 @@ add_subdirectory(tests)
 execute_process(
     COMMAND git describe --tags --abbrev=0
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_TAG
+    OUTPUT_VARIABLE LATEST_TAG
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
 execute_process(
     COMMAND git rev-parse --short HEAD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_VARIABLE LAST_COMMIT_HASH
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
 execute_process(
-    COMMAND git rev-parse --abbrev-ref HEAD
+    COMMAND git rev-list --count HEAD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_BRANCH_NAME
+    OUTPUT_VARIABLE COMMIT_COUNT
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-message("Git Tag: ${GIT_TAG}")
-message("Git Commit Hash: ${GIT_COMMIT_HASH}")
-message("Git Branch: ${GIT_BRANCH}")
+if(LATEST_TAG)
+    set(VERSION "${LATEST_TAG}-${COMMIT_COUNT}-${LAST_COMMIT_HASH}")
+else()
+    set(VERSION "0.0.1-${COMMIT_COUNT}-${LAST_COMMIT_HASH}")
+endif()
+message("Generated Version: ${VERSION}")
+
 string(TIMESTAMP COMPILE_TIME "%Y%m%d_%H%M%S")
 set(CPACK_PACKAGE_NAME "CDROID-${COMPILE_TIME}-${GIT_COMMIT_HASH}")
 set(CPACK_PACKAGE_VERSION "1.0.0")

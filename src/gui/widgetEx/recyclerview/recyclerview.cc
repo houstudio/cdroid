@@ -162,7 +162,6 @@ void RecyclerView::initRecyclerView(){
     mEdgeEffectFactory = new EdgeEffectFactory();
     mItemAnimatorListener = std::bind(&RecyclerView::doAnimatorFinished,this,std::placeholders::_1);
     setItemAnimator(new DefaultItemAnimator());
-    LOGD("mItemAnimator = %p",mItemAnimator);
 
     setScrollContainer(true);
     setFocusableInTouchMode(true);
