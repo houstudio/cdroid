@@ -103,7 +103,7 @@ private:
     
     bool mAllowNonCallbacks; // immutable
 
-    int mWakeEventFd;  // immutable
+    int  mWakeEventFd;  // immutable
     std::recursive_mutex mLock;
 
     std::list<MessageEnvelope> mMessageEnvelopes; // guarded by mLock
@@ -115,7 +115,7 @@ private:
     // any use of it is racy anyway.
     bool mPolling;
 
-    int mEpollFd; // guarded by mLock but only modified on the looper thread
+    int  mEpollFd; // guarded by mLock but only modified on the looper thread
     bool mEpollRebuildRequired; // guarded by mLock
 
     // Locked list of file descriptor monitoring requests.
@@ -168,18 +168,18 @@ public:
     static void setForThread(Looper* looper);
     static Looper* getForThread();
     bool getAllowNonCallbacks() const;
-    int pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData);
+    int  pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData);
     inline int pollOnce(int timeoutMillis) {
         return pollOnce(timeoutMillis, NULL, NULL, NULL);
     }
-    int pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outData);
+    int  pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outData);
     inline int pollAll(int timeoutMillis) {
         return pollAll(timeoutMillis, NULL, NULL, NULL);
     }
     void wake();
-    int addFd(int fd, int ident, int events, Looper_callbackFunc callback, void* data);
-    int addFd(int fd, int ident, int events, const LooperCallback* callback, void* data);
-    int removeFd(int fd);
+    int  addFd(int fd, int ident, int events, Looper_callbackFunc callback, void* data);
+    int  addFd(int fd, int ident, int events, const LooperCallback* callback, void* data);
+    int  removeFd(int fd);
     void sendMessage(const MessageHandler* handler, const Message& message);
     void sendMessageDelayed(nsecs_t uptimeDelay, const MessageHandler* handler,const Message& message);
     void sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,const Message& message);

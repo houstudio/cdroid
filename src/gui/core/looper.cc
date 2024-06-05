@@ -51,7 +51,7 @@ void Looper::Looper::Request::initEventItem(struct epoll_event* eventItem) const
 
     memset(eventItem, 0, sizeof(epoll_event)); // zero out unused members of data field union
     eventItem->events = epollEvents;
-    eventItem->data.fd = fd;
+    eventItem->data.fd= fd;
 }
 
 Looper::Looper(bool allowNonCallbacks) :
@@ -76,7 +76,7 @@ Looper::~Looper() {
 }
 
 void Looper::initTLSKey() {
-    int error = pthread_key_create(&gTLSKey, threadDestructor);
+    const int error = pthread_key_create(&gTLSKey, threadDestructor);
     LOGE_IF(error != 0, "Could not allocate TLS key: %s", strerror(error));
 }
 

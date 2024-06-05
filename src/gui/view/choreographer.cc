@@ -7,7 +7,7 @@ namespace cdroid{
 #define FRAME_CALLBACK_TOKEN 1
  
 long Choreographer::sFrameDelay = DEFAULT_FRAME_DELAY;
-
+#define USE_FRAME_TIME 1
 Choreographer::Choreographer(){
     mLooper = nullptr;
     mFrameScheduled  = false;
@@ -49,7 +49,7 @@ void Choreographer::setFrameDelay(long frameDelay){
 }
 
 long Choreographer::getFrameTime()const{
-    return SystemClock::uptimeMillis();
+    return getFrameTimeNanos()/SystemClock::NANOS_PER_MS;
 }
 
 long Choreographer::subtractFrameDelay(long delayMillis) {
@@ -58,11 +58,11 @@ long Choreographer::subtractFrameDelay(long delayMillis) {
 }
 
 long Choreographer::getFrameTimeNanos()const{
-    return SystemClock::uptimeMillis();    
+    return USE_FRAME_TIME ? mLastFrameTimeNanos:SystemClock::uptimeNanos();
 }
 
 long Choreographer::getLastFrameTimeNanos()const{
-    return mLastFrameTimeNanos;
+    return USE_FRAME_TIME ? mLastFrameTimeNanos:SystemClock::uptimeNanos();
 }
 
 long Choreographer::getFrameIntervalNanos()const{
@@ -108,7 +108,7 @@ void Choreographer::postCallbackDelayedInternal(int callbackType,void* action, v
         msg.arg1 = callbackType;
         msg.setAsynchronous(true);
         mHandler.sendMessageAtTime(msg, dueTime);
-    }*/   
+    }*/
 }
 
 void Choreographer::removeCallbacks(int callbackType,const Runnable* action, void* token){
@@ -144,7 +144,7 @@ void Choreographer::postFrameCallbackDelayed(const FrameCallback& callback, long
 void Choreographer::scheduleFrameLocked(long now){
     if (!mFrameScheduled) {
         mFrameScheduled = true;
-        long nextFrameTime = std::max(mLastFrameTimeNanos /*/ TimeUtils.NANOS_PER_MS*/ + DEFAULT_FRAME_DELAY, now);
+        nsecs_t nextFrameTime = std::max(mLastFrameTimeNanos /SystemClock::NANOS_PER_MS + sFrameDelay, nsecs_t(now));
         LOG(DEBUG)<<"Scheduling next frame in " << (nextFrameTime - now) << " ms.";
         //Message msg = mHandler.obtainMessage(MSG_DO_FRAME);
         //msg.setAsynchronous(true);
@@ -186,7 +186,7 @@ void Choreographer::doCallbacks(int callbackType, long frameTimeNanos){
         // for earlier processing phases in a frame to post callbacks that should run
         // in a following phase, such as an input event that causes an animation to start.
         const nsecs_t now = SystemClock::uptimeNanos();
-        callbacks = mCallbackQueues[callbackType]->extractDueCallbacksLocked(now/1000000);
+        callbacks = mCallbackQueues[callbackType]->extractDueCallbacksLocked(now/SystemClock::NANOS_PER_MS);
         if (callbacks == nullptr) {
             return;
         }
