@@ -6,6 +6,8 @@ namespace cdroid{
 
 class SystemClock{
 public:
+    constexpr static long NANOS_PER_MS = 1000000;
+public:
     /*Returns milliseconds since boot, not counting time spent in deep sleep*/
     static LONGLONG uptimeMillis();
     static LONGLONG uptimeMicros();

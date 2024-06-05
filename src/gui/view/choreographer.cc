@@ -5,9 +5,10 @@
 namespace cdroid{
 #define DEFAULT_FRAME_DELAY 20
 #define FRAME_CALLBACK_TOKEN 1
+#define USE_FRAME_TIME 0
  
 long Choreographer::sFrameDelay = DEFAULT_FRAME_DELAY;
-#define USE_FRAME_TIME 1
+
 Choreographer::Choreographer(){
     mLooper = nullptr;
     mFrameScheduled  = false;
@@ -49,6 +50,8 @@ void Choreographer::setFrameDelay(long frameDelay){
 }
 
 long Choreographer::getFrameTime()const{
+    FATAL_IF(!mCallbacksRunning,"This method must only be called as "
+           "part of a callback while a frame is in progress.");
     return getFrameTimeNanos()/SystemClock::NANOS_PER_MS;
 }
 
@@ -61,6 +64,12 @@ long Choreographer::getFrameTimeNanos()const{
     return USE_FRAME_TIME ? mLastFrameTimeNanos:SystemClock::uptimeNanos();
 }
 
+/**
+  * Like {@link #getLastFrameTimeNanos}, but always returns the last frame time, not matter
+  * whether callbacks are currently running.
+  * @return The frame start time of the last frame, in the {@link System#nanoTime()} time base.
+  * @hide
+  */
 long Choreographer::getLastFrameTimeNanos()const{
     return USE_FRAME_TIME ? mLastFrameTimeNanos:SystemClock::uptimeNanos();
 }
@@ -154,8 +163,7 @@ void Choreographer::scheduleFrameLocked(long now){
 
 int Choreographer::checkEvents(){
     const nsecs_t now = SystemClock::uptimeNanos();
-    const nsecs_t last= getLastFrameTimeNanos();
-    return (now - last)>=getFrameIntervalNanos();
+    return (now - mLastFrameTimeNanos)>=getFrameIntervalNanos();
 }
 
 int Choreographer::handleEvents(){

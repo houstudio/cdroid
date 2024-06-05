@@ -6548,7 +6548,6 @@ bool View::post(Runnable& what){
 }
 
 bool  View::postDelayed(Runnable& what,long delay){
-    LOGD("%p root=%p post %p delay=%lld",this,getRootView(),&what,delay);
 #if !NEW_POST_DELAYED
     View*root = getRootView();
     if(root&&(root!=this)) return root->postDelayed(what,delay);
@@ -6556,7 +6555,7 @@ bool  View::postDelayed(Runnable& what,long delay){
     if(mAttachInfo)mAttachInfo->mEventSource->postDelayed(what,delay);
     else getRunQueue()->postDelayed(what,delay);
 #endif
-    return false;
+    return true;
 }
 
 bool View::post(const std::function<void()>&what){
@@ -6570,7 +6569,6 @@ bool View::postDelayed(const std::function<void()>&what,long delay){
 }
 
 bool View::removeCallbacks(const Runnable& what){
-    LOGD("%p root=%p remove %p",this,getRootView(),&what);
 #if !NEW_POST_DELAYED
     View*root = getRootView();
     if( root && (root!=this) ) return root->removeCallbacks(what);
@@ -6578,7 +6576,7 @@ bool View::removeCallbacks(const Runnable& what){
     if(mAttachInfo)mAttachInfo->mEventSource->removeCallbacks(what);
     getRunQueue()->removeCallbacks(what);
 #endif
-    return false;
+    return true;
 }
 
 ViewOverlay*View::getOverlay(){
