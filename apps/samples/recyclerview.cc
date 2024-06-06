@@ -2,6 +2,8 @@
 #include <widgetEx/recyclerview/recyclerview.h>
 #include <widgetEx/recyclerview/carousellayoutmanager.h>
 #include <widgetEx/recyclerview/divideritemdecoration.h>
+#include <widgetEx/recyclerview/itemtouchhelper.h>
+
 class MyAdapter:public RecyclerView::Adapter,RecyclerView::AdapterDataObserver{//<MyAdapter.ViewHolder> {
 private:
     std::vector<std::string> items;
@@ -62,6 +64,17 @@ public:
         LOGV("positionStart=%d itemCount=%d",positionStart,itemCount);
     }
 };
+class SimpleCallback:public ItemTouchHelper::SimpleCallback{
+public:
+    SimpleCallback(int d1,int d2):ItemTouchHelper::SimpleCallback(d1,d2){}
+    bool onMove(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder,RecyclerView::ViewHolder& target)override{
+        LOGD("");
+        return true;
+    }
+    void onSwiped(RecyclerView::ViewHolder& viewHolder, int direction)override{
+        LOGD("direction=%d",direction);
+    }
+};
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
@@ -69,16 +82,20 @@ int main(int argc,const char*argv[]){
     RecyclerView*rv=new RecyclerView(800,480);
     auto ps = new LinearSnapHelper();//PagerSnapHelper();
     ps->attachToRecyclerView(rv);
-    MyAdapter*adapter=new MyAdapter();
+    MyAdapter*adapter = new MyAdapter();
+    SimpleCallback*cbk = new SimpleCallback((ItemTouchHelper::LEFT|ItemTouchHelper::RIGHT)<<2,(ItemTouchHelper::LEFT|ItemTouchHelper::RIGHT)<<1);
+    ItemTouchHelper*touchhelper=new ItemTouchHelper(cbk);
+    touchhelper->attachToRecyclerView(rv);
     rv->setHasFixedSize(true);
+    rv->addItemDecoration(touchhelper);
     rv->getRecycledViewPool().setMaxRecycledViews(0,64);
     //adapter->setHasStableIds(true);
     rv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     rv->setAdapter(adapter);
     DividerItemDecoration* decoration = new DividerItemDecoration(&app, LinearLayout::VERTICAL);
+
     for(int i=0;i<100;i++){
         adapter->add(std::string("string ")+std::to_string(i));
-        //adapter->notifyItemInserted(i);//Notice:call notifyItemInserted before layout will cause memleak.
     }
 
     decoration->setDrawable(new ColorDrawable(0xFFFF0000));

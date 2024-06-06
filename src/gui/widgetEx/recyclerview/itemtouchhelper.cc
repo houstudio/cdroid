@@ -107,6 +107,8 @@ void ItemTouchHelper::onRequestDisallowInterceptTouchEvent(bool disallowIntercep
 
 ItemTouchHelper::ItemTouchHelper(Callback* callback) {
     mCallback = callback;
+    mRecyclerView = nullptr;
+    mVelocityTracker = nullptr;
     mScrollRunnable = [this]() {
         if (mSelected != nullptr && scrollIfNecessary()) {
             if (mSelected != nullptr) { //it might be lost during scrolling
@@ -883,7 +885,7 @@ ItemTouchUIUtil& ItemTouchHelper::Callback::getDefaultUIUtil() {
 }
 
 int ItemTouchHelper::Callback::convertToRelativeDirection(int flags, int layoutDirection) {
-    int masked = flags & ABS_HORIZONTAL_DIR_FLAGS;
+    const int masked = flags & ABS_HORIZONTAL_DIR_FLAGS;
     if (masked == 0) {
         return flags; // does not have any abs flags, good.
     }
