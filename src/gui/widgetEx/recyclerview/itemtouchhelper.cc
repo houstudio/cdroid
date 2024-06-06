@@ -112,7 +112,7 @@ ItemTouchHelper::ItemTouchHelper(Callback* callback) {
     mSwipeEscapeVelocity = 120;
     mMaxSwipeVelocity = 800;
     mScrollRunnable = [this]() {
-        if (mSelected != nullptr && scrollIfNecessary()) {
+        if ((mSelected != nullptr) && scrollIfNecessary()) {
             if (mSelected != nullptr) { //it might be lost during scrolling
                 moveIfNecessary(*mSelected);
             }
@@ -250,7 +250,7 @@ public:
     }
 };
 void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState) {
-    if (selected == mSelected && actionState == mActionState) {
+    if ( (selected == mSelected) && (actionState == mActionState) ) {
         return;
     }
     mDragScrollStartTimeInMs = LONG_MIN;//Long.MIN_VALUE;
@@ -626,8 +626,8 @@ RecyclerView::ViewHolder* ItemTouchHelper::findSwipedView(MotionEvent& motionEve
 }
 
 void ItemTouchHelper::checkSelectForSwipe(int action, MotionEvent& motionEvent, int pointerIndex) {
-    if (mSelected != nullptr || action != MotionEvent::ACTION_MOVE
-            || mActionState == ACTION_STATE_DRAG || !mCallback->isItemViewSwipeEnabled()) {
+    if ((mSelected != nullptr) || (action != MotionEvent::ACTION_MOVE)
+            || (mActionState == ACTION_STATE_DRAG) || !mCallback->isItemViewSwipeEnabled()) {
         return;
     }
     if (mRecyclerView->getScrollState() == RecyclerView::SCROLL_STATE_DRAGGING) {
@@ -1297,6 +1297,11 @@ ItemTouchHelper::RecoverAnimation::RecoverAnimation(RecyclerView::ViewHolder* vi
     mAnimatorListener.onAnimationRepeat= std::bind(&RecoverAnimation::onAnimationRepeat,this,std::placeholders::_1);
     mValueAnimator->addListener(mAnimatorListener);
     setFraction(0.f);
+}
+
+ItemTouchHelper::RecoverAnimation::~RecoverAnimation(){
+    LOGD("destroy RecoverAnimation %p,%p",this,mValueAnimator);
+    delete mValueAnimator;
 }
 
 void ItemTouchHelper::RecoverAnimation::setDuration(long duration) {

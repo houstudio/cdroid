@@ -220,6 +220,7 @@ protected:
 public:
     RecoverAnimation(RecyclerView::ViewHolder* viewHolder, int animationType,
             int actionState, float startDx, float startDy, float targetX, float targetY);
+    virtual ~RecoverAnimation();
     void setDuration(long duration);
     void start();
     void cancel();

@@ -1,4 +1,5 @@
 #include <animation/valueanimator.h>
+#include <animation/interpolators.h>
 #include <systemclock.h>
 #include <cmath>
 #include <stdarg.h>
@@ -29,7 +30,7 @@ ValueAnimator::ValueAnimator(){
     mStartDelay = 0;
     mRepeatCount = 0;
     mDurationScale = -1.f;
-    mInterpolator = sDefaultInterpolator;//new AccelerateDecelerateInterpolator();
+    mInterpolator = AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
 }
 
 ValueAnimator::ValueAnimator(const ValueAnimator&o){
@@ -68,7 +69,7 @@ ValueAnimator::~ValueAnimator(){
         delete v;
     mValues.clear();
     removeAnimationCallback();
-    //if(mInterpolator!=sDefaultInterpolator)delete mInterpolator;
+    //if(mInterpolator != sDefaultInterpolator)delete mInterpolator;
 }
 
 void ValueAnimator::setDurationScale(float durationScale) {
@@ -86,25 +87,25 @@ bool ValueAnimator::areAnimatorsEnabled() {
 }
 
 ValueAnimator* ValueAnimator::ofInt(const std::vector<int>&values){
-    ValueAnimator*anim=new ValueAnimator();
+    ValueAnimator*anim = new ValueAnimator();
     anim->setIntValues(values);
     return anim;
 }
 
 ValueAnimator* ValueAnimator::ofArgb(const std::vector<int>&values){
-    ValueAnimator*anim=new ValueAnimator();
+    ValueAnimator*anim = new ValueAnimator();
     anim->setIntValues(values);
     return anim;
 }
 
 ValueAnimator* ValueAnimator::ofFloat(const std::vector<float>&values){
-    ValueAnimator*anim=new ValueAnimator();
+    ValueAnimator*anim = new ValueAnimator();
     anim->setFloatValues(values);
     return anim;
 }
 
 ValueAnimator* ValueAnimator::ofPropertyValuesHolder(const std::vector<PropertyValuesHolder*>&values){
-    ValueAnimator*anim=new ValueAnimator();
+    ValueAnimator*anim = new ValueAnimator();
     anim->setValues(values);
     return anim;
 }
@@ -296,8 +297,8 @@ AnimateValue ValueAnimator::getAnimatedValue(){
 }
 
 AnimateValue ValueAnimator::getAnimatedValue(const std::string&propertyName){
-    auto it=mValuesMap.find(propertyName);
-    if(it!=mValuesMap.end())
+    auto it = mValuesMap.find(propertyName);
+    if(it != mValuesMap.end())
         return it->second->getAnimatedValue();
     return AnimateValue(0);
 }
@@ -323,8 +324,8 @@ void ValueAnimator::addUpdateListener(AnimatorUpdateListener listener){
 }
 
 void ValueAnimator::removeUpdateListener(AnimatorUpdateListener listener){
-    for(auto it=mUpdateListeners.begin();it!=mUpdateListeners.end();it++){
-        if((*it)==listener){
+    for(auto it = mUpdateListeners.begin();it!=mUpdateListeners.end();it++){
+        if( (*it) == listener){
              mUpdateListeners.erase(it);
              break;
         }
@@ -336,12 +337,11 @@ void ValueAnimator::removeAllUpdateListeners(){
 }
 
 void ValueAnimator::setInterpolator(TimeInterpolator* value){
-    if(mInterpolator!=sDefaultInterpolator)
-        delete mInterpolator;
+    //if(mInterpolator != sDefaultInterpolator) delete mInterpolator;
     if(value)
         mInterpolator = value;
     else
-        mInterpolator = new LinearInterpolator();
+        mInterpolator = LinearInterpolator::gLinearInterpolator.get();//new LinearInterpolator();
 }
 
 TimeInterpolator* ValueAnimator::getInterpolator(){
@@ -461,7 +461,7 @@ void ValueAnimator::resume(){
 }
 
 void ValueAnimator::pause() {
-    bool previouslyPaused = mPaused;
+    const bool previouslyPaused = mPaused;
     Animator::pause();
     if (!previouslyPaused && mPaused) {
         mPauseTime = -1;
@@ -540,7 +540,7 @@ void ValueAnimator::endAnimation(){
 void ValueAnimator::commitAnimationFrame(long frameTime){
     if (!mStartTimeCommitted) {
         mStartTimeCommitted = true;
-        long adjustment = frameTime - mLastFrameTime;
+        const long adjustment = frameTime - mLastFrameTime;
         if (adjustment > 0) {
             mStartTime += adjustment;
             //LOGD("Adjusted start time by %d ms",adjustment);// toString());
