@@ -4,7 +4,8 @@
 #include <widgetEx/recyclerview/divideritemdecoration.h>
 #include <widgetEx/recyclerview/itemtouchhelper.h>
 
-class MyAdapter:public RecyclerView::Adapter,RecyclerView::AdapterDataObserver{//<MyAdapter.ViewHolder> {
+class MyAdapter:public RecyclerView::Adapter,
+                public RecyclerView::AdapterDataObserver{
 private:
     std::vector<std::string> items;
     RecyclerView*mRV;
@@ -20,7 +21,7 @@ public:
     MyAdapter(){
         registerAdapterDataObserver(this);
     }
-    MyAdapter(const std::vector<std::string>& items) {
+    MyAdapter(const std::vector<std::string>& items):MyAdapter(){
         this->items = items;
     }
     MyAdapter::ViewHolder* onCreateViewHolder(ViewGroup* parent, int viewType) {
@@ -34,18 +35,18 @@ public:
     }
 
     void onBindViewHolder(RecyclerView::ViewHolder& holder, int position)override{
-	std::string item = items.at(position);
-	TextView*textView = ((MyAdapter::ViewHolder&)holder).textView;
+	    std::string item = items.at(position);
+	    TextView*textView = ((MyAdapter::ViewHolder&)holder).textView;
         textView->setText(item);
-	textView->setId(position);
-	LOGD("%p:%d",textView,position);
-	textView->setOnClickListener([position](View&v){
-	    RecyclerView*rv =  (RecyclerView*)v.getParent();
-	    RecyclerView::LayoutManager*mgr = rv->getLayoutManager();
-	    RecyclerView::LayoutParams*lp=(RecyclerView::LayoutParams*)v.getLayoutParams();
-	    int pos= mgr->getPosition(&v);
-	    LOGD("click item positon=%d holder lp",position,lp);
-	});
+	    textView->setId(position);
+	    LOGD("%p:%d",textView,position);
+	    textView->setOnClickListener([position](View&v){
+	        RecyclerView*rv =  (RecyclerView*)v.getParent();
+	        RecyclerView::LayoutManager*mgr = rv->getLayoutManager();
+	        RecyclerView::LayoutParams*lp=(RecyclerView::LayoutParams*)v.getLayoutParams();
+	        int pos= mgr->getPosition(&v);
+	        LOGD("click item positon=%d holder lp",position,lp);
+	    });
     }
     void remove(int idx){
         items.erase(items.begin()+idx);
@@ -64,15 +65,25 @@ public:
         LOGV("positionStart=%d itemCount=%d",positionStart,itemCount);
     }
 };
-class SimpleCallback:public ItemTouchHelper::SimpleCallback{
+
+class SimpleCallback: public ItemTouchHelper::SimpleCallback{
+private:
+    MyAdapter*mAdapter;
 public:
-    SimpleCallback(int d1,int d2):ItemTouchHelper::SimpleCallback(d1,d2){}
+    SimpleCallback(MyAdapter*adapter):ItemTouchHelper::SimpleCallback(
+        ItemTouchHelper::LEFT | ItemTouchHelper::RIGHT,
+        ItemTouchHelper::LEFT | ItemTouchHelper::RIGHT){
+        mAdapter = adapter;
+    }
     bool onMove(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder,RecyclerView::ViewHolder& target)override{
         LOGD("");
         return true;
     }
     void onSwiped(RecyclerView::ViewHolder& viewHolder, int direction)override{
-        LOGD("direction=%d",direction);
+        const int swipedPosition = viewHolder.getAdapterPosition();
+        LOGD("direction=%d swipedPosition=%d",direction,swipedPosition);
+        mAdapter->remove(swipedPosition);
+        mAdapter->notifyItemRemoved(swipedPosition);
     }
 };
 int main(int argc,const char*argv[]){
@@ -83,7 +94,8 @@ int main(int argc,const char*argv[]){
     auto ps = new LinearSnapHelper();//PagerSnapHelper();
     ps->attachToRecyclerView(rv);
     MyAdapter*adapter = new MyAdapter();
-    SimpleCallback*cbk = new SimpleCallback((ItemTouchHelper::LEFT|ItemTouchHelper::RIGHT)<<2,(ItemTouchHelper::LEFT|ItemTouchHelper::RIGHT)<<1);
+    //SimpleCallback*cbk = new SimpleCallback(adapter,(ItemTouchHelper::LEFT|ItemTouchHelper::RIGHT)<<2,(ItemTouchHelper::LEFT|ItemTouchHelper::RIGHT)<<1);
+    SimpleCallback*cbk = new SimpleCallback(adapter);
     ItemTouchHelper*touchhelper=new ItemTouchHelper(cbk);
     touchhelper->attachToRecyclerView(rv);
     rv->setHasFixedSize(true);
@@ -105,9 +117,9 @@ int main(int argc,const char*argv[]){
     Runnable r;
     r=[&](){
         adapter->remove(4);
-	adapter->notifyItemRemoved(4);
-	w->postDelayed(r,3000);
+  	    adapter->notifyItemRemoved(4);
+	    w->postDelayed(r,3000);
     };
-    w->postDelayed(r,8000);
+    //w->postDelayed(r,8000);
     app.exec();
 }

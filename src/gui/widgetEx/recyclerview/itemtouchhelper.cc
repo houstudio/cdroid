@@ -109,6 +109,8 @@ ItemTouchHelper::ItemTouchHelper(Callback* callback) {
     mCallback = callback;
     mRecyclerView = nullptr;
     mVelocityTracker = nullptr;
+    mSwipeEscapeVelocity = 120;
+    mMaxSwipeVelocity = 800;
     mScrollRunnable = [this]() {
         if (mSelected != nullptr && scrollIfNecessary()) {
             if (mSelected != nullptr) { //it might be lost during scrolling
@@ -230,6 +232,23 @@ void ItemTouchHelper::onDraw(Canvas& c, RecyclerView& parent, RecyclerView::Stat
 template <typename T>static  int signum(T val) {
     return (T(0) < val) - (val < T(0));
 }
+
+class MyRecoverAnimation:public ItemTouchHelper::RecoverAnimation{
+private:
+    std::function<void(Animator&,bool)>mOnAnimationEnd;
+public:
+    MyRecoverAnimation(RecyclerView::ViewHolder* viewHolder, int animationType,
+        int actionState, float startDx, float startDy, float targetX, float targetY)
+       :ItemTouchHelper::RecoverAnimation(viewHolder,animationType,actionState,startDx,startDy,targetX,targetY){
+    }
+    void setListener(std::function<void(Animator&,bool)>func){
+         mOnAnimationEnd =func;
+    }
+    void onAnimationEnd(Animator& animation,bool isReverse)override{
+        RecoverAnimation::onAnimationEnd(animation,isReverse);
+        mOnAnimationEnd(animation,isReverse);
+    }
+};
 void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState) {
     if (selected == mSelected && actionState == mActionState) {
         return;
@@ -288,39 +307,34 @@ void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState
             getSelectedDxDy(mTmpPosition);
             const float currentTranslateX = mTmpPosition[0];
             const float currentTranslateY = mTmpPosition[1];
-            RecoverAnimation* rv =new RecoverAnimation(prevSelected, animationType,
-                    prevActionState, currentTranslateX, currentTranslateY,
-                    targetTranslateX, targetTranslateY);/*{
-                public void onAnimationEnd(Animator animation) {
-                    super.onAnimationEnd(animation);
-                    if (this.mOverridden) {
-                        return;
-                    }
+            MyRecoverAnimation* rca = new MyRecoverAnimation(prevSelected, animationType,
+                      prevActionState, currentTranslateX, currentTranslateY,targetTranslateX, targetTranslateY);
+            rca->setListener([this,rca,swipeDir,prevSelected](Animator& animation,bool isReverse) {
+                    if (rca->mOverridden) return;
                     if (swipeDir <= 0) {
                         // this is a drag or failed swipe. recover immediately
-                        mCallback->clearView(mRecyclerView, prevSelected);
+                        mCallback->clearView(*mRecyclerView,*prevSelected);
                         // full cleanup will happen on onDrawOver
                     } else {
                         // wait until remove animation is complete.
-                        mPendingCleanup.add(prevSelected.itemView);
-                        mIsPendingCleanup = true;
+                        mPendingCleanup.push_back(prevSelected->itemView);
+                        rca->mIsPendingCleanup = true;
                         if (swipeDir > 0) {
                             // Animation might be ended by other animators during a layout.
                             // We defer callback to avoid editing adapter during a layout.
-                            postDispatchSwipe(this, swipeDir);
+                            postDispatchSwipe(rca, swipeDir);
                         }
                     }
                     // removed from the list after it is drawn for the last time
-                    if (mOverdrawChild == prevSelected.itemView) {
-                        removeChildDrawingOrderCallbackIfNecessary(prevSelected.itemView);
+                    if (mOverdrawChild == prevSelected->itemView) {
+                        removeChildDrawingOrderCallbackIfNecessary(prevSelected->itemView);
                     }
-                }
-            };*/
+                });
             const long duration = mCallback->getAnimationDuration(*mRecyclerView, animationType,
                     targetTranslateX - currentTranslateX, targetTranslateY - currentTranslateY);
-            rv->setDuration(duration);
-            mRecoverAnimations.push_back(rv);
-            rv->start();
+            rca->setDuration(duration);
+            mRecoverAnimations.push_back(rca);
+            rca->start();
             preventLayout = true;
         } else {
             removeChildDrawingOrderCallbackIfNecessary(prevSelected->itemView);
@@ -1277,7 +1291,11 @@ ItemTouchHelper::RecoverAnimation::RecoverAnimation(RecyclerView::ViewHolder* vi
     };
     mValueAnimator->addUpdateListener(ls);
     mValueAnimator->setTarget(viewHolder->itemView);
-    mValueAnimator->addListener(*this);
+    mAnimatorListener.onAnimationStart = std::bind(&RecoverAnimation::onAnimationStart,this,std::placeholders::_1,std::placeholders::_2);
+    mAnimatorListener.onAnimationEnd   = std::bind(&RecoverAnimation::onAnimationEnd,this,std::placeholders::_1,std::placeholders::_2);
+    mAnimatorListener.onAnimationCancel= std::bind(&RecoverAnimation::onAnimationCancel,this,std::placeholders::_1);
+    mAnimatorListener.onAnimationRepeat= std::bind(&RecoverAnimation::onAnimationRepeat,this,std::placeholders::_1);
+    mValueAnimator->addListener(mAnimatorListener);
     setFraction(0.f);
 }
 
@@ -1311,11 +1329,11 @@ void ItemTouchHelper::RecoverAnimation::update() {
     }
 }
 
-void ItemTouchHelper::RecoverAnimation::onAnimationStart(Animator& animation) {
+void ItemTouchHelper::RecoverAnimation::onAnimationStart(Animator& animation,bool/*isReverse*/) {
 
 }
 
-void ItemTouchHelper::RecoverAnimation::onAnimationEnd(Animator& animation) {
+void ItemTouchHelper::RecoverAnimation::onAnimationEnd(Animator& animation,bool isReverse) {
     if (!mEnded) {
         mViewHolder->setIsRecyclable(true);
     }

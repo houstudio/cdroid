@@ -199,7 +199,7 @@ public:
 };
 #endif
 
-class ItemTouchHelper::RecoverAnimation:public Animator::AnimatorListener {
+class ItemTouchHelper::RecoverAnimation{
 protected:
     friend ItemTouchHelper;
     float mStartDx;
@@ -216,6 +216,7 @@ protected:
     bool mOverridden = false;
     bool mEnded = false;
     float mFraction;
+    Animator::AnimatorListener mAnimatorListener;
 public:
     RecoverAnimation(RecyclerView::ViewHolder* viewHolder, int animationType,
             int actionState, float startDx, float startDy, float targetX, float targetY);
@@ -224,10 +225,10 @@ public:
     void cancel();
     void setFraction(float fraction);
     void update();
-    void onAnimationStart(Animator& animation);
-    void onAnimationEnd(Animator& animation);
-    void onAnimationCancel(Animator& animation);
-    void onAnimationRepeat(Animator& animation);
+    virtual void onAnimationStart(Animator& animation,bool/*isReverse*/);
+    virtual void onAnimationEnd(Animator& animation,bool/*isReverse*/);
+    virtual void onAnimationCancel(Animator& animation);
+    virtual void onAnimationRepeat(Animator& animation);
 };
 }/*endof namespace*/
 #endif/*__ITEMTOUCH_HELPER_H__*/
