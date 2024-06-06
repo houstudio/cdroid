@@ -39,7 +39,7 @@ void ItemTouchUIUtilImpl::onDrawOver(Canvas& c, RecyclerView& recyclerView, View
 void ItemTouchUIUtilImpl::clearView(View& view){
     const long* tag = (const long*)view.getTag(R::id::item_touch_helper_previous_elevation);
     if (tag != nullptr/* && tag instanceof Float*/) {
-        view.setElevation(float(*tag));
+        view.setElevation(float((long)tag));
     }
     view.setTag(R::id::item_touch_helper_previous_elevation, nullptr);
 
