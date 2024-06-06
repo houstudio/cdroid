@@ -137,7 +137,7 @@ protected:
     int getAbsoluteMovementFlags(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder);
     bool hasDragFlag(RecyclerView& recyclerView, RecyclerView::ViewHolder& viewHolder);
     bool hasSwipeFlag(RecyclerView& recyclerView, RecyclerView::ViewHolder& viewHolder);
-    void onDraw(Canvas& c, RecyclerView& parent, RecyclerView::ViewHolder& selected,
+    void onDraw(Canvas& c, RecyclerView& parent, RecyclerView::ViewHolder* selected,
          std::vector<ItemTouchHelper::RecoverAnimation*>& recoverAnimationList,int actionState, float dX, float dY);
     void onDrawOver(Canvas& c, RecyclerView& parent, RecyclerView::ViewHolder* selected,
          std::vector<ItemTouchHelper::RecoverAnimation*>& recoverAnimationList, int actionState, float dX, float dY);

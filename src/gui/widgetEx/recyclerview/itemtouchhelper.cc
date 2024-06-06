@@ -226,7 +226,7 @@ void ItemTouchHelper::onDraw(Canvas& c, RecyclerView& parent, RecyclerView::Stat
         dx = mTmpPosition[0];
         dy = mTmpPosition[1];
     }
-    mCallback->onDraw(c, parent,*mSelected, mRecoverAnimations, mActionState, dx, dy);
+    mCallback->onDraw(c, parent,mSelected, mRecoverAnimations, mActionState, dx, dy);
 }
 
 template <typename T>static  int signum(T val) {
@@ -1095,7 +1095,7 @@ void ItemTouchHelper::Callback::onMoved(RecyclerView& recyclerView,RecyclerView:
     }
 }
 
-void ItemTouchHelper::Callback::onDraw(Canvas& c, RecyclerView& parent, RecyclerView::ViewHolder& selected,
+void ItemTouchHelper::Callback::onDraw(Canvas& c, RecyclerView& parent, RecyclerView::ViewHolder* selected,
         std::vector<ItemTouchHelper::RecoverAnimation*>& recoverAnimationList,
         int actionState, float dX, float dY) {
     const int recoverAnimSize = recoverAnimationList.size();
@@ -1103,13 +1103,12 @@ void ItemTouchHelper::Callback::onDraw(Canvas& c, RecyclerView& parent, Recycler
         ItemTouchHelper::RecoverAnimation* anim = recoverAnimationList.at(i);
         anim->update();
         c.save();
-        onChildDraw(c, parent,*anim->mViewHolder, anim->mX, anim->mY, anim->mActionState,
-                false);
+        onChildDraw(c, parent,*anim->mViewHolder, anim->mX, anim->mY, anim->mActionState, false);
         c.restore();
     }
-    if (&selected != nullptr) {
+    if (selected) {
         c.save();
-        onChildDraw(c, parent, selected, dX, dY, actionState, true);
+        onChildDraw(c, parent, *selected, dX, dY, actionState, true);
         c.restore();
     }
 }
@@ -1124,7 +1123,7 @@ void ItemTouchHelper::Callback::onDrawOver(Canvas& c, RecyclerView& parent, Recy
         onChildDrawOver(c, parent, *anim->mViewHolder, anim->mX, anim->mY, anim->mActionState, false);
         c.restore();
     }
-    if (selected != nullptr) {
+    if (selected) {
         c.save();
         onChildDrawOver(c, parent, *selected, dX, dY, actionState, true);
         c.restore();
@@ -1134,6 +1133,7 @@ void ItemTouchHelper::Callback::onDrawOver(Canvas& c, RecyclerView& parent, Recy
         RecoverAnimation* anim = recoverAnimationList.at(i);
         if (anim->mEnded && !anim->mIsPendingCleanup) {
             recoverAnimationList.erase(recoverAnimationList.begin()+i);//remove(i);
+            delete anim;
         } else if (!anim->mEnded) {
             hasRunningAnimation = true;
         }
