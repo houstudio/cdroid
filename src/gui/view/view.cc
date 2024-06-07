@@ -6513,27 +6513,19 @@ bool View::onTouchEvent(MotionEvent& event){
 }
 
 void View::postOnAnimation(Runnable& action){
-#if !NEW_POST_DELAYED
-    postDelayed(action,0);
-#else
     if(mAttachInfo){
         Choreographer::getInstance().postCallback(Choreographer::CALLBACK_ANIMATION,action,nullptr);
     }else{
         getRunQueue()->post(action);
     }
-#endif
 }
 
 void View::postOnAnimationDelayed(Runnable& action, long delayMillis){
-#if !NEW_POST_DELAYED
-    postDelayed(action,delayMillis);
-#else
     if(mAttachInfo){
         Choreographer::getInstance().postCallbackDelayed(Choreographer::CALLBACK_ANIMATION,action,nullptr,delayMillis);
     }else{
         getRunQueue()->postDelayed(action,delayMillis);
     }
-#endif
 }
 
 HandlerActionQueue* View::getRunQueue() {
@@ -6548,13 +6540,8 @@ bool View::post(Runnable& what){
 }
 
 bool  View::postDelayed(Runnable& what,long delay){
-#if !NEW_POST_DELAYED
-    View*root = getRootView();
-    if(root&&(root!=this)) return root->postDelayed(what,delay);
-#else
     if(mAttachInfo)mAttachInfo->mEventSource->postDelayed(what,delay);
     else getRunQueue()->postDelayed(what,delay);
-#endif
     return true;
 }
 
@@ -6569,13 +6556,8 @@ bool View::postDelayed(const std::function<void()>&what,long delay){
 }
 
 bool View::removeCallbacks(const Runnable& what){
-#if !NEW_POST_DELAYED
-    View*root = getRootView();
-    if( root && (root!=this) ) return root->removeCallbacks(what);
-#else
     if(mAttachInfo)mAttachInfo->mEventSource->removeCallbacks(what);
     getRunQueue()->removeCallbacks(what);
-#endif
     return true;
 }
 

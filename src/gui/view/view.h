@@ -57,7 +57,7 @@
 #else
 #define DECLARE_UIEVENT(type,name,...) typedef std::function< type(__VA_ARGS__) >name
 #endif
-#define NEW_POST_DELAYED 1
+
 namespace cdroid{
 
 class ViewGroup;
