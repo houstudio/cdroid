@@ -465,18 +465,6 @@ void Window::onBackPressed(){
     LOGD("recv BackPressed");
     post([this](){WindowManager::getInstance().removeWindow(this);} );
 }
-#if !NEW_POST_DELAYED
-bool Window::postDelayed(Runnable& what,long delay){
-    LOGD("%p handler=%p post %p delay=%lld",this,mUIEventHandler,&what,delay);
-    return mUIEventHandler && mUIEventHandler->postDelayed(what,delay);
-}
-
-bool Window::removeCallbacks(const Runnable& what){
-    if(mUIEventHandler)
-        return mUIEventHandler->removeCallbacks((Runnable&)what);
-    return !(mUIEventHandler==nullptr);
-}
-#endif
 
 bool Window::isInLayout()const{
     return mInLayout;

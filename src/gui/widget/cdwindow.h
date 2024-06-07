@@ -109,10 +109,6 @@ public:
     virtual void onDeactive();
     bool dispatchKeyEvent(KeyEvent&event)override;
     bool isInLayout()const override;
-#if !NEW_POST_DELAYED
-    bool postDelayed(Runnable& what,long delay)override;
-    bool removeCallbacks(const Runnable& what)override;
-#endif
     void dispatchInvalidateOnAnimation(View* view)override;
     void dispatchInvalidateRectOnAnimation(View*,const Rect&)override;
     void dispatchInvalidateDelayed(View*, long delayMilliseconds)override;
