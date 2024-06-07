@@ -366,9 +366,9 @@ void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState
 
 void ItemTouchHelper::postDispatchSwipe(RecoverAnimation* anim,int swipeDir) {
     // wait until animations are complete.
-    const Runnable r([this,anim,r,swipeDir]() {
-        if (mRecyclerView != nullptr && mRecyclerView->isAttachedToWindow() && !anim->mOverridden
-                && anim->mViewHolder->getAdapterPosition() != RecyclerView::NO_POSITION) {
+    Runnable r([this,anim,&r,swipeDir]() {
+        if (mRecyclerView && mRecyclerView->isAttachedToWindow() && !anim->mOverridden
+                && (anim->mViewHolder->getAdapterPosition() != RecyclerView::NO_POSITION) ) {
             RecyclerView::ItemAnimator* animator = mRecyclerView->getItemAnimator();
             // if animator is running or we have other active recover animations, we try
             // not to call onSwiped because DefaultItemAnimator is not good at merging
@@ -1284,6 +1284,8 @@ ItemTouchHelper::RecoverAnimation::RecoverAnimation(RecyclerView::ViewHolder* vi
     mStartDy = startDy;
     mTargetX = targetX;
     mTargetY = targetY;
+    mOverridden = false;
+    mEnded = false;
     mValueAnimator = ValueAnimator::ofFloat({0.f, 1.f});
     ValueAnimator::AnimatorUpdateListener ls;
     ls/*onAnimationUpdate*/ = [this](ValueAnimator& animation) {

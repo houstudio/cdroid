@@ -213,8 +213,8 @@ protected:
     bool mIsPendingCleanup;
     float mX;
     float mY;
-    bool mOverridden = false;
-    bool mEnded = false;
+    bool mOverridden;
+    bool mEnded;
     float mFraction;
     Animator::AnimatorListener mAnimatorListener;
 public:
