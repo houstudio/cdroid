@@ -678,8 +678,8 @@ public:
     virtual void smoothScrollToPosition(RecyclerView& recyclerView, State& state,int position);
     virtual bool computeScrollVectorForPosition(int targetPosition,PointF&scrollVector);
     void startSmoothScroll(SmoothScroller* smoothScroller);
-    bool isSmoothScrolling();
-    int getLayoutDirection();
+    bool isSmoothScrolling() const;
+    int getLayoutDirection() const;
     void endAnimation(View* view);
     void addDisappearingView(View* child);
     void addDisappearingView(View* child, int index);
@@ -1036,11 +1036,11 @@ public:
     void setTargetPosition(int targetPosition);
     bool computeScrollVectorForPosition(int targetPosition,PointF&scrollVector);
     RecyclerView::LayoutManager* getLayoutManager();
-    bool isPendingInitialRun();
-    bool isRunning();
-    int getTargetPosition();
+    bool isPendingInitialRun() const;
+    bool isRunning() const;
+    int getTargetPosition() const;
     int getChildPosition(View* view);
-    int getChildCount();
+    int getChildCount() const;
     View* findViewByPosition(int position);
     void instantScrollToPosition(int position);
 };

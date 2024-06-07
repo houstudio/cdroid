@@ -5018,8 +5018,7 @@ void RecyclerView::LayoutManager::smoothScrollToPosition(RecyclerView& recyclerV
  * @param smoothScroller Instance which defines how smooth scroll should be animated
  */
 void RecyclerView::LayoutManager::startSmoothScroll(SmoothScroller* smoothScroller) {
-    if (mSmoothScroller && smoothScroller != mSmoothScroller
-            && mSmoothScroller->isRunning()) {
+    if (mSmoothScroller && (smoothScroller != mSmoothScroller) && mSmoothScroller->isRunning()) {
         mSmoothScroller->stop();
     }
     delete mSmoothScroller;
@@ -5031,11 +5030,11 @@ bool RecyclerView::LayoutManager::computeScrollVectorForPosition(int targetPosit
     return false;
 }
 
-bool RecyclerView::LayoutManager::isSmoothScrolling() {
+bool RecyclerView::LayoutManager::isSmoothScrolling() const{
     return mSmoothScroller && mSmoothScroller->isRunning();
 }
 
-int RecyclerView::LayoutManager::getLayoutDirection() {
+int RecyclerView::LayoutManager::getLayoutDirection() const{
     return mRecyclerView->getLayoutDirection();
 }
 
@@ -5839,6 +5838,7 @@ void RecyclerView::LayoutManager::stopSmoothScroller() {
 
 void RecyclerView::LayoutManager::onSmoothScrollerStopped(SmoothScroller* smoothScroller) {
     if (mSmoothScroller == smoothScroller) {
+        delete mSmoothScroller;
         mSmoothScroller = nullptr;
     }
 }
@@ -6581,15 +6581,15 @@ void RecyclerView::SmoothScroller::stop() {
     mRecyclerView = nullptr;
 }
 
-bool RecyclerView::SmoothScroller::isPendingInitialRun() {
+bool RecyclerView::SmoothScroller::isPendingInitialRun() const{
     return mPendingInitialRun;
 }
 
-bool RecyclerView::SmoothScroller::isRunning() {
+bool RecyclerView::SmoothScroller::isRunning() const{
     return mRunning;
 }
 
-int RecyclerView::SmoothScroller::getTargetPosition() {
+int RecyclerView::SmoothScroller::getTargetPosition() const{
     return mTargetPosition;
 }
 
@@ -6657,7 +6657,7 @@ int RecyclerView::SmoothScroller::getChildPosition(View* view) {
     return mRecyclerView->getChildLayoutPosition(view);
 }
 
-int RecyclerView::SmoothScroller::getChildCount() {
+int RecyclerView::SmoothScroller::getChildCount() const{
     return mRecyclerView->mLayout->getChildCount();
 }
 

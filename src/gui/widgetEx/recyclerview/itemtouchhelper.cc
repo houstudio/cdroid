@@ -235,18 +235,18 @@ template <typename T>static  int signum(T val) {
 
 class MyRecoverAnimation:public ItemTouchHelper::RecoverAnimation{
 private:
-    std::function<void(Animator&,bool)>mOnAnimationEnd;
+    std::function<void(Animator&,bool)>mOnAnimationEndListener;
 public:
     MyRecoverAnimation(RecyclerView::ViewHolder* viewHolder, int animationType,
         int actionState, float startDx, float startDy, float targetX, float targetY)
        :ItemTouchHelper::RecoverAnimation(viewHolder,animationType,actionState,startDx,startDy,targetX,targetY){
     }
     void setListener(std::function<void(Animator&,bool)>func){
-         mOnAnimationEnd =func;
+         mOnAnimationEndListener =func;
     }
     void onAnimationEnd(Animator& animation,bool isReverse)override{
         RecoverAnimation::onAnimationEnd(animation,isReverse);
-        mOnAnimationEnd(animation,isReverse);
+        mOnAnimationEndListener(animation,isReverse);
     }
 };
 void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState) {
