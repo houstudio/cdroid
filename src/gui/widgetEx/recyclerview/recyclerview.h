@@ -1033,6 +1033,7 @@ protected:
     virtual void onTargetFound(View* targetView,State& state,Action& action)=0;
 public:
     SmoothScroller();
+    virtual ~SmoothScroller();
     void setTargetPosition(int targetPosition);
     bool computeScrollVectorForPosition(int targetPosition,PointF&scrollVector);
     RecyclerView::LayoutManager* getLayoutManager();

@@ -16,6 +16,15 @@ InputEventConsistencyVerifier::InputEventConsistencyVerifier(Object* caller, int
     //mLogTag = (logTag != null) ? logTag : "InputEventConsistencyVerifier";
 }
 
+InputEventConsistencyVerifier::~InputEventConsistencyVerifier(){
+    KeyState*keyState = mKeyStateList;
+    while(keyState){
+        KeyState* tmp = keyState;
+        keyState = tmp->next;
+        delete tmp;
+    }
+}
+
 /**
  * Determines whether the instrumentation should be enabled.
  * @return True if it should be enabled.

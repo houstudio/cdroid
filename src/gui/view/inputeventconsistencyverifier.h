@@ -102,7 +102,7 @@ public:
      * @param logTag Tag for logging. If null defaults to the short class name.
      */
     InputEventConsistencyVerifier(Object* caller, int flags);
-
+    virtual ~InputEventConsistencyVerifier();
     /**
      * Determines whether the instrumentation should be enabled.
      * @return True if it should be enabled.

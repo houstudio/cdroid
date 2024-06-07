@@ -6532,6 +6532,10 @@ RecyclerView::SmoothScroller::SmoothScroller() {
     mRecyclingAction = new Action(0, 0);
 }
 
+RecyclerView::SmoothScroller::~SmoothScroller(){
+    delete mRecyclingAction;
+}
+
 void RecyclerView::SmoothScroller::start(RecyclerView* recyclerView, LayoutManager* layoutManager) {
     LOGW_IF(mStarted,"An instance of SmoothScroller was started more than once. Each instance of SmoothScroller "
                 "is intended to only be used once. You should create a new instance for each use.");
