@@ -2900,12 +2900,12 @@ void RecyclerView::offsetPositionRecordsForRemove(int positionStart, int itemCou
         ViewHolder* holder = getChildViewHolderInt(mChildHelper->getUnfilteredChildAt(i));
         if (holder && !holder->shouldIgnore()) {
             if (holder->mPosition >= positionEnd) {
-                LOGD("offsetPositionRecordsForRemove attached child %d(%p) hold %p now at position %d",
+                LOGD_IF(_DEBUG,"offsetPositionRecordsForRemove attached child %d(%p) hold %p now at position %d",
                     i,holder->itemView ,holder, (holder->mPosition - itemCount));
                 holder->offsetPosition(-itemCount, applyToPreLayout);
                 mState->mStructureChanged = true;
             } else if (holder->mPosition >= positionStart) {
-                LOGD("offsetPositionRecordsForRemove attached child %d(%p) holder %p now REMOVED",i,holder->itemView,holder);
+                LOGD_IF(_DEBUG,"offsetPositionRecordsForRemove attached child %d(%p) holder %p now REMOVED",i,holder->itemView,holder);
                 holder->flagRemovedAndOffsetPosition(positionStart - 1, -itemCount,applyToPreLayout);
                 mState->mStructureChanged = true;
             }
@@ -4174,7 +4174,7 @@ void RecyclerView::Recycler::recycleViewHolderInternal(ViewHolder& holder) {
 
         // TODO: consider cancelling an animation when an item is removed scrollBy,
         // to return it to the pool faster
-        LOGD("trying to recycle a non-recycleable holder. Hopefully, it will "
+        LOGD_IF(_DEBUG,"trying to recycle a non-recycleable holder. Hopefully, it will "
              "re-visit here. We are still removing it from animation lists");
     }
     // even if the holder is not removed, we still call this method so that it is removed
@@ -6677,7 +6677,7 @@ void RecyclerView::SmoothScroller::instantScrollToPosition(int position) {
 void RecyclerView::SmoothScroller::onChildAttachedToWindow(View* child) {
     if (getChildPosition(child) == getTargetPosition()) {
         mTargetView = child;
-        LOGD("smooth scroll target view has been attached");
+        LOGD_IF(_DEBUG,"smooth scroll target view has been attached");
     }
 }
 

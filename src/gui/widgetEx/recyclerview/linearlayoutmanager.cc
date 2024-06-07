@@ -987,7 +987,7 @@ void LinearLayoutManager::recycleChildren(RecyclerView::Recycler& recycler, int 
  */
 void LinearLayoutManager::recycleViewsFromStart(RecyclerView::Recycler& recycler, int scrollingOffset,int noRecycleSpace) {
     if (scrollingOffset < 0) {
-        LOGD("Called recycle from start with a negative value. This might happen"
+        LOGD_IF(_DEBUG,"Called recycle from start with a negative value. This might happen"
                   " during layout changes but may be sign of a bug");
         return;
     }
@@ -1021,7 +1021,7 @@ void LinearLayoutManager::recycleViewsFromEnd(RecyclerView::Recycler& recycler, 
             int noRecycleSpace) {
     const int childCount = getChildCount();
     if (scrollingOffset < 0) {
-        LOGD("Called recycle from end with a negative value. This might happen"
+        LOGD_IF(_DEBUG,"Called recycle from end with a negative value. This might happen"
                 " during layout changes but may be sign of a bug");
         return;
     }
@@ -1064,8 +1064,8 @@ void LinearLayoutManager::recycleByLayoutState(RecyclerView::Recycler& recycler,
     if (!layoutState.mRecycle || layoutState.mInfinite) {
         return;
     }
-    int scrollingOffset = layoutState.mScrollingOffset;
-    int noRecycleSpace = layoutState.mNoRecycleSpace;
+    const int scrollingOffset = layoutState.mScrollingOffset;
+    const int noRecycleSpace = layoutState.mNoRecycleSpace;
     if (layoutState.mLayoutDirection == LayoutState::LAYOUT_START) {
         recycleViewsFromEnd(recycler, scrollingOffset, noRecycleSpace);
     } else {

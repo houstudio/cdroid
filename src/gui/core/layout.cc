@@ -31,17 +31,17 @@ Layout::Layout(int fontSize,int width){
     mAlignment = ALIGN_LEFT;
     mColumns = COLUMNS_NORMAL;
     mEllipsis= ELLIPSIS_NONE;
-    mEllipsizedWidth=0;
+    mEllipsizedWidth = 0;
     mSpacingMult = 1.0;
     mSpacingAdd  = 0;
     mLayout  = 0;
     mCaretPos= 0;
-    mMultiline=false;
-    mBreakStrategy=BREAK_STRATEGY_SIMPLE ;
+    mMultiline= false;
+    mBreakStrategy = BREAK_STRATEGY_SIMPLE ;
     mEditable = false;
-    mContext=Cairo::Context::create(sImage);
-    if(Typeface::DEFAULT==nullptr)
-	Typeface::loadPreinstalledSystemFontMap();
+    mContext  = Cairo::Context::create(sImage);
+    if(Typeface::DEFAULT == nullptr)
+	    Typeface::loadPreinstalledSystemFontMap();
     mTypeface = Typeface::DEFAULT;
 }
 

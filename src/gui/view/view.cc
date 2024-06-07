@@ -5768,14 +5768,14 @@ KeyEvent::DispatcherState* View::getKeyDispatcherState()const{
 
 bool View::dispatchKeyEvent(KeyEvent&event){
     if(mInputEventConsistencyVerifier)
-	mInputEventConsistencyVerifier->onKeyEvent(event,0);
-    if (mListenerInfo && mListenerInfo->mOnKeyListener && (mViewFlags & ENABLED_MASK) == ENABLED
+        mInputEventConsistencyVerifier->onKeyEvent(event,0);
+    if (mListenerInfo && mListenerInfo->mOnKeyListener && ((mViewFlags & ENABLED_MASK) == ENABLED)
             && mListenerInfo->mOnKeyListener(*this, event.getKeyCode(), event)) {
         return true;
     }
-    const bool result = event.dispatch(this,(mAttachInfo? &mAttachInfo->mKeyDispatchState : nullptr),this);
+    const bool result = event.dispatch(this,( mAttachInfo ? &mAttachInfo->mKeyDispatchState : nullptr),this);
     LOGV("%s.%s=%d",event.getLabel(event.getKeyCode()),KeyEvent::actionToString(event.getAction()).c_str(),result);
-    if(mInputEventConsistencyVerifier && (result==false))
+    if(mInputEventConsistencyVerifier && (result == false))
         mInputEventConsistencyVerifier->onUnhandledEvent(event, 0);
     return result;
 }
