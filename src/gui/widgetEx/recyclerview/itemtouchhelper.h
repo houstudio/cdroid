@@ -36,6 +36,7 @@ public:
     class RecoverAnimation;
     class ItemTouchHelperGestureListener;
 protected:
+    friend ItemTouchHelperGestureListener;
     std::vector<View*> mPendingCleanup;
     std::vector<RecoverAnimation*> mRecoverAnimations;
     RecyclerView* mRecyclerView;
@@ -187,17 +188,16 @@ public:
     int getMovementFlags(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder)override;
 };
 
-#if 0
-class ItemTouchHelper::ItemTouchHelperGestureListener:public GestureDetector.SimpleOnGestureListener {
+class ItemTouchHelper::ItemTouchHelperGestureListener/*:public GestureDetector::SimpleOnGestureListener*/{
 private:
     bool mShouldReactToLongPress = true;
+    ItemTouchHelper*mItemTouchHelper;
 public:
-    ItemTouchHelperGestureListener();
+    ItemTouchHelperGestureListener(ItemTouchHelper*);
     void doNotReactToLongPress();
     bool onDown(MotionEvent& e);
     void onLongPress(MotionEvent& e);
 };
-#endif
 
 class ItemTouchHelper::RecoverAnimation{
 protected:

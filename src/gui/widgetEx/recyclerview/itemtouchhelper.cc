@@ -1220,60 +1220,48 @@ int ItemTouchHelper::SimpleCallback::getMovementFlags(RecyclerView& recyclerView
     return makeMovementFlags(getDragDirs(recyclerView, viewHolder),
             getSwipeDirs(recyclerView, viewHolder));
 }
-#if 0
-private class ItemTouchHelperGestureListener extends GestureDetector.SimpleOnGestureListener {
 
-    private bool mShouldReactToLongPress = true;
+ItemTouchHelper::ItemTouchHelperGestureListener::ItemTouchHelperGestureListener(ItemTouchHelper*hlp):mItemTouchHelper(hlp) {
+}
 
-    ItemTouchHelperGestureListener() {
+void ItemTouchHelper::ItemTouchHelperGestureListener::doNotReactToLongPress() {
+    mShouldReactToLongPress = false;
+}
+
+bool ItemTouchHelper::ItemTouchHelperGestureListener::onDown(MotionEvent& e) {
+    return true;
+}
+
+void ItemTouchHelper::ItemTouchHelperGestureListener::onLongPress(MotionEvent& e) {
+    if (!mShouldReactToLongPress) {
+        return;
     }
-
-    void doNotReactToLongPress() {
-        mShouldReactToLongPress = false;
-    }
-
-    @Override
-    public bool onDown(MotionEvent e) {
-        return true;
-    }
-
-    @Override
-    public void onLongPress(MotionEvent e) {
-        if (!mShouldReactToLongPress) {
-            return;
-        }
-        View child = findChildView(e);
-        if (child != null) {
-            ViewHolder vh = mRecyclerView.getChildViewHolder(child);
-            if (vh != null) {
-                if (!mCallback->hasDragFlag(mRecyclerView, vh)) {
-                    return;
-                }
-                int pointerId = e.getPointerId(0);
-                // Long press is deferred.
-                // Check w/ active pointer id to avoid selecting after motion
-                // event is canceled.
-                if (pointerId == mActivePointerId) {
-                    final int index = e.findPointerIndex(mActivePointerId);
-                    final float x = e.getX(index);
-                    final float y = e.getY(index);
-                    mInitialTouchX = x;
-                    mInitialTouchY = y;
-                    mDx = mDy = 0f;
-                    if (DEBUG) {
-                        Log.d(TAG,
-                                "onlong press: x:" + mInitialTouchX + ",y:" + mInitialTouchY);
-                    }
-                    if (mCallback->isLongPressDragEnabled()) {
-                        select(vh, ACTION_STATE_DRAG);
-                    }
+    View* child = mItemTouchHelper->findChildView(e);
+    if (child != nullptr) {
+        RecyclerView::ViewHolder* vh = mItemTouchHelper->mRecyclerView->getChildViewHolder(child);
+        if (vh != nullptr) {
+            if (!mItemTouchHelper->mCallback->hasDragFlag(*mItemTouchHelper->mRecyclerView,*vh)) {
+                return;
+            }
+            int pointerId = e.getPointerId(0);
+            // Long press is deferred.
+            // Check w/ active pointer id to avoid selecting after motion
+            // event is canceled.
+            if (pointerId == mItemTouchHelper->mActivePointerId) {
+                const int index = e.findPointerIndex(mItemTouchHelper->mActivePointerId);
+                const float x = e.getX(index);
+                const float y = e.getY(index);
+                mItemTouchHelper->mInitialTouchX = x;
+                mItemTouchHelper->mInitialTouchY = y;
+                mItemTouchHelper->mDx = mItemTouchHelper->mDy = 0.f;
+                LOGD_IF(_DEBUG,"onlong press: x:%.f ,y:%.f",x,y);
+                if (mItemTouchHelper->mCallback->isLongPressDragEnabled()) {
+                    mItemTouchHelper->select(vh, ACTION_STATE_DRAG);
                 }
             }
         }
     }
 }
-#endif
-//private static class RecoverAnimation:public Animator::AnimatorListener {
 
 ItemTouchHelper::RecoverAnimation::RecoverAnimation(RecyclerView::ViewHolder* viewHolder, int animationType,
         int actionState, float startDx, float startDy, float targetX, float targetY) {
