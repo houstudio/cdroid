@@ -486,7 +486,7 @@ void LinearLayoutManager::layoutForPredictiveAnimations(RecyclerView::Recycler& 
         fill(recycler, *mLayoutState, state, false);
     }
     mLayoutState->mScrapList.clear();
-    LOGW("mLayoutState->mScrapList = nullptr;TOBE OPENED");
+    //LOGW("mLayoutState->mScrapList = nullptr;TOBE OPENED");
 }
 
 void LinearLayoutManager::updateAnchorInfoForLayout(RecyclerView::Recycler& recycler, RecyclerView::State& state,
@@ -497,7 +497,7 @@ void LinearLayoutManager::updateAnchorInfoForLayout(RecyclerView::Recycler& recy
     }
 
     if (updateAnchorFromChildren(recycler, state, anchorInfo)) {
-        LOGD("updated anchor info from existing children");
+        LOGD_IF(_DEBUG,"updated anchor info from existing children");
         return;
     }
     LOGD_IF(_DEBUG,"deciding anchor info for fresh state");

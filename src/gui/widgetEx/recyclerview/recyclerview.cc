@@ -675,7 +675,7 @@ bool RecyclerView::removeAnimatingView(View* view) {
         ViewHolder* viewHolder = getChildViewHolderInt(view);
         mRecycler->unscrapView(*viewHolder);
         mRecycler->recycleViewHolderInternal(*viewHolder);
-        LOGD("after removing animated view: %p",view);
+        LOGD_IF(_DEBUG,"after removing animated view: %p",view);
     }
     // only clear request eaten flag if we removed the view.
     stopInterceptRequestLayout(!removed);
@@ -4427,7 +4427,7 @@ void RecyclerView::Recycler::offsetPositionRecordsForMove(int from, int to) {
         } else {
             holder->offsetPosition(inBetweenOffset, false);
         }
-        LOGD("offsetPositionRecordsForMove cached child %d holder %p",i,holder);
+        LOGD_IF(_DEBUG,"offsetPositionRecordsForMove cached child %d holder %p",i,holder);
     }
 }
 
@@ -4436,7 +4436,7 @@ void RecyclerView::Recycler::offsetPositionRecordsForInsert(int insertedAt, int 
     for (int i = 0; i < cachedCount; i++) {
         ViewHolder* holder = mCachedViews.at(i);
         if (holder && holder->mPosition >= insertedAt) {
-            LOGD("offsetPositionRecordsForInsert cached %d holder %p now at position %d",i,holder,(holder->mPosition + count));
+            LOGD_IF(_DEBUG,"offsetPositionRecordsForInsert cached %d holder %p now at position %d",i,holder,(holder->mPosition + count));
             holder->offsetPosition(count, true);
         }
     }
@@ -4449,7 +4449,7 @@ void RecyclerView::Recycler::offsetPositionRecordsForRemove(int removedFrom, int
         ViewHolder* holder = mCachedViews.at(i);
         if (holder != nullptr) {
             if (holder->mPosition >= removedEnd) {
-                LOGD("offsetPositionRecordsForRemove cached %d holder %p now at positon %d",i,holder,(holder->mPosition - count));
+                LOGD_IF(_DEBUG,"offsetPositionRecordsForRemove cached %d holder %p now at positon %d",i,holder,(holder->mPosition - count));
                 holder->offsetPosition(-count, applyToPreLayout);
             } else if (holder->mPosition >= removedFrom) {
                 // Item for this view was removed. Dump it from the cache.

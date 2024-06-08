@@ -1,7 +1,7 @@
 #include <widgetEx/recyclerview/adapterhelper.h>
 #include <widgetEx/recyclerview/opreorderer.h>
 namespace cdroid{
-static constexpr int _DEBUG=1;
+static constexpr int _DEBUG = 0;
 AdapterHelper::AdapterHelper(Callback callback)
    :AdapterHelper(callback, false){
 }

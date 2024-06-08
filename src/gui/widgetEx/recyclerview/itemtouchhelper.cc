@@ -3,6 +3,29 @@
 
 namespace cdroid{
 
+ItemTouchHelper::ItemTouchHelper(Callback* callback) {
+    mCallback = callback;
+    mRecyclerView = nullptr;
+    mVelocityTracker = nullptr;
+    mSwipeEscapeVelocity = 120;
+    mMaxSwipeVelocity = 800;
+    mScrollRunnable = [this]() {
+        if ((mSelected != nullptr) && scrollIfNecessary()) {
+            if (mSelected != nullptr) { //it might be lost during scrolling
+                moveIfNecessary(*mSelected);
+            }
+            mRecyclerView->removeCallbacks(mScrollRunnable);
+            mRecyclerView->postOnAnimation(mScrollRunnable);
+        }
+    };
+    mOnChildAttachStateChangeListener.onChildViewAttachedToWindow = std::bind(&ItemTouchHelper::onChildViewAttachedToWindow,this,std::placeholders::_1);
+    mOnChildAttachStateChangeListener.onChildViewDetachedFromWindow = std::bind(&ItemTouchHelper::onChildViewDetachedFromWindow,this,std::placeholders::_1);
+
+    mOnItemTouchListener.onInterceptTouchEvent = std::bind(&ItemTouchHelper::onInterceptTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
+    mOnItemTouchListener.onTouchEvent = std::bind(&ItemTouchHelper::onTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
+    mOnItemTouchListener.onRequestDisallowInterceptTouchEvent = std::bind(&ItemTouchHelper::onRequestDisallowInterceptTouchEvent,this,std::placeholders::_1);
+}
+
 bool ItemTouchHelper::onInterceptTouchEvent(RecyclerView& recyclerView,MotionEvent& event) {
     //mGestureDetector.onTouchEvent(event);
     LOGD_IF(_DEBUG,"intercept: x:%.f ,y:%.f",event.getX(),event.getY());
@@ -103,29 +126,6 @@ void ItemTouchHelper::onRequestDisallowInterceptTouchEvent(bool disallowIntercep
         return;
     }
     select(nullptr, ACTION_STATE_IDLE);
-}
-
-ItemTouchHelper::ItemTouchHelper(Callback* callback) {
-    mCallback = callback;
-    mRecyclerView = nullptr;
-    mVelocityTracker = nullptr;
-    mSwipeEscapeVelocity = 120;
-    mMaxSwipeVelocity = 800;
-    mScrollRunnable = [this]() {
-        if ((mSelected != nullptr) && scrollIfNecessary()) {
-            if (mSelected != nullptr) { //it might be lost during scrolling
-                moveIfNecessary(*mSelected);
-            }
-            mRecyclerView->removeCallbacks(mScrollRunnable);
-            mRecyclerView->postOnAnimation(mScrollRunnable);
-        }
-    };
-    mOnChildAttachStateChangeListener.onChildViewAttachedToWindow = std::bind(&ItemTouchHelper::onChildViewAttachedToWindow,this,std::placeholders::_1);
-    mOnChildAttachStateChangeListener.onChildViewDetachedFromWindow = std::bind(&ItemTouchHelper::onChildViewDetachedFromWindow,this,std::placeholders::_1);
-
-    mOnItemTouchListener.onInterceptTouchEvent = std::bind(&ItemTouchHelper::onInterceptTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
-    mOnItemTouchListener.onTouchEvent = std::bind(&ItemTouchHelper::onTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
-    mOnItemTouchListener.onRequestDisallowInterceptTouchEvent = std::bind(&ItemTouchHelper::onRequestDisallowInterceptTouchEvent,this,std::placeholders::_1);
 }
 
 bool ItemTouchHelper::hitTest(View& child, float x, float y, float left, float top) {
@@ -1302,7 +1302,6 @@ ItemTouchHelper::RecoverAnimation::RecoverAnimation(RecyclerView::ViewHolder* vi
 }
 
 ItemTouchHelper::RecoverAnimation::~RecoverAnimation(){
-    LOGD("destroy RecoverAnimation %p,%p",this,mValueAnimator);
     delete mValueAnimator;
 }
 
