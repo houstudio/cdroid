@@ -140,7 +140,7 @@ void LinearLayoutManager::setOrientation(int orientation) {
 
     assertNotInLayoutOrScroll("");
 
-    if (orientation != mOrientation || mOrientationHelper == nullptr) {
+    if ((orientation != mOrientation) || (mOrientationHelper == nullptr)) {
         mOrientationHelper =  OrientationHelper::createOrientationHelper(this, orientation);
         mAnchorInfo->mOrientationHelper = mOrientationHelper;
         mOrientation = orientation;
@@ -1652,7 +1652,12 @@ void LinearLayoutManager::SavedState::writeToParcel(Parcel& dest, int flags) {
 /***************************************************************************************************/
 
 LinearLayoutManager::AnchorInfo::AnchorInfo() {
+    mOrientationHelper = nullptr;
     reset();
+}
+
+LinearLayoutManager::AnchorInfo::~AnchorInfo(){
+    delete mOrientationHelper;
 }
 
 void LinearLayoutManager::AnchorInfo::reset() {

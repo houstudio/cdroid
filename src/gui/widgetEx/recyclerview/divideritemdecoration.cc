@@ -4,7 +4,8 @@ namespace cdroid{
 DividerItemDecoration::DividerItemDecoration(Context* context, int orientation) {
     //final TypedArray a = context.obtainStyledAttributes(ATTRS);
     //mDivider = a.getDrawable(0);
-    mDivider = nullptr;
+    AttributeSet attr = context->obtainStyledAttributes("@android:attr/listDivider");
+    //mDivider = attr.getDrawable();
     LOGW_IF(mDivider == nullptr,"@android:attr/listDivider was not set in the theme used for this "
                "DividerItemDecoration. Please set that attribute all call setDrawable()");
     setOrientation(orientation);

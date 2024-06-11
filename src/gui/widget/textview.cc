@@ -611,7 +611,7 @@ void TextView::setRawTextSize(float size, bool shouldRequestLayout){
 void TextView::setTextAppearance(const std::string&appearance){
     TextAppearanceAttributes attributes;
     if(appearance.empty()==false){
-        AttributeSet attrs=mContext->obtainStyledAttributes(appearance);
+        AttributeSet attrs = mContext->obtainStyledAttributes(appearance);
         if(attrs.size()){
             attributes.readTextAppearance(mContext,attrs);
             applyTextAppearance(&attributes);
