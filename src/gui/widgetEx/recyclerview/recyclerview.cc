@@ -3145,11 +3145,11 @@ void RecyclerView::offsetChildrenHorizontal(int dx) {
     }
 }
 
-void RecyclerView::getDecoratedBoundsWithMargins(View*view,Rect& outBounds) {
+void RecyclerView::getDecoratedBoundsWithMargins(View*view,Rect& outBounds) const{
     getDecoratedBoundsWithMarginsInt(view, outBounds);
 }
 
-void RecyclerView::getDecoratedBoundsWithMarginsInt(View* view, Rect& outBounds) {
+void RecyclerView::getDecoratedBoundsWithMarginsInt(View* view, Rect& outBounds){
     const LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
     const Rect insets = lp->mDecorInsets;
     outBounds.set(view->getLeft() - insets.left - lp->leftMargin,
@@ -5249,19 +5249,19 @@ View* RecyclerView::LayoutManager::getChildAt(int index) {
     return mChildHelper ? mChildHelper->getChildAt(index) : nullptr;
 }
 
-int RecyclerView::LayoutManager::getWidthMode() {
+int RecyclerView::LayoutManager::getWidthMode() const{
     return mWidthMode;
 }
 
-int RecyclerView::LayoutManager::getHeightMode() {
+int RecyclerView::LayoutManager::getHeightMode() const{
     return mHeightMode;
 }
 
-int RecyclerView::LayoutManager::getWidth() {
+int RecyclerView::LayoutManager::getWidth() const{
     return mWidth;
 }
 
-int RecyclerView::LayoutManager::getHeight() {
+int RecyclerView::LayoutManager::getHeight() const{
     return mHeight;
 }
 
@@ -5594,23 +5594,23 @@ void RecyclerView::LayoutManager::getTransformedBoundingBox(View* child, bool in
     out.offset(child->getLeft(), child->getTop());
 }
 
-void RecyclerView::LayoutManager::getDecoratedBoundsWithMargins(View* view,Rect& outBounds) {
+void RecyclerView::LayoutManager::getDecoratedBoundsWithMargins(View* view,Rect& outBounds) const{
     RecyclerView::getDecoratedBoundsWithMarginsInt(view, outBounds);
 }
 
-int RecyclerView::LayoutManager::getDecoratedLeft(View* child) {
+int RecyclerView::LayoutManager::getDecoratedLeft(View* child) const{
     return child->getLeft() - getLeftDecorationWidth(child);
 }
 
-int RecyclerView::LayoutManager::getDecoratedTop(View* child) {
+int RecyclerView::LayoutManager::getDecoratedTop(View* child) const{
     return child->getTop() - getTopDecorationHeight(child);
 }
 
-int RecyclerView::LayoutManager::getDecoratedRight(View* child) {
+int RecyclerView::LayoutManager::getDecoratedRight(View* child) const{
     return child->getRight() + getRightDecorationWidth(child);
 }
 
-int RecyclerView::LayoutManager::getDecoratedBottom(View* child) {
+int RecyclerView::LayoutManager::getDecoratedBottom(View* child) const{
     return child->getBottom() + getBottomDecorationHeight(child);
 }
 
@@ -5623,19 +5623,19 @@ void RecyclerView::LayoutManager::calculateItemDecorationsForChild(View* child,R
     outRect = insets;//.set(insets);
 }
 
-int RecyclerView::LayoutManager::getTopDecorationHeight(View* child) {
+int RecyclerView::LayoutManager::getTopDecorationHeight(View* child) const{
     return ((LayoutParams*) child->getLayoutParams())->mDecorInsets.top;
 }
 
-int RecyclerView::LayoutManager::getBottomDecorationHeight(View* child) {
+int RecyclerView::LayoutManager::getBottomDecorationHeight(View* child) const{
     return ((LayoutParams*) child->getLayoutParams())->mDecorInsets.height;
 }
 
-int RecyclerView::LayoutManager::getLeftDecorationWidth(View* child) {
+int RecyclerView::LayoutManager::getLeftDecorationWidth(View* child) const{
     return ((LayoutParams*) child->getLayoutParams())->mDecorInsets.left;
 }
 
-int RecyclerView::LayoutManager::getRightDecorationWidth(View* child) {
+int RecyclerView::LayoutManager::getRightDecorationWidth(View* child) const{
     return ((LayoutParams*) child->getLayoutParams())->mDecorInsets.width;
 }
 

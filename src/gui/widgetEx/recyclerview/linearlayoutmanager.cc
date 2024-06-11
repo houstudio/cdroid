@@ -138,7 +138,7 @@ void LinearLayoutManager::setOrientation(int orientation) {
 
     assertNotInLayoutOrScroll("");
 
-    if ((orientation != mOrientation) || (mOrientationHelper == nullptr)) {
+    if ( (orientation != mOrientation) || (mOrientationHelper == nullptr) ) {
         mOrientationHelper =  OrientationHelper::createOrientationHelper(this, orientation);
         mAnchorInfo->mOrientationHelper = mOrientationHelper;
         mOrientation = orientation;
@@ -148,7 +148,7 @@ void LinearLayoutManager::setOrientation(int orientation) {
 
 void  LinearLayoutManager::resolveShouldLayoutReverse() {
         // A == B is the same result, but we rather keep it readable
-    if (mOrientation == VERTICAL || !isLayoutRTL()) {
+    if ( (mOrientation == VERTICAL) || !isLayoutRTL()) {
         mShouldReverseLayout = mReverseLayout;
     } else {
         mShouldReverseLayout = !mReverseLayout;
@@ -175,7 +175,7 @@ View* LinearLayoutManager::findViewByPosition(int position) {
     }
     const int firstChild = getPosition(getChildAt(0));
     const int viewPosition = position - firstChild;
-    if (viewPosition >= 0 && viewPosition < childCount) {
+    if ( (viewPosition >= 0) && (viewPosition < childCount) ) {
         View* child = getChildAt(viewPosition);
         if (getPosition(child) == position) {
             return child; // in pre-layout, this may not match
@@ -239,7 +239,7 @@ void LinearLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, Rec
     // 4) scroll to fulfill requirements like stack from bottom.
     // create layout state
     LOGD_IF(_DEBUG,"is pre layout:%d",state.isPreLayout());
-    if (mPendingSavedState  || mPendingScrollPosition != RecyclerView::NO_POSITION) {
+    if (mPendingSavedState || (mPendingScrollPosition != RecyclerView::NO_POSITION) ) {
         if (state.getItemCount() == 0) {
             removeAndRecycleAllViews(recycler);
             return;
@@ -255,17 +255,17 @@ void LinearLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, Rec
     resolveShouldLayoutReverse();
 
     View* focused = getFocusedChild();
-    if (!mAnchorInfo->mValid || mPendingScrollPosition != RecyclerView::NO_POSITION
-            || mPendingSavedState != nullptr) {
+    if (!mAnchorInfo->mValid || (mPendingScrollPosition != RecyclerView::NO_POSITION)
+            || (mPendingSavedState != nullptr) ) {
         mAnchorInfo->reset();
         mAnchorInfo->mLayoutFromEnd = mShouldReverseLayout ^ mStackFromEnd;
         // calculate anchor position and coordinate
         updateAnchorInfoForLayout(recycler, state, *mAnchorInfo);
         mAnchorInfo->mValid = true;
     } else if (focused && (mOrientationHelper->getDecoratedStart(focused)
-                    >= mOrientationHelper->getEndAfterPadding()
+                >= mOrientationHelper->getEndAfterPadding()
             || mOrientationHelper->getDecoratedEnd(focused)
-            <= mOrientationHelper->getStartAfterPadding())) {
+                <= mOrientationHelper->getStartAfterPadding())) {
         // This case relates to when the anchor child is the focused view and due to layout
         // shrinking the focused view fell outside the viewport, e.g. when soft keyboard shows
         // up after tapping an EditText which shrinks RV causing the focused view (The tapped
@@ -291,8 +291,8 @@ void LinearLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, Rec
     calculateExtraLayoutSpace(state, mReusableIntPair);
     int extraForStart = std::max(0, mReusableIntPair[0]) + mOrientationHelper->getStartAfterPadding();
     int extraForEnd = std::max(0, mReusableIntPair[1]) + mOrientationHelper->getEndPadding();
-    if (state.isPreLayout() && mPendingScrollPosition != RecyclerView::NO_POSITION
-            && mPendingScrollPositionOffset != INVALID_OFFSET) {
+    if (state.isPreLayout() && (mPendingScrollPosition != RecyclerView::NO_POSITION)
+            && (mPendingScrollPositionOffset != INVALID_OFFSET) ) {
         // if the child is visible and we are going to move it around, we should layout
         // extra items in the opposite direction to make sure new items animate nicely
         // instead of just fading in
@@ -449,7 +449,7 @@ void LinearLayoutManager::layoutForPredictiveAnimations(RecyclerView::Recycler& 
     const int scrapSize = scrapList.size();
     const int firstChildPos = getPosition(getChildAt(0));
     for (int i = 0; i < scrapSize; i++) {
-	RecyclerView::ViewHolder* scrap = scrapList.at(i);
+        RecyclerView::ViewHolder* scrap = scrapList.at(i);
         if (scrap->isRemoved()) {
             continue;
         }
@@ -541,11 +541,11 @@ bool LinearLayoutManager::updateAnchorFromChildren(RecyclerView::Recycler& recyc
 }
 
 bool LinearLayoutManager::updateAnchorFromPendingData(RecyclerView::State& state, AnchorInfo& anchorInfo) {
-    if (state.isPreLayout() || mPendingScrollPosition == RecyclerView::NO_POSITION) {
+    if (state.isPreLayout() || (mPendingScrollPosition == RecyclerView::NO_POSITION) ) {
         return false;
     }
     // validate scroll position
-    if (mPendingScrollPosition < 0 || mPendingScrollPosition >= state.getItemCount()) {
+    if ( (mPendingScrollPosition < 0) || (mPendingScrollPosition >= state.getItemCount()) ) {
         mPendingScrollPosition = RecyclerView::NO_POSITION;
         mPendingScrollPositionOffset = INVALID_OFFSET;
         LOGD_IF(_DEBUG,"ignoring invalid scroll position %d",mPendingScrollPosition);
@@ -555,7 +555,7 @@ bool LinearLayoutManager::updateAnchorFromPendingData(RecyclerView::State& state
     // if child is visible, try to make it a reference child and ensure it is fully visible.
     // if child is not visible, align it depending on its virtual position.
     anchorInfo.mPosition = mPendingScrollPosition;
-    if (mPendingSavedState != nullptr && mPendingSavedState->hasValidAnchor()) {
+    if (mPendingSavedState && mPendingSavedState->hasValidAnchor()) {
         // Anchor offset depends on how that child was laid out. Here, we update it
         // according to our current view bounds
         anchorInfo.mLayoutFromEnd = mPendingSavedState->mAnchorLayoutFromEnd;
