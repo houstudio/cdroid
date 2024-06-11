@@ -134,9 +134,7 @@ int LinearLayoutManager::getOrientation()const {
 }
 
 void LinearLayoutManager::setOrientation(int orientation) {
-    if (orientation != HORIZONTAL && orientation != VERTICAL) {
-        FATAL("invalid orientation:%d",orientation);
-    }
+    FATAL_IF( (orientation != HORIZONTAL)&&(orientation != VERTICAL),"invalid orientation:%d",orientation);
 
     assertNotInLayoutOrScroll("");
 
@@ -1653,11 +1651,8 @@ void LinearLayoutManager::SavedState::writeToParcel(Parcel& dest, int flags) {
 
 LinearLayoutManager::AnchorInfo::AnchorInfo() {
     mOrientationHelper = nullptr;
+    /*mOrientationHelper is owned/destroied by LinearLayoutManager*/
     reset();
-}
-
-LinearLayoutManager::AnchorInfo::~AnchorInfo(){
-    delete mOrientationHelper;
 }
 
 void LinearLayoutManager::AnchorInfo::reset() {

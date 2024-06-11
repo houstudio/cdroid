@@ -224,7 +224,6 @@ protected:
     bool mValid;
 protected:
     AnchorInfo();
-    virtual ~AnchorInfo();
     void reset();
     void assignCoordinateFromPadding();
     bool isViewValidAsAnchor(View* child, RecyclerView::State& state);
