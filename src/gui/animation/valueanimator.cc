@@ -202,8 +202,8 @@ void ValueAnimator::setCurrentFraction(float fraction) {
     fraction = clampFraction(fraction);
     mStartTimeCommitted = true; // do not allow start time to be compensated for jank
     if (isPulsingInternal()) {
-        long seekTime = (long) (getScaledDuration() * fraction);
-        long currentTime =SystemClock::uptimeMillis();
+        const long seekTime = (long) (getScaledDuration() * fraction);
+        const long currentTime = SystemClock::uptimeMillis();
         // Only modify the start time when the animation is running. Seek fraction will ensure
         // non-running animations skip to the correct start time.
         mStartTime = currentTime - seekTime;

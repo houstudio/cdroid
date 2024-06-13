@@ -78,10 +78,7 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
             FATAL("Pages must fill the whole ViewPager2 (use match_parent)");
         }
     };
-    ls.onChildViewDetachedFromWindow=[](View&){
-	// nothing
-    };
-    mRecyclerView->addOnChildAttachStateChangeListener(ls);//enforceChildFillListener());
+    mRecyclerView->addOnChildAttachStateChangeListener(ls);//enforceChildFillListener();
 
     // Create ScrollEventAdapter before attaching PagerSnapHelper to RecyclerView, because the
     // attach process calls PagerSnapHelperImpl.findSnapView, which uses the mScrollEventAdapter
@@ -141,22 +138,6 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
 
 }
 
-
-RecyclerView::OnChildAttachStateChangeListener ViewPager2::enforceChildFillListener() {
-    return {};/*new RecyclerView::OnChildAttachStateChangeListener() {
-        public void onChildViewAttachedToWindow(View* view) {
-            RecyclerView::LayoutParams* layoutParams = (RecyclerView::LayoutParams*) view->getLayoutParams();
-            if (layoutParams->width != LayoutParams::MATCH_PARENT
-                    || layoutParams->height != LayoutParams::MATCH_PARENT) {
-                FATAL("Pages must fill the whole ViewPager2 (use match_parent)");
-            }
-        }
-
-        public void onChildViewDetachedFromWindow(View* view) {
-            // nothing
-        }
-    };*/
-}
 #if 0
 CharSequence ViewPager2::getAccessibilityClassName() {
     if (mAccessibilityProvider.handlesGetAccessibilityClassName()) {
@@ -412,9 +393,9 @@ void ViewPager2::setCurrentItemInternal(int item, bool smoothScroll) {
     if (std::abs(item - previousItem) > 3) {
         mRecyclerView->scrollToPosition(item > previousItem ? item - 3 : item + 3);
         // TODO(b/114361680): call smoothScrollToPosition synchronously (blocked by b/114019007)
-	Runnable run([this,item](){
-	    mRecyclerView->smoothScrollToPosition(item);
-	});
+        Runnable run([this,item](){
+            mRecyclerView->smoothScrollToPosition(item);
+        });
         mRecyclerView->post(run);//new SmoothScrollToPosition(item, mRecyclerView));
     } else {
         mRecyclerView->smoothScrollToPosition(item);

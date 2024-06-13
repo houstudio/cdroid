@@ -716,8 +716,8 @@ public:
     int getPaddingBottom();
     int getPaddingStart();
     int getPaddingEnd();
-    bool isFocused();
-    bool hasFocus();
+    bool isFocused()const;
+    bool hasFocus()const;
     View* getFocusedChild();
     int getItemCount();
     virtual void offsetChildrenHorizontal(int dx);

@@ -5289,11 +5289,11 @@ int RecyclerView::LayoutManager::getPaddingEnd() {
     return mRecyclerView ? mRecyclerView->getPaddingEnd() : 0;
 }
 
-bool RecyclerView::LayoutManager::isFocused() {
+bool RecyclerView::LayoutManager::isFocused() const{
     return mRecyclerView && mRecyclerView->isFocused();
 }
 
-bool RecyclerView::LayoutManager::hasFocus() {
+bool RecyclerView::LayoutManager::hasFocus() const{
     return mRecyclerView && mRecyclerView->hasFocus();
 }
 

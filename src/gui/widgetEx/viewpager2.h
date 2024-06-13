@@ -67,7 +67,6 @@ protected:
 private:
     class RecyclerViewImpl;
     void initialize(Context* context, const AttributeSet& attrs);
-    RecyclerView::OnChildAttachStateChangeListener enforceChildFillListener();
     void setOrientation(Context* context,const AttributeSet& attrs);
     void restorePendingState();
     void unregisterCurrentItemDataSetTracker(RecyclerView::Adapter*adapter);
