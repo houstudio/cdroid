@@ -40,7 +40,7 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
     const bool hasAT = value.size() && (property[0]=='@');
     const bool isRes = hasAT && ( value.find('/') != std::string::npos );
     while(isRes && ((pos=value.find_first_of("@?")) != std::string::npos) ){
-	value.erase(pos,1);
+        value.erase(pos,1);
     }
     
     if( isRes && (value.find(':')==std::string::npos) && (value.find('/')!=std::string::npos) ){

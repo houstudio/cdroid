@@ -55,3 +55,21 @@ TEST_F(ASSETS,drawable){
     ASSERT_EQ((uint32_t)cl->getColor(),0);
     app.exec();
 }
+TEST_F(ASSETS,state_layerlist){
+    App app;
+    StateListDrawable*st=(StateListDrawable*)app.getDrawable("@cdroid:drawable/list_selector_background");
+    ASSERT_NE(st,nullptr);
+    ASSERT_EQ(st->getChildCount(),6);
+    ASSERT_NE(dynamic_cast<ColorDrawable*>(st->getStateDrawable(0)),nullptr);
+    ASSERT_NE(dynamic_cast<NinePatchDrawable*>(st->getStateDrawable(1)),nullptr);
+    ASSERT_NE(dynamic_cast<NinePatchDrawable*>(st->getStateDrawable(2)),nullptr);
+    ASSERT_NE(dynamic_cast<TransitionDrawable*>(st->getStateDrawable(3)),nullptr);
+    TransitionDrawable*td=dynamic_cast<TransitionDrawable*>(st->getStateDrawable(3));
+    ASSERT_NE(dynamic_cast<TransitionDrawable*>(st->getStateDrawable(4)),nullptr);
+    ASSERT_NE(dynamic_cast<NinePatchDrawable*>(st->getStateDrawable(5)),nullptr);
+    ASSERT_NE(td,nullptr);
+    ASSERT_EQ(td->getNumberOfLayers(),2);
+    ASSERT_NE(dynamic_cast<NinePatchDrawable*>(td->getDrawable(0)),nullptr);
+    ASSERT_NE(dynamic_cast<NinePatchDrawable*>(td->getDrawable(1)),nullptr);
+    app.exec();
+}

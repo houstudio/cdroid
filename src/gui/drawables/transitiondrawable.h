@@ -6,20 +6,20 @@ namespace cdroid{
 
 class TransitionDrawable:public LayerDrawable{
 private:
-    int mTransitionState;
+    int  mTransitionState;
     bool mReverse;
     long mStartTimeMillis;
-    int mFrom;
-    int mTo;
-    int mDuration;
-    int mOriginalDuration;
-    int mAlpha;
+    int  mFrom;
+    int  mTo;
+    int  mDuration;
+    int  mOriginalDuration;
+    int  mAlpha;
     bool mCrossFade;
 
     class TransitionState:public LayerDrawable::LayerState{
     public:
-         TransitionState(TransitionState* orig, TransitionDrawable* owner);
-         TransitionDrawable*newDrawable()override;
+        TransitionState(TransitionState* orig, TransitionDrawable* owner);
+        TransitionDrawable*newDrawable()override;
     };
 
     TransitionDrawable(std::shared_ptr<TransitionState> state);

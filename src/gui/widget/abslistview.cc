@@ -1300,7 +1300,7 @@ void AbsListView::keyPressed() {
     Drawable* selector = mSelector;
     const Rect& selectorRect = mSelectorRect;
     LOGD("focused=%d touchModeDrawsInPressedState=%d",isFocused(),touchModeDrawsInPressedState());
-    if (selector != nullptr && (isFocused() || touchModeDrawsInPressedState())
+    if (selector && (isFocused() || touchModeDrawsInPressedState())
             && !selectorRect.empty()) {
 
         View* v = getChildAt(mSelectedPosition - mFirstPosition);
@@ -1313,7 +1313,7 @@ void AbsListView::keyPressed() {
 
         const bool longClickable = isLongClickable();
         Drawable* d = selector->getCurrent();
-        if (d != nullptr && dynamic_cast<TransitionDrawable*>(d)) {
+        if (d && dynamic_cast<TransitionDrawable*>(d)) {
             if (longClickable) {
                 ((TransitionDrawable*) d)->startTransition(ViewConfiguration::getLongPressTimeout());
             } else {

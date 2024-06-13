@@ -304,7 +304,7 @@ class ParseItem {
 };
 
 class ParseData {
-  public:
+public:
     std::vector<std::shared_ptr<ParseItem> >items;
     std::vector<AttributeSet> attrs;
     std::vector<std::string>  names;
@@ -342,8 +342,8 @@ class ParseData {
         return upper->drawable;
     }
     void pop2Upper(Drawable*d) {
-        auto upper=items.at(items.size()-2);
-        if(upperIsItem()) upper->drawable=d;
+        auto upper = items.at(items.size()-2);
+        if(upperIsItem()&&(upper->drawable==nullptr)) upper->drawable = d;
         else if(upperIsWrapper()) {
             DrawableWrapper* dwrap = dynamic_cast<DrawableWrapper*>(upper->drawable);
             dwrap->setDrawable(d);
@@ -403,14 +403,14 @@ static int parseColor(const std::string&value) {
 static void parseShapeGradient(GradientDrawable*gd,ShapeDrawable*sd,const AttributeSet&atts) {
     std::vector<int32_t> cls;
     PointF center;
-    GradientDrawable::Orientation orientation= GradientDrawable::TOP_BOTTOM/*DEFAULT_ORIENTATION*/;
+    GradientDrawable::Orientation orientation = GradientDrawable::TOP_BOTTOM/*DEFAULT_ORIENTATION*/;
     cls.push_back(atts.getColor("startColor",0));
     if(atts.hasAttribute("centerColor"))
         cls.push_back(atts.getColor("centerColor"));
     if(atts.hasAttribute("endColor"))
         cls.push_back(atts.getColor("endColor",0));
 
-    const int gradientType=atts.getInt("type",std::map<const std::string,int> {
+    const int gradientType = atts.getInt("type",std::map<const std::string,int> {
         {"linear",GradientDrawable::LINEAR_GRADIENT},
         {"radial",GradientDrawable::RADIAL_GRADIENT},
         {"sweep",GradientDrawable::SWEEP_GRADIENT}
@@ -489,7 +489,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 
     if(it!=drawableParsers.end()) {
         auto item = pd->items.back();
-        if( strcmp(name,"shape")||(((strcmp(name,"item")==0)||(strcmp(name,"transition")==0))&&atts.hasAttribute("drawable"))){
+        if( strcmp(name,"shape") || (atts.hasAttribute("drawable") &&((strcmp(name,"item")==0)||(strcmp(name,"transition")==0)&&(pd->items.size())))){
             Drawable* d = it->second(pd->ctx,atts);
             if(d){
                 auto cs = d->getConstantState();
@@ -516,34 +516,34 @@ static Drawable*parseShapeDrawable(Context*ctx,const AttributeSet&atts,
         if(tag.compare("gradient")==0) gradient= &p;
         if(tag.compare("size") ==0)   size = &p;
         if(tag.compare("stroke") ==0) stroke= &p;
-        if(tag.compare("solid") ==0)  solid= &p;
-        if(tag.compare("padding")==0) padding= &p;
+        if(tag.compare("solid") ==0)  solid = &p;
+        if(tag.compare("padding")==0) padding=&p;
     }
 
     LOGE_IF(!(gradient||solid||stroke),"stroke solid gradient property error!");
     if(gradient||solid||stroke) {
         GradientDrawable*d = (GradientDrawable*)GradientDrawable::inflate(ctx,atts);
 
-        if(corners)parseCorners(d,nullptr, *corners);
+        if( corners) parseCorners(d,nullptr, *corners);
 
-        if(gradient)parseShapeGradient(d,nullptr, *gradient);
-        else if(solid){
+        if(gradient) parseShapeGradient(d,nullptr, *gradient);
+        else if( solid ){
             d->setColor(solid->getColorStateList("color"));
         }
 
-        if(size)d->setSize(size->getDimensionPixelSize("width",-1),size->getDimensionPixelSize("height",-1));
+        if( size )d->setSize(size->getDimensionPixelSize("width",-1),size->getDimensionPixelSize("height",-1));
 
-        if(stroke) {
+        if( stroke ) {
             d->setStroke(stroke->getDimensionPixelSize("width",1),stroke->getColorStateList("color"),
                 stroke->getDimensionPixelSize("dashWidth"),stroke->getDimensionPixelSize("dashGap"));
         }
-        if(padding)d->setPadding(padding->getDimensionPixelSize("left"),padding->getDimensionPixelSize("top"),
+        if( padding ) d->setPadding(padding->getDimensionPixelSize("left"),padding->getDimensionPixelSize("top"),
                 padding->getDimensionPixelSize("right"),padding->getDimensionPixelSize("bottom"));
         return d;
     } else {
-        ShapeDrawable*sd=new ShapeDrawable();
-        if(corners) parseCorners(nullptr,sd, *corners);
-        if(gradient)parseShapeGradient(nullptr,sd,*gradient);
+        ShapeDrawable*sd = new ShapeDrawable();
+        if( corners )  parseCorners(nullptr,sd, *corners);
+        if( gradient ) parseShapeGradient(nullptr,sd,*gradient);
         return sd;
     }
 }
@@ -564,13 +564,19 @@ static void endElement(void *userData, const XML_Char *name) {
             pd->pop2Upper(leaf);
         }
         pd->drawable= leaf;
-        LOGV("coming drawable %s %p upperIsShape=%d",name,leaf,pd->upperIsShape());
+        LOGV("%p coming drawable %s %p upperIsShape=%d",pd,name,leaf,pd->upperIsShape());
     } else { /*item (stub drawable) or other drawable*/
-        LOGV("coming drawable %s",name);
+        LOGV("%p coming drawable %s",pd,name);
         Drawable* topchild = nullptr,*parent = nullptr;
-        const AttributeSet atts = pd->items.back()->props;
+        auto backItem = pd->items.back();
+        const AttributeSet atts = backItem->props;
+        //if( (backItem->name.compare("item")==0) || ((backItem->name.compare("transition")==0)&&(pd->items.size()>1)) ){
         if(pd->upperIsItem()||pd->upperIsWrapper()) {
-            pd->pop2Upper(pd->items.back()->drawable);
+            const std::string drawableResourceId = atts.getString("drawable");
+            if( backItem->drawable == nullptr ) {
+                backItem->drawable= pd->ctx->getDrawable(drawableResourceId);
+            }
+            pd->pop2Upper(backItem->drawable);
         }
         if(pd->items.size()>1) {
             auto pitem = pd->items.back();
@@ -583,14 +589,14 @@ static void endElement(void *userData, const XML_Char *name) {
             std::vector<int> state;
             StateSet::parseState(state,atts);
             ((StateListDrawable*)parent)->addState(state,topchild);
-            LOGV("add drawable %p to StateListDrawable %p",topchild,parent);
+            LOGV("%p add drawable %p to StateListDrawable %p",pd,topchild,parent);
         } else if(dynamic_cast<LevelListDrawable*>(parent)) {
             int minLevel = atts.getInt("minLevel",INT_MIN);//get child level info
             int maxLevel = atts.getInt("maxLevel",INT_MIN);
             if( minLevel == INT_MIN ) minLevel = maxLevel;
             if( maxLevel == INT_MIN ) maxLevel = minLevel;
             ((LevelListDrawable*)parent)->addLevel(minLevel,maxLevel,topchild);
-            LOGV("add drawable %p to LevelListDrawable %p level=(%d,%d)",topchild,parent,minLevel,maxLevel);
+            LOGV("%p add drawable %p to LevelListDrawable %p level=(%d,%d)",pd,topchild,parent,minLevel,maxLevel);
         } else if(dynamic_cast<LayerDrawable*>(parent)) {
             LayerDrawable* ld = dynamic_cast<LayerDrawable*>(parent);
             const int idx = ld->addLayer(topchild);
@@ -602,14 +608,14 @@ static void endElement(void *userData, const XML_Char *name) {
             const int id = atts.getResourceId("id",-1);
             const std::string src = atts.getString("drawable");
             if(id!=-1)ld->setId(idx,id);
-            LOGV("add drawable %p to LayerDrawable %p index=%d id=%d gravity=%x size=%dx%d",topchild,
+            LOGV("%p add drawable %p to LayerDrawable %p index=%d id=%d gravity=%x size=%dx%d",pd,topchild,
                  parent,idx,id,ld->getLayerGravity(idx),ld->getLayerWidth(idx),ld->getLayerHeight(idx));
         } else if(dynamic_cast<AnimationDrawable*>(parent)) {
             AnimationDrawable* ad = (AnimationDrawable*)parent;
             const int duration = atts.getInt("duration",0);
             const std::string src = atts.getString("drawable");
             ad->addFrame(topchild,duration);
-            LOGV("add drawable %p to AnimationDrawable %p duration=%d",topchild,parent,duration);
+            LOGV("%p add drawable %p to AnimationDrawable %p duration=%d",pd,topchild,parent,duration);
         }
         if(pd->items.size()==1)  pd->drawable=pd->items.back()->drawable;
     }
@@ -645,7 +651,7 @@ Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string&
         }
     } while(rdlen);
     XML_ParserFree(parser);
-    LOGV("parsed drawable [%p] from %s",pd.drawable,resname.c_str());
+    LOGV("%p parsed drawable [%p] from %s",&pd,pd.drawable,resname.c_str());
     return pd.drawable;
 }
 
