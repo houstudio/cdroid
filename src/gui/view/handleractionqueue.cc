@@ -25,17 +25,17 @@ void HandlerActionQueue::removeCallbacks(const Runnable& action) {
             // this one needs to move to the "new" list.
             mActions[j] = mActions[i];
         }
-
         j++;
     }
 
     // The "new" list only has j entries.
     // Null out any remaining entries.
+    const int finalCount = j;
     for (; j < count; j++) {
         delete mActions[j];
         mActions[j] = nullptr;
     }
-    mActions.resize(j);//mCount = j;
+    mActions.resize(finalCount);
 }
 
 void HandlerActionQueue::executeActions(UIEventSource& handler) {
