@@ -37,7 +37,7 @@ TEST_F(ASSETS,array2){
 }
 TEST_F(ASSETS,color){
     App app(0,NULL);
-    ColorStateList*cl=app.getColorStateList("cdroid:attr/editTextColor");
+    ColorStateList* cl = app.getColorStateList("cdroid:attr/editTextColor");
     ASSERT_TRUE(cl!=NULL);
     cl=app.getColorStateList("cdroid:color/textview");
     ASSERT_TRUE(cl!=NULL);
@@ -45,7 +45,7 @@ TEST_F(ASSETS,color){
 }
 TEST_F(ASSETS,drawable){
     App app;
-    ColorDrawable*cl=(ColorDrawable*)app.getDrawable("@cdroid:color/black");
+    ColorDrawable* cl = (ColorDrawable*)app.getDrawable("@cdroid:color/black");
     ASSERT_TRUE(cl!=NULL);
     LOGD("COLOR=%x",(uint32_t)cl->getColor());
     ASSERT_EQ((uint32_t)cl->getColor(),(uint32_t)0xFF000000);
@@ -57,7 +57,7 @@ TEST_F(ASSETS,drawable){
 }
 TEST_F(ASSETS,state_layerlist){
     App app;
-    StateListDrawable*st=(StateListDrawable*)app.getDrawable("@cdroid:drawable/list_selector_background");
+    StateListDrawable* st = (StateListDrawable*)app.getDrawable("@cdroid:drawable/list_selector_background");
     ASSERT_NE(st,nullptr);
     ASSERT_EQ(st->getChildCount(),6);
     ASSERT_NE(dynamic_cast<ColorDrawable*>(st->getStateDrawable(0)),nullptr);
@@ -81,7 +81,7 @@ TEST_F(ASSETS,state_layerlist){
 
 TEST_F(ASSETS,animated_selector){
     App app;
-    AnimatedStateListDrawable*asd=(AnimatedStateListDrawable*)app.getDrawable("@cdroid:drawable/switch_thumb_material_anim");
+    AnimatedStateListDrawable* asd = (AnimatedStateListDrawable*)app.getDrawable("@cdroid:drawable/switch_thumb_material_anim");
     ASSERT_NE(asd,nullptr);
     ASSERT_EQ(asd->getChildCount(),5);
     ASSERT_NE(dynamic_cast<NinePatchDrawable*>(asd->getStateDrawable(0)),nullptr);
@@ -89,14 +89,14 @@ TEST_F(ASSETS,animated_selector){
     ASSERT_NE(dynamic_cast<NinePatchDrawable*>(asd->getStateDrawable(2)),nullptr);
     ASSERT_NE(dynamic_cast<TransitionDrawable*>(asd->getStateDrawable(3)),nullptr);
     ASSERT_NE(dynamic_cast<TransitionDrawable*>(asd->getStateDrawable(4)),nullptr);
-    TransitionDrawable*td1 =dynamic_cast<TransitionDrawable*>(asd->getStateDrawable(3));
+    TransitionDrawable*td1 = dynamic_cast<TransitionDrawable*>(asd->getStateDrawable(3));
        ASSERT_NE(td1,nullptr);
        ASSERT_EQ(td1->getNumberOfLayers(),1);
        ASSERT_NE(dynamic_cast<AnimationDrawable*>(td1->getDrawable(0)),nullptr);
        AnimationDrawable*ad1 = dynamic_cast<AnimationDrawable*>(td1->getDrawable(0));
        ASSERT_EQ(ad1->getChildCount(),12);
        for(int i=0;i<ad1->getChildCount();i++) ASSERT_NE(dynamic_cast<NinePatchDrawable*>(ad1->getChild(i)),nullptr);
-    TransitionDrawable*td2 =dynamic_cast<TransitionDrawable*>(asd->getStateDrawable(4));
+    TransitionDrawable* td2 = dynamic_cast<TransitionDrawable*>(asd->getStateDrawable(4));
        ASSERT_NE(td2,nullptr);
        ASSERT_EQ(td2->getNumberOfLayers(),1);
        ASSERT_NE(dynamic_cast<AnimationDrawable*>(td2->getDrawable(0)),nullptr);

@@ -39,7 +39,7 @@ bool StateListDrawable::StateListState::hasFocusStateSpecified()const{
 }
 
 StateListDrawable::StateListDrawable(){
-    auto state=std::make_shared<StateListState>(nullptr,this);
+    auto state = std::make_shared<StateListState>(nullptr,this);
     setConstantState(state);
 }
 
@@ -52,7 +52,7 @@ StateListDrawable::StateListDrawable(Context*ctx,const AttributeSet&atts)
 }
 
 StateListDrawable::StateListDrawable(const ColorStateList&cls){
-    auto state=std::make_shared<StateListState>(nullptr,this);
+    auto state = std::make_shared<StateListState>(nullptr,this);
     setConstantState(state);
     const std::vector<int>&colors = cls.getColors();
     const std::vector<std::vector<int>>& states = cls.getStates();
@@ -62,7 +62,7 @@ StateListDrawable::StateListDrawable(const ColorStateList&cls){
 }
 
 StateListDrawable::StateListDrawable(std::shared_ptr<StateListState>state){
-    std::shared_ptr<StateListState>newState =std::make_shared<StateListState>(state.get(), this);
+    std::shared_ptr<StateListState>newState = std::make_shared<StateListState>(state.get(), this);
     setConstantState(newState);
     onStateChange(getState());
 }
@@ -86,7 +86,7 @@ void StateListDrawable::clearMutated(){
 
 void StateListDrawable::setConstantState(std::shared_ptr<DrawableContainerState>state){
     DrawableContainer::setConstantState(state);
-    mStateListState =std::dynamic_pointer_cast<StateListState>(state);
+    mStateListState = std::dynamic_pointer_cast<StateListState>(state);
 }
 
 int StateListDrawable::indexOfStateSet(const std::vector<int>&stateSet)const{

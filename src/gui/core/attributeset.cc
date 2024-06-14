@@ -50,8 +50,8 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
 }
 
 int AttributeSet::set(const char*atts[],int size){
-    int rc=0;
-    for(int i=0;atts[i]&&(size==0||i<size);i+=2,rc+=1){
+    int rc = 0;
+    for(int i = 0;atts[i]&&(size==0||i<size);i+=2,rc+=1){
         const char* key=strrchr(atts[i],' ');
         if(key)key++;else key=atts[i];
         mAttrs.insert(std::pair<std::string,std::string>
@@ -65,8 +65,8 @@ std::map<std::string,std::string>&AttributeSet::getEntries(){
 }
 
 int AttributeSet::inherit(const AttributeSet&other){
-    int inheritedCount=0;
-    for(auto it=other.mAttrs.begin();it!=other.mAttrs.end();it++){
+    int inheritedCount = 0;
+    for(auto it = other.mAttrs.begin(); it != other.mAttrs.end() ; it++){
         if(mAttrs.find(it->first)==mAttrs.end()){
            mAttrs.insert(std::pair<std::string,std::string>
               (it->first.c_str(),normalize(mPackage,it->second)));
@@ -79,8 +79,8 @@ int AttributeSet::inherit(const AttributeSet&other){
 bool AttributeSet::add(const std::string&key,const std::string&value){
     auto itr = mAttrs.find(key);
     std::string ks = key;
-    size_t pos =ks.find(' ');
-    if(pos!=std::string::npos)ks = ks.substr(pos+1);
+    size_t pos = ks.find(' ');
+    if( pos != std::string::npos )ks = ks.substr(pos+1);
     if(itr == mAttrs.end())
         mAttrs.insert({(std::string)ks,normalize(mPackage,value)});
     else
@@ -97,82 +97,81 @@ int AttributeSet::size()const{
 }
 
 const std::string AttributeSet::getAttributeValue(const std::string&key)const{
-    auto it=mAttrs.find(key);
-    if(it!=mAttrs.end())
+    auto it = mAttrs.find(key);
+    if( it != mAttrs.end() )
         return it->second;
     return std::string();
 }
 
 bool AttributeSet::getBoolean(const std::string&key,bool def)const{
-    const std::string v=getAttributeValue(key);
-    if(v.empty())return def;
-	return v.compare("true")==0;
+    const std::string v = getAttributeValue(key);
+    if(v.empty()) return def;
+	return v.compare("true") == 0;
 }
 
 int AttributeSet::getInt(const std::string&key,int def)const{
-    int base=10;
-    const std::string v=getAttributeValue(key);
+    int base = 10;
+    const std::string v = getAttributeValue(key);
     if(v.empty()||((v[0]>='a')&&(v[0]<='z'))){
         return def;
     }
     if(((v.length()>2)&&(v[1]=='x'||v[1]=='X'))||(v[0]=='#'))
-        base=16;
+        base = 16;
     return std::strtol(v.c_str(),nullptr,base);
 }
 
 int AttributeSet::getInt(const std::string&key,const std::map<const std::string,int>&kvs,int def)const{
-    const std::string vstr=getAttributeValue(key);
-    if(vstr.size()&&vstr.find('|')!=std::string::npos){
-        std::vector<std::string>gs=split(vstr);
-        int result=0;
-        int count=0;
+    const std::string vstr = getAttributeValue(key);
+    if( vstr.size() && (vstr.find('|') != std::string::npos) ){
+        std::vector<std::string> gs = split(vstr);
+        int result= 0;
+        int count = 0;
         for(std::string s:gs){
-            auto it=kvs.find(s);
-            if(it!=kvs.end()){
-                result|=it->second;
+            auto it = kvs.find(s);
+            if(it != kvs.end()){
+                result |= it->second;
                 count++;
             }
         }
-        return count?result:def;
+        return count ? result : def;
     }else{
-        auto it=kvs.find(vstr);
-        return it==kvs.end()?def:it->second;
+        auto it = kvs.find(vstr);
+        return it == kvs.end() ? def : it->second;
     }
 }
 
 int AttributeSet::getResourceId(const std::string&key,int def)const{
-    const std::string str=getString(key);
-    int value = def;
+    const std::string str = getString(key);
     if(!str.empty()){
-	value = mContext->getId(str);
-	return value==-1?def:value;
+        int value = mContext->getId(str);
+        return value == -1 ? def : value;
     }
-    return value;
+    return def;
 }
 
 int AttributeSet::getColor(const std::string&key,int def)const{
-    const std::string resid=getString(key);
-    if(resid.empty())return def;
+    const std::string resid = getString(key);
+    if(resid.empty()) return def;
     return mContext->getColor(resid);
 
 }
 
 float AttributeSet::getFloat(const std::string&key,float def)const{
-    const std::string v=getAttributeValue(key);
+    const std::string v = getAttributeValue(key);
     if(v.empty())return def;
     return std::strtof(v.c_str(),nullptr);
 }
 
 float AttributeSet::getFraction(const std::string&key,int base,int pbase,float def)const{
-    const std::string v=getAttributeValue(key);
-    if(v.empty())return def;
-    float ret=std::strtof(v.c_str(),nullptr);
-    if(v.find('%')!=std::string::npos)ret/=100.f;
+    const std::string v = getAttributeValue(key);
+    if(v.empty()) return def;
+    float ret = std::strtof(v.c_str(),nullptr);
+    if( v.find('%') != std::string::npos )ret /= 100.f;
     return ret;
 }
 
 const std::string AttributeSet::getString(const std::string&key,const std::string&def)const{
-    const std::string v=getAttributeValue(key);
+    const std::string v = getAttributeValue(key);
     if(v.empty())return def;
     return v;
 }

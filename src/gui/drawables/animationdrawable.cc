@@ -14,8 +14,8 @@ AnimationDrawable::AnimationDrawable(std::shared_ptr<AnimationDrawable::Animatio
     mCurFrame = 0;
     mMutated  = false;
     mAnimating= false;
-    if(state)setFrame(0,true,false);
-    mRunnable=std::bind(&AnimationDrawable::run,this);
+    if(state) setFrame(0,true,false);
+    mRunnable = std::bind(&AnimationDrawable::run,this);
 }
 
 AnimationDrawable::AnimationDrawable(Context*ctx,const AttributeSet&atts)
@@ -37,10 +37,10 @@ void AnimationDrawable::setConstantState(std::shared_ptr<DrawableContainerState>
 }
 
 bool AnimationDrawable::setVisible(bool visible,bool restart){
-    const bool changed=DrawableContainer::setVisible(visible,restart);
+    const bool changed = DrawableContainer::setVisible(visible,restart);
     if(visible){
         if(restart||changed){
-            const bool startFromZero =restart||(!mRunning&&!mAnimationState->mOneShot)||
+            const bool startFromZero = restart ||(!mRunning&&!mAnimationState->mOneShot)||
                 (mCurFrame >= mAnimationState->getChildCount() );
             setFrame((startFromZero?0:mCurFrame),true,mAnimating);     
         }
@@ -53,13 +53,13 @@ bool AnimationDrawable::setVisible(bool visible,bool restart){
 void AnimationDrawable::start(){
     mAnimating = true;
     if(!isRunning())
-        setFrame(0,false,mAnimationState->getChildCount()>1||!mAnimationState->mOneShot);
+        setFrame(0,false,(mAnimationState->getChildCount()>1)||!mAnimationState->mOneShot);
 }
 
 void AnimationDrawable::stop(){
     mAnimating = false;
     if(isRunning()){
-        mCurFrame =0 ;
+        mCurFrame = 0 ;
         unscheduleSelf(mRunnable);
     }
 }
@@ -107,11 +107,11 @@ void AnimationDrawable::addFrame(Drawable*frame,int duration){
 }
 
 void AnimationDrawable::nextFrame(bool unschedule){
-    int nextFrame =mCurFrame + 1;
-    int numFrames =mAnimationState->getChildCount();
-    bool isLastFrame =mAnimationState->mOneShot && nextFrame>=(numFrames-1);
-    if(!mAnimationState->mOneShot && nextFrame >= numFrames)
-        nextFrame=0;
+    int nextFrame = mCurFrame + 1;
+    int numFrames = mAnimationState->getChildCount();
+    bool isLastFrame = mAnimationState->mOneShot && (nextFrame >= numFrames-1);
+    if(!mAnimationState->mOneShot && (nextFrame >= numFrames) )
+        nextFrame = 0;
     setFrame(nextFrame,unschedule,!isLastFrame);
 }
 

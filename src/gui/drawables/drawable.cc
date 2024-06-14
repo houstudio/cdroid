@@ -489,7 +489,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 
     if(it!=drawableParsers.end()) {
         auto item = pd->items.back();
-        if( strcmp(name,"shape") || (atts.hasAttribute("drawable") &&((strcmp(name,"item")==0)||(strcmp(name,"transition")==0)&&(pd->items.size())))){
+        if( strcmp(name,"shape") || (atts.hasAttribute("drawable") &&((strcmp(name,"item")==0)||(strcmp(name,"transition")==0)))){
             Drawable* d = it->second(pd->ctx,atts);
             if(d){
                 auto cs = d->getConstantState();
@@ -563,13 +563,14 @@ static void endElement(void *userData, const XML_Char *name) {
         if(pd->upperIsItem()||pd->upperIsWrapper()) {
             pd->pop2Upper(leaf);
         }
-        pd->drawable= leaf;
+        pd->drawable = leaf;
         LOGV("%p coming drawable %s %p upperIsShape=%d",pd,name,leaf,pd->upperIsShape());
     } else { /*item (stub drawable) or other drawable*/
         LOGV("%p coming drawable %s",pd,name);
         Drawable* topchild = nullptr,*parent = nullptr;
         auto backItem = pd->items.back();
         const AttributeSet atts = backItem->props;
+        atts.dump();
         //if( (backItem->name.compare("item")==0) || ((backItem->name.compare("transition")==0)&&(pd->items.size()>1)) ){
         if(pd->upperIsItem()||pd->upperIsWrapper()) {
             const std::string drawableResourceId = atts.getString("drawable");
@@ -587,9 +588,13 @@ static void endElement(void *userData, const XML_Char *name) {
 
         if(dynamic_cast<StateListDrawable*>(parent)) {
             std::vector<int> state;
+            StateListDrawable*sld = dynamic_cast<StateListDrawable*>(parent);
+            AnimatedStateListDrawable*asld = dynamic_cast<AnimatedStateListDrawable*>(parent);
             StateSet::parseState(state,atts);
-            ((StateListDrawable*)parent)->addState(state,topchild);
-            LOGV("%p add drawable %p to StateListDrawable %p",pd,topchild,parent);
+            const int id = atts.getResourceId("id",-1);
+            if(asld) asld->addState(state,topchild,id);
+            else sld->addState(state,topchild);
+            LOGV("%p add drawable %p to StateListDrawable %p id=%d",pd,topchild,parent,id);
         } else if(dynamic_cast<LevelListDrawable*>(parent)) {
             int minLevel = atts.getInt("minLevel",INT_MIN);//get child level info
             int maxLevel = atts.getInt("maxLevel",INT_MIN);

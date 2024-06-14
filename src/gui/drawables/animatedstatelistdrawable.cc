@@ -7,6 +7,7 @@ AnimatedStateListDrawable::AnimatedStateListDrawable():StateListDrawable(){
     std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(nullptr,this);
     setConstantState(newState);
     onStateChange(getState());
+    mTransition = nullptr;
     jumpToCurrentState();
 }
 
@@ -21,6 +22,7 @@ AnimatedStateListDrawable::AnimatedStateListDrawable(Context*ctx,const Attribute
 AnimatedStateListDrawable::AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListDrawable::AnimatedStateListState> state)
   :StateListDrawable(state){
     std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(state.get(), this);
+    mTransition = nullptr;
     setConstantState(newState);
     onStateChange(getState());
     jumpToCurrentState();
