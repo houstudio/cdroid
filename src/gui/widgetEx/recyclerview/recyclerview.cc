@@ -3362,6 +3362,7 @@ void RecyclerView::ViewFlinger::run() {
         }
     }
     // call this after the onAnimation is complete not to have inconsistent callbacks etc.
+    smoothScroller = mRV->mLayout->mSmoothScroller;/*mSmoothScroller maybe nulled in mRV->setScrollState.*/
     if (smoothScroller != nullptr) {
         if (smoothScroller->isPendingInitialRun()) {
             smoothScroller->onAnimation(0, 0);
@@ -6531,6 +6532,7 @@ RecyclerView::SmoothScroller::SmoothScroller() {
     mTargetPosition = RecyclerView::NO_POSITION;
     mRecyclerView = nullptr;
     mLayoutManager = nullptr;
+    mTargetView = nullptr;
     mRecyclingAction = new Action(0, 0);
 }
 
