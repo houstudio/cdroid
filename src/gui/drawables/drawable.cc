@@ -570,7 +570,6 @@ static void endElement(void *userData, const XML_Char *name) {
         Drawable* topchild = nullptr,*parent = nullptr;
         auto backItem = pd->items.back();
         const AttributeSet atts = backItem->props;
-        atts.dump();
         //if( (backItem->name.compare("item")==0) || ((backItem->name.compare("transition")==0)&&(pd->items.size()>1)) ){
         if(pd->upperIsItem()||pd->upperIsWrapper()) {
             const std::string drawableResourceId = atts.getString("drawable");
