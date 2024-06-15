@@ -247,7 +247,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
         img->bits_per_pixel=32;
         img->bytes_per_line=width*4;
     }
-    img->data=(char*)malloc(width*height*img->bytes_per_line);
+    img->data=(char*)malloc(height*img->bytes_per_line);
     *surface=img;
     LOGD("%p  size=%dx%dx%d %db",img,width,height,img->bytes_per_line,img->bits_per_pixel);
     if(hwsurface) {
