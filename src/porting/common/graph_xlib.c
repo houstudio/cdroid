@@ -76,6 +76,7 @@ static void InjectREL(ULONG time,int type,int axis,int value) {
 static void onExit() {
     LOGD("X11 Graph shutdown!");
     if(x11Display) {
+        XSelectInput(x11Display,x11Window,0);
         XDestroyWindow(x11Display,x11Window);
         XCloseDisplay(x11Display);
         x11Display=NULL;
@@ -373,6 +374,7 @@ static void* X11EventProc(void*p) {
             LOGD("event.type=%d",event.type);
             break;
         };
+        if(x11Display==0)break;
     }
 }
 
