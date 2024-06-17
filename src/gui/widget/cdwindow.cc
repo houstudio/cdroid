@@ -311,6 +311,7 @@ RefPtr<Canvas>Window::getCanvas(){
 void Window::onCreate(){
     LOGV("%p[%s]:%d",this,getText().c_str(),mID);
 }
+
 void Window::onActive(){
     LOGD("%p[%s]:%d",this,getText().c_str(),mID);
 }

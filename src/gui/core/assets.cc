@@ -226,8 +226,9 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     }
     if(name.compare("cdroid")==0)
         setTheme("cdroid:style/Theme");
-    LOGI("%s %d resource,[%did,%darray,%dstyle,%dstring,%ddimens] used %dms",package.c_str(),count,mIDS.size(),mArraies.size(),
-         mStyles.size(),mStrings.size(),mDimensions.size(),int(SystemClock::uptimeMillis()-sttm));
+    LOGI("%s %d resource,[%d id,%d array,%d style,%d string,%d dimens] used %dms",
+         package.c_str(),count, mIDS.size(),mArraies.size(), mStyles.size(),
+         mStrings.size(),mDimensions.size(),int(SystemClock::uptimeMillis()-sttm));
     return pak?0:-1;
 }
 

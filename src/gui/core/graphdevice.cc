@@ -171,8 +171,7 @@ void GraphDevice::trackFPS(Canvas& canvas) {
         if (totalTime > 1000) {
             char buffer[64];
             const float fps = (float) mFpsNumFrames * 1000 / totalTime;
-            struct mallinfo2 mi;
-	    mi= mallinfo2();
+            struct mallinfo2 mi = mallinfo2();
             mFpsStartTime = nowTime;
             mFpsNumFrames = 0;
             sprintf(buffer,"%.2ffps,%ldK",fps,mi.uordblks>>10);

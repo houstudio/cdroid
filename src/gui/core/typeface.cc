@@ -428,6 +428,7 @@ int Typeface::loadFromFontConfig() {
     if(fs)FcFontSetDestroy(fs);
     FcConfigDestroy(config);
     FcObjectSetDestroy(os);
+    FcFini();
     LOGI("load %d font sSystemFontMap.size=%d",loadedFont,sSystemFontMap.size());
     return loadedFont;
 }
