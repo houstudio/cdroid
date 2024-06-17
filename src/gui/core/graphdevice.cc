@@ -156,6 +156,9 @@ void GraphDevice::invalidate(const Rect&r){
     LOGV("(%d,%d,%d,%d)",r.left,r.top,r.width,r.height);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+/*make gcc happy for mallinfo()*/
 void GraphDevice::trackFPS(Canvas& canvas) {
     // Tracks frames per second drawn. First value in a series of draws may be bogus
     // because it down not account for the intervening idle time
@@ -171,10 +174,10 @@ void GraphDevice::trackFPS(Canvas& canvas) {
         if (totalTime > 1000) {
             char buffer[64];
             const float fps = (float) mFpsNumFrames * 1000 / totalTime;
-            struct mallinfo2 mi = mallinfo2();
+            struct mallinfo mi = mallinfo();
             mFpsStartTime = nowTime;
             mFpsNumFrames = 0;
-            sprintf(buffer,"%.2ffps,%ldK",fps,mi.uordblks>>10);
+            sprintf(buffer,"%.2ffps,%ldK",fps,long(mi.uordblks>>10));
        	    mFPSText = buffer;
         }
     }
@@ -188,6 +191,7 @@ void GraphDevice::trackFPS(Canvas& canvas) {
     canvas.draw_text(mRectBanner,mFPSText,Gravity::CENTER);
     canvas.restore(); 
 }
+#pragma GCC diagnostic pop
 
 void GraphDevice::getScreenSize(int &w,int&h)const{
     w = mScreenWidth;
