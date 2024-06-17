@@ -888,6 +888,7 @@ void AbsListView::setSelector(Drawable*sel) {
         mSelector->setCallback(nullptr);
         unscheduleDrawable(*mSelector);
     }
+    delete mSelector;
     mSelector = sel;
     Rect padding;
     sel->getPadding(padding);

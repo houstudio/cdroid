@@ -130,6 +130,47 @@ int DrawableContainer::DrawableContainerState::getChangingConfigurations()const{
     return mChangingConfigurations | mChildrenChangingConfigurations;
 }
 
+int DrawableContainer::DrawableContainerState::addChild(Drawable* dr){
+    const int pos = mDrawables.size();
+    dr->mutate();
+    dr->setVisible(false, true);
+    dr->setCallback(mOwner);
+
+    LOGV("%p addChild(%d:%p)",this,mDrawables.size(),dr);
+    mDrawables.push_back(dr);
+    mChildrenChangingConfigurations |= dr->getChangingConfigurations();
+
+    invalidateCache();
+
+    mConstantPadding.set(0,0,0,0);
+    mCheckedPadding = false;
+    mCheckedConstantSize = false;
+    mCheckedConstantState = false;
+    return pos;
+}
+
+void DrawableContainer::DrawableContainerState::invalidateCache(){
+    mCheckedOpacity = false;
+    mCheckedStateful= false;
+}
+
+void DrawableContainer::DrawableContainerState::createAllFutures(){
+    const int futureCount = mDrawableFutures.size();
+    for (int keyIndex = 0; keyIndex < futureCount; keyIndex++) {
+        const int index= mDrawableFutures.keyAt(keyIndex);
+        std::shared_ptr<ConstantState>cs =mDrawableFutures.valueAt(keyIndex);
+        mDrawables[index] = prepareDrawable(cs->newDrawable());
+    }
+    mDrawableFutures.clear();
+}
+
+Drawable* DrawableContainer::DrawableContainerState::prepareDrawable(Drawable* child) {
+    child->setLayoutDirection(mLayoutDirection);
+    child = child->mutate();
+    child->setCallback(mOwner);
+    return child;
+}
+
 int DrawableContainer::DrawableContainerState::getChildCount()const{
     return mDrawables.size();
 }
@@ -156,29 +197,20 @@ Drawable*DrawableContainer::DrawableContainerState::getChild(int index){
     return nullptr;
 }
 
-
-int DrawableContainer::DrawableContainerState::addChild(Drawable* dr){
-    const int pos = mDrawables.size();
-    dr->mutate();
-    dr->setVisible(false, true);
-    dr->setCallback(mOwner);
-
-    LOGV("%p addChild(%d:%p)",this,mDrawables.size(),dr);
-    mDrawables.push_back(dr);
-    mChildrenChangingConfigurations |= dr->getChangingConfigurations();
-
-    invalidateCache();
-
-    mConstantPadding.set(0,0,0,0);
-    mCheckedPadding = false;
-    mCheckedConstantSize = false;
-    mCheckedConstantState = false;
-    return pos;
-}
-
-void DrawableContainer::DrawableContainerState::invalidateCache(){
-    mCheckedOpacity = false;
-    mCheckedStateful= false;
+bool DrawableContainer::DrawableContainerState::setLayoutDirection(int layoutDirection, int currentIndex){
+    bool changed = false;
+    // No need to call createAllFutures, since future drawables will
+    // change layout direction when they are prepared.
+    for (int i = 0; i < mDrawables.size(); i++) {
+        if (mDrawables[i] != nullptr) {
+            const bool childChanged = mDrawables[i]->setLayoutDirection(layoutDirection);
+            if (i == currentIndex) {
+                changed = childChanged;
+            }
+        }
+    }
+    mLayoutDirection = layoutDirection;
+    return changed;    
 }
 
 void DrawableContainer::DrawableContainerState::mutate(){
@@ -193,6 +225,10 @@ void DrawableContainer::DrawableContainerState::clearMutated(){
         if (dr)dr->clearMutated();
     }
     mMutated = false;
+}
+
+void DrawableContainer::DrawableContainerState::setVariablePadding(bool variable) {
+    mVariablePadding = variable;
 }
 
 bool DrawableContainer::DrawableContainerState::canConstantState() {
@@ -211,22 +247,6 @@ bool DrawableContainer::DrawableContainerState::canConstantState() {
     return true;
 }
 
-bool DrawableContainer::DrawableContainerState::setLayoutDirection(int layoutDirection, int currentIndex){
-    bool changed = false;
-    // No need to call createAllFutures, since future drawables will
-    // change layout direction when they are prepared.
-    for (int i = 0; i < mDrawables.size(); i++) {
-        if (mDrawables[i] != nullptr) {
-            const bool childChanged = mDrawables[i]->setLayoutDirection(layoutDirection);
-            if (i == currentIndex) {
-                changed = childChanged;
-            }
-        }
-    }
-    mLayoutDirection = layoutDirection;
-    return changed;    
-}
-
 bool DrawableContainer::DrawableContainerState::getConstantPadding(Rect&rect) {
     if (mVariablePadding)return false;
 
@@ -240,17 +260,25 @@ bool DrawableContainer::DrawableContainerState::getConstantPadding(Rect&rect) {
     Rect r ={0,0,0,0};
     Rect t ={0,0,0,0};
     for (auto dr:mDrawables) {
-       if (dr->getPadding(t)) {
-           if (t.left > r.left) r.left = t.left;
-           if (t.top > r.top) r.top = t.top;
-	   if(t.width > r.width ) r.width = t.width;
-	   if(t.height> r.height) r.height= t.height;
-       }
+        if (dr->getPadding(t)) {
+            if (t.left > r.left) r.left = t.left;
+            if (t.top > r.top) r.top = t.top;
+            if(t.width > r.width ) r.width = t.width;
+            if(t.height> r.height) r.height= t.height;
+        }
     }
     mCheckedPadding = true;
     mConstantPadding =r;
-    rect= r;
+    rect = r;
     return true;
+}
+
+void DrawableContainer::DrawableContainerState::setConstantSize(bool constant) {
+    mConstantSize = constant;
+}
+
+bool DrawableContainer::DrawableContainerState::isConstantSize() const{
+    return mConstantSize;
 }
 
 std::shared_ptr<DrawableContainer::DrawableContainerState> DrawableContainer::cloneConstantState(){
@@ -258,16 +286,16 @@ std::shared_ptr<DrawableContainer::DrawableContainerState> DrawableContainer::cl
 }
 
 void DrawableContainer::setConstantState(std::shared_ptr<DrawableContainerState>state){
-     mDrawableContainerState = state;
-     // The locally cached drawables may have changed.
-     if (mCurIndex >= 0) {
-         mCurrDrawable = state->getChild(mCurIndex);
-         if (mCurrDrawable != nullptr) {
+    mDrawableContainerState = state;
+    // The locally cached drawables may have changed.
+    if (mCurIndex >= 0) {
+        mCurrDrawable = state->getChild(mCurIndex);
+        if (mCurrDrawable != nullptr) {
             initializeDrawableForDisplay(mCurrDrawable);
-         }
-     }
-     mLastIndex = -1;
-     mLastDrawable = nullptr;
+        }
+    }
+    mLastIndex = -1;
+    mLastDrawable = nullptr;
 }
 
 DrawableContainer*DrawableContainer::mutate(){
@@ -299,23 +327,6 @@ int DrawableContainer::DrawableContainerState::getConstantMinimumWidth() {
 int DrawableContainer::DrawableContainerState::getConstantMinimumHeight() {
     if (!mCheckedConstantSize) computeConstantSize();
     return mConstantMinimumHeight;
-}
-
-Drawable* DrawableContainer::DrawableContainerState::prepareDrawable(Drawable* child) {
-    child->setLayoutDirection(mLayoutDirection);
-    child = child->mutate();
-    child->setCallback(mOwner);
-    return child;
-}
-
-void DrawableContainer::DrawableContainerState::createAllFutures(){
-    const int futureCount = mDrawableFutures.size();
-    for (int keyIndex = 0; keyIndex < futureCount; keyIndex++) {
-        const int index= mDrawableFutures.keyAt(keyIndex);
-        std::shared_ptr<ConstantState>cs =mDrawableFutures.valueAt(keyIndex);
-        mDrawables[index] = prepareDrawable(cs->newDrawable());
-    }
-    mDrawableFutures.clear();
 }
 
 void DrawableContainer::DrawableContainerState::computeConstantSize() {

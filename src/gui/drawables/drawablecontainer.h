@@ -11,18 +11,18 @@ protected:
         Drawable*prepareDrawable(Drawable* child);
     public:
         DrawableContainer*mOwner;
+        Rect mConstantPadding;
         int mDensity;
         int mChangingConfigurations;
         int mChildrenChangingConfigurations;
         bool mVariablePadding;
         bool mCheckedPadding;
-        Rect mConstantPadding;
         bool mConstantSize;
         bool mCheckedConstantSize;
+        bool mCheckedOpacity;
         int mConstantWidth,mConstantHeight;
         int mConstantMinimumWidth,mConstantMinimumHeight;
 
-        bool mCheckedOpacity;
         int mOpacity;
 
         bool mCheckedConstantState;
@@ -32,14 +32,13 @@ protected:
 
         bool mDither;
         bool mMutated;
+        bool mAutoMirrored;
         int mLayoutDirection;
         int mEnterFadeDuration,mExitFadeDuration;
-        bool mAutoMirrored;
         int mTintMode;
         ColorFilter*mColorFilter;
         const ColorStateList*mTintList;
         std::vector<Drawable* >mDrawables;
-        //std::map<int,std::shared_ptr<ConstantState> >mDrawableFutures;
         SparseArray<std::shared_ptr<ConstantState> >mDrawableFutures;
         DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own);
         ~DrawableContainerState()override;
@@ -51,15 +50,15 @@ protected:
         void invalidateCache();
         virtual void mutate();
         virtual void clearMutated();
+        void setVariablePadding(bool variable);
         void createAllFutures();
         virtual bool isStateful();
         bool canConstantState();
         int getChangingConfigurations()const override;
         bool setLayoutDirection(int layoutDirection, int currentIndex);
         bool getConstantPadding(Rect&rect);
-        void setConstantSize(bool constant){mConstantSize=constant;}
-        bool isConstantSize()const {return mConstantSize;}
-        void setVariablePadding(bool variable){mVariablePadding=variable;}
+        void setConstantSize(bool constant);
+        bool isConstantSize()const;
         int getConstantWidth();
         int getConstantHeight();
         int getConstantMinimumWidth();
@@ -76,10 +75,10 @@ protected:
     void initializeDrawableForDisplay(Drawable*d);
     std::shared_ptr<DrawableContainerState>mDrawableContainerState;
 protected:
-    int mAlpha = 0xFF;
-    bool mHasAlpha;
+    int mAlpha;
     int mCurIndex;
     int mLastIndex;
+    bool mHasAlpha;
     bool mMutated;
     Runnable mAnimationRunnable;
     long mEnterAnimationEnd;
