@@ -341,7 +341,7 @@ int Typeface::loadFromFontConfig() {
     FcConfig *config = FcInitLoadConfigAndFonts ();
     if(!config) return 0;
 
-    FcPattern  *pat  = FcPatternCreate();
+    FcPattern  *pat= FcPatternCreate();
     FcObjectSet*os = FcObjectSetBuild (FC_FAMILY, FC_STYLE, FC_LANG, FC_FILE,FC_WEIGHT,NULL);
     FcFontSet  *fs = FcFontList(config, pat, os);
     //FcPatternDestroy(pat);
@@ -353,11 +353,11 @@ int Typeface::loadFromFontConfig() {
     if(langenv)lang = langenv;
     size_t pos = lang.find('.');
     const int loadedFont = fs->nfont;
-    if(pos!=std::string::npos)
-        lang=lang.substr(0,pos);
+    if(pos != std::string::npos)
+        lang = lang.substr(0,pos);
     pos = lang.find('_');
-    if(pos!=std::string::npos)
-        lang=lang.substr(0,pos);
+    if(pos != std::string::npos)
+        lang = lang.substr(0,pos);
     mSystemLang = lang;
     for (int i=0; fs && i < fs->nfont; i++) {
         FcPattern *pat = fs->fonts[i];//FcPatternDuplicate(fs->fonts[i]);
@@ -369,7 +369,7 @@ int Typeface::loadFromFontConfig() {
         if(pos!=std::string::npos)
             font = font.substr(0,pos);
         pos = font.find_last_of(PATH_SEPARATOR);
-        if(pos!=std::string::npos)
+        if(pos != std::string::npos)
             font = font.substr(pos+1);
         std::string fontKey = mContext->getPackageName()+":font/"+font;
         LOGV("%d family=%s style=%s",i,family.c_str(),style.c_str(),tf->mFileName.c_str());
@@ -379,8 +379,8 @@ int Typeface::loadFromFontConfig() {
             sSystemFontMap.insert({fm,tf});
         LOGV("font %s %p",family.c_str(),tf);
         if(std::regex_search(family,patSans)) {
-            std::string ms=std::regex_search(family,patMono)?"mono":"serif";
-            ms ="sans-"+ms;
+            std::string ms = std::regex_search(family,patMono)?"mono":"serif";
+            ms = "sans-"+ms;
             auto it = sSystemFontMap.find(ms);
             if( it == sSystemFontMap.end()) {
                 sSystemFontMap.insert({std::string(ms),tf});

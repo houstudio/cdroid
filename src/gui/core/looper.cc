@@ -71,7 +71,7 @@ Looper::~Looper() {
         close(mEpollFd);
     }
     for(EventHandler*hdl:mEventHandlers){
-        delete hdl;
+        if(hdl->mFlags&3==3)delete hdl;
     }mEventHandlers.clear();
 }
 

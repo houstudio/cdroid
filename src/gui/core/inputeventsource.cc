@@ -10,6 +10,7 @@ namespace cdroid{
 
 InputEventSource::InputEventSource(){
     InputInit();
+    setOwned(false);
     mScreenSaveTimeOut = -1;
     mRunning = false;
     mIsPlayback = false;
