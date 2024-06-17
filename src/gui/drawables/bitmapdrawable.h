@@ -29,13 +29,13 @@ private:
         int mTileModeY;
         int mSrcDensityOverride;
         int mTargetDensity;
-	Cairo::RefPtr<Cairo::ImageSurface>mBitmap;
+        Cairo::RefPtr<Cairo::ImageSurface>mBitmap;
         BitmapState();
         BitmapState(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
         BitmapState(const BitmapState&bitmapState);
         ~BitmapState()override;
         BitmapDrawable* newDrawable()override;
-       int getChangingConfigurations()const override;
+        int getChangingConfigurations()const override;
     };
     int mBitmapWidth;
     int mBitmapHeight;

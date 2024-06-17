@@ -14,6 +14,7 @@
 #include <thread>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <malloc.h>
 #include <fstream>
 using namespace Cairo;
 
@@ -168,10 +169,14 @@ void GraphDevice::trackFPS(Canvas& canvas) {
         const long totalTime = nowTime - mFpsStartTime;
         mFpsPrevTime = nowTime;
         if (totalTime > 1000) {
+            char buffer[64];
             const float fps = (float) mFpsNumFrames * 1000 / totalTime;
+            struct mallinfo2 mi;
+	    mi= mallinfo2();
             mFpsStartTime = nowTime;
             mFpsNumFrames = 0;
-       	    mFPSText = std::to_string(fps);
+            sprintf(buffer,"%.2ffps,%ldK",fps,mi.uordblks>>10);
+       	    mFPSText = buffer;
         }
     }
     canvas.save();

@@ -375,10 +375,10 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
         }
     }
     if(surf->kbuffer&&(surf->hasLogo==0)) MI_SYS_MemsetPa(surf->kbuffer,0xFF000000,surf->msize);
-    surf->orig_buffer=surf->buffer;
-    if(hwsurface)  setfbinfo(surf);
-    surf->ishw=hwsurface;
-    surf->alpha=255;
+    surf->orig_buffer = surf->buffer;
+    if(hwsurface) setfbinfo(surf);
+    surf->ishw = hwsurface;
+    surf->alpha= 255;
     LOGI("Surface=%p buf=%llx/%p size=%dx%d/%d hw=%d",surf,surf->kbuffer,surf->buffer,surf->width,surf->height,surf->msize,hwsurface);
     *surface=surf;
     return E_OK;
