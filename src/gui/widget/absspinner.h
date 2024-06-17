@@ -7,7 +7,7 @@ class AbsSpinner:public AdapterView{
 protected:
     class RecycleBin{
     private:
-        SparseArray<View*,nullptr> mScrapHeap;
+        SparseArray<View*> mScrapHeap;
         AbsSpinner*ABS;
     public:
         RecycleBin(AbsSpinner*);

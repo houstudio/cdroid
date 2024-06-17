@@ -407,7 +407,7 @@ protected:
     bool mInvertY;
     bool mTypeB;
     BitSet32 mLastBits,mCurrBits;
-    SparseArray<int,-1>mTrack2Slot;
+    SparseArray<int>mTrack2Slot;
     PointerCoords mCoord;
     PointerProperties mProp;
     std::vector<PointerCoords>mPointerCoords;

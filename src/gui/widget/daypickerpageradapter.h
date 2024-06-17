@@ -19,7 +19,7 @@ private:
     };
     Calendar mMinDate;
     Calendar mMaxDate;
-    SparseArray<ViewHolder*,nullptr>mItems;
+    SparseArray<ViewHolder*>mItems;
     LayoutInflater* mInflater;
     std::string mLayoutResId;
     int mCalendarViewId;

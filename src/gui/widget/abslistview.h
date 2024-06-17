@@ -242,7 +242,7 @@ protected:
     RecycleBin*mRecycler;
     AdapterDataSetObserver*mDataSetObserver;
     SparseBooleanArray mCheckStates;
-    LongSparseArray<int,0> mCheckedIdStates;
+    LongSparseArray<int> mCheckedIdStates;
     Drawable* mSelector;
     int mMotionPosition;
     int mMotionViewOriginalTop;

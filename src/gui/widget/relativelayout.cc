@@ -1086,7 +1086,7 @@ void RelativeLayout::DependencyGraph::getSortedViews(std::vector<View*>&sorted,c
         std::map<Node*, DependencyGraph*>& dependents = node->dependents;
         for (auto dep:dependents) {
             Node* dependent = dep.first;//dependents.keyAt(i);
-            SparseArray<Node*,nullptr>& dependencies = dependent->dependencies;
+            SparseArray<Node*>& dependencies = dependent->dependencies;
             
             dependencies.remove(key);
             if (dependencies.size() == 0) {

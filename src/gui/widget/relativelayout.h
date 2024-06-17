@@ -70,12 +70,12 @@ private:
              * that needs this node to be processed first.*/
             std::map<Node*,DependencyGraph*>dependents;
             /** The list of dependencies for this node.*/
-            SparseArray<Node*,nullptr> dependencies;
+            SparseArray<Node*> dependencies;
             Node(View*v);
             ~Node();
         };
         std::vector<Node*>mNodes;
-        SparseArray<Node*,nullptr> mKeyNodes;
+        SparseArray<Node*> mKeyNodes;
         std::list<Node*>mRoots;
         DependencyGraph();
         ~DependencyGraph();

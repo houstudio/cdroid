@@ -113,7 +113,7 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
         if(d == nullptr)continue;
         std::shared_ptr<ConstantState> cs=d->getConstantState();
         if(cs)
-            mDrawableFutures[i]=cs;
+            mDrawableFutures.put(i,cs);
         else
             mDrawables[i]=d;
     }
@@ -134,15 +134,21 @@ int DrawableContainer::DrawableContainerState::getChildCount()const{
     return mDrawables.size();
 }
 
+std::vector<Drawable*> DrawableContainer::DrawableContainerState::getChildren(){
+    createAllFutures();
+    return mDrawables;
+}
+
 Drawable*DrawableContainer::DrawableContainerState::getChild(int index){
     Drawable*dr = mDrawables.at(index);
     if(dr)return dr;
     if (mDrawableFutures.size()) {
-        auto it = mDrawableFutures.find(index);
-        if (it != mDrawableFutures.end()) {
-            auto cs = it->second;
+        const int keyIndex = mDrawableFutures.indexOfKey(index);
+        if (keyIndex>=0) {
+            std::shared_ptr<ConstantState> cs = mDrawableFutures.valueAt(keyIndex);
             Drawable* prepared = prepareDrawable(cs->newDrawable());
             mDrawables[index] = prepared;
+            mDrawableFutures.removeAt(keyIndex);
             LOGV("getChild(%d)=%p",index,prepared);
             return prepared;
         }
@@ -305,9 +311,11 @@ Drawable* DrawableContainer::DrawableContainerState::prepareDrawable(Drawable* c
 void DrawableContainer::DrawableContainerState::createAllFutures(){
     const int futureCount = mDrawableFutures.size();
     for (int keyIndex = 0; keyIndex < futureCount; keyIndex++) {
-        auto cs = mDrawableFutures[keyIndex];
-        mDrawables[keyIndex] = prepareDrawable(cs->newDrawable());
+        const int index= mDrawableFutures.keyAt(keyIndex);
+        std::shared_ptr<ConstantState>cs =mDrawableFutures.valueAt(keyIndex);
+        mDrawables[index] = prepareDrawable(cs->newDrawable());
     }
+    mDrawableFutures.clear();
 }
 
 void DrawableContainer::DrawableContainerState::computeConstantSize() {

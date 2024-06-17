@@ -108,7 +108,7 @@ View* RecycleBin::getTransientStateView(int position) {
 }
 
 void RecycleBin::clearTransientStateViews() {
-    SparseArray<View*,nullptr>& viewsByPos = mTransientStateViews;
+    SparseArray<View*>& viewsByPos = mTransientStateViews;
     if (viewsByPos.size()) {
         int N = viewsByPos.size();
         for (int i = 0; i < N; i++) {
@@ -117,7 +117,7 @@ void RecycleBin::clearTransientStateViews() {
         viewsByPos.clear();
     }
 
-    SparseArray<View*,nullptr>& viewsById = mTransientStateViewsById;
+    SparseArray<View*>& viewsById = mTransientStateViewsById;
     if (viewsById.size()) {
         const int N = viewsById.size();
         for (int i = 0; i < N; i++) {
@@ -285,7 +285,7 @@ void RecycleBin::pruneScrapViews() {
         }
     }
 
-    SparseArray<View*,nullptr>& transViewsByPos = mTransientStateViews;
+    SparseArray<View*>& transViewsByPos = mTransientStateViews;
     if (transViewsByPos.size()) {
         for (int i = 0; i < transViewsByPos.size(); i++) {
             View* v = transViewsByPos.valueAt(i);
@@ -297,7 +297,7 @@ void RecycleBin::pruneScrapViews() {
         }
     }
 
-    SparseArray<View*,nullptr>& transViewsById = mTransientStateViewsById;
+    SparseArray<View*>& transViewsById = mTransientStateViewsById;
     if (transViewsById.size()) {
         for (int i = 0; i < transViewsById.size(); i++) {
             View* v = transViewsById.valueAt(i);

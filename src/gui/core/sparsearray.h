@@ -5,7 +5,7 @@
 
 namespace cdroid{
 
-template<typename K,typename T,T ValueIfKeyNotFound=nullptr>
+template<typename K,typename T>
 class SparseArrayImpl{
 private:
     std::vector<K>mKeys;
@@ -17,30 +17,33 @@ public:
     }
     void clear(){
         mKeys.clear();
-	mValues.clear();
+        mValues.clear();
     }
     void put(int key, T value){
         auto itr=std::find(mKeys.begin(),mKeys.end(),key);
         if(itr!=mKeys.end()){
-	    mValues[itr-mKeys.begin()]=value;
-	    return;
-	}
+            mValues[itr-mKeys.begin()]=value;
+	        return;
+	    }
         mKeys.push_back(key);
         mValues.push_back(value);	
     }
-    T get( int key,T def=ValueIfKeyNotFound)const{
+    T get( int key,T def)const{
         auto itr=std::find(mKeys.begin(),mKeys.end(),key);
-	if(itr!=mKeys.end())
-	    return mValues[itr-mKeys.begin()];
-	return def;
+        if(itr!=mKeys.end())
+            return mValues[itr-mKeys.begin()];
+        return def;
+    }
+    T get( int key)const{
+        return get(key,static_cast<T>(0));
     }
     int indexOfKey(int key)const{
-	auto itr=std::find(mKeys.begin(),mKeys.end(),key);
-	return itr!=mKeys.end()?itr-mKeys.begin():-1;
+        auto itr=std::find(mKeys.begin(),mKeys.end(),key);
+        return itr!=mKeys.end()?itr-mKeys.begin():-1;
     }
     int indexOfValue(T value)const{
-	auto itr=std::find(mValues.begin(),mValues.end(),value);
-	return itr!=mValues.end()?itr-mValues.begin():-1;
+        auto itr=std::find(mValues.begin(),mValues.end(),value);
+        return itr!=mValues.end()?itr-mValues.begin():-1;
     }
     int keyAt(int index)const{
         return mKeys[index];
@@ -57,20 +60,20 @@ public:
         }	
     }
     void removeAt(int idx){
-	mKeys.erase(mKeys.begin()+idx);
-	mValues.erase(mValues.begin()+idx);
+        mKeys.erase(mKeys.begin()+idx);
+        mValues.erase(mValues.begin()+idx);
     }
 };
-template<typename T,T ValueIfKeyNotFound = nullptr>
-using SparseArray = SparseArrayImpl<int,T, ValueIfKeyNotFound>;
+template<typename T>
+using SparseArray = SparseArrayImpl<int,T>;
 
-using SparseBooleanArray = SparseArrayImpl<int, bool, false>;
-using SparseIntArray = SparseArrayImpl<int,int,0>;
-using SparseLongArray= SparseArrayImpl<int,long,0>;
+using SparseBooleanArray = SparseArrayImpl<int, bool>;
+using SparseIntArray = SparseArrayImpl<int,int>;
+using SparseLongArray= SparseArrayImpl<int,long>;
 
-template<typename T,T ValueIfKeyNotFound = nullptr>
-using LongSparseArray= SparseArrayImpl<long,T,ValueIfKeyNotFound>;
+template<typename T>
+using LongSparseArray= SparseArrayImpl<long,T>;
 
-using LongSparseLongArray=LongSparseArray<long,0>;
+using LongSparseLongArray=LongSparseArray<long>;
 }
 #endif

@@ -1,6 +1,7 @@
 #ifndef __DRAWABLE_CONTAINER_H__
 #define __DRAWABLE_CONTAINER_H__
 #include <drawables/drawable.h>
+#include <core/sparsearray.h>
 namespace cdroid{
 
 class DrawableContainer:public Drawable,Drawable::Callback{
@@ -38,13 +39,15 @@ protected:
         ColorFilter*mColorFilter;
         const ColorStateList*mTintList;
         std::vector<Drawable* >mDrawables;
-        std::map<int,std::shared_ptr<ConstantState> >mDrawableFutures;
+        //std::map<int,std::shared_ptr<ConstantState> >mDrawableFutures;
+        SparseArray<std::shared_ptr<ConstantState> >mDrawableFutures;
         DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own);
         ~DrawableContainerState()override;
         DrawableContainer*newDrawable()override{return nullptr;}//must be overrided by inherited
         int addChild(Drawable* dr);
         int getChildCount()const;
         Drawable*getChild(int index);
+        std::vector<Drawable*>getChildren();
         void invalidateCache();
         virtual void mutate();
         virtual void clearMutated();

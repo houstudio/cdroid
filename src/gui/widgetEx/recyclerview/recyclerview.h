@@ -834,7 +834,7 @@ protected:
         long mCreateRunningAverageNs = 0;
         long mBindRunningAverageNs = 0;
     };
-    SparseArray<ScrapData*,nullptr> mScrap;
+    SparseArray<ScrapData*> mScrap;
     int size();
     long runningAverage(long oldAverage, long newValue);
     void factorInCreateTime(int viewType, long createTimeNs);
@@ -1111,7 +1111,7 @@ protected:
     int mRemainingScrollVertical;    
 private:
     int mTargetPosition = RecyclerView::NO_POSITION;
-    SparseArray<Object*,nullptr> mData;
+    SparseArray<Object*> mData;
 protected:
     void assertLayoutStep(int accepted);
     State& reset();

@@ -23,8 +23,8 @@ private:
     std::vector<View*>*mCurrentScrap;
     int mViewTypeCount;
     std::vector<View*>mSkippedScrap;
-    SparseArray<View*,nullptr>mTransientStateViews;
-    SparseArray<View*,nullptr>mTransientStateViewsById;
+    SparseArray<View*>mTransientStateViews;
+    SparseArray<View*>mTransientStateViewsById;
 
     class Adapter*getAdapter();//refto abslistview's mAdapter;
     std::vector<View*>getSkippedScrap();
