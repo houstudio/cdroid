@@ -28,7 +28,7 @@ AnimationDrawable::AnimationDrawable(Context*ctx,const AttributeSet&atts)
 }
 
 AnimationDrawable::~AnimationDrawable(){
-    mRunnable.reset();
+    mRunnable = nullptr;
 }
 
 void AnimationDrawable::setConstantState(std::shared_ptr<DrawableContainerState>state){
@@ -108,8 +108,8 @@ void AnimationDrawable::addFrame(Drawable*frame,int duration){
 
 void AnimationDrawable::nextFrame(bool unschedule){
     int nextFrame = mCurFrame + 1;
-    int numFrames = mAnimationState->getChildCount();
-    bool isLastFrame = mAnimationState->mOneShot && (nextFrame >= numFrames-1);
+    const int numFrames = mAnimationState->getChildCount();
+    const bool isLastFrame = mAnimationState->mOneShot && (nextFrame >= numFrames-1);
     if(!mAnimationState->mOneShot && (nextFrame >= numFrames) )
         nextFrame = 0;
     setFrame(nextFrame,unschedule,!isLastFrame);

@@ -13,14 +13,11 @@ protected:
     using Functor=std::function<R(Args...)>;
     std::shared_ptr<Functor>mFunctor;
 public:
-    CallbackBase(){
-        mFunctor = std::make_shared<Functor>();
+    CallbackBase():mFunctor(std::make_shared<Functor>()){
     }
-    CallbackBase(const Functor&a):CallbackBase(){
-        mFunctor = std::make_shared<Functor>(a);
+    CallbackBase(const Functor&a):mFunctor(std::make_shared<Functor>(a)){
     }
-    CallbackBase(const CallbackBase&b){
-        mFunctor = b.mFunctor;
+    CallbackBase(const CallbackBase&b):mFunctor(b.mFunctor){
     }
     virtual ~CallbackBase(){}
     CallbackBase&operator=(const Functor&a){
@@ -29,6 +26,15 @@ public:
     }
     CallbackBase&operator=(const CallbackBase&b){
         mFunctor = b.mFunctor;
+        return *this;
+    }
+    //for std::move
+    CallbackBase& operator=(CallbackBase&& other) noexcept {
+        mFunctor = other.mFunctor;//std::move(other.mFunctor);
+        return *this;
+    }
+    CallbackBase&operator=(std::nullptr_t){
+        mFunctor= nullptr;
         return *this;
     }
     bool operator == (const CallbackBase&b)const{
@@ -42,9 +48,6 @@ public:
     }
     bool operator!=(std::nullptr_t)const{
         return (*mFunctor) != nullptr;
-    }
-    void reset(){
-        mFunctor = nullptr;
     }
     virtual R operator()(Args...args){
         return (*mFunctor)(std::forward<Args>(args)...);
@@ -74,7 +77,7 @@ public:
     }
 };
 
-typedef CallbackBase<void>Runnable;
+using Runnable=CallbackBase<void>;
 
 }//endof namespace
 
