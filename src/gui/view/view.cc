@@ -406,7 +406,6 @@ View::~View(){
     mViewCount --;
     LOGD_IF(View::VIEW_DEBUG||(mViewCount>1000),"%p:%d mViewCount=%d",this,mID,mViewCount);
 
-    delete mRunQueue;
     delete mScrollCache;
     mScrollCache = nullptr;
     mMeasureCache.clear();
@@ -435,6 +434,7 @@ View::~View(){
     delete mOverlay;
     delete mAnimator;
     delete mFloatingTreeObserver;
+    delete mRunQueue;
 }
 
 bool View::isShowingLayoutBounds()const{
