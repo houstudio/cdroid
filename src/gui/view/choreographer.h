@@ -42,7 +42,7 @@ private:
     bool mFrameScheduled;
     bool mCallbacksRunning;
     nsecs_t mLastFrameTimeNanos;
-    long mFrameIntervalNanos;
+    nsecs_t mFrameIntervalNanos;
     CallbackRecord* mCallbackPool;
     CallbackQueue* mCallbackQueues[CALLBACK_LAST+1];
     static long sFrameDelay;
@@ -57,17 +57,17 @@ private:
 protected:
     int checkEvents()override;
     int handleEvents()override;
-    void doFrame(long frameTimeNanos,int frame);
+    void doFrame(nsecs_t frameTimeNanos,int frame);
     void doCallbacks(int callbackType, long frameTimeMillis);
 public:
     static Choreographer& getInstance();
     static long getFrameDelay();
     static long subtractFrameDelay(long delayMillis);
     static void setFrameDelay(long frameDelay);
-    long getFrameTimeNanos()const;
-    long getLastFrameTimeNanos()const;
+    nsecs_t getFrameTimeNanos()const;
+    nsecs_t getLastFrameTimeNanos()const;
     long getFrameTime()const;
-    long getFrameIntervalNanos()const;
+    nsecs_t getFrameIntervalNanos()const;
     void postCallback(int callbackType,const Runnable& action, void* token);
     void postCallbackDelayed(int callbackType,const Runnable& action,void*token,long delayMillis);
     void removeCallbacks(int callbackType, const Runnable* action,void*token);

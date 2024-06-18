@@ -60,7 +60,7 @@ long Choreographer::subtractFrameDelay(long delayMillis) {
     return delayMillis <= frameDelay ? 0 : delayMillis - frameDelay;
 }
 
-long Choreographer::getFrameTimeNanos()const{
+nsecs_t Choreographer::getFrameTimeNanos()const{
     return USE_FRAME_TIME ? mLastFrameTimeNanos:SystemClock::uptimeNanos();
 }
 
@@ -70,11 +70,11 @@ long Choreographer::getFrameTimeNanos()const{
   * @return The frame start time of the last frame, in the {@link System#nanoTime()} time base.
   * @hide
   */
-long Choreographer::getLastFrameTimeNanos()const{
+nsecs_t Choreographer::getLastFrameTimeNanos()const{
     return USE_FRAME_TIME ? mLastFrameTimeNanos:SystemClock::uptimeNanos();
 }
 
-long Choreographer::getFrameIntervalNanos()const{
+nsecs_t Choreographer::getFrameIntervalNanos()const{
     return mFrameIntervalNanos;
 }
 
@@ -172,7 +172,7 @@ int Choreographer::handleEvents(){
     return 0;
 }
 
-void Choreographer::doFrame(long frameTimeNanos,int frame){
+void Choreographer::doFrame(nsecs_t frameTimeNanos,int frame){
     mFrameScheduled = false;
     mLastFrameTimeNanos = frameTimeNanos;
     //LOGV("mLastFrameTimeNanos=%lld",mLastFrameTimeNanos);
