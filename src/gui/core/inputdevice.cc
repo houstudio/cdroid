@@ -303,6 +303,7 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mTypeB = false;
     mTrackID = mSlotID = -1;
     mAxisFlags = 0;
+    mCorrectedDeviceClasses = mDeviceClasses;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
     std::vector<InputDeviceInfo::MotionRange>&mr = mDeviceInfo.getMotionRanges();
     for(int i=0;i<mr.size();i++){
@@ -425,8 +426,8 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     default:/*MotionEvent::AXIS_Z:*/ break;
     }/*endof switch(axis)*/
 
-    if( (raw_axis>=ABS_MT_SLOT) && (raw_axis<=ABS_MT_SLOT) )
-        mAxisFlags = 1 << (raw_axis - ABS_MT_SLOT);
+    if( (raw_axis>=ABS_MT_SLOT) && (raw_axis<=ABS_CNT) )
+        mAxisFlags |= 1 << (raw_axis - ABS_MT_SLOT);
     switch(raw_axis){
     case ABS_X ... ABS_Z :
         mSlotID = 0 ; mTrackID = 0;
@@ -480,7 +481,7 @@ int TouchDevice::isValidEvent(int type,int code,int value){
 int TouchDevice::getActionByBits(int& pointIndex){
     const uint32_t diffBits = mLastBits.value^mCurrBits.value;
     pointIndex = diffBits?BitSet32::firstMarkedBit(diffBits):mTrack2Slot.indexOfValue(mSlotID);
-    if((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)
+    if(((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0))//||(mTrack2Slot.size()==0))
         pointIndex = 0;
     if(mLastBits.count()==mCurrBits.count()){
         return MotionEvent::ACTION_MOVE;
@@ -551,8 +552,19 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         }break;
     case EV_SYN:
         if((code!=SYN_REPORT) && (code!=SYN_MT_REPORT))break;
-        if((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)&&(mAxisFlags&(1<<(ABS_MT_TRACKING_ID-ABS_MT_SLOT))==0))
-            mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
+#ifndef DISABLE_MTASST
+    #define TRACKING_FLAG ((1<<(ABS_MT_TRACKING_ID-ABS_MT_SLOT))|(1<<(ABS_MT_SLOT-ABS_MT_SLOT)))
+        LOGD("%x,%x,%x,%x",mCorrectedDeviceClasses,INPUT_DEVICE_CLASS_TOUCH_MT,mAxisFlags,TRACKING_FLAG);
+        if( ((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && ((mAxisFlags&TRACKING_FLAG)==0))
+                ||((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) ){
+            mCorrectedDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
+            mCurrBits.markBit(0); mLastBits.markBit(0);
+            if(mAxisFlags&TRACKING_FLAG)mCurrBits.clear();
+            mTrack2Slot.put(0,0); mProp.id = 0;
+        }
+        if(code==SYN_REPORT)mAxisFlags = 0;
+#endif
+
 #if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
         slot = mTrack2Slot.indexOfKey(mProp.id);
 #else
