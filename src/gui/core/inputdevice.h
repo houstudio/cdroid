@@ -349,6 +349,7 @@ protected:
     uint32_t mScreenWidth;
     uint32_t mScreenHeight;
     uint32_t mAxisFlags;
+    uint32_t mCorrectedDeviceClasses;
     int mScreenRotation;
     int mSeqID;
     InputDeviceInfo mDeviceInfo;
