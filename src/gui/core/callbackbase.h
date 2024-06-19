@@ -41,13 +41,13 @@ public:
         return mFunctor.get() == b.mFunctor.get();
     }
     operator bool()const{ 
-        return (*mFunctor)!=nullptr;
+        return (mFunctor!=nullptr)&&(*mFunctor!=nullptr);
     }
     bool operator==(std::nullptr_t)const{
-        return (*mFunctor) == nullptr;
+        return (mFunctor==nullptr)||(*mFunctor == nullptr);
     }
     bool operator!=(std::nullptr_t)const{
-        return (*mFunctor) != nullptr;
+        return (mFunctor!=nullptr)&&(*mFunctor != nullptr);
     }
     virtual R operator()(Args...args){
         return (*mFunctor)(std::forward<Args>(args)...);
