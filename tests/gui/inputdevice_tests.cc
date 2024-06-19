@@ -87,6 +87,48 @@ TEST_F(INPUTDEVICE,ST){
    ASSERT_EQ(OutEvents[3]->getY(0),mts[12].value);
 }
 
+TEST_F(INPUTDEVICE,ST2){
+    TouchDevice d(INJECTDEV_TOUCH);
+    MTEvent mts[]={
+        {EV_KEY,BTN_TOUCH,1},//0
+        {EV_ABS,ABS_X,10},
+        {EV_ABS,ABS_Y,20},
+        {EV_SYN,SYN_REPORT,0},
+
+        {EV_ABS,ABS_Z,12},//4,/*NOX means use th last pointer's X value*/
+        {EV_ABS,ABS_Y,22},//5
+        {EV_SYN,SYN_REPORT,0},
+
+        {EV_ABS,ABS_X,14},//7
+        {EV_ABS,ABS_Y,24},
+        {EV_SYN,SYN_REPORT,0},
+
+        {EV_KEY,BTN_TOUCH,0},//10
+        {EV_ABS,ABS_X,16},
+        {EV_ABS,ABS_Y,26},
+        {EV_SYN,SYN_REPORT,0},
+    };
+   EventCount = sendEvents(d,mts,sizeof(mts)/sizeof(MTEvent),OutEvents);
+   ASSERT_EQ(EventCount,4);
+   ASSERT_EQ(OutEvents[0]->getAction(),MotionEvent::ACTION_DOWN);
+   ASSERT_EQ(OutEvents[0]->getPointerId(0),0);
+   ASSERT_EQ(OutEvents[0]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[0]->getX(0),mts[1].value);
+   ASSERT_EQ(OutEvents[0]->getY(0),mts[2].value);
+
+   ASSERT_EQ(OutEvents[1]->getAction(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[1]->getX(0),mts[1].value);
+   ASSERT_EQ(OutEvents[1]->getY(0),mts[5].value);
+
+   ASSERT_EQ(OutEvents[2]->getAction(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[2]->getX(0),mts[7].value);
+   ASSERT_EQ(OutEvents[2]->getY(0),mts[8].value);
+
+   ASSERT_EQ(OutEvents[3]->getAction(),MotionEvent::ACTION_UP);
+   ASSERT_EQ(OutEvents[3]->getX(0),mts[11].value);
+   ASSERT_EQ(OutEvents[3]->getY(0),mts[12].value);
+}
+
 #if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
 #define POINTERID(trackingId,index) trackingId
 #else
