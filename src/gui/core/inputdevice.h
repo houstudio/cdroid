@@ -348,6 +348,7 @@ protected:
     int mKeyboardType;
     uint32_t mScreenWidth;
     uint32_t mScreenHeight;
+    uint32_t mAxisFlags;
     int mScreenRotation;
     int mSeqID;
     InputDeviceInfo mDeviceInfo;

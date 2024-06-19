@@ -302,6 +302,7 @@ int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
 TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mTypeB = false;
     mTrackID = mSlotID = -1;
+    mAxisFlags = 0;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
     std::vector<InputDeviceInfo::MotionRange>&mr = mDeviceInfo.getMotionRanges();
     for(int i=0;i<mr.size();i++){
@@ -424,6 +425,8 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     default:/*MotionEvent::AXIS_Z:*/ break;
     }/*endof switch(axis)*/
 
+    if( (raw_axis>=ABS_MT_SLOT) && (raw_axis<=ABS_MT_SLOT) )
+        mAxisFlags = 1 << (raw_axis - ABS_MT_SLOT);
     switch(raw_axis){
     case ABS_X ... ABS_Z :
         mSlotID = 0 ; mTrackID = 0;
@@ -548,6 +551,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         }break;
     case EV_SYN:
         if((code!=SYN_REPORT) && (code!=SYN_MT_REPORT))break;
+        if((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)&&(mAxisFlags&(1<<(ABS_MT_TRACKING_ID-ABS_MT_SLOT))==0))
+            mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
 #if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
         slot = mTrack2Slot.indexOfKey(mProp.id);
 #else
@@ -601,8 +606,9 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         }
 
         mLastBits.value = mCurrBits.value;
-        mCoord.clear();mProp.clear();
+        mProp.clear();
         if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mTypeB==false) ){
+            mCoord.clear();
             mCurrBits.clear(); //only typeA
             mTrack2Slot.clear();
             for(int i = 0;i < pointerCount;i++){mPointerCoords[i].clear();mPointerCoords[i].clear();};
