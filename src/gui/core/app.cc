@@ -18,6 +18,7 @@
 #include <inputeventsource.h>
 #include <mutex>
 #include <cla.h>
+#include <core/build.h>
 void spt_init(int argc, char *argv[]);
 void setproctitle(const char *fmt, ...);
 extern "C" char *__progname;
@@ -53,6 +54,7 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     rotation = (getArgAsInt("rotate",0)/90)%4;
     onInit();
     setName(std::string(argc?argv[0]:__progname));
+    LOGI("CDROID Ver:%d.%d.%d Build %d",BUILD::VERSION::Major,BUILD::VERSION::Minor,BUILD::VERSION::Patch,BUILD::VERSION::BuildNumber);
     LOGI("App [%s] started c++=%d",mName.c_str(),__cplusplus);
 	
     View::VIEW_DEBUG = hasSwitch("debug");
