@@ -136,7 +136,7 @@ int DrawableContainer::DrawableContainerState::addChild(Drawable* dr){
     dr->setVisible(false, true);
     dr->setCallback(mOwner);
 
-    LOGV("%p addChild(%d:%p)",this,mDrawables.size(),dr);
+    LOGV("addChild(%p)[%d] to %p",dr,mDrawables.size(),this);
     mDrawables.push_back(dr);
     mChildrenChangingConfigurations |= dr->getChangingConfigurations();
 

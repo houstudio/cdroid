@@ -9,7 +9,7 @@ DECLARE_WIDGET(ImageView)
 ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initImageView();
-    mBaselineAlignBottom =attrs.getBoolean("baselineAlignBottom",false);
+    mBaselineAlignBottom = attrs.getBoolean("baselineAlignBottom",false);
     mBaseline = attrs.getDimensionPixelSize("baseline",-1);
     setAdjustViewBounds(attrs.getBoolean("adjustViewBounds",false));
     mCropToPadding = attrs.getBoolean("cropToPadding",false);
@@ -20,7 +20,7 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
             {"centerCrop",ScaleType::CENTER_CROP},{"centerInside",ScaleType::CENTER_INSIDE}
          },-1);
     if(scaleType>=0)setScaleType(scaleType);
-    Drawable*d=attrs.getDrawable("src");
+    Drawable*d = attrs.getDrawable("src");
     if(d)setImageDrawable(d);
     mDrawableTintList = attrs.getColorStateList("tint");
     mHasDrawableTint = mDrawableTintList!=nullptr;
