@@ -29,51 +29,52 @@ FORMAT formats[]={
 };
 
 class GRAPH:public testing::Test{
-   public :
-   static void SetUpTestCase(){
-      GFXInit();
-      for(int f=GPF_ARGB4444;f<=GPF_ABGR;f++){
-         printf("format %d whitepixel=%x\r\n",f,Color2Pixel(f,0xFFFFFFFF));
-         printf("format %d whitealphapixel=%x\r\n",f,Color2Pixel(f,0x00FFFFFF));
-      }
-   }
-   static void TearDownTestCase(){
-      sleep(20);
-   }
-   virtual void SetUp(){
-   }
-   static UINT Color2Pixel(INT fmt,UINT color){
-      FORMAT*f=formats+fmt;
-      BYTE a,r,g,b;
-      UINT pixel;
-      a=color>>24;
-      r=color>>16;
-      g=color>>8;
-      b=color;
-      pixel=((a&f->amask)<<f->ashift)|((r&f->rmask)<<f->rshift)|((g&f->gmask)<<f->gshift)|((b&f->bmask)<<f->bshift);
-      return pixel;
-   }
-   virtual void TearDown(){
-   }
-   unsigned long long gettime(){
-       struct timeval tv;
-       gettimeofday(&tv,NULL);
-       return tv.tv_sec*1000+tv.tv_usec/1000;
-   }
-   unsigned int getPixel(HANDLE surface,int x,int y){
-   //for pixel(x,y)out of surface,we return INVALID_COLOR
-       BYTE*buffer;
-       UINT w,h,f,pitch;
-       GFXLockSurface(surface,(void**)&buffer,&pitch);
-       GFXGetSurfaceInfo(surface,&w,&h,(int*)&f);
-       if(x<0||y<0||x>=w||y>=h)return INVALID_COLOR;
-       buffer+=pitch*y;
-       switch(f){
-       case GPF_ARGB4444:
-       case GPF_ARGB1555:return *(USHORT*)(buffer+2*x);
-       case GPF_ARGB:
-       case GPF_ABGR:
-       case GPF_RGB32:return *(UINT*)(buffer+4*x);
+public :
+    static void SetUpTestCase(){
+       GFXInit();
+       for(int f=GPF_ARGB4444;f<=GPF_ABGR;f++){
+          printf("format %d whitepixel=%x\r\n",f,Color2Pixel(f,0xFFFFFFFF));
+          printf("format %d whitealphapixel=%x\r\n",f,Color2Pixel(f,0x00FFFFFF));
+       }
+    }
+    static void TearDownTestCase(){
+       sleep(20);
+    }
+    virtual void SetUp(){
+    }
+    static UINT Color2Pixel(INT fmt,UINT color){
+        FORMAT*f = formats+fmt;
+        BYTE a,r,g,b;
+        UINT pixel;
+        a = color>>24;
+        r = color>>16;
+        g = color>>8;
+        b = color;
+        pixel = ((a&f->amask)<<f->ashift)|((r&f->rmask)<<f->rshift)|((g&f->gmask)<<f->gshift)|((b&f->bmask)<<f->bshift);
+        return pixel;
+    }
+    virtual void TearDown(){
+    }
+    unsigned long long gettime(){
+        struct timeval tv;
+        gettimeofday(&tv,NULL);
+        return tv.tv_sec*1000+tv.tv_usec/1000;
+    }
+    unsigned int getPixel(HANDLE surface,int x,int y){
+        //for pixel(x,y)out of surface,we return INVALID_COLOR
+        BYTE*buffer;
+        UINT w,h,f,pitch;
+        GFXLockSurface(surface,(void**)&buffer,&pitch);
+        GFXGetSurfaceInfo(surface,&w,&h,(int*)&f);
+        if(x<0||y<0||x>=w||y>=h)return INVALID_COLOR;
+        buffer+=pitch*y;
+        switch(f){
+        case GPF_ARGB4444:
+        case GPF_ARGB1555:return *(USHORT*)(buffer+2*x);
+        case GPF_ARGB:
+        case GPF_ABGR:
+        case GPF_RGB32:return *(UINT*)(buffer+4*x);
+        default:return 0xCCCCCCCC;
        }
    }
    BOOL errorPixel(HANDLE surface,int x,int y,UINT color){

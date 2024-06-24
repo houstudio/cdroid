@@ -132,10 +132,6 @@ if(ENABLE_PINYIN2HZ)
     list(APPEND CDROID_DEPINCLUDES ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include)
 endif()
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/src/gui/gui_features.h.cmake")
-    configure_file(src/gui/gui_features.h.cmake  ${CMAKE_BINARY_DIR}/include/gui/gui_features.h)
-    configure_file(src/gui/gui_features.h.cmake  ${CMAKE_SOURCE_DIR}/src/gui/gui_features.h)
-endif()
 set(SKIP_INSTALL_EXPORT TRUE)
 
 if(NOT VCPKG_TARGET_TRIPLET)

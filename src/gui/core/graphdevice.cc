@@ -16,6 +16,8 @@
 #include <sys/resource.h>
 #include <malloc.h>
 #include <fstream>
+#include <gui_features.h>
+
 using namespace Cairo;
 
 namespace cdroid{
@@ -23,8 +25,8 @@ namespace cdroid{
 GraphDevice*GraphDevice::mInst = nullptr;
 
 GraphDevice&GraphDevice::GraphDevice::getInstance(){
-    if(nullptr==mInst)
-        mInst=new GraphDevice();
+    if(nullptr == mInst)
+        mInst = new GraphDevice();
     return *mInst;
 }
 
@@ -156,9 +158,6 @@ void GraphDevice::invalidate(const Rect&r){
     LOGV("(%d,%d,%d,%d)",r.left,r.top,r.width,r.height);
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-/*make gcc happy for mallinfo()*/
 void GraphDevice::trackFPS(Canvas& canvas) {
     // Tracks frames per second drawn. First value in a series of draws may be bogus
     // because it down not account for the intervening idle time
@@ -174,10 +173,17 @@ void GraphDevice::trackFPS(Canvas& canvas) {
         if (totalTime > 1000) {
             char buffer[64];
             const float fps = (float) mFpsNumFrames * 1000 / totalTime;
+#if HAVE_MALLINFO2
+            struct mallinfo2 mi = mallinfo2();
+            sprintf(buffer,"%.2ffps,%ldK",fps,long(mi.uordblks>>10));
+#elif HAVE_MALLINFO
             struct mallinfo mi = mallinfo();
+            sprintf(buffer,"%.2ffps,%ldK",fps,long(mi.uordblks>>10));
+#else
+            sprintf(buffer,"%.2ffps",fps);
+#endif
             mFpsStartTime = nowTime;
             mFpsNumFrames = 0;
-            sprintf(buffer,"%.2ffps,%ldK",fps,long(mi.uordblks>>10));
        	    mFPSText = buffer;
         }
     }
@@ -191,7 +197,6 @@ void GraphDevice::trackFPS(Canvas& canvas) {
     canvas.draw_text(mRectBanner,mFPSText,Gravity::CENTER);
     canvas.restore(); 
 }
-#pragma GCC diagnostic pop
 
 void GraphDevice::getScreenSize(int &w,int&h)const{
     w = mScreenWidth;

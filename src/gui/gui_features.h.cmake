@@ -13,5 +13,9 @@
 #cmakedefine ENABLE_BARCODE   1
 #cmakedefine ENABLE_LITEHTML  1
 
+
+#cmakedefine HAVE_MALLINFO 1
+#cmakedefine HAVE_MALLINFO2 1
+
 #define CDROID_VERSION "@CDROID_VERSION@"
 #define CDROID_VERSION_MAJOR "@CDROID_VERSION_MAJOR@"

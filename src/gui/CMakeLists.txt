@@ -34,7 +34,9 @@ include_directories(
     ${CDROID_DEPINCLUDES}
     ${LIBUNIBREAK_INCLUDE_DIRS}
 )
-
+#message(FATAL_ERROR "VERSION=${VERSION}")
+set(CDROID_VERSION 1.2)
+set(CDROID_VERSION_MAJOR 1)
 add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
 add_definitions(--include stdpatch.h)
@@ -82,6 +84,11 @@ foreach( each_file ${filtered_files} )
   install(FILES  ${PROJECT_SOURCE_DIR}/${each_file} DESTINATION "${CMAKE_BINARY_DIR}/include/gui/${FILE_PATH}")
 endforeach(each_file)
 
+include(CheckFunctionExists)
+check_function_exists(mallinfo2 HAVE_MALLINFO2)
+check_function_exists(mallinfo HAVE_MALLINFO)
+
+configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
 configure_file("cdroid.pc.in"  "cdroid.pc"  @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc"
 	DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
