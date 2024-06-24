@@ -395,10 +395,10 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
 
         if(mInvertX)value = mMaxX - value + mMinX;
         if(mSwitchXY){
-            value = (value * mScreenWidth)/mTPHeight;
+            value = (value * int(mScreenWidth))/int(mTPHeight);
             axis= MotionEvent::AXIS_Y;
         }else if(mScreenWidth != mTPWidth){
-            value = (value * mScreenWidth)/mTPWidth;
+            value = (value * int(mScreenWidth))/(int)mTPWidth;
         }
         mCoord.setAxisValue(axis,value);
         break;
@@ -412,10 +412,10 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
 
         if(mInvertY)value = mMaxY - value + mMinY;
         if(mSwitchXY){
-            value = (value * mScreenHeight)/mTPWidth;
+            value = (value * int(mScreenHeight))/int(mTPWidth);
             axis= MotionEvent::AXIS_X;
         }else{
-            value = (value * mScreenHeight)/mTPHeight;
+            value = (value * int(mScreenHeight))/int(mTPHeight);
         }mCoord.setAxisValue(axis,value);
         break;
     case MotionEvent::AXIS_PRESSURE:
