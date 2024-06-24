@@ -554,7 +554,6 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         if((code!=SYN_REPORT) && (code!=SYN_MT_REPORT))break;
 #ifndef DISABLE_MTASST
     #define TRACKING_FLAG ((1<<(ABS_MT_TRACKING_ID-ABS_MT_SLOT))|(1<<(ABS_MT_SLOT-ABS_MT_SLOT)))
-        LOGD("%x,%x,%x,%x",mCorrectedDeviceClasses,INPUT_DEVICE_CLASS_TOUCH_MT,mAxisFlags,TRACKING_FLAG);
         if( ((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && ((mAxisFlags&TRACKING_FLAG)==0))
                 ||((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) ){
             mCorrectedDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
