@@ -2,7 +2,6 @@
 #include <cairomm/context.h>
 #include <cairomm/surface.h>
 #include <image-decoders/imagedecoder.h>
-#include <gui/gui_features.h>
 #include <core/systemclock.h>
 #include <cdlog.h>
 #include "png.h"     /* original (unpatched) libpng is ok */

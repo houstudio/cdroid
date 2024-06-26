@@ -40,6 +40,7 @@ public:
     void setScreenSaver(ScreenSaver func,int timeout);
     void closeScreenSaver();
     bool isScreenSaverActived()const;
+    void record(const std::string&fname);
     void playback(const std::string&fname);
     int checkEvents()override;
     int handleEvents()override;

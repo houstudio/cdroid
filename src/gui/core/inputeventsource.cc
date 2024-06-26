@@ -180,22 +180,22 @@ void InputEventSource::recordEvent(InputEvent&inputEvent){
         oss<<(4 + m.getAction())<<","<<m.getX(0)<<","<<m.getY()<<","<<m.getEventTime()<<std::endl;
     }else if(type==InputEvent::INPUT_EVENT_TYPE_KEY){
         KeyEvent& k = (KeyEvent&)inputEvent;
-        oss<<k.getAction()<<","<<k.getKeyCode()<<","<<k.getEventTime()<<std::endl;
+        oss<<k.getAction()<<","<<k.getLabel()<<","<<k.getEventTime()<<std::endl;
     }
 }
 
 InputEvent*InputEventSource::parseEvent(const char*line){
     const char*tokens[16]={0};
     const char*p = line;
-    int tokenCount=0;
-    int action = atoi(line);
+    int tokenCount = 0;
     while( p && ( tokenCount < sizeof(tokens)/sizeof(tokens[0]) )){
-        tokens[tokenCount++]=p;
+        tokens[tokenCount++] = p;
         p = strchr(p+1,',');
     }
-    if(action<4){/*KeyEvent*/
+    if(tokenCount<4){/*KeyEvent*/
         const int keyCode = atoi(tokens[1]);
         const nsecs_t etime = atoi(tokens[2]);
+        const int action = atoi(line);
         KeyEvent* k = KeyEvent::obtain(etime,etime,action,keyCode,
             0/*repeat*/, 0/*metaState*/, 0/*deviceId*/, keyCode/*scancode*/,
             0/*flags*/, 0/*source*/,0/*displayid*/);
@@ -203,7 +203,7 @@ InputEvent*InputEventSource::parseEvent(const char*line){
     }else if(tokenCount>=4){/*MotionEvent*/
         int tkIdx = tokenCount>4?1:0;
         const int pointer =(tokenCount>4) ? atoi(tokens[0]) : 0;
-        action = atoi(tokens[tkIdx]);
+        const int action = atoi(tokens[tkIdx]);
         const int x = atoi(tokens[tkIdx+1]);
         const int y = atoi(tokens[tkIdx+2]);
         const nsecs_t etime = atoll(tokens[tkIdx+3]);
@@ -214,6 +214,10 @@ InputEvent*InputEventSource::parseEvent(const char*line){
         return m;
     }
     return nullptr;
+}
+
+void InputEventSource::record(const std::string&fname){
+    frecord.open(fname);
 }
 
 void InputEventSource::playback(const std::string&fname){

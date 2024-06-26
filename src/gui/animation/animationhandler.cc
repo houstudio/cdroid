@@ -29,7 +29,6 @@ void AnimationHandler::MyFrameCallbackProvider::setFrameDelay(long delay) {
 AnimationHandler::AnimationHandler(){
     mProvider  = nullptr;
     mListDirty = false;
-	//mInLooper = false;
     mFrameCallback = std::bind(&AnimationHandler::doFrame,this,std::placeholders::_1);
 }
 
@@ -37,15 +36,6 @@ AnimationHandler::~AnimationHandler(){
     delete mProvider;
 }
 
-/*int AnimationHandler::checkEvents(){
-    return mAnimationCallbacks.size();
-}
-
-int AnimationHandler::handleEvents(){
-    const long currentTime = getProvider()->getFrameTime();
-    doAnimationFrame(currentTime);
-    return 1;
-}*/
 
 void AnimationHandler::doFrame(long frameTimeNanos){
     LOGV("not used,frame refresh callback");
@@ -107,10 +97,6 @@ void AnimationHandler::cleanUpList(){
 
 static NeverDestroyed<AnimationHandler>mInst;
 AnimationHandler&AnimationHandler::getInstance(){
-    /*if(!mInst->mInLooper){
-        Looper::getDefault()->addEventHandler(mInst.get());
-		mInst->mInLooper = true;
-    }*/
     return *mInst;
 }
 
@@ -180,7 +166,7 @@ long AnimationHandler::getFrameDelay() {
 
 void AnimationHandler::autoCancelBasedOn(ObjectAnimator* objectAnimator){
     for(auto cb:mAnimationCallbacks){
-        if(cb == nullptr)continue;
+        if(cb == nullptr) continue;
         if(objectAnimator->shouldAutoCancel(cb))
             dynamic_cast<Animator*>(cb)->cancel();
     }

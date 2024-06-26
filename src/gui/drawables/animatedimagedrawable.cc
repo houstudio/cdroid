@@ -1,7 +1,6 @@
 #include <drawables/animatedimagedrawable.h>
 #include <systemclock.h>
 #include <cdlog.h>
-#include <gui/gui_features.h>
 #include <view/view.h>
 #include <image-decoders/imagedecoder.h>
 #include <image-decoders/framesequence.h>

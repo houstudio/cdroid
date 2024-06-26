@@ -7,7 +7,6 @@
 #include <drawables/animatedimagedrawable.h>
 #include <image-decoders/imagedecoder.h>
 #include <core/textutils.h>
-#include <gui/gui_features.h>
 
 namespace cdroid{
 

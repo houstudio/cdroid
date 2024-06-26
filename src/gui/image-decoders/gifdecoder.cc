@@ -1,7 +1,6 @@
 #include <core/context.h>
 #include <cairomm/surface.h>
 #include <image-decoders/imagedecoder.h>
-#include <gui/gui_features.h>
 #include <gif_lib.h>
 #include <cdlog.h>
 

@@ -7,7 +7,7 @@
 
 namespace cdroid{
 class ObjectAnimator;
-class AnimationHandler/*:EventHandler*/{
+class AnimationHandler{
 public:
     class AnimationFrameCallback{
     public:
@@ -32,7 +32,6 @@ private:
         void setFrameDelay(long delay)override;
     };
     bool mListDirty;
-	//bool mInLooper;
     AnimationFrameCallbackProvider* mProvider;
     Choreographer::FrameCallback mFrameCallback;
     std::list<AnimationFrameCallback*> mAnimationCallbacks;
@@ -49,9 +48,6 @@ private:
     void commitAnimationFrame(AnimationFrameCallback* callback, long frameTime);
     void cleanUpList();
     int getCallbackSize()const;
-protected:
-    //int checkEvents()override;
-    //int handleEvents()override;
 public:
     static AnimationHandler& getInstance();
     void setProvider(const AnimationFrameCallbackProvider* provider);
