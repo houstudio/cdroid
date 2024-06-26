@@ -28,6 +28,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/../porting/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include
     ${CMAKE_BINARY_DIR}/include
+    ${PROJECT_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/include/gui
     ${CMAKE_BINARY_DIR}/include/porting
     ${CMAKE_BINARY_DIR}/include/pinyin
@@ -89,6 +90,7 @@ check_function_exists(mallinfo2 HAVE_MALLINFO2)
 check_function_exists(mallinfo HAVE_MALLINFO)
 
 configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
+add_definitions(--include gui_features.h)
 configure_file("cdroid.pc.in"  "cdroid.pc"  @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc"
 	DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
