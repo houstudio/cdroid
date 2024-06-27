@@ -346,8 +346,8 @@ public:
 protected:
     int mDeviceClasses;
     int mKeyboardType;
-    uint32_t mScreenWidth;
-    uint32_t mScreenHeight;
+    int32_t mScreenWidth;
+    int32_t mScreenHeight;
     uint32_t mAxisFlags;
     uint32_t mCorrectedDeviceClasses;
     int mLastAction;

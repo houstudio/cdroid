@@ -396,10 +396,10 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
 
         if(mInvertX)value = mMaxX - value + mMinX;
         if(mSwitchXY){
-            value = (value * int(mScreenWidth))/int(mTPHeight);
+            value = (value * mScreenWidth)/mTPHeight;
             axis= MotionEvent::AXIS_Y;
         }else if(mScreenWidth != mTPWidth){
-            value = (value * int(mScreenWidth))/(int)mTPWidth;
+            value = (value * mScreenWidth)/mTPWidth;
         }
         mCoord.setAxisValue(axis,value);
         break;
@@ -413,15 +413,14 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
 
         if(mInvertY)value = mMaxY - value + mMinY;
         if(mSwitchXY){
-            value = (value * int(mScreenHeight))/int(mTPWidth);
+            value = (value * mScreenHeight)/mTPWidth;
             axis= MotionEvent::AXIS_X;
         }else{
-            value = (value * int(mScreenHeight))/int(mTPHeight);
+            value = (value * mScreenHeight)/mTPHeight;
         }mCoord.setAxisValue(axis,value);
         break;
     case MotionEvent::AXIS_PRESSURE:
-        tmp = mPressureMax - mPressureMin;
-        if(tmp == 0)tmp = 1;
+        tmp = std::max(mPressureMax - mPressureMin,1);
         mCoord.setAxisValue(axis,float(value - mPressureMin)/tmp);
         break;
     default:/*MotionEvent::AXIS_Z:*/ break;
@@ -589,14 +588,14 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         if(lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)&&(action==MotionEvent::ACTION_MOVE)&&(mMoveTime-lastEvent->getDownTime()<100)){
             auto lastTime = lastEvent->getDownTime();
             lastEvent->addSample(mMoveTime,mPointerCoords.data());
-            LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
+            LOGD("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
         }else {
             const bool useBackupProps = ((action==MotionEvent::ACTION_UP)||(action==MotionEvent::ACTION_POINTER_UP))&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT);
             const PointerCoords  *coords = useBackupProps ? mPointerCoordsBak.data(): mPointerCoords.data();
             const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
             mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
                  0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
-            LOGV_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
+            LOGD_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
                  mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
             mEvent->setActionButton(mActionButton);
             mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
