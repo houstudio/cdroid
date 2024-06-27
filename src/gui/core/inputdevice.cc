@@ -563,8 +563,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         if( ((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && ((mAxisFlags&TRACKING_FLAG)==0))
                 ||((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) ){
             mCorrectedDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
-            if((mAxisFlags&0x80000000)==0)
-            {mCurrBits.markBit(0); mLastBits.markBit(0);}
+            if((mAxisFlags&(TRACKING_FLAG|0x80000000))==0)
+            {mCurrBits.markBit(0); mLastBits.markBit(0);mTrack2Slot.clear();}
             if(mAxisFlags&TRACKING_FLAG)mCurrBits.clear();
             mTrack2Slot.put(0,0); mProp.id = 0;
         }
@@ -585,7 +585,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         action = getActionByBits(pointerIndex);
         mMoveTime = (tv.tv_sec * 1000LL + tv.tv_usec/1000);
         lastEvent = (mEvents.size()>1) ? (MotionEvent*)mEvents.back() : nullptr;
-        pointerCount = (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) ? std::max(mLastBits.count(),mCurrBits.count()) : 1;
+        pointerCount = (mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) ? std::max(mLastBits.count(),mCurrBits.count()) : 1;
         if(lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)&&(action==MotionEvent::ACTION_MOVE)&&(mMoveTime-lastEvent->getDownTime()<100)){
             auto lastTime = lastEvent->getDownTime();
             lastEvent->addSample(mMoveTime,mPointerCoords.data());
@@ -625,7 +625,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
 
         mLastBits.value = mCurrBits.value;
         mProp.clear();
-        if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mTypeB==false) ){
+        if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)&&(mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mTypeB==false) ){
             mCoord.clear();
             mCurrBits.clear(); //only typeA
             mTrack2Slot.clear();

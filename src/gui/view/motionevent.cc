@@ -567,7 +567,7 @@ const PointerCoords& MotionEvent::getHistoricalRawPointerCoords(
         size_t pointerIndex, size_t historicalIndex) const {
     const size_t pointerCount = getPointerCount();
     if((pointerIndex<0)||(pointerIndex>=pointerCount))
-        LOGE("outof Range pointerIndex=%d/%d",pointerIndex,pointerCount);
+        LOGE("outof Range pointerIndex=%d/%d action=%d",pointerIndex,pointerCount,mAction);
     if(historicalIndex==HISTORY_CURRENT){
         return mSamplePointerCoords[pointerIndex];
     }else{
