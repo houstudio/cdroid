@@ -350,6 +350,7 @@ protected:
     uint32_t mScreenHeight;
     uint32_t mAxisFlags;
     uint32_t mCorrectedDeviceClasses;
+    int mLastAction;
     int mScreenRotation;
     int mSeqID;
     InputDeviceInfo mDeviceInfo;

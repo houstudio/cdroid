@@ -303,6 +303,7 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mTypeB = false;
     mTrackID = mSlotID = -1;
     mAxisFlags = 0;
+    mLastAction= -1;
     mCorrectedDeviceClasses = mDeviceClasses;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
     std::vector<InputDeviceInfo::MotionRange>&mr = mDeviceInfo.getMotionRanges();
@@ -481,8 +482,12 @@ int TouchDevice::isValidEvent(int type,int code,int value){
 int TouchDevice::getActionByBits(int& pointIndex){
     const uint32_t diffBits = mLastBits.value^mCurrBits.value;
     pointIndex = diffBits?BitSet32::firstMarkedBit(diffBits):mTrack2Slot.indexOfValue(mSlotID);
-    if(((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0))//||(mTrack2Slot.size()==0))
+    if(((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0))
         pointIndex = 0;
+    if(((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)){
+        if(mLastAction==MotionEvent::ACTION_UP)
+            return MotionEvent::ACTION_DOWN;
+    }
     if(mLastBits.count()==mCurrBits.count()){
         return MotionEvent::ACTION_MOVE;
     }else if(mLastBits.count()<mCurrBits.count()){
@@ -522,6 +527,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case BTN_STYLUS:
             mActionButton = MotionEvent::BUTTON_PRIMARY;
             if(value)mCurrBits.markBit(0);else mCurrBits.clearBit(0);
+            mAxisFlags|=0x80000000;
             if(value){
                 mMoveTime = mDownTime = tv.tv_sec * 1000 + tv.tv_usec/1000;
                 mButtonState = MotionEvent::BUTTON_PRIMARY;
@@ -557,7 +563,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         if( ((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && ((mAxisFlags&TRACKING_FLAG)==0))
                 ||((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) ){
             mCorrectedDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
-            mCurrBits.markBit(0); mLastBits.markBit(0);
+            if((mAxisFlags&0x80000000)==0)
+            {mCurrBits.markBit(0); mLastBits.markBit(0);}
             if(mAxisFlags&TRACKING_FLAG)mCurrBits.clear();
             mTrack2Slot.put(0,0); mProp.id = 0;
         }
@@ -598,7 +605,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             mEvents.push_back(e);
             mEvent->recycle();
         }
-
+        mLastAction = action;
         if( mLastBits.count() > mCurrBits.count() ){
             const uint32_t pointerIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
             LOGV("clearbits %d %08x,%08x trackslot.size=%d",pointerIndex,mLastBits.value,mCurrBits.value, mTrack2Slot.size());
