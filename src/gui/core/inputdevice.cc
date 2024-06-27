@@ -562,9 +562,8 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         if( ((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && ((mAxisFlags&TRACKING_FLAG)==0))
                 ||((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) ){
             mCorrectedDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
-            if((mAxisFlags&(TRACKING_FLAG|0x80000000))==0)
-            {mCurrBits.markBit(0); mLastBits.markBit(0);mTrack2Slot.clear();}
-            if(mAxisFlags&TRACKING_FLAG)mCurrBits.clear();
+            if((mAxisFlags&0x80000000)==0) {mCurrBits.markBit(0); mLastBits.markBit(0);}
+            if( mAxisFlags&TRACKING_FLAG ) mCurrBits.clear();
             mTrack2Slot.put(0,0); mProp.id = 0;
         }
         if(code==SYN_REPORT)mAxisFlags = 0;
@@ -588,14 +587,14 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         if(lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)&&(action==MotionEvent::ACTION_MOVE)&&(mMoveTime-lastEvent->getDownTime()<100)){
             auto lastTime = lastEvent->getDownTime();
             lastEvent->addSample(mMoveTime,mPointerCoords.data());
-            LOGD("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
+            LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
         }else {
             const bool useBackupProps = ((action==MotionEvent::ACTION_UP)||(action==MotionEvent::ACTION_POINTER_UP))&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT);
             const PointerCoords  *coords = useBackupProps ? mPointerCoordsBak.data(): mPointerCoords.data();
             const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
             mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
                  0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
-            LOGD_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
+            LOGV_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
                  mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
             mEvent->setActionButton(mActionButton);
             mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
