@@ -562,7 +562,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         if( ((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && ((mAxisFlags&TRACKING_FLAG)==0))
                 ||((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) ){
             mCorrectedDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
-            if((mAxisFlags&0x80000000)==0) {mCurrBits.markBit(0); mLastBits.markBit(0);}
+            if((mAxisFlags&0x80000000)==0) {mCurrBits.markBit(0); mLastBits.markBit(0);mTrack2Slot.clear();}
             if( mAxisFlags&TRACKING_FLAG ) mCurrBits.clear();
             mTrack2Slot.put(0,0); mProp.id = 0;
         }
