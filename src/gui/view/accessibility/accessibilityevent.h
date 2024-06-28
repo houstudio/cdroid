@@ -273,6 +273,17 @@ public:
      * The window either entered or exited picture-in-picture mode.
      */
     static constexpr int WINDOWS_CHANGE_PIP = 0x00000400;
+private:
+    AccessibilityEvent();
+protected:
+    void init(AccessibilityEvent&);
+public:
+    void setSealed(bool);
+    void getRecordCount()const;
+    //void appendRecord(AccessibilityRecord&);
+    //AccessibilityRecord getRecord(int);
+    int getEventType()const;
+    int getContentChangeTypes()const;
 };
 }
 #endif

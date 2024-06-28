@@ -339,6 +339,7 @@ void View::initView(){
     mPerformClick = nullptr;
     mPendingCheckForTap = nullptr;
     mUnsetPressedState = nullptr;;
+    mAccessibilityDelegate = nullptr;
     mPendingCheckForLongPress = nullptr;
     mInputEventConsistencyVerifier = nullptr;
     if(InputEventConsistencyVerifier::isInstrumentationEnabled()&&View::VIEW_DEBUG)
@@ -434,6 +435,7 @@ View::~View(){
     delete mOverlay;
     delete mAnimator;
     delete mFloatingTreeObserver;
+    delete mAccessibilityDelegate;
     delete mRunQueue;
 }
 
@@ -5124,6 +5126,23 @@ View& View::clearAccessibilityFocusNoCallbacks(int action){
 }
 
 View& View::sendAccessibilityEvent(int eventType){
+    return *this;
+}
+
+View& View::sendAccessibilityEventInternal(int eventType){
+    return *this;
+}
+
+View& View::sendAccessibilityEventUnchecked(AccessibilityEvent& event) {
+    if (mAccessibilityDelegate) {
+        //mAccessibilityDelegate->sendAccessibilityEventUnchecked(this, event);
+    } else {
+        sendAccessibilityEventUncheckedInternal(event);
+    }
+    return *this;
+}
+
+View& View::sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event){
     return *this;
 }
 

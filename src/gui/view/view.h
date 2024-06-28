@@ -342,6 +342,7 @@ public:
         CallbackBase<void,View&>onViewAttachedToWindow;
         CallbackBase<void,View&>onViewDetachedFromWindow;
     }OnAttachStateChangeListener;
+    class AccessibilityDelegate;
 private:
     friend ViewGroup;
     friend Window;
@@ -505,6 +506,7 @@ protected:
     bool mCachingFailed;
     bool mLastIsOpaque;
     bool mSendingHoverAccessibilityEvents;
+    AccessibilityDelegate* mAccessibilityDelegate;
     Rect mClipBounds;
     std::string mHint;
     std::string mContentDescription;
@@ -944,6 +946,9 @@ public:
     virtual View& clearFlag(int flag);
     bool isAccessibilityFocused()const;
     View& sendAccessibilityEvent(int eventType);
+    View& sendAccessibilityEventInternal(int eventType);
+    View& sendAccessibilityEventUnchecked(AccessibilityEvent& event);
+    View& sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event);
     bool requestAccessibilityFocus();
     View& clearAccessibilityFocus();
     View& clearAccessibilityFocusNoCallbacks(int action);
@@ -1344,7 +1349,7 @@ public:
     static int adjust(int measureSpec, int delta);
     static const std::string toString(int measureSpec) ;
 };
-using MeasureSpec=View::MeasureSpec;
+using MeasureSpec= View::MeasureSpec;
 
 class View::BaseSavedState:public AbsSavedState {
 public:
@@ -1362,6 +1367,55 @@ public:
     BaseSavedState(Parcel& source);
     BaseSavedState(Parcelable* superState);
     void writeToParcel(Parcel& out, int flags);
+};
+
+class View::AccessibilityDelegate {
+public:
+    void sendAccessibilityEvent(View& host, int eventType) {
+        host.sendAccessibilityEventInternal(eventType);
+    }
+
+#if __TODO__
+    bool performAccessibilityAction(View& host, int action,Bundle* args) {
+        return host.performAccessibilityActionInternal(action, args);
+    }
+
+    void sendAccessibilityEventUnchecked(View& host,AccessibilityEvent& event) {
+        host.sendAccessibilityEventUncheckedInternal(event);
+    }
+
+    bool dispatchPopulateAccessibilityEvent(View& host,AccessibilityEvent& event) {
+        return host.dispatchPopulateAccessibilityEventInternal(event);
+    }
+
+    void onPopulateAccessibilityEvent(View& host,AccessibilityEvent& event) {
+        host.onPopulateAccessibilityEventInternal(event);
+    }
+
+    void onInitializeAccessibilityEvent(View& host,AccessibilityEvent& event) {
+        host.onInitializeAccessibilityEventInternal(event);
+    }
+
+    void onInitializeAccessibilityNodeInfo(View& host,AccessibilityNodeInfo& info) {
+        host.onInitializeAccessibilityNodeInfoInternal(info);
+    }
+
+    void addExtraDataToAccessibilityNodeInfo(View& host,AccessibilityNodeInfo& info,
+            const std::string& extraDataKey, Bundle* arguments) {
+        host.addExtraDataToAccessibilityNodeInfo(info, extraDataKey, arguments);
+    }
+
+    bool onRequestSendAccessibilityEvent(ViewGroup& host, View& child,AccessibilityEvent& event) {
+        return host.onRequestSendAccessibilityEventInternal(child, event);
+    }
+
+    AccessibilityNodeProvider* getAccessibilityNodeProvider(View& host) {
+        return nullptr;
+    }
+    AccessibilityNodeInfo createAccessibilityNodeInfo(View& host) {
+        return host.createAccessibilityNodeInfoInternal();
+    }
+#endif
 };
 }//endof namespace cdroid
 

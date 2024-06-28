@@ -21,4 +21,13 @@ void Parcel::writeBoolean(bool){
 void Parcel::writeString(const std::string&){
 }
 
+void Parcel::writeParcelable(Parcelable* p, int parcelableFlags) {
+    if (p == nullptr) {
+        writeString("");
+        return;
+    }
+    //writeParcelableCreator(p);
+    //p->writeToParcel(this, parcelableFlags);
+}
+
 }

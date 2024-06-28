@@ -2123,10 +2123,10 @@ void RecyclerView::dispatchContentChangedIfNecessary() {
     const int flags = mEatenAccessibilityChangeFlags;
     mEatenAccessibilityChangeFlags = 0;
     if (flags != 0 && isAccessibilityEnabled()) {
-        //const AccessibilityEvent event = AccessibilityEvent.obtain();
-        //event.setEventType(AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
-        //AccessibilityEventCompat.setContentChangeTypes(event, flags);
-        //sendAccessibilityEventUnchecked(event);
+        //const AccessibilityEvent* event = AccessibilityEvent::obtain();
+        //event->setEventType(AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
+        //event->setContentChangeTypes(flags);
+        //sendAccessibilityEventUnchecked(*event);
     }
 }
 
@@ -2138,7 +2138,7 @@ bool RecyclerView::shouldDeferAccessibilityEvent(AccessibilityEvent* event) {
     if (isComputingLayout()) {
         int type = 0;
         if (event != nullptr) {
-            type = AccessibilityEvent::getContentChangeTypes(event);
+            type = event->getContentChangeTypes();
         }
         if (type == 0) {
             type = AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED;
@@ -6261,16 +6261,13 @@ void RecyclerView::ViewHolder::onEnteredHiddenState(RecyclerView* parent) {
     if (mPendingAccessibilityState != PENDING_ACCESSIBILITY_STATE_NOT_SET) {
         mWasImportantForAccessibilityBeforeHidden = mPendingAccessibilityState;
     } else {
-        mWasImportantForAccessibilityBeforeHidden =
-                itemView->getImportantForAccessibility();
+        mWasImportantForAccessibilityBeforeHidden = itemView->getImportantForAccessibility();
     }
-    parent->setChildImportantForAccessibilityInternal(this,
-            View::IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+    parent->setChildImportantForAccessibilityInternal(this, View::IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
 }
 
 void RecyclerView::ViewHolder::onLeftHiddenState(RecyclerView* parent) {
-    parent->setChildImportantForAccessibilityInternal(this,
-            mWasImportantForAccessibilityBeforeHidden);
+    parent->setChildImportantForAccessibilityInternal(this,mWasImportantForAccessibilityBeforeHidden);
     mWasImportantForAccessibilityBeforeHidden = View::IMPORTANT_FOR_ACCESSIBILITY_AUTO;
 }
 

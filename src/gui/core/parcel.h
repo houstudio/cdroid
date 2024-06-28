@@ -1,7 +1,7 @@
 #ifndef __PARCEL_H__
 #define __PARCEL_H__
 namespace cdroid{
-
+class Parcelable;
 class Parcel{
 private:
     static constexpr int POOL_SIZE = 6;
@@ -55,6 +55,8 @@ private:
     // EX_TRANSACTION_FAILED is used exclusively in native code.
     // see libbinder's binder/Status.h
     static constexpr int EX_TRANSACTION_FAILED = -129;
+private:
+
 public:
     static Parcel* obtain();
     void recycle();
@@ -71,6 +73,7 @@ public:
     void writeFloat(float val);
     void writeDouble(double val);
     void writeString(const std::string& val);
+    void writeParcelable(Parcelable*p,int parcelableFlags);
 };
 }/*endof namespace*/
 #endif/*__PARCEL_H__*/
