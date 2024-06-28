@@ -124,6 +124,7 @@ RecyclerView::~RecyclerView(){
     delete mBottomGlow;
     delete mEdgeEffectFactory;
     delete mScrollingChildHelper;
+    delete mPendingSavedState;
     delete (ViewInfoStore::ProcessCallback*)mViewInfoProcessCallback;
 }
 
@@ -145,6 +146,7 @@ void RecyclerView::initRecyclerView(){
     mViewFlinger = new ViewFlinger(this);
     mItemAnimator= nullptr;
     mRecycler = new Recycler(this);
+    mPendingSavedState = nullptr;
     mObserver = new RecyclerViewDataObserver(this);
     mLeftGlow = mTopGlow = nullptr;
     mRightGlow = mBottomGlow = nullptr;
@@ -616,34 +618,28 @@ RecyclerView::OnFlingListener RecyclerView::getOnFlingListener() {
 }
 
 Parcelable* RecyclerView::onSaveInstanceState() {
-#if 0 
-    SavedState* state = new SavedState(super.onSaveInstanceState());;
+    SavedState* state = new SavedState(ViewGroup::onSaveInstanceState());
     if (mPendingSavedState != nullptr) {
-        state->copyFrom(mPendingSavedState);
+        state->copyFrom(*mPendingSavedState);
     } else if (mLayout != nullptr) {
         state->mLayoutState = mLayout->onSaveInstanceState();
     } else {
         state->mLayoutState = nullptr;
     }
     return state;
-#else
-    return nullptr;
-#endif
 }
 
 void RecyclerView::onRestoreInstanceState(Parcelable& state) {
-#if 0
-    if (!(dynamic_cast<SavedState*>(&state)) {
-	ViewGroup::onRestoreInstanceState(state);
+    if (dynamic_cast<SavedState*>(&state)==nullptr) {
+        ViewGroup::onRestoreInstanceState(state);
         return;
     }
 
     mPendingSavedState = (SavedState*)& state;
-    ViewGroup::onRestoreInstanceState(mPendingSavedState.getSuperState());
-    if (mLayout != null && mPendingSavedState.mLayoutState != null) {
-        mLayout->onRestoreInstanceState(mPendingSavedState.mLayoutState);
+    ViewGroup::onRestoreInstanceState(*mPendingSavedState->getSuperState());
+    if (mLayout != nullptr && mPendingSavedState->mLayoutState != nullptr) {
+        mLayout->onRestoreInstanceState(*mPendingSavedState->mLayoutState);
     }
-#endif
 }
 
 void RecyclerView::dispatchSaveInstanceState(SparseArray<Parcelable*>& container) {
@@ -6801,47 +6797,25 @@ void RecyclerView::SmoothScroller::Action::update(int dx,int dy,int duration,Int
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#if 0
-public static class SavedState extends AbsSavedState {
+/** called by CREATOR */
+RecyclerView::SavedState::SavedState(Parcel& in):AbsSavedState(in){
+    //super(in, loader);
+    //mLayoutState = in.readParcelable(loader != null ? loader : LayoutManager.class.getClassLoader());
+}
 
-        Parcelable mLayoutState;
+/**Called by onSaveInstanceState */
+RecyclerView::SavedState::SavedState(Parcelable* superState):AbsSavedState(superState){
+}
 
-        /** called by CREATOR */
-        SavedState(Parcel in, ClassLoader loader) {
-            super(in, loader);
-            mLayoutState = in.readParcelable(
-                    loader != null ? loader : LayoutManager.class.getClassLoader());
-        }
+void RecyclerView::SavedState::writeToParcel(Parcel& dest, int flags) {
+    AbsSavedState::writeToParcel(dest, flags);
+    //dest.writeParcelable(mLayoutState, 0);
+}
 
-        /**Called by onSaveInstanceState */
-        SavedState(Parcelable superState) {
-            super(superState);
-        }
+void RecyclerView::SavedState::copyFrom(SavedState& other) {
+    mLayoutState = other.mLayoutState;
+}
 
-        public void writeToParcel(Parcel dest, int flags) {
-            super.writeToParcel(dest, flags);
-            dest.writeParcelable(mLayoutState, 0);
-        }
-
-        void copyFrom(SavedState other) {
-            mLayoutState = other.mLayoutState;
-        }
-
-        public static final Creator<SavedState> CREATOR = new ClassLoaderCreator<SavedState>() {
-            public SavedState createFromParcel(Parcel in, ClassLoader loader) {
-                return new SavedState(in, loader);
-            }
-
-            public SavedState createFromParcel(Parcel in) {
-                return new SavedState(in, null);
-            }
-
-            public SavedState[] newArray(int size) {
-                return new SavedState[size];
-            }
-        };
-    }
-#endif
 
 bool RecyclerView::AdapterDataObservable::hasObservers() const{
     return !mObservers.empty();

@@ -576,19 +576,13 @@ void Layout::relayout(bool force){
 
 static const std::string processBidi(const std::wstring&logstr){
 #ifdef ENABLE_FRIBIDI
-    size_t wsize=logstr.length()+1;
-    FriBidiCharType base_dir=FRIBIDI_TYPE_ON;
-    FriBidiChar * visstr= new FriBidiChar[wsize] ;
-    FriBidiLevel* level = new FriBidiLevel[wsize];
-    FriBidiStrIndex *posLV= new FriBidiStrIndex[wsize];
-    FriBidiStrIndex *posVL= new FriBidiStrIndex[wsize];
+    const size_t wsize = logstr.length()+1;
+    FriBidiCharType base_dir = FRIBIDI_TYPE_ON;
+    FriBidiChar * visstr = new FriBidiChar[wsize] ;
 
-    fribidi_log2vis((const FriBidiChar*)logstr.c_str(),logstr.length(),&base_dir,visstr,posLV,posVL,level);
+    fribidi_log2vis((const FriBidiChar*)logstr.c_str(),logstr.length(),&base_dir,visstr,nullptr,nullptr,nullptr);
     std::wstring biditxt((const wchar_t*)visstr,wsize-1);
     delete [] visstr;
-    delete [] posLV;
-    delete [] posVL;
-    delete [] level;
     return TextUtils::unicode2utf8(biditxt); 
 #else
     return TextUtils::unicode2utf8(logstr);
@@ -621,7 +615,7 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
             line.size(),lw,int(te.x_advance));
         canvas.move_to(x,y);
         canvas.show_text(processBidi(line));
-        if(mCaretPos>=lineStart&&mCaretPos<lineEnd){
+        if( (mCaretPos>=lineStart) && (mCaretPos<lineEnd) ){
             measureSize(line.substr(0,mCaretPos-lineStart),te,nullptr);
             mCaretRect.left= x + te.x_advance;
             mCaretRect.top = lineNum * mLineHeight;

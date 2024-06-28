@@ -17,6 +17,7 @@ LinearLayoutManager::LinearLayoutManager(Context* context,int orientation,bool r
     mStackFromEnd = false;
     mShouldReverseLayout = false;
     mRecycleChildrenOnDetach = true;
+    mInitialPrefetchItemCount = 2;
     mAnchorInfo = new AnchorInfo();
     mLayoutChunkResult = new LayoutChunkResult();
     setOrientation(orientation);
@@ -98,6 +99,7 @@ Parcelable* LinearLayoutManager::onSaveInstanceState() {
     }
     return state;
 }
+
 void LinearLayoutManager::onRestoreInstanceState(Parcelable& state) {
     if (dynamic_cast<SavedState*>(&state)) {
         mPendingSavedState = (SavedState*)&state;

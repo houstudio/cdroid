@@ -25,6 +25,7 @@ public:
     class ViewHolder;
     class Recycler;
     class State;
+    class SavedState;
     class LayoutManager;
     class AdapterDataObservable;
     class RecycledViewPool;
@@ -448,6 +449,7 @@ public:
 private:
     RecyclerViewDataObserver* mObserver;
     Recycler* mRecycler;
+    SavedState* mPendingSavedState;
     AdapterHelper* mAdapterHelper;
     ChildHelper* mChildHelper;
     ViewInfoStore* mViewInfoStore;
@@ -811,6 +813,7 @@ public:
     int getViewLayoutPosition();
     int getViewAdapterPosition();
 };
+
 class RecyclerView::EdgeEffectFactory {
 public:
     friend RecyclerView;
@@ -1088,6 +1091,18 @@ public:
     void notifyItemRangeRemoved(int positionStart, int itemCount);
     void notifyItemMoved(int fromPosition, int toPosition);
 };
+
+class RecyclerView::SavedState:public AbsSavedState{
+protected:
+    Parcelable*mLayoutState;
+    friend RecyclerView;
+public:
+    SavedState(Parcel&in);
+    SavedState(Parcelable*superState);
+    void writeToParcel(Parcel&dest,int flags)override;
+    void copyFrom(SavedState&other);
+};
+
 class RecyclerView::State{
 protected:
     friend RecyclerView;

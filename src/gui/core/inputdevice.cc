@@ -573,7 +573,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         slot = mTrack2Slot.indexOfKey(mProp.id);
 #else
         slot = mProp.id;
-        if( (mProp.id==-1) && ((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) )
+        if( (mProp.id==-1) && ((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) )
             mProp.id = 0;
 #endif
         slot = slot>=0?slot:0;
