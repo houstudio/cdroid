@@ -154,7 +154,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
                 const std::string&txt=candidateView->getItem(idx)->getText();
                 const std::wstring wtext=TextUtils::utf8tounicode(txt);
                 imm.commitText(wtext,1);
-                im->get_predicts(imm.predictsource,candidates);
+                im->get_predicts(imm.predictSource,candidates);
                 updatePredicts(candidates);
                 im->close_search();*/
             }
@@ -176,51 +176,66 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     /*candidateView->setItemClickListener([&](AbsListView&lv,const ListView::ListItem&itm,int index){
         std::wstring wtext;
         std::vector<std::string>candidates;
-        InputMethod*im=InputMethodManager::getInstance().im;
-        imm.predictsource=itm.getText();
-        wtext=TextUtils::utf8tounicode(imm.predictsource);
+        InputMethod*im = InputMethodManager::getInstance().im;
+        imm.predictSource = itm.getText();
+        wtext = TextUtils::utf8tounicode(imm.predictSource);
         imm.commitText(wtext,1);
-        text2IM=std::wstring();
+        text2IM = std::wstring();
         im->close_search();
-        im->get_predicts(imm.predictsource,candidates);
+        im->get_predicts(imm.predictSource,candidates);
         updatePredicts(candidates);
     });*/
 }
 
 InputMethodManager*InputMethodManager::mInst=nullptr;
-std::map<std::string,InputMethod*>InputMethodManager::imemethods;
 
 int InputMethodManager::registeMethod(const std::string&name,InputMethod*method){
-    imemethods.insert(std::pair<std::string,InputMethod*>(name,method));
+    imeMethods.push_back({name,method});
     LOGD("registeInputMethod(%s)%p",name.c_str(),method);
     return 0;
+}
+
+int InputMethodManager::getInputMethodCount()const{
+    return imeMethods.size();
+}
+
+InputMethod*InputMethodManager::getInputMethod(int idx){
+    return imeMethods.at(idx).second;
 }
 
 std::vector<std::string>InputMethodManager::getInputMethods(std::vector<InputMethod*>*methods){
     std::vector<std::string>ms;
     if(methods)methods->clear();
-    for(auto m:imemethods){
+    for(auto m:imeMethods){
         ms.push_back(m.first);
         if(methods)methods->push_back(m.second);
     }
     return ms;
 }
 
+InputMethod*InputMethodManager::getInputMethod(const std::string&name){
+    for(auto m:imeMethods){
+        if(m.first.compare(name)==0)
+            return m.second;
+    }
+    return nullptr;
+}
+
 InputMethodManager::InputMethodManager(){
-    im=nullptr;
-    kcm=nullptr;
-    imeWindow=nullptr;
+    im = nullptr;
+    kcm= nullptr;
+    imeWindow = nullptr;
 }
 
 InputMethodManager::~InputMethodManager(){
-    mInst=nullptr;
+    mInst = nullptr;
     delete kcm;
     LOGD("InputMethodManager Destroied!");
     if(imeWindow)WindowManager::getInstance().removeWindow(imeWindow);
-    for(auto ime:imemethods){
+    for(auto ime:imeMethods){
         delete ime.second;
     }
-    imemethods.clear();
+    imeMethods.clear();
 }
 
 int InputMethodManager::setKeyCharacterMap(const std::string&filename){
@@ -243,14 +258,14 @@ InputMethodManager&InputMethodManager::getInstance(){
         if(mInst->setKeyCharacterMap("Generic.kcm"))
             mInst->setKeyCharacterMap("qwerty.kcm");
     }
-    if(imemethods.size() == 0){
+    if(mInst->imeMethods.size() == 0){
         InputMethod*m;
-	//m = new InputMethod("@cdroid:xml/qwerty.xml");
-	//registeMethod("English",m);
+	    //m = new InputMethod("@cdroid:xml/qwerty.xml");
+	    //registeMethod("English",m);
 #ifdef ENABLE_PINYIN2HZ
         m = new GooglePinyin("@cdroid:xml/qwerty.xml");
         m->load_dicts("dict_pinyin.dat","userdict.dat");
-        registeMethod("GooglePinyin26",m);
+        mInst->registeMethod("GooglePinyin26",m);
 #endif
     }
     return *mInst;
@@ -308,8 +323,8 @@ void InputMethodManager::setInputType(int inputType){
         if(imeWindow)imeWindow->setVisibility(View::INVISIBLE);
         break;
     default:
-        if(imemethods.size()){
-            auto it = imemethods.begin();
+        if(imeMethods.size()){
+            auto it = imeMethods.begin();
             setInputMethod(it->second,it->first);
         }break;
     }
@@ -320,10 +335,9 @@ void InputMethodManager::setInputType(int inputType){
 }
 
 int InputMethodManager::setInputMethod(const std::string&name){
-    auto it = imemethods.find(name);
-    LOGE_IF(it == imemethods.end(),"Inputmethod \"%s\" not found!",name.c_str());
-    if(it != imemethods.end())
-        return setInputMethod(it->second,it->first);
+    InputMethod*im = getInputMethod(name);
+    LOGE_IF(im==nullptr,"Inputmethod \"%s\" not found!",name.c_str());
+    if(im) return setInputMethod(im,name);
     return -1;
 }
 

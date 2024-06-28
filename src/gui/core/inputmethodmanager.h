@@ -11,11 +11,11 @@ private:
     friend class IMEWindow;
     int mInputType;
     std::wstring text2IM;
-    static std::map<std::string,InputMethod*>imemethods;
+    std::vector<std::pair<std::string,InputMethod*>>imeMethods;
     int setInputMethod(InputMethod*,const std::string&name);
 protected:
     class KeyCharacterMap*kcm;
-    std::string predictsource;
+    std::string predictSource;
     InputMethod*im;
     static class InputMethodManager*mInst;
     class IMEWindow*imeWindow;
@@ -24,8 +24,11 @@ protected:
     void commitText(const std::wstring&text,int newcursorPos);
 public:
     static InputMethodManager&getInstance();
-    static int registeMethod(const std::string&name,InputMethod*);
-    static std::vector<std::string>getInputMethods(std::vector<InputMethod*>*methods);
+    int registeMethod(const std::string&name,InputMethod*);
+    std::vector<std::string>getInputMethods(std::vector<InputMethod*>*methods);
+    int getInputMethodCount()const;
+    InputMethod*getInputMethod(int idx);
+    InputMethod*getInputMethod(const std::string&name);
     void shutDown(){delete mInst;}
     int setKeyCharacterMap(const std::string&kcm);
     int getCharacter(int keycode,int metaState)const;
