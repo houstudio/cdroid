@@ -88,7 +88,7 @@ function(get_git_version VERSION MAJOR MINOR PATCH COMMITCOUNT COMMITID)
 
     # Extract MAJOR, MINOR, PATCH from VERSION if MAJOR, MINOR, PATCH are provided
     if(DEFINED MAJOR AND DEFINED MINOR AND DEFINED PATCH)
-        string(REGEX MATCHALL "([0-9]+)\\.([0-9]+)\\.([0-9]+)" matches ${CDVERSION})
+        string(REGEX MATCHALL "([0-9]+)\\.([0-9]+)(\\.[0-9]+)?" matches ${CDVERSION})
         set(${MAJOR} ${CMAKE_MATCH_1} PARENT_SCOPE)
         set(${MINOR} ${CMAKE_MATCH_2} PARENT_SCOPE)
         if(CMAKE_MATCH_3)
