@@ -30,29 +30,8 @@ add_subdirectory(apps)
 
 add_subdirectory(tests)
 
-execute_process(
-    COMMAND git describe --tags --abbrev=0
-    OUTPUT_VARIABLE LATEST_TAG
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-execute_process(
-    COMMAND git rev-parse --short ${LATEST_TAG}
-    OUTPUT_VARIABLE LAST_COMMIT_HASH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
-execute_process(
-    COMMAND git rev-list --count ${LATEST_TAG}
-    OUTPUT_VARIABLE COMMIT_COUNT
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-if(LATEST_TAG)
-    set(VERSION "${LATEST_TAG}-${COMMIT_COUNT}-${LAST_COMMIT_HASH}")
-else()
-    set(VERSION "0.0.1-${COMMIT_COUNT}-${LAST_COMMIT_HASH}")
-endif()
-message("Generated Version: ${VERSION} LATEST_TAG=${LATEST_TAG}")
+get_git_version(VERSION _ _ _ _ _)
+#message(FATAL_ERROR "Generated Version: ${VERSION} LATEST_TAG=${LATEST_TAG}")
 
 string(TIMESTAMP COMPILE_TIME "%Y%m%d_%H%M%S")
 set(CPACK_PACKAGE_NAME "CDROID-${COMPILE_TIME}-${GIT_COMMIT_HASH}")

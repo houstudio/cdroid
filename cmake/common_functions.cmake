@@ -59,8 +59,13 @@ endfunction()
 
 function(get_git_version VERSION MAJOR MINOR PATCH COMMITCOUNT COMMITID)
     execute_process(
-        COMMAND git describe --tags --abbrev=0
+        COMMAND git describe --tags
         OUTPUT_VARIABLE LATEST_TAG
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    execute_process(
+        COMMAND git describe --tags --abbrev=0
+        OUTPUT_VARIABLE CDVERSION
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
@@ -76,16 +81,13 @@ function(get_git_version VERSION MAJOR MINOR PATCH COMMITCOUNT COMMITID)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-    if(LATEST_TAG)
-        set(CDVERSION "${LATEST_TAG}")
-    else()
+    if(NOT CDVERSION)
         set(CDVERSION "0.0.1")
     endif()
 
     # Extract MAJOR, MINOR, PATCH from VERSION if MAJOR, MINOR, PATCH are provided
     if(DEFINED MAJOR AND DEFINED MINOR AND DEFINED PATCH)
-        #string(REGEX MATCH "v([0-9]+)\\.([0-9]+)\\.([0-9]+).*" _ ${${VERSION}})
-        string(REGEX MATCH "([0-9]+)\\.([0-9]+)(\\.([0-9]+))?" _ ${CDVERSION})
+        string(REGEX MATCHALL "([0-9]+)\\.([0-9]+)\\.([0-9]+)" matches ${CDVERSION})
         set(${MAJOR} ${CMAKE_MATCH_1} PARENT_SCOPE)
         set(${MINOR} ${CMAKE_MATCH_2} PARENT_SCOPE)
         if(CMAKE_MATCH_3)
