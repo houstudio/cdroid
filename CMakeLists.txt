@@ -30,12 +30,11 @@ add_subdirectory(apps)
 
 add_subdirectory(tests)
 
-get_git_version(VERSION _ _ _ _ _)
-#message(FATAL_ERROR "Generated Version: ${VERSION} LATEST_TAG=${LATEST_TAG}")
+get_git_version(CDROID_VERSION _ _ _ _ GIT_COMMITID)
 
 string(TIMESTAMP COMPILE_TIME "%Y%m%d_%H%M%S")
-set(CPACK_PACKAGE_NAME "CDROID-${COMPILE_TIME}-${GIT_COMMIT_HASH}")
-set(CPACK_PACKAGE_VERSION "1.0.0")
+set(CPACK_PACKAGE_NAME "CDROID-${COMPILE_TIME}-${CDROID_COMMITID}")
+set(CPACK_PACKAGE_VERSION ${CDROID_VERSION})
 set(CPACK_GENERATOR "ZIP")  # Choose the desired generator (e.g., ZIP, TGZ, NSIS, etc.)
 include(CPack)
 

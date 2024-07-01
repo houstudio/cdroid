@@ -59,6 +59,8 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void drawableStateChanged()override;
     virtual void onDraw(Canvas& canvas) override;
+    void onAttachedToWindow()override;
+    void onDetachedFromWindow()override;
 public:
     explicit ImageView(int w, int h);
     ImageView(Context*ctx,const AttributeSet&attrs);
@@ -68,6 +70,7 @@ public:
     void invalidateDrawable(Drawable& dr)override;
     std::vector<int> onCreateDrawableState()override;
     void onRtlPropertiesChanged(int layoutDirection)override;
+    void onVisibilityAggregated(bool isVisible)override;
     int getScaleType()const;
     void setScaleType(int st);
     void setImageMatrix(const Cairo::Matrix& matrix);
@@ -102,6 +105,7 @@ public:
     void setImageAlpha(int alpha);
     int getImageAlpha()const;
     bool isOpaque()const override;
+    View& setVisibility(int visibility)override;
     void setImageLevel(int level);
     void setSelected(bool selected)override;
     void setCornerRadii(int radius);

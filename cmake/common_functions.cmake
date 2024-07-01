@@ -77,6 +77,7 @@ function(get_git_version VERSION MAJOR MINOR PATCH COMMITCOUNT COMMITID)
 
     execute_process(
         COMMAND git rev-list --count ${LATEST_TAG}
+        #We can change LATEST_TAG to CDVERSION to get commit count since your TAG is created"
         OUTPUT_VARIABLE COMMIT_COUNT
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )

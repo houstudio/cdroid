@@ -70,8 +70,11 @@ void ImageView::initImageView(){
 }
 
 ImageView::~ImageView() {
-    if(mDrawable!=mRecycleableBitmapDrawable)
+    if(mDrawable!=mRecycleableBitmapDrawable){
+        unscheduleDrawable(*mRecycleableBitmapDrawable);
         delete mRecycleableBitmapDrawable;
+    }
+    if(mDrawable)unscheduleDrawable(*mDrawable);
     delete mDrawable;
     //delete mDrawableTintList;//cant be destroied.
     delete mColorFilter;
@@ -636,6 +639,39 @@ bool ImageView::isFilledByImage() const{
     }
     // If the matrix doesn't map to a rectangle, assume the worst.
     return false;
+}
+
+void ImageView::onVisibilityAggregated(bool isVisible) {
+    View::onVisibilityAggregated(isVisible);
+    // Only do this for new apps post-Nougat
+    if (mDrawable/*&& !sCompatDrawableVisibilityDispatch*/) {
+        mDrawable->setVisible(isVisible, false);
+    }
+}
+
+View& ImageView::setVisibility(int visibility) {
+    View::setVisibility(visibility);
+    // Only do this for old apps pre-Nougat; new apps use onVisibilityAggregated
+    if (mDrawable/* && sCompatDrawableVisibilityDispatch*/) {
+        mDrawable->setVisible(visibility == VISIBLE, false);
+    }
+    return *this;
+}
+
+void ImageView::onAttachedToWindow() {
+    View::onAttachedToWindow();
+    // Only do this for old apps pre-Nougat; new apps use onVisibilityAggregated
+    if (mDrawable/*&& sCompatDrawableVisibilityDispatch*/) {
+        mDrawable->setVisible(getVisibility() == VISIBLE, false);
+    }
+}
+
+void ImageView::onDetachedFromWindow() {
+    View::onDetachedFromWindow();
+    // Only do this for old apps pre-Nougat; new apps use onVisibilityAggregated
+    if (mDrawable/*&& sCompatDrawableVisibilityDispatch*/) {
+        mDrawable->setVisible(false, false);
+    }
 }
 
 void ImageView::applyImageTint() {
