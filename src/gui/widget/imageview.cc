@@ -70,11 +70,8 @@ void ImageView::initImageView(){
 }
 
 ImageView::~ImageView() {
-    if(mDrawable!=mRecycleableBitmapDrawable){
-        unscheduleDrawable(*mRecycleableBitmapDrawable);
+    if(mDrawable!=mRecycleableBitmapDrawable)
         delete mRecycleableBitmapDrawable;
-    }
-    if(mDrawable)unscheduleDrawable(*mDrawable);
     delete mDrawable;
     //delete mDrawableTintList;//cant be destroied.
     delete mColorFilter;
