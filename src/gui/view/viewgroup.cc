@@ -198,7 +198,6 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
     },FOCUS_BEFORE_DESCENDANTS);
     setDescendantFocusability(flags);
 
-    setMotionEventSplittingEnabled(atts.getBoolean("splitMotionEvents",false));
     if(atts.getBoolean("animateLayoutChanges",false))
         setLayoutTransition(new LayoutTransition());
     const int layoutMode = atts.getInt("layoutMode",std::map<const std::string,int>{
@@ -206,6 +205,9 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
         {"clipBounds",LAYOUT_MODE_CLIP_BOUNDS},
         {"opticalBounds",LAYOUT_MODE_OPTICAL_BOUNDS}
     },LAYOUT_MODE_UNDEFINED);
+    setAddStatesFromChildren(atts.getBoolean("addStatesFromChildren",false));
+    setMotionEventSplittingEnabled(atts.getBoolean("splitMotionEvents",false));
+    setAlwaysDrawnWithCacheEnabled(atts.getBoolean("alwaysDrawnWithCache",false));
     setLayoutMode(layoutMode);
     setTransitionGroup(atts.getBoolean("transitionGroup",false));
     setTouchscreenBlocksFocus(atts.getBoolean("touchscreenBlocksFocus",false));
@@ -213,7 +215,7 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
 
 ViewGroup::~ViewGroup() {
     while(mChildren.size()){
-        View*v=mChildren[0];
+        View*v = mChildren[0];
         removeViewAt(0);
         delete v;
     }
