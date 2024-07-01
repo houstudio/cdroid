@@ -57,3 +57,48 @@ function(Translate pofile transtopath)
    )
 endfunction()
 
+function(get_git_version VERSION MAJOR MINOR PATCH COMMITCOUNT COMMITID)
+    execute_process(
+        COMMAND git describe --tags --abbrev=0
+        OUTPUT_VARIABLE LATEST_TAG
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    execute_process(
+        COMMAND git rev-parse --short ${LATEST_TAG}
+        OUTPUT_VARIABLE LAST_COMMIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    execute_process(
+        COMMAND git rev-list --count ${LATEST_TAG}
+        OUTPUT_VARIABLE COMMIT_COUNT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if(LATEST_TAG)
+        set(CDVERSION "${LATEST_TAG}")
+    else()
+        set(CDVERSION "0.0.1")
+    endif()
+
+    # Extract MAJOR, MINOR, PATCH from VERSION if MAJOR, MINOR, PATCH are provided
+    if(DEFINED MAJOR AND DEFINED MINOR AND DEFINED PATCH)
+        #string(REGEX MATCH "v([0-9]+)\\.([0-9]+)\\.([0-9]+).*" _ ${${VERSION}})
+        string(REGEX MATCH "([0-9]+)\\.([0-9]+)(\\.([0-9]+))?" _ ${CDVERSION})
+        set(${MAJOR} ${CMAKE_MATCH_1} PARENT_SCOPE)
+        set(${MINOR} ${CMAKE_MATCH_2} PARENT_SCOPE)
+        if(CMAKE_MATCH_3)
+            set(${PATCH} ${CMAKE_MATCH_3} PARENT_SCOPE)
+            set(${VERSION} "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}" PARENT_SCOPE)
+        else()
+            set(${PATCH} "0" PARENT_SCOPE)
+            set(${VERSION} "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.0" PARENT_SCOPE)
+        endif()
+    endif()
+    if(DEFINED COMMITCOUNT AND DEFINED COMMITID)
+        set(${COMMITCOUNT} ${COMMIT_COUNT}  PARENT_SCOPE)
+        set(${COMMITID} ${LAST_COMMIT_HASH} PARENT_SCOPE)
+    endif()
+endfunction()
+

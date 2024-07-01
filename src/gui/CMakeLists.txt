@@ -35,9 +35,17 @@ include_directories(
     ${CDROID_DEPINCLUDES}
     ${LIBUNIBREAK_INCLUDE_DIRS}
 )
-#message(FATAL_ERROR "VERSION=${VERSION}")
-set(CDROID_VERSION 1.2)
-set(CDROID_VERSION_MAJOR 1)
+get_git_version(CDROID_VERSION CDROID_VERSION_MAJOR CDROID_VERSION_MINOR
+    CDROID_VERSION_PATCH CDROID_BUILD_NUMBER CDROID_COMMITID)
+message("VERSION=${CDROID_VERSION} ${CDROID_VERSION_MAJOR}.${CDROID_VERSION_MINOR}.${CDROID_VERSION_PATCH}
+CDROID_BUILD_NUMBER=${CDROID_BUILD_NUMBER} COMMIT_ID=${CDROID_COMMITID}")
+
+include(CheckFunctionExists)
+check_function_exists(mallinfo2 HAVE_MALLINFO2)
+check_function_exists(mallinfo HAVE_MALLINFO)
+configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
+
+add_definitions(--include gui_features.h)
 add_definitions(--include cdtypes.h)
 add_definitions(--include cdlog.h)
 add_definitions(--include stdpatch.h)
@@ -85,15 +93,9 @@ foreach( each_file ${filtered_files} )
   install(FILES  ${PROJECT_SOURCE_DIR}/${each_file} DESTINATION "${CMAKE_BINARY_DIR}/include/gui/${FILE_PATH}")
 endforeach(each_file)
 
-include(CheckFunctionExists)
-check_function_exists(mallinfo2 HAVE_MALLINFO2)
-check_function_exists(mallinfo HAVE_MALLINFO)
-
-configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
-add_definitions(--include gui_features.h)
 configure_file("cdroid.pc.in"  "cdroid.pc"  @ONLY)
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc"
-	DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
+file(COPY ${PROJECT_BINARY_DIR}/gui_features.h DESTINATION "${CMAKE_BINARY_DIR}/include/gui/")
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
 
 set(PKGCONFIG_LIBS "cairo bzip2 libzip")#do not use -l
 set(PKGCONFIG_LIBS_PRIVATE "expat bzip2 libzip")
