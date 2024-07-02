@@ -49,7 +49,7 @@ void ImageView::initImageView(){
     mBaselineAlignBottom = false;
     mBaseline = -1;
     mAlpha = 255;
-    mLevel = 0;
+    mLevel = INT_MIN;
     mViewAlphaScale= 256;
     mDrawableWidth = mDrawableHeight = -1;
     mScaleType  = FIT_CENTER;
@@ -668,6 +668,7 @@ void ImageView::onDetachedFromWindow() {
     // Only do this for old apps pre-Nougat; new apps use onVisibilityAggregated
     if (mDrawable/*&& sCompatDrawableVisibilityDispatch*/) {
         mDrawable->setVisible(false, false);
+        unscheduleDrawable(*mDrawable);/*added by zhhou*/
     }
 }
 
@@ -754,7 +755,8 @@ void ImageView::updateDrawable(Drawable*d){
             const bool visible = isAttachedToWindow() && (getWindowVisibility() == VISIBLE) && isShown();
             d->setVisible(visible, true);
         }
-        d->setLevel(mLevel);
+        if(mLevel!=INT_MIN)
+            d->setLevel(mLevel);
         mDrawableWidth = d->getIntrinsicWidth();
         mDrawableHeight = d->getIntrinsicHeight();
         applyImageTint();
