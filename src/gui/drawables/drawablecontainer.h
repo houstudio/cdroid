@@ -129,8 +129,8 @@ public:
     void jumpToCurrentState()override;
 
     void invalidateDrawable(Drawable& who)override;
-    void scheduleDrawable(Drawable&who,Runnable what, long when)override;
-    void unscheduleDrawable(Drawable& who,Runnable what)override;
+    void scheduleDrawable(Drawable&who,Runnable& what, long when)override;
+    void unscheduleDrawable(Drawable& who,Runnable& what)override;
     bool setVisible(bool visible, bool restart)override;
     std::shared_ptr<ConstantState>getConstantState()override;
     DrawableContainer*mutate()override;

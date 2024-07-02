@@ -4985,15 +4985,15 @@ void View::invalidateDrawable(Drawable& who){
     if(verifyDrawable(&who)) invalidate(true);
 }
 
-void View::scheduleDrawable(Drawable& who,Runnable what, long when){
+void View::scheduleDrawable(Drawable& who,Runnable& what, long when){
     const long delay = when - SystemClock::uptimeMillis();
     Choreographer::getInstance().postCallbackDelayed(Choreographer::CALLBACK_ANIMATION, what,&who,
            Choreographer::subtractFrameDelay(delay));
     //postDelayed(what,delay);
 }
 
-void View::unscheduleDrawable(Drawable& who,Runnable what){
-    if(verifyDrawable(&who)&&what!=nullptr){
+void View::unscheduleDrawable(Drawable& who,Runnable& what){
+    if(verifyDrawable(&who)&&(what!=nullptr)){
         Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&what,&who); 
         //removeCallbacks(what);
     }

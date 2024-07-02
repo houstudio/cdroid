@@ -47,8 +47,8 @@ public:
     class Callback{
     public:
         virtual void invalidateDrawable(Drawable& who)=0;
-        virtual void scheduleDrawable(Drawable& who,Runnable what, long when)=0;
-        virtual void unscheduleDrawable(Drawable& who,Runnable what)=0;
+        virtual void scheduleDrawable(Drawable& who,Runnable& what, long when)=0;
+        virtual void unscheduleDrawable(Drawable& who,Runnable& what)=0;
     };
     class ConstantState{
     public:

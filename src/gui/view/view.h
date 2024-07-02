@@ -679,8 +679,8 @@ public:
     void setLayerType(int);
     int  getDrawingCacheBackgroundColor()const;
     void setDrawingCacheBackgroundColor(int);
-    void scheduleDrawable(Drawable& who,Runnable what, long when)override;
-    void unscheduleDrawable(Drawable& who,Runnable what)override;
+    void scheduleDrawable(Drawable& who,Runnable& what, long when)override;
+    void unscheduleDrawable(Drawable& who,Runnable& what)override;
     virtual void unscheduleDrawable(Drawable& who);
 
     const Rect getBound()const;

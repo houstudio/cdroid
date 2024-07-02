@@ -500,7 +500,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
             }
             item->drawable = d;
         }
-        LOGV("created drawable %s:%p props:%d",name,item->drawable,item->props.size());
+        //LOGV("created drawable %s:%p props:%d",name,item->drawable,item->props.size());
     }
 }
 
@@ -564,9 +564,9 @@ static void endElement(void *userData, const XML_Char *name) {
             pd->pop2Upper(leaf);
         }
         pd->drawable = leaf;
-        LOGV("%p coming drawable %s %p upperIsShape=%d",pd,name,leaf,pd->upperIsShape());
+        //LOGV("%p coming drawable %s %p upperIsShape=%d",pd,name,leaf,pd->upperIsShape());
     } else { /*item (stub drawable) or other drawable*/
-        LOGV("%p coming drawable %s",pd,name);
+        //LOGV("%p coming drawable %s",pd,name);
         Drawable* topchild = nullptr,*parent = nullptr;
         auto backItem = pd->items.back();
         const AttributeSet atts = backItem->props;
@@ -612,7 +612,7 @@ static void endElement(void *userData, const XML_Char *name) {
             const int id = atts.getResourceId("id",-1);
             const std::string src = atts.getString("drawable");
             if(id!=-1)ld->setId(idx,id);
-            LOGV("%p add drawable %p to LayerDrawable %p index=%d id=%d gravity=%x size=%dx%d",pd,topchild,
+            LOGV("%p add drawable %p to Layer/TransitionDrawable %p index=%d id=%d gravity=%x size=%dx%d",pd,topchild,
                  parent,idx,id,ld->getLayerGravity(idx),ld->getLayerWidth(idx),ld->getLayerHeight(idx));
         } else if(dynamic_cast<AnimationDrawable*>(parent)) {
             AnimationDrawable* ad = (AnimationDrawable*)parent;
@@ -621,7 +621,7 @@ static void endElement(void *userData, const XML_Char *name) {
             ad->addFrame(topchild,duration);
             LOGV("%p add drawable %p to AnimationDrawable %p duration=%d",pd,topchild,parent,duration);
         }
-        if(pd->items.size()==1)  pd->drawable=pd->items.back()->drawable;
+        if(pd->items.size()==1) pd->drawable=pd->items.back()->drawable;
     }
     pd->items.pop_back();//popup item
 }
