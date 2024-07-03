@@ -518,7 +518,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
     int slot,pointerCount,pointerIndex,action;
     MotionEvent*lastEvent;
     if(!isValidEvent(type,code,value))return -1;
-    //LOGV("%lu:%04u %d,%d,%d",tv.tv_sec,tv.tv_usec,type,code,value);
+    LOGV("%lu:%04u %d,%d,%d",tv.tv_sec,tv.tv_usec,type,code,value);
     switch(type){
     case EV_KEY:
         switch(code){
@@ -526,7 +526,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         case BTN_STYLUS:
             mActionButton = MotionEvent::BUTTON_PRIMARY;
             if(value)mCurrBits.markBit(0);else mCurrBits.clearBit(0);
-            mAxisFlags|=0x80000000;
+            mAxisFlags |= 0x80000000;
             if(value){
                 mMoveTime = mDownTime = tv.tv_sec * 1000 + tv.tv_usec/1000;
                 mButtonState = MotionEvent::BUTTON_PRIMARY;
@@ -552,21 +552,23 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
              setAxisValue(code,value,false);break;
         }break;
     case EV_REL:
-        if((code>=REL_X)&&(code<=REL_Z)){
+        if( (code >= REL_X) && (code <= REL_Z) ){
             setAxisValue(code,value,true);
         }break;
     case EV_SYN:
-        if((code!=SYN_REPORT) && (code!=SYN_MT_REPORT))break;
+        if( (code != SYN_REPORT) && (code != SYN_MT_REPORT) )break;
 #ifndef DISABLE_MTASST
+    #define HASMTFLAG(f) (mAxisFlags&(1<<((f)-ABS_MT_SLOT)))
+    #define HASTRACKORSLOT (HASMTFLAG(ABS_MT_TRACKING_ID)||HASMTFLAG(ABS_MT_SLOT))
     #define TRACKING_FLAG ((1<<(ABS_MT_TRACKING_ID-ABS_MT_SLOT))|(1<<(ABS_MT_SLOT-ABS_MT_SLOT)))
-        if( ((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && ((mAxisFlags&TRACKING_FLAG)==0))
-                ||((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) ){
+        if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && ((HASMTFLAG(ABS_MT_POSITION_X)||HASMTFLAG(ABS_MT_POSITION_Y))&&(HASTRACKORSLOT==0)) ){
             mCorrectedDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
+            LOGV("mCurrBits=%x last=%x mAxisFlags=%x/%x pos=%.f,%.f code=%d",mCurrBits.value,mLastBits.value,mAxisFlags,TRACKING_FLAG,mCoord.getX(),mCoord.getY(),code);
             if((mAxisFlags&0x80000000)==0) {mCurrBits.markBit(0); mLastBits.markBit(0);mTrack2Slot.clear();}
             if( mAxisFlags&TRACKING_FLAG ) mCurrBits.clear();
             mTrack2Slot.put(0,0); mProp.id = 0;
         }
-        if(code==SYN_REPORT)mAxisFlags = 0;
+        if(code == SYN_REPORT) mAxisFlags = 0;
 #endif
 
 #if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
@@ -582,9 +584,9 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         if( code == SYN_MT_REPORT )break;
         action = getActionByBits(pointerIndex);
         mMoveTime = (tv.tv_sec * 1000LL + tv.tv_usec/1000);
-        lastEvent = (mEvents.size()>1) ? (MotionEvent*)mEvents.back() : nullptr;
+        lastEvent = (mEvents.size() > 1) ? (MotionEvent*)mEvents.back() : nullptr;
         pointerCount = (mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) ? std::max(mLastBits.count(),mCurrBits.count()) : 1;
-        if(lastEvent&&(lastEvent->getActionMasked()==MotionEvent::ACTION_MOVE)&&(action==MotionEvent::ACTION_MOVE)&&(mMoveTime-lastEvent->getDownTime()<100)){
+        if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (action == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
             auto lastTime = lastEvent->getDownTime();
             lastEvent->addSample(mMoveTime,mPointerCoords.data());
             LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
@@ -594,7 +596,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
             mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
                  0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
-            LOGV_IF(action!=MotionEvent::ACTION_MOVE,"mask=%08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
+            LOGV_IF(action != MotionEvent::ACTION_MOVE,"mask = %08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
                  mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
             mEvent->setActionButton(mActionButton);
             mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
@@ -606,9 +608,9 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
         mLastAction = action;
         if( mLastBits.count() > mCurrBits.count() ){
             const uint32_t pointerIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
-            LOGV("clearbits %d %08x,%08x trackslot.size=%d",pointerIndex,mLastBits.value,mCurrBits.value, mTrack2Slot.size());
+            LOGV("clearbits %d %08x,%08x trackslot.size = %d",pointerIndex,mLastBits.value,mCurrBits.value, mTrack2Slot.size());
             if(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) mCurrBits.clearBit(pointerIndex);
-            if( pointerIndex<mTrack2Slot.size())
+            if( pointerIndex < mTrack2Slot.size())
                 mTrack2Slot.removeAt(pointerIndex);
             mPointerProps.erase (mPointerProps.begin() + pointerIndex);
             mPointerCoords.erase(mPointerCoords.begin()+ pointerIndex);
