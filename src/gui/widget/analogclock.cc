@@ -180,8 +180,12 @@ void AnalogClock::onDetachedFromWindow() {
         getContext().unregisterReceiver(mIntentReceiver);
         mReceiverAttached = false;
     }*/
-    removeCallbacks(mTick);
     View::onDetachedFromWindow();
+    removeCallbacks(mTick);
+    if(mHourHand)unscheduleDrawable(*mHourHand);
+    if(mMinuteHand)unscheduleDrawable(*mMinuteHand);
+    if(mSecondHand)unscheduleDrawable(*mSecondHand);
+    if(mDial)unscheduleDrawable(*mDial);
 }
 
 void AnalogClock::onVisible() {

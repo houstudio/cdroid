@@ -2,26 +2,26 @@
 namespace cdroid{
 
 ShapeDrawable::ShapeState::ShapeState(){
-    mAlpha=255;
-    mShape=nullptr;
-    mTint =nullptr;
+    mAlpha= 255;
+    mShape= nullptr;
+    mTint = nullptr;
     mTintMode = PorterDuff::Mode::NOOP;
-    mIntrinsicWidth=0;
-    mIntrinsicHeight=0;
+    mIntrinsicWidth = 0;
+    mIntrinsicHeight= 0;
     mPadding.set(0,0,0,0);
 }
 
 ShapeDrawable::ShapeState::ShapeState(const ShapeState&orig)
       :ShapeDrawable::ShapeState::ShapeState(){
     mIntrinsicWidth = orig.mIntrinsicWidth;
-    mIntrinsicHeight = orig.mIntrinsicHeight;
-    mPadding=orig.mPadding;
+    mIntrinsicHeight= orig.mIntrinsicHeight;
+    mPadding= orig.mPadding;
     mAlpha  = orig.mAlpha;
     if(mShape)
         mShape  = orig.mShape->clone();
     if(orig.mTint)
-        mTint   = new ColorStateList(*orig.mTint);
-    mTintMode =orig.mTintMode;
+        mTint = orig.mTint;
+    mTintMode = orig.mTintMode;
 }
 
 ShapeDrawable* ShapeDrawable::ShapeState::newDrawable(){
@@ -62,7 +62,7 @@ std::shared_ptr<Drawable::ConstantState>ShapeDrawable::getConstantState(){
 void ShapeDrawable::setShape(Shape*shape){
     if(mShapeState->mShape)
        delete mShapeState->mShape;
-    mShapeState->mShape=shape;
+    mShapeState->mShape = shape;
     updateShape();
 }
 
@@ -73,7 +73,7 @@ void ShapeDrawable::onBoundsChange(const Rect&bounds){
 
 bool ShapeDrawable::onStateChange(const std::vector<int>&stateset){
     if(mShapeState->mTint && mShapeState->mTintMode != PorterDuff::Mode::NOOP){
-        mTintFilter= updateTintFilter(mTintFilter,mShapeState->mTint,mShapeState->mTintMode);
+        mTintFilter = updateTintFilter(mTintFilter,mShapeState->mTint,mShapeState->mTintMode);
         return true;
     }
     return false;
@@ -105,7 +105,7 @@ bool ShapeDrawable::getPadding(Rect&padding){
 }
 
 void ShapeDrawable::setPadding(const Rect& padding){
-    mShapeState->mPadding=padding;
+    mShapeState->mPadding = padding;
 }
 
 void ShapeDrawable::setPadding(int left, int top, int right, int bottom){
@@ -117,7 +117,7 @@ void ShapeDrawable::setPadding(int left, int top, int right, int bottom){
 }
 
 void ShapeDrawable::setAlpha(int alpha){
-    mShapeState->mAlpha =alpha;
+    mShapeState->mAlpha = alpha;
     invalidateSelf();
 }
 
@@ -135,7 +135,7 @@ int ShapeDrawable::getOpacity(){
 
 void ShapeDrawable::setTintList(const ColorStateList*tint){
     if( mShapeState->mTint!=tint ){
-        mShapeState->mTint =tint;
+        mShapeState->mTint = tint;
         mTintFilter = updateTintFilter(mTintFilter,tint,mShapeState->mTintMode); 
         invalidateSelf();
     }
@@ -143,7 +143,7 @@ void ShapeDrawable::setTintList(const ColorStateList*tint){
 
 void ShapeDrawable::setTintMode(int tintMode){
     mShapeState->mTintMode = tintMode;
-    mTintFilter=updateTintFilter(mTintFilter,mShapeState->mTint,tintMode);
+    mTintFilter= updateTintFilter(mTintFilter,mShapeState->mTint,tintMode);
     invalidateSelf();
 }
 
@@ -160,7 +160,7 @@ int ShapeDrawable::getIntrinsicHeight()const{
 }
 
 void ShapeDrawable::setIntrinsicWidth(int width){
-    mShapeState->mIntrinsicWidth=width;
+    mShapeState->mIntrinsicWidth = width;
     invalidateSelf();
 }
 
@@ -175,7 +175,7 @@ void ShapeDrawable::updateLocalState(){
 
 ShapeDrawable*ShapeDrawable::mutate(){
     if (!mMutated && Drawable::mutate() == this) {
-        mShapeState=std::make_shared<ShapeState>(*mShapeState);
+        mShapeState = std::make_shared<ShapeState>(*mShapeState);
         updateLocalState();
         mMutated = true;
     }
@@ -209,22 +209,22 @@ void ShapeDrawable::draw(Canvas&canvas){
 }
 
 Drawable*ShapeDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    const std::string type=atts.getString("shape");//rectangle,line,oval,ring
-    Shape*shape=nullptr;
+    const std::string type = atts.getString("shape");//rectangle,line,oval,ring
+    Shape*shape = nullptr;
     if(type.compare("rectangle")==0)  shape = new RoundRectShape();
     else if(type.compare("ring")==0||type.compare("oval")==0){
         OvalShape*oval = new OvalShape();
-        shape =oval;
+        shape = oval;
         oval->setThickness(atts.getInt("thickness"));
         oval->setThicknessRatio(atts.getFloat("thicknessRatio",.0f));
         oval->setInnerRadius(atts.getInt("innerRadius",0)); 
         oval->setInnerRadiusRatio(atts.getFloat("innerRadiusRatio",.0f));
     }else if(type.compare( "arc")==0){
-        const float start=atts.getFloat("startAngle",0);
-        const float end  =atts.getFloat("endAngle",360);
-        shape= new ArcShape(start,end);
+        const float start= atts.getFloat("startAngle",0);
+        const float end  = atts.getFloat("endAngle",360);
+        shape = new ArcShape(start,end);
     }
-    ShapeDrawable*d=new ShapeDrawable();
+    ShapeDrawable*d = new ShapeDrawable();
     d->setShape(shape);
     return d;
 }

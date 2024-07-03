@@ -370,7 +370,6 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         if (mOnLayout == nullptr) {
             mOnLayout = makeLayout(mTextOn);
         }
-
         if (mOffLayout == nullptr) {
             mOffLayout = makeLayout(mTextOff);
         }
@@ -451,6 +450,12 @@ bool Switch::hitThumb(float x, float y) {
     const int thumbRight = thumbLeft + mThumbWidth + mTempRect.left + mTempRect.width + mTouchSlop;
     const int thumbBottom = mSwitchBottom + mTouchSlop;
     return x > thumbLeft && x < thumbRight && y > thumbTop && y < thumbBottom;
+}
+
+void Switch::onDetachedFromWindow(){
+    CompoundButton::onDetachedFromWindow();
+    if(mThumbDrawable)unscheduleDrawable(*mThumbDrawable);
+    if(mTrackDrawable)unscheduleDrawable(*mTrackDrawable);
 }
 
 bool Switch::onTouchEvent(MotionEvent& ev){

@@ -97,6 +97,7 @@ private:
     int getThumbScrollRange();
 protected:
     void doSetChecked(bool checked)override;
+    void onDetachedFromWindow()override;
     void onLayout(bool changed, int left, int top, int width, int height)override;
     void onDraw(Canvas&)override;
     std::vector<int>onCreateDrawableState()override;

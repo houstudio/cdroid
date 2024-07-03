@@ -191,6 +191,12 @@ bool CheckedTextView::isCheckMarkAtStart() {
     return hgrav == Gravity::LEFT;
 }
 
+void CheckedTextView::onDetachedFromWindowInternal(){
+    TextView::onDetachedFromWindowInternal();
+    if(mCheckMarkDrawable)
+        unscheduleDrawable(*mCheckMarkDrawable);
+}
+
 void CheckedTextView::onDraw(Canvas& canvas) {
     TextView::onDraw(canvas);
 

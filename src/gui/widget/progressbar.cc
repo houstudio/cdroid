@@ -306,6 +306,8 @@ void ProgressBar::onDetachedFromWindow(){
         mRefreshIsPosted = false;
     }
     View::onDetachedFromWindow();
+    if(mCurrentDrawable)unscheduleDrawable(*mCurrentDrawable);
+    if(mProgressDrawable)unscheduleDrawable(*mProgressDrawable);
     mAttached =false;
 }
 
