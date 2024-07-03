@@ -118,12 +118,18 @@ Drawable* CompoundButton::getButtonDrawable()const{
 }
 
 bool CompoundButton::verifyDrawable(Drawable* who)const{
-    return Button::verifyDrawable(who) || who == mButtonDrawable;
+    return Button::verifyDrawable(who) || (who == mButtonDrawable);
+}
+
+void CompoundButton::onDetachedFromWindow(){
+    if(mButtonDrawable)
+        unscheduleDrawable(*mButtonDrawable);
 }
 
 void CompoundButton::jumpDrawablesToCurrentState(){
     Button::jumpDrawablesToCurrentState();
-    if (mButtonDrawable ) mButtonDrawable->jumpToCurrentState();
+    if (mButtonDrawable )
+        mButtonDrawable->jumpToCurrentState();
 }
 
 void CompoundButton::setButtonTintList(const ColorStateList* tint) {

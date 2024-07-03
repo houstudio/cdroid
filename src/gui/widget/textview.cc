@@ -491,9 +491,9 @@ TextView::~TextView() {
 }
 
 void TextView::onDetachedFromWindowInternal(){
-    for(int i=0;mDrawables && (i<4);i++){
-        Drawable*d=mDrawables->mShowing[i];
-        if(d==nullptr)continue;
+    for(int i = 0; mDrawables && ( i<4 );i++){
+        Drawable*d = mDrawables->mShowing[i];
+        if( d == nullptr)continue;
         unscheduleDrawable(*d);
     }
     View::onDetachedFromWindowInternal();

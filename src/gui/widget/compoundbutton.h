@@ -22,6 +22,7 @@ protected:
     int getHorizontalOffsetForDrawables()const override;
     void drawableStateChanged()override;
     bool verifyDrawable(Drawable* who)const override;
+    void onDetachedFromWindow()override;
     void onDraw(Canvas&canvas)override;
     virtual void doSetChecked(bool);
 public:
