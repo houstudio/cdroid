@@ -319,10 +319,23 @@ TEST_F(INPUTDEVICE,MTA){//TypeA Events
 
       {EV_ABS,ABS_MT_TRACKING_ID,-1},//46
       {EV_KEY,BTN_TOUCH,0},//20
+      {EV_SYN,SYN_MT_REPORT,0},
+      {EV_SYN,SYN_REPORT,0},
+
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//50
+      {EV_ABS,ABS_MT_POSITION_X ,20},
+      {EV_ABS,ABS_MT_POSITION_Y ,30},
+      {EV_SYN,SYN_MT_REPORT,0},
+      {EV_SYN,SYN_REPORT,0},
+
+      //{EV_ABS,ABS_MT_TRACKING_ID,-1},//55
+      {EV_KEY,BTN_TOUCH,0},
+      {EV_SYN,SYN_MT_REPORT,0},
       {EV_SYN,SYN_REPORT,0}
+
    };
    EventCount = sendEvents(d,mts,sizeof(mts)/sizeof(MTEvent),OutEvents);
-   ASSERT_EQ(EventCount,7);
+   ASSERT_EQ(EventCount,9);
    ASSERT_EQ(OutEvents[0]->getAction(),MotionEvent::ACTION_DOWN);
    ASSERT_EQ(OutEvents[0]->getActionIndex(),0);
    ASSERT_EQ(OutEvents[0]->getPointerId(0),POINTERID(mts[0].value,0));
@@ -382,6 +395,16 @@ TEST_F(INPUTDEVICE,MTA){//TypeA Events
    ASSERT_EQ(OutEvents[6]->getPointerCount(),1);
    ASSERT_EQ(OutEvents[6]->getX(0),mts[42].value);//123
    ASSERT_EQ(OutEvents[6]->getY(0),mts[43].value);//134
+
+   ASSERT_EQ(OutEvents[7]->getActionMasked(),MotionEvent::ACTION_DOWN);
+   ASSERT_EQ(OutEvents[7]->getX(0),mts[51].value);
+   ASSERT_EQ(OutEvents[7]->getY(0),mts[52].value);
+   ASSERT_EQ(OutEvents[7]->getActionIndex(),0);
+
+   ASSERT_EQ(OutEvents[8]->getActionMasked(),MotionEvent::ACTION_UP);
+   ASSERT_EQ(OutEvents[8]->getX(0),mts[51].value);
+   ASSERT_EQ(OutEvents[8]->getY(0),mts[52].value);
+   ASSERT_EQ(OutEvents[8]->getActionIndex(),0);
 }
 
 TEST_F(INPUTDEVICE,MTA2){
@@ -399,36 +422,60 @@ TEST_F(INPUTDEVICE,MTA2){
       {EV_SYN,SYN_MT_REPORT,0},
       {EV_SYN,SYN_REPORT,0},
 
-      {EV_ABS,ABS_MT_TRACKING_ID,1},//14
-      {EV_ABS,ABS_MT_POSITION_X ,24},//15
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//10
+      {EV_ABS,ABS_MT_POSITION_X ,24},
       {EV_ABS,ABS_MT_POSITION_Y ,34},
       {EV_SYN,SYN_MT_REPORT,0},
       {EV_SYN,SYN_REPORT,0},
 
-      {EV_ABS,ABS_MT_TRACKING_ID,1},//27 POINTER_UP finger 2(trackid 3) is up
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//15 POINTER_UP finger 2(trackid 3) is up
       {EV_ABS,ABS_MT_POSITION_X ,26},
       {EV_ABS,ABS_MT_POSITION_Y ,36},
-      {EV_SYN,SYN_MT_REPORT,0},     //30
-      {EV_SYN,SYN_REPORT,0},//35
+      {EV_SYN,SYN_MT_REPORT,0},
+      {EV_SYN,SYN_REPORT,0},
 
-      {EV_ABS,ABS_MT_TRACKING_ID,1},//36 POINTER_UP finger 1(tracckid 1) isup
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//20 POINTER_UP finger 1(tracckid 1) isup
       {EV_ABS,ABS_MT_POSITION_X ,28},
       {EV_ABS,ABS_MT_POSITION_Y ,38},
       {EV_SYN,SYN_MT_REPORT,0},
-      {EV_SYN,SYN_REPORT,0},//40
+      {EV_SYN,SYN_REPORT,0},
 
-      {EV_ABS,ABS_MT_TRACKING_ID,1},//41
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//25
       {EV_ABS,ABS_MT_POSITION_X ,30},
       {EV_ABS,ABS_MT_POSITION_Y ,40},
       {EV_SYN,SYN_MT_REPORT,0},
-      {EV_SYN,SYN_REPORT,0},//45
+      {EV_SYN,SYN_REPORT,0},
 
-      {EV_ABS,ABS_MT_TRACKING_ID,-1},//46
+      {EV_ABS,ABS_MT_TRACKING_ID,-1},//30
       {EV_KEY,BTN_TOUCH,0},//20
+      {EV_SYN,SYN_MT_REPORT,0},
+      {EV_SYN,SYN_REPORT,0},
+
+      //the second touch sequences
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//34
+      {EV_ABS,ABS_MT_POSITION_X ,20},
+      {EV_ABS,ABS_MT_POSITION_Y ,30},
+      {EV_SYN,SYN_MT_REPORT,0},
+      {EV_SYN,SYN_REPORT,0},
+
+      //{EV_ABS,ABS_MT_TRACKING_ID,-1},//39
+      {EV_KEY,BTN_TOUCH,0},
+      {EV_SYN,SYN_MT_REPORT,0},
       {EV_SYN,SYN_REPORT,0}
+
    };
    EventCount = sendEvents(d,mts,sizeof(mts)/sizeof(MTEvent),OutEvents);
-   ASSERT_EQ(EventCount,7);
+   ASSERT_EQ(EventCount,9);
+
+   ASSERT_EQ(OutEvents[7]->getActionMasked(),MotionEvent::ACTION_DOWN);
+   ASSERT_EQ(OutEvents[7]->getX(0),mts[35].value);
+   ASSERT_EQ(OutEvents[7]->getY(0),mts[36].value);
+   ASSERT_EQ(OutEvents[7]->getActionIndex(),0);
+
+   ASSERT_EQ(OutEvents[8]->getActionMasked(),MotionEvent::ACTION_UP);
+   ASSERT_EQ(OutEvents[8]->getX(0),mts[35].value);
+   ASSERT_EQ(OutEvents[8]->getY(0),mts[36].value);
+   ASSERT_EQ(OutEvents[8]->getActionIndex(),0);
 }
 
 TEST_F(INPUTDEVICE,MTB){//Type B Events
