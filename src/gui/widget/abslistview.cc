@@ -1948,6 +1948,8 @@ void AbsListView::onDetachedFromWindow() {
 
     // Detach any view left in the scrap heap
     mRecycler->clear();
+    if(mSelector)
+        unscheduleDrawable(*mSelector);
 
     ViewTreeObserver* treeObserver = getViewTreeObserver();
     treeObserver->removeOnTouchModeChangeListener(mTouchModeChangeListener);
