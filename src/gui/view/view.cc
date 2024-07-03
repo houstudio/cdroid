@@ -1474,7 +1474,7 @@ void View::dispatchCancelPendingInputEvents() {
     mPrivateFlags3 &= ~PFLAG3_CALLED_SUPER;
     onCancelPendingInputEvents();
     if ((mPrivateFlags3 & PFLAG3_CALLED_SUPER) != PFLAG3_CALLED_SUPER) {
-        "View did not call through to super.onCancelPendingInputEvents()";
+        FATAL("View did not call through to super.onCancelPendingInputEvents()");
     }
 }
 
@@ -4953,6 +4953,10 @@ void View::cleanupDraw(){
         ViewGroup*root=(ViewGroup*)mAttachInfo->mRootView;
         root->cancelInvalidate(this);
     }
+    if(mBackground)unscheduleDrawable(*mBackground);
+    if(mDefaultFocusHighlight)unscheduleDrawable(*mDefaultFocusHighlight);
+    if(mDefaultFocusHighlightCache)unscheduleDrawable(*mDefaultFocusHighlightCache);
+    if(mScrollIndicatorDrawable)unscheduleDrawable(*mScrollIndicatorDrawable);
 }
 
 int View::getWindowAttachCount()const{

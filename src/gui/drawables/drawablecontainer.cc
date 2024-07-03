@@ -751,7 +751,7 @@ bool DrawableContainer::selectDrawable(int index){
         mCurIndex = -1;
     }
 
-    if (mEnterAnimationEnd != 0 || mExitAnimationEnd != 0) {
+    if (mEnterAnimationEnd || mExitAnimationEnd) {
         if (mAnimationRunnable == nullptr) {
             mAnimationRunnable = [this](){
                 animate(true);
