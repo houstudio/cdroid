@@ -5,8 +5,7 @@ class NavController;
 class Navigation {
 private:
     // No instances. Static utilities only.
-    Navigation() {
-    }
+    Navigation();
 
     /**
      * Find a {@link NavController} given the id of a View and its containing

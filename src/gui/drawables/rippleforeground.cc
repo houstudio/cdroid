@@ -62,7 +62,7 @@ void RippleForeground::drawSoftware(Canvas& c,float origAlpha) {
 
 void RippleForeground::pruneSwFinished() {
     if( mRunningSwAnimators.size()==0)return;
-    for (int i=mRunningSwAnimators.size();i>=0;i--){
+    for (int i = mRunningSwAnimators.size() - 1;i>=0;i--){
         Animator*anim=mRunningSwAnimators[i];
         if (!anim->isRunning()) {
             mRunningSwAnimators.erase(mRunningSwAnimators.begin()+i);

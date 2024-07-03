@@ -1,4 +1,4 @@
-#if 0
+#if 0 
 #include <navigation/navigation.h>
 
 namespace cdroid{
@@ -19,12 +19,11 @@ Navigation::Navigation() {
  * @throws IllegalStateException if the given viewId does not correspond with a
  * {@link NavHost} or is not within a NavHost.
  */
-NavController* Navigation::findNavController(Context*,int viewId) {
-    View view = ActivityCompat.requireViewById(activity, viewId);
-    NavController navController = findViewNavController(view);
-    if (navController == null) {
-        throw new IllegalStateException("Activity " + activity
-                + " does not have a NavController set on " + viewId);
+NavController* Navigation::findNavController(Context*activity,int viewId) {
+    View* view = Activity::requireViewById(activity, viewId);
+    NavController* navController = findViewNavController(view);
+    if (navController == nullptr) {
+        FATAL("Activity %p does not have a NavController set on %d",activity viewId);
     }
     return navController;
 }
@@ -44,8 +43,8 @@ NavController* Navigation::findNavController(Context*,int viewId) {
  */
 NavController* Navigation::findNavController(View* view) {
     NavController* navController = findViewNavController(view);
-    if (navController == null) {
-        throw new IllegalStateException("View " + view + " does not have a NavController set");
+    if (navController == nullptr) {
+        FATAL("View %p does not have a NavController set",view);
     }
     return navController;
 }
@@ -60,8 +59,8 @@ NavController* Navigation::findNavController(View* view) {
  * @return a new click listener for setting on an arbitrary view
  */
 
-View::OnClickListener Navigation::createNavigateOnClickListener(@IdRes final int resId) {
-    return createNavigateOnClickListener(resId, null);
+View::OnClickListener Navigation::createNavigateOnClickListener(int resId) {
+    return createNavigateOnClickListener(resId, nullptr);
 }
 
 /**
@@ -75,12 +74,10 @@ View::OnClickListener Navigation::createNavigateOnClickListener(@IdRes final int
  * @return a new click listener for setting on an arbitrary view
  */
 View::OnClickListener Navigation::createNavigateOnClickListener(int resId,Bundle* args) {
-    return new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            findNavController(view).navigate(resId, args);
-        }
+    View::OnClickListener clk=[redId,args](View&view) {
+        findNavController(view)->navigate(resId, args);
     };
+    return clk;
 }
 
 /**
@@ -93,8 +90,8 @@ View::OnClickListener Navigation::createNavigateOnClickListener(int resId,Bundle
  * @param controller The controller you wish to later retrieve via
  *                   {@link #findNavController(View)}
  */
-void Navigation::setViewNavController(View* view,/*@Nullable*/ NavController controller) {
-    view.setTag(R.id.nav_controller_view_tag, controller);
+void Navigation::setViewNavController(View* view,/*@Nullable*/ NavController* controller) {
+    view->setTag(R::id::nav_controller_view_tag, controller);
 }
 
 /**
@@ -108,14 +105,14 @@ NavController* Navigation::findViewNavController(View* view) {
         if (controller != nullptr) {
             return controller;
         }
-        ViewParent parent = view.getParent();
-        view = parent instanceof View ? (View) parent : nullptr;
+        ViewGroup* parent = view->getParent();
+        view = parent;
     }
     return nullptr;
 }
 
 NavController* Navigation::getViewNavController(View* view) {
-    Object tag = view.getTag(R.id.nav_controller_view_tag);
+    Object tag = view->getTag(R::id::nav_controller_view_tag);
     NavController* controller = nullptr;
     if (tag instanceof WeakReference) {
         controller = ((WeakReference<NavController>) tag).get();
