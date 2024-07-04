@@ -37,7 +37,7 @@ ViewConfiguration::ViewConfiguration(Context* context):ViewConfiguration(){
     AttributeSet atts(context,"");
     WindowManager::getInstance().getDefaultDisplay().getMetrics(metrics);
     const float sizeAndDensity = metrics.density;
-    atts = context->obtainStyledAttributes("@style/view_Configuration");
+    atts = context->obtainStyledAttributes(context->getPackageName()+":style/view_Configuration");
     if(atts.size()==0)
         atts = context->obtainStyledAttributes("cdroid:style/view_Configuration");
     mEdgeSlop = (int) (sizeAndDensity * EDGE_SLOP + 0.5f);
