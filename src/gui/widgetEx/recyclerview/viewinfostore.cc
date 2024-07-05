@@ -12,7 +12,7 @@ void ViewInfoStore::clear() {
 void ViewInfoStore::addToPreLayout(RecyclerView::ViewHolder* holder, RecyclerView::ItemAnimator::ItemHolderInfo* info) {
     InfoRecord* record = nullptr;//mLayoutHolderMap.get(holder);
     auto it = mLayoutHolderMap.find(holder);
-    if(it ==mLayoutHolderMap.end())record = it->second;
+    if(it !=mLayoutHolderMap.end())record = it->second;
     if (record == nullptr) {
         record = InfoRecord::obtain();
         mLayoutHolderMap.insert({holder,record});//put(holder, record);
