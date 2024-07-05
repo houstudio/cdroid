@@ -15,9 +15,9 @@ private:
     std::vector<MoveInfo*> mPendingMoves;
     std::vector<ChangeInfo*> mPendingChanges;
 protected:
-    std::vector<std::vector<RecyclerView::ViewHolder*>> mAdditionsList;
-    std::vector<std::vector<MoveInfo*>> mMovesList;
-    std::vector<std::vector<ChangeInfo*>> mChangesList;
+    std::vector<std::vector<RecyclerView::ViewHolder*>*> mAdditionsList;
+    std::vector<std::vector<MoveInfo*>*> mMovesList;
+    std::vector<std::vector<ChangeInfo*>*> mChangesList;
 
     std::vector<RecyclerView::ViewHolder*> mAddAnimations;
     std::vector<RecyclerView::ViewHolder*> mMoveAnimations;

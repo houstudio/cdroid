@@ -40,21 +40,23 @@ void DefaultItemAnimator::runPendingAnimations() {
     mPendingRemovals.clear();
     // Next, move stuff
     if (movesPending) {
-        mMovesList.push_back(mPendingMoves);
-        std::vector<MoveInfo*>&moves = mMovesList.back();
+        std::vector<MoveInfo*>*moves = new std::vector<MoveInfo*>;
+        *moves = mPendingMoves;
+        mMovesList.push_back(moves);
         mPendingMoves.clear();
         Runnable mover;
-        mover=[this,&moves]() {
-            for (MoveInfo* moveInfo : moves) {
+        mover=[this,moves]() {
+            for (MoveInfo* moveInfo : *moves) {
                 animateMoveImpl(*moveInfo->holder, moveInfo->fromX, moveInfo->fromY,
                         moveInfo->toX, moveInfo->toY);
             }
             auto it = std::find(mMovesList.begin(),mMovesList.end(),moves);
-            moves.clear();
+            moves->clear();
+            delete moves;
             mMovesList.erase(it);//remove(moves);
         };
         if (removalsPending) {
-            View* view = moves.at(0)->holder->itemView;
+            View* view = moves->at(0)->holder->itemView;
             view->postOnAnimationDelayed(mover, getRemoveDuration());
         } else {
             mover();//.run();
@@ -62,20 +64,22 @@ void DefaultItemAnimator::runPendingAnimations() {
     }
     // Next, change stuff, to run in parallel with move animations
     if (changesPending) {
-        mChangesList.push_back(mPendingChanges);
-        std::vector<ChangeInfo*>& changes = mChangesList.back();
+        std::vector<ChangeInfo*>* changes = new std::vector<ChangeInfo*>;
+        *changes = mPendingChanges;
+        mChangesList.push_back(changes);
         mPendingChanges.clear();
         Runnable changer;
-        changer= [this,&changes]() {
-            for (ChangeInfo* change : changes) {
+        changer= [this,changes]() {
+            for (ChangeInfo* change : *changes) {
                 animateChangeImpl(*change);
             }
             auto it = std::find(mChangesList.begin(),mChangesList.end(),changes);
-            changes.clear();
+            changes->clear();
+            delete changes;
             mChangesList.erase(it);//remove(changes);
         };
         if (removalsPending) {
-            RecyclerView::ViewHolder* holder = changes.at(0)->oldHolder;
+            RecyclerView::ViewHolder* holder = changes->at(0)->oldHolder;
             holder->itemView->postOnAnimationDelayed(changer, getRemoveDuration());
         } else {
             changer();//.run();
@@ -83,16 +87,18 @@ void DefaultItemAnimator::runPendingAnimations() {
     }
     // Next, add stuff
     if (additionsPending) {
-       mAdditionsList.push_back(mPendingAdditions);
-       std::vector<RecyclerView::ViewHolder*>& additions = mAdditionsList.back();
+       std::vector<RecyclerView::ViewHolder*>* additions = new std::vector<RecyclerView::ViewHolder*>();
+       *additions = mPendingAdditions;
+       mAdditionsList.push_back(additions);
        mPendingAdditions.clear();
        Runnable adder;
-       adder = [this,&additions]() {
-            for (RecyclerView::ViewHolder* holder : additions) {
+       adder = [this,additions]() {
+            for (RecyclerView::ViewHolder* holder : *additions) {
                 animateAddImpl(*holder);
             }
-            additions.clear();
             auto it = std::find(mAdditionsList.begin(),mAdditionsList.end(),additions);
+            additions->clear();
+            delete additions;
             mAdditionsList.erase(it);//remove(additions);
         };
         if (removalsPending || movesPending || changesPending) {
@@ -100,7 +106,7 @@ void DefaultItemAnimator::runPendingAnimations() {
             long moveDuration = movesPending ? getMoveDuration() : 0;
             long changeDuration = changesPending ? getChangeDuration() : 0;
             long totalDelay = removeDuration + std::max(moveDuration, changeDuration);
-            View* view = additions.at(0)->itemView;
+            View* view = additions->at(0)->itemView;
             view->postOnAnimationDelayed(adder, totalDelay);
         } else {
             adder();//.run();
@@ -171,21 +177,7 @@ void DefaultItemAnimator::animateAddImpl(RecyclerView::ViewHolder& holder) {
     mAddAnimations.push_back(&holder);//add(holder);
     Animator::AnimatorListener al;
     al.onAnimationStart = std::bind(&DefaultItemAnimator::onAddAnimationStart,this,&holder,std::placeholders::_1,std::placeholders::_2);
-    /*[this,&holder](Animator&animator,bool isReverse){
-        dispatchAddStarting(holder);
-    };*/
-    //al.onAnimationCancel= std::bind(&DefaultItemAnimator::onAddAnimationCancel,this,&holder,std::placeholders::_1,std::placeholders::_2);
-    /*[&holder](Animator&){
-        holder.itemView->setAlpha(1); 
-    };*/
     al.onAnimationEnd = std::bind(&DefaultItemAnimator::onAddAnimationEnd,this,&holder,std::placeholders::_1,std::placeholders::_2);
-    /*[this,&holder,&animation](Animator& animator,bool isReverse){
-        animation.setListener({});
-        dispatchAddFinished(holder);
-        auto it = std::find(mAddAnimations.begin(), mAddAnimations.end(),&holder);
-        mAddAnimations.erase(it);//mAddAnimations.remove(holder);
-        dispatchFinishedWhenDone();
-    };*/
     animation.alpha(1).setDuration(getAddDuration()).setListener(al).start();
 }
 
@@ -398,22 +390,24 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
     }
 
     for (int i = mChangesList.size() - 1; i >= 0; i--) {
-        std::vector<ChangeInfo*> changes = mChangesList.at(i);
-        endChangeAnimation(changes, item);
-        if (changes.empty()) {
+        std::vector<ChangeInfo*>* changes = mChangesList.at(i);
+        endChangeAnimation(*changes, item);
+        if (changes->empty()) {
+            delete changes;
             mChangesList.erase(mChangesList.begin()+i);//.remove(i);
         }
     }
     for (int i = mMovesList.size() - 1; i >= 0; i--) {
-        std::vector<MoveInfo*> moves = mMovesList.at(i);
-        for (int j = moves.size() - 1; j >= 0; j--) {
-            MoveInfo* moveInfo = moves.at(j);
+        std::vector<MoveInfo*>* moves = mMovesList.at(i);
+        for (int j = moves->size() - 1; j >= 0; j--) {
+            MoveInfo* moveInfo = moves->at(j);
             if (moveInfo->holder == &item) {
                 view->setTranslationY(0);
                 view->setTranslationX(0);
                 dispatchMoveFinished(item);
-                moves.erase(moves.begin()+j);//.remove(j);
-                if (moves.empty()) {
+                moves->erase(moves->begin()+j);//.remove(j);
+                if (moves->empty()) {
+                    delete moves;
                     mMovesList.erase(mMovesList.begin()+i);//.remove(i);
                 }
                 break;
@@ -421,13 +415,14 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
         }
     }
     for (int i = mAdditionsList.size() - 1; i >= 0; i--) {
-        std::vector<RecyclerView::ViewHolder*> additions = mAdditionsList.at(i);
-        it = std::find(additions.begin(),additions.end(),&item);
-        if (it!=additions.end()){//additions.remove(item)) {
+        std::vector<RecyclerView::ViewHolder*>* additions = mAdditionsList.at(i);
+        it = std::find(additions->begin(),additions->end(),&item);
+        if (it!=additions->end()){//additions.remove(item)) {
             view->setAlpha(1);
-            additions.erase(it);
+            additions->erase(it);
             dispatchAddFinished(item);
-            if (additions.empty()) {
+            if (additions->empty()) {
+                delete additions;
                 mAdditionsList.erase(mAdditionsList.begin()+i);//.remove(i);
             }
         }
@@ -518,43 +513,43 @@ void DefaultItemAnimator::endAnimations() {
 
     int listCount = mMovesList.size();
     for (int i = listCount - 1; i >= 0; i--) {
-        std::vector<MoveInfo*>& moves = mMovesList.at(i);
-        count = moves.size();
+        std::vector<MoveInfo*>* moves = mMovesList.at(i);
+        count = moves->size();
         for (int j = count - 1; j >= 0; j--) {
-            MoveInfo* moveInfo = moves.at(j);
+            MoveInfo* moveInfo = moves->at(j);
             RecyclerView::ViewHolder* item = moveInfo->holder;
             View* view = item->itemView;
             view->setTranslationY(0);
             view->setTranslationX(0);
             dispatchMoveFinished(*moveInfo->holder);
-            moves.erase(moves.begin()+i);//.remove(j);
-            if (moves.empty()) {
+            moves->erase(moves->begin()+i);//.remove(j);
+            if (moves->empty()) {
                 mMovesList.erase(mMovesList.begin()+i);//remove(moves);
             }
         }
     }
     listCount = mAdditionsList.size();
     for (int i = listCount - 1; i >= 0; i--) {
-        std::vector<RecyclerView::ViewHolder*>& additions = mAdditionsList.at(i);
-        count = additions.size();
+        std::vector<RecyclerView::ViewHolder*>* additions = mAdditionsList.at(i);
+        count = additions->size();
         for (int j = count - 1; j >= 0; j--) {
-            RecyclerView::ViewHolder* item = additions.at(j);
+            RecyclerView::ViewHolder* item = additions->at(j);
             View* view = item->itemView;
             view->setAlpha(1);
             dispatchAddFinished(*item);
-            additions.erase(additions.begin()+i);//.remove(j);
-            if (additions.empty()) {
+            additions->erase(additions->begin()+i);//.remove(j);
+            if (additions->empty()) {
                 mAdditionsList.erase(mAdditionsList.begin()+i);//.remove(additions);
             }
         }
     }
     listCount = mChangesList.size();
     for (int i = listCount - 1; i >= 0; i--) {
-        std::vector<ChangeInfo*>& changes = mChangesList.at(i);
-        count = changes.size();
+        std::vector<ChangeInfo*>* changes = mChangesList.at(i);
+        count = changes->size();
         for (int j = count - 1; j >= 0; j--) {
-            endChangeAnimationIfNecessary(*changes.at(j));
-            if (changes.empty()) {
+            endChangeAnimationIfNecessary(*changes->at(j));
+            if (changes->empty()) {
                 mChangesList.erase(mChangesList.begin()+i);//.remove(changes);
             }
         }
