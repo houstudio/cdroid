@@ -377,13 +377,13 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
     }
     endChangeAnimation(mPendingChanges, item);
     auto it = std::find(mPendingRemovals.begin(),mPendingRemovals.end(),&item);
-    if (it!=mPendingRemovals.end()){//if(mPendingRemovals.remove(item)){
+    if (it!=mPendingRemovals.end()) {
         view->setAlpha(1);
         mPendingRemovals.erase(it);
         dispatchRemoveFinished(item);
     }
     it = std::find(mPendingAdditions.begin(),mPendingAdditions.end(),&item);
-    if (it!=mPendingAdditions.end()){//mPendingAdditions.remove(item)) {
+    if (it!=mPendingAdditions.end()) {
         view->setAlpha(1);
         mPendingAdditions.erase(it);
         dispatchAddFinished(item);
@@ -417,7 +417,7 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
     for (int i = mAdditionsList.size() - 1; i >= 0; i--) {
         std::vector<RecyclerView::ViewHolder*>* additions = mAdditionsList.at(i);
         it = std::find(additions->begin(),additions->end(),&item);
-        if (it!=additions->end()){//additions.remove(item)) {
+        if (it!=additions->end()) {
             view->setAlpha(1);
             additions->erase(it);
             dispatchAddFinished(item);
@@ -430,24 +430,32 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
 
     // animations should be ended by the cancel above.
     //noinspection PointlessBooleanExpression,ConstantConditions
-    /*if (mRemoveAnimations.remove(item) && DEBUG) {
-        LOGE("after animation is cancelled, item should not be in mRemoveAnimations list");
+    auto itItem = std::find(mRemoveAnimations.begin(),mRemoveAnimations.end(),&item);
+    if ( itItem!=mRemoveAnimations.end()) {
+        mRemoveAnimations.erase(itItem);
+        LOGE_IF(_DEBUG,"after animation is cancelled, item should not be in mRemoveAnimations list");
     }
 
     //noinspection PointlessBooleanExpression,ConstantConditions
-    if (mAddAnimations.remove(item) && DEBUG) {
-        LOGE("after animation is cancelled, item should not be in mAddAnimations list");
+    itItem = std::find(mAddAnimations.begin(),mAddAnimations.end(),&item);
+    if ( it!=mAddAnimations.end() ) {
+        mAddAnimations.erase(itItem);
+        LOGE_IF(_DEBUG,"after animation is cancelled, item should not be in mAddAnimations list");
     }
 
     //noinspection PointlessBooleanExpression,ConstantConditions
-    if (mChangeAnimations.remove(item) && DEBUG) {
-        LOGE("after animation is cancelled, item should not be in mChangeAnimations list");
+    itItem = std::find(mChangeAnimations.begin(),mChangeAnimations.end(),&item);
+    if ( itItem!=mChangeAnimations.end() ) {;
+        mChangeAnimations.erase(itItem);
+        LOGE_IF(_DEBUG,"after animation is cancelled, item should not be in mChangeAnimations list");
     }
 
     //noinspection PointlessBooleanExpression,ConstantConditions
-    if (mMoveAnimations.remove(item) && DEBUG) {
-        LOGE("after animation is cancelled, item should not be in mMoveAnimations list");
-    }*/
+    itItem = std::find(mMoveAnimations.begin(),mMoveAnimations.end(),&item);
+    if ( it!=mMoveAnimations.end() ) {
+        mMoveAnimations.erase(itItem);
+        LOGE_IF(_DEBUG,"after animation is cancelled, item should not be in mMoveAnimations list");
+    }
     dispatchFinishedWhenDone();
 }
 
