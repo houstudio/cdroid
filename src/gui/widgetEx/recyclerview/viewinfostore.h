@@ -9,13 +9,13 @@ public:
     struct ProcessCallback {
         std::function<void(RecyclerView::ViewHolder*,RecyclerView::ItemAnimator::ItemHolderInfo*,
 			RecyclerView::ItemAnimator::ItemHolderInfo*)> processDisappeared;
-	//(RecyclerView::ViewHolder* viewHolder,RecyclerView::ItemAnimator::ItemHolderInfo* preInfo, RecyclerView::ItemAnimator::ItemHolderInfo* postInfo);
-	std::function<void(RecyclerView::ViewHolder*,RecyclerView::ItemAnimator::ItemHolderInfo*,
+	    //(RecyclerView::ViewHolder* viewHolder,RecyclerView::ItemAnimator::ItemHolderInfo* preInfo, RecyclerView::ItemAnimator::ItemHolderInfo* postInfo);
+	    std::function<void(RecyclerView::ViewHolder*,RecyclerView::ItemAnimator::ItemHolderInfo*,
 			RecyclerView::ItemAnimator::ItemHolderInfo*)> processAppeared;
-	//(RecyclerView::ViewHolder* viewHolder, RecyclerView::ItemAnimator::ItemHolderInfo* preInfo,RecyclerView::ItemAnimator::ItemHolderInfo* postInfo);
-	std::function<void(RecyclerView::ViewHolder*,RecyclerView::ItemAnimator::ItemHolderInfo*,RecyclerView::ItemAnimator::ItemHolderInfo*)> processPersistent;
-	//(RecyclerView::ViewHolder* viewHolder,RecyclerView::ItemAnimator::ItemHolderInfo* preInfo, RecyclerView::ItemAnimator::ItemHolderInfo* postInfo);
-	std::function<void(RecyclerView::ViewHolder*)>unused;//(RecyclerView::ViewHolder* holder);
+	    //(RecyclerView::ViewHolder* viewHolder, RecyclerView::ItemAnimator::ItemHolderInfo* preInfo,RecyclerView::ItemAnimator::ItemHolderInfo* postInfo);
+	    std::function<void(RecyclerView::ViewHolder*,RecyclerView::ItemAnimator::ItemHolderInfo*,RecyclerView::ItemAnimator::ItemHolderInfo*)> processPersistent;
+	    //(RecyclerView::ViewHolder* viewHolder,RecyclerView::ItemAnimator::ItemHolderInfo* preInfo, RecyclerView::ItemAnimator::ItemHolderInfo* postInfo);
+	    std::function<void(RecyclerView::ViewHolder*)>unused;//(RecyclerView::ViewHolder* holder);
     };
 
     class InfoRecord {
@@ -40,7 +40,7 @@ public:
     };
 protected:
     std::map<RecyclerView::ViewHolder*, InfoRecord*> mLayoutHolderMap;
-    std::map<long,RecyclerView::ViewHolder*> mOldChangedHolders;
+    LongSparseArray<RecyclerView::ViewHolder*> mOldChangedHolders;
 private:
     friend RecyclerView;
     RecyclerView::ItemAnimator::ItemHolderInfo* popFromLayoutStep(RecyclerView::ViewHolder* vh, int flag);

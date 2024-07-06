@@ -56,7 +56,7 @@ RecyclerView::ItemAnimator::ItemHolderInfo* ViewInfoStore::popFromLayoutStep(Rec
         // if not pre-post flag is left, clear.
         if ((record->flags & (InfoRecord::FLAG_PRE | InfoRecord::FLAG_POST)) == 0) {
             mLayoutHolderMap.erase(it);//removeAt(index);
-	    InfoRecord::recycle(record);
+            InfoRecord::recycle(record);
         }
         return info;
     }
@@ -64,7 +64,7 @@ RecyclerView::ItemAnimator::ItemHolderInfo* ViewInfoStore::popFromLayoutStep(Rec
 }
 
 void ViewInfoStore::addToOldChangeHolders(long key, RecyclerView::ViewHolder* holder) {
-    mOldChangedHolders.insert({key,holder});//put(key, holder);
+    mOldChangedHolders.put(key, holder);
 }
 
 void ViewInfoStore::addToAppearedInPreLayoutHolders(RecyclerView::ViewHolder* holder, RecyclerView::ItemAnimator::ItemHolderInfo* info) {
@@ -87,8 +87,7 @@ bool ViewInfoStore::isInPreLayout(RecyclerView::ViewHolder* viewHolder) {
 }
 
 RecyclerView::ViewHolder* ViewInfoStore::getFromOldChangeHolders(long key) {
-    auto it = mOldChangedHolders.find(key);
-    return (it!=mOldChangedHolders.end())?it->second:nullptr;
+    return  mOldChangedHolders.get(key);
 }
 
 void ViewInfoStore::addToPostLayout(RecyclerView::ViewHolder* holder, RecyclerView::ItemAnimator::ItemHolderInfo* info) {
@@ -163,16 +162,15 @@ void ViewInfoStore::process(ProcessCallback callback) {
 }
 
 void ViewInfoStore::removeViewHolder(RecyclerView::ViewHolder* holder) {
-    for (auto it =mOldChangedHolders.begin();it!=mOldChangedHolders.end();it++){
-        if (holder == it->second){//mOldChangedHolders.valueAt(i)) {
-            mOldChangedHolders.erase(it);//removeAt(i);
+    for (int i =mOldChangedHolders.size()-1;i>=0;i++){
+        if (holder == mOldChangedHolders.valueAt(i)) {
+            mOldChangedHolders.removeAt(i);
             break;
         }
     }
-    InfoRecord* info = nullptr;//mLayoutHolderMap.remove(holder);
     auto it = mLayoutHolderMap.find(holder);
     if( it!= mLayoutHolderMap.end() ){
-        info = it->second;
+        InfoRecord*info = it->second;
         if(info)
             InfoRecord::recycle(info);
         mLayoutHolderMap.erase(it);
