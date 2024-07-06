@@ -46,12 +46,12 @@ void DefaultItemAnimator::runPendingAnimations() {
         mPendingMoves.clear();
         Runnable mover;
         mover=[this,moves]() {
-            for (MoveInfo* moveInfo : *moves) {
-                animateMoveImpl(*moveInfo->holder, moveInfo->fromX, moveInfo->fromY,
-                        moveInfo->toX, moveInfo->toY);
-            }
             auto it = std::find(mMovesList.begin(),mMovesList.end(),moves);
             if(it!=mMovesList.end()){
+                for (MoveInfo* moveInfo : *moves) {
+                    animateMoveImpl(*moveInfo->holder, moveInfo->fromX, moveInfo->fromY,
+                        moveInfo->toX, moveInfo->toY);
+                }
                 moves->clear();
                 delete moves;
                 mMovesList.erase(it);//remove(moves);
@@ -72,11 +72,11 @@ void DefaultItemAnimator::runPendingAnimations() {
         mPendingChanges.clear();
         Runnable changer;
         changer= [this,changes]() {
-            for (ChangeInfo* change : *changes) {
-                animateChangeImpl(*change);
-            }
             auto it = std::find(mChangesList.begin(),mChangesList.end(),changes);
             if(it!=mChangesList.end()){
+                for (ChangeInfo* change : *changes) {
+                    animateChangeImpl(*change);
+                }
                 changes->clear();
                 delete changes;
                 mChangesList.erase(it);//remove(changes);
@@ -97,11 +97,11 @@ void DefaultItemAnimator::runPendingAnimations() {
        mPendingAdditions.clear();
        Runnable adder;
        adder = [this,additions]() {
-            for (RecyclerView::ViewHolder* holder : *additions) {
-                animateAddImpl(*holder);
-            }
             auto it = std::find(mAdditionsList.begin(),mAdditionsList.end(),additions);
             if(it!=mAdditionsList.end()){
+                for (RecyclerView::ViewHolder* holder : *additions) {
+                    animateAddImpl(*holder);
+                }
                 additions->clear();
                 delete additions;
                 mAdditionsList.erase(it);//remove(additions);
