@@ -51,9 +51,11 @@ void DefaultItemAnimator::runPendingAnimations() {
                         moveInfo->toX, moveInfo->toY);
             }
             auto it = std::find(mMovesList.begin(),mMovesList.end(),moves);
-            moves->clear();
-            delete moves;
-            mMovesList.erase(it);//remove(moves);
+            if(it!=mMovesList.end()){
+                moves->clear();
+                delete moves;
+                mMovesList.erase(it);//remove(moves);
+            }
         };
         if (removalsPending) {
             View* view = moves->at(0)->holder->itemView;
@@ -74,9 +76,11 @@ void DefaultItemAnimator::runPendingAnimations() {
                 animateChangeImpl(*change);
             }
             auto it = std::find(mChangesList.begin(),mChangesList.end(),changes);
-            changes->clear();
-            delete changes;
-            mChangesList.erase(it);//remove(changes);
+            if(it!=mChangesList.end()){
+                changes->clear();
+                delete changes;
+                mChangesList.erase(it);//remove(changes);
+            }
         };
         if (removalsPending) {
             RecyclerView::ViewHolder* holder = changes->at(0)->oldHolder;
@@ -97,9 +101,11 @@ void DefaultItemAnimator::runPendingAnimations() {
                 animateAddImpl(*holder);
             }
             auto it = std::find(mAdditionsList.begin(),mAdditionsList.end(),additions);
-            additions->clear();
-            delete additions;
-            mAdditionsList.erase(it);//remove(additions);
+            if(it!=mAdditionsList.end()){
+                additions->clear();
+                delete additions;
+                mAdditionsList.erase(it);//remove(additions);
+            }
         };
         if (removalsPending || movesPending || changesPending) {
             long removeDuration = removalsPending ? getRemoveDuration() : 0;
@@ -531,8 +537,9 @@ void DefaultItemAnimator::endAnimations() {
             view->setTranslationY(0);
             view->setTranslationX(0);
             dispatchMoveFinished(*moveInfo->holder);
-            moves->erase(moves->begin()+i);//.remove(j);
+            moves->erase(moves->begin()+j);//.remove(j);
             if (moves->empty()) {
+                delete moves;
                 mMovesList.erase(mMovesList.begin()+i);//remove(moves);
             }
         }
@@ -546,8 +553,9 @@ void DefaultItemAnimator::endAnimations() {
             View* view = item->itemView;
             view->setAlpha(1);
             dispatchAddFinished(*item);
-            additions->erase(additions->begin()+i);//.remove(j);
+            additions->erase(additions->begin()+j);//.remove(j);
             if (additions->empty()) {
+                delete additions;
                 mAdditionsList.erase(mAdditionsList.begin()+i);//.remove(additions);
             }
         }
@@ -559,6 +567,7 @@ void DefaultItemAnimator::endAnimations() {
         for (int j = count - 1; j >= 0; j--) {
             endChangeAnimationIfNecessary(*changes->at(j));
             if (changes->empty()) {
+                delete changes;
                 mChangesList.erase(mChangesList.begin()+i);//.remove(changes);
             }
         }
