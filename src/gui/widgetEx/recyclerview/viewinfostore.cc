@@ -171,9 +171,11 @@ void ViewInfoStore::removeViewHolder(RecyclerView::ViewHolder* holder) {
     }
     InfoRecord* info = nullptr;//mLayoutHolderMap.remove(holder);
     auto it = mLayoutHolderMap.find(holder);
-    if( it!= mLayoutHolderMap.end() )info = it->second;
-    if (info != nullptr) {
-        InfoRecord::recycle(info);
+    if( it!= mLayoutHolderMap.end() ){
+        info = it->second;
+        if(info)
+            InfoRecord::recycle(info);
+        mLayoutHolderMap.erase(it);
     }
 }
 
