@@ -92,11 +92,11 @@ bool UIEventSource::hasDelayedRunners()const{
 
 int UIEventSource::removeCallbacks(const Runnable& what){
     int count=0;
-    for(auto it = mRunnables.begin();it != mRunnables.end();it++){
+    for(auto it = mRunnables.begin();it != mRunnables.end();){
         if(it->run == what){
             it = mRunnables.erase(it);
             count++;
-        }
+        }else it++;
     }
     return count;
 }

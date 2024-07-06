@@ -211,7 +211,8 @@ bool DefaultItemAnimator::animateMove(RecyclerView::ViewHolder& holder, int from
 void DefaultItemAnimator::onMoveAnimationStart(RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
     dispatchMoveStarting(*holder);
 }
-void DefaultItemAnimator::onMoveAnimationCancel(int deltaX,int deltaY,RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
+
+void DefaultItemAnimator::onMoveAnimationCancel(int deltaX,int deltaY,RecyclerView::ViewHolder*holder,Animator& animator){
     if (deltaX != 0) {
         holder->itemView->setTranslationX(0);
     }
@@ -223,7 +224,7 @@ void DefaultItemAnimator::onMoveAnimationEnd(RecyclerView::ViewHolder*holder,Ani
     ViewPropertyAnimator& animation = holder->itemView->animate();
     animation.setListener({});
     dispatchMoveFinished(*holder);
-    auto it =std::find(mMoveAnimations.begin(),mMoveAnimations.end(),holder);
+    auto it = std::find(mMoveAnimations.begin(),mMoveAnimations.end(),holder);
     mMoveAnimations.erase(it);//mMoveAnimations.remove(holder);
     dispatchFinishedWhenDone();
 }
@@ -246,7 +247,7 @@ void DefaultItemAnimator::animateMoveImpl(RecyclerView::ViewHolder& holder, int 
     Animator::AnimatorListener al;
 
     al.onAnimationStart = std::bind(&DefaultItemAnimator::onMoveAnimationStart,this,&holder,std::placeholders::_1,std::placeholders::_2);
-    //al.onAnimationCancel = std::bind(&DefaultItemAnimator::onMoveAnimationCancel,this,deltaX,deltaY,&holder,std::placeholders::_1,std::placeholders::_2);
+    al.onAnimationCancel = std::bind(&DefaultItemAnimator::onMoveAnimationCancel,this,deltaX,deltaY,&holder,std::placeholders::_1);
     al.onAnimationEnd = std::bind(&DefaultItemAnimator::onMoveAnimationEnd,this,&holder,std::placeholders::_1,std::placeholders::_2);
     animation.setDuration(getMoveDuration()).setListener(al).start();
 }

@@ -237,6 +237,8 @@ class MyRecoverAnimation:public ItemTouchHelper::RecoverAnimation{
 private:
     std::function<void(Animator&,bool)>mOnAnimationEndListener;
 public:
+    Runnable mRunnable;
+public:
     MyRecoverAnimation(RecyclerView::ViewHolder* viewHolder, int animationType,
         int actionState, float startDx, float startDy, float targetX, float targetY)
        :ItemTouchHelper::RecoverAnimation(viewHolder,animationType,actionState,startDx,startDy,targetX,targetY){
@@ -366,7 +368,8 @@ void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState
 
 void ItemTouchHelper::postDispatchSwipe(RecoverAnimation* anim,int swipeDir) {
     // wait until animations are complete.
-    Runnable r([this,anim,&r,swipeDir]() {
+    MyRecoverAnimation*myAnim = (MyRecoverAnimation*)anim;
+    myAnim->mRunnable = ([this,anim,swipeDir]() {
         if (mRecyclerView && mRecyclerView->isAttachedToWindow() && !anim->mOverridden
                 && (anim->mViewHolder->getAdapterPosition() != RecyclerView::NO_POSITION) ) {
             RecyclerView::ItemAnimator* animator = mRecyclerView->getItemAnimator();
@@ -377,11 +380,11 @@ void ItemTouchHelper::postDispatchSwipe(RecoverAnimation* anim,int swipeDir) {
                     && !hasRunningRecoverAnim()) {
                 mCallback->onSwiped(*anim->mViewHolder, swipeDir);
             } else {
-                mRecyclerView->post(r);
+                mRecyclerView->post(((MyRecoverAnimation*)anim)->mRunnable);
             }
         }
     });
-    mRecyclerView->post(r);
+    mRecyclerView->post(myAnim->mRunnable);
 }
 
 bool ItemTouchHelper::hasRunningRecoverAnim() {
