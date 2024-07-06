@@ -162,7 +162,7 @@ void ViewInfoStore::process(ProcessCallback callback) {
 }
 
 void ViewInfoStore::removeViewHolder(RecyclerView::ViewHolder* holder) {
-    for (int i =mOldChangedHolders.size()-1;i>=0;i++){
+    for (int i = mOldChangedHolders.size()-1;i>=0;i--){
         if (holder == mOldChangedHolders.valueAt(i)) {
             mOldChangedHolders.removeAt(i);
             break;

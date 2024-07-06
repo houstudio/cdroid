@@ -284,13 +284,14 @@ void DefaultItemAnimator::onChangeAnimationEnd(bool old,ChangeInfo*changeInfo,An
     View*view = holder == nullptr ? nullptr : holder->itemView;
     if(view&&holder){
         ViewPropertyAnimator& animator = view->animate();
-	animator.setListener({});
+	    animator.setListener({});
         view->setAlpha(1);
         view->setTranslationX(0);
         view->setTranslationY(0);
         dispatchChangeFinished(*holder, old);
         auto it = std::find(mChangeAnimations.begin(),mChangeAnimations.end(),holder);
-        mChangeAnimations.erase(it);//remove(*changeInfo.oldHolder);
+        if(it!=mChangeAnimations.end())
+            mChangeAnimations.erase(it);
         dispatchFinishedWhenDone();
     }
 
@@ -438,7 +439,7 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
 
     //noinspection PointlessBooleanExpression,ConstantConditions
     itItem = std::find(mAddAnimations.begin(),mAddAnimations.end(),&item);
-    if ( it!=mAddAnimations.end() ) {
+    if ( itItem!=mAddAnimations.end() ) {
         mAddAnimations.erase(itItem);
         LOGE_IF(_DEBUG,"after animation is cancelled, item should not be in mAddAnimations list");
     }
@@ -452,7 +453,7 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
 
     //noinspection PointlessBooleanExpression,ConstantConditions
     itItem = std::find(mMoveAnimations.begin(),mMoveAnimations.end(),&item);
-    if ( it!=mMoveAnimations.end() ) {
+    if ( itItem!=mMoveAnimations.end() ) {
         mMoveAnimations.erase(itItem);
         LOGE_IF(_DEBUG,"after animation is cancelled, item should not be in mMoveAnimations list");
     }

@@ -2524,7 +2524,6 @@ void RecyclerView::dispatchLayoutStep3() {
                     mViewInfoStore->addToPostLayout(holder, &animationInfo);
                 } else {
                     ItemAnimator::ItemHolderInfo* preInfo = mViewInfoStore->popFromPreLayout(oldChangeViewHolder);
-                    mViewInfoStore->popFromPreLayout(holder);//added by chenyang
                     // we add and remove so that any post info is merged.
                     mViewInfoStore->addToPostLayout(holder, &animationInfo);
                     ItemAnimator::ItemHolderInfo* postInfo = mViewInfoStore->popFromPostLayout(holder);
