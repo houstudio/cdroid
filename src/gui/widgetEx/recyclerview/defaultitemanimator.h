@@ -55,15 +55,15 @@ protected:
     void onChangeAnimationStart(bool,ChangeInfo*,Animator& animator,bool isReverse);
     void onChangeAnimationEnd(bool,ChangeInfo*,Animator& animator,bool isReverse);
 protected:
-    void animateRemoveImpl(RecyclerView::ViewHolder& holder)override;
+    virtual void animateRemoveImpl(RecyclerView::ViewHolder& holder);
     void endChangeAnimation(std::vector<ChangeInfo*>& infoList, RecyclerView::ViewHolder& item);
     void endChangeAnimationIfNecessary(ChangeInfo& changeInfo);
     bool endChangeAnimationIfNecessary(ChangeInfo& changeInfo, RecyclerView::ViewHolder& item);
     void resetAnimation(RecyclerView::ViewHolder& holder);
 protected:
-    void animateAddImpl(RecyclerView::ViewHolder& holder)override;
-    void animateMoveImpl(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY)override;
-    void animateChangeImpl(ChangeInfo& changeInfo)override;
+    virtual void animateAddImpl(RecyclerView::ViewHolder& holder);
+    virtual void animateMoveImpl(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY);
+    virtual void animateChangeImpl(ChangeInfo& changeInfo);
     void dispatchFinishedWhenDone();
     void cancelAll(std::vector<RecyclerView::ViewHolder*>& viewHolders);
 public:

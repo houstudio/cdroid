@@ -164,9 +164,11 @@ bool DefaultItemAnimator::animateAdd(RecyclerView::ViewHolder& holder) {
 void DefaultItemAnimator::onAddAnimationStart(RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
     dispatchAddStarting(*holder);
 }
+
 void DefaultItemAnimator::onAddAnimationCancel(RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
     holder->itemView->setAlpha(1);
 }
+
 void DefaultItemAnimator::onAddAnimationEnd(RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
     View* view = holder->itemView;
     ViewPropertyAnimator& animation = view->animate();
@@ -220,6 +222,7 @@ void DefaultItemAnimator::onMoveAnimationCancel(int deltaX,int deltaY,RecyclerVi
         holder->itemView->setTranslationY(0);
     }
 }
+
 void DefaultItemAnimator::onMoveAnimationEnd(RecyclerView::ViewHolder*holder,Animator& animator,bool isReverse){
     ViewPropertyAnimator& animation = holder->itemView->animate();
     animation.setListener({});
