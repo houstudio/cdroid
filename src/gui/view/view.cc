@@ -3052,7 +3052,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
         }
 
         // Deal with alpha if it is or used to be <1
-        if (alpha < 1 || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA) != 0) {
+        if (alpha < 1.f || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA) != 0) {
             if (alpha < 1) {
                 mPrivateFlags3 |= PFLAG3_VIEW_IS_ANIMATING_ALPHA;
             } else {
@@ -3079,7 +3079,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
 
     if (!drawingWithRenderNode) {
         // apply clips directly, since RenderNode won't do it for this draw
-        int clips=0;
+        int clips = 0;
         if ((parentFlags & ViewGroup::FLAG_CLIP_CHILDREN) != 0 && cache == nullptr) {
             if (offsetForScroll){
                 canvas.rectangle(sx,sy,getWidth(),getHeight());
@@ -3102,6 +3102,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     }
 
     if (!drawingWithDrawingCache) {
+        if(alpha<1.0)canvas.push_group();
         if (drawingWithRenderNode) {
             mPrivateFlags &= ~PFLAG_DIRTY_MASK;
             //((DisplayListCanvas) canvas).drawRenderNode(renderNode);
@@ -3113,14 +3114,17 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
                 draw(canvas);
             }
         }
+        if(alpha<1.0){
+            canvas.pop_group_to_source();
+            canvas.paint_with_alpha(alpha);
+        }
     } else if (cache != nullptr) {
         mPrivateFlags &= ~PFLAG_DIRTY_MASK;
         cache->flush();
         canvas.save();
         canvas.reset_clip();
         canvas.set_source(cache,0,0);
-        if(alpha<1.f)canvas.paint_with_alpha(alpha);
-        else canvas.paint();
+        canvas.paint_with_alpha(alpha);
         canvas.restore();
     }
     while(restoreTo-- >0) {

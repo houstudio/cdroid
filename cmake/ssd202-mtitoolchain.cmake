@@ -8,4 +8,7 @@ SET(CMAKE_SYSTEM_PROCESSOR arm)
 SET(CMAKE_CXX_COMPILER ${TOOLCHAIN_DIR}/bin/arm-linux-gnueabihf-g++)
 SET(CMAKE_C_COMPILER ${TOOLCHAIN_DIR}/bin/arm-linux-gnueabihf-gcc)
 SET(CMAKE_ASM_COMPILER ${TOOLCHAIN_DIR}/bin/arm-linux-gnueabihf-gcc)
-SET(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_DIR}/arm-linux-gnueabihf/libc)
+SET(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_DIR})
+
+set(ENV{PKG_CONFIG_PATH} "${TOOLCHAIN_DIR}/sysroot//usr/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+set(CMAKE_SYSROOT ${TOOLCHAIN_DIR}/sysroot)
