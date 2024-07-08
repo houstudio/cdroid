@@ -1,6 +1,7 @@
 #ifndef __DEFAULT_ITEM_ANIMATOR_H__
 #define __DEFAULT_ITEM_ANIMATOR_H__
 #include <widgetEx/recyclerview/simpleitemanimator.h>
+
 namespace cdroid{
 class DefaultItemAnimator:public SimpleItemAnimator {
 private:
@@ -54,15 +55,15 @@ protected:
     void onChangeAnimationStart(bool,ChangeInfo*,Animator& animator,bool isReverse);
     void onChangeAnimationEnd(bool,ChangeInfo*,Animator& animator,bool isReverse);
 protected:
-    void animateRemoveImpl(RecyclerView::ViewHolder& holder);
+    void animateRemoveImpl(RecyclerView::ViewHolder& holder)override;
     void endChangeAnimation(std::vector<ChangeInfo*>& infoList, RecyclerView::ViewHolder& item);
     void endChangeAnimationIfNecessary(ChangeInfo& changeInfo);
     bool endChangeAnimationIfNecessary(ChangeInfo& changeInfo, RecyclerView::ViewHolder& item);
     void resetAnimation(RecyclerView::ViewHolder& holder);
 protected:
-    void animateAddImpl(RecyclerView::ViewHolder& holder);
-    void animateMoveImpl(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY);
-    void animateChangeImpl(ChangeInfo& changeInfo);
+    void animateAddImpl(RecyclerView::ViewHolder& holder)override;
+    void animateMoveImpl(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY)override;
+    void animateChangeImpl(ChangeInfo& changeInfo)override;
     void dispatchFinishedWhenDone();
     void cancelAll(std::vector<RecyclerView::ViewHolder*>& viewHolders);
 public:

@@ -498,9 +498,9 @@ protected:
     /* Cache initial left padding*/
     int mUserPaddingLeftInitial;
     /* Cache initial right padding*/
-    int  mUserPaddingRightInitial;
-    int  mTransientStateCount;
-    int  mWindowAttachCount;
+    int mUserPaddingRightInitial;
+    int mTransientStateCount;
+    int mWindowAttachCount;
     bool mLeftPaddingDefined;
     bool mRightPaddingDefined;
     bool mCachingFailed;
