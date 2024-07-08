@@ -270,9 +270,9 @@ void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){
     if (mFirstTouchTarget==nullptr)return;
  
     long now = SystemClock::uptimeMillis();
-    bool syntheticEvent=(event==nullptr);
+    bool syntheticEvent = (event==nullptr);
     if(event==nullptr){
-        event=MotionEvent::obtain(now, now,MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
+        event = MotionEvent::obtain(now, now,MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
         event->setAction(MotionEvent::ACTION_CANCEL);
         event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
     }
@@ -292,7 +292,7 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
     // Canceling motions is a special case.  We don't need to perform any transformations
     // or filtering.  The important part is the action, not the contents.
     const int oldAction = event.getAction();
-    if (cancel || oldAction == MotionEvent::ACTION_CANCEL) {
+    if (cancel || (oldAction == MotionEvent::ACTION_CANCEL) ) {
         event.setAction(MotionEvent::ACTION_CANCEL);
         if (child == nullptr) {
             handled = View::dispatchTouchEvent(event);
@@ -318,9 +318,9 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
     // dispatch as long as we are careful to revert any changes we make.
     // Otherwise we need to make a copy.
     MotionEvent* transformedEvent;
-#if 0//android orignal code,
+#if 1//android orignal code,
     if (newPointerIdBits == oldPointerIdBits) {
-        if (child == nullptr || child->hasIdentityMatrix()) {
+        if ((child == nullptr) || child->hasIdentityMatrix()) {
             if (child == nullptr) {
                 handled = View::dispatchTouchEvent(event);
             } else {
@@ -2919,11 +2919,11 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
         if( (actionMasked == MotionEvent::ACTION_DOWN) || (split && (actionMasked == MotionEvent::ACTION_POINTER_DOWN))
            || (actionMasked == MotionEvent::ACTION_HOVER_MOVE) ){
             const int actionIndex = ev.getActionIndex(); // always 0 for down
-            const int idBitsToAssign = split ? 1 << ev.getPointerId(actionIndex): TouchTarget::ALL_POINTER_IDS;
+            const int idBitsToAssign = split ? (1 << ev.getPointerId(actionIndex)) : TouchTarget::ALL_POINTER_IDS;
 
             removePointersFromTouchTargets(idBitsToAssign);
             const int childrenCount = mChildren.size();
-            if (newTouchTarget == nullptr && childrenCount){
+            if ((newTouchTarget == nullptr) && childrenCount){
                 const int x = ev.getX(actionIndex);
                 const int y = ev.getY(actionIndex);
 
@@ -2992,8 +2992,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
                 handled = true;
             } else {
                 const bool cancelChild = resetCancelNextUpFlag(target->child)|| intercepted;
-                if (dispatchTransformedTouchEvent(ev, cancelChild,
-                        target->child, target->pointerIdBits)) {
+                if (dispatchTransformedTouchEvent(ev, cancelChild, target->child, target->pointerIdBits)) {
                     handled = true;
                 }
                 if (cancelChild) {
@@ -3010,10 +3009,10 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
     } 
 
     // Update list of touch targets for pointer up or cancel, if needed.
-    if (canceled || actionMasked == MotionEvent::ACTION_UP
-        || actionMasked == MotionEvent::ACTION_HOVER_MOVE) {
+    if (canceled || (actionMasked == MotionEvent::ACTION_UP)
+        || (actionMasked == MotionEvent::ACTION_HOVER_MOVE) ) {
         resetTouchState();
-    } else if (split && actionMasked == MotionEvent::ACTION_POINTER_UP) {
+    } else if (split && (actionMasked == MotionEvent::ACTION_POINTER_UP) ) {
         int actionIndex = ev.getActionIndex();
         int idBitsToRemove = 1 << ev.getPointerId(actionIndex);
         removePointersFromTouchTargets(idBitsToRemove);

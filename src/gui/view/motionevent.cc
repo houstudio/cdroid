@@ -284,7 +284,7 @@ MotionEvent*MotionEvent::split(int idBits){
     }
 
     int newAction;
-    if ((oldActionMasked == ACTION_POINTER_DOWN) || (oldActionMasked == ACTION_POINTER_UP)) {
+    if ( (oldActionMasked == ACTION_POINTER_DOWN) || (oldActionMasked == ACTION_POINTER_UP) ) {
         if (newActionPointerIndex < 0) { // An unrelated pointer changed.
             newAction = ACTION_MOVE;
         } else if (newPointerCount == 1) { // The first/last pointer went down/up.
@@ -317,7 +317,7 @@ MotionEvent*MotionEvent::split(int idBits){
 }
 
 bool MotionEvent::isButtonPressed(int button)const{
-    return (button!=0)&&((getButtonState() & button) == button);
+    return (button!=0) && ((getButtonState() & button) == button);
 }
 
 void MotionEvent::addSample(nsecs_t eventTime, const PointerCoords*coords) {
