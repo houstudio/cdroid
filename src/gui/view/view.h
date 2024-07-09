@@ -168,7 +168,16 @@ protected:
                | PFLAG2_TEXT_ALIGNMENT_RESOLVED | PFLAG2_PADDING_RESOLVED | PFLAG2_DRAWABLE_RESOLVED,
         PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_MASK = (IMPORTANT_FOR_ACCESSIBILITY_AUTO
                | IMPORTANT_FOR_ACCESSIBILITY_YES | IMPORTANT_FOR_ACCESSIBILITY_NO
-               | IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS) << PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT
+               | IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS) << PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT,
+
+        PFLAG2_ACCESSIBILITY_LIVE_REGION_SHIFT = 23,
+        ACCESSIBILITY_LIVE_REGION_NONE = 0x00000000,
+        ACCESSIBILITY_LIVE_REGION_POLITE = 0x00000001,
+        ACCESSIBILITY_LIVE_REGION_ASSERTIVE = 0x00000002,
+        ACCESSIBILITY_LIVE_REGION_DEFAULT = ACCESSIBILITY_LIVE_REGION_NONE,
+        PFLAG2_ACCESSIBILITY_LIVE_REGION_MASK = (ACCESSIBILITY_LIVE_REGION_NONE
+            | ACCESSIBILITY_LIVE_REGION_POLITE | ACCESSIBILITY_LIVE_REGION_ASSERTIVE)
+            << PFLAG2_ACCESSIBILITY_LIVE_REGION_SHIFT
     };
     enum PFLAGS3{//FLAGS in mPrivateFlags3
         PFLAG3_VIEW_IS_ANIMATING_TRANSFORM = 0x0001 ,
@@ -331,6 +340,7 @@ public:
     DECLARE_UIEVENT(bool,OnTouchListener,View&v, MotionEvent&);
     DECLARE_UIEVENT(bool,OnHoverListener,View&v, MotionEvent&);
     DECLARE_UIEVENT(bool,OnGenericMotionListener,View&v, MotionEvent&);
+    DECLARE_UIEVENT(bool,OnCapturedPointerListener,View&v, MotionEvent&);
     DECLARE_UIEVENT(void,OnClickListener,View&);
     DECLARE_UIEVENT(bool,OnLongClickListener,View&);
     DECLARE_UIEVENT(bool,OnContextClickListener,View&);
@@ -465,6 +475,7 @@ private:
     bool hasParentWantsFocus()const;
     void cleanupDraw();
     void invalidateInternal(int l, int t, int r, int b, bool invalidateCache,bool fullInvalidate);
+    View* findAccessibilityFocusHost(bool searchDescendants);
 protected:
     static bool sIgnoreMeasureCache;
     static bool sAlwaysRemeasureExactly;
@@ -602,9 +613,10 @@ protected:
     bool canReceivePointerEvents()const;
     virtual bool dispatchHoverEvent(MotionEvent&event);
     virtual bool dispatchTrackballEvent(MotionEvent& event);
+    virtual bool dispatchCapturedPointerEvent(MotionEvent& event);
     virtual bool dispatchGenericPointerEvent(MotionEvent& event);
     virtual bool dispatchGenericFocusedEvent(MotionEvent& event);
-    virtual bool hasHoveredChild();
+    virtual bool hasHoveredChild()const;
     virtual bool pointInHoveredChild(MotionEvent& event);
 
     virtual void saveHierarchyState(SparseArray<Parcelable*>& container);
@@ -942,7 +954,15 @@ public:
     void setTextAlignment(int textAlignment);
     virtual int  getTextAlignment()const;
 
-   // Attribute
+    //Pointer
+    virtual bool hasPointerCapture()const;
+    void requestPointerCapture();
+    void releasePointerCapture();
+    virtual void onPointerCaptureChange(bool hasCapture);
+    virtual void dispatchPointerCaptureChanged(bool hasCapture);
+    virtual bool onCapturedPointerEvent(MotionEvent& event);
+    void setOnCapturedPointerListener(OnCapturedPointerListener l);
+    // Attribute
     virtual View& clearFlag(int flag);
     bool isAccessibilityFocused()const;
     View& sendAccessibilityEvent(int eventType);
@@ -1004,6 +1024,8 @@ public:
     int getImportantForAccessibility();
     void setImportantForAccessibility(int mode);
     bool isImportantForAccessibility()const;
+    void setAccessibilityLiveRegion(int mode);
+    int  getAccessibilityLiveRegion() const;
     virtual bool requestFocus(int direction,Rect* previouslyFocusedRect);
     bool hasFocusable()const{ return hasFocusable(true, false); }
     virtual bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const;
@@ -1250,6 +1272,7 @@ public:
     View::OnKeyListener mOnKeyListener;
     View::OnTouchListener mOnTouchListener;
     View::OnHoverListener mOnHoverListener;
+    View::OnCapturedPointerListener mOnCapturedPointerListener;
     View::OnGenericMotionListener mOnGenericMotionListener;
     std::vector<View::OnUnhandledKeyEventListener> mUnhandledKeyListeners;
     //View::OnDragListener mOnDragListener;

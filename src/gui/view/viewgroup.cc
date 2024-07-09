@@ -72,6 +72,7 @@ public:
         child = nullptr;
     }
 };
+
 class HoverTarget {
 private:
     static constexpr int MAX_RECYCLED = 32;
@@ -158,6 +159,7 @@ void ViewGroup::initGroup(){
     mTooltipHoverTarget = nullptr;
     mLayoutAnimationController = nullptr;
     mHoveredSelf = false;
+    mPointerCapture  = false;
     mIsInterestedInDrag = false;
     mTooltipHoveredSelf = false;
     mChildCountWithTransientState= 0;
@@ -318,7 +320,6 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
     // dispatch as long as we are careful to revert any changes we make.
     // Otherwise we need to make a copy.
     MotionEvent* transformedEvent;
-#if 1//android orignal code,
     if (newPointerIdBits == oldPointerIdBits) {
         if ((child == nullptr) || child->hasIdentityMatrix()) {
             if (child == nullptr) {
@@ -351,23 +352,6 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
         }
         handled = child->dispatchTouchEvent(*transformedEvent);
     }
-#else//zhhou
-    transformedEvent = MotionEvent::obtain(event);
-    if (child == nullptr) {
-        handled = View::dispatchTouchEvent(*transformedEvent);
-    } else {
-        float offsetX = mScrollX - child->mLeft;
-        float offsetY = mScrollY - child->mTop;
-        const int action = event.getAction();
-        transformedEvent->offsetLocation(offsetX, offsetY);
-        if (! child->hasIdentityMatrix()) {
-            LOGV_IF(action==MotionEvent::ACTION_DOWN,"xy=(%f,%f) , (%f,%f)",event.getX(),event.getY(),transformedEvent->getX(),transformedEvent->getY());
-            transformedEvent->transform(child->getInverseMatrix());
-            LOGV_IF(action==MotionEvent::ACTION_DOWN,"XY=(%f,%f)",transformedEvent->getX(),transformedEvent->getY());
-        }
-        handled = child->dispatchTouchEvent(*transformedEvent);
-    }
-#endif
     // Done. 
     transformedEvent->recycle();
     return handled;
@@ -483,8 +467,8 @@ bool ViewGroup::dispatchTooltipHoverEvent(MotionEvent& event) {
 
         // Check what the child under the pointer says about the tooltip.
         if (childrenCount != 0) {
-            const float x = event.getX();
-            const float y = event.getY();
+            const float x = event.getXDispatchLocation(0);
+            const float y = event.getYDispatchLocation(0);
 
             std::vector<View*> preorderedList = buildOrderedChildList();
             const bool customOrder = preorderedList.size()==0 && isChildrenDrawingOrderEnabled();
@@ -555,8 +539,16 @@ bool ViewGroup::dispatchTooltipHoverEvent(MotionEvent& event, View* child) {
     return result;
 }
 
-bool ViewGroup::hasHoveredChild() {
+bool ViewGroup::hasHoveredChild() const{
     return mFirstHoverTarget != nullptr;
+}
+
+bool ViewGroup::pointInHoveredChild(MotionEvent& event) {
+    if (mFirstHoverTarget) {
+        return isTransformedTouchPointInView(event.getXDispatchLocation(0),
+                event.getYDispatchLocation(0),*mFirstHoverTarget->child, nullptr);
+    }
+    return false;
 }
 
 void ViewGroup::exitHoverTargets(){
@@ -631,8 +623,8 @@ bool ViewGroup::dispatchGenericPointerEvent(MotionEvent& event) {
     // Send the event to the child under the pointer.
     const int childrenCount = mChildren.size();
     if (childrenCount != 0) {
-        const float x = event.getX();
-        const float y = event.getY();
+        const float x = event.getXDispatchLocation(0);
+        const float y = event.getYDispatchLocation(0);
         std::vector<View*> preorderedList = buildOrderedChildList();
         bool customOrder = preorderedList.empty()  && isChildrenDrawingOrderEnabled();
         for (int i = childrenCount - 1; i >= 0; i--) {
@@ -2267,6 +2259,24 @@ void ViewGroup::requestChildFocus(View*child,View*focused){
         mParent->requestChildFocus(this, focused);
 }
 
+bool ViewGroup::hasPointerCapture()const{
+    return mPointerCapture;
+}
+
+void ViewGroup::requestPointerCapture(bool){
+    //TODO
+}
+
+void ViewGroup::handlePointerCaptureChanged(bool hasCapture) {
+    if (mPointerCapture == hasCapture) {
+        return;
+    }
+    mPointerCapture = hasCapture;
+    /*if (mView != nullptr) {
+        mView->dispatchPointerCaptureChanged(hasCapture);
+    }*/
+}
+
 void ViewGroup::clearChildFocus(View* child){
     if (mFocused == nullptr) {
          View::clearFocus();
@@ -2924,8 +2934,8 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
             removePointersFromTouchTargets(idBitsToAssign);
             const int childrenCount = mChildren.size();
             if ((newTouchTarget == nullptr) && childrenCount){
-                const int x = ev.getX(actionIndex);
-                const int y = ev.getY(actionIndex);
+                const int x = ev.getXDispatchLocation(actionIndex);
+                const int y = ev.getYDispatchLocation(actionIndex);
 
                 std::vector<View*>preorderedList = buildTouchDispatchChildList();
                 const bool customOrder = preorderedList.empty() && isChildrenDrawingOrderEnabled();
@@ -3035,8 +3045,8 @@ bool ViewGroup::dispatchHoverEvent(MotionEvent&event){
     HoverTarget* firstOldHoverTarget = mFirstHoverTarget;
     mFirstHoverTarget = nullptr;
     if (!interceptHover && action != MotionEvent::ACTION_HOVER_EXIT) {
-        float x = event.getX();
-        float y = event.getY();
+        float x = event.getXDispatchLocation(0);
+        float y = event.getYDispatchLocation(0);
         int childrenCount = mChildren.size();
         if (childrenCount != 0) {
             std::vector<View*> preorderedList = buildOrderedChildList();
@@ -3191,8 +3201,8 @@ bool ViewGroup::dispatchHoverEvent(MotionEvent&event){
 bool ViewGroup::onInterceptHoverEvent(MotionEvent& event) {
     if (event.isFromSource(InputDevice::SOURCE_MOUSE)) {
         const int action = event.getAction();
-        const float x = event.getX();
-        const float y = event.getY();
+        const float x = event.getXDispatchLocation(0);
+        const float y = event.getYDispatchLocation(0);
         if ((action == MotionEvent::ACTION_HOVER_MOVE
                 || action == MotionEvent::ACTION_HOVER_ENTER) && isOnScrollbar(x, y)) {
             return true;

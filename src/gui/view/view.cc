@@ -2513,7 +2513,7 @@ void View::setOnHoverListener(OnHoverListener l){
 
 void View::setDrawingCacheEnabled(bool enabled) {
     mCachingFailed = false;
-    //setFlags(enabled ? DRAWING_CACHE_ENABLED : 0, DRAWING_CACHE_ENABLED);
+    setFlags(enabled ? DRAWING_CACHE_ENABLED : 0, DRAWING_CACHE_ENABLED);
 }
 
 bool View::isDrawingCacheEnabled()const{
@@ -3196,7 +3196,7 @@ int View::getNextFocusLeftId()const{
 }
 
 View& View::setNextFocusLeftId(int id){
-    mNextFocusLeftId=id;
+    mNextFocusLeftId = id;
     return *this;
 }
 
@@ -3205,7 +3205,7 @@ int View::getNextFocusRightId()const{
 }
 
 View& View::setNextFocusRightId(int id){
-    mNextFocusRightId=id;
+    mNextFocusRightId = id;
     return *this;
 }
 
@@ -3214,7 +3214,7 @@ int View::getNextFocusUpId()const{
 }
 
 View& View::setNextFocusUpId(int id){
-    mNextFocusUpId=id;
+    mNextFocusUpId = id;
     return *this;
 }
 
@@ -3223,7 +3223,7 @@ int View::getNextFocusDownId()const{
 }
 
 View& View::setNextFocusDownId(int id){
-    mNextFocusDownId=id;
+    mNextFocusDownId = id;
     return *this;
 }
 
@@ -3232,11 +3232,49 @@ int View::getNextFocusForwardId()const{
 }
 
 View& View::setNextFocusForwardId(int id){
-    mNextFocusForwardId=id;
+    mNextFocusForwardId = id;
     return *this;
 }
+    
+bool View::hasPointerCapture()const{
+    ViewGroup* viewRootImpl = getRootView();//getViewRootImpl();
+    if (viewRootImpl == nullptr) {
+        return false;
+    }
+    return viewRootImpl->hasPointerCapture();
+}
 
-static int sNextAccessibilityViewId=0;
+void View::requestPointerCapture(){
+    ViewGroup* viewRootImpl = getRootView();//getViewRootImpl();
+    if (viewRootImpl != nullptr) {
+        viewRootImpl->requestPointerCapture(true);
+    }
+}
+
+void View::releasePointerCapture(){
+    ViewGroup* viewRootImpl = getRootView();//getViewRootImpl();
+    if (viewRootImpl != nullptr) {
+        viewRootImpl->requestPointerCapture(false);
+    }
+}
+
+void View::onPointerCaptureChange(bool hasCapture){
+    //NOTHING
+}
+
+void View::dispatchPointerCaptureChanged(bool hasCapture){
+    onPointerCaptureChange(hasCapture);
+}
+
+bool View::onCapturedPointerEvent(MotionEvent& event){
+    return false;
+}
+
+void View::setOnCapturedPointerListener(OnCapturedPointerListener l){
+    getListenerInfo()->mOnCapturedPointerListener = l;
+}
+
+static int sNextAccessibilityViewId = 0;
 int View::getAccessibilityViewId(){
     if (mAccessibilityViewId == NO_ID) {
         mAccessibilityViewId = sNextAccessibilityViewId++;
@@ -3937,6 +3975,24 @@ int View::getBackgroundTintMode() const{
     return mBackgroundTint ? mBackgroundTint->mTintMode : -1;
 }
 
+/**
+  * Called by the view system when the focus state of this view changes.
+  * When the focus change event is caused by directional navigation, direction
+  * and previouslyFocusedRect provide insight into where the focus is coming from.
+  * When overriding, be sure to call up through to the super class so that
+  * the standard focus handling will occur.
+  *
+  * @param gainFocus True if the View has focus; false otherwise.
+  * @param direction The direction focus has moved when requestFocus()
+  *                  is called to give this view focus. Values are
+  *                  {@link #FOCUS_UP}, {@link #FOCUS_DOWN}, {@link #FOCUS_LEFT},
+  *                  {@link #FOCUS_RIGHT}, {@link #FOCUS_FORWARD}, or {@link #FOCUS_BACKWARD}.
+  *                  It may not always apply, in which case use the default.
+  * @param previouslyFocusedRect The rectangle, in this view's coordinate
+  *        system, of the previously focused view.  If applicable, this will be
+  *        passed in as finer grained information about where the focus is coming
+  *        from (in addition to direction).  Will be <code>null</code> otherwise.
+  */
 void View::onFocusChanged(bool gainFocus,int direct,Rect*previouslyFocusedRect){
     if(mListenerInfo&&mListenerInfo->mOnFocusChangeListener)
         mListenerInfo->mOnFocusChangeListener(*this,gainFocus);
@@ -5255,6 +5311,38 @@ void View::setImportantForAccessibility(int mode){
     }
 }
 
+void View::setAccessibilityLiveRegion(int mode){
+    if (mode != getAccessibilityLiveRegion()) {
+        mPrivateFlags2 &= ~PFLAG2_ACCESSIBILITY_LIVE_REGION_MASK;
+        mPrivateFlags2 |= (mode << PFLAG2_ACCESSIBILITY_LIVE_REGION_SHIFT)
+                & PFLAG2_ACCESSIBILITY_LIVE_REGION_MASK;
+        //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+    }
+}
+
+int View::getAccessibilityLiveRegion() const{
+    return (mPrivateFlags2 & PFLAG2_ACCESSIBILITY_LIVE_REGION_MASK)
+            >> PFLAG2_ACCESSIBILITY_LIVE_REGION_SHIFT;
+}
+
+View* View::findAccessibilityFocusHost(bool searchDescendants) {
+    if (isAccessibilityFocusedViewOrHost()) {
+        return this;
+    }
+
+    if (searchDescendants) {
+        ViewGroup* viewRoot = getRootView();//getViewRootImpl();
+        /*if (viewRoot != nullptr) {
+            View* focusHost = viewRoot->getAccessibilityFocusedHost();
+            if (focusHost && ViewGroup::isViewDescendantOf(focusHost, this)) {
+                return focusHost;
+            }
+        }*/
+    }
+
+    return nullptr;
+}
+
 bool View::isImportantForAccessibility()const{
     const int mode = (mPrivateFlags2 & PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_MASK) >> PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT;
     if ((mode == IMPORTANT_FOR_ACCESSIBILITY_NO) || (mode == IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS)) {
@@ -5957,6 +6045,18 @@ bool View::dispatchTrackballEvent(MotionEvent& event){
    return onTrackballEvent(event);
 }
 
+bool View::dispatchCapturedPointerEvent(MotionEvent& event){
+    if (!hasPointerCapture()) {
+        return false;
+    }
+    //noinspection SimplifiableIfStatement
+    if (mListenerInfo && mListenerInfo->mOnCapturedPointerListener
+            && mListenerInfo->mOnCapturedPointerListener(*this, event)) {
+        return true;
+    }
+    return onCapturedPointerEvent(event);
+}
+
 bool View::dispatchGenericMotionEventInternal(MotionEvent& event){
     if (mListenerInfo && mListenerInfo->mOnGenericMotionListener
           && (mViewFlags & ENABLED_MASK) == ENABLED
@@ -6021,7 +6121,7 @@ bool View::dispatchHoverEvent(MotionEvent& event){
     return onHoverEvent(event);
 }
 
-bool View::hasHoveredChild() {
+bool View::hasHoveredChild() const{
     return false;
 }
 

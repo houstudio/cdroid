@@ -117,6 +117,12 @@ MotionEvent::MotionEvent(){
     mSampleEventTimes.clear();
 }
 
+void MotionEvent::setSource(int source){
+    if(source==mSource)return;
+    InputEvent::setSource(source);
+    updateCursorPosition();
+}
+
 MotionEvent*MotionEvent::obtain(){
     MotionEvent*ev = PooledInputEventFactory::getInstance().createMotionEvent();
     ev->mPointerProperties.clear();
@@ -212,6 +218,7 @@ void MotionEvent::initialize(
        mPointerProperties.push_back(pointerProperties[i]);
     }
     addSample(eventTime,pointerCoords);
+    updateCursorPosition();
 }
 
 MotionEvent::MotionEvent(const MotionEvent&other){
@@ -634,6 +641,65 @@ float MotionEvent::getHistoricalToolMinor(size_t pointerIndex, size_t historical
 
 float MotionEvent::getHistoricalOrientation(size_t pointerIndex, size_t historicalIndex) const{
     return getHistoricalRawAxisValue(AXIS_ORIENTATION, pointerIndex, historicalIndex);
+}
+
+void MotionEvent::cancel(){
+    setAction(ACTION_CANCEL);
+}
+
+float MotionEvent::getXCursorPosition()const{
+    return mCursorX;
+}
+
+float MotionEvent::getYCursorPosition()const{
+    return mCursorY;
+}
+
+void MotionEvent::setCursorPosition(float x, float y){
+    mCursorX = x;
+    mCursorY = y;
+}
+
+float MotionEvent::getXDispatchLocation(int pointerIndex){
+    if (isFromSource(InputDevice::SOURCE_MOUSE)) {
+        const float xCursorPosition = getXCursorPosition();
+        if (xCursorPosition != INVALID_CURSOR_POSITION) {
+            return xCursorPosition;
+        }
+    }
+    return getX(pointerIndex);
+}
+
+float MotionEvent::getYDispatchLocation(int pointerIndex){
+    if (isFromSource(InputDevice::SOURCE_MOUSE)) {
+        const float yCursorPosition = getYCursorPosition();
+        if (yCursorPosition != INVALID_CURSOR_POSITION) {
+            return yCursorPosition;
+        }
+    }
+    return getY(pointerIndex);
+}
+
+void MotionEvent::updateCursorPosition() {
+    if (getSource() != InputDevice::SOURCE_MOUSE) {
+        setCursorPosition(INVALID_CURSOR_POSITION, INVALID_CURSOR_POSITION);
+        return;
+    }
+
+    float x = 0;
+    float y = 0;
+
+    const int pointerCount = getPointerCount();
+    for (int i = 0; i < pointerCount; ++i) {
+        x += getX(i);
+        y += getY(i);
+    }
+
+    // If pointer count is 0, divisions below yield NaN, which is an acceptable result for this
+    // corner case.
+    x /= pointerCount;
+    y /= pointerCount;
+    setCursorPosition(x, y);
 }
 
 template <typename T>

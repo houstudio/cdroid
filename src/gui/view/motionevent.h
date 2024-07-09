@@ -3,6 +3,7 @@
 #include <view/inputevent.h>
 #include <cairomm/matrix.h>
 #include <core/bitset.h>
+#include <math.h>
 
 #define USE_TRACKINGID_AS_POINTERID 0
 namespace cdroid{
@@ -166,7 +167,8 @@ public:
         CLASSIFICATION_PINCH = 5,
     };
 private:
-    static const int HISTORY_CURRENT = -0x80000000;
+    static constexpr float INVALID_CURSOR_POSITION = NAN;
+    static constexpr int HISTORY_CURRENT = -0x80000000;
     static MotionEvent*obtain();
     static void ensureSharedTempPointerCapacity(int desiredCapacity);
 protected:
@@ -180,6 +182,8 @@ protected:
     float mYOffset;
     float mXPrecision;
     float mYPrecision;
+    float mCursorX;
+    float mCursorY;
     nsecs_t mDownTime;
     std::vector<PointerProperties> mPointerProperties;
     std::vector< nsecs_t > mSampleEventTimes;
@@ -208,6 +212,7 @@ public:
     static bool isTouchEvent(int32_t source, int32_t action);
     void copyFrom(const MotionEvent* other, bool keepHistory);
     MotionEvent*split(int idBits);
+    void setSource(int)override;
     virtual int getType()const{return INPUT_EVENT_TYPE_MOTION;}
     inline int32_t getAction() const { return mAction;}
     inline void setAction(int32_t action) { mAction = action; }
@@ -248,7 +253,14 @@ public:
 
     nsecs_t getHistoricalEventTime(size_t historicalIndex) const;
     nsecs_t getHistoricalEventTimeNanos(size_t historicalIndex) const;
+    void cancel();
+    float getXDispatchLocation(int pointerIndex);
+    float getYDispatchLocation(int pointerIndex);
+    float getXCursorPosition()const;
+    float getYCursorPosition()const;
 private:
+    void setCursorPosition(float x, float y);
+    void updateCursorPosition();
     ////////////////////////////////// Raw AXIS Properties ///////////////////////////////////
     const PointerCoords& getRawPointerCoords(size_t pointerIndex) const;
     const PointerCoords& getHistoricalRawPointerCoords(size_t pointerIndex, size_t historicalIndex) const;

@@ -106,13 +106,14 @@ private:
     int mChildUnhandledKeyListeners;
     bool mLayoutCalledWhileSuppressed;
     bool mIsInterestedInDrag;
+    bool mHoveredSelf;
+    bool mTooltipHoveredSelf;
+    bool mPointerCapture;
     Animation::AnimationListener mAnimationListener;
     LayoutTransition::TransitionListener mLayoutTransitionListener;
     class LayoutAnimationController* mLayoutAnimationController;
     class TouchTarget* mFirstTouchTarget;
     class HoverTarget* mFirstHoverTarget;
-    bool mHoveredSelf;
-    bool mTooltipHoveredSelf;
     View* mTooltipHoverTarget;
     POINT animateTo;//save window boundray  while animating
     POINT animateFrom;//window animate from boundary
@@ -148,6 +149,7 @@ private:
     bool dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child);
     bool dispatchTooltipHoverEvent(MotionEvent& event, View* child);
     void setTouchscreenBlocksFocusNoRefocus(bool touchscreenBlocksFocus);
+    void handlePointerCaptureChanged(bool hasCapture);
 
     void addInArray(View* child, int index);
     bool removeViewInternal(View* view);
@@ -246,7 +248,8 @@ protected:
     std::vector<int> onCreateDrawableState()override;
     void dispatchSetPressed(bool pressed)override;
     void dispatchDrawableHotspotChanged(float x,float y)override;
-    bool hasHoveredChild()override;
+    bool hasHoveredChild()const override;
+    bool pointInHoveredChild(MotionEvent& event)override;
     virtual int getChildDrawingOrder(int childCount, int i);
     std::vector<View*> buildOrderedChildList();
 
@@ -372,6 +375,7 @@ public:
     View* findViewWithTagTraversal(void*tag)override;
     virtual void resetResolvedPadding()override;
     virtual bool shouldDelayChildPressedState();
+    bool hasPointerCapture()const override;
 
     virtual bool onInterceptHoverEvent(MotionEvent& event);
     virtual bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes);
@@ -408,6 +412,8 @@ public:
     virtual void cancelInvalidate(View* view);
     virtual bool showContextMenuForChild(View* originalView);
     virtual bool showContextMenuForChild(View* originalView, float x, float y);
+    //ViewRootImpl
+    void requestPointerCapture(bool);
 };
 
 }  // namespace cdroid

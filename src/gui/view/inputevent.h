@@ -34,10 +34,10 @@ public:
     virtual InputEvent*copy()const=0;
     void initialize(int32_t deviceId, int32_t source);
     void initialize(const InputEvent& from);
-    void setSource(int source){mSource=source;}
     int getSource()const{return mSource;}
     bool isFromSource(int s)const;
     long getSequenceNumber()const{return mSeq;}
+    virtual void setSource(int source);
     virtual bool isTainted()const=0;
     virtual void setTainted(bool)=0;
     virtual nsecs_t getEventTimeNanos() const { return mEventTime*NS_PER_MS; }

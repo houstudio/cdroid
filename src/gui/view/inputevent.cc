@@ -33,6 +33,10 @@ void InputEvent::initialize(int32_t deviceId, int32_t source) {
     mSource = source;
 }
 
+void InputEvent::setSource(int source){
+    mSource = source;
+}
+
 bool InputEvent::isFromSource(int source)const{
     return (getSource() & source) == source;
 }
