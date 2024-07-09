@@ -22,6 +22,7 @@ private:
 
     bool mSmoothScrollingEnabled = true;
 
+    int mScrollDuration;
     int mTouchSlop;
     int mMinimumVelocity;
     int mMaximumVelocity;

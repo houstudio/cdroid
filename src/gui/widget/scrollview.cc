@@ -16,6 +16,7 @@ ScrollView::ScrollView(Context*context,const AttributeSet&atts)
   :FrameLayout(context,atts){
     initScrollView();
     setFillViewport(atts.getBoolean("fillViewport", false));
+    mScrollDuration = atts.getInt("scrollDuration",400);
 }
 
 ScrollView::~ScrollView(){
@@ -102,6 +103,7 @@ void ScrollView::initScrollView() {
     mVerticalScrollFactor= configuration.getScaledVerticalScrollFactor();
     mScrollOffset [0]  = mScrollOffset [1] = 0;
     mScrollConsumed[0] = mScrollConsumed[1]= 0;
+    mScrollDuration = 400;
 }
 
 View& ScrollView::addView(View* child) {
@@ -832,7 +834,7 @@ void ScrollView::smoothScrollBy(int dx, int dy) {
         const int scrollY = mScrollY;
         dy = std::max(0, std::min(scrollY + dy, maxY)) - scrollY;
 
-        mScroller->startScroll(mScrollX, scrollY, 0, dy);
+        mScroller->startScroll(mScrollX, scrollY, 0, dy,mScrollDuration);
         postInvalidateOnAnimation();
     } else {
         if (!mScroller->isFinished()) {

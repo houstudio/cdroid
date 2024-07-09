@@ -4055,11 +4055,11 @@ View& View::setForeground(Drawable* foreground){
 }
 
 bool View::isForegroundInsidePadding()const{
-    return mForegroundInfo != nullptr ? mForegroundInfo->mInsidePadding : true;
+    return mForegroundInfo ? mForegroundInfo->mInsidePadding : true;
 }
 
 int View::getForegroundGravity()const{
-    return mForegroundInfo != nullptr ? mForegroundInfo->mGravity : Gravity::START | Gravity::TOP;
+    return mForegroundInfo ? mForegroundInfo->mGravity : Gravity::START | Gravity::TOP;
 }
 
 View& View::setForegroundGravity(int gravity){
@@ -4105,6 +4105,20 @@ View& View::setForegroundTintMode(int tintMode){
         mForegroundInfo->mTintInfo = new TintInfo();
     }
     mForegroundInfo->mTintInfo->mTintMode = tintMode;
+    mForegroundInfo->mTintInfo->mHasTintMode = true;
+
+    applyForegroundTint();
+    return *this;
+}
+
+View& View::setForegroundTintBlendMode(int blendMode) {
+    if (mForegroundInfo == nullptr) {
+        mForegroundInfo = new ForegroundInfo();
+    }
+    if (mForegroundInfo->mTintInfo == nullptr) {
+        mForegroundInfo->mTintInfo = new TintInfo();
+    }
+    mForegroundInfo->mTintInfo->mBlendMode = blendMode;
     mForegroundInfo->mTintInfo->mHasTintMode = true;
 
     applyForegroundTint();
@@ -5841,6 +5855,11 @@ void View::layout(int l, int t, int w, int h){
 void View::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     setMeasuredDimension(getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec),
                 getDefaultSize(getSuggestedMinimumHeight(), heightMeasureSpec));
+}
+
+View& View::setLeftTopRightBottom(int left, int top, int right, int bottom) {
+    setFrame(left, top, right-left, bottom-top);
+    return *this;
 }
 
 void View::sizeChange(int newWidth,int newHeight,int oldWidth,int oldHeight){

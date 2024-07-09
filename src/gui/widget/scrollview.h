@@ -16,6 +16,7 @@ private:
     bool mFillViewport;
     bool mSmoothScrollingEnabled = true;
     int mTouchSlop;
+    int mScrollDuration;
     int mMinimumVelocity;
     int mMaximumVelocity;
 

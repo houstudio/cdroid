@@ -17,6 +17,7 @@ HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet&atts)
   :FrameLayout(ctx,atts){
     initScrollView();
     setFillViewport(atts.getBoolean("fillViewport", false));
+    mScrollDuration=atts.getInt("scrollDuration",300);
 }
 
 HorizontalScrollView::~HorizontalScrollView(){
@@ -98,6 +99,7 @@ void HorizontalScrollView::initScrollView() {
     mOverscrollDistance= configuration.getScaledOverscrollDistance();
     mOverflingDistance = configuration.getScaledOverflingDistance();
     mHorizontalScrollFactor = configuration.getScaledHorizontalScrollFactor();
+    mScrollDuration = 400;
 }
 
 View& HorizontalScrollView::addView(View* child){
@@ -815,7 +817,7 @@ void HorizontalScrollView::smoothScrollBy(int dx, int dy) {
         int scrollX = mScrollX;
         dx = std::max(0, std::min(scrollX + dx, maxX)) - scrollX;
 
-        mScroller->startScroll(scrollX, mScrollY, dx, 0);
+        mScroller->startScroll(scrollX, mScrollY, dx, 0,mScrollDuration);
         postInvalidateOnAnimation();
     } else {
         if (!mScroller->isFinished()) mScroller->abortAnimation();

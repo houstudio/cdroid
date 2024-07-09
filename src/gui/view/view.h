@@ -570,6 +570,7 @@ protected:
     Cairo::RefPtr<Cairo::ImageSurface>getDrawingCache(bool autoScale);
     virtual bool hasWindowFocus()const;
 
+    View& setLeftTopRightBottom(int left, int top, int right, int bottom);
     virtual bool setFrame(int x,int y,int w,int h);
     virtual void resetResolvedDrawables();
     virtual bool verifyDrawable(Drawable*)const;
@@ -877,6 +878,7 @@ public:
     View& setForegroundGravity(int gravity);
     View& setForegroundTintList(const ColorStateList* tint);
     View& setForegroundTintMode(int tintMode);
+    View& setForegroundTintBlendMode(int blendMode);
     const ColorStateList* getForegroundTintList();
     virtual void onResolveDrawables(int layoutDirection);
 
