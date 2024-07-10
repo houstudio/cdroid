@@ -113,6 +113,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     // Set the text alignment flag depending on the value of the attribute
     mPrivateFlags2 |= (textAlignment<<PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT);
     //setTextAlignment( textAlignment );
+
     setForegroundGravity( attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY) );
     setForegroundTintList(attrs.getColorStateList("foregroundTint"));
 
@@ -149,8 +150,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
         viewFlagMasks  |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE_MASK;
     }
     if( attrs.hasAttribute("focusable") ){
-	viewFlagValues|= attrs.getBoolean("focusable",false)?FOCUSABLE : NOT_FOCUSABLE;
-	viewFlagMasks |= FOCUSABLE_MASK;
+        viewFlagValues|= attrs.getBoolean("focusable",false)?FOCUSABLE : NOT_FOCUSABLE;
+        viewFlagMasks |= FOCUSABLE_MASK;
     }
     if( attrs.getBoolean("clickable",false) ){
         viewFlagValues |= CLICKABLE;
@@ -164,6 +165,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
         viewFlagValues |= DUPLICATE_PARENT_STATE;
         viewFlagMasks  |= DUPLICATE_PARENT_STATE;
     }
+    setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
 
     const int fadingEdges = attrs.getInt("requiresFadingEdge",std::map<const std::string,int>({
 	   {"none",FADING_EDGE_NONE},
@@ -209,7 +211,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
            {"top",SCROLL_INDICATOR_TOP}, 	  {"left",SCROLL_INDICATOR_LEFT},
            {"right",SCROLL_INDICATOR_RIGHT}, {"bottom",SCROLL_INDICATOR_BOTTOM}
            }),0)<<SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)&SCROLL_INDICATORS_PFLAG3_MASK;
-    if(scrollIndicators)mPrivateFlags3 |= scrollIndicators;
+    if(scrollIndicators) mPrivateFlags3 |= scrollIndicators;
+    if(attrs.getBoolean("isScrollContainer",false)) setScrollContainer(true);
 
     if(viewFlagMasks)
         setFlags(viewFlagValues, viewFlagMasks);
