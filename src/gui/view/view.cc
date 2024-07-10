@@ -143,7 +143,10 @@ View::View(Context*ctx,const AttributeSet&attrs){
         setPivotY(attrs.getDimensionPixelSize("transformPivotY",0));
 
     setKeyboardNavigationCluster( attrs.getBoolean("keyboardNavigationCluster",false) );
- 
+    if(attrs.getBoolean("filterTouchesWhenObscured",false)){
+        viewFlagValues |= FILTER_TOUCHES_WHEN_OBSCURED;
+        viewFlagMasks |= FILTER_TOUCHES_WHEN_OBSCURED;
+    } 
     if( attrs.getBoolean( "focusableInTouchMode" , false ) ){
         viewFlagValues &= ~FOCUSABLE_AUTO;
         viewFlagValues |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE;
@@ -160,6 +163,10 @@ View::View(Context*ctx,const AttributeSet&attrs){
     if( attrs.getBoolean("longClickable",false) ){
         viewFlagValues |= LONG_CLICKABLE;
         viewFlagMasks  |= LONG_CLICKABLE;
+    }
+    if( !attrs.getBoolean("saveEnabled",true)){
+         viewFlagValues |=SAVE_DISABLED;
+         viewFlagMasks |=SAVE_DISABLED_MASK;
     }
     if(attrs.getBoolean("duplicateParentState",false)){
         viewFlagValues |= DUPLICATE_PARENT_STATE;
@@ -6061,6 +6068,27 @@ bool View::canReceivePointerEvents()const{
     return (mViewFlags & VISIBILITY_MASK) == VISIBLE || getAnimation() != nullptr;
 }
 
+bool View::getFilterTouchesWhenObscured() const{
+    return (mViewFlags & FILTER_TOUCHES_WHEN_OBSCURED) != 0;
+}
+
+View& View::setFilterTouchesWhenObscured(bool enabled) {
+    setFlags(enabled ? FILTER_TOUCHES_WHEN_OBSCURED : 0,
+            FILTER_TOUCHES_WHEN_OBSCURED);
+    //calculateAccessibilityDataSensitive();
+    return *this;
+}
+
+bool View::onFilterTouchEventForSecurity(MotionEvent& event){
+    //noinspection RedundantIfStatement
+    if ((mViewFlags & FILTER_TOUCHES_WHEN_OBSCURED) != 0
+            && (event.getFlags() & MotionEvent::FLAG_WINDOW_IS_OBSCURED) != 0) {
+        // Window is obscured, drop this touch.
+        return false;
+    }
+    return true;
+}
+
 bool View::dispatchTrackballEvent(MotionEvent& event){
    if (mInputEventConsistencyVerifier) {
        mInputEventConsistencyVerifier->onTrackballEvent(event, 0);
@@ -6157,10 +6185,10 @@ bool View::dispatchGenericMotionEvent(MotionEvent&event){
     if (mInputEventConsistencyVerifier)
          mInputEventConsistencyVerifier->onGenericMotionEvent(event, 0);
     if ((source & InputDevice::SOURCE_CLASS_POINTER) != 0) {
-        int action = event.getAction();
-        if (action == MotionEvent::ACTION_HOVER_ENTER
-                || action == MotionEvent::ACTION_HOVER_MOVE
-                || action == MotionEvent::ACTION_HOVER_EXIT) {
+        const int action = event.getAction();
+        if ((action == MotionEvent::ACTION_HOVER_ENTER)
+                || (action == MotionEvent::ACTION_HOVER_MOVE)
+                || (action == MotionEvent::ACTION_HOVER_EXIT)) {
             if (dispatchHoverEvent(event)) {
                 return true;
             }
@@ -6184,29 +6212,31 @@ bool View::dispatchTouchEvent(MotionEvent&event){
     if (mInputEventConsistencyVerifier)
         mInputEventConsistencyVerifier->onTouchEvent(event, 0);
 
-    if (actionMasked == MotionEvent::ACTION_UP ||
-            actionMasked == MotionEvent::ACTION_CANCEL ||
-            (actionMasked == MotionEvent::ACTION_DOWN && !result)) {
+    if ( (actionMasked == MotionEvent::ACTION_UP) ||
+         (actionMasked == MotionEvent::ACTION_CANCEL) ||
+         (actionMasked == MotionEvent::ACTION_DOWN && !result)) {
         stopNestedScroll();
     }
 
-    if ((mViewFlags & ENABLED_MASK) == ENABLED && handleScrollBarDragging(event)) {
-        result = true;
-    }
+    if(onFilterTouchEventForSecurity(event)){
+        if (((mViewFlags & ENABLED_MASK) == ENABLED) && handleScrollBarDragging(event)) {
+            result = true;
+        }
 
-    if ( mListenerInfo && mListenerInfo->mOnTouchListener
-            && (mViewFlags & ENABLED_MASK) == ENABLED
-            && mListenerInfo->mOnTouchListener(*this, event)) {
-        result = true;
-    }
+        if ( mListenerInfo && mListenerInfo->mOnTouchListener
+                && ((mViewFlags & ENABLED_MASK) == ENABLED)
+                && mListenerInfo->mOnTouchListener(*this, event)) {
+            result = true;
+        }
 
-    if(!result&& onTouchEvent(event)){
-        result=true;
+        if(!result&& onTouchEvent(event)){
+            result=true;
+        }
     }
     if (!result && mInputEventConsistencyVerifier)
         mInputEventConsistencyVerifier->onUnhandledEvent(event, 0);
-    if (actionMasked == MotionEvent::ACTION_UP ||
-         actionMasked == MotionEvent::ACTION_CANCEL ||
+    if ( (actionMasked == MotionEvent::ACTION_UP) ||
+         (actionMasked == MotionEvent::ACTION_CANCEL) ||
          (actionMasked == MotionEvent::ACTION_DOWN && !result)) {
         stopNestedScroll();
     }

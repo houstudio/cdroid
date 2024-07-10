@@ -236,16 +236,15 @@ public:
         SCROLLBARS_VERTICAL  = 0x200 ,
         SCROLLBARS_MASK      = 0x300 ,
 
-        CLIPCHILDREN = 0x400 ,
-        TRANSPARENT  = 0x800 ,
+        FILTER_TOUCHES_WHEN_OBSCURED = 0x400,//CLIPCHILDREN = 0x400 ,TRANSPARENT  = 0x800 ,
 
-        FADING_EDGE_NONE =0x000000 ,
+        FADING_EDGE_NONE = 0x000000 ,
         FADING_EDGE_HORIZONTAL= 0x1000 ,
         FADING_EDGE_VERTICAL  = 0x2000 ,
         FADING_EDGE_MASK      = 0x3000 ,
 
         CLICKABLE       = 0x4000 ,
-        DRAWING_CACHE_ENABLED  = 0x8000 ,
+        DRAWING_CACHE_ENABLED = 0x8000 ,
 
         SAVE_DISABLED = 0x000010000,
         SAVE_DISABLED_MASK = 0x000010000,
@@ -262,10 +261,10 @@ public:
         DRAWING_CACHE_QUALITY_AUTO = 0x00000000 ,
         DRAWING_CACHE_QUALITY_MASK = 0x00180000 ,
 
-        MEASURED_HEIGHT_STATE_SHIFT=16 ,
-        MEASURED_STATE_TOO_SMALL=0x1000000 ,
-        MEASURED_SIZE_MASK =0x00ffffff ,
-        MEASURED_STATE_MASK=0xff000000 ,
+        MEASURED_HEIGHT_STATE_SHIFT= 16 ,
+        MEASURED_STATE_TOO_SMALL= 0x1000000 ,
+        MEASURED_SIZE_MASK = 0x00ffffff ,
+        MEASURED_STATE_MASK= 0xff000000 ,
 
        //FocusDirection{
         FOCUS_BACKWARD=0x01 ,
@@ -612,7 +611,10 @@ protected:
     virtual void dispatchCancelPendingInputEvents();
     virtual void onCancelPendingInputEvents();
     bool canReceivePointerEvents()const;
+    bool getFilterTouchesWhenObscured()const;
+    View& setFilterTouchesWhenObscured(bool enabled);
     virtual bool dispatchHoverEvent(MotionEvent&event);
+    virtual bool onFilterTouchEventForSecurity(MotionEvent& event);
     virtual bool dispatchTrackballEvent(MotionEvent& event);
     virtual bool dispatchCapturedPointerEvent(MotionEvent& event);
     virtual bool dispatchGenericPointerEvent(MotionEvent& event);
