@@ -213,6 +213,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
            }),0)<<SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)&SCROLL_INDICATORS_PFLAG3_MASK;
     if(scrollIndicators) mPrivateFlags3 |= scrollIndicators;
     if(attrs.getBoolean("isScrollContainer",false)) setScrollContainer(true);
+    setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled",false));
 
     if(viewFlagMasks)
         setFlags(viewFlagValues, viewFlagMasks);
