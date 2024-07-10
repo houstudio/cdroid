@@ -3,7 +3,7 @@
 #include <view/inputevent.h>
 #include <cairomm/matrix.h>
 #include <core/bitset.h>
-#include <math.h>
+#include <limits>
 
 #define USE_TRACKINGID_AS_POINTERID 0
 namespace cdroid{
@@ -103,12 +103,12 @@ public:
         AXIS_SIZE = 3,
         AXIS_TOUCH_MAJOR = 4,
         AXIS_TOUCH_MINOR = 5,
-        AXIS_TOOL_MAJOR = 6,
-        AXIS_TOOL_MINOR = 7,
+        AXIS_TOOL_MAJOR  = 6,
+        AXIS_TOOL_MINOR  = 7,
         AXIS_ORIENTATION = 8,
         AXIS_VSCROLL = 9,
         AXIS_HSCROLL = 10,
-        AXIS_Z = 11,
+        AXIS_Z  = 11,
         AXIS_RX = 12,
         AXIS_RY = 13,
         AXIS_RZ = 14,
@@ -118,7 +118,7 @@ public:
         AXIS_RTRIGGER = 18,
         AXIS_THROTTLE = 19,
         AXIS_RUDDER = 20,
-        AXIS_WHEEL = 21,
+        AXIS_WHEEL  = 21,
         AXIS_GAS = 22,
         AXIS_BRAKE = 23,
         AXIS_DISTANCE = 24,
@@ -167,7 +167,7 @@ public:
         CLASSIFICATION_PINCH = 5,
     };
 private:
-    static constexpr float INVALID_CURSOR_POSITION = NAN;
+    static constexpr float INVALID_CURSOR_POSITION = std::numeric_limits<float>::quiet_NaN();
     static constexpr int HISTORY_CURRENT = -0x80000000;
     static MotionEvent*obtain();
     static void ensureSharedTempPointerCapacity(int desiredCapacity);
@@ -182,8 +182,8 @@ protected:
     float mYOffset;
     float mXPrecision;
     float mYPrecision;
-    float mCursorX;
-    float mCursorY;
+    float mCursorXPosition;
+    float mCursorYPosition;
     nsecs_t mDownTime;
     std::vector<PointerProperties> mPointerProperties;
     std::vector< nsecs_t > mSampleEventTimes;
@@ -259,7 +259,6 @@ public:
     float getXCursorPosition()const;
     float getYCursorPosition()const;
 private:
-    void setCursorPosition(float x, float y);
     void updateCursorPosition();
     ////////////////////////////////// Raw AXIS Properties ///////////////////////////////////
     const PointerCoords& getRawPointerCoords(size_t pointerIndex) const;
@@ -271,6 +270,7 @@ private:
     inline float getRawX(size_t pointerIndex) const { return getRawAxisValue(AXIS_X, pointerIndex); }
     inline float getRawY(size_t pointerIndex) const { return getRawAxisValue(AXIS_Y, pointerIndex); }
 public:
+    void setCursorPosition(float x, float y);
     /////////////////////// AXIS Properties has been transformed //////////////////////////////
     const PointerCoords& getPointerCoords(int pointerIndex)const;
     const PointerCoords& getHistoricalPointerCoords(size_t pointerIndex, size_t historicalIndex) const;

@@ -693,7 +693,7 @@ bool GradientDrawable::ensureValidRect() {
         GradientState&st =*mGradientState;
         mRect.set(bounds.left + inset, bounds.top + inset, bounds.width - 2*inset, bounds.height - 2*inset);
 
-        std::vector<int>&gradientColors = st.mGradientColors;
+        const std::vector<int>&gradientColors = st.mGradientColors;
         if (gradientColors.size()) {
             const RectF r = mRect;
             float x0, x1, y0, y1;

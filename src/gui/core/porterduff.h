@@ -6,7 +6,7 @@ namespace cdroid{
 class PorterDuff{
 public:
     enum Mode{
-	NOOP = -1,/*added by zhhou*/
+        NOOP = -1,/*added by zhhou*/
         // these value must match their native equivalents. See SkXfermode.h
         /**
          * <p>

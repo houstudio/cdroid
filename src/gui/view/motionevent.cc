@@ -648,16 +648,16 @@ void MotionEvent::cancel(){
 }
 
 float MotionEvent::getXCursorPosition()const{
-    return mCursorX;
+    return mCursorXPosition;
 }
 
 float MotionEvent::getYCursorPosition()const{
-    return mCursorY;
+    return mCursorYPosition;
 }
 
 void MotionEvent::setCursorPosition(float x, float y){
-    mCursorX = x;
-    mCursorY = y;
+    mCursorXPosition = x;
+    mCursorYPosition = y;
 }
 
 float MotionEvent::getXDispatchLocation(int pointerIndex){
