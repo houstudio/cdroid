@@ -6065,7 +6065,7 @@ int View::commitText(const std::wstring&ws){
 }
 
 bool View::canReceivePointerEvents()const{
-    return (mViewFlags & VISIBILITY_MASK) == VISIBLE || getAnimation() != nullptr;
+    return ((mViewFlags & VISIBILITY_MASK) == VISIBLE) || (getAnimation() != nullptr);
 }
 
 bool View::getFilterTouchesWhenObscured() const{

@@ -613,8 +613,8 @@ protected:
     bool canReceivePointerEvents()const;
     bool getFilterTouchesWhenObscured()const;
     View& setFilterTouchesWhenObscured(bool enabled);
+    bool onFilterTouchEventForSecurity(MotionEvent& event);
     virtual bool dispatchHoverEvent(MotionEvent&event);
-    virtual bool onFilterTouchEventForSecurity(MotionEvent& event);
     virtual bool dispatchTrackballEvent(MotionEvent& event);
     virtual bool dispatchCapturedPointerEvent(MotionEvent& event);
     virtual bool dispatchGenericPointerEvent(MotionEvent& event);
