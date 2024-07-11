@@ -495,6 +495,10 @@ void Layout::pushLineData(int start,int ytop,int descent,int width){
     }
 }
 
+template <typename T> int signum(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
 void Layout::relayout(bool force){
     TextExtents extents,tee;
     FontExtents fontextents;
@@ -502,10 +506,13 @@ void Layout::relayout(bool force){
     int start = 0,ytop = 0;
     std::wstring word;
     if(!(force||mLayout)) return;
-    mLineCount=0;
+    mLineCount = 0;
     mLines.clear();
     measureSize(L"",extents,&fontextents);
-    mLineHeight = (fontextents.ascent +fontextents.descent)*mSpacingMult+mSpacingAdd;
+    mLineHeight = (fontextents.ascent + fontextents.descent);
+    if(float(mLineHeight)/mFontSize<1.f)
+        mLineHeight = fontextents.height;
+    mLineHeight = mLineHeight*mSpacingMult+mSpacingAdd;
     for(int i = 0; mMultiline && (i < mText.length());i++){
         char breaks[2];
         wchar_t wch[2];
