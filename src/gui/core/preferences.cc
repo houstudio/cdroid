@@ -74,9 +74,7 @@ void Preferences::load(const char*buf,size_t len){
 
 void Preferences::load(std::istream&istream){
     XML_Parser parser=XML_ParserCreate(nullptr);
-    std::string curKey;
-    std::string curValue;
-    int len=0;
+    int len = 0;
     PREFPARSER kvp;
     kvp.pref=this;
     XML_SetUserData(parser,&kvp);
@@ -195,62 +193,60 @@ std::string Preferences::getString(const std::string&section,const std::string&k
 void Preferences::setValue(const std::string&section,const std::string&key,bool v){
     auto sec=mPrefs.find(section);
     if(sec==mPrefs.end()){
-	std::map<std::string,std::string>ss;
-	sec=mPrefs.insert({section,std::map<std::string,std::string>()}).first;
+	    sec = mPrefs.insert({section,std::map<std::string,std::string>()}).first;
     }
-    auto kv=sec->second.find(key);
-    if(kv==sec->second.end())
+    auto kv = sec->second.find(key);
+    if(kv == sec->second.end())
 	sec->second.insert({key,(v?"true":"false")});
-    else kv->second=(v?"true":"false");
+    else kv->second = (v?"true":"false");
     updates++;
 }
 
 void Preferences::setValue(const std::string&section,const std::string&key,int v){
-    auto sec=mPrefs.find(section);
-    if(sec==mPrefs.end()){
-	std::string vs=std::to_string(v);
-	sec=mPrefs.insert({section,std::map<std::string,std::string>()}).first;
+    auto sec = mPrefs.find(section);
+    if(sec == mPrefs.end()){
+        sec = mPrefs.insert({section,std::map<std::string,std::string>()}).first;
     }
-    auto kv=sec->second.find(key);
-    if(kv==sec->second.end())
+    auto kv = sec->second.find(key);
+    if(kv == sec->second.end())
 	sec->second.insert({key,std::to_string(v)});
-    else kv->second=std::to_string(v);
+    else kv->second = std::to_string(v);
     LOGV("%s %s %d",section.c_str(),key.c_str(),v);
     updates++;
 }
 
 void Preferences::setValue(const std::string&section,const std::string&key,float v){
-    auto sec=mPrefs.find(section);
-    if(sec==mPrefs.end())
-	sec=mPrefs.insert({section,std::map<std::string,std::string>()}).first;
-    auto kv=sec->second.find(key);
-    if(kv==sec->second.end())
+    auto sec = mPrefs.find(section);
+    if(sec == mPrefs.end())
+        sec = mPrefs.insert({section,std::map<std::string,std::string>()}).first;
+    auto kv = sec->second.find(key);
+    if(kv == sec->second.end())
 	sec->second.insert({key,std::to_string(v)});
-    else kv->second=std::to_string(v);
+    else kv->second = std::to_string(v);
     LOGV("%s %s %f",section.c_str(),key.c_str(),v);
     updates++;
 }
 
 void Preferences::setValue(const std::string&section,const std::string&key,const std::string&v){
-    auto sec=mPrefs.find(section);
-    if(sec==mPrefs.end())
-	sec=mPrefs.insert({section,std::map<std::string,std::string>()}).first;
-    auto kv=sec->second.find(key);
-    if(kv==sec->second.end())
+    auto sec = mPrefs.find(section);
+    if(sec == mPrefs.end())
+	    sec = mPrefs.insert({section,std::map<std::string,std::string>()}).first;
+    auto kv = sec->second.find(key);
+    if(kv == sec->second.end())
 	sec->second.insert({key,v});
-    else kv->second=v;
+    else kv->second = v;
     LOGV("%s %s %s",section.c_str(),key.c_str(),v.c_str());
     updates++;
 }
 
 void Preferences::setValue(const std::string&section,const std::string&key,double v){
-    auto sec=mPrefs.find(section);
+    auto sec = mPrefs.find(section);
     if(sec==mPrefs.end())
-	sec=mPrefs.insert({section,std::map<std::string,std::string>()}).first;
-    auto kv=sec->second.find(key);
-    if(kv==sec->second.end())
-	sec->second.insert({key,std::to_string(v)});
-    else kv->second=std::to_string(v);
+	    sec = mPrefs.insert({section,std::map<std::string,std::string>()}).first;
+    auto kv = sec->second.find(key);
+    if(kv == sec->second.end())
+	    sec->second.insert({key,std::to_string(v)});
+    else kv->second = std::to_string(v);
     LOGV("%s %s %f",section.c_str(),key.c_str(),v);
     updates++;
 }

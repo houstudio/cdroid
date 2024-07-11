@@ -324,7 +324,6 @@ static void setPatternByTileMode(RefPtr<SurfacePattern>pat,int tileMode){
 }
 
 static int getRotateAngle(Canvas&canvas){
-    double xx, yx, xy, yy, x0, y0;
     Cairo::Matrix ctx=canvas.get_matrix();
     double radians = atan2(ctx.yy, ctx.xy);
     return int(radians*180.f/M_PI);
@@ -394,7 +393,6 @@ void BitmapDrawable::draw(Canvas&canvas){
         if ( (mBounds.width !=mBitmapWidth)  || (mBounds.height != mBitmapHeight) ) {
             canvas.scale(dw/sw,dh/sh);
             dx /= fx;       dy /= fy;
-            dw /= fx;       dh /= fy;
 #if defined(__x86_64__)||defined(__amd64__)||defined(__i386__)
             LOGD_IF((mBitmapWidth*mBitmapHeight>=512*512)||(std::min(fx,fy)<0.1f)||(std::max(fx,fy)>10.f),
                 "%p bitmap %s scaled %dx%d->%d,%d",this,mBitmapState->mResource.c_str() ,mBitmapWidth,mBitmapHeight,mBounds.width,mBounds.height);
@@ -444,7 +442,8 @@ Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
     BitmapDrawable*d = new BitmapDrawable(ctx,src);
     LOGD("bitmap=%p",d);
     d->setGravity(gravity);
-    d->setTileModeXY(tileModeX,tileModeY); 
+    d->setTileModeXY(tileModeX,tileModeY);
+    d->setAntiAlias(antialias);
     return d;
 }
 

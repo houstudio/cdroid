@@ -119,7 +119,7 @@ void Looper::setForThread(Looper* looper){
 }
 
 Looper*Looper::getForThread(){
-   int result = pthread_once(&gTLSOnce,initTLSKey);
+   const int result = pthread_once(&gTLSOnce,initTLSKey);
    LOGW_IF(result!=0,"pthread_once failed");
    Looper*looper =(Looper*)pthread_getspecific(gTLSKey);
    return looper;
@@ -203,7 +203,7 @@ int Looper::pollEvents(int timeoutMillis){
     mResponses.clear();
     mResponseIndex = 0;
     mPolling = true;
-    int j,eventCount; 
+    int eventCount; 
     struct epoll_event eventItems[EPOLL_MAX_EVENTS];
 #if USED_POLL == EPOLL
     eventCount = epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMillis);
@@ -216,7 +216,7 @@ int Looper::pollEvents(int timeoutMillis){
         pollfds.push_back(pfd);
     }
     eventCount = poll(pollfds.data(),pollfds.size(),timeoutMillis);
-    j = 0;
+    int j = 0;
     for(auto f:pollfds){
         if(f.revents==0)continue;
         eventItems[j].data.fd= f.fd;
@@ -613,7 +613,7 @@ void Looper::sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,
     { // acquire lock
         std::lock_guard<std::recursive_mutex> _l(mLock);
 
-        std::list<MessageEnvelope>::iterator it;
+        std::list<MessageEnvelope>::const_iterator it;
         for(it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
             if(it->uptime>=uptime)break;
             i+=1;

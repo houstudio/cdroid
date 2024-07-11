@@ -36,7 +36,6 @@ NinePatch::~NinePatch() {
 }
 
 static int getRotateAngle(Canvas&canvas){
-    double xx, yx, xy, yy, x0, y0;
     Cairo::Matrix ctx=canvas.get_matrix();
     double radians = atan2(ctx.yy, ctx.xy);
     return int(radians*180.f/M_PI);

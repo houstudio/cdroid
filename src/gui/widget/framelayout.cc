@@ -8,9 +8,9 @@ namespace cdroid{
 DECLARE_WIDGET(FrameLayout)
 
 FrameLayout::FrameLayout(int w,int h):ViewGroup(w,h){
-    mMeasureAllChildren=false;
-    mForegroundPaddingLeft=mForegroundPaddingRight=0;
-    mForegroundPaddingTop =mForegroundPaddingBottom=0;
+    mMeasureAllChildren = false;
+    mForegroundPaddingLeft= mForegroundPaddingRight = 0;
+    mForegroundPaddingTop = mForegroundPaddingBottom= 0;
 }
 
 FrameLayout::FrameLayout(Context* context,const AttributeSet& attrs)

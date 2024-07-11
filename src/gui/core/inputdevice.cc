@@ -41,6 +41,8 @@ InputDevice::InputDevice(int fdev){
 
     mSeqID = 0;
     mDeviceClasses= 0;
+    mAxisFlags =0;
+
     mKeyboardType = KEYBOARD_TYPE_NONE;
     InputGetDeviceInfo(fdev,&devInfos);
     di.name = devInfos.name;
@@ -142,7 +144,8 @@ InputDevice::InputDevice(int fdev){
         if (!status) {
             mDeviceClasses |= INPUT_DEVICE_CLASS_KEYBOARD;
         }
-    } 
+    }
+    mCorrectedDeviceClasses = mDeviceClasses;
     kmap = nullptr;
     LOGI("%d:[%s] Props=%02x%02x%02x%02x[%s]",fdev,devInfos.name,devInfos.propBitMask[0],
           devInfos.propBitMask[1],devInfos.propBitMask[2],devInfos.propBitMask[3],oss.str().c_str());

@@ -8,6 +8,7 @@ DECLARE_WIDGET(ViewAnimator)
 ViewAnimator::ViewAnimator(int w,int h):FrameLayout(w,h){
     mInAnimation = nullptr;
     mOutAnimation= nullptr;
+    setMeasureAllChildren(true);
 }
 
 ViewAnimator::ViewAnimator(Context* context,const AttributeSet& attrs)
@@ -21,11 +22,9 @@ ViewAnimator::~ViewAnimator(){
 }
 
 void ViewAnimator::initViewAnimator(Context* context, const AttributeSet& attrs) {
-    //mMeasureAllChildren = true;
     // For compatibility, default to measure children, but allow XML
     // attribute to override.
-    bool measureAllChildren = attrs.getBoolean("measureAllChildren", true);
-    setMeasureAllChildren(measureAllChildren);
+    setMeasureAllChildren(attrs.getBoolean("measureAllChildren", true));
     mInAnimation  = nullptr;
     mOutAnimation = nullptr;
 }
@@ -57,7 +56,7 @@ void ViewAnimator::showPrevious() {
 }
 
 void ViewAnimator::showOnly(int childIndex, bool animate) {
-    int count = getChildCount();
+    const int count = getChildCount();
     for (int i = 0; i < count; i++) {
        View* child = getChildAt(i);
        if (i == childIndex) {
@@ -151,12 +150,15 @@ View* ViewAnimator::getCurrentView() {
 Animation* ViewAnimator::getInAnimation(){
     return mInAnimation;
 }
+
 void ViewAnimator::setInAnimation(Animation* inAnimation){
     mInAnimation=inAnimation;
 }
+
 Animation* ViewAnimator::getOutAnimation(){
     return mOutAnimation;
 }
+
 void ViewAnimator::setOutAnimation(Animation* outAnimation){
     mOutAnimation = outAnimation;
 }

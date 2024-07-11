@@ -14,7 +14,7 @@
 namespace cdroid{
 struct InputDeviceIdentifier {
     InputDeviceIdentifier() :
-        bus(0), vendor(0), product(0), version(0) {
+        bus(0), vendor(0), product(0), version(0), nonce(0){
     }
     // Information provided by the kernel.
     std::string name;

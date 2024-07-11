@@ -696,9 +696,10 @@ bool GradientDrawable::ensureValidRect() {
         const std::vector<int>&gradientColors = st.mGradientColors;
         if (gradientColors.size()) {
             const RectF r = mRect;
-            float x0, x1, y0, y1;
+            float x0, y0;
 
             if (st.mGradient == LINEAR_GRADIENT) {
+                float x1,y1;
                 const float level = st.mUseLevel ? getLevel() / 10000.0f : 1.0f;
                 switch (st.mOrientation) {
                 case TOP_BOTTOM:

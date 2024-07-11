@@ -63,6 +63,9 @@ Keyboard::Key::Key(void*p){
     edgeFlags = row->rowEdgeFlags;
     on = false;
     pressed = false;
+    repeatable = false;
+    icon = nullptr;
+    iconPreview = nullptr;
 }
 
 void Keyboard::Key::onPressed() {
