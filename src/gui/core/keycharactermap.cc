@@ -355,28 +355,26 @@ void KeyCharacterMap::tryRemapKey(int32_t keyCode, int32_t metaState,
             *outKeyCode = behavior->replacementKeyCode;
             int32_t newMetaState = metaState & ~behavior->metaState;
             // Reset dependent meta states.
-#if 0 
-            if (behavior->metaState & AMETA_ALT_ON) {
-                newMetaState &= ~(AMETA_ALT_LEFT_ON | AMETA_ALT_RIGHT_ON);
+            if (behavior->metaState & KeyEvent::META_ALT_ON) {
+                newMetaState &= ~(KeyEvent::META_ALT_LEFT_ON | KeyEvent::META_ALT_RIGHT_ON);
             }
-            if (behavior->metaState & (AMETA_ALT_LEFT_ON | AMETA_ALT_RIGHT_ON)) {
-                newMetaState &= ~AMETA_ALT_ON;
+            if (behavior->metaState & (KeyEvent::META_ALT_LEFT_ON | KeyEvent::META_ALT_RIGHT_ON)) {
+                newMetaState &= ~KeyEvent::META_ALT_ON;
             }
-            if (behavior->metaState & AMETA_CTRL_ON) {
-                newMetaState &= ~(AMETA_CTRL_LEFT_ON | AMETA_CTRL_RIGHT_ON);
+            if (behavior->metaState & KeyEvent::META_CTRL_ON) {
+                newMetaState &= ~(KeyEvent::META_CTRL_LEFT_ON | KeyEvent::META_CTRL_RIGHT_ON);
             }
-            if (behavior->metaState & (AMETA_CTRL_LEFT_ON | AMETA_CTRL_RIGHT_ON)) {
-                newMetaState &= ~AMETA_CTRL_ON;
+            if (behavior->metaState & (KeyEvent::META_CTRL_LEFT_ON | KeyEvent::META_CTRL_RIGHT_ON)) {
+                newMetaState &= ~KeyEvent::META_CTRL_ON;
             }
-            if (behavior->metaState & AMETA_SHIFT_ON) {
-                newMetaState &= ~(AMETA_SHIFT_LEFT_ON | AMETA_SHIFT_RIGHT_ON);
+            if (behavior->metaState & KeyEvent::META_SHIFT_ON) {
+                newMetaState &= ~(KeyEvent::META_SHIFT_LEFT_ON | KeyEvent::META_SHIFT_RIGHT_ON);
             }
-            if (behavior->metaState & (AMETA_SHIFT_LEFT_ON | AMETA_SHIFT_RIGHT_ON)) {
-                newMetaState &= ~AMETA_SHIFT_ON;
+            if (behavior->metaState & (KeyEvent::META_SHIFT_LEFT_ON | KeyEvent::META_SHIFT_RIGHT_ON)) {
+                newMetaState &= ~KeyEvent::META_SHIFT_ON;
             }
             // ... and put universal bits back if needed
-            *outMetaState = normalizeMetaState(newMetaState);
-#endif
+            *outMetaState = KeyEvent::normalizeMetaState(newMetaState);
         }
     }
 

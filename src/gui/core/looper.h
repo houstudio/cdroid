@@ -92,7 +92,7 @@ private:
     };
 
     struct MessageEnvelope {
-        MessageEnvelope() : uptime(0) { }
+        MessageEnvelope() : uptime(0),handler(nullptr){}
         MessageEnvelope(nsecs_t u, MessageHandler* h,
             const Message& m) : uptime(u), handler(h), message(m) {
         }

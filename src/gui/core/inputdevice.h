@@ -92,11 +92,10 @@ enum class InputDeviceLightCapability : uint32_t {
 };
 
 struct InputDeviceSensorInfo {
-    explicit InputDeviceSensorInfo(std::string name, std::string vendor, int32_t version,
-        InputDeviceSensorType type, InputDeviceSensorAccuracy accuracy,
-        float maxRange, float resolution, float power, int32_t minDelay,
-        int32_t fifoReservedEventCount, int32_t fifoMaxEventCount,
-        std::string stringType, int32_t maxDelay, int32_t flags,int32_t id);
+    explicit InputDeviceSensorInfo(const std::string& name,const std::string& vendor, int32_t version,
+        InputDeviceSensorType type, InputDeviceSensorAccuracy accuracy, float maxRange, float resolution,
+        float power, int32_t minDelay, int32_t fifoReservedEventCount, int32_t fifoMaxEventCount,
+        const std::string& stringType, int32_t maxDelay, int32_t flags,int32_t id);
     // Name string of the sensor.
     std::string name;
     // Vendor string of this sensor.
@@ -132,7 +131,7 @@ struct InputDeviceSensorInfo {
 };
 
 struct InputDeviceLightInfo {
-    explicit InputDeviceLightInfo(std::string name, int32_t id, InputDeviceLightType type,
+    explicit InputDeviceLightInfo(const std::string& name, int32_t id, InputDeviceLightType type,
                                   /*ftl::Flags<InputDeviceLightCapability>*/uint32_t capabilityFlags,
                                   int32_t ordinal)
           : name(name), id(id), type(type), capabilityFlags(capabilityFlags), ordinal(ordinal) {}

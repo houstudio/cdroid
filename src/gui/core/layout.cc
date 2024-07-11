@@ -24,7 +24,8 @@ namespace cdroid{
 static unsigned char sData[4];
 static RefPtr<ImageSurface>sImage = ImageSurface::create(sData,Surface::Format::ARGB32,1,1,4);
 
-Layout::Layout(int fontSize,int width){
+Layout::Layout(int fontSize,int width)
+       :mContext(nullptr),mTypeface(nullptr){
     mFontSize= fontSize;
     mWidth  = width;
     mLineCount = 0;
@@ -46,9 +47,7 @@ Layout::Layout(int fontSize,int width){
     mTypeface = Typeface::DEFAULT;
 }
 
-Layout::Layout(const Layout&l){
-    mFontSize = l.mFontSize;
-    mWidth = l.mWidth;
+Layout::Layout(const Layout&l):Layout(l.mFontSize,l.mWidth){
     mLineCount = l.mLineCount;
     mAlignment = l.mAlignment;
     mColumns = l.mColumns;
@@ -64,7 +63,6 @@ Layout::Layout(const Layout&l){
     mEditable = l.mEditable;
     mText = l.mText;
     mLines= l.mLines;
-    mContext = Cairo::Context::create(sImage);
     setTypeface(l.mTypeface);
 }
 
@@ -203,9 +201,9 @@ int Layout::getLineRight(int line)const{
 }
 
 int Layout::getLineForOffset(int offset)const{
-    int high = getLineCount(), low = -1, guess;
+    int high = getLineCount(), low = -1;
     while (high - low > 1) {
-        guess = (high + low) / 2;
+        int guess = (high + low) / 2;
         if (getLineStart(guess) > offset)
             high = guess;
         else

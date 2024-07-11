@@ -26,12 +26,14 @@ void* ObjectAnimator::getTarget(){
 
 void ObjectAnimator::setPropertyName(const std::string&propertyName){
     if(mValuesMap.size()){
-        auto it=mValuesMap.begin();
-        std::string oldName=it->first;
-        //it->first=propertyName;
+        auto it = mValuesMap.begin();
+        auto it2= mValuesMap.find(it->first/*oldName*/);
+        if(it2!=mValuesMap.end())
+            mValuesMap.erase(it2);
+        mValuesMap.insert({propertyName,mValues[0]});
     }
-    mPropertyName=propertyName;
-    mInitialized=false;
+    mPropertyName= propertyName;
+    mInitialized = false;
 }
 
 void ObjectAnimator::setProperty(const Property& property){

@@ -64,13 +64,13 @@ const std::string TextUtils::utf16_utf8(const unsigned short*utf16,int len){
 }
 
 const std::wstring TextUtils::utf8tounicode(const std::string&utf8){
-    size_t u8len=utf8.size()+8;
-    wchar_t *out=new wchar_t[utf8.size()+8];
+    size_t u8len = utf8.size() + 8;
+    wchar_t *out = new wchar_t[u8len];
     #ifdef USE_ICONV
-    int rc=convert("UTF-8",UCSWCHAR(),utf8.c_str(),utf8.size(),(char*)out,sizeof(wchar_t)*u8len);
+    int rc = convert("UTF-8",UCSWCHAR(),utf8.c_str(),utf8.size(),(char*)out,sizeof(wchar_t)*u8len);
     #else
     wchar_t*pout=out;
-    for(int i=0;i<utf8.length();){
+    for(int i=0;i< utf8.length() ;){
         int n=UTF2UCS((utf8.c_str()+i),pout++);
         i+=n;
     }
@@ -82,13 +82,13 @@ const std::wstring TextUtils::utf8tounicode(const std::string&utf8){
 }
 
 const std::u16string TextUtils::utf8_utf16(const std::string&utf8){
-    size_t u8len=utf8.size()+8;
-    char16_t *out=new char16_t[utf8.size()+8];
+    size_t u8len = utf8.size()+8;
+    char16_t *out= new char16_t[u8len];
     #ifdef USE_ICONV
     int rc=convert("UTF-8",UCSWCHAR(),utf8.c_str(),utf8.size(),(char*)out,sizeof(wchar_t)*u8len);
     #else
     char16_t*pout=out;
-    for(int i=0;i<utf8.length();){
+    for(int i = 0;i < utf8.length() ;){
 	wchar_t oc;
         int n=UTF2UCS((utf8.c_str()+i),&oc);
 	*pout++=oc;
@@ -102,20 +102,20 @@ const std::u16string TextUtils::utf8_utf16(const std::string&utf8){
 }
 
 const std::string TextUtils::unicode2utf8(const std::wstring&u32s){
-    int u8len=u32s.length()*4+8;
-    char*out=new char[u8len];
+    int u8len = u32s.length()*4+8;
+    char*out  = new char[u8len];
     #ifdef USE_ICONV
     convert(UCSWCHAR(),"UTF-8",(char*)u32s.c_str(),u32s.length()*sizeof(wchar_t),out,u8len);
     #else
     //static int ucs4ToUtf8 (unsigned char *s, wchar_t uc, int n)
-    char*pout=out;
-    for(int i=0;i<u32s.length();i++){
-        int n=UCS2UTF(u32s[i],pout,4);
+    char*pout = out;
+    for(int i = 0 ;i < u32s.length() ;i++){
+        int n = UCS2UTF(u32s[i],pout,4);
         pout+=n;
     }
     *pout=0;
     #endif
-    std::string u8s=out;
+    std::string u8s = out;
     delete[] out;
     return u8s;
 }

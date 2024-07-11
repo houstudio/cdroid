@@ -40,13 +40,13 @@ int Tokenizer::fromStream(const std::string&name,std::istream&is, Tokenizer** ou
     // so we must trust that read will read the entire file.
     char*buffer = new char[length];
     if (!is.read(buffer, length)) {
-        result = -errno;
+        //result = -errno;
         LOGE("Error reading stream:%s!",name.c_str());
         delete[] buffer;
         buffer = NULL;
         return -1;
     }
-    *outTokenizer = new Tokenizer(name.c_str(), buffer,true, length);
+    *outTokenizer = new Tokenizer(name, buffer,true, length);
     return result;
 }
 

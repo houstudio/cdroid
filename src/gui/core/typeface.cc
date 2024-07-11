@@ -247,7 +247,7 @@ Typeface* Typeface::createWeightStyle(Typeface* base,int weight, bool italic) {
     const int key = (weight << 1) | (italic ? 1 : 0);
 
     Typeface* typeface = base;
-    int bestMactched=0;
+    int bestMactched = 0;
     for(auto it= sSystemFontMap.begin(); it!= sSystemFontMap.end(); it++) {
         Typeface* face = it->second;
         const int match= base->getFamily()==it->first;

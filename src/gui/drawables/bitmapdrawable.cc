@@ -174,12 +174,12 @@ bool BitmapDrawable::isAutoMirrored(){
 }
 
 int BitmapDrawable::computeTransparency(RefPtr<ImageSurface>bmp){
-    if(bmp==nullptr||bmp->get_width()==0||bmp->get_height()==0)
+    if((bmp==nullptr)||(bmp->get_width()==0)||(bmp->get_height()==0))
         return PixelFormat::TRANSPARENT;
     if((bmp->get_content()&Cairo::Content::CONTENT_ALPHA)==0)
         return PixelFormat::OPAQUE;
 
-    if(bmp->get_content()&CONTENT_COLOR==0){
+    if( (bmp->get_content()&CONTENT_COLOR) ==0){
         switch(bmp->get_format()){
         case Surface::Format::A1: return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
         case Surface::Format::A8:
@@ -193,12 +193,12 @@ int BitmapDrawable::computeTransparency(RefPtr<ImageSurface>bmp){
         default:return PixelFormat::TRANSLUCENT; 
         }
     }
-    if(bmp->get_format()==Surface::Format::RGB16_565||bmp->get_format()==Surface::Format::RGB24)
+    if((bmp->get_format()==Surface::Format::RGB16_565)||(bmp->get_format()==Surface::Format::RGB24))
         return PixelFormat::OPAQUE;
     if(bmp->get_format()!=Surface::Format::ARGB32)
         return PixelFormat::TRANSLUCENT;
-    for(int y=0;y<bmp->get_height();y++){
-        uint32_t*pixel=(uint32_t*)(bmp->get_data()+bmp->get_stride()*y);
+    for(int y = 0;y < bmp->get_height() ;y++){
+        uint32_t*pixel = (uint32_t*)(bmp->get_data() + bmp->get_stride()*y);
         for (int x = 0; x < bmp->get_width(); x++, pixel++){
             int a = (*pixel & 0xff000000) >> 24;
             if (a > 0 && a < 255)return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;

@@ -219,11 +219,10 @@ static void startTag(void *userData, const XML_Char *name, const XML_Char **satt
     Context*context = pd->context;
     Keyboard* keyboard= pd->keyboard;
     Keyboard::Row*row = pd->row;
-    int sz;
     atts.set(satts);
     if(0 == strcmp(name,"Keyboard")){
-	sz = getDimensionOrFraction(atts,"keyWidth",pd->displayWidth,pd->defaultKeyWidth);
-	keyboard->setKeyWidth(sz);
+        int sz = getDimensionOrFraction(atts,"keyWidth",pd->displayWidth,pd->defaultKeyWidth);
+        keyboard->setKeyWidth(sz);
         sz = getDimensionOrFraction(atts,"horizontalGap",pd->displayWidth,keyboard->getHorizontalGap());
         keyboard->setHorizontalGap(sz);
         sz = getDimensionOrFraction(atts,"verticalGap",pd->displayHeight,keyboard->getVerticalGap());
@@ -247,7 +246,6 @@ static void startTag(void *userData, const XML_Char *name, const XML_Char **satt
 
 static void endTag(void *userData, const XML_Char *name){
     KeyboardData*pd = (KeyboardData*)userData;
-    Context*context = pd->context;
     Keyboard* keyboard= pd->keyboard;
     Keyboard::Row*row = pd->row;
     if(0 == strcmp(name,"Key")){
@@ -270,7 +268,6 @@ static void endTag(void *userData, const XML_Char *name){
 
 void Keyboard::loadKeyboard(Context*context,const std::string&resid){
     std::string package;
-    ULONGLONG tstart = SystemClock::uptimeMillis();
     XML_Parser parser= XML_ParserCreateNS(NULL,' ');
 
     context->getInputStream(resid,&package);
@@ -281,9 +278,9 @@ void Keyboard::loadKeyboard(Context*context,const std::string&resid){
     pd.displayHeight= mDisplayHeight;
     pd.keyboardMode = mKeyboardMode;
     pd.defaultKeyWidth=mDefaultWidth;
-    int len = 0;
     std::unique_ptr<std::istream>stream=context->getInputStream(resid);
     if(stream){
+        int len = 0;
         do{
             char buf[256];
             stream->read(buf,sizeof(buf));
