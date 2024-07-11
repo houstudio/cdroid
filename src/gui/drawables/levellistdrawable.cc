@@ -18,7 +18,7 @@ void LevelListDrawable::LevelListState::mutate(){
 }
 
 void LevelListDrawable::LevelListState::addLevel(int low,int high,Drawable*drawable){
-    const int pos = addChild(drawable);
+    addChild(drawable);
     mLows.push_back(low);
     mHighs.push_back(high);
 }
@@ -39,13 +39,13 @@ LevelListDrawable*LevelListDrawable::LevelListState::newDrawable(){
 
 LevelListDrawable::LevelListDrawable():DrawableContainer(){
     mMutated = false;
-    auto state=std::make_shared<LevelListState>(nullptr,this);
+    auto state = std::make_shared<LevelListState>(nullptr,this);
     setConstantState(state);
     onLevelChange(getLevel());
 }
 
 LevelListDrawable::LevelListDrawable(std::shared_ptr<LevelListState>state){
-    auto newState=std::make_shared<LevelListState>(state.get(),this);
+    auto newState = std::make_shared<LevelListState>(state.get(),this);
     mMutated = false;
     setConstantState(newState);
     onLevelChange(getLevel());
@@ -70,7 +70,7 @@ void LevelListDrawable::setConstantState(std::shared_ptr<DrawableContainerState>
 }
 
 LevelListDrawable*LevelListDrawable::mutate(){
-    if (!mMutated && DrawableContainer::mutate() == this) {
+    if (!mMutated && (DrawableContainer::mutate() == this)) {
         mLevelListState->mutate();
         mMutated = true;
     }

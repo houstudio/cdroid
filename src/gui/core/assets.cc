@@ -602,10 +602,7 @@ int Assets::loadKeyValues(const std::string&fullresid,void*pending,std::function
     if(stream == nullptr)
         return 0;
     XML_Parser parser = XML_ParserCreateNS(nullptr,' ');//XML_ParserCreate(nullptr);
-    std::string curKey;
-    std::string curValue;
     KVPARSER kvp;
-    auto pos = fullresid.find(".xml");
     kvp.context = this;
     kvp.parser = parser;
     kvp.func = func;

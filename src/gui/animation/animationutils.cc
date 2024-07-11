@@ -55,7 +55,6 @@ static void endAnimation(void *userData, const XML_Char *name){
 Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resid){
     int rdlen;
     char buf[256];
-    int index=0;
     ANIMPARSERDATA pd;
     void*parseParams[2];
     pd.context = context;

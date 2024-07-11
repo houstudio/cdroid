@@ -110,7 +110,7 @@ void GradientDrawable::GradientState::applyDensityScaling(int sourceDensity, int
 
     if (mThickness > 0)  mThickness = Drawable::scaleFromDensity(mThickness, sourceDensity, targetDensity, true);
 
-    if (mOpticalInsets.left!=0||mOpticalInsets.top!=0||mOpticalInsets.right!=0||mOpticalInsets.right!=0) {
+    if (mOpticalInsets.left||mOpticalInsets.top||mOpticalInsets.right||mOpticalInsets.right) {
         const int left  = Drawable::scaleFromDensity(mOpticalInsets.left, sourceDensity, targetDensity, true);
         const int top   = Drawable::scaleFromDensity( mOpticalInsets.top, sourceDensity, targetDensity, true);
         const int right = Drawable::scaleFromDensity(mOpticalInsets.right, sourceDensity, targetDensity, true);
@@ -897,7 +897,7 @@ void GradientDrawable::draw(Canvas&canvas) {
     const bool useLayer =(haveStroke || haveFill) && (st->mShape!=LINE) &&
 	    (currStrokeAlpha<255) && ((mAlpha<255)|| colorFilter);
     const float sweep = st->mUseLevelForShape ? (360.f*getLevel()/10000.f) : 360.f;
-    float rad = .0f, innerRadius = .0f;
+    float rad = .0f;
 
     std::vector<float>radii;
     if( (mFillPaint==nullptr) && (haveStroke==false) )return;
@@ -951,7 +951,7 @@ void GradientDrawable::draw(Canvas&canvas) {
         break;
     case RING: {
         //inner
-        innerRadius = st->mInnerRadius;
+        float innerRadius = st->mInnerRadius;
         RectF bounds= {mRect.left,mRect.top,mRect.width,mRect.height};
         float thickness = st->mThickness!=-1 ? st->mThickness:(bounds.width/st->mThicknessRatio);
         float radius = st->mInnerRadius!=-1 ? st->mInnerRadius :(bounds.width/st->mInnerRadiusRatio);

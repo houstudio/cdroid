@@ -64,7 +64,6 @@ std::vector<Animator*> AnimatorSet::getChildAnimations()const{
 }
 
 void AnimatorSet::setTarget(void*target){
-    int size = mNodes.size();
     for (auto node:mNodes){//int i = 0; i < size; i++) {
         //Node* node = mNodes.get(i);
         Animator* animation = node->mAnimation;
@@ -246,7 +245,6 @@ void AnimatorSet::setupStartValues() {
 }
 
 void AnimatorSet::setupEndValues() {
-    int size = mNodes.size();
     for (Node*node:mNodes){
         if (node != mRootNode) {
             node->mAnimation->setupEndValues();
@@ -293,7 +291,6 @@ void AnimatorSet::start(bool inReverse, bool selfPulse) {
     mPaused = false;
     mPauseTime = -1;
 
-    int size = mNodes.size();
     for (Node*node:mNodes) {
         node->mEnded = false;
         //node->mAnimation->setAllowRunningAsynchronously(false);

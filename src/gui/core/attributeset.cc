@@ -10,10 +10,10 @@ namespace cdroid{
 
 static std::vector<std::string> split(const std::string & path) {
     std::vector<std::string> vec;
-    size_t begin, end;
+    size_t begin;
     begin = path.find_first_not_of("|");
     while (begin != std::string::npos) {
-        end = path.find_first_of("|", begin);
+        size_t end = path.find_first_of("|", begin);
         vec.push_back(path.substr(begin, end-begin));
         begin = path.find_first_not_of("|", end);
     }
