@@ -219,7 +219,7 @@ void NinePatch::getResizeArea() {
     int  j = 0;
     int  left = 0, right = 0;
     for(int  i = 0; i < mImage->get_width(); i++) {
-        if (IsColorBlack(mImage,i, j) && left == 0) {
+        if (IsColorBlack(mImage,i, j) && (left == 0)) {
             left = i;
         }
         if (left && IsColorBlack(mImage,i, j) && !IsColorBlack(mImage,i+1, j)) {
@@ -233,7 +233,7 @@ void NinePatch::getResizeArea() {
     int  i = 0;
     int  top = 0, bot = 0;
     for(int  j = 0; j < mImage->get_height(); j++) {
-        if (IsColorBlack(mImage,i, j) && top == 0) {
+        if (IsColorBlack(mImage,i, j) && (top == 0)) {
             top = j;
         }
         if (top && IsColorBlack(mImage,i, j) && !IsColorBlack(mImage,i, j+1)) {

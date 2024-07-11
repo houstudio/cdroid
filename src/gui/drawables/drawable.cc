@@ -618,7 +618,7 @@ static void endElement(void *userData, const XML_Char *name) {
         } else if(dynamic_cast<AnimationDrawable*>(parent)) {
             AnimationDrawable* ad = (AnimationDrawable*)parent;
             const int duration = atts.getInt("duration",0);
-            const std::string src = atts.getString("drawable");
+            //const std::string src = atts.getString("drawable");
             ad->addFrame(topchild,duration);
             LOGV("%p add %s %p to AnimationDrawable %p duration=%d",pd,name,topchild,parent,duration);
         }

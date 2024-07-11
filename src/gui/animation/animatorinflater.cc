@@ -44,11 +44,10 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 
 static void endElement(void *userData, const XML_Char *name){
     ParseData*pd =(ParseData*)userData;
-    Animator*anim=pd->animators.back();
     pd->animators.pop_back();
-    if(pd->animators.size()){
+    if((strcmp(name,"set")==0)&&pd->animators.size()){
         AnimatorSet*aset=(AnimatorSet*)pd->animators.back();
-        //aset->addAnimator(anim);
+        aset->playTogether(pd->animators);
     }
 }
 
