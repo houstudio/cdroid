@@ -7,7 +7,9 @@ class BlockInvalidateCallback:public Drawable::Callback {
 private:
     Drawable::Callback* mCallback;
 public:
-    BlockInvalidateCallback* wrap(Drawable::Callback* callback) {
+    BlockInvalidateCallback():mCallback(nullptr){
+    }
+    BlockInvalidateCallback* wrap(Drawable::Callback* callback){
         mCallback = callback;
         return this;
     }

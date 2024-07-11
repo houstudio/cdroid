@@ -34,6 +34,7 @@ Layout::Layout(int fontSize,int width){
     mEllipsizedWidth = 0;
     mSpacingMult = 1.0;
     mSpacingAdd  = 0;
+    mLineHeight  = 0;
     mLayout  = 0;
     mCaretPos= 0;
     mMultiline= false;
@@ -63,12 +64,12 @@ Layout::Layout(const Layout&l){
     mEditable = l.mEditable;
     mText = l.mText;
     mLines= l.mLines;
-    mContext=Cairo::Context::create(sImage);
+    mContext = Cairo::Context::create(sImage);
     setTypeface(l.mTypeface);
 }
 
 void Layout::setWidth(int width){
-    if(mWidth!=width){
+    if(mWidth != width){
         mWidth = width;
         mLayout++;
     }

@@ -2903,8 +2903,8 @@ void View::draw(Canvas&canvas){
 }
 
 bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
-    const bool hardwareAcceleratedCanvas=false;
-    bool drawingWithRenderNode= mAttachInfo && mAttachInfo->mHardwareAccelerated  && hardwareAcceleratedCanvas;
+    const bool hardwareAcceleratedCanvas = false;
+    bool drawingWithRenderNode = mAttachInfo && mAttachInfo->mHardwareAccelerated  && hardwareAcceleratedCanvas;
     bool more = false;
     const bool childHasIdentityMatrix = hasIdentityMatrix();
     const int parentFlags = parent->mGroupFlags;

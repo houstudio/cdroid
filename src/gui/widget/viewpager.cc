@@ -946,7 +946,7 @@ void ViewPager::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     for (auto child:mChildren){
         if (child->getVisibility() != GONE) {
             LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
-            if (lp == nullptr || !lp->isDecor) {
+            if ((lp == nullptr) || !lp->isDecor) {
                 const int widthSpec = MeasureSpec::makeMeasureSpec(
                        (int) (childWidthSize * lp->widthFactor), MeasureSpec::EXACTLY);
                 child->measure(widthSpec, mChildHeightMeasureSpec);

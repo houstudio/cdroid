@@ -224,6 +224,7 @@ InputMethod*InputMethodManager::getInputMethod(const std::string&name){
 InputMethodManager::InputMethodManager(){
     im = nullptr;
     kcm= nullptr;
+    mInputType = -1;
     imeWindow = nullptr;
 }
 
