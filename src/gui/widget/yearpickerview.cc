@@ -16,7 +16,10 @@ private:
     int mCount;
 
 public:
-    YearAdapter(Context* context) {
+    YearAdapter(Context* context)
+          :mActivatedYear(0)
+          ,mMinYear(0)
+          ,mCount(0){
         mInflater = LayoutInflater::from(context);
     }
 

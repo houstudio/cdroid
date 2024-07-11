@@ -17,7 +17,7 @@ class PlotObject::Private
 {
 public:
     Private(PlotObject *qq)
-        :q(qq){
+        :q(qq),size(0),thickness(0){
         type = UnknownType;
         pointStyle = NoPoints;
     }

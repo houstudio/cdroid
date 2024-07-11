@@ -18,6 +18,7 @@ public:
         : q(qq)
         , m_visible(true)
         , m_showTickLabels(false)
+        , m_showTickmarks(true)
         , m_labelFmt('g')
         , m_labelFieldWidth(0)
         , m_labelPrec(-1)

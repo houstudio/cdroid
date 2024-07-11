@@ -3091,11 +3091,11 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     if (!drawingWithRenderNode) {
         // apply clips directly, since RenderNode won't do it for this draw
         int clips = 0;
-        if ((parentFlags & ViewGroup::FLAG_CLIP_CHILDREN) != 0 && cache == nullptr) {
+        if ((parentFlags & ViewGroup::FLAG_CLIP_CHILDREN) && (cache == nullptr)) {
             if (offsetForScroll){
                 canvas.rectangle(sx,sy,getWidth(),getHeight());
             } else {
-                if (!scalingRequired || cache == nullptr) {
+                if (!scalingRequired/*||cache == nullptr*/) {
                     canvas.rectangle(0,0,getWidth(), getHeight());
                 } else {
                     canvas.rectangle(0, 0, cache->get_width(), cache->get_height());

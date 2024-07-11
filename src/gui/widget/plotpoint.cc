@@ -16,10 +16,8 @@ class PlotPoint::Private
 {
 public:
     Private(PlotPoint *qq, const PointF &p, const std::string &l, double bw)
-        : q(qq)
-        , point(p)
-        , label(l)
-        , barWidth(bw)
+        : q(qq)     , point(p) , plot(nullptr)
+        , label(l)  , barWidth(bw)
     {
     }
     
