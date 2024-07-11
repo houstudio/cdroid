@@ -90,28 +90,13 @@ enum class InputDeviceLightCapability : uint32_t {
     /** Capability to change color of the light */
     RGB = 0x00000002,
 };
+
 struct InputDeviceSensorInfo {
     explicit InputDeviceSensorInfo(std::string name, std::string vendor, int32_t version,
-                                   InputDeviceSensorType type, InputDeviceSensorAccuracy accuracy,
-                                   float maxRange, float resolution, float power, int32_t minDelay,
-                                   int32_t fifoReservedEventCount, int32_t fifoMaxEventCount,
-                                   std::string stringType, int32_t maxDelay, int32_t flags,
-                                   int32_t id)
-          : name(name),
-            vendor(vendor),
-            version(version),
-            type(type),
-            accuracy(accuracy),
-            maxRange(maxRange),
-            resolution(resolution),
-            power(power),
-            minDelay(minDelay),
-            fifoReservedEventCount(fifoReservedEventCount),
-            fifoMaxEventCount(fifoMaxEventCount),
-            stringType(stringType),
-            maxDelay(maxDelay),
-            flags(flags),
-            id(id) {}
+        InputDeviceSensorType type, InputDeviceSensorAccuracy accuracy,
+        float maxRange, float resolution, float power, int32_t minDelay,
+        int32_t fifoReservedEventCount, int32_t fifoMaxEventCount,
+        std::string stringType, int32_t maxDelay, int32_t flags,int32_t id);
     // Name string of the sensor.
     std::string name;
     // Vendor string of this sensor.

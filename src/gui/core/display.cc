@@ -4,7 +4,7 @@
 namespace cdroid{
 
 Display::Display(int id,DisplayInfo&displayInfo)
-	:mDisplayId(id),mIsValid(true){
+	:mDisplayId(id),mIsValid(true),mFlags(0){
    mDisplayInfo = displayInfo;
    mType = TYPE_BUILT_IN;
    displayInfo.type = mType;

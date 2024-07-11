@@ -328,7 +328,7 @@ RefPtr<ImageSurface>Assets::loadImage(const std::string&fullresid) {
         img = LoadImage(fi);
         LOGD_IF(img == nullptr,"pak=%p %s open failed",pak,resname.c_str());
         return img;
-    }else if(zfile){
+    }else {
         img = LoadImage(zipis);
     }
     LOGV_IF(img,"image %s size=%dx%d",fullresid.c_str(),img->get_width(),img->get_height());
@@ -345,13 +345,13 @@ int Assets::getId(const std::string&resname)const {
     if(key.empty())return -1;
     if(key.length()&&(key.find('/')==std::string::npos))
         return TextUtils::strtol(key);
-    auto pos =key.find('+');
-    if(pos!=std::string::npos)
+    auto pos = key.find('+');
+    if(pos != std::string::npos)
         key.erase(pos,1);
     parseResource(key,&resid,&pkg);
 
-    auto it=mIDS.find(pkg+":"+resid);
-    return it==mIDS.end()?-1:it->second;
+    auto it = mIDS.find(pkg+":"+resid);
+    return (it == mIDS.end())?-1:it->second;
 }
 
 int Assets::getNextAutofillId(){

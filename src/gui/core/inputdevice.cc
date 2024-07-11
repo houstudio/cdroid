@@ -17,6 +17,28 @@
 using namespace std;
 namespace cdroid{
 
+InputDeviceSensorInfo::InputDeviceSensorInfo(std::string name, std::string vendor, int32_t version,
+    InputDeviceSensorType type, InputDeviceSensorAccuracy accuracy,
+    float maxRange, float resolution, float power, int32_t minDelay,
+    int32_t fifoReservedEventCount, int32_t fifoMaxEventCount,
+    std::string stringType, int32_t maxDelay, int32_t flags,int32_t id)
+          : name(name),
+            vendor(vendor),
+            version(version),
+            type(type),
+            accuracy(accuracy),
+            maxRange(maxRange),
+            resolution(resolution),
+            power(power),
+            minDelay(minDelay),
+            fifoReservedEventCount(fifoReservedEventCount),
+            fifoMaxEventCount(fifoMaxEventCount),
+            stringType(stringType),
+            maxDelay(maxDelay),
+            flags(flags),
+            id(id) {
+}
+
 static bool containsNonZeroByte(const uint8_t* array, uint32_t startIndex, uint32_t endIndex) {
     const uint8_t* end = array + endIndex;
     array += startIndex;
@@ -42,6 +64,8 @@ InputDevice::InputDevice(int fdev){
     mSeqID = 0;
     mDeviceClasses= 0;
     mAxisFlags =0;
+    mLastAction = -1;
+    mScreenRotation =0;
 
     mKeyboardType = KEYBOARD_TYPE_NONE;
     InputGetDeviceInfo(fdev,&devInfos);
@@ -306,7 +330,6 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mTypeB = false;
     mTrackID = mSlotID = -1;
     mAxisFlags = 0;
-    mLastAction= -1;
     mCorrectedDeviceClasses = mDeviceClasses;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
     std::vector<InputDeviceInfo::MotionRange>&mr = mDeviceInfo.getMotionRanges();
@@ -640,7 +663,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
 }
 
 MouseDevice::MouseDevice(int fd):TouchDevice(fd){
-    mX = mY = 0;
+    mX = mY = mZ = 0;
     memset(mButtonStates,0,sizeof(mButtonStates));
 }
 
@@ -681,8 +704,9 @@ void InputDeviceInfo::initialize(int32_t id, int32_t generation, int32_t control
     mIsExternal = isExternal;
     mHasMic = hasMic;
     mSources = 0;
-    //mKeyboardType = AINPUT_KEYBOARD_TYPE_NONE;
+    mKeyboardType = 0;//AINPUT_KEYBOARD_TYPE_NONE;
     mHasVibrator = false;
+    mHasSensor = false;
     mHasButtonUnderPad = false;
     mMotionRanges.clear();
 }

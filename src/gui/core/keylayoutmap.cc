@@ -236,7 +236,7 @@ int KeyLayoutMap::Parser::parseKey() {
         if (mTokenizer->isEol() || mTokenizer->peekChar() == '#') break;
 
         std::string flagToken = mTokenizer->nextToken(WHITESPACE);
-        uint32_t flag = 0;//getKeyFlagByLabel(flagToken.c_str());
+        uint32_t flag = getKeyFlagByLabel(flagToken.c_str());
         if (!flag) {
             LOGE("%s: Expected key flag label, got '%s'.", mTokenizer->getLocation().c_str(),
                     flagToken.c_str());

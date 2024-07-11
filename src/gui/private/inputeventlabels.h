@@ -384,14 +384,14 @@ static const InputEventLabel LEDS[] = {
     // NOTE: If you add new LEDs here, you must also add them to Input.h
     { NULL, 0 }
 };
-/*static const InputEventLabel FLAGS[] = {
+static const InputEventLabel FLAGS[] = {
     DEFINE_FLAG(VIRTUAL),
     DEFINE_FLAG(FUNCTION),
     DEFINE_FLAG(GESTURE),
 
     { NULL, 0 }
 };
-*/
+
 static int lookupValueByLabel(const char* literal, const InputEventLabel *list) {
     while (list->literal) {
         if (strcmp(literal, list->literal) == 0) {
@@ -423,9 +423,9 @@ static inline const char* getLabelByKeyCode(int32_t keyCode) {
     return NULL;
 }
 
-/*static inline uint32_t getKeyFlagByLabel(const char* label) {
+static inline uint32_t getKeyFlagByLabel(const char* label) {
     return uint32_t(lookupValueByLabel(label, FLAGS));
-}*/
+}
 
 static inline int32_t getAxisByLabel(const char* label) {
     return int32_t(lookupValueByLabel(label, AXES));
