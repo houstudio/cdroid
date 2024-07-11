@@ -248,7 +248,7 @@ void Window::onSizeChanged(int w,int h,int oldw,int oldh){
 }
 
 void Window::onVisibilityChanged(View& changedView,int visibility){
-    GraphDevice::getInstance().invalidate(getBound());
+    //GraphDevice::getInstance().invalidate(getBound());
     GraphDevice::getInstance().flip();
 }
 

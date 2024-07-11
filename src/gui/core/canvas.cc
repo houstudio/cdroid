@@ -99,7 +99,6 @@ void Canvas::draw_image(const RefPtr<ImageSurface>& img,const Rect& dst,const Re
     if (dw != sw || dh != sh) {
        scale(fx, fy);
        dx /= fx;       dy /= fy;
-       dw /= fx;       dh /= fy;
     }
 
     clip();

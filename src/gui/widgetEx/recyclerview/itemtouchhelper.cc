@@ -321,11 +321,9 @@ void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState
                         // wait until remove animation is complete.
                         mPendingCleanup.push_back(prevSelected->itemView);
                         rca->mIsPendingCleanup = true;
-                        if (swipeDir > 0) {
-                            // Animation might be ended by other animators during a layout.
-                            // We defer callback to avoid editing adapter during a layout.
-                            postDispatchSwipe(rca, swipeDir);
-                        }
+                        // Animation might be ended by other animators during a layout.
+                        // We defer callback to avoid editing adapter during a layout.
+                        postDispatchSwipe(rca, swipeDir);
                     }
                     // removed from the list after it is drawn for the last time
                     if (mOverdrawChild == prevSelected->itemView) {

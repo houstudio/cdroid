@@ -153,16 +153,16 @@ HANDLE GraphDevice::getPrimarySurface()const{
     return mPrimarySurface;
 }
 
-void GraphDevice::invalidate(const Rect&r){
+/*void GraphDevice::invalidate(const Rect&r){
     //mInvalidateRgn->do_union((const RectangleInt&)r);
     LOGV("(%d,%d,%d,%d)",r.left,r.top,r.width,r.height);
-}
+}*/
 
 void GraphDevice::trackFPS(Canvas& canvas) {
     // Tracks frames per second drawn. First value in a series of draws may be bogus
     // because it down not account for the intervening idle time
     const long nowTime = SystemClock::currentTimeMillis();
-    if (mFpsStartTime <=0) {
+    if (mFpsStartTime ==0) {
         mFpsStartTime = mFpsPrevTime = nowTime;
         mFpsNumFrames = 0;
     } else {

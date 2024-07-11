@@ -33,8 +33,6 @@ AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState>
 
 AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::string&res)
    :AnimatedImageDrawable(){
-    uint8_t*buffer;
-    uint32_t pitch;
     auto istm = ctx->getInputStream(res);
     auto frmSequence = FrameSequence::create(istm.get());
     if(frmSequence==nullptr)return;
@@ -80,7 +78,6 @@ void AnimatedImageDrawable::setRepeatCount(int repeatCount){
 }
 
 int AnimatedImageDrawable::getRepeatCount()const{
-    auto frameSequence = mAnimatedImageState->mFrameSequence;
     return mRepeatCount;
 }
 
