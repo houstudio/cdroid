@@ -13,7 +13,7 @@ private:
     int mWidth;
     float mLineHeight;
     int mLineCount;
-    double mFontSize;
+    float mFontSize;
     int mEllipsizedWidth;
     int mColumns;
     int mEllipsis;
@@ -60,8 +60,8 @@ public:
     int  getWidth()const;
     Typeface*getTypeface()const;
     void setTypeface(Typeface*tf);
-    void setFontSize(double size);
-    double getFontSize()const;
+    void setFontSize(float size);
+    float getFontSize()const;
     bool setText(const std::string&);
     bool setText(const std::wstring&);
     void setEditable(bool);

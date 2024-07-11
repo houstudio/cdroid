@@ -87,7 +87,7 @@ void Layout::setTypeface(Typeface*tf){
     mContext->set_font_face(mTypeface->getFontFace()->get_font_face());
 }
 
-void Layout::setFontSize(double size){
+void Layout::setFontSize(float size){
     if(mFontSize!=size){
         mFontSize=size;
         mLayout++;
@@ -95,7 +95,7 @@ void Layout::setFontSize(double size){
     }
 }
 
-double Layout::getFontSize()const{
+float Layout::getFontSize()const{
     return mFontSize;
 }
 
@@ -495,10 +495,6 @@ void Layout::pushLineData(int start,int ytop,int descent,int width){
     }
 }
 
-template <typename T> int signum(T val) {
-    return (T(0) < val) - (val < T(0));
-}
-
 void Layout::relayout(bool force){
     TextExtents extents,tee;
     FontExtents fontextents;
@@ -510,7 +506,7 @@ void Layout::relayout(bool force){
     mLines.clear();
     measureSize(L"",extents,&fontextents);
     mLineHeight = (fontextents.ascent + fontextents.descent);
-    if(float(mLineHeight)/mFontSize<1.f)
+    if(mLineHeight<mFontSize)
         mLineHeight = fontextents.height;
     mLineHeight = mLineHeight*mSpacingMult+mSpacingAdd;
     for(int i = 0; mMultiline && (i < mText.length());i++){
