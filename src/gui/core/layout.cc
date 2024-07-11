@@ -505,7 +505,7 @@ void Layout::relayout(bool force){
     mLineCount=0;
     mLines.clear();
     measureSize(L"",extents,&fontextents);
-    mLineHeight = fontextents.height*mSpacingMult+mSpacingAdd;
+    mLineHeight = (fontextents.ascent +fontextents.descent)*mSpacingMult+mSpacingAdd;
     for(int i = 0; mMultiline && (i < mText.length());i++){
         char breaks[2];
         wchar_t wch[2];
