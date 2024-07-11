@@ -683,7 +683,7 @@ private:
     ListView*LV;
 public:
     AlertListAdapter(Context*ctx,const std::string&resource,int field)
-       :ArrayAdapter<std::string>::ArrayAdapter(ctx,resource,field){
+       :ArrayAdapter<std::string>::ArrayAdapter(ctx,resource,field),mParams(nullptr),LV(nullptr){
     }
     void setParams(AlertController::AlertParams*param,ListView*lv){
         mParams=param;

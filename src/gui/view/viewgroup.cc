@@ -44,8 +44,9 @@ public:
     TouchTarget*next;
 public:
     TouchTarget(){
-        child=nullptr;
-        next=nullptr;
+        child= nullptr;
+        next = nullptr;
+        pointerIdBits = 0;
     }
     static TouchTarget*obtain(View*child,int pointerIdBits){
         TouchTarget*target;
@@ -57,8 +58,8 @@ public:
             sRecycledCount--;
             target->next=nullptr;
         }
-        target->child=child;
-        target->pointerIdBits=pointerIdBits;
+        target->child = child;
+        target->pointerIdBits = pointerIdBits;
         return target;
     }
     void recycle(){
@@ -2971,7 +2972,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
                             }
                             mLastTouchDownX = ev.getX() ;
                             mLastTouchDownY = ev.getY() ;
-                            newTouchTarget=addTouchTarget(child,idBitsToAssign);
+                            newTouchTarget = addTouchTarget(child,idBitsToAssign);
                             alreadyDispatchedToNewTouchTarget = true;
                             break;
                         }
@@ -2999,7 +3000,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
             TouchTarget* target = mFirstTouchTarget;
             while (target ) {
                 TouchTarget* next = target->next;
-                if (alreadyDispatchedToNewTouchTarget && target == newTouchTarget) {
+                if (alreadyDispatchedToNewTouchTarget && (target == newTouchTarget) ) {
                     handled = true;
                 } else {
                     const bool cancelChild = resetCancelNextUpFlag(target->child)|| intercepted;

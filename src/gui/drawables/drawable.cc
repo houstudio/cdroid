@@ -316,6 +316,7 @@ public:
     ParseData() {
         drawable = nullptr;
         parser = nullptr;
+        ctx = nullptr;
     }
     void push(const std::string&name,AttributeSet&atts) {
         std::shared_ptr<ParseItem> item = std::make_shared<ParseItem>();
@@ -593,14 +594,14 @@ static void endElement(void *userData, const XML_Char *name) {
             const int id = atts.getResourceId("id",-1);
             if(asld) asld->addState(state,topchild,id);
             else sld->addState(state,topchild);
-            LOGV("%p add drawable %p to StateListDrawable %p id=%d",pd,topchild,parent,id);
+            LOGV("%p add %s %p to StateListDrawable %p id=%d",pd,name,topchild,parent,id);
         } else if(dynamic_cast<LevelListDrawable*>(parent)) {
             int minLevel = atts.getInt("minLevel",INT_MIN);//get child level info
             int maxLevel = atts.getInt("maxLevel",INT_MIN);
             if( minLevel == INT_MIN ) minLevel = maxLevel;
             if( maxLevel == INT_MIN ) maxLevel = minLevel;
             ((LevelListDrawable*)parent)->addLevel(minLevel,maxLevel,topchild);
-            LOGV("%p add drawable %p to LevelListDrawable %p level=(%d,%d)",pd,topchild,parent,minLevel,maxLevel);
+            LOGV("%p add %s %p to LevelListDrawable %p level=(%d,%d)",pd,name,topchild,parent,minLevel,maxLevel);
         } else if(dynamic_cast<LayerDrawable*>(parent)) {
             LayerDrawable* ld = dynamic_cast<LayerDrawable*>(parent);
             const int idx = ld->addLayer(topchild);
@@ -612,14 +613,14 @@ static void endElement(void *userData, const XML_Char *name) {
             const int id = atts.getResourceId("id",-1);
             const std::string src = atts.getString("drawable");
             if(id!=-1)ld->setId(idx,id);
-            LOGV("%p add drawable %p to Layer/TransitionDrawable %p index=%d id=%d gravity=%x size=%dx%d",pd,topchild,
+            LOGV("%p add %s %p to Layer/TransitionDrawable %p index=%d id=%d gravity=%x size=%dx%d",pd,name,topchild,
                  parent,idx,id,ld->getLayerGravity(idx),ld->getLayerWidth(idx),ld->getLayerHeight(idx));
         } else if(dynamic_cast<AnimationDrawable*>(parent)) {
             AnimationDrawable* ad = (AnimationDrawable*)parent;
             const int duration = atts.getInt("duration",0);
             const std::string src = atts.getString("drawable");
             ad->addFrame(topchild,duration);
-            LOGV("%p add drawable %p to AnimationDrawable %p duration=%d",pd,topchild,parent,duration);
+            LOGV("%p add %s %p to AnimationDrawable %p duration=%d",pd,name,topchild,parent,duration);
         }
         if(pd->items.size()==1) pd->drawable=pd->items.back()->drawable;
     }

@@ -285,7 +285,7 @@ int KeyLayoutMap::Parser::parseAxis() {
 
         mTokenizer->skipDelimiters(WHITESPACE);
         std::string axisToken = mTokenizer->nextToken(WHITESPACE);
-        axisInfo.axis = 0;//getAxisByLabel(axisToken.c_str());
+        axisInfo.axis = getAxisByLabel(axisToken.c_str());
         if (axisInfo.axis < 0) {
             LOGE("%s: Expected inverted axis label, got '%s'.",
                     mTokenizer->getLocation().c_str(), axisToken.c_str());
@@ -305,7 +305,7 @@ int KeyLayoutMap::Parser::parseAxis() {
 
         mTokenizer->skipDelimiters(WHITESPACE);
         std::string lowAxisToken = mTokenizer->nextToken(WHITESPACE);
-        axisInfo.axis = 0;//getAxisByLabel(lowAxisToken.c_str());
+        axisInfo.axis = getAxisByLabel(lowAxisToken.c_str());
         if (axisInfo.axis < 0) {
             LOGE("%s: Expected low axis label, got '%s'.",
                     mTokenizer->getLocation().c_str(), lowAxisToken.c_str());
@@ -314,14 +314,14 @@ int KeyLayoutMap::Parser::parseAxis() {
 
         mTokenizer->skipDelimiters(WHITESPACE);
         std::string highAxisToken = mTokenizer->nextToken(WHITESPACE);
-        axisInfo.highAxis = 0;//getAxisByLabel(highAxisToken.string());
+        axisInfo.highAxis = getAxisByLabel(highAxisToken.c_str());
         if (axisInfo.highAxis < 0) {
             LOGE("%s: Expected high axis label, got '%s'.",
                     mTokenizer->getLocation().c_str(), highAxisToken.c_str());
             return -1;//BAD_VALUE;
         }
     } else {
-        axisInfo.axis = 0;//getAxisByLabel(token.c_str());
+        axisInfo.axis = getAxisByLabel(token.c_str());
         if (axisInfo.axis < 0) {
             LOGE("%s: Expected axis label, 'split' or 'invert', got '%s'.",
                     mTokenizer->getLocation().c_str(), token.c_str());

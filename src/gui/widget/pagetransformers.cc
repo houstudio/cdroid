@@ -186,7 +186,7 @@ ZoomOutSlideTransformer::ZoomOutSlideTransformer(float minscale,float minalpha){
 }
 
 void ZoomOutSlideTransformer::onTransform(View& view, float position) {
-    if (position >= -1 || position <= 1) {
+    if ((position >= -1.f) || (position <= 1.f)) {
 	// Modify the default slide transition to shrink the page as well
 	const float height = view.getHeight();
 	const float width = view.getWidth();

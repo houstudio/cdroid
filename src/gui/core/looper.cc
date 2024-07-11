@@ -71,8 +71,9 @@ Looper::~Looper() {
         close(mEpollFd);
     }
     for(EventHandler*hdl:mEventHandlers){
-        if(hdl->mFlags&3==3)delete hdl;
-    }mEventHandlers.clear();
+        if((hdl->mFlags&3)==3)delete hdl;
+    }
+    mEventHandlers.clear();
 }
 
 void Looper::initTLSKey() {
