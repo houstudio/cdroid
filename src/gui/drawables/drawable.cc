@@ -544,7 +544,7 @@ static Drawable*parseShapeDrawable(Context*ctx,const AttributeSet&atts,
     } else {
         ShapeDrawable*sd = new ShapeDrawable();
         if( corners ) parseCorners(nullptr,sd, *corners);
-        if(gradient) parseShapeGradient(nullptr,sd,*gradient);
+        /*if(gradient)*/parseShapeGradient(nullptr,sd,*gradient);
         return sd;
     }
 }

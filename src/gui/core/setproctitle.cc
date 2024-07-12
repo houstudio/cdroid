@@ -108,7 +108,7 @@ error:
 static int spt_copyargs(int argc, char *argv[]) {
   char *tmp;
   int i;
-  for (i = 1; i < argc || (i >= argc && argv[i]); i++) {
+  for (i = 1; i < argc || argv[i]; i++) {
     if (!argv[i])
       continue;
     if (!(tmp = strdup(argv[i])))
@@ -125,7 +125,7 @@ void spt_init(int argc, char *argv[]) {
     return;
   nul = &base[strlen(base)];
   end = nul + 1;
-  for (i = 0; i < argc || (i >= argc && argv[i]); i++) {
+  for (i = 0; i < argc || argv[i]; i++) {
     if (!argv[i] || argv[i] < end)
       continue;
     end = argv[i] + strlen(argv[i]) + 1;
