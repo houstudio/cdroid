@@ -197,7 +197,7 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
             break;
         }
     }
-    const Cairo::RectangleInt re = rgn->get_extents();
+    //const Cairo::RectangleInt re = rgn->get_extents();
     //GraphDevice::getInstance().invalidate({re.x,re.y,re.width,re.height});
     GraphDevice::getInstance().flip();
 }

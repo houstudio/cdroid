@@ -316,7 +316,6 @@ static Cairo::RefPtr<Cairo::ImageSurface> LoadImage( std::istream&istream ){
 }
 
 RefPtr<ImageSurface>Assets::loadImage(const std::string&fullresid) {
-    size_t capacity = 0;
     std::string resname;
     ZIPArchive*pak = getResource(fullresid,&resname,nullptr);
     if(pak)guessExtension(pak,resname);

@@ -119,7 +119,7 @@ static int spt_copyargs(int argc, char *argv[]) {
 } /* spt_copyargs() */
 void spt_init(int argc, char *argv[]) {
     char **envp = environ;
-  char *base, *end, *nul, *tmp;
+  char *base, *end, *nul;
   int i, error;
   if (!(base = argv[0]))
     return;

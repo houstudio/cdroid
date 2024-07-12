@@ -80,11 +80,11 @@ Typeface::Typeface(FcPattern & font) {
 
     FcLangSet *langset=nullptr;
     ret = FcPatternGetLangSet(&font, FC_LANG,0,&langset);
+    LOGV_IF(ret,"FcPatternGetLangSet=%d",ret);
     //FcChar8 *lang = FcLangSetGetString(langset, 0);
     ret = FcLangSetHasLang(langset,(const FcChar8*)mSystemLang.c_str());
-    if(ret == 0)
-        mStyle |= SYSLANG_MATCHED;
-    LOGV("has %s=%d",mSystemLang.c_str(),ret);
+    if(ret == FcResultMatch)  mStyle |= SYSLANG_MATCHED;
+    LOGV_IF(ret,"FcLangSetHasLang %s=%d",mSystemLang.c_str(),ret);
 
     Cairo::Matrix matrix = Cairo::identity_matrix();
     Cairo::Matrix ctm = Cairo::identity_matrix();
@@ -205,7 +205,6 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
         const std::string family = tf->getFamily();
         std::vector<std::string>families = TextUtils::split(family,";");
         auto it = std::find(families.begin(),families.end(),familyName);
-        const int ttfLangs = families.size();
         if( (it != families.end())||(fontKey.compare(wantFamily) == 0)) {
             familyMatched++;
         }
@@ -244,7 +243,7 @@ Typeface* Typeface::defaultFromStyle(int style) {
 }
 
 Typeface* Typeface::createWeightStyle(Typeface* base,int weight, bool italic) {
-    const int key = (weight << 1) | (italic ? 1 : 0);
+    //const int key = (weight << 1) | (italic ? 1 : 0);
 
     Typeface* typeface = base;
     int bestMactched = 0;
