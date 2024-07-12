@@ -54,11 +54,11 @@ void Scroller::sInit(){
         float alpha = (float) i / NB_SAMPLES;
 
         float x_max = 1.0f;
-        float x, tx, coef;
+        float x, coef;
         while (true) {
             x = x_min + (x_max - x_min) / 2.0f;
             coef = 3.0f * x * (1.0f - x);
-            tx = coef * ((1.0f - x) * P1 + x * P2) + x * x * x;
+            float tx = coef * ((1.0f - x) * P1 + x * P2) + x * x * x;
             if (abs(tx - alpha) < 1E-5) break;
             if (tx > alpha) x_max = x;
             else x_min = x;
@@ -66,11 +66,11 @@ void Scroller::sInit(){
         SPLINE_POSITION[i] = coef * ((1.0f - x) * START_TENSION + x) + x * x * x;
 
         float y_max = 1.0f;
-        float y, dy;
+        float y;
         while (true) {
             y = y_min + (y_max - y_min) / 2.0f;
             coef = 3.0f * y * (1.0f - y);
-            dy = coef * ((1.0f - y) * START_TENSION + y) + y * y * y;
+            float dy = coef * ((1.0f - y) * START_TENSION + y) + y * y * y;
             if (abs(dy - alpha) < 1E-5) break;
             if (dy > alpha) y_max = y;
             else y_min = y;

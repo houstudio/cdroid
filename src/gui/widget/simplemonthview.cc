@@ -12,7 +12,7 @@ SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
 
     // We may have been laid out smaller than our preferred size. If so,
     // scale all dimensions to fit.
-    int measuredPaddedHeight = h;// - paddingTop - paddingBottom;
+    //const int measuredPaddedHeight = h;// - paddingTop - paddingBottom;
     const float scaleH = 1.0f;//paddedHeight / (float) measuredPaddedHeight;
     int monthHeight = (int) (mDesiredMonthHeight * scaleH);
     int cellWidth = mPaddedWidth / DAYS_IN_WEEK;
@@ -403,7 +403,7 @@ void SimpleMonthView::onDraw(Canvas& canvas){
 }
 
 void SimpleMonthView::drawMonth(Canvas& canvas){
-    float x = mPaddedWidth / 2.f;
+    //float x = mPaddedWidth / 2.f;
     // Vertically centered within the month header height.
     canvas.set_color(0xFFFFFFFF);
     Rect rctxt={0,0,mPaddedWidth,mMonthHeight};
@@ -420,7 +420,7 @@ void SimpleMonthView::drawDaysOfWeek(Canvas& canvas){
     const int colWidth = mCellWidth;
 
     // Text is vertically centered within the day of week height.
-    int rowCenter = headerHeight + rowHeight / 2;
+    //const int rowCenter = headerHeight + rowHeight / 2;
     
     canvas.set_color(0xFFFFFFFF);
     canvas.move_to(0,headerHeight);

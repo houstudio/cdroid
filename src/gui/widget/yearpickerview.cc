@@ -74,16 +74,16 @@ public:
         int year = getYearForPosition(position);
         bool activated = mActivatedYear == year;
 
-        /*if ((convertView == nullptr) || v->isActivated() != activated) {
-            int textAppearanceResId;
-            if (activated && ITEM_TEXT_ACTIVATED_APPEARANCE != 0) {
-                textAppearanceResId = ITEM_TEXT_ACTIVATED_APPEARANCE;
+        if ((convertView == nullptr) || v->isActivated() != activated) {
+            std::string textAppearanceResId="YearLabel_Activated";
+            if (activated /*&& ITEM_TEXT_ACTIVATED_APPEARANCE != 0*/) {
+                //textAppearanceResId = ITEM_TEXT_ACTIVATED_APPEARANCE;
             } else {
-                textAppearanceResId = ITEM_TEXT_APPEARANCE;
+                //textAppearanceResId = ITEM_TEXT_APPEARANCE;
             }
             v->setTextAppearance(textAppearanceResId);
             v->setActivated(activated);
-        }*/
+        }
         v->setText(std::to_string(year));
         return v;
     }
