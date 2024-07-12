@@ -81,7 +81,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mSelectedTextSize = mSelectedText->getTextSize();
     mTypeface = Typeface::create(atts.getString("typeface"),Typeface::NORMAL);
     mSelectedTypeface = Typeface::create(atts.getString("selectedTypeface"),Typeface::NORMAL);
-    ViewConfiguration configuration = ViewConfiguration::get(context);
+    //ViewConfiguration configuration = ViewConfiguration::get(context);
     setTextSize(atts.getDimensionPixelSize("textSize",mTextSize));
     mTextSize2 = atts.getDimensionPixelSize("textSize2",mTextSize);
     if(atts.hasAttribute("selectedTextSize"))
@@ -123,10 +123,6 @@ bool NumberPicker::isHorizontalMode()const{
 
 bool NumberPicker::isAscendingOrder()const{
     return mOrder == ASCENDING;
-}
-
-static float pxToSp(float px){
-    return px;
 }
 
 static float dpToPx(float dp){
@@ -229,8 +225,8 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
     const int inptTxtMsrdHght = mSelectedText->getMeasuredHeight();
     const int inptTxtLeft= (msrdWdth - inptTxtMsrdWdth) /2;
     const int inptTxtTop = (msrdHght - inptTxtMsrdHght)/2;
-    const int inptTxtRight= inptTxtLeft + inptTxtMsrdWdth;
-    const int inptTxtBottom=inptTxtTop + inptTxtMsrdHght;
+    //const int inptTxtRight= inptTxtLeft + inptTxtMsrdWdth;
+    //const int inptTxtBottom=inptTxtTop + inptTxtMsrdHght;
     mSelectedText->layout(inptTxtLeft, inptTxtTop, inptTxtMsrdWdth, inptTxtMsrdHght);
     mSelectedTextCenter = (isHorizontalMode()?getWidth():getHeight())/2;
     if (changed) { // need to do all this when we know our size
@@ -1091,8 +1087,8 @@ void NumberPicker::onDraw(Canvas&canvas){
 
 void NumberPicker::drawHorizontalDividers(Canvas& canvas) {
     int top,bottom,left,right;
-    int leftOfLeftDivider,rightOfLeftDivider;
-    int bottomOfUnderlineDivider,topOfUnderlineDivider;
+    int leftOfLeftDivider/*,rightOfLeftDivider*/;
+    int /*bottomOfUnderlineDivider,*/topOfUnderlineDivider;
     int rightOfRightDivider,leftOfRightDivider;
 
     switch (mDividerType) {
@@ -1106,7 +1102,7 @@ void NumberPicker::drawHorizontalDividers(Canvas& canvas) {
         }
         // draw the left divider
         leftOfLeftDivider = mLeftDividerLeft;
-        rightOfLeftDivider = leftOfLeftDivider + mDividerThickness;
+        //rightOfLeftDivider = leftOfLeftDivider + mDividerThickness;
         mDividerDrawable->setBounds(leftOfLeftDivider, top, mDividerThickness, bottom-top);
         mDividerDrawable->draw(canvas);
         // draw the right divider
@@ -1123,7 +1119,7 @@ void NumberPicker::drawHorizontalDividers(Canvas& canvas) {
             left = mLeftDividerLeft;
             right = mRightDividerRight;
         }
-        bottomOfUnderlineDivider = mBottomDividerBottom;
+        //bottomOfUnderlineDivider = mBottomDividerBottom;
         mDividerDrawable->setBounds(left,topOfUnderlineDivider,right - left,mDividerThickness);
         mDividerDrawable->draw(canvas);
         break;
@@ -1132,7 +1128,7 @@ void NumberPicker::drawHorizontalDividers(Canvas& canvas) {
 
 void NumberPicker::drawVerticalDividers(Canvas& canvas) {
     int left, right;
-    int topOfTopDivider,bottomOfTopDivider;
+    int topOfTopDivider/*,bottomOfTopDivider*/;
     int bottomOfUnderlineDivider,topOfUnderlineDivider;
     int topOfBottomDivider,bottomOfBottomDivider;
     if (mDividerLength > 0 && mDividerLength <= mMaxWidth) {
@@ -1146,7 +1142,7 @@ void NumberPicker::drawVerticalDividers(Canvas& canvas) {
     case SIDE_LINES:
         // draw the top divider
         topOfTopDivider = mTopDividerTop;
-        bottomOfTopDivider = topOfTopDivider + mDividerThickness;
+        //bottomOfTopDivider = topOfTopDivider + mDividerThickness;
         mDividerDrawable->setBounds(left, topOfTopDivider, right-left, mDividerThickness);
         mDividerDrawable->draw(canvas);
         // draw the bottom divider
