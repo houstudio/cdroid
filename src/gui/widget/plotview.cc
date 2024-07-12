@@ -521,7 +521,6 @@ void PlotView::maskAlongLine(const PointF &p1, const PointF &p2, float fvalue){
 }
 
 static void drawRound(Canvas&canvas,const RectF&r,float radii) {
-    float db = 180.f;
     float pts[8];
     double radian = M_PI;
     pts[0] = r.left + radii;
@@ -695,12 +694,11 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp){
         // QPen pen = painter->pen();
         // pen.setStyle( Qt::DotLine );
         // painter->setPen( pen );
-        double radius = 25;
         drawRound(painter,bestRect,std::min(bestRect.width,bestRect.height)/4);
         //painter.stroke();
         // Now connect the label to the point with a line.
         // The line is drawn from the center of the near edge of the rectangle
-        float xline = bestRect.centerX();
+        /*float xline = bestRect.centerX();
         if (bestRect.left > pos.x) {
             xline = bestRect.left;
         }
@@ -714,12 +712,12 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp){
         }
         if (bestRect.bottom() < pos.y) {
             yline = bestRect.bottom();
-        }
+        }*/
 
-	/*painter.move_to(xline,yline);
-	painter.line_to(pos.x,pos.y);
-	painter.close_path();
-	painter.stroke();*/
+        /*painter.move_to(xline,yline);
+        painter.line_to(pos.x,pos.y);
+        painter.close_path();
+        painter.stroke();*/
     }
 
     // Mask the label's rectangle so other labels won't overlap it.

@@ -366,7 +366,7 @@ void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState
 
 void ItemTouchHelper::postDispatchSwipe(RecoverAnimation* anim,int swipeDir) {
     // wait until animations are complete.
-    MyRecoverAnimation*myAnim = (MyRecoverAnimation*)anim;
+    MyRecoverAnimation*myAnim = dynamic_cast<MyRecoverAnimation*>(anim);
     myAnim->mRunnable = ([this,anim,swipeDir]() {
         if (mRecyclerView && mRecyclerView->isAttachedToWindow() && !anim->mOverridden
                 && (anim->mViewHolder->getAdapterPosition() != RecyclerView::NO_POSITION) ) {
@@ -378,7 +378,7 @@ void ItemTouchHelper::postDispatchSwipe(RecoverAnimation* anim,int swipeDir) {
                     && !hasRunningRecoverAnim()) {
                 mCallback->onSwiped(*anim->mViewHolder, swipeDir);
             } else {
-                mRecyclerView->post(((MyRecoverAnimation*)anim)->mRunnable);
+                mRecyclerView->post(dynamic_cast<MyRecoverAnimation*>(anim)->mRunnable);
             }
         }
     });

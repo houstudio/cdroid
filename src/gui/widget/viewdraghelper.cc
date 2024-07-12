@@ -28,7 +28,7 @@ ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* c
     mTouchSlop = vc.getScaledTouchSlop();
     mMaxVelocity = vc.getScaledMaximumFlingVelocity();
     mMinVelocity = vc.getScaledMinimumFlingVelocity();
-    mScroller = new OverScroller(context, (VDInterpolator*)sInterpolator.get(),true);
+    mScroller = new OverScroller(context,sInterpolator.get(),true);
     mSetIdleRunnable = [this](){
         setDragState(STATE_IDLE);
     };

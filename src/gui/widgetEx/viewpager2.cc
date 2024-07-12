@@ -162,8 +162,8 @@ Parcelable* ViewPager2::onSaveInstanceState() {
     if (mPendingAdapterState != nullptr) {
         ss->mAdapterState = mPendingAdapterState;
     } else {
-        RecyclerView::Adapter*adapter = mRecyclerView->getAdapter();
-        /*if (adapter instanceof StatefulAdapter) {
+        /*RecyclerView::Adapter*adapter = mRecyclerView->getAdapter();
+        if (adapter instanceof StatefulAdapter) {
             ss->mAdapterState = ((StatefulAdapter) adapter).saveState();
         }*/
     }

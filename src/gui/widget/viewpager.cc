@@ -539,9 +539,7 @@ void ViewPager::populate() {
 
 void ViewPager::populate(int newCurrentItem){
     ItemInfo* oldCurInfo = nullptr;
-    int focusDirection = View::FOCUS_FORWARD;
     if (mCurItem != newCurrentItem) {
-        focusDirection = mCurItem < newCurrentItem ? View::FOCUS_RIGHT : View::FOCUS_LEFT;
         oldCurInfo = infoForPosition(mCurItem);
         mCurItem = newCurrentItem;
     }

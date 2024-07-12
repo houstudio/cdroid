@@ -134,13 +134,13 @@ int Scroller::getFinalY()const{
 }
 
 bool Scroller::computeScrollOffset() {
-    int index;
-    float x,t,distanceCoef,velocityCoef;
     if (mFinished) return false;
 
     int timePassed = (int)(AnimationUtils::currentAnimationTimeMillis() - mStartTime);
     
     if (timePassed < mDuration) {
+        int index;
+        float x,t,distanceCoef,velocityCoef;
         switch (mMode) {
         case SCROLL_MODE:
             x = mInterpolator->getInterpolation(timePassed * mDurationReciprocal);
