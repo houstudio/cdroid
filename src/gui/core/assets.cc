@@ -409,11 +409,12 @@ int Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
 }
 
 
-Drawable* Assets::getDrawable(const std::string&fullresid) {
+Drawable* Assets::getDrawable(const std::string&resid) {
     Drawable* d = nullptr;
     std::string resname,package;
-    ZIPArchive* pak = getResource(fullresid,&resname,&package);
-    if(fullresid.empty()||(fullresid.compare("null")==0)) {
+    std::string fullresid = parseResource(resid,&resname,&package);
+    ZIPArchive* pak = getResource(fullresid,&resname,nullptr);
+    if(resid.empty()||(resid.compare("null")==0)) {
         return d;
     } else {
         auto it = mDrawables.find(fullresid);
@@ -428,7 +429,7 @@ Drawable* Assets::getDrawable(const std::string&fullresid) {
         }
     }
     //wrap png to drawable,make app develop simply
-    if(resname[0]=='#'||resname[1]=='x'|| resname[1]=='X'){
+    if((resname[0]=='#')||(resname[1]=='x')||(resname[1]=='X')){
         LOGV("color %s",fullresid.c_str());
         d = new ColorDrawable(Color::parseColor(resname));
         mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));

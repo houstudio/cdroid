@@ -26,6 +26,7 @@ private:
     int mIntrinsicHeight;
     bool mStarting;
     bool mFrameScheduled;
+    bool mMutated;
     int mCurrentFrame;
     int mNextFrame;
     int mFrameDelay;
@@ -67,6 +68,7 @@ public:
     void start()override;
     void stop()override;
     void restart(int fromFrame=0);
+    AnimatedImageDrawable*mutate()override;
     void registerAnimationCallback(Animatable2::AnimationCallback callback);
     bool unregisterAnimationCallback(Animatable2::AnimationCallback callback);
     void clearAnimationCallbacks();

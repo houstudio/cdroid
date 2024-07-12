@@ -15,6 +15,7 @@ AnimatedImageDrawable::AnimatedImageDrawable()
 AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state)
    :Drawable(){
     mStarting = false;
+    mMutated  = false;
     mRepeated = 0;
     mRepeatCount = state?state->mRepeatCount:REPEAT_UNDEFINED;
     mIntrinsicWidth = mIntrinsicHeight = 0;
@@ -25,6 +26,7 @@ AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState>
     mImageHandler = nullptr;
     mFrameSequenceState = nullptr;
     auto frmSequence = mAnimatedImageState->mFrameSequence;
+    LOGD("%p frmSequence=%p",this,frmSequence);
     if(frmSequence){
         mFrameSequenceState = frmSequence->createState();
         mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,frmSequence->getWidth(),frmSequence->getHeight());
@@ -48,12 +50,13 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
 #else
     mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,frmSequence->getWidth(),frmSequence->getHeight());
 #endif
-    LOGD("%s image %dx%dx%d",res.c_str(),frmSequence->getWidth(),frmSequence->getHeight(),frmSequence->getFrameCount());
+    LOGD("%p %s %dx%dx%d frmSequence=%p",this,res.c_str(),frmSequence->getWidth(),frmSequence->getHeight(),frmSequence->getFrameCount(),frmSequence);
     mAnimatedImageState->mFrameCount = frmSequence->getFrameCount();
 }
 
 AnimatedImageDrawable::~AnimatedImageDrawable(){
     mStarting = false;
+    LOGD("%p",this);
     if(mRunnable)
         unscheduleSelf(mRunnable);
     mRunnable = nullptr;
@@ -62,6 +65,14 @@ AnimatedImageDrawable::~AnimatedImageDrawable(){
         GFXDestroySurface(mImageHandler);
         mImageHandler = nullptr;
     }
+}
+
+AnimatedImageDrawable*AnimatedImageDrawable::mutate(){
+    if (!mMutated && Drawable::mutate() == this) {
+        mAnimatedImageState = std::make_shared<AnimatedImageState>(*mAnimatedImageState);
+        mMutated = true;
+    }
+    return this;
 }
 
 std::shared_ptr<Drawable::ConstantState>AnimatedImageDrawable::getConstantState(){
@@ -285,13 +296,19 @@ void AnimatedImageDrawable::onBoundsChange(const Rect& bounds) {
 
 Drawable*AnimatedImageDrawable::inflate(Context*ctx,const AttributeSet&atts){
     const std::string res = atts.getString("drawable");
-    AnimatedImageDrawable*d = new AnimatedImageDrawable(ctx,res);
-    const bool autoStart = atts.getBoolean("autoStart");
-    const int repeatCount =atts.getInt("repeatCount",REPEAT_UNDEFINED);
-    if(autoStart)d->start();
-    if(repeatCount!=REPEAT_UNDEFINED){
-        d->mAnimatedImageState->mRepeatCount = repeatCount;
-        d->setRepeatCount(repeatCount);
+    AnimatedImageDrawable*d = nullptr;
+    if(ctx){
+        d = dynamic_cast<AnimatedImageDrawable*>(ctx->getDrawable(res));
+        LOGD_IF(d,"%s %p",res.c_str(),d);
+    }else{
+        d=new AnimatedImageDrawable(ctx,res);
+        const bool autoStart = atts.getBoolean("autoStart");
+        const int repeatCount= atts.getInt("repeatCount",REPEAT_UNDEFINED);
+        if(autoStart)d->start();
+        if(repeatCount!=REPEAT_UNDEFINED){
+            d->mAnimatedImageState->mRepeatCount = repeatCount;
+            d->setRepeatCount(repeatCount);
+        }
     }
     return d;
 }
