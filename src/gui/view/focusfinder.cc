@@ -455,13 +455,13 @@ View* FocusFinder::findNearestTouchable(ViewGroup* root, int x, int y, int direc
     int edgeSlop =ViewConfiguration::get(root->getContext()).getScaledEdgeSlop();
 
     RECT closestBounds;
-    RECT touchableBounds = mOtherRect;
+    RECT& touchableBounds = mOtherRect;
 
     for (int i = 0; i < numTouchables; i++) {
         View* touchable = touchables.at(i);
 
         // get visible bounds of other view in same coordinate system
-        touchableBounds=touchable->getDrawingRect();
+        touchableBounds = touchable->getDrawingRect();
 
         root->offsetRectBetweenParentAndChild(touchable, touchableBounds, true, true);
 

@@ -256,8 +256,8 @@ bool WebPFrameSequence::WebPFrameSequenceState::decodeFrame(const WebPIterator& 
         return false;
     }
 
-    const int canvasWidth = mFrameSequence.getWidth();
-    const int canvasHeight = mFrameSequence.getHeight();
+    //const int canvasWidth = mFrameSequence.getWidth();
+    //const int canvasHeight = mFrameSequence.getHeight();
     const bool currFrameIsKeyFrame = mFrameSequence.isKeyFrame(currIter.frame_num - 1);
     // During the decoding of current frame, we may have set some pixels to be transparent
     // (i.e. alpha < 255). However, the value of each of these pixels should have been determined

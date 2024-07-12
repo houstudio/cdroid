@@ -272,7 +272,6 @@ MotionEvent*MotionEvent::split(int idBits){
     const int oldActionPointerIndex = (oldAction & ACTION_POINTER_INDEX_MASK)>>ACTION_POINTER_INDEX_SHIFT;
     int newActionPointerIndex = -1;
     int newPointerCount = 0;
-    int newIdBits = 0;
     for (int i = 0; i < oldPointerCount; i++) {
         pp[newPointerCount] = getPointerProperties(i);
         const int idBit = 1 << pp[newPointerCount].id;
@@ -282,7 +281,6 @@ MotionEvent*MotionEvent::split(int idBits){
             }
             map[newPointerCount] = i;
             newPointerCount += 1;
-            newIdBits |= idBit;
         }
     }
 
