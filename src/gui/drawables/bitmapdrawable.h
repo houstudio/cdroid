@@ -65,6 +65,7 @@ public:
     void setGravity(int gravity);
     void setAntiAlias(bool aa);
     bool hasAntiAlias()const;
+    void setDither(bool)override;
     int getIntrinsicWidth()const override;
     int getIntrinsicHeight()const override;
     int getOpacity()override;

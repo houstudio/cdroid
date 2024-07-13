@@ -89,6 +89,9 @@ bool Drawable::isAutoMirrored() {
     return false;
 }
 
+void Drawable::setDither(bool){
+}
+
 void Drawable::setColorFilter(ColorFilter*cf) {
     delete mColorFilter;
     mColorFilter = cf;

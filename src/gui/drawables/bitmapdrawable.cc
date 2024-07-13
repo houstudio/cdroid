@@ -129,6 +129,11 @@ int BitmapDrawable::getGravity()const{
     return mBitmapState->mGravity;
 }
 
+void BitmapDrawable::setDither(bool dither){
+    //mBitmapState.mPaint.setDither(dither);
+    invalidateSelf();
+}
+
 int BitmapDrawable::getIntrinsicWidth()const{
     return mBitmapWidth;
 }

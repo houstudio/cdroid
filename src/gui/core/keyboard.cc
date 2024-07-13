@@ -82,8 +82,6 @@ void Keyboard::Key::onReleased(bool inside) {
 int Keyboard::Key::parseCSV(const std::string& value,std::vector<int>& codes){
     Tokenizer*token;
     Tokenizer::fromContents("csv",value.c_str(),&token);
-    int ret=0;
-    int idx=0;
     do{
         std::string s=token->nextToken(",");
         token->skipDelimiters(",");
