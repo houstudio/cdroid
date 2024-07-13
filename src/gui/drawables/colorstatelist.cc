@@ -183,7 +183,7 @@ struct ColorsParserData{
 };
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **props){
-    ColorsParserData*cd = (ColorsParserData*)userData;
+    ColorsParserData*cd = static_cast<ColorsParserData*>(userData);
     AttributeSet atts(cd->ctx,cd->package);
     atts.set(props);
     if(strcmp(name,"item") == 0){

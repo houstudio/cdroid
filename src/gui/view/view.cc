@@ -1600,14 +1600,14 @@ bool View::dispatchVisibilityAggregated(bool isVisible) {
 
 void View::onVisibilityAggregated(bool isVisible) {
     // Update our internal visibility tracking so we can detect changes
-    bool oldVisible = (mPrivateFlags3 & PFLAG3_AGGREGATED_VISIBLE) != 0;
+    //bool oldVisible = (mPrivateFlags3 & PFLAG3_AGGREGATED_VISIBLE) != 0;
     mPrivateFlags3 = isVisible ? (mPrivateFlags3 | PFLAG3_AGGREGATED_VISIBLE)
             : (mPrivateFlags3 & ~PFLAG3_AGGREGATED_VISIBLE);
     if (isVisible && mAttachInfo != nullptr) {
         initialAwakenScrollBars();
     }
 
-    Drawable*dr= mBackground;
+    Drawable*dr = mBackground;
     if (dr && isVisible != dr->isVisible()) {
         dr->setVisible(isVisible, false);
     }

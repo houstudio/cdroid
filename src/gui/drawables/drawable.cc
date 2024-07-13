@@ -482,7 +482,7 @@ static void parseCorners(GradientDrawable*gd,ShapeDrawable*sd,const AttributeSet
 }
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts) {
-    ParseData* pd = (ParseData*)userData;
+    ParseData* pd = static_cast<ParseData*>(userData);
     auto it = drawableParsers.find(name);
     AttributeSet atts(pd->ctx,pd->package);
     atts.set(satts);
@@ -551,7 +551,7 @@ static Drawable*parseShapeDrawable(Context*ctx,const AttributeSet&atts,
 }
 
 static void endElement(void *userData, const XML_Char *name) {
-    ParseData*pd = (ParseData*)userData;
+    ParseData*pd = static_cast<ParseData*>(userData);
 
     auto it = drawableParsers.find(name);
     if(it == drawableParsers.end()) {
