@@ -119,6 +119,8 @@ public:
     int getLayoutDirection()const;
     bool setLayoutDirection(int);
     virtual void setDither(bool);
+    virtual void setFilterBitmap(bool filter);
+    virtual bool isFilterBitmap()const;
 
     virtual int getIntrinsicWidth() const;
     virtual int getIntrinsicHeight()const;

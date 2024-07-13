@@ -9,9 +9,9 @@ class NinePatchDrawable:public Drawable{
 private:
     class NinePatchState:public std::enable_shared_from_this<NinePatchState>,public ConstantState{
     public:
-        float mBaseAlpha;// = 1.0f;
-        bool mDither;// = DEFAULT_DITHER;
-        bool mAutoMirrored;// = false;
+        float mBaseAlpha;//= 1.0f;
+        bool mDither;//=DEFAULT_DITHER;
+        bool mAutoMirrored;//= false;
         Rect mPadding;
         Insets mOpticalInsets;
         int mTintMode;
@@ -33,6 +33,7 @@ private:
     Insets mOpticalInsets;
     Rect mPadding;
     bool mMutated;
+    bool mFilterBitmap;
     bool needsMirroring();
     void computeBitmapSize();
     std::shared_ptr<NinePatchState>mNinePatchState;
@@ -53,6 +54,8 @@ public:
     void setTintMode(int mode)override;
     void setAutoMirrored(bool mirrored)override;
     bool isAutoMirrored()override;
+    void setFilterBitmap(bool filter)override;
+    bool isFilterBitmap()const override;
     int getIntrinsicWidth() const override;
     int getIntrinsicHeight()const override;
     NinePatchDrawable*mutate()override;

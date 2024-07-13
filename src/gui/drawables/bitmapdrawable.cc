@@ -15,6 +15,7 @@ BitmapDrawable::BitmapState::BitmapState(){
     mTintMode     = DEFAULT_TINT_MODE;
     mTileModeX = mTileModeY = -1;
     mAutoMirrored = false;
+    mFilterBitmap = false;
     mSrcDensityOverride = 0;
     mTargetDensity = 160;
     mChangingConfigurations=0;
@@ -269,8 +270,18 @@ void BitmapDrawable::setAntiAlias(bool aa) {
     mBitmapState->mAntiAlias;
     invalidateSelf();
 }
+
 bool BitmapDrawable::hasAntiAlias() const{
     return mBitmapState->mAntiAlias;
+}
+
+void BitmapDrawable::setFilterBitmap(bool filter) {
+    mBitmapState->mFilterBitmap = filter;
+    invalidateSelf();
+}
+
+bool BitmapDrawable::isFilterBitmap() const{
+    return mBitmapState->mFilterBitmap;
 }
 
 void BitmapDrawable::computeBitmapSize() {
@@ -402,8 +413,9 @@ void BitmapDrawable::draw(Canvas&canvas){
         const float fx = dw / sw   , fy = dh / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
         const int angle_degrees = getRotateAngle(canvas);
-        const Cairo::SurfacePattern::Filter filterMode = (angle_degrees%90==0)&&(getOpacity()==PixelFormat::OPAQUE)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
-
+        const Cairo::SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap==false)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
+        LOGD_IF(((angle_degrees%90)||(getOpacity()!=PixelFormat::OPAQUE))&&(mBitmapState->mFilterBitmap==false),
+                "Maybe you must use setFilterBitmap(true)");
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
         if ( (mBounds.width !=mBitmapWidth)  || (mBounds.height != mBitmapHeight) ) {
@@ -443,7 +455,6 @@ Insets BitmapDrawable::getOpticalInsets() {
 
 Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
     const std::string src=atts.getString("src");
-    //bool filter = atts.getBoolean("filter",true);
     const int gravity= atts.getGravity("gravity",Gravity::CENTER);
     static std::map<const std::string,int>kvs={
 	      {"disabled",TileMode::DISABLED}, {"clamp",TileMode::CLAMP},
@@ -455,6 +466,7 @@ Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
     BitmapDrawable*d = new BitmapDrawable(ctx,src);
     LOGD("bitmap=%p",d);
     d->setGravity(gravity);
+    d->setFilterBitmap(atts.getBoolean("filter",false));
     d->setTileModeXY(tileModeX,tileModeY);
     d->setAntiAlias(atts.getBoolean("antialias",true));
     d->setDither(atts.getBoolean("dither",true));

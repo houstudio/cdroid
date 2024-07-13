@@ -92,6 +92,12 @@ bool Drawable::isAutoMirrored() {
 void Drawable::setDither(bool){
 }
 
+void Drawable::setFilterBitmap(bool filter){
+}
+
+bool Drawable::isFilterBitmap()const{
+    return false;
+}
 void Drawable::setColorFilter(ColorFilter*cf) {
     delete mColorFilter;
     mColorFilter = cf;

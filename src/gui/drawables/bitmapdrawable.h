@@ -21,6 +21,7 @@ private:
         int mTransparency;
         bool mAutoMirrored;
         bool mAntiAlias;
+        bool mFilterBitmap;
         int mChangingConfigurations;
         std::vector<int>mThemeAttrs;
         const ColorStateList* mTint;
@@ -67,6 +68,8 @@ public:
     bool hasMipMap()const;
     void setAntiAlias(bool aa);
     bool hasAntiAlias()const;
+    void setFilterBitmap(bool filter)override;
+    bool isFilterBitmap()const override;
     void setDither(bool)override;
     int getIntrinsicWidth()const override;
     int getIntrinsicHeight()const override;

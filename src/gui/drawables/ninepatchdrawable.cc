@@ -9,7 +9,8 @@ namespace cdroid{
 NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
     mNinePatchState = state;
     mAlpha = 255;
-    mMutated =false;
+    mMutated = false;
+    mFilterBitmap = false;
     mTintFilter = nullptr;
     mPadding.setEmpty();
     computeBitmapSize();
@@ -19,6 +20,7 @@ NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid){
     mNinePatchState = std::make_shared<NinePatchState>(ctx,resid);//->getImage(resid));
     mAlpha = 255;
     mMutated = false;
+    mFilterBitmap = false;
     mTintFilter = nullptr;
     computeBitmapSize();
 }
@@ -136,6 +138,14 @@ bool NinePatchDrawable::needsMirroring() {
 
 bool NinePatchDrawable::isAutoMirrored(){
     return mNinePatchState->mAutoMirrored;
+}
+
+void NinePatchDrawable::setFilterBitmap(bool filter){
+    mFilterBitmap = filter;
+}
+
+bool NinePatchDrawable::isFilterBitmap()const{
+    return mFilterBitmap;
 }
 
 int NinePatchDrawable::getIntrinsicWidth()const{
