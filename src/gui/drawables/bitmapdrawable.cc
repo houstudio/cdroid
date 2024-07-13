@@ -254,6 +254,17 @@ void BitmapDrawable::setGravity(int gravity){
     }
 }
 
+void BitmapDrawable::setMipMap(bool mipMap) {
+    if (mBitmapState->mBitmap) {
+        //mBitmapState->mBitmap.setHasMipMap(mipMap);
+        invalidateSelf();
+    }
+}
+
+bool BitmapDrawable::hasMipMap() const{
+    return mBitmapState->mBitmap!=nullptr;  //&& mBitmapStatemBitmap.hasMipMap();
+}
+
 void BitmapDrawable::setAntiAlias(bool aa) {
     mBitmapState->mAntiAlias;
     invalidateSelf();
@@ -449,6 +460,7 @@ Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
     d->setGravity(gravity);
     d->setTileModeXY(tileModeX,tileModeY);
     d->setAntiAlias(antialias);
+    d->setDither(dither);
     return d;
 }
 

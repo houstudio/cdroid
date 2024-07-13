@@ -63,6 +63,8 @@ public:
     int getAlpha()const override;
     int getGravity()const;
     void setGravity(int gravity);
+    void setMipMap(bool);
+    bool hasMipMap()const;
     void setAntiAlias(bool aa);
     bool hasAntiAlias()const;
     void setDither(bool)override;

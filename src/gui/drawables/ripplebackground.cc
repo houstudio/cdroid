@@ -61,7 +61,7 @@ bool RippleBackground::isVisible()const{
 }
 
 void RippleBackground::draw(Canvas& c,float paintAlpha){
-    const int alpha = std::min( int(paintAlpha * mOpacity + 0.5f), 255);
+    //const int alpha = std::min( int(paintAlpha * mOpacity + 0.5f), 255);
     c.arc(0,0,mTargetRadius,0,M_PI*2.f);
     c.fill();
 }

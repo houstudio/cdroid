@@ -226,7 +226,7 @@ void NinePatch::getResizeArea() {
             right = i;
             left -= 1;
             mResizeDistancesX.push_back(std::make_pair(left, right - left));
-            left = right = 0;
+            left = 0;//right = 0;
         }
     }
     int  i = 0;
@@ -239,7 +239,7 @@ void NinePatch::getResizeArea() {
             bot = j;
             top -= 1;
             mResizeDistancesY.push_back(std::make_pair(top, bot - top));
-            top =  bot = 0;
+            top = 0;// bot = 0;
         }
     }
 }
@@ -264,7 +264,7 @@ void NinePatch::updateCachedImage(int width, int height,Cairo::Context*painterIn
     double factorX= 0.f, factorY= 0.f;
     int x1 = 0 , y1 = 0; //for image parts X/Y
     int widthResize,heightResize; //width/height for image parts
-    int resizeX = 0 , resizeY = 0;
+    int resizeX = 0 , resizeY ;
     int offsetX = 0 , offsetY = 0;
     
     RefPtr<Cairo::Context> imgPainter;
