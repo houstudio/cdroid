@@ -121,8 +121,8 @@ void Looper::setForThread(Looper* looper){
 
 Looper*Looper::getForThread(){
    const int result = pthread_once(&gTLSOnce,initTLSKey);
-   LOGW_IF(result!=0,"pthread_once failed");
-   Looper*looper =(Looper*)pthread_getspecific(gTLSKey);
+   LOGW_IF(result != 0,"pthread_once failed");
+   Looper*looper = static_cast<Looper*>(pthread_getspecific(gTLSKey));
    return looper;
 }
 
@@ -484,7 +484,7 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
         request.ident = ident;
         request.events = events;
         request.seq = mNextRequestSeq++;
-        request.callback = (LooperCallback*)callback;
+        request.callback = const_cast<LooperCallback*>(callback);
         request.data = data;
         if (mNextRequestSeq == -1) mNextRequestSeq = 0; // reserve sequence number -1
 
@@ -620,7 +620,7 @@ void Looper::sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,
             i+=1;
         }
 
-        MessageEnvelope messageEnvelope(uptime,(MessageHandler*)handler, message);
+        MessageEnvelope messageEnvelope(uptime,const_cast<MessageHandler*>(handler), message);
         mMessageEnvelopes.insert(it,messageEnvelope);
 
         // Optimization: If the Looper is currently sending a message, then we can skip
@@ -650,7 +650,7 @@ void Looper::removeHandler(MessageHandler*handler){
 }
 
 void Looper::addEventHandler(const EventHandler*handler){
-    mEventHandlers.insert(mEventHandlers.begin(),(EventHandler*)handler);
+    mEventHandlers.insert(mEventHandlers.begin(),const_cast<EventHandler*>(handler));
 }
 
 void Looper::removeEventHandler(const EventHandler*handler){
