@@ -118,7 +118,7 @@ public:
 
     int getLayoutDirection()const;
     bool setLayoutDirection(int);
-    void setDither(bool);
+    virtual void setDither(bool);
 
     virtual int getIntrinsicWidth() const;
     virtual int getIntrinsicHeight()const;
