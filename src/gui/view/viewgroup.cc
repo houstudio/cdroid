@@ -3293,7 +3293,7 @@ void ViewGroup::dispatchRestoreInstanceState(SparseArray<Parcelable*>& container
 }
 
 void ViewGroup::dispatchThawSelfOnly(SparseArray<Parcelable*>& container){
-    View:;dispatchRestoreInstanceState(container);
+    View::dispatchRestoreInstanceState(container);
 }
 
 bool ViewGroup::dispatchVisibilityAggregated(bool isVisible) {
