@@ -29,7 +29,9 @@ private:
     uint32_t mFormatFlags;
     // mIsKeyFrame[i] is true if ith canvas can be constructed without decoding any prior frames.
     bool* mIsKeyFrame;
+private:
     void constructDependencyChain();
+    WebPFrameSequence(const WebPFrameSequence&)=default;
 public:
     class WebPFrameSequenceState;
 public:

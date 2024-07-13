@@ -443,10 +443,7 @@ Insets BitmapDrawable::getOpticalInsets() {
 
 Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
     const std::string src=atts.getString("src");
-    bool antialias= atts.getBoolean("antialias",true);
-    bool dither = atts.getBoolean("dither",true);
-    bool filter = atts.getBoolean("filter",true);
-    bool mipMap = atts.getBoolean("mipMap",true);
+    //bool filter = atts.getBoolean("filter",true);
     const int gravity= atts.getGravity("gravity",Gravity::CENTER);
     static std::map<const std::string,int>kvs={
 	      {"disabled",TileMode::DISABLED}, {"clamp",TileMode::CLAMP},
@@ -459,8 +456,9 @@ Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
     LOGD("bitmap=%p",d);
     d->setGravity(gravity);
     d->setTileModeXY(tileModeX,tileModeY);
-    d->setAntiAlias(antialias);
-    d->setDither(dither);
+    d->setAntiAlias(atts.getBoolean("antialias",true));
+    d->setDither(atts.getBoolean("dither",true));
+    d->setMipMap(atts.getBoolean("mipMap",true));
     return d;
 }
 

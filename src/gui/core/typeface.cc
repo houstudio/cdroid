@@ -185,7 +185,6 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
     Typeface*bestFace = Typeface::DEFAULT;
     std::string wantFamily = familyName;
     int bestMatched = 0;
-    int supportLangs  = 0;
     if(!wantFamily.empty()) {
         if(wantFamily[0]=='@')
             wantFamily = wantFamily.substr(1);
