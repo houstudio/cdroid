@@ -53,6 +53,8 @@ void NinePatch::draw(Canvas& painter, int  x, int  y,float alpha) {
     painter.set_source(mCachedImage,0,0);
     painter.rectangle(0,0,mCachedImage->get_width(),mCachedImage->get_height());
     painter.clip();
+    Cairo::RefPtr<SurfacePattern>spat = painter.get_source_for_surface();
+    if(spat)spat->set_filter(filterMode);
     painter.paint();
     painter.restore();
 }
