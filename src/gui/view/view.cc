@@ -3782,7 +3782,6 @@ std::vector<int>View::onCreateDrawableState(){
 }
 
 std::vector<int>& View::mergeDrawableStates(std::vector<int>&baseState,const std::vector<int>&additionalState) {
-    const int N = baseState.size();
     const int M = additionalState.size();
     for(int j=0;j<M;j++)
         baseState.push_back(additionalState[j]);
@@ -4465,7 +4464,7 @@ bool View::requestAccessibilityFocus(){
     }
     if ((mPrivateFlags2 & PFLAG2_ACCESSIBILITY_FOCUSED) == 0) {
         mPrivateFlags2 |= PFLAG2_ACCESSIBILITY_FOCUSED;
-        ViewGroup* viewRootImpl = getRootView();
+        //ViewGroup* viewRootImpl = getRootView();
         //if (viewRootImpl) viewRootImpl->setAccessibilityFocus(this, nullptr);
         invalidate();
         sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED);
@@ -4786,7 +4785,7 @@ void View::buildDrawingCacheImpl(bool autoScale){
     bool clear = true;
     RefPtr<ImageSurface> bitmap = autoScale ? mDrawingCache : mUnscaledDrawingCache;
 
-    if (bitmap == nullptr || bitmap->get_width() != width || bitmap->get_height() != height) {
+    if ((bitmap == nullptr) || (bitmap->get_width() != width) || (bitmap->get_height() != height)) {
         Surface::Format format = Surface::Format::RGB16_565;
         if (!opaque) {
             // Never pick ARGB_4444 because it looks awful
@@ -6013,7 +6012,6 @@ bool View::dispatchUnhandledMove(View* focused,int direction){
 }
 
 bool View::onKeyDown(int keyCode,KeyEvent& evt){
-    int mc=InputMethodManager::getInstance().getCharacter(keyCode,evt.getMetaState());
     if (KeyEvent::isConfirmKey(keyCode)) {
         if ((mViewFlags & ENABLED_MASK) == DISABLED)return true;
 

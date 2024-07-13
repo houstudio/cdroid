@@ -741,8 +741,8 @@ void ViewGroup::removeFromArray(int index){
     if (!isViewTransitioning(mChildren[index])){
         mChildren[index]->mParent = nullptr;
     }
-    if (index>=0&&index<mChildren.size()) {
-        auto it=mChildren.erase(mChildren.begin()+index);
+    if ((index>=0)&&(index<mChildren.size())) {
+        /*auto it=*/mChildren.erase(mChildren.begin()+index);
         //delete *it;cant delete here 
     } else {
         LOGE("IndexOutOfBounds %d",index);
@@ -756,10 +756,10 @@ void ViewGroup::removeFromArray(int index){
 }
 
 void ViewGroup::removeFromArray(int start, int count){
-    int childrenCount = mChildren.size();
+    const int childrenCount = mChildren.size();
 
     start = std::max(0, start);
-    int end = std::min(childrenCount, start + count);
+    const int end = std::min(childrenCount, start + count);
 
     if (start == end)  return;
     for (int i = start; i < end; i++) {

@@ -187,8 +187,6 @@ int AdapterView::findSyncPosition(){
 
     long endTime = SystemClock::uptimeMillis() + SYNC_MAX_DURATION_MILLIS;
 
-    long rowId;
-
     // first position scanned so far
     int first = seed;
 
@@ -198,12 +196,6 @@ int AdapterView::findSyncPosition(){
     // True if we should move down on the next iteration
     bool next = false;
 
-    // True when we have looked at the first item in the data
-    bool hitFirst;
-
-    // True when we have looked at the last item in the data
-    bool hitLast;
-
     // Get the item ID locally (instead of getItemIdAtPosition), so
     // we need the adapter
     Adapter*adapter=getAdapter();
@@ -212,14 +204,14 @@ int AdapterView::findSyncPosition(){
     }
 
     while (SystemClock::uptimeMillis() <= endTime) {
-        rowId = adapter->getItemId(seed);
+        long rowId = adapter->getItemId(seed);
         if (rowId == idToMatch) {
             // Found it!
             return seed;
         }
 
-        hitLast = last == count - 1;
-        hitFirst = first == 0;
+        bool hitLast = last == count - 1;
+        bool hitFirst = first == 0;
 
         if (hitLast && hitFirst) {
             // Looked at everything

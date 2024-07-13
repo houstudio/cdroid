@@ -511,7 +511,6 @@ ViewPropertyAnimator::PropertyBundle::PropertyBundle(int propertyMask,const std:
 
 bool ViewPropertyAnimator::PropertyBundle::cancel(int propertyConstant){
     if ((mPropertyMask & propertyConstant) != 0 ) {
-        const int count = mNameValuesHolder.size();
         for (auto it = mNameValuesHolder.begin();it!=mNameValuesHolder.end();it++){
             NameValuesHolder& nameValuesHolder = (*it);
             if (nameValuesHolder.mNameConstant == propertyConstant) {
