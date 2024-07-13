@@ -217,7 +217,7 @@ Rect NinePatch::getContentArea() {
 
 void NinePatch::getResizeArea() {
     int  j = 0;
-    int  left = 0, right = 0;
+    int  left = 0, right;
     for(int  i = 0; i < mImage->get_width(); i++) {
         if (IsColorBlack(mImage,i, j) && (left == 0)) {
             left = i;
@@ -226,12 +226,11 @@ void NinePatch::getResizeArea() {
             right = i;
             left -= 1;
             mResizeDistancesX.push_back(std::make_pair(left, right - left));
-            right = 0;
-            left = 0;
+            left = right = 0;
         }
     }
     int  i = 0;
-    int  top = 0, bot = 0;
+    int  top = 0, bot;
     for(int  j = 0; j < mImage->get_height(); j++) {
         if (IsColorBlack(mImage,i, j) && (top == 0)) {
             top = j;
@@ -240,8 +239,7 @@ void NinePatch::getResizeArea() {
             bot = j;
             top -= 1;
             mResizeDistancesY.push_back(std::make_pair(top, bot - top));
-            top = 0;
-            bot = 0;
+            top =  bot = 0;
         }
     }
 }

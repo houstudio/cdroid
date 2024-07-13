@@ -11,13 +11,13 @@ using namespace ime_pinyin;
 
 namespace cdroid{
 
-InputMethod::InputMethod(const std::string&layout){
-    keyboardlayout=layout;
+InputMethod::InputMethod(const std::string&layout)
+    :keyboardlayout(layout){
 }
 
 int InputMethod::load_dicts(const std::string&sys,const std::string&user){
-    sysdict=sys;
-    userdict=user;
+    sysdict = sys;
+    userdict= user;
     return 0;
 }
 

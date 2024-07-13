@@ -23,9 +23,8 @@ static std::vector<std::string> split(const std::string & path) {
 AttributeSet::AttributeSet():AttributeSet(nullptr,""){
 }
 
-AttributeSet::AttributeSet(Context*ctx,const std::string&package){
-    mContext = ctx;
-    mPackage = package;
+AttributeSet::AttributeSet(Context*ctx,const std::string&package)
+    :mContext(ctx),mPackage(package){
 }
 
 void AttributeSet::setContext(Context*ctx,const std::string&package){

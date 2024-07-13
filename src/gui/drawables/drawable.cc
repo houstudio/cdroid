@@ -313,10 +313,7 @@ public:
     Context* ctx;
     std::string package;
     std::string resourceFile;
-    ParseData() {
-        drawable = nullptr;
-        parser = nullptr;
-        ctx = nullptr;
+    ParseData():drawable(nullptr),parser(nullptr),ctx(nullptr){
     }
     void push(const std::string&name,AttributeSet&atts) {
         std::shared_ptr<ParseItem> item = std::make_shared<ParseItem>();
@@ -544,7 +541,8 @@ static Drawable*parseShapeDrawable(Context*ctx,const AttributeSet&atts,
     } else {
         ShapeDrawable*sd = new ShapeDrawable();
         if( corners ) parseCorners(nullptr,sd, *corners);
-        /*if(gradient)*/parseShapeGradient(nullptr,sd,*gradient);
+        /*if(gradient)parseShapeGradient(nullptr,sd,*gradient)*/;
+        FATAL("Cant reached ");
         return sd;
     }
 }
