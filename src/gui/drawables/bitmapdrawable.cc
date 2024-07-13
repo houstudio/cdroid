@@ -414,8 +414,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
         const int angle_degrees = getRotateAngle(canvas);
         const Cairo::SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap==false)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
-        LOGD_IF(((angle_degrees%90)||(getOpacity()!=PixelFormat::OPAQUE))&&(mBitmapState->mFilterBitmap==false),
-                "Maybe you must use setFilterBitmap(true)");
+        LOGD_IF((angle_degrees%90)&&(mBitmapState->mFilterBitmap==false),"Maybe you must use setFilterBitmap(true)");
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
         if ( (mBounds.width !=mBitmapWidth)  || (mBounds.height != mBitmapHeight) ) {
