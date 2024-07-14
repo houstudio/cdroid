@@ -61,12 +61,12 @@ struct JpegStream {
     unsigned char buffer [4096];
 };
 static void init_source (j_decompress_ptr cinfo) {
-    auto src = (JpegStream*)(cinfo->src);
+    auto src = reinterpret_cast<JpegStream*>(cinfo->src);
 }
 
 static boolean fill_buffer (j_decompress_ptr cinfo) {
     // Read to buffer
-    JpegStream* src = (JpegStream*)(cinfo->src);
+    JpegStream* src = reinterpret_cast<JpegStream*>(cinfo->src);
     src->stream->read((char*)src->buffer,sizeof(src->buffer));
     src->pub.next_input_byte = src->buffer;
     src->pub.bytes_in_buffer = src->stream->gcount();// How many yo could read
@@ -75,7 +75,7 @@ static boolean fill_buffer (j_decompress_ptr cinfo) {
 }
 
 static void skip (j_decompress_ptr cinfo, long num_bytes) {
-    JpegStream*src = (JpegStream*)cinfo->src;
+    JpegStream*src = reinterpret_cast<JpegStream*>(cinfo->src);
     if (num_bytes > 0) {
         while (num_bytes > (long)src->pub.bytes_in_buffer) {
             num_bytes -= (long)src->pub.bytes_in_buffer;
@@ -332,9 +332,9 @@ struct decoder_error_mgr {
 
 static void handle_jpeg_error(j_common_ptr cinfo) {
     struct decoder_error_mgr *err = (struct decoder_error_mgr*)(cinfo->err);
+    LOGE("JPEG read/write error");
     jpeg_destroy_decompress((j_decompress_ptr)cinfo);
     longjmp(err->setjmp_buffer, 1);
-    LOGE("JPEG read/write error");
 }
 
 cairo_surface_t *cairo_image_surface_create_from_jpeg_stdstream(std::istream&is) {
