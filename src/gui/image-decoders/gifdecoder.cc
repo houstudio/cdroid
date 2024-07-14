@@ -118,7 +118,7 @@ static int gifDrawFrame(GifFileType*gif,int current_frame,size_t pxstride,uint8_
                 color = (ext && frame->RasterBits[loc] == transparentIndex) ? bg
                         : &colorMap->Colors[frame->RasterBits[loc]];
                 if (color)
-                    line[x] = ARGB(255, color->Red, color->Green, color->Blue);
+                    line[x] = ARGB(255U, color->Red, color->Green, color->Blue);
             }
             px = (px + pxstride * inc);
             n += inc;
@@ -149,7 +149,7 @@ static int gifDrawFrame(GifFileType*gif,int current_frame,size_t pxstride,uint8_
                 color = (ext && frame->RasterBits[loc] == transparentIndex) ? bg
                         : &colorMap->Colors[frame->RasterBits[loc]];
                 if (color)
-                    line[x] = ARGB(255, color->Red, color->Green, color->Blue);
+                    line[x] = ARGB(255U, color->Red, color->Green, color->Blue);
             }
             px +=pxstride;
         }

@@ -60,7 +60,6 @@ void NinePatch::draw(Canvas& painter, int  x, int  y,float alpha) {
 }
 
 void NinePatch::draw(Canvas& painter, const Rect&rect,float alpha){
-    const int angle_degrees = getRotateAngle(painter);
     int resizeWidth = 0,resizeHeight = 0;
     const int width = rect.width;
     const int height= rect.height;
@@ -71,7 +70,6 @@ void NinePatch::draw(Canvas& painter, const Rect&rect,float alpha){
         mOpacity = BitmapDrawable::computeTransparency(mImage);
     }
     mAlpha = alpha;
-    //const Cairo::SurfacePattern::Filter filterMode = (angle_degrees%90==0)&&(mOpacity==PixelFormat::OPAQUE)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
     for (int i = 0; i < mResizeDistancesX.size(); i++) {
         resizeWidth += mResizeDistancesX[i].second;
     }
