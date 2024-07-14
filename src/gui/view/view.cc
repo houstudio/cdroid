@@ -4770,7 +4770,7 @@ void View::buildDrawingCacheImpl(bool autoScale){
     const bool opaque = mDrawingCacheBackgroundColor != 0 || isOpaque();
     const bool use32BitCache = mAttachInfo && mAttachInfo->mUse32BitDrawingCache;
 
-    const long projectedBitmapSize = width * height * (opaque && !use32BitCache ? 2 : 4);
+    const long projectedBitmapSize = long(width * height) * (opaque && !use32BitCache ? 2 : 4);
     const long drawingCacheSize =  ViewConfiguration::get(mContext).getScaledMaximumDrawingCacheSize();
     if (width <= 0 || height <= 0 || projectedBitmapSize > drawingCacheSize) {
         if (width > 0 && height > 0) {
@@ -5311,19 +5311,19 @@ void View::setImportantForAccessibility(int mode){
 
         // If this node or its descendants are no longer important, try to
         // clear accessibility focus.
-        if (mode == IMPORTANT_FOR_ACCESSIBILITY_NO || hideDescendants) {
-            View* focusHost = nullptr;//findAccessibilityFocusHost(hideDescendants);
+        /*if (mode == IMPORTANT_FOR_ACCESSIBILITY_NO || hideDescendants) {
+            View* focusHost = findAccessibilityFocusHost(hideDescendants);
             if (focusHost) {
                 focusHost->clearAccessibilityFocus();
             }
-        }
+        }*/
 
         // If we're moving between AUTO and another state, we might not need
         // to send a subtree changed notification. We'll store the computed
         // importance, since we'll need to check it later to make sure.
         const bool maySkipNotify = oldMode == IMPORTANT_FOR_ACCESSIBILITY_AUTO
                 || mode == IMPORTANT_FOR_ACCESSIBILITY_AUTO;
-        const bool oldIncludeForAccessibility = maySkipNotify ;//&& includeForAccessibility();
+        //const bool oldIncludeForAccessibility = maySkipNotify && includeForAccessibility();
         mPrivateFlags2 &= ~PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_MASK;
         mPrivateFlags2 |= (mode << PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT)
                 & PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_MASK;
@@ -5355,8 +5355,8 @@ View* View::findAccessibilityFocusHost(bool searchDescendants) {
     }
 
     if (searchDescendants) {
-        ViewGroup* viewRoot = getRootView();//getViewRootImpl();
-        /*if (viewRoot != nullptr) {
+        /*ViewGroup* viewRoot = getRootView();//getViewRootImpl();
+        if (viewRoot != nullptr) {
             View* focusHost = viewRoot->getAccessibilityFocusedHost();
             if (focusHost && ViewGroup::isViewDescendantOf(focusHost, this)) {
                 return focusHost;
@@ -5786,7 +5786,7 @@ bool View::showTooltip(int x, int y, bool fromLongClick){
     hideTooltip();
     mTooltipInfo->mTooltipFromLongClick = fromLongClick;
     //mTooltipInfo->mTooltipPopup = new TooltipPopup(getContext());
-    const bool fromTouch = (mPrivateFlags3 & PFLAG3_FINGER_DOWN) == PFLAG3_FINGER_DOWN;
+    //const bool fromTouch = (mPrivateFlags3 & PFLAG3_FINGER_DOWN) == PFLAG3_FINGER_DOWN;
     //mTooltipInfo->mTooltipPopup->show(this, x, y, fromTouch, mTooltipInfo.mTooltipText);
     mAttachInfo->mTooltipHost = this;
     // The available accessibility actions have changed

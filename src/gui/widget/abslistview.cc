@@ -1620,7 +1620,7 @@ void AbsListView::draw(Canvas& canvas) {
             canvas.restore();
         }
         if (!mEdgeGlowBottom->isFinished()) {
-            const int edgeX = - width + translateX;
+            //const int edgeX = - width + translateX;
             const int edgeY = std::max(getHeight(), mScrollY + mLastPositionDistanceGuess)
                               - (clipToPadding ? mPaddingBottom : 0);
             canvas.save();

@@ -71,7 +71,7 @@ void NinePatch::draw(Canvas& painter, const Rect&rect,float alpha){
         mOpacity = BitmapDrawable::computeTransparency(mImage);
     }
     mAlpha = alpha;
-    const Cairo::SurfacePattern::Filter filterMode = (angle_degrees%90==0)&&(mOpacity==PixelFormat::OPAQUE)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
+    //const Cairo::SurfacePattern::Filter filterMode = (angle_degrees%90==0)&&(mOpacity==PixelFormat::OPAQUE)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
     for (int i = 0; i < mResizeDistancesX.size(); i++) {
         resizeWidth += mResizeDistancesX[i].second;
     }
