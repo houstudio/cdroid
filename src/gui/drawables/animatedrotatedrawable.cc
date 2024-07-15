@@ -202,6 +202,7 @@ Drawable*AnimatedRotateDrawable::inflate(Context*ctx,const AttributeSet&atts){
     ad->setFramesDuration(atts.getInt("frameDuration"));
     Drawable*child = createWrappedDrawable(ctx,atts);
     ad->setDrawable(child);
+    ad->setFilterBitmap(true);
     return ad;
 }
 }
