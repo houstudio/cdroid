@@ -16,6 +16,8 @@ BitmapDrawable::BitmapState::BitmapState(){
     mTileModeX = mTileModeY = -1;
     mAutoMirrored = false;
     mFilterBitmap = false;
+    mMipMap = false;
+    mDither = false;
     mSrcDensityOverride = 0;
     mTargetDensity = 160;
     mChangingConfigurations=0;
@@ -49,6 +51,7 @@ BitmapDrawable::BitmapState::BitmapState(const BitmapState&bitmapState){
 
 BitmapDrawable::BitmapState::~BitmapState(){
     mBitmap = nullptr;
+    LOGV("%p %s",this,mResource.c_str());
     //delete mTint;//tint cant be destroied
 }
 
@@ -131,7 +134,7 @@ int BitmapDrawable::getGravity()const{
 }
 
 void BitmapDrawable::setDither(bool dither){
-    //mBitmapState.mPaint.setDither(dither);
+    mBitmapState->mDither = dither;
     invalidateSelf();
 }
 
@@ -256,10 +259,8 @@ void BitmapDrawable::setGravity(int gravity){
 }
 
 void BitmapDrawable::setMipMap(bool mipMap) {
-    if (mBitmapState->mBitmap) {
-        //mBitmapState->mBitmap.setHasMipMap(mipMap);
-        invalidateSelf();
-    }
+    mBitmapState->mMipMap = mipMap;
+    invalidateSelf();
 }
 
 bool BitmapDrawable::hasMipMap() const{
@@ -295,7 +296,7 @@ void BitmapDrawable::computeBitmapSize() {
 
 void BitmapDrawable::updateDstRectAndInsetsIfDirty(){
     if (mDstRectAndInsetsDirty) {
-        if (mBitmapState->mTileModeX == TileMode::DISABLED && mBitmapState->mTileModeY == TileMode::DISABLED) {
+        if ((mBitmapState->mTileModeX == TileMode::DISABLED) && (mBitmapState->mTileModeY == TileMode::DISABLED)) {
             const int layoutDir = getLayoutDirection();
             mDstRect.set(0,0,0,0);
             Gravity::apply(mBitmapState->mGravity,mBitmapWidth,mBitmapHeight,mBounds, mDstRect, layoutDir);
@@ -305,7 +306,7 @@ void BitmapDrawable::updateDstRectAndInsetsIfDirty(){
             const int bottom= mBounds.bottom()- mDstRect.bottom();
             mOpticalInsets.set(left, top, right, bottom);
         } else {
-            mDstRect=getBounds();
+            mDstRect = getBounds();
             mOpticalInsets.set(0,0,0,0);// = Insets.NONE;
         }
     }
@@ -367,6 +368,7 @@ void BitmapDrawable::draw(Canvas&canvas){
     if(mBounds.empty())return;
 
     canvas.save();
+    canvas.set_antialias(mBitmapState->mMipMap?Cairo::ANTIALIAS_SUBPIXEL:Cairo::ANTIALIAS_DEFAULT);
     if(mTintFilter){
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
@@ -413,7 +415,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         const float fx = dw / sw   , fy = dh / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
         const int angle_degrees = getRotateAngle(canvas);
-        const Cairo::SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap==false)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
+        const Cairo::SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap||mBitmapState->mDither)?SurfacePattern::Filter::BILINEAR:SurfacePattern::Filter::NEAREST;
         LOGD_IF((angle_degrees%90)&&(mBitmapState->mFilterBitmap==false),"Maybe you must use setFilterBitmap(true)");
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
@@ -468,7 +470,7 @@ Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
     d->setFilterBitmap(atts.getBoolean("filter",false));
     d->setTileModeXY(tileModeX,tileModeY);
     d->setAntiAlias(atts.getBoolean("antialias",true));
-    d->setDither(atts.getBoolean("dither",true));
+    d->setDither(atts.getBoolean("dither",false));
     d->setMipMap(atts.getBoolean("mipMap",true));
     return d;
 }

@@ -22,6 +22,8 @@ private:
         bool mAutoMirrored;
         bool mAntiAlias;
         bool mFilterBitmap;
+        bool mDither;
+        bool mMipMap;
         int mChangingConfigurations;
         std::vector<int>mThemeAttrs;
         const ColorStateList* mTint;
