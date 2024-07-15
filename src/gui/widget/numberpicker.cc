@@ -79,8 +79,8 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mSelectedText->setFocusable(false);
     mTextAlign = mSelectedText->getGravity();
     mSelectedTextSize = mSelectedText->getTextSize();
-    mTypeface = Typeface::create(atts.getString("typeface"),Typeface::NORMAL);
-    mSelectedTypeface = Typeface::create(atts.getString("selectedTypeface"),Typeface::NORMAL);
+    mTypeface = Typeface::create(atts.getString("fontFamily"),Typeface::NORMAL);
+    mSelectedTypeface = Typeface::create(atts.getString("selectedfontFamily"),Typeface::NORMAL);
     //ViewConfiguration configuration = ViewConfiguration::get(context);
     setTextSize(atts.getDimensionPixelSize("textSize",mTextSize));
     mTextSize2 = atts.getDimensionPixelSize("textSize2",mTextSize);
