@@ -76,17 +76,9 @@ INT GFXGetDisplayCount() {
 INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
     if(dispid<0||dispid>=GFXGetDisplayCount())return E_ERROR;
     FBDEVICE*dev=devs+dispid;
-    *width=dev->var.xres;
-    *height=dev->var.yres;
-    if( (dev->var.xres==0) || (dev->var.yres==0)) {
-        *width=800;
-        *height=640;
-    } else {
-        *width -=(screenMargin.x + screenMargin.w);
-        *height-=(screenMargin.y + screenMargin.h);
-        if(*height<=0)exit(-1);
-    }
-    LOGD("screensize=%dx%d",*width,*height);
+    *width =dev->var.xres-(screenMargin.x + screenMargin.w);
+    *height=dev->var.yres-(screenMargin.y + screenMargin.h);
+    LOGV("screen[%d]size=%dx%d/%dx%d",dispid,*width,*height,dev->var.xres,dev->var.yres);
     return E_OK;
 }
 
@@ -189,14 +181,14 @@ static int setfbinfo(FBSURFACE*surf) {
 
 INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface) {
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
+    FBDEVICE*dev = &devs[dispid];
     surf->dispid=dispid;
-    surf->width=width;
-    surf->height=height;
+    surf->width= hwsurface?dev->var.xres:width;
+    surf->height=hwsurface?dev->var.yres:height;
     surf->format=format;
     surf->ishw=hwsurface;
     surf->pitch=width*4;
     size_t buffer_size=surf->height*surf->pitch;
-    FBDEVICE*dev=devs+dispid;
     if(hwsurface && devs[dispid].fix.smem_len) {
         size_t mem_len=((dev->fix.smem_start) -((dev->fix.smem_start) & ~(getpagesize() - 1)));
         buffer_size=surf->height*dev->fix.line_length;
@@ -242,12 +234,15 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
         rs.h=(int)rs.h+dy;
         dy=0;
     }
-    if(dx+rs.w>ndst->width)rs.w=ndst->width-dx;
-    if(dy+rs.h>ndst->height)rs.h=ndst->height-dy;
+    if(dx+rs.w>ndst->width - screenMargin.x - screenMargin.w)
+        rs.w = ndst->width - screenMargin.x - screenMargin.w-dx;
+    if(dy+rs.h>ndst->height- screenMargin.y- screenMargin.h)
+        rs.h = ndst->height- screenMargin.y- screenMargin.h -dy;
 
     LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
     pbs+=rs.y*nsrc->pitch+rs.x*4;
-    pbd+=dy*ndst->pitch+dx*4;
+    if(ndst->ishw==0)pbd+=dy*ndst->pitch+dx*4;
+    else pbd+=(dy+screenMargin.y)*ndst->pitch+(dx+screenMargin.x)*4;
     const int cpw=rs.w*4;
     for(y=0; y<rs.h; y++) {
         memcpy(pbd,pbs,cpw);
