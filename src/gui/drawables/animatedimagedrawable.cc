@@ -56,7 +56,8 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
 
 AnimatedImageDrawable::~AnimatedImageDrawable(){
     mStarting = false;
-    LOGD("%p",this);
+    auto frmSequence = mAnimatedImageState->mFrameSequence;
+    LOGD_IF(frmSequence,"%p/%p %dx%dx%d",this,frmSequence,frmSequence->getWidth(),frmSequence->getHeight(),frmSequence->getFrameCount());
     if(mRunnable)
         unscheduleSelf(mRunnable);
     mRunnable = nullptr;
@@ -300,8 +301,9 @@ Drawable*AnimatedImageDrawable::inflate(Context*ctx,const AttributeSet&atts){
     if(ctx){
         d = dynamic_cast<AnimatedImageDrawable*>(ctx->getDrawable(res));
         LOGD_IF(d,"%s %p",res.c_str(),d);
-    }else{
-        d=new AnimatedImageDrawable(ctx,res);
+    }
+    if(d==nullptr){
+        d = new AnimatedImageDrawable(ctx,res);
         const bool autoStart = atts.getBoolean("autoStart");
         const int repeatCount= atts.getInt("repeatCount",REPEAT_UNDEFINED);
         if(autoStart)d->start();
