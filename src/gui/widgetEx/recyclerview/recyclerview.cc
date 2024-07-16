@@ -551,18 +551,18 @@ int RecyclerView::getBaseline() {
 }
 
 void RecyclerView::addOnChildAttachStateChangeListener(OnChildAttachStateChangeListener listener) {
-    /*if (mOnChildAttachStateListeners == nullptr) {
-        mOnChildAttachStateListeners = new ArrayList<>();
-    }*/
     mOnChildAttachStateListeners.push_back(listener);
 }
 
 void RecyclerView::removeOnChildAttachStateChangeListener(OnChildAttachStateChangeListener listener) {
-    /*if (mOnChildAttachStateListeners.size() == ) {
+    if (mOnChildAttachStateListeners.size() == 0) {
         return;
-    }*/
-    LOGD("TODO");
-    //mOnChildAttachStateListeners.remove(listener);
+    }
+    for(auto it=mOnChildAttachStateListeners.begin();it!=mOnChildAttachStateListeners.end();it++){
+        if ((it->onChildViewAttachedToWindow==listener.onChildViewAttachedToWindow)
+                && (it->onChildViewDetachedFromWindow==listener.onChildViewDetachedFromWindow))
+            mOnChildAttachStateListeners.erase(it);
+    }
 }
 
 void RecyclerView::clearOnChildAttachStateChangeListeners() {

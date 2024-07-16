@@ -173,7 +173,7 @@ public:/*public classes*/
     typedef CallbackBase<void,ViewHolder&>RecyclerListener;// onViewRecycled(ViewHolder& holder);
     struct OnChildAttachStateChangeListener {
         CallbackBase<void,View&>onChildViewAttachedToWindow;
-        CallbackBase<void,View&>onChildViewDetachedFromWindow;;
+        CallbackBase<void,View&>onChildViewDetachedFromWindow;
     };
     //ItemAnimator::ItemAnimatorListener
     /*struct ItemAnimatorListener {
