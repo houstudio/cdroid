@@ -118,6 +118,7 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
     }
     devinfo->product= id.product;
     devinfo->vendor = id.vendor;
+    devinfo->version= id.version;
     ioctl(device, EVIOCGBIT(EV_KEY, sizeof(devinfo->keyBitMask)), devinfo->keyBitMask);
     ioctl(device, EVIOCGBIT(EV_ABS, sizeof(devinfo->absBitMask)), devinfo->absBitMask);
     ioctl(device, EVIOCGBIT(EV_REL, sizeof(devinfo->relBitMask)), devinfo->relBitMask);

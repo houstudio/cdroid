@@ -71,6 +71,7 @@ InputDevice::InputDevice(int fdev){
     di.name = devInfos.name;
     di.product= devInfos.product;
     di.vendor = devInfos.vendor;
+    di.version= devInfos.version;
     mDeviceInfo.initialize(fdev,0,0,di,devInfos.name,0,0);
 
     Display display =  WindowManager::getInstance().getDefaultDisplay();
