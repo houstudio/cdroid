@@ -58,8 +58,8 @@ AnimatedImageDrawable::~AnimatedImageDrawable(){
     mStarting = false;
     auto frmSequence = mAnimatedImageState->mFrameSequence;
     LOGD_IF(frmSequence,"%p/%p %dx%dx%d",this,frmSequence,frmSequence->getWidth(),frmSequence->getHeight(),frmSequence->getFrameCount());
-    if(mRunnable)
-        unscheduleSelf(mRunnable);
+    Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,nullptr,this);
+    if(mRunnable) unscheduleSelf(mRunnable);
     mRunnable = nullptr;
     delete mFrameSequenceState;
     if(mImageHandler){
@@ -271,7 +271,7 @@ void AnimatedImageDrawable::postOnAnimationStart(){
             if(callback.onAnimationStart)callback.onAnimationStart(*this);
         }
     });
-    //todo post callback
+    Choreographer::getInstance().postCallback(Choreographer::CALLBACK_ANIMATION,r,this);
 }
 
 void AnimatedImageDrawable::postOnAnimationEnd(){
@@ -283,6 +283,7 @@ void AnimatedImageDrawable::postOnAnimationEnd(){
             if(callback.onAnimationEnd)callback.onAnimationEnd(*this);
         }
     });
+    Choreographer::getInstance().postCallback(Choreographer::CALLBACK_ANIMATION,r,this);
 }
 
 void AnimatedImageDrawable::clearAnimationCallbacks(){
