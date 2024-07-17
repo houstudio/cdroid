@@ -12,7 +12,7 @@
 #cmakedefine ENABLE_PLPLOT    1
 #cmakedefine ENABLE_BARCODE   1
 #cmakedefine ENABLE_LITEHTML  1
-
+#cmakedefine ENABLE_AUDIO 1
 
 #cmakedefine HAVE_MALLINFO 1
 #cmakedefine HAVE_MALLINFO2 1

@@ -11,6 +11,7 @@ option(ENABLE_CAIROSVG "enable svg decoder" OFF)
 option(ENABLE_MBEDTLS "enable mbedtls" ON)
 option(ENABLE_PLPLOT "Enable PLPLot" OFF)
 option(ENABLE_DTV "DTV modules support" OFF)
+option(ENABLE_AUDIO "Enabled Audio(Sound Effect" ON)
 option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." ON)
 
 option(ENABLE_PINYIN2HZ "Chinese Pinyin to HZ support" ON)
@@ -64,6 +65,9 @@ list(APPEND CDROID_DEPLIBS
     ${ZLIB_LIBRARIES}
     ${UNIBREAK_LIBRARIES}
 )
+if(RTAUDIO_FOUND AND ENABLE_AUDIO)
+   list(APPEND CDROID_DEPLIBS ${RTAUDIO_LIBRARIES})
+endif()
 if ( BROTLIDEC_FOUND )
    #list(APPEND CDROID_DEPLIBS ${BROTLIDEC_LIBRARIES})
 endif()
