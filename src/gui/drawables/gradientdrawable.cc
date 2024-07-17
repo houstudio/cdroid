@@ -1000,7 +1000,7 @@ Drawable*GradientDrawable::inflate(Context*ctx,const AttributeSet&atts) {
         {"line",GradientDrawable::Shape::LINE},          {"ring",GradientDrawable::Shape::RING}
     },GradientDrawable::Shape::RECTANGLE);
     d->setShape(shapeType);
-    d->setUseLevel(atts.getBoolean("useLevel"));
+    d->mGradientState->mUseLevelForShape=atts.getBoolean("useLevel");
     if(shapeType == GradientDrawable::Shape::RING) {
         d->setInnerRadius(atts.getDimensionPixelSize("innerRadius",-1));
         d->setInnerRadiusRatio(atts.getDimensionPixelSize("innerRadiusRatio",-1));

@@ -103,7 +103,7 @@ private:
     
     bool mAllowNonCallbacks; // immutable
 
-    int  mWakeEventFd;  // immutable
+    int  mWakeEventFd;// immutable
     std::recursive_mutex mLock;
 
     std::list<MessageEnvelope> mMessageEnvelopes; // guarded by mLock
@@ -115,7 +115,7 @@ private:
     // any use of it is racy anyway.
     bool mPolling;
 
-    int  mEpollFd; // guarded by mLock but only modified on the looper thread
+    int  mEpollFd;// guarded by mLock but only modified on the looper thread
     bool mEpollRebuildRequired; // guarded by mLock
 
     // Locked list of file descriptor monitoring requests.
