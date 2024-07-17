@@ -47,9 +47,12 @@ find_package(Brotli)
 find_package(BZip2)
 find_package(UniBreak REQUIRED)
 find_package(litehtml CONFIG)
-find_package(PLPLOT)
+#find_package(PLPLOT)
 find_package(zint CONFIG) #barcode generater
 find_package(Fribidi)
+find_package(RtAudio)
+set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES} ${RTAUDIO_INCLUDE_DIRS}")
+#message(FATAL_ERROR "RtAudio_INCLUDE_DIRS=${RtAudio_INCLUDE_DIR} RtAudio_FOUND=${RtAudio_FOUND}")
 list(APPEND CDROID_DEPLIBS
     ${CAIRO_LIBRARIES}
     ${PIXMAN_LIBRARIES}
