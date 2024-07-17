@@ -101,6 +101,7 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
     struct input_id id;
     rc1=ioctl(device, EVIOCGNAME(sizeof(devinfo->name) - 1),devinfo->name);
     rc2=ioctl(device, EVIOCGID, &id);
+    LOGD("device[%s]%d  vid:%d pid:%d ver:%d",devinfo->name,device,id.vendor,id.product,id.version);
 
     for(int i=0,j=0; i<ABS_CNT; i++) {
         struct input_absinfo info;
