@@ -72,6 +72,7 @@ InputDevice::InputDevice(int fdev){
     di.product= devInfos.product;
     di.vendor = devInfos.vendor;
     di.version= devInfos.version;
+    di.uniqueId= (char*)devInfos.uniqueId;
     mDeviceInfo.initialize(fdev,0,0,di,devInfos.name,0,0);
 
     Display display =  WindowManager::getInstance().getDefaultDisplay();
@@ -267,6 +268,10 @@ int InputDevice::getClasses()const{
 
 const std::string&InputDevice::getName()const{
     return mDeviceInfo.getIdentifier().name;
+}
+
+const InputDeviceIdentifier&InputDevice::getIdentifier()const{
+    return mDeviceInfo.getIdentifier();
 }
 
 int InputDevice::getEventCount()const{

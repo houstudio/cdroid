@@ -96,12 +96,14 @@ INT InputInit() {
 #define SET_BIT(array,bit)    ((array)[(bit)/8] |= (1<<((bit)%8)))
 
 INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
-    int rc1,rc2;
+    int rc1,rc2,version;
     memset(devinfo,0,sizeof(INPUTDEVICEINFO));
     struct input_id id;
     rc1=ioctl(device, EVIOCGNAME(sizeof(devinfo->name) - 1),devinfo->name);
     rc2=ioctl(device, EVIOCGID, &id);
-    LOGD("device[%s]%d  vid:%d pid:%d ver:%d",devinfo->name,device,id.vendor,id.product,id.version);
+    rc2=ioctl(device,EVIOCGVERSION,&version);
+    rc2=ioctl(device,EVIOCGUNIQ(sizeof(devinfo->uniqueId)),devinfo->uniqueId);
+    LOGD("device[%s]%d  vid:%d pid:%d ver:%d id:%s",devinfo->name,device,id.vendor,id.product,version,devinfo->uniqueId);
 
     for(int i=0,j=0; i<ABS_CNT; i++) {
         struct input_absinfo info;

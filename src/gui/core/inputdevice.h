@@ -357,6 +357,7 @@ public:
     void pushEvent(InputEvent*);
     InputEvent*popEvent();
     const std::string&getName()const;
+    const InputDeviceIdentifier&getIdentifier()const;
     void bindDisplay(int);
 };
 

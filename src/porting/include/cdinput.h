@@ -46,6 +46,7 @@ typedef struct{
     USHORT vendor;
     USHORT product;
     USHORT version;
+    BYTE uniqueId[64];
     BYTE keyBitMask[128];
     BYTE absBitMask[8];
     BYTE relBitMask[4];
