@@ -16,6 +16,8 @@ aux_source_directory(animation SRCS_ANIMATION)
 aux_source_directory(private SRCS_PRIVATE)
 aux_source_directory(utils SRCS_UTILS)
 aux_source_directory(transition SRCS_TRANSITION)
+aux_source_directory(gesture SRCS_GESTURE)
+aux_source_directory(navigation SRCS_NAVIGATION)
 add_subdirectory(image-decoders)
 aux_source_directory(image-decoders SRCS_IMAGEDECODERS)
 include_directories(
@@ -35,14 +37,16 @@ include_directories(
     ${CDROID_DEPINCLUDES}
     ${LIBUNIBREAK_INCLUDE_DIRS}
 )
-get_git_version(CDROID_VERSION CDROID_VERSION_MAJOR CDROID_VERSION_MINOR
-    CDROID_VERSION_PATCH CDROID_BUILD_NUMBER CDROID_COMMITID)
+GetGitVersion(CDROID)
 message("VERSION=${CDROID_VERSION} ${CDROID_VERSION_MAJOR}.${CDROID_VERSION_MINOR}.${CDROID_VERSION_PATCH}
 CDROID_BUILD_NUMBER=${CDROID_BUILD_NUMBER} COMMIT_ID=${CDROID_COMMITID}")
 
+include(CheckIncludeFile)
 include(CheckFunctionExists)
 check_function_exists(mallinfo2 HAVE_MALLINFO2)
 check_function_exists(mallinfo HAVE_MALLINFO)
+check_include_file("RtAudio.h" HAVE_RTAUDIO_H)
+message("CMAKE_REQUIRED_INCLUDES=${CMAKE_REQUIRED_INCLUDES} HAVE_RTAUDIO_H=${HAVE_RTAUDIO_H}")
 configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
 
 add_definitions(--include gui_features.h)
@@ -55,12 +59,18 @@ set(SOURCES_GUI
     ${SRCS_VIEWS}
     ${SRCS_CAIROMM} ${SRCS_WIDGET}
     ${SRCS_WIDGETEX} ${SRCS_DRAWABLES}
-    ${SRCS_APP} ${SRCS_DIALOG}
+    ${SRCS_APP}
     ${SRCS_UTILS}
     ${SRCS_ANIMATION}
     ${SRCS_TRANSITION}
     ${SRCS_IMAGEDECODERS}
 )
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    list(APPEND SOURCES_GUI
+        ${SRCS_NAVIGATION}
+        )
+endif()
 
 add_library(cdroid SHARED ${SOURCES_GUI})
 CreatePAK(cdroid ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)

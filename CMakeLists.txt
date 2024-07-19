@@ -29,9 +29,7 @@ add_subdirectory(src/3rdparty/pinyin)
 add_subdirectory(apps)
 
 add_subdirectory(tests)
-
-get_git_version(CDROID_VERSION _ _ _ _ GIT_COMMITID)
-
+GetGitVersion(CDROID)
 string(TIMESTAMP COMPILE_TIME "%Y%m%d_%H%M%S")
 set(CPACK_PACKAGE_NAME "CDROID-${COMPILE_TIME}-${CDROID_COMMITID}")
 set(CPACK_PACKAGE_VERSION ${CDROID_VERSION})
