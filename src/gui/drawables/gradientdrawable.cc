@@ -853,15 +853,16 @@ static void drawRoundedRect(Canvas& cr,const RectF&rect,
 	const double y = rect.top;
 	const double width = rect.width;
 	const double height= rect.height;
-    double maxTopRadius = std::min(width / 2, topLeftRadius + topRightRadius);
-    double maxBottomRadius = std::min(width / 2, bottomLeftRadius + bottomRightRadius);
-    double maxLeftRadius = std::min(height / 2, topLeftRadius + bottomLeftRadius);
-    double maxRightRadius = std::min(height / 2, topRightRadius + bottomRightRadius);
+    const double maxRadius = std::min(width,height);
+    const double maxTopRadius = std::min(maxRadius, topLeftRadius + topRightRadius);
+    const double maxBottomRadius = std::min(maxRadius, bottomLeftRadius + bottomRightRadius);
+    const double maxLeftRadius = std::min(maxRadius, topLeftRadius + bottomLeftRadius);
+    const double maxRightRadius = std::min(maxRadius, topRightRadius + bottomRightRadius);
 
-    double topLeftRadiusClipped = std::min(topLeftRadius, std::min(maxTopRadius, maxLeftRadius));
-    double topRightRadiusClipped = std::min(topRightRadius, std::min(maxTopRadius, maxRightRadius));
-    double bottomLeftRadiusClipped = std::min(bottomLeftRadius, std::min(maxBottomRadius, maxLeftRadius));
-    double bottomRightRadiusClipped = std::min(bottomRightRadius, std::min(maxBottomRadius, maxRightRadius));
+    const double topLeftRadiusClipped = std::min(topLeftRadius, std::min(maxTopRadius, maxLeftRadius));
+    const double topRightRadiusClipped = std::min(topRightRadius, std::min(maxTopRadius, maxRightRadius));
+    const double bottomLeftRadiusClipped = std::min(bottomLeftRadius, std::min(maxBottomRadius, maxLeftRadius));
+    const double bottomRightRadiusClipped = std::min(bottomRightRadius, std::min(maxBottomRadius, maxRightRadius));
 
     cr.move_to(x + topLeftRadiusClipped, y);
     cr.line_to(x + width - topRightRadiusClipped, y);
