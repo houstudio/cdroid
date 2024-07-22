@@ -1,3 +1,6 @@
+#ifndef __NAVI_INFLATOR_H__
+#define __NAVI_INFLATOR_H__
+
 #include <navigation/navigatorprovider.h>
 //frameworks/support/navigation/runtime/src/main/java/androidx/navigation/NavInflater.java
 namespace cdroid{
@@ -19,17 +22,15 @@ class NavInflater {
      * if no navigation resource is otherwise supplied during host configuration.</p>
      */
 private:
+    class NaviParser;
+    friend NaviParser;
     Context* mContext;
     NavigatorProvider* mNavigatorProvider;
 private:
-    NavDestination* inflate(@NonNull Resources res, @NonNull XmlResourceParser parser,
-            const AttributeSet& attrs);
-    void inflateArgument(@NonNull Resources res, @NonNull NavDestination dest,
-            const AttributeSet& attrs);
-    void inflateDeepLink(@NonNull Resources res, @NonNull NavDestination dest,
-            const AttributeSet& attrs);
-    void inflateAction(@NonNull Resources res, @NonNull NavDestination dest,
-            const AttributeSet& attrs);
+    NavDestination* inflate(const std::string&name, const AttributeSet& attrs);
+    void inflateArgument(NavDestination& dest, const AttributeSet& attrs);
+    void inflateDeepLink(NavDestination& dest, const AttributeSet& attrs);
+    void inflateAction(NavDestination& dest,  const AttributeSet& attrs);
 public:
     NavInflater(Context* context,NavigatorProvider* navigatorProvider);
 

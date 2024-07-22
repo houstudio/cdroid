@@ -3,27 +3,21 @@
 namespace cdroid{
 
 Navigator*SimpleNavigatorProvider::getNavigator(const std::string& name) {
-    if (!validateName(name)) {
-        throw ("navigator name cannot be an empty string");
-    }
-
+    LOGE_IF(!validateName(name),"navigator name cannot be an empty string");
     Navigator* /*<? extends NavDestination>*/navigator = mNavigators.find(name)->second;
-    if (navigator == nullptr) {
-        /*throw new IllegalStateException("Could not find Navigator with name \"" + name
-                + "\". You must call NavController.addNavigator() for each navigation type.");*/
-    }
+    FATAL_IF(navigator == nullptr,"Could not find Navigator with name "
+        "You must call NavController.addNavigator() for each navigation type.",name.c_str());
     return  navigator;
 }
 
 Navigator*SimpleNavigatorProvider::addNavigator(Navigator*navigator) {
     std::string name = "";//getNavigator("");//getNameForNavigator(navigator->getClass());
+    FATAL("do not call this function");
     return addNavigator(name, navigator);
 }
 
 Navigator*SimpleNavigatorProvider::addNavigator(const std::string& name,Navigator*navigator) {
-    if (!validateName(name)) {
-        //throw new IllegalArgumentException("navigator name cannot be an empty string");
-    }
+    FATAL_IF(!validateName(name),"navigator name cannot be an empty string");
     mNavigators.insert({name, navigator});
     return navigator;
 }

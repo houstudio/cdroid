@@ -101,6 +101,7 @@ public:
     void setLayerHeight(int idx,int h);
     int getLayerGravity(int index)const;
     void setLayerGravity(int index, int gravity);
+    void setLayerAttributes(int idx,const AttributeSet&);
     void setLayerInset(int index, int l, int t, int r, int b);
     void setLayerInsetRelative(int index, int s, int t, int e, int b);
     int getLayerInsetLeft(int index)const;
@@ -134,6 +135,7 @@ public:
     Drawable* getDrawable(int index)const;
     void setDrawable(int index, Drawable* drawable);
     bool getPadding(Rect& padding)override;
+    void setPadding(const AttributeSet&);
     void setPadding(int left, int top, int right, int bottom);
     void setPaddingRelative(int start,int top,int end,int bottom);
     int getLeftPadding()const;

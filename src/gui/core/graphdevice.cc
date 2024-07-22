@@ -16,8 +16,6 @@
 #include <sys/resource.h>
 #include <malloc.h>
 #include <fstream>
-#include <gui_features.h>
-
 using namespace Cairo;
 
 namespace cdroid{

@@ -316,6 +316,24 @@ void LayerDrawable::setLayerInsetInternal(int index, int l, int t, int r, int b,
     LOGV("%d:(%d,%d,%d,%d,0x%x,0x%x)",index,l,t,r,b,s,e);
 }
 
+void LayerDrawable::setLayerAttributes(int idx,const AttributeSet&atts){
+    const int left = atts.getDimensionPixelOffset("left",0);
+    const int top = atts.getDimensionPixelOffset("top",0);
+    const int right= atts.getDimensionPixelOffset("right",0);
+    const int bottom= atts.getDimensionPixelOffset("bottom",0);
+    const int start= atts.getDimensionPixelOffset("start",INSET_UNDEFINED);
+    const int end  = atts.getDimensionPixelOffset("end",INSET_UNDEFINED);
+    const int id = atts.getResourceId("id",-1);
+    if((start!=INSET_UNDEFINED)||(end!=INSET_UNDEFINED))
+        setLayerInsetRelative(idx,start,top,end,bottom);
+    else
+        setLayerInset(idx,left,top,right,bottom);
+    setLayerGravity(idx,atts.getGravity("gravity",Gravity::NO_GRAVITY));
+    setLayerWidth(idx,atts.getDimensionPixelOffset("width",-1));
+    setLayerHeight(idx,atts.getDimensionPixelOffset("height",-1));
+    if(id!=-1)setId(idx,id);
+}
+
 void LayerDrawable::setLayerInset(int index, int l, int t, int r, int b){
     setLayerInsetInternal(index, l, t, r, b, INSET_UNDEFINED, INSET_UNDEFINED);
 }
@@ -545,6 +563,19 @@ bool LayerDrawable::getPadding(Rect& padding){
     if (paddingR >= 0) padding.width = paddingR;
     if (paddingB >= 0) padding.height = paddingB;
     return padding.left != 0 || padding.top != 0 || padding.width != 0 || padding.height != 0;
+}
+
+void LayerDrawable::setPadding(const AttributeSet&atts){
+    const int left = atts.getDimensionPixelOffset("paddingLeft",0);
+    const int top = atts.getDimensionPixelOffset("paddingTop",0);
+    const int right= atts.getDimensionPixelOffset("paddingRight",0);
+    const int bottom= atts.getDimensionPixelOffset("paddingBottom",0);
+    const int start= atts.getDimensionPixelOffset("paddingStart",INSET_UNDEFINED);
+    const int end  = atts.getDimensionPixelOffset("paddingEnd",INSET_UNDEFINED);
+    if((start==INSET_UNDEFINED)&&(end==INSET_UNDEFINED)) 
+        setPadding(left,top,right,bottom);
+    else
+        setPaddingRelative(start,top,end,bottom);
 }
 
 void LayerDrawable::setPadding(int left, int top, int right, int bottom){

@@ -612,14 +612,7 @@ static void endElement(void *userData, const XML_Char *name) {
         } else if(dynamic_cast<LayerDrawable*>(parent)) {
             LayerDrawable* ld = dynamic_cast<LayerDrawable*>(parent);
             const int idx = ld->addLayer(topchild);
-            ld->setLayerInset(idx,atts.getDimensionPixelOffset("left"),atts.getDimensionPixelOffset("top"),
-                              atts.getDimensionPixelOffset("right"),atts.getDimensionPixelOffset("bottom"));
-            ld->setLayerGravity(idx,atts.getGravity("gravity",Gravity::NO_GRAVITY));
-            ld->setLayerWidth(idx,atts.getDimensionPixelOffset("width",-1));
-            ld->setLayerHeight(idx,atts.getDimensionPixelOffset("height",-1));
-            const int id = atts.getResourceId("id",-1);
-            const std::string src = atts.getString("drawable");
-            if(id!=-1)ld->setId(idx,id);
+            ld->setLayerAttributes(idx,atts);
             LOGV("%p add %s %p to Layer/TransitionDrawable %p index=%d id=%d gravity=%x size=%dx%d",pd,name,topchild,
                  parent,idx,id,ld->getLayerGravity(idx),ld->getLayerWidth(idx),ld->getLayerHeight(idx));
         } else if(dynamic_cast<AnimationDrawable*>(parent)) {
