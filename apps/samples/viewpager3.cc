@@ -1,6 +1,6 @@
 #include <cdroid.h>
 #include <dirent.h>
-#include <widget/pagetransformers.h>
+#include <pagetransformers.h>
 #include <cdlog.h>
 using namespace Cairo;
 class MyPageAdapter:public PagerAdapter{

@@ -6,6 +6,7 @@ find_package(PLPLOT)
 find_package(CDROID)
 find_package(Freetype)
 include_directories(
+   ./
    ${CDROID_INCLUDE_DIRS}
    ${CAIRO_INCLUDE_DIRS}
    ${FONTCONFIG_INCLUDE_DIRS}

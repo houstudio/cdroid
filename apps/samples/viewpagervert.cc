@@ -1,6 +1,6 @@
 #include <cdroid.h>
 #include <widget/simplemonthview.h>
-#include <widget/pagetransformers.h>
+#include <pagetransformers.h>
 static int mPageCount=5;
 class MyPageAdapter:public PagerAdapter{
 public:

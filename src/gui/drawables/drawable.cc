@@ -613,8 +613,8 @@ static void endElement(void *userData, const XML_Char *name) {
             LayerDrawable* ld = dynamic_cast<LayerDrawable*>(parent);
             const int idx = ld->addLayer(topchild);
             ld->setLayerAttributes(idx,atts);
-            LOGV("%p add %s %p to Layer/TransitionDrawable %p index=%d id=%d gravity=%x size=%dx%d",pd,name,topchild,
-                 parent,idx,id,ld->getLayerGravity(idx),ld->getLayerWidth(idx),ld->getLayerHeight(idx));
+            LOGV("%p add %s %p to Layer/TransitionDrawable %p index=%d gravity=%x size=%dx%d",pd,name,topchild,
+                 parent,idx,ld->getLayerGravity(idx),ld->getLayerWidth(idx),ld->getLayerHeight(idx));
         } else if(dynamic_cast<AnimationDrawable*>(parent)) {
             AnimationDrawable* ad = (AnimationDrawable*)parent;
             const int duration = atts.getInt("duration",0);
