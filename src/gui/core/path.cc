@@ -225,6 +225,19 @@ void Path::round_rectangle(const RectF&rect,const std::vector<float>& radii){
     mCTX->close_path();//closeSubpath();
 }
 
+void Path::compute_bounds(RectF&bounds, bool include_stroke){
+    double x1, y1, x2, y2;
+    if (include_stroke) {
+        // 计算描边路径的边界
+        mCTX->get_stroke_extents(x1, y1, x2, y2);
+    } else {
+        // 计算填充路径的边界
+        mCTX->get_fill_extents(x1, y1, x2, y2);
+    }
+    LOGD("%s extents: (%.f,%.d,%.f,%.d)",(include_stroke?"Stroke":"Fill"),x1,y1,x2,y2);
+    bounds={float(x1),float(y1),float(x2-x1),float(y2-y1)};
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 typedef PointF (*BezierCalculation)(float t, const PointF* points);
 static void addMove(std::vector<PointF>&segmentPoints,std::vector<float>&lengths,PointF&toPoint){
@@ -241,8 +254,8 @@ static void addLine(std::vector<PointF>&segmentPoints,std::vector<float>&lengths
     const float dx=fpt.x-toPoint.x;
     const float dy=fpt.y-toPoint.y;
 
-    if(dx==.0&&dy==.0f)  return ;
-    float length=lengths.back()+sqrt(dx*dx+dy*dy);
+    if( (dx==0.0f) && (dy==0.0f) )  return ;
+    float length = lengths.back()+sqrt(dx*dx+dy*dy);
     segmentPoints.push_back(toPoint);
     lengths.push_back(length);
 }

@@ -203,7 +203,7 @@ int Layout::getLineRight(int line)const{
 int Layout::getLineForOffset(int offset)const{
     int high = getLineCount(), low = -1;
     while (high - low > 1) {
-        int guess = (high + low) / 2;
+        const int guess = (high + low) / 2;
         if (getLineStart(guess) > offset)
             high = guess;
         else

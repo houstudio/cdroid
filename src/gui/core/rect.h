@@ -137,6 +137,17 @@ struct CRect{
             height = y2 - y1;
         }
     }
+    void Union(T px,T py){
+        const int new_x = std::min(left, px);  // 矩形的左上角 x 坐标
+        const int new_y = std::min(top, py);  // 矩形的左上角 y 坐标
+        const int new_w = std::max(left + width, px) - new_x;  // 矩形的宽度
+        const int new_h = std::max(top + height, py) - new_y;  // 矩形的高度
+
+        left = new_x;
+        top = new_y;
+        width = new_w;
+        height = new_h;
+    }
     void Union(T x,T y,T w,T h){
         Union(Make(x,y,w,h));
     }

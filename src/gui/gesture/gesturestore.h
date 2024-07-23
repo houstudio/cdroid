@@ -1,5 +1,8 @@
 #ifndef __GESTURE_STORE_H__
 #define __GESTURE_STORE_H__
+#include <map>
+#include <vector>
+#include <gesture/prediction.h>
 namespace cdroid{
 /**
  * GestureLibrary maintains gesture examples and makes predictions on a new
@@ -26,6 +29,8 @@ namespace cdroid{
 //                4 bytes     float       Y coordinate of the point
 //                8 bytes     long        Time stamp
 //
+class Learner;
+class Gesture;
 class GestureStore {
 private:
     static constexpr short FILE_FORMAT_VERSION = 1;
@@ -34,10 +39,10 @@ private:
     int mOrientationStyle = ORIENTATION_SENSITIVE;
     std::map<std::string, std::vector<Gesture*>> mNamedGestures;
 
-    Learner mClassifier;
+    Learner* mClassifier;
     bool mChanged = false;
 private:
-    void readFormatV1(DataInputStream in);//throws IOException
+    void readFormatV1(std::istream& in);//throws IOException
 public:
     static constexpr int SEQUENCE_INVARIANT = 1;
     // when SEQUENCE_SENSITIVE is used, only single stroke gestures are currently allowed
@@ -78,7 +83,7 @@ public:
      *
      * @return a set of strings
      */
-    Set<std::string> getGestureEntries();
+    std::vector<std::string> getGestureEntries();
 
     /**
      * Recognize a gesture
@@ -86,7 +91,7 @@ public:
      * @param gesture the query
      * @return a list of predictions of possible entries for a given gesture
      */
-    ArrayList<Prediction> recognize(Gesture* gesture);
+    std::vector<Prediction> recognize(Gesture* gesture);
     /**
      * Add a gesture for the entry
      *
@@ -123,14 +128,15 @@ public:
     /**
      * Save the gesture library
      */
-    void save(OutputStream stream);// throws IOException
-    void save(OutputStream stream, bool closeStream);// throws IOException
+    void save(std::ostream& stream);// throws IOException
+    void save(std::ostream& stream, bool closeStream);// throws IOException
     /**
      * Load the gesture library
      */
-    void load(InputStream stream);//throws IOException
-    void load(InputStream stream, bool closeStream);//throws IOException
-    Learner getLearner();
-}
+    void load(std::istream& stream);//throws IOException
+    void load(std::istream& stream, bool closeStream);//throws IOException
+    Learner& getLearner();
+};
+
 }/*endof namespace*/
 #endif/*__GESTURE_STORE_H__*/

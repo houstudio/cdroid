@@ -20,11 +20,6 @@ private:
     // Consistency verifier flags.
     int mFlags;
 
-    // Tag for logging which a client can set to help distinguish the output
-    // from different verifiers since several can be active at the same time.
-    // If not provided defaults to the simple class name.
-    std::string mLogTag;
-
     // The most recently checked event and the nesting level at which it was checked.
     // This is only set when the verifier is called from a nesting level greater than 0
     // so that the verifier can detect when it has been asked to verify the same event twice.

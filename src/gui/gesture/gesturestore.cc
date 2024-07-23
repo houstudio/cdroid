@@ -1,3 +1,9 @@
+#include <core/systemclock.h>
+#include <gesture/learner.h>
+#include <gesture/gesture.h>
+#include <gesture/instance.h>
+#include <gesture/instancelearner.h>
+#include <gesture/gesturestore.h>
 /**
  * GestureLibrary maintains gesture examples and makes predictions on a new
  * gesture
@@ -62,8 +68,10 @@ int GestureStore::getSequenceType() {
  *
  * @return a set of strings
  */
-Set<std::string> GestureStore::getGestureEntries() {
-    return mNamedGestures.keySet();
+std::vector<std::string> GestureStore::getGestureEntries() {
+    std::vector<std::string>keys;
+    for(auto g:mNamedGestures)keys.push_back(g.first);
+    return keys;//mNamedGestures;
 }
 
 /**
@@ -73,9 +81,8 @@ Set<std::string> GestureStore::getGestureEntries() {
  * @return a list of predictions of possible entries for a given gesture
  */
 std::vector<Prediction> GestureStore::recognize(Gesture* gesture) {
-    Instance instance = Instance.createInstance(mSequenceType,
-            mOrientationStyle, gesture, null);
-    return mClassifier.classify(mSequenceType, mOrientationStyle, instance.vector);
+    Instance* instance = Instance::createInstance(mSequenceType,  mOrientationStyle, *gesture, nullptr);
+    return mClassifier->classify(mSequenceType, mOrientationStyle, instance->vector);
 }
 
 /**
@@ -85,17 +92,16 @@ std::vector<Prediction> GestureStore::recognize(Gesture* gesture) {
  * @param gesture
  */
 void GestureStore::addGesture(const std::string& entryName, Gesture* gesture) {
-    if (entryName == null || entryName.length() == 0) {
+    if (entryName.empty()) {
         return;
     }
-    std::vector<Gesture*> gestures = mNamedGestures.get(entryName);
-    if (gestures == null) {
-        gestures = new ArrayList<Gesture>();
-        mNamedGestures.put(entryName, gestures);
+    auto it = mNamedGestures.find(entryName);
+    if (it==mNamedGestures.end()){
+        std::vector<Gesture*>gestures;
+        it = mNamedGestures.insert({entryName, gestures}).first;
     }
-    gestures.add(gesture);
-    mClassifier.addInstance(
-            Instance.createInstance(mSequenceType, mOrientationStyle, gesture, entryName));
+    it->second.push_back(gesture);
+    mClassifier->addInstance(Instance::createInstance(mSequenceType, mOrientationStyle, *gesture, entryName));
     mChanged = true;
 }
 
@@ -107,19 +113,21 @@ void GestureStore::addGesture(const std::string& entryName, Gesture* gesture) {
  * @param gesture
  */
 void GestureStore::removeGesture(const std::string& entryName, Gesture* gesture) {
-    ArrayList<Gesture> gestures = mNamedGestures.get(entryName);
-    if (gestures == null) {
+    auto it = mNamedGestures.find(entryName);
+    if (it==mNamedGestures.end()){
         return;
     }
-
-    gestures.remove(gesture);
+    std::vector<Gesture*>& gestures = it->second;
+    auto itg = std::find(gestures.begin(),gestures.end(),gesture);
+    if(itg!=gestures.end())
+        gestures.erase(itg);//remove(gesture);
 
     // if there are no more samples, remove the entry automatically
-    if (gestures.isEmpty()) {
-        mNamedGestures.remove(entryName);
+    if (gestures.empty()) {
+        mNamedGestures.erase(it);//remove(entryName);
     }
 
-    mClassifier.removeInstance(gesture.getID());
+    mClassifier->removeInstance(gesture->getID());
 
     mChanged = true;
 }
@@ -130,8 +138,10 @@ void GestureStore::removeGesture(const std::string& entryName, Gesture* gesture)
  * @param entryName the entry name
  */
 void GestureStore::removeEntry(const std::string& entryName) {
-    mNamedGestures.remove(entryName);
-    mClassifier.removeInstances(entryName);
+    auto it = mNamedGestures.find(entryName);
+    if(it!=mNamedGestures.end())
+        mNamedGestures.erase(it);
+    mClassifier->removeInstances(entryName);
     mChanged = true;
 }
 
@@ -142,11 +152,11 @@ void GestureStore::removeEntry(const std::string& entryName) {
  * @return the list of gestures that is under this name
  */
 std::vector<Gesture*> GestureStore::getGestures(const std::string& entryName) {
-    ArrayList<Gesture> gestures = mNamedGestures.get(entryName);
-    if (gestures != null) {
-        return new ArrayList<Gesture>(gestures);
+    auto it = mNamedGestures.find(entryName);
+    if (it!=mNamedGestures.end()){
+        return it->second;
     } else {
-        return null;
+        return std::vector<Gesture*>();//nullptr
     }
 }
 
@@ -157,118 +167,115 @@ bool GestureStore::hasChanged() {
 /**
  * Save the gesture library
  */
-void GestureStore::save(OutputStream stream){// throws IOException {
+void GestureStore::save(std::ostream& stream){
     save(stream, false);
 }
 
-void GestureStore::save(OutputStream stream, bool closeStream){// throws IOException {
+void GestureStore::save(std::ostream& stream, bool closeStream){
+#if 0
     DataOutputStream out = null;
 
-    try {
-        long start;
-        if (PROFILE_LOADING_SAVING) {
-            start = SystemClock.elapsedRealtime();
-        }
-
-        final HashMap<String, ArrayList<Gesture>> maps = mNamedGestures;
-
-        out = new DataOutputStream((stream instanceof BufferedOutputStream) ? stream :
-                new BufferedOutputStream(stream, GestureConstants.IO_BUFFER_SIZE));
-        // Write version number
-        out.writeShort(FILE_FORMAT_VERSION);
-        // Write number of entries
-        out.writeInt(maps.size());
-
-        for (Map.Entry<String, ArrayList<Gesture>> entry : maps.entrySet()) {
-            final String key = entry.getKey();
-            final ArrayList<Gesture> examples = entry.getValue();
-            final int count = examples.size();
-
-            // Write entry name
-            out.writeUTF(key);
-            // Write number of examples for this entry
-            out.writeInt(count);
-
-            for (int i = 0; i < count; i++) {
-                examples.get(i).serialize(out);
-            }
-        }
-
-        out.flush();
-
-        if (PROFILE_LOADING_SAVING) {
-            long end = SystemClock.elapsedRealtime();
-            LOGD("Saving gestures library = " + (end - start) + " ms");
-        }
-
-        mChanged = false;
-    } finally {
-        if (closeStream) GestureUtils.closeStream(out);
+    long start;
+    if (PROFILE_LOADING_SAVING) {
+        start = SystemClock::elapsedRealtime();
     }
+
+    std::map<std::string, std::vector<Gesture*>>& maps = mNamedGestures;
+
+    out = new DataOutputStream((stream instanceof BufferedOutputStream) ? stream :
+            new BufferedOutputStream(stream, GestureConstants.IO_BUFFER_SIZE));
+    // Write version number
+    out.writeShort(FILE_FORMAT_VERSION);
+    // Write number of entries
+    out.writeInt(maps.size());
+
+    for (auto it = maps.begin();it!=maps.end();it++){
+        const std::string key = it->first;//entry.getKey();
+        std::vector<Gesture*> examples = it->second;//entry.getValue();
+        const int count = examples.size();
+
+        // Write entry name
+        out.writeUTF(key);
+        // Write number of examples for this entry
+        out.writeInt(count);
+
+        for (int i = 0; i < count; i++) {
+            examples.at(i).serialize(out);
+        }
+    }
+
+    out.flush();
+
+    if (PROFILE_LOADING_SAVING) {
+        long end = SystemClock::elapsedRealtime();
+        LOGD("Saving gestures library = %d ms", (end - start));
+    }
+
+    mChanged = false;
+    if (closeStream) GestureUtils::closeStream(out);
+#endif
 }
 
 /**
  * Load the gesture library
  */
-void GestureStore::load(InputStream stream) {//throws IOException {
+void GestureStore::load(std::istream& stream) {
     load(stream, false);
 }
 
-void GestureStore::load(InputStream stream, bool closeStream){// throws IOException {
+void GestureStore::load(std::istream& stream, bool closeStream){
+#if 0
     DataInputStream in = null;
-    try {
-        in = new DataInputStream((stream instanceof BufferedInputStream) ? stream :
-                new BufferedInputStream(stream, GestureConstants.IO_BUFFER_SIZE));
+    in = new DataInputStream((stream instanceof BufferedInputStream) ? stream :
+            new BufferedInputStream(stream, GestureConstants.IO_BUFFER_SIZE));
 
-        long start;
-        if (PROFILE_LOADING_SAVING) {
-            start = SystemClock.elapsedRealtime();
-        }
-
-        // Read file format version number
-        final short versionNumber = in.readShort();
-        switch (versionNumber) {
-            case 1:
-                readFormatV1(in);
-                break;
-        }
-
-        if (PROFILE_LOADING_SAVING) {
-            long end = SystemClock.elapsedRealtime();
-            Log.d(LOG_TAG, "Loading gestures library = " + (end - start) + " ms");
-        }
-    } finally {
-        if (closeStream) GestureUtils.closeStream(in);
+    long start;
+    if (PROFILE_LOADING_SAVING) {
+        start = SystemClock::elapsedRealtime();
     }
+
+    // Read file format version number
+    const short versionNumber = in.readShort();
+    switch (versionNumber) {
+        case 1:
+            readFormatV1(in);
+            break;
+    }
+
+    if (PROFILE_LOADING_SAVING) {
+        const long end = SystemClock::elapsedRealtime();
+        LOGD("Loading gestures library = %d ms",(end - start));
+    }
+    if (closeStream) GestureUtils::closeStream(in);
+#endif
 }
 
-void GestureStore::readFormatV1(DataInputStream in) {//throws IOException {
-    final Learner classifier = mClassifier;
-    final HashMap<String, ArrayList<Gesture>> namedGestures = mNamedGestures;
+void GestureStore::readFormatV1(std::istream& in) {
+    Learner* classifier = mClassifier;
+    std::map<std::string, std::vector<Gesture*>>& namedGestures = mNamedGestures;
     namedGestures.clear();
-
+#if 0
     // Number of entries in the library
-    final int entriesCount = in.readInt();
+    const int entriesCount = in.readInt();
 
     for (int i = 0; i < entriesCount; i++) {
         // Entry name
-        final String name = in.readUTF();
+        const std::string name = in.readUTF();
         // Number of gestures
-        final int gestureCount = in.readInt();
+        const int gestureCount = in.readInt();
 
-        final ArrayList<Gesture> gestures = new ArrayList<Gesture>(gestureCount);
+        std::vector<Gesture*> gestures;
         for (int j = 0; j < gestureCount; j++) {
-            final Gesture gesture = Gesture.deserialize(in);
-            gestures.add(gesture);
-            classifier.addInstance(
-                    Instance.createInstance(mSequenceType, mOrientationStyle, gesture, name));
+            Gesture* gesture = Gesture::deserialize(in);
+            gestures.push_back(gesture);
+            classifier->addInstance(Instance::createInstance(mSequenceType, mOrientationStyle, gesture, name));
         }
-
-        namedGestures.put(name, gestures);
+        namedGestures.insert({name, gestures});
     }
+#endif
 }
 
-Learner GestureStore::getLearner() {
-    return mClassifier;
+Learner& GestureStore::getLearner() {
+    return *mClassifier;
 }
 }/*endof namespace*/

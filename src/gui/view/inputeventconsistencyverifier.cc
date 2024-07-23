@@ -13,7 +13,6 @@ InputEventConsistencyVerifier::InputEventConsistencyVerifier(Object* caller, int
     mMostRecentEventIndex = 0;
     mCurrentEvent = nullptr;
     mKeyStateList = nullptr;
-    //mLogTag = (logTag != null) ? logTag : "InputEventConsistencyVerifier";
 }
 
 InputEventConsistencyVerifier::~InputEventConsistencyVerifier(){

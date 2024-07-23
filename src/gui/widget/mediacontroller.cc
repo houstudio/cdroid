@@ -43,7 +43,7 @@ void MediaController::initFloatingWindow() {
 
     setFocusable(true);
     setFocusableInTouchMode(true);
-    //setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+    //setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
     requestFocus();
 }
 

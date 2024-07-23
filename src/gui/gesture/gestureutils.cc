@@ -1,17 +1,22 @@
+#include <climits>
+#include <cfloat>
+#include <gesture/gesturestroke.h>
+#include <gesture/gestureutils.h>
+
 namespace cdroid{
 
 GestureUtils::GestureUtils() {
 }
 
-void GestureUtils::closeStream(Closeable stream) {
+/*void GestureUtils::closeStream(Closeable stream) {
     if (stream != null) {
         try {
             stream.close();
         } catch (IOException e) {
-            Log.e(LOG_TAG, "Could not close stream", e);
+            LOGE("Could not close stream");
         }
     }
-}
+}*/
 
 /**
  * Samples the gesture spatially by rendering the gesture into a 2D
@@ -24,7 +29,7 @@ void GestureUtils::closeStream(Closeable stream) {
  *         as a 1D array. The float at index i represents the grayscale
  *         value at pixel [i%bitmapSize, i/bitmapSize]
  */
-float[] GestureUtils::spatialSampling(Gesture& gesture, int bitmapSize) {
+std::vector<float> GestureUtils::spatialSampling(Gesture& gesture, int bitmapSize) {
     return spatialSampling(gesture, bitmapSize, false);
 }
 
@@ -41,14 +46,14 @@ float[] GestureUtils::spatialSampling(Gesture& gesture, int bitmapSize) {
  *         as a 1D array. The float at index i represents the grayscale
  *         value at pixel [i%bitmapSize, i/bitmapSize]
  */
-float[] GestureUtils::spatialSampling(Gesture& gesture, int bitmapSize,bool keepAspectRatio) {
-    final float targetPatchSize = bitmapSize - 1;
-    float[] sample = new float[bitmapSize * bitmapSize];
-    Arrays.fill(sample, 0);
+std::vector<float> GestureUtils::spatialSampling(Gesture& gesture, int bitmapSize,bool keepAspectRatio) {
+    const float targetPatchSize = bitmapSize - 1;
+    std::vector<float> sample(bitmapSize * bitmapSize,0);
+    //Arrays.fill(sample, 0);
 
     RectF rect = gesture.getBoundingBox();
-    final float gestureWidth = rect.width();
-    final float gestureHeight = rect.height();
+    const float gestureWidth = rect.width;
+    const float gestureHeight = rect.height;
     float sx = targetPatchSize / gestureWidth;
     float sy = targetPatchSize / gestureHeight;
 
@@ -84,16 +89,16 @@ float[] GestureUtils::spatialSampling(Gesture& gesture, int bitmapSize,bool keep
     float preDy = -rect.centerY();
     float postDx = targetPatchSize / 2;
     float postDy = targetPatchSize / 2;
-    final ArrayList<GestureStroke> strokes = gesture.getStrokes();
-    final int count = strokes.size();
+    std::vector<GestureStroke*> strokes = gesture.getStrokes();
+    const int count = strokes.size();
     int size;
     float xpos;
     float ypos;
     for (int index = 0; index < count; index++) {
-        final GestureStroke stroke = strokes.get(index);
-        float[] strokepoints = stroke.points;
-        size = strokepoints.length;
-        final float[] pts = new float[size];
+        const GestureStroke* stroke = strokes.at(index);
+        std::vector<float> strokepoints = stroke->points;
+        size = strokepoints.size();
+        std::vector<float> pts(size);// = new float[size];
         for (int i = 0; i < size; i += 2) {
             pts[i] = (strokepoints[i] + preDx) * sx + postDx;
             pts[i + 1] = (strokepoints[i + 1] + preDy) * sy + postDy;
@@ -113,7 +118,7 @@ float[] GestureUtils::spatialSampling(Gesture& gesture, int bitmapSize,bool keep
             if (segmentEndX != -1) {
                 // Evaluate horizontally
                 if (segmentEndX > segmentStartX) {
-                    xpos = (float) Math.ceil(segmentStartX);
+                    xpos = (float) std::ceil(segmentStartX);
                     float slope = (segmentEndY - segmentStartY) /
                                   (segmentEndX - segmentStartX);
                     while (xpos < segmentEndX) {
@@ -122,7 +127,7 @@ float[] GestureUtils::spatialSampling(Gesture& gesture, int bitmapSize,bool keep
                         xpos++;
                     }
                 } else if (segmentEndX < segmentStartX){
-                    xpos = (float) Math.ceil(segmentEndX);
+                    xpos = (float) std::ceil(segmentEndX);
                     float slope = (segmentEndY - segmentStartY) /
                                   (segmentEndX - segmentStartX);
                     while (xpos < segmentStartX) {
@@ -133,7 +138,7 @@ float[] GestureUtils::spatialSampling(Gesture& gesture, int bitmapSize,bool keep
                 }
                 // Evaluate vertically
                 if (segmentEndY > segmentStartY) {
-                    ypos = (float) Math.ceil(segmentStartY);
+                    ypos = (float) std::ceil(segmentStartY);
                     float invertSlope = (segmentEndX - segmentStartX) /
                                         (segmentEndY - segmentStartY);
                     while (ypos < segmentEndY) {
@@ -142,7 +147,7 @@ float[] GestureUtils::spatialSampling(Gesture& gesture, int bitmapSize,bool keep
                         ypos++;
                     }
                 } else if (segmentEndY < segmentStartY) {
-                    ypos = (float) Math.ceil(segmentEndY);
+                    ypos = (float) std::ceil(segmentEndY);
                     float invertSlope = (segmentEndX - segmentStartX) /
                                         (segmentEndY - segmentStartY);
                     while (ypos < segmentStartY) {
@@ -159,13 +164,13 @@ float[] GestureUtils::spatialSampling(Gesture& gesture, int bitmapSize,bool keep
     return sample;
 }
 
-void GestureUtils::plot(float x, float y, float[] sample, int sampleSize) {
+void GestureUtils::plot(float x, float y,std::vector<float>& sample, int sampleSize) {
     x = x < 0 ? 0 : x;
     y = y < 0 ? 0 : y;
-    int xFloor = (int) Math.floor(x);
-    int xCeiling = (int) Math.ceil(x);
-    int yFloor = (int) Math.floor(y);
-    int yCeiling = (int) Math.ceil(y);
+    int xFloor = (int) std::floor(x);
+    int xCeiling = (int) std::ceil(x);
+    int yFloor = (int) std::floor(y);
+    int yCeiling = (int) std::ceil(y);
 
     // if it's an integer
     if (x == xFloor && y == yFloor) {
@@ -174,14 +179,14 @@ void GestureUtils::plot(float x, float y, float[] sample, int sampleSize) {
             sample[index] = 1;
         }
     } else {
-        final double xFloorSq = Math.pow(xFloor - x, 2);
-        final double yFloorSq = Math.pow(yFloor - y, 2);
-        final double xCeilingSq = Math.pow(xCeiling - x, 2);
-        final double yCeilingSq = Math.pow(yCeiling - y, 2);
-        float topLeft = (float) Math.sqrt(xFloorSq + yFloorSq);
-        float topRight = (float) Math.sqrt(xCeilingSq + yFloorSq);
-        float btmLeft = (float) Math.sqrt(xFloorSq + yCeilingSq);
-        float btmRight = (float) Math.sqrt(xCeilingSq + yCeilingSq);
+        const double xFloorSq = std::pow(xFloor - x, 2);
+        const double yFloorSq = std::pow(yFloor - y, 2);
+        const double xCeilingSq = std::pow(xCeiling - x, 2);
+        const double yCeilingSq = std::pow(yCeiling - y, 2);
+        float topLeft = (float) std::sqrt(xFloorSq + yFloorSq);
+        float topRight = (float) std::sqrt(xCeilingSq + yFloorSq);
+        float btmLeft = (float) std::sqrt(xFloorSq + yCeilingSq);
+        float btmRight = (float) std::sqrt(xCeilingSq + yCeilingSq);
         float sum = topLeft + topRight + btmLeft + btmRight;
 
         float value = topLeft / sum;
@@ -218,25 +223,25 @@ void GestureUtils::plot(float x, float y, float[] sample, int sampleSize) {
  * @param numPoints the number of points
  * @return the sampled points in the form of [x1, y1, x2, y2, ..., xn, yn]
  */
-float[] GestureUtils::temporalSampling(GestureStroke& stroke, int numPoints) {
-    final float increment = stroke.length / (numPoints - 1);
-    int vectorLength = numPoints * 2;
-    float[] vector = new float[vectorLength];
+std::vector<float> GestureUtils::temporalSampling(GestureStroke& stroke, int numPoints) {
+    const float increment = stroke.length / (numPoints - 1);
+    const int vectorLength = numPoints * 2;
+    std::vector<float> vector(vectorLength);
     float distanceSoFar = 0;
-    float[] pts = stroke.points;
+    std::vector<float> pts = stroke.points;
     float lstPointX = pts[0];
     float lstPointY = pts[1];
     int index = 0;
-    float currentPointX = Float.MIN_VALUE;
-    float currentPointY = Float.MIN_VALUE;
+    float currentPointX = FLT_MIN;//Float.MIN_VALUE;
+    float currentPointY = FLT_MIN;//Float.MIN_VALUE;
     vector[index] = lstPointX;
     index++;
     vector[index] = lstPointY;
     index++;
     int i = 0;
-    int count = pts.length / 2;
+    int count = pts.size() / 2;
     while (i < count) {
-        if (currentPointX == Float.MIN_VALUE) {
+        if (currentPointX == FLT_MIN) {
             i++;
             if (i >= count) {
                 break;
@@ -246,7 +251,7 @@ float[] GestureUtils::temporalSampling(GestureStroke& stroke, int numPoints) {
         }
         float deltaX = currentPointX - lstPointX;
         float deltaY = currentPointY - lstPointY;
-        float distance = (float) Math.hypot(deltaX, deltaY);
+        float distance = (float) std::hypot(deltaX, deltaY);
         if (distanceSoFar + distance >= increment) {
             float ratio = (increment - distanceSoFar) / distance;
             float nx = lstPointX + ratio * deltaX;
@@ -261,8 +266,8 @@ float[] GestureUtils::temporalSampling(GestureStroke& stroke, int numPoints) {
         } else {
             lstPointX = currentPointX;
             lstPointY = currentPointY;
-            currentPointX = Float.MIN_VALUE;
-            currentPointY = Float.MIN_VALUE;
+            currentPointX = FLT_MIN;
+            currentPointY = FLT_MIN;
             distanceSoFar += distance;
         }
     }
@@ -280,18 +285,18 @@ float[] GestureUtils::temporalSampling(GestureStroke& stroke, int numPoints) {
  * @param points the points in the form of [x1, y1, x2, y2, ..., xn, yn]
  * @return the centroid
  */
-float[] GestureUtils::computeCentroid(float[] points) {
+std::vector<float> GestureUtils::computeCentroid(const std::vector<float>& points) {
     float centerX = 0;
     float centerY = 0;
-    int count = points.length;
+    const int count = points.size();
     for (int i = 0; i < count; i++) {
         centerX += points[i];
         i++;
         centerY += points[i];
     }
-    float[] center = new float[2];
-    center[0] = 2 * centerX / count;
-    center[1] = 2 * centerY / count;
+    std::vector<float>center(2);
+    center[0]=(2 * centerX / count);
+    center[1]=(2 * centerY / count);
 
     return center;
 }
@@ -302,13 +307,9 @@ float[] GestureUtils::computeCentroid(float[] points) {
  * @param points the points in the form of [x1, y1, x2, y2, ..., xn, yn]
  * @return the variance-covariance matrix
  */
-float[][] GestureUtils::computeCoVariance(float[] points) {
-    float[][] array = new float[2][2];
-    array[0][0] = 0;
-    array[0][1] = 0;
-    array[1][0] = 0;
-    array[1][1] = 0;
-    int count = points.length;
+std::vector<std::vector<float>>GestureUtils::computeCoVariance(const std::vector<float>& points) {
+    std::vector<std::vector<float>> array(2,std::vector<float>(2,0.f));
+    const int count = points.size();
     for (int i = 0; i < count; i++) {
         float x = points[i];
         i++;
@@ -326,28 +327,28 @@ float[][] GestureUtils::computeCoVariance(float[] points) {
     return array;
 }
 
-float GestureUtils::computeTotalLength(float[] points) {
+float GestureUtils::computeTotalLength(const std::vector<float>& points) {
     float sum = 0;
-    int count = points.length - 4;
+    const int count = points.size() - 4;
     for (int i = 0; i < count; i += 2) {
         float dx = points[i + 2] - points[i];
         float dy = points[i + 3] - points[i + 1];
-        sum += Math.hypot(dx, dy);
+        sum += std::hypot(dx, dy);
     }
     return sum;
 }
 
-float GestureUtils::computeStraightness(float[] points) {
-    float totalLen = computeTotalLength(points);
-    float dx = points[2] - points[0];
-    float dy = points[3] - points[1];
-    return (float) Math.hypot(dx, dy) / totalLen;
+float GestureUtils::computeStraightness(const std::vector<float>& points) {
+    const float totalLen = computeTotalLength(points);
+    const float dx = points[2] - points[0];
+    const float dy = points[3] - points[1];
+    return (float) std::hypot(dx, dy) / totalLen;
 }
 
-float GestureUtils::computeStraightness(float[] points, float totalLen) {
-    float dx = points[2] - points[0];
-    float dy = points[3] - points[1];
-    return (float) Math.hypot(dx, dy) / totalLen;
+float GestureUtils::computeStraightness(const std::vector<float>& points, float totalLen) {
+    const float dx = points[2] - points[0];
+    const float dy = points[3] - points[1];
+    return (float) std::hypot(dx, dy) / totalLen;
 }
 
 /**
@@ -357,9 +358,9 @@ float GestureUtils::computeStraightness(float[] points, float totalLen) {
  * @param vector2
  * @return the distance
  */
-float GestureUtils::squaredEuclideanDistance(float[] vector1, float[] vector2) {
+float GestureUtils::squaredEuclideanDistance(const std::vector<float>& vector1,const std::vector<float>& vector2) {
     float squaredDistance = 0;
-    int size = vector1.length;
+    const int size = vector1.size();
     for (int i = 0; i < size; i++) {
         float difference = vector1[i] - vector2[i];
         squaredDistance += difference * difference;
@@ -374,13 +375,13 @@ float GestureUtils::squaredEuclideanDistance(float[] vector1, float[] vector2) {
  * @param vector2
  * @return the distance between 0 and Math.PI
  */
-float GestureUtils::cosineDistance(float[] vector1, float[] vector2) {
+float GestureUtils::cosineDistance(const std::vector<float>& vector1,const std::vector<float>& vector2) {
     float sum = 0;
-    int len = vector1.length;
+    const int len = vector1.size();
     for (int i = 0; i < len; i++) {
         sum += vector1[i] * vector2[i];
     }
-    return (float) Math.acos(sum);
+    return (float) std::acos(sum);
 }
 
 /**
@@ -391,8 +392,8 @@ float GestureUtils::cosineDistance(float[] vector1, float[] vector2) {
  * @param numOrientations the maximum number of orientation allowed
  * @return the distance between the two instances (between 0 and Math.PI)
  */
-float GestureUtils::minimumCosineDistance(float[] vector1, float[] vector2, int numOrientations) {
-    final int len = vector1.length;
+float GestureUtils::minimumCosineDistance(const std::vector<float>& vector1,const std::vector<float>& vector2, int numOrientations) {
+    const int len = vector1.size();
     float a = 0;
     float b = 0;
     for (int i = 0; i < len; i += 2) {
@@ -400,17 +401,17 @@ float GestureUtils::minimumCosineDistance(float[] vector1, float[] vector2, int 
         b += vector1[i] * vector2[i + 1] - vector1[i + 1] * vector2[i];
     }
     if (a != 0) {
-        final float tan = b/a;
-        final double angle = Math.atan(tan);
-        if (numOrientations > 2 && Math.abs(angle) >= Math.PI / numOrientations) {
-            return (float) Math.acos(a);
+        const float tan = b/a;
+        const double angle = std::atan(tan);
+        if (numOrientations > 2 && std::abs(angle) >= M_PI / numOrientations) {
+            return (float) std::acos(a);
         } else {
-            final double cosine = Math.cos(angle);
-            final double sine = cosine * tan;
-            return (float) Math.acos(a * cosine + b * sine);
+            const double cosine = std::cos(angle);
+            const double sine = cosine * tan;
+            return (float) std::acos(a * cosine + b * sine);
         }
     } else {
-        return (float) Math.PI / 2;
+        return (float) M_PI / 2;
     }
 }
 
@@ -420,16 +421,16 @@ float GestureUtils::minimumCosineDistance(float[] vector1, float[] vector2, int 
  * @param originalPoints
  * @return an oriented bounding box
  */
-OrientedBoundingBox GestureUtils::computeOrientedBoundingBox(ArrayList<GesturePoint> originalPoints) {
-    final int count = originalPoints.size();
-    float[] points = new float[count * 2];
+OrientedBoundingBox* GestureUtils::computeOrientedBoundingBox(const std::vector<GesturePoint>& originalPoints) {
+    const int count = originalPoints.size();
+    std::vector<float> points(count * 2);
     for (int i = 0; i < count; i++) {
-        GesturePoint point = originalPoints.get(i);
+        GesturePoint point = originalPoints.at(i);
         int index = i * 2;
         points[index] = point.x;
         points[index + 1] = point.y;
     }
-    float[] meanVector = computeCentroid(points);
+    std::vector<float> meanVector = computeCentroid(points);
     return computeOrientedBoundingBox(points, meanVector);
 }
 
@@ -439,27 +440,27 @@ OrientedBoundingBox GestureUtils::computeOrientedBoundingBox(ArrayList<GesturePo
  * @param originalPoints
  * @return an oriented bounding box
  */
-OrientedBoundingBox GestureUtils::computeOrientedBoundingBox(float[] originalPoints) {
-    int size = originalPoints.length;
-    float[] points = new float[size];
+OrientedBoundingBox* GestureUtils::computeOrientedBoundingBox(std::vector<float>& originalPoints) {
+    const int size = originalPoints.size();
+    std::vector<float> points(size);
     for (int i = 0; i < size; i++) {
         points[i] = originalPoints[i];
     }
-    float[] meanVector = computeCentroid(points);
+    std::vector<float> meanVector = computeCentroid(points);
     return computeOrientedBoundingBox(points, meanVector);
 }
 
-OrientedBoundingBox GestureUtils::computeOrientedBoundingBox(float[] points, float[] centroid) {
+OrientedBoundingBox* GestureUtils::computeOrientedBoundingBox(std::vector<float>& points,const std::vector<float>& centroid) {
     translate(points, -centroid[0], -centroid[1]);
 
-    float[][] array = computeCoVariance(points);
-    float[] targetVector = computeOrientation(array);
+    std::vector<std::vector<float>> array = computeCoVariance(points);
+    std::vector<float> targetVector = computeOrientation(array);
 
     float angle;
     if (targetVector[0] == 0 && targetVector[1] == 0) {
-        angle = (float) -Math.PI/2;
+        angle = (float) -M_PI/2;
     } else { // -PI<alpha<PI
-        angle = (float) Math.atan2(targetVector[1], targetVector[0]);
+        angle = (float) std::atan2(targetVector[1], targetVector[0]);
         rotate(points, -angle);
     }
 
@@ -467,7 +468,7 @@ OrientedBoundingBox GestureUtils::computeOrientedBoundingBox(float[] points, flo
     float miny = FLT_MAX;//Float.MAX_VALUE;
     float maxx = FLT_MIN;//Float.MIN_VALUE;
     float maxy = FLT_MIN;//Float.MIN_VALUE;
-    int count = points.length;
+    const int count = points.size();
     for (int i = 0; i < count; i++) {
         if (points[i] < minx) {
             minx = points[i];
@@ -487,8 +488,8 @@ OrientedBoundingBox GestureUtils::computeOrientedBoundingBox(float[] points, flo
     return new OrientedBoundingBox((float) (angle * 180 / M_PI), centroid[0], centroid[1], maxx - minx, maxy - miny);
 }
 
-float[] GestureUtils::computeOrientation(float[][] covarianceMatrix) {
-    float[] targetVector = new float[2];
+std::vector<float> GestureUtils::computeOrientation(std::vector<std::vector<float>>& covarianceMatrix) {
+    std::vector<float> targetVector(2);
     if (covarianceMatrix[0][1] == 0 || covarianceMatrix[1][0] == 0) {
         targetVector[0] = 1;
         targetVector[1] = 0;
@@ -498,7 +499,7 @@ float[] GestureUtils::computeOrientation(float[][] covarianceMatrix) {
     float b = covarianceMatrix[0][0] * covarianceMatrix[1][1] - covarianceMatrix[0][1]
             * covarianceMatrix[1][0];
     float value = a / 2;
-    float rightside = (float) Math.sqrt(Math.pow(value, 2) - b);
+    float rightside = (float) std::sqrt(std::pow(value, 2) - b);
     float lambda1 = -value + rightside;
     float lambda2 = -value - rightside;
     if (lambda1 == lambda2) {
@@ -513,21 +514,21 @@ float[] GestureUtils::computeOrientation(float[][] covarianceMatrix) {
 }
 
 
-float[] GestureUtils::rotate(float[] points, float angle) {
-    float cos = (float) Math.cos(angle);
-    float sin = (float) Math.sin(angle);
-    int size = points.length;
+std::vector<float>& GestureUtils::rotate(std::vector<float>& points, float angle) {
+    const float cos = (float) std::cos(angle);
+    const float sin = (float) std::sin(angle);
+    int size = points.size();
     for (int i = 0; i < size; i += 2) {
-        float x = points[i] * cos - points[i + 1] * sin;
-        float y = points[i] * sin + points[i + 1] * cos;
+        const float x = points[i] * cos - points[i + 1] * sin;
+        const float y = points[i] * sin + points[i + 1] * cos;
         points[i] = x;
         points[i + 1] = y;
     }
     return points;
 }
 
-float[] GestureUtils::translate(float[] points, float dx, float dy) {
-    int size = points.length;
+std::vector<float>& GestureUtils::translate(std::vector<float>& points, float dx, float dy) {
+    const int size = points.size();
     for (int i = 0; i < size; i += 2) {
         points[i] += dx;
         points[i + 1] += dy;
@@ -535,8 +536,8 @@ float[] GestureUtils::translate(float[] points, float dx, float dy) {
     return points;
 }
 
-float[] GestureUtils::scale(float[] points, float sx, float sy) {
-    int size = points.length;
+std::vector<float>& GestureUtils::scale(std::vector<float>& points, float sx, float sy) {
+    const int size = points.size();
     for (int i = 0; i < size; i += 2) {
         points[i] *= sx;
         points[i + 1] *= sy;

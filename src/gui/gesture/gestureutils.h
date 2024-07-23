@@ -1,25 +1,31 @@
 #ifndef __GESTURE_UTILS_H__
 #define __GESTURE_UTILS_H__
+#include <vector>
+#include <gesture/gesturepoint.h>
+#include <gesture/gesture.h>
+#include <gesture/orientedboundingbox.h>
 namespace cdroid{
-
+class Instance;
+class IntstanceLearner;
+class GestureStroke;
 class GestureUtils {
 private:
     static constexpr float SCALING_THRESHOLD = 0.26f;
-    static constexpr float NONUNIFORM_SCALE = (float) Math.sqrt(2);
+    static constexpr float NONUNIFORM_SCALE = (float) std::sqrt(2);
 
     GestureUtils();
-    static void plot(float x, float y, float[] sample, int sampleSize);
-    static float[][] computeCoVariance(float[] points);
-    static OrientedBoundingBox computeOrientedBoundingBox(float[] points, float[] centroid);
-    static float[] computeOrientation(float[][] covarianceMatrix);
-protected:
+    static void plot(float x, float y,std::vector<float>& sample, int sampleSize);
+    static std::vector<std::vector<float>> computeCoVariance(const std::vector<float>& points);
+    static OrientedBoundingBox* computeOrientedBoundingBox(std::vector<float>& points,const std::vector<float>& centroid);
+    static std::vector<float> computeOrientation(std::vector<std::vector<float>>& covarianceMatrix);
+public:/*package shared functions*/
     /**
      * Calculates the centroid of a set of points.
      *
      * @param points the points in the form of [x1, y1, x2, y2, ..., xn, yn]
      * @return the centroid
      */
-    static float[] computeCentroid(float[] points);
+    static std::vector<float> computeCentroid(const std::vector<float>& points);
 
     /**
      * Calculates the variance-covariance matrix of a set of points.
@@ -27,9 +33,9 @@ protected:
      * @param points the points in the form of [x1, y1, x2, y2, ..., xn, yn]
      * @return the variance-covariance matrix
      */
-    static float computeTotalLength(float[] points);
-    static float computeStraightness(float[] points);
-    static float computeStraightness(float[] points, float totalLen);
+    static float computeTotalLength(const std::vector<float>& points);
+    static float computeStraightness(const std::vector<float>& points);
+    static float computeStraightness(const std::vector<float>& points, float totalLen);
     /**
      * Calculates the squared Euclidean distance between two vectors.
      *
@@ -37,7 +43,7 @@ protected:
      * @param vector2
      * @return the distance
      */
-    static float squaredEuclideanDistance(float[] vector1, float[] vector2);
+    static float squaredEuclideanDistance(const std::vector<float>& vector1,const std::vector<float>& vector2);
 
     /**
      * Calculates the cosine distance between two instances.
@@ -46,7 +52,7 @@ protected:
      * @param vector2
      * @return the distance between 0 and Math.PI
      */
-    static float cosineDistance(float[] vector1, float[] vector2);
+    static float cosineDistance(const std::vector<float>& vector1,const std::vector<float>& vector2);
 
     /**
      * Calculates the "minimum" cosine distance between two instances.
@@ -56,12 +62,12 @@ protected:
      * @param numOrientations the maximum number of orientation allowed
      * @return the distance between the two instances (between 0 and Math.PI)
      */
-    static float minimumCosineDistance(float[] vector1, float[] vector2, int numOrientations);
-    static float[] rotate(float[] points, float angle);
-    static float[] translate(float[] points, float dx, float dy);
-    static float[] scale(float[] points, float sx, float sy);
+    static float minimumCosineDistance(const std::vector<float>& vector1,const std::vector<float>& vector2, int numOrientations);
+    static std::vector<float>& rotate(std::vector<float>& points, float angle);
+    static std::vector<float>& translate(std::vector<float>& points, float dx, float dy);
+    static std::vector<float>& scale(std::vector<float>& points, float sx, float sy);
 public:
-    static void closeStream(Closeable stream);
+    //static void closeStream(Closeable stream);
     /**
      * Samples the gesture spatially by rendering the gesture into a 2D
      * grayscale bitmap. Scales the gesture to fit the size of the bitmap.
@@ -73,7 +79,7 @@ public:
      *         as a 1D array. The float at index i represents the grayscale
      *         value at pixel [i%bitmapSize, i/bitmapSize]
      */
-    static float[] spatialSampling(Gesture& gesture, int bitmapSize);
+    static std::vector<float> spatialSampling(Gesture& gesture, int bitmapSize);
 
     /**
      * Samples the gesture spatially by rendering the gesture into a 2D
@@ -88,7 +94,7 @@ public:
      *         as a 1D array. The float at index i represents the grayscale
      *         value at pixel [i%bitmapSize, i/bitmapSize]
      */
-    static float[] spatialSampling(Gesture& gesture, int bitmapSize,bool keepAspectRatio);
+    static std::vector<float> spatialSampling(Gesture& gesture, int bitmapSize,bool keepAspectRatio);
 
     /**
      * Samples a stroke temporally into a given number of evenly-distributed
@@ -98,7 +104,7 @@ public:
      * @param numPoints the number of points
      * @return the sampled points in the form of [x1, y1, x2, y2, ..., xn, yn]
      */
-    static float[] temporalSampling(GestureStroke& stroke, int numPoints);
+    static std::vector<float> temporalSampling(GestureStroke& stroke, int numPoints);
 
     /**
      * Computes an oriented, minimum bounding box of a set of points.
@@ -106,7 +112,7 @@ public:
      * @param originalPoints
      * @return an oriented bounding box
      */
-    static OrientedBoundingBox computeOrientedBoundingBox(ArrayList<GesturePoint> originalPoints);
+    static OrientedBoundingBox* computeOrientedBoundingBox(const std::vector<GesturePoint>& originalPoints);
 
     /**
      * Computes an oriented, minimum bounding box of a set of points.
@@ -114,7 +120,7 @@ public:
      * @param originalPoints
      * @return an oriented bounding box
      */
-    static OrientedBoundingBox computeOrientedBoundingBox(float[] originalPoints);
-}
+    static OrientedBoundingBox* computeOrientedBoundingBox(std::vector<float>& originalPoints);
+};
 }/*endof namespace*/
 #endif/*__GESTURE_UTILS_H__*/
