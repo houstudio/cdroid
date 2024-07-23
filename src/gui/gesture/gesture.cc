@@ -1,6 +1,8 @@
 #include <gesture/gesture.h>
 #include <gesture/gesturestroke.h>
 namespace cdroid{
+std::atomic<int>Gesture::sGestureCount(0);
+
 Gesture::Gesture() {
     mGestureID = GESTURE_ID_BASE + sGestureCount++;
 }
