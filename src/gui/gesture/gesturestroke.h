@@ -12,10 +12,8 @@ class GestureStroke {
     static constexpr float TOUCH_TOLERANCE = 3;
 public:
     RectF boundingBox;
-
     float length;
     std::vector<float> points;
-
 private:
     std::vector<long> timestamps;
     cdroid::Path mCachedPath;
@@ -45,7 +43,7 @@ public:
      *
      * @return the path
      */
-    cdroid::Path toPath(float width, float height, int numSample);
+    cdroid::Path* toPath(float width, float height, int numSample);
     void serialize(std::ostream& out);
     static GestureStroke* deserialize(std::istream& in);
 

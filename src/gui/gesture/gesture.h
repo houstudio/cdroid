@@ -52,10 +52,10 @@ public:
      * @return the bounding box of the gesture
      */
     RectF getBoundingBox()const;
-    cdroid::Path toPath();
-    cdroid::Path toPath(Path* path);
-    cdroid::Path toPath(int width, int height, int edge, int numSample);
-    cdroid::Path toPath(Path* path, int width, int height, int edge, int numSample);
+    cdroid::Path* toPath();
+    cdroid::Path* toPath(Path* path);
+    cdroid::Path* toPath(int width, int height, int edge, int numSample);
+    cdroid::Path* toPath(Path* path, int width, int height, int edge, int numSample);
     /**
      * Sets the id of the gesture.
      *

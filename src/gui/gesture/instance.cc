@@ -44,7 +44,7 @@ Instance* Instance::createInstance(int sequenceType, int orientationType, Gestur
     return instance;
 }
 
-static std::vector<float> Instance::spatialSampler(Gesture& gesture) {
+std::vector<float> Instance::spatialSampler(Gesture& gesture) {
     return GestureUtils::spatialSampling(gesture, PATCH_SAMPLE_SIZE, false);
 }
 
@@ -55,8 +55,8 @@ static float ORIENTATIONS[] = {
      (float) (-M_PI * 3 / 4), (float) -M_PI
 };
 
-static std::vector<float> Instance::temporalSampler(int orientationType, Gesture& gesture) {
-    std::vector<float> pts = GestureUtils::temporalSampling(gesture.getStrokes().at(0),
+std::vector<float> Instance::temporalSampler(int orientationType, Gesture& gesture) {
+    std::vector<float> pts = GestureUtils::temporalSampling(*gesture.getStrokes().at(0),
             SEQUENCE_SAMPLE_SIZE);
     std::vector<float> center = GestureUtils::computeCentroid(pts);
     float orientation = (float)std::atan2(pts[1] - center[1], pts[0] - center[0]);

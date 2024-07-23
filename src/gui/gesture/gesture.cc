@@ -12,7 +12,7 @@ Gesture* Gesture::clone() {
     const int count = mStrokes.size();
     for (int i = 0; i < count; i++) {
         GestureStroke* stroke = mStrokes.at(i);
-        gesture->mStrokes.push_back((GestureStroke*)stroke->clone());
+        LOGD("TODO");//gesture->mStrokes.push_back((GestureStroke*)stroke->clone());
     }
     return gesture;
 }
@@ -64,35 +64,36 @@ RectF Gesture::getBoundingBox()const {
     return mBoundingBox;
 }
 
-cdroid::Path Gesture::toPath() {
+cdroid::Path* Gesture::toPath() {
     return toPath(nullptr);
 }
 
-cdroid::Path Gesture::toPath(Path* path) {
+cdroid::Path* Gesture::toPath(Path* path) {
     if (path == nullptr) path = new Path();
 
     const std::vector<GestureStroke*> strokes = mStrokes;
     const int count = strokes.size();
 
+    LOGD("TODO");
     for (int i = 0; i < count; i++) {
-        path->addPath(strokes.at(i)->getPath());
+        //path->addPath(strokes.at(i)->getPath());
     }
 
     return path;
 }
 
-cdroid::Path Gesture::toPath(int width, int height, int edge, int numSample) {
+cdroid::Path* Gesture::toPath(int width, int height, int edge, int numSample) {
     return toPath(nullptr, width, height, edge, numSample);
 }
 
-cdroid::Path Gesture::toPath(Path* path, int width, int height, int edge, int numSample) {
+cdroid::Path* Gesture::toPath(Path* path, int width, int height, int edge, int numSample) {
     if (path == nullptr) path = new cdroid::Path();
 
     const std::vector<GestureStroke*>& strokes = mStrokes;
     const int count = strokes.size();
-
+    LOGD("TODO");
     for (int i = 0; i < count; i++) {
-        path->addPath(strokes.at(i)->toPath(width - 2 * edge, height - 2 * edge, numSample));
+        //path->addPath(strokes.at(i)->toPath(width - 2 * edge, height - 2 * edge, numSample));
     }
 
     return path;
@@ -133,8 +134,8 @@ Bitmap Gesture::toBitmap(int width, int height, int edge, int numSample, int col
     canvas.set_color(color);
 
     for (auto stroke:mStrokes) {
-        Path path = stroke->toPath(width - 2 * edge, height - 2 * edge, numSample);
-        canvas.drawPath(path);
+        Path* path = stroke->toPath(width - 2 * edge, height - 2 * edge, numSample);
+        LOGD("TODO");//canvas.drawPath(path);
     }
 
     return bitmap;
@@ -155,9 +156,9 @@ Bitmap Gesture::toBitmap(int width, int height, int inset, int color) {
 
     canvas.set_color(color);
 
-    Path path = toPath();
+    Path* path = toPath();
     RectF bounds;
-    path.compute_bounds(bounds, true);
+    path->compute_bounds(bounds, true);
 
     const float sx = (width - 2 * inset) / bounds.width;
     const float sy = (height - 2 * inset) / bounds.height;
@@ -172,7 +173,7 @@ Bitmap Gesture::toBitmap(int width, int height, int inset, int color) {
     canvas.translate(offsetX + inset, offsetY + inset);
     canvas.scale(scale, scale);
 
-    canvas.drawPath(path);
+    LOGD("TODO");//canvas.drawPath(path);
 
     return bitmap;
 }
