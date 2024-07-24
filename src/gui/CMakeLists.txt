@@ -45,7 +45,7 @@ include(CheckIncludeFile)
 include(CheckFunctionExists)
 check_function_exists(mallinfo2 HAVE_MALLINFO2)
 check_function_exists(mallinfo HAVE_MALLINFO)
-check_include_file("RtAudio.h" HAVE_RTAUDIO_H)
+check_include_file("rtaudio/RtAudio.h" HAVE_RTAUDIO_H)
 message("CMAKE_REQUIRED_INCLUDES=${CMAKE_REQUIRED_INCLUDES} HAVE_RTAUDIO_H=${HAVE_RTAUDIO_H}")
 configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
 
@@ -67,9 +67,10 @@ set(SOURCES_GUI
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    list(APPEND SOURCES_GUI
-        ${SRCS_NAVIGATION}
-        )
+    list(APPEND SOURCES_GUI   ${SRCS_NAVIGATION})
+endif()
+if(ENABLE_GESTURE)
+    list(APPEND SOURCES_GUI ${SRCS_GESTURE})
 endif()
 
 add_library(cdroid SHARED ${SOURCES_GUI})
