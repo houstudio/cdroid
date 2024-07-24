@@ -31,6 +31,7 @@ public:
     void reset();
     void begin_new_sub_path();
     void close_path();
+    void append_path(const Path&);
     void compute_bounds(RectF&, bool include_stroke);
     void approximate(std::vector<float>&,float acceptableError);
 };

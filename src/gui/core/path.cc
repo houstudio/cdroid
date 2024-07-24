@@ -192,6 +192,7 @@ void Path::round_rectangle(double x,double y,double width,double height,const st
     //const RectF rect={x,y,width,height};
     round_rectangle({float(x),float(y),float(width),float(height)},radii);
 }
+
 void Path::round_rectangle(const RectF&rect,const std::vector<float>& radii){
     constexpr double circleControlPoint=0.447715;
     move_to(rect.left+radii[0],rect.top);
@@ -223,6 +224,11 @@ void Path::round_rectangle(const RectF&rect,const std::vector<float>& radii){
            rect.left+radii[0],rect.top);
     }
     mCTX->close_path();//closeSubpath();
+}
+
+void Path::append_path(const Path&other){
+    LOGW("TODO");
+    //mCTX->append_path(other.mCTX);
 }
 
 void Path::compute_bounds(RectF&bounds, bool include_stroke){

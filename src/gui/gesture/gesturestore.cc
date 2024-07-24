@@ -334,7 +334,7 @@ namespace GestureIOHelper{
         out.write((char*)u8,4);
     }
 
-    void writeInt(std::ostream&out,uint64_t value){
+    void writeLong(std::ostream&out,uint64_t value){
         uint8_t u8[4];
         u8[0] = value>>56;
         u8[1] = (value>>48)&0xFF;
