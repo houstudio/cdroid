@@ -184,6 +184,7 @@ private:
     int mOverflingDistance;
     bool mFadingMarqueeEnabled;
     long mGlobalActionsKeyTimeout;
+    float mAmbiguousGestureMultiplier;
     float mVerticalScrollFactor;
     float mHorizontalScrollFactor;
     bool mShowMenuShortcutsWhenKeyboardPresent;
@@ -316,6 +317,7 @@ public:
      */
     int getScaledPagingTouchSlop();
 
+    static constexpr int getDoubleTapSlop(){return DOUBLE_TAP_SLOP;}
     /**
      * @return Distance in pixels between the first touch and second touch to still be
      *         considered a double tap
@@ -339,12 +341,13 @@ public:
      */
     int getScaledWindowTouchSlop();
 
+    static constexpr int getMinimumFlingVelocity() {return MINIMUM_FLING_VELOCITY;}
     /**
      * @return Minimum velocity to initiate a fling, as measured in pixels per second.
      */
     int getScaledMinimumFlingVelocity();
 
-
+    static constexpr int getMaximumFlingVelocity() { return MAXIMUM_FLING_VELOCITY;}
     /**
      * @return Maximum velocity to initiate a fling, as measured in pixels per second.
      */
@@ -436,7 +439,8 @@ public:
      *
      * @deprecated Use {@link #getScaledAmbiguousGestureMultiplier()}.
      */
-    static constexpr float getScaledAmbiguousGestureMultiplier() {return AMBIGUOUS_GESTURE_MULTIPLIER;}
+    static constexpr float getAmbiguousGestureMultiplier() {return AMBIGUOUS_GESTURE_MULTIPLIER;}
+    float getScaledAmbiguousGestureMultiplier()const;
     /**
      * @return the default duration in milliseconds for {@link ActionMode#hide(long)}.
      */

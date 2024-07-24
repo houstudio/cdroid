@@ -21,6 +21,7 @@ ViewConfiguration::ViewConfiguration(){
     mPagingTouchSlop = PAGING_TOUCH_SLOP;
     mDoubleTapSlop = DOUBLE_TAP_SLOP;
     mWindowTouchSlop = WINDOW_TOUCH_SLOP;
+    mAmbiguousGestureMultiplier = AMBIGUOUS_GESTURE_MULTIPLIER;
     //noinspection deprecation
     mMaximumDrawingCacheSize = MAXIMUM_DRAWING_CACHE_SIZE;
     mOverscrollDistance = OVERSCROLL_DISTANCE;
@@ -48,6 +49,7 @@ ViewConfiguration::ViewConfiguration(Context* context):ViewConfiguration(){
     mMaximumDrawingCacheSize = 4 * metrics.widthPixels * metrics.heightPixels;
     mOverscrollDistance = (int) (sizeAndDensity * OVERSCROLL_DISTANCE + 0.5f);
     mOverflingDistance = (int) (sizeAndDensity * OVERFLING_DISTANCE + 0.5f);
+    mAmbiguousGestureMultiplier = atts.getFloat("config_ambiguousGestureMultiplier",AMBIGUOUS_GESTURE_MULTIPLIER);
 
     if(atts.size()){
         mIsScreenRound = atts.getBoolean("config_isScreenRound",false);
@@ -304,6 +306,9 @@ long ViewConfiguration::getAccessibilityShortcutKeyTimeoutAfterConfirmation() {
     return A11Y_SHORTCUT_KEY_TIMEOUT_AFTER_CONFIRMATION;
 }
 
+float ViewConfiguration::getScaledAmbiguousGestureMultiplier() const{
+    return mAmbiguousGestureMultiplier;
+}
 /**
  * Report if the device has a permanent menu key available to the user.
  *
