@@ -31,6 +31,22 @@ namespace cdroid{
 //
 class Learner;
 class Gesture;
+
+namespace GestureIOHelper{
+    int readBytes(std::istream&in,uint8_t*buff,int size);
+    int16_t readShort(std::istream&in);
+    int32_t readInt(std::istream&in);
+    int64_t readLong(std::istream&in);
+    float readFloat(std::istream&in);
+    std::string readUTF(std::istream&in);
+    void writeBytes(std::ostream&out,uint8_t*buf,int size);
+    void writeShort(std::ostream&out,uint16_t value);
+    void writeInt(std::ostream&out,uint32_t value);
+    void writeLong(std::ostream&out,uint64_t value);
+    void writeUTF(std::ostream&out,const std::string&);
+    void writeFloat(std::ostream&out,float value);
+}
+
 class GestureStore {
 private:
     static constexpr short FILE_FORMAT_VERSION = 1;

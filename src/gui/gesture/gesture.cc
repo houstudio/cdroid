@@ -1,4 +1,5 @@
 #include <gesture/gesture.h>
+#include <gesture/gesturestore.h>
 #include <gesture/gesturestroke.h>
 namespace cdroid{
 std::atomic<int>Gesture::sGestureCount(0);
@@ -198,9 +199,9 @@ Gesture Gesture::deserialize(std::istream& in){
     Gesture gesture;
 
     // Gesture ID
-    //gesture.mGestureID = in.readLong();
+    gesture.mGestureID = GestureIOHelper::readLong(in);
     // Number of strokes
-    int count;// = in.readInt();
+    int count = GestureIOHelper::readInt(in);
 
     for (int i = 0; i < count; i++) {
         gesture.addStroke(GestureStroke::deserialize(in));

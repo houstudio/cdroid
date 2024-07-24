@@ -171,10 +171,7 @@ void GestureStore::save(std::ostream& stream){
     save(stream, false);
 }
 
-void GestureStore::save(std::ostream& stream, bool closeStream){
-#if 0
-    DataOutputStream out = null;
-
+void GestureStore::save(std::ostream& out, bool closeStream){
     long start;
     if (PROFILE_LOADING_SAVING) {
         start = SystemClock::elapsedRealtime();
@@ -182,12 +179,10 @@ void GestureStore::save(std::ostream& stream, bool closeStream){
 
     std::map<std::string, std::vector<Gesture*>>& maps = mNamedGestures;
 
-    out = new DataOutputStream((stream instanceof BufferedOutputStream) ? stream :
-            new BufferedOutputStream(stream, GestureConstants.IO_BUFFER_SIZE));
     // Write version number
-    out.writeShort(FILE_FORMAT_VERSION);
+    GestureIOHelper::writeShort(out,FILE_FORMAT_VERSION);
     // Write number of entries
-    out.writeInt(maps.size());
+    GestureIOHelper::writeInt(out,maps.size());
 
     for (auto it = maps.begin();it!=maps.end();it++){
         const std::string key = it->first;//entry.getKey();
@@ -195,12 +190,12 @@ void GestureStore::save(std::ostream& stream, bool closeStream){
         const int count = examples.size();
 
         // Write entry name
-        out.writeUTF(key);
+        GestureIOHelper::writeUTF(out,key);
         // Write number of examples for this entry
-        out.writeInt(count);
+        GestureIOHelper::writeInt(out,count);
 
         for (int i = 0; i < count; i++) {
-            examples.at(i).serialize(out);
+            examples.at(i)->serialize(out);
         }
     }
 
@@ -212,8 +207,7 @@ void GestureStore::save(std::ostream& stream, bool closeStream){
     }
 
     mChanged = false;
-    if (closeStream) GestureUtils::closeStream(out);
-#endif
+    //if (closeStream) GestureUtils::closeStream(out);
 }
 
 /**
@@ -223,59 +217,146 @@ void GestureStore::load(std::istream& stream) {
     load(stream, false);
 }
 
-void GestureStore::load(std::istream& stream, bool closeStream){
-#if 0
-    DataInputStream in = null;
-    in = new DataInputStream((stream instanceof BufferedInputStream) ? stream :
-            new BufferedInputStream(stream, GestureConstants.IO_BUFFER_SIZE));
-
+void GestureStore::load(std::istream& in, bool closeStream){
     long start;
     if (PROFILE_LOADING_SAVING) {
         start = SystemClock::elapsedRealtime();
     }
 
     // Read file format version number
-    const short versionNumber = in.readShort();
+    const short versionNumber = GestureIOHelper::readShort(in);
     switch (versionNumber) {
-        case 1:
-            readFormatV1(in);
-            break;
+    case 1:
+        readFormatV1(in);
+        break;
     }
 
     if (PROFILE_LOADING_SAVING) {
         const long end = SystemClock::elapsedRealtime();
         LOGD("Loading gestures library = %d ms",(end - start));
     }
-    if (closeStream) GestureUtils::closeStream(in);
-#endif
+    //if (closeStream) GestureUtils::closeStream(in);
 }
 
 void GestureStore::readFormatV1(std::istream& in) {
     Learner* classifier = mClassifier;
     std::map<std::string, std::vector<Gesture*>>& namedGestures = mNamedGestures;
     namedGestures.clear();
-#if 0
+
     // Number of entries in the library
-    const int entriesCount = in.readInt();
+    const int entriesCount = GestureIOHelper::readInt(in);
 
     for (int i = 0; i < entriesCount; i++) {
         // Entry name
-        const std::string name = in.readUTF();
+        const std::string name = GestureIOHelper::readUTF(in);
         // Number of gestures
-        const int gestureCount = in.readInt();
+        const int gestureCount = GestureIOHelper::readInt(in);
 
         std::vector<Gesture*> gestures;
-        for (int j = 0; j < gestureCount; j++) {
+        /*for (int j = 0; j < gestureCount; j++) {
             Gesture* gesture = Gesture::deserialize(in);
             gestures.push_back(gesture);
             classifier->addInstance(Instance::createInstance(mSequenceType, mOrientationStyle, gesture, name));
-        }
+        }*/
         namedGestures.insert({name, gestures});
     }
-#endif
 }
 
 Learner& GestureStore::getLearner() {
     return *mClassifier;
 }
+
+namespace GestureIOHelper{
+
+    int readBytes(std::istream&in,uint8_t*buff,int size){
+        in.read((char*)buff,size);
+        return in.gcount();
+    }
+
+    int16_t readShort(std::istream&in){
+        uint8_t u8[2];
+        readBytes(in,u8,2);
+        return u8[0]<<8|u8[1];
+    }
+
+    int32_t readInt(std::istream&in){
+        uint8_t u8[4];
+        readBytes(in,u8,4);
+        return (u8[0]<<24)|(u8[1]<<16)||(u8[2]<<8)|u8[3];
+    }
+
+    int64_t readLong(std::istream&in){
+        uint8_t u8[8];
+        readBytes(in,u8,8);
+        return (int64_t(u8[0])<<56)|(int64_t(u8[1])<<48)|(int64_t(u8[2])<<40)|(int64_t(u8[3])<<32)
+            |(u8[4]<<24)|(u8[5]<<16)|(u8[6]<<8)|u8[6];
+    }
+
+    union FloatIntUnion {
+        float f;
+        int i;
+    };
+
+    float readFloat(std::istream&in){
+        FloatIntUnion fi;
+        fi.i = readInt(in);
+        return fi.f;
+    }
+
+    std::string readUTF(std::istream&in){
+        int32_t size = readInt(in);
+        uint8_t *buff= new uint8_t[size+1];
+        std::string str;
+        readBytes(in,buff,size);
+        buff[size] = 0;
+        str = (char*)buff;
+        delete []buff;
+        return str;
+    }
+
+    void writeBytes(std::ostream&out,uint8_t*buf,int size){
+        out.write((char*)buf,size);
+    }
+
+    void writeShort(std::ostream&out,uint16_t value){
+        uint8_t u8[2];
+        u8[0] = (value>>8);
+        u8[1] = (value&0xFF);
+        out.write((char*)u8,2);
+    }
+
+    void writeInt(std::ostream&out,uint32_t value){
+        uint8_t u8[4];
+        u8[0]=value>>24;
+        u8[1]=(value>>16)&0xFF;
+        u8[2]=(value>>8)&0xFF;
+        u8[3]=(value&0xFF);
+        out.write((char*)u8,4);
+    }
+
+    void writeInt(std::ostream&out,uint64_t value){
+        uint8_t u8[4];
+        u8[0] = value>>56;
+        u8[1] = (value>>48)&0xFF;
+        u8[2] = (value>>40)&0xFF;
+        u8[3] = (value>>32)&0xFF;
+        u8[4] = (value>>24)&0xFF;
+        u8[5] = (value>>16)&0xFF;
+        u8[6] = (value>>8)&0xFF;
+        u8[7] = value&0xFF;
+        out.write((char*)u8,8);
+    }
+
+    void writeFloat(std::ostream&out,float value){
+        FloatIntUnion fi;
+        fi.f = value;
+        writeInt(out,uint32_t(fi.i));
+    }
+
+    void writeUTF(std::ostream&out,const std::string&str){
+        writeInt(out,str.size());
+        writeBytes(out,(uint8_t*)str.c_str(),str.size());
+    }
+}/*endof namespace GestureIOHelper*/
+
 }/*endof namespace*/

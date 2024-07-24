@@ -1,4 +1,5 @@
 #include <iostream>
+#include <gesture/gesturestore.h>
 #include <gesture/gestureutils.h>
 #include <gesture/gesturestroke.h>
 namespace cdroid{
@@ -149,21 +150,21 @@ void GestureStroke::serialize(std::ostream& out){
     const int count = points.size();
 
     // Write number of points
-    //out.writeInt(count / 2);
+    GestureIOHelper::writeInt(out,count / 2);
 
     for (int i = 0; i < count; i += 2) {
         // Write X
-        //out.writeFloat(points[i]);//pts[i]);
+        GestureIOHelper::writeFloat(out,points[i]);//pts[i]);
         // Write Y
-        //out.writeFloat(points[i+1]);//pts[i + 1]);
+        GestureIOHelper::writeFloat(out,points[i+1]);//pts[i + 1]);
         // Write timestamp
-        //out.writeLong(timestamps[i/2]);//times[i / 2]);
+        GestureIOHelper::writeLong(out,timestamps[i/2]);//times[i / 2]);
     }
 }
 
 GestureStroke* GestureStroke::deserialize(std::istream& in){
     // Number of points
-    const int count =0;// in.readInt();
+    const int count = GestureIOHelper::readInt(in);
 
     std::vector<GesturePoint> points;
     for (int i = 0; i < count; i++) {
