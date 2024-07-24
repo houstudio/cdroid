@@ -178,6 +178,7 @@ protected:
     int32_t mEdgeFlags;
     int32_t mMetaState;
     int32_t mButtonState;
+    int32_t mClassification;
     float mXOffset;
     float mYOffset;
     float mXPrecision;
@@ -243,6 +244,7 @@ public:
     inline int32_t getButtonState() const { return mButtonState; }
     inline void setButtonState(int32_t buttonState) { mButtonState = buttonState; }
     bool isButtonPressed(int button)const;
+    int32_t  getClassification()const{return mClassification;}
     inline int32_t getActionButton() const { return mActionButton; }
     inline void setActionButton(int32_t button) { mActionButton = button; }
     inline float getXOffset() const { return mXOffset; }

@@ -90,7 +90,7 @@ void DevicePanel::onClick(View&v){
          mDevices.insert(std::pair<int,PagerAdapter*>(id,adapter));
     }
     mLastDevice = id;
-    if(adapter->getCount()==0){
+    if(adapter&&adapter->getCount()==0){
         adapter->add(Device("设备1",true,true));
         adapter->add(Device("设备2",true,false));
         adapter->add(Device("设备3",false,true));

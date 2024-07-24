@@ -203,6 +203,7 @@ void MotionEvent::initialize(
     mEdgeFlags = edgeFlags;
     mMetaState = metaState;
     mButtonState = buttonState;
+    mClassification=0;
     mXOffset = xOffset;
     mYOffset = yOffset;
     mXPrecision = xPrecision;
@@ -233,6 +234,7 @@ void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
     mEdgeFlags = other->mEdgeFlags;
     mMetaState = other->mMetaState;
     mButtonState = other->mButtonState;
+    mClassification=other->mClassification;
     mXOffset = other->mXOffset;
     mYOffset = other->mYOffset;
     mXPrecision = other->mXPrecision;

@@ -10,7 +10,6 @@
 #include <dirent.h>
 //#include <svg-cairo.h>
 #include <fstream>
-#include <gui/gui_features.h>
 #ifdef ENABLE_CAIROSVG
 #include <curl/curl.h>
 #endif
