@@ -165,6 +165,7 @@ private:
      * (short version to be used when {@link View#SYSTEM_UI_FLAG_LOW_PROFILE} is set).
      */
     static constexpr int HOVER_TOOLTIP_HIDE_SHORT_TIMEOUT = 3000;
+    static constexpr float AMBIGUOUS_GESTURE_MULTIPLIER = 2.f;
 private:
     int mEdgeSlop;
     int mFadingEdgeLength;
@@ -207,11 +208,11 @@ public:
     /**
      * @return Duration of the fade when scrollbars fade away in milliseconds
      */
-    static int getScrollBarFadeDuration();
+    static constexpr int getScrollBarFadeDuration(){return SCROLL_BAR_FADE_DURATION;}
     /**
      * @return Default delay before the scrollbars fade in milliseconds
      */
-    static int getScrollDefaultDelay();
+    static constexpr int getScrollDefaultDelay(){return SCROLL_BAR_DEFAULT_DELAY;}
 
     /**
      * @return the length of the fading edges in pixels
@@ -221,45 +222,45 @@ public:
      * @return the duration in milliseconds of the pressed state in child
      * components.
      */
-    static int getPressedStateDuration();
+    static constexpr int getPressedStateDuration(){return PRESSED_STATE_DURATION;}
     /**
      * @return the duration in milliseconds before a press turns into
      * a long press
      */
-    static int getLongPressTimeout();
+    static constexpr int getLongPressTimeout(){return DEFAULT_LONG_PRESS_TIMEOUT;}
     /**
      * @return the duration in milliseconds between the first tap's up event and the second tap's
      * down event for an interaction to be considered part of the same multi-press.
      * @hide
      */
-    static int getMultiPressTimeout();
+    static constexpr int getMultiPressTimeout(){return DEFAULT_MULTI_PRESS_TIMEOUT;}
 
     /**
      * @return the time before the first key repeat in milliseconds.
      */
-    static int getKeyRepeatTimeout();
+    static constexpr int getKeyRepeatTimeout(){return getLongPressTimeout();}
     /**
      * @return the time between successive key repeats in milliseconds.
      */
-    static int getKeyRepeatDelay();
+    static constexpr int getKeyRepeatDelay(){return KEY_REPEAT_DELAY;}
     /**
      * @return the duration in milliseconds we will wait to see if a touch event
      * is a tap or a scroll. If the user does not move within this interval, it is
      * considered to be a tap.
      */
-    static int getTapTimeout();
+    static constexpr int getTapTimeout(){return TAP_TIMEOUT;}
     /**
      * @return the duration in milliseconds we will wait to see if a touch event
      * is a jump tap. If the user does not move within this interval, it is
      * considered to be a tap.
      */
-    static int getJumpTapTimeout();
+    static constexpr int getJumpTapTimeout(){return JUMP_TAP_TIMEOUT;}
     /**
      * @return the duration in milliseconds between the first tap's up event and
      * the second tap's down event for an interaction to be considered a
      * double-tap.
      */
-    static int getDoubleTapTimeout();
+    static constexpr int getDoubleTapTimeout(){return DOUBLE_TAP_TIMEOUT;}
     /**
      * @return the minimum duration in milliseconds between the first tap's
      * up event and the second tap's down event for an interaction to be considered a
@@ -267,28 +268,29 @@ public:
      *
      * @hide
      */
-    static int getDoubleTapMinTime();
+    static constexpr int getDoubleTapMinTime(){return DOUBLE_TAP_MIN_TIME;}
     /**
      * @return the maximum duration in milliseconds between a touch pad
      * touch and release for a given touch to be considered a tap (click) as
      * opposed to a hover movement gesture.
      * @hide
      */
-    static int getHoverTapTimeout();
+    static constexpr int getHoverTapTimeout(){return HOVER_TAP_TIMEOUT;}
     /**
      * @return the maximum distance in pixels that a touch pad touch can move
      * before being released for it to be considered a tap (click) as opposed
      * to a hover movement gesture.
      * @hide
      */
-    static int getHoverTapSlop();
+    static constexpr int getHoverTapSlop(){return HOVER_TAP_SLOP;}
 
     /**
      * @return Inset in pixels to look for touchable content when the user touches the edge of the
      *         screen
      */
     int getScaledEdgeSlop();
-
+    
+    static constexpr int getTouchSlop() { return TOUCH_SLOP; }
     /**
      * @return Distance in pixels a touch can wander before we think the user is scrolling
      */
@@ -300,6 +302,7 @@ public:
      */
     int getScaledHoverSlop();
 
+    static constexpr int getDoubleTapTouchSlop(){return DOUBLE_TAP_SLOP;}
     /**
      * @return Distance in pixels the first touch can wander before we do not consider this a
      * potential double tap event
@@ -422,12 +425,22 @@ public:
      * @return A scalar dimensionless value representing the coefficient of
      *         friction.
      */
-    static float getScrollFriction();
-
+    static constexpr float getScrollFriction(){return SCROLL_FRICTION;}
+    /**
+     * The multiplication factor for inhibiting default gestures.
+     *
+     * If a MotionEvent has {@link android.view.MotionEvent#CLASSIFICATION_AMBIGUOUS_GESTURE} set,
+     * then certain actions, such as scrolling, will be inhibited. However, to account for the
+     * possibility of an incorrect classification, existing gesture thresholds (e.g. scrolling
+     * touch slop and the long-press timeout) should be scaled by this factor and remain in effect.
+     *
+     * @deprecated Use {@link #getScaledAmbiguousGestureMultiplier()}.
+     */
+    static constexpr float getScaledAmbiguousGestureMultiplier() {return AMBIGUOUS_GESTURE_MULTIPLIER;}
     /**
      * @return the default duration in milliseconds for {@link ActionMode#hide(long)}.
      */
-    static long getDefaultActionModeHideDuration();
+    static constexpr long getDefaultActionModeHideDuration(){return ACTION_MODE_HIDE_DURATION_DEFAULT;}
     /**
      * Report if the device has a permanent menu key available to the user.
      *
@@ -457,24 +470,24 @@ public:
      * hidden
      * @hide
      */
-    static int getLongPressTooltipHideTimeout();
+    static constexpr int getLongPressTooltipHideTimeout(){return LONG_PRESS_TOOLTIP_HIDE_TIMEOUT;}
     /**
      * @return the duration in milliseconds before a hover event causes a tooltip to be shown
      * @hide
      */
-    static int getHoverTooltipShowTimeout();
+    static constexpr int getHoverTooltipShowTimeout(){return HOVER_TOOLTIP_SHOW_TIMEOUT;}
     /**
      * @return the duration in milliseconds before mouse inactivity causes a tooltip to be hidden
      * (default variant to be used when {@link View#SYSTEM_UI_FLAG_LOW_PROFILE} is not set).
      * @hide
      */
-    static int getHoverTooltipHideTimeout();
+    static constexpr int getHoverTooltipHideTimeout(){return HOVER_TOOLTIP_HIDE_TIMEOUT;}
     /**
      * @return the duration in milliseconds before mouse inactivity causes a tooltip to be hidden
      * (shorter variant to be used when {@link View#SYSTEM_UI_FLAG_LOW_PROFILE} is set).
      * @hide
      */
-    static int getHoverTooltipHideShortTimeout();
+    static constexpr int getHoverTooltipHideShortTimeout(){return HOVER_TOOLTIP_HIDE_SHORT_TIMEOUT;}
 };
 }//end namespace
 #endif
