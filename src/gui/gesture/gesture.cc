@@ -186,9 +186,9 @@ void Gesture::serialize(std::ostream& out){
     const int count = strokes.size();
 
     // Write gesture ID
-    //out.writeLong(mGestureID);
+    GestureIOHelper::writeLong(out,mGestureID);
     // Write number of strokes
-    //out.writeInt(count);
+    GestureIOHelper::writeInt(out,count);
 
     for (int i = 0; i < count; i++) {
         strokes.at(i)->serialize(out);

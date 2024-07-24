@@ -1,5 +1,6 @@
 #ifndef __GESTURE_POINT_H__
 #define __GESTURE_POINT_H__
+#include <gesture/gesturestore.h>
 namespace cdroid{
 class GesturePoint {
 public:
@@ -14,10 +15,10 @@ public:
     }
     static GesturePoint deserialize(std::istream& in) {
         // Read X and Y
-        const float x =1;// in.readFloat();
-        const float y =1;// in.readFloat();
+        const float x = GestureIOHelper::readFloat(in);
+        const float y = GestureIOHelper::readFloat(in);
         // Read timestamp
-        const long timeStamp =1;// in.readLong();
+        const long timeStamp = GestureIOHelper::readLong(in);
         return GesturePoint{x, y, timeStamp};
     }
 };
