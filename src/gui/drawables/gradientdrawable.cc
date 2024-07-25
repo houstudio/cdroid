@@ -1,4 +1,5 @@
 #include <drawables/gradientdrawable.h>
+#include <cfloat>
 #include <color.h>
 #include <cdlog.h>
 using namespace Cairo;
@@ -847,12 +848,17 @@ void GradientDrawable::getPatternAlpha(int& strokeAlpha,int& fillApha){
         fillApha = int(255.f*a);
     }
 }
+
+static double min3(double a,double b,double c){
+    return std::min(a,std::min(b,c));
+}
 static void drawRoundedRect(Canvas& cr,const RectF&rect,
                 double topLeftRadius, double topRightRadius, double bottomRightRadius, double bottomLeftRadius) {
     const double x = rect.left;
 	const double y = rect.top;
 	const double width = rect.width;
 	const double height= rect.height;
+#if 0
     const double maxRadius = std::min(width,height);
     const double maxTopRadius = std::min(maxRadius, topLeftRadius + topRightRadius);
     const double maxBottomRadius = std::min(maxRadius, bottomLeftRadius + bottomRightRadius);
@@ -863,7 +869,16 @@ static void drawRoundedRect(Canvas& cr,const RectF&rect,
     const double topRightRadiusClipped = std::min(topRightRadius, std::min(maxTopRadius, maxRightRadius));
     const double bottomLeftRadiusClipped = std::min(bottomLeftRadius, std::min(maxBottomRadius, maxLeftRadius));
     const double bottomRightRadiusClipped = std::min(bottomRightRadius, std::min(maxBottomRadius, maxRightRadius));
-
+#else
+    const double topLeftRadiusClipped = (topLeftRadius<=FLT_EPSILON)?0:min3(topLeftRadius,
+            width*topLeftRadius/(topLeftRadius+topRightRadius), height*topLeftRadius/(topLeftRadius+bottomLeftRadius));
+    const double topRightRadiusClipped = (topRightRadius<=FLT_EPSILON)?0:min3(topRightRadius,
+            width*topRightRadius/(topLeftRadius+topRightRadius), height*topRightRadius/(topRightRadius+bottomRightRadius));
+    const double bottomLeftRadiusClipped = (bottomLeftRadius<=FLT_EPSILON)?0:min3(bottomLeftRadius,
+            width*bottomLeftRadius/(bottomLeftRadius+bottomRightRadius), height*bottomLeftRadius/(topLeftRadius+bottomLeftRadius));
+    const double bottomRightRadiusClipped = (bottomRightRadius<=FLT_EPSILON)?0:min3(bottomRightRadius,
+            width*bottomRightRadius/(bottomLeftRadius+bottomRightRadius), height*bottomRightRadius/(topRightRadius+bottomRightRadius));    
+#endif
     cr.move_to(x + topLeftRadiusClipped, y);
     cr.line_to(x + width - topRightRadiusClipped, y);
     cr.arc(x + width - topRightRadiusClipped, y + topRightRadiusClipped, topRightRadiusClipped, -M_PI_2, 0);
