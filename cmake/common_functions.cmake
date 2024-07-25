@@ -83,7 +83,9 @@ function(GetGitVersion TARGET)
     )
 
     if(NOT CDVERSION)
-        set(CDVERSION "0.0.1")
+        set(CDVERSION "2.0.0")
+        set(COMMIT_COUNT "0");
+        set(LAST_COMMIT_HASH "00000000")
     endif()
 
     # Extract MAJOR, MINOR, PATCH from VERSION if MAJOR, MINOR, PATCH are provided
