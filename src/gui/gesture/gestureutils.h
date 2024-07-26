@@ -79,7 +79,7 @@ public:
      *         as a 1D array. The float at index i represents the grayscale
      *         value at pixel [i%bitmapSize, i/bitmapSize]
      */
-    static std::vector<float> spatialSampling(Gesture& gesture, int bitmapSize);
+    static std::vector<float> spatialSampling(const Gesture& gesture, int bitmapSize);
 
     /**
      * Samples the gesture spatially by rendering the gesture into a 2D
@@ -94,7 +94,7 @@ public:
      *         as a 1D array. The float at index i represents the grayscale
      *         value at pixel [i%bitmapSize, i/bitmapSize]
      */
-    static std::vector<float> spatialSampling(Gesture& gesture, int bitmapSize,bool keepAspectRatio);
+    static std::vector<float> spatialSampling(const Gesture& gesture, int bitmapSize,bool keepAspectRatio);
 
     /**
      * Samples a stroke temporally into a given number of evenly-distributed

@@ -23,7 +23,7 @@ Gesture* Gesture::clone() {
 /**
  * @return all the strokes of the gesture
  */
-std::vector<GestureStroke*> Gesture::getStrokes() {
+const std::vector<GestureStroke*>& Gesture::getStrokes() const{
     return mStrokes;
 }
 
@@ -195,16 +195,16 @@ void Gesture::serialize(std::ostream& out){
     }
 }
 
-Gesture Gesture::deserialize(std::istream& in){
-    Gesture gesture;
+Gesture* Gesture::deserialize(std::istream& in){
+    Gesture* gesture=new Gesture();
 
     // Gesture ID
-    gesture.mGestureID = GestureIOHelper::readLong(in);
+    gesture->mGestureID = GestureIOHelper::readLong(in);
     // Number of strokes
-    int count = GestureIOHelper::readInt(in);
-
+    const int count = GestureIOHelper::readInt(in);
+    LOGD("gesture:%llu %d strokes",int64_t(gesture->mGestureID),count);
     for (int i = 0; i < count; i++) {
-        gesture.addStroke(GestureStroke::deserialize(in));
+        gesture->addStroke(GestureStroke::deserialize(in));
     }
 
     return gesture;

@@ -47,7 +47,7 @@ public:
         return mStore->getGestureEntries();
     }
 
-    std::vector<Prediction> recognize(Gesture* gesture) {
+    std::vector<Prediction> recognize(const Gesture& gesture) {
         return mStore->recognize(gesture);
     }
 

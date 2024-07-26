@@ -13,8 +13,8 @@ private:
 private:
     Instance(long id,const std::vector<float>& sample,const std::string& sampleName);
     void normalize();
-    static std::vector<float> spatialSampler(Gesture& gesture);
-    static std::vector<float> temporalSampler(int orientationType, Gesture& gesture);
+    static std::vector<float> spatialSampler(const Gesture& gesture);
+    static std::vector<float> temporalSampler(int orientationType,const Gesture& gesture);
 protected:
     // the feature vector
     std::vector<float> vector;
@@ -35,7 +35,7 @@ public:
      * @param label
      * @return the instance
      */
-    static Instance* createInstance(int sequenceType, int orientationType, Gesture& gesture,const std::string& label);
+    static Instance* createInstance(int sequenceType, int orientationType,const Gesture& gesture,const std::string& label);
 };
 }/*endof namespace*/
 #endif /*__GESTURE_INSTANCE_H__*/

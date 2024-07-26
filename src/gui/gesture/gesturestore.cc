@@ -80,8 +80,8 @@ std::vector<std::string> GestureStore::getGestureEntries() {
  * @param gesture the query
  * @return a list of predictions of possible entries for a given gesture
  */
-std::vector<Prediction> GestureStore::recognize(Gesture* gesture) {
-    Instance* instance = Instance::createInstance(mSequenceType,  mOrientationStyle, *gesture, nullptr);
+std::vector<Prediction> GestureStore::recognize(const Gesture& gesture) {
+    Instance* instance = Instance::createInstance(mSequenceType,  mOrientationStyle, gesture, nullptr);
     return mClassifier->classify(mSequenceType, mOrientationStyle, instance->vector);
 }
 
@@ -251,13 +251,13 @@ void GestureStore::readFormatV1(std::istream& in) {
         const std::string name = GestureIOHelper::readUTF(in);
         // Number of gestures
         const int gestureCount = GestureIOHelper::readInt(in);
-
+        LOGD("[%d]%d :%s",i,gestureCount,name.c_str());
         std::vector<Gesture*> gestures;
-        /*for (int j = 0; j < gestureCount; j++) {
+        for (int j = 0; j < gestureCount; j++) {
             Gesture* gesture = Gesture::deserialize(in);
             gestures.push_back(gesture);
-            classifier->addInstance(Instance::createInstance(mSequenceType, mOrientationStyle, gesture, name));
-        }*/
+            //classifier->addInstance(Instance::createInstance(mSequenceType, mOrientationStyle, gesture, name));
+        }
         namedGestures.insert({name, gestures});
     }
 }
@@ -282,7 +282,7 @@ namespace GestureIOHelper{
     int32_t readInt(std::istream&in){
         uint8_t u8[4];
         readBytes(in,u8,4);
-        return (u8[0]<<24)|(u8[1]<<16)||(u8[2]<<8)|u8[3];
+        return (u8[0]<<24)|(u8[1]<<16)|(u8[2]<<8)|u8[3];
     }
 
     int64_t readLong(std::istream&in){
@@ -304,13 +304,13 @@ namespace GestureIOHelper{
     }
 
     std::string readUTF(std::istream&in){
-        int32_t size = readInt(in);
-        uint8_t *buff= new uint8_t[size+1];
+        const uint16_t utflen = readShort(in);
+        uint8_t *bBuff= new uint8_t[utflen+1];
         std::string str;
-        readBytes(in,buff,size);
-        buff[size] = 0;
-        str = (char*)buff;
-        delete []buff;
+        readBytes(in,bBuff,utflen);
+        bBuff[utflen] = 0;
+        str = (char*)bBuff;
+        delete []bBuff;
         return str;
     }
 
@@ -354,7 +354,7 @@ namespace GestureIOHelper{
     }
 
     void writeUTF(std::ostream&out,const std::string&str){
-        writeInt(out,str.size());
+        writeShort(out,str.size());
         writeBytes(out,(uint8_t*)str.c_str(),str.size());
     }
 }/*endof namespace GestureIOHelper*/

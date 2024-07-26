@@ -30,7 +30,7 @@ void Instance::normalize() {
  * @param label
  * @return the instance
  */
-Instance* Instance::createInstance(int sequenceType, int orientationType, Gesture& gesture, const std::string& label) {
+Instance* Instance::createInstance(int sequenceType, int orientationType,const Gesture& gesture, const std::string& label) {
     std::vector<float> pts;
     Instance* instance;
     if (sequenceType == GestureStore::SEQUENCE_SENSITIVE) {
@@ -44,7 +44,7 @@ Instance* Instance::createInstance(int sequenceType, int orientationType, Gestur
     return instance;
 }
 
-std::vector<float> Instance::spatialSampler(Gesture& gesture) {
+std::vector<float> Instance::spatialSampler(const Gesture& gesture) {
     return GestureUtils::spatialSampling(gesture, PATCH_SAMPLE_SIZE, false);
 }
 
@@ -55,7 +55,7 @@ static float ORIENTATIONS[] = {
      (float) (-M_PI * 3 / 4), (float) -M_PI
 };
 
-std::vector<float> Instance::temporalSampler(int orientationType, Gesture& gesture) {
+std::vector<float> Instance::temporalSampler(int orientationType,const Gesture& gesture) {
     std::vector<float> pts = GestureUtils::temporalSampling(*gesture.getStrokes().at(0),
             SEQUENCE_SAMPLE_SIZE);
     std::vector<float> center = GestureUtils::computeCentroid(pts);

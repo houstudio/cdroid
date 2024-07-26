@@ -26,7 +26,7 @@ public:
     /**
      * @return all the strokes of the gesture
      */
-    std::vector<GestureStroke*> getStrokes();
+    const std::vector<GestureStroke*>& getStrokes()const;
 
     /**
      * @return the number of strokes included by this gesture
@@ -89,7 +89,7 @@ public:
      */
     Bitmap toBitmap(int width, int height, int inset, int color);
     void serialize(std::ostream& out);
-    static Gesture deserialize(std::istream& in);
+    static Gesture* deserialize(std::istream& in);
 #if 0
     public static final @android.annotation.NonNull Parcelable.Creator<Gesture> CREATOR = new Parcelable.Creator<Gesture>() {
         public Gesture createFromParcel(Parcel in);

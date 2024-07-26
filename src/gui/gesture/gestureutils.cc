@@ -29,7 +29,7 @@ GestureUtils::GestureUtils() {
  *         as a 1D array. The float at index i represents the grayscale
  *         value at pixel [i%bitmapSize, i/bitmapSize]
  */
-std::vector<float> GestureUtils::spatialSampling(Gesture& gesture, int bitmapSize) {
+std::vector<float> GestureUtils::spatialSampling(const Gesture& gesture, int bitmapSize) {
     return spatialSampling(gesture, bitmapSize, false);
 }
 
@@ -46,7 +46,7 @@ std::vector<float> GestureUtils::spatialSampling(Gesture& gesture, int bitmapSiz
  *         as a 1D array. The float at index i represents the grayscale
  *         value at pixel [i%bitmapSize, i/bitmapSize]
  */
-std::vector<float> GestureUtils::spatialSampling(Gesture& gesture, int bitmapSize,bool keepAspectRatio) {
+std::vector<float> GestureUtils::spatialSampling(const Gesture& gesture, int bitmapSize,bool keepAspectRatio) {
     const float targetPatchSize = bitmapSize - 1;
     std::vector<float> sample(bitmapSize * bitmapSize,0);
     //Arrays.fill(sample, 0);

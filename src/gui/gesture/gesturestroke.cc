@@ -170,7 +170,7 @@ GestureStroke* GestureStroke::deserialize(std::istream& in){
     for (int i = 0; i < count; i++) {
         points.push_back(GesturePoint::deserialize(in));
     }
-
+    LOGD("\t\t%d points",count);
     return new GestureStroke(points);
 }
 

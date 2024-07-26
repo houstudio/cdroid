@@ -36,8 +36,13 @@ public:
 
     bool load() override{
         if (!mResourceId.empty()) {
-            auto ifs = mContext->getInputStream(mResourceId,nullptr);
-            mStore->load(*ifs, true);
+            if(mContext){
+                auto fs=mContext->getInputStream(mResourceId,nullptr);
+                if(fs)mStore->load(*fs);
+            }else{
+                std::ifstream fs(mResourceId);
+                mStore->load(fs, true);
+            }
             LOGD("load the gesture library from %s",mResourceId.c_str());
             return true;
         }

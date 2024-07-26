@@ -107,7 +107,7 @@ public:
      * @param gesture the query
      * @return a list of predictions of possible entries for a given gesture
      */
-    std::vector<Prediction> recognize(Gesture* gesture);
+    std::vector<Prediction> recognize(const Gesture& gesture);
     /**
      * Add a gesture for the entry
      *
