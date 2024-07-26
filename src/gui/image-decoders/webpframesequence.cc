@@ -17,6 +17,8 @@
 #include <string.h>
 #include "cdtypes.h"
 #include "cdlog.h"
+#include <gui/gui_features.h>
+#if ENABLE_WEBP&&ENABLE_WEBP
 #include "webp/decode.h"
 #include "webp/demux.h"
 #include "webpframesequence.h"
@@ -405,3 +407,4 @@ static FrameSequence::RegistryEntry gEntry = {
 };
 static FrameSequence::Registry gRegister(gEntry);
 }/*endof namespace*/
+#endif/*ENABLE_WEBP*/

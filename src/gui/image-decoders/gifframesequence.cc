@@ -17,6 +17,8 @@
 #include <string.h>
 #include "cdtypes.h"
 #include "cdlog.h"
+#include <gui/gui_features.h>
+#if ENABLE_GIF&&ENABLE_GIF
 #include "gif_lib.h"
 #include "gifframesequence.h"
 
@@ -359,3 +361,4 @@ static FrameSequence::RegistryEntry gEntry = {
 };
 static FrameSequence::Registry gRegister(gEntry);
 }/*endof namespace*/
+#endif/*ENABLE_GIF*/
