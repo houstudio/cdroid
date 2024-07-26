@@ -44,17 +44,47 @@ GestureStroke::GestureStroke(const RectF& bbx, float len,const std::vector<float
     timestamps = times;
 }
 
+static void quad_to(Canvas&c,double x1, double y1, double x2, double y2){
+    double x0, y0;
+    c.get_current_point(x0,y0);
+
+    //Control points for cubic bezier curve
+    double cp1x = x0 + 2.f / 3.f * (x1 - x0);
+    double cp1y = y0 + 2.f / 3.f * (y1 - y0);
+    double cp2x = cp1x + (x2 - x0) / 3.f;
+    double cp2y = cp1y + (y2 - y0) / 3.f;
+    c.curve_to(cp1x, cp1y, cp2x, cp2y, x2, y2);
+}
+
 /**
  * Draws the stroke with a given canvas and paint.
  *
  * @param canvas
  */
 void GestureStroke::draw(Canvas& canvas) {
-    if (1/*mCachedPath == null*/) {
+    /*if (mCachedPath == nullptr) {
         makePath();LOGD("TODO");
     }
+    canvas.drawPath(mCachedPath);*/
+    std::vector<float>& localPoints = points;
+    const int count = localPoints.size();
 
-    //canvas.drawPath(mCachedPath);
+    float mX = 0, mY = 0;
+    for (int i = 0; i < count; i += 2) {
+        const float x = localPoints[i];
+        const float y = localPoints[i + 1];
+        if (i==0) {
+            canvas.move_to(x, y);
+            mX = x;  mY = y;
+        } else {
+            float dx = std::abs(x - mX);
+            float dy = std::abs(y - mY);
+            if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
+                quad_to(canvas,mX, mY, (x + mX) / 2, (y + mY) / 2);
+                mX = x;  mY = y;
+            }
+        }
+    }
 }
 
 cdroid::Path GestureStroke::getPath() {
@@ -71,23 +101,20 @@ void GestureStroke::makePath() {
 
     Path path;
 
-    float mX = 0;
-    float mY = 0;
+    float mX = 0, mY = 0;
 
     for (int i = 0; i < count; i += 2) {
         float x = localPoints[i];
         float y = localPoints[i + 1];
         if (i==0/*path == null*/) {
             path.move_to(x, y);
-            mX = x;
-            mY = y;
+            mX = x;  mY = y;
         } else {
             float dx = std::abs(x - mX);
             float dy = std::abs(y - mY);
             if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
                 path.quad_to(mX, mY, (x + mX) / 2, (y + mY) / 2);
-                mX = x;
-                mY = y;
+                mX = x;  mY = y;
             }
         }
     }

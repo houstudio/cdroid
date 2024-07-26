@@ -81,7 +81,7 @@ std::vector<std::string> GestureStore::getGestureEntries() {
  * @return a list of predictions of possible entries for a given gesture
  */
 std::vector<Prediction> GestureStore::recognize(const Gesture& gesture) {
-    Instance* instance = Instance::createInstance(mSequenceType,  mOrientationStyle, gesture, nullptr);
+    Instance* instance = Instance::createInstance(mSequenceType,  mOrientationStyle, gesture,"");
     return mClassifier->classify(mSequenceType, mOrientationStyle, instance->vector);
 }
 

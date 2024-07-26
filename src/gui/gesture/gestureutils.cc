@@ -89,7 +89,7 @@ std::vector<float> GestureUtils::spatialSampling(const Gesture& gesture, int bit
     float preDy = -rect.centerY();
     float postDx = targetPatchSize / 2;
     float postDy = targetPatchSize / 2;
-    std::vector<GestureStroke*> strokes = gesture.getStrokes();
+    const std::vector<GestureStroke*>& strokes = gesture.getStrokes();
     const int count = strokes.size();
     int size;
     float xpos;

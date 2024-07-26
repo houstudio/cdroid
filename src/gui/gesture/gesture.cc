@@ -137,8 +137,9 @@ Bitmap Gesture::toBitmap(int width, int height, int edge, int numSample, int col
     canvas.set_color(color);
 
     for (auto stroke:mStrokes) {
-        Path* path = stroke->toPath(width - 2 * edge, height - 2 * edge, numSample);
-        LOGD("TODO");//canvas.drawPath(path);
+        //Path* path = stroke->toPath(width - 2 * edge, height - 2 * edge, numSample);
+        //canvas.drawPath(path);
+        stroke->draw(canvas);
     }
 
     return bitmap;
@@ -175,9 +176,10 @@ Bitmap Gesture::toBitmap(int width, int height, int inset, int color) {
 
     canvas.translate(offsetX + inset, offsetY + inset);
     canvas.scale(scale, scale);
-
-    LOGD("TODO");//canvas.drawPath(path);
-
+    //canvas.drawPath(path);
+    for (auto stroke:mStrokes){
+        stroke->draw(canvas);
+    }
     return bitmap;
 }
 

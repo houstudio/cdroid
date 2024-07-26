@@ -5,7 +5,7 @@
 namespace cdroid{
 
 Instance::Instance(long id,const std::vector<float>& sample, const std::string& sampleName)
-    :id(id),vector(vector),label(sampleName){
+    :id(id),vector(sample),label(sampleName){
 }
 
 void Instance::normalize() {

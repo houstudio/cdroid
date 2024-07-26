@@ -18,7 +18,7 @@ private:
     static std::atomic<int> sGestureCount;
     RectF mBoundingBox;
     // the same as its instance ID
-    long mGestureID;
+    unsigned long mGestureID;
     std::vector<GestureStroke*> mStrokes;
 public:
     Gesture();
