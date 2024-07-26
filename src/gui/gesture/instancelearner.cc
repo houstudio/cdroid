@@ -1,5 +1,6 @@
 #include <map>
 #include <cfloat>
+#include <algorithm>
 #include <gesture/prediction.h>
 #include <gesture/instance.h>
 #include <gesture/instancelearner.h>
@@ -7,19 +8,10 @@
 #include <gesture/gestureutils.h>
 
 namespace cdroid{
-    /*private static final Comparator<Prediction> sComparator = new Comparator<Prediction>() {
-        public int compare(Prediction object1, Prediction object2) {
-            double score1 = object1.score;
-            double score2 = object2.score;
-            if (score1 > score2) {
-                return -1;
-            } else if (score1 < score2) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }
-    }*/
+
+static bool compareScore(const Prediction& a, const Prediction& b) {
+    return a.score > b.score; /*In Descending Order*/
+}
 
 std::vector<Prediction> InstanceLearner::classify(int sequenceType, int orientationType, const std::vector<float>& vector) {
     std::vector<Prediction> predictions ;
@@ -51,10 +43,10 @@ std::vector<Prediction> InstanceLearner::classify(int sequenceType, int orientat
 
     // double sum = 0;
     for (auto it:label2score) {
-        predictions.push_back(/*Prediction*/{it.first, it.second});
+        predictions.push_back({it.first, it.second});
     }
 
-    //Collections.sort(predictions, sComparator);
+    std::sort(predictions.begin(),predictions.end(),compareScore);
     return predictions;
 }
 
