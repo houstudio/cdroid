@@ -256,7 +256,7 @@ void GestureStore::readFormatV1(std::istream& in) {
         for (int j = 0; j < gestureCount; j++) {
             Gesture* gesture = Gesture::deserialize(in);
             gestures.push_back(gesture);
-            //classifier->addInstance(Instance::createInstance(mSequenceType, mOrientationStyle, gesture, name));
+            classifier->addInstance(Instance::createInstance(mSequenceType, mOrientationStyle,*gesture, name));
         }
         namedGestures.insert({name, gestures});
     }

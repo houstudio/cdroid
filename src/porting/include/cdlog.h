@@ -57,7 +57,7 @@ public:
 
 #define LOG(level)        cdlog::LogMessage(__FILE__,__LINE__,__FUNCTION__,LOG_##level).messageStream()
 #define LOG_IF(level,exp) if(exp)cdlog::LogMessage(__FILE__,__LINE__,__FUNCTION__,LOG_##level).messageStream()
-#endif //endof __cplusplus
+#endif /*endof __cplusplus*/
 
 #ifdef __cplusplus
     #define LOG_PRINTF(level,...) cdlog::LogMessage(__FILE__,__LINE__,__FUNCTION__,level).messageSave(__VA_ARGS__)
@@ -71,22 +71,36 @@ public:
     #define LOGD(...)
     #define LOGD_IF(x,...)
     #define LOG_DUMP(tag,data,len)
+    #define DUMPV(tag,data,len)
+    #define DUMPV_IF(x,tag,data,len)
+    #define DUMPD(tag,data,len)
+    #define DUMPD_IF(x,tag,data,len)
 #else
     #define LOGV(...)  LOG_PRINTF(LOG_VERBOSE,__VA_ARGS__) 
     #define LOGD(...)  LOG_PRINTF(LOG_DEBUG,__VA_ARGS__)
-    #define LOGV_IF(x,...)  if(x) LOG_PRINTF(LOG_VERBOSE,__VA_ARGS__) 
-    #define LOGD_IF(x,...)  if(x) LOG_PRINTF(LOG_DEBUG,__VA_ARGS__) 
+    #define LOGV_IF(x,...)  {if(x) LOG_PRINTF(LOG_VERBOSE,__VA_ARGS__);}
+    #define LOGD_IF(x,...)  {if(x) LOG_PRINTF(LOG_DEBUG,__VA_ARGS__);}
     #define LOG_DUMP(tag,data,len) LogDump(LOG_DEBUG,__FILE__,__FUNCTION__,__LINE__,tag,data,len)
+    #define DUMPV(tag,data,len) LogDump(LOG_VERBOSE,__FILE__,__FUNCTION__,__LINE__,tag,data,len)
+    #define DUMPD(tag,data,len) LogDump(LOG_DEBUG,__FILE__,__FUNCTION__,__LINE__,tag,data,len)
+    #define DUMPV_IF(x,tag,data,len) {if(x) LogDump(LOG_VERBOSE,__FILE__,__FUNCTION__,__LINE__,tag,data,len);}
+    #define DUMPD_IF(x,tag,data,len) {if(x) LogDump(LOG_DEBUG,__FILE__,__FUNCTION__,__LINE__,tag,data,len);}
 #endif
 
 #define LOGI(...)  LOG_PRINTF(LOG_INFO,__VA_ARGS__) 
 #define LOGW(...)  LOG_PRINTF(LOG_WARN,__VA_ARGS__) 
-#define LOGE(...)  LOG_PRINTF(LOG_ERROR,__VA_ARGS__) 
+#define LOGE(...)  LOG_PRINTF(LOG_ERROR,__VA_ARGS__)
+#define DUMPI(tag,data,len) LogDump(LOG_INFO,__FILE__,__FUNCTION__,__LINE__,tag,data,len)
+#define DUMPW(tag,data,len) LogDump(LOG_WARN,__FILE__,__FUNCTION__,__LINE__,tag,data,len)
+#define DUMPE(tag,data,len) LogDump(LOG_ERROR,__FILE__,__FUNCTION__,__LINE__,tag,data,len)
 #define FATAL(...) cdlog::FatalMessage(__FILE__,__LINE__,__FUNCTION__,0).messageSave(__VA_ARGS__)
 
-#define LOGI_IF(x,...)  if(x) LOG_PRINTF(LOG_INFO,__VA_ARGS__) 
-#define LOGW_IF(x,...)  if(x) LOG_PRINTF(LOG_WARN,__VA_ARGS__) 
-#define LOGE_IF(x,...)  if(x) LOG_PRINTF(LOG_ERROR,__VA_ARGS__) 
-#define FATAL_IF(x,...) if(x) LOG_PRINTF(LOG_FATAL,__VA_ARGS__)
+#define LOGI_IF(x,...)  {if(x) LOG_PRINTF(LOG_INFO,__VA_ARGS__);}
+#define LOGW_IF(x,...)  {if(x) LOG_PRINTF(LOG_WARN,__VA_ARGS__);}
+#define LOGE_IF(x,...)  {if(x) LOG_PRINTF(LOG_ERROR,__VA_ARGS__);}
+#define DUMPI_IF(x,tag,data,len) {if(x) LogDump(LOG_INFO,__FILE__,__FUNCTION__,__LINE__,tag,data,len);}
+#define DUMPW_IF(x,tag,data,len) {if(x) LogDump(LOG_WARN,__FILE__,__FUNCTION__,__LINE__,tag,data,len);}
+#define DUMPE_IF(x,tag,data,len) {if(x) LogDump(LOG_ERROR,__FILE__,__FUNCTION__,__LINE__,tag,data,len);}
+#define FATAL_IF(x,...) {if(x) LOG_PRINTF(LOG_FATAL,__VA_ARGS__);}
     
 #endif//endif __CDLOG_H__

@@ -19,7 +19,7 @@
 #else
 #include <ucontext.h>
 #endif
-#define ASYNC_LOG 1
+#define ASYNC_LOG 1 
 static LogLevel sLogLevel=LOG_DEBUG;
 
 static std::string splitFileName(const std::string& str) {
@@ -55,6 +55,7 @@ static void LogInit() {
     });
 #endif
 }
+
 void LogPrintf(int level,const char*file,const char*func,int line,const char*format,...) {
     va_list args;
     const std::string tag=splitFileName(file);
