@@ -9,6 +9,12 @@ Gesture::Gesture() {
     mBoundingBox.set(0,0,0,0);
 }
 
+Gesture::~Gesture(){
+    for(auto stroke:mStrokes)
+        delete stroke;
+    LOGV("Destroy Gesture %p",this);
+}
+
 Gesture* Gesture::clone() {
     Gesture* gesture = new Gesture();
     gesture->mBoundingBox.set(mBoundingBox.left, mBoundingBox.top,

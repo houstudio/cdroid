@@ -22,6 +22,7 @@ private:
     std::vector<GestureStroke*> mStrokes;
 public:
     Gesture();
+    ~Gesture();
     Gesture* clone();
     /**
      * @return all the strokes of the gesture

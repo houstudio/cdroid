@@ -35,6 +35,15 @@ GestureStore::GestureStore() {
     mClassifier = new InstanceLearner();
 }
 
+GestureStore::~GestureStore(){
+    delete mClassifier;
+    for(auto ng:mNamedGestures){
+        std::vector<Gesture*>& strokes = ng.second;
+        for(auto stroke:strokes)
+            delete stroke;
+    }
+    LOGV("Destroy GestureStore %p",this);
+}
 /**
  * Specify how the gesture library will handle orientation.
  * Use ORIENTATION_INVARIANT or ORIENTATION_SENSITIVE

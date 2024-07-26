@@ -15,9 +15,10 @@ protected:
     }
 public:
     virtual bool save()=0;
-
     virtual bool load()=0;
-
+    virtual ~GestureLibrary(){
+        delete mStore;
+    }
     virtual bool isReadOnly()const {
         return false;
     }

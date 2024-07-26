@@ -74,7 +74,7 @@ public:
     static constexpr int ORIENTATION_SENSITIVE_8 = 8;
 public:
     GestureStore(); 
-
+    ~GestureStore();
     /**
      * Specify how the gesture library will handle orientation.
      * Use ORIENTATION_INVARIANT or ORIENTATION_SENSITIVE
