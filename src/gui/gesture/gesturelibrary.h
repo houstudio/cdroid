@@ -2,11 +2,11 @@
 #define __GESTURE_LIBRARY_H__
 #include <string>
 #include <vector>
+#include <gesture/learner.h>
+#include <gesture/gesture.h>
 #include <gesture/prediction.h>
 #include <gesture/gesturestore.h>
 namespace cdroid{
-class Learner;
-class Gesture;
 class GestureLibrary {
 protected:
     GestureStore* mStore;

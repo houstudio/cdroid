@@ -6,6 +6,7 @@ std::atomic<int>Gesture::sGestureCount(0);
 
 Gesture::Gesture() {
     mGestureID = GESTURE_ID_BASE + sGestureCount++;
+    mBoundingBox.set(0,0,0,0);
 }
 
 Gesture* Gesture::clone() {

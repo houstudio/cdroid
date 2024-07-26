@@ -175,6 +175,7 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     const float radians=M_PI*2.f*mCurrentDegrees/360.f;
     const float fsin=sin(radians);
     const float fcos=cos(radians);
+    const bool filteredBitmap = drawable->isFilterBitmap();
 #if 0//Anti clockwise
     Matrix mtx(fcos,-fsin, fsin,fcos,
             sdot(-fsin,py,1-fcos,px),   sdot(fsin,px,1-fcos,py));
@@ -184,9 +185,13 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     canvas.save();
     canvas.translate(bounds.left,bounds.top);
     canvas.transform(mtx);
+    if(!filteredBitmap)
+        drawable->setFilterBitmap(true);
     drawable->setBounds(0,0,w,h);
     drawable->draw(canvas);
     drawable->setBounds(bounds);
+    if(!filteredBitmap)
+        drawable->setFilterBitmap(false);
     canvas.translate(-bounds.left,-bounds.top);
     canvas.restore();
 #endif

@@ -2,10 +2,10 @@
 #define __GESTURE_INSTANCE_H__
 #include <string>
 #include <vector>
+#include <gesture/learner.h>
+#include <gesture/instancelearner.h>
+#include <gesture/gesturestore.h>
 namespace cdroid{
-class Gesture;
-class Learner;
-class InstanceLearner;
 class Instance {
 private:
     static constexpr int SEQUENCE_SAMPLE_SIZE = 16;
@@ -18,10 +18,8 @@ private:
 protected:
     // the feature vector
     std::vector<float> vector;
-
     // the label can be null
     const std::string label;
-
     // the id of the instance
     long id;
     friend class Learner;

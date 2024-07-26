@@ -1,10 +1,10 @@
 #ifndef __LEARNER_H__
 #define __LEARNER_H__
+#include <string>
 #include <vector>
 #include <gesture/prediction.h>
 namespace cdroid{
 class Instance;
-
 class Learner {
 private:
     std::vector<Instance*> mInstances;

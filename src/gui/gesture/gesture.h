@@ -5,9 +5,9 @@
 #include <core/rect.h>
 #include <core/path.h>
 #include <core/parcelable.h>
+#include <gesture/gesturestroke.h>
 
 namespace cdroid{
-class GestureStroke;
 typedef Cairo::RefPtr<Cairo::ImageSurface> Bitmap;
 class Gesture:public Parcelable {
 private:
