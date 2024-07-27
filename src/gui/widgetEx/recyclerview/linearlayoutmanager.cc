@@ -141,6 +141,7 @@ void LinearLayoutManager::setOrientation(int orientation) {
     assertNotInLayoutOrScroll("");
 
     if ( (orientation != mOrientation) || (mOrientationHelper == nullptr) ) {
+        delete mOrientationHelper;
         mOrientationHelper =  OrientationHelper::createOrientationHelper(this, orientation);
         mAnchorInfo->mOrientationHelper = mOrientationHelper;
         mOrientation = orientation;
@@ -264,10 +265,8 @@ void LinearLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, Rec
         // calculate anchor position and coordinate
         updateAnchorInfoForLayout(recycler, state, *mAnchorInfo);
         mAnchorInfo->mValid = true;
-    } else if (focused && (mOrientationHelper->getDecoratedStart(focused)
-                >= mOrientationHelper->getEndAfterPadding()
-            || mOrientationHelper->getDecoratedEnd(focused)
-                <= mOrientationHelper->getStartAfterPadding())) {
+    } else if (focused && ( (mOrientationHelper->getDecoratedStart(focused)>= mOrientationHelper->getEndAfterPadding())
+            || (mOrientationHelper->getDecoratedEnd(focused) <= mOrientationHelper->getStartAfterPadding()) )) {
         // This case relates to when the anchor child is the focused view and due to layout
         // shrinking the focused view fell outside the viewport, e.g. when soft keyboard shows
         // up after tapping an EditText which shrinks RV causing the focused view (The tapped
