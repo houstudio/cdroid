@@ -1,5 +1,5 @@
-#include <wiget/framelayout.h>
-
+#include <widget/framelayout.h>
+#include <gesture/gesturelibraries.h>
 namespace cdroid{
 class GestureOverlayView:public FrameLayout {
 public:
@@ -9,24 +9,23 @@ public:
     static constexpr int ORIENTATION_HORIZONTAL = 0;
     static constexpr int ORIENTATION_VERTICAL = 1;
 public:
-    static interface OnGesturingListener {
-        void onGesturingStarted(GestureOverlayView overlay);
-
-        void onGesturingEnded(GestureOverlayView overlay);
+    class OnGesturingListener:public EventSet {
+    public:
+        CallbackBase<void,GestureOverlayView&> onGesturingStarted;
+        CallbackBase<void,GestureOverlayView&> onGesturingEnded;
     };
 
-    interface OnGestureListener {
-        void onGestureStarted(GestureOverlayView overlay, MotionEvent event);
-
-        void onGesture(GestureOverlayView overlay, MotionEvent event);
-
-        void onGestureEnded(GestureOverlayView overlay, MotionEvent event);
-
-        void onGestureCancelled(GestureOverlayView overlay, MotionEvent event);
+    class OnGestureListener:public EventSet{
+    public:
+        CallbackBase<void,GestureOverlayView&,MotionEvent&> onGestureStarted;
+        CallbackBase<void,GestureOverlayView&,MotionEvent&> onGesture;
+        CallbackBase<void,GestureOverlayView&,MotionEvent&> onGestureEnded;
+        CallbackBase<void,GestureOverlayView&,MotionEvent&> onGestureCancelled;
     };
 
-    interface OnGesturePerformedListener {
-        void onGesturePerformed(GestureOverlayView overlay, Gesture gesture);
+    class  OnGesturePerformedListener:public EventSet{
+    public:
+        CallbackBase<void,GestureOverlayView&, Gesture&> onGesturePerformed;
     };
 private:
     static constexpr int FADE_ANIMATION_RATE = 16;
@@ -38,6 +37,8 @@ private:
     long mFadingStart;
     bool mFadingHasStarted;
     bool mFadeEnabled = true;
+    bool mFireActionPerformed;
+    bool mResetMultipleStrokes;
 
     int mCurrentColor;
     int mCertainGestureColor = 0xFFFFFF00;
@@ -52,8 +53,8 @@ private:
 
     int mOrientation = ORIENTATION_VERTICAL;
 
-    final Rect mInvalidRect = new Rect();
-    final Path mPath = new Path();
+    Rect mInvalidRect;
+    Path mPath;
     bool mGestureVisible = true;
 
     float mX;
@@ -87,9 +88,10 @@ private:
     float mFadingAlpha = 1.0f;
     AccelerateDecelerateInterpolator*mInterpolator;// =new AccelerateDecelerateInterpolator();
 
-    FadeOutRunnable mFadingOut;// = new FadeOutRunnable();
+    Runnable mFadingOut;// = new FadeOutRunnable();
 private:
     void init();
+    void FadeOutProc();
     void setCurrentColor(int color);
     void setPaintAlpha(int alpha);
     void clear(bool animated, bool fireActionPerformed, bool immediate);
@@ -101,7 +103,7 @@ private:
     void fireOnGesturePerformed();
 protected:
     void onDetachedFromWindow()override;
-publc:
+public:
     GestureOverlayView(Context* context,const AttributeSet& attrs);
     const std::vector<GesturePoint>& getCurrentStroke() const;
 
@@ -125,8 +127,8 @@ publc:
     void setEventsInterceptionEnabled(bool enabled);
     bool isFadeEnabled()const;
     void setFadeEnabled(bool fadeEnabled);
-    Gesture getGesture()const;
-    void setGesture(Gesture gesture);
+    Gesture* getGesture()const;
+    void setGesture(Gesture* gesture);
     Path getGesturePath();
     Path getGesturePath(Path path);
     bool isGestureVisible()const;
@@ -143,7 +145,7 @@ publc:
     void removeOnGesturingListener(OnGesturingListener listener);
     void removeAllOnGesturingListeners();
     bool isGesturing()const;
-    void draw(Canvas canvas);
+    void draw(Canvas& canvas);
     void clear(bool animated);
     void cancelClearAnimation();
     void cancelGesture();

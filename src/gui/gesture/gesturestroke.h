@@ -9,8 +9,8 @@
 
 namespace cdroid{
 class GestureStroke {
-    static constexpr float TOUCH_TOLERANCE = 3;
 public:
+    static constexpr float TOUCH_TOLERANCE = 3;
     RectF boundingBox;
     float length;
     std::vector<float> points;

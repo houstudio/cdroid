@@ -3,6 +3,7 @@
 #include <string>
 #include <gesture/instance.h>
 #include <gesture/gesturelibrary.h>
+#include <gesture/gestureutils.h>
 namespace cdroid{
 class Context;
 class GestureLibrary;
