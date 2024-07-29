@@ -127,14 +127,14 @@ struct CRect{
         if(empty()){
             set(b.left,b.top,b.width,b.height);
         }else{
-            T x1 = _MIN (left, b.left);
-            T y1 = _MIN (top, b.top);
-            T x2 = _MAX (b.left + b.width,  left + width);
-            T y2 = _MAX (b.top +  b.height, top + height);
+            T x1 = std::min (left, b.left);
+            T y1 = std::min (top, b.top);
+            T newWidth = std::max (b.left + b.width,  left + width) - x1;
+            T newHeight = std::max (b.top +  b.height, top + height) - y1;
             left = x1;
             top = y1;
-            width  = x2 - x1;
-            height = y2 - y1;
+            width  = newWidth;
+            height = newHeight;
         }
     }
     void Union(T px,T py){

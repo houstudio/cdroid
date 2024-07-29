@@ -493,11 +493,11 @@ Rect GestureOverlayView::touchMove(MotionEvent& event) {
             mTotalLength += (float) std::hypot(dx, dy);
 
             if (mTotalLength > mGestureStrokeLengthThreshold) {
-                OrientedBoundingBox box =  GestureUtils::computeOrientedBoundingBox(mStrokeBuffer);
+                OrientedBoundingBox* box =  GestureUtils::computeOrientedBoundingBox(mStrokeBuffer);
 
                 float angle = std::abs(box.orientation);
-                if (angle > 90) {
-                    angle = 180 - angle;
+                if (angle > 90.f) {
+                    angle = 180.f - angle;
                 }
 
                 if (box.squareness > mGestureStrokeSquarenessTreshold ||

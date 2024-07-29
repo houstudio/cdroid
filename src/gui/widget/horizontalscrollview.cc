@@ -90,6 +90,7 @@ void HorizontalScrollView::initScrollView() {
     setFocusable(true);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
+    mLastScroll = 0;
     mEdgeGlowLeft = new EdgeEffect(mContext);
     mEdgeGlowRight= new EdgeEffect(mContext);
     ViewConfiguration&configuration=ViewConfiguration::get(mContext);

@@ -47,8 +47,13 @@ int Gesture::getStrokesCount()const {
  * @param stroke
  */
 void Gesture::addStroke(GestureStroke* stroke) {
+    RectF ob= mBoundingBox;
+    RectF sb= stroke->boundingBox;
     mStrokes.push_back(stroke);
     mBoundingBox.Union(stroke->boundingBox);
+    LOGD("Gesture %p(%.f,%.f,%.f,%.f) add Stroke %p(%.f,%.f,%.f,%.f)==>(%.f,%.f,%.f,%.f)",this,stroke,
+            ob.left,ob.top,ob.width,ob.height,sb.left,sb.top,sb.width,sb.height,
+            mBoundingBox.left,mBoundingBox.top,mBoundingBox.width,mBoundingBox.height);
 }
 
 /**
@@ -168,8 +173,8 @@ Bitmap Gesture::toBitmap(int width, int height, int inset, int color) {
     canvas.set_color(color);
 
     Path* path = toPath();
-    RectF bounds;
-    path->compute_bounds(bounds, true);
+    RectF bounds = mBoundingBox;
+    //path->compute_bounds(bounds, true);
 
     const float sx = (width - 2 * inset) / bounds.width;
     const float sy = (height - 2 * inset) / bounds.height;
@@ -187,6 +192,7 @@ Bitmap Gesture::toBitmap(int width, int height, int inset, int color) {
     for (auto stroke:mStrokes){
         stroke->draw(canvas);
     }
+    canvas.stroke();
     return bitmap;
 }
 
