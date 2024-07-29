@@ -182,7 +182,7 @@ public:
 };
 
 TEST_F(LOOPER,handler){
-    Looper *loop= Looper::getDefault();
+    Looper *loop= Looper::getMainLooper();
     Handler *handler=new MyHandler();
     handler->sendEmptyMessage(1);
     handler->sendEmptyMessageDelayed(2,20);
@@ -196,7 +196,7 @@ TEST_F(LOOPER,handler){
 }
 
 TEST_F(LOOPER,asyncmsg){
-    Looper *loop= Looper::getDefault();
+    Looper *loop= Looper::getMainLooper();
     Handler *handler=new MyHandler();
     handler->sendEmptyMessage(1);
     handler->sendEmptyMessageDelayed(2,20);
@@ -230,14 +230,14 @@ static int fdcallback(int fd, int events, void* data){
    if(*loops>20){
       struct itimerspec new_value={{0,0},{0,0}};
       timerfd_settime(fd,0,&new_value, NULL);
-      Looper::getDefault()->removeFd(fd);
+      Looper::getMainLooper()->removeFd(fd);
    }
    return 1;
 }
 
 TEST_F(LOOPER,timerfd){
     #define INTERVAL 200 //ms
-    Looper*loop= Looper::getDefault();
+    Looper*loop= Looper::getMainLooper();
     int loops=0;
     struct itimerspec new_value={{0,0},{0,0}};
     ms2timespec(INTERVAL,&new_value.it_value);
@@ -253,7 +253,7 @@ TEST_F(LOOPER,timerfd2){
     #define INTERVAL 200 //ms
     App app;
     int loops=0;
-    Looper*loop= Looper::getDefault();
+    Looper*loop= Looper::getMainLooper();
     struct itimerspec new_value={{0,0},{0,0}};
 
     ms2timespec(INTERVAL,&new_value.it_value);
