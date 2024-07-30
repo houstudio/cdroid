@@ -71,7 +71,8 @@ DrawableWrapper::~DrawableWrapper(){
 void DrawableWrapper::setDrawable(Drawable*dr){
     if (mDrawable != nullptr)
         mDrawable->setCallback(nullptr);
-    mDrawable=dr;
+    delete mDrawable;
+    mDrawable = dr;
     if(dr){
         dr->setCallback(this);
         dr->setVisible(isVisible(), true);
@@ -80,7 +81,7 @@ void DrawableWrapper::setDrawable(Drawable*dr){
         dr->setBounds(getBounds());
         dr->setLayoutDirection(getLayoutDirection());   
         if(mState)
-            mState->mDrawableState=dr->getConstantState(); 
+            mState->mDrawableState = dr->getConstantState(); 
     }
     invalidateSelf();
 }
@@ -90,15 +91,15 @@ Drawable*DrawableWrapper::getDrawable()const{
 }
 
 bool DrawableWrapper::isStateful()const{
-    return mDrawable  && mDrawable->isStateful();
+    return mDrawable && mDrawable->isStateful();
 }
 
 bool DrawableWrapper::hasFocusStateSpecified()const{
-    return mDrawable  && mDrawable->hasFocusStateSpecified();
+    return mDrawable && mDrawable->hasFocusStateSpecified();
 }
 
 bool DrawableWrapper::onStateChange(const std::vector<int>& state) {
-    if (mDrawable  && mDrawable->isStateful()) {
+    if (mDrawable && mDrawable->isStateful()) {
         bool changed = mDrawable->setState(state);
         if (changed)  onBoundsChange(getBounds());
         return changed;
@@ -107,7 +108,7 @@ bool DrawableWrapper::onStateChange(const std::vector<int>& state) {
 }
 
 bool DrawableWrapper::onLevelChange(int level) {
-    return mDrawable  && mDrawable->setLevel(level);
+    return mDrawable && mDrawable->setLevel(level);
 }
 
 void DrawableWrapper::onBoundsChange(const Rect& bounds) {
@@ -188,7 +189,7 @@ void DrawableWrapper::unscheduleDrawable(Drawable& who,Runnable& what){
 }
 
 bool DrawableWrapper::getPadding(Rect& padding){
-    return mDrawable  && mDrawable->getPadding(padding);
+    return mDrawable && mDrawable->getPadding(padding);
 }
 
 Insets DrawableWrapper::getOpticalInsets(){

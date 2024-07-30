@@ -1,12 +1,11 @@
-#if 10
+#if 0
 #include <gesture/gestureoverlayview.h>
 namespace cdroid{
-//private final AccelerateDecelerateInterpolator mInterpolator =new AccelerateDecelerateInterpolator();
-//private final FadeOutRunnable mFadingOut = new FadeOutRunnable();
 
 GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet& attrs)
   :FrameLayout(context, attrs){
 
+    init();
     mGestureStrokeWidth = attrs.getFloat("gestureStrokeWidth", mGestureStrokeWidth);
     mInvalidateExtraBorder = std::max(1, ((int) mGestureStrokeWidth) - 1);
     mCertainGestureColor = attrs.getColor("gestureColor",mCertainGestureColor);
@@ -21,22 +20,16 @@ GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet& attr
     mFadeEnabled = attrs.getBoolean("fadeEnabled", mFadeEnabled);
     mOrientation = attrs.getInt("orientation", mOrientation);
 
-    init();
 }
 
 void GestureOverlayView::init() {
     setWillNotDraw(false);
     mFadingOut = std::bind(&GestureOverlayView::FadeOutProc,this);
-    /*Paint gesturePaint = mGesturePaint;
-    gesturePaint.setAntiAlias(GESTURE_RENDERING_ANTIALIAS);
-    gesturePaint.setColor(mCertainGestureColor);
-    gesturePaint.setStyle(Paint.Style.STROKE);
-    gesturePaint.setStrokeJoin(Paint.Join.ROUND);
-    gesturePaint.setStrokeCap(Paint.Cap.ROUND);
-    gesturePaint.setStrokeWidth(mGestureStrokeWidth);
-    gesturePaint.setDither(DITHER_FLAG);*/
-
+    mInterpolator = AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
     mCurrentColor = mCertainGestureColor;
+    mFadeDuration = 150;
+    mFadeOffset = 420;
+    mCurrentGesture = nullptr;
     setPaintAlpha(255);
 }
 
@@ -177,11 +170,11 @@ void GestureOverlayView::setFadeOffset(long fadeOffset) {
     mFadeOffset = fadeOffset;
 }
 
-void GestureOverlayView::addOnGestureListener(OnGestureListener listener) {
+void GestureOverlayView::addOnGestureListener(const OnGestureListener& listener) {
     mOnGestureListeners.push_back(listener);
 }
 
-void GestureOverlayView::removeOnGestureListener(OnGestureListener listener) {
+void GestureOverlayView::removeOnGestureListener(const OnGestureListener& listener) {
     auto it = std::find(mOnGestureListeners.begin(), mOnGestureListeners.end(),listener);
     if(it !=  mOnGestureListeners.end())
         mOnGestureListeners.erase(it);
@@ -191,14 +184,14 @@ void GestureOverlayView::removeAllOnGestureListeners() {
     mOnGestureListeners.clear();
 }
 
-void GestureOverlayView::addOnGesturePerformedListener(OnGesturePerformedListener listener) {
+void GestureOverlayView::addOnGesturePerformedListener(const OnGesturePerformedListener& listener) {
     mOnGesturePerformedListeners.push_back(listener);
     if (mOnGesturePerformedListeners.size() > 0) {
         mHandleGestureActions = true;
     }
 }
 
-void GestureOverlayView::removeOnGesturePerformedListener(OnGesturePerformedListener listener) {
+void GestureOverlayView::removeOnGesturePerformedListener(const OnGesturePerformedListener& listener) {
     mOnGesturePerformedListeners.remove(listener);
     if (mOnGesturePerformedListeners.size() <= 0) {
         mHandleGestureActions = false;
@@ -210,11 +203,11 @@ void GestureOverlayView::removeAllOnGesturePerformedListeners() {
     mHandleGestureActions = false;
 }
 
-void GestureOverlayView::addOnGesturingListener(OnGesturingListener listener) {
+void GestureOverlayView::addOnGesturingListener(const OnGesturingListener& listener) {
     mOnGesturingListeners.push_back(listener);
 }
 
-void GestureOverlayView::removeOnGesturingListener(OnGesturingListener listener) {
+void GestureOverlayView::removeOnGesturingListener(const OnGesturingListener& listener) {
     auto it = std::find(mOnGesturingListeners.begin(),mOnGesturingListeners.end(),listener);
     if(it!=mOnGesturingListeners.end())
         mOnGesturingListeners.erase(it);
@@ -245,6 +238,8 @@ void GestureOverlayView::draw(Canvas& canvas) {
         pc.setAlpha(uint8_t(mPaintAlpha));
         canvas.set_source_rgba(pc.red(),pc.green(),pc.blue(),pc.alpha());
         canvas.set_line_width(mGestureStrokeWidth);
+        canvas.set_line_cap(Cairo::Context::LineCap::ROUND);
+        canvas.set_line_join(Cairo::Context::LineJoin::ROUND);
         canvas.drawPath(mPath, mGesturePaint);
     }
 }
@@ -577,9 +572,6 @@ void GestureOverlayView::fireOnGesturePerformed() {
 }
 
 void GestureOverlayView::FadeOutProc(){
-    //bool fireActionPerformed;
-    //bool resetMultipleStrokes;
-
     if (mIsFadingOut) {
         const long now = AnimationUtils::currentAnimationTimeMillis();
         const long duration = now - mFadingStart;

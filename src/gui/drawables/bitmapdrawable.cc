@@ -56,7 +56,7 @@ BitmapDrawable::BitmapState::~BitmapState(){
 }
 
 BitmapDrawable* BitmapDrawable::BitmapState::newDrawable(){
-    return new BitmapDrawable(shared_from_this());    
+    return new BitmapDrawable(shared_from_this());
 }
 
 int BitmapDrawable::BitmapState::getChangingConfigurations()const{
@@ -380,11 +380,11 @@ void BitmapDrawable::draw(Canvas&canvas){
             RefPtr<Surface> subs=ImageSurface::create(Surface::Format::ARGB32,mBounds.width,mBitmapHeight);
             RefPtr<Cairo::Context>subcanvas=Cairo::Context::create(subs);
             subcanvas->rectangle(0,0,mBounds.width,mBitmapHeight);
-            setPatternByTileMode(pat,mBitmapState->mTileModeX); 
+            setPatternByTileMode(pat,mBitmapState->mTileModeX);
             subcanvas->set_source(pat);
             subcanvas->fill();
 
-            RefPtr<SurfacePattern>pats= SurfacePattern::create(subs); 
+            RefPtr<SurfacePattern>pats= SurfacePattern::create(subs);
             canvas.set_source(pats);
             if(mBounds.height>mBitmapHeight&&mBitmapState->mTileModeY==TileMode::DISABLED)
                  setPatternByTileMode(pats,TileMode::CLAMP);
@@ -463,7 +463,7 @@ Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
     const int tileMode = atts.getInt("tileMode",kvs,-1);
     const int tileModeX= atts.getInt("tileModeX",kvs,tileMode);
     const int tileModeY= atts.getInt("tileModeY",kvs,tileMode);
-    
+ 
     BitmapDrawable*d = new BitmapDrawable(ctx,src);
     LOGD("bitmap=%p",d);
     d->setGravity(gravity);

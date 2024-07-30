@@ -176,8 +176,8 @@ Bitmap Gesture::toBitmap(int width, int height, int inset, int color) {
     RectF bounds = mBoundingBox;
     //path->compute_bounds(bounds, true);
 
-    const float sx = (width - 2 * inset) / bounds.width;
-    const float sy = (height - 2 * inset) / bounds.height;
+    const float sx = float(width - 2 * inset) / bounds.width;
+    const float sy = float(height - 2 * inset) / bounds.height;
     const float scale = sx > sy ? sy : sx;
     canvas.set_line_width(2.0f / scale);
 
