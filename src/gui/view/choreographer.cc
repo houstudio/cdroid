@@ -189,7 +189,8 @@ void Choreographer::doFrame(nsecs_t frameTimeNanos,int frame){
 
 void Choreographer::doCallbacks(int callbackType, long frameTimeNanos){
     CallbackRecord* callbacks;
-    /*synchronized (mLock)*/{
+    /*synchronized (mLock)*/
+    {
         // We use "now" to determine when callbacks become due because it's possible
         // for earlier processing phases in a frame to post callbacks that should run
         // in a following phase, such as an input event that causes an animation to start.
@@ -226,7 +227,8 @@ void Choreographer::doCallbacks(int callbackType, long frameTimeNanos){
             c->action , c->token, (SystemClock::uptimeMillis() - c->dueTime),c->dueTime);
         c->run(frameTimeNanos);
     }
-    /*synchronized (mLock)*/ {
+    /*synchronized (mLock)*/
+    {
         mCallbacksRunning = false;
         do {
             CallbackRecord* next = callbacks->next;

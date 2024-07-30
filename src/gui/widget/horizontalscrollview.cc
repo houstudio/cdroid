@@ -924,7 +924,7 @@ int HorizontalScrollView::consumeFlingInStretch(int unconsumed) {
     if (unconsumed > 0 && mEdgeGlowLeft && mEdgeGlowLeft->getDistance() != 0.f) {
         const int size = getWidth();
         const float deltaDistance = -unconsumed * FLING_DESTRETCH_FACTOR / size;
-        const int consumed = std::round(-size / FLING_DESTRETCH_FACTOR
+        const int consumed = std::round(float(-size) / FLING_DESTRETCH_FACTOR
                 * mEdgeGlowLeft->onPullDistance(deltaDistance, 0.5f));
         if (consumed != unconsumed) {
             mEdgeGlowLeft->finish();
@@ -934,7 +934,7 @@ int HorizontalScrollView::consumeFlingInStretch(int unconsumed) {
     if (unconsumed < 0 && mEdgeGlowRight && mEdgeGlowRight->getDistance() != .0f) {
         const int size = getWidth();
         const float deltaDistance = unconsumed * FLING_DESTRETCH_FACTOR / size;
-        const int consumed = std::round(size / FLING_DESTRETCH_FACTOR
+        const int consumed = std::round(float(size) / FLING_DESTRETCH_FACTOR
                 * mEdgeGlowRight->onPullDistance(deltaDistance, 0.5f));
         if (consumed != unconsumed) {
             mEdgeGlowRight->finish();

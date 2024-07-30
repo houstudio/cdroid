@@ -1,4 +1,4 @@
-#if 0
+#if 10
 #include <gesture/gestureoverlayview.h>
 namespace cdroid{
 //private final AccelerateDecelerateInterpolator mInterpolator =new AccelerateDecelerateInterpolator();
@@ -7,32 +7,19 @@ namespace cdroid{
 GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet& attrs)
   :FrameLayout(context, attrs){
 
-    /*mGestureStrokeWidth = a.getFloat(R.styleable.GestureOverlayView_gestureStrokeWidth,
-            mGestureStrokeWidth);
+    mGestureStrokeWidth = attrs.getFloat("gestureStrokeWidth", mGestureStrokeWidth);
     mInvalidateExtraBorder = std::max(1, ((int) mGestureStrokeWidth) - 1);
-    mCertainGestureColor = a.getColor(R.styleable.GestureOverlayView_gestureColor,
-            mCertainGestureColor);
-    mUncertainGestureColor = a.getColor(R.styleable.GestureOverlayView_uncertainGestureColor,
-            mUncertainGestureColor);
-    mFadeDuration = a.getInt(R.styleable.GestureOverlayView_fadeDuration, (int) mFadeDuration);
-    mFadeOffset = a.getInt(R.styleable.GestureOverlayView_fadeOffset, (int) mFadeOffset);
-    mGestureStrokeType = a.getInt(R.styleable.GestureOverlayView_gestureStrokeType,
-            mGestureStrokeType);
-    mGestureStrokeLengthThreshold = a.getFloat(
-            R.styleable.GestureOverlayView_gestureStrokeLengthThreshold,
-            mGestureStrokeLengthThreshold);
-    mGestureStrokeAngleThreshold = a.getFloat(
-            R.styleable.GestureOverlayView_gestureStrokeAngleThreshold,
-            mGestureStrokeAngleThreshold);
-    mGestureStrokeSquarenessTreshold = a.getFloat(
-            R.styleable.GestureOverlayView_gestureStrokeSquarenessThreshold,
-            mGestureStrokeSquarenessTreshold);
-    mInterceptEvents = a.getBoolean(R.styleable.GestureOverlayView_eventsInterceptionEnabled,
-            mInterceptEvents);
-    mFadeEnabled = a.getBoolean(R.styleable.GestureOverlayView_fadeEnabled,
-            mFadeEnabled);
-    mOrientation = a.getInt(R.styleable.GestureOverlayView_orientation, mOrientation);*/
-
+    mCertainGestureColor = attrs.getColor("gestureColor",mCertainGestureColor);
+    mUncertainGestureColor = attrs.getColor("uncertainGestureColor",mUncertainGestureColor);
+    mFadeDuration = attrs.getInt("fadeDuration", (int) mFadeDuration);
+    mFadeOffset = attrs.getInt("fadeOffset", (int) mFadeOffset);
+    mGestureStrokeType = attrs.getInt("gestureStrokeType", mGestureStrokeType);
+    mGestureStrokeLengthThreshold = attrs.getFloat("gestureStrokeLengthThreshold",  mGestureStrokeLengthThreshold);
+    mGestureStrokeAngleThreshold = attrs.getFloat("gestureStrokeAngleThreshold", mGestureStrokeAngleThreshold);
+    mGestureStrokeSquarenessTreshold = attrs.getFloat("gestureStrokeSquarenessThreshold", mGestureStrokeSquarenessTreshold);
+    mInterceptEvents = attrs.getBoolean("eventsInterceptionEnabled", mInterceptEvents);
+    mFadeEnabled = attrs.getBoolean("fadeEnabled", mFadeEnabled);
+    mOrientation = attrs.getInt("orientation", mOrientation);
 
     init();
 }
@@ -88,7 +75,7 @@ float GestureOverlayView::getGestureStrokeWidth() const{
 void GestureOverlayView::setGestureStrokeWidth(float gestureStrokeWidth) {
     mGestureStrokeWidth = gestureStrokeWidth;
     mInvalidateExtraBorder = std::max(1, int(gestureStrokeWidth) - 1);
-    mGesturePaint.setStrokeWidth(gestureStrokeWidth);
+    //mGesturePaint.setStrokeWidth(gestureStrokeWidth);
 }
 
 int GestureOverlayView::getGestureStrokeType() const{
@@ -195,7 +182,9 @@ void GestureOverlayView::addOnGestureListener(OnGestureListener listener) {
 }
 
 void GestureOverlayView::removeOnGestureListener(OnGestureListener listener) {
-    mOnGestureListeners.remove(listener);
+    auto it = std::find(mOnGestureListeners.begin(), mOnGestureListeners.end(),listener);
+    if(it !=  mOnGestureListeners.end())
+        mOnGestureListeners.erase(it);
 }
 
 void GestureOverlayView::removeAllOnGestureListeners() {
@@ -203,7 +192,7 @@ void GestureOverlayView::removeAllOnGestureListeners() {
 }
 
 void GestureOverlayView::addOnGesturePerformedListener(OnGesturePerformedListener listener) {
-    mOnGesturePerformedListeners.add(listener);
+    mOnGesturePerformedListeners.push_back(listener);
     if (mOnGesturePerformedListeners.size() > 0) {
         mHandleGestureActions = true;
     }
@@ -222,11 +211,13 @@ void GestureOverlayView::removeAllOnGesturePerformedListeners() {
 }
 
 void GestureOverlayView::addOnGesturingListener(OnGesturingListener listener) {
-    mOnGesturingListeners.add(listener);
+    mOnGesturingListeners.push_back(listener);
 }
 
 void GestureOverlayView::removeOnGesturingListener(OnGesturingListener listener) {
-    mOnGesturingListeners.remove(listener);
+    auto it = std::find(mOnGesturingListeners.begin(),mOnGesturingListeners.end(),listener);
+    if(it!=mOnGesturingListeners.end())
+        mOnGesturingListeners.erase(it);
 }
 
 void GestureOverlayView::removeAllOnGesturingListeners() {
@@ -250,6 +241,10 @@ void GestureOverlayView::setCurrentColor(int color) {
 void GestureOverlayView::draw(Canvas& canvas) {
     FrameLayout::draw(canvas);
     if ((mCurrentGesture != nullptr) && mGestureVisible) {
+        Color pc(mCurrentColor);
+        pc.setAlpha(uint8_t(mPaintAlpha));
+        canvas.set_source_rgba(pc.red(),pc.green(),pc.blue(),pc.alpha());
+        canvas.set_line_width(mGestureStrokeWidth);
         canvas.drawPath(mPath, mGesturePaint);
     }
 }
@@ -258,7 +253,7 @@ void GestureOverlayView::setPaintAlpha(int alpha) {
     alpha += alpha >> 7;
     const int baseAlpha = mCurrentColor >> 24;
     const int useAlpha = baseAlpha * alpha >> 8;
-    mGesturePaint.setColor((mCurrentColor << 8 >>> 8) | (useAlpha << 24));
+    mPaintAlpha = useAlpha;
 }
 
 void GestureOverlayView::clear(bool animated) {
@@ -370,8 +365,8 @@ bool GestureOverlayView::processEvent(MotionEvent& event) {
         return true;
     case MotionEvent::ACTION_MOVE:
         if (mIsListeningForGestures) {
-            Rect rect = touchMove(event);
-            if (rect != null) {
+            const Rect rect = touchMove(event);
+            if (!rect.empty()) {
                 invalidate(rect);
             }
             return true;
@@ -591,7 +586,7 @@ void GestureOverlayView::FadeOutProc(){
 
         if (duration > mFadeDuration) {
             if (mFireActionPerformed) {
-                mFireOnGesturePerformed();
+                fireOnGesturePerformed();
             }
 
             mPreviousWasGesturing = false;
@@ -605,7 +600,7 @@ void GestureOverlayView::FadeOutProc(){
             float interpolatedTime = std::max(0.0f, std::min(1.0f, duration / (float) mFadeDuration));
             mFadingAlpha = 1.0f - mInterpolator->getInterpolation(interpolatedTime);
             setPaintAlpha(int(255 * mFadingAlpha));
-            postDelayed(this, FADE_ANIMATION_RATE);
+            postDelayed(mFadingOut, FADE_ANIMATION_RATE);
         }
     } else if (mResetMultipleStrokes) {
         mResetGesture = true;

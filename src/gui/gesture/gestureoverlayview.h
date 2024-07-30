@@ -41,6 +41,7 @@ private:
     bool mResetMultipleStrokes;
 
     int mCurrentColor;
+    int mPaintAlpha;
     int mCertainGestureColor = 0xFFFFFF00;
     int mUncertainGestureColor = 0x48FFFF00;
     float mGestureStrokeWidth = 12.0f;
