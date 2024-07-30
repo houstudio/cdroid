@@ -46,23 +46,25 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     mQuitFlag = false;
     mExitCode = 0;
     mInst = this;
-    Typeface::setContext(this);
     cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
     cla.addArguments(extoptions.data(),extoptions.size());
     cla.setSwitchChars("-");
     cla.parse(argc,argv);
     rotation = (getArgAsInt("rotate",0)/90)%4;
+    if(hasSwitch("help")){
+        std::cout<<cla.getUsageString()<<std::endl;
+        std::cout<<"params.count="<<getParamCount()<<std::endl;
+        exit(EXIT_SUCCESS);
+        LogSetModuleLevel(nullptr,LOG_FATAL);
+        mQuitFlag=1;
+    }
+    Typeface::setContext(this);
     onInit();
     setName(std::string(argc?argv[0]:__progname));
     LOGI("CDROID Ver:%d.%d.%d Build %d",BUILD::VERSION::Major,BUILD::VERSION::Minor,BUILD::VERSION::Patch,BUILD::VERSION::BuildNumber);
     LOGI("App [%s] started c++=%d",mName.c_str(),__cplusplus);
 	
     View::VIEW_DEBUG = hasSwitch("debug");
-    if(hasSwitch("help")){
-        std::cout<<cla.getUsageString()<<std::endl;
-        std::cout<<"params.count="<<getParamCount()<<std::endl;
-        exit(0);
-    }
     Looper::prepare(false);
     Choreographer & chograph = Choreographer::getInstance();
     chograph.setFrameDelay(getArgAsInt("framedelay",chograph.getFrameDelay()));

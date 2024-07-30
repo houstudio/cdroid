@@ -144,7 +144,7 @@ protected:
     }
 
     float calculateSpeedPerPixel(DisplayMetrics& displayMetrics) {
-        return /*MILLISECONDS_PER_INCH*/100.f / displayMetrics.densityDpi;
+        return SnapHelper::MILLISECONDS_PER_INCH / displayMetrics.densityDpi;
     }
 public:
     MyLinearSmoothScroller(SnapHelper*snap,RecyclerView*rv)
