@@ -69,7 +69,7 @@ void GestureDetector::init(Context* context) {
     if(InputEventConsistencyVerifier::isInstrumentationEnabled())
          mInputEventConsistencyVerifier = new InputEventConsistencyVerifier((Object*)this, 0) ;
     mPressRunnable = [this](){
-        mListener.onShowPress(*mCurrentDownEvent);
+        if(mListener.onShowPress)mListener.onShowPress(*mCurrentDownEvent);
     };
     mLongPressRunnable=[this](){
         //recordGestureClassification(msg.arg1);

@@ -35,9 +35,7 @@ public:
     class Callback;
     class SimpleCallback;
     class RecoverAnimation;
-    class ItemTouchHelperGestureListener;
 protected:
-    friend ItemTouchHelperGestureListener;
     std::vector<View*> mPendingCleanup;
     std::vector<RecoverAnimation*> mRecoverAnimations;
     RecyclerView* mRecyclerView;
@@ -68,6 +66,11 @@ private:
     int mOverdrawChildPosition = -1;
     GestureDetector* mGestureDetector;
     //ItemTouchHelperGestureListener mItemTouchHelperGestureListener;
+    GestureDetector::OnGestureListener mItemTouchHelperGestureListener;
+    bool mShouldReactToLongPress = true;
+    void doNotReactToLongPress();
+    bool onGestureDown(MotionEvent& e);
+    void onGestureLongPress(MotionEvent& e);
 
     RecyclerView::OnItemTouchListener mOnItemTouchListener;
     RecyclerView::OnChildAttachStateChangeListener mOnChildAttachStateChangeListener;
@@ -187,17 +190,6 @@ public:
     int getSwipeDirs(RecyclerView& recyclerView, RecyclerView::ViewHolder& viewHolder);
     int getDragDirs(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder);
     int getMovementFlags(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder)override;
-};
-
-class ItemTouchHelper::ItemTouchHelperGestureListener/*:public GestureDetector::SimpleOnGestureListener*/{
-private:
-    bool mShouldReactToLongPress = true;
-    ItemTouchHelper*mItemTouchHelper;
-public:
-    ItemTouchHelperGestureListener(ItemTouchHelper*);
-    void doNotReactToLongPress();
-    bool onDown(MotionEvent& e);
-    void onLongPress(MotionEvent& e);
 };
 
 class ItemTouchHelper::RecoverAnimation{

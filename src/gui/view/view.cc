@@ -7035,7 +7035,7 @@ void View::playSoundEffect(int soundConstant){
 }
 
 bool View::performHapticFeedback(int feedbackConstant, int flags){
-    if (mAttachInfo == nullptr) {
+    if ((mAttachInfo == nullptr)||(mAttachInfo->mPerformHapticFeedback==nullptr)) {
         return false;
     }
     //noinspection SimplifiableIfStatement

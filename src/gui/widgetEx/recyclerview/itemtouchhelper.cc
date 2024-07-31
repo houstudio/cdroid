@@ -9,6 +9,7 @@ ItemTouchHelper::ItemTouchHelper(Callback* callback) {
     mVelocityTracker = nullptr;
     mSwipeEscapeVelocity = 120;
     mMaxSwipeVelocity = 800;
+    mGestureDetector = nullptr;
     mScrollRunnable = [this]() {
         if ((mSelected != nullptr) && scrollIfNecessary()) {
             if (mSelected != nullptr) { //it might be lost during scrolling
@@ -27,7 +28,7 @@ ItemTouchHelper::ItemTouchHelper(Callback* callback) {
 }
 
 bool ItemTouchHelper::onInterceptTouchEvent(RecyclerView& recyclerView,MotionEvent& event) {
-    //mGestureDetector.onTouchEvent(event);
+    mGestureDetector->onTouchEvent(event);
     LOGD_IF(_DEBUG,"intercept: x:%.f ,y:%.f",event.getX(),event.getY());
     const int action = event.getActionMasked();
     if (action == MotionEvent::ACTION_DOWN) {
@@ -69,7 +70,7 @@ bool ItemTouchHelper::onInterceptTouchEvent(RecyclerView& recyclerView,MotionEve
 }
 
 void ItemTouchHelper::onTouchEvent(RecyclerView& recyclerView,MotionEvent& event) {
-    //mGestureDetector.onTouchEvent(event);
+    mGestureDetector->onTouchEvent(event);
     LOGD_IF(_DEBUG,"on touch: x:%d,y:%d",mInitialTouchX,mInitialTouchY);
     if (mVelocityTracker != nullptr) {
         mVelocityTracker->addMovement(event);
@@ -179,19 +180,18 @@ void ItemTouchHelper::destroyCallbacks() {
 }
 
 void ItemTouchHelper::startGestureDetection() {
-    /*mItemTouchHelperGestureListener = new ItemTouchHelperGestureListener();
-    mGestureDetector = new GestureDetectorCompat(mRecyclerView->getContext(),
-            mItemTouchHelperGestureListener);*/
+    mItemTouchHelperGestureListener.onDown=std::bind(&ItemTouchHelper::onGestureDown,this,std::placeholders::_1);
+    mItemTouchHelperGestureListener.onLongPress=std::bind(&ItemTouchHelper::onGestureLongPress,this,std::placeholders::_1);
+    mGestureDetector = new GestureDetector(mRecyclerView->getContext(),mItemTouchHelperGestureListener);
 }
 
 void ItemTouchHelper::stopGestureDetection() {
-    /*if (mItemTouchHelperGestureListener != null) {
-        mItemTouchHelperGestureListener.doNotReactToLongPress();
-        mItemTouchHelperGestureListener = null;
+    if (mItemTouchHelperGestureListener.onDown||mItemTouchHelperGestureListener.onLongPress) {
+        doNotReactToLongPress();
+        mItemTouchHelperGestureListener ={};
     }
-    if (mGestureDetector != null) {
-        mGestureDetector = null;
-    }*/
+    delete mGestureDetector;
+    mGestureDetector = nullptr;
 }
 
 void ItemTouchHelper::getSelectedDxDy(float outPosition[2]) {
@@ -1222,42 +1222,39 @@ int ItemTouchHelper::SimpleCallback::getMovementFlags(RecyclerView& recyclerView
             getSwipeDirs(recyclerView, viewHolder));
 }
 
-ItemTouchHelper::ItemTouchHelperGestureListener::ItemTouchHelperGestureListener(ItemTouchHelper*hlp):mItemTouchHelper(hlp) {
-}
-
-void ItemTouchHelper::ItemTouchHelperGestureListener::doNotReactToLongPress() {
+void ItemTouchHelper::doNotReactToLongPress() {
     mShouldReactToLongPress = false;
 }
 
-bool ItemTouchHelper::ItemTouchHelperGestureListener::onDown(MotionEvent& e) {
+bool ItemTouchHelper::onGestureDown(MotionEvent& e) {
     return true;
 }
 
-void ItemTouchHelper::ItemTouchHelperGestureListener::onLongPress(MotionEvent& e) {
+void ItemTouchHelper::onGestureLongPress(MotionEvent& e) {
     if (!mShouldReactToLongPress) {
         return;
     }
-    View* child = mItemTouchHelper->findChildView(e);
+    View* child = findChildView(e);
     if (child != nullptr) {
-        RecyclerView::ViewHolder* vh = mItemTouchHelper->mRecyclerView->getChildViewHolder(child);
+        RecyclerView::ViewHolder* vh = mRecyclerView->getChildViewHolder(child);
         if (vh != nullptr) {
-            if (!mItemTouchHelper->mCallback->hasDragFlag(*mItemTouchHelper->mRecyclerView,*vh)) {
+            if (!mCallback->hasDragFlag(*mRecyclerView,*vh)) {
                 return;
             }
             int pointerId = e.getPointerId(0);
             // Long press is deferred.
             // Check w/ active pointer id to avoid selecting after motion
             // event is canceled.
-            if (pointerId == mItemTouchHelper->mActivePointerId) {
-                const int index = e.findPointerIndex(mItemTouchHelper->mActivePointerId);
+            if (pointerId == mActivePointerId) {
+                const int index = e.findPointerIndex(mActivePointerId);
                 const float x = e.getX(index);
                 const float y = e.getY(index);
-                mItemTouchHelper->mInitialTouchX = x;
-                mItemTouchHelper->mInitialTouchY = y;
-                mItemTouchHelper->mDx = mItemTouchHelper->mDy = 0.f;
+                mInitialTouchX = x;
+                mInitialTouchY = y;
+                mDx = mDy = 0.f;
                 LOGD_IF(_DEBUG,"onlong press: x:%.f ,y:%.f",x,y);
-                if (mItemTouchHelper->mCallback->isLongPressDragEnabled()) {
-                    mItemTouchHelper->select(vh, ACTION_STATE_DRAG);
+                if (mCallback->isLongPressDragEnabled()) {
+                    select(vh, ACTION_STATE_DRAG);
                 }
             }
         }
