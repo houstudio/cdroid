@@ -4,9 +4,10 @@ namespace cdroid{
 ScaleGestureDetector::ScaleGestureDetector(Context* context,const OnScaleGestureListener& listener) {
     mContext = context;
     mListener = listener;
+    mInProgress = false;
     mQuickScaleEnabled = false;
     mGestureDetector = nullptr;
-    ViewConfiguration viewConfiguration = ViewConfiguration::get(context);
+    ViewConfiguration& viewConfiguration = ViewConfiguration::get(context);
     mInputEventConsistencyVerifier = InputEventConsistencyVerifier::isInstrumentationEnabled() ?
                 new InputEventConsistencyVerifier((Object*)this, 0) : nullptr;
     mSpanSlop = viewConfiguration.getScaledTouchSlop() * 2;
@@ -39,7 +40,7 @@ bool ScaleGestureDetector::onTouchEvent(MotionEvent& event) {
     const int count = event.getPointerCount();
     const bool isStylusButtonDown = (event.getButtonState() & MotionEvent::BUTTON_STYLUS_PRIMARY) != 0;
 
-    const bool anchoredScaleCancelled = mAnchoredScaleMode == ANCHORED_SCALE_MODE_STYLUS && !isStylusButtonDown;
+    const bool anchoredScaleCancelled = (mAnchoredScaleMode == ANCHORED_SCALE_MODE_STYLUS) && !isStylusButtonDown;
     const bool streamComplete = action == MotionEvent::ACTION_UP || action == MotionEvent::ACTION_CANCEL || anchoredScaleCancelled;
 
     if (action == MotionEvent::ACTION_DOWN || streamComplete) {
@@ -47,7 +48,7 @@ bool ScaleGestureDetector::onTouchEvent(MotionEvent& event) {
         // If it's an ACTION_DOWN we're beginning a new event stream.
         // This means the app probably didn't give us all the events. Shame on it.
         if (mInProgress) {
-            mListener.onScaleEnd(*this);
+            if(mListener.onScaleEnd)mListener.onScaleEnd(*this);
             mInProgress = false;
             mInitialSpan = 0;
             mAnchoredScaleMode = ANCHORED_SCALE_MODE_NONE;
