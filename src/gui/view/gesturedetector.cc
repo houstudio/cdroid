@@ -1,4 +1,3 @@
-#if 10
 #include <core/handler.h>
 #include <view/choreographer.h>
 #include <view/viewconfiguration.h>
@@ -38,6 +37,7 @@ void GestureDetector::init(Context* context) {
     mInputEventConsistencyVerifier = nullptr;
     mStillDown = false;
     mInLongPress = mInContextClick = false;
+    mIsDoubleTapping = false;
     mAlwaysInTapRegion = false;
     mAlwaysInBiggerTapRegion =false;
     mIgnoreNextUpEvent = false;
@@ -176,7 +176,7 @@ bool GestureDetector::onTouchEvent(MotionEvent& ev) {
         break;
 
     case MotionEvent::ACTION_DOWN:
-        if (mDoubleTapListener.onDoubleTap != nullptr) {
+        if (mDoubleTapListener.onDoubleTap||mDoubleTapListener.onSingleTapConfirmed||mDoubleTapListener.onDoubleTapEvent) {
             //bool hadTapMessage mHandler->hasMessages(TAP);
             //if (hadTapMessage) mHandler->removeMessages(TAP);
             const int hadTapMessage = Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&mTapRunnable,this);
@@ -460,4 +460,3 @@ void GestureDetector::recordGestureClassification(int classification) {
     mHasRecordedClassification = true;
 }
 }/*endof namespace*/
-#endif
