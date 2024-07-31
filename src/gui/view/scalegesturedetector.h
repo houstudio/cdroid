@@ -91,7 +91,7 @@ private:
     bool inAnchoredScaleMode()const;
 public:
     ScaleGestureDetector(Context* context,const OnScaleGestureListener& listener);
-
+    ~ScaleGestureDetector();
     /**
      * Accepts MotionEvents and dispatches events to a {@link OnScaleGestureListener}
      * when appropriate.

@@ -171,6 +171,7 @@ private:
     void recordGestureClassification(int classification);
 public:
     GestureDetector(Context* context,const OnGestureListener& listener);
+    ~GestureDetector();
     void setOnDoubleTapListener(const OnDoubleTapListener& onDoubleTapListener);
     void setContextClickListener(const OnContextClickListener& onContextClickListener);
     void setIsLongpressEnabled(bool isLongpressEnabled);

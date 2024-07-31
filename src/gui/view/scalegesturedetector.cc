@@ -19,6 +19,11 @@ ScaleGestureDetector::ScaleGestureDetector(Context* context,const OnScaleGesture
     setStylusScaleEnabled(true);
 }
 
+ScaleGestureDetector::~ScaleGestureDetector(){
+    delete mGestureDetector;
+    delete mInputEventConsistencyVerifier;
+}
+
 bool ScaleGestureDetector::onTouchEvent(MotionEvent& event) {
     if (mInputEventConsistencyVerifier) {
         mInputEventConsistencyVerifier->onTouchEvent(event, 0);

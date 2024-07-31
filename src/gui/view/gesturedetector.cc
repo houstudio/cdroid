@@ -27,6 +27,11 @@ GestureDetector::GestureDetector(Context* context,const OnGestureListener& liste
     init(context);
 }
 
+GestureDetector::~GestureDetector(){
+
+   delete mInputEventConsistencyVerifier;
+}
+
 void GestureDetector::init(Context* context) {
     mIsLongpressEnabled = true;
     mVelocityTracker = nullptr;
