@@ -14,13 +14,9 @@ ScaleGestureDetector::ScaleGestureDetector(Context* context,const OnScaleGesture
     mMinSpan = viewConfiguration.getScaledMinimumScalingSpan();
     //mHandler = handler;
     // Quick scale is enabled by default after JB_MR2
-    if (1){//targetSdkVersion > Build.VERSION_CODES.JELLY_BEAN_MR2) {
-        setQuickScaleEnabled(true);
-    }
+    setQuickScaleEnabled(true);
     // Stylus scale is enabled by default after LOLLIPOP_MR1
-    if (1){//targetSdkVersion > Build.VERSION_CODES.LOLLIPOP_MR1) {
-        setStylusScaleEnabled(true);
-    }
+    setStylusScaleEnabled(true);
 }
 
 bool ScaleGestureDetector::onTouchEvent(MotionEvent& event) {
@@ -41,9 +37,9 @@ bool ScaleGestureDetector::onTouchEvent(MotionEvent& event) {
     const bool isStylusButtonDown = (event.getButtonState() & MotionEvent::BUTTON_STYLUS_PRIMARY) != 0;
 
     const bool anchoredScaleCancelled = (mAnchoredScaleMode == ANCHORED_SCALE_MODE_STYLUS) && !isStylusButtonDown;
-    const bool streamComplete = action == MotionEvent::ACTION_UP || action == MotionEvent::ACTION_CANCEL || anchoredScaleCancelled;
+    const bool streamComplete = (action == MotionEvent::ACTION_UP) || (action == MotionEvent::ACTION_CANCEL) || anchoredScaleCancelled;
 
-    if (action == MotionEvent::ACTION_DOWN || streamComplete) {
+    if ((action == MotionEvent::ACTION_DOWN) || streamComplete) {
         // Reset any scale in progress with the listener.
         // If it's an ACTION_DOWN we're beginning a new event stream.
         // This means the app probably didn't give us all the events. Shame on it.
@@ -151,7 +147,7 @@ bool ScaleGestureDetector::onTouchEvent(MotionEvent& event) {
         mPrevSpanY = mCurrSpanY = spanY;
         mPrevSpan = mCurrSpan = span;
         mPrevTime = mCurrTime;
-        mInProgress = (mListener.onScaleBegin?mListener.onScaleBegin(*this):false);
+        mInProgress = (mListener.onScaleBegin?mListener.onScaleBegin(*this):true);
     }
 
     // Handle motion; focal point and span/scale factor are changing.

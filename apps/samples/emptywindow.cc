@@ -1,10 +1,11 @@
 #include <cdroid.h>
 #include <cdlog.h>
 #include <view/gesturedetector.h>
-
+#include <view/scalegesturedetector.h>
 class MyWindow:public Window{
 private:
     GestureDetector*mDetector;
+    ScaleGestureDetector*mScaler;
 public:
     MyWindow(int x,int y,int w,int h):Window(x,y,w,h){
         GestureDetector::OnGestureListener gl;
@@ -14,10 +15,17 @@ public:
         gl.onLongPress=std::bind(&MyWindow::onLongPress,this,std::placeholders::_1);
         mDetector=new GestureDetector(mContext,gl);
         GestureDetector::OnDoubleTapListener dl;
+        ScaleGestureDetector::OnScaleGestureListener sl;
+        sl.onScale=[](ScaleGestureDetector&scaler){
+            LOGD("scaled %f",scaler.getScaleFactor());
+            return true;
+        };
+        mScaler=new ScaleGestureDetector(mContext,sl);
         dl.onSingleTapConfirmed=std::bind(&MyWindow::onSingleTapConfirmed,this,std::placeholders::_1);
         dl.onDoubleTap=std::bind(&MyWindow::onDoubleTap,this,std::placeholders::_1);
         dl.onDoubleTapEvent=std::bind(&MyWindow::onDoubleTapEvent,this,std::placeholders::_1);
         setOnTouchListener([this](View& v, MotionEvent& event){
+            mScaler->onTouchEvent(event);
             return mDetector->onTouchEvent(event); 
         });
         mDetector->setOnDoubleTapListener(dl);
