@@ -37,7 +37,7 @@ public:
     int calculateTimeForScrolling(int dx);
     int getHorizontalSnapPreference();
     int getVerticalSnapPreference();
-    void updateActionForInterimTarget(Action action);
+    void updateActionForInterimTarget(Action& action);
     int clampApplyScroll(int tmpDt, int dt);
     virtual int calculateDtToFit(int viewStart, int viewEnd, int boxStart, int boxEnd, int
         snapPreference);

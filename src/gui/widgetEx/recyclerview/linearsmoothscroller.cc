@@ -98,7 +98,7 @@ int LinearSmoothScroller::getVerticalSnapPreference() {
             mTargetVector.y > 0 ? SNAP_TO_END : SNAP_TO_START;
 }
 
-void LinearSmoothScroller::updateActionForInterimTarget(Action action) {
+void LinearSmoothScroller::updateActionForInterimTarget(Action& action) {
     // find an interim target position
     PointF scrollVector;
     mTargetVectorUsable = computeScrollVectorForPosition(getTargetPosition(),scrollVector);
