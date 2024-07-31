@@ -35,7 +35,7 @@ private:
         bool hasDueCallbacksLocked(long now)const;
         CallbackRecord* extractDueCallbacksLocked(long now);
         void addCallbackLocked(long dueTime, void* action,void* token);
-        void removeCallbacksLocked(void* action, void* token);
+        int removeCallbacksLocked(void* action, void* token);
     };
 private:
     Looper *mLooper;
@@ -51,7 +51,7 @@ private:
     static float getRefreshRate();
     CallbackRecord* obtainCallbackLocked(long dueTime,void* action,void* token);
     void recycleCallbackLocked(CallbackRecord* callback);
-    void removeCallbacksInternal(int callbackType,void* action, void* token);
+    int removeCallbacksInternal(int callbackType,void* action, void* token);
     void postCallbackDelayedInternal(int callbackType,void* action, void* token, long delayMillis);
     void scheduleFrameLocked(long);
 protected:
@@ -70,8 +70,8 @@ public:
     nsecs_t getFrameIntervalNanos()const;
     void postCallback(int callbackType,const Runnable& action, void* token);
     void postCallbackDelayed(int callbackType,const Runnable& action,void*token,long delayMillis);
-    void removeCallbacks(int callbackType, const Runnable* action,void*token);
-    void removeFrameCallback(const FrameCallback& callback);
+    int removeCallbacks(int callbackType, const Runnable* action,void*token);
+    int removeFrameCallback(const FrameCallback& callback);
     void postFrameCallbackDelayed(const FrameCallback& callback, long delayMillis);
     void postFrameCallback(const FrameCallback& callback);
 };

@@ -120,12 +120,12 @@ void Choreographer::postCallbackDelayedInternal(int callbackType,void* action, v
     }*/
 }
 
-void Choreographer::removeCallbacks(int callbackType,const Runnable* action, void* token){
-    removeCallbacksInternal(callbackType,(void*)action,token);
+int Choreographer::removeCallbacks(int callbackType,const Runnable* action, void* token){
+    return removeCallbacksInternal(callbackType,(void*)action,token);
 }
 
-void Choreographer::removeCallbacksInternal(int callbackType,void* action, void* token){
-    mCallbackQueues[callbackType]->removeCallbacksLocked(action,token);
+int Choreographer::removeCallbacksInternal(int callbackType,void* action, void* token){
+    return mCallbackQueues[callbackType]->removeCallbacksLocked(action,token);
 }
 
 void Choreographer::postCallback(int callbackType,const Runnable& action, void* token){
@@ -136,8 +136,8 @@ void Choreographer::postCallbackDelayed(int callbackType,const Runnable& action,
     postCallbackDelayedInternal(callbackType,(void*)&action, token, delayMillis);
 }
 
-void Choreographer::removeFrameCallback(const FrameCallback& callback){
-    removeCallbacksInternal(CALLBACK_ANIMATION,(void*)&callback,(void*)FRAME_CALLBACK_TOKEN);
+int Choreographer::removeFrameCallback(const FrameCallback& callback){
+    return removeCallbacksInternal(CALLBACK_ANIMATION,(void*)&callback,(void*)FRAME_CALLBACK_TOKEN);
 }
 
 void Choreographer::postFrameCallback(const FrameCallback& callback){
@@ -305,8 +305,9 @@ void Choreographer::CallbackQueue::addCallbackLocked(long dueTime,void* action,v
     entry->next = callback;
 }
 
-void Choreographer::CallbackQueue::removeCallbacksLocked(void* action, void* token) {
+int Choreographer::CallbackQueue::removeCallbacksLocked(void* action, void* token) {
     CallbackRecord* predecessor = nullptr;
+    int count = 0;
     for (CallbackRecord* callback = mHead; callback != nullptr;) {
         CallbackRecord* next = callback->next;
         if ( ((((long)token) == FRAME_CALLBACK_TOKEN) && (callback->frameCallback==*(FrameCallback*)action) )
@@ -317,12 +318,14 @@ void Choreographer::CallbackQueue::removeCallbacksLocked(void* action, void* tok
             } else {
                 mHead = next;
             }
+            count++;
             mChoreographer->recycleCallbackLocked(callback);
         } else {
             predecessor = callback;
         }
         callback = next;
     }
+    return count;
 }
 
 }//endof namespace
