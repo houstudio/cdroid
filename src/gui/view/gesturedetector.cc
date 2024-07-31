@@ -438,7 +438,8 @@ void GestureDetector::dispatchLongPress() {
     Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&mTapRunnable,this);
     mDeferConfirmSingleTap = false;
     mInLongPress = true;
-    mListener.onLongPress(*mCurrentDownEvent);
+    if(mListener.onLongPress)
+        mListener.onLongPress(*mCurrentDownEvent);
 }
 
 void GestureDetector::recordGestureClassification(int classification) {

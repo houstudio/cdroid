@@ -325,6 +325,7 @@ int Choreographer::CallbackQueue::removeCallbacksLocked(void* action, void* toke
         }
         callback = next;
     }
+    LOGV_IF(count,"removed %d Actions",count);
     return count;
 }
 

@@ -1,5 +1,6 @@
 #ifndef __ITEMTOUCH_HELPER_H__
 #define __ITEMTOUCH_HELPER_H__
+#include <view/gesturedetector.h>
 #include <widgetEx/recyclerview/recyclerview.h>
 #include <widgetEx/recyclerview/itemtouchuiutil.h>
 namespace cdroid{
@@ -65,7 +66,7 @@ private:
     RecyclerView::ChildDrawingOrderCallback mChildDrawingOrderCallback;
     View* mOverdrawChild = nullptr;
     int mOverdrawChildPosition = -1;
-    //GestureDetectorCompat mGestureDetector;
+    GestureDetector* mGestureDetector;
     //ItemTouchHelperGestureListener mItemTouchHelperGestureListener;
 
     RecyclerView::OnItemTouchListener mOnItemTouchListener;
