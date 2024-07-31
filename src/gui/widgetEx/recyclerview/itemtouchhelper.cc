@@ -269,8 +269,7 @@ void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState
         mOverdrawChild = selected->itemView;
         addChildDrawingOrderCallback();
     }
-    int actionStateMask = (1 << (DIRECTION_FLAG_COUNT + DIRECTION_FLAG_COUNT * actionState))
-            - 1;
+    const int actionStateMask = (1 << (DIRECTION_FLAG_COUNT + DIRECTION_FLAG_COUNT * actionState)) - 1;
     bool preventLayout = false;
 
     if (mSelected != nullptr) {

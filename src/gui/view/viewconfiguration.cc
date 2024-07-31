@@ -16,6 +16,7 @@ ViewConfiguration::ViewConfiguration(){
     mScrollbarSize = SCROLL_BAR_SIZE;
     mTouchSlop = TOUCH_SLOP;
     mHoverSlop = TOUCH_SLOP / 2;
+    mMinScalingSpan = 0;
     mMinScrollbarTouchTarget = MIN_SCROLLBAR_TOUCH_TARGET;
     mDoubleTapTouchSlop = DOUBLE_TAP_TOUCH_SLOP;
     mPagingTouchSlop = PAGING_TOUCH_SLOP;
@@ -57,6 +58,7 @@ ViewConfiguration::ViewConfiguration(Context* context):ViewConfiguration(){
         mFadingMarqueeEnabled = atts.getBoolean("config_ui_enableFadingMarquee",mFadingMarqueeEnabled);
         mTouchSlop = atts.getDimensionPixelSize("config_viewConfigurationTouchSlop",mTouchSlop);
         mHoverSlop = atts.getDimensionPixelSize("config_viewConfigurationHoverSlop",mHoverSlop);
+        mMinScalingSpan=atts.getDimensionPixelSize("config_minScalingSpan",mMinScalingSpan);
         mMinScrollbarTouchTarget = atts.getDimensionPixelSize("config_minScrollbarTouchTarget",mMinScrollbarTouchTarget);
         mGlobalActionsKeyTimeout = atts.getInt("config_globalActionsKeyTimeout",mGlobalActionsKeyTimeout);
     }
@@ -332,6 +334,10 @@ bool ViewConfiguration::hasPermanentMenuKey() {
  */
 bool ViewConfiguration::shouldShowMenuShortcutsWhenKeyboardPresent() {
     return mShowMenuShortcutsWhenKeyboardPresent;
+}
+
+int ViewConfiguration::getScaledMinimumScalingSpan()const{
+    return mMinScalingSpan;
 }
 
 /**

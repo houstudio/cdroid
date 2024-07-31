@@ -173,6 +173,7 @@ private:
     int mMaximumFlingVelocity;
     int mScrollbarSize;
     int mTouchSlop;
+    int mMinScalingSpan;
     int mHoverSlop;
     int mMinScrollbarTouchTarget;
     int mDoubleTapTouchSlop;
@@ -464,6 +465,7 @@ public:
      * @return {@code True} if shortcuts should be displayed in menus.
      */
     bool shouldShowMenuShortcutsWhenKeyboardPresent();
+    int getScaledMinimumScalingSpan()const;
     /**
      * @hide
      * @return Whether or not marquee should use fading edges.
