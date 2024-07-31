@@ -28,7 +28,6 @@ GestureDetector::GestureDetector(Context* context,const OnGestureListener& liste
 }
 
 GestureDetector::~GestureDetector(){
-
    delete mInputEventConsistencyVerifier;
 }
 
