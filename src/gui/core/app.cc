@@ -65,7 +65,7 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     LOGI("App [%s] started c++=%d",mName.c_str(),__cplusplus);
 	
     View::VIEW_DEBUG = hasSwitch("debug");
-    Looper::prepare(false);
+    Looper::prepareMainLooper();
     Choreographer & chograph = Choreographer::getInstance();
     chograph.setFrameDelay(getArgAsInt("framedelay",chograph.getFrameDelay()));
     WindowManager::getInstance().setDisplayRotation(rotation);

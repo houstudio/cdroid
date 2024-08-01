@@ -75,6 +75,7 @@ public:
     virtual int checkEvents()=0;
     virtual int handleEvents()=0;
 };
+
 class Looper{
 private:
     struct Request {
@@ -128,6 +129,7 @@ private:
     size_t mResponseIndex;
     nsecs_t mNextMessageUptime;
 private:
+    static Looper*sMainLooper;
     int pollEvents(int timeoutMillis);
     int pollInner(int timeoutMillis);
     int removeFd(int fd, int seq);
@@ -164,6 +166,7 @@ public:
     static Looper*getDefault();
     static Looper*getMainLooper();
     static Looper*myLooper();
+    static void prepareMainLooper();
     static Looper*prepare(int opts);
     static void setForThread(Looper* looper);
     static Looper* getForThread();

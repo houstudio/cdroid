@@ -21,6 +21,7 @@
 #define EPOLLERR POLLERR
 #define EPOLLHUP POLLHUP
 #endif
+/*REF:system/core/libutils/Looper.cpp*/
 namespace cdroid{
 
 static constexpr int EPOLL_SIZE_HINT = 8;
@@ -54,6 +55,7 @@ void Looper::Looper::Request::initEventItem(struct epoll_event* eventItem) const
     eventItem->data.fd= fd;
 }
 
+Looper* Looper::sMainLooper = nullptr;
 Looper::Looper(bool allowNonCallbacks) :
         mAllowNonCallbacks(allowNonCallbacks), mSendingMessage(false),
         mPolling(false), mEpollFd(-1), mEpollRebuildRequired(false),
@@ -94,7 +96,7 @@ Looper*Looper::getDefault(){
 }
 
 Looper*Looper::getMainLooper(){
-    return getForThread(); 
+    return sMainLooper;
 }
 
 Looper*Looper::myLooper(){
@@ -111,6 +113,12 @@ Looper*Looper::prepare(int opts){
     LOGW_IF(looper->getAllowNonCallbacks()!=allowNonCallbacks,"Looper already prepared for this thread with a different"
 	    " value for the LOOPER_PREPARE_ALLOW_NON_CALLBACKS option.");
     return looper;
+}
+
+void Looper::prepareMainLooper(){
+    prepare(false);
+    FATAL_IF(sMainLooper,"The main Looper has been prepared");
+    sMainLooper=myLooper();
 }
 
 void Looper::setForThread(Looper* looper){
