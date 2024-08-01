@@ -2861,7 +2861,7 @@ void RecyclerView::offsetPositionRecordsForMove(int from, int to) {
         if ( (holder == nullptr) || (holder->mPosition < start) || (holder->mPosition > end) ) {
             continue;
         }
-        LOGD("offsetPositionRecordsForMove attached child %d holder %p",i, holder);
+        LOGD_IF(_DEBUG,"offsetPositionRecordsForMove attached child %d holder %p",i, holder);
         if (holder->mPosition == from) {
             holder->offsetPosition(to - from, false);
         } else {
@@ -2879,7 +2879,7 @@ void RecyclerView::offsetPositionRecordsForInsert(int positionStart, int itemCou
     for (int i = 0; i < childCount; i++) {
         ViewHolder* holder = getChildViewHolderInt(mChildHelper->getUnfilteredChildAt(i));
         if ( (holder != nullptr) && !holder->shouldIgnore() && (holder->mPosition >= positionStart) ) {
-            LOGE("offsetPositionRecordsForInsert attached child %d holder %p  now at position %d"
+            LOGD_IF(_DEBUG,"offsetPositionRecordsForInsert attached child %d holder %p  now at position %d"
                        ,i,holder, (holder->mPosition + itemCount));
             holder->offsetPosition(itemCount, false);
             mState->mStructureChanged = true;

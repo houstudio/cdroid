@@ -28,8 +28,7 @@ public:
         TextView* view = new TextView("",200,64);
         view->setBackgroundColor(0xff234567);
         view->setGravity(Gravity::CENTER);
-        view->setLayoutParams(new LayoutParams(LayoutParams::MATCH_PARENT,80));//LayoutParams::WRAP_CONTENT));
-        //view->setLayoutParams(new LayoutParams(120,LayoutParams::MATCH_PARENT));//LayoutParams::WRAP_CONTENT));
+        view->setLayoutParams(new LayoutParams(LayoutParams::MATCH_PARENT,60));//LayoutParams::MATCH_PARENT))
         //view->setLayoutParams(new LayoutParams(640,LayoutParams::MATCH_PARENT));
         return new ViewHolder(view);
     }
@@ -39,7 +38,6 @@ public:
 	    TextView*textView = ((MyAdapter::ViewHolder&)holder).textView;
         textView->setText(item);
 	    textView->setId(position);
-	    LOGD("%p:%d",textView,position);
 	    textView->setOnClickListener([position](View&v){
 	        RecyclerView*rv =  (RecyclerView*)v.getParent();
 	        RecyclerView::LayoutManager*mgr = rv->getLayoutManager();
@@ -71,12 +69,14 @@ private:
     MyAdapter*mAdapter;
 public:
     SimpleCallback(MyAdapter*adapter):ItemTouchHelper::SimpleCallback(
-        ItemTouchHelper::LEFT | ItemTouchHelper::RIGHT,
+        ItemTouchHelper::LEFT | ItemTouchHelper::RIGHT|ItemTouchHelper::UP|ItemTouchHelper::DOWN,
         ItemTouchHelper::LEFT | ItemTouchHelper::RIGHT){
         mAdapter = adapter;
     }
     bool onMove(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder,RecyclerView::ViewHolder& target)override{
-        LOGD("");
+        const int fromPosition=viewHolder.getPosition();
+        const int toPosition=target.getPosition();
+        mAdapter->notifyItemMoved(fromPosition, toPosition);
         return true;
     }
     void onSwiped(RecyclerView::ViewHolder& viewHolder, int direction)override{
@@ -91,6 +91,7 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,-1,-1);
     w->setBackgroundColor(0xFF112233);
     RecyclerView*rv=new RecyclerView(800,480);
+    rv->setLayoutManager(new GridLayoutManager(&app,argc));
     auto ps = new LinearSnapHelper();//PagerSnapHelper();
     ps->attachToRecyclerView(rv);
     MyAdapter*adapter = new MyAdapter();
@@ -98,10 +99,8 @@ int main(int argc,const char*argv[]){
     SimpleCallback*cbk = new SimpleCallback(adapter);
     ItemTouchHelper*touchhelper=new ItemTouchHelper(cbk);
     touchhelper->attachToRecyclerView(rv);
-    rv->setHasFixedSize(true);
     rv->addItemDecoration(touchhelper);
     rv->getRecycledViewPool().setMaxRecycledViews(0,64);
-    //adapter->setHasStableIds(true);
     rv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     rv->setAdapter(adapter);
     DividerItemDecoration* decoration = new DividerItemDecoration(&app, LinearLayout::VERTICAL);
@@ -113,13 +112,5 @@ int main(int argc,const char*argv[]){
     decoration->setDrawable(new ColorDrawable(0xFFFF0000));
     rv->addItemDecoration(decoration);
     w->addView(rv);
-    w->requestLayout();
-    Runnable r;
-    r=[&](){
-        adapter->remove(4);
-  	    adapter->notifyItemRemoved(4);
-	    w->postDelayed(r,3000);
-    };
-    //w->postDelayed(r,8000);
     app.exec();
 }
