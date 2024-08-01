@@ -161,6 +161,7 @@ void DrawableContainer::DrawableContainerState::createAllFutures(){
     for (int keyIndex = 0; keyIndex < futureCount; keyIndex++) {
         const int index= mDrawableFutures.keyAt(keyIndex);
         std::shared_ptr<ConstantState>cs =mDrawableFutures.valueAt(keyIndex);
+        delete mDrawables[index];
         mDrawables[index] = prepareDrawable(cs->newDrawable());
     }
     mDrawableFutures.clear();

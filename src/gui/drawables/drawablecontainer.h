@@ -38,8 +38,8 @@ protected:
         int mTintMode;
         ColorFilter*mColorFilter;
         const ColorStateList*mTintList;
-        std::vector<Drawable* >mDrawables;
-        SparseArray<std::shared_ptr<ConstantState> >mDrawableFutures;
+        std::vector<Drawable*>mDrawables;
+        SparseArray<std::shared_ptr<ConstantState>>mDrawableFutures;
         DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own);
         ~DrawableContainerState()override;
         DrawableContainer*newDrawable()override{return nullptr;}//must be overrided by inherited
