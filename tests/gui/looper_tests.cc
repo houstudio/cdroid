@@ -290,9 +290,9 @@ TEST_F(LOOPER,timerfd2){
     w->addView(btn);
     int color=11,color2=0;
     Runnable run={[&](){
-	btn->setBackgroundColor(0xFF000000|color|(color2<<8));
-	color+=8;color2+=4;
-	w->postDelayed(run,100);
+        btn->setBackgroundColor(0xFF000000|color|(color2<<8));
+        color+=8;color2+=4;
+        w->postDelayed(run,100);
     }};
     w->postDelayed(run,100);
     btn->setOnClickListener([](View&v){

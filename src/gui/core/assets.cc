@@ -636,7 +636,7 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
     size_t pos = name.find("attr");
     while(pos!=std::string::npos) {
         name = name.replace(pos,4,"style");
-        if((pos =name.find('?'))!=std::string::npos)
+        if((pos=name.find('?'))!=std::string::npos)
             name.erase(pos,1);
         if((pos =name.find('/'))!=std::string::npos)
             name=name.substr(pos+1);

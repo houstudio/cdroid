@@ -3,25 +3,15 @@
 
 #include <cdtypes.h>
 
-
-#define  KEY_VOLUP   KEY_VOLUMEUP
-#define  KEY_VOLDOWN KEY_VOLUMEDOWN
-#define  KEY_CHUP    KEY_F11
-#define  KEY_CHDOWN  KEY_F12
-
 BEGIN_DECLS
 
-#define SOURCECLASS_BUTTON   0x01 //for Keyboard
-#define SOURCECLASS_POINTER  0x02 //for Touch,Mouse
-#define SOURCECLASS_POSITION 0x04 
-#define SOURCECLASS_JOYSTICK 0x08
 typedef struct{
     unsigned long tv_sec;
     long int tv_usec;
-    unsigned short type;
-    unsigned short code;
-    unsigned int value;
-    int device;
+    uint16_t type;
+    uint16_t code;
+    uint32_t value;
+    int32_t device;
 }INPUTEVENT;//reference to linux input_event
 
 #define MAX_DEVICE_NAME 64
@@ -33,6 +23,7 @@ typedef struct{
    #define EV_ADD          0xFE/*used by INPUTEVENT's type, for device add*/
    #define EV_REMOVE       0xFF/*used by INPUTEVENT's type, for device remove*/
 #endif
+
 typedef struct{
     int axis;
     int minimum;
@@ -41,6 +32,7 @@ typedef struct{
     int flat;
     int resolution;
 }INPUTAXISINFO;
+
 typedef struct{
     USHORT bustype;
     USHORT vendor;

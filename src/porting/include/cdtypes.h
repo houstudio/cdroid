@@ -1,7 +1,7 @@
 #ifndef __BASIC_TYPE_H__
 #define __BASIC_TYPE_H__
-#include<cderrors.h>
-
+#include <cderrors.h>
+#include <stdint.h>
 #ifdef  __cplusplus
 #define BEGIN_DECLS extern "C" {
 #define END_DECLS }

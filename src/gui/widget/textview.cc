@@ -208,12 +208,12 @@ private:
     Runnable /*Choreographer::FrameCallback*/ mTickCallback;
     Runnable /*Choreographer::FrameCallback*/ mStartCallback;
     Runnable /*Choreographer::FrameCallback*/ mRestartCallback;
-	
+
 private:
     void resetScroll() {
         mScroll = 0.0f;
         if (mView ) mView->invalidate();
-    }	
+    }
 public:
     Marquee(TextView* v,Layout*lt) {
         mStatus = MARQUEE_STOPPED;
@@ -234,14 +234,14 @@ public:
             }
         };
     }
-	
+
     void tick() {
         if (mStatus != MARQUEE_RUNNING) {
             return;
         }
-	
+
         mView->removeCallbacks(mTickCallback);
-	
+
         if (mView  && (mView->isFocused() || mView->isSelected())) {
             long currentMs = SystemClock::uptimeMillis();
             long deltaMs = currentMs - mLastAnimationMs;
@@ -265,7 +265,7 @@ public:
         mView->removeCallbacks(mTickCallback);
         resetScroll();
     }
-	
+
     void start(int repeatLimit) {
         if (repeatLimit == 0) {
             stop();
@@ -367,7 +367,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
 
     setText(ctx->getString(attrs.getString("text")));
     setHint(ctx->getString(attrs.getString("hint")));
-    
+
     Drawable* left = attrs.getDrawable("drawableLeft");
     Drawable*right = attrs.getDrawable("drawableRight");
     Drawable*  top = attrs.getDrawable("drawableTop");
@@ -383,7 +383,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setRelativeDrawablesIfNeeded(start, end);
 
     setCompoundDrawablePadding(attrs.getDimensionPixelSize("drawablePadding",0));
-   
+
     setMinHeight(attrs.getDimensionPixelSize("minHeight", -1));
     setMaxHeight(attrs.getDimensionPixelSize("maxHeight", mMaximum));
 
@@ -563,7 +563,7 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
 
     if (attr->mFontFeatureSettings != null) {
         setFontFeatureSettings(attr->mFontFeatureSettings);
-    }*/    
+    }*/
 }
 
 void TextView::addTextChangedListener(const TextWatcher& watcher){
@@ -863,7 +863,7 @@ void TextView::setMinWidth(int minPixels){
     mMinWidth = minPixels;
     mMinWidthMode = PIXELS;
     requestLayout();
-    invalidate(true);    
+    invalidate(true);
 }
 int TextView::getMinWidth()const{
     return mMinWidthMode == PIXELS ? mMinWidth : -1;
@@ -914,7 +914,7 @@ int TextView::getLineHeight()const{
 }
 
 void TextView::setLineHeight(int h){
-    setLineSpacing(h-getLineHeight(),1.f); 
+    setLineSpacing(h-getLineHeight(),1.f);
 }
 
 bool TextView::isAutoSizeEnabled() const{
@@ -1278,7 +1278,7 @@ void TextView::setCompoundDrawablesWithIntrinsicBounds(const std::string& left, 
 		const std::string& right,const std::string& bottom){
     Context* context = getContext();
     setCompoundDrawablesWithIntrinsicBounds(context->getDrawable(left),context->getDrawable(top),
-            context->getDrawable(right),context->getDrawable(bottom));    
+            context->getDrawable(right),context->getDrawable(bottom));
 }
 
 void TextView::onResolveDrawables(int layoutDirection){
@@ -1486,7 +1486,7 @@ void TextView::drawableHotspotChanged(float x,float y){
     for(int i=0;mDrawables&&(i<4);i++){
         Drawable* dr=mDrawables->mShowing[i];
         if(dr)dr->setHotspot(x,y);
-    }    
+    }
 }
 
 bool TextView::isPaddingOffsetRequired() {
@@ -1642,7 +1642,7 @@ void TextView::setEllipsize(int where){
             requestLayout();
             invalidate();
         }
-    }    
+    } 
 }
 
 void TextView::setTextColor(int color){
@@ -1755,7 +1755,7 @@ void TextView::setCompoundDrawablePadding(int pad){
        if (mDrawables != nullptr)
            mDrawables->mDrawablePadding = pad;
     } else {
-         if (mDrawables == nullptr) 
+         if (mDrawables == nullptr)
              mDrawables = new Drawables(getContext());
          mDrawables->mDrawablePadding = pad;
     }
@@ -1904,7 +1904,7 @@ int TextView::getVerticalOffset(bool forceNormal){
             }
         }
     }
-    return voffset;    
+    return voffset;
 }
 
 int TextView::getBottomVerticalOffset(bool forceNormal){
@@ -1938,12 +1938,15 @@ void TextView::setShadowLayer(float radius, float dx, float dy, int color){
 float TextView::getShadowRadius()const{
     return mShadowRadius;
 }
+
 float TextView::getShadowDx()const{
     return mShadowDx;
 }
+
 float TextView::getShadowDy()const{
     return mShadowDy;
 }
+
 int TextView::getShadowColor()const{
     return mShadowColor;
 }

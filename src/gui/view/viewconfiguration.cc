@@ -46,7 +46,7 @@ ViewConfiguration::ViewConfiguration(Context* context):ViewConfiguration(){
     mFadingEdgeLength = int(sizeAndDensity*FADING_EDGE_LENGTH + 0.5f);
 	
     mDoubleTapSlop = (int) (sizeAndDensity * DOUBLE_TAP_SLOP + 0.5f);
-    mWindowTouchSlop = (int) (sizeAndDensity * WINDOW_TOUCH_SLOP + 0.5f);	
+    mWindowTouchSlop = (int) (sizeAndDensity * WINDOW_TOUCH_SLOP + 0.5f);
     mMaximumDrawingCacheSize = 4 * metrics.widthPixels * metrics.heightPixels;
     mOverscrollDistance = (int) (sizeAndDensity * OVERSCROLL_DISTANCE + 0.5f);
     mOverflingDistance = (int) (sizeAndDensity * OVERFLING_DISTANCE + 0.5f);
@@ -62,7 +62,7 @@ ViewConfiguration::ViewConfiguration(Context* context):ViewConfiguration(){
         mMinScrollbarTouchTarget = atts.getDimensionPixelSize("config_minScrollbarTouchTarget",mMinScrollbarTouchTarget);
         mGlobalActionsKeyTimeout = atts.getInt("config_globalActionsKeyTimeout",mGlobalActionsKeyTimeout);
     }
-	
+
     mPagingTouchSlop = mTouchSlop * 2;
     mDoubleTapTouchSlop = mTouchSlop;
     if(atts.size()){
