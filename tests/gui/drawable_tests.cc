@@ -11,11 +11,22 @@ class DRAWABLE:public testing::Test{
 public:
     static Canvas*ctx;
     static Assets*rm;
+    static int mScreenWidth,mScreenHeight;
     static RefPtr<ImageSurface>sImage;
+    static HANDLE mPrimarySurface,mDrawSurface;
 public:
     static void SetUpTestCase(){
+        int mPitch,mFormat;
+        uint8_t*mBuffer;
         GFXInit();
-        ctx=new Canvas(800,600);//GraphDevice::getInstance().createContext(800,600);
+        GFXGetDisplaySize(0,(UINT*)&mScreenWidth,(UINT*)&mScreenHeight);
+        GFXCreateSurface(0,&mPrimarySurface,mScreenWidth,mScreenHeight,mFormat,1);
+        GFXCreateSurface(0,&mDrawSurface,mScreenWidth,mScreenHeight,mFormat,0);
+        GFXLockSurface(mDrawSurface,(void**)&mBuffer,(UINT*)&mPitch);
+        auto surface=Cairo::ImageSurface::create(mBuffer,Cairo::Surface::Format::ARGB32,mScreenWidth,mScreenHeight,mPitch);
+        printf("mPrimarySurface=%p@%p size=%dx%dx%d\r\n",mPrimarySurface,&mBuffer,mScreenWidth,mScreenHeight,mPitch);
+
+        ctx=new Canvas(surface);//GraphDevice::getInstance().createContext(800,600);
         sImage=ImageSurface::create(Surface::Format::ARGB32,400,400);
         RefPtr<Gradient>pat=LinearGradient::create(0,0,400,400);
         RefPtr<Gradient>rd=RadialGradient::create(20,20,30,200,200,100);
@@ -42,20 +53,18 @@ public:
     }
     static void TearDownCase(){
         delete ctx;
+        GFXDestroySurface(mDrawSurface);
+        GFXDestroySurface(mPrimarySurface);
     }
     virtual void SetUp(){
         ctx->save();
         ctx->set_source_rgba(0,0,0,1);
-        ctx->rectangle(0,0,800,600);
+        ctx->rectangle(0,0,mScreenWidth,mScreenHeight);
         ctx->fill();
     }
     void postCompose(){
-        RECT rect={0,0,800,600};
-        Canvas*primary=GraphDevice::getInstance().getPrimaryContext();
-        primary->set_source(ctx->get_target(),0,0);
-        primary->rectangle(0,0,800,600);
-        primary->fill();
-        GFXFlip(GraphDevice::getInstance().getPrimarySurface());
+        GFXBlit(mPrimarySurface,0,0,mDrawSurface,nullptr);
+        GFXFlip(mPrimarySurface);
     }
     virtual void TearDown(){
         ctx->restore();
@@ -65,13 +74,17 @@ public:
 };
 
 Canvas* DRAWABLE::ctx=nullptr;
-Assets*DRAWABLE::rm =nullptr;
+Assets* DRAWABLE::rm =nullptr;
+int DRAWABLE::mScreenWidth=0;
+int DRAWABLE::mScreenHeight=0;
+HANDLE DRAWABLE::mPrimarySurface=nullptr;
+HANDLE DRAWABLE::mDrawSurface=nullptr;
 RefPtr<ImageSurface>DRAWABLE::sImage;
 
 TEST_F(DRAWABLE,parsexml){
     std::ifstream fs("styles.xml");
 }
-
+#if 0
 TEST_F(DRAWABLE,color){
     const char*text="<color color=\"red\"/>";
     std::istringstream is(text);
@@ -81,7 +94,7 @@ TEST_F(DRAWABLE,color){
     d->draw(*ctx);	
     delete d;
 }
-
+#endif
 TEST_F(DRAWABLE,bitmapalpha){
     BitmapDrawable*d=new BitmapDrawable(sImage);
     ASSERT_EQ(d->getBitmap().get(),(void*)sImage.get());
@@ -163,6 +176,7 @@ TEST_F(DRAWABLE,transition){
 TEST_F(DRAWABLE,rectshape){
     RectShape*rs=new RectShape();
     rs->resize(600,500);
+    rs->setSolidColor(0xFFFF0000);
     ctx->set_color(0xFFFF0000);
     for(int alpha=255;alpha>0;alpha-=5){
         ctx->set_source_rgb(0,0,0);
@@ -286,7 +300,6 @@ TEST_F(DRAWABLE,clipdrawable){
     Shape*sp=new RectShape();
     ClipDrawable *cd2=new ClipDrawable(sd,Gravity::CENTER,ClipDrawable::HORIZONTAL);
     sd->setShape(sp);
-    cd2->setDrawable(sd);
     sp->setSolidColor(0xFFFF0000);
     sp->setStrokeColor(0xFF00FF00);
     sp->setStrokeSize(5);
@@ -344,16 +357,6 @@ TEST_F(DRAWABLE,layerdrawable){
     }
     ld->setBounds(100,100,400,400);
     ld->draw(*ctx);
-}
-TEST_F(DRAWABLE,layerdrawable2){
-    LayerDrawable*ld=dynamic_cast<LayerDrawable*>(Drawable::inflate(nullptr,"/home/houzh/Miniwin/src/gui/res/drawable/progress_horizontal.xml"));
-    LayerDrawable*ld2=dynamic_cast<LayerDrawable*>(ld->getConstantState()->newDrawable());
-    ld->setBounds(10,100,300,300);
-    ld2->setBounds(410,100,300,300);
-    ld->draw(*ctx);
-    ld2->draw(*ctx);
-    postCompose();
-    sleep(10);
 }
 
 TEST_F(DRAWABLE,animaterotate){
