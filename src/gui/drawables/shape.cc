@@ -161,7 +161,11 @@ void Shape::rebuildPattern(int x,int y){
            applyGradients();
         }break;
     case Gradient::SWEEP:{
-	   std::vector<Cairo::ColorStop>stops;
+           std::vector<Cairo::ColorStop>stops;
+           for(int i=0;i<mGradientColors.size();i++){
+               Color c(mGradientColors[i]);
+               stops.push_back({double(i)/mGradientColors.size(),c.red(),c.green(),c.blue(),c.alpha()});
+           }
            mPaint=SweepGradient::create(mGradientCenterX*mWidth,mGradientCenterY*mHeight,mGradientRadius,M_PI*2.f,stops);
            LOGV("SWEEP(%.2f,%.2f:%.2f",mGradientCenterX*mWidth,mGradientCenterY*mHeight,mGradientRadius);
            applyGradients();
