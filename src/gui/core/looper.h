@@ -24,7 +24,7 @@ struct epoll_event{
 #include <sys/epoll.h>
 #endif
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <mutex>
 #include <list>
@@ -52,7 +52,7 @@ private:
 
 class MessageHandler{
 private:
-    int mFlags;
+    uint32_t mFlags;
     friend class Looper;
 protected:
     MessageHandler();
@@ -65,7 +65,7 @@ public:
 
 class EventHandler{
 protected:
-    int mFlags;
+    uint32_t mFlags;
     friend class Looper;
 protected:
     EventHandler();
@@ -78,6 +78,7 @@ public:
 
 class Looper{
 private:
+    using SequenceNumber = uint64_t;
     struct Request {
         int fd;
         int ident;
@@ -85,9 +86,10 @@ private:
         int seq;
         LooperCallback* callback;
         void* data;
-        void initEventItem(struct epoll_event* eventItem) const;
+        uint32_t getEpollEvents() const;
     };
     struct Response {
+        SequenceNumber seq;
         int events;
         Request request;
     };
@@ -120,8 +122,9 @@ private:
     bool mEpollRebuildRequired; // guarded by mLock
 
     // Locked list of file descriptor monitoring requests.
-    std::map<int, Request> mRequests;  // guarded by mLock
-    int mNextRequestSeq;
+    std::unordered_map<SequenceNumber, Request> mRequests; //guarded by mLock
+    std::unordered_map<int/*fd*/,SequenceNumber>mSequenceNumberByFd; //guarded by mLock
+    SequenceNumber mNextRequestSeq;
 
     // This state is only used privately by pollOnce and does not require a lock since
     // it runs on a single thread.
@@ -130,14 +133,14 @@ private:
     nsecs_t mNextMessageUptime;
 private:
     static Looper*sMainLooper;
-    int pollEvents(int timeoutMillis);
+    int doEventHandlers();
     int pollInner(int timeoutMillis);
+    int removeSequenceNumberLocked(SequenceNumber seq);
     int removeFd(int fd, int seq);
     void awoken();
     void pushResponse(int events, const Request& request);
     void rebuildEpollLocked();
     void scheduleEpollRebuildLocked();
-    void doIdleHandlers();
     static void initTLSKey();
     static void threadDestructor(void*);
 protected:
@@ -189,12 +192,12 @@ public:
     void removeMessages(const MessageHandler* handler);
     void removeMessages(const MessageHandler* handler, int what);
     void removeCallbacks(const MessageHandler* handler,Runnable r);
+    bool isPolling() const;
+
     void addHandler(MessageHandler*);
     void removeHandler(MessageHandler*);
     void addEventHandler(const EventHandler*handler);
     void removeEventHandler(const EventHandler*handler);
-    bool isPolling() const;
-    
 };
 }
 #endif

@@ -13,14 +13,24 @@
 #include <time.h>
 
 class LOOPER:public testing::Test{
-
-   public :
-   virtual void SetUp(){
-   }
-   virtual void TearDown(){
-      LOGD("\r\n\r\n");
-   }
+protected:
+    static Looper*mLooper;
+public :
+    static void SetUpTestCase(){
+        Looper::prepare(false);
+        mLooper=Looper::getMainLooper();
+        if(mLooper==nullptr)Looper::prepareMainLooper();
+        mLooper=Looper::myLooper();
+    }
+    static void TearDownCase(){
+    }
+    virtual void SetUp(){
+    }
+    virtual void TearDown(){
+       LOGD("\r\n\r\n");
+    }
 };
+Looper*LOOPER::mLooper=nullptr;
 
 class MyRunner{
 public:
@@ -74,48 +84,74 @@ public:
 };
 
 TEST_F(LOOPER,pollonce){
-   Looper loop(false);
    int64_t t1=SystemClock::uptimeMillis();
-   loop.pollOnce(1000);
+   mLooper->pollOnce(1000);
    int64_t t2=SystemClock::uptimeMillis();
    ASSERT_TRUE((t2-t1)>=1000&&(t2-t2)<1005);
 }
 
 TEST_F(LOOPER,sendMessage){
-   Looper loop(false);
    Message msg(100);
    int  processed=0;
    TestHandler ft;
-   loop.sendMessage(&ft,msg);
-   loop.pollOnce(10);
+   mLooper->sendMessage(&ft,msg);
+   mLooper->pollOnce(10);
    ASSERT_EQ(ft.getCount(),1);
 }
 
 TEST_F(LOOPER,sendMessageDelay){
-   Looper loop(false);
    Message msg(100);
    TestHandler ft;
    int64_t t1=SystemClock::uptimeMillis();
-   loop.sendMessageDelayed(1000,&ft,msg);
-   while(!ft.getCount()) loop.pollOnce(10);
+   mLooper->sendMessageDelayed(1000,&ft,msg);
+   while(!ft.getCount()) mLooper->pollOnce(10);
    int64_t t2=SystemClock::uptimeMillis();
    ASSERT_TRUE((t2-t1)>=1000&&(t2-t2)<1005);
 }
 
 TEST_F(LOOPER,removeMessage){
-   Looper loop(false);
    Message msg(100),msg2(200);
    TestHandler ft;
    int64_t t2,t1=SystemClock::uptimeMillis();
-   loop.sendMessageDelayed(1000,&ft,msg);
-   loop.sendMessageDelayed(1000,&ft,msg2);
+   mLooper->sendMessageDelayed(1000,&ft,msg);
+   mLooper->sendMessageDelayed(1000,&ft,msg2);
    t2=t1;
-   loop.removeMessages(&ft,100);
+   mLooper->removeMessages(&ft,100);
    while(t2-t1<1100){
-       loop.pollOnce(10);
+       mLooper->pollOnce(10);
        t2=SystemClock::uptimeMillis();
    }
    ASSERT_EQ(ft.getCount(),1);
+}
+class SelfDestroyHandler:public MessageHandler{
+private:
+    Looper*mLooper;
+public:
+   SelfDestroyHandler(Looper*lp){mLooper=lp;}
+   void handleMessage(Message&msg)override{
+       mLooper->removeMessages(this);
+   }
+};
+class SelfDestroyEventHandler:public EventHandler{
+private:
+    Looper*mLooper;
+public:
+    SelfDestroyEventHandler(Looper*lp){mLooper=lp;}
+    int checkEvents()override{return 1;};
+    int handleEvents()override{
+        mLooper->removeEventHandler(this);
+        return 1;
+    }
+};
+TEST_F(LOOPER,removeHandler){
+    SelfDestroyHandler*sd=new SelfDestroyHandler(mLooper);
+    SelfDestroyEventHandler*se=new SelfDestroyEventHandler(mLooper);
+    Message msg(100);
+    mLooper->addEventHandler(se);
+    mLooper->sendMessageDelayed(10,sd,msg);
+
+    mLooper->pollOnce(100);
+    LOGD("===");
 }
 
 class TestRunner:public Runnable{
@@ -153,28 +189,13 @@ TEST_F(LOOPER,eventhandler){
     ASSERT_FALSE(rc);
 }
 
-TEST_F(LOOPER,loop){
-   Looper loop(false);
-   //UIEventSource*handler=new UIEventSource(nullptr,nullptr);
-   //loop.addEventHandler(handler);
-   Handler handler;
-   TestRunner  run;
-   int count=0;
-   ASSERT_TRUE((bool)run);
-   ASSERT_FALSE(run==nullptr);
-   ASSERT_TRUE(run!=nullptr);
-   run();
-   handler.postDelayed(run,10);
-   while(1)loop.pollAll(100);
-}
-
 class MyHandler:public Handler{
 public:
+    int count=0;
     void handleMessage(Message&msg)override{
-        LOGD("rcv msg %d",msg.what);
+        count++;
     }
     void handleIdle(){
-        LOGD("idle");
     }
     ~MyHandler(){
         LOGD("MyHandler destroied!");
@@ -183,36 +204,38 @@ public:
 
 TEST_F(LOOPER,handler){
     Looper *loop= Looper::getMainLooper();
-    Handler *handler=new MyHandler();
+    MyHandler *handler=new MyHandler();
     handler->sendEmptyMessage(1);
     handler->sendEmptyMessageDelayed(2,20);
     Runnable cbk([](){LOGD("---");});
     handler->postDelayed(cbk,30);
     int count=0;
     while(count++<3)
-        loop->pollAll(10);
-    loop->removeHandler(handler);
-    while(count++<6)loop->pollAll(10);
+        mLooper->pollAll(10);
+    mLooper->removeHandler(handler);
+    while(count++<6)mLooper->pollAll(10);
+    delete handler;
+    ASSERT_EQ(handler->count,2);
 }
 
 TEST_F(LOOPER,asyncmsg){
-    Looper *loop= Looper::getMainLooper();
-    Handler *handler=new MyHandler();
-    handler->sendEmptyMessage(1);
-    handler->sendEmptyMessageDelayed(2,20);
+    MyHandler *handler=new MyHandler();
+    handler->sendEmptyMessage(0);
+    handler->sendEmptyMessageDelayed(0,20);
     Runnable cbk([](){LOGD("---");});
     handler->postDelayed(cbk,30);
+    Message msg;
     std::thread th([&](){
-	Message msg;
-	msg.what=0;
-	while(1){
-	   loop->sendMessageDelayed(10,handler,msg);
-	   msg.what++;
-	   usleep(100);
-	}
+        msg.what=0;
+        while(msg.what++<10000){
+           mLooper->sendMessageDelayed(10,handler,msg);
+           usleep(100);
+        }
     });
     th.detach();
-    while(1)loop->pollAll(10);
+    int count=0;
+    while(count++<200)mLooper->pollAll(10);
+    ASSERT_EQ(handler->count,10002);
 }
 
 static void ms2timespec(int ms, struct timespec *ts){
@@ -226,18 +249,17 @@ static int fdcallback(int fd, int events, void* data){
    struct timespec cur;
    clock_gettime(CLOCK_MONOTONIC,&cur);
    if(events&Looper::EVENT_INPUT)
-      ::read(fd, &count, sizeof(uint64_t));
+       ::read(fd, &count, sizeof(uint64_t));
    if(*loops>20){
-      struct itimerspec new_value={{0,0},{0,0}};
-      timerfd_settime(fd,0,&new_value, NULL);
-      Looper::getMainLooper()->removeFd(fd);
+       struct itimerspec new_value={{0,0},{0,0}};
+       timerfd_settime(fd,0,&new_value, NULL);
+       Looper::getMainLooper()->removeFd(fd);
    }
    return 1;
 }
 
 TEST_F(LOOPER,timerfd){
     #define INTERVAL 200 //ms
-    Looper*loop= Looper::getMainLooper();
     int loops=0;
     struct itimerspec new_value={{0,0},{0,0}};
     ms2timespec(INTERVAL,&new_value.it_value);
@@ -245,8 +267,9 @@ TEST_F(LOOPER,timerfd){
     int fd=timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
 
     int rc=timerfd_settime(fd, 0/*TFD_TIMER_ABSTIME*/, &new_value,NULL);
-    loop->addFd(fd,0,Looper::EVENT_INPUT,fdcallback,&loops);
-    while(1)loop->pollAll(10);
+    mLooper->addFd(fd,0,Looper::EVENT_INPUT,fdcallback,&loops);
+
+    while(1)mLooper->pollAll(10);
 }
 
 TEST_F(LOOPER,timerfd2){
