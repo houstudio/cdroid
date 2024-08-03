@@ -10,12 +10,12 @@
 #define DEBUG_POLL_AND_WAKE 0
 #define DEBUG_CALLBACKS 0
 
-#if USED_POLL == NOPOLL
+#if !defined(HAVE_POLL) && !defined(HAVE_EPOLL)
     #define EPOLLIN  1
     #define EPOLLOUT 4
     #define EPOLLERR 8
     #define EPOLLHUP 0x10
-#elif USED_POLL==POLL
+#elif defined(HAVE_POLL) && !defined(HAVE_EPOLL)
     #define EPOLLIN  POLLIN
     #define EPOLLOUT POLLOUT
     #define EPOLLERR POLLERR
@@ -139,7 +139,7 @@ bool Looper::getAllowNonCallbacks() const {
 
 void Looper::rebuildEpollLocked() {
     // Close old epoll instance if we have one.
-#if USED_POLL == EPOLL
+#if defined(HAVE_EPOLL)
     if (mEpollFd >= 0) {
         LOGV("%p ~ rebuildEpollLocked - rebuilding epoll set", this);
         close(mEpollFd);
@@ -150,7 +150,7 @@ void Looper::rebuildEpollLocked() {
     LOGE_IF(mEpollFd < 0, "Could not create epoll instance: %s", strerror(errno));
 #endif
     struct epoll_event wakeEvent = createEpollEvent(EPOLLIN,WAKE_EVENT_FD_SEQ);
-#if USED_POLL == EPOLL
+#if defined(HAVE_EPOLL)
     int result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mWakeEventFd, &wakeEvent);
     LOGE_IF(result != 0, "Could not add wake event fd to epoll instance: %s",strerror(errno));
 #endif
@@ -158,7 +158,7 @@ void Looper::rebuildEpollLocked() {
         const SequenceNumber& seq = it->first;
         const Request& request = it->second;
         epoll_event eventItem =createEpollEvent(request.getEpollEvents(),seq);
-#if USED_POLL == EPOLL
+#if defined(HAVE_EPOLL)
         const int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, request.fd, & eventItem);
         LOGE_IF(epollResult<0,"Error adding epoll events for fd %d while rebuilding epoll set: %s",request.fd, strerror(errno));
 #endif
@@ -481,7 +481,7 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
         epoll_event eventItem = createEpollEvent(request.getEpollEvents(),seq);
         auto seq_it = mSequenceNumberByFd.find(fd);
         if (seq_it == mSequenceNumberByFd.end()) {
-#if USED_POLL ==EPOLL     
+#if defined(HAVE_EPOLL)
             int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, fd, &eventItem);
             if (epollResult < 0) {
                 LOGE("Error adding epoll events for fd %d: %s", fd, strerror(errno));
@@ -491,7 +491,7 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
             mRequests.emplace(seq, request);
             mSequenceNumberByFd.emplace(fd,seq);
         } else {
-#if USED_POLL ==EPOLL
+#if defined(HAVE_EPOLL)
             int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_MOD, fd, & eventItem);
             if (epollResult < 0) {
                 if (errno == ENOENT) {
@@ -606,7 +606,7 @@ int Looper::removeFd(int fd, int seq) {
         // Always remove the FD from the request map even if an error occurs while
         // updating the epoll set so that we avoid accidentally leaking callbacks.
         mRequests.erase(itr);
-#if USED_POLL ==EPOLL
+#if defined(HAVE_EPOLL)
         int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_DEL, fd, nullptr);
         if (epollResult < 0) {
             if (seq != -1 && (errno == EBADF || errno == ENOENT)) {

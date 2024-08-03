@@ -1,33 +1,38 @@
 #ifndef __ALOOPER_H__
 #define __ALOOPER_H__
-#include <core/message.h>
-#define NOPOLL 0
-#define POLL   1
-#define EPOLL  2
-#define USED_POLL EPOLL
-#if USED_POLL!=EPOLL
-typedef union epoll_data{
-  void *ptr;
-  int fd;
-  uint32_t u32;
-  uint64_t u64;
-} epoll_data_t;
-
-struct epoll_event{
-  uint32_t events;      /* Epoll events */
-  epoll_data_t data;    /* User data variable */
-};
-#endif
-#if USED_POLL == POLL
-#include <poll.h>
-#elif USED_POLL ==EPOLL
-#include <sys/epoll.h>
-#endif
-
 #include <unordered_map>
 #include <vector>
 #include <mutex>
 #include <list>
+#include <core/message.h>
+
+#if defined(HAVE_EPOLL)
+#include <sys/epoll.h>
+#elif defined(HAVE_POLL)
+#include <poll.h>
+#endif
+
+#if defined(HAVE_POLL) && !defined(HAVE_EPOLL)
+typedef union epoll_data{
+    void *ptr;
+    int fd;
+    uint32_t u32;
+    uint64_t u64;
+} epoll_data_t;
+
+struct epoll_event{
+    uint32_t events;      /* Epoll events */
+    epoll_data_t data;    /* User data variable */
+};
+#endif
+#if !defined(HAVE_POLL)
+struct pollfd {
+    int   fd;         /* file descriptor */
+    short events;     /* requested events */
+    short revents;    /* returned events */
+};
+#endif
+
 
 namespace cdroid{
 typedef int64_t nsecs_t;
