@@ -84,7 +84,7 @@ RefPtr<ImageSurface>DRAWABLE::sImage;
 TEST_F(DRAWABLE,parsexml){
     std::ifstream fs("styles.xml");
 }
-#if 0
+
 TEST_F(DRAWABLE,color){
     const char*text="<color color=\"red\"/>";
     std::istringstream is(text);
@@ -94,7 +94,7 @@ TEST_F(DRAWABLE,color){
     d->draw(*ctx);	
     delete d;
 }
-#endif
+
 TEST_F(DRAWABLE,bitmapalpha){
     BitmapDrawable*d=new BitmapDrawable(sImage);
     ASSERT_EQ(d->getBitmap().get(),(void*)sImage.get());

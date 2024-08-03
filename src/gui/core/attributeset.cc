@@ -151,6 +151,9 @@ int AttributeSet::getResourceId(const std::string&key,int def)const{
 int AttributeSet::getColor(const std::string&key,int def)const{
     const std::string resid = getString(key);
     if(resid.empty()) return def;
+    else if((resid[0]=='#')||(resid.find(':')==std::string::npos)) {
+        return Color::parseColor(resid);
+    }
     return mContext->getColor(resid);
 
 }

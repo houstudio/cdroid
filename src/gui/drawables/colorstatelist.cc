@@ -42,7 +42,7 @@ ColorStateList::ColorStateList(const std::vector<std::vector<int>>&states,const 
 }
 
 ColorStateList::~ColorStateList(){
-    LOGV("%p====",this);
+    LOGV("%p",this);
 }
 
 void ColorStateList::dump()const{

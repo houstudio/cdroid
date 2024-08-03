@@ -53,9 +53,12 @@ namespace {
 
 Looper* Looper::sMainLooper = nullptr;
 Looper::Looper(bool allowNonCallbacks) :
-        mAllowNonCallbacks(allowNonCallbacks), mSendingMessage(false),
-        mPolling(false), mEpollFd(-1), mEpollRebuildRequired(false),
-        mNextRequestSeq(WAKE_EVENT_FD_SEQ+1), mResponseIndex(0), mNextMessageUptime(LLONG_MAX) {
+        mAllowNonCallbacks(allowNonCallbacks),
+        mSendingMessage(false),
+        mPolling(false), mEpollFd(-1),
+        mEpollRebuildRequired(false),
+        mNextRequestSeq(WAKE_EVENT_FD_SEQ+1),
+        mResponseIndex(0), mNextMessageUptime(LLONG_MAX) {
     mWakeEventFd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
     LOGE_IF(mWakeEventFd < 0, "Could not make wake event fd: %s",strerror(errno));
     std::lock_guard<std::recursive_mutex>_l(mLock);
@@ -114,7 +117,7 @@ Looper*Looper::prepare(int opts){
 void Looper::prepareMainLooper(){
     prepare(false);
     FATAL_IF(sMainLooper,"The main Looper has been prepared");
-    sMainLooper=myLooper();
+    sMainLooper = myLooper();
 }
 
 void Looper::setForThread(Looper* looper){
@@ -165,7 +168,7 @@ void Looper::rebuildEpollLocked() {
 void Looper::scheduleEpollRebuildLocked() {
     if (!mEpollRebuildRequired) {
 #if DEBUG_CALLBACKS
-        LOGD("%p  scheduleEpollRebuildLocked - scheduling epoll set rebuild", this);
+        LOGD("%p scheduleEpollRebuildLocked - scheduling epoll set rebuild", this);
 #endif
         mEpollRebuildRequired = true;
         wake();
@@ -227,13 +230,12 @@ int Looper::doEventHandlers(){
         uint32_t eFlags = es->mFlags;
         if(es&&((eFlags&1)==0)&&(es->checkEvents()>0)){ 
             es->handleEvents();  count++;
-            eFlags = es->mFlags;//Maybe EventHandler::handleEvents will destroy itself,recheck the flags
-            if((eFlags&3)==3) delete es;//make EventHandler::handleEvents can destroy itself
+            eFlags = es->mFlags;//Maybe EventHandler::handleEvents will remove itself,so we recheck the flags
+            if((eFlags&3)==3) delete es;//EventHandler owned by looper must be freed here
             if((eFlags&1)==1){
                 it = mEventHandlers.erase(it);
                 continue;
             }
-            //EventHandler owned by looper must be freed here
         }it++;
     }
     return count;
@@ -326,11 +328,10 @@ Done: ;
         nsecs_t now = SystemClock::uptimeMillis();
         const MessageEnvelope& messageEnvelope = mMessageEnvelopes.front();
         if (messageEnvelope.uptime <= now) {
-            // Remove the envelope from the list.
-            // We keep a strong reference to the handler until the call to handleMessage
-            // finishes.  Then we drop it so that the handler can be deleted *before*
-            // we reacquire our lock.
-            { // obtain handler
+            //Remove the envelope from the list. We keep a strong reference to the handler
+            //until the call to handleMessage finishes. Then we drop it so that the handler
+            //can be deleted *before* we reacquire our lock.
+            {//obtain handler
                 MessageHandler* handler = messageEnvelope.handler;
                 Message message = messageEnvelope.message;
                 mMessageEnvelopes.pop_front();
@@ -343,7 +344,7 @@ Done: ;
                     message.callback();
                 else 
                     handler->handleMessage(message);
-            } // release handler
+            }//release handler
 
             mLock.lock();
             mSendingMessage = false;
