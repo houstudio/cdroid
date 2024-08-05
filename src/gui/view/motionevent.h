@@ -194,18 +194,18 @@ public:
     MotionEvent(const MotionEvent&m);
     MotionEvent*copy()const override{return obtain(*this);}
     void initialize(int deviceId,int source,int displayId,int action,int actionButton,
-           int flags, int edgeFlags,int metaState, int buttonState, float xOffset, float yOffset,
+        int flags, int edgeFlags,int metaState, int buttonState, float xOffset, float yOffset,
 	    float xPrecision, float yPrecision,nsecs_t downTime, nsecs_t eventTime, size_t pointerCount,
-            const PointerProperties* pointerProperties,const PointerCoords* pointerCoords);
+        const PointerProperties* pointerProperties,const PointerCoords* pointerCoords);
 
     static MotionEvent*obtain(nsecs_t downTime, nsecs_t eventTime, int action,
-            int pointerCount, const PointerProperties* pointerProperties,const PointerCoords* pointerCoords,
-                int metaState, int buttonState, float xPrecision, float yPrecision, int deviceId,
-            int edgeFlags, int source, int flags);
+        int pointerCount, const PointerProperties* pointerProperties,const PointerCoords* pointerCoords,
+        int metaState, int buttonState, float xPrecision, float yPrecision, int deviceId,
+        int edgeFlags, int source, int flags);
 
     static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,
-            float x, float y, float pressure, float size, int metaState,
-            float xPrecision, float yPrecision, int deviceId, int edgeFlags);
+        float x, float y, float pressure, float size, int metaState,
+        float xPrecision, float yPrecision, int deviceId, int edgeFlags);
 
     static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action, float x, float y, int metaState);
     static MotionEvent* obtain(const MotionEvent& other);

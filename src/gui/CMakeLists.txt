@@ -114,7 +114,7 @@ set(PKGCONFIG_LIBS "cairo bzip2 libzip")#do not use -l
 set(PKGCONFIG_LIBS_PRIVATE "expat bzip2 libzip")
 set(NONPKG_LIBS "-l${PROJECT_NAME} -ltvhal")#non pkgconfig libraries
 set(NONPKG_LIBS_PRIVATE "-ltvhal")
-message("==CDROID_DEPLIBS=${CDROID_DEPLIBS}")
+message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
 target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal)
 
 if(litehtml_FOUND)

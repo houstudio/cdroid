@@ -244,13 +244,16 @@ static void ms2timespec(int ms, struct timespec *ts){
 }
 
 static int fdcallback(int fd, int events, void* data){
-   uint64_t count;
-   int *loops=(int*)data;
    struct timespec cur;
+   int *loops=(int*)data;
    clock_gettime(CLOCK_MONOTONIC,&cur);
-   if(events&Looper::EVENT_INPUT)
+   if(events&Looper::EVENT_INPUT){
+       uint64_t count;
        ::read(fd, &count, sizeof(uint64_t));
-   if(*loops>20){
+       (*loops)+=count;
+       LOGD("loops +%d = %d",count,*loops);
+   }
+   if(*loops>=20){
        struct itimerspec new_value={{0,0},{0,0}};
        timerfd_settime(fd,0,&new_value, NULL);
        Looper::getMainLooper()->removeFd(fd);
@@ -269,34 +272,7 @@ TEST_F(LOOPER,timerfd){
     int rc=timerfd_settime(fd, 0/*TFD_TIMER_ABSTIME*/, &new_value,NULL);
     mLooper->addFd(fd,0,Looper::EVENT_INPUT,fdcallback,&loops);
 
-    while(1)mLooper->pollAll(10);
+    while(loops<20)mLooper->pollAll(10);
+    ASSERT_EQ(loops,20);
 }
 
-TEST_F(LOOPER,timerfd2){
-    #define INTERVAL 200 //ms
-    App app;
-    int loops=0;
-    Looper*loop= Looper::getMainLooper();
-    struct itimerspec new_value={{0,0},{0,0}};
-
-    ms2timespec(INTERVAL,&new_value.it_value);
-    ms2timespec(INTERVAL,&new_value.it_interval);
-    int fd=timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
-
-    int rc=timerfd_settime(fd, 0/*TFD_TIMER_ABSTIME*/, &new_value, NULL);
-    loop->addFd(fd,0,Looper::EVENT_INPUT,fdcallback,&loops);
-    Window*w  = new Window(0,0,-1,-1);
-    Button*btn= new Button("Test",200,200);
-    w->addView(btn);
-    int color=11,color2=0;
-    Runnable run={[&](){
-        btn->setBackgroundColor(0xFF000000|color|(color2<<8));
-        color+=8;color2+=4;
-        w->postDelayed(run,100);
-    }};
-    w->postDelayed(run,100);
-    btn->setOnClickListener([](View&v){
-        printf("button clicked \r\n");
-    });
-    app.exec();
-}

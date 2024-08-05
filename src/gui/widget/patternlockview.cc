@@ -1,4 +1,3 @@
-#if 10
 #include <widget/patternlockview.h>
 namespace cdroid{
 static constexpr float FLOAT_MIN = std::numeric_limits<float>::min();
@@ -926,4 +925,3 @@ void PatternLockView::checkRange(int row, int column) {
 }
 
 }//endof namespace
-#endif

@@ -69,7 +69,7 @@ void PointerCoords::applyOffset(float xOffset, float yOffset) {
 }
 
 void PointerCoords::tooManyAxes(int axis) {
-    LOGD("Could not set value for axis %d because the PointerCoords structure is full and "
+    LOGW("Could not set value for axis %d because the PointerCoords structure is full and "
             "cannot contain more than %d axis values.", axis, int(MAX_AXES));
 }
 
