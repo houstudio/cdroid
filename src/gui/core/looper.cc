@@ -47,7 +47,9 @@ static int toMillisecondTimeoutDelay(nsecs_t referenceTime, nsecs_t timeoutTime)
 namespace {
     constexpr uint64_t WAKE_EVENT_FD_SEQ = 1;
     epoll_event createEpollEvent(uint32_t events, uint64_t seq) {
-        return {.events = events, .data = {.u64 = seq}};
+        epoll_event e={events};
+        e.data.u64 = seq;
+        return e;
     }
 } 
 
