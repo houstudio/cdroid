@@ -690,7 +690,7 @@ void RecyclerView::setRecycledViewPool(RecycledViewPool* pool) {
     mRecycler->setRecycledViewPool(pool);
 }
 
-void RecyclerView::setViewCacheExtension(ViewCacheExtension* extension) {
+void RecyclerView::setViewCacheExtension(const ViewCacheExtension& extension) {
     mRecycler->setViewCacheExtension(extension);
 }
 
@@ -3724,7 +3724,6 @@ RecyclerView::Recycler::Recycler(RecyclerView*rv){
     mRV = rv;
     mViewCacheMax = DEFAULT_CACHE_SIZE;
     mChangedScrap = nullptr;
-    mViewCacheExtension = nullptr;
     mRecyclerPool = nullptr;
 }
 
@@ -3919,7 +3918,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
         if (holder == nullptr && mViewCacheExtension != nullptr) {
             // We are NOT sending the offsetPosition because LayoutManager does not
             // know it.
-            View* view = mViewCacheExtension->getViewForPositionAndType(*this, position, type);
+            View* view = mViewCacheExtension/*->getViewForPositionAndType*/(*this, position, type);
             if (view != nullptr) {
                 holder = mRV->getChildViewHolder(view);
                 if (holder == nullptr) {
@@ -4457,7 +4456,7 @@ void RecyclerView::Recycler::offsetPositionRecordsForRemove(int removedFrom, int
     }
 }
 
-void RecyclerView::Recycler::setViewCacheExtension(ViewCacheExtension* extension) {
+void RecyclerView::Recycler::setViewCacheExtension(const ViewCacheExtension& extension) {
     mViewCacheExtension = extension;
 }
 

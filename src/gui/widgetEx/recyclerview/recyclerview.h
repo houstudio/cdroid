@@ -30,7 +30,6 @@ public:
     class AdapterDataObservable;
     class RecycledViewPool;
     class EdgeEffectFactory;
-    class ViewCacheExtension;
     class LayoutParams;
     class AdapterDataObserver{
     public:
@@ -184,10 +183,11 @@ public:/*public classes*/
         void onAnimationsFinished();
     };*/
     typedef CallbackBase<int,int,int>ChildDrawingOrderCallback;
-    class ViewCacheExtension {
+    typedef std::function<View*(Recycler&,int,int)>ViewCacheExtension;
+    /*class ViewCacheExtension {
     public:
         virtual View* getViewForPositionAndType(Recycler& recycler, int position,int type)=0;
-    };
+    };*/
 
     class Adapter{//<ViewHolder>{
     private:
@@ -481,7 +481,7 @@ public:
     OnFlingListener getOnFlingListener();
     RecycledViewPool& getRecycledViewPool();
     void setRecycledViewPool(RecycledViewPool* pool);
-    void setViewCacheExtension(ViewCacheExtension* extension);
+    void setViewCacheExtension(const ViewCacheExtension& extension);
     void setItemViewCacheSize(int size);
     int getScrollState()const;
     void setScrollState(int state);
@@ -866,7 +866,7 @@ private:
     static constexpr int DEFAULT_CACHE_SIZE = 2;
     std::vector<ViewHolder*> mUnmodifiableAttachedScrap;
     int mRequestedCacheMax = DEFAULT_CACHE_SIZE;
-    ViewCacheExtension* mViewCacheExtension;
+    RecyclerView::ViewCacheExtension mViewCacheExtension;
 
     bool tryBindViewHolderByDeadline(ViewHolder& holder, int offsetPosition,
             int position, long deadlineNs);
@@ -902,7 +902,7 @@ protected:
     void offsetPositionRecordsForMove(int from, int to);
     void offsetPositionRecordsForInsert(int insertedAt, int count);
     void offsetPositionRecordsForRemove(int removedFrom, int count, bool applyToPreLayout);
-    void setViewCacheExtension(ViewCacheExtension* extension);
+    void setViewCacheExtension(const ViewCacheExtension& extension);
     void setRecycledViewPool(RecycledViewPool* pool);
     RecycledViewPool& getRecycledViewPool();
     void viewRangeUpdate(int positionStart, int itemCount);
