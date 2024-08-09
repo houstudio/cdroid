@@ -61,7 +61,13 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     Typeface::setContext(this);
     onInit();
     setName(std::string(argc?argv[0]:__progname));
-    LOGI("CDROID Ver:%d.%d.%d Build %d",BUILD::VERSION::Major,BUILD::VERSION::Minor,BUILD::VERSION::Patch,BUILD::VERSION::BuildNumber);
+    LOGI("\033[1;35m          ┏━┓┏┓╋╋╋┏┓┏┓");
+    LOGI("\033[1;35m          ┃┏╋┛┣┳┳━╋╋┛┃");
+    LOGI("\033[1;35m          ┃┗┫╋┃┏┫╋┃┃╋┃");
+    LOGI("\033[1;35m          ┗━┻━┻┛┗━┻┻━┛");
+
+    LOGI("      CDROID %s Build %d",BUILD::VERSION::Release.c_str(),BUILD::VERSION::BuildNumber);
+    LOGI("https://www.gitee.com/houstudio/cdroid\n");
     LOGI("App [%s] started c++=%d",mName.c_str(),__cplusplus);
 	
     View::VIEW_DEBUG = hasSwitch("debug");

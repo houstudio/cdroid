@@ -230,15 +230,18 @@ int Looper::doEventHandlers(){
     for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();){
         EventHandler*es=(*it);
         uint32_t eFlags = es->mFlags;
-        if(es&&((eFlags&1)==0)&&(es->checkEvents()>0)){ 
-            es->handleEvents();  count++;
-            eFlags = es->mFlags;//Maybe EventHandler::handleEvents will remove itself,so we recheck the flags
-            if((eFlags&3)==3) delete es;//EventHandler owned by looper must be freed here
-            if((eFlags&1)==1){
-                it = mEventHandlers.erase(it);
-                continue;
+        if(es&&((eFlags&1)==0)){
+            if(es->checkEvents()>0){
+                es->handleEvents();  count++;
             }
-        }it++;
+            eFlags = es->mFlags;//Maybe EventHandler::handleEvents will remove itself,so we recheck the flags
+        }
+        if((eFlags&3)==3) delete es;//EventHandler owned by looper must be freed here
+        if((eFlags&1)==1){
+            it = mEventHandlers.erase(it);
+            continue;
+        }
+        it++;
     }
     return count;
 }
