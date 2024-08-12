@@ -6,6 +6,7 @@
 #include <freetype/ftsnames.h>
 #include <cairomm/matrix.h>
 #include <core/context.h>
+#include <core/atexit.h>
 #include <dirent.h>
 #include <cdlog.h>
 
@@ -282,11 +283,20 @@ void Typeface::loadPreinstalledSystemFontMap() {
     SANS_SERIF   = create("sans-serif",NORMAL);
     SERIF        = create("serif",NORMAL);
     MONOSPACE    = create("monospace",NORMAL);
+
     LOGD("DEFAULT=%p [%s] style:%d %s",DEFAULT,DEFAULT->mFamily.c_str(),DEFAULT->getStyle(),DEFAULT->mFileName.c_str());
     LOGD("DEFAULT_BOLD=%p [%s] style:%d %s",DEFAULT_BOLD,DEFAULT_BOLD->mFamily.c_str(),DEFAULT->getStyle(),DEFAULT_BOLD->mFileName.c_str());
     LOGD("SANS_SERIF=%p [%s] style:%d %s",SANS_SERIF,SANS_SERIF->mFamily.c_str(),DEFAULT->getStyle(),SANS_SERIF->mFileName.c_str());
     LOGD("SERIF=%p [%s]style:%d %s",SERIF,SERIF->mFamily.c_str(),DEFAULT->getStyle(),SERIF->mFileName.c_str());
     LOGD("MONOSPACE=%p [%s]style:%d %s",MONOSPACE,MONOSPACE->mFamily.c_str(),DEFAULT->getStyle(),MONOSPACE->mFileName.c_str());
+
+    AtExit::registerCallback([](){
+        for(auto it= sSystemFontMap.begin(); it!= sSystemFontMap.end(); it++) {
+            Typeface* face = it->second;
+            delete face;
+        }
+        sSystemFontMap.clear();
+    });
 }
 
 static FT_Library ftLibrary = nullptr;
