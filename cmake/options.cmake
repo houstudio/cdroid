@@ -13,6 +13,7 @@ option(ENABLE_PLPLOT "Enable PLPLot" OFF)
 option(ENABLE_GESTURE "Enable Gesture support" ON)
 option(ENABLE_AUDIO "Enabled Audio(Sound Effect)" ON)
 option(ENABLE_BARCODE "Enable BarCode(QrCodr...)" ON)
+option(ENABLE_LOTTIE "Enable Lottie Animation" ON)
 option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." ON)
 
 option(ENABLE_PINYIN2HZ "Chinese Pinyin to HZ support" ON)
@@ -49,12 +50,12 @@ find_package(Brotli)
 find_package(BZip2)
 find_package(UniBreak REQUIRED)
 find_package(litehtml CONFIG)
+find_package(RLottie)
 #find_package(PLPLOT)
 find_package(zint CONFIG) #barcode generater
 find_package(Fribidi)
 find_package(RtAudio)
 set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES} ${RTAUDIO_INCLUDE_DIRS}")
-#message(FATAL_ERROR "RtAudio_INCLUDE_DIRS=${RtAudio_INCLUDE_DIR} RtAudio_FOUND=${RtAudio_FOUND}")
 list(APPEND CDROID_DEPLIBS
     ${ZLIB_LIBRARIES}
     ${PNG_LIBRARIES}
@@ -66,22 +67,32 @@ list(APPEND CDROID_DEPLIBS
     ${UNIBREAK_LIBRARIES}
     ${ZIP_LIBRARIES}
 )
+
 if(RTAUDIO_FOUND AND ENABLE_AUDIO)
    list(APPEND CDROID_DEPLIBS ${RTAUDIO_LIBRARIES})
 else()
    set(ENABLE_AUDIO OFF)
 endif()
+
+if(RLOTTIE_FOUND AND ENABLE_LOTTIE)
+   list(APPEND CDROID_DEPLIBS ${RLOTTIE_LIBRARIES})
+else()
+   set(ENABLE_LOTTIE OFF)
+endif()
+
 if ( BROTLIDEC_FOUND )
    #list(APPEND CDROID_DEPLIBS ${BROTLIDEC_LIBRARIES})
 endif()
 if (BZIP2_FOUND)
    list(APPEND CDROID_DEPLIBS ${BZIP2_LIBRARIES})
 endif()
+
 if (TURBOJPEG_FOUND)
    add_definitions(-DENABLE_TURBOJPEG=1)
    list(APPEND CDROID_DEPLIBS ${TURBOJPEG_LIBRARIES})
    list(APPEND CDROID_DEPINCLUDES ${TURBOJPEG_INCLUDE_DIRS})
 endif()
+
 if(JPEG_FOUND)
    add_definitions(-DENABLE_JPEG=1)
    list(APPEND CDROID_DEPLIBS ${JPEG_LIBRARIES})
