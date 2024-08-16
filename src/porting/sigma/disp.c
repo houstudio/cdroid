@@ -106,10 +106,12 @@ int32_t DispSetSaturation(int dev,int value){
 }
 
 int32_t DispSetColorTemp(int dev,const DISP_ColorTemperature*colorTemp){
+    int rc = MI_DISP_DeviceSetColorTempeture(0,(MI_DISP_ColorTemperature_t*)colorTemp);
     return 0;
 }
 
 int32_t DispGetColorTemp(int dev,DISP_ColorTemperature*colorTemp){
+    int rc = MI_DISP_DeviceGetColorTempeture(0,(MI_DISP_ColorTemperature_t*)colorTemp);
     return 0;
 }
 
@@ -118,9 +120,19 @@ int32_t DispGetColorTemp(int dev,DISP_ColorTemperature*colorTemp){
  * entryNumber Gamma Entry number,-1(0xFFFFFFFF):disable gamma
  * */
 int32_t DispSetGamma(int dev,uint8_t*r,uint8_t*g,uint8_t*b,uint32_t entryNumber){
+    MI_DISP_GammaParam_t gm;
+    gm.bEn=(entryNumber!=(uint32_t)-1);
+    gm.u16EntryNum=entryNumber;
+    gm.pu8ColorR=r;
+    gm.pu8ColorG=g;
+    gm.pu8ColorB=b;
+    MI_DISP_DeviceSetGammaParam(0,&gm);
     return 0;
 }
 
 int32_t DispGetGamma(int dev,uint8_t*r,uint8_t*g,uint8_t*b,uint32_t *entryNumber){
+    //MI_DISP_GammaParam_t gm;
+    //MI_DISP_DeviceSetGammaParam(0,&gm);
     return 0;
 }
+
