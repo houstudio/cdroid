@@ -15,7 +15,7 @@ set(ALI_SRCS
 
 if (ENABLE_DTV)
     list(APPEND ALI_SRCS  ngl_dsc.c ngl_smc.c  ngl_tuner.c ngl_dmx.cc 
-          ngl_nvm.c  ngl_pvr.c ngl_snd.c ngl_video.c  ngl_disp.c  )
+          ngl_nvm.c  ngl_pvr.c ngl_snd.c ngl_video.c  alidisp.c  )
 endif()
 list(APPEND ALI_LIBS pthread  direct directfb aui)
 

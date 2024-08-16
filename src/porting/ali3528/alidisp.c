@@ -2,7 +2,7 @@
 #include<aui_osd.h>
 #include<cdtypes.h>
 #include<cdlog.h>
-#include<ngl_disp.h>
+#include<cddisp.h>
 
 static aui_hdl dis_hd=NULL;
 static aui_hdl dis_sd=NULL;
