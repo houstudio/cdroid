@@ -7,29 +7,29 @@
 static aui_hdl dis_hd=NULL;
 static aui_hdl dis_sd=NULL;
 
-DWORD nglDispInit(){
+int32_t DispInit(){
     int rc;
     aui_attr_dis attr_dis;
     MEMSET(&attr_dis, 0 ,sizeof(aui_attr_dis));
 
     if (aui_find_dev_by_idx(AUI_MODULE_DIS, AUI_DIS_HD, &dis_hd)){
         attr_dis.uc_dev_idx = AUI_DIS_HD;
-	rc=aui_dis_open(&attr_dis, &dis_hd);
-	LOGD("aui_dis_open HD =%d",rc);
+	    rc=aui_dis_open(&attr_dis, &dis_hd);
+	    LOGD("aui_dis_open HD =%d",rc);
     }
 
     LOGD("init_dis_handle(),222");	
 	
     if (aui_find_dev_by_idx(AUI_MODULE_DIS, AUI_DIS_SD, &dis_sd)){
-	attr_dis.uc_dev_idx = AUI_DIS_SD;
-	rc=aui_dis_open(&attr_dis, &dis_sd);
-   	LOGD(" aui_dis_open SD =%d",rc);
+	    attr_dis.uc_dev_idx = AUI_DIS_SD;
+	    rc=aui_dis_open(&attr_dis, &dis_sd);
+   	    LOGD(" aui_dis_open SD =%d",rc);
     }
     LOGD("dis_hd=%p dis_sd=%p",dis_hd,dis_sd);
     return E_OK;
 }
 
-DWORD nglDispSetResolution(int res){
+int32_t DispSetResolution(int dev,int res){
     int rc;
     unsigned int tve_src=0;
     unsigned long output_width = 1280;
@@ -42,23 +42,23 @@ DWORD nglDispSetResolution(int res){
     case DISP_RES_1080I:
     case DISP_RES_1080P:
       	tvsys = (res==DISP_RES_1080I)?AUI_DIS_TVSYS_LINE_1080_25:AUI_DIS_TVSYS_LINE_1080_50;
-	output_width = 1920;
-	output_height = 1080;
-	progressive =res==DISP_RES_1080P;
+	    output_width = 1920;
+	    output_height = 1080;
+	    progressive =res==DISP_RES_1080P;
         break;
     case DISP_RES_720I:
     case DISP_RES_720P:
         tvsys = AUI_DIS_TVSYS_LINE_720_50;
-	output_width = 1280;
-	output_height = 720;
-	progressive = res==DISP_RES_720P;
+	    output_width = 1280;
+	    output_height = 720;
+	    progressive = res==DISP_RES_720P;
         break;
     case DISP_RES_576I:
     case DISP_RES_576P:
      	tvsys = AUI_DIS_TVSYS_PAL;
-	output_width = 720;
-	output_height = 576;
-	progressive = true;
+	    output_width = 720;
+	    output_height = 576;
+	    progressive = true;
     case DISP_RES_480I:
         tvsys = AUI_DIS_TVSYS_NTSC;
         output_width=720;
@@ -115,7 +115,7 @@ DWORD nglDispSetResolution(int res){
     return E_OK;
 }
 
-DWORD nglDispSetAspectRatio(int ratio){
+int32_t DispSetAspectRatio(int dev,int ratio){
     int rc;
     switch(ratio){
     case DISP_APR_AUTO:   ratio=AUI_DIS_AP_AUTO;break;
@@ -128,7 +128,7 @@ DWORD nglDispSetAspectRatio(int ratio){
     return rc;
 }
 
-DWORD nglDispGetAspectRatio(int*ratio){
+int32_t DispGetAspectRatio(int dev,int*ratio){
     struct aui_dis_info dis_info;
     memset(&dis_info,0,sizeof(aui_dis_info));
     aui_dis_get((void*)dis_hd,AUI_DIS_GET_INFO,(void*)&dis_info);
@@ -141,7 +141,7 @@ DWORD nglDispGetAspectRatio(int*ratio){
     return E_OK;
 }
 
-DWORD nglDispSetMatchMode(int md){
+int32_t DispSetMatchMode(int dev,int md){
     int rc;
     aui_dis_match_mode mm;
     switch(md){
@@ -157,24 +157,43 @@ DWORD nglDispSetMatchMode(int md){
     return rc;
 }
 
-DWORD nglDispSetBrightNess(int value){
+int32_t DispSetBrightNess(int dev,int value){
     int rc;
     aui_dis_enhance_set(dis_sd,AUI_DIS_ENHANCE_BRIGHTNESS,value);
     rc=aui_dis_enhance_set(dis_hd,AUI_DIS_ENHANCE_BRIGHTNESS,value);
     LOGD("rc=%d value=%d",rc,value);
 }
 
-DWORD nglDispSetContrast(int value){
+int32_t DispSetContrast(int dev,int value){
     int rc;
     aui_dis_enhance_set(dis_sd,AUI_DIS_ENHANCE_CONTRAST,value);
-    rc=aui_dis_enhance_set(dis_hd,AUI_DIS_ENHANCE_CONTRAST,value);
+    rc = aui_dis_enhance_set(dis_hd,AUI_DIS_ENHANCE_CONTRAST,value);
     LOGD("rc=%d value=%d",rc,value);
 }
 
-DWORD nglDispSetSaturation(int value){
+int32_t DispSetSaturation(int dev,int value){
     int rc;
     aui_dis_enhance_set(dis_sd,AUI_DIS_ENHANCE_SATURATION,value);
-    rc=aui_dis_enhance_set(dis_hd,AUI_DIS_ENHANCE_SATURATION,value);
+    rc = aui_dis_enhance_set(dis_hd,AUI_DIS_ENHANCE_SATURATION,value);
     LOGD("rc=%d value=%d ",value,rc);
 }
 
+int32_t DispSetColorTemp(int dev,const DISP_ColorTemperature*){
+    return 0;
+}
+
+int32_t DispGetColorTemp(int dev,DISP_ColorTemperature*){
+    return 0;
+}
+
+/*DispSetGamma
+ *
+ * entryNumber Gamma Entry number,-1(0xFFFFFFFF):disable gamma
+ * */
+int32_t DispSetGamma(int dev,uint8_t*r,uint8_t*g,uint8_t*b,uint32_t entryNumber){
+    return 0;
+}
+
+int32_t DispGetGamma(int dev,uint8_t*r,uint8_t*g,uint8_t*b,uint32_t *entryNumber){
+    return 0;
+}
