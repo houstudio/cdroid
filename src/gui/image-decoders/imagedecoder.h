@@ -10,23 +10,18 @@ namespace cdroid{
 class ImageDecoder{
 protected:
     struct PRIVATE*mPrivate;
-    int mFrameCount;
     int mImageWidth;
     int mImageHeight;
     int mCurrScanline;
-    float mScale;
     std::istream*istream;
 public:
     ImageDecoder(std::istream&);
     virtual ~ImageDecoder();
-    virtual int decode(bool sizeOnly)=0;
     int getWidth()const;
     int getHeight()const;
-    float getScale()const;
-    void setScale(float);
-    virtual int getFrameCount()const;
-    virtual int getFrameDuration(int)const;
-    virtual int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)=0;
+
+    virtual bool decodeSize()=0;
+    virtual Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f)=0;
 
     static ImageDecoder*create(Context*ctx,const std::string&resourceId);
     static Drawable*createAsDrawable(Context*ctx,const std::string&resourceId);
@@ -36,32 +31,25 @@ class GIFDecoder:public ImageDecoder{
 public:
     GIFDecoder(std::istream&);
     ~GIFDecoder()override;
-    int decode(bool sizeOnly)override;
-    virtual int getFrameDuration(int)const;
-    int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)override;
+    bool decodeSize()override;
+    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f)override;
 };
 
 class JPEGDecoder:public ImageDecoder{
 public:
     JPEGDecoder(std::istream&);
-    int decode(bool sizeOnly)override;
-    int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)override;
+    ~JPEGDecoder()override;
+    bool decodeSize()override;
+    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f)override;
 };
 
-class APNGDecoder:public ImageDecoder{
+class PNGDecoder:public ImageDecoder{
 public:
-    APNGDecoder(std::istream&);
-    ~APNGDecoder()override;
-    int decode(bool sizeOnly)override;
-    int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)override;
+    PNGDecoder(std::istream&);
+    ~PNGDecoder()override;
+    bool decodeSize()override;
+    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f)override;
 };
 
-class WebpDecoder:public ImageDecoder{
-public:
-    WebpDecoder(std::istream&);
-    ~WebpDecoder();
-    int decode(bool sizeOnly)override;
-    int readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex)override;
-};
 }/*endof namespace*/
 #endif

@@ -3,6 +3,7 @@
 #include <ngl_os.h>
 #include <sys/time.h>
 #include <core/systemclock.h>
+#include <core/atexit.h>
 #include <cdlog.h>
 #include <functional>
 #include <thread>
@@ -275,4 +276,8 @@ TEST_F(LOOPER,timerfd){
     while(loops<20)mLooper->pollAll(10);
     ASSERT_EQ(loops,20);
 }
-
+TEST_F(LOOPER,atexit){
+    AtExit::registerCallback([](){std::cout<<"__1"<<std::endl;});
+    AtExit::registerCallback([](){std::cout<<"__2"<<std::endl;});
+    AtExit::registerCallback([](){std::cout<<"__3"<<std::endl;});
+}

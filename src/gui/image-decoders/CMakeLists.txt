@@ -1,5 +1,6 @@
 project(image-decoders C CXX)
 find_package(GIF)
+find_package(PNG)
 find_package(WebP CONFIG)
 aux_source_directory(. DECODER_SRCS)
 include_directories(
@@ -9,6 +10,7 @@ include_directories(
 	${FREETYPE2_INCLUDE_DIRS}
 	${CAIRO_INCLUDE_DIRS}
 	${WEBP_INCLUDE_DIRS})
+list(APPEND IMAGE_DEPLIBS ${PNG_LIBRARIES})
 if(ENABLE_JPEG)
    list(APPEND IMAGE_DEPLIBS ${JPEG_LIBRARIES})
 endif()

@@ -8,9 +8,6 @@
 
 namespace cdroid{
 
-JPEGDecoder::JPEGDecoder(std::istream&stm):ImageDecoder(stm){
-}
-
 struct decoder_error_mgr {
     struct jpeg_error_mgr pub; // "public" fields for IJG library
     jmp_buf setjmp_buffer;     // For handling catastropic errors
@@ -79,11 +76,9 @@ static void make_jpeg_stream (j_decompress_ptr cinfo, std::istream* in) {
 #ifndef LIBJPEG_TURBO_VERSION
 static void pix_conv(unsigned char *dst, int dw, const unsigned char *src, int sw, int num) {
     int si, di;
-
     // safety check
     if (dw < 3 || sw < 3 || dst == NULL || src == NULL)
         return;
-
     num--;
     for (si = num * sw, di = num * dw; si >= 0; si -= sw, di -= dw) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -114,72 +109,93 @@ static void decimalToFraction(double decimal,int& scale_num,int& scale_denom) {
     scale_denom = denominator / commonDivisor;
 }
 
-int JPEGDecoder::readImage(Cairo::RefPtr<Cairo::ImageSurface>image,int frameIndex){
+struct PRIVATE{
     struct jpeg_decompress_struct cinfo;
     struct decoder_error_mgr jerr;
+};
+
+JPEGDecoder::JPEGDecoder(std::istream&stm):ImageDecoder(stm){
+    mPrivate = new  PRIVATE;
+    struct jpeg_decompress_struct* cinfo = &mPrivate->cinfo;
+    struct decoder_error_mgr* jerr = &mPrivate->jerr;
+
+    cinfo->err = jpeg_std_error(&jerr->pub);
+    jerr->pub.error_exit = handle_jpeg_error;
+    jpeg_create_decompress(cinfo);
+    make_jpeg_stream(cinfo,istream);
+}
+
+JPEGDecoder::~JPEGDecoder(){
+   delete mPrivate;
+}
+
+Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale){
+    Cairo::RefPtr<Cairo::ImageSurface>image;
+    struct jpeg_decompress_struct* cinfo = &mPrivate->cinfo;
+    struct decoder_error_mgr* jerr = &mPrivate->jerr;
     int scale_num,scale_denom;
     JSAMPROW row_pointer[1];
-    cairo_surface_t *sfc;
     // initialize jpeg decompression structures
-    if (setjmp(jerr.setjmp_buffer)){
-        return 0;//sfc;
+    if (setjmp(jerr->setjmp_buffer)){
+        return nullptr;
     }
-    cinfo.err = jpeg_std_error(&jerr.pub);
-    jerr.pub.error_exit = handle_jpeg_error;
-    jpeg_create_decompress(&cinfo);
-    make_jpeg_stream(&cinfo,istream);
-    jpeg_read_header(&cinfo, TRUE);
+    if((mImageWidth==-1)||(mImageHeight==-1)){
+        decodeSize();
+    }
 
-    decimalToFraction(mScale,scale_num,scale_denom);
+    decimalToFraction(scale,scale_num,scale_denom);
     if(scale_num){
-        cinfo.scale_num  = scale_num;
-        cinfo.scale_denom= scale_denom;
+        cinfo->scale_num  = scale_num;
+        cinfo->scale_denom= scale_denom;
     }
 
 #ifdef LIBJPEG_TURBO_VERSION
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-    cinfo.out_color_space = JCS_EXT_BGRA;
+    cinfo->out_color_space = JCS_EXT_BGRA;
 #else
-    cinfo.out_color_space = JCS_EXT_ARGB;
+    cinfo->out_color_space = JCS_EXT_ARGB;
 #endif
 #else
-    cinfo.out_color_space = JCS_RGB;
+    cinfo->out_color_space = JCS_RGB;
 #endif
     // start decompressor
-    (void) jpeg_start_decompress(&cinfo);
+    (void) jpeg_start_decompress(cinfo);
     // create Cairo image surface
-    sfc = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, cinfo.output_width, cinfo.output_height);
-    if (cairo_surface_status(sfc) != CAIRO_STATUS_SUCCESS) {
-        jpeg_destroy_decompress(&cinfo);
-        return 0;//sfc;
+    image = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, cinfo->output_width, cinfo->output_height);
+    if (image ==nullptr) {
+        jpeg_destroy_decompress(cinfo);
+        return nullptr;
     }
 
     // loop over all scanlines and fill Cairo image surface
-    while (cinfo.output_scanline < cinfo.output_height) {
-        unsigned char *row_address = cairo_image_surface_get_data(sfc) +
-                         (cinfo.output_scanline * cairo_image_surface_get_stride(sfc));
+    while (cinfo->output_scanline < cinfo->output_height) {
+        unsigned char *row_address = image->get_data() +cinfo->output_scanline * image->get_stride();
         row_pointer[0] = row_address;
-        if(jpeg_read_scanlines(&cinfo, row_pointer, 1)!=1){
-            LOGD("jpeg data corrupt at scanline=%d/%d",cinfo.output_scanline,cinfo.output_height);
+        if(jpeg_read_scanlines(cinfo, row_pointer, 1)!=1){
+            LOGW("jpeg data corrupt at scanline=%d/%d",cinfo->output_scanline,cinfo->output_height);
             break;
         }
 #ifndef LIBJPEG_TURBO_VERSION
-        pix_conv(row_address, 4, row_address, 3, cinfo.output_width);
+        pix_conv(row_address, 4, row_address, 3, cinfo->output_width);
 #endif
     }
 
     // finish and close everything
-    cairo_surface_mark_dirty(sfc);
-    (void) jpeg_finish_decompress(&cinfo);
-    jpeg_destroy_decompress(&cinfo);
+    (void) jpeg_finish_decompress(cinfo);
+    jpeg_destroy_decompress(cinfo);
 
     // set jpeg mime data
-    cairo_surface_set_mime_data(sfc, CAIRO_MIME_TYPE_JPEG, NULL, 0, NULL,NULL);
+    image->set_mime_data(CAIRO_MIME_TYPE_JPEG, nullptr, 0, nullptr);
 
-    return 0;//sfc;
+    return image;
 }
 
-int JPEGDecoder::decode(bool sizeOnly){
-    return 0;
+bool JPEGDecoder::decodeSize(){
+    struct jpeg_decompress_struct* cinfo = &mPrivate->cinfo;
+    jpeg_read_header(cinfo, TRUE);
+    mImageWidth = cinfo->image_width;
+    mImageHeight= cinfo->image_height;
+    LOGD("imagesize=%dx%d",mImageWidth,mImageHeight);
+    return true;
 }
 }/*endof namespacee*/

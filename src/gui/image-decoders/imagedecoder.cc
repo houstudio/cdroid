@@ -13,8 +13,6 @@ namespace cdroid{
 ImageDecoder::ImageDecoder(std::istream&stm){
     mImageWidth = -1;
     mImageHeight= -1;
-    mFrameCount = 0;
-    mScale = 1.f;
     mPrivate = nullptr;
     istream = &stm;
 }
@@ -28,28 +26,6 @@ int ImageDecoder::getWidth()const{
 
 int ImageDecoder::getHeight()const{
     return mImageHeight;
-}
-
-int ImageDecoder::getFrameCount()const{
-    return mFrameCount;
-}
-
-float ImageDecoder::getScale()const{
-    return mScale;
-}
-
-void ImageDecoder::setScale(float s){
-    mScale =s;
-}
-
-int ImageDecoder::getFrameDuration(int idx)const{
-    int duration = 0;//( (idx>=0) && (idx<mFrameCount) ) ? mFrames[idx]->duration:INT_MAX;
-    // Many annoying ads specify a 0 duration to make an image flash as quickly as possible.
-    // We follow Firefox's behavior and use a duration of 100 ms for any frames that specify
-    // a duration of <= 10 ms. See <rdar://problem/7689300> and <http://webkit.org/b/36082>
-    // for more information.
-    if(duration<=10)duration = 100;
-    return duration;
 }
 
 static bool matchesGIFSignature(char* contents){
@@ -112,7 +88,7 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
         decoder = new GIFDecoder(*istm);
 #endif
     if (matchesPNGSignature(contents))
-        decoder = new APNGDecoder(*istm);
+        decoder = new PNGDecoder(*istm);
 #if USE(ICO)
     if (matchesICOSignature(contents) || matchesCURSignature(contents))
         return ICOImageDecoder::create(alphaOption, gammaAndColorProfileOption);
@@ -140,7 +116,7 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
     ImageDecoder*decoder = create(ctx,resourceId);
     if(decoder){
         Cairo::RefPtr<Cairo::ImageSurface>image = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,decoder->getWidth(),decoder->getHeight());
-        decoder->readImage(image,0);
+        image=decoder->decode();
         delete decoder;
         if(TextUtils::endWith(resourceId,"9.png"))
 	    return new NinePatchDrawable(image);
