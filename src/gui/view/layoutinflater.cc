@@ -1,5 +1,6 @@
 #include <view/layoutinflater.h>
 #include <view/viewgroup.h>
+#include <core/atexit.h>
 #include <cdroid.h>
 #include <expat.h>
 #include <cdlog.h>
@@ -20,7 +21,7 @@ LayoutInflater*LayoutInflater::from(Context*context) {
         LayoutInflater*flater = new LayoutInflater(context);
         it = mMaps.insert(std::pair<Context*,LayoutInflater*>(context,flater)).first;
         if( mMaps.size() ==1) {
-            atexit([]() {
+            AtExit::registerCallback([]() {
                 INFLATERMAPPER& fmap = LayoutInflater::getInflaterMap();
                 STYLEMAPPER& smap = getStyleMap();
                 fmap.clear();
@@ -28,7 +29,6 @@ LayoutInflater*LayoutInflater::from(Context*context) {
                 for(auto m:mMaps)
                     delete m.second;
                 mMaps.clear();
-                std::cout<<"LayoutInflater::Destroied!"<<std::endl;
             });
         }
     }

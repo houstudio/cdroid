@@ -369,7 +369,7 @@ int Typeface::loadFromFontConfig() {
     mSystemLang = lang;
     for (int i=0; fs && i < fs->nfont; i++) {
         FcPattern *pat = fs->fonts[i];//FcPatternDuplicate(fs->fonts[i]);
-        Typeface  *tf = new Typeface(*pat);
+        Typeface* tf = new Typeface(*pat);
         const std::string family = tf->getFamily();
         const std::string style = tf->getStyleName();
         std::string font = tf->mFileName;

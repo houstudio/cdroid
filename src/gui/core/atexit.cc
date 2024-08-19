@@ -1,12 +1,15 @@
-#include "atexit.h"
 #include <algorithm>
 #include <iostream>
-
+#include <stdlib.h>
+#include <memory>
+#include <core/atexit.h>
 namespace cdroid {
 
+static std::vector<std::function<void()>> *mCallbacks = nullptr;
 std::vector<std::function<void()>>& AtExit::callbacks() {
-    static std::vector<std::function<void()>> callbacks;
-    return callbacks;
+    if(mCallbacks==nullptr)
+        mCallbacks = new std::vector<std::function<void()>>;
+    return *mCallbacks;
 }
 
 std::mutex& AtExit::callbacksMutex() {
@@ -16,15 +19,20 @@ std::mutex& AtExit::callbacksMutex() {
 
 void AtExit::registerCallback(std::function<void()> callback) {
     std::lock_guard<std::mutex> lock(callbacksMutex());
-    callbacks().push_back(std::move(callback));
+    callbacks().push_back(callback);
+    LOGD("callbacks.size=%d %p",callbacks().size(),&callback);
 }
 
 void AtExit::executeCallbacks() {
     std::lock_guard<std::mutex> lock(callbacksMutex());
-    std::for_each(callbacks().rbegin(), callbacks().rend(), [](const std::function<void()>& callback) {
-        callback();
-    });
+    std::vector<std::function<void()>>&cbks = callbacks();
+    LOGD("AtExit::executeCallbacks %d",int(cbks.size()));
+    for(auto& callback:cbks) {
+        if(callback)callback();
+    }
+    delete mCallbacks;
 }
+
 class AtExit::AtExitInitializer{
 public:
     AtExitInitializer();
@@ -32,9 +40,8 @@ public:
 
 // Ensure callbacks are executed at exit
 AtExit::AtExitInitializer::AtExitInitializer(){
-    std::atexit([] {
-        AtExit::executeCallbacks();
-    });
+    LOGD("**AtExitInitializer::AtExitInitializer");
+    atexit(AtExit::executeCallbacks);
 }
 
 AtExit::AtExitInitializer atExitInitializer;

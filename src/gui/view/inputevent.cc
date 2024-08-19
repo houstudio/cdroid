@@ -2,6 +2,7 @@
 #include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <core/inputdevice.h>
+#include <core/atexit.h>
 // --- InputEvent ---
 namespace cdroid{
 
@@ -57,8 +58,10 @@ void InputEvent::recycle(){
 PooledInputEventFactory*PooledInputEventFactory::mInst=nullptr;
 
 PooledInputEventFactory& PooledInputEventFactory::getInstance(){
-    if(nullptr==mInst)
+    if(nullptr==mInst){
         mInst = new PooledInputEventFactory(20);
+        AtExit::registerCallback([](){delete mInst;});
+    }
     return *mInst;
 }
 
@@ -67,11 +70,11 @@ PooledInputEventFactory::PooledInputEventFactory(size_t maxPoolSize) :
 }
 
 PooledInputEventFactory::~PooledInputEventFactory() {
-    for (size_t i = 0; i < mKeyEventPool.size(); i++) {
+    while(!mKeyEventPool.empty()) {
         delete mKeyEventPool.front();
         mKeyEventPool.pop();
     }
-    for (size_t i = 0; i < mMotionEventPool.size(); i++) {
+    while(!mMotionEventPool.empty()) {
         delete mMotionEventPool.front();
         mMotionEventPool.pop();
     }
