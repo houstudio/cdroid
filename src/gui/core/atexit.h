@@ -3,6 +3,7 @@
 #include <functional>
 #include <vector>
 #include <mutex>
+
 namespace cdroid{
 class AtExit {
 private:
@@ -10,6 +11,7 @@ private:
 public:
     class AtExitInitializer;
     friend AtExitInitializer;
+    friend void AtExitProc();
     // Register a callback to be executed on exit.
     static void registerCallback(std::function<void()> callback);
 private:
