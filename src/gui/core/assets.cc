@@ -508,7 +508,7 @@ int Assets::getColor(const std::string&refid) {
         it = mColors.find(clrRef);
         if(it != mColors.end())
             return it->second;
-        name = name.substr(name.find_last_of(":/")+1);
+        name = name.substr(name.find_last_of(":?/")+1);
         clrRef = mTheme.getString(name);
         return getColor(clrRef);
     }else if((refid[0]=='#')||refid.find(':')==std::string::npos) {
