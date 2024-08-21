@@ -3,6 +3,8 @@
 #include <map>
 #include <mutex>
 #include <iostream>
+#include <exception>
+
 namespace cdroid{
 static std::map<const std::string ,unsigned int>sColorNameMap={
     {"aquamarine",0xFF7FFFD4},    {"beige" , 0xFFF5F5DC},       {"black"    , 0xFF000000},     {"blue"      , 0xFF0000FF},
@@ -80,7 +82,8 @@ unsigned int Color::getHtmlColor(const std::string&colorname){
              std::cout<<"sColorNameMap.cleared"<<std::endl;
          });
      });
-     if(it== sColorNameMap.end())return -1;
+     if(it== sColorNameMap.end())/*return -1;*/
+         throw std::invalid_argument("invalid color");
      return it->second;
 }
 

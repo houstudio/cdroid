@@ -209,6 +209,8 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         }
         return 0;
     });
+    if(name.compare("cdroid")==0)
+        setTheme("cdroid:style/Theme");
     for(auto c:pending.colors){
         auto it = mColors.find(c.second);
         LOGD_IF(it==mColors.end(),"color %s losting refto %s",c.first.c_str(),c.second.c_str());
@@ -224,8 +226,6 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         for(auto attr:cs.second) cls->addStateColor(this,attr);
         mStateColors.insert({cs.first,cls});
     }
-    if(name.compare("cdroid")==0)
-        setTheme("cdroid:style/Theme");
     LOGI("%s %d resource,[%d id,%d array,%d style,%d string,%d dimens] used %dms",
          package.c_str(),count, mIDS.size(),mArraies.size(), mStyles.size(),
          mStrings.size(),mDimensions.size(),int(SystemClock::uptimeMillis()-sttm));
@@ -502,7 +502,16 @@ int Assets::getColor(const std::string&refid) {
     auto it = mColors.find(name);
     if(it != mColors.end()) {
         return it->second;
-    } else if((refid[0]=='#')||refid.find(':')==std::string::npos) {
+    } else if(refid.find("?")!=std::string::npos){
+        std::string clrRef = name;//mTheme.getString(name.substr(6));
+        TextUtils::replace(clrRef,"attr","color");
+        it = mColors.find(clrRef);
+        if(it != mColors.end())
+            return it->second;
+        name = name.substr(name.find_last_of(":/")+1);
+        clrRef = mTheme.getString(name);
+        return getColor(clrRef);
+    }else if((refid[0]=='#')||refid.find(':')==std::string::npos) {
         return Color::parseColor(refid);
     } else if(refid.find("color/")==std::string::npos) { //refid is defined as an color reference
         parseResource(refid,&name,nullptr);
@@ -525,14 +534,14 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
         mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
         return cls;
     }else if( (itc == mColors.end()) && (name.empty()==false) ) {
-        size_t slashpos = fullresid.find("/");
-        if( (fullresid[0]=='#') || (slashpos==std::string::npos) ) {/*digital colors*/
-            const int color = Color::parseColor(fullresid);
-            ColorStateList* cls = new ColorStateList(color);
+        const size_t slashpos = fullresid.find("/");
+        try{
+            ColorStateList* cls=ColorStateList::inflate(this,fullresid);
             mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
             return cls;
-        }
-        if( slashpos == std::string::npos ) {/*for color wolrds*/
+        }catch(std::invalid_argument&e){
+            LOGE("%s:%s",e.what(),fullresid.c_str());
+            //if( slashpos == std::string::npos ) {/*for color wolrds*/
             std::string realName;
             parseResource(fullresid,&realName,nullptr);
             realName = mTheme.getString(realName);
@@ -542,10 +551,6 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
                 mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
                 return cls;
             }
-        }else{
-            ColorStateList* cls=ColorStateList::inflate(this,fullresid);
-            mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
-            return cls;
         }
     } else if(fullresid.find("attr")!=std::string::npos) {
         const size_t slashpos = fullresid.find("/");

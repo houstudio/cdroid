@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string.h>
 #include <map>
+#include <exception>
 #include <cdtypes.h>
 #include <cdlog.h>
 
@@ -222,6 +223,12 @@ ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const 
 
 ColorStateList*ColorStateList::inflate(Context*ctx,const std::string&resname){
     ColorStateList*cs = nullptr;
+    const std::string fullresid = resname;
+    const size_t slashpos = fullresid.find("/");
+    if( (fullresid[0]=='#') || (slashpos==std::string::npos) ) {/*digital colors and html colors*/
+        const int color = Color::parseColor(fullresid);/*here maybe caused std::invalid_argument exception*/
+        return new ColorStateList(color);
+    }
     if(ctx == nullptr){
         std::ifstream fs(resname);
         cs = fromStream(ctx,fs,resname);
