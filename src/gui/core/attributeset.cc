@@ -38,12 +38,13 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
     std::string value= property;
     const bool hasAT = value.size() && (property[0]=='@');
     const bool hasAsk= value.size() && (property[0]=='?');
-    const bool isRes = (hasAT|hasAsk) && ( value.find('/') != std::string::npos );
+    const bool hasSlash = value.find('/')!=std::string::npos;
+    const bool isRes = (hasAT|hasAsk) && hasSlash;
     while(isRes && ((pos=value.find_first_of("@?")) != std::string::npos) ){
         value.erase(pos,1);
     }
     
-    if( isRes && (value.find(':')==std::string::npos) && (value.find('/')!=std::string::npos) ){
+    if( isRes && (value.find(':')==std::string::npos) && hasSlash ){
         value = std::string(pkg+":"+value);
         if(hasAsk)value = "?"+value;
     }
@@ -55,8 +56,7 @@ int AttributeSet::set(const char*atts[],int size){
     for(int i = 0;atts[i]&&(size==0||i<size);i+=2,rc+=1){
         const char* key=strrchr(atts[i],' ');
         if(key)key++;else key=atts[i];
-        mAttrs.insert(std::pair<std::string,std::string>
-            (std::string(key),normalize(mPackage,std::string(atts[i+1]))));
+        mAttrs.insert({std::string(key),normalize(mPackage,std::string(atts[i+1]))});
     }
     return mAttrs.size();
 }

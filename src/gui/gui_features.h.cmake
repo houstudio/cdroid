@@ -13,6 +13,7 @@
 #cmakedefine ENABLE_BARCODE   1
 #cmakedefine ENABLE_LITEHTML  1
 #cmakedefine ENABLE_AUDIO 1
+#cmakedefine ENABLE_LCMS 1
 
 #cmakedefine HAVE_EPOLL 1
 #cmakedefine HAVE_POLL  1
@@ -25,3 +26,4 @@
 #define CDROID_VERSION_PATCH @CDROID_VERSION_PATCH@
 #define CDROID_BUILD_NUMBER  @CDROID_BUILD_NUMBER@
 #define CDROID_COMMITID     "@CDROID_COMMITID@"
+#define CDROID_PRODUCT      "@CDROID_CHIPSET@"
