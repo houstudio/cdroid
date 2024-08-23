@@ -7,7 +7,8 @@
 #include <drawables/animatedimagedrawable.h>
 #include <image-decoders/imagedecoder.h>
 #include <core/textutils.h>
-
+#include <core/context.h>
+#include <lcms2.h>
 namespace cdroid{
 
 ImageDecoder::ImageDecoder(std::istream&stm){
@@ -15,9 +16,13 @@ ImageDecoder::ImageDecoder(std::istream&stm){
     mImageHeight= -1;
     mPrivate = nullptr;
     istream = &stm;
+    mTransform= nullptr;
 }
 
 ImageDecoder::~ImageDecoder(){
+#if ENABLE(LCMS)
+    if(mTransform)cmsDeleteTransform(mTransform);
+#endif
 }
 
 int ImageDecoder::getWidth()const{

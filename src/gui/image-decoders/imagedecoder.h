@@ -13,6 +13,7 @@ protected:
     int mImageWidth;
     int mImageHeight;
     int mCurrScanline;
+    void*mTransform;
     std::istream*istream;
 public:
     ImageDecoder(std::istream&);
@@ -21,7 +22,7 @@ public:
     int getHeight()const;
 
     virtual bool decodeSize()=0;
-    virtual Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f)=0;
+    virtual Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)=0;
 
     static ImageDecoder*create(Context*ctx,const std::string&resourceId);
     static Drawable*createAsDrawable(Context*ctx,const std::string&resourceId);
@@ -32,7 +33,7 @@ public:
     GIFDecoder(std::istream&);
     ~GIFDecoder()override;
     bool decodeSize()override;
-    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f)override;
+    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
 };
 
 class JPEGDecoder:public ImageDecoder{
@@ -40,15 +41,17 @@ public:
     JPEGDecoder(std::istream&);
     ~JPEGDecoder()override;
     bool decodeSize()override;
-    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f)override;
+    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
 };
 
 class PNGDecoder:public ImageDecoder{
+private:
+    void*getColorProfile(PRIVATE*,uint8_t colorType);
 public:
     PNGDecoder(std::istream&);
     ~PNGDecoder()override;
     bool decodeSize()override;
-    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f)override;
+    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
 };
 
 }/*endof namespace*/

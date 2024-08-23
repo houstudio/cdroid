@@ -129,7 +129,7 @@ JPEGDecoder::~JPEGDecoder(){
    delete mPrivate;
 }
 
-Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale){
+Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale,void*targetProfile){
     Cairo::RefPtr<Cairo::ImageSurface>image;
     struct jpeg_decompress_struct* cinfo = &mPrivate->cinfo;
     struct decoder_error_mgr* jerr = &mPrivate->jerr;
