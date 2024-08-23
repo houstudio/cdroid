@@ -86,10 +86,10 @@ void AnimationHandler::commitAnimationFrame(AnimationFrameCallback* callback, lo
 
 void AnimationHandler::cleanUpList(){
     if (mListDirty) {
-       for (auto it = mAnimationCallbacks.begin();it != mAnimationCallbacks.end();it++){
+       for (auto it = mAnimationCallbacks.begin();it != mAnimationCallbacks.end();){
            if ((*it) == nullptr) {
                it = mAnimationCallbacks.erase(it);
-           }
+           }else it++;
        }
        mListDirty = false;
     }
@@ -102,7 +102,7 @@ AnimationHandler&AnimationHandler::getInstance(){
 
 AnimationHandler::AnimationFrameCallbackProvider*AnimationHandler::getProvider(){
     if(mProvider==nullptr)
-        mProvider=new MyFrameCallbackProvider();
+        mProvider = new MyFrameCallbackProvider();
     return mProvider;
 }
     
