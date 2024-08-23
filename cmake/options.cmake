@@ -14,7 +14,7 @@ option(ENABLE_GESTURE "Enable Gesture support" ON)
 option(ENABLE_AUDIO "Enabled Audio(Sound Effect)" ON)
 option(ENABLE_BARCODE "Enable BarCode(QrCodr...)" ON)
 option(ENABLE_LOTTIE "Enable Lottie Animation" ON)
-option(ENABLE_LCMS "Enable LCMS color profile transofrm" ON)
+option(ENABLE_LCMS "Enable Little CMS (a color management engine)" ON)
 option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." ON)
 
 option(ENABLE_PINYIN2HZ "Chinese Pinyin to HZ support" ON)
