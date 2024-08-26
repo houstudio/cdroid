@@ -6735,10 +6735,8 @@ bool View::postDelayed(const std::function<void()>&what,long delay){
 }
 
 bool View::removeCallbacks(const Runnable& what){
-    if(mAttachInfo){
+    if(mAttachInfo)
         mAttachInfo->mEventSource->removeCallbacks(what);
-        Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&what,nullptr);
-    }
     getRunQueue()->removeCallbacks(what);
     return true;
 }
