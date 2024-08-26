@@ -23,7 +23,7 @@ public:
     int getCount()override{return 5;}
     bool isViewFromObject(View* view, void*object)override{ return view==object;}
     void* instantiateItem(ViewGroup* container, int position)override{
-        std::string res[]={"@layout/layout1.xml","@layout/sweeptest.xml","@layout/layout3.xml"};
+        std::string res[]={"@layout/layout1.xml","@layout/layout2.xml","@layout/layout3.xml"};
         switch(position){
         case 2:
         case 3:
