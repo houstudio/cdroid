@@ -21,12 +21,12 @@ static void istream_png_reader(png_structp png_ptr, png_bytep png_data, png_size
     is->read(reinterpret_cast<char*>(png_data), data_size);
 }
 
-PNGDecoder::PNGDecoder(std::istream&stm):ImageDecoder(stm) {
+PNGDecoder::PNGDecoder(Context*ctx,const std::string&resourceId):ImageDecoder(ctx,resourceId) {
     mPrivate = new PRIVATE();
     mPrivate->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     mPrivate->info_ptr= png_create_info_struct(mPrivate->png_ptr);
 
-    png_set_read_fn(mPrivate->png_ptr,(void*)istream,istream_png_reader);
+    png_set_read_fn(mPrivate->png_ptr,(void*)istream.get(),istream_png_reader);
 }
 
 PNGDecoder::~PNGDecoder() {

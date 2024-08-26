@@ -14,9 +14,9 @@ protected:
     int mImageHeight;
     int mCurrScanline;
     void*mTransform;
-    std::istream*istream;
+    std::unique_ptr<std::istream>istream;
 public:
-    ImageDecoder(std::istream&);
+    ImageDecoder(Context*ctx,const std::string&res);
     virtual ~ImageDecoder();
     int getWidth()const;
     int getHeight()const;
@@ -30,7 +30,7 @@ public:
 
 class GIFDecoder:public ImageDecoder{
 public:
-    GIFDecoder(std::istream&);
+    GIFDecoder(Context*ctx,const std::string&res);
     ~GIFDecoder()override;
     bool decodeSize()override;
     Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
@@ -38,7 +38,7 @@ public:
 
 class JPEGDecoder:public ImageDecoder{
 public:
-    JPEGDecoder(std::istream&);
+    JPEGDecoder(Context*ctx,const std::string&res);
     ~JPEGDecoder()override;
     bool decodeSize()override;
     Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
@@ -48,7 +48,7 @@ class PNGDecoder:public ImageDecoder{
 private:
     void*getColorProfile(PRIVATE*,uint8_t colorType);
 public:
-    PNGDecoder(std::istream&);
+    PNGDecoder(Context*ctx,const std::string&res);
     ~PNGDecoder()override;
     bool decodeSize()override;
     Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;

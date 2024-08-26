@@ -11,12 +11,15 @@
 #include <lcms2.h>
 namespace cdroid{
 
-ImageDecoder::ImageDecoder(std::istream&stm){
+ImageDecoder::ImageDecoder(Context*ctx,const std::string&resourceId){
     mImageWidth = -1;
     mImageHeight= -1;
     mPrivate = nullptr;
-    istream = &stm;
     mTransform= nullptr;
+    if(ctx)
+        istream = ctx->getInputStream(resourceId);
+    else
+        istream = std::move(std::make_unique<std::ifstream>(resourceId));
 }
 
 ImageDecoder::~ImageDecoder(){
@@ -84,23 +87,23 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
     else
         istm = std::move(std::make_unique<std::ifstream>(resourceId));
     istm->read(contents,lengthOfLongestSignature);
-    unsigned length = istm->gcount();
+    const unsigned length = istm->gcount();
     if (length < lengthOfLongestSignature)
         return nullptr;
     istm->seekg(0,std::ios::beg);
 #if ENABLE(GIF)&&0
     if (matchesGIFSignature(contents))
-        decoder = new GIFDecoder(*istm);
+        decoder = new GIFDecoder(ctx,resourceId);
 #endif
     if (matchesPNGSignature(contents))
-        decoder = new PNGDecoder(*istm);
+        decoder = new PNGDecoder(ctx,resourceId);
 #if USE(ICO)
     if (matchesICOSignature(contents) || matchesCURSignature(contents))
         return ICOImageDecoder::create(alphaOption, gammaAndColorProfileOption);
 #endif
 #if ENABLE(JPEG)
     if (matchesJPEGSignature(contents))
-        decoder = new JPEGDecoder(*istm);
+        decoder = new JPEGDecoder(ctx,resourceId);
 #endif
 #if USE(OPENJPEG)
     if (matchesJP2Signature(contents))
@@ -120,16 +123,20 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
 Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){
     ImageDecoder*decoder = create(ctx,resourceId);
     if(decoder){
-        Cairo::RefPtr<Cairo::ImageSurface>image = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,decoder->getWidth(),decoder->getHeight());
-        image=decoder->decode();
+        static int png,png9,jpg;
+        Cairo::RefPtr<Cairo::ImageSurface>image = decoder->decode();
         delete decoder;
+        if(TextUtils::endWith(resourceId,"9.png"))png9++;
+        else if(TextUtils::endWith(resourceId,".png"))png++;
+        else if(TextUtils::endWith(resourceId,".jpg"))jpg++;
+        LOGD("%d png, %d 9png,%d jpg",png,png9,jpg);
         if(TextUtils::endWith(resourceId,"9.png"))
-	    return new NinePatchDrawable(image);
+            return new NinePatchDrawable(image);
         else if(TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg"))
             return new BitmapDrawable(image);
     }
     if(TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp"))
-	return new AnimatedImageDrawable(ctx,resourceId);
+	    return new AnimatedImageDrawable(ctx,resourceId);
     return nullptr;
 }
 

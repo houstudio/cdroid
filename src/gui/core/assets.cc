@@ -11,6 +11,8 @@
 #include <expat.h>
 #include <limits.h>
 #include <core/systemclock.h>
+#include <image-decoders/imagedecoder.h>
+
 using namespace Cairo;
 namespace cdroid {
 
@@ -457,13 +459,9 @@ Drawable* Assets::getDrawable(const std::string&resid) {
     } else if(resname.find("color/")!=std::string::npos) {
         const uint32_t cc = (uint32_t)getColor(fullresid);
         return new ColorDrawable(cc);
-    } else if(TextUtils::endWith(resname,".9.png")) {
-        d = new NinePatchDrawable(this,fullresid);
-    } else if (TextUtils::endWith(resname,".png")||TextUtils::endWith(resname,".jpg")) {
-        d = new BitmapDrawable(this,fullresid);
-    } else if(TextUtils::endWith(resname,".gif")||TextUtils::endWith(resname,".apng")
-		    ||TextUtils::endWith(resname,".webp")){
-        d = new AnimatedImageDrawable(this,fullresid);
+    } else if(TextUtils::endWith(resname,".png")||TextUtils::endWith(resname,".jpg")
+            ||TextUtils::endWith(resname,".gif")||TextUtils::endWith(resname,".apng")) {
+        d = ImageDecoder::createAsDrawable(this,resname);
     }
     if( (d == nullptr) && (!fullresid.empty()) ) {
         void*zfile = pak ? pak->getZipHandle(resname) : nullptr;
@@ -544,6 +542,7 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
             //if( slashpos == std::string::npos ) {/*for color wolrds*/
             std::string realName;
             parseResource(fullresid,&realName,nullptr);
+            if(realName.find("?")!=std::string::npos)
             realName = mTheme.getString(realName);
             itc = mColors.find(realName);
             if(itc != mColors.end()){

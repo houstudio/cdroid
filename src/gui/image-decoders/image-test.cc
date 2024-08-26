@@ -10,10 +10,9 @@ int main(int argc,const char*argv[]){
     cdroid::App app(argc,argv);
 #if 1
     const char*fname =(argc>1)?argv[1]:"/home/houzh/pf.jpg";
-    std::ifstream fstrm (fname);
     cdroid::ImageDecoder*dec=nullptr;
-    if(TextUtils::endWith(fname,"png")) dec=new cdroid::PNGDecoder(fstrm);
-    else dec=new cdroid::JPEGDecoder(fstrm);
+    if(TextUtils::endWith(fname,"png")) dec=new cdroid::PNGDecoder(nullptr,fname);
+    else dec=new cdroid::JPEGDecoder(nullptr,fname);
     Cairo::RefPtr<Cairo::ImageSurface>image=dec->decode(1.234);
     LOGD("imageinfo:%dx%d",dec->getWidth(),dec->getHeight());
     image->write_to_png("111.png");
