@@ -125,7 +125,7 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
     std::unique_ptr<ImageDecoder>decoder = create(ctx,resourceId);
     if(decoder){
         Cairo::RefPtr<Cairo::ImageSurface>image = decoder->decode();
-        if(TextUtils::endWith(resourceId,"9.png"))
+        if(TextUtils::endWith(resourceId,".9.png"))
             return new NinePatchDrawable(image);
         else if(TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg"))
             return new BitmapDrawable(image);
