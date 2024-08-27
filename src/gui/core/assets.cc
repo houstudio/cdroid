@@ -453,7 +453,8 @@ Drawable* Assets::getDrawable(const std::string&resid) {
 		    ||TextUtils::endWith(resname,".webp")){
         d = new AnimatedImageDrawable(this,fullresid);
     }*/ else if(TextUtils::endWith(resname,".png")||TextUtils::endWith(resname,".jpg")
-            ||TextUtils::endWith(resname,".gif")||TextUtils::endWith(resname,".apng")) {
+            ||TextUtils::endWith(resname,".gif")||TextUtils::endWith(resname,".apng")
+            ||TextUtils::endWith(resname,".webp")) {
         d = ImageDecoder::createAsDrawable(this,resname);
     }
     if( (d == nullptr) && (!fullresid.empty()) ) {
