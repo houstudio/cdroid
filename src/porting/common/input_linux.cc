@@ -38,25 +38,25 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <sys/inotify.h>
-typedef struct{
+typedef struct {
     int fd;
     std::string name;
-}DEVICENODE;
+} DEVICENODE;
 typedef struct {
     int maxfd;
     int inotify;
     int pipe[2];
     std::vector<DEVICENODE> fds;
-    std::vector<DEVICENODE>::iterator findByFd(int fd){
-	for(auto it=fds.begin();it!=fds.end();it++)
-	   if(it->fd==fd)return it;
-	return fds.end();
+    std::vector<DEVICENODE>::iterator findByFd(int fd) {
+        for(auto it=fds.begin(); it!=fds.end(); it++)
+            if(it->fd==fd)return it;
+        return fds.end();
     }
 
-    std::vector<DEVICENODE>::iterator findByPath(const std::string&path){
-	for(auto it=fds.begin();it!=fds.end();it++)
-	   if(it->name==path)return it;
-	return fds.end();
+    std::vector<DEVICENODE>::iterator findByPath(const std::string&path) {
+        for(auto it=fds.begin(); it!=fds.end(); it++)
+            if(it->name==path)return it;
+        return fds.end();
     }
 } INPUTDEVICE;
 
@@ -203,44 +203,48 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
     std::vector<DEVICENODE> FDS = dev.fds;
     for(int i=0; i < FDS.size(); i++) {
         if(!FD_ISSET(FDS[i].fd,&rfds))continue;
-        if(FDS[i].fd == dev.pipe[0]){ //for pipe
+        if(FDS[i].fd == dev.pipe[0]) { //for pipe
             rc = read(FDS[i].fd,e, (max-count)*sizeof(INPUTEVENT));
             e += rc/sizeof(INPUTEVENT);
             count += rc/sizeof(INPUTEVENT);
-        }else if(FDS[i].fd == dev.inotify){
+        } else if(FDS[i].fd == dev.inotify) {
             int elen=0;
             struct inotify_event*ievent=(struct inotify_event*)inotifyBuffer;
             const int total = read(dev.inotify,inotifyBuffer,sizeof(inotifyBuffer));
             LOGI("read(dev.inotify=%d/%d)",total,sizeof(struct inotify_event));
             if(total<sizeof(struct inotify_event))
                 continue;
-            while(elen<total){
+            while(elen<total) {
                 ievent = (struct inotify_event*)(inotifyBuffer+event_pos);
                 std::string path = WATCHED_PATH;
                 path.append("/").append(ievent->name);
                 const int eventsize = sizeof(struct inotify_event)+ievent->len;
                 rc -= eventsize;
                 event_pos += eventsize;
-                if(ievent->mask & IN_DELETE){
+                if(ievent->mask & IN_DELETE) {
                     auto it = dev.findByPath(path);
                     e->device = it->fd;
                     e->type = EV_REMOVE;
                     LOGI("..device %s:%d/%d deleted found=%d",path.c_str(),ievent->wd,it->fd,(it!=dev.fds.end()));
-                    if(it!=dev.fds.end()){FD_CLR(it->fd,&rfds);close(it->fd);dev.fds.erase(it);}
+                    if(it!=dev.fds.end()) {
+                        FD_CLR(it->fd,&rfds);
+                        close(it->fd);
+                        dev.fds.erase(it);
+                    }
                     e++;
-                }else if(ievent->mask & IN_CREATE){
+                } else if(ievent->mask & IN_CREATE) {
                     e->device = open(path.c_str(),O_RDWR);
                     e->type = EV_ADD;
                     dev.fds.push_back({e->device,path});
                     dev.maxfd=std::max(dev.maxfd,e->device);
                     LOGI("device %s:%d created",path.c_str(),e->device);
                     e++;
-                }else{
+                } else {
                     LOGI("device %s:%d event=%x rc=%d",path.c_str(),ievent->wd,ievent->mask,IN_CREATE,IN_DELETE,rc);
                 }
                 elen+=(sizeof(struct inotify_event)+ievent->len);
             }
-        }else {/*for input devices*/
+        } else {/*for input devices*/
             rc = read(FDS[i].fd,events, sizeof(events)/sizeof(struct input_event));
             for(int j=0; (rc>0)&&j<rc/sizeof(struct input_event)&&(count<max); j++,e++,count++) {
                 e->tv_sec = events[j].time.tv_sec;
@@ -250,7 +254,7 @@ INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
                 e->value= events[j].value;
                 e->device = FDS[i].fd;
                 LOGV_IF(e->type<EV_SW,"fd:%d [%s]%02x,%02x,%02x time=%ld.%06ld",FDS[i].fd,
-                     type2name[e->type],e->type,e->code,e->value,e->tv_sec,e->tv_usec);
+                        type2name[e->type],e->type,e->code,e->value,e->tv_sec,e->tv_usec);
             }
         }
     }
