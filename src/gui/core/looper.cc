@@ -7,6 +7,12 @@
 #include <limits.h>
 #include <systemclock.h>
 
+#if defined(HAVE_EPOLL)
+#include <sys/epoll.h>
+#elif defined(HAVE_POLL)
+#include <poll.h>
+#endif
+
 #define DEBUG_POLL_AND_WAKE 0
 #define DEBUG_CALLBACKS 0
 
@@ -21,6 +27,28 @@
     #define EPOLLERR POLLERR
     #define EPOLLHUP POLLHUP
 #endif
+
+#if defined(HAVE_POLL) && !defined(HAVE_EPOLL)
+typedef union epoll_data{
+    void *ptr;
+    int fd;
+    uint32_t u32;
+    uint64_t u64;
+} epoll_data_t;
+
+struct epoll_event{
+    uint32_t events;      /* Epoll events */
+    epoll_data_t data;    /* User data variable */
+};
+#endif
+#if !defined(HAVE_POLL)
+struct pollfd {
+    int   fd;         /* file descriptor */
+    short events;     /* requested events */
+    short revents;    /* returned events */
+};
+#endif
+
 /*REF:system/core/libutils/Looper.cpp*/
 namespace cdroid{
 

@@ -24,7 +24,7 @@ public:
     virtual bool decodeSize()=0;
     virtual Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)=0;
 
-    static ImageDecoder*create(Context*ctx,const std::string&resourceId);
+    static std::unique_ptr<ImageDecoder>create(Context*ctx,const std::string&resourceId);
     static Drawable*createAsDrawable(Context*ctx,const std::string&resourceId);
 };
 

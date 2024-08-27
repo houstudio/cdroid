@@ -313,31 +313,17 @@ void Assets::loadStrings(const std::string&lan) {
     }
 }
 
-static Cairo::RefPtr<Cairo::ImageSurface> LoadImage( std::istream&istream ){
-    return Cairo::ImageSurface::create_from_stream(istream);
+Cairo::RefPtr<ImageSurface>Assets::loadImage(const std::string&fullresid) {
+    return loadImage(fullresid,-1,-1);
 }
 
-RefPtr<ImageSurface>Assets::loadImage(const std::string&fullresid) {
-    std::string resname;
-    ZIPArchive*pak = getResource(fullresid,&resname,nullptr);
-    if(pak)guessExtension(pak,resname);
-    void*zfile = pak ? pak->getZipHandle(resname):nullptr;
-    ZipInputStream zipis(zfile);
-    RefPtr<ImageSurface>img;
-    if(zfile == nullptr) {
-        std::ifstream fi(fullresid);
-        img = LoadImage(fi);
-        LOGD_IF(img == nullptr,"pak=%p %s open failed",pak,resname.c_str());
-        return img;
-    }else {
-        img = LoadImage(zipis);
+Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(const std::string&resname,int width,int height){
+    std::unique_ptr<ImageDecoder>dec = ImageDecoder::create(this,resname);
+    float scale = 1.f;
+    if( (width<0||height<0) && dec->decodeSize() ){
+       scale = std::max(float(dec->getWidth())/width,float(dec->getHeight())/height);
     }
-    LOGV_IF(img,"image %s size=%dx%d",fullresid.c_str(),img->get_width(),img->get_height());
-    return img;
-}
-
-Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(const std::string&resname,int width,int height,int scaleType){
-    return nullptr;
+    return dec->decode(scale);
 }
 
 int Assets::getId(const std::string&resname)const {

@@ -27,7 +27,7 @@ public:
     virtual const std::string getString(const std::string&id,const std::string&lan="")=0;
     virtual std::unique_ptr<std::istream>getInputStream(const std::string&,std::string*outpkg=nullptr)=0;
     virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname)=0;
-    virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height,int scaleType)=0;
+    virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height)=0;
     virtual Drawable* getDrawable(const std::string&resid)=0;
     Drawable* getDrawable(const AttributeSet&atts,const std::string&key){
         return atts.hasAttribute(key)?getDrawable(atts.getString(key)):nullptr;

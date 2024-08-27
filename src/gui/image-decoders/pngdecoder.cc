@@ -51,8 +51,7 @@ void*PNGDecoder::getColorProfile(PRIVATE*priv,uint8_t colorType) {
         cmsHPROFILE src_profile = cmsOpenProfileFromMem(icc_data, icc_size);
         cmsColorSpaceSignature profileSpace = cmsGetColorSpace(src_profile);
 
-        if (profileSpace != cmsSigRgbData &&
-                (colorType & PNG_COLOR_MASK_COLOR || profileSpace != cmsSigGrayData)) {
+        if ((profileSpace != cmsSigRgbData) && ((colorType & PNG_COLOR_MASK_COLOR) || (profileSpace != cmsSigGrayData))) {
             cmsCloseProfile(src_profile);
             return nullptr;
         }

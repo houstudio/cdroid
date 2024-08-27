@@ -78,10 +78,10 @@ static bool matchesCURSignature(char* contents){
     return !memcmp(contents, "\x00\x00\x02\x00", 4);
 }
 
-ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
+std::unique_ptr<ImageDecoder>ImageDecoder::create(Context*ctx,const std::string&resourceId){
     constexpr unsigned lengthOfLongestSignature = 14; /* To wit: "RIFF????WEBPVP"*/
     char contents[lengthOfLongestSignature];
-    ImageDecoder*decoder = nullptr;
+    std::unique_ptr<ImageDecoder>decoder;
     std::unique_ptr<std::istream>istm;
     if(ctx)
         istm = ctx->getInputStream(resourceId);
@@ -94,17 +94,17 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
     istm->seekg(0,std::ios::beg);
 #if ENABLE(GIF)&&0
     if (matchesGIFSignature(contents))
-        decoder = new GIFDecoder(ctx,resourceId);
+        decoder = std::make_unique<GIFDecoder>(ctx,resourceId);
 #endif
     if (matchesPNGSignature(contents))
-        decoder = new PNGDecoder(ctx,resourceId);
+        decoder = std::make_unique<PNGDecoder>(ctx,resourceId);
 #if USE(ICO)
     if (matchesICOSignature(contents) || matchesCURSignature(contents))
         return ICOImageDecoder::create(alphaOption, gammaAndColorProfileOption);
 #endif
 #if ENABLE(JPEG)
     if (matchesJPEGSignature(contents))
-        decoder = new JPEGDecoder(ctx,resourceId);
+        decoder = std::make_unique<JPEGDecoder>(ctx,resourceId);
 #endif
 #if USE(OPENJPEG)
     if (matchesJP2Signature(contents))
@@ -122,10 +122,9 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
 }
 
 Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){
-    ImageDecoder*decoder = create(ctx,resourceId);
+    std::unique_ptr<ImageDecoder>decoder = create(ctx,resourceId);
     if(decoder){
         Cairo::RefPtr<Cairo::ImageSurface>image = decoder->decode();
-        delete decoder;
         if(TextUtils::endWith(resourceId,"9.png"))
             return new NinePatchDrawable(image);
         else if(TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg"))
