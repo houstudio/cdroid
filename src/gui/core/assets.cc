@@ -459,14 +459,14 @@ Drawable* Assets::getDrawable(const std::string&resid) {
     } else if(resname.find("color/")!=std::string::npos) {
         const uint32_t cc = (uint32_t)getColor(fullresid);
         return new ColorDrawable(cc);
-    } else if(TextUtils::endWith(resname,".9.png")) {
+    } /*else if(TextUtils::endWith(resname,".9.png")) {
         d = new NinePatchDrawable(this,fullresid);
     } else if (TextUtils::endWith(resname,".png")||TextUtils::endWith(resname,".jpg")) {
         d = new BitmapDrawable(this,fullresid);
     } else if(TextUtils::endWith(resname,".gif")||TextUtils::endWith(resname,".apng")
 		    ||TextUtils::endWith(resname,".webp")){
         d = new AnimatedImageDrawable(this,fullresid);
-    } else if(TextUtils::endWith(resname,".png")||TextUtils::endWith(resname,".jpg")
+    }*/ else if(TextUtils::endWith(resname,".png")||TextUtils::endWith(resname,".jpg")
             ||TextUtils::endWith(resname,".gif")||TextUtils::endWith(resname,".apng")) {
         d = ImageDecoder::createAsDrawable(this,resname);
     }
