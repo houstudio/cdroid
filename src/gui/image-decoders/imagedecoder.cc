@@ -9,6 +9,7 @@
 #include <core/textutils.h>
 #include <core/context.h>
 #include <lcms2.h>
+
 namespace cdroid{
 
 ImageDecoder::ImageDecoder(Context*ctx,const std::string&resourceId){
@@ -123,13 +124,8 @@ ImageDecoder*ImageDecoder::create(Context*ctx,const std::string&resourceId){
 Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){
     ImageDecoder*decoder = create(ctx,resourceId);
     if(decoder){
-        static int png,png9,jpg;
         Cairo::RefPtr<Cairo::ImageSurface>image = decoder->decode();
         delete decoder;
-        if(TextUtils::endWith(resourceId,"9.png"))png9++;
-        else if(TextUtils::endWith(resourceId,".png"))png++;
-        else if(TextUtils::endWith(resourceId,".jpg"))jpg++;
-        LOGD("%d png, %d 9png,%d jpg",png,png9,jpg);
         if(TextUtils::endWith(resourceId,"9.png"))
             return new NinePatchDrawable(image);
         else if(TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg"))
