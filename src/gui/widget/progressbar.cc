@@ -40,8 +40,21 @@ DECLARE_WIDGET(ProgressBar)
 ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initProgressBar();
-    setProgressDrawable(attrs.getDrawable("progressDrawable"));
-    setIndeterminateDrawable(attrs.getDrawable("indeterminateDrawable"));
+    Drawable* progressDrawable = attrs.getDrawable("progressDrawable");
+    if(progressDrawable){
+        if(needsTileify(progressDrawable))
+            setIndeterminateDrawableTiled(progressDrawable);
+        else
+            setIndeterminateDrawable(progressDrawable);
+    }
+
+    Drawable* indeterminateDrawable = attrs.getDrawable("indeterminateDrawable");
+    if(indeterminateDrawable){
+        if(needsTileify(indeterminateDrawable))
+            setIndeterminateDrawableTiled(indeterminateDrawable);
+        else
+            setIndeterminateDrawable(indeterminateDrawable);
+    }
 
     mDuration = attrs.getInt("indeterminateDuration",mDuration);
     mMinWidth = attrs.getDimensionPixelSize("minWidth", mMinWidth);
@@ -53,7 +66,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
     mOnlyIndeterminate=attrs.getBoolean("indeterminateOnly",mOnlyIndeterminate);
     mNoInvalidate = false;
-    setIndeterminate(mOnlyIndeterminate||attrs.getBoolean("indeterminate",false));
+    setIndeterminate(mOnlyIndeterminate||attrs.getBoolean("indeterminate",mIndeterminate));
 
     mMirrorForRtl = attrs.getBoolean("mirrorForRtl",false); 
 
