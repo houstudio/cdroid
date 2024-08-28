@@ -1,4 +1,4 @@
-#ProgressTintInfoinclude <widget/progressbar.h>
+#include <widget/progressbar.h>
 #include <animation/objectanimator.h>
 #include <widget/R.h>
 #include <cdlog.h>
