@@ -496,13 +496,17 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 
     if(it!=drawableParsers.end()) {
         auto item = pd->items.back();
-        if( strcmp(name,"shape") || (atts.hasAttribute("drawable") &&((strcmp(name,"item")==0)||(strcmp(name,"transition")==0)))){
-            Drawable* d = it->second(pd->ctx,atts);
+        const bool hasDrawable = atts.hasAttribute("drawable");
+        if( strcmp(name,"shape") || (hasDrawable &&((strcmp(name,"item")==0)||(strcmp(name,"transition")==0)))){
+            Drawable* d = nullptr;
+            const std::string strDrawable = atts.getString("drawable");
+            if(hasDrawable)d = pd->ctx->getDrawable(strDrawable);
+            else d = it->second(pd->ctx,atts);
             if(d){
                 auto cs = d->getConstantState();
                 if(cs){
-                   cs->mResource = atts.getString("drawable");
-                   LOGV_IF(atts.hasAttribute("drawable"),"%p.res=%s",cs->mResource.c_str());
+                   cs->mResource = strDrawable;
+                   LOGD_IF(atts.hasAttribute("drawable"),"%p.res=%s",strDrawable.c_str());
                 }
             }
             item->drawable = d;
@@ -618,7 +622,6 @@ static void endElement(void *userData, const XML_Char *name) {
         } else if(dynamic_cast<AnimationDrawable*>(parent)) {
             AnimationDrawable* ad = (AnimationDrawable*)parent;
             const int duration = atts.getInt("duration",0);
-            //const std::string src = atts.getString("drawable");
             ad->addFrame(topchild,duration);
             LOGV("%p add %s %p to AnimationDrawable %p duration=%d",pd,name,topchild,parent,duration);
         }

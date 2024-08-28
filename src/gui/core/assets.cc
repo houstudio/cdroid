@@ -455,7 +455,7 @@ Drawable* Assets::getDrawable(const std::string&resid) {
     }*/ else if(TextUtils::endWith(resname,".png")||TextUtils::endWith(resname,".jpg")
             ||TextUtils::endWith(resname,".gif")||TextUtils::endWith(resname,".apng")
             ||TextUtils::endWith(resname,".webp")) {
-        d = ImageDecoder::createAsDrawable(this,resname);
+        d = ImageDecoder::createAsDrawable(this,package+":"+resname);
     }
     if( (d == nullptr) && (!fullresid.empty()) ) {
         void*zfile = pak ? pak->getZipHandle(resname) : nullptr;
