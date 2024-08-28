@@ -268,7 +268,7 @@ bool BitmapDrawable::hasMipMap() const{
 }
 
 void BitmapDrawable::setAntiAlias(bool aa) {
-    mBitmapState->mAntiAlias;
+    mBitmapState->mAntiAlias = aa;
     invalidateSelf();
 }
 
