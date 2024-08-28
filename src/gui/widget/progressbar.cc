@@ -1,4 +1,4 @@
-#include <widget/progressbar.h>
+#ProgressTintInfoinclude <widget/progressbar.h>
 #include <animation/objectanimator.h>
 #include <widget/R.h>
 #include <cdlog.h>
@@ -76,6 +76,50 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
     setProgress(attrs.getInt("progress",mProgress));
     setSecondaryProgress(attrs.getInt("secondaryProgress",mSecondaryProgress));
 
+    if(attrs.hasAttribute("progressTintMode")){
+        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+        mProgressTintInfo->mHasProgressTintMode=true;
+    }
+
+    if(attrs.hasAttribute("progressTint")){
+        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+        mProgressTintInfo->mProgressTintList=attrs.getColorStateList("progressTint");
+        mProgressTintInfo->mHasProgressTint = true;
+    }
+
+    if(attrs.hasAttribute("progressBackgroundTintMode")){
+        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+    }
+
+    if(attrs.hasAttribute("progressBackgroundTint")){
+        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+        mProgressTintInfo->mProgressBackgroundTintList = attrs.getColorStateList("progressBackgroundTint");
+        mProgressTintInfo->mHasProgressBackgroundTint = true;
+    }
+
+    if(attrs.hasAttribute("secondaryProgressTintMode")){
+        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+        mProgressTintInfo->mHasSecondaryProgressTintMode = true;
+    }
+
+    if(attrs.hasAttribute("secondaryProgressTint")){
+        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+        mProgressTintInfo->mSecondaryProgressTintList = attrs.getColorStateList("secondaryProgressTint");
+        mProgressTintInfo->mHasSecondaryProgressTint=true;
+    }
+
+    if (attrs.hasAttribute("indeterminateTintMode")) {
+        if (mProgressTintInfo == nullptr) mProgressTintInfo = new ProgressTintInfo();
+        //mProgressTintInfo.mIndeterminateBlendMode = Drawable.parseBlendMode(a.getInt(
+        //        R.styleable.ProgressBar_indeterminateTintMode, -1), null);
+        mProgressTintInfo->mHasIndeterminateTintMode = true;
+    }
+
+    if (attrs.hasAttribute("indeterminateTint")) {
+        if (mProgressTintInfo == nullptr) mProgressTintInfo = new ProgressTintInfo();
+        mProgressTintInfo->mIndeterminateTintList = attrs.getColorStateList("indeterminateTint");
+        mProgressTintInfo->mHasIndeterminateTint = true;
+    }
     applyProgressTints();
     applyIndeterminateTint();
 }
