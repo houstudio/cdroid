@@ -1,4 +1,5 @@
 #include <drawables/bitmapdrawable.h>
+#include <image-decoders/imagedecoder.h>
 #include <fstream>
 #include <app.h>
 #include <cdlog.h>
@@ -83,14 +84,8 @@ BitmapDrawable::BitmapDrawable(std::shared_ptr<BitmapState>state){
 
 BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname)
   :BitmapDrawable(std::make_shared<BitmapState>()){
-    std::ifstream fs(resname,std::ios::binary);
-    RefPtr<ImageSurface>b;
-    mBitmapState->mResource = resname;
-    if((ctx==nullptr)||fs.good()){
-        b = ImageSurface::create_from_stream(fs);
-    }else {
-        b = ctx->loadImage(resname);
-    }
+    auto dec = ImageDecoder::create(ctx,resname);
+    RefPtr<ImageSurface>b = dec->decode();
     setBitmap(b);
 #if defined(DEBUG) && ( defined(__x86_64__) || defined(__i386__) )
     const char*tNames[] = {"UNKNOWN","TRANSLUCENT","TRANSPARENT","OPAQUE"};
