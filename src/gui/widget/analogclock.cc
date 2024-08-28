@@ -58,7 +58,6 @@ Drawable* AnalogClock::apply(TintInfo*ti,Drawable*drawable){
     if (ti->mHasTintList) {
         newDrawable->setTintList(ti->mTintList);
     }
-
     /*if (ti->mHasTintBlendMode) {
         newDrawable->setTintBlendMode(ti->mTintBlendMode);
     }*/
@@ -78,6 +77,7 @@ void AnalogClock::setDial(Icon icon) {
         if (mDialTintInfo->mHasTintList /*|| mDialTintInfo->mHasTintBlendMode*/) {
            mDial = apply(mDialTintInfo,mDial);
         }
+        mDial->setFilterBitmap(true);
     }
     mChanged = true;
     requestLayout();
@@ -100,7 +100,7 @@ void AnalogClock::setHourHand(Icon icon) {
     if (mHourHandTintInfo->mHasTintList/* || mHourHandTintInfo->mHasTintBlendMode*/) {
         mHourHand = apply(mHourHandTintInfo,mHourHand);
     }
-
+    mHourHand->setFilterBitmap(true);
     mChanged = true;
     requestLayout();
 }
@@ -119,6 +119,7 @@ const ColorStateList* AnalogClock::getHourHandTintList()const{
 
 void AnalogClock::setMinuteHand(Icon icon) {
     mMinuteHand = icon;//.loadDrawable(getContext());
+    mMinuteHand->setFilterBitmap(true);
     if (mHourHandTintInfo->mHasTintList /*|| mHourHandTintInfo.mHasTintBlendMode*/) {
         mHourHand = apply(mHourHandTintInfo,mHourHand);
     }
@@ -129,10 +130,10 @@ void AnalogClock::setMinuteHand(Icon icon) {
 
 void AnalogClock::setSecondHand(Icon icon) {
     mSecondHand = icon;//.loadDrawable(getContext());
+    mSecondHand->setFilterBitmap(true);
     if (mHourHandTintInfo->mHasTintList /*|| mHourHandTintInfo.mHasTintBlendMode*/) {
         mHourHand = apply(mHourHandTintInfo,mHourHand);
     }
-
     mChanged = true;
     invalidate();
 }
