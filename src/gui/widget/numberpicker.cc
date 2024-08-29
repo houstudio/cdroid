@@ -514,7 +514,7 @@ void NumberPicker::computeScroll() {
     if (scroller->isFinished()) {
         onScrollerFinished(scroller);
     } else {
-        invalidate();
+        postInvalidate();
     }
 }
 
