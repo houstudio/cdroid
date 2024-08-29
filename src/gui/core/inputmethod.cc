@@ -15,6 +15,9 @@ InputMethod::InputMethod(const std::string&layout)
     :keyboardlayout(layout){
 }
 
+InputMethod::~InputMethod(){
+}
+
 int InputMethod::load_dicts(const std::string&sys,const std::string&user){
     sysdict = sys;
     userdict= user;
@@ -49,6 +52,11 @@ int InputMethod::get_predicts(const std::string&,std::vector<std::string>&predic
 #ifdef ENABLE_PINYIN2HZ
 GooglePinyin::GooglePinyin(const std::string&layout)
  :InputMethod(layout),handle(nullptr){
+}
+
+GooglePinyin::~GooglePinyin(){
+    if(handle)
+        im_close_decoder(handle);
 }
 
 int GooglePinyin::load_dicts(const std::string&sys,const std::string&user){

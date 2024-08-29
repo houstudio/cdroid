@@ -11,6 +11,7 @@ protected:
    std::string keyboardlayout;
 public:
    InputMethod(const std::string&layout);
+   virtual ~InputMethod();
    const std::string getSysdict()const;
    const std::string getUserDict()const;
    const std::string getKeyboardLayout(int type)const;
@@ -31,6 +32,7 @@ protected:
    void*handle;
 public:
    GooglePinyin(const std::string&layout);
+   ~GooglePinyin()override;
    int load_dicts(const std::string&sys,const std::string&user)override;
    int search(const std::string&,std::vector<std::string>&candidates)override;
    void close_search()override;
