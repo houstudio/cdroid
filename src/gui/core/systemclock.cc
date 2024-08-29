@@ -11,18 +11,21 @@ LONGLONG SystemClock::uptimeMillis(){
     auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
     return millis;
 }
+
 LONGLONG SystemClock::uptimeMicros(){
     std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
     auto duration = now.time_since_epoch(); 
     auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
     return micros;
 }
+
 LONGLONG SystemClock::uptimeNanos(){
     std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
     auto duration = now.time_since_epoch(); 
     auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
     return nanos;
 }
+
 /*Returns milliseconds since January 1, 1970 00:00:00.0 UTC*/
 LONGLONG SystemClock::currentTimeMillis(){
     std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
@@ -45,4 +48,5 @@ LONGLONG SystemClock::currentTimeSeconds(){
 LONGLONG SystemClock::elapsedRealtime(){
     return currentTimeMillis();
 }
+
 }
