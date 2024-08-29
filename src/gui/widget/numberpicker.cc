@@ -1033,6 +1033,13 @@ void NumberPicker::onDraw(Canvas&canvas){
         int selectorIndex = mSelectorIndices[isAscendingOrder() ? i : mSelectorIndices.size() - i - 1];
         std::string scrollSelectorValue = mSelectorIndexToStringCache.at(selectorIndex);
         if (scrollSelectorValue.empty()) {
+            if(isHorizontalMode()){
+                x += selectedSize;
+                recText.offset(selectedSize,0);
+            }else{
+                y += selectedSize;
+                recText.offset(0,selectedSize);
+            }
             continue;
         }
         if(mSelectedText->getVisibility()==View::VISIBLE){
@@ -1203,14 +1210,14 @@ int NumberPicker::resolveSizeAndStateRespectingMinSize(int minSize, int measured
 void NumberPicker::initializeSelectorWheelIndices(){
     mSelectorIndexToStringCache.clear();
     const int current = getValue();
-    const int count = (std::abs(mMaxValue - mMinValue) + 1);
+    //const int count = (std::abs(mMaxValue - mMinValue) + 1);
     for (int i = 0; i < mSelectorIndices.size(); i++) {
         int selectorIndex = current + (i - mWheelMiddleItemIndex);
         if (mWrapSelectorWheel) {
             selectorIndex = getWrappedSelectorIndex(selectorIndex);
         }
-        if(mSelectorIndices.size() > count)
-            selectorIndex = (selectorIndex + count)%count;
+        //if(mSelectorIndices.size() > count)
+        //    selectorIndex = (selectorIndex + count)%count;
         mSelectorIndices[i] = selectorIndex;
         ensureCachedScrollSelectorValue(mSelectorIndices[i]);
     }
