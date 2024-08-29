@@ -8,7 +8,10 @@
 #include <image-decoders/imagedecoder.h>
 #include <core/textutils.h>
 #include <core/context.h>
+
+#if ENABLE(CMS)
 #include <lcms2.h>
+#endif
 
 namespace cdroid{
 

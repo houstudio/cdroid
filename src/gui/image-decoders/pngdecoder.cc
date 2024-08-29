@@ -4,7 +4,9 @@
 #include <image-decoders/imagedecoder.h>
 #include <core/systemclock.h>
 #include <cdlog.h>
+#if ENABLE(CMS)
 #include <lcms2.h>
+#endif
 #include "png.h"     /* original (unpatched) libpng is ok */
 //REF:https://github.com/xxyyboy/img_apng2webp/blob/main/apng2png/apng2webp.c
 //https://gitee.com/mirrors_line/apng-drawable.git
