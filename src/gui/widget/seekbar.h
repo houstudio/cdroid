@@ -14,11 +14,11 @@ public:
 protected:
     OnSeekBarChangeListener  mOnSeekBarChangeListener;
     void onProgressRefresh(float scale, bool fromUser, int progress)override;
+    void onStartTrackingTouch()override;
+    void onStopTrackingTouch()override;
 public:
     SeekBar(int w,int h);
     SeekBar(Context*ctx,const AttributeSet& attrs);
-    void onStartTrackingTouch()override;
-    void onStopTrackingTouch()override;
     void setOnSeekBarChangeListener(const OnSeekBarChangeListener& l);
 };
 
