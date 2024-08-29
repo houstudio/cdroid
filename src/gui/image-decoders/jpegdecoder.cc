@@ -185,8 +185,7 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale,void*targetPr
     jpeg_destroy_decompress(cinfo);
 
     // set jpeg mime data
-    image->set_mime_data(CAIRO_MIME_TYPE_JPEG, nullptr, 0, nullptr);
-
+    cairo_surface_set_mime_data(image->cobj(),CAIRO_MIME_TYPE_JPEG,nullptr,0,nullptr,nullptr);
     return image;
 }
 
