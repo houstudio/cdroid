@@ -43,9 +43,9 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
     Drawable* progressDrawable = attrs.getDrawable("progressDrawable");
     if(progressDrawable){
         if(needsTileify(progressDrawable))
-            setIndeterminateDrawableTiled(progressDrawable);
+            setProgressDrawableTiled(progressDrawable);
         else
-            setIndeterminateDrawable(progressDrawable);
+            setProgressDrawable(progressDrawable);
     }
 
     Drawable* indeterminateDrawable = attrs.getDrawable("indeterminateDrawable");
