@@ -180,7 +180,7 @@ bool BitmapDrawable::isAutoMirrored(){
 int BitmapDrawable::computeTransparency(RefPtr<ImageSurface>bmp){
     if((bmp==nullptr)||(bmp->get_width()==0)||(bmp->get_height()==0))
         return PixelFormat::TRANSPARENT;
-    if((bmp->get_content()&Cairo::Content::CONTENT_ALPHA)==0)
+    if((bmp->get_content()&&(Cairo::Content::CONTENT_ALPHA)==0))
         return PixelFormat::OPAQUE;
 
     if( (bmp->get_content()&CONTENT_COLOR) ==0){
