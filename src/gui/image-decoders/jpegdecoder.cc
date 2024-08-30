@@ -5,6 +5,9 @@
 #include <turbojpeg.h>
 #include <image-decoders/imagedecoder.h>
 #include <cdlog.h>
+#if ENABLE(LCMS)
+#include <lcms2.h>
+#endif
 
 namespace cdroid{
 
@@ -149,6 +152,22 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale,void*targetPr
         cinfo->scale_denom= scale_denom;
     }
 
+    //if(targetProfile==nullptr) targetProfile = mCMSProfile;
+    if(targetProfile){
+        cmsHPROFILE src_profile = getColorProfile(mPrivate);
+        if (src_profile) {
+            cmsColorSpaceSignature profileSpace = cmsGetColorSpace(src_profile);
+
+            cmsUInt32Number inType=TYPE_RGBA_8;
+
+            mTransform = cmsCreateTransform(src_profile, inType, targetProfile, TYPE_RGBA_8,
+                             cmsGetHeaderRenderingIntent(src_profile), 0);
+
+            cmsCloseProfile(src_profile);
+
+            //jinfo->out_color_space =inType == TYPE_GRAY_8 ? JCS_GRAYSCALE : JCS_EXT_RGBA;
+        }
+    }
 #ifdef LIBJPEG_TURBO_VERSION
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     cinfo->out_color_space = JCS_EXT_BGRA;
@@ -168,9 +187,13 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale,void*targetPr
     }
 
     // loop over all scanlines and fill Cairo image surface
+    uint8_t*srcLine = new uint8_t[image->get_stride()];
     while (cinfo->output_scanline < cinfo->output_height) {
         unsigned char *row_address = image->get_data() +cinfo->output_scanline * image->get_stride();
-        row_pointer[0] = row_address;
+        if(mTransform==nullptr)
+            row_pointer[0] = row_address;
+        else
+            row_pointer[0] = srcLine;
         if(jpeg_read_scanlines(cinfo, row_pointer, 1)!=1){
             LOGW("jpeg data corrupt at scanline=%d/%d",cinfo->output_scanline,cinfo->output_height);
             break;
@@ -178,7 +201,11 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale,void*targetPr
 #ifndef LIBJPEG_TURBO_VERSION
         pix_conv(row_address, 4, row_address, 3, cinfo->output_width);
 #endif
+#if ENABLE(LCMS)
+        cmsDoTransform(mTransform, srcLine, row_address, mImageWidth);
+#endif
     }
+    delete []srcLine;
 
     // finish and close everything
     (void) jpeg_finish_decompress(cinfo);
@@ -194,7 +221,33 @@ bool JPEGDecoder::decodeSize(){
     jpeg_read_header(cinfo, TRUE);
     mImageWidth = cinfo->image_width;
     mImageHeight= cinfo->image_height;
-    LOGD("imagesize=%dx%d",mImageWidth,mImageHeight);
     return true;
+}
+
+void* JPEGDecoder::getColorProfile(PRIVATE*priv) {
+#if ENABLE(LCMS)
+    JOCTET* icc_data;
+    unsigned int icc_size;
+    if (jpeg_read_icc_profile(&priv->cinfo, &icc_data, &icc_size)) {
+        cmsHPROFILE src_profile = cmsOpenProfileFromMem(icc_data, icc_size);
+        free(icc_data);
+
+        cmsColorSpaceSignature profileSpace = cmsGetColorSpace(src_profile);
+
+        if (profileSpace != cmsSigRgbData &&
+            (mPrivate->cinfo.jpeg_color_space != JCS_GRAYSCALE ||
+            profileSpace != cmsSigGrayData)) {
+            cmsCloseProfile(src_profile);
+            return nullptr;
+        }
+        LOGD("profileSpace=%x",profileSpace);
+        return src_profile;
+    } else {
+        LOGD("profileSpace sRGB");
+        return cmsCreate_sRGBProfile();
+    }
+#else
+    return nullptr;
+#endif
 }
 }/*endof namespacee*/

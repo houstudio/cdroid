@@ -72,24 +72,22 @@ Cairo::RefPtr<Cairo::ImageSurface> PNGDecoder::decode(float scale,void*targetPro
 
     if( (mImageWidth==-1) || (mImageHeight==-1) )
         decodeSize();
-    std::vector<png_bytep> row_pointers;//(mImageHeight);
+    std::vector<png_bytep> row_pointers(mImageHeight);
     Cairo::RefPtr<Cairo::ImageSurface> image = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mImageWidth,mImageHeight);
     uint8_t*frame_pixels=image->get_data();
 
-    if(targetProfile==nullptr)
-        targetProfile=mCMSProfile;
+    //if(targetProfile==nullptr) targetProfile=mCMSProfile;
 
     for (png_uint_32 y = 0; y < mImageHeight; ++y) {
-        row_pointers.push_back(frame_pixels + y* mImageWidth * 4);
+        row_pointers[y] = (frame_pixels + y* mImageWidth * 4);
         bzero(row_pointers[y],mImageWidth * 4);
     }
 #if ENABLE(LCMS)
     if(targetProfile) {
-        const int inType = TYPE_RGBA_8;
+        uint32_t inType=TYPE_RGBA_8;
         const uint8_t colorType = png_get_color_type(png_ptr,info_ptr);
         cmsHPROFILE src_profile = getColorProfile(mPrivate, colorType);
         const uint32_t profileSpace = cmsGetColorSpace(src_profile);
-
         mTransform = cmsCreateTransform(src_profile, inType, targetProfile, TYPE_RGBA_8,
                                         cmsGetHeaderRenderingIntent(src_profile), 0);
         cmsCloseProfile(src_profile);
@@ -202,7 +200,8 @@ bool PNGDecoder::decodeSize() {
     if (interlace != PNG_INTERLACE_NONE)
         png_set_interlace_handling (png_ptr);
 
-    png_set_filler(png_ptr,0xffU,PNG_FILLER_AFTER);
+    if(color_type&PNG_COLOR_MASK_ALPHA)
+        png_set_filler(png_ptr,0xffU,PNG_FILLER_AFTER);
 
     /* recheck header after setting EXPAND options */
     png_read_update_info (png_ptr, info_ptr);
