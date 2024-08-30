@@ -27,7 +27,7 @@ PNGDecoder::PNGDecoder(Context*ctx,const std::string&resourceId):ImageDecoder(ct
     mPrivate = new PRIVATE();
     mPrivate->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     mPrivate->info_ptr= png_create_info_struct(mPrivate->png_ptr);
-
+    LOGV("%s",resourceId.c_str());
     png_set_read_fn(mPrivate->png_ptr,(void*)istream.get(),istream_png_reader);
 }
 
@@ -76,7 +76,7 @@ Cairo::RefPtr<Cairo::ImageSurface> PNGDecoder::decode(float scale,void*targetPro
     Cairo::RefPtr<Cairo::ImageSurface> image = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mImageWidth,mImageHeight);
     uint8_t*frame_pixels=image->get_data();
 
-    if(targetProfile==nullptr) targetProfile=mCMSProfile;
+    //if(targetProfile==nullptr) targetProfile=mCMSProfile;
 
     for (png_uint_32 y = 0; y < mImageHeight; ++y) {
         row_pointers[y] = (frame_pixels + y* mImageWidth * 4);
@@ -144,19 +144,36 @@ static void premultiply_data (png_structp png, png_row_infop row_info, png_bytep
     }
 }
 
-/* Converts RGBx bytes to native endian xRGB */
-static void convert_bytes_to_data (png_structp png, png_row_infop row_info, png_bytep data) {
+static uint16_t f_to_u16(float val){
+    if (val < 0)
+        return 0;
+    else if (val > 1)
+        return 65535;
+    else
+        return (uint16_t)(val * 65535.f);
+}
+
+static void unpremultiply_float (float *f, uint16_t *d16, unsigned width){
     unsigned int i;
 
-    for (i = 0; i < row_info->rowbytes; i += 4) {
-        uint8_t *base  = &data[i];
-        uint8_t  red   = base[0];
-        uint8_t  green = base[1];
-        uint8_t  blue  = base[2];
-        uint32_t pixel;
+    for (i = 0; i < width; i++) {
+        float r, g, b, a;
+        r = *f++;
+        g = *f++;
+        b = *f++;
+        a = *f++;
 
-        pixel = (0xffu << 24) | (red << 16) | (green << 8) | (blue << 0);
-        memcpy (base, &pixel, sizeof (uint32_t));
+        if (a > 0) {
+            *d16++ = f_to_u16(r / a);
+            *d16++ = f_to_u16(g / a);
+            *d16++ = f_to_u16(b / a);
+            *d16++ = f_to_u16(a);
+        } else {
+            *d16++ = 0;
+            *d16++ = 0;
+            *d16++ = 0;
+            *d16++ = 0;
+        }
     }
 }
 
@@ -198,13 +215,17 @@ bool PNGDecoder::decodeSize() {
         png_set_gray_to_rgb(png_ptr);
         color_type |= PNG_COLOR_TYPE_RGB;
     }
+    if(color_type==PNG_COLOR_TYPE_RGB){
+        png_set_expand(png_ptr);
+        png_set_add_alpha(png_ptr,0xFFU,PNG_FILLER_AFTER);
+    }
 
     if (interlace != PNG_INTERLACE_NONE)
         png_set_interlace_handling (png_ptr);
 
     if(color_type&PNG_COLOR_MASK_ALPHA)
         png_set_filler(png_ptr,0xffU,PNG_FILLER_AFTER);
-
+    
     /* recheck header after setting EXPAND options */
     png_read_update_info (png_ptr, info_ptr);
     png_get_IHDR (png_ptr, info_ptr,(uint32_t*)&mImageWidth, (uint32_t*)&mImageHeight,
@@ -212,28 +233,12 @@ bool PNGDecoder::decodeSize() {
     LOGE_IF((bit_depth != 8 && bit_depth != 16) || ! (color_type == PNG_COLOR_TYPE_RGB ||  color_type == PNG_COLOR_TYPE_RGB_ALPHA),
             "Decoder Error");
 
-    switch (color_type) {
-    default:
-        FATAL("ASSERT_NOT_REACHED");
-        break;
-
-    case PNG_COLOR_TYPE_RGB_ALPHA:
-        if (bit_depth == 8) {
-            format = CAIRO_FORMAT_ARGB32;
+    if(color_type==PNG_COLOR_TYPE_RGB_ALPHA) {
+        if(bit_depth == 8){
             png_set_read_user_transform_fn (png_ptr, premultiply_data);
-        } else {
-            format = CAIRO_FORMAT_RGBA128F;
+        }else {
+            LOGD("TODO:CAIRO_FORMAT_RGBA128F");
         }
-        break;
-
-    case PNG_COLOR_TYPE_RGB:
-        if (bit_depth == 8) {
-            format = CAIRO_FORMAT_RGB24;
-            png_set_read_user_transform_fn (png_ptr, convert_bytes_to_data);
-        } else {
-            format = CAIRO_FORMAT_RGB96F;
-        }
-        break;
     }
     return true;
 }
