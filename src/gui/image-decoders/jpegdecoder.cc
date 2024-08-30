@@ -199,7 +199,7 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale,void*targetPr
         pix_conv(row_address, 4, row_address, 3, cinfo->output_width);
 #endif
 #if ENABLE(LCMS)
-        cmsDoTransform(mTransform, srcLine, row_address, mImageWidth);
+        if(mTransform)cmsDoTransform(mTransform, srcLine, row_address, mImageWidth);
 #endif
     }
     delete []srcLine;
