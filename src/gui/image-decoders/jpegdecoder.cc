@@ -151,23 +151,20 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale,void*targetPr
         cinfo->scale_num  = scale_num;
         cinfo->scale_denom= scale_denom;
     }
-
-    //if(targetProfile==nullptr) targetProfile = mCMSProfile;
+#if ENABLE(LCMS)
     if(targetProfile){
         cmsHPROFILE src_profile = getColorProfile(mPrivate);
         if (src_profile) {
-            cmsColorSpaceSignature profileSpace = cmsGetColorSpace(src_profile);
-
             cmsUInt32Number inType=TYPE_RGBA_8;
+            cmsColorSpaceSignature profileSpace = cmsGetColorSpace(src_profile);
 
             mTransform = cmsCreateTransform(src_profile, inType, targetProfile, TYPE_RGBA_8,
                              cmsGetHeaderRenderingIntent(src_profile), 0);
 
             cmsCloseProfile(src_profile);
-
-            //jinfo->out_color_space =inType == TYPE_GRAY_8 ? JCS_GRAYSCALE : JCS_EXT_RGBA;
         }
     }
+#endif
 #ifdef LIBJPEG_TURBO_VERSION
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     cinfo->out_color_space = JCS_EXT_BGRA;
