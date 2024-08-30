@@ -240,7 +240,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
             width += screenMargin.x + screenMargin.w;
             height+= screenMargin.y + screenMargin.h;
         }
-        img=XCreateImage(x11Display,x11Visual, imagedepth,ZPixmap,0,NULL,width,height,32,0);
+        img=XCreateImage(x11Display,x11Visual, imagedepth,ZPixmap,0,NULL,width,height,32,width*4);
     } else {
         img=(XImage*)malloc(sizeof(XImage));
         img->width=width;

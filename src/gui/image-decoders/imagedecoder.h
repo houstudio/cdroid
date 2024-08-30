@@ -38,6 +38,8 @@ public:
 };
 
 class JPEGDecoder:public ImageDecoder{
+private:
+    void*getColorProfile(PRIVATE*);
 public:
     JPEGDecoder(Context*ctx,const std::string&res);
     ~JPEGDecoder()override;
