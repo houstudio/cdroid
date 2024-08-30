@@ -28,9 +28,11 @@ static void init_source (j_decompress_ptr cinfo) {
 
 static void handle_jpeg_error(j_common_ptr cinfo) {
     struct decoder_error_mgr *err = (struct decoder_error_mgr*)(cinfo->err);
+    char jpegLastErrorMsg[JMSG_LENGTH_MAX];
+    (*(cinfo->err->format_message))(cinfo, jpegLastErrorMsg);
     jpeg_destroy_decompress((j_decompress_ptr)cinfo);
+    LOGE("JPEG read/write error:%s",jpegLastErrorMsg);
     longjmp(err->setjmp_buffer, 1);
-    LOGE("JPEG read/write error");
 }
 
 static boolean fill_buffer (j_decompress_ptr cinfo) {
@@ -140,7 +142,7 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale,void*targetPr
     JSAMPROW row_pointer[1];
     // initialize jpeg decompression structures
     if (setjmp(jerr->setjmp_buffer)){
-        return nullptr;
+        return image;
     }
     if((mImageWidth==-1)||(mImageHeight==-1)){
         decodeSize();
