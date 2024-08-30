@@ -72,12 +72,15 @@ Cairo::RefPtr<Cairo::ImageSurface> PNGDecoder::decode(float scale,void*targetPro
 
     if( (mImageWidth==-1) || (mImageHeight==-1) )
         decodeSize();
-    std::vector<png_bytep> row_pointers(mImageHeight);
+    std::vector<png_bytep> row_pointers;//(mImageHeight);
     Cairo::RefPtr<Cairo::ImageSurface> image = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mImageWidth,mImageHeight);
-    unsigned char*frame_pixels=image->get_data();
+    uint8_t*frame_pixels=image->get_data();
+
+    if(targetProfile==nullptr)
+        targetProfile=mCMSProfile;
 
     for (png_uint_32 y = 0; y < mImageHeight; ++y) {
-        row_pointers[y] = frame_pixels + y* mImageWidth * 4;
+        row_pointers.push_back(frame_pixels + y* mImageWidth * 4);
         bzero(row_pointers[y],mImageWidth * 4);
     }
 #if ENABLE(LCMS)
@@ -86,12 +89,24 @@ Cairo::RefPtr<Cairo::ImageSurface> PNGDecoder::decode(float scale,void*targetPro
         const uint8_t colorType = png_get_color_type(png_ptr,info_ptr);
         cmsHPROFILE src_profile = getColorProfile(mPrivate, colorType);
         const uint32_t profileSpace = cmsGetColorSpace(src_profile);
+
         mTransform = cmsCreateTransform(src_profile, inType, targetProfile, TYPE_RGBA_8,
                                         cmsGetHeaderRenderingIntent(src_profile), 0);
         cmsCloseProfile(src_profile);
     }
 #endif
-    png_read_image(png_ptr, row_pointers.data());
+    if(mTransform==nullptr)
+        png_read_image(png_ptr, row_pointers.data());
+#if  ENABLE(LCMS)
+    else{
+        uint8_t *srcLine=new uint8_t[mImageWidth*4];
+        for(uint32_t i=0;i<mImageHeight;i++){
+            png_read_row(png_ptr,srcLine,nullptr);
+            cmsDoTransform(mTransform,srcLine,row_pointers[i],mImageWidth);
+        }
+        delete []srcLine;
+    }
+#endif
     png_read_end (png_ptr, info_ptr);
     cairo_surface_set_mime_data(image->cobj(), CAIRO_MIME_TYPE_PNG, nullptr, 0, nullptr,nullptr);
     return image;

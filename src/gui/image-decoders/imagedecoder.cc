@@ -8,12 +8,14 @@
 #include <image-decoders/imagedecoder.h>
 #include <core/textutils.h>
 #include <core/context.h>
-
+#include <core/atexit.h>
 #if ENABLE(LCMS)
 #include <lcms2.h>
 #endif
 
 namespace cdroid{
+
+void*ImageDecoder::mCMSProfile = nullptr;
 
 ImageDecoder::ImageDecoder(Context*ctx,const std::string&resourceId){
     mImageWidth = -1;
@@ -24,6 +26,17 @@ ImageDecoder::ImageDecoder(Context*ctx,const std::string&resourceId){
         istream = ctx->getInputStream(resourceId);
     else
         istream = std::move(std::make_unique<std::ifstream>(resourceId));
+
+#if ENABLE(LCMS)
+    if(mCMSProfile==nullptr){
+        mCMSProfile=cmsOpenProfileFromFile("/home/houzh/sRGB Color Space Profile.icm","r");
+        if(mCMSProfile){
+            AtExit::registerCallback([](){
+                cmsCloseProfile(mCMSProfile);
+            });
+        }
+    }
+#endif
 }
 
 ImageDecoder::~ImageDecoder(){

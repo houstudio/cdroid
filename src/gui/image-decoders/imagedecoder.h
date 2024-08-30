@@ -14,6 +14,7 @@ protected:
     int mImageHeight;
     int mCurrScanline;
     void*mTransform;
+    static void*mCMSProfile;
     std::unique_ptr<std::istream>istream;
 public:
     ImageDecoder(Context*ctx,const std::string&res);
