@@ -9,7 +9,7 @@
 #include <core/textutils.h>
 #include <core/context.h>
 
-#if ENABLE(CMS)
+#if ENABLE(LCMS)
 #include <lcms2.h>
 #endif
 

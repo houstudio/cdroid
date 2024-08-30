@@ -4,7 +4,7 @@
 #include <image-decoders/imagedecoder.h>
 #include <core/systemclock.h>
 #include <cdlog.h>
-#if ENABLE(CMS)
+#if ENABLE(LCMS)
 #include <lcms2.h>
 #endif
 #include "png.h"     /* original (unpatched) libpng is ok */
@@ -57,7 +57,6 @@ void*PNGDecoder::getColorProfile(PRIVATE*priv,uint8_t colorType) {
             cmsCloseProfile(src_profile);
             return nullptr;
         }
-
         return src_profile;
     } else {
         return cmsCreate_sRGBProfile();
