@@ -392,7 +392,7 @@ void AbsSeekBar::setThumbPos(int wh, Drawable* thumb, float scale, int offset){
         bottom= top+ thumbHeight;
         Drawable* background = getBackground();
         if (background != nullptr) {
-            const int offsetX = mPaddingLeft; - mThumbOffset;
+            const int offsetX = mPaddingLeft - mThumbOffset;
             const int offsetY = mPaddingTop + mThumbOffset;
             background->setHotspotBounds(left , top + offsetY,right-left,bottom-top);//thumbWidth,thumbHeight);
         }
