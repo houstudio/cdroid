@@ -421,9 +421,11 @@ void BitmapDrawable::draw(Canvas&canvas){
         float dw = mBounds.width   , dh = mBounds.height;
         const float fx = dw / sw   , fy = dh / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
-        bool isScaling=false;
+        bool isScaling = false;
         const int angle_degrees = getRotateAngle(canvas,isScaling);
-        const Cairo::SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap||mBitmapState->mDither||isScaling)?SurfacePattern::Filter::BILINEAR:SurfacePattern::Filter::NEAREST;
+        const Cairo::SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap||mBitmapState->mDither||isScaling)
+               ? SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;
+
         LOGD_IF((angle_degrees%90)&&(mBitmapState->mFilterBitmap==false),"Maybe you must use setFilterBitmap(true)");
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
