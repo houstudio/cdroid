@@ -532,8 +532,7 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
             mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
             return cls;
         }catch(std::invalid_argument&e){
-            LOGE("%s:%s",e.what(),fullresid.c_str());
-            //if( slashpos == std::string::npos ) {/*for color wolrds*/
+            LOGD("%s:%s",e.what(),fullresid.c_str());
             std::string realName;
             parseResource(fullresid,&realName,nullptr);
             if(realName.find("?")!=std::string::npos)
