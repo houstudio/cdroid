@@ -357,9 +357,10 @@ static void setPatternByTileMode(RefPtr<SurfacePattern>pat,int tileMode){
     }
 }
 
-static int getRotateAngle(Canvas&canvas){
+static int getRotateAngle(Canvas&canvas,bool &scaling){
     Cairo::Matrix ctx=canvas.get_matrix();
     double radians = atan2(ctx.yy, ctx.xy);
+    scaling=(ctx.xx!=1.f)||(ctx.yy!=1.f);
     return int(radians*180.f/M_PI);
 }
 
@@ -420,8 +421,9 @@ void BitmapDrawable::draw(Canvas&canvas){
         float dw = mBounds.width   , dh = mBounds.height;
         const float fx = dw / sw   , fy = dh / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
-        const int angle_degrees = getRotateAngle(canvas);
-        const Cairo::SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap||mBitmapState->mDither)?SurfacePattern::Filter::BILINEAR:SurfacePattern::Filter::NEAREST;
+        bool isScaling=false;
+        const int angle_degrees = getRotateAngle(canvas,isScaling);
+        const Cairo::SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap||mBitmapState->mDither||isScaling)?SurfacePattern::Filter::BILINEAR:SurfacePattern::Filter::NEAREST;
         LOGD_IF((angle_degrees%90)&&(mBitmapState->mFilterBitmap==false),"Maybe you must use setFilterBitmap(true)");
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
