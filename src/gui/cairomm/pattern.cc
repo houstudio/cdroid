@@ -175,7 +175,16 @@ SurfacePattern::Filter SurfacePattern::get_filter() const
   return result;
 }
 
+void SurfacePattern::set_dither(Dither dither){
+  cairo_pattern_set_dither(m_cobject,(cairo_dither_t)dither);
+  check_object_status_and_throw_exception(*this);
+}
 
+SurfacePattern::Dither SurfacePattern::get_dither() const{
+  auto result = static_cast<Dither>(cairo_pattern_get_dither(m_cobject));
+  check_object_status_and_throw_exception(*this);
+  return result;
+}
 
 Gradient::Gradient()
 {

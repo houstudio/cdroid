@@ -321,7 +321,13 @@ public:
        */
       GAUSSIAN = CAIRO_FILTER_GAUSSIAN
   };
-
+  enum class Dither{
+      NONE = CAIRO_DITHER_NONE,
+      DEFAULT = CAIRO_DITHER_DEFAULT,
+      FAST = CAIRO_DITHER_FAST,
+      GOOD = CAIRO_DITHER_GOOD,
+      BEST = CAIRO_DITHER_BEST
+  };/*Dither added by zhhou*/
   /** Create a C++ wrapper for the C instance. This C++ instance should then be given to a RefPtr.
    * @param cobject The C instance.
    * @param has_reference Whether we already have a reference. Otherwise, the constructor will take an extra reference.
@@ -365,6 +371,10 @@ public:
    * each filter.
    */
   Filter get_filter() const;
+
+  void set_dither(Dither dither);
+
+  Dither get_dither() const;
 };
 
 class CAIROMM_API Gradient : public Pattern
