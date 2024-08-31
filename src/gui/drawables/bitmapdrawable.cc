@@ -423,8 +423,10 @@ void BitmapDrawable::draw(Canvas&canvas){
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
         bool isScaling = false;
         const int angle_degrees = getRotateAngle(canvas,isScaling);
-        const Cairo::SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap||mBitmapState->mDither||isScaling)
+        const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap||isScaling)
                ? SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;
+        const SurfacePattern::Dither ditherMode = mBitmapState->mDither
+               ? SurfacePattern::Dither::GOOD : SurfacePattern::Dither::DEFAULT;
 
         LOGD_IF((angle_degrees%90)&&(mBitmapState->mFilterBitmap==false),"Maybe you must use setFilterBitmap(true)");
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
@@ -447,7 +449,10 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.set_operator(Cairo::Context::Operator::SOURCE);
         }
         Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
-        if(spat)spat->set_filter(filterMode);
+        if(spat){
+            spat->set_filter(filterMode);
+            spat->set_dither(ditherMode);
+        }
         canvas.paint_with_alpha(alpha);
     }
 
