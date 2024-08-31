@@ -913,6 +913,8 @@ void GradientDrawable::draw(Canvas&canvas) {
     const bool useLayer =(haveStroke || haveFill) && (st->mShape!=LINE) &&
 	    (currStrokeAlpha<255) && ((mAlpha<255)|| colorFilter);
     const float sweep = st->mUseLevelForShape ? (360.f*getLevel()/10000.f) : 360.f;
+    const Pattern::Dither ditherMode = mGradientState->mDither
+               ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
     float rad = .0f;
 
     std::vector<float>radii;
@@ -923,6 +925,8 @@ void GradientDrawable::draw(Canvas&canvas) {
         canvas.clip();
         canvas.push_group();
     }
+    if(mFillPaint)
+        mFillPaint->set_dither(ditherMode);
     switch (st->mShape) {
     case RECTANGLE:
         rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);

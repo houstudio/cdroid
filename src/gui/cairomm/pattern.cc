@@ -94,6 +94,17 @@ Pattern::Extend Pattern::get_extend() const
   return result;
 }
 
+void Pattern::set_dither(Dither dither){
+  cairo_pattern_set_dither(m_cobject,(cairo_dither_t)dither);
+  check_object_status_and_throw_exception(*this);
+}
+
+Pattern::Dither Pattern::get_dither() const{
+  auto result = static_cast<Dither>(cairo_pattern_get_dither(m_cobject));
+  check_object_status_and_throw_exception(*this);
+  return result;
+}
+
 SolidPattern::SolidPattern(cairo_pattern_t* cobject, bool has_reference)
 : Pattern(cobject, has_reference)
 {
@@ -171,17 +182,6 @@ void SurfacePattern::set_filter(Filter filter)
 SurfacePattern::Filter SurfacePattern::get_filter() const
 {
   auto result = static_cast<Filter>(cairo_pattern_get_filter(m_cobject));
-  check_object_status_and_throw_exception(*this);
-  return result;
-}
-
-void SurfacePattern::set_dither(Dither dither){
-  cairo_pattern_set_dither(m_cobject,(cairo_dither_t)dither);
-  check_object_status_and_throw_exception(*this);
-}
-
-SurfacePattern::Dither SurfacePattern::get_dither() const{
-  auto result = static_cast<Dither>(cairo_pattern_get_dither(m_cobject));
   check_object_status_and_throw_exception(*this);
   return result;
 }
