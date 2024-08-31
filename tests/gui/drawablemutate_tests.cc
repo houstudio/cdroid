@@ -163,8 +163,11 @@ TEST_F(MUTATE,layer){
 }
 
 TEST_F(MUTATE,parsexml){
-    Drawable*d1=Drawable::inflate(nullptr,"/home/houzh/Miniwin/src/gui/res/drawable/progress_horizontal.xml");
-    Drawable*d2=d1->getConstantState()->newDrawable();
+    Drawable*d1,*d2;
+    d1=Drawable::inflate(nullptr,"/home/houzh/cdroid/src/gui/res/drawable/progress_horizontal.xml");
+    ASSERT_EQ(d1->getConstantState().use_count(),1);
+    d2=d1->getConstantState()->newDrawable();
+    ASSERT_EQ(d1->getConstantState().use_count(),2);
     ASSERT_EQ(d1->getConstantState(),d2->getConstantState());
     //delete d1;
     //delete d2;
