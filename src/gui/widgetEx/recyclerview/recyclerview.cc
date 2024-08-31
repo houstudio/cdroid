@@ -3600,6 +3600,7 @@ void RecyclerView::RecycledViewPool::putRecycledView(ViewHolder* scrap) {
     const int viewType = scrap->getItemViewType();
     std::vector<ViewHolder*>& scrapHeap = getScrapDataForType(viewType)->mScrapHeap;
     if (mScrap.get(viewType)->mMaxScrap <= scrapHeap.size()) {
+        delete scrap;//chenyang:)
         return;
     }
     if (_DEBUG){
