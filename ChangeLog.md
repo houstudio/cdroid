@@ -3,8 +3,9 @@
   - add CMS(Color Manager System)
   - Cairo::Pattern add dither support
   - BitmapDrawable,GradientDrawable add Dither support
-  - RecyclerView can working undfer lower(default) poolsize
+  - RecyclerView can working on lower(default) poolsize
   - add new image-decoders,all image is decoded to RGBA32. ui layer compsition can be faster than ever.
+  - add GestureDetector
 
 # **V2.0.66**
   - some bug fixes
