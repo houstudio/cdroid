@@ -37,7 +37,7 @@ foreach(Example ${ExamplesFileList})
   # Define example executable
   add_executable(${ExampleName} ${Example})
   # Link example against curlpp
-  target_link_libraries(${ExampleName} cdroid )
+  target_link_libraries(${ExampleName} cdroid)
   # make the meta target depend on this example.
   add_dependencies(build_app_examples ${ExampleName})
   install(TARGETS ${ExampleName} DESTINATION bin/examples)
