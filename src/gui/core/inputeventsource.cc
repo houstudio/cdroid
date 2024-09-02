@@ -118,6 +118,7 @@ int InputEventSource::checkEvents(){
     }
     if(count && mIsScreenSaveActived && mScreenSaver){
         mScreenSaver(false);
+        mIsScreenSaveActived= false;
         mLastInputEventTime = now;
     }
     return count;
