@@ -17,9 +17,6 @@ AnalogClock::AnalogClock(Context*ctx,const AttributeSet& attrs)
     setHourHand( attrs.getDrawable("hand_hour"));
     setMinuteHand( attrs.getDrawable("hand_minute"));
     setSecondHand( attrs.getDrawable("hand_second"));
-
-    mDialWidth = mDial->getIntrinsicWidth();
-    mDialHeight= mDial->getIntrinsicHeight();
 }
 
 AnalogClock::AnalogClock(int w,int h):View(w,h){
@@ -70,6 +67,7 @@ Drawable* AnalogClock::apply(TintInfo*ti,Drawable*drawable){
 }
 
 void AnalogClock::setDial(Icon icon) {
+    delete mDial;
     mDial = icon;//.loadDrawable(getContext());
     if(mDial){
         mDialWidth  = mDial->getIntrinsicWidth();
@@ -97,10 +95,21 @@ const ColorStateList* AnalogClock::getDialTintList()const {
 
 void AnalogClock::setHourHand(Icon icon) {
     mHourHand = icon;//.loadDrawable(getContext());
+
     if (mHourHandTintInfo->mHasTintList/* || mHourHandTintInfo->mHasTintBlendMode*/) {
         mHourHand = apply(mHourHandTintInfo,mHourHand);
     }
-    mHourHand->setFilterBitmap(true);
+
+    if( (mDial==nullptr) && mHourHand){
+        const int32_t dw = mHourHand->getIntrinsicWidth()*2;
+        const int32_t dh = mHourHand->getIntrinsicHeight()*2;
+        if( (dw>mDialWidth) || (dh>mDialHeight) ){
+            mDialWidth = dw;
+            mDialHeight= dh;
+        }
+    }
+    if(mHourHand)
+        mHourHand->setFilterBitmap(true);
     mChanged = true;
     requestLayout();
 }
@@ -118,22 +127,45 @@ const ColorStateList* AnalogClock::getHourHandTintList()const{
 }
 
 void AnalogClock::setMinuteHand(Icon icon) {
+    delete mMinuteHand;
     mMinuteHand = icon;//.loadDrawable(getContext());
-    mMinuteHand->setFilterBitmap(true);
+
     if (mHourHandTintInfo->mHasTintList /*|| mHourHandTintInfo.mHasTintBlendMode*/) {
         mHourHand = apply(mHourHandTintInfo,mHourHand);
     }
 
+    if( (mDial==nullptr) && mMinuteHand){
+        const int32_t dw = mMinuteHand->getIntrinsicWidth()*2;
+        const int32_t dh = mMinuteHand->getIntrinsicHeight()*2;
+        if( (dw>mDialWidth) || (dh>mDialHeight) ){
+            mDialWidth = dw;
+            mDialHeight= dh;
+        }
+    }
+    if(mMinuteHand)
+        mMinuteHand->setFilterBitmap(true);
     mChanged = true;
     requestLayout();
 }
 
 void AnalogClock::setSecondHand(Icon icon) {
+    delete mSecondHand;
     mSecondHand = icon;//.loadDrawable(getContext());
-    mSecondHand->setFilterBitmap(true);
+
     if (mHourHandTintInfo->mHasTintList /*|| mHourHandTintInfo.mHasTintBlendMode*/) {
         mHourHand = apply(mHourHandTintInfo,mHourHand);
     }
+
+    if( (mDial==nullptr) && mMinuteHand){
+        const int32_t dw = mSecondHand->getIntrinsicWidth()*2;
+        const int32_t dh = mSecondHand->getIntrinsicHeight()*2;
+        if( (dw>mDialWidth) || (dh>mDialHeight) ){
+            mDialWidth = dw;
+            mDialHeight= dh;
+        }
+    }
+    if(mSecondHand)
+        mSecondHand->setFilterBitmap(true);
     mChanged = true;
     invalidate();
 }
