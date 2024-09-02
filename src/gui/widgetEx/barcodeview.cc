@@ -39,7 +39,7 @@ void BarcodeView::initView(){
     mGS1Parens = true;
     mGS1NoCheck= true;
     mBorderType= BOX;
-    mOption1 = 0;
+    mOption1 = 3;
     mOption2 = 0;
     mOption3 = 0;
     mDotSize =1;
