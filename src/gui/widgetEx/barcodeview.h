@@ -1,10 +1,11 @@
-#pragma once
-
-#if ENABLE_BARCODE
+#ifndef __BARCODE_VIEW_H__
+#define __BARCODE_VIEW_H__
 
 #include <view/view.h>
 #include <string>
+#if ENABLE(BARCODE)
 #include <zint.h>
+#endif
 
 namespace cdroid{
 class BarcodeView:public View{
@@ -19,6 +20,7 @@ public:
         ZintSeg(const std::string& text, const int ECIIndex = 0); // `ECIIndex` is comboBox index (not ECI value)
     };
     enum Symbologies{
+#if ENABLE(BARCODE)
         Code11   = BARCODE_CODE11,      /*1 Code 11 */ 
         C25Standard=BARCODE_C25STANDARD,/*2 2 of 5 Standard (Matrix) */
         C25Matrix= BARCODE_C25MATRIX,   /*2 Legacy */
@@ -147,6 +149,7 @@ public:
         RMQR  = BARCODE_RMQR ,             /*145 Rectangular Micro QR Code (rMQR) */
         BC412 = BARCODE_BC412,             /*146 IBM BC412 (SEMI T1-95) */
         LAST  = BARCODE_LAST               /*146Max barcode number marker, not barcode */
+#endif
     };
 private:
     int mErrorNo;
@@ -236,5 +239,5 @@ public:
 
 };
 }/*endof namespace*/
-#endif/*ENABLE_BARCODE*/
+#endif/*__BARCODE_VIEW_H__*/
 
