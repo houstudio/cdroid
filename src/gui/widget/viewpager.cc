@@ -1,6 +1,7 @@
 #include <widget/viewpager.h>
 #include <focusfinder.h>
 #include <cdtypes.h>
+#include <core/neverdestroyed.h>
 #include <cdlog.h>
 
 //https://www.androidos.net.cn/android/9.0.0_r8/xref/frameworks/support/viewpager/src/main/java/androidx/viewpager/widget/ViewPager.java
@@ -12,6 +13,8 @@ public:
         return t * t * t * t * t + 1.0f;
     }
 };
+
+static NeverDestroyed<VPInterpolator>sVPInterpolator;
 
 DECLARE_WIDGET(ViewPager);
 
@@ -44,7 +47,7 @@ void ViewPager::initViewPager(){
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setFocusable(true);
     Context* context = getContext();
-    mInterpolator=new VPInterpolator();
+    mInterpolator=sVPInterpolator.get();
     mVelocityTracker = nullptr;
     mScroller = new Scroller(context, mInterpolator);
     mFakeDragging = false;
