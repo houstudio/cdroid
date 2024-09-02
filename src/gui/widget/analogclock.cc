@@ -104,8 +104,8 @@ void AnalogClock::setHourHand(Icon icon) {
         const int32_t dw = mHourHand->getIntrinsicWidth()*2;
         const int32_t dh = mHourHand->getIntrinsicHeight()*2;
         if( (dw>mDialWidth) || (dh>mDialHeight) ){
-            mDialWidth = dw;
-            mDialHeight= dh;
+            mDialWidth = std::max(dw,dh);
+            mDialHeight= mDialWidth;
         }
     }
     if(mHourHand)
@@ -138,8 +138,8 @@ void AnalogClock::setMinuteHand(Icon icon) {
         const int32_t dw = mMinuteHand->getIntrinsicWidth()*2;
         const int32_t dh = mMinuteHand->getIntrinsicHeight()*2;
         if( (dw>mDialWidth) || (dh>mDialHeight) ){
-            mDialWidth = dw;
-            mDialHeight= dh;
+            mDialWidth = std::max(dw,dh);
+            mDialHeight= mDialWidth;
         }
     }
     if(mMinuteHand)
@@ -160,8 +160,8 @@ void AnalogClock::setSecondHand(Icon icon) {
         const int32_t dw = mSecondHand->getIntrinsicWidth()*2;
         const int32_t dh = mSecondHand->getIntrinsicHeight()*2;
         if( (dw>mDialWidth) || (dh>mDialHeight) ){
-            mDialWidth = dw;
-            mDialHeight= dh;
+            mDialWidth = std::max(dw,dh);
+            mDialHeight= mDialWidth;
         }
     }
     if(mSecondHand)
