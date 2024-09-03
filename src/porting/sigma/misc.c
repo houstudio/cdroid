@@ -3,6 +3,7 @@
 #include "mi_sys.h"
 #include "mi_gfx.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 int SYSInit(){
     return 0;

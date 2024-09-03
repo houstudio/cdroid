@@ -1,7 +1,8 @@
 #include <drawables/animatedimagedrawable.h>
 #include <systemclock.h>
 #include <cdlog.h>
-#include <view/view.h>
+#include <view/gravity.h>
+#include <view/choreographer.h>
 #include <image-decoders/imagedecoder.h>
 #include <image-decoders/framesequence.h>
 #include <porting/cdgraph.h>
@@ -119,7 +120,7 @@ int AnimatedImageDrawable::getOpacity(){
 void AnimatedImageDrawable::setAutoMirrored(bool mirrored) {
     if (mAnimatedImageState->mAutoMirrored != mirrored) {
         mAnimatedImageState->mAutoMirrored = mirrored;
-        if (getLayoutDirection() == View::LAYOUT_DIRECTION_RTL) {
+        if (getLayoutDirection() == LayoutDirection::RTL) {
             //nSetMirrored(mState.mNativePtr, mirrored);
             invalidateSelf();
         }
@@ -135,7 +136,7 @@ bool AnimatedImageDrawable::onLayoutDirectionChanged(int layoutDirection) {
         return false;
     }
 
-    const bool mirror = layoutDirection == View::LAYOUT_DIRECTION_RTL;
+    const bool mirror = layoutDirection == LayoutDirection::RTL;
     mAnimatedImageState->mAutoMirrored= mirror;
     return true;
 }

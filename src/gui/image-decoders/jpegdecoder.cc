@@ -2,15 +2,24 @@
 #include <stddef.h>
 #include <setjmp.h>
 #include <jpeglib.h>
-#include <turbojpeg.h>
+#include <gui_features.h>
 #include <image-decoders/imagedecoder.h>
 #include <cdlog.h>
 #if ENABLE(LCMS)
 #include <lcms2.h>
 #endif
 
+#if defined(ENABLE_TURBOJPEG) && ENABLE_TURBOJPEG
+#include <turbojpeg.h>
+#endif
+
+#if defined(ENABLE_JPEG) && ENABLE_JPEG
+#include <jpeglib.h>
+#endif
+
 namespace cdroid{
 
+#if defined(ENABLE_JPEG) && ENABLE_JPEG
 struct decoder_error_mgr {
     struct jpeg_error_mgr pub; // "public" fields for IJG library
     jmp_buf setjmp_buffer;     // For handling catastropic errors
@@ -249,4 +258,5 @@ void* JPEGDecoder::getColorProfile(PRIVATE*priv) {
     return nullptr;
 #endif
 }
+#endif/*ENABLE_JPEG*/
 }/*endof namespacee*/
