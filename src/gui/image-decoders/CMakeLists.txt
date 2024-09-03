@@ -1,6 +1,7 @@
 project(image-decoders C CXX)
 
 find_package(GIF)
+find_package(JPEG)
 find_package(WEBP)
 find_package(LCMS2)
 
