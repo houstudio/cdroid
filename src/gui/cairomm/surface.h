@@ -21,7 +21,6 @@
 
 #include <string>
 #include <vector>
-#include <istream>
 /* following is required for OS X */
 
 #ifdef nil
@@ -585,12 +584,9 @@ public:
    * @since 1.8
    */
   void write_to_png_stream(const SlotWriteFunc& write_func);
-  void write_to_png(cairo_write_func_t write_func, void *closure);
+
 #endif // CAIRO_HAS_PNG_FUNCTIONS
 
-  void write_to_jpg(const std::string& filename);
-  void write_to_jpg_stream(const SlotWriteFunc& write_func);
-  void write_to_jpg(cairo_write_func_t write_func, void *closure);
   /** This function returns the device for a surface
    * @return The device for this surface, or an empty RefPtr if the surface has
    * no associated device */
@@ -818,15 +814,9 @@ public:
    * contents of the PNG image file.
    */
   static RefPtr<ImageSurface> create_from_png_stream(const SlotReadFunc& read_func);
-  static RefPtr<ImageSurface> create_from_png(cairo_read_func_t read_func, void *closure);
+
 #endif // CAIRO_HAS_PNG_FUNCTIONS
-#if defined(ENABLE_JPEG)||defined(ENABLE_TURBOJPEG)
-  static RefPtr<ImageSurface> create_from_jpg(std::string filename);
-  static RefPtr<ImageSurface> create_from_jpg_stream(const SlotReadFunc& read_func);
-  static RefPtr<ImageSurface> create_from_jpg(cairo_read_func_t read_func, void *closure);
-  static RefPtr<ImageSurface> create_from_jpg(void*mem,size_t size);
-#endif
-  static RefPtr<ImageSurface> create_from_stream(std::istream& stream);
+
 };
 
 

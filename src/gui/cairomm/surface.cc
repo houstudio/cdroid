@@ -17,15 +17,8 @@
  */
 
 #include <cairomm/surface.h>
-#include <cairomm/context.h>
 #include <cairomm/script.h>
 #include <cairomm/private.h>
-#include <cairomm/cairo_jpg.h>
-//#include <cairomm/bitmap.h>
-#include <cdtypes.h>
-#include <cdlog.h>
-#include <chrono>
-#include <fstream>
 
 namespace Cairo
 {
@@ -267,153 +260,14 @@ void Surface::write_to_png_stream(const SlotWriteFunc& write_func)
     delete old_slot;
   auto slot_copy = new SlotWriteFunc(write_func);
   set_write_slot(cobj(), slot_copy);
-  auto status = cairo_surface_write_to_png_stream(cobj(),
-                                                         &write_func_wrapper,
-                                                         slot_copy /*closure*/);
-  check_status_and_throw_exception(status);
-}
-
-void Surface::write_to_png(cairo_write_func_t write_func, void *closure)
-{
-  auto status = cairo_surface_write_to_png_stream(cobj(), write_func, closure);
+  auto status = cairo_surface_write_to_png_stream(
+    cobj(), &c_write_func_wrapper, slot_copy /*closure*/);
   check_status_and_throw_exception(status);
 }
 #endif
 
-void Surface::write_to_jpg(const std::string& filename){
-     //auto status = cairo_surface_write_to_jpeg(cobj(),filename.c_str());
-     //check_status_and_throw_exception(status);
-}
-
-void Surface::write_to_jpg_stream(const SlotWriteFunc& write_func){
-#if 0
-    auto old_slot = get_slot(cobj());
-    if (old_slot)
-      delete old_slot;
-    auto slot_copy = new SlotWriteFunc(write_func);
-    set_write_slot(cobj(), slot_copy);
-    auto status = cairo_surface_write_to_jpeg_stream(cobj(),
-                                                         &write_func_wrapper,
-                                                         slot_copy /*closure*/);
-    check_status_and_throw_exception(status);
-#endif
-}
-
-#if defined(ENABLE_JPEG)||defined(ENABLE_TURBOJPEG)
-RefPtr<ImageSurface> ImageSurface::create_from_jpg(std::string filename){
-    auto cobject = cairo_image_surface_create_from_jpeg(filename.c_str());
-    check_status_and_throw_exception(cairo_surface_status(cobject));
-    return RefPtr<ImageSurface>(new ImageSurface(cobject, true /* has reference */));
-}
-
-RefPtr<ImageSurface> ImageSurface::create_from_jpg_stream(const SlotReadFunc& read_func)
+RefPtr<Device> Surface::get_device()
 {
-    auto slot_copy = new SlotReadFunc(read_func);
-    auto cobject =  cairo_image_surface_create_from_jpeg_stream(&read_func_wrapper, slot_copy);
-    check_status_and_throw_exception(cairo_surface_status(cobject));
-    set_read_slot(cobject, slot_copy);
-    return RefPtr<ImageSurface>(new ImageSurface(cobject, true /* has reference */));
-}
-
-RefPtr<ImageSurface> ImageSurface::create_from_jpg(cairo_read_func_t read_func, void *closure){
-    auto cobject = cairo_image_surface_create_from_jpeg_stream(read_func, closure);
-    check_status_and_throw_exception(cairo_surface_status(cobject));
-    return RefPtr<ImageSurface>(new ImageSurface(cobject, true /* has reference */));
-}
-
-RefPtr<ImageSurface> ImageSurface::create_from_jpg(void*mem,size_t size){
-    auto cobject = cairo_image_surface_create_from_jpeg_mem(mem,size);
-    check_status_and_throw_exception(cairo_surface_status(cobject));
-    return RefPtr<ImageSurface>(new ImageSurface(cobject, true /* has reference */));
-}
-#endif
-
-static  cairo_status_t stream_read(void *closure,unsigned char *data,unsigned int length){
-    std::istream*is=(std::istream*)closure;
-    if(is->eof())return CAIRO_STATUS_READ_ERROR;
-    is->read((char*)data,length);
-    return CAIRO_STATUS_SUCCESS;
-}
-
-typedef struct FileType {
-    const char *type;
-    const char*identifer;
-    uint8_t size;
-} FileType;
-
-#define PAK_GEN_FILE_TYPE(type, identifer)  {type, identifer, sizeof(identifer) - 1}
-
-static const FileType FILE_TYPES[] = {
-    PAK_GEN_FILE_TYPE("png", "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"),
-    PAK_GEN_FILE_TYPE("jpg", "\xff\xd8\xff"),//the 4th bytes can be \xdb\xe0\xe1"),
-    PAK_GEN_FILE_TYPE("bmp", "\x42\x4d"),
-    PAK_GEN_FILE_TYPE("bmp", "\x4d\x42"),
-    PAK_GEN_FILE_TYPE("svg", "<svg "),
-    PAK_GEN_FILE_TYPE("svg", "<?xml")
-};
-
-static const char*pakGetFileType(const char*filebuf) {
-    for (unsigned int i = 0; i < sizeof(FILE_TYPES)/sizeof(FileType); i++)
-        if (memcmp(filebuf, FILE_TYPES[i].identifer, FILE_TYPES[i].size) == 0)
-            return FILE_TYPES[i].type;
-    return "";
-}
-
-using namespace std::chrono;
-RefPtr<ImageSurface>ImageSurface:: create_from_stream(std::istream& stream){
-    unsigned char head[8]={0};
-    RefPtr<ImageSurface>img;
-    steady_clock::time_point t2,t1=steady_clock::now();
-    stream.read((char*)head,sizeof(head));
-    const unsigned char*ftype=(const unsigned char*)pakGetFileType((const char*)head);
-
-    LOGE_IF(!stream.good(),"stream error");
-    if(!stream.good())return nullptr;
-
-    for(int i=0;i<sizeof(head);i++)stream.unget();
-    if( memcmp("jpg",ftype,3) == 0 ){
-       cairo_surface_t* cobject = nullptr;
-#ifdef ENABLE_TURBOJPEG
-       cobject = cairo_image_surface_create_from_turbojpeg_stdstream(stream);
-#endif
-#ifdef ENABLE_JPEG
-       if(nullptr==cobject )cobject = cairo_image_surface_create_from_jpeg_stdstream(stream);
-#endif
-       if(cobject) img = RefPtr<ImageSurface>(new ImageSurface(cobject, true /* has reference */));
-    }else if( memcmp("png",ftype,3) == 0 ){
-        img = create_from_png(stream_read,&stream);
-    }/*else if(memcmp("bmp",ftype,3)==0){
-        Bitmap bmp;;
-        bmp.ReadFromStream(stream);
-        img=(RefPtr<ImageSurface>)bmp;
-    }*/else if( memcmp("svg",ftype,3) == 0 ){
-#ifdef ENABLE_CAIROSVG
-         svg_cairo_t *svg;
-         unsigned int width,height;
-         svg_cairo_create(&svg);
-         svg_cairo_parse_chunk_begin(svg);
-         while(!stream.eof()){
-            char buff[512];
-            stream.read(buff,sizeof(buff));
-            svg_cairo_parse_chunk(svg,buff,stream.gcount());
-         }
-         svg_cairo_parse_chunk_end(svg);
-         svg_cairo_get_size(svg,&width,&height);
-         LOGD("svg.viewport = %dx%d",width,height);
-         if( (width > 0) && ( height > 0) ){
-             img = ImageSurface::create(Surface::Format::ARGB32,width,height);
-             RefPtr<Context>ctx = Context::create(img);
-             svg_cairo_render(svg,(cairo_t*)ctx->cobj());
-         }
-         svg_cairo_destroy(svg);
-#endif
-    }
-    t2 = steady_clock::now();
-    LOGV_IF(img.get(),"img.size=%dx%d used %.5f stype=%s",img->get_width(),img->get_height(),duration_cast<duration<double>>(t2 - t1),ftype);
-    return img;
-}
-
-RefPtr<Device> Surface::get_device(){
   auto *d = cairo_surface_get_device (m_cobject);
 
   if (!d)
@@ -484,7 +338,7 @@ RefPtr<ImageSurface> ImageSurface::create(unsigned char* data, Format format, in
 
 RefPtr<ImageSurface> ImageSurface::create_from_png(std::string filename)
 {
-  auto cobject =cairo_image_surface_create_from_png(filename.c_str());
+  auto cobject = cairo_image_surface_create_from_png(filename.c_str());
   check_status_and_throw_exception(cairo_surface_status(cobject));
   return make_refptr_for_instance<ImageSurface>(new ImageSurface(cobject, true /* has reference */));
 }
@@ -493,16 +347,10 @@ RefPtr<ImageSurface> ImageSurface::create_from_png_stream(const SlotReadFunc& re
 {
   auto slot_copy = new SlotReadFunc(read_func);
   auto cobject =
-    cairo_image_surface_create_from_png_stream(&read_func_wrapper, slot_copy);
+    cairo_image_surface_create_from_png_stream(&c_read_func_wrapper, slot_copy);
   check_status_and_throw_exception(cairo_surface_status(cobject));
   set_read_slot(cobject, slot_copy);
   return make_refptr_for_instance<ImageSurface>(new ImageSurface(cobject, true /* has reference */));
-}
-
-RefPtr<ImageSurface> ImageSurface::create_from_png(cairo_read_func_t read_func, void *closure){
-    auto cobject = cairo_image_surface_create_from_png_stream(read_func, closure);
-    check_status_and_throw_exception(cairo_surface_status(cobject));
-    return RefPtr<ImageSurface>(new ImageSurface(cobject, true /* has reference */));
 }
 
 #endif // CAIRO_HAS_PNG_FUNCTIONS
@@ -617,7 +465,7 @@ RefPtr<PdfSurface> PdfSurface::create_for_stream(const SlotWriteFunc& write_func
 {
   auto slot_copy = new SlotWriteFunc(write_func);
   auto cobject =
-    cairo_pdf_surface_create_for_stream(write_func_wrapper, slot_copy,
+    cairo_pdf_surface_create_for_stream(c_write_func_wrapper, slot_copy,
                                         width_in_points, height_in_points);
   check_status_and_throw_exception(cairo_surface_status(cobject));
   set_write_slot(cobject, slot_copy);
@@ -685,7 +533,7 @@ RefPtr<PsSurface> PsSurface::create_for_stream(const SlotWriteFunc& write_func, 
 {
   auto slot_copy = new SlotWriteFunc(write_func);
   auto cobject =
-    cairo_ps_surface_create_for_stream(write_func_wrapper, slot_copy,
+    cairo_ps_surface_create_for_stream(c_write_func_wrapper, slot_copy,
                                        width_in_points, height_in_points);
   check_status_and_throw_exception(cairo_surface_status(cobject));
   set_write_slot(cobject, slot_copy);
@@ -787,7 +635,7 @@ RefPtr<SvgSurface> SvgSurface::create_for_stream(const SlotWriteFunc& write_func
 {
   auto slot_copy = new SlotWriteFunc(write_func);
   auto cobject =
-    cairo_svg_surface_create_for_stream(write_func_wrapper, slot_copy,
+    cairo_svg_surface_create_for_stream(c_write_func_wrapper, slot_copy,
                                         width_in_points, height_in_points);
   check_status_and_throw_exception(cairo_surface_status(cobject));
   set_write_slot(cobject, slot_copy);

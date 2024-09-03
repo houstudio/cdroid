@@ -1,4 +1,5 @@
 #include <drawables/ninepatchdrawable.h>
+#include <image-decoders/imagedecoder.h>
 #include <drawables/ninepatch.h>
 #include <fstream>
 #include <cdlog.h>
@@ -209,10 +210,8 @@ void NinePatchDrawable::draw(Canvas&canvas){
 }
 
 Drawable*NinePatchDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    const std::string src=atts.getString("src");
-    RefPtr<ImageSurface>bmp;
-    std::unique_ptr<std::istream>is=ctx->getInputStream(src);
-    bmp=ImageSurface::create_from_stream(*is);
+    auto dec = ImageDecoder::create(ctx,atts.getString("src"));
+    RefPtr<ImageSurface>bmp = dec->decode();
     return new NinePatchDrawable(bmp);
 }
 

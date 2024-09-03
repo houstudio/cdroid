@@ -502,6 +502,7 @@ void TetrisWindow::onDraw(Canvas&canvas){
 
 Window*CreateTetrisWindow(){
     Window*w=new TetrisWindow(0,0,1280,720);
+    return w;
 };
 }//namespace
 #if 10

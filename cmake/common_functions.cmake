@@ -34,16 +34,6 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
     install(FILES ${PakPath} DESTINATION data)
 endfunction()
 
-function(CreatePO SourceDIR POPath projectname)
-    file(GLOB_RECURSE ${projectname}_POSRCS  "*.c" "*.cc" "*.cpp" "*.h" "*.hpp")
-    add_custom_target(${projectname}_po
-        COMMAND touch ${POPath}/${projectname}.po
-        COMMAND xgettext -d ${projectname} -j -c -p${POPath} -kTEXT ${${projectname}_POSRCS}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    )
-    add_dependencies( ${projectname} ${projectname}_po)
-endfunction()
-
 function(Translate pofile transtopath)
    add_custom_target(translate
       #po2json translate   pofile to string_xx.json
@@ -105,6 +95,7 @@ function(GetGitVersion TARGET)
     endif()
     if(DEFINED COMMIT_COUNT AND DEFINED LAST_COMMIT_HASH)
         set(${TARGET}_BUILD_NUMBER ${COMMIT_COUNT}  PARENT_SCOPE)
+        string(TOUPPER ${LAST_COMMIT_HASH} LAST_COMMIT_HASH)
         set(${TARGET}_COMMITID ${LAST_COMMIT_HASH} PARENT_SCOPE)
     endif()
 endfunction()

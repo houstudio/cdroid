@@ -8,6 +8,7 @@
 #include <cairomm/context.h>
 #include <cairomm/region.h>
 #include <cairomm/fontface.h>
+#include <image-decoders/imagedecoder.h>
 #include <windowmanager.h>
 #include <pixman.h>
 #include <systemclock.h>
@@ -59,8 +60,8 @@ int GraphDevice::init(){
     mFpsStartTime = mFpsPrevTime = 0;
     Cairo::RefPtr<Cairo::ImageSurface> img= nullptr;
     if(!mLogo.empty()){
-        std::ifstream fs(mLogo.c_str());
-        img = Cairo::ImageSurface::create_from_stream(fs);
+        auto dec = ImageDecoder::create(nullptr,mLogo);
+        img = dec->decode();
     }
     GFXInit();
 

@@ -7,7 +7,7 @@
 #define CAIROMM_MAJOR_VERSION 1
 
 /* Minor version number of cairomm. */
-#define CAIROMM_MINOR_VERSION 16 
+#define CAIROMM_MINOR_VERSION 18 
 
 /* Micro version number of cairomm. */
 #define CAIROMM_MICRO_VERSION 0
