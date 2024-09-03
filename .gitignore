@@ -9,8 +9,7 @@ apps/*
 !.gitigmore
 !.gitmodules
 *~
-src/test4ext/porting
-src/test4ext/*.gz
+src/gui/gui_features.h
 deps
 appdevops*
 src/tools/po2json.py
