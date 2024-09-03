@@ -2,6 +2,7 @@ project(image-decoders C CXX)
 
 find_package(GIF)
 find_package(WEBP)
+find_package(LCMS2)
 
 aux_source_directory(. DECODER_SRCS)
 
@@ -29,6 +30,12 @@ endif()
 
 if(ENABLE_WEBP OR WEBP_FOUND)
    list(APPEND IMAGE_DEPLIBS ${WEBP_LIBRARIES})
+endif()
+
+if(LCMS2_FOUND AND ENABLE_LCMS)
+    list(APPEND IMAGE_DEPLIBS ${LCMS2_LIBRARIES})
+else()
+    set(ENABLE_LCMS OFF)
 endif()
 
 add_library(image-decoders STATIC ${DECODER_SRCS})

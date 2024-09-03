@@ -1,5 +1,7 @@
 project(cdroid C CXX)
 
+include(cdroid.cmake)
+
 option( GUI_STATIC "UI is static link" ON)
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
@@ -58,17 +60,15 @@ add_definitions(--include cdlog.h)
 add_definitions(--include stdpatch.h)
 
 set(SOURCES_GUI
-    ${SRCS_GUICORE}
-    ${SRCS_VIEWS}
-    ${SRCS_CAIROMM} ${SRCS_WIDGET}
+    ${SRCS_GUICORE} ${SRCS_CAIROMM}
+    ${SRCS_VIEWS} ${SRCS_WIDGET} ${SRCS_APP}
+    #${CDROID_SOURCES}
     ${SRCS_WIDGETEX} ${SRCS_DRAWABLES}
-    ${SRCS_APP}
     ${SRCS_UTILS}
     ${SRCS_ANIMATION}
     ${SRCS_TRANSITION}
-    ${SRCS_IMAGEDECODERS}
 )
-
+#message(FATAL_ERROR "${CDROID_SOURCES}")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     list(APPEND SOURCES_GUI ${SRCS_NAVIGATION})
 endif()
@@ -116,7 +116,7 @@ set(PKGCONFIG_LIBS_PRIVATE "expat bzip2 libzip")
 set(NONPKG_LIBS "-l${PROJECT_NAME} -ltvhal")#non pkgconfig libraries
 set(NONPKG_LIBS_PRIVATE "-ltvhal")
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
-target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal)
+target_link_libraries(cdroid ${CDROID_DEPLIBS} image-decoders tvhal)
 
 if(litehtml_FOUND)
    add_subdirectory(widget/html)
