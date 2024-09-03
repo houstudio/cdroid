@@ -62,6 +62,7 @@ add_definitions(--include stdpatch.h)
 set(SOURCES_GUI
     ${SRCS_GUICORE} ${SRCS_CAIROMM}
     ${SRCS_VIEWS} ${SRCS_WIDGET} ${SRCS_APP}
+    ${SRCS_GESTURE}
     #${CDROID_SOURCES}
     ${SRCS_WIDGETEX} ${SRCS_DRAWABLES}
     ${SRCS_UTILS}
