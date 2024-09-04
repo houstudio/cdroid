@@ -161,6 +161,8 @@ public:
     int get(int);
     long getTimeInMillis();
     void setTimeInMillis(long millis);
+    bool after(const Calendar&other)const;
+    bool before(const Calendar&other)const;
 };
 
 }//namespace

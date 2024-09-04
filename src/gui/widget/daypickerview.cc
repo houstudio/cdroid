@@ -59,6 +59,22 @@ void DayPickerView::onLayout(bool changed, int left, int top, int width, int hei
                 rightIconRight, rightIconTop + rightDH);
 }
 
+void DayPickerView::setDayOfWeekTextAppearance(const std::string& resId) {
+    mAdapter->setDayOfWeekTextAppearance(resId);
+}
+
+const std::string DayPickerView::getDayOfWeekTextAppearance() {
+    return mAdapter->getDayOfWeekTextAppearance();
+}
+
+void DayPickerView::setDayTextAppearance(const std::string& resId) {
+    mAdapter->setDayTextAppearance(resId);
+}
+
+const std::string DayPickerView::getDayTextAppearance() {
+    return mAdapter->getDayTextAppearance();
+}
+
 void DayPickerView::setDate(long timeInMillis) {
     setDate(timeInMillis, false);
 }

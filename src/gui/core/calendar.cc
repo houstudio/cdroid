@@ -574,4 +574,11 @@ void Calendar::setTimeInMillis(long millis){
     areAllFieldsSet = areFieldsSet = true;
 }
 
+bool Calendar::after(const Calendar&other)const{
+    return mTime>other.mTime;
+}
+
+bool Calendar::before(const Calendar&other)const{
+    return mTime<other.mTime;
+}
 }//namespace

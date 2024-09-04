@@ -48,7 +48,7 @@ check_function_exists(mallinfo HAVE_MALLINFO)
 check_function_exists(epoll_wait HAVE_EPOLL)
 check_function_exists(poll HAVE_POLL)
 check_include_file("rtaudio/RtAudio.h" HAVE_RTAUDIO_H)
-message("CMAKE_REQUIRED_INCLUDES=${CMAKE_REQUIRED_INCLUDES} HAVE_RTAUDIO_H=${HAVE_RTAUDIO_H}")
+
 configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
 configure_file(gui_features.h.cmake  ${PROJECT_SOURCE_DIR}/gui_features.h)
 

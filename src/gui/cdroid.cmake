@@ -98,10 +98,9 @@ list(APPEND CDROID_SOURCES
     #widget/tablelayout.cc
 )
 
-list(APPEND CDROID_SOURCES__
-    widget/activitymanager.cc
-    widget/backendcairo.cc
-    widget/calendarview.cc
+list(APPEND CDROID_SOURCES
+    #widget/activitymanager.cc
+    #widget/backendcairo.cc
 )
 
 list(APPEND CDROID_SOURCES  widget/viewpager.cc)
@@ -113,6 +112,8 @@ if(ENABLE_DAYTIME_WIDGETS)
         widget/daypickerview.cc
         widget/daypickerviewpager.cc
         widget/simplemonthview.cc
+        #widget/calendarview.cc
+        #widget/calendarviewlegacydelegate.cc
     )
 endif(ENABLE_DAYTIME_WIDGETS)
 

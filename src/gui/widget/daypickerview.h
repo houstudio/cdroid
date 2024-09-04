@@ -43,6 +43,10 @@ protected:
 
 public:
     DayPickerView(Context* context,const AttributeSet&atts);
+    void setDayOfWeekTextAppearance(const std::string& resId);
+    const std::string getDayOfWeekTextAppearance();
+    void  setDayTextAppearance(const std::string& resId);
+    const std::string getDayTextAppearance();
     void setDate(long timeInMillis);
     void setDate(long timeInMillis, bool animate);
     long getDate();
