@@ -1,10 +1,8 @@
 #ifndef __TYPEFACE_H__
 #define __TYPEFACE_H__
 #include <string>
-#include <core/callbackbase.h>
-#include <cairomm/fontface.h>
-#include <cairomm/scaledfont.h>
 #include <unordered_map>
+#include <cairomm/scaledfont.h>
 
 namespace cdroid{
 class Context;
@@ -31,7 +29,6 @@ public:
     /** The NORMAL style of the default monospace typeface. */
     static Typeface* MONOSPACE;
 private:
-    Runnable mCleaner;
     static std::string mFallbackFamilyName;
     std::string mFamily;
     std::string mStyleName;

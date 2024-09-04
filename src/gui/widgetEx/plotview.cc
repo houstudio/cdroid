@@ -1,6 +1,7 @@
-#if ENABLE_PLPLOT
 #include <widgetEx/plotview.h>
+#if ENABLE(PLPLOT)
 #include <plstream.h>
+//#include <matplot/matplot.h>
 namespace cdroid{
 
 PlotView::PlotView(int w,int h):View(w,h){
@@ -29,4 +30,4 @@ plstream*PlotView::getStream()const{
 }
 
 }
-#endif/*ENABLE_PLPLOT*/
+#endif/*ENABLE(PLPLOT)*/

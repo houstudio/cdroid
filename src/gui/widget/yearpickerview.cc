@@ -111,6 +111,14 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 YearPickerView::YearPickerView(Context*ctx,const AttributeSet&attrs):ListView(ctx,attrs){
+    mViewSize = attrs.getDimensionPixelOffset("animator_height");
+    mChildSize= attrs.getDimensionPixelOffset("year_label_height");
+    setOnItemClickListener([this](AdapterView& parent,View& view, int position, long id){
+        const int year = mAdapter->getYearForPosition(position);
+        mAdapter->setSelection(year);
+        if(mOnYearSelectedListener)
+            mOnYearSelectedListener(*this,year);
+    });
 }
 
 void YearPickerView::setOnYearSelectedListener(OnYearSelectedListener listener) {
@@ -119,17 +127,12 @@ void YearPickerView::setOnYearSelectedListener(OnYearSelectedListener listener) 
 
 void YearPickerView::setYear(int year) {
     mAdapter->setSelection(year);
-    int position=mAdapter->getPositionForYear(year);
-    if (position >= 0 && position < getCount())
-        setSelectionCentered(position);
-    /*post(new Runnable() {
-        void run() {
-            int position = mAdapter.getPositionForYear(year);
-            if (position >= 0 && position < getCount()) {
-                setSelectionCentered(position);
-            }
+    post([this,year](){
+        const int position = mAdapter->getPositionForYear(year);
+        if ( (position >= 0) && (position < getCount()) ) {
+            setSelectionCentered(position);
         }
-    });*/
+    });
 }
 
 void YearPickerView::setSelectionCentered(int position) {
@@ -141,4 +144,11 @@ void YearPickerView::setRange(int min,int max/*Calendar min, Calendar max*/) {
     mAdapter->setRange(min, max);
 }
 
+int YearPickerView::getFirstPositionOffset() {
+    View* firstChild = getChildAt(0);
+    if (firstChild == nullptr) {
+        return 0;
+    }
+    return firstChild->getTop();
+}
 }

@@ -7,23 +7,24 @@ option(ENABLE_GIF "enable gif encode and decoder" OFF)
 option(ENABLE_JPEG "enable jpeg decoder" ON)
 option(ENABLE_WEBP "enable webp decoder" ON)
 option(ENABLE_PLPLOT "Enable PLPLot" OFF)
-option(ENABLE_GESTURE "Enable Gesture support" OFF)
 option(ENABLE_AUDIO "Enabled Audio(Sound Effect)" OFF)
-option(ENABLE_BARCODE "Enable BarCode(QrCode Code11 Code49 Code93...)" ON)
+option(ENABLE_BARCODE "Enable BarCode(QrCode Code11 Code49 Code93...)" OFF)
 option(ENABLE_QRCODE "Enable QRCode(only support QRCode)" ON)
 option(ENABLE_LOTTIE "Enable Lottie Animation" OFF)
 option(ENABLE_LCMS "Enable Little CMS (a color management engine)" OFF)
+option(ENABLE_FRIBIDI "Enable BiDi layout" ON)
 option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." OFF)
 
 option(ENABLE_PINYIN2HZ "Chinese Pinyin to HZ support" ON)
+option(ENABLE_DIALOGS "Enable AlertDialogs" OFF)
+option(ENABLE_SPINNER "Enable Spinner" OFF)
+option(ENABLE_DAYTIME_WIDGETS "Enable Daytime widgets" OFF)
+option(ENABLE_RECYCLERVIEW "Enable RecyclerView" ON)
+option(ENABLE_NAVIGATION "Enable Navigation" OFF)
 
-set(CMAKE_USE_OPENSSL ON)
-
-find_package(PNG REQUIRED)
 find_package(ZIP REQUIRED)
 find_package(Freetype2 REQUIRED)
 find_package(EXPAT REQUIRED)
-find_package(Pixman REQUIRED)
 find_package(Cairo REQUIRED)
 find_package(LUNASVG)
 find_package(Fontconfig REQUIRED)
@@ -88,12 +89,9 @@ else()
 endif(ENABLE_FRIBIDI)
 
 list(APPEND CDROID_DEPINCLUDES
-    ${PNG_INCLUDE_DIRS}
     ${ZIP_INCLUDE_DIRS}
     ${EXPAT_INCLUDE_DIRS}
     ${CAIRO_INCLUDE_DIRS}
-    ${CAIRO_INCLUDE_DIRS}/cairo
-    ${PIXMAN_INCLUDE_DIRS}
 )
 
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")

@@ -1,14 +1,11 @@
+#include <regex>
+#include <dirent.h>
+#include <cdlog.h>
 #include <core/typeface.h>
 #include <core/textutils.h>
-#include <regex>
-#include <freetype/freetype.h>
-#include <freetype/ftsystem.h>
-#include <freetype/ftsnames.h>
 #include <cairomm/matrix.h>
 #include <core/context.h>
 #include <core/atexit.h>
-#include <dirent.h>
-#include <cdlog.h>
 
 namespace cdroid {
 extern "C" {

@@ -10,7 +10,6 @@
 #include <cairomm/fontface.h>
 #include <image-decoders/imagedecoder.h>
 #include <windowmanager.h>
-#include <pixman.h>
 #include <systemclock.h>
 #include <thread>
 #include <sys/time.h>

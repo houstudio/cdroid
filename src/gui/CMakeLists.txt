@@ -13,12 +13,10 @@ aux_source_directory(widget SRCS_WIDGET)
 file(GLOB_RECURSE SRCS_WIDGETEX RELATIVE "${PROJECT_SOURCE_DIR}" "widgetEx/*")
 aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm  SRCS_CAIROMM)
-aux_source_directory(app SRCS_APP)
 aux_source_directory(animation SRCS_ANIMATION)
 aux_source_directory(private SRCS_PRIVATE)
 aux_source_directory(utils SRCS_UTILS)
 aux_source_directory(transition SRCS_TRANSITION)
-aux_source_directory(gesture SRCS_GESTURE)
 aux_source_directory(navigation SRCS_NAVIGATION)
 add_subdirectory(image-decoders)
 aux_source_directory(image-decoders SRCS_IMAGEDECODERS)
@@ -61,21 +59,13 @@ add_definitions(--include stdpatch.h)
 
 set(SOURCES_GUI
     ${SRCS_GUICORE} ${SRCS_CAIROMM}
-    ${SRCS_VIEWS} ${SRCS_WIDGET} ${SRCS_APP}
-    ${SRCS_GESTURE}
-    #${CDROID_SOURCES}
-    ${SRCS_WIDGETEX} ${SRCS_DRAWABLES}
+    #${SRCS_VIEWS} ${SRCS_WIDGET} ${SRCS_WIDGETEX} ${SRCS_APP}
+    ${CDROID_SOURCES}
+    ${SRCS_DRAWABLES}
     ${SRCS_UTILS}
     ${SRCS_ANIMATION}
     ${SRCS_TRANSITION}
 )
-#message(FATAL_ERROR "${CDROID_SOURCES}")
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    list(APPEND SOURCES_GUI ${SRCS_NAVIGATION})
-endif()
-if(ENABLE_GESTURE)
-    list(APPEND SOURCES_GUI ${SRCS_GESTURE})
-endif()
 
 add_library(cdroid SHARED ${SOURCES_GUI})
 CreatePAK(cdroid ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)
@@ -112,8 +102,8 @@ configure_file("cdroid.pc.in"  "cdroid.pc"  @ONLY)
 file(COPY ${PROJECT_BINARY_DIR}/gui_features.h DESTINATION "${CMAKE_BINARY_DIR}/include/gui/")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
 
-set(PKGCONFIG_LIBS "cairo bzip2 libzip")#do not use -l
-set(PKGCONFIG_LIBS_PRIVATE "expat bzip2 libzip")
+set(PKGCONFIG_LIBS "cairo libzip")#do not use -l
+set(PKGCONFIG_LIBS_PRIVATE "expat libzip")
 set(NONPKG_LIBS "-l${PROJECT_NAME} -ltvhal")#non pkgconfig libraries
 set(NONPKG_LIBS_PRIVATE "-ltvhal")
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")

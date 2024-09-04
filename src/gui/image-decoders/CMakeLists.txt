@@ -1,5 +1,6 @@
 project(image-decoders C CXX)
 
+find_package(PNG REQUIRED)
 find_package(GIF)
 find_package(JPEG)
 find_package(WEBP)

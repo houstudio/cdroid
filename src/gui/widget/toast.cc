@@ -35,8 +35,8 @@ ToastWindow::~ToastWindow(){
 void ToastWindow::timeElapsed(){
     if(mTimeElapsed <mDuration){
         postDelayed(mTimer,500);
-	mTimeElapsed += 500;
-	return;
+	    mTimeElapsed += 500;
+	    return;
     }
     close();
 }
@@ -48,7 +48,7 @@ void ToastWindow::setDuration(int dur){
 Toast::Toast(Context*context){
     mContext = context;
     if(context == nullptr)
-	mContext= &App::getInstance();
+	    mContext= &App::getInstance();
     mX = mY  = 0;
     mGravity = Gravity::NO_GRAVITY;
     mWindow  = nullptr;
@@ -82,7 +82,8 @@ void Toast::show(){
 }
 
 void Toast::cancel(){
-    if(mWindow)mWindow->close();
+    if(mWindow)
+        mWindow->close();
     mWindow = nullptr;
 }
 

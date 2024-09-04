@@ -6,7 +6,7 @@ includedir=${prefix}/include
 
 Name: cdroid
 Description: C++ style Android UI component library
-Version: 1.0.0
+Version: @CDROID_VERSION@
 
 #Requires Requires.private libs that supported by pkgconfig
 Requires: @PKGCONFIG_LIBS@
