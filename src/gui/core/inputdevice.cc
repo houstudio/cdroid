@@ -310,13 +310,21 @@ int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
          return -1;
     }
     switch(type){
-    case EV_KEY:
+    case EV_KEY://value 0:release,1:down,2:long press/repeat(press and hold).
         if(kmap)kmap->mapKey(code/*scancode*/,0,&keycode/*keycode*/,(uint32_t*)&flags);
-        mLastDownKey = (value ? keycode : -1);//key down
-        if(mLastDownKey==keycode)
-            mRepeatCount+=(value==0);
-        else
-            mRepeatCount=0;
+        switch(value){
+        case 0://key up
+            mLastDownKey = -1;
+            mRepeatCount = 0;
+            break;
+        case 1://key down
+            if(mLastDownKey==keycode)
+                mRepeatCount ++;
+            mLastDownKey = keycode;
+            break;
+        default://2:key repeat
+            break;
+        }
 
         mEvent.initialize(getId(),getSources(),(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
               keycode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeMicros()/*eventtime*/);
