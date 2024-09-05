@@ -913,7 +913,7 @@ void GradientDrawable::draw(Canvas&canvas) {
 
     const bool haveStroke = currStrokeAlpha > 0 && mStrokePaint &&  mStrokeWidth> 0;
     const bool haveFill = currFillAlpha>0;
-    const bool useLayer =(haveStroke || haveFill) && (st->mShape!=LINE) &&
+    /*const bool useLayer =(haveStroke || haveFill) && (st->mShape!=LINE) &&
 	    (currStrokeAlpha<255) && ((mAlpha<255)|| colorFilter);*/
     const float sweep = st->mUseLevelForShape ? (360.f*getLevel()/10000.f) : 360.f;
     const Pattern::Dither ditherMode = mGradientState->mDither
