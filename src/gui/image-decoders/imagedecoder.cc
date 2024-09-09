@@ -108,7 +108,7 @@ std::unique_ptr<ImageDecoder>ImageDecoder::create(Context*ctx,const std::string&
     if (length < lengthOfLongestSignature)
         return nullptr;
     istm->seekg(0,std::ios::beg);
-#if ENABLE(GIF)&&0
+#if ENABLE(GIF)
     if (matchesGIFSignature(contents))
         decoder = std::make_unique<GIFDecoder>(ctx,resourceId);
 #endif
@@ -146,7 +146,7 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
         else if(TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg"))
             return new BitmapDrawable(image);
     }
-    if(TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")||TextUtils::endWith(".apng"))
+    if(TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")||TextUtils::endWith(resourceId,".apng"))
 	    return new AnimatedImageDrawable(ctx,resourceId);
     return nullptr;
 }
