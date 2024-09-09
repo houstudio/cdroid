@@ -91,11 +91,11 @@ list(APPEND CDROID_SOURCES
     widget/linearlayout.cc
     widget/framelayout.cc
     widget/relativelayout.cc
-    #widget/tabwidget.cc
-    #widget/gridlayout.cc
-    #widget/tablerow.cc
-    #widget/tablayout.cc
-    #widget/tablelayout.cc
+    widget/tabwidget.cc
+    widget/gridlayout.cc
+    widget/tablerow.cc
+    widget/tablayout.cc
+    widget/tablelayout.cc
 )
 
 list(APPEND CDROID_SOURCES

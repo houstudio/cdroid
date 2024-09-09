@@ -146,7 +146,7 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
         else if(TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg"))
             return new BitmapDrawable(image);
     }
-    if(TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp"))
+    if(TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")||TextUtils::endWith(".apng"))
 	    return new AnimatedImageDrawable(ctx,resourceId);
     return nullptr;
 }

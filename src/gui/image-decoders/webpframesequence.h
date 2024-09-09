@@ -17,7 +17,7 @@
 #ifndef __FRAMESQUENCE_WEBP_H__
 #define __FRAMESQUENCE_WEBP_H__
 
-#include "framesequence.h"
+#include <image-decoders/framesequence.h>
 namespace cdroid{
 // Parser for a possibly-animated WebP bitstream.
 class WebPFrameSequence : public FrameSequence {

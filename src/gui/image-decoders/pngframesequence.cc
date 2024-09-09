@@ -15,360 +15,272 @@
  */
 
 #include <string.h>
-#include "cdtypes.h"
-#include "cdlog.h"
-#if 0
-#include "png.h"
-#include "pngframesequence.h"
+#include <cdtypes.h>
+#include <cdlog.h>
+#include <png.h>
+#ifdef PNG_APNG_SUPPORTED
+#include <image-decoders/pngframesequence.h>
 
-//REF: https://github.com/guoweilkd/lv_lib_apng/blob/master/lv_apng.c
-namespace cdroid{
-
-#define GIF_DEBUG 1
-#define ARGB_TO_COLOR8888(a, r, g, b) ((a) << 24 | (r) << 16 | (g) << 8 | (b))
-
-static int streamReader(GifFileType* fileType, GifByteType* out, int size) {
-    std::istream* stream = (std::istream*) fileType->UserData;
-    stream->read((char*)out, size);
-    return stream->gcount();
-}
-
-static uint32_t gifColorToColor8888(const GifColorType& color) {
-    return ARGB_TO_COLOR8888(0xff, color.Red, color.Green, color.Blue);
-}
-
-static long getDelayMs(GraphicsControlBlock& gcb) {
-    return gcb.DelayTime * 10;
-}
-
-static bool willBeCleared(const GraphicsControlBlock& gcb) {
-    return gcb.DisposalMode == DISPOSE_BACKGROUND || gcb.DisposalMode == DISPOSE_PREVIOUS;
-}
-
+namespace cdroid {
+//REF: https://gitee.com/suyimin1/APNG4Android
+//https://gitee.com/z411500976/upng-js/blob/master/UPNG.js
 ////////////////////////////////////////////////////////////////////////////////
 // Frame sequence
 ////////////////////////////////////////////////////////////////////////////////
+static void pngmem_reader(png_structp png_ptr, png_bytep png_data, png_size_t data_size) {
+    char** ppd = (char**)(png_get_io_ptr(png_ptr));
+    memcpy(png_data,*ppd, data_size);
+    *ppd += data_size;
+}
 
 PngFrameSequence::PngFrameSequence(std::istream* stream) :
-        mLoopCount(1), mBgColor(COLOR_TRANSPARENT), mPreservedFrames(NULL), mRestoringFrames(NULL) {
-    mGif = DGifOpen(stream, streamReader, NULL);
-    if (!mGif) {
-        LOGW("Gif load failed");
-        return;
+    mLoopCount(1), mBgColor(COLOR_TRANSPARENT), mPreservedFrames(NULL), mRestoringFrames(NULL) {
+    png_structp png_ptr;
+    png_infop png_info;
+    stream->seekg(0,std::ios::end);
+    mDataSize = stream->tellg();
+    mDataBytes= new uint8_t[mDataSize];
+    stream->seekg(0,std::ios::beg);
+    stream->read((char*)mDataBytes,mDataSize);
+
+    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    png_info= png_create_info_struct(png_ptr);
+    char*pd = (char*)mDataBytes;
+    png_set_read_fn(png_ptr,(void*)&pd,pngmem_reader);
+    png_read_info(png_ptr, png_info);
+
+    if(!png_get_valid(png_ptr, png_info, PNG_INFO_acTL)){
+        LOGD("Not a APNG");
     }
+    png_get_IHDR(png_ptr, png_info, (uint32_t*)&mImageWidth, (uint32_t*)&mImageHeight,nullptr,nullptr,nullptr,nullptr,nullptr);
+    //&bit_depth, &color_type, &interlace_type, NULL, NULL);
+    png_get_acTL(png_ptr, png_info, (uint32_t*)&mFrameCount, (uint32_t*)&mLoopCount);
 
-    if (DGifSlurp(mGif) != GIF_OK) {
-        LOGW("Gif slurp failed");
-        DGifCloseFile(mGif, NULL);
-        mGif = NULL;
-        return;
-    }
+    LOGD("mDataSize=%d image %dx%dx%d",mDataSize,mImageWidth,mImageHeight,mFrameCount);
 
-    long durationMs = 0;
-    int lastUnclearedFrame = -1;
-    mPreservedFrames = new bool[mGif->ImageCount];
-    mRestoringFrames = new int[mGif->ImageCount];
-
-    GraphicsControlBlock gcb;
-    for (int i = 0; i < mGif->ImageCount; i++) {
-        const SavedImage& image = mGif->SavedImages[i];
-
-        // find the loop extension pair
-        for (int j = 0; (j + 1) < image.ExtensionBlockCount; j++) {
-            ExtensionBlock* eb1 = image.ExtensionBlocks + j;
-            ExtensionBlock* eb2 = image.ExtensionBlocks + j + 1;
-            if (eb1->Function == APPLICATION_EXT_FUNC_CODE
-                    // look for "NETSCAPE2.0" app extension
-                    && eb1->ByteCount == 11
-                    && !memcmp((const char*)(eb1->Bytes), "NETSCAPE2.0", 11)
-                    // verify extension contents and get loop count
-                    && eb2->Function == CONTINUE_EXT_FUNC_CODE
-                    && eb2->ByteCount == 3
-                    && eb2->Bytes[0] == 1) {
-                mLoopCount = (int)(eb2->Bytes[2] << 8) + (int)(eb2->Bytes[1]);
-            }
-        }
-
-        DGifSavedExtensionToGCB(mGif, i, &gcb);
-
-        // timing
-        durationMs += getDelayMs(gcb);
-
-        // preserve logic
-        mPreservedFrames[i] = false;
-        mRestoringFrames[i] = -1;
-        if (gcb.DisposalMode == DISPOSE_PREVIOUS && lastUnclearedFrame >= 0) {
-            mPreservedFrames[lastUnclearedFrame] = true;
-            mRestoringFrames[i] = lastUnclearedFrame;
-        }
-        if (!willBeCleared(gcb)) {
-            lastUnclearedFrame = i;
-        }
-    }
-
-    LOGD_IF(GIF_DEBUG,"PngFrameSequence created with size %d %d, frames %d dur %ld",
-            mGif->SWidth, mGif->SHeight, mGif->ImageCount, durationMs);
-    for (int i = 0; i < mGif->ImageCount; i++) {
-        DGifSavedExtensionToGCB(mGif, i, &gcb);
-        LOGD("    Frame %d - must preserve %d, restore point %d, trans color %d",
-                i, mPreservedFrames[i], mRestoringFrames[i], gcb.TransparentColor);
-    }
-
-    if (mGif->SColorMap) {
-        // calculate bg color
-        GraphicsControlBlock gcb;
-        DGifSavedExtensionToGCB(mGif, 0, &gcb);
-        if (gcb.TransparentColor == NO_TRANSPARENT_COLOR) {
-            mBgColor = gifColorToColor8888(mGif->SColorMap->Colors[mGif->SBackGroundColor]);
-        }
-    }
+    png_destroy_read_struct(&png_ptr, &png_info, NULL);
 }
 
 PngFrameSequence::~PngFrameSequence() {
-    if (mGif) {
-        DGifCloseFile(mGif, NULL);
-    }
     delete[] mPreservedFrames;
     delete[] mRestoringFrames;
+    delete[] mDataBytes;
 }
 
 int PngFrameSequence::getWidth() const {
-    return mGif ? mGif->SWidth : 0;
+    return mImageWidth;
 }
 
 int PngFrameSequence::getHeight() const {
-    return mGif ? mGif->SHeight : 0;
+    return mImageHeight;
 }
 
 bool PngFrameSequence::isOpaque() const {
-    return (mBgColor & COLOR_8888_ALPHA_MASK) == COLOR_8888_ALPHA_MASK;
+    return 0;//(mBgColor & COLOR_8888_ALPHA_MASK) == COLOR_8888_ALPHA_MASK;
 }
 
 int PngFrameSequence::getFrameCount() const {
-    return mGif ? mGif->ImageCount : 0;
+    return mFrameCount;
 }
 
-FrameSequence::FrameSequenceState* PngFrameSequence::createState() const {
+FrameSequenceState* PngFrameSequence::createState() const {
     return new PngFrameSequenceState(*this);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// draw helpers
-////////////////////////////////////////////////////////////////////////////////
-
-// return true if area of 'target' is completely covers area of 'covered'
-static bool checkIfCover(const GifImageDesc& target, const GifImageDesc& covered) {
-    return target.Left <= covered.Left
-            && covered.Left + covered.Width <= target.Left + target.Width
-            && target.Top <= covered.Top
-            && covered.Top + covered.Height <= target.Top + target.Height;
-}
-
-static void copyLine(uint32_t* dst, const unsigned char* src, const ColorMapObject* cmap,
-                     int transparent, int width) {
-    for (; width > 0; width--, src++, dst++) {
-        if (*src != transparent && *src < cmap->ColorCount) {
-            *dst = gifColorToColor8888(cmap->Colors[*src]);
-        }
-    }
-}
-
-static void setLineColor(uint32_t* dst, uint32_t color, int width) {
-    for (; width > 0; width--, dst++) {
-        *dst = color;
-    }
-}
-
-static void getCopySize(const GifImageDesc& imageDesc, int maxWidth, int maxHeight,
-        GifWord& copyWidth, GifWord& copyHeight) {
-    copyWidth = imageDesc.Width;
-    if (imageDesc.Left + copyWidth > maxWidth) {
-        copyWidth = maxWidth - imageDesc.Left;
-    }
-    copyHeight = imageDesc.Height;
-    if (imageDesc.Top + copyHeight > maxHeight) {
-        copyHeight = maxHeight - imageDesc.Top;
-    }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Frame sequence state
 ////////////////////////////////////////////////////////////////////////////////
 
 PngFrameSequence::PngFrameSequenceState::PngFrameSequenceState(const PngFrameSequence& frameSequence) :
-    mFrameSequence(frameSequence), mPreserveBuffer(NULL), mPreserveBufferFrame(-1) {
+    mFrameSequence(frameSequence),mFrameIndex(0){
+    const int width = mFrameSequence.getWidth();
+    const int height= mFrameSequence.getHeight();
+
+    LOGD("size=%dx%dx%d",width,height,mFrameSequence.getFrameCount());
+    png_ptr = nullptr;
+    png_info= nullptr;
+    mFrame = new uint8_t[width*height*4];
+    mBuffer = new uint8_t[width*height*4];
+    mPrevFrame = new uint8_t[width*height*4];
+   
+    png_bytep trans_alpha;
+    png_get_tRNS(png_ptr, png_info, &trans_alpha, nullptr,nullptr);
+    LOGD("trans_alpha=%p %d",trans_alpha,(trans_alpha?*trans_alpha:0));
+    png_color_16p bg = nullptr;
+    png_get_bKGD(png_ptr, png_info, &bg);
+
+    if (bg) {
+        switch (png_get_color_type(png_ptr, png_info)) {
+        case PNG_COLOR_TYPE_RGB:
+            LOGD("Background RGB(%d, %d, %d)", bg->red, bg->green, bg->blue);
+            break;
+        case PNG_COLOR_TYPE_PALETTE:
+            // Handle palette-based background color if needed
+            break;
+        case PNG_COLOR_TYPE_RGB_ALPHA:
+            LOGD("Background RGB(%d, %d, %d) with alpha %d", bg->red, bg->green, bg->blue,0);
+            break;
+        default: LOGD("Background color type not supported");  break;
+        }
+    } else {
+        LOGD("No background color specified");
+    }
+}
+
+void PngFrameSequence::PngFrameSequenceState::resetPngIO(){
+    if((png_ptr==nullptr)||(png_info==nullptr)){
+        png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+        png_info= png_create_info_struct(png_ptr);
+    }
+    mFrameIndex = 0;
+    mBytesAt = mFrameSequence.mDataBytes;
+    png_set_read_fn(png_ptr,(void*)&mBytesAt,pngmem_reader);
+
+    png_set_sig_bytes(png_ptr, 0);
+    png_read_info(png_ptr, png_info);
+
+    png_set_expand(png_ptr);
+    png_set_strip_16(png_ptr);
+    png_set_gray_to_rgb(png_ptr);
+    png_set_add_alpha(png_ptr, 0xff, PNG_FILLER_AFTER);
+    png_set_bgr(png_ptr);
+    png_set_interlace_handling(png_ptr);
+    png_read_update_info(png_ptr, png_info);
 }
 
 PngFrameSequence::PngFrameSequenceState::~PngFrameSequenceState() {
-       delete[] mPreserveBuffer;
+    png_destroy_read_struct(&png_ptr, &png_info, nullptr);
+    delete []  mFrame;
+    delete [] mBuffer;
+    delete [] mPrevFrame;
 }
 
-void PngFrameSequence::PngFrameSequenceState::savePreserveBuffer(uint32_t* outputPtr, int outputPixelStride, int frameNr) {
-    if (frameNr == mPreserveBufferFrame) return;
+static void composeFrame(uint8_t*dst,uint8_t*src,uint32_t stride, unsigned char bop, uint32_t x, uint32_t y, uint32_t w, uint32_t h) {
+    uint32_t  i, j;
+    int u, v, al;
+    for (j=0; j<h; j++) {
+        uint8_t * sp = src+j*stride;//rows_src[j];
+        uint8_t * dp = dst+(j+y)*stride+x*4;//rows_dst[j+y] + x*4;
 
-    mPreserveBufferFrame = frameNr;
-    const int width = mFrameSequence.getWidth();
-    const int height = mFrameSequence.getHeight();
-    if (!mPreserveBuffer) {
-        mPreserveBuffer = new uint32_t[width * height];
-    }
-    for (int y = 0; y < height; y++) {
-        memcpy(mPreserveBuffer + width * y,
-                outputPtr + outputPixelStride * y,
-                width * 4);
+        if (bop == 0){memcpy(dp, sp, w*4);continue;}
+        for (i=0; i<w; i++, sp+=4, dp+=4) {
+            if (sp[3] == 255)
+                memcpy(dp, sp, 4);
+            else if (sp[3] != 0) {
+                if (dp[3] != 0) {
+                    u = sp[3]*255;
+                    v = (255-sp[3])*dp[3];
+                    al = u + v;
+                    dp[0] = (sp[0]*u + dp[0]*v)/al;
+                    dp[1] = (sp[1]*u + dp[1]*v)/al;
+                    dp[2] = (sp[2]*u + dp[2]*v)/al;
+                    dp[3] = al/255;
+                } else
+                    memcpy(dp, sp, 4);
+            }
+        }
     }
 }
 
-void PngFrameSequence::PngFrameSequenceState::restorePreserveBuffer(uint32_t* outputPtr, int outputPixelStride) {
-    const int width = mFrameSequence.getWidth();
-    const int height = mFrameSequence.getHeight();
-    if (!mPreserveBuffer) {
-        LOGD("preserve buffer not allocated! ah!");
-        return;
-    }
-    for (int y = 0; y < height; y++) {
-        memcpy(outputPtr + outputPixelStride * y,
-                mPreserveBuffer + width * y,
-                width * 4);
+static void fillFrame(uint8_t*dst,uint32_t stride, uint32_t x, uint32_t y, uint32_t w, uint32_t h,uint32_t color) {
+    for (uint32_t j=0; j<h; j++) {
+        uint8_t * dp = dst+(j+y)*stride+x*4;//rows_dst[j+y] + x*4;
+
+        for (uint32_t i=0; i<w; i++,dp+=4) {
+           *((uint32_t*)dp) = color;
+        }
     }
 }
 
 long PngFrameSequence::PngFrameSequenceState::drawFrame(int frameNr,
         uint32_t* outputPtr, int outputPixelStride, int previousFrameNr) {
-
-    GifFileType* gif = mFrameSequence.getGif();
-    if (!gif) {
-        LOGD("Cannot drawFrame, mGif is NULL");
-        return -1;
-    }
-
-    LOGD_IF(GIF_DEBUG,"      drawFrame on %p nr %d on addr %p, previous frame nr %d",
-            this, frameNr, outputPtr, previousFrameNr);
-
-    const int height = mFrameSequence.getHeight();
     const int width = mFrameSequence.getWidth();
+    const int height = mFrameSequence.getHeight();
+    uint16_t delay_num, delay_den,delay;
+    uint32_t frmX, frmY;
+    uint32_t frmWidth ,frmHeight;
+    uint32_t frmDelay;
+    uint8_t frmDop,frmBop;
 
-    GraphicsControlBlock gcb;
+    uint32_t first = png_get_first_frame_is_hidden(png_ptr, png_info) ? 1 : 0;
 
-    int start = std::max(previousFrameNr + 1, 0);
+    std::vector<png_bytep> rows_frame(height);
+    std::vector<png_bytep> rows_buffer(height);
 
-    for (int i = std::max(start - 1, 0); i < frameNr; i++) {
-        int neededPreservedFrame = mFrameSequence.getRestoringFrame(i);
-        if (neededPreservedFrame >= 0 && (mPreserveBufferFrame != neededPreservedFrame)) {
-            LOGD_IF(GIF_DEBUG,"frame %d needs frame %d preserved, but %d is currently, so drawing from scratch",
-                    i, neededPreservedFrame, mPreserveBufferFrame);
-            start = 0;
-        }
+    for(int i=0;i<height;i++){
+        rows_frame[i] = mFrame + i*width*4;
+        rows_buffer[i]= mBuffer + i*width*4;
     }
 
-    for (int i = start; i <= frameNr; i++) {
-        DGifSavedExtensionToGCB(gif, i, &gcb);
-        const SavedImage& frame = gif->SavedImages[i];
+    if(frameNr==0)
+       resetPngIO();
 
-        bool frameOpaque = gcb.TransparentColor == NO_TRANSPARENT_COLOR;
-        LOGD_IF(GIF_DEBUG,"producing frame %d, drawing frame %d (opaque %d, disp %d, del %d)",
-                frameNr, i, frameOpaque, gcb.DisposalMode, gcb.DelayTime);
-        if (i == 0) {
-            //clear bitmap
-            uint32_t bgColor = mFrameSequence.getBackgroundColor();
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    outputPtr[y * outputPixelStride + x] = bgColor;
-                }
-            }
-        } else {
-            GraphicsControlBlock prevGcb;
-            DGifSavedExtensionToGCB(gif, i - 1, &prevGcb);
-            const SavedImage& prevFrame = gif->SavedImages[i - 1];
-            bool prevFrameDisposed = willBeCleared(prevGcb);
+    LOGE_IF(frameNr!=mFrameIndex,"Error FrameSequence %d should be %d",frameNr,mFrameIndex);
 
-            bool newFrameOpaque = gcb.TransparentColor == NO_TRANSPARENT_COLOR;
-            bool prevFrameCompletelyCovered = newFrameOpaque
-                    && checkIfCover(frame.ImageDesc, prevFrame.ImageDesc);
-
-            if (prevFrameDisposed && !prevFrameCompletelyCovered) {
-                switch (prevGcb.DisposalMode) {
-                case DISPOSE_BACKGROUND: {
-                    uint32_t* dst = outputPtr + prevFrame.ImageDesc.Left +
-                            prevFrame.ImageDesc.Top * outputPixelStride;
-
-                    GifWord copyWidth, copyHeight;
-                    getCopySize(prevFrame.ImageDesc, width, height, copyWidth, copyHeight);
-                    for (; copyHeight > 0; copyHeight--) {
-                        setLineColor(dst, COLOR_TRANSPARENT, copyWidth);
-                        dst += outputPixelStride;
-                    }
-                } break;
-                case DISPOSE_PREVIOUS: {
-                    restorePreserveBuffer(outputPtr, outputPixelStride);
-                } break;
-                }
-            }
-
-            if (mFrameSequence.getPreservedFrame(i - 1)) {
-                // currently drawn frame will be restored by a following DISPOSE_PREVIOUS draw, so
-                // we preserve it
-                savePreserveBuffer(outputPtr, outputPixelStride, i - 1);
-            }
-        }
-
-        bool willBeCleared = gcb.DisposalMode == DISPOSE_BACKGROUND
-                || gcb.DisposalMode == DISPOSE_PREVIOUS;
-        if (i == frameNr || !willBeCleared) {
-            const ColorMapObject* cmap = gif->SColorMap;
-            if (frame.ImageDesc.ColorMap) {
-                cmap = frame.ImageDesc.ColorMap;
-            }
-
-            if (cmap == NULL || cmap->ColorCount != (1 << cmap->BitsPerPixel)) {
-                LOGW("Warning: potentially corrupt color map");
-            }
-
-            const unsigned char* src = (unsigned char*)frame.RasterBits;
-            uint32_t* dst = outputPtr + frame.ImageDesc.Left +
-                    frame.ImageDesc.Top * outputPixelStride;
-            GifWord copyWidth, copyHeight;
-            getCopySize(frame.ImageDesc, width, height, copyWidth, copyHeight);
-            for (; copyHeight > 0; copyHeight--) {
-                copyLine(dst, src, cmap, gcb.TransparentColor, copyWidth);
-                src += frame.ImageDesc.Width;
-                dst += outputPixelStride;
-            }
-        }
+    png_read_frame_head(png_ptr, png_info);
+    png_get_next_frame_fcTL(png_ptr,png_info,&frmWidth,&frmHeight,&frmX,&frmY,
+                &delay_num,&delay_den,&frmDop,&frmBop);
+    if(delay_den==0)delay_den = 100;
+    frmDelay = (delay_num*1000)/delay_den;
+    if(frameNr==first){/*The first frame doesn't have an fcTL so it's expected to be hidden, but we'll extract it anyway*/
+        frmBop = PNG_BLEND_OP_SOURCE;
+        if(frmDop==PNG_DISPOSE_OP_PREVIOUS)
+            frmDop = PNG_DISPOSE_OP_NONE;
     }
 
-    // return last frame's delay
-    const int maxFrame = gif->ImageCount;
-    const int lastFrame = (frameNr + maxFrame - 1) % maxFrame;
-    DGifSavedExtensionToGCB(gif, lastFrame, &gcb);
-    return getDelayMs(gcb);
+    LOGV("frame %d at(%d,%d,%d,%d) op=%d/%d readPos=%d",mFrameIndex,frmX,frmY,frmWidth,frmHeight,frmDop,frmBop,mBytesAt-mFrameSequence.mDataBytes);
+
+    png_read_image(png_ptr, rows_buffer.data());
+    if(frmDop==PNG_DISPOSE_OP_PREVIOUS)
+        memcpy(mPrevFrame,mFrame,width*height*4);
+
+    composeFrame(mFrame,mBuffer,width*4,frmBop,frmX,frmY,frmWidth,frmHeight);
+    memcpy(outputPtr,mFrame,width*height*4);
+    switch(frmDop){
+    case PNG_DISPOSE_OP_NONE:/*Nothing* TODO*/ break;
+    case PNG_DISPOSE_OP_BACKGROUND:
+        fillFrame(mFrame,width*4,frmX,frmY,frmWidth,frmHeight,0);
+        break;
+    case PNG_DISPOSE_OP_PREVIOUS:
+        memcpy(mFrame,mPrevFrame,width*height*4);
+        break;
+    }
+    mFrameIndex++;
+
+    return frmDelay;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Registry
-////////////////////////////////////////////////////////////////////////////////
-
-static bool isPng(void* header, int header_size) {
-    return !memcmp(GIF_STAMP, header, PNG_STAMP_LEN)
-            || !memcmp(GIF87_STAMP, header, GIF_STAMP_LEN)
-            || !memcmp(GIF89_STAMP, header, GIF_STAMP_LEN);
-}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static bool acceptsBuffers() {
     return false;
 }
 
-static FrameSequence* createFramesequence(std::istream* stream) {
-    return new GifFrameSequence(stream);
+static bool isPng(void* header, int header_size) {
+    static constexpr const char*PNG_STAMP="\x89\x50\x4E\x47\x0D\x0A\x1A\x0A";
+    constexpr int PNG_STAMP_LEN = strlen(PNG_STAMP);
+    return !memcmp(PNG_STAMP, header, PNG_STAMP_LEN)
+           || !memcmp(PNG_STAMP, header, PNG_STAMP_LEN)
+           || !memcmp(PNG_STAMP, header, PNG_STAMP_LEN);
 }
 
-static RegistryEntry gEntry = {
-        PNG_STAMP_LEN,
-        isPng,
-        createFramesequence,
-        //NULL,
-        acceptsBuffers,
+static FrameSequence* createFramesequence(std::istream* stream) {
+    return new cdroid::PngFrameSequence(stream);
+}
+
+static FrameSequence::RegistryEntry gEntry = {
+    8/*PNG_STAMP_LEN*/,
+    isPng,
+    createFramesequence,
+    //NULL,
+    acceptsBuffers,
 };
-static Registry gRegister(gEntry);
+static FrameSequence::Registry gRegister(gEntry);
+
 }/*endof namespace*/
-#endif
+
+#endif /*PNG_APNG_SUPPORTED*/
+

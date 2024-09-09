@@ -16,12 +16,20 @@
 
 #ifndef __FRAMESQUENCE_PNG_H__
 #define __FRAMESQUENCE_PNG_H__
-
-#include "framesequence.h"
+#include <vector>
+#include <cairomm/surface.h>
+#include <image-decoders/framesequence.h>
 namespace cdroid{
+typedef struct png_struct_def* png_structp;
+typedef struct png_info_def* png_infop;
+
 class PngFrameSequence : public FrameSequence {
 private:
-    struct GifFileType* mGif;
+    int32_t mImageWidth;
+    int32_t mImageHeight;
+    int32_t mFrameCount;
+    uint32_t mDataSize;
+    uint8_t *mDataBytes;
     int mLoopCount;
     uint32_t mBgColor;
     // array of bool per frame - if true, frame data is used by a later DISPOSE_PREVIOUS frame
@@ -29,7 +37,9 @@ private:
     // array of ints per frame - if >= 0, points to the index of the preserve that frame needs
     int* mRestoringFrames;
 public:
+    class ApngFrame;
     class PngFrameSequenceState;
+    friend PngFrameSequenceState;
 public:
     PngFrameSequence(std::istream* stream);
     virtual ~PngFrameSequence();
@@ -44,7 +54,6 @@ public:
 
     virtual FrameSequenceState* createState() const override;
 
-    GifFileType* getGif() const { return mGif; }
     uint32_t getBackgroundColor() const { return mBgColor; }
     bool getPreservedFrame(int frameIndex) const { return mPreservedFrames[frameIndex]; }
     int getRestoringFrame(int frameIndex) const { return mRestoringFrames[frameIndex]; }
@@ -52,17 +61,32 @@ public:
 
 class PngFrameSequence::PngFrameSequenceState : public FrameSequenceState {
 private:
+    struct ApngFrame{
+        uint32_t x;
+        uint32_t y;
+        uint32_t width;
+        uint32_t height;
+        uint32_t delay;
+        uint8_t dop;
+        uint8_t bop;
+    };
+    png_structp png_ptr;
+    png_infop png_info;
+    ApngFrame*mPrev;
+    uint8_t*mBytesAt;
+    int32_t mFrameIndex;
+    uint8_t*mFrame;
+    uint8_t*mBuffer;
+    uint8_t*mPrevFrame;
     const PngFrameSequence& mFrameSequence;
-    uint32_t* mPreserveBuffer;
-    int mPreserveBufferFrame;
-    void savePreserveBuffer(uint32_t* outputPtr, int outputPixelStride, int frameNr);
-    void restorePreserveBuffer(uint32_t* outputPtr, int outputPixelStride);
+    void resetPngIO();
 public:
     PngFrameSequenceState(const PngFrameSequence& frameSequence);
     virtual ~PngFrameSequenceState();
     // returns frame's delay time in ms
     virtual long drawFrame(int frameNr, uint32_t* outputPtr, int outputPixelStride, int previousFrameNr);
 };
+
 }/*endof namespace*/
 #endif //__FRAMESQUENCE_PNG_H__
 

@@ -722,8 +722,8 @@
 	<item name="config_scrollbarSize">4dip</item>
 	<item name="config_isScreenRound">false</item>
 	<item name="config_ui_enableFadingMarquee">true</item>
-	<item name="config_viewConfigurationTouchSlop">8dp</item>
-	<item name="config_viewConfigurationHoverSlop">8dp</item>
+	<item name="config_viewConfigurationTouchSlop">16dp</item>
+	<item name="config_viewConfigurationHoverSlop">16dp</item>
 	<item name="config_minScrollbarTouchTarget">48dp</item>
 	<item name="config_viewMinFlingVelocity">50dp</item>
 	<item name="config_viewMaxFlingVelocity">8000dp</item>

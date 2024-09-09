@@ -35,9 +35,10 @@ find_package(RLOTTIE)
 find_package(zint CONFIG) #barcode generater
 find_package(Fribidi)
 find_package(RTAUDIO)
-find_package(Matplot++)
+
 set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES} ${RTAUDIO_INCLUDE_DIRS}")
 #message(FATAL_ERROR "Matplot++=${Matplot++_LIBRARY}-${Matplot++_INCLUDE_DIR} -${Matplot++_FOUND}-${Matplot++_LIBRARIES}")
+
 list(APPEND CDROID_DEPLIBS
     ${PNG_LIBRARIES}
     ${FREETYPE2_LIBRARIES}

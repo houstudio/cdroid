@@ -17,7 +17,7 @@
 #ifndef __FRAMESQUENCE_GIF_H__
 #define __FRAMESQUENCE_GIF_H__
 
-#include "framesequence.h"
+#include "image-decoders/framesequence.h"
 namespace cdroid{
 class GifFrameSequence : public FrameSequence {
 private:
