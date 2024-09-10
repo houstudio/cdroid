@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
 #include <core/systemclock.h>
+#include <image-decoders/imagedecoder.h>
 #include <ngl_os.h>
 
 using namespace cdroid;
@@ -57,7 +58,8 @@ TEST_F(BENCHMARK,FillBlit){
 TEST_F(BENCHMARK,Jpeg){
    int64_t t1=SystemClock::uptimeMillis();
    for(int i=0;i<100;i++){
-       RefPtr<ImageSurface>img=ImageSurface::create_from_jpg("radio_logo.jpg");
+       auto dec =ImageDecoder::create(nullptr,"radio_logo.jpg");
+       RefPtr<ImageSurface>img=dec->decode();
    }
    int64_t t2=SystemClock::uptimeMillis();
    printf("jpeg decoe time:%f \r\n",(t2-t1)/100.f);

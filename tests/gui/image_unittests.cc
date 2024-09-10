@@ -8,8 +8,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
-//#include <svg-cairo.h>
-#include <fstream>
+#include <image-decoders/imagedecoder.h>
 #ifdef ENABLE_CAIROSVG
 #include <curl/curl.h>
 #endif
@@ -69,7 +68,7 @@ public :
            size_t pt=path.rfind('.');
            if(pt!= std::string::npos){
               std::string ext=path.substr(pt+1);
-	      pt=path.find(filter);
+	          pt=path.find(filter);
               if(filter.empty()||pt!= std::string::npos)images.push_back(path);
            }
            return ;
@@ -93,8 +92,8 @@ Assets *IMAGE::rm=nullptr;
 TEST_F(IMAGE,Bitmap){
     loadImages("./","bmp");
     for(int i=0;i<images.size();i++){
-       std::ifstream fs(images[i].c_str());
-       RefPtr<ImageSurface>img=ImageSurface::create_from_stream(fs);
+        auto dec = ImageDecoder::create(nullptr,images[i]);
+       RefPtr<ImageSurface>img=dec->decode();
        RECT rect={0,0,800,600};
        for(int i=0;i<10;i++){
           ctx->set_color(0xFF000000|(i*20<<16));
@@ -112,8 +111,8 @@ TEST_F(IMAGE,Image_PNG){
     printf("%lu image loaded\r\n",images.size());
     for(int i=0;i<images.size();i++){
         tmstart();
-        std::ifstream fs(images[i].c_str());
-        RefPtr<ImageSurface>img=ImageSurface::create_from_stream(fs);
+        auto dec = ImageDecoder::create(nullptr,images[i]);
+        RefPtr<ImageSurface>img=dec->decode();
         tmend("decodepng");
         RECT rect={0,0,800,600};
         ctx->rectangle(rect);
@@ -135,8 +134,8 @@ TEST_F(IMAGE,Image_JPG){
     printf("%lu img loaded\r\n",images.size());
     for(int i=0;i<images.size();i++){
         tmstart();
-        std::ifstream fs(images[i].c_str());
-        RefPtr<ImageSurface>img=ImageSurface::create_from_stream(fs);
+        auto dec = ImageDecoder::create(nullptr,images[i]);
+        RefPtr<ImageSurface>img=dec->decode();
         tmend("decodejpg");
         RECT rect={0,0,800,600};
         ctx->rectangle(rect);ctx->fill();
@@ -153,8 +152,8 @@ TEST_F(IMAGE,Image_JPG){
 TEST_F(IMAGE,draw){
     loadImages("/home/houzh/JPG/","");
     for(int i=0;i<images.size();i++){
-        std::ifstream fs(images[i].c_str());
-        RefPtr<ImageSurface>img=ImageSurface::create_from_stream(fs);
+        auto dec = ImageDecoder::create(nullptr,images[i]);
+        RefPtr<ImageSurface>img=dec->decode();
         RECT dst={100,100,200,200};
         RECT rs={img->get_width()/2,img->get_height()/2,img->get_width()/2,img->get_height()/2};
         ctx->draw_image(img,dst,&rs);
@@ -164,9 +163,8 @@ TEST_F(IMAGE,draw){
 }
 
 TEST_F(IMAGE,ninepatch1){
-    std::ifstream fs("/home/houzh/Miniwin/apps/ntvplus/assets/drawable/paopao1.9.png");
-    RefPtr<ImageSurface>img=ImageSurface::create_from_stream(fs);
-    ASSERT_EQ(1,(int)fs.good());
+    auto dec = ImageDecoder::create(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/paopao1.9.png");
+    RefPtr<ImageSurface>img = dec->decode();
     RECT rect={50,50,400,100};
     //std::vector<NinePatchBlock> horz,vert;
     //img->get_ninepatch(horz,vert);
@@ -174,9 +172,8 @@ TEST_F(IMAGE,ninepatch1){
 }
 
 TEST_F(IMAGE,ninepatch2){
-    std::ifstream fs("/home/houzh/Miniwin/apps/ntvplus/assets/drawable/btn_normal.9.png");
-    RefPtr<ImageSurface>img=ImageSurface::create_from_stream(fs);
-    ASSERT_EQ(1,(int)fs.good());
+    auto dec = ImageDecoder::create(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/btn_normal.9.png");
+    RefPtr<ImageSurface>img = dec->decode();
     RECT rect={50,50,400,100};
     //std::vector<NinePatchBlock> horz,vert;
     //img->get_ninepatch(horz,vert);

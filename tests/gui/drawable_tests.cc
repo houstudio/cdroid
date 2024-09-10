@@ -5,6 +5,7 @@
 #include <sstream>
 #include <core/systemclock.h>
 #include <core/path.h>
+#include <image-decoders/imagedecoder.h>
 #define SLEEP(x) usleep((x)*1000)
 using namespace Cairo;
 class DRAWABLE:public testing::Test{
@@ -111,9 +112,8 @@ TEST_F(DRAWABLE,bitmapalpha){
 }
 
 TEST_F(DRAWABLE,ninepatch1){
-    std::ifstream fs("/home/houzh/Miniwin/apps/ntvplus/assets/drawable/paopao1.9.png");
-    RefPtr<ImageSurface>img=ImageSurface::create_from_stream(fs);
-    ASSERT_EQ(1,(int)fs.good());
+    auto dec = ImageDecoder::create(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/paopao1.9.png");
+    RefPtr<ImageSurface>img = dec->decode();
     NinePatchDrawable *d=new NinePatchDrawable(img);
     d->setBounds(50,50,600,200);
     d->draw(*ctx);
@@ -121,9 +121,8 @@ TEST_F(DRAWABLE,ninepatch1){
 }
 
 TEST_F(DRAWABLE,ninepatch2){
-    std::ifstream fs("/home/houzh/Miniwin/apps/ntvplus/assets/drawable/btn_normal.9.png");//paopao1.9.png");
-    RefPtr<ImageSurface>img=ImageSurface::create_from_stream(fs);
-    ASSERT_EQ(1,(int)fs.good());
+    auto dec = ImageDecoder::create(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/btn_normal.9.png");//paopao1.9.png");
+    RefPtr<ImageSurface>img= dec->decode();
     ctx->set_source_rgb(.4,.4,.0);
     ctx->rectangle(0,0,700,300);
     ctx->fill();
@@ -573,13 +572,31 @@ TEST_F(DRAWABLE,inflatelevellist){
        usleep(500000);
    }
 }
+TEST_F(DRAWABLE,gradient_alpha){
+    GradientDrawable*gd=new GradientDrawable();
+    gd->setBounds(50,50,500,500);
+    gd->setShape(1);
+    for(int i=0;i<100;i++){
+        gd->setStroke(i*2+8,0xFFFFFFFF,i*2,i);
 
+        ctx->set_source_rgb(0,0,0);
+        ctx->rectangle(0,0,800,600);
+        ctx->fill();
+        gd->setColors(std::vector<int>{(int)0xFFFF0000,(int)0xFF00FF00,(int)0xFF0000FF},{.0f,.5f,1.f});
+        gd->setCornerRadius(20-i);
+        gd->setAlpha(i*255/100);
+        gd->draw(*ctx);
+        ctx->get_target()->write_to_png(std::string("gradient")+std::to_string(i)+".png");
+        postCompose();
+        usleep(1000);
+    }
+}
 TEST_F(DRAWABLE,gradient_rectangle){
     GradientDrawable*gd=new GradientDrawable();
     gd->setBounds(50,50,500,500);
     for(int shape=0;shape<4;shape++){
         gd->setShape(shape);
-        for(int i=0;i<8;i++){
+        for(int i=0;i<100;i++){
             gd->setStroke(i*2+8,0xFFFFFFFF,i*2,shape*2);
 
             ctx->set_source_rgb(0,0,0);
@@ -589,10 +606,11 @@ TEST_F(DRAWABLE,gradient_rectangle){
             gd->setColors(std::vector<int>{(int)0xFFFF0000,(int)0xFF00FF00,(int)0xFF0000FF},{.0f,.5f,1.f});
             gd->setSize(500-20*i,500-20*i);
             gd->setCornerRadius(20-i);
+            gd->setAlpha(i*8);
             gd->draw(*ctx);
-            ctx->get_target()->write_to_png("gradient1.png");
+            ctx->get_target()->write_to_png(std::string("gradient")+std::to_string(i)+".png");
             postCompose();
-            usleep(100000);
+            usleep(1000000);
         }
    }
 }
