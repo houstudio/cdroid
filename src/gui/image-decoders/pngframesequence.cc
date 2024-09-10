@@ -17,6 +17,7 @@
 #include <string.h>
 #include <cdtypes.h>
 #include <cdlog.h>
+#include <core/color.h>
 #include <png.h>
 #ifdef PNG_APNG_SUPPORTED
 #include <image-decoders/pngframesequence.h>
@@ -38,6 +39,10 @@ PngFrameSequence::PngFrameSequence(std::istream* stream) :
     mLoopCount(1), mBgColor(COLOR_TRANSPARENT) {
     png_structp png_ptr;
     png_infop png_info;
+    png_color_16p bg = nullptr;
+    png_bytep trans_alpha = nullptr;
+    Color ccBG(mBgColor);
+
     stream->seekg(0,std::ios::end);
     mDataSize = stream->tellg();
     mDataBytes= new uint8_t[mDataSize];
@@ -50,14 +55,41 @@ PngFrameSequence::PngFrameSequence(std::istream* stream) :
     png_set_read_fn(png_ptr,(void*)&pd,pngmem_reader);
     png_read_info(png_ptr, png_info);
 
-    if(!png_get_valid(png_ptr, png_info, PNG_INFO_acTL)){
-        LOGD("Not a APNG");
-    }
+    LOGD_IF(!png_get_valid(png_ptr, png_info, PNG_INFO_acTL),"Not a APNG");
+
     png_get_IHDR(png_ptr, png_info, (uint32_t*)&mImageWidth, (uint32_t*)&mImageHeight,nullptr,nullptr,nullptr,nullptr,nullptr);
     //&bit_depth, &color_type, &interlace_type, NULL, NULL);
     png_get_acTL(png_ptr, png_info, (uint32_t*)&mFrameCount, (uint32_t*)&mLoopCount);
 
-    LOGD("mDataSize=%d image %dx%dx%d",mDataSize,mImageWidth,mImageHeight,mFrameCount);
+    png_get_tRNS(png_ptr, png_info, &trans_alpha, nullptr,nullptr);
+    if(trans_alpha)ccBG.setAlpha(float(*trans_alpha)/65535.f);
+    LOGD("trans_alpha=%p %d",trans_alpha,(trans_alpha?*trans_alpha:0));
+    png_get_bKGD(png_ptr, png_info, &bg);
+
+    if (bg) {
+        switch (png_get_color_type(png_ptr, png_info)) {
+        case PNG_COLOR_TYPE_RGB:
+            ccBG.setRed(float(bg->red)/65535.f);
+            ccBG.setGreen(float(bg->red)/65535.f);
+            ccBG.setBlue(float(bg->red)/65535.f);
+            break;
+        case PNG_COLOR_TYPE_PALETTE:
+            // Handle palette-based background color if needed
+            break;
+        case PNG_COLOR_TYPE_RGB_ALPHA:
+            ccBG.setRed(float(bg->red)/65535.f);
+            ccBG.setGreen(float(bg->red)/65535.f);
+            ccBG.setBlue(float(bg->red)/65535.f);
+            if(trans_alpha==nullptr)
+                ccBG.setAlpha(0.f);
+            LOGD("Background RGB(%d, %d, %d) with alpha %d", bg->red, bg->green, bg->blue,0);
+            break;
+        default: LOGD("Background color type not supported");  break;
+        }
+        mBgColor = ccBG.toArgb();
+        LOGD("Background RGB(%d, %d, %d)", bg->red, bg->green, bg->blue);
+    }
+    LOGD("mDataSize=%d image %dx%dx%d background=%x",mDataSize,mImageWidth,mImageHeight,mFrameCount,mBgColor);
 
     png_destroy_read_struct(&png_ptr, &png_info, NULL);
 }
@@ -103,28 +135,6 @@ PngFrameSequence::PngFrameSequenceState::PngFrameSequenceState(const PngFrameSeq
     mBuffer = new uint8_t[width*height*4];
     mPrevFrame = new uint8_t[width*height*4];
    
-    png_bytep trans_alpha;
-    png_get_tRNS(png_ptr, png_info, &trans_alpha, nullptr,nullptr);
-    LOGD("trans_alpha=%p %d",trans_alpha,(trans_alpha?*trans_alpha:0));
-    png_color_16p bg = nullptr;
-    png_get_bKGD(png_ptr, png_info, &bg);
-
-    if (bg) {
-        switch (png_get_color_type(png_ptr, png_info)) {
-        case PNG_COLOR_TYPE_RGB:
-            LOGD("Background RGB(%d, %d, %d)", bg->red, bg->green, bg->blue);
-            break;
-        case PNG_COLOR_TYPE_PALETTE:
-            // Handle palette-based background color if needed
-            break;
-        case PNG_COLOR_TYPE_RGB_ALPHA:
-            LOGD("Background RGB(%d, %d, %d) with alpha %d", bg->red, bg->green, bg->blue,0);
-            break;
-        default: LOGD("Background color type not supported");  break;
-        }
-    } else {
-        LOGD("No background color specified");
-    }
 }
 
 void PngFrameSequence::PngFrameSequenceState::resetPngIO(){
@@ -239,7 +249,7 @@ long PngFrameSequence::PngFrameSequenceState::drawFrame(int frameNr,
     switch(frmDop){
     case PNG_DISPOSE_OP_NONE:/*Nothing* TODO*/ break;
     case PNG_DISPOSE_OP_BACKGROUND:
-        fillFrame(mFrame,width*4,frmX,frmY,frmWidth,frmHeight,0);
+        fillFrame(mFrame,width*4,frmX,frmY,frmWidth,frmHeight,mFrameSequence.mBgColor);
         break;
     case PNG_DISPOSE_OP_PREVIOUS:
         memcpy(mFrame,mPrevFrame,width*height*4);
