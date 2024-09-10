@@ -9,6 +9,8 @@
 #include <core/textutils.h>
 #include <core/context.h>
 #include <core/atexit.h>
+#include <png.h>
+#include <porting/cdlog.h>
 #if ENABLE(LCMS)
 #include <lcms2.h>
 #endif
@@ -94,6 +96,16 @@ static bool matchesCURSignature(char* contents){
     return !memcmp(contents, "\x00\x00\x02\x00", 4);
 }
 
+static bool isApng(std::istream*istm,const std::string&name){
+    char buf[64];
+    //Chuk IHDR is the pngs's 1st Chunk
+    //Chunk acTL is the 1st Chunk after IHDR
+    istm->read(buf,48);
+    const uint32_t frames = png_get_uint_32(buf+41);
+    LOGV("chunk:%c%c%c%c isapng=%d frames:%d",buf[37],buf[38],buf[39],buf[40],!memcmp(buf+37,"acTL",4),frames);
+    return (memcmp(buf+37,"acTL",4)==0) && (frames>1);
+}
+
 std::unique_ptr<ImageDecoder>ImageDecoder::create(Context*ctx,const std::string&resourceId){
     constexpr unsigned lengthOfLongestSignature = 14; /* To wit: "RIFF????WEBPVP"*/
     char contents[lengthOfLongestSignature];
@@ -112,7 +124,7 @@ std::unique_ptr<ImageDecoder>ImageDecoder::create(Context*ctx,const std::string&
     if (matchesGIFSignature(contents))
         decoder = std::make_unique<GIFDecoder>(ctx,resourceId);
 #endif
-    if (matchesPNGSignature(contents))
+    if (matchesPNGSignature(contents)&&(isApng(istm.get(),resourceId) == false))
         decoder = std::make_unique<PNGDecoder>(ctx,resourceId);
 #if USE(ICO)
     if (matchesICOSignature(contents) || matchesCURSignature(contents))
@@ -138,7 +150,7 @@ std::unique_ptr<ImageDecoder>ImageDecoder::create(Context*ctx,const std::string&
 }
 
 Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){
-    std::unique_ptr<ImageDecoder>decoder = create(ctx,resourceId);
+    const std::unique_ptr<ImageDecoder>decoder = create(ctx,resourceId);
     if(decoder){
         Cairo::RefPtr<Cairo::ImageSurface>image = decoder->decode();
         if(TextUtils::endWith(resourceId,".9.png"))
@@ -146,7 +158,8 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
         else if(TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg"))
             return new BitmapDrawable(image);
     }
-    if(TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")||TextUtils::endWith(resourceId,".apng"))
+    if(TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")
+            ||TextUtils::endWith(resourceId,".apng")||)TextUtils::endWith(resourceId,".png")
 	    return new AnimatedImageDrawable(ctx,resourceId);
     return nullptr;
 }
