@@ -6,7 +6,16 @@ find_package(JPEG)
 find_package(WEBP)
 find_package(LCMS2)
 
-aux_source_directory(. DECODER_SRCS)
+set(DECODER_SRCS
+    imagedecoder.cc
+    pngdecoder.cc
+    jpegdecoder.cc
+    framesequence.cc
+    gifframesequence.cc
+    pngframesequence.cc
+    webpframesequence.cc
+    #pngchunks.cc
+    )
 
 include_directories(
 	./ ../
