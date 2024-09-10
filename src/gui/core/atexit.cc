@@ -26,7 +26,7 @@ void AtExit::registerCallback(std::function<void()> callback) {
 void AtExit::executeCallbacks() {
     std::lock_guard<std::mutex> lock(callbacksMutex());
     std::vector<std::function<void()>>&cbks = callbacks();
-    LOGD("AtExit::executeCallbacks %d",int(cbks.size()));
+    LOGD_IF(cbks.size(),"AtExit::executeCallbacks %d",int(cbks.size()));
     for(auto& callback:cbks) {
         if(callback)callback();
     }

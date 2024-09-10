@@ -24,6 +24,7 @@
 namespace cdroid {
 //REF: https://gitee.com/suyimin1/APNG4Android
 //https://gitee.com/z411500976/upng-js/blob/master/UPNG.js
+//https://github.com/guoweilkd/lv_lib_apng/blob/master/lv_apng.c
 ////////////////////////////////////////////////////////////////////////////////
 // Frame sequence
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,7 +35,7 @@ static void pngmem_reader(png_structp png_ptr, png_bytep png_data, png_size_t da
 }
 
 PngFrameSequence::PngFrameSequence(std::istream* stream) :
-    mLoopCount(1), mBgColor(COLOR_TRANSPARENT), mPreservedFrames(NULL), mRestoringFrames(NULL) {
+    mLoopCount(1), mBgColor(COLOR_TRANSPARENT) {
     png_structp png_ptr;
     png_infop png_info;
     stream->seekg(0,std::ios::end);
@@ -62,8 +63,6 @@ PngFrameSequence::PngFrameSequence(std::istream* stream) :
 }
 
 PngFrameSequence::~PngFrameSequence() {
-    delete[] mPreservedFrames;
-    delete[] mRestoringFrames;
     delete[] mDataBytes;
 }
 
@@ -151,7 +150,7 @@ void PngFrameSequence::PngFrameSequenceState::resetPngIO(){
 
 PngFrameSequence::PngFrameSequenceState::~PngFrameSequenceState() {
     png_destroy_read_struct(&png_ptr, &png_info, nullptr);
-    delete []  mFrame;
+    delete [] mFrame;
     delete [] mBuffer;
     delete [] mPrevFrame;
 }

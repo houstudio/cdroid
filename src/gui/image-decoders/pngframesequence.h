@@ -32,10 +32,6 @@ private:
     uint8_t *mDataBytes;
     int mLoopCount;
     uint32_t mBgColor;
-    // array of bool per frame - if true, frame data is used by a later DISPOSE_PREVIOUS frame
-    bool* mPreservedFrames;
-    // array of ints per frame - if >= 0, points to the index of the preserve that frame needs
-    int* mRestoringFrames;
 public:
     class ApngFrame;
     class PngFrameSequenceState;
@@ -55,8 +51,6 @@ public:
     virtual FrameSequenceState* createState() const override;
 
     uint32_t getBackgroundColor() const { return mBgColor; }
-    bool getPreservedFrame(int frameIndex) const { return mPreservedFrames[frameIndex]; }
-    int getRestoringFrame(int frameIndex) const { return mRestoringFrames[frameIndex]; }
 };
 
 class PngFrameSequence::PngFrameSequenceState : public FrameSequenceState {
@@ -72,7 +66,6 @@ private:
     };
     png_structp png_ptr;
     png_infop png_info;
-    ApngFrame*mPrev;
     uint8_t*mBytesAt;
     int32_t mFrameIndex;
     uint8_t*mFrame;

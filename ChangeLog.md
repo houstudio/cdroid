@@ -1,9 +1,10 @@
 # **V2.1.0**
-  - Some bug fix 
-  - add CMS(Color Manager System)
-  - Cairo::Pattern add dither support
-  - BitmapDrawable,GradientDrawable add Dither support
-  - RecyclerView can working on lower(default) poolsize
+  - Some bug fix.
+  - add CMS(Color Manager System).
+  - Cairo::Pattern add dither support.
+  - Apng animation supported reopened(with less memory).
+  - BitmapDrawable,GradientDrawable add Dither support,GradientDrawable with alpha optimized.
+  - RecyclerView can working on lower(default) poolsize.
   - add new image-decoders,all image is decoded to RGBA32. ui layer compsition can be faster than ever.
   - add GestureDetector
 
