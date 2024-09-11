@@ -15,12 +15,12 @@
  */
 
 #include <string.h>
-#include "cdtypes.h"
-#include "cdlog.h"
+#include <cdtypes.h>
+#include <cdlog.h>
 #include <gui/gui_features.h>
-#if 1||ENABLE_GIF&&ENABLE_GIF
-#include "gif_lib.h"
-#include "gifframesequence.h"
+#if ENABLE_GIF&&ENABLE_GIF
+#include <gif_lib.h>
+#include <image-decoders/gifframesequence.h>
 
 namespace cdroid{
 
@@ -263,7 +263,7 @@ long GifFrameSequence::GifFrameSequenceState::drawFrame(int frameNr,
                 frameNr, i, frameOpaque, gcb.DisposalMode, gcb.DelayTime);
         if (i == 0) {
             //clear bitmap
-            uint32_t bgColor = mFrameSequence.getBackgroundColor();
+            const uint32_t bgColor = mFrameSequence.getBackgroundColor();
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
                     outputPtr[y * outputPixelStride + x] = bgColor;

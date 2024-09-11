@@ -17,8 +17,8 @@
 #include "framesequence.h"
 namespace cdroid{
 
-FrameSequence::Registry* FrameSequence::mHead = nullptr;
 int FrameSequence::mHeaderBytesRequired = 0;
+FrameSequence::Registry* FrameSequence::mHead = nullptr;
 
 FrameSequence::FrameSequence(cdroid::Context*ctx):mContext(ctx){
 }
@@ -63,9 +63,5 @@ FrameSequence* FrameSequence::create(cdroid::Context*ctx,std::istream* stream) {
     return frameSequence;
 }
 
-bool FrameSequence::isSupport(std::istream* stream) {
-    const RegistryEntry* entry = Registry::find(stream);
-    return entry!=nullptr;
-}
 }/*endof namespace*/
 

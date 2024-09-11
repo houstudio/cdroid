@@ -40,8 +40,6 @@ public:
      *
      * Type determined by header information in the stream
      */
-    static FrameSequence* create(cdroid::Context*,std::istream* stream);
-    static bool isSupport(std::istream* stream);
     FrameSequence(cdroid::Context*);
     virtual ~FrameSequence() {}
     virtual int getWidth() const = 0;
@@ -49,8 +47,9 @@ public:
     virtual bool isOpaque() const = 0;
     virtual int getFrameCount() const = 0;
     virtual int getDefaultLoopCount() const = 0;
-
     virtual FrameSequenceState* createState() const = 0;
+
+    static FrameSequence* create(cdroid::Context*,std::istream* stream);
 };
 
 class FrameSequenceState {
