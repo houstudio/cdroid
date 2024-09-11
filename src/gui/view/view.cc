@@ -2262,7 +2262,7 @@ void View::setScrollIndicators(int indicators,int mask) {
     indicators &= mask;
 
     // Merge with non-masked flags.
-    int updatedFlags = indicators | (mPrivateFlags3 & ~mask);
+    const int updatedFlags = indicators | (mPrivateFlags3 & ~mask);
 
     if (mPrivateFlags3 != updatedFlags) {
         mPrivateFlags3 = updatedFlags;
@@ -2287,7 +2287,7 @@ void View::onDrawScrollIndicators(Canvas& canvas){
 
     Drawable* dr = mScrollIndicatorDrawable;
     if (dr == nullptr)
-        return;// Scroll indicators aren't supported here.
+        return;//Scroll indicators aren't supported here.
 
     Rect rect ;
     const int h = dr->getIntrinsicHeight();

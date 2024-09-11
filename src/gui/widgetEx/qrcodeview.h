@@ -1,4 +1,4 @@
-#ifndef __QRRCODE_VIEW_H__
+#ifndef __QRCODE_VIEW_H__
 #define __QRCODE_VIEW_H__
 
 #include <view/view.h>
