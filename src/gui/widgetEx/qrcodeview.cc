@@ -22,17 +22,15 @@ QRCodeView::~QRCodeView(){
 }
 
 void QRCodeView::initView(){
-    //mQRcode  = nullptr;
-    mZoom = 10.0;
-}
-
-bool QRCodeView::resetSymbol(){
-
-    return true;
+    mZoom = 1.0;
+    mQrCodeWidth =0;
+    mBarColor = 0xFFFFFFFF;
 }
 
 void QRCodeView::setText(const std::string&text){
     if(mText!=text){
+        if(mText.empty())
+            requestLayout();
         mText = text;
         encode();
         invalidate(true);
@@ -41,14 +39,14 @@ void QRCodeView::setText(const std::string&text){
 }
 
 void QRCodeView::setBarcodeColor(int color){
-    /*if(mFgColor!=color){
-        mFgColor = color;
+    if(mBarColor!=color){
+        mBarColor = color;
         invalidate();
-    }*/
+    }
 }
 
 int QRCodeView::getBarcodeColor()const{
-    return 0;//mFgColor;
+    return mBarColor;
 }
 
 void  QRCodeView::setZoom(float zoom){
@@ -72,13 +70,15 @@ void  QRCodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int width,height;
     if(widthMode == MeasureSpec::EXACTLY){
         width = widthSize;
+        mZoom = float(width)/mQrCodeWidth;
     }else{
-        width = mQRImage->get_width()*mZoom;
+        width = mQrCodeWidth*mZoom;
     }
     if(heightMode == MeasureSpec::EXACTLY){
         height= heightSize;
+        mZoom = std::max(mZoom,float(height)/mQrCodeWidth);
     }else{
-        height= mQRImage->get_width()*mZoom;
+        height= mQrCodeWidth*mZoom;
     }
     LOGD("setMeasuredDimension(%d,%d)",width,height);
     setMeasuredDimension(width, height);
@@ -87,22 +87,24 @@ void  QRCodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 extern "C" int QRspec_getMinimumVersion(int size, QRecLevel level);
 
 void QRCodeView::encode(){
-    const int version = QRspec_getMinimumVersion(mText.size(), QR_ECLEVEL_L);
-    QRcode*mQRcode = QRcode_encodeString(mText.c_str(), version, QR_ECLEVEL_L, QR_MODE_8, 1);
+    const int version = QRspec_getMinimumVersion(mText.size(), QR_ECLEVEL_H);
+    QRcode*mQRcode = QRcode_encodeString(mText.c_str(), version, QR_ECLEVEL_M, QR_MODE_8, 1);
     if(mQRcode){
-        uint32_t*qimg;
         const uint8_t*qrd = mQRcode->data;
-        mQRImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mQRcode->width,mQRcode->width);
+        mQrCodeWidth = mQRcode->width;
+        mQRImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mQrCodeWidth,mQrCodeWidth);
         const uint32_t image_stride = mQRImage->get_stride()/4;
-        qimg = (uint32_t*)mQRImage->get_data();
+        uint32_t*qimg = (uint32_t*)mQRImage->get_data();
         for(int32_t y = 0,idx = 0; y < mQRcode->width; y++){
             for(int32_t x = 0; x < mQRcode->width; x++){
-                qimg[x]=(qrd[idx+x]&1)?0xFFFFFFFF:0;
+                qimg[x]=(qrd[idx+x]&1)?mBarColor:0;
             }
             idx += mQRcode->width;
             qimg += image_stride;
         }
-        mZoom = float(std::min(getWidth(),getHeight()))/mQRcode->width;
+        const float wx = getWidth() - getPaddingLeft()- getPaddingRight();
+        const float wy = getHeight()- getPaddingTop() - getPaddingBottom();
+        mZoom = std::min(wx,wy)/mQRcode->width;
         mQRImage->mark_dirty();
     }
     QRcode_free(mQRcode);
@@ -118,12 +120,12 @@ void  QRCodeView::onDraw(Canvas&canvas){
 
     canvas.save();
 
-    canvas.translate(0, 0);
+    canvas.translate(getPaddingLeft(), getPaddingTop());
     canvas.scale(mZoom,mZoom);
     canvas.set_source(mQRImage,0,0);
     Cairo::RefPtr<Cairo::SurfacePattern>spat = canvas.get_source_for_surface();
     spat->set_filter(Cairo::SurfacePattern::Filter::NEAREST);
-    canvas.rectangle(0,0,21,21);
+    canvas.rectangle(0,0,mQrCodeWidth,mQrCodeWidth);
     canvas.clip();
     canvas.paint();
     canvas.restore();

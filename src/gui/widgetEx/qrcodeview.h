@@ -6,8 +6,10 @@
 namespace cdroid{
 class QRCodeView:public View{
 private:
+    int mQrCodeWidth;
+    int mBarColor;
+private:
     void initView();
-    bool resetSymbol();
 protected:
     float mZoom;
     std::string mText;
