@@ -40,7 +40,7 @@ if(ENABLE_GESTURE)
         gesture/learner.cc
         gesture/orientedboundingbox.cc
     )
-endif(ENABLE_GESTURE）
+endif(ENABLE_GESTURE)
 
 list(APPEND CDROID_SOURCES
     widget/edgeeffect.cc
