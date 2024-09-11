@@ -20,7 +20,7 @@
 #include <core/color.h>
 #include <png.h>
 #ifdef PNG_APNG_SUPPORTED
-#include <image-decoders/pngframesequence.h>
+#include <image-decoders/pngframesequenceLVGL.h>
 
 namespace cdroid {
 //REF: https://gitee.com/suyimin1/APNG4Android
@@ -35,8 +35,8 @@ static void pngmem_reader(png_structp png_ptr, png_bytep png_data, png_size_t da
     *ppd += data_size;
 }
 
-PngFrameSequence::PngFrameSequence(cdroid::Context*ctx,std::istream* stream)
-    :FrameSequence(ctx), mLoopCount(1), mBgColor(COLOR_TRANSPARENT) {
+PngFrameSequence::PngFrameSequence(std::istream* stream) :
+    mLoopCount(1), mBgColor(COLOR_TRANSPARENT) {
     png_structp png_ptr;
     png_infop png_info;
     png_color_16p bg = nullptr;
@@ -131,9 +131,9 @@ PngFrameSequence::PngFrameSequenceState::PngFrameSequenceState(const PngFrameSeq
     LOGD("size=%dx%dx%d",width,height,mFrameSequence.getFrameCount());
     png_ptr = nullptr;
     png_info= nullptr;
-    mFrame = new uint8_t[width*height*4];
-    mBuffer = new uint8_t[width*height*4];
-    mPrevFrame = new uint8_t[width*height*4];
+    mBaseBuffer = new uint8_t[width*height*4];
+    mRenderBuffer = nullptr;
+    mCurrBase = nullptr;
 }
 
 void PngFrameSequence::PngFrameSequenceState::resetPngIO(){
@@ -154,17 +154,12 @@ void PngFrameSequence::PngFrameSequenceState::resetPngIO(){
     png_set_add_alpha(png_ptr, 0xff, PNG_FILLER_AFTER);
     png_set_bgr(png_ptr);
     png_set_interlace_handling(png_ptr);
-
-    PNGDecoder::setGamma(nullptr,png_ptr, png_info);
-
     png_read_update_info(png_ptr, png_info);
 }
 
 PngFrameSequence::PngFrameSequenceState::~PngFrameSequenceState() {
     png_destroy_read_struct(&png_ptr, &png_info, nullptr);
-    delete [] mFrame;
-    delete [] mBuffer;
-    delete [] mPrevFrame;
+    delete [] mBaseBuffer;
 }
 
 static void composeFrame(uint8_t*dst,uint8_t*src,uint32_t stride, unsigned char bop, uint32_t x, uint32_t y, uint32_t w, uint32_t h) {
@@ -194,6 +189,102 @@ static void composeFrame(uint8_t*dst,uint8_t*src,uint32_t stride, unsigned char 
     }
 }
 
+void  PngFrameSequence::PngFrameSequenceState::blend2Render(uint32_t x, uint32_t y, uint32_t w, uint32_t h){
+    uint8_t *prender = mRenderBuffer;
+    uint8_t *pbase = mBaseBuffer;
+    const int width  = mFrameSequence.getWidth();
+    const int height = mFrameSequence.getHeight();
+    const int row_size = width * 4;
+    int opa_i = 3;
+
+    if(mCurrBase == pbase){
+        memcpy(prender,pbase, y * row_size);
+
+        int offset = (y + h) * row_size;
+        memcpy(prender + offset,pbase + offset, (height - y - h) * row_size);
+
+        int end = y + h;
+        for(int i = y; i < end; i ++){
+            memcpy(&prender[i * row_size],&pbase[i * row_size], x*4);
+            memcpy(&prender[i * row_size + (x + w)*4],&pbase[i * row_size + (x + w)*4], (width - x - w)*4);
+        }
+    }
+
+    int u, v, al;
+    int i_end = y + h;
+    int k_end = (x + w) * 4;
+    for(int i = y; i < i_end; i ++){
+        int row_offset = i * row_size;
+        for(int k = x*4; k < k_end; k += 4){
+            if(prender[row_offset + k + opa_i] == 255){//什么都不用干
+            }
+            else if(prender[row_offset + k + opa_i] == 0){//用base填充
+                memcpy(&prender[row_offset + k],&pbase[row_offset + k],4);
+            }
+            else if(1){
+                int index = row_offset + k;
+                if(pbase[index + opa_i] != 0){
+                    u = prender[index + opa_i] * 255;
+                    v = (255 - prender[index + opa_i]) * pbase[index + opa_i];
+                    al = u + v;
+                    prender[index + 0] = (prender[index + 0] * u + pbase[index + 0] * v) / al;
+                    prender[index + 1] = (prender[index + 1] * u + pbase[index + 1] * v) / al;
+                    prender[index + 2] = (prender[index + 2] * u + pbase[index + 2] * v) / al;
+                    prender[index + 3] = al / 255;
+                }
+            }
+        }
+    }
+}
+
+void  PngFrameSequence::PngFrameSequenceState::fill2Render(uint32_t x, uint32_t y, uint32_t w, uint32_t h){
+    uint8_t *prender =mRenderBuffer;
+    uint8_t *pbase = mBaseBuffer;
+    const int width = mFrameSequence.getWidth();
+    const int height= mFrameSequence.getHeight();
+    const int row_size = width * 4;
+
+    if(mCurrBase == pbase){
+        memcpy(prender,pbase, y * row_size);
+
+        int offset = (y + h) * row_size;
+        memcpy(prender + offset,pbase + offset, (height - y - h) * row_size);
+
+        int end = y + h;
+        for(int i = y; i < end; i ++){
+            memcpy(&prender[i * row_size],&pbase[i * row_size], x*4);
+            memcpy(&prender[i * row_size + (x + w)*4],&pbase[i * row_size + (x + w)*4], (width - x - w)*4);
+        }
+    }
+}
+
+void PngFrameSequence::PngFrameSequenceState::copyArea2Base(uint32_t x, uint32_t y, uint32_t w, uint32_t h){
+    uint8_t *prender = mRenderBuffer;
+    uint8_t *pbase = mBaseBuffer;
+    const uint32_t width  = mFrameSequence.getWidth();
+    const int row_size = width * 4;
+
+    int end = y + h;
+    for(int i = y; i < end; i ++){
+        memcpy(&pbase[i * row_size + x*4],&prender[i * row_size + x*4], w*4);
+    }
+}
+
+void PngFrameSequence::PngFrameSequenceState::clearBaseArea(uint32_t x, uint32_t y, uint32_t w, uint32_t h){
+    uint8_t *prender = mRenderBuffer;
+    uint8_t *pbase = mBaseBuffer;
+    const int width  = mFrameSequence.getWidth();
+    const int height = mFrameSequence.getHeight();
+    const int row_size = width * 4;
+
+    memcpy(pbase, prender, height * width * 4);
+
+    int end = y + h;
+    for(int i = y; i < end; i ++){
+        memset(&pbase[i * row_size + x*4], 0x00, w*4);
+    }
+}
+
 static void fillFrame(uint8_t*dst,uint32_t stride, uint32_t x, uint32_t y, uint32_t w, uint32_t h,uint32_t color) {
     for (uint32_t j=0; j<h; j++) {
         uint8_t * dp = dst+(j+y)*stride+x*4;//rows_dst[j+y] + x*4;
@@ -204,24 +295,28 @@ static void fillFrame(uint8_t*dst,uint32_t stride, uint32_t x, uint32_t y, uint3
     }
 }
 
+static uint32_t frmX1, frmY1, frmWidth1 ,frmHeight1;
 long PngFrameSequence::PngFrameSequenceState::drawFrame(int frameNr,
         uint32_t* outputPtr, int outputPixelStride, int previousFrameNr) {
     const int width = mFrameSequence.getWidth();
     const int height = mFrameSequence.getHeight();
-    uint32_t frmX,frmY,frmWidth,frmHeight,frmDelay;
-    uint16_t delay_num,delay_den;
+    uint32_t frmX, frmY, frmWidth ,frmHeight,frmDelay;
+    uint16_t delay_num, delay_den,delay;
     uint8_t frmDop,frmBop;
+    uint8_t *pbase = mBaseBuffer;
+    uint8_t *prender = (uint8_t*)outputPtr;
+
 
     uint32_t first = png_get_first_frame_is_hidden(png_ptr, png_info) ? 1 : 0;
 
     std::vector<png_bytep> rows(height);
 
-    for(int i=0;i<height;i++){
-        rows[i]= mBuffer + i*width*4;
+    if(frameNr==0){
+        mRenderBuffer =(uint8_t*)outputPtr;
+        mCurrBase = (uint8_t*)outputPtr;
+        resetPngIO();
     }
 
-    if(frameNr==0)
-       resetPngIO();
     LOGE_IF(frameNr!=mFrameIndex,"Error FrameSequence %d should be %d",frameNr,mFrameIndex);
 
     png_read_frame_head(png_ptr, png_info);
@@ -229,30 +324,43 @@ long PngFrameSequence::PngFrameSequenceState::drawFrame(int frameNr,
                 &delay_num,&delay_den,&frmDop,&frmBop);
     if(delay_den==0)delay_den = 100;
     frmDelay = (delay_num*1000)/delay_den;
-    if(frameNr==first){/*The first frame doesn't have an fcTL so it's expected to be hidden, but we'll extract it anyway*/
+    if(frameNr==0){/*The first frame doesn't have an fcTL so it's expected to be hidden, but we'll extract it anyway*/
         frmBop = PNG_BLEND_OP_SOURCE;
         if(frmDop==PNG_DISPOSE_OP_PREVIOUS)
-            frmDop = PNG_DISPOSE_OP_NONE;
+            frmDop = PNG_DISPOSE_OP_BACKGROUND;
     }
 
-    LOGV("frame %d at(%d,%d,%d,%d) op=%d/%d readPos=%d delay=%d",mFrameIndex,frmX,frmY,frmWidth,frmHeight,frmDop,frmBop,mBytesAt-mFrameSequence.mDataBytes,frmDelay);
+    LOGD("frame %d at(%d,%d,%d,%d) op=%d/%d",mFrameIndex,frmX,frmY,frmWidth,frmHeight,frmDop,frmBop,mBytesAt-mFrameSequence.mDataBytes);
+    
+    for(int i=0;i<height;i++){
+        rows[i]= prender + (i+frmY)*width*4+frmX*4;
+    }
 
+    if(mFrameIndex==0)mCurrBase = prender;
+    if(mCurrBase ==prender){
+        if(frmDop==PNG_DISPOSE_OP_PREVIOUS){
+            memcpy(pbase,prender,width*height*4);
+            mCurrBase = pbase;
+        }else if(frmBop==PNG_BLEND_OP_OVER){
+            copyArea2Base(frmX,frmY,frmWidth,frmHeight);
+        }
+    }
     png_read_image(png_ptr, rows.data());
-    if(frmDop==PNG_DISPOSE_OP_PREVIOUS)
-        memcpy(mPrevFrame,mFrame,width*height*4);
 
-    composeFrame(mFrame,mBuffer,width*4,frmBop,frmX,frmY,frmWidth,frmHeight);
-    memcpy(outputPtr,mFrame,width*height*4);
-    switch(frmDop){
-    case PNG_DISPOSE_OP_NONE:/*Nothing* TODO*/ break;
-    case PNG_DISPOSE_OP_BACKGROUND:
-        fillFrame(mFrame,width*4,frmX,frmY,frmWidth,frmHeight,mFrameSequence.mBgColor);
-        break;
-    case PNG_DISPOSE_OP_PREVIOUS:
-        memcpy(mFrame,mPrevFrame,width*height*4);
-        break;
+    if(frmBop==PNG_BLEND_OP_OVER){
+        blend2Render(frmX,frmY,frmWidth,frmHeight);
+    }else{
+        fill2Render(frmX,frmY,frmWidth,frmHeight);
+    }
+
+    if(frmDop==PNG_DISPOSE_OP_BACKGROUND){
+        clearBaseArea(frmX,frmY,frmWidth,frmHeight);
+        mCurrBase = pbase;
+    }else{
+        mCurrBase = prender;
     }
     mFrameIndex++;
+
     return frmDelay;
 }
 
@@ -272,8 +380,8 @@ static bool isPng(void* header, int header_size) {
            || !memcmp(PNG_STAMP, header, PNG_STAMP_LEN);
 }
 
-static FrameSequence* createFramesequence(cdroid::Context*ctx,std::istream* stream) {
-    return new cdroid::PngFrameSequence(ctx,stream);
+static FrameSequence* createFramesequence(std::istream* stream) {
+    return new cdroid::PngFrameSequence(stream);
 }
 
 static FrameSequence::RegistryEntry gEntry = {

@@ -18,9 +18,10 @@
 #define __FRAMESQUENCE_PNG_H__
 #include <vector>
 #include <cairomm/surface.h>
-#include <image-decoders/imagedecoder.h>
 #include <image-decoders/framesequence.h>
 namespace cdroid{
+typedef struct png_struct_def* png_structp;
+typedef struct png_info_def* png_infop;
 
 class PngFrameSequence : public FrameSequence {
 private:
@@ -36,7 +37,7 @@ public:
     class PngFrameSequenceState;
     friend PngFrameSequenceState;
 public:
-    PngFrameSequence(Context*,std::istream* stream);
+    PngFrameSequence(std::istream* stream);
     virtual ~PngFrameSequence();
 
     int getWidth() const override;
@@ -54,15 +55,28 @@ public:
 
 class PngFrameSequence::PngFrameSequenceState : public FrameSequenceState {
 private:
+    struct ApngFrame{
+        uint32_t x;
+        uint32_t y;
+        uint32_t width;
+        uint32_t height;
+        uint32_t delay;
+        uint8_t dop;
+        uint8_t bop;
+    };
     png_structp png_ptr;
     png_infop png_info;
     uint8_t*mBytesAt;
     int32_t mFrameIndex;
-    uint8_t*mFrame;
-    uint8_t*mBuffer;
-    uint8_t*mPrevFrame;
+    uint8_t*mCurrBase;
+    uint8_t*mBaseBuffer;
+    uint8_t*mRenderBuffer;
     const PngFrameSequence& mFrameSequence;
     void resetPngIO();
+    void blend2Render(uint32_t x, uint32_t y, uint32_t w, uint32_t h);
+    void fill2Render(uint32_t x, uint32_t y, uint32_t w, uint32_t h);
+    void copyArea2Base(uint32_t x, uint32_t y, uint32_t w, uint32_t h);
+    void clearBaseArea(uint32_t x, uint32_t y, uint32_t w, uint32_t h);
 public:
     PngFrameSequenceState(const PngFrameSequence& frameSequence);
     virtual ~PngFrameSequenceState();

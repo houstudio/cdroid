@@ -1,4 +1,14 @@
 /*gui_features.h.cmake  Generated from configure.ac by autoheader.*/
+#cmakedefine ENABLE_GESTURE 1
+#cmakedefine ENABLE_SPINNER 1
+#cmakedefine ENABLE_DIALOGS 1
+#cmakedefine ENABLE_RECYCLERVIEW 1
+#cmakedefine ENABLE_DAYTIME_WIDGETS 1
+#cmakedefine ENABLE_NAVIGATION 1
+#cmakedefine ENABLE_BARCODE 1
+#cmakedefine ENABLE_QRCODE 1
+#cmakedefine ENABLE_LOTTIE 1
+
 #cmakedefine ENABLE_GIF   1     
 #cmakedefine ENABLE_JPEG  1
 #cmakedefine ENABLE_WEBP  1
@@ -21,6 +31,7 @@
 #cmakedefine HAVE_MALLINFO 1
 #cmakedefine HAVE_MALLINFO2 1
 #cmakedefine HAVE_RTAUDIO_H 1
+
 #define CDROID_VERSION "@CDROID_VERSION@"
 #define CDROID_VERSION_MAJOR @CDROID_VERSION_MAJOR@
 #define CDROID_VERSION_MINOR @CDROID_VERSION_MINOR@

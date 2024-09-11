@@ -20,6 +20,9 @@ namespace cdroid{
 FrameSequence::Registry* FrameSequence::mHead = nullptr;
 int FrameSequence::mHeaderBytesRequired = 0;
 
+FrameSequence::FrameSequence(cdroid::Context*ctx):mContext(ctx){
+}
+
 FrameSequence::Registry::Registry(const RegistryEntry& entry) {
     mImpl = entry;
     mNext = mHead;
@@ -45,11 +48,11 @@ const FrameSequence::RegistryEntry* FrameSequence::Registry::find(std::istream* 
     return 0;
 }
 
-FrameSequence* FrameSequence::create(std::istream* stream) {
+FrameSequence* FrameSequence::create(cdroid::Context*ctx,std::istream* stream) {
     const RegistryEntry* entry = Registry::find(stream);
 
     if (!entry) return NULL;
-    FrameSequence* frameSequence = entry->createFrameSequence(stream);
+    FrameSequence* frameSequence = entry->createFrameSequence(ctx,stream);
     if (!frameSequence->getFrameCount() ||
             !frameSequence->getWidth() || !frameSequence->getHeight()) {
         // invalid contents, abort

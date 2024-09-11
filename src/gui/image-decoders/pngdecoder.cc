@@ -177,14 +177,32 @@ static void unpremultiply_float (float *f, uint16_t *d16, unsigned width){
     }
 }
 
-bool PNGDecoder::decodeSize() {
-    cairo_format_t format;
-    int bit_depth,interlace,color_type;
+double PNGDecoder::setGamma(Context*ctx,png_structp png_ptr,png_infop info_ptr){
     constexpr double cMaxGamma = 21474.83;
     constexpr double cDefaultGamma = 2.2;/*default screen gamma*/
     constexpr double cInverseGamma = 0.45455;
     int intent;
     double gamma = cInverseGamma;
+
+    if(png_get_sRGB(png_ptr, info_ptr, &intent)){
+        png_set_gamma(png_ptr, cDefaultGamma, PNG_DEFAULT_sRGB);
+        gamma = PNG_DEFAULT_sRGB;
+    }else if(png_get_gAMA(png_ptr, info_ptr,&gamma)){
+        if( (gamma<=0.0)||(gamma>cMaxGamma)){
+            gamma = cInverseGamma;
+            png_set_gAMA(png_ptr, info_ptr,gamma);
+        }
+        png_set_gamma(png_ptr, cDefaultGamma, gamma);
+    }else{
+        gamma = cInverseGamma;
+        png_set_gamma(png_ptr,cDefaultGamma,cInverseGamma);
+    }
+    return gamma;
+}
+
+bool PNGDecoder::decodeSize() {
+    cairo_format_t format;
+    int bit_depth,interlace,color_type;
 
     png_structp png_ptr = mPrivate->png_ptr;
     png_infop info_ptr = mPrivate->info_ptr;
@@ -231,19 +249,7 @@ bool PNGDecoder::decodeSize() {
     if(color_type&PNG_COLOR_MASK_ALPHA)
         png_set_filler(png_ptr,0xffU,PNG_FILLER_AFTER);
 
-
-    if(png_get_sRGB(png_ptr, info_ptr, &intent)){
-        png_set_gamma(png_ptr, cDefaultGamma, PNG_DEFAULT_sRGB);
-        gamma = PNG_DEFAULT_sRGB;
-    }else if(png_get_gAMA(png_ptr, info_ptr,&gamma)){
-        if( (gamma<=0.0)||(gamma>cMaxGamma)){
-            gamma = cInverseGamma;
-            png_set_gAMA(png_ptr, info_ptr,gamma);
-        }
-        png_set_gamma(png_ptr, cDefaultGamma, gamma);
-    }else{
-        png_set_gamma(png_ptr,cDefaultGamma,cInverseGamma);
-    }
+    setGamma(mContext,png_ptr,info_ptr);
 
     /* recheck header after setting EXPAND options */
     png_read_update_info (png_ptr, info_ptr);

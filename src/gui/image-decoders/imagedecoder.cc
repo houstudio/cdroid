@@ -24,6 +24,7 @@ ImageDecoder::ImageDecoder(Context*ctx,const std::string&resourceId){
     mImageHeight= -1;
     mPrivate = nullptr;
     mTransform= nullptr;
+    mContext = ctx;
     if(ctx)
         istream = ctx->getInputStream(resourceId);
     else

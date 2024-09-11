@@ -35,7 +35,7 @@ private:
 public:
     class WebPFrameSequenceState;
 public:
-    WebPFrameSequence(std::istream* stream);
+    WebPFrameSequence(cdroid::Context*,std::istream* stream);
     virtual ~WebPFrameSequence();
 
     int getWidth() const override;

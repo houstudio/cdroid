@@ -84,8 +84,8 @@ void WebPFrameSequence::constructDependencyChain() {
     }
 }
 
-WebPFrameSequence::WebPFrameSequence(std::istream* stream)
-        : mDemux(NULL) , mIsKeyFrame(NULL){
+WebPFrameSequence::WebPFrameSequence(cdroid::Context*ctx,std::istream* stream)
+      :FrameSequence(ctx),mDemux(NULL) , mIsKeyFrame(NULL) {
     // Read RIFF header to get file size.
     uint8_t riff_header[RIFF_HEADER_SIZE];
     if (stream->read((char*)riff_header, RIFF_HEADER_SIZE).gcount() != RIFF_HEADER_SIZE) {
@@ -395,8 +395,8 @@ static bool acceptsWebPBuffer() {
     return true;
 }
 
-static FrameSequence* createFramesequence(std::istream* stream) {
-    return new WebPFrameSequence(stream);
+static FrameSequence* createFramesequence(cdroid::Context*ctx,std::istream* stream) {
+    return new WebPFrameSequence(ctx,stream);
 }
 
 static FrameSequence::RegistryEntry gEntry = {

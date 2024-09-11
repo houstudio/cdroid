@@ -24,6 +24,7 @@
 
 namespace cdroid{
 class FrameSequenceState;
+class Context;
 class FrameSequence {
 public:
     struct RegistryEntry;
@@ -31,15 +32,17 @@ public:
 private:
     static Registry*mHead;
     static int mHeaderBytesRequired;
+protected:
+    cdroid::Context*mContext;
 public:
     /**
      * Creates a FrameSequence using data from the data stream
      *
      * Type determined by header information in the stream
      */
-    static FrameSequence* create(std::istream* stream);
+    static FrameSequence* create(cdroid::Context*,std::istream* stream);
     static bool isSupport(std::istream* stream);
-
+    FrameSequence(cdroid::Context*);
     virtual ~FrameSequence() {}
     virtual int getWidth() const = 0;
     virtual int getHeight() const = 0;
@@ -65,7 +68,7 @@ public:
 struct FrameSequence::RegistryEntry {
     int requiredHeaderBytes;
     bool (*checkHeader)(void* header, int header_size);
-    FrameSequence* (*createFrameSequence)(std::istream* stream);
+    FrameSequence* (*createFrameSequence)(cdroid::Context*,std::istream* stream);
     bool (*acceptsBuffer)();
 };
 

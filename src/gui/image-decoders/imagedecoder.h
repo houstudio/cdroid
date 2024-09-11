@@ -6,6 +6,9 @@
 #include <cairomm/surface.h>
 #include <core/context.h>
 
+typedef struct png_struct_def* png_structp;
+typedef struct png_info_def* png_infop;
+
 namespace cdroid{
 class ImageDecoder{
 protected:
@@ -15,6 +18,7 @@ protected:
     int mCurrScanline;
     void*mTransform;
     static void*mCMSProfile;
+    cdroid::Context*mContext;
     std::unique_ptr<std::istream>istream;
 public:
     ImageDecoder(Context*ctx,const std::string&res);
@@ -50,6 +54,8 @@ public:
 class PNGDecoder:public ImageDecoder{
 private:
     void*getColorProfile(PRIVATE*,uint8_t colorType);
+public:
+    static double setGamma(Context*ctx,png_structp png_ptr,png_infop info_ptr);
 public:
     PNGDecoder(Context*ctx,const std::string&res);
     ~PNGDecoder()override;

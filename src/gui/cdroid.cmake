@@ -27,6 +27,21 @@ list(APPEND CDROID_SOURCES
     #view/menu.cc
 )
 
+if(ENABLE_GESTURE)
+    list(APPEND CDROID_SOURCES
+        gesture/gesture.cc
+        gesture/gesturelibraries.cc
+        gesture/gestureoverlayview.cc
+        gesture/gesturestore.cc
+        gesture/gesturestroke.cc
+        gesture/gestureutils.cc
+        gesture/instance.cc
+        gesture/instancelearner.cc
+        gesture/learner.cc
+        gesture/orientedboundingbox.cc
+    )
+endif(ENABLE_GESTURE）
+
 list(APPEND CDROID_SOURCES
     widget/edgeeffect.cc
     widget/scroller.cc

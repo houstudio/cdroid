@@ -1,4 +1,5 @@
 #include <widget/calendarview.h>
+#include <widget/calendarviewmaterialdelegate.h>
 namespace cdroid{
 
 CalendarView::CalendarView(int w,int h):FrameLayout(w,h){

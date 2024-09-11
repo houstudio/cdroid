@@ -31,7 +31,7 @@ private:
 public:
     class GifFrameSequenceState;
 public:
-    GifFrameSequence(std::istream* stream);
+    GifFrameSequence(cdroid::Context*,std::istream* stream);
     virtual ~GifFrameSequence();
 
     int getWidth() const override;

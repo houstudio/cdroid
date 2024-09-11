@@ -13,6 +13,7 @@ option(ENABLE_QRCODE "Enable QRCode(only support QRCode)" ON)
 option(ENABLE_LOTTIE "Enable Lottie Animation" OFF)
 option(ENABLE_LCMS "Enable Little CMS (a color management engine)" OFF)
 option(ENABLE_FRIBIDI "Enable BiDi layout" ON)
+option(ENABLE_GESTURE "Enable Gesture support" OFF)
 option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." OFF)
 
 option(ENABLE_PINYIN2HZ "Chinese Pinyin to HZ support" ON)
