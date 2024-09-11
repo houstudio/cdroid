@@ -134,7 +134,6 @@ PngFrameSequence::PngFrameSequenceState::PngFrameSequenceState(const PngFrameSeq
     mFrame = new uint8_t[width*height*4];
     mBuffer = new uint8_t[width*height*4];
     mPrevFrame = new uint8_t[width*height*4];
-   
 }
 
 void PngFrameSequence::PngFrameSequenceState::resetPngIO(){
@@ -206,25 +205,20 @@ long PngFrameSequence::PngFrameSequenceState::drawFrame(int frameNr,
         uint32_t* outputPtr, int outputPixelStride, int previousFrameNr) {
     const int width = mFrameSequence.getWidth();
     const int height = mFrameSequence.getHeight();
-    uint16_t delay_num, delay_den,delay;
-    uint32_t frmX, frmY;
-    uint32_t frmWidth ,frmHeight;
-    uint32_t frmDelay;
+    uint32_t frmX,frmY,frmWidth,frmHeight,frmDelay;
+    uint16_t delay_num,delay_den;
     uint8_t frmDop,frmBop;
 
     uint32_t first = png_get_first_frame_is_hidden(png_ptr, png_info) ? 1 : 0;
 
-    std::vector<png_bytep> rows_frame(height);
-    std::vector<png_bytep> rows_buffer(height);
+    std::vector<png_bytep> rows(height);
 
     for(int i=0;i<height;i++){
-        rows_frame[i] = mFrame + i*width*4;
-        rows_buffer[i]= mBuffer + i*width*4;
+        rows[i]= mBuffer + i*width*4;
     }
 
     if(frameNr==0)
        resetPngIO();
-
     LOGE_IF(frameNr!=mFrameIndex,"Error FrameSequence %d should be %d",frameNr,mFrameIndex);
 
     png_read_frame_head(png_ptr, png_info);
@@ -238,9 +232,9 @@ long PngFrameSequence::PngFrameSequenceState::drawFrame(int frameNr,
             frmDop = PNG_DISPOSE_OP_NONE;
     }
 
-    LOGV("frame %d at(%d,%d,%d,%d) op=%d/%d readPos=%d",mFrameIndex,frmX,frmY,frmWidth,frmHeight,frmDop,frmBop,mBytesAt-mFrameSequence.mDataBytes);
+    LOGV("frame %d at(%d,%d,%d,%d) op=%d/%d readPos=%d delay=%d",mFrameIndex,frmX,frmY,frmWidth,frmHeight,frmDop,frmBop,mBytesAt-mFrameSequence.mDataBytes,frmDelay);
 
-    png_read_image(png_ptr, rows_buffer.data());
+    png_read_image(png_ptr, rows.data());
     if(frmDop==PNG_DISPOSE_OP_PREVIOUS)
         memcpy(mPrevFrame,mFrame,width*height*4);
 
@@ -256,7 +250,6 @@ long PngFrameSequence::PngFrameSequenceState::drawFrame(int frameNr,
         break;
     }
     mFrameIndex++;
-
     return frmDelay;
 }
 

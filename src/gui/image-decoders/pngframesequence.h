@@ -55,15 +55,6 @@ public:
 
 class PngFrameSequence::PngFrameSequenceState : public FrameSequenceState {
 private:
-    struct ApngFrame{
-        uint32_t x;
-        uint32_t y;
-        uint32_t width;
-        uint32_t height;
-        uint32_t delay;
-        uint8_t dop;
-        uint8_t bop;
-    };
     png_structp png_ptr;
     png_infop png_info;
     uint8_t*mBytesAt;
