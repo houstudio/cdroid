@@ -17,6 +17,7 @@
  */
 #ifndef __CDROID_VIEW_H__
 #define __CDROID_VIEW_H__
+#include <gui_features.h>
 #include <core/inputdevice.h>
 #include <core/canvas.h>
 #include <core/insets.h>

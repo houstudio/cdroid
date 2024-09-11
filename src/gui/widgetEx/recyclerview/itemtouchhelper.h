@@ -1,10 +1,9 @@
 #ifndef __ITEMTOUCH_HELPER_H__
 #define __ITEMTOUCH_HELPER_H__
-#include <view/gesturedetector.h>
 #include <widgetEx/recyclerview/recyclerview.h>
 #include <widgetEx/recyclerview/itemtouchuiutil.h>
 namespace cdroid{
-
+class GestureDetector;
 class ItemTouchHelper:public RecyclerView::ItemDecoration{
     //implements RecyclerView.OnChildAttachStateChangeListener {
 protected:

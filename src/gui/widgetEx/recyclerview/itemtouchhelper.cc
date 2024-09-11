@@ -1,3 +1,4 @@
+#include <view/gesturedetector.h>
 #include <widgetEx/recyclerview/itemtouchhelper.h>
 #include <core/neverdestroyed.h>
 
@@ -28,7 +29,9 @@ ItemTouchHelper::ItemTouchHelper(Callback* callback) {
 }
 
 bool ItemTouchHelper::onInterceptTouchEvent(RecyclerView& recyclerView,MotionEvent& event) {
+#if ENABLE(GESTURE)
     mGestureDetector->onTouchEvent(event);
+#endif
     LOGD_IF(_DEBUG,"intercept: x:%.f ,y:%.f",event.getX(),event.getY());
     const int action = event.getActionMasked();
     if (action == MotionEvent::ACTION_DOWN) {
@@ -70,7 +73,9 @@ bool ItemTouchHelper::onInterceptTouchEvent(RecyclerView& recyclerView,MotionEve
 }
 
 void ItemTouchHelper::onTouchEvent(RecyclerView& recyclerView,MotionEvent& event) {
+#if ENABLE(GESTURE)
     mGestureDetector->onTouchEvent(event);
+#endif
     LOGD_IF(_DEBUG,"on touch: x:%d,y:%d",mInitialTouchX,mInitialTouchY);
     if (mVelocityTracker != nullptr) {
         mVelocityTracker->addMovement(event);
@@ -180,9 +185,11 @@ void ItemTouchHelper::destroyCallbacks() {
 }
 
 void ItemTouchHelper::startGestureDetection() {
+#if ENABLE(GESTURE)
     mItemTouchHelperGestureListener.onDown=std::bind(&ItemTouchHelper::onGestureDown,this,std::placeholders::_1);
     mItemTouchHelperGestureListener.onLongPress=std::bind(&ItemTouchHelper::onGestureLongPress,this,std::placeholders::_1);
     mGestureDetector = new GestureDetector(mRecyclerView->getContext(),mItemTouchHelperGestureListener);
+#endif
 }
 
 void ItemTouchHelper::stopGestureDetection() {
@@ -190,8 +197,10 @@ void ItemTouchHelper::stopGestureDetection() {
         doNotReactToLongPress();
         mItemTouchHelperGestureListener ={};
     }
+#if ENABLE(GESTURE)
     delete mGestureDetector;
     mGestureDetector = nullptr;
+#endif
 }
 
 void ItemTouchHelper::getSelectedDxDy(float outPosition[2]) {
