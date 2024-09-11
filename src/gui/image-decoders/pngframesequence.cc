@@ -137,6 +137,11 @@ PngFrameSequence::PngFrameSequenceState::PngFrameSequenceState(const PngFrameSeq
 }
 
 void PngFrameSequence::PngFrameSequenceState::resetPngIO(){
+    constexpr double cMaxGamma = 21474.83;
+    constexpr double cDefaultGamma = 2.2;/*default screen gamma*/
+    constexpr double cInverseGamma = 0.45455;
+    int intent;
+    double gamma = cInverseGamma;
     if((png_ptr==nullptr)||(png_info==nullptr)){
         png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
         png_info= png_create_info_struct(png_ptr);
@@ -154,6 +159,21 @@ void PngFrameSequence::PngFrameSequenceState::resetPngIO(){
     png_set_add_alpha(png_ptr, 0xff, PNG_FILLER_AFTER);
     png_set_bgr(png_ptr);
     png_set_interlace_handling(png_ptr);
+
+    if(png_get_sRGB(png_ptr, png_info, &intent)){
+        png_set_gamma(png_ptr, cDefaultGamma, PNG_DEFAULT_sRGB);
+        gamma = PNG_DEFAULT_sRGB;
+    }else if(png_get_gAMA(png_ptr, png_info,&gamma)){
+        if( (gamma<=0.0)||(gamma>cMaxGamma)){
+            gamma = cInverseGamma;
+            png_set_gAMA(png_ptr, png_info,gamma);
+        }
+        png_set_gamma(png_ptr, cDefaultGamma, gamma);
+    }else{
+        png_set_gamma(png_ptr,cDefaultGamma,cInverseGamma);
+    }
+    LOGD("gamma=%f",gamma);
+
     png_read_update_info(png_ptr, png_info);
 }
 
