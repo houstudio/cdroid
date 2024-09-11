@@ -10,6 +10,9 @@ int main(int argc,const char*argv[]){
 #if ENABLE(BARCODE)
      BarcodeView*bv=new BarcodeView(256,256);
      w->addView(bv);
+     bv->setBackgroundColor(0xFF445566);
+     bv->setBarcodeColor(0xFFFF0000);
+     bv->setPadding(10,10,10,10);
      bv->setZoom(2.f);
      bv->setSymbology(BarcodeView::QRCode);
      bv->setText("https://www.sina.com.cn");
@@ -20,6 +23,7 @@ int main(int argc,const char*argv[]){
 #endif
 #if ENABLE(QRCODE)
      QRCodeView *qr=new QRCodeView(256,256);
+     qr->setPadding(10,10,10,10);
      qr->setText("138-0123456789");
      w->addView(qr).setPos(300,0);
 #endif
