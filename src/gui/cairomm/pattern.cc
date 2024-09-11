@@ -94,6 +94,7 @@ Pattern::Extend Pattern::get_extend() const
   return result;
 }
 
+#if CAIRO_VERSION_MINOR>=18
 void Pattern::set_dither(Dither dither){
   cairo_pattern_set_dither(m_cobject,(cairo_dither_t)dither);
   check_object_status_and_throw_exception(*this);
@@ -104,6 +105,7 @@ Pattern::Dither Pattern::get_dither() const{
   check_object_status_and_throw_exception(*this);
   return result;
 }
+#endif
 
 SolidPattern::SolidPattern(cairo_pattern_t* cobject, bool has_reference)
 : Pattern(cobject, has_reference)

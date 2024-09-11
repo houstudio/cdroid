@@ -119,7 +119,7 @@ public:
        */
       PAD = CAIRO_EXTEND_PAD
   };
-  
+#if CAIRO_VERSION_MINOR>=18
   enum class Dither{
       NONE = CAIRO_DITHER_NONE,
       DEFAULT = CAIRO_DITHER_DEFAULT,
@@ -127,7 +127,7 @@ public:
       GOOD = CAIRO_DITHER_GOOD,
       BEST = CAIRO_DITHER_BEST
   };/*Dither added by zhhou*/
-
+#endif
   /** Create a C++ wrapper for the C instance. This C++ instance should then be given to a RefPtr.
    * @param cobject The C instance.
    * @param has_reference Whether we already have a reference. Otherwise, the constructor will take an extra reference.
@@ -205,10 +205,10 @@ public:
    * @since 1.12
    */
   Extend get_extend() const;
-  
+#if CAIRO_VERSION_MINOR>=18 
   void set_dither(Dither dither);
   Dither get_dither() const;
-
+#endif
   typedef cairo_pattern_t cobject;
   inline cobject* cobj() { return m_cobject; }
   inline const cobject* cobj() const { return m_cobject; }

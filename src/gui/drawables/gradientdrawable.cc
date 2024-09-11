@@ -922,8 +922,10 @@ void GradientDrawable::draw(Canvas&canvas) {
     std::vector<float>radii;
     if( (mFillPaint==nullptr) && (haveStroke==false) )return;
     canvas.save();
+#if CAIRO_VERSION_MINOR>=18
     if(mFillPaint)
         mFillPaint->set_dither(ditherMode);
+#endif
     switch (st->mShape) {
     case RECTANGLE:
         rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
