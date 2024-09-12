@@ -19,6 +19,7 @@
 #include <mutex>
 #include <cla.h>
 #include <core/build.h>
+#include <core/atexit.h>
 void spt_init(int argc, char *argv[]);
 void setproctitle(const char *fmt, ...);
 extern "C" char *__progname;
@@ -80,15 +81,13 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     setOpacity(getArgAsInt("alpha",255));
     Typeface::loadFaceFromResource(this);
     DisplayMetrics::DENSITY_DEVICE = getArgAsInt("density",DisplayMetrics::getDeviceDensity());
+    AtExit::registerCallback([this](){
+        LOGD("Exit...");
+        mQuitFlag = true;
+    });
     InputEventSource*inputsource=&InputEventSource::getInstance();//(getArg("record",""));
     addEventHandler(inputsource);
     inputsource->playback(getArg("monkey",""));
-
-    signal(SIGINT,[](int sig){
-        LOGD("SIG %d...",sig);
-        App::mInst->mQuitFlag = true;
-        signal(sig,SIG_DFL);
-    });
 }
 
 App::~App(){
@@ -162,6 +161,7 @@ std::string App::getParam(int idx,const std::string&def)const{
     cla.getParam(idx,value);
     return value;
 }
+
 void App::setOpacity(unsigned char alpha){
     auto primarySurface = GraphDevice::getInstance().getPrimarySurface();
     if(primarySurface){
@@ -179,7 +179,8 @@ void App::removeEventHandler(const EventHandler*handler){
 }
 
 int App::exec(){
-    while(!mQuitFlag)Looper::getMainLooper()->pollAll(1);
+    Looper*looper = Looper::getMainLooper();
+    while(!mQuitFlag)looper->pollAll(1);
     return mExitCode;
 }
 
