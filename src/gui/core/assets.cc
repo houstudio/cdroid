@@ -398,9 +398,10 @@ int Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
 
 Drawable* Assets::getDrawable(const std::string&resid) {
     Drawable* d = nullptr;
-    std::string resname,package;
+    std::string resname,package,ext;
     std::string fullresid = parseResource(resid,&resname,&package);
     ZIPArchive* pak = getResource(fullresid,&resname,nullptr);
+    auto extpos = resname.rfind(".");
     if(resid.empty()||(resid.compare("null")==0)) {
         return d;
     } else {
@@ -415,6 +416,8 @@ Drawable* Assets::getDrawable(const std::string&resid) {
             mDrawables.erase(it);
         }
     }
+    if(extpos!=std::string::npos)
+        ext = resname.substr(extpos+1);
     //wrap png to drawable,make app develop simply
     if((resname[0]=='#')||(resname[1]=='x')||(resname[1]=='X')){
         LOGV("color %s",fullresid.c_str());
@@ -445,10 +448,10 @@ Drawable* Assets::getDrawable(const std::string&resid) {
     } else if(resname.find("color/")!=std::string::npos) {
         const uint32_t cc = (uint32_t)getColor(fullresid);
         return new ColorDrawable(cc);
-    } else if(!TextUtils::endWith(resname,"xml")){
+    } else if(!ext.compare("xml")){
         d = ImageDecoder::createAsDrawable(this,package+":"+resname);
     }
-    if( (d == nullptr) && (!fullresid.empty()) ) {
+    if( (d == nullptr) && (ext.compare("xml")==0) ) {
         void*zfile = pak ? pak->getZipHandle(resname) : nullptr;
         if(zfile) {
             ZipInputStream zs(zfile);
