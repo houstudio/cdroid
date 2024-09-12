@@ -1,5 +1,6 @@
 #include <widget/analogclock.h>
 #include <systemclock.h>
+#include <core/calendar.h>
 #include <cdlog.h>
 #include<iomanip>
 #include <ctime>
@@ -45,6 +46,7 @@ void AnalogClock::initAnalog(){
     mHourHandTintInfo = new TintInfo;
     mMinuteHandTintInfo = new TintInfo;
     mSecondHandTintInfo = new TintInfo;
+    mTick = std::bind(&AnalogClock::onTickProc,this);
 }
 
 Drawable* AnalogClock::apply(TintInfo*ti,Drawable*drawable){
@@ -193,18 +195,8 @@ void AnalogClock::onVisibilityAggregated(bool isVisible) {
 }
 
 void AnalogClock::onAttachedToWindow(){
-    mTick=[this](){
-        std::time_t t = std::time(NULL);
-        struct std::tm when= *std::localtime(&t);
-        std::get_time(&when,"%R");
-        mHour    = (float)when.tm_hour;
-        mMinutes = (float)when.tm_min;
-        mSeconds = (float)when.tm_sec;
-        mChanged = true;
-        this->invalidate(true);
-        this->postDelayed(mTick,500);
-    };
-    post(mTick);
+    onTickProc();
+    onTimeChanged();
 }
 
 
@@ -224,7 +216,7 @@ void AnalogClock::onDetachedFromWindow() {
 void AnalogClock::onVisible() {
     if (!mVisible) {
         mVisible = true;
-        //mTick.run();
+        onTickProc();
     }
 
 }
@@ -301,13 +293,13 @@ void AnalogClock::onDraw(Canvas&canvas){
     canvas.save();
     canvas.translate(x,y);
     canvas.rotate_degrees((mHour+mMinutes/60.f) / 12.0f * 360.0f);
-    if (changed) {
+    if (changed&&mHourHand) {
         w = mHourHand->getIntrinsicWidth();
         h = mHourHand->getIntrinsicHeight();
         mHourHand->setBounds( - (w / 2), - (h / 2), w,h);
         LOGV("HourHand.size=%dx%d  %p",w,h,mHourHand);
     }
-    mHourHand->draw(canvas);
+    if(mHourHand) mHourHand->draw(canvas);
     canvas.restore();
 
     canvas.save();
@@ -320,8 +312,7 @@ void AnalogClock::onDraw(Canvas&canvas){
         mMinuteHand->setBounds( - (w / 2), - (h / 2),w,h);
         LOGV("MinuteHand.size=%dx%d  %p",w,h,mMinuteHand);
     }
-    if(mMinuteHand)
-	mMinuteHand->draw(canvas);
+    if(mMinuteHand) mMinuteHand->draw(canvas);
     canvas.restore();
 
     if (mSecondHand  && mSecondsHandFps > 0) {
@@ -342,4 +333,51 @@ void AnalogClock::onDraw(Canvas&canvas){
     }
 }
 
+void AnalogClock::onTickProc(){
+    std::time_t t = std::time(NULL);
+    struct std::tm when= *std::localtime(&t);
+    std::get_time(&when,"%R");
+    mHour    = (float)when.tm_hour;
+    mMinutes = (float)when.tm_min;
+    mSeconds = (float)when.tm_sec;
+    mChanged = true;
+    invalidate(true);
+    postDelayed(mTick,500);
+};
+
+void AnalogClock::onTimeChanged() {
+    Calendar mCalendar;//;setToNow();
+
+    const int hour = mCalendar.get(Calendar::HOUR);//hour;
+    const int minute = mCalendar.get(Calendar::MINUTE);//minute;
+    const int second = mCalendar.get(Calendar::SECOND);//second;
+
+    mMinutes = minute + second / 60.0f;
+    mHour = hour + mMinutes / 60.0f;
+    mChanged = true;
+
+    onTimeChanged(mCalendar.getTime());//toEpochMilli());
+}
+
+void AnalogClock::onTimeChanged(/*LocalTime localTime,*/long nowMillis){
+    float previousHour = mHour;
+    float previousMinutes = mMinutes;
+#if 0
+    float rawSeconds = localTime.getSecond() + localTime.getNano() / 1_000_000_000f;
+    // We round the fraction of the second so that the seconds hand always occupies the same
+    // n positions between two given numbers, where n is the number of ticks per second. This
+    // ensures the second hand advances by a consistent distance despite our handler callbacks
+    // occurring at inconsistent frequencies.
+    mSeconds = mSecondsHandFps <= 0 ? rawSeconds
+                    : std::round(rawSeconds * mSecondsHandFps) / (float) mSecondsHandFps;
+    mMinutes = /*localTime.getMinute() +*/ mSeconds / 60.0f;
+    mHour = localTime.getHour() + mMinutes / 60.0f;
+    mChanged = true;
+
+    // Update the content description only if the announced hours and minutes have changed.
+    if ((int) previousHour != (int) mHour || (int) previousMinutes != (int) mMinutes) {
+        updateContentDescription(nowMillis);
+    }
+#endif
+}
 }

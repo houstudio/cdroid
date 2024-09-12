@@ -23,7 +23,7 @@
 #include <cairomm/enums.h>
 #include <cairo.h>
 
-#if !defined(CAIRO_DITHER_NONE) && (CAIRO_VERSION_MINOR<18)
+#if !defined(CAIRO_DITHER_NONE)
   #define CAIRO_DITHER_NONE 0
   #define CAIRO_DITHER_DEFAULT  1
   #define CAIRO_DITHER_FAST 2

@@ -448,7 +448,7 @@ Drawable* Assets::getDrawable(const std::string&resid) {
     } else if(resname.find("color/")!=std::string::npos) {
         const uint32_t cc = (uint32_t)getColor(fullresid);
         return new ColorDrawable(cc);
-    } else if(!ext.compare("xml")){
+    } else if(ext.compare("xml")){
         d = ImageDecoder::createAsDrawable(this,package+":"+resname);
     }
     if( (d == nullptr) && (ext.compare("xml")==0) ) {

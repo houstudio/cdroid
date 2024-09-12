@@ -30,6 +30,9 @@ private:
     void onVisible();
     void onInvisible();
     Drawable* apply(TintInfo*,Drawable*);
+    void onTickProc();
+    void onTimeChanged();
+    void onTimeChanged(/*LocalTime localTime,*/long nowMillis);
 protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
