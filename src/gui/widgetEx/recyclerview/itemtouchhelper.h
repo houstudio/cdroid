@@ -63,9 +63,11 @@ private:
     RecyclerView::ChildDrawingOrderCallback mChildDrawingOrderCallback;
     View* mOverdrawChild = nullptr;
     int mOverdrawChildPosition = -1;
+#if ENABLE(GESTURE)
     GestureDetector* mGestureDetector;
     //ItemTouchHelperGestureListener mItemTouchHelperGestureListener;
     GestureDetector::OnGestureListener mItemTouchHelperGestureListener;
+#endif
     bool mShouldReactToLongPress = true;
     void doNotReactToLongPress();
     bool onGestureDown(MotionEvent& e);
