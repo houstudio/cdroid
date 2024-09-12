@@ -7,12 +7,15 @@ public:
     int getCount(){return 8;}
     bool isViewFromObject(View* view, void*object) { return view==object;}
     void* instantiateItem(ViewGroup* container, int position) {
+#if ENABLE(DAYTIME_WIDGETS)
         if(position<getCount()/2){
             SimpleMonthView*sm=new  SimpleMonthView(100,100);
             sm->setMonthParams(23,Calendar::MAY+position,2021,-1,1,31);
             container->addView(sm);
             return sm;
-        }else{
+        }else
+#endif
+        {
             View*sm=new View(100,100);
             sm->setBackground(new ColorDrawable(0xFF000000|(0xFF<<((position%3)*8))));
             container->addView(sm);

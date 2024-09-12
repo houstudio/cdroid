@@ -32,13 +32,16 @@ public:
     int getCount(){return 5;}
     bool isViewFromObject(View* view, void*object) { return view==object;}
     void* instantiateItem(ViewGroup* container, int position) {
+#if ENABLE(DAYTIME_WIDGETS)
         if(position!=2){
             SimpleMonthView*sm=new  SimpleMonthView(100,100);
             sm->setMonthParams(23,Calendar::MAY+position,2021,-1,1,31);
             container->addView(sm);
             sm->setId(position);
             return sm;
-        }else{
+        }else
+#endif
+        {
             ListView*lv=new  ListView(100,100);
             MyAdapter*ma=new MyAdapter();
             for(int i=0;i<50;i++)ma->add("");
