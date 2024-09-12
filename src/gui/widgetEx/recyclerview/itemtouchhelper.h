@@ -1,9 +1,11 @@
 #ifndef __ITEMTOUCH_HELPER_H__
 #define __ITEMTOUCH_HELPER_H__
+#include <view/gesturedetector.h>
 #include <widgetEx/recyclerview/recyclerview.h>
 #include <widgetEx/recyclerview/itemtouchuiutil.h>
+
 namespace cdroid{
-class GestureDetector;
+
 class ItemTouchHelper:public RecyclerView::ItemDecoration{
     //implements RecyclerView.OnChildAttachStateChangeListener {
 protected:
@@ -63,11 +65,9 @@ private:
     RecyclerView::ChildDrawingOrderCallback mChildDrawingOrderCallback;
     View* mOverdrawChild = nullptr;
     int mOverdrawChildPosition = -1;
-#if ENABLE(GESTURE)
     GestureDetector* mGestureDetector;
     //ItemTouchHelperGestureListener mItemTouchHelperGestureListener;
     GestureDetector::OnGestureListener mItemTouchHelperGestureListener;
-#endif
     bool mShouldReactToLongPress = true;
     void doNotReactToLongPress();
     bool onGestureDown(MotionEvent& e);

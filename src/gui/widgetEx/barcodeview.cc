@@ -317,34 +317,49 @@ bool BarcodeView::getWidthHeightXdim(float x_dim, float &width_x_dim, float &hei
     return true;
 }
 
+static void getStringSize(zint_vector_string*ss,double*dx,double*dy){
+    *dx = *dy =0;
+}
+
 void  BarcodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     const int widthMode  = MeasureSpec::getMode(widthMeasureSpec);
     const int heightMode = MeasureSpec::getMode(heightMeasureSpec);
     const int widthSize  = MeasureSpec::getSize(widthMeasureSpec);
     const int heightSize = MeasureSpec::getSize(heightMeasureSpec);
-    int width,height;
-    float sx=0,sy=0;
-    if(widthMode == MeasureSpec::EXACTLY) {
-        width = widthSize;
-        if(mSymbol->vector)sx=float(width)/mSymbol->vector->width;
-    } else {
-        if(mSymbol->vector) {
-            width = mSymbol->vector->width * mZoom;
-        } else {
-            width = mSymbol->width * mZoom;
-        }
+    int width=widthSize,height=heightSize;
+    const float ASPECT_RATIO = mSymbol->vector->width/mSymbol->vector->height;
+    LOGD("%x,%x,%x vector=%f,%f",MeasureSpec::EXACTLY,MeasureSpec::AT_MOST,MeasureSpec::UNSPECIFIED,
+             mSymbol->vector->width,mSymbol->vector->height);
+    LOGD("%p mode=%xx%x size=%d,%d",this,widthMode,heightMode,widthSize,heightSize);
+
+    switch(widthMode){
+    case MeasureSpec::EXACTLY:
+        if(heightMode!=MeasureSpec::AT_MOST)
+            height = float(width) / ASPECT_RATIO;
+        break;
+    case MeasureSpec::AT_MOST:
+        height = std::min(height, int(float(width)/ ASPECT_RATIO));
+        break;
+
+    case MeasureSpec::UNSPECIFIED:
+        width = (int) (ASPECT_RATIO*height);
+        break;
     }
-    if(heightMode == MeasureSpec::EXACTLY) {
-        height= heightSize;
-        if(mSymbol->vector)sy=float(height)/mSymbol->vector->height;
-    } else {
-        if(mSymbol->vector) {
-            height= mSymbol->vector->height* mZoom;
-        } else {
-            height= mSymbol->height* mZoom;
-        }
+    switch (heightMode) {
+    case MeasureSpec::EXACTLY:
+        width = int(ASPECT_RATIO*height);
+        break;
+
+    case MeasureSpec::AT_MOST:
+        //height = heightSize;
+        //width = std::max(width, int(height * ASPECT_RATIO));
+        break;
+
+    case MeasureSpec::UNSPECIFIED:
+        height = int(float(width) / ASPECT_RATIO);
+        break;
     }
-    LOGD("setMeasuredDimension(%d,%d)",width,height);
+    LOGD("%p setMeasuredDimension(%d,%d)",this,width,height);
     setMeasuredDimension(width, height);
 }
 
@@ -482,11 +497,12 @@ void  BarcodeView::onDraw(Canvas&canvas) {
     float scale = mSymbol->scale;
 
     const float gwidth = mSymbol->vector->width;
-    const float gheight= mSymbol->vector->height;
+    const float fontSize=  mSymbol->vector->strings?mSymbol->vector->strings->fsize:0.f;
+    const float gheight= mSymbol->vector->height+fontSize;
     const float wx = getWidth() - getPaddingLeft()-getPaddingRight();
     const float wy = getHeight()- getPaddingTop()-getPaddingBottom();
 
-    LOGD("%p vectorsize=%fx%f/%dx%d , bitmap=%p",this,gwidth,gheight,mSymbol->bitmap_width,mSymbol->bitmap_height,mSymbol->bitmap);
+    LOGD("%p vectorsize=%fx%f, scale=%fx%f",this,gwidth,gheight,double(wx)/gwidth, double(wy)/gheight);
     canvas.translate(xtr, ytr);
     canvas.scale(double(wx)/gwidth, double(wy)/gheight);
 
