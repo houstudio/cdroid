@@ -403,9 +403,9 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
             mAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
                 setVisualProgress(R::id::progress,GET_VARIANT(anim.getAnimatedValue(),float));
             }));
-	    mAnimator->addListener(mAnimtorListener);
+            mAnimator->addListener(mAnimtorListener);
         }
-	mAnimator->end();
+        mAnimator->end();
         mAnimator->getValues(0)->setValues(std::vector<float>({mVisualProgress,scale}));
         mAnimator->start();
     } else {

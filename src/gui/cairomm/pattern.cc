@@ -94,18 +94,22 @@ Pattern::Extend Pattern::get_extend() const
   return result;
 }
 
-#if CAIRO_VERSION_MINOR>=18
 void Pattern::set_dither(Dither dither){
+#if CAIRO_VERSION_MINOR>=18
   cairo_pattern_set_dither(m_cobject,(cairo_dither_t)dither);
   check_object_status_and_throw_exception(*this);
+#endif
 }
 
 Pattern::Dither Pattern::get_dither() const{
+#if CAIRO_VERSION_MINOR>=18
   auto result = static_cast<Dither>(cairo_pattern_get_dither(m_cobject));
   check_object_status_and_throw_exception(*this);
   return result;
-}
+#else
+  return 0;
 #endif
+}
 
 SolidPattern::SolidPattern(cairo_pattern_t* cobject, bool has_reference)
 : Pattern(cobject, has_reference)

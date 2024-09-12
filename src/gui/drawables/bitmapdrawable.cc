@@ -451,9 +451,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         Cairo::RefPtr<SurfacePattern>spat = canvas.get_source_for_surface();
         if(spat){
             spat->set_filter(filterMode);
-#if CAIRO_VERSION_MINOR>=18
             spat->set_dither(ditherMode);
-#endif
         }
         canvas.paint_with_alpha(alpha);
     }
