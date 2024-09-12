@@ -1,14 +1,12 @@
 #include <cdroid.h>
-#if ENABLE_BARCODE
 #include <widgetEx/barcodeview.h>
 #include <widgetEx/qrcodeview.h>
-#endif
 
 int main(int argc,const char*argv[]){
      App app(argc,argv);
      Window*w =new Window(0,0,-1,-1); 
-#if ENABLE(BARCODE)
      LinearLayout*ll=new LinearLayout(800,512);
+#if ENABLE(BARCODE)
      ll->setOrientation(LinearLayout::VERTICAL);
      BarcodeView*bv=new BarcodeView(256,256);
      ll->addView(bv,new LinearLayout::LayoutParams(-2,256));

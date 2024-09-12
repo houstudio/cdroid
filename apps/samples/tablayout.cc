@@ -4,10 +4,14 @@ public:
     int getCount()override{return 8;}
     bool isViewFromObject(View* view, void*object)override{ return view==object;}
     void* instantiateItem(ViewGroup* container, int position)override{
+#if ENABLE(DAYTIME_WIDGETS)
         SimpleMonthView*sm=new  SimpleMonthView(1280,560);
         sm->setMonthParams(23,Calendar::MAY+position,2021,-1,1,31);
         container->addView(sm).setId(100+position);
         return sm;
+#else
+        return new TextView("TextView",0,0);
+#endif
     }
     void destroyItem(ViewGroup* container, int position,void* object)override{
         container->removeView((View*)object);
