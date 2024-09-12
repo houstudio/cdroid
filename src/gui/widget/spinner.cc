@@ -338,7 +338,7 @@ bool Spinner::onTouchEvent(MotionEvent& event){
 
 /////////////////////////////////SpinnerPopup//////////////////////////////////////////
 Spinner::DropdownPopup::DropdownPopup(Context*context,Spinner*sp)
-  :ListPopupWindow(context,AttributeSet()){
+  :ListPopupWindow(context,AttributeSet(context,"")){
     mSpinner=sp;
     mAdapter=nullptr;
     setAnchorView(mSpinner);

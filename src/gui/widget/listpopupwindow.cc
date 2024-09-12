@@ -23,9 +23,10 @@ public:
 
 ListPopupWindow::ListPopupWindow(Context*context,const AttributeSet&atts){
     mContext = context;
+    initPopupWindow();
     mDropDownHorizontalOffset = atts.getDimensionPixelOffset("dropDownHorizontalOffet",0);
     mDropDownVerticalOffset   = atts.getDimensionPixelOffset("dropDownVerticalOffet",0);
-    initPopupWindow();
+    mPopup = new PopupWindow(mContext,atts);
 }
 
 ListPopupWindow::~ListPopupWindow(){
@@ -51,11 +52,11 @@ void ListPopupWindow::initPopupWindow(){
     mDropDownGravity= Gravity::NO_GRAVITY;
     mPromptPosition = POSITION_PROMPT_ABOVE;
     mHandler = new Handler();
-    mPopup =new PopupWindow(mContext,AttributeSet(mContext,""));
+    mPopup = nullptr;
     mHideSelector = [this](){
         clearListSelection();
     };
-    mTouchInterceptor =[this](View& v, MotionEvent& event){
+    mTouchInterceptor = [this] (View& v, MotionEvent& event){
         const int action = event.getAction();
         const int x = (int) event.getX();
         const int y = (int) event.getY();
