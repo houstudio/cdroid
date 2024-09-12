@@ -1,6 +1,7 @@
 #include <memory>
 #include <cstring>
 #include <fstream>
+#include <gui_features.h>
 #include <drawables/drawable.h>
 #include <drawables/bitmapdrawable.h>
 #include <drawables/ninepatchdrawable.h>
