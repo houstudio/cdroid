@@ -67,20 +67,22 @@ void  QRCodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     const int heightMode = MeasureSpec::getMode(heightMeasureSpec);
     const int widthSize  = MeasureSpec::getSize(widthMeasureSpec);
     const int heightSize = MeasureSpec::getSize(heightMeasureSpec);
-    int width,height;
-    if(widthMode == MeasureSpec::EXACTLY){
-        width = widthSize;
-        mZoom = float(width)/mQrCodeWidth;
-    }else{
-        width = mQrCodeWidth*mZoom;
+    int width = widthSize,height=heightSize;
+    switch(widthMode){
+    case MeasureSpec::EXACTLY:
+        height= width;
+    case MeasureSpec::AT_MOST:
+        if(heightMode==MeasureSpec::EXACTLY){
+            height= heightSize;
+        }else
+            width = mQrCodeWidth*mZoom;
+        break;
+    case MeasureSpec::UNSPECIFIED:
+        break;
     }
-    if(heightMode == MeasureSpec::EXACTLY){
-        height= heightSize;
-        mZoom = std::max(mZoom,float(height)/mQrCodeWidth);
-    }else{
-        height= mQrCodeWidth*mZoom;
-    }
-    LOGD("setMeasuredDimension(%d,%d)",width,height);
+    mZoom = std::min(width,height);
+    mZoom /= mQrCodeWidth;
+    LOGV("setMeasuredDimension(%d,%d)  %dx%d mZoom=%f",width,height,widthSize,heightSize,mZoom);
     setMeasuredDimension(width, height);
 }
 

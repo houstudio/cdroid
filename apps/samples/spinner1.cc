@@ -48,6 +48,7 @@ int main(int argc,const char*argv[]){
     LinearLayout*linear = new LinearLayout(0,0);
     linear->setOrientation(LinearLayout::VERTICAL);
     w->addView(linear);
+#if ENABLE(SPINNER)
     Spinner*spinner=new Spinner(300,40);
     spinner->setAdapter(adapter);
     spinner->setId(100);
@@ -57,5 +58,6 @@ int main(int argc,const char*argv[]){
     spinner->requestFocus();
     spinner->requestLayout();
     spinner->setSelection(0);
+#endif
     app.exec();
 }
