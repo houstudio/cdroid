@@ -20,12 +20,13 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
             if(it->second)it->second();
             mAnimatorSetupMap.erase(it);
         }
-        
+
         it = mAnimatorOnStartMap.find(&animation);
         if (it!=mAnimatorOnStartMap.end()) {
             if(it->second)it->second();
             mAnimatorOnStartMap.erase(it);
         }
+
         if (mListener.onAnimationStart) {
             mListener.onAnimationStart(animation,reverse);
         }
@@ -57,7 +58,7 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
         if (mListener.onAnimationEnd) {
             mListener.onAnimationEnd(animation,reverse);
         }
-        it = mAnimatorOnEndMap.find(&animation); 
+        it = mAnimatorOnEndMap.find(&animation);
         if ( (it!=mAnimatorOnEndMap.end()) && it->second){
             it->second();
             mAnimatorOnEndMap.erase(it);

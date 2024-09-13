@@ -693,21 +693,12 @@ void CarouselLayoutManager::LayoutHelper::fillLayoutOrder() {
 }
 
 std::shared_ptr<CarouselLayoutManager::LayoutOrder> CarouselLayoutManager::LayoutHelper::createLayoutOrder() {
-    /*Iterator<LayoutOrder*> iterator = mReusedItems.iterator();
-    while (iterator.hasNext()) {
-        WeakReference<LayoutOrder> layoutOrderWeakReference = iterator.next();
-        LayoutOrder* layoutOrder = layoutOrderWeakReference.get();
-        iterator.remove();
-        if (nullptr != layoutOrder) {
-            return layoutOrder;
-        }
-    }*/
     for(auto it=mReusedItems.begin();it!=mReusedItems.end();it++){
-       std::weak_ptr<LayoutOrder>layoutOrder = *it;
-       it = mReusedItems.erase(it);
-       if(!layoutOrder.expired()){
-	   return layoutOrder.lock();//it = mReusedItems.erase(it);
-       }
+        std::weak_ptr<LayoutOrder>layoutOrder = *it;
+        it = mReusedItems.erase(it);
+        if(!layoutOrder.expired()){
+	        return layoutOrder.lock();//it = mReusedItems.erase(it);
+        }
     }
     return std::make_shared<LayoutOrder>();
 }

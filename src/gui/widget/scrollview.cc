@@ -795,7 +795,7 @@ bool ScrollView::arrowScroll(int direction) {
         // (also, need to temporarily force FOCUS_BEFORE_DESCENDANTS so we are
         // sure to
         // get it)
-        int descendantFocusability = getDescendantFocusability();  // save
+        const int descendantFocusability = getDescendantFocusability();  // save
         setDescendantFocusability(ViewGroup::FOCUS_BEFORE_DESCENDANTS);
         requestFocus();
         setDescendantFocusability(descendantFocusability);  // restore

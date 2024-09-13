@@ -135,8 +135,8 @@ void ViewTreeObserver::removeOnWindowAttachListener(const OnWindowAttachListener
     for(auto it = mOnWindowAttachListeners.begin();it!=mOnWindowAttachListeners.end();it++){
         if(it->onWindowDetached==victim.onWindowDetached){
             mOnWindowAttachListeners.erase(it);
-	    break;
-	}
+	        break;
+	    }
     }
 }
 

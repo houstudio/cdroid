@@ -312,7 +312,7 @@ void RippleDrawable::onHotspotBoundsChanged(){
     for(auto ripple:mExitingRipples)
         ripple->onHotspotBoundsChanged();
     if(mRipple)mRipple->onHotspotBoundsChanged();
-    if(mBackground)mBackground->onHotspotBoundsChanged(); 
+    if(mBackground)mBackground->onHotspotBoundsChanged();
 }
 
 void RippleDrawable::draw(Canvas& canvas){
@@ -345,12 +345,13 @@ void RippleDrawable::invalidateSelf(bool invalidateMask) {
 }
 
 void RippleDrawable::pruneRipples() {
-    for(auto it = mExitingRipples.begin();it!=mExitingRipples.end();it++){
+    for(auto it = mExitingRipples.begin();it!=mExitingRipples.end();){
         RippleForeground*fg = *it;
         if(fg->hasFinishedExit()){
             it = mExitingRipples.erase(it);
             delete fg;
-            if(it==mExitingRipples.end())break;
+        }else {
+            it++;
         }
     }
 }
