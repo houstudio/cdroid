@@ -23,7 +23,10 @@ option(ENABLE_DAYTIME_WIDGETS "Enable Daytime widgets" OFF)
 option(ENABLE_RECYCLERVIEW "Enable RecyclerView" ON)
 option(ENABLE_NAVIGATION "Enable Navigation" OFF)
 
+find_package(ZLIB REQUIRED)
 find_package(ZIP REQUIRED)
+find_package(BZip2 REQUIRED)
+find_package(Pixman REQUIRED)
 find_package(Freetype2 REQUIRED)
 find_package(EXPAT REQUIRED)
 find_package(Cairo REQUIRED)
@@ -42,6 +45,8 @@ set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES} ${RTAUDIO_INCLUDE_DIRS}"
 #message(FATAL_ERROR "Matplot++=${Matplot++_LIBRARY}-${Matplot++_INCLUDE_DIR} -${Matplot++_FOUND}-${Matplot++_LIBRARIES}")
 
 list(APPEND CDROID_DEPLIBS
+    ${ZLIB_LIBRARIES}
+    ${BZIP2_LIBRARIES}
     ${PNG_LIBRARIES}
     ${FREETYPE2_LIBRARIES}
     ${PIXMAN_LIBRARIES}
