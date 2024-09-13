@@ -15,7 +15,7 @@ set(DECODER_SRCS
     pngframesequence.cc
     webpframesequence.cc
     #pngchunks.cc
-    )
+)
 
 include_directories(
 	./ ../
