@@ -107,7 +107,7 @@ Pattern::Dither Pattern::get_dither() const{
   check_object_status_and_throw_exception(*this);
   return result;
 #else
-  return 0;
+  return DITHER_DEFAULT;
 #endif
 }
 
