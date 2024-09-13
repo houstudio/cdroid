@@ -192,24 +192,22 @@ std::string Preferences::getString(const std::string&section,const std::string&k
 
 void Preferences::setValue(const std::string&section,const std::string&key,bool v){
     auto sec=mPrefs.find(section);
-    if(sec==mPrefs.end()){
+    if(sec==mPrefs.end())
 	    sec = mPrefs.insert({section,std::map<std::string,std::string>()}).first;
-    }
     auto kv = sec->second.find(key);
     if(kv == sec->second.end())
-	sec->second.insert({key,(v?"true":"false")});
+	    sec->second.insert({key,(v?"true":"false")});
     else kv->second = (v?"true":"false");
     updates++;
 }
 
 void Preferences::setValue(const std::string&section,const std::string&key,int v){
     auto sec = mPrefs.find(section);
-    if(sec == mPrefs.end()){
+    if(sec == mPrefs.end())
         sec = mPrefs.insert({section,std::map<std::string,std::string>()}).first;
-    }
     auto kv = sec->second.find(key);
     if(kv == sec->second.end())
-	sec->second.insert({key,std::to_string(v)});
+	    sec->second.insert({key,std::to_string(v)});
     else kv->second = std::to_string(v);
     LOGV("%s %s %d",section.c_str(),key.c_str(),v);
     updates++;
@@ -221,7 +219,7 @@ void Preferences::setValue(const std::string&section,const std::string&key,float
         sec = mPrefs.insert({section,std::map<std::string,std::string>()}).first;
     auto kv = sec->second.find(key);
     if(kv == sec->second.end())
-	sec->second.insert({key,std::to_string(v)});
+	    sec->second.insert({key,std::to_string(v)});
     else kv->second = std::to_string(v);
     LOGV("%s %s %f",section.c_str(),key.c_str(),v);
     updates++;
@@ -233,7 +231,7 @@ void Preferences::setValue(const std::string&section,const std::string&key,const
 	    sec = mPrefs.insert({section,std::map<std::string,std::string>()}).first;
     auto kv = sec->second.find(key);
     if(kv == sec->second.end())
-	sec->second.insert({key,v});
+	    sec->second.insert({key,v});
     else kv->second = v;
     LOGV("%s %s %s",section.c_str(),key.c_str(),v.c_str());
     updates++;

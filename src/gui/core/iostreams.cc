@@ -92,7 +92,7 @@ std::streambuf::pos_type  ZipStreamBuf::seekoff(std::streambuf::off_type off, st
     return off;
 }
 
-std::streambuf::pos_type  ZipStreamBuf::seekpos(std::streambuf::pos_type pos, 
+std::streambuf::pos_type  ZipStreamBuf::seekpos(std::streambuf::pos_type pos,
     std::ios_base::openmode mode/*ios_base::in | ios_base::out*/){
     return seekoff(pos,std::ios_base::beg,mode);
 }

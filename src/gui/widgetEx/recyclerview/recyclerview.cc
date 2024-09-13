@@ -206,9 +206,9 @@ void RecyclerView::initAutofill() {
     /*if (getImportantForAutofill()== View::IMPORTANT_FOR_AUTOFILL_AUTO) {
         setImportantForAutofill(View::IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
     }*/
-} 
+}
 
-//Runnable mUpdateChildViewsRunnable 
+//Runnable mUpdateChildViewsRunnable
 void RecyclerView::doUpdateChildViews(){
     if (!mFirstLayoutComplete || isLayoutRequested()) {
         // a layout request will happen, we should not do layout here.
@@ -3582,7 +3582,7 @@ RecyclerView::ViewHolder* RecyclerView::RecycledViewPool::getRecycledView(int vi
         std::vector<ViewHolder*>& scrapHeap = scrapData->mScrapHeap;
         ViewHolder*ret = scrapHeap.back();
         scrapHeap.pop_back();
-        return ret;	
+        return ret;
     }
     return nullptr;
 }
@@ -5570,7 +5570,7 @@ void RecyclerView::LayoutManager::getTransformedBoundingBox(View* child, bool in
     if (includeDecorInsets) {
         Rect& insets = ((LayoutParams*) child->getLayoutParams())->mDecorInsets;
         out.set(-insets.left, -insets.top,
-            child->getWidth() + insets.left + insets.width, 
+            child->getWidth() + insets.left + insets.width,
             child->getHeight() + insets.top + insets.height);
     } else {
         out.set(0, 0, child->getWidth(), child->getHeight());
@@ -6216,7 +6216,7 @@ void RecyclerView::ViewHolder::addChangePayload(Object* payload) {
 }
 
 void RecyclerView::ViewHolder::createPayloadsIfNeeded() {
-    //if (mPayloads.empty() == null) 
+    //if (mPayloads.empty() == null)
     {
         mUnmodifiedPayloads = &mPayloads;// Collections.unmodifiableList(mPayloads);
     }

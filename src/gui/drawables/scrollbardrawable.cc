@@ -112,7 +112,7 @@ bool ScrollBarDrawable::onStateChange(const std::vector<int>&state) {
 void ScrollBarDrawable::drawTrack(Canvas&canvas,const Rect& bounds, bool vertical) {
     Drawable* track=vertical?mVerticalTrack:mHorizontalTrack;
     if ( track ) {
-        if (mBoundsChanged) 
+        if (mBoundsChanged)
             track->setBounds(bounds);
         track->draw(canvas);
     }
@@ -127,7 +127,7 @@ void ScrollBarDrawable::drawThumb(Canvas& canvas,const Rect& bounds, int offset,
             mVerticalThumb->draw(canvas);
         }
     } else if ( mHorizontalThumb ) {
-        if (changed) 
+        if (changed)
             mHorizontalThumb->setBounds(bounds.left+ offset, bounds.top,length, bounds.height);
         mHorizontalThumb->draw(canvas);
     }

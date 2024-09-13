@@ -1024,7 +1024,7 @@ private:
     Action* mRecyclingAction;
     bool mStarted;
 private:
-    void onAnimation(int dx, int dy);    
+    void onAnimation(int dx, int dy);
 protected:
     void start(RecyclerView* recyclerView, RecyclerView::LayoutManager* layoutManager);
     void stop();

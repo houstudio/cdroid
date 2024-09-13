@@ -26,7 +26,7 @@ private:
     bool mStackFromEnd = false;
     bool mSmoothScrollbarEnabled = true;
     bool mRecycleChildrenOnDetach;
-    LayoutChunkResult* mLayoutChunkResult;;
+    LayoutChunkResult* mLayoutChunkResult;
     int mInitialPrefetchItemCount;
     int mReusableIntPair[2];
 private:

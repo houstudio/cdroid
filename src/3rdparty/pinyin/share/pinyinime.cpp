@@ -59,6 +59,7 @@ extern "C" {
     //   return false;
 
     // return matrix_search->init_fd(sys_fd, start_offset, length, fn_usr_dict);
+    return false;
   }
 
   void im_close_decoder(void*hime) {

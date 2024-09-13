@@ -7,7 +7,6 @@
 
 namespace cdroid{
 
-TimeInterpolator* ValueAnimator::sDefaultInterpolator = new AccelerateDecelerateInterpolator();
 
 ValueAnimator::ValueAnimator(){
     mReversing = false;

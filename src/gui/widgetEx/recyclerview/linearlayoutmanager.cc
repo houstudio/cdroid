@@ -526,7 +526,7 @@ bool LinearLayoutManager::updateAnchorFromChildren(RecyclerView::Recycler& recyc
         // If that is the case, offset it back to 0 so that we use these pre-layout children.
         if (!state.isPreLayout() && supportsPredictiveItemAnimations()) {
             // validate this child is at least partially visible. if not, offset it to start
-            const bool notVisible =  mOrientationHelper->getDecoratedStart(referenceChild) 
+            const bool notVisible =  mOrientationHelper->getDecoratedStart(referenceChild)
 		    >= mOrientationHelper->getEndAfterPadding()
                     || mOrientationHelper->getDecoratedEnd(referenceChild)
                     < mOrientationHelper->getStartAfterPadding();
@@ -1379,8 +1379,8 @@ View* LinearLayoutManager::findOnePartiallyOrCompletelyInvisibleChild(int fromIn
     if (next == 0) {
         return getChildAt(fromIndex);
     }
-    int preferredBoundsFlag = 0;/*ViewBoundsCheck.ViewBounds*/ 
-    int acceptableBoundsFlag = 0;/*ViewBoundsCheck.ViewBounds*/ 
+    int preferredBoundsFlag = 0;/*ViewBoundsCheck.ViewBounds*/
+    int acceptableBoundsFlag = 0;/*ViewBoundsCheck.ViewBounds*/
     if (mOrientationHelper->getDecoratedStart(getChildAt(fromIndex))
             < mOrientationHelper->getStartAfterPadding()) {
         preferredBoundsFlag = (ViewBoundsCheck::FLAG_CVS_LT_PVS | ViewBoundsCheck::FLAG_CVE_LT_PVE

@@ -36,7 +36,7 @@ class MemoryBuf: public std::streambuf {
 private:
     std::streambuf::pos_type buffpos,buffersize;
 public:
-    MemoryBuf(char const* base, size_t size); 
+    MemoryBuf(char const* base, size_t size);
     std::streambuf::pos_type  seekoff(std::streambuf::off_type off, std::ios_base::seekdir way,
         std::ios_base::openmode mode/*ios_base::in | ios_base::out*/)override;
 };
