@@ -20,10 +20,12 @@ set(DECODER_SRCS
 include_directories(
 	./ ../
 	../../porting/include
-	${CMAKE_BINARY_DIR}/include
 	${FREETYPE2_INCLUDE_DIRS}
 	${CAIRO_INCLUDE_DIRS}
-	${WEBP_INCLUDE_DIRS})
+	${WEBP_INCLUDE_DIRS}
+	${CMAKE_BINARY_DIR}/include
+    ${CMAKE_BINARY_DIR}/include/gui
+)
 
 list(APPEND IMAGE_DEPLIBS ${PNG_LIBRARIES})
 

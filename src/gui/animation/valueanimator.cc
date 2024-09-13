@@ -51,7 +51,7 @@ ValueAnimator::ValueAnimator(const ValueAnimator&o){
     mCurrentFraction = 0;
     mSelfPulse = true;
     mSuppressSelfPulseRequested = false;
-    mInterpolator = sDefaultInterpolator;
+    mInterpolator = AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
     auto& oldValues = o.mValues;
     if (oldValues.size()) {
         const int numValues = oldValues.size();

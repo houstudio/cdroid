@@ -50,7 +50,7 @@ check_function_exists(poll HAVE_POLL)
 check_include_file("rtaudio/RtAudio.h" HAVE_RTAUDIO_H)
 
 configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
-configure_file(gui_features.h.cmake  ${PROJECT_SOURCE_DIR}/gui_features.h)
+#configure_file(gui_features.h.cmake  ${PROJECT_SOURCE_DIR}/gui_features.h)
 
 add_definitions(--include gui_features.h)
 add_definitions(--include cdtypes.h)
