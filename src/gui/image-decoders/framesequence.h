@@ -22,13 +22,14 @@
 #include <memory>
 #include <iostream>
 #include <functional>
-#define  COLOR_8888_ALPHA_MASK  0xff000000 // TODO: handle endianness
-#define  COLOR_TRANSPARENT 0x0
 
 namespace cdroid{
 class FrameSequenceState;
 class Context;
 class FrameSequence {
+public:
+    static constexpr uint32_t COLOR_8888_ALPHA_MASK = 0xff000000;
+    static constexpr uint32_t COLOR_TRANSPARENT = 0x0;
 public:
     typedef std::function<bool(const uint8_t*,uint32_t)>Verifier;
     typedef std::function<FrameSequence*(cdroid::Context*,std::istream*stream)> Factory;

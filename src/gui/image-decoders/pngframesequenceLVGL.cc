@@ -19,9 +19,9 @@
 #include <cdlog.h>
 #include <core/color.h>
 #include <png.h>
-#ifdef PNG_APNG_SUPPORTED
+#if defined(PNG_APNG_SUPPORTED)
 #include <image-decoders/pngframesequenceLVGL.h>
-
+#error DO NOT USE,It seems has some bug with DisposeOP=PNG_DISPOSE_OP_PREVIOUS
 namespace cdroid {
 //REF: https://gitee.com/suyimin1/APNG4Android
 //https://gitee.com/z411500976/upng-js/blob/master/UPNG.js
