@@ -151,7 +151,7 @@ void AnimatedRotateDrawable::updateLocalState(){
     // so that it looks smooth when rotated.
     Drawable* drawable = getDrawable();
     if (drawable != nullptr) {
-        //drawable->setFilterBitmap(true);
+        drawable->setFilterBitmap(true);
         if (dynamic_cast<BitmapDrawable*>(drawable)) {
             ((BitmapDrawable*)drawable)->setAntiAlias(true);
         }
@@ -178,10 +178,10 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     const bool filteredBitmap = drawable->isFilterBitmap();
 #if 0//Anti clockwise
     Matrix mtx(fcos,-fsin, fsin,fcos,
-            sdot(-fsin,py,1-fcos,px),   sdot(fsin,px,1-fcos,py));
+            sdot(-fsin,py,1-fcos,px), sdot(fsin,px,1-fcos,py));
 #else//Clockwise
     Matrix mtx(fcos,fsin, -fsin,fcos,
-            sdot(fsin,py,1-fcos,px),  sdot(-fsin,px,1-fcos,py));
+            sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));
     canvas.save();
     canvas.translate(bounds.left,bounds.top);
     canvas.transform(mtx);
