@@ -337,7 +337,7 @@ public:
   /** For instance,
    * void on_destroy();
    */
-  typedef void(*SlotDestroy)();
+  typedef void(*SlotDestroy)(void*data);
 
   /** Attach an image in the format mime_type to surface. To remove the data from
    * a surface, call unset_mime_data() with same mime type.

@@ -27,7 +27,7 @@ BitmapDrawable::BitmapState::BitmapState(){
 BitmapDrawable::BitmapState::BitmapState(RefPtr<ImageSurface>bitmap)
     :BitmapState(){
     mBitmap = bitmap;
-    mTransparency = computeTransparency(bitmap);
+    mTransparency = ImageDecoder::getTransparency(bitmap);
 }
 
 BitmapDrawable::BitmapState::BitmapState(const BitmapState&bitmapState){
@@ -121,7 +121,7 @@ RefPtr<ImageSurface> BitmapDrawable::getBitmap()const{
 
 void BitmapDrawable::setBitmap(RefPtr<ImageSurface>bmp){
     mBitmapState->mBitmap = bmp;
-    mBitmapState->mTransparency = computeTransparency(bmp);
+    mBitmapState->mTransparency = ImageDecoder::getTransparency(bmp);
     mDstRectAndInsetsDirty = true;
     computeBitmapSize();
     invalidateSelf();
@@ -186,41 +186,6 @@ void BitmapDrawable::setAutoMirrored(bool mirrored){
 
 bool BitmapDrawable::isAutoMirrored(){
     return mBitmapState->mAutoMirrored;
-}
-
-int BitmapDrawable::computeTransparency(RefPtr<ImageSurface>bmp){
-    if((bmp==nullptr)||(bmp->get_width()==0)||(bmp->get_height()==0))
-        return PixelFormat::TRANSPARENT;
-    if((bmp->get_content()&&(Cairo::Content::CONTENT_ALPHA)==0))
-        return PixelFormat::OPAQUE;
-
-    if( (bmp->get_content()&CONTENT_COLOR) ==0){
-        switch(bmp->get_format()){
-        case Surface::Format::A1: return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
-        case Surface::Format::A8:
-            for(int y=0;y<bmp->get_height();y++){
-                uint8_t*alpha=bmp->get_data()+bmp->get_stride()*y;
-                for(int x=0;x<bmp->get_width();x++,alpha++)
-                    if(*alpha > 0 && *alpha < 255)
-                        return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;
-            }
-            return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
-        default:return PixelFormat::TRANSLUCENT; 
-        }
-    }
-    if((bmp->get_format()==Surface::Format::RGB16_565)||(bmp->get_format()==Surface::Format::RGB24))
-        return PixelFormat::OPAQUE;
-    if(bmp->get_format()!=Surface::Format::ARGB32)
-        return PixelFormat::TRANSLUCENT;
-    for(int y = 0;y < bmp->get_height() ;y++){
-        uint32_t*pixel = (uint32_t*)(bmp->get_data() + bmp->get_stride()*y);
-        for (int x = 0; x < bmp->get_width(); x++, pixel++){
-            int a = (*pixel & 0xff000000) >> 24;
-            if (a > 0 && a < 255)return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;
-            else if(a==0)return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA
-        }
-    }
-    return  PixelFormat::OPAQUE;
 }
 
 int BitmapDrawable::getOpacity(){
@@ -384,8 +349,8 @@ void BitmapDrawable::draw(Canvas&canvas){
     if(mBitmapState->mTileModeX>=0||mBitmapState->mTileModeY>=0){
         RefPtr<SurfacePattern> pat =SurfacePattern::create(mBitmapState->mBitmap);
         if(mBitmapState->mTileModeX!=TileMode::DISABLED){
-            RefPtr<Surface> subs=ImageSurface::create(Surface::Format::ARGB32,mBounds.width,mBitmapHeight);
-            RefPtr<Cairo::Context>subcanvas=Cairo::Context::create(subs);
+            RefPtr<Surface> subs = ImageSurface::create(Surface::Format::ARGB32,mBounds.width,mBitmapHeight);
+            RefPtr<Cairo::Context> subcanvas = Cairo::Context::create(subs);
             subcanvas->rectangle(0,0,mBounds.width,mBitmapHeight);
             setPatternByTileMode(pat,mBitmapState->mTileModeX);
             subcanvas->set_source(pat);
@@ -393,23 +358,23 @@ void BitmapDrawable::draw(Canvas&canvas){
 
             RefPtr<SurfacePattern>pats= SurfacePattern::create(subs);
             canvas.set_source(pats);
-            if(mBounds.height>mBitmapHeight&&mBitmapState->mTileModeY==TileMode::DISABLED)
+            if( (mBounds.height>mBitmapHeight) && (mBitmapState->mTileModeY==TileMode::DISABLED) )
                  setPatternByTileMode(pats,TileMode::CLAMP);
             else setPatternByTileMode(pats,mBitmapState->mTileModeY);
             canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
             canvas.fill();
         }else{
-            RefPtr<Surface> subs=ImageSurface::create(Surface::Format::ARGB32,mBitmapWidth,mBounds.height);
-            RefPtr<Cairo::Context>subcanvas=Cairo::Context::create(subs);
+            RefPtr<Surface> subs = ImageSurface::create(Surface::Format::ARGB32,mBitmapWidth,mBounds.height);
+            RefPtr<Cairo::Context> subcanvas = Cairo::Context::create(subs);
            
             subcanvas->rectangle(0,0,mBitmapWidth,mBounds.height);
             setPatternByTileMode(pat,mBitmapState->mTileModeY);
             subcanvas->set_source(pat);
             subcanvas->fill();
 
-            RefPtr<SurfacePattern>pats= SurfacePattern::create(subs); 
+            RefPtr<SurfacePattern>pats = SurfacePattern::create(subs); 
             canvas.set_source(pats);
-            if(mBounds.width>mBitmapWidth&&mBitmapState->mTileModeX==TileMode::DISABLED)
+            if( (mBounds.width>mBitmapWidth) && (mBitmapState->mTileModeX==TileMode::DISABLED))
                 setPatternByTileMode(pats,TileMode::CLAMP);
             else setPatternByTileMode(pats,mBitmapState->mTileModeX);
             canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
@@ -432,7 +397,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         LOGD_IF((angle_degrees%90)&&(mBitmapState->mFilterBitmap==false),"Maybe you must use setFilterBitmap(true)");
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
-        if ( (mBounds.width !=mBitmapWidth)  || (mBounds.height != mBitmapHeight) ) {
+        if ( (mBounds.width !=mBitmapWidth) || (mBounds.height != mBitmapHeight) ) {
             canvas.scale(dw/sw,dh/sh);
             dx /= fx;       dy /= fy;
 #if defined(__x86_64__)||defined(__amd64__)||defined(__i386__)

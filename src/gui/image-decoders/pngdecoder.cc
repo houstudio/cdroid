@@ -16,19 +16,21 @@ namespace cdroid {
 struct PRIVATE {
     png_structp png_ptr;
     png_infop info_ptr;
+    std::istream*istream;
 };
 
 static void istream_png_reader(png_structp png_ptr, png_bytep png_data, png_size_t data_size) {
-    std::istream* is = (std::istream*)(png_get_io_ptr(png_ptr));
-    is->read(reinterpret_cast<char*>(png_data), data_size);
+    PRIVATE*priv = (PRIVATE*)(png_get_io_ptr(png_ptr));
+    priv->istream->read(reinterpret_cast<char*>(png_data), data_size);
 }
 
 PNGDecoder::PNGDecoder(Context*ctx,const std::string&resourceId):ImageDecoder(ctx,resourceId) {
     mPrivate = new PRIVATE();
     mPrivate->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     mPrivate->info_ptr= png_create_info_struct(mPrivate->png_ptr);
+    mPrivate->istream = istream.get();
     LOGV("%s",resourceId.c_str());
-    png_set_read_fn(mPrivate->png_ptr,(void*)istream.get(),istream_png_reader);
+    png_set_read_fn(mPrivate->png_ptr,mPrivate,istream_png_reader);
 }
 
 PNGDecoder::~PNGDecoder() {
@@ -108,7 +110,10 @@ Cairo::RefPtr<Cairo::ImageSurface> PNGDecoder::decode(float scale,void*targetPro
     }
 #endif
     png_read_end (png_ptr, info_ptr);
+    image->set_mime_data(CAIRO_MIME_TYPE_PNG, nullptr, 0, nullptr);
     cairo_surface_set_mime_data(image->cobj(), CAIRO_MIME_TYPE_PNG, nullptr, 0, nullptr,nullptr);
+    const int transparency = ImageDecoder::computeTransparency(image);
+    ImageDecoder::setTransparency(image,transparency);
     return image;
 }
 
@@ -118,7 +123,7 @@ static inline int multiply_alpha (int alpha, int color) {
 }
 
 /* Premultiplies data and converts RGBA bytes => native endian */
-static void premultiply_data (png_structp png, png_row_infop row_info, png_bytep     data) {
+static void premultiply_data (png_structp png, png_row_infop row_info, png_bytep data) {
     unsigned int i;
 
     for (i = 0; i < row_info->rowbytes; i += 4) {

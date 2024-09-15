@@ -17,7 +17,7 @@
 #endif
 
 namespace cdroid{
-
+using namespace Cairo;
 void*ImageDecoder::mCMSProfile = nullptr;
 
 ImageDecoder::ImageDecoder(Context*ctx,const std::string&resourceId){
@@ -55,6 +55,58 @@ int ImageDecoder::getWidth()const{
 
 int ImageDecoder::getHeight()const{
     return mImageHeight;
+}
+
+int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
+    if((bmp==nullptr)||(bmp->get_width()==0)||(bmp->get_height()==0))
+        return PixelFormat::TRANSPARENT;
+    if((bmp->get_content()&&(Cairo::Content::CONTENT_ALPHA)==0))
+        return PixelFormat::OPAQUE;
+
+    if( (bmp->get_content()&CONTENT_COLOR) ==0){
+        switch(bmp->get_format()){
+        case Surface::Format::A1: return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
+        case Surface::Format::A8:
+            for(int y=0;y<bmp->get_height();y++){
+                uint8_t*alpha=bmp->get_data()+bmp->get_stride()*y;
+                for(int x=0;x<bmp->get_width();x++,alpha++)
+                    if(*alpha > 0 && *alpha < 255)
+                        return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;
+            }
+            return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
+        default:return PixelFormat::TRANSLUCENT;
+        }
+    }
+
+    if((bmp->get_format()==Surface::Format::RGB16_565)||(bmp->get_format()==Surface::Format::RGB24))
+        return PixelFormat::OPAQUE;
+
+    if(bmp->get_format()!=Surface::Format::ARGB32)
+        return PixelFormat::TRANSLUCENT;
+
+    for(int y = 0;y < bmp->get_height() ;y++){
+        uint32_t*pixel = (uint32_t*)(bmp->get_data() + bmp->get_stride()*y);
+        for (int x = 0; x < bmp->get_width(); x++, pixel++){
+            int a = (*pixel & 0xff000000) >> 24;
+            if (a > 0 && a < 255)return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;
+            else if(a==0)return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA
+        }
+    }
+
+    return  PixelFormat::OPAQUE;
+}
+
+#define TRANSPARENCY "TRANSPARENCY"
+
+int ImageDecoder::getTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
+    unsigned long len;
+    const unsigned char*data= bmp->get_mime_data((const char*)TRANSPARENCY,len);
+    const int transparency  = int((unsigned long)data);
+    return transparency?transparency:int(PixelFormat::OPAQUE);
+}
+
+void ImageDecoder::setTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp,int transparency){
+    bmp->set_mime_data((const char*)TRANSPARENCY,(unsigned char*)(long(transparency)),0,nullptr);
 }
 
 static bool matchesGIFSignature(char* contents){

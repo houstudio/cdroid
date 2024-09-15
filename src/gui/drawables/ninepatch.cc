@@ -1,6 +1,6 @@
 #include <drawables/ninepatch.h>
 #include <core/context.h>
-#include <drawables/bitmapdrawable.h>
+#include <image-decoders/imagedecoder.h>
 #include <cdlog.h>
 
 using namespace Cairo;
@@ -11,7 +11,7 @@ namespace cdroid{
 NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
     : mImage(image){
     mContentArea = getContentArea();
-    mOpacity = INT_MAX;
+    mOpacity = ImageDecoder::computeTransparency(mImage);
     mAlpha =1.f;
     getResizeArea();
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
@@ -23,7 +23,7 @@ NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
 NinePatch::NinePatch(Context*ctx,const std::string&resid){
     mImage= ctx->loadImage(resid);
     mContentArea = getContentArea();
-    mOpacity = INT_MAX;
+    mOpacity = ImageDecoder::computeTransparency(mImage);
     mAlpha = 1.0f;
     getResizeArea();
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
@@ -35,21 +35,16 @@ NinePatch::NinePatch(Context*ctx,const std::string&resid){
 NinePatch::~NinePatch() {
 }
 
-static int getRotateAngle(Canvas&canvas){
-    Cairo::Matrix ctx=canvas.get_matrix();
-    double radians = atan2(ctx.yy, ctx.xy);
-    return int(radians*180.f/M_PI);
-}
 
 void NinePatch::draw(Canvas& painter, int  x, int  y,float alpha) {
-    const int angle_degrees = getRotateAngle(painter);
+    Cairo::Matrix ctx = painter.get_matrix();
+    const double radians = atan2(ctx.yy, ctx.xy);
+    const int rotDegrees = int(radians*180.f/M_PI)%90;
+    const bool isScaling = (ctx.xx!=1.f)||(ctx.yy!=1.f);
     painter.save();
     painter.translate(x,y);
-    if(mOpacity ==INT_MAX){
-        mOpacity = BitmapDrawable::computeTransparency(mImage);
-    }
     mAlpha = alpha;
-    const Cairo::SurfacePattern::Filter filterMode = (angle_degrees%90==0)&&(mOpacity==PixelFormat::OPAQUE)?SurfacePattern::Filter::NEAREST:SurfacePattern::Filter::BILINEAR;
+    const SurfacePattern::Filter filterMode = (rotDegrees||isScaling)?SurfacePattern::Filter::BILINEAR:SurfacePattern::Filter::NEAREST;
     painter.set_source(mCachedImage,0,0);
     painter.rectangle(0,0,mCachedImage->get_width(),mCachedImage->get_height());
     painter.clip();
@@ -64,11 +59,9 @@ void NinePatch::draw(Canvas& painter, const Rect&rect,float alpha){
     const int width = rect.width;
     const int height= rect.height;
     std::ostringstream oss;
+
     painter.save();
     painter.translate(rect.left,rect.top);
-    if(mOpacity ==INT_MAX){
-        mOpacity = BitmapDrawable::computeTransparency(mImage);
-    }
     mAlpha = alpha;
     for (int i = 0; i < mResizeDistancesX.size(); i++) {
         resizeWidth += mResizeDistancesX[i].second;

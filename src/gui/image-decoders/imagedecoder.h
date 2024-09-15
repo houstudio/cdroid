@@ -25,10 +25,12 @@ public:
     virtual ~ImageDecoder();
     int getWidth()const;
     int getHeight()const;
-
     virtual bool decodeSize()=0;
     virtual Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)=0;
 
+    static int  computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp);
+    static int  getTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp);
+    static void setTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp,int);
     static std::unique_ptr<ImageDecoder>create(Context*ctx,const std::string&resourceId);
     static Drawable*createAsDrawable(Context*ctx,const std::string&resourceId);
 };

@@ -120,15 +120,15 @@ static void on_cairo_destroy(void *data)
   if(!slot)
     return;
 
-  (*slot)();
+  (*slot)(data);
   delete slot;
 }
 
 void Surface::set_mime_data(const std::string& mime_type, unsigned char* data, unsigned long length, const SlotDestroy& slot_destroy)
 {
-  auto copy = new SlotDestroy(slot_destroy); //Deleted when the callback is called once.
+  //auto copy = new SlotDestroy(slot_destroy); //Deleted when the callback is called once.
   cairo_surface_set_mime_data(const_cast<cobject*>(cobj()), mime_type.c_str(), data, length,
-    &on_cairo_destroy, copy);
+    slot_destroy/*on_cairo_destroy*/, data);
   check_object_status_and_throw_exception(*this);
 }
 
