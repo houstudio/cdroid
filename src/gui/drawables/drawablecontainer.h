@@ -110,6 +110,7 @@ public:
     int getChangingConfigurations()const override;
     void setAlpha(int)override;
     int getAlpha()const override;
+    void setDither(bool dither)override;
     int getOpacity()override;
     int getIntrinsicWidth() const override;
     int getIntrinsicHeight()const override;

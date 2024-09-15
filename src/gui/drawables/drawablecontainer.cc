@@ -469,6 +469,15 @@ int DrawableContainer::getAlpha() const{
     return mAlpha;
 }
 
+void DrawableContainer::setDither(bool dither) {
+    if (mDrawableContainerState->mDither != dither) {
+        mDrawableContainerState->mDither = dither;
+        if (mCurrDrawable != nullptr) {
+            mCurrDrawable->setDither(mDrawableContainerState->mDither);
+        }
+    }
+}
+
 void DrawableContainer::setColorFilter(ColorFilter*colorFilter){
 
     if (mDrawableContainerState->mColorFilter != colorFilter) {
@@ -708,7 +717,7 @@ void DrawableContainer::initializeDrawableForDisplay(Drawable*d){
         }*/
     }
     d->setVisible(isVisible(), true);
-    //d->setDither(mDither);
+    d->setDither(mDrawableContainerState->mDither);
     d->setState(getState());
     d->setLevel(getLevel());
     d->setBounds(getBounds());

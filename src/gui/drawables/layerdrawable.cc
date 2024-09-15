@@ -976,23 +976,30 @@ void LayerDrawable::unscheduleDrawable(Drawable& who,Runnable& what){
 }
 
 bool LayerDrawable::setVisible(bool visible,bool restart){
-    bool changed=Drawable::setVisible(visible,restart);
+    const bool changed = Drawable::setVisible(visible,restart);
     for(auto child:mLayerState->mChildren){
-        Drawable*dr=child->mDrawable;
+        Drawable*dr = child->mDrawable;
         if(dr)dr->setVisible(visible,restart);
     }
     return changed;
 }
 
+void LayerDrawable::setDither(bool dither) {
+    for (auto child:mLayerState->mChildren) {
+        Drawable* dr = child->mDrawable;
+        if (dr) dr->setDither(dither);
+    }
+}
+
 void LayerDrawable::setAlpha(int alpha){
     for(auto child:mLayerState->mChildren){
-        Drawable*dr=child->mDrawable;
-        if(dr)dr->setAlpha(alpha);    
+        Drawable*dr = child->mDrawable;
+        if(dr) dr->setAlpha(alpha);    
     }
 }
 
 int  LayerDrawable::getAlpha()const{
-    Drawable*dr=getFirstNonNullDrawable();
+    Drawable*dr = getFirstNonNullDrawable();
     if(dr) return dr->getAlpha();
     return Drawable::getAlpha();
 }

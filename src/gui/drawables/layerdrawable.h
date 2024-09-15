@@ -152,6 +152,7 @@ public:
     void setTintList(const ColorStateList* tint)override;
     void setTintMode(int tintMode)override;
     bool setVisible(bool visible,bool restart)override;
+    void setDither(bool dither)override;
     void setAlpha(int alpha)override;
     int  getAlpha()const override;
     void setOpacity(int opacity);
