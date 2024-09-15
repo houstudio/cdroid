@@ -30,6 +30,7 @@ private:
     int* mRestoringFrames;
 public:
     class GifFrameSequenceState;
+    static constexpr uint32_t GIF_HEADER_SIZE = 6;/*GIF87a or GIF89a*/
 public:
     GifFrameSequence(cdroid::Context*,std::istream* stream);
     virtual ~GifFrameSequence();
@@ -48,6 +49,7 @@ public:
     uint32_t getBackgroundColor() const { return mBgColor; }
     bool getPreservedFrame(int frameIndex) const { return mPreservedFrames[frameIndex]; }
     int getRestoringFrame(int frameIndex) const { return mRestoringFrames[frameIndex]; }
+    static  bool isGIF(const uint8_t*,uint32_t);
 };
 
 class GifFrameSequence::GifFrameSequenceState : public FrameSequenceState {

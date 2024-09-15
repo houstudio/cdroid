@@ -107,7 +107,7 @@ set(PKGCONFIG_LIBS_PRIVATE "expat libzip")
 set(NONPKG_LIBS "-l${PROJECT_NAME} -ltvhal")#non pkgconfig libraries
 set(NONPKG_LIBS_PRIVATE "-ltvhal")
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
-target_link_libraries(cdroid ${CDROID_DEPLIBS} image-decoders tvhal)
+target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal image-decoders)
 
 if(litehtml_FOUND)
    add_subdirectory(widget/html)

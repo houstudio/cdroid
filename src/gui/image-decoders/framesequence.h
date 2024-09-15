@@ -17,8 +17,11 @@
 #ifndef __FRAME_SEQUENCE_H__
 #define __FRAME_SEQUENCE_H__
 
+#include <map>
+#include <vector>
+#include <memory>
 #include <iostream>
-
+#include <functional>
 #define  COLOR_8888_ALPHA_MASK  0xff000000 // TODO: handle endianness
 #define  COLOR_TRANSPARENT 0x0
 
@@ -27,11 +30,17 @@ class FrameSequenceState;
 class Context;
 class FrameSequence {
 public:
-    struct RegistryEntry;
-    class Registry;
+    typedef std::function<bool(const uint8_t*,uint32_t)>Verifier;
+    typedef std::function<FrameSequence*(cdroid::Context*,std::istream*stream)> Factory;
+    struct Registry{
+        Factory factory;
+        Verifier verifier;
+        uint32_t magicSize;
+        Registry(uint32_t,Factory&,Verifier&);
+    };
 private:
-    static Registry*mHead;
-    static int mHeaderBytesRequired;
+    static std::map<const std::string,Registry>mFactories;
+    static uint32_t mHeaderBytesRequired;
 protected:
     cdroid::Context*mContext;
 public:
@@ -48,7 +57,7 @@ public:
     virtual int getFrameCount() const = 0;
     virtual int getDefaultLoopCount() const = 0;
     virtual FrameSequenceState* createState() const = 0;
-
+    static int registerFactory(const std::string&mime,uint32_t,Factory,Verifier);
     static FrameSequence* create(cdroid::Context*,std::istream* stream);
 };
 
@@ -62,22 +71,6 @@ public:
     */
     virtual long drawFrame(int frameNr, uint32_t* outputPtr, int outputPixelStride, int previousFrameNr) = 0;
     virtual ~FrameSequenceState() {}
-};
-
-struct FrameSequence::RegistryEntry {
-    int requiredHeaderBytes;
-    bool (*checkHeader)(void* header, int header_size);
-    FrameSequence* (*createFrameSequence)(cdroid::Context*,std::istream* stream);
-    bool (*acceptsBuffer)();
-};
-
-class FrameSequence::Registry {
-public:
-    Registry(const RegistryEntry& entry);
-    static const RegistryEntry* find(std::istream* stream);
-private:
-    RegistryEntry mImpl;
-    Registry* mNext;
 };
 
 }/*endof namespace*/

@@ -19,11 +19,10 @@
 #include "cdlog.h"
 #include <gui/gui_features.h>
 #if ENABLE_WEBP&&ENABLE_WEBP
-#include "webp/decode.h"
-#include "webp/demux.h"
-#include "webpframesequence.h"
+#include <webp/decode.h>
+#include <webp/demux.h>
+#include <image-decoders/webpframesequence.h>
 
-#define RIFF_HEADER_SIZE 12 //Size of the RIFF header ("RIFFnnnnWEBP")
 #define CHUNK_HEADER_SIZE  8     // Size of a chunk header.
 #define TAG_SIZE           4     // Size of a chunk tag (e.g. "VP8L").
 #define MAX_CHUNK_PAYLOAD (~0U - CHUNK_HEADER_SIZE - 1)
@@ -57,8 +56,7 @@ void WebPFrameSequence::constructDependencyChain() {
     const int canvasWidth = getWidth();
     const int canvasHeight = getHeight();
 
-    WebPIterator prev;
-    WebPIterator curr;
+    WebPIterator prev , curr;
 
     // Note: WebPDemuxGetFrame() uses base-1 counting.
     int ok = WebPDemuxGetFrame(mDemux, 1, &curr);
@@ -203,10 +201,11 @@ static void copyFrame(const uint32_t* src, int srcStride, uint32_t* dst, int dst
 
 WebPFrameSequence::WebPFrameSequenceState::WebPFrameSequenceState(const WebPFrameSequence& frameSequence) :
         mFrameSequence(frameSequence) {
-    WebPInitDecoderConfig(&mDecoderConfig);
-    mDecoderConfig.options.use_threads = 1;
-    mDecoderConfig.output.is_external_memory = 1;
-    mDecoderConfig.output.colorspace = MODE_bgrA;//Pre-multiplied alpha mode.
+    mDecoderConfig = new WebPDecoderConfig;
+    WebPInitDecoderConfig(mDecoderConfig);
+    mDecoderConfig->options.use_threads = 1;
+    mDecoderConfig->output.is_external_memory = 1;
+    mDecoderConfig->output.colorspace = MODE_bgrA;//Pre-multiplied alpha mode.
     const int canvasWidth = mFrameSequence.getWidth();
     const int canvasHeight = mFrameSequence.getHeight();
     mPreservedBuffer = new uint32_t[canvasWidth * canvasHeight];
@@ -214,6 +213,7 @@ WebPFrameSequence::WebPFrameSequenceState::WebPFrameSequenceState(const WebPFram
 
 WebPFrameSequence::WebPFrameSequenceState::~WebPFrameSequenceState() {
     delete[] mPreservedBuffer;
+    delete mDecoderConfig;
 }
 
 void WebPFrameSequence::WebPFrameSequenceState::initializeFrame(const WebPIterator& currIter, uint32_t* currBuffer,
@@ -249,12 +249,12 @@ void WebPFrameSequence::WebPFrameSequenceState::initializeFrame(const WebPIterat
 bool WebPFrameSequence::WebPFrameSequenceState::decodeFrame(const WebPIterator& currIter, uint32_t* currBuffer,
         int currStride, const WebPIterator& prevIter, const uint32_t* prevBuffer, int prevStride) {
     uint32_t* dst = currBuffer + currIter.x_offset + currIter.y_offset * currStride;
-    mDecoderConfig.output.u.RGBA.rgba = (uint8_t*)dst;
-    mDecoderConfig.output.u.RGBA.stride = currStride * 4;
-    mDecoderConfig.output.u.RGBA.size = mDecoderConfig.output.u.RGBA.stride * currIter.height;
+    mDecoderConfig->output.u.RGBA.rgba = (uint8_t*)dst;
+    mDecoderConfig->output.u.RGBA.stride = currStride * 4;
+    mDecoderConfig->output.u.RGBA.size = mDecoderConfig->output.u.RGBA.stride * currIter.height;
 
     const WebPData& currFrame = currIter.fragment;
-    if (WebPDecode(currFrame.bytes, currFrame.size, &mDecoderConfig) != VP8_STATUS_OK) {
+    if (WebPDecode(currFrame.bytes, currFrame.size, mDecoderConfig) != VP8_STATUS_OK) {
         return false;
     }
 
@@ -384,27 +384,12 @@ long WebPFrameSequence::WebPFrameSequenceState::drawFrame(int frameNr,
 // Registry
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool isWebP(void* header, int header_size) {
+bool WebPFrameSequence::isWEBP(const uint8_t* header,uint32_t header_size) {
     const uint8_t* const header_str = (const uint8_t*)header;
     return (header_size >= RIFF_HEADER_SIZE) &&
             !memcmp("RIFF", header_str, 4) &&
             !memcmp("WEBP", header_str + 8, 4);
 }
 
-static bool acceptsWebPBuffer() {
-    return true;
-}
-
-static FrameSequence* createFramesequence(cdroid::Context*ctx,std::istream* stream) {
-    return new WebPFrameSequence(ctx,stream);
-}
-
-static FrameSequence::RegistryEntry gEntry = {
-    RIFF_HEADER_SIZE,
-    isWebP,
-    createFramesequence,
-    acceptsWebPBuffer,
-};
-static FrameSequence::Registry gRegister(gEntry);
 }/*endof namespace*/
 #endif/*ENABLE_WEBP*/

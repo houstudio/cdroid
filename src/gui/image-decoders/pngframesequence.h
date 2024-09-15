@@ -35,6 +35,8 @@ public:
     class ApngFrame;
     class PngFrameSequenceState;
     friend PngFrameSequenceState;
+    /*PNG_MAGIC "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"*/
+    static constexpr int PNG_HEADER_SIZE = 8;
 public:
     PngFrameSequence(Context*,std::istream* stream);
     virtual ~PngFrameSequence();
@@ -48,8 +50,8 @@ public:
     }
 
     virtual FrameSequenceState* createState() const override;
-
     uint32_t getBackgroundColor() const { return mBgColor; }
+    static bool isPNG(const uint8_t*,uint32_t);
 };
 
 class PngFrameSequence::PngFrameSequenceState : public FrameSequenceState {

@@ -340,26 +340,11 @@ long GifFrameSequence::GifFrameSequenceState::drawFrame(int frameNr,
 // Registry
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool isGif(void* header, int header_size) {
+bool GifFrameSequence::isGIF(const uint8_t* header,uint32_t header_size) {
     return !memcmp(GIF_STAMP, header, GIF_STAMP_LEN)
             || !memcmp(GIF87_STAMP, header, GIF_STAMP_LEN)
             || !memcmp(GIF89_STAMP, header, GIF_STAMP_LEN);
 }
 
-static bool acceptsBuffers() {
-    return false;
-}
-
-static FrameSequence* createFramesequence(cdroid::Context*ctx,std::istream*stream) {
-    return new GifFrameSequence(ctx,stream);
-}
-
-static FrameSequence::RegistryEntry gEntry = {
-    GIF_STAMP_LEN,
-    isGif,
-    createFramesequence,
-    acceptsBuffers,
-};
-static FrameSequence::Registry gRegister(gEntry);
 }/*endof namespace*/
 #endif/*ENABLE_GIF*/

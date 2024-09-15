@@ -260,30 +260,17 @@ long PngFrameSequence::PngFrameSequenceState::drawFrame(int frameNr,
 // Registry
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static bool acceptsBuffers() {
-    return false;
-}
-
-static bool isPng(void* header, int header_size) {
+bool PngFrameSequence::isPNG(const uint8_t* header,uint32_t head_size) {
     static constexpr const char*PNG_STAMP="\x89\x50\x4E\x47\x0D\x0A\x1A\x0A";
-    constexpr int PNG_STAMP_LEN = strlen(PNG_STAMP);
-    return !memcmp(PNG_STAMP, header, PNG_STAMP_LEN)
-           || !memcmp(PNG_STAMP, header, PNG_STAMP_LEN)
-           || !memcmp(PNG_STAMP, header, PNG_STAMP_LEN);
+    return !memcmp(PNG_STAMP, header, PNG_HEADER_SIZE)
+           || !memcmp(PNG_STAMP, header, PNG_HEADER_SIZE)
+           || !memcmp(PNG_STAMP, header, PNG_HEADER_SIZE);
 }
 
 static FrameSequence* createFramesequence(cdroid::Context*ctx,std::istream* stream) {
     return new cdroid::PngFrameSequence(ctx,stream);
 }
 
-static FrameSequence::RegistryEntry gEntry = {
-    8/*PNG_STAMP_LEN*/,
-    isPng,
-    createFramesequence,
-    //NULL,
-    acceptsBuffers,
-};
-static FrameSequence::Registry gRegister(gEntry);
 
 }/*endof namespace*/
 

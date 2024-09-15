@@ -389,10 +389,8 @@ void BitmapDrawable::draw(Canvas&canvas){
         bool isScaling = false;
         const int angle_degrees = getRotateAngle(canvas,isScaling);
 	    //SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;GOOD/FAST seems more slowly than ,BILINEAR/NEAREST
-        const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap)
-               ? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
-        const Pattern::Dither ditherMode = mBitmapState->mDither
-               ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
+        const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap) ? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
+        const Pattern::Dither ditherMode = mBitmapState->mDither ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
 
         LOGD_IF((angle_degrees%90)&&(mBitmapState->mFilterBitmap==false),"Maybe you must use setFilterBitmap(true)");
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);

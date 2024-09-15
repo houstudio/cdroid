@@ -18,6 +18,8 @@
 #define __FRAMESQUENCE_WEBP_H__
 
 #include <image-decoders/framesequence.h>
+struct WebPDecoderConfig;
+struct WebPIterator;
 namespace cdroid{
 // Parser for a possibly-animated WebP bitstream.
 class WebPFrameSequence : public FrameSequence {
@@ -29,11 +31,13 @@ private:
     uint32_t mFormatFlags;
     // mIsKeyFrame[i] is true if ith canvas can be constructed without decoding any prior frames.
     bool* mIsKeyFrame;
+    static Registry mWebp;
 private:
     void constructDependencyChain();
     WebPFrameSequence(const WebPFrameSequence&)=default;
 public:
     class WebPFrameSequenceState;
+    static constexpr uint32_t RIFF_HEADER_SIZE = 12;/*Size of the RIFF header ("RIFFnnnnWEBP")*/
 public:
     WebPFrameSequence(cdroid::Context*,std::istream* stream);
     virtual ~WebPFrameSequence();
@@ -49,13 +53,14 @@ public:
     FrameSequenceState* createState() const override;
     WebPDemuxer* getDemuxer() const { return mDemux; }
     bool isKeyFrame(size_t frameNr) const { return mIsKeyFrame[frameNr]; }
+    static bool isWEBP(const uint8_t*,uint32_t);
 };
 
 // Produces frames of a possibly-animated WebP file for display.
 class WebPFrameSequence::WebPFrameSequenceState: public FrameSequenceState {
 private:
     const WebPFrameSequence& mFrameSequence;
-    WebPDecoderConfig mDecoderConfig;
+    WebPDecoderConfig* mDecoderConfig;
     uint32_t* mPreservedBuffer;
     void initializeFrame(const WebPIterator& currIter, uint32_t* currBuffer, int currStride,
             const WebPIterator& prevIter, const uint32_t* prevBuffer, int prevStride);

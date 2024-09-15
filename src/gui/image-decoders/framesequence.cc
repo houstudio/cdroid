@@ -13,54 +13,73 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "framesequence.h"
+#include <gui_features.h>
+#include <image-decoders/framesequence.h>
+#include <image-decoders/gifframesequence.h>
+#include <image-decoders/pngframesequence.h>
+#include <image-decoders/webpframesequence.h>
+#include <cdlog.h>
 namespace cdroid{
 
-int FrameSequence::mHeaderBytesRequired = 0;
-FrameSequence::Registry* FrameSequence::mHead = nullptr;
+uint32_t FrameSequence::mHeaderBytesRequired = 0;
+
+std::map<const std::string,FrameSequence::Registry> FrameSequence::mFactories;
+
+FrameSequence::Registry::Registry(uint32_t msize,Factory& fun,Verifier& v)
+  :magicSize(msize),factory(fun),verifier(v){
+
+}
 
 FrameSequence::FrameSequence(cdroid::Context*ctx):mContext(ctx){
 }
 
-FrameSequence::Registry::Registry(const RegistryEntry& entry) {
-    mImpl = entry;
-    mNext = mHead;
-    mHead = this;
-    if (mHeaderBytesRequired < entry.requiredHeaderBytes) {
-        mHeaderBytesRequired = entry.requiredHeaderBytes;
-    }
-}
-
-const FrameSequence::RegistryEntry* FrameSequence::Registry::find(std::istream* stream) {
-    Registry* registry = mHead;
-    const off_t headerSize = mHeaderBytesRequired;
-    char header[headerSize];
-    stream->read(header, headerSize);
-    stream->seekg(-headerSize,std::ios::cur);
-    while (registry) {
-        if (headerSize >= registry->mImpl.requiredHeaderBytes
-                && registry->mImpl.checkHeader(header, headerSize)) {
-            return &(registry->mImpl);
-        }
-        registry = registry->mNext;
+int FrameSequence::registerFactory(const std::string&mime,uint32_t magicSize,Factory factory,Verifier v){
+    auto it = mFactories.find(mime);
+    if(it==mFactories.end()){
+        mFactories.insert({mime,Registry(magicSize,factory,v)});
+        mHeaderBytesRequired = std::max(magicSize,mHeaderBytesRequired);
+        LOGD("Register FrameSequence factory[%d] %s", mFactories.size(),mime.c_str());
+        return 0;
     }
     return 0;
 }
 
+static int registerAllFrameSequences(std::map<const std::string,FrameSequence::Registry>&entis){
+    FrameSequence::registerFactory(std::string("mime/apng"),
+            PngFrameSequence::PNG_HEADER_SIZE,
+            [](cdroid::Context*ctx,std::istream* stream){
+                return new PngFrameSequence(ctx,stream);
+            },PngFrameSequence::isPNG);
+#if ENABLE(WEBP)
+    FrameSequence::registerFactory(std::string("mime/webp"),
+            WebPFrameSequence::RIFF_HEADER_SIZE,
+            [](cdroid::Context*ctx,std::istream* stream){
+                return new WebPFrameSequence(ctx,stream);
+            },WebPFrameSequence::isWEBP);
+#endif
+#if ENABLE(GIF)
+    FrameSequence::registerFactory(std::string("mime/gif"),
+            GifFrameSequence::GIF_HEADER_SIZE,
+            [](cdroid::Context*ctx,std::istream* stream){
+                return new GifFrameSequence(ctx,stream);
+            },GifFrameSequence::isGIF);
+#endif
+    return entis.size();
+}
+
 FrameSequence* FrameSequence::create(cdroid::Context*ctx,std::istream* stream) {
-    const RegistryEntry* entry = Registry::find(stream);
-
-    if (!entry) return NULL;
-    FrameSequence* frameSequence = entry->createFrameSequence(ctx,stream);
-    if (!frameSequence->getFrameCount() ||
-            !frameSequence->getWidth() || !frameSequence->getHeight()) {
-        // invalid contents, abort
-        delete frameSequence;
-        return NULL;
+    uint8_t header[32];
+    if((mHeaderBytesRequired==0)||(mFactories.size()==0)){
+        registerAllFrameSequences(mFactories);
     }
-
-    return frameSequence;
+    stream->read((char*)header,mHeaderBytesRequired);
+    stream->seekg(int(-mHeaderBytesRequired),std::ios::cur);
+    for(auto& f:mFactories){
+        auto& dec = f.second;
+        if(dec.verifier(header,mHeaderBytesRequired))
+           return dec.factory(ctx,stream);
+    }
+    return nullptr;
 }
 
 }/*endof namespace*/
