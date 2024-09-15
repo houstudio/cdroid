@@ -9,24 +9,25 @@
 
 namespace cdroid {
 extern "C" {
-    FcPattern *FcFreeTypeQueryFace (const FT_Face  face,
-                                    const FcChar8  *file,
-                                    unsigned int   id,
-                                    FcBlanks       *blanks);
+    FcPattern *FcFreeTypeQueryFace (const FT_Face  face,const FcChar8  *file,
+                                    unsigned int id, FcBlanks *blanks);
     int FcPatternGetFTFace(const FcPattern*,const char*,int,FT_Face*);
 }
+
 Typeface* Typeface::MONOSPACE;
 Typeface* Typeface::SANS_SERIF;
 Typeface* Typeface::SERIF;
 Typeface* Typeface::DEFAULT;
 Typeface* Typeface::DEFAULT_BOLD;
 Typeface* Typeface::sDefaultTypeface;
+
 std::string Typeface::mSystemLang;
 std::string Typeface::mFallbackFamilyName;
+
 static constexpr int SYSLANG_MATCHED = 0x80000000;
 
-std::unordered_map<std::string, Typeface*>Typeface::sSystemFontMap;
 cdroid::Context* Typeface::mContext;
+std::unordered_map<std::string, Typeface*>*Typeface::sSystemFontMap = new std::unordered_map<std::string, Typeface*>;
 
 void Typeface::setContext(cdroid::Context*ctx){
     mContext = ctx;
@@ -43,19 +44,19 @@ Typeface::Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face) {
 Typeface::Typeface(FcPattern & font) {
     int i,ret, weight=0;
     double pixelSize=.0f;
-    FcChar8* s =nullptr;
+    FcChar8* s = nullptr;
     if(FcPatternGetString(&font, FC_FILE, 0, &s) == FcResultMatch){
-        mFileName=std::string((const char*)s);
+        mFileName = std::string((const char*)s);
     }
     std::ostringstream oss;
-    for(int i=0;FcPatternGetString(&font,FC_FAMILY,i,&s)==FcResultMatch;i++){
+    for(int i = 0; FcPatternGetString(&font,FC_FAMILY,i,&s) == FcResultMatch;i++){
         if(!oss.str().empty())oss<<";";
         oss<<(const char*)s;
     }
     mFamily = oss.str();
     LOGV("family=%s",mFamily.c_str());
     oss.clear();
-    for(i=0; FcPatternGetString(&font, FC_STYLE, i, &s)==FcResultMatch;i++){
+    for(i=0; FcPatternGetString(&font, FC_STYLE, i, &s) == FcResultMatch;i++){
         if(!oss.str().empty())oss<<",";
         oss<<(const char*)s;
     }
@@ -76,12 +77,12 @@ Typeface::Typeface(FcPattern & font) {
     ret = FcPatternGetDouble(&font,FC_DPI,0,&pixelSize);
     LOGV_IF(ret == FcResultMatch,"dpi =%f",pixelSize);
 
-    FcLangSet *langset=nullptr;
+    FcLangSet *langset = nullptr;
     ret = FcPatternGetLangSet(&font, FC_LANG,0,&langset);
     LOGV_IF(ret,"FcPatternGetLangSet=%d",ret);
     //FcChar8 *lang = FcLangSetGetString(langset, 0);
     ret = FcLangSetHasLang(langset,(const FcChar8*)mSystemLang.c_str());
-    if(ret == FcResultMatch)  mStyle |= SYSLANG_MATCHED;
+    if(ret == FcResultMatch) mStyle |= SYSLANG_MATCHED;
     LOGV_IF(ret,"FcLangSetHasLang %s=%d",mSystemLang.c_str(),ret);
 
     Cairo::Matrix matrix = Cairo::identity_matrix();
@@ -105,11 +106,11 @@ int Typeface::parseStyle(const std::string&styleName,std::string&normalizedName)
         {NULL,0}
     };
     int style = NORMAL;
-    normalizedName=std::string();
+    normalizedName = std::string();
     for(int i=0; stlMAP[i].styleName; i++) {
         const std::regex pat(stlMAP[i].styleName, std::regex_constants::icase);
         if(std::regex_search(styleName,pat)){
-            style|=stlMAP[i].styleProp;
+            style |= stlMAP[i].styleProp;
             if(!normalizedName.empty())normalizedName.append("|");
             normalizedName.append(stlMAP[i].name);
         }
@@ -165,7 +166,7 @@ Typeface* Typeface::create(Typeface*family, int style) {
 
     Typeface* typeface = family;
     int bestMactched=0;
-    for(auto it= sSystemFontMap.begin(); it!= sSystemFontMap.end(); it++) {
+    for(auto it= sSystemFontMap->begin(); it!= sSystemFontMap->end(); it++) {
         Typeface* face = it->second;
         const int match= (face->getStyle()==style)+(face->getFamily().compare(family->getFamily())==0);
         if((face->getStyle()==style)&&(match>bestMactched)) {
@@ -191,11 +192,11 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
     }
     if(wantFamily.find(":")!=std::string::npos){
         //only for family @font/font-name
-        auto it =sSystemFontMap.find(wantFamily);
-        if(it!=sSystemFontMap.end())
+        auto it =sSystemFontMap->find(wantFamily);
+        if(it!=sSystemFontMap->end())
             return it->second;
     }
-    for(auto i= sSystemFontMap.begin(); i!= sSystemFontMap.end(); i++) {
+    for(auto i= sSystemFontMap->begin(); i!= sSystemFontMap->end(); i++) {
         Typeface*tf = i->second;
         int familyMatched = 0;
         const std::string fontKey= i->first;
@@ -228,7 +229,7 @@ Typeface* Typeface::create(cdroid::Typeface*family, int weight, bool italic) {
 }
 
 Typeface* Typeface::create(const std::string& familyName,int style) {
-    if(sSystemFontMap.empty())
+    if(sSystemFontMap->empty())
         loadPreinstalledSystemFontMap();
     Typeface*tf = getSystemDefaultTypeface(familyName);
     if(familyName.find("/")!=std::string::npos)return tf;
@@ -244,7 +245,7 @@ Typeface* Typeface::createWeightStyle(Typeface* base,int weight, bool italic) {
 
     Typeface* typeface = base;
     int bestMactched = 0;
-    for(auto it= sSystemFontMap.begin(); it!= sSystemFontMap.end(); it++) {
+    for(auto it= sSystemFontMap->begin(); it!= sSystemFontMap->end(); it++) {
         Typeface* face = it->second;
         const int match= base->getFamily()==it->first;
         if((it->second->isItalic()==italic)&&(match>bestMactched)) {
@@ -269,8 +270,7 @@ void Typeface::buildSystemFallback(const std::string xmlPath,const std::string& 
 }
 
 void Typeface::loadPreinstalledSystemFontMap() {
-    if(sSystemFontMap.size())
-        return;
+    if(sSystemFontMap->size()) return;
     loadFromFontConfig();
     //loadFromPath("");
     //loadFaceFromResource(mContext);
@@ -288,11 +288,13 @@ void Typeface::loadPreinstalledSystemFontMap() {
     LOGD("MONOSPACE=%p [%s]style:%d %s",MONOSPACE,MONOSPACE->mFamily.c_str(),DEFAULT->getStyle(),MONOSPACE->mFileName.c_str());
 
     AtExit::registerCallback([](){
-        for(auto it= sSystemFontMap.begin(); it!= sSystemFontMap.end(); it++) {
+        printf("Typeface::sSystemFontMap.size=%d\r\n",int(sSystemFontMap->size()));
+        for(auto it= sSystemFontMap->begin(); it!= sSystemFontMap->end(); it++) {
             Typeface* face = it->second;
             delete face;
         }
-        sSystemFontMap.clear();
+        sSystemFontMap->clear();
+        delete sSystemFontMap;
     });
 }
 
@@ -323,7 +325,7 @@ int Typeface::loadFromPath(const std::string&path) {
                 std::vector<std::string>families=TextUtils::split(family,";");
 				loadedFont += int(families.size());
                 for(std::string fm:families)
-                    sSystemFontMap.insert({fm,typeface});
+                    sSystemFontMap->insert({fm,typeface});
                 LOGV("[%s] style=%s/%x %d glyphs",family.c_str(),style.c_str(),typeface->getStyle(),ftFace->num_glyphs);
             }
             FT_Done_Face(ftFace);
@@ -332,7 +334,7 @@ int Typeface::loadFromPath(const std::string&path) {
         LOGV("path=%s",ps);
     }
     FcStrListDone(dirs);
-    LOGD("loaded %d font sSystemFontMap.size=%d",loadedFont,sSystemFontMap.size());
+    LOGD("loaded %d font sSystemFontMap.size=%d",loadedFont,sSystemFontMap->size());
     return loadedFont;
 }
 
@@ -378,38 +380,38 @@ int Typeface::loadFromFontConfig() {
             font = font.substr(pos+1);
         std::string fontKey = mContext->getPackageName()+":font/"+font;
         LOGV("%d family=%s style=%s",i,family.c_str(),style.c_str(),tf->mFileName.c_str());
-        sSystemFontMap.insert({fontKey,tf});
+        sSystemFontMap->insert({fontKey,tf});
         std::vector<std::string>families = TextUtils::split(family,";");
         for(std::string fm:families)
-            sSystemFontMap.insert({fm,tf});
+            sSystemFontMap->insert({fm,tf});
         LOGV("font %s %p",family.c_str(),tf);
         if(std::regex_search(family,patSans)) {
             std::string ms = std::regex_search(family,patMono)?"mono":"serif";
             ms = "sans-"+ms;
-            auto it = sSystemFontMap.find(ms);
-            if( it == sSystemFontMap.end()) {
-                sSystemFontMap.insert({std::string(ms),tf});
+            auto it = sSystemFontMap->find(ms);
+            if( it == sSystemFontMap->end()) {
+                sSystemFontMap->insert({std::string(ms),tf});
                 LOGV("family:[%s] is marked as [%s]",family.c_str(),ms.c_str());
             }
             if(ms.find("mono")!=std::string::npos) {
-                it = sSystemFontMap.find("monospace");
-                if(it == sSystemFontMap.end()) {
-                    sSystemFontMap.insert({std::string("monospace"),tf});
+                it = sSystemFontMap->find("monospace");
+                if(it == sSystemFontMap->end()) {
+                    sSystemFontMap->insert({std::string("monospace"),tf});
                     LOGV("family [%s] is marked as [monospace]",family.c_str());
                 }
             }
         } else if(std::regex_search(family,patMono)) {
-            auto it = sSystemFontMap.find("monospace");
-            if( it == sSystemFontMap.end()) {
-                sSystemFontMap.insert({std::string("monospace"),tf});
+            auto it = sSystemFontMap->find("monospace");
+            if( it == sSystemFontMap->end()) {
+                sSystemFontMap->insert({std::string("monospace"),tf});
                 LOGV("family [%s] is marked as [monospace]",family.c_str());
             }
         }
         if(std::regex_search(family,patSerif)) {
             if(false == std::regex_search(family,patSans)&& false==std::regex_search(family,patMono)) {
-                auto it = sSystemFontMap.find("serif");
-                if(it == sSystemFontMap.end()) {
-                    sSystemFontMap.insert({std::string("serif"),tf});
+                auto it = sSystemFontMap->find("serif");
+                if(it == sSystemFontMap->end()) {
+                    sSystemFontMap->insert({std::string("serif"),tf});
                     LOGV("family [%s] is marked as [serif]",family.c_str());
                 }
             }
@@ -434,7 +436,7 @@ int Typeface::loadFromFontConfig() {
     FcConfigDestroy(config);
     FcObjectSetDestroy(os);
     FcFini();
-    LOGI("load %d font sSystemFontMap.size=%d",loadedFont,sSystemFontMap.size());
+    LOGI("load %d font sSystemFontMap.size=%d",loadedFont,sSystemFontMap->size());
     return loadedFont;
 }
 
@@ -498,8 +500,8 @@ int Typeface::loadFaceFromResource(cdroid::Context*context) {
 #endif
         LOGD("Open fontResource %s=%d family=%s pat=%p face=%p/%p=%d",fontUrl.c_str(),
              err,typeface->getFamily().c_str(),pat,face,font_face,err);
-        sSystemFontMap.insert({fontUrl,typeface});
-        sSystemFontMap.insert({typeface->getFamily(),typeface});
+        sSystemFontMap->insert({fontUrl,typeface});
+        sSystemFontMap->insert({typeface->getFamily(),typeface});
 #endif
     }
     LOGI("%d font loaded from resource",fonts.size());
