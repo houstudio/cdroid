@@ -11,7 +11,7 @@ namespace cdroid{
 NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
     : mImage(image){
     mContentArea = getContentArea();
-    mOpacity = ImageDecoder::computeTransparency(mImage);
+    mOpacity = ImageDecoder::getTransparency(mImage);
     mAlpha =1.f;
     getResizeArea();
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
@@ -21,9 +21,10 @@ NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
 }
 
 NinePatch::NinePatch(Context*ctx,const std::string&resid){
-    mImage= ctx->loadImage(resid);
+    auto dec = ImageDecoder::create(ctx,resid);
+    mImage = dec->decode();
     mContentArea = getContentArea();
-    mOpacity = ImageDecoder::computeTransparency(mImage);
+    mOpacity = ImageDecoder::getTransparency(mImage);
     mAlpha = 1.0f;
     getResizeArea();
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
