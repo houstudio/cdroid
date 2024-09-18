@@ -79,8 +79,8 @@ View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool att
             v = inflate(package,*stream,root,attachToRoot && (root!=nullptr),atts);
         } else {
             char cwdpath[PATH_MAX]="your work directory";
-            getcwd(cwdpath,PATH_MAX);
-            LOGE("faild to load resource %s [%s.pak] must be copied to [%s]",resource.c_str(),package.c_str(),cwdpath);
+            char* result=getcwd(cwdpath,PATH_MAX);
+            LOGE("faild to load resource %s [%s.pak] must be copied to [%s]",resource.c_str(),package.c_str(),result);
         }
     } else {
         std::ifstream fin(resource);
