@@ -36,8 +36,7 @@ AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState>
 
 AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::string&res)
    :AnimatedImageDrawable(){
-    auto istm = ctx->getInputStream(res);
-    auto frmSequence = FrameSequence::create(ctx,istm.get());
+    auto frmSequence = FrameSequence::create(ctx,res);
     if(frmSequence==nullptr)return;
     mAnimatedImageState->mFrameSequence = frmSequence;
     mRepeatCount = frmSequence->getDefaultLoopCount();

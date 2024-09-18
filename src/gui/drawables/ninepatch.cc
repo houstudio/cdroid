@@ -21,8 +21,7 @@ NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
 }
 
 NinePatch::NinePatch(Context*ctx,const std::string&resid){
-    auto dec = ImageDecoder::create(ctx,resid);
-    mImage = dec->decode();
+    mImage = ImageDecoder::loadImage(ctx,resid);
     mContentArea = getContentArea();
     mOpacity = ImageDecoder::getTransparency(mImage);
     mAlpha = 1.0f;
