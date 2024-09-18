@@ -221,11 +221,11 @@ Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std:
             float scale = 1.f;
             decoder = f.factory(*istm);
             if((width>0)&&(height>0))
-                scale = std::max(float(decoder->getWidth())/width,float(decoder->getHeight())/height);
+                scale = std::min(float(width)/decoder->getWidth(),float(height)/decoder->getHeight());
             else if(width>0)
-                scale = std::max(scale,float(decoder->getWidth())/width);
+                scale = std::min(scale,float(width)/decoder->getWidth());
             else if(height>0)
-                scale = std::max(scale,float(decoder->getHeight())/height);
+                scale = std::max(scale,float(height)/decoder->getHeight());
             return decoder->decode(scale);
         }
     }

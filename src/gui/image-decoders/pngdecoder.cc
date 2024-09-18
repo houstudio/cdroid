@@ -111,7 +111,6 @@ Cairo::RefPtr<Cairo::ImageSurface> PNGDecoder::decode(float scale,void*targetPro
     }
 #endif
     png_read_end (png_ptr, info_ptr);
-    image->set_mime_data(CAIRO_MIME_TYPE_PNG, nullptr, 0, nullptr);
     cairo_surface_set_mime_data(image->cobj(), CAIRO_MIME_TYPE_PNG, nullptr, 0, nullptr,nullptr);
     const int transparency = ImageDecoder::computeTransparency(image);
     ImageDecoder::setTransparency(image,transparency);
