@@ -9,11 +9,7 @@
 #include <image-decoders/pngframesequence.h>
 int main(int argc,const char*argv[]){
 #if 0
-    const char*fname =(argc>1)?argv[1]:"/home/houzh/pf.jpg";
-    std::unique_ptr<cdroid::ImageDecoder>dec;
-    dec=ImageDecoder::create(nullptr,fname);
-    Cairo::RefPtr<Cairo::ImageSurface>image=dec->decode();
-    LOGD("imageinfo:%dx%d",dec->getWidth(),dec->getHeight());
+    auto image=ImageDecoder::loadImage(nullptr,argv[1]);
     image->write_to_png("111.png");
 #else
     cdroid::FrameSequence*seq=new cdroid::PngFrameSequence(nullptr,argv[1]);

@@ -23,7 +23,7 @@ private:
     bool mMultiline;
     int mBreakStrategy;
     float mSpacingMult; //spacingMult line spacing multiplier
-    int  mSpacingAdd;   //spacingAdd line spacing add
+    int mSpacingAdd;   //spacingAdd line spacing add
     int mLayout;        //mLayout>0 need relayout
     Rect mCaretRect;
     void pushLineData(int start,int ytop,int descent,int width);

@@ -20,17 +20,11 @@ namespace cdroid{
 using namespace Cairo;
 void*ImageDecoder::mCMSProfile = nullptr;
 
-ImageDecoder::ImageDecoder(Context*ctx,const std::string&resourceId){
+ImageDecoder::ImageDecoder(std::istream&stream):mStream(stream){
     mImageWidth = -1;
     mImageHeight= -1;
     mPrivate = nullptr;
     mTransform= nullptr;
-    mContext = ctx;
-    if(ctx)
-        mStream = ctx->getInputStream(resourceId);
-    else
-        mStream = std::move(std::make_unique<std::ifstream>(resourceId));
-
 #if ENABLE(LCMS)
     if(mCMSProfile==nullptr){
         mCMSProfile=cmsOpenProfileFromFile("/home/houzh/sRGB Color Space Profile.icm","r");
@@ -57,13 +51,15 @@ ImageDecoder::Registry::Registry(uint32_t msize,Factory& fun,Verifier& v)
 
 }
 
-int ImageDecoder::registerFactory(const std::string&mime,uint32_t magicSize,Factory factory,Verifier v){
+int ImageDecoder::registerFactory(const std::string&mime,uint32_t magicSize,Verifier v,Factory factory){
     auto it = mFactories.find(mime);
     if(it==mFactories.end()){
         mFactories.insert({mime,Registry(magicSize,factory,v)});
         mHeaderBytesRequired = std::max(magicSize,mHeaderBytesRequired);
         LOGD("Register FrameSequence factory[%d] %s", mFactories.size(),mime.c_str());
         return 0;
+    }else{
+        it->second.factory = factory;
     }
     return 0;
 }
@@ -169,32 +165,17 @@ static bool isApng(std::istream*istm){
     return (memcmp(buf+37,"acTL",4)==0) && (frames>1);
 }
 
-std::unique_ptr<ImageDecoder>ImageDecoder::create(Context*ctx,const std::string&resourceId){
-    constexpr unsigned lengthOfLongestSignature = 14; /* To wit: "RIFF????WEBPVP"*/
-    uint8_t contents[lengthOfLongestSignature];
-    std::unique_ptr<ImageDecoder>decoder;
-    std::unique_ptr<std::istream>istm;
-    if(ctx)
-        istm = ctx->getInputStream(resourceId);
-    else
-        istm = std::move(std::make_unique<std::ifstream>(resourceId));
-    istm->read((char*)contents,lengthOfLongestSignature);
-    const unsigned length = istm->gcount();
-    if (length < lengthOfLongestSignature)
-        return nullptr;
-    istm->seekg(0,std::ios::beg);
-
+static int registerBuildinCodesc(){
+    ImageDecoder::registerFactory(std::string("mime/png"),8,PNGDecoder::isPNG,
+            [](std::istream&stream){return std::make_unique<PNGDecoder>(stream);});
 #if ENABLE(GIF)
-    if (GIFDecoder::isGIF(contents,lengthOfLongestSignature))
-        decoder = std::make_unique<GIFDecoder>(ctx,resourceId);
+    ImageDecoder::registerFactory("mime/gif",6,PNGDecoder::isGIF,
+            [](std::istream&stream){return std::make_unique<GIFDecoder>(stream);});
 #endif
 
-    if (PNGDecoder::isPNG(contents,lengthOfLongestSignature)&&(isApng(istm.get()) == false))
-        decoder = std::make_unique<PNGDecoder>(ctx,resourceId);
-
 #if ENABLE(JPEG)
-    if (JPEGDecoder::isJPEG(contents,lengthOfLongestSignature))
-        decoder = std::make_unique<JPEGDecoder>(ctx,resourceId);
+    ImageDecoder::registerFactory("mime/jpeg",12,JPEGDecoder::isJPEG,
+            [](std::istream&stream){return std::make_unique<JPEGDecoder>(stream);});
 #endif
 
 #if USE(OPENJPEG)
@@ -214,18 +195,46 @@ std::unique_ptr<ImageDecoder>ImageDecoder::create(Context*ctx,const std::string&
     if (matchesBMPSignature(contents))
         return BMPImageDecoder::create(alphaOption, gammaAndColorProfileOption);
 #endif
-    return decoder;
+    return 0;
 }
 
-Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(Context*ctx,const std::string&resid){
-    auto dec = ImageDecoder::create(ctx,resid);
-    return dec ? dec->decode():nullptr;
+Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std::string&resourceId,int width,int height){
+    constexpr unsigned lengthOfLongestSignature = 14; /* To wit: "RIFF????WEBPVP"*/
+    uint8_t contents[lengthOfLongestSignature];
+    std::unique_ptr<ImageDecoder>decoder;
+    std::unique_ptr<std::istream>istm;
+    if(ctx)
+        istm = ctx->getInputStream(resourceId);
+    else
+        istm = std::move(std::make_unique<std::ifstream>(resourceId));
+    istm->read((char*)contents,lengthOfLongestSignature);
+    const unsigned length = istm->gcount();
+    if (length < lengthOfLongestSignature)
+        return nullptr;
+    istm->seekg(0,std::ios::beg);
+    if(mFactories.empty()){
+        registerBuildinCodesc();
+    }
+    for(auto fac:mFactories){
+        auto f = fac.second;
+        if(f.verifier(contents,lengthOfLongestSignature)){
+            float scale = 1.f;
+            decoder = f.factory(*istm);
+            if((width>0)&&(height>0))
+                scale = std::max(float(decoder->getWidth())/width,float(decoder->getHeight())/height);
+            else if(width>0)
+                scale = std::max(scale,float(decoder->getWidth())/width);
+            else if(height>0)
+                scale = std::max(scale,float(decoder->getHeight())/height);
+            return decoder->decode(scale);
+        }
+    }
+    return nullptr;
 }
 
 Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){
-    const std::unique_ptr<ImageDecoder>decoder = create(ctx,resourceId);
-    if(decoder){
-        Cairo::RefPtr<Cairo::ImageSurface>image = decoder->decode();
+    Cairo::RefPtr<Cairo::ImageSurface> image = loadImage(ctx,resourceId);
+    if(image){
         if(TextUtils::endWith(resourceId,".9.png"))
             return new NinePatchDrawable(image);
         else if(TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg"))

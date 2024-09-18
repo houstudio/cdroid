@@ -59,8 +59,7 @@ int GraphDevice::init(){
     mFpsStartTime = mFpsPrevTime = 0;
     Cairo::RefPtr<Cairo::ImageSurface> img= nullptr;
     if(!mLogo.empty()){
-        auto dec = ImageDecoder::create(nullptr,mLogo);
-        img = dec->decode();
+        img = ImageDecoder::loadImage(nullptr,mLogo);
     }
     GFXInit();
 

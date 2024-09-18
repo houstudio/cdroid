@@ -24,12 +24,11 @@ static void istream_png_reader(png_structp png_ptr, png_bytep png_data, png_size
     priv->istream->read(reinterpret_cast<char*>(png_data), data_size);
 }
 
-PNGDecoder::PNGDecoder(Context*ctx,const std::string&resourceId):ImageDecoder(ctx,resourceId) {
+PNGDecoder::PNGDecoder(std::istream&stream):ImageDecoder(stream) {
     mPrivate = new PRIVATE();
     mPrivate->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     mPrivate->info_ptr= png_create_info_struct(mPrivate->png_ptr);
-    mPrivate->istream = mStream.get();
-    LOGV("%s",resourceId.c_str());
+    mPrivate->istream = &mStream;
     png_set_read_fn(mPrivate->png_ptr,mPrivate,istream_png_reader);
 }
 
@@ -256,7 +255,7 @@ bool PNGDecoder::decodeSize() {
     if(color_type&PNG_COLOR_MASK_ALPHA)
         png_set_filler(png_ptr,0xffU,PNG_FILLER_AFTER);
 
-    setGamma(mContext,png_ptr,info_ptr);
+    //setGamma(nullptr,png_ptr,info_ptr);
 
     /* recheck header after setting EXPAND options */
     png_read_update_info (png_ptr, info_ptr);

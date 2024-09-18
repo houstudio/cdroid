@@ -36,19 +36,19 @@ static void pngmem_reader(png_structp png_ptr, png_bytep png_data, png_size_t da
     *ppd += data_size;
 }
 
-PngFrameSequence::PngFrameSequence(cdroid::Context*ctx,const std::string&resid)
-    :FrameSequence(ctx,resid), mLoopCount(1), mBgColor(COLOR_TRANSPARENT) {
+PngFrameSequence::PngFrameSequence(std::istream&stream)
+    :FrameSequence(stream), mLoopCount(1), mBgColor(COLOR_TRANSPARENT) {
     png_structp png_ptr;
     png_infop png_info;
     png_color_16p bg = nullptr;
     png_bytep trans_alpha = nullptr;
     Color ccBG(mBgColor);
 
-    mStream->seekg(0,std::ios::end);
-    mDataSize = mStream->tellg();
+    mStream.seekg(0,std::ios::end);
+    mDataSize = mStream.tellg();
     mDataBytes= new uint8_t[mDataSize];
-    mStream->seekg(0,std::ios::beg);
-    mStream->read((char*)mDataBytes,mDataSize);
+    mStream.seekg(0,std::ios::beg);
+    mStream.read((char*)mDataBytes,mDataSize);
 
     png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     png_info= png_create_info_struct(png_ptr);
@@ -156,7 +156,7 @@ void PngFrameSequence::PngFrameSequenceState::resetPngIO(){
     png_set_bgr(png_ptr);
     png_set_interlace_handling(png_ptr);
 
-    PNGDecoder::setGamma(nullptr,png_ptr, png_info);
+    //PNGDecoder::setGamma(nullptr,png_ptr, png_info);
 
     png_read_update_info(png_ptr, png_info);
 }
@@ -267,11 +267,6 @@ bool PngFrameSequence::isPNG(const uint8_t* header,uint32_t head_size) {
            || !memcmp(PNG_STAMP, header, PNG_HEADER_SIZE)
            || !memcmp(PNG_STAMP, header, PNG_HEADER_SIZE);
 }
-
-static FrameSequence* createFramesequence(cdroid::Context*ctx,const std::string&resid) {
-    return new cdroid::PngFrameSequence(ctx,resid);
-}
-
 
 }/*endof namespace*/
 

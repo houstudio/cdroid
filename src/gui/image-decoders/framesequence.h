@@ -32,7 +32,7 @@ public:
     static constexpr uint32_t COLOR_TRANSPARENT = 0x0;
 public:
     typedef std::function<bool(const uint8_t*,uint32_t)>Verifier;
-    typedef std::function<FrameSequence*(cdroid::Context*,const std::string&)> Factory;
+    typedef std::function<FrameSequence*(std::istream&)> Factory;
     struct Registry{
         Factory factory;
         Verifier verifier;
@@ -43,16 +43,14 @@ private:
     static std::map<const std::string,Registry>mFactories;
     static uint32_t mHeaderBytesRequired;
 protected:
-    cdroid::Context*mContext;
-    std::string mResource;
-    std::unique_ptr<std::istream>mStream;
+    std::istream& mStream;
 public:
     /**
      * Creates a FrameSequence using data from the data stream
      *
      * Type determined by header information in the stream
      */
-    FrameSequence(cdroid::Context*,const std::string&);
+    FrameSequence(std::istream&);
     virtual ~FrameSequence() {}
     virtual int getWidth() const = 0;
     virtual int getHeight() const = 0;
@@ -60,7 +58,7 @@ public:
     virtual int getFrameCount() const = 0;
     virtual int getDefaultLoopCount() const = 0;
     virtual FrameSequenceState* createState() const = 0;
-    static int registerFactory(const std::string&mime,uint32_t,Factory,Verifier);
+    static int registerFactory(const std::string&mime,uint32_t,Verifier,Factory);
     static FrameSequence* create(cdroid::Context*,const std::string&resid);
 };
 

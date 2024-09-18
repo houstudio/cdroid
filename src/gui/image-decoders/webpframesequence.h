@@ -39,7 +39,7 @@ public:
     class WebPFrameSequenceState;
     static constexpr uint32_t RIFF_HEADER_SIZE = 12;/*Size of the RIFF header ("RIFFnnnnWEBP")*/
 public:
-    WebPFrameSequence(cdroid::Context*,const std::string&resid);
+    WebPFrameSequence(std::istream&);
     virtual ~WebPFrameSequence();
 
     int getWidth() const override;

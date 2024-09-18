@@ -31,14 +31,10 @@ FrameSequence::Registry::Registry(uint32_t msize,Factory& fun,Verifier& v)
 
 }
 
-FrameSequence::FrameSequence(cdroid::Context*ctx,const std::string&res):mContext(ctx),mResource(res){
-    if(ctx)
-        mStream = ctx->getInputStream(res);
-    else
-        mStream = std::make_unique<std::fstream>(res);
+FrameSequence::FrameSequence(std::istream&stream):mStream(stream){
 }
 
-int FrameSequence::registerFactory(const std::string&mime,uint32_t magicSize,Factory factory,Verifier v){
+int FrameSequence::registerFactory(const std::string&mime,uint32_t magicSize,Verifier v,Factory factory){
     auto it = mFactories.find(mime);
     if(it==mFactories.end()){
         mFactories.insert({mime,Registry(magicSize,factory,v)});
@@ -54,23 +50,26 @@ int FrameSequence::registerFactory(const std::string&mime,uint32_t magicSize,Fac
 static int registerAllFrameSequences(std::map<const std::string,FrameSequence::Registry>&entis){
     FrameSequence::registerFactory(std::string("mime/apng"),
             PngFrameSequence::PNG_HEADER_SIZE,
-            [](cdroid::Context*ctx,const std::string&resid){
-                return new PngFrameSequence(ctx,resid);
-            },PngFrameSequence::isPNG);
+            PngFrameSequence::isPNG,
+            [](std::istream&stream){
+                return new PngFrameSequence(stream);
+            });
 #if ENABLE(WEBP)
     FrameSequence::registerFactory(std::string("mime/webp"),
             WebPFrameSequence::RIFF_HEADER_SIZE,
-            [](cdroid::Context*ctx,const std::string&resid){
-                return new WebPFrameSequence(ctx,resid);
-            },WebPFrameSequence::isWEBP);
+            WebPFrameSequence::isWEBP,
+            [](std::istream&stream){
+                return new WebPFrameSequence(stream);
+            });
 #endif
 
 #if ENABLE(GIF)
     FrameSequence::registerFactory(std::string("mime/gif"),
             GifFrameSequence::GIF_HEADER_SIZE,
-            [](cdroid::Context*ctx,const std::string&resid){
-                return new GifFrameSequence(ctx,resid);
-            },GifFrameSequence::isGIF);
+            GifFrameSequence::isGIF,
+            [](std::istream&stream){
+                return new GifFrameSequence(stream);
+            });
 #endif
     return entis.size();
 }
@@ -90,7 +89,7 @@ FrameSequence* FrameSequence::create(cdroid::Context*ctx,const std::string&resid
     for(auto& f:mFactories){
         auto& dec = f.second;
         if(dec.verifier(header,mHeaderBytesRequired))
-           return dec.factory(ctx,resid);
+           return dec.factory(*stream);
     }
     return nullptr;
 }

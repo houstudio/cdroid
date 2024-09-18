@@ -18,7 +18,7 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <gui/gui_features.h>
-#if defined(ENABLE_GIF)&&ENABLE_GIF
+#if 1||defined(ENABLE_GIF)&&ENABLE_GIF
 #include <gif_lib.h>
 #include <image-decoders/gifframesequence.h>
 
@@ -43,10 +43,10 @@ static bool willBeCleared(const GraphicsControlBlock& gcb) {
 // Frame sequence
 ////////////////////////////////////////////////////////////////////////////////
 
-GifFrameSequence::GifFrameSequence(cdroid::Context*ctx,const std::string&resid):
-      FrameSequence(ctx,resid), mLoopCount(1), mBgColor(COLOR_TRANSPARENT),
+GifFrameSequence::GifFrameSequence(std::istream&stream)
+      :FrameSequence(stream), mLoopCount(1), mBgColor(COLOR_TRANSPARENT),
       mPreservedFrames(NULL), mRestoringFrames(NULL) {
-    mGif = DGifOpen(mStream.get(), streamReader, NULL);
+    mGif = DGifOpen(&mStream, streamReader, NULL);
     if (!mGif) {
         LOGW("Gif load failed");
         return;

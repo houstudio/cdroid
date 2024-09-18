@@ -210,8 +210,7 @@ void NinePatchDrawable::draw(Canvas&canvas){
 }
 
 Drawable*NinePatchDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    auto dec = ImageDecoder::create(ctx,atts.getString("src"));
-    RefPtr<ImageSurface>bmp = dec->decode();
+    RefPtr<ImageSurface>bmp = ImageDecoder::loadImage(ctx,atts.getString("src"));
     return new NinePatchDrawable(bmp);
 }
 

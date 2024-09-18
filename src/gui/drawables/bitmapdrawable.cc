@@ -93,7 +93,6 @@ BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname)
         b = ctx->loadImage(resname);
     }
 #else
-    //auto dec = ImageDecoder::create(ctx,resname);
     b = ImageDecoder::loadImage(ctx,resname);
 #endif
     mBitmapState->mResource = resname;

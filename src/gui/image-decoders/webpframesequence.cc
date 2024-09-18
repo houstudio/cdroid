@@ -84,12 +84,12 @@ void WebPFrameSequence::constructDependencyChain() {
     }
 }
 
-WebPFrameSequence::WebPFrameSequence(cdroid::Context*ctx,const std::string&resid)
-      :FrameSequence(ctx,resid),mDemux(NULL) , mIsKeyFrame(NULL) {
+WebPFrameSequence::WebPFrameSequence(std::istream&stream)
+      :FrameSequence(stream),mDemux(NULL) , mIsKeyFrame(NULL) {
     // Read RIFF header to get file size.
     uint8_t riff_header[RIFF_HEADER_SIZE];
 
-    if (mStream->read((char*)riff_header, RIFF_HEADER_SIZE).gcount() != RIFF_HEADER_SIZE) {
+    if (mStream.read((char*)riff_header, RIFF_HEADER_SIZE).gcount() != RIFF_HEADER_SIZE) {
         LOGE("WebP header load failed");
         return;
     }
@@ -109,7 +109,7 @@ WebPFrameSequence::WebPFrameSequence(cdroid::Context*ctx,const std::string&resid
     // Read rest of the bytes.
     void* remaining_bytes = (void*)(mDataBytes + RIFF_HEADER_SIZE);
     size_t remaining_size = mDataSize - RIFF_HEADER_SIZE;
-    if (mStream->read((char*)remaining_bytes, remaining_size).gcount() != remaining_size) {
+    if (mStream.read((char*)remaining_bytes, remaining_size).gcount() != remaining_size) {
         LOGE("WebP full load failed");
         return;
     }

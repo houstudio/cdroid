@@ -128,7 +128,7 @@ struct PRIVATE{
     struct decoder_error_mgr jerr;
 };
 
-JPEGDecoder::JPEGDecoder(Context*ctx,const std::string&resourceId):ImageDecoder(ctx,resourceId){
+JPEGDecoder::JPEGDecoder(std::istream&stream):ImageDecoder(stream){
     mPrivate = new  PRIVATE;
     struct jpeg_decompress_struct* cinfo = &mPrivate->cinfo;
     struct decoder_error_mgr* jerr = &mPrivate->jerr;
@@ -136,7 +136,7 @@ JPEGDecoder::JPEGDecoder(Context*ctx,const std::string&resourceId):ImageDecoder(
     cinfo->err = jpeg_std_error(&jerr->pub);
     jerr->pub.error_exit = handle_jpeg_error;
     jpeg_create_decompress(cinfo);
-    make_jpeg_stream(cinfo,mStream.get());
+    make_jpeg_stream(cinfo,&mStream);
 }
 
 JPEGDecoder::~JPEGDecoder(){

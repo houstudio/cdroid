@@ -13,7 +13,7 @@ namespace cdroid{
 class ImageDecoder{
 public:
     typedef std::function<int(const uint8_t*,uint32_t)>Verifier;
-    typedef std::function<ImageDecoder*(cdroid::Context*,std::istream*stream)> Factory;
+    typedef std::function<std::unique_ptr<ImageDecoder>(std::istream&)> Factory;
     struct Registry{
         Factory factory;
         Verifier verifier;
@@ -27,31 +27,28 @@ protected:
     struct PRIVATE*mPrivate;
     int mImageWidth;
     int mImageHeight;
-    int mCurrScanline;
     void*mTransform;
     static void*mCMSProfile;
-    cdroid::Context*mContext;
-    std::unique_ptr<std::istream>mStream;
+    std::istream&mStream;
 public:
-    ImageDecoder(Context*ctx,const std::string&res);
+    ImageDecoder(std::istream&);
     virtual ~ImageDecoder();
     int getWidth()const;
     int getHeight()const;
     virtual bool decodeSize()=0;
     virtual Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)=0;
 
-    static int  registerFactory(const std::string&mime,uint32_t magicSize,Factory factory,Verifier v);
+    static int  registerFactory(const std::string&mime,uint32_t magicSize,Verifier,Factory factory);
     static int  computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp);
     static int  getTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp);
     static void setTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp,int);
-    static std::unique_ptr<ImageDecoder>create(Context*ctx,const std::string&resourceId);
-    static Cairo::RefPtr<Cairo::ImageSurface>loadImage(Context*ctx,const std::string&);
+    static Cairo::RefPtr<Cairo::ImageSurface>loadImage(Context*ctx,const std::string&,int width=-1,int height=-1);
     static Drawable*createAsDrawable(Context*ctx,const std::string&resourceId);
 };
 
 class GIFDecoder:public ImageDecoder{
 public:
-    GIFDecoder(Context*ctx,const std::string&res);
+    GIFDecoder(std::istream&);
     ~GIFDecoder()override;
     bool decodeSize()override;
     Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
@@ -62,7 +59,7 @@ class JPEGDecoder:public ImageDecoder{
 private:
     void*getColorProfile(PRIVATE*);
 public:
-    JPEGDecoder(Context*ctx,const std::string&res);
+    JPEGDecoder(std::istream&);
     ~JPEGDecoder()override;
     bool decodeSize()override;
     Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
@@ -75,7 +72,7 @@ private:
 public:
     static double setGamma(Context*ctx,png_structp png_ptr,png_infop info_ptr);
 public:
-    PNGDecoder(Context*ctx,const std::string&res);
+    PNGDecoder(std::istream&);
     ~PNGDecoder()override;
     bool decodeSize()override;
     Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
