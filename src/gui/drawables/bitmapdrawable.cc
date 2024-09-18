@@ -321,10 +321,10 @@ static void setPatternByTileMode(RefPtr<SurfacePattern>pat,int tileMode){
     }
 }
 
-static int getRotateAngle(Canvas&canvas,bool &scaling){
+static int getRotateAngle(Canvas&canvas){
     Cairo::Matrix ctx=canvas.get_matrix();
     double radians = atan2(ctx.yy, ctx.xy);
-    scaling=(ctx.xx!=1.f)||(ctx.yy!=1.f);
+    //scaling=(ctx.xx!=1.f)||(ctx.yy!=1.f);
     return int(radians*180.f/M_PI);
 }
 
@@ -386,9 +386,9 @@ void BitmapDrawable::draw(Canvas&canvas){
         const float fx = dw / sw   , fy = dh / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
         bool isScaling = false;
-        const int angle_degrees = getRotateAngle(canvas,isScaling);
+        const int angle_degrees = getRotateAngle(canvas);
 	    //SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;GOOD/FAST seems more slowly than ,BILINEAR/NEAREST
-        const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap) ? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
+        const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap||angle_degrees) ? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
         const Pattern::Dither ditherMode = mBitmapState->mDither ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
 
         LOGD_IF((angle_degrees%90)&&(mBitmapState->mFilterBitmap==false),"Maybe you must use setFilterBitmap(true)");
