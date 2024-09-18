@@ -58,8 +58,7 @@ TEST_F(BENCHMARK,FillBlit){
 TEST_F(BENCHMARK,Jpeg){
    int64_t t1=SystemClock::uptimeMillis();
    for(int i=0;i<100;i++){
-       auto dec =ImageDecoder::create(nullptr,"radio_logo.jpg");
-       RefPtr<ImageSurface>img=dec->decode();
+       auto img =ImageDecoder::loadImage(nullptr,"radio_logo.jpg");
    }
    int64_t t2=SystemClock::uptimeMillis();
    printf("jpeg decoe time:%f \r\n",(t2-t1)/100.f);

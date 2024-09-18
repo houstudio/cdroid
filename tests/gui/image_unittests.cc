@@ -92,8 +92,7 @@ Assets *IMAGE::rm=nullptr;
 TEST_F(IMAGE,Bitmap){
     loadImages("./","bmp");
     for(int i=0;i<images.size();i++){
-        auto dec = ImageDecoder::create(nullptr,images[i]);
-       RefPtr<ImageSurface>img=dec->decode();
+       auto img = ImageDecoder::loadImage(nullptr,images[i]);
        RECT rect={0,0,800,600};
        for(int i=0;i<10;i++){
           ctx->set_color(0xFF000000|(i*20<<16));
@@ -111,8 +110,7 @@ TEST_F(IMAGE,Image_PNG){
     printf("%lu image loaded\r\n",images.size());
     for(int i=0;i<images.size();i++){
         tmstart();
-        auto dec = ImageDecoder::create(nullptr,images[i]);
-        RefPtr<ImageSurface>img=dec->decode();
+        auto img = ImageDecoder::loadImage(nullptr,images[i]);
         tmend("decodepng");
         RECT rect={0,0,800,600};
         ctx->rectangle(rect);
@@ -134,8 +132,7 @@ TEST_F(IMAGE,Image_JPG){
     printf("%lu img loaded\r\n",images.size());
     for(int i=0;i<images.size();i++){
         tmstart();
-        auto dec = ImageDecoder::create(nullptr,images[i]);
-        RefPtr<ImageSurface>img=dec->decode();
+        auto img = ImageDecoder::loadImage(nullptr,images[i]);
         tmend("decodejpg");
         RECT rect={0,0,800,600};
         ctx->rectangle(rect);ctx->fill();
@@ -152,8 +149,7 @@ TEST_F(IMAGE,Image_JPG){
 TEST_F(IMAGE,draw){
     loadImages("/home/houzh/JPG/","");
     for(int i=0;i<images.size();i++){
-        auto dec = ImageDecoder::create(nullptr,images[i]);
-        RefPtr<ImageSurface>img=dec->decode();
+        auto img = ImageDecoder::loadImage(nullptr,images[i]);
         RECT dst={100,100,200,200};
         RECT rs={img->get_width()/2,img->get_height()/2,img->get_width()/2,img->get_height()/2};
         ctx->draw_image(img,dst,&rs);
@@ -163,8 +159,7 @@ TEST_F(IMAGE,draw){
 }
 
 TEST_F(IMAGE,ninepatch1){
-    auto dec = ImageDecoder::create(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/paopao1.9.png");
-    RefPtr<ImageSurface>img = dec->decode();
+    auto img = ImageDecoder::loadImage(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/paopao1.9.png");
     RECT rect={50,50,400,100};
     //std::vector<NinePatchBlock> horz,vert;
     //img->get_ninepatch(horz,vert);
@@ -172,8 +167,7 @@ TEST_F(IMAGE,ninepatch1){
 }
 
 TEST_F(IMAGE,ninepatch2){
-    auto dec = ImageDecoder::create(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/btn_normal.9.png");
-    RefPtr<ImageSurface>img = dec->decode();
+    auto img = ImageDecoder::loadImage(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/btn_normal.9.png");
     RECT rect={50,50,400,100};
     //std::vector<NinePatchBlock> horz,vert;
     //img->get_ninepatch(horz,vert);

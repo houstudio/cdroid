@@ -112,8 +112,7 @@ TEST_F(DRAWABLE,bitmapalpha){
 }
 
 TEST_F(DRAWABLE,ninepatch1){
-    auto dec = ImageDecoder::create(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/paopao1.9.png");
-    RefPtr<ImageSurface>img = dec->decode();
+    auto img = ImageDecoder::loadImage(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/paopao1.9.png");
     NinePatchDrawable *d=new NinePatchDrawable(img);
     d->setBounds(50,50,600,200);
     d->draw(*ctx);
@@ -121,8 +120,7 @@ TEST_F(DRAWABLE,ninepatch1){
 }
 
 TEST_F(DRAWABLE,ninepatch2){
-    auto dec = ImageDecoder::create(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/btn_normal.9.png");//paopao1.9.png");
-    RefPtr<ImageSurface>img= dec->decode();
+    auto img = ImageDecoder::loadImage(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/btn_normal.9.png");//paopao1.9.png");
     ctx->set_source_rgb(.4,.4,.0);
     ctx->rectangle(0,0,700,300);
     ctx->fill();
