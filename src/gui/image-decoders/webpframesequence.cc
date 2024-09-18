@@ -19,8 +19,10 @@
 #include "cdlog.h"
 #include <gui/gui_features.h>
 #if ENABLE_WEBP&&ENABLE_WEBP
+#include <core/context.h>
 #include <webp/decode.h>
 #include <webp/demux.h>
+#include <fstream>
 #include <image-decoders/webpframesequence.h>
 
 #define CHUNK_HEADER_SIZE  8     // Size of a chunk header.
@@ -82,11 +84,12 @@ void WebPFrameSequence::constructDependencyChain() {
     }
 }
 
-WebPFrameSequence::WebPFrameSequence(cdroid::Context*ctx,std::istream* stream)
-      :FrameSequence(ctx),mDemux(NULL) , mIsKeyFrame(NULL) {
+WebPFrameSequence::WebPFrameSequence(cdroid::Context*ctx,const std::string&resid)
+      :FrameSequence(ctx,resid),mDemux(NULL) , mIsKeyFrame(NULL) {
     // Read RIFF header to get file size.
     uint8_t riff_header[RIFF_HEADER_SIZE];
-    if (stream->read((char*)riff_header, RIFF_HEADER_SIZE).gcount() != RIFF_HEADER_SIZE) {
+
+    if (mStream->read((char*)riff_header, RIFF_HEADER_SIZE).gcount() != RIFF_HEADER_SIZE) {
         LOGE("WebP header load failed");
         return;
     }
@@ -106,7 +109,7 @@ WebPFrameSequence::WebPFrameSequence(cdroid::Context*ctx,std::istream* stream)
     // Read rest of the bytes.
     void* remaining_bytes = (void*)(mDataBytes + RIFF_HEADER_SIZE);
     size_t remaining_size = mDataSize - RIFF_HEADER_SIZE;
-    if (stream->read((char*)remaining_bytes, remaining_size).gcount() != remaining_size) {
+    if (mStream->read((char*)remaining_bytes, remaining_size).gcount() != remaining_size) {
         LOGE("WebP full load failed");
         return;
     }

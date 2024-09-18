@@ -16,9 +16,7 @@ int main(int argc,const char*argv[]){
     LOGD("imageinfo:%dx%d",dec->getWidth(),dec->getHeight());
     image->write_to_png("111.png");
 #else
-    std::ifstream fin(argv[1]);
-    ImageDecoder::create(nullptr,argv[1]);
-    cdroid::FrameSequence*seq=new cdroid::PngFrameSequence(nullptr,&fin);
+    cdroid::FrameSequence*seq=new cdroid::PngFrameSequence(nullptr,argv[1]);
     LOGD("%dx%dx%d",seq->getWidth(),seq->getHeight(),seq->getFrameCount());
     Cairo::RefPtr<Cairo::ImageSurface>img=Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,seq->getWidth(),seq->getHeight());
     cdroid::FrameSequenceState*state=seq->createState();

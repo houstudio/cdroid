@@ -28,7 +28,7 @@ PNGDecoder::PNGDecoder(Context*ctx,const std::string&resourceId):ImageDecoder(ct
     mPrivate = new PRIVATE();
     mPrivate->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     mPrivate->info_ptr= png_create_info_struct(mPrivate->png_ptr);
-    mPrivate->istream = istream.get();
+    mPrivate->istream = mStream.get();
     LOGV("%s",resourceId.c_str());
     png_set_read_fn(mPrivate->png_ptr,mPrivate,istream_png_reader);
 }
@@ -36,6 +36,10 @@ PNGDecoder::PNGDecoder(Context*ctx,const std::string&resourceId):ImageDecoder(ct
 PNGDecoder::~PNGDecoder() {
     png_destroy_read_struct(&mPrivate->png_ptr, &mPrivate->info_ptr, nullptr);
     delete mPrivate;
+}
+
+bool PNGDecoder::isPNG(const uint8_t* contents,uint32_t header_size){
+    return !memcmp((const char*)contents, "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A", 8);
 }
 
 static void png_error_fn(png_structp png_ptr, png_const_charp msg) {
@@ -78,8 +82,6 @@ Cairo::RefPtr<Cairo::ImageSurface> PNGDecoder::decode(float scale,void*targetPro
     Cairo::RefPtr<Cairo::ImageSurface> image = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mImageWidth,mImageHeight);
     uint8_t*frame_pixels=image->get_data();
 
-    //if(targetProfile==nullptr) targetProfile=mCMSProfile;
-
     for (png_uint_32 y = 0; y < mImageHeight; ++y) {
         row_pointers[y] = (frame_pixels + y* mImageWidth * 4);
         bzero(row_pointers[y],mImageWidth * 4);
@@ -100,7 +102,7 @@ Cairo::RefPtr<Cairo::ImageSurface> PNGDecoder::decode(float scale,void*targetPro
 #if  ENABLE(LCMS)
     else{
         uint8_t *srcLine=new uint8_t[mImageWidth*4];
-        for(uint32_t i=0;i<mImageHeight;i++){
+        for(uint32_t i = 0;i < mImageHeight;i++){
             png_read_row(png_ptr,srcLine,nullptr);
             cmsDoTransform(mTransform,srcLine,row_pointers[i],mImageWidth);
             uint8_t *pd = row_pointers[i] , *ps = srcLine;
@@ -127,16 +129,16 @@ static void premultiply_data (png_structp png, png_row_infop row_info, png_bytep
     unsigned int i;
 
     for (i = 0; i < row_info->rowbytes; i += 4) {
-        uint8_t *base  = &data[i];
-        uint8_t  alpha = base[3];
         uint32_t p;
+        uint8_t *base = &data[i];
+        uint8_t alpha = base[3];
 
         if (alpha == 0) {
             p = 0;
         } else {
-            uint8_t  red   = base[0];
-            uint8_t  green = base[1];
-            uint8_t  blue  = base[2];
+            uint8_t red   = base[0];
+            uint8_t green = base[1];
+            uint8_t blue  = base[2];
 
             if (alpha != 0xff) {
                 red   = multiply_alpha (alpha, red);

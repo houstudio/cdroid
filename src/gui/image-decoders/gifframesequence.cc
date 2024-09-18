@@ -43,10 +43,10 @@ static bool willBeCleared(const GraphicsControlBlock& gcb) {
 // Frame sequence
 ////////////////////////////////////////////////////////////////////////////////
 
-GifFrameSequence::GifFrameSequence(cdroid::Context*ctx,std::istream* stream):
-      FrameSequence(ctx), mLoopCount(1), mBgColor(COLOR_TRANSPARENT),
+GifFrameSequence::GifFrameSequence(cdroid::Context*ctx,const std::string&resid):
+      FrameSequence(ctx,resid), mLoopCount(1), mBgColor(COLOR_TRANSPARENT),
       mPreservedFrames(NULL), mRestoringFrames(NULL) {
-    mGif = DGifOpen(stream, streamReader, NULL);
+    mGif = DGifOpen(mStream.get(), streamReader, NULL);
     if (!mGif) {
         LOGW("Gif load failed");
         return;

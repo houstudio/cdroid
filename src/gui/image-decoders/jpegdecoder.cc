@@ -136,11 +136,15 @@ JPEGDecoder::JPEGDecoder(Context*ctx,const std::string&resourceId):ImageDecoder(
     cinfo->err = jpeg_std_error(&jerr->pub);
     jerr->pub.error_exit = handle_jpeg_error;
     jpeg_create_decompress(cinfo);
-    make_jpeg_stream(cinfo,istream.get());
+    make_jpeg_stream(cinfo,mStream.get());
 }
 
 JPEGDecoder::~JPEGDecoder(){
    delete mPrivate;
+}
+
+bool JPEGDecoder::isJPEG(const uint8_t* contents,uint32_t header_size){
+    return !memcmp((const char*)contents, "\xFF\xD8\xFF", 3);
 }
 
 Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale,void*targetProfile){

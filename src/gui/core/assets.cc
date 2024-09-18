@@ -320,10 +320,10 @@ Cairo::RefPtr<ImageSurface>Assets::loadImage(const std::string&fullresid) {
 Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(const std::string&resname,int width,int height){
     std::unique_ptr<ImageDecoder>dec = ImageDecoder::create(this,resname);
     float scale = 1.f;
-    if( (width<0||height<0) && dec->decodeSize() ){
+    if( (width<0||height<0) && dec && dec->decodeSize() ){
        scale = std::max(float(dec->getWidth())/width,float(dec->getHeight())/height);
     }
-    return dec->decode(scale);
+    return dec ? dec->decode(scale):nullptr;
 }
 
 int Assets::getId(const std::string&resname)const {

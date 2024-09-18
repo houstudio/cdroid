@@ -19,6 +19,7 @@
 #include <cdlog.h>
 #include <core/color.h>
 #include <png.h>
+#include <fstream>
 #ifdef PNG_APNG_SUPPORTED
 #include <image-decoders/pngframesequence.h>
 
@@ -35,19 +36,19 @@ static void pngmem_reader(png_structp png_ptr, png_bytep png_data, png_size_t da
     *ppd += data_size;
 }
 
-PngFrameSequence::PngFrameSequence(cdroid::Context*ctx,std::istream* stream)
-    :FrameSequence(ctx), mLoopCount(1), mBgColor(COLOR_TRANSPARENT) {
+PngFrameSequence::PngFrameSequence(cdroid::Context*ctx,const std::string&resid)
+    :FrameSequence(ctx,resid), mLoopCount(1), mBgColor(COLOR_TRANSPARENT) {
     png_structp png_ptr;
     png_infop png_info;
     png_color_16p bg = nullptr;
     png_bytep trans_alpha = nullptr;
     Color ccBG(mBgColor);
 
-    stream->seekg(0,std::ios::end);
-    mDataSize = stream->tellg();
+    mStream->seekg(0,std::ios::end);
+    mDataSize = mStream->tellg();
     mDataBytes= new uint8_t[mDataSize];
-    stream->seekg(0,std::ios::beg);
-    stream->read((char*)mDataBytes,mDataSize);
+    mStream->seekg(0,std::ios::beg);
+    mStream->read((char*)mDataBytes,mDataSize);
 
     png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     png_info= png_create_info_struct(png_ptr);
@@ -267,8 +268,8 @@ bool PngFrameSequence::isPNG(const uint8_t* header,uint32_t head_size) {
            || !memcmp(PNG_STAMP, header, PNG_HEADER_SIZE);
 }
 
-static FrameSequence* createFramesequence(cdroid::Context*ctx,std::istream* stream) {
-    return new cdroid::PngFrameSequence(ctx,stream);
+static FrameSequence* createFramesequence(cdroid::Context*ctx,const std::string&resid) {
+    return new cdroid::PngFrameSequence(ctx,resid);
 }
 
 

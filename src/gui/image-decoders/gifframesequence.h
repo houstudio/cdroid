@@ -32,7 +32,7 @@ public:
     class GifFrameSequenceState;
     static constexpr uint32_t GIF_HEADER_SIZE = 6;/*GIF87a or GIF89a*/
 public:
-    GifFrameSequence(cdroid::Context*,std::istream* stream);
+    GifFrameSequence(cdroid::Context*,const std::string&);
     virtual ~GifFrameSequence();
 
     int getWidth() const override;

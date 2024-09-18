@@ -27,9 +27,9 @@ ImageDecoder::ImageDecoder(Context*ctx,const std::string&resourceId){
     mTransform= nullptr;
     mContext = ctx;
     if(ctx)
-        istream = ctx->getInputStream(resourceId);
+        mStream = ctx->getInputStream(resourceId);
     else
-        istream = std::move(std::make_unique<std::ifstream>(resourceId));
+        mStream = std::move(std::make_unique<std::ifstream>(resourceId));
 
 #if ENABLE(LCMS)
     if(mCMSProfile==nullptr){
@@ -49,6 +49,25 @@ ImageDecoder::~ImageDecoder(){
 #endif
 }
 
+uint32_t ImageDecoder::mHeaderBytesRequired = 0;
+std::map<const std::string,ImageDecoder::Registry> ImageDecoder::mFactories;
+
+ImageDecoder::Registry::Registry(uint32_t msize,Factory& fun,Verifier& v)
+  :magicSize(msize),factory(fun),verifier(v){
+
+}
+
+int ImageDecoder::registerFactory(const std::string&mime,uint32_t magicSize,Factory factory,Verifier v){
+    auto it = mFactories.find(mime);
+    if(it==mFactories.end()){
+        mFactories.insert({mime,Registry(magicSize,factory,v)});
+        mHeaderBytesRequired = std::max(magicSize,mHeaderBytesRequired);
+        LOGD("Register FrameSequence factory[%d] %s", mFactories.size(),mime.c_str());
+        return 0;
+    }
+    return 0;
+}
+
 int ImageDecoder::getWidth()const{
     return mImageWidth;
 }
@@ -65,7 +84,8 @@ int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
 
     if( (bmp->get_content()&CONTENT_COLOR) ==0){
         switch(bmp->get_format()){
-        case Surface::Format::A1: return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
+        case Surface::Format::A1:
+            return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
         case Surface::Format::A8:
             for(int y=0;y<bmp->get_height();y++){
                 uint8_t*alpha=bmp->get_data()+bmp->get_stride()*y;
@@ -74,7 +94,8 @@ int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
                         return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;
             }
             return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
-        default:return PixelFormat::TRANSLUCENT;
+        default:
+            return PixelFormat::TRANSLUCENT;
         }
     }
 
@@ -109,18 +130,6 @@ void ImageDecoder::setTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp,int tra
     bmp->set_mime_data((const char*)TRANSPARENCY,(unsigned char*)(long(transparency)),0,nullptr);
 }
 
-static bool matchesGIFSignature(char* contents){
-    return !memcmp(contents, "GIF87a", 6) || !memcmp(contents, "GIF89a", 6);
-}
-
-static bool matchesPNGSignature(char* contents){
-    return !memcmp(contents, "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A", 8);
-}
-
-static bool matchesJPEGSignature(char* contents){
-    return !memcmp(contents, "\xFF\xD8\xFF", 3);
-}
-
 #if USE(OPENJPEG)
 static bool matchesJP2Signature(char* contents){
     return !memcmp(contents, "\x00\x00\x00\x0C\x6A\x50\x20\x20\x0D\x0A\x87\x0A", 12)
@@ -150,7 +159,7 @@ static bool matchesCURSignature(char* contents){
     return !memcmp(contents, "\x00\x00\x02\x00", 4);
 }
 
-static bool isApng(std::istream*istm,const std::string&name){
+static bool isApng(std::istream*istm){
     char buf[64];
     //Chuk IHDR is the pngs's 1st Chunk
     //Chunk acTL is the 1st Chunk after IHDR
@@ -162,32 +171,32 @@ static bool isApng(std::istream*istm,const std::string&name){
 
 std::unique_ptr<ImageDecoder>ImageDecoder::create(Context*ctx,const std::string&resourceId){
     constexpr unsigned lengthOfLongestSignature = 14; /* To wit: "RIFF????WEBPVP"*/
-    char contents[lengthOfLongestSignature];
+    uint8_t contents[lengthOfLongestSignature];
     std::unique_ptr<ImageDecoder>decoder;
     std::unique_ptr<std::istream>istm;
     if(ctx)
         istm = ctx->getInputStream(resourceId);
     else
         istm = std::move(std::make_unique<std::ifstream>(resourceId));
-    istm->read(contents,lengthOfLongestSignature);
+    istm->read((char*)contents,lengthOfLongestSignature);
     const unsigned length = istm->gcount();
     if (length < lengthOfLongestSignature)
         return nullptr;
     istm->seekg(0,std::ios::beg);
+
 #if ENABLE(GIF)
-    if (matchesGIFSignature(contents))
+    if (GIFDecoder::isGIF(contents,lengthOfLongestSignature))
         decoder = std::make_unique<GIFDecoder>(ctx,resourceId);
 #endif
-    if (matchesPNGSignature(contents)&&(isApng(istm.get(),resourceId) == false))
+
+    if (PNGDecoder::isPNG(contents,lengthOfLongestSignature)&&(isApng(istm.get()) == false))
         decoder = std::make_unique<PNGDecoder>(ctx,resourceId);
-#if USE(ICO)
-    if (matchesICOSignature(contents) || matchesCURSignature(contents))
-        return ICOImageDecoder::create(alphaOption, gammaAndColorProfileOption);
-#endif
+
 #if ENABLE(JPEG)
-    if (matchesJPEGSignature(contents))
+    if (JPEGDecoder::isJPEG(contents,lengthOfLongestSignature))
         decoder = std::make_unique<JPEGDecoder>(ctx,resourceId);
 #endif
+
 #if USE(OPENJPEG)
     if (matchesJP2Signature(contents))
         return JPEG2000ImageDecoder::create(JPEG2000ImageDecoder::Format::JP2, alphaOption, gammaAndColorProfileOption);
@@ -196,11 +205,21 @@ std::unique_ptr<ImageDecoder>ImageDecoder::create(Context*ctx,const std::string&
         return JPEG2000ImageDecoder::create(JPEG2000ImageDecoder::Format::J2K, alphaOption, gammaAndColorProfileOption);
 #endif
 
+#if USE(ICO)
+    if (matchesICOSignature(contents) || matchesCURSignature(contents))
+        return ICOImageDecoder::create(alphaOption, gammaAndColorProfileOption);
+#endif
+
 #if USE(BITMAP)
     if (matchesBMPSignature(contents))
         return BMPImageDecoder::create(alphaOption, gammaAndColorProfileOption);
 #endif
     return decoder;
+}
+
+Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(Context*ctx,const std::string&resid){
+    auto dec = ImageDecoder::create(ctx,resid);
+    return dec ? dec->decode():nullptr;
 }
 
 Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){

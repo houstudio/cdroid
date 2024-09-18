@@ -38,7 +38,7 @@ public:
     /*PNG_MAGIC "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"*/
     static constexpr int PNG_HEADER_SIZE = 8;
 public:
-    PngFrameSequence(Context*,std::istream* stream);
+    PngFrameSequence(Context*,const std::string&);
     virtual ~PngFrameSequence();
 
     int getWidth() const override;

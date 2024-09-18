@@ -7,6 +7,7 @@
 #include <string.h>
 #include <fstream>
 #include <iomanip>
+#include <unistd.h>
 
 namespace cdroid {
 
@@ -77,7 +78,9 @@ View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool att
         if(stream && stream->good()) {
             v = inflate(package,*stream,root,attachToRoot && (root!=nullptr),atts);
         } else {
-            LOGE("faild to load resource %s [cdroid.pak %s.pak] must be copied to your work directory",resource.c_str(),package.c_str());
+            char cwdpath[PATH_MAX]="your work directory";
+            getcwd(cwdpath,PATH_MAX);
+            LOGE("faild to load resource %s [%s.pak] must be copied to [%s]",resource.c_str(),package.c_str(),cwdpath);
         }
     } else {
         std::ifstream fin(resource);
