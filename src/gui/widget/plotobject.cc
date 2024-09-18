@@ -210,12 +210,12 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw){
     if (d->type & Bars) {
         double w = 0;
         for (int i = 0; i < d->pList.size(); ++i) {
-	    auto it =d->pList.begin();
-	    std::advance(it,i);
+            auto it =d->pList.begin();
+            std::advance(it,i);
             if ((*it)->barWidth() == 0.0) {
                 if (i < d->pList.size() - 1) {
-		    auto next=it;
-		    std::advance(next,1);
+                    auto next=it;
+                    std::advance(next,1);
                     w = (*next)->x() - (*it)->x();
                 }
                 // For the last bin, we'll just keep the previous width

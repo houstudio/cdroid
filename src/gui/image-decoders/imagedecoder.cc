@@ -169,7 +169,7 @@ static int registerBuildinCodesc(){
     ImageDecoder::registerFactory(std::string("mime/png"),8,PNGDecoder::isPNG,
             [](std::istream&stream){return std::make_unique<PNGDecoder>(stream);});
 #if ENABLE(GIF)
-    ImageDecoder::registerFactory("mime/gif",6,PNGDecoder::isGIF,
+    ImageDecoder::registerFactory("mime/gif",6,GIFDecoder::isGIF,
             [](std::istream&stream){return std::make_unique<GIFDecoder>(stream);});
 #endif
 
