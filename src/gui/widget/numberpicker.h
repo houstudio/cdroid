@@ -49,7 +49,6 @@ private:
     int mMaxHeight;
     int mMinWidth;
     int mMaxWidth;
-    bool mComputeMaxWidth;
     int mTextSize,mTextSize2;
     int mSelectedTextSize;
     int mTextColor,mTextColor2;
@@ -89,7 +88,14 @@ private:
     int mTouchSlop;
     int mMinimumFlingVelocity;
     int mMaximumFlingVelocity;
+    bool mComputeMaxWidth;
     bool mWrapSelectorWheel;
+    bool mScrollerEnabled;
+    bool mIncrementVirtualButtonPressed;
+    bool mDecrementVirtualButtonPressed;
+    bool mHideWheelUntilFocused; 
+    bool mWrapSelectorWheelPreferred;
+    bool mUpdateInputTextInFling;
     int mWheelItemCount;
     int mRealWheelItemCount;
     int mWheelMiddleItemIndex;
@@ -107,15 +113,10 @@ private:
     int mItemSpacing;
     int mSelectionDividerHeight;
     int mScrollState=OnScrollListener::SCROLL_STATE_IDLE;
-    bool mScrollerEnabled;
     int mTopSelectionDividerTop;
     int mBottomSelectionDividerBottom;
     int mLastHoveredChildVirtualViewId;
-    bool mIncrementVirtualButtonPressed;
-    bool mDecrementVirtualButtonPressed;
     int mLastHandledDownDpadKeyCode;
-    bool mHideWheelUntilFocused; 
-    bool mWrapSelectorWheelPreferred;
     Cairo::RefPtr<Cairo::LinearGradient>mPat;
     //PressedStateHelper's members
     Runnable mPressedStateHelpers;

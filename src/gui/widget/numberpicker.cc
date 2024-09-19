@@ -77,6 +77,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mSelectedText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
     mSelectedText->setEnabled(false);
     mSelectedText->setFocusable(false);
+    mUpdateInputTextInFling = atts.getBoolean("updateInputTextInFling",mUpdateInputTextInFling);
     mTextAlign = mSelectedText->getGravity();
     mSelectedTextSize = mSelectedText->getTextSize();
     mTypeface = Typeface::create(atts.getString("fontFamily"),Typeface::NORMAL);
@@ -186,6 +187,7 @@ void NumberPicker::initView(){
     mLastHandledDownDpadKeyCode = -1;
     mWrapSelectorWheel= false;
     mWrapSelectorWheelPreferred = true;
+    mUpdateInputTextInFling = false;
     mIncrementVirtualButtonPressed = false;
     mDecrementVirtualButtonPressed = false;
     mSelectionDividerHeight = UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT;
@@ -1237,7 +1239,7 @@ void NumberPicker::setValueInternal(int current, bool notifyChng){
     int previous = mValue;
     mValue = current;
     // If we're flinging, we'll update the text view at the end when it becomes visible
-    if (mScrollState != OnScrollListener::SCROLL_STATE_FLING)
+    if ((mScrollState != OnScrollListener::SCROLL_STATE_FLING)||mUpdateInputTextInFling)
         updateInputTextView();
     if (notifyChng)
         notifyChange(previous, current);
