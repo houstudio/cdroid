@@ -221,7 +221,7 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
     const int msrdHght = getMeasuredHeight();
 
     // Input text centered horizontally.
-    const int inptTxtMsrdWdth = isHorizontalMode()?mSelectorElementSize:mSelectedText->getMeasuredWidth();
+    const int inptTxtMsrdWdth = mSelectedText->getMeasuredWidth();
     const int inptTxtMsrdHght = mSelectedText->getMeasuredHeight();
     const int inptTxtLeft= (msrdWdth - inptTxtMsrdWdth) /2;
     const int inptTxtTop = (msrdHght - inptTxtMsrdHght)/2;
