@@ -334,9 +334,10 @@ protected:
     int32_t mScreenHeight;
     uint32_t mAxisFlags;
     uint32_t mCorrectedDeviceClasses;
-    int mLastAction;
-    int mScreenRotation;
-    int mSeqID;
+    int32_t mLastAction;
+    int32_t mScreenRotation;
+    int32_t mSeqID;
+    nsecs_t mLastEventTime;
     InputDeviceInfo mDeviceInfo;
     class KeyLayoutMap*kmap;
     static Preferences mPrefs;
@@ -344,7 +345,7 @@ protected:
     virtual int isValidEvent(int type,int code,int value);
 public:
     InputDevice(int fdev);
-    virtual int putRawEvent(const struct timeval&tv,int type,int code,int value){return 0;}//PENDING need more rawevent OK,wecan getevent now
+    virtual int putEvent(const struct timeval&tv,int type,int code,int value){return 0;}//PENDING need more rawevent OK,wecan getevent now
     int getId()const;
     int getProductId()const;
     int getVendorId()const;
@@ -358,6 +359,7 @@ public:
     InputEvent*popEvent();
     const std::string&getName()const;
     const InputDeviceIdentifier&getIdentifier()const;
+    void getLastEvent(int&action,nsecs_t&etime)const;
     void bindDisplay(int);
 };
 
@@ -372,7 +374,7 @@ protected:
     int isValidEvent(int type,int code,int value)override;
 public:
     KeyDevice(int fd);
-    virtual int putRawEvent(const struct timeval&tv,int type,int code,int value);
+    virtual int putEvent(const struct timeval&tv,int type,int code,int value);
 };
 
 class TouchDevice:public InputDevice{
@@ -408,7 +410,7 @@ protected:
     int ABS2AXIS(int absaxis);
 public:
     TouchDevice(int fd);
-    virtual int putRawEvent(const struct timeval&tv,int type,int code,int value);
+    virtual int putEvent(const struct timeval&tv,int type,int code,int value);
 };
 
 class MouseDevice:public TouchDevice{
@@ -418,7 +420,7 @@ protected:
     int isValidEvent(int type,int code,int value)override;
 public:
     MouseDevice(int fd);
-    virtual int putRawEvent(const timeval&tv,int type,int code,int value);
+    virtual int putEvent(const timeval&tv,int type,int code,int value);
 };
 }//namespace
 #endif 

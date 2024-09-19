@@ -63,8 +63,9 @@ InputDevice::InputDevice(int fdev){
     mSeqID = 0;
     mDeviceClasses= 0;
     mAxisFlags =0;
-    mLastAction = -1;
     mScreenRotation =0;
+    mLastAction=-1;
+    mLastEventTime = 0;
 
     mKeyboardType = KEYBOARD_TYPE_NONE;
     InputGetDeviceInfo(fdev,&devInfos);
@@ -280,12 +281,19 @@ int InputDevice::getEventCount()const{
 
 void InputDevice::pushEvent(InputEvent*e){
     mEvents.push_back(e);
+    mLastAction=e->getAction();
+    mLastEventTime=e->getEventTime();
 }
 
 InputEvent*InputDevice::popEvent(){
     InputEvent*event = mEvents.front();
     mEvents.pop_front();
     return event;
+}
+
+void InputDevice::getLastEvent(int&action,nsecs_t&etime)const{
+    action = mLastAction;
+    etime = mLastEventTime;
 }
 
 KeyDevice::KeyDevice(int fd)
@@ -302,7 +310,7 @@ int KeyDevice::isValidEvent(int type,int code,int value){
     return (type==EV_KEY)||(type==EV_SYN);
 }
 
-int KeyDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
+int KeyDevice::putEvent(const struct timeval&tv,int type,int code,int value){
     int flags  = 0;
     int keycode= code;
     if(!isValidEvent(type,code,value)){
@@ -553,7 +561,7 @@ static std::string printEvent(MotionEvent*e){
     return oss.str(); 
 }
 
-int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
+int TouchDevice::putEvent(const struct timeval&tv,int type,int code,int value){
     int slot,pointerCount,pointerIndex,action;
     MotionEvent*lastEvent;
     if(!isValidEvent(type,code,value))return -1;
@@ -645,6 +653,7 @@ int TouchDevice::putRawEvent(const struct timeval&tv,int type,int code,int value
             mEvent->recycle();
         }
         mLastAction = action;
+        mLastEventTime = mMoveTime;
         if( mLastBits.count() > mCurrBits.count() ){
             const uint32_t pointerIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
             LOGV("clearbits %d %08x,%08x trackslot.size = %d",pointerIndex,mLastBits.value,mCurrBits.value, mTrack2Slot.size());
@@ -684,9 +693,9 @@ int MouseDevice::isValidEvent(int type,int code,int value){
     return (type==EV_KEY)||(type==EV_REL)||(type==EV_SYN)||true;
 }
 
-int MouseDevice::putRawEvent(const struct timeval&tv,int type,int code,int value){
+int MouseDevice::putEvent(const struct timeval&tv,int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
-    return TouchDevice::putRawEvent(tv,type,code,value);
+    return TouchDevice::putEvent(tv,type,code,value);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////

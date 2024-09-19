@@ -7,7 +7,9 @@
 #include <systemclock.h>
 
 namespace cdroid{
-
+class InputEventSource::DeviceObject{
+public:
+};
 InputEventSource::InputEventSource(){
     InputInit();
     setOwned(false);
@@ -43,10 +45,10 @@ void InputEventSource::doEventsConsume(){
                 continue;
             }
             if(it==mDevices.end()){
-                getdevice(es->device)->putRawEvent(tv,e->type,e->code,e->value);
+                getDevice(es->device)->putEvent(tv,e->type,e->code,e->value);
                 continue;
             }
-            it->second->putRawEvent(tv,e->type,e->code,e->value);
+            it->second->putEvent(tv,e->type,e->code,e->value);
         }
     }
 }
@@ -62,7 +64,7 @@ void InputEventSource::onDeviceChanged(const INPUTEVENT*es){
     std::shared_ptr<InputDevice>dev = nullptr;
     switch(es->type){
     case EV_ADD:/*noting todo*/
-        dev = getdevice(es->device);
+        dev = getDevice(es->device);
         LOGI("device %s %d is added",(dev?dev->getName().c_str():""),es->device);
         break;
     case EV_REMOVE:
@@ -86,7 +88,7 @@ void InputEventSource::setScreenSaver(ScreenSaver func,int timeout){
     mScreenSaveTimeOut = timeout;
 }
 
-std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
+std::shared_ptr<InputDevice>InputEventSource::getDevice(int fd){
     std::shared_ptr<InputDevice>dev;
     auto itr = mDevices.find(fd);
     if(itr == mDevices.end()){
@@ -102,12 +104,27 @@ std::shared_ptr<InputDevice>InputEventSource::getdevice(int fd){
     return itr->second;
 }
 
+bool InputEventSource::needCancel(InputDevice*dev){
+    int32_t action;
+    nsecs_t etime;
+    const nsecs_t now = SystemClock::uptimeMillis();
+    dev->getLastEvent(action,etime);
+    if( (action==MotionEvent::ACTION_MOVE) && (now - etime>300) ){
+        MotionEvent*e = MotionEvent::obtain(now, now, MotionEvent::ACTION_CANCEL, 0, 0, 0);
+        dev->pushEvent(e);
+    }
+    return false;
+}
+
 int InputEventSource::checkEvents(){
     std::lock_guard<std::mutex> lock(mtxEvents);
     const nsecs_t now = SystemClock::uptimeMillis();
     int count = 0;
     for(auto dev:mDevices){
-        count += dev.second->getEventCount();
+        const int devEvents= dev.second->getEventCount();
+        count += devEvents;
+        if(devEvents==0)
+            needCancel(dev.second.get());
     }
     if(mRunning==false)
         mRunning = true;

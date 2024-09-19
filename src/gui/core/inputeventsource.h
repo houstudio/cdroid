@@ -16,6 +16,7 @@ class InputEventSource:public EventHandler{
 public:	
     typedef std::function<void(bool)>ScreenSaver;
 private:
+    class DeviceObject;
     std::mutex mtxEvents;
     ScreenSaver mScreenSaver;
     int mScreenSaveTimeOut;
@@ -26,8 +27,9 @@ private:
     nsecs_t mLastInputEventTime;/*for screensaver*/
     std::ofstream frecord;
     std::unordered_map<int,std::shared_ptr<InputDevice>>mDevices;
-    std::shared_ptr<InputDevice>getdevice(int fd);
+    std::shared_ptr<InputDevice>getDevice(int fd);
     void doEventsConsume();
+    bool needCancel(InputDevice*dev);
     void recordEvent(InputEvent&);
     InputEvent*parseEvent(const char*);
 protected:

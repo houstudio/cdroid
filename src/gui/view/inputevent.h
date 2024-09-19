@@ -67,10 +67,11 @@ enum {
 class InputEvent{
 protected:
     static constexpr long NS_PER_MS = 1000000;
-    int mDeviceId;
-    int mDisplayId;
-    int mSource;
-    int mId;
+    int32_t mDeviceId;
+    int32_t mDisplayId;
+    int32_t mSource;
+    int32_t mId;
+    int32_t mAction;
     long mSeq;
     static int mNextSeq;
     nsecs_t mEventTime;//SystemClock#uptimeMillis
@@ -84,6 +85,7 @@ public:
     };
     InputEvent();
     virtual ~InputEvent();
+    int getAction()const{return mAction;}
     int getDeviceId()const{return mDeviceId;}
     int getDisplayId()const;
     void setDisplayId(int);

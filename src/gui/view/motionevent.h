@@ -172,7 +172,6 @@ private:
     static MotionEvent*obtain();
     static void ensureSharedTempPointerCapacity(int desiredCapacity);
 protected:
-    int32_t mAction;
     int32_t mActionButton;
     int32_t mFlags;
     int32_t mEdgeFlags;
@@ -215,7 +214,6 @@ public:
     MotionEvent*split(int idBits);
     void setSource(int)override;
     virtual int getType()const{return INPUT_EVENT_TYPE_MOTION;}
-    inline int32_t getAction() const { return mAction;}
     inline void setAction(int32_t action) { mAction = action; }
     inline int32_t getActionMasked() const { return mAction &ACTION_MASK; }
     int getActionIndex()const{

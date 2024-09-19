@@ -6,7 +6,6 @@ namespace cdroid{
 
 class KeyEvent:public InputEvent{
 private:
-    int32_t mAction;
     int32_t mFlags;
     int32_t mKeyCode;
     int32_t mScanCode;
@@ -134,7 +133,6 @@ public:
     }
     inline int32_t getScanCode() const { return mScanCode; }
     inline int32_t getMetaState() const { return mMetaState; }
-    int getAction()const{return mAction;}//key up-->0 down-->1
     int getRepeatCount()const {return mRepeatCount;}
     inline nsecs_t getDownTime() const { return mDownTime; }
     bool hasNoModifiers()const;
