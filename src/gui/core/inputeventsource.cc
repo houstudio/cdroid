@@ -109,7 +109,7 @@ bool InputEventSource::needCancel(InputDevice*dev){
     nsecs_t etime;
     const nsecs_t now = SystemClock::uptimeMillis();
     dev->getLastEvent(action,etime);
-    if( (action==MotionEvent::ACTION_MOVE) && (now - etime>300) ){
+    if( (action!=MotionEvent::ACTION_CANCEL) && (now - etime>300) ){
         MotionEvent*e = MotionEvent::obtain(now, now, MotionEvent::ACTION_CANCEL, 0, 0, 0);
         dev->pushEvent(e);
     }
