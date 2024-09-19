@@ -41,11 +41,6 @@ bool PNGDecoder::isPNG(const uint8_t* contents,uint32_t header_size){
     return !memcmp((const char*)contents, "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A", 8);
 }
 
-static void png_error_fn(png_structp png_ptr, png_const_charp msg) {
-    LOGE("------ png error %s", msg);
-    longjmp(PNG_JMPBUF(png_ptr), -1);
-}
-
 void*PNGDecoder::getColorProfile(PRIVATE*priv,uint8_t colorType) {
 #if ENABLE(LCMS)
     if (png_get_valid(priv->png_ptr, priv->info_ptr, PNG_INFO_iCCP)) {
@@ -150,12 +145,9 @@ static void premultiply_data (png_structp png, png_row_infop row_info, png_bytep
 }
 
 static uint16_t f_to_u16(float val){
-    if (val < 0)
-        return 0;
-    else if (val > 1)
-        return 65535;
-    else
-        return (uint16_t)(val * 65535.f);
+    if (val < 0) return 0;
+    else if (val > 1) return 65535;
+    else return (uint16_t)(val * 65535.f);
 }
 
 static void unpremultiply_float (float *f, uint16_t *d16, unsigned width){
@@ -163,10 +155,8 @@ static void unpremultiply_float (float *f, uint16_t *d16, unsigned width){
 
     for (i = 0; i < width; i++) {
         float r, g, b, a;
-        r = *f++;
-        g = *f++;
-        b = *f++;
-        a = *f++;
+        r = *f++;  g = *f++;
+        b = *f++;  a = *f++;
 
         if (a > 0) {
             *d16++ = f_to_u16(r / a);
@@ -174,10 +164,8 @@ static void unpremultiply_float (float *f, uint16_t *d16, unsigned width){
             *d16++ = f_to_u16(b / a);
             *d16++ = f_to_u16(a);
         } else {
-            *d16++ = 0;
-            *d16++ = 0;
-            *d16++ = 0;
-            *d16++ = 0;
+            *d16++ = 0;  *d16++ = 0;
+            *d16++ = 0;  *d16++ = 0;
         }
     }
 }
@@ -262,6 +250,10 @@ bool PNGDecoder::decodeSize() {
                   &bit_depth, &color_type, &interlace, NULL, NULL);
     LOGE_IF((bit_depth != 8 && bit_depth != 16) || ! (color_type == PNG_COLOR_TYPE_RGB ||  color_type == PNG_COLOR_TYPE_RGB_ALPHA),
             "Decoder Error");
+
+#ifdef PNG_APNG_SUPPORTED
+    png_get_acTL(png_ptr, info_ptr, (uint32_t*)&mFrameCount,nullptr);
+#endif
 
     if(color_type==PNG_COLOR_TYPE_RGB_ALPHA) {
         if(bit_depth == 8){

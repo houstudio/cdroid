@@ -27,6 +27,7 @@ protected:
     struct PRIVATE*mPrivate;
     int mImageWidth;
     int mImageHeight;
+    int mFrameCount;
     void*mTransform;
     static void*mCMSProfile;
     std::istream&mStream;
@@ -35,6 +36,7 @@ public:
     virtual ~ImageDecoder();
     int getWidth()const;
     int getHeight()const;
+    int getFrameCount()const;
     virtual bool decodeSize()=0;
     virtual Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)=0;
 

@@ -46,6 +46,7 @@ bool GIFDecoder::decodeSize(){
     mPrivate->gif = gifFileType;
     mImageWidth = gifFileType->SWidth;
     mImageHeight= gifFileType->SHeight;
+    mFrameCount = gifFileType->ImageCount;
     LOGD("GIF %d frames loaded size(%dx%d)",gifFileType->ImageCount,mImageWidth,mImageHeight);
     return true;
 }

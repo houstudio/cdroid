@@ -23,6 +23,7 @@ void*ImageDecoder::mCMSProfile = nullptr;
 ImageDecoder::ImageDecoder(std::istream&stream):mStream(stream){
     mImageWidth = -1;
     mImageHeight= -1;
+    mFrameCount = 1;
     mPrivate = nullptr;
     mTransform= nullptr;
 #if ENABLE(LCMS)
@@ -56,7 +57,7 @@ int ImageDecoder::registerFactory(const std::string&mime,uint32_t magicSize,Veri
     if(it==mFactories.end()){
         mFactories.insert({mime,Registry(magicSize,factory,v)});
         mHeaderBytesRequired = std::max(magicSize,mHeaderBytesRequired);
-        LOGD("Register FrameSequence factory[%d] %s", mFactories.size(),mime.c_str());
+        LOGD("Register FrameSequence factory[%d] %s", mFactories.size()-1,mime.c_str());
         return 0;
     }else{
         it->second.factory = factory;
@@ -70,6 +71,10 @@ int ImageDecoder::getWidth()const{
 
 int ImageDecoder::getHeight()const{
     return mImageHeight;
+}
+
+int ImageDecoder::getFrameCount()const{
+    return mFrameCount;
 }
 
 int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
