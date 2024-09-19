@@ -8,6 +8,7 @@ find_package(LCMS2)
 
 set(DECODER_SRCS
     imagedecoder.cc
+    gifdecoder.cc
     pngdecoder.cc
     jpegdecoder.cc
     framesequence.cc
