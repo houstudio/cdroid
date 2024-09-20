@@ -1306,7 +1306,7 @@ View& ViewGroup::addView(View* child, int width, int height){
 }
 
 View& ViewGroup::addView(View* child, LayoutParams* params){
-    return  addView(child, -1, params);
+    return addView(child, -1, params);
 }
 
 void ViewGroup::removeView(View* view){
