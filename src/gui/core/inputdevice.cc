@@ -653,7 +653,7 @@ int TouchDevice::putEvent(const struct timeval&tv,int type,int code,int value){
             mEvent->recycle();
         }
         mLastAction = action;
-        mLastEventTime = mMoveTime;
+        mLastEventTime = SystemClock::uptimeMillis();
         if( mLastBits.count() > mCurrBits.count() ){
             const uint32_t pointerIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
             LOGV("clearbits %d %08x,%08x trackslot.size = %d",pointerIndex,mLastBits.value,mCurrBits.value, mTrack2Slot.size());
