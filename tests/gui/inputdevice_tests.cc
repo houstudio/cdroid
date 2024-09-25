@@ -21,7 +21,7 @@ public:
       int eventCount = 0;
       int32_t tmEVT = 0;
       for(int i=0;i<size;i++){
-         d.putRawEvent({0,tmEVT},mts[i].type,mts[i].code,mts[i].value);
+         d.putEvent({0,tmEVT},mts[i].type,mts[i].code,mts[i].value);
          if((mts[i].type==EV_SYN)&&(mts[i].code==SYN_REPORT))
              tmEVT+=200*1000000;
       }
