@@ -1538,8 +1538,6 @@ void RecyclerView::onDetachedFromWindow() {
         mItemAnimator->endAnimations();
     }
     stopScroll();
-    delete mViewFlinger;
-    mViewFlinger =nullptr;
     mIsAttached = false;
     if (mLayout != nullptr) {
         mLayout->dispatchDetachedFromWindow(*this, *mRecycler);

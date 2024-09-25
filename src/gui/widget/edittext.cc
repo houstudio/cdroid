@@ -63,6 +63,8 @@ int EditText::commitText(const std::wstring&ws){
     switch(mEditMode){
     case READONLY:return 0;
     case INSERT:
+        if((mMaxLength>0)&&(wText.size()>=mMaxLength))
+            break;
         if(mCaretPos<wText.size())
             wText.insert(mCaretPos,ws);
         else 
@@ -227,7 +229,7 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
         }
         return false;
     default:
-        ch=InputMethodManager::getInstance().getCharacter(keyCode,event.getMetaState());
+        ch = InputMethodManager::getInstance().getCharacter(keyCode,event.getMetaState());
         if(ch!=0){
             std::wstring ws;
             ws.append(1,ch); 
