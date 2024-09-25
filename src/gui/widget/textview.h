@@ -155,6 +155,7 @@ private:
 protected:
     int mEditMode;//0--readonly 1--insert 2--replace
     int mCaretPos;
+    int mMaxLength;
     bool mBlinkOn;
     Rect mCaretRect;
     Cairo::RefPtr<Cairo::FontFace>mTypeFace;

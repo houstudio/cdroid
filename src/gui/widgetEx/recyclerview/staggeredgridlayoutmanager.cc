@@ -108,7 +108,7 @@ void StaggeredGridLayoutManager::onScrollStateChanged(int state) {
     }
 }
 
-void StaggeredGridLayoutManager::onDetachedFromWindow(RecyclerView* view, RecyclerView::Recycler& recycler) {
+void StaggeredGridLayoutManager::onDetachedFromWindow(RecyclerView& view, RecyclerView::Recycler& recycler) {
     LayoutManager::onDetachedFromWindow(view, recycler);
 
     removeCallbacks(mCheckForGapsRunnable);
@@ -116,7 +116,7 @@ void StaggeredGridLayoutManager::onDetachedFromWindow(RecyclerView* view, Recycl
         mSpans[i]->clear();
     }
     // SGLM will require fresh layout call to recover state after detach
-    view->requestLayout();
+    view.requestLayout();
 }
 
 View* StaggeredGridLayoutManager::hasGapsToFix() {

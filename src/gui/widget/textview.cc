@@ -391,6 +391,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
     setSingleLine(attrs.getBoolean("singleLine",mSingleLine));
     setGravity(attrs.getGravity("gravity",Gravity::TOP|Gravity::START));
+    mMaxLength= attrs.getInt("maxLength",-1);
 
     setLineSpacing( attrs.getDimensionPixelSize("lineSpacingExtra",0),
              attrs.getFloat("lineSpacingMultiplier",1.f) );
@@ -455,6 +456,7 @@ void TextView::initView(){
     mMaxMode = LINES;
     mMinMode = LINES;
     mDeferScroll = -1;
+    mMaxLength= -1;
     mMarqueeRepeatLimit =3;
     mLastLayoutDirection = -1;
     mFontWeightAdjustment= INT_MAX;

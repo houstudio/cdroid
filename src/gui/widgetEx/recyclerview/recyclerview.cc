@@ -358,14 +358,14 @@ void RecyclerView::initChildrenHelper() {
     cbk.onEnteredHiddenState=[this](View* child) {
         ViewHolder* vh = getChildViewHolderInt(child);
         if (vh != nullptr) {
-            vh->onEnteredHiddenState(this);
+            vh->onEnteredHiddenState(*this);
         }
     };
 
     cbk.onLeftHiddenState=[this](View* child) {
         ViewHolder* vh = getChildViewHolderInt(child);
         if (vh != nullptr) {
-            vh->onLeftHiddenState(this);
+            vh->onLeftHiddenState(*this);
         }
     };
     mChildHelper = new ChildHelper(cbk);
@@ -586,7 +586,7 @@ void RecyclerView::setLayoutManager(LayoutManager* layout) {
         mRecycler->clear();
 
         if (mIsAttached) {
-            mLayout->dispatchDetachedFromWindow(this, *mRecycler);
+            mLayout->dispatchDetachedFromWindow(*this, *mRecycler);
         }
         mLayout->setRecyclerView(nullptr);
         mLayout = nullptr;
@@ -602,7 +602,7 @@ void RecyclerView::setLayoutManager(LayoutManager* layout) {
         }
         mLayout->setRecyclerView(this);
         if (mIsAttached) {
-            mLayout->dispatchAttachedToWindow(this);
+            mLayout->dispatchAttachedToWindow(*this);
         }
     }
     mRecycler->updateViewCacheSize();
@@ -1252,7 +1252,7 @@ void RecyclerView::ensureLeftGlow() {
     if (mLeftGlow != nullptr) {
         return;
     }
-    mLeftGlow = mEdgeEffectFactory->createEdgeEffect(this, EdgeEffectFactory::DIRECTION_LEFT);
+    mLeftGlow = mEdgeEffectFactory->createEdgeEffect(*this, EdgeEffectFactory::DIRECTION_LEFT);
     if (mClipToPadding) {
         mLeftGlow->setSize(getMeasuredHeight() - getPaddingTop() - getPaddingBottom(),
                 getMeasuredWidth() - getPaddingLeft() - getPaddingRight());
@@ -1265,7 +1265,7 @@ void RecyclerView::ensureRightGlow() {
     if (mRightGlow != nullptr) {
         return;
     }
-    mRightGlow = mEdgeEffectFactory->createEdgeEffect(this, EdgeEffectFactory::DIRECTION_RIGHT);
+    mRightGlow = mEdgeEffectFactory->createEdgeEffect(*this, EdgeEffectFactory::DIRECTION_RIGHT);
     if (mClipToPadding) {
         mRightGlow->setSize(getMeasuredHeight() - getPaddingTop() - getPaddingBottom(),
                 getMeasuredWidth() - getPaddingLeft() - getPaddingRight());
@@ -1278,7 +1278,7 @@ void RecyclerView::ensureTopGlow() {
     if (mTopGlow != nullptr)  {
         return;
     }
-    mTopGlow = mEdgeEffectFactory->createEdgeEffect(this, EdgeEffectFactory::DIRECTION_TOP);
+    mTopGlow = mEdgeEffectFactory->createEdgeEffect(*this, EdgeEffectFactory::DIRECTION_TOP);
     if (mClipToPadding) {
         mTopGlow->setSize(getMeasuredWidth() - getPaddingLeft() - getPaddingRight(),
                 getMeasuredHeight() - getPaddingTop() - getPaddingBottom());
@@ -1292,7 +1292,7 @@ void RecyclerView::ensureBottomGlow() {
     if (mBottomGlow != nullptr) {
         return;
     }
-    mBottomGlow = mEdgeEffectFactory->createEdgeEffect(this, EdgeEffectFactory::DIRECTION_BOTTOM);
+    mBottomGlow = mEdgeEffectFactory->createEdgeEffect(*this, EdgeEffectFactory::DIRECTION_BOTTOM);
     if (mClipToPadding) {
         mBottomGlow->setSize(getMeasuredWidth() - getPaddingLeft() - getPaddingRight(),
                 getMeasuredHeight() - getPaddingTop() - getPaddingBottom());
@@ -1504,7 +1504,7 @@ void RecyclerView::onAttachedToWindow() {
     mIsAttached = true;
     mFirstLayoutComplete = mFirstLayoutComplete && !isLayoutRequested();
     if (mLayout != nullptr) {
-        mLayout->dispatchAttachedToWindow(this);
+        mLayout->dispatchAttachedToWindow(*this);
     }
     mPostedAnimatorRunner = false;
 #if 0
@@ -1538,9 +1538,11 @@ void RecyclerView::onDetachedFromWindow() {
         mItemAnimator->endAnimations();
     }
     stopScroll();
+    delete mViewFlinger;
+    mViewFlinger =nullptr;
     mIsAttached = false;
     if (mLayout != nullptr) {
-        mLayout->dispatchDetachedFromWindow(this, *mRecycler);
+        mLayout->dispatchDetachedFromWindow(*this, *mRecycler);
     }
     mPendingAccessibilityImportanceChange.clear();
     removeCallbacks(mItemAnimatorRunner);
@@ -3535,8 +3537,8 @@ void RecyclerView::RecyclerViewDataObserver::triggerUpdateProcessor() {
     }
 }
 
-EdgeEffect* RecyclerView::EdgeEffectFactory::createEdgeEffect(RecyclerView* view,int direction) {
-    return new EdgeEffect(view->getContext());
+EdgeEffect* RecyclerView::EdgeEffectFactory::createEdgeEffect(RecyclerView& view,int direction) {
+    return new EdgeEffect(view.getContext());
 }
 
 /////////////RecycledViewPool///////////////////
@@ -4913,12 +4915,12 @@ void  RecyclerView::LayoutManager::collectAdjacentPrefetchPositions(int dx, int 
 void  RecyclerView::LayoutManager::collectInitialPrefetchPositions(int adapterItemCount,
         LayoutPrefetchRegistry& layoutPrefetchRegistry) {}
 
-void RecyclerView::LayoutManager::dispatchAttachedToWindow(RecyclerView* view) {
+void RecyclerView::LayoutManager::dispatchAttachedToWindow(RecyclerView& view) {
     mIsAttachedToWindow = true;
     onAttachedToWindow(view);
 }
 
-void RecyclerView::LayoutManager::dispatchDetachedFromWindow(RecyclerView* view, Recycler& recycler) {
+void RecyclerView::LayoutManager::dispatchDetachedFromWindow(RecyclerView& view, Recycler& recycler) {
     mIsAttachedToWindow = false;
     onDetachedFromWindow(view, recycler);
 }
@@ -4940,14 +4942,14 @@ bool RecyclerView::LayoutManager::removeCallbacks(Runnable action) {
     return false;
 }
 
-void RecyclerView::LayoutManager::onAttachedToWindow(RecyclerView* view) {
+void RecyclerView::LayoutManager::onAttachedToWindow(RecyclerView& view) {
 }
 
-void RecyclerView::LayoutManager::onDetachedFromWindow(RecyclerView* view) {
+void RecyclerView::LayoutManager::onDetachedFromWindow(RecyclerView& view) {
 
 }
 
-void RecyclerView::LayoutManager::onDetachedFromWindow(RecyclerView* view, Recycler& recycler) {
+void RecyclerView::LayoutManager::onDetachedFromWindow(RecyclerView& view, Recycler& recycler) {
     onDetachedFromWindow(view);
 }
 
@@ -6256,18 +6258,18 @@ void RecyclerView::ViewHolder::resetInternal() {
     clearNestedRecyclerViewIfNotNested(*this);
 }
 
-void RecyclerView::ViewHolder::onEnteredHiddenState(RecyclerView* parent) {
+void RecyclerView::ViewHolder::onEnteredHiddenState(RecyclerView& parent) {
     // While the view item is in hidden state, make it invisible for the accessibility.
     if (mPendingAccessibilityState != PENDING_ACCESSIBILITY_STATE_NOT_SET) {
         mWasImportantForAccessibilityBeforeHidden = mPendingAccessibilityState;
     } else {
         mWasImportantForAccessibilityBeforeHidden = itemView->getImportantForAccessibility();
     }
-    parent->setChildImportantForAccessibilityInternal(this, View::IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+    parent.setChildImportantForAccessibilityInternal(this, View::IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
 }
 
-void RecyclerView::ViewHolder::onLeftHiddenState(RecyclerView* parent) {
-    parent->setChildImportantForAccessibilityInternal(this,mWasImportantForAccessibilityBeforeHidden);
+void RecyclerView::ViewHolder::onLeftHiddenState(RecyclerView& parent) {
+    parent.setChildImportantForAccessibilityInternal(this,mWasImportantForAccessibilityBeforeHidden);
     mWasImportantForAccessibilityBeforeHidden = View::IMPORTANT_FOR_ACCESSIBILITY_AUTO;
 }
 
@@ -6617,10 +6619,7 @@ void RecyclerView::SmoothScroller::onAnimation(int dx, int dy) {
         PointF pointF;
         const bool rc = computeScrollVectorForPosition(mTargetPosition,pointF);
         if (rc && (pointF.x != 0 || pointF.y != 0)) {
-            recyclerView->scrollStep(
-                    (int) signum(pointF.x),
-                    (int) signum(pointF.y),
-                    nullptr);
+            recyclerView->scrollStep( (int) signum(pointF.x), (int) signum(pointF.y), nullptr);
         }
     }
 
@@ -6629,7 +6628,7 @@ void RecyclerView::SmoothScroller::onAnimation(int dx, int dy) {
         // verify target position
         if (getChildPosition(mTargetView) == mTargetPosition) {
             onTargetFound(mTargetView, *recyclerView->mState, *mRecyclingAction);
-            mRecyclingAction->runIfNecessary(recyclerView);
+            mRecyclingAction->runIfNecessary(*recyclerView);
             stop();
         } else {
             LOGE("Passed over target position while smooth scrolling.");
@@ -6639,7 +6638,7 @@ void RecyclerView::SmoothScroller::onAnimation(int dx, int dy) {
     if (mRunning) {
         onSeekTargetStep(dx, dy, *recyclerView->mState, *mRecyclingAction);
         const bool hadJumpTarget = mRecyclingAction->hasJumpTarget();
-        mRecyclingAction->runIfNecessary(recyclerView);
+        mRecyclingAction->runIfNecessary(*recyclerView);
         if (hadJumpTarget) {
             // It is not stopped so needs to be restarted
             if (mRunning) {
@@ -6711,11 +6710,11 @@ bool RecyclerView::SmoothScroller::Action::hasJumpTarget() {
     return mJumpToPosition >= 0;
 }
 
-void RecyclerView::SmoothScroller::Action::runIfNecessary(RecyclerView* recyclerView) {
+void RecyclerView::SmoothScroller::Action::runIfNecessary(RecyclerView& recyclerView) {
     if (mJumpToPosition >= 0) {
         int position = mJumpToPosition;
         mJumpToPosition = NO_POSITION;
-        recyclerView->jumpToPositionForSmoothScroller(position);
+        recyclerView.jumpToPositionForSmoothScroller(position);
         mChanged = false;
         return;
     }
@@ -6723,12 +6722,12 @@ void RecyclerView::SmoothScroller::Action::runIfNecessary(RecyclerView* recycler
         validate();
         if (mInterpolator == nullptr) {
             if (mDuration == UNDEFINED_DURATION) {
-                recyclerView->mViewFlinger->smoothScrollBy(mDx, mDy);
+                recyclerView.mViewFlinger->smoothScrollBy(mDx, mDy);
             } else {
-                recyclerView->mViewFlinger->smoothScrollBy(mDx, mDy, mDuration);
+                recyclerView.mViewFlinger->smoothScrollBy(mDx, mDy, mDuration);
             }
         } else {
-            recyclerView->mViewFlinger->smoothScrollBy(mDx, mDy, mDuration, mInterpolator);
+            recyclerView.mViewFlinger->smoothScrollBy(mDx, mDy, mDuration, mInterpolator);
         }
         mConsecutiveUpdates++;
         // A new action is being set in every animation step. This looks like a bad

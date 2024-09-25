@@ -58,7 +58,7 @@ void LinearLayoutManager::setRecycleChildrenOnDetach(bool recycleChildrenOnDetac
     mRecycleChildrenOnDetach = recycleChildrenOnDetach;
 }
 
-void LinearLayoutManager::onDetachedFromWindow(RecyclerView* view, RecyclerView::Recycler& recycler) {
+void LinearLayoutManager::onDetachedFromWindow(RecyclerView& view, RecyclerView::Recycler& recycler) {
     LayoutManager::onDetachedFromWindow(view, recycler);
     if (mRecycleChildrenOnDetach) {
         removeAndRecycleAllViews(recycler);

@@ -113,7 +113,7 @@ public:
 	~StaggeredGridLayoutManager()override;
     bool isAutoMeasureEnabled()const override;
     void onScrollStateChanged(int state)override;
-    void onDetachedFromWindow(RecyclerView* view, RecyclerView::Recycler& recycler)override;
+    void onDetachedFromWindow(RecyclerView& view, RecyclerView::Recycler& recycler)override;
     void setSpanCount(int spanCount);
     void setOrientation(int orientation);
     void setReverseLayout(bool reverseLayout);

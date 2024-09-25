@@ -617,8 +617,8 @@ protected:
     void setRecyclerView(RecyclerView* recyclerView);
     void setMeasureSpecs(int wSpec, int hSpec);
     void setMeasuredDimensionFromChildren(int widthSpec, int heightSpec);
-    void dispatchAttachedToWindow(RecyclerView* view);
-    void dispatchDetachedFromWindow(RecyclerView* view, Recycler& recycler);
+    void dispatchAttachedToWindow(RecyclerView& view);
+    void dispatchDetachedFromWindow(RecyclerView& view, Recycler& recycler);
     void removeAndRecycleScrapInt(Recycler& recycler);
     bool shouldReMeasureChild(View* child, int widthSpec, int heightSpec,const LayoutParams* lp);
     bool shouldMeasureChild(View* child, int widthSpec, int heightSpec,const LayoutParams* lp);
@@ -662,9 +662,9 @@ public:
     bool isAttachedToWindow();
     void postOnAnimation(Runnable action);
     bool removeCallbacks(Runnable action);
-    virtual void onAttachedToWindow(RecyclerView* view);
-    virtual void onDetachedFromWindow(RecyclerView* view);
-    virtual void onDetachedFromWindow(RecyclerView* view, Recycler& recycler);
+    virtual void onAttachedToWindow(RecyclerView& view);
+    virtual void onDetachedFromWindow(RecyclerView& view);
+    virtual void onDetachedFromWindow(RecyclerView& view, Recycler& recycler);
     bool getClipToPadding();
     virtual void onLayoutChildren(Recycler& recycler, State& state);
     virtual void onLayoutCompleted(State& state);
@@ -822,7 +822,7 @@ public:
     static constexpr int DIRECTION_RIGHT = 2;
     static constexpr int DIRECTION_BOTTOM = 3;
 protected:
-    virtual EdgeEffect* createEdgeEffect(RecyclerView* view,int direction);
+    virtual EdgeEffect* createEdgeEffect(RecyclerView& view,int direction);
 };
 
 class RecyclerView::RecycledViewPool{
@@ -934,8 +934,8 @@ private:
     static std::vector<Object*> FULLUPDATE_PAYLOADS;
 
     void createPayloadsIfNeeded();
-    void onEnteredHiddenState(RecyclerView* parent);
-    void onLeftHiddenState(RecyclerView* parent);
+    void onEnteredHiddenState(RecyclerView& parent);
+    void onLeftHiddenState(RecyclerView& parent);
     bool shouldBeKeptAsChild();
     bool doesTransientStatePreventRecycling();
 protected:
@@ -1064,7 +1064,7 @@ private:
     void validate();
 protected:
     bool hasJumpTarget();
-    void runIfNecessary(RecyclerView* recyclerView);
+    void runIfNecessary(RecyclerView& recyclerView);
 public:
     Action(int dx,int dy);
     Action(int dx, int dy, int duration);
