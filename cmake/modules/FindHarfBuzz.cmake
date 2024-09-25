@@ -76,9 +76,9 @@ mark_as_advanced(
     HARFBUZZ_INCLUDE_DIRS
     HARFBUZZ_LIBRARIES
 )
-if( HARFBUZZ_INCLUDE_DIRS )#AND NOT HARFBUZZ_LIBRARIES)
+if( HARFBUZZ_INCLUDE_DIRS AND NOT HARFBUZZ_LIBRARIES)
    set(HARFBUZZ_LIBRARIES harfbuzz)
-   set HARFBUZZ_FOUND TRUE)
+   set(HARFBUZZ_FOUND TRUE)
    if(NOT TARGET harfbuzz::harfbuzz)
       add_library(harfbuzz::harfbuzz UNKNOWN IMPORTED)
       set_target_properties(harfbuzz::harfbuzz PROPERTIES
