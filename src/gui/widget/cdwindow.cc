@@ -50,6 +50,7 @@ Window::Window(int x,int y,int width,int height,int type)
     if(width<0)  width = size.x;
     if(height<0) height= size.y;
     setFrame(x, y, width, height);
+    mPendingRgn->do_union({0,0,width,height});
     WindowManager::getInstance().addWindow(this);
     mAttachInfo->mPlaySoundEffect = std::bind(&Window::playSoundImpl,this,std::placeholders::_1);
 }
@@ -237,8 +238,8 @@ View& Window::setPos(int x,int y){
 View& Window::setAlpha(float alpha){
     if(isAttachedToWindow()){
         RefPtr<Canvas> canvas = getCanvas();
-	LOGV("setAlpha(%p,%d)",this,(int)(alpha*255));
-	GFXSurfaceSetOpacity(canvas->mHandle, (alpha*255));
+        LOGV("setAlpha(%p,%d)",this,(int)(alpha*255));
+        GFXSurfaceSetOpacity(canvas->mHandle, (alpha*255));
     }
     return *this;
 }

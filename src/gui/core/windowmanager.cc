@@ -61,14 +61,14 @@ int WindowManager::getDisplayRotation()const{
 
 Display& WindowManager::getDefaultDisplay(){
     if(mDisplays.size()==0){
-	size_t dc = GFXGetDisplayCount();
-	for(size_t i = 0;i < dc ;i++){
-	    DisplayInfo info;
-	    info.rotation = mDisplayRotation;
-	    GFXGetDisplaySize(i,(UINT*)&info.logicalWidth,(UINT*)&info.logicalHeight);
-	    Display d(i,info);
-	    mDisplays.push_back(d);
-	}
+	    size_t dc = GFXGetDisplayCount();
+	    for(size_t i = 0;i < dc ;i++){
+	        DisplayInfo info;
+	        info.rotation = mDisplayRotation;
+	        GFXGetDisplaySize(i,(UINT*)&info.logicalWidth,(UINT*)&info.logicalHeight);
+	        Display d(i,info);
+	        mDisplays.push_back(d);
+        }
     }
     return mDisplays.at(Display::DEFAULT_DISPLAY); 
 }
@@ -107,7 +107,6 @@ void WindowManager::addWindow(Window*win){
         info->mTreeObserver->dispatchOnWindowFocusChange(true);
     });
     mActiveWindow = win;
-    win->invalidate();
     LOGV("win=%p Handler=%p windows.size=%d",win,win->mUIEventHandler,mWindows.size());
 }
 

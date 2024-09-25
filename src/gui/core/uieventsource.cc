@@ -37,8 +37,8 @@ int UIEventSource::handleRunnables(){
     int count=0;
     GraphDevice::getInstance().lock();
     if ( ((mFlags&1)==0) && mAttachedView && mAttachedView->isAttachedToWindow()){
-        if(mAttachedView->isLayoutRequested())
-            mLayoutRunner();
+        //if(mAttachedView->isLayoutRequested())
+        //    mLayoutRunner();
         const nsecs_t nowms = SystemClock::uptimeMillis()-1;/*-1 to prevent postDelay(mRunable,0)in some Runnable*/
         //maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
         while(mRunnables.size() && ((mFlags&1)==0)){
@@ -48,6 +48,8 @@ int UIEventSource::handleRunnables(){
             if(runner.run)runner.run();
             count++;
         }
+        if(((mFlags&1)==0)&&mAttachedView->isLayoutRequested())
+            mLayoutRunner();
         if(((mFlags&1)==0) && mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
             ((Window*)mAttachedView)->draw();
             GraphDevice::getInstance().flip();
