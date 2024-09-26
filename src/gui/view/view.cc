@@ -6718,7 +6718,7 @@ bool View::post(Runnable& what){
     return postDelayed(what,0);
 }
 
-bool  View::postDelayed(Runnable& what,long delay){
+bool View::postDelayed(Runnable& what,long delay){
     if(mAttachInfo)mAttachInfo->mEventSource->postDelayed(what,delay);
     else getRunQueue()->postDelayed(what,delay);
     return true;

@@ -496,17 +496,14 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 
     if(it!=drawableParsers.end()) {
         auto item = pd->items.back();
-        const bool hasDrawable = atts.hasAttribute("drawable");
-        if( strcmp(name,"shape") || (hasDrawable &&((strcmp(name,"item")==0)||(strcmp(name,"transition")==0)))){
-            Drawable* d = nullptr;
+        if( strcmp(name,"shape") || (atts.hasAttribute("drawable") &&((strcmp(name,"item")==0)||(strcmp(name,"transition")==0)))){
+            Drawable* d = it->second(pd->ctx,atts);
             const std::string strDrawable = atts.getString("drawable");
-            if(hasDrawable)d = pd->ctx->getDrawable(strDrawable);
-            else d = it->second(pd->ctx,atts);
             if(d){
                 auto cs = d->getConstantState();
                 if(cs){
                    cs->mResource = strDrawable;
-                   LOGV_IF(hasDrawable,"res=%s",strDrawable.c_str());
+                   LOGV_IF(!strDrawable.empty(),"res=%s",strDrawable.c_str());
                 }
             }
             item->drawable = d;

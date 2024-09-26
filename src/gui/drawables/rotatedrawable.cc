@@ -143,7 +143,7 @@ void RotateDrawable::draw(Canvas& canvas) {
     canvas.rotate_degrees(mState->mCurrentDegrees);
     d->draw(canvas);
     canvas.restore();
-    //LOGD("pos=%d,%d/%.f,%.f level=%d degress=%d",bounds.left,bounds.top,px,py,getLevel(),int(mState->mCurrentDegrees));
+    LOGV("pos=%d,%d/%.f,%.f level=%d degress=%d",bounds.left,bounds.top,px,py,getLevel(),int(mState->mCurrentDegrees));
 }
 
 Drawable*RotateDrawable::inflate(Context*ctx,const AttributeSet&atts){

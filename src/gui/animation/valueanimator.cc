@@ -542,7 +542,7 @@ void ValueAnimator::commitAnimationFrame(long frameTime){
         const long adjustment = frameTime - mLastFrameTime;
         if (adjustment > 0) {
             mStartTime += adjustment;
-            //LOGD("Adjusted start time by %d ms",adjustment);// toString());
+            LOGV("%p Adjusted start time by %d ms",this,adjustment);
         }
     }
 }

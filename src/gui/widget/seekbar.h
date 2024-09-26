@@ -10,7 +10,6 @@ public:
         CallbackBase<void,SeekBar&>onStartTrackingTouch;
         CallbackBase<void,SeekBar&>onStopTrackingTouch;
     };
-    //DECLARE_UIEVENT(void,OnSeekBarChangeListener,AbsSeekBar&seek,int progress,bool fromuser);
 protected:
     OnSeekBarChangeListener  mOnSeekBarChangeListener;
     void onProgressRefresh(float scale, bool fromUser, int progress)override;
