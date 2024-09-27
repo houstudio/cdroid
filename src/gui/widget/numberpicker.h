@@ -102,6 +102,7 @@ private:
     int mRealWheelItemCount;
     int mWheelMiddleItemIndex;
     Drawable* mDividerDrawable;
+    Drawable* mItemBackground;
     int mDividerColor;
     int mDividerType;
     int mDividerDistance;

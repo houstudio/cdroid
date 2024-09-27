@@ -52,6 +52,11 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     }else{
         setDividerColor(atts.getColor("dividerColor",mDividerColor));
     }
+    mItemBackground =  atts.getDrawable("itemBackground");
+    if(mItemBackground){
+        mItemBackground->setCallback(this);
+        mItemBackground->setLayoutDirection(getLayoutDirection());
+    }
     mDividerDistance = atts.getDimensionPixelSize("dividerDistance",UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE);
     mDividerLength = atts.getDimensionPixelSize("dividerLength",0);
     mOrder = ASCENDING;
@@ -145,6 +150,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
 
 NumberPicker::~NumberPicker(){
     delete mDividerDrawable;
+    delete mItemBackground;
     delete mFlingScroller;
     delete mAdjustScroller;
     for(auto d:mDisplayedDrawables)delete d;
@@ -211,6 +217,7 @@ void NumberPicker::initView(){
     mInputTextColor = 0xFFFFFFFF;
     mSelectedTypeface = nullptr;
     mTypeface = nullptr;
+    mItemBackground = nullptr;
     mDividerColor =DEFAULT_DIVIDER_COLOR;
     mWheelMiddleItemIndex = 0;
     mDividerDrawable  = nullptr;
@@ -1059,9 +1066,9 @@ void NumberPicker::onDraw(Canvas&canvas){
     for (int i = 0; i < mSelectorIndices.size(); i++) {
         float font_size  = mTextSize;
         int selectedSize = mSelectorElementSize;
+        const float harfSize = (isHorizontalMode()?getWidth():getHeight())/2.f;
+        const float fraction = std::abs( (isHorizontalMode()?x:y) - harfSize + mSelectorElementSize/2)/harfSize;
         if(mTextSize != mTextSize2){
-            const float harfSize = (isHorizontalMode()?getWidth():getHeight())/2.f;
-            const float fraction = std::abs( (isHorizontalMode()?x:y) - harfSize + mSelectorElementSize/2)/harfSize;
             font_size = lerp(mTextSize,mTextSize2,fraction);
             canvas.set_font_size(font_size);
         }
@@ -1106,6 +1113,11 @@ void NumberPicker::onDraw(Canvas&canvas){
                 }
                 dr->draw(canvas);
             }else{
+                if(mItemBackground){
+                    mItemBackground->setBounds(recText);
+                    mItemBackground->setAlpha(fraction*255);
+                    mItemBackground->draw(canvas);
+                }
                 canvas.draw_text(recText,scrollSelectorValue,textGravity);
             }
         }
