@@ -16,7 +16,7 @@ BitmapDrawable::BitmapState::BitmapState(){
     mTintMode     = DEFAULT_TINT_MODE;
     mTileModeX = mTileModeY = -1;
     mAutoMirrored = false;
-    mFilterBitmap = false;
+    mFilterBitmap = true;
     mMipMap = false;
     mDither = false;
     mSrcDensityOverride = 0;
@@ -321,13 +321,6 @@ static void setPatternByTileMode(RefPtr<SurfacePattern>pat,int tileMode){
     }
 }
 
-static int getRotateAngle(Canvas&canvas){
-    Cairo::Matrix ctx=canvas.get_matrix();
-    double radians = atan2(ctx.yy, ctx.xy);
-    //scaling=(ctx.xx!=1.f)||(ctx.yy!=1.f);
-    return int(radians*180.f/M_PI);
-}
-
 void BitmapDrawable::draw(Canvas&canvas){
     if(mBitmapState->mBitmap==nullptr) return;
     updateDstRectAndInsetsIfDirty();
@@ -385,13 +378,16 @@ void BitmapDrawable::draw(Canvas&canvas){
         float dw = mBounds.width   , dh = mBounds.height;
         const float fx = dw / sw   , fy = dh / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
-        bool isScaling = false;
-        const int angle_degrees = getRotateAngle(canvas);
 	    //SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;GOOD/FAST seems more slowly than ,BILINEAR/NEAREST
-        const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap ||(angle_degrees%90)) ? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
+        SurfacePattern::Filter filterMode = SurfacePattern::Filter::BILINEAR;
         const Pattern::Dither ditherMode = mBitmapState->mDither ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
 
-        LOGD_IF((angle_degrees%90)&&(mBitmapState->mFilterBitmap==false),"%p Maybe must use setFilterBitmap(true) level=%d",this,getLevel());
+        if(getOpacity()==PixelFormat::OPAQUE)
+            filterMode = SurfacePattern::Filter::NEAREST;
+        else if(mBitmapState->mFilterBitmap){
+            LOGV_IF((mBitmapWidth*mBitmapHeight>=512*512),"%p[%s] size=%dx%d opacity=%d . should setFilterBitmap(false) to make render faster",
+                    this,getConstantState()->mResource.c_str(),mBitmapWidth,mBitmapHeight,getOpacity());
+        }
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
         if ( (mBounds.width !=mBitmapWidth) || (mBounds.height != mBitmapHeight) ) {

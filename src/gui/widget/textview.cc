@@ -257,7 +257,7 @@ public:
             mView->invalidate();
         }
     }
-	
+
     void stop() {
         mStatus = MARQUEE_STOPPED;
         mView->removeCallbacks(mStartCallback);
@@ -291,8 +291,8 @@ public:
     }
     float getGhostOffset(){return mGhostOffset; }
     float getScroll() { return mScroll; }
-    float getMaxFadeScroll(){ return mMaxFadeScroll; }	
-    bool shouldDrawLeftFade(){ return mScroll <= mFadeStop; }	
+    float getMaxFadeScroll(){ return mMaxFadeScroll; }
+    bool shouldDrawLeftFade(){ return mScroll <= mFadeStop; }
     bool shouldDrawGhost() {  return mStatus == MARQUEE_RUNNING && mScroll > mGhostStart; }
     bool isRunning() { return mStatus == MARQUEE_RUNNING; }
     bool isStopped() { return mStatus == MARQUEE_STOPPED; }
@@ -1269,7 +1269,7 @@ void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right
 }
 
 void TextView::setCompoundDrawablesWithIntrinsicBounds(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom){
-    if (left) left->setBounds(0, 0, left->getIntrinsicWidth(), left->getIntrinsicHeight());      
+    if (left) left->setBounds(0, 0, left->getIntrinsicWidth(), left->getIntrinsicHeight());
     if (right)right->setBounds(0, 0, right->getIntrinsicWidth(), right->getIntrinsicHeight());
     if (top)  top->setBounds(0, 0, top->getIntrinsicWidth(), top->getIntrinsicHeight());
     if (bottom)bottom->setBounds(0, 0, bottom->getIntrinsicWidth(), bottom->getIntrinsicHeight());
@@ -1644,7 +1644,7 @@ void TextView::setEllipsize(int where){
             requestLayout();
             invalidate();
         }
-    } 
+    }
 }
 
 void TextView::setTextColor(int color){

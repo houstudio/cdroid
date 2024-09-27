@@ -238,17 +238,24 @@ Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std:
 }
 
 Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){
+    Drawable*d = nullptr;
     Cairo::RefPtr<Cairo::ImageSurface> image = loadImage(ctx,resourceId);
+
     if(image){
         if(TextUtils::endWith(resourceId,".9.png"))
-            return new NinePatchDrawable(image);
+            d = new NinePatchDrawable(image);
         else if(TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg"))
-            return new BitmapDrawable(image);
+            d = new BitmapDrawable(image);
+        if(d) d->getConstantState()->mResource=resourceId;
+        return d;
     }
+
     if(TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")
-            ||TextUtils::endWith(resourceId,".apng")||TextUtils::endWith(resourceId,".png"))
-	    return new AnimatedImageDrawable(ctx,resourceId);
-    return nullptr;
+            ||TextUtils::endWith(resourceId,".apng")||TextUtils::endWith(resourceId,".png")){
+	    d = new AnimatedImageDrawable(ctx,resourceId);
+        d->getConstantState()->mResource=resourceId;
+    }
+    return d;
 }
 
 }/*endof namespace*/

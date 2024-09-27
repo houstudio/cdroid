@@ -79,7 +79,7 @@ void DrawableWrapper::setDrawable(Drawable*dr){
         dr->setState(getState());
         dr->setLevel(getLevel());
         dr->setBounds(getBounds());
-        dr->setLayoutDirection(getLayoutDirection());   
+        dr->setLayoutDirection(getLayoutDirection());
         if(mState)
             mState->mDrawableState = dr->getConstantState(); 
     }
@@ -150,7 +150,7 @@ DrawableWrapper*DrawableWrapper::mutate(){
 
 void DrawableWrapper::clearMutated(){
     Drawable::clearMutated();
-    if (mDrawable ) 
+    if (mDrawable)
         mDrawable->clearMutated();
     mMutated = false;
 }
@@ -218,7 +218,7 @@ void DrawableWrapper::setColorFilter(ColorFilter*colorFilter){
 ColorFilter*DrawableWrapper::getColorFilter(){
     Drawable*dr = getDrawable();
     if(dr)return dr->getColorFilter();
-    return Drawable::getColorFilter(); 
+    return Drawable::getColorFilter();
 }
 
 void DrawableWrapper::setTintList(const ColorStateList*tint){
