@@ -1115,7 +1115,7 @@ void NumberPicker::onDraw(Canvas&canvas){
             }else{
                 if(mItemBackground){
                     mItemBackground->setBounds(recText);
-                    mItemBackground->setAlpha(fraction*255);
+                    mItemBackground->setAlpha(255*(1.0-fraction));
                     mItemBackground->draw(canvas);
                 }
                 canvas.draw_text(recText,scrollSelectorValue,textGravity);
