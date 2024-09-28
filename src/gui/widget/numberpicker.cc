@@ -277,11 +277,12 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
         initializeFadingEdges();
         const int dividerDistence = 2*mDividerThickness + mDividerDistance;
         if(isHorizontalMode()){
+            const int w = std::max(inptTxtMsrdWdth,mSelectorElementSize);
             mLeftDividerLeft = (getWidth()-mDividerDistance)/2 - mDividerThickness;
             mRightDividerRight= mLeftDividerLeft + dividerDistence;
             mBottomDividerBottom = getHeight();
             //mInputText->layout(inptTxtLeft, inptTxtTop,std::max(inptTxtMsrdWdth,mSelectorElementSize), inptTxtMsrdHght);
-            mInputText->layout((msrdWdth - mSelectorElementSize) /2, inptTxtTop,mSelectorElementSize, inptTxtMsrdHght);
+            mInputText->layout((msrdWdth - w) /2, inptTxtTop,w, inptTxtMsrdHght);
         }else{
             mTopDividerTop = (getHeight() - mDividerDistance)/2 - mDividerThickness;
             mBottomDividerBottom = mTopDividerTop + dividerDistence;
@@ -1074,7 +1075,7 @@ void NumberPicker::onDraw(Canvas&canvas){
             canvas.set_font_size(font_size);
         }
 
-        int selectorIndex = mSelectorIndices[isAscendingOrder() ? i : mSelectorIndices.size() - i - 1];
+        const int selectorIndex = mSelectorIndices[isAscendingOrder() ? i : mSelectorIndices.size() - i - 1];
         std::string scrollSelectorValue = mSelectorIndexToStringCache.at(selectorIndex);
         if (scrollSelectorValue.empty()) {
             if(isHorizontalMode()){
@@ -1336,7 +1337,7 @@ void NumberPicker::initializeSelectorWheel(){
         int selectedWidth= (mInputText->getVisibility()==View::VISIBLE)?std::max(mInputTextSize,inputEdit_Size):inputEdit_Size;//mInputTextSize;
         const int totalTextSize = int ((selectorIndices.size() - 1) * mTextSize + selectedWidth);
         const float totalTextGapWidth = getWidth() - totalTextSize;
-        mInputTextGapWidth = (int) (totalTextGapWidth / textGapCount);
+        mInputTextGapWidth = (int) (totalTextGapWidth / (textGapCount-1));
         mSelectorElementSize = std::min(getMaxTextSize() + mInputTextGapWidth,getWidth()/textGapCount);
         if( (mInputText->getVisibility()==View::INVISIBLE) || (selectedWidth-mSelectorElementSize<0))
             selectedWidth = mSelectorElementSize;
@@ -1345,7 +1346,7 @@ void NumberPicker::initializeSelectorWheel(){
         int selectedHeight= std::max(mSelectorElementSize,inputEdit_Size);//:mInputTextSize;
         const int totalTextSize = int ((selectorIndices.size() - 1) * mTextSize + selectedHeight);
         const float totalTextGapHeight= getHeight() - totalTextSize;
-        mInputTextGapHeight = (int) (totalTextGapHeight / textGapCount);
+        mInputTextGapHeight = (int) (totalTextGapHeight / (textGapCount-1));
         mSelectorElementSize = std::min(getMaxTextSize() + mInputTextGapHeight,getHeight()/textGapCount);
         if( (mInputText->getVisibility()==View::INVISIBLE) || (selectedHeight-mSelectorElementSize<0) )
             selectedHeight = mSelectorElementSize;

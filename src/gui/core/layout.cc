@@ -613,11 +613,13 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         int x , y = getLineBaseline(lineNum);
         int lineStart = getLineStart(lineNum);
         int lineEnd = getLineEnd(lineNum);
+        std::string u8line;
         std::wstring line = getLineText(lineNum);
         const int last = line.back();
         if((last=='\n')||(last=='\r'))
            line.pop_back();
-        measureSize(processBidi(line),te);
+        u8line = processBidi(line);
+        measureSize(u8line,te);
         switch(mAlignment){
         case ALIGN_NORMAL:
         case ALIGN_LEFT  : 
@@ -630,7 +632,7 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         LOGV("line[%d/%d](%d,%d) [%s](%d).width=%d",lineNum,mLineCount,x,y,TextUtils::unicode2utf8(line).c_str(),
             line.size(),int(te.x_advance));
         canvas.move_to(x,y);
-        canvas.show_text(processBidi(line));
+        canvas.show_text(u8line);
         if( (mCaretPos>=lineStart) && (mCaretPos<lineEnd) ){
             measureSize(line.substr(0,mCaretPos-lineStart),te,nullptr);
             mCaretRect.left= x + te.x_advance;
