@@ -1102,7 +1102,8 @@ void NumberPicker::onDraw(Canvas&canvas){
         // is shown only if the wheel is static and it covers the middle item.
         // Otherwise, if the user starts editing the text via the IME he may 
         // see a dimmed version of the old value intermixed with the new one.
-        if ((showSelectorWheel && i != mWheelMiddleItemIndex) || (i == mWheelMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
+        if ((showSelectorWheel && (i!=0) && (i!= mSelectorIndices.size()-1) && (i!=mWheelMiddleItemIndex))
+                || ( (i==mWheelMiddleItemIndex) && (mInputText->getVisibility()!=VISIBLE) ) ) {
             Drawable*dr = nullptr;
             if(selectorIndex<mDisplayedDrawables.size() && (dr = mDisplayedDrawables.at(selectorIndex))){
                 Rect outRect;
