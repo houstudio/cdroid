@@ -216,8 +216,10 @@ void Window::draw(){
     RefPtr<Canvas>canvas = getCanvas();
     mAttachInfo->mDrawingTime = SystemClock::uptimeMillis();
     ViewGroup::draw(*canvas);
-    if(View::VIEW_DEBUG)drawInvalidateRegion(*canvas);
-    LOGD_IF(View::VIEW_DEBUG,"%p:%d used %dms",this,mID,SystemClock::uptimeMillis() - mAttachInfo->mDrawingTime);
+    if(View::VIEW_DEBUG){drawInvalidateRegion(*canvas);
+        const int duration = int(SystemClock::uptimeMillis() - mAttachInfo->mDrawingTime);
+        LOGD_IF(duration>10,"%p:%d used %dms",this,mID,duration);
+    }
     mPendingRgn->do_union(mInvalidRgn);
     mInvalidRgn->subtract(mInvalidRgn);
     GraphDevice::getInstance().flip();

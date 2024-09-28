@@ -27,6 +27,7 @@ private:
     int mLayout;        //mLayout>0 need relayout
     Rect mCaretRect;
     void pushLineData(int start,int ytop,int descent,int width);
+    double measureSize(const std::string&text,Cairo::TextExtents&te,Cairo::FontExtents*fe=nullptr)const;
     double measureSize(const std::wstring&text,Cairo::TextExtents&te,Cairo::FontExtents*fe=nullptr)const;
     void calculateEllipsis(int line,int linewidth);
     void setEllipse(int line,int start,int count);

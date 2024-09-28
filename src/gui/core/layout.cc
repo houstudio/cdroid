@@ -7,7 +7,9 @@
 #endif
 #include <cdlog.h>
 #include <textutils.h>
-
+extern "C"{
+#include <SheenBidi.h>
+}
 using namespace Cairo;
 
 namespace cdroid{
@@ -116,6 +118,14 @@ void Layout::setEllipsis(int ellipsis){
         mColumns = (ellipsis==ELLIPSIS_NONE||ellipsis==ELLIPSIS_MARQUEE)?COLUMNS_NORMAL:COLUMNS_ELLIPSIZE;
         mLayout++;
     }
+}
+
+double Layout::measureSize(const std::string&text,TextExtents&te,FontExtents*fe)const{
+    mContext->set_font_face(mTypeface->getFontFace()->get_font_face());
+    mContext->set_font_size(mFontSize);
+    mContext->get_text_extents(text,te);
+    if(fe)mContext->get_font_extents(*fe);
+    return te.x_advance;
 }
 
 double Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe)const{
@@ -475,8 +485,10 @@ void Layout::setCaretPos(int pos){
 }
 
 void Layout::setBreakStrategy(int breakStrategy){
-    mBreakStrategy = breakStrategy;
-    mLayout++;
+    if(mBreakStrategy != breakStrategy){
+        mBreakStrategy = breakStrategy;
+        mLayout++;
+    }
 }
 
 int Layout::getBreakStrategy()const{
@@ -499,12 +511,14 @@ void Layout::relayout(bool force){
     FontExtents fontextents;
     double total_width = 0,word_width = 0;
     int start = 0,ytop = 0;
+
     std::wstring word;
     if(!(force||mLayout)) return;
     mLineCount = 0;
     mLines.clear();
     measureSize(L"",extents,&fontextents);
     mLineHeight = (fontextents.ascent + fontextents.descent);
+
     if(mLineHeight<mFontSize)
         mLineHeight = fontextents.height;
     mLineHeight = mLineHeight*mSpacingMult+mSpacingAdd;
@@ -573,7 +587,7 @@ void Layout::relayout(bool force){
         mLineCount++;
     }
     pushLineData(mText.length(),ytop,fontextents.descent,0);
-    mLayout=0;
+    mLayout = 0;
 }
 
 static const std::string processBidi(const std::wstring&logstr){
@@ -595,26 +609,26 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
     mCaretRect.setEmpty();
     LOGV("%p layoutWidth=%d fontSize=%.f alignment=%x breakStrategy=%d",this,mWidth,mFontSize,mAlignment,mBreakStrategy);
     for (int lineNum = firstLine; lineNum < lastLine; lineNum++) {
-        int x = 0,lw = getLineWidth(lineNum,true);
         TextExtents te = {0};
-        int y = getLineBaseline(lineNum);
+        int x , y = getLineBaseline(lineNum);
         int lineStart = getLineStart(lineNum);
         int lineEnd = getLineEnd(lineNum);
         std::wstring line = getLineText(lineNum);
         const int last = line.back();
         if((last=='\n')||(last=='\r'))
            line.pop_back();
+        measureSize(processBidi(line),te);
         switch(mAlignment){
         case ALIGN_NORMAL:
         case ALIGN_LEFT  : 
         default          : x = 0 ; break;
-        case ALIGN_CENTER: x = (mWidth - lw)/2 ; break;
+        case ALIGN_CENTER: x = (mWidth - te.x_advance)/2 ; break;
         case ALIGN_OPPOSITE:
-        case ALIGN_RIGHT : x = mWidth - lw ; break;
+        case ALIGN_RIGHT : x = mWidth - te.x_advance ; break;
         }
-        //measureSize(line,te);
-        LOGV("line[%d/%d](%d,%d) [%s](%d).width=%d/%d",lineNum,mLineCount,x,y,TextUtils::unicode2utf8(line).c_str(),
-            line.size(),lw,int(te.x_advance));
+
+        LOGV("line[%d/%d](%d,%d) [%s](%d).width=%d",lineNum,mLineCount,x,y,TextUtils::unicode2utf8(line).c_str(),
+            line.size(),int(te.x_advance));
         canvas.move_to(x,y);
         canvas.show_text(processBidi(line));
         if( (mCaretPos>=lineStart) && (mCaretPos<lineEnd) ){
