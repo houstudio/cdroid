@@ -40,6 +40,8 @@ Layout::Layout(int fontSize,int width)
     mMultiline= false;
     mBreakStrategy = BREAK_STRATEGY_SIMPLE ;
     mEditable = false;
+    mSelectionStart =-1;
+    mSelectionEnd = -1;
     mContext  = Cairo::Context::create(sImage);
     if(Typeface::DEFAULT == nullptr)
 	    Typeface::loadPreinstalledSystemFontMap();
@@ -62,6 +64,8 @@ Layout::Layout(const Layout&l):Layout(l.mFontSize,l.mWidth){
     mEditable = l.mEditable;
     mText = l.mText;
     mLines= l.mLines;
+    mSelectionStart = l.mSelectionStart;
+    mSelectionEnd = l.mSelectionEnd;
     setTypeface(l.mTypeface);
 }
 
@@ -280,6 +284,20 @@ int Layout::getOffsetToLeftOf(int offset) const{
 
 int Layout::getOffsetToRightOf(int offset) const{
     return getOffsetToLeftRightOf(offset, false);
+}
+
+int Layout::setSelection(int start,int stop){
+    mSelectionStart = start;
+    mSelectionEnd = stop;
+    return 0;
+}
+
+int Layout::getSelectionStart()const{
+    return mSelectionStart;
+}
+
+int Layout::getSelectionEnd()const{
+    return mSelectionEnd;
 }
 
 int Layout::getLineHeight(bool txtonly)const{

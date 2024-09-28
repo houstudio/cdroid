@@ -1954,10 +1954,13 @@ int TextView::getShadowColor()const{
 }
 
 bool TextView::canSelectAllText()const{
+    mLayout->setSelection(-1,-1);
     return false;
 }
 
 bool TextView::selectAllText(){
+    const int length = mLayout->getText().length();
+    mLayout->setSelection(0,length);
     return false;
 }
 
@@ -1970,17 +1973,17 @@ int TextView::getTotalPaddingBottom(){
 }
 
 int TextView::getSelectionStart()const{
-    return 0;
+    return mLayout ? mLayout->getSelectionStart():-1;
 }
 
 int TextView::getSelectionEnd()const{
-    return 0;
+    return  mLayout ? mLayout->getSelectionEnd():-1;
 }
 
 bool TextView::hasSelection()const{
     const int selectionStart = getSelectionStart();
     const int selectionEnd = getSelectionEnd();
-    return selectionStart >= 0 && selectionEnd > 0 && selectionStart != selectionEnd;
+    return (selectionStart >= 0) && (selectionEnd > 0) && (selectionStart != selectionEnd);
 }
 
 std::string TextView::getSelectedText()const{
@@ -1990,12 +1993,12 @@ std::string TextView::getSelectedText()const{
      const int start = getSelectionStart();
      const int end = getSelectionEnd();
      const std::wstring &text =mLayout->getText();
-     std::wstring ret = text.substr(std::min(start, end),std::abs(start-end+1));
+     std::wstring ret = start<end?text.substr(start,end):text.substr(end,start);
      return TextUtils::unicode2utf8(ret);
 }
 
 void TextView::setSingleLine(bool single){
-    mSingleLine=single;
+    mSingleLine = single;
     mLayout->setMultiline(!single);
     mLayout->relayout();
     invalidate(true);

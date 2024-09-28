@@ -19,6 +19,8 @@ private:
     int mEllipsis;
     int mAlignment;
     int mCaretPos;
+    int mSelectionStart;
+    int mSelectionEnd;
     bool mEditable;
     bool mMultiline;
     int mBreakStrategy;
@@ -89,6 +91,9 @@ public:
     int getLineForOffset(int offset)const;//get line by char offset
     int getOffsetToLeftOf(int offset)const;
     int getOffsetToRightOf(int offset)const;
+    int setSelection(int start,int stop);
+    int getSelectionStart()const;
+    int getSelectionEnd()const;
     virtual int getEllipsisStart(int line)const;
     virtual int getEllipsisCount(int line)const;
 
