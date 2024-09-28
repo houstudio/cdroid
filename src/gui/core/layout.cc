@@ -7,9 +7,6 @@
 #endif
 #include <cdlog.h>
 #include <textutils.h>
-extern "C"{
-#include <SheenBidi.h>
-}
 using namespace Cairo;
 
 namespace cdroid{
