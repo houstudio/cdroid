@@ -76,6 +76,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     LayoutInflater::from(mContext)->inflate(layoutres,this);
     setWidthAndHeight();
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
+    mVirtualButtonPressedDrawable = atts.getDrawable("virtualButtonPressedDrawable");
     setWillNotDraw(false);
 
     mInputText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
@@ -151,6 +152,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
 NumberPicker::~NumberPicker(){
     delete mDividerDrawable;
     delete mItemBackground;
+    delete mVirtualButtonPressedDrawable;
     delete mFlingScroller;
     delete mAdjustScroller;
     for(auto d:mDisplayedDrawables)delete d;
@@ -218,6 +220,7 @@ void NumberPicker::initView(){
     mSelectedTypeface = nullptr;
     mTypeface = nullptr;
     mItemBackground = nullptr;
+    mVirtualButtonPressedDrawable = nullptr;
     mDividerColor =DEFAULT_DIVIDER_COLOR;
     mWheelMiddleItemIndex = 0;
     mDividerDrawable  = nullptr;
@@ -259,6 +262,7 @@ void NumberPicker::initView(){
     mRealWheelItemCount= DEFAULT_WHEEL_ITEM_COUNT;
     mSelectorIndices.resize(mWheelItemCount);
 }
+
 void NumberPicker::onLayout(bool changed, int left, int top, int width, int height){
     const int msrdWdth = getMeasuredWidth();
     const int msrdHght = getMeasuredHeight();
@@ -1041,6 +1045,18 @@ void NumberPicker::onDraw(Canvas&canvas){
             canvas.rectangle(0, mTopDividerTop, getWidth(), mBottomDividerBottom-mTopDividerTop);
             canvas.clip();
         }
+        if (showSelectorWheel && mVirtualButtonPressedDrawable && (mScrollState == OnScrollListener::SCROLL_STATE_IDLE)){
+            if (mDecrementVirtualButtonPressed) {
+                mVirtualButtonPressedDrawable->setState(StateSet::PRESSED_STATE_SET);
+                mVirtualButtonPressedDrawable->setBounds(0, 0, mRight, mTopSelectionDividerTop);
+                mVirtualButtonPressedDrawable->draw(canvas);
+            }
+            if (mIncrementVirtualButtonPressed) {
+                mVirtualButtonPressedDrawable->setState(StateSet::PRESSED_STATE_SET);
+                mVirtualButtonPressedDrawable->setBounds(0, mBottomSelectionDividerBottom, mRight, mBottom);
+                mVirtualButtonPressedDrawable->draw(canvas);
+            }
+        }
     }
     if( mTextColor != mTextColor2 ){
         if( mPat == nullptr ) {
@@ -1102,8 +1118,7 @@ void NumberPicker::onDraw(Canvas&canvas){
         // is shown only if the wheel is static and it covers the middle item.
         // Otherwise, if the user starts editing the text via the IME he may 
         // see a dimmed version of the old value intermixed with the new one.
-        if ((showSelectorWheel && (i!=0) && (i!= mSelectorIndices.size()-1) && (i!=mWheelMiddleItemIndex))
-                || ( (i==mWheelMiddleItemIndex) && (mInputText->getVisibility()!=VISIBLE) ) ) {
+        if ((showSelectorWheel && i != mWheelMiddleItemIndex) || (i == mWheelMiddleItemIndex && mInputText->getVisibility() != VISIBLE)) {
             Drawable*dr = nullptr;
             if(selectorIndex<mDisplayedDrawables.size() && (dr = mDisplayedDrawables.at(selectorIndex))){
                 Rect outRect;

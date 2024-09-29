@@ -103,6 +103,7 @@ private:
     int mWheelMiddleItemIndex;
     Drawable* mDividerDrawable;
     Drawable* mItemBackground;
+    Drawable* mVirtualButtonPressedDrawable;
     int mDividerColor;
     int mDividerType;
     int mDividerDistance;
