@@ -916,25 +916,35 @@ void  NumberPicker::setDisplayedValues(const std::vector<std::string>&displayedV
 void NumberPicker::drawableStateChanged() {
     ViewGroup::drawableStateChanged();
 
-    if (mDividerDrawable!=nullptr  && mDividerDrawable->isStateful()
+    if (mDividerDrawable  && mDividerDrawable->isStateful()
         && mDividerDrawable->setState(getDrawableState())) {
         invalidateDrawable(*mDividerDrawable);
+    }
+
+    if (mItemBackground  && mItemBackground->isStateful()
+        && mItemBackground->setState(getDrawableState())) {
+        invalidateDrawable(*mItemBackground);
     }
 }
 
 void NumberPicker::jumpDrawablesToCurrentState() {
     ViewGroup::jumpDrawablesToCurrentState();
 
-    if (mDividerDrawable != nullptr) {
+    if (mDividerDrawable)
         mDividerDrawable->jumpToCurrentState();
-    }
+
+    if (mItemBackground)
+        mItemBackground->jumpToCurrentState();
 }
 
 void NumberPicker::onResolveDrawables(int layoutDirection){
     ViewGroup::onResolveDrawables(layoutDirection);
-    if (mDividerDrawable) {
+
+    if (mDividerDrawable)
         mDividerDrawable->setLayoutDirection(layoutDirection);
-    }
+
+    if (mItemBackground)
+        mItemBackground->setLayoutDirection(layoutDirection);
 }
 
 void NumberPicker::setTextColor(int color){
@@ -942,6 +952,7 @@ void NumberPicker::setTextColor(int color){
     mTextColor2= color;
     invalidate();
 }
+
 void NumberPicker::setTextColor(int color,int color2){
     mTextColor  = color;
     mTextColor2 = color2;
