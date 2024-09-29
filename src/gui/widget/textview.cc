@@ -186,7 +186,7 @@ class Marquee {
 private:
     static constexpr  float MARQUEE_DELTA_MAX = 0.07f;
     static constexpr  int MARQUEE_DELAY = 1200;
-    static constexpr  int MARQUEE_DP_PER_SECOND = 10;//30;
+    static constexpr  int MARQUEE_DP_PER_SECOND = 30;
 
     static constexpr  int MARQUEE_STOPPED = 0x0;
     static constexpr  int MARQUEE_STARTING= 0x1;
@@ -656,6 +656,8 @@ void TextView::setText(const std::string&txt){
             mCaretPos = ws.length()-1;
         mLayout->setCaretPos(mCaretPos);
         checkForRelayout();
+        startStopMarquee(false);
+        startStopMarquee(true);
         mLayout->relayout();//use to fix getBaselineError for empty text
     }
 }
@@ -2075,6 +2077,12 @@ void TextView::startStopMarquee(bool start){
             stopMarquee();
         }
     }
+}
+
+bool TextView::setFrame(int l, int t, int w, int h) {
+    const bool result = View::setFrame(l, t, w, h);
+    restartMarqueeIfNeeded();
+    return result;
 }
 
 void TextView::restartMarqueeIfNeeded(){

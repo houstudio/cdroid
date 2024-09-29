@@ -170,6 +170,7 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     bool supportsAutoSizeText()const;
     bool isPaddingOffsetRequired()override;
+    bool setFrame(int l, int t, int w, int h)override;
     int getLeftPaddingOffset()override;
     int getTopPaddingOffset()override;
     int getBottomPaddingOffset()override;
