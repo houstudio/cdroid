@@ -3813,7 +3813,7 @@ void View::drawableStateChanged(){
         } 
     }
     if (mStateListAnimator) mStateListAnimator->setState(state);
-    if(changed)   invalidate(true);
+    if(changed) invalidate(true);
 }
 
 void View::drawableHotspotChanged(float x, float y){

@@ -1888,7 +1888,9 @@ int TextView::getBoxHeight(Layout* l){
     const int padding = (l ==mHintLayout)
 	    ?getCompoundPaddingTop() + getCompoundPaddingBottom()
             :getExtendedPaddingTop() + getExtendedPaddingBottom();
-    return getMeasuredHeight() - padding +opticalInsets.top + opticalInsets.bottom;
+    int measuedHeight=getMeasuredHeight();
+    if(measuedHeight==0)measuedHeight=getHeight();
+    return measuedHeight - padding +opticalInsets.top + opticalInsets.bottom;
 }
 
 int TextView::getVerticalOffset(bool forceNormal){
@@ -1896,8 +1898,8 @@ int TextView::getVerticalOffset(bool forceNormal){
     const int gravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
     Layout* l = mLayout;
     if (gravity != Gravity::TOP) {
-        int boxht = getBoxHeight(l);
-        int textht = mLayout->getHeight();//LineHeight(true);
+        const int boxht = getBoxHeight(l);
+        const int textht = mLayout->getHeight();//LineHeight(true);
         if (textht < boxht) {
             if (gravity == Gravity::BOTTOM) {
                 voffset = boxht - textht;
