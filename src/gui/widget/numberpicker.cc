@@ -1135,6 +1135,12 @@ void NumberPicker::onDraw(Canvas&canvas){
                     mItemBackground->setBounds(recText);
                     if(mTextColor != mTextColor2)
                         mItemBackground->setAlpha(255*(1.0-fraction));
+                    if(mItemBackground->isStateful()){
+                        std::vector<int>state = getDrawableState();
+                        if(i==mWheelMiddleItemIndex)
+                            state.push_back(StateSet::SELECTED);
+                        mItemBackground->setState(state);
+                    }
                     mItemBackground->draw(canvas);
                 }
                 canvas.draw_text(recText,scrollSelectorValue,textGravity);
