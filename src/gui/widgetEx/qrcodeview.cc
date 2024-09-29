@@ -15,6 +15,12 @@ QRCodeView::QRCodeView(int w,int h):View(w,h){
 
 QRCodeView::QRCodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
     initView();
+    mEccLevel = attrs.getInt("eccLevel",std::map<const std::string,int>{
+            {"low",QR_ECLEVEL_L},
+            {"medium",QR_ECLEVEL_M},
+            {"quartor",QR_ECLEVEL_Q},
+            {"high",QR_ECLEVEL_H}
+    },mEccLevel);
 }
 
 QRCodeView::~QRCodeView(){
@@ -24,6 +30,8 @@ QRCodeView::~QRCodeView(){
 void QRCodeView::initView(){
     mZoom = 1.0;
     mQrCodeWidth =0;
+    mEccLevel = QR_ECLEVEL_M;
+    mMode = QR_MODE_8;
     mBarColor = 0xFFFFFFFF;
 }
 
@@ -89,8 +97,8 @@ void  QRCodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 extern "C" int QRspec_getMinimumVersion(int size, QRecLevel level);
 
 void QRCodeView::encode(){
-    const int version = QRspec_getMinimumVersion(mText.size(), QR_ECLEVEL_H);
-    QRcode*mQRcode = QRcode_encodeString(mText.c_str(), version, QR_ECLEVEL_M, QR_MODE_8, 1);
+    const int version = QRspec_getMinimumVersion(mText.size(), (QRecLevel)mEccLevel);
+    QRcode*mQRcode = QRcode_encodeString(mText.c_str(), version, (QRecLevel)mEccLevel, (QRencodeMode)mMode, 1);
     if(mQRcode){
         const uint8_t*qrd = mQRcode->data;
         mQrCodeWidth = mQRcode->width;

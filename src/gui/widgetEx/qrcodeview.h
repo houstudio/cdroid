@@ -8,6 +8,8 @@ class QRCodeView:public View{
 private:
     int mQrCodeWidth;
     int mBarColor;
+    int mEccLevel;
+    int mMode;
 private:
     void initView();
 protected:
