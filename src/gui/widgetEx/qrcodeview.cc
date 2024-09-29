@@ -70,7 +70,7 @@ void  QRCodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int width = widthSize,height=heightSize;
     switch(widthMode){
     case MeasureSpec::EXACTLY:
-        height= width;
+        height= width; break;
     case MeasureSpec::AT_MOST:
         if(heightMode==MeasureSpec::EXACTLY){
             height= heightSize;
