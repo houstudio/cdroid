@@ -189,6 +189,7 @@ if(ENABLE_RECYCLERVIEW)
         widgetEx/recyclerview/childhelper.cc
         #widgetEx/recyclerview/carousellayoutmanager.cc
         widgetEx/recyclerview/adapterhelper.cc
+        widgetEx/coordinatorlayout.cc
     )
 endif(ENABLE_RECYCLERVIEW)
 
@@ -204,7 +205,9 @@ if(ENABLE_LOTTIE)
 endif(ENABLE_LOTTIE)
 
 if(ENABLE_QRCODE)
-    list(APPEND CDROID_SOURCES widgetEx/qrcodeview.cc)
+    list(APPEND CDROID_SOURCES
+        widgetEx/qrcodegen.cc
+        widgetEx/qrcodeview.cc)
 endif(ENABLE_QRCODE)
 
 if(ENABLE_BARCODE)
