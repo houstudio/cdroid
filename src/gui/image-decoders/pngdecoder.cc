@@ -1,13 +1,14 @@
 #include <core/context.h>
 #include <cairomm/context.h>
 #include <cairomm/surface.h>
+#include <drawables/drawable.h>
 #include <image-decoders/imagedecoder.h>
 #include <core/systemclock.h>
 #include <cdlog.h>
 #if ENABLE(LCMS)
 #include <lcms2.h>
 #endif
-#include "png.h"     /* original (unpatched) libpng is ok */
+#include <png.h>     /* original (unpatched) libpng is ok */
 //REF:https://github.com/xxyyboy/img_apng2webp/blob/main/apng2png/apng2webp.c
 //https://gitee.com/mirrors_line/apng-drawable.git
 namespace cdroid {
@@ -16,6 +17,7 @@ namespace cdroid {
 struct PRIVATE {
     png_structp png_ptr;
     png_infop info_ptr;
+    int transparency;
     std::istream*istream;
 };
 
@@ -28,12 +30,14 @@ PNGDecoder::PNGDecoder(std::istream&stream):ImageDecoder(stream) {
     mPrivate = new PRIVATE();
     mPrivate->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     mPrivate->info_ptr= png_create_info_struct(mPrivate->png_ptr);
+    mPrivate->transparency =PixelFormat::UNKNOWN;
     mPrivate->istream = &mStream;
     png_set_read_fn(mPrivate->png_ptr,mPrivate,istream_png_reader);
 }
 
 PNGDecoder::~PNGDecoder() {
-    png_destroy_read_struct(&mPrivate->png_ptr, &mPrivate->info_ptr, nullptr);
+    if(mPrivate->png_ptr)
+        png_destroy_read_struct(&mPrivate->png_ptr, &mPrivate->info_ptr, nullptr);
     delete mPrivate;
 }
 
@@ -67,8 +71,8 @@ void*PNGDecoder::getColorProfile(PRIVATE*priv,uint8_t colorType) {
 }
 
 Cairo::RefPtr<Cairo::ImageSurface> PNGDecoder::decode(float scale,void*targetProfile) {
-    png_structp png_ptr =mPrivate->png_ptr;
-    png_infop info_ptr=mPrivate->info_ptr;
+    png_structp png_ptr = mPrivate->png_ptr;
+    png_infop info_ptr  = mPrivate->info_ptr;
 
     if( (mImageWidth==-1) || (mImageHeight==-1) )
         decodeSize();
@@ -107,7 +111,7 @@ Cairo::RefPtr<Cairo::ImageSurface> PNGDecoder::decode(float scale,void*targetPro
 #endif
     png_read_end (png_ptr, info_ptr);
     cairo_surface_set_mime_data(image->cobj(), CAIRO_MIME_TYPE_PNG, nullptr, 0, nullptr,nullptr);
-    const int transparency = ImageDecoder::computeTransparency(image);
+    const int transparency = mPrivate->transparency!=PixelFormat::UNKNOWN ? mPrivate->transparency:ImageDecoder::computeTransparency(image);
     ImageDecoder::setTransparency(image,transparency);
     return image;
 }
@@ -202,52 +206,59 @@ bool PNGDecoder::decodeSize() {
 
     if (setjmp(png_jmpbuf(png_ptr))) {
         LOGE("Error during libpng init_io");
-        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        //png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         return false;
     }
     png_read_info(png_ptr, info_ptr);
     png_get_IHDR(png_ptr, info_ptr,(uint32_t*)&mImageWidth, (uint32_t*)&mImageHeight, &bit_depth, &color_type,&interlace, NULL, NULL);
 
+    /* convert palette/gray image to rgb */
     if (color_type == PNG_COLOR_TYPE_PALETTE) {
+        int num_trans = 0;
+        png_bytep trans_alpha = nullptr;
+        png_color_16p trans_color = nullptr;
         png_set_palette_to_rgb(png_ptr);
-        color_type = PNG_COLOR_TYPE_RGB;
+        png_get_tRNS(png_ptr, info_ptr, &trans_alpha, &num_trans, &trans_color);
         bit_depth = 8;
+        if(num_trans==0)mPrivate->transparency=PixelFormat::OPAQUE;
     }
 
-    if ( (color_type == PNG_COLOR_TYPE_GRAY) && (bit_depth < 8) ) {
+    /* expand gray bit depth if needed */
+    if ( (color_type == PNG_COLOR_TYPE_GRAY) /*&& (bit_depth < 8)*/ ) {
         png_set_expand_gray_1_2_4_to_8(png_ptr);
         bit_depth = 8;
     }
 
+    /* transform transparency to alpha */
     if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
+        int num_trans = 0;
+        png_bytep trans_alpha = nullptr;
+        png_color_16p trans_color = nullptr;
+        png_get_tRNS(png_ptr, info_ptr, &trans_alpha, &num_trans, &trans_color);
+        if(num_trans==0)mPrivate->transparency=PixelFormat::OPAQUE;
         png_set_tRNS_to_alpha(png_ptr);
-        color_type |= PNG_COLOR_MASK_ALPHA;
     }
 
     if (bit_depth < 8)
         png_set_packing (png_ptr);
 
+    /* convert grayscale to RGB */
     if ( (color_type==PNG_COLOR_TYPE_GRAY) || (color_type==PNG_COLOR_TYPE_GRAY_ALPHA) ) {
         png_set_gray_to_rgb(png_ptr);
-        color_type |= PNG_COLOR_TYPE_RGB;
-    }
-    if(color_type==PNG_COLOR_TYPE_RGB){
-        png_set_expand(png_ptr);
-        png_set_add_alpha(png_ptr,0xFFU,PNG_FILLER_AFTER);
     }
 
     if (interlace != PNG_INTERLACE_NONE)
         png_set_interlace_handling (png_ptr);
-
-    if(color_type&PNG_COLOR_MASK_ALPHA)
-        png_set_filler(png_ptr,0xffU,PNG_FILLER_AFTER);
-
-    //setGamma(nullptr,png_ptr,info_ptr);
+    png_set_filler (png_ptr, 0xff, PNG_FILLER_AFTER);
 
     /* recheck header after setting EXPAND options */
     png_read_update_info (png_ptr, info_ptr);
-    png_get_IHDR (png_ptr, info_ptr,(uint32_t*)&mImageWidth, (uint32_t*)&mImageHeight,
-                  &bit_depth, &color_type, &interlace, NULL, NULL);
+    png_get_IHDR (png_ptr, info_ptr,
+                  (uint32_t*)&mImageWidth, (uint32_t*)&mImageHeight, &bit_depth,
+                  &color_type, &interlace, NULL, NULL);
+
+    //setGamma(nullptr,png_ptr,info_ptr);
+
     LOGE_IF((bit_depth != 8 && bit_depth != 16) || ! (color_type == PNG_COLOR_TYPE_RGB ||  color_type == PNG_COLOR_TYPE_RGB_ALPHA),
             "Decoder Error");
 
@@ -259,7 +270,8 @@ bool PNGDecoder::decodeSize() {
         if(bit_depth == 8){
             png_set_read_user_transform_fn (png_ptr, premultiply_data);
         }else {
-            LOGD("TODO:CAIRO_FORMAT_RGBA128F");
+            //png_set_read_user_transform_fn (png_ptr, premultiply_floatdata);
+            LOGD("TODO:CAIRO_FORMAT_RGBA128F bit_depth=%d",bit_depth);
         }
     }
     return true;
