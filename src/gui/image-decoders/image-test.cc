@@ -7,8 +7,13 @@
 #include <core/app.h>
 #include <core/textutils.h>
 #include <image-decoders/framesequence.h>
+#include <dirent.h>
+#include <sys/stat.h>
+static void scan_dir(const char*dir);
 int main(int argc,const char*argv[]){
-#if 0 
+#if 10
+    scan_dir(argv[1]);
+    return 0;
     auto image=ImageDecoder::loadImage(nullptr,argv[1]);
     image->write_to_png("111.png");
 #else
@@ -30,4 +35,49 @@ int main(int argc,const char*argv[]){
     ad->start();*/
 #endif
     return 0;
+}
+
+static void scan_dir(const char*dir){
+    struct dirent *entry;
+    struct stat entry_stat;
+    DIR *dp = opendir(dir);
+
+    if (dp == NULL) {
+        const char* tnms[] = {"NULL","TRANSLUCENT","TRANSPARENT","OPAQUE"};
+        auto image= ImageDecoder::loadImage(nullptr,dir);
+        int trans = ImageDecoder::getTransparency(image);
+        printf("image[%p] trans=%d/%d %12s path=%s\r\n",(image?image.get():nullptr),
+                trans,ImageDecoder::computeTransparency(image),tnms[trans],dir);
+        return;
+    }
+
+    printf("Directory: %s\n", dir);
+
+    while ((entry = readdir(dp)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;  // 跳过当前和上级目录
+        }
+
+        char path[1024];
+        snprintf(path, sizeof(path), "%s/%s", dir, entry->d_name);
+
+        // 获取文件状态
+        if (stat(path, &entry_stat) == -1) {
+            perror("stat");
+            continue;
+        }
+
+        // 判断文件类型
+        if (S_ISDIR(entry_stat.st_mode)) {
+            // 递归扫描子目录
+            //scan_dir(path);
+        } else {
+            const char* tnms[] = {"NULL","TRANSLUCENT","TRANSPARENT","OPAQUE"};
+            auto image= ImageDecoder::loadImage(nullptr,path);
+            const int t1 = ImageDecoder::getTransparency(image);
+            const int t2 = ImageDecoder::computeTransparency(image);
+            printf("image[%p] trans=%d/%d %12s path=%s\r\n",(image?image.get():nullptr),t1,t2,tnms[t2],path);
+        }
+    }
+    closedir(dp);
 }
