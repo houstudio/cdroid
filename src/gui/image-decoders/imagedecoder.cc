@@ -127,7 +127,7 @@ int ImageDecoder::getTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
         const int transparency  = int((unsigned long)data);
         return transparency?transparency:int(PixelFormat::OPAQUE);
     }
-    return 0;
+    return PixelFormat::TRANSPARENT;
 }
 
 void ImageDecoder::setTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp,int transparency){
