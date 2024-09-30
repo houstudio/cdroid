@@ -320,7 +320,7 @@ void ProgressBar::drawableHotspotChanged(float x, float y){
 }
 
 bool ProgressBar::verifyDrawable(Drawable* who)const{
-    return who == mProgressDrawable || who == mIndeterminateDrawable|| View::verifyDrawable(who);
+    return (who == mProgressDrawable) || (who == mIndeterminateDrawable)|| View::verifyDrawable(who);
 }
 
 void ProgressBar::jumpDrawablesToCurrentState() {

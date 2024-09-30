@@ -17,10 +17,10 @@ QRCodeView::QRCodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
     initView();
 
     mEccLevel = attrs.getInt("eccLevel",std::map<const std::string,int>{
-            {"low",QR_ECLEVEL_L},
-            {"medium",QR_ECLEVEL_M},
-            {"quartor",QR_ECLEVEL_Q},
-            {"high",QR_ECLEVEL_H}
+            {"low",QR_ECLEVEL_L},    /* 7%*/
+            {"medium",QR_ECLEVEL_M}, /*15%*/
+            {"quartor",QR_ECLEVEL_Q},/*20%*/
+            {"high",QR_ECLEVEL_H}    /*30%*/
     },mEccLevel);
 
     mEncodeMode = attrs.getInt("encodeMode",std::map<const std::string,int>{
@@ -41,7 +41,7 @@ QRCodeView::~QRCodeView(){
 void QRCodeView::initView(){
     mZoom = 1.0;
     mQrCodeWidth =0;
-    mEccLevel = QR_ECLEVEL_M;
+    mEccLevel = QR_ECLEVEL_Q;
     mEncodeMode = QR_MODE_8;
     mDotColor=0xFF000000;
     mLogoDrawable = nullptr;
@@ -174,6 +174,7 @@ void QRCodeView::encode(){
         mQRImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mQrCodeWidth,mQrCodeWidth);
         const uint32_t image_stride = mQRImage->get_stride()/4;
         uint32_t*qimg = (uint32_t*)mQRImage->get_data();
+        mDotColor=0xFF000000;
         const int barBgColor = (~mDotColor)|0xFF000000;
         for(int32_t y = 0,idx = 0; y < mQRcode->width; y++){
             for(int32_t x = 0; x < mQRcode->width; x++){
@@ -205,16 +206,21 @@ void  QRCodeView::onDraw(Canvas&canvas){
     canvas.paint();
     canvas.restore();
 
-    if(mLogoDrawable&&(mEccLevel>=QR_ECLEVEL_M)){
+    if(mLogoDrawable){
         Rect rect;
-        const static float ff[]={0.5,0.3,0.25,0.2};
+        const static float ff[]={0.07,
+            0.14, /*0.15 do not work*/
+            0.20, 0.30};
+        const int dec = (std::sqrt(mQrCodeWidth*mQrCodeWidth*ff[mEccLevel])-1)*mZoom;
         const int imgw = mLogoDrawable->getIntrinsicWidth();
         const int imgh = mLogoDrawable->getIntrinsicHeight();
         rect.set(getPaddingLeft(),getPaddingTop(),
                 getWidth()-getPaddingLeft()-getPaddingRight(),
                 getHeight()-getPaddingTop()-getPaddingBottom());
-        rect.inflate(-getWidth()*ff[mEccLevel],-getHeight()*ff[mEccLevel]);
-        if(imgw*imgh<rect.width*rect.height)
+        LOGD("level=%d mQrCodeWidth=%d dec=%d zoom=%f imgsize=%dx%d",mEccLevel,mQrCodeWidth,dec,mZoom,imgw,imgh);
+        if(imgw*imgh>dec*dec)
+            rect.set((getWidth()-dec)/2,(getHeight()-dec)/2,dec,dec);
+        else
             rect.set((getWidth()-imgw)/2,(getHeight()-imgh)/2,imgw,imgh);
         mLogoDrawable->setBounds(rect);
         mLogoDrawable->draw(canvas);
