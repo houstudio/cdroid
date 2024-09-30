@@ -25,6 +25,7 @@ private:
     int mEccLevel;
     int mEncodeMode;
     float mZoom;
+    bool mShowLogo;
     Drawable*mLogoDrawable;
 private:
     void initView();
@@ -37,6 +38,7 @@ protected:
     bool verifyDrawable(Drawable* who)const override;
     void jumpDrawablesToCurrentState()override;
     void onResolveDrawables(int layoutDirection)override;
+    bool onTouchEvent(MotionEvent&)override;
 public:
     QRCodeView(int w,int h);
     QRCodeView(Context*ctx,const AttributeSet&attrs);

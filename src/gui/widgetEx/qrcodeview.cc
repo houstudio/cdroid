@@ -43,7 +43,8 @@ void QRCodeView::initView(){
     mQrCodeWidth =0;
     mEccLevel = ECC_MEDIUM;
     mEncodeMode = MODE_UTF8;
-    mDotColor=0xFF000000;
+    mDotColor = 0xFF000000;
+    mShowLogo = true;
     mLogoDrawable = nullptr;
     setBackgroundColor(0xFF000000);
 }
@@ -183,6 +184,14 @@ void QRCodeView::encode(){
     mQRImage->mark_dirty();
 }
 
+bool QRCodeView::onTouchEvent(MotionEvent&evt){
+    if(evt.getActionMasked()==MotionEvent::ACTION_UP){
+        mShowLogo = !mShowLogo;
+        invalidate();
+    }
+    return View::onTouchEvent(evt);
+}
+
 void  QRCodeView::onDraw(Canvas&canvas){
     View::onDraw(canvas);
 
@@ -191,24 +200,24 @@ void  QRCodeView::onDraw(Canvas&canvas){
     canvas.translate(getPaddingLeft(), getPaddingTop());
     canvas.scale(mZoom,mZoom);
     canvas.set_source(mQRImage,0,0);
-    Cairo::RefPtr<Cairo::SurfacePattern>spat = canvas.get_source_for_surface();
-    spat->set_filter(Cairo::SurfacePattern::Filter::NEAREST);
+    auto pat = canvas.get_source_for_surface();
+    pat->set_filter(Cairo::SurfacePattern::Filter::NEAREST);
     canvas.rectangle(0,0,mQrCodeWidth,mQrCodeWidth);
     canvas.clip();
     canvas.paint();
     canvas.restore();
 
-    if(mLogoDrawable){
+    if(mLogoDrawable&&mShowLogo){
         Rect rect;
         const static float ff[]={/*0.07,0.15,0.20,0.30*/
-            0.05,0.12,0.18,0.28};
+            0.05,0.12,0.16,0.256};
         const int dec = (std::sqrt(mQrCodeWidth*mQrCodeWidth*ff[mEccLevel]))*mZoom;
         const int imgw = mLogoDrawable->getIntrinsicWidth();
         const int imgh = mLogoDrawable->getIntrinsicHeight();
         rect.set(getPaddingLeft(),getPaddingTop(),
                 getWidth()-getPaddingLeft()-getPaddingRight(),
                 getHeight()-getPaddingTop()-getPaddingBottom());
-        LOGD("level=%d mQrCodeWidth=%d dec=%d zoom=%f imgsize=%dx%d",mEccLevel,mQrCodeWidth,dec,mZoom,imgw,imgh);
+        LOGV("level=%d mQrCodeWidth=%d dec=%d zoom=%f imgsize=%dx%d",mEccLevel,mQrCodeWidth,dec,mZoom,imgw,imgh);
         if(imgw*imgh>dec*dec)
             rect.set((getWidth()-dec)/2,(getHeight()-dec)/2,dec,dec);
         else
