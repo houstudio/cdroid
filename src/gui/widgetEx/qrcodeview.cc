@@ -17,17 +17,17 @@ QRCodeView::QRCodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
     initView();
 
     mEccLevel = attrs.getInt("eccLevel",std::map<const std::string,int>{
-            {"low",QR_ECLEVEL_L},    /* 7%*/
-            {"medium",QR_ECLEVEL_M}, /*15%*/
-            {"quartor",QR_ECLEVEL_Q},/*20%*/
-            {"high",QR_ECLEVEL_H}    /*30%*/
+            {"low",ECC_LOW},    /* 7%*/
+            {"medium",ECC_MEDIUM}, /*15%*/
+            {"quartor",ECC_QUARTOR},/*20%*/
+            {"high",ECC_HIGH}    /*30%*/
     },mEccLevel);
 
     mEncodeMode = attrs.getInt("encodeMode",std::map<const std::string,int>{
-            {"numberic",int(MODE_NUMERIC)},
-            {"alphanumeric",int(MODE_ALPHANUMERIC)},
-            {"utf8",int(MODE_UTF8)},
-            {"kanji",int(MODE_KANJI)}
+            {"numberic",MODE_NUMERIC},
+            {"alphanumeric",MODE_ALPHANUMERIC},
+            {"utf8" , MODE_UTF8},
+            {"kanji", MODE_KANJI}
     },mEncodeMode);
 
     mDotColor = attrs.getColor("dotColor",mDotColor);
@@ -41,8 +41,8 @@ QRCodeView::~QRCodeView(){
 void QRCodeView::initView(){
     mZoom = 1.0;
     mQrCodeWidth =0;
-    mEccLevel = QR_ECLEVEL_H;
-    mEncodeMode = QR_MODE_8;
+    mEccLevel = ECC_MEDIUM;
+    mEncodeMode = MODE_UTF8;
     mDotColor=0xFF000000;
     mLogoDrawable = nullptr;
     setBackgroundColor(0xFF000000);
@@ -85,13 +85,11 @@ int QRCodeView::getDotColor()const{
 
 void QRCodeView::setText(const std::string&text){
     if(mText!=text){
-        if(mText.empty())
-            requestLayout();
         mText = text;
         encode();
+        requestLayout();
         invalidate(true);
     }
-    float w,h;
 }
 
 void QRCodeView::setLogoResource(const std::string&resid){
@@ -163,13 +161,10 @@ void  QRCodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     setMeasuredDimension(width, height);
 }
 
-extern "C" int QRspec_getMinimumVersion(int size, QRecLevel level);
-
 void QRCodeView::encode(){
     const float wx = getWidth() - getPaddingLeft()- getPaddingRight();
     const float wy = getHeight()- getPaddingTop() - getPaddingBottom();
     qrcodegen::QrCode qr0 = qrcodegen::QrCode::encodeText(mText.c_str(),static_cast<qrcodegen::QrCode::Ecc>(mEccLevel));
-    //std::vector<QrSegment> segs= QrSegment::makeSegments(mText);
     mQrCodeWidth = qr0.getSize();
     mZoom = std::min(wx,wy)/mQrCodeWidth;
     mQRImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mQrCodeWidth,mQrCodeWidth);
