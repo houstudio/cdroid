@@ -1,5 +1,5 @@
 #include <widgetEx/qrcodeview.h>
-#if ENABLE(QRCODE) ||1
+#if ENABLE(QRCODE)
 #include <qrencode.h>
 #include <cdlog.h>
 
@@ -21,10 +21,12 @@ QRCodeView::QRCodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
             {"quartor",QR_ECLEVEL_Q},
             {"high",QR_ECLEVEL_H}
     },mEccLevel);
+    mDotColor =attrs.getColor("dotColor",mDotColor);
+    mLogoDrawable = attrs.getDrawable("logo");
 }
 
 QRCodeView::~QRCodeView(){
-    
+    delete mLogoDrawable;
 }
 
 void QRCodeView::initView(){
@@ -32,7 +34,20 @@ void QRCodeView::initView(){
     mQrCodeWidth =0;
     mEccLevel = QR_ECLEVEL_M;
     mMode = QR_MODE_8;
-    mBarColor = 0xFFFFFFFF;
+    mDotColor=0xFF000000;
+    mLogoDrawable = nullptr;
+    setBackgroundColor(0xFF000000);
+}
+
+void QRCodeView::setDotColor(int color){
+    if(mDotColor!=color){
+        mDotColor=color;
+        invalidate();
+    }
+}
+
+int QRCodeView::getDotColor()const{
+    return mDotColor;
 }
 
 void QRCodeView::setText(const std::string&text){
@@ -46,15 +61,34 @@ void QRCodeView::setText(const std::string&text){
     float w,h;
 }
 
-void QRCodeView::setBarcodeColor(int color){
-    if(mBarColor!=color){
-        mBarColor = color;
+void QRCodeView::setLogoResource(const std::string&resid){
+    setLogo(mContext->getDrawable(resid));
+}
+
+void QRCodeView::setLogo(Drawable*logo){
+    if(mLogoDrawable!=logo){
+        delete mLogoDrawable;
+        mLogoDrawable = logo;
         invalidate();
     }
 }
 
-int QRCodeView::getBarcodeColor()const{
-    return mBarColor;
+Drawable* QRCodeView::getLogo()const{
+    return mLogoDrawable;
+}
+
+bool QRCodeView::verifyDrawable(Drawable* who)const{
+    return (who==mLogoDrawable)||View::verifyDrawable(who);
+}
+
+void QRCodeView::jumpDrawablesToCurrentState(){
+    View::jumpDrawablesToCurrentState();
+    if (mLogoDrawable) mLogoDrawable->jumpToCurrentState();
+}
+
+void QRCodeView::onResolveDrawables(int layoutDirection){
+    if(mLogoDrawable)
+        mLogoDrawable->setLayoutDirection(layoutDirection);
 }
 
 void  QRCodeView::setZoom(float zoom){
@@ -66,9 +100,11 @@ float  QRCodeView::getZoom()const{
     return mZoom;
 }
 
-/*void QRCodeView::onSizeChanged(int w,int h,int ow,int oh){
-    mZoom
-}*/
+void QRCodeView::onSizeChanged(int w,int h,int ow,int oh){
+    View::onSizeChanged(w,h,ow,oh);
+    if(mQRImage)
+        mZoom = float(std::min(w,h))/float(mQRImage->get_width());
+}
 
 void  QRCodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     const int widthMode  = MeasureSpec::getMode(widthMeasureSpec);
@@ -105,9 +141,10 @@ void QRCodeView::encode(){
         mQRImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mQrCodeWidth,mQrCodeWidth);
         const uint32_t image_stride = mQRImage->get_stride()/4;
         uint32_t*qimg = (uint32_t*)mQRImage->get_data();
+        const int barBgColor = (~mDotColor)|0xFF000000;
         for(int32_t y = 0,idx = 0; y < mQRcode->width; y++){
             for(int32_t x = 0; x < mQRcode->width; x++){
-                qimg[x]=(qrd[idx+x]&1)?mBarColor:0;
+                qimg[x]=(qrd[idx+x]&1)?mDotColor:barBgColor;
             }
             idx += mQRcode->width;
             qimg += image_stride;
@@ -122,11 +159,6 @@ void QRCodeView::encode(){
 
 void  QRCodeView::onDraw(Canvas&canvas){
     View::onDraw(canvas);
-    const struct zint_vector_rect *rect;
-    const struct zint_vector_hexagon *hex;
-    const struct zint_vector_circle *circle;
-    struct zint_vector_string *string;
-    const RectF paintRect ={0,0,(float)getWidth(),(float)getHeight()};
 
     canvas.save();
 
@@ -139,6 +171,21 @@ void  QRCodeView::onDraw(Canvas&canvas){
     canvas.clip();
     canvas.paint();
     canvas.restore();
+
+    if(mLogoDrawable&&(mEccLevel>=QR_ECLEVEL_M)){
+        Rect rect;
+        const static float ff[]={0.5,0.3,0.25,0.2};
+        const int imgw = mLogoDrawable->getIntrinsicWidth();
+        const int imgh = mLogoDrawable->getIntrinsicHeight();
+        rect.set(getPaddingLeft(),getPaddingTop(),
+                getWidth()-getPaddingLeft()-getPaddingRight(),
+                getHeight()-getPaddingTop()-getPaddingBottom());
+        rect.inflate(-getWidth()*ff[mEccLevel],-getHeight()*ff[mEccLevel]);
+        if(imgw*imgh<rect.width*rect.height)
+            rect.set((getWidth()-imgw)/2,(getHeight()-imgh)/2,imgw,imgh);
+        mLogoDrawable->setBounds(rect);
+        mLogoDrawable->draw(canvas);
+    }
 }
 
 }/*endof namespace*/
