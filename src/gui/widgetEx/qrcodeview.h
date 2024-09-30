@@ -16,7 +16,8 @@ public:
         MODE_NUMERIC=0,
         MODE_ALPHANUMERIC=1,
         MODE_UTF8=2,
-        MODE_KANJI=3
+        MODE_KANJI=3,
+        MODE_ECI=4
     };
 private:
     int mQrCodeWidth;

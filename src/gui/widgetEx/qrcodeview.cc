@@ -1,6 +1,6 @@
 #include <widgetEx/qrcodeview.h>
 #if ENABLE(QRCODE)
-#include <qrencode.h>
+#include <widgetEx/qrcodegen.h>
 #include <cdlog.h>
 
 //REF:https://github.com/zint/zint-gpl-only/blob/master/backend_qt4/qzint.h/cpp
@@ -41,7 +41,7 @@ QRCodeView::~QRCodeView(){
 void QRCodeView::initView(){
     mZoom = 1.0;
     mQrCodeWidth =0;
-    mEccLevel = QR_ECLEVEL_Q;
+    mEccLevel = QR_ECLEVEL_H;
     mEncodeMode = QR_MODE_8;
     mDotColor=0xFF000000;
     mLogoDrawable = nullptr;
@@ -166,29 +166,26 @@ void  QRCodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 extern "C" int QRspec_getMinimumVersion(int size, QRecLevel level);
 
 void QRCodeView::encode(){
-    const int version = QRspec_getMinimumVersion(mText.size(), (QRecLevel)mEccLevel);
-    QRcode*mQRcode = QRcode_encodeString(mText.c_str(), version, (QRecLevel)mEccLevel, (QRencodeMode)mEncodeMode, 1);
-    if(mQRcode){
-        const uint8_t*qrd = mQRcode->data;
-        mQrCodeWidth = mQRcode->width;
-        mQRImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mQrCodeWidth,mQrCodeWidth);
-        const uint32_t image_stride = mQRImage->get_stride()/4;
-        uint32_t*qimg = (uint32_t*)mQRImage->get_data();
-        mDotColor=0xFF000000;
-        const int barBgColor = (~mDotColor)|0xFF000000;
-        for(int32_t y = 0,idx = 0; y < mQRcode->width; y++){
-            for(int32_t x = 0; x < mQRcode->width; x++){
-                qimg[x]=(qrd[idx+x]&1)?mDotColor:barBgColor;
-            }
-            idx += mQRcode->width;
-            qimg += image_stride;
+    const float wx = getWidth() - getPaddingLeft()- getPaddingRight();
+    const float wy = getHeight()- getPaddingTop() - getPaddingBottom();
+    qrcodegen::QrCode qr0 = qrcodegen::QrCode::encodeText(mText.c_str(),static_cast<qrcodegen::QrCode::Ecc>(mEccLevel));
+    //std::vector<QrSegment> segs= QrSegment::makeSegments(mText);
+    mQrCodeWidth = qr0.getSize();
+    mZoom = std::min(wx,wy)/mQrCodeWidth;
+    mQRImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mQrCodeWidth,mQrCodeWidth);
+
+    const uint32_t image_stride = mQRImage->get_stride()/4;
+    uint32_t*qimg = (uint32_t*)mQRImage->get_data();
+    mDotColor = 0xFF000000;
+    const int barBgColor = (~mDotColor)|0xFF000000;
+    for(int32_t y = 0,idx = 0; y < mQrCodeWidth; y++){
+        for(int32_t x = 0; x < mQrCodeWidth; x++){
+            qimg[x] = qr0.getModule(x, y)?mDotColor:barBgColor;
         }
-        const float wx = getWidth() - getPaddingLeft()- getPaddingRight();
-        const float wy = getHeight()- getPaddingTop() - getPaddingBottom();
-        mZoom = std::min(wx,wy)/mQRcode->width;
-        mQRImage->mark_dirty();
+        idx += mQrCodeWidth;
+        qimg += image_stride;
     }
-    QRcode_free(mQRcode);
+    mQRImage->mark_dirty();
 }
 
 void  QRCodeView::onDraw(Canvas&canvas){
@@ -208,10 +205,9 @@ void  QRCodeView::onDraw(Canvas&canvas){
 
     if(mLogoDrawable){
         Rect rect;
-        const static float ff[]={0.07,
-            0.14, /*0.15 do not work*/
-            0.20, 0.30};
-        const int dec = (std::sqrt(mQrCodeWidth*mQrCodeWidth*ff[mEccLevel])-1)*mZoom;
+        const static float ff[]={/*0.07,0.15,0.20,0.30*/
+            0.05,0.12,0.18,0.28};
+        const int dec = (std::sqrt(mQrCodeWidth*mQrCodeWidth*ff[mEccLevel]))*mZoom;
         const int imgw = mLogoDrawable->getIntrinsicWidth();
         const int imgh = mLogoDrawable->getIntrinsicHeight();
         rect.set(getPaddingLeft(),getPaddingTop(),
