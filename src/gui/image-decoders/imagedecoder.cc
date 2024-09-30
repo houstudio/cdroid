@@ -121,14 +121,18 @@ int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
 #define TRANSPARENCY "TRANSPARENCY"
 
 int ImageDecoder::getTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
-    unsigned long len;
-    const unsigned char*data= bmp->get_mime_data((const char*)TRANSPARENCY,len);
-    const int transparency  = int((unsigned long)data);
-    return transparency?transparency:int(PixelFormat::OPAQUE);
+    if(bmp){
+        unsigned long len;
+        const unsigned char*data= bmp->get_mime_data((const char*)TRANSPARENCY,len);
+        const int transparency  = int((unsigned long)data);
+        return transparency?transparency:int(PixelFormat::OPAQUE);
+    }
+    return 0;
 }
 
 void ImageDecoder::setTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp,int transparency){
-    bmp->set_mime_data((const char*)TRANSPARENCY,(unsigned char*)(long(transparency)),0,nullptr);
+    if(bmp)
+        bmp->set_mime_data((const char*)TRANSPARENCY,(unsigned char*)(long(transparency)),0,nullptr);
 }
 
 #if USE(OPENJPEG)
