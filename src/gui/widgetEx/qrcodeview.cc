@@ -15,13 +15,22 @@ QRCodeView::QRCodeView(int w,int h):View(w,h){
 
 QRCodeView::QRCodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
     initView();
+
     mEccLevel = attrs.getInt("eccLevel",std::map<const std::string,int>{
             {"low",QR_ECLEVEL_L},
             {"medium",QR_ECLEVEL_M},
             {"quartor",QR_ECLEVEL_Q},
             {"high",QR_ECLEVEL_H}
     },mEccLevel);
-    mDotColor =attrs.getColor("dotColor",mDotColor);
+
+    mEncodeMode = attrs.getInt("encodeMode",std::map<const std::string,int>{
+            {"numberic",int(MODE_NUMERIC)},
+            {"alphanumeric",int(MODE_ALPHANUMERIC)},
+            {"utf8",int(MODE_UTF8)},
+            {"kanji",int(MODE_KANJI)}
+    },mEncodeMode);
+
+    mDotColor = attrs.getColor("dotColor",mDotColor);
     mLogoDrawable = attrs.getDrawable("logo");
 }
 
@@ -33,10 +42,34 @@ void QRCodeView::initView(){
     mZoom = 1.0;
     mQrCodeWidth =0;
     mEccLevel = QR_ECLEVEL_M;
-    mMode = QR_MODE_8;
+    mEncodeMode = QR_MODE_8;
     mDotColor=0xFF000000;
     mLogoDrawable = nullptr;
     setBackgroundColor(0xFF000000);
+}
+
+void QRCodeView::setEccLevel(int level){
+    if(mEccLevel!=level){
+        mEccLevel=level;
+        encode();
+        invalidate();
+    }
+}
+
+int QRCodeView::getEccLevel()const{
+    return mEccLevel;
+}
+
+void QRCodeView::setEncodeMode(int mode){
+    if((mEncodeMode!=mode)&&(mode>=MODE_NUMERIC)&&(mode<=MODE_KANJI)){
+        mEncodeMode = mode;
+        encode();
+        invalidate();
+    }
+}
+
+int QRCodeView::getEncodeMode()const{
+    return mEncodeMode;
 }
 
 void QRCodeView::setDotColor(int color){
@@ -134,7 +167,7 @@ extern "C" int QRspec_getMinimumVersion(int size, QRecLevel level);
 
 void QRCodeView::encode(){
     const int version = QRspec_getMinimumVersion(mText.size(), (QRecLevel)mEccLevel);
-    QRcode*mQRcode = QRcode_encodeString(mText.c_str(), version, (QRecLevel)mEccLevel, (QRencodeMode)mMode, 1);
+    QRcode*mQRcode = QRcode_encodeString(mText.c_str(), version, (QRecLevel)mEccLevel, (QRencodeMode)mEncodeMode, 1);
     if(mQRcode){
         const uint8_t*qrd = mQRcode->data;
         mQrCodeWidth = mQRcode->width;

@@ -5,11 +5,24 @@
 
 namespace cdroid{
 class QRCodeView:public View{
+public:
+    enum ECCLevel{
+        ECC_LOW=0,
+        ECC_MEDIUM=1,
+        ECC_QUARTOR=2,
+        ECC_HIGH=3
+    };
+    enum QREncodeMode{
+        MODE_NUMERIC=0,
+        MODE_ALPHANUMERIC=1,
+        MODE_UTF8=2,
+        MODE_KANJI=3
+    };
 private:
     int mQrCodeWidth;
     int mDotColor;
     int mEccLevel;
-    int mMode;
+    int mEncodeMode;
     float mZoom;
     Drawable*mLogoDrawable;
 private:
@@ -27,9 +40,13 @@ public:
     QRCodeView(int w,int h);
     QRCodeView(Context*ctx,const AttributeSet&attrs);
     ~QRCodeView()override;
+    void setText(const std::string&text);
+    void setEccLevel(int);
+    int getEccLevel()const;
+    void setEncodeMode(int);
+    int getEncodeMode()const;
     void setDotColor(int color);
     int getDotColor()const;
-    void setText(const std::string&text);
     void setLogo(Drawable*);
     void setLogoResource(const std::string&);
     Drawable* getLogo()const;
