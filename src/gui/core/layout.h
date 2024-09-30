@@ -21,6 +21,7 @@ private:
     int mCaretPos;
     int mSelectionStart;
     int mSelectionEnd;
+    int mTextDirection;
     bool mEditable;
     bool mMultiline;
     int mBreakStrategy;
@@ -101,6 +102,8 @@ public:
     int getLineAscent(int line)const;
     int getLineBottom(int line)const;
     int getLineEnd(int line)const;
+    void setTextDirection(int);
+    int getTextDirection()const;
     int getParagraphDirection(int line)const;
     int getLineHeight(bool txtonly=false)const;
     int getLineBounds(int line, RECT& bounds)const; 

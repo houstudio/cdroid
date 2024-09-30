@@ -151,6 +151,15 @@ int Layout::getLineCount()const{
     return mLineCount;
 }
 
+void Layout::setTextDirection(int dir){
+    mTextDirection = dir;
+    mLayout++;
+}
+
+int Layout::getTextDirection()const{
+    return mTextDirection;
+}
+
 int Layout::getParagraphDirection(int line)const{
    return 1;
 }
@@ -607,12 +616,12 @@ void Layout::relayout(bool force){
 
 static const std::string processBidi(const std::wstring&logstr){
 #ifdef ENABLE_FRIBIDI
-    const size_t wsize = logstr.length()+1;
+    const size_t wsize = logstr.length();
     FriBidiCharType base_dir = FRIBIDI_TYPE_ON;
     FriBidiChar * visstr = new FriBidiChar[wsize] ;
 
     fribidi_log2vis((const FriBidiChar*)logstr.c_str(),logstr.length(),&base_dir,visstr,nullptr,nullptr,nullptr);
-    std::wstring biditxt((const wchar_t*)visstr,wsize-1);
+    std::wstring biditxt((const wchar_t*)visstr,wsize);
     delete [] visstr;
     return TextUtils::unicode2utf8(biditxt); 
 #else
