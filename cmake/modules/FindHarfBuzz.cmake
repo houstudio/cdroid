@@ -62,7 +62,7 @@ endif ()
 message("HARFBUZZ_LIBRARIES=${HARFBUZZ_LIBRARIES} HARFBUZZ_INCLUDE_DIRS=${HARFBUZZ_INCLUDE_DIRS} HARFBUZZ_VERSION=${HARFBUZZ_VERSION}")
 # HarfBuzz 0.9.18 split ICU support into a separate harfbuzz-icu library.
 if ("${PC_HARFBUZZ_VERSION}" VERSION_GREATER "0.9.17")
-    pkg_check_modules(PC_HARFBUZZ_ICU harfbuzz-icu>=0.9.18 REQUIRED)
+    pkg_check_modules(PC_HARFBUZZ_ICU harfbuzz-icu>=0.9.18)# REQUIRED)
     find_library(HARFBUZZ_ICU_LIBRARIES NAMES harfbuzz-icu
         HINTS ${PC_HARFBUZZ_ICU_LIBRARY_DIRS} ${PC_HARFBUZZ_ICU_LIBDIR}
     )

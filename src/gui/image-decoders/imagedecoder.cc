@@ -124,7 +124,7 @@ int ImageDecoder::getTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
     if(bmp){
         unsigned long len;
         const unsigned char*data= bmp->get_mime_data((const char*)TRANSPARENCY,len);
-        const int transparency  = int((unsigned long)data);
+        const int transparency = int((unsigned long)data);
         return transparency?transparency:int(PixelFormat::OPAQUE);
     }
     return PixelFormat::TRANSPARENT;
