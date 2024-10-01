@@ -1399,24 +1399,24 @@ void TextView::setTypeface(Typeface* tf,int style){
 
 void TextView::setTypeface(Typeface* tf){
     mOriginalTypeface = tf;
-    if (mFontWeightAdjustment != 0
-            && mFontWeightAdjustment != INT_MAX/*Configuration::FONT_WEIGHT_ADJUSTMENT_UNDEFINED*/) {
+    if ( (mFontWeightAdjustment != 0)
+            && (mFontWeightAdjustment != INT_MAX)/*Configuration::FONT_WEIGHT_ADJUSTMENT_UNDEFINED*/) {
         if (tf == nullptr) {
             tf = Typeface::DEFAULT;
         } else {
-            int newWeight = std::min(
+            const int newWeight = std::min(
                     std::max(tf->getWeight() + mFontWeightAdjustment, (int)FontStyle::FONT_WEIGHT_MIN),
                     (int)FontStyle::FONT_WEIGHT_MAX);
-            int typefaceStyle = tf ? tf->getStyle() : 0;
-            bool italic = (typefaceStyle & Typeface::ITALIC) != 0;
+            const int typefaceStyle = tf ? tf->getStyle() : 0;
+            const bool italic = (typefaceStyle & Typeface::ITALIC) != 0;
             tf = Typeface::create(tf, newWeight, italic);
         }
     }
-    if (mOriginalTypeface!=tf||true){//mTextPaint.getTypeface() != tf) {
+    if (tf&&mLayout&&(tf!=mLayout->getTypeface())){//mTextPaint.getTypeface() != tf) {
         //mTextPaint.setTypeface(tf);
         if (mLayout != nullptr) {
             //nullLayouts();
-	    mLayout->setTypeface(tf);
+            mLayout->setTypeface(tf);
             requestLayout();
             invalidate();
         }
