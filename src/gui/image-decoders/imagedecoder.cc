@@ -106,16 +106,19 @@ int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
     if(bmp->get_format()!=Surface::Format::ARGB32)
         return PixelFormat::TRANSLUCENT;
 
+    int transparentCount = 0, opaqueCount = 0;
     for(int y = 0;y < bmp->get_height() ;y++){
-        uint32_t*pixel = (uint32_t*)(bmp->get_data() + bmp->get_stride()*y);
-        for (int x = 0; x < bmp->get_width(); x++, pixel++){
-            int a = (*pixel & 0xff000000) >> 24;
-            if (a > 0 && a < 255)return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;
-            else if(a==0)return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA
+        uint8_t*pixels = (bmp->get_data() + bmp->get_stride()*y);
+        for (int x = 0; x < bmp->get_width(); x++, pixels+=4){
+            const uint8_t a = pixels[3];
+            if(a==0) transparentCount++;
+            else if(a!=255) return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA
+            else opaqueCount++;//return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;
+
+            if(transparentCount&&opaqueCount) return PixelFormat::TRANSLUCENT;
         }
     }
-
-    return  PixelFormat::OPAQUE;
+    return PixelFormat::OPAQUE;
 }
 
 #define TRANSPARENCY "TRANSPARENCY"

@@ -76,7 +76,9 @@ static void scan_dir(const char*dir){
             auto image= ImageDecoder::loadImage(nullptr,path);
             const int t1 = ImageDecoder::getTransparency(image);
             const int t2 = ImageDecoder::computeTransparency(image);
-            printf("image[%p] trans=%d/%d %12s path=%s\r\n",(image?image.get():nullptr),t1,t2,tnms[t2],path);
+            if(image==nullptr)continue;
+            printf("image[%p] %4dx%-4d trans=%d/%d %12s [%s]\r\n",image.get(),
+                    image->get_width(),image->get_height(), t1,t2,tnms[t2],entry->d_name);
         }
     }
     closedir(dp);

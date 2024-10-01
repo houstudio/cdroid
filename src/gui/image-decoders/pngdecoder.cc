@@ -214,19 +214,12 @@ bool PNGDecoder::decodeSize() {
 
     /* convert palette/gray image to rgb */
     if (color_type == PNG_COLOR_TYPE_PALETTE) {
-        int num_trans = 0;
-        png_bytep trans_alpha = nullptr;
-        png_color_16p trans_color = nullptr;
         png_set_palette_to_rgb(png_ptr);
-        png_get_tRNS(png_ptr, info_ptr, &trans_alpha, &num_trans, &trans_color);
-        bit_depth = 8;
-        if(num_trans==0)mPrivate->transparency=PixelFormat::OPAQUE;
     }
 
     /* expand gray bit depth if needed */
     if ( (color_type == PNG_COLOR_TYPE_GRAY) /*&& (bit_depth < 8)*/ ) {
         png_set_expand_gray_1_2_4_to_8(png_ptr);
-        bit_depth = 8;
     }
 
     /* transform transparency to alpha */
@@ -253,9 +246,8 @@ bool PNGDecoder::decodeSize() {
 
     /* recheck header after setting EXPAND options */
     png_read_update_info (png_ptr, info_ptr);
-    png_get_IHDR (png_ptr, info_ptr,
-                  (uint32_t*)&mImageWidth, (uint32_t*)&mImageHeight, &bit_depth,
-                  &color_type, &interlace, NULL, NULL);
+    png_get_IHDR (png_ptr, info_ptr,(uint32_t*)&mImageWidth, (uint32_t*)&mImageHeight,
+            &bit_depth, &color_type, &interlace, NULL, NULL);
 
     //setGamma(nullptr,png_ptr,info_ptr);
 
