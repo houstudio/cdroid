@@ -20,6 +20,7 @@ Typeface* Typeface::SERIF;
 Typeface* Typeface::DEFAULT;
 Typeface* Typeface::DEFAULT_BOLD;
 Typeface* Typeface::sDefaultTypeface;
+Typeface* Typeface::sDefaults[4];
 
 std::string Typeface::mSystemLang;
 std::string Typeface::mFallbackFamilyName;
@@ -237,7 +238,7 @@ Typeface* Typeface::create(const std::string& familyName,int style) {
 }
 
 Typeface* Typeface::defaultFromStyle(int style) {
-    return getDefault();
+    return sDefaults[(style&0x03)];
 }
 
 Typeface* Typeface::createWeightStyle(Typeface* base,int weight, bool italic) {
@@ -281,6 +282,12 @@ void Typeface::loadPreinstalledSystemFontMap() {
     SERIF        = create("serif",NORMAL);
     MONOSPACE    = create("monospace",NORMAL);
 
+    sDefaults[0]=DEFAULT;
+    sDefaults[1]=DEFAULT_BOLD;
+    sDefaults[2]=create(nullptr,ITALIC);
+    sDefaults[3]=create(nullptr,BOLD_ITALIC);
+
+    LOGD("sDefaults=%p,%p,%p,%p",sDefaults[0],sDefaults[1],sDefaults[2],sDefaults[3]);
     LOGD("DEFAULT=%p [%s] style:%d %s",DEFAULT,DEFAULT->mFamily.c_str(),DEFAULT->getStyle(),DEFAULT->mFileName.c_str());
     LOGD("DEFAULT_BOLD=%p [%s] style:%d %s",DEFAULT_BOLD,DEFAULT_BOLD->mFamily.c_str(),DEFAULT->getStyle(),DEFAULT_BOLD->mFileName.c_str());
     LOGD("SANS_SERIF=%p [%s] style:%d %s",SANS_SERIF,SANS_SERIF->mFamily.c_str(),DEFAULT->getStyle(),SANS_SERIF->mFileName.c_str());
