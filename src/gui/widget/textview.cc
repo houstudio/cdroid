@@ -459,7 +459,7 @@ void TextView::initView(){
     mMaxLength= -1;
     mMarqueeRepeatLimit =3;
     mLastLayoutDirection = -1;
-    mFontWeightAdjustment= INT_MAX;
+    mFontWeightAdjustment= 16;//INT_MAX;
     mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
     mHorizontallyScrolling =false;
     mNeedsAutoSizeText = false;
