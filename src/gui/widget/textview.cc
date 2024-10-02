@@ -1412,8 +1412,7 @@ void TextView::setTypeface(Typeface* tf){
             tf = Typeface::create(tf, newWeight, italic);
         }
     }
-    if (tf&&mLayout&&(tf!=mLayout->getTypeface())){//mTextPaint.getTypeface() != tf) {
-        //mTextPaint.setTypeface(tf);
+    if (tf&&mLayout&&(tf!=mLayout->getTypeface())){
         if (mLayout != nullptr) {
             //nullLayouts();
             mLayout->setTypeface(tf);
