@@ -40,6 +40,7 @@ private:
     static cdroid::Context*mContext;
     static std::string mSystemLang;
     static Typeface* sDefaultTypeface;
+    static Typeface* sDefaults[4];
     static std::unordered_map<std::string,Typeface*>*sSystemFontMap;
     static std::unordered_map<std::string,std::vector<FontFamily>>systemFallbackMap;
     static std::unordered_map<void*,Typeface*>sStyledTypefaceCache;
