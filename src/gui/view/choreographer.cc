@@ -14,7 +14,7 @@ Choreographer::Choreographer(){
     mFrameScheduled  = false;
     mCallbacksRunning= false;
     mLastFrameTimeNanos = 0;
-    mFrameIntervalNanos = (1000000000 / getRefreshRate());
+    mFrameIntervalNanos = (1e9 / getRefreshRate());
     mCallbackPool = nullptr;
     for(int i = 0;i <= CALLBACK_LAST;i++){
         mCallbackQueues[i] = new CallbackQueue(this);
@@ -22,13 +22,7 @@ Choreographer::Choreographer(){
 }
 
 float Choreographer::getRefreshRate() {
-#if 0
-    DisplayInfo di = DisplayManagerGlobal.getInstance().getDisplayInfo(
-            Display::DEFAULT_DISPLAY);
-    return di.getMode().getRefreshRate();
-#else
-    return 20.f;
-#endif
+    return 1000.f/sFrameDelay;
 }
 
 static NeverDestroyed<Choreographer>mInst;
