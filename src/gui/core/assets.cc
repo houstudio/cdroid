@@ -444,7 +444,10 @@ Drawable* Assets::getDrawable(const std::string&resid) {
         const uint32_t cc = (uint32_t)getColor(fullresid);
         return new ColorDrawable(cc);
     } else if(ext.compare("xml")){
-        d = ImageDecoder::createAsDrawable(this,package+":"+resname);
+        if(resname.find_first_of("@:")!=std::string::npos)
+            d = ImageDecoder::createAsDrawable(this,package+":"+resname);
+        else
+            d = ImageDecoder::createAsDrawable(this,resname);
     }
     if( (d == nullptr) && (ext.compare("xml")==0) ) {
         void*zfile = pak ? pak->getZipHandle(resname) : nullptr;

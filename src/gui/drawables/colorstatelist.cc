@@ -13,7 +13,7 @@
 
 namespace cdroid{
 
-std::vector<std::vector<int>> ColorStateList::EMPTY={{0}};
+std::vector<std::vector<int>> ColorStateList::EMPTY={{}};
 
 ColorStateList::ColorStateList(){
     mChangingConfigurations=0;
