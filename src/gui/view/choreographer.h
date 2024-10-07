@@ -14,6 +14,7 @@ public:
         CALLBACK_LAST  = CALLBACK_COMMIT
     };
     typedef CallbackBase<void,long>FrameCallback;
+    static constexpr long DEFAULT_FRAME_DELAY=33;
 private:
     class CallbackRecord{
     public:
@@ -62,8 +63,8 @@ protected:
 public:
     static Choreographer& getInstance();
     static long getFrameDelay();
-    static long subtractFrameDelay(long delayMillis);
     static void setFrameDelay(long frameDelay);
+    static long subtractFrameDelay(long delayMillis);
     nsecs_t getFrameTimeNanos()const;
     nsecs_t getLastFrameTimeNanos()const;
     long getFrameTime()const;

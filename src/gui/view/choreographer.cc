@@ -3,18 +3,17 @@
 #include <cdlog.h>
 
 namespace cdroid{
-#define DEFAULT_FRAME_DELAY 20
 #define FRAME_CALLBACK_TOKEN 1
 #define USE_FRAME_TIME 0
  
-long Choreographer::sFrameDelay = DEFAULT_FRAME_DELAY;
+long Choreographer::sFrameDelay = Choreographer::DEFAULT_FRAME_DELAY;
 
 Choreographer::Choreographer(){
     mLooper = nullptr;
     mFrameScheduled  = false;
     mCallbacksRunning= false;
     mLastFrameTimeNanos = 0;
-    mFrameIntervalNanos = (1e9 / getRefreshRate());
+    mFrameIntervalNanos = (1E9/getRefreshRate());
     mCallbackPool = nullptr;
     for(int i = 0;i <= CALLBACK_LAST;i++){
         mCallbackQueues[i] = new CallbackQueue(this);
@@ -31,6 +30,7 @@ Choreographer& Choreographer::getInstance(){
     if(mInst->mLooper==nullptr){
         mInst->mLooper = Looper::getMainLooper();
         mInst->mLooper->addEventHandler(mInst.get());
+        mInst->mFrameIntervalNanos=(1E9/getRefreshRate());
     }
     return *mInst;
 }   

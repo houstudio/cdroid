@@ -73,8 +73,7 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
 	
     View::VIEW_DEBUG = hasSwitch("debug");
     Looper::prepareMainLooper();
-    Choreographer & chograph = Choreographer::getInstance();
-    chograph.setFrameDelay(getArgAsInt("framedelay",chograph.getFrameDelay()));
+    Choreographer::setFrameDelay(getArgAsInt("framedelay",Choreographer::DEFAULT_FRAME_DELAY));
     WindowManager::getInstance().setDisplayRotation(rotation);
     GraphDevice::getInstance().setRotation(rotation).setLogo(getArg("logo")).showFPS(hasSwitch("fps")).init();
     Typeface::loadPreinstalledSystemFontMap();
