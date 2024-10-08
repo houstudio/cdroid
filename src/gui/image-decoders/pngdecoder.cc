@@ -239,7 +239,10 @@ bool PNGDecoder::decodeSize() {
     if ( (color_type==PNG_COLOR_TYPE_GRAY) || (color_type==PNG_COLOR_TYPE_GRAY_ALPHA) ) {
         png_set_gray_to_rgb(png_ptr);
     }
-
+    if(color_type==PNG_COLOR_TYPE_RGB){
+        png_set_expand(png_ptr);
+        png_set_add_alpha(png_ptr,0xFFU,PNG_FILLER_AFTER);
+    }
     if (interlace != PNG_INTERLACE_NONE)
         png_set_interlace_handling (png_ptr);
     png_set_filler (png_ptr, 0xff, PNG_FILLER_AFTER);
