@@ -53,11 +53,7 @@
 #include <drawables.h>
 #include <cdlog.h>
 
-#ifndef _GLIBCXX_FUNCTIONAL
-#define DECLARE_UIEVENT(type,name,...) typedef type(*name)(__VA_ARGS__)
-#else
 #define DECLARE_UIEVENT(type,name,...) typedef std::function< type(__VA_ARGS__) >name
-#endif
 
 namespace cdroid{
 
