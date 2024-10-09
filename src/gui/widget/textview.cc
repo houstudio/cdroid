@@ -493,6 +493,7 @@ TextView::~TextView() {
 }
 
 void TextView::onDetachedFromWindowInternal(){
+    stopMarquee();
     for(int i = 0; mDrawables && ( i<4 );i++){
         Drawable*d = mDrawables->mShowing[i];
         if( d == nullptr)continue;
