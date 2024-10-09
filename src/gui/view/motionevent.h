@@ -167,7 +167,7 @@ public:
         CLASSIFICATION_PINCH = 5,
     };
 private:
-    static constexpr float INVALID_CURSOR_POSITION = std::numeric_limits<float>::quiet_NaN();
+    static constexpr float INVALID_CURSOR_POSITION = NAN;//std::numeric_limits<float>::quiet_NaN();
     static constexpr int HISTORY_CURRENT = -0x80000000;
     static MotionEvent*obtain();
     static void ensureSharedTempPointerCapacity(int desiredCapacity);

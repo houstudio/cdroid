@@ -3,6 +3,8 @@
 #include <cdtypes.h>
 #include <core/neverdestroyed.h>
 #include <cdlog.h>
+#include <cfloat>
+#include <limits>
 
 //https://www.androidos.net.cn/android/9.0.0_r8/xref/frameworks/support/viewpager/src/main/java/androidx/viewpager/widget/ViewPager.java
 namespace cdroid{
@@ -83,8 +85,8 @@ void ViewPager::initViewPager(){
     mCurItem = 0;
     mPageMargin =0;
     mOffscreenPageLimit =3;
-    mFirstOffset=-std::numeric_limits<float>::max();
-    mLastOffset = std::numeric_limits<float>::max();
+    mFirstOffset=-FLT_MAX;//std::numeric_limits<float>::max();
+    mLastOffset = FLT_MAX;//std::numeric_limits<float>::max();
 
     mFlingDistance = (int) (MIN_DISTANCE_FOR_FLING * density);
     mCloseEnough   = (int) (CLOSE_ENOUGH * density);
@@ -767,9 +769,9 @@ void ViewPager::calculatePageOffsets(ItemInfo* curItem, int curIndex, ItemInfo* 
     const int itemCount = mItems.size();
     float offset = curItem->offset;
     int pos = curItem->position - 1;
-    mFirstOffset= (curItem->position == 0) ? curItem->offset : (-std::numeric_limits<float>::max());
+    mFirstOffset= (curItem->position == 0) ? curItem->offset : (-FLT_MAX);//std::numeric_limits<float>::max());
     mLastOffset = (curItem->position == N - 1)
-             ? (curItem->offset + curItem->widthFactor - 1) : std::numeric_limits<float>::max();
+             ? (curItem->offset + curItem->widthFactor - 1) : FLT_MAX;//std::numeric_limits<float>::max();
 
     // Previous pages
     for (int i = curIndex - 1; i >= 0; i--, pos--) {

@@ -95,7 +95,7 @@ void Animation::cancel() {
         //guard.close();
     }
     // Make sure we move the animation to the end
-    mStartTime =std::numeric_limits<int>::min();// Long.MIN_VALUE;
+    mStartTime =LONG_MIN;//std::numeric_limits<int>::min();// Long.MIN_VALUE;
     mMore = mOneMoreTime = false;
 }
 
@@ -365,7 +365,7 @@ bool Animation::getTransformation(long currentTime, Transformation& outTransform
 }
 
 bool Animation::isCanceled() {
-    return mStartTime == std::numeric_limits<long>::min();//Long.MIN_VALUE;
+    return mStartTime == LONG_MIN;//std::numeric_limits<long>::min();//Long.MIN_VALUE;
 }
 
 void Animation::fireAnimationStart() {

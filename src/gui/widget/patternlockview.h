@@ -2,6 +2,7 @@
 #define __PATTERN_LOCK_VIEW_H__
 #include <view/view.h>
 #include <limits>
+#include <cfloat>
 namespace cdroid{
 
 class PatternLockView:public View{
@@ -51,8 +52,8 @@ public:
         float mTranslateY = 0.0f;
         float mAlpha = 1.0f;
         float mSize;
-        float mLineEndX = std::numeric_limits<float>::min();//Float.MIN_VALUE;
-        float mLineEndY = std::numeric_limits<float>::min();//Float.MIN_VALUE;
+        float mLineEndX = FLT_MIN;//std::numeric_limits<float>::min();//Float.MIN_VALUE;
+        float mLineEndY = FLT_MIN;//std::numeric_limits<float>::min();//Float.MIN_VALUE;
         ValueAnimator* mLineAnimator;
     };
     class Dot{

@@ -1,6 +1,7 @@
 #include <widget/patternlockview.h>
+#include <limits.h>
 namespace cdroid{
-static constexpr float FLOAT_MIN = std::numeric_limits<float>::min();
+static constexpr float FLOAT_MIN = FLT_MIN;//std::numeric_limits<float>::min();
 
 PatternLockView::PatternLockView(int w,int h):View(w,h){
     initView();
