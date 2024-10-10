@@ -80,7 +80,7 @@ StateListDrawable*StateListDrawable::mutate(){
 }
 
 void StateListDrawable::clearMutated(){
-    StateListDrawable::clearMutated();
+    DrawableContainer::clearMutated();
     mMutated = false;
 }
 
