@@ -64,7 +64,7 @@ BEGIN_DECLS
     - @ref kVA_NBMAX_PERIODIC_CALLS
 
     In the `va_setup.h` header file:
-    - @ref kVA_SETUP_SEMAPHORE_SIZE_IN_DWORD
+    - @ref kVA_SETUP_SEMAPHORE_SIZE_IN_int32_t
     - @ref kVA_SETUP_MUTEX_SIZE_IN_DWORD
 * @{
 */
@@ -74,7 +74,7 @@ BEGIN_DECLS
 #define kVA_NO_WAIT                         0            /**< No wait */
 
 
-void*nglMalloc(UINT uiSize);
+void*nglMalloc(uint32_t uiSize);
 /**
 This function allocates memory blocks.
 @param uiSize Size of allocated memory in bytes.
@@ -86,8 +86,8 @@ This function allocates memory blocks.
     This function must be mapped to the standard libc equivalent function.
 @see VA_Free
 */
-void *nglAlloc ( UINT uiSize);
-void *nglRealloc(void*ptr,UINT newsize);
+void *nglAlloc ( uint32_t uiSize);
+void *nglRealloc(void*ptr,uint32_t newsize);
 /**
 The VA_Free function frees the memory block previously allocated by VA_Alloc.
 @param ptr Indicates the address of the memory block to free.
@@ -106,8 +106,8 @@ Viaccess-Orca uses this function to print formatted output to a unique external 
 @return the number of printed characters.
 @b Comments @n This function must be thread-safe.
 */
-INT nglPrintf(const char *pFormat, ...);
-INT nglPrintData(const char*label,const BYTE*data,int len);
+int32_t nglPrintf(const char *pFormat, ...);
+int32_t nglPrintData(const char*label,const uint8_t*data,int len);
 
 /**
 This function initializes a semaphore. Semaphores are commonly used to count and limit the number 
@@ -132,7 +132,7 @@ of threads that access a shared resource.
 typedef HANDLE NGLSemaphore;
 typedef HANDLE NGLMutex;
 
-INT nglCreateSemaphore(NGLSemaphore * const pSemaphore, UINT uiValue);
+int32_t nglCreateSemaphore(NGLSemaphore * const pSemaphore, uint32_t uiValue);
 
 /**
 This function deletes a semaphore that was previously initialized by 
@@ -147,7 +147,7 @@ This function deletes a semaphore that was previously initialized by
 
 @see VA_InitializeSemaphore VA_AcquireSemaphore VA_ReleaseSemaphore
 */
-INT nglDeleteSemaphore(NGLSemaphore pSemaphore);
+int32_t nglDeleteSemaphore(NGLSemaphore pSemaphore);
 
 /**
 A thread calls the function VA_AcquireSemaphore to acquire a semaphore previously initialized 
@@ -167,7 +167,7 @@ resource is made available, the waiting thread is released and continues its exe
         not fulfill the constraints detailed above.
 @see @ref VA_InitializeSemaphore @ref VA_DeleteSemaphore @ref VA_ReleaseSemaphore
 */
-INT nglAcquireSemaphore(NGLSemaphore pSemaphore, UINT uiDuration);
+int32_t nglAcquireSemaphore(NGLSemaphore pSemaphore, uint32_t uiDuration);
 
 
 /**
@@ -180,7 +180,7 @@ This mechanism enables a thread, waiting for the semaphore to be resumed.
         If pSemaphore does not correspond to an initialized semaphore.
 @see VA_InitializeSemaphore VA_DeleteSemaphore VA_AcquireSemaphore
 */
-INT nglReleaseSemaphore(NGLSemaphore pSemaphore);
+int32_t nglReleaseSemaphore(NGLSemaphore pSemaphore);
 
 /**
 This function initializes a mutex. A mutex is a synchronization object that is created so that 
@@ -196,7 +196,7 @@ thread at a time can modify data or have access to a resource .
       It only initializes the structure's fields.
 @see VA_DeleteMutex VA_LockMutex VA_UnlockMutex
 */
-INT nglCreateMutex(NGLMutex * const pMutex);
+int32_t nglCreateMutex(NGLMutex * const pMutex);
 
 
 /**
@@ -210,7 +210,7 @@ This function deletes a mutex that was previously initialized by the
 @b Comments @n This function does not free the memory addressed by pMutex.
 @see VA_InitializeMutex VA_LockMutex VA_UnlockMutex
 */
-INT nglDeleteMutex (NGLMutex pMutex);
+int32_t nglDeleteMutex (NGLMutex pMutex);
 
 
 /**
@@ -225,7 +225,7 @@ unlocked.
 @retval kVA_INVALID_PARAMETER If pMutex does not correspond to an initialized mutex.
 @see VA_InitializeMutex VA_DeleteMutex VA_UnlockMutex
 */
-INT nglLockMutex (NGLMutex pMutex);
+int32_t nglLockMutex (NGLMutex pMutex);
 
 
 /**
@@ -237,7 +237,7 @@ called the same number of times to free the mutex for other threads.
 @retval kVA_INVALID_PARAMETER If pMutex does not correspond to an initialized mutex.
 @see VA_InitializeMutex VA_DeleteMutex VA_LockMutex
 */
-INT nglUnlockMutex (NGLMutex pMutex);
+int32_t nglUnlockMutex (NGLMutex pMutex);
 
 
 typedef void (*THREAD_PROC)(void*p);
@@ -250,17 +250,17 @@ of time.
                   If uiDuration is equal to 0, the calling thread is moved to the end of 
                   the queue by the OS scheduler and a new thread gets to run.
 */
-void nglSleep( UINT uiDuration );
+void nglSleep( uint32_t uiDuration );
 
 HANDLE nglCreateEvent(BOOL state, BOOL autoreset);//autoreset=true WaitEvent will resetstate to false
 
-DWORD nglDestroyEvent(HANDLE evenid);
+int32_t nglDestroyEvent(HANDLE evenid);
 
-DWORD nglResetEvent(HANDLE evenid);
+int32_t nglResetEvent(HANDLE evenid);
 
-DWORD nglSetEvent(HANDLE evenid);
+int32_t nglSetEvent(HANDLE evenid);
 
-DWORD nglWaitEvent(HANDLE evenid, DWORD timeout);
+int32_t nglWaitEvent(HANDLE evenid, uint32_t timeout);
 
 END_DECLS
 

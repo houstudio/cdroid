@@ -46,9 +46,10 @@ int MPClose(HANDLE handle) {
     return E_OK;
 }
 
-int MPGetTime(HANDLE handle,UINT*curtime,UINT*timems) {
+int MPGetTime(HANDLE handle,uint32_t*curtime,uint32_t*timems) {
     return E_OK;
 }
+
 int MPSeek(HANDLE handle,double timems) {
     NGL_PLAYER*mp=(NGL_PLAYER*)handle;
     //mpg_cmd_set_speed

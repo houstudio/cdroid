@@ -9,14 +9,14 @@ public:
     constexpr static long NANOS_PER_MS = 1000000;
 public:
     /*Returns milliseconds since boot, not counting time spent in deep sleep*/
-    static LONGLONG uptimeMillis();
-    static LONGLONG uptimeMicros();
-    static LONGLONG uptimeNanos();
+    static int64_t uptimeMillis();
+    static int64_t uptimeMicros();
+    static int64_t uptimeNanos();
     /*Returns milliseconds since January 1, 1970 00:00:00.0 UTC*/
-    static LONGLONG currentTimeMillis();
-    static LONGLONG currentTimeSeconds();
-    static bool setCurrentTimeMillis(LONGLONG millis);
-    static LONGLONG elapsedRealtime();
+    static int64_t currentTimeMillis();
+    static int64_t currentTimeSeconds();
+    static bool setCurrentTimeMillis(int64_t millis);
+    static int64_t elapsedRealtime();
 };
 
 }

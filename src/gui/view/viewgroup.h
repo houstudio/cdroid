@@ -170,7 +170,7 @@ protected:
     std::vector<View*> mChildrenInterestedInDrag;
     Cairo::RefPtr<Cairo::Region>mInvalidRgn;
     Transformation*mInvalidationTransformation;
-    LONGLONG time_lastframe;
+    int64_t time_lastframe;
     OnHierarchyChangeListener mOnHierarchyChangeListener;
     bool getChildVisibleRect(View*child,Rect&r,Point*offset,bool forceParentCheck);
     virtual bool canAnimate()const;

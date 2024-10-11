@@ -63,7 +63,7 @@ int GraphDevice::init(){
     }
     GFXInit();
 
-    GFXGetDisplaySize(0,(UINT*)&mScreenWidth,(UINT*)&mScreenHeight);
+    GFXGetDisplaySize(0,(uint32_t*)&mScreenWidth,(uint32_t*)&mScreenHeight);
     GFXCreateSurface(0,&mPrimarySurface,mScreenWidth,mScreenHeight,mFormat,1);
     GFXLockSurface(mPrimarySurface,(void**)&buffer,&pitch);
     LOGI("PrimarySurface=%p size=%dx%d buffer=%p rotation=%d",mPrimarySurface,mScreenWidth,mScreenHeight,buffer,mRotation*90);

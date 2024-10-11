@@ -49,7 +49,7 @@ static void InjectKey(int type,int code,int value) {
     i.device=INJECTDEV_KEY;
     InputInjectEvents(&i,1,1);
 }
-static void InjectABS(ULONG time,int type,int axis,int value) {
+static void InjectABS(unsigned long time,int type,int axis,int value) {
     INPUTEVENT i= {0};
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC,&ts);
@@ -61,7 +61,7 @@ static void InjectABS(ULONG time,int type,int axis,int value) {
     i.device=INJECTDEV_TOUCH;
     InputInjectEvents(&i,1,1);
 }
-static void InjectREL(ULONG time,int type,int axis,int value) {
+static void InjectREL(unsigned long time,int type,int axis,int value) {
     INPUTEVENT i= {0};
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC,&ts);

@@ -21,9 +21,9 @@ Canvas::Canvas(const RefPtr<Surface>& target)
 }
 
 Canvas::Canvas(unsigned int width,unsigned int height):Context(nullptr,true){
-    BYTE*buffer;
-    INT format;
-    UINT pitch;
+    uint8_t*buffer;
+    int32_t format;
+    uint32_t pitch;
     GFXCreateSurface(0,&mHandle,width,height,GPF_ARGB,false);
     GFXLockSurface(mHandle,(void**)&buffer,&pitch);
     RefPtr<Surface>surf=ImageSurface::create(buffer,Surface::Format::ARGB32,width,height,pitch);
@@ -39,7 +39,7 @@ void*Canvas::getHandler()const{
     return mHandle;
 }
 
-void Canvas::set_color(UINT color){
+void Canvas::set_color(uint32_t color){
     set_color((color>>16)&0xFF,(color>>8)&0xFF,color&0xFF,(color>>24));
 }
 

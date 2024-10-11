@@ -26,7 +26,7 @@ public:
     void get_text_size(const std::string&txt,int*w,int*h); 
     void draw_text(const Rect&rect,const std::string&text,int text_alignment=0);
     void set_color(uint8_t r,uint8_t g, uint8_t b,uint8_t a=255);
-    void set_color(UINT color);
+    void set_color(uint32_t color);
     void rectangle(int x,int y,int w,int h);
     void rectangle(const Rect &r);
     void draw_image(const Cairo::RefPtr<Cairo::ImageSurface>&img,const Rect& dst,const Rect* src);

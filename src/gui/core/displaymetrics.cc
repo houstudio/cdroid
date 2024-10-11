@@ -29,7 +29,7 @@ void DisplayMetrics::setTo(const DisplayMetrics& o) {
 }
 
 void DisplayMetrics::setToDefaults() {
-    GFXGetDisplaySize(0,(UINT*)&widthPixels,(UINT*)&heightPixels);
+    GFXGetDisplaySize(0,(uint32_t*)&widthPixels,(uint32_t*)&heightPixels);
     density =  DENSITY_DEVICE / (float) DENSITY_DEFAULT;
     densityDpi =  DENSITY_DEVICE;
     scaledDensity = density;

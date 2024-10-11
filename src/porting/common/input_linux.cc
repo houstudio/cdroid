@@ -26,8 +26,6 @@
 #include <vector>
 #include <algorithm>
 #include <cdlog.h>
-#include <ngl_msgq.h>
-#include <ngl_timer.h>
 #include <string.h>
 #include <sys/types.h>
 #include <dirent.h>

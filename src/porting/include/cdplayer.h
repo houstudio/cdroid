@@ -15,7 +15,7 @@ typedef enum{
    MP_ERROR,
    MP_END
 }MPMESSAGE;
-typedef void(*MP_CALLBACK)(HANDLE,MPMESSAGE msg,LONG param,void*userdata);
+typedef void(*MP_CALLBACK)(HANDLE,MPMESSAGE msg,long param,void*userdata);
 
 HANDLE MPOpen(const char*fname);
 int MPPlay(HANDLE handle);

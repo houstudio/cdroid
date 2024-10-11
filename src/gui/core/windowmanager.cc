@@ -15,10 +15,7 @@
  */
 
 #include <windowmanager.h>
-#include <ngl_msgq.h>
-#include <ngl_os.h>
 #include <cdlog.h>
-#include <ngl_timer.h>
 #include <graphdevice.h>
 #include <uieventsource.h>
 
@@ -65,7 +62,7 @@ Display& WindowManager::getDefaultDisplay(){
 	    for(size_t i = 0;i < dc ;i++){
 	        DisplayInfo info;
 	        info.rotation = mDisplayRotation;
-	        GFXGetDisplaySize(i,(UINT*)&info.logicalWidth,(UINT*)&info.logicalHeight);
+	        GFXGetDisplaySize(i,(uint32_t*)&info.logicalWidth,(uint32_t*)&info.logicalHeight);
 	        Display d(i,info);
 	        mDisplays.push_back(d);
         }

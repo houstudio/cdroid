@@ -182,7 +182,7 @@ View* LayoutInflater::inflate(const std::string&package,std::istream&stream,View
     char buf[256];
     XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
     WindowParserData pd;
-    ULONGLONG tstart = SystemClock::uptimeMillis();
+    int64_t tstart = SystemClock::uptimeMillis();
 
     pd.ctx  = mContext;
     pd.root = root;

@@ -34,7 +34,7 @@ bool Display::getDisplayInfo(DisplayInfo&info){
 
 void Display::getSize(Point&outSize){
     updateDisplayInfoLocked();
-    GFXGetDisplaySize(mDisplayId,(UINT*)&outSize.x,(UINT*)&outSize.y);
+    GFXGetDisplaySize(mDisplayId,(uint32_t*)&outSize.x,(uint32_t*)&outSize.y);
     const int rotation = mDisplayInfo.rotation;
     if((rotation==ROTATION_90)||(mDisplayInfo.rotation==ROTATION_270)){
         const int temp = outSize.x;
@@ -45,7 +45,7 @@ void Display::getSize(Point&outSize){
 
 void Display::getRealSize(Point&outSize){
     updateDisplayInfoLocked();
-    GFXGetDisplaySize(mDisplayId,(UINT*)&outSize.x,(UINT*)&outSize.y);
+    GFXGetDisplaySize(mDisplayId,(uint32_t*)&outSize.x,(uint32_t*)&outSize.y);
 }
 
 int Display::getRotation(){
@@ -55,12 +55,12 @@ int Display::getRotation(){
 
 void Display::getMetrics(DisplayMetrics&outMetrics){
     outMetrics.setToDefaults();
-    GFXGetDisplaySize(mDisplayId,(UINT*)&outMetrics.widthPixels,(UINT*)&outMetrics.heightPixels);
+    GFXGetDisplaySize(mDisplayId,(uint32_t*)&outMetrics.widthPixels,(uint32_t*)&outMetrics.heightPixels);
 }
 
 void Display::getRealMetrics(DisplayMetrics&outMetrics){
     outMetrics.setToDefaults();
-    GFXGetDisplaySize(mDisplayId,(UINT*)&outMetrics.widthPixels,(UINT*)&outMetrics.heightPixels);
+    GFXGetDisplaySize(mDisplayId,(uint32_t*)&outMetrics.widthPixels,(uint32_t*)&outMetrics.heightPixels);
 }
 
 }
