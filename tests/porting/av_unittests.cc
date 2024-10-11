@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
-#include <ngl_os.h>
-#include <ngl_dmx.h>
-#include <ngl_video.h>
+#include <dtvos.h>
+#include <dtvdmx.h>
+#include <dtvideo.h>
 #include <cdgraph.h>
-#include <ngl_tuner.h>
+#include <dtvtuner.h>
 #include <tvtestutils.h>
-#include <ngl_misc.h>
+#include <cdmisc.h>
 
 class AV:public testing::Test{
    public :

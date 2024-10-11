@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <ngl_os.h>
 #include <core/scheduler.h>
 
 class SCHEDULER:public testing::Test{
@@ -14,8 +13,8 @@ class SCHEDULER:public testing::Test{
 struct SubscribeItem{
    int serviceid;
    system_clock::time_point time;
-   UINT eventid;
-   UINT duration;/*unint in seconds*/
+   uint32_t eventid;
+   uint32_t duration;/*unint in seconds*/
    std::string name;
    void onTriggered(){
       printf("triggered serviceid:%d event.name=%s\r\n",serviceid,name.c_str());

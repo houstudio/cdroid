@@ -14,14 +14,14 @@ typedef unsigned long NGL_TIME ;
 This structure specifies the various properties of the calendar time.
 */
 typedef struct{
-    INT uiSec;        /**<  Gives seconds after the minute [0, 59].     */
-    INT uiMin;        /**<  Gives minutes after the hour [0, 59].       */
-    INT uiHour;       /**<  Gives the hour of the day [0, 23].          */
-    INT uiMonthDay;   /**<  Gives the day of the month [1, 31].         */
-    INT uiMonth;      /**<  Gives the month of the year [0, 11].        */
-    INT uiYear;       /**<  Gives the years since 1900.                 */
-    INT uiWeekDay;    /**<  Gives days from Sunday [0,6].               */
-    INT uiYearDay;    /**<  Gives the days since first January [0,365]. */
+    int32_t uiSec;        /**<  Gives seconds after the minute [0, 59].     */
+    int32_t uiMin;        /**<  Gives minutes after the hour [0, 59].       */
+    int32_t uiHour;       /**<  Gives the hour of the day [0, 23].          */
+    int32_t uiMonthDay;   /**<  Gives the day of the month [1, 31].         */
+    int32_t uiMonth;      /**<  Gives the month of the year [0, 11].        */
+    int32_t uiYear;       /**<  Gives the years since 1900.                 */
+    int32_t uiWeekDay;    /**<  Gives days from Sunday [0,6].               */
+    int32_t uiYearDay;    /**<  Gives the days since first January [0,365]. */
 } NGL_TM;
 
 
@@ -29,8 +29,8 @@ typedef struct{
 This structure gives information on the processor runtime.
 */
 typedef struct{
-    UINT uiMilliSec;  /**< Indicates the processor runtime, in milliseconds.   */
-    UINT uiMicroSec;  /**< Indicates the remaining microseconds, if available. */
+    uint32_t uiMilliSec;  /**< Indicates the processor runtime, in milliseconds.   */
+    uint32_t uiMicroSec;  /**< Indicates the remaining microseconds, if available. */
 } NGL_RunTime ;
 
 /**
@@ -46,7 +46,7 @@ exchanged via the return channel (Network Time Protocol or NTP), for example.
 @see tVA_Time VA_TimeToTm VA_TmToTime
 */
 void nglGetTime(NGL_TIME *pTime);
-DWORD nglSetTime(NGL_TIME*ptime);
+int32_t nglSetTime(NGL_TIME*ptime);
 
 /**
 This function translates a time value from the @ref tVA_Time format
@@ -96,7 +96,7 @@ moment the STB is switched on. For more details refer to @ref tVA_RunTime.
 void nglGetRunTime( NGL_RunTime *pRunTime);
 
 ///////////////////////////timer///////////////////////
-typedef void(*NGL_TIMER_CB)(DWORD timerid);
+typedef void(*NGL_TIMER_CB)(int32_t timerid);
 
 typedef enum
 {
@@ -105,10 +105,10 @@ typedef enum
         EM_TIMERMODE_MAX                            ///< Ä£Ê½Ñ¡Ïî½áÊø±ê¼Ç£¬ÎÞÐ§²ÎÊý
 }NGL_TimerMode;
 
-DWORD NGLCreateTimer(NGL_TimerMode emode, DWORD interval, NGL_TIMER_CB fnCB);
-DWORD NGLDestroyTimer(DWORD timerid);
-DWORD NGLStartTimer(DWORD timerid);
-DWORD NGLStopTimer(DWORD timerid);
+int32_t NGLCreateTimer(NGL_TimerMode emode, uint32_t interval, NGL_TIMER_CB fnCB);
+int32_t NGLDestroyTimer(int32_t timerid);
+int32_t NGLStartTimer(int32_t timerid);
+int32_t NGLStopTimer(int32_t timerid);
 
 END_DECLS
 

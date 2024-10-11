@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
-#include <ngl_os.h>
-#include <ngl_dmx.h>
-#include <ngl_tuner.h>
-#include <ngl_misc.h>
+#include <dtvos.h>
+#include <dtvdmx.h>
+#include <dtvtuner.h>
+#include <cdmisc.h>
 #include <tvtestutils.h>
 #define MAX_PROGRAM 32
 

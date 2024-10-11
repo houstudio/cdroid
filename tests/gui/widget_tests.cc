@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
 #include <widget/keyboardview.h>
-#include <ngl_os.h>
 #include <cdlog.h>
 
 #define ID_OK 10

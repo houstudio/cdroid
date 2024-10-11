@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <ngl_os.h>
 
 using namespace cdroid;
 

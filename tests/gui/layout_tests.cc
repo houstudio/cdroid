@@ -5,8 +5,6 @@
 #include <widget/absolutelayout.h>
 #include <widget/gridlayout.h>
 #include <widget/radiogroup.h>
-#include <ngl_os.h>
-#include <ngl_timer.h>
 
 class LAYOUT:public testing::Test{
 

@@ -34,7 +34,7 @@ HANDLE nglMsgQCreate(int howmany, int sizepermag) {
     return q;
 }
 
-DWORD nglMsgQDestroy(HANDLE msgid) {
+int32_t nglMsgQDestroy(HANDLE msgid) {
     MSGQUEUE*q=(MSGQUEUE*)msgid;
     pthread_cond_destroy(&q->cput);
     pthread_cond_destroy(&q->cget);
@@ -44,7 +44,7 @@ DWORD nglMsgQDestroy(HANDLE msgid) {
     return E_OK;
 }
 
-DWORD nglMsgQSend(HANDLE msgid, const void* pvmsg, int msgsize, DWORD timeout) {
+int32_t nglMsgQSend(HANDLE msgid, const void* pvmsg, uint msgsize, uint32_t timeout) {
     MSGQUEUE*q=(MSGQUEUE*)msgid;
     struct timespec ts;
     int rc=0;
@@ -74,7 +74,7 @@ DWORD nglMsgQSend(HANDLE msgid, const void* pvmsg, int msgsize, DWORD timeout) {
     return rc==0?E_OK:E_ERROR;
 }
 
-DWORD nglMsgQReceive(HANDLE msgid,void* pvmsg, DWORD msgsize, DWORD timeout) {
+int32_t nglMsgQReceive(HANDLE msgid,void* pvmsg, uint32_t msgsize, uint32_t timeout) {
     MSGQUEUE*q=(MSGQUEUE*)msgid;
     struct timespec ts;
     int rc=0;
@@ -104,7 +104,7 @@ DWORD nglMsgQReceive(HANDLE msgid,void* pvmsg, DWORD msgsize, DWORD timeout) {
     return rc==0?E_OK:E_ERROR;
 }
 
-DWORD nglMsgQGetCount(HANDLE msgid,UINT*count) {
+int32_t nglMsgQGetCount(HANDLE msgid,uint32_t*count) {
     MSGQUEUE*q=(MSGQUEUE*)msgid;
     pthread_mutex_lock(&q->mutex);
     *count=q->msgCount;

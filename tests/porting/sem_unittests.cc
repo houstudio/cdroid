@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <gtest/gtest.h>
-#include <ngl_os.h>
+#include <dtvos.h>
 
 class OSSEM:public testing::Test{
    public :

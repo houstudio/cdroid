@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <ngl_os.h>
 #include <fstream>
 
 static const char*texts[]={"Creates 中国智造"," the specified format and dimensions.",

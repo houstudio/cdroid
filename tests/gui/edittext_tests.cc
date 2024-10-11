@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <ngl_os.h>
-#include <ngl_timer.h>
 #include <core/textutils.h>
 
 class EDITTEXT:public testing::Test{

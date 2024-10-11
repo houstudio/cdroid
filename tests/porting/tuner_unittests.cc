@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
-#include<gtest/internal/gtest-port.h>
-#include <ngl_os.h>
-#include <ngl_tuner.h>
-#include <ngl_dmx.h>
+#include `<gtest/internal/gtest-port.h>
+#include <dtvos.h>
+#include <dtvtuner.h>
+#include <dtvdmx.h>
 #include <tvtestutils.h>
 
 static void TunningCBK(INT tuneridx,INT lockedState,void*param){

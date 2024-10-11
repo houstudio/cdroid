@@ -5,10 +5,10 @@
 BEGIN_DECLS
 
 HANDLE nglMsgQCreate(int howmany, int sizepermag);
-DWORD nglMsgQDestroy(HANDLE msgq);
-DWORD nglMsgQSend(HANDLE msgq, const void* pvmag, int msgsize, DWORD timeout);
-DWORD nglMsgQReceive(HANDLE msgq,void* pvmag, DWORD msgsize, DWORD timeout);
-DWORD nglMsgQGetCount(HANDLE msgq,UINT*count);
+int32_t nglMsgQDestroy(HANDLE msgq);
+int32_t nglMsgQSend(HANDLE msgq, const void* pvmag, uint32_t msgsize, uint32_t timeout);
+int32_t nglMsgQReceive(HANDLE msgq,void* pvmag, uint32_t msgsize, uint32_t timeout);
+int32_t nglMsgQGetCount(HANDLE msgq,uint32_t*count);
 END_DECLS
 
 #endif

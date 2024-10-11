@@ -2,7 +2,6 @@
 #include <cdroid.h>
 #include <core/systemclock.h>
 #include <image-decoders/imagedecoder.h>
-#include <ngl_os.h>
 
 using namespace cdroid;
 using namespace Cairo;

@@ -2,8 +2,6 @@
 #include <cdroid.h>
 #include <widget/gridview.h>
 #include <widget/listview.h>
-#include <ngl_os.h>
-#include<ngl_timer.h>
 
 class LISTVIEW:public testing::Test{
 

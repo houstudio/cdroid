@@ -1,4 +1,4 @@
-#include <ngl_timer.h>
+#include <dtvtimer.h>
 #include <time.h>
 #include <sys/time.h>
 #include <cdlog.h>
@@ -22,7 +22,7 @@ void nglGetTime(NGL_TIME *pTime) {
     return;
 }
 
-DWORD nglSetTime(NGL_TIME*ptime) {
+int32_t nglSetTime(NGL_TIME*ptime) {
     struct timeval tv;
     NGL_TM tm;
     int rc;

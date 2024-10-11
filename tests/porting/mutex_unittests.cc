@@ -2,7 +2,7 @@
 #include <sys/time.h>
 #include <gtest/gtest.h>
 extern "C"{
-#include <ngl_os.h>
+#include <dtvos.h>
 }
 
 class OSMUTEX:public testing::Test{

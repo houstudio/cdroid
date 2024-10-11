@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
-#include <ngl_os.h>
+#include <dtvos.h>
 
 class OSMEM:public testing::Test{
    public :

@@ -20,10 +20,10 @@ public:
         int mPitch,mFormat;
         uint8_t*mBuffer;
         GFXInit();
-        GFXGetDisplaySize(0,(UINT*)&mScreenWidth,(UINT*)&mScreenHeight);
+        GFXGetDisplaySize(0,(uint32_t*)&mScreenWidth,(uint32_t*)&mScreenHeight);
         GFXCreateSurface(0,&mPrimarySurface,mScreenWidth,mScreenHeight,mFormat,1);
         GFXCreateSurface(0,&mDrawSurface,mScreenWidth,mScreenHeight,mFormat,0);
-        GFXLockSurface(mDrawSurface,(void**)&mBuffer,(UINT*)&mPitch);
+        GFXLockSurface(mDrawSurface,(void**)&mBuffer,(uint32_t*)&mPitch);
         auto surface=Cairo::ImageSurface::create(mBuffer,Cairo::Surface::Format::ARGB32,mScreenWidth,mScreenHeight,mPitch);
         printf("mPrimarySurface=%p@%p size=%dx%dx%d\r\n",mPrimarySurface,&mBuffer,mScreenWidth,mScreenHeight,mPitch);
 
@@ -431,11 +431,11 @@ TEST_F(DRAWABLE,inflateshape){
       <gradient cdroid:angle=\"180\"  cdroid:centerX=\"0.5\" cdroid:centerY=\"0.5\" cdroid:startColor=\"#ffff0000\"\
         cdroid:centerColor=\"#ff00ff00\"  cdroid:endColor=\"#ff0000ff\"  cdroid:gradientRadius=\"200dp\" \
         cdroid:type=\"radial\"/></shape>";
-    LONGLONG t1=SystemClock::uptimeMillis();
+    int64_t t1=SystemClock::uptimeMillis();
     std::istringstream is(text);
     Drawable*d=Drawable::fromStream(nullptr,is);
     d->setBounds(100,100,400,400);
-    LONGLONG t2=SystemClock::uptimeMillis();
+    int64_t t2=SystemClock::uptimeMillis();
     d->draw(*ctx);
     ASSERT_NE((void*)nullptr,dynamic_cast<ShapeDrawable*>(d));
     printf("Usedtime=%lld\r\n",t2-t1);
@@ -447,11 +447,11 @@ TEST_F(DRAWABLE,inflateclip){
       <gradient cdroid:angle=\"180\"  cdroid:centerX=\"0.5\" cdroid:centerY=\"0.5\" cdroid:startColor=\"#ffff0000\"\
         cdroid:centerColor=\"#ff00ff00\"  cdroid:endColor=\"#ff0000ff\"  cdroid:gradientRadius=\"200dp\" \
         cdroid:type=\"radial\"/></shape></clip>";
-    LONGLONG t1=SystemClock::uptimeMillis();
+    int64_t t1=SystemClock::uptimeMillis();
     std::istringstream is(text);
     Drawable*d=Drawable::fromStream(nullptr,is);
     d->setBounds(100,100,400,400);
-    LONGLONG t2=SystemClock::uptimeMillis();
+    int64_t t2=SystemClock::uptimeMillis();
     for(int i=0;i<10000;i+=100){
 	ctx->set_source_rgb(0,0,0);
 	ctx->rectangle(0,0,800,600);
@@ -477,7 +477,7 @@ TEST_F(DRAWABLE,inflatelayer){
    std::istringstream is(text);
    Drawable*d=Drawable::fromStream(nullptr,is);
    d->setBounds(100,100,400,400);
-   LONGLONG t2=SystemClock::uptimeMillis();
+   int64_t t2=SystemClock::uptimeMillis();
    LayerDrawable*ld=dynamic_cast<LayerDrawable*>(d);
    ASSERT_NE((void*)nullptr,ld);
    ASSERT_NE((void*)nullptr,ld->findDrawableByLayerId(123));

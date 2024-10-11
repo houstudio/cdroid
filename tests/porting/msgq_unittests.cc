@@ -2,8 +2,8 @@
 #include <sys/time.h>
 #include <gtest/gtest.h>
 extern "C"{
-#include <ngl_os.h>
-#include <ngl_msgq.h>
+#include <dtvos.h>
+#include <dtvmsgq.h>
 }
 
 class OSMSGQ:public testing::Test{
@@ -23,7 +23,7 @@ typedef struct{
    HANDLE q;
    int snd_delay;
    int rcv_delay;
-   DWORD*msgs;
+   uint32_t*msgs;
 }TESTQUEUE;
 
 #ifdef ENABLE_DTV
@@ -105,22 +105,22 @@ TEST_F(OSMSGQ,Send_Recv_1){
 }
 static void SendProc(void*p){
    TESTQUEUE*dt=(TESTQUEUE*)p;
-   DWORD msg;
-   DWORD *msgs=dt->msgs;
+   uint32_t msg;
+   uint32_t *msgs=dt->msgs;
    int i=0;
    while(msgs[i]){
-       ASSERT_EQ(0,nglMsgQSend(dt->q,&msgs[i],sizeof(DWORD),1000));
+       ASSERT_EQ(0,nglMsgQSend(dt->q,&msgs[i],sizeof(uint32_t),1000));
        i++;
        usleep(dt->snd_delay);
    }
 }
 static void RecvProc(void*p){
    TESTQUEUE*dt=(TESTQUEUE*)p;
-   DWORD msg;
-   DWORD *msgs=dt->msgs;
+   uint32_t msg;
+   uint32_t *msgs=dt->msgs;
    int i=0;
    while(msgs[i]){
-      ASSERT_EQ(0,nglMsgQReceive(dt->q,&msg,sizeof(DWORD),1000));
+      ASSERT_EQ(0,nglMsgQReceive(dt->q,&msg,sizeof(uint32_t),1000));
       ASSERT_EQ(msg,msgs[i]);
       i++;
       usleep(dt->rcv_delay);
@@ -129,10 +129,10 @@ static void RecvProc(void*p){
 
 TEST_F(OSMSGQ,Send_Recv_2){//slow recv & fast send
    void* tid_snd,*tid_rcv;
-   DWORD msgs[]={100,200,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,0};
+   uint32_t msgs[]={100,200,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,0};
    TESTQUEUE dt;
    dt.msgs=msgs;
-   dt.q=nglMsgQCreate(6,sizeof(DWORD));
+   dt.q=nglMsgQCreate(6,sizeof(uint32_t));
    dt.rcv_delay=200;dt.snd_delay=100;
    nglCreateThread(&tid_snd,0,0,SendProc,(void*)&dt);
    nglCreateThread(&tid_rcv,0,0,RecvProc,(void*)&dt);
@@ -142,8 +142,8 @@ TEST_F(OSMSGQ,Send_Recv_2){//slow recv & fast send
 TEST_F(OSMSGQ,Send_Recv_3){//fast recv & slow send
    void* tid_snd,*tid_rcv;
    TESTQUEUE dt;
-   DWORD i,msgs[]={200,100,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,0};
-   dt.q=nglMsgQCreate(6,sizeof(DWORD));
+   uint32_t i,msgs[]={200,100,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,0};
+   dt.q=nglMsgQCreate(6,sizeof(uint32_t));
    dt.msgs=msgs;
    dt.rcv_delay=100;dt.snd_delay=200;
    

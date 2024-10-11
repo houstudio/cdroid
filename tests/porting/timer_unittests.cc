@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <ngl_timer.h>
+#include <dtvtimer.h>
 #include <time.h>
 
 class TIMER:public testing::Test{

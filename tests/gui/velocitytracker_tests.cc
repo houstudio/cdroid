@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <ngl_os.h>
 #include <view/velocitytracker.h>
 using namespace cdroid;
 

@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <ngl_os.h>
-#include <ngl_timer.h>
 #include <widget/edgeeffect.h>
 
 class EDGEEFFECT:public testing::Test{

@@ -28,8 +28,8 @@ TEST_F(MUTATE,color){
     ASSERT_EQ(d1->getColor(),0xFFFFFFFF);
     d2->mutate();
     d2->setColor(0x00FF0000);
-    ASSERT_EQ((UINT)d1->getColor(),0xFFFFFFFF);
-    ASSERT_EQ((UINT)d2->getColor(),0x00FF0000);
+    ASSERT_EQ((uint32_t)d1->getColor(),0xFFFFFFFF);
+    ASSERT_EQ((uint32_t)d2->getColor(),0x00FF0000);
     ASSERT_NE(d1->getColor(),d2->getColor());
 }
 

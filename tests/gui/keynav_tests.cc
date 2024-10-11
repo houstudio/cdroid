@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <vector>
 #include <list>
-#include <ngl_os.h>
 #include <cdroid.h>
 
 class KEYNAV:public testing::Test{
