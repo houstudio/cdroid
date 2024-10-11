@@ -28,8 +28,6 @@
 #include<fstream>
 #include<vector>
 //#include<cdlog.h>
-#include<ngl_msgq.h>
-#include<ngl_timer.h>
 #include<string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
