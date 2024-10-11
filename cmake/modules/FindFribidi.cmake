@@ -5,6 +5,7 @@ find_path(FRIBIDI_INCLUDE_DIRS
     NAMES fribidi.h
     HINTS ${PC_FRIBIDI_INCLUDEDIR}
     ${PC_FRIBIDI_INCLUDE_DIRS}
+    PATH_SUFFIXES fribidi
 )
 
 find_library(FRIBIDI_LIBRARIES
