@@ -179,7 +179,7 @@ long AnimationSet::getDuration()const{
 
 long AnimationSet::computeDurationHint(){
     long duration = 0;
-    int count = mAnimations.size();
+    int count = (int)mAnimations.size();
     for (int i = count - 1; i >= 0; --i) {
         long d = mAnimations[i]->computeDurationHint();
         if (d > duration) duration = d;
@@ -190,10 +190,10 @@ long AnimationSet::computeDurationHint(){
 void AnimationSet::initializeInvalidateRegion(int left, int top, int right, int bottom){
     Rect& region = mPreviousRegion;
     region.set(left, top, right, bottom);
-    region.inset(-1.0f, -1.0f);
+    region.inset(-1, -1);
 
     if (mFillBefore) {
-        const int count = mAnimations.size();
+        const int count = (int)mAnimations.size();
         Transformation temp;
 
         Transformation& previousTransformation = mPreviousTransformation;
@@ -211,7 +211,7 @@ void AnimationSet::initializeInvalidateRegion(int left, int top, int right, int 
 }
 
 bool AnimationSet::getTransformation(long currentTime, Transformation& t){
-    const int count = mAnimations.size();
+    const int count = (int)mAnimations.size();
     Transformation temp;
 
     bool more = false;

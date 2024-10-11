@@ -388,7 +388,7 @@ int  RippleDrawable::getMaskType(){
 void RippleDrawable::drawContent(Canvas& canvas) {
     // Draw everything except the mask.
     std::vector<ChildDrawable*> &array = mLayerState->mChildren;
-    const int count = mLayerState->mChildren.size();
+    const int count = (int)mLayerState->mChildren.size();
     for (int i = 0; i < count; i++) {
         if (array[i]->mId != cdroid::R::id::mask) {
             array[i]->mDrawable->draw(canvas);
@@ -403,8 +403,8 @@ void RippleDrawable::drawBackgroundAndRipples(Canvas& canvas) {
         return;
     }
 
-    const float x = mHotspotBounds.centerX();
-    const float y = mHotspotBounds.centerY();
+    const float x = (float)mHotspotBounds.centerX();
+    const float y = (float)mHotspotBounds.centerY();
     canvas.translate(x, y);
     int color=mState->mColor->getColorForState(getState(),0xFF888888);
     canvas.set_color(color);
@@ -413,7 +413,7 @@ void RippleDrawable::drawBackgroundAndRipples(Canvas& canvas) {
         mBackground->draw(canvas, 1.f);
     }
     for (auto ripple:mExitingRipples) {
-        const int alpha = 0x80 * ripple->getOpacity();
+        const int alpha = int(ripple->getOpacity()*0x80);
         color = (color&0x00FFFFFF) | (alpha<<24);
         canvas.set_color(color);
         ripple->draw(canvas,1.f);
@@ -574,7 +574,7 @@ Rect RippleDrawable::getDirtyBounds() {
         Rect rippleBounds;
 
         std::vector<RippleForeground*>& activeRipples = mExitingRipples;
-        const int N = mExitingRipples.size();
+        const int N = (int)mExitingRipples.size();
         for (int i = 0; i < N; i++) {
             activeRipples[i]->getBounds(rippleBounds);
             rippleBounds.offset(cX, cY);

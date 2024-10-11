@@ -1,5 +1,6 @@
 #include<view/keyevent.h>
 #include <private/inputeventlabels.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 
 KeyEvent* KeyEvent::obtain(){

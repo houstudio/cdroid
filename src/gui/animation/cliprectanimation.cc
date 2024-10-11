@@ -28,15 +28,15 @@ ClipRectAnimation::ClipRectAnimation(Context* context, const AttributeSet& attrs
 
 ClipRectAnimation::ClipRectAnimation(const Rect& fromClip,const Rect& toClip)
 :Animation(){
-    mFromLeftValue = fromClip.left;
-    mFromTopValue = fromClip.top;
-    mFromRightValue= fromClip.right();
-    mFromBottomValue = fromClip.bottom();
+    mFromLeftValue = (float)fromClip.left;
+    mFromTopValue = (float)fromClip.top;
+    mFromRightValue= (float)fromClip.right();
+    mFromBottomValue = (float)fromClip.bottom();
 
-    mToLeftValue = toClip.left;
-    mToTopValue = toClip.top;
-    mToRightValue= toClip.right();
-    mToBottomValue = toClip.bottom();    
+    mToLeftValue = (float)toClip.left;
+    mToTopValue = (float)toClip.top;
+    mToRightValue= (float)toClip.right();
+    mToBottomValue = (float)toClip.bottom();    
 }
 
 ClipRectAnimation::ClipRectAnimation(int fromL, int fromT, int fromR, int fromB,

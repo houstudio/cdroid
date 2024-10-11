@@ -10,7 +10,7 @@
 namespace cdroid{
 
 #if defined(_MSC_VER)  // MSVC
-#define ALIGN_ATTRIBUTE(n) __declspec(align(n))
+#define ALIGN_ATTRIBUTE(n) //__declspec(align(n))
 #elif defined(__GNUC__) || defined(__clang__)  // GCC或Clang
 #define ALIGN_ATTRIBUTE(n) __attribute__((aligned(n)))
 #else
@@ -177,7 +177,7 @@ public:
     };
 private:
     static constexpr float INVALID_CURSOR_POSITION = NAN;//std::numeric_limits<float>::quiet_NaN();
-    static constexpr int HISTORY_CURRENT = -0x80000000;
+    static constexpr int HISTORY_CURRENT = 0x80000000;
     static MotionEvent*obtain();
     static void ensureSharedTempPointerCapacity(int desiredCapacity);
 protected:

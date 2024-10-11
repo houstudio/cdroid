@@ -105,8 +105,8 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
                 const char* p = strpbrk(value.c_str(),"sdp");
                 if(p){
                     const DisplayMetrics& dm = getDisplayMetrics();
-                    if(strncmp(p,"sp",2)==0) v = (dm.scaledDensity * v /*+0.5f*/);
-                    else if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)v=(dm.density * v /*+0.5f*/);
+                    if(strncmp(p,"sp",2)==0) v = int(dm.scaledDensity * v /*+0.5f*/);
+                    else if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)v =int(dm.density * v /*+0.5f*/);
                 }
                 mDimensions.insert({package+":dimen/"+name,v});
             }else if(itc!=mDimensions.end()){
@@ -356,7 +356,7 @@ const std::string Assets::getString(const std::string& resid,const std::string&l
     return str;
 }
 
-int Assets::getArray(const std::string&resid,std::vector<int>&out) {
+size_t Assets::getArray(const std::string&resid,std::vector<int>&out) {
     std::string pkg,name = resid;
     std::string fullname = parseResource(resid,&name,&pkg);
     auto it = mArraies.find(fullname);
@@ -368,7 +368,7 @@ int Assets::getArray(const std::string&resid,std::vector<int>&out) {
     return  0;
 }
 
-int Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
+size_t Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
     std::string pkg,name = resid;
     std::string fullname = parseResource(resid,&name,&pkg);
     auto it = mArraies.find(fullname);
@@ -586,7 +586,7 @@ static void endElement(void *userData, const XML_Char *name) {
 
 int Assets::loadKeyValues(const std::string&fullresid,void*pending,std::function<void(const std::vector<std::string>&,
                           const std::vector<AttributeSet>&atts,const std::string&,void*p)>func) {
-    int len = 0;
+    size_t len = 0;
     char buf[256];
 
     std::unique_ptr<std::istream>stream = getInputStream(fullresid);

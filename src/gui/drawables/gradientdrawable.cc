@@ -126,10 +126,10 @@ void GradientDrawable::GradientState::applyDensityScaling(int sourceDensity, int
     }
     if (mRadius > 0)    mRadius = Drawable::scaleFromDensity(mRadius, sourceDensity, targetDensity);
     if (mRadiusArray.size()) {
-        mRadiusArray[0] = Drawable::scaleFromDensity((int) mRadiusArray[0], sourceDensity, targetDensity, true);
-        mRadiusArray[1] = Drawable::scaleFromDensity((int) mRadiusArray[1], sourceDensity, targetDensity, true);
-        mRadiusArray[2] = Drawable::scaleFromDensity((int) mRadiusArray[2], sourceDensity, targetDensity, true);
-        mRadiusArray[3] = Drawable::scaleFromDensity((int) mRadiusArray[3], sourceDensity, targetDensity, true);
+        mRadiusArray[0] = Drawable::scaleFromDensity(static_cast<int>(mRadiusArray[0]), sourceDensity, targetDensity, true);
+        mRadiusArray[1] = Drawable::scaleFromDensity(static_cast<int>(mRadiusArray[1]), sourceDensity, targetDensity, true);
+        mRadiusArray[2] = Drawable::scaleFromDensity(static_cast<int>(mRadiusArray[2]), sourceDensity, targetDensity, true);
+        mRadiusArray[3] = Drawable::scaleFromDensity(static_cast<int>(mRadiusArray[3]), sourceDensity, targetDensity, true);
     }
     if (mStrokeWidth > 0)  mStrokeWidth = Drawable::scaleFromDensity(mStrokeWidth, sourceDensity, targetDensity, true);
     if (mStrokeDashWidth>0)mStrokeDashWidth = Drawable::scaleFromDensity(mStrokeDashGap, sourceDensity, targetDensity);
@@ -677,10 +677,10 @@ static double getRadius(const RectF& r, int x, int y) {
     PointF bottomRight = {r.left + r.width, r.top + r.height};
     PointF bottomLeft = {r.left, r.top + r.height};
 
-    double dist1 = distance(x, y, topLeft.x, topLeft.y);
-    double dist2 = distance(x, y, topRight.x, topRight.y);
-    double dist3 = distance(x, y, bottomRight.x, bottomRight.y);
-    double dist4 = distance(x, y, bottomLeft.x, bottomLeft.y);
+    double dist1 = distance(float(x), float(y), topLeft.x, topLeft.y);
+    double dist2 = distance(float(x), float(y), topRight.x, topRight.y);
+    double dist3 = distance(float(x), float(y), bottomRight.x, bottomRight.y);
+    double dist4 = distance(float(x), float(y), bottomLeft.x, bottomLeft.y);
 
     return std::max({dist1, dist2, dist3, dist4});
 }
@@ -691,7 +691,7 @@ bool GradientDrawable::ensureValidRect() {
         Rect bounds = getBounds();
         float inset = 0;
 
-        if (mStrokePaint)inset = mStrokeWidth*0.5f;
+        if (mStrokePaint)inset = static_cast<float>(mStrokeWidth*0.5f);
 
         GradientState&st =*mGradientState;
         mRect.set(bounds.left + inset, bounds.top + inset, bounds.width - 2*inset, bounds.height - 2*inset);
@@ -931,7 +931,7 @@ void GradientDrawable::draw(Canvas&canvas) {
         if(st->mRadiusArray.size())radii=st->mRadiusArray;
         if(st->mRadius > 0.0f)radii= {rad,rad,rad,rad};
         if(radii.size())drawRoundedRect(canvas,mRect,radii[0],radii[1],radii[2],radii[3]);
-        else canvas.rectangle(mRect.left,mRect.top,mRect.width,mRect.height);
+        else canvas.rectangle(int(mRect.left),int(mRect.top),int(mRect.width),int(mRect.height));
         if(mFillPaint)canvas.set_source(mFillPaint);
         if (haveStroke) {
             if(mFillPaint)canvas.fill_preserve();
@@ -969,7 +969,7 @@ void GradientDrawable::draw(Canvas&canvas) {
         break;
     case RING: {
         //inner
-        float innerRadius = st->mInnerRadius;
+        float innerRadius = float(st->mInnerRadius);
         RectF bounds= {mRect.left,mRect.top,mRect.width,mRect.height};
         float thickness = st->mThickness!=-1 ? st->mThickness:(bounds.width/st->mThicknessRatio);
         float radius = st->mInnerRadius!=-1 ? st->mInnerRadius :(bounds.width/st->mInnerRadiusRatio);

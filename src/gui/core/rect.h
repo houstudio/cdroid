@@ -1,7 +1,7 @@
 #ifndef __UIBASE_H__
 #define __UIBASE_H__
-#define    DISALLOW_COPY_AND_ASSIGN(TypeName) \
-    private: TypeName(const TypeName&);                \
+#define DISALLOW_COPY_AND_ASSIGN(TypeName) \
+    private: TypeName(const TypeName&);    \
     private: TypeName& operator=(const TypeName&)
 namespace cdroid{
 

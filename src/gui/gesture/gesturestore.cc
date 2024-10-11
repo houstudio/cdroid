@@ -4,6 +4,8 @@
 #include <gesture/instance.h>
 #include <gesture/instancelearner.h>
 #include <gesture/gesturestore.h>
+#include <porting/cdlog.h>
+#include <iostream>
 /**
  * GestureLibrary maintains gesture examples and makes predictions on a new
  * gesture

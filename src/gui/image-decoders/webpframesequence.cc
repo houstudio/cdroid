@@ -53,7 +53,7 @@ static bool FrameContainsPixel(const WebPIterator& frame, int x, int y) {
 
 // Construct mIsKeyFrame array.
 void WebPFrameSequence::constructDependencyChain() {
-    const size_t frameCount = getFrameCount();
+    const int frameCount = getFrameCount();
     mIsKeyFrame = new bool[frameCount];
     const int canvasWidth = getWidth();
     const int canvasHeight = getHeight();
@@ -64,7 +64,7 @@ void WebPFrameSequence::constructDependencyChain() {
     int ok = WebPDemuxGetFrame(mDemux, 1, &curr);
     LOGE_IF(!ok, "Could not retrieve frame# 0");
     mIsKeyFrame[0] = true;  // 0th frame is always a key frame.
-    for (size_t i = 1; i < frameCount; i++) {
+    for (int i = 1; i < frameCount; i++) {
         prev = curr;
         ok = WebPDemuxGetFrame(mDemux, i + 1, &curr);  // Get ith frame.
         LOGE_IF(!ok, "Could not retrieve frame# %d", i);
@@ -79,7 +79,7 @@ void WebPFrameSequence::constructDependencyChain() {
     }
     WebPDemuxReleaseIterator(&prev);
     WebPDemuxReleaseIterator(&curr);
-    for(size_t i=0;i<frameCount;i++){
+    for(int i=0;i<frameCount;i++){
         LOGV("Frame# %zu: %s", i, mIsKeyFrame[i] ? "Key frame" : "NOT a key frame");
     }
 }

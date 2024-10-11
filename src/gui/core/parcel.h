@@ -1,5 +1,6 @@
 #ifndef __PARCEL_H__
 #define __PARCEL_H__
+#include <stdint.h>
 namespace cdroid{
 class Parcelable;
 class Parcel{

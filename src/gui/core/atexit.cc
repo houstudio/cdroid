@@ -2,6 +2,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <memory>
+#include <porting/cdlog.h>
 #include <core/atexit.h>
 namespace cdroid {
 

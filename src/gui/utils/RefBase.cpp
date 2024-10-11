@@ -397,7 +397,7 @@ void RefBase::incStrong(const void* id) const{
         return;
     }
 
-    int32_t old __unused = refs->mStrong.fetch_sub(INITIAL_STRONG_VALUE, std::memory_order_relaxed);
+    int32_t old = refs->mStrong.fetch_sub(INITIAL_STRONG_VALUE, std::memory_order_relaxed);
     // A decStrong() must still happen after us.
     LOGE_IF(old > INITIAL_STRONG_VALUE, "0x%x too small", old);
     refs->mBase->onFirstRef();
@@ -469,7 +469,7 @@ RefBase* RefBase::weakref_type::refBase() const{
 void RefBase::weakref_type::incWeak(const void* id){
     weakref_impl* const impl = static_cast<weakref_impl*>(this);
     impl->addWeakRef(id);
-    const int32_t c __unused = impl->mWeak.fetch_add(1,
+    const int32_t c = impl->mWeak.fetch_add(1,
             std::memory_order_relaxed);
     LOGE_IF(c >= 0, "incWeak called on %p after last weak ref", this);
 }

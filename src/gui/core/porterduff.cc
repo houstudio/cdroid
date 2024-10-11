@@ -1,6 +1,6 @@
 #include <core/canvas.h>
 #include <core/porterduff.h>
-
+#include <porting/cdlog.h>
 namespace cdroid{
 
 PorterDuff::Mode PorterDuff::intToMode(int val) {

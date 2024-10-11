@@ -11,19 +11,13 @@
 #define __builtin_clzll(x) uint32_t(__lzcnt64(x))
 #define __builtin_ctz __builtin_ctzl
 inline int __builtin_ctzl(uint32_t x) {
-    if (x == 0) {
-        return 32;
-    }
-
-    unsigned int index;
+    if (x == 0) return 32;
+    unsigned long  index;
     _BitScanForward(&index, x);
     return static_cast<int>(index);
 }
 inline int __builtin_ctzll(uint64_t x) {
-    if (x == 0) {
-        return 64;
-    }
-
+    if (x == 0) return 64;
     unsigned long index;
     _BitScanForward64(&index, x);
     return static_cast<int>(index);

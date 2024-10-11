@@ -12,7 +12,7 @@ private:
     std::vector<T>mValues;
 public:
     SparseArrayImpl(){}
-    int size()const{
+    size_t size()const{
         return mKeys.size();
     }
     void clear(){

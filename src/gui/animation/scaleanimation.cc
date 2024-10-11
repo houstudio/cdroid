@@ -66,10 +66,10 @@ ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY, f
 ScaleAnimation::ScaleAnimation(float fromX, float toX, float fromY, float toY,
             int pivotXType, float pivotXValue, int pivotYType, float pivotYValue) {
     //mResources = null;
-    mFromX = (fromX==0.f)?0.0001:fromX;
-    mToX   = (toX==0.f)?0.0001:toX;
-    mFromY = (fromY==0.f)?0.0001:fromY;
-    mToY   = (toY==0.f)?0.0001:toY;
+    mFromX = (fromX==0.f)?0.0001f:fromX;
+    mToX   = (toX==0.f)?0.0001f:toX;
+    mFromY = (fromY==0.f)?0.0001f:fromY;
+    mToY   = (toY==0.f)?0.0001f:toY;
 
     mPivotXValue = pivotXValue;
     mPivotXType  = pivotXType;

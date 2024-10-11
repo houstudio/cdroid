@@ -196,8 +196,8 @@ void RippleForeground::draw(Canvas&canvas,float alpha){
 }
 
 void RippleForeground::clampStartingPosition(){
-    float cX = mBounds.centerX();
-    float cY = mBounds.centerY();
+    float cX = (float)mBounds.centerX();
+    float cY = (float)mBounds.centerY();
     float dX = mStartingX - cX;
     float dY = mStartingY - cY;
     float r = mTargetRadius - mStartRadius;

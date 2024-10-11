@@ -54,8 +54,8 @@ public:
     Drawable * getDrawable(const std::string&resid)override;
     int getColor(const std::string&resid)override;
     int getDimension(const std::string&resid)override;
-    int getArray(const std::string&resid,std::vector<int>&)override;
-    int getArray(const std::string&resid,std::vector<std::string>&)override;
+    size_t getArray(const std::string&resid,std::vector<int>&)override;
+    size_t getArray(const std::string&resid,std::vector<std::string>&)override;
     ColorStateList* getColorStateList(const std::string&resid)override;
     AttributeSet obtainStyledAttributes(const std::string&)override;
 };

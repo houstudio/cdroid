@@ -39,7 +39,7 @@ std::streambuf::int_type ZipStreamBuf::underflow() {//Unbuffered get
         return traits_type::to_int_type(*gptr());
     }
 
-    int n = zip_fread((zip_file_t*)zipfile, buffer, BUFFER_SIZE);
+    zip_int64_t n = zip_fread((zip_file_t*)zipfile, buffer, BUFFER_SIZE);
     if (n <= 0) {
         setg(buffer,buffer,buffer);
         return traits_type::eof();

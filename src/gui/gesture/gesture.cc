@@ -1,6 +1,8 @@
 #include <gesture/gesture.h>
 #include <gesture/gesturestore.h>
 #include <gesture/gesturestroke.h>
+#include <porting/cdlog.h>
+
 namespace cdroid{
 std::atomic<int>Gesture::sGestureCount(0);
 
@@ -19,7 +21,7 @@ Gesture* Gesture::clone() {
     Gesture* gesture = new Gesture();
     gesture->mBoundingBox.set(mBoundingBox.left, mBoundingBox.top,
                                     mBoundingBox.width, mBoundingBox.height);
-    const int count = mStrokes.size();
+    const int count = (int)mStrokes.size();
     for (int i = 0; i < count; i++) {
         GestureStroke* stroke = mStrokes.at(i);
         LOGD("TODO");//gesture->mStrokes.push_back((GestureStroke*)stroke->clone());
@@ -38,7 +40,7 @@ const std::vector<GestureStroke*>& Gesture::getStrokes() const{
  * @return the number of strokes included by this gesture
  */
 int Gesture::getStrokesCount()const {
-    return mStrokes.size();
+    return (int)mStrokes.size();
 }
 
 /**
@@ -87,7 +89,7 @@ cdroid::Path* Gesture::toPath(Path* path) {
     if (path == nullptr) path = new Path();
 
     const std::vector<GestureStroke*> strokes = mStrokes;
-    const int count = strokes.size();
+    const int count = (int)strokes.size();
 
     LOGD("TODO");
     for (int i = 0; i < count; i++) {
@@ -105,7 +107,7 @@ cdroid::Path* Gesture::toPath(Path* path, int width, int height, int edge, int n
     if (path == nullptr) path = new cdroid::Path();
 
     const std::vector<GestureStroke*>& strokes = mStrokes;
-    const int count = strokes.size();
+    const int count = (int)strokes.size();
     LOGD("TODO");
     for (int i = 0; i < count; i++) {
         //path->addPath(strokes.at(i)->toPath(width - 2 * edge, height - 2 * edge, numSample));
@@ -198,7 +200,7 @@ Bitmap Gesture::toBitmap(int width, int height, int inset, int color) {
 
 void Gesture::serialize(std::ostream& out){
     const std::vector<GestureStroke*>& strokes = mStrokes;
-    const int count = strokes.size();
+    const int count = (int)strokes.size();
 
     // Write gesture ID
     GestureIOHelper::writeLong(out,mGestureID);

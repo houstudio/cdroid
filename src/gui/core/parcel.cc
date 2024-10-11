@@ -1,3 +1,5 @@
+#include <vector>
+#include <string>
 #include <core/parcel.h>
 namespace cdroid{
 

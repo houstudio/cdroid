@@ -4,6 +4,7 @@
 #include <cdlog.h>
 #include <animation/valueanimator.h>
 #include <animation/animationutils.h>
+#include <cmath>
 
 namespace cdroid{
 

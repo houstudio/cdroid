@@ -1,5 +1,6 @@
 #ifndef __CDROID_BUILD_H__
 #define __CDROID_BUILD_H__
+#include <string>
 namespace cdroid{
 
 class BUILD{

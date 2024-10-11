@@ -2,6 +2,8 @@
 #include <gesture/gesture.h>
 #include <gesture/gestureutils.h>
 #include <gesture/gesturestore.h>
+#define _USE_MATH_DEFINES
+#include <cmath>
 namespace cdroid{
 
 Instance::Instance(long id,const std::vector<float>& sample, const std::string& sampleName)
@@ -12,7 +14,7 @@ void Instance::normalize() {
     std::vector<float>& sample = vector;
     float sum = 0;
 
-    const int size = sample.size();
+    const int size = (int)sample.size();
     for (int i = 0; i < size; i++) {
         sum += sample[i] * sample[i];
     }

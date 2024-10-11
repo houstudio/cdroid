@@ -53,7 +53,7 @@ void AnimatorSet::playSequentially(const std::vector<Animator*>&items){
 
 std::vector<Animator*> AnimatorSet::getChildAnimations()const{
     std::vector<Animator*> childList;
-    int size = mNodes.size();
+    int size = (int)mNodes.size();
     for (int i = 0; i < size; i++) {
         Node* node = mNodes.at(i);
         if (node != mRootNode) {
@@ -118,7 +118,7 @@ void AnimatorSet::forceToEnd() {
             // Use a large number for the play time.
             zeroScalePlayTime = INT_MAX;//Integer.MAX_VALUE;
         }
-        handleAnimationEvents(mLastEventId, mEvents.size() - 1, zeroScalePlayTime);
+        handleAnimationEvents(mLastEventId, int(mEvents.size() - 1), zeroScalePlayTime);
     }
     mPlayingSet.clear();
     endAnimation();
@@ -132,7 +132,7 @@ void AnimatorSet::end() {
         // Iterate the animations that haven't finished or haven't started, and end them.
         if (mReversing) {
             // Between start() and first frame, mLastEventId would be unset (i.e. -1)
-            mLastEventId = mLastEventId == -1 ? mEvents.size() : mLastEventId;
+            mLastEventId = (mLastEventId == -1 )? int(mEvents.size()) : mLastEventId;
             while (mLastEventId > 0) {
                 mLastEventId = mLastEventId - 1;
                 AnimationEvent* event = mEvents.at(mLastEventId);
@@ -361,7 +361,7 @@ void AnimatorSet::skipToEndValue(bool inReverse) {
     // run, such that the sequential animations modifying the same property would have
     // the right value in the end.
     if (inReverse) {
-        for (int i = mEvents.size() - 1; i >= 0; i--) {
+        for (int i = int(mEvents.size() - 1); i >= 0; i--) {
             if (mEvents.at(i)->mEvent == AnimationEvent::ANIMATION_DELAY_ENDED) {
                 mEvents.at(i)->mNode->mAnimation->skipToEndValue(true);
             }
@@ -559,7 +559,7 @@ bool AnimatorSet::doAnimationFrame(long frameTime){
     }
 
     // Remove all the finished anims
-    for (int i = mPlayingSet.size() - 1; i >= 0; i--) {
+    for (size_t i = mPlayingSet.size() - 1; i >= 0; i--) {
         if (mPlayingSet.at(i)->mEnded) {
             //mPlayingSet.remove(i);
         }
@@ -595,7 +595,7 @@ bool AnimatorSet::pulseAnimationFrame(long frameTime) {
 
 void AnimatorSet::handleAnimationEvents(int startId, int latestId, long playTime) {
     if (mReversing) {
-        startId = startId == -1 ? mEvents.size() : startId;
+        startId = startId == -1 ? int(mEvents.size()) : startId;
         for (int i = startId - 1; i >= latestId; i--) {
             AnimationEvent* event = mEvents.at(i);
             Node* node = event->mNode;
@@ -683,7 +683,7 @@ void AnimatorSet::startAnimation() {
             skipToEndValue(!mReversing);
         } else {
             // If not all children are initialized and play direction is forward
-            for (int i = mEvents.size() - 1; i >= 0; i--) {
+            for (size_t i = mEvents.size() - 1; i >= 0; i--) {
                 if (mEvents.at(i)->mEvent == AnimationEvent::ANIMATION_DELAY_ENDED) {
                     Animator* anim = mEvents.at(i)->mNode->mAnimation;
                     // Only reset the animations that have been initialized to start value,
@@ -709,7 +709,7 @@ void AnimatorSet::startAnimation() {
         }
         int toId = findLatestEventIdForTime(playTime);
         handleAnimationEvents(-1, toId, playTime);
-        for (int i = mPlayingSet.size() - 1; i >= 0; i--) {
+        for (int i = int(mPlayingSet.size() - 1); i >= 0; i--) {
             if (mPlayingSet.at(i)->mEnded) {
                 //mPlayingSet.remove(i);
             }
@@ -731,7 +731,7 @@ void AnimatorSet::removeDummyListener() {
 }
 
 int AnimatorSet::findLatestEventIdForTime(long currentPlayTime) {
-    int size = mEvents.size();
+    const int size = (int)mEvents.size();
     int latestId = mLastEventId;
     // Call start on the first animations now to be consistent with the old behavior
     if (mReversing) {

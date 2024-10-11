@@ -8,7 +8,7 @@ class TransitionDrawable:public LayerDrawable{
 private:
     int  mTransitionState;
     bool mReverse;
-    long mStartTimeMillis;
+    int64_t mStartTimeMillis;
     int  mFrom;
     int  mTo;
     int  mDuration;

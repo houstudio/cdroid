@@ -2,9 +2,11 @@
 #include <gesture/gesturestore.h>
 #include <gesture/gestureutils.h>
 #include <gesture/gesturestroke.h>
+#include <porting/cdlog.h>
+
 namespace cdroid{
 GestureStroke::GestureStroke(const std::vector<GesturePoint>& points) {
-    const int count = points.size();
+    const int count = (int)points.size();
     std::vector<float> tmpPoints(count * 2);
     std::vector<long> times(count);
 
@@ -67,7 +69,7 @@ void GestureStroke::draw(Canvas& canvas) {
     }
     canvas.drawPath(mCachedPath);*/
     std::vector<float>& localPoints = points;
-    const int count = localPoints.size();
+    const int count = (int)localPoints.size();
 
     float mX = 0, mY = 0;
     for (int i = 0; i < count; i += 2) {
@@ -97,7 +99,7 @@ cdroid::Path GestureStroke::getPath() {
 
 void GestureStroke::makePath() {
     std::vector<float>& localPoints = points;
-    const int count = localPoints.size();
+    const int count = (int)localPoints.size();
 
     Path path;
 
@@ -147,7 +149,7 @@ cdroid::Path* GestureStroke::toPath(float width, float height, int numSample) {
 
     Path* path=nullptr;
 
-    const int count = pts.size();
+    const int count = (int)pts.size();
 
     for (int i = 0; i < count; i += 2) {
         float x = pts[i];
@@ -174,7 +176,7 @@ cdroid::Path* GestureStroke::toPath(float width, float height, int numSample) {
 void GestureStroke::serialize(std::ostream& out){
     //final float[] pts = points;
     //final long[] times = timestamps;
-    const int count = points.size();
+    const int count = (int)points.size();
 
     // Write number of points
     GestureIOHelper::writeInt(out,count / 2);

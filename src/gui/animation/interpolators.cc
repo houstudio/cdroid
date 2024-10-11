@@ -18,8 +18,8 @@ AccelerateInterpolator::AccelerateInterpolator(Context*ctx,const AttributeSet&at
 }
 
 AccelerateInterpolator::AccelerateInterpolator(double f){
-    mFactor=f;
-    mDoubleFactor=f*2;
+    mFactor=float(f);
+    mDoubleFactor=float(f*2);
 }
 
 float AccelerateInterpolator::getInterpolation(float input){

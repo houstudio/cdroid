@@ -18,8 +18,8 @@ void StateListAnimator::addState(const std::vector<int>&specs, ValueAnimator* an
 
 void StateListAnimator::setState(const std::vector<int>&state){
     Tuple* match = nullptr;
-    const int count = mTuples.size();
-    for (int i = 0; i < count; i++) {
+    const size_t count = mTuples.size();
+    for (size_t i = 0; i < count; i++) {
         Tuple& tuple = mTuples.at(i);
         if (StateSet::stateSetMatches(tuple.mSpecs, state)) {
             match = &tuple;
@@ -62,8 +62,8 @@ void StateListAnimator::setTarget(View* view) {
 }
 
 void StateListAnimator::clearTarget() {
-    const int size = mTuples.size();
-    for (int i = 0; i < size; i++) {
+    const size_t size = mTuples.size();
+    for (size_t i = 0; i < size; i++) {
         mTuples.at(i).mAnimator->setTarget(nullptr);
     }
     mView = nullptr;

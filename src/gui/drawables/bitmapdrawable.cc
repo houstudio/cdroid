@@ -373,9 +373,9 @@ void BitmapDrawable::draw(Canvas&canvas){
             canvas.fill();
         } 
     }else {
-        const float sw=mBitmapWidth, sh = mBitmapHeight;
-        float dx = mBounds.left    , dy = mBounds.top;
-        float dw = mBounds.width   , dh = mBounds.height;
+        const float sw = float(mBitmapWidth), sh = float(mBitmapHeight);
+        float dx = float(mBounds.left)  , dy = float(mBounds.top);
+        float dw = float(mBounds.width) , dh = float(mBounds.height);
         const float fx = dw / sw   , fy = dh / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
 	    //SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;GOOD/FAST seems more slowly than ,BILINEAR/NEAREST

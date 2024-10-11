@@ -14,7 +14,7 @@ int AudioManager::AudioCallback(void *outputBuffer, void *inputBuffer, unsigned 
       double streamTime, /*RtAudioStreamStatus*/uint32_t status, void *userData){
     AudioManager*thiz=(AudioManager*)userData;
     float *buffer = (float*)thiz->mBuffer;
-    for(int i=0;i<nBufferFrames;i++)
+    for(uint32_t i=0;i<nBufferFrames;i++)
         buffer[i]=float(i)/nBufferFrames;
     /*将数据复制到输出缓冲区*/
     memcpy(outputBuffer, buffer, nBufferFrames * sizeof(float));
@@ -109,4 +109,3 @@ void  AudioManager::playSoundEffect(int effectType, float volume){
 }
 
 }
-

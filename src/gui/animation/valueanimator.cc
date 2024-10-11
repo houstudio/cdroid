@@ -54,7 +54,7 @@ ValueAnimator::ValueAnimator(const ValueAnimator&o){
     mInterpolator = AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
     auto& oldValues = o.mValues;
     if (oldValues.size()) {
-        const int numValues = oldValues.size();
+        const int numValues = (int)oldValues.size();
         for (int i = 0; i < numValues; ++i) {
             PropertyValuesHolder* newValuesHolder = new PropertyValuesHolder(*oldValues[i]);//.clone();
             mValues.push_back(newValuesHolder);
@@ -202,7 +202,7 @@ void ValueAnimator::setCurrentFraction(float fraction) {
     mStartTimeCommitted = true; // do not allow start time to be compensated for jank
     if (isPulsingInternal()) {
         const long seekTime = (long) (getScaledDuration() * fraction);
-        const long currentTime = SystemClock::uptimeMillis();
+        const int64_t currentTime = SystemClock::uptimeMillis();
         // Only modify the start time when the animation is running. Seek fraction will ensure
         // non-running animations skip to the correct start time.
         mStartTime = currentTime - seekTime;
@@ -478,7 +478,7 @@ bool ValueAnimator::isStarted() {
 
 void ValueAnimator::reverse() {
     if (isPulsingInternal()) {
-        long currentTime = SystemClock::uptimeMillis();
+        int64_t currentTime = SystemClock::uptimeMillis();
         long currentPlayTime = currentTime - mStartTime;
         long timeLeft = getScaledDuration() - currentPlayTime;
         mStartTime = currentTime - timeLeft;

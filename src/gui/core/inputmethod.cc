@@ -123,5 +123,4 @@ int GooglePinyin::get_spellings(std::vector<std::string>&sps){
 }
 #endif //ENABLE_PINYIN2HZ
 
-}//namespace
-
+}/*wndof namespace*/

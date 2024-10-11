@@ -18,7 +18,7 @@ public:
         const float x = GestureIOHelper::readFloat(in);
         const float y = GestureIOHelper::readFloat(in);
         // Read timestamp
-        const long timeStamp = GestureIOHelper::readLong(in);
+        const int64_t timeStamp = GestureIOHelper::readLong(in);
         return GesturePoint{x, y, timeStamp};
     }
 };

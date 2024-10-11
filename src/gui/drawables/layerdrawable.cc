@@ -409,7 +409,7 @@ LayerDrawable::ChildDrawable* LayerDrawable::createLayer(Drawable* dr){
 }
 
 int LayerDrawable::addLayer(ChildDrawable* layer){
-    const int i = mLayerState->mChildren.size();
+    const int i = (int)mLayerState->mChildren.size();
     mLayerState->mChildren.push_back(layer);
     mLayerState->invalidateCache();
     if(layer&&layer->mDrawable){
@@ -464,7 +464,7 @@ Drawable* LayerDrawable::findDrawableByLayerId(int id){
 }
 
 int LayerDrawable::getNumberOfLayers()const{
-    return mLayerState->mChildren.size();
+    return (int)mLayerState->mChildren.size();
 }
 
 bool LayerDrawable::setDrawableByLayerId(int id, Drawable* drawable){
@@ -514,7 +514,7 @@ void LayerDrawable::computeNestedPadding(Rect& padding){
     padding.set(0,0,0,0);
 
     // Add all the padding.
-    const int N = mLayerState->mChildren.size();
+    const int N = (int)mLayerState->mChildren.size();
     for (int i = 0; i < N; i++) {
         LayerDrawable::ChildDrawable*child=mLayerState->mChildren.at(i);
         refreshChildPadding(i, child);
@@ -526,7 +526,7 @@ void LayerDrawable::computeNestedPadding(Rect& padding){
 }
 
 void LayerDrawable::computeStackedPadding(Rect& padding){
-    const int N = mLayerState->mChildren.size();
+    const int N = (int)mLayerState->mChildren.size();
     padding.set(0,0,0,0);
     for (int i = 0; i < N; i++) {
         LayerDrawable::ChildDrawable*child=mLayerState->mChildren.at(i);
@@ -669,7 +669,7 @@ void LayerDrawable::setTintMode(int tintMode){
 }
 
 void LayerDrawable::ensurePadding() {
-    const int N = mLayerState->mChildren.size();
+    const size_t N = mLayerState->mChildren.size();
     if (mPaddingL.size()>N) return;
 
     mPaddingL.resize(N);
@@ -679,7 +679,7 @@ void LayerDrawable::ensurePadding() {
 }
 
 void LayerDrawable::refreshPadding() {
-    const int N = mLayerState->mChildren.size();
+    const int N = (int)mLayerState->mChildren.size();
     for (int i = 0; i < N; i++)
         refreshChildPadding(i, mLayerState->mChildren[i]);
 }
@@ -717,7 +717,7 @@ void LayerDrawable::onBoundsChange(const Rect& bounds){
 
 bool LayerDrawable::onLevelChange(int level){
     bool changed = false;
-    const int N = mLayerState->mChildren.size();
+    const int N = (int)mLayerState->mChildren.size();
     for (int i = 0; i < N; i++) {
         LayerDrawable::ChildDrawable*child=mLayerState->mChildren[i];
         Drawable* dr = child->mDrawable;
@@ -732,7 +732,7 @@ bool LayerDrawable::onLevelChange(int level){
 
 bool LayerDrawable::onStateChange(const std::vector<int>& state){
     bool changed = false;
-    const int N = mLayerState->mChildren.size();
+    const int N = (int)mLayerState->mChildren.size();
     for (int i = 0; i < N; i++) {
         LayerDrawable::ChildDrawable*child=mLayerState->mChildren[i];
         Drawable* dr = child->mDrawable;
@@ -786,7 +786,7 @@ void LayerDrawable::updateLayerBoundsInternal(const Rect& bounds){
     const bool isLayoutRtl = layoutDirection == LayoutDirection::RTL;
     const bool isPaddingNested = mLayerState->mPaddingMode == PADDING_MODE_NEST;
 
-    for (int i = 0, count = mLayerState->mChildren.size(); i < count; i++) {
+    for (size_t i = 0, count = mLayerState->mChildren.size(); i < count; i++) {
         ChildDrawable*r=mLayerState->mChildren[i];
         Drawable* d = r->mDrawable;
         if (d == nullptr)  continue;
@@ -870,8 +870,8 @@ int LayerDrawable::getIntrinsicWidth()const{
 
     const bool nest = mLayerState->mPaddingMode == PADDING_MODE_NEST;
     const bool isLayoutRtl = getLayoutDirection() == LayoutDirection::RTL;
-    const int N = mLayerState->mChildren.size();
-    for (int i = 0; i < N; i++) {
+    const size_t N = mLayerState->mChildren.size();
+    for (size_t i = 0; i < N; i++) {
         ChildDrawable* r = mLayerState->mChildren.at(i);
         if (r->mDrawable == nullptr) continue;
         // Take the resolved layout direction into account. If start / end
@@ -904,8 +904,8 @@ int LayerDrawable::getIntrinsicHeight()const{
     int padB = 0;
 
     const bool nest = mLayerState->mPaddingMode == PADDING_MODE_NEST;
-    const int N = mLayerState->mChildren.size();
-    for (int i = 0; i < N; i++) {
+    const size_t N = mLayerState->mChildren.size();
+    for (size_t i = 0; i < N; i++) {
         ChildDrawable* r = mLayerState->mChildren.at(i);
         if (r->mDrawable == nullptr) continue;
         // Don't apply padding and insets for children that don't have

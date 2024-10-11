@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
+include(cmake/depchecks.cmake)
 include(cmake/common_functions.cmake)
 include(cmake/options.cmake)
 

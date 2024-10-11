@@ -2,6 +2,8 @@
 #include <core/context.h>
 #include <gesture/gesturelibrary.h>
 #include <gesture/gesturelibraries.h>
+#include <porting/cdlog.h>
+
 namespace cdroid{
 
 class GestureLibraries::StreamGestureLibrary:public GestureLibrary {

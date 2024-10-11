@@ -125,7 +125,7 @@ const std::vector<std::vector<int>>& ColorStateList::getStates()const{
 void ColorStateList::onColorsChanged(){
     int defaultColor = Color::RED;//DEFAULT_COLOR;
     bool isOpaque = true;
-    const int N=mStateSpecs.size();
+    const int N=(int)mStateSpecs.size();
     if ( N> 0) {
         defaultColor = mColors[0];
 
@@ -150,7 +150,7 @@ void ColorStateList::onColorsChanged(){
 }
 
 int ColorStateList::getColorForState(const std::vector<int>&stateSet, int defaultColor)const{
-    const int setLength = mStateSpecs.size();
+    const int setLength = (int)mStateSpecs.size();
     for (int i = 0; i < setLength; i++) {
         if (StateSet::stateSetMatches(mStateSpecs[i], stateSet)) {
             return mColors[i];
@@ -209,7 +209,7 @@ ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const 
     XML_SetElementHandler(parser, startElement, nullptr/*endElement*/);
     do {
        stream.read(buf,sizeof(buf));
-       int rdlen = stream.gcount();
+       size_t rdlen = stream.gcount();
        done = (rdlen==0);
        if (XML_Parse(parser, buf,rdlen,done) == XML_STATUS_ERROR) {
            const char*es=XML_ErrorString(XML_GetErrorCode(parser));

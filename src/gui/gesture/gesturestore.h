@@ -2,6 +2,7 @@
 #define __GESTURE_STORE_H__
 #include <map>
 #include <vector>
+#include <iostream>
 #include <gesture/prediction.h>
 namespace cdroid{
 /**

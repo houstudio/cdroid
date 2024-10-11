@@ -139,7 +139,7 @@ void Shape::rebuildPattern(int x,int y){
            mPaint=SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
         }break;
     case Gradient::LINEAR:{
-           const int angleIndex=mGradientAngle/45;
+           const int angleIndex=int(mGradientAngle/45);
            const int wh=std::max(mWidth,mHeight);
            switch(angleIndex%8){
            case 0: mPaint=LinearGradient::create(0,0,mWidth,0) ; break;
@@ -155,7 +155,7 @@ void Shape::rebuildPattern(int x,int y){
            applyGradients();
         }break;
     case Gradient::RADIAL:{
-           const float pd=mGradientAngle*M_PI/180.f;
+           const double pd=mGradientAngle*M_PI/180.f;
            LOGV("center=%.2f,%.2f cx,cy=%.2f,%.2f mRadius=%f mAngle=%.2f xy=%d,%d",mGradientCenterX,mGradientCenterY,cx,cy,mGradientRadius,mGradientAngle,x,y);
            mPaint=RadialGradient::create(cx,cy,0,cx,cy,mGradientRadius);
            applyGradients();

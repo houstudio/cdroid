@@ -239,7 +239,7 @@ std::vector<float> GestureUtils::temporalSampling(GestureStroke& stroke, int num
     vector[index] = lstPointY;
     index++;
     int i = 0;
-    int count = pts.size() / 2;
+    int count = int(pts.size() / 2);
     while (i < count) {
         if (currentPointX == FLT_MIN) {
             i++;
@@ -288,7 +288,7 @@ std::vector<float> GestureUtils::temporalSampling(GestureStroke& stroke, int num
 std::vector<float> GestureUtils::computeCentroid(const std::vector<float>& points) {
     float centerX = 0;
     float centerY = 0;
-    const int count = points.size();
+    const int count = (int)points.size();
     for (int i = 0; i < count; i++) {
         centerX += points[i];
         i++;
@@ -309,7 +309,7 @@ std::vector<float> GestureUtils::computeCentroid(const std::vector<float>& point
  */
 std::vector<std::vector<float>>GestureUtils::computeCoVariance(const std::vector<float>& points) {
     std::vector<std::vector<float>> array(2,std::vector<float>(2,0.f));
-    const int count = points.size();
+    const int count = (int)points.size();
     for (int i = 0; i < count; i++) {
         float x = points[i];
         i++;
@@ -329,7 +329,7 @@ std::vector<std::vector<float>>GestureUtils::computeCoVariance(const std::vector
 
 float GestureUtils::computeTotalLength(const std::vector<float>& points) {
     float sum = 0;
-    const int count = points.size() - 4;
+    const int count = int(points.size() - 4);
     for (int i = 0; i < count; i += 2) {
         float dx = points[i + 2] - points[i];
         float dy = points[i + 3] - points[i + 1];
@@ -360,7 +360,7 @@ float GestureUtils::computeStraightness(const std::vector<float>& points, float 
  */
 float GestureUtils::squaredEuclideanDistance(const std::vector<float>& vector1,const std::vector<float>& vector2) {
     float squaredDistance = 0;
-    const int size = vector1.size();
+    const int size = (int)vector1.size();
     for (int i = 0; i < size; i++) {
         float difference = vector1[i] - vector2[i];
         squaredDistance += difference * difference;
@@ -377,7 +377,7 @@ float GestureUtils::squaredEuclideanDistance(const std::vector<float>& vector1,c
  */
 float GestureUtils::cosineDistance(const std::vector<float>& vector1,const std::vector<float>& vector2) {
     float sum = 0;
-    const int len = vector1.size();
+    const int len = (int)vector1.size();
     for (int i = 0; i < len; i++) {
         sum += vector1[i] * vector2[i];
     }
@@ -393,7 +393,7 @@ float GestureUtils::cosineDistance(const std::vector<float>& vector1,const std::
  * @return the distance between the two instances (between 0 and Math.PI)
  */
 float GestureUtils::minimumCosineDistance(const std::vector<float>& vector1,const std::vector<float>& vector2, int numOrientations) {
-    const int len = vector1.size();
+    const int len = (int)vector1.size();
     float a = 0;
     float b = 0;
     for (int i = 0; i < len; i += 2) {
@@ -422,7 +422,7 @@ float GestureUtils::minimumCosineDistance(const std::vector<float>& vector1,cons
  * @return an oriented bounding box
  */
 OrientedBoundingBox* GestureUtils::computeOrientedBoundingBox(const std::vector<GesturePoint>& originalPoints) {
-    const int count = originalPoints.size();
+    const int count = (int)originalPoints.size();
     std::vector<float> points(count * 2);
     for (int i = 0; i < count; i++) {
         GesturePoint point = originalPoints.at(i);
@@ -441,7 +441,7 @@ OrientedBoundingBox* GestureUtils::computeOrientedBoundingBox(const std::vector<
  * @return an oriented bounding box
  */
 OrientedBoundingBox* GestureUtils::computeOrientedBoundingBox(std::vector<float>& originalPoints) {
-    const int size = originalPoints.size();
+    const int size = (int)originalPoints.size();
     std::vector<float> points(size);
     for (int i = 0; i < size; i++) {
         points[i] = originalPoints[i];
@@ -468,7 +468,7 @@ OrientedBoundingBox* GestureUtils::computeOrientedBoundingBox(std::vector<float>
     float miny = FLT_MAX;//Float.MAX_VALUE;
     float maxx = FLT_MIN;//Float.MIN_VALUE;
     float maxy = FLT_MIN;//Float.MIN_VALUE;
-    const int count = points.size();
+    const int count = (int)points.size();
     for (int i = 0; i < count; i++) {
         if (points[i] < minx) {
             minx = points[i];
@@ -517,7 +517,7 @@ std::vector<float> GestureUtils::computeOrientation(std::vector<std::vector<floa
 std::vector<float>& GestureUtils::rotate(std::vector<float>& points, float angle) {
     const float cos = (float) std::cos(angle);
     const float sin = (float) std::sin(angle);
-    int size = points.size();
+    const int size = (int)points.size();
     for (int i = 0; i < size; i += 2) {
         const float x = points[i] * cos - points[i + 1] * sin;
         const float y = points[i] * sin + points[i + 1] * cos;
@@ -528,7 +528,7 @@ std::vector<float>& GestureUtils::rotate(std::vector<float>& points, float angle
 }
 
 std::vector<float>& GestureUtils::translate(std::vector<float>& points, float dx, float dy) {
-    const int size = points.size();
+    const int size = (int)points.size();
     for (int i = 0; i < size; i += 2) {
         points[i] += dx;
         points[i + 1] += dy;
@@ -537,7 +537,7 @@ std::vector<float>& GestureUtils::translate(std::vector<float>& points, float dx
 }
 
 std::vector<float>& GestureUtils::scale(std::vector<float>& points, float sx, float sy) {
-    const int size = points.size();
+    const int size = (int)points.size();
     for (int i = 0; i < size; i += 2) {
         points[i] *= sx;
         points[i + 1] *= sy;

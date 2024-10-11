@@ -133,7 +133,7 @@ int DrawableContainer::DrawableContainerState::getChangingConfigurations()const{
 }
 
 int DrawableContainer::DrawableContainerState::addChild(Drawable* dr){
-    const int pos = mDrawables.size();
+    const int pos = (int)mDrawables.size();
     dr->mutate();
     dr->setVisible(false, true);
     dr->setCallback(mOwner);
@@ -175,7 +175,7 @@ Drawable* DrawableContainer::DrawableContainerState::prepareDrawable(Drawable* c
 }
 
 int DrawableContainer::DrawableContainerState::getChildCount()const{
-    return mDrawables.size();
+    return (int)mDrawables.size();
 }
 
 std::vector<Drawable*> DrawableContainer::DrawableContainerState::getChildren(){
@@ -374,7 +374,7 @@ int DrawableContainer::DrawableContainerState::getOpacity(){
 
     createAllFutures();
 
-    const int N = mDrawables.size();
+    const int N = (int)mDrawables.size();
     int op = (N > 0) ? mDrawables[0]->getOpacity() : PixelFormat::TRANSPARENT;
     for (int i = 1; i < N; i++) {
         op = Drawable::resolveOpacity(op, mDrawables[i]->getOpacity());
@@ -654,7 +654,7 @@ Drawable*DrawableContainer::getCurrent(){
 void DrawableContainer::animate(bool schedule) {
     mHasAlpha = true;
 
-    const long now = SystemClock::uptimeMillis();
+    const int64_t now = SystemClock::uptimeMillis();
     bool animating = false;
     if (mCurrDrawable != nullptr) {
         if (mEnterAnimationEnd != 0) {
@@ -732,7 +732,7 @@ void DrawableContainer::setCurrentIndex(int index){
 
 bool DrawableContainer::selectDrawable(int index){
     if(index==mCurIndex)return false;
-    const long now = SystemClock::uptimeMillis();
+    const int64_t now = SystemClock::uptimeMillis();
     if(mDrawableContainerState->mExitFadeDuration > 0){
         if (mLastDrawable != nullptr) {
             mLastDrawable->setVisible(false, false);
