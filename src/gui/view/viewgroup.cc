@@ -150,7 +150,7 @@ void ViewGroup::initGroup(){
     mGroupFlags|= FLAG_ANIMATION_DONE;
     mGroupFlags|= FLAG_ANIMATION_CACHE;
     mGroupFlags|= FOCUS_BEFORE_DESCENDANTS;
-    mGroupFlags!= FLAG_ALWAYS_DRAWN_WITH_CACHE;
+    //mGroupFlags!= FLAG_ALWAYS_DRAWN_WITH_CACHE;
     mLayoutMode = LAYOUT_MODE_UNDEFINED;
     mFocused    = nullptr;
     mDefaultFocus = nullptr;
