@@ -404,7 +404,7 @@ nsecs_t MotionEvent::getHistoricalEventTimeNanos(size_t historyPos) const{
     }
 }
 
-ssize_t MotionEvent::findPointerIndex(int32_t pointerId) const {
+int32_t MotionEvent::findPointerIndex(int32_t pointerId) const {
     const size_t pointerCount = mPointerProperties.size();
     for (size_t i = 0; i < pointerCount; i++) {
         if (mPointerProperties[i].id == pointerId) {

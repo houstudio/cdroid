@@ -241,7 +241,7 @@ public:
     }
     inline int32_t getEdgeFlags() const { return mEdgeFlags; }
     inline void setEdgeFlags(int32_t edgeFlags) { mEdgeFlags = edgeFlags; }
-    inline bool isHoverExitPending()const{return getFlags()&FLAG_HOVER_EXIT_PENDING!=0;}
+    inline bool isHoverExitPending()const{return (getFlags()&FLAG_HOVER_EXIT_PENDING)!=0;}
     inline void setHoverExitPending(bool hoverExitPending){
         if(hoverExitPending)mFlags|=FLAG_HOVER_EXIT_PENDING;
         else mFlags&=~FLAG_HOVER_EXIT_PENDING;
@@ -342,7 +342,7 @@ public:
         return getAxisValue(AXIS_ORIENTATION, pointerIndex);
     }
     bool isResampled(size_t pointerIndex, size_t historicalIndex) const;
-    ssize_t findPointerIndex(int32_t pointerId) const;
+    int32_t findPointerIndex(int32_t pointerId) const;
     inline bool isTargetAccessibilityFocus()const{
         return (mFlags & FLAG_TARGET_ACCESSIBILITY_FOCUS) != 0;
     }
