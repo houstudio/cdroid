@@ -14,9 +14,9 @@
 
 class GameWindow :public Window {
   protected:
-    USHORT score;
-    USHORT scheme;
-    USHORT SIZE;
+    uint16_t score;
+    uint16_t scheme;
+    uint16_t SIZE;
     std::vector<std::vector<uint32_t> >board;
     TextView*tfscore;
   public:

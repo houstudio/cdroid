@@ -59,60 +59,60 @@ static void sigint_handler(int arg){
     terminate = 1;
 }
 
-INT GFXInit() {
+int32_t GFXInit() {
     if(drmFD>0)return 0;
     drmFD = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
     drmModeres = drmModeGetResources(drmFD);
     crtc_id = drmModeres->crtcs[0];
     conn_id = drmModeres->connectors[0];
     drmConn = drmModeGetConnector(drmFD, conn_id);
-    //signal(SIGINT, sigint_handler);
+    //signal(SIGint32_t, sigint_handler);
     return 0;
 }
 
-INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
+int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height) {
     if(width)*width=drmConn->modes[0].hdisplay;
     if(height)*height=drmConn->modes[0].vdisplay;
     //LOGD("screensize=%dx%d",*width,*height);
     return 0;
 }
 
-INT GFXGetDisplayCount(){
+int32_t GFXGetDisplayCount(){
     return 1;
 }
 
-INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch) {
+int32_t GFXLockSurface(HANDLE surface,void**buffer,uint32_t*pitch) {
     SURFACE*gfx=(SURFACE*)surface;
     *buffer=gfx->vaddr;
     *pitch=gfx->pitch;
     return 0;
 }
 
-INT GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format) {
+int32_t GFXGetSurfaceInfo(HANDLE surface,uint32_t*width,uint32_t*height,int32_t *format) {
      SURFACE*gfx=(SURFACE*)surface;
      *width=gfx->width;
      *height=gfx->height;
     return 0;
 }
 
-INT GFXUnlockSurface(HANDLE surface) {
+int32_t GFXUnlockSurface(HANDLE surface) {
     return 0;
 }
 
-INT GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha) {
+int32_t GFXSurfaceSetOpacity(HANDLE surface,uint8_t alpha) {
     return 0;
 }
 
-INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
+int32_t GFXFillRect(HANDLE surface,const GFXRect*rect,uint32_t color) {
     SURFACE*ngs=(SURFACE*)surface;
-    UINT x,y;
+    uint32_t x,y;
     GFXRect rec= {0,0,0,0};
     rec.w=ngs->width;
     rec.h=ngs->height;
     if(rect)rec=*rect;
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d",ngs,rec.x,rec.y,rec.w,rec.h,color,ngs->pitch);
-    UINT*fb=(UINT*)(ngs->vaddr+ngs->pitch*rec.y+rec.x*4);
-    UINT*fbtop=fb;
+    uint32_t*fb=(uint32_t*)(ngs->vaddr+ngs->pitch*rec.y+rec.x*4);
+    uint32_t*fbtop=fb;
     for(x=0; x<rec.w; x++)fb[x]=color;
     const int cpw=rec.w*4;
     long copied=0;
@@ -135,7 +135,7 @@ static void modeset_flip_handler(int fd, uint32_t frame,
     LOGD_IF(i%200==0,"crtcid=%d time %d.%d flip=%d",crtc_id,sec,usec,ret);
 }
 
-INT GFXFlip(HANDLE surface) {
+int32_t GFXFlip(HANDLE surface) {
     SURFACE*gfx=(SURFACE*)surface;
     /*drmEventContext ev = {};
     ev.version = DRM_EVENT_CONTEXT_VERSION;
@@ -149,7 +149,7 @@ INT GFXFlip(HANDLE surface) {
     return 0;
 }
 
-INT GFXCreateSurface(int,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface) {
+int32_t GFXCreateSurface(int,HANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
     SURFACE*gfx=(SURFACE*)malloc(sizeof(SURFACE));
     gfx->width = width;
     gfx->height= height;
@@ -165,12 +165,12 @@ INT GFXCreateSurface(int,HANDLE*surface,UINT width,UINT height,INT format,BOOL h
     return 0;
 }
 
-INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect) {
+int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect) {
     SURFACE*ndst=(SURFACE*)dstsurface;
     SURFACE*nsrc=(SURFACE*)srcsurface;
     GFXRect rs= {0,0};
-    BYTE*pbs=(BYTE*)nsrc->vaddr;
-    BYTE*pbd=(BYTE*)ndst->vaddr;
+    uint8_t*pbs=(uint8_t*)nsrc->vaddr;
+    uint8_t*pbd=(uint8_t*)ndst->vaddr;
     rs.w=nsrc->width;
     rs.h=nsrc->height;
     if(srcrect)rs=*srcrect;
@@ -206,7 +206,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     return 0;
 }
 
-INT GFXDestroySurface(HANDLE surface) {
+int32_t GFXDestroySurface(HANDLE surface) {
     SURFACE*gfx=(SURFACE*)surface;
     modeset_destroy_fb(drmFD,gfx);
     free(gfx);

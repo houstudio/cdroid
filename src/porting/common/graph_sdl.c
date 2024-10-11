@@ -15,9 +15,9 @@ static SDL_Window *sdlWindow = NULL;
 static SDL_Renderer *sdlRenderer = NULL;
 typedef struct {
     int dispid;
-    UINT width;
-    UINT height;
-    UINT pitch;
+    uint32_t width;
+    uint32_t height;
+    uint32_t pitch;
     int format;
     int ishw;
     SDL_Surface*surface;
@@ -30,8 +30,8 @@ static void SendKeyEvent(SDL_Event*event);
 static void SendMouseEvent(SDL_Event*event);
 static FBSURFACE*PrimarySurface;
 
-INT GFXInit() {
-    UINT width,height;
+int32_t GFXInit() {
+    uint32_t width,height;
     if(sdlWindow)return E_OK;
     SDL_Init(SDL_INIT_VIDEO);
     GFXGetDisplaySize(0,&width,&height);
@@ -50,11 +50,11 @@ INT GFXInit() {
     return E_OK;
 }
 
-INT GFXGetDisplayCount() {
+int32_t GFXGetDisplayCount() {
     return 1;
 }
 
-INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
+int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height) {
     const char*env= getenv("SCREEN_SIZE");
     if(env==NULL) {
         *width=1280;//dispCfg.width;
@@ -71,14 +71,14 @@ INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
     return E_OK;
 }
 
-INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch) {
+int32_t GFXLockSurface(HANDLE surface,void**buffer,uint32_t*pitch) {
     FBSURFACE*ngs=(FBSURFACE*)surface;
     *buffer=ngs->surface->pixels;
     *pitch=ngs->pitch;
     return 0;
 }
 
-INT GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format) {
+int32_t GFXGetSurfaceInfo(HANDLE surface,uint32_t*width,uint32_t*height,int32_t *format) {
     FBSURFACE*ngs=(FBSURFACE*)surface;
     *width = ngs->width;
     *height= ngs->height;
@@ -86,15 +86,15 @@ INT GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format) {
     return E_OK;
 }
 
-INT GFXUnlockSurface(HANDLE surface) {
+int32_t GFXUnlockSurface(HANDLE surface) {
     return 0;
 }
 
-INT GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha) {
+int32_t GFXSurfaceSetOpacity(HANDLE surface,uint8_t alpha) {
     return 0;//dispLayer->SetOpacity(dispLayer,alpha);
 }
 
-INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
+int32_t GFXFillRect(HANDLE surface,const GFXRect*rect,uint32_t color) {
     FBSURFACE*ngs=(FBSURFACE*)surface;
     GFXRect rec= {0,0,0,0};
     rec.w=ngs->width;
@@ -105,11 +105,11 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
     return E_OK;
 }
 
-INT GFXFlip(HANDLE surface) {
+int32_t GFXFlip(HANDLE surface) {
     return 0;
 }
 
-INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface) {
+int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
     surf->dispid=dispid;
     surf->width=width;
@@ -118,7 +118,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     surf->ishw=hwsurface;
     surf->pitch=width*4;
     size_t buffer_size=surf->height*surf->pitch;
-    UINT rmask, gmask, bmask, amask;
+    uint32_t rmask, gmask, bmask, amask;
 #if 0//SDL_BYTEORDER == SDL_BIG_ENDIAN
     rmask = 0xff000000;
     gmask = 0x00ff0000;
@@ -143,7 +143,7 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     return E_OK;
 }
 
-INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect) {
+int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect) {
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
     FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
     GFXRect rs= {0,0};
@@ -180,7 +180,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     return 0;
 }
 
-INT GFXDestroySurface(HANDLE surface) {
+int32_t GFXDestroySurface(HANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     SDL_FreeSurface(surf->surface);
     SDL_DestroyTexture(surf->texture);
