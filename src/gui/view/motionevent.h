@@ -4,6 +4,7 @@
 #include <cairomm/matrix.h>
 #include <core/bitset.h>
 #include <limits>
+#include <cmath>
 
 #define USE_TRACKINGID_AS_POINTERID 0
 namespace cdroid{
