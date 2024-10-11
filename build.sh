@@ -26,9 +26,16 @@ DEPLIBS["D211"]=${VCPKGROOT}/installed/riscv64-d211-linux
 DEPLIBS["HI3536"]=${VCPKGROOT}/installed/hisi3536-linux
 DEPLIBS["INGENIC"]=${VCPKGROOT}/installed/ingenic-linux
 DEPLIBS["TINAT113"]=${VCPKGROOT}/installed/tinat113-linux-dynamic
-CDROID_VALID_PORTS="x64"
+DEPLIBS["WIN32"]=${VCPKGROOT}/installed/x64-windows:${VCPKGROOT}/installed/x64-windows-release
+OSNAME=""
+if [ "$(uname)" = "Linux" ]; then
+    OSNAME="x64"
+elif [ -d "/c" ]; then
+    OSNAME="win32"
+fi
+CDROID_VALID_PORTS="${OSNAME}"
 SHOWHELP=0
-PRODUCT="x64"
+PRODUCT="${OSNAME}"
 BUILD_TYPE="Release"
 
 for key in "${!TOOLCHAINS[@]}"
@@ -75,10 +82,10 @@ echo "VALID_PORTS=${CDROID_VALID_PORTS}"
 echo "product=$PRODUCT ${PRODUCT,,}"
 echo "build=${BUILD_TYPE}/${BUILD_TYPE,,}"
 
-if [ "$PRODUCT" = "X64" ]; then
+if [ "$PRODUCT" = "X64" ] || [ "$PRODUCT" = "WIN32" ]; then
     echo "x64"
     TOOLCHAIN_FILE=""
-elif [ "$PRODUCT" != "X64" ]; then
+elif [ "$PRODUCT" != "X64" ] && [ "$PRODUCT" != "WIN32" ]; then
     TOOLCHAIN_FILE="-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAINS[${PRODUCT}]}"
     if [ "$TOOLCHAIN_FILE" = "-DCMAKE_TOOLCHAIN_FILE=" ]; then
        SHOWHELP=1
