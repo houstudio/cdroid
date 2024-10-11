@@ -5,9 +5,30 @@
 #if defined(_MSC_VER)
 #include <intrin.h>
 #define __builtin_popcountl  __popcnt
-#define __builtin_popcountll __popcnt64
+#define __builtin_popcountll(x) uint32_t(__popcnt64(x))
 #define __builtin_clz  __lzcnt
-#define __builtin_clzll __lzcnt64
+#define __builtin_clzl  __lzcnt
+#define __builtin_clzll(x) uint32_t(__lzcnt64(x))
+#define __builtin_ctz __builtin_ctzl
+inline int __builtin_ctzl(uint32_t x) {
+    if (x == 0) {
+        return 32;
+    }
+
+    unsigned int index;
+    _BitScanForward(&index, x);
+    return static_cast<int>(index);
+}
+inline int __builtin_ctzll(uint64_t x) {
+    if (x == 0) {
+        return 64;
+    }
+
+    unsigned long index;
+    _BitScanForward64(&index, x);
+    return static_cast<int>(index);
+}
+
 #endif
 
 struct BitSet32 {
@@ -216,7 +237,7 @@ struct BitSet64 {
     inline uint32_t clearFirstMarkedBit() { return clearFirstMarkedBit(value); }
 
     static inline uint32_t clearFirstMarkedBit(uint64_t& value) {
-        uint64_t n = firstMarkedBit(value);
+        uint32_t n = firstMarkedBit(value);
         clearBit(value, n);
         return n;
     }
@@ -226,7 +247,7 @@ struct BitSet64 {
     inline uint32_t markFirstUnmarkedBit() { return markFirstUnmarkedBit(value); }
 
     static inline uint32_t markFirstUnmarkedBit(uint64_t& value) {
-        uint64_t n = firstUnmarkedBit(value);
+        uint32_t n = firstUnmarkedBit(value);
         markBit(value, n);
         return n;
     }
@@ -236,7 +257,7 @@ struct BitSet64 {
     inline uint32_t clearLastMarkedBit() { return clearLastMarkedBit(value); }
 
     static inline uint32_t clearLastMarkedBit(uint64_t& value) {
-        uint64_t n = lastMarkedBit(value);
+        uint32_t n = lastMarkedBit(value);
         clearBit(value, n);
         return n;
     }
