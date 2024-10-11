@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <queue>
-typedef __int64_t nsecs_t;
+typedef int64_t nsecs_t;
 namespace cdroid{
 /*
  * Flags that flow alongside events in the input dispatch system to help with certain
