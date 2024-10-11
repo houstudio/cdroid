@@ -33,9 +33,8 @@ find_package(X11)
 find_package(DRM)
 if (SDL2_FOUND)
     include_directories(${SDL2_INCLUDE_DIRS})
-    add_library(tvhal SHARED ${WIN32_SRCS} ../common/graph_sdl.c)
-    target_link_libraries(tvhal ${SDL2_LIBRARIES})
-    list(APPEND WIN32PORTS tvhal)
+    list(APPEND WIN32_SRCS ../common/graph_sdl.c)
+    list(APPEND WIN32DEP_LIBRARIES ${SDL2_LIBRARIES})
 endif(SDL2_FOUND)
 
 include_directories(./
@@ -45,6 +44,8 @@ include_directories(./
     ${WIN32_INCLUDE_DIRS}
 )
 
+add_library(tvhal ${WIN32_SRCS})
+target_link_libraries(tvhal ${WIN32DEP_LIBRARIES})
 
 install (TARGETS ${WIN32PORTS}  DESTINATION lib)
 
