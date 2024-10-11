@@ -1,10 +1,9 @@
 #include <cdtypes.h>
-#include <ngl_mediaplayer.h>
+#include <cdplayer.h>
 #include <aui_common.h>
 #include <aui_mp.h>
 #include <aui_dis.h>
 #include <cdlog.h>
-#include <ngl_os.h>
 
 NGL_MODULE(NGLMP);
 

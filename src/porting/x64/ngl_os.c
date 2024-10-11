@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <ngl_os.h>
+#include <dtvos.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <sys/time.h>

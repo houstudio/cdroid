@@ -1,5 +1,4 @@
 #include <cdtypes.h>
-#include <ngl_os.h>
 #include <cdgraph.h>
 #include <cdlog.h>
 #include <directfb.h>

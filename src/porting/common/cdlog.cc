@@ -1,6 +1,5 @@
 #include <cdtypes.h>
 #include <cdlog.h>
-#include <ngl_os.h>
 #include <cstdio>
 #include <string.h>
 #include <time.h>
