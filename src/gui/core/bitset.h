@@ -2,12 +2,12 @@
 #define __BITSET_H__
 #include <cstdint>
 
-#if defined(__MSC_VER)
+#if defined(_MSC_VER)
 #include <intrin.h>
 #define __builtin_popcountl  __popcnt
 #define __builtin_popcountll __popcnt64
 #define __builtin_clz  __lzcnt
-#define __builtin_clzl __lzcnt64
+#define __builtin_clzll __lzcnt64
 #endif
 
 struct BitSet32 {
