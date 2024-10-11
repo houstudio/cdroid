@@ -4,14 +4,14 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
-#include "ngl_dmx.h"
+#include <dtvdmx.h>
 #include <aui_dmx.h> 
 #include <aui_tsg.h>
 #include <aui_tsi.h>
 #include <aui_nim.h>
 #include <strings.h>
 #include <cdlog.h>
-#include <ngl_os.h>
+#include <dtvos.h>
 #include <mutex>
 #define MASK_LEN 16 
 #define UNUSED_PID -1

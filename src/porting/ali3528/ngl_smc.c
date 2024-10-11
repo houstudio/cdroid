@@ -2,7 +2,7 @@
   FILE : stub_sc.c
   PURPOSE: This file is a stub for linking tests.
 */
-#include "ngl_smc.h"
+#include "dtvsmc.h"
 #include "aui_smc.h"
 #include <stdio.h>
 #include <string.h>

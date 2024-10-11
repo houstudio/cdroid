@@ -1,5 +1,5 @@
 #include <cdtypes.h>
-#include <ngl_pvr.h>
+#include <dtvpvr.h>
 #include <aui_pvr.h>
 #include <aui_ca_pvr.h>
 #include <aui_dsc.h>

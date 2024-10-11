@@ -1,6 +1,6 @@
 #include<stdlib.h>
 #include<stdio.h>
-#include<ngl_dsc.h>
+#include<dtvdsc.h>
 #include<aui_dsc.h>
 #include<aui_dmx.h>
 #include<aui_kl.h>

@@ -4,10 +4,10 @@
 #include <aui_av.h>
 #include <aui_snd.h>
 #include <aui_dis.h>
-#include <ngl_video.h>
+#include <dtvideo.h>
 #include <cdlog.h>
-#include <ngl_disp.h>
-#include <ngl_snd.h>
+#include <dtdisp.h>
+#include <dtsnd.h>
 #include <string.h>
 
 typedef struct{

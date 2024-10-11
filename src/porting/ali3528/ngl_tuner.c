@@ -1,10 +1,10 @@
-#include "ngl_tuner.h"
+#include "dtvtuner.h"
 #include "aui_nim.h"
 #include <aui_gpio.h>
 #include <inttypes.h>
-#include <ngl_os.h>
+#include <dtvos.h>
 #include <cdlog.h>
-#include <ngl_msgq.h>
+#include <dtvmsgq.h>
 #include <aui_common.h>
 #include <aui_gpio.h>
 

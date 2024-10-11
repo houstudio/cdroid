@@ -1,5 +1,5 @@
-#include <ngl_msgq.h>
-#include <ngl_os.h>
+#include <dtvmsgq.h>
+#include <dtvos.h>
 #include <aui_os.h>
 #include <pthread.h>
 #include <cdlog.h>
