@@ -34,26 +34,26 @@ typedef struct{
 }INPUTAXISINFO;
 
 typedef struct{
-    USHORT bustype;
-    USHORT vendor;
-    USHORT product;
-    USHORT version;
-    BYTE uniqueId[64];
-    BYTE keyBitMask[128];
-    BYTE absBitMask[8];
-    BYTE relBitMask[4];
-    BYTE swBitMask [4];
-    BYTE ledBitMask[4];
-    BYTE propBitMask[4];
-    BYTE ffBitMask [16];
+    uint16_t bustype;
+    uint16_t vendor;
+    uint16_t product;
+    uint16_t version;
+    uint8_t uniqueId[64];
+    uint8_t keyBitMask[128];
+    uint8_t absBitMask[8];
+    uint8_t relBitMask[4];
+    uint8_t swBitMask [4];
+    uint8_t ledBitMask[4];
+    uint8_t propBitMask[4];
+    uint8_t ffBitMask [16];
     INPUTAXISINFO axis[64/*ABS_CNT*/];
     char name[MAX_DEVICE_NAME];
 }INPUTDEVICEINFO;
 
-INT InputInit();
-INT InputGetEvents(INPUTEVENT*events,UINT maxevent,DWORD timeout);
-INT InputInjectEvents(const INPUTEVENT*events,UINT count,DWORD timeout);
-INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*);
+int32_t InputInit();
+int32_t InputGetEvents(INPUTEVENT*events,uint32_t maxevent,uint32_t timeout);
+int32_t InputInjectEvents(const INPUTEVENT*events,uint32_t count,uint32_t timeout);
+int32_t InputGetDeviceInfo(int device,INPUTDEVICEINFO*);
 
 END_DECLS
 

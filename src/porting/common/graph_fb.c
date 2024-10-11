@@ -18,9 +18,9 @@ typedef struct {
 
 typedef struct {
     int dispid;
-    UINT width;
-    UINT height;
-    UINT pitch;
+    uint32_t width;
+    uint32_t height;
+    uint32_t pitch;
     int format;
     int ishw;
     char*buffer;
@@ -30,7 +30,7 @@ typedef struct {
 static FBDEVICE devs[2]= {-1};
 static GFXRect screenMargin= {0};
 
-INT GFXInit() {
+int32_t GFXInit() {
     if(devs[0].fb>=0)return E_OK;
     memset(devs,0,sizeof(devs));
     FBDEVICE*dev=&devs[0];
@@ -69,11 +69,11 @@ INT GFXInit() {
     return E_OK;
 }
 
-INT GFXGetDisplayCount() {
+int32_t GFXGetDisplayCount() {
     return 1;
 }
 
-INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
+int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height) {
     if(dispid<0||dispid>=GFXGetDisplayCount())return E_ERROR;
     FBDEVICE*dev=devs+dispid;
     *width =dev->var.xres-(screenMargin.x + screenMargin.w);
@@ -83,14 +83,14 @@ INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
 }
 
 
-INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch) {
+int32_t GFXLockSurface(HANDLE surface,void**buffer,uint32_t*pitch) {
     FBSURFACE*ngs=(FBSURFACE*)surface;
     *buffer=ngs->buffer;
     *pitch=ngs->pitch;
     return 0;
 }
 
-INT GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format) {
+int32_t GFXGetSurfaceInfo(HANDLE surface,uint32_t*width,uint32_t*height,int32_t *format) {
     FBSURFACE*ngs=(FBSURFACE*)surface;
     *width = ngs->width;
     *height= ngs->height;
@@ -98,24 +98,24 @@ INT GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format) {
     return E_OK;
 }
 
-INT GFXUnlockSurface(HANDLE surface) {
+int32_t GFXUnlockSurface(HANDLE surface) {
     return 0;
 }
 
-INT GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha) {
+int32_t GFXSurfaceSetOpacity(HANDLE surface,uint8_t alpha) {
     return 0;//dispLayer->SetOpacity(dispLayer,alpha);
 }
 
-INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
+int32_t GFXFillRect(HANDLE surface,const GFXRect*rect,uint32_t color) {
     FBSURFACE*ngs=(FBSURFACE*)surface;
-    UINT x,y;
+    uint32_t x,y;
     GFXRect rec= {0,0,0,0};
     rec.w=ngs->width;
     rec.h=ngs->height;
     if(rect)rec=*rect;
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d",ngs,rec.x,rec.y,rec.w,rec.h,color,ngs->pitch);
-    UINT*fb=(UINT*)(ngs->buffer+ngs->pitch*rec.y+rec.x*4);
-    UINT*fbtop=fb;
+    uint32_t*fb=(uint32_t*)(ngs->buffer+ngs->pitch*rec.y+rec.x*4);
+    uint32_t*fbtop=fb;
     for(x=0; x<rec.w; x++)fb[x]=color;
     const int cpw=rec.w*4;
     long copied=0;
@@ -127,7 +127,7 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
     return E_OK;
 }
 
-INT GFXFlip(HANDLE surface) {
+int32_t GFXFlip(HANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     FBDEVICE*dev=devs+surf->dispid;
     if(surf->ishw) {
@@ -179,7 +179,7 @@ static int setfbinfo(FBSURFACE*surf) {
 }
 
 
-INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface) {
+int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
     FBDEVICE*dev = &devs[dispid];
     surf->dispid=dispid;
@@ -207,13 +207,13 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
 }
 
 
-INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect) {
+int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect) {
     unsigned int x,y,sw,sh;
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
     FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
     GFXRect rs= {0,0};
-    BYTE*pbs=(BYTE*)nsrc->buffer;
-    BYTE*pbd=(BYTE*)ndst->buffer;
+    uint8_t*pbs=(uint8_t*)nsrc->buffer;
+    uint8_t*pbd=(uint8_t*)ndst->buffer;
     rs.w=nsrc->width;
     rs.h=nsrc->height;
     if(srcrect)rs=*srcrect;
@@ -252,7 +252,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcr
     return 0;
 }
 
-INT GFXDestroySurface(HANDLE surface) {
+int32_t GFXDestroySurface(HANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     FBDEVICE*dev=devs+surf->dispid;
     if(surf->ishw)

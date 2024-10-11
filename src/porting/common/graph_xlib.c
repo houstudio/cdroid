@@ -83,7 +83,7 @@ static void onExit() {
     }
 }
 
-INT GFXInit() {
+int32_t GFXInit() {
     if(x11Display)return E_OK;
     XInitThreads();
     x11Display=XOpenDisplay(NULL);
@@ -142,7 +142,7 @@ INT GFXInit() {
     return E_OK;
 }
 
-INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
+int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height) {
     const char*env= getenv("SCREEN_SIZE");
     if(env==NULL) {
         *width=1280;//dispCfg.width;
@@ -157,18 +157,18 @@ INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height) {
     return E_OK;
 }
 
-INT GFXGetDisplayCount() {
+int32_t GFXGetDisplayCount() {
     return 1;
 }
 
-INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch) {
+int32_t GFXLockSurface(HANDLE surface,void**buffer,uint32_t*pitch) {
     XImage*img=(XImage*)surface;
     *buffer=img->data;
     *pitch=img->bytes_per_line;
     return 0;
 }
 
-INT GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format) {
+int32_t GFXGetSurfaceInfo(HANDLE surface,uint32_t*width,uint32_t*height,int32_t *format) {
     XImage*img=(XImage*)surface;
     *width=img->width;
     *height=img->height;
@@ -176,11 +176,11 @@ INT GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format) {
     return E_OK;
 }
 
-INT GFXUnlockSurface(HANDLE surface) {
+int32_t GFXUnlockSurface(HANDLE surface) {
     return 0;
 }
 
-INT GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha) {
+int32_t GFXSurfaceSetOpacity(HANDLE surface,uint8_t alpha) {
     return 0;//dispLayer->SetOpacity(dispLayer,alpha);
 }
 
@@ -202,16 +202,16 @@ static void  X11Expose(int x,int y,int w,int h) {
         //XPutBackEvent(x11Display,(XEvent*)&e);
     }
 }
-INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
+int32_t GFXFillRect(HANDLE surface,const GFXRect*rect,uint32_t color) {
     XImage*img=(XImage*)surface;
-    UINT x,y;
+    uint32_t x,y;
     GFXRect rec= {0,0,0,0};
     rec.w=img->width;
     rec.h=img->height;
     if(rect)rec=*rect;
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d",img,rec.x,rec.y,rec.w,rec.h,color,img->bytes_per_line);
-    UINT*fb=(UINT*)(img->data+img->bytes_per_line*rec.y+rec.x*4);
-    UINT*fbtop=fb;
+    uint32_t*fb=(uint32_t*)(img->data+img->bytes_per_line*rec.y+rec.x*4);
+    uint32_t*fbtop=fb;
     for(x=0; x<rec.w; x++)fb[x]=color;
     for(y=1; y<rec.h; y++) {
         fb+=(img->bytes_per_line>>2);
@@ -223,7 +223,7 @@ INT GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color) {
     return E_OK;
 }
 
-INT GFXFlip(HANDLE surface) {
+int32_t GFXFlip(HANDLE surface) {
     XImage *img=(XImage*)surface;
     if(mainSurface==surface) {
         GFXRect rect= {0,0,img->width,img->height};
@@ -232,7 +232,7 @@ INT GFXFlip(HANDLE surface) {
     return 0;
 }
 
-INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface) {
+int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
     XImage*img=NULL;
     if(x11Display) {
         int imagedepth = DefaultDepth(x11Display,DefaultScreen(x11Display));
@@ -258,12 +258,12 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
 }
 
 
-INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* srcrect) {
+int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* srcrect) {
     XImage *ndst=(XImage*)dstsurface;
     XImage *nsrc=(XImage*)srcsurface;
     GFXRect rs= {0,0};
-    BYTE*pbs=(BYTE*)nsrc->data;
-    BYTE*pbd=(BYTE*)ndst->data;
+    uint8_t*pbs=(uint8_t*)nsrc->data;
+    uint8_t*pbd=(uint8_t*)ndst->data;
     rs.w=nsrc->width;
     rs.h=nsrc->height;
     if(srcrect)rs=*srcrect;
@@ -303,7 +303,7 @@ INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* src
     return 0;
 }
 
-INT GFXDestroySurface(HANDLE surface) {
+int32_t GFXDestroySurface(HANDLE surface) {
     XDestroyImage((XImage*)surface);
     return 0;
 }
@@ -336,7 +336,7 @@ static void* X11EventProc(void*p) {
         case KeyPress:/* 当检测到键盘按键,退出消息循环 */
         case KeyRelease:
             down=event.type==KeyPress;
-            keysym=XLookupKeysym(&event,0);
+            keysym=XLookupKeysym((XKeyEvent*)&event,0);
             for(i=0;i<sizeof(X11KEY2CD)/sizeof(X11KEY2CD[0]);i++){
                 if(keysym==X11KEY2CD[i].xkey){
                     SENDKEY((key=X11KEY2CD[i].key),down);

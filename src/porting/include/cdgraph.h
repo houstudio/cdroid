@@ -33,14 +33,14 @@ typedef enum {
  @brief .
  @{ */
 typedef struct _GFXPoint{
-    INT x;
-    INT y;
+    int32_t x;
+    int32_t y;
 }GFXPoint;
 typedef struct _GFXRect{
-    INT x;
-    INT y;
-    UINT w;
-    UINT h;
+    int32_t x;
+    int32_t y;
+    uint32_t w;
+    uint32_t h;
 }GFXRect;
 /**}*/
 
@@ -58,7 +58,7 @@ typedef struct _GFXRect{
 
     For more information refer to @ref nglCreateSurface.*/
 
-INT GFXInit();
+int32_t GFXInit();
 /**This function get the graph resolution
  *  @param [in]dispid displayid ,count as 0,1,2...
     @param [out]width                         The value return screen width in pixels.
@@ -68,10 +68,10 @@ INT GFXInit();
      For more information refer to @ref nglCreateSurface and @ref nglGetSurfaceInfo.
 */
 /**GFXGetDisplayCount get display count>=1 */
-INT GFXGetDisplayCount();
+int32_t GFXGetDisplayCount();
 
 /**GFXGetDisplaySize return phisical display  size in no rotation*/
-INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height);
+int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height);
 /**This function create an OSD Surface which we can used to draw sth.
     @param [out]surface                      The value used to return surface handle.
     @param [in]width                         The value give the surface width in pixels.
@@ -83,7 +83,7 @@ INT GFXGetDisplaySize(int dispid,UINT*width,UINT*height);
     For more information refer to @ref nglCreateSurface and @ref nglGetSurfaceInfo.
 */
 
-INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface);
+int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface);
 
 /**This function create an OSD Surface which we can used to draw sth.
     @param [in]surface                       The surface handle which is created by @ref nglCreateSurface.
@@ -95,10 +95,10 @@ INT GFXCreateSurface(int dispid,HANDLE*surface,UINT width,UINT height,INT format
     For more information refer to @ref nglCreateSurface and @ref nglGetSurfaceInfo.
 */
 
-INT GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format);
-INT GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch);
-INT GFXUnlockSurface(HANDLE surface);
-INT GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha);
+int32_t GFXGetSurfaceInfo(HANDLE surface,uint32_t*width,uint32_t*height,int32_t *format);
+int32_t GFXLockSurface(HANDLE surface,void**buffer,uint32_t*pitch);
+int32_t GFXUnlockSurface(HANDLE surface);
+int32_t GFXSurfaceSetOpacity(HANDLE surface,uint8_t alpha);
 /**Thie function fill the surface area with color 
   @param [in]surface         
   @param [in]rect            if rect is NULL fill whole surface area
@@ -106,7 +106,7 @@ INT GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha);
   @retval E_OK
   @retval E_ERROR
 */
-INT GFXFillRect(HANDLE dstsurface,const GFXRect*rect,UINT color);
+int32_t GFXFillRect(HANDLE dstsurface,const GFXRect*rect,uint32_t color);
 
 /**This function Blit source surface to dest surface .
     @param [in]dstsurface                     The dest surface which used to blit to.
@@ -118,9 +118,9 @@ INT GFXFillRect(HANDLE dstsurface,const GFXRect*rect,UINT color);
     @retval E_ERROR
     For more information refer to @ref nglCreateSurface .
 */
-INT GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect);
-INT GFXBatchBlit(HANDLE dstsurface,const GFXPoint*dest_point,HANDLE srcsurface,const GFXRect*srcrects);
-INT GFXFlip(HANDLE dstsurface);
+int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect);
+int32_t GFXBatchBlit(HANDLE dstsurface,const GFXPoint*dest_point,HANDLE srcsurface,const GFXRect*srcrects);
+int32_t GFXFlip(HANDLE dstsurface);
 
 /**This functionDestroy the surface
     @param [in]dstsurface                     The dest surface we want to destroied
@@ -128,7 +128,7 @@ INT GFXFlip(HANDLE dstsurface);
     @retval E_ERROR
     For more information refer to @ref nglCreateSurface
 */
-INT GFXDestroySurface(HANDLE surface);
+int32_t GFXDestroySurface(HANDLE surface);
 
 /**}*///raphfunctions
 

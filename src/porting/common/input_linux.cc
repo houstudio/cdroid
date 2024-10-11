@@ -62,7 +62,7 @@ typedef struct {
 
 static INPUTDEVICE dev= {0,0};
 #define WATCHED_PATH "/dev/input"
-INT InputInit() {
+int32_t InputInit() {
     if(dev.pipe[0]>0)
         return 0;
     pipe(dev.pipe);
@@ -95,7 +95,7 @@ INT InputInit() {
 
 #define SET_BIT(array,bit)    ((array)[(bit)/8] |= (1<<((bit)%8)))
 
-INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
+int32_t InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
     int rc1,rc2,rcc,version,clock=1/*EV_CLK_MONO*/;
     memset(devinfo,0,sizeof(INPUTDEVICEINFO));
     struct input_id id;
@@ -169,7 +169,7 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
     return 0;
 }
 
-INT InputInjectEvents(const INPUTEVENT*es,UINT count,DWORD timeout) {
+int32_t InputInjectEvents(const INPUTEVENT*es,uint32_t count,uint32_t timeout) {
     const char*evtnames[] = {"SYN","KEY","REL","ABS","MSC","SW"};
     struct timespec tv;
     INPUTEVENT*events = (INPUTEVENT*)malloc(count*sizeof(INPUTEVENT));
@@ -183,7 +183,7 @@ INT InputInjectEvents(const INPUTEVENT*es,UINT count,DWORD timeout) {
     return count;
 }
 
-INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
+int32_t InputGetEvents(INPUTEVENT*outevents,uint32_t max,uint32_t timeout) {
     int rc,count = 0,event_pos = 0;
     struct timeval tv;
     struct input_event events[64];

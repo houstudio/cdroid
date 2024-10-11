@@ -29,9 +29,9 @@ typedef struct{
 }FBDEVICE;
 
 typedef struct{
-   UINT width;
-   UINT height;
-   UINT pitch;
+   uint32_t width;
+   uint32_t height;
+   uint32_t pitch;
    int format;
    int ishw;
    void*current;
@@ -43,7 +43,7 @@ typedef struct{
 
 static FBDEVICE dev={-1};
 
-DWORD GFXInit(){
+int32_t GFXInit(){
     if(dev.fb>=0)return E_OK;
 #ifdef HAVE_FY_TDE2
     VO_Enable();
@@ -120,8 +120,8 @@ void copySurface(void*phyfrom,void*phyto){
     dst_rect.u32Height  = dev.var.yres;
 
     // 获取虚拟地址对应的物理地址
-    src_surface.u32PhyAddr = (UINT32)phyfrom;//surf->current==surf->buffer?surf->phybkbuffer:surf->phybuffer;//src_phy;
-    dst_surface.u32PhyAddr = (UINT32)phyto;//surf->current==surf->buffer?surf->phybuffer:surf->phybkbuffer;//dst_phy;
+    src_surface.u32PhyAddr = (uint32_t)phyfrom;//surf->current==surf->buffer?surf->phybkbuffer:surf->phybuffer;//src_phy;
+    dst_surface.u32PhyAddr = (uint32_t)phyto;//surf->current==surf->buffer?surf->phybuffer:surf->phybkbuffer;//dst_phy;
 
     TDE_HANDLE tde_handle= FY_TDE2_BeginJob();
     if (FY_TDE2_QuickCopy(tde_handle, &src_surface, &src_rect, &dst_surface, &dst_rect)){
@@ -140,7 +140,7 @@ static void swapBuffer(FBSURFACE*surf){
 	}
 }
 
-void FastFillRect(FBSURFACE*surf,const GFXRect*rect,UINT color){
+void FastFillRect(FBSURFACE*surf,const GFXRect*rect,uint32_t color){
     TDE2_SURFACE_S dst_surface; 
     memset(&dst_surface, 0, sizeof(TDE2_SURFACE_S));
     dst_surface.enColorFmt      = TDE2_COLOR_FMT_ARGB8888;
@@ -149,7 +149,7 @@ void FastFillRect(FBSURFACE*surf,const GFXRect*rect,UINT color){
     dst_surface.u32Stride       = surf->pitch;
     dst_surface.bAlphaMax255    = FY_TRUE;
     if(surf->bkbuffer==NULL){
-        dst_surface.u32PhyAddr = (UINT32)((surf->current==surf->buffer)?surf->phybuffer:surf->phybkbuffer);
+        dst_surface.u32PhyAddr = (uint32_t)((surf->current==surf->buffer)?surf->phybuffer:surf->phybkbuffer);
     }
     TDE_HANDLE tde_handle=FY_TDE2_BeginJob();
 
@@ -160,21 +160,21 @@ void FastFillRect(FBSURFACE*surf,const GFXRect*rect,UINT color){
 }
 #endif
 
-DWORD GFXGetScreenSize(UINT*width,UINT*height){
+int32_t GFXGetScreenSize(uint32_t*width,uint32_t*height){
     *width=dev.var.xres;
     *height=dev.var.yres;
     LOGD("screensize=%dx%d",*width,*height);
     return E_OK;
 }
 
-DWORD GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch){
+int32_t GFXLockSurface(HANDLE surface,void**buffer,uint32_t*pitch){
     FBSURFACE*ngs=(FBSURFACE*)surface;
     *buffer=ngs->buffer;
     *pitch=ngs->pitch;
     return 0;
 }
 
-DWORD GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format){
+int32_t GFXGetSurfaceInfo(HANDLE surface,uint32_t*width,uint32_t*height,INT *format){
     FBSURFACE*ngs=(FBSURFACE*)surface;
     *width = ngs->width;
     *height= ngs->height;
@@ -182,24 +182,24 @@ DWORD GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format){
     return E_OK;
 }
 
-DWORD GFXUnlockSurface(HANDLE surface){
+int32_t GFXUnlockSurface(HANDLE surface){
     return 0;
 }
 
-DWORD GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha){
+int32_t GFXSurfaceSetOpacity(HANDLE surface,uint8_t alpha){
     return 0;//dispLayer->SetOpacity(dispLayer,alpha);
 }
 
-DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
+int32_t GFXFillRect(HANDLE surface,const GFXRect*rect,uint32_t color){
     FBSURFACE*ngs=(FBSURFACE*)surface;
-    UINT x,y;
+    uint32_t x,y;
     GFXRect rec={0,0,0,0};
     rec.w=ngs->width;
     rec.h=ngs->height;
     if(rect)rec=*rect;
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d",ngs,rec.x,rec.y,rec.w,rec.h,color,ngs->pitch);
-    UINT*fb=(UINT*)(ngs->buffer+ngs->pitch*rec.y+rec.x*4);
-    UINT *fbtop=fb; 
+    uint32_t*fb=(uint32_t*)(ngs->buffer+ngs->pitch*rec.y+rec.x*4);
+    uint32_t *fbtop=fb; 
 #ifdef HAVE_FY_TDE2
     if(ngs->ishw){
         FastFillRect(ngs,rect,color);
@@ -215,7 +215,7 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rect,UINT color){
     return E_OK;
 }
 
-DWORD GFXFlip(HANDLE surface){
+int32_t GFXFlip(HANDLE surface){
     FBSURFACE*surf=(FBSURFACE*)surface;
     if(surf->ishw){
 #ifdef HAVE_FY_TDE2
@@ -284,7 +284,7 @@ static void ResetScreenFormat(FBSURFACE*fb,int width,int height,int format){
 }
 #endif
 
-DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface){
+int32_t GFXCreateSurface(HANDLE*surface,uint32_t width,uint32_t height,INT format,BOOL hwsurface){
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
     bzero(surf,sizeof(FBSURFACE));
     surf->width=width;
@@ -319,7 +319,7 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
     return E_OK;
 }
 
-DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect){
+int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect){
     unsigned int x,y,sw,sh;
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
     FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
@@ -353,7 +353,7 @@ DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*sr
     return 0;
 }
 
-DWORD GFXDestroySurface(HANDLE surface){
+int32_t GFXDestroySurface(HANDLE surface){
     FBSURFACE*surf=(FBSURFACE*)surface;
     if(surf->ishw)
         munmap(surf->buffer,dev.fix.smem_len);
