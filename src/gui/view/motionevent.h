@@ -9,11 +9,19 @@
 #define USE_TRACKINGID_AS_POINTERID 0
 namespace cdroid{
 
+#if defined(_MSC_VER)  // MSVC
+#define ALIGN_ATTRIBUTE(n) __declspec(align(n))
+#elif defined(__GNUC__) || defined(__clang__)  // GCC或Clang
+#define ALIGN_ATTRIBUTE(n) __attribute__((aligned(n)))
+#else
+#error "Unsupported compiler"
+#endif
+
 struct PointerCoords {
     enum { MAX_AXES = 30 }; // 30 so that sizeof(PointerCoords) == 128
 
     // Bitfield of axes that are present in this structure.
-    uint64_t bits __attribute__((aligned(8)));
+    uint64_t bits ALIGN_ATTRIBUTE(8);
     bool isResampled;
     // Values of axes that are stored in this structure packed in order by axis id
     // for each axis that is present in the structure according to 'bits'.
