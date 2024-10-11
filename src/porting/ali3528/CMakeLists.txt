@@ -5,7 +5,7 @@ set(ALI_SRCS
     ngl_msgq.c
     ngl_timer.c
     ngl_nvm.c
-    ngl_graph.c
+    graph_ali.c
     ngl_tuner.c
     ngl_panel.c
     ngl_pvr.c

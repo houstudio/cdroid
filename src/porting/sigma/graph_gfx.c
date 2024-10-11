@@ -390,8 +390,8 @@ int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
     FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
     GFXRect rs= {0,0};
-    BYTE*pbs=(BYTE*)nsrc->buffer;
-    BYTE*pbd=(BYTE*)ndst->buffer;
+    uint8_t*pbs=(uint8_t*)nsrc->buffer;
+    uint8_t*pbd=(uint8_t*)ndst->buffer;
     int ret;
     MI_U16 fence;
     MI_GFX_Opt_t opt;

@@ -24,7 +24,7 @@ static void DFBDisplayLayerCBK(DFBDisplayLayerID layer_id, DFBDisplayLayerDescri
     LOGD("Layer %d[%s] type:%x surface.caps=%x accessor=%x",layer_id,desc.name,desc.type,desc.surface_caps,desc.surface_accessor);
 }
 
-DWORD GFXInit()
+int32_t GFXInit()
 {
 #ifdef USE_DIRECTFB
     if(directfb!=NULL)return E_OK;
@@ -55,7 +55,7 @@ static void Rect2Aui(GFXRect*r,struct aui_osd_rect*ar){
     ar->uHeight=r->h;
 }
 
-DWORD GFXGetScreenSize(UINT*width,UINT*height){
+int32_t GFXGetScreenSize(uint32_t*width,uint32_t*height){
 #ifdef USE_DIRECTFB
     IDirectFBDisplayLayer *dispLayer;
     DFBDisplayLayerConfig dispCfg;
@@ -71,7 +71,7 @@ DWORD GFXGetScreenSize(UINT*width,UINT*height){
     return E_OK;
 }
 
-DWORD GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch){
+int32_t GFXLockSurface(HANDLE surface,void**buffer,uint32_t*pitch){
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     int ret=surf->Lock(surf,DSLF_READ | DSLF_WRITE,buffer,pitch);
@@ -87,7 +87,7 @@ DWORD GFXLockSurface(HANDLE surface,void**buffer,UINT*pitch){
     return ret;
 }
 
-DWORD GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format)
+int32_t GFXGetSurfaceInfo(HANDLE surface,uint32_t*width,uint32_t*height,INT *format)
 {
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
@@ -106,7 +106,7 @@ DWORD GFXGetSurfaceInfo(HANDLE surface,UINT*width,UINT*height,INT *format)
     return ret==0?E_OK:E_ERROR;
 }
 
-DWORD GFXUnlockSurface(HANDLE surface){
+int32_t GFXUnlockSurface(HANDLE surface){
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     int ret=surf->Unlock(surf);
@@ -117,7 +117,7 @@ DWORD GFXUnlockSurface(HANDLE surface){
     return ret;
 }
 
-DWORD GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha){
+int32_t GFXSurfaceSetOpacity(HANDLE surface,uint8_t alpha){
     LOGD("==setopacity=%x",alpha);
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
@@ -134,7 +134,7 @@ DWORD GFXSurfaceSetOpacity(HANDLE surface,BYTE alpha){
 #endif
 }
 
-DWORD GFXFillRect(HANDLE surface,const GFXRect*rec,UINT color){
+int32_t GFXFillRect(HANDLE surface,const GFXRect*rec,uint32_t color){
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     GFXRect r={0,0,0,0};
@@ -146,7 +146,7 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rec,UINT color){
     surf->FillRectangle(surf,r.x,r.y,r.w,r.h);
 #else
     aui_osd_rect rc={0,0,0,0};
-    UINT w,h,f;
+    uint32_t w,h,f;
     nglGetSurfaceInfo(surface,&w,&h,&f);
     if(rec==NULL){
         rc.uWidth=w;rc.uHeight=h;
@@ -157,13 +157,13 @@ DWORD GFXFillRect(HANDLE surface,const GFXRect*rec,UINT color){
     return E_OK;
 }
 
-DWORD GFXFlip(HANDLE surface){
+int32_t GFXFlip(HANDLE surface){
 #ifdef USE_DIRECTFB
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     int ret=surf->Flip( surf, NULL, DSFLIP_NONE);//ONSYNC);
 #else
     aui_osd_rect rc={0,0,0,0};
-    UINT w,h,f;
+    uint32_t w,h,f;
     aui_surface_info info;
     int ret=aui_gfx_surface_info_get((aui_hdl)surface,&info);
     rc.uWidth=info.width;rc.uHeight=info.height;
@@ -175,7 +175,7 @@ DWORD GFXFlip(HANDLE surface){
     return ret;
 }
 
-DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hwsurface)
+int32_t GFXCreateSurface(HANDLE*surface,uint32_t width,uint32_t height,INT format,BOOL hwsurface)
 {
 #ifdef USE_DIRECTFB
      int i,ret;
@@ -228,7 +228,7 @@ DWORD GFXCreateSurface(HANDLE*surface,UINT width,UINT height,INT format,BOOL hws
 #endif
 }
 
-DWORD GFXSetSurfaceColorKey(HANDLE surface,UINT color){
+int32_t GFXSetSurfaceColorKey(HANDLE surface,uint32_t color){
 #ifdef USE_DIRECTFB
       IDirectFBSurface*dfbsrc=(IDirectFBSurface*)surface;
 #else
@@ -237,7 +237,7 @@ DWORD GFXSetSurfaceColorKey(HANDLE surface,UINT color){
 }
 
 #define MIN(x,y) ((x)>(y)?(y):(x))
-DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect)
+int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect)
 {
 #ifdef USE_DIRECTFB
      int ret,dw,dh;
@@ -304,7 +304,7 @@ DWORD GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*sr
      return ret;
 }
 
-DWORD GFXDestroySurface(HANDLE surface)
+int32_t GFXDestroySurface(HANDLE surface)
 {
 #ifdef USE_DIRECTFB
      destroyed_surface++;

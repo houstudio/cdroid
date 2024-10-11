@@ -324,8 +324,8 @@ int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
     FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
     GFXRect rs={0,0};
-    BYTE*pbs=(BYTE*)nsrc->buffer;
-    BYTE*pbd=(BYTE*)ndst->buffer;
+    uint8_t*pbs=(uint8_t*)nsrc->buffer;
+    uint8_t*pbd=(uint8_t*)ndst->buffer;
     rs.w=nsrc->width;rs.h=nsrc->height;
     if(srcrect)rs=*srcrect;
     if(((int)rs.w+dx<=0)||((int)rs.h+dy<=0)||(dx>=(int)ndst->width)||(dy>=(int)ndst->height)||(rs.x<0)||(rs.y<0)){
