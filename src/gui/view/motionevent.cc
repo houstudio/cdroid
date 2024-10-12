@@ -1,6 +1,8 @@
 #include <view/motionevent.h>
 #include <private/inputeventlabels.h>
 #include <inputdevice.h>
+#include <porting/cdlog.h>
+
 namespace cdroid{
 
 // --- PointerCoords ---
@@ -107,8 +109,20 @@ void PointerProperties::copyFrom(const PointerProperties& other) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
+static std::vector< PointerProperties>gSharedTempPointerProperties;
+static std::vector< PointerCoords>gSharedTempPointerCoords;
+static std::vector<int>gSharedTempPointerIndexMap;
 
 void MotionEvent::ensureSharedTempPointerCapacity(int desiredCapacity){
+    if ( gSharedTempPointerCoords.size() < desiredCapacity) {
+        int capacity = gSharedTempPointerCoords.size();
+        while (capacity < desiredCapacity) {
+            capacity *= 2;
+        }
+        gSharedTempPointerCoords.resize(capacity);
+        gSharedTempPointerProperties.resize(capacity);
+        gSharedTempPointerIndexMap .resize(capacity];
+    }
 }
 
 MotionEvent::MotionEvent(){
@@ -216,7 +230,7 @@ void MotionEvent::initialize(
     mSampleEventTimes.clear();
     mSamplePointerCoords.clear();
     for(int i=0;i<pointerCount;i++){
-       mPointerProperties.push_back(pointerProperties[i]);
+        mPointerProperties.push_back(pointerProperties[i]);
     }
     addSample(eventTime,pointerCoords);
     updateCursorPosition();
@@ -265,9 +279,9 @@ MotionEvent*MotionEvent::split(int idBits){
     MotionEvent*ev = obtain();
     const int oldPointerCount = getPointerCount();
     ensureSharedTempPointerCapacity(oldPointerCount);
-    PointerProperties pp[oldPointerCount];// = gSharedTempPointerProperties;
-    PointerCoords pc[oldPointerCount];// = gSharedTempPointerCoords;
-    int map[oldPointerCount];// = gSharedTempPointerIndexMap;
+    PointerProperties *pp = gSharedTempPointerProperties.data();
+    PointerCoords *pc = gSharedTempPointerCoords.data();
+    int *map = gSharedTempPointerIndexMap.data();
 
     const int oldAction = getAction();
     const int oldActionMasked = oldAction & ACTION_MASK;
@@ -348,7 +362,7 @@ MotionEvent* MotionEvent::clampNoHistory(float left, float top, float right, flo
     const int pointerCount = getPointerCount();
     ensureSharedTempPointerCapacity(pointerCount);
 #if 0
-    PointerProperties*pp = gSharedTempPointerProperties;
+    PointerProperties*pp = gSharedTempPointerProperties.data();
     PointerCoords* pc = gSharedTempPointerCoords;
     for (int i = 0; i < pointerCount; i++) {
         pp[i] = mPointerProperties[i];//nativeGetPointerProperties(mNativePtr,i,pp[i]);
@@ -709,7 +723,7 @@ static void appendUnless(T defValue, std::ostringstream& os,const std::string& k
 }
 
 void MotionEvent::toStream(std::ostream& os)const{
-    os<<"MotionEvent { action="<<actionToString(getAction());
+    os<<(const char*)"MotionEvent { action="<<actionToString(getAction());
     //appendUnless("0", msg, ", actionButton=", buttonStateToString(getActionButton()));
 
     const int pointerCount = getPointerCount();
@@ -727,18 +741,18 @@ void MotionEvent::toStream(std::ostream& os)const{
 
     //appendUnless("0", os, ", buttonState=", buttonStateToString(getButtonState()));
     //appendUnless(classificationToString(CLASSIFICATION_NONE), os, ", classification=",classificationToString(getClassification()));
-    os<<", metaState="<<KeyEvent::metaStateToString(getMetaState());
+    os<< (const char*)", metaState="<<KeyEvent::metaStateToString(getMetaState());
     //appendUnless("0", os, ", metaState=", KeyEvent::metaStateToString(getMetaState()));
-    os<<", flags=0x"<<std::hex<<getFlags();//appendUnless("0", os, ", flags=0x", Integer.toHexString(getFlags()));
-    os<<", edgeFlags=0x"<<std::hex<<getEdgeFlags()<<std::dec;//appendUnless("0", os, ", edgeFlags=0x", Integer.toHexString(getEdgeFlags()));
-    os<<", pointerCount="<<pointerCount;//appendUnless(1, os, ", pointerCount=", pointerCount);
-    os<<", historySize="<<getHistorySize();//appendUnless(0, os, ", historySize=", getHistorySize());
-    os<<", eventTime="<<getEventTime();
+    os<< (const char*)", flags=0x"<<std::hex<<getFlags();//appendUnless("0", os, ", flags=0x", Integer.toHexString(getFlags()));
+    os<< (const char*)", edgeFlags=0x"<<std::hex<<getEdgeFlags()<<std::dec;//appendUnless("0", os, ", edgeFlags=0x", Integer.toHexString(getEdgeFlags()));
+    os<< (const char*)", pointerCount="<<pointerCount;//appendUnless(1, os, ", pointerCount=", pointerCount);
+    os<< (const char*)", historySize="<<getHistorySize();//appendUnless(0, os, ", historySize=", getHistorySize());
+    os<< (const char*)", eventTime="<<getEventTime();
     if (true){//!DEBUG_CONCISE_TOSTRING) {
-        os<<", downTime="<<getDownTime();
-        os<<", deviceId="<<getDeviceId();
-        os<<", source=0x"<<std::hex<<getSource()<<std::dec;
-        os<<", displayId="<<getDisplayId();
+        os<< (const char*)", downTime="<<getDownTime();
+        os<< (const char*)", deviceId="<<getDeviceId();
+        os<< (const char*)", source=0x"<<std::hex<<getSource()<<std::dec;
+        os<< (const char*)", displayId="<<getDisplayId();
         //os<<", eventId="<<getId();
     }
     os<<" }";
