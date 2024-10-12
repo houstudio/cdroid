@@ -115,7 +115,7 @@ static std::vector<int>gSharedTempPointerIndexMap;
 
 void MotionEvent::ensureSharedTempPointerCapacity(int desiredCapacity){
     if ( gSharedTempPointerCoords.size() < desiredCapacity) {
-        int capacity = gSharedTempPointerCoords.size();
+        int capacity = std::max((int)gSharedTempPointerCoords.size(),8);
         while (capacity < desiredCapacity) {
             capacity *= 2;
         }

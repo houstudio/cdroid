@@ -950,7 +950,7 @@ static bool solveLeastSquares(const std::vector<float>& x, const std::vector<flo
     }
     for (uint32_t i = n; i != 0; ) {
         i--;
-        outB[i] = vectorDot(&q[i][0], wy, m);
+        outB[i] = vectorDot(&q[i][0], wy.data(), m);
         for (uint32_t j = n - 1; j > i; j--) {
             outB[i] -= r[i][j] * outB[j];
         }
