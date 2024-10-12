@@ -1567,9 +1567,9 @@ bool StaggeredGridLayoutManager::computeScrollVectorForPosition(int targetPositi
         return false;
     }
     if (mOrientation == HORIZONTAL) {
-        outVector.set(direction,0);
+        outVector.set(float(direction),0.f);
     } else {
-        outVector.set(0,direction);
+        outVector.set(0.f,float(direction));
     }
     return true;
 }
@@ -2094,19 +2094,19 @@ void StaggeredGridLayoutManager::Span::onOffset(int dt) {
 
 int StaggeredGridLayoutManager::Span::findFirstVisibleItemPosition() {
     return mLM->mReverseLayout
-            ? findOneVisibleChild(mViews.size() - 1, -1, false)
+            ? findOneVisibleChild(int(mViews.size() - 1), -1, false)
             : findOneVisibleChild(0, mViews.size(), false);
 }
 
 int StaggeredGridLayoutManager::Span::findFirstPartiallyVisibleItemPosition() {
     return mLM->mReverseLayout
-            ? findOnePartiallyVisibleChild(mViews.size() - 1, -1, true)
+            ? findOnePartiallyVisibleChild(int(mViews.size() - 1), -1, true)
             : findOnePartiallyVisibleChild(0, mViews.size(), true);
 }
 
 int StaggeredGridLayoutManager::Span::findFirstCompletelyVisibleItemPosition() {
     return mLM->mReverseLayout
-            ? findOneVisibleChild(mViews.size() - 1, -1, true)
+            ? findOneVisibleChild(int(mViews.size() - 1), -1, true)
             : findOneVisibleChild(0, mViews.size(), true);
 }
 
@@ -2119,7 +2119,7 @@ int StaggeredGridLayoutManager::Span::findLastVisibleItemPosition() {
 int StaggeredGridLayoutManager::Span::findLastPartiallyVisibleItemPosition() {
     return mLM->mReverseLayout
             ? findOnePartiallyVisibleChild(0, mViews.size(), true)
-            : findOnePartiallyVisibleChild(mViews.size() - 1, -1, true);
+            : findOnePartiallyVisibleChild(int(mViews.size() - 1), -1, true);
 }
 
 int StaggeredGridLayoutManager::Span::findLastCompletelyVisibleItemPosition() {
@@ -2187,7 +2187,7 @@ View* StaggeredGridLayoutManager::Span::getFocusableViewAfter(int referenceChild
             }
         }
     } else {
-        for (int i = mViews.size() - 1; i >= 0; i--) {
+        for (int i = int(mViews.size() - 1); i >= 0; i--) {
             View* view = mViews.at(i);
             if ((mLM->mReverseLayout && mLM->getPosition(view) >= referenceChildPosition)
                     || (!mLM->mReverseLayout && mLM->getPosition(view) <= referenceChildPosition)) {
@@ -2228,7 +2228,7 @@ int StaggeredGridLayoutManager::LazySpanLookup::invalidateAfter(int position) {
     if (endPosition == RecyclerView::NO_POSITION) {
         //Arrays.fill(mData, position, mData.size(), LayoutParams::INVALID_SPAN_ID);
         std::fill(mData.begin() + position, mData.end() , (int)LayoutParams::INVALID_SPAN_ID);
-        return mData.size();
+        return (int)mData.size();
     } else {
         // just invalidate items in between
         //Arrays.fill(mData, position, endPosition + 1, LayoutParams::INVALID_SPAN_ID);
@@ -2263,8 +2263,8 @@ void StaggeredGridLayoutManager::LazySpanLookup::ensureSize(int position) {
         mData.resize(std::max(position, (int)MIN_SIZE) + 1);// = new int[std::max(position, MIN_SIZE) + 1];
         std::fill(mData.begin(),mData.end(),(int)LayoutParams::INVALID_SPAN_ID);
     } else if (position >= mData.size()) {
-        const int oldlen = mData.size();//int[] old = mData;
-        const int newlen = sizeForPosition(position);
+        const size_t oldlen = mData.size();//int[] old = mData;
+        const size_t newlen = sizeForPosition(position);
         mData.resize(newlen);
 	    std::fill(mData.begin()+oldlen,mData.end(),(int)LayoutParams::INVALID_SPAN_ID);
     }
@@ -2347,8 +2347,8 @@ int StaggeredGridLayoutManager::LazySpanLookup::invalidateFullSpansAfter(int pos
         mFullSpanItems.erase(it);//.remove(item);
     }
     int nextFsiIndex = -1;
-    const int count = mFullSpanItems.size();
-    for (int i = 0; i < count; i++) {
+    const size_t count = mFullSpanItems.size();
+    for (size_t i = 0; i < count; i++) {
         FullSpanItem* fsi = mFullSpanItems.at(i);
         if (fsi->mPosition >= position) {
             nextFsiIndex = i;
@@ -2367,8 +2367,8 @@ void StaggeredGridLayoutManager::LazySpanLookup::addFullSpanItem(FullSpanItem* f
     if (mFullSpanItems.empty()){// == null) {
         //mFullSpanItems = new ArrayList<>();
     }
-    const int size = mFullSpanItems.size();
-    for (int i = 0; i < size; i++) {
+    const size_t size = mFullSpanItems.size();
+    for (size_t i = 0; i < size; i++) {
         FullSpanItem* other = mFullSpanItems.at(i);
         if (other->mPosition == fullSpanItem->mPosition) {
             if (_Debug) {
@@ -2404,8 +2404,8 @@ StaggeredGridLayoutManager::LazySpanLookup::FullSpanItem* StaggeredGridLayoutMan
     if (mFullSpanItems.empty()){// == nullptr) {
         return nullptr;
     }
-    const int limit = mFullSpanItems.size();
-    for (int i = 0; i < limit; i++) {
+    const size_t limit = mFullSpanItems.size();
+    for (size_t i = 0; i < limit; i++) {
         FullSpanItem* fsi = mFullSpanItems.at(i);
         if (fsi->mPosition >= maxPos) {
             return nullptr;
@@ -2548,9 +2548,9 @@ void StaggeredGridLayoutManager::AnchorInfo::reset() {
 }
 
 void StaggeredGridLayoutManager::AnchorInfo::saveSpanReferenceLines(std::vector<Span*>& spans) {
-    const int spanCount = spans.size();
+    const size_t spanCount = spans.size();
     mSpanReferenceLines.resize(spanCount);
-    for (int i = 0; i < spanCount; i++) {
+    for (size_t i = 0; i < spanCount; i++) {
         // does not matter start or end since this is only recorded when span is reset
         mSpanReferenceLines[i] = spans[i]->getStartLine(Span::INVALID_LINE);
     }

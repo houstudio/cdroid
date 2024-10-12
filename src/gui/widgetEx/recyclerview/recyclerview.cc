@@ -945,7 +945,7 @@ bool RecyclerView::scrollByInternal(int x, int y, MotionEvent* ev) {
         mLastTouchX -= mScrollOffset[0];
         mLastTouchY -= mScrollOffset[1];
         if (ev != nullptr) {
-            ev->offsetLocation(mScrollOffset[0], mScrollOffset[1]);
+            ev->offsetLocation(float(mScrollOffset[0]), float(mScrollOffset[1]));
         }
         mNestedOffsets[0] += mScrollOffset[0];
         mNestedOffsets[1] += mScrollOffset[1];
@@ -1109,7 +1109,7 @@ bool RecyclerView::fling(int velocityX, int velocityY) {
         return false;
     }
 
-    if (!dispatchNestedPreFling(velocityX, velocityY)) {
+    if (!dispatchNestedPreFling(float(velocityX), float(velocityY))) {
         const bool canScroll = bCanScrollHorizontal || bCanScrollVertical;
         dispatchNestedFling(velocityX, velocityY, canScroll);
         if (mOnFlingListener && mOnFlingListener(velocityX, velocityY)){//->onFling(velocityX, velocityY)) {
@@ -1605,8 +1605,8 @@ bool RecyclerView::dispatchOnItemTouchIntercept(MotionEvent& e) {
         mActiveOnItemTouchListener = nullptr;
     }
 
-    const int listenerCount = mOnItemTouchListeners.size();
-    for (int i = 0; i < listenerCount; i++) {
+    const size_t listenerCount = mOnItemTouchListeners.size();
+    for (size_t i = 0; i < listenerCount; i++) {
         OnItemTouchListener& listener = mOnItemTouchListeners.at(i);
         if (listener.onInterceptTouchEvent(*this, e) && action != MotionEvent::ACTION_CANCEL) {
             mActiveOnItemTouchListener = &listener;
@@ -1635,8 +1635,8 @@ bool RecyclerView::dispatchOnItemTouch(MotionEvent& e) {
     // Listeners will have already received the ACTION_DOWN via dispatchOnItemTouchIntercept
     // as called from onInterceptTouchEvent; skip it.
     if (action != MotionEvent::ACTION_DOWN) {
-        const int listenerCount = mOnItemTouchListeners.size();
-        for (int i = 0; i < listenerCount; i++) {
+        const size_t listenerCount = mOnItemTouchListeners.size();
+        for (size_t i = 0; i < listenerCount; i++) {
             OnItemTouchListener& listener = mOnItemTouchListeners.at(i);
             if (listener.onInterceptTouchEvent(*this, e)) {
                 mActiveOnItemTouchListener = &listener;
@@ -1751,7 +1751,7 @@ bool RecyclerView::onInterceptTouchEvent(MotionEvent& e) {
 }
 
 void RecyclerView::requestDisallowInterceptTouchEvent(bool disallowIntercept) {
-    const int listenerCount = mOnItemTouchListeners.size();
+    const int listenerCount = (int)mOnItemTouchListeners.size();
     for (int i = 0; i < listenerCount; i++) {
         OnItemTouchListener listener = mOnItemTouchListeners.at(i);
         listener.onRequestDisallowInterceptTouchEvent(disallowIntercept);
@@ -1787,7 +1787,7 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
     if (action == MotionEvent::ACTION_DOWN) {
         mNestedOffsets[0] = mNestedOffsets[1] = 0;
     }
-    vtev->offsetLocation(mNestedOffsets[0], mNestedOffsets[1]);
+    vtev->offsetLocation(float(mNestedOffsets[0]), float(mNestedOffsets[1]));
 
     switch (action) {
     case MotionEvent::ACTION_DOWN: {
@@ -1827,7 +1827,7 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
             if (dispatchNestedPreScroll(dx, dy, mScrollConsumed, mScrollOffset, TYPE_TOUCH)) {
                 dx -= mScrollConsumed[0];
                 dy -= mScrollConsumed[1];
-                vtev->offsetLocation(mScrollOffset[0], mScrollOffset[1]);
+                vtev->offsetLocation(float(mScrollOffset[0]), float(mScrollOffset[1]));
                 // Updated the nested offsets
                 mNestedOffsets[0] += mScrollOffset[0];
                 mNestedOffsets[1] += mScrollOffset[1];
@@ -1879,7 +1879,7 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
     case MotionEvent::ACTION_UP: {
             mVelocityTracker->addMovement(*vtev);
             eventAddedToVelocityTracker = true;
-            mVelocityTracker->computeCurrentVelocity(1000, mMaxFlingVelocity);
+            mVelocityTracker->computeCurrentVelocity(1000, float(mMaxFlingVelocity));
             const float xvel = bCanScrollHorizontally ? -mVelocityTracker->getXVelocity(mScrollPointerId) : 0;
             const float yvel = bCanScrollVertically ? -mVelocityTracker->getYVelocity(mScrollPointerId) : 0;
             if (!(((xvel != 0) || (yvel != 0)) && fling((int) xvel, (int) yvel))) {
@@ -2734,7 +2734,7 @@ void RecyclerView::markItemDecorInsetsDirty() {
 void RecyclerView::draw(Canvas& c) {
     ViewGroup::draw(c);
 
-    const int count = mItemDecorations.size();
+    const int count = (int)mItemDecorations.size();
     for (int i = 0; i < count; i++) {
         mItemDecorations.at(i)->onDrawOver(c, *this, *mState);
     }
@@ -2790,7 +2790,7 @@ void RecyclerView::draw(Canvas& c) {
 void RecyclerView::onDraw(Canvas& c) {
     ViewGroup::onDraw(c);
 
-    const int count = mItemDecorations.size();
+    const int count = (int)mItemDecorations.size();
     for (int i = 0; i < count; i++) {
         mItemDecorations.at(i)->onDraw(c, *this, *mState);
     }
@@ -3166,7 +3166,7 @@ Rect RecyclerView::getItemDecorInsetsForChild(View* child) {
     }
     Rect& insets = lp->mDecorInsets;
     insets.set(0, 0, 0, 0);
-    const int decorCount = mItemDecorations.size();
+    const int decorCount = (int)mItemDecorations.size();
     for (int i = 0; i < decorCount; i++) {
         mTempRect.set(0, 0, 0, 0);
         mItemDecorations.at(i)->getItemOffsets(mTempRect, *child, *this, *mState);
@@ -4252,12 +4252,12 @@ void RecyclerView::Recycler::clearScrap() {
 
 RecyclerView::ViewHolder* RecyclerView::Recycler::getChangedScrapViewForPosition(int position) {
     // If pre-layout, check the changed scrap for an exact match.
-    int changedScrapSize;
+    size_t changedScrapSize;
     if ((mChangedScrap == nullptr) || ((changedScrapSize = mChangedScrap->size()) == 0) ) {
         return nullptr;
     }
     // find by position
-    for (int i = 0; i < changedScrapSize; i++) {
+    for (size_t i = 0; i < changedScrapSize; i++) {
         ViewHolder* holder = mChangedScrap->at(i);
         if (!holder->wasReturnedFromScrap() && (holder->getLayoutPosition() == position) ) {
             holder->addFlags(ViewHolder::FLAG_RETURNED_FROM_SCRAP);
@@ -4282,7 +4282,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::getChangedScrapViewForPosition
 }
 
 RecyclerView::ViewHolder* RecyclerView::Recycler::getScrapOrHiddenOrCachedHolderForPosition(int position, bool dryRun) {
-    const int scrapCount = mAttachedScrap.size();
+    const int scrapCount = (int)mAttachedScrap.size();
 
     // Try first for an exact, non-invalid match from scrap.
     for (int i = 0; i < scrapCount; i++) {
@@ -4332,7 +4332,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::getScrapOrHiddenOrCachedHolder
 
 RecyclerView::ViewHolder* RecyclerView::Recycler::getScrapOrCachedViewForId(long id, int type, bool dryRun) {
     // Look in our attached views first
-    const int count = mAttachedScrap.size();
+    const int count = (int)mAttachedScrap.size();
     for (int i = count - 1; i >= 0; i--) {
         ViewHolder* holder = mAttachedScrap.at(i);
         if ((holder->getItemId() == id) && !holder->wasReturnedFromScrap()) {
@@ -4365,7 +4365,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::getScrapOrCachedViewForId(long
     }
 
     // Search the first-level cache
-    const int cacheSize = mCachedViews.size();
+    const int cacheSize = (int)mCachedViews.size();
     for (int i = cacheSize - 1; i >= 0; i--) {
         ViewHolder* holder = mCachedViews.at(i);
         if (holder->getItemId() == id) {
@@ -4413,7 +4413,7 @@ void RecyclerView::Recycler::offsetPositionRecordsForMove(int from, int to) {
         end = from;
         inBetweenOffset = 1;
     }
-    const int cachedCount = mCachedViews.size();
+    const int cachedCount = (int)mCachedViews.size();
     for (int i = 0; i < cachedCount; i++) {
         ViewHolder* holder = mCachedViews.at(i);
         if ((holder == nullptr) || (holder->mPosition < start) || (holder->mPosition > end)) {
@@ -4429,7 +4429,7 @@ void RecyclerView::Recycler::offsetPositionRecordsForMove(int from, int to) {
 }
 
 void RecyclerView::Recycler::offsetPositionRecordsForInsert(int insertedAt, int count) {
-    const int cachedCount = mCachedViews.size();
+    const int cachedCount = (int)mCachedViews.size();
     for (int i = 0; i < cachedCount; i++) {
         ViewHolder* holder = mCachedViews.at(i);
         if (holder && holder->mPosition >= insertedAt) {
@@ -4441,7 +4441,7 @@ void RecyclerView::Recycler::offsetPositionRecordsForInsert(int insertedAt, int 
 
 void RecyclerView::Recycler::offsetPositionRecordsForRemove(int removedFrom, int count, bool applyToPreLayout) {
     const int removedEnd = removedFrom + count;
-    const int cachedCount = mCachedViews.size();
+    const int cachedCount = (int)mCachedViews.size();
     for (int i = cachedCount - 1; i >= 0; i--) {
         ViewHolder* holder = mCachedViews.at(i);
         if (holder != nullptr) {
@@ -4480,7 +4480,7 @@ RecyclerView::RecycledViewPool& RecyclerView::Recycler::getRecycledViewPool() {
 
 void RecyclerView::Recycler::viewRangeUpdate(int positionStart, int itemCount) {
     const int positionEnd = positionStart + itemCount;
-    const int cachedCount = mCachedViews.size();
+    const int cachedCount = (int)mCachedViews.size();
     for (int i = cachedCount - 1; i >= 0; i--) {
         ViewHolder* holder = mCachedViews.at(i);
         if (holder == nullptr) {
@@ -4498,7 +4498,7 @@ void RecyclerView::Recycler::viewRangeUpdate(int positionStart, int itemCount) {
 }
 
 void RecyclerView::Recycler::markKnownViewsInvalid() {
-    const int cachedCount = mCachedViews.size();
+    const int cachedCount = (int)mCachedViews.size();
     for (int i = 0; i < cachedCount; i++) {
         ViewHolder* holder = mCachedViews.at(i);
         if (holder != nullptr) {
@@ -4514,17 +4514,17 @@ void RecyclerView::Recycler::markKnownViewsInvalid() {
 }
 
 void RecyclerView::Recycler::clearOldPositions() {
-    const int cachedCount = mCachedViews.size();
+    const int cachedCount = (int)mCachedViews.size();
     for (int i = 0; i < cachedCount; i++) {
         ViewHolder* holder = mCachedViews.at(i);
         holder->clearOldPosition();
     }
-    const int scrapCount = mAttachedScrap.size();
+    const int scrapCount = (int)mAttachedScrap.size();
     for (int i = 0; i < scrapCount; i++) {
         mAttachedScrap.at(i)->clearOldPosition();
     }
     if (mChangedScrap != nullptr) {
-        const int changedScrapCount = mChangedScrap->size();
+        const int changedScrapCount = (int)mChangedScrap->size();
         for (int i = 0; i < changedScrapCount; i++) {
             mChangedScrap->at(i)->clearOldPosition();
         }
@@ -4532,7 +4532,7 @@ void RecyclerView::Recycler::clearOldPositions() {
 }
 
 void RecyclerView::Recycler::markItemDecorInsetsDirty() {
-    const int cachedCount = mCachedViews.size();
+    const int cachedCount = (int)mCachedViews.size();
     for (int i = 0; i < cachedCount; i++) {
         ViewHolder* holder = mCachedViews.at(i);
         LayoutParams* layoutParams = (LayoutParams*) holder->itemView->getLayoutParams();
@@ -4682,7 +4682,7 @@ void RecyclerView::dispatchChildDetached(View* child) {
     if (mAdapter != nullptr && viewHolder != nullptr) {
         mAdapter->onViewDetachedFromWindow(*viewHolder);
     }
-    const int cnt = mOnChildAttachStateListeners.size();
+    const int cnt = (int)mOnChildAttachStateListeners.size();
     for (int i = cnt - 1; i >= 0; i--) {
         mOnChildAttachStateListeners.at(i).onChildViewDetachedFromWindow(*child);
     }
@@ -4694,7 +4694,7 @@ void RecyclerView::dispatchChildAttached(View* child) {
     if (mAdapter != nullptr && viewHolder != nullptr) {
         mAdapter->onViewAttachedToWindow(*viewHolder);
     }
-    const int cnt = mOnChildAttachStateListeners.size();
+    const int cnt = (int)mOnChildAttachStateListeners.size();
     for (int i = cnt - 1; i >= 0; i--) {
         mOnChildAttachStateListeners.at(i).onChildViewAttachedToWindow(*child);
     }
@@ -5585,7 +5585,8 @@ void RecyclerView::LayoutManager::getTransformedBoundingBox(View* child, bool in
             childMatrix.transform_rectangle(recd);
             out.set((int) std::floor(recd.x),(int) std::floor(recd.y),
                  (int) std::ceil(recd.width),(int) std::ceil(recd.height) );
-            tempRectF.set(recd.x,recd.y,recd.width,recd.height);
+            tempRectF.set(static_cast<float>(recd.x),static_cast<float>(recd.y),
+                static_cast<float>(recd.width),static_cast<float>(recd.height));
         }
     }
     out.offset(child->getLeft(), child->getTop());
@@ -6338,7 +6339,7 @@ bool RecyclerView::setChildImportantForAccessibilityInternal(ViewHolder* viewHol
 }
 
 void RecyclerView::dispatchPendingImportantForAccessibilityChanges() {
-    for (int i = mPendingAccessibilityImportanceChange.size() - 1; i >= 0; i--) {
+    for (int i = int(mPendingAccessibilityImportanceChange.size() - 1); i >= 0; i--) {
         ViewHolder* viewHolder = mPendingAccessibilityImportanceChange.at(i);
         if (viewHolder->itemView->getParent() != this || viewHolder->shouldIgnore()) {
             continue;
@@ -6834,7 +6835,7 @@ void RecyclerView::AdapterDataObservable::notifyItemRangeChanged(int positionSta
     // removing itself from {@link mObservers} - and that could cause problems if
     // an iterator is used on the ArrayList {@link mObservers}.
     // to avoid such problems, just march thru the list in the reverse order.
-    for (int i = mObservers.size() - 1; i >= 0; i--) {
+    for (int i = int(mObservers.size() - 1); i >= 0; i--) {
         mObservers.at(i)->onItemRangeChanged(positionStart, itemCount, payload);
     }
 }
@@ -6860,7 +6861,7 @@ void RecyclerView::AdapterDataObservable::notifyItemRangeRemoved(int positionSta
 }
 
 void RecyclerView::AdapterDataObservable::notifyItemMoved(int fromPosition, int toPosition) {
-    for (int i = mObservers.size() - 1; i >= 0; i--) {
+    for (int i = int(mObservers.size() - 1); i >= 0; i--) {
         mObservers.at(i)->onItemRangeMoved(fromPosition, toPosition, 1);
     }
 }
@@ -7057,8 +7058,8 @@ bool RecyclerView::ItemAnimator::canReuseUpdatedViewHolder(ViewHolder& viewHolde
 }
 
 void RecyclerView::ItemAnimator::dispatchAnimationsFinished() {
-    const int count = mFinishedListeners.size();
-    for (int i = 0; i < count; ++i) {
+    const size_t count = mFinishedListeners.size();
+    for (size_t i = 0; i < count; ++i) {
         auto ls = mFinishedListeners.at(i);
         if(ls)ls();//.onAnimationsFinished();
     }
