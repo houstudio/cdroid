@@ -444,28 +444,28 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
     auto itItem = std::find(mRemoveAnimations.begin(),mRemoveAnimations.end(),&item);
     if ( itItem!=mRemoveAnimations.end()) {
         mRemoveAnimations.erase(itItem);
-        LOGE_IF(_DEBUG,"after animation is cancelled, item should not be in mRemoveAnimations list");
+        LOGE_IF(_Debug,"after animation is cancelled, item should not be in mRemoveAnimations list");
     }
 
     //noinspection PointlessBooleanExpression,ConstantConditions
     itItem = std::find(mAddAnimations.begin(),mAddAnimations.end(),&item);
     if ( itItem!=mAddAnimations.end() ) {
         mAddAnimations.erase(itItem);
-        LOGE_IF(_DEBUG,"after animation is cancelled, item should not be in mAddAnimations list");
+        LOGE_IF(_Debug,"after animation is cancelled, item should not be in mAddAnimations list");
     }
 
     //noinspection PointlessBooleanExpression,ConstantConditions
     itItem = std::find(mChangeAnimations.begin(),mChangeAnimations.end(),&item);
     if ( itItem!=mChangeAnimations.end() ) {;
         mChangeAnimations.erase(itItem);
-        LOGE_IF(_DEBUG,"after animation is cancelled, item should not be in mChangeAnimations list");
+        LOGE_IF(_Debug,"after animation is cancelled, item should not be in mChangeAnimations list");
     }
 
     //noinspection PointlessBooleanExpression,ConstantConditions
     itItem = std::find(mMoveAnimations.begin(),mMoveAnimations.end(),&item);
     if ( itItem!=mMoveAnimations.end() ) {
         mMoveAnimations.erase(itItem);
-        LOGE_IF(_DEBUG,"after animation is cancelled, item should not be in mMoveAnimations list");
+        LOGE_IF(_Debug,"after animation is cancelled, item should not be in mMoveAnimations list");
     }
     dispatchFinishedWhenDone();
 }

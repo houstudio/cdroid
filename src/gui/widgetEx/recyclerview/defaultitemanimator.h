@@ -5,7 +5,7 @@
 namespace cdroid{
 class DefaultItemAnimator:public SimpleItemAnimator {
 private:
-    static constexpr bool _DEBUG = true;
+    static constexpr bool _Debug = true;
     static TimeInterpolator* sDefaultInterpolator;
 protected:
     class MoveInfo;

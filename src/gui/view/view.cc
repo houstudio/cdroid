@@ -6424,8 +6424,8 @@ void View::getBoundsOnScreen(Rect& outRect, bool clipToParent) {
     Rect position;// = mAttachInfo->mTmpTransformRect;
     position.set(0, 0, mRight - mLeft, mBottom - mTop);
     mapRectFromViewToScreenCoords(position, clipToParent);
-    outRect.set(std::round(position.left), std::round(position.top),
-            std::round(position.width), std::round(position.height));
+    outRect.set(static_cast<int>(std::round(position.left)), static_cast<int>(std::round(position.top)),
+            static_cast<int>(std::round(position.width)), static_cast<int>(std::round(position.height)));
     //may be Rect(left,top,right,bottom) is right way used to  transform
 }
 
