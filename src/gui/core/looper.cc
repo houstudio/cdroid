@@ -9,7 +9,10 @@
   #define read  _read
   #define write  _write
   #define _CRT_SECURE_NO_WARNINGS
-  #define strerror_r strerror_s
+  static const char* strerror_r(int errnum, char* buf, size_t buflen) {
+      strerror_s(buf, buflen, errnum);
+      return buf;
+  }
 #elif defined(__Linux__)||defined(__unix__)
   #include <unistd.h>
   #include <sys/eventfd.h>
@@ -623,7 +626,7 @@ int Looper::removeSequenceNumberLocked(SequenceNumber seq){
             // We defensively rebuild the epoll set to avoid getting spurious
             // notifications with nowhere to go.
             char buff[128];
-            LOGE("Error removing epoll events for fd %d: %s", fd, strerror_r(buff,sizeof(buff),errno));
+            LOGE("Error removing epoll events for fd %d: %s", fd, strerror_r(buff,sizeof(buff), errno));
             scheduleEpollRebuildLocked();
             return -1;
         }
