@@ -1,9 +1,15 @@
 #include <core/looper.h>
 #include <string.h>
 #include <pthread.h>
-#if defined(_WIN32)||defined(_WIN64)
+#if defined(_WIN32)||defined(_WIN64)||defined(_MSVC_VER)
   #include <fcntl.h>
   #include <io.h>
+  #define close  _close
+  #define open   _open
+  #define read  _read
+  #define write  _write
+  #define _CRT_SECURE_NO_WARNINGS
+  #define strerror_r strerror_s
 #elif defined(__Linux__)||defined(__unix__)
   #include <unistd.h>
   #include <sys/eventfd.h>
@@ -464,7 +470,8 @@ void Looper::wake() {
     uint64_t inc = 1;
     const long nWrite = TEMP_FAILURE_RETRY(write(mWakeEventFd, &inc, sizeof(uint64_t)));
     if (nWrite != sizeof(uint64_t)) {
-        LOGE_IF(errno!=EAGAIN,"Could not write wake signal to fd %d: %s",mWakeEventFd, strerror(errno));
+        char buff[128];
+        LOGE_IF(errno!=EAGAIN,"Could not write wake signal to fd %d: %s",mWakeEventFd, strerror_r(buff,sizeof(buff),errno));
     }
 }
 
@@ -615,7 +622,8 @@ int Looper::removeSequenceNumberLocked(SequenceNumber seq){
             // our list of callbacks got out of sync with the epoll set somehow.
             // We defensively rebuild the epoll set to avoid getting spurious
             // notifications with nowhere to go.
-            LOGE("Error removing epoll events for fd %d: %s", fd, strerror(errno));
+            char buff[128];
+            LOGE("Error removing epoll events for fd %d: %s", fd, strerror_r(buff,sizeof(buff),errno));
             scheduleEpollRebuildLocked();
             return -1;
         }
