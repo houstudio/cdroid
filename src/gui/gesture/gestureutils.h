@@ -12,7 +12,7 @@ class GestureStroke;
 class GestureUtils {
 private:
     static constexpr float SCALING_THRESHOLD = 0.26f;
-    static constexpr float NONUNIFORM_SCALE = (float) std::sqrt(2);
+    static constexpr float NONUNIFORM_SCALE = 1.4142135623730951f;// (float)std::sqrt(2);
 
     GestureUtils();
     static void plot(float x, float y,std::vector<float>& sample, int sampleSize);

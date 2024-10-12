@@ -7585,7 +7585,7 @@ void View::CheckForTap::setAnchor(float x,float y){
 
 void View::CheckForTap::run(){
     mView->mPrivateFlags &= ~PFLAG_PRESSED;
-    mView->setPressed(true,static_cast<int>(mX),static_cast<int>(mY));
+    mView->setPressed(true,mX,mY);
     mView->checkForLongClick(ViewConfiguration::getTapTimeout(), static_cast<int>(mX), static_cast<int>(mY));
 }
 

@@ -138,10 +138,10 @@ struct CRect{
         }
     }
     void Union(T px,T py){
-        const int new_x = std::min(left, px);  // 矩形的左上角 x 坐标
-        const int new_y = std::min(top, py);  // 矩形的左上角 y 坐标
-        const int new_w = std::max(left + width, px) - new_x;  // 矩形的宽度
-        const int new_h = std::max(top + height, py) - new_y;  // 矩形的高度
+        const T new_x = std::min(left, px);
+        const T new_y = std::min(top, py);
+        const T new_w = std::max(left + width, px) - new_x;
+        const T new_h = std::max(top + height, py) - new_y;
 
         left = new_x;
         top = new_y;

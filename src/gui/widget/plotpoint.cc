@@ -69,7 +69,7 @@ double PlotPoint::x() const
 
 void PlotPoint::setX(double x)
 {
-    d->point.x=x;
+    d->point.x= static_cast<float>(x);
 }
 
 double PlotPoint::y() const
@@ -79,7 +79,7 @@ double PlotPoint::y() const
 
 void PlotPoint::setY(double y)
 {
-    d->point.y=y;
+    d->point.y=static_cast<float>(y);
 }
 
 std::string PlotPoint::label() const

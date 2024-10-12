@@ -230,7 +230,8 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw){
             PointF sp2 = pw->mapToWidget(p2);
 
             const RectF barRect = RectF::Make(sp1.x, sp1.y, sp2.x - sp1.x, sp2.y - sp1.y);
-            painter.rectangle(sp1.x, sp1.y, barRect.width,barRect.height);
+            painter.rectangle(static_cast<int>(sp1.x), static_cast<int>(sp1.y),
+                static_cast<int>(barRect.width), static_cast<int>(barRect.height));
             painter.set_source(barBrush());
             painter.fill_preserve();
             painter.set_source(barPen());
@@ -294,10 +295,12 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw){
         for (const PlotPoint *pp : d->pList) {
             // q is the position of the point in screen pixel coordinates
             PointF q = pw->mapToWidget(pp->position());
-            if (pw->pixRect().contains(q.x,q.y)) {
+            if (pw->pixRect().contains(static_cast<int>(q.x),static_cast<int>(q.y))) {
                 double x1 = q.x - size();
                 double y1 = q.y - size();
-                RectF qr = RectF::Make(x1, y1, 2 * size(), 2 * size());
+                Rect rect;
+                RectF qr = RectF::Make(static_cast<float>(x1), static_cast<float>(y1),
+                    static_cast<float>(2.f * size()), static_cast<float>(2 * size()));
                 // Mask out this rect in the plot for label avoidance
                 pw->maskRect(qr, 2.0);
 
@@ -309,7 +312,9 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw){
 
                 case Letter:
                     //painter->drawText(qr, Qt::AlignCenter, pp->label().left(1));
-                    painter.draw_text(Rect::Make(qr.left, qr.top, 2 * size(), 2 * size()),pp->label(),cdroid::Gravity::CENTER);
+                    rect = Rect::Make(static_cast<int>(qr.left), static_cast<int>(qr.top),
+                        static_cast<int>(2.f * size()), static_cast<int>(2.f * size()));
+                    painter.draw_text(rect,pp->label(),cdroid::Gravity::CENTER);
                     break;
 
                 case Triangle:
@@ -325,7 +330,8 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw){
                     break;
 
                 case Square:
-                    painter.rectangle(qr.left,qr.top,qr.width,qr.height);
+                    painter.rectangle(static_cast<int>(qr.left),static_cast<int>(qr.top),
+                        static_cast<int>(qr.width), static_cast<int>(qr.height) );
                     painter.set_source(brush());
                     painter.fill_preserve();
                     painter.set_source(pen());
@@ -409,7 +415,7 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw){
 
     for (PlotPoint *pp : d->pList) {
         const PointF q = pw->mapToWidget(pp->position());
-        if (pw->pointInView(q.x,q.y, 1) && !pp->label().empty()) {
+        if (pw->pointInView(static_cast<int>(q.x),static_cast<int>(q.y), 1) && !pp->label().empty()) {
             pw->placeLabel(painter, pp);
         }
     }

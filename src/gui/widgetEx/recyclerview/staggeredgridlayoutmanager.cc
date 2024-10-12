@@ -2251,7 +2251,7 @@ void StaggeredGridLayoutManager::LazySpanLookup::setSpan(int position, Span* spa
 }
 
 int StaggeredGridLayoutManager::LazySpanLookup::sizeForPosition(int position) {
-    int len = mData.size();
+    int len = (int)mData.size();
     while (len <= position) {
         len *= 2;
     }
