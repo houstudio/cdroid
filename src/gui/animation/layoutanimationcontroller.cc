@@ -132,7 +132,7 @@ int LayoutAnimationController::getTransformedIndex(const AnimationParameters* pa
     case ORDER_REVERSE: return params->count - 1 - params->index;
     case ORDER_RANDOM :
 #if defined(__linux__)||defined(__unix__)
-        return (int) (params->count * drand48());
+        return static_cast<int> (params->count * drand48());
 #else
         {
             std::random_device rd;

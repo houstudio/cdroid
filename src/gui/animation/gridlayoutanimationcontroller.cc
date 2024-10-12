@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <random>
 #include <view/viewgroup.h>
 #include <animation/gridlayoutanimationcontroller.h>
 
@@ -120,8 +121,17 @@ int GridLayoutAnimationController::getTransformedColumnIndex(const AnimationPara
         index = params->columnsCount - 1 - params->column;
         break;
     case ORDER_RANDOM:
+#if defined(__linux__)||defined(__unix__)
         //if (mRandomizer == null) mRandomizer = new Random();
-        index = (int) (params->columnsCount * drand48());//mRandomizer.nextFloat());
+        index = static_Cast<int> (params->columnsCount * drand48());//mRandomizer.nextFloat());
+#else
+        {
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<> dis(0.0, 1.0);
+            return static_cast<int>(params->columnsCount * dis(gen));
+        }
+#endif
         break;
     case ORDER_NORMAL:
     default:
