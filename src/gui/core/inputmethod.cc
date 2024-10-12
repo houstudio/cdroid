@@ -71,7 +71,7 @@ int GooglePinyin::load_dicts(const std::string&sys,const std::string&user){
 int GooglePinyin::search(const std::string&pinyin,std::vector<std::string>&candidates){
     char16 canbuf[64];
     const size_t num = im_search(handle,pinyin.c_str(),pinyin.length());
-    for(size_t i = 0; i < num ; i++){/*拼音转汉字*/
+    for(size_t i = 0; i < num ; i++){/*opinyin to HANZI*/
         char16*scan = im_get_candidate(handle,i,canbuf,32);
         std::string u8s = TextUtils::utf16_utf8(scan,utf16_strlen(scan));
         if(u8s.size())candidates.push_back(u8s);
@@ -84,7 +84,7 @@ void GooglePinyin::close_search(){
     im_reset_search(handle);
 }
 
-//eg:如输入"大"，会返回 "家","学","概"等
+//predictive input
 int GooglePinyin::get_predicts(const std::string&txt,std::vector<std::string>&predicts){
     char16 (*predict_buf)[kMaxPredictSize + 1];
     const std::u16string u16txt=TextUtils::utf8_utf16(txt);
