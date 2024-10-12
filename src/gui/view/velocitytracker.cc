@@ -887,7 +887,7 @@ static bool solveLeastSquares(const std::vector<float>& x, const std::vector<flo
             vectorToString(x.data(), m).c_str(), vectorToString(y.data(), m).c_str(),vectorToString(w.data(), m).c_str());
 
     // Expand the X vector to a matrix A, pre-multiplied by the weights.
-    float a[n][m]; // column-major order
+    std::vector<std::vector<float>> a(n,std::vector<float>(m)); // column-major order
     for (uint32_t h = 0; h < m; h++) {
         a[0][h] = w[h];
         for (uint32_t i = 1; i < n; i++) {
@@ -897,8 +897,8 @@ static bool solveLeastSquares(const std::vector<float>& x, const std::vector<flo
     LOGD_IF(DEBUG_STRATEGY,"  - a=%s", matrixToString(&a[0][0], m, n, false /*rowMajor*/).c_str());
 
     // Apply the Gram-Schmidt process to A to obtain its QR decomposition.
-    float q[n][m]; // orthonormal basis, column-major order
-    float r[n][n]; // upper triangular matrix, row-major order
+    std::vector<std::vector<float>> q(n,std::vector<float>(m)); // orthonormal basis, column-major order
+    std::vector<std::vector<float>> r(n,std::vector<float>(n)); // upper triangular matrix, row-major order
     for (uint32_t j = 0; j < n; j++) {
         for (uint32_t h = 0; h < m; h++) {
             q[j][h] = a[j][h];
@@ -944,7 +944,7 @@ static bool solveLeastSquares(const std::vector<float>& x, const std::vector<flo
 
     // Solve R B = Qt W Y to find B.  This is easy because R is upper triangular.
     // We just work from bottom-right to top-left calculating B's coefficients.
-    float wy[m];
+    std::vector<float> wy(m);
     for (uint32_t h = 0; h < m; h++) {
         wy[h] = y[h] * w[h];
     }
