@@ -64,9 +64,9 @@ AudioManager::AudioManager(){
         LOGD("Device[%d](%s) %dxIn + %dxOut", i,info.name.c_str(),info.duplexChannels,info.outputChannels);
     }
     parameters.deviceId = mDAC->getDefaultOutputDevice();
-    parameters.nChannels = 1; // 单声道
-    parameters.firstChannel = 0; // 第一个声道
-    RtAudioFormat format = RTAUDIO_FLOAT32; // 32位浮点数格式
+    parameters.nChannels = 1;
+    parameters.firstChannel = 0;
+    RtAudioFormat format = RTAUDIO_FLOAT32;
     try{
         mDAC->openStream(&parameters, nullptr, format, 44100, &mBufferFrames, &AudioCallback, (void *)this);
         mDAC->startStream();

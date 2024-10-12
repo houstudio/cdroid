@@ -4,6 +4,7 @@
 #include <vector>
 #include <mutex>
 #include <list>
+#include <cstdint>
 #include <core/message.h>
 
 namespace cdroid{
