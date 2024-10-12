@@ -2951,7 +2951,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
     mPrivateFlags |= PFLAG_DRAWN;
     double cx1,cy1,cx2,cy2;
     canvas.get_clip_extents(cx1,cy1,cx2,cy2);
-    Rect rcc=Rect::MakeLTRB(cx1,cy1,cx2,cy2);
+    Rect rcc=Rect::MakeLTRB(static_cast<int>(cx1),static_cast<int>(cy1),static_cast<int>(cx2),static_cast<int>(cy2));
     if (!concatMatrix && (parentFlags & (ViewGroup::FLAG_SUPPORT_STATIC_TRANSFORMATIONS |
                     ViewGroup::FLAG_CLIP_CHILDREN)) == ViewGroup::FLAG_CLIP_CHILDREN &&
             (false ==rcc.intersect(mLeft, mTop, mRight-mLeft, mBottom-mTop)) &&

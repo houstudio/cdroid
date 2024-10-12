@@ -1,4 +1,6 @@
 #include <view/abssavedstate.h>
+#include <porting/cdlog.h>
+
 namespace cdroid{
     AbsSavedState AbsSavedState::EMPTY_STATE;
 

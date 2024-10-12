@@ -13,7 +13,7 @@ Choreographer::Choreographer(){
     mFrameScheduled  = false;
     mCallbacksRunning= false;
     mLastFrameTimeNanos = 0;
-    mFrameIntervalNanos = (1E9/getRefreshRate());
+    mFrameIntervalNanos = static_cast<nsecs_t>(1E9/getRefreshRate());
     mCallbackPool = nullptr;
     for(int i = 0;i <= CALLBACK_LAST;i++){
         mCallbackQueues[i] = new CallbackQueue(this);
@@ -30,7 +30,7 @@ Choreographer& Choreographer::getInstance(){
     if(mInst->mLooper==nullptr){
         mInst->mLooper = Looper::getMainLooper();
         mInst->mLooper->addEventHandler(mInst.get());
-        mInst->mFrameIntervalNanos=(1E9/getRefreshRate());
+        mInst->mFrameIntervalNanos = static_cast<nsecs_t>(1E9/getRefreshRate());
     }
     return *mInst;
 }   

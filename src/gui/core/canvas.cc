@@ -87,10 +87,10 @@ void Canvas::draw_text(const Rect& rect,const std::string& text,int text_alignme
 void Canvas::draw_image(const RefPtr<ImageSurface>& img,const Rect& dst,const Rect* srcRect){
     Rect src= (srcRect==nullptr) ? Rect::Make(0,0,img->get_width(),img->get_height()) : *srcRect;
     
-    const float sx = src.left  , sy = src.top;
-    const float sw = src.width , sh = src.height;
-    float dx = dst.left     , dy = dst.top;
-    float dw = dst.width , dh = dst.height;
+    const float sx = float(src.left)  , sy = float(src.top);
+    const float sw = float(src.width) , sh = float(src.height);
+    float dx = float(dst.left)  , dy = float(dst.top);
+    float dw = float(dst.width) , dh = float(dst.height);
     float fx = dw / sw   , fy = dh / sh;
 
     save();

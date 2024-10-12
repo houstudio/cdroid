@@ -278,7 +278,7 @@ void Keyboard::loadKeyboard(Context*context,const std::string&resid){
     pd.defaultKeyWidth=mDefaultWidth;
     std::unique_ptr<std::istream>stream=context->getInputStream(resid);
     if(stream){
-        int len = 0;
+        size_t len = 0;
         do{
             char buf[256];
             stream->read(buf,sizeof(buf));
