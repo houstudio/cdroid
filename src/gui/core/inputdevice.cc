@@ -310,7 +310,7 @@ int KeyDevice::isValidEvent(int type,int code,int value){
     return (type==EV_KEY)||(type==EV_SYN);
 }
 
-int KeyDevice::putEvent(const struct timeval&tv,int type,int code,int value){
+int KeyDevice::putEvent(long sec,long nsec,int type,int code,int value){
     int flags  = 0;
     int keycode= code;
     if(!isValidEvent(type,code,value)){
@@ -561,7 +561,7 @@ static std::string printEvent(MotionEvent*e){
     return oss.str(); 
 }
 
-int TouchDevice::putEvent(const struct timeval&tv,int type,int code,int value){
+int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
     int slot,pointerCount,pointerIndex,action;
     MotionEvent*lastEvent;
     if(!isValidEvent(type,code,value))return -1;
@@ -578,7 +578,7 @@ int TouchDevice::putEvent(const struct timeval&tv,int type,int code,int value){
                 mMoveTime = mDownTime = tv.tv_sec * 1000 + tv.tv_usec/1000;
                 mButtonState = MotionEvent::BUTTON_PRIMARY;
             }else{
-                mMoveTime = tv.tv_sec * 1000 + tv.tv_usec/1000;
+                mMoveTime = sec * 1000 + usec/1000;
                 mButtonState &= ~MotionEvent::BUTTON_PRIMARY;
             }
             break;
@@ -693,9 +693,9 @@ int MouseDevice::isValidEvent(int type,int code,int value){
     return (type==EV_KEY)||(type==EV_REL)||(type==EV_SYN)||true;
 }
 
-int MouseDevice::putEvent(const struct timeval&tv,int type,int code,int value){
+int MouseDevice::putEvent(long sec,long usec,int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
-    return TouchDevice::putEvent(tv,type,code,value);
+    return TouchDevice::putEvent(sec,usec,type,code,value);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////

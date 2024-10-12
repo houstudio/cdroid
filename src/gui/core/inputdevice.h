@@ -9,7 +9,6 @@
 #include <time.h>
 #include <core/preferences.h>
 #include <core/sparsearray.h>
-#include <sys/time.h>
 //#include <utils/flags.h>
 namespace cdroid{
 struct InputDeviceIdentifier {
@@ -345,7 +344,7 @@ protected:
     virtual int isValidEvent(int type,int code,int value);
 public:
     InputDevice(int fdev);
-    virtual int putEvent(const struct timeval&tv,int type,int code,int value){return 0;}//PENDING need more rawevent OK,wecan getevent now
+    virtual int putEvent(long sec,long usec,int type,int code,int value){return 0;}//PENDING need more rawevent OK,wecan getevent now
     int getId()const;
     int getProductId()const;
     int getVendorId()const;
@@ -374,7 +373,7 @@ protected:
     int isValidEvent(int type,int code,int value)override;
 public:
     KeyDevice(int fd);
-    virtual int putEvent(const struct timeval&tv,int type,int code,int value);
+    virtual int putEvent(long sec,long usec,int type,int code,int value);
 };
 
 class TouchDevice:public InputDevice{
@@ -410,7 +409,7 @@ protected:
     int ABS2AXIS(int absaxis);
 public:
     TouchDevice(int fd);
-    virtual int putEvent(const struct timeval&tv,int type,int code,int value);
+    virtual int putEvent(long sec,long usec,int type,int code,int value);
 };
 
 class MouseDevice:public TouchDevice{
@@ -420,7 +419,7 @@ protected:
     int isValidEvent(int type,int code,int value)override;
 public:
     MouseDevice(int fd);
-    virtual int putEvent(const timeval&tv,int type,int code,int value);
+    virtual int putEvent(long sec,long usec,int type,int code,int value);
 };
 }//namespace
 #endif 

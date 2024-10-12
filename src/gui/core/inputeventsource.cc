@@ -38,17 +38,16 @@ void InputEventSource::doEventsConsume(){
         LOGV_IF(count,"rcv %d rawEvents",count);
         for(int i = 0 ; i < count ; i ++){
             const INPUTEVENT*e = es+i;
-            struct timeval tv = {(time_t)e->tv_sec,e->tv_usec};
             auto it = mDevices.find(e->device);
             if(es[i].type >= EV_ADD){
                 onDeviceChanged(es+i);
                 continue;
             }
             if(it==mDevices.end()){
-                getDevice(es->device)->putEvent(tv,e->type,e->code,e->value);
+                getDevice(es->device)->putEvent(e->tv_sec,e->tv_nsec,e->type,e->code,e->value);
                 continue;
             }
-            it->second->putEvent(tv,e->type,e->code,e->value);
+            it->second->putEvent(e->tv_sec,e->tv_nsec,e->type,e->code,e->value);
         }
     }
 }
