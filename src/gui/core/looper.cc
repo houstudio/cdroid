@@ -3,10 +3,10 @@
 #if defined(_WIN32)||defined(_WIN64)
   #include <fcntl.h>
   #include <io.h>
-#elif defiend(__Linux__)||defined(__unix__)
+#elif defined(__Linux__)||defined(__unix__)
   #include <unistd.h>
   #include <sys/eventfd.h>
-#dnfif
+#endif
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <limits.h>
