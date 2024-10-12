@@ -113,7 +113,7 @@ static std::vector< PointerProperties>gSharedTempPointerProperties;
 static std::vector< PointerCoords>gSharedTempPointerCoords;
 static std::vector<int>gSharedTempPointerIndexMap;
 
-void MotionEvent::ensureSharedTempPointerCapacity(int desiredCapacity){
+void MotionEvent::ensureSharedTempPointerCapacity(size_t desiredCapacity){
     if ( gSharedTempPointerCoords.size() < desiredCapacity) {
         int capacity = std::max((int)gSharedTempPointerCoords.size(),8);
         while (capacity < desiredCapacity) {
@@ -277,7 +277,7 @@ void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
 
 MotionEvent*MotionEvent::split(int idBits){
     MotionEvent*ev = obtain();
-    const int oldPointerCount = getPointerCount();
+    const size_t oldPointerCount = getPointerCount();
     ensureSharedTempPointerCapacity(oldPointerCount);
     PointerProperties *pp = gSharedTempPointerProperties.data();
     PointerCoords *pc = gSharedTempPointerCoords.data();
@@ -288,7 +288,7 @@ MotionEvent*MotionEvent::split(int idBits){
     const int oldActionPointerIndex = (oldAction & ACTION_POINTER_INDEX_MASK)>>ACTION_POINTER_INDEX_SHIFT;
     int newActionPointerIndex = -1;
     int newPointerCount = 0;
-    for (int i = 0; i < oldPointerCount; i++) {
+    for (size_t i = 0; i < oldPointerCount; i++) {
         pp[newPointerCount] = getPointerProperties(i);
         const int idBit = 1 << pp[newPointerCount].id;
         if ((idBit & idBits) != 0) {
@@ -317,14 +317,14 @@ MotionEvent*MotionEvent::split(int idBits){
         newAction = oldAction;
     }
 
-    const int historySize = getHistorySize();
+    const int historySize = (int)getHistorySize();
     for (int h = 0; h <= historySize; h++) {
         const int historyPos = h == historySize ? HISTORY_CURRENT : h;
         for (int i = 0; i < newPointerCount; i++) {
             //getPointerCoords(map[i], historyPos, &pc[i]);
             pc[i] = getHistoricalRawPointerCoords(map[i], historyPos);
         }
-        const long eventTimeNanos = getHistoricalEventTime(historyPos);
+        const auto eventTimeNanos = getHistoricalEventTime(historyPos);
         if (h == 0) {
             ev->initialize( getDeviceId(),getSource(),0/*displayId*/, newAction, 0, getFlags(),
                 getEdgeFlags(), getMetaState() , getButtonState(), getXOffset(), getYOffset(),
@@ -359,11 +359,11 @@ static float clamp(float value, float low, float high) {
 
 MotionEvent* MotionEvent::clampNoHistory(float left, float top, float right, float bottom){
     MotionEvent*ev = obtain();
-    const int pointerCount = getPointerCount();
+    const size_t pointerCount = getPointerCount();
     ensureSharedTempPointerCapacity(pointerCount);
 #if 0
     PointerProperties*pp = gSharedTempPointerProperties.data();
-    PointerCoords* pc = gSharedTempPointerCoords;
+    PointerCoords* pc = gSharedTempPointerCoords.data();
     for (int i = 0; i < pointerCount; i++) {
         pp[i] = mPointerProperties[i];//nativeGetPointerProperties(mNativePtr,i,pp[i]);
         getPointerCoords(i,pc[i]);//nativeGetPointerCoords(mNativePtr,i,HISTORY_CURRENT,pc[i]);
@@ -422,7 +422,7 @@ int32_t MotionEvent::findPointerIndex(int32_t pointerId) const {
     const size_t pointerCount = mPointerProperties.size();
     for (size_t i = 0; i < pointerCount; i++) {
         if (mPointerProperties[i].id == pointerId) {
-            return i;
+            return static_cast<int>(i);
         }
     }
     return -1;
@@ -703,7 +703,7 @@ void MotionEvent::updateCursorPosition() {
     float x = 0;
     float y = 0;
 
-    const int pointerCount = getPointerCount();
+    const size_t pointerCount = getPointerCount();
     for (int i = 0; i < pointerCount; ++i) {
         x += getX(i);
         y += getY(i);
@@ -726,7 +726,7 @@ void MotionEvent::toStream(std::ostream& os)const{
     os<<(const char*)"MotionEvent { action="<<actionToString(getAction());
     //appendUnless("0", msg, ", actionButton=", buttonStateToString(getActionButton()));
 
-    const int pointerCount = getPointerCount();
+    const size_t pointerCount = getPointerCount();
     for (int i = 0; i < pointerCount; i++) {
         //appendUnless(i, os, ", id[" + i + "]=", getPointerId(i));
         float x = getX(i);

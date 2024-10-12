@@ -207,8 +207,8 @@ bool DrawerLayout::dispatchTransformedGenericPointerEvent(MotionEvent& event, Vi
       handled = child->dispatchGenericMotionEvent(*transformedEvent);
       transformedEvent->recycle();
    } else {
-      const float offsetX = getScrollX() - child->getLeft();
-      const float offsetY = getScrollY() - child->getTop();
+      const float offsetX = float(getScrollX() - child->getLeft());
+      const float offsetY = float(getScrollY() - child->getTop());
       event.offsetLocation(offsetX, offsetY);
       handled = child->dispatchGenericMotionEvent(event);
       event.offsetLocation(-offsetX, -offsetY);
@@ -243,7 +243,7 @@ void DrawerLayout::updateDrawerState(int forGravity,int activeState, View* activ
 
         // Notify the listeners. Do that from the end of the list so that if a listener
         // removes itself as the result of being called, it won't mess up with our iteration
-        const int listenerCount = mListeners.size();
+        const int listenerCount = (int)mListeners.size();
         for (int i = listenerCount - 1; i >= 0; i--) {
             if(mListeners.at(i).onDrawerStateChanged)
                 mListeners.at(i).onDrawerStateChanged(state);
@@ -258,7 +258,7 @@ void DrawerLayout::dispatchOnDrawerClosed(View* drawerView) {
 
         // Notify the listeners. Do that from the end of the list so that if a listener
         // removes itself as the result of being called, it won't mess up with our iteration
-        const int listenerCount = mListeners.size();
+        const int listenerCount = (int)mListeners.size();
         for (int i = listenerCount - 1; i >= 0; i--) {
             if(mListeners.at(i).onDrawerClosed)
                 mListeners.at(i).onDrawerClosed(*drawerView);
@@ -284,7 +284,7 @@ void DrawerLayout::dispatchOnDrawerOpened(View* drawerView) {
         lp->openState = LayoutParams::FLAG_IS_OPENED;
         // Notify the listeners. Do that from the end of the list so that if a listener
         // removes itself as the result of being called, it won't mess up with our iteration
-        int listenerCount = mListeners.size();
+        const int listenerCount = (int)mListeners.size();
         for (int i = listenerCount - 1; i >= 0; i--) {
             if(mListeners.at(i).onDrawerOpened)
                 mListeners.at(i).onDrawerOpened(*drawerView);
@@ -316,7 +316,7 @@ void DrawerLayout::updateChildrenImportantForAccessibility(View* drawerView, boo
 void DrawerLayout::dispatchOnDrawerSlide(View* drawerView, float slideOffset) {
     // Notify the listeners. Do that from the end of the list so that if a listener
     // removes itself as the result of being called, it won't mess up with our iteration
-    int listenerCount = mListeners.size();
+    const int listenerCount = (int)mListeners.size();
     for (int i = listenerCount - 1; i >= 0; i--) {
         if(mListeners.at(i).onDrawerSlide)
             mListeners.at(i).onDrawerSlide(*drawerView, slideOffset);
@@ -1154,7 +1154,7 @@ void DrawerLayout::addFocusables(std::vector<View*>& views, int direction, int f
     }
 
     if (!bIsDrawerOpen) {
-        int nonDrawerViewsCount = mNonDrawerViews.size();
+        size_t nonDrawerViewsCount = mNonDrawerViews.size();
         for (int i = 0; i < nonDrawerViewsCount; ++i) {
             View* child = mNonDrawerViews.at(i);
             if (child->getVisibility() == View::VISIBLE) {
@@ -1184,7 +1184,7 @@ View* DrawerLayout::findVisibleDrawer() {
 void DrawerLayout::cancelChildViewTouch() {
     // Cancel child touches
     if (!mChildrenCanceledTouch) {
-        long now = SystemClock::uptimeMillis();
+        auto now = SystemClock::uptimeMillis();
         MotionEvent* cancelEvent = MotionEvent::obtain(now, now,
                 MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
         int childCount = getChildCount();

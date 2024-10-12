@@ -182,7 +182,7 @@ View* FocusFinder::findNextKeyboardNavigationCluster(View* root,View* currentClu
     /*mUserSpecifiedClusterComparator.setFocusables(clusters, root);
     Collections.sort(clusters, mUserSpecifiedClusterComparator);
     mUserSpecifiedClusterComparator.recycle();*/
-    const int count = clusters.size();
+    const int count = (int)clusters.size();
 
     switch (direction) {
     case View::FOCUS_FORWARD:
@@ -236,8 +236,8 @@ View* FocusFinder::findNextFocusInAbsoluteDirection(std::vector<View*>&focusable
 
     View* closest = nullptr;
 
-    int numFocusables = focusables.size();
-    for (int i = 0; i < numFocusables; i++) {
+    size_t numFocusables = focusables.size();
+    for (size_t i = 0; i < numFocusables; i++) {
         View* focusable = focusables.at(i);
 
         // only interested in other non-root views
@@ -447,7 +447,7 @@ int FocusFinder::minorAxisDistance(int direction,const RECT& source,const RECT&d
 View* FocusFinder::findNearestTouchable(ViewGroup* root, int x, int y, int direction, std::vector<int> deltas) {
     std::vector<View*> touchables;
     int minDistance =INT_MAX;// Integer.MAX_VALUE;
-    int numTouchables=0;
+    size_t numTouchables = 0;
     View* closest = nullptr;
     root->addTouchables(touchables);
     numTouchables = touchables.size();

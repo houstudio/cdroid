@@ -12,7 +12,6 @@
 #include <windowmanager.h>
 #include <systemclock.h>
 #include <thread>
-//#include <sys/time.h>
 #include <sys/resource.h>
 #include <malloc.h>
 #include <fstream>

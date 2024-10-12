@@ -179,7 +179,7 @@ private:
     static constexpr float INVALID_CURSOR_POSITION = NAN;//std::numeric_limits<float>::quiet_NaN();
     static constexpr int HISTORY_CURRENT = 0x80000000;
     static MotionEvent*obtain();
-    static void ensureSharedTempPointerCapacity(int desiredCapacity);
+    static void ensureSharedTempPointerCapacity(size_t desiredCapacity);
 protected:
     int32_t mActionButton;
     int32_t mFlags;

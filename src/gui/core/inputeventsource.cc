@@ -227,7 +227,7 @@ InputEvent*InputEventSource::parseEvent(const char*line){
         const nsecs_t etime = atoll(tokens[tkIdx+3]);
         MotionEvent*m = MotionEvent::obtain(etime,etime,
             action|(pointer<<MotionEvent::ACTION_POINTER_INDEX_SHIFT),
-            x,y, 0/*pressure*/, 0/*size*/, 0/*metaState*/,
+            float(x),float(y), 0/*pressure*/, 0/*size*/, 0/*metaState*/,
             0,0/*x/yPrecision*/,0/*deviceId*/,0/*edgeFlags*/);
         return m;
     }

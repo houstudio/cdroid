@@ -2,7 +2,17 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include <unistd.h>
+#if defined(_WIN32)||defined(_WIN64)
+  #include <fcntl.h>
+  #include <io.h>
+  #ifndef F_OK
+    #define F_OK 0
+    #define W_OK 2
+    #define R_OK 4
+  #endif
+#elif defined(__linux__)||defined(__unix__)
+  #include <unistd.h>
+#endif
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <expat.h>

@@ -1,7 +1,8 @@
 #include <systemclock.h>
 #include <chrono>
-#include <sys/time.h>
-
+#if defined(__linux__)||defined(__unix__)
+  #include <sys/time.h>
+#endif
 namespace cdroid{
 
 /*Returns milliseconds since boot, not counting time spent in deep sleep*/
@@ -35,10 +36,14 @@ int64_t SystemClock::currentTimeMillis(){
 }
 
 bool SystemClock::setCurrentTimeMillis(int64_t millis){
+#if defined(__linux__)||defined(__unix__)
     struct timeval tv;
     tv.tv_sec = millis/1000;
     tv.tv_usec= (millis%1000)*1000;
     return settimeofday(&tv,nullptr)==0;
+#elif defined(_WIN32)||defined(_WIN64)
+    return false;
+#endif
 }
 
 int64_t SystemClock::currentTimeSeconds(){

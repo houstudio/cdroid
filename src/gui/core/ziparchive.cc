@@ -3,7 +3,12 @@
 #include <zip.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#if defined(_WIN32)||defined(_WIN64)
+  #include <fcntl.h>
+  #include <io.h>
+#elif defined(__linux__)||defined(__unix__)
+  #include <unistd.h>
+#endif
 #include <dirent.h>
 #include <chrono>
 #include <cdtypes.h>

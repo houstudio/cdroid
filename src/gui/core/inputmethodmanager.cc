@@ -196,7 +196,7 @@ int InputMethodManager::registeMethod(const std::string&name,InputMethod*method)
 }
 
 int InputMethodManager::getInputMethodCount()const{
-    return imeMethods.size();
+    return (int)imeMethods.size();
 }
 
 InputMethod*InputMethodManager::getInputMethod(int idx){

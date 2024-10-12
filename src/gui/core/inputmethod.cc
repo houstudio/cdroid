@@ -70,8 +70,8 @@ int GooglePinyin::load_dicts(const std::string&sys,const std::string&user){
 /*pinyin to chinese words*/
 int GooglePinyin::search(const std::string&pinyin,std::vector<std::string>&candidates){
     char16 canbuf[64];
-    const int num = im_search(handle,pinyin.c_str(),pinyin.length());
-    for(int i = 0; i < num ; i++){/*拼音转汉字*/
+    const size_t num = im_search(handle,pinyin.c_str(),pinyin.length());
+    for(size_t i = 0; i < num ; i++){/*拼音转汉字*/
         char16*scan = im_get_candidate(handle,i,canbuf,32);
         std::string u8s = TextUtils::utf16_utf8(scan,utf16_strlen(scan));
         if(u8s.size())candidates.push_back(u8s);
