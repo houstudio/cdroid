@@ -14,8 +14,8 @@
 #include <core/windowmanager.h>
 #if defined(__linux__)||defined(__unix__)
   #include <linux/input.h>
-#else
-  
+#elif defined(_WIN32)||defined(_WIN64)
+  #include <core/eventcodes.h>   
 #endif
 
 using namespace std;
