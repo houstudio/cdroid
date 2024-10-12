@@ -474,7 +474,7 @@ void Looper::wake() {
     const long nWrite = TEMP_FAILURE_RETRY(write(mWakeEventFd, &inc, sizeof(uint64_t)));
     if (nWrite != sizeof(uint64_t)) {
         char buff[128];
-        LOGE_IF(errno!=EAGAIN,"Could not write wake signal to fd %d: %s",mWakeEventFd, strerror_r(buff,sizeof(buff),errno));
+        LOGE_IF(errno!=EAGAIN,"Could not write wake signal to fd %d: %s",mWakeEventFd, strerror_r(errno,buff,sizeof(buff)));
     }
 }
 
@@ -626,7 +626,7 @@ int Looper::removeSequenceNumberLocked(SequenceNumber seq){
             // We defensively rebuild the epoll set to avoid getting spurious
             // notifications with nowhere to go.
             char buff[128];
-            LOGE("Error removing epoll events for fd %d: %s", fd, strerror_r(buff,sizeof(buff), errno));
+            LOGE("Error removing epoll events for fd %d: %s", fd, strerror_r(errno,buff,sizeof(buff)));
             scheduleEpollRebuildLocked();
             return -1;
         }
