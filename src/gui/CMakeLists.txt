@@ -52,10 +52,12 @@ check_include_file("rtaudio/RtAudio.h" HAVE_RTAUDIO_H)
 configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
 #configure_file(gui_features.h.cmake  ${PROJECT_SOURCE_DIR}/gui_features.h)
 
-add_definitions(--include gui_features.h)
-add_definitions(--include cdtypes.h)
-add_definitions(--include cdlog.h)
-add_definitions(--include stdpatch.h)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_definitions(--include gui_features.h)
+    add_definitions(--include cdtypes.h)
+    add_definitions(--include cdlog.h)
+    add_definitions(--include stdpatch.h)
+endif()
 
 set(SOURCES_GUI
     ${SRCS_GUICORE} ${SRCS_CAIROMM}

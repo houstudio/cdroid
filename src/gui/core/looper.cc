@@ -1,5 +1,6 @@
 #include <core/looper.h>
 #include <string.h>
+#include <pthread.h>
 #if defined(_WIN32)||defined(_WIN64)
   #include <fcntl.h>
   #include <io.h>
