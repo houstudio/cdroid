@@ -28,7 +28,7 @@ ZIPArchive::~ZIPArchive(){
 }
 
 int ZIPArchive::getEntries(std::vector<std::string>&entries)const{
-    const int num=zip_get_num_entries((zip_t*)zip,ZIP_FL_UNCHANGED);
+    const zip_int64_t num = zip_get_num_entries((zip_t*)zip,ZIP_FL_UNCHANGED);
     for(int i=0;i<num;i++){
         const char*name=zip_get_name((zip_t*)zip,i,0);
         entries.push_back(name);
@@ -39,7 +39,7 @@ int ZIPArchive::getEntries(std::vector<std::string>&entries)const{
 int ZIPArchive::forEachEntry(std::function<bool(const std::string&)>func)const{
     int count=0;
     if(func){
-        const int num=zip_get_num_entries((zip_t*)zip,ZIP_FL_NODIR);
+        const zip_int64_t num = zip_get_num_entries((zip_t*)zip,ZIP_FL_NODIR);
         for(int i=0;i<num;i++){
             const char*name=zip_get_name((zip_t*)zip,i,0);
             count+=(func(name)!=false);
@@ -50,14 +50,14 @@ int ZIPArchive::forEachEntry(std::function<bool(const std::string&)>func)const{
 }
 
 bool ZIPArchive::hasEntry(const std::string&name,bool excludeDirectories)const{
-    int flags=ZIP_FL_ENC_UTF_8;//DEFAULLT_ENC_FLAG;
+    int flags = ZIP_FL_ENC_UTF_8;//DEFAULLT_ENC_FLAG;
     if (excludeDirectories)flags = flags | ZIP_FL_NODIR;
     zip_int64_t index=zip_name_locate((zip_t*)zip,name.c_str(),flags);
     return index>=0;
 }
 
 std::istream* ZIPArchive::getInputStream(const std::string&fname)const{
-    zip_file_t*zfile=zip_fopen((zip_t*)zip,fname.c_str(),ZIP_RDONLY);//ZIP_FL_ENC_UTF_8
+    zip_file_t*zfile = zip_fopen((zip_t*)zip,fname.c_str(),ZIP_RDONLY);//ZIP_FL_ENC_UTF_8
     LOGV("zfile=%p [%s",zfile,fname.c_str());
     if(zfile==nullptr)return nullptr;
     return new ZipInputStream(zfile);

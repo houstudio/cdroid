@@ -11,6 +11,9 @@
   #include <unistd.h>
 #elif defined(_WIN32)||defined(_WIN64)
   #include <direct.h>
+  #ifndef PATH_MAX
+  #define PATH_MAX _MAX_PATH
+  #endif
 #endif
 namespace cdroid {
 
@@ -181,7 +184,7 @@ static void endElement(void *userData, const XML_Char *name) {
 }
 
 View* LayoutInflater::inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*atts) {
-    int len = 0;
+    size_t len = 0;
     char buf[256];
     XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
     WindowParserData pd;

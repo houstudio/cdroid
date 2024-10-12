@@ -2,6 +2,7 @@
 #include <view/viewgroup.h>
 #include <animation/animationutils.h>
 #include <animation/layoutanimationcontroller.h>
+#include <random>
 
 namespace cdroid{
 
@@ -129,7 +130,17 @@ long LayoutAnimationController::getDelayForView(View* view){
 int LayoutAnimationController::getTransformedIndex(const AnimationParameters* params){
     switch (getOrder()) {
     case ORDER_REVERSE: return params->count - 1 - params->index;
-    case ORDER_RANDOM : return (int) (params->count * drand48());
+    case ORDER_RANDOM :
+#if defined(__linux__)||defined(__unix__)
+        return (int) (params->count * drand48());
+#else
+        {
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<> dis(0.0, 1.0);
+            return static_cast<int>(params->count * dis(gen));
+        }
+#endif
     case ORDER_NORMAL : default: return params->index;
     }
 }

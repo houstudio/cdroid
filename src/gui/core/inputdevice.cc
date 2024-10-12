@@ -12,7 +12,11 @@
 #include <keylayoutmap.h>
 #include <core/app.h>
 #include <core/windowmanager.h>
-#include <linux/input.h>
+#if defined(__linux__)||defined(__unix__)
+  #include <linux/input.h>
+#else
+  
+#endif
 
 using namespace std;
 namespace cdroid{
