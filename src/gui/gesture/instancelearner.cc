@@ -16,9 +16,9 @@ static bool compareScore(const Prediction& a, const Prediction& b) {
 std::vector<Prediction> InstanceLearner::classify(int sequenceType, int orientationType, const std::vector<float>& vector) {
     std::vector<Prediction> predictions ;
     std::vector<Instance*>& instances = getInstances();
-    const int count = instances.size();
+    const size_t count = instances.size();
     std::map<const std::string, double> label2score;
-    for (int i = 0; i < count; i++) {
+    for (size_t i = 0; i < count; i++) {
         Instance* sample = instances.at(i);
         if (sample->vector.size() != vector.size()) {
             continue;

@@ -183,7 +183,7 @@ void GestureStore::save(std::ostream& stream){
 }
 
 void GestureStore::save(std::ostream& out, bool closeStream){
-    long start;
+    int64_t start;
     if (PROFILE_LOADING_SAVING) {
         start = SystemClock::elapsedRealtime();
     }
@@ -213,8 +213,8 @@ void GestureStore::save(std::ostream& out, bool closeStream){
     out.flush();
 
     if (PROFILE_LOADING_SAVING) {
-        long end = SystemClock::elapsedRealtime();
-        LOGD("Saving gestures library = %d ms", (end - start));
+        int64_t end = SystemClock::elapsedRealtime();
+        LOGD("Saving gestures library = %d ms", int(end - start));
     }
 
     mChanged = false;
@@ -243,8 +243,8 @@ void GestureStore::load(std::istream& in, bool closeStream){
     }
 
     if (PROFILE_LOADING_SAVING) {
-        const long end = SystemClock::elapsedRealtime();
-        LOGD("Loading gestures library = %d ms",(end - start));
+        const int64_t end = SystemClock::elapsedRealtime();
+        LOGD("Loading gestures library = %d ms",int(end - start));
     }
     //if (closeStream) GestureUtils::closeStream(in);
 }

@@ -15,9 +15,9 @@ public:
     float length;
     std::vector<float> points;
 private:
-    std::vector<long> timestamps;
+    std::vector<int64_t> timestamps;
     cdroid::Path mCachedPath;
-    GestureStroke(const RectF& bbx, float len,const std::vector<float>& pts,const std::vector<long>&times);
+    GestureStroke(const RectF& bbx, float len,const std::vector<float>& pts,const std::vector<int64_t>&times);
     void makePath(); 
 public:
     /**

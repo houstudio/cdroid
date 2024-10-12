@@ -6,9 +6,9 @@ class GesturePoint {
 public:
     float x;
     float y;
-    long timestamp;
+    int64_t timestamp;
 public:
-    GesturePoint(float x, float y, long t) {
+    GesturePoint(float x, float y, int64_t t) {
         this->x = x;
         this->y = y;
         timestamp = t;

@@ -8,7 +8,7 @@ namespace cdroid{
 GestureStroke::GestureStroke(const std::vector<GesturePoint>& points) {
     const int count = (int)points.size();
     std::vector<float> tmpPoints(count * 2);
-    std::vector<long> times(count);
+    std::vector<int64_t> times(count);
 
     RectF bx{0,0,0,0};
     float len = 0;
@@ -39,7 +39,7 @@ GestureStroke::GestureStroke(const std::vector<GesturePoint>& points) {
 /**
  * A faster constructor specially for cloning a stroke.
  */
-GestureStroke::GestureStroke(const RectF& bbx, float len,const std::vector<float>& pts,const std::vector<long>&times) {
+GestureStroke::GestureStroke(const RectF& bbx, float len,const std::vector<float>& pts,const std::vector<int64_t>&times) {
     boundingBox = bbx;//new RectF(bbx.left, bbx.top, bbx.width, bbx.height);
     length = len;
     points = pts;

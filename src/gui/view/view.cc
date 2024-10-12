@@ -7585,8 +7585,8 @@ void View::CheckForTap::setAnchor(float x,float y){
 
 void View::CheckForTap::run(){
     mView->mPrivateFlags &= ~PFLAG_PRESSED;
-    mView->setPressed(true,mX,mY);
-    mView->checkForLongClick(ViewConfiguration::getTapTimeout(),mX, mY);
+    mView->setPressed(true,static_cast<int>(mX),static_cast<int>(mY));
+    mView->checkForLongClick(ViewConfiguration::getTapTimeout(), static_cast<int>(mX), static_cast<int>(mY));
 }
 
 void View::CheckForTap::postDelayed(long ms){
@@ -7646,8 +7646,8 @@ View::ForegroundInfo::~ForegroundInfo(){
 }
 
 bool View::TooltipInfo::updateAnchorPos(MotionEvent&event){
-    const int newAnchorX = event.getX();
-    const int newAnchorY = event.getY();
+    const int newAnchorX = static_cast<int>(event.getX());
+    const int newAnchorY = static_cast<int>(event.getY());
     if((std::abs(newAnchorX-mAnchorX)<=mHoverSlop)&& (std::abs(newAnchorY-mAnchorY)<=mHoverSlop))
         return false;
     mAnchorX = newAnchorX;
@@ -7693,7 +7693,7 @@ View::ScrollabilityCache::~ScrollabilityCache(){
 }
 
 void View::ScrollabilityCache::run(){
-    long now = AnimationUtils::currentAnimationTimeMillis();
+    auto now = AnimationUtils::currentAnimationTimeMillis();
     if (host && (now >= fadeStartTime)) {
         // the animation fades the scrollbars out by changing
         // the opacity (alpha) from fully opaque to fully
