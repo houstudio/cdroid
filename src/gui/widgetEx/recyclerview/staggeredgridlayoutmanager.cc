@@ -2451,7 +2451,7 @@ void StaggeredGridLayoutManager::LazySpanLookup::FullSpanItem::writeToParcel(Par
     dest.writeInt(mGapDir);
     dest.writeInt(mHasUnwantedGapAfter ? 1 : 0);
     if (mGapPerSpan.size()){
-        dest.writeInt(mGapPerSpan.size());
+        dest.writeInt((int32_t)mGapPerSpan.size());
         //dest.writeIntArray(mGapPerSpan);
     } else {
         dest.writeInt(0);

@@ -39,11 +39,11 @@ public:
     }
     int indexOfKey(int key)const{
         auto itr=std::find(mKeys.begin(),mKeys.end(),key);
-        return itr!=mKeys.end()?itr-mKeys.begin():-1;
+        return itr!=mKeys.end()?int(itr-mKeys.begin()):-1;
     }
     int indexOfValue(T value)const{
         auto itr=std::find(mValues.begin(),mValues.end(),value);
-        return itr!=mValues.end()?itr-mValues.begin():-1;
+        return itr!=mValues.end()?int(itr-mValues.begin()):-1;
     }
     int keyAt(int index)const{
         return mKeys[index];

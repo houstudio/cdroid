@@ -201,7 +201,18 @@ Calendar& Calendar::setFields(int count,...){
     return *this;
 }
 
-
+#if defined(_WIN32)||defined(_WIN64)||defined(_MSVC_VER)
+static void gmtime_r(const time_t* timer, struct tm* result) {
+    //std::lock_guard<std::mutex> lock(gmtime_mutex);
+    std::tm* tmp = std::gmtime(timer);
+    if (tmp) {
+        *result = *tmp;
+    }
+}
+static time_t timegm(struct tm* tm) {
+    return _mkgmtime(tm);
+}
+#endif
 void Calendar::computeFields(){
 #if 1 
     struct tm tn;

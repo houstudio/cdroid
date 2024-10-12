@@ -3,7 +3,7 @@
 #include <core/context.h>
 #include <core/audiomanager.h>
 #include <view/soundeffectconstants.h>
-
+#include <porting/cdlog.h>
 #if ENABLE(AUDIO)
 #include <rtaudio/RtAudio.h>
 #endif

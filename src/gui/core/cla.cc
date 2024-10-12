@@ -43,7 +43,7 @@ static std::string ExtractFilename(const std::string &path) {
 static std::string ToLower(const std::string &str) {
     std::string retValue=str;
     std::transform(retValue.begin(), retValue.end(), retValue.begin(), [](char c) {
-         return std::tolower(c, std::locale());
+         return std::tolower(c);
     });
     return retValue;
 }
