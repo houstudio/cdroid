@@ -749,7 +749,7 @@ void ImpulseVelocityTrackerStrategy::addMovement(nsecs_t eventTime, int32_t poin
 }
 
 static float kineticEnergyToVelocity(float work) {
-    static constexpr float sqrt2 = 1.41421356237;
+    static constexpr float sqrt2 = 1.41421356237f;
     return (work < 0 ? -1.0 : 1.0) * sqrtf(fabsf(work)) * sqrt2;
 }
 
@@ -1052,7 +1052,7 @@ bool LeastSquaresVelocityTrackerStrategy::getEstimator(int32_t pointerId,Velocit
     std::vector<float> w;
     std::vector<float> time;
 
-    uint32_t index = mIndex.at(pointerId);
+    size_t index = mIndex.at(pointerId);
     const Movement& newestMovement = movementIt->second[index];
     do {
         const Movement& movement = movementIt->second[index];
@@ -1146,7 +1146,7 @@ float LeastSquaresVelocityTrackerStrategy::chooseWeight(int32_t pointerId,uint32
         float deltaMillis = (movements[nextIndex].eventTime- movements[index].eventTime)
                 *0.000001f;
         if (deltaMillis < 0 ) return 0.5f;
-        if (deltaMillis < 10) return 0.5f + deltaMillis * 0.05;
+        if (deltaMillis < 10) return 0.5f + deltaMillis * 0.05f;
         return 1.0f;
     }
 
@@ -1158,9 +1158,9 @@ float LeastSquaresVelocityTrackerStrategy::chooseWeight(int32_t pointerId,uint32
         //   age 60ms: 0.5
         float ageMillis = (movements[mIndex.at(pointerId)].eventTime - movements[index].eventTime) * 0.001f;/*android us ns 0.000001f*/;
         if (ageMillis < 0 ) return 0.5f;
-        if (ageMillis < 10) return 0.5f + ageMillis * 0.05;
+        if (ageMillis < 10) return 0.5f + ageMillis * 0.05f;
         if (ageMillis < 50) return 1.0f;
-        if (ageMillis < 60) return 0.5f + (60 - ageMillis) * 0.05;
+        if (ageMillis < 60) return 0.5f + (60 - ageMillis) * 0.05f;
         return 0.5f;
     }
 

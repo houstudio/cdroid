@@ -4087,7 +4087,7 @@ void RecyclerView::Recycler::recycleViewInternal(View* view) {
 }
 
 void RecyclerView::Recycler::recycleAndClearCachedViews() {
-    const int count = mCachedViews.size();
+    const int count = (int)mCachedViews.size();
     for (int i = count - 1; i >= 0; i--) {
         recycleCachedViewAt(i);
     }
@@ -4314,8 +4314,8 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::getScrapOrHiddenOrCachedHolder
     }
 
     // Search in our first-level recycled view cache.
-    const int cacheSize = mCachedViews.size();
-    for (int i = 0; i < cacheSize; i++) {
+    const size_t cacheSize = mCachedViews.size();
+    for (size_t i = 0; i < cacheSize; i++) {
         ViewHolder* holder = mCachedViews.at(i);
         // invalid view holders may be in cache if adapter has stable ids as they can be
         // retrieved via getScrapOrCachedViewForId
@@ -6821,7 +6821,7 @@ void RecyclerView::AdapterDataObservable::notifyChanged() {
     // removing itself from {@link mObservers} - and that could cause problems if
     // an iterator is used on the ArrayList {@link mObservers}.
     // to avoid such problems, just march thru the list in the reverse order.
-    for (int i = mObservers.size() - 1; i >= 0; i--) {
+    for (int i = int(mObservers.size() - 1); i >= 0; i--) {
         mObservers.at(i)->onChanged();
     }
 }

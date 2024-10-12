@@ -4,7 +4,7 @@ namespace cdroid{
 
 class AnimationUtils{
 public:
-    static long currentAnimationTimeMillis();
+    static int64_t currentAnimationTimeMillis();
     static Animation* loadAnimation(Context* context,const std::string&id);
     static LayoutAnimationController* loadLayoutAnimation(Context* context,const std::string&id);
     static Animation* makeInAnimation(Context* c, bool fromLeft);

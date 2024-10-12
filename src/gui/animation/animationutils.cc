@@ -6,7 +6,7 @@
 
 namespace cdroid{
 
-long AnimationUtils::currentAnimationTimeMillis(){
+int64_t AnimationUtils::currentAnimationTimeMillis(){
     return SystemClock::uptimeMillis();
 }
 
@@ -53,7 +53,7 @@ static void endAnimation(void *userData, const XML_Char *name){
 }
 
 Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resid){
-    int rdlen;
+    size_t rdlen;
     char buf[256];
     ANIMPARSERDATA pd;
     void*parseParams[2];
@@ -98,7 +98,7 @@ static void startAnimationController(void *userData, const XML_Char *xname, cons
 LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
     LACDATA data;
     char buf[256];
-    int rdlen = 0;
+    size_t rdlen = 0;
     data.context = context;
     data.controller = nullptr;
     std::unique_ptr<std::istream> stream = context->getInputStream(resid,&data.package);
@@ -173,7 +173,7 @@ static void startPolator(void *userData, const XML_Char *xname, const XML_Char *
 }
 
 Interpolator* AnimationUtils::loadInterpolator(Context* context,const std::string&resid){
-    int rdlen;
+    size_t rdlen;
     char buf[256];
     Interpolator*interpolator = nullptr;
     XML_Parser parser = XML_ParserCreate(nullptr);

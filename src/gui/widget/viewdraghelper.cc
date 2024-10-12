@@ -313,8 +313,8 @@ void ViewDragHelper::saveInitialMotion(float x, float y, int pointerId) {
 } 
 
 void ViewDragHelper::saveLastMotion(MotionEvent& ev) {
-    const int pointerCount = ev.getPointerCount();
-    for (int i = 0; i < pointerCount; i++) {
+    const size_t pointerCount = ev.getPointerCount();
+    for (size_t i = 0; i < pointerCount; i++) {
         const int pointerId = ev.getPointerId(i);
         // If pointer is invalid then skip saving on ACTION_MOVE.
         if (!isValidPointerForActionMove(pointerId)) {
@@ -578,8 +578,8 @@ void ViewDragHelper::processTouchEvent(MotionEvent& ev){
             saveLastMotion(ev);
         } else {
             // Check to see if any pointer is now over a draggable view.
-            const int pointerCount = ev.getPointerCount();
-            for (int i = 0; i < pointerCount; i++) {
+            const size_t pointerCount = ev.getPointerCount();
+            for (size_t i = 0; i < pointerCount; i++) {
                 const int pointerId = ev.getPointerId(i);
 
                 // If pointer is invalid then skip the ACTION_MOVE.
@@ -611,8 +611,8 @@ void ViewDragHelper::processTouchEvent(MotionEvent& ev){
         if (mDragState == STATE_DRAGGING && pointerId == mActivePointerId) {
             // Try to find another pointer that's still holding on to the captured view.
             int newActivePointer = INVALID_POINTER;
-            const int pointerCount = ev.getPointerCount();
-            for (int i = 0; i < pointerCount; i++) {
+            const size_t pointerCount = ev.getPointerCount();
+            for (size_t i = 0; i < pointerCount; i++) {
                 const int id = ev.getPointerId(i);
                 if (id == mActivePointerId) {
                     // This one's going away, skip.
@@ -709,7 +709,7 @@ bool ViewDragHelper::checkTouchSlop(View* child, float dx, float dy){
 }
 
 bool ViewDragHelper::checkTouchSlop(int directions){
-    const int count = mInitialMotionX.size();
+    const int count = (int)mInitialMotionX.size();
     for (int i = 0; i < count; i++) {
         if (checkTouchSlop(directions, i)) {
             return true;
@@ -738,7 +738,7 @@ bool ViewDragHelper::checkTouchSlop(int directions, int pointerId){
 }
 
 bool ViewDragHelper::isEdgeTouched(int edges)const{
-    const int count = mInitialEdgesTouched.size();
+    const int count = (int)mInitialEdgesTouched.size();
     for (int i = 0; i < count; i++) {
         if (isEdgeTouched(edges, i)) {
             return true;

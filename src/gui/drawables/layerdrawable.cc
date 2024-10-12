@@ -132,7 +132,8 @@ LayerDrawable::LayerState::LayerState(const LayerState*orig,LayerDrawable*owner)
 }
 
 LayerDrawable::LayerState::~LayerState(){
-    for_each(mChildren.begin(),mChildren.end(),[](ChildDrawable*c){delete c;});
+    for (auto it = mChildren.begin(); it != mChildren.end();it++)
+       delete *it;
     mChildren.clear();
 }
 

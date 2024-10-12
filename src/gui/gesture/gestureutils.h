@@ -1,6 +1,7 @@
 #ifndef __GESTURE_UTILS_H__
 #define __GESTURE_UTILS_H__
 #include <vector>
+#include <cmath>
 #include <gesture/gesturepoint.h>
 #include <gesture/gesture.h>
 #include <gesture/orientedboundingbox.h>

@@ -544,7 +544,7 @@ void View::setLeft(int left){
     const int height = mBottom - mTop;
 
     mLeft = left;
-    mRenderNode->setLeft(left);
+    mRenderNode->setLeft(float(left));
 
     sizeChange(mRight - mLeft, height, oldWidth, height);
 
@@ -589,7 +589,7 @@ void View::setTop(int top){
     const int oldHeight = mBottom - mTop;
 
     mTop = top;
-    mRenderNode->setTop(mTop);
+    mRenderNode->setTop(float(mTop));
 
     sizeChange(width, mBottom - mTop, width, oldHeight);
 
@@ -631,7 +631,7 @@ void View::setRight(int right){
     const int height = mBottom - mTop;
 
     mRight = right;
-    mRenderNode->setRight(mRight);
+    mRenderNode->setRight(float(mRight));
 
     sizeChange(mRight - mLeft, height, oldWidth, height);
 
@@ -673,7 +673,7 @@ void View::setBottom(int bottom){
     const int oldHeight = mBottom - mTop;
     
     mBottom = bottom;
-    mRenderNode->setBottom(mBottom);
+    mRenderNode->setBottom(float(mBottom));
     
     sizeChange(width, mBottom - mTop, width, oldHeight);
     
@@ -3783,8 +3783,8 @@ std::vector<int>View::onCreateDrawableState(){
 }
 
 std::vector<int>& View::mergeDrawableStates(std::vector<int>&baseState,const std::vector<int>&additionalState) {
-    const int M = additionalState.size();
-    for(int j=0;j<M;j++)
+    const size_t M = additionalState.size();
+    for(size_t j=0;j<M;j++)
         baseState.push_back(additionalState[j]);
     return baseState;
 }
@@ -5183,7 +5183,8 @@ bool View::requestRectangleOnScreen(Rect& rectangle, bool immediate){
     View* child = this;
 
     RectF position;
-    position.set(rectangle.left,rectangle.top,rectangle.width,rectangle.height);
+    position.set(static_cast<float>(rectangle.left),static_cast<float>(rectangle.top),
+        static_cast<float>(rectangle.width),static_cast<float>(rectangle.height));
 
     ViewGroup* parent = mParent;
     bool scrolled = false;

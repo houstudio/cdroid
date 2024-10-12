@@ -226,9 +226,9 @@ bool LinearLayoutManager::computeScrollVectorForPosition(int targetPosition,Poin
     const int firstChildPos = getPosition(getChildAt(0));
     const int direction = targetPosition < firstChildPos != mShouldReverseLayout ? -1 : 1;
     if (mOrientation == HORIZONTAL) {
-        point.set(direction, 0);
+        point.set(float(direction), 0.f);
     } else {
-        point.set(0, direction);
+        point.set(0.f, float(direction));
     }
     return true;
 }
@@ -447,9 +447,9 @@ void LinearLayoutManager::layoutForPredictiveAnimations(RecyclerView::Recycler& 
     // to make the logic simpler, we calculate the size of children and call fill.
     int scrapExtraStart = 0, scrapExtraEnd = 0;
     std::vector<RecyclerView::ViewHolder*> scrapList = recycler.getScrapList();
-    const int scrapSize = scrapList.size();
+    const size_t scrapSize = scrapList.size();
     const int firstChildPos = getPosition(getChildAt(0));
-    for (int i = 0; i < scrapSize; i++) {
+    for (size_t i = 0; i < scrapSize; i++) {
         RecyclerView::ViewHolder* scrap = scrapList.at(i);
         if (scrap->isRemoved()) {
             continue;
@@ -1558,10 +1558,10 @@ View* LinearLayoutManager::LayoutState::next(RecyclerView::Recycler& recycler) {
 }
 
 View* LinearLayoutManager::LayoutState::nextViewFromScrapList() {
-    const int size = mScrapList.size();
-    for (int i = 0; i < size; i++) {
+    const size_t size = mScrapList.size();
+    for (size_t i = 0; i < size; i++) {
         View* view = mScrapList.at(i)->itemView;
-	RecyclerView::LayoutParams* lp = (RecyclerView::LayoutParams*) view->getLayoutParams();
+        RecyclerView::LayoutParams* lp = (RecyclerView::LayoutParams*) view->getLayoutParams();
         if (lp->isItemRemoved()) {
             continue;
         }
@@ -1588,15 +1588,15 @@ void LinearLayoutManager::LayoutState::assignPositionFromScrapList(View* ignore)
 }
 
 View* LinearLayoutManager::LayoutState::nextViewInLimitedList(View* ignore) {
-    const int size = mScrapList.size();
+    const size_t size = mScrapList.size();
     View* closest = nullptr;
     int closestDistance = INT_MAX;
     if (_Debug && mIsPreLayout) {
         LOGE("Scrap list cannot be used in pre layout");
     }
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         View* view = mScrapList.at(i)->itemView;
-	RecyclerView::LayoutParams* lp = (RecyclerView::LayoutParams*) view->getLayoutParams();
+        RecyclerView::LayoutParams* lp = (RecyclerView::LayoutParams*) view->getLayoutParams();
         if (view == ignore || lp->isItemRemoved()) {
             continue;
         }

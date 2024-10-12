@@ -1,5 +1,6 @@
 #include <view/inputeventconsistencyverifier.h>
 #include <core/inputdevice.h>
+#include <porting/cdlog.h>
 
 namespace cdroid{
 static const char* EVENT_TYPE_KEY = "KeyEvent";
@@ -245,7 +246,7 @@ void InputEventConsistencyVerifier::onTouchEvent(MotionEvent& event, int nesting
     mTouchEventStreamDeviceId = deviceId;
     mTouchEventStreamSource = source;
 
-    const int pointerCount = event.getPointerCount();
+    const int pointerCount = (int)event.getPointerCount();
     if ((source & InputDevice::SOURCE_CLASS_POINTER) != 0) {
         switch (action) {
         case MotionEvent::ACTION_DOWN:
@@ -496,7 +497,7 @@ void InputEventConsistencyVerifier::ensureMetaStateIsNormalized(int metaState) {
 }
 
 void InputEventConsistencyVerifier::ensurePointerCountIsOneForThisAction(MotionEvent& event) {
-    const int pointerCount = event.getPointerCount();
+    const size_t pointerCount = event.getPointerCount();
     if (pointerCount != 1) {
         problem("Pointer count is %d but it should always be 1 for %s",
 		pointerCount, MotionEvent::actionToString(event.getAction()));
@@ -513,7 +514,7 @@ void InputEventConsistencyVerifier::ensureActionButtonIsNonZeroForThisAction(Mot
 }
 
 void InputEventConsistencyVerifier::ensureHistorySizeIsZeroForThisAction(MotionEvent& event) {
-    const int historySize = event.getHistorySize();
+    const size_t historySize = event.getHistorySize();
     if (historySize != 0) {
         problem("History size is %d but it should always be 0 for %s",
 		historySize,MotionEvent::actionToString(event.getAction()));

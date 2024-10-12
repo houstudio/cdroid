@@ -47,7 +47,7 @@ std::vector<float> GestureUtils::spatialSampling(const Gesture& gesture, int bit
  *         value at pixel [i%bitmapSize, i/bitmapSize]
  */
 std::vector<float> GestureUtils::spatialSampling(const Gesture& gesture, int bitmapSize,bool keepAspectRatio) {
-    const float targetPatchSize = bitmapSize - 1;
+    const float targetPatchSize = static_cast<float>(bitmapSize - 1);
     std::vector<float> sample(bitmapSize * bitmapSize,0);
     //Arrays.fill(sample, 0);
 
@@ -90,16 +90,16 @@ std::vector<float> GestureUtils::spatialSampling(const Gesture& gesture, int bit
     float postDx = targetPatchSize / 2;
     float postDy = targetPatchSize / 2;
     const std::vector<GestureStroke*>& strokes = gesture.getStrokes();
-    const int count = strokes.size();
-    int size;
+    const size_t count = strokes.size();
+    size_t size;
     float xpos;
     float ypos;
-    for (int index = 0; index < count; index++) {
+    for (size_t index = 0; index < count; index++) {
         const GestureStroke* stroke = strokes.at(index);
         std::vector<float> strokepoints = stroke->points;
         size = strokepoints.size();
         std::vector<float> pts(size);// = new float[size];
-        for (int i = 0; i < size; i += 2) {
+        for (size_t i = 0; i < size; i += 2) {
             pts[i] = (strokepoints[i] + preDx) * sx + postDx;
             pts[i + 1] = (strokepoints[i + 1] + preDy) * sy + postDy;
         }

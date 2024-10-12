@@ -442,7 +442,7 @@ void StaggeredGridLayoutManager::repositionToWrapContentIfNecessary() {
     const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
-        float size = mSecondaryOrientation->getDecoratedMeasurement(child);
+        float size = static_cast<float>(mSecondaryOrientation->getDecoratedMeasurement(child));
         if (size < maxSize) {
             continue;
         }
@@ -453,7 +453,7 @@ void StaggeredGridLayoutManager::repositionToWrapContentIfNecessary() {
         maxSize = std::max(maxSize, size);
     }
     int before = mSizePerSpan;
-    int desired = std::round(maxSize * mSpanCount);
+    int desired = static_cast<int>(std::round(maxSize * mSpanCount));
     if (mSecondaryOrientation->getMode() == MeasureSpec::AT_MOST) {
         desired = std::min(desired, mSecondaryOrientation->getTotalSpace());
     }
@@ -1955,7 +1955,7 @@ int StaggeredGridLayoutManager::Span::getEndLine(int def) {
     if (mCachedEnd != INVALID_LINE) {
         return mCachedEnd;
     }
-    const int size = mViews.size();
+    const size_t size = mViews.size();
     if (size == 0) {
         return def;
     }
@@ -2048,7 +2048,7 @@ void StaggeredGridLayoutManager::Span::setLine(int line) {
 }
 
 void StaggeredGridLayoutManager::Span::popEnd() {
-    const int size = mViews.size();
+    const int size = (int)mViews.size();
     View* end = mViews.back();mViews.pop_back();//remove(size - 1);
     LayoutParams* lp = getLayoutParams(end);
     lp->mSpan = nullptr;
@@ -2095,37 +2095,37 @@ void StaggeredGridLayoutManager::Span::onOffset(int dt) {
 int StaggeredGridLayoutManager::Span::findFirstVisibleItemPosition() {
     return mLM->mReverseLayout
             ? findOneVisibleChild(int(mViews.size() - 1), -1, false)
-            : findOneVisibleChild(0, mViews.size(), false);
+            : findOneVisibleChild(0, (int)mViews.size(), false);
 }
 
 int StaggeredGridLayoutManager::Span::findFirstPartiallyVisibleItemPosition() {
     return mLM->mReverseLayout
             ? findOnePartiallyVisibleChild(int(mViews.size() - 1), -1, true)
-            : findOnePartiallyVisibleChild(0, mViews.size(), true);
+            : findOnePartiallyVisibleChild(0, (int)mViews.size(), true);
 }
 
 int StaggeredGridLayoutManager::Span::findFirstCompletelyVisibleItemPosition() {
     return mLM->mReverseLayout
             ? findOneVisibleChild(int(mViews.size() - 1), -1, true)
-            : findOneVisibleChild(0, mViews.size(), true);
+            : findOneVisibleChild(0, (int)mViews.size(), true);
 }
 
 int StaggeredGridLayoutManager::Span::findLastVisibleItemPosition() {
     return mLM->mReverseLayout
-            ? findOneVisibleChild(0, mViews.size(), false)
-            : findOneVisibleChild(mViews.size() - 1, -1, false);
+            ? findOneVisibleChild(0, (int)mViews.size(), false)
+            : findOneVisibleChild(int(mViews.size() - 1), -1, false);
 }
 
 int StaggeredGridLayoutManager::Span::findLastPartiallyVisibleItemPosition() {
     return mLM->mReverseLayout
-            ? findOnePartiallyVisibleChild(0, mViews.size(), true)
+            ? findOnePartiallyVisibleChild(0, (int)mViews.size(), true)
             : findOnePartiallyVisibleChild(int(mViews.size() - 1), -1, true);
 }
 
 int StaggeredGridLayoutManager::Span::findLastCompletelyVisibleItemPosition() {
     return mLM->mReverseLayout
-            ? findOneVisibleChild(0, mViews.size(), true)
-            : findOneVisibleChild(mViews.size() - 1, -1, true);
+            ? findOneVisibleChild(0, (int)mViews.size(), true)
+            : findOneVisibleChild(int(mViews.size() - 1), -1, true);
 }
 
 int StaggeredGridLayoutManager::Span::findOnePartiallyOrCompletelyVisibleChild(int fromIndex, int toIndex,
@@ -2173,7 +2173,7 @@ int StaggeredGridLayoutManager::Span::findOnePartiallyVisibleChild(int fromIndex
 View* StaggeredGridLayoutManager::Span::getFocusableViewAfter(int referenceChildPosition, int layoutDir) {
     View* candidate = nullptr;
     if (layoutDir == LayoutState::LAYOUT_START) {
-        const int limit = mViews.size();
+        const int limit = (int)mViews.size();
         for (int i = 0; i < limit; i++) {
             View* view = mViews.at(i);
             if ((mLM->mReverseLayout && mLM->getPosition(view) <= referenceChildPosition)
@@ -2207,7 +2207,7 @@ View* StaggeredGridLayoutManager::Span::getFocusableViewAfter(int referenceChild
 
 int StaggeredGridLayoutManager::LazySpanLookup::forceInvalidateAfter(int position) {
     if (mFullSpanItems.size()){// != null) {
-        for (int i = mFullSpanItems.size() - 1; i >= 0; i--) {
+        for (int i = int(mFullSpanItems.size() - 1); i >= 0; i--) {
             FullSpanItem* fsi = mFullSpanItems.at(i);
             if (fsi->mPosition >= position) {
                 mFullSpanItems.erase(mFullSpanItems.begin()+i);//remove(i);
@@ -2296,7 +2296,7 @@ void StaggeredGridLayoutManager::LazySpanLookup::offsetFullSpansForRemoval(int p
         return;
     }
     const int end = positionStart + itemCount;
-    for (int i = mFullSpanItems.size() - 1; i >= 0; i--) {
+    for (int i = int(mFullSpanItems.size() - 1); i >= 0; i--) {
         FullSpanItem* fsi = mFullSpanItems.at(i);
         if (fsi->mPosition < positionStart) {
             continue;
@@ -2327,7 +2327,7 @@ void StaggeredGridLayoutManager::LazySpanLookup::offsetFullSpansForAddition(int 
     if (mFullSpanItems.empty()){// == null) {
         return;
     }
-    for (int i = mFullSpanItems.size() - 1; i >= 0; i--) {
+    for (int i = int(mFullSpanItems.size() - 1); i >= 0; i--) {
         FullSpanItem* fsi = mFullSpanItems.at(i);
         if (fsi->mPosition < positionStart) {
             continue;
@@ -2347,8 +2347,8 @@ int StaggeredGridLayoutManager::LazySpanLookup::invalidateFullSpansAfter(int pos
         mFullSpanItems.erase(it);//.remove(item);
     }
     int nextFsiIndex = -1;
-    const size_t count = mFullSpanItems.size();
-    for (size_t i = 0; i < count; i++) {
+    const int count = (int)mFullSpanItems.size();
+    for (int i = 0; i < count; i++) {
         FullSpanItem* fsi = mFullSpanItems.at(i);
         if (fsi->mPosition >= position) {
             nextFsiIndex = i;
@@ -2390,7 +2390,7 @@ StaggeredGridLayoutManager::LazySpanLookup::FullSpanItem* StaggeredGridLayoutMan
     if (mFullSpanItems.empty()){// == nullptr) {
         return nullptr;
     }
-    for (int i = mFullSpanItems.size() - 1; i >= 0; i--) {
+    for (int i = int(mFullSpanItems.size() - 1); i >= 0; i--) {
         FullSpanItem* fsi = mFullSpanItems.at(i);
         if (fsi->mPosition == position) {
             return fsi;
