@@ -565,7 +565,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
     int slot,pointerCount,pointerIndex,action;
     MotionEvent*lastEvent;
     if(!isValidEvent(type,code,value))return -1;
-    LOGV("%lu:%04u %d,%d,%d",tv.tv_sec,tv.tv_usec,type,code,value);
+    LOGV("%lu:%04u %d,%d,%d",sec,usec,type,code,value);
     switch(type){
     case EV_KEY:
         switch(code){
@@ -575,7 +575,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
             if(value)mCurrBits.markBit(0);else mCurrBits.clearBit(0);
             mAxisFlags |= 0x80000000;
             if(value){
-                mMoveTime = mDownTime = tv.tv_sec * 1000 + tv.tv_usec/1000;
+                mMoveTime = mDownTime = sec * 1000 + usec/1000;
                 mButtonState = MotionEvent::BUTTON_PRIMARY;
             }else{
                 mMoveTime = sec * 1000 + usec/1000;
@@ -630,7 +630,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         mPointerCoords[slot] = mCoord;
         if( code == SYN_MT_REPORT )break;
         action = getActionByBits(pointerIndex);
-        mMoveTime = (tv.tv_sec * 1000LL + tv.tv_usec/1000);
+        mMoveTime = (sec * 1000LL + usec/1000);
         lastEvent = (mEvents.size() > 1) ? (MotionEvent*)mEvents.back() : nullptr;
         pointerCount = (mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) ? std::max(mLastBits.count(),mCurrBits.count()) : 1;
         if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (action == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){

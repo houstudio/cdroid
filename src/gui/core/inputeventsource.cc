@@ -44,10 +44,10 @@ void InputEventSource::doEventsConsume(){
                 continue;
             }
             if(it==mDevices.end()){
-                getDevice(es->device)->putEvent(e->tv_sec,e->tv_nsec,e->type,e->code,e->value);
+                getDevice(es->device)->putEvent(e->tv_sec,e->tv_usec,e->type,e->code,e->value);
                 continue;
             }
-            it->second->putEvent(e->tv_sec,e->tv_nsec,e->type,e->code,e->value);
+            it->second->putEvent(e->tv_sec,e->tv_usec,e->type,e->code,e->value);
         }
     }
 }
