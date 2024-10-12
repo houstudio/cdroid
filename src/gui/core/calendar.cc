@@ -216,7 +216,7 @@ static time_t timegm(struct tm* tm) {
 void Calendar::computeFields(){
 #if 1 
     struct tm tn;
-    long tmLocal= mTime/1000+zone;
+    time_t tmLocal= mTime/1000+zone;
     gmtime_r(&tmLocal,&tn);
     set(tn.tm_year+1900,tn.tm_mon,tn.tm_mday,tn.tm_hour,tn.tm_min,tn.tm_sec);
     set(DAY_OF_WEEK,tn.tm_wday);
