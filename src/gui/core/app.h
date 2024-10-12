@@ -35,7 +35,7 @@ public:
      int getArgAsInt(const std::string&key,int def)const;
      float getArgAsFloat(const std::string&key,float def)const;
      double getArgAsDouble(const std::string&key,double def)const;
-     int getParamCount()const;
+     size_t getParamCount()const;
      std::string getParam(int idx,const std::string&def="")const;
      virtual void addEventHandler(const EventHandler* handler);
      virtual void removeEventHandler(const EventHandler*handler);

@@ -150,7 +150,7 @@ double App::getArgAsDouble(const std::string&key,double def)const{
     return value;
 }
 
-int App::getParamCount()const{
+size_t App::getParamCount()const{
     return cla.getParamCount();
 }
 

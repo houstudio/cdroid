@@ -66,6 +66,9 @@
  * SC - System Control
  */
 /* Code 255 is reserved for special needs of AT keyboard driver */
+#ifndef KEY_OK
+    #define KEY_OK    0x160
+#endif
 #define KEY_LEFT      KEY_DPAD_LEFT
 #define KEY_RIGHT     KEY_DPAD_RIGHT
 #define KEY_UP        KEY_DPAD_UP

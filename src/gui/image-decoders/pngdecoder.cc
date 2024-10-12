@@ -82,7 +82,7 @@ Cairo::RefPtr<Cairo::ImageSurface> PNGDecoder::decode(float scale,void*targetPro
 
     for (png_uint_32 y = 0; y < mImageHeight; ++y) {
         row_pointers[y] = (frame_pixels + y* mImageWidth * 4);
-        bzero(row_pointers[y],mImageWidth * 4);
+        memset(row_pointers[y],0,mImageWidth * 4);
     }
 #if ENABLE(LCMS)
     if(targetProfile) {

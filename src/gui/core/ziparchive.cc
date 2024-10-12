@@ -33,7 +33,7 @@ int ZIPArchive::getEntries(std::vector<std::string>&entries)const{
         const char*name=zip_get_name((zip_t*)zip,i,0);
         entries.push_back(name);
     }
-    return num;
+    return static_cast<int>(num);
 }
 
 int ZIPArchive::forEachEntry(std::function<bool(const std::string&)>func)const{

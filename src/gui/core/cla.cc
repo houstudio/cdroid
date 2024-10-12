@@ -1,5 +1,6 @@
-#include "cla.h"
+#include <core/cla.h>
 #include <stdio.h>
+#include <cctype>
 #include <algorithm> // std::min
 #include <sstream>   // std::stringstream
 #include <iomanip>   // std::left, std::setw

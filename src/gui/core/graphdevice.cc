@@ -12,7 +12,9 @@
 #include <windowmanager.h>
 #include <systemclock.h>
 #include <thread>
+#if defined(__linux__)||defined(__unix__)
 #include <sys/resource.h>
+#endif
 #include <malloc.h>
 #include <fstream>
 using namespace Cairo;
