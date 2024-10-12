@@ -253,8 +253,10 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
             d = new NinePatchDrawable(image);
         else if(TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg"))
             d = new BitmapDrawable(image);
-        if(d) d->getConstantState()->mResource=resourceId;
-        return d;
+        if(d) {
+            d->getConstantState()->mResource=resourceId;
+            return d;
+        }
     }
 
     if(TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")
