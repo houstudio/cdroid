@@ -153,8 +153,18 @@ int GridLayoutAnimationController::getTransformedRowIndex(const AnimationParamet
         index = params->rowsCount - 1 - params->row;
         break;
     case ORDER_RANDOM:
+#if defined(__linux__)||defined(__unix__)
         //if (mRandomizer == null) mRandomizer = new Random();
         index = (int) (params->rowsCount * drand48());//mRandomizer.nextFloat());
+#else
+        {
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<> dis(0.0, 1.0);
+            index = static_cast<int>(params->rowsCount * dis(gen));
+        }
+
+#endif
         break;
     case ORDER_NORMAL:
     default:

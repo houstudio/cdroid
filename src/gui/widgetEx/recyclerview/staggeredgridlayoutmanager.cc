@@ -5,6 +5,9 @@
 #include <widgetEx/recyclerview/adapterhelper.h>
 #include <widgetEx/recyclerview/linearsmoothscroller.h>
 #include <cassert>
+#if defined(_WIN32)||defined(_WIN64)||defined(_MSC_VER)
+#include <intrin.h>
+#endif
 
 namespace cdroid{
 
@@ -2647,7 +2650,11 @@ static int numberOfTrailingZeros(unsigned int n) {
     return __builtin_ctz(n);
 }
 static int numberOfSetBits(unsigned int n) {
+#if defined(__clang__)||defined(__GNUC__)
     return __builtin_popcount(n);
+#elif defined(_WIN32)||defined(_WIN64)
+    return __popcnt(n);
+#endif
 }
 
 void StaggeredGridLayoutManager::BitSet::clear(int bitIndex) {
