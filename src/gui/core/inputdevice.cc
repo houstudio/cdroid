@@ -480,12 +480,15 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     if( (raw_axis>=ABS_MT_SLOT) && (raw_axis<=ABS_CNT) )
         mAxisFlags |= 1 << (raw_axis - ABS_MT_SLOT);
     switch(raw_axis){
-    case ABS_X ... ABS_Z :
+    case ABS_X:
+    case ABS_Y:
+    case ABS_Z:
         mSlotID = 0 ; mTrackID = 0;
         mProp.id= 0;
         mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
         break;
-    case ABS_MT_POSITION_X...ABS_MT_POSITION_Y:
+    case ABS_MT_POSITION_X:
+    case ABS_MT_POSITION_Y:
         //mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH_MT;
 	break;
     case ABS_MT_SLOT:
@@ -598,9 +601,12 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         }break;
     case EV_ABS:
         switch(code){
-        case ABS_X ... ABS_Z :
-        case ABS_MT_SLOT ... ABS_MT_TOOL_Y://MT_TOUCH_MAJOR...MT_TOOL_Y
-             setAxisValue(code,value,false);break;
+        case ABS_X:
+        case ABS_Y:
+        case ABS_Z:
+        default: if ((code >= ABS_MT_SLOT) && (code <= ABS_MT_TOOL_Y)) {
+            setAxisValue(code, value, false); break;
+        }
         }break;
     case EV_REL:
         if( (code >= REL_X) && (code <= REL_Z) ){

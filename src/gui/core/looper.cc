@@ -461,7 +461,7 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
 void Looper::wake() {
     LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  wake", this);
     uint64_t inc = 1;
-    const ssize_t nWrite = TEMP_FAILURE_RETRY(write(mWakeEventFd, &inc, sizeof(uint64_t)));
+    const long nWrite = TEMP_FAILURE_RETRY(write(mWakeEventFd, &inc, sizeof(uint64_t)));
     if (nWrite != sizeof(uint64_t)) {
         LOGE_IF(errno!=EAGAIN,"Could not write wake signal to fd %d: %s",mWakeEventFd, strerror(errno));
     }
