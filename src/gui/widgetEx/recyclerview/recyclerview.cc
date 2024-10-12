@@ -334,7 +334,7 @@ void RecyclerView::initChildrenHelper() {
             if (!vh->isTmpDetached() && !vh->shouldIgnore()) {
                 LOGE("Called attach on a child which is not detached: %p",vh);
             }
-            LOGD_IF(_DEBUG,"reAttach %p %p:%d",vh,vh->itemView,vh->itemView->getId());
+            LOGD_IF(_Debug,"reAttach %p %p:%d",vh,vh->itemView,vh->itemView->getId());
             vh->clearTmpDetachFlag();
         }
         attachViewToParent(child, index, layoutParams);
@@ -348,7 +348,7 @@ void RecyclerView::initChildrenHelper() {
                 if (vh->isTmpDetached() && !vh->shouldIgnore()) {
                     LOGE("called detach on an already detached child %p",vh);
                 }
-                LOGD_IF(_DEBUG,"tmpDetach =%p %p:%d",vh,vh->itemView,vh->itemView->getId());
+                LOGD_IF(_Debug,"tmpDetach =%p %p:%d",vh,vh->itemView,vh->itemView->getId());
                 vh->addFlags(ViewHolder::FLAG_TMP_DETACHED);
             }
         }
@@ -671,7 +671,7 @@ bool RecyclerView::removeAnimatingView(View* view) {
         ViewHolder* viewHolder = getChildViewHolderInt(view);
         mRecycler->unscrapView(*viewHolder);
         mRecycler->recycleViewHolderInternal(*viewHolder);
-        LOGD_IF(_DEBUG,"after removing animated view: %p",view);
+        LOGD_IF(_Debug,"after removing animated view: %p",view);
     }
     // only clear request eaten flag if we removed the view.
     stopInterceptRequestLayout(!removed);
@@ -706,7 +706,7 @@ void RecyclerView::setScrollState(int state) {
     if (state == mScrollState) {
         return;
     }
-    LOGD_IF(_DEBUG,"setting scroll state from %d to %d",mScrollState,state);
+    LOGD_IF(_Debug,"setting scroll state from %d to %d",mScrollState,state);
     mScrollState = state;
     if (state != SCROLL_STATE_SETTLING) {
         stopScrollersInternal();
@@ -1016,7 +1016,7 @@ void RecyclerView::startInterceptRequestLayout() {
 void RecyclerView::stopInterceptRequestLayout(bool performLayoutChildren) {
     if (mInterceptRequestLayoutDepth < 1) {
         //noinspection PointlessBooleanExpression
-        LOGD_IF(_DEBUG,"stopInterceptRequestLayout was called more "
+        LOGD_IF(_Debug,"stopInterceptRequestLayout was called more "
             "times than startInterceptRequestLayout.");
         mInterceptRequestLayoutDepth = 1;
     }
@@ -2823,7 +2823,7 @@ void RecyclerView::saveOldPositions() {
     const int childCount = mChildHelper->getUnfilteredChildCount();
     for (int i = 0; i < childCount; i++) {
         ViewHolder* holder = getChildViewHolderInt(mChildHelper->getUnfilteredChildAt(i));
-        if (_DEBUG && holder->mPosition == -1 && !holder->isRemoved()) {
+        if (_Debug && holder->mPosition == -1 && !holder->isRemoved()) {
             LOGE("view holder cannot have position -1 unless it is removed %p");
         }
         if (!holder->shouldIgnore()) {
@@ -2861,7 +2861,7 @@ void RecyclerView::offsetPositionRecordsForMove(int from, int to) {
         if ( (holder == nullptr) || (holder->mPosition < start) || (holder->mPosition > end) ) {
             continue;
         }
-        LOGD_IF(_DEBUG,"offsetPositionRecordsForMove attached child %d holder %p",i, holder);
+        LOGD_IF(_Debug,"offsetPositionRecordsForMove attached child %d holder %p",i, holder);
         if (holder->mPosition == from) {
             holder->offsetPosition(to - from, false);
         } else {
@@ -2879,7 +2879,7 @@ void RecyclerView::offsetPositionRecordsForInsert(int positionStart, int itemCou
     for (int i = 0; i < childCount; i++) {
         ViewHolder* holder = getChildViewHolderInt(mChildHelper->getUnfilteredChildAt(i));
         if ( (holder != nullptr) && !holder->shouldIgnore() && (holder->mPosition >= positionStart) ) {
-            LOGD_IF(_DEBUG,"offsetPositionRecordsForInsert attached child %d holder %p  now at position %d"
+            LOGD_IF(_Debug,"offsetPositionRecordsForInsert attached child %d holder %p  now at position %d"
                        ,i,holder, (holder->mPosition + itemCount));
             holder->offsetPosition(itemCount, false);
             mState->mStructureChanged = true;
@@ -2896,12 +2896,12 @@ void RecyclerView::offsetPositionRecordsForRemove(int positionStart, int itemCou
         ViewHolder* holder = getChildViewHolderInt(mChildHelper->getUnfilteredChildAt(i));
         if (holder && !holder->shouldIgnore()) {
             if (holder->mPosition >= positionEnd) {
-                LOGD_IF(_DEBUG,"offsetPositionRecordsForRemove attached child %d(%p) hold %p now at position %d",
+                LOGD_IF(_Debug,"offsetPositionRecordsForRemove attached child %d(%p) hold %p now at position %d",
                     i,holder->itemView ,holder, (holder->mPosition - itemCount));
                 holder->offsetPosition(-itemCount, applyToPreLayout);
                 mState->mStructureChanged = true;
             } else if (holder->mPosition >= positionStart) {
-                LOGD_IF(_DEBUG,"offsetPositionRecordsForRemove attached child %d(%p) holder %p now REMOVED",i,holder->itemView,holder);
+                LOGD_IF(_Debug,"offsetPositionRecordsForRemove attached child %d(%p) holder %p now REMOVED",i,holder->itemView,holder);
                 holder->flagRemovedAndOffsetPosition(positionStart - 1, -itemCount,applyToPreLayout);
                 mState->mStructureChanged = true;
             }
@@ -3225,7 +3225,7 @@ void RecyclerView::dispatchOnScrollStateChanged(int state) {
     if (mScrollListener.onScrollStateChanged != nullptr) {
         mScrollListener.onScrollStateChanged(*this, state);
     }
-    for (int i = mScrollListeners.size() - 1; i >= 0; i--) {
+    for (int i = int(mScrollListeners.size() - 1); i >= 0; i--) {
 	auto func = mScrollListeners.at(i).onScrollStateChanged;
         if(func)func(*this, state);
     }
@@ -3603,7 +3603,7 @@ void RecyclerView::RecycledViewPool::putRecycledView(ViewHolder* scrap) {
         delete scrap;//chenyang:)
         return;
     }
-    if (_DEBUG){
+    if (_Debug){
         auto it =std::find(scrapHeap.begin(),scrapHeap.end(),scrap);
         LOGD_IF(it!=scrapHeap.end(),"this scrap item already exists");
     }
@@ -3761,7 +3761,7 @@ bool RecyclerView::Recycler::validateViewHolderForOffsetPosition(ViewHolder* hol
     // if it is a removed holder, nothing to verify since we cannot ask adapter anymore
     // if it is not removed, verify the type and id.
     if (holder->isRemoved()) {
-        if (_DEBUG && !mRV->mState->isPreLayout()) {
+        if (_Debug && !mRV->mState->isPreLayout()) {
             LOGE("should not receive a removed view unless it is pre layout");
         }
         return mRV->mState->isPreLayout();
@@ -3931,7 +3931,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
             }
         }
         if (holder == nullptr) { // fallback to pool
-            LOGD_IF(_DEBUG,"tryGetViewHolderForPositionByDeadline(%d) fetching from shared pool",position);
+            LOGD_IF(_Debug,"tryGetViewHolderForPositionByDeadline(%d) fetching from shared pool",position);
             holder = getRecycledViewPool().getRecycledView(type);
             if (holder != nullptr) {
                 holder->resetInternal();
@@ -3957,7 +3957,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
             }
             const long end = mRV->getNanoTime();
             mRecyclerPool->factorInCreateTime(type, end - start);
-            LOGD_IF(_DEBUG,"tryGetViewHolderForPositionByDeadline created new ViewHolder");
+            LOGD_IF(_Debug,"tryGetViewHolderForPositionByDeadline created new ViewHolder");
         }
     }
 
@@ -3981,7 +3981,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
         // do not update unless we absolutely have to.
         holder->mPreLayoutPosition = position;
     } else if (!holder->isBound() || holder->needsUpdate() || holder->isInvalid()) {
-        LOGE_IF(_DEBUG && holder->isRemoved(),"Removed holder should be bound and it should"
+        LOGE_IF(_Debug && holder->isRemoved(),"Removed holder should be bound and it should"
                  " come here only in pre-layout. Holder: %p",holder);
         const int offsetPosition = mRV->mAdapterHelper->findPositionOffset(position);
         bound = tryBindViewHolderByDeadline(*holder, offsetPosition, position, deadlineNs);
@@ -4098,9 +4098,9 @@ void RecyclerView::Recycler::recycleAndClearCachedViews() {
 }
 
 void RecyclerView::Recycler::recycleCachedViewAt(int cachedViewIndex) {
-    LOGD_IF(_DEBUG,"Recycling cached view at index %d" ,cachedViewIndex);
+    LOGD_IF(_Debug,"Recycling cached view at index %d" ,cachedViewIndex);
     ViewHolder* viewHolder = mCachedViews.at(cachedViewIndex);
-    LOGD_IF(_DEBUG,"CachedViewHolder to be recycled:%p ", viewHolder);
+    LOGD_IF(_Debug,"CachedViewHolder to be recycled:%p ", viewHolder);
     addViewHolderToRecycledViewPool(*viewHolder, true);
     mCachedViews.erase(mCachedViews.begin()+cachedViewIndex);//remove(cachedViewIndex);
 }
@@ -4127,7 +4127,7 @@ void RecyclerView::Recycler::recycleViewHolderInternal(ViewHolder& holder) {
     bool cached = false;
     bool recycled = false;
     auto it = std::find(mCachedViews.begin(),mCachedViews.end(),&holder);
-    if (_DEBUG && it!=mCachedViews.end()){//mCachedViews.contains(holder)) {
+    if (_Debug && it!=mCachedViews.end()){//mCachedViews.contains(holder)) {
         LOGE("cached view received recycle internal? %p",&holder);
     }
     if (forceRecycle || holder.isRecyclable()) {
@@ -4171,7 +4171,7 @@ void RecyclerView::Recycler::recycleViewHolderInternal(ViewHolder& holder) {
 
         // TODO: consider cancelling an animation when an item is removed scrollBy,
         // to return it to the pool faster
-        LOGD_IF(_DEBUG,"trying to recycle a non-recycleable holder. Hopefully, it will "
+        LOGD_IF(_Debug,"trying to recycle a non-recycleable holder. Hopefully, it will "
              "re-visit here. We are still removing it from animation lists");
     }
     // even if the holder is not removed, we still call this method so that it is removed
@@ -4323,7 +4323,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::getScrapOrHiddenOrCachedHolder
             if (!dryRun) {
                 mCachedViews.erase(mCachedViews.begin()+i);//remove(i);
             }
-            LOGD_IF(_DEBUG,"getScrapOrHiddenOrCachedHolderForPosition(%d) found match in cache:%p",position,holder);
+            LOGD_IF(_Debug,"getScrapOrHiddenOrCachedHolderForPosition(%d) found match in cache:%p",position,holder);
             return holder;
         }
     }
@@ -4393,7 +4393,7 @@ void RecyclerView::Recycler::dispatchViewRecycled(ViewHolder& holder) {
     if (mRV->mState != nullptr) {
         mRV->mViewInfoStore->removeViewHolder(&holder);
     }
-    LOGD_IF(_DEBUG,"dispatchViewRecycled: %p" ,&holder);
+    LOGD_IF(_Debug,"dispatchViewRecycled: %p" ,&holder);
 }
 
 void RecyclerView::Recycler::onAdapterChanged(Adapter* oldAdapter, Adapter* newAdapter,
@@ -4424,7 +4424,7 @@ void RecyclerView::Recycler::offsetPositionRecordsForMove(int from, int to) {
         } else {
             holder->offsetPosition(inBetweenOffset, false);
         }
-        LOGD_IF(_DEBUG,"offsetPositionRecordsForMove cached child %d holder %p",i,holder);
+        LOGD_IF(_Debug,"offsetPositionRecordsForMove cached child %d holder %p",i,holder);
     }
 }
 
@@ -4433,7 +4433,7 @@ void RecyclerView::Recycler::offsetPositionRecordsForInsert(int insertedAt, int 
     for (int i = 0; i < cachedCount; i++) {
         ViewHolder* holder = mCachedViews.at(i);
         if (holder && holder->mPosition >= insertedAt) {
-            LOGD_IF(_DEBUG,"offsetPositionRecordsForInsert cached %d holder %p now at position %d",i,holder,(holder->mPosition + count));
+            LOGD_IF(_Debug,"offsetPositionRecordsForInsert cached %d holder %p now at position %d",i,holder,(holder->mPosition + count));
             holder->offsetPosition(count, true);
         }
     }
@@ -4446,7 +4446,7 @@ void RecyclerView::Recycler::offsetPositionRecordsForRemove(int removedFrom, int
         ViewHolder* holder = mCachedViews.at(i);
         if (holder != nullptr) {
             if (holder->mPosition >= removedEnd) {
-                LOGD_IF(_DEBUG,"offsetPositionRecordsForRemove cached %d holder %p now at positon %d",i,holder,(holder->mPosition - count));
+                LOGD_IF(_Debug,"offsetPositionRecordsForRemove cached %d holder %p now at positon %d",i,holder,(holder->mPosition - count));
                 holder->offsetPosition(-count, applyToPreLayout);
             } else if (holder->mPosition >= removedFrom) {
                 // Item for this view was removed. Dump it from the cache.
@@ -6297,7 +6297,7 @@ void RecyclerView::ViewHolder::setIsRecyclable(bool recyclable) {
     mIsRecyclableCount = recyclable ? mIsRecyclableCount - 1 : mIsRecyclableCount + 1;
     if (mIsRecyclableCount < 0) {
         mIsRecyclableCount = 0;
-        LOGE_IF(_DEBUG,"isRecyclable decremented to %d is below 0: "
+        LOGE_IF(_Debug,"isRecyclable decremented to %d is below 0: "
              "unmatched pair of setIsRecyable() calls for %p" , mIsRecyclableCount,this);
         LOGE("isRecyclable decremented to %d is below 0: "
               "unmatched pair of setIsRecyable() calls for %p" ,mIsRecyclableCount, this);
@@ -6671,7 +6671,7 @@ void RecyclerView::SmoothScroller::instantScrollToPosition(int position) {
 void RecyclerView::SmoothScroller::onChildAttachedToWindow(View* child) {
     if (getChildPosition(child) == getTargetPosition()) {
         mTargetView = child;
-        LOGD_IF(_DEBUG,"smooth scroll target view has been attached");
+        LOGD_IF(_Debug,"smooth scroll target view has been attached");
     }
 }
 
@@ -6844,7 +6844,7 @@ void RecyclerView::AdapterDataObservable::notifyItemRangeInserted(int positionSt
     // including removing itself from {@link mObservers} - and that could cause problems if
     // an iterator is used on the ArrayList {@link mObservers}.
     // to avoid such problems, just march thru the list in the reverse order.
-    for (int i = mObservers.size() - 1; i >= 0; i--) {
+    for (int i = int(mObservers.size() - 1); i >= 0; i--) {
         mObservers.at(i)->onItemRangeInserted(positionStart, itemCount);
     }
 }
@@ -6854,7 +6854,7 @@ void RecyclerView::AdapterDataObservable::notifyItemRangeRemoved(int positionSta
     // removing itself from {@link mObservers} - and that could cause problems if
     // an iterator is used on the ArrayList {@link mObservers}.
     // to avoid such problems, just march thru the list in the reverse order.
-    for (int i = mObservers.size() - 1; i >= 0; i--) {
+    for (int i = int(mObservers.size() - 1); i >= 0; i--) {
         mObservers.at(i)->onItemRangeRemoved(positionStart, itemCount);
     }
 }

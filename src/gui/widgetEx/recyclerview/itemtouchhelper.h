@@ -9,7 +9,7 @@ namespace cdroid{
 class ItemTouchHelper:public RecyclerView::ItemDecoration{
     //implements RecyclerView.OnChildAttachStateChangeListener {
 protected:
-    static constexpr bool _DEBUG = false;
+    static constexpr bool _Debug = false;
     static constexpr int ACTIVE_POINTER_ID_NONE = -1;
     static constexpr int DIRECTION_FLAG_COUNT = 8;
     static constexpr int ACTION_MODE_IDLE_MASK = (1 << DIRECTION_FLAG_COUNT) - 1;

@@ -105,7 +105,7 @@ void LinearLayoutManager::onRestoreInstanceState(Parcelable& state) {
         mPendingSavedState = (SavedState*)&state;
         requestLayout();
         LOGD("loaded saved state");
-    } else if (_DEBUG) {
+    } else if (_Debug) {
         LOGD("invalid saved state class");
     }
 }
@@ -241,7 +241,7 @@ void LinearLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, Rec
     // 3) fill towards end, stacking from top
     // 4) scroll to fulfill requirements like stack from bottom.
     // create layout state
-    LOGD_IF(_DEBUG,"is pre layout:%d",state.isPreLayout());
+    LOGD_IF(_Debug,"is pre layout:%d",state.isPreLayout());
     if (mPendingSavedState || (mPendingScrollPosition != RecyclerView::NO_POSITION) ) {
         if (state.getItemCount() == 0) {
             removeAndRecycleAllViews(recycler);
@@ -280,7 +280,7 @@ void LinearLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, Rec
         // child which can change between layout passes).
         mAnchorInfo->assignFromViewAndKeepVisibleRect(focused, getPosition(focused));
     }
-    LOGD_IF(_DEBUG,"Anchor info:%p",mAnchorInfo);
+    LOGD_IF(_Debug,"Anchor info:%p",mAnchorInfo);
 
     // LLM may decide to layout items for "extra" pixels to account for scrolling target,
     // caching or predictive animations.
@@ -417,7 +417,7 @@ void LinearLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, Rec
         mAnchorInfo->reset();
     }
     mLastStackFromEnd = mStackFromEnd;
-    if (_DEBUG) {
+    if (_Debug) {
         validateChildOrder();
     }
 }
@@ -464,7 +464,7 @@ void LinearLayoutManager::layoutForPredictiveAnimations(RecyclerView::Recycler& 
         }
     }
 
-    LOGD_IF(_DEBUG,"for unused scrap, decided to add %d towards start and %d towards end",
+    LOGD_IF(_Debug,"for unused scrap, decided to add %d towards start and %d towards end",
 		    scrapExtraStart,scrapExtraEnd);
     mLayoutState->mScrapList = scrapList;
     if (scrapExtraStart > 0) {
@@ -491,15 +491,15 @@ void LinearLayoutManager::layoutForPredictiveAnimations(RecyclerView::Recycler& 
 void LinearLayoutManager::updateAnchorInfoForLayout(RecyclerView::Recycler& recycler, RecyclerView::State& state,
         AnchorInfo& anchorInfo) {
     if (updateAnchorFromPendingData(state, anchorInfo)) {
-        LOGD_IF(_DEBUG,"updated anchor info from pending information");
+        LOGD_IF(_Debug,"updated anchor info from pending information");
         return;
     }
 
     if (updateAnchorFromChildren(recycler, state, anchorInfo)) {
-        LOGD_IF(_DEBUG,"updated anchor info from existing children");
+        LOGD_IF(_Debug,"updated anchor info from existing children");
         return;
     }
-    LOGD_IF(_DEBUG,"deciding anchor info for fresh state");
+    LOGD_IF(_Debug,"deciding anchor info for fresh state");
     anchorInfo.assignCoordinateFromPadding();
     anchorInfo.mPosition = mStackFromEnd ? state.getItemCount() - 1 : 0;
 }
@@ -549,7 +549,7 @@ bool LinearLayoutManager::updateAnchorFromPendingData(RecyclerView::State& state
     if ( (mPendingScrollPosition < 0) || (mPendingScrollPosition >= state.getItemCount()) ) {
         mPendingScrollPosition = RecyclerView::NO_POSITION;
         mPendingScrollPositionOffset = INVALID_OFFSET;
-        LOGD_IF(_DEBUG,"ignoring invalid scroll position %d",mPendingScrollPosition);
+        LOGD_IF(_Debug,"ignoring invalid scroll position %d",mPendingScrollPosition);
         return false;
     }
 
@@ -939,12 +939,12 @@ int LinearLayoutManager::scrollBy(int delta, RecyclerView::Recycler& recycler, R
     updateLayoutState(layoutDirection, absDelta, true, state);
     const int consumed = mLayoutState->mScrollingOffset + fill(recycler, *mLayoutState, state, false);
     if (consumed < 0) {
-        LOGD_IF(_DEBUG,"Don't have any more elements to scroll");
+        LOGD_IF(_Debug,"Don't have any more elements to scroll");
         return 0;
     }
     const int scrolled = absDelta > consumed ? layoutDirection * consumed : delta;
     mOrientationHelper->offsetChildren(-scrolled);
-    LOGD_IF(_DEBUG,"scroll req: %d scrolled %d",delta,scrolled);
+    LOGD_IF(_Debug,"scroll req: %d scrolled %d",delta,scrolled);
     mLayoutState->mLastScrollDelta = scrolled;
     return scrolled;
 }
@@ -959,7 +959,7 @@ void LinearLayoutManager::recycleChildren(RecyclerView::Recycler& recycler, int 
     if (startIndex == endIndex) {
         return;
     }
-    LOGD_IF(_DEBUG,"Recycling %d items",std::abs(startIndex - endIndex));
+    LOGD_IF(_Debug,"Recycling %d items",std::abs(startIndex - endIndex));
     if (endIndex > startIndex) {
         for (int i = endIndex - 1; i >= startIndex; i--) {
             removeAndRecycleViewAt(i, recycler);
@@ -986,7 +986,7 @@ void LinearLayoutManager::recycleChildren(RecyclerView::Recycler& recycler, int 
  */
 void LinearLayoutManager::recycleViewsFromStart(RecyclerView::Recycler& recycler, int scrollingOffset,int noRecycleSpace) {
     if (scrollingOffset < 0) {
-        LOGD_IF(_DEBUG,"Called recycle from start with a negative value. This might happen"
+        LOGD_IF(_Debug,"Called recycle from start with a negative value. This might happen"
                   " during layout changes but may be sign of a bug");
         return;
     }
@@ -1020,7 +1020,7 @@ void LinearLayoutManager::recycleViewsFromEnd(RecyclerView::Recycler& recycler, 
             int noRecycleSpace) {
     const int childCount = getChildCount();
     if (scrollingOffset < 0) {
-        LOGD_IF(_DEBUG,"Called recycle from end with a negative value. This might happen"
+        LOGD_IF(_Debug,"Called recycle from end with a negative value. This might happen"
                 " during layout changes but may be sign of a bug");
         return;
     }
@@ -1116,7 +1116,7 @@ int LinearLayoutManager::fill(RecyclerView::Recycler& recycler, LayoutState& lay
             break;
         }
     }
-    if (_DEBUG) {
+    if (_Debug) {
         validateChildOrder();
     }
     return start - layoutState.mAvailable;
@@ -1126,7 +1126,7 @@ void LinearLayoutManager::layoutChunk(RecyclerView::Recycler& recycler, Recycler
             LayoutState& layoutState, LayoutChunkResult& result) {
     View* view = layoutState.next(recycler);
     if (view == nullptr) {
-        if (_DEBUG && layoutState.mScrapList.empty()){// == nullptr) {
+        if (_Debug && layoutState.mScrapList.empty()){// == nullptr) {
             LOGE("received null view when unexpected");
         }
         // if we are laying out views in scrap, this may return null which means there is
@@ -1183,7 +1183,7 @@ void LinearLayoutManager::layoutChunk(RecyclerView::Recycler& recycler, Recycler
     // We calculate everything with View's bounding box (which includes decor and margins)
     // To calculate correct layout position, we subtract margins.
     layoutDecoratedWithMargins(view, left, top, right-left, bottom-top);
-    LOGD_IF(_DEBUG,"laid out child at position %d,with(%d,%d,%d,%d)",getPosition(view),
+    LOGD_IF(_Debug,"laid out child at position %d,with(%d,%d,%d,%d)",getPosition(view),
                 (left + params->leftMargin),(top + params->topMargin),
                 (right - params->rightMargin),(bottom - params->bottomMargin));
 
@@ -1591,7 +1591,7 @@ View* LinearLayoutManager::LayoutState::nextViewInLimitedList(View* ignore) {
     const int size = mScrapList.size();
     View* closest = nullptr;
     int closestDistance = INT_MAX;
-    if (_DEBUG && mIsPreLayout) {
+    if (_Debug && mIsPreLayout) {
         LOGE("Scrap list cannot be used in pre layout");
     }
     for (int i = 0; i < size; i++) {

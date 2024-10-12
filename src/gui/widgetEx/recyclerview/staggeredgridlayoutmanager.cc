@@ -484,7 +484,7 @@ void StaggeredGridLayoutManager::repositionToWrapContentIfNecessary() {
 }
 
 void StaggeredGridLayoutManager::applyPendingSavedState(AnchorInfo& anchorInfo) {
-    LOGD_IF(_DEBUG,"found saved state: %p",mPendingSavedState);
+    LOGD_IF(_Debug,"found saved state: %p",mPendingSavedState);
     if (mPendingSavedState->mSpanOffsetsSize > 0) {
         if (mPendingSavedState->mSpanOffsetsSize == mSpanCount) {
             for (int i = 0; i < mSpanCount; i++) {
@@ -527,7 +527,7 @@ void StaggeredGridLayoutManager::updateAnchorInfoForLayout(RecyclerView::State& 
     if (updateAnchorFromChildren(state, anchorInfo)) {
         return;
     }
-    LOGD_IF(_DEBUG,"Deciding anchor info from fresh state");
+    LOGD_IF(_Debug,"Deciding anchor info from fresh state");
     anchorInfo.assignCoordinateFromPadding();
     anchorInfo.mPosition = 0;
 }
@@ -786,7 +786,7 @@ void StaggeredGridLayoutManager::onRestoreInstanceState(Parcelable& state) {
     if (dynamic_cast<SavedState*>(&state)) {
         mPendingSavedState =(SavedState*) &state;
         requestLayout();
-    } else if (_DEBUG) {
+    } else if (_Debug) {
         LOGD("invalid saved state class");
     }
 }
@@ -835,7 +835,7 @@ Parcelable* StaggeredGridLayoutManager::onSaveInstanceState() {
         state.mVisibleAnchorPosition = RecyclerView::NO_POSITION;
         state.mSpanOffsetsSize = 0;
     }
-    LOGD_IF(_DEBUG,"saved state:%p" ,state);
+    LOGD_IF(_Debug,"saved state:%p" ,state);
     return state;
 #else
     return nullptr;
@@ -1127,7 +1127,7 @@ int StaggeredGridLayoutManager::fill(RecyclerView::Recycler& recycler, LayoutSta
     }
 
     updateAllRemainingSpans(layoutState.mLayoutDirection, targetLine);
-    LOGD_IF(_DEBUG,"FILLING targetLine: %d,remaining spans:%p, state:%p",
+    LOGD_IF(_Debug,"FILLING targetLine: %d,remaining spans:%p, state:%p",
             targetLine,mRemainingSpans,layoutState);
 
     // the default coordinate to add new view.
@@ -1146,9 +1146,9 @@ int StaggeredGridLayoutManager::fill(RecyclerView::Recycler& recycler, LayoutSta
         if (assignSpan) {
             currentSpan = lp->mFullSpan ? mSpans[0] : getNextSpan(layoutState);
             mLazySpanLookup->setSpan(position, currentSpan);
-            LOGD_IF(_DEBUG,"assigned %d for %d",currentSpan->mIndex,position);
+            LOGD_IF(_Debug,"assigned %d for %d",currentSpan->mIndex,position);
         } else {
-            LOGD_IF(_DEBUG,"using %d for pos %d",spanIndex,position);
+            LOGD_IF(_Debug,"using %d for pos %d",spanIndex,position);
             currentSpan = mSpans[spanIndex];
         }
         // assign span before measuring so that item decorators can get updated span index
@@ -1669,7 +1669,7 @@ int StaggeredGridLayoutManager::scrollBy(int dt, RecyclerView::Recycler& recycle
     } else { // dt > 0
         totalScroll = consumed;
     }
-    LOGD_IF(_DEBUG,"asked %d scrolled", dt, totalScroll);
+    LOGD_IF(_Debug,"asked %d scrolled", dt, totalScroll);
 
     mPrimaryOrientation->offsetChildren(-totalScroll);
     // always reset this if we scroll for a proper save instance state
@@ -1869,7 +1869,7 @@ int StaggeredGridLayoutManager::convertFocusDirectionToLayoutDirection(int focus
         return mOrientation == HORIZONTAL ? LayoutState::LAYOUT_END
                     : LayoutState::INVALID_LAYOUT;
     default:
-        LOGD_IF(_DEBUG,"Unknown focus request:%d",focusDirection);
+        LOGD_IF(_Debug,"Unknown focus request:%d",focusDirection);
         return LayoutState::INVALID_LAYOUT;
     }
 
@@ -2371,7 +2371,7 @@ void StaggeredGridLayoutManager::LazySpanLookup::addFullSpanItem(FullSpanItem* f
     for (int i = 0; i < size; i++) {
         FullSpanItem* other = mFullSpanItems.at(i);
         if (other->mPosition == fullSpanItem->mPosition) {
-            if (_DEBUG) {
+            if (_Debug) {
                 FATAL("two fsis for same position");
             } else {
                 mFullSpanItems.erase(mFullSpanItems.begin()+i);//.remove(i);

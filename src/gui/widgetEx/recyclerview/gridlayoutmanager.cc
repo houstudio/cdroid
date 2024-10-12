@@ -86,7 +86,7 @@ void GridLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, Recyc
         cachePreLayoutSpanMapping();
     }
     LinearLayoutManager::onLayoutChildren(recycler, state);
-    if (_DEBUG) {
+    if (_Debug) {
         validateChildOrder();
     }
     clearPreLayoutSpanMappingCache();
@@ -333,7 +333,7 @@ int GridLayoutManager::getSpanGroupIndex(RecyclerView::Recycler& recycler, Recyc
     }
     const int adapterPosition = recycler.convertPreLayoutPositionToPostLayout(viewPosition);
     if (adapterPosition == -1) {
-        if (_DEBUG) {
+        if (_Debug) {
             LOGD("Cannot find span group index for position %d",viewPosition);
         }
         LOGW("Cannot find span size for pre layout position. ",viewPosition);
@@ -352,7 +352,7 @@ int GridLayoutManager::getSpanIndex(RecyclerView::Recycler& recycler, RecyclerVi
     }
     const int adapterPosition = recycler.convertPreLayoutPositionToPostLayout(pos);
     if (adapterPosition == -1) {
-        if (_DEBUG) {
+        if (_Debug) {
             LOGD("Cannot find span index for pre layout position. It is"
                    " not cached, not in the adapter. Pos:%d",pos);
         }
@@ -373,7 +373,7 @@ int GridLayoutManager::getSpanSize(RecyclerView::Recycler& recycler, RecyclerVie
     }
     const int adapterPosition = recycler.convertPreLayoutPositionToPostLayout(pos);
     if (adapterPosition == -1) {
-        if (_DEBUG) {
+        if (_Debug) {
             LOGD("Cannot find span size for pre layout position. It is"
                  " not cached, not in the adapter. Pos:%d",pos);
         }
@@ -558,7 +558,7 @@ void GridLayoutManager::layoutChunk(RecyclerView::Recycler& recycler, RecyclerVi
         // We calculate everything with View's bounding box (which includes decor and margins)
         // To calculate correct layout position, we subtract margins.
         layoutDecoratedWithMargins(view, left, top, right-left, bottom-top);
-        LOGD_IF(_DEBUG,"laid out child at position %d,with*%d,%d,%d,%d) span:%d, spanSize:%d",
+        LOGD_IF(_Debug,"laid out child at position %d,with*%d,%d,%d,%d) span:%d, spanSize:%d",
 	    getPosition(view),(left + params->leftMargin),(top + params->topMargin),(right - params->rightMargin),
 	    (bottom - params->bottomMargin), params->mSpanIndex , params->mSpanSize);
         // Consume the available space if the view is not removed OR changed

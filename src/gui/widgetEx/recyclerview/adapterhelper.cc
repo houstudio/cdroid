@@ -1,7 +1,7 @@
 #include <widgetEx/recyclerview/adapterhelper.h>
 #include <widgetEx/recyclerview/opreorderer.h>
 namespace cdroid{
-static constexpr int _DEBUG = 0;
+static constexpr int _Debug = 0;
 AdapterHelper::AdapterHelper(Callback callback)
    :AdapterHelper(callback, false){
 }
@@ -167,7 +167,7 @@ void AdapterHelper::dispatchAndUpdateViewHolders(UpdateOp* op) {
     if (op->cmd == UpdateOp::ADD || op->cmd == UpdateOp::MOVE) {
         throw "should not dispatch add or move for pre layout";
     }
-    if (_DEBUG) {
+    if (_Debug) {
         LOGD("dispatch (pre)%p" ,op);
         LOGD("postponed state before:");
         for (UpdateOp* updateOp : mPostponedList) {
@@ -179,7 +179,7 @@ void AdapterHelper::dispatchAndUpdateViewHolders(UpdateOp* op) {
     // handle each pos 1 by 1 to ensure continuity. If it breaks, dispatch partial
     // TODO Since move ops are pushed to end, we should not need this anymore
     int tmpStart = updatePositionWithPostponed(op->positionStart, op->cmd);
-    LOGD_IF(_DEBUG,"pos:%d,updatedPos:%d mPostponedList.size=%d",op->positionStart,tmpStart,mPostponedList.size());
+    LOGD_IF(_Debug,"pos:%d,updatedPos:%d mPostponedList.size=%d",op->positionStart,tmpStart,mPostponedList.size());
     int tmpCnt = 1;
     int offsetPositionForPartial = op->positionStart;
     int positionMultiplier;
@@ -191,7 +191,7 @@ void AdapterHelper::dispatchAndUpdateViewHolders(UpdateOp* op) {
     for (int p = 1; p < op->itemCount; p++) {
         const int pos = op->positionStart + (positionMultiplier * p);
         int updatedPos = updatePositionWithPostponed(pos, op->cmd);
-        LOGD_IF(_DEBUG,"pos:%d,updatedPos:%d",pos,updatedPos);
+        LOGD_IF(_Debug,"pos:%d,updatedPos:%d",pos,updatedPos);
         bool continuous = false;
         switch (op->cmd) {
 	case UpdateOp::UPDATE: continuous = updatedPos == tmpStart + 1;  break;
@@ -202,7 +202,7 @@ void AdapterHelper::dispatchAndUpdateViewHolders(UpdateOp* op) {
         } else {
             // need to dispatch this separately
             UpdateOp* tmp = obtainUpdateOp(op->cmd, tmpStart, tmpCnt, op->payload);
-            LOGD_IF(_DEBUG,"need to dispatch separately %d",tmp->cmd);
+            LOGD_IF(_Debug,"need to dispatch separately %d",tmp->cmd);
             dispatchFirstPassAndUpdateViewHolders(tmp, offsetPositionForPartial);
             recycleUpdateOp(tmp);
             if (op->cmd == UpdateOp::UPDATE) {
@@ -216,11 +216,11 @@ void AdapterHelper::dispatchAndUpdateViewHolders(UpdateOp* op) {
     recycleUpdateOp(op);
     if (tmpCnt > 0) {
         UpdateOp* tmp = obtainUpdateOp(op->cmd, tmpStart, tmpCnt, payload);
-        LOGD_IF(_DEBUG,"dispatching:%d",tmp->cmd);
+        LOGD_IF(_Debug,"dispatching:%d",tmp->cmd);
         dispatchFirstPassAndUpdateViewHolders(tmp, offsetPositionForPartial);
         recycleUpdateOp(tmp);
     }
-    if (_DEBUG) {
+    if (_Debug) {
         LOGD("post dispatch");
         LOGD("postponed state after:");
         for (UpdateOp* updateOp : mPostponedList) {
@@ -300,7 +300,7 @@ int AdapterHelper::updatePositionWithPostponed(int pos, int cmd) {
                 }
             }
         }
-        if (_DEBUG) {
+        if (_Debug) {
             LOGD("dispath (step %d)",i);
             LOGD("postponed state:%d, pos:%d",i,pos);
             for (UpdateOp* updateOp : mPostponedList) {
@@ -351,7 +351,7 @@ void AdapterHelper::applyAdd(UpdateOp* op) {
 
 void AdapterHelper::postponeAndUpdateViewHolders(UpdateOp* op) {
     mPostponedList.push_back(op);//add(op);
-    LOGD_IF(_DEBUG,"postponing op->%p:%d mPostponedList.size=%d",op,op->cmd,mPostponedList.size());
+    LOGD_IF(_Debug,"postponing op->%p:%d mPostponedList.size=%d",op,op->cmd,mPostponedList.size());
     switch (op->cmd) {
    case UpdateOp::ADD:
         mCallback.offsetPositionsForAdd(op->positionStart, op->itemCount);

@@ -17,7 +17,7 @@ typedef void* Bundle;
 
 class RecyclerView:public ViewGroup{
 private:
-    static constexpr bool _DEBUG=false;
+    static constexpr bool _Debug=false;
 public:
     class SmoothScroller;
     class FastScroller;

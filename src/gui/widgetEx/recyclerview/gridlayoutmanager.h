@@ -5,7 +5,7 @@ namespace cdroid{
 
 class GridLayoutManager:public LinearLayoutManager {
 private:
-    static constexpr bool _DEBUG = false;
+    static constexpr bool _Debug = false;
 public:
     static constexpr int DEFAULT_SPAN_COUNT = -1;
     class SpanSizeLookup;

@@ -3,6 +3,7 @@
 #include <view/motionevent.h>
 #include <core/inputdevice.h>
 #include <core/atexit.h>
+#include <porting/cdlog.h>
 // --- InputEvent ---
 namespace cdroid{
 

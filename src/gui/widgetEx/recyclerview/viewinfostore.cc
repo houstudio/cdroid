@@ -2,7 +2,7 @@
 #include <widgetEx/recyclerview/viewinfostore.h>
 
 namespace cdroid{
-static constexpr int _DEBUG=1;
+static constexpr int _Debug=1;
 
 void ViewInfoStore::clear() {
     mLayoutHolderMap.clear();
@@ -154,7 +154,7 @@ void ViewInfoStore::process(ProcessCallback callback) {
             callback.processAppeared(viewHolder, record->preInfo, record->postInfo);
         } else if ((record->flags & InfoRecord::FLAG_APPEAR) != 0) {
             // Scrap view. RecyclerView will handle removing/recycling this.
-        } else if (_DEBUG) {
+        } else if (_Debug) {
             LOGE("record without any reasonable flag combination:/");
         }
         InfoRecord::recycle(record);

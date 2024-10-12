@@ -32,7 +32,7 @@ bool ItemTouchHelper::onInterceptTouchEvent(RecyclerView& recyclerView,MotionEve
 #if ENABLE(GESTURE)
     mGestureDetector->onTouchEvent(event);
 #endif
-    LOGD_IF(_DEBUG,"intercept: x:%.f ,y:%.f",event.getX(),event.getY());
+    LOGD_IF(_Debug,"intercept: x:%.f ,y:%.f",event.getX(),event.getY());
     const int action = event.getActionMasked();
     if (action == MotionEvent::ACTION_DOWN) {
         mActivePointerId = event.getPointerId(0);
@@ -61,7 +61,7 @@ bool ItemTouchHelper::onInterceptTouchEvent(RecyclerView& recyclerView,MotionEve
         // in a non scroll orientation, if distance change is above threshold, we
         // can select the item
         const int index = event.findPointerIndex(mActivePointerId);
-        LOGD_IF(_DEBUG,"pointer index %d",index);
+        LOGD_IF(_Debug,"pointer index %d",index);
         if (index >= 0) {
             checkSelectForSwipe(action, event, index);
         }
@@ -76,7 +76,7 @@ void ItemTouchHelper::onTouchEvent(RecyclerView& recyclerView,MotionEvent& event
 #if ENABLE(GESTURE)
     mGestureDetector->onTouchEvent(event);
 #endif
-    LOGD_IF(_DEBUG,"on touch: x:%d,y:%d",mInitialTouchX,mInitialTouchY);
+    LOGD_IF(_Debug,"on touch: x:%d,y:%d",mInitialTouchX,mInitialTouchY);
     if (mVelocityTracker != nullptr) {
         mVelocityTracker->addMovement(event);
     }
@@ -171,7 +171,7 @@ void ItemTouchHelper::destroyCallbacks() {
     mRecyclerView->removeOnItemTouchListener(mOnItemTouchListener);
     mRecyclerView->removeOnChildAttachStateChangeListener(mOnChildAttachStateChangeListener);
     // clean all attached
-    const int recoverAnimSize = mRecoverAnimations.size();
+    const int recoverAnimSize = (int)mRecoverAnimations.size();
     for (int i = recoverAnimSize - 1; i >= 0; i--) {
         RecoverAnimation* recoverAnimation = mRecoverAnimations.at(0);
         mCallback->clearView(*mRecyclerView, *recoverAnimation->mViewHolder);
@@ -574,7 +574,7 @@ void ItemTouchHelper::onChildViewDetachedFromWindow(View& view) {
  * Returns the animation type or 0 if cannot be found.
  */
 void ItemTouchHelper::endRecoverAnimation(RecyclerView::ViewHolder& viewHolder, bool overrided) {
-    const int recoverAnimSize = mRecoverAnimations.size();
+    const int recoverAnimSize = (int)mRecoverAnimations.size();
     for (int i = recoverAnimSize - 1; i >= 0; i--) {
         RecoverAnimation* anim = mRecoverAnimations.at(i);
         if (anim->mViewHolder == &viewHolder) {
@@ -743,7 +743,7 @@ void ItemTouchHelper::startSwipe(RecyclerView::ViewHolder& viewHolder) {
 
 ItemTouchHelper::RecoverAnimation* ItemTouchHelper::findAnimation(MotionEvent& event) {
     View* target = findChildView(event);
-    for (int i = mRecoverAnimations.size() - 1; i >= 0; i--) {
+    for (int i = int(mRecoverAnimations.size() - 1); i >= 0; i--) {
         RecoverAnimation* anim = mRecoverAnimations.at(i);
         if (anim->mViewHolder->itemView == target) {
             return anim;
@@ -1260,7 +1260,7 @@ void ItemTouchHelper::onGestureLongPress(MotionEvent& e) {
                 mInitialTouchX = x;
                 mInitialTouchY = y;
                 mDx = mDy = 0.f;
-                LOGD_IF(_DEBUG,"onlong press: x:%.f ,y:%.f",x,y);
+                LOGD_IF(_Debug,"onlong press: x:%.f ,y:%.f",x,y);
                 if (mCallback->isLongPressDragEnabled()) {
                     select(vh, ACTION_STATE_DRAG);
                 }

@@ -42,7 +42,7 @@ void ChildHelper::addView(View* child, int index, bool hidden){
         hideViewInternal(child);
     }
     mCallback.addView(child, offset);
-    LOGD_IF(_DEBUG,"addViewAt %d,h:%d",index,hidden);
+    LOGD_IF(_Debug,"addViewAt %d,h:%d",index,hidden);
 }
 
 int ChildHelper::getOffset(int index){
@@ -75,7 +75,7 @@ void ChildHelper::removeView(View* view){
         unhideViewInternal(view);
     }
     mCallback.removeViewAt(index);
-    LOGD_IF(_DEBUG,"remove View off:%d",index);
+    LOGD_IF(_Debug,"remove View off:%d",index);
 }
 
 void ChildHelper::removeViewAt(int index){
@@ -88,7 +88,7 @@ void ChildHelper::removeViewAt(int index){
         unhideViewInternal(view);
     }
     mCallback.removeViewAt(offset);
-    LOGD_IF(_DEBUG,"removeViewAt %d off:%d",index,offset);
+    LOGD_IF(_Debug,"removeViewAt %d off:%d",index,offset);
 }
 
 View* ChildHelper::getChildAt(int index){
@@ -104,7 +104,7 @@ void ChildHelper::removeAllViewsUnfiltered(){
     }
     mHiddenViews.clear();
     mCallback.removeAllViews();
-    LOGD_IF(_DEBUG,"removeAllViewsUnfiltered");
+    LOGD_IF(_Debug,"removeAllViewsUnfiltered");
 }
 
 View* ChildHelper::findHiddenNonRemovedView(int position){
@@ -134,7 +134,7 @@ void ChildHelper::attachViewToParent(View* child, int index, ViewGroup::LayoutPa
         hideViewInternal(child);
     }
     mCallback.attachViewToParent(child, offset, layoutParams);
-    LOGD_IF(_DEBUG,"attach view to parent index:%d off:%d h:%d ",index,offset,hidden);
+    LOGD_IF(_Debug,"attach view to parent index:%d off:%d h:%d ",index,offset,hidden);
 }
 
 int ChildHelper::getChildCount()const{
@@ -153,7 +153,7 @@ void ChildHelper::detachViewFromParent(int index){
     const int offset = getOffset(index);
     mBucket->remove(offset);
     mCallback.detachViewFromParent(offset);
-    LOGD_IF(_DEBUG,"detach view from parent %d of:%d",index,offset);
+    LOGD_IF(_Debug,"detach view from parent %d of:%d",index,offset);
 }
 
 int ChildHelper::indexOfChild(View* child){
@@ -162,7 +162,7 @@ int ChildHelper::indexOfChild(View* child){
         return -1;
     }
     if (mBucket->get(index)) {
-        if (_DEBUG) {
+        if (_Debug) {
             FATAL("cannot get index of a hidden child");
         } else {
             return -1;
@@ -182,12 +182,12 @@ void ChildHelper::hide(View* view){
     if (offset < 0) {
         FATAL("view is not a child, cannot hide %p",view);
     }
-    if (_DEBUG && mBucket->get(offset)) {
+    if (_Debug && mBucket->get(offset)) {
         FATAL("trying to hide same view twice, how come ?%p ",view);
     }
     mBucket->set(offset);
     hideViewInternal(view);
-    LOGD_IF(_DEBUG,"hiding child %p at offset",view,offset);
+    LOGD_IF(_Debug,"hiding child %p at offset",view,offset);
 }
 
 void ChildHelper::unhide(View* view){

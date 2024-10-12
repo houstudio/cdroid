@@ -22,7 +22,7 @@ public:
     Bucket* mBucket;
     std::vector<View*>mHiddenViews;
 private:
-    static constexpr bool _DEBUG = false;
+    static constexpr bool _Debug = false;
     void hideViewInternal(View* child);
     bool unhideViewInternal(View* child);
     int getOffset(int index);
