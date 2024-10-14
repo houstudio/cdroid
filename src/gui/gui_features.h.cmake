@@ -28,6 +28,7 @@
 #cmakedefine ENABLE_LOTTIE 1
 #cmakedefine HAVE_EPOLL 1
 #cmakedefine HAVE_POLL  1
+#cmakedefine HAVE_EVENTFD 1
 #cmakedefine HAVE_MALLINFO 1
 #cmakedefine HAVE_MALLINFO2 1
 #cmakedefine HAVE_RTAUDIO_H 1

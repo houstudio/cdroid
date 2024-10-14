@@ -95,19 +95,7 @@ namespace {
         return e;
     }
 } 
-class CompletionPort {
-public:
-    CompletionPort();
-    ~CompletionPort();
 
-    void addSocket(SOCKET s);
-    void removeSocket(SOCKET s);
-    void wait(std::vector<std::pair<SOCKET, DWORD>>& events, int timeout);
-
-private:
-    HANDLE hCompletionPort;
-    std::map<OVERLAPPED*, SOCKET> overlappedMap;
-};
 Looper* Looper::sMainLooper = nullptr;
 Looper::Looper(bool allowNonCallbacks) :
         mAllowNonCallbacks(allowNonCallbacks),
