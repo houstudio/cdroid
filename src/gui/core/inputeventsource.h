@@ -16,7 +16,6 @@ class InputEventSource:public EventHandler{
 public:	
     typedef std::function<void(bool)>ScreenSaver;
 private:
-    class DeviceObject;
     std::mutex mtxEvents;
     ScreenSaver mScreenSaver;
     int mScreenSaveTimeOut;

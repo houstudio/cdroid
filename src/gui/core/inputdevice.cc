@@ -600,13 +600,8 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         case BTN_TOOL_FINGER:break;
         }break;
     case EV_ABS:
-        switch(code){
-        case ABS_X:
-        case ABS_Y:
-        case ABS_Z:
-        default: if ((code >= ABS_MT_SLOT) && (code <= ABS_MT_TOOL_Y)) {
-            setAxisValue(code, value, false); break;
-        }
+        if ( ((code>>=ABS_X)&&(code<=ABS_Z)) || ((code >= ABS_MT_SLOT) && (code <= ABS_MT_TOOL_Y))) {
+            setAxisValue(code, value, false);
         }break;
     case EV_REL:
         if( (code >= REL_X) && (code <= REL_Z) ){

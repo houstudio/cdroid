@@ -7,9 +7,6 @@
 #include <systemclock.h>
 
 namespace cdroid{
-class InputEventSource::DeviceObject{
-public:
-};
 InputEventSource::InputEventSource(){
     InputInit();
     setOwned(false);
