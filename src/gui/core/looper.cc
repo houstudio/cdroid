@@ -95,27 +95,44 @@ namespace {
         return e;
     }
 } 
+class CompletionPort {
+public:
+    CompletionPort();
+    ~CompletionPort();
 
+    void addSocket(SOCKET s);
+    void removeSocket(SOCKET s);
+    void wait(std::vector<std::pair<SOCKET, DWORD>>& events, int timeout);
+
+private:
+    HANDLE hCompletionPort;
+    std::map<OVERLAPPED*, SOCKET> overlappedMap;
+};
 Looper* Looper::sMainLooper = nullptr;
 Looper::Looper(bool allowNonCallbacks) :
         mAllowNonCallbacks(allowNonCallbacks),
         mSendingMessage(false),
+        mWakeEventFd(-1),
         mPolling(false), mEpollFd(-1),
         mEpollRebuildRequired(false),
         mNextRequestSeq(WAKE_EVENT_FD_SEQ+1),
         mResponseIndex(0), mNextMessageUptime(LLONG_MAX) {
+#if defined(HAVE_EVENTFD)
     mWakeEventFd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
     LOGE_IF(mWakeEventFd < 0, "Could not make wake event fd: %s",strerror(errno));
+#endif
     std::lock_guard<std::recursive_mutex>_l(mLock);
     rebuildEpollLocked();
 }
 
 Looper::~Looper() {
+#if defined(HAVE_EVENTFD)
     close(mWakeEventFd);
     mWakeEventFd = -1;
     if (mEpollFd >= 0) {
         close(mEpollFd);
     }
+#endif
     for(EventHandler*hdl:mEventHandlers){
         if((hdl->mFlags&3)==3)delete hdl;
     }
@@ -469,6 +486,7 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
      __result; })
 #endif
 void Looper::wake() {
+#if defined(HAVE_EVENTFD)
     LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  wake", this);
     uint64_t inc = 1;
     const long nWrite = TEMP_FAILURE_RETRY(write(mWakeEventFd, &inc, sizeof(uint64_t)));
@@ -476,6 +494,7 @@ void Looper::wake() {
         char buff[128];
         LOGE_IF(errno!=EAGAIN,"Could not write wake signal to fd %d: %s",mWakeEventFd, strerror_r(errno,buff,sizeof(buff)));
     }
+#endif
 }
 
 void Looper::awoken() {

@@ -47,6 +47,7 @@ check_function_exists(mallinfo2 HAVE_MALLINFO2)
 check_function_exists(mallinfo HAVE_MALLINFO)
 check_function_exists(epoll_wait HAVE_EPOLL)
 check_function_exists(poll HAVE_POLL)
+check_function_exists(eventfd HAVE_EVENTFD)
 check_include_file("rtaudio/RtAudio.h" HAVE_RTAUDIO_H)
 
 configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)

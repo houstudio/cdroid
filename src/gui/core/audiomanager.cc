@@ -16,7 +16,6 @@ int AudioManager::AudioCallback(void *outputBuffer, void *inputBuffer, unsigned 
     float *buffer = (float*)thiz->mBuffer;
     for(uint32_t i=0;i<nBufferFrames;i++)
         buffer[i]=float(i)/nBufferFrames;
-    /*将数据复制到输出缓冲区*/
     memcpy(outputBuffer, buffer, nBufferFrames * sizeof(float));
     return 0;
 }
