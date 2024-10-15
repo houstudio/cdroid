@@ -1250,7 +1250,7 @@ bool UserDict::load(const char *file, LemmaIdType start_id) {
   pthread_mutex_unlock(&g_mutex_);
   return false;
 }
-#if defined(_WIN32)||defiend(_WIN64)
+#if defined(_WIN32)||defined(_WIN64)
 int ftruncate(int file_descriptor, int length) {
     HANDLE hFile = (HANDLE)_get_osfhandle(file_descriptor);
     if (hFile == INVALID_HANDLE_VALUE) {
