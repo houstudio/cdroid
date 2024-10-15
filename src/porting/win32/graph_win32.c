@@ -9,34 +9,44 @@ typedef struct {
     HWND hwnd;
     int width;
     int height;
+    int pitch;
 } FBDEVICE;
 
 typedef struct {
     int dispid;
+    HDC hDC;
+    HBITMAP hBitmap;
     uint32_t width;
     uint32_t height;
     uint32_t pitch;
     int format;
     int ishw;
     char*buffer;
-    char*kbuffer;/*kernel buffer address*/
 } FBSURFACE;
 
 static FBDEVICE devs[2]= {-1};
 static GFXRect screenMargin= {0};
-
+static LRESULT CALLBACK cdroid_window_message_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+}
 static unsigned int __stdcall display_thread(void * param)
 {
     DWORD window_style= WS_OVERLAPPEDWINDOW;
     window_style &= ~(WS_SIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME);
     char*env = getenv("SCREEN_SIZE");
     int width=1280,height=720;
+    WNDCLASSEXW window_class;
     MSG message;
     if(env){
         width= atoi(env);
         env = strpbrk(env,"xX*,");
         if(env)height=atoi(env+1);
     }
+    memset(&window_class,0, sizeof(WNDCLASSEXW));
+    window_class.cbSize = sizeof(WNDCLASSEXW);
+    window_class.lpfnWndProc = cdroid_window_message_proc;
+    window_class.lpszClassName = L"CDROID.Window";
+    RegisterClassExW(&window_class);
     devs[0].hwnd = CreateWindowExW(WS_EX_CLIENTEDGE,
            L"CDROID.Window",L"CDROID",window_style,CW_USEDEFAULT,
            0,width,height,NULL,NULL,NULL,NULL);
@@ -121,16 +131,10 @@ int32_t GFXFillRect(HANDLE surface,const GFXRect*rect,uint32_t color) {
     rec.h=ngs->height;
     if(rect)rec=*rect;
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d",ngs,rec.x,rec.y,rec.w,rec.h,color,ngs->pitch);
-    uint32_t*fb=(uint32_t*)(ngs->buffer+ngs->pitch*rec.y+rec.x*4);
-    uint32_t*fbtop=fb;
-    for(x=0; x<rec.w; x++)fb[x]=color;
-    const int cpw=rec.w*4;
-    long copied=0;
-    for(y=1; y<rec.h; y++) {
-        fb+=(ngs->pitch>>2);
-        memcpy(fb,fbtop,cpw);
-        copied+=ngs->pitch;
-    }
+    RECT winrec = { rec.x,rec.y,rec.x + rec.w,rec.y + rec.h };
+    HBRUSH hb = CreateSolidBrush(color);
+    FillRect(ngs->hDC, &winrec, (HBRUSH)hb);
+    DeleteObject(hb);
     return E_OK;
 }
 
@@ -139,76 +143,39 @@ int32_t GFXFlip(HANDLE surface) {
     FBDEVICE*dev=devs+surf->dispid;
     if(surf->ishw) {
         GFXRect rect= {0,0,surf->width,surf->height};
-        //if(rc)rect=*rc;
-        dev->var.yoffset=0;
-        int ret=ioctl(dev->fb, FBIOPAN_DISPLAY, &dev->var);
-        LOGD_IF(ret<0,"FBIOPAN_DISPLAY=%d yoffset=%d",ret,dev->var.yoffset);
     }
     return 0;
 }
-
-static int setfbinfo(FBSURFACE*surf) {
-    int rc=-1;
-    FBDEVICE*dev=devs+surf->dispid;
-    struct fb_var_screeninfo*v=&dev->var;
-    v->xres=surf->width;
-    v->yres=surf->height;
-    v->xres_virtual=surf->width;
-    v->yres_virtual=surf->height;
-    v->bits_per_pixel=32;
-    switch(surf->format) {
-    case GPF_ARGB:
-        v->transp.offset=24;
-        v->transp.length=8;
-        v->red.offset=16;
-        v->red.length=8;
-        v->green.offset=8;
-        v->green.length=8;
-        v->blue.offset=0;
-        v->blue.length=8;
-        break;
-    case GPF_ABGR:
-        v->transp.offset=24;
-        v->transp.length=8;
-        v->blue.offset=16;
-        v->blue.length=8;
-        v->green.offset=8;
-        v->green.length=8;
-        v->red.offset=0;
-        v->red.length=8;
-        break;
-    default:
-        break;
-    }
-    rc=ioctl(dev->fb,FBIOPUT_VSCREENINFO,v);
-    LOGD("FBIOPUT_VSCREENINFO=%d",rc);
-    return rc;
-}
-
 
 int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
     FBDEVICE*dev = &devs[dispid];
     surf->dispid=dispid;
-    surf->width= hwsurface?dev->var.xres:width;
-    surf->height=hwsurface?dev->var.yres:height;
+    surf->width= hwsurface?dev->width:width;
+    surf->height=hwsurface?dev->height:height;
     surf->format=format;
     surf->ishw=hwsurface;
     surf->pitch=width*4;
     size_t buffer_size=surf->height*surf->pitch;
-    if(hwsurface && devs[dispid].fix.smem_len) {
-        size_t mem_len=((dev->fix.smem_start) -((dev->fix.smem_start) & ~(getpagesize() - 1)));
-        buffer_size=surf->height*dev->fix.line_length;
+
+    {
+        BITMAPINFO bitmap_info;
+        HDC wdc = GetDC(dev->hwnd);
+        surf->hDC = CreateCompatibleDC(wdc);
+        ReleaseDC(dev->hwnd, wdc);
+        bitmap_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bitmap_info.bmiHeader.biWidth = surf->width;
+        bitmap_info.bmiHeader.biHeight = -surf->height;
+        bitmap_info.bmiHeader.biPlanes = 1;
+        bitmap_info.bmiHeader.biBitCount = 32;
+        surf->hBitmap = CreateDIBSection(surf->hDC,(PBITMAPINFO)(&bitmap_info),
+            DIB_RGB_COLORS,(void**)&surf->buffer, NULL,0);
+        buffer_size=surf->pitch*surf->height;
         setfbinfo(surf);
-        surf->kbuffer=(dev->fix.smem_start);
-        surf->buffer=(char*)mmap( NULL,buffer_size,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0 );
-        surf->pitch=dev->fix.line_length;
-    } else {
-        surf->kbuffer=0;
-        surf->buffer=(char*)malloc(buffer_size);
+        surf->pitch=dev->pitch;
     }
     surf->ishw=hwsurface;
-    LOGV("surface=%x buf=%p/%p size=%dx%d hw=%d",surf,surf->kbuffer,surf->buffer,width,height,hwsurface);
+    LOGV("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->buffer,width,height,hwsurface);
     *surface=surf;
     return E_OK;
 }
@@ -251,20 +218,17 @@ int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*
     if(ndst->ishw==0)pbd+=dy*ndst->pitch+dx*4;
     else pbd+=(dy+screenMargin.y)*ndst->pitch+(dx+screenMargin.x)*4;
     const int cpw=rs.w*4;
-    for(y=0; y<rs.h; y++) {
-        memcpy(pbd,pbs,cpw);
-        pbs+=nsrc->pitch;
-        pbd+=ndst->pitch;
-    }
+    BitBlt(ndst->hDC, dx, dy, rs.w, rs.y, nsrc->hDC, rs.x, rs.y, SRCCOPY);
     return 0;
 }
 
 int32_t GFXDestroySurface(HANDLE surface) {
-    FBSURFACE*surf=(FBSURFACE*)surface;
-    FBDEVICE*dev=devs+surf->dispid;
-    if(surf->ishw)
-        munmap(surf->buffer,surf->pitch*surf->height);
-    else if(surf->buffer)free(surf->buffer);
+    FBSURFACE* surf = (FBSURFACE*)surface;
+    FBDEVICE* dev = devs + surf->dispid;
+    if (surf->hBitmap) {
+        DeleteObject((HBITMAP)surf->hBitmap);
+        DeleteDC(surf->hDC);
+    }
     free(surf);
     return 0;
 }
