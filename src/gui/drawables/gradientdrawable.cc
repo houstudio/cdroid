@@ -652,7 +652,7 @@ int GradientDrawable::getOpacity()const {
            OPAQUE : TRANSLUCENT;
 }
 
-void GradientDrawable::setColorFilter(ColorFiltr*colorFilter){
+void GradientDrawable::setColorFilter(ColorFilter*colorFilter){
     if(colorFilter !=mColorFilter){
         mColorFilter = colorFilter;
 	invalidateSelf();
