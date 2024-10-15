@@ -1250,6 +1250,33 @@ bool UserDict::load(const char *file, LemmaIdType start_id) {
   pthread_mutex_unlock(&g_mutex_);
   return false;
 }
+#if defined(_WIN32)||defiend(_WIN64)
+int ftruncate(int file_descriptor, int length) {
+    HANDLE hFile = (HANDLE)_get_osfhandle(file_descriptor);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        errno = EBADF;
+        return -1;
+    }
+
+    // 设置文件当前位置为文件末尾
+    LONG high_order = 0;
+    DWORD low_order = SetFilePointer(hFile, length, &high_order, FILE_BEGIN);
+    if (low_order == INVALID_SET_FILE_POINTER) {
+        if (GetLastError() != NO_ERROR) {
+            errno = EIO;
+            return -1;
+        }
+    }
+
+    // 设置文件末尾
+    if (!SetEndOfFile(hFile)) {
+        errno = EIO;
+        return -1;
+    }
+
+    return 0;
+}
+#endif
 
 void UserDict::write_back() {
   // XXX write back is only allowed from close_dict due to thread-safe sake
