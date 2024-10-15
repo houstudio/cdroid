@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define _CRT_SECURE_NO_WARNINGS
 #include "userdict.h"
 #include "splparser.h"
 #include "ngram.h"
@@ -23,13 +23,28 @@
 #ifdef ___DEBUG_PERF___
 #include <cutils/log.h>
 #endif
+#if defined(__linux__)||defined(__unix__)
 #include <unistd.h>
+#include <sys/time.h>
+#elif defined(_WIN32)||defined(__WIN64)
+#include<io.h>
+#define close  _close
+#define open   _open
+#define read  _read
+#define write _write
+void gettimeofday(struct timeval* tv, struct timezone* local) {
+    ULONGLONG tick = GetTickCount64();
+    if (tv) {
+        tv->tv_sec = 0;
+        tv->tv_usec = 0;
+    }
+}
+#endif
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <assert.h>
 #include <ctype.h>
 #include <sys/types.h>
-#include <sys/time.h>
 #include <time.h>
 #include <pthread.h>
 #include <math.h>

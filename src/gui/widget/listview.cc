@@ -124,7 +124,7 @@ void ListView::addHeaderView(View* v) {
 }
 
 int ListView::getHeaderViewsCount()const {
-    return mHeaderViewInfos.size();
+    return (int)mHeaderViewInfos.size();
 }
 
 bool ListView::removeHeaderView(View* v) {
@@ -143,8 +143,8 @@ bool ListView::removeHeaderView(View* v) {
 }
 
 void ListView::removeFixedViewInfo(View* v, std::vector<FixedViewInfo*>& where) {
-    const int len = where.size();
-    for (int i = 0; i < len; ++i) {
+    const size_t len = where.size();
+    for (size_t i = 0; i < len; ++i) {
         FixedViewInfo* info = where[i];
         if (info->view == v) {
             where.erase(where.begin()+i);
@@ -182,7 +182,7 @@ void ListView::addFooterView(View* v) {
 }
 
 int ListView::getFooterViewsCount()const {
-    return mFooterViewInfos.size();
+    return (int)mFooterViewInfos.size();
 }
 
 bool ListView::removeFooterView(View* v) {
@@ -1344,7 +1344,7 @@ bool ListView::trackMotionScroll(int deltaY, int incrementalDeltaY) {
 }
 
 void ListView::removeUnusedFixedViews(std::vector<FixedViewInfo*>& infoList) {
-    for (int i = infoList.size() - 1; i >= 0; i--) {
+    for (int i = int(infoList.size() - 1); i >= 0; i--) {
         FixedViewInfo* fixedViewInfo = infoList[i];
         View* view = fixedViewInfo->view;
         LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
@@ -2465,7 +2465,7 @@ void ListView::dispatchDraw(Canvas&canvas) {
         int count = getChildCount();
         int headerCount = getHeaderViewsCount();
         int itemCount = mItemCount;
-        int footerLimit = (itemCount - mFooterViewInfos.size());
+        int footerLimit = int(itemCount - mFooterViewInfos.size());
         bool headerDividers = mHeaderDividersEnabled;
         bool footerDividers = mFooterDividersEnabled;
         int first = mFirstPosition;
@@ -2758,8 +2758,8 @@ View* ListView::findViewTraversal(int id) {
 
 View* ListView::findViewInHeadersOrFooters(const std::vector<FixedViewInfo*>& where, int id) {
     // Look in the passed in list of headers or footers for the view.
-    const int len = where.size();
-    for (int i = 0; i < len; i++) {
+    const size_t len = where.size();
+    for (size_t i = 0; i < len; i++) {
         View*v = where.at(i)->view;
         //if (!v.isRootNamespace()) {
             v = v->findViewById(id);
@@ -2784,10 +2784,10 @@ View* ListView::findViewByPredicateTraversal(std::function<bool(const View*)>pre
 
 View* ListView::findViewByPredicateInHeadersOrFooters(const std::vector<FixedViewInfo*>&where,
         std::function<bool(const View*)>predicate, View* childToSkip) {
-    const int len = where.size();
+    const size_t len = where.size();
     View* v;
 
-    for (int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         v = where.at(i)->view;
 
         if (v != childToSkip && !v->isRootNamespace()) {
@@ -2800,9 +2800,9 @@ View* ListView::findViewByPredicateInHeadersOrFooters(const std::vector<FixedVie
 
 View* ListView::findViewWithTagInHeadersOrFooters(std::vector<FixedViewInfo*>& where, void* tag) {
     // Look in the passed in list of headers or footers for the view with the tag.
-    const int len = where.size();
+    const size_t len = where.size();
 
-    for (int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         View* v = where.at(i)->view;
 
         if (!v->isRootNamespace()) {
@@ -2828,7 +2828,7 @@ bool ListView::shouldAdjustHeightForDivider(int itemIndex) {
         bool fillForMissingDividers = isOpaque() && !AbsListView::isOpaque();
         const int itemCount = mItemCount;
         const int headerCount = getHeaderViewsCount();
-        const int footerLimit = (itemCount - mFooterViewInfos.size());
+        const int footerLimit = int(itemCount - mFooterViewInfos.size());
         const bool isHeader = (itemIndex < headerCount);
         const bool isFooter = (itemIndex >= footerLimit);
         const bool headerDividers = mHeaderDividersEnabled;

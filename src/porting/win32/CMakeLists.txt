@@ -1,7 +1,6 @@
 project (win32 C CXX)
 
 set(WIN32_SRCS
-	#winlog.cc
      wininput.cc
      graph_win32.c
      ../common/cdlog.cc

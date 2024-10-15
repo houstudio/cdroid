@@ -23,8 +23,12 @@
 
 // Debug performance for operations
 // #define ___DEBUG_PERF___
+#if defined(__linux__)||defined(__unix__)
+#include<sys/time.h>
+#elif defined(_WIN32)||defined(_WIN64)
+#include <Windows.h>
 
-#include <sys/time.h>
+#endif
 #include <pthread.h>
 #include "atomdictbase.h"
 

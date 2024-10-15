@@ -74,7 +74,7 @@ void PatternLockView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
 void PatternLockView::onDraw(Canvas& canvas) {
     std::vector<Dot*>& pattern = mPattern;
-    int patternSize = pattern.size();
+    int patternSize = (int)pattern.size();
     std::vector< std::vector<bool> >& drawLookupTable = mPatternDrawLookup;
 
     if (mPatternViewMode == AUTO_DRAW) {
@@ -338,7 +338,7 @@ void PatternLockView::setDotCount(int dotCount) {
             mDots[i][j]= new Dot(this,i,j);
 	    mPatternDrawLookup[i][j] = false;
             mDotStates[i][j] = new DotState();
-            mDotStates[i][j]->mSize = mDotNormalSize;
+            mDotStates[i][j]->mSize = float(mDotNormalSize);
             mPattern[i*mDotCount+j]=new Dot(this,i,j);
         }
     }
@@ -709,15 +709,15 @@ int PatternLockView::getColumnHit(float x) {
 }
 
 void PatternLockView::handleActionMove(MotionEvent& event) {
-    float radius = mPathWidth;
-    int historySize = event.getHistorySize();
+    float radius = (float)mPathWidth;
+    const int historySize = (int)event.getHistorySize();
     mTempInvalidateRect.setEmpty();
     bool invalidateNow = false;
     for (int i = 0; i < historySize + 1; i++) {
         float x = event.getX();//i < historySize ? event.getHistoricalX(i) : event.getX();
         float y = event.getY();//i < historySize ? event.getHistoricalY(i) : event.getY();
         Dot* hitDot = detectAndAddHit(x, y);
-        int patternSize = mPattern.size();
+        size_t patternSize = mPattern.size();
         if (hitDot != nullptr && patternSize == 1) {
             mPatternInProgress = true;
             notifyPatternStarted();
@@ -758,8 +758,8 @@ void PatternLockView::handleActionMove(MotionEvent& event) {
 
             // Invalidate between the pattern's last cell and the previous
             // location
-            mTempInvalidateRect.Union(std::round(left), std::round(top),
-                    std::round(right), std::round(bottom));
+            mTempInvalidateRect.Union(static_cast<int>(std::round(left)),static_cast<int>(std::round(top)),
+                    static_cast<int>(std::round(right)), static_cast<int>(std::round(bottom)));
         }
     }
     mInProgressX = event.getX();

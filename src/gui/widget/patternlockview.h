@@ -79,7 +79,7 @@ private:
     std::vector<std::vector<DotState*>> mDotStates;
     int mPatternSize;
     bool mDrawingProfilingStarted = false;
-    long mAnimatingPeriodStart;
+    int64_t mAnimatingPeriodStart;
     float mHitFactor = 0.6f;
 
     // Made static so that the static inner class can use it

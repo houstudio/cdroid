@@ -110,7 +110,7 @@ View* RecycleBin::getTransientStateView(int position) {
 void RecycleBin::clearTransientStateViews() {
     SparseArray<View*>& viewsByPos = mTransientStateViews;
     if (viewsByPos.size()) {
-        int N = viewsByPos.size();
+        const int N = (int)viewsByPos.size();
         for (int i = 0; i < N; i++) {
             removeDetachedView(viewsByPos.valueAt(i), false);
         }
@@ -119,7 +119,7 @@ void RecycleBin::clearTransientStateViews() {
 
     SparseArray<View*>& viewsById = mTransientStateViewsById;
     if (viewsById.size()) {
-        const int N = viewsById.size();
+        const int N = (int)viewsById.size();
         for (int i = 0; i < N; i++) {
             removeDetachedView(viewsById.valueAt(i), false);
         }
@@ -216,7 +216,7 @@ void RecycleBin::scrapActiveViews() {
     bool multipleScraps = mViewTypeCount > 1;
 
     std::vector<View*>& scrapViews =*mCurrentScrap;
-    int count = activeViews.size();
+    const int count = (int)activeViews.size();
     for (int i = count - 1; i >= 0; i--) {
         View* victim = activeViews[i];
         if (victim == nullptr)continue;
@@ -323,8 +323,8 @@ void RecycleBin::reclaimScrapViews(std::vector<View*>& views) {
 }
 
 void RecycleBin::setCacheColorHint(int color) {
-    int typeCount = mScrapViews.size();//mViewTypeCount;
-    for (int i = 0; i < typeCount; i++) {
+    const size_t typeCount = mScrapViews.size();//mViewTypeCount;
+    for (size_t i = 0; i < typeCount; i++) {
         std::vector<View*>& scrap = mScrapViews[i];
         int scrapCount = scrap.size();
         for (int j = 0; j < scrapCount; j++) {
@@ -333,8 +333,8 @@ void RecycleBin::setCacheColorHint(int color) {
     }
 
     // Just in case this is called during a layout pass
-    int count = mActiveViews.size();
-    for (int i = 0; i < count; ++i) {
+    size_t count = mActiveViews.size();
+    for (size_t i = 0; i < count; ++i) {
         View* victim = mActiveViews[i];
         if (victim != nullptr) {
             victim->setDrawingCacheBackgroundColor(color);
@@ -343,11 +343,11 @@ void RecycleBin::setCacheColorHint(int color) {
 }
 
 View* RecycleBin::retrieveFromScrap(std::vector<View*>& scrapViews, int position) {
-    const int size = scrapViews.size();
+    const size_t size = scrapViews.size();
     if (size > 0) {
         // See if we still have a view for this position or ID.
         // Traverse backwards to find the most recently used scrap view
-        for (int i = size - 1; i >= 0; i--) {
+        for (size_t i = size - 1; i >= 0; i--) {
             View* view = scrapViews[i];
             AbsListView::LayoutParams* params =(AbsListView::LayoutParams*) view->getLayoutParams();
 
@@ -375,8 +375,8 @@ View* RecycleBin::retrieveFromScrap(std::vector<View*>& scrapViews, int position
 }
 
 void RecycleBin::clearScrap(std::vector<View*>& scrap) {
-    const int scrapCount = scrap.size();
-    for (int j = 0; j < scrapCount; j++) {
+    const size_t scrapCount = scrap.size();
+    for (size_t j = 0; j < scrapCount; j++) {
         View*v=scrap[scrapCount - 1 - j];
         scrap.erase(scrap.begin()+scrapCount - 1 - j);
         removeDetachedView(v, false);
