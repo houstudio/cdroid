@@ -478,9 +478,9 @@ bool ValueAnimator::isStarted() {
 
 void ValueAnimator::reverse() {
     if (isPulsingInternal()) {
-        int64_t currentTime = SystemClock::uptimeMillis();
-        long currentPlayTime = currentTime - mStartTime;
-        long timeLeft = getScaledDuration() - currentPlayTime;
+        const int64_t currentTime = SystemClock::uptimeMillis();
+        const long currentPlayTime = static_cast<long>(currentTime - mStartTime);
+        const long timeLeft = getScaledDuration() - currentPlayTime;
         mStartTime = currentTime - timeLeft;
         mStartTimeCommitted = true; // do not allow start time to be compensated for jank
         mReversing = !mReversing;
@@ -665,7 +665,7 @@ bool ValueAnimator::doAnimationFrame(long frameTime){
     // an animation.  The "current time" must always be on or after the start
     // time to avoid animating frames at negative time intervals.  In practice, this
     // is very rare and only happens when seeking backwards.
-    const long currentTime = std::max(frameTime, mStartTime);
+    const long currentTime = std::max(frameTime, (long)mStartTime);
     bool finished = animateBasedOnTime(currentTime);
 
     if (finished)  endAnimation();

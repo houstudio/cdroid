@@ -1,0 +1,197 @@
+#include <map>
+#include <stdexcept>
+#include <core/epollwrapper.h>
+namespace cdroid{
+
+#if (defined(_WIN32)||defined(_WIN64))
+class IOCP :public cdroid::IOEventProcessor {
+private:
+    HANDLE hCompletionPort;
+    std::map<int, OVERLAPPED*> fdMap;
+private:
+    OVERLAPPED* getOverlapped(int fd) {
+        auto it = fdMap.find(fd);
+        return it != fdMap.end() ? it->second : nullptr;
+    }
+public:
+    IOCP() {
+        hCompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+        if (hCompletionPort == NULL) {
+            throw std::runtime_error("CreateIoCompletionPort failed");
+        }
+    }
+    virtual ~IOCP() {
+        CloseHandle(hCompletionPort);
+    }
+
+    int addFd(int fd, uint32_t events)override {
+        if (CreateIoCompletionPort((HANDLE)socket, hCompletionPort, (ULONG_PTR)NULL, 0) == NULL) {
+            return -1; // 失败
+        }
+        OVERLAPPED* overlapped = new OVERLAPPED();
+        ZeroMemory(overlapped, sizeof(OVERLAPPED));
+        fdMap[fd] = overlapped;
+        return 0;
+    }
+    int removeFd(int fd) override{// EPOLL_CTL_DEL
+        auto it = fdMap.find(fd);
+        if (it != fdMap.end()) {
+            delete it->second;
+            fdMap.erase(it);
+            return 0;
+        }
+        return -1; // 成功
+    }
+
+    int waitEvents(std::vector<epoll_event>& events, uint32_t timeout)override {
+        OVERLAPPED_ENTRY entries[128];
+        ULONG numEntriesReturned;
+
+        BOOL result = GetQueuedCompletionStatusEx(hCompletionPort, entries, 128,
+            &numEntriesReturned, timeout, FALSE);
+
+        if (result == FALSE) {
+            if (GetLastError() == WAIT_TIMEOUT) {
+                return 0;
+            }
+            return -1; //failed
+        }
+
+        for (ULONG i = 0; i < numEntriesReturned; ++i) {
+            int socket = entries[i].lpCompletionKey;
+            DWORD bytesTransferred = entries[i].dwNumberOfBytesTransferred;
+
+            epoll_event event;
+            event.events = (bytesTransferred == 0) ? 0 : 1;
+            event.data.fd = socket;
+            events.push_back(event);
+        }
+
+        return numEntriesReturned;
+    }
+ };
+#endif/*endof WIN32&&WIN64*/
+
+#if (defined(__linux__)||defined(__unix__))
+class EPOLL:public IOEventProcessor {
+private:
+    int epfd;
+    int maxEvents;
+public:
+    explicit EPOLL(int maxEvents = 10) : maxEvents(maxEvents) {
+        epfd = epoll_create1(0);
+        if (epfd == -1) {
+            throw std::runtime_error("Failed to create epoll file descriptor");
+        }
+    }
+
+    ~EPOLL() {
+        close(epfd);
+    }
+
+    int addFD(int fd, uint32_t events)override {
+        struct epoll_event event;
+        event.data.fd = fd;
+        event.events = events;
+
+        if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event) == -1) {
+            throw std::runtime_error("Failed to add file descriptor to epoll");
+        }
+        return 0;
+    }
+
+    int removeFD(int fd)override {
+        if (epoll_ctl(epfd, EPOLL_CTL_DEL, fd, nullptr) == -1) {
+            throw std::runtime_error("Failed to remove file descriptor from epoll");
+        }
+        return 0;
+    }
+
+    void modifyFD(int fd, uint32_t events) {
+        struct epoll_event event;
+        event.data.fd = fd;
+        event.events = events;
+
+        if (epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &event) == -1) {
+            throw std::runtime_error("Failed to modify file descriptor in epoll");
+        }
+    }
+
+    int waitEvents(std::vector<epoll_event>& activeFDs, uint32_t timeout) override{
+        struct epoll_event events[maxEvents];
+        int numEvents = epoll_wait(epfd, events, maxEvents, -1);
+        
+        if (numEvents == -1) {
+            throw std::runtime_error("Failed to wait for epoll events");
+        }
+
+        activeFDs.clear();
+        for (int i = 0; i < numEvents; ++i) {
+            activeFDs.push_back(events[i].data.fd);
+        }
+    }
+};
+#endif/*epoll*/
+
+class SELECTPOR : public IOEventProcessor {
+private:
+    fd_set readSet;
+    fd_set writeSet;
+    int maxFD = 0;
+public:
+    int addFd(int fd, uint32_t events) override {
+        if (events & EPOLLIN) {
+            FD_SET(fd, &readSet);
+        }
+        if (events & EPOLLOUT) {
+            FD_SET(fd, &writeSet);
+        }
+        if (fd > maxFD) maxFD = fd;
+        return 0;
+    }
+
+    int removeFd(int fd) override {
+        FD_CLR(fd, &readSet);
+        FD_CLR(fd, &writeSet);
+        if (fd == maxFD) {
+            for (int i = maxFD - 1; i >= 0; --i) {
+                if (FD_ISSET(i, &readSet) || FD_ISSET(i, &writeSet)) {
+                    maxFD = i;
+                    break;
+                }
+            }
+        }
+        return 0;
+    }
+
+    int waitEvents(std::vector<epoll_event>& activeFDs,uint32_t ms) override {
+        fd_set tmpReadSet = readSet;
+        fd_set tmpWriteSet = writeSet;
+        struct timeval timeout = { 5, 0 }; // 5 seconds timeout
+        int numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &timeout);
+        if (numEvents == -1) {
+            throw std::runtime_error("Failed to select file descriptors");
+        }
+
+        activeFDs.clear();
+        for (int i = 0; i <= maxFD; ++i) {
+            if (FD_ISSET(i, &tmpReadSet) || FD_ISSET(i, &tmpWriteSet)) {
+                //activeFDs.push_back(i);
+            }
+        }
+    }
+};
+
+IOEventProcessor::IOEventProcessor() {}
+IOEventProcessor::~IOEventProcessor() {}
+IOEventProcessor* IOEventProcessor::create(){
+#if defined(_WIN32)||defined(_WIN64)
+    return new IOCP();
+#elif defined(__linux__)||defined(__unix__)
+    return new EPOLL();
+#else
+    return new SELECTPOR();
+#endif    
+}
+
+}/*endof namespace*/

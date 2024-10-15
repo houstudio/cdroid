@@ -1,14 +1,15 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <core/looper.h>
 #include <string.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <core/epollwrapper.h>
 #if defined(_WIN32)||defined(_WIN64)||defined(_MSVC_VER)
   #include <io.h>
   #define close  _close
   #define open   _open
   #define read  _read
   #define write  _write
-  #define _CRT_SECURE_NO_WARNINGS
   static const char* strerror_r(int errnum, char* buf, size_t buflen) {
       strerror_s(buf, buflen, errnum);
       return buf;
@@ -17,7 +18,6 @@
   #include <unistd.h>
   #include <sys/eventfd.h>
 #endif
-#include <cdtypes.h>
 #include <cdlog.h>
 #include <limits.h>
 #include <systemclock.h>

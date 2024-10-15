@@ -41,7 +41,7 @@ private:
     static TimeInterpolator* sDefaultInterpolator;
     std::vector<AnimatorUpdateListener> mUpdateListeners;
 protected:
-    long mStartTime = -1;
+    int64_t mStartTime = -1;
     bool mStartTimeCommitted;
     float mSeekFraction = -1;
     bool mInitialized = false;

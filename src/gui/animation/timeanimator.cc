@@ -24,7 +24,7 @@ bool TimeAnimator::animateBasedOnTime(long currentTime){
 
 void TimeAnimator::setCurrentPlayTime(long playTime){
     const int64_t currentTime=AnimationUtils::currentAnimationTimeMillis();
-    mStartTime = std::max(mStartTime,long(currentTime - playTime));
+    mStartTime = std::max(mStartTime,currentTime - playTime);
     animateBasedOnTime(currentTime);
 }
 
