@@ -652,6 +652,22 @@ int GradientDrawable::getOpacity()const {
            OPAQUE : TRANSLUCENT;
 }
 
+void GradientDrawable::setColorFilter(ColorFiltr*colorFilter){
+    if(colorFilter !=mColorFilter){
+        mColorFilter = colorFilter;
+	invalidateSelf();
+    }
+}
+
+ColorFilter*GradientDrawable::getColorFilter(){
+    return mColorFilter;
+}
+
+void GradientDrawable::setTintList(ColorStateList*tint){
+    mGradientState->mTint = tint;
+    invalidateSelf();
+}
+
 void GradientDrawable::onBoundsChange(const Rect& r) {
     Drawable::onBoundsChange(r);
     //mRingPath = null;

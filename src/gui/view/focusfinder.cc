@@ -202,7 +202,7 @@ View* FocusFinder::findNextFocusInRelativeDirection(std::vector<View*>& focusabl
     Collections.sort(focusables, mUserSpecifiedFocusComparator);
     mUserSpecifiedFocusComparator.recycle();*/
 
-    const int count = focusables.size();
+    const int count = (int)focusables.size();
     switch (direction) {
     case View::FOCUS_FORWARD : return getNextFocusable(focused, focusables, count);
     case View::FOCUS_BACKWARD: return getPreviousFocusable(focused, focusables, count);

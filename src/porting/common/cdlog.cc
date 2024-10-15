@@ -1,4 +1,3 @@
-#include <cdtypes.h>
 #include <cdlog.h>
 #include <cstdio>
 #include <string.h>
@@ -7,20 +6,34 @@
 #include <map>
 #include <shared_queue.h>
 #include <iomanip>
+#if defined(__Linux__)||defined(__unix__)
 #include <unistd.h>
-#include <limits.h>
-#ifdef HAVE_EXECINFO_H
-#include <execinfo.h>
-#endif
 #include <cxxabi.h>
 #if defined(__clang__) || defined(__APPLE__)
 #include <sys/ucontext.h>
 #else
 #include <ucontext.h>
 #endif
+#endif
+#include <limits.h>
+#ifdef HAVE_EXECINFO_H
+#include <execinfo.h>
+#endif
 #define ASYNC_LOG 1 
 static LogLevel sLogLevel=LOG_DEBUG;
-
+#if defined(_WIN32)||defined(_WIN64)||defined(_MSVC_VER)
+#include <Windows.h>
+/*struct timespec {
+    time_t tv_sec;
+    long tv_nsec;
+};*/
+#define CLOCK_MONOTONIC 0
+void clock_gettime(int, struct timespec* ts){
+    ULONGLONG tickCount = GetTickCount64();
+    ts->tv_sec = static_cast<time_t>(tickCount / 1000);
+    ts->tv_nsec = static_cast<long>((tickCount % 1000) * 1000000);
+}
+#endif
 static std::string splitFileName(const std::string& str) {
     size_t found;
     std::string result=str;

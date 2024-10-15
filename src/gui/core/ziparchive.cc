@@ -11,7 +11,6 @@
 #endif
 #include <dirent.h>
 #include <chrono>
-#include <cdtypes.h>
 #include <cdlog.h>
 using namespace std::chrono;
 
