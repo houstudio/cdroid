@@ -185,7 +185,7 @@ public:
     void setDither(bool dither);
     void setColorFilter(ColorFilter*)override;
     ColorFilter*getColorFilter()override;
-    void setTintList(ColorStateList*tint)override;
+    void setTintList(const ColorStateList*tint)override;
     int getOpacity()const;
     void getGradientCenter(float&x,float&y)const;
     std::shared_ptr<ConstantState>getConstantState()override;

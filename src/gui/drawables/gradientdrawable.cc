@@ -663,7 +663,7 @@ ColorFilter*GradientDrawable::getColorFilter(){
     return mColorFilter;
 }
 
-void GradientDrawable::setTintList(ColorStateList*tint){
+void GradientDrawable::setTintList(const ColorStateList*tint){
     mGradientState->mTint = tint;
     invalidateSelf();
 }
