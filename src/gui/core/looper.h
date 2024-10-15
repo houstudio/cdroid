@@ -61,7 +61,6 @@ private:
         int fd;
         int ident;
         int events;
-        int seq;
         LooperCallback* callback;
         void* data;
         uint32_t getEpollEvents() const;
@@ -114,7 +113,6 @@ private:
     int doEventHandlers();
     int pollInner(int timeoutMillis);
     int removeSequenceNumberLocked(SequenceNumber seq);
-    int removeFd(int fd, int seq);
     void awoken();
     void pushResponse(int events, const Request& request);
     void rebuildEpollLocked();

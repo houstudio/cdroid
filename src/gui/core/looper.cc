@@ -529,7 +529,6 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
         request.fd = fd;
         request.ident = ident;
         request.events = events;
-        request.seq = mNextRequestSeq++;
         request.callback = const_cast<LooperCallback*>(callback);
         request.data = data;
         if (mNextRequestSeq == -1) mNextRequestSeq = 0; // reserve sequence number -1
@@ -640,7 +639,7 @@ int Looper::removeSequenceNumberLocked(SequenceNumber seq){
     }
     return 1;
 }
-
+#if 0
 int Looper::removeFd(int fd, int seq) {
 #if DEBUG_CALLBACKS
     LOGD("%p  removeFd - fd=%d, seq=%d", this, fd, seq);
@@ -697,7 +696,7 @@ int Looper::removeFd(int fd, int seq) {
     } // release lock
     return 1;
 }
-
+#endif
 void Looper::sendMessage(const MessageHandler* handler, const Message& message) {
     const nsecs_t now = SystemClock::uptimeMillis();
     sendMessageAtTime(now, handler, message);
