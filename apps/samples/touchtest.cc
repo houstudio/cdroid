@@ -1,7 +1,7 @@
 #include <cdroid.h>
 #include <core/inputdevice.h>
 #include <porting/cdinput.h>
-#include <linux/input.h>
+//#include <linux/input.h>
 #include <core/inputeventsource.h>
 #include <sstream>
 class TouchWindow:public Window{

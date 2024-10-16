@@ -27,9 +27,9 @@ add_custom_target(build_app_examples COMMENT A target that requires all the exam
 if(NOT ENABLE_PLPLOT)
    list(REMOVE_ITEM ExamplesFileList plot.cc)
 endif()
-add_definitions(--include cdtypes.h)
-add_definitions(--include cdlog.h)
-add_definitions(--include core/stdpatch.h)
+#add_definitions(--include cdtypes.h)
+#add_definitions(--include cdlog.h)
+#add_definitions(--include core/stdpatch.h)
 
 if(BUILD_EXAMPLES)
 foreach(Example ${ExamplesFileList})

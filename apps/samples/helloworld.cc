@@ -1,9 +1,11 @@
 #include <cdroid.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
 #include <widget/candidateview.h>
 
 int main(int argc,const char*argv[]){
+#if defined(__linux__)||defined(__unix__)
     setenv("LANG","zh_CN.UTF-8",1);
+#endif
     App app(argc,argv);
     LOGD("bool.size=%d float.size=%d ponter.size=%d string.size=%d View.size=%d function.size=%d Runnable.size=%d Insets.size=%d"
          " shared_ptr.size=%d vector.size=%d map.size=%d",  sizeof(bool),sizeof(float),sizeof(void*),sizeof(std::string),

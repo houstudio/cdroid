@@ -100,7 +100,7 @@ TEST_F(WIDGET,EditText){
         e->setBackgroundColor(0Xff444444);
         e->setSingleLine(i>0);
         e->setBreakStrategy(i==0);
-        e->setTextSize(30+i*5);
+        e->setTextSize(30.f+i*5);
         e->setText(sss[i*2]);
         e->setInputType(EditText::TYPE_ANY);
         e->setPattern(sss[i*2+1]);     

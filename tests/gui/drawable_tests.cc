@@ -581,7 +581,7 @@ TEST_F(DRAWABLE,gradient_alpha){
         ctx->rectangle(0,0,800,600);
         ctx->fill();
         gd->setColors(std::vector<int>{(int)0xFFFF0000,(int)0xFF00FF00,(int)0xFF0000FF},{.0f,.5f,1.f});
-        gd->setCornerRadius(20-i);
+        gd->setCornerRadius(20.f-i);
         gd->setAlpha(i*255/100);
         gd->draw(*ctx);
         ctx->get_target()->write_to_png(std::string("gradient")+std::to_string(i)+".png");
@@ -595,7 +595,7 @@ TEST_F(DRAWABLE,gradient_rectangle){
     for(int shape=0;shape<4;shape++){
         gd->setShape(shape);
         for(int i=0;i<100;i++){
-            gd->setStroke(i*2+8,0xFFFFFFFF,i*2,shape*2);
+            gd->setStroke(i*2+8,0xFFFFFFFF,i*2,float(shape*2));
 
             ctx->set_source_rgb(0,0,0);
             ctx->rectangle(0,0,800,600);
@@ -603,7 +603,7 @@ TEST_F(DRAWABLE,gradient_rectangle){
             gd->setOrientation((GradientDrawable::Orientation)i);
             gd->setColors(std::vector<int>{(int)0xFFFF0000,(int)0xFF00FF00,(int)0xFF0000FF},{.0f,.5f,1.f});
             gd->setSize(500-20*i,500-20*i);
-            gd->setCornerRadius(20-i);
+            gd->setCornerRadius(20.f-i);
             gd->setAlpha(i*8);
             gd->draw(*ctx);
             ctx->get_target()->write_to_png(std::string("gradient")+std::to_string(i)+".png");

@@ -255,7 +255,7 @@ TEST_F(WINDOW,OrderedChildList){
     App app;
     Window*ow=new Window(0,0,640,480);
     for(int i=0;i<4;i++)
-        ow->addView(new TextView(std::string("textview")+std::to_string(i),100,40)).setId(i).setZ(4-i);
+        ow->addView(new TextView(std::string("textview")+std::to_string(i),100,40)).setId(i).setZ(4.f-i);
     std::vector<View*>views=ow->buildTouchDispatchChildList();
     ASSERT_EQ(views[0]->getId(),3);
     ASSERT_EQ(views[3]->getId(),0);

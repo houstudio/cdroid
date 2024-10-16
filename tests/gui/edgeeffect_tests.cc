@@ -24,7 +24,7 @@ public:
    }
    void setType(bool top){
        
-       mEF->onPull(top?20:-20);
+       mEF->onPull(top?20.f:-20.f);
    }
 };
 
