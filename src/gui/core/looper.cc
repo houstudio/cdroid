@@ -540,7 +540,7 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
             mSequenceNumberByFd.emplace(fd,seq);
         } else {
 #if defined(HAVE_EPOLL)
-            int epollResult = -1;LOGD("TODO");//epoll_ctl(mEpollFd, EPOLL_CTL_MOD, fd, & eventItem);
+            int epollResult = mEpoll->modifyFd(fd,request.getEpollEvents());////epoll_ctl(mEpollFd, EPOLL_CTL_MOD, fd, & eventItem);
             if (epollResult < 0) {
                 if (errno == ENOENT) {
                     // Tolerate ENOENT because it means that an older file descriptor was

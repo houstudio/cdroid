@@ -37,6 +37,7 @@ public:
     static IOEventProcessor* create();
     virtual int addFd(int socket, uint32_t events) = 0;
     virtual int removeFd(int fd) = 0;
+    virtual int modifyFd(int fd,uint32_t events)=0;
     virtual int waitEvents(std::vector<epoll_event>& events, uint32_t timeout) = 0;
 };
 }/*endof namespace cdroid*/

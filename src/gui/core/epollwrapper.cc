@@ -43,6 +43,9 @@ public:
         return -1; // 成功
     }
 
+    int modifyFd(int fd,uint32_t events) override{
+	return -1;
+    }
     int waitEvents(std::vector<epoll_event>& events, uint32_t timeout)override {
         OVERLAPPED_ENTRY entries[128];
         ULONG numEntriesReturned;
@@ -106,13 +109,14 @@ public:
         return 0;
     }
 
-    void modifyFD(int fd, uint32_t events) {
+    int modifyFd(int fd, uint32_t events) override{
         struct epoll_event event;
         event.data.fd = fd;
         event.events = events;
         if (epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &event) == -1) {
             throw std::runtime_error("Failed to modify file descriptor in epoll");
         }
+	return 0;
     }
 
     int waitEvents(std::vector<epoll_event>& activeFDs, uint32_t timeout) override{
