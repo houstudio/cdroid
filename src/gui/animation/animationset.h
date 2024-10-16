@@ -29,13 +29,13 @@ public:
     bool hasAlpha() override;
     void setDuration(long durationMillis)override;
     void addAnimation(Animation* a);
-    void setStartTime(long startTimeMillis)override;
-    long getStartTime()const override;
+    void setStartTime(int64_t startTimeMillis)override;
+    int64_t getStartTime()const override;
     void restrictDuration(long durationMillis)override;
     long getDuration()const override;
     long computeDurationHint()override;
     void initializeInvalidateRegion(int left, int top, int right, int bottom);
-    bool getTransformation(long currentTime, Transformation& t)override;
+    bool getTransformation(int64_t currentTime, Transformation& t)override;
     void scaleCurrentDuration(float scale);
     void initialize(int width, int height, int parentWidth, int parentHeight)override;
     void reset()override;

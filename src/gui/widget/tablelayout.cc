@@ -249,13 +249,13 @@ void TableLayout::findLargestCells(int widthMeasureSpec, int heightMeasureSpec) 
         layoutParams->height = LayoutParams::WRAP_CONTENT;
 
         std::vector<int>widths = row->getColumnsWidths(widthMeasureSpec, heightMeasureSpec);
-        int newLength = widths.size();
+        int newLength = (int)widths.size();
         // this is the first row, we just need to copy the values
         if (firstRow) {
             mMaxWidths=widths;//System.arraycopy(widths, 0, mMaxWidths, 0, newLength);
             firstRow = false;
         } else {
-            int length = mMaxWidths.size();
+            int length = (int)mMaxWidths.size();
             // the current row is wider than the previous rows, so
             // we just grow the array and copy the values
             mMaxWidths.resize(newLength);
@@ -299,14 +299,14 @@ void TableLayout::shrinkAndStretchColumns(int widthMeasureSpec) {
  
 void TableLayout::mutateColumnsWidth(SparseBooleanArray& columns,bool allColumns, int size, int totalWidth) {
     int skipped = 0;
-    int length = mMaxWidths.size();
-    const int count = allColumns ? length : columns.size();
+    size_t length = mMaxWidths.size();
+    const size_t count = allColumns ? length : columns.size();
     int totalExtraSpace = size - totalWidth;
-    int extraSpace = totalExtraSpace / count;
+    int extraSpace = int(totalExtraSpace / count);
 
     // Column's widths are changed: force child table rows to re-measure.
     // (done by super.measureVertical after shrinkAndStretchColumns.)
-    const int nbChildren = getChildCount();
+    const int nbChildren = (int)getChildCount();
     for (int i = 0; i < nbChildren; i++) {
         View* child = getChildAt(i);
         if (dynamic_cast<TableRow*>(child)) {
@@ -315,7 +315,7 @@ void TableLayout::mutateColumnsWidth(SparseBooleanArray& columns,bool allColumns
     }
 
     if (!allColumns) {
-        for (int i=0;i<count;i++){
+        for (size_t i=0;i<count;i++){
             int column = columns.keyAt(i);
             if (columns.valueAt(i)) {
                 if (column < length) {
@@ -326,7 +326,7 @@ void TableLayout::mutateColumnsWidth(SparseBooleanArray& columns,bool allColumns
             }
         }
     } else {
-        for (int i = 0; i < count; i++) mMaxWidths[i] += extraSpace;
+        for (size_t i = 0; i < count; i++) mMaxWidths[i] += extraSpace;
 
         // we don't skip any column so we can return right away
         return;
@@ -334,10 +334,10 @@ void TableLayout::mutateColumnsWidth(SparseBooleanArray& columns,bool allColumns
 
     if (skipped > 0 && skipped < count) {
         // reclaim any extra space we left to columns that don't exist
-        extraSpace = skipped * extraSpace / (count - skipped);
-        for (int i=0;i<count;i++){
+        extraSpace = skipped * extraSpace / int(count - skipped);
+        for (size_t i=0;i<count;i++){
             int column = columns.keyAt(i);
-            if ( columns.valueAt(i) && column < length) {
+            if ( columns.valueAt((int)i) && column < length) {
                 if (extraSpace > mMaxWidths[column]) {
                     mMaxWidths[column] = 0;
                 } else {

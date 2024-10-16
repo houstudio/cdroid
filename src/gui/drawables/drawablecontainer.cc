@@ -157,8 +157,8 @@ void DrawableContainer::DrawableContainerState::invalidateCache(){
 }
 
 void DrawableContainer::DrawableContainerState::createAllFutures(){
-    const int futureCount = mDrawableFutures.size();
-    for (int keyIndex = 0; keyIndex < futureCount; keyIndex++) {
+    const size_t futureCount = mDrawableFutures.size();
+    for (size_t keyIndex = 0; keyIndex < futureCount; keyIndex++) {
         const int index= mDrawableFutures.keyAt(keyIndex);
         std::shared_ptr<ConstantState>cs =mDrawableFutures.valueAt(keyIndex);
         delete mDrawables[index];

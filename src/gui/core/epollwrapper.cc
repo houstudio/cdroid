@@ -70,10 +70,10 @@ public:
         return numEntriesReturned;
     }
  };
-#endif/*endof WIN32&&WIN64*/
 
-#if (defined(__linux__)||defined(__unix__))
-class EPOLL:public IOEventProcessor {
+#elif  (defined(__linux__)||defined(__unix__))
+
+    class EPOLL:public IOEventProcessor {
 private:
     int epfd;
     int maxEvents;
@@ -93,7 +93,6 @@ public:
         struct epoll_event event;
         event.data.fd = fd;
         event.events = events;
-
         if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event) == -1) {
             throw std::runtime_error("Failed to add file descriptor to epoll");
         }
@@ -111,7 +110,6 @@ public:
         struct epoll_event event;
         event.data.fd = fd;
         event.events = events;
-
         if (epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &event) == -1) {
             throw std::runtime_error("Failed to modify file descriptor in epoll");
         }
@@ -119,19 +117,18 @@ public:
 
     int waitEvents(std::vector<epoll_event>& activeFDs, uint32_t timeout) override{
         struct epoll_event events[maxEvents];
-        int numEvents = epoll_wait(epfd, events, maxEvents, -1);
-        
+        const int numEvents = epoll_wait(epfd, events, maxEvents, -1);
         if (numEvents == -1) {
             throw std::runtime_error("Failed to wait for epoll events");
         }
-
         activeFDs.clear();
         for (int i = 0; i < numEvents; ++i) {
             activeFDs.push_back(events[i].data.fd);
         }
     }
 };
-#endif/*epoll*/
+
+#else
 
 class SELECTPOR : public IOEventProcessor {
 private:
@@ -165,22 +162,31 @@ public:
     }
 
     int waitEvents(std::vector<epoll_event>& activeFDs,uint32_t ms) override {
+        struct timeval tv;
         fd_set tmpReadSet = readSet;
         fd_set tmpWriteSet = writeSet;
-        struct timeval timeout = { 5, 0 }; // 5 seconds timeout
-        int numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &timeout);
+        tv.tv_sec = ms / 1000;
+        tv.tv_usec = (ms % 1000) * 1000;
+        int numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &tv);
         if (numEvents == -1) {
             throw std::runtime_error("Failed to select file descriptors");
         }
-
         activeFDs.clear();
         for (int i = 0; i <= maxFD; ++i) {
-            if (FD_ISSET(i, &tmpReadSet) || FD_ISSET(i, &tmpWriteSet)) {
-                //activeFDs.push_back(i);
+            epoll_event e;
+            e.data.fd = i;
+            if (FD_ISSET(i, &tmpReadSet)) {
+                e.events = EPOLLIN;
+                activeFDs.push_back(e);
+            }else if (FD_ISSET(i, &tmpWriteSet)) {
+                e.events = EPOLLOUT;
+                activeFDs.push_back(e);
             }
         }
+        return (int)activeFDs.size();
     }
 };
+#endif
 
 IOEventProcessor::IOEventProcessor() {}
 IOEventProcessor::~IOEventProcessor() {}

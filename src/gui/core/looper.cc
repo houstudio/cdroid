@@ -367,7 +367,7 @@ int Looper::pollInner(int timeoutMillis) {
                 if (epollEvents & EPOLLOUT) events |= EVENT_OUTPUT;
                 if (epollEvents & EPOLLERR) events |= EVENT_ERROR;
                 if (epollEvents & EPOLLHUP) events |= EVENT_HANGUP;
-                mResponses.push_back({.seq = seq, .events = events, .request = request});
+                mResponses.push_back({ seq,events,request });
             } else {
                 LOGW("Ignoring unexpected epoll events 0x%x for sequence number %lld"
                       " that is no longer registered.",epollEvents, seq);
@@ -465,19 +465,14 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
     }
 }
 
-//TEMP_FAILURE_RETRY defined in <unistd.h>
-#ifndef TEMP_FAILURE_RETRY
-#define TEMP_FAILURE_RETRY(expression) \
-  ({ long int __result; \
-     do __result = (long int)(expression); \
-     while (__result == -1 && errno == EINTR); \
-     __result; })
-#endif
 void Looper::wake() {
 #if defined(HAVE_EVENTFD)
     LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  wake", this);
     uint64_t inc = 1;
-    const long nWrite = TEMP_FAILURE_RETRY(write(mWakeEventFd, &inc, sizeof(uint64_t)));
+    long nWrite;
+    do {
+        nWrite = write(mWakeEventFd, &inc, sizeof(uint64_t));
+    } while ((nWrite == -1) && (errno == EINTR));
     if (nWrite != sizeof(uint64_t)) {
         char buff[128];
         LOGE_IF(errno!=EAGAIN,"Could not write wake signal to fd %d: %s",mWakeEventFd, strerror_r(errno,buff,sizeof(buff)));
@@ -488,7 +483,10 @@ void Looper::wake() {
 void Looper::awoken() {
     LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  awoken", this);
     uint64_t counter;
-    TEMP_FAILURE_RETRY(read(mWakeEventFd, &counter, sizeof(uint64_t)));
+    long result;
+    do {
+        result = read(mWakeEventFd, &counter, sizeof(uint64_t));
+    } while ((result == -1) && (errno == EINTR));
 }
 
 void Looper::pushResponse(int events, const Request& request) {

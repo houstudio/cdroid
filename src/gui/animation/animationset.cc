@@ -142,7 +142,7 @@ void AnimationSet::addAnimation(Animation* a){
     mDirty = true;
 }
 
-void AnimationSet::setStartTime(long startTimeMillis){
+void AnimationSet::setStartTime(int64_t startTimeMillis){
     Animation::setStartTime(startTimeMillis);
 
     for (Animation*a:mAnimations){
@@ -150,8 +150,8 @@ void AnimationSet::setStartTime(long startTimeMillis){
     }
 }
 
-long AnimationSet::getStartTime()const{
-    long startTime = LONG_MAX;//Long.MAX_VALUE;
+int64_t AnimationSet::getStartTime()const{
+    int64_t startTime = LONG_MAX;//Long.MAX_VALUE;
     for (Animation*a:mAnimations){
         startTime = std::min(startTime, a->getStartTime());
     }
@@ -210,7 +210,7 @@ void AnimationSet::initializeInvalidateRegion(int left, int top, int right, int 
     }
 }
 
-bool AnimationSet::getTransformation(long currentTime, Transformation& t){
+bool AnimationSet::getTransformation(int64_t currentTime, Transformation& t){
     const int count = (int)mAnimations.size();
     Transformation temp;
 

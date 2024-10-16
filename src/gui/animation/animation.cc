@@ -174,7 +174,7 @@ void Animation::scaleCurrentDuration(float scale) {
     mStartOffset = (long) (mStartOffset * scale);
 }
 
-void Animation::setStartTime(long startTimeMillis) {
+void Animation::setStartTime(int64_t startTimeMillis) {
     mStartTime = startTimeMillis;
     mStarted   = mEnded = false;
     mCycleFlip = false;
@@ -240,7 +240,7 @@ Interpolator* Animation::getInterpolator() {
     return mInterpolator;
 }
 
-long Animation::getStartTime()const{
+int64_t Animation::getStartTime()const{
     return mStartTime;
 }
 long Animation::getDuration() const{
@@ -307,7 +307,7 @@ long Animation::computeDurationHint() {
     return (getStartOffset() + getDuration()) * (getRepeatCount() + 1);
 }
 
-bool Animation::getTransformation(long currentTime, Transformation& outTransformation) {
+bool Animation::getTransformation(int64_t currentTime, Transformation& outTransformation) {
     if (mStartTime == -1) mStartTime = currentTime;
 
     long startOffset = getStartOffset();
@@ -389,7 +389,7 @@ void Animation::fireAnimationEnd() {
     }
 }
 
-bool Animation::getTransformation(long currentTime, Transformation& outTransformation,float scale) {
+bool Animation::getTransformation(int64_t currentTime, Transformation& outTransformation,float scale) {
     mScaleFactor = scale;
     return getTransformation(currentTime, outTransformation);
 }

@@ -647,7 +647,7 @@ Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string&
     LOGE_IF((stream.good()==false)&&isResURL,"%s open failed",resname.c_str());
     do {
         stream.read(buf,sizeof(buf));
-        rdlen = stream.gcount();
+        rdlen = (int)stream.gcount();
         if (XML_Parse(parser, buf,rdlen,!rdlen) == XML_STATUS_ERROR) {
             const char*es=XML_ErrorString(XML_GetErrorCode(parser));
             LOGE_IF(isResURL,"%s at %s:line %ld",es, resname.c_str(),XML_GetCurrentLineNumber(parser));

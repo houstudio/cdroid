@@ -49,7 +49,7 @@ protected:
     bool mFillBefore = true;
     bool mFillAfter = false;
     bool mFillEnabled = false;
-    long mStartTime = -1;
+    int64_t mStartTime = -1;
     long mStartOffset;
     long mDuration;
     int mRepeatCount = 0;
@@ -86,7 +86,7 @@ public:
     virtual void setDuration(long durationMillis);
     virtual void restrictDuration(long durationMillis);
     virtual void scaleCurrentDuration(float scale);
-    virtual void setStartTime(long startTimeMillis);
+    virtual void setStartTime(int64_t startTimeMillis);
     virtual void start();
     void startNow();
     virtual void setRepeatMode(int repeatMode) ;
@@ -101,7 +101,7 @@ public:
     void setDetachWallpaper(bool detachWallpaper);
     void setShowWallpaper(bool showWallpaper);
     Interpolator* getInterpolator();
-    virtual long getStartTime()const;
+    virtual int64_t getStartTime()const;
     virtual long getDuration()const;
     long getStartOffset()const;
     int getRepeatMode()const;
@@ -115,8 +115,8 @@ public:
     virtual bool willChangeBounds()const;
     void setAnimationListener(AnimationListener listener);
     virtual long computeDurationHint();
-    virtual bool getTransformation(long currentTime, Transformation& outTransformation);
-    virtual bool getTransformation(long currentTime, Transformation& outTransformation, float scale);
+    virtual bool getTransformation(int64_t currentTime, Transformation& outTransformation);
+    virtual bool getTransformation(int64_t currentTime, Transformation& outTransformation, float scale);
     bool hasStarted()const;
     bool hasEnded()const;
     void getInvalidateRegion(int left, int top, int width, int height, Rect& invalidate, Transformation& transformation);

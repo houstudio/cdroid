@@ -53,7 +53,7 @@ static void endAnimation(void *userData, const XML_Char *name){
 }
 
 Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resid){
-    size_t rdlen;
+    int rdlen;
     char buf[256];
     ANIMPARSERDATA pd;
     void*parseParams[2];
@@ -65,7 +65,7 @@ Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resi
     std::unique_ptr<std::istream> stream = context->getInputStream(resid,&pd.package);
     do {
         stream->read(buf,sizeof(buf));
-        rdlen = stream->gcount();
+        rdlen = (int)stream->gcount();
         if (XML_Parse(parser, buf,rdlen,!rdlen) == XML_STATUS_ERROR) {
             const char*es = XML_ErrorString(XML_GetErrorCode(parser));
             LOGE("%s at %s:line %ld",es, resid.c_str(),XML_GetCurrentLineNumber(parser));
@@ -98,7 +98,7 @@ static void startAnimationController(void *userData, const XML_Char *xname, cons
 LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
     LACDATA data;
     char buf[256];
-    size_t rdlen = 0;
+    std::streamsize rdlen = 0;
     data.context = context;
     data.controller = nullptr;
     std::unique_ptr<std::istream> stream = context->getInputStream(resid,&data.package);
@@ -109,7 +109,7 @@ LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,
     do {
         stream->read(buf,sizeof(buf));
         rdlen = stream->gcount();
-        if (XML_Parse(parser, buf,rdlen,!rdlen) == XML_STATUS_ERROR) {
+        if (XML_Parse(parser, buf,static_cast<int>(rdlen),static_cast<int>(!rdlen)) == XML_STATUS_ERROR) {
             const char*es=XML_ErrorString(XML_GetErrorCode(parser));
             LOGE("%s at %s:line %ld",es, resid.c_str(),XML_GetCurrentLineNumber(parser));
             XML_ParserFree(parser);
@@ -173,7 +173,7 @@ static void startPolator(void *userData, const XML_Char *xname, const XML_Char *
 }
 
 Interpolator* AnimationUtils::loadInterpolator(Context* context,const std::string&resid){
-    size_t rdlen;
+    std::streamsize rdlen;
     char buf[256];
     Interpolator*interpolator = nullptr;
     XML_Parser parser = XML_ParserCreate(nullptr);
@@ -183,7 +183,7 @@ Interpolator* AnimationUtils::loadInterpolator(Context* context,const std::strin
     do{
         stream->read(buf,sizeof(buf));
         rdlen = stream->gcount();
-        if (XML_Parse(parser, buf,rdlen,!rdlen) == XML_STATUS_ERROR) {
+        if (XML_Parse(parser, buf,static_cast<int>(rdlen),static_cast<int>(!rdlen)) == XML_STATUS_ERROR) {
             const char*es=XML_ErrorString(XML_GetErrorCode(parser));
             LOGE("%s at %s:line %ld",es, resid.c_str(),XML_GetCurrentLineNumber(parser));
             XML_ParserFree(parser); 

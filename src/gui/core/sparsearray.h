@@ -45,11 +45,11 @@ public:
         auto itr=std::find(mValues.begin(),mValues.end(),value);
         return itr!=mValues.end()?int(itr-mValues.begin()):-1;
     }
-    int keyAt(int index)const{
+    int keyAt(size_t index)const{
         return mKeys[index];
     }
 
-    T valueAt(int index)const{
+    T valueAt(size_t index)const{
         return mValues[index];
     }
     void remove(int key){
@@ -59,7 +59,7 @@ public:
 	        mValues.erase(mValues.begin()+idx);
         }	
     }
-    void removeAt(int idx){
+    void removeAt(size_t idx){
         mKeys.erase(mKeys.begin()+idx);
         mValues.erase(mValues.begin()+idx);
     }

@@ -35,8 +35,8 @@ void AdapterHelper::reset() {
 
 void AdapterHelper::preProcess() {
     mOpReorderer->reorderOps(mPendingUpdates);
-    const int count = mPendingUpdates.size();
-    for (int i = 0; i < count; i++) {
+    const size_t count = mPendingUpdates.size();
+    for (size_t i = 0; i < count; i++) {
         UpdateOp* op = mPendingUpdates.at(i);
         switch (op->cmd) {
         case UpdateOp::ADD:    applyAdd(op);   break;
@@ -52,8 +52,8 @@ void AdapterHelper::preProcess() {
 }
 
 void AdapterHelper::consumePostponedUpdates() {
-    const int count = mPostponedList.size();
-    for (int i = 0; i < count; i++) {
+    const size_t count = mPostponedList.size();
+    for (size_t i = 0; i < count; i++) {
         mCallback.onDispatchSecondPass(mPostponedList.at(i));
     }
     recycleUpdateOpsAndClearList(mPostponedList);
@@ -244,7 +244,7 @@ void AdapterHelper::dispatchFirstPassAndUpdateViewHolders(UpdateOp* op, int offs
 }
 
 int AdapterHelper::updatePositionWithPostponed(int pos, int cmd) {
-    const int count = mPostponedList.size();
+    const int count = (int)mPostponedList.size();
     for (int i = count - 1; i >= 0; i--) {
         UpdateOp* postponed = mPostponedList.at(i);
         if (postponed->cmd == UpdateOp::MOVE) {
@@ -326,8 +326,8 @@ int AdapterHelper::updatePositionWithPostponed(int pos, int cmd) {
 }
 
 bool AdapterHelper::canFindInPreLayout(int position) {
-    const int count = mPostponedList.size();
-    for (int i = 0; i < count; i++) {
+    const size_t count = mPostponedList.size();
+    for (size_t i = 0; i < count; i++) {
         UpdateOp* op = mPostponedList.at(i);
         if (op->cmd == UpdateOp::MOVE) {
             if (findPositionOffset(op->itemCount, i + 1) == position) {
@@ -383,7 +383,7 @@ int AdapterHelper::findPositionOffset(int position) {
 }
 
 int AdapterHelper::findPositionOffset(int position, int firstPostponedItem) {
-    const int count = mPostponedList.size();
+    const int count = (int)mPostponedList.size();
     for (int i = firstPostponedItem; i < count; ++i) {
         UpdateOp* op = mPostponedList.at(i);
         if (op->cmd == UpdateOp::MOVE) {
@@ -463,8 +463,8 @@ void AdapterHelper::consumeUpdatesInOnePass() {
     // we still consume postponed updates (if there is) in case there was a pre-process call
     // w/o a matching consumePostponedUpdates.
     consumePostponedUpdates();
-    const int count = mPendingUpdates.size();
-    for (int i = 0; i < count; i++) {
+    const size_t count = mPendingUpdates.size();
+    for (size_t i = 0; i < count; i++) {
         UpdateOp* op = mPendingUpdates.at(i);
         switch (op->cmd) {
         case UpdateOp::ADD:
@@ -493,8 +493,8 @@ void AdapterHelper::consumeUpdatesInOnePass() {
 }
 
 int AdapterHelper::applyPendingUpdatesToPosition(int position) {
-    const int size = mPendingUpdates.size();
-    for (int i = 0; i < size; i++) {
+    const size_t size = mPendingUpdates.size();
+    for (size_t i = 0; i < size; i++) {
         UpdateOp* op = mPendingUpdates.at(i);
         switch (op->cmd) {
         case UpdateOp::ADD:
@@ -553,8 +553,8 @@ void AdapterHelper::recycleUpdateOp(UpdateOp* op) {
 }
 
 void AdapterHelper::recycleUpdateOpsAndClearList(std::vector<UpdateOp*>& ops) {
-    const int count = ops.size();
-    for (int i = 0; i < count; i++) {
+    const size_t count = ops.size();
+    for (size_t i = 0; i < count; i++) {
         recycleUpdateOp(ops.at(i));
     }
     ops.clear();
