@@ -1,6 +1,5 @@
 #include <cdroid.h>
 #include <string>
-#include <cdlog.h>
 #include <iostream>
 extern Window*CreateMultiMedia(); 
 

@@ -1,10 +1,10 @@
 #include <cdroid.h>
-#include <cdtypes.h>
-#include <cdlog.h>
-#include <strings.h>
+//#include <porting/cdtypes.h>
+#include <porting/cdlog.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
+//#include <strings.h>
+//#include <unistd.h>
 #include <dirent.h>
 #include <fstream>
 #include <string.h>

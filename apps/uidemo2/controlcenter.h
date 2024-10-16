@@ -1,12 +1,8 @@
 #ifndef __CONTROL_CENTER_H__
 #define __CONTROL_CENTER_H__
 #include <cdroid.h>
-#include <cdtypes.h>
-#include <cdlog.h>
-#include <strings.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <dirent.h>
 #include <fstream>
 #include <string.h>

@@ -12,8 +12,6 @@ include_directories(
    ${CMAKE_BINARY_DIR}/include/porting
 )
 aux_source_directory(./ DEMO_SRCS)
-add_definitions(--include cdtypes.h)
-add_definitions(--include cdlog.h)
 link_directories(${CMAKE_BINARY_DIR}/lib)
 add_executable(uidemo1 ${DEMO_SRCS})
 

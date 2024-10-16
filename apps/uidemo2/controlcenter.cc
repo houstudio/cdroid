@@ -1,4 +1,5 @@
 #include <controlcenter.h>
+#include <porting/cdlog.h>
 #include <R.h>
 
 ControlCenter::ControlCenter(int x,int y,int w,int h):Window(x,y,w,h){

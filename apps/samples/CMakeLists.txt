@@ -30,7 +30,7 @@ endif()
 #add_definitions(--include cdtypes.h)
 #add_definitions(--include cdlog.h)
 #add_definitions(--include core/stdpatch.h)
-
+link_directories({CMAKE_BINARY_DIR}/src/gui/Debug)
 if(BUILD_EXAMPLES)
 foreach(Example ${ExamplesFileList})
   message(STATUS "\tCreating build rule for ${Example}")
