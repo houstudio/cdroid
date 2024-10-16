@@ -117,7 +117,7 @@ public:
 
     int waitEvents(std::vector<epoll_event>& activeFDs, uint32_t timeout) override{
         struct epoll_event events[maxEvents];
-        const int numEvents = epoll_wait(epfd, events, maxEvents, -1);
+        const int numEvents = epoll_wait(epfd, events, maxEvents,timeout);
         if (numEvents == -1) {
             throw std::runtime_error("Failed to wait for epoll events");
         }

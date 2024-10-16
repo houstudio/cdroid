@@ -32,8 +32,8 @@ namespace cdroid{
 class IOEventProcessor{
 protected:
     IOEventProcessor();
-    virtual ~IOEventProcessor();
 public:
+    virtual ~IOEventProcessor();
     static IOEventProcessor* create();
     virtual int addFd(int socket, uint32_t events) = 0;
     virtual int removeFd(int fd) = 0;
