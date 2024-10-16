@@ -1,6 +1,7 @@
 #include <core/path.h>
 #include <cairomm/surface.h>
 #include <cairomm/context.h>
+#include <porting/cdlog.h>
 #include <map>
 namespace cdroid{
 
