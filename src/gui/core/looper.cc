@@ -22,47 +22,8 @@
 #include <limits.h>
 #include <systemclock.h>
 
-#if defined(HAVE_EPOLL)
-#include <sys/epoll.h>
-#elif defined(HAVE_POLL)
-#include <poll.h>
-#endif
-
 #define DEBUG_POLL_AND_WAKE 0
 #define DEBUG_CALLBACKS 0
-
-#if !defined(HAVE_POLL) && !defined(HAVE_EPOLL)
-    #define EPOLLIN  1
-    #define EPOLLOUT 4
-    #define EPOLLERR 8
-    #define EPOLLHUP 0x10
-#elif defined(HAVE_POLL) && !defined(HAVE_EPOLL)
-    #define EPOLLIN  POLLIN
-    #define EPOLLOUT POLLOUT
-    #define EPOLLERR POLLERR
-    #define EPOLLHUP POLLHUP
-#endif
-
-#if defined(HAVE_POLL) && !defined(HAVE_EPOLL)
-typedef union epoll_data{
-    void *ptr;
-    int fd;
-    uint32_t u32;
-    uint64_t u64;
-} epoll_data_t;
-
-struct epoll_event{
-    uint32_t events;      /* Epoll events */
-    epoll_data_t data;    /* User data variable */
-};
-#endif
-#if !defined(HAVE_POLL)
-struct pollfd {
-    int   fd;         /* file descriptor */
-    short events;     /* requested events */
-    short revents;    /* returned events */
-};
-#endif
 
 /*REF:system/core/libutils/Looper.cpp*/
 namespace cdroid{
@@ -194,19 +155,17 @@ void Looper::rebuildEpollLocked() {
     //mEpollFd = epoll_create(EPOLL_CLOEXEC);
     mEpoll = IOEventProcessor::create();
     LOGE_IF(mEpoll ==nullptr, "Could not create epoll instance: %s", strerror(errno));
+
     struct epoll_event wakeEvent = createEpollEvent(EPOLLIN,WAKE_EVENT_FD_SEQ);
-#if defined(HAVE_EPOLL)
     int result = mEpoll->addFd(mWakeEventFd,EVENT_INPUT);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mWakeEventFd, &wakeEvent);
     LOGE_IF(result != 0, "Could not add wake event fd to epoll instance: %s",strerror(errno));
-#endif
+
     for (auto it=mRequests.begin();it!=mRequests.end(); it++) {
         const SequenceNumber& seq = it->first;
         const Request& request = it->second;
         epoll_event eventItem =createEpollEvent(request.getEpollEvents(),seq);
-#if defined(HAVE_EPOLL)
         const int epollResult = mEpoll->addFd(request.fd,request.getEpollEvents());//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, request.fd, & eventItem);
         LOGE_IF(epollResult<0,"Error adding epoll events for fd %d while rebuilding epoll set: %s",request.fd, strerror(errno));
-#endif
     }
 }
 
@@ -529,17 +488,14 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
         epoll_event eventItem = createEpollEvent(request.getEpollEvents(),seq);
         auto seq_it = mSequenceNumberByFd.find(fd);
         if (seq_it == mSequenceNumberByFd.end()) {
-#if defined(HAVE_EPOLL)
             int epollResult = mEpoll->addFd(fd,request.getEpollEvents());//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, fd, &eventItem);
             if (epollResult < 0) {
                 LOGE("Error adding epoll events for fd %d: %s", fd, strerror(errno));
                 return -1;
             }
-#endif
             mRequests.emplace(seq, request);
             mSequenceNumberByFd.emplace(fd,seq);
         } else {
-#if defined(HAVE_EPOLL)
             int epollResult = mEpoll->modifyFd(fd,request.getEpollEvents());////epoll_ctl(mEpollFd, EPOLL_CTL_MOD, fd, & eventItem);
             if (epollResult < 0) {
                 if (errno == ENOENT) {
@@ -571,7 +527,6 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
                     return -1;
                 }
             }
-#endif
             const SequenceNumber oldSeq = seq_it->second;
             mRequests.erase(oldSeq);
             mRequests.emplace(seq,request);
@@ -632,64 +587,7 @@ int Looper::removeSequenceNumberLocked(SequenceNumber seq){
     }
     return 1;
 }
-#if 0
-int Looper::removeFd(int fd, int seq) {
-#if DEBUG_CALLBACKS
-    LOGD("%p  removeFd - fd=%d, seq=%d", this, fd, seq);
-#endif
-    { // acquire lock
-        std::lock_guard<std::recursive_mutex>  _l(mLock);
-        auto itr = mRequests.find(fd);//indexOfKey(fd);
-        if (itr == mRequests.end()) {
-            return 0;
-        }
 
-        // Check the sequence number if one was given.
-        if ( (seq != -1) && (itr->second.seq != seq) ) {
-#if DEBUG_CALLBACKS
-            LOGD("%p  removeFd - sequence number mismatch, oldSeq=%d", this, itr->second.seq);
-#endif
-            return 0;
-        }
-
-        // Always remove the FD from the request map even if an error occurs while
-        // updating the epoll set so that we avoid accidentally leaking callbacks.
-        mRequests.erase(itr);
-#if defined(HAVE_EPOLL)
-        int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_DEL, fd, nullptr);
-        if (epollResult < 0) {
-            if (seq != -1 && (errno == EBADF || errno == ENOENT)) {
-                // Tolerate EBADF or ENOENT when the sequence number is known because it
-                // means that the file descriptor was closed before its callback was
-                // unregistered.  This error may occur naturally when a callback has the
-                // side-effect of closing the file descriptor before returning and
-                // unregistering itself.
-                //
-                // Unfortunately due to kernel limitations we need to rebuild the epoll
-                // set from scratch because it may contain an old file handle that we are
-                // now unable to remove since its file descriptor is no longer valid.
-                // No such problem would have occurred if we were using the poll system
-                // call instead, but that approach carries others disadvantages.
-#if DEBUG_CALLBACKS
-                LOGD("%p  removeFd - EPOLL_CTL_DEL failed due to file descriptor "
-                        "being closed: %s", this, strerror(errno));
-#endif
-                scheduleEpollRebuildLocked();
-            } else {
-                // Some other error occurred.  This is really weird because it means
-                // our list of callbacks got out of sync with the epoll set somehow.
-                // We defensively rebuild the epoll set to avoid getting spurious
-                // notifications with nowhere to go.
-                LOGE("Error removing epoll events for fd %d: %s", fd, strerror(errno));
-                scheduleEpollRebuildLocked();
-                return -1;
-            }
-        }
-#endif
-    } // release lock
-    return 1;
-}
-#endif
 void Looper::sendMessage(const MessageHandler* handler, const Message& message) {
     const nsecs_t now = SystemClock::uptimeMillis();
     sendMessageAtTime(now, handler, message);
