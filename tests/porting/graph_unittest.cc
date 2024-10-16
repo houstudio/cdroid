@@ -1,10 +1,12 @@
-#include<porting/cdgraph.h>
-#include<porting/cdlog.h>
-#include <gtest/gtest.h>
 #if defined(__Linux__)||defined(__unix__)
 #include <sys/time.h>
 #elif defined(_WIN32)||defined(_WIN64)
 #include <Windows.h>
+#endif
+#include<porting/cdgraph.h>
+#include<porting/cdlog.h>
+#include <gtest/gtest.h>
+#if defined(_WIN32)||defined(_WIN64)
 void usleep(unsigned int microseconds) {
     LARGE_INTEGER frequency;
     QueryPerformanceFrequency(&frequency);
@@ -19,13 +21,12 @@ void usleep(unsigned int microseconds) {
 void sleep(unsigned int secs) {
     usleep(secs * 1000000);
 }
-void gettimeofday(struct timeval* t1,struct timezone* zone) {
+void gettimeofday(struct timeval* t1, struct timezone* zone) {
     auto tt = GetTickCount64();
-    t1->tv_sec = tt%1000;
+    t1->tv_sec = tt % 1000;
     t1->tv_usec = (tt % 1000) * 1000;
 }
 #endif
-
 #define INVALID_COLOR 0x01010101
 typedef struct{
    int fmt;

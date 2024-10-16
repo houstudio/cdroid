@@ -14,11 +14,6 @@ if(COMMAND cmake_policy)
    #make vcpkg happy:)
 endif(COMMAND cmake_policy)
 
-if(MSVC)
-    #Disable Visual Studio's backup
-    add_compile_options(/d2backslash)
-endif()
-
 set(DISABLE_FORCE_DEBUG_POSTFIX ON)
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)

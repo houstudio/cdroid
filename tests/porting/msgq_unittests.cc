@@ -1,9 +1,9 @@
-#include <stdio.h>
 #if defined(__linux__)||defined(__unix___)
 #include <sys/time.h>
 #else
 #include <Windows.h>
 #endif
+#include <stdio.h>
 #include <gtest/gtest.h>
 extern "C"{
 #include <porting/dtvos.h>

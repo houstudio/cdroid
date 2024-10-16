@@ -29,12 +29,13 @@ include_directories(
    ${CMAKE_BINARY_DIR}/include
    ${CMAKE_BINARY_DIR}/include/gui
    ${CMAKE_BINARY_DIR}/include/porting
+   ${CMAKE_SOURCE_DIR}/src/porting/include
 )
 
 link_directories(${CMAKE_BINARY_DIR}/lib)
 
 add_executable(hal_tests ${SRCS_HAL}) 
 
-target_link_libraries(hal_tests tvhal dl pthread ${GTEST_LIBRARIES})
+target_link_libraries(hal_tests tvhal ${PTHREAD_LIBRARIES} ${GTEST_LIBRARIES})
 
 install (TARGETS hal_tests  DESTINATION bin/tests)

@@ -1,10 +1,10 @@
+#include <Windows.h>
 #include <cdgraph.h>
 #include <cdlog.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <Windows.h>
 typedef struct {
     HWND hwnd;
     int width;
@@ -171,7 +171,6 @@ int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t heigh
         surf->hBitmap = CreateDIBSection(surf->hDC,(PBITMAPINFO)(&bitmap_info),
             DIB_RGB_COLORS,(void**)&surf->buffer, NULL,0);
         buffer_size=surf->pitch*surf->height;
-        setfbinfo(surf);
         surf->pitch=dev->pitch;
     }
     surf->ishw=hwsurface;

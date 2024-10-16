@@ -20,13 +20,13 @@
 #include<sys/epoll.h>
 #endif
 
-#include<cdtypes.h>
-#include<cdlog.h>
-#include<cdinput.h>
-#include<map>
-#include<iostream>
-#include<fstream>
-#include<vector>
+#include <cdtypes.h>
+#include <cdlog.h>
+#include <cdinput.h>
+#include <map>
+#include <iostream>
+#include <fstream>
+#include <vector>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -57,7 +57,7 @@ typedef struct {
 
 static INPUTDEVICE dev= {0,0};
 
-INT InputInit() {
+int32_t InputInit() {
     if(dev.pipe[0]>0)
         return 0;
 #if 0
@@ -90,7 +90,7 @@ INT InputInit() {
 
 #define SET_BIT(array,bit)    ((array)[(bit)/8] |= (1<<((bit)%8)))
 
-INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
+int32_t InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
 #if 0
     int rc1,rc2;
     memset(devinfo,0,sizeof(INPUTDEVICEINFO));
@@ -151,7 +151,7 @@ INT InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
     return 0;
 }
 
-INT InputInjectEvents(const INPUTEVENT*es,UINT count,DWORD timeout) {
+int32_t InputInjectEvents(const INPUTEVENT*es,uint32_t count, uint32_t timeout) {
     const char*evtnames[]= {"SYN","KEY","REL","ABS","MSC","SW"};
     INPUTEVENT*events=(INPUTEVENT*)malloc(count*sizeof(INPUTEVENT));
     if(events)memcpy(events,es,count*sizeof(INPUTEVENT));
@@ -164,7 +164,7 @@ INT InputInjectEvents(const INPUTEVENT*es,UINT count,DWORD timeout) {
     return count;
 }
 
-INT InputGetEvents(INPUTEVENT*outevents,UINT max,DWORD timeout) {
+int32_t InputGetEvents(INPUTEVENT*outevents, uint32_t max, uint32_t timeout) {
 #if 0
     int rc,count=0;
     struct timeval tv;
