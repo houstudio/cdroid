@@ -193,10 +193,12 @@ void Looper::rebuildEpollLocked() {
     if (mEpollFd >= 0) {
         LOGV("%p ~ rebuildEpollLocked - rebuilding epoll set", this);
         close(mEpollFd);
+        delete mEpoll;
     }
 
     // Allocate the new epoll instance and register the wake pipe.
-    mEpollFd = epoll_create(EPOLL_CLOEXEC);
+    //mEpollFd = epoll_create(EPOLL_CLOEXEC);
+    mEpoll = IOEventProcessor::create();
     LOGE_IF(mEpollFd < 0, "Could not create epoll instance: %s", strerror(errno));
 #endif
     struct epoll_event wakeEvent = createEpollEvent(EPOLLIN,WAKE_EVENT_FD_SEQ);
@@ -317,8 +319,8 @@ int Looper::pollInner(int timeoutMillis) {
     mResponseIndex =0;
     //We are about to idle
     mPolling = true;
-    struct epoll_event eventItems[EPOLL_MAX_EVENTS];
-    const int eventCount = epoll_wait(mEpollFd,eventItems,EPOLL_MAX_EVENTS,timeoutMillis);
+    std::vector<struct epoll_event> eventItems;
+    const int eventCount = mEpoll->waitEvents(eventItems,timeoutMillis);// epoll_wait(mEpollFd, eventItems, EPOLL_MAX_EVENTS, timeoutMillis);
     //No longer idling.
     mPolling = false;
     // Acquire lock.
@@ -606,7 +608,7 @@ int Looper::removeSequenceNumberLocked(SequenceNumber seq){
     mRequests.erase(request_it);
     mSequenceNumberByFd.erase(fd);
 
-    int epollResult = epoll_ctl(mEpollFd, EPOLL_CTL_DEL, fd, nullptr);
+    int epollResult = mEpoll->removeFd(fd);// epoll_ctl(mEpollFd, EPOLL_CTL_DEL, fd, nullptr);
     if (epollResult < 0) {
         if (errno == EBADF || errno == ENOENT) {
             // Tolerate EBADF or ENOENT because it means that the file descriptor was closed

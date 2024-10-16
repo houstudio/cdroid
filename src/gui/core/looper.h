@@ -95,12 +95,13 @@ private:
     // any use of it is racy anyway.
     bool mPolling;
 
+    class IOEventProcessor* mEpoll;
     int  mEpollFd;// guarded by mLock but only modified on the looper thread
     bool mEpollRebuildRequired; // guarded by mLock
 
     // Locked list of file descriptor monitoring requests.
     std::unordered_map<SequenceNumber, Request> mRequests; //guarded by mLock
-    std::unordered_map<int/*fd*/,SequenceNumber>mSequenceNumberByFd; //guarded by mLock
+    std::unordered_map<int,SequenceNumber>mSequenceNumberByFd; //guarded by mLock
     SequenceNumber mNextRequestSeq;
 
     // This state is only used privately by pollOnce and does not require a lock since
