@@ -47,7 +47,7 @@ int FrameSequence::registerFactory(const std::string&mime,uint32_t magicSize,Ver
     return 0;
 }
 
-static int registerAllFrameSequences(std::map<const std::string,FrameSequence::Registry>&entis){
+int FrameSequence::registerAllFrameSequences(std::map<const std::string,Registry>&entis){
     FrameSequence::registerFactory(std::string("mime/apng"),
             PngFrameSequence::PNG_HEADER_SIZE,
             PngFrameSequence::isPNG,

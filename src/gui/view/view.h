@@ -1390,7 +1390,7 @@ public:
 public:
     BaseSavedState(Parcel& source);
     BaseSavedState(Parcelable* superState);
-    void writeToParcel(Parcel& out, int flags);
+    void writeToParcel(Parcel& out, int flags)override;
 };
 
 class View::AccessibilityDelegate {

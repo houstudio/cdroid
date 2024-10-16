@@ -1,11 +1,11 @@
 project(pinyin C CXX)
 aux_source_directory(share PINYIN_SRCS)
+find_package(Pthread)
 add_library(pinyin ${PINYIN_SRCS})
 include_directories(include)
-target_link_libraries(pinyin pthread)
-
+target_link_libraries(pinyin ${PTHREAD_LIBRARIES})
 add_executable(dictbuild ${PINYIN_SRCS} command/pinyinime_dictbuilder.cpp)
-target_link_libraries(dictbuild pthread)
+target_link_libraries(dictbuild ${PTHREAD_LIBRARIES})
 target_compile_definitions(dictbuild PRIVATE ___BUILD_MODEL___)
 
 add_executable(pytest test.cpp)

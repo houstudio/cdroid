@@ -15,7 +15,7 @@ protected:
 public:
     Parcelable* getSuperState();
     int describeContents();
-    void writeToParcel(Parcel& dest, int flags);
+    virtual void writeToParcel(Parcel& dest, int flags);
 };
 }/*endof namespace*/
 #endif

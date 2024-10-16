@@ -25,7 +25,7 @@ public:
     }
 
     int addFd(int fd, uint32_t events)override {
-        if (CreateIoCompletionPort((HANDLE)socket, hCompletionPort, (ULONG_PTR)NULL, 0) == NULL) {
+        if (CreateIoCompletionPort((HANDLE)fd, hCompletionPort, (ULONG_PTR)NULL, 0) == NULL) {
             return -1; // 失败
         }
         OVERLAPPED* overlapped = new OVERLAPPED();
@@ -58,12 +58,12 @@ public:
         }
 
         for (ULONG i = 0; i < numEntriesReturned; ++i) {
-            int socket = entries[i].lpCompletionKey;
+            int fd = entries[i].lpCompletionKey;
             DWORD bytesTransferred = entries[i].dwNumberOfBytesTransferred;
 
             epoll_event event;
             event.events = (bytesTransferred == 0) ? 0 : 1;
-            event.data.fd = socket;
+            event.data.fd = fd;
             events.push_back(event);
         }
 

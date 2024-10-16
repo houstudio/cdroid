@@ -1,5 +1,4 @@
 #include <app.h>
-#include <cdtypes.h>
 #include <cdlog.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -21,7 +20,12 @@
 #include <core/atexit.h>
 void spt_init(int argc, char *argv[]);
 void setproctitle(const char *fmt, ...);
+#if defined(__linux__)||defined(__unix__)
 extern "C" char *__progname;
+#endif
+
+unsigned long GetModuleFileNameA(void* hModule, char* lpFilename, unsigned long nSize);
+
 namespace cdroid{
 
 App*App::mInst=nullptr;
@@ -60,7 +64,13 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     }
     Typeface::setContext(this);
     onInit();
+#if defined(__linux__)||defined(__unix__)
     setName(std::string(argc?argv[0]:__progname));
+#elif (defined(_WIN32)||defined(_WIN64))
+    char progName[260];
+    GetModuleFileNameA(nullptr,progName,sizeof(progName));
+    setName(std::string(argc?argv[0]:progName));
+#endif
     LOGI("\033[1;35m          ┏━┓┏┓╋╋╋┏┓┏┓");
     LOGI("\033[1;35m          ┃┏╋┛┣┳┳━╋╋┛┃");
     LOGI("\033[1;35m          ┃┗┫╋┃┏┫╋┃┃╋┃");
