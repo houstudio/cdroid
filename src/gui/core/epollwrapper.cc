@@ -172,12 +172,12 @@ public:
     }
 
     int modifyFd(int fd,uint32_t events)override{
-	FD_CLR(fd,&readSet);
-	FD_CLR(fd,&writeSet);
-	if(events & Looper::EVENT_INPUT) FD_SET(fd,&readSet);
-	if(events & Looper::EVENT_OUTPUT) FD_SET(fd,&writeSet);
-	if(fd>maxFD) maxFD = fd;
-        return -1;
+	    FD_CLR(fd,&readSet);
+	    FD_CLR(fd,&writeSet);
+	    if(events & Looper::EVENT_INPUT) FD_SET(fd,&readSet);
+	    if(events & Looper::EVENT_OUTPUT) FD_SET(fd,&writeSet);
+	    if(fd>maxFD) maxFD = fd;
+        return 0;
     }
 
     int waitEvents(std::vector<epoll_event>& activeFDs,uint32_t ms) override {
@@ -186,7 +186,7 @@ public:
         fd_set tmpWriteSet = writeSet;
         tv.tv_sec = ms / 1000;
         tv.tv_usec = (ms % 1000) * 1000;
-        int numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &tv);
+        const int numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &tv);
         if (numEvents == -1) {
             throw std::runtime_error("Failed to select file descriptors");
         }
