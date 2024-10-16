@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
-#include <cdinput.h>
+#include <porting/cdinput.h>
+#if defined(__linux__)||defined(__unix__)
 #include <linux/input.h>
+#else
+#include <core/eventcodes.h>
+#endif
 #include <fcntl.h>
 class INPUT:public testing::Test{
    public :
@@ -27,7 +31,7 @@ TEST_F(INPUT,InjectEvent){
    INPUTEVENT e;
    INPUTEVENT e2;
    e.type=EV_KEY;
-   e.code=KEY_ENTER;
+   e.code = 100;// KEY_ENTER;
    e.device=INJECTDEV_KEY;
    ASSERT_EQ(1,InputInjectEvents(&e,1,0));
    ASSERT_EQ(1,InputGetEvents(&e2,1,1));

@@ -1,7 +1,30 @@
-#include<cdgraph.h>
-#include<cdlog.h>
+#include<porting/cdgraph.h>
+#include<porting/cdlog.h>
 #include <gtest/gtest.h>
+#if defined(__Linux__)||defined(__unix__)
 #include <sys/time.h>
+#elif defined(_WIN32)||defined(_WIN64)
+#include <Windows.h>
+void usleep(unsigned int microseconds) {
+    LARGE_INTEGER frequency;
+    QueryPerformanceFrequency(&frequency);
+    LARGE_INTEGER start;
+    QueryPerformanceCounter(&start);
+    long long end = start.QuadPart + static_cast<long long>(microseconds) * frequency.QuadPart / 1000000;
+
+    do {
+        QueryPerformanceCounter(&start);
+    } while (start.QuadPart < end);
+}
+void sleep(unsigned int secs) {
+    usleep(secs * 1000000);
+}
+void gettimeofday(struct timeval* t1,struct timezone* zone) {
+    auto tt = GetTickCount64();
+    t1->tv_sec = tt%1000;
+    t1->tv_usec = (tt % 1000) * 1000;
+}
+#endif
 
 #define INVALID_COLOR 0x01010101
 typedef struct{
@@ -148,7 +171,7 @@ TEST_F(GRAPH,CreateSurface_1){
 }
 
 TEST_F(GRAPH,CreateSurface_2){
-    uint32_t width,height,pitch;
+    uint32_t width=0,height=0,pitch=0;
     int fmts[]={GPF_ARGB4444,GPF_ARGB1555,GPF_ARGB,GPF_ABGR,GPF_RGB32};
     int bps[] ={         2,         2    ,  4     ,    4   ,    4    }; 
     ASSERT_EQ(0,GFXGetDisplaySize(0,&width,&height));
@@ -192,7 +215,7 @@ TEST_F(GRAPH,Alpha){
 
 TEST_F(GRAPH,Colors){
     HANDLE surface=0;
-    uint32_t width,height;
+    uint32_t width=0,height=0;
     GFXRect r={0,0,0,0};
     ASSERT_EQ(0,GFXGetDisplaySize(0,&width,&height));
     ASSERT_EQ(0,GFXCreateSurface(0,&surface,width,height,GPF_ARGB,1));
@@ -212,7 +235,7 @@ TEST_F(GRAPH,Colors){
 
 TEST_F(GRAPH,Blit){
     HANDLE mainsurface=0,surface;
-    uint32_t width,height;
+    uint32_t width=0,height=0;
     GFXRect r={0,0,0,0};
     ASSERT_EQ(0,GFXGetDisplaySize(0,&width,&height));
     ASSERT_EQ(0,GFXCreateSurface(0,&mainsurface,width,height,GPF_ARGB,1));
@@ -253,10 +276,10 @@ TEST_F(GRAPH,Multilayer){
         for(int i=0;i<4;i++){
            int sw,sh,fmt;
            gettimeofday(&tv,NULL);
-           srandom(tv.tv_usec);
+           srand(tv.tv_usec);
            if(layers[i]){
-               int x=k-500+random()%width;
-               int y=k-500+random()%height;
+               int x=k-500+rand()%width;
+               int y=k-500+rand()%height;
                GFXGetSurfaceInfo(layers[i],(uint32_t*)&sw,(uint32_t*)&sh,&fmt);
                if((x+sw>0) && (y+sh>0) && (x<(int)width) && (y<(int)height)) 
                    ASSERT_EQ(0,GFXBlit(hwsurface,x,y,layers[i],NULL));
@@ -307,7 +330,7 @@ TEST_F(GRAPH,Benchmark_Fill){
    r.w=width;r.h=height;
    gettimeofday(&t1,NULL);
    for(int i=0;i<TEST_TIMES;i++){
-       GFXFillRect(surface,&r,0xFF000000|(i<<8)|(i+i<<16));
+       GFXFillRect(surface,&r,0xFF000000|(i<<8)|((i+i)<<16));
    }
    gettimeofday(&t2,NULL);
    int usedtime=(t2.tv_sec*1000+t2.tv_usec/1000-t1.tv_sec*1000+t1.tv_usec/1000);

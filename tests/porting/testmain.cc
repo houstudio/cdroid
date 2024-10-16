@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include <cdtypes.h>
-#include <cdlog.h>
-#include <cdgraph.h>
+#include <porting/cdtypes.h>
+#include <porting/cdlog.h>
+#include <porting/cdgraph.h>
 #include <math.h>
 
 class HALEnvironment: public testing::Environment{

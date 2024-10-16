@@ -1,6 +1,6 @@
 #ifndef __DTV_UTILS_H__
 #define __DTV_UTILS_H__
-#include <cdtypes.h>
+#include <porting/cdtypes.h>
 #include <ngl_tuner.h>
 
 namespace tvutils{

@@ -1,9 +1,13 @@
 #include <stdio.h>
+#if defined(__linux__)||defined(__unix___)
 #include <sys/time.h>
+#else
+#include <Windows.h>
+#endif
 #include <gtest/gtest.h>
 extern "C"{
-#include <dtvos.h>
-#include <dtvmsgq.h>
+#include <porting/dtvos.h>
+#include <porting/dtvmsgq.h>
 }
 
 class OSMSGQ:public testing::Test{
@@ -14,9 +18,13 @@ class OSMSGQ:public testing::Test{
    virtual void TearDown(){
    }
    unsigned long long gettime(){
+#if defined(__linux__)||defined(__unix__)
        struct timeval tv;
        gettimeofday(&tv,NULL);
        return tv.tv_sec*1000+tv.tv_usec/1000;
+#elif defined(_WIN32)||defined(_WIN64)
+       return GetTickCount64();
+#endif
    }
 };
 typedef struct{

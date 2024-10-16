@@ -1,7 +1,11 @@
 #include <stdio.h>
+#if defined(__linux__)||defined(__unix__)
 #include <sys/time.h>
+#elif defined(_WIN32)||defined(_WIN64)
+#include <Windows.h>
+#endif
 #include <gtest/gtest.h>
-#include <dtvos.h>
+#include <porting/dtvos.h>
 
 class OSEVENT:public testing::Test{
    public :

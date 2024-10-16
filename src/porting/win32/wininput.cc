@@ -27,8 +27,7 @@
 #include<iostream>
 #include<fstream>
 #include<vector>
-//#include<cdlog.h>
-#include<string.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
