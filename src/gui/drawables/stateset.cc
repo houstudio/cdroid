@@ -45,9 +45,9 @@ bool StateSet::stateSetMatches(const std::vector<int>& stateSpec,const std::vect
     if (stateSet.size()==0)
         return (stateSpec.size()==0) || isWildCard(stateSpec);
 
-    const int stateSpecSize = stateSpec.size();
-    const int stateSetSize = stateSet.size();
-    for (int i = 0; i < stateSpecSize; i++) {
+    const size_t stateSpecSize = stateSpec.size();
+    const size_t stateSetSize = stateSet.size();
+    for (size_t i = 0; i < stateSpecSize; i++) {
         int stateSpecState = stateSpec[i];
         if (stateSpecState == 0) { // We've reached the end of the cases to match against.
             return true;
@@ -85,8 +85,8 @@ bool StateSet::stateSetMatches(const std::vector<int>& stateSpec,const std::vect
 }
 
 bool StateSet::stateSetMatches(const std::vector<int>& stateSpec,int state){
-    const int stateSpecSize = stateSpec.size();
-    for (int i = 0; i < stateSpecSize; i++) {
+    const size_t stateSpecSize = stateSpec.size();
+    for (size_t i = 0; i < stateSpecSize; i++) {
         int stateSpecState = stateSpec[i];
         if (stateSpecState == 0)// We've reached the end of the cases to match against.
             return true;

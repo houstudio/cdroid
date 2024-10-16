@@ -27,8 +27,8 @@ void RecycleBin::setViewTypeCount(int viewTypeCount) {
 }
 
 void RecycleBin::markChildrenDirty() {
-    const int typeCount = mScrapViews.size();//mViewTypeCount;
-    for (int i = 0; i < typeCount; i++) {
+    const size_t typeCount = mScrapViews.size();//mViewTypeCount;
+    for (size_t i = 0; i < typeCount; i++) {
  	    std::vector<View*>& scrap = mScrapViews[i];
         int scrapCount = scrap.size();
         for (int j = 0; j < scrapCount; j++) {
@@ -37,21 +37,21 @@ void RecycleBin::markChildrenDirty() {
     }
 
     if (mTransientStateViews.size()) {
-        int count = mTransientStateViews.size();
-        for (int i = 0; i < count; i++) {
+        size_t count = mTransientStateViews.size();
+        for (size_t i = 0; i < count; i++) {
             mTransientStateViews.valueAt(i)->forceLayout();
         }
     }
     if (mTransientStateViewsById.size()) {
-        int count = mTransientStateViewsById.size();
-        for (int i = 0; i < count; i++) {
+        size_t count = mTransientStateViewsById.size();
+        for (size_t i = 0; i < count; i++) {
             mTransientStateViewsById.valueAt(i)->forceLayout();
         }
     }
 }
 
 void RecycleBin::clear() {
-    for (int i = 0; i < mScrapViews.size(); i++) {
+    for (size_t i = 0; i < mScrapViews.size(); i++) {
         std::vector<View*>& scrap = mScrapViews[i];
         clearScrap(scrap);
     }
@@ -204,8 +204,8 @@ std::vector<View*>RecycleBin::getSkippedScrap() {
 }
 
 void RecycleBin::removeSkippedScrap() {
-    int count = mSkippedScrap.size();
-    for (int i = 0; i < count; i++) {
+    size_t count = mSkippedScrap.size();
+    for (size_t i = 0; i < count; i++) {
         removeDetachedView(mSkippedScrap[i], false);
     }
     mSkippedScrap.clear();
@@ -261,10 +261,10 @@ void RecycleBin::scrapActiveViews() {
 
 
 void RecycleBin::fullyDetachScrapViews() {
-    int viewTypeCount = mViewTypeCount;
-    for (int i = 0; i < viewTypeCount; ++i) {
+    size_t viewTypeCount = mViewTypeCount;
+    for (size_t i = 0; i < viewTypeCount; ++i) {
         std::vector<View*>& scrapPile = mScrapViews[i];
-        for (int j = scrapPile.size() - 1; j >= 0; j--) {
+        for (int j = int(scrapPile.size() - 1); j >= 0; j--) {
             View* view = scrapPile[j];
             if (view->isTemporarilyDetached()) {
                 removeDetachedView(view, false);
@@ -275,11 +275,11 @@ void RecycleBin::fullyDetachScrapViews() {
 
 
 void RecycleBin::pruneScrapViews() {
-    int maxViews = mActiveViews.size();
-    int viewTypeCount = mViewTypeCount;
-    for (int i = 0; i < viewTypeCount; ++i) {
+    size_t maxViews = mActiveViews.size();
+    size_t viewTypeCount = mViewTypeCount;
+    for (size_t i = 0; i < viewTypeCount; ++i) {
         std::vector<View*>& scrapPile = mScrapViews[i];
-        int size = scrapPile.size();
+        size_t size = scrapPile.size();
         while (size > maxViews) {
             scrapPile.erase(scrapPile.begin()+(--size));//remove(--size);
         }
@@ -314,7 +314,7 @@ void RecycleBin::reclaimScrapViews(std::vector<View*>& views) {
     if (mViewTypeCount == 1) {
         views=mScrapViews[0];
     } else {
-        for (int i = 0; i < mViewTypeCount; ++i) {
+        for (size_t i = 0; i < mViewTypeCount; ++i) {
             std::vector<View*>& scrapPile = mScrapViews[i];
             //views.addAll(scrapPile);
             views.insert(views.begin(),scrapPile.begin(),scrapPile.end());
@@ -326,8 +326,8 @@ void RecycleBin::setCacheColorHint(int color) {
     const size_t typeCount = mScrapViews.size();//mViewTypeCount;
     for (size_t i = 0; i < typeCount; i++) {
         std::vector<View*>& scrap = mScrapViews[i];
-        int scrapCount = scrap.size();
-        for (int j = 0; j < scrapCount; j++) {
+        size_t scrapCount = scrap.size();
+        for (size_t j = 0; j < scrapCount; j++) {
             scrap[j]->setDrawingCacheBackgroundColor(color);
         }
     }

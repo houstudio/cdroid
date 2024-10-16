@@ -21,7 +21,7 @@ private:
     std::vector<View*>mActiveViews;
     std::vector<std::vector<View*>>mScrapViews;
     std::vector<View*>*mCurrentScrap;
-    int mViewTypeCount;
+    size_t mViewTypeCount;
     std::vector<View*>mSkippedScrap;
     SparseArray<View*>mTransientStateViews;
     SparseArray<View*>mTransientStateViewsById;

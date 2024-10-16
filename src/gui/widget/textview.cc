@@ -654,7 +654,7 @@ void TextView::setText(const std::string&txt){
     if(mLayout->setText(txt)){// && (getVisibility()==View::VISIBLE)){
         std::wstring&ws=getEditable();
         if(mCaretPos<ws.length())
-            mCaretPos = ws.length()-1;
+            mCaretPos = int(ws.length()-1);
         mLayout->setCaretPos(mCaretPos);
         checkForRelayout();
         startStopMarquee(false);
@@ -1963,7 +1963,7 @@ bool TextView::canSelectAllText()const{
 }
 
 bool TextView::selectAllText(){
-    const int length = mLayout->getText().length();
+    const int length = (int)mLayout->getText().length();
     mLayout->setSelection(0,length);
     return false;
 }
@@ -2170,11 +2170,11 @@ void TextView::onDraw(Canvas& canvas) {
           compoundPaddingLeft,compoundPaddingTop,compoundPaddingRight,compoundPaddingBottom);
 
     if (mShadowRadius != 0) {
-        clipLeft += std::min(.0f, mShadowDx - mShadowRadius);
-        clipRight+= std::max(.0f, mShadowDx + mShadowRadius);
+        clipLeft += std::min(0, int(mShadowDx - mShadowRadius));
+        clipRight+= std::max(0, int(mShadowDx + mShadowRadius));
 
-        clipTop   += std::min(.0f, mShadowDy - mShadowRadius);
-        clipBottom+= std::max(.0f, mShadowDy + mShadowRadius);
+        clipTop   += std::min(0, int(mShadowDy - mShadowRadius));
+        clipBottom+= std::max(0, int(mShadowDy + mShadowRadius));
     }
     canvas.rectangle(clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop);
     canvas.clip();
