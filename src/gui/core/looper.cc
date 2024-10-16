@@ -99,10 +99,9 @@ namespace {
 Looper* Looper::sMainLooper = nullptr;
 Looper::Looper(bool allowNonCallbacks) :
         mAllowNonCallbacks(allowNonCallbacks),
-        mSendingMessage(false),
-        mWakeEventFd(-1),
-        mPolling(false), mEpollFd(-1),
+        mSendingMessage(false),mPolling(false),
         mEpollRebuildRequired(false),
+        mWakeEventFd(-1),mEpoll(nullptr),
         mNextRequestSeq(WAKE_EVENT_FD_SEQ+1),
         mResponseIndex(0), mNextMessageUptime(LLONG_MAX) {
 #if defined(HAVE_EVENTFD)
@@ -121,6 +120,7 @@ Looper::~Looper() {
         close(mEpollFd);
     }
 #endif
+    delete mEpoll;
     for(EventHandler*hdl:mEventHandlers){
         if((hdl->mFlags&3)==3)delete hdl;
     }

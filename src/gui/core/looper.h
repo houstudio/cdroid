@@ -96,7 +96,7 @@ private:
     bool mPolling;
 
     class IOEventProcessor* mEpoll;
-    int  mEpollFd;// guarded by mLock but only modified on the looper thread
+    //int  mEpollFd;// guarded by mLock but only modified on the looper thread
     bool mEpollRebuildRequired; // guarded by mLock
 
     // Locked list of file descriptor monitoring requests.
