@@ -72,8 +72,8 @@ public:
  };
 
 #elif  (defined(__linux__)||defined(__unix__))
-
-    class EPOLL:public IOEventProcessor {
+#include <unistd.h>
+class EPOLL:public IOEventProcessor {
 private:
     int epfd;
     int maxEvents;
@@ -89,7 +89,7 @@ public:
         close(epfd);
     }
 
-    int addFD(int fd, uint32_t events)override {
+    int addFd(int fd, uint32_t events)override {
         struct epoll_event event;
         event.data.fd = fd;
         event.events = events;
@@ -99,7 +99,7 @@ public:
         return 0;
     }
 
-    int removeFD(int fd)override {
+    int removeFd(int fd)override {
         if (epoll_ctl(epfd, EPOLL_CTL_DEL, fd, nullptr) == -1) {
             throw std::runtime_error("Failed to remove file descriptor from epoll");
         }
@@ -123,8 +123,9 @@ public:
         }
         activeFDs.clear();
         for (int i = 0; i < numEvents; ++i) {
-            activeFDs.push_back(events[i].data.fd);
+            activeFDs.push_back(events[i]);
         }
+	return int(activeFDs.size());
     }
 };
 
