@@ -515,13 +515,13 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
         return its->second;
     else if(itc != mColors.end()){
         ColorStateList* cls = new ColorStateList(itc->second);
-        mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
+        mStateColors.insert(std::pair<const std::string,ColorStateList*>(name,cls));
         return cls;
     }else if( (itc == mColors.end()) && (name.empty()==false) ) {
         const size_t slashpos = fullresid.find("/");
         try{
             ColorStateList* cls=ColorStateList::inflate(this,fullresid);
-            mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
+            mStateColors.insert(std::pair<const std::string,ColorStateList*>(name,cls));
             return cls;
         }catch(std::invalid_argument&e){
             std::string realName;
@@ -531,7 +531,7 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
             itc = mColors.find(realName);
             if(itc != mColors.end()){
                 ColorStateList* cls = new ColorStateList(itc->second);
-                mStateColors.insert(std::pair<const std::string,ColorStateList*>(fullresid,cls));
+                mStateColors.insert(std::pair<const std::string,ColorStateList*>(name,cls));
                 return cls;
             }
         }
