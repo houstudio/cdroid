@@ -166,6 +166,10 @@ public:
         return 0;
     }
 
+    int modifyFd(int fd,uint32_t events)override{
+        return -1;    
+    }
+
     int waitEvents(std::vector<epoll_event>& activeFDs,uint32_t ms) override {
         struct timeval tv;
         fd_set tmpReadSet = readSet;
