@@ -39,7 +39,7 @@ find_package(RLOTTIE)
 find_package(zint CONFIG) #barcode generater
 find_package(Fribidi)
 find_package(RTAUDIO)
-
+find_package(Pthread)
 set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES} ${RTAUDIO_INCLUDE_DIRS}")
 
 list(APPEND CDROID_DEPLIBS
@@ -60,7 +60,10 @@ if(RTAUDIO_FOUND AND ENABLE_AUDIO)
 else()
     set(ENABLE_AUDIO OFF)
 endif()
-
+if(MSVC)
+	message(FATAL_ERRPR "PTHREAD=${PTHREAD_LIBRARIES}")
+	list(APPEND CDROID_DEPLIBS ${PTHREAD_LIBRAIRES})
+endif()
 if(RLOTTIE_FOUND AND ENABLE_LOTTIE)
     list(APPEND CDROID_DEPLIBS ${RLOTTIE_LIBRARIES})
 else()
@@ -124,8 +127,8 @@ foreach(lib ${CDROID_DEPLIBS})
        if("${linkfile}" STREQUAL "")
            install(FILES ${lib} DESTINATION lib)
        else()
-	       get_filename_component(fromfile ${linkfile} NAME)
-	       install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+	   get_filename_component(fromfile ${linkfile} NAME)
+	   install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 	          ${fromfile} ${libname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/lib)")
        endif("${linkfile" STREQUAL "")
        set(lib ${linkpath}/${linkname})
