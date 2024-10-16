@@ -19,6 +19,7 @@
 #include <image-decoders/pngframesequence.h>
 #include <image-decoders/webpframesequence.h>
 #include <fstream>
+#include <png.h>
 #include <cdlog.h>
 namespace cdroid{
 
@@ -48,12 +49,14 @@ int FrameSequence::registerFactory(const std::string&mime,uint32_t magicSize,Ver
 }
 
 int FrameSequence::registerAllFrameSequences(std::map<const std::string,Registry>&entis){
+#ifdef PNG_APNG_SUPPORTED 
     FrameSequence::registerFactory(std::string("mime/apng"),
             PngFrameSequence::PNG_HEADER_SIZE,
             PngFrameSequence::isPNG,
             [](std::istream&stream){
                 return new PngFrameSequence(stream);
             });
+#endif
 #if ENABLE(WEBP)
     FrameSequence::registerFactory(std::string("mime/webp"),
             WebPFrameSequence::RIFF_HEADER_SIZE,

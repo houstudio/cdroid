@@ -18,13 +18,12 @@
 #include <cla.h>
 #include <core/build.h>
 #include <core/atexit.h>
-void spt_init(int argc, char *argv[]);
-void setproctitle(const char *fmt, ...);
+
 #if defined(__linux__)||defined(__unix__)
 extern "C" char *__progname;
+#elif defined(_WIN32)||defined(_WIN64)
+extern "C" unsigned long  GetModuleFileNameA(void* hModule, char* lpFilename, unsigned long nSize);
 #endif
-
-unsigned long GetModuleFileNameA(void* hModule, char* lpFilename, unsigned long nSize);
 
 namespace cdroid{
 
