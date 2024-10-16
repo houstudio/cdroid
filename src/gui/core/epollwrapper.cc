@@ -175,7 +175,7 @@ public:
 	FD_CLR(fd,&readSet);
 	FD_CLR(fd,&writeSet);
 	if(events & Looper::EVENT_INPUT) FD_SET(fd,&readSet);
-	if(event & Looper::EVENT_OUTPUT) FD_SET(fd,&writeSet);
+	if(events & Looper::EVENT_OUTPUT) FD_SET(fd,&writeSet);
 	if(fd>maxFD) maxFD = fd;
         return -1;
     }
