@@ -1,9 +1,10 @@
 #include <map>
 #include <stdexcept>
+#include <core/looper.h>
 #include <core/epollwrapper.h>
 namespace cdroid{
 
-#if (defined(_WIN32)||defined(_WIN64))
+#if (defined(_WIN32)||defined(_WIN64)) && defined(USEIOCP_IN_WINDOWS)
 class IOCP :public cdroid::IOEventProcessor {
 private:
     HANDLE hCompletionPort;
@@ -80,6 +81,13 @@ class EPOLL:public IOEventProcessor {
 private:
     int epfd;
     int maxEvents;
+private:
+    uint32_t getEpollEvents(uint32_t events) const{
+        uint32_t epollEvents = 0;
+        if (events & Looper::EVENT_INPUT) epollEvents |= EPOLLIN;
+        if (events & Looper::EVENT_OUTPUT)epollEvents |= EPOLLOUT;
+        return epollEvents;
+    }
 public:
     explicit EPOLL(int maxEvents = 10) : maxEvents(maxEvents) {
         epfd = epoll_create1(0);
@@ -92,10 +100,11 @@ public:
         close(epfd);
     }
 
+
     int addFd(int fd, uint32_t events)override {
         struct epoll_event event;
         event.data.fd = fd;
-        event.events = events;
+        event.events = getEpollEvents(events);
         if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event) == -1) {
             throw std::runtime_error("Failed to add file descriptor to epoll");
         }
@@ -112,7 +121,7 @@ public:
     int modifyFd(int fd, uint32_t events) override{
         struct epoll_event event;
         event.data.fd = fd;
-        event.events = events;
+        event.events = getEpollEvents(events);
         if (epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &event) == -1) {
             throw std::runtime_error("Failed to modify file descriptor in epoll");
         }
@@ -142,12 +151,8 @@ private:
     int maxFD = 0;
 public:
     int addFd(int fd, uint32_t events) override {
-        if (events & EPOLLIN) {
-            FD_SET(fd, &readSet);
-        }
-        if (events & EPOLLOUT) {
-            FD_SET(fd, &writeSet);
-        }
+        if (events & Looper::EVENT_INPUT)  FD_SET(fd, &readSet);
+        if (events & Looper::EVENT_OUTPUT) FD_SET(fd, &writeSet);
         if (fd > maxFD) maxFD = fd;
         return 0;
     }
@@ -167,7 +172,12 @@ public:
     }
 
     int modifyFd(int fd,uint32_t events)override{
-        return -1;    
+	FD_CLR(fd,&readSet);
+	FD_CLR(fd,&writeSet);
+	if(events & Looper::EVENT_INPUT) FD_SET(fd,&readSet);
+	if(event & Looper::EVENT_OUTPUT) FD_SET(fd,&writeSet);
+	if(fd>maxFD) maxFD = fd;
+        return -1;
     }
 
     int waitEvents(std::vector<epoll_event>& activeFDs,uint32_t ms) override {
@@ -185,10 +195,10 @@ public:
             epoll_event e;
             e.data.fd = i;
             if (FD_ISSET(i, &tmpReadSet)) {
-                e.events = EPOLLIN;
+                e.events = Looper::EVENT_INPUT;
                 activeFDs.push_back(e);
             }else if (FD_ISSET(i, &tmpWriteSet)) {
-                e.events = EPOLLOUT;
+                e.events = Looper::EVENT_OUTPUT;
                 activeFDs.push_back(e);
             }
         }
@@ -200,7 +210,7 @@ public:
 IOEventProcessor::IOEventProcessor() {}
 IOEventProcessor::~IOEventProcessor() {}
 IOEventProcessor* IOEventProcessor::create(){
-#if defined(_WIN32)||defined(_WIN64)
+#if (defined(_WIN32)||defined(_WIN64))&&defined(USEIOCP_IN_WINDOWS)
     return new IOCP();
 #elif defined(__linux__)||defined(__unix__)
     return new EPOLL();
