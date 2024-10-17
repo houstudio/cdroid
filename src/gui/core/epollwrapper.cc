@@ -76,7 +76,7 @@ public:
     }
  };
 
-#elif  (defined(__linux__)||defined(__unix__))
+#elif (defined(__linux__)||defined(__unix__))
 #include <unistd.h>
 class EPOLL:public IOEventProcessor {
 private:
@@ -157,17 +157,21 @@ private:
     fd_set readSet;
     fd_set writeSet;
     int maxFD = 0;
+    std::map<int,uint64_t>mSeqs;
 public:
     int addFd(int fd, struct epoll_event& e) override {
         if (e.events & Looper::EVENT_INPUT)  FD_SET(fd, &readSet);
         if (e.events & Looper::EVENT_OUTPUT) FD_SET(fd, &writeSet);
         if (fd > maxFD) maxFD = fd;
+        mSeqs.insert({fd,uint64_t(e.data.u64)});
         return 0;
     }
 
     int removeFd(int fd) override {
+        auto it = mSeqs.find(fd);
         FD_CLR(fd, &readSet);
         FD_CLR(fd, &writeSet);
+	if(it!=mSeqs.end()) mSeqs.erase(it);
         if (fd == maxFD) {
             for (int i = maxFD - 1; i >= 0; --i) {
                 if (FD_ISSET(i, &readSet) || FD_ISSET(i, &writeSet)) {
@@ -180,8 +184,10 @@ public:
     }
 
     int modifyFd(int fd,struct epoll_event&e)override{
+        auto it = mSeqs.find(fd);
         FD_CLR(fd,&readSet);
         FD_CLR(fd,&writeSet);
+	if(it!=mSeqs.end())it->second = e.data.u64;
         if(e.events & Looper::EVENT_INPUT) FD_SET(fd,&readSet);
         if(e.events & Looper::EVENT_OUTPUT) FD_SET(fd,&writeSet);
         if(fd>maxFD) maxFD = fd;
@@ -202,11 +208,14 @@ public:
         for (int i = 0; i <= maxFD; ++i) {
             epoll_event e;
             e.data.fd = i;
+	    auto it =mSeqs.find(i);
             if (FD_ISSET(i, &tmpReadSet)) {
                 e.events = Looper::EVENT_INPUT;
+		if(it!=mSeqs.end())e.data.u64=it->second;
                 activeFDs.push_back(e);
             }else if (FD_ISSET(i, &tmpWriteSet)) {
                 e.events = Looper::EVENT_OUTPUT;
+		if(it!=mSeqs.end())e.data.u64=it->second;
                 activeFDs.push_back(e);
             }
         }
@@ -220,7 +229,7 @@ IOEventProcessor::~IOEventProcessor() {}
 IOEventProcessor* IOEventProcessor::create(){
 #if (defined(_WIN32)||defined(_WIN64))&&defined(USEIOCP_IN_WINDOWS)
     return new IOCP();
-#elif defined(__linux__)||defined(__unix__)
+#elif (defined(__linux__)||defined(__unix__))
     return new EPOLL();
 #else
     return new SELECTPOR();
