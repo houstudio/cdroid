@@ -116,14 +116,14 @@ public:
         event.data.fd = fd;
         event.events = toEpollEvents(events);
         if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event) == -1) {
-            throw std::runtime_error("Failed to add file descriptor to epoll");
+            return -1;
         }
         return 0;
     }
 
     int removeFd(int fd)override {
         if (epoll_ctl(epfd, EPOLL_CTL_DEL, fd, nullptr) == -1) {
-            throw std::runtime_error("Failed to remove file descriptor from epoll");
+            return -1;
         }
         return 0;
     }
@@ -133,7 +133,7 @@ public:
         event.data.fd = fd;
         event.events = toEpollEvents(events);
         if (epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &event) == -1) {
-            throw std::runtime_error("Failed to modify file descriptor in epoll");
+            return -1;
         }
         return 0;
     }
@@ -142,7 +142,7 @@ public:
         struct epoll_event events[maxEvents];
         const int numEvents = epoll_wait(epfd, events, maxEvents,timeout);
         if (numEvents == -1) {
-            throw std::runtime_error("Failed to wait for epoll events");
+            return -1;
         }
         activeFDs.clear();
         for (int i = 0; i < numEvents; ++i) {

@@ -63,7 +63,6 @@ private:
         int events;
         LooperCallback* callback;
         void* data;
-        uint32_t getEpollEvents() const;
     };
     struct Response {
         SequenceNumber seq;
