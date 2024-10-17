@@ -287,10 +287,10 @@ bool RecyclerView::FastScroller::onInterceptTouchEvent(RecyclerView& recyclerVie
                 && (insideVerticalThumb || insideHorizontalThumb)) {
             if (insideHorizontalThumb) {
                 mDragState = DRAG_X;
-                mHorizontalDragX = (int) ev.getX();
+                mHorizontalDragX = ev.getX();
             } else if (insideVerticalThumb) {
                 mDragState = DRAG_Y;
-                mVerticalDragY = (int) ev.getY();
+                mVerticalDragY = ev.getY();
             }
 
             setState(STATE_DRAGGING);
@@ -317,10 +317,10 @@ void RecyclerView::FastScroller::onTouchEvent(RecyclerView& recyclerView,MotionE
         if (insideVerticalThumb || insideHorizontalThumb) {
             if (insideHorizontalThumb) {
                 mDragState = DRAG_X;
-                mHorizontalDragX = (int) me.getX();
+                mHorizontalDragX = me.getX();
             } else if (insideVerticalThumb) {
                 mDragState = DRAG_Y;
-                mVerticalDragY = (int) me.getY();
+                mVerticalDragY = me.getY();
             }
             setState(STATE_DRAGGING);
         }
@@ -345,11 +345,11 @@ void RecyclerView::FastScroller::onRequestDisallowInterceptTouchEvent(bool disal
 void RecyclerView::FastScroller::verticalScrollTo(float y) {
     int scrollbarRange[2];
     getVerticalRange(scrollbarRange);
-    y = std::max(scrollbarRange[0], std::min(scrollbarRange[1], int(y)));
+    y = std::max(float(scrollbarRange[0]), std::min(float(scrollbarRange[1]), y));
     if (std::abs(mVerticalThumbCenterY - y) < 2) {
         return;
     }
-    int scrollingBy = scrollTo(mVerticalDragY, y, scrollbarRange,
+    const int scrollingBy = scrollTo(mVerticalDragY, y, scrollbarRange,
             mRecyclerView->computeVerticalScrollRange(),
             mRecyclerView->computeVerticalScrollOffset(), mRecyclerViewHeight);
     if (scrollingBy != 0) {
@@ -361,12 +361,12 @@ void RecyclerView::FastScroller::verticalScrollTo(float y) {
 void RecyclerView::FastScroller::horizontalScrollTo(float x) {
     int scrollbarRange[2];
     getHorizontalRange(scrollbarRange);
-    x = std::max(scrollbarRange[0], std::min(scrollbarRange[1], int(x)));
+    x = std::max(float(scrollbarRange[0]), std::min(float(scrollbarRange[1]), x));
     if (std::abs(mHorizontalThumbCenterX - x) < 2) {
         return;
     }
 
-    int scrollingBy = scrollTo(mHorizontalDragX, x, scrollbarRange,
+    const int scrollingBy = scrollTo(mHorizontalDragX, x, scrollbarRange,
             mRecyclerView->computeHorizontalScrollRange(),
             mRecyclerView->computeHorizontalScrollOffset(), mRecyclerViewWidth);
     if (scrollingBy != 0) {
