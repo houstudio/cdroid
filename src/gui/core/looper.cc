@@ -157,14 +157,14 @@ void Looper::rebuildEpollLocked() {
     LOGE_IF(mEpoll ==nullptr, "Could not create epoll instance: %s", strerror(errno));
 #if defined(HAVE_EVENTFD)
     struct epoll_event wakeEvent = createEpollEvent(EPOLLIN,WAKE_EVENT_FD_SEQ);
-    int result = mEpoll->addFd(mWakeEventFd,EVENT_INPUT);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mWakeEventFd, &wakeEvent);
+    int result = mEpoll->addFd(mWakeEventFd,wakeEvent);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mWakeEventFd, &wakeEvent);
     LOGE_IF(result != 0, "Could not add wake event fd to epoll instance: %s",strerror(errno));
 #endif
     for (auto it=mRequests.begin();it!=mRequests.end(); it++) {
         const SequenceNumber& seq = it->first;
         const Request& request = it->second;
         epoll_event eventItem =createEpollEvent(request.events,seq);
-        const int epollResult = mEpoll->addFd(request.fd,request.events);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, request.fd, & eventItem);
+        const int epollResult = mEpoll->addFd(request.fd,eventItem);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, request.fd, & eventItem);
         LOGE_IF(epollResult<0,"Error adding epoll events for fd %d while rebuilding epoll set: %s",request.fd, strerror(errno));
     }
 }
@@ -483,7 +483,7 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
         epoll_event eventItem = createEpollEvent(request.events,seq);
         auto seq_it = mSequenceNumberByFd.find(fd);
         if (seq_it == mSequenceNumberByFd.end()) {
-            int epollResult = mEpoll->addFd(fd,request.events);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, fd, &eventItem);
+            int epollResult = mEpoll->addFd(fd,eventItem);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, fd, &eventItem);
             if (epollResult < 0) {
                 LOGE("Error adding epoll events for fd %d: %s", fd, strerror(errno));
                 return -1;
@@ -491,7 +491,7 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
             mRequests.emplace(seq, request);
             mSequenceNumberByFd.emplace(fd,seq);
         } else {
-            int epollResult = mEpoll->modifyFd(fd,request.events);////epoll_ctl(mEpollFd, EPOLL_CTL_MOD, fd, & eventItem);
+            int epollResult = mEpoll->modifyFd(fd,eventItem);////epoll_ctl(mEpollFd, EPOLL_CTL_MOD, fd, & eventItem);
             if (epollResult < 0) {
                 if (errno == ENOENT) {
                     // Tolerate ENOENT because it means that an older file descriptor was
@@ -511,7 +511,7 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
                     LOGD("%p  addFd - EPOLL_CTL_MOD failed due to file descriptor "
                             "being recycled, falling back on EPOLL_CTL_ADD: %s", this, strerror(errno));
 #endif
-                    epollResult = mEpoll->addFd(fd,request.events);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, fd, & eventItem);
+                    epollResult = mEpoll->addFd(fd,eventItem);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, fd, & eventItem);
                     if (epollResult < 0) {
                         LOGE("Error modifying or adding epoll events for fd %d: %s", fd, strerror(errno));
                         return -1;

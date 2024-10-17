@@ -25,7 +25,7 @@ public:
         CloseHandle(hCompletionPort);
     }
 
-    int addFd(int fd, uint32_t events)override {
+    int addFd(int fd,struct epoll_event& event)override {
         if (CreateIoCompletionPort((HANDLE)fd, hCompletionPort, (ULONG_PTR)NULL, 0) == NULL) {
             return -1; // 失败
         }
@@ -44,9 +44,10 @@ public:
         return -1; // 成功
     }
 
-    int modifyFd(int fd,uint32_t events) override{
+    int modifyFd(int fd,struct epoll_event&event) override{
 	return -1;
     }
+
     int waitEvents(std::vector<epoll_event>& events, uint32_t timeout)override {
         OVERLAPPED_ENTRY entries[128];
         ULONG numEntriesReturned;
@@ -111,10 +112,8 @@ public:
     }
 
 
-    int addFd(int fd, uint32_t events)override {
-        struct epoll_event event;
-        event.data.fd = fd;
-        event.events = toEpollEvents(events);
+    int addFd(int fd,struct epoll_event&event)override {
+        event.events = toEpollEvents(event.events);
         if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event) == -1) {
             return -1;
         }
@@ -128,10 +127,8 @@ public:
         return 0;
     }
 
-    int modifyFd(int fd, uint32_t events) override{
-        struct epoll_event event;
-        event.data.fd = fd;
-        event.events = toEpollEvents(events);
+    int modifyFd(int fd,struct epoll_event&event) override{
+        event.events = toEpollEvents(event.events);
         if (epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &event) == -1) {
             return -1;
         }
@@ -161,9 +158,9 @@ private:
     fd_set writeSet;
     int maxFD = 0;
 public:
-    int addFd(int fd, uint32_t events) override {
-        if (events & Looper::EVENT_INPUT)  FD_SET(fd, &readSet);
-        if (events & Looper::EVENT_OUTPUT) FD_SET(fd, &writeSet);
+    int addFd(int fd, struct epoll_event& e) override {
+        if (e.events & Looper::EVENT_INPUT)  FD_SET(fd, &readSet);
+        if (e.events & Looper::EVENT_OUTPUT) FD_SET(fd, &writeSet);
         if (fd > maxFD) maxFD = fd;
         return 0;
     }
@@ -182,11 +179,11 @@ public:
         return 0;
     }
 
-    int modifyFd(int fd,uint32_t events)override{
+    int modifyFd(int fd,struct epoll_event&e)override{
         FD_CLR(fd,&readSet);
         FD_CLR(fd,&writeSet);
-        if(events & Looper::EVENT_INPUT) FD_SET(fd,&readSet);
-        if(events & Looper::EVENT_OUTPUT) FD_SET(fd,&writeSet);
+        if(e.events & Looper::EVENT_INPUT) FD_SET(fd,&readSet);
+        if(e.events & Looper::EVENT_OUTPUT) FD_SET(fd,&writeSet);
         if(fd>maxFD) maxFD = fd;
         return 0;
     }
