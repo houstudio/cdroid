@@ -86,16 +86,16 @@ private:
         uint32_t epollEvents = 0;
         if (events & Looper::EVENT_INPUT) epollEvents |= EPOLLIN;
         if (events & Looper::EVENT_OUTPUT)epollEvents |= EPOLLOUT;
-	if (events & Looper::EVENT_HANGUP)epollEvents |= EPOLLHUP;
-	if (events & Looper::EVENT_ERROR) epollEvents |= EPOLLERR;
+        if (events & Looper::EVENT_HANGUP)epollEvents |= EPOLLHUP;
+        if (events & Looper::EVENT_ERROR) epollEvents |= EPOLLERR;
         return epollEvents;
     }
     uint32_t toLoopEvents(uint32_t events){
         uint32_t loopEvents = 0;
-	if (events & EPOLLIN) loopEvents|=Looper::EVENT_INPUT;
-	if (events &EPOLLOUT) loopEvents|=Looper::EVENT_OUTPUT;
-	if (events &EPOLLHUP) loopEvents|=Looper::EVENT_HANGUP;
-	if (events &EPOLLERR) loopEvents|=Looper::EVENT_ERROR;
+        if (events & EPOLLIN) loopEvents|=Looper::EVENT_INPUT;
+        if (events &EPOLLOUT) loopEvents|=Looper::EVENT_OUTPUT;
+        if (events &EPOLLHUP) loopEvents|=Looper::EVENT_HANGUP;
+        if (events &EPOLLERR) loopEvents|=Looper::EVENT_ERROR;
         return loopEvents;
     }
 public:
@@ -135,7 +135,7 @@ public:
         if (epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &event) == -1) {
             throw std::runtime_error("Failed to modify file descriptor in epoll");
         }
-	return 0;
+        return 0;
     }
 
     int waitEvents(std::vector<epoll_event>& activeFDs, uint32_t timeout) override{
@@ -149,7 +149,7 @@ public:
             events[i].events=toLoopEvents(events[i].events);
             activeFDs.push_back(events[i]);
         }
-	return int(activeFDs.size());
+        return int(activeFDs.size());
     }
 };
 
