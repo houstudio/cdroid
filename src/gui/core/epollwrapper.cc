@@ -21,12 +21,13 @@ public:
             throw std::runtime_error("CreateIoCompletionPort failed");
         }
     }
+
     virtual ~IOCP() {
         CloseHandle(hCompletionPort);
     }
 
     int addFd(int fd,struct epoll_event& event)override {
-        if (CreateIoCompletionPort((HANDLE)fd, hCompletionPort, (ULONG_PTR)NULL, 0) == NULL) {
+        if (CreateIoCompletionPort((HANDLE)fd, hCompletionPort, (ULONG_PTR)event.data.u64, 0) == NULL) {
             return -1; // 失败
         }
         OVERLAPPED* overlapped = new OVERLAPPED();
@@ -34,6 +35,7 @@ public:
         fdMap[fd] = overlapped;
         return 0;
     }
+
     int removeFd(int fd) override{// EPOLL_CTL_DEL
         auto it = fdMap.find(fd);
         if (it != fdMap.end()) {
@@ -45,12 +47,12 @@ public:
     }
 
     int modifyFd(int fd,struct epoll_event&event) override{
-	return -1;
+        return 0;
     }
 
     int waitEvents(std::vector<epoll_event>& events, uint32_t timeout)override {
-        OVERLAPPED_ENTRY entries[128];
         ULONG numEntriesReturned;
+        OVERLAPPED_ENTRY entries[128];
 
         BOOL result = GetQueuedCompletionStatusEx(hCompletionPort, entries, 128,
             &numEntriesReturned, timeout, FALSE);
@@ -63,15 +65,13 @@ public:
         }
 
         for (ULONG i = 0; i < numEntriesReturned; ++i) {
-            int fd = entries[i].lpCompletionKey;
-            DWORD bytesTransferred = entries[i].dwNumberOfBytesTransferred;
-
             epoll_event event;
+            event.data.u64 = static_cast<uint64_t>(entries[i].lpCompletionKey);
+            DWORD bytesTransferred = entries[i].dwNumberOfBytesTransferred;
             event.events = (bytesTransferred == 0) ? 0 : 1;
-            event.data.fd = fd;
+            event.events = 0;//TODO
             events.push_back(event);
         }
-
         return numEntriesReturned;
     }
  };
@@ -152,7 +152,7 @@ public:
 
 #else
 
-class SELECTPOR : public IOEventProcessor {
+class SELECTOR : public IOEventProcessor {
 private:
     fd_set readSet;
     fd_set writeSet;
@@ -171,7 +171,7 @@ public:
         auto it = mSeqs.find(fd);
         FD_CLR(fd, &readSet);
         FD_CLR(fd, &writeSet);
-	if(it!=mSeqs.end()) mSeqs.erase(it);
+        if(it!=mSeqs.end()) mSeqs.erase(it);
         if (fd == maxFD) {
             for (int i = maxFD - 1; i >= 0; --i) {
                 if (FD_ISSET(i, &readSet) || FD_ISSET(i, &writeSet)) {
@@ -187,7 +187,7 @@ public:
         auto it = mSeqs.find(fd);
         FD_CLR(fd,&readSet);
         FD_CLR(fd,&writeSet);
-	if(it!=mSeqs.end())it->second = e.data.u64;
+        if(it!=mSeqs.end())it->second = e.data.u64;
         if(e.events & Looper::EVENT_INPUT) FD_SET(fd,&readSet);
         if(e.events & Looper::EVENT_OUTPUT) FD_SET(fd,&writeSet);
         if(fd>maxFD) maxFD = fd;
@@ -208,14 +208,14 @@ public:
         for (int i = 0; i <= maxFD; ++i) {
             epoll_event e;
             e.data.fd = i;
-	    auto it =mSeqs.find(i);
+            auto it =mSeqs.find(i);
             if (FD_ISSET(i, &tmpReadSet)) {
                 e.events = Looper::EVENT_INPUT;
-		if(it!=mSeqs.end())e.data.u64=it->second;
+                if(it!=mSeqs.end()) e.data.u64=it->second;
                 activeFDs.push_back(e);
             }else if (FD_ISSET(i, &tmpWriteSet)) {
                 e.events = Looper::EVENT_OUTPUT;
-		if(it!=mSeqs.end())e.data.u64=it->second;
+                if(it!=mSeqs.end())e.data.u64=it->second;
                 activeFDs.push_back(e);
             }
         }
@@ -232,7 +232,7 @@ IOEventProcessor* IOEventProcessor::create(){
 #elif (defined(__linux__)||defined(__unix__))
     return new EPOLL();
 #else
-    return new SELECTPOR();
+    return new SELECTOR();
 #endif    
 }
 
