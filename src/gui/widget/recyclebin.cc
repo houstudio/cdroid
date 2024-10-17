@@ -347,7 +347,7 @@ View* RecycleBin::retrieveFromScrap(std::vector<View*>& scrapViews, int position
     if (size > 0) {
         // See if we still have a view for this position or ID.
         // Traverse backwards to find the most recently used scrap view
-        for (size_t i = size - 1; i >= 0; i--) {
+        for (int i = int(size - 1); i >= 0; i--) {
             View* view = scrapViews[i];
             AbsListView::LayoutParams* params =(AbsListView::LayoutParams*) view->getLayoutParams();
 

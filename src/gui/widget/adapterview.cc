@@ -50,8 +50,7 @@ AdapterView::~AdapterView(){
 
 void AdapterView::onDetachedFromWindow(){
     ViewGroup::onDetachedFromWindow();
-    if(mSelectionNotifier)
-        removeCallbacks(mSelectionNotifier);
+    removeCallbacks(mSelectionNotifier);
 }
 
 Adapter*AdapterView::getAdapter(){
