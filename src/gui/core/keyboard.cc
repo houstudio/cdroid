@@ -278,11 +278,11 @@ void Keyboard::loadKeyboard(Context*context,const std::string&resid){
     pd.defaultKeyWidth=mDefaultWidth;
     std::unique_ptr<std::istream>stream=context->getInputStream(resid);
     if(stream){
-        size_t len = 0;
+	int len = 0;
         do{
             char buf[256];
             stream->read(buf,sizeof(buf));
-            len=stream->gcount();
+            len=(int)stream->gcount();
             if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
                 const char*es=XML_ErrorString(XML_GetErrorCode(parser));
                 LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));

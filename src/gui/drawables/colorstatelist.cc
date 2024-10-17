@@ -209,7 +209,7 @@ ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const 
     XML_SetElementHandler(parser, startElement, nullptr/*endElement*/);
     do {
        stream.read(buf,sizeof(buf));
-       size_t rdlen = stream.gcount();
+       int rdlen = (int)stream.gcount();
        done = (rdlen==0);
        if (XML_Parse(parser, buf,rdlen,done) == XML_STATUS_ERROR) {
            const char*es=XML_ErrorString(XML_GetErrorCode(parser));

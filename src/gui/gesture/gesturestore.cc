@@ -281,7 +281,7 @@ namespace GestureIOHelper{
 
     int readBytes(std::istream&in,uint8_t*buff,int size){
         in.read((char*)buff,size);
-        return in.gcount();
+        return (int)in.gcount();
     }
 
     int16_t readShort(std::istream&in){

@@ -586,7 +586,7 @@ static void endElement(void *userData, const XML_Char *name) {
 
 int Assets::loadKeyValues(const std::string&fullresid,void*pending,std::function<void(const std::vector<std::string>&,
                           const std::vector<AttributeSet>&atts,const std::string&,void*p)>func) {
-    size_t len = 0;
+    int len = 0;
     char buf[256];
 
     std::unique_ptr<std::istream>stream = getInputStream(fullresid);
@@ -605,7 +605,7 @@ int Assets::loadKeyValues(const std::string&fullresid,void*pending,std::function
     XML_SetCharacterDataHandler(parser,CharacterHandler);
     do {
         stream->read(buf,sizeof(buf));
-        len = stream->gcount();
+        len = (int)stream->gcount();
         if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
             const char*es=XML_ErrorString(XML_GetErrorCode(parser));
             LOGE("%s:%s at line %ld",fullresid.c_str(),es, XML_GetCurrentLineNumber(parser));

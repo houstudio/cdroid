@@ -32,7 +32,7 @@ GIFDecoder::~GIFDecoder(){
 static int GIFRead(GifFileType *gifFile, GifByteType *buff, int rdlen){
     std::istream*is=(std::istream*)gifFile->UserData;
     is->read((char*)buff,rdlen);
-    return is->gcount();
+    return (int)is->gcount();
 }
 
 static int gifDrawFrame(GifFileType*gif,int current_frame,size_t pxstride,uint8_t *pixels,bool force_DISPOSE_1);
