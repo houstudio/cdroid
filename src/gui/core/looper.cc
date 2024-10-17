@@ -307,7 +307,7 @@ int Looper::pollInner(int timeoutMillis) {
         const SequenceNumber seq = eventItems[i].data.u64;
         const uint32_t epollEvents = eventItems[i].events;
         if (seq == WAKE_EVENT_FD_SEQ) {
-            if (epollEvents & EPOLLIN) {
+            if (epollEvents & EVENT_INPUT) {
                 awoken();
             } else {
                 LOGW("Ignoring unexpected epoll events 0x%x on wake event fd.", epollEvents);
@@ -316,12 +316,7 @@ int Looper::pollInner(int timeoutMillis) {
             const auto& request_it = mRequests.find(seq);
             if (request_it != mRequests.end()) {
                 const auto& request = request_it->second;
-                int events = 0;
-                if (epollEvents & EPOLLIN) events |= EVENT_INPUT;
-                if (epollEvents & EPOLLOUT) events |= EVENT_OUTPUT;
-                if (epollEvents & EPOLLERR) events |= EVENT_ERROR;
-                if (epollEvents & EPOLLHUP) events |= EVENT_HANGUP;
-                mResponses.push_back({ seq,events,request });
+                mResponses.push_back({ seq,int(epollEvents),request });
             } else {
                 LOGW("Ignoring unexpected epoll events 0x%x for sequence number %lld"
                       " that is no longer registered.",epollEvents, seq);

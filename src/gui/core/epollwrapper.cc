@@ -82,11 +82,21 @@ private:
     int epfd;
     int maxEvents;
 private:
-    uint32_t getEpollEvents(uint32_t events) const{
+    uint32_t toEpollEvents(uint32_t events) const{
         uint32_t epollEvents = 0;
         if (events & Looper::EVENT_INPUT) epollEvents |= EPOLLIN;
         if (events & Looper::EVENT_OUTPUT)epollEvents |= EPOLLOUT;
+	if (events & Looper::EVENT_HANGUP)epollEvents |= EPOLLHUP;
+	if (events & Looper::EVENT_ERROR) epollEvents |= EPOLLERR;
         return epollEvents;
+    }
+    uint32_t toLoopEvents(uint32_t events){
+        uint32_t loopEvents = 0;
+	if (events & EPOLLIN) loopEvents|=Looper::EVENT_INPUT;
+	if (events &EPOLLOUT) loopEvents|=Looper::EVENT_OUTPUT;
+	if (events &EPOLLHUP) loopEvents|=Looper::EVENT_HANGUP;
+	if (events &EPOLLERR) loopEvents|=Looper::EVENT_ERROR;
+        return loopEvents;
     }
 public:
     explicit EPOLL(int maxEvents = 10) : maxEvents(maxEvents) {
@@ -104,7 +114,7 @@ public:
     int addFd(int fd, uint32_t events)override {
         struct epoll_event event;
         event.data.fd = fd;
-        event.events = getEpollEvents(events);
+        event.events = toEpollEvents(events);
         if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event) == -1) {
             throw std::runtime_error("Failed to add file descriptor to epoll");
         }
@@ -121,7 +131,7 @@ public:
     int modifyFd(int fd, uint32_t events) override{
         struct epoll_event event;
         event.data.fd = fd;
-        event.events = getEpollEvents(events);
+        event.events = toEpollEvents(events);
         if (epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &event) == -1) {
             throw std::runtime_error("Failed to modify file descriptor in epoll");
         }
@@ -136,6 +146,7 @@ public:
         }
         activeFDs.clear();
         for (int i = 0; i < numEvents; ++i) {
+            events[i].events=toLoopEvents(events[i].events);
             activeFDs.push_back(events[i]);
         }
 	return int(activeFDs.size());
@@ -172,11 +183,11 @@ public:
     }
 
     int modifyFd(int fd,uint32_t events)override{
-	    FD_CLR(fd,&readSet);
-	    FD_CLR(fd,&writeSet);
-	    if(events & Looper::EVENT_INPUT) FD_SET(fd,&readSet);
-	    if(events & Looper::EVENT_OUTPUT) FD_SET(fd,&writeSet);
-	    if(fd>maxFD) maxFD = fd;
+        FD_CLR(fd,&readSet);
+        FD_CLR(fd,&writeSet);
+        if(events & Looper::EVENT_INPUT) FD_SET(fd,&readSet);
+        if(events & Looper::EVENT_OUTPUT) FD_SET(fd,&writeSet);
+        if(fd>maxFD) maxFD = fd;
         return 0;
     }
 
