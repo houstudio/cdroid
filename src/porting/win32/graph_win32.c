@@ -156,6 +156,7 @@ int32_t GFXFlip(HANDLE surface) {
     FBDEVICE*dev=devs+surf->dispid;
     if(surf->ishw) {
         GFXRect rect= {0,0,surf->width,surf->height};
+        InvalidateRect(dev->hwnd,NULL,FALSE);
     }
     return 0;
 }

@@ -380,7 +380,7 @@ size_t Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
         return out.size();
     }
     ZIPArchive * pak = getResource(resid,&name,nullptr);
-    pak->forEachEntry([&out,pkg](const std::string&res){
+    if(pak)pak->forEachEntry([&out,pkg](const std::string&res){
         if(TextUtils::startWith(res,"font")){
             std::string fullres = AttributeSet::normalize(pkg,res);
             out.push_back(fullres);

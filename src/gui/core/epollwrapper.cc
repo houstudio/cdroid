@@ -202,7 +202,7 @@ public:
         tv.tv_usec = (ms % 1000) * 1000;
         const int numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &tv);
         if (numEvents == -1) {
-            throw std::runtime_error("Failed to select file descriptors");
+            return -1;// throw std::runtime_error("Failed to select file descriptors");
         }
         activeFDs.clear();
         for (int i = 0; i <= maxFD; ++i) {
