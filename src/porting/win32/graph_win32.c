@@ -29,9 +29,19 @@ static FBDEVICE devs[2]= {0};
 static GFXRect screenMargin= {0};
 static LRESULT CALLBACK cdroid_window_message_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
-    case WM_TIMER:
-        InvalidateRect(hWnd, NULL, FALSE); 
-        break;
+    case WM_TOUCH: {
+        UINT cInputs = LOWORD(wParam);
+        if (cInputs == 0)break;
+        PTOUCHINPUT pInputs = (PTOUCHINPUT)malloc(cInputs * sizeof(TOUCHINPUT));
+        if (GetTouchInputInfo((HTOUCHINPUT)lParam, cInputs, pInputs, sizeof(TOUCHINPUT))) {
+            for (UINT i = 0; i < cInputs; i++) {
+                TOUCHINPUT ti = pInputs[i];
+                LOGI("Touch point %u: x = %ld, y = %ld", i, ti.x / 100, ti.y / 100);
+            }
+            CloseTouchInputHandle((HTOUCHINPUT)lParam);
+            free(pInputs);
+        }break;
+    }
     case WM_PAINT: {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd,&ps);
@@ -62,7 +72,6 @@ static unsigned int __stdcall display_thread(void * param)
     window_class.lpszClassName = CDROID_WINDOW_CLASSNAME;
     ATOM atrc = RegisterClassExW(&window_class);
     LOGI("RegisterCLassExW=%d", atrc);
-    printf("RegisterCLassExW=%d\r\n", atrc);
     devs[0].hwnd = CreateWindowExW(WS_EX_CLIENTEDGE,
            CDROID_WINDOW_CLASSNAME,L"CDROID",window_style,CW_USEDEFAULT,
            0,width,height,NULL,NULL,NULL,NULL);
@@ -78,6 +87,7 @@ static unsigned int __stdcall display_thread(void * param)
         TranslateMessage(&message);
         DispatchMessageW(&message);
     }
+    return 0;
 }
 
 int32_t GFXInit() {
