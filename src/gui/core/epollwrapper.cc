@@ -2,6 +2,8 @@
 #include <stdexcept>
 #include <core/looper.h>
 #include <core/epollwrapper.h>
+#include <porting/cdlog.h>
+
 namespace cdroid{
 
 #if (defined(_WIN32)||defined(_WIN64)) && defined(USEIOCP_IN_WINDOWS)
@@ -159,6 +161,14 @@ private:
     int maxFD = 0;
     std::map<int,uint64_t>mSeqs;
 public:
+    SELECTOR() {
+        WSADATA wsaData;
+        int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+        LOGD("WSAStartup=%d", result);
+    }
+    ~SELECTOR()override {
+        WSACleanup();
+    }
     int addFd(int fd, struct epoll_event& e) override {
         if (e.events & Looper::EVENT_INPUT)  FD_SET(fd, &readSet);
         if (e.events & Looper::EVENT_OUTPUT) FD_SET(fd, &writeSet);
@@ -200,9 +210,14 @@ public:
         fd_set tmpWriteSet = writeSet;
         tv.tv_sec = ms / 1000;
         tv.tv_usec = (ms % 1000) * 1000;
-        const int numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &tv);
+        int numEvents;
+        if (mSeqs.size())
+            numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &tv);
+        else
+            numEvents = select(0, nullptr, nullptr,nullptr, &tv);
         if (numEvents == -1) {
-            return -1;// throw std::runtime_error("Failed to select file descriptors");
+            //LOGW("Failed to select file descriptors %d,%d",WSAGetLastError(),SOCKET_ERROR);
+            return 0;
         }
         activeFDs.clear();
         for (int i = 0; i <= maxFD; ++i) {
