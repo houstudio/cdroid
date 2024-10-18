@@ -86,7 +86,7 @@ static LRESULT CALLBACK Window_PROC(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
         break;
     case WM_MOUSEMOVE:
         if (wParam & MK_LBUTTON) {
-        SENDMOUSE(msgTime, (LOWORD(lParam) - screenMargin.x), (HIWORD(lParam) - screenMargin.y));
+            SENDMOUSE(msgTime, (LOWORD(lParam) - screenMargin.x), (HIWORD(lParam) - screenMargin.y));
         }
         break;
     case WM_PAINT: {
