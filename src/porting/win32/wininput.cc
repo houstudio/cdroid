@@ -1,26 +1,4 @@
-#ifdef HAVE_INPUT_H
-#include<linux/input.h>
-#else
-#define EV_SYN                  0x00
-#define EV_KEY                  0x01
-#define EV_REL                  0x02
-#define EV_ABS                  0x03
-#define EV_MSC                  0x04
-#define EV_SW                   0x05
-#define EV_LED                  0x11
-#define EV_SND                  0x12
-#define EV_REP                  0x14
-#define EV_FF                   0x15
-#endif
-
-#ifdef HAVE_POLL_H
-#include<poll.h>
-#endif
-#ifdef HAVE_EPOLL_H
-#include<sys/epoll.h>
-#endif
-
-#include <cdtypes.h>
+#include <Windows.h>
 #include <cdlog.h>
 #include <cdinput.h>
 #include <map>
@@ -30,17 +8,13 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
-#ifndef _WIN32
-#include <dirent.h>
-#include <unistd.h>
-#include <poll.h>
-#else
+#undef SW_MAX
+#include <core/eventcodes.h>
 #include <io.h>
 #include <fcntl.h>
 #define write _write
 #define open _open
-#endif
+
 
 #include <fcntl.h>
 #include <signal.h>
@@ -50,7 +24,7 @@ typedef struct {
     int maxfd;
     int nfd;
     int inotify;
-    int pipe[2];
+    HANDLE pipe[2];
     int fds[128];
     std::map<int,int>keymap;
 } INPUTDEVICE;
@@ -58,43 +32,21 @@ typedef struct {
 static INPUTDEVICE dev= {0,0};
 
 int32_t InputInit() {
-    if(dev.pipe[0]>0)
-        return 0;
-#if 0
-    pipe(dev.pipe);
-    dev.nfd=0;
-    dev.fds[dev.nfd++]=dev.pipe[0];
-    dev.maxfd=dev.pipe[0];
-    int rc=fcntl(dev.pipe[0],F_SETFL,O_NONBLOCK);
-    struct dirent **namelist=nullptr;
-    LOGD("cplusplus=%di nfd=%d fcntl=%d fd[0]=%d input_event.size=%d %d",__cplusplus,dev.nfd,rc,dev.fds[0],sizeof(struct input_event),sizeof(struct timeval));
-    int nf=scandir("/dev/input",&namelist,[&dev](const struct dirent * ent)->int{
-        char fname[256];
-        int fd=-1;
-        snprintf(fname,sizeof(fname),"/dev/input/%s",ent->d_name);
-        if(ent->d_type!=DT_DIR) {
-            fd=open(fname,O_RDWR);
-            LOGD("%s fd=%d",fname,fd);
-            if(fd>0) {
-                dev.maxfd=std::max(dev.maxfd,fd);
-                dev.fds[dev.nfd++]=fd;
-            }
-        }
-        return fd>0;
-    },nullptr);
-    free(namelist);
-    LOGD("maxfd=%d numfd=%d\r\n",dev.maxfd,nf+1);
-#endif
+    if(dev.pipe[0]!=0) return 0;
+    DWORD flags = PIPE_READMODE_BYTE | PIPE_NOWAIT;
+    BOOL rc = CreatePipe(&dev.pipe[0],&dev.pipe[1], NULL, 0);
+    LOGI("CreatePipe %p,%p", dev.pipe[0], dev.pipe[1]);
+    SetNamedPipeHandleState(dev.pipe[0], &flags, NULL, NULL);
+    SetNamedPipeHandleState(dev.pipe[1], &flags, NULL, NULL);
     return 0;
 }
 
 #define SET_BIT(array,bit)    ((array)[(bit)/8] |= (1<<((bit)%8)))
 
 int32_t InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
-#if 0
     int rc1,rc2;
     memset(devinfo,0,sizeof(INPUTDEVICEINFO));
-
+#if 0
     struct input_id id;
     rc1=ioctl(device, EVIOCGNAME(sizeof(devinfo->name) - 1),devinfo->name);
     rc2=ioctl(device, EVIOCGID, &id);
@@ -121,6 +73,7 @@ int32_t InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
     ioctl(device, EVIOCGBIT(EV_LED, sizeof(devinfo->ledBitMask)), devinfo->ledBitMask);
     ioctl(device, EVIOCGBIT(EV_FF, sizeof(devinfo->ffBitMask)), devinfo->ffBitMask);
     ioctl(device, EVIOCGPROP(sizeof(devinfo->propBitMask)), devinfo->propBitMask);
+  #endif
     switch(device) {
     case INJECTDEV_TOUCH:
         strcpy(devinfo->name,"Touch-Inject");
@@ -147,7 +100,6 @@ int32_t InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
     default:
         break;
     }
-#endif
     return 0;
 }
 
@@ -157,7 +109,7 @@ int32_t InputInjectEvents(const INPUTEVENT*es,uint32_t count, uint32_t timeout) 
     if(events)memcpy(events,es,count*sizeof(INPUTEVENT));
 
     if(events && (dev.pipe[1]>0)) {
-        int rc=write(dev.pipe[1],events,count*sizeof(INPUTEVENT));
+        int rc=WriteFile(dev.pipe[1],events,count*sizeof(INPUTEVENT),NULL,NULL);
         LOGV_IF(count&&(es->type<=EV_SW),"pipe=%d %s,%x,%x write=%d",dev.pipe[1],evtnames[es->type],es->code,es->value,rc);
     }
     if(events)free(events);
@@ -165,26 +117,11 @@ int32_t InputInjectEvents(const INPUTEVENT*es,uint32_t count, uint32_t timeout) 
 }
 
 int32_t InputGetEvents(INPUTEVENT*outevents, uint32_t max, uint32_t timeout) {
-#if 0
     int rc,count=0;
-    struct timeval tv;
-
-    struct input_event events[64];
     INPUTEVENT*e=outevents;
-    fd_set rfds;
-    static const char*type2name[]= {"SYN","KEY","REL","ABS","MSC","SW"};
-    tv.tv_usec=(timeout%1000)*1000;//1000L*timeout;
-    tv.tv_sec=timeout/1000;
-    FD_ZERO(&rfds);
-    for(int i=0; i<dev.nfd; i++) {
-        FD_SET(dev.fds[i],&rfds);
-    }
-    rc=select(dev.maxfd+1,&rfds,NULL,NULL,&tv);
-    if(rc<0) {
-        LOGD("select error");
-        return E_ERROR;
-    }
-    for(int i=0; i<dev.nfd; i++) {
+    DWORD readedBytes=0;
+    ReadFile(dev.pipe[0], outevents, sizeof(INPUTEVENT) * max, &readedBytes, NULL);
+    /*for (int i = 0; i<dev.nfd; i++) {
         if(!FD_ISSET(dev.fds[i],&rfds))continue;
         if(dev.fds[i]!=dev.pipe[0]) {
             rc=read(dev.fds[i],events, sizeof(events)/sizeof(struct input_event));
@@ -204,9 +141,7 @@ int32_t InputGetEvents(INPUTEVENT*outevents, uint32_t max, uint32_t timeout) {
             count+=rc/sizeof(INPUTEVENT);
         }
         LOGV_IF(rc,"fd %d read %d bytes ispipe=%d",dev.fds[i],rc,dev.fds[i]==dev.pipe[0]);
-    }
-    return e-outevents;
-#endif
-    return 0;
+    }*/
+    return readedBytes/sizeof(INPUTEVENT);
 }
 
