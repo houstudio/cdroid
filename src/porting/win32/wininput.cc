@@ -120,6 +120,6 @@ int32_t InputGetEvents(INPUTEVENT*outevents, uint32_t max, uint32_t timeout) {
     INPUTEVENT*e=outevents;
     DWORD readedBytes=0;
     ReadFile(dev.pipe[0], outevents, sizeof(INPUTEVENT) * max, &readedBytes, NULL);
-    LOGI_IF(readedBytes>0,"read %d bytes %d events", readedBytes, readedBytes / sizeof(INPUTEVENT));
+    LOGV_IF(readedBytes>0,"read %d bytes %d events", readedBytes, readedBytes / sizeof(INPUTEVENT));
     return readedBytes/sizeof(INPUTEVENT);
 }

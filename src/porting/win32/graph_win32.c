@@ -119,11 +119,10 @@ static unsigned int __stdcall display_thread(void * param)
     window_class.lpszClassName = CDROID_WINDOW_CLASSNAME;
     ATOM atrc = RegisterClassExW(&window_class);
     LOGI("RegisterCLassExW=%d", atrc);
-    devs[0].hwnd = CreateWindowExW(WS_EX_CLIENTEDGE,
-           CDROID_WINDOW_CLASSNAME,L"CDROID",window_style,CW_USEDEFAULT,
-           0,width,height,NULL,NULL,NULL,NULL);
+    devs[0].hwnd = CreateWindowExW(WS_EX_CLIENTEDGE,CDROID_WINDOW_CLASSNAME,L"CDROID",
+        window_style,CW_USEDEFAULT,0,width,height,NULL,NULL,NULL,NULL);
     devs[0].width = width;
-    devs[0].height = height;
+    devs[0].height= height;
     devs[0].pitch = width * 4;
     LOGI("Win32 hwnd=%p solution=%dx%d \r\n", devs[0].hwnd, width, height);
     ShowWindow(devs[0].hwnd, SW_SHOW);
