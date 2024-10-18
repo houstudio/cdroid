@@ -162,12 +162,16 @@ private:
     std::map<int,uint64_t>mSeqs;
 public:
     SELECTOR() {
+#if defined(_WIN32)||defined(_WIN64)
         WSADATA wsaData;
         int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-        LOGD("WSAStartup=%d", result);
+        LOGI("WSAStartup=%d", result);
+#endif
     }
     ~SELECTOR()override {
+#if defined(_WIN32)||defined(_WIN64)
         WSACleanup();
+#endif
     }
     int addFd(int fd, struct epoll_event& e) override {
         if (e.events & Looper::EVENT_INPUT)  FD_SET(fd, &readSet);
@@ -210,13 +214,9 @@ public:
         fd_set tmpWriteSet = writeSet;
         tv.tv_sec = ms / 1000;
         tv.tv_usec = (ms % 1000) * 1000;
-        int numEvents;
-        if (mSeqs.size())
-            numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &tv);
-        else
-            numEvents = select(0, nullptr, nullptr,nullptr, &tv);
+        const int numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &tv);
         if (numEvents == -1) {
-            //LOGW("Failed to select file descriptors %d,%d",WSAGetLastError(),SOCKET_ERROR);
+            LOGW("Failed to select file descriptors，select's return value seems some error in MSVC");
             return 0;
         }
         activeFDs.clear();
