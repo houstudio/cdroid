@@ -25,7 +25,7 @@ typedef struct {
     char*buffer;
 } FBSURFACE;
 
-static FBDEVICE devs[2]= {-1};
+static FBDEVICE devs[2]= {0};
 static GFXRect screenMargin= {0};
 static LRESULT CALLBACK cdroid_window_message_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
@@ -58,7 +58,8 @@ static unsigned int __stdcall display_thread(void * param)
     window_class.lpfnWndProc = cdroid_window_message_proc;
     window_class.lpszClassName = CDROID_WINDOW_CLASSNAME;
     ATOM atrc = RegisterClassExW(&window_class);
-    LOGD("RegisterCLassExW=%d", atrc);
+    LOGI("RegisterCLassExW=%d", atrc);
+    printf("RegisterCLassExW=%d\r\n", atrc);
     devs[0].hwnd = CreateWindowExW(WS_EX_CLIENTEDGE,
            CDROID_WINDOW_CLASSNAME,L"CDROID",window_style,CW_USEDEFAULT,
            0,width,height,NULL,NULL,NULL,NULL);
@@ -74,7 +75,7 @@ static unsigned int __stdcall display_thread(void * param)
 }
 
 int32_t GFXInit() {
-    if(devs[0].hwnd>=0)return E_OK;
+    if(devs[0].hwnd>0)return E_OK;
     memset(devs,0,sizeof(devs));
     FBDEVICE*dev=&devs[0];
     const char*strMargins=getenv("SCREEN_MARGINS");

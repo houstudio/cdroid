@@ -44,7 +44,7 @@ include_directories(./
 
 add_library(tvhal SHARED ${WIN32_SRCS})
 if(MSVC)
-    set_target_properties(tvhal PROPERTIES WINDOW_EXPORT_ALL_SYMBOLS ON)       
+    set_target_properties(tvhal PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)       
     list(APPEND WIN32DEP_LIBRARIES kernel32 gdi32)
 endif()
 target_link_libraries(tvhal ${WIN32DEP_LIBRARIES})

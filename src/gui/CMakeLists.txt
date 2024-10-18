@@ -113,9 +113,7 @@ message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
 target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal image-decoders)
 
 if(MSVC)
-set_target_properties(cdroid PROPERTIES
-    WINDOWS_EXPORT_ALL_SYMBOLS ON
-)
+   set_target_properties(cdroid PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
 if(litehtml_FOUND)
