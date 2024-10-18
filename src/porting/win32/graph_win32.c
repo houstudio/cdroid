@@ -63,7 +63,9 @@ static unsigned int __stdcall display_thread(void * param)
     devs[0].hwnd = CreateWindowExW(WS_EX_CLIENTEDGE,
            CDROID_WINDOW_CLASSNAME,L"CDROID",window_style,CW_USEDEFAULT,
            0,width,height,NULL,NULL,NULL,NULL);
-
+    devs[0].width = width;
+    devs[0].height = height;
+    devs[0].pitch = width * 4;
     LOGI("Win32 hwnd=%p solution=%dx%d \r\n", devs[0].hwnd, width, height);
     ShowWindow(devs[0].hwnd, SW_SHOW);
     UpdateWindow(devs[0].hwnd);
@@ -182,6 +184,7 @@ int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t heigh
         bitmap_info.bmiHeader.biHeight = -surf->height;
         bitmap_info.bmiHeader.biPlanes = 1;
         bitmap_info.bmiHeader.biBitCount = 32;
+        bitmap_info.bmiHeader.biCompression = 0;
         surf->hBitmap = CreateDIBSection(surf->hDC,(PBITMAPINFO)(&bitmap_info),
             DIB_RGB_COLORS,(void**)&surf->buffer, NULL,0);
         buffer_size=surf->pitch*surf->height;

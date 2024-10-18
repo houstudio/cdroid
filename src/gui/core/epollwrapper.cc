@@ -158,10 +158,13 @@ class SELECTOR : public IOEventProcessor {
 private:
     fd_set readSet;
     fd_set writeSet;
-    int maxFD = 0;
+    int maxFD;
     std::map<int,uint64_t>mSeqs;
 public:
     SELECTOR() {
+        maxFD = 0;
+        FD_ZERO(&readSet);
+        FD_ZERO(&writeSet);
 #if defined(_WIN32)||defined(_WIN64)
         WSADATA wsaData;
         int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -214,9 +217,9 @@ public:
         fd_set tmpWriteSet = writeSet;
         tv.tv_sec = ms / 1000;
         tv.tv_usec = (ms % 1000) * 1000;
-        const int numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &tv);
+        int numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &tv);
         if (numEvents == -1) {
-            LOGW("Failed to select file descriptors，select's return value seems some error in MSVC");
+            //LOGW("Failed to select file descriptors，select's return value seems some error in MSVC");
             return 0;
         }
         activeFDs.clear();

@@ -52,7 +52,8 @@ int main(int argc,const char*argv[]){
     w->addView(tv).setPos(600,400);
     tv->setBackgroundColor(0xFF00FF00);
     float rotation=.0f;
-    Runnable r([&](){
+    Runnable r;
+    r=([&]() {
         lv->setRotation(rotation);
         tv->setRotation(rotation);
         rotation+=5;
