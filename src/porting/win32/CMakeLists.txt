@@ -29,9 +29,6 @@ endif()
 find_package(PkgConfig)
 find_package(SDL2)
 find_package(DirectFB)
-if(MSVC)
-    list(APPEND WIN32DEP_LIBRARIES kernel32 gdi32)
-endif()
 if (SDL2_FOUND)
     include_directories(${SDL2_INCLUDE_DIRS})
     list(APPEND WIN32_SRCS ../common/graph_sdl.c)
@@ -45,7 +42,11 @@ include_directories(./
     ${WIN32_INCLUDE_DIRS}
 )
 
-add_library(tvhal ${WIN32_SRCS})
+add_library(tvhal SHARED ${WIN32_SRCS})
+if(MSVC)
+    set_target_properties(tvhal PROPERTIES WINDOW_EXPORT_ALL_SYMBOLS ON)       
+    list(APPEND WIN32DEP_LIBRARIES kernel32 gdi32)
+endif()
 target_link_libraries(tvhal ${WIN32DEP_LIBRARIES})
 
 install (TARGETS ${WIN32PORTS}  DESTINATION lib)
