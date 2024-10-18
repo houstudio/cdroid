@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+#include <cdinput.h>
+#include <core/eventcodes.h>
 
 typedef struct {
     HWND hwnd;
@@ -27,7 +29,42 @@ typedef struct {
 
 static FBDEVICE devs[2]= {0};
 static GFXRect screenMargin= {0};
-static LRESULT CALLBACK cdroid_window_message_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+#define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
+#if 1
+#define SENDMOUSE(time,x,y)  {\
+      InjectABS(time,EV_ABS,ABS_MT_TRACKING_ID,12);\
+      InjectABS(time,EV_ABS,ABS_MT_POSITION_X,x);\
+      InjectABS(time,EV_ABS,ABS_MT_POSITION_Y,y);\
+      InjectABS(time,EV_ABS,SYN_MT_REPORT,0);\
+      InjectABS(time,EV_SYN,SYN_REPORT,0);}
+#else
+#define SENDMOUSE(time,x,y)  {\
+      InjectABS(time,EV_ABS,ABS_X,x);\
+      InjectABS(time,EV_ABS,ABS_Y,y);\
+      InjectABS(time,EV_SYN,SYN_REPORT,0);}
+#endif
+static void InjectKey(unsigned long etime,int type, int code, int value) {
+    INPUTEVENT i = { 0 };
+    i.tv_sec = etime/1000;
+    i.tv_usec = (etime%1000)*1000;
+    i.type = type;
+    i.code = code;
+    i.value = value;
+    i.device = INJECTDEV_KEY;
+    InputInjectEvents(&i, 1, 1);
+}
+static void InjectABS(unsigned long etime, int type, int axis, int value) {
+    INPUTEVENT i = { 0 };
+    i.tv_sec = etime/1000;
+    i.tv_usec = (etime%1000)*1000;
+    i.type = type;
+    i.code = axis;
+    i.value = value;
+    i.device = INJECTDEV_TOUCH;
+    InputInjectEvents(&i, 1, 1);
+}
+static LRESULT CALLBACK Window_PROC(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    DWORD msgTime = GetMessageTime();
     switch (uMsg) {
     case WM_TOUCH: {
         UINT cInputs = LOWORD(wParam);
@@ -42,6 +79,16 @@ static LRESULT CALLBACK cdroid_window_message_proc(HWND hWnd, UINT uMsg, WPARAM 
             free(pInputs);
         }break;
     }
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+        InjectABS(msgTime, EV_KEY, BTN_TOUCH, (uMsg == WM_LBUTTONDOWN) ? 1 : 0);
+        SENDMOUSE(msgTime, (LOWORD(lParam) - screenMargin.x), (HIWORD(lParam) - screenMargin.y));
+        break;
+    case WM_MOUSEMOVE:
+        if (wParam & MK_LBUTTON) {
+        SENDMOUSE(msgTime, (LOWORD(lParam) - screenMargin.x), (HIWORD(lParam) - screenMargin.y));
+        }
+        break;
     case WM_PAINT: {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd,&ps);
@@ -68,7 +115,7 @@ static unsigned int __stdcall display_thread(void * param)
     }
     memset(&window_class,0, sizeof(WNDCLASSEXW));
     window_class.cbSize = sizeof(WNDCLASSEXW);
-    window_class.lpfnWndProc = cdroid_window_message_proc;
+    window_class.lpfnWndProc = Window_PROC;
     window_class.lpszClassName = CDROID_WINDOW_CLASSNAME;
     ATOM atrc = RegisterClassExW(&window_class);
     LOGI("RegisterCLassExW=%d", atrc);

@@ -117,31 +117,9 @@ int32_t InputInjectEvents(const INPUTEVENT*es,uint32_t count, uint32_t timeout) 
 }
 
 int32_t InputGetEvents(INPUTEVENT*outevents, uint32_t max, uint32_t timeout) {
-    int rc,count=0;
     INPUTEVENT*e=outevents;
     DWORD readedBytes=0;
     ReadFile(dev.pipe[0], outevents, sizeof(INPUTEVENT) * max, &readedBytes, NULL);
-    /*for (int i = 0; i<dev.nfd; i++) {
-        if(!FD_ISSET(dev.fds[i],&rfds))continue;
-        if(dev.fds[i]!=dev.pipe[0]) {
-            rc=read(dev.fds[i],events, sizeof(events)/sizeof(struct input_event));
-            for(int j=0; j<rc/sizeof(struct input_event)&&(count<max); j++,e++,count++) {
-                e->tv_sec = events[j].time.tv_sec;
-                e->tv_usec= events[j].time.tv_usec;
-                e->type = events[j].type;
-                e->code = events[j].code;
-                e->value= events[j].value;
-                e->device=dev.fds[i];
-                LOGV_IF(e->type<EV_SW,"fd:%d [%s]%02x,%02x,%02x time=%ld.%ld time2=%ld.%ld",dev.fds[i],
-                        type2name[e->type],e->type,e->code,e->value,e->tv_sec,e->tv_usec,events[j].time.tv_sec,events[j].time.tv_usec);
-            }
-        } else { //for pipe
-            rc=read(dev.fds[i],e, (max-count)*sizeof(INPUTEVENT));
-            e+=rc/sizeof(INPUTEVENT);
-            count+=rc/sizeof(INPUTEVENT);
-        }
-        LOGV_IF(rc,"fd %d read %d bytes ispipe=%d",dev.fds[i],rc,dev.fds[i]==dev.pipe[0]);
-    }*/
+    LOGI_IF(readedBytes>0,"read %d bytes %d events", readedBytes, readedBytes / sizeof(INPUTEVENT));
     return readedBytes/sizeof(INPUTEVENT);
 }
-
