@@ -141,7 +141,7 @@ public:
     virtual void destroyItem(ViewGroup* container, int position, void* object);
     virtual void setPrimaryItem(ViewGroup* container, int position, void* object);
     virtual void finishUpdate(ViewGroup* container);
-    virtual bool isViewFromObject(View* view, void* object)=0;
+    virtual bool isViewFromObject(View* view, void* object);
     virtual int getItemPosition(void* object);
     virtual void notifyDataSetChanged();
     void registerDataSetObserver(DataSetObserver* observer);

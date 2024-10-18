@@ -18,6 +18,7 @@ public:
       YELLOW    = 0xFFFFFF00,
       CYAN      = 0xFF00FFFF,
       MAGENTA   = 0xFFFF00FF,
+      ORANGE    = 0xFFFFA500,
       TRANSPARENT = 0
     };
 private:

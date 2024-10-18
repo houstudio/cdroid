@@ -86,6 +86,10 @@ void PagerAdapter::destroyItem(ViewGroup* container, int position, void* object)
 void PagerAdapter::finishUpdate(ViewGroup* container){
 }
 
+bool PagerAdapter::isViewFromObject(View*view,void*obj){
+    return view==obj;
+}
+
 int PagerAdapter::getItemPosition(void* object){
     return POSITION_UNCHANGED;
 }
