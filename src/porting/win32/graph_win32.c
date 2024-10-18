@@ -184,7 +184,7 @@ int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t heigh
         bitmap_info.bmiHeader.biHeight = -surf->height;
         bitmap_info.bmiHeader.biPlanes = 1;
         bitmap_info.bmiHeader.biBitCount = 32;
-        bitmap_info.bmiHeader.biCompression = 0;
+        bitmap_info.bmiHeader.biCompression = BI_RGB;
         surf->hBitmap = CreateDIBSection(surf->hDC,(PBITMAPINFO)(&bitmap_info),
             DIB_RGB_COLORS,(void**)&surf->buffer, NULL,0);
         buffer_size=surf->pitch*surf->height;
