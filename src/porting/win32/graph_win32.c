@@ -29,6 +29,9 @@ static FBDEVICE devs[2]= {0};
 static GFXRect screenMargin= {0};
 static LRESULT CALLBACK cdroid_window_message_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
+    case WM_TIMER:
+        InvalidateRect(hWnd, NULL, FALSE); 
+        break;
     case WM_PAINT: {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd,&ps);
@@ -70,6 +73,7 @@ static unsigned int __stdcall display_thread(void * param)
     ShowWindow(devs[0].hwnd, SW_SHOW);
     UpdateWindow(devs[0].hwnd);
     SetEvent((HANDLE)param);
+    //SetTimer(devs[0].hwnd, 1, 50, NULL);
     while(GetMessageW(&message, NULL, 0, 0)) {
         TranslateMessage(&message);
         DispatchMessageW(&message);
@@ -172,8 +176,6 @@ int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t heigh
     surf->format=format;
     surf->ishw=hwsurface;
     surf->pitch=width*4;
-    size_t buffer_size=surf->height*surf->pitch;
-
     {
         BITMAPINFO bitmap_info;
         HDC wdc = GetDC(dev->hwnd);
@@ -187,12 +189,11 @@ int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t heigh
         bitmap_info.bmiHeader.biCompression = BI_RGB;
         surf->hBitmap = CreateDIBSection(surf->hDC,(PBITMAPINFO)(&bitmap_info),
             DIB_RGB_COLORS,(void**)&surf->buffer, NULL,0);
-        buffer_size=surf->pitch*surf->height;
-        surf->pitch=dev->pitch;
+        SelectObject(surf->hDC, surf->hBitmap);
         devs[0].hdc = surf->hDC;
     }
     surf->ishw=hwsurface;
-    LOGV("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->buffer,width,height,hwsurface);
+    LOGI("surface=%x buf=%p size=%dx%dx%d hw=%d",surf,surf->buffer,width,height,surf->pitch,hwsurface);
     *surface=surf;
     return E_OK;
 }
@@ -235,7 +236,7 @@ int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*
     if(ndst->ishw==0)pbd+=dy*ndst->pitch+dx*4;
     else pbd+=(dy+screenMargin.y)*ndst->pitch+(dx+screenMargin.x)*4;
     const int cpw=rs.w*4;
-    BitBlt(ndst->hDC, dx, dy, rs.w, rs.y, nsrc->hDC, rs.x, rs.y, SRCCOPY);
+    BitBlt(ndst->hDC, dx, dy, rs.w, rs.h, nsrc->hDC, rs.x, rs.y, SRCCOPY);
     return 0;
 }
 
