@@ -7,6 +7,7 @@
 
 typedef struct {
     HWND hwnd;
+    HDC hdc;
     int width;
     int height;
     int pitch;
@@ -27,8 +28,18 @@ typedef struct {
 static FBDEVICE devs[2]= {-1};
 static GFXRect screenMargin= {0};
 static LRESULT CALLBACK cdroid_window_message_proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+    switch (uMsg) {
+    case WM_PAINT: {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd,&ps);
+        BitBlt(hdc, 0, 0, devs[0].width,devs[0].height, devs[0].hdc, 0, 0, SRCCOPY);
+        EndPaint(hWnd, &ps);
+        }break;
+    default:return DefWindowProcW(hWnd, uMsg, wParam, lParam);
+    }
+    return 0;
 }
+#define CDROID_WINDOW_CLASSNAME L"CDROID.Window"
 static unsigned int __stdcall display_thread(void * param)
 {
     DWORD window_style= WS_OVERLAPPEDWINDOW;
@@ -45,15 +56,16 @@ static unsigned int __stdcall display_thread(void * param)
     memset(&window_class,0, sizeof(WNDCLASSEXW));
     window_class.cbSize = sizeof(WNDCLASSEXW);
     window_class.lpfnWndProc = cdroid_window_message_proc;
-    window_class.lpszClassName = L"CDROID.Window";
-    RegisterClassExW(&window_class);
+    window_class.lpszClassName = CDROID_WINDOW_CLASSNAME;
+    ATOM atrc = RegisterClassExW(&window_class);
+    LOGD("RegisterCLassExW=%d", atrc);
     devs[0].hwnd = CreateWindowExW(WS_EX_CLIENTEDGE,
-           L"CDROID.Window",L"CDROID",window_style,CW_USEDEFAULT,
+           CDROID_WINDOW_CLASSNAME,L"CDROID",window_style,CW_USEDEFAULT,
            0,width,height,NULL,NULL,NULL,NULL);
-    
+
+    LOGI("Win32 hwnd=%p solution=%dx%d \r\n", devs[0].hwnd, width, height);
     ShowWindow(devs[0].hwnd, SW_SHOW);
     UpdateWindow(devs[0].hwnd);
-    LOGI("Win32 solution=%dx%d \r\n", width, height);
     SetEvent((HANDLE)param);
     while(GetMessageW(&message, NULL, 0, 0)) {
         TranslateMessage(&message);
@@ -79,7 +91,7 @@ int32_t GFXInit() {
         screenMargin.h = atoi(token);
         free(sm);
     }
-    HANDLE mutex = CreateEventExW(NULL, NULL, 0, EVENT_ALL_ACCESS);
+    HANDLE mutex = CreateEventExW(NULL, CDROID_WINDOW_CLASSNAME, 0, EVENT_ALL_ACCESS);
     HANDLE thread = (HANDLE)_beginthreadex(NULL,0,display_thread,mutex,0,NULL);
     WaitForSingleObjectEx(mutex, INFINITE, FALSE);
     CloseHandle(mutex);
@@ -172,6 +184,7 @@ int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t heigh
             DIB_RGB_COLORS,(void**)&surf->buffer, NULL,0);
         buffer_size=surf->pitch*surf->height;
         surf->pitch=dev->pitch;
+        devs[0].hdc = surf->hDC;
     }
     surf->ishw=hwsurface;
     LOGV("surface=%x buf=%p size=%dx%d hw=%d",surf,surf->buffer,width,height,hwsurface);
