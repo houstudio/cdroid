@@ -16,7 +16,7 @@ BitmapDrawable::BitmapState::BitmapState(){
     mTintMode     = DEFAULT_TINT_MODE;
     mTileModeX = mTileModeY = -1;
     mAutoMirrored = false;
-    mFilterBitmap = true;
+    mFilterBitmap = false;
     mMipMap = false;
     mDither = false;
     mSrcDensityOverride = 0;
@@ -379,15 +379,13 @@ void BitmapDrawable::draw(Canvas&canvas){
         const float fx = dw / sw   , fy = dh / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
 	    //SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;GOOD/FAST seems more slowly than ,BILINEAR/NEAREST
-        SurfacePattern::Filter filterMode = SurfacePattern::Filter::BILINEAR;
+        const SurfacePattern::Filter filterMode = mBitmapState->mFilterBitmap ? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
         const Pattern::Dither ditherMode = mBitmapState->mDither ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
 
-        if(getOpacity()==PixelFormat::OPAQUE)
-            filterMode = SurfacePattern::Filter::NEAREST;
-        else if(mBitmapState->mFilterBitmap){
-            LOGV_IF((mBitmapWidth*mBitmapHeight>=512*512),"%p[%s] size=%dx%d opacity=%d . should setFilterBitmap(false) to make render faster",
-                    this,getConstantState()->mResource.c_str(),mBitmapWidth,mBitmapHeight,getOpacity());
-        }
+        LOGV_IF(mBitmapState->mFilterBitmap&&(mBitmapWidth*mBitmapHeight>=512*512),
+                   "%p[%s] size=%dx%d opacity=%d . should setFilterBitmap(false) to make render faster",
+                   this,getConstantState()->mResource.c_str(),mBitmapWidth,mBitmapHeight,getOpacity());
+
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
         if ( (mBounds.width !=mBitmapWidth) || (mBounds.height != mBitmapHeight) ) {
