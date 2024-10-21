@@ -26,7 +26,6 @@ if(MSVC)
 else()
     set(PTHREAD_LIB_NAME "pthread")
     set(PTHREAD_LIBRARY "pthread")
-    set(PTHREAD_INCLUDE_DIR "./")
 endif()
 
 if(NOT PTHREAD_LIBRARY)
