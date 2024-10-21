@@ -957,8 +957,13 @@ int View::getLayerType()const{
     return mLayerType;
 }
 
-void View::setLayerType(int type){
-    mLayerType= type;
+void View::setLayerType(int layerType){
+    if(layerType!=LAYER_TYPE_SOFTWARE){
+        destroyDrawingCache();
+    }
+    mLayerType = layerType;
+    invalidateParentCaches();
+    invalidate();
 }
 
 void View::onAnimationStart() {
