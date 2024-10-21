@@ -139,9 +139,12 @@ void RotateDrawable::draw(Canvas& canvas) {
     const float py = mState->mPivotYRel ? (bounds.height * mState->mPivotY) : mState->mPivotY;
 
     canvas.save();
+    const bool filterBitmap = d->getFilterBitmap();
     canvas.translate(px,py);
     canvas.rotate_degrees(mState->mCurrentDegrees);
+    if(!filterBitmap)d->setFilterBitmap(true);
     d->draw(canvas);
+    if(!filterBitmap)d->setFilterBitmap(false);
     canvas.restore();
     LOGV("pos=%d,%d/%.f,%.f level=%d degress=%d",bounds.left,bounds.top,px,py,getLevel(),int(mState->mCurrentDegrees));
 }
