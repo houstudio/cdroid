@@ -186,12 +186,10 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     canvas.translate(bounds.left,bounds.top);
     canvas.transform(mtx);
     if(!filteredBitmap)
-        drawable->setFilterBitmap(true);
+        canvas.set_antialias(Cairo::ANTIALIAS_DEFAULT);
     drawable->setBounds(0,0,w,h);
     drawable->draw(canvas);
     drawable->setBounds(bounds);
-    if(!filteredBitmap)
-        drawable->setFilterBitmap(false);
     canvas.translate(-bounds.left,-bounds.top);
     canvas.restore();
 #endif

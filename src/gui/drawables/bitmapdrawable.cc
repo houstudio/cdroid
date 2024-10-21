@@ -379,7 +379,8 @@ void BitmapDrawable::draw(Canvas&canvas){
         const float fx = dw / sw   , fy = dh / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
 	    //SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;GOOD/FAST seems more slowly than ,BILINEAR/NEAREST
-        const SurfacePattern::Filter filterMode = mBitmapState->mFilterBitmap ? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
+        const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap||(canvas.get_antialias()!=Cairo::ANTIALIAS_NONE))
+		? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
         const Pattern::Dither ditherMode = mBitmapState->mDither ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
 
         LOGV_IF(mBitmapState->mFilterBitmap&&(mBitmapWidth*mBitmapHeight>=512*512),
