@@ -247,7 +247,7 @@ bool BitmapDrawable::hasAntiAlias() const{
 }
 
 void BitmapDrawable::setFilterBitmap(bool filter) {
-    if(mBitmapstate->mFilterBitmap!=filter){
+    if(mBitmapState->mFilterBitmap!=filter){
         mBitmapState->mFilterBitmap = filter;
         invalidateSelf();
     }
