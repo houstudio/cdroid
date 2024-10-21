@@ -1,6 +1,15 @@
 set(PTHREAD_LIBRARIES "")
 set(PTHREAD_INCLUDE_DIRS "")
 
+pkg_check_modules(PC_ZLIB  zlib)
+find_library(PTHREAD_LIBRARY NAMES ${PTHREAD_LIB_NAME}
+	PATHS "${CMAKE_MODULE_PATH}"
+	HINTS ${PC_ZLIB_LIBDIR} ${PC_ZLIB_LIBRARY_DIRS}
+             PATH_SUFFIXES "lib" "lib64")
+find_path(PTHREAD_INCLUDE_DIR NAMES pthread.h
+	HINTS ${PC_ZLIB_INCLUDEDIR} ${PC_ZLIB_INCLUDE_DIRS}
+          PATH_SUFFIXES "include"
+          )
 set(PTHREAD_LIB_NAME "pthreadVC3")
 
 if(MSVC)
@@ -13,22 +22,15 @@ if(MSVC)
     else()
         message("Unsupported Runtime Library option")
     endif()
+    
 else()
     set(PTHREAD_LIB_NAME "pthread")
+    set(PTHREAD_LIBRARY "pthread")
+    set(PTHREAD_INCLUDE_DIR "./")
 endif()
-pkg_check_modules(PC_ZLIB  zlib)
-find_library(PTHREAD_LIBRARY NAMES ${PTHREAD_LIB_NAME}
-	PATHS "${CMAKE_MODULE_PATH}"
-	HINTS ${PC_ZLIB_LIBDIR} ${PC_ZLIB_LIBRARY_DIRS}
-             PATH_SUFFIXES "lib" "lib64")
-
-find_path(PTHREAD_INCLUDE_DIR NAMES pthread.h
-	HINTS ${PC_ZLIB_INCLUDEDIR} ${PC_ZLIB_INCLUDE_DIRS}
-          PATH_SUFFIXES "include"
-          )
 
 if(NOT PTHREAD_LIBRARY)
-   #message(FATAL_ERROR "Could not find ${PTHREAD_LIB_NAME} library in ${CMAKE_MODULE_PATH}")
+   message(FATAL_ERROR "Could not find ${PTHREAD_LIB_NAME} library in ${CMAKE_MODULE_PATH}")
 endif()
 
 if(NOT PTHREAD_INCLUDE_DIR)
