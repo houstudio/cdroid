@@ -334,7 +334,6 @@ void BitmapDrawable::draw(Canvas&canvas){
     if(mBounds.empty())return;
 
     canvas.save();
-    canvas.set_antialias(mBitmapState->mMipMap?Cairo::ANTIALIAS_SUBPIXEL:Cairo::ANTIALIAS_DEFAULT);
     if(mTintFilter){
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
         canvas.clip();
@@ -381,7 +380,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         const float fx = dw / sw   , fy = dh / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
 	    //SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;GOOD/FAST seems more slowly than ,BILINEAR/NEAREST
-        const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap||(canvas.get_antialias()!=Cairo::ANTIALIAS_NONE))
+        const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap||(canvas.get_antialias()>Cairo::ANTIALIAS_NONE))
 		? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
         const Pattern::Dither ditherMode = mBitmapState->mDither ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
 
