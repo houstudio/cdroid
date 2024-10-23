@@ -77,13 +77,13 @@ int32_t GFXInit() {
     kbuffStart += displayScreenSize;
     buffStart  += displayScreenSize;
     for(int i=1;i<=numSurface;i++){
-	devSurfaces[i].kbuffer=kbuffStart;
-	devSurfaces[i].buffer =buffStart;
-	devSurfaces[i].width  = dev->var.xres;
+        devSurfaces[i].kbuffer=kbuffStart;
+        devSurfaces[i].buffer =buffStart;
+        devSurfaces[i].width  = dev->var.xres;
         devSurfaces[i].height = dev->var.yres;
-	devSurfaces[i].used=0;
-	kbuffStart+=screenSize;
-	buffStart+=screenSize;
+        devSurfaces[i].used=0;
+        kbuffStart+=screenSize;
+        buffStart+=screenSize;
     }
     dev->var.yoffset=0;//set first screen memory for display
     LOGI("FBIOPUT_VSCREENINFO=%d",ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var));
@@ -222,8 +222,8 @@ int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t heigh
     size_t buffer_size=surf->height*surf->pitch;
     if(hwsurface) {
         setfbinfo(surf);
-	dev->var.yoffset=0;
-	ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var);
+        dev->var.yoffset=0;
+        ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var);
     } else {
         if(surf->kbuffer==0){
             surf->buffer=(char*)malloc(buffer_size);
@@ -286,7 +286,7 @@ int32_t GFXDestroySurface(HANDLE surface) {
     FBDEVICE*dev=devs+surf->dispid;
     if(surf->used && (surf->kbuffer==NULL)){
         free(surf->buffer);
-	surf->buffer = NULL;
+        surf->buffer = NULL;
     }
     surf->used = 0;
     return 0;
