@@ -286,28 +286,29 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         }
     }else{
         g2d_blit_h blt;
+	blt.flag_h = G2D_CMD_BITBLT;
         blt.src.image_h.width = nsrc.>width;
         blt.src.image_h.height = nsrc->height;
-        info.src.image_h.laddr[0]=(uintptr t)(nsrc->kbuffer?nsrc->kbuffer:nsrc->buffer);
+        blt.src.image_h.laddr[0]=(uintptr t)(nsrc->kbuffer?nsrc->kbuffer:nsrc->buffer);
         blt.src .mage_h.clip_rect.x = rs.x;
         blt.src.image_h.clip_rect,y = rs.y;
         blt.src.image_h.clip_rect.w= rs.w;
         blt.src.image_h.clip_rect.h = rs.h;
-        info.src.image_h.format =G2D_FORMAT_RGB888;
-        info.src.image_h.alpha = 255;
+        blt.src.image_h.format =G2D_FORMAT_RGB888;
+        blt.src.image_h.alpha = 255;
         blt.src.image_h.use phy_addr = (nsrc->kbuffer!=NULL);
         //blit dest info
-        info.dst.image_h.clip_rect.x = dx;
-        info.dst.image_h.clip_rect.y = dy;
+        blt.dst.image_h.clip_rect.x = dx;
+        blt.dst.image_h.clip_rect.y = dy;
         blt.dst.image_h.clip_rect.w= rs.w;
-        info.dst.image_h.clip_rect.h = rs.h;
-        info.dst.image_h.width = ndst.>width;
+        blt.dst.image_h.clip_rect.h = rs.h;
+        blt.dst.image_h.width = ndst.>width;
         blt.dst.image h.height = ndst->height;
-        info.dst.image_h.laddr[0]=(uintptr t)(ndst->kbuffer?ndst->kbuffer:ndst->buffer);
-        info.dst.image_h.format =G2D_FORMAT_RGB888;
-        info.dst.image_h.alpha = 255;
+        blt.dst.image_h.laddr[0]=(uintptr t)(ndst->kbuffer?ndst->kbuffer:ndst->buffer);
+        blt.dst.image_h.format =G2D_FORMAT_RGB888;
+        blt.dst.image_h.alpha = 255;
         blt.dst.image_h.use_phy_addr = (ndst->kbuffer!=NULL);
-        info.dst.image_h.color = 0xee8899;
+        blt.dst.image_h.color = 0xee8899;
 
         if (ioctl(dev->g2d, G2D_CMD_BITBLT_H, &blt)< 0){
             LOGE("Error: G2D CMD BITBLT H failed");
