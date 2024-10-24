@@ -14,8 +14,15 @@
 #include <sys/time.h>
 #include <unistd.h>
 #elif defined(_WIN32)||defined(_WIN64)
+#include <WinSock2.h>
 extern void sleep(uint32_t);
 extern void usleep(uint32_t);
+extern void gettimeofday(struct timeval* t1, struct timezone* zone);
+#undef RECT
+#undef SIZE
+#undef POINT
+#undef RGB
+#undef IN
 #endif
 #define SLEEP(x) usleep((x)*1000)
 

@@ -24,7 +24,7 @@ void usleep(uint32_t us) {
 using namespace Cairo;
 using namespace cdroid;
 #define SLEEP(x) usleep((x)*1000)
-class CONTEXT:public testing::Test{
+class CDCONTEXT:public testing::Test{
 protected:
 public :
    static Assets *rm;
@@ -52,11 +52,11 @@ public :
        sleep(2);
    }
 };
-Canvas*CONTEXT::ctx=nullptr;
-Assets *CONTEXT::rm=nullptr;
+Canvas*CDCONTEXT::ctx=nullptr;
+Assets *CDCONTEXT::rm=nullptr;
 
 
-TEST_F(CONTEXT,TEXT_ALIGNMENT){
+TEST_F(CDCONTEXT,TEXT_ALIGNMENT){
     const char*horz[]={"LEFT","CENTER","RIGHT"};
     const char*vert[]={"TOP","VCENTER","BOTTOM"};
     char alignment[64];
@@ -84,7 +84,7 @@ TEST_F(CONTEXT,TEXT_ALIGNMENT){
     SLEEP(2000);
 }
 
-TEST_F(CONTEXT,circle){
+TEST_F(CDCONTEXT,circle){
     const int PTCOUNT=30;
     const double RADIUS=280;
     struct CPoint{
@@ -117,7 +117,7 @@ TEST_F(CONTEXT,circle){
     GraphDevice::getInstance().composeSurfaces();
 }
 
-TEST_F(CONTEXT,Translate){
+TEST_F(CDCONTEXT,Translate){
     cdroid::Rect rect={0,0,800,600};
     ctx->set_color(0xFFFFFFFF);
     ctx->rectangle(0,0,800,600);ctx->fill();
@@ -138,7 +138,7 @@ TEST_F(CONTEXT,Translate){
     ctx->stroke();
 }
 
-TEST_F(CONTEXT,Clip){
+TEST_F(CDCONTEXT,Clip){
     RefPtr<ImageSurface>img=ImageSurface::create_from_png("light.png");
     cdroid::Rect rect={0,0,800,600};
     ctx->set_color(0xFFFFFFFF);
@@ -148,7 +148,7 @@ TEST_F(CONTEXT,Clip){
     ctx->draw_image(img,rect,nullptr);
 }
 
-TEST_F(CONTEXT,Clip1){
+TEST_F(CDCONTEXT,Clip1){
     ctx->set_color(0xFF888888);
     ctx->rectangle(-100,-100,1280,720);
     ctx->fill();
@@ -171,7 +171,7 @@ TEST_F(CONTEXT,Clip1){
     ctx->get_target()->write_to_png("clip1.png");
 }
 
-TEST_F(CONTEXT,Clip2){
+TEST_F(CDCONTEXT,Clip2){
 
     ctx->reset_clip();
     ctx->arc(100,100,50,0,M_PI*2.f);
@@ -183,7 +183,7 @@ TEST_F(CONTEXT,Clip2){
     printf("CLIPS(%f,%f,%f,%f) lst.size=%lu\r\n",x1,y1,x2,y2,lst.size());
 }
 
-TEST_F(CONTEXT,Clip3){
+TEST_F(CDCONTEXT,Clip3){
     ctx->reset_clip();
     ctx->rectangle(0,0,200,200);
     ctx->clip();
@@ -195,7 +195,7 @@ TEST_F(CONTEXT,Clip3){
     printf("clip region after  translate(%.f,%.f,%.f,%.f)\r\n",cx1,cy1,cx2,cy2);
 }
 
-TEST_F(CONTEXT,Mask){
+TEST_F(CDCONTEXT,Mask){
     RefPtr<ImageSurface>img=ImageSurface::create_from_png("im_game.png");
     RefPtr<Pattern>pat1=SurfacePattern::create(img);
     RefPtr<Pattern>pat2=SolidPattern::create_rgba(0,1.0,0,.5);
@@ -206,7 +206,7 @@ TEST_F(CONTEXT,Mask){
     ctx->paint();//_with_alpha(0.5);
 }
 
-TEST_F(CONTEXT,ImageSurface){
+TEST_F(CDCONTEXT,ImageSurface){
     RefPtr<ImageSurface>img=ImageSurface::create_from_png("im_game.png");
     RefPtr<Cairo::Context>ictx=Cairo::Context::create(img);
     RefPtr<Gradient>pat=LinearGradient::create(0,0,400,0);
@@ -223,7 +223,7 @@ TEST_F(CONTEXT,ImageSurface){
     ctx->rectangle(0,0,400,400);
     ctx->fill();
 }
-TEST_F(CONTEXT,Pattern_Line){
+TEST_F(CDCONTEXT,Pattern_Line){
    int i, j; 
    RefPtr<RadialGradient>radpat(RadialGradient::create(200, 150, 80, 400, 300, 400));
    RefPtr<LinearGradient>linpat(LinearGradient::create(200, 210, 600, 390));
@@ -245,7 +245,7 @@ TEST_F(CONTEXT,Pattern_Line){
    ctx->fill ();
    ctx->dump2png("pat-line.png");
 }
-TEST_F(CONTEXT,Pattern_Radio){
+TEST_F(CDCONTEXT,Pattern_Radio){
    RefPtr<RadialGradient>radpat(RadialGradient::create(200, 200, 10, 200, 200, 150));
    cdroid::Rect rect={0,0,1200,600};
    radpat->add_color_stop_rgb ( .0, 1., 1., 1.);
@@ -256,7 +256,7 @@ TEST_F(CONTEXT,Pattern_Radio){
    ctx->dump2png("pat-radio.png");
 }
 
-TEST_F(CONTEXT,Font){
+TEST_F(CDCONTEXT,Font){
     const char *texts[]={
         "The quick brown fox jumps over a lazy dog",
         "Innovation in China 0123456789" 
@@ -301,28 +301,28 @@ TEST_F(CONTEXT,Font){
     }
     SLEEP(1000);
 }
-TEST_F(CONTEXT,ALPHA){
+TEST_F(CDCONTEXT,ALPHA){
      ctx->set_color(0xFFFFFFFF);
      ctx->rectangle(0,0,1280,720);ctx->fill();
      ctx->set_color(0x80FF0000);
      ctx->rectangle(200,200,480,320);ctx->fill();
      ctx->dump2png("alpha.png");
 }
-TEST_F(CONTEXT,HOLE){
+TEST_F(CDCONTEXT,HOLE){
      ctx->set_color(0xFFFFFFFF);
      ctx->rectangle(0,0,1280,720);ctx->fill();
      ctx->set_color(0);
      ctx->rectangle(200,200,480,320);ctx->fill();
      ctx->dump2png("hole.png");
 }
-TEST_F(CONTEXT,HOLE2){
+TEST_F(CDCONTEXT,HOLE2){
      ctx->set_color(0xFFFFFFFF);
      ctx->rectangle(0,0,1280,720);ctx->fill();
      ctx->set_source_rgba(0,0,0,0);
      ctx->rectangle(200,200,480,320);ctx->fill();
      ctx->dump2png("hole2.png");
 }
-TEST_F(CONTEXT,HOLE3){
+TEST_F(CDCONTEXT,HOLE3){
      RefPtr<ImageSurface>img=ImageSurface::create(Surface::Format::ARGB32,1280,720);
      RefPtr<Cairo::Context>ctx1=Cairo::Context::create(img);
      ctx1->set_source_rgb(1,0.5,1);
@@ -333,7 +333,7 @@ TEST_F(CONTEXT,HOLE3){
      ctx1->fill();
      img->write_to_png("hole3.png");
 }
-TEST_F(CONTEXT,layout){
+TEST_F(CDCONTEXT,layout){
     Layout layout(30,200);
     ctx->set_font_size(30);
     layout.setText("A brown fox jump over the lazy dog!");
@@ -381,7 +381,7 @@ static const std::wstring processBidi(const std::wstring&logstr){
 }
 #include <hb.h>
 #include <hb-ft.h>
-TEST_F(CONTEXT,hebrew){
+TEST_F(CDCONTEXT,hebrew){
 #define DOUBLE_FROM_26_6(t) ((double)(t) / 64.0)
 #define HBFixedToFloat(t)  ((double)(t)/64.0)
     const wchar_t text[]={0xfb49,0x05d0,0x05ad,0x0020,0x05d0,0x059d,0x0020,0x05d0,0x0599,0x0020,

@@ -18,7 +18,7 @@ public:
     static Assets*rm;
     static int mScreenWidth,mScreenHeight;
     static RefPtr<ImageSurface>sImage;
-    static HANDLE mPrimarySurface,mDrawSurface;
+    static GFXHANDLE mPrimarySurface,mDrawSurface;
 public:
     static void SetUpTestCase(){
         int mPitch,mFormat;
@@ -82,8 +82,8 @@ Canvas* DRAWABLE::ctx=nullptr;
 Assets* DRAWABLE::rm =nullptr;
 int DRAWABLE::mScreenWidth=0;
 int DRAWABLE::mScreenHeight=0;
-HANDLE DRAWABLE::mPrimarySurface=nullptr;
-HANDLE DRAWABLE::mDrawSurface=nullptr;
+GFXHANDLE DRAWABLE::mPrimarySurface=nullptr;
+GFXHANDLE DRAWABLE::mDrawSurface=nullptr;
 RefPtr<ImageSurface>DRAWABLE::sImage;
 
 TEST_F(DRAWABLE,parsexml){

@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <cdroid.h>
 //#include <porting/cdinput.h>
 #if defined(__linux__)||defined(__unix__) 
 #include <sys/time.h>
@@ -7,7 +6,19 @@
 #elif defined(_WIN32)||defined(_WIN64)
 #include <WinSock2.h>
 extern void gettimeofday(struct timeval* t1, struct timezone* zone);
+#undef RECT
+#undef SIZE
+#undef POINT
+#undef RGB
+#undef IN
+#undef OUT
+#undef WINDING
+#undef TRANSPARENT
+#undef OPAQUE
+#undef INFINITE
+#undef ABSOLUTE
 #endif
+#include <cdroid.h>
 struct MTEvent{int type,code,value;};
 class EVENT:public testing::Test{
 
