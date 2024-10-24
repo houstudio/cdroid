@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <sys/time.h>
 #include <core/systemclock.h>
 #include <core/atexit.h>
 #include <cdlog.h>
@@ -8,8 +7,14 @@
 #include <thread>
 #include <core/uieventsource.h>
 #include <core/handler.h>
+#if defined(__linux__)||defined(__unix__)
+#include <sys/time.h>
 #include <sys/timerfd.h>
 #include <unistd.h>
+#else
+extern void sleep(uint32_t);
+extern void usleep(uint32_t);
+#endif
 #include <time.h>
 
 class LOOPER:public testing::Test{

@@ -6,6 +6,10 @@
 #include <core/systemclock.h>
 #include <core/path.h>
 #include <image-decoders/imagedecoder.h>
+#if defined(_WIN32)||defined(_WIN64)
+extern void sleep(uint32_t);
+extern void usleep(uint32_t);
+#endif
 #define SLEEP(x) usleep((x)*1000)
 using namespace Cairo;
 class DRAWABLE:public testing::Test{

@@ -8,13 +8,14 @@
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <string.h>
-#include <core/eventcodes.h>
+#include <linux/input.h>
 #include <cdinput.h>
-#include <ingenic2d.h>
+#include <g2d_driver.h>
 #include <libhardware2/fb.h>
 
 typedef struct {
     int fb;
+    int g2d;
     struct fb_fix_screeninfo fix;
     struct fb_var_screeninfo var;
 } FBDEVICE;
@@ -26,19 +27,18 @@ typedef struct {
     uint32_t pitch;
     int format;
     int ishw;
+    int used;
     char*buffer;
     char*kbuffer;/*kernel buffer address*/
-    struct ingenic_2d_frame*frame;
 } FBSURFACE;
 
 static FBDEVICE devs[2]= {-1};
-static struct ingenic_2d *g2d;
-
+static GFXRect screenMargin= {0};
+static FBSURFACE devSurfaces[16];
 int32_t GFXInit() {
     if(devs[0].fb>=0)return E_OK;
     memset(devs,0,sizeof(devs));
     FBDEVICE*dev=&devs[0];
-#if 0
     dev->fb=open("/dev/fb0", O_RDWR);
     // Get fixed screen information
     if(ioctl(dev->fb, FBIOGET_FSCREENINFO, &dev->fix) == -1) {
@@ -52,16 +52,45 @@ int32_t GFXInit() {
         LOGE("Error reading variable information");
         return E_ERROR;
     }
-#else
-    struct fb_device_info fb_info;
-    dev->fb=fb_open("/dev/fb0",&fb_info);
-    dev->fix=fb_info.fix;
-    dev->var=fb_info.var;
-#endif
+    dev->g2d=open("/dev/g2d",O_RDWR);
+    const char*strMargin=getenv("SCREEN_MARGINS");
+    const char* DELIM=",;";
+    if(strMargin){
+        char *sm=strdup(strMargin);
+        char*token=strtok(sm,DELIM);
+        screenMargin.x=atoi(token);
+        token=strtok(NULL,DELIM);
+        screenMargin.y=atoi(token);
+        token=strtok(NULL,DELIM);
+        screenMargin.w=atoi(token);
+        token=strtok(NULL,DELIM);
+        screenMargin.h=atoi(token);
+        free(sm);
+    }
+    const size_t displayScreenSize=(dev->var.yres * dev->fix.line_length);
+    const size_t screenSize = (dev->var.yres - screenMargin.y - screenMargin.h) * (dev->fix.line_length - (screenMargin.x + screenMargin.w)*4);
+    const size_t numSurface=(dev->fix.line_length-displayScreenSize)/screenSize+1;
+    char*fbp = (char *)mmap(0,dev->fix.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fb, 0);
+    char*kbuffStart = (const char*)devs[0].fix.smem_start;
+    char*buffStart = fbp;
+    devSurfaces[0].kbuffer= buffStart;
+    devSurfaces[0].buffer = fbp;
+    devSurfaces[0].width  = dev->var.xres;
+    devSurfaces[0].height = dev->var.yres;
+    devSurfaces[0].pitch  = dev->fix.line_length;
+    kbuffStart += displayScreenSize;
+    buffStart  += displayScreenSize;
+    for(int i=1;i<=numSurface;i++){
+        devSurfaces[i].kbuffer=kbuffStart;
+        devSurfaces[i].buffer =buffStart;
+        devSurfaces[i].width  = dev->var.xres;
+        devSurfaces[i].height = dev->var.yres;
+        devSurfaces[i].used=0;
+        kbuffStart+=screenSize;
+        buffStart+=screenSize;
+    }
     dev->var.yoffset=0;//set first screen memory for display
-    LOGI("fb_open fd =%d fb_enabled=%d",dev->fb,fb_enable(dev->fb));
-    g2d = ingenic_2d_open();
-    LOGI("FBIOPUT_VSCREENINFO=%d g2d=%p",ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var),g2d);
+    LOGI("FBIOPUT_VSCREENINFO=%d",ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var));
     LOGI("fb solution=%dx%d accel_flags=0x%x\r\n",dev->var.xres,dev->var.yres,dev->var.accel_flags);
     return E_OK;
 }
@@ -73,13 +102,9 @@ int32_t GFXGetDisplayCount() {
 int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height) {
     if(dispid<0||dispid>=GFXGetDisplayCount())return E_ERROR;
     FBDEVICE*dev=devs+dispid;
-    *width=dev->var.xres;
-    *height=dev->var.yres;
-    if( (dev->var.xres==0) || (dev->var.yres==0)) {
-        *width=800;
-        *height=640;
-    }
-    LOGD("screensize=%dx%d",*width,*height);
+    *width =dev->var.xres-(screenMargin.x + screenMargin.w);
+    *height=dev->var.yres-(screenMargin.y + screenMargin.h);
+    LOGV("screen[%d]size=%dx%d/%dx%d",dispid,*width,*height,dev->var.xres,dev->var.yres);
     return E_OK;
 }
 
@@ -179,30 +204,34 @@ static int setfbinfo(FBSURFACE*surf) {
     return rc;
 }
 
+static FBSURFACE*getFreeSurface(){
+    for(int i=0;i<sizeof(devSurfaces)/sizeof(FBSURFACE);i++){
+        if(!devSurfaces[i].used){
+            devSurfaces[i].used++;
+            return devSurfaces+i;
+        }
+    }
+    return NULL;
+}
 
 int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
-    FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
+    FBSURFACE*surf=getFreeSurface();
+    FBDEVICE*dev = &devs[dispid];
     surf->dispid=dispid;
-    surf->width=width;
-    surf->height=height;
+    surf->width= hwsurface?dev->var.xres:width;
+    surf->height=hwsurface?dev->var.yres:height;
     surf->format=format;
     surf->ishw=hwsurface;
     surf->pitch=width*4;
     size_t buffer_size=surf->height*surf->pitch;
-    FBDEVICE*dev=devs+dispid;
-    if(hwsurface && devs[dispid].fix.smem_len) {
-        size_t mem_len=((dev->fix.smem_start) -((dev->fix.smem_start) & ~(getpagesize() - 1)));
-        buffer_size=surf->height*dev->fix.line_length;
+    if(hwsurface) {
         setfbinfo(surf);
-	surf->kbuffer=dev->fix.smem_start;
-        surf->buffer=(char*)mmap( NULL,buffer_size,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0 );
-        surf->pitch=dev->fix.line_length;
-	surf->frame=ingenic_2d_alloc_frame_by_user(g2d,width,height,INGENIC_2D_ARGB8888,surf->kbuffer,surf->buffer,buffer_size);
+        dev->var.yoffset=0;
+        ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var);
     } else {
-        surf->buffer=(char*)malloc(buffer_size);
-	surf->frame = ingenic_2d_alloc_frame(g2d,width,height,INGENIC_2D_ARGB8888);
-	surf->buffer= surf->frame->addr[0];
-	surf->kbuffer=surf->frame->phyaddr[0];
+        if(surf->kbuffer==0){
+            surf->buffer=(char*)malloc(buffer_size);
+	}
     }
     surf->ishw=hwsurface;
     LOGV("surface=%x buf=%p/%p size=%dx%d hw=%d",surf,surf->kbuffer,surf->buffer,width,height,hwsurface);
@@ -215,7 +244,7 @@ int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*
     unsigned int x,y,sw,sh;
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
     FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
-    struct ingenic_2d_rect ingenic_src,ingenic_dst;
+    FBDEVICE*dev=devs+ndst->dispid;
     GFXRect rs= {0,0};
     uint8_t*pbs=(uint8_t*)nsrc->buffer;
     uint8_t*pbd=(uint8_t*)ndst->buffer;
@@ -239,41 +268,61 @@ int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*
         rs.h=(int)rs.h+dy;
         dy=0;
     }
-    if(dx+rs.w>ndst->width)rs.w=ndst->width-dx;
-    if(dy+rs.h>ndst->height)rs.h=ndst->height-dy;
+    if(dx+rs.w>ndst->width - screenMargin.x - screenMargin.w)
+        rs.w = ndst->width - screenMargin.x - screenMargin.w-dx;
+    if(dy+rs.h>ndst->height- screenMargin.y- screenMargin.h)
+        rs.h = ndst->height- screenMargin.y- screenMargin.h -dy;
 
     LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
-    /*pbs+=rs.y*nsrc->pitch+rs.x*4;
-    pbd+=dy*ndst->pitch+dx*4;
+    pbs+=rs.y*nsrc->pitch+rs.x*4;
+    if(ndst->ishw==0)pbd+=dy*ndst->pitch+dx*4;
+    else pbd+=(dy+screenMargin.y)*ndst->pitch+(dx+screenMargin.x)*4;
     const int cpw=rs.w*4;
-    for(y=0; y<rs.h; y++) {
-        memcpy(pbd,pbs,cpw);
-        pbs+=nsrc->pitch;
-        pbd+=ndst->pitch;
-    }*/
-    ingenic_src.x=rs.x;
-    ingenic_src.y=rs.y;
-    ingenic_src.w=rs.w;
-    ingenic_src.h=rs.h;
-    ingenic_src.frame=nsrc->frame;
-    ingenic_dst.x=dx;
-    ingenic_dst.y=dy;
-    ingenic_dst.w=rs.w;
-    ingenic_dst.h=rs.h;
-    ingenic_dst.frame=ndst->frame;
-    ingenic_2d_blend(g2d,&ingenic_src,&ingenic_dst,255);
+    if(dev->g2d<0){
+        for(y=0; y<rs.h; y++) {
+            memcpy(pbd,pbs,cpw);
+            pbs+=nsrc->pitch;
+            pbd+=ndst->pitch;
+        }
+    }else{
+        g2d_blit_h blt;
+        blt.src.image_h.width = nsrc.>width;
+        blt.src.image_h.height = nsrc->height;
+        info.src.image_h.laddr[0]=(uintptr t)(nsrc->kbuffer?nsrc->kbuffer:nsrc->buffer);
+        blt.src .mage_h.clip_rect.x = rs.x;
+        blt.src.image_h.clip_rect,y = rs.y;
+        blt.src.image_h.clip_rect.w= rs.w;
+        blt.src.image_h.clip_rect.h = rs.h;
+        info.src.image_h.format =G2D_FORMAT_RGB888;
+        info.src.image_h.alpha = 255;
+        blt.src.image_h.use phy_addr = (nsrc->kbuffer!=NULL);
+        //blit dest info
+        info.dst.image_h.clip_rect.x = dx;
+        info.dst.image_h.clip_rect.y = dy;
+        blt.dst.image_h.clip_rect.w= rs.w;
+        info.dst.image_h.clip_rect.h = rs.h;
+        info.dst.image_h.width = ndst.>width;
+        blt.dst.image h.height = ndst->height;
+        info.dst.image_h.laddr[0]=(uintptr t)(ndst->kbuffer?ndst->kbuffer:ndst->buffer);
+        info.dst.image_h.format =G2D_FORMAT_RGB888;
+        info.dst.image_h.alpha = 255;
+        blt.dst.image_h.use_phy_addr = (ndst->kbuffer!=NULL);
+        info.dst.image_h.color = 0xee8899;
+
+        if (ioctl(dev->g2d, G2D_CMD_BITBLT_H, &blt)< 0){
+            LOGE("Error: G2D CMD BITBLT H failed");
+        }
+    }
     return 0;
 }
 
 int32_t GFXDestroySurface(HANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     FBDEVICE*dev=devs+surf->dispid;
-    if(surf->ishw)
-        munmap(surf->buffer,surf->pitch*surf->height);
-    else {
-	if(surf->buffer)free(surf->buffer);
-	if(surf->frame)ingenic_2d_free_frame(g2d,surf->frame);
+    if(surf->used && (surf->kbuffer==NULL)){
+        free(surf->buffer);
+        surf->buffer = NULL;
     }
-    free(surf);
+    surf->used = 0;
     return 0;
 }

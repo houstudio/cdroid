@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <sys/time.h>
 #include <core/calendar.h>
 
 class CALENDAR:public testing::Test{

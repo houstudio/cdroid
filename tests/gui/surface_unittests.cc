@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
-#include <cdtypes.h>
+//#include <cdtypes.h>
 #include <cdgraph.h>
 #include <core/canvas.h>
-#include <sys/time.h>
 #include <core/assets.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -11,6 +10,17 @@
 #include <fstream>
 #include <cdlog.h>
 #include <core/textutils.h>
+#if defined(__linux__)||defined(__unix__)
+#include <sys/time.h>
+#elif defined(_WIN32)||defined(_WIN64)
+#include <Windows.h>
+void sleep(uint32_t s) {
+    Sleep(s * 1000);
+}
+void usleep(uint32_t us) {
+    Sleep(us * 1000000);
+}
+#endif
 using namespace Cairo;
 using namespace cdroid;
 #define SLEEP(x) usleep((x)*1000)

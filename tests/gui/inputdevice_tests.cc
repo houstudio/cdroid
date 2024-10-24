@@ -1,8 +1,13 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <sys/time.h>
 #include <porting/cdinput.h>
+#if defined(__linux__)||defined(__unix__) 
+#include <sys/time.h>
 #include <linux/input.h>
+#else
+#include <core/eventcodes.h>
+#endif
+
 struct MTEvent{int type,code,value;};
 class INPUTDEVICE:public testing::Test{
 public:

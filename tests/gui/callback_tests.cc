@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <sys/time.h>
 #include <core/systemclock.h>
 #include <cdlog.h>
 #include <functional>

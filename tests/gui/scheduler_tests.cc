@@ -1,7 +1,10 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
 #include <core/scheduler.h>
-
+#if defined(_WIN32)||defined(_WIN64)
+extern void sleep(uint32_t);
+extern void usleep(uint32_t);
+#endif
 class SCHEDULER:public testing::Test{
 
    public :

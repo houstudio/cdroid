@@ -1,8 +1,6 @@
 #include <gtest/gtest.h>
-#include <cdtypes.h>
 #include <cdgraph.h>
 #include <core/canvas.h>
-#include <sys/time.h>
 #include <core/assets.h>
 #include <cdinput.h>
 #include <sys/types.h>
@@ -12,8 +10,13 @@
 #ifdef ENABLE_CAIROSVG
 #include <curl/curl.h>
 #endif
+#if defined(__linux__)||defined(__unix__)
+#include <sys/time.h>
 #include <unistd.h>
-
+#elif defined(_WIN32)||defined(_WIN64)
+extern void sleep(uint32_t);
+extern void usleep(uint32_t);
+#endif
 #define SLEEP(x) usleep((x)*1000)
 
 using namespace Cairo;
