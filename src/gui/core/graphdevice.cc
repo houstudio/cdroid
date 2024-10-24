@@ -52,7 +52,7 @@ GraphDevice & GraphDevice::setRotation(int rotation){
 }
 
 int GraphDevice::init(){
-    HANDLE logoSurface;
+    GFXHANDLE logoSurface;
     uint8_t*buffer,*logoBuffer;
     uint32_t pitch;
     mPendingCompose = 0;
@@ -147,7 +147,7 @@ void GraphDevice::showLogo(Cairo::Context*context,Cairo::RefPtr<Cairo::ImageSurf
     context->restore();
 }
 
-HANDLE GraphDevice::getPrimarySurface()const{
+GFXHANDLE GraphDevice::getPrimarySurface()const{
     return mPrimarySurface;
 }
 
@@ -320,7 +320,7 @@ void GraphDevice::composeSurfaces(){
     for(int i=0;i< wSurfaces.size();i++){
         Rect rcw = wBounds[i];
         RefPtr<Region> rgn = wins[i]->mPendingRgn;
-        HANDLE hdlSurface  = wSurfaces[i]->mHandle;
+        GFXHANDLE hdlSurface  = wSurfaces[i]->mHandle;
         if(rgn->empty())continue; 
         rgn->intersect(wins[i]->mVisibleRgn);/*it is already empty*/
         LOGV_IF(!rgn->empty(),"surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());

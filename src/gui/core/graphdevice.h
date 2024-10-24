@@ -31,7 +31,7 @@ private:
     std::condition_variable mCV;
     std::string mFPSText;
     std::string mLogo;
-    HANDLE mPrimarySurface;
+    GFXHANDLE mPrimarySurface;
     class Canvas*mPrimaryContext;
     static GraphDevice*mInst;
     GraphDevice();
@@ -59,7 +59,7 @@ public:
     bool needCompose()const;
     Canvas*getPrimaryContext();
     //void invalidate(const Rect&);
-    HANDLE getPrimarySurface()const;
+    GFXHANDLE getPrimarySurface()const;
 };
 }
 #endif

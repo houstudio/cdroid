@@ -10,6 +10,8 @@
 #define END_DECLS
 #endif
 
+#if !(defined(_WIN32)||defined(_WIN64))
+
 #ifndef __VOID
 #define __VOID
 typedef void VOID;
@@ -118,5 +120,7 @@ typedef int BOOL;
 #ifndef NULL
 #define NULL ((void*)0)
 #endif
+
+#endif /*!(defined(_WIN32)||defined(_WIN64))*/
 
 #endif
