@@ -174,7 +174,7 @@ typedef struct{
     BOOL autoreset;
 }EVENT;
 
-HANDLE nglCreateEvent(BOOL state,BOOL autoreset )
+OSHANDLE nglCreateEvent(BOOL state,BOOL autoreset )
 {
     EVENT*e=(EVENT*)nglMalloc(sizeof(EVENT));
     pthread_mutex_init(&e->mtx,NULL);
@@ -183,7 +183,7 @@ HANDLE nglCreateEvent(BOOL state,BOOL autoreset )
     pthread_cond_init(&e->cond,&e->attr);
     e->triggered=state;
     e->autoreset=autoreset;
-    return (DWORD)e;
+    return (OSHANDLE)e;
 #ifdef LINUX
 
 #else
@@ -193,12 +193,12 @@ HANDLE nglCreateEvent(BOOL state,BOOL autoreset )
      attr.b_auto_reset=0;
      attr.b_initial_state=0;
      aui_os_event_create(&attr,&hdl);
-     return (DWORD)hdl;
+     return (OSHANDLE)hdl;
 #endif
 }
 
 
-DWORD nglDestroyEvent(HANDLE eventid)
+int32_t nglDestroyEvent(OSHANDLE eventid)
 {
 #ifdef LINUX
     EVENT*e=(EVENT*)eventid;
@@ -215,7 +215,7 @@ DWORD nglDestroyEvent(HANDLE eventid)
 #endif
 }
 
-DWORD nglResetEvent(HANDLE eventid)
+int32_t nglResetEvent(OSHANDLE eventid)
 {
 #ifdef LINUX
      EVENT*e=(EVENT*)eventid;
@@ -230,7 +230,7 @@ DWORD nglResetEvent(HANDLE eventid)
 #endif
 }
 
-DWORD nglSetEvent(HANDLE eventid)
+int32_t nglSetEvent(OSHANDLE eventid)
 {
 #ifdef LINUX
     EVENT*e=(EVENT*)eventid;
@@ -244,7 +244,7 @@ DWORD nglSetEvent(HANDLE eventid)
 #endif
 }
 
-DWORD nglWaitEvent(HANDLE eventid, DWORD timeout)
+int32_t nglWaitEvent(OSHANDLE eventid, uint32_t timeout)
 {
 #ifdef LINUX
     EVENT*e=(EVENT*)eventid;
@@ -276,18 +276,18 @@ DWORD nglWaitEvent(HANDLE eventid, DWORD timeout)
 #endif
 }
 
-void nglCreateThread(HANDLE *threadid,int p,int stacksize,THREAD_PROC proc,void*param)
+void nglCreateThread(OSHANDLE *threadid,int p,int stacksize,THREAD_PROC proc,void*param)
 {
     pthread_t thid;
     pthread_create(&thid,NULL,(void * (*)(void *))proc,param);
     *threadid=thid;
 }
 
-void nglDeleteThread(HANDLE threadid){
+void nglDeleteThread(OSHANDLE threadid){
     
 }
 
-void nglJoinThread(HANDLE threadid){
+void nglJoinThread(OSHANDLE threadid){
     pthread_join((pthread_t)threadid,NULL);
 }
 

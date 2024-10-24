@@ -11,7 +11,7 @@
     with this code or wish to make comments, please report them to Viaccess.
  
     Trademarks 
-    Viaccess is a registered trademark of Viaccess ® in France and/or other 
+    Viaccess is a registered trademark of Viaccess ?in France and/or other 
     countries. All other product and company names mentioned herein are the 
     trademarks of their respective owners.
     Viaccess may hold patents, patent applications, trademarks, copyrights 
@@ -34,8 +34,10 @@
 
 #include "cdtypes.h"
 
-BEGIN_DECLS
-
+#ifdef __cplusplus
+extern "C" {
+#endif
+typedef void* OSHANDLE;
 /**
  @ingroup std_drivers
  */
@@ -129,8 +131,8 @@ of threads that access a shared resource.
 @see VA_DeleteSemaphore VA_AcquireSemaphore VA_ReleaseSemaphore
 */
 
-typedef HANDLE NGLSemaphore;
-typedef HANDLE NGLMutex;
+typedef OSHANDLE NGLSemaphore;
+typedef OSHANDLE NGLMutex;
 
 int32_t nglCreateSemaphore(NGLSemaphore * const pSemaphore, uint32_t uiValue);
 
@@ -241,8 +243,8 @@ int32_t nglUnlockMutex (NGLMutex pMutex);
 
 
 typedef void (*THREAD_PROC)(void*p);
-void nglCreateThread(HANDLE *threadid,int p,int stacksize,THREAD_PROC proc,void*param);
-void nglDeleteThread(HANDLE threadid);
+void nglCreateThread(OSHANDLE*threadid,int p,int stacksize,THREAD_PROC proc,void*param);
+void nglDeleteThread(OSHANDLE threadid);
 /**
 This function suspends the execution of the current thread for a specified amount 
 of time.
@@ -252,17 +254,18 @@ of time.
 */
 void nglSleep( uint32_t uiDuration );
 
-HANDLE nglCreateEvent(BOOL state, BOOL autoreset);//autoreset=true WaitEvent will resetstate to false
+OSHANDLE nglCreateEvent(bool state, bool autoreset);//autoreset=true WaitEvent will resetstate to false
 
-int32_t nglDestroyEvent(HANDLE evenid);
+int32_t nglDestroyEvent(OSHANDLE evenid);
 
-int32_t nglResetEvent(HANDLE evenid);
+int32_t nglResetEvent(OSHANDLE evenid);
 
-int32_t nglSetEvent(HANDLE evenid);
+int32_t nglSetEvent(OSHANDLE evenid);
 
-int32_t nglWaitEvent(HANDLE evenid, uint32_t timeout);
-
-END_DECLS
+int32_t nglWaitEvent(OSHANDLE evenid, uint32_t timeout);
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _NGL_OS_H_ */
 
