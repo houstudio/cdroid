@@ -15,7 +15,7 @@ class RECTTEST:public testing::Test{
 
 TEST_F(RECTTEST,intersect){
     cdroid::Rect rc1={0,0,100,100};
-    cdriod::Rect rc2={-40,-50,100,100};
+    cdroid::Rect rc2={-40,-50,100,100};
     rc2.intersect(rc1);
     printf("%d,%d %d,%d\r\n",rc2.left,rc2.top,rc2.width,rc2.height);
     ASSERT_EQ(rc2.left,0);

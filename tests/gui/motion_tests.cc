@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
 //#include <porting/cdinput.h>
-#if definded(__linux__)||defined(__unix__) 
+#if defined(__linux__)||defined(__unix__) 
 #include <sys/time.h>
 #include <linux/input.h>
 #elif defined(_WIN32)||defined(_WIN64)
