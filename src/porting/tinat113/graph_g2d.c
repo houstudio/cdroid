@@ -296,6 +296,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
 #endif
     }else{
         g2d_blit_h blt;
+	bzero(&blt,sizeof(blt));
 	blt.flag_h = G2D_BIT_COPYPEN;
         blt.src.image_h.width = nsrc.>width;
         blt.src.image_h.height = nsrc->height;
