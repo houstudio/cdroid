@@ -60,7 +60,7 @@ TEST_F(CONTEXT,TEXT_ALIGNMENT){
     const char*horz[]={"LEFT","CENTER","RIGHT"};
     const char*vert[]={"TOP","VCENTER","BOTTOM"};
     char alignment[64];
-    RECT rect={100,100,800,120};
+    cdroid::Rect rect={100,100,800,120};
     ctx->set_font_size(40);
     for(int h=0;h<=2;h++){
         for(int v=0;v<=2;v++){
@@ -112,13 +112,13 @@ TEST_F(CONTEXT,circle){
         ctx->stroke();
     }
     ctx->translate(-300,-300);
-    RECT r={0,0,800,600};
+    cdroid::Rect r={0,0,800,600};
     //GraphDevice::getInstance().invalidate(&r);
     GraphDevice::getInstance().composeSurfaces();
 }
 
 TEST_F(CONTEXT,Translate){
-    RECT rect={0,0,800,600};
+    cdroid::Rect rect={0,0,800,600};
     ctx->set_color(0xFFFFFFFF);
     ctx->rectangle(0,0,800,600);ctx->fill();
     ctx->set_color(0xFFFF0000);
@@ -140,7 +140,7 @@ TEST_F(CONTEXT,Translate){
 
 TEST_F(CONTEXT,Clip){
     RefPtr<ImageSurface>img=ImageSurface::create_from_png("light.png");
-    RECT rect={0,0,800,600};
+    cdroid::Rect rect={0,0,800,600};
     ctx->set_color(0xFFFFFFFF);
     ctx->rectangle(0,0,800,600);ctx->fill();
     ctx->arc(400,300,100,0,M_PI*2);
@@ -178,7 +178,7 @@ TEST_F(CONTEXT,Clip2){
     ctx->clip();
     double x1=0,y1=0,x2=0,y2=0;
     ctx->get_clip_extents(x1,y1,x2,y2);
-    std::vector<Rectangle>lst;
+    std::vector<Cairo::Rectangle>lst;
     ctx->copy_clip_rectangle_list(lst);
     printf("CLIPS(%f,%f,%f,%f) lst.size=%lu\r\n",x1,y1,x2,y2,lst.size());
 }
@@ -199,7 +199,7 @@ TEST_F(CONTEXT,Mask){
     RefPtr<ImageSurface>img=ImageSurface::create_from_png("im_game.png");
     RefPtr<Pattern>pat1=SurfacePattern::create(img);
     RefPtr<Pattern>pat2=SolidPattern::create_rgba(0,1.0,0,.5);
-    RECT rect={0,0,800,600};
+    cdroid::Rect rect={0,0,800,600};
     ctx->set_source(pat1);
     ctx->rectangle(0,0,800,600);
     ctx->mask(pat2);
@@ -227,7 +227,7 @@ TEST_F(CONTEXT,Pattern_Line){
    int i, j; 
    RefPtr<RadialGradient>radpat(RadialGradient::create(200, 150, 80, 400, 300, 400));
    RefPtr<LinearGradient>linpat(LinearGradient::create(200, 210, 600, 390));
-   RECT rect={0,0,800,600};
+   cdroid::Rect rect={0,0,800,600};
    radpat->add_color_stop_rgb ( 0, 1.0, 0.8, 0.8); 
    radpat->add_color_stop_rgb ( 1, 0.9, 0.0, 0.0); 
    for (i=1; i<10; i++) 
@@ -247,7 +247,7 @@ TEST_F(CONTEXT,Pattern_Line){
 }
 TEST_F(CONTEXT,Pattern_Radio){
    RefPtr<RadialGradient>radpat(RadialGradient::create(200, 200, 10, 200, 200, 150));
-   RECT rect={0,0,1200,600};
+   cdroid::Rect rect={0,0,1200,600};
    radpat->add_color_stop_rgb ( .0, 1., 1., 1.);
    radpat->add_color_stop_rgb ( 1., 1., .0,.0);
    ctx->set_source ( radpat);
@@ -263,7 +263,7 @@ TEST_F(CONTEXT,Font){
     };
     ctx->set_color(0xffffffff);
     ctx->rectangle(0,0,1280,720);ctx->fill();
-    RECT rect={0,0,1280,720};
+    cdroid::Rect rect={0,0,1280,720};
     auto lg=LinearGradient::create(10,480,1100,720);
     lg->add_color_stop_rgba(.0,1.0,0,0,0.5);
     lg->add_color_stop_rgba(.5,.0,1.,.0,1.);

@@ -38,7 +38,7 @@ TEST_F(WINDOW,LocationInWindow1){
     Window* w=new Window(100,100,400,400);
     View*v=new View(200,200);
     w->addView(v).setPos(10,10);
-    POINT pt;
+    cdroid::Point pt;
     w->getLocationInWindow((int*)&pt);
     ASSERT_EQ(pt.x,0);
     ASSERT_EQ(pt.y,0);
@@ -54,7 +54,7 @@ TEST_F(WINDOW,LocationInWindow2){
     ViewGroup*vg=new ViewGroup(200,200);
     w->addView(vg).setPos(10,10);
     vg->addView(v).setPos(10,10);
-    POINT pt;
+    cdroid::Point pt;
     vg->getLocationInWindow((int*)&pt);
 
     ASSERT_EQ(pt.x,10);
@@ -73,7 +73,7 @@ TEST_F(WINDOW,LocationInWindow3){
     w->addView(vg).setPos(10,10);
     vg->addView(v).setPos(10,10);
     vg->scrollTo(10,5);
-    POINT pt;
+    cdroid::Point pt;
     vg->getLocationInWindow((int*)&pt);
 
     ASSERT_EQ(pt.x,0);

@@ -247,7 +247,7 @@ static void ms2timespec(int ms, struct timespec *ts){
     ts->tv_sec = ms / 1000;
     ts->tv_nsec = (ms % 1000) * 1000000;
 }
-
+#if defined(__linux__)||defined(__unix__)
 static int fdcallback(int fd, int events, void* data){
    struct timespec cur;
    int *loops=(int*)data;
@@ -280,6 +280,8 @@ TEST_F(LOOPER,timerfd){
     while(loops<20)mLooper->pollAll(10);
     ASSERT_EQ(loops,20);
 }
+#endif
+
 TEST_F(LOOPER,atexit){
     AtExit::registerCallback([](){std::cout<<"__1"<<std::endl;});
     AtExit::registerCallback([](){std::cout<<"__2"<<std::endl;});

@@ -48,7 +48,7 @@ public :
       ts=gettime();
    }
    void postCompose(){
-       RECT rect={0,0,800,600};
+       cdroid::Rect rect={0,0,800,600};
        Canvas*primary=GraphDevice::getInstance().getPrimaryContext();
        primary->set_source(ctx->get_target(),0,0);
        primary->rectangle(0,0,800,600);
@@ -96,7 +96,7 @@ TEST_F(IMAGE,Bitmap){
     loadImages("./","bmp");
     for(int i=0;i<images.size();i++){
        auto img = ImageDecoder::loadImage(nullptr,images[i]);
-       RECT rect={0,0,800,600};
+       cdroid::Rect rect={0,0,800,600};
        for(int i=0;i<10;i++){
           ctx->set_color(0xFF000000|(i*20<<16));
           ctx->rectangle(rect);
@@ -115,7 +115,7 @@ TEST_F(IMAGE,Image_PNG){
         tmstart();
         auto img = ImageDecoder::loadImage(nullptr,images[i]);
         tmend("decodepng");
-        RECT rect={0,0,800,600};
+        cdroid::Rect rect={0,0,800,600};
         ctx->rectangle(rect);
         ctx->fill();
         tmstart();
@@ -137,7 +137,7 @@ TEST_F(IMAGE,Image_JPG){
         tmstart();
         auto img = ImageDecoder::loadImage(nullptr,images[i]);
         tmend("decodejpg");
-        RECT rect={0,0,800,600};
+        cdroid::Rect rect={0,0,800,600};
         ctx->rectangle(rect);ctx->fill();
         tmstart();
 	printf("image %s =%p\r\n",images[i].c_str(),img.get());
@@ -153,8 +153,8 @@ TEST_F(IMAGE,draw){
     loadImages("/home/houzh/JPG/","");
     for(int i=0;i<images.size();i++){
         auto img = ImageDecoder::loadImage(nullptr,images[i]);
-        RECT dst={100,100,200,200};
-        RECT rs={img->get_width()/2,img->get_height()/2,img->get_width()/2,img->get_height()/2};
+        cdroid::Rect dst={100,100,200,200};
+        cdroid::Rect rs={img->get_width()/2,img->get_height()/2,img->get_width()/2,img->get_height()/2};
         ctx->draw_image(img,dst,&rs);
         postCompose();
         sleep(5);
@@ -163,7 +163,7 @@ TEST_F(IMAGE,draw){
 
 TEST_F(IMAGE,ninepatch1){
     auto img = ImageDecoder::loadImage(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/paopao1.9.png");
-    RECT rect={50,50,400,100};
+    cdroid::Rect rect={50,50,400,100};
     //std::vector<NinePatchBlock> horz,vert;
     //img->get_ninepatch(horz,vert);
     //ctx->draw_ninepatch(img,rect,horz,vert);
@@ -171,7 +171,7 @@ TEST_F(IMAGE,ninepatch1){
 
 TEST_F(IMAGE,ninepatch2){
     auto img = ImageDecoder::loadImage(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/btn_normal.9.png");
-    RECT rect={50,50,400,100};
+    cdroid::Rect rect={50,50,400,100};
     //std::vector<NinePatchBlock> horz,vert;
     //img->get_ninepatch(horz,vert);
     //ctx->draw_ninepatch(img,rect,horz,vert);
@@ -225,7 +225,7 @@ TEST_F(IMAGE,SVG){
         "https://www.levien.com/svg/tiger.svg","file://./svgs/rect1.svg"
      };
      unsigned int width,height;
-     RECT rect={0,0,800,600};
+     cdroid::Rect rect={0,0,800,600};
      mkdir("pngs",0777);
      for(int i=0;i<sizeof(svgs)/sizeof(svgs[0]);i++){
          svg_cairo_create(&svg);

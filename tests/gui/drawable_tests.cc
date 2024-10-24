@@ -191,7 +191,7 @@ TEST_F(DRAWABLE,rectshape){
 }
 
 TEST_F(DRAWABLE,roundrect){
-    RECT rect={2,2,2,2};
+    cdroid::Rect rect={2,2,2,2};
     std::vector<float>out={40,30,50,30};
     std::vector<float>in={};//{30,20,30,20};
     RoundRectShape*rs=new RoundRectShape(out,rect,in);
@@ -211,7 +211,7 @@ TEST_F(DRAWABLE,roundrect){
 }
 
 TEST_F(DRAWABLE,roundrectshape){
-    RECT rect={2,2,2,2};
+    cdroid::Rect rect={2,2,2,2};
     std::vector<float>out={40,30,50,30};
     std::vector<float>in={};//{30,20,30,20};
     RoundRectShape*rs=new RoundRectShape(out,rect,in);
