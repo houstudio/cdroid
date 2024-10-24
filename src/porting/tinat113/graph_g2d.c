@@ -286,7 +286,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         }
     }else{
         g2d_blit_h blt;
-	blt.flag_h = G2D_CMD_BITBLT;
+	blt.flag_h = G2D_BIT_COPYPEN;
         blt.src.image_h.width = nsrc.>width;
         blt.src.image_h.height = nsrc->height;
         blt.src.image_h.laddr[0]=(uintptr t)(nsrc->kbuffer?nsrc->kbuffer:nsrc->buffer);
