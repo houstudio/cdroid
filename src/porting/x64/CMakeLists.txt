@@ -37,10 +37,12 @@ find_package(SDL2)
 find_package(DirectFB)
 find_package(X11)
 find_package(DRM)
+find_package(Pixman)
+
 if(X11_FOUND)
     include_directories(${X11_INCLUDE_DIR}) 
     add_library(tvhal-x11 SHARED ${X64_SRCS} ../common/graph_xlib.c)
-    target_link_libraries(tvhal-x11 ${X11_LIBRARIES})
+    target_link_libraries(tvhal-x11 ${X11_LIBRARIES} ${PIXMAN_LIBRARIES})
     list(APPEND X64PORTS tvhal-x11)
 endif(X11_FOUND)
 if(DRM_FOUND)
@@ -71,13 +73,14 @@ endif()
 
 include_directories(./
     ../common ../include
+    ${PIXMAN_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
     ${X64_INCLUDE_DIRS}
 )
 message("CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR} GRAPH_SRCS=${GRAPH_SRCS}")
 add_library(tvhal SHARED ${X64_SRCS} ../common/graph_xlib.c)
-target_link_libraries(tvhal PRIVATE ${X11_LIBRARIES})
+target_link_libraries(tvhal PRIVATE ${X11_LIBRARIES} ${PIXMAN_LIBRARIES})
 
 set(PREFIX ${CMAKE_INSTALL_PREFIX})
 set(NONPKG_LIBS "-L${CMAKE_INSTALL_PREFIX}/lib")

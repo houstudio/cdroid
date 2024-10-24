@@ -12,6 +12,7 @@
 #include <string.h>
 #include <linux/input.h>
 #include <time.h>
+#include <pixman.h>
 
 static Display*x11Display=NULL;
 static Window x11Window=0;
@@ -21,7 +22,7 @@ static GC mainGC=0;
 static XImage*mainSurface=NULL;
 static void* X11EventProc(void*p);
 static GFXRect screenMargin= {0}; //{60,0,60,0};
-
+#define USE_PIXMAN 1
 #define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
 #if 1
    #define SENDMOUSE(time,x,y)  {\
@@ -201,6 +202,15 @@ static void  X11Expose(int x,int y,int w,int h) {
         //XPutBackEvent(x11Display,(XEvent*)&e);
     }
 }
+
+static pixman_color_t argb32_to_pixman_color(uint32_t argb) {
+    pixman_color_t color;
+    color.alpha = (argb >> 24) & 0xFF * 0xFFFF / 0xFF; // Alpha: 0-255 -> 0-65535
+    color.red   = (argb >> 16) & 0xFF * 0xFFFF / 0xFF; // Red: 0-255 -> 0-65535
+    color.green = (argb >> 8)  & 0xFF * 0xFFFF / 0xFF; // Green: 0-255 -> 0-65535
+    color.blue  = (argb >> 0)  & 0xFF * 0xFFFF / 0xFF; // Blue: 0-255 -> 0-65535
+    return color;
+}
 int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
     XImage*img=(XImage*)surface;
     uint32_t x,y;
@@ -209,6 +219,7 @@ int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
     rec.h=img->height;
     if(rect)rec=*rect;
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d",img,rec.x,rec.y,rec.w,rec.h,color,img->bytes_per_line);
+#ifndef USE_PIXMAN
     uint32_t*fb=(uint32_t*)(img->data+img->bytes_per_line*rec.y+rec.x*4);
     uint32_t*fbtop=fb;
     for(x=0; x<rec.w; x++)fb[x]=color;
@@ -216,6 +227,13 @@ int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
         fb+=(img->bytes_per_line>>2);
         memcpy(fb,fbtop,rec.w*4);
     }
+#else
+    pixman_color_t pmcolor=argb32_to_pixman_color(color);
+    pixman_rectangle16_t rec16={rec.x,rec.y,rec.w,rec.h};
+    pixman_image_t *src_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, img->width, img->height, img->data, img->bytes_per_line);
+    pixman_image_fill_rectangles(PIXMAN_OP_SRC, src_image, &pmcolor, 1, &rec16);
+    pixman_image_unref(src_image);
+#endif
     if(surface==mainSurface) {
         X11Expose(rec.x,rec.y,rec.w,rec.h);
     }
@@ -285,6 +303,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
     if(dy + rs.h > ndst->height-screenMargin.y - screenMargin.h) rs.h = ndst->height-screenMargin.y - screenMargin.h -dy;
 
     //LOGV_IF(ndst==mainSurface,"Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
+#ifndef USE_PIXMAN
     pbs += rs.y*nsrc->bytes_per_line+rs.x*4;
     pbd += dy*ndst->bytes_per_line+dx*4;
     if(ndst==mainSurface) {
@@ -295,6 +314,14 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         pbs+=nsrc->bytes_per_line;
         pbd+=ndst->bytes_per_line;
     }
+#else
+    pixman_image_t *src_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, nsrc->width, nsrc->height, nsrc->data, nsrc->bytes_per_line);
+    pixman_image_t *dst_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, ndst->width, ndst->height, ndst->data, ndst->bytes_per_line);
+    pixman_image_composite(PIXMAN_OP_SRC, src_image,NULL/*mask*/, dst_image,
+                       rs.x, rs.y, 0, 0, dx, dy, rs.w, rs.h);
+    pixman_image_unref(src_image);
+    pixman_image_unref(dst_image);    
+#endif
     LOGV("src (%d,%d,%d,%d) dst (%d,%d,%d,%d)",rs.x,rs.y,rs.w,rs.h,dx,dy,rs.w,rs.h);
     if((ndst==mainSurface)&&x11Display) {
         X11Expose(dx+screenMargin.x,dy+screenMargin.h,rs.w,rs.h);
