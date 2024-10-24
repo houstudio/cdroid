@@ -160,14 +160,14 @@ int32_t GFXGetDisplayCount() {
     return 1;
 }
 
-int32_t GFXLockSurface(HANDLE surface,void**buffer,uint32_t*pitch) {
+int32_t GFXLockSurface(GFXHANDLE surface,void**buffer,uint32_t*pitch) {
     XImage*img=(XImage*)surface;
     *buffer=img->data;
     *pitch=img->bytes_per_line;
     return 0;
 }
 
-int32_t GFXGetSurfaceInfo(HANDLE surface,uint32_t*width,uint32_t*height,int32_t *format) {
+int32_t GFXGetSurfaceInfo(GFXHANDLE surface,uint32_t*width,uint32_t*height,int32_t *format) {
     XImage*img=(XImage*)surface;
     *width=img->width;
     *height=img->height;
@@ -175,11 +175,11 @@ int32_t GFXGetSurfaceInfo(HANDLE surface,uint32_t*width,uint32_t*height,int32_t 
     return E_OK;
 }
 
-int32_t GFXUnlockSurface(HANDLE surface) {
+int32_t GFXUnlockSurface(GFXHANDLE surface) {
     return 0;
 }
 
-int32_t GFXSurfaceSetOpacity(HANDLE surface,uint8_t alpha) {
+int32_t GFXSurfaceSetOpacity(GFXHANDLE surface,uint8_t alpha) {
     return 0;//dispLayer->SetOpacity(dispLayer,alpha);
 }
 
@@ -201,7 +201,7 @@ static void  X11Expose(int x,int y,int w,int h) {
         //XPutBackEvent(x11Display,(XEvent*)&e);
     }
 }
-int32_t GFXFillRect(HANDLE surface,const GFXRect*rect,uint32_t color) {
+int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
     XImage*img=(XImage*)surface;
     uint32_t x,y;
     GFXRect rec= {0,0,0,0};
@@ -222,7 +222,7 @@ int32_t GFXFillRect(HANDLE surface,const GFXRect*rect,uint32_t color) {
     return E_OK;
 }
 
-int32_t GFXFlip(HANDLE surface) {
+int32_t GFXFlip(GFXHANDLE surface) {
     XImage *img=(XImage*)surface;
     if(mainSurface==surface) {
         GFXRect rect= {0,0,img->width,img->height};
@@ -231,7 +231,7 @@ int32_t GFXFlip(HANDLE surface) {
     return 0;
 }
 
-int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
+int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
     XImage*img=NULL;
     if(x11Display) {
         int imagedepth = DefaultDepth(x11Display,DefaultScreen(x11Display));
@@ -257,7 +257,7 @@ int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t heigh
 }
 
 
-int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect* srcrect) {
+int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GFXRect* srcrect) {
     XImage *ndst=(XImage*)dstsurface;
     XImage *nsrc=(XImage*)srcsurface;
     GFXRect rs= {0,0};
@@ -302,7 +302,7 @@ int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*
     return 0;
 }
 
-int32_t GFXDestroySurface(HANDLE surface) {
+int32_t GFXDestroySurface(GFXHANDLE surface) {
     XDestroyImage((XImage*)surface);
     return 0;
 }

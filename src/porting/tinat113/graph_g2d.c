@@ -109,14 +109,14 @@ int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height) {
 }
 
 
-int32_t GFXLockSurface(HANDLE surface,void**buffer,uint32_t*pitch) {
+int32_t GFXLockSurface(GFXHANDLE surface,void**buffer,uint32_t*pitch) {
     FBSURFACE*ngs=(FBSURFACE*)surface;
     *buffer=ngs->buffer;
     *pitch=ngs->pitch;
     return 0;
 }
 
-int32_t GFXGetSurfaceInfo(HANDLE surface,uint32_t*width,uint32_t*height,int32_t *format) {
+int32_t GFXGetSurfaceInfo(GFXHANDLE surface,uint32_t*width,uint32_t*height,int32_t *format) {
     FBSURFACE*ngs=(FBSURFACE*)surface;
     *width = ngs->width;
     *height= ngs->height;
@@ -124,15 +124,15 @@ int32_t GFXGetSurfaceInfo(HANDLE surface,uint32_t*width,uint32_t*height,int32_t 
     return E_OK;
 }
 
-int32_t GFXUnlockSurface(HANDLE surface) {
+int32_t GFXUnlockSurface(GFXHANDLE surface) {
     return 0;
 }
 
-int32_t GFXSurfaceSetOpacity(HANDLE surface,uint8_t alpha) {
+int32_t GFXSurfaceSetOpacity(GFXHANDLE surface,uint8_t alpha) {
     return 0;//dispLayer->SetOpacity(dispLayer,alpha);
 }
 
-int32_t GFXFillRect(HANDLE surface,const GFXRect*rect,uint32_t color) {
+int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
     FBSURFACE*ngs=(FBSURFACE*)surface;
     uint32_t x,y;
     GFXRect rec= {0,0,0,0};
@@ -153,7 +153,7 @@ int32_t GFXFillRect(HANDLE surface,const GFXRect*rect,uint32_t color) {
     return E_OK;
 }
 
-int32_t GFXFlip(HANDLE surface) {
+int32_t GFXFlip(GFXHANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     FBDEVICE*dev=devs+surf->dispid;
     if(surf->ishw) {
@@ -214,7 +214,7 @@ static FBSURFACE*getFreeSurface(){
     return NULL;
 }
 
-int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
+int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
     FBSURFACE*surf=getFreeSurface();
     FBDEVICE*dev = &devs[dispid];
     surf->dispid=dispid;
@@ -240,7 +240,7 @@ int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t heigh
 }
 
 
-int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect) {
+int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GFXRect*srcrect) {
     unsigned int x,y,sw,sh;
     FBSURFACE*ndst=(FBSURFACE*)dstsurface;
     FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
@@ -316,7 +316,7 @@ int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*
     return 0;
 }
 
-int32_t GFXDestroySurface(HANDLE surface) {
+int32_t GFXDestroySurface(GFXHANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     FBDEVICE*dev=devs+surf->dispid;
     if(surf->used && (surf->kbuffer==NULL)){
