@@ -6,6 +6,7 @@
 #include <string.h>
 #include <cdinput.h>
 #include <core/eventcodes.h>
+#include <pixman.h>
 
 typedef struct {
     HWND hwnd;

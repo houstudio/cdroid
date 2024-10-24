@@ -12,6 +12,7 @@
 #include <cdinput.h>
 #include <g2d_driver.h>
 #include <libhardware2/fb.h>
+#include <pixman.h>
 
 typedef struct {
     int fb;
@@ -279,11 +280,20 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
     else pbd+=(dy+screenMargin.y)*ndst->pitch+(dx+screenMargin.x)*4;
     const int cpw=rs.w*4;
     if(dev->g2d<0){
+#if 0
         for(y=0; y<rs.h; y++) {
             memcpy(pbd,pbs,cpw);
             pbs+=nsrc->pitch;
             pbd+=ndst->pitch;
         }
+#else
+    pixman_image_t *src_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, nsrc->width, nsrc->height, nsrc->buffer, 0);
+    pixman_image_t *dst_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, ndst->width, ndst->height, ndst->buffer, 0);
+    pixman_image_composite(PIXMAN_OP_SRC, src_image,NULL/*mask*/, dst_image,
+                       rs.x, rs.y, 0, 0, dx, dy, rs.w, rs.h);
+    pixman_image_unref(src_image);
+    pixman_image_unref(dst_image);	
+#endif
     }else{
         g2d_blit_h blt;
 	blt.flag_h = G2D_BIT_COPYPEN;
