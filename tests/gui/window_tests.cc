@@ -5,10 +5,11 @@
 extern void sleep(uint32_t);
 extern void usleep(uint32_t);
 #endif
-static const char*texts[]={"Creates 中国智造"," the specified format and dimensions.",
+static const std::vector<std::string>texts={//std::string("Creates 中国智造"),
+std::string("the specified format and dimensions."),
             "Initially the surface contents"," are set to 0.","(Specifically, within each pixel,",
             " each color or alpha channel","belonging to format will be 0.","The contents","of bits within a pixel,",
-            " but not belonging","必须使用UTF8编码 " };
+            " but not belonging"/*,"必须使用UTF8编码 "*/};
 class WINDOW:public testing::Test{
 
    public :
@@ -155,7 +156,7 @@ TEST_F(WINDOW,LinearLayout){
    LinearLayout*g1=new LinearLayout(0,0,800,400);
    LinearLayout*g2=new LinearLayout(0,410,800,200);
 
-   int count=sizeof(texts)/sizeof(char*);
+   size_t count=texts.size();
    for(int i=0;i<8;i++){
        g1->addView(new Button(texts[i%count],200,40));
        g2->addView(new Button(texts[(i+7)%count],200,40));

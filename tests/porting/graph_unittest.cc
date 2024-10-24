@@ -7,20 +7,13 @@
 #include<porting/cdlog.h>
 #include<porting/cderrors.h>
 #include <gtest/gtest.h>
-#if defined(_WIN32)||defined(_WIN64)
-void usleep(unsigned int microseconds) {
-    LARGE_INTEGER frequency;
-    QueryPerformanceFrequency(&frequency);
-    LARGE_INTEGER start;
-    QueryPerformanceCounter(&start);
-    long long end = start.QuadPart + static_cast<long long>(microseconds) * frequency.QuadPart / 1000000;
 
-    do {
-        QueryPerformanceCounter(&start);
-    } while (start.QuadPart < end);
+#if defined(_WIN32)||defined(_WIN64)
+void usleep(uint32_t us) {
+    Sleep(us / 1000);
 }
-void sleep(unsigned int secs) {
-    usleep(secs * 1000000);
+void sleep(uint32_t s) {
+    Sleep(s * 1000);
 }
 void gettimeofday(struct timeval* t1, struct timezone* zone) {
     auto tt = GetTickCount64();
@@ -368,12 +361,11 @@ typedef struct {
    unsigned int rgb[4];
 }TSTPIXEL;
 
-#if 0
 TEST_F(GRAPH,Format){
     //this case show four color block ,RED,GREEN,BLUE,WHITE.
     GFXHANDLE surface;
     uint32_t width,height;
-    GFXGetDisplaySize(&width,&height);
+    GFXGetDisplaySize(0,&width,&height);
     TSTPIXEL fpixels[]={
        {GPF_ARGB,    {0xFFFF0000,0xFF00FF00,0xFF0000FF,0xFFFFFFFF}},
        {GPF_ABGR,    {0xFF0000FF,0xFF00FF00,0xFFFF0000,0xFFFFFFFF}},
@@ -383,7 +375,7 @@ TEST_F(GRAPH,Format){
     };
 
     for(int i=0;i<sizeof(fpixels)/sizeof(TSTPIXEL)-3;i++){
-        GFXCreateSurface(&surface,width,height,fpixels[i].format,1);
+        GFXCreateSurface(0,&surface,width,height,fpixels[i].format,1);
 	GFXRect r={100,100,100,100};
 	GFXFillRect(surface,&r,0xFFFF0000);
 	ASSERT_EQ(getPixel(surface,101,101),fpixels[i].rgb[0]);
@@ -399,10 +391,10 @@ TEST_F(GRAPH,Format){
 
 	GFXFlip(surface);
 	GFXDestroySurface(surface);
-	GFXSleep(5000);
+	usleep(5000);
     }
 }
-#endif
+
 
 TEST_F(GRAPH,Blit_Normal){
     GFXHANDLE hwsurface;
@@ -528,3 +520,4 @@ TEST_F(GRAPH,canvas){
     GFXDestroySurface(surface);
 }
 #endif
+
