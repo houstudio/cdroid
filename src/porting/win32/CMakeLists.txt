@@ -16,7 +16,7 @@ include_directories(./
 )
 add_library(tvhal SHARED ${WIN32_SRCS} graph_wgl.c)
 add_library(tvhal-wgl SHARED ${WIN32_SRCS} graph_wgl.c)
-add_library(tvhal-gdi SHARED ${WIN32_SRCS} graph_win32.c)
+add_library(tvhal-gdi SHARED ${WIN32_SRCS} graph_gdi.c)
 
 set_target_properties(tvhal PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 set_target_properties(tvhal-wgl PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)   
