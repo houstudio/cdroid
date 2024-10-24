@@ -109,7 +109,7 @@ int32_t GFXFlip(GFXHANDLE surface) {
     return 0;
 }
 
-int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
+int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,bool hwsurface) {
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
     surf->dispid=dispid;
     surf->width=width;
