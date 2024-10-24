@@ -1,5 +1,6 @@
 #ifndef __CDROID_GRAPH_H__
 #define __CDROID_GRAPH_H__
+#include <stdbool.h>
 #include <stdint.h>
 /**
  @ingroup std_drivers
@@ -84,7 +85,7 @@ int32_t GFXGetDisplaySize(int dispid, uint32_t* width, uint32_t* height);
     For more information refer to @ref nglCreateSurface and @ref nglGetSurfaceInfo.
 */
 
-int32_t GFXCreateSurface(int dispid, GFXHANDLE* surface, uint32_t width, uint32_t height, int32_t format, BOOL hwsurface);
+int32_t GFXCreateSurface(int dispid, GFXHANDLE* surface, uint32_t width, uint32_t height, int32_t format, bool hwsurface);
 
 /**This function create an OSD Surface which we can used to draw sth.
     @param [in]surface                       The surface handle which is created by @ref nglCreateSurface.

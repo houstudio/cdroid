@@ -5,6 +5,7 @@
 #endif
 #include<porting/cdgraph.h>
 #include<porting/cdlog.h>
+#include<porting/cderrors.h>
 #include <gtest/gtest.h>
 #if defined(_WIN32)||defined(_WIN64)
 void usleep(unsigned int microseconds) {
@@ -84,7 +85,7 @@ public :
         gettimeofday(&tv,NULL);
         return tv.tv_sec*1000+tv.tv_usec/1000;
     }
-    unsigned int getPixel(HANDLE surface,int x,int y){
+    unsigned int getPixel(GFXHANDLE surface,int x,int y){
         //for pixel(x,y)out of surface,we return INVALID_COLOR
         uint8_t*buffer;
         uint32_t w,h,f,pitch;
@@ -101,7 +102,7 @@ public :
         default:return 0xCCCCCCCC;
        }
    }
-   BOOL errorPixel(HANDLE surface,int x,int y,uint32_t color){
+   bool errorPixel(GFXHANDLE surface,int x,int y,uint32_t color){
    //check color of pixel(x,y) =color
        uint32_t cc=getPixel(surface,x,y);
        return ((cc!=color)&&(cc!=INVALID_COLOR))||(cc==INVALID_COLOR);
@@ -109,7 +110,7 @@ public :
    void setRect(GFXRect&r,int x,int y,uint32_t w,uint32_t h){
        r.x=x;r.y=y;r.w=w;r.h=h;
    }
-   int CheckColor(HANDLE surface,GFXRect*rec,uint32_t c){
+   int CheckColor(GFXHANDLE surface,GFXRect*rec,uint32_t c){
        int rc=0;
        uint32_t w,h,f;
        GFXRect r;
@@ -143,7 +144,7 @@ public :
        if(errorPixel(surface,r.x,r.y+(int)r.h,c))rc|=0x8000;
        return rc;
    }
-   int FillCheckColor(HANDLE surface,GFXRect*rec,uint32_t c){
+   int FillCheckColor(GFXHANDLE surface,GFXRect*rec,uint32_t c){
        GFXFillRect(surface,rec,c);
        return CheckColor(surface,rec,c);
    }
@@ -157,16 +158,16 @@ TEST_F(GRAPH,Graph_GetScreen){
 }
 
 TEST_F(GRAPH,CreateSurface_1){
-    HANDLE surface=0;
+    GFXHANDLE surface=0;
     uint32_t width,height;
     ASSERT_EQ(0,GFXGetDisplaySize(0,&width,&height));
     ASSERT_EQ(0,GFXCreateSurface(0,&surface,width,height,GPF_ARGB,1));
-    ASSERT_NE((HANDLE)nullptr,surface);
+    ASSERT_NE((GFXHANDLE)nullptr,surface);
 
     GFXRect r={100,100,400,400};
     ASSERT_EQ(0,GFXFillRect(surface,&r,0xFFFF00FF));
     ASSERT_EQ(0,GFXFlip(surface));
-    ASSERT_NE((HANDLE)nullptr,surface);
+    ASSERT_NE((GFXHANDLE)nullptr,surface);
     sleep(2);
     ASSERT_EQ(0,GFXDestroySurface(surface));
 }
@@ -179,13 +180,13 @@ TEST_F(GRAPH,CreateSurface_2){
     ASSERT_GT(width*height,0);
     for(int i=0;i<sizeof(fmts)/sizeof(int);i++){
         uint32_t w=0,h=0,fmt=0;
-        HANDLE surface=NULL;
+        GFXHANDLE surface=NULL;
         void*buffer=NULL;
         int32_t  rc=GFXCreateSurface(0,&surface,width,height,fmts[i],0);
         ASSERT_TRUE((rc==E_NOT_SUPPORT)||(rc==E_OK));
         if(rc==E_NOT_SUPPORT)
             continue;
-        ASSERT_NE((HANDLE)nullptr,surface);
+        ASSERT_NE((GFXHANDLE)nullptr,surface);
         ASSERT_EQ(0,GFXGetSurfaceInfo(surface,&w,&h,(int*)&fmt));
         ASSERT_GT(w*h,0);
         ASSERT_EQ(fmt,fmts[i]);
@@ -199,7 +200,7 @@ TEST_F(GRAPH,CreateSurface_2){
 }
 
 TEST_F(GRAPH,Alpha){
-    HANDLE surface=0;
+    GFXHANDLE surface=0;
     uint32_t width,height,pitch;
     uint32_t *buffer;
     ASSERT_EQ(0,GFXGetDisplaySize(0,&width,&height));
@@ -215,7 +216,7 @@ TEST_F(GRAPH,Alpha){
 }
 
 TEST_F(GRAPH,Colors){
-    HANDLE surface=0;
+    GFXHANDLE surface=0;
     uint32_t width=0,height=0;
     GFXRect r={0,0,0,0};
     ASSERT_EQ(0,GFXGetDisplaySize(0,&width,&height));
@@ -235,7 +236,7 @@ TEST_F(GRAPH,Colors){
 }
 
 TEST_F(GRAPH,Blit){
-    HANDLE mainsurface=0,surface;
+    GFXHANDLE mainsurface=0,surface;
     uint32_t width=0,height=0;
     GFXRect r={0,0,0,0};
     ASSERT_EQ(0,GFXGetDisplaySize(0,&width,&height));
@@ -258,9 +259,9 @@ TEST_F(GRAPH,Blit){
 }
 
 TEST_F(GRAPH,Multilayer){
-    HANDLE hwsurface;
+    GFXHANDLE hwsurface;
     uint32_t width,height;
-    HANDLE layers[4]={NULL,NULL,NULL,NULL};
+    GFXHANDLE layers[4]={NULL,NULL,NULL,NULL};
     struct timeval tv;
     ASSERT_EQ(0,GFXGetDisplaySize(0,&width,&height));
     ASSERT_EQ(0,GFXCreateSurface(0,&hwsurface,width,height,GPF_ARGB,1));
@@ -296,12 +297,12 @@ TEST_F(GRAPH,Multilayer){
 }
 
 TEST_F(GRAPH,FillRect){
-    HANDLE surface=0;
+    GFXHANDLE surface=0;
     GFXRect r;
     uint32_t width,height;
     ASSERT_EQ(0,GFXGetDisplaySize(0,&width,&height));
     ASSERT_EQ(0,GFXCreateSurface(0,&surface,width,height,GPF_ARGB,1));
-    ASSERT_NE((HANDLE)nullptr,surface);
+    ASSERT_NE((GFXHANDLE)nullptr,surface);
 
     ASSERT_EQ(0xFFFF,FillCheckColor(surface,NULL,0));
 
@@ -321,7 +322,7 @@ TEST_F(GRAPH,FillRect){
 }
 #define TEST_TIMES 1000
 TEST_F(GRAPH,Benchmark_Fill){
-   HANDLE surface=0;
+   GFXHANDLE surface=0;
    uint32_t width,height,pitch;
    uint32_t *buffer;
    struct timeval t1,t2;
@@ -342,8 +343,8 @@ TEST_F(GRAPH,Benchmark_Fill){
 }
 
 TEST_F(GRAPH,Benchmark_Blit){
-   HANDLE mainsurface=0;
-   HANDLE surface2;
+   GFXHANDLE mainsurface=0;
+   GFXHANDLE surface2;
    uint32_t width,height,pitch;
    struct timeval t1,t2;
 
@@ -370,7 +371,7 @@ typedef struct {
 #if 0
 TEST_F(GRAPH,Format){
     //this case show four color block ,RED,GREEN,BLUE,WHITE.
-    HANDLE surface;
+    GFXHANDLE surface;
     uint32_t width,height;
     GFXGetDisplaySize(&width,&height);
     TSTPIXEL fpixels[]={
@@ -404,8 +405,8 @@ TEST_F(GRAPH,Format){
 #endif
 
 TEST_F(GRAPH,Blit_Normal){
-    HANDLE hwsurface;
-    HANDLE swsurface;
+    GFXHANDLE hwsurface;
+    GFXHANDLE swsurface;
     unsigned int width,height;
     GFXGetDisplaySize(0,&width,&height);
     GFXCreateSurface(0,&hwsurface,width,height,GPF_ARGB,1);
@@ -429,8 +430,8 @@ TEST_F(GRAPH,Blit_Normal){
 }
 
 TEST_F(GRAPH,Blit_CheckColor){
-    HANDLE hwsurface;
-    HANDLE swsurface;
+    GFXHANDLE hwsurface;
+    GFXHANDLE swsurface;
     unsigned int width,height;
     GFXRect r;
 #define FILLCOLOR 0xFFFF0000
@@ -465,8 +466,8 @@ TEST_F(GRAPH,Blit_CheckColor){
 }
 
 TEST_F(GRAPH,Blit_Range){
-    HANDLE hwsurface;
-    HANDLE swsurface;
+    GFXHANDLE hwsurface;
+    GFXHANDLE swsurface;
     unsigned int width,height;
     GFXRect r;
     setRect(r,0,0,320,240);
@@ -489,7 +490,7 @@ TEST_F(GRAPH,Blit_Range){
 
 #if 0
 TEST_F(GRAPH,canvas){
-    HANDLE surface;
+    GFXHANDLE surface;
     uint32_t width,height;
     uint32_t*buffer;
     uint32_t pitch;

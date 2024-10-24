@@ -112,7 +112,7 @@ int32_t GFXFlip(GFXHANDLE surface) {
     return ret;
 }
 
-int32_t GFXCreateSurface(int32_t dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
+int32_t GFXCreateSurface(int32_t dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,bool hwsurface) {
     int i,ret;
     DFBSurfaceDescription   desc;
     IDirectFBSurface*dfbsurface;

@@ -210,7 +210,7 @@ static FBSURFACE*getFreeSurface(){
     return NULL;
 }
 
-int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
+int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,bool hwsurface) {
     FBSURFACE*surf=getFreeSurface();
     FBDEVICE*dev = &devs[dispid];
     surf->dispid=dispid;

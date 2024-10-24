@@ -81,29 +81,29 @@ int32_t GFXGetDisplayCount(){
     return 1;
 }
 
-int32_t GFXLockSurface(HANDLE surface,void**buffer,uint32_t*pitch) {
+int32_t GFXLockSurface(GFXHANDLE surface,void**buffer,uint32_t*pitch) {
     SURFACE*gfx=(SURFACE*)surface;
     *buffer=gfx->vaddr;
     *pitch=gfx->pitch;
     return 0;
 }
 
-int32_t GFXGetSurfaceInfo(HANDLE surface,uint32_t*width,uint32_t*height,int32_t *format) {
+int32_t GFXGetSurfaceInfo(GFXHANDLE surface,uint32_t*width,uint32_t*height,int32_t *format) {
      SURFACE*gfx=(SURFACE*)surface;
      *width=gfx->width;
      *height=gfx->height;
     return 0;
 }
 
-int32_t GFXUnlockSurface(HANDLE surface) {
+int32_t GFXUnlockSurface(GFXHANDLE surface) {
     return 0;
 }
 
-int32_t GFXSurfaceSetOpacity(HANDLE surface,uint8_t alpha) {
+int32_t GFXSurfaceSetOpacity(GFXHANDLE surface,uint8_t alpha) {
     return 0;
 }
 
-int32_t GFXFillRect(HANDLE surface,const GFXRect*rect,uint32_t color) {
+int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
     SURFACE*ngs=(SURFACE*)surface;
     uint32_t x,y;
     GFXRect rec= {0,0,0,0};
@@ -135,7 +135,7 @@ static void modeset_flip_handler(int fd, uint32_t frame,
     LOGD_IF(i%200==0,"crtcid=%d time %d.%d flip=%d",crtc_id,sec,usec,ret);
 }
 
-int32_t GFXFlip(HANDLE surface) {
+int32_t GFXFlip(GFXHANDLE surface) {
     SURFACE*gfx=(SURFACE*)surface;
     /*drmEventContext ev = {};
     ev.version = DRM_EVENT_CONTEXT_VERSION;
@@ -149,7 +149,7 @@ int32_t GFXFlip(HANDLE surface) {
     return 0;
 }
 
-int32_t GFXCreateSurface(int,HANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
+int32_t GFXCreateSurface(int,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,bool hwsurface) {
     SURFACE*gfx=(SURFACE*)malloc(sizeof(SURFACE));
     gfx->width = width;
     gfx->height= height;
@@ -165,7 +165,7 @@ int32_t GFXCreateSurface(int,HANDLE*surface,uint32_t width,uint32_t height,int32
     return 0;
 }
 
-int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*srcrect) {
+int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GFXRect*srcrect) {
     SURFACE*ndst=(SURFACE*)dstsurface;
     SURFACE*nsrc=(SURFACE*)srcsurface;
     GFXRect rs= {0,0};
@@ -206,7 +206,7 @@ int32_t GFXBlit(HANDLE dstsurface,int dx,int dy,HANDLE srcsurface,const GFXRect*
     return 0;
 }
 
-int32_t GFXDestroySurface(HANDLE surface) {
+int32_t GFXDestroySurface(GFXHANDLE surface) {
     SURFACE*gfx=(SURFACE*)surface;
     modeset_destroy_fb(drmFD,gfx);
     free(gfx);
