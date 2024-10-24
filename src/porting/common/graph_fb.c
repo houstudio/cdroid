@@ -10,6 +10,7 @@
 #include <string.h>
 #include <linux/input.h>
 #include <cdinput.h>
+#include <pixman.h>
 typedef struct {
     int fb;
     struct fb_fix_screeninfo fix;
@@ -269,6 +270,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         rs.h = ndst->height- screenMargin.y- screenMargin.h -dy;
 
     LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
+#if 0
     pbs+=rs.y*nsrc->pitch+rs.x*4;
     if(ndst->ishw==0)pbd+=dy*ndst->pitch+dx*4;
     else pbd+=(dy+screenMargin.y)*ndst->pitch+(dx+screenMargin.x)*4;
@@ -278,6 +280,14 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         pbs+=nsrc->pitch;
         pbd+=ndst->pitch;
     }
+#else
+    pixman_image_t *src_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, nsrc->width, nsrc->height, nsrc->buffer, nsrc->pitch);
+    pixman_image_t *dst_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, ndst->width, ndst->height, ndst->buffer, ndst->pitch);
+    pixman_image_composite(PIXMAN_OP_SRC, src_image,NULL/*mask*/, dst_image,
+                       rs.x, rs.y, 0, 0, dx, dy, rs.w, rs.h);
+    pixman_image_unref(src_image);
+    pixman_image_unref(dst_image);
+#endif
     return 0;
 }
 
