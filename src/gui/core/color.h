@@ -3,6 +3,11 @@
 #include <string>
 #include <cstdint>
 
+#define RGBA(r,g,b,a) (((a)<<24)||((r)<<16)||((g)<<8)||(b))
+#if !(defined(RGB)||defined(_WIN32)||defined(_WIN64))
+#define RGB(r,g,b) RGBA(r,g,b,0xFF)
+#endif
+
 namespace cdroid{
 class Color{
 public:

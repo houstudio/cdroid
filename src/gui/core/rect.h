@@ -160,8 +160,10 @@ struct CRect{
 
 typedef CRect<int> Rect;
 typedef CRect<float>RectF;
-
-#define MAKERECT(x,y,w,h) RECT::Make(x,y,w,h)
+#if !(defined(RECT)||defined(_WIN32)||defined(_WIN64))
+typedef Rect RECT;
+#endif
+#define MAKERECT(x,y,w,h) Rect::Make(x,y,w,h)
 
 }
 #endif
