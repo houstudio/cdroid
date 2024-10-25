@@ -72,7 +72,7 @@ int main(int argc,const char*argv[]){
     w->setId(0);
     for(int i=0;i<50;i++)pgAdapter->add(""); 
     int optionid=0;
-    RECT rect;
+    Rect rect;
     if(argc>1)optionid=std::atoi(argv[1]);
     w->setBackgroundColor(0xFFFF0000);
     AbsListView::OnScrollListener ons={nullptr,nullptr};

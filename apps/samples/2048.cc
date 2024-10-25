@@ -82,7 +82,7 @@ void GameWindow::drawBoard(Canvas&canvas) {
             canvas.fill();
             canvas.set_color(0xFFFFFFFF);
             if(board[x][y]) {
-                RECT r= {x*CW,y*CW,CW,CW};
+                Rect r= {x*CW,y*CW,CW,CW};
                 int v=pow2[board[x][y]-1];
                 canvas.set_font_size(CW/getwb(v));
                 sprintf(CC,"%d",v);

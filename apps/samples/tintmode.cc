@@ -77,10 +77,10 @@ public:
 	np->setImageSize(300,300);
 	np->draw(canvas,300,100);
 	for(int i=1;i<6;i++)
- 	    np->drawScaledPart(RECT{1,8,5,30},RECT{20+30*i,400-10*i,5*i,100+20*i},canvas);
+ 	    np->drawScaledPart(Rect{1,8,5,30},Rect{20+30*i,400-10*i,5*i,100+20*i},canvas);
 
 	for(int i=0;i<5;i++)
-	   np->drawScaledPart(RECT{6,1,13,7},RECT{400,450+55*i,289,7+i*10},canvas);
+	   np->drawScaledPart(Rect{6,1,13,7},Rect{400,450+55*i,289,7+i*10},canvas);
 
 	canvas.save();
 	canvas.set_source(np->mImage,400,0);

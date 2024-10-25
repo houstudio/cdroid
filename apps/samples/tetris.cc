@@ -472,7 +472,7 @@ void TetrisWindow::onDraw(Canvas&canvas){
                 canvas.fill();
             } 
     //绘制得分
-    RECT rect;
+    Rect rect;
     rect.set(MARGIN*5+AREA_COL*BLOCK_SIZE,MARGIN*2+4*BLOCK_SIZE,BLOCK_SIZE*4,BLOCK_SIZE*4);
     canvas.set_font_size(26);
     canvas.draw_text(rect,std::string("Score: ")+std::to_string(score),Gravity::LEFT|Gravity::CENTER_VERTICAL);
