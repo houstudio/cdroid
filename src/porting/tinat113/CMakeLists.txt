@@ -28,7 +28,9 @@ list(APPEND TINAT113_INCLUDE_DIRS ../common)
 list(APPEND TINAT113_INCLUDE_DIRS ../include)
 find_package(Pixman)
 include_directories(./
-    ../common ../include
+    ../common
+    ../include
+    ./include
     ${PIXMAN_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
@@ -37,5 +39,6 @@ include_directories(./
 set(PREFIX ${CMAKE_INSTALL_PREFIX})
 
 add_library(tvhal SHARED ${TINAT113_SRCS} ../common/graph_fb.c)
+add_library(tvhal-g2d SHARED ${TINAT113_SRCS} sunximem.c graph_g2d.c)
 target_link_libraries(tvhal ${TINAT113_LIBS} ${PIXMAN_LIBRARIES} dl)
 install (TARGETS tvhal DESTINATION lib)
