@@ -71,7 +71,7 @@ int32_t GFXInit() {
     }
     const size_t displayScreenSize=(dev->var.yres * dev->fix.line_length);
     const size_t screenSize = (dev->var.yres - screenMargin.y - screenMargin.h) * (dev->fix.line_length - (screenMargin.x + screenMargin.w)*4);
-    const size_t numSurface=(dev->fix.line_length-displayScreenSize)/screenSize+1;
+    const size_t numSurfaces= (dev->fix.line_length-displayScreenSize)/screenSize+1;
     char*buffStart = (char *)mmap(0,dev->fix.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fb, 0);
     char*kbuffStart = (const char*)devs[0].fix.smem_start;
     devSurfaces[0].kbuffer= kbuffStart;
@@ -81,7 +81,7 @@ int32_t GFXInit() {
     devSurfaces[0].pitch  = dev->fix.line_length;
     kbuffStart += displayScreenSize;
     buffStart  += displayScreenSize;
-    for(int i=1;i<=numSurface;i++){
+    for(int i=1;i<=numSurfaces;i++){
         devSurfaces[i].kbuffer=kbuffStart;
         devSurfaces[i].buffer =buffStart;
         devSurfaces[i].width  = dev->var.xres;
@@ -91,7 +91,7 @@ int32_t GFXInit() {
         buffStart+=screenSize;
     }
     dev->var.yoffset=0;//set first screen memory for display
-    LOGI("FBIOPUT_VSCREENINFO=%d g2dfd=%d",ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var),dev->g2d);
+    LOGI("FBIOPUT_VSCREENINFO=%d g2dfd=%d numSurfaces",ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var),dev->g2d,numSurfaces);
     LOGI("fb solution=%dx%d accel_flags=0x%x\r\n",dev->var.xres,dev->var.yres,dev->var.accel_flags);
     return E_OK;
 }

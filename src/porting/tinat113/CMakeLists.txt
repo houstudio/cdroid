@@ -38,7 +38,8 @@ include_directories(./
 )
 set(PREFIX ${CMAKE_INSTALL_PREFIX})
 
-add_library(tvhal SHARED ${TINAT113_SRCS} ../common/graph_fb.c)
-add_library(tvhal-g2d SHARED ${TINAT113_SRCS} sunximem.c graph_g2d.c)
+add_library(tvhal-fb SHARED ${TINAT113_SRCS} ../common/graph_fb.c)
+add_library(tvhal-g2d SHARED ${TINAT113_SRCS} graph_g2d.c ion_alloc.c sunximem.c)
+add_library(tvhal SHARED ${TINAT113_SRCS} graph_g2d.c)
 target_link_libraries(tvhal ${TINAT113_LIBS} ${PIXMAN_LIBRARIES} dl)
 install (TARGETS tvhal DESTINATION lib)
