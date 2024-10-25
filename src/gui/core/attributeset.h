@@ -19,7 +19,7 @@ public:
     void setContext(Context*,const std::string&package);
     bool add(const std::string&,const std::string&value);
     bool hasAttribute(const std::string&key)const;
-    int  size()const;
+    size_t  size()const;
     int  set(const char*atts[],int size=0);
     static std::string normalize(const std::string&pkg,const std::string&property);
     std::map<std::string,std::string>&getEntries();

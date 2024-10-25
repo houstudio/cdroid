@@ -59,7 +59,7 @@ public:
     virtual int getDefaultLoopCount() const = 0;
     virtual FrameSequenceState* createState() const = 0;
     static int registerFactory(const std::string&mime,uint32_t,Verifier,Factory);
-    static int registerAllFrameSequences(std::map<const std::string,Registry>&entis);
+    static size_t registerAllFrameSequences(std::map<const std::string,Registry>&entis);
     static FrameSequence* create(cdroid::Context*,const std::string&resid);
 };
 

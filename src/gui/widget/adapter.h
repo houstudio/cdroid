@@ -95,7 +95,7 @@ public:
         return mObjects[position];
     }
     int getCount()const override {
-        return mObjects.size();
+        return (int)mObjects.size();
     }
     void add(const T& obj){
         mObjects.push_back(obj);

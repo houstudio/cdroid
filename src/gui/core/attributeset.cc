@@ -58,7 +58,7 @@ int AttributeSet::set(const char*atts[],int size){
         if(key)key++;else key=atts[i];
         mAttrs.insert({std::string(key),normalize(mPackage,std::string(atts[i+1]))});
     }
-    return mAttrs.size();
+    return (int)mAttrs.size();
 }
 
 std::map<std::string,std::string>&AttributeSet::getEntries(){
@@ -93,7 +93,7 @@ bool AttributeSet::hasAttribute(const std::string&key)const{
     return mAttrs.find(key)!=mAttrs.end();
 }
 
-int AttributeSet::size()const{
+size_t AttributeSet::size()const{
     return mAttrs.size();
 }
 
@@ -221,7 +221,7 @@ int AttributeSet::getDimensionPixelSize(const std::string&key,int def)const{
         if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)
 	    def = (dm.density * def /*+0.5f*/);
         if(strncmp(p,"sp",2)==0)
-	    def = (dm.scaledDensity * def /*+0.5f*/);
+	    def = int(dm.scaledDensity * def /*+0.5f*/);
     }
     return def;
 }

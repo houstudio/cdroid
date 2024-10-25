@@ -309,7 +309,7 @@ int AdapterHelper::updatePositionWithPostponed(int pos, int cmd) {
             LOGD("----");
         }
     }
-    for (int i = mPostponedList.size() - 1; i >= 0; i--) {
+    for (int i = int(mPostponedList.size() - 1); i >= 0; i--) {
         UpdateOp* op = mPostponedList.at(i);
         if (op->cmd == UpdateOp::MOVE) {
             if (op->itemCount == op->positionStart || op->itemCount < 0) {
@@ -326,8 +326,8 @@ int AdapterHelper::updatePositionWithPostponed(int pos, int cmd) {
 }
 
 bool AdapterHelper::canFindInPreLayout(int position) {
-    const size_t count = mPostponedList.size();
-    for (size_t i = 0; i < count; i++) {
+    const int count = (int)mPostponedList.size();
+    for (int i = 0; i < count; i++) {
         UpdateOp* op = mPostponedList.at(i);
         if (op->cmd == UpdateOp::MOVE) {
             if (findPositionOffset(op->itemCount, i + 1) == position) {

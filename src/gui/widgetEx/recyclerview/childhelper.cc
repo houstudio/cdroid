@@ -98,7 +98,7 @@ View* ChildHelper::getChildAt(int index){
 
 void ChildHelper::removeAllViewsUnfiltered(){
     mBucket->reset();
-    for (int i = mHiddenViews.size() - 1; i >= 0; i--) {
+    for (int i = int(mHiddenViews.size() - 1); i >= 0; i--) {
         mCallback.onLeftHiddenState(mHiddenViews.at(i));
         //mHiddenViews.remove(i);
     }
@@ -108,7 +108,7 @@ void ChildHelper::removeAllViewsUnfiltered(){
 }
 
 View* ChildHelper::findHiddenNonRemovedView(int position){
-    const int count = mHiddenViews.size();
+    const int count = (int)mHiddenViews.size();
     for (int i = 0; i < count; i++) {
         View* view = mHiddenViews.at(i);
         RecyclerView::ViewHolder* holder = mCallback.getChildViewHolder(view);

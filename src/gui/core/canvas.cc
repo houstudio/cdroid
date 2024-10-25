@@ -22,7 +22,6 @@ Canvas::Canvas(const RefPtr<Surface>& target)
 
 Canvas::Canvas(unsigned int width,unsigned int height):Context(nullptr,true){
     uint8_t*buffer;
-    int32_t format;
     uint32_t pitch;
     GFXCreateSurface(0,&mHandle,width,height,GPF_ARGB,false);
     GFXLockSurface(mHandle,(void**)&buffer,&pitch);
