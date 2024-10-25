@@ -4,8 +4,12 @@
 #include <R.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-//#include <unistd.h>
 #include <porting/cdlog.h>
+#if defined(_WIN32)||defiend(_WIN64)
+void realpath(const char* path, char* real) {
+    strcpy(real, path);
+}
+#endif
 namespace cdroid{
 std::string SimplifyPath(const std::string & path) {
     char rpath[1024];
