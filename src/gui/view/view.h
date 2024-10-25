@@ -53,7 +53,7 @@
 #include <drawables.h>
 #include <cdlog.h>
 
-#define DECLARE_UIEVENT(type,name,...) typedef std::function< type(__VA_ARGS__) >name
+#define DECLARE_UIEVENT(type, name, ...) using name = std::function<type(__VA_ARGS__)>
 
 namespace cdroid{
 
