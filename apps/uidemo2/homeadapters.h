@@ -24,10 +24,10 @@ public:
     int mSubType;
     bool mPowerOn;
     bool mInline;
-    Device(const std::string&name,bool power=true,bool _inline=false){
+    Device(const std::string&name,bool power=true,bool _Inline=false){
         mName=name;
         mPowerOn=power;
-        mInline=_inline;
+        mInline=_Inline;
     }
 };
 
