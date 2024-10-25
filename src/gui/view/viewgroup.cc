@@ -2724,7 +2724,7 @@ void ViewGroup::invalidateInheritedLayoutMode(int layoutModeOfRoot){
     }
 }
 
-bool ViewGroup::isTransformedTouchPointInView(float x,float y, View& child,POINT*outLocalPoint) {
+bool ViewGroup::isTransformedTouchPointInView(float x,float y, View& child,Point*outLocalPoint) {
     float point[2] ={x,y};
     transformPointToViewLocal(point,child);
     const bool isInView=child.pointInView(point[0],point[1],0);

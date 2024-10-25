@@ -315,14 +315,14 @@ int Layout::getLineHeight(bool txtonly)const{
     return getLineBottom(0)-getLineTop(0)+1;
 }
 
-int Layout::getLineBounds(int line, RECT& bounds)const{
+int Layout::getLineBounds(int line, Rect& bounds)const{
     int top = getLineTop(line);
     int bottom =getLineBottom(line);
     bounds.set(0, top,mWidth,bottom-top+1);
     return getLineBaseline(line);
 }
 
-void Layout::getCaretRect(RECT&rect)const{
+void Layout::getCaretRect(Rect&rect)const{
     rect = mCaretRect;
 }
 

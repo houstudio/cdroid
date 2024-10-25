@@ -115,8 +115,8 @@ private:
     class TouchTarget* mFirstTouchTarget;
     class HoverTarget* mFirstHoverTarget;
     View* mTooltipHoverTarget;
-    POINT animateTo;//save window boundray  while animating
-    POINT animateFrom;//window animate from boundary
+    Point animateTo;//save window boundray  while animating
+    Point animateFrom;//window animate from boundary
     Transformation* mChildTransformation;
     void initGroup();
     void initFromAttributes(Context*,const AttributeSet&);

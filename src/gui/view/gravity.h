@@ -106,12 +106,12 @@ public:
         RELATIVE_HORIZONTAL_GRAVITY_MASK = START | END
     };
 public:
-    static void apply(int gravity, int w, int h,const RECT& container,RECT& outRect);
-    static void apply(int gravity, int w, int h,const RECT& container,RECT& outRect, int layoutDirection);
-    static void apply(int gravity, int w, int h,const RECT& container,int xAdj, int yAdj, RECT& outRect);
-    static void apply(int gravity, int w, int h,const RECT& container,int xAdj, int yAdj, RECT& outRect, int layoutDirection);
-    static void applyDisplay(int gravity,const RECT& display,RECT& inoutObj);
-    static void applyDisplay(int gravity,const RECT& display,RECT& inoutObj, int layoutDirection);
+    static void apply(int gravity, int w, int h,const Rect& container, Rect& outRect);
+    static void apply(int gravity, int w, int h,const Rect& container, Rect& outRect, int layoutDirection);
+    static void apply(int gravity, int w, int h,const Rect& container,int xAdj, int yAdj, Rect& outRect);
+    static void apply(int gravity, int w, int h,const Rect& container,int xAdj, int yAdj, Rect& outRect, int layoutDirection);
+    static void applyDisplay(int gravity,const Rect& display, Rect& inoutObj);
+    static void applyDisplay(int gravity,const Rect& display, Rect& inoutObj, int layoutDirection);
     static bool isVertical(int gravity);
     static bool isHorizontal(int gravity);
     static int getAbsoluteGravity(int gravity, int layoutDirection);

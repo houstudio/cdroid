@@ -6,16 +6,16 @@
 
 namespace cdroid{
 
-void Gravity::apply(int gravity, int w, int h,const RECT& container,RECT& outRect){
+void Gravity::apply(int gravity, int w, int h,const Rect& container,Rect& outRect){
     return apply(gravity, w, h, container, 0, 0, outRect);
 }
 
-void Gravity::apply(int gravity, int w, int h,const RECT& container,RECT& outRect, int layoutDirection){
+void Gravity::apply(int gravity, int w, int h,const Rect& container,Rect& outRect, int layoutDirection){
     const int absGravity = getAbsoluteGravity(gravity, layoutDirection);
     apply(absGravity, w, h, container, 0, 0, outRect);
 }
 
-void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, int yAdj, RECT& outRect){
+void Gravity::apply(int gravity, int w, int h,const Rect& container,int xAdj, int yAdj, Rect& outRect){
     int tmp=0;
     switch (gravity&((AXIS_PULL_BEFORE|AXIS_PULL_AFTER)<<AXIS_X_SHIFT)) {
     case 0:
@@ -92,12 +92,12 @@ void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, in
     }
 }
 
-void Gravity::apply(int gravity, int w, int h,const RECT& container,int xAdj, int yAdj, RECT& outRect, int layoutDirection){
+void Gravity::apply(int gravity, int w, int h,const Rect& container,int xAdj, int yAdj, Rect& outRect, int layoutDirection){
     int absGravity = getAbsoluteGravity(gravity, layoutDirection);
     apply(absGravity, w, h, container, xAdj, yAdj, outRect);
 }
 
-void Gravity::applyDisplay(int gravity,const RECT& display,RECT& inoutObj){
+void Gravity::applyDisplay(int gravity,const Rect& display,Rect& inoutObj){
     if ((gravity&DISPLAY_CLIP_VERTICAL) != 0) {
         if (inoutObj.top < display.top) inoutObj.top = display.top;
         if (inoutObj.bottom() > display.bottom()) inoutObj.width=display.bottom()-inoutObj.top;//inoutObj.bottom = display.bottom;
@@ -134,7 +134,7 @@ void Gravity::applyDisplay(int gravity,const RECT& display,RECT& inoutObj){
     }
 }
 
-void Gravity::applyDisplay(int gravity,const RECT& display,RECT& inoutObj, int layoutDirection){
+void Gravity::applyDisplay(int gravity,const Rect& display,Rect& inoutObj, int layoutDirection){
     int absGravity = getAbsoluteGravity(gravity, layoutDirection);
     applyDisplay(absGravity, display, inoutObj);
 }

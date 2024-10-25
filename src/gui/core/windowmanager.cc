@@ -339,7 +339,7 @@ void WindowManager::onKeyEvent(KeyEvent&event) {
 }
 
 void WindowManager::clip(Window*win){
-    RECT rcw = win->getBound();
+    Rect rcw = win->getBound();
     for (auto wind = mWindows.rbegin() ;wind != mWindows.rend();wind++){
         if( (*wind)==win )break;
         if( (*wind)->getVisibility()!=View::VISIBLE)continue;

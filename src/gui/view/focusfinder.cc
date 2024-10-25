@@ -18,12 +18,12 @@ View* FocusFinder::findNextFocus(ViewGroup* root, View* focused, int direction) 
     return findNextFocus(root, focused, nullptr, direction);
 }
 
-View* FocusFinder::findNextFocusFromRect(ViewGroup* root,const RECT* focusedRect,int direction) {
+View* FocusFinder::findNextFocusFromRect(ViewGroup* root,const Rect* focusedRect,int direction) {
     mFocusedRect=*focusedRect;
     return findNextFocus(root, nullptr,&mFocusedRect, direction);
 }
 
-View* FocusFinder::findNextFocus(ViewGroup* root, View* focused,RECT* focusedRect, int direction) {
+View* FocusFinder::findNextFocus(ViewGroup* root, View* focused,Rect* focusedRect, int direction) {
     View* next = nullptr;
     ViewGroup* effectiveRoot = getEffectiveRoot(root, focused);
     if (focused != nullptr) {
@@ -121,7 +121,7 @@ View* FocusFinder::findNextUserSpecifiedFocus(ViewGroup* root, View* focused, in
     return nullptr;
 }
 
-View* FocusFinder::findNextFocus(ViewGroup* root, View* focused,RECT* focusedRect,
+View* FocusFinder::findNextFocus(ViewGroup* root, View* focused,Rect* focusedRect,
                                  int direction,std::vector<View*>& focusables) {
     if (focused != nullptr) {
         if (focusedRect == nullptr) {
@@ -196,7 +196,7 @@ View* FocusFinder::findNextKeyboardNavigationCluster(View* root,View* currentClu
 }
 
 View* FocusFinder::findNextFocusInRelativeDirection(std::vector<View*>& focusables, ViewGroup* root,
-        View* focused,const RECT* focusedRect, int direction) {
+        View* focused,const Rect* focusedRect, int direction) {
         // Note: This sort is stable.
     /*mUserSpecifiedFocusComparator.setFocusables(focusables, root);
     Collections.sort(focusables, mUserSpecifiedFocusComparator);
@@ -210,20 +210,20 @@ View* FocusFinder::findNextFocusInRelativeDirection(std::vector<View*>& focusabl
     return focusables.at(count - 1);
 }
 
-void FocusFinder::setFocusBottomRight(ViewGroup* root, RECT& focusedRect)const{
+void FocusFinder::setFocusBottomRight(ViewGroup* root, Rect& focusedRect)const{
     const int rootBottom = root->getScrollY() + root->getHeight();
     const int rootRight = root->getScrollX() + root->getWidth();
     focusedRect.set(rootRight, rootBottom, rootRight, rootBottom);
 }
 
-void FocusFinder::setFocusTopLeft(ViewGroup* root, RECT&focusedRect)const{
+void FocusFinder::setFocusTopLeft(ViewGroup* root, Rect&focusedRect)const{
     const int rootTop = root->getScrollY();
     const int rootLeft = root->getScrollX();
     focusedRect.set(rootLeft, rootTop, rootLeft, rootTop);
 }
 
 View* FocusFinder::findNextFocusInAbsoluteDirection(std::vector<View*>&focusables, ViewGroup* root, View* focused,
-        const RECT*focusedRect, int direction) {
+        const Rect*focusedRect, int direction) {
     // initialize the best candidate to something impossible
     // (so the first plausible view will become the best choice)
     mBestCandidateRect=*focusedRect;
@@ -320,7 +320,7 @@ View* FocusFinder::getPreviousKeyboardNavigationCluster(View*root,View*currentCl
     return root;
 }
 
-bool FocusFinder::isBetterCandidate(int direction,const RECT& source,const RECT& rect1,const RECT& rect2) {
+bool FocusFinder::isBetterCandidate(int direction,const Rect& source,const Rect& rect1,const Rect& rect2) {
 
     // to be a better candidate, need to at least be a candidate in the first
     // place :)
@@ -341,7 +341,7 @@ bool FocusFinder::isBetterCandidate(int direction,const RECT& source,const RECT&
             < getWeightedDistanceFor(majorAxisDistance(direction, source, rect2), minorAxisDistance(direction, source, rect2));
 }
 
-bool FocusFinder::beamBeats(int direction,const RECT& source,const RECT& rect1,const RECT& rect2) {
+bool FocusFinder::beamBeats(int direction,const Rect& source,const Rect& rect1,const Rect& rect2) {
     const bool rect1InSrcBeam = beamsOverlap(direction, source, rect1);
     const bool rect2InSrcBeam = beamsOverlap(direction, source, rect2);
 
@@ -374,7 +374,7 @@ int FocusFinder::getWeightedDistanceFor(int majorAxisDistance, int minorAxisDist
             + minorAxisDistance * minorAxisDistance;
 }
 
-bool FocusFinder::isCandidate(const RECT& srcRect,const RECT& destRect, int direction) {
+bool FocusFinder::isCandidate(const Rect& srcRect,const Rect& destRect, int direction) {
     switch (direction) {
     case View::FOCUS_LEFT:  return (srcRect.right() > destRect.right() || srcRect.left >= destRect.right()) && srcRect.left > destRect.left;
     case View::FOCUS_RIGHT: return (srcRect.left < destRect.left || srcRect.right() <= destRect.left) && srcRect.right() < destRect.right();
@@ -384,7 +384,7 @@ bool FocusFinder::isCandidate(const RECT& srcRect,const RECT& destRect, int dire
     }
 }
 
-bool FocusFinder::beamsOverlap(int direction,const RECT& rect1,const RECT&rect2) {
+bool FocusFinder::beamsOverlap(int direction,const Rect& rect1,const Rect&rect2) {
     switch (direction) {
     case View::FOCUS_LEFT:
     case View::FOCUS_RIGHT: return (rect2.bottom() >= rect1.top) && (rect2.top <= rect1.bottom());
@@ -394,7 +394,7 @@ bool FocusFinder::beamsOverlap(int direction,const RECT& rect1,const RECT&rect2)
     }
 }
 
-bool FocusFinder::isToDirectionOf(int direction,const RECT& src,const RECT&dest) {
+bool FocusFinder::isToDirectionOf(int direction,const Rect& src,const Rect&dest) {
     switch (direction) {
     case View::FOCUS_LEFT:  return src.left >= dest.right();
     case View::FOCUS_RIGHT: return src.right() <= dest.left;
@@ -404,15 +404,15 @@ bool FocusFinder::isToDirectionOf(int direction,const RECT& src,const RECT&dest)
     }
 }
 
-int FocusFinder::majorAxisDistance(int direction,const RECT& source,const RECT& dest) {
+int FocusFinder::majorAxisDistance(int direction,const Rect& source,const Rect& dest) {
     return std::max(0, majorAxisDistanceRaw(direction, source, dest));
 }
 
-int FocusFinder::majorAxisDistanceToFarEdge(int direction,const RECT& source,const RECT& dest) {
+int FocusFinder::majorAxisDistanceToFarEdge(int direction,const Rect& source,const Rect& dest) {
     return std::max(1, majorAxisDistanceToFarEdgeRaw(direction, source, dest));
 }
 
-int FocusFinder::majorAxisDistanceRaw(int direction,const RECT&source,const RECT&dest) {
+int FocusFinder::majorAxisDistanceRaw(int direction,const Rect&source,const Rect&dest) {
     switch (direction) {
     case View::FOCUS_LEFT:  return source.left - dest.right();
     case View::FOCUS_RIGHT: return dest.left - source.right();
@@ -422,7 +422,7 @@ int FocusFinder::majorAxisDistanceRaw(int direction,const RECT&source,const RECT
     }
 }
 
-int FocusFinder::majorAxisDistanceToFarEdgeRaw(int direction,const RECT& source,const RECT& dest) {
+int FocusFinder::majorAxisDistanceToFarEdgeRaw(int direction,const Rect& source,const Rect& dest) {
     switch (direction) {
     case View::FOCUS_LEFT:  return source.left - dest.left;
     case View::FOCUS_RIGHT: return dest.right() - source.right();
@@ -432,7 +432,7 @@ int FocusFinder::majorAxisDistanceToFarEdgeRaw(int direction,const RECT& source,
     }
 }
 
-int FocusFinder::minorAxisDistance(int direction,const RECT& source,const RECT&dest) {
+int FocusFinder::minorAxisDistance(int direction,const Rect& source,const Rect&dest) {
     switch (direction) {
     case View::FOCUS_LEFT:
     case View::FOCUS_RIGHT: // the distance between the center verticals
@@ -454,8 +454,8 @@ View* FocusFinder::findNearestTouchable(ViewGroup* root, int x, int y, int direc
 
     int edgeSlop =ViewConfiguration::get(root->getContext()).getScaledEdgeSlop();
 
-    RECT closestBounds;
-    RECT& touchableBounds = mOtherRect;
+    Rect closestBounds;
+    Rect& touchableBounds = mOtherRect;
 
     for (int i = 0; i < numTouchables; i++) {
         View* touchable = touchables.at(i);
@@ -498,7 +498,7 @@ View* FocusFinder::findNearestTouchable(ViewGroup* root, int x, int y, int direc
     return closest;
 }
 
-bool FocusFinder::isTouchCandidate(int x, int y,const RECT&destRect, int direction)const{
+bool FocusFinder::isTouchCandidate(int x, int y,const Rect&destRect, int direction)const{
     switch (direction) {
     case View::FOCUS_LEFT:  return destRect.left <= x && destRect.top <= y && y <= destRect.bottom();
     case View::FOCUS_RIGHT: return destRect.left >= x && destRect.top <= y && y <= destRect.bottom();

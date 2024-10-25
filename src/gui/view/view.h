@@ -455,10 +455,10 @@ private:
     bool isHoverable()const;
     bool hasSize()const;
     bool canTakeFocus()const;
-    void getRoundVerticalScrollBarBounds(RECT* bounds);
-    void getStraightVerticalScrollBarBounds(RECT*drawBounds,RECT*touchBounds=nullptr);
-    void getVerticalScrollBarBounds(RECT*bounds,RECT*touchBounds=nullptr);
-    void getHorizontalScrollBarBounds(RECT*drawBounds,RECT*touchBounds);
+    void getRoundVerticalScrollBarBounds(Rect* bounds);
+    void getStraightVerticalScrollBarBounds(Rect*drawBounds, Rect*touchBounds=nullptr);
+    void getVerticalScrollBarBounds(Rect*bounds, Rect*touchBounds=nullptr);
+    void getHorizontalScrollBarBounds(Rect*drawBounds, Rect*touchBounds);
     void initializeScrollIndicatorsInternal();
     void setFocusedInCluster(View* cluster);
     void updateFocusedInCluster(View* oldFocus,int direction);

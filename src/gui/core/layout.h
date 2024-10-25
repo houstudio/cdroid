@@ -106,8 +106,8 @@ public:
     int getTextDirection()const;
     int getParagraphDirection(int line)const;
     int getLineHeight(bool txtonly=false)const;
-    int getLineBounds(int line, RECT& bounds)const; 
-    void getCaretRect(RECT&r)const;
+    int getLineBounds(int line, Rect& bounds)const; 
+    void getCaretRect(Rect&r)const;
     int getHeight(bool cap=false)const;
     int getEllipsizedWidth() const;
     void drawText(Canvas&canvas,int firstLine,int lastLine);
