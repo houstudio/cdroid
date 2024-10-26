@@ -58,7 +58,6 @@ public:
     void composeSurfaces();
     bool needCompose()const;
     Canvas*getPrimaryContext();
-    //void invalidate(const Rect&);
     GFXHANDLE getPrimarySurface()const;
 };
 }

@@ -151,26 +151,22 @@ GFXHANDLE GraphDevice::getPrimarySurface()const{
     return mPrimarySurface;
 }
 
-/*void GraphDevice::invalidate(const Rect&r){
-    //mInvalidateRgn->do_union((const RectangleInt&)r);
-    LOGV("(%d,%d,%d,%d)",r.left,r.top,r.width,r.height);
-}*/
-
 void GraphDevice::trackFPS(Canvas& canvas) {
     // Tracks frames per second drawn. First value in a series of draws may be bogus
     // because it down not account for the intervening idle time
-    const long nowTime = SystemClock::currentTimeMillis();
+    const int64_t nowTime = SystemClock::currentTimeMillis();
+#define FPS_CHECKTIME 500
     if (mFpsStartTime ==0) {
         mFpsStartTime = mFpsPrevTime = nowTime;
         mFpsNumFrames = 0;
     } else {
         ++mFpsNumFrames;
-        const long frameTime = nowTime - mFpsPrevTime;
-        const long totalTime = nowTime - mFpsStartTime;
+        const long frameTime = long(nowTime - mFpsPrevTime);
+        const long totalTime = long(nowTime - mFpsStartTime);
         mFpsPrevTime = nowTime;
-        if (totalTime > 1000) {
+        if (totalTime >=FPS_CHECKTIME) {
             char buffer[64];
-            const float fps = (float) mFpsNumFrames * 1000 / totalTime;
+            const float fps = (float) mFpsNumFrames * FPS_CHECKTIME / totalTime;
 #if HAVE_MALLINFO2
             struct mallinfo2 mi = mallinfo2();
             sprintf(buffer,"%.2ffps,%ldK",fps,long(mi.uordblks>>10));
@@ -214,7 +210,7 @@ void GraphDevice::flip(){
 }
 
 bool GraphDevice::needCompose()const{
-    return mPendingCompose&&(mComposing==0);
+    return mPendingCompose && mComposing;
 }
 
 Canvas*GraphDevice::getPrimaryContext(){
@@ -230,10 +226,9 @@ void GraphDevice::doCompose(){
     LOGD("%d concurrent threads are supported",std::thread::hardware_concurrency());
     while(!mQuitFlag){
         std::unique_lock<std::mutex>lock(mMutex);
-        mComposing = 0;
         mCV.wait(lock);
-        mComposing++;
         composeSurfaces();
+        mComposing = 0;
     }
     LOGD("ComposeThread exit");
 }
