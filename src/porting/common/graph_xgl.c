@@ -1,4 +1,4 @@
-#include <Windows.h>
+#include <stdio.h>
 #include <cdgraph.h>
 #include <cdlog.h>
 #include <fcntl.h>
@@ -6,13 +6,14 @@
 #include <string.h>
 #include <cdinput.h>
 #include <core/eventcodes.h>
-#include <gl/gl.h>
-#include <gl/glu.h>
+#include <X11/Xlib.h>
+#include <GL/gl.h>
+#include <GL/glx.h>
 #include <pixman.h>
 typedef struct {
-    HWND hwnd;
-    HDC hdc;
-    HGLRC hgrc;
+    Display*display;
+    Window*window;
+    GLXContext glc;
     int width;
     int height;
     int pitch;
@@ -33,7 +34,7 @@ typedef struct {
 
 static FBDEVICE devs[2]= {0};
 static GFXRect screenMargin= {0};
-#define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
+#define SENDKEY(time,k,down) {InjectKey(time,EV_KEY,k,down);}
 #if 1
 #define SENDMOUSE(time,x,y)  {\
       InjectABS(time,EV_ABS,ABS_MT_TRACKING_ID,12);\
@@ -59,109 +60,16 @@ static void InjectKey(unsigned long etime,int type, int code, int value) {
 }
 
 static void InjectABS(unsigned long etime, int type, int axis, int value);
-static void InitOpenGL(HDC hdc, int width, int height);
-static void SetupPixelFormat(HDC hdc);
 static void DrawScene(int width, int height);
-static LRESULT CALLBACK Window_PROC(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    DWORD msgTime = GetMessageTime();
-    switch (uMsg) {
-    case WM_TOUCH: {
-        UINT cInputs = LOWORD(wParam);
-        if (cInputs == 0)break;
-        PTOUCHINPUT pInputs = (PTOUCHINPUT)malloc(cInputs * sizeof(TOUCHINPUT));
-        if (GetTouchInputInfo((HTOUCHINPUT)lParam, cInputs, pInputs, sizeof(TOUCHINPUT))) {
-            for (UINT i = 0; i < cInputs; i++) {
-                TOUCHINPUT ti = pInputs[i];
-                LOGI("Touch point %u: x = %ld, y = %ld", i, ti.x / 100, ti.y / 100);
-            }
-            CloseTouchInputHandle((HTOUCHINPUT)lParam);
-            free(pInputs);
-        }break;
-    }
-    case WM_LBUTTONDOWN:
-    case WM_LBUTTONUP:
-        InjectABS(msgTime, EV_KEY, BTN_TOUCH, (uMsg == WM_LBUTTONDOWN) ? 1 : 0);
-        SENDMOUSE(msgTime, (LOWORD(lParam) - screenMargin.x), (HIWORD(lParam) - screenMargin.y));
-        break;
-    case WM_MOUSEMOVE:
-        if (wParam & MK_LBUTTON) {
-            SENDMOUSE(msgTime, (LOWORD(lParam) - screenMargin.x), (HIWORD(lParam) - screenMargin.y));
-        }
-        break;
-    default:return DefWindowProcW(hWnd, uMsg, wParam, lParam);
-    }
-    return 0;
-}
-#define CDROID_WINDOW_CLASSNAME L"CDROID.Window"
-static unsigned int __stdcall msgLooperProc(void * param)
-{
-    MSG message;
-    int width = 1280, height = 720;
-    DWORD window_style = WS_OVERLAPPEDWINDOW;
-    window_style &= ~(WS_SIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME);
-    char* env = getenv("SCREEN_SIZE");
-    WNDCLASSEXW window_class;
-    if (env) {
-        width = atoi(env);
-        env = strpbrk(env, "xX*,");
-        if (env)height = atoi(env + 1);
-    }
-    memset(&window_class, 0, sizeof(WNDCLASSEXW));
-    window_class.cbSize = sizeof(WNDCLASSEXW);
-    window_class.lpfnWndProc = Window_PROC;
-    window_class.lpszClassName = CDROID_WINDOW_CLASSNAME;
-    ATOM atrc = RegisterClassExW(&window_class);
-
-    devs[0].hwnd = CreateWindowExW(WS_EX_CLIENTEDGE, CDROID_WINDOW_CLASSNAME, L"CDROID",
-        window_style, CW_USEDEFAULT, 0, width, height, NULL, NULL, NULL, NULL);
-    devs[0].width = width;
-    devs[0].height = height;
-    devs[0].pitch = width * 4;
-    devs[0].buffer = (char*)malloc(width * height * 4);
-
-    devs[0].hdc = GetDC(devs[0].hwnd);
-    SetupPixelFormat(devs[0].hdc);
-
-    // ´´½¨ OpenGL ÉÏÏÂÎÄ
-    devs[0].hgrc = wglCreateContext(devs[0].hdc);
-    glGenTextures(1, &devs[0].texture);
-
-    glBindTexture(GL_TEXTURE_2D, devs[0].texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, devs[0].buffer);
-
-    wglMakeCurrent(devs[0].hdc, devs[0].hgrc);
-    glViewport(0, 0, width, height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluOrtho2D(-1.0, 1.0, 1.0, -1.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    ShowWindow(devs[0].hwnd, SW_SHOW);
-    UpdateWindow(devs[0].hwnd);
-    SetEvent((HANDLE)param);
-    while (GetMessageW(&message, devs[0].hwnd, 0, 0)) {
-        TranslateMessage(&message);
-        DispatchMessageW(&message);
-        if (devs[0].buffer) {
-           wglMakeCurrent(devs[0].hdc, devs[0].hgrc);
-           DrawScene(devs[0].width, devs[0].height);
-           SwapBuffers(devs[0].hdc);
-        }
-    }
-    return 0;
-}
+static unsigned int xglThreadProc(void * param);
 
 int32_t GFXInit() {
-    if(devs[0].hwnd>0)return E_OK;
+    if(devs[0].display)return E_OK;
     memset(devs,0,sizeof(devs));
     FBDEVICE*dev=&devs[0];
     const char*strMargins=getenv("SCREEN_MARGINS");
     const char* DELIM=",;";
+    pthread_t thread1;
     if(strMargins){
         char *sm  = strdup(strMargins);
         char*token= strtok(sm,DELIM);
@@ -174,13 +82,8 @@ int32_t GFXInit() {
         screenMargin.h = atoi(token);
         free(sm);
     }
-    DWORD window_style = WS_OVERLAPPEDWINDOW;
-    window_style &= ~(WS_SIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME);
-    
-    HANDLE mutex = CreateEventExW(NULL, CDROID_WINDOW_CLASSNAME, 0, EVENT_ALL_ACCESS);
-    HANDLE thread = (HANDLE)_beginthreadex(NULL,0,msgLooperProc,mutex,0,NULL);
-    WaitForSingleObjectEx(mutex, INFINITE, FALSE);
-    CloseHandle(mutex);
+    pthread_create(&thread1, NULL,xglThreadProc, NULL);
+    sleep(2);
     return E_OK;
 }
 
@@ -244,8 +147,17 @@ int32_t GFXFlip(GFXHANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     FBDEVICE*dev=devs+surf->dispid;
     if(surf->ishw) {
-        GFXRect rect= {0,0,surf->width,surf->height};
-        InvalidateRect(dev->hwnd,NULL,FALSE);
+	XEvent event;
+	event.type = Expose;
+        event.xexpose.window = devs[0].window;
+        event.xexpose.x = 0;
+        event.xexpose.y = 0;
+        event.xexpose.width = surf->width;
+        event.xexpose.height = surf->height;
+        event.xexpose.count = 0;
+
+        XSendEvent(devs[0].display, devs[0].window, False, ExposureMask, &event);
+        //XFlush(devs[0].display);
     }
     return 0;
 }
@@ -324,6 +236,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
     pixman_image_unref(src_image);
     pixman_image_unref(dst_image);
 #endif
+    //if(ndst->ishw) X11Expose(dx,dy,rs.w,rs.h);
     return 0;
 }
 
@@ -349,26 +262,6 @@ static void InjectABS(unsigned long etime, int type, int axis, int value) {
     InputInjectEvents(&i, 1, 1);
 }
 
-static void InitOpenGL(HDC hdc, int width, int height) {
-    glViewport(0, 0, width, height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(45.0f, ((GLdouble)width) / ((GLdouble)height), 1.0f, 100.0f);
-    glMatrixMode(GL_MODELVIEW);
-}
-static void SetupPixelFormat(HDC hdc) {
-    PIXELFORMATDESCRIPTOR pfd;
-    pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-    pfd.nVersion = 1;
-    pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-    pfd.iPixelType = PFD_TYPE_RGBA;
-    pfd.cColorBits = 32;
-    pfd.iLayerType = PFD_MAIN_PLANE;
-
-    int pixelFormat = ChoosePixelFormat(hdc, &pfd);
-    SetPixelFormat(hdc, pixelFormat, &pfd);
-}
-
 static void DrawScene(int width,int height) {
     if (devs[0].buffer == NULL)return;
 
@@ -384,13 +277,142 @@ static void DrawScene(int width,int height) {
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
     glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 0.0f);  // ×óÏÂ½Ç
-    glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0f, -1.0f, 0.0f);   // ÓÒÏÂ½Ç
-    glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0f, 1.0f, 0.0f);    // ÓÒÉÏ½Ç
-    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f, 1.0f, 0.0f);   // ×óÉÏ½Ç
+    glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 0.0f);
+    glTexCoord2f(1.0f, 0.0f); glVertex3f(1.0f, -1.0f, 0.0f);
+    glTexCoord2f(1.0f, 1.0f); glVertex3f(1.0f, 1.0f, 0.0f);
+    glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f, 1.0f, 0.0f);
     glEnd();
 
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
     glFlush();
+    glXSwapBuffers(devs[0].display, devs[0].window);
 }
+
+static struct{int xkey;int key;}X11KEY2CD[]={
+   {XK_0,7},{XK_1,8},{XK_2,9},{XK_3,10},{XK_4,11},{XK_5,12},{XK_6,13},{XK_7,14},{XK_8,15},{XK_9,16},
+   {XK_F1,131},{XK_F2,132},{XK_F3,133},{XK_F4,134},{XK_F5,135},{XK_F6,136},{XK_F7,137},{XK_F8,138}, {XK_F9,139},{XK_F10,140},{XK_F11,141},{XK_F12,142},
+   {XK_KP_Left,21},{XK_KP_Right,22},{XK_KP_Up,19},{XK_KP_Down,20},{XK_Home,122},{XK_End,123},{XK_Page_Up,92},{XK_Page_Down,93},
+   {XK_Insert,124},{XK_Delete,67},{XK_KP_Enter,23/*DPAD_CENTER*/},{XK_Escape,111},{XK_Return,66},{XK_KP_Space,62},{XK_BackSpace,112},{XK_Menu,82},
+   {XK_q,45},{XK_w,51},{XK_e,33},{XK_r,46},{XK_t,48},{XK_y,53/*Y*/},{XK_u,49},{XK_i,37},{XK_o,43},{XK_p,44},
+   {XK_a,29},{XK_s,47},{XK_d,32},{XK_f,34},{XK_g,35},{XK_h,36},{XK_j,38},{XK_k,39},{XK_l,40},
+   {XK_z,54},{XK_x,52},{XK_c,31},{XK_v,50},{XK_b,30},{XK_n,42},{XK_m,41}
+};
+
+static unsigned int xglThreadProc(void * param)
+{
+    int width = 1280, height = 720;
+    Colormap cmap;
+    XSetWindowAttributes swa;
+    Atom wm_delete_window;
+    char* env = getenv("SCREEN_SIZE");
+    if (env) {
+        width = atoi(env);
+        env = strpbrk(env, "xX*,");
+        if (env)height = atoi(env + 1);
+    }
+    
+    devs[0].display = XOpenDisplay(NULL);
+    devs[0].width = width;
+    devs[0].height = height;
+    devs[0].pitch = width * 4;
+    devs[0].buffer = (char*)malloc(width * height * 4);
+
+    int screen = DefaultScreen(devs[0].display);
+    int glp[] = {GLX_RGBA, GLX_DEPTH_SIZE, 16, GLX_DOUBLEBUFFER, None};
+    XVisualInfo *vi = glXChooseVisual(devs[0].display, screen, glp);
+
+    cmap = XCreateColormap(devs[0].display, RootWindow(devs[0].display, vi->screen), vi->visual, AllocNone);
+    swa.colormap = cmap;
+    swa.event_mask = ExposureMask | KeyPressMask;
+
+    devs[0].window = XCreateWindow(devs[0].display, RootWindow(devs[0].display, vi->screen), 0, 0, width, height, 0, vi->depth,
+                           InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
+    XStoreName(devs[0].display, devs[0].window, "CDROID");
+
+    XSelectInput(devs[0].display, devs[0].window, ExposureMask | KeyPressMask|KeyReleaseMask |ResizeRedirectMask|
+                     ButtonPressMask | ButtonReleaseMask | PointerMotionMask | Button1MotionMask | Button2MotionMask );
+
+    devs[0].glc = glXCreateContext(devs[0].display, vi, NULL, GL_TRUE);
+
+    glXMakeCurrent(devs[0].display, devs[0].window, devs[0].glc);
+    XMapWindow(devs[0].display, devs[0].window);
+
+    
+    glGenTextures(1, &devs[0].texture);
+    glBindTexture(GL_TEXTURE_2D, devs[0].texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, devs[0].buffer);
+
+    glViewport(0, 0, width, height);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-1.0, 1.0, 1.0, -1.0, -1.0, 1.0);
+    //gluOrtho2D(-1.0, 1.0, 1.0, -1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    //SetEvent((HANDLE)param);
+    wm_delete_window = XInternAtom(devs[0].display, "WM_DELETE_WINDOW", False);
+    XSetWMProtocols(devs[0].display, devs[0].window, &wm_delete_window, 1);
+    while(1){
+        XEvent event;
+	int i,keysym,key=0,down;
+        XNextEvent(devs[0].display,&event);
+        switch(event.type){
+        case Expose:
+            DrawScene(width,height);break;
+	case ClientMessage:
+	    //DrawScene(width,height);
+            if ((Atom)event.xclient.data.l[0] == wm_delete_window) {
+                LOGD("GraphXGL.Terminated");
+                goto end;
+            }break;
+        case KeyPress:/* ¿¿¿¿¿¿¿¿,¿¿¿¿¿¿ */
+        case KeyRelease:
+            down=event.type==KeyPress;
+            keysym=XLookupKeysym((XKeyEvent*)&event,0);
+            for(i=0;i<sizeof(X11KEY2CD)/sizeof(X11KEY2CD[0]);i++){
+                if(keysym==X11KEY2CD[i].xkey){
+                    SENDKEY(event.xmotion.time,(key=X11KEY2CD[i].key),down);
+                    break;
+                }
+            }
+            LOGV("keycode:%d sym:%d %d",event.xkey.keycode,keysym,key);
+            break;
+        case ButtonPress:
+        case ButtonRelease:
+            if(1==event.xbutton.button) {
+                InjectABS(event.xbutton.time,EV_KEY,BTN_TOUCH,(event.type==ButtonPress)?1:0);
+                SENDMOUSE(event.xbutton.time,event.xbutton.x - screenMargin.x, event.xbutton.y - screenMargin.y);
+            }
+            break;
+        case MotionNotify:
+            if(event.xmotion.state&Button1MotionMask) {
+                SENDMOUSE(event.xmotion.time,event.xmotion.x - screenMargin.x, event.xmotion.y - screenMargin.y);
+            }
+            break;
+        case DestroyNotify:
+            LOGD("====X11Window::Destroied");
+            return 0;
+        case UnmapNotify:
+            LOGD("===UnmapNotify ");
+            break;
+        default:
+            LOGD("event.type=%d",event.type);
+            break;
+
+        }
+    }
+end:
+    glXMakeCurrent(devs[0].display, None, NULL);
+    glXDestroyContext(devs[0].display, devs[0].glc);
+    XDestroyWindow(devs[0].display, devs[0].window);
+    XCloseDisplay(devs[0].display);
+    LOGD("XGL Thread Exited");
+    return 0;
+}
+
