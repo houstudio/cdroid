@@ -55,8 +55,8 @@ int32_t GFXInit() {
         LOGE("Error reading variable information");
         return E_ERROR;
     }
-    dev->g2d=open("/dev/g2d",O_RDWR);
-    const char*strMargin=getenv("SCREEN_MARGINS");
+    dev->g2d = open("/dev/g2d",O_RDWR);
+    const char*strMargin = getenv("SCREEN_MARGINS");
     const char* DELIM=",;";
     if(strMargin){
         char *sm=strdup(strMargin);
