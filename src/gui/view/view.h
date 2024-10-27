@@ -634,8 +634,8 @@ protected:
     void damageInParent();
     void transformRect(Rect&rect);
     virtual bool hasDefaultFocus()const;
-    int getSuggestedMinimumWidth();
-    int getSuggestedMinimumHeight();
+    virtual int getSuggestedMinimumWidth();
+    virtual int getSuggestedMinimumHeight();
     void setMeasuredDimension(int measuredWidth, int measuredHeight);
     bool handleScrollBarDragging(MotionEvent& event);
     bool performButtonActionOnTouchDown(MotionEvent&);
