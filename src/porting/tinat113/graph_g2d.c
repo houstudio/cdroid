@@ -34,14 +34,15 @@ typedef struct {
     char*kbuffer;/*kernel buffer address*/
 } FBSURFACE;
 
-static FBDEVICE devs[2]= {-1};
-static GFXRect screenMargin= {0};
+static FBDEVICE devs[2] = {-1};
+static GFXRect screenMargin = {0};
 static FBSURFACE devSurfaces[16];
+
 int32_t GFXInit() {
     if(devs[0].fb>=0)return E_OK;
-    memset(devs,0,sizeof(devs));
-    FBDEVICE*dev=&devs[0];
-    dev->fb=open("/dev/fb0", O_RDWR);
+    bzero(devs,sizeof(devs));
+    FBDEVICE*dev = &devs[0];
+    dev->fb = open("/dev/fb0", O_RDWR);
     // Get fixed screen information
     if(ioctl(dev->fb, FBIOGET_FSCREENINFO, &dev->fix) == -1) {
         LOGE("Error reading fixed information fd=%d",dev->fb);
@@ -71,7 +72,7 @@ int32_t GFXInit() {
     }
     const size_t displayScreenSize=(dev->var.yres * dev->fix.line_length);
     const size_t screenSize = (dev->var.yres - screenMargin.y - screenMargin.h) * (dev->fix.line_length - (screenMargin.x + screenMargin.w)*4);
-    const size_t numSurfaces= (dev->fix.line_length-displayScreenSize)/screenSize+1;
+    const size_t numSurfaces= (dev->fix.smem_len - displayScreenSize)/screenSize+1;
     char*buffStart = (char *)mmap(0,dev->fix.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fb, 0);
     char*kbuffStart = (const char*)devs[0].fix.smem_start;
     devSurfaces[0].kbuffer= kbuffStart;
@@ -81,7 +82,8 @@ int32_t GFXInit() {
     devSurfaces[0].pitch  = dev->fix.line_length;
     kbuffStart += displayScreenSize;
     buffStart  += displayScreenSize;
-    for(int i = 1; i < numSurfaces ; i++){
+    LOGI("g2dfd=%d numSurfaces=%d dissze=%d,screenSize=%d",dev->g2d,numSurfaces,displayScreenSize,screenSize);
+    for(int i = 1; (i < numSurfaces)&&(i<sizeof(devSurfaces)/sizeof(devSurfaces[0])) ; i++){
         devSurfaces[i].kbuffer= kbuffStart;
         devSurfaces[i].buffer = buffStart;
         devSurfaces[i].width  = dev->var.xres;
@@ -90,8 +92,9 @@ int32_t GFXInit() {
         kbuffStart += screenSize;
         buffStart += screenSize;
     }
-    dev->var.yoffset=0;//set first screen memory for display
-    LOGI("FBIOPUT_VSCREENINFO=%d g2dfd=%d numSurfaces=%d",ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var),dev->g2d,numSurfaces);
+    dev->var.yoffset = 0;//set first screen memory for display
+    int rc = ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var);
+    LOGI("FBIOPUT_VSCREENINFO=%d g2dfd=%d numSurfaces=%d",rc,dev->g2d,numSurfaces);
     LOGI("fb solution=%dx%d accel_flags=0x%x\r\n",dev->var.xres,dev->var.yres,dev->var.accel_flags);
     return E_OK;
 }
@@ -239,42 +242,42 @@ static FBSURFACE*getFreeSurface(){
 }
 
 int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,bool hwsurface) {
-    FBSURFACE*surf=getFreeSurface();
+    FBSURFACE*surf = getFreeSurface();
     FBDEVICE*dev = &devs[dispid];
-    surf->dispid=dispid;
-    surf->width= hwsurface?dev->var.xres:width;
-    surf->height=hwsurface?dev->var.yres:height;
-    surf->format=format;
-    surf->ishw=hwsurface;
-    surf->pitch=width*4;
+    surf->dispid= dispid;
+    surf->width = hwsurface?dev->var.xres:width;
+    surf->height= hwsurface?dev->var.yres:height;
+    surf->format= format;
+    surf->ishw = hwsurface;
+    surf->pitch = width*4;
     size_t buffer_size=surf->height*surf->pitch;
     if(hwsurface) {
         setfbinfo(surf);
-        dev->var.yoffset=0;
+        dev->var.yoffset = 0;
         ioctl(dev->fb,FBIOPAN_DISPLAY,&dev->var);
     } else {
         if(surf->kbuffer==0){
-            surf->buffer=(char*)malloc(buffer_size);
+            surf->buffer = (char*)malloc(buffer_size);
 	}
     }
     surf->ishw=hwsurface;
-    LOGV("surface=%x buf=%p/%p size=%dx%d hw=%d",surf,surf->kbuffer,surf->buffer,width,height,hwsurface);
-    *surface=surf;
+    LOGD("surface=%x buf=%p/%p size=%dx%d hw=%d",surf,surf->kbuffer,surf->buffer,width,height,hwsurface);
+    *surface = surf;
     return E_OK;
 }
 
 
 int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GFXRect*srcrect) {
     unsigned int x,y,sw,sh;
-    FBSURFACE*ndst=(FBSURFACE*)dstsurface;
-    FBSURFACE*nsrc=(FBSURFACE*)srcsurface;
-    FBDEVICE*dev=devs+ndst->dispid;
+    FBSURFACE*ndst = (FBSURFACE*)dstsurface;
+    FBSURFACE*nsrc = (FBSURFACE*)srcsurface;
+    FBDEVICE*dev = devs+ndst->dispid;
     GFXRect rs= {0,0};
-    uint8_t*pbs=(uint8_t*)nsrc->buffer;
-    uint8_t*pbd=(uint8_t*)ndst->buffer;
-    rs.w=nsrc->width;
-    rs.h=nsrc->height;
-    if(srcrect)rs=*srcrect;
+    uint8_t*pbs = (uint8_t*)nsrc->buffer;
+    uint8_t*pbd = (uint8_t*)ndst->buffer;
+    rs.w = nsrc->width;
+    rs.h = nsrc->height;
+    if(srcrect)rs =*srcrect;
     if(((int)rs.w+dx<=0)||((int)rs.h+dy<=0)||(dx>=(int)ndst->width)||(dy>=(int)ndst->height)||(rs.x<0)||(rs.y<0)) {
         LOGV("dx=%d,dy=%d rs=(%d,%d-%d,%d)",dx,dy,rs.x,rs.y,rs.w,rs.h);
         return E_INVALID_PARA;
