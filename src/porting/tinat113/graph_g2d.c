@@ -81,17 +81,17 @@ int32_t GFXInit() {
     devSurfaces[0].pitch  = dev->fix.line_length;
     kbuffStart += displayScreenSize;
     buffStart  += displayScreenSize;
-    for(int i=1;i<=numSurfaces;i++){
-        devSurfaces[i].kbuffer=kbuffStart;
-        devSurfaces[i].buffer =buffStart;
+    for(int i = 1; i < numSurfaces ; i++){
+        devSurfaces[i].kbuffer= kbuffStart;
+        devSurfaces[i].buffer = buffStart;
         devSurfaces[i].width  = dev->var.xres;
         devSurfaces[i].height = dev->var.yres;
-        devSurfaces[i].used=0;
-        kbuffStart+=screenSize;
-        buffStart+=screenSize;
+        devSurfaces[i].used = 0;
+        kbuffStart += screenSize;
+        buffStart += screenSize;
     }
     dev->var.yoffset=0;//set first screen memory for display
-    LOGI("FBIOPUT_VSCREENINFO=%d g2dfd=%d numSurfaces",ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var),dev->g2d,numSurfaces);
+    LOGI("FBIOPUT_VSCREENINFO=%d g2dfd=%d numSurfaces=%d",ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var),dev->g2d,numSurfaces);
     LOGI("fb solution=%dx%d accel_flags=0x%x\r\n",dev->var.xres,dev->var.yres,dev->var.accel_flags);
     return E_OK;
 }
