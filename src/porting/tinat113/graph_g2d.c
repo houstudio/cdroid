@@ -75,7 +75,7 @@ int32_t GFXInit() {
     }
     const size_t displayScreenSize=(dev->var.yres * dev->fix.line_length);
     const size_t screenSize = (dev->var.yres - screenMargin.y - screenMargin.h) * (dev->fix.line_length - (screenMargin.x + screenMargin.w)*4);
-    const size_t numSurfaces= (dev->fix.smem_len - displayScreenSize)/screenSize+1;
+    size_t numSurfaces= (dev->fix.smem_len - displayScreenSize)/screenSize+1;
     char*buffStart = (char*)mmap(0,dev->fix.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fb, 0);
     char*kbuffStart= (char*)devs[0].fix.smem_start;
     devSurfaces[0].kbuffer= kbuffStart;
