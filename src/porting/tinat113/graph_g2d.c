@@ -11,9 +11,11 @@
 #include <linux/input.h>
 #include <cdinput.h>
 #include <g2d_driver.h>
-#include <pixman.h>
 
 #define USE_PIXMAN 1
+#ifdef USE_PIXMAN
+#include <pixman.h>
+#endif
 
 typedef struct {
     int fb;
@@ -342,10 +344,10 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         blt.dst_image_h.width = ndst->width;
         blt.dst_image_h.height = ndst->height;
         blt.dst_image_h.mode = G2D_GLOBAL_ALPHA;
-        blt.dst_image_h.laddr[0]=(uintptr_t)(ndst->kbuffer?ndst->kbuffer:ndst->buffer);
+        blt.dst_image_h.laddr[0]=(uintptr_t)((ndst->kbuffer||ndst->ishw)?ndst->kbuffer:ndst->buffer);
         blt.dst_image_h.format =G2D_FORMAT_ARGB8888;
         blt.dst_image_h.alpha = 255;
-        blt.dst_image_h.use_phy_addr = (ndst->kbuffer!=NULL);
+        blt.dst_image_h.use_phy_addr = (ndst->kbuffer!=NULL)||ndst->ishw;
         blt.dst_image_h.color = 0xee8899;
 
         if (ioctl(dev->g2d, G2D_CMD_BITBLT_H, &blt)< 0){
