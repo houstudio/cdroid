@@ -103,6 +103,8 @@ int32_t GFXInit() {
         devSurfaces[i].width  = dev->var.xres;
         devSurfaces[i].height = dev->var.yres;
         devSurfaces[i].used = 0;
+        if(devSurfaces[i].buffer) numSurfaces++;
+        else break;
         LOGI("suf[%d]buffer=%p/%p",i,devSurfaces[i].kbuffer,devSurfaces[i].buffer);
     }
     dev->var.yoffset = 0;//set first screen memory for display
