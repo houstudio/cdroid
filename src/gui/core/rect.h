@@ -15,9 +15,9 @@ struct CPoint{
     void set(T _x,T _y){x=_x;y=_y;};
     static constexpr CPoint Make(T x,T y){return {x,y};}
 };
-typedef CPoint< int > Point;
-typedef CPoint<float> PointF;
-#define MAKEPOINT(x,y) Point::Make(x,y)
+
+using Point = CPoint<int>;
+using PointF= CPoint<float>;
 
 template<typename T>
 struct CSize{
@@ -29,9 +29,9 @@ struct CSize{
     static constexpr CSize Make(T x,T y){return {x,y};}
     static constexpr CSize MakeEmpty(){return {0,0};}
 };
-typedef CSize< int > Size;
-typedef CSize<float> SizeF;
-#define MAKESIZE(x,y) Size::Make(x,y)
+
+using Size = CSize<int>;
+using SizeF= CSize<float>;
 
 template<typename T>
 struct CRect{
@@ -158,13 +158,13 @@ struct CRect{
     static constexpr CRect MakeSize(const CSize<T>&sz){return CRect{0,0,sz.x,sz.y};}
 };
 
-typedef CRect<int> Rect;
-typedef CRect<float>RectF;
+using Rect = CRect<int>;
+using RectF= CRect<float>;
+
 #if !(defined(RECT)||defined(_WIN32)||defined(_WIN64))
 typedef Rect RECT;
 #endif
-#define MAKERECT(x,y,w,h) Rect::Make(x,y,w,h)
 
-}
+}/*endof namespace*/
 #endif
 
