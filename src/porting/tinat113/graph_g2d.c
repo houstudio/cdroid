@@ -307,7 +307,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
     if(ndst->ishw==0)pbd+=dy*ndst->pitch+dx*4;
     else pbd+=(dy+screenMargin.y)*ndst->pitch+(dx+screenMargin.x)*4;
     const int cpw=rs.w*4;
-    if(dev->g2d<0){
+    if((dev->g2d<0)||((nsrc->ishw==0)&&(nsrc->kbuffer==NULL))){
 #ifndef USE_PIXMAN
         for(y=0; y<rs.h; y++) {
             memcpy(pbd,pbs,cpw);
