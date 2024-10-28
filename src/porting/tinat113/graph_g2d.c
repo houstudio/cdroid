@@ -84,6 +84,7 @@ int32_t GFXInit() {
     devSurfaces[0].pitch  = dev->fix.line_length;
     kbuffStart += displayScreenSize;
     buffStart  += displayScreenSize;
+    sunxifb_mem_init();
     LOGI("g2dfd=%d numSurfaces=%d dissze=%d,screenSize=%d",dev->g2d,numSurfaces,displayScreenSize,screenSize);
     for(int i = 1; (i < numSurfaces)&&(i<sizeof(devSurfaces)/sizeof(devSurfaces[0])) ; i++){
         devSurfaces[i].kbuffer= kbuffStart;
@@ -93,6 +94,15 @@ int32_t GFXInit() {
         devSurfaces[i].used = 0;
         kbuffStart += screenSize;
         buffStart += screenSize;
+        LOGI("suf[%d]buffer=%p/%p",i,kbuffStart,buffStart);
+    }
+    for(int i=numSurfaces;i<4;i++){
+        devSurfaces[i].buffer = sunxifb_mem_alloc(screenSize,"ion.surface");
+        devSurfaces[i].kbuffer= sunxifb_mem_get_phyaddr(devSurfaces[i].buffer);
+        devSurfaces[i].width  = width;
+        devSurfaces[i].height = height;
+        devSurfaces[i].used = 0;
+        LOGI("suf[%d]buffer=%p/%p",i,devSurfaces[i].kbuffer,devSurfaces[i].buffer);
     }
     dev->var.yoffset = 0;//set first screen memory for display
     int rc = ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var);
