@@ -12,7 +12,7 @@
 #include <cdinput.h>
 #include <g2d_driver.h>
 
-#define USE_PIXMAN 1
+//#define USE_PIXMAN 1
 #ifdef USE_PIXMAN
 #include <pixman.h>
 #endif
