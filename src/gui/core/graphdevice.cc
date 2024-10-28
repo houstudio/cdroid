@@ -155,7 +155,7 @@ void GraphDevice::trackFPS(Canvas& canvas) {
     // Tracks frames per second drawn. First value in a series of draws may be bogus
     // because it down not account for the intervening idle time
     const int64_t nowTime = SystemClock::currentTimeMillis();
-#define FPS_CHECKTIME 500
+#define FPS_CHECKTIME 1000
     if (mFpsStartTime ==0) {
         mFpsStartTime = mFpsPrevTime = nowTime;
         mFpsNumFrames = 0;
