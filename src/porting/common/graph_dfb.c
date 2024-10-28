@@ -123,8 +123,8 @@ int32_t GFXCreateSurface(int32_t dispid,GFXHANDLE*surface,uint32_t width,uint32_
     if(hwsurface) {
         DFBDisplayLayerConfig dispCfg;
         primaryLayer->GetConfiguration(primaryLayer, &dispCfg );
-        desc.flags=(DSDESC_CAPS|DSDESC_WIDTH | DSDESC_HEIGHT | DSDESC_PIXELFORMAT);//|DSDESC_PREALLOCATED);
-        desc.caps=DSCCAPS_NONE;//DSCAPS_FLIPPING;
+        desc.flags = (DSDESC_CAPS|DSDESC_WIDTH | DSDESC_HEIGHT | DSDESC_PIXELFORMAT);//|DSDESC_PREALLOCATED);
+        desc.caps = DSCCAPS_NONE;//DSCAPS_FLIPPING;
         width = dispCfg.width;
         height= dispCfg.height;
     } else {
@@ -134,11 +134,11 @@ int32_t GFXCreateSurface(int32_t dispid,GFXHANDLE*surface,uint32_t width,uint32_
     desc.width=width;
     desc.height=height;
     desc.pixelformat=DSPF_ARGB;
-    ret=directfb->CreateSurface( directfb, &desc,&dfbsurface);
+    ret = directfb->CreateSurface( directfb, &desc,&dfbsurface);
     LOGD_IF(ret,"surface=%x  ishw=%d",dfbsurface,hwsurface);
     if(!hwsurface)dfbsurface->MakeClient(dfbsurface);
     dfbsurface->Clear(dfbsurface,0,0,0,0);
-    *surface=(GFXHANDLE)dfbsurface;
+    *surface = (GFXHANDLE)dfbsurface;
     return E_OK;
 }
 
@@ -148,9 +148,9 @@ int32_t GFXSetSurfaceColorKey(GFXHANDLE surface,uint32_t color) {
 
 int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GFXRect*srcrect) {
     int ret,dstwidth,dstheight;
-    GFXRect rs= {0,0},rd;
-    IDirectFBSurface*dfbsrc=(IDirectFBSurface*)srcsurface;
-    IDirectFBSurface*dfbdst=(IDirectFBSurface*)dstsurface;
+    GFXRect rs = {0,0},rd;
+    IDirectFBSurface*dfbsrc = (IDirectFBSurface*)srcsurface;
+    IDirectFBSurface*dfbdst = (IDirectFBSurface*)dstsurface;
     DFBRegion region;
 
     dfbdst = primarySurface;
@@ -192,6 +192,6 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
 
 int32_t GFXDestroySurface(GFXHANDLE surface) {
     LOGV("surface=%p",surface);
-    IDirectFBSurface*dfbsurface=(IDirectFBSurface*)surface;
+    IDirectFBSurface*dfbsurface = (IDirectFBSurface*)surface;
     return dfbsurface->Release(dfbsurface);
 }

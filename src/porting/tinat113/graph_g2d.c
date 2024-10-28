@@ -48,7 +48,7 @@ int32_t GFXInit() {
         LOGE("Error reading fixed information fd=%d",dev->fb);
         return E_ERROR;
     }
-    LOGI("fbmem.addr=%p fbmem.size=%d pitch=%d",(char*)dev->fix.smem_start,dev->fix.smem_len,dev->fix.line_length);
+    LOGI("fb=%d smem.start=%p size=%d pitch=%d",dev->fb,(char*)dev->fix.smem_start,dev->fix.smem_len,dev->fix.line_length);
 
     // Get variable screen information
     if(ioctl(dev->fb, FBIOGET_VSCREENINFO, &dev->var) == -1) {
