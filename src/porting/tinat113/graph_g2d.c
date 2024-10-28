@@ -74,7 +74,7 @@ int32_t GFXInit() {
     const size_t screenSize = (dev->var.yres - screenMargin.y - screenMargin.h) * (dev->fix.line_length - (screenMargin.x + screenMargin.w)*4);
     const size_t numSurfaces= (dev->fix.smem_len - displayScreenSize)/screenSize+1;
     char*buffStart = (char *)mmap(0,dev->fix.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fb, 0);
-    char*kbuffStart = (const char*)devs[0].fix.smem_start;
+    char*kbuffStart= (const char*)devs[0].fix.smem_start;
     devSurfaces[0].kbuffer= kbuffStart;
     devSurfaces[0].buffer = buffStart;
     devSurfaces[0].width  = dev->var.xres;
@@ -158,10 +158,10 @@ int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
         }
     }else{
         g2d_fillrect_h fill;
-	bzero(&fill,sizeof(fill));
+        bzero(&fill,sizeof(fill));
         fill.dst_image_h.mode = G2D_PIXEL_ALPHA;
         fill.dst_image_h.color = color;
-        fill.dst_image_h.format = G2D_FORMAT_RGB888;
+        fill.dst_image_h.format = G2D_FORMAT_ARGB8888;
         fill.dst_image_h.clip_rect.x = rec.x;
         fill.dst_image_h.clip_rect.y = rec.y;
         fill.dst_image_h.clip_rect.w = rec.w;
@@ -322,8 +322,8 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
 #endif
     }else{
         g2d_blt_h blt;
-	bzero(&blt,sizeof(blt));
-	blt.flag_h = G2D_BLT_NONE;
+        bzero(&blt,sizeof(blt));
+        blt.flag_h = G2D_BLT_NONE|G2D_ROT_0;
         blt.src_image_h.width = nsrc->width;
         blt.src_image_h.height = nsrc->height;
         blt.src_image_h.laddr[0]=(uintptr_t)(nsrc->kbuffer?nsrc->kbuffer:nsrc->buffer);
@@ -331,7 +331,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         blt.src_image_h.clip_rect,y = rs.y;
         blt.src_image_h.clip_rect.w= rs.w;
         blt.src_image_h.clip_rect.h = rs.h;
-        blt.src_image_h.format =G2D_FORMAT_RGB888;
+        blt.src_image_h.format =G2D_FORMAT_ARGB8888;
         blt.src_image_h.alpha = 255;
         blt.src_image_h.use_phy_addr = (nsrc->kbuffer!=NULL);
         //blit dest info
@@ -341,8 +341,9 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         blt.dst_image_h.clip_rect.h = rs.h;
         blt.dst_image_h.width = ndst->width;
         blt.dst_image_h.height = ndst->height;
+        blt.dst_image_h.mode = G2D_GLOBAL_ALPHA;
         blt.dst_image_h.laddr[0]=(uintptr_t)(ndst->kbuffer?ndst->kbuffer:ndst->buffer);
-        blt.dst_image_h.format =G2D_FORMAT_RGB888;
+        blt.dst_image_h.format =G2D_FORMAT_ARGB8888;
         blt.dst_image_h.alpha = 255;
         blt.dst_image_h.use_phy_addr = (ndst->kbuffer!=NULL);
         blt.dst_image_h.color = 0xee8899;
@@ -357,7 +358,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
 int32_t GFXDestroySurface(GFXHANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     FBDEVICE*dev=devs+surf->dispid;
-    if(surf->used && (surf->kbuffer==NULL)&&(surf->ishw==0)){
+    if(surf->used && (surf->kbuffer==NULL) && (surf->ishw==0)){
         free(surf->buffer);
         surf->buffer = NULL;
     }
