@@ -357,7 +357,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
 int32_t GFXDestroySurface(GFXHANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     FBDEVICE*dev=devs+surf->dispid;
-    if(surf->used && (surf->kbuffer==NULL)){
+    if(surf->used && (surf->kbuffer==NULL)&&(surf->ishw==0)){
         free(surf->buffer);
         surf->buffer = NULL;
     }

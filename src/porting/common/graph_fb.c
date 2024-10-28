@@ -10,7 +10,11 @@
 #include <string.h>
 #include <linux/input.h>
 #include <cdinput.h>
+
+#ifdef USE_PIXMAN
 #include <pixman.h>
+#endif
+
 typedef struct {
     int fb;
     struct fb_fix_screeninfo fix;
@@ -67,16 +71,16 @@ int32_t GFXInit() {
     const size_t displayScreenSize=(dev->var.yres * dev->fix.line_length);
     const size_t screenSize = (dev->var.yres - screenMargin.y - screenMargin.h) * (dev->fix.line_length - (screenMargin.x + screenMargin.w)*4);
     const size_t numSurfaces= (dev->fix.smem_len-displayScreenSize)/screenSize+1;
-    char*fbp = (char *)mmap(0,dev->fix.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fb, 0);
-    char*kbuffStart = (const char*)devs[0].fix.smem_start;
-    char*buffStart = fbp;
-    devSurfaces[0].kbuffer= buffStart;
-    devSurfaces[0].buffer = fbp;
+    char*buffStart = (char*)mmap(0,dev->fix.smem_len, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fb, 0);
+    char*kbuffStart= (char*)devs[0].fix.smem_start;
+    devSurfaces[0].kbuffer= kbuffStart;
+    devSurfaces[0].buffer = buffStart;
     devSurfaces[0].width  = dev->var.xres;
     devSurfaces[0].height = dev->var.yres;
     devSurfaces[0].pitch  = dev->fix.line_length;
     kbuffStart += displayScreenSize;
     buffStart  += displayScreenSize;
+    LOGI("surface %d buf=%p/%p",0,kbuffStart,buffStart);
     for(int i=1;i<numSurfaces;i++){
         devSurfaces[i].kbuffer=kbuffStart;
         devSurfaces[i].buffer =buffStart;
@@ -85,6 +89,7 @@ int32_t GFXInit() {
         devSurfaces[i].used=0;
         kbuffStart+=screenSize;
         buffStart+=screenSize;
+	LOGI("surface %d buf=%p/%p",i,kbuffStart,buffStart);
     }
     dev->var.yoffset=0;//set first screen memory for display
     int rc = ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var);
@@ -271,7 +276,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         rs.h = ndst->height- screenMargin.y- screenMargin.h -dy;
 
     LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
-#if 0
+#ifndef USE_PIXMAN
     pbs+=rs.y*nsrc->pitch+rs.x*4;
     if(ndst->ishw==0)pbd+=dy*ndst->pitch+dx*4;
     else pbd+=(dy+screenMargin.y)*ndst->pitch+(dx+screenMargin.x)*4;
@@ -295,7 +300,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
 int32_t GFXDestroySurface(GFXHANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     FBDEVICE*dev=devs+surf->dispid;
-    if(surf->used && (surf->kbuffer==NULL)){
+    if(surf->used && (surf->kbuffer==NULL)&&(surf->ishw==0)){
         free(surf->buffer);
         surf->buffer = NULL;
     }
