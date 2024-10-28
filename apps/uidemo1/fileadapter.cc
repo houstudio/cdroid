@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <porting/cdlog.h>
-#if defined(_WIN32)||defiend(_WIN64)
+#if defined(_WIN32)||defined(_WIN64)
 void realpath(const char* path, char* real) {
     strcpy(real, path);
 }
