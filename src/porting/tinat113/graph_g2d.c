@@ -11,6 +11,7 @@
 #include <linux/input.h>
 #include <cdinput.h>
 #include <g2d_driver.h>
+#include <sunximem.h>
 
 //#define USE_PIXMAN 1
 #ifdef USE_PIXMAN
@@ -99,8 +100,8 @@ int32_t GFXInit() {
     for(int i=numSurfaces;i<4;i++){
         devSurfaces[i].buffer = sunxifb_mem_alloc(screenSize,"ion.surface");
         devSurfaces[i].kbuffer= sunxifb_mem_get_phyaddr(devSurfaces[i].buffer);
-        devSurfaces[i].width  = width;
-        devSurfaces[i].height = height;
+        devSurfaces[i].width  = dev->var.xres;
+        devSurfaces[i].height = dev->var.yres;
         devSurfaces[i].used = 0;
         LOGI("suf[%d]buffer=%p/%p",i,devSurfaces[i].kbuffer,devSurfaces[i].buffer);
     }
