@@ -40,6 +40,13 @@ find_package(DRM)
 find_package(Pixman)
 find_package(OpenGL)
 
+include_directories(../common ../include ${PIXMAN_INCLUDE_DIRS})
+
+include_directories(${DIRECTFB_INCLUDE_DIRS})
+add_library(tvhal-fb SHARED ${X64_SRCS} ../common/graph_fb.c)
+target_link_libraries(tvhal-fb)
+list(APPEND X64PORTS tvhal-fb)
+
 if(OPENGL_FOUND AND X11_FOUND)
     include_directories(${OPENGL_INCLUDE_DIRS})
     add_library(tvhal-xgl SHARED ${X64_SRCS} ../common/graph_xgl.c)
