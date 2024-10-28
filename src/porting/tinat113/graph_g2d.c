@@ -147,7 +147,7 @@ int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
     rec.h=ngs->height;
     if(rect)rec=*rect;
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d",ngs,rec.x,rec.y,rec.w,rec.h,color,ngs->pitch);
-    if(ngs->kbuffer==0){
+    if((ngs->kbuffer==0)&&(ngs->ishw==0)){
         uint32_t*fb=(uint32_t*)(ngs->buffer+ngs->pitch*rec.y+rec.x*4);
         uint32_t*fbtop=fb;
         for(x=0; x<rec.w; x++)fb[x]=color;
@@ -328,7 +328,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         blt.flag_h = G2D_BLT_NONE|G2D_ROT_0;
         blt.src_image_h.width = nsrc->width;
         blt.src_image_h.height = nsrc->height;
-        blt.src_image_h.laddr[0]=(uintptr_t)(nsrc->kbuffer?nsrc->kbuffer:nsrc->buffer);
+        blt.src_image_h.laddr[0]=(uintptr_t)((nsrc->kbuffer||nsrc->ishw)?nsrc->kbuffer:nsrc->buffer);
         blt.src_image_h.clip_rect.x = rs.x;
         blt.src_image_h.clip_rect,y = rs.y;
         blt.src_image_h.clip_rect.w= rs.w;
