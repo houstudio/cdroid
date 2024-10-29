@@ -10,7 +10,7 @@
 #include <string.h>
 #include <linux/input.h>
 #include <cdinput.h>
-#include <g2d_driver.h>
+#include <g2d_driver_enh.h>
 #include <sunximem.h>
 
 //#define USE_PIXMAN 1
