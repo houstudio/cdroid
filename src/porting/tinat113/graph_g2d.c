@@ -181,7 +181,7 @@ int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
         fill.dst_image_h.clip_rect.y = rec.y;
         fill.dst_image_h.clip_rect.w = rec.w;
         fill.dst_image_h.clip_rect.h = rec.h;
-        fill.dst_image_h.width = ngs->width;
+        fill.dst_image_h.width = ngs->pitch;
         fill.dst_image_h.height = ngs->height;
         fill.dst_image_h.align[0] = 0;
         fill.dst_image_h.align[1] = fill.dst_image_h.align[0];
