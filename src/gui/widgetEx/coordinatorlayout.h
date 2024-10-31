@@ -192,7 +192,7 @@ public:
     //Behavior(Context* context, const AttributeSet& attrs) {}
     virtual void onAttachedToLayoutParams(CoordinatorLayout::LayoutParams& params) {}
     virtual void onDetachedFromLayoutParams() {}
-    virtual bool onInterceptTouchEvent(CoordinatorLayout& parent, View& child, MotionEvent& ev) {}
+    virtual bool onInterceptTouchEvent(CoordinatorLayout& parent, View& child, MotionEvent& ev) { return false; }
     virtual bool onTouchEvent(CoordinatorLayout& parent, View& child, MotionEvent& ev) { return false; }
     virtual int getScrimColor(CoordinatorLayout& parent, View& child) { return 0xFF000000; }
     virtual float getScrimOpacity(CoordinatorLayout& parent, View& child) { return .0f; }
@@ -264,8 +264,8 @@ public:
         return false;
     }
     virtual void onRestoreInstanceState(CoordinatorLayout& parent, View& child, Parcelable& state);
-    Parcelable onSaveInstanceState(CoordinatorLayout& parent, View& child) {}
-    virtual bool getInsetDodgeRect(CoordinatorLayout& parent, View& child, Rect& rect) {}
+    Parcelable* onSaveInstanceState(CoordinatorLayout& parent, View& child) { return nullptr; }
+    virtual bool getInsetDodgeRect(CoordinatorLayout& parent, View& child, Rect& rect) { return false; }
 };
 
 /**
