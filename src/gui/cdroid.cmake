@@ -189,7 +189,8 @@ if(ENABLE_RECYCLERVIEW)
         widgetEx/recyclerview/childhelper.cc
         #widgetEx/recyclerview/carousellayoutmanager.cc
         widgetEx/recyclerview/adapterhelper.cc
-        #widgetEx/coordinatorlayout.cc
+        widgetEx/viewgrouputils.cc
+        widgetEx/coordinatorlayout.cc
     )
 endif(ENABLE_RECYCLERVIEW)
 

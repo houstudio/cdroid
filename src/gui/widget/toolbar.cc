@@ -757,13 +757,13 @@ void ToolBar::onLayout(bool changed, int l, int t, int w, int h){
     // such that absolute layout direction can be used below.
     std::vector<View*>mTempViews;
     addCustomViewsWithGravity(mTempViews, Gravity::LEFT);
-    int leftViewsCount = mTempViews.size();
+    size_t leftViewsCount = mTempViews.size();
     for (int i = 0; i < leftViewsCount; i++) {
         left = layoutChildLeft(mTempViews.at(i), left, collapsingMargins,alignmentHeight);
     }
 
     addCustomViewsWithGravity(mTempViews, Gravity::RIGHT);
-    int rightViewsCount = mTempViews.size();
+    size_t rightViewsCount = mTempViews.size();
     for (int i = 0; i < rightViewsCount; i++) {
         right = layoutChildRight(mTempViews.at(i), right, collapsingMargins,alignmentHeight);
     }
@@ -781,7 +781,7 @@ void ToolBar::onLayout(bool changed, int l, int t, int w, int h){
     } else if (centerRight > right) {
         centerLeft -= centerRight - right;
     }
-    int centerViewsCount = mTempViews.size();
+    size_t centerViewsCount = mTempViews.size();
     for (int i = 0; i < centerViewsCount; i++) {
         centerLeft = layoutChildLeft(mTempViews.at(i), centerLeft, collapsingMargins,alignmentHeight);
     }
@@ -793,8 +793,8 @@ int ToolBar::getViewListMeasuredWidth(const std::vector<View*>& views, int*colla
     int collapseLeft = collapsingMargins[0];
     int collapseRight = collapsingMargins[1];
     int width = 0;
-    const int count = views.size();
-    for (int i = 0; i < count; i++) {
+    const size_t count = views.size();
+    for (size_t i = 0; i < count; i++) {
         View* v = views.at(i);
         LayoutParams* lp = (LayoutParams*) v->getLayoutParams();
         const int l = lp->leftMargin - collapseLeft;
@@ -968,7 +968,7 @@ void ToolBar::removeChildrenForExpandedActionView() {
 }
 
 void ToolBar::addChildrenForExpandedActionView() {
-    const int count = mHiddenViews.size();
+    const int count = (int)mHiddenViews.size();
     // Re-add in reverse order since we removed in reverse order
     for (int i = count - 1; i >= 0; i--) {
         addView(mHiddenViews.at(i));

@@ -322,11 +322,15 @@ public:
         SCROLL_AXIS_HORIZONTAL=1 ,
         SCROLL_AXIS_VERTICAL  =2 ,
 
+        TYPE_TOUCH = 0,/*Indicates that the input type for the gesture is from a user touching the screen.*/
+        TYPE_NON_TOUCH = 1,
+
        //OverScrollMode of view
         OVER_SCROLL_ALWAYS =0 ,
         OVER_SCROLL_IF_CONTENT_SCROLLS =1 ,
         OVER_SCROLL_NEVER =2 ,
     };//endof ViewFlags
+    
     enum LayerType{
         LAYER_TYPE_NONE    =0,
         LAYER_TYPE_SOFTWARE=1,
