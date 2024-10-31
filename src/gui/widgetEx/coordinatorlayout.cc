@@ -1486,6 +1486,16 @@ int CoordinatorLayout::getNestedScrollAxes() {
     }
 }*/
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+void CoordinatorLayout::Behavior::setTag(View& child, void* tag) {
+    LayoutParams* lp = (LayoutParams*)child.getLayoutParams();
+    lp->mBehaviorTag = tag;
+}
+
+void* CoordinatorLayout::Behavior::getTag(View& child) {
+    LayoutParams* lp = (LayoutParams*)child.getLayoutParams();
+    return lp->mBehaviorTag;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 CoordinatorLayout::LayoutParams::LayoutParams(int width, int height)
     :MarginLayoutParams(width,height) {
