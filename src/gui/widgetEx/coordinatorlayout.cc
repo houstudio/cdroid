@@ -385,6 +385,7 @@ CoordinatorLayout::Behavior* CoordinatorLayout::parseBehavior(Context* context,c
         throw new RuntimeException("Could not inflate Behavior subclass " + fullName, e);
     }
 #endif
+    return nullptr;
 }
 
 CoordinatorLayout::LayoutParams* CoordinatorLayout::getResolvedLayoutParams(View* child) {
