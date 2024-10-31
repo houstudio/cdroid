@@ -339,7 +339,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         g2d_blt_h blt;
         bzero(&blt,sizeof(blt));
         blt.flag_h = G2D_BLT_NONE|G2D_ROT_0;
-        blt.src_image_h.width = nsrc->width;
+        blt.src_image_h.width = nsrc->pitch;
         blt.src_image_h.height = nsrc->height;
         blt.src_image_h.laddr[0]=(uintptr_t)((nsrc->kbuffer||nsrc->ishw)?nsrc->kbuffer:nsrc->buffer);
         blt.src_image_h.clip_rect.x = rs.x;
@@ -354,7 +354,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         blt.dst_image_h.clip_rect.y = dy;
         blt.dst_image_h.clip_rect.w= rs.w;
         blt.dst_image_h.clip_rect.h = rs.h;
-        blt.dst_image_h.width = ndst->width;
+        blt.dst_image_h.width = ndst->pitch;
         blt.dst_image_h.height = ndst->height;
         blt.dst_image_h.mode = G2D_GLOBAL_ALPHA;
         blt.dst_image_h.laddr[0]=(uintptr_t)((ndst->kbuffer||ndst->ishw)?ndst->kbuffer:ndst->buffer);
