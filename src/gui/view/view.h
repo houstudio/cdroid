@@ -648,6 +648,7 @@ protected:
     bool awakenScrollBars(int startDelay, bool invalidate);
 
     static int combineVisibility(int vis1, int vis2);
+    WindowInsets* getRootWindowInsets();
     virtual void onSizeChanged(int w,int h,int oldw,int oldh);
     virtual void onScrollChanged(int l, int t, int oldl, int oldt);
     virtual void onLayout(bool ,int,int,int,int);

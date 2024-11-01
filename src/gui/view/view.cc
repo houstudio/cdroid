@@ -4555,7 +4555,8 @@ bool View::fitSystemWindows(Rect& insets) {
         // apply insets path and take things from there.
         Finally fin([this]() {mPrivateFlags3 &= ~PFLAG3_FITTING_SYSTEM_WINDOWS; });
         mPrivateFlags3 |= PFLAG3_FITTING_SYSTEM_WINDOWS;
-        return dispatchApplyWindowInsets(WindowInsets(insets)).isConsumed();
+	WindowInsets winsets(insets);
+        return dispatchApplyWindowInsets(winsets).isConsumed();
     }
     else {
         // We're being called from the newer apply insets path.
@@ -4577,18 +4578,19 @@ bool View::fitSystemWindowsInt(Rect& insets) {
     }
     return false;
 }
+
 WindowInsets View::onApplyWindowInsets(WindowInsets& insets) {
+    Rect rect = insets.getSystemWindowInsets();
     if ((mPrivateFlags3 & PFLAG3_FITTING_SYSTEM_WINDOWS) == 0) {
         // We weren't called from within a direct call to fitSystemWindows,
         // call into it as a fallback in case we're in a class that overrides it
         // and has logic to perform.
-        if (fitSystemWindows(insets.getSystemWindowInsets())) {
+        if (fitSystemWindows(rect)) {
             return insets.consumeSystemWindowInsets();
         }
-    }
-    else {
+    } else {
         // We were called from within a direct call to fitSystemWindows.
-        if (fitSystemWindowsInt(insets.getSystemWindowInsets())) {
+        if (fitSystemWindowsInt(rect)) {
             return insets.consumeSystemWindowInsets();
         }
     }
@@ -4609,16 +4611,16 @@ WindowInsets View::dispatchApplyWindowInsets(WindowInsets& insets) {
     }
 }
 
-/*WindowInsets* View::getRootWindowInsets() {
+WindowInsets* View::getRootWindowInsets() {
     if (mAttachInfo != nullptr) {
-        return mAttachInfo->mViewRootImpl.getWindowInsets(false);
+        return nullptr;//mAttachInfo->mRootView->getWindowInsets(false);
     }
     return nullptr;
-}*/
+}
 
 bool View::computeFitSystemWindows(Rect& inoutInsets, Rect& outLocalInsets) {
-    WindowInsets innerInsets = computeSystemWindowInsets(WindowInsets(inoutInsets),
-            outLocalInsets);
+    WindowInsets wInsets(inoutInsets);
+    WindowInsets innerInsets = computeSystemWindowInsets(wInsets,outLocalInsets);
     inoutInsets=innerInsets.getSystemWindowInsets();
     return innerInsets.isSystemWindowInsetsConsumed();
 }
