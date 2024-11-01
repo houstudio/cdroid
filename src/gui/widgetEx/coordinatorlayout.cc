@@ -1,4 +1,3 @@
-#if 1
 #include <widgetEx/coordinatorlayout.h>
 #include <widgetEx/viewgrouputils.h>
 namespace cdroid{
@@ -961,7 +960,7 @@ void CoordinatorLayout::onChildViewsChanged(int type) {
         }
 
         // Update any behavior-dependent views for the change
-        for (int j = i + 1; j < childCount; j++) {
+        for (size_t j = i + 1; j < childCount; j++) {
             View* checkChild = mDependencySortedChildren.at(j);
             LayoutParams* checkLp = (LayoutParams*) checkChild->getLayoutParams();
             Behavior* b = checkLp->getBehavior();
@@ -1091,10 +1090,10 @@ void CoordinatorLayout::setInsetOffsetY(View* child, int offsetY) {
 }
 
 void CoordinatorLayout::dispatchDependentViewsChanged(View& view) {
-    std::vector<View*> dependents = mChildDag.getIncomingEdges(&view);
-    if (!dependents.empty()) {
-        for (int i = 0; i < dependents.size(); i++) {
-            View* child = dependents.at(i);
+    std::vector<View*>* dependents = mChildDag.getIncomingEdges(&view);
+    if (dependents&&dependents->size()) {
+        for (int i = 0; i < dependents->size(); i++) {
+            View* child = dependents->at(i);
             LayoutParams* lp = (LayoutParams*)child->getLayoutParams();
             Behavior* b = lp->getBehavior();
             if (b != nullptr) {
@@ -1105,19 +1104,19 @@ void CoordinatorLayout::dispatchDependentViewsChanged(View& view) {
 }
 
 std::vector<View*> CoordinatorLayout::getDependencies(View& child) {
-    std::vector<View*> dependencies = mChildDag.getOutgoingEdges(&child);
+    std::vector<View*>* dependencies = mChildDag.getOutgoingEdges(&child);
     mTempDependenciesList.clear();
-    if (!dependencies.empty()) {
-        mTempDependenciesList.insert(mTempDependenciesList.end(),dependencies.begin(), dependencies.end());// addAll(dependencies);
+    if (dependencies&&dependencies->size()) {
+        mTempDependenciesList.insert(mTempDependenciesList.end(),dependencies->begin(), dependencies->end());// addAll(dependencies);
     }
     return mTempDependenciesList;
 }
 
 std::vector<View*> CoordinatorLayout::getDependents(View& child) {
-    std::vector<View*> edges = mChildDag.getIncomingEdges(&child);
+    std::vector<View*>* edges = mChildDag.getIncomingEdges(&child);
     mTempDependenciesList.clear();
-    if (!edges.empty()) {
-        mTempDependenciesList.insert(mTempDependenciesList.end(),edges.begin(), edges.end());// addAll(edges);
+    if (edges&&edges->size()) {
+        mTempDependenciesList.insert(mTempDependenciesList.end(),edges->begin(), edges->end());// addAll(edges);
     }
     return mTempDependenciesList;
 }
@@ -1878,4 +1877,3 @@ public static final Creator<SavedState> CREATOR =
 #endif
 }
 /*endof namespace*/
-#endif

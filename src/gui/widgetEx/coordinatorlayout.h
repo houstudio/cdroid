@@ -184,12 +184,11 @@ private: void setupForInsets();
  * @param <V> The View type that this Behavior operates on
  */
 //template<typename V>
-class CoordinatorLayout::Behavior :public View {//<V extends View> {
+class CoordinatorLayout::Behavior{//; :public View {//<V extends View> {
     //static_assert(std::is_base_of<View, V>::value, "V must be a subclass of View");
 public:
-    //Behavior() {}
-
-    //Behavior(Context* context, const AttributeSet& attrs) {}
+    Behavior() {}
+    Behavior(Context* context, const AttributeSet& attrs) {}
     virtual void onAttachedToLayoutParams(CoordinatorLayout::LayoutParams& params) {}
     virtual void onDetachedFromLayoutParams() {}
     virtual bool onInterceptTouchEvent(CoordinatorLayout& parent, View& child, MotionEvent& ev) { return false; }

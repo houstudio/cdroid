@@ -10,11 +10,10 @@ namespace cdroid{
 template<typename T>
 class DirectedAcyclicGraph{
 private:
-    Pools::SimplePool<std::vector<T*>>* mListPool;// (10);
-    std::map<T*, std::vector<T*>*> mGraph;
-
     std::vector<T*> mSortResult;
     std::set<T*> mSortTmpMarked;
+    Pools::SimplePool<std::vector<T*>> *mListPool;// (10);
+    std::map<T*, std::vector<T*>*> mGraph;
 private:
     void dfs(T* node, std::vector<T*>&result, std::set<T*>& tmpMarked) {
         if (std::find(result.begin(),result.end(),node)!=result.end()) {//result.contains(node)) {
@@ -28,9 +27,9 @@ private:
         tmpMarked.insert(node);
         // Recursively dfs all of the node's edges
         auto itg = mGraph.find(node);
-        std::vector<T*>* edges = itg!=mGraph.end()?itg->second:nullptr;// mGraph.get(node);
+        std::vector<T*>* edges = (itg!=mGraph.end())?itg->second:nullptr;// mGraph.get(node);
         if (edges!=nullptr) {
-            for (int i = 0, size = edges->size(); i < size; i++) {
+            for (size_t i = 0, size = edges->size(); i < size; i++) {
                 dfs(edges->at(i), result, tmpMarked);
             }
         }
@@ -48,9 +47,9 @@ private:
         return list;
     }
 
-    void poolList(std::vector<T*>& list) {
-        list.clear();
-        mListPool->release(&list);
+    void poolList(std::vector<T*>* list) {
+        list->clear();
+        mListPool->release(list);
     }
 public:
     DirectedAcyclicGraph() {
@@ -58,6 +57,7 @@ public:
     }
     ~DirectedAcyclicGraph() {
         delete mListPool;
+        for (auto g : mGraph)delete g.second;
     }
     void addNode(T* node) {
         if (mGraph.find(node)==mGraph.end()) {
@@ -74,7 +74,7 @@ public:
             LOGE("All nodes must be present in the graph before being added as an edge");
         }
         auto it = mGraph.find(node);
-        std::vector<T*>* edges = it->second;// mGraph.get(node);
+        std::vector<T*>* edges = (it==mGraph.end())?it->second:nullptr;// mGraph.get(node);
         if (edges == nullptr) {
             // If edges is null, we should try and get one from the pool and add it to the graph
             edges = getEmptyList();
@@ -84,26 +84,28 @@ public:
         edges->push_back(incomingEdge);
     }
 
-    std::vector<T*> getIncomingEdges(T* node) {
+    std::vector<T*>* getIncomingEdges(T* node) {
         auto it = mGraph.find(node);
-        return *it->second;
+        return it->second;
     }
 
-    std::vector<T*> getOutgoingEdges(T* node) {
-        std::vector<T*> result;
+    std::vector<T*>* getOutgoingEdges(T* node) {
+        std::vector<T*>* result=nullptr;
         for (auto p:mGraph){//int i = 0, size = mGraph.size(); i < size; i++) {
             std::vector<T*>* edges = p.second;// mGraph.valueAt(i);
-            if (edges != nullptr && (std::find(edges->begin(),edges->end(),node)!=edges->end())) {
-                result.push_back(p.first);// mGraph.keyAt(i));
+            if (edges && (std::find(edges->begin(),edges->end(),node)!=edges->end())) {
+                if (result == nullptr)
+                    result = new std::vector<T*>;
+                result->push_back(p.first);// mGraph.keyAt(i));
             }
         }
         return result;
     }
 
-    bool hasOutgoingEdges(T* node) {
+    bool hasOutgoingEdges(T* node)const {
         for (const auto p:mGraph){//int i = 0, size = mGraph.size(); i < size; i++) {
             std::vector<T*>* edges = p.second;// mGraph.valueAt(i);
-            if ((edges != nullptr) && (std::find(edges->begin(),edges->end(),node)!=edges->end())) {
+            if (edges && (std::find(edges->begin(),edges->end(),node)!=edges->end())) {
                 return true;
             }
         }
@@ -114,7 +116,7 @@ public:
         for (auto p:mGraph){//int i = 0, size = mGraph.size(); i < size; i++) {
             std::vector<T*>* edges = p.second;// mGraph.valueAt(i);
             if (edges != nullptr) {
-                poolList(*edges);
+                poolList(edges);
             }
         }
         mGraph.clear();
@@ -124,7 +126,7 @@ public:
         mSortResult.clear();
         mSortTmpMarked.clear();
         // Start a DFS from each node in the graph
-        for (const auto itm:mGraph){// int i = 0, size = mGraph.size(); i < size; i++) {
+        for (auto itm:mGraph){// int i = 0, size = mGraph.size(); i < size; i++) {
             dfs(itm.first, mSortResult, mSortTmpMarked);
             //dfs(mGraph.keyAt(i), mSortResult, mSortTmpMarked);
         }
