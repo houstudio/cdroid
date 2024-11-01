@@ -67,11 +67,11 @@ void CoordinatorLayout::onAttachedToWindow() {
         ViewTreeObserver* vto = getViewTreeObserver();
         vto->addOnPreDrawListener(mOnPreDrawListener);
     }
-    /*if (mLastInsets == null && this->getFitsSystemWindows()) {
+    if (mLastInsets == nullptr && this->getFitsSystemWindows()) {
         // We're set to fitSystemWindows but we haven't had any insets yet...
         // We should request a new dispatch of window insets
         this->requestApplyInsets();
-    }*/
+    }
     mIsAttachedToWindow = true;
 }
 
@@ -149,7 +149,7 @@ void CoordinatorLayout::setStatusBarBackgroundColor(int color) {
 }
 
 WindowInsets CoordinatorLayout::setWindowInsets(const WindowInsets& insets) {
-    /*if (!ObjectsCompat.equals(mLastInsets, insets)) {
+    /*if ((mLastInsets == nullptr) || (*mLastInsets != insets)) {
         mLastInsets = insets;
         mDrawStatusBarBackground = insets != null && insets.getSystemWindowInsetTop() > 0;
         setWillNotDraw(!mDrawStatusBarBackground && getBackground() == null);
@@ -543,20 +543,20 @@ void CoordinatorLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
         int childWidthMeasureSpec = widthMeasureSpec;
         int childHeightMeasureSpec = heightMeasureSpec;
-        /*if (applyInsets && !child->getFitsSystemWindows()) {
+        if (applyInsets && !child->getFitsSystemWindows()) {
             // We're set to handle insets but this child isn't, so we will measure the
             // child as if there are no insets
-            const int horizInsets = mLastInsets.getSystemWindowInsetLeft()
-                    + mLastInsets.getSystemWindowInsetRight();
-            const int vertInsets = mLastInsets.getSystemWindowInsetTop()
-                    + mLastInsets.getSystemWindowInsetBottom();
+            const int horizInsets = mLastInsets->getSystemWindowInsetLeft()
+                    + mLastInsets->getSystemWindowInsetRight();
+            const int vertInsets = mLastInsets->getSystemWindowInsetTop()
+                    + mLastInsets->getSystemWindowInsetBottom();
 
             childWidthMeasureSpec = MeasureSpec::makeMeasureSpec(widthSize - horizInsets, widthMode);
             childHeightMeasureSpec = MeasureSpec::makeMeasureSpec(heightSize - vertInsets, heightMode);
-        }*/
+        }
 
         Behavior* b = lp->getBehavior();
-        if (b == nullptr || !b->onMeasureChild(*this, *child, childWidthMeasureSpec, keylineWidthUsed,
+        if ((b == nullptr) || !b->onMeasureChild(*this, *child, childWidthMeasureSpec, keylineWidthUsed,
                 childHeightMeasureSpec, 0)) {
             onMeasureChild(child, childWidthMeasureSpec, keylineWidthUsed, childHeightMeasureSpec, 0);
         }
@@ -575,7 +575,7 @@ void CoordinatorLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 }
 
 WindowInsets CoordinatorLayout::dispatchApplyWindowInsetsToBehaviors(WindowInsets insets) {
-    /*if (insets.isConsumed()) {
+    if (insets.isConsumed()) {
         return insets;
     }
 
@@ -583,18 +583,18 @@ WindowInsets CoordinatorLayout::dispatchApplyWindowInsetsToBehaviors(WindowInset
         View* child = getChildAt(i);
         if (child->getFitsSystemWindows()) {
             LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
-            Behavior* b = lp.getBehavior();
+            Behavior* b = lp->getBehavior();
 
             if (b != nullptr) {
                 // If the view has a behavior, let it try first
-                insets = b->onApplyWindowInsets(this, child, insets);
+                insets = b->onApplyWindowInsets(*this, *child, insets);
                 if (insets.isConsumed()) {
                     // If it consumed the insets, break
                     break;
                 }
             }
         }
-    }*/
+    }
 
     return insets;
 }
@@ -636,7 +636,7 @@ void CoordinatorLayout::onLayout(bool changed, int l, int t, int r, int b) {
 void CoordinatorLayout::onDraw(Canvas& c) {
     ViewGroup::onDraw(c);
     if (mDrawStatusBarBackground && mStatusBarBackground) {
-        int inset = 0;// mLastInsets != null ? mLastInsets.getSystemWindowInsetTop() : 0;
+        int inset =  mLastInsets ? mLastInsets->getSystemWindowInsetTop() : 0;
         if (inset > 0) {
             mStatusBarBackground->setBounds(0, 0, getWidth(), inset);
             mStatusBarBackground->draw(c);
@@ -645,7 +645,7 @@ void CoordinatorLayout::onDraw(Canvas& c) {
 }
 
 void CoordinatorLayout::setFitsSystemWindows(bool fitSystemWindows) {
-    //ViewGroup::setFitsSystemWindows(fitSystemWindows);
+    ViewGroup::setFitsSystemWindows(fitSystemWindows);
     setupForInsets();
 }
 
@@ -833,23 +833,21 @@ void CoordinatorLayout::layoutChildWithKeyline(View* child, int keyline, int lay
 
 void CoordinatorLayout::layoutChild(View* child, int layoutDirection) {
     const LayoutParams* lp = (const LayoutParams*) child->getLayoutParams();
-    Rect parent;
+    Rect parent,out;
     parent.set(getPaddingLeft() + lp->leftMargin,
             getPaddingTop() + lp->topMargin,
             getWidth() - getPaddingRight() - lp->rightMargin,
             getHeight() - getPaddingBottom() - lp->bottomMargin);
 
-    /*if (mLastInsets != null && getFitsSystemWindows()
-            && !child.getFitsSystemWindows()) {
+    if (mLastInsets && getFitsSystemWindows() && !child->getFitsSystemWindows()) {
         // If we're set to handle insets but this child isn't, then it has been measured as
         // if there are no insets. We need to lay it out to match.
-        parent.left += mLastInsets.getSystemWindowInsetLeft();
-        parent.top += mLastInsets.getSystemWindowInsetTop();
-        parent.right -= mLastInsets.getSystemWindowInsetRight();
-        parent.bottom -= mLastInsets.getSystemWindowInsetBottom();
-    }*/
+        parent.left += mLastInsets->getSystemWindowInsetLeft();
+        parent.top += mLastInsets->getSystemWindowInsetTop();
+        parent.width -= mLastInsets->getSystemWindowInsetRight();
+        parent.height -= mLastInsets->getSystemWindowInsetBottom();
+    }
 
-    Rect out;
     Gravity::apply(resolveGravity(lp->gravity), child->getMeasuredWidth(),
             child->getMeasuredHeight(), parent, out, layoutDirection);
     child->layout(out.left, out.top, out.width, out.height);
@@ -1023,8 +1021,7 @@ void CoordinatorLayout::offsetChildByInset(View* child,const Rect& inset,int lay
 
     LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
     Behavior* behavior = lp->getBehavior();
-    Rect dodgeRect;// = acquireTempRect();
-    Rect bounds;// = acquireTempRect();
+    Rect dodgeRect, bounds;
     bounds.set(child->getLeft(), child->getTop(), child->getWidth(), child->getHeight());
 
     if (behavior && behavior->getInsetDodgeRect(*this, *child, dodgeRect)) {

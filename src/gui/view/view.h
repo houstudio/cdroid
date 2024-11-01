@@ -35,6 +35,7 @@
 #include <view/gravity.h>
 #include <view/layoutparams.h>
 #include <view/rendernode.h>
+#include <view/windowinsets.h>
 #include <view/velocitytracker.h>
 #include <view/layoutinflater.h>
 #include <view/viewpropertyanimator.h>
@@ -206,129 +207,171 @@ protected:
     class ForegroundInfo;
     class ListenerInfo;
 public:
-    enum ViewFlags{//public common View Flags
+    enum ViewFlags {//public common View Flags
         IMPORTANT_FOR_AUTOFILL_AUTO = 0x0,
         IMPORTANT_FOR_AUTOFILL_YES = 0x1,
         IMPORTANT_FOR_AUTOFILL_NO = 0x2,
         IMPORTANT_FOR_AUTOFILL_YES_EXCLUDE_DESCENDANTS = 0x4,
         IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS = 0x8,
-        ENABLED        = 0x00 ,
-        DISABLED       = 0x01 ,
-        ENABLED_MASK   = 0x01 ,
-        VISIBLE        = 0x02 ,
-        INVISIBLE      = 0x04 ,
-        GONE           = 0x08 ,
-        VISIBILITY_MASK= 0x0E ,
-        NOT_FOCUSABLE  = 0x00 ,
-        FOCUSABLE      = 0x10 ,
-        FOCUSABLE_AUTO = 0x20 ,
-        FOCUSABLE_MASK = 0x30 ,
-        FOCUSABLE_IN_TOUCH_MODE=0x40 ,
+        ENABLED = 0x00,
+        DISABLED = 0x20,
+        ENABLED_MASK = 0x20,
+        VISIBLE = 0x00,
+        INVISIBLE = 0x04,
+        GONE = 0x08,
+        VISIBILITY_MASK = 0x0C,
+        NOT_FOCUSABLE = 0x00,
+        FOCUSABLE = 0x01,
+        FOCUSABLE_AUTO = 0x10,
+        FOCUSABLE_MASK = 0x11,
+        FOCUSABLE_IN_TOUCH_MODE = 0x40000,
+        FITS_SYSTEM_WINDOWS = 0x00000002,
 
-        WILL_NOT_DRAW  = 0x80 ,
-        DRAW_MASK      = 0x80 ,
+        WILL_NOT_DRAW = 0x80,
+        DRAW_MASK = 0x80,
 
-        SCROLLBARS_NONE= 0 ,
-        SCROLLBARS_HORIZONTAL= 0x100 ,
-        SCROLLBARS_VERTICAL  = 0x200 ,
-        SCROLLBARS_MASK      = 0x300 ,
+        SCROLLBARS_NONE = 0,
+        SCROLLBARS_HORIZONTAL = 0x100,
+        SCROLLBARS_VERTICAL = 0x200,
+        SCROLLBARS_MASK = 0x300,
 
         FILTER_TOUCHES_WHEN_OBSCURED = 0x400,//CLIPCHILDREN = 0x400 ,TRANSPARENT  = 0x800 ,
+        OPTIONAL_FITS_SYSTEM_WINDOWS = 0x800,
+        FADING_EDGE_NONE = 0x000000,
+        FADING_EDGE_HORIZONTAL = 0x1000,
+        FADING_EDGE_VERTICAL = 0x2000,
+        FADING_EDGE_MASK = 0x3000,
 
-        FADING_EDGE_NONE = 0x000000 ,
-        FADING_EDGE_HORIZONTAL= 0x1000 ,
-        FADING_EDGE_VERTICAL  = 0x2000 ,
-        FADING_EDGE_MASK      = 0x3000 ,
-
-        CLICKABLE       = 0x4000 ,
-        DRAWING_CACHE_ENABLED = 0x8000 ,
+        CLICKABLE = 0x4000,
+        DRAWING_CACHE_ENABLED = 0x8000,
 
         SAVE_DISABLED = 0x000010000,
         SAVE_DISABLED_MASK = 0x000010000,
 
-        WILL_NOT_CACHE_DRAWING = 0x000020000 ,
+        WILL_NOT_CACHE_DRAWING = 0x000020000,
 
-        LONG_CLICKABLE = 0x200000 ,
-        DUPLICATE_PARENT_STATE=0x10000 ,
-        CONTEXT_CLICKABLE=0x20000 ,
-        TOOLTIP =0x40000 ,
+        LONG_CLICKABLE = 0x200000,
+        DUPLICATE_PARENT_STATE = 0x10000,
+        CONTEXT_CLICKABLE = 0x20000,
+        TOOLTIP = 0x40000,
 
-        DRAWING_CACHE_QUALITY_LOW  = 0x00080000 ,
-        DRAWING_CACHE_QUALITY_HIGH = 0x00100000 ,
-        DRAWING_CACHE_QUALITY_AUTO = 0x00000000 ,
-        DRAWING_CACHE_QUALITY_MASK = 0x00180000 ,
+        DRAWING_CACHE_QUALITY_LOW = 0x00080000,
+        DRAWING_CACHE_QUALITY_HIGH = 0x00100000,
+        DRAWING_CACHE_QUALITY_AUTO = 0x00000000,
+        DRAWING_CACHE_QUALITY_MASK = 0x00180000,
 
-        MEASURED_HEIGHT_STATE_SHIFT= 16 ,
-        MEASURED_STATE_TOO_SMALL= 0x1000000 ,
-        MEASURED_SIZE_MASK = 0x00ffffff ,
-        MEASURED_STATE_MASK= 0xff000000 ,
+        MEASURED_HEIGHT_STATE_SHIFT = 16,
+        MEASURED_STATE_TOO_SMALL = 0x1000000,
+        MEASURED_SIZE_MASK = 0x00ffffff,
+        MEASURED_STATE_MASK = 0xff000000,
 
-       //FocusDirection{
-        FOCUS_BACKWARD=0x01 ,
-        FOCUS_FORWARD =0x02 ,
-        FOCUS_LEFT    =0x11 ,
-        FOCUS_UP      =0x21 ,
-        FOCUS_RIGHT   =0x42 ,
-        FOCUS_DOWN    =0x82 ,
+        //FocusDirection{
+        FOCUS_BACKWARD = 0x01,
+        FOCUS_FORWARD = 0x02,
+        FOCUS_LEFT = 0x11,
+        FOCUS_UP = 0x21,
+        FOCUS_RIGHT = 0x42,
+        FOCUS_DOWN = 0x82,
 
-       //FocusableMode
-        FOCUSABLES_ALL = 0 ,
-        FOCUSABLES_TOUCH_MODE=1 ,
-  
-        LAYOUT_DIRECTION_UNDEFINED = LayoutDirection::UNDEFINED ,
-        LAYOUT_DIRECTION_LTR = LayoutDirection::LTR ,
-        LAYOUT_DIRECTION_RTL = LayoutDirection::RTL ,
-        LAYOUT_DIRECTION_INHERIT= LayoutDirection::INHERIT ,
-        LAYOUT_DIRECTION_LOCALE = LayoutDirection::LOCAL ,
-        LAYOUT_DIRECTION_DEFAULT= LAYOUT_DIRECTION_INHERIT ,
+        //FocusableMode
+        FOCUSABLES_ALL = 0,
+        FOCUSABLES_TOUCH_MODE = 1,
+
+        LAYOUT_DIRECTION_UNDEFINED = LayoutDirection::UNDEFINED,
+        LAYOUT_DIRECTION_LTR = LayoutDirection::LTR,
+        LAYOUT_DIRECTION_RTL = LayoutDirection::RTL,
+        LAYOUT_DIRECTION_INHERIT = LayoutDirection::INHERIT,
+        LAYOUT_DIRECTION_LOCALE = LayoutDirection::LOCAL,
+        LAYOUT_DIRECTION_DEFAULT = LAYOUT_DIRECTION_INHERIT,
         LAYOUT_DIRECTION_RESOLVED_DEFAULT = LAYOUT_DIRECTION_LTR,
-  
-       //ScrollBarPosition
-        SCROLLBAR_POSITION_DEFAULT= 0 ,
-        SCROLLBAR_POSITION_LEFT   = 1 ,
-        SCROLLBAR_POSITION_RIGHT  = 2 ,
 
-       //ScrollIndicators
-        SCROLL_INDICATORS_NONE        = 0x0000 ,
-        SCROLL_INDICATORS_PFLAG3_MASK = PFLAG3_SCROLL_INDICATOR_TOP | PFLAG3_SCROLL_INDICATOR_BOTTOM 
-             | PFLAG3_SCROLL_INDICATOR_LEFT  | PFLAG3_SCROLL_INDICATOR_RIGHT 
-             | PFLAG3_SCROLL_INDICATOR_START | PFLAG3_SCROLL_INDICATOR_END ,
-        SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT =8 ,
-  
-        SCROLL_INDICATOR_TOP    = PFLAG3_SCROLL_INDICATOR_TOP >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT ,
-        SCROLL_INDICATOR_BOTTOM = PFLAG3_SCROLL_INDICATOR_BOTTOM >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT ,
-        SCROLL_INDICATOR_LEFT   = PFLAG3_SCROLL_INDICATOR_LEFT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT ,
-        SCROLL_INDICATOR_RIGHT  = PFLAG3_SCROLL_INDICATOR_RIGHT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT ,
+        //ScrollBarPosition
+        SCROLLBAR_POSITION_DEFAULT = 0,
+        SCROLLBAR_POSITION_LEFT = 1,
+        SCROLLBAR_POSITION_RIGHT = 2,
 
-    /*The scrollbar style to display the scrollbars at the edge of the view,
-     * increasing the padding of the view. The scrollbars will only overlap the
-     * background, if any*/
-        SCROLLBARS_INSIDE_OVERLAY = 0 ,
-        SCROLLBARS_INSIDE_INSET   = 0x01000000 ,
-        SCROLLBARS_OUTSIDE_OVERLAY= 0x02000000 ,
-        SCROLLBARS_OUTSIDE_INSET  = 0x03000000 ,
-        SCROLLBARS_INSET_MASK     = 0x01000000 ,
-        SCROLLBARS_OUTSIDE_MASK   = 0x02000000 ,
-        SCROLLBARS_STYLE_MASK     = 0x03000000 ,
+        //ScrollIndicators
+        SCROLL_INDICATORS_NONE = 0x0000,
+        SCROLL_INDICATORS_PFLAG3_MASK = PFLAG3_SCROLL_INDICATOR_TOP | PFLAG3_SCROLL_INDICATOR_BOTTOM
+        | PFLAG3_SCROLL_INDICATOR_LEFT | PFLAG3_SCROLL_INDICATOR_RIGHT
+        | PFLAG3_SCROLL_INDICATOR_START | PFLAG3_SCROLL_INDICATOR_END,
+        SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT = 8,
 
-        KEEP_SCREEN_ON            = 0x04000000 ,
-        SOUND_EFFECTS_ENABLED     = 0x08000000 ,
-        HAPTIC_FEEDBACK_ENABLED   = 0x10000000 ,
-        PARENT_SAVE_DISABLED      = 0x20000000 ,
-        PARENT_SAVE_DISABLED_MASK = 0x20000000 ,
+        SCROLL_INDICATOR_TOP = PFLAG3_SCROLL_INDICATOR_TOP >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT,
+        SCROLL_INDICATOR_BOTTOM = PFLAG3_SCROLL_INDICATOR_BOTTOM >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT,
+        SCROLL_INDICATOR_LEFT = PFLAG3_SCROLL_INDICATOR_LEFT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT,
+        SCROLL_INDICATOR_RIGHT = PFLAG3_SCROLL_INDICATOR_RIGHT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT,
 
-       //Indicates no axis of view scrolling.
-        SCROLL_AXIS_NONE      =0 ,
-        SCROLL_AXIS_HORIZONTAL=1 ,
-        SCROLL_AXIS_VERTICAL  =2 ,
+        /*The scrollbar style to display the scrollbars at the edge of the view,
+         * increasing the padding of the view. The scrollbars will only overlap the
+         * background, if any*/
+        SCROLLBARS_INSIDE_OVERLAY = 0,
+        SCROLLBARS_INSIDE_INSET = 0x01000000,
+        SCROLLBARS_OUTSIDE_OVERLAY = 0x02000000,
+        SCROLLBARS_OUTSIDE_INSET = 0x03000000,
+        SCROLLBARS_INSET_MASK = 0x01000000,
+        SCROLLBARS_OUTSIDE_MASK = 0x02000000,
+        SCROLLBARS_STYLE_MASK = 0x03000000,
+
+        KEEP_SCREEN_ON = 0x04000000,
+        SOUND_EFFECTS_ENABLED = 0x08000000,
+        HAPTIC_FEEDBACK_ENABLED = 0x10000000,
+        PARENT_SAVE_DISABLED = 0x20000000,
+        PARENT_SAVE_DISABLED_MASK = 0x20000000,
+
+        //Indicates no axis of view scrolling.
+        SCROLL_AXIS_NONE = 0,
+        SCROLL_AXIS_HORIZONTAL = 1,
+        SCROLL_AXIS_VERTICAL = 2,
 
         TYPE_TOUCH = 0,/*Indicates that the input type for the gesture is from a user touching the screen.*/
         TYPE_NON_TOUCH = 1,
 
-       //OverScrollMode of view
-        OVER_SCROLL_ALWAYS =0 ,
-        OVER_SCROLL_IF_CONTENT_SCROLLS =1 ,
-        OVER_SCROLL_NEVER =2 ,
+        //OverScrollMode of view
+        OVER_SCROLL_ALWAYS = 0,
+        OVER_SCROLL_IF_CONTENT_SCROLLS = 1,
+        OVER_SCROLL_NEVER = 2,
+    };//endof ViewFlags
+    enum SYSTEM_UI{//SystemUI FLAGS
+        SYSTEM_UI_FLAG_VISIBLE = 0,
+        SYSTEM_UI_FLAG_LOW_PROFILE = 0x00000001,
+        SYSTEM_UI_FLAG_HIDE_NAVIGATION = 0x00000002,
+        SYSTEM_UI_FLAG_FULLSCREEN = 0x00000004,
+        SYSTEM_UI_FLAG_LAYOUT_STABLE = 0x00000100,
+        SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION = 0x00000200,
+        SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN = 0x00000400,
+        SYSTEM_UI_FLAG_IMMERSIVE = 0x00000800,
+        SYSTEM_UI_FLAG_IMMERSIVE_STICKY = 0x00001000,
+        SYSTEM_UI_FLAG_LIGHT_STATUS_BAR = 0x00002000,
+        SYSTEM_UI_RESERVED_LEGACY1 = 0x00004000,
+        SYSTEM_UI_RESERVED_LEGACY2 = 0x00010000,
+        SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR = 0x00000010,
+        STATUS_BAR_HIDDEN = SYSTEM_UI_FLAG_LOW_PROFILE,
+        STATUS_BAR_VISIBLE = SYSTEM_UI_FLAG_VISIBLE,
+        STATUS_BAR_DISABLE_EXPAND = 0x00010000,
+        STATUS_BAR_DISABLE_NOTIFICATION_ICONS = 0x00020000,
+        STATUS_BAR_DISABLE_NOTIFICATION_ALERTS = 0x00040000,
+        STATUS_BAR_DISABLE_NOTIFICATION_TICKER = 0x00080000,
+        STATUS_BAR_DISABLE_SYSTEM_INFO = 0x00100000,
+        STATUS_BAR_DISABLE_HOME = 0x00200000,
+        STATUS_BAR_DISABLE_BACK = 0x00400000,
+        STATUS_BAR_DISABLE_CLOCK = 0x00800000,
+        STATUS_BAR_DISABLE_RECENT= 0x01000000,
+        STATUS_BAR_DISABLE_SEARCH= 0x02000000,
+        STATUS_BAR_TRANSIENT = 0x04000000,
+        NAVIGATION_BAR_TRANSIENT = 0x08000000,
+        STATUS_BAR_UNHIDE = 0x10000000,
+        NAVIGATION_BAR_UNHIDE = 0x20000000,
+        STATUS_BAR_TRANSLUCENT = 0x40000000,
+        NAVIGATION_BAR_TRANSLUCENT = 0x80000000,
+        NAVIGATION_BAR_TRANSPARENT = 0x00008000,
+        STATUS_BAR_TRANSPARENT = 0x00000008,
+        SYSTEM_UI_TRANSPARENT = NAVIGATION_BAR_TRANSPARENT | STATUS_BAR_TRANSPARENT,
+        PUBLIC_STATUS_BAR_VISIBILITY_MASK = 0x00003FF7,
+        SYSTEM_UI_CLEARABLE_FLAGS = SYSTEM_UI_FLAG_LOW_PROFILE |
+              SYSTEM_UI_FLAG_HIDE_NAVIGATION | SYSTEM_UI_FLAG_FULLSCREEN,
+        SYSTEM_UI_LAYOUT_FLAGS = SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            | SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
     };//endof ViewFlags
     
     enum LayerType{
@@ -346,6 +389,7 @@ public:
     DECLARE_UIEVENT(bool,OnContextClickListener,View&);
     DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);
     DECLARE_UIEVENT(void,OnScrollChangeListener,View& v, int, int, int, int);
+    DECLARE_UIEVENT(WindowInsets, OnApplyWindowInsetsListener,View&,WindowInsets&);
     typedef CallbackBase<void,View&,int,int,int,int,int,int,int,int>OnLayoutChangeListener;
     typedef CallbackBase<bool,View&,KeyEvent&>OnUnhandledKeyEventListener;
     typedef struct{
@@ -427,6 +471,7 @@ private:
     void resetPressedState();
     void hideTooltip();
     bool showHoverTooltip();
+    void handleTooltipUp();
     bool showTooltip(int x, int y, bool fromLongClick);
     bool showLongClickTooltip(int x, int y);
     void initView();
@@ -578,12 +623,14 @@ protected:
     virtual std::vector<int> onCreateDrawableState();
     virtual View& setFlags(int flag,int mask);
     virtual bool hasFlag(int flag) const;
+    bool fitSystemWindows(Rect& insets);
     virtual void dispatchSetSelected(bool selected);
     virtual void dispatchSetPressed(bool pressed);
     virtual void dispatchVisibilityChanged(View& changedView,int visiblity);
     virtual bool dispatchVisibilityAggregated(bool isVisible);
     virtual void dispatchWindowFocusChanged(bool);
     virtual bool dispatchTooltipHoverEvent(MotionEvent& event);
+    void handleTooltipKey(KeyEvent& event);
     virtual void onWindowFocusChanged(bool hasWindowFocus);
     virtual void onVisibilityChanged(View& changedView,int visibility);
     virtual void onAttachedToWindow();
@@ -593,6 +640,7 @@ protected:
     virtual void dispatchDraw(Canvas&);
     virtual void onFocusChanged(bool,int,Rect*);
     virtual void onFocusLost();
+    bool computeFitSystemWindows(Rect& inoutInsets, Rect& outLocalInsets);
     virtual void clearParentsWantFocus();
     virtual void clearFocusInternal(View* focused, bool propagate, bool refocus);
     virtual void handleFocusGainInternal(int direction,Rect*previouslyFocusedRect);
@@ -989,10 +1037,21 @@ public:
     void getWindowVisibleDisplayFrame(Rect& outRect);
     void getWindowDisplayFrame(Rect& outRect);
     bool isShown()const;
+    virtual WindowInsets onApplyWindowInsets(WindowInsets& insets);
+    void setOnApplyWindowInsetsListener(const OnApplyWindowInsetsListener& listener);
+    WindowInsets dispatchApplyWindowInsets(WindowInsets& insets);
+    WindowInsets computeSystemWindowInsets(WindowInsets& in, Rect& outLocalInsets);
+    void setFitsSystemWindows(bool fitSystemWindows);
+    bool getFitsSystemWindows()const;
+    bool fitsSystemWindows();
+    void requestFitSystemWindows();
+    void requestApplyInsets();
+    void makeOptionalFitsSystemWindows();
     virtual View& setEnabled(bool enable);
     virtual bool isEnabled() const;
     virtual void setSelected(bool);
     bool isSelected()const;
+    bool fitSystemWindowsInt(Rect& insets);
     void setPressed(bool);
     bool isPressed()const;
     void setActivated(bool activated);
@@ -1196,9 +1255,11 @@ public:
     Display*mDisplay;
     ViewGroup*mRootView;
     bool mHardwareAccelerated;
+    bool mOverscanRequested;
     float mApplicationScale;
     int mWindowLeft;
     int mWindowTop;
+    int mSystemUiVisibility;
     Rect mOverscanInsets;
     Rect mContentInsets;
     Rect mVisibleInsets;
@@ -1281,6 +1342,7 @@ public:
     View::OnGenericMotionListener mOnGenericMotionListener;
     std::vector<View::OnUnhandledKeyEventListener> mUnhandledKeyListeners;
     //View::OnDragListener mOnDragListener;
+    OnApplyWindowInsetsListener mOnApplyWindowInsetsListener;
 };
 
 class View::CheckForTap{

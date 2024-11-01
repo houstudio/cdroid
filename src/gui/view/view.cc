@@ -4534,6 +4534,133 @@ bool View::isShown()const{
     return true;
 }
 
+class Finally {
+public:
+    Finally(std::function<void()> func) : action(func) {}
+    ~Finally() { action(); }
+private:
+    std::function<void()> action;
+};
+
+bool View::fitSystemWindows(Rect& insets) {
+    if ((mPrivateFlags3 & PFLAG3_APPLYING_INSETS) == 0) {
+        /*if (insets == null) {
+            // Null insets by definition have already been consumed.
+            // This call cannot apply insets since there are none to apply,
+            // so return false.
+            return false;
+        }*/
+        // If we're not in the process of dispatching the newer apply insets call,
+        // that means we're not in the compatibility path. Dispatch into the newer
+        // apply insets path and take things from there.
+        Finally fin([this]() {mPrivateFlags3 &= ~PFLAG3_FITTING_SYSTEM_WINDOWS; });
+        mPrivateFlags3 |= PFLAG3_FITTING_SYSTEM_WINDOWS;
+        return dispatchApplyWindowInsets(WindowInsets(insets)).isConsumed();
+    }
+    else {
+        // We're being called from the newer apply insets path.
+        // Perform the standard fallback behavior.
+        return fitSystemWindowsInt(insets);
+    }
+}
+bool View::fitSystemWindowsInt(Rect& insets) {
+    if ((mViewFlags & FITS_SYSTEM_WINDOWS) == FITS_SYSTEM_WINDOWS) {
+        mUserPaddingStart = UNDEFINED_PADDING;
+        mUserPaddingEnd = UNDEFINED_PADDING;
+        Rect localInsets;
+        bool res = computeFitSystemWindows(insets, localInsets);
+        mUserPaddingLeftInitial = localInsets.left;
+        mUserPaddingRightInitial = localInsets.width;
+        internalSetPadding(localInsets.left, localInsets.top,
+            localInsets.width, localInsets.height);
+        return res;
+    }
+    return false;
+}
+WindowInsets View::onApplyWindowInsets(WindowInsets& insets) {
+    if ((mPrivateFlags3 & PFLAG3_FITTING_SYSTEM_WINDOWS) == 0) {
+        // We weren't called from within a direct call to fitSystemWindows,
+        // call into it as a fallback in case we're in a class that overrides it
+        // and has logic to perform.
+        if (fitSystemWindows(insets.getSystemWindowInsets())) {
+            return insets.consumeSystemWindowInsets();
+        }
+    }
+    else {
+        // We were called from within a direct call to fitSystemWindows.
+        if (fitSystemWindowsInt(insets.getSystemWindowInsets())) {
+            return insets.consumeSystemWindowInsets();
+        }
+    }
+    return insets;
+}
+
+void View::setOnApplyWindowInsetsListener(const OnApplyWindowInsetsListener& listener) {
+    mListenerInfo->mOnApplyWindowInsetsListener = listener;
+}
+
+WindowInsets View::dispatchApplyWindowInsets(WindowInsets& insets) {
+    mPrivateFlags3 |= PFLAG3_APPLYING_INSETS;
+    Finally finally([this]() {mPrivateFlags3 &= ~PFLAG3_APPLYING_INSETS; });
+    if (mListenerInfo && mListenerInfo->mOnApplyWindowInsetsListener) {
+        return mListenerInfo->mOnApplyWindowInsetsListener(*this, insets);
+    } else {
+        return onApplyWindowInsets(insets);
+    }
+}
+
+/*WindowInsets* View::getRootWindowInsets() {
+    if (mAttachInfo != nullptr) {
+        return mAttachInfo->mViewRootImpl.getWindowInsets(false);
+    }
+    return nullptr;
+}*/
+
+bool View::computeFitSystemWindows(Rect& inoutInsets, Rect& outLocalInsets) {
+    WindowInsets innerInsets = computeSystemWindowInsets(WindowInsets(inoutInsets),
+            outLocalInsets);
+    inoutInsets=innerInsets.getSystemWindowInsets();
+    return innerInsets.isSystemWindowInsetsConsumed();
+}
+
+WindowInsets View::computeSystemWindowInsets(WindowInsets& in, Rect& outLocalInsets) {
+    if (((mViewFlags & OPTIONAL_FITS_SYSTEM_WINDOWS) == 0)|| (mAttachInfo == nullptr)
+            || (((mAttachInfo->mSystemUiVisibility & SYSTEM_UI_LAYOUT_FLAGS) == 0)
+            && !mAttachInfo->mOverscanRequested)) {
+        outLocalInsets = in.getSystemWindowInsets();
+        return in.consumeSystemWindowInsets().inset(outLocalInsets);
+    } else {
+        // The application wants to take care of fitting system window for
+        // the content...  however we still need to take care of any overscan here.
+        outLocalInsets = mAttachInfo->mOverscanInsets;
+        return in.inset(outLocalInsets);
+    }
+}
+void View::setFitsSystemWindows(bool fitSystemWindows) {
+    setFlags(fitSystemWindows ? FITS_SYSTEM_WINDOWS : 0, FITS_SYSTEM_WINDOWS);
+}
+
+bool View::getFitsSystemWindows()const {
+    return (mViewFlags & FITS_SYSTEM_WINDOWS) == FITS_SYSTEM_WINDOWS;
+}
+
+bool View::fitsSystemWindows() {
+    return getFitsSystemWindows();
+}
+
+void View::requestFitSystemWindows() {
+    if (mParent != nullptr) {
+        mParent->requestFitSystemWindows();
+    }
+}
+void View::requestApplyInsets() {
+    requestFitSystemWindows();
+}
+
+void View::makeOptionalFitsSystemWindows(){
+    setFlags(OPTIONAL_FITS_SYSTEM_WINDOWS,OPTIONAL_FITS_SYSTEM_WINDOWS);
+}
+
 View& View::setEnabled(bool enable) {
     if( enable == isEnabled() ) return *this;
     setFlags(enable?ENABLED:DISABLED,ENABLED_MASK);
@@ -5751,6 +5878,29 @@ std::string View::getTooltipText()const{
     return mTooltipInfo?mTooltipInfo->mTooltipText:std::string("");
 }
 
+void View::handleTooltipKey(KeyEvent& event) {
+    switch (event.getAction()) {
+    case KeyEvent::ACTION_DOWN:
+        if (event.getRepeatCount() == 0) {
+            hideTooltip();
+        }
+        break;
+
+    case KeyEvent::ACTION_UP:
+        handleTooltipUp();
+        break;
+    }
+}
+
+void View::handleTooltipUp() {
+    if (mTooltipInfo == nullptr || mTooltipInfo->mTooltipPopup == nullptr) {
+        return;
+    }
+    removeCallbacks(mTooltipInfo->mHideTooltipRunnable);
+    postDelayed(mTooltipInfo->mHideTooltipRunnable,
+        ViewConfiguration::getLongPressTooltipHideTimeout());
+}
+
 void View::hideTooltip(){
     if (mTooltipInfo == nullptr) {
         return;
@@ -5787,7 +5937,7 @@ bool View::showTooltip(int x, int y, bool fromLongClick){
     if (fromLongClick && (mViewFlags & ENABLED_MASK) != ENABLED) {
         return false;
     }
-    if (true){//TextUtils::isEmpty(mTooltipInfo->mTooltipText)) {
+    if (mTooltipInfo->mTooltipText.empty()) {
         return false;
     }
     hideTooltip();
@@ -6612,7 +6762,8 @@ bool View::onTouchEvent(MotionEvent& event){
     switch(action){
     case MotionEvent::ACTION_UP:
         mPrivateFlags3 &= ~PFLAG3_FINGER_DOWN;
-        if(mPrivateFlags&PFLAG_PRESSED);
+        if(mPrivateFlags&PFLAG_PRESSED)
+            handleTooltipUp();
         if (!clickable){
             removeTapCallback();
             removeLongPressCallback();

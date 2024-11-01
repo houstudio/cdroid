@@ -18,8 +18,6 @@ private:
     bool mDisplayCutoutConsumed = false;
 private:
     static Rect insetInsets(const Rect& insets, int left, int top, int right, int bottom);
-protected:
-    bool isSystemWindowInsetsConsumed() const;
 public:
     static WindowInsets CONSUMED;
 
@@ -80,6 +78,8 @@ public:
 
     WindowInsets inset(int left, int top, int right, int bottom);
     bool operator==(const WindowInsets& o)const;
+    bool operator!=(const WindowInsets& o)const;
+    bool isSystemWindowInsetsConsumed() const;
 };
 }/*endof namespace*/
 #endif/*__WINDOW_INSETS_H__*/

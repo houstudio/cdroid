@@ -245,18 +245,31 @@ WindowInsets WindowInsets::inset(int left, int top, int right, int bottom) {
 
 bool WindowInsets::operator==(const WindowInsets&that)const {
     if (this == &that) return true;
-    return mIsRound == that.mIsRound
-            && mAlwaysConsumeNavBar == that.mAlwaysConsumeNavBar
-            && mSystemWindowInsetsConsumed == that.mSystemWindowInsetsConsumed
-            && mWindowDecorInsetsConsumed == that.mWindowDecorInsetsConsumed
-            && mStableInsetsConsumed == that.mStableInsetsConsumed
-            && mDisplayCutoutConsumed == that.mDisplayCutoutConsumed
+    return (mIsRound == that.mIsRound)
+            && (mAlwaysConsumeNavBar == that.mAlwaysConsumeNavBar)
+            && (mSystemWindowInsetsConsumed == that.mSystemWindowInsetsConsumed)
+            && (mWindowDecorInsetsConsumed == that.mWindowDecorInsetsConsumed)
+            && (mStableInsetsConsumed == that.mStableInsetsConsumed)
+            && (mDisplayCutoutConsumed == that.mDisplayCutoutConsumed)
             && (mSystemWindowInsets==mSystemWindowInsets)
             && (mWindowDecorInsets==that.mWindowDecorInsets)
             && (mStableInsets==that.mStableInsets)
             && (mDisplayCutout==that.mDisplayCutout);
 }
 
+bool WindowInsets::operator!=(const WindowInsets& that)const {
+    if (this == &that) return false;
+    return (mIsRound != that.mIsRound)
+        || (mAlwaysConsumeNavBar == that.mAlwaysConsumeNavBar)
+        || (mSystemWindowInsetsConsumed == that.mSystemWindowInsetsConsumed)
+        || (mWindowDecorInsetsConsumed == that.mWindowDecorInsetsConsumed)
+        || ( mStableInsetsConsumed == that.mStableInsetsConsumed)
+        || ( mDisplayCutoutConsumed == that.mDisplayCutoutConsumed)
+        || (mSystemWindowInsets == mSystemWindowInsets)
+        || (mWindowDecorInsets == that.mWindowDecorInsets)
+        || (mStableInsets == that.mStableInsets)
+        || (mDisplayCutout == that.mDisplayCutout);
+}
 Rect WindowInsets::insetInsets(const Rect& insets, int left, int top, int right, int bottom) {
     int newLeft = std::max(0, insets.left - left);
     int newTop = std::max(0, insets.top - top);
