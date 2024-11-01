@@ -8,11 +8,11 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
             ? context.obtainStyledAttributes(attrs, R.styleable.CoordinatorLayout,
                 0, R.style.Widget_Support_CoordinatorLayout)
             : context.obtainStyledAttributes(attrs, R.styleable.CoordinatorLayout,
-                defStyleAttr, 0);
-    final int keylineArrayRes = a.getResourceId(R.styleable.CoordinatorLayout_keylines, 0);
-    if (keylineArrayRes != 0) {
+                defStyleAttr, 0);*/
+    std::string keylineArrayRes = attrs.getString("keylines");
+    /*if (!keylineArrayRes.empty()) {
         final Resources res = context.getResources();
-        mKeylines = res.getIntArray(keylineArrayRes);
+        mKeylines = attrs.getInArray(keylineArrayRes);
         final float density = res.getDisplayMetrics().density;
         final int count = mKeylines.length;
         for (int i = 0; i < count; i++) {
@@ -179,6 +179,17 @@ void CoordinatorLayout::resetTouchBehaviors(bool notifyOnInterceptTouchEvent) {
     mDisallowInterceptReset = false;
 }
 
+static int TOP_SORTED_CHILDREN_COMPARATOR(View* lhs, View* rhs) {
+    const float lz = lhs->getZ();
+    const float rz = rhs->getZ();
+    if (lz > rz) {
+        return -1;
+    } else if (lz < rz) {
+        return 1;
+    }
+    return 0;
+};
+
 void CoordinatorLayout::getTopSortedChildren(std::vector<View*>& out) {
     out.clear();
 
@@ -189,21 +200,16 @@ void CoordinatorLayout::getTopSortedChildren(std::vector<View*>& out) {
         View* child = getChildAt(childIndex);
         out.push_back(child);
     }
-
-    /*if (TOP_SORTED_CHILDREN_COMPARATOR != null) {
-        Collections.sort(out, TOP_SORTED_CHILDREN_COMPARATOR);
-    }*/
+    std::sort(out.begin(), out.end(), TOP_SORTED_CHILDREN_COMPARATOR);
 }
 
 bool CoordinatorLayout::performIntercept(MotionEvent& ev,int type) {
     bool intercepted = false;
     bool newBlock = false;
-
     MotionEvent* cancelEvent = nullptr;
-
     const int action = ev.getActionMasked();
 
-    std::vector<View*> topmostChildList = mTempList1;
+    std::vector<View*> topmostChildList;
     getTopSortedChildren(topmostChildList);
 
     // Let topmost child views inspect first
@@ -285,7 +291,6 @@ bool CoordinatorLayout::onTouchEvent(MotionEvent& ev) {
     bool handled = false;
     bool cancelSuper = false;
     MotionEvent* cancelEvent = nullptr;
-
     const int action = ev.getActionMasked();
 
     if (mBehaviorTouchView || (cancelSuper = performIntercept(ev, TYPE_ON_TOUCH))) {
@@ -470,11 +475,9 @@ int CoordinatorLayout::getSuggestedMinimumHeight() {
     return std::max(ViewGroup::getSuggestedMinimumHeight(), getPaddingTop() + getPaddingBottom());
 }
 
-
 void CoordinatorLayout::onMeasureChild(View* child, int parentWidthMeasureSpec, int widthUsed,
         int parentHeightMeasureSpec, int heightUsed) {
-    measureChildWithMargins(child, parentWidthMeasureSpec, widthUsed,
-            parentHeightMeasureSpec, heightUsed);
+    measureChildWithMargins(child, parentWidthMeasureSpec, widthUsed,parentHeightMeasureSpec, heightUsed);
 }
 
 void CoordinatorLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -527,7 +530,7 @@ void CoordinatorLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
         int childWidthMeasureSpec = widthMeasureSpec;
         int childHeightMeasureSpec = heightMeasureSpec;
-        /*if (applyInsets && !ViewCompat.getFitsSystemWindows(child)) {
+        /*if (applyInsets && !child->getFitsSystemWindows()) {
             // We're set to handle insets but this child isn't, so we will measure the
             // child as if there are no insets
             const int horizInsets = mLastInsets.getSystemWindowInsetLeft()
@@ -553,10 +556,8 @@ void CoordinatorLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         childState = View::combineMeasuredStates(childState, child->getMeasuredState());
     }
 
-    const int width = View::resolveSizeAndState(widthUsed, widthMeasureSpec,
-            childState & View::MEASURED_STATE_MASK);
-    const int height = View::resolveSizeAndState(heightUsed, heightMeasureSpec,
-            childState << View::MEASURED_HEIGHT_STATE_SHIFT);
+    const int width = View::resolveSizeAndState(widthUsed, widthMeasureSpec, childState & View::MEASURED_STATE_MASK);
+    const int height = View::resolveSizeAndState(heightUsed, heightMeasureSpec, childState << View::MEASURED_HEIGHT_STATE_SHIFT);
     setMeasuredDimension(width, height);
 }
 
@@ -605,7 +606,7 @@ void CoordinatorLayout::onLayout(bool changed, int l, int t, int r, int b) {
     const size_t childCount = mDependencySortedChildren.size();
     for (size_t i = 0; i < childCount; i++) {
         View* child = mDependencySortedChildren.at(i);
-        if (child->getVisibility() == GONE) {
+        if (child->getVisibility() == View::GONE) {
             // If the child is GONE, skip...
             continue;
         }
@@ -1397,10 +1398,8 @@ void CoordinatorLayout::onNestedPreScroll(View* target, int dx, int dy, int* con
             mTempIntPair[0] = mTempIntPair[1] = 0;
             viewBehavior->onNestedPreScroll(*this, *view, *target, dx, dy, mTempIntPair, type);
 
-            xConsumed = dx > 0 ? std::max(xConsumed, mTempIntPair[0])
-                    : std::min(xConsumed, mTempIntPair[0]);
-            yConsumed = dy > 0 ? std::max(yConsumed, mTempIntPair[1])
-                    : std::min(yConsumed, mTempIntPair[1]);
+            xConsumed = dx > 0 ? std::max(xConsumed, mTempIntPair[0]) : std::min(xConsumed, mTempIntPair[0]);
+            yConsumed = dy > 0 ? std::max(yConsumed, mTempIntPair[1]) : std::min(yConsumed, mTempIntPair[1]);
 
             accepted = true;
         }
@@ -1469,20 +1468,6 @@ bool CoordinatorLayout::onNestedPreFling(View* target, float velocityX, float ve
 int CoordinatorLayout::getNestedScrollAxes() {
     return mNestedScrollingParentHelper->getNestedScrollAxes();
 }
-
-/*static class ViewElevationComparator implements Comparator<View> {
-    @Override
-    public int compare(View lhs, View rhs) {
-        final float lz = ViewCompat.getZ(lhs);
-        final float rz = ViewCompat.getZ(rhs);
-        if (lz > rz) {
-            return -1;
-        } else if (lz < rz) {
-            return 1;
-        }
-        return 0;
-    }
-}*/
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 void CoordinatorLayout::Behavior::setTag(View& child, void* tag) {

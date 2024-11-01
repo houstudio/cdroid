@@ -23,7 +23,6 @@ private:
     std::vector<View*> mDependencySortedChildren;
     DirectedAcyclicGraph<View> mChildDag;
 
-    std::vector<View*> mTempList1;
     std::vector<View*> mTempDependenciesList;
     int mTempIntPair[2];
     bool mDisallowInterceptReset;
@@ -63,18 +62,29 @@ private:
     void setInsetOffsetX(View* child, int offsetX);
     void setInsetOffsetY(View* child, int offsetY);
     bool hasDependencies(View* child)const;
+    void setupForInsets();
 protected:
     void drawableStateChanged() override;
     bool verifyDrawable(Drawable* who)const override;
+    WindowInsets setWindowInsets(const WindowInsets& insets);
     int getSuggestedMinimumWidth()override;
     int getSuggestedMinimumHeight()override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
-
+    void onLayout(bool changed, int l, int t, int r, int b)override;
     void recordLastChildRect(View* child, Rect& r);
     void getLastChildRect(View* child, Rect& out);
     void getChildRect(View* child, bool transform, Rect& out);
     void getDesiredAnchoredChildRect(View* child, int layoutDirection,const Rect& anchorRect, Rect& out);
     bool drawChild(Canvas& canvas, View* child, long drawingTime)override;
+    void onChildViewsChanged(int type);
+    std::vector<View*> getDependencySortedChildren();
+    void ensurePreDrawListener();
+    void addPreDrawListener();
+    void removePreDrawListener();
+    void offsetChildToAnchor(View* child, int layoutDirection);
+    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
+    bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
 #if 0
     void onRestoreInstanceState(Parcelable state)override;
     Parcelable onSaveInstanceState() override;
@@ -87,89 +97,61 @@ public:
     void setStatusBarBackground(Drawable* bg);
     Drawable* getStatusBarBackground();
     View& setVisibility(int visibility) override;
-    public: void setStatusBarBackgroundResource(const std::string& resId);
-
-    public: void setStatusBarBackgroundColor(int color);
-
-    WindowInsets setWindowInsets(const WindowInsets& insets);
-
-    public: WindowInsets getLastWindowInsets();
-
-    public: bool onInterceptTouchEvent(MotionEvent& ev) override;
-    public: bool onTouchEvent(MotionEvent& ev)override;
-    public: void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
+    void setStatusBarBackgroundResource(const std::string& resId);
+    void setStatusBarBackgroundColor(int color);
+    WindowInsets getLastWindowInsets();
+    bool onInterceptTouchEvent(MotionEvent& ev) override;
+    bool onTouchEvent(MotionEvent& ev)override;
+    void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
 
     static Behavior* parseBehavior(Context* context,const AttributeSet& attrs,const std::string& name);
     LayoutParams* getResolvedLayoutParams(View* child);
 
     void getDescendantRect(View* descendant, Rect& out);
-
-
-
-    public: void onMeasureChild(View* child, int parentWidthMeasureSpec, int widthUsed,
+    void onMeasureChild(View* child, int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed);
 
-    public: void onLayoutChild(View* child, int layoutDirection);
-    protected: void onLayout(bool changed, int l, int t, int r, int b)override;
-    public: void onDraw(Canvas& c)override;
-    public: void setFitsSystemWindows(bool fitSystemWindows);// override;
+    void onLayoutChild(View* child, int layoutDirection);
+    void onDraw(Canvas& c)override;
+    void setFitsSystemWindows(bool fitSystemWindows);// override;
 
-    void onChildViewsChanged(int type);
+    void dispatchDependentViewsChanged(View& view);
 
-    public: void dispatchDependentViewsChanged(View& view);
+    std::vector<View*> getDependencies(View& child);
 
-    public: std::vector<View*> getDependencies(View& child);
+    std::vector<View*> getDependents(View& child);
+    bool isPointInChildBounds(View& child, int x, int y);
 
-    public: std::vector<View*> getDependents(View& child);
+    bool doViewsOverlap(View& first, View& second);
 
-    std::vector<View*> getDependencySortedChildren();
+    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 
-    void ensurePreDrawListener();
+    bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes);//override;
 
-    void addPreDrawListener();
-    void removePreDrawListener();
+    bool onStartNestedScroll(View* child, View* target, int axes, int type);// override;
 
-    void offsetChildToAnchor(View* child, int layoutDirection);
+    void onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes);//override;
 
-    public: bool isPointInChildBounds(View& child, int x, int y);
+    void onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes, int type);// override;
 
-    public: bool doViewsOverlap(View& first, View& second);
+    void onStopNestedScroll(View* target);//override;
 
-    public: ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    void onStopNestedScroll(View* target, int type);// override;
 
-    protected: ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed);
 
-    protected: ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
+    void onNestedScroll(View* target, int dxConsumed, int dyConsumed,
+    int dxUnconsumed, int dyUnconsumed, int type);// override;
+    void onNestedPreScroll(View* target, int dx, int dy, int consumed[]) override;
 
-    protected: bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    void onNestedPreScroll(View* target, int dx, int dy, int* consumed, int  type);// override;
+    bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed);// override;
+    bool onNestedPreFling(View* target, float velocityX, float velocityY);// override;
 
-    public: bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes);//override;
-
-    public: bool onStartNestedScroll(View* child, View* target, int axes, int type);// override;
-
-    public: void onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes);//override;
-
-    public: void onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes, int type);// override;
-
-    public: void onStopNestedScroll(View* target);//override;
-
-    public: void onStopNestedScroll(View* target, int type);// override;
-
-    public: void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed);
-
-    public: void onNestedScroll(View* target, int dxConsumed, int dyConsumed,
-        int dxUnconsumed, int dyUnconsumed, int type);// override;
-    public: void onNestedPreScroll(View* target, int dx, int dy, int consumed[]) override;
-
-    public: void onNestedPreScroll(View* target, int dx, int dy, int* consumed, int  type);// override;
-    public: bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed);// override;
-    public: bool onNestedPreFling(View* target, float velocityX, float velocityY);// override;
-
-    public: int getNestedScrollAxes();//override;
+    int getNestedScrollAxes();//override;
 
     bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate)override;
 
-private: void setupForInsets();
     class AttachedBehavior {
     virtual Behavior& getBehavior() = 0;
     };
@@ -304,10 +286,6 @@ protected:
     Behavior* mBehavior;
     friend class CoordinatorLayout;
     bool mBehaviorResolved = false;
-private:
-    void resolveAnchorView(View* forChild, CoordinatorLayout& parent);
-    bool verifyAnchorView(View* forChild, CoordinatorLayout& parent);
-    bool shouldDodge(View* other, int layoutDirection);
 public: 
     int gravity = Gravity::NO_GRAVITY;
     int anchorGravity = Gravity::NO_GRAVITY;
@@ -322,16 +300,11 @@ public:
     View* mAnchorDirectChild;
     Rect mLastChildRect;
     void* mBehaviorTag;
-public: 
-    LayoutParams(int width, int height);
-    LayoutParams(Context* context, const AttributeSet& attrs);
-    LayoutParams(const LayoutParams& p);
-    LayoutParams(const MarginLayoutParams& p);
-    LayoutParams(const ViewGroup::LayoutParams& p);
-    int getAnchorId()const;
-    void setAnchorId(int id);   
-    Behavior* getBehavior()const;
-    void setBehavior(Behavior* behavior);
+private:
+    void resolveAnchorView(View* forChild, CoordinatorLayout& parent);
+    bool verifyAnchorView(View* forChild, CoordinatorLayout& parent);
+    bool shouldDodge(View* other, int layoutDirection);
+protected:
     void setLastChildRect(const Rect& r);
     Rect getLastChildRect();
     bool checkAnchorChanged()const;
@@ -347,6 +320,16 @@ public:
     bool dependsOn(CoordinatorLayout& parent, View* child, View* dependency);
     void invalidateAnchor();
     View* findAnchorView(CoordinatorLayout& parent, View* forChild);
+public: 
+    LayoutParams(int width, int height);
+    LayoutParams(Context* context, const AttributeSet& attrs);
+    LayoutParams(const LayoutParams& p);
+    LayoutParams(const MarginLayoutParams& p);
+    LayoutParams(const ViewGroup::LayoutParams& p);
+    int getAnchorId()const;
+    void setAnchorId(int id);   
+    Behavior* getBehavior()const;
+    void setBehavior(Behavior* behavior);
 };
 
 
