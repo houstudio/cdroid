@@ -586,8 +586,8 @@ WindowInsets CoordinatorLayout::dispatchApplyWindowInsetsToBehaviors(WindowInset
 }
 
 
-void CoordinatorLayout::onLayoutChild(View& child, int layoutDirection) {
-    LayoutParams* lp = (LayoutParams*) child.getLayoutParams();
+void CoordinatorLayout::onLayoutChild(View* child, int layoutDirection) {
+    const LayoutParams* lp = (const LayoutParams*) child->getLayoutParams();
     if (lp->checkAnchorChanged()) {
         LOGE("An anchor may not be changed after CoordinatorLayout measurement begins before layout is complete.");
     }
@@ -614,7 +614,7 @@ void CoordinatorLayout::onLayout(bool changed, int l, int t, int r, int b) {
         Behavior* behavior = lp->getBehavior();
 
         if ((behavior == nullptr) || !behavior->onLayoutChild(*this, *child, layoutDirection)) {
-            onLayoutChild(*child, layoutDirection);
+            onLayoutChild(child, layoutDirection);
         }
     }
 }
@@ -660,12 +660,12 @@ void CoordinatorLayout::getChildRect(View* child, bool transform, Rect& out) {
     }
 }
 
-void CoordinatorLayout::getDesiredAnchoredChildRectWithoutConstraints(View& child, int layoutDirection,
-        Rect& anchorRect, Rect& out, LayoutParams& lp, int childWidth, int childHeight) {
+void CoordinatorLayout::getDesiredAnchoredChildRectWithoutConstraints(View* child, int layoutDirection,
+        const Rect& anchorRect, Rect& out,const LayoutParams* lp, int childWidth, int childHeight) {
     const int absGravity = Gravity::getAbsoluteGravity(
-            resolveAnchoredChildGravity(lp.gravity), layoutDirection);
+            resolveAnchoredChildGravity(lp->gravity), layoutDirection);
     const int absAnchorGravity = Gravity::getAbsoluteGravity(
-            resolveGravity(lp.anchorGravity), layoutDirection);
+            resolveGravity(lp->anchorGravity), layoutDirection);
 
     const int hgrav = absGravity & Gravity::HORIZONTAL_GRAVITY_MASK;
     const int vgrav = absGravity & Gravity::VERTICAL_GRAVITY_MASK;
@@ -748,32 +748,32 @@ void CoordinatorLayout::constrainChildRect(const LayoutParams& lp, Rect& out, in
 }
 
 
-void CoordinatorLayout::getDesiredAnchoredChildRect(View& child, int layoutDirection, Rect& anchorRect, Rect& out) {
-    LayoutParams* lp = (LayoutParams*) child.getLayoutParams();
-    const int childWidth = child.getMeasuredWidth();
-    const int childHeight = child.getMeasuredHeight();
-    getDesiredAnchoredChildRectWithoutConstraints(child, layoutDirection, anchorRect, out, *lp,
+void CoordinatorLayout::getDesiredAnchoredChildRect(View* child, int layoutDirection,const Rect& anchorRect, Rect& out) {
+    const LayoutParams* lp = (const LayoutParams*) child->getLayoutParams();
+    const int childWidth = child->getMeasuredWidth();
+    const int childHeight = child->getMeasuredHeight();
+    getDesiredAnchoredChildRectWithoutConstraints(child, layoutDirection, anchorRect, out, lp,
             childWidth, childHeight);
     constrainChildRect(*lp, out, childWidth, childHeight);
 }
 
-void CoordinatorLayout::layoutChildWithAnchor(View& child, View* anchor, int layoutDirection) {
+void CoordinatorLayout::layoutChildWithAnchor(View* child, View* anchor, int layoutDirection) {
     Rect anchorRect,childRect;
     getDescendantRect(anchor, anchorRect);
     getDesiredAnchoredChildRect(child, layoutDirection, anchorRect, childRect);
-    child.layout(childRect.left, childRect.top, childRect.width, childRect.height);
+    child->layout(childRect.left, childRect.top, childRect.width, childRect.height);
 }
 
-void CoordinatorLayout::layoutChildWithKeyline(View& child, int keyline, int layoutDirection) {
-    LayoutParams* lp = (LayoutParams*) child.getLayoutParams();
+void CoordinatorLayout::layoutChildWithKeyline(View* child, int keyline, int layoutDirection) {
+    const LayoutParams* lp = (const LayoutParams*) child->getLayoutParams();
     const int absGravity = Gravity::getAbsoluteGravity(resolveKeylineGravity(lp->gravity), layoutDirection);
 
     const int hgrav = absGravity & Gravity::HORIZONTAL_GRAVITY_MASK;
     const int vgrav = absGravity & Gravity::VERTICAL_GRAVITY_MASK;
     const int width = getWidth();
     const int height = getHeight();
-    const int childWidth = child.getMeasuredWidth();
-    const int childHeight = child.getMeasuredHeight();
+    const int childWidth = child->getMeasuredWidth();
+    const int childHeight = child->getMeasuredHeight();
 
     if (layoutDirection == View::LAYOUT_DIRECTION_RTL) {
         keyline = width - keyline;
@@ -814,11 +814,11 @@ void CoordinatorLayout::layoutChildWithKeyline(View& child, int keyline, int lay
     top = std::max(getPaddingTop() + lp->topMargin,
             std::min(top,height - getPaddingBottom() - childHeight - lp->bottomMargin));
 
-    child.layout(left, top,childWidth,childHeight);
+    child->layout(left, top,childWidth,childHeight);
 }
 
-void CoordinatorLayout::layoutChild(View& child, int layoutDirection) {
-    LayoutParams* lp = (LayoutParams*) child.getLayoutParams();
+void CoordinatorLayout::layoutChild(View* child, int layoutDirection) {
+    const LayoutParams* lp = (const LayoutParams*) child->getLayoutParams();
     Rect parent;
     parent.set(getPaddingLeft() + lp->leftMargin,
             getPaddingTop() + lp->topMargin,
@@ -836,10 +836,9 @@ void CoordinatorLayout::layoutChild(View& child, int layoutDirection) {
     }*/
 
     Rect out;
-    Gravity::apply(resolveGravity(lp->gravity), child.getMeasuredWidth(),
-            child.getMeasuredHeight(), parent, out, layoutDirection);
-    child.layout(out.left, out.top, out.width, out.height);
-
+    Gravity::apply(resolveGravity(lp->gravity), child->getMeasuredWidth(),
+            child->getMeasuredHeight(), parent, out, layoutDirection);
+    child->layout(out.left, out.top, out.width, out.height);
 }
 
 int CoordinatorLayout::resolveGravity(int gravity) {
@@ -1107,7 +1106,7 @@ std::vector<View*> CoordinatorLayout::getDependencies(View& child) {
     std::vector<View*>* dependencies = mChildDag.getOutgoingEdges(&child);
     mTempDependenciesList.clear();
     if (dependencies&&dependencies->size()) {
-        mTempDependenciesList.insert(mTempDependenciesList.end(),dependencies->begin(), dependencies->end());// addAll(dependencies);
+        mTempDependenciesList.insert(mTempDependenciesList.end(),dependencies->begin(), dependencies->end());
     }
     return mTempDependenciesList;
 }
@@ -1116,7 +1115,7 @@ std::vector<View*> CoordinatorLayout::getDependents(View& child) {
     std::vector<View*>* edges = mChildDag.getIncomingEdges(&child);
     mTempDependenciesList.clear();
     if (edges&&edges->size()) {
-        mTempDependenciesList.insert(mTempDependenciesList.end(),edges->begin(), edges->end());// addAll(edges);
+        mTempDependenciesList.insert(mTempDependenciesList.end(),edges->begin(), edges->end());
     }
     return mTempDependenciesList;
 }
@@ -1149,7 +1148,7 @@ void CoordinatorLayout::ensurePreDrawListener() {
     }
 }
 
-bool CoordinatorLayout::hasDependencies(View* child) {
+bool CoordinatorLayout::hasDependencies(View* child)const {
     return mChildDag.hasOutgoingEdges(child);
 }
 
@@ -1195,10 +1194,10 @@ void CoordinatorLayout::offsetChildToAnchor(View* child, int layoutDirection) {
 
         int childWidth = child->getMeasuredWidth();
         int childHeight = child->getMeasuredHeight();
-        getDesiredAnchoredChildRectWithoutConstraints(*child, layoutDirection, anchorRect,
-                desiredChildRect, *lp, childWidth, childHeight);
-        bool changed = desiredChildRect.left != childRect.left ||
-                desiredChildRect.top != childRect.top;
+        getDesiredAnchoredChildRectWithoutConstraints(child, layoutDirection, anchorRect,
+                desiredChildRect, lp, childWidth, childHeight);
+        const bool changed = (desiredChildRect.left != childRect.left) ||
+                (desiredChildRect.top != childRect.top);
         constrainChildRect(*lp, desiredChildRect, childWidth, childHeight);
 
         const int dx = desiredChildRect.left - childRect.left;
@@ -1584,7 +1583,7 @@ Rect CoordinatorLayout::LayoutParams::getLastChildRect() {
     return mLastChildRect;
 }
 
-bool CoordinatorLayout::LayoutParams::checkAnchorChanged() {
+bool CoordinatorLayout::LayoutParams::checkAnchorChanged()const {
     return mAnchorView == nullptr && mAnchorId != View::NO_ID;
 }
 

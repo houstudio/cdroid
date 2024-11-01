@@ -50,19 +50,19 @@ private:
     int getKeyline(int index);
     void prepareChildren();
     WindowInsets dispatchApplyWindowInsetsToBehaviors(WindowInsets insets);
-    void getDesiredAnchoredChildRectWithoutConstraints(View& child, int layoutDirection,
-            Rect& anchorRect, Rect& out, LayoutParams& lp, int childWidth, int childHeight);
+    void getDesiredAnchoredChildRectWithoutConstraints(View* child, int layoutDirection,
+            const Rect& anchorRect, Rect& out,const LayoutParams* lp, int childWidth, int childHeight);
     void constrainChildRect(const LayoutParams& lp, Rect& out, int childWidth, int childHeight);
-    void layoutChildWithAnchor(View& child, View* anchor, int layoutDirection);
-    void layoutChildWithKeyline(View& child, int keyline, int layoutDirection);
-    void layoutChild(View& child, int layoutDirection);
+    void layoutChildWithAnchor(View* child, View* anchor, int layoutDirection);
+    void layoutChildWithKeyline(View* child, int keyline, int layoutDirection);
+    void layoutChild(View* child, int layoutDirection);
     static int resolveGravity(int gravity);
     static int resolveKeylineGravity(int gravity);
     static int resolveAnchoredChildGravity(int gravity);
     void offsetChildByInset(View* child,const Rect& inset,int layoutDirection);
     void setInsetOffsetX(View* child, int offsetX);
     void setInsetOffsetY(View* child, int offsetY);
-    bool hasDependencies(View* child);
+    bool hasDependencies(View* child)const;
 protected:
     void drawableStateChanged() override;
     bool verifyDrawable(Drawable* who)const override;
@@ -73,7 +73,7 @@ protected:
     void recordLastChildRect(View* child, Rect& r);
     void getLastChildRect(View* child, Rect& out);
     void getChildRect(View* child, bool transform, Rect& out);
-    void getDesiredAnchoredChildRect(View& child, int layoutDirection, Rect& anchorRect, Rect& out);
+    void getDesiredAnchoredChildRect(View* child, int layoutDirection,const Rect& anchorRect, Rect& out);
     bool drawChild(Canvas& canvas, View* child, long drawingTime)override;
 #if 0
     void onRestoreInstanceState(Parcelable state)override;
@@ -109,7 +109,7 @@ public:
     public: void onMeasureChild(View* child, int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed);
 
-    public: void onLayoutChild(View& child, int layoutDirection);
+    public: void onLayoutChild(View* child, int layoutDirection);
     protected: void onLayout(bool changed, int l, int t, int r, int b)override;
     public: void onDraw(Canvas& c)override;
     public: void setFitsSystemWindows(bool fitSystemWindows);// override;
@@ -191,19 +191,32 @@ public:
     Behavior(Context* context, const AttributeSet& attrs) {}
     virtual void onAttachedToLayoutParams(CoordinatorLayout::LayoutParams& params) {}
     virtual void onDetachedFromLayoutParams() {}
-    virtual bool onInterceptTouchEvent(CoordinatorLayout& parent, View& child, MotionEvent& ev) { return false; }
-    virtual bool onTouchEvent(CoordinatorLayout& parent, View& child, MotionEvent& ev) { return false; }
+    virtual bool onInterceptTouchEvent(CoordinatorLayout& parent, View& child, MotionEvent& ev) {
+        return false;
+    }
+    virtual bool onTouchEvent(CoordinatorLayout& parent, View& child, MotionEvent& ev) {
+        return false;
+    }
     virtual int getScrimColor(CoordinatorLayout& parent, View& child) { return 0xFF000000; }
     virtual float getScrimOpacity(CoordinatorLayout& parent, View& child) { return .0f; }
-    virtual bool blocksInteractionBelow(CoordinatorLayout& parent, View& child) { return getScrimOpacity(parent, child) > .0f; }
-    virtual bool layoutDependsOn(CoordinatorLayout& parent, View& child, View& dependency) { return false; }
-    virtual bool onDependentViewChanged(CoordinatorLayout& parent, View& child, View& dependency) { return false; }
-    virtual void onDependentViewRemoved(CoordinatorLayout& parent, View& child, View& dependency) {}
+    virtual bool blocksInteractionBelow(CoordinatorLayout& parent, View& child) {
+        return getScrimOpacity(parent, child) > .0f;
+    }
+    virtual bool layoutDependsOn(CoordinatorLayout& parent, View& child, View& dependency) {
+        return false;
+    }
+    virtual bool onDependentViewChanged(CoordinatorLayout& parent, View& child, View& dependency) { 
+        return false;
+    }
+    virtual void onDependentViewRemoved(CoordinatorLayout& parent, View& child, View& dependency) {
+    }
     virtual bool onMeasureChild(CoordinatorLayout& parent, View& child,int parentWidthMeasureSpec,
         int widthUsed, int parentHeightMeasureSpec, int heightUsed) {
         return false;
     }
-    virtual bool onLayoutChild(CoordinatorLayout& parent, View& child, int layoutDirection) { return false; }
+    virtual bool onLayoutChild(CoordinatorLayout& parent, View& child, int layoutDirection) {
+        return false;
+    }
  
     static void setTag(View& child, void* tag);
     static void* getTag(View& child);
@@ -220,21 +233,24 @@ public:
         return false;
     }
     virtual void onNestedScrollAccepted(CoordinatorLayout& coordinatorLayout,
-        View& child, View& directTargetChild, View& target, int axes) {}
+        View& child, View& directTargetChild, View& target, int axes) {
+    }
     virtual void onNestedScrollAccepted(CoordinatorLayout& coordinatorLayout, View& child, View& directTargetChild,
         View& target, int axes, int type) {
         if (type == View::TYPE_TOUCH) {
             onNestedScrollAccepted(coordinatorLayout, child, directTargetChild, target, axes);
         }
     }
-    virtual void onStopNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target) {}
+    virtual void onStopNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target) {
+    }
     virtual void onStopNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int type) {
         if (type == View::TYPE_TOUCH) {
             onStopNestedScroll(coordinatorLayout, child, target);
         }
     }
     virtual void onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child,
-        View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {}
+        View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
+    }
     virtual void onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child,
         View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
         if (type == View::TYPE_TOUCH) {
@@ -242,7 +258,8 @@ public:
         }
     }
     virtual void onNestedPreScroll(CoordinatorLayout& coordinatorLayout,
-        View& child, View& target, int dx, int dy, int* consumed) {}
+        View& child, View& target, int dx, int dy, int* consumed) {
+    }
     virtual void onNestedPreScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target,
         int dx, int dy, int* consumed, int type) {
         if (type == View::TYPE_TOUCH) {
@@ -257,20 +274,27 @@ public:
         View& child, View& target, float velocityX, float velocityY) {
         return false;
     }
-    WindowInsets onApplyWindowInsets(CoordinatorLayout& coordinatorLayout, View& child, WindowInsets& insets);
+    WindowInsets onApplyWindowInsets(CoordinatorLayout& coordinatorLayout, View& child, WindowInsets& insets) {
+        return insets;
+    }
     virtual bool onRequestChildRectangleOnScreen(CoordinatorLayout& coordinatorLayout,
         View& child, const Rect& rectangle, bool immediate) {
         return false;
     }
-    virtual void onRestoreInstanceState(CoordinatorLayout& parent, View& child, Parcelable& state);
-    Parcelable* onSaveInstanceState(CoordinatorLayout& parent, View& child) { return nullptr; }
-    virtual bool getInsetDodgeRect(CoordinatorLayout& parent, View& child, Rect& rect) { return false; }
+    virtual void onRestoreInstanceState(CoordinatorLayout& parent, View& child, Parcelable& state) {
+    }
+    Parcelable* onSaveInstanceState(CoordinatorLayout& parent, View& child) { 
+        return nullptr;
+    }
+    virtual bool getInsetDodgeRect(CoordinatorLayout& parent, View& child, Rect& rect) {
+        return false;
+    }
 };
 
 /**
  * Parameters describing the desired layout for a child of a {@link CoordinatorLayout}.
  */
-class CoordinatorLayout::LayoutParams:public MarginLayoutParams {
+class CoordinatorLayout::LayoutParams:public ViewGroup::MarginLayoutParams {
 private:
     bool mDidBlockInteraction;
     bool mDidAcceptNestedScrollTouch;
@@ -280,78 +304,49 @@ protected:
     Behavior* mBehavior;
     friend class CoordinatorLayout;
     bool mBehaviorResolved = false;
-
+private:
+    void resolveAnchorView(View* forChild, CoordinatorLayout& parent);
+    bool verifyAnchorView(View* forChild, CoordinatorLayout& parent);
+    bool shouldDodge(View* other, int layoutDirection);
 public: 
     int gravity = Gravity::NO_GRAVITY;
     int anchorGravity = Gravity::NO_GRAVITY;
-
     int keyline = -1;
-
     int mAnchorId = View::NO_ID;
-
     int insetEdge = Gravity::NO_GRAVITY;
-
     int dodgeInsetEdges = Gravity::NO_GRAVITY;
  public:
     int mInsetOffsetX;
     int mInsetOffsetY;
-
     View* mAnchorView;
     View* mAnchorDirectChild;
     Rect mLastChildRect;
     void* mBehaviorTag;
 public: 
     LayoutParams(int width, int height);
-
     LayoutParams(Context* context, const AttributeSet& attrs);
-
     LayoutParams(const LayoutParams& p);
-
-public: LayoutParams(const MarginLayoutParams& p);
-public: LayoutParams(const ViewGroup::LayoutParams& p);
-
-public: int getAnchorId()const;
-
-public: void setAnchorId(int id);
-
-public: Behavior* getBehavior()const;
-
-    public: void setBehavior(Behavior* behavior);
-
+    LayoutParams(const MarginLayoutParams& p);
+    LayoutParams(const ViewGroup::LayoutParams& p);
+    int getAnchorId()const;
+    void setAnchorId(int id);   
+    Behavior* getBehavior()const;
+    void setBehavior(Behavior* behavior);
     void setLastChildRect(const Rect& r);
-
     Rect getLastChildRect();
-
-    bool checkAnchorChanged();
-
+    bool checkAnchorChanged()const;
     bool didBlockInteraction();
-
     bool isBlockingInteractionBelow(CoordinatorLayout& parent, View* child);
-
     void resetTouchBehaviorTracking();
-
     void resetNestedScroll(int type);
-
     void setNestedScrollAccepted(int type, bool accept);
     bool isNestedScrollAccepted(int type);
-
     bool getChangedAfterNestedScroll();
-
     void setChangedAfterNestedScroll(bool changed);
-
     void resetChangedAfterNestedScroll();
-
     bool dependsOn(CoordinatorLayout& parent, View* child, View* dependency);
-
     void invalidateAnchor();
-
     View* findAnchorView(CoordinatorLayout& parent, View* forChild);
-
-    private: void resolveAnchorView(View* forChild,CoordinatorLayout& parent);
-
-    private: bool verifyAnchorView(View* forChild, CoordinatorLayout& parent);
-
-    private: bool shouldDodge(View* other, int layoutDirection);
 };
 
 
