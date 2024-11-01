@@ -1,9 +1,13 @@
 #include <widgetEx/coordinatorlayout.h>
 #include <widgetEx/viewgrouputils.h>
 namespace cdroid{
+
+CoordinatorLayout::CoordinatorLayout(int w, int h) :ViewGroup(w, h) {
+    initView();
+}
 CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
     :ViewGroup(context, attrs){
-
+    initView();
     /*final TypedArray a = (defStyleAttr == 0)
             ? context.obtainStyledAttributes(attrs, R.styleable.CoordinatorLayout,
                 0, R.style.Widget_Support_CoordinatorLayout)
@@ -35,6 +39,12 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
             }
         };
     ViewGroup::setOnHierarchyChangeListener(hcl);
+}
+
+void CoordinatorLayout::initView() {
+    mBehaviorTouchView = nullptr;
+    mNestedScrollingTarget = nullptr;
+    mStatusBarBackground = nullptr;
 }
 
 void CoordinatorLayout::setOnHierarchyChangeListener(const OnHierarchyChangeListener& onHierarchyChangeListener) {

@@ -43,6 +43,7 @@ private:
     //androidx.core.view.OnApplyWindowInsetsListener mApplyWindowInsetsListener;
     NestedScrollingParentHelper* mNestedScrollingParentHelper;//new NestedScrollingParentHelper(this);
 private:
+    void initView();
     void resetTouchBehaviors(bool notifyOnInterceptTouchEvent);
     void getTopSortedChildren(std::vector<View*>& out);
     bool performIntercept(MotionEvent& ev,int type);
@@ -90,6 +91,7 @@ protected:
     Parcelable onSaveInstanceState() override;
 #endif
 public:
+    CoordinatorLayout(int w, int h);
     CoordinatorLayout(Context* context,const AttributeSet& attrs);
     void setOnHierarchyChangeListener(const OnHierarchyChangeListener& onHierarchyChangeListener)override;
     void onAttachedToWindow()override;
