@@ -1,8 +1,5 @@
 #include <widget/nestedscrollinghelper.h>
 
-#define TYPE_TOUCH 0
-#define TYPE_NON_TOUCH 1
-
 namespace cdroid{
 
 NestedScrollingParentHelper::NestedScrollingParentHelper(ViewGroup* viewGroup) {
@@ -12,7 +9,7 @@ NestedScrollingParentHelper::NestedScrollingParentHelper(ViewGroup* viewGroup) {
  
 void NestedScrollingParentHelper::onNestedScrollAccepted(View* child,View* target,
        int axes) {
-    onNestedScrollAccepted(child, target, axes, TYPE_TOUCH);
+    onNestedScrollAccepted(child, target, axes, View::TYPE_TOUCH);
 }
  
 void NestedScrollingParentHelper::onNestedScrollAccepted(View* child,View* target,
@@ -25,7 +22,7 @@ int NestedScrollingParentHelper::getNestedScrollAxes()const{
 }
  
 void NestedScrollingParentHelper::onStopNestedScroll(View* target) {
-    onStopNestedScroll(target, TYPE_TOUCH);
+    onStopNestedScroll(target, View::TYPE_TOUCH);
 }
 	
 void NestedScrollingParentHelper::onStopNestedScroll(View* target,int type) {
@@ -53,7 +50,7 @@ bool NestedScrollingChildHelper::isNestedScrollingEnabled() {
 }
 
 bool NestedScrollingChildHelper::hasNestedScrollingParent() {
-    return hasNestedScrollingParent(TYPE_TOUCH);
+    return hasNestedScrollingParent(View::TYPE_TOUCH);
 }
 
 bool NestedScrollingChildHelper::hasNestedScrollingParent( int type) {
@@ -61,7 +58,7 @@ bool NestedScrollingChildHelper::hasNestedScrollingParent( int type) {
 }
 
 bool NestedScrollingChildHelper::startNestedScroll( int axes) {
-    return startNestedScroll(axes, TYPE_TOUCH);
+    return startNestedScroll(axes, View::TYPE_TOUCH);
 }
 
 bool NestedScrollingChildHelper::startNestedScroll( int axes, int type) {
@@ -88,7 +85,7 @@ bool NestedScrollingChildHelper::startNestedScroll( int axes, int type) {
 }
 
 void NestedScrollingChildHelper::stopNestedScroll() {
-    stopNestedScroll(TYPE_TOUCH);
+    stopNestedScroll(View::TYPE_TOUCH);
 }
 
 void NestedScrollingChildHelper::stopNestedScroll( int type) {
@@ -102,7 +99,7 @@ void NestedScrollingChildHelper::stopNestedScroll( int type) {
 bool NestedScrollingChildHelper::dispatchNestedScroll(int dxConsumed, int dyConsumed,
         int dxUnconsumed, int dyUnconsumed, int offsetInWindow[]) {
     return dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,
-            offsetInWindow, TYPE_TOUCH);
+            offsetInWindow, View::TYPE_TOUCH);
 }
 
 bool NestedScrollingChildHelper::dispatchNestedScroll(int dxConsumed, int dyConsumed,
@@ -141,7 +138,7 @@ bool NestedScrollingChildHelper::dispatchNestedScroll(int dxConsumed, int dyCons
 
 bool NestedScrollingChildHelper::dispatchNestedPreScroll(int dx, int dy,
 	int consumed[], int offsetInWindow[]) {
-    return dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow, TYPE_TOUCH);
+    return dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow, View::TYPE_TOUCH);
 }
 
 bool NestedScrollingChildHelper::dispatchNestedPreScroll(int dx, int dy,
@@ -184,7 +181,7 @@ bool NestedScrollingChildHelper::dispatchNestedPreScroll(int dx, int dy,
 
 bool NestedScrollingChildHelper::dispatchNestedFling(float velocityX, float velocityY, bool consumed) {
     if (isNestedScrollingEnabled()) {
-        ViewGroup* parent = getNestedScrollingParentForType(TYPE_TOUCH);
+        ViewGroup* parent = getNestedScrollingParentForType(View::TYPE_TOUCH);
         if (parent != nullptr) {
             return parent->onNestedFling(mView, velocityX,velocityY, consumed);
         }
@@ -194,7 +191,7 @@ bool NestedScrollingChildHelper::dispatchNestedFling(float velocityX, float velo
 
 bool NestedScrollingChildHelper::dispatchNestedPreFling(float velocityX, float velocityY) {
     if (isNestedScrollingEnabled()) {
-        ViewGroup* parent = getNestedScrollingParentForType(TYPE_TOUCH);
+        ViewGroup* parent = getNestedScrollingParentForType(View::TYPE_TOUCH);
         if (parent != nullptr) {
             return parent->onNestedPreFling(mView, velocityX, velocityY);
         }
@@ -212,16 +209,16 @@ void NestedScrollingChildHelper::onStopNestedScroll( View* child) {
 
 ViewGroup* NestedScrollingChildHelper::getNestedScrollingParentForType(int type) {
     switch (type) {
-    case TYPE_TOUCH:    return mNestedScrollingParentTouch;
-    case TYPE_NON_TOUCH:return mNestedScrollingParentNonTouch;
+    case View::TYPE_TOUCH:    return mNestedScrollingParentTouch;
+    case View::TYPE_NON_TOUCH:return mNestedScrollingParentNonTouch;
     }
     return nullptr;
 }
 
 void NestedScrollingChildHelper::setNestedScrollingParentForType(int type, ViewGroup* p) {
     switch (type) {
-    case TYPE_TOUCH:     mNestedScrollingParentTouch = p;     break;
-    case TYPE_NON_TOUCH: mNestedScrollingParentNonTouch = p;  break;
+    case View::TYPE_TOUCH:     mNestedScrollingParentTouch = p;     break;
+    case View::TYPE_NON_TOUCH: mNestedScrollingParentNonTouch = p;  break;
     }
 }
 }/*endof namespace*/

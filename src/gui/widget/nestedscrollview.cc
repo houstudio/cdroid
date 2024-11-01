@@ -2,9 +2,6 @@
 #include <widget/nestedscrollinghelper.h>
 #include <view/focusfinder.h>
 
-#define TYPE_TOUCH 0
-#define TYPE_NON_TOUCH 1
-
 namespace cdroid{
 
 DECLARE_WIDGET2(NestedScrollView,"cdroid:attr/scrollViewStyle")
@@ -56,25 +53,25 @@ bool NestedScrollView::isNestedScrollingEnabled() {
 }
 
 bool NestedScrollView::startNestedScroll(int axes) {
-    return startNestedScroll(axes, TYPE_TOUCH);
+    return startNestedScroll(axes, View::TYPE_TOUCH);
 }
 
 void NestedScrollView::stopNestedScroll() {
-    stopNestedScroll(TYPE_TOUCH);
+    stopNestedScroll(View::TYPE_TOUCH);
 }
 
 bool NestedScrollView::hasNestedScrollingParent() {
-    return hasNestedScrollingParent(TYPE_TOUCH);
+    return hasNestedScrollingParent(View::TYPE_TOUCH);
 }
 
 bool NestedScrollView::dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,
         int dyUnconsumed, int offsetInWindow[]) {
     return dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,
-            offsetInWindow, TYPE_TOUCH);
+            offsetInWindow, View::TYPE_TOUCH);
 }
 
 bool NestedScrollView::dispatchNestedPreScroll(int dx, int dy, int consumed[], int offsetInWindow[]) {
-    return dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow, TYPE_TOUCH);
+    return dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow, View::TYPE_TOUCH);
 }
 
 bool NestedScrollView::dispatchNestedFling(float velocityX, float velocityY, bool consumed) {
@@ -121,27 +118,27 @@ void NestedScrollView::onNestedPreScroll(View* target, int dx, int dy,int consum
 
 
 bool NestedScrollView::onStartNestedScroll(View* child, View* target, int nestedScrollAxes) {
-    return onStartNestedScroll(child, target, nestedScrollAxes, TYPE_TOUCH);
+    return onStartNestedScroll(child, target, nestedScrollAxes, View::TYPE_TOUCH);
 }
 
 
 void NestedScrollView::onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes) {
-    onNestedScrollAccepted(child, target, nestedScrollAxes, TYPE_TOUCH);
+    onNestedScrollAccepted(child, target, nestedScrollAxes, View::TYPE_TOUCH);
 }
 
 
 void NestedScrollView::onStopNestedScroll(View* target) {
-    onStopNestedScroll(target, TYPE_TOUCH);
+    onStopNestedScroll(target, View::TYPE_TOUCH);
 }
 
 
 void NestedScrollView::onNestedScroll(View* target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
-    onNestedScroll(target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,TYPE_TOUCH);
+    onNestedScroll(target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,View::TYPE_TOUCH);
 }
 
 
 void NestedScrollView::onNestedPreScroll(View* target, int dx, int dy, int consumed[]) {
-    onNestedPreScroll(target, dx, dy, consumed, TYPE_TOUCH);
+    onNestedPreScroll(target, dx, dy, consumed, View::TYPE_TOUCH);
 }
 
 
@@ -560,7 +557,7 @@ bool NestedScrollView::onInterceptTouchEvent(MotionEvent& ev) {
             */
             mScroller->computeScrollOffset();
             mIsBeingDragged = stopGlowAnimations(ev)||(!mScroller->isFinished());
-            startNestedScroll(View::SCROLL_AXIS_VERTICAL, TYPE_TOUCH);
+            startNestedScroll(View::SCROLL_AXIS_VERTICAL, View::TYPE_TOUCH);
             break;
         }
 
@@ -573,7 +570,7 @@ bool NestedScrollView::onInterceptTouchEvent(MotionEvent& ev) {
             if (mScroller->springBack(getScrollX(), getScrollY(), 0, 0, 0, getScrollRange())) {
                 postInvalidateOnAnimation();
             }
-            stopNestedScroll(TYPE_TOUCH);
+            stopNestedScroll(View::TYPE_TOUCH);
             break;
         case MotionEvent::ACTION_POINTER_UP:
             onSecondaryPointerUp(ev);
@@ -621,7 +618,7 @@ bool NestedScrollView::onTouchEvent(MotionEvent& ev) {
             // Remember where the motion event started
             mLastMotionY = (int) ev.getY();
             mActivePointerId = ev.getPointerId(0);
-            startNestedScroll(View::SCROLL_AXIS_VERTICAL, TYPE_TOUCH);
+            startNestedScroll(View::SCROLL_AXIS_VERTICAL, View::TYPE_TOUCH);
             break;
         }
         case MotionEvent::ACTION_MOVE:{
@@ -633,7 +630,7 @@ bool NestedScrollView::onTouchEvent(MotionEvent& ev) {
 
             int y = (int) ev.getY(activePointerIndex);
             int deltaY = mLastMotionY - y;
-            if (dispatchNestedPreScroll(0, deltaY, mScrollConsumed, mScrollOffset,TYPE_TOUCH)) {
+            if (dispatchNestedPreScroll(0, deltaY, mScrollConsumed, mScrollOffset,View::TYPE_TOUCH)) {
                 deltaY -= mScrollConsumed[1];
                 vtev->offsetLocation(0, mScrollOffset[1]);
                 mNestedYOffset += mScrollOffset[1];
@@ -663,14 +660,14 @@ bool NestedScrollView::onTouchEvent(MotionEvent& ev) {
                 // Calling overScrollBy will call onOverScrolled, which
                 // calls onScrollChanged if applicable.
                 if (overScrollBy(0, deltaY, 0, getScrollY(), 0, range, 0,
-                        0, true) && !hasNestedScrollingParent(TYPE_TOUCH)) {
+                        0, true) && !hasNestedScrollingParent(View::TYPE_TOUCH)) {
                     // Break our velocity if we hit a scroll barrier.
                     mVelocityTracker->clear();
                 }
 
                 int scrolledDeltaY = getScrollY() - oldY;
                 int unconsumedY = deltaY - scrolledDeltaY;
-                if (dispatchNestedScroll(0, scrolledDeltaY, 0, unconsumedY, mScrollOffset,TYPE_TOUCH)) {
+                if (dispatchNestedScroll(0, scrolledDeltaY, 0, unconsumedY, mScrollOffset,View::TYPE_TOUCH)) {
                     mLastMotionY -= mScrollOffset[1];
                     vtev->offsetLocation(0, mScrollOffset[1]);
                     mNestedYOffset += mScrollOffset[1];
@@ -873,7 +870,7 @@ bool NestedScrollView::overScrollBy(int deltaX, int deltaY,int scrollX, int scro
         clampedY = true;
     }
 
-    if (clampedY && !hasNestedScrollingParent(TYPE_NON_TOUCH)) {
+    if (clampedY && !hasNestedScrollingParent(View::TYPE_NON_TOUCH)) {
         mScroller->springBack(newScrollX, newScrollY, 0, 0, 0, getScrollRange());
     }
 
@@ -1211,7 +1208,7 @@ void NestedScrollView::computeScroll() {
         int dy = y - mLastScrollerY;
 
         // Dispatch up to parent
-        if (dispatchNestedPreScroll(0, dy, mScrollConsumed, nullptr, TYPE_NON_TOUCH)) {
+        if (dispatchNestedPreScroll(0, dy, mScrollConsumed, nullptr, View::TYPE_NON_TOUCH)) {
             dy -= mScrollConsumed[1];
         }
 
@@ -1224,7 +1221,7 @@ void NestedScrollView::computeScroll() {
             int scrolledDeltaY = getScrollY() - oldScrollY;
             int unconsumedY = dy - scrolledDeltaY;
 
-            if (!dispatchNestedScroll(0, scrolledDeltaY, 0, unconsumedY, nullptr,TYPE_NON_TOUCH)) {
+            if (!dispatchNestedScroll(0, scrolledDeltaY, 0, unconsumedY, nullptr,View::TYPE_NON_TOUCH)) {
                 int mode = getOverScrollMode();
                 bool canOverscroll = mode == OVER_SCROLL_ALWAYS
                         || (mode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
@@ -1244,8 +1241,8 @@ void NestedScrollView::computeScroll() {
         this->postInvalidateOnAnimation();
     } else {
         // We can't scroll any more, so stop any indirect scrolling
-        if (hasNestedScrollingParent(TYPE_NON_TOUCH)) {
-            stopNestedScroll(TYPE_NON_TOUCH);
+        if (hasNestedScrollingParent(View::TYPE_NON_TOUCH)) {
+            stopNestedScroll(View::TYPE_NON_TOUCH);
         }
         // and reset the scroller y
         mLastScrollerY = 0;
@@ -1465,7 +1462,7 @@ bool NestedScrollView::isViewDescendantOf(View* child, View* parent) {
 
 void NestedScrollView::fling(int velocityY) {
     if (getChildCount() > 0) {
-        startNestedScroll(View::SCROLL_AXIS_VERTICAL, TYPE_NON_TOUCH);
+        startNestedScroll(View::SCROLL_AXIS_VERTICAL, View::TYPE_NON_TOUCH);
         mScroller->fling(getScrollX(), getScrollY(), // start
                 0, velocityY, // velocities
                 0, 0, // x
@@ -1491,7 +1488,7 @@ void NestedScrollView::endDrag() {
     mIsBeingDragged = false;
 
     recycleVelocityTracker();
-    stopNestedScroll(TYPE_TOUCH);
+    stopNestedScroll(View::TYPE_TOUCH);
 
     if (mEdgeGlowTop != nullptr) {
         mEdgeGlowTop->onRelease();

@@ -14,8 +14,6 @@
 namespace cdroid{
 
 //public class RecyclerView extends ViewGroup implements ScrollingView, NestedScrollingChild2 {
-static constexpr int TYPE_TOUCH = 0;
-static constexpr int TYPE_NON_TOUCH = 1;
 class QuinticInterpolator:public Interpolator{
 public:
     float getInterpolation(float t)override{
@@ -940,7 +938,7 @@ bool RecyclerView::scrollByInternal(int x, int y, MotionEvent* ev) {
     }
 
     if (dispatchNestedScroll(consumedX, consumedY, unconsumedX, unconsumedY, mScrollOffset,
-            TYPE_TOUCH)) {
+            View::TYPE_TOUCH)) {
         // Update the last touch co-ords, taking any scroll offset into account
         mLastTouchX -= mScrollOffset[0];
         mLastTouchY -= mScrollOffset[1];
@@ -1123,7 +1121,7 @@ bool RecyclerView::fling(int velocityX, int velocityY) {
             if (bCanScrollVertical) {
                 nestedScrollAxis |= View::SCROLL_AXIS_VERTICAL;
             }
-            startNestedScroll(nestedScrollAxis, TYPE_NON_TOUCH);
+            startNestedScroll(nestedScrollAxis, View::TYPE_NON_TOUCH);
             velocityX = std::max(-mMaxFlingVelocity, std::min(velocityX, mMaxFlingVelocity));
             velocityY = std::max(-mMaxFlingVelocity, std::min(velocityY, mMaxFlingVelocity));
             mViewFlinger->fling(velocityX, velocityY);
@@ -1697,7 +1695,7 @@ bool RecyclerView::onInterceptTouchEvent(MotionEvent& e) {
             if (canScrollVertically) {
                 nestedScrollAxis |= View::SCROLL_AXIS_VERTICAL;
             }
-            startNestedScroll(nestedScrollAxis, TYPE_TOUCH);
+            startNestedScroll(nestedScrollAxis, View::TYPE_TOUCH);
             break;
 
     case MotionEvent::ACTION_POINTER_DOWN:
@@ -1740,7 +1738,7 @@ bool RecyclerView::onInterceptTouchEvent(MotionEvent& e) {
 
     case MotionEvent::ACTION_UP: {
             mVelocityTracker->clear();
-            stopNestedScroll(TYPE_TOUCH);
+            stopNestedScroll(View::TYPE_TOUCH);
         } break;
 
     case MotionEvent::ACTION_CANCEL: {
@@ -1802,7 +1800,7 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
             if (bCanScrollVertically) {
                 nestedScrollAxis |= View::SCROLL_AXIS_VERTICAL;
             }
-            startNestedScroll(nestedScrollAxis, TYPE_TOUCH);
+            startNestedScroll(nestedScrollAxis, View::TYPE_TOUCH);
         } break;
 
     case MotionEvent::ACTION_POINTER_DOWN:
@@ -1824,7 +1822,7 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
             int dx = mLastTouchX - x;
             int dy = mLastTouchY - y;
 
-            if (dispatchNestedPreScroll(dx, dy, mScrollConsumed, mScrollOffset, TYPE_TOUCH)) {
+            if (dispatchNestedPreScroll(dx, dy, mScrollConsumed, mScrollOffset, View::TYPE_TOUCH)) {
                 dx -= mScrollConsumed[0];
                 dy -= mScrollConsumed[1];
                 vtev->offsetLocation(float(mScrollOffset[0]), float(mScrollOffset[1]));
@@ -1905,7 +1903,7 @@ void RecyclerView::resetTouch() {
     if (mVelocityTracker != nullptr)  {
         mVelocityTracker->clear();
     }
-    stopNestedScroll(TYPE_TOUCH);
+    stopNestedScroll(View::TYPE_TOUCH);
     releaseGlows();
 }
 
@@ -3274,7 +3272,7 @@ void RecyclerView::ViewFlinger::run() {
         mLastFlingY = y;
         int overscrollX = 0, overscrollY = 0;
 
-        if (mRV->dispatchNestedPreScroll(dx, dy, scrollConsumed, nullptr, TYPE_NON_TOUCH)) {
+        if (mRV->dispatchNestedPreScroll(dx, dy, scrollConsumed, nullptr, View::TYPE_NON_TOUCH)) {
             dx -= scrollConsumed[0];
             dy -= scrollConsumed[1];
         }
@@ -3306,7 +3304,7 @@ void RecyclerView::ViewFlinger::run() {
             mRV->considerReleasingGlowsOnScroll(dx, dy);
         }
 
-        if (!mRV->dispatchNestedScroll(hresult, vresult, overscrollX, overscrollY, nullptr,TYPE_NON_TOUCH)
+        if (!mRV->dispatchNestedScroll(hresult, vresult, overscrollX, overscrollY, nullptr,View::TYPE_NON_TOUCH)
                 && (overscrollX != 0 || overscrollY != 0)) {
             int vel = (int) scroller->getCurrVelocity();
 
@@ -3343,7 +3341,7 @@ void RecyclerView::ViewFlinger::run() {
                 || fullyConsumedVertical;
 
         if (scroller->isFinished() || (!fullyConsumedAny
-                && !mRV->hasNestedScrollingParent(TYPE_NON_TOUCH))) {
+                && !mRV->hasNestedScrollingParent(View::TYPE_NON_TOUCH))) {
             // setting state to idle will stop this.
             mRV->setScrollState(SCROLL_STATE_IDLE);
             /*if (ALLOW_THREAD_GAP_WORK) {
