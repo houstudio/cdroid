@@ -347,6 +347,9 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         blt.src_image_h.clip_rect.w= rs.w;
         blt.src_image_h.clip_rect.h = rs.h;
         blt.src_image_h.format =G2D_FORMAT_ARGB8888;
+        blt.src_image_h.align[0] = 0;
+        blt.src_image_h.align[1] = blt.src_image_h.align[0];
+        blt.src_image_h.align[2] = blt.src_image_h.align[0];
         blt.src_image_h.alpha = 255;
         blt.src_image_h.use_phy_addr = (nsrc->kbuffer!=NULL);
         //blit dest info
@@ -359,6 +362,9 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         blt.dst_image_h.mode = G2D_GLOBAL_ALPHA;
         blt.dst_image_h.laddr[0]=(uintptr_t)((ndst->kbuffer||ndst->ishw)?ndst->kbuffer:ndst->buffer);
         blt.dst_image_h.format =G2D_FORMAT_ARGB8888;
+        blt.dst_image_h.align[0] = 0;
+        blt.dst_image_h.align[1] = blt.dst_image_h.align[0];
+        blt.dst_image_h.align[2] = blt.dst_image_h.align[0];        
         blt.dst_image_h.alpha = 255;
         blt.dst_image_h.use_phy_addr = (ndst->kbuffer!=NULL)||ndst->ishw;
         blt.dst_image_h.color = 0xee8899;

@@ -24,6 +24,7 @@ list(APPEND CDROID_SOURCES
     view/viewtreeobserver.cc
     view/gesturedetector.cc
     view/scalegesturedetector.cc
+    view/windowinsets.cc
     #view/menu.cc
 )
 

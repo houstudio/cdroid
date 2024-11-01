@@ -681,7 +681,7 @@ void PlotView::placeLabel(cdroid::Canvas&painter, PlotPoint *pp){
         ++iter;
     }
 
-    Rect rctxt = Rect::Make(bestRect.left,bestRect.top,bestRect.width,bestRect.height);
+    Rect rctxt = Rect::Make(int(bestRect.left),int(bestRect.top),int(bestRect.width),int(bestRect.height));
     painter.draw_text(rctxt/*bestRect*/,pp->label(), textFlags);
 
     // Is a line needed to connect the label to the point?

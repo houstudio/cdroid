@@ -1,5 +1,7 @@
 #include <widgetEx/coordinatorlayout.h>
 #include <widgetEx/viewgrouputils.h>
+#include <porting/cdlog.h>
+
 namespace cdroid{
 
 CoordinatorLayout::CoordinatorLayout(int w, int h) :ViewGroup(w, h) {
@@ -42,6 +44,7 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
 }
 
 void CoordinatorLayout::initView() {
+    mDrawStatusBarBackground = false;
     mBehaviorTouchView = nullptr;
     mNestedScrollingTarget = nullptr;
     mStatusBarBackground = nullptr;
@@ -103,7 +106,7 @@ void CoordinatorLayout::setStatusBarBackground(Drawable* bg) {
     }
 }
 
-Drawable* CoordinatorLayout::getStatusBarBackground() {
+Drawable* CoordinatorLayout::getStatusBarBackground()const {
     return mStatusBarBackground;
 }
 
@@ -159,7 +162,7 @@ WindowInsets CoordinatorLayout::setWindowInsets(const WindowInsets& insets) {
 }
 
 WindowInsets CoordinatorLayout::getLastWindowInsets() {
-    return mLastInsets;
+    return *mLastInsets;
 } 
 
 void CoordinatorLayout::resetTouchBehaviors(bool notifyOnInterceptTouchEvent) {
@@ -414,7 +417,7 @@ CoordinatorLayout::LayoutParams* CoordinatorLayout::getResolvedLayoutParams(View
             result->mBehaviorResolved = true;
         } else {
             // The deprecated path that looks up the attached behavior based on annotation
-            Class<?> childClass = child.getClass();
+            Class< ? > childClass = child.getClass();
             DefaultBehavior defaultBehavior = null;
             while (childClass != null
                     && (defaultBehavior = childClass.getAnnotation(DefaultBehavior.class))
@@ -431,7 +434,7 @@ CoordinatorLayout::LayoutParams* CoordinatorLayout::getResolvedLayoutParams(View
                                     + " a default constructor?", e);
                 }
             }
-            result.mBehaviorResolved = true;
+            result->mBehaviorResolved = true;
         }
     }*/
     return result;
@@ -1492,11 +1495,28 @@ void* CoordinatorLayout::Behavior::getTag(View& child) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 CoordinatorLayout::LayoutParams::LayoutParams(int width, int height)
     :MarginLayoutParams(width,height) {
+    init();
 }
 
+void CoordinatorLayout::LayoutParams::init() {
+    gravity = Gravity::NO_GRAVITY;
+    anchorGravity = Gravity::NO_GRAVITY;
+    keyline = -1;
+    mAnchorId = View::NO_ID;
+    insetEdge = Gravity::NO_GRAVITY;
+    dodgeInsetEdges = Gravity::NO_GRAVITY;
+    mBehavior = nullptr;
+    mAnchorView = nullptr;
+    mAnchorDirectChild = nullptr;
+    mBehaviorTag = nullptr;
+}
+
+CoordinatorLayout::LayoutParams::~LayoutParams() {
+    delete mBehavior;
+}
 CoordinatorLayout::LayoutParams::LayoutParams(Context* context, const AttributeSet& attrs)
     :MarginLayoutParams(context, attrs){
-
+    init();
     //final TypedArray a = context.obtainStyledAttributes(attrs,
     //        R.styleable.CoordinatorLayout_Layout);
 
@@ -1521,14 +1541,17 @@ CoordinatorLayout::LayoutParams::LayoutParams(Context* context, const AttributeS
 
 CoordinatorLayout::LayoutParams::LayoutParams(const LayoutParams& p)
     :MarginLayoutParams(p){
+    init();
 }
 
 CoordinatorLayout::LayoutParams::LayoutParams(const MarginLayoutParams& p)
     :MarginLayoutParams(p){
+    init();
 }
 
 CoordinatorLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& p)
     :MarginLayoutParams(p){
+    init();
 }
 
 int CoordinatorLayout::LayoutParams::getAnchorId() const{
@@ -1549,8 +1572,8 @@ void CoordinatorLayout::LayoutParams::setBehavior(Behavior* behavior) {
         if (mBehavior != nullptr) {
             // First detach any old behavior
             mBehavior->onDetachedFromLayoutParams();
+            delete mBehavior;
         }
-
         mBehavior = behavior;
         mBehaviorTag = nullptr;
         mBehaviorResolved = true;
@@ -1574,12 +1597,12 @@ void CoordinatorLayout::LayoutParams::setLastChildRect(const Rect& r) {
  * Get the last known position rect for this child view.
  * Note: do not mutate the result of this call.
  */
-Rect CoordinatorLayout::LayoutParams::getLastChildRect() {
+Rect CoordinatorLayout::LayoutParams::getLastChildRect() const{
     return mLastChildRect;
 }
 
-bool CoordinatorLayout::LayoutParams::checkAnchorChanged()const {
-    return mAnchorView == nullptr && mAnchorId != View::NO_ID;
+bool CoordinatorLayout::LayoutParams::checkAnchorChanged() const {
+    return (mAnchorView == nullptr) && (mAnchorId != View::NO_ID);
 }
 
 bool CoordinatorLayout::LayoutParams::didBlockInteraction() {
@@ -1594,9 +1617,8 @@ bool CoordinatorLayout::LayoutParams::isBlockingInteractionBelow(CoordinatorLayo
         return true;
     }
 
-    return mDidBlockInteraction |= mBehavior 
-            ? mBehavior->blocksInteractionBelow(parent, *child)
-            : false;
+    mDidBlockInteraction |= mBehavior ? mBehavior->blocksInteractionBelow(parent, *child): false;
+    return mDidBlockInteraction;
 }
 
 void CoordinatorLayout::LayoutParams::resetTouchBehaviorTracking() {
@@ -1656,7 +1678,7 @@ View* CoordinatorLayout::LayoutParams::findAnchorView(CoordinatorLayout& parent,
         return nullptr;
     }
 
-    if (mAnchorView == nullptr || !verifyAnchorView(forChild, parent)) {
+    if ((mAnchorView == nullptr) || !verifyAnchorView(forChild, parent)) {
         resolveAnchorView(forChild, parent);
     }
     return mAnchorView;
@@ -1692,8 +1714,7 @@ void CoordinatorLayout::LayoutParams::resolveAnchorView(View* forChild,Coordinat
             mAnchorView = mAnchorDirectChild = nullptr;
             return;
         }
-        LOGE("Could not find CoordinatorLayout descendant view");
-               //" with id " + parent.getResources().getResourceName(mAnchorId)" to anchor view " + forChild);
+        LOGE("Could not find CoordinatorLayout descendant view with id %d o anchor view %p",mAnchorId,forChild);
     }
 }
 
@@ -1724,23 +1745,23 @@ bool CoordinatorLayout::LayoutParams::shouldDodge(View* other, int layoutDirecti
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+void CoordinatorLayout::onRestoreInstanceState(Parcelable& state) {
 #if 0
-void CoodinatorLayout::onRestoreInstanceState(Parcelable state) {
     if (!(state instanceof SavedState)) {
-        super.onRestoreInstanceState(state);
+        ViewGroup::onRestoreInstanceState(state);
         return;
     }
 
-    final SavedState ss = (SavedState) state;
-    super.onRestoreInstanceState(ss.getSuperState());
+    SavedState ss = (SavedState) state;
+    ViewGroup::onRestoreInstanceState(ss.getSuperState());
 
-    final SparseArray<Parcelable> behaviorStates = ss.behaviorStates;
+    SparseArray<Parcelable> behaviorStates = ss.behaviorStates;
 
     for (int i = 0, count = getChildCount(); i < count; i++) {
-        final View child = getChildAt(i);
-        final int childId = child.getId();
-        final LayoutParams lp = getResolvedLayoutParams(child);
-        final Behavior b = lp.getBehavior();
+        View* child = getChildAt(i);
+        int childId = child.getId();
+        LayoutParams* lp = getResolvedLayoutParams(child);
+        Behavior* b = lp->getBehavior();
 
         if (childId != NO_ID && b != null) {
             Parcelable savedState = behaviorStates.get(childId);
@@ -1749,11 +1770,12 @@ void CoodinatorLayout::onRestoreInstanceState(Parcelable state) {
             }
         }
     }
+#endif
 }
 
-Parcelable  CoordinatorLayout::onSaveInstanceState() {
+Parcelable* CoordinatorLayout::onSaveInstanceState() {
+#if 0
     SavedState ss = new SavedState(super.onSaveInstanceState());
-
     SparseArray<Parcelable> behaviorStates ;
     for (int i = 0, count = getChildCount(); i < count; i++) {
         final View child = getChildAt(i);
@@ -1771,8 +1793,11 @@ Parcelable  CoordinatorLayout::onSaveInstanceState() {
     }
     ss.behaviorStates = behaviorStates;
     return ss;
-}
+#else
+    return nullptr;
 #endif
+}
+
  bool  CoordinatorLayout::requestChildRectangleOnScreen(View* child, Rect& rectangle, bool immediate) {
     LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
     Behavior* behavior = lp->getBehavior();
