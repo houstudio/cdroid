@@ -39,7 +39,6 @@ WindowInsets::WindowInsets(const WindowInsets& src) {
     mDisplayCutoutConsumed = src.mDisplayCutoutConsumed;
 }
 
- /** @hide */
 WindowInsets::WindowInsets(const Rect& systemWindowInsets)
   :WindowInsets(&systemWindowInsets, nullptr, nullptr, false, false, nullptr){
 }
@@ -81,18 +80,18 @@ int WindowInsets::getWindowDecorInsetBottom() const{
 }
 
 bool WindowInsets::hasSystemWindowInsets() const{
-    return mSystemWindowInsets.left != 0 || mSystemWindowInsets.top != 0 ||
-            mSystemWindowInsets.width != 0 || mSystemWindowInsets.height != 0;
+    return (mSystemWindowInsets.left != 0) || (mSystemWindowInsets.top != 0) ||
+            (mSystemWindowInsets.width != 0) || (mSystemWindowInsets.height != 0);
 }
 
 bool WindowInsets::hasWindowDecorInsets() const{
-    return mWindowDecorInsets.left != 0 || mWindowDecorInsets.top != 0 ||
-            mWindowDecorInsets.width != 0 || mWindowDecorInsets.height != 0;
+    return (mWindowDecorInsets.left != 0) || (mWindowDecorInsets.top != 0) ||
+            (mWindowDecorInsets.width != 0) || (mWindowDecorInsets.height != 0);
 }
 
 bool WindowInsets::hasInsets() const{
     return hasSystemWindowInsets() || hasWindowDecorInsets() || hasStableInsets()
-            || mDisplayCutout != nullptr;
+            || (mDisplayCutout != nullptr);
 }
 
 DisplayCutout* WindowInsets::getDisplayCutout()const {
@@ -107,8 +106,8 @@ WindowInsets WindowInsets::consumeDisplayCutout() {
 }
 
 bool WindowInsets::isConsumed() const{
-    return mSystemWindowInsetsConsumed && mWindowDecorInsetsConsumed && mStableInsetsConsumed
-            && mDisplayCutoutConsumed;
+    return mSystemWindowInsetsConsumed && mWindowDecorInsetsConsumed 
+           && mStableInsetsConsumed && mDisplayCutoutConsumed;
 }
 
 bool WindowInsets::isRound() const{
@@ -191,8 +190,8 @@ int WindowInsets::getStableInsetBottom() const{
 }
 
 bool WindowInsets::hasStableInsets() const{
-    return mStableInsets.top != 0 || mStableInsets.left != 0 || mStableInsets.width != 0
-            || mStableInsets.height != 0;
+    return (mStableInsets.top != 0) || (mStableInsets.left != 0) || (mStableInsets.width != 0)
+            || (mStableInsets.height != 0);
 }
 
 WindowInsets WindowInsets::consumeStableInsets() {
@@ -262,6 +261,7 @@ bool WindowInsets::operator!=(const WindowInsets& that)const {
         || (mStableInsets == that.mStableInsets)
         || (mDisplayCutout == that.mDisplayCutout);
 }
+
 Rect WindowInsets::insetInsets(const Rect& insets, int left, int top, int right, int bottom) {
     const int newLeft = std::max(0, insets.left - left);
     const int newTop = std::max(0, insets.top - top);
