@@ -17,7 +17,7 @@ WindowInsets::WindowInsets(const Rect* systemWindowInsets,const Rect* windowDeco
     if(mWindowDecorInsetsConsumed) mWindowDecorInsets = *windowDecorInsets;
 
     mStableInsetsConsumed = stableInsets == nullptr;
-    if(mStableInsetsConsumed)mStableInsets = *stableInsets;
+    if(mStableInsetsConsumed) mStableInsets = *stableInsets;
 
     mIsRound = isRound;
     mAlwaysConsumeNavBar = alwaysConsumeNavBar;
@@ -45,14 +45,7 @@ WindowInsets::WindowInsets(const Rect& systemWindowInsets)
 }
 
 Rect WindowInsets::getSystemWindowInsets() const{
-    Rect mTempRect= mSystemWindowInsets;
-    /*if (mSystemWindowInsets != nullptr) {
-        mTempRect=mSystemWindowInsets;
-    } else {
-        // If there were no system window insets, this is just empty.
-        mTempRect.setEmpty();
-    }*/
-    return mTempRect;
+    return mSystemWindowInsets;
 }
 
 int WindowInsets::getSystemWindowInsetLeft() const{
@@ -102,7 +95,6 @@ bool WindowInsets::hasInsets() const{
             || mDisplayCutout != nullptr;
 }
 
-//@Nullable
 DisplayCutout* WindowInsets::getDisplayCutout()const {
     return mDisplayCutout;
 }
@@ -271,11 +263,11 @@ bool WindowInsets::operator!=(const WindowInsets& that)const {
         || (mDisplayCutout == that.mDisplayCutout);
 }
 Rect WindowInsets::insetInsets(const Rect& insets, int left, int top, int right, int bottom) {
-    int newLeft = std::max(0, insets.left - left);
-    int newTop = std::max(0, insets.top - top);
-    int newRight = std::max(0, insets.width - right);
-    int newBottom = std::max(0, insets.height - bottom);
-    if (newLeft == left && newTop == top && newRight == right && newBottom == bottom) {
+    const int newLeft = std::max(0, insets.left - left);
+    const int newTop = std::max(0, insets.top - top);
+    const int newRight = std::max(0, insets.width - right);
+    const int newBottom = std::max(0, insets.height - bottom);
+    if ((newLeft == left) && (newTop == top) && (newRight == right) && (newBottom == bottom)) {
         return insets;
     }
     return Rect::Make(newLeft, newTop, newRight, newBottom);

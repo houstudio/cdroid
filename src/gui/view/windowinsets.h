@@ -8,7 +8,6 @@ private:
     Rect mSystemWindowInsets;
     Rect mWindowDecorInsets;
     Rect mStableInsets;
-    Rect mTempRect;
     bool mIsRound;
     DisplayCutout* mDisplayCutout;
     bool mAlwaysConsumeNavBar;
@@ -22,7 +21,7 @@ public:
     static WindowInsets CONSUMED;
 
     WindowInsets(const Rect* systemWindowInsets,const Rect* windowDecorInsets, const Rect* stableInsets,
-         bool isRound, bool alwaysConsumeNavBar, const DisplayCutout* displayCutout);
+                   bool isRound, bool alwaysConsumeNavBar, const DisplayCutout* displayCutout);
     WindowInsets(const WindowInsets& src);
     WindowInsets(const Rect& systemWindowInsets);
 
@@ -31,18 +30,14 @@ public:
     int getSystemWindowInsetTop() const;
     int getSystemWindowInsetRight() const;
     int getSystemWindowInsetBottom() const;
+
     int getWindowDecorInsetLeft() const;
-
     int getWindowDecorInsetTop() const;
-
     int getWindowDecorInsetRight() const;
-
     int getWindowDecorInsetBottom() const;
 
     bool hasSystemWindowInsets() const;
-
     bool hasWindowDecorInsets() const;
-
     bool hasInsets() const;
 
     DisplayCutout* getDisplayCutout()const;
@@ -50,21 +45,17 @@ public:
     WindowInsets consumeDisplayCutout();
 
     bool isConsumed() const;
-
     bool isRound() const;
 
     WindowInsets consumeSystemWindowInsets();
-
-    WindowInsets consumeSystemWindowInsets(bool left, bool top,
-     bool right, bool bottom);
-
+    WindowInsets consumeSystemWindowInsets(bool left, bool top, bool right, bool bottom);
     WindowInsets replaceSystemWindowInsets(int left, int top,int right, int bottom);
     WindowInsets replaceSystemWindowInsets(const Rect& systemWindowInsets);
 
     WindowInsets consumeWindowDecorInsets();
-
     WindowInsets consumeWindowDecorInsets(bool left, bool top,bool right, bool bottom);
     WindowInsets replaceWindowDecorInsets(int left, int top, int right, int bottom);
+
     int getStableInsetTop() const;
     int getStableInsetLeft() const;
     int getStableInsetRight() const;
