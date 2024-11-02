@@ -35,7 +35,7 @@ void CoordinatorLayout::initView() {
     mBehaviorTouchView = nullptr;
     mNestedScrollingTarget = nullptr;
     mStatusBarBackground = nullptr;
-
+    mNestedScrollingParentHelper = new NestedScrollingParentHelper(this);
     setupForInsets();
     OnHierarchyChangeListener hcl;
     hcl.onChildViewAdded = [this](ViewGroup&parent,View*child) {
@@ -50,6 +50,11 @@ void CoordinatorLayout::initView() {
             }
         };
     ViewGroup::setOnHierarchyChangeListener(hcl);
+}
+
+CoordinatorLayout::~CoordinatorLayout(){
+    delete mStatusBarBackground;
+    delete mNestedScrollingParentHelper;
 }
 
 void CoordinatorLayout::setOnHierarchyChangeListener(const OnHierarchyChangeListener& onHierarchyChangeListener) {

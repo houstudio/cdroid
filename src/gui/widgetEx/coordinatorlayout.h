@@ -90,6 +90,7 @@ protected:
 public:
     CoordinatorLayout(int w, int h);
     CoordinatorLayout(Context* context,const AttributeSet& attrs);
+    ~CoordinatorLayout();
     void setOnHierarchyChangeListener(const OnHierarchyChangeListener& onHierarchyChangeListener)override;
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
@@ -196,7 +197,7 @@ public:
         View& child, View& directTargetChild, View& target, int axes) {
         return false;
     }
-    bool onStartNestedScroll(CoordinatorLayout& coordinatorLayout,View& child,
+    virtual bool onStartNestedScroll(CoordinatorLayout& coordinatorLayout,View& child,
           View& directTargetChild, View& target, int axes, int type) {
         if (type == View::TYPE_TOUCH) {
             return onStartNestedScroll(coordinatorLayout, child, directTargetChild, target, axes);

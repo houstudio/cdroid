@@ -15,9 +15,12 @@ public:
         child.setTranslationY(translationY);
         return true;
     }
+
     bool onStartNestedScroll(CoordinatorLayout& coordinatorLayout,View& child,View& directTargetChild,
                                        View& target, int axes, int type) {
-        return dynamic_cast<ScrollView*>(&target) && (axes & View::SCROLL_AXIS_VERTICAL) != 0;
+        const bool ret =dynamic_cast<ScrollView*>(&target) && (axes & View::SCROLL_AXIS_VERTICAL) != 0;
+        LOGD("res=%d axes=%d/%d",ret,axes,View::SCROLL_AXIS_VERTICAL);
+	return ret;
     }
 
     void onNestedPreScroll(CoordinatorLayout& coordinatorLayout,View& child,View& target,
@@ -31,7 +34,7 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
     CoordinatorLayout*cl=new CoordinatorLayout(-1,-1);
-    NestedScrollView*scroller=new NestedScrollView(-1,-1);
+    ScrollView*scroller=new ScrollView(-1,-1);
     scroller->setSmoothScrollingEnabled(true);
     scroller->setVerticalScrollBarEnabled(true);
     scroller->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
