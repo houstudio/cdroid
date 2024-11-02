@@ -819,7 +819,7 @@ public:
     virtual void dispatchWindowSystemUiVisiblityChanged(int visible);
     void setOnSystemUiVisibilityChangeListener(OnSystemUiVisibilityChangeListener l);
     virtual void dispatchSystemUiVisibilityChanged(int visibility);
-    virtual void setDisabledSystemUiVisibility(int flags);
+    void setDisabledSystemUiVisibility(int flags);
 
     void setDrawingCacheEnabled(bool);
     bool isDrawingCacheEnabled()const;

@@ -187,7 +187,6 @@ protected:
     bool dispatchVisibilityAggregated(bool isVisible)override;
     void dispatchWindowSystemUiVisiblityChanged(int visible)override;
     void dispatchSystemUiVisibilityChanged(int visibility)override;
-    void setDisabledSystemUiVisibility(int flags)override;
 
     void dispatchDetachedFromWindow()override;
     void dispatchCancelPendingInputEvents()override;

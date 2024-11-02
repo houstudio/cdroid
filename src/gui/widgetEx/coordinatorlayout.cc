@@ -4,6 +4,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(CoordinatorLayout)
+
 CoordinatorLayout::CoordinatorLayout(int w, int h) :ViewGroup(w, h) {
     initView();
 }
@@ -17,15 +19,14 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
             : context.obtainStyledAttributes(attrs, R.styleable.CoordinatorLayout,
                 defStyleAttr, 0);*/
     std::string keylineArrayRes = attrs.getString("keylines");
-    /*if (!keylineArrayRes.empty()) {
-        final Resources res = context.getResources();
-        mKeylines = attrs.getInArray(keylineArrayRes);
-        final float density = res.getDisplayMetrics().density;
-        final int count = mKeylines.length;
-        for (int i = 0; i < count; i++) {
+    if (!keylineArrayRes.empty()) {
+        context->getArray(keylineArrayRes,mKeylines);
+        const float density = context->getDisplayMetrics().density;
+        const size_t count = mKeylines.size();
+        for (size_t i = 0; i < count; i++) {
             mKeylines[i] = (int) (mKeylines[i] * density);
         }
-    }*/
+    }
     mStatusBarBackground = attrs.getDrawable("statusBarBackground");
 
 }
