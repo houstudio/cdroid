@@ -162,6 +162,7 @@ private:
     void notifyAnimationListener();
     View&addViewInner(View* child, int index,LayoutParams* params,bool preventRequestLayout);
     void addDisappearingView(View* v);
+    bool updateLocalSystemUiVisibility(int localValue, int localChanges)override;
 protected:
     int mGroupFlags;
     int mPersistentDrawingCache;
@@ -184,6 +185,10 @@ protected:
     void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
     void dispatchWindowVisibilityChanged(int visibility)override;
     bool dispatchVisibilityAggregated(bool isVisible)override;
+    void dispatchWindowSystemUiVisiblityChanged(int visible)override;
+    void dispatchSystemUiVisibilityChanged(int visibility)override;
+    void setDisabledSystemUiVisibility(int flags)override;
+
     void dispatchDetachedFromWindow()override;
     void dispatchCancelPendingInputEvents()override;
     void internalSetPadding(int left, int top, int width, int height)override;

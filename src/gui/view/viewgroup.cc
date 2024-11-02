@@ -977,12 +977,36 @@ void ViewGroup::attachViewToParent(View* child, int index, LayoutParams* params)
     //notifySubtreeAccessibilityStateChangedIfNeeded();
 }
 
+void ViewGroup::dispatchWindowSystemUiVisiblityChanged(int visible) {
+    View::dispatchWindowSystemUiVisiblityChanged(visible);
+    for (auto child:mChildren) {
+        child->dispatchWindowSystemUiVisiblityChanged(visible);
+    }
+}
+
+void ViewGroup::dispatchSystemUiVisibilityChanged(int visible) {
+    View::dispatchSystemUiVisibilityChanged(visible);
+    for (auto child:mChildren) {
+        child->dispatchSystemUiVisibilityChanged(visible);
+    }
+}
+
+bool ViewGroup::updateLocalSystemUiVisibility(int localValue, int localChanges) {
+    bool changed = View::updateLocalSystemUiVisibility(localValue, localChanges);
+
+    for (auto child:mChildren){
+        changed |= child->updateLocalSystemUiVisibility(localValue, localChanges);
+    }
+    return changed;
+}
+
 void ViewGroup::dispatchWindowVisibilityChanged(int visibility) {
     View::dispatchWindowVisibilityChanged(visibility);
     for (auto child:mChildren) {
         child->dispatchWindowVisibilityChanged(visibility);
     }
 }
+
 
 void ViewGroup::dispatchVisibilityChanged(View& changedView, int visibility) {
     View::dispatchVisibilityChanged(changedView, visibility);

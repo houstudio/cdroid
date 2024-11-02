@@ -694,7 +694,7 @@ protected:
     void setMeasuredDimension(int measuredWidth, int measuredHeight);
     bool handleScrollBarDragging(MotionEvent& event);
     bool performButtonActionOnTouchDown(MotionEvent&);
-    bool updateLocalSystemUiVisibility(int localValue, int localChanges);
+    virtual bool updateLocalSystemUiVisibility(int localValue, int localChanges);
 
     void onAnimationStart();
     void onAnimationEnd();
@@ -816,10 +816,10 @@ public:
     int getSystemUiVisibility()const;
     int getWindowSystemUiVisibility()const;
     virtual void onWindowSystemUiVisibilityChanged(int visible);
-    void dispatchWindowSystemUiVisiblityChanged(int visible);
+    virtual void dispatchWindowSystemUiVisiblityChanged(int visible);
     void setOnSystemUiVisibilityChangeListener(OnSystemUiVisibilityChangeListener l);
-    void dispatchSystemUiVisibilityChanged(int visibility);
-    void setDisabledSystemUiVisibility(int flags);
+    virtual void dispatchSystemUiVisibilityChanged(int visibility);
+    virtual void setDisabledSystemUiVisibility(int flags);
 
     void setDrawingCacheEnabled(bool);
     bool isDrawingCacheEnabled()const;
