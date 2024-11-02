@@ -389,6 +389,7 @@ public:
     DECLARE_UIEVENT(bool,OnContextClickListener,View&);
     DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);
     DECLARE_UIEVENT(void,OnScrollChangeListener,View& v, int, int, int, int);
+    DECLARE_UIEVENT(void,OnSystemUiVisibilityChangeListener,int);
     DECLARE_UIEVENT(WindowInsets, OnApplyWindowInsetsListener,View&,WindowInsets&);
     typedef CallbackBase<void,View&,int,int,int,int,int,int,int,int>OnLayoutChangeListener;
     typedef CallbackBase<bool,View&,KeyEvent&>OnUnhandledKeyEventListener;
@@ -555,6 +556,7 @@ protected:
     int mUserPaddingLeftInitial;
     /* Cache initial right padding*/
     int mUserPaddingRightInitial;
+    int mSystemUiVisibility;
     int mTransientStateCount;
     int mWindowAttachCount;
     bool mLeftPaddingDefined;
@@ -692,6 +694,7 @@ protected:
     void setMeasuredDimension(int measuredWidth, int measuredHeight);
     bool handleScrollBarDragging(MotionEvent& event);
     bool performButtonActionOnTouchDown(MotionEvent&);
+    bool updateLocalSystemUiVisibility(int localValue, int localChanges);
 
     void onAnimationStart();
     void onAnimationEnd();
@@ -808,6 +811,15 @@ public:
     void setHapticFeedbackEnabled(bool hapticFeedbackEnabled);
     bool isHapticFeedbackEnabled()const;
     bool performHapticFeedback(int feedbackConstant, int flags=0);
+
+    void setSystemUiVisibility(int visibility);
+    int getSystemUiVisibility()const;
+    int getWindowSystemUiVisibility()const;
+    virtual void onWindowSystemUiVisibilityChanged(int visible);
+    void dispatchWindowSystemUiVisiblityChanged(int visible);
+    void setOnSystemUiVisibilityChangeListener(OnSystemUiVisibilityChangeListener l);
+    void dispatchSystemUiVisibilityChanged(int visibility);
+    void setDisabledSystemUiVisibility(int flags);
 
     void setDrawingCacheEnabled(bool);
     bool isDrawingCacheEnabled()const;
@@ -1261,6 +1273,8 @@ public:
     int mWindowLeft;
     int mWindowTop;
     int mSystemUiVisibility;
+    int mDisabledSystemUiVisibility;
+    int mGlobalSystemUiVisibility;
     Rect mOverscanInsets;
     Rect mContentInsets;
     Rect mVisibleInsets;
@@ -1277,7 +1291,10 @@ public:
     int mWindowVisibility;
     long mDrawingTime;
     bool mInTouchMode;
+    bool mUnbufferedDispatchRequested;
+    bool mRecomputeGlobalAttributes;
     bool mKeepScreenOn;
+    bool mHasSystemUiListeners;
     bool mDebugLayout;
     bool mDisplayState;/*true display is on*/
     UIEventSource*mEventSource;
@@ -1343,6 +1360,7 @@ public:
     View::OnGenericMotionListener mOnGenericMotionListener;
     std::vector<View::OnUnhandledKeyEventListener> mUnhandledKeyListeners;
     //View::OnDragListener mOnDragListener;
+    OnSystemUiVisibilityChangeListener mOnSystemUiVisibilityChangeListener;
     OnApplyWindowInsetsListener mOnApplyWindowInsetsListener;
 };
 

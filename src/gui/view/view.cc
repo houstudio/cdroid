@@ -7216,6 +7216,62 @@ bool View::isHapticFeedbackEnabled() const{
     return HAPTIC_FEEDBACK_ENABLED == (mViewFlags & HAPTIC_FEEDBACK_ENABLED);
 }
 
+void View::setSystemUiVisibility(int visibility){
+    if (visibility != mSystemUiVisibility) {
+        mSystemUiVisibility = visibility;
+        if (mParent  && mAttachInfo && !mAttachInfo->mRecomputeGlobalAttributes) {
+	    mParent->recomputeViewAttributes(this);
+        }
+    }
+}
+
+int View::getSystemUiVisibility()const{
+    return mSystemUiVisibility;
+}
+
+int View::getWindowSystemUiVisibility()const{
+    return mAttachInfo ? mAttachInfo->mSystemUiVisibility : 0;
+}
+
+void View::onWindowSystemUiVisibilityChanged(int visible){
+    //NOTHING
+}
+
+void View::dispatchWindowSystemUiVisiblityChanged(int visible){
+    onWindowSystemUiVisibilityChanged(visible);
+}
+
+void View::setOnSystemUiVisibilityChangeListener(OnSystemUiVisibilityChangeListener l){
+    getListenerInfo()->mOnSystemUiVisibilityChangeListener = l;
+    if (mParent && mAttachInfo && !mAttachInfo->mRecomputeGlobalAttributes) {
+        mParent->recomputeViewAttributes(this);
+    }
+}
+
+void View::dispatchSystemUiVisibilityChanged(int visibility){
+    if (mListenerInfo && mListenerInfo->mOnSystemUiVisibilityChangeListener) {
+        mListenerInfo->mOnSystemUiVisibilityChangeListener(visibility & PUBLIC_STATUS_BAR_VISIBILITY_MASK);
+    }
+}
+
+bool View::updateLocalSystemUiVisibility(int localValue, int localChanges){
+    const int val = (mSystemUiVisibility & ~localChanges) | (localValue & localChanges);
+    if (val != mSystemUiVisibility) {
+        setSystemUiVisibility(val);
+        return true;
+    }
+    return false;
+}
+
+void View::setDisabledSystemUiVisibility(int flags){
+    if (mAttachInfo && (mAttachInfo->mDisabledSystemUiVisibility != flags) ) {
+	mAttachInfo->mDisabledSystemUiVisibility = flags;
+	if (mParent != nullptr) {
+	    mParent->recomputeViewAttributes(this);
+	}
+    }
+}
+
 void View::setMeasuredDimensionRaw(int measuredWidth, int measuredHeight) {
     mMeasuredWidth = measuredWidth;
     mMeasuredHeight = measuredHeight;

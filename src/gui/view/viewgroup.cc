@@ -3309,6 +3309,13 @@ bool ViewGroup::dispatchVisibilityAggregated(bool isVisible) {
     return isVisible;
 }
 
+void ViewGroup::recomputeViewAttributes(View* child) {
+    if (mAttachInfo && !mAttachInfo->mRecomputeGlobalAttributes) {
+        ViewGroup* parent = mParent;
+        if (parent != nullptr) parent->recomputeViewAttributes(this);
+    }
+}
+
 void ViewGroup::bringChildToFront(View* child) {
     const int index = indexOfChild(child);
     if (index >= 0) {

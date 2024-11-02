@@ -1815,25 +1815,20 @@ Parcelable* CoordinatorLayout::onSaveInstanceState() {
 
 void CoordinatorLayout::setupForInsets() {
 
-    /*if (this->getFitsSystemWindows()) {
-        if (mApplyWindowInsetsListener == null) {
-            mApplyWindowInsetsListener =
-                    new androidx.core.view.OnApplyWindowInsetsListener() {
-                        @Override
-                        public WindowInsetsCompat onApplyWindowInsets(View v,
-                                WindowInsetsCompat insets) {
-                            return setWindowInsets(insets);
-                        }
-                    };
+    if (this->getFitsSystemWindows()) {
+        if (mApplyWindowInsetsListener == nullptr) {
+            mApplyWindowInsetsListener = [this](View& v, WindowInsets& insets) {
+                    return setWindowInsets(insets);
+                };
         }
         // First apply the insets listener
-        //this->setOnApplyWindowInsetsListener(mApplyWindowInsetsListener);
+        this->setOnApplyWindowInsetsListener(mApplyWindowInsetsListener);
 
         // Now set the sys ui flags to enable us to lay out in the window insets
-        //setSystemUiVisibility(View::SYSTEM_UI_FLAG_LAYOUT_STABLE | View::SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+        this->setSystemUiVisibility(View::SYSTEM_UI_FLAG_LAYOUT_STABLE | View::SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     } else {
         this->setOnApplyWindowInsetsListener(nullptr);
-    }*/
+    }
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 #if 0

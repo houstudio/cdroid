@@ -274,7 +274,7 @@ public:
     int  getLayoutMode();
     void setLayoutMode(int layoutMode);
     ViewOverlay*getOverlay()override;
-
+    virtual void recomputeViewAttributes(View* child);
     virtual void bringChildToFront(View*);
     bool getClipChildren()const;
     void setClipChildren(bool clipChildren);

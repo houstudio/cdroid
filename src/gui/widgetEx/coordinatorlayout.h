@@ -38,8 +38,8 @@ private:
     Drawable* mStatusBarBackground;
 
     ViewGroup::OnHierarchyChangeListener mOnHierarchyChangeListener;
-    //androidx.core.view.OnApplyWindowInsetsListener mApplyWindowInsetsListener;
-    NestedScrollingParentHelper* mNestedScrollingParentHelper;//new NestedScrollingParentHelper(this);
+    View::OnApplyWindowInsetsListener mApplyWindowInsetsListener;
+    NestedScrollingParentHelper* mNestedScrollingParentHelper;
 private:
     void initView();
     void resetTouchBehaviors(bool notifyOnInterceptTouchEvent);
