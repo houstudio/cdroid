@@ -1,15 +1,17 @@
 #include<cdroid.h>
 #include<cdlog.h>
-#include <widgetEx/coorinatorlayout.h>
+#include <widgetEx/coordinatorlayout.h>
+
+using namespace cdroid;
 
 class YourCustomBehavior:public cdroid::CoordinatorLayout::Behavior{
 public:
-    YourCustomBehavior():CoordinatorLayout::Behavior{
+    YourCustomBehavior():Behavior(){
     }
 
-    bool onDependentViewChanged(CoordinatorLayout& parent,View& child, View& dependency) {
+    bool onDependentViewChanged(CoordinatorLayout& parent,View& child, View& dependency) override{
         // Update your child view based on changes in the dependent view
-        float translationY = std::min(0, dependency.getTranslationY());
+        float translationY = std::min(0.f, dependency.getTranslationY());
         child.setTranslationY(translationY);
         return true;
     }
@@ -20,7 +22,7 @@ public:
 
     void onNestedPreScroll(CoordinatorLayout& coordinatorLayout,View& child,View& target,
                               int dx, int dy,int* consumed,int type) {
-        float translationY = std::max(0, std::min(child.getHeight(), child.getTranslationY() - dy));
+        float translationY = std::max(0, std::min(child.getHeight(), int(child.getTranslationY() - dy)));
         child.setTranslationY(translationY);
     }
 };
@@ -29,7 +31,7 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
     CoordinatorLayout*cl=new CoordinatorLayout(-1,-1);
-    ScrollView*scroller=new ScrollView(-1,-1);
+    NestedScrollView*scroller=new NestedScrollView(-1,-1);
     scroller->setSmoothScrollingEnabled(true);
     scroller->setVerticalScrollBarEnabled(true);
     scroller->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
@@ -45,7 +47,6 @@ int main(int argc,const char*argv[]){
         TextView*edit=new TextView(std::string("String")+std::to_string(i),680,200);
         edit->setTextColor(0xFFFFFFFF);
         edit->setSingleLine(true);
-        edit->setInputType(EditText::TYPE_ANY);
         edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
         edit->setBackgroundColor(0xFF000000|((i*8)<<16)|((i*8)<<8)|(i*8));
         edit->setTextSize(40);
@@ -56,11 +57,12 @@ int main(int argc,const char*argv[]){
 			    LayoutParams::MATCH_PARENT,
 			    LayoutParams::WRAP_CONTENT)).setId(100);
     TextView*tv=new TextView("Hello world",100,32);
-    cl->addView(tv,new CoorinatorLayout::LayoutParams(
-			    LayoutParams::MATCH_PARENT,
-			    LayoutParams::WRAP_CONTENT
-			    ));
-    w->addView(cl);
+    CoordinatorLayout::LayoutParams*tlp=new CoordinatorLayout::LayoutParams(
+                        LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
+    tlp->setBehavior(new YourCustomBehavior());
+    tlp->gravity = Gravity::BOTTOM|Gravity::END;
+    cl->addView(tv,tlp).setId(101);
+    w->addView(cl).setId(1);
     w->requestLayout();
     return app.exec();
 }

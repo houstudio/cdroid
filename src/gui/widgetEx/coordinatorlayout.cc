@@ -7,6 +7,7 @@ namespace cdroid{
 CoordinatorLayout::CoordinatorLayout(int w, int h) :ViewGroup(w, h) {
     initView();
 }
+
 CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
     :ViewGroup(context, attrs){
     initView();
@@ -27,6 +28,14 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
     }*/
     mStatusBarBackground = attrs.getDrawable("statusBarBackground");
 
+}
+
+void CoordinatorLayout::initView() {
+    mDrawStatusBarBackground = false;
+    mBehaviorTouchView = nullptr;
+    mNestedScrollingTarget = nullptr;
+    mStatusBarBackground = nullptr;
+
     setupForInsets();
     OnHierarchyChangeListener hcl;
     hcl.onChildViewAdded = [this](ViewGroup&parent,View*child) {
@@ -41,13 +50,6 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
             }
         };
     ViewGroup::setOnHierarchyChangeListener(hcl);
-}
-
-void CoordinatorLayout::initView() {
-    mDrawStatusBarBackground = false;
-    mBehaviorTouchView = nullptr;
-    mNestedScrollingTarget = nullptr;
-    mStatusBarBackground = nullptr;
 }
 
 void CoordinatorLayout::setOnHierarchyChangeListener(const OnHierarchyChangeListener& onHierarchyChangeListener) {
