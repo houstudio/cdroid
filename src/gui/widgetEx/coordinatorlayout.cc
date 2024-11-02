@@ -1647,9 +1647,9 @@ void CoordinatorLayout::LayoutParams::setNestedScrollAccepted(int type, bool acc
 bool CoordinatorLayout::LayoutParams::isNestedScrollAccepted(int type) {
     switch (type) {
     case View::TYPE_TOUCH:
-            return mDidAcceptNestedScrollTouch;
+        return mDidAcceptNestedScrollTouch;
     case View::TYPE_NON_TOUCH:
-            return mDidAcceptNestedScrollNonTouch;
+        return mDidAcceptNestedScrollNonTouch;
     }
     return false;
 }
@@ -1667,8 +1667,7 @@ void CoordinatorLayout::LayoutParams::resetChangedAfterNestedScroll() {
 }
 
 bool CoordinatorLayout::LayoutParams::dependsOn(CoordinatorLayout& parent, View* child, View* dependency) {
-    return dependency == mAnchorDirectChild
-            || shouldDodge(dependency, parent.getLayoutDirection())
+    return (dependency == mAnchorDirectChild) || shouldDodge(dependency, parent.getLayoutDirection())
             || (mBehavior && mBehavior->layoutDependsOn(parent, *child, *dependency));
 }
 

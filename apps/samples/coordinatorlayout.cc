@@ -8,7 +8,10 @@ class YourCustomBehavior:public cdroid::CoordinatorLayout::Behavior{
 public:
     YourCustomBehavior():Behavior(){
     }
-
+    bool layoutDependsOn(CoordinatorLayout& parent, View& child, View& dependency)override {
+	LOGD("");
+        return dynamic_cast<NestedScrollView*>(&dependency);
+    }
     bool onDependentViewChanged(CoordinatorLayout& parent,View& child, View& dependency) override{
         // Update your child view based on changes in the dependent view
         float translationY = std::min(0.f, dependency.getTranslationY());
