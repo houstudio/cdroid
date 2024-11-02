@@ -181,6 +181,7 @@ const std::string AttributeSet::getString(const std::string&key,const std::strin
 }
 
 static std::map<const std::string,int>gravitykvs={
+    {"none"  , Gravity::NO_GRAVITY},
     {"top"   , Gravity::TOP}   ,
     {"bottom", Gravity::BOTTOM},    
     {"left"  , Gravity::LEFT}  ,   

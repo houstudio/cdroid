@@ -1518,6 +1518,7 @@ void CoordinatorLayout::LayoutParams::init() {
 CoordinatorLayout::LayoutParams::~LayoutParams() {
     delete mBehavior;
 }
+
 CoordinatorLayout::LayoutParams::LayoutParams(Context* context, const AttributeSet& attrs)
     :MarginLayoutParams(context, attrs){
     init();
@@ -1525,13 +1526,13 @@ CoordinatorLayout::LayoutParams::LayoutParams(Context* context, const AttributeS
     //        R.styleable.CoordinatorLayout_Layout);
 
     this->gravity = attrs.getGravity("layout_gravity",Gravity::NO_GRAVITY);
-    mAnchorId = attrs.getResourceId("layout_anchor",View::NO_ID);
+    mAnchorId = context->getId(attrs.getString("layout_anchor"));
     anchorGravity = attrs.getGravity("layout_anchorGravity",Gravity::NO_GRAVITY);
 
     this->keyline = attrs.getInt("layout_keyline", -1);
 
-    insetEdge = attrs.getInt("layout_insetEdge", 0);
-    dodgeInsetEdges = attrs.getInt("layout_dodgeInsetEdges", 0);
+    insetEdge = attrs.getGravity("layout_insetEdge", Gravity::NO_GRAVITY);
+    dodgeInsetEdges = attrs.getGravity("layout_dodgeInsetEdges", Gravity::NO_GRAVITY);
     mBehaviorResolved = attrs.hasAttribute("layout_behavior");
     if (mBehaviorResolved) {
         mBehavior = parseBehavior(context, attrs, attrs.getString("layout_behavior"));
