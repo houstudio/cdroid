@@ -1156,6 +1156,7 @@ public:
     void removeOnUnhandledKeyEventListener(OnUnhandledKeyEventListener listener);
 
     virtual int  commitText(const std::wstring&);
+    virtual void dispatchWindowVisibilityChanged(int visibility);
     virtual void onWindowVisibilityChanged(int);
     virtual void onVisibilityAggregated(bool isVisible);
     virtual bool onInterceptTouchEvent(MotionEvent& evt);

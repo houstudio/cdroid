@@ -1588,6 +1588,10 @@ void View::onRestoreInstanceState(Parcelable& state){
 #endif
 }
 
+void View::dispatchWindowVisibilityChanged(int visibility){
+    onWindowVisibilityChanged(visibility);
+}
+
 void View::onWindowVisibilityChanged(int visibility) {
     if (visibility == VISIBLE) {
         initialAwakenScrollBars();

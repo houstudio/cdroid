@@ -182,7 +182,8 @@ protected:
     bool hasFocusableChild(bool dispatchExplicit)const;
     MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child)const;
     void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
-    bool dispatchVisibilityAggregated(bool isVisible);
+    void dispatchWindowVisibilityChanged(int visibility)override;
+    bool dispatchVisibilityAggregated(bool isVisible)override;
     void dispatchDetachedFromWindow()override;
     void dispatchCancelPendingInputEvents()override;
     void internalSetPadding(int left, int top, int width, int height)override;
