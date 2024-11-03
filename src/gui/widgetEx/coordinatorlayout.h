@@ -142,8 +142,8 @@ public:
 
     bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate)override;
 
-    class AttachedBehavior {
-        virtual Behavior& getBehavior() = 0;
+    struct AttachedBehavior {
+	std::function<Behavior*()> getBehavior;
     };
 };
 

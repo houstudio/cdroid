@@ -415,7 +415,7 @@ CoordinatorLayout::Behavior* CoordinatorLayout::parseBehavior(Context* context,c
 
 CoordinatorLayout::LayoutParams* CoordinatorLayout::getResolvedLayoutParams(View* child) {
     LayoutParams* result = (LayoutParams*) child->getLayoutParams();
-    /*if (!result->mBehaviorResolved) {
+    if (!result->mBehaviorResolved) {
         if (dynamic_cast<AttachedBehavior*>(child)) {
             Behavior* attachedBehavior = ((AttachedBehavior*) child)->getBehavior();
             if (attachedBehavior == nullptr) {
@@ -425,8 +425,8 @@ CoordinatorLayout::LayoutParams* CoordinatorLayout::getResolvedLayoutParams(View
             result->mBehaviorResolved = true;
         } else {
             // The deprecated path that looks up the attached behavior based on annotation
-            Class< ? > childClass = child.getClass();
-            DefaultBehavior defaultBehavior = null;
+            /*Class< ? > childClass = child.getClass();
+            Behavior* defaultBehavior = nullptr;
             while (childClass != null
                     && (defaultBehavior = childClass.getAnnotation(DefaultBehavior.class))
                             == null) {
@@ -441,10 +441,10 @@ CoordinatorLayout::LayoutParams* CoordinatorLayout::getResolvedLayoutParams(View
                                     + " could not be instantiated. Did you forget"
                                     + " a default constructor?", e);
                 }
-            }
+            }*/
             result->mBehaviorResolved = true;
         }
-    }*/
+    }
     return result;
 }
 
