@@ -138,6 +138,11 @@ int InputEventSource::checkEvents(){
     return count;
 }
 
+void InputEventSource::openScreenSaver(){
+    mIsScreenSaveActived = true;
+    mLastInputEventTime = SystemClock::uptimeMillis();
+}
+
 void InputEventSource::closeScreenSaver(){
     if(mIsScreenSaveActived){
         mIsScreenSaveActived = false;

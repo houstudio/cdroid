@@ -38,6 +38,7 @@ protected:
 public:
     static InputEventSource& getInstance();
     ~InputEventSource();
+    void openScreenSaver();
     void setScreenSaver(ScreenSaver func,int timeout);
     void closeScreenSaver();
     bool isScreenSaverActived()const;

@@ -4642,6 +4642,7 @@ WindowInsets View::computeSystemWindowInsets(WindowInsets& in, Rect& outLocalIns
         return in.inset(outLocalInsets);
     }
 }
+
 void View::setFitsSystemWindows(bool fitSystemWindows) {
     setFlags(fitSystemWindows ? FITS_SYSTEM_WINDOWS : 0, FITS_SYSTEM_WINDOWS);
 }
@@ -4659,6 +4660,7 @@ void View::requestFitSystemWindows() {
         mParent->requestFitSystemWindows();
     }
 }
+
 void View::requestApplyInsets() {
     requestFitSystemWindows();
 }
@@ -4692,6 +4694,7 @@ void View::setActivated(bool activated){
 }
 
 void View::dispatchSetActivated(bool activated){
+    //NOTHING
 }
 
 bool View::isActivated()const{
