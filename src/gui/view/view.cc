@@ -4602,7 +4602,7 @@ WindowInsets View::onApplyWindowInsets(WindowInsets& insets) {
 }
 
 void View::setOnApplyWindowInsetsListener(const OnApplyWindowInsetsListener& listener) {
-    mListenerInfo->mOnApplyWindowInsetsListener = listener;
+    getListenerInfo()()->mOnApplyWindowInsetsListener = listener;
 }
 
 WindowInsets View::dispatchApplyWindowInsets(WindowInsets& insets) {
