@@ -14,6 +14,7 @@ public:
     static const std::string unicode2utf8(const std::wstring&);
     static bool startWith(const std::string&str,const std::string&head);
     static bool endWith(const std::string&str,const std::string&tail);
+    static std::string join(const std::string&sep,const std::vector<std::string>&parts);
     static std::string& trim(std::string&);
     static std::string& replace(std::string&str,const std::string&sfind,const std::string&sreplace);
     static long strtol(const std::string&value);

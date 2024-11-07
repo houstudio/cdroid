@@ -141,6 +141,15 @@ std::string& TextUtils::trim(std::string&s){
     return s;
 }
 
+std::string TextUtils::join(const std::string&sep,const std::vector<std::string>&parts){
+    std::ostringstream oss;
+    for(size_t i=0;i<parts.size();i++){
+        oss<<parts[i];
+        if(i!=parts.size()-1)oss<<sep;
+    }
+    return oss.str();
+}
+
 std::string& TextUtils::replace(std::string&src,const std::string&old_value,const std::string&new_value){
     for (std::string::size_type pos(0); pos != std::string::npos; pos += new_value.length()) {
         if ((pos = src.find(old_value, pos)) != std::string::npos) {
