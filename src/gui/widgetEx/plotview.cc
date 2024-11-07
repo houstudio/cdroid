@@ -4,6 +4,8 @@
 //#include <matplot/matplot.h>
 namespace cdroid{
 
+DECLARE_WIDGET3(PlotView,"PLPlotView","")
+
 PlotView::PlotView(int w,int h):View(w,h){
     pls=new plstream();
     //int argc=0;
