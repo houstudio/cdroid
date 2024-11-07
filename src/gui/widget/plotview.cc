@@ -287,6 +287,7 @@ void PlotView::removeAllPlotObjects(){
 
 void PlotView::resetPlotMask(){
     Rect rc = pixRect();
+    if(rc.empty())return;
     d->plotMask = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,rc.width,rc.height);//QImage(pixRect().size(), QImage::Format_ARGB32);
     Cairo::RefPtr<Cairo::Context>ctx=Cairo::Context::create(d->plotMask);
     ctx->set_source_rgba(0,0,0,0.5);
@@ -315,7 +316,7 @@ void PlotView::resetPlot(){
 
 void PlotView::replacePlotObject(int i, PlotObject *o){
     // skip null pointers and invalid indexes
-    if (!o || i < 0 || i >= d->objectList.size()) {
+    if ((o==nullptr) || (i < 0) || (i >= d->objectList.size())) {
         return;
     }
     if (d->objectList.at(i) == o) {
