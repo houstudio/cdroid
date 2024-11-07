@@ -155,7 +155,7 @@ void ListView::removeFixedViewInfo(View* v, std::vector<FixedViewInfo*>& where) 
 
 void ListView::addFooterView(View* v,void* data, bool isSelectable) {
     if (v->getParent() != nullptr && v->getParent() != this) {
-        throw "The specified child already has a parent.You must call removeView() on the child's parent first.";
+        throw std::runtime_error("The specified child already has a parent.You must call removeView() on the child's parent first.");
     }
 
     FixedViewInfo* info = new FixedViewInfo();

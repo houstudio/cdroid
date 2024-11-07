@@ -318,7 +318,7 @@ void KeyEvent::DispatcherState::reset(void* target){
 
 void KeyEvent::DispatcherState::startTracking(KeyEvent& event,void* target){
     if (event.getAction() != ACTION_DOWN) {
-         throw "Can only start tracking on a down event";
+         throw std::runtime_error("Can only start tracking on a down event");
     }
     LOGV("Start trackingt in %p:%p",target,this);
     mDownKeyCode = event.getKeyCode();

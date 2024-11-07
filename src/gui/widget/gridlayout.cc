@@ -377,7 +377,7 @@ GridLayout::LayoutParams* GridLayout::getLayoutParams(View* c) {
 }
 
 void GridLayout::handleInvalidParams(const std::string& msg){
-    throw msg;
+    throw std::runtime_error(msg.c_str());
 }
 
 void GridLayout::checkLayoutParams(const LayoutParams* lp, bool horizontal)const{

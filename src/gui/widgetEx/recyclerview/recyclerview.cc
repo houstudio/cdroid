@@ -4587,8 +4587,8 @@ int RecyclerView::Adapter::getItemViewType(int position) {
 
 void RecyclerView::Adapter::setHasStableIds(bool hasStableIds) {
     if (hasObservers()) {
-        throw "Cannot change whether this adapter has "
-              "stable IDs while the adapter has registered observers.";
+        throw std::runtime_error("Cannot change whether this adapter has "
+              "stable IDs while the adapter has registered observers.");
     }
     mHasStableIds = hasStableIds;
 }
@@ -6365,7 +6365,7 @@ void RecyclerView::initFastScroller(StateListDrawable* verticalThumb, Drawable* 
    StateListDrawable* horizontalThumb,Drawable* horizontalTrack,const AttributeSet&atts) {
     if (verticalThumb == nullptr || verticalTrack == nullptr
             || horizontalThumb == nullptr || horizontalTrack == nullptr) {
-        throw "Trying to set fast scroller without both required drawables.";
+        throw std::runtime_error("Trying to set fast scroller without both required drawables.");
     }
     //Resources resources = getContext().getResources();
     new FastScroller(this, verticalThumb, verticalTrack, horizontalThumb, horizontalTrack,

@@ -243,7 +243,7 @@ void NestedScrollView::initScrollView() {
 
 View& NestedScrollView::addView(View* child) {
     if (getChildCount() > 0) {
-        throw "ScrollView can host only one direct child";
+        throw std::runtime_error("ScrollView can host only one direct child");
     }
     return FrameLayout::addView(child);
 }
@@ -251,7 +251,7 @@ View& NestedScrollView::addView(View* child) {
 
 View& NestedScrollView::addView(View* child, int index) {
     if (getChildCount() > 0) {
-        throw "ScrollView can host only one direct child";
+        throw std::runtime_error("ScrollView can host only one direct child");
     }
     return FrameLayout::addView(child, index);
 }
@@ -259,7 +259,7 @@ View& NestedScrollView::addView(View* child, int index) {
 
 View& NestedScrollView::addView(View* child, ViewGroup::LayoutParams* params) {
     if (getChildCount() > 0) {
-        throw "ScrollView can host only one direct child";
+        throw std::runtime_error("ScrollView can host only one direct child");
     }
     return FrameLayout::addView(child, params);
 }
@@ -267,7 +267,7 @@ View& NestedScrollView::addView(View* child, ViewGroup::LayoutParams* params) {
 
 View& NestedScrollView::addView(View* child, int index, ViewGroup::LayoutParams* params) {
     if (getChildCount() > 0) {
-        throw "ScrollView can host only one direct child";
+        throw std::runtime_error("ScrollView can host only one direct child");
     }
     return FrameLayout::addView(child, index, params);
 }
@@ -812,7 +812,7 @@ float NestedScrollView::getVerticalScrollFactorCompat() {
         /*TypedValue outValue = new TypedValue();
         Context* context = getContext();
         if (!context->getTheme().resolveAttribute(android.R.attr.listPreferredItemHeight, outValue, true)) {
-            throw "Expected theme to define listPreferredItemHeight.";
+            throw std::runtime_error("Expected theme to define listPreferredItemHeight.");
         }
         mVerticalScrollFactor = outValue.getDimension(context->getResources().getDisplayMetrics());*/
 	mVerticalScrollFactor=1.f;

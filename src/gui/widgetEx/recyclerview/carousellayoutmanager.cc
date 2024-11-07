@@ -21,7 +21,7 @@ CarouselLayoutManager::CarouselLayoutManager(int orientation)
 
 CarouselLayoutManager::CarouselLayoutManager(int orientation, bool circleLayout) {
     if (HORIZONTAL != orientation && VERTICAL != orientation) {
-        throw "orientation should be HORIZONTAL or VERTICAL";
+        throw std::runtime_error("orientation should be HORIZONTAL or VERTICAL");
     }
     mOrientation = orientation;
     mCircleLayout = circleLayout;
@@ -63,7 +63,7 @@ void CarouselLayoutManager::setPostLayoutListener(PostLayoutListener postLayoutL
  */
 void CarouselLayoutManager::setMaxVisibleItems(int maxVisibleItems) {
     if (0 > maxVisibleItems) {
-        throw "maxVisibleItems can't be less then 0";
+        throw std::runtime_error("maxVisibleItems can't be less then 0");
     }
     mLayoutHelper->mMaxVisibleItems = maxVisibleItems;
     requestLayout();

@@ -74,13 +74,13 @@ void PagerAdapter::startUpdate(ViewGroup* container){
 }
 
 void*PagerAdapter::instantiateItem(ViewGroup* container, int position){
-    throw "Required method instantiateItem was not overridden";
+    throw std::runtime_error("Required method instantiateItem was not overridden");
     return nullptr;
 }
 
 
 void PagerAdapter::destroyItem(ViewGroup* container, int position, void* object){
-    throw "Required method destroyItem was not overridden";
+    throw std::runtime_error("Required method destroyItem was not overridden");
 }
 
 void PagerAdapter::finishUpdate(ViewGroup* container){

@@ -14,7 +14,7 @@ ViewSwitcher::ViewSwitcher(Context*ctx,const AttributeSet&atts)
 
 View& ViewSwitcher::addView(View* child, int index, ViewGroup::LayoutParams* params){
     if (getChildCount() >= 2) {
-        throw "Can't add more than 2 views to a ViewSwitcher";
+        throw std::runtime_error("Can't add more than 2 views to a ViewSwitcher");
     }
     return ViewAnimator::addView(child, index, params);
 }

@@ -89,7 +89,7 @@ public:
 
     static HoverTarget* obtain(View* child) {
         if (child == nullptr) {
-            throw "child must be non-null";
+            throw std::runtime_error("child must be non-null");
         }
 
         HoverTarget* target;
@@ -107,7 +107,7 @@ public:
 
     void recycle() {
         if (child == nullptr) {
-            throw "already recycled once";
+            throw std::runtime_error("already recycled once");
         }
         if (sRecycledCount < MAX_RECYCLED) {
             next = sRecycleBin;
@@ -1349,7 +1349,7 @@ void ViewGroup::removeView(View* view){
 
 View&ViewGroup::addView(View* child, int index,LayoutParams* params){
     if(child==nullptr)
-         throw "Cannot add a null child view to a ViewGroup";
+         throw std::runtime_error("Cannot add a null child view to a ViewGroup");
     requestLayout();
     invalidate(true);
     return addViewInner(child, index, params, false);
@@ -1372,7 +1372,7 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
     }
 
     if(child->mParent){
-        throw "The specified child already has a parent. you must call removeView() on the child's parent first.";
+        throw std::runtime_error("The specified child already has a parent. you must call removeView() on the child's parent first.");
     }
     if(mTransition){
         mTransition->addChild(this,child);
@@ -1698,7 +1698,7 @@ void ViewGroup::removeViewsInternal(int start, int count){
     int end = start + count;
 
     if (start < 0 || count < 0 || end > mChildren.size()) {
-        throw "IndexOutOfBoundsException";//new IndexOutOfBoundsException();
+        throw std::runtime_error("IndexOutOfBoundsException");
     }
 
     View* focused = mFocused;

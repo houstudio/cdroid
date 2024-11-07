@@ -15,7 +15,7 @@ TextSwitcher::TextSwitcher(Context*ctx,const AttributeSet&atts)
 
 View& TextSwitcher::addView(View* child, int index, ViewGroup::LayoutParams* params){
     if(dynamic_cast<TextView*>(child)==nullptr)
-       throw "TextSwitcher children must be instances of TextView";
+       throw std::runtime_error("TextSwitcher children must be instances of TextView");
     return ViewSwitcher::addView(child,index,params);
 }
 

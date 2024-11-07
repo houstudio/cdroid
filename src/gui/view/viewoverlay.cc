@@ -55,7 +55,7 @@ ViewOverlay::OverlayViewGroup::~OverlayViewGroup(){
 
 void ViewOverlay::OverlayViewGroup::add(Drawable* drawable){
     if (drawable == nullptr) {
-        throw "drawable must be non-null";
+        throw std::runtime_error("drawable must be non-null");
     }
     if (std::find(mDrawables.begin(),mDrawables.end(),drawable)==mDrawables.end()) {
         // Make each drawable unique in the overlay; can't add it more than once
@@ -67,7 +67,7 @@ void ViewOverlay::OverlayViewGroup::add(Drawable* drawable){
 
 void ViewOverlay::OverlayViewGroup::remove(Drawable* drawable){
     if (drawable == nullptr) {
-        throw "drawable must be non-null";
+        throw std::runtime_error("drawable must be non-null");
     }
     auto it=std::find(mDrawables.begin(),mDrawables.end(),drawable);
     if (it!=mDrawables.end()) {
@@ -84,7 +84,7 @@ bool ViewOverlay::OverlayViewGroup::verifyDrawable(Drawable* who)const{
 
 void ViewOverlay::OverlayViewGroup::add(View* child) {
     if (child == nullptr) {
-        throw "view must be non-null";
+        throw std::runtime_error("view must be non-null");
     }
 
     if (child->getParent()) {

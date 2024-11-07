@@ -67,7 +67,7 @@ void PatternLockView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         break;
 
     default:
-        throw "Unknown aspect ratio";
+        throw std::runtime_error("Unknown aspect ratio");
     }
     setMeasuredDimension(newWidth, newHeight);
 }
@@ -311,7 +311,7 @@ void PatternLockView::setViewMode(int patternViewMode) {
     mPatternViewMode = patternViewMode;
     if (patternViewMode == AUTO_DRAW) {
         if (mPattern.size() == 0) {
-            throw "you must have a pattern to animate if you want to set the display mode to animate";
+            throw std::runtime_error("you must have a pattern to animate if you want to set the display mode to animate");
 	}	
         mAnimatingPeriodStart = SystemClock::elapsedRealtime();
         Dot* first = mPattern.at(0);
@@ -872,7 +872,7 @@ int PatternLockView::getCurrentColor(bool partOfPattern) {
             || mPatternViewMode == AUTO_DRAW) {
         return mCorrectStateColor;
     } else {
-        throw "Unknown view mode ";// + mPatternViewMode);
+        throw std::runtime_error("Unknown view mode ");// + mPatternViewMode);
     }
 }
 

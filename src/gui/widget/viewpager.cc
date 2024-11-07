@@ -1122,7 +1122,7 @@ bool ViewPager::pageScrolled(int scrollX){
         mCalledSuper = false;
         onPageScrolled(0, 0, 0);
         if (!mCalledSuper) {
-            throw ("onPageScrolled did not call superclass implementation");
+            throw std::runtime_error("onPageScrolled did not call superclass implementation");
         }
         return false;
     }

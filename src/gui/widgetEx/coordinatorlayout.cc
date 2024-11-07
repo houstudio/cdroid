@@ -407,7 +407,7 @@ CoordinatorLayout::Behavior* CoordinatorLayout::parseBehavior(Context* context,c
         }
         return c.newInstance(context, attrs);
     } catch (Exception e) {
-        throw new RuntimeException("Could not inflate Behavior subclass " + fullName, e);
+        throw std::runtime_error("Could not inflate Behavior subclass " + fullName, e);
     }
 #endif
     return nullptr;
