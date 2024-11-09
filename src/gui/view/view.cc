@@ -6284,7 +6284,7 @@ bool View::dispatchCapturedPointerEvent(MotionEvent& event){
 
 bool View::dispatchGenericMotionEventInternal(MotionEvent& event){
     if (mListenerInfo && mListenerInfo->mOnGenericMotionListener
-          && (mViewFlags & ENABLED_MASK) == ENABLED
+          && ((mViewFlags & ENABLED_MASK) == ENABLED)
           && mListenerInfo->mOnGenericMotionListener(*this, event)) {
         return true;
     }

@@ -604,7 +604,7 @@ void ViewGroup::onViewRemoved(View*v){
 }
 
 bool ViewGroup::hasTransientState(){
-    return mChildCountWithTransientState > 0 || View::hasTransientState();
+    return (mChildCountWithTransientState > 0) || View::hasTransientState();
 }
 
 void ViewGroup::dispatchAttachedToWindow(AttachInfo* info, int visibility){
