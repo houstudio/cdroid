@@ -38,6 +38,7 @@
 #include <view/windowinsets.h>
 #include <view/velocitytracker.h>
 #include <view/layoutinflater.h>
+#include <view/configuration.h>
 #include <view/viewpropertyanimator.h>
 #include <view/viewconfiguration.h>
 #include <view/viewtreeobserver.h>
@@ -705,6 +706,7 @@ protected:
 
     bool isOnScrollbar(int x,int y);
     bool isOnScrollbarThumb(int x,int y);
+    virtual void onConfigurationChanged(Configuration& newConfig);
     virtual bool overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX,
               int  scrollRangeY, int maxOverScrollX, int maxOverScrollY, bool isTouchEvent);
     virtual void onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY);
@@ -1049,6 +1051,7 @@ public:
     int  getWindowVisibility()const;
     void getWindowVisibleDisplayFrame(Rect& outRect);
     void getWindowDisplayFrame(Rect& outRect);
+    virtual void dispatchConfigurationChanged(Configuration& newConfig);
     bool isShown()const;
     virtual WindowInsets onApplyWindowInsets(WindowInsets& insets);
     void setOnApplyWindowInsetsListener(const OnApplyWindowInsetsListener& listener);
@@ -1288,6 +1291,7 @@ public:
     bool mScalingRequired;
     bool mUse32BitDrawingCache;
     bool mViewVisibilityChanged;
+    bool mViewScrollChanged;
     bool mIgnoreDirtyState;
     int mWindowVisibility;
     long mDrawingTime;

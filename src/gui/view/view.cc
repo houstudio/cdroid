@@ -4846,6 +4846,14 @@ void View::getWindowDisplayFrame(Rect& outRect) {
     WindowManager::getInstance().getDefaultDisplay().getSize(sz);
     outRect.set(0,0,sz.x,sz.y);
 }
+
+void View::dispatchConfigurationChanged(Configuration& newConfig){
+    onConfigurationChanged(newConfig);
+}
+
+void View::onConfigurationChanged(Configuration& newConfig){
+}
+
 void View::dispatchVisibilityChanged(View& changedView,int visibility){
     onVisibilityChanged(changedView, visibility); 
 }
@@ -6065,6 +6073,8 @@ void View::onScrollChanged(int l, int t, int oldl, int oldt){
     if (mForegroundInfo != nullptr) {
         mForegroundInfo->mBoundsChanged = true;
     }
+    if(mAttachInfo)
+        mAttachInfo->mViewScrollChanged = true;
     if(mListenerInfo && mListenerInfo->mOnScrollChangeListener)
         mListenerInfo->mOnScrollChangeListener(*this,l,t,oldl,oldt);
 }

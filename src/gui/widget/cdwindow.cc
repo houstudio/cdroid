@@ -215,7 +215,15 @@ void Window::draw(){
     }
     RefPtr<Canvas>canvas = getCanvas();
     mAttachInfo->mDrawingTime = SystemClock::uptimeMillis();
+
+    mAttachInfo->mTreeObserver->dispatchOnPreDraw();
     ViewGroup::draw(*canvas);
+    mAttachInfo->mTreeObserver->dispatchOnDraw();
+
+    if (mAttachInfo->mViewScrollChanged) {
+         mAttachInfo->mViewScrollChanged = false;
+         mAttachInfo->mTreeObserver->dispatchOnScrollChanged();
+    }
     if(View::VIEW_DEBUG){drawInvalidateRegion(*canvas);
         const int duration = int(SystemClock::uptimeMillis() - mAttachInfo->mDrawingTime);
         LOGD_IF(duration>10,"%p:%d used %dms",this,mID,duration);

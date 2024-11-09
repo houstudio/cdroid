@@ -3340,6 +3340,12 @@ bool ViewGroup::dispatchVisibilityAggregated(bool isVisible) {
     return isVisible;
 }
 
+void ViewGroup::dispatchConfigurationChanged(Configuration& newConfig){
+    View::dispatchConfigurationChanged(newConfig);
+    for(auto child:mChildren)
+        child->dispatchConfigurationChanged(newConfig);
+}
+
 void ViewGroup::recomputeViewAttributes(View* child) {
     if (mAttachInfo && !mAttachInfo->mRecomputeGlobalAttributes) {
         ViewGroup* parent = mParent;

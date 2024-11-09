@@ -30,17 +30,17 @@ public:
         static constexpr int TOUCHABLE_INSETS_VISIBLE = 2;
         static constexpr int TOUCHABLE_INSETS_REGION = 3;
     public:
-	Rect contentInsets;
+        Rect contentInsets;
         Rect visibleInsets;
-	Cairo::RefPtr<Cairo::Region> touchableRegion;
-	int mTouchableInsets;
+        Cairo::RefPtr<Cairo::Region> touchableRegion;
+        int mTouchableInsets;
     public:
-	void setTouchableInsets(int val);
-	void reset();
-	bool isEmpty()const;
-	int hashCode()const;
-	bool equals(Object*)const;
-	void set(const InternalInsetsInfo& other);
+        void setTouchableInsets(int val);
+        void reset();
+        bool isEmpty()const;
+        int hashCode()const;
+        bool equals(Object*)const;
+        void set(const InternalInsetsInfo& other);
     };
     typedef CallbackBase <void,InternalInsetsInfo&> OnComputeInternalInsetsListener;
     typedef CallbackBase <void> OnEnterAnimationCompleteListener;

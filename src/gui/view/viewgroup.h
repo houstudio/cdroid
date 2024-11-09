@@ -185,6 +185,7 @@ protected:
     void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
     void dispatchWindowVisibilityChanged(int visibility)override;
     bool dispatchVisibilityAggregated(bool isVisible)override;
+    void dispatchConfigurationChanged(Configuration& newConfig)override;
     void dispatchWindowSystemUiVisiblityChanged(int visible)override;
     void dispatchSystemUiVisibilityChanged(int visibility)override;
 

@@ -20,6 +20,13 @@ void Parcel::writeInt(int val){
 void Parcel::writeBoolean(bool){
 }
 
+float Parcel::readFloat(){
+    return 0;
+}
+
+void Parcel::writeFloat(float){
+}
+
 void Parcel::writeString(const std::string&){
 }
 
