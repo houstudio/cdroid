@@ -361,16 +361,15 @@ MotionEvent* MotionEvent::clampNoHistory(float left, float top, float right, flo
     MotionEvent*ev = obtain();
     const size_t pointerCount = getPointerCount();
     ensureSharedTempPointerCapacity(pointerCount);
-#if 0
+
     PointerProperties*pp = gSharedTempPointerProperties.data();
     PointerCoords* pc = gSharedTempPointerCoords.data();
-    for (int i = 0; i < pointerCount; i++) {
+    for (size_t i = 0; i < pointerCount; i++) {
         pp[i] = mPointerProperties[i];//nativeGetPointerProperties(mNativePtr,i,pp[i]);
-        getPointerCoords(i,pc[i]);//nativeGetPointerCoords(mNativePtr,i,HISTORY_CURRENT,pc[i]);
-        pc[i].x = clamp(pc[i].x, left, right);
-        pc[i].y = clamp(pc[i].y, top, bottom);
+        pc[i] = getPointerCoords(i);//nativeGetPointerCoords(mNativePtr,i,HISTORY_CURRENT,pc[i]);
+        pc[i].setAxisValue(AXIS_X,clamp(pc[i].getX(), left, right));
+        pc[i].setAxisValue(AXIS_Y,clamp(pc[i].getY(), top, bottom));
     }
-#endif
     return ev;
 }
 

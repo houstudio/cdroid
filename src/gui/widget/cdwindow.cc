@@ -292,7 +292,7 @@ RefPtr<Canvas>Window::getCanvas(){
         LOGV("rotation=%d window.size=%dx%d canvas.size=%dx%d antialias=%d,%d,%d,%d,%d,%d,%d",rotation*90,getWidth(),getHeight(),
              canvasWidth,canvasHeight,canvas->get_antialias(),CAIRO_ANTIALIAS_NONE,CAIRO_ANTIALIAS_GRAY,CAIRO_ANTIALIAS_SUBPIXEL,
              CAIRO_ANTIALIAS_FAST,CAIRO_ANTIALIAS_GOOD,CAIRO_ANTIALIAS_BEST);
-	canvas->set_antialias(Cairo::ANTIALIAS_NONE);
+        canvas->set_antialias(Cairo::ANTIALIAS_NONE);
         switch(rotation){
         case Display::ROTATION_0:break;
         case Display::ROTATION_90:
@@ -318,6 +318,8 @@ RefPtr<Canvas>Window::getCanvas(){
         RectangleInt r = mInvalidRgn->get_rectangle(i);
         canvas->rectangle(r.x,r.y,r.width,r.height);
     }
+    mPendingRgn->do_union(mInvalidRgn);
+    mInvalidRgn->subtract(mInvalidRgn);
     if(num>0)canvas->clip();
     return canvas;
 }
