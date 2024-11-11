@@ -1339,13 +1339,8 @@ void NumberPicker::setValueInternal(int current, bool notifyChng){
     // If we're flinging, we'll update the text view at the end when it becomes visible
     if ((mScrollState != OnScrollListener::SCROLL_STATE_FLING) && mFlingScroller->isFinished()){
         updateInputTextView();
-        if(notifyChng)notifyChange(previous, current);
-    }else{
-        post([this,notifyChng,previous,current](){
-            if(mUpdateInputTextInFling) updateInputTextView();
-            if(notifyChng) notifyChange(previous, current);
-        });
     }
+	if(notifyChng)notifyChange(previous, current);
     initializeSelectorWheelIndices();
     invalidate();
 }
