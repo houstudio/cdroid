@@ -9,7 +9,11 @@ PLPlotView::PLPlotView(int w,int h):View(w,h){
     initView();
 }
 
-PLPlotView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
+PLPlotView::PLPlotView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
+    initView();
+}
+
+void PLPlotView::initView(){
     pls = new plstream();
     pls->sdev("extcairo");
     pls->init();

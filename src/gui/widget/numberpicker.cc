@@ -577,9 +577,9 @@ void NumberPicker::computeScroll() {
         mPreviousScrollerY = currentScrollerY;
     }
     if (scroller->isFinished()) {
-        onScrollerFinished(scroller);//post([this,scroller](){onScrollerFinished(scroller);});
+        onScrollerFinished(scroller);
     } else {
-        invalidate();//postInvalidate();
+        invalidate();
     }
 }
 
@@ -1337,7 +1337,7 @@ void NumberPicker::setValueInternal(int current, bool notifyChng){
     int previous = mValue;
     mValue = current;
     // If we're flinging, we'll update the text view at the end when it becomes visible
-    if ((mScrollState != OnScrollListener::SCROLL_STATE_FLING) && mFlingScroller->isFinished()){
+    if ( (mScrollState != OnScrollListener::SCROLL_STATE_FLING) || mUpdateInputTextInFling){
         updateInputTextView();
     }
 	if(notifyChng)notifyChange(previous, current);

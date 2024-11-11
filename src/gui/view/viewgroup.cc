@@ -556,7 +556,7 @@ void ViewGroup::exitHoverTargets(){
     if (mHoveredSelf || mFirstHoverTarget) {
         const long now = SystemClock::uptimeMillis();
         MotionEvent* event = MotionEvent::obtain(now, now,
-                MotionEvent::ACTION_HOVER_EXIT, 0.0f, 0.0f, 0);
+                MotionEvent::ACTION_HOVER_EXIT, 0.f, 0.f, 0);
         event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
         dispatchHoverEvent(*event);
         event->recycle();
@@ -578,7 +578,7 @@ void ViewGroup::cancelHoverTarget(View*view){
 
             const long now = SystemClock::uptimeMillis();
             MotionEvent* event = MotionEvent::obtain(now, now,
-                    MotionEvent::ACTION_HOVER_EXIT, 0.0f, 0.0f, 0);
+                    MotionEvent::ACTION_HOVER_EXIT, 0.f, 0.f, 0);
             event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
             view->dispatchHoverEvent(*event);
             event->recycle();
@@ -622,7 +622,7 @@ void ViewGroup::dispatchAttachedToWindow(AttachInfo* info, int visibility){
 
 bool ViewGroup::dispatchGenericPointerEvent(MotionEvent& event) {
     // Send the event to the child under the pointer.
-    const int childrenCount = mChildren.size();
+    const int childrenCount = (int)mChildren.size();
     if (childrenCount != 0) {
         const float x = event.getXDispatchLocation(0);
         const float y = event.getYDispatchLocation(0);
@@ -3237,8 +3237,8 @@ bool ViewGroup::onInterceptHoverEvent(MotionEvent& event) {
         const int action = event.getAction();
         const float x = event.getXDispatchLocation(0);
         const float y = event.getYDispatchLocation(0);
-        if ((action == MotionEvent::ACTION_HOVER_MOVE
-                || action == MotionEvent::ACTION_HOVER_ENTER) && isOnScrollbar(x, y)) {
+        if (((action == MotionEvent::ACTION_HOVER_MOVE)
+                ||(action == MotionEvent::ACTION_HOVER_ENTER)) && isOnScrollbar(x, y)) {
             return true;
         }
     }
@@ -3251,6 +3251,7 @@ MotionEvent* ViewGroup::obtainMotionEventNoHistoryOrSelf(MotionEvent* event) {
     }
     return MotionEvent::obtainNoHistory(*event);
 }
+
 void ViewGroup::dispatchDetachedFromWindow(){
     // If we still have a touch target, we are still in the process of
     // dispatching motion events to a child; we need to get rid of that

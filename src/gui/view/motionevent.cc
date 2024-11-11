@@ -490,7 +490,7 @@ void MotionEvent::scale(float scaleFactor) {
     mXPrecision *= scaleFactor;
     mYPrecision *= scaleFactor;
 
-    size_t numSamples = mSamplePointerCoords.size();
+    const size_t numSamples = mSamplePointerCoords.size();
     for (size_t i = 0; i < numSamples; i++) {
         mSamplePointerCoords[i].scale(scaleFactor);//editableitemat(i)
     }
