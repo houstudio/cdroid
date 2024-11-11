@@ -55,10 +55,12 @@ public:
     DirectedAcyclicGraph() {
         mListPool = new Pools::SimplePool<std::vector<T*>>(10);
     }
+
     ~DirectedAcyclicGraph() {
         delete mListPool;
         for (auto g : mGraph)delete g.second;
     }
+
     void addNode(T* node) {
         if (mGraph.find(node)==mGraph.end()) {
             mGraph.insert({ node, nullptr });
@@ -70,7 +72,7 @@ public:
     }
 
     void addEdge(T* node, T* incomingEdge) {
-        if ((mGraph.find(node)!=mGraph.end()) || (mGraph.find(incomingEdge)!=mGraph.end())) {
+        if ((mGraph.find(node)==mGraph.end()) || (mGraph.find(incomingEdge)==mGraph.end())) {
             LOGE("All nodes must be present in the graph before being added as an edge");
         }
         auto it = mGraph.find(node);
@@ -90,7 +92,7 @@ public:
     }
 
     std::vector<T*>* getOutgoingEdges(T* node) {
-        std::vector<T*>* result=nullptr;
+        std::vector<T*>* result = nullptr;
         for (auto p:mGraph){//int i = 0, size = mGraph.size(); i < size; i++) {
             std::vector<T*>* edges = p.second;// mGraph.valueAt(i);
             if (edges && (std::find(edges->begin(),edges->end(),node)!=edges->end())) {
