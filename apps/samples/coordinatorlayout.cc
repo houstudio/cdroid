@@ -1,7 +1,7 @@
 #include<cdroid.h>
 #include<cdlog.h>
 #include <widgetEx/coordinatorlayout.h>
-
+#include <core/classloader.h>
 using namespace cdroid;
 
 class YourCustomBehavior:public cdroid::CoordinatorLayout::Behavior{
@@ -33,6 +33,7 @@ public:
     }
 };
 
+REGISTER_CLASS(YourCustomBehavior,cdroid::CoordinatorLayout::Behavior);
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
@@ -44,7 +45,10 @@ int main(int argc,const char*argv[]){
 
     LinearLayout*layout=new LinearLayout(-1,-1);
     layout->setOrientation(LinearLayout::VERTICAL);
-    scroller->addView(layout,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,(LayoutParams::WRAP_CONTENT)));
+    CoordinatorLayout::LayoutParams*tlp=new CoordinatorLayout::LayoutParams(
+                        LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
+    scroller->addView(layout,tlp);
+    tlp->setBehavior(new YourCustomBehavior());
     layout->setId(200);
 
     for(int i=0;i<50;i++){
@@ -63,8 +67,7 @@ int main(int argc,const char*argv[]){
 			    LayoutParams::MATCH_PARENT,
 			    LayoutParams::WRAP_CONTENT)).setId(100);
     TextView*tv=new TextView("Hello world",100,32);
-    CoordinatorLayout::LayoutParams*tlp=new CoordinatorLayout::LayoutParams(
-                        LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
+    tlp=new CoordinatorLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
     tlp->setBehavior(new YourCustomBehavior());
     tlp->gravity = Gravity::BOTTOM|Gravity::END;
     cl->addView(tv,tlp).setId(101);
