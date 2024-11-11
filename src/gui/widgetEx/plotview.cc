@@ -7,11 +7,6 @@ DECLARE_WIDGET(PLPlotView)
 
 PLPlotView::PLPlotView(int w,int h):View(w,h){
     initView();
-    pls->sdev("extcairo");
-    pls->init();
-    mImage = ImageSurface::create(Surface::Format::ARGB32,w,h);
-    mImageContext = Cairo::Context::create(mImage);
-    pls->cmd(PLESC_DEVINIT,mImageContext->cobj());
 }
 
 PLPlotView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
