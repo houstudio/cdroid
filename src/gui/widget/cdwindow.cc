@@ -228,8 +228,8 @@ void Window::draw(){
         const int duration = int(SystemClock::uptimeMillis() - mAttachInfo->mDrawingTime);
         LOGD_IF(duration>10,"%p:%d used %dms",this,mID,duration);
     }
-    mPendingRgn->do_union(mInvalidRgn);
-    mInvalidRgn->subtract(mInvalidRgn);
+    //mPendingRgn->do_union(mInvalidRgn);
+    //mInvalidRgn->subtract(mInvalidRgn);
     GraphDevice::getInstance().flip();
 }
 
