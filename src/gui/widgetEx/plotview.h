@@ -7,13 +7,19 @@
 class  plstream;
 namespace cdroid{
 
-class PlotView:public View{
+class PLPlotView:public View{
 private:
    Cairo::RefPtr<Cairo::ImageSurface>mImage;
    Cairo::RefPtr<Cairo::Context>mImageContext;
    plstream*pls;
+private:
+   void initView();
+protected:
+   void onSizeChanged(int w,int h,int ow,int oh)override;
 public:
-   PlotView(int w,int h);
+   PLPlotView(int w,int h);
+   PLPlotView(Context*,const AttributeSet&attrs);
+   ~PLPlotView();
    void onDraw(Canvas&canvas)override;
    plstream*getStream()const;
 };

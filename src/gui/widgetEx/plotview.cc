@@ -1,33 +1,45 @@
 #include <widgetEx/plotview.h>
 #if ENABLE(PLPLOT)
 #include <plstream.h>
-//#include <matplot/matplot.h>
 namespace cdroid{
 
-DECLARE_WIDGET3(PlotView,"PLPlotView","")
+DECLARE_WIDGET(PLPlotView)
 
-PlotView::PlotView(int w,int h):View(w,h){
-    pls=new plstream();
-    //int argc=0;
-    //char*argv[]={nullptr};
-    //pls->parseopts(&argc,argv,PL_PARSE_FULL|PL_PARSE_NOPROGRAM);
+PLPlotView::PLPlotView(int w,int h):View(w,h){
+    initView();
     pls->sdev("extcairo");
-    mImage=ImageSurface::create(Surface::Format::ARGB32,w,h);
-    mImageContext=Cairo::Context::create(mImage);
     pls->init();
+    mImage = ImageSurface::create(Surface::Format::ARGB32,w,h);
+    mImageContext = Cairo::Context::create(mImage);
     pls->cmd(PLESC_DEVINIT,mImageContext->cobj());
 }
 
-void PlotView::onDraw(Canvas&canvas){
+PLPlotView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
+    pls = new plstream();
+    pls->sdev("extcairo");
+    pls->init();
+}
+
+PLPlotView::~PLPlotView(){
+    delete pls;
+}
+
+void PLPlotView::onSizeChanged(int w,int h,int ow,int oh){
+    mImage = ImageSurface::create(Surface::Format::ARGB32,w,h);
+    mImageContext = Cairo::Context::create(mImage);
+    pls->cmd(PLESC_DEVINIT,mImageContext->cobj());
+}
+
+void PLPlotView::onDraw(Canvas&canvas){
     canvas.save();
     canvas.set_operator(Cairo::Context::Operator::OVER);
-    canvas.set_source(mImage,.0f,.0f);
+    canvas.set_source(mImage,0.f,0.f);
     canvas.rectangle(0,0,getWidth(),getHeight());
     canvas.fill();
     canvas.restore();
 }
 
-plstream*PlotView::getStream()const{
+plstream*PLPlotView::getStream()const{
     return pls;
 }
 
