@@ -27,14 +27,8 @@ struct PointerCoords {
     // for each axis that is present in the structure according to 'bits'.
     float values[MAX_AXES];
 
-    inline void clear() {
-        BitSet64::clear(bits);
-        isResampled = false;
-    }
-
-    bool isEmpty() const {
-        return BitSet64::isEmpty(bits);
-    }
+    void clear();
+    bool isEmpty() const;
 
     float getAxisValue(int32_t axis) const;
     int setAxisValue(int32_t axis, float value);
@@ -46,10 +40,7 @@ struct PointerCoords {
     float getY() const;
 
     bool operator==(const PointerCoords& other) const;
-    inline bool operator!=(const PointerCoords& other) const {
-        return !(*this == other);
-    }
-
+    bool operator!=(const PointerCoords& other) const;
     void copyFrom(const PointerCoords& other);
 
 private:
@@ -64,16 +55,10 @@ struct PointerProperties {
     // The pointer tool type.
     int32_t toolType;
 
-    inline void clear() {
-        id = -1;
-        toolType = 0;
-    }
-
+    void clear();
     bool operator==(const PointerProperties& other) const;
-    inline bool operator!=(const PointerProperties& other) const {
-        return !(*this == other);
-    }
-    PointerProperties(){clear();}
+    bool operator!=(const PointerProperties& other) const;
+    PointerProperties();
     void copyFrom(const PointerProperties& other);
 };
 

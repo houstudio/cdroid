@@ -232,6 +232,7 @@ void NumberPicker::initView(){
     mWrapSelectorWheel= false;
     mWrapSelectorWheelPreferred = true;
     mUpdateInputTextInFling = false;
+    mPerformClickOnTap = false;
     mIncrementVirtualButtonPressed = false;
     mDecrementVirtualButtonPressed = false;
     mSelectionDividerHeight = UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT;
@@ -351,6 +352,7 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
     if (!isEnabled() ||(action!=MotionEvent::ACTION_DOWN)) {
         return false;
     }
+    mPerformClickOnTap = false;
     if(isHorizontalMode()){
         mLastDownOrMoveEventX = mLastDownEventX = event.getX();
         if (!mFlingScroller->isFinished()) {
@@ -364,9 +366,7 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
             onScrollerFinished(mAdjustScroller);
         } else if (mLastDownEventX >= mLeftDividerLeft
                 && mLastDownEventX <= mRightDividerRight) {
-            if (mOnClickListener) {
-                mOnClickListener(*this);
-            }
+            mPerformClickOnTap = true;
         } else if (mLastDownEventX < mLeftDividerLeft) {
             postChangeCurrentByOneFromLongPress(false);
         } else if (mLastDownEventX > mRightDividerRight) {
@@ -383,9 +383,7 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
             mAdjustScroller->forceFinished(true);
         } else if (mLastDownEventY >= mTopDividerTop
                 && mLastDownEventY <= mBottomDividerBottom) {
-            if (mOnClickListener) {
-                mOnClickListener(*this);
-            }
+            mPerformClickOnTap = true;
         } else if (mLastDownEventY < mTopDividerTop) {
             postChangeCurrentByOneFromLongPress(false);
         } else if (mLastDownEventY > mBottomDividerBottom) {
@@ -450,15 +448,24 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
                 const int eventX = (int) event.getX();
                 const int deltaMoveX = (int) std::abs(eventX - mLastDownEventX);
                 if (deltaMoveX <= mTouchSlop) {
-                    int selectorIndexOffset = (eventX / mSelectorElementSize)
-                            - mWheelMiddleItemIndex;
-                    if (selectorIndexOffset > 0) {
-                        changeValueByOne(true);
-                    } else if (selectorIndexOffset < 0) {
-                        changeValueByOne(false);
-                    } else {
-                        ensureScrollWheelAdjusted();
+                    if( mPerformClickOnTap ){
+                        mPerformClickOnTap = false;
+                        performClick();
+                        if ( (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) && mOnClickListener &&
+                             (mLastDownEventX >= mLeftDividerLeft && mLastDownEventX <= mRightDividerRight)) {
+                            mOnClickListener(*this);
+                        }
+                    }else{
+                        int selectorIndexOffset = (eventX / mSelectorElementSize) - mWheelMiddleItemIndex;
+                        if (selectorIndexOffset > 0) {
+                            changeValueByOne(true);
+                        } else if (selectorIndexOffset < 0) {
+                            changeValueByOne(false);
+                        } else {
+                            ensureScrollWheelAdjusted();
+                        }
                     }
+               
                 } else {
                     ensureScrollWheelAdjusted();
                 }
@@ -473,15 +480,24 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
                 const int eventY = (int) event.getY();
                 const int deltaMoveY = (int) std::abs(eventY - mLastDownEventY);
                 if (deltaMoveY <= mTouchSlop){
-                    int selectorIndexOffset = (eventY / mSelectorElementSize) - mWheelMiddleItemIndex;
-                    if (selectorIndexOffset > 0) {
-                        changeValueByOne(true);
-                        pshButtonTapped(R::id::increment);
-                    } else if (selectorIndexOffset < 0) {
-                        changeValueByOne(false);
-                        pshButtonTapped(R::id::decrement);
+                    if( mPerformClickOnTap ){
+                        mPerformClickOnTap = false;
+                        performClick();
+                        if ( (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) && mOnClickListener &&
+                             (mLastDownEventY >= mTopDividerTop && mLastDownEventY <= mBottomDividerBottom)) {
+                            mOnClickListener(*this);
+                        }
                     }else{
-                        ensureScrollWheelAdjusted();
+                        int selectorIndexOffset = (eventY / mSelectorElementSize) - mWheelMiddleItemIndex;
+                        if (selectorIndexOffset > 0) {
+                            changeValueByOne(true);
+                            pshButtonTapped(R::id::increment);
+                        } else if (selectorIndexOffset < 0) {
+                            changeValueByOne(false);
+                            pshButtonTapped(R::id::decrement);
+                        }else{
+                            ensureScrollWheelAdjusted();
+                        }
                     }
                 }else{
                     ensureScrollWheelAdjusted();
@@ -561,9 +577,9 @@ void NumberPicker::computeScroll() {
         mPreviousScrollerY = currentScrollerY;
     }
     if (scroller->isFinished()) {
-        post([this,scroller](){onScrollerFinished(scroller);});
+        onScrollerFinished(scroller);//post([this,scroller](){onScrollerFinished(scroller);});
     } else {
-        postInvalidate();
+        invalidate();//postInvalidate();
     }
 }
 

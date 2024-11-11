@@ -98,6 +98,7 @@ private:
     bool mHideWheelUntilFocused; 
     bool mWrapSelectorWheelPreferred;
     bool mUpdateInputTextInFling;
+    bool mPerformClickOnTap;
     int mWheelItemCount;
     int mRealWheelItemCount;
     int mWheelMiddleItemIndex;

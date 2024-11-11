@@ -6,6 +6,14 @@
 namespace cdroid{
 
 // --- PointerCoords ---
+void PointerCoords::clear() {
+    BitSet64::clear(bits);
+    isResampled = false;
+}
+
+bool PointerCoords::isEmpty() const {
+    return BitSet64::isEmpty(bits);
+}
 
 float PointerCoords::getAxisValue(int32_t axis) const {
     if (axis < 0 || axis > 63 || !BitSet64::hasBit(bits, axis)){
@@ -89,6 +97,10 @@ bool PointerCoords::operator==(const PointerCoords& other) const {
     return true;
 }
 
+bool PointerCoords::operator!=(const PointerCoords& other) const {
+     return !(*this == other);
+}
+
 void PointerCoords::copyFrom(const PointerCoords& other) {
     bits = other.bits;
     const uint32_t count = BitSet64::count(bits);
@@ -98,9 +110,20 @@ void PointerCoords::copyFrom(const PointerCoords& other) {
 }
 
 // --- PointerProperties ---
+PointerProperties::PointerProperties(){
+    clear();
+}
+void PointerProperties::clear() {
+    id = -1;
+    toolType = 0;
+}
 
 bool PointerProperties::operator==(const PointerProperties& other) const {
     return (id == other.id) && (toolType == other.toolType);
+}
+
+bool PointerProperties::operator!=(const PointerProperties& other) const {
+    return !(*this == other);
 }
 
 void PointerProperties::copyFrom(const PointerProperties& other) {
