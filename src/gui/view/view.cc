@@ -5624,7 +5624,6 @@ void View::handleFocusGainInternal(int direction,Rect*previouslyFocusedRect){
         if (mAttachInfo) mAttachInfo->mTreeObserver->dispatchOnGlobalFocusChange(oldFocus, this);
 
         onFocusChanged(true, direction, previouslyFocusedRect);
-        invalidate(true);
         refreshDrawableState();
     }
 }
