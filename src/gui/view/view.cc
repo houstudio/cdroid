@@ -6694,11 +6694,10 @@ bool View::performButtonActionOnTouchDown(MotionEvent& event) {
 }
 
 void View::checkForLongClick(int delayOffset,int x,int y){
-    //LOGV("%p:%d checkForLongClick longclickable=%d",this,mID,(mViewFlags & LONG_CLICKABLE) == LONG_CLICKABLE );
-    if ((mViewFlags & LONG_CLICKABLE) == LONG_CLICKABLE || (mViewFlags & TOOLTIP) == TOOLTIP) {
+    if (((mViewFlags & LONG_CLICKABLE) == LONG_CLICKABLE) || ((mViewFlags & TOOLTIP) == TOOLTIP)) {
         mHasPerformedLongPress = false;
         if (mPendingCheckForLongPress == nullptr) {
-            mPendingCheckForLongPress = new CheckForLongPress(this);//new Runnable;
+            mPendingCheckForLongPress = new CheckForLongPress(this);
         }
         mPendingCheckForLongPress->setAnchor(x,y);
         mPendingCheckForLongPress->rememberWindowAttachCount();
@@ -6712,7 +6711,7 @@ void View::removeTapCallback() {
         mPrivateFlags &= ~PFLAG_PREPRESSED;
         mPendingCheckForTap->removeCallbacks();
         delete mPendingCheckForTap;
-        mPendingCheckForTap=nullptr;
+        mPendingCheckForTap = nullptr;
     }
 }
 
@@ -6737,7 +6736,6 @@ void View::removePerformClickCallback(){
 }
 
 void View::removeUnsetPressCallback() {
-    //LOGV("removeUnsetPressCallback pressed=%d",mPrivateFlags & PFLAG_PRESSED);
     if ((mPrivateFlags & PFLAG_PRESSED) != 0 && mUnsetPressedState != nullptr) {
         setPressed(false);
         removeCallbacks(mUnsetPressedState);
@@ -6749,10 +6747,8 @@ bool View::handleScrollBarDragging(MotionEvent& event) {
     const float y = event.getY();
     const int action = event.getAction();
     if (mScrollCache == nullptr) return false;
-    if ((mScrollCache->mScrollBarDraggingState == ScrollabilityCache::NOT_DRAGGING
-            && action != MotionEvent::ACTION_DOWN)
-            || !event.isFromSource(InputDevice::SOURCE_MOUSE)
-            || !event.isButtonPressed(MotionEvent::BUTTON_PRIMARY)) {
+    if (((mScrollCache->mScrollBarDraggingState == ScrollabilityCache::NOT_DRAGGING) && (action != MotionEvent::ACTION_DOWN))
+            || !event.isFromSource(InputDevice::SOURCE_MOUSE) || !event.isButtonPressed(MotionEvent::BUTTON_PRIMARY)) {
         mScrollCache->mScrollBarDraggingState = ScrollabilityCache::NOT_DRAGGING;
         return false;
     }
@@ -6778,8 +6774,8 @@ bool View::handleScrollBarDragging(MotionEvent& event) {
             const float maxThumbOffset = bounds.height - thumbLength;
             const float newThumbOffset =std::min(std::max(thumbOffset + diff, 0.0f), maxThumbOffset);
             const int height = getHeight();
-            if (std::round(newThumbOffset) != thumbOffset && maxThumbOffset > 0
-                    && height > 0 && extent > 0) {
+            if ((std::round(newThumbOffset) != thumbOffset) && (maxThumbOffset > 0)
+                    && (height > 0) && (extent > 0)) {
                 const int newY = std::round((range - extent)
                         / ((float)extent / height) * (newThumbOffset / maxThumbOffset));
                 if (newY != getScrollY()) {
@@ -6789,8 +6785,7 @@ bool View::handleScrollBarDragging(MotionEvent& event) {
             }
             return true;
         }
-        if (mScrollCache->mScrollBarDraggingState
-                == ScrollabilityCache::DRAGGING_HORIZONTAL_SCROLL_BAR) {
+        if (mScrollCache->mScrollBarDraggingState == ScrollabilityCache::DRAGGING_HORIZONTAL_SCROLL_BAR) {
             Rect& bounds = mScrollCache->mScrollBarBounds;
             getHorizontalScrollBarBounds(&bounds, nullptr);
             const int range = computeHorizontalScrollRange();
@@ -6842,11 +6837,11 @@ bool View::onTouchEvent(MotionEvent& event){
     const int x = event.getX();
     const int y = event.getY();
     const int action = event.getAction();
-    const bool clickable = ((mViewFlags&CLICKABLE) == CLICKABLE  || (mViewFlags&LONG_CLICKABLE) == LONG_CLICKABLE);
+    const bool clickable = (((mViewFlags&CLICKABLE) == CLICKABLE)||((mViewFlags&LONG_CLICKABLE) == LONG_CLICKABLE));
     bool prepressed;
 
     if ((mViewFlags & ENABLED_MASK) == DISABLED) {
-        if (action == MotionEvent::ACTION_UP && (mPrivateFlags & PFLAG_PRESSED) != 0) {
+        if ((action == MotionEvent::ACTION_UP) && ((mPrivateFlags & PFLAG_PRESSED) != 0)) {
             setPressed(false);
         }
         mPrivateFlags3 &= ~PFLAG3_FINGER_DOWN;
