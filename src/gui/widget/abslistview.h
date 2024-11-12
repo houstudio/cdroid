@@ -7,11 +7,12 @@
 #include <widget/edgeeffect.h>
 #include <widget/popupwindow.h>
 #include <widget/filterable.h>
+
 namespace cdroid{
 
 #define OVERSCROLL_LIMIT_DIVISOR 3
 #define CHECK_POSITION_SEARCH_DISTANCE 20
-class ContextMenuInfo;
+
 class AbsListView:public AdapterView,Filter::FilterListener{
 private:
     static constexpr float FLING_DESTRETCH_FACTOR = 4.f;
@@ -135,7 +136,7 @@ private:
     bool mFiltered;
     int mScrollOffset[2] ;
     int mScrollConsumed[2];
-    ContextMenuInfo* mContextMenuInfo;
+    ContextMenu::ContextMenuInfo* mContextMenuInfo;
     class FastScroller* mFastScroll;
     std::vector<int>mSelectorState;
     int mLastScrollState;
@@ -309,7 +310,7 @@ protected:
     virtual void fillGap(bool down)=0;
     int findClosestMotionRow(int y);
     
-    ContextMenuInfo*createContextMenuInfo(View* view, int position, long id);
+    ContextMenu::ContextMenuInfo*createContextMenuInfo(View* view, int position, long id);
     void positionSelectorLikeTouch(int position, View* sel, float x, float y);
     void positionSelectorLikeFocus(int position, View* sel);
     void keyPressed();
@@ -463,6 +464,7 @@ public:
 
 class AbsListView::CheckForLongPress:public WindowRunnable{
 private:
+    friend class AbsListView;
     static constexpr int INVALID_COORD=-1;
     float mX ,mY;
 public:

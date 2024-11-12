@@ -490,6 +490,10 @@ AdapterView::OnItemLongClickListener AdapterView::getOnItemLongClickListener() c
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+AdapterView::AdapterContextMenuInfo::AdapterContextMenuInfo(View* view, int pos, long _id):
+    targetView(view),position(pos),id(_id){
+}
+
 AdapterDataSetObserver::AdapterDataSetObserver(AdapterView*lv){
     mAdapterView = lv;
 }

@@ -204,6 +204,58 @@ public:
     MenuItem*getItem()const;
 };
 
+class ContextMenu:public Menu {
+public:
+
+    /**
+     * Sets the context menu header's title to the title given in <var>title</var>.
+     *
+     * @param title The character sequence used for the title.
+     * @return This ContextMenu so additional setters can be called.
+     */
+    virtual ContextMenu& setHeaderTitle(const std::string& title)=0;
+
+    /**
+     * Sets the context menu header's icon to the icon given in <var>iconRes</var>
+     * resource id.
+     *
+     * @param iconRes The resource identifier used for the icon.
+     * @return This ContextMenu so additional setters can be called.
+     */
+    virtual ContextMenu& setHeaderIcon(const std::string& iconRes)=0;
+
+    /**
+     * Sets the context menu header's icon to the icon given in <var>icon</var>
+     * {@link Drawable}.
+     *
+     * @param icon The {@link Drawable} used for the icon.
+     * @return This ContextMenu so additional setters can be called.
+     */
+    virtual ContextMenu& setHeaderIcon(Drawable* icon)=0;
+
+    /**
+     * Sets the header of the context menu to the {@link View} given in
+     * <var>view</var>. This replaces the header title and icon (and those
+     * replace this).
+     *
+     * @param view The {@link View} used for the header.
+     * @return This ContextMenu so additional setters can be called.
+     */
+    virtual ContextMenu& setHeaderView(View* view)=0;
+
+    /**
+     * Clears the header of the context menu.
+     */
+    virtual void clearHeader()=0;
+
+    /**
+     * Additional information regarding the creation of the context menu.  For example,
+     * {@link AdapterView}s use this to pass the exact item position within the adapter
+     * that initiated the context menu.
+     */
+    struct ContextMenuInfo {
+    };
+};
 }
 
 #endif

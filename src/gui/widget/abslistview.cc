@@ -1273,7 +1273,7 @@ bool AbsListView::performLongPress(View* child,int longPressPosition,long longPr
         /*if (mChoiceActionMode == nullptr &&
             (mChoiceActionMode = startActionMode(mMultiChoiceModeCallback)) != null)*/ {
             setItemChecked(longPressPosition, true);
-            //performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+            performHapticFeedback(HapticFeedbackConstants::LONG_PRESS);
         }
         return true;
     }
@@ -1282,15 +1282,15 @@ bool AbsListView::performLongPress(View* child,int longPressPosition,long longPr
     if (mOnItemLongClickListener != nullptr) {
         handled = mOnItemLongClickListener(*this,*child,longPressPosition, longPressId);
     }
-    /*if (!handled) {
+    if (!handled) {
         mContextMenuInfo = createContextMenuInfo(child, longPressPosition, longPressId);
-        if (x != CheckForLongPress.INVALID_COORD && y != CheckForLongPress.INVALID_COORD) {
+        if ((x != CheckForLongPress::INVALID_COORD) && (y != CheckForLongPress::INVALID_COORD)) {
             handled = AdapterView::showContextMenuForChild(this, x, y);
         } else {
             handled = AdapterView::showContextMenuForChild(this);
         }
-    }*/
-    //if (handled) performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+    }
+    if (handled) performHapticFeedback(HapticFeedbackConstants::LONG_PRESS);
     return handled;
 }
 
@@ -2169,8 +2169,8 @@ bool AbsListView::performItemClick(View& view, int position, long id) {
     return handled;
 }
 
-ContextMenuInfo* AbsListView::createContextMenuInfo(View* view, int position, long id){
-    return nullptr;
+ContextMenu::ContextMenuInfo* AbsListView::createContextMenuInfo(View* view, int position, long id){
+    return  new AdapterContextMenuInfo(view, position, id);;
 }
 
 bool AbsListView::showContextMenu(){

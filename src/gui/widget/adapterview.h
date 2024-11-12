@@ -1,5 +1,6 @@
 #ifndef __ADAPTER_VIEW_H__
 #define __ADAPTER_VIEW_H__
+#include <view/menu.h>
 #include <view/viewgroup.h>
 #include <widget/adapter.h>
 namespace cdroid{
@@ -22,7 +23,28 @@ public:
         std::function<void(AdapterView&parent)>onNothingSelected;
     };
     typedef std::function<void (AdapterView& parent,View& view, int position, long id)>OnItemClickListener;
-    typedef std::function<bool (AdapterView& parent,View& view, int position, long id)>OnItemLongClickListener; 
+    typedef std::function<bool (AdapterView& parent,View& view, int position, long id)>OnItemLongClickListener;
+    
+    class AdapterContextMenuInfo:public ContextMenu::ContextMenuInfo {
+    public: 
+        AdapterContextMenuInfo(View* targetView, int position, long id);
+        /**
+         * The child view for which the context menu is being displayed. This
+         * will be one of the children of this AdapterView.
+         */
+        View* targetView;
+
+        /**
+         * The position in the adapter for which the context menu is being
+         * displayed.
+         */
+        int position;
+
+        /**
+         * The row id of the item for which the context menu is being displayed.
+         */
+        long id;
+    };
 private:
     int mDesiredFocusableState;
     Parcelable mInstanceState;
