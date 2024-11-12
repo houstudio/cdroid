@@ -6599,7 +6599,7 @@ bool View::performClick(){
 
 bool View::callOnClick() {
     if (mListenerInfo && mListenerInfo->mOnClickListener) {
-        li.mOnClickListener(*this);
+        mListenerInfo->mOnClickListener(*this);
         return true;
     }
     return false;
