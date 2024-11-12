@@ -2170,6 +2170,7 @@ bool AbsListView::performItemClick(View& view, int position, long id) {
 }
 
 ContextMenu::ContextMenuInfo* AbsListView::createContextMenuInfo(View* view, int position, long id){
+    LOGD("the AdapterContextMenuInfo's memory maybe losted");
     return  new AdapterContextMenuInfo(view, position, id);;
 }
 

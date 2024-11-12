@@ -1,12 +1,17 @@
 #ifndef __MENU_H__
 #define __MENU_H__
 #include <string>
-#include <view/view.h>
-
+#include <core/callbackbase.h>
+#include <view/keyevent.h>
+#include <cairomm/surface.h>
 namespace cdroid{
-
+class View;
 class SubMenu;
 class MenuItem;
+class Drawable;
+#ifndef DECLARE_UIEVENT
+#define DECLARE_UIEVENT(type, name, ...) using name = std::function<type(__VA_ARGS__)>
+#endif
 class Menu{
 public:
     /**

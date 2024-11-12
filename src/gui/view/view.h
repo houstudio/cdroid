@@ -32,6 +32,7 @@
 #include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <view/abssavedstate.h>
+#include <view/menu.h>
 #include <view/gravity.h>
 #include <view/layoutparams.h>
 #include <view/rendernode.h>
@@ -388,6 +389,7 @@ public:
     DECLARE_UIEVENT(void,OnClickListener,View&);
     DECLARE_UIEVENT(bool,OnLongClickListener,View&);
     DECLARE_UIEVENT(bool,OnContextClickListener,View&);
+    DECLARE_UIEVENT(void,OnCreateContextMenuListener,ContextMenu&,View&,ContextMenu::ContextMenuInfo*);
     DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);
     DECLARE_UIEVENT(void,OnScrollChangeListener,View& v, int, int, int, int);
     DECLARE_UIEVENT(void,OnSystemUiVisibilityChangeListener,int);
@@ -693,6 +695,8 @@ protected:
     virtual int getSuggestedMinimumWidth();
     virtual int getSuggestedMinimumHeight();
     void setMeasuredDimension(int measuredWidth, int measuredHeight);
+    virtual ContextMenu::ContextMenuInfo* getContextMenuInfo();
+    virtual void onCreateContextMenu(ContextMenu& menu);
     virtual bool handleScrollBarDragging(MotionEvent& event);
     bool performButtonActionOnTouchDown(MotionEvent&);
     virtual bool updateLocalSystemUiVisibility(int localValue, int localChanges);
@@ -909,6 +913,8 @@ public:
     bool  hasClickListener()const;
     virtual void setOnClickListener(OnClickListener l);
     virtual void setOnLongClickListener(OnLongClickListener l);
+    void setOnContextClickListener(OnContextClickListener l);
+    void setOnCreateContextMenuListener(OnCreateContextMenuListener l);
     virtual void setOnFocusChangeListener(OnFocusChangeListener listtener); 
     virtual void setOnScrollChangeListener(OnScrollChangeListener l);
     void  addOnLayoutChangeListener(OnLayoutChangeListener listener);
@@ -1161,6 +1167,7 @@ public:
     void addOnUnhandledKeyEventListener(OnUnhandledKeyEventListener listener);
     void removeOnUnhandledKeyEventListener(OnUnhandledKeyEventListener listener);
 
+    virtual void createContextMenu(ContextMenu& menu);
     virtual int  commitText(const std::wstring&);
     virtual void dispatchWindowVisibilityChanged(int visibility);
     virtual void onWindowVisibilityChanged(int);
@@ -1360,7 +1367,7 @@ public:
     View::OnClickListener mOnClickListener;
     View::OnLongClickListener mOnLongClickListener;
     View::OnContextClickListener mOnContextClickListener;
-    //OnCreateContextMenuListener mOnCreateContextMenuListener;
+    OnCreateContextMenuListener mOnCreateContextMenuListener;
     View::OnKeyListener mOnKeyListener;
     View::OnTouchListener mOnTouchListener;
     View::OnHoverListener mOnHoverListener;

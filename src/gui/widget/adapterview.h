@@ -1,6 +1,5 @@
 #ifndef __ADAPTER_VIEW_H__
 #define __ADAPTER_VIEW_H__
-#include <view/menu.h>
 #include <view/viewgroup.h>
 #include <widget/adapter.h>
 namespace cdroid{

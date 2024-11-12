@@ -2451,6 +2451,27 @@ void View::setOnLongClickListener(OnLongClickListener l){
     getListenerInfo()->mOnLongClickListener=l;
 }
 
+void View::setOnContextClickListener(OnContextClickListener l) {
+    if (!isContextClickable()) {
+        setContextClickable(true);
+    }
+    getListenerInfo()->mOnContextClickListener = l;
+}
+
+/**
+ * Register a callback to be invoked when the context menu for this view is
+ * being built. If this view is not long clickable, it becomes long clickable.
+ *
+ * @param l The callback that will run
+ *
+ */
+void View::setOnCreateContextMenuListener(OnCreateContextMenuListener l) {
+    if (!isLongClickable()) {
+        setLongClickable(true);
+    }
+    getListenerInfo()->mOnCreateContextMenuListener = l;
+}
+
 void View::setOnFocusChangeListener(OnFocusChangeListener listtener){
     getListenerInfo()->mOnFocusChangeListener = listtener;
 }
@@ -6199,6 +6220,35 @@ bool View::onCheckIsTextEditor(){
     return false;
 }
 
+void View::createContextMenu(ContextMenu& menu) {
+    ContextMenu::ContextMenuInfo* menuInfo = getContextMenuInfo();
+
+    // Sets the current menu info so all items added to menu will have
+    // my extra info set.
+    //((MenuBuilder)menu).setCurrentMenuInfo(menuInfo);
+
+    onCreateContextMenu(menu);
+    if (mListenerInfo && mListenerInfo->mOnCreateContextMenuListener) {
+        mListenerInfo->mOnCreateContextMenuListener(menu, *this, menuInfo);
+    }
+
+    // Clear the extra information so subsequent items that aren't mine don't
+    // have my extra info.
+    //((MenuBuilder)menu).setCurrentMenuInfo(nullptr);
+
+    if (mParent != nullptr) {
+        mParent->createContextMenu(menu);
+    }
+}
+
+ContextMenu::ContextMenuInfo* View::getContextMenuInfo() {
+    return nullptr;
+}
+
+void View::onCreateContextMenu(ContextMenu& menu) {
+    //NOTHING
+}
+
 bool View::onKeyDown(int keyCode,KeyEvent& evt){
     if (KeyEvent::isConfirmKey(keyCode)) {
         if ((mViewFlags & ENABLED_MASK) == DISABLED)return true;
@@ -6547,10 +6597,18 @@ bool View::performClick(){
 
 bool View::performLongClickInternal(float x, float y){
     bool handled = false;
-    if(mListenerInfo && mListenerInfo->mOnLongClickListener)
+    if(mListenerInfo && mListenerInfo->mOnLongClickListener){
         handled = mListenerInfo->mOnLongClickListener(*this);
+    }
+    if (!handled) {
+        const bool isAnchored = !std::isnan(x) && !std::isnan(y);
+        handled = isAnchored ? showContextMenu(x, y) : showContextMenu();
+    }
     if((mViewFlags & TOOLTIP)==TOOLTIP){
         if(!handled)handled = showLongClickTooltip((int) x, (int) y);
+    }
+    if (handled) {
+        performHapticFeedback(HapticFeedbackConstants::LONG_PRESS);
     }
     return handled;
 }
