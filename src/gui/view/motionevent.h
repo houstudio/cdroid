@@ -256,7 +256,7 @@ private:
     void updateCursorPosition();
     ////////////////////////////////// Raw AXIS Properties ///////////////////////////////////
     const PointerCoords& getRawPointerCoords(size_t pointerIndex) const;
-    const PointerCoords& getHistoricalRawPointerCoords(size_t pointerIndex, size_t historicalIndex) const;
+    int getHistoricalRawPointerCoords(size_t pointerIndex, size_t historicalIndex,PointerCoords&) const;
     float getHistoricalRawAxisValue(int32_t axis, size_t pointerIndex,size_t historicalIndex) const;
     float getHistoricalRawX(size_t pointerIndex, size_t historicalIndex) const;
     float getHistoricalRawY(size_t pointerIndex, size_t historicalIndex) const;
@@ -266,8 +266,8 @@ private:
 public:
     void setCursorPosition(float x, float y);
     /////////////////////// AXIS Properties has been transformed //////////////////////////////
-    const PointerCoords& getPointerCoords(int pointerIndex)const;
-    const PointerCoords& getHistoricalPointerCoords(size_t pointerIndex, size_t historicalIndex) const;
+    const PointerCoords getPointerCoords(int pointerIndex)const;
+    const PointerCoords getHistoricalPointerCoords(size_t pointerIndex, size_t historicalIndex) const;
     float getHistoricalAxisValue(int axis, size_t pointerIndex,size_t historicalIndex) const;
     float getHistoricalX(size_t pointerIndex, size_t historicalIndex) const;
     float getHistoricalY(size_t pointerIndex, size_t historicalIndex) const;
