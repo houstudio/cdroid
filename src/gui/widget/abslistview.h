@@ -11,7 +11,7 @@ namespace cdroid{
 
 #define OVERSCROLL_LIMIT_DIVISOR 3
 #define CHECK_POSITION_SEARCH_DISTANCE 20
-
+class ContextMenuInfo;
 class AbsListView:public AdapterView,Filter::FilterListener{
 private:
     static constexpr float FLING_DESTRETCH_FACTOR = 4.f;
@@ -135,6 +135,7 @@ private:
     bool mFiltered;
     int mScrollOffset[2] ;
     int mScrollConsumed[2];
+    ContextMenuInfo* mContextMenuInfo;
     class FastScroller* mFastScroll;
     std::vector<int>mSelectorState;
     int mLastScrollState;
@@ -197,6 +198,8 @@ private:
     EditText* getTextFilterInput();
     void onTouchModeChanged(bool isInTouchMode);//called by ViewTreeObserver
     void onGlobalLayout();
+    bool showContextMenuInternal(float x, float y, bool useOffsets);
+    bool showContextMenuForChildInternal(View* originalView, float x, float y,bool useOffsets);
 protected:
     int mChoiceMode;
     int mCheckedItemCount;
@@ -306,6 +309,7 @@ protected:
     virtual void fillGap(bool down)=0;
     int findClosestMotionRow(int y);
     
+    ContextMenuInfo*createContextMenuInfo(View* view, int position, long id);
     void positionSelectorLikeTouch(int position, View* sel, float x, float y);
     void positionSelectorLikeFocus(int position, View* sel);
     void keyPressed();
@@ -377,6 +381,10 @@ public:
     int pointToPosition(int x, int y);
     long pointToRowId(int x, int y);
     bool performItemClick(View& view, int position, long id)override;
+    bool showContextMenu()override;
+    bool showContextMenu(float x, float y)override;
+    bool showContextMenuForChild(View* originalView)override;
+    bool showContextMenuForChild(View* originalView, float x, float y);
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;

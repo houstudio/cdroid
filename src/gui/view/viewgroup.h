@@ -66,6 +66,9 @@ public:
         FLAG_IS_TRANSITION_GROUP    = 0x1000000,
         FLAG_IS_TRANSITION_GROUP_SET= 0x2000000,
         FLAG_TOUCHSCREEN_BLOCKS_FOCUS= 0x4000000,
+        FLAG_START_ACTION_MODE_FOR_CHILD_IS_TYPED = 0x8000000,
+        FLAG_START_ACTION_MODE_FOR_CHILD_IS_NOT_TYPED = 0x10000000,
+        FLAG_SHOW_CONTEXT_MENU_WITH_COORDS = 0x20000000,
     };
     enum{
         PERSISTENT_NO_CACHE = 0x0,
@@ -301,6 +304,9 @@ public:
     void unFocus(View* focused)override;
     void clearChildFocus(View* child);
     void focusableViewAvailable(View*);
+    bool isShowingContextMenuWithCoords()const;
+    virtual bool showContextMenuForChild(View* originalView);
+    virtual bool showContextMenuForChild(View* originalView, float x, float y);
     bool hasTransientState()override;
     void childHasTransientStateChanged(View* child, bool childHasTransientState);
 
@@ -416,8 +422,6 @@ public:
     virtual void dispatchInvalidateDelayed(View*,long delay);
     virtual void dispatchInvalidateRectDelayed(const AttachInfo::InvalidateInfo*,long delay);
     virtual void cancelInvalidate(View* view);
-    virtual bool showContextMenuForChild(View* originalView);
-    virtual bool showContextMenuForChild(View* originalView, float x, float y);
     //ViewRootImpl
     void requestPointerCapture(bool);
 };

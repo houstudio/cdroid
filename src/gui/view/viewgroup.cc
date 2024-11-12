@@ -2338,6 +2338,29 @@ void ViewGroup::focusableViewAvailable(View*v){
      }
 }
 
+bool ViewGroup::showContextMenuForChild(View* originalView){
+    if (isShowingContextMenuWithCoords()) {
+        // We're being called for compatibility. Return false and let the version
+        // with coordinates recurse up.
+        return false;
+    }
+    return mParent && mParent->showContextMenuForChild(originalView);
+}
+
+bool ViewGroup::showContextMenuForChild(View* originalView, float x, float y){
+    mGroupFlags |= FLAG_SHOW_CONTEXT_MENU_WITH_COORDS;
+    if (showContextMenuForChild(originalView)) {
+        mGroupFlags &= ~FLAG_SHOW_CONTEXT_MENU_WITH_COORDS;
+        return true;
+    }
+    mGroupFlags &= ~FLAG_SHOW_CONTEXT_MENU_WITH_COORDS;
+    return mParent && mParent->showContextMenuForChild(originalView, x, y);
+}
+
+bool ViewGroup::isShowingContextMenuWithCoords()const{
+    return (mGroupFlags & FLAG_SHOW_CONTEXT_MENU_WITH_COORDS) != 0;
+}
+
 bool ViewGroup::getTouchscreenBlocksFocus()const{ 
     return mGroupFlags & FLAG_TOUCHSCREEN_BLOCKS_FOCUS;
 }
@@ -2434,14 +2457,6 @@ void ViewGroup::offsetChildrenLeftAndRight(int offset){
     for (auto v:mChildren) {
         v->setPos(v->mLeft + offset,v->mTop);
     }
-}
-
-bool ViewGroup::showContextMenuForChild(View* originalView){
-    return false;
-}
-
-bool ViewGroup::showContextMenuForChild(View* originalView, float x, float y){
-    return false;
 }
 
 bool ViewGroup::getChildVisibleRect(View*child,Rect&r,Point*offset){

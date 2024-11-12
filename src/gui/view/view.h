@@ -924,8 +924,8 @@ public:
     void cancelLongPress();
     bool  performContextClick(float x, float y);
     bool  performContextClick();
-    bool showContextMenu();
-    bool showContextMenu(float x, float y);
+    virtual bool showContextMenu();
+    virtual bool showContextMenu(float x, float y);
     void startActivityForResult(Intent intent, int requestCode);
     virtual bool dispatchActivityResult(const std::string& who, int requestCode, int resultCode, Intent data);
     virtual void onActivityResult(int requestCode, int resultCode, Intent data);

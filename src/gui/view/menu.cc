@@ -4,31 +4,31 @@ using namespace Cairo;
 namespace cdroid{
 
 MenuItem::MenuItem(){
-   mEnabled=true;
-   mVisible=true;
-   mSubMenu=nullptr;
-   mGroupId=-1;
-   mItemId=-1;
-   mOrder=-1;
+   mEnabled = true;
+   mVisible = true;
+   mSubMenu = nullptr;
+   mGroupId = -1;
+   mItemId  = -1;
+   mOrder = -1;
 }
 
 MenuItem& MenuItem::setEnabled(bool v){
-    mEnabled=v;
+    mEnabled = v;
     return *this;
 }
 
 MenuItem& MenuItem::setTitle(const std::string&txt){
-    mTitle=txt;
+    mTitle = txt;
     return *this;
 }
 
 MenuItem& MenuItem::setVisible(bool v){
-    mVisible=v;
+    mVisible = v;
     return *this;
 }
 
 MenuItem& MenuItem::setTooltipText(const std::string&tip){
-    mTooltip=tip;
+    mTooltip = tip;
     return *this;
 }
 
@@ -37,13 +37,13 @@ SubMenu* MenuItem::getSubMenu()const{
 }
 
 bool MenuItem::hasSubMenu()const{
-    return mSubMenu&&mSubMenu->size();
+    return mSubMenu && mSubMenu->size();
 }
 
 //###############################
 
 Menu::Menu(){
-   owner=nullptr;
+   owner = nullptr;
 }
 
 Menu::~Menu(){
@@ -56,12 +56,12 @@ void Menu::popup(int x,int y){
 void Menu::close(){
 }
 
-MenuItem& Menu::add(const std::string&title){
+MenuItem* Menu::add(const std::string&title){
    return add(-1,-1,-1,title);
 }
 
-MenuItem& Menu::add(int groupId, int itemId, int order,const std::string&title){
-   MenuItem*itm=new MenuItem(); 
+MenuItem* Menu::add(int groupId, int itemId, int order,const std::string&title){
+   MenuItem*itm = new MenuItem(); 
    itm->setTitle(title);
    itm->mGroupId=groupId;
    itm->mItemId=itemId;
@@ -70,11 +70,11 @@ MenuItem& Menu::add(int groupId, int itemId, int order,const std::string&title){
    return *itm;
 }
 
-SubMenu& Menu::addSubMenu(const std::string&title){
+SubMenu* Menu::addSubMenu(const std::string&title){
    return addSubMenu(-1,-1,-1,title);
 }
 
-SubMenu& Menu::addSubMenu(int groupId,int itemId,int order,const std::string& title){
+SubMenu* Menu::addSubMenu(int groupId,int itemId,int order,const std::string& title){
    MenuItem&itm=add(groupId,itemId,order,title);
    itm.mSubMenu=new SubMenu();
    return *itm.mSubMenu;

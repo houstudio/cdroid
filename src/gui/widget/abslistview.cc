@@ -33,6 +33,7 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mFastScroll = nullptr;
     mPopup = nullptr;
     mTextFilter = nullptr;
+    mContextMenuInfo= nullptr;
     mStackFromBottom = false;
     mIsChildViewEnabled =false;
     mFiltered    = false;
@@ -2165,6 +2166,77 @@ bool AbsListView::performItemClick(View& view, int position, long id) {
     if (dispatchItemClick) {
         handled |= AdapterView::performItemClick(view, position, id);
     }
+    return handled;
+}
+
+ContextMenuInfo* AbsListView::createContextMenuInfo(View* view, int position, long id){
+    return nullptr;
+}
+
+bool AbsListView::showContextMenu(){
+    return showContextMenuInternal(0, 0, true);
+}
+
+bool AbsListView::showContextMenu(float x, float y){
+    return showContextMenuInternal(x, y, true);
+}
+
+bool AbsListView::showContextMenuInternal(float x, float y, bool useOffsets) {
+    const int position = pointToPosition((int)x, (int)y);
+    if (position != INVALID_POSITION) {
+        const long id = mAdapter->getItemId(position);
+        View* child = getChildAt(position - mFirstPosition);
+        if (child != nullptr) {
+            mContextMenuInfo = createContextMenuInfo(child, position, id);
+            if (useOffsets) {
+                return AdapterView::showContextMenuForChild(this, x, y);
+            } else {
+                return AdapterView::showContextMenuForChild(this);
+            }
+        }
+    }
+    if (useOffsets) {
+        return AdapterView::showContextMenu(x, y);
+    } else {
+        return AdapterView::showContextMenu();
+    }
+}
+
+bool AbsListView::showContextMenuForChild(View* originalView){
+    if (isShowingContextMenuWithCoords()) {
+        return false;
+    }
+    return showContextMenuForChildInternal(originalView, 0, 0, false);
+}
+
+bool AbsListView::showContextMenuForChild(View* originalView, float x, float y){
+    return showContextMenuForChildInternal(originalView,x, y, true);
+}
+
+bool AbsListView::showContextMenuForChildInternal(View* originalView, float x, float y, bool useOffsets) {
+    const int longPressPosition = getPositionForView(originalView);
+    if (longPressPosition < 0) {
+        return false;
+    }
+
+    const long longPressId = mAdapter->getItemId(longPressPosition);
+    bool handled = false;
+
+    if (mOnItemLongClickListener != nullptr) {
+        handled = mOnItemLongClickListener/*.onItemLongClick*/(*this, *originalView,longPressPosition, longPressId);
+    }
+
+    if (!handled) {
+        View* child = getChildAt(longPressPosition - mFirstPosition);
+        mContextMenuInfo = createContextMenuInfo(child, longPressPosition, longPressId);
+
+        if (useOffsets) {
+            handled = AdapterView::showContextMenuForChild(originalView, x, y);
+        } else {
+            handled = AdapterView::showContextMenuForChild(originalView);
+        }
+    }
+
     return handled;
 }
 

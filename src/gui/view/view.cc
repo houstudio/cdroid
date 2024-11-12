@@ -6577,8 +6577,8 @@ bool View::performContextClick(float x, float y) {
 }
 
 bool View::performContextClick() {
-    sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_CONTEXT_CLICKED);
     bool handled = false;
+    sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_CONTEXT_CLICKED);
     if (mListenerInfo && mListenerInfo->mOnContextClickListener) {
         handled = mListenerInfo->mOnContextClickListener(*this);
     }
