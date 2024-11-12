@@ -349,7 +349,7 @@ MotionEvent*MotionEvent::split(int idBits){
         }
         const auto eventTimeNanos = getHistoricalEventTime(historyPos);
         if (h == 0) {
-            ev->initialize( getDeviceId(),getSource(),0/*displayId*/, newAction, 0, getFlags(),
+            ev->initialize( getDeviceId(),getSource(),getDisplayId(), newAction, 0, getFlags(),
                 getEdgeFlags(), getMetaState() , getButtonState(), getXOffset(), getYOffset(),
                 getXPrecision(), getYPrecision(),mDownTime, eventTimeNanos,  newPointerCount, pp, pc);
         } else {
