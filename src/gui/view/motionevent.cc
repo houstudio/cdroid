@@ -389,7 +389,7 @@ MotionEvent* MotionEvent::clampNoHistory(float left, float top, float right, flo
     PointerCoords* pc = gSharedTempPointerCoords.data();
     for (size_t i = 0; i < pointerCount; i++) {
         pp[i] = mPointerProperties[i];//nativeGetPointerProperties(mNativePtr,i,pp[i]);
-        pc[i] = getPointerCoords(i);//nativeGetPointerCoords(mNativePtr,i,HISTORY_CURRENT,pc[i]);
+        getPointerCoords(i,pc[i]);//nativeGetPointerCoords(mNativePtr,i,HISTORY_CURRENT,pc[i]);
         pc[i].setAxisValue(AXIS_X,clamp(pc[i].getX(), left, right));
         pc[i].setAxisValue(AXIS_Y,clamp(pc[i].getY(), top, bottom));
     }
@@ -638,16 +638,13 @@ float MotionEvent::getHistoricalRawX(size_t pointerIndex, size_t historicalIndex
 float MotionEvent::getHistoricalRawY(size_t pointerIndex, size_t historicalIndex) const {
     return getHistoricalRawAxisValue(AXIS_Y, pointerIndex, historicalIndex);
 }
-const PointerCoords MotionEvent::getPointerCoords(int pointerIndex)const{
-    PointerCoords pc;
-    getHistoricalRawPointerCoords(pointerIndex,HISTORY_CURRENT,pc);
-    return pc;
+
+int MotionEvent::getPointerCoords(int pointerIndex,PointerCoords&pc)const{
+    return getHistoricalRawPointerCoords(pointerIndex,HISTORY_CURRENT,pc);
 }
 
-const PointerCoords MotionEvent::getHistoricalPointerCoords(size_t pointerIndex, size_t historicalIndex) const{
-    PointerCoords pc;
-    getHistoricalRawPointerCoords(pointerIndex,historicalIndex,pc);
-    return pc;
+int MotionEvent::getHistoricalPointerCoords(size_t pointerIndex, size_t historicalIndex,PointerCoords&pc) const{
+    return getHistoricalRawPointerCoords(pointerIndex,historicalIndex,pc);
 }
 
 float MotionEvent::getHistoricalAxisValue(int axis,size_t pointerIndex,size_t historicalIndex)const{

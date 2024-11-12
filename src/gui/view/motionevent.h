@@ -266,8 +266,8 @@ private:
 public:
     void setCursorPosition(float x, float y);
     /////////////////////// AXIS Properties has been transformed //////////////////////////////
-    const PointerCoords getPointerCoords(int pointerIndex)const;
-    const PointerCoords getHistoricalPointerCoords(size_t pointerIndex, size_t historicalIndex) const;
+    int getPointerCoords(int pointerIndex,PointerCoords&)const;
+    int getHistoricalPointerCoords(size_t pointerIndex, size_t historicalIndex,PointerCoords&) const;
     float getHistoricalAxisValue(int axis, size_t pointerIndex,size_t historicalIndex) const;
     float getHistoricalX(size_t pointerIndex, size_t historicalIndex) const;
     float getHistoricalY(size_t pointerIndex, size_t historicalIndex) const;
