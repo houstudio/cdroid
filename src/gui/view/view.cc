@@ -6592,7 +6592,17 @@ bool View::performClick(){
          mListenerInfo->mOnClickListener(*this);
          result = true;
     }
+    sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_CLICKED);
+    //notifyEnterOrExitForAutoFillIfNeeded(true);
     return result;
+}
+
+bool View::callOnClick() {
+    if (mListenerInfo && mListenerInfo->mOnClickListener) {
+        li.mOnClickListener(*this);
+        return true;
+    }
+    return false;
 }
 
 bool View::performLongClickInternal(float x, float y){
