@@ -284,9 +284,7 @@ public:
     float getY(size_t pointerIndex=0) const { return getAxisValue(AXIS_Y,pointerIndex); }
 
     //////////////////////////////////////////////////////////////////////////////////////////    
-    inline const PointerProperties& getPointerProperties(size_t pointerIndex) const {
-        return mPointerProperties[pointerIndex];
-    }
+    int getPointerProperties(size_t pointerIndex,PointerProperties&pp) const;
     void addSample(nsecs_t eventTime,const PointerCoords*);
     void offsetLocation(float xOffset, float yOffset);
     void setLocation(float x,float y);
@@ -296,6 +294,9 @@ public:
     // Matrix is in row-major form and compatible with SkMatrix.
     void transform(const float matrix[9]);
     void transform(const Cairo::Matrix & matrix);
+    void addBatch(nsecs_t eventTime, float x, float y, float pressure, float size, int metaState);
+    void addBatch(nsecs_t eventTime,const std::vector<PointerCoords>& pointerCoords, int metaState);
+    bool addBatch(MotionEvent& event);
     inline int32_t getPointerId(size_t pointerIndex) const {
         return mPointerProperties[pointerIndex].id;
     }

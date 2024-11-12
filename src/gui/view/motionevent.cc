@@ -312,7 +312,7 @@ MotionEvent*MotionEvent::split(int idBits){
     int newActionPointerIndex = -1;
     int newPointerCount = 0;
     for (size_t i = 0; i < oldPointerCount; i++) {
-        pp[newPointerCount] = getPointerProperties(i);
+        getPointerProperties(i,pp[newPointerCount]);
         const int idBit = 1 << pp[newPointerCount].id;
         if ((idBit & idBits) != 0) {
             if (i == oldActionPointerIndex) {
@@ -362,6 +362,11 @@ MotionEvent*MotionEvent::split(int idBits){
 
 bool MotionEvent::isButtonPressed(int button)const{
     return (button!=0) && ((getButtonState() & button) == button);
+}
+
+int MotionEvent::getPointerProperties(size_t pointerIndex,PointerProperties&pp) const{
+    pp = mPointerProperties[pointerIndex];
+    return 0;
 }
 
 void MotionEvent::addSample(nsecs_t eventTime, const PointerCoords*coords) {
@@ -616,12 +621,81 @@ int MotionEvent::getHistoricalRawPointerCoords(
         return -1;
     }
     if(historicalIndex==HISTORY_CURRENT){
-        pc=mSamplePointerCoords[pointerIndex];
+        pc = mSamplePointerCoords[pointerIndex];
     }else{
         const size_t position = historicalIndex * getPointerCount() + pointerIndex;
-        pc=mSamplePointerCoords[position];
+        pc = mSamplePointerCoords[position];
     }
     return 0;
+}
+
+void MotionEvent::addBatch(nsecs_t eventTime, float x, float y, float pressure, float size, int metaState){
+    ensureSharedTempPointerCapacity(1);
+    PointerCoords* pc = gSharedTempPointerCoords.data();
+    pc[0].clear();
+    pc[0].setAxisValue(AXIS_X,x);//x = x;
+    pc[0].setAxisValue(AXIS_Y,y);//y = y;
+    pc[0].setAxisValue(AXIS_PRESSURE,pressure);//pressure = pressure;
+    pc[0].setAxisValue(AXIS_SIZE,size);//size = size;
+    //nativeAddBatch(mNativePtr, eventTime * NS_PER_MS, pc, metaState);
+    addSample(eventTime * NS_PER_MS,pc);
+    setMetaState(metaState|getMetaState());
+}
+
+void MotionEvent::addBatch(nsecs_t eventTime,const std::vector<PointerCoords>& pointerCoords, int metaState){
+     addSample(eventTime,pointerCoords.data());
+     setMetaState(metaState|getMetaState());
+}
+
+bool MotionEvent::addBatch(MotionEvent& event){
+    const int action = getActionMasked();//nativeGetAction(mNativePtr);
+    if ((action != ACTION_MOVE) && (action != ACTION_HOVER_MOVE)) {
+        return false;
+    }
+    if (action != event.getActionMasked()){//nativeGetAction(event.mNativePtr)) {
+        return false;
+    }
+
+    if ((getDeviceId() != event.getDeviceId())
+            || (getSource() != event.getSource())
+            || (getFlags() != event.getFlags())) {
+        return false;
+    }
+
+    const int pointerCount = getPointerCount();
+    if (pointerCount != event.getPointerCount()) {
+        return false;
+    }
+
+    /*nchronized (gSharedTempLock)*/{
+        ensureSharedTempPointerCapacity(std::max(pointerCount, 2));
+        PointerProperties* pp = gSharedTempPointerProperties.data();
+        PointerCoords* pc = gSharedTempPointerCoords.data();
+
+        for (int i = 0; i < pointerCount; i++) {
+            getPointerProperties(i, pp[0]);
+            event.getPointerProperties(i, pp[1]);
+            if (pp[0]!=(pp[1])) {
+                return false;
+            }
+        }
+
+        const int metaState = event.getMetaState();
+        const int historySize = event.getHistorySize();
+        for (int h = 0; h <= historySize; h++) {
+            const int historyPos = (h == historySize ? HISTORY_CURRENT : h);
+
+            for (int i = 0; i < pointerCount; i++) {
+                event.getHistoricalPointerCoords(i, historyPos, pc[i]);
+            }
+
+            const long eventTimeNanos = event.getHistoricalEventTimeNanos(historyPos);
+            //nativeAddBatch(mNativePtr, eventTimeNanos, pc, metaState);
+            addSample(eventTimeNanos,pc);
+            setMetaState(metaState|getMetaState());
+        }
+    }
+    return true;
 }
 
 float MotionEvent::getHistoricalRawAxisValue(int32_t axis, size_t pointerIndex,
