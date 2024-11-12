@@ -6187,6 +6187,18 @@ bool View::dispatchUnhandledMove(View* focused,int direction){
     return false;
 }
 
+bool View::onKeyPreIme(int keyCode, KeyEvent& event){
+    return false;
+}
+
+bool View::onKeyShortcut(int keyCode, KeyEvent& event){
+    return false;
+}
+
+bool View::onCheckIsTextEditor(){
+    return false;
+}
+
 bool View::onKeyDown(int keyCode,KeyEvent& evt){
     if (KeyEvent::isConfirmKey(keyCode)) {
         if ((mViewFlags & ENABLED_MASK) == DISABLED)return true;

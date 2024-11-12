@@ -2369,6 +2369,11 @@ void AbsListView::onTouchModeChanged(bool isInTouchMode) {
     }
 }
 
+bool AbsListView::handleScrollBarDragging(MotionEvent& event) {
+    // Doesn't support normal scroll bar dragging. Use FastScroller.
+    return false;
+}
+
 bool AbsListView::onTouchEvent(MotionEvent& ev) {
     if (!isEnabled()) {
         // A disabled view that is clickable still consumes the touch

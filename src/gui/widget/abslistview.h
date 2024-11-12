@@ -311,6 +311,7 @@ protected:
     void keyPressed();
     void invokeOnItemScrollListener();
     bool performStylusButtonPressAction(MotionEvent& ev);
+    bool handleScrollBarDragging(MotionEvent& event)override;
     bool performLongPress(View* child,int longPressPosition,long longPressId);
     bool performLongPress(View* child,int longPressPosition,long longPressId,int x,int y);
     ViewGroup::LayoutParams*generateDefaultLayoutParams()const override;

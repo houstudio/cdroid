@@ -693,7 +693,7 @@ protected:
     virtual int getSuggestedMinimumWidth();
     virtual int getSuggestedMinimumHeight();
     void setMeasuredDimension(int measuredWidth, int measuredHeight);
-    bool handleScrollBarDragging(MotionEvent& event);
+    virtual bool handleScrollBarDragging(MotionEvent& event);
     bool performButtonActionOnTouchDown(MotionEvent&);
     virtual bool updateLocalSystemUiVisibility(int localValue, int localChanges);
 
@@ -1149,10 +1149,13 @@ public:
     virtual bool dispatchKeyEvent(KeyEvent&event);
     virtual View* dispatchUnhandledKeyEvent(KeyEvent& evt);
     virtual bool dispatchUnhandledMove(View* focused,int direction);
+    virtual bool onKeyPreIme(int keyCode, KeyEvent& event);
+    virtual bool onKeyShortcut(int keyCode, KeyEvent& event);
     bool onKeyUp(int keycode,KeyEvent& evt)override;
     bool onKeyDown(int keycode,KeyEvent& evt)override;
     bool onKeyLongPress(int keyCode, KeyEvent& event)override;
     bool onKeyMultiple(int keyCode, int count, KeyEvent& event)override;
+    virtual bool onCheckIsTextEditor();
     virtual bool onUnhandledKeyEvent(KeyEvent& event);
     virtual bool hasUnhandledKeyListener()const;
     void addOnUnhandledKeyEventListener(OnUnhandledKeyEventListener listener);
