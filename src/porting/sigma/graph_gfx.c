@@ -335,6 +335,7 @@ static int setfbinfo(FBSURFACE*surf) {
     LOGD("FBIOPUT_VSCREENINFO=%d",rc);
     return rc;
 }
+
 static FBSURFACE*getFreeFace(){
     for(int i=0;i<sizeof(devSurfaces)/sizeof(FBSURFACE);i++){
         if(!devSurfaces[i].used){
@@ -345,7 +346,7 @@ static FBSURFACE*getFreeFace(){
     return NULL;
 }
 
-int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,BOOL hwsurface) {
+int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,bool hwsurface) {
     FBSURFACE*surf=getFreeFace();
     FBDEVICE*dev = &devs[dispid];
     surf->dispid = dispid;
