@@ -4289,8 +4289,7 @@ View& View::setFlags(int flags,int mask) {
 
     // If focusable is auto, update the FOCUSABLE bit.
     int focusableChangedByAuto = 0;
-    if (((mViewFlags & FOCUSABLE_AUTO) != 0)
-            && (changed & (FOCUSABLE_MASK | CLICKABLE)) != 0) {
+    if ((mViewFlags & FOCUSABLE_AUTO) && (changed & (FOCUSABLE_MASK | CLICKABLE))) {
         // Heuristic only takes into account whether view is clickable.
         int newFocus=(mViewFlags & CLICKABLE)?FOCUSABLE:NOT_FOCUSABLE;
         mViewFlags = (mViewFlags & ~FOCUSABLE) | newFocus;
@@ -4299,8 +4298,8 @@ View& View::setFlags(int flags,int mask) {
     }
 
     /* Check if the FOCUSABLE bit has changed */
-    if (((changed & FOCUSABLE) != 0) && ((privateFlags & PFLAG_HAS_BOUNDS) != 0)) {
-        if (((old & FOCUSABLE) == FOCUSABLE) && ((privateFlags & PFLAG_FOCUSED) != 0)) {
+    if ((changed & FOCUSABLE) && (privateFlags & PFLAG_HAS_BOUNDS)) {
+        if (((old & FOCUSABLE) == FOCUSABLE) && (privateFlags & PFLAG_FOCUSED)) {
             /* Give up focus if we are no longer focusable */
             clearFocus();
             mParent->clearFocusedInCluster();
