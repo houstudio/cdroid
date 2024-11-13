@@ -156,6 +156,7 @@ protected:
         IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS = 0x00000004,
         IMPORTANT_FOR_ACCESSIBILITY_DEFAULT = IMPORTANT_FOR_ACCESSIBILITY_AUTO,
         PFLAG2_ACCESSIBILITY_FOCUSED   = 0x04000000 ,
+        PFLAG2_SUBTREE_ACCESSIBILITY_STATE_CHANGED =0x8000000,
         PFLAG2_VIEW_QUICK_REJECTED     = 0x10000000 ,
         PFLAG2_PADDING_RESOLVED        = 0x20000000 ,
         PFLAG2_DRAWABLE_RESOLVED       = 0x40000000 ,
@@ -528,6 +529,7 @@ private:
     void cleanupDraw();
     void invalidateInternal(int l, int t, int r, int b, bool invalidateCache,bool fullInvalidate);
     View* findAccessibilityFocusHost(bool searchDescendants);
+    bool hasListenersForAccessibility() const;
 protected:
     static bool sIgnoreMeasureCache;
     static bool sAlwaysRemeasureExactly;
@@ -728,7 +730,7 @@ protected:
     virtual void onDrawScrollBars(Canvas& canvas);
     void onDrawHorizontalScrollBar(Canvas& canvas, Drawable* scrollBar,const Rect&);
     void onDrawVerticalScrollBar (Canvas& canvas , Drawable* scrollBar,const Rect&);
-
+    void resetSubtreeAccessibilityStateChanged();
     void ensureTransformationInfo();
 public:
     View(Context*ctx,const AttributeSet&attrs);
@@ -976,6 +978,9 @@ public:
     int getBackgroundTintMode() const;
     const ColorStateList* getBackgroundTintList()const;
     virtual int getSolidColor()const;
+
+    bool isActionableForAccessibility()const;
+    void setTransitionVisibility(int visibility);
 
     bool isTemporarilyDetached()const;
     virtual void dispatchStartTemporaryDetach();

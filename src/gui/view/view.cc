@@ -3401,6 +3401,23 @@ std::string View::getContentDescription()const{
     return mContentDescription;
 }
 
+bool View::isActionableForAccessibility()const{
+    return (isClickable() || isLongClickable() || isFocusable());
+}
+
+bool View::hasListenersForAccessibility() const{
+    ListenerInfo* info = mListenerInfo;
+    return mTouchDelegate || (info&&(info->mOnKeyListener || info->mOnTouchListener 
+            || info->mOnGenericMotionListener || info->mOnHoverListener /*|| info->mOnDragListener*/));
+}
+void View::setTransitionVisibility(int visibility){
+    mViewFlags = (mViewFlags & ~View::VISIBILITY_MASK) | visibility;
+}
+
+void View::resetSubtreeAccessibilityStateChanged(){
+    mPrivateFlags2 &= ~PFLAG2_SUBTREE_ACCESSIBILITY_STATE_CHANGED;
+}
+
 bool View::isTemporarilyDetached()const{
     return (mPrivateFlags3 & PFLAG3_TEMPORARY_DETACH) != 0;
 }
@@ -5577,10 +5594,10 @@ bool View::isImportantForAccessibility()const{
         parent = parent->getParent();
     }
 
-    return mode == IMPORTANT_FOR_ACCESSIBILITY_YES;
-/*	    || isActionableForAccessibility()
-        || hasListenersForAccessibility() || getAccessibilityNodeProvider() != null
-        || getAccessibilityLiveRegion() != ACCESSIBILITY_LIVE_REGION_NONE || isAccessibilityPane();*/
+    return (mode == IMPORTANT_FOR_ACCESSIBILITY_YES)
+	    || isActionableForAccessibility()
+        || hasListenersForAccessibility() /*|| getAccessibilityNodeProvider() != null
+        || getAccessibilityLiveRegion() != ACCESSIBILITY_LIVE_REGION_NONE || isAccessibilityPane()*/;
 }
 
 bool View::hasAncestorThatBlocksDescendantFocus()const{
