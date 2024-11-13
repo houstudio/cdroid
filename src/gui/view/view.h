@@ -1209,10 +1209,10 @@ public:
     bool resolveRtlPropertiesIfNeeded();
     void resetRtlProperties();
     
-    void dispatchScreenStateChanged(int screenState);
-    void onScreenStateChanged(int screenState);
-    void dispatchMovedToDisplay(Display& display, Configuration& config);
-    void onMovedToDisplay(int displayId, Configuration& config);
+    virtual void dispatchScreenStateChanged(int screenState);
+    virtual void onScreenStateChanged(int screenState);
+    virtual void dispatchMovedToDisplay(Display& display, Configuration& config);
+    virtual void onMovedToDisplay(int displayId, Configuration& config);
 
     void resetResolvedTextDirection();
     void resetResolvedLayoutDirection();

@@ -186,6 +186,8 @@ protected:
     bool hasFocusableChild(bool dispatchExplicit)const;
     MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child)const;
     void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
+    void dispatchScreenStateChanged(int screenState)override;
+    void dispatchMovedToDisplay(Display& display, Configuration& config)override;
     void dispatchWindowVisibilityChanged(int visibility)override;
     bool dispatchVisibilityAggregated(bool isVisible)override;
     void dispatchConfigurationChanged(Configuration& newConfig)override;

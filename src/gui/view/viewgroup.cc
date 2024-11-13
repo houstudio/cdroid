@@ -620,6 +620,20 @@ void ViewGroup::dispatchAttachedToWindow(AttachInfo* info, int visibility){
      }
 }
 
+void ViewGroup::dispatchScreenStateChanged(int screenState) {
+    View::dispatchScreenStateChanged(screenState);
+    for (auto child:mChildren) {
+        child->dispatchScreenStateChanged(screenState);
+    }
+}
+
+void ViewGroup::dispatchMovedToDisplay(Display& display, Configuration& config) {
+    View::dispatchMovedToDisplay(display, config);
+
+    for (auto child:mChildren) {
+        child->dispatchMovedToDisplay(display, config);
+    }
+}
 bool ViewGroup::dispatchGenericPointerEvent(MotionEvent& event) {
     // Send the event to the child under the pointer.
     const int childrenCount = (int)mChildren.size();
