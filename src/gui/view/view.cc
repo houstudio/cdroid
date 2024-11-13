@@ -1277,7 +1277,7 @@ void View::transformFromViewToWindowSpace(int*inOutLocation){
     inOutLocation[1]=(int)position[1];
 }
 
-void View::mapRectFromViewToScreenCoords(Rect& rect, bool clipToParent){
+void View::mapRectFromViewToScreenCoords(RectF& rect, bool clipToParent){
     if (!hasIdentityMatrix()) {
         getMatrix().transform_rectangle((RectangleInt&)rect);//mapRect(rect);
     }
@@ -1289,10 +1289,10 @@ void View::mapRectFromViewToScreenCoords(Rect& rect, bool clipToParent){
         rect.offset(-parentView->mScrollX, -parentView->mScrollY);
 
         if (clipToParent) {
-            rect.left = std::max(rect.left, 0);
-            rect.top  = std::max(rect.top, 0);
-            rect.width= std::min(rect.width,parentView->getWidth());//rect.right = std::min(rect.right, parentView->getWidth());
-            rect.height=std::min(rect.height,parentView->getHeight());//rect.bottom = std::min(rect.bottom, parentView->getHeight());
+            rect.left = std::max(rect.left, 0.f);
+            rect.top  = std::max(rect.top, 0.f);
+            rect.width= std::min(rect.width,(float)parentView->getWidth());//rect.right = std::min(rect.right, parentView->getWidth());
+            rect.height=std::min(rect.height,(float)parentView->getHeight());//rect.bottom = std::min(rect.bottom, parentView->getHeight());
         }
         if (!parentView->hasIdentityMatrix()) {
             parentView->getMatrix().transform_rectangle((RectangleInt&)rect);//mapRect(rect);
@@ -6679,7 +6679,7 @@ void View::getBoundsOnScreen(Rect& outRect, bool clipToParent) {
     if (mAttachInfo == nullptr) {
         return;
     }
-    Rect position;// = mAttachInfo->mTmpTransformRect;
+    RectF position;
     position.set(0, 0, mRight - mLeft, mBottom - mTop);
     mapRectFromViewToScreenCoords(position, clipToParent);
     outRect.set(static_cast<int>(std::round(position.left)), static_cast<int>(std::round(position.top)),

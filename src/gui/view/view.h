@@ -1009,7 +1009,7 @@ public:
     int getHorizontalFadingEdgeLength();
     void setFadingEdgeLength(int length);
     void transformFromViewToWindowSpace(int*);
-    void mapRectFromViewToScreenCoords(Rect& rect, bool clipToParent);
+    void mapRectFromViewToScreenCoords(RectF& rect, bool clipToParent);
     void getLocationOnScreen(int*);
     void getLocationInWindow(int*);
     bool startNestedScroll(int axes);
