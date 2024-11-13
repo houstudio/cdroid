@@ -1208,6 +1208,12 @@ public:
     static bool isLayoutModeOptical(View*);
     bool resolveRtlPropertiesIfNeeded();
     void resetRtlProperties();
+    
+    void dispatchScreenStateChanged(int screenState);
+    void onScreenStateChanged(int screenState);
+    void dispatchMovedToDisplay(Display& display, Configuration& config);
+    void onMovedToDisplay(int displayId, Configuration& config);
+
     void resetResolvedTextDirection();
     void resetResolvedLayoutDirection();
     void resetResolvedPaddingInternal();
@@ -1306,6 +1312,7 @@ public:
     int mSystemUiVisibility;
     int mDisabledSystemUiVisibility;
     int mGlobalSystemUiVisibility;
+    int mDisplayState;
     Rect mOverscanInsets;
     Rect mContentInsets;
     Rect mVisibleInsets;
@@ -1328,7 +1335,6 @@ public:
     bool mKeepScreenOn;
     bool mHasSystemUiListeners;
     bool mDebugLayout;
-    bool mDisplayState;/*true display is on*/
     UIEventSource*mEventSource;
     std::function<void(int)>mPlaySoundEffect;
     std::function<bool(int,bool)>mPerformHapticFeedback;

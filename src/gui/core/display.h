@@ -59,6 +59,13 @@ public:
         ROTATION_180,
         ROTATION_270
     };
+    static constexpr int STATE_UNKNOWN = 0;//ViewProtoEnums.DISPLAY_STATE_UNKNOWN;
+    static constexpr int STATE_OFF = 1;//ViewProtoEnums.DISPLAY_STATE_OFF;
+    static constexpr int STATE_ON  = 2;//ViewProtoEnums.DISPLAY_STATE_ON; 
+    static constexpr int STATE_DOZE= 3;//ViewProtoEnums.DISPLAY_STATE_DOZE;
+    static constexpr int STATE_SUSPEND= 4;//ViewProtoEnums.DISPLAY_STATE_SUSPEND;
+    static constexpr int STATE_VR= 5;//ViewProtoEnums.DISPLAY_STATE_VR;
+    static constexpr int STATE_ON_SUSPEND=6;//ViewProtoEnums.DISPLAY_STATE_ON_SUSPEND;
 private:
     void updateDisplayInfoLocked();   
 public:
@@ -70,6 +77,7 @@ public:
     void getSize(Point&outSize);
     void getRealSize(Point&outSize);
     int  getRotation();
+    int getState();
     void getMetrics(DisplayMetrics&outMetrics);
     void getRealMetrics(DisplayMetrics&outMetrics);
 };

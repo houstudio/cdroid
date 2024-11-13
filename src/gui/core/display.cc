@@ -48,6 +48,11 @@ void Display::getRealSize(Point&outSize){
     GFXGetDisplaySize(mDisplayId,(uint32_t*)&outSize.x,(uint32_t*)&outSize.y);
 }
 
+int Display::getState(){
+    updateDisplayInfoLocked();
+    return mDisplayInfo.state;
+}
+
 int Display::getRotation(){
     updateDisplayInfoLocked();
     return mDisplayInfo.rotation;

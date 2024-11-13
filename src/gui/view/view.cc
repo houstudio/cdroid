@@ -4819,9 +4819,11 @@ void View::setPressed(bool pressed){
         mPrivateFlags |= PFLAG_PRESSED;
     else 
         mPrivateFlags &= ~PFLAG_PRESSED;
-    if (needsRefresh)
-        refreshDrawableState();
-    dispatchSetPressed(pressed);
+    if(mAttachInfo){
+        if (needsRefresh)
+            refreshDrawableState();
+        dispatchSetPressed(pressed);
+    }
 }
 
 void View::setPressed(bool pressed,float x,float y){
@@ -6945,10 +6947,10 @@ bool View::onTouchEvent(MotionEvent& event){
                     if(!post(mPerformClick))performClickInternal();
                 }
             }
+            if(mUnsetPressedState == nullptr){
+                mUnsetPressedState =[this]{setPressed(false);};
+            }
             if(isAttachedToWindow()){
-                if(mUnsetPressedState == nullptr){
-                    mUnsetPressedState=[this]{setPressed(false);};
-                }
                 postDelayed(mUnsetPressedState,ViewConfiguration::getPressedStateDuration());
                 removeTapCallback();
             }
@@ -7105,6 +7107,24 @@ bool View::isLayoutValid()const{
 
 bool View::isLayoutRequested()const{
     return (mPrivateFlags & PFLAG_FORCE_LAYOUT) == PFLAG_FORCE_LAYOUT;
+}
+
+void View::dispatchScreenStateChanged(int screenState){
+     onScreenStateChanged(screenState);
+}
+
+void View::onScreenStateChanged(int screenState) {
+    //NOTHING
+}
+
+void View::dispatchMovedToDisplay(Display& display, Configuration& config){
+    mAttachInfo->mDisplay = &display;
+    mAttachInfo->mDisplayState = display.getState();
+    onMovedToDisplay(display.getDisplayId(), config);
+}
+
+void View::onMovedToDisplay(int displayId, Configuration& config){
+     //NOTHING
 }
 
 bool View::hasRtlSupport()const{
