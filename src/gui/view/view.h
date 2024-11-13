@@ -913,7 +913,7 @@ public:
     bool  willNotDraw()const;
     void  setWillNotDraw(bool willNotDraw);
     const Rect getClientRect()const;
-    bool  hasClickListener()const;
+    bool  hasOnClickListener()const;
     virtual void setOnClickListener(OnClickListener l);
     virtual void setOnLongClickListener(OnLongClickListener l);
     void setOnContextClickListener(OnContextClickListener l);

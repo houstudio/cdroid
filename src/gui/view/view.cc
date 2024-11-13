@@ -2445,8 +2445,8 @@ void View::setOnClickListener(OnClickListener l){
     getListenerInfo()->mOnClickListener=l;
 }
 
-bool View::hasClickListener()const{
-    return mListenerInfo&&mListenerInfo->mOnClickListener!=nullptr;
+bool View::hasOnClickListener()const{
+    return mListenerInfo&&(mListenerInfo->mOnClickListener!=nullptr);
 }
 
 void View::setOnLongClickListener(OnLongClickListener l){
@@ -2506,7 +2506,7 @@ static bool operator == (const View::OnAttachStateChangeListener& left, const Vi
 }
 
 void View::removeOnAttachStateChangeListener(OnAttachStateChangeListener listener) {
-    if (mListenerInfo == nullptr || mListenerInfo->mOnAttachStateChangeListeners.empty()) {
+    if ((mListenerInfo == nullptr) || mListenerInfo->mOnAttachStateChangeListeners.empty()) {
         return;
     }
     std::vector<OnAttachStateChangeListener>&ls = mListenerInfo->mOnAttachStateChangeListeners;
