@@ -429,6 +429,7 @@ View::~View(){
     if(isAttachedToWindow())onDetachedFromWindow();
     if(mBackground)mBackground->setCallback(nullptr);
 
+    delete mTouchDelegate;
     delete mKeyedTags;
     delete mForegroundInfo;
     delete mPendingCheckForTap;
@@ -6746,6 +6747,8 @@ void View::removeUnsetPressCallback() {
 }
 
 void View::setTouchDelegate(TouchDelegate*delegate){
+    if(mTouchDelegate)
+        delete mTouchDelegate;
     mTouchDelegate = delegate;
 }
 
