@@ -4442,15 +4442,15 @@ View& View::setFlags(int flags,int mask) {
             mPrivateFlags &= ~PFLAG_SKIP_DRAW;
         }
         requestLayout();
-        invalidate();
+        invalidate(true);
     }
-#if 0
     if ((changed & KEEP_SCREEN_ON) != 0) {
-        if (mParent != null && mAttachInfo != null && !mAttachInfo.mRecomputeGlobalAttributes) {
-            mParent.recomputeViewAttributes(this);
+        if (mParent && mAttachInfo && !mAttachInfo->mRecomputeGlobalAttributes) {
+            mParent->recomputeViewAttributes(this);
         }
     }
 
+#if 0
     if (accessibilityEnabled) {
         // If we're an accessibility pane and the visibility changed, we already have sent
         // a state change, so we really don't need to report other changes.
@@ -4470,7 +4470,6 @@ View& View::setFlags(int flags,int mask) {
         }
     }
 #endif
-    invalidate(true);
     return *this;
 }
 

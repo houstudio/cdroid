@@ -49,6 +49,15 @@ TEST_F(EVENT,Alloc_Free){
    }
 }
 
+TEST_F(EVENT,Time){
+    PointerCoords coords[2];
+    PointerProperties props[2];
+    nsecs_t mMoveTime=SystemClock::uptimeMillis();
+    MotionEvent*e=MotionEvent::obtain(mMoveTime , mMoveTime , 0 , 1,props,coords, 0/*metaState*/,0,
+                 0,0/*x/yPrecision*/,0/*deviceId*/, 0/*edgeFlags*/, 0, 0/*flags*/);
+    ASSERT_EQ(mMoveTime,e->getEventTime());
+}
+
 TEST_F(EVENT,EventPool){
     PooledInputEventFactory pool(32);
     PointerCoords coords[128];
