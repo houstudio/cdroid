@@ -848,6 +848,8 @@ public:
     void refreshDrawableState();
     bool isDefaultFocusHighlightNeeded(const Drawable* background,const Drawable* foreground)const;
     virtual const std::vector<int>getDrawableState();
+    bool getKeepScreenOn()const;
+    void setKeepScreenOn(bool);
 
     int getNextFocusLeftId()const;
     View& setNextFocusLeftId(int id);
@@ -859,6 +861,8 @@ public:
     View& setNextFocusDownId(int id);
     int getNextFocusForwardId()const;
     View& setNextFocusForwardId(int id);
+    int getNextClusterForwardId()const;
+    View& setNextClusterForwardId(int);
 
     int getScrollBarSize()const;
     View& setScrollBarSize(int scrollBarSize);

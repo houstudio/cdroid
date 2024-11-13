@@ -3237,6 +3237,14 @@ bool View::isViewIdGenerated(int id){
     return (id&0xFF000000)==0xFF000000;
 }
 
+bool View::getKeepScreenOn()const{
+    return (mViewFlags & KEEP_SCREEN_ON) != 0;
+}
+
+void View::setKeepScreenOn(bool keepScreenOn){
+    setFlags(keepScreenOn ? KEEP_SCREEN_ON : 0, KEEP_SCREEN_ON);
+}
+
 int View::getNextFocusLeftId()const{
     return mNextFocusLeftId;
 }
@@ -3281,7 +3289,16 @@ View& View::setNextFocusForwardId(int id){
     mNextFocusForwardId = id;
     return *this;
 }
-    
+
+int View::getNextClusterForwardId()const {
+    return mNextClusterForwardId;
+}
+
+View& View::setNextClusterForwardId(int nextClusterForwardId){
+    mNextClusterForwardId = nextClusterForwardId;
+    return *this;
+}
+
 bool View::hasPointerCapture()const{
     ViewGroup* viewRootImpl = getRootView();//getViewRootImpl();
     if (viewRootImpl == nullptr) {
@@ -4477,10 +4494,6 @@ bool View::isDuplicateParentStateEnabled()const{
     return (mViewFlags & DUPLICATE_PARENT_STATE) == DUPLICATE_PARENT_STATE;
 }
 
-bool View::isFocused()const {
-    return (mPrivateFlags & PFLAG_FOCUSED) != 0;
-}
-
 bool View::isInEditMode()const{
     return false;
 }
@@ -4776,6 +4789,10 @@ void View::resetPressedState(){
         setPressed(false);
         if (!mHasPerformedLongPress) removeLongPressCallback();
     }
+}
+
+bool View::isFocused()const {
+    return (mPrivateFlags & PFLAG_FOCUSED) != 0;
 }
 
 void View::setPressed(bool pressed){
