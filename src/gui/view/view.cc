@@ -46,13 +46,13 @@ int View::mViewCount = 0;
 View::View(int w,int h){
     initView();
     mContext=&App::getInstance();
-
     mRight  = w;
     mBottom = h;
     mLeft = mTop =0;
     setBackgroundColor(0xFF000000);
     if(ViewConfiguration::isScreenRound())
         mRoundScrollbarRenderer = new RoundScrollbarRenderer(this);
+    mTouchSlop = ViewConfiguration::get(mContext).getScaledTouchSlop();
 }
 
 View::View(Context*ctx,const AttributeSet&attrs){
@@ -113,6 +113,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
     // Set the text alignment flag depending on the value of the attribute
     mPrivateFlags2 |= (textAlignment<<PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT);
     //setTextAlignment( textAlignment );
+
+    mTouchSlop = ViewConfiguration::get(mContext).getScaledTouchSlop();
 
     setForegroundGravity( attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY) );
     setForegroundTintList(attrs.getColorStateList("foregroundTint"));
@@ -346,6 +348,7 @@ void View::initView(){
     mAnimator = nullptr;
     mRunQueue = nullptr;
     mTag = nullptr;
+    mTouchDelegate = nullptr;
     mStateListAnimator = nullptr;
     mPerformClick = nullptr;
     mPendingCheckForTap = nullptr;
@@ -6742,6 +6745,14 @@ void View::removeUnsetPressCallback() {
     }
 }
 
+void View::setTouchDelegate(TouchDelegate*delegate){
+    mTouchDelegate = delegate;
+}
+
+TouchDelegate*View::getTouchDelegate()const{
+    return mTouchDelegate;
+}
+
 bool View::handleScrollBarDragging(MotionEvent& event) {
     const float x = event.getX();
     const float y = event.getY();
@@ -6850,6 +6861,11 @@ bool View::onTouchEvent(MotionEvent& event){
         return clickable;
     }
 
+    if(mTouchDelegate){
+        if(mTouchDelegate->onTouchEvent(event)){
+            return true;
+        }
+    }
     if (!(clickable || (mViewFlags & TOOLTIP) == TOOLTIP))return false; 
 
     switch(action){
@@ -6918,7 +6934,7 @@ bool View::onTouchEvent(MotionEvent& event){
         if (clickable)drawableHotspotChanged(x, y);
 
         // Be lenient about moving outside of buttons
-        if (!pointInView(x, y,ViewConfiguration::get(mContext).getScaledTouchSlop())) {
+        if (!pointInView(x, y,mTouchSlop)) {
             // Outside button Remove any future long press/tap checks
             removeTapCallback();
             removeLongPressCallback();

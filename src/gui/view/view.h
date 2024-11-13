@@ -34,9 +34,10 @@
 #include <view/abssavedstate.h>
 #include <view/menu.h>
 #include <view/gravity.h>
-#include <view/layoutparams.h>
 #include <view/rendernode.h>
+#include <view/layoutparams.h>
 #include <view/windowinsets.h>
+#include <view/touchdelegate.h>
 #include <view/velocitytracker.h>
 #include <view/layoutinflater.h>
 #include <view/configuration.h>
@@ -422,6 +423,7 @@ private:
     int mNextFocusDownId;
     int mNextFocusForwardId;
     int mNextClusterForwardId;
+    int mTouchSlop;
     Insets mLayoutInsets;
  
     bool mInContextButtonPress;
@@ -438,6 +440,7 @@ private:
     InputEventConsistencyVerifier* mInputEventConsistencyVerifier;
     ViewTreeObserver* mFloatingTreeObserver;
     StateListAnimator* mStateListAnimator;
+    TouchDelegate*mTouchDelegate;
     ViewPropertyAnimator* mAnimator;
     ViewGroup* mNestedScrollingParent;
     std::map<uint64_t,uint64_t>mMeasureCache;
@@ -929,6 +932,8 @@ public:
     void getBoundsOnScreen(Rect& outRect, bool clipToParent=false);
     void cancelPendingInputEvents();
     void cancelLongPress();
+    void setTouchDelegate(TouchDelegate* delegate);
+    TouchDelegate* getTouchDelegate()const;
     bool  performContextClick(float x, float y);
     bool  performContextClick();
     virtual bool showContextMenu();

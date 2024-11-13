@@ -5,6 +5,7 @@ list(APPEND CDROID_SOURCES
     view/configuration.cc
     view/focusfinder.cc
     view/gravity.cc
+    view/touchdelegate.cc
     view/handleractionqueue.cc
     view/inputevent.cc
     view/inputeventconsistencyverifier.cc
