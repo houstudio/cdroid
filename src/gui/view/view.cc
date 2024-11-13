@@ -223,6 +223,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
     if(scrollIndicators) mPrivateFlags3 |= scrollIndicators;
     if(attrs.getBoolean("isScrollContainer",false)) setScrollContainer(true);
     setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled",false));
+    setKeyboardNavigationCluster(attrs.getBoolean("keyboardNavigationCluster", false));
+    setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
 
     if(viewFlagMasks)
         setFlags(viewFlagValues, viewFlagMasks);
@@ -247,7 +249,6 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setBackground(attrs.getDrawable("background"));
 
     setForeground(attrs.getDrawable("foreground"));
-    //setForegroundGravity(attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY));
     const int fgTintMode = Drawable::parseTintMode(attrs.getInt("foregroundTintMode",tintModes,PorterDuff::Mode::NOOP),PorterDuff::Mode::NOOP);
     setForegroundTintMode(fgTintMode);
     mForegroundInfo->mInsidePadding = attrs.getBoolean("foregroundInsidePadding",mForegroundInfo->mInsidePadding);
@@ -5763,6 +5764,14 @@ void View::setFocusable(int focusable){
 
 bool View::isFocusableInTouchMode()const{
     return FOCUSABLE_IN_TOUCH_MODE == (mViewFlags & FOCUSABLE_IN_TOUCH_MODE);
+}
+
+bool View::isSaveFromParentEnable()const{
+    return (mViewFlags & PARENT_SAVE_DISABLED_MASK) != PARENT_SAVE_DISABLED;
+}
+
+View& View::setSaveFromParentEnabled(bool _Enabled){
+    return setFlags(_Enabled ? 0 : PARENT_SAVE_DISABLED, PARENT_SAVE_DISABLED_MASK);
 }
 
 void View::setFocusableInTouchMode(bool focusableInTouchMode){

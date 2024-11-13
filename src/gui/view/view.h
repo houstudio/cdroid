@@ -672,6 +672,8 @@ protected:
     bool getFilterTouchesWhenObscured()const;
     View& setFilterTouchesWhenObscured(bool enabled);
     bool onFilterTouchEventForSecurity(MotionEvent& event);
+    bool isSaveFromParentEnable()const;
+    View& setSaveFromParentEnabled(bool);
     virtual bool dispatchHoverEvent(MotionEvent&event);
     virtual bool dispatchTrackballEvent(MotionEvent& event);
     virtual bool dispatchCapturedPointerEvent(MotionEvent& event);
