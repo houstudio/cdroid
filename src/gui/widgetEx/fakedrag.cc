@@ -90,7 +90,7 @@ void FakeDrag::beginFakeVelocityTracker() {
     }
 }
 
-void FakeDrag::addFakeMotionEvent(long time, int action, float x, float y) {
+void FakeDrag::addFakeMotionEvent(int64_t time, int action, float x, float y) {
     MotionEvent* ev = MotionEvent::obtain(mFakeDragBeginTime, time, action, x, y, 0);
     mVelocityTracker->addMovement(*ev);
     ev->recycle();

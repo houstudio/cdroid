@@ -296,7 +296,7 @@ template <typename T> int signum(T val) {
 }
 
 void EdgeEffect::updateSpring() {
-    long time = AnimationUtils::currentAnimationTimeMillis();
+    int64_t time = AnimationUtils::currentAnimationTimeMillis();
     float deltaT = (time - mStartTime) / 1000.f; // Convert from millis to seconds
     if (deltaT < 0.001f) {
         return; // Must have at least 1 ms difference

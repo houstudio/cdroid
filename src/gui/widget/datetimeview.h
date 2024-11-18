@@ -14,20 +14,20 @@ private:
     int mLastDisplay = -1;
     DateFormat mLastFormat;
 
-    long mUpdateTimeMillis;
+    int64_t mUpdateTimeMillis;
     //static final ThreadLocal<ReceiverInfo> sReceiverInfo = new ThreadLocal<ReceiverInfo>();
     std::string mNowText;
     bool mShowRelativeTime;
 private:
     void updateRelativeTime();
-    long computeNextMidnight(TimeZone timeZone);
+    int64_t computeNextMidnight(TimeZone timeZone);
 protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
     void update();
 public:
     DateTimeView(Context* context,const AttributeSet& attrs);
-    void setTime(long timeMillis);
+    void setTime(int64_t timeMillis);
     void setShowRelativeTime(bool showRelativeTime);
     void setVisibility(int visibility)override;
 };

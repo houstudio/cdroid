@@ -16,7 +16,7 @@ private:
     nsecs_t mFakeDragBeginTime;
 private:
     void beginFakeVelocityTracker();
-    void addFakeMotionEvent(long time, int action, float x, float y);
+    void addFakeMotionEvent(int64_t time, int action, float x, float y);
 public:
     FakeDrag(ViewPager2* viewPager, ScrollEventAdapter* scrollEventAdapter, RecyclerView* recyclerView);
     bool isFakeDragging();

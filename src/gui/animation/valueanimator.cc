@@ -479,8 +479,8 @@ bool ValueAnimator::isStarted() {
 void ValueAnimator::reverse() {
     if (isPulsingInternal()) {
         const int64_t currentTime = SystemClock::uptimeMillis();
-        const long currentPlayTime = static_cast<long>(currentTime - mStartTime);
-        const long timeLeft = getScaledDuration() - currentPlayTime;
+        const int64_t currentPlayTime = static_cast<long>(currentTime - mStartTime);
+        const int64_t timeLeft = getScaledDuration() - currentPlayTime;
         mStartTime = currentTime - timeLeft;
         mStartTimeCommitted = true; // do not allow start time to be compensated for jank
         mReversing = !mReversing;
