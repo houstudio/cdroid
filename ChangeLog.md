@@ -1,3 +1,8 @@
+# **V3.0.0
+  - Add CoordniatorLayout
+  - Windows port working
+  - add some losting fucntions
+  - add allwinner tina's porting
 # **V2.1.0**
   - Some bug fix.
   - add CMS(Color Manager System).

@@ -78,7 +78,7 @@ size_t FrameSequence::registerAllFrameSequences(std::map<const std::string,Regis
 }
 
 FrameSequence* FrameSequence::create(cdroid::Context*ctx,const std::string&resid) {
-    uint8_t header[32];
+    uint8_t header[32]={0};
     std::unique_ptr<std::istream>stream;
     if((mHeaderBytesRequired==0)||(mFactories.size()==0)){
         registerAllFrameSequences(mFactories);
