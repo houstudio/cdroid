@@ -53,7 +53,7 @@ private:
     CallbackRecord* obtainCallbackLocked(int64_t dueTime,void* action,void* token);
     void recycleCallbackLocked(CallbackRecord* callback);
     int removeCallbacksInternal(int callbackType,void* action, void* token);
-    void postCallbackDelayedInternal(int callbackType,void* action, void* token, long delayMillis);
+    void postCallbackDelayedInternal(int callbackType,void* action, void* token, int64_t delayMillis);
     void scheduleFrameLocked(int64_t);
 protected:
     int checkEvents()override;
@@ -64,7 +64,7 @@ public:
     static Choreographer& getInstance();
     static long getFrameDelay();
     static void setFrameDelay(long frameDelay);
-    static long subtractFrameDelay(long delayMillis);
+    static int64_t subtractFrameDelay(long delayMillis);
     nsecs_t getFrameTimeNanos()const;
     nsecs_t getLastFrameTimeNanos()const;
     long getFrameTime()const;

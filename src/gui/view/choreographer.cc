@@ -49,8 +49,8 @@ long Choreographer::getFrameTime()const{
     return getFrameTimeNanos()/SystemClock::NANOS_PER_MS;
 }
 
-long Choreographer::subtractFrameDelay(long delayMillis) {
-    const long frameDelay = sFrameDelay;
+int64_t Choreographer::subtractFrameDelay(long delayMillis) {
+    const int64_t frameDelay = sFrameDelay;
     return delayMillis <= frameDelay ? 0 : delayMillis - frameDelay;
 }
 
@@ -97,7 +97,7 @@ void Choreographer::recycleCallbackLocked(CallbackRecord* callback) {
     mCallbackPool   = callback;
 }
 
-void Choreographer::postCallbackDelayedInternal(int callbackType,void* action, void* token, long delayMillis){
+void Choreographer::postCallbackDelayedInternal(int callbackType,void* action, void* token, int64_t delayMillis){
     LOGV("type=%d ,action=%p,token=%p ,delayMillis=%d",callbackType,action,token,delayMillis);
 
     const auto now = SystemClock::uptimeMillis();
