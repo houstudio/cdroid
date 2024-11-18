@@ -33,9 +33,9 @@ private:
     OnDaySelectedListener mOnDaySelectedListener;
 private:
     void updateButtonVisibility(int position);
-    void setDate(long timeInMillis, bool animate, bool setSelected);
+    void setDate(int64_t timeInMillis, bool animate, bool setSelected);
     int getDiffMonths(Calendar& start, Calendar& end);
-    int getPositionFromDay(long timeInMillis);
+    int getPositionFromDay(int64_t timeInMillis);
     Calendar getTempCalendarForTime(long timeInMillis);
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
@@ -47,16 +47,16 @@ public:
     const std::string getDayOfWeekTextAppearance();
     void  setDayTextAppearance(const std::string& resId);
     const std::string getDayTextAppearance();
-    void setDate(long timeInMillis);
-    void setDate(long timeInMillis, bool animate);
+    void setDate(int64_t timeInMillis);
+    void setDate(int64_t timeInMillis, bool animate);
     long getDate();
     bool getBoundsForDate(long timeInMillis,Rect& outBounds);
     void setFirstDayOfWeek(int firstDayOfWeek);
     int getFirstDayOfWeek();
-    void setMinDate(long timeInMillis);
-    long getMinDate();
-    void setMaxDate(long timeInMillis);
-    long getMaxDate();
+    void setMinDate(int64_t timeInMillis);
+    int64_t getMinDate();
+    void setMaxDate(int64_t timeInMillis);
+    int64_t getMaxDate();
     void onRangeChanged();
     void setOnDaySelectedListener(OnDaySelectedListener listener);
     int getMostVisiblePosition();

@@ -51,8 +51,8 @@ private:
     float mCurrSpanY;
     float mPrevSpanX;
     float mPrevSpanY;
-    long mCurrTime;
-    long mPrevTime;
+    int64_t mCurrTime;
+    int64_t mPrevTime;
     bool mInProgress;
     int mSpanSlop;
     int mMinSpan;
@@ -224,7 +224,7 @@ public:
      *
      * @return Current event time in milliseconds.
      */
-    long getEventTime() const;
+    int64_t getEventTime() const;
 };
 }/*endof namespace*/
 #endif/*__SCALE_GESTURE_DETECTOR_H__*/

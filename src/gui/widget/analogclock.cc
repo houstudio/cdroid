@@ -359,7 +359,7 @@ void AnalogClock::onTimeChanged() {
     onTimeChanged(mCalendar.getTime());//toEpochMilli());
 }
 
-void AnalogClock::onTimeChanged(/*LocalTime localTime,*/long nowMillis){
+void AnalogClock::onTimeChanged(/*LocalTime localTime,*/int64_t nowMillis){
     float previousHour = mHour;
     float previousMinutes = mMinutes;
 #if 0

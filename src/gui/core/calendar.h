@@ -112,7 +112,7 @@ private:
 protected:
     int fields[FIELD_COUNT];
     bool bisSet[FIELD_COUNT];
-    long mTime;
+    int64_t mTime;
     bool isTimeSet;
     bool areFieldsSet;
     bool areAllFieldsSet;
@@ -134,9 +134,9 @@ public:
     Calendar();
     Calendar& set(int field, int value);
     /*set UTC Time in seconds from epoch*/
-    void setTime(long millisecond);
+    void setTime(int64_t millisecond);
     /*return the current time as UTC seconds from the epoch*/
-    long getTime();
+    int64_t getTime();
     void setTimeZone(int zone);
     int getTimeZone();
     void set(int year, int month, int date);
@@ -159,8 +159,8 @@ public:
     int getMinimalDaysInFirstWeek();
     void setMinimalDaysInFirstWeek(int value);
     int get(int);
-    long getTimeInMillis();
-    void setTimeInMillis(long millis);
+    int64_t getTimeInMillis();
+    void setTimeInMillis(int64_t millis);
     bool after(const Calendar&other)const;
     bool before(const Calendar&other)const;
 };

@@ -315,7 +315,7 @@ void AutoScrollHelper::ClampedScroller::start() {
 
 
 void AutoScrollHelper::ClampedScroller::requestStop() {
-    long currentTime = AnimationUtils::currentAnimationTimeMillis();
+    int64_t currentTime = AnimationUtils::currentAnimationTimeMillis();
     mEffectiveRampDown = constrain((int) (currentTime - mStartTime), 0, mRampDownDuration);
     mStopValue = getValueAt(currentTime);
     mStopTime = currentTime;
@@ -330,10 +330,10 @@ float AutoScrollHelper::ClampedScroller::getValueAt(long currentTime) {
     if (currentTime < mStartTime) {
         return .0f;
     } else if (mStopTime < 0 || currentTime < mStopTime) {
-        long elapsedSinceStart = currentTime - mStartTime;
+        int64_t elapsedSinceStart = currentTime - mStartTime;
         return 0.5f * constrain(elapsedSinceStart / (float) mRampUpDuration, .0f, 1.f);
     } else {
-        long elapsedSinceEnd = currentTime - mStopTime;
+        int64_t elapsedSinceEnd = currentTime - mStopTime;
         return (1.f - mStopValue) + mStopValue
                 * constrain(elapsedSinceEnd / (float) mEffectiveRampDown, .0f, 1.f);
     }
@@ -348,10 +348,10 @@ void AutoScrollHelper::ClampedScroller::computeScrollDelta() {
         throw "Cannot compute scroll delta before calling start()";
     }
 
-    long currentTime = AnimationUtils::currentAnimationTimeMillis();
+    const int64_t currentTime = AnimationUtils::currentAnimationTimeMillis();
     float value = getValueAt(currentTime);
     float scale = interpolateValue(value);
-    long elapsedSinceDelta = currentTime - mDeltaTime;
+    int64_t elapsedSinceDelta = currentTime - mDeltaTime;
 
     mDeltaTime = currentTime;
     mDeltaX = (int) (elapsedSinceDelta * scale * mTargetVelocityX);

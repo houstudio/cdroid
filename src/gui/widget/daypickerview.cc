@@ -75,15 +75,15 @@ const std::string DayPickerView::getDayTextAppearance() {
     return mAdapter->getDayTextAppearance();
 }
 
-void DayPickerView::setDate(long timeInMillis) {
+void DayPickerView::setDate(int64_t timeInMillis) {
     setDate(timeInMillis, false);
 }
 
-void DayPickerView::setDate(long timeInMillis, bool animate) {
+void DayPickerView::setDate(int64_t timeInMillis, bool animate) {
     setDate(timeInMillis, animate, true);
 }
 
-void DayPickerView::setDate(long timeInMillis, bool animate, bool setSelected) {
+void DayPickerView::setDate(int64_t timeInMillis, bool animate, bool setSelected) {
     bool dateClamped = false;
     // Clamp the target day in milliseconds to the min or max if outside the range.
     if (timeInMillis < mMinDate.getTimeInMillis()) {
@@ -108,11 +108,11 @@ void DayPickerView::setDate(long timeInMillis, bool animate, bool setSelected) {
     mAdapter->setSelectedDay(&mTempCalendar);
 }
 
-long DayPickerView::getDate() {
+int64_t DayPickerView::getDate() {
     return mSelectedDay.getTimeInMillis();
 }
 
-bool DayPickerView::getBoundsForDate(long timeInMillis,Rect& outBounds) {
+bool DayPickerView::getBoundsForDate(int64_t timeInMillis,Rect& outBounds) {
     int position = getPositionFromDay(timeInMillis);
     if (position != mViewPager->getCurrentItem()) {
         return false;
@@ -130,21 +130,21 @@ int DayPickerView::getFirstDayOfWeek() {
     return mAdapter->getFirstDayOfWeek();
 }
 
-void DayPickerView::setMinDate(long timeInMillis) {
+void DayPickerView::setMinDate(int64_t timeInMillis) {
     mMinDate.setTimeInMillis(timeInMillis);
     onRangeChanged();
 }
 
-long DayPickerView::getMinDate() {
+int64_t DayPickerView::getMinDate() {
     return mMinDate.getTimeInMillis();
 }
 
-void DayPickerView::setMaxDate(long timeInMillis) {
+void DayPickerView::setMaxDate(int64_t timeInMillis) {
     mMaxDate.setTimeInMillis(timeInMillis);
     onRangeChanged();
 }
 
-long DayPickerView::getMaxDate() {
+int64_t DayPickerView::getMaxDate() {
     return mMaxDate.getTimeInMillis();
 }
 
@@ -179,14 +179,14 @@ static int constrain(int amount, int low, int high) {//get the
     return amount < low ? low : (amount > high ? high : amount);
 }
 
-int DayPickerView::getPositionFromDay(long timeInMillis) {
+int DayPickerView::getPositionFromDay(int64_t timeInMillis) {
     Calendar ctmp=getTempCalendarForTime(timeInMillis);
     int diffMonthMax = getDiffMonths(mMinDate, mMaxDate);
     int diffMonth = getDiffMonths(mMinDate, ctmp);
     return constrain(diffMonth, 0, diffMonthMax);
 }
 
-Calendar DayPickerView::getTempCalendarForTime(long timeInMillis) {
+Calendar DayPickerView::getTempCalendarForTime(int64_t timeInMillis) {
     mTempCalendar.setTimeInMillis(timeInMillis);
     return mTempCalendar;
 }

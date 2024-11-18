@@ -264,7 +264,7 @@ long ScaleGestureDetector::getTimeDelta() const{
     return mCurrTime - mPrevTime;
 }
 
-long ScaleGestureDetector::getEventTime() const{
+int64_t ScaleGestureDetector::getEventTime() const{
     return mCurrTime;
 }
 }

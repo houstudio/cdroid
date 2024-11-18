@@ -32,13 +32,13 @@ bool Chronometer::isTheFinalCountDown()const{
 }
 
 
-void Chronometer::setBase(long base){
+void Chronometer::setBase(int64_t base){
     mBase = base;
     dispatchChronometerTick();
     updateText(SystemClock::elapsedRealtime());
 }
 
-long Chronometer::getBase()const {
+int64_t Chronometer::getBase()const {
     return mBase;
 }
 
@@ -78,9 +78,9 @@ void Chronometer::setStarted(bool started) {
     updateRunning();
 }
 
-void Chronometer::updateText(long now) {
+void Chronometer::updateText(int64_t now) {
     mNow = now;
-    long seconds = mCountDown ? mBase - now : now - mBase;
+    int64_t seconds = mCountDown ? mBase - now : now - mBase;
     seconds /= 1000;
     bool negative = false;
     if (seconds < 0) {

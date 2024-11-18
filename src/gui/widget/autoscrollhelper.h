@@ -31,9 +31,9 @@ private:
         float mTargetVelocityX;
         float mTargetVelocityY;
 
-        long mStartTime;
+        int64_t mStartTime;
 
-        long mDeltaTime;
+        int64_t mDeltaTime;
         int mDeltaX;
         int mDeltaY;
 

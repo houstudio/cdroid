@@ -12,10 +12,10 @@ namespace cdroid{
 class Chronometer:public TextView{
 public:
     DECLARE_UIEVENT(void,OnChronometerTickListener,Chronometer&);
-    DECLARE_UIEVENT(const std::string,Formatter,long);
+    DECLARE_UIEVENT(const std::string,Formatter,int64_t);
 private:
-    long mBase;
-    long mNow; // the currently displayed time
+    int64_t mBase;
+    int64_t mNow; // the currently displayed time
     bool mVisible;
     bool mStarted;
     bool mRunning;
@@ -27,9 +27,9 @@ private:
     bool mCountDown;
 private:
     void tickRunner();
-    void updateText(long now);
+    void updateText(int64_t now);
     void updateRunning();
-    static std::string formatDuration(long ms);
+    static std::string formatDuration(int64_t ms);
 protected:
     void dispatchChronometerTick();
 public:
@@ -38,8 +38,8 @@ public:
     void setCountDown(bool countDown);
     bool isCountDown()const;
     bool isTheFinalCountDown()const;
-    void setBase(long base);
-    long getBase()const;
+    void setBase(int64_t base);
+    int64_t getBase()const;
     void setFormat(const std::string& format);
     std::string getFormat()const;
     void setOnChronometerTickListener(OnChronometerTickListener listener);

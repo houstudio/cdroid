@@ -2938,7 +2938,7 @@ void View::draw(Canvas&canvas){
     if (debugDraw()) debugDrawFocus(canvas);
 }
 
-bool View::draw(Canvas&canvas,ViewGroup*parent,long drawingTime){
+bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
     const bool hardwareAcceleratedCanvas = false;
     bool drawingWithRenderNode = mAttachInfo && mAttachInfo->mHardwareAccelerated  && hardwareAcceleratedCanvas;
     bool more = false;
@@ -7473,7 +7473,7 @@ void View::getDrawingRect(Rect& outRect) const {
     outRect.height= getHeight();
 }
 
-long View::getDrawingTime() const{
+int64_t View::getDrawingTime() const{
     return mAttachInfo ? mAttachInfo->mDrawingTime : 0;
 }
 

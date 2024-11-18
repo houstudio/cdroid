@@ -137,7 +137,7 @@ private:
     int mFlingDistance;
     int mCloseEnough;
     bool mFakeDragging;
-    long mFakeDragBeginTime;
+    int64_t mFakeDragBeginTime;
 
 
     EdgeEffect* mLeftEdge;

@@ -32,7 +32,7 @@ private:
     Drawable* apply(TintInfo*,Drawable*);
     void onTickProc();
     void onTimeChanged();
-    void onTimeChanged(/*LocalTime localTime,*/long nowMillis);
+    void onTimeChanged(/*LocalTime localTime,*/int64_t nowMillis);
 protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;

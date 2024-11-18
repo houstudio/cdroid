@@ -704,7 +704,7 @@ void ProgressBar::drawTrack(Canvas&canvas){
         canvas.translate(mPaddingLeft, mPaddingTop);
     }
 
-    const long time = getDrawingTime();
+    const int64_t time = getDrawingTime();
     if (mHasAnimation) {
         mAnimation->getTransformation(time, *mTransformation);
         const float scale = mTransformation->getAlpha();

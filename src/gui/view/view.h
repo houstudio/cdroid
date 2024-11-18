@@ -739,7 +739,7 @@ public:
     bool isShowingLayoutBounds()const;
     void setShowingLayoutBounds(bool debugLayout);
     virtual void draw(Canvas&canvas);
-    bool draw(Canvas&canvas,ViewGroup*parent,long drawingTime);
+    bool draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime);
 
     virtual void invalidateParentCaches();
     virtual void invalidateParentIfNeeded();
@@ -768,7 +768,7 @@ public:
     void getHitRect(Rect&);
     bool pointInView(int localX,int localY,int slop);
     const Rect getDrawingRect()const;
-    long getDrawingTime()const;
+    int64_t getDrawingTime()const;
     virtual void getFocusedRect(Rect&r);
     virtual View& setPos(int x,int y);
     virtual View& setSize(int x,int y);
@@ -1328,7 +1328,7 @@ public:
     bool mViewScrollChanged;
     bool mIgnoreDirtyState;
     int mWindowVisibility;
-    long mDrawingTime;
+    int64_t mDrawingTime;
     bool mInTouchMode;
     bool mUnbufferedDispatchRequested;
     bool mRecomputeGlobalAttributes;

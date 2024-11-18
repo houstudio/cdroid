@@ -69,13 +69,13 @@ private:
         static constexpr int LONGEST_PAST_TIME = 200;
         float mPastX[NUM_PAST];
         float mPastY[NUM_PAST];
-        long mPastTime[NUM_PAST]; 
+        int64_t mPastTime[NUM_PAST]; 
         float mXVelocity;
         float mYVelocity;
     public:
         void clear();
         void addMovement(MotionEvent&ev);
-        void addPoint(float x,float y,long time);
+        void addPoint(float x,float y,int64_t time);
         void computeCurrentVelocity(int units);
         void computeCurrentVelocity(int units,float maxVelocity);
         float getXVelocity()const;

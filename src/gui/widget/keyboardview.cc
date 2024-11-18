@@ -637,7 +637,7 @@ void  KeyboardView::SwipeTracker::clear(){
 }
 
 void  KeyboardView::SwipeTracker::addMovement(MotionEvent&ev){
-    long time = ev.getEventTime();
+    const int64_t time = ev.getEventTime();
     /*int N = ev.getHistorySize();
     for (int i=0; i<N; i++) {
         addPoint(ev.getHistoricalX(i), ev.getHistoricalY(i),
@@ -646,7 +646,7 @@ void  KeyboardView::SwipeTracker::addMovement(MotionEvent&ev){
     addPoint(ev.getX(), ev.getY(), time);
 }
 
-void  KeyboardView::SwipeTracker::addPoint(float x,float y,long time){
+void  KeyboardView::SwipeTracker::addPoint(float x,float y,int64_t time){
     int drop = -1;
     int i;
     //final long[] pastTime = mPastTime;

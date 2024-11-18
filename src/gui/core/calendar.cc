@@ -60,10 +60,10 @@ Calendar& Calendar::set(int field, int value){
     return *this;
 }
 
-void Calendar::setTime(long millis){
+void Calendar::setTime(int64_t millis){
     if(mTime==millis && isTimeSet && areFieldsSet && areAllFieldsSet)
        return; 
-    mTime=millis;
+    mTime = millis;
     isTimeSet = true;
     areFieldsSet = false;
     computeFields();
@@ -72,8 +72,10 @@ void Calendar::setTime(long millis){
 
 void Calendar::add(int field, int amount){
 }
+
 void Calendar::roll(int field, bool up){
 }
+
 void Calendar::roll(int field, int amount){
      while (amount > 0) {
         roll(field, true);
@@ -85,7 +87,7 @@ void Calendar::roll(int field, int amount){
     }
 }
 
-long Calendar::getTime(){
+int64_t Calendar::getTime(){
     if (!isTimeSet) {
         updateTime();
     }
@@ -565,14 +567,14 @@ void Calendar::setMinimalDaysInFirstWeek(int value){
     invalidateWeekFields();
 }
 
-long Calendar::getTimeInMillis(){
+int64_t Calendar::getTimeInMillis(){
     if (!isTimeSet) {
         updateTime();
     }
     return mTime;
 }
 
-void Calendar::setTimeInMillis(long millis){
+void Calendar::setTimeInMillis(int64_t millis){
     if (mTime == millis && isTimeSet && areFieldsSet && areAllFieldsSet) {
         // END Android-changed: Android doesn't have sun.util.calendar.ZoneInfo.
 
