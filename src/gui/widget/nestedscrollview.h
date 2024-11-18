@@ -16,7 +16,7 @@ private:
     static constexpr float MAX_SCROLL_FACTOR = 0.5f;
     static constexpr int INVALID_POINTER = -1;
 private:
-    long mLastScroll;
+    int64_t mLastScroll;
  
     Rect mTempRect;
     OverScroller* mScroller;

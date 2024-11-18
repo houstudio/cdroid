@@ -261,13 +261,13 @@ public:
 
     const std::string getDateTextAppearance() override;
 
-    void setMinDate(long minDate) override;
+    void setMinDate(int64_t minDate) override;
 
-    long getMinDate() override;
+    int64_t getMinDate() override;
 
     void setMaxDate(long maxDate) override;
 
-    long getMaxDate();
+    int64_t getMaxDate();
 
     void setShowWeekNumber(bool showWeekNumber) override;
 
@@ -277,15 +277,15 @@ public:
 
     int getFirstDayOfWeek() override;
 
-    void setDate(long date) override;
+    void setDate(int64_t date) override;
 
-    void setDate(long date, bool animate, bool center)override;
+    void setDate(int64_t date, bool animate, bool center)override;
 
-    long getDate() override;
+    int64_t getDate() override;
 
     void setOnDateChangeListener(const CalendarView::OnDateChangeListener& listener) override;
 
-    bool getBoundsForDate(long date, Rect& outBounds) override;
+    bool getBoundsForDate(int64_t date, Rect& outBounds) override;
 
     void onConfigurationChanged(int newConfig) override;
 private:

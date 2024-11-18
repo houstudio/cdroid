@@ -136,7 +136,7 @@ int Scroller::getFinalY()const{
 bool Scroller::computeScrollOffset() {
     if (mFinished) return false;
 
-    int timePassed = (int)(AnimationUtils::currentAnimationTimeMillis() - mStartTime);
+    const int64_t timePassed = (int)(AnimationUtils::currentAnimationTimeMillis() - mStartTime);
     
     if (timePassed < mDuration) {
         int index;
@@ -299,7 +299,7 @@ void Scroller::abortAnimation() {
 }
     
 void Scroller::extendDuration(int extend) {
-    int passed = timePassed();
+    long passed = timePassed();
     mDuration = passed + extend;
     mDurationReciprocal = 1.0f / mDuration;
     mFinished = false;
@@ -309,8 +309,8 @@ void Scroller::extendDuration(int extend) {
  * Returns the time elapsed since the beginning of the scrolling.
  *
  * @return The elapsed time in milliseconds.*/
-int Scroller::timePassed()const{
-    return (int)(AnimationUtils::currentAnimationTimeMillis()- mStartTime);
+long Scroller::timePassed()const{
+    return (long)(AnimationUtils::currentAnimationTimeMillis()- mStartTime);
 }
 
 /**

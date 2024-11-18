@@ -215,7 +215,7 @@ const std::string CalendarViewLegacyDelegate::getDateTextAppearance() {
     return mDateTextAppearanceResId;
 }
 
-void CalendarViewLegacyDelegate::setMinDate(long minDate) {
+void CalendarViewLegacyDelegate::setMinDate(int64_t minDate) {
     mTempDate.setTimeInMillis(minDate);
     if (isSameDate(mTempDate, mMinDate)) {
         return;
@@ -242,11 +242,11 @@ void CalendarViewLegacyDelegate::setMinDate(long minDate) {
     }
 }
 
-long CalendarViewLegacyDelegate::getMinDate() {
+int64_t CalendarViewLegacyDelegate::getMinDate() {
     return mMinDate.getTimeInMillis();
 }
 
-void CalendarViewLegacyDelegate::setMaxDate(long maxDate) {
+void CalendarViewLegacyDelegate::setMaxDate(int64_t maxDate) {
     mTempDate.setTimeInMillis(maxDate);
     if (isSameDate(mTempDate, mMaxDate)) {
         return;
@@ -266,7 +266,7 @@ void CalendarViewLegacyDelegate::setMaxDate(long maxDate) {
     }
 }
 
-long CalendarViewLegacyDelegate::getMaxDate() {
+int64_t CalendarViewLegacyDelegate::getMaxDate() {
     return mMaxDate.getTimeInMillis();
 }
 
@@ -309,7 +309,7 @@ void CalendarViewLegacyDelegate::setDate(long date, bool animate, bool center) {
     goTo(mTempDate, animate, true, center);
 }
 
-long CalendarViewLegacyDelegate::getDate() {
+int64_t CalendarViewLegacyDelegate::getDate() {
     return mAdapter->mSelectedDate.getTimeInMillis();
 }
 
@@ -317,7 +317,7 @@ void CalendarViewLegacyDelegate::setOnDateChangeListener(const CalendarView::OnD
     mOnDateChangeListener = listener;
 }
 
-bool CalendarViewLegacyDelegate::getBoundsForDate(long date, Rect& outBounds) {
+bool CalendarViewLegacyDelegate::getBoundsForDate(int64_t date, Rect& outBounds) {
     Calendar calendarDate;// = Calendar.getInstance();
     calendarDate.setTimeInMillis(date);
     const int listViewEntryCount = mListView->getCount();

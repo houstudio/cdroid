@@ -1105,7 +1105,7 @@ void NestedScrollView::smoothScrollBy(int dx, int dy) {
         // Nothing to do.
         return;
     }
-    long duration = AnimationUtils::currentAnimationTimeMillis() - mLastScroll;
+    int64_t duration = AnimationUtils::currentAnimationTimeMillis() - mLastScroll;
     if (duration > ANIMATED_SCROLL_GAP) {
         View* child = getChildAt(0);
         NestedScrollView::LayoutParams* lp = (LayoutParams*) child->getLayoutParams();

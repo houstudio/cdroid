@@ -22,7 +22,7 @@ private:
 
     int mCurrX;
     int mCurrY;
-    long mStartTime;
+    int64_t mStartTime;
     int mDuration;
     float mDurationReciprocal;
     float mDeltaX;
@@ -84,7 +84,7 @@ public:
             int minX, int maxX, int minY, int maxY);
     void abortAnimation();
     void extendDuration(int extend);
-    int timePassed()const;
+    long timePassed()const;
     void setFinalX(int newX);
     void setFinalY(int newY);
     bool isScrollingInDirection(float xvel, float yvel);

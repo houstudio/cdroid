@@ -17,17 +17,17 @@ public:
     const std::string getWeekDayTextAppearance()const;
     void setDateTextAppearance(const std::string&resid);
     const std::string getDateTextAppearance()const;
-    void setMinDate(long minDate);/*date from 1970.1.1*/
-    long getMinDate()const;
-    void setMaxDate(long maxDate);
-    long getMaxDate()const;
+    void setMinDate(int64_t minDate);/*date from 1970.1.1*/
+    int64_t getMinDate()const;
+    void setMaxDate(int64_t maxDate);
+    int64_t getMaxDate()const;
     void setFirstDayOfWeek(int firstDayOfWeek);
     int getFirstDayOfWeek()const;
     void setOnDateChangeListener(OnDateChangeListener listener);
     void setDate(long date);
     /*get selected Date*/
-    long getDate();
-    bool getBoundsForDate(long date,Rect& outBounds);
+    int64_t getDate();
+    bool getBoundsForDate(int64_t date,Rect& outBounds);
 };
 
 class CalendarView::CalendarViewDelegate{
@@ -60,11 +60,11 @@ public:
     virtual void setDateTextAppearance(const std::string&resourceId)=0;
     virtual const std::string getDateTextAppearance()=0;
 
-    virtual void setMinDate(long minDate)=0;
-    virtual long getMinDate()=0;
+    virtual void setMinDate(int64_t minDate)=0;
+    virtual int64_t getMinDate()=0;
 
-    virtual void setMaxDate(long maxDate)=0;
-    virtual long getMaxDate()=0;
+    virtual void setMaxDate(int64_t maxDate)=0;
+    virtual int64_t getMaxDate()=0;
 
     virtual void setShowWeekNumber(bool showWeekNumber)=0;
     virtual bool getShowWeekNumber()=0;
@@ -72,11 +72,11 @@ public:
     virtual void setFirstDayOfWeek(int firstDayOfWeek)=0;
     virtual int getFirstDayOfWeek()=0;
 
-    virtual void setDate(long date)=0;
-    virtual void setDate(long date, bool animate, bool center)=0;
+    virtual void setDate(int64_t date)=0;
+    virtual void setDate(int64_t date, bool animate, bool center)=0;
     virtual long getDate()=0;
 
-    virtual bool getBoundsForDate(long date, Rect& outBounds)=0;
+    virtual bool getBoundsForDate(int64_t date, Rect& outBounds)=0;
 
     virtual void setOnDateChangeListener(const OnDateChangeListener& listener);
 

@@ -83,7 +83,7 @@ private:
     int mPreviousScrollerY;
     float mLastDownEventX;
     float mLastDownEventY;
-    long mLastDownEventTime;
+    int64_t mLastDownEventTime;
     float mLastDownOrMoveEventX;
     float mLastDownOrMoveEventY;
     VelocityTracker* mVelocityTracker;
