@@ -99,7 +99,7 @@ private:
     float mGlowScaleYStart;
     float mGlowScaleYFinish;
 
-    long mStartTime;
+    int64_t mStartTime;
     float mDuration;
 
     Interpolator* mInterpolator;

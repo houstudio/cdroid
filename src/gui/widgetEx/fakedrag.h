@@ -13,7 +13,7 @@ private:
     int mMaximumVelocity;
     float mRequestedDragDistance;
     int mActualDraggedDistance;
-    long mFakeDragBeginTime;
+    nsecs_t mFakeDragBeginTime;
 private:
     void beginFakeVelocityTracker();
     void addFakeMotionEvent(long time, int action, float x, float y);

@@ -810,7 +810,7 @@ void HorizontalScrollView::smoothScrollBy(int dx, int dy) {
         // Nothing to do.
         return;
     }
-    long duration = SystemClock::uptimeMillis() - mLastScroll;
+    const auto duration = SystemClock::uptimeMillis() - mLastScroll;
     if (duration > ANIMATED_SCROLL_GAP) {
         int width = getWidth() - mPaddingRight - mPaddingLeft;
         int right = getChildAt(0)->getWidth();

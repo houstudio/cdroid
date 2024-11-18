@@ -424,7 +424,7 @@ protected:
     void repositionShadowingViews();
     static RecyclerView*findNestedRecyclerView(View* view);
     static void clearNestedRecyclerViewIfNotNested(ViewHolder& holder);
-    long getNanoTime();
+    int64_t getNanoTime();
     void dispatchChildDetached(View* child);
     void dispatchChildAttached(View* child);
     bool setChildImportantForAccessibilityInternal(ViewHolder* viewHolder,int importantForAccessibility);

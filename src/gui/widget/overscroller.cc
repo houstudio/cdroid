@@ -299,7 +299,7 @@ bool OverScroller::SplineOverScroller::continueWhenFinished() {
 }
 
 bool OverScroller::SplineOverScroller::update(){
-    const long currentTime = SystemClock::uptimeMillis() - mStartTime;
+    const int64_t currentTime = SystemClock::uptimeMillis() - mStartTime;
 
     if (currentTime == 0) {
         // Skip work but report that we're still going if we have a nonzero duration.
@@ -430,10 +430,10 @@ bool OverScroller::computeScrollOffset() {
     case SCROLL_MODE:{
            // Any scroller can be used for time, since they were started
            // together in scroll mode. We use X here.
-           const long elapsedTime = SystemClock::uptimeMillis() - mScrollerX->mStartTime;
+           const int64_t elapsedTime = SystemClock::uptimeMillis() - mScrollerX->mStartTime;
            const int duration = mScrollerX->mDuration;
            if (elapsedTime < duration) {
-               float q = mInterpolator->getInterpolation(elapsedTime / (float) duration);
+               float q = mInterpolator->getInterpolation(float(elapsedTime) / duration);
                mScrollerX->updateScroll(q);
                mScrollerY->updateScroll(q);
            } else {
@@ -521,8 +521,8 @@ void OverScroller::abortAnimation() {
 }
 
 int OverScroller::timePassed()const{
-   long time = SystemClock::uptimeMillis();
-   long startTime = std::min(mScrollerX->mStartTime, mScrollerY->mStartTime);
+   const int64_t time = SystemClock::uptimeMillis();
+   const int64_t startTime = std::min(mScrollerX->mStartTime, mScrollerY->mStartTime);
    return (int) (time - startTime);
 }
 

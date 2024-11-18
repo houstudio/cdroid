@@ -94,7 +94,7 @@ public:
     long getTotalDuration();
     virtual void setCurrentPlayTime(long playTime);
     void setCurrentFraction(float fraction);
-    long getCurrentPlayTime();
+    int64_t getCurrentPlayTime();
     long getStartDelay();
     void setStartDelay(long startDelay);
     static long getFrameDelay();

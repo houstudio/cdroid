@@ -78,7 +78,7 @@ void EdgeEffect::onPull(float deltaDistance, float displacement){
         finish();
         return;
     }
-    long now = SystemClock::uptimeMillis();
+    const int64_t now = SystemClock::uptimeMillis();
     mTargetDisplacement = displacement;
     if (mState == STATE_PULL_DECAY && now - mStartTime < mDuration && edgeEffectBehavior == TYPE_GLOW) {
         return;
@@ -243,7 +243,7 @@ int EdgeEffect::getMaxHeight()const{
 }
 
 void EdgeEffect::update() {
-    long time = SystemClock::uptimeMillis();
+    const auto time = SystemClock::uptimeMillis();
     float t = std::min((time - mStartTime) / mDuration, 1.f);
 
     float interp = mInterpolator->getInterpolation(t);

@@ -226,7 +226,7 @@ Drawable::Callback* Drawable::getCallback()const {
     return mCallback;
 }
 
-void Drawable::scheduleSelf(Runnable& what, long when) {
+void Drawable::scheduleSelf(Runnable& what, int64_t when) {
     if(mCallback)mCallback->scheduleDrawable(*this, what, when);
 }
 

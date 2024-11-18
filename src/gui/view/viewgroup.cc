@@ -272,7 +272,7 @@ bool ViewGroup::ensureTouchMode(bool){
 void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){
     if (mFirstTouchTarget==nullptr)return;
  
-    long now = SystemClock::uptimeMillis();
+    const auto now = SystemClock::uptimeMillis();
     bool syntheticEvent = (event==nullptr);
     if(event==nullptr){
         event = MotionEvent::obtain(now, now,MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
@@ -433,7 +433,7 @@ void ViewGroup::cancelTouchTarget(View* view){
                 predecessor->next = next;
             }
             target->recycle();
-            long now = SystemClock::uptimeMillis();
+            const auto now = SystemClock::uptimeMillis();
             MotionEvent* event=MotionEvent::obtain(now, now, MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
             event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
             view->dispatchTouchEvent(*event);
@@ -447,7 +447,7 @@ void ViewGroup::cancelTouchTarget(View* view){
 
 void ViewGroup::exitTooltipHoverTargets() {
     if (mTooltipHoveredSelf || mTooltipHoverTarget) {
-        const long now = SystemClock::uptimeMillis();
+        const auto now = SystemClock::uptimeMillis();
         MotionEvent* event = MotionEvent::obtain(now, now,
                 MotionEvent::ACTION_HOVER_EXIT, 0.0f, 0.0f, 0);
         event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
@@ -554,7 +554,7 @@ bool ViewGroup::pointInHoveredChild(MotionEvent& event) {
 
 void ViewGroup::exitHoverTargets(){
     if (mHoveredSelf || mFirstHoverTarget) {
-        const long now = SystemClock::uptimeMillis();
+        const auto now = SystemClock::uptimeMillis();
         MotionEvent* event = MotionEvent::obtain(now, now,
                 MotionEvent::ACTION_HOVER_EXIT, 0.f, 0.f, 0);
         event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
@@ -576,7 +576,7 @@ void ViewGroup::cancelHoverTarget(View*view){
             }
             target->recycle();
 
-            const long now = SystemClock::uptimeMillis();
+            const auto now = SystemClock::uptimeMillis();
             MotionEvent* event = MotionEvent::obtain(now, now,
                     MotionEvent::ACTION_HOVER_EXIT, 0.f, 0.f, 0);
             event->setSource(InputDevice::SOURCE_TOUCHSCREEN);

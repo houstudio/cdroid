@@ -36,7 +36,7 @@ bool ForwardingListener::onTouch(View& v, MotionEvent& event){
         forwarding = onTouchObserved(event) && onForwardingStarted();
         if (forwarding) {
             // Make sure we cancel any ongoing source event stream.
-            const long now = SystemClock::uptimeMillis();
+            const int64_t now = SystemClock::uptimeMillis();
             MotionEvent* e = MotionEvent::obtain(now, now, MotionEvent::ACTION_CANCEL,0.0f, 0.0f, 0);
             mSrc->onTouchEvent(*e);
             e->recycle();
@@ -136,7 +136,7 @@ void ForwardingListener::onLongPress() {
     mSrc->getParent()->requestDisallowInterceptTouchEvent(true);
 
     // Make sure we cancel any ongoing source event stream.
-    const long now = SystemClock::uptimeMillis();
+    const int64_t now = SystemClock::uptimeMillis();
     MotionEvent* e = MotionEvent::obtain(now, now, MotionEvent::ACTION_CANCEL, 0, 0, 0);
     mSrc->onTouchEvent(*e);
     e->recycle();

@@ -72,7 +72,7 @@ nsecs_t Choreographer::getFrameIntervalNanos()const{
     return mFrameIntervalNanos;
 }
 
-Choreographer::CallbackRecord* Choreographer::obtainCallbackLocked(long dueTime,void* action, void* token) {
+Choreographer::CallbackRecord* Choreographer::obtainCallbackLocked(int64_t dueTime,void* action, void* token) {
     CallbackRecord* callback = mCallbackPool;
     if (callback == nullptr) {
         callback = new CallbackRecord();
@@ -100,8 +100,8 @@ void Choreographer::recycleCallbackLocked(CallbackRecord* callback) {
 void Choreographer::postCallbackDelayedInternal(int callbackType,void* action, void* token, long delayMillis){
     LOGV("type=%d ,action=%p,token=%p ,delayMillis=%d",callbackType,action,token,delayMillis);
 
-    const long now = SystemClock::uptimeMillis();
-    const long dueTime = now + delayMillis;
+    const auto now = SystemClock::uptimeMillis();
+    const auto dueTime = now + delayMillis;
     mCallbackQueues[callbackType]->addCallbackLocked(dueTime, action, token);
     
     /*if (dueTime <= now) {
@@ -144,7 +144,7 @@ void Choreographer::postFrameCallbackDelayed(const FrameCallback& callback, long
     postCallbackDelayedInternal(CALLBACK_ANIMATION,(void*)&callback, (void*)FRAME_CALLBACK_TOKEN, delayMillis);    
 }
 
-void Choreographer::scheduleFrameLocked(long now){
+void Choreographer::scheduleFrameLocked(int64_t now){
     if (!mFrameScheduled) {
         mFrameScheduled = true;
         nsecs_t nextFrameTime = std::max(mLastFrameTimeNanos /SystemClock::NANOS_PER_MS + sFrameDelay, nsecs_t(now));
@@ -253,11 +253,11 @@ Choreographer::CallbackQueue::CallbackQueue(Choreographer*choreographer){
     mChoreographer = choreographer;
 }
 
-bool Choreographer::CallbackQueue::hasDueCallbacksLocked(long now) const{
+bool Choreographer::CallbackQueue::hasDueCallbacksLocked(int64_t now) const{
     return (mHead != nullptr) && (mHead->dueTime <= now);
 }
 
-Choreographer::CallbackRecord* Choreographer::CallbackQueue::extractDueCallbacksLocked(long now) {
+Choreographer::CallbackRecord* Choreographer::CallbackQueue::extractDueCallbacksLocked(int64_t now) {
     CallbackRecord* callbacks = mHead;
     if ( (callbacks == nullptr) || (callbacks->dueTime > now) ) {
         return nullptr;
@@ -277,7 +277,7 @@ Choreographer::CallbackRecord* Choreographer::CallbackQueue::extractDueCallbacks
     return callbacks;
 }
 
-void Choreographer::CallbackQueue::addCallbackLocked(long dueTime,void* action,void* token) {
+void Choreographer::CallbackQueue::addCallbackLocked(int64_t dueTime,void* action,void* token) {
     CallbackRecord* callback = mChoreographer->obtainCallbackLocked(dueTime, action, token);
     CallbackRecord* entry = mHead;
     if (entry == nullptr) {

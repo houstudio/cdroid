@@ -251,7 +251,7 @@ float AutoScrollHelper::constrainEdgeValue(float current, float leading) {
 }
 
 void AutoScrollHelper::cancelTargetTouch() {
-    long eventTime = SystemClock::uptimeMillis();
+    const auto eventTime = SystemClock::uptimeMillis();
     MotionEvent* cancel = MotionEvent::obtain(
             eventTime, eventTime, MotionEvent::ACTION_CANCEL, 0, 0, 0);
     mTarget->onTouchEvent(*cancel);

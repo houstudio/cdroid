@@ -43,7 +43,7 @@ bool FakeDrag::fakeDragBy(float offsetPxFloat) {
     int offsetPx = std::round(mRequestedDragDistance - mActualDraggedDistance);
     // ... and keep track of pixels scrolled so we don't get rounding errors
     mActualDraggedDistance += offsetPx;
-    long time = SystemClock::uptimeMillis();
+    const auto time = SystemClock::uptimeMillis();
 
     const bool isHorizontal = mViewPager->getOrientation() == ViewPager2::ORIENTATION_HORIZONTAL;
     // Scroll deltas use pixels:

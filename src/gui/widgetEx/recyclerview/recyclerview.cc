@@ -1044,7 +1044,7 @@ void RecyclerView::setLayoutFrozen(bool frozen) {
             }
             mLayoutWasDefered = false;
         } else {
-            long now = SystemClock::uptimeMillis();
+            const auto now = SystemClock::uptimeMillis();
             MotionEvent* cancelEvent = MotionEvent::obtain(now, now,
                     MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
             onTouchEvent(*cancelEvent);
@@ -3709,7 +3709,7 @@ void RecyclerView::clearNestedRecyclerViewIfNotNested(ViewHolder& holder) {
     }
 }
 
-long RecyclerView::getNanoTime() {
+int64_t RecyclerView::getNanoTime() {
     /*if (ALLOW_THREAD_GAP_WORK) {
         return SystemClock::uptimeNanos();//System.nanoTime();
     } else */{

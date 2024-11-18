@@ -150,7 +150,7 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
     if( (mCurrentFrame != mNextFrame) && mAnimatedImageState->mFrameCount){
         const auto startTime  = SystemClock::uptimeMillis();
         mFrameDelay = mFrameSequenceState->drawFrame(mNextFrame,(uint32_t*)mImage->get_data(),mImage->get_stride()>>2,mCurrentFrame);
-        const long decodeTime = long(SystemClock::uptimeMillis() - startTime);
+        const int64_t decodeTime = long(SystemClock::uptimeMillis() - startTime);
         mFrameDelay = (decodeTime >= mFrameDelay)?(mFrameDelay/2):(mFrameDelay - decodeTime);
         mCurrentFrame = mNextFrame;
         mImage->mark_dirty();
@@ -177,7 +177,7 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
             }
             if(!mFrameScheduled){
                 unscheduleSelf(mRunnable);
-                scheduleSelf(mRunnable, long(SystemClock::uptimeMillis() + mFrameDelay));
+                scheduleSelf(mRunnable, SystemClock::uptimeMillis() + mFrameDelay);
                 mFrameScheduled = true;
             }
         }

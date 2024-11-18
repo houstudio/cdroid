@@ -825,7 +825,7 @@ void ScrollView::doScrollY(int delta) {
 }
 
 void ScrollView::smoothScrollBy(int dx, int dy) {
-    long duration = SystemClock::uptimeMillis() - mLastScroll;
+    const int64_t duration = SystemClock::uptimeMillis() - mLastScroll;
     if (getChildCount() == 0) return;
     if (duration > ANIMATED_SCROLL_GAP) {
         const int height = getHeight() - mPaddingBottom - mPaddingTop;

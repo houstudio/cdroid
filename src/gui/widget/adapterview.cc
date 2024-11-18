@@ -185,7 +185,7 @@ int AdapterView::findSyncPosition(){
     seed = std::max(0, seed);
     seed = std::min(count - 1, seed);
 
-    long endTime = SystemClock::uptimeMillis() + SYNC_MAX_DURATION_MILLIS;
+    int64_t endTime = SystemClock::uptimeMillis() + SYNC_MAX_DURATION_MILLIS;
 
     // first position scanned so far
     int first = seed;

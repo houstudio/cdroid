@@ -47,7 +47,7 @@ public:
     class Callback{
     public:
         virtual void invalidateDrawable(Drawable& who)=0;
-        virtual void scheduleDrawable(Drawable& who,Runnable& what, long when)=0;
+        virtual void scheduleDrawable(Drawable& who,Runnable& what, int64_t when)=0;
         virtual void unscheduleDrawable(Drawable& who,Runnable& what)=0;
     };
     class ConstantState{
@@ -133,7 +133,7 @@ public:
     virtual void setChangingConfigurations(int);
     void setCallback(Callback*cbk);
     Callback* getCallback()const;
-    void scheduleSelf(Runnable& what, long when);
+    void scheduleSelf(Runnable& what, int64_t when);
     virtual void unscheduleSelf(Runnable& what);
 
     virtual void invalidateSelf();

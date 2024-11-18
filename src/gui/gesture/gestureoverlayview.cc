@@ -307,7 +307,7 @@ void GestureOverlayView::cancelGesture() {
     mCurrentGesture->addStroke(new GestureStroke(mStrokeBuffer));
 
     // pass the event to handlers
-    const long now = SystemClock::uptimeMillis();
+    const auto now = SystemClock::uptimeMillis();
     MotionEvent* event = MotionEvent::obtain(now, now, MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
 
     std::vector<OnGestureListener>& listeners = mOnGestureListeners;

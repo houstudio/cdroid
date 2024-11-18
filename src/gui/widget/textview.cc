@@ -204,7 +204,7 @@ private:
     int mRepeatLimit;
 
     float mScroll;
-    long mLastAnimationMs;
+    int64_t mLastAnimationMs;
     Runnable /*Choreographer::FrameCallback*/ mTickCallback;
     Runnable /*Choreographer::FrameCallback*/ mStartCallback;
     Runnable /*Choreographer::FrameCallback*/ mRestartCallback;
@@ -243,8 +243,8 @@ public:
         mView->removeCallbacks(mTickCallback);
 
         if (mView  && (mView->isFocused() || mView->isSelected())) {
-            long currentMs = SystemClock::uptimeMillis();
-            long deltaMs = currentMs - mLastAnimationMs;
+            int64_t currentMs = SystemClock::uptimeMillis();
+            int64_t deltaMs = currentMs - mLastAnimationMs;
             mLastAnimationMs = currentMs;
             float deltaPx = deltaMs * mPixelsPerMs;
             mScroll += deltaPx;

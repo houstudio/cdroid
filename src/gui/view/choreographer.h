@@ -33,9 +33,9 @@ private:
         CallbackRecord*mHead;
     public:
         CallbackQueue(Choreographer*choreographer);
-        bool hasDueCallbacksLocked(long now)const;
-        CallbackRecord* extractDueCallbacksLocked(long now);
-        void addCallbackLocked(long dueTime, void* action,void* token);
+        bool hasDueCallbacksLocked(int64_t now)const;
+        CallbackRecord* extractDueCallbacksLocked(int64_t now);
+        void addCallbackLocked(int64_t dueTime, void* action,void* token);
         int removeCallbacksLocked(void* action, void* token);
     };
 private:
@@ -50,11 +50,11 @@ private:
     friend NeverDestroyed<Choreographer>;
     Choreographer();
     static float getRefreshRate();
-    CallbackRecord* obtainCallbackLocked(long dueTime,void* action,void* token);
+    CallbackRecord* obtainCallbackLocked(int64_t dueTime,void* action,void* token);
     void recycleCallbackLocked(CallbackRecord* callback);
     int removeCallbacksInternal(int callbackType,void* action, void* token);
     void postCallbackDelayedInternal(int callbackType,void* action, void* token, long delayMillis);
-    void scheduleFrameLocked(long);
+    void scheduleFrameLocked(int64_t);
 protected:
     int checkEvents()override;
     int handleEvents()override;

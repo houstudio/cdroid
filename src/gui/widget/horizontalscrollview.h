@@ -8,7 +8,7 @@ namespace cdroid{
 
 class HorizontalScrollView:public FrameLayout{
 private:
-    long mLastScroll;
+    int64_t mLastScroll;
     OverScroller* mScroller;
     VelocityTracker* mVelocityTracker;
     EdgeEffect* mEdgeGlowLeft;

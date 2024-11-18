@@ -35,7 +35,7 @@ public:
     // Constant current deceleration
     float mDeceleration;
     // Animation starting time, in system milliseconds
-    long mStartTime;
+    int64_t mStartTime;
     // Animation duration, in milliseconds
     int mDuration;
     // Duration to complete spline component of animation

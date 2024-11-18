@@ -1700,7 +1700,7 @@ bool ViewPager::beginFakeDrag(){
     } else {
         mVelocityTracker->clear();
     }
-    const long time = SystemClock::uptimeMillis();
+    const auto time = SystemClock::uptimeMillis();
     MotionEvent* ev = MotionEvent::obtain(time, time, MotionEvent::ACTION_DOWN, 0, 0, 0);
     mVelocityTracker->addMovement(*ev);
     ev->recycle();
@@ -1768,7 +1768,7 @@ void ViewPager::fakeDragBy(float xOffset){
     pageScrolled((int) scrollX);
 
     // Synthesize an event for the VelocityTracker.
-    const long time = SystemClock::uptimeMillis();
+    const auto time = SystemClock::uptimeMillis();
     MotionEvent* ev = MotionEvent::obtain(mFakeDragBeginTime, time, MotionEvent::ACTION_MOVE,
             mLastMotionX, 0, 0);
     mVelocityTracker->addMovement(*ev);

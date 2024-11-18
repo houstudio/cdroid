@@ -259,7 +259,7 @@ bool ValueAnimator::shouldPlayBackward(int iteration, bool inReverse){
     }
 }
 
-long ValueAnimator::getCurrentPlayTime() {
+int64_t ValueAnimator::getCurrentPlayTime() {
     if (!mInitialized || (!mStarted && mSeekFraction < 0)) {
         return 0;
     }
@@ -270,7 +270,7 @@ long ValueAnimator::getCurrentPlayTime() {
     if (durationScale == .0f) {
         durationScale = 1.f;
     }
-    return (long) ((SystemClock::uptimeMillis() - mStartTime) / durationScale);
+    return ((SystemClock::uptimeMillis() - mStartTime) / durationScale);
 }
 
 long ValueAnimator::getStartDelay() {

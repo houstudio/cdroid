@@ -66,7 +66,7 @@ void TransitionDrawable::resetTransition() {
 }
 
 void TransitionDrawable::reverseTransition(int duration) {
-    const long time = SystemClock::uptimeMillis();
+    const auto time = SystemClock::uptimeMillis();
     // Animation is over
     if (time - mStartTimeMillis > mDuration) {
         if (mTo == 0) {
