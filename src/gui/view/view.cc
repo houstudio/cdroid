@@ -2360,7 +2360,7 @@ void View::onDrawScrollBars(Canvas& canvas){
         return;
 
     bool bInvalidate = false;
-    long now = AnimationUtils::currentAnimationTimeMillis();
+    int64_t now = AnimationUtils::currentAnimationTimeMillis();
     if (cache->state == ScrollabilityCache::FADING){
         // We're fading -- get our fade interpolation
 
@@ -2714,7 +2714,7 @@ void View::onDrawForeground(Canvas& canvas){
     }
 }
 
-bool View::applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* a, bool scalingRequired) {
+bool View::applyLegacyAnimation(ViewGroup* parent, int64_t drawingTime, Animation* a, bool scalingRequired) {
     Transformation* invalidationTransform;
     const int flags = parent->mGroupFlags;
     const bool initialized = a->isInitialized();

@@ -43,7 +43,7 @@ void Choreographer::setFrameDelay(long frameDelay){
     sFrameDelay = frameDelay;
 }
 
-long Choreographer::getFrameTime()const{
+int64_t Choreographer::getFrameTime()const{
     FATAL_IF(!mCallbacksRunning,"This method must only be called as "
            "part of a callback while a frame is in progress.");
     return getFrameTimeNanos()/SystemClock::NANOS_PER_MS;
@@ -54,7 +54,7 @@ int64_t Choreographer::subtractFrameDelay(long delayMillis) {
     return delayMillis <= frameDelay ? 0 : delayMillis - frameDelay;
 }
 
-nsecs_t Choreographer::getFrameTimeNanos()const{
+int64_t Choreographer::getFrameTimeNanos()const{
     return USE_FRAME_TIME ? mLastFrameTimeNanos:SystemClock::uptimeNanos();
 }
 
@@ -64,11 +64,11 @@ nsecs_t Choreographer::getFrameTimeNanos()const{
   * @return The frame start time of the last frame, in the {@link System#nanoTime()} time base.
   * @hide
   */
-nsecs_t Choreographer::getLastFrameTimeNanos()const{
+int64_t Choreographer::getLastFrameTimeNanos()const{
     return USE_FRAME_TIME ? mLastFrameTimeNanos:SystemClock::uptimeNanos();
 }
 
-nsecs_t Choreographer::getFrameIntervalNanos()const{
+int64_t Choreographer::getFrameIntervalNanos()const{
     return mFrameIntervalNanos;
 }
 

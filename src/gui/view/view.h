@@ -520,7 +520,7 @@ private:
     void setFocusedInCluster(View* cluster);
     void updateFocusedInCluster(View* oldFocus,int direction);
     bool dispatchGenericMotionEventInternal(MotionEvent& event);
-    bool applyLegacyAnimation(ViewGroup* parent, long drawingTime, Animation* a, bool scalingRequired);
+    bool applyLegacyAnimation(ViewGroup* parent, int64_t drawingTime, Animation* a, bool scalingRequired);
     bool needRtlPropertiesResolution()const;
     bool skipInvalidate()const;
     void buildDrawingCache(bool autoScale);

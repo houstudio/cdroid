@@ -1933,7 +1933,7 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     mGroupFlags   &= ~FLAG_INVALIDATE_REQUIRED;
 
     bool more = false;
-    const long drawingTime = getDrawingTime();
+    const int64_t drawingTime = getDrawingTime();
 
     //if (usingRenderNodeProperties) canvas.insertReorderBarrier();
     const int transientCount = mTransientIndices.size();

@@ -65,10 +65,10 @@ public:
     static long getFrameDelay();
     static void setFrameDelay(long frameDelay);
     static int64_t subtractFrameDelay(long delayMillis);
-    nsecs_t getFrameTimeNanos()const;
-    nsecs_t getLastFrameTimeNanos()const;
-    long getFrameTime()const;
-    nsecs_t getFrameIntervalNanos()const;
+    int64_t getFrameTimeNanos()const;
+    int64_t getLastFrameTimeNanos()const;
+    int64_t getFrameTime()const;
+    int64_t getFrameIntervalNanos()const;
     void postCallback(int callbackType,const Runnable& action, void* token);
     void postCallbackDelayed(int callbackType,const Runnable& action,void*token,long delayMillis);
     int removeCallbacks(int callbackType, const Runnable* action,void*token);

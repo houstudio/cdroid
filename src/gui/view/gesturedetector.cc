@@ -425,7 +425,7 @@ bool GestureDetector::isConsideredDoubleTap(MotionEvent& firstDown, MotionEvent&
         return false;
     }
 
-    const long deltaTime = secondDown.getEventTime() - firstUp.getEventTime();
+    const int64_t deltaTime = secondDown.getEventTime() - firstUp.getEventTime();
     if (deltaTime > DOUBLE_TAP_TIMEOUT || deltaTime < DOUBLE_TAP_MIN_TIME) {
         return false;
     }

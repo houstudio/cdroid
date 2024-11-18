@@ -96,7 +96,7 @@ private:
     int mNestedScrollAxes;
     int mLastTouchDownX,mLastTouchDownY;
     int mLastTouchDownIndex=-1;
-    long mLastTouchDownTime;
+    int64_t mLastTouchDownTime;
     View* mFocused;
     View* mDefaultFocus;
     View* mFocusedInCluster;

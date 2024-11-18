@@ -689,7 +689,7 @@ bool MotionEvent::addBatch(MotionEvent& event){
                 event.getHistoricalPointerCoords(i, historyPos, pc[i]);
             }
 
-            const long eventTimeNanos = event.getHistoricalEventTimeNanos(historyPos);
+            const int64_t eventTimeNanos = event.getHistoricalEventTimeNanos(historyPos);
             //nativeAddBatch(mNativePtr, eventTimeNanos, pc, metaState);
             addSample(eventTimeNanos,pc);
             setMetaState(metaState|getMetaState());
