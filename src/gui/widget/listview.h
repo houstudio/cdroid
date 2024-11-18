@@ -151,7 +151,7 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onSizeChanged(int w, int h, int oldw, int oldh)override;
     void onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocusedRect)override;
-    bool drawChild(Canvas&,View*,long)override;
+    bool drawChild(Canvas&,View*,int64_t)override;
     void dispatchDraw(Canvas&)override;
 public:
     ListView(int w,int h);

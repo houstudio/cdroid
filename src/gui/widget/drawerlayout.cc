@@ -725,7 +725,7 @@ void DrawerLayout::onDraw(Canvas& c) {
 #endif
 }
 
-bool DrawerLayout::drawChild(Canvas& canvas, View* child, long drawingTime) {
+bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
     int height = getHeight();
     bool drawingContent = isContentView(child);
     int clipLeft = 0, clipRight = getWidth();

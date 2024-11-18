@@ -1808,7 +1808,7 @@ void ViewGroup::dispatchWindowFocusChanged(bool hasFocus) {
     }
 }
 
-bool ViewGroup::drawChild(Canvas& canvas, View* child, long drawingTime){
+bool ViewGroup::drawChild(Canvas& canvas, View* child, int64_t drawingTime){
     return child->draw(canvas,this,drawingTime);
 }
 

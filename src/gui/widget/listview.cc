@@ -2602,7 +2602,7 @@ void ListView::dispatchDraw(Canvas&canvas) {
     AbsListView::dispatchDraw(canvas);
 }
 
-bool ListView::drawChild(Canvas& canvas, View* child, long drawingTime) {
+bool ListView::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
     bool more = AbsListView::drawChild(canvas, child, drawingTime);
     if (mCachingActive /*&& child->mCachingFailed*/) {
         mCachingActive = false;

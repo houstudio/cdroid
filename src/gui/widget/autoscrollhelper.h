@@ -37,10 +37,10 @@ private:
         int mDeltaX;
         int mDeltaY;
 
-        long mStopTime;
+        int64_t mStopTime;
         float mStopValue;
         int mEffectiveRampDown;
-        float getValueAt(long currentTime);
+        float getValueAt(int64_t currentTime);
         float interpolateValue(float value);
     public:
         ClampedScroller();

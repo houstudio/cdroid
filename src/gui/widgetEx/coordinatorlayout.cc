@@ -879,7 +879,7 @@ int CoordinatorLayout::resolveAnchoredChildGravity(int gravity) {
     return gravity == Gravity::NO_GRAVITY ? Gravity::CENTER : gravity;
 }
 
-bool CoordinatorLayout::drawChild(Canvas& canvas, View* child, long drawingTime) {
+bool CoordinatorLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
     LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
     if (lp->mBehavior != nullptr) {
         float scrimAlpha = lp->mBehavior->getScrimOpacity(*this, *child);

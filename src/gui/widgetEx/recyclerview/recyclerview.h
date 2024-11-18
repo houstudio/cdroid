@@ -555,7 +555,7 @@ public:
     ViewHolder* findViewHolderForAdapterPosition(int position);
     ViewHolder* findViewHolderForItemId(long id);
     View* findChildViewUnder(float x, float y);
-    bool drawChild(Canvas& canvas, View* child, long drawingTime)override;
+    bool drawChild(Canvas& canvas, View* child, int64_t drawingTime)override;
     void offsetChildrenVertical(int dy);
     void onChildAttachedToWindow(View* child);
     void onChildDetachedFromWindow(View* child);

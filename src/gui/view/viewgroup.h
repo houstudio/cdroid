@@ -245,7 +245,7 @@ protected:
 
     virtual void measureChildWithMargins(View* child,int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed);
-    virtual bool drawChild(Canvas& canvas, View* child, long drawingTime);
+    virtual bool drawChild(Canvas& canvas, View* child, int64_t drawingTime);
 
     virtual void onDebugDrawMargins(Canvas& canvas);
     virtual void onDebugDraw(Canvas& canvas);

@@ -3115,7 +3115,7 @@ View* RecyclerView::findChildViewUnder(float x, float y) {
     return nullptr;
 }
 
-bool RecyclerView::drawChild(Canvas& canvas, View* child, long drawingTime) {
+bool RecyclerView::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
     return ViewGroup::drawChild(canvas, child, drawingTime);
 }
 

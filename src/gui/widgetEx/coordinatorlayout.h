@@ -74,7 +74,7 @@ protected:
     void getLastChildRect(View* child, Rect& out);
     void getChildRect(View* child, bool transform, Rect& out);
     void getDesiredAnchoredChildRect(View* child, int layoutDirection,const Rect& anchorRect, Rect& out);
-    bool drawChild(Canvas& canvas, View* child, long drawingTime)override;
+    bool drawChild(Canvas& canvas, View* child, int64_t drawingTime)override;
     void onChildViewsChanged(int type);
     std::vector<View*> getDependencySortedChildren();
     void ensurePreDrawListener();

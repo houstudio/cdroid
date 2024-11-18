@@ -326,7 +326,7 @@ bool AutoScrollHelper::ClampedScroller::isFinished() {
           && AnimationUtils::currentAnimationTimeMillis() > mStopTime + mEffectiveRampDown;
 }
 
-float AutoScrollHelper::ClampedScroller::getValueAt(long currentTime) {
+float AutoScrollHelper::ClampedScroller::getValueAt(int64_t currentTime) {
     if (currentTime < mStartTime) {
         return .0f;
     } else if (mStopTime < 0 || currentTime < mStopTime) {
