@@ -969,7 +969,7 @@ void LayerDrawable::invalidateDrawable(Drawable& who){
         invalidateSelf();
     }
 }
-void LayerDrawable::scheduleDrawable(Drawable& who,Runnable& what, long when){
+void LayerDrawable::scheduleDrawable(Drawable& who,Runnable& what, int64_t when){
     scheduleSelf(what, when);
 }
 

@@ -24,7 +24,7 @@ public:
         // Ignore invalidation.
     }
 
-    void scheduleDrawable(Drawable& who,Runnable& what, long when)override{
+    void scheduleDrawable(Drawable& who,Runnable& what, int64_t when)override{
         if (mCallback != nullptr) {
             mCallback->scheduleDrawable(who, what, when);
         }
@@ -810,7 +810,7 @@ void DrawableContainer::invalidateDrawable(Drawable& who){
     }
 }
 
-void DrawableContainer::scheduleDrawable(Drawable&who,Runnable& what, long when){
+void DrawableContainer::scheduleDrawable(Drawable&who,Runnable& what, int64_t when){
     if ((&who == mCurrDrawable)&&(mCallback != nullptr))
         mCallback->scheduleDrawable(who, what, when);
 }

@@ -250,7 +250,7 @@ void ScrollBarDrawable::invalidateDrawable(Drawable& who) {
     invalidateSelf();
 }
 
-void ScrollBarDrawable::scheduleDrawable(Drawable& who, Runnable& what, long when) {
+void ScrollBarDrawable::scheduleDrawable(Drawable& who, Runnable& what, int64_t when) {
     scheduleSelf(what, when);
 }
 

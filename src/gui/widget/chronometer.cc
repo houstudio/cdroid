@@ -140,7 +140,7 @@ void Chronometer::dispatchChronometerTick() {
 static constexpr int MIN_IN_SEC = 60;
 static constexpr int HOUR_IN_SEC = MIN_IN_SEC*60;
 static constexpr int SECOND_IN_MILLIS=1000;
-std::string Chronometer::formatDuration(long ms) {
+std::string Chronometer::formatDuration(int64_t ms) {
     int duration = (int) (ms / SECOND_IN_MILLIS);
     if (duration < 0) {
         duration = -duration;

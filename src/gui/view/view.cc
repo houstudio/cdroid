@@ -5283,7 +5283,7 @@ void View::invalidateDrawable(Drawable& who){
     if(verifyDrawable(&who)) invalidate(true);
 }
 
-void View::scheduleDrawable(Drawable& who,Runnable& what, long when){
+void View::scheduleDrawable(Drawable& who,Runnable& what, int64_t when){
     const auto delay = when - SystemClock::uptimeMillis();
     Choreographer::getInstance().postCallbackDelayed(Choreographer::CALLBACK_ANIMATION, what,&who,
            Choreographer::subtractFrameDelay(delay));

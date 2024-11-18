@@ -162,7 +162,7 @@ public:
     bool onLayoutDirectionChanged(int layoutDirection)override;
     std::shared_ptr<ConstantState>getConstantState()override;
     void invalidateDrawable(Drawable& who);
-    void scheduleDrawable(Drawable& who,Runnable& what, long when);
+    void scheduleDrawable(Drawable& who,Runnable& what, int64_t when);
     void unscheduleDrawable(Drawable& who,Runnable& what);
     void draw(Canvas&canvas)override;
     static Drawable*inflate(Context*,const AttributeSet&atts);

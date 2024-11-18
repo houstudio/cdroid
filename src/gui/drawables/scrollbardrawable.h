@@ -55,7 +55,7 @@ public:
     int getAlpha() const override;
     int getOpacity()override;
     void invalidateDrawable(Drawable& who)override;
-    void scheduleDrawable(Drawable& who, Runnable& what, long when)override;
+    void scheduleDrawable(Drawable& who, Runnable& what, int64_t when)override;
     void unscheduleDrawable(Drawable& who,Runnable& what)override;
 };
 

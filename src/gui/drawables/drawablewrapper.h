@@ -45,7 +45,7 @@ public:
     void clearMutated()override;
     std::shared_ptr<ConstantState>getConstantState()override;
     void invalidateDrawable(Drawable& who)override;
-    void scheduleDrawable(Drawable&who,Runnable& what, long when)override;
+    void scheduleDrawable(Drawable&who,Runnable& what, int64_t when)override;
     void unscheduleDrawable(Drawable& who,Runnable& what)override;
     void draw(Canvas&canvas)override;
     bool getPadding(Rect& padding)override;

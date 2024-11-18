@@ -174,7 +174,7 @@ void DrawableWrapper::invalidateDrawable(Drawable& who){
     }
 }
 
-void DrawableWrapper::scheduleDrawable(Drawable&who,Runnable& what, long when){
+void DrawableWrapper::scheduleDrawable(Drawable&who,Runnable& what, int64_t when){
     Drawable::Callback* callback = getCallback();
     if (callback != nullptr) {
         callback->scheduleDrawable(*this, what, when);
