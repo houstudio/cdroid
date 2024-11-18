@@ -405,7 +405,7 @@ bool KeyboardView::onTouchEvent(MotionEvent& me){
     const int pointerCount = me.getPointerCount();
     const int action = me.getAction();
     bool result = false;
-    const long now = me.getEventTime();
+    const int64_t now = me.getEventTime();
 
     if (pointerCount != mOldPointerCount) {
         if (pointerCount == 1) {
@@ -446,7 +446,7 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
     if (touchY >= -mVerticalCorrection)
         touchY += mVerticalCorrection;
     const int action = me.getAction();
-    const long eventTime = me.getEventTime();
+    const int64_t eventTime = me.getEventTime();
     int keyIndex = getKeyIndices(touchX, touchY, nullptr);
     mPossiblePoly = possiblePoly;
 
@@ -593,7 +593,7 @@ void KeyboardView::resetMultiTap() {
     mInMultiTap = false;
 }
 
-void KeyboardView::checkMultiTap(long eventTime, int keyIndex){
+void KeyboardView::checkMultiTap(int64_t eventTime, int keyIndex){
     if (keyIndex == NOT_A_KEY) return;
     Keyboard::Key* key = mKeys[keyIndex];
     if (key->codes.size() > 1) {
@@ -687,7 +687,7 @@ void  KeyboardView::SwipeTracker::computeCurrentVelocity(int units){
 void  KeyboardView::SwipeTracker::computeCurrentVelocity(int units,float maxVelocity){
     float oldestX = mPastX[0];
     float oldestY = mPastY[0];
-    long oldestTime = mPastTime[0];
+    int64_t oldestTime = mPastTime[0];
     float accumX = 0;
     float accumY = 0;
     int N=0;

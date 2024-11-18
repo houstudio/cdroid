@@ -49,8 +49,8 @@ public:
     const std::string getDayTextAppearance();
     void setDate(int64_t timeInMillis);
     void setDate(int64_t timeInMillis, bool animate);
-    long getDate();
-    bool getBoundsForDate(long timeInMillis,Rect& outBounds);
+    int64_t getDate();
+    bool getBoundsForDate(int64_t timeInMillis,Rect& outBounds);
     void setFirstDayOfWeek(int firstDayOfWeek);
     int getFirstDayOfWeek();
     void setMinDate(int64_t timeInMillis);

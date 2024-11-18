@@ -265,7 +265,7 @@ public:
 
     int64_t getMinDate() override;
 
-    void setMaxDate(long maxDate) override;
+    void setMaxDate(int64_t maxDate) override;
 
     int64_t getMaxDate();
 

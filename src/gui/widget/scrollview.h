@@ -8,7 +8,7 @@ namespace cdroid{
 
 class ScrollView:public FrameLayout{
 private:
-    long mLastScroll;
+    int64_t mLastScroll;
     int mLastMotionY;
     bool mIsLayoutDirty=true;
     View* mChildToScrollTo = nullptr;

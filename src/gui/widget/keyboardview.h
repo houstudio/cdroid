@@ -121,15 +121,15 @@ private:
 
     Rect mPadding;
 
-    long mDownTime;
-    long mLastMoveTime;
+    int64_t mDownTime;
+    int64_t mLastMoveTime;
     int  mLastKey;
     int  mLastCodeX;
     int  mLastCodeY;
     int  mCurrentKey = NOT_A_KEY;
     int  mDownKey = NOT_A_KEY;
-    long mLastKeyTime;
-    long mCurrentKeyTime;
+    int64_t mLastKeyTime;
+    int64_t mCurrentKeyTime;
 
     std::vector<int>  mKeyIndices;
     int  mPopupX;
@@ -155,7 +155,7 @@ private:
     // For multi-tap
     int  mLastSentIndex;
     int  mTapCount;
-    long mLastTapTime;
+    int64_t mLastTapTime;
     bool mInMultiTap;
     bool mKeyboardChanged;
     Rect mDirtyRect;
@@ -172,7 +172,7 @@ private:
     bool onModifiedTouchEvent(MotionEvent& me, bool possiblePoly);
     bool repeatKey();
     void resetMultiTap();
-    void checkMultiTap(long eventTime, int keyIndex);
+    void checkMultiTap(int64_t eventTime, int keyIndex);
     void dismissPopupKeyboard();
 protected:
     bool onLongPress(Keyboard::Key* popupKey);
