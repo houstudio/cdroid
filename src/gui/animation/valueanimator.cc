@@ -191,7 +191,7 @@ long ValueAnimator::getTotalDuration(){
     }
 }
 
-void ValueAnimator::setCurrentPlayTime(long playTime) {
+void ValueAnimator::setCurrentPlayTime(int64_t playTime) {
     float fraction = mDuration > 0 ? (float) playTime / mDuration : 1;
     setCurrentFraction(fraction);
 }
@@ -536,10 +536,10 @@ void ValueAnimator::endAnimation(){
     mReversing = false;
 }
 
-void ValueAnimator::commitAnimationFrame(long frameTime){
+void ValueAnimator::commitAnimationFrame(int64_t frameTime){
     if (!mStartTimeCommitted) {
         mStartTimeCommitted = true;
-        const long adjustment = frameTime - mLastFrameTime;
+        const int64_t adjustment = frameTime - mLastFrameTime;
         if (adjustment > 0) {
             mStartTime += adjustment;
             LOGV("%p Adjusted start time by %d ms",this,adjustment);
@@ -547,7 +547,7 @@ void ValueAnimator::commitAnimationFrame(long frameTime){
     }
 }
 
-bool ValueAnimator::animateBasedOnTime(long currentTime){
+bool ValueAnimator::animateBasedOnTime(int64_t currentTime){
     bool done = false;
     if (mRunning) {
         long scaledDuration = getScaledDuration();
@@ -574,7 +574,7 @@ bool ValueAnimator::animateBasedOnTime(long currentTime){
     return done;
 }
 
-void ValueAnimator::animateBasedOnPlayTime(long currentPlayTime, long lastPlayTime, bool inReverse){
+void ValueAnimator::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse){
     initAnimation();
     // Check whether repeat callback is needed only when repeat count is non-zero
     if (mRepeatCount > 0) {
@@ -616,11 +616,11 @@ bool ValueAnimator::isInitialized(){
     return mInitialized;
 }
 
-bool ValueAnimator::doAnimationFrame(long frameTime){
+bool ValueAnimator::doAnimationFrame(int64_t frameTime){
     if (mStartTime < 0) {
         // First frame. If there is start delay, start delay count down will happen *after* this
         // frame.
-        mStartTime = mReversing ? frameTime : frameTime + (long) (mStartDelay * resolveDurationScale());
+        mStartTime = mReversing ? frameTime : frameTime + (mStartDelay * resolveDurationScale());
     }
 
     // Handle pause/resume
@@ -665,14 +665,14 @@ bool ValueAnimator::doAnimationFrame(long frameTime){
     // an animation.  The "current time" must always be on or after the start
     // time to avoid animating frames at negative time intervals.  In practice, this
     // is very rare and only happens when seeking backwards.
-    const long currentTime = std::max(frameTime, (long)mStartTime);
+    const int64_t currentTime = std::max(frameTime, mStartTime);
     bool finished = animateBasedOnTime(currentTime);
 
     if (finished)  endAnimation();
     return finished;
 }
 
-bool ValueAnimator::pulseAnimationFrame(long frameTime){
+bool ValueAnimator::pulseAnimationFrame(int64_t frameTime){
     if (mSelfPulse) {
         // Pulse animation frame will *always* be after calling start(). If mSelfPulse isn't
         // set to false at this point, that means child animators did not call super's start().

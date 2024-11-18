@@ -12,7 +12,7 @@ void TimeAnimator::start(){
     ValueAnimator::start();
 }
 
-bool TimeAnimator::animateBasedOnTime(long currentTime){
+bool TimeAnimator::animateBasedOnTime(int64_t currentTime){
     if(mListener != nullptr){
         long totalTime = currentTime - mStartTime;
         long detaTime  = (mPreviousTime<0)?0:(currentTime -mPreviousTime);
@@ -22,7 +22,7 @@ bool TimeAnimator::animateBasedOnTime(long currentTime){
     return true;
 }
 
-void TimeAnimator::setCurrentPlayTime(long playTime){
+void TimeAnimator::setCurrentPlayTime(int64_t playTime){
     const int64_t currentTime=AnimationUtils::currentAnimationTimeMillis();
     mStartTime = std::max(mStartTime,currentTime - playTime);
     animateBasedOnTime(currentTime);

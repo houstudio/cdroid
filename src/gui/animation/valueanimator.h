@@ -65,11 +65,11 @@ private:
 protected:
     virtual void animateValue(float fraction);
     void startWithoutPulsing(bool inReverse);
-    virtual bool animateBasedOnTime(long currentTime);
-    virtual void animateBasedOnPlayTime(long currentPlayTime, long lastPlayTime, bool inReverse);
+    virtual bool animateBasedOnTime(int64_t currentTime);
+    virtual void animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse);
     void skipToEndValue(bool inReverse);
     bool isInitialized();
-    bool pulseAnimationFrame(long frameTime);
+    bool pulseAnimationFrame(int64_t frameTime);
 public:
     ValueAnimator();
     ValueAnimator(const ValueAnimator&);
@@ -92,7 +92,7 @@ public:
     ValueAnimator& setDuration(long duration);
     long getDuration();
     long getTotalDuration();
-    virtual void setCurrentPlayTime(long playTime);
+    virtual void setCurrentPlayTime(int64_t playTime);
     void setCurrentFraction(float fraction);
     int64_t getCurrentPlayTime();
     long getStartDelay();
@@ -121,8 +121,8 @@ public:
     void reverse()override;
     bool canReverse()override;
 
-    void commitAnimationFrame(long frameTime)override;
-    bool doAnimationFrame(long frameTime)override;
+    void commitAnimationFrame(int64_t frameTime)override;
+    bool doAnimationFrame(int64_t frameTime)override;
     float getAnimatedFraction();
     ValueAnimator* clone()const override;
     AnimationHandler& getAnimationHandler()const;

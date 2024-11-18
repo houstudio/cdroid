@@ -89,7 +89,7 @@ bool RippleForeground::hasFinishedExit()const{
 }
 
 long RippleForeground::computeFadeOutDelay() {
-    long timeSinceEnter = AnimationUtils::currentAnimationTimeMillis() - mEnterStartedAtMillis;
+    const int64_t timeSinceEnter = AnimationUtils::currentAnimationTimeMillis() - mEnterStartedAtMillis;
     if (timeSinceEnter > 0 && timeSinceEnter < OPACITY_HOLD_DURATION) {
         return OPACITY_HOLD_DURATION - timeSinceEnter;
     }

@@ -375,12 +375,12 @@ void AnimatorSet::skipToEndValue(bool inReverse) {
     }
 }
 
-void AnimatorSet::animateBasedOnPlayTime(long currentPlayTime, long lastPlayTime, bool inReverse){
+void AnimatorSet::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse){
     if (inReverse) {
         if (getTotalDuration() == DURATION_INFINITE) {
             LOGE("Cannot reverse AnimatorSet with infinite duration");
         }
-        long duration = getTotalDuration() - mStartDelay;
+        int64_t duration = getTotalDuration() - mStartDelay;
         currentPlayTime = std::min(currentPlayTime, duration);
         currentPlayTime = duration - currentPlayTime;
         lastPlayTime = duration - lastPlayTime;
@@ -442,7 +442,7 @@ void AnimatorSet::skipToStartValue(bool inReverse){
      skipToEndValue(!inReverse);
 }
 
-void AnimatorSet::setCurrentPlayTime(long playTime){
+void AnimatorSet::setCurrentPlayTime(int64_t playTime){
     initAnimation();
 
     if (!isStarted()) {
@@ -465,7 +465,7 @@ void AnimatorSet::setCurrentPlayTime(long playTime){
     }
 }
 
-long AnimatorSet::getCurrentPlayTime() {
+int64_t AnimatorSet::getCurrentPlayTime() {
     if (mSeekState->isActive()) {
         return mSeekState->getPlayTime();
     }
@@ -492,7 +492,7 @@ void AnimatorSet::initChildren(){
     }
 }
 
-bool AnimatorSet::doAnimationFrame(long frameTime){
+bool AnimatorSet::doAnimationFrame(int64_t frameTime){
     float durationScale = ValueAnimator::getDurationScale();
     if (durationScale == .0f) {
         // Duration scale is 0, end the animation right away.
@@ -539,7 +539,7 @@ bool AnimatorSet::doAnimationFrame(long frameTime){
 
     // From here on, we always use unscaled play time. Note this unscaled playtime includes
     // the start delay.
-    long unscaledPlayTime = (long) ((frameTime - mFirstFrame) / durationScale);
+    int64_t unscaledPlayTime = int64_t((frameTime - mFirstFrame) / durationScale);
     mLastFrameTime = frameTime;
 
     // 1. Pulse the animators that will start or end in this frame
@@ -585,15 +585,15 @@ bool AnimatorSet::doAnimationFrame(long frameTime){
     return false;
 }
 
-void AnimatorSet::commitAnimationFrame(long frameTime) {
+void AnimatorSet::commitAnimationFrame(int64_t frameTime) {
     // No op.
 }
 
-bool AnimatorSet::pulseAnimationFrame(long frameTime) {
+bool AnimatorSet::pulseAnimationFrame(int64_t frameTime) {
     return doAnimationFrame(frameTime);
 }
 
-void AnimatorSet::handleAnimationEvents(int startId, int latestId, long playTime) {
+void AnimatorSet::handleAnimationEvents(int startId, int latestId, int64_t playTime) {
     if (mReversing) {
         startId = startId == -1 ? int(mEvents.size()) : startId;
         for (int i = startId - 1; i >= latestId; i--) {
@@ -640,7 +640,7 @@ void AnimatorSet::handleAnimationEvents(int startId, int latestId, long playTime
     }
 }
 
-void AnimatorSet::pulseFrame(AnimatorSet::Node* node, long animPlayTime) {
+void AnimatorSet::pulseFrame(AnimatorSet::Node* node, int64_t animPlayTime) {
     if (!node->mEnded) {
         float durationScale = ValueAnimator::getDurationScale();
         durationScale = durationScale == 0  ? 1 : durationScale;
@@ -649,11 +649,11 @@ void AnimatorSet::pulseFrame(AnimatorSet::Node* node, long animPlayTime) {
     }
 }
 
-long AnimatorSet::getPlayTimeForNode(long overallPlayTime, AnimatorSet::Node* node) {
+int64_t AnimatorSet::getPlayTimeForNode(int64_t overallPlayTime, AnimatorSet::Node* node) {
     return getPlayTimeForNode(overallPlayTime, node, mReversing);
 }
 
-long AnimatorSet::getPlayTimeForNode(long overallPlayTime, AnimatorSet::Node* node, bool inReverse) {
+int64_t AnimatorSet::getPlayTimeForNode(int64_t overallPlayTime, AnimatorSet::Node* node, bool inReverse) {
     if (inReverse) {
         overallPlayTime = getTotalDuration() - overallPlayTime;
         return node->mEndTime - overallPlayTime;
@@ -698,7 +698,7 @@ void AnimatorSet::startAnimation() {
     }
 
     if (mReversing || mStartDelay == 0 || mSeekState->isActive()) {
-        long playTime;
+        int64_t playTime;
         // If no delay, we need to call start on the first animations to be consistent with old
         // behavior.
         if (mSeekState->isActive()) {
@@ -730,7 +730,7 @@ void AnimatorSet::removeDummyListener() {
     }
 }
 
-int AnimatorSet::findLatestEventIdForTime(long currentPlayTime) {
+int AnimatorSet::findLatestEventIdForTime(int64_t currentPlayTime) {
     const int size = (int)mEvents.size();
     int latestId = mLastEventId;
     // Call start on the first animations now to be consistent with the old behavior
@@ -937,7 +937,7 @@ AnimatorSet::AnimationEvent::AnimationEvent(Node* node, int event) {
     mEvent = event;
 }
 
-long AnimatorSet::AnimationEvent::getTime()const {
+int64_t AnimatorSet::AnimationEvent::getTime()const {
     if (mEvent == ANIMATION_START) {
         return mNode->mStartTime;
     } else if (mEvent == ANIMATION_DELAY_ENDED) {
@@ -958,14 +958,14 @@ void AnimatorSet::SeekState::reset() {
     mSeekingInReverse = false;
 }
 
-void AnimatorSet::SeekState::setPlayTime(long playTime, bool inReverse) {
+void AnimatorSet::SeekState::setPlayTime(int64_t playTime, bool inReverse) {
     // TODO: This can be simplified.
 
     // Clamp the play time
     if (mAnimSet->getTotalDuration() != DURATION_INFINITE) {
-        mPlayTime = std::min(playTime, mAnimSet->getTotalDuration() - mAnimSet->mStartDelay);
+        mPlayTime = std::min(playTime, int64_t(mAnimSet->getTotalDuration() - mAnimSet->mStartDelay));
     }
-    mPlayTime = std::max(0L, mPlayTime);
+    mPlayTime = std::max(int64_t(0), mPlayTime);
     mSeekingInReverse = inReverse;
 }
 
@@ -982,11 +982,11 @@ void AnimatorSet::SeekState::updateSeekDirection(bool inReverse){
     }
 }
 
-long AnimatorSet::SeekState::getPlayTime()const{
+int64_t AnimatorSet::SeekState::getPlayTime()const{
     return mPlayTime;
 }
 
-long AnimatorSet::SeekState::getPlayTimeNormalized()const{
+int64_t AnimatorSet::SeekState::getPlayTimeNormalized()const{
     if (mAnimSet->mReversing) {
         return mAnimSet->getTotalDuration() - mAnimSet->mStartDelay - mPlayTime;
     }

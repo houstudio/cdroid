@@ -25,8 +25,8 @@ private:
         Node* mLatestParent = nullptr;
 
         bool mParentsAdded = false;
-        long mStartTime = 0;
-        long mEndTime = 0;
+        int64_t mStartTime = 0;
+        int64_t mEndTime = 0;
         long mTotalDuration = 0;
     public:
         Node(Animator* animation);
@@ -45,20 +45,20 @@ private:
         int mEvent;
     public:
         AnimationEvent(Node* node, int event);
-        long getTime()const;
+        int64_t getTime()const;
     };
     class SeekState{
     private:
         AnimatorSet*mAnimSet;
-        long mPlayTime;
+        int64_t mPlayTime;
         bool mSeekingInReverse;
     public:
         SeekState(AnimatorSet*set);
         void reset();
-        void setPlayTime(long playTime, bool inReverse);
+        void setPlayTime(int64_t playTime, bool inReverse);
         void updateSeekDirection(bool inReverse);
-        long getPlayTime()const;
-        long getPlayTimeNormalized()const;
+        int64_t getPlayTime()const;
+        int64_t getPlayTimeNormalized()const;
         bool isActive()const;
     };
 public:
@@ -102,15 +102,15 @@ private:
     bool mShouldIgnoreEndWithoutStart;
     bool mShouldResetValuesAtStart;
     bool mEndCanBeCalled;
-    long mLastFrameTime = -1;
-    long mFirstFrame = -1;
+    int64_t mLastFrameTime = -1;
+    int64_t mFirstFrame = -1;
     int mLastEventId = -1;
     // Indicates whether the animation is reversing.
     bool mReversing = false;
     bool mSelfPulse = true;
     SeekState* mSeekState;
     bool mChildrenInitialized = false;
-    long mPauseTime = -1;
+    int64_t mPauseTime = -1;
 private:
     void forceToEnd();
     void initAnimation();
@@ -119,14 +119,14 @@ private:
     void updateAnimatorsDuration();
     void skipToStartValue(bool inReverse);
     void initChildren();
-    void handleAnimationEvents(int startId, int latestId, long playTime);
-    void pulseFrame(Node* node, long animPlayTime);
-    long getPlayTimeForNode(long overallPlayTime, Node* node) ;
-    long getPlayTimeForNode(long overallPlayTime, Node* node, bool inReverse);
+    void handleAnimationEvents(int startId, int latestId, int64_t playTime);
+    void pulseFrame(Node* node, int64_t animPlayTime);
+    int64_t getPlayTimeForNode(int64_t overallPlayTime, Node* node) ;
+    int64_t getPlayTimeForNode(int64_t overallPlayTime, Node* node, bool inReverse);
     void startAnimation();
     void addDummyListener();
     void removeDummyListener();
-     int findLatestEventIdForTime(long currentPlayTime);
+     int findLatestEventIdForTime(int64_t currentPlayTime);
     void endAnimation();
     void removeAnimationCallback();
     void addAnimationCallback(long delay);
@@ -137,7 +137,7 @@ private:
     Node* getNodeForAnimation(Animator* anim);
 protected:
     void skipToEndValue(bool inReverse);
-    void animateBasedOnPlayTime(long currentPlayTime, long lastPlayTime, bool inReverse);
+    void animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse);
     bool isInitialized();
 public:
     AnimatorSet();
@@ -162,11 +162,11 @@ public:
     void pause()override;
     void resume()override;
     void start()override;
-    void setCurrentPlayTime(long playTime);
-    long getCurrentPlayTime();
-    bool doAnimationFrame(long frameTime)override;
-    void commitAnimationFrame(long frameTime)override;
-    bool pulseAnimationFrame(long frameTime)override;
+    void setCurrentPlayTime(int64_t playTime);
+    int64_t getCurrentPlayTime();
+    bool doAnimationFrame(int64_t frameTime)override;
+    void commitAnimationFrame(int64_t frameTime)override;
+    bool pulseAnimationFrame(int64_t frameTime)override;
     Animator* clone()const override;
     bool canReverse()override;
     void reverse()override;

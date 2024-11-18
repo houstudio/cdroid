@@ -201,13 +201,13 @@ void AnimatedStateListDrawable::AnimatedStateListState::mutate() {
 
 int AnimatedStateListDrawable::AnimatedStateListState::addTransition(int fromId, int toId,Drawable* anim, bool reversible){
     const int pos = addChild(anim);
-    const long keyFromTo = generateTransitionKey(fromId, toId);
+    const int64_t keyFromTo = generateTransitionKey(fromId, toId);
     const int64_t reversibleBit = reversible ? REVERSIBLE_FLAG_BIT : 0;
 
     mTransitions.put(keyFromTo, pos | reversibleBit);//append
 
     if (reversible) {
-        const long keyToFrom = generateTransitionKey(toId, fromId);
+        const int64_t keyToFrom = generateTransitionKey(toId, fromId);
         mTransitions.put(keyToFrom, pos | REVERSED_BIT | reversibleBit);//append
     }
     return pos;
@@ -233,17 +233,17 @@ int AnimatedStateListDrawable::AnimatedStateListState::getKeyframeIdAt(int index
 }
 
 int AnimatedStateListDrawable::AnimatedStateListState::indexOfTransition(int fromId, int toId) {
-    const long keyFromTo = generateTransitionKey(fromId, toId);
+    const int64_t keyFromTo = generateTransitionKey(fromId, toId);
     return (int) mTransitions.get(keyFromTo, -1);
 }
 
 bool AnimatedStateListDrawable::AnimatedStateListState::isTransitionReversed(int fromId, int toId) {
-    const long keyFromTo = generateTransitionKey(fromId, toId);
+    const int64_t keyFromTo = generateTransitionKey(fromId, toId);
     return (mTransitions.get(keyFromTo, -1) & REVERSED_BIT) != 0;
 }
 
 bool AnimatedStateListDrawable::AnimatedStateListState::transitionHasReversibleFlag(int fromId, int toId) {
-    const long keyFromTo = generateTransitionKey(fromId, toId);
+    const int64_t keyFromTo = generateTransitionKey(fromId, toId);
     return (mTransitions.get(keyFromTo, -1) & REVERSIBLE_FLAG_BIT) != 0;
 }
 

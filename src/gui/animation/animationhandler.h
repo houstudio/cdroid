@@ -11,14 +11,14 @@ class AnimationHandler{
 public:
     class AnimationFrameCallback{
     public:
-        virtual bool doAnimationFrame(long)=0;
-        virtual void commitAnimationFrame(long)=0;
+        virtual bool doAnimationFrame(int64_t)=0;
+        virtual void commitAnimationFrame(int64_t)=0;
     };
     class AnimationFrameCallbackProvider {
     public:
         virtual void postFrameCallback(const Choreographer::FrameCallback& callback)=0;
         virtual void postCommitCallback(Runnable& runnable)=0;
-        virtual long getFrameTime()=0;
+        virtual int64_t getFrameTime()=0;
         virtual long getFrameDelay()=0;
         virtual void setFrameDelay(long delay)=0;
     };
@@ -27,7 +27,7 @@ private:
     public:
         void postFrameCallback(const Choreographer::FrameCallback& callback)override;
         void postCommitCallback(Runnable& runnable)override;
-        long getFrameTime()override;
+        int64_t getFrameTime()override;
         long getFrameDelay()override;
         void setFrameDelay(long delay)override;
     };
@@ -42,10 +42,10 @@ private:
 private:
     AnimationFrameCallbackProvider* getProvider();
     ~AnimationHandler();
-    void doFrame(long);
-    void doAnimationFrame(long frameTime);
-    bool isCallbackDue(AnimationFrameCallback* callback, long currentTime);
-    void commitAnimationFrame(AnimationFrameCallback* callback, long frameTime);
+    void doFrame(int64_t);
+    void doAnimationFrame(int64_t frameTime);
+    bool isCallbackDue(AnimationFrameCallback* callback, int64_t currentTime);
+    void commitAnimationFrame(AnimationFrameCallback* callback, int64_t frameTime);
     void cleanUpList();
     int getCallbackSize()const;
 public:

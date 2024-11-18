@@ -35,7 +35,7 @@ private:
     /** Whether we can use hardware acceleration for the exit animation. */
     bool mUsingProperties;
 
-    long mEnterStartedAtMillis;
+    int64_t mEnterStartedAtMillis;
     bool mForceSoftware;
     float mStartRadius = 0;
     std::vector<Animator*> mRunningSwAnimators;

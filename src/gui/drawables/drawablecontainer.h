@@ -81,8 +81,8 @@ protected:
     bool mHasAlpha;
     bool mMutated;
     Runnable mAnimationRunnable;
-    long mEnterAnimationEnd;
-    long mExitAnimationEnd;
+    int64_t mEnterAnimationEnd;
+    int64_t mExitAnimationEnd;
 
     Drawable* mCurrDrawable;
     Drawable* mLastDrawable;

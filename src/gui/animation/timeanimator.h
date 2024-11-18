@@ -8,12 +8,12 @@ public:
     typedef std::function<void(TimeAnimator&,long totalTime,long detaTime)>TimeListener;
 private:
     TimeListener mListener;
-    long mPreviousTime;
+    int64_t mPreviousTime;
 public:
     TimeAnimator();
     void start();
-    bool animateBasedOnTime(long currentTime)override;
-    void setCurrentPlayTime(long playTime)override;
+    bool animateBasedOnTime(int64_t currentTime)override;
+    void setCurrentPlayTime(int64_t playTime)override;
     void setTimeListener(TimeListener listener);
     void animateValue(float fraction)override;
     void initAnimation()override;

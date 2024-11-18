@@ -115,7 +115,7 @@ bool Animator::canReverse() {
 void Animator::reverse(){
 }
 
-bool Animator::pulseAnimationFrame(long frameTime) {
+bool Animator::pulseAnimationFrame(int64_t frameTime) {
     // TODO: Need to find a better signal than this. There's a bug in SystemUI that's preventing
     // returning !isStarted() from working.
     return false;
@@ -136,7 +136,7 @@ bool Animator::isInitialized() {
     return true;
 }
 
-void Animator::animateBasedOnPlayTime(long currentPlayTime, long lastPlayTime, bool inReverse) {
+void Animator::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse) {
 }
 
 AnimatorListenerAdapter::AnimatorListenerAdapter(){

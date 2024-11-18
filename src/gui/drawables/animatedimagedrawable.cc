@@ -150,7 +150,7 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
     if( (mCurrentFrame != mNextFrame) && mAnimatedImageState->mFrameCount){
         const int64_t startTime  = SystemClock::uptimeMillis();
         mFrameDelay = mFrameSequenceState->drawFrame(mNextFrame,(uint32_t*)mImage->get_data(),mImage->get_stride()>>2,mCurrentFrame);
-        const int64_t decodeTime = long(SystemClock::uptimeMillis() - startTime);
+        const int64_t decodeTime = (SystemClock::uptimeMillis() - startTime);
         mFrameDelay = (decodeTime >= mFrameDelay)?(mFrameDelay/2):(mFrameDelay - decodeTime);
         mCurrentFrame = mNextFrame;
         mImage->mark_dirty();

@@ -13,7 +13,7 @@ void AnimationHandler::MyFrameCallbackProvider::postCommitCallback(Runnable& run
     Choreographer::getInstance().postCallback(Choreographer::CALLBACK_COMMIT, runnable, nullptr);
 }
 
-long AnimationHandler::MyFrameCallbackProvider::getFrameTime() {
+int64_t AnimationHandler::MyFrameCallbackProvider::getFrameTime() {
     return Choreographer::getInstance().getFrameTime();
 }
 
@@ -38,7 +38,7 @@ AnimationHandler::~AnimationHandler(){
 }
 
 
-void AnimationHandler::doFrame(long frameTimeNanos){
+void AnimationHandler::doFrame(int64_t frameTimeNanos){
     LOGV("not used,frame refresh callback");
     doAnimationFrame(getProvider()->getFrameTime());
     if( mAnimationCallbacks.size() ){
@@ -46,7 +46,7 @@ void AnimationHandler::doFrame(long frameTimeNanos){
     }
 }
 
-void AnimationHandler::doAnimationFrame(long frameTime){
+void AnimationHandler::doAnimationFrame(int64_t frameTime){
     const int size = mAnimationCallbacks.size();
     for (auto callback:mAnimationCallbacks) {
         if (callback == nullptr) continue;
@@ -66,7 +66,7 @@ void AnimationHandler::doAnimationFrame(long frameTime){
     cleanUpList();
 }
 
-bool AnimationHandler::isCallbackDue(AnimationFrameCallback* callback, long currentTime){
+bool AnimationHandler::isCallbackDue(AnimationFrameCallback* callback, int64_t currentTime){
     auto it = mDelayedCallbackStartTime.find(callback);
     if(it == mDelayedCallbackStartTime.end()) return true;
     if (it->second < currentTime) {
@@ -76,7 +76,7 @@ bool AnimationHandler::isCallbackDue(AnimationFrameCallback* callback, long curr
     return false;    
 }
 
-void AnimationHandler::commitAnimationFrame(AnimationFrameCallback* callback, long frameTime){
+void AnimationHandler::commitAnimationFrame(AnimationFrameCallback* callback, int64_t frameTime){
     auto it = mDelayedCallbackStartTime.find(callback);
     auto itc = std::find(mCommitCallbacks.begin(),mCommitCallbacks.end(),callback);
     if ((it == mDelayedCallbackStartTime.end()) && (itc != mCommitCallbacks.end()) ) {
