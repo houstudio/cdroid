@@ -61,7 +61,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     initView();
 
     mContext = ctx;
-    mID = ctx->getId(attrs.getString("id"));
+    mID = attrs.getResourceId("id",View::NO_ID);
     mMinWidth  = attrs.getDimensionPixelSize("minWidth",0);
     mMinHeight = attrs.getDimensionPixelSize("minHeight",0);
     setLayerType(attrs.getInt("layerType",std::map<const std::string,int>{

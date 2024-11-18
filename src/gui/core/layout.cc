@@ -42,6 +42,7 @@ Layout::Layout(int fontSize,int width)
     mEditable = false;
     mSelectionStart =-1;
     mSelectionEnd = -1;
+    mText.clear();
     mContext  = Cairo::Context::create(sImage);
     if(Typeface::DEFAULT == nullptr)
 	    Typeface::loadPreinstalledSystemFontMap();

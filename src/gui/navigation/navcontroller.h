@@ -2,6 +2,7 @@
 #define __NAV_CONTROLLER_H__
 #include <vector>
 #include <deque>
+#include <core/callbackbase.h>
 #include <navigation/navinflater.h>
 #include <navigation/navdestination.h>
 #include <navigation/simplenavigatorprovider.h>

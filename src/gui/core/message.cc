@@ -70,4 +70,8 @@ void Message::recycle(){
     }
 }
 
+void Message::recycleUnchecked(){
+
+}
+
 }

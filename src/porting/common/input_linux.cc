@@ -36,9 +36,13 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <sys/inotify.h>
-typedef struct {
+typedef struct DeviceNode{
     int fd;
     std::string name;
+    DeviceNode(int _fd,const std::string&str){
+        fd=_fd;
+        name=str;
+    }
 } DEVICENODE;
 typedef struct {
     int maxfd;

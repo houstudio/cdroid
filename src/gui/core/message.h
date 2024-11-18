@@ -39,6 +39,7 @@ public:
     }
     void sendToTarget();
     void recycle();
+    void recycleUnchecked();
     static Message* obtain();
     static Message* obtain(const Message&);
     static Message* obtain(Handler* h);

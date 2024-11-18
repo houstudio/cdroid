@@ -1,6 +1,7 @@
 #if 0
 #include <navigation/navoptions.h>
 #include <navigation/navcontroller.h>
+#include <navigation/navdestination.h>
 
 namespace cdroid{
 /*
@@ -40,7 +41,7 @@ NavController::onNavigatorNavigated(Navigator& navigator,/*IdRes*/int destId,
             }
         }
         NavDestination* newDest = findDestination(destId);
-        FATAL_IF(newDest == null,"Navigator %p reported navigation to unknown destination id ",navigator);
+        FATAL_IF(newDest == nullptr,"Navigator %p reported navigation to unknown destination id ",navigator);
                     //NavDestination::getDisplayName(mContext, destId);
         if (backStackEffect == Navigator::BACK_STACK_DESTINATION_ADDED) {
             // Add the new destination to the back stack

@@ -258,6 +258,7 @@ LayerDrawable::LayerDrawable(const std::vector<Drawable*>&drawables)
 
 LayerDrawable::LayerDrawable(std::shared_ptr<LayerState>state){
     mMutated = false;
+    mChildRequestedInvalidation = 0;
     mSuspendChildInvalidation = false;
     mLayerState = createConstantState(state.get(),nullptr);
     if (mLayerState->mChildren.size()) {

@@ -23,11 +23,7 @@ NavGraph::NavGraph(/*@NonNull*/ NavGraphNavigator* navGraphNavigator)
 
 void NavGraph::onInflate(Context* context, const AttributeSet& attrs){
     NavDestination::onInflate(context, attrs);
-    /*TypedArray a = context.getResources().obtainAttributes(attrs,
-            R.styleable.NavGraphNavigator);
-    setStartDestination(
-            a.getResourceId(R.styleable.NavGraphNavigator_startDestination, 0));
-    a.recycle();*/
+    setStartDestination(attrs.getResourceId("startDestination", 0));
 }
 
 std::pair<NavDestination*, Bundle>* NavGraph::matchDeepLink(/*@NonNull Uri*/const std::string& uri) {
@@ -45,7 +41,7 @@ std::pair<NavDestination*, Bundle>* NavGraph::matchDeepLink(/*@NonNull Uri*/cons
         }
     }
 #else
-    size_t  size = mNodes.size();
+    const size_t  size = mNodes.size();
     for(int i=0;i<size;i++){
         NavDestination*child = mNodes.valueAt(i);
 	std::pair<NavDestination*, Bundle>* childResult = child->matchDeepLink(uri);
@@ -67,7 +63,7 @@ std::pair<NavDestination*, Bundle>* NavGraph::matchDeepLink(/*@NonNull Uri*/cons
  */
 void NavGraph::addDestination(/*@NonNull*/ NavDestination* node) {
     if (node->getId() == 0) {
-        throw ("Destinations must have an id."
+        throw std::runtime_error("Destinations must have an id."
                 " Call setId() or include an android:id in your navigation XML.");
     }
     NavDestination* existingDestination = mNodes.get(node->getId());
@@ -75,7 +71,7 @@ void NavGraph::addDestination(/*@NonNull*/ NavDestination* node) {
         return;
     }
     if (node->getParent() != nullptr) {
-        throw ("Destination already has a parent set."
+        throw std::runtime_error("Destination already has a parent set."
                 " Call NavGraph.remove() to remove the previous parent.");
     }
     if (existingDestination != nullptr) {
@@ -213,5 +209,5 @@ bool NavGraph::Iterator::operator!=(const Iterator& other) const {
     return mIter != other.mIter;
 }
 
-}
+}/*endof namesapce*/
 

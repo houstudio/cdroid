@@ -20,6 +20,7 @@
 #cmakedefine ENABLE_FRIBIDI  1
 #cmakedefine ENABLE_PINYIN2HZ 1
 #cmakedefine ENABLE_PLPLOT    1
+#cmakedefine ENABLE_MATHGL    1
 #cmakedefine ENABLE_MATPLOT   1
 #cmakedefine ENABLE_BARCODE   1
 #cmakedefine ENABLE_LITEHTML  1

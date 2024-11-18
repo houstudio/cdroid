@@ -196,7 +196,7 @@ LogMessage::~LogMessage() {
 void LogMessage::messageSave(const char* format, ...) {
     if(level_message>=level_module) {
         va_list arglist;
-        char message[kMaxMessageSize];
+        char message[kMaxMessageSize]={0};
         va_start(arglist, format);
         const int nbrcharacters = vsnprintf(message, sizeof(message), format, arglist);
         va_end(arglist);

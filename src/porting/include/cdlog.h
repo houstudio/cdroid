@@ -101,6 +101,6 @@ public:
 #define DUMPI_IF(x,tag,data,len) {if(x) LogDump(LOG_INFO,__FILE__,__FUNCTION__,__LINE__,tag,data,len);}
 #define DUMPW_IF(x,tag,data,len) {if(x) LogDump(LOG_WARN,__FILE__,__FUNCTION__,__LINE__,tag,data,len);}
 #define DUMPE_IF(x,tag,data,len) {if(x) LogDump(LOG_ERROR,__FILE__,__FUNCTION__,__LINE__,tag,data,len);}
-#define FATAL_IF(x,...) {if(x) LOG_PRINTF(LOG_FATAL,__VA_ARGS__);}
+#define FATAL_IF(x,...) {if(x) cdlog::FatalMessage(__FILE__,__LINE__,__FUNCTION__,0).messageSave(__VA_ARGS__);}
     
 #endif//endif __CDLOG_H__
