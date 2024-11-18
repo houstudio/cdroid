@@ -13,19 +13,19 @@ public:
         CALLBACK_COMMIT= 3,
         CALLBACK_LAST  = CALLBACK_COMMIT
     };
-    typedef CallbackBase<void,long>FrameCallback;
+    typedef CallbackBase<void,int64_t>FrameCallback;
     static constexpr long DEFAULT_FRAME_DELAY=33;
 private:
     class CallbackRecord{
     public:
         CallbackRecord*next;
-        long dueTime;
+        int64_t dueTime;
         Runnable action;
         FrameCallback frameCallback;
         void* token;
     public:
         CallbackRecord();
-        void run(long frameTimeNanos);
+        void run(int64_t frameTimeNanos);
     };
     class CallbackQueue{
     public:

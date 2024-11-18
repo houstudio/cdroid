@@ -1119,7 +1119,7 @@ bool View::awakenScrollBars(int startDelay, bool invalidate){
 
         // Tell mScrollCache when we should start fading. This may
         // extend the fade start time if one was already scheduled
-        long fadeStartTime = AnimationUtils::currentAnimationTimeMillis() + startDelay;
+        const int64_t fadeStartTime = AnimationUtils::currentAnimationTimeMillis() + startDelay;
         mScrollCache->fadeStartTime = fadeStartTime;
         mScrollCache->state = ScrollabilityCache::ON;
 
@@ -2368,7 +2368,7 @@ void View::onDrawScrollBars(Canvas& canvas){
         if (now-cache->fadeStartTime>cache->scrollBarFadeDuration){
             cache->state = ScrollabilityCache::OFF;
         } else {
-            const int alpha=255-255*(now-cache->fadeStartTime)/cache->scrollBarFadeDuration;
+            const int alpha = 255-255*((now-cache->fadeStartTime)/cache->scrollBarFadeDuration);
             cache->scrollBar->mutate()->setAlpha(alpha);
         }
         // This will make the scroll bars inval themselves after drawing. We only 
@@ -8078,7 +8078,7 @@ View::ScrollabilityCache::~ScrollabilityCache(){
 }
 
 void View::ScrollabilityCache::run(){
-    auto now = AnimationUtils::currentAnimationTimeMillis();
+    const int64_t now = AnimationUtils::currentAnimationTimeMillis();
     if (host && (now >= fadeStartTime)) {
         // the animation fades the scrollbars out by changing
         // the opacity (alpha) from fully opaque to fully

@@ -1464,7 +1464,7 @@ public:
     ScrollBarDrawable*scrollBar;
     View* host;
     Runnable mRunner;
-    long fadeStartTime;
+    int64_t fadeStartTime;
     int state;
     int mLastColor;
     Rect mScrollBarBounds;

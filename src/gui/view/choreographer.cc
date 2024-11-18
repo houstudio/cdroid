@@ -240,7 +240,7 @@ Choreographer::CallbackRecord::CallbackRecord(){
    dueTime = 0;
 }
 
-void Choreographer::CallbackRecord::run(long frameTimeNanos) {
+void Choreographer::CallbackRecord::run(int64_t frameTimeNanos) {
     if (((long int)token) == FRAME_CALLBACK_TOKEN) {
         frameCallback(frameTimeNanos);
     } else {
