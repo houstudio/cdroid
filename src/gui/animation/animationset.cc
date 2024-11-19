@@ -151,7 +151,7 @@ void AnimationSet::setStartTime(int64_t startTimeMillis){
 }
 
 int64_t AnimationSet::getStartTime()const{
-    int64_t startTime = LONG_MAX;//Long.MAX_VALUE;
+    int64_t startTime = INT64_MAX;//Long.MAX_VALUE;
     for (Animation*a:mAnimations){
         startTime = std::min(startTime, a->getStartTime());
     }

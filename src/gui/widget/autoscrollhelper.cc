@@ -289,7 +289,7 @@ void AutoScrollHelper::animationRun(){
 }
 /////////////////////////////////////////////////////////////////////////////////////
 AutoScrollHelper::ClampedScroller::ClampedScroller() {
-    mStartTime = LONG_MIN;//Long.MIN_VALUE;
+    mStartTime = INT64_MIN;//Long.MIN_VALUE;
     mStopTime = -1;
     mDeltaTime = 0;
     mDeltaX = 0;
