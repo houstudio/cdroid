@@ -147,8 +147,8 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
             const std::string styleName  =package+":style/"+attStyle.getString("name");
             const std::string styleParent=attStyle.getString("parent");
             auto it=mStyles.find(styleName);
-            if(it==mStyles.end()) {
-                it=mStyles.insert(it,{styleName,AttributeSet()});
+            if(it == mStyles.end()) {
+                it = mStyles.insert(it,{styleName,AttributeSet()});
                 if(styleParent.length())it->second.add("parent",styleParent);
                 LOGV("style:%s",styleName.c_str());
             }
@@ -363,7 +363,7 @@ size_t Assets::getArray(const std::string&resid,std::vector<int>&out) {
     if(it != mArraies.end()) {
         for(auto itm:it->second)
            out.push_back(std::stoi(itm));
-        return out.size();
+        return it->second.size();
     }
     return  0;
 }
@@ -377,7 +377,7 @@ size_t Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
             itm = AttributeSet::normalize(pkg,itm);
             out.push_back(itm);
         }
-        return out.size();
+        return it->second.size();
     }
     ZIPArchive * pak = getResource(resid,&name,nullptr);
     if(pak)pak->forEachEntry([&out,pkg](const std::string&res){

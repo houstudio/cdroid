@@ -1,6 +1,7 @@
 #ifndef __ATTRIBUTESET_H__
 #define __ATTRIBUTESET_H__
 #include <string>
+#include <vector>
 #include <map>
 #include <core/displaymetrics.h>
 
@@ -40,6 +41,8 @@ public:
 
     ColorStateList*getColorStateList(const std::string&key)const;
     Drawable*getDrawable(const std::string&key)const;
+    int getArray(const std::string&key,std::vector<std::string>&array)const;
+    int getArray(const std::string&key,std::vector<int>&array)const;
     void dump()const;
 };
 }

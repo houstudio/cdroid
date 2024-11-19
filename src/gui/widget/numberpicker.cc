@@ -141,6 +141,15 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     setMinValue(atts.getInt("min",0));
     setMaxValue(atts.getInt("max",0));
 
+    std::vector<std::string>displayedValues;
+    atts.getArray("displayedValues",displayedValues);
+    const int valueCount = std::abs(getMinValue()-getMaxValue())+1;
+    if(displayedValues.size()){
+        if(displayedValues.size()==valueCount)
+            setDisplayedValues(displayedValues);
+        LOGW_IF(displayedValues.size()!=valueCount,"displayedValues %d,value(%d,%d)",displayedValues.size(),mMinValue,mMaxValue);
+    }
+
     updateWrapSelectorWheel();
     LOGV("%p:%d textSize=%d,%d",this,mID,mInputTextSize,mTextSize);
     if(getFocusable()==View::FOCUSABLE_AUTO){

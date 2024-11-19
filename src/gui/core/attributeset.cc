@@ -47,7 +47,9 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
     if( isRes && (value.find(':')==std::string::npos) && hasSlash ){
         value = std::string(pkg+":"+value);
         if(hasAsk)value = "?"+value;
-    }
+    }/*else if(hasAsk&&(hasSlash==false)){
+        value = std::string(pkg+":attr/"+value);
+    }*/
     return value;
 }
 
@@ -148,6 +150,24 @@ int AttributeSet::getResourceId(const std::string&key,int def)const{
         return value == -1 ? def : value;
     }
     return def;
+}
+
+int AttributeSet::getArray(const std::string&key,std::vector<std::string>&array)const{
+    const std::string str = getString(key);
+    if(!str.empty()){
+        int value = mContext->getArray(str,array);
+        return value;
+    }
+    return 0;
+}
+
+int AttributeSet::getArray(const std::string&key,std::vector<int>&array)const{
+    const std::string str = getString(key);
+    if(!str.empty()){
+        int value = mContext->getArray(str,array);
+        return value;
+    }
+    return 0;
 }
 
 int AttributeSet::getColor(const std::string&key,int def)const{
