@@ -41,19 +41,19 @@ public:
         return mDayPickerView->getDayTextAppearance();
     }
 
-    void setMinDate(long minDate) override{
+    void setMinDate(int64_t minDate) override{
         mDayPickerView->setMinDate(minDate);
     }
 
-    long getMinDate() override{
+    int64_t getMinDate() override{
         return mDayPickerView->getMinDate();
     }
 
-    void setMaxDate(long maxDate) override{
+    void setMaxDate(int64_t maxDate) override{
         mDayPickerView->setMaxDate(maxDate);
     }
 
-    long getMaxDate() override{
+    int64_t getMaxDate() override{
         return mDayPickerView->getMaxDate();
     }
 
@@ -65,15 +65,15 @@ public:
         return mDayPickerView->getFirstDayOfWeek();
     }
 
-    void setDate(long date) {
+    void setDate(int64_t date) {
         mDayPickerView->setDate(date, true);
     }
 
-    void setDate(long date, bool animate, bool center) override{
+    void setDate(int64_t date, bool animate, bool center) override{
         mDayPickerView->setDate(date, animate);
     }
 
-    long getDate() {
+    int64_t getDate() {
         return mDayPickerView->getDate();
     }
 
@@ -81,7 +81,7 @@ public:
         mOnDateChangeListener = listener;
     }
 
-    bool getBoundsForDate(long date, Rect& outBounds) override{
+    bool getBoundsForDate(int64_t date, Rect& outBounds) override{
         bool result = mDayPickerView->getBoundsForDate(date, outBounds);
         if (result) {
             // Found the date in the current picker. Now need to offset vertically to return correct

@@ -28,14 +28,14 @@ public:
     bool sendMessage(Message& msg);
     bool sendEmptyMessage(int what);
     bool sendEmptyMessageDelayed(int what, long delayMillis);
-    bool sendEmptyMessageAtTime(int what, long uptimeMillis);
+    bool sendEmptyMessageAtTime(int what, int64_t uptimeMillis);
     bool sendMessageDelayed(Message& msg, long delayMillis);
-    bool sendMessageAtTime(Message& msg, long uptimeMillis);
+    bool sendMessageAtTime(Message& msg, int64_t uptimeMillis);
 
     bool hasCallbacks(Runnable r);
     void removeCallbacks(const Runnable& r);
     bool post(Runnable r);
-    bool postAtTime(Runnable r, long uptimeMillis);
+    bool postAtTime(Runnable r, int64_t uptimeMillis);
     bool postDelayed(Runnable r, long delayMillis);
 };
 }//endof namespace 

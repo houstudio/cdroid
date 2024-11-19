@@ -83,7 +83,7 @@ bool Handler::sendEmptyMessageDelayed(int what, long delayMillis) {
     return sendMessageDelayed(msg, delayMillis);
 }
 
-bool Handler::sendEmptyMessageAtTime(int what, long uptimeMillis) {
+bool Handler::sendEmptyMessageAtTime(int what, int64_t uptimeMillis) {
     Message msg;// = Message.obtain();
     msg.what = what;
     return sendMessageAtTime(msg, uptimeMillis);
@@ -96,7 +96,7 @@ bool Handler::sendMessageDelayed(Message& msg, long delayMillis){
     return sendMessageAtTime(msg, SystemClock::uptimeMillis() + delayMillis);
 }
 
-bool Handler::sendMessageAtTime(Message& msg, long uptimeMillis) {
+bool Handler::sendMessageAtTime(Message& msg, int64_t uptimeMillis) {
 #if 0
     MessageQueue queue = mQueue;
     if (queue == null) {
@@ -117,7 +117,7 @@ bool Handler::post(Runnable r){
     return sendMessageDelayed(msg, 0);
 }
 
-bool Handler::postAtTime(Runnable r, long uptimeMillis){
+bool Handler::postAtTime(Runnable r, int64_t uptimeMillis){
     Message msg = getPostMessage(r);
     return sendMessageAtTime(msg, uptimeMillis);
 }

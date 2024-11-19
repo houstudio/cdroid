@@ -12,9 +12,9 @@ void HandlerActionQueue::postDelayed(const Runnable& action, long delayMillis) {
 }
 
 void HandlerActionQueue::removeCallbacks(const Runnable& action) {
-    const int count = mActions.size();
-    int j = 0;
-    for (int i = 0; i < count; i++) {
+    const size_t count = mActions.size();
+    size_t j = 0;
+    for (size_t i = 0; i < count; i++) {
         if (mActions[i]->matches(action)) {
             // Remove this action by overwriting it within
             // this loop or nulling it out later.
@@ -39,7 +39,7 @@ void HandlerActionQueue::removeCallbacks(const Runnable& action) {
 }
 
 void HandlerActionQueue::executeActions(UIEventSource& handler) {
-    for (int i = 0, count = mActions.size(); i < count; i++) {
+    for (size_t i = 0, count = mActions.size(); i < count; i++) {
         HandlerAction* handlerAction = mActions[i];
         handler.postDelayed(handlerAction->action, handlerAction->delay);
     }
