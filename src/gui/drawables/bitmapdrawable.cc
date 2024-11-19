@@ -325,7 +325,12 @@ static void setPatternByTileMode(RefPtr<SurfacePattern>pat,int tileMode){
     case TileMode::MIRROR: pat->set_extend(Pattern::Extend::REFLECT); break;
     }
 }
-
+static int getRotateAngle(Canvas&canvas){
+    double xx, yx, xy, yy, x0, y0;
+    Cairo::Matrix ctx=canvas.get_matrix();
+    double radians = atan2(ctx.yy, ctx.xy);
+    return int(radians*180.f/M_PI);
+}
 void BitmapDrawable::draw(Canvas&canvas){
     if(mBitmapState->mBitmap==nullptr) return;
     updateDstRectAndInsetsIfDirty();
@@ -382,8 +387,9 @@ void BitmapDrawable::draw(Canvas&canvas){
         float dw = float(mBounds.width) , dh = float(mBounds.height);
         const float fx = dw / sw   , fy = dh / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
+        const int angle_degrees = getRotateAngle(canvas);
 	    //SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;GOOD/FAST seems more slowly than ,BILINEAR/NEAREST
-        const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap||(canvas.get_antialias()>Cairo::ANTIALIAS_NONE))
+        const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap)||(angle_degrees%90==0)
 		? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
         const Pattern::Dither ditherMode = mBitmapState->mDither ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
 
