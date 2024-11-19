@@ -29,8 +29,9 @@ NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid){
 NinePatchDrawable::NinePatchDrawable(RefPtr<ImageSurface>bmp){
     mNinePatchState = std::make_shared<NinePatchState>(bmp);
     mAlpha = 255;
-    mTintFilter = nullptr;
     mMutated = false;
+    mFilterBitmap = false;
+    mTintFilter = nullptr;
     computeBitmapSize();
 }
 
@@ -134,7 +135,7 @@ void NinePatchDrawable::setAutoMirrored(bool mirrored) {
 }
 
 bool NinePatchDrawable::needsMirroring() {
-    return isAutoMirrored() && getLayoutDirection() == LayoutDirection::RTL;
+    return isAutoMirrored() && (getLayoutDirection() == LayoutDirection::RTL);
 }
 
 bool NinePatchDrawable::isAutoMirrored(){

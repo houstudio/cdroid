@@ -448,6 +448,7 @@ View::~View(){
     delete mRoundScrollbarRenderer;
     delete mCurrentAnimation;
     delete mTransformationInfo;
+    delete mStateListAnimator;
     delete mOverlay;
     delete mAnimator;
     delete mFloatingTreeObserver;
@@ -7792,6 +7793,7 @@ void View::setStateListAnimator(StateListAnimator*stateListAnimator){
     }
     if (mStateListAnimator != nullptr) {
         mStateListAnimator->setTarget(nullptr);
+        delete mStateListAnimator;
     }
     mStateListAnimator = stateListAnimator;
     if (stateListAnimator != nullptr) {

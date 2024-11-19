@@ -185,8 +185,8 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
 }
 
 int Assets::addResource(const std::string&path,const std::string&name) {
-    ZIPArchive*pak=new ZIPArchive(path);
-    std::string package=name;
+    ZIPArchive*pak = new ZIPArchive(path);
+    std::string package = name;
     if(name.empty()) {
         size_t pos=path.find_last_of('/');
         if(pos != std::string::npos)
@@ -444,7 +444,7 @@ Drawable* Assets::getDrawable(const std::string&resid) {
         const uint32_t cc = (uint32_t)getColor(fullresid);
         return new ColorDrawable(cc);
     } else if(ext.compare("xml")){
-        if(resname.find_first_of("@:")!=std::string::npos)
+        if(resname.find(":")==std::string::npos)
             d = ImageDecoder::createAsDrawable(this,package+":"+resname);
         else
             d = ImageDecoder::createAsDrawable(this,resname);
