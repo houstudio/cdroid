@@ -15,7 +15,7 @@ RadioGroup::RadioGroup(int w,int h):LinearLayout(w,h){
 
 RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
     :LinearLayout(context,attrs){
-    mCheckedId = mContext->getId(attrs.getString("id"));
+    mCheckedId = attrs.getResourceId("id",View::NO_ID);
     mInitialCheckedId = (mCheckedId!=View::NO_ID);
     setOrientation(attrs.getInt("orientation",VERTICAL));
     init();

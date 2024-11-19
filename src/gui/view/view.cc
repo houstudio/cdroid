@@ -124,12 +124,12 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setFocusableInTouchMode( attrs.getBoolean("focusableInTouchMode",false) );
     setFocusedByDefault( attrs.getBoolean("focusedByDefault",false) );
   
-    mNextFocusLeftId = ctx->getId( attrs.getString("nextFocusLeft") );
-    mNextFocusRightId= ctx->getId( attrs.getString("nextFocusRight") );
-    mNextFocusUpId   = ctx->getId( attrs.getString("nextFocusUp") );
-    mNextFocusDownId = ctx->getId( attrs.getString("nextFocusDown") );
-    mNextFocusForwardId  = ctx->getId( attrs.getString("nextFocusForward") );
-    mNextClusterForwardId= ctx->getId( attrs.getString("nextClusterFoward") );
+    mNextFocusLeftId = attrs.getResourceId("nextFocusLeft",View::NO_ID);
+    mNextFocusRightId= attrs.getResourceId("nextFocusRight",View::NO_ID);
+    mNextFocusUpId   = attrs.getResourceId("nextFocusUp",View::NO_ID);
+    mNextFocusDownId = attrs.getResourceId("nextFocusDown",View::NO_ID);
+    mNextFocusForwardId  = attrs.getResourceId("nextFocusForward",View::NO_ID);
+    mNextClusterForwardId= attrs.getResourceId("nextClusterFoward",View::NO_ID);
 
     setRotation( attrs.getFloat("rotation",0) );
     setTranslationX( attrs.getDimensionPixelSize("translationX",0) );

@@ -807,24 +807,18 @@ RelativeLayout::LayoutParams::LayoutParams(const RelativeLayout::LayoutParams& s
     mNeedsLayoutResolution = false;
 }
 
-static int GetID(Context*ctx,const AttributeSet&atts,const std::string&res){
-    const int id=ctx->getId(atts.getString(res));
-    return id==View::NO_ID?0:id;
-}
-
 RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):MarginLayoutParams(ctx,atts){
-#define GETID(res) GetID(ctx,atts,res)
     alignWithParent = atts.getBoolean("alignWithParentIfMissing",false);
     mLeft = mTop = mRight = mBottom = VALUE_NOT_SET;
-    mRules[LEFT_OF] = GETID("layout_toLeftOf");
-    mRules[RIGHT_OF]= GETID("layout_toRightOf");
-    mRules[ABOVE]   = GETID("layout_above");
-    mRules[BELOW]   = GETID("layout_below");
-    mRules[ALIGN_BASELINE]= GETID("layout_alignBaseline");
-    mRules[ALIGN_LEFT]    = GETID("layout_alignLeft");
-    mRules[ALIGN_TOP]     = GETID("layout_alignTop");
-    mRules[ALIGN_RIGHT]   = GETID("layout_alignRight");
-    mRules[ALIGN_BOTTOM]  = GETID("layout_alignBottom");
+    mRules[LEFT_OF] = atts.getResourceId("layout_toLeftOf",0);
+    mRules[RIGHT_OF]= atts.getResourceId("layout_toRightOf",0);
+    mRules[ABOVE]   = atts.getResourceId("layout_above",0);
+    mRules[BELOW]   = atts.getResourceId("layout_below",0);
+    mRules[ALIGN_BASELINE]= atts.getResourceId("layout_alignBaseline",0);
+    mRules[ALIGN_LEFT]    = atts.getResourceId("layout_alignLeft",0);
+    mRules[ALIGN_TOP]     = atts.getResourceId("layout_alignTop",0);
+    mRules[ALIGN_RIGHT]   = atts.getResourceId("layout_alignRight",0);
+    mRules[ALIGN_BOTTOM]  = atts.getResourceId("layout_alignBottom",0);
 
     mRules[ALIGN_PARENT_LEFT]  = atts.getBoolean("layout_alignParentLeft"  , false) ? LTRUE : 0;
     mRules[ALIGN_PARENT_TOP]   = atts.getBoolean("layout_alignParentTop"   , false) ? LTRUE : 0;    
@@ -835,10 +829,10 @@ RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):
     mRules[CENTER_HORIZONTAL]= atts.getBoolean("layout_centerHorizontal", false) ? LTRUE : 0;
     mRules[CENTER_VERTICAL]  = atts.getBoolean("layout_centerVertical"  , false) ? LTRUE : 0;
 
-    mRules[START_OF]   = GETID("layout_toStartOf");
-    mRules[END_OF]     = GETID("layout_toEndOf");
-    mRules[ALIGN_START]= GETID("layout_alignStart"); 
-    mRules[ALIGN_END]  = GETID("layout_alignEnd"); 
+    mRules[START_OF]   = atts.getResourceId("layout_toStartOf",0);
+    mRules[END_OF]     = atts.getResourceId("layout_toEndOf",0);
+    mRules[ALIGN_START]= atts.getResourceId("layout_alignStart",0);
+    mRules[ALIGN_END]  = atts.getResourceId("layout_alignEnd",0);
 
     mRules[ALIGN_PARENT_START] = atts.getBoolean("layout_alignParentStart", false) ? LTRUE : 0;
     mRules[ALIGN_PARENT_END]   = atts.getBoolean("layout_alignParentEnd"  , false) ? LTRUE : 0;

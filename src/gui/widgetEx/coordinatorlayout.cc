@@ -1527,7 +1527,7 @@ CoordinatorLayout::LayoutParams::LayoutParams(Context* context, const AttributeS
     //        R.styleable.CoordinatorLayout_Layout);
 
     this->gravity = attrs.getGravity("layout_gravity",Gravity::NO_GRAVITY);
-    mAnchorId = context->getId(attrs.getString("layout_anchor"));
+    mAnchorId = attrs.getResourceId("layout_anchor",View::NO_ID);
     anchorGravity = attrs.getGravity("layout_anchorGravity",Gravity::NO_GRAVITY);
 
     this->keyline = attrs.getInt("layout_keyline", -1);
