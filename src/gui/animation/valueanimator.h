@@ -19,13 +19,13 @@ private:
     friend class AnimatorSet;
     static float sDurationScale;
     //static TimeInterpolator sDefaultInterpolator = new AccelerateDecelerateInterpolator();
-    long mPauseTime;
+    int64_t mPauseTime;
     bool mResumed = false;
     bool mReversing;
     float mOverallFraction = .0f;
     float mCurrentFraction = .0f;
-    long mLastFrameTime = -1;
-    long mFirstFrameTime = -1;
+    int64_t mLastFrameTime = -1;
+    int64_t mFirstFrameTime = -1;
     bool mRunning = false;
     bool mStarted = false;
     bool mStartListenersCalled = false;
@@ -48,8 +48,8 @@ protected:
     std::vector<PropertyValuesHolder*>mValues;
     std::map<const std::string,PropertyValuesHolder*>mValuesMap;
 private:
-    float resolveDurationScale();
-    long getScaledDuration();
+    float resolveDurationScale()const;
+    int64_t getScaledDuration()const;
     int getCurrentIteration(float fraction);
     float getCurrentIterationFraction(float fraction, bool inReverse);
     float clampFraction(float fraction);

@@ -166,12 +166,12 @@ void ValueAnimator::initAnimation(){
     }
 }
 
-float ValueAnimator::resolveDurationScale() {
+float ValueAnimator::resolveDurationScale() const{
     return mDurationScale >= .0f ? mDurationScale : sDurationScale;
 }
 
-long ValueAnimator::getScaledDuration() {
-    return (long)(mDuration * resolveDurationScale());
+int64_t ValueAnimator::getScaledDuration() const{
+    return int64_t(mDuration) * resolveDurationScale();
 }
 
 ValueAnimator& ValueAnimator::setDuration(long duration){
@@ -192,7 +192,7 @@ long ValueAnimator::getTotalDuration(){
 }
 
 void ValueAnimator::setCurrentPlayTime(int64_t playTime) {
-    float fraction = mDuration > 0 ? (float) playTime / mDuration : 1;
+    const float fraction = mDuration > 0 ? (float) playTime / mDuration : 1;
     setCurrentFraction(fraction);
 }
 
@@ -201,7 +201,7 @@ void ValueAnimator::setCurrentFraction(float fraction) {
     fraction = clampFraction(fraction);
     mStartTimeCommitted = true; // do not allow start time to be compensated for jank
     if (isPulsingInternal()) {
-        const long seekTime = (long) (getScaledDuration() * fraction);
+        const int64_t seekTime = int64_t(getScaledDuration()) * fraction;
         const int64_t currentTime = SystemClock::uptimeMillis();
         // Only modify the start time when the animation is running. Seek fraction will ensure
         // non-running animations skip to the correct start time.
@@ -550,7 +550,7 @@ void ValueAnimator::commitAnimationFrame(int64_t frameTime){
 bool ValueAnimator::animateBasedOnTime(int64_t currentTime){
     bool done = false;
     if (mRunning) {
-        long scaledDuration = getScaledDuration();
+        int64_t scaledDuration = getScaledDuration();
         float fraction = scaledDuration > 0 ? (float)(currentTime - mStartTime) / scaledDuration : 1.f;
         float lastFraction = mOverallFraction;
         bool newIteration = (int) fraction > (int) lastFraction;
@@ -654,7 +654,7 @@ bool ValueAnimator::doAnimationFrame(int64_t frameTime){
 
     if (mLastFrameTime < 0) {
         if (mSeekFraction >= 0) {
-            long seekTime = (long) (getScaledDuration() * mSeekFraction);
+            int64_t seekTime = getScaledDuration() * mSeekFraction;
             mStartTime = frameTime - seekTime;
             mSeekFraction = -1;
         }
