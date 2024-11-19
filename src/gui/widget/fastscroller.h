@@ -160,7 +160,7 @@ private:
     bool mMatchDragPosition;
 
     float mInitialTouchY;
-    long mPendingDrag = -1;
+    int64_t mPendingDrag = -1;
     int mScaledTouchSlop;
 
     int mOldItemCount;

@@ -75,7 +75,7 @@ private:
 
     RecyclerView::OnItemTouchListener mOnItemTouchListener;
     RecyclerView::OnChildAttachStateChangeListener mOnChildAttachStateChangeListener;
-    long mDragScrollStartTimeInMs;
+    int64_t mDragScrollStartTimeInMs;
     static bool hitTest(View& child, float x, float y, float left, float top);
 
     void setupCallbacks();
@@ -176,7 +176,7 @@ public:
     virtual long getAnimationDuration(RecyclerView& recyclerView, int animationType,
             float animateDx, float animateDy);
     virtual int interpolateOutOfBoundsScroll(RecyclerView& recyclerView,
-            int viewSize, int viewSizeOutOfBounds,int totalSize, long msSinceStartScroll);
+            int viewSize, int viewSizeOutOfBounds,int totalSize, int64_t msSinceStartScroll);
 };
 
 class ItemTouchHelper::SimpleCallback:public ItemTouchHelper::Callback{

@@ -5284,7 +5284,7 @@ void View::invalidateDrawable(Drawable& who){
 }
 
 void View::scheduleDrawable(Drawable& who,Runnable& what, int64_t when){
-    const auto delay = when - SystemClock::uptimeMillis();
+    const int64_t delay = when - SystemClock::uptimeMillis();
     Choreographer::getInstance().postCallbackDelayed(Choreographer::CALLBACK_ANIMATION, what,&who,
            Choreographer::subtractFrameDelay(delay));
     //postDelayed(what,delay);

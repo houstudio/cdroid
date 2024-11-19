@@ -264,7 +264,7 @@ void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState
     if ( (selected == mSelected) && (actionState == mActionState) ) {
         return;
     }
-    mDragScrollStartTimeInMs = LONG_MIN;//Long.MIN_VALUE;
+    mDragScrollStartTimeInMs = LLONG_MIN;
     const int prevActionState = mActionState;
     // prevent duplicate animations
     endRecoverAnimation(*selected, true);
@@ -408,12 +408,12 @@ bool ItemTouchHelper::hasRunningRecoverAnim() {
  */
 bool ItemTouchHelper::scrollIfNecessary() {
     if (mSelected == nullptr) {
-        mDragScrollStartTimeInMs = LONG_MIN;//Long.MIN_VALUE;
+        mDragScrollStartTimeInMs = LLONG_MIN;
         return false;
     }
-    const long now = SystemClock::currentTimeMillis();
-    const long scrollDuration = mDragScrollStartTimeInMs
-            == LONG_MIN ? 0 : now - mDragScrollStartTimeInMs;
+    const int64_t now = SystemClock::currentTimeMillis();
+    const int64_t scrollDuration = mDragScrollStartTimeInMs
+            == LLONG_MIN ? 0 : now - mDragScrollStartTimeInMs;
     RecyclerView::LayoutManager* lm = mRecyclerView->getLayoutManager();
     Rect mTmpRect;
     int scrollX = 0;
@@ -456,13 +456,13 @@ bool ItemTouchHelper::scrollIfNecessary() {
                 mRecyclerView->getHeight(), scrollDuration);
     }
     if (scrollX != 0 || scrollY != 0) {
-        if (mDragScrollStartTimeInMs == LONG_MIN) {
+        if (mDragScrollStartTimeInMs == LLONG_MIN) {
             mDragScrollStartTimeInMs = now;
         }
         mRecyclerView->scrollBy(scrollX, scrollY);
         return true;
     }
-    mDragScrollStartTimeInMs = LONG_MIN;//Long.MIN_VALUE;
+    mDragScrollStartTimeInMs = LLONG_MIN;//Long.MIN_VALUE;
     return false;
 }
 
@@ -1179,7 +1179,7 @@ long ItemTouchHelper::Callback::getAnimationDuration(RecyclerView& recyclerView,
 }
 
 int ItemTouchHelper::Callback::interpolateOutOfBoundsScroll(RecyclerView& recyclerView,
-        int viewSize, int viewSizeOutOfBounds, int totalSize, long msSinceStartScroll) {
+        int viewSize, int viewSizeOutOfBounds, int totalSize, int64_t msSinceStartScroll) {
     const int maxScroll = getMaxDragScroll(recyclerView);
     const int absOutOfBounds = std::abs(viewSizeOutOfBounds);
     const int direction = (int) signum(viewSizeOutOfBounds);
