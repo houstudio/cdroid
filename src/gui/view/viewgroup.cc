@@ -2950,6 +2950,17 @@ bool ViewGroup::dispatchKeyEvent(KeyEvent&event){
     return View::dispatchKeyEvent(event);
 }
 
+bool ViewGroup::dispatchKeyShortcutEvent(KeyEvent&event){
+    if ((mPrivateFlags & (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS))
+            == (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS)) {
+        return View::dispatchKeyShortcutEvent(event);
+    } else if (mFocused && (mFocused->mPrivateFlags & PFLAG_HAS_BOUNDS)
+            == PFLAG_HAS_BOUNDS) {
+        return mFocused->dispatchKeyShortcutEvent(event);
+    }
+    return false;
+}
+
 bool ViewGroup::dispatchTrackballEvent(MotionEvent& event) {
     if (mInputEventConsistencyVerifier) {
         mInputEventConsistencyVerifier->onTrackballEvent(event, 1);

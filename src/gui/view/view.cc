@@ -6176,6 +6176,10 @@ bool View::dispatchKeyEvent(KeyEvent&event){
     return result;
 }
 
+bool View::dispatchKeyShortcutEvent(KeyEvent&event){
+    return onKeyShortcut(event.getKeyCode(), event);
+}
+
 bool View::dispatchTooltipHoverEvent(MotionEvent& event){
     if (mTooltipInfo == nullptr) {
             return false;

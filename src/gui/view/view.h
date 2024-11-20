@@ -1171,6 +1171,7 @@ public:
 
     KeyEvent::DispatcherState* getKeyDispatcherState()const;
     virtual bool dispatchKeyEvent(KeyEvent&event);
+    virtual bool dispatchKeyShortcutEvent(KeyEvent&);
     virtual View* dispatchUnhandledKeyEvent(KeyEvent& evt);
     virtual bool dispatchUnhandledMove(View* focused,int direction);
     virtual bool onKeyPreIme(int keyCode, KeyEvent& event);
