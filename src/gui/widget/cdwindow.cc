@@ -361,6 +361,18 @@ int Window::processKeyEvent(KeyEvent&event){
             groupNavigationDirection = View::FOCUS_BACKWARD;
         }
     }
+    if (event.getAction() == KeyEvent::ACTION_DOWN
+            && !KeyEvent::metaStateHasNoModifiers(event.getMetaState())
+            && event.getRepeatCount() == 0
+            && !KeyEvent::isModifierKey(event.getKeyCode())
+            && groupNavigationDirection == 0) {
+        if (dispatchKeyShortcutEvent(event)) {
+            return FINISH_HANDLED;
+        }
+        /*if (shouldDropInputEvent(q)) {
+            return FINISH_NOT_HANDLED;
+        }*/
+    }
     if(action == KeyEvent::ACTION_DOWN){
         if(groupNavigationDirection != 0){
             if(performKeyboardGroupNavigation(groupNavigationDirection))
@@ -500,8 +512,9 @@ void Window::doLayout(){
         view->measure(widthSpec, heightSpec);
         view->layout (lp->leftMargin,lp->topMargin,view->getMeasuredWidth(),view->getMeasuredHeight());
     }
+    mAttachInfo->mTreeObserver->dispatchOnGlobalLayout();
     mPrivateFlags&=~PFLAG_FORCE_LAYOUT;
-    mInLayout = false;  
+    mInLayout = false;
 }
 
 
