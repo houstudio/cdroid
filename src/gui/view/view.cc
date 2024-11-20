@@ -4923,8 +4923,8 @@ void View::onVisibilityChanged(View& changedView,int visibility){
     //nothing
 }
 
-void View::dispatchDisplayHInt(int hint){
-    onDisplayHInt(hint);
+void View::dispatchDisplayHint(int hint){
+    onDisplayHint(hint);
 }
 
 void View::onDisplayHint(int hint){

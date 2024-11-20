@@ -404,6 +404,9 @@ public:
     void setMotionEventSplittingEnabled(bool split);
     bool isMotionEventSplittingEnabled()const; 
     bool dispatchKeyEvent(KeyEvent&)override;
+    bool dispatchTrackballEvent(MotionEvent& event)override;
+    bool dispatchCapturedPointerEvent(MotionEvent& event)override;
+    void dispatchPointerCaptureChanged(bool hasCapture)override;
     bool dispatchUnhandledMove(View* focused, int direction)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
     bool dispatchHoverEvent(MotionEvent&event)override;

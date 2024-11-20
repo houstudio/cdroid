@@ -2950,6 +2950,52 @@ bool ViewGroup::dispatchKeyEvent(KeyEvent&event){
     return View::dispatchKeyEvent(event);
 }
 
+bool ViewGroup::dispatchTrackballEvent(MotionEvent& event) {
+    if (mInputEventConsistencyVerifier) {
+        mInputEventConsistencyVerifier->onTrackballEvent(event, 1);
+    }
+
+    if ((mPrivateFlags & (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS))
+            == (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS)) {
+        if (View::dispatchTrackballEvent(event)) {
+            return true;
+        }
+    } else if (mFocused  && (mFocused->mPrivateFlags & PFLAG_HAS_BOUNDS)
+            == PFLAG_HAS_BOUNDS) {
+        if (mFocused->dispatchTrackballEvent(event)) {
+            return true;
+        }
+    }
+
+    if (mInputEventConsistencyVerifier) {
+        mInputEventConsistencyVerifier->onUnhandledEvent(event, 1);
+    }
+    return false;
+}
+
+bool ViewGroup::dispatchCapturedPointerEvent(MotionEvent& event){
+   if ((mPrivateFlags & (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS))
+            == (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS)) {
+        if (View::dispatchCapturedPointerEvent(event)) {
+            return true;
+        }
+    } else if (mFocused && (mFocused->mPrivateFlags & PFLAG_HAS_BOUNDS)
+            == PFLAG_HAS_BOUNDS) {
+        if (mFocused->dispatchCapturedPointerEvent(event)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void ViewGroup::dispatchPointerCaptureChanged(bool hasCapture){
+    exitHoverTargets();
+    View::dispatchPointerCaptureChanged(hasCapture);
+    for (View*child:mChildren){
+        child->dispatchPointerCaptureChanged(hasCapture);
+    }
+}
+
 MotionEvent* ViewGroup::getTransformedMotionEvent(MotionEvent& event, View* child)const{
     const float offsetX = mScrollX - child->mLeft;
     const float offsetY = mScrollY - child->mTop;
