@@ -34,6 +34,7 @@
 #include <view/abssavedstate.h>
 #include <view/menu.h>
 #include <view/gravity.h>
+#include <view/pointericon.h>
 #include <view/rendernode.h>
 #include <view/layoutparams.h>
 #include <view/windowinsets.h>
@@ -438,6 +439,7 @@ private:
 
     ViewOverlay* mOverlay;
     HandlerActionQueue*mRunQueue;
+    PointerIcon* mPointerIcon;
     InputEventConsistencyVerifier* mInputEventConsistencyVerifier;
     ViewTreeObserver* mFloatingTreeObserver;
     StateListAnimator* mStateListAnimator;
@@ -718,6 +720,7 @@ protected:
 
     bool isOnScrollbar(int x,int y);
     bool isOnScrollbarThumb(int x,int y);
+    bool isDraggingScrollBar()const;
     virtual void onConfigurationChanged(Configuration& newConfig);
     virtual bool overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX,
               int  scrollRangeY, int maxOverScrollX, int maxOverScrollY, bool isTouchEvent);
@@ -1054,6 +1057,9 @@ public:
     virtual void dispatchPointerCaptureChanged(bool hasCapture);
     virtual bool onCapturedPointerEvent(MotionEvent& event);
     void setOnCapturedPointerListener(OnCapturedPointerListener l);
+    virtual PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex);
+    View& setPointerIcon(PointerIcon* pointerIcon);
+    PointerIcon*getPointerIcon();
     // Attribute
     virtual View& clearFlag(int flag);
     bool isAccessibilityFocused()const;
@@ -1329,6 +1335,7 @@ public:
     bool mUse32BitDrawingCache;
     bool mViewVisibilityChanged;
     bool mViewScrollChanged;
+    bool mHandlingPointerEvent;
     bool mIgnoreDirtyState;
     int mWindowVisibility;
     int64_t mDrawingTime;

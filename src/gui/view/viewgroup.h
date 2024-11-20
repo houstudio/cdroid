@@ -166,6 +166,7 @@ private:
     View&addViewInner(View* child, int index,LayoutParams* params,bool preventRequestLayout);
     void addDisappearingView(View* v);
     bool updateLocalSystemUiVisibility(int localValue, int localChanges)override;
+    PointerIcon* dispatchResolvePointerIcon(MotionEvent& event, int pointerIndex,View* child);
 protected:
     int mGroupFlags;
     int mPersistentDrawingCache;
@@ -356,6 +357,8 @@ public:
     bool canResolveTextAlignment()const override;
     bool isTextAlignmentResolved()const override;
     int getTextAlignment()const override;
+
+    PointerIcon* onResolvePointerIcon(MotionEvent&, int)override;
 
     void startLayoutAnimation(); 
     void scheduleLayoutAnimation();

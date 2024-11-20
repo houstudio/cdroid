@@ -1228,6 +1228,55 @@ std::vector<View*> ViewGroup::buildTouchDispatchChildList(){
     return buildOrderedChildList();
 }
 
+PointerIcon* ViewGroup::onResolvePointerIcon(MotionEvent& event, int pointerIndex) {
+    const float x = event.getX(pointerIndex);
+    const float y = event.getY(pointerIndex);
+    if (isOnScrollbarThumb(x, y) || isDraggingScrollBar()) {
+        return PointerIcon::getSystemIcon(mContext, PointerIcon::TYPE_ARROW);
+    }
+    // Check what the child under the pointer says about the pointer.
+    const int childrenCount = mChildren.size();//Count;
+    if (childrenCount != 0) {
+        std::vector<View*> preorderedList = buildOrderedChildList();
+        const bool customOrder = preorderedList.empty() && isChildrenDrawingOrderEnabled();
+        auto& children = mChildren;
+        for (int i = childrenCount - 1; i >= 0; i--) {
+            const int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
+            View* child = getAndVerifyPreorderedView(preorderedList,children, childIndex);
+            if (!canViewReceivePointerEvents(*child)
+                    || !isTransformedTouchPointInView(x, y, *child, nullptr)) {
+                continue;
+            }
+            PointerIcon* pointerIcon = dispatchResolvePointerIcon(event, pointerIndex, child);
+            if (pointerIcon) {
+                if (preorderedList.size()) preorderedList.clear();
+                return pointerIcon;
+            }
+        }
+        if (preorderedList.size()) preorderedList.clear();
+    }
+
+    // The pointer is not a child or the child has no preferences, returning the default
+    // implementation.
+    return View::onResolvePointerIcon(event, pointerIndex);
+}
+
+PointerIcon* ViewGroup::dispatchResolvePointerIcon(MotionEvent& event, int pointerIndex,View* child) {
+    PointerIcon* pointerIcon;
+    if (!child->hasIdentityMatrix()) {
+        MotionEvent* transformedEvent = getTransformedMotionEvent(event, child);
+        pointerIcon = child->onResolvePointerIcon(*transformedEvent, pointerIndex);
+        transformedEvent->recycle();
+    } else {
+        const float offsetX = mScrollX - child->mLeft;
+        const float offsetY = mScrollY - child->mTop;
+        event.offsetLocation(offsetX, offsetY);
+        pointerIcon = child->onResolvePointerIcon(event, pointerIndex);
+        event.offsetLocation(-offsetX, -offsetY);
+    }
+    return pointerIcon;
+}
+
 int ViewGroup::getAndVerifyPreorderedIndex(int childrenCount, int i, bool customOrder){
     int childIndex;
     if (customOrder) {

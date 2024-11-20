@@ -22,14 +22,14 @@
 #include <view/handleractionqueue.h>
 #include <widget/edgeeffect.h>
 #include <animation/animationutils.h>
-#include <cdlog.h>
+#include <core/systemclock.h>
+#include <porting/cdlog.h>
 #include <string.h>
 #include <algorithm>
 #include <focusfinder.h>
 #include <inputmethodmanager.h>
 #include <app.h>
 #include <color.h>
-#include <systemclock.h>
 
 #define UNDEFINED_PADDING INT_MIN
 using namespace Cairo;
@@ -349,6 +349,7 @@ void View::initView(){
     mAnimator = nullptr;
     mRunQueue = nullptr;
     mTag = nullptr;
+    mPointerIcon = nullptr;
     mTouchDelegate = nullptr;
     mStateListAnimator = nullptr;
     mPerformClick = nullptr;
@@ -2247,6 +2248,10 @@ bool View::isOnHorizontalScrollbarThumb(int x,int y){
     return false;
 }
 
+bool View::isDraggingScrollBar() const{
+    return mScrollCache && mScrollCache->mScrollBarDraggingState != ScrollabilityCache::NOT_DRAGGING;
+}
+
 void View::initializeScrollIndicatorsInternal(){
     if (mScrollIndicatorDrawable == nullptr) {
         mScrollIndicatorDrawable = mContext->getDrawable("cdroid:drawable/scroll_indicator_material");
@@ -3299,6 +3304,28 @@ int View::getNextClusterForwardId()const {
 View& View::setNextClusterForwardId(int nextClusterForwardId){
     mNextClusterForwardId = nextClusterForwardId;
     return *this;
+}
+
+PointerIcon* View::onResolvePointerIcon(MotionEvent& event, int pointerIndex) {
+    const float x = event.getX(pointerIndex);
+    const float y = event.getY(pointerIndex);
+    if (isDraggingScrollBar() || isOnScrollbarThumb(x, y)) {
+        return PointerIcon::getSystemIcon(mContext, PointerIcon::TYPE_ARROW);
+    }
+    return mPointerIcon;
+}
+
+View& View::setPointerIcon(PointerIcon* pointerIcon) {
+    mPointerIcon = pointerIcon;
+    if (mAttachInfo == nullptr || mAttachInfo->mHandlingPointerEvent) {
+        return *this;
+    }
+    //mAttachInfo->mSession.updatePointerIcon(mAttachInfo.mWindow);
+    return *this;
+}
+
+PointerIcon* View::getPointerIcon() {
+    return mPointerIcon;
 }
 
 bool View::hasPointerCapture()const{

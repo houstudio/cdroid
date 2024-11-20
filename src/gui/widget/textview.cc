@@ -439,6 +439,7 @@ TextView::TextView(const std::string& text, int width, int height)
 void TextView::initView(){
     mDrawables= nullptr;
     mMarquee  = nullptr;
+    mScroller = nullptr;
     mSavedMarqueeModeLayout=nullptr;
     mOriginalTypeface = nullptr;
     mMaxWidth = INT_MAX;
@@ -487,10 +488,59 @@ TextView::~TextView() {
     //delete mTextColor;
     //delete mHintTextColor;
     //delete mLinkTextColor;
+    delete mScroller;
     delete mLayout;
     delete mHintLayout;
     delete mDrawables;
 }
+
+#if 0
+bool TextView::onPreDraw() {
+    if (mLayout == nullptr) {
+        assumeLayout();
+    }
+
+    if (mMovement != null) {
+        /* This code also provides auto-scrolling when a cursor is moved using a
+         * CursorController (insertion point or selection limits).
+         * For selection, ensure start or end is visible depending on controller's state.
+         */
+        int curs = getSelectionEnd();
+        // Do not create the controller if it is not already created.
+        if (mEditor != null && mEditor.mSelectionModifierCursorController != null
+                && mEditor.mSelectionModifierCursorController.isSelectionStartDragged()) {
+            curs = getSelectionStart();
+        }
+
+        /*
+         * TODO: This should really only keep the end in view if
+         * it already was before the text changed.  I'm not sure
+         * of a good way to tell from here if it was.
+         */
+        if (curs < 0 && (mGravity & Gravity.VERTICAL_GRAVITY_MASK) == Gravity.BOTTOM) {
+            curs = mText.length();
+        }
+
+        if (curs >= 0) {
+            bringPointIntoView(curs);
+        }
+    } else {
+        bringTextIntoView();
+    }
+
+    // This has to be checked here since:
+    // - onFocusChanged cannot start it when focus is given to a view with selected text (after
+    //   a screen rotation) since layout is not yet initialized at that point.
+    if (mEditor != null && mEditor.mCreatedWithASelection) {
+        mEditor.refreshTextActionMode();
+        mEditor.mCreatedWithASelection = false;
+    }
+
+    unregisterForPreDraw();
+
+    return true;
+}
+#endif
 
 void TextView::onDetachedFromWindowInternal(){
     stopMarquee();
@@ -786,6 +836,370 @@ void TextView::checkForRelayout() {
         //nullLayouts();
         requestLayout();
         invalidate();
+    }
+}
+
+bool TextView::isShowingHint()const{
+    return mLayout->getText().empty()&&(mHintLayout->getText().empty()==false);
+}
+
+bool TextView::bringTextIntoView(){
+    Layout* layout = isShowingHint() ? mHintLayout : mLayout;
+    int line = 0;
+    if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) == Gravity::BOTTOM) {
+        line = layout->getLineCount() - 1;
+    }
+
+    int dir = layout->getParagraphDirection(line);
+    int hspace = mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight();
+    int vspace = mBottom - mTop - getExtendedPaddingTop() - getExtendedPaddingBottom();
+    int ht = layout->getHeight();
+    int scrollx, scrolly;
+#if __TODO_
+    Layout::Alignment a = layout->getParagraphAlignment(line);
+
+    // Convert to left, center, or right alignment.
+    if (a == Layout::Alignment::ALIGN_NORMAL) {
+        a = dir == Layout::DIR_LEFT_TO_RIGHT
+                ? Layout::Alignment::ALIGN_LEFT : Layout::Alignment::ALIGN_RIGHT;
+    } else if (a == Layout::Alignment::ALIGN_OPPOSITE) {
+        a = dir == Layout::DIR_LEFT_TO_RIGHT
+                ? Layout::Alignment::ALIGN_RIGHT : Layout::Alignment::ALIGN_LEFT;
+    }
+
+    if (a == Layout::Alignment::ALIGN_CENTER) {
+        /*
+         * Keep centered if possible, or, if it is too wide to fit,
+         * keep leading edge in view.
+         */
+
+        int left = (int) std::floor(layout->getLineLeft(line));
+        int right = (int) std::ceil(layout->getLineRight(line));
+
+        if (right - left < hspace) {
+            scrollx = (right + left) / 2 - hspace / 2;
+        } else {
+            if (dir < 0) {
+                scrollx = right - hspace;
+            } else {
+                scrollx = left;
+            }
+        }
+    } else if (a == Layout::Alignment::ALIGN_RIGHT) {
+        int right = (int) std::ceil(layout->getLineRight(line));
+        scrollx = right - hspace;
+    } else { // a == Layout.Alignment.ALIGN_LEFT (will also be the default)
+        scrollx = (int) std::floor(layout->getLineLeft(line));
+    }
+#endif
+    if (ht < vspace) {
+        scrolly = 0;
+    } else {
+        if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) == Gravity::BOTTOM) {
+            scrolly = ht - vspace;
+        } else {
+            scrolly = 0;
+        }
+    }
+
+    if (scrollx != mScrollX || scrolly != mScrollY) {
+        scrollTo(scrollx, scrolly);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool TextView::bringPointIntoView(int offset) {
+    if (isLayoutRequested()) {
+        mDeferScroll = offset;
+        return false;
+    }
+    bool changed = false;
+
+    Layout* layout = isShowingHint() ? mHintLayout : mLayout;
+
+    if (layout == nullptr) return changed;
+
+    int line = layout->getLineForOffset(offset);
+
+    int grav;
+#if __TODO_
+    switch (layout->getParagraphAlignment(line)) {
+    case ALIGN_LEFT:
+        grav = 1;   break;
+    case ALIGN_RIGHT:
+        grav = -1;  break;
+    case ALIGN_NORMAL:
+        grav = layout->getParagraphDirection(line);
+        break;
+    case ALIGN_OPPOSITE:
+        grav = -layout->getParagraphDirection(line);
+        break;
+    case ALIGN_CENTER:
+    default:   grav = 0;   break;
+    }
+#endif
+    // We only want to clamp the cursor to fit within the layout width
+    // in left-to-right modes, because in a right to left alignment,
+    // we want to scroll to keep the line-right on the screen, as other
+    // lines are likely to have text flush with the right margin, which
+    // we want to keep visible.
+    // A better long-term solution would probably be to measure both
+    // the full line and a blank-trimmed version, and, for example, use
+    // the latter measurement for centering and right alignment, but for
+    // the time being we only implement the cursor clamping in left to
+    // right where it is most likely to be annoying.
+    const bool clamped = grav > 0;
+    // FIXME: Is it okay to truncate this, or should we round?
+    const int x = 0;// (int) layout->getPrimaryHorizontal(offset, clamped);
+    const int top = layout->getLineTop(line);
+    const int bottom = layout->getLineTop(line + 1);
+
+    int left = (int) std::floor(layout->getLineLeft(line));
+    int right = (int) std::ceil(layout->getLineRight(line));
+    int ht = layout->getHeight();
+
+    int hspace = mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight();
+    int vspace = mBottom - mTop - getExtendedPaddingTop() - getExtendedPaddingBottom();
+    if (!mHorizontallyScrolling && right - left > hspace && right > x) {
+        // If cursor has been clamped, make sure we don't scroll.
+        right = std::max(x, left + hspace);
+    }
+
+    int hslack = (bottom - top) / 2;
+    int vslack = hslack;
+
+    if (vslack > vspace / 4) {
+        vslack = vspace / 4;
+    }
+    if (hslack > hspace / 4) {
+        hslack = hspace / 4;
+    }
+
+    int hs = mScrollX;
+    int vs = mScrollY;
+
+    if (top - vs < vslack) {
+        vs = top - vslack;
+    }
+    if (bottom - vs > vspace - vslack) {
+        vs = bottom - (vspace - vslack);
+    }
+    if (ht - vs < vspace) {
+        vs = ht - vspace;
+    }
+    if (0 - vs > 0) {
+        vs = 0;
+    }
+
+    if (grav != 0) {
+        if (x - hs < hslack) {
+            hs = x - hslack;
+        }
+        if (x - hs > hspace - hslack) {
+            hs = x - (hspace - hslack);
+        }
+    }
+
+    if (grav < 0) {
+        if (left - hs > 0) {
+            hs = left;
+        }
+        if (right - hs < hspace) {
+            hs = right - hspace;
+        }
+    } else if (grav > 0) {
+        if (right - hs < hspace) {
+            hs = right - hspace;
+        }
+        if (left - hs > 0) {
+            hs = left;
+        }
+    } else /* grav == 0 */ {
+        if (right - left <= hspace) {
+            /*
+             * If the entire text fits, center it exactly.
+             */
+            hs = left - (hspace - (right - left)) / 2;
+        } else if (x > right - hslack) {
+            /*
+             * If we are near the right edge, keep the right edge
+             * at the edge of the view.
+             */
+            hs = right - hspace;
+        } else if (x < left + hslack) {
+            /*
+             * If we are near the left edge, keep the left edge
+             * at the edge of the view.
+             */
+            hs = left;
+        } else if (left > hs) {
+            /*
+             * Is there whitespace visible at the left?  Fix it if so.
+             */
+            hs = left;
+        } else if (right < hs + hspace) {
+            /*
+             * Is there whitespace visible at the right?  Fix it if so.
+             */
+            hs = right - hspace;
+        } else {
+            /*
+             * Otherwise, float as needed.
+             */
+            if (x - hs < hslack) {
+                hs = x - hslack;
+            }
+            if (x - hs > hspace - hslack) {
+                hs = x - (hspace - hslack);
+            }
+        }
+    }
+
+    if (hs != mScrollX || vs != mScrollY) {
+        if (mScroller == nullptr) {
+            scrollTo(hs, vs);
+        } else {
+            const long duration = AnimationUtils::currentAnimationTimeMillis() - mLastScroll;
+            int dx = hs - mScrollX;
+            int dy = vs - mScrollY;
+
+            if (duration > ANIMATED_SCROLL_GAP) {
+                mScroller->startScroll(mScrollX, mScrollY, dx, dy);
+                awakenScrollBars(mScroller->getDuration(),true);
+                invalidate();
+            } else {
+                if (!mScroller->isFinished()) {
+                    mScroller->abortAnimation();
+                }
+
+                scrollBy(dx, dy);
+            }
+
+            mLastScroll = AnimationUtils::currentAnimationTimeMillis();
+        }
+
+        changed = true;
+    }
+
+    if (isFocused()) {
+        // This offsets because getInterestingRect() is in terms of viewport coordinates, but
+        // requestRectangleOnScreen() is in terms of content coordinates.
+
+        // The offsets here are to ensure the rectangle we are using is
+        // within our view bounds, in case the cursor is on the far left
+        // or right.  If it isn't withing the bounds, then this request
+        // will be ignored.
+        Rect mTempRect;
+        mTempRect.set(x - 2, top, x + 2, bottom);
+        getInterestingRect(mTempRect, line);
+        mTempRect.offset(mScrollX, mScrollY);
+
+        if (requestRectangleOnScreen(mTempRect)) {
+            changed = true;
+        }
+    }
+
+    return changed;
+}
+
+bool TextView::moveCursorToVisibleOffset() {
+#if _TODO_
+    if (!(mText instanceof Spannable)) {
+        return false;
+    }
+    int start = getSelectionStart();
+    int end = getSelectionEnd();
+    if (start != end) {
+        return false;
+    }
+
+    // First: make sure the line is visible on screen:
+
+    int line = mLayout->getLineForOffset(start);
+
+    const int top = mLayout->getLineTop(line);
+    const int bottom = mLayout->getLineTop(line + 1);
+    const int vspace = mBottom - mTop - getExtendedPaddingTop() - getExtendedPaddingBottom();
+    int vslack = (bottom - top) / 2;
+    if (vslack > vspace / 4) {
+        vslack = vspace / 4;
+    }
+    const int vs = mScrollY;
+
+    if (top < (vs + vslack)) {
+        line = mLayout->getLineForVertical(vs + vslack + (bottom - top));
+    } else if (bottom > (vspace + vs - vslack)) {
+        line = mLayout->getLineForVertical(vspace + vs - vslack - (bottom - top));
+    }
+
+    // Next: make sure the character is visible on screen:
+
+    const int hspace = mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight();
+    const int hs = mScrollX;
+    const int leftChar = mLayout->getOffsetForHorizontal(line, hs);
+    const int rightChar = mLayout->getOffsetForHorizontal(line, hspace + hs);
+
+    // line might contain bidirectional text
+    const int lowChar = leftChar < rightChar ? leftChar : rightChar;
+    const int highChar = leftChar > rightChar ? leftChar : rightChar;
+
+    int newStart = start;
+    if (newStart < lowChar) {
+        newStart = lowChar;
+    } else if (newStart > highChar) {
+        newStart = highChar;
+    }
+
+    if (newStart != start) {
+        Selection.setSelection(mSpannable, newStart);
+        return true;
+    }
+#endif
+    return false;
+}
+
+void TextView::getInterestingRect(Rect& r, int line) {
+    convertFromViewportToContentCoordinates(r);
+
+    // Rectangle can can be expanded on first and last line to take
+    // padding into account.
+    // TODO Take left/right padding into account too?
+    if (line == 0) r.top -= getExtendedPaddingTop();
+    if (line == mLayout->getLineCount() - 1) r.width +=getExtendedPaddingTop() + getExtendedPaddingBottom();
+}
+
+void TextView::convertFromViewportToContentCoordinates(Rect& r) {
+    const int horizontalOffset = viewportToContentHorizontalOffset();
+    r.left += horizontalOffset;
+    r.width += horizontalOffset;
+
+    const int verticalOffset = viewportToContentVerticalOffset();
+    r.top += verticalOffset;
+    r.height += verticalOffset;
+}
+
+int TextView::viewportToContentHorizontalOffset() {
+    return getCompoundPaddingLeft() - mScrollX;
+}
+
+int TextView::viewportToContentVerticalOffset() {
+    int offset = getExtendedPaddingTop() - mScrollY;
+    if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) != Gravity::TOP) {
+        offset += getVerticalOffset(false);
+    }
+    return offset;
+}
+
+void TextView::computeScroll() {
+    if (mScroller != nullptr) {
+        if (mScroller->computeScrollOffset()) {
+            mScrollX = mScroller->getCurrX();
+            mScrollY = mScroller->getCurrY();
+            invalidateParentCaches();
+            postInvalidate();  // So we draw again
+        }
     }
 }
 

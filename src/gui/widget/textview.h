@@ -20,6 +20,7 @@
 #include <view/view.h>
 #include <core/layout.h>
 #include <core/typeface.h>
+#include <widget/scroller.h>
 #include <widget/textwatcher.h>
 
 namespace cdroid {
@@ -30,6 +31,7 @@ private:
     static constexpr int SANS = 1;
     static constexpr int SERIF= 2;
     static constexpr int MONOSPACE = 3;
+    static constexpr int ANIMATED_SCROLL_GAP = 250;
 public:
     static constexpr int AUTO_SIZE_TEXT_TYPE_NONE = 0;
     static constexpr int AUTO_SIZE_TEXT_TYPE_UNIFORM = 1;
@@ -99,6 +101,7 @@ private:
     bool mSingleLine;
     bool mHorizontallyScrolling;
     bool mNeedsAutoSizeText;
+    bool mRestartMarquee;
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
     int mFontWeightAdjustment;
@@ -115,12 +118,13 @@ private:
     class Drawables*mDrawables;
     class Marquee*mMarquee;
     int  mEllipsize;
-    bool mRestartMarquee;
     int  mMarqueeFadeMode;
     int  mMarqueeRepeatLimit;
     int  mLastLayoutDirection;
+    int64_t mLastScroll;
     Layout* mSavedMarqueeModeLayout;
-
+    Scroller*mScroller;
+private:
     void initView();
     int  getLayoutAlignment()const;
     void applyCompoundDrawableTint();
@@ -129,7 +133,12 @@ private:
     void updateTextColors();
     int  getDesiredHeight();
     int  getDesiredHeight( Layout* layout, bool cap);
+    void getInterestingRect(Rect& r, int line);
+    void convertFromViewportToContentCoordinates(Rect&);
+
     void checkForRelayout();
+    bool isShowingHint()const;
+    bool bringTextIntoView();
     void autoSizeText();
     static int desired(Layout*);
     int  getBoxHeight(Layout* l);
@@ -184,6 +193,8 @@ protected:
     void onVisibilityChanged(View& changedView, int visibility)override;
     void viewClicked(class InputMethodManager*);
     void resetResolvedDrawables()override;
+    int viewportToContentHorizontalOffset();
+    int viewportToContentVerticalOffset();
 public:
     enum EDITMODE{
        READONLY,
@@ -201,6 +212,9 @@ public:
     const std::string getText()const;
     void  setTextAppearance(const std::string&);
     View& setHint(const std::string&txt)override;
+    bool bringPointIntoView(int offset);
+    bool moveCursorToVisibleOffset();
+    void computeScroll()override;
     bool canSelectAllText()const;
     bool selectAllText();
     int getSelectionStart()const;

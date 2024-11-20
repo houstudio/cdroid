@@ -13,6 +13,7 @@ list(APPEND CDROID_SOURCES
     view/layoutinflater.cc
     view/layoutparams.cc
     view/motionevent.cc
+    view/pointericon.cc
     view/rendernode.cc
     view/roundscrollbarrenderer.cc
     view/soundeffectconstants.cc
@@ -67,6 +68,7 @@ list(APPEND CDROID_SOURCES
     widget/space.cc
     widget/textview.cc
     widget/edittext.cc
+    #widget/datetimeview.cc
     widget/checkedtextview.cc
     widget/imagebutton.cc
     widget/imageview.cc
@@ -202,6 +204,7 @@ list(APPEND CDROID_SOURCES
     widgetEx/scrolleventadapter.cc
     widgetEx/plotview.cc
     widgetEx/fakedrag.cc
+    #widgetEx/mathglview.cc
 )
 
 if(ENABLE_LOTTIE)

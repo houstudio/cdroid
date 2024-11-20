@@ -63,6 +63,14 @@ public:
         mKeys.erase(mKeys.begin()+idx);
         mValues.erase(mValues.begin()+idx);
     }
+    void append(int key, T value) {
+        if (size() && (key <= mKeys.back())) {
+            put(key, value);
+            return;
+        }
+        mKeys.push_back(key);// = GrowingArrayUtils.append(mKeys, mSize, key);
+        mValues.push_back(value);// = GrowingArrayUtils.append(mValues, mSize, value);
+    }
 };
 template<typename T>
 using SparseArray = SparseArrayImpl<int,T>;
