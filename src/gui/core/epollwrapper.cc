@@ -4,85 +4,22 @@
 #include <core/epollwrapper.h>
 #include <porting/cdlog.h>
 
+#if defined(__linux__)||defined(__unix__)
+#include <unistd.h>
+#define EPOLL_HANDLE int
+#elif defined(_WIN32)||defined(_WIN64)
+#define EPOLL_HANDLE HANDLE
+#endif
+
+//REFERENCES:
+//Fast epoll for windows:https://github.com/piscisaureus/wepoll 
+
 namespace cdroid{
 
-#if (defined(_WIN32)||defined(_WIN64)) && defined(USEIOCP_IN_WINDOWS)
-class IOCP :public cdroid::IOEventProcessor {
-private:
-    HANDLE hCompletionPort;
-    std::map<int, OVERLAPPED*> fdMap;
-private:
-    OVERLAPPED* getOverlapped(int fd) {
-        auto it = fdMap.find(fd);
-        return it != fdMap.end() ? it->second : nullptr;
-    }
-public:
-    IOCP() {
-        hCompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
-        if (hCompletionPort == NULL) {
-            throw std::runtime_error("CreateIoCompletionPort failed");
-        }
-    }
-
-    virtual ~IOCP() {
-        CloseHandle(hCompletionPort);
-    }
-
-    int addFd(int fd,struct epoll_event& event)override {
-        if (CreateIoCompletionPort((HANDLE)fd, hCompletionPort, (ULONG_PTR)event.data.u64, 0) == NULL) {
-            return -1; // 失败
-        }
-        OVERLAPPED* overlapped = new OVERLAPPED();
-        ZeroMemory(overlapped, sizeof(OVERLAPPED));
-        fdMap[fd] = overlapped;
-        return 0;
-    }
-
-    int removeFd(int fd) override{// EPOLL_CTL_DEL
-        auto it = fdMap.find(fd);
-        if (it != fdMap.end()) {
-            delete it->second;
-            fdMap.erase(it);
-            return 0;
-        }
-        return -1; // 成功
-    }
-
-    int modifyFd(int fd,struct epoll_event&event) override{
-        return 0;
-    }
-
-    int waitEvents(std::vector<epoll_event>& events, uint32_t timeout)override {
-        ULONG numEntriesReturned;
-        OVERLAPPED_ENTRY entries[128];
-
-        BOOL result = GetQueuedCompletionStatusEx(hCompletionPort, entries, 128,
-            &numEntriesReturned, timeout, FALSE);
-
-        if (result == FALSE) {
-            if (GetLastError() == WAIT_TIMEOUT) {
-                return 0;
-            }
-            return -1; //failed
-        }
-
-        for (ULONG i = 0; i < numEntriesReturned; ++i) {
-            epoll_event event;
-            event.data.u64 = static_cast<uint64_t>(entries[i].lpCompletionKey);
-            DWORD bytesTransferred = entries[i].dwNumberOfBytesTransferred;
-            event.events = (bytesTransferred == 0) ? 0 : 1;
-            event.events = 0;//TODO
-            events.push_back(event);
-        }
-        return numEntriesReturned;
-    }
- };
-
-#elif (defined(__linux__)||defined(__unix__))
-#include <unistd.h>
+#if defined(_WIN32)||defined(_WIN64)||defined(__linux__)||defined(__unix__)
 class EPOLL:public IOEventProcessor {
 private:
-    int epfd;
+    EPOLL_HANDLE epfd;
     int maxEvents;
 private:
     uint32_t toEpollEvents(uint32_t events) const{
@@ -245,9 +182,7 @@ public:
 IOEventProcessor::IOEventProcessor() {}
 IOEventProcessor::~IOEventProcessor() {}
 IOEventProcessor* IOEventProcessor::create(){
-#if (defined(_WIN32)||defined(_WIN64))&&defined(USEIOCP_IN_WINDOWS)
-    return new IOCP();
-#elif (defined(__linux__)||defined(__unix__))
+#if defined(_WIN32)||defined(_WIN64)||(defined(__linux__)||defined(__unix__))
     return new EPOLL();
 #else
     return new SELECTOR();
