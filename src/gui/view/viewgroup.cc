@@ -1808,6 +1808,23 @@ void ViewGroup::dispatchWindowFocusChanged(bool hasFocus) {
     }
 }
 
+void ViewGroup::addTouchables(std::vector<View*>&views){
+    View::addTouchables(views);
+
+    for (View*child:mChildren){
+        if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
+            child->addTouchables(views);
+        }
+    }
+}
+
+void ViewGroup::dispatchDisplayHint(int hint){
+    View::dispatchDisplayHint(hint);
+    for (View*child:mChildren){
+        child->dispatchDisplayHint(hint);
+    }
+}
+
 bool ViewGroup::drawChild(Canvas& canvas, View* child, int64_t drawingTime){
     return child->draw(canvas,this,drawingTime);
 }

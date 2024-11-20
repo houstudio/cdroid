@@ -408,6 +408,8 @@ public:
     bool dispatchTouchEvent(MotionEvent& event)override;
     bool dispatchHoverEvent(MotionEvent&event)override;
     void dispatchWindowFocusChanged(bool hasFocus)override;
+    void addTouchables(std::vector<View*>&)override;
+    void dispatchDisplayHint(int hint)override;
     bool isTransitionGroup();
     void setTransitionGroup(bool isTransitionGroup);
     virtual void requestDisallowInterceptTouchEvent(bool disallowIntercept);

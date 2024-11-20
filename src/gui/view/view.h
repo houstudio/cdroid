@@ -643,6 +643,7 @@ protected:
     void handleTooltipKey(KeyEvent& event);
     virtual void onWindowFocusChanged(bool hasWindowFocus);
     virtual void onVisibilityChanged(View& changedView,int visibility);
+    virtual void onDisplayHint(int hint/*Visibility*/);
     virtual void onAttachedToWindow();
     virtual void onDetachedFromWindow();
     virtual void onDetachedFromWindowInternal();
@@ -1186,6 +1187,7 @@ public:
 
     virtual void createContextMenu(ContextMenu& menu);
     virtual int  commitText(const std::wstring&);
+    virtual void dispatchDisplayHint(/*Visibility*/int hint);
     virtual void dispatchWindowVisibilityChanged(int visibility);
     virtual void onWindowVisibilityChanged(int);
     virtual void onVisibilityAggregated(bool isVisible);

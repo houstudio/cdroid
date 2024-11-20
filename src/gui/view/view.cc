@@ -4923,6 +4923,14 @@ void View::onVisibilityChanged(View& changedView,int visibility){
     //nothing
 }
 
+void View::dispatchDisplayHInt(int hint){
+    onDisplayHInt(hint);
+}
+
+void View::onDisplayHint(int hint){
+    //NOTHING
+}
+
 bool View::isDirty()const{
     return (mPrivateFlags&PFLAG_DIRTY_MASK)!=0;
 }
