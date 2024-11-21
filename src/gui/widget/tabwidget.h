@@ -53,6 +53,7 @@ public:
     View& setEnabled(bool enabled)override;
     View& addView(View* child)override;
     void removeAllViews()override;
+    PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
     void setTabSelectionListener(OnTabSelectionChanged listener);
     void onFocusChange(View* v, bool hasFocus);
 };

@@ -390,6 +390,8 @@ public:
     bool onKeyUp(int keyCode, KeyEvent& event)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;
     bool onTouchEvent(MotionEvent& ev)override;
+    bool onInterceptHoverEvent(MotionEvent& event)override;
+    PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
     void onRtlPropertiesChanged(int layoutDirection)override;
     bool onGenericMotionEvent(MotionEvent& event)override;
     void fling(int velocity);

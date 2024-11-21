@@ -278,6 +278,13 @@ void TabWidget::removeAllViews() {
     mSelectedTab = -1;
 }
 
+PointerIcon* TabWidget::onResolvePointerIcon(MotionEvent& event, int pointerIndex) {
+    if (!isEnabled()) {
+        return nullptr;
+    }
+    return LinearLayout::onResolvePointerIcon(event, pointerIndex);
+}
+
 void TabWidget::setTabSelectionListener(OnTabSelectionChanged listener) {
     mSelectionChangedListener = listener;
 }

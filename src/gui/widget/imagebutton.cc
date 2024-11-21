@@ -12,4 +12,11 @@ ImageButton::ImageButton(Context*ctx,const AttributeSet& attrs)
 ImageButton::ImageButton(int w,int h):ImageView(w,h){
 }
 
+PointerIcon* ImageButton::onResolvePointerIcon(MotionEvent& event, int pointerIndex){
+    if ((getPointerIcon() == nullptr) && isClickable() && isEnabled()) {
+        return PointerIcon::getSystemIcon(getContext(), PointerIcon::TYPE_HAND);
+    }
+    return ImageView::onResolvePointerIcon(event, pointerIndex);
+}
+
 }

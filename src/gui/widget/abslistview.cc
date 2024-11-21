@@ -2395,6 +2395,25 @@ bool AbsListView::onInterceptTouchEvent(MotionEvent& ev) {
     return false;
 }
 
+bool AbsListView::onInterceptHoverEvent(MotionEvent& event) {
+    if (mFastScroll && mFastScroll->onInterceptHoverEvent(event)) {
+        return true;
+    }
+
+    return AdapterView::onInterceptHoverEvent(event);
+}
+
+
+PointerIcon* AbsListView::onResolvePointerIcon(MotionEvent& event, int pointerIndex) {
+    if (mFastScroll != nullptr) {
+        PointerIcon* pointerIcon = mFastScroll->onResolvePointerIcon(event, pointerIndex);
+        if (pointerIcon != nullptr) {
+            return pointerIcon;
+        }
+    }
+    return AdapterView::onResolvePointerIcon(event, pointerIndex);
+}
+
 void AbsListView::onSecondaryPointerUp(MotionEvent& ev) {
     int pointerIndex = (ev.getAction() & MotionEvent::ACTION_POINTER_INDEX_MASK) >>
                        MotionEvent::ACTION_POINTER_INDEX_SHIFT;

@@ -131,6 +131,7 @@ public:
     int getBaseline()override;
     void show(int textDirection, int textAlignment);
     bool onTouchEvent(MotionEvent& event)override;
+    PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
 };
 
 }//namespace

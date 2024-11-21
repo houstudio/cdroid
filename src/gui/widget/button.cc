@@ -18,5 +18,11 @@ Button::Button(const std::string& text, int32_t w, int32_t h)
 Button::~Button() {
 }
 
+PointerIcon* Button::onResolvePointerIcon(MotionEvent& event, int pointerIndex) {
+    if ((getPointerIcon() == nullptr) && isClickable() && isEnabled()) {
+        return PointerIcon::getSystemIcon(getContext(), PointerIcon::TYPE_HAND);
+    }
+    return TextView::onResolvePointerIcon(event, pointerIndex);
+}
 }//endof namespace
 

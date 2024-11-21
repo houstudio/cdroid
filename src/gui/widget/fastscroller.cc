@@ -1046,14 +1046,13 @@ bool FastScroller::onInterceptHoverEvent(MotionEvent& ev) {
     return false;
 }
 
-#if 0
-PointerIcon FastScroller::onResolvePointerIcon(MotionEvent& event, int pointerIndex) {
-    if (mState == STATE_DRAGGING || isPointInside(event.getX(), event.getY())) {
-        return PointerIcon.getSystemIcon(mList.getContext(), PointerIcon.TYPE_ARROW);
+
+PointerIcon* FastScroller::onResolvePointerIcon(MotionEvent& event, int pointerIndex) {
+    if ((mState == STATE_DRAGGING) || isPointInside(event.getX(), event.getY())) {
+        return PointerIcon::getSystemIcon(mList->getContext(), PointerIcon::TYPE_ARROW);
     }
     return nullptr;
 }
-#endif
 
 bool FastScroller::onTouchEvent(MotionEvent& me) {
     if (!isEnabled()) {

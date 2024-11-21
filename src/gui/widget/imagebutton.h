@@ -8,6 +8,7 @@ class ImageButton:public ImageView{
 public:
     ImageButton(int w,int h);
     ImageButton(Context*ctx,const AttributeSet& attrs);
+    PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
 };
 
 }//namespace

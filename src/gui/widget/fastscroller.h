@@ -217,7 +217,7 @@ public:
     void onSectionsChanged();
     bool onInterceptTouchEvent(MotionEvent& ev);
     bool onInterceptHoverEvent(MotionEvent& ev);
-    //PointerIcon onResolvePointerIcon(MotionEvent& event, int pointerIndex);
+    PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex);
     bool onTouchEvent(MotionEvent& me);
     void updateLayout();
 };

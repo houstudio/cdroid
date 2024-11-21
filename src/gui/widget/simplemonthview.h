@@ -127,6 +127,7 @@ public:
     void setFirstDayOfWeek(int weekStart);
     void setMonthParams(int selectedDay,int month,int year,int weekStart,int enabledDayStart, int enabledDayEnd);
     bool getBoundsForDay(int id,Rect&outBounds);
+    PointerIcon*onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
 };
 
 }//namespace

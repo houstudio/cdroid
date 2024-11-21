@@ -336,6 +336,13 @@ bool Spinner::onTouchEvent(MotionEvent& event){
     return AbsSpinner::onTouchEvent(event);
 }
 
+PointerIcon* Spinner::onResolvePointerIcon(MotionEvent& event, int pointerIndex){
+    if ((getPointerIcon() == nullptr) && isClickable() && isEnabled()) {
+         return PointerIcon::getSystemIcon(getContext(), PointerIcon::TYPE_HAND);
+    }
+    return AbsSpinner::onResolvePointerIcon(event, pointerIndex);
+}
+
 /////////////////////////////////SpinnerPopup//////////////////////////////////////////
 Spinner::DropdownPopup::DropdownPopup(Context*context,Spinner*sp)
   :ListPopupWindow(context,AttributeSet(context,"")){

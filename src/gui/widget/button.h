@@ -9,6 +9,7 @@ public:
     Button(const std::string& text, int w, int h);
     Button(Context*ctx,const AttributeSet& attrs);
     virtual ~Button();
+    PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
 };
 }
 #endif

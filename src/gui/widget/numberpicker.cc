@@ -524,7 +524,7 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
 bool NumberPicker::dispatchTouchEvent(MotionEvent& event){
     int action = event.getActionMasked();
     switch (action) {
-    case MotionEvent::ACTION_CANCEL:LOGD("ACTION_CANCEL");
+    case MotionEvent::ACTION_CANCEL:
     case MotionEvent::ACTION_UP:
         removeAllCallbacks();
         break;

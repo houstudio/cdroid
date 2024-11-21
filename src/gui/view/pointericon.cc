@@ -1,10 +1,12 @@
 #include <view/pointericon.h>
 #include <drawables/animationdrawable.h>
-#if 10
+#include <expat.h>
+
 namespace cdroid{
+
 PointerIcon* PointerIcon::gNullIcon = new PointerIcon(TYPE_NULL);
 SparseArray<PointerIcon*> PointerIcon::gSystemIcons;
-bool PointerIcon::sUseLargeIcons=false;
+bool PointerIcon::sUseLargeIcons = false;
 
 PointerIcon::PointerIcon(int type) {
     mType = type;
@@ -135,36 +137,34 @@ Bitmap PointerIcon::getBitmapFromDrawable(BitmapDrawable* bitmapDrawable) {
     return scaled;
 }
 
+static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
+}
+
 void PointerIcon::loadResource(Context* context, const std::string& resourceId) {
-    std::string bitmapRes;
-    float hotSpotX;
-    float hotSpotY;
-#if 0
-    try {
-        XmlUtils.beginDocument(parser, "pointer-icon");
-
-        final TypedArray a = resources.obtainAttributes(
-                parser, com.android.internal.R.styleable.PointerIcon);
-        bitmapRes = a.getResourceId(com.android.internal.R.styleable.PointerIcon_bitmap, 0);
-        hotSpotX = a.getDimension(com.android.internal.R.styleable.PointerIcon_hotSpotX, 0);
-        hotSpotY = a.getDimension(com.android.internal.R.styleable.PointerIcon_hotSpotY, 0);
-        a.recycle();
-    } catch (Exception ex) {
-        throw std::runtime_error("Exception parsing pointer icon resource.", ex);
-    } finally {
-        parser.close();
-    }
-
-    if (bitmapRes == 0) {
-        throw std::runtime_error("<pointer-icon> is missing bitmap attribute.");
-    }
-#endif
-    Drawable* drawable;
-    /*if (context == nullptr) {
-        drawable = resources.getDrawable(bitmapRes);
-    } else */{
-        drawable = context->getDrawable(bitmapRes);
-    }
+    float hotSpotX,hotSpotY;
+    std::streamsize len;
+    char buf[256];
+    AttributeSet attrs(context,"");
+    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
+    std::unique_ptr<std::istream>stream = context->getInputStream(resourceId);
+    XML_SetUserData(parser,&attrs);
+    XML_SetElementHandler(parser, startElement, nullptr);
+    do {
+        stream->read(buf,sizeof(buf));
+        len = stream->gcount();
+        if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
+            const char*es = XML_ErrorString(XML_GetErrorCode(parser));
+            LOGE("%s:%s at line %ld",resourceId.c_str(),es, XML_GetCurrentLineNumber(parser));
+            XML_ParserFree(parser);
+            break;
+        }
+    } while(len!=0);
+    XML_ParserFree(parser);
+    if(attrs.size()<3)
+        throw std::runtime_error("Exception parsing pointer icon resource.");
+    Drawable* drawable = attrs.getDrawable("bitmap");
+    hotSpotX = attrs.getDimensionPixelSize("hotSpotX");
+    hotSpotY = attrs.getDimensionPixelSize("hotSpotY");
     if (dynamic_cast<AnimationDrawable*>(drawable)) {
         // Extract animation frame bitmaps.
         AnimationDrawable* animationDrawable = (AnimationDrawable*) drawable;
@@ -183,11 +183,12 @@ void PointerIcon::loadResource(Context* context, const std::string& resourceId) 
                 if (!dynamic_cast<BitmapDrawable*>(drawableFrame)) {
                     throw std::runtime_error("Frame of an animated pointer icon must refer to a bitmap drawable.");
                 }
-                if (drawableFrame->getIntrinsicWidth() != width ||
-                    drawableFrame->getIntrinsicHeight() != height) {
-                    /*throw std::runtime_error("The bitmap size of " + i + "-th frame "
-                            + "is different. All frames should have the exact same size and "
-                            + "share the same hotspot.");*/
+                if ((drawableFrame->getIntrinsicWidth() != width) ||
+                    (drawableFrame->getIntrinsicHeight() != height)) {
+                    std::ostringstream oss;
+                    oss<<"The bitmap size of " <<i<<"-th frame is different. All frames "
+                        "should have the exact same size and share the same hotspot.";
+                    throw std::runtime_error(oss.str());
                 }
                 BitmapDrawable* bitmapDrawableFrame = (BitmapDrawable*) drawableFrame;
                 mBitmapFrames[i - 1] = getBitmapFromDrawable(bitmapDrawableFrame);
@@ -276,4 +277,3 @@ std::string PointerIcon::getSystemIconTypeIndex(int type) {
 }
 
 }/*endof namespace*/
-#endif

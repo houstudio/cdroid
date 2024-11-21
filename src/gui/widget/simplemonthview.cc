@@ -746,4 +746,17 @@ bool SimpleMonthView::onDayClicked(int day){
     return true;
 }
 
+PointerIcon* SimpleMonthView::onResolvePointerIcon(MotionEvent& event, int pointerIndex) {
+    if (!isEnabled()) {
+        return nullptr;
+    }
+    // Add 0.5f to event coordinates to match the logic in onTouchEvent.
+    const int x = (int) (event.getX() + 0.5f);
+    const int y = (int) (event.getY() + 0.5f);
+    const int dayUnderPointer = getDayAtLocation(x, y);
+    if (dayUnderPointer >= 0) {
+        return PointerIcon::getSystemIcon(getContext(), PointerIcon::TYPE_HAND);
+    }
+    return View::onResolvePointerIcon(event, pointerIndex);
+}
 }//namespace

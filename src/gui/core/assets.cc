@@ -586,26 +586,26 @@ static void endElement(void *userData, const XML_Char *name) {
 
 int Assets::loadKeyValues(const std::string&fullresid,void*pending,std::function<void(const std::vector<std::string>&,
                           const std::vector<AttributeSet>&atts,const std::string&,void*p)>func) {
-    int len = 0;
+    std::streamsize len = 0;
     char buf[256];
 
     std::unique_ptr<std::istream>stream = getInputStream(fullresid);
     LOGE_IF(stream == nullptr,"%s load failed",fullresid.c_str());
     if(stream == nullptr)
         return 0;
-    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');//XML_ParserCreate(nullptr);
+    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
     KVPARSER kvp;
     kvp.context = this;
     kvp.parser = parser;
     kvp.func = func;
-	kvp.pendingResources=pending;
+	kvp.pendingResources = pending;
     parseResource(fullresid,nullptr,&kvp.package);
     XML_SetUserData(parser,&kvp);
     XML_SetElementHandler(parser, startElement, endElement);
     XML_SetCharacterDataHandler(parser,CharacterHandler);
     do {
         stream->read(buf,sizeof(buf));
-        len = (int)stream->gcount();
+        len = stream->gcount();
         if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
             const char*es=XML_ErrorString(XML_GetErrorCode(parser));
             LOGE("%s:%s at line %ld",fullresid.c_str(),es, XML_GetCurrentLineNumber(parser));
