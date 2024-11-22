@@ -27,9 +27,9 @@ public:
     struct Callback {
         std::function<RecyclerView::ViewHolder*(int)> findViewHolder;//(int position)
         std::function<void(int,int)> offsetPositionsForRemovingInvisible;//(int positionStart, int itemCount);
-	std::function<void(int,int)> offsetPositionsForRemovingLaidOutOrNewView;//(int positionStart, int itemCount);
-	std::function<void(int,int,Object*)> markViewHoldersUpdated;//(int positionStart, int itemCount, Object payloads);
-	std::function<void(UpdateOp*)> onDispatchFirstPass;//(UpdateOp updateOp);
+        std::function<void(int,int)> offsetPositionsForRemovingLaidOutOrNewView;//(int positionStart, int itemCount);
+        std::function<void(int,int,Object*)> markViewHoldersUpdated;//(int positionStart, int itemCount, Object payloads);
+        std::function<void(UpdateOp*)> onDispatchFirstPass;//(UpdateOp updateOp);
         std::function<void(UpdateOp*)> onDispatchSecondPass;//(UpdateOp updateOp);
         std::function<void(int,int)> offsetPositionsForAdd;//(int positionStart, int itemCount);
         std::function<void(int,int)> offsetPositionsForMove;//(int from, int to);
