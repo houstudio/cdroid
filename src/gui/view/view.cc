@@ -20,6 +20,7 @@
 #include <view/viewoverlay.h>
 #include <view/roundscrollbarrenderer.h>
 #include <view/handleractionqueue.h>
+//#include <view/accessibility/accessibilitywindowinfo.h>
 #include <widget/edgeeffect.h>
 #include <animation/animationutils.h>
 #include <core/systemclock.h>
@@ -3366,14 +3367,6 @@ void View::setOnCapturedPointerListener(OnCapturedPointerListener l){
     getListenerInfo()->mOnCapturedPointerListener = l;
 }
 
-static int sNextAccessibilityViewId = 0;
-int View::getAccessibilityViewId(){
-    if (mAccessibilityViewId == NO_ID) {
-        mAccessibilityViewId = sNextAccessibilityViewId++;
-    }
-    return mAccessibilityViewId;
-}
-
 int View::getAutoFillViewId(){
     if (mAutofillViewId == NO_ID) {
         mAutofillViewId = mContext->getNextAutofillId();
@@ -3419,6 +3412,19 @@ View& View::setHint(const std::string&hint){
 
 const std::string&View::getHint()const{
     return mHint;
+}
+
+static int sNextAccessibilityViewId = 0;
+int View::getAccessibilityViewId(){
+    if (mAccessibilityViewId == NO_ID) {
+        mAccessibilityViewId = sNextAccessibilityViewId++;
+    }
+    return mAccessibilityViewId;
+}
+
+int View::getAccessibilityWindowId()const{
+    return mAttachInfo? mAttachInfo->mAccessibilityWindowId
+           : -1/*AccessibilityWindowInfo::UNDEFINED_WINDOW_ID*/;
 }
 
 void View::setContentDescription(const std::string&content){

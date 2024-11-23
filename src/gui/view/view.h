@@ -999,6 +999,7 @@ public:
     View& setId(int id);
     int  getId()const;
     int  getAccessibilityViewId();
+    int getAccessibilityWindowId()const;
     int  getAutoFillViewId();
     void setTag(void*);
     void*getTag()const;
@@ -1318,6 +1319,7 @@ public:
     float mApplicationScale;
     int mWindowLeft;
     int mWindowTop;
+    int mAccessibilityWindowId;
     int mSystemUiVisibility;
     int mDisabledSystemUiVisibility;
     int mGlobalSystemUiVisibility;
