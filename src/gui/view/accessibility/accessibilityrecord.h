@@ -1,8 +1,13 @@
-
+#ifndef __ACCESSIBILITY_RECORD_H__
+#define __ACCESSIBILITY_RECORD_H__
+#include <string>
+#include <vector>
+#include <view/accessibility/accessibilitynodeinfo.h>
+#include <view/accessibility/accessibilitywindowinfo.h>
+namespace cdroid{
 class AccessibilityRecord {
-    /** @hide */
-    protected static final bool DEBUG_CONCISE_TOSTRING = false;
-
+protected:
+    static constexpr bool DEBUG_CONCISE_TOSTRING = false;
 private:
     static constexpr int UNDEFINED = -1;
 
@@ -13,15 +18,13 @@ private:
     static constexpr int PROPERTY_SCROLLABLE = 0x00000100;
     static constexpr int PROPERTY_IMPORTANT_FOR_ACCESSIBILITY = 0x00000200;
 
-    static constexpr int GET_SOURCE_PREFETCH_FLAGS =
-        AccessibilityNodeInfo.FLAG_PREFETCH_PREDECESSORS
-        | AccessibilityNodeInfo.FLAG_PREFETCH_SIBLINGS
-        | AccessibilityNodeInfo.FLAG_PREFETCH_DESCENDANTS;
+    static constexpr int GET_SOURCE_PREFETCH_FLAGS =AccessibilityNodeInfo::FLAG_PREFETCH_PREDECESSORS
+            | AccessibilityNodeInfo::FLAG_PREFETCH_SIBLINGS | AccessibilityNodeInfo::FLAG_PREFETCH_DESCENDANTS;
 
     // Housekeeping
     static constexpr int MAX_POOL_SIZE = 10;
     //static final Object sPoolLock = new Object();
-    static AccessibilityRecord sPool;
+    static AccessibilityRecord* sPool;
     static int sPoolSize;
     AccessibilityRecord* mNext;
     bool mIsInPool;
@@ -42,15 +45,15 @@ protected:
 
     int mAddedCount= UNDEFINED;
     int mRemovedCount = UNDEFINED;
-    long mSourceNodeId = AccessibilityNodeInfo.UNDEFINED_NODE_ID;
-    int mSourceWindowId = AccessibilityWindowInfo.UNDEFINED_WINDOW_ID;
+    long mSourceNodeId = AccessibilityNodeInfo::UNDEFINED_NODE_ID;
+    int mSourceWindowId = AccessibilityWindowInfo::UNDEFINED_WINDOW_ID;
 
-    CharSequence mClassName;
-    CharSequence mContentDescription;
-    CharSequence mBeforeText;
-    Parcelable mParcelableData;
+    std::string mClassName;
+    std::string mContentDescription;
+    std::string mBeforeText;
+    Parcelable* mParcelableData;
 
-    final List<CharSequence> mText = new ArrayList<CharSequence>();
+    std::vector<std::string> mText;
 
     int mConnectionId = UNDEFINED;
 public:
@@ -66,7 +69,7 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    void setSource(View source);
+    void setSource(View* source);
 
     /**
      * Sets the source to be a virtual descendant of the given <code>root</code>.
@@ -82,7 +85,7 @@ public:
      * @param root The root of the virtual subtree.
      * @param virtualDescendantId The id of the virtual descendant.
      */
-    public void setSource(@Nullable View root, int virtualDescendantId);
+    void setSource(View* root, int virtualDescendantId);
 
     /**
      * Set the source node ID directly
@@ -90,7 +93,7 @@ public:
      * @param sourceNodeId The source node Id
      * @hide
      */
-    public void setSourceNodeId(long sourceNodeId);
+    void setSourceNodeId(long sourceNodeId);
 
     /**
      * Gets the {@link AccessibilityNodeInfo} of the event source.
@@ -101,7 +104,7 @@ public:
      * </p>
      * @return The info of the source.
      */
-    public AccessibilityNodeInfo getSource();
+    AccessibilityNodeInfo* getSource();
 
     /**
      * Sets the window id.
@@ -110,21 +113,21 @@ public:
      *
      * @hide
      */
-    public void setWindowId(int windowId);
+    void setWindowId(int windowId);
 
     /**
      * Gets the id of the window from which the event comes from.
      *
      * @return The window id.
      */
-    public int getWindowId();
+    int getWindowId();
 
     /**
      * Gets if the source is checked.
      *
      * @return True if the view is checked, false otherwise.
      */
-    public bool isChecked();
+    bool isChecked();
 
     /**
      * Sets if the source is checked.
@@ -133,14 +136,14 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setChecked(bool isChecked);
+    void setChecked(bool isChecked);
 
     /**
      * Gets if the source is enabled.
      *
      * @return True if the view is enabled, false otherwise.
      */
-    public bool isEnabled();
+    bool isEnabled();
 
     /**
      * Sets if the source is enabled.
@@ -149,14 +152,14 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setEnabled(bool isEnabled);
+    void setEnabled(bool isEnabled);
 
     /**
      * Gets if the source is a password field.
      *
      * @return True if the view is a password field, false otherwise.
      */
-    public boolean isPassword();
+    bool isPassword();
 
     /**
      * Sets if the source is a password field.
@@ -165,14 +168,14 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setPassword(bool isPassword);
+    void setPassword(bool isPassword);
 
     /**
      * Gets if the source is taking the entire screen.
      *
      * @return True if the source is full screen, false otherwise.
      */
-    public bool isFullScreen();
+    bool isFullScreen();
 
     /**
      * Sets if the source is taking the entire screen.
@@ -181,14 +184,14 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setFullScreen(bool isFullScreen);
+    void setFullScreen(bool isFullScreen);
 
     /**
      * Gets if the source is scrollable.
      *
      * @return True if the source is scrollable, false otherwise.
      */
-    public bool isScrollable()
+    bool isScrollable();
 
     /**
      * Sets if the source is scrollable.
@@ -197,7 +200,7 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setScrollable(bool scrollable);
+    void setScrollable(bool scrollable);
 
     /**
      * Gets if the source is important for accessibility.
@@ -212,7 +215,7 @@ public:
      *
      * @hide
      */
-    public boolean isImportantForAccessibility();
+    bool isImportantForAccessibility();
 
     /**
      * Sets if the source is important for accessibility.
@@ -223,14 +226,14 @@ public:
      * @throws IllegalStateException If called from an AccessibilityService.
      * @hide
      */
-    public void setImportantForAccessibility(bool importantForAccessibility);
+    void setImportantForAccessibility(bool importantForAccessibility);
 
     /**
      * Gets the number of items that can be visited.
      *
      * @return The number of items.
      */
-    public int getItemCount();
+    int getItemCount();
 
     /**
      * Sets the number of items that can be visited.
@@ -239,15 +242,13 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setItemCount(int itemCount);
+    void setItemCount(int itemCount);
     /**
      * Gets the index of the source in the list of items the can be visited.
      *
      * @return The current item index.
      */
-    public int getCurrentItemIndex() {
-        return mCurrentItemIndex;
-    }
+    int getCurrentItemIndex()const;
 
     /**
      * Sets the index of the source in the list of items that can be visited.
@@ -256,10 +257,7 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setCurrentItemIndex(int currentItemIndex) {
-        enforceNotSealed();
-        mCurrentItemIndex = currentItemIndex;
-    }
+    void setCurrentItemIndex(int currentItemIndex);
 
     /**
      * Gets the index of the first character of the changed sequence,
@@ -269,9 +267,7 @@ public:
      * @return The index of the first character or selection
      *        start or the first visible item.
      */
-    public int getFromIndex() {
-        return mFromIndex;
-    }
+    int getFromIndex()const;
 
     /**
      * Sets the index of the first character of the changed sequence
@@ -283,10 +279,7 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setFromIndex(int fromIndex) {
-        enforceNotSealed();
-        mFromIndex = fromIndex;
-    }
+    void setFromIndex(int fromIndex);
 
     /**
      * Gets the index of text selection end or the index of the last
@@ -294,9 +287,7 @@ public:
      *
      * @return The index of selection end or last item index.
      */
-    public int getToIndex() {
-        return mToIndex;
-    }
+    int getToIndex() const;
 
     /**
      * Sets the index of text selection end or the index of the last
@@ -304,48 +295,35 @@ public:
      *
      * @param toIndex The index of selection end or last item index.
      */
-    public void setToIndex(int toIndex) {
-        enforceNotSealed();
-        mToIndex = toIndex;
-    }
+    void setToIndex(int toIndex);
 
     /**
      * Gets the scroll offset of the source left edge in pixels.
      *
      * @return The scroll.
      */
-    public int getScrollX() {
-        return mScrollX;
-    }
+    int getScrollX()const;
 
     /**
      * Sets the scroll offset of the source left edge in pixels.
      *
      * @param scrollX The scroll.
      */
-    public void setScrollX(int scrollX) {
-        enforceNotSealed();
-        mScrollX = scrollX;
-    }
+    void setScrollX(int scrollX);
 
     /**
      * Gets the scroll offset of the source top edge in pixels.
      *
      * @return The scroll.
      */
-    public int getScrollY() {
-        return mScrollY;
-    }
+    int getScrollY() const;
 
     /**
      * Sets the scroll offset of the source top edge in pixels.
      *
      * @param scrollY The scroll.
      */
-    public void setScrollY(int scrollY) {
-        enforceNotSealed();
-        mScrollY = scrollY;
-    }
+    void setScrollY(int scrollY);
 
     /**
      * Gets the difference in pixels between the horizontal position before the scroll and the
@@ -353,9 +331,7 @@ public:
      *
      * @return the scroll delta x
      */
-    public int getScrollDeltaX() {
-        return mScrollDeltaX;
-    }
+    int getScrollDeltaX() const;
 
     /**
      * Sets the difference in pixels between the horizontal position before the scroll and the
@@ -363,10 +339,7 @@ public:
      *
      * @param scrollDeltaX the scroll delta x
      */
-    public void setScrollDeltaX(int scrollDeltaX) {
-        enforceNotSealed();
-        mScrollDeltaX = scrollDeltaX;
-    }
+    void setScrollDeltaX(int scrollDeltaX);
 
     /**
      * Gets the difference in pixels between the vertical position before the scroll and the
@@ -374,9 +347,7 @@ public:
      *
      * @return the scroll delta y
      */
-    public int getScrollDeltaY() {
-        return mScrollDeltaY;
-    }
+    int getScrollDeltaY()const;
 
     /**
      * Sets the difference in pixels between the vertical position before the scroll and the
@@ -384,57 +355,42 @@ public:
      *
      * @param scrollDeltaY the scroll delta y
      */
-    public void setScrollDeltaY(int scrollDeltaY) {
-        enforceNotSealed();
-        mScrollDeltaY = scrollDeltaY;
-    }
+    void setScrollDeltaY(int scrollDeltaY);
 
     /**
      * Gets the max scroll offset of the source left edge in pixels.
      *
      * @return The max scroll.
      */
-    public int getMaxScrollX() {
-        return mMaxScrollX;
-    }
+    int getMaxScrollX()const;
 
     /**
      * Sets the max scroll offset of the source left edge in pixels.
      *
      * @param maxScrollX The max scroll.
      */
-    public void setMaxScrollX(int maxScrollX) {
-        enforceNotSealed();
-        mMaxScrollX = maxScrollX;
-    }
+    void setMaxScrollX(int maxScrollX);
 
     /**
      * Gets the max scroll offset of the source top edge in pixels.
      *
      * @return The max scroll.
      */
-    public int getMaxScrollY() {
-        return mMaxScrollY;
-    }
+    int getMaxScrollY()const;
 
     /**
      * Sets the max scroll offset of the source top edge in pixels.
      *
      * @param maxScrollY The max scroll.
      */
-    public void setMaxScrollY(int maxScrollY) {
-        enforceNotSealed();
-        mMaxScrollY = maxScrollY;
-    }
+    void setMaxScrollY(int maxScrollY);
 
     /**
      * Gets the number of added characters.
      *
      * @return The number of added characters.
      */
-    public int getAddedCount() {
-        return mAddedCount;
-    }
+    int getAddedCount() const;
 
     /**
      * Sets the number of added characters.
@@ -443,19 +399,14 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setAddedCount(int addedCount) {
-        enforceNotSealed();
-        mAddedCount = addedCount;
-    }
+    void setAddedCount(int addedCount);
 
     /**
      * Gets the number of removed characters.
      *
      * @return The number of removed characters.
      */
-    public int getRemovedCount() {
-        return mRemovedCount;
-    }
+    int getRemovedCount()const;
 
     /**
      * Sets the number of removed characters.
@@ -464,19 +415,14 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setRemovedCount(int removedCount) {
-        enforceNotSealed();
-        mRemovedCount = removedCount;
-    }
+    void setRemovedCount(int removedCount);
 
     /**
      * Gets the class name of the source.
      *
      * @return The class name.
      */
-    public CharSequence getClassName() {
-        return mClassName;
-    }
+    std::string getClassName()const;
 
     /**
      * Sets the class name of the source.
@@ -485,10 +431,7 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setClassName(CharSequence className) {
-        enforceNotSealed();
-        mClassName = className;
-    }
+    void setClassName(const std::string& className);
 
     /**
      * Gets the text of the event. The index in the list represents the priority
@@ -496,18 +439,14 @@ public:
      *
      * @return The text.
      */
-    public List<CharSequence> getText() {
-        return mText;
-    }
+    std::vector<std::string> getText()const;
 
     /**
      * Sets the text before a change.
      *
      * @return The text before the change.
      */
-    public CharSequence getBeforeText() {
-        return mBeforeText;
-    }
+    std::string getBeforeText()const;
 
     /**
      * Sets the text before a change.
@@ -516,20 +455,14 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setBeforeText(CharSequence beforeText) {
-        enforceNotSealed();
-        mBeforeText = (beforeText == null) ? null
-                : beforeText.subSequence(0, beforeText.length());
-    }
+    void setBeforeText(const std::string& beforeText);
 
     /**
      * Gets the description of the source.
      *
      * @return The description.
      */
-    public CharSequence getContentDescription() {
-        return mContentDescription;
-    }
+    std::string getContentDescription()const;
 
     /**
      * Sets the description of the source.
@@ -538,20 +471,14 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setContentDescription(CharSequence contentDescription) {
-        enforceNotSealed();
-        mContentDescription = (contentDescription == null) ? null
-                : contentDescription.subSequence(0, contentDescription.length());
-    }
+    void setContentDescription(const std::string& contentDescription);
 
     /**
      * Gets the {@link Parcelable} data.
      *
      * @return The parcelable data.
      */
-    public Parcelable getParcelableData() {
-        return mParcelableData;
-    }
+    Parcelable* getParcelableData()const;
 
     /**
      * Sets the {@link Parcelable} data of the event.
@@ -560,10 +487,7 @@ public:
      *
      * @throws IllegalStateException If called from an AccessibilityService.
      */
-    public void setParcelableData(Parcelable parcelableData) {
-        enforceNotSealed();
-        mParcelableData = parcelableData;
-    }
+    void setParcelableData(Parcelable* parcelableData);
 
     /**
      * Gets the id of the source node.
@@ -572,9 +496,7 @@ public:
      *
      * @hide
      */
-    public long getSourceNodeId() {
-        return mSourceNodeId;
-    }
+    long getSourceNodeId()const;
 
     /**
      * Sets the unique id of the IAccessibilityServiceConnection over which
@@ -584,7 +506,7 @@ public:
      *
      * @hide
      */
-    public void setConnectionId(int connectionId);
+    void setConnectionId(int connectionId);
 
     /**
      * Sets if this instance is sealed.
@@ -593,14 +515,14 @@ public:
      *
      * @hide
      */
-    public void setSealed(bool sealed);
+    void setSealed(bool sealed);
 
     /**
      * Gets if this instance is sealed.
      *
      * @return Whether is sealed.
      */
-    bool isSealed();
+    bool isSealed()const;
 
     /**
      * Enforces that this instance is sealed.
@@ -617,29 +539,13 @@ public:
     void enforceNotSealed();
 
     /**
-     * Gets the value of a boolean property.
-     *
-     * @param property The property.
-     * @return The value.
-     */
-    private bool getBooleanProperty(int property);
-
-    /**
-     * Sets a boolean property.
-     *
-     * @param property The property.
-     * @param value The value.
-     */
-    private void setBooleanProperty(int property, boolean value);
-
-    /**
      * Returns a cached instance if such is available or a new one is
      * instantiated. The instance is initialized with data from the
      * given record.
      *
      * @return An instance.
      */
-    public static AccessibilityRecord obtain(AccessibilityRecord record);
+    static AccessibilityRecord* obtain(const AccessibilityRecord& record);
 
     /**
      * Returns a cached instance if such is available or a new one is
@@ -647,7 +553,7 @@ public:
      *
      * @return An instance.
      */
-    public static AccessibilityRecord obtain();
+    static AccessibilityRecord* obtain();
     /**
      * Return an instance back to be reused.
      * <p>
@@ -655,41 +561,56 @@ public:
      *
      * @throws IllegalStateException If the record is already recycled.
      */
-    public void recycle();
+    void recycle();
+private:
+    /**
+     * Gets the value of a bool property.
+     *
+     * @param property The property.
+     * @return The value.
+     */
+    bool getBooleanProperty(int property);
+
+    /**
+     * Sets a bool property.
+     *
+     * @param property The property.
+     * @param value The value.
+     */
+    void setBooleanProperty(int property, bool value);
+
 
     /**
      * Initialize this record from another one.
      *
      * @param record The to initialize from.
      */
-    void init(AccessibilityRecord record);
+    void init(const AccessibilityRecord& record);
 
     /**
      * Clears the state of this instance.
      */
     void clear(); 
-
-    @Override
-    public String toString() {
-        return appendTo(new StringBuilder()).toString();
-    }
-
+#if 0
     StringBuilder appendTo(StringBuilder builder);
-    private void appendUnless(boolean defValue, int prop, StringBuilder builder);
-    private static String singleBooleanPropertyToString(int prop);
+    void appendUnless(bool defValue, int prop, StringBuilder builder);
+    static String singleBooleanPropertyToString(int prop);
 
-    private void append(StringBuilder builder, String propName, int propValue);
+    void append(StringBuilder builder, String propName, int propValue);
         if (DEBUG_CONCISE_TOSTRING && propValue == UNDEFINED) return;
         appendPropName(builder, propName).append(propValue);
     }
 
-    private void append(StringBuilder builder, String propName, Object propValue);
+    void append(StringBuilder builder, String propName, Object propValue);
         if (DEBUG_CONCISE_TOSTRING && propValue == null) return;
         appendPropName(builder, propName).append(propValue);
     }
 
-    private StringBuilder appendPropName(StringBuilder builder, String propName);
+    StringBuilder appendPropName(StringBuilder builder, String propName);
         return builder.append("; ").append(propName).append(": ");
     }
-}
+#endif
+};
+}/*endof namespace*/
+#endif/*__ACCESSIBILITY_RECORD_H__*/
 

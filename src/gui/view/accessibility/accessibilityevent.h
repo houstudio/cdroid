@@ -1,8 +1,11 @@
 #ifndef __ACCESSIBILITY_EVENT_H__
 #define __ACCESSIBILITY_EVENT_H__
+#include <view/accessibility/accessibilityrecord.h>
 namespace cdroid{
-class AccessibilityEvent{
-
+class AccessibilityEvent:public AccessibilityRecord{
+private:
+    static constexpr int TYPE_ALL_MASK = 0xFFFFFFFF;
+    static constexpr int MAX_POOL_SIZE = 10;
 public:
     static constexpr bool DEBUG_ORIGIN = false;
 
@@ -274,9 +277,24 @@ public:
      */
     static constexpr int WINDOWS_CHANGE_PIP = 0x00000400;
 private:
-    AccessibilityEvent();
+    std::string mPackageName;
+    int64_t mEventTime;
+    std::vector<AccessibilityRecord*> mRecords;
+    static Pools::SimplePool<AccessibilityEvent>sPool;
 protected:
-    void init(AccessibilityEvent&);
+    int mEventType;
+    int mMovementGranularity;
+    int mAction;
+    int mContentChangeTypes;
+    int mWindowChangeTypes;
+private:
+    AccessibilityEvent();
+    static std::string contentChangeTypesToString(int types);
+    static std::string singleContentChangeTypeToString(int type);
+    static std::string windowChangeTypesToString(int types);
+    static std::string singleWindowChangeTypeToString(int type);
+protected:
+    void init(const AccessibilityEvent&);
 public:
     void setSealed(bool);
     void getRecordCount()const;
@@ -284,6 +302,18 @@ public:
     //AccessibilityRecord getRecord(int);
     int getEventType()const;
     int getContentChangeTypes()const;
+    void setContentChangeTypes(int changeTypes);
+    int getWindowChanges()const;
+    void setWindowChanges(int changes);
+    void setEventType(int eventType);
+    int64_t getEventTime()const;
+    void setEventTime(int64_t eventTime);
+    static AccessibilityEvent* obtainWindowsChangedEvent(int windowId, int windowChangeTypes);
+    static AccessibilityEvent* obtain(int eventType);
+    static AccessibilityEvent* obtain(const AccessibilityEvent& event);
+    static AccessibilityEvent* obtain();
+    void recycle();
+    void clear();
 };
 }
 #endif
