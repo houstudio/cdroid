@@ -48,7 +48,7 @@
 #include <view/soundeffectconstants.h>
 #include <view/hapticfeedbackconstants.h>
 #include <view/accessibility/accessibilityevent.h>
-#include <accessibility/accessibilitynodeprovider.h>
+#include <view/accessibility/accessibilitynodeprovider.h>
 #include <view/inputeventconsistencyverifier.h>
 #include <animation/animation.h>
 #include <animation/statelistanimator.h>
@@ -211,6 +211,7 @@ protected:
         PFLAG3_SCROLL_INDICATOR_RIGHT      = 0x0800 ,
         PFLAG3_SCROLL_INDICATOR_START      = 0x1000 ,
         PFLAG3_SCROLL_INDICATOR_END        = 0x2000 ,
+        PFLAG3_IMPORTANT_FOR_AUTOFILL_SHIFT= 19,
 
         PFLAG3_CLUSTER                 = 0x08000 ,
         PFLAG3_IS_AUTOFILLED           = 0x10000 ,
@@ -218,7 +219,11 @@ protected:
         PFLAG3_FOCUSED_BY_DEFAULT      = 0x40000 ,
         PFLAG3_TEMPORARY_DETACH        = 0x2000000 ,
         PFLAG3_NO_REVEAL_ON_FOCUS      = 0x4000000 ,
-        PFLAG3_AGGREGATED_VISIBLE      = 0x20000000
+        PFLAG3_NOTIFY_AUTOFILL_ENTER_ON_LAYOUT = 0x8000000,
+        PFLAG3_SCREEN_READER_FOCUSABLE = 0x10000000,
+        PFLAG3_AGGREGATED_VISIBLE      = 0x20000000,
+        PFLAG3_AUTOFILLID_EXPLICITLY_SET = 0x40000000,
+        PFLAG3_ACCESSIBILITY_HEADING   = 0x80000000
     };
     class AttachInfo;
     class TransformationInfo;
@@ -398,6 +403,16 @@ public:
         LAYER_TYPE_SOFTWARE=1,
         LAYER_TYPE_HARDWARE=2
     };
+    static constexpr int AUTOFILL_TYPE_NONE = 0;
+    static constexpr int AUTOFILL_TYPE_TEXT = 1;
+    static constexpr int AUTOFILL_TYPE_TOGGLE = 2;
+    static constexpr int AUTOFILL_TYPE_LIST = 3;
+    static constexpr int AUTOFILL_TYPE_DATE = 4;
+    static constexpr int PFLAG3_IMPORTANT_FOR_AUTOFILL_MASK = (IMPORTANT_FOR_AUTOFILL_AUTO
+           | IMPORTANT_FOR_AUTOFILL_YES | IMPORTANT_FOR_AUTOFILL_NO
+           | IMPORTANT_FOR_AUTOFILL_YES_EXCLUDE_DESCENDANTS
+           | IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS)
+           << PFLAG3_IMPORTANT_FOR_AUTOFILL_SHIFT;
     DECLARE_UIEVENT(bool,OnKeyListener,View& v, int keyCode, KeyEvent&);
     DECLARE_UIEVENT(bool,OnTouchListener,View&v, MotionEvent&);
     DECLARE_UIEVENT(bool,OnHoverListener,View&v, MotionEvent&);
@@ -549,6 +564,7 @@ private:
     View* findAccessibilityFocusHost(bool searchDescendants);
     bool hasListenersForAccessibility() const;
     bool isAccessibilityPane()const;
+    bool isAutofillable();
     void postSendViewScrolledAccessibilityEventCallback(int dx, int dy);
     void cancel(SendViewScrolledAccessibilityEvent* callback);
 protected:
@@ -1034,6 +1050,7 @@ public:
     View& setId(int id);
     int  getId()const;
     int  getAccessibilityViewId();
+    int getAutofillViewId();
     int getAccessibilityWindowId()const;
     int  getAutoFillViewId();
     void setTag(void*);
@@ -1096,9 +1113,15 @@ public:
     virtual PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex);
     View& setPointerIcon(PointerIcon* pointerIcon);
     PointerIcon*getPointerIcon();
+    int getImportantForAutofill()const;
+    void setImportantForAutofill(int mode);
+    bool isImportantForAutofill()const;
+    bool canNotifyAutofillEnterExitEvent();
+
     // Attribute
     virtual View& clearFlag(int flag);
     bool isAccessibilityFocused()const;
+    void notifyEnterOrExitForAutoFillIfNeeded(bool enter);
     View& setAccessibilityPaneTitle(const std::string& accessibilityPaneTitle);
     std::string getAccessibilityPaneTitle() const;
     View& sendAccessibilityEvent(int eventType);
@@ -1155,6 +1178,8 @@ public:
     void setHovered(bool hovered);
     bool isAutofilled()const;
     void setAutofilled(bool);
+    //void setAutofillId(AutoillId);
+    int getAutofillType()const;
 
     bool isClickable()const;
     void setClickable(bool clickable);

@@ -56,6 +56,8 @@ protected:
     std::vector<std::string> mText;
 
     int mConnectionId = UNDEFINED;
+protected:
+    virtual void clear(); 
 public:
     /*
      * Hide constructor.
@@ -561,7 +563,7 @@ public:
      *
      * @throws IllegalStateException If the record is already recycled.
      */
-    void recycle();
+    virtual void recycle();
 private:
     /**
      * Gets the value of a bool property.
@@ -587,10 +589,6 @@ private:
      */
     void init(const AccessibilityRecord& record);
 
-    /**
-     * Clears the state of this instance.
-     */
-    void clear(); 
 #if 0
     StringBuilder appendTo(StringBuilder builder);
     void appendUnless(bool defValue, int prop, StringBuilder builder);

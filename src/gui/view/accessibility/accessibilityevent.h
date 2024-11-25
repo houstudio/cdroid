@@ -312,8 +312,8 @@ public:
     static AccessibilityEvent* obtain(int eventType);
     static AccessibilityEvent* obtain(const AccessibilityEvent& event);
     static AccessibilityEvent* obtain();
-    void recycle();
-    void clear();
+    void recycle()override;
+    void clear()override;
 };
 }
 #endif

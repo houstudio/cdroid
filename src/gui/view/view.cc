@@ -22,6 +22,7 @@
 #include <view/roundscrollbarrenderer.h>
 #include <view/handleractionqueue.h>
 #include <view/accessibility/accessibilitywindowinfo.h>
+#include <view/accessibility/accessibilitymanager.h>
 #include <widget/edgeeffect.h>
 #include <animation/animationutils.h>
 #include <core/systemclock.h>
@@ -3436,10 +3437,17 @@ AccessibilityNodeProvider* View::getAccessibilityNodeProvider()const{
 
 static int sNextAccessibilityViewId = 0;
 int View::getAccessibilityViewId(){
-    if (mAccessibilityViewId == NO_ID) {
+    if (mAccessibilityViewId == View::NO_ID) {
         mAccessibilityViewId = sNextAccessibilityViewId++;
     }
     return mAccessibilityViewId;
+}
+
+int View::getAutofillViewId(){
+    if (mAutofillViewId == View::NO_ID) {
+        mAutofillViewId = mContext->getNextAutofillId();
+    }
+    return mAutofillViewId;
 }
 
 int View::getAccessibilityWindowId()const{
@@ -3466,9 +3474,9 @@ bool View::hasListenersForAccessibility() const{
 }
 
 void View::notifyViewAccessibilityStateChangedIfNeeded(int changeType){
-    /*if (!AccessibilityManager::getInstance(mContext).isEnabled() ||( mAttachInfo == nullptr)) {
+    if (!AccessibilityManager::getInstance(mContext).isEnabled() ||( mAttachInfo == nullptr)) {
         return;
-    }*/
+    }
 
     // Changes to views with a pane title count as window state changes, as the pane title
     // marks them as significant parts of the UI.
@@ -3503,9 +3511,9 @@ void View::notifyViewAccessibilityStateChangedIfNeeded(int changeType){
 }
 
 void View::notifySubtreeAccessibilityStateChangedIfNeeded(){
-    /*if (!AccessibilityManager::getInstance(mContext).isEnabled() || (mAttachInfo == nullptr)) {
+    if (!AccessibilityManager::getInstance(mContext).isEnabled() || (mAttachInfo == nullptr)) {
         return;
-    }*/
+    }
 
     if ((mPrivateFlags2 & PFLAG2_SUBTREE_ACCESSIBILITY_STATE_CHANGED) == 0) {
         mPrivateFlags2 |= PFLAG2_SUBTREE_ACCESSIBILITY_STATE_CHANGED;
@@ -3750,7 +3758,7 @@ void View::dispatchFinishTemporaryDetach(){
     if (hasWindowFocus() && hasFocus()) {
         InputMethodManager::getInstance().focusIn(this);
     }
-    //notifyEnterOrExitForAutoFillIfNeeded(true);
+    notifyEnterOrExitForAutoFillIfNeeded(true);
 }
 
 void View::onFinishTemporaryDetach(){
@@ -3759,7 +3767,7 @@ void View::onFinishTemporaryDetach(){
 
 void View::dispatchStartTemporaryDetach(){
     mPrivateFlags3 |= PFLAG3_TEMPORARY_DETACH;
-    //notifyEnterOrExitForAutoFillIfNeeded(false);
+    notifyEnterOrExitForAutoFillIfNeeded(false);
     onStartTemporaryDetach();
 }
 
@@ -4423,7 +4431,7 @@ void View::onFocusChanged(bool gainFocus,int direct,Rect*previouslyFocusedRect){
     if (mAttachInfo) {
         mAttachInfo->mKeyDispatchState.reset(this);
     }
-    //notifyEnterOrExitForAutoFillIfNeeded(gainFocus);
+    notifyEnterOrExitForAutoFillIfNeeded(gainFocus);
 }
 
 Drawable* View::getForeground()const{
@@ -4474,6 +4482,29 @@ View& View::setForeground(Drawable* foreground){
     requestLayout();
     invalidate(true);
     return *this;
+}
+
+void View::notifyEnterOrExitForAutoFillIfNeeded(bool enter) {
+    if (canNotifyAutofillEnterExitEvent()) {
+        /*AutofillManager afm = getAutofillManager();
+        if (afm != nullptr) {
+            if (enter && isFocused()) {
+                // We have not been laid out yet, hence cannot evaluate
+                // whether this view is visible to the user, we will do
+                // the evaluation once layout is complete.
+                if (!isLaidOut()) {
+                    mPrivateFlags3 |= PFLAG3_NOTIFY_AUTOFILL_ENTER_ON_LAYOUT;
+                } else if (isVisibleToUser()) {
+                    // TODO This is a potential problem that View gets focus before it's visible
+                    // to User. Ideally View should handle the event when isVisibleToUser()
+                    // becomes true where it should issue notifyViewEntered().
+                    afm.notifyViewEntered(this);
+                }
+            } else if (!enter && !isFocused()) {
+                afm.notifyViewExited(this);
+            }
+        }*/
+    }
 }
 
 View& View::setAccessibilityPaneTitle(const std::string& accessibilityPaneTitle) {
@@ -5483,6 +5514,81 @@ Drawable* View::getAutofilledDrawable(){
     return mAttachInfo->mAutofilledDrawable;
 }
 
+int View::getImportantForAutofill()const{
+    return (mPrivateFlags3 & PFLAG3_IMPORTANT_FOR_AUTOFILL_MASK) >> PFLAG3_IMPORTANT_FOR_AUTOFILL_SHIFT;
+}
+
+void View::setImportantForAutofill(int mode){
+    mPrivateFlags3 &= ~PFLAG3_IMPORTANT_FOR_AUTOFILL_MASK;
+    mPrivateFlags3 |= (mode << PFLAG3_IMPORTANT_FOR_AUTOFILL_SHIFT)
+            & PFLAG3_IMPORTANT_FOR_AUTOFILL_MASK;
+}
+
+bool View::isImportantForAutofill()const{
+    //Check parent mode to ensure we're not hidden.
+    ViewGroup* parent = mParent;
+    while (parent) {
+        const int parentImportance = parent->getImportantForAutofill();
+        if (parentImportance == IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+                || parentImportance == IMPORTANT_FOR_AUTOFILL_YES_EXCLUDE_DESCENDANTS) {
+            return false;
+        }
+        parent = parent->getParent();
+    }
+
+    const int importance = getImportantForAutofill();
+
+    // First, check the explicit states.
+    if (importance == IMPORTANT_FOR_AUTOFILL_YES_EXCLUDE_DESCENDANTS
+            || importance == IMPORTANT_FOR_AUTOFILL_YES) {
+        return true;
+    }
+    if (importance == IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+            || importance == IMPORTANT_FOR_AUTOFILL_NO) {
+        return false;
+    }
+
+    // Then use some heuristics to handle AUTO.
+#if 0
+    // Always include views that have an explicit resource id.
+    const int id = mID;
+    if (id != NO_ID && !isViewIdGenerated(id)) {
+        final Resources res = getResources();
+        String entry = null;
+        String pkg = null;
+        try {
+            entry = res.getResourceEntryName(id);
+            pkg = res.getResourcePackageName(id);
+        } catch (Resources.NotFoundException e) {
+            // ignore
+        }
+        if (entry != null && pkg != null && pkg.equals(mContext.getPackageName())) {
+            return true;
+        }
+    }
+
+    // If the app developer explicitly set hints for it, it's important.
+    if (getAutofillHints() != null) {
+        return true;
+    }
+#endif
+    // Otherwise, assume it's not important...
+    return false;
+}
+
+bool View::isAutofillable(){
+    return getAutofillType() != AUTOFILL_TYPE_NONE && isImportantForAutofill()
+            && getAutofillViewId() > LAST_APP_AUTOFILL_ID;
+}
+
+bool View::canNotifyAutofillEnterExitEvent(){
+    return isAutofillable() && isAttachedToWindow();
+}
+
+int View::getAutofillType()const{
+    return AUTOFILL_TYPE_NONE;
+}
+
 void View::drawAutofilledHighlight(Canvas& canvas){
     if (isAutofilled()) {
         Drawable* autofilledHighlight = getAutofilledDrawable();
@@ -5842,9 +5948,9 @@ View& View::sendAccessibilityEvent(int eventType){
 }
 
 View& View::sendAccessibilityEventInternal(int eventType){
-    /*if (AccessibilityManager.getInstance(mContext).isEnabled()) {
-         sendAccessibilityEventUnchecked(AccessibilityEvent::obtain(eventType));
-    }*/
+    if (AccessibilityManager::getInstance(mContext).isEnabled()) {
+        sendAccessibilityEventUnchecked(*AccessibilityEvent::obtain(eventType));
+    }
     return *this;
 }
 
@@ -5859,8 +5965,7 @@ View& View::sendAccessibilityEventUnchecked(AccessibilityEvent& event) {
 
 View& View::sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event){
        // Panes disappearing are relevant even if though the view is no longer visible.
-    const bool isWindowStateChanged =
-            (event.getEventType() == AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED);
+    const bool isWindowStateChanged = (event.getEventType() == AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED);
     const bool isWindowDisappearedEvent = isWindowStateChanged && ((event.getContentChangeTypes()
             & AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_DISAPPEARED) != 0);
     if (!isShown() && !isWindowDisappearedEvent) {
@@ -6752,10 +6857,10 @@ void View::layout(int l, int t, int w, int h){
         }
     }
 
-    /*if ((mPrivateFlags3 & PFLAG3_NOTIFY_AUTOFILL_ENTER_ON_LAYOUT) != 0) {
+    if ((mPrivateFlags3 & PFLAG3_NOTIFY_AUTOFILL_ENTER_ON_LAYOUT) != 0) {
         mPrivateFlags3 &= ~PFLAG3_NOTIFY_AUTOFILL_ENTER_ON_LAYOUT;
-        //notifyEnterOrExitForAutoFillIfNeeded(true);
-    }*/
+        notifyEnterOrExitForAutoFillIfNeeded(true);
+    }
 }
 
 void View::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
@@ -6791,9 +6896,9 @@ void View::onSizeChanged(int w,int h,int ow,int oh){
 
 void View::onScrollChanged(int l, int t, int oldl, int oldt){
     notifySubtreeAccessibilityStateChangedIfNeeded();
-    /*if (AccessibilityManager::getInstance(mContext)->isEnabled()) {
+    if (AccessibilityManager::getInstance(mContext).isEnabled()) {
          postSendViewScrolledAccessibilityEventCallback(l - oldl, t - oldt);
-    }*/
+    }
     mBackgroundSizeChanged = true;
     mBoundsChangedmDefaultFocusHighlightSizeChanged = true;
     if (mForegroundInfo != nullptr) {
@@ -7303,7 +7408,7 @@ bool View::performClick(){
          result = true;
     }
     sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_CLICKED);
-    //notifyEnterOrExitForAutoFillIfNeeded(true);
+    notifyEnterOrExitForAutoFillIfNeeded(true);
     return result;
 }
 
@@ -8687,7 +8792,7 @@ void View::SendViewScrolledAccessibilityEvent::post(int dx, int dy) {
 }
 
 void View::SendViewScrolledAccessibilityEvent::run() {
-    if (0/*AccessibilityManager.getInstance(mContext).isEnabled()*/) {
+    if (AccessibilityManager::getInstance(mView->getContext()).isEnabled()) {
         AccessibilityEvent* event = AccessibilityEvent::obtain(AccessibilityEvent::TYPE_VIEW_SCROLLED);
         event->setScrollDeltaX(mDeltaX);
         event->setScrollDeltaY(mDeltaY);

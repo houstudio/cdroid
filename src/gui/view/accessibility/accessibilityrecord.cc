@@ -1,4 +1,5 @@
 #include <view/view.h>
+#include <porting/cdlog.h>
 #include <view/accessibility/accessibilityrecord.h>
 namespace cdroid{
 
@@ -6,6 +7,8 @@ AccessibilityRecord*AccessibilityRecord::sPool = nullptr;
 int AccessibilityRecord::sPoolSize=0;
 
 AccessibilityRecord::AccessibilityRecord() {
+    mSealed = false;
+    mIsInPool=false;
 }
 
 void AccessibilityRecord::setSource(View* source) {
@@ -323,6 +326,7 @@ void AccessibilityRecord::recycle() {
     clear();
     //synchronized (sPoolLock) 
     {
+        LOGD("sPoolSize=%d",sPoolSize);
         if (sPoolSize <= MAX_POOL_SIZE) {
             mNext = sPool;
             sPool = this;

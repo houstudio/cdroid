@@ -33,6 +33,7 @@ list(APPEND CDROID_SOURCES
     view/accessibility/accessibilityrecord.cc
     view/accessibility/accessibilitywindowinfo.cc
     view/accessibility/accessibilitynodeinfo.cc
+    view/accessibility/accessibilitymanager.cc
 )
 
 if(ENABLE_GESTURE)

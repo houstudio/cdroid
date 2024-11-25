@@ -16,6 +16,7 @@
 
 #include <view/viewgroup.h>
 #include <view/viewoverlay.h>
+#include <view/accessibility/accessibilitymanager.h>
 #include <animation/layouttransition.h>
 #include <animation/layoutanimationcontroller.h>
 #include <cdlog.h>
@@ -2362,7 +2363,9 @@ bool ViewGroup::requestSendAccessibilityEvent(View* child, AccessibilityEvent& e
     if (!propagate) {
         return false;
     }
-    return mParent->requestSendAccessibilityEvent(this, event);
+    bool rc= mParent->requestSendAccessibilityEvent(this, event);
+    AccessibilityManager::getInstance(mContext).sendAccessibilityEvent(event);
+    return true;
 }
 
 bool ViewGroup::onRequestSendAccessibilityEvent(View* child, AccessibilityEvent& event){
@@ -2381,15 +2384,14 @@ void ViewGroup::notifySubtreeAccessibilityStateChanged(View* child, View* source
     // If this is a live region, we should send a subtree change event
     // from this view. Otherwise, we can let it propagate up.
     if (getAccessibilityLiveRegion() != ACCESSIBILITY_LIVE_REGION_NONE) {
-        notifyViewAccessibilityStateChangedIfNeeded(
-                AccessibilityEvent::CONTENT_CHANGE_TYPE_SUBTREE);
+        notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_SUBTREE);
     } else if (mParent != nullptr) {
         mParent->notifySubtreeAccessibilityStateChanged(this, source, changeType);
     }
 }
 
 void ViewGroup::notifySubtreeAccessibilityStateChangedIfNeeded() {
-    if (/*!AccessibilityManager::getInstance(mContext).isEnabled() ||*/ (mAttachInfo == nullptr)||1) {
+    if (!AccessibilityManager::getInstance(mContext).isEnabled() || (mAttachInfo == nullptr)) {
         return;
     }
     // If something important for a11y is happening in this subtree, make sure it's dispatched

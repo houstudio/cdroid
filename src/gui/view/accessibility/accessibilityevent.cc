@@ -112,17 +112,10 @@ AccessibilityEvent*AccessibilityEvent::obtainWindowsChangedEvent(
 AccessibilityEvent* AccessibilityEvent::obtain(int eventType) {
     AccessibilityEvent* event = AccessibilityEvent::obtain();
     event->setEventType(eventType);
+    LOGD("event %p type=%x/%d",event,eventType,eventType);
     return event;
 }
 
-/**
- * Returns a cached instance if such is available or a new one is
- * created. The returned instance is initialized from the given
- * <code>event</code>.
- *
- * @param event The other event.
- * @return An instance.
- */
 AccessibilityEvent* AccessibilityEvent::obtain(const AccessibilityEvent& event) {
     AccessibilityEvent* eventClone = AccessibilityEvent::obtain();
     eventClone->init(event);
@@ -143,17 +136,18 @@ AccessibilityEvent* AccessibilityEvent::obtain(const AccessibilityEvent& event) 
 AccessibilityEvent*AccessibilityEvent::obtain() {
     AccessibilityEvent* event = sPool.acquire();
     if (event == nullptr) event = new AccessibilityEvent();
-    //if (DEBUG_ORIGIN) event->originStackTrace = Thread.currentThread().getStackTrace();
+    LOGD("obtain %p",event);
     return event;
 }
 
 void AccessibilityEvent::recycle() {
+    LOGD("release %p",this);
     clear();
     sPool.release(this);
 }
 
 void AccessibilityEvent::clear() {
-    //super.clear();
+    AccessibilityRecord::clear();
     mEventType = 0;
     mMovementGranularity = 0;
     mAction = 0;
@@ -166,7 +160,6 @@ void AccessibilityEvent::clear() {
         record->recycle();
         mRecords.pop_back();
     }
-    //if (DEBUG_ORIGIN) originStackTrace = null;
 }
 
 }/*endof namespace*/
