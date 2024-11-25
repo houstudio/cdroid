@@ -162,4 +162,69 @@ void AccessibilityEvent::clear() {
     }
 }
 
+template<typename T>
+static int numberOfTrailingZeros(T value) {
+    if (value == 0) return sizeof(T)*8; // 32 位整数的情况下
+    int count = 0;
+    while ((value & 1) == 0) {
+        value >>= 1;
+        count++;
+    }
+    return count;
+}
+
+std::string AccessibilityEvent::eventTypeToString(int eventType){
+    if (eventType == TYPES_ALL_MASK) {
+        return "TYPES_ALL_MASK";
+    }
+    std::ostringstream builder;
+    int eventTypeCount = 0;
+    builder<<"[";
+    while (eventType != 0) {
+        const int eventTypeFlag = 1 << numberOfTrailingZeros(eventType);
+        eventType &= ~eventTypeFlag;
+
+        if (eventTypeCount > 0) {
+            builder<<", ";
+        }
+        builder << singleEventTypeToString(eventTypeFlag);
+
+        eventTypeCount++;
+    }
+    if (eventTypeCount > 1) {
+        builder<<']';
+    }
+    return builder.str();
+}
+
+std::string AccessibilityEvent::singleEventTypeToString(int eventType) {
+    switch (eventType) {
+    case TYPE_VIEW_CLICKED: return "TYPE_VIEW_CLICKED";
+    case TYPE_VIEW_LONG_CLICKED: return "TYPE_VIEW_LONG_CLICKED";
+    case TYPE_VIEW_SELECTED: return "TYPE_VIEW_SELECTED";
+    case TYPE_VIEW_FOCUSED: return "TYPE_VIEW_FOCUSED";
+    case TYPE_VIEW_TEXT_CHANGED: return "TYPE_VIEW_TEXT_CHANGED";
+    case TYPE_WINDOW_STATE_CHANGED: return "TYPE_WINDOW_STATE_CHANGED";
+    case TYPE_VIEW_HOVER_ENTER: return "TYPE_VIEW_HOVER_ENTER";
+    case TYPE_VIEW_HOVER_EXIT: return "TYPE_VIEW_HOVER_EXIT";
+    case TYPE_NOTIFICATION_STATE_CHANGED: return "TYPE_NOTIFICATION_STATE_CHANGED";
+    case TYPE_TOUCH_EXPLORATION_GESTURE_START: return "TYPE_TOUCH_EXPLORATION_GESTURE_START";
+    case TYPE_TOUCH_EXPLORATION_GESTURE_END: return "TYPE_TOUCH_EXPLORATION_GESTURE_END";
+    case TYPE_WINDOW_CONTENT_CHANGED: return "TYPE_WINDOW_CONTENT_CHANGED";
+    case TYPE_VIEW_TEXT_SELECTION_CHANGED: return "TYPE_VIEW_TEXT_SELECTION_CHANGED";
+    case TYPE_VIEW_SCROLLED: return "TYPE_VIEW_SCROLLED";
+    case TYPE_ANNOUNCEMENT: return "TYPE_ANNOUNCEMENT";
+    case TYPE_VIEW_ACCESSIBILITY_FOCUSED: return "TYPE_VIEW_ACCESSIBILITY_FOCUSED";
+    case TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED: return "TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED";
+    case TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY: return "TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY";
+    case TYPE_GESTURE_DETECTION_START: return "TYPE_GESTURE_DETECTION_START";
+    case TYPE_GESTURE_DETECTION_END: return "TYPE_GESTURE_DETECTION_END";
+    case TYPE_TOUCH_INTERACTION_START: return "TYPE_TOUCH_INTERACTION_START";
+    case TYPE_TOUCH_INTERACTION_END: return "TYPE_TOUCH_INTERACTION_END";
+    case TYPE_WINDOWS_CHANGED: return "TYPE_WINDOWS_CHANGED";
+    case TYPE_VIEW_CONTEXT_CLICKED: return "TYPE_VIEW_CONTEXT_CLICKED";
+    case TYPE_ASSIST_READING_CONTEXT: return "TYPE_ASSIST_READING_CONTEXT";
+    default: return std::to_string(eventType);
+    }
+}
 }/*endof namespace*/

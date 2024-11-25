@@ -2363,7 +2363,7 @@ bool ViewGroup::requestSendAccessibilityEvent(View* child, AccessibilityEvent& e
     if (!propagate) {
         return false;
     }
-    bool rc= mParent->requestSendAccessibilityEvent(this, event);
+    const bool rc= mParent->requestSendAccessibilityEvent(this, event);
     AccessibilityManager::getInstance(mContext).sendAccessibilityEvent(event);
     return true;
 }

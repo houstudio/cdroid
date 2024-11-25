@@ -4,7 +4,6 @@
 namespace cdroid{
 class AccessibilityEvent:public AccessibilityRecord{
 private:
-    static constexpr int TYPE_ALL_MASK = 0xFFFFFFFF;
     static constexpr int MAX_POOL_SIZE = 10;
 public:
     static constexpr bool DEBUG_ORIGIN = false;
@@ -28,6 +27,7 @@ public:
      */
     static constexpr int MAX_TEXT_LENGTH = 500;
 
+    static constexpr int TYPES_ALL_MASK = 0xFFFFFFFF;
     /**
      * Represents the event of clicking on a {@link android.view.View} like
      * {@link android.widget.Button}, {@link android.widget.CompoundButton}, etc.
@@ -293,8 +293,10 @@ private:
     static std::string singleContentChangeTypeToString(int type);
     static std::string windowChangeTypesToString(int types);
     static std::string singleWindowChangeTypeToString(int type);
+    static std::string singleEventTypeToString(int eventType);
 protected:
     void init(const AccessibilityEvent&);
+    void clear()override;
 public:
     void setSealed(bool);
     void getRecordCount()const;
@@ -313,7 +315,7 @@ public:
     static AccessibilityEvent* obtain(const AccessibilityEvent& event);
     static AccessibilityEvent* obtain();
     void recycle()override;
-    void clear()override;
+    static std::string eventTypeToString(int eventType);
 };
 }
 #endif
