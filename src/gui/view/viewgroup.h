@@ -195,6 +195,7 @@ protected:
     void dispatchWindowSystemUiVisiblityChanged(int visible)override;
     void dispatchSystemUiVisibilityChanged(int visibility)override;
 
+    int getNumChildrenForAccessibility() const;
     void dispatchDetachedFromWindow()override;
     void dispatchCancelPendingInputEvents()override;
     void internalSetPadding(int left, int top, int width, int height)override;
@@ -209,6 +210,11 @@ protected:
     bool dispatchTooltipHoverEvent(MotionEvent& event)override;
     virtual bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect);
     virtual bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate);
+    virtual bool requestSendAccessibilityEvent(View* child, AccessibilityEvent& event);
+    virtual bool onRequestSendAccessibilityEvent(View* child, AccessibilityEvent& event);
+    virtual bool onRequestSendAccessibilityEventInternal(View* child, AccessibilityEvent& event);
+    void notifySubtreeAccessibilityStateChanged(View* child, View* source, int changeType);
+    void notifySubtreeAccessibilityStateChangedIfNeeded()override;
     bool performKeyboardGroupNavigation(int direction);
 
     bool isAlwaysDrawnWithCacheEnabled()const;
@@ -333,6 +339,7 @@ public:
     View*getChildAt(int idx)const;
     int indexOfChild(View* child)const;
     void setChildrenDrawingCacheEnabled(bool);
+    virtual bool onNestedPrePerformAccessibilityAction(View* target, int action, Bundle args);
     bool isLayoutModeOptical()const;
     void cleanupLayoutState(View* child)const;
 

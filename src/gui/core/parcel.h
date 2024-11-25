@@ -2,8 +2,10 @@
 #define __PARCEL_H__
 #include <stdint.h>
 #include <string>
+#include <vector>
 namespace cdroid{
 class Parcelable;
+using Bundle=void*;
 class Parcel{
 private:
     static constexpr int POOL_SIZE = 6;
@@ -63,19 +65,27 @@ public:
     static Parcel* obtain();
     void recycle();
     uint8_t readByte();
-    int readInt();
+    int32_t readInt();
+    int64_t readLong();
     bool readBoolean();
     float readFloat();
     double readDouble();
     std::string readString();
+    std::string readCharSequence();
+    Bundle readBundle();
+    std::vector<std::string>createStringArrayList();
 
     void writeByte(uint8_t val);
     void writeInt(int32_t val);
+    void writeLong(int64_t);
     void writeBoolean(bool);
     void writeFloat(float val);
     void writeDouble(double val);
     void writeString(const std::string& val);
+    void writeCharSequence(const std::string& val);
+    void writeBundle(const Bundle&);
     void writeParcelable(Parcelable*p,int parcelableFlags);
+    void writeStringArrayList(const std::vector<std::string>&);
 };
 }/*endof namespace*/
 #endif/*__PARCEL_H__*/

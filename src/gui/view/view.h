@@ -48,6 +48,7 @@
 #include <view/soundeffectconstants.h>
 #include <view/hapticfeedbackconstants.h>
 #include <view/accessibility/accessibilityevent.h>
+#include <accessibility/accessibilitynodeprovider.h>
 #include <view/inputeventconsistencyverifier.h>
 #include <animation/animation.h>
 #include <animation/statelistanimator.h>
@@ -68,6 +69,19 @@ class Window;
 class UIEventSource;
 class HandlerActionQueue;
 class View:public Drawable::Callback,public KeyEvent::Callback{
+private:
+    static constexpr int POPULATING_ACCESSIBILITY_EVENT_TYPES=
+        AccessibilityEvent::TYPE_VIEW_CLICKED
+        | AccessibilityEvent::TYPE_VIEW_LONG_CLICKED
+        | AccessibilityEvent::TYPE_VIEW_SELECTED
+        | AccessibilityEvent::TYPE_VIEW_FOCUSED
+        | AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED
+        | AccessibilityEvent::TYPE_VIEW_HOVER_ENTER
+        | AccessibilityEvent::TYPE_VIEW_HOVER_EXIT
+        | AccessibilityEvent::TYPE_VIEW_TEXT_CHANGED
+        | AccessibilityEvent::TYPE_VIEW_TEXT_SELECTION_CHANGED
+        | AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED
+        | AccessibilityEvent::TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY;
 public:
     static bool VIEW_DEBUG;
     static int mViewCount;
@@ -412,6 +426,7 @@ private:
     class CheckForTap;
     class CheckForLongPress;
     class ScrollabilityCache;
+    class SendViewScrolledAccessibilityEvent;
     int mMinWidth;
     int mMinHeight;
     int mDrawingCacheBackgroundColor;
@@ -457,6 +472,7 @@ private:
 	
     CheckForTap* mPendingCheckForTap;
     Runnable mPerformClick;
+    SendViewScrolledAccessibilityEvent* mSendViewScrolledAccessibilityEvent;
     CheckForLongPress* mPendingCheckForLongPress;
     Runnable mUnsetPressedState;
     class RoundScrollbarRenderer* mRoundScrollbarRenderer;
@@ -532,6 +548,9 @@ private:
     void invalidateInternal(int l, int t, int r, int b, bool invalidateCache,bool fullInvalidate);
     View* findAccessibilityFocusHost(bool searchDescendants);
     bool hasListenersForAccessibility() const;
+    bool isAccessibilityPane()const;
+    void postSendViewScrolledAccessibilityEventCallback(int dx, int dy);
+    void cancel(SendViewScrolledAccessibilityEvent* callback);
 protected:
     static bool sIgnoreMeasureCache;
     static bool sAlwaysRemeasureExactly;
@@ -540,6 +559,7 @@ protected:
     int mLayerType;
     int mAutofillViewId;
     int mAccessibilityViewId;
+    int mAccessibilityCursorPosition;
     int mScrollX;
     int mScrollY;
     int mOverScrollMode;
@@ -578,6 +598,7 @@ protected:
     Rect mClipBounds;
     std::string mHint;
     std::string mContentDescription;
+    std::string mAccessibilityPaneTitle;
     Cairo::RefPtr<Cairo::ImageSurface> mDrawingCache;
     Cairo::RefPtr<Cairo::ImageSurface> mUnscaledDrawingCache;
     void * mTag;
@@ -735,6 +756,7 @@ protected:
     void onDrawHorizontalScrollBar(Canvas& canvas, Drawable* scrollBar,const Rect&);
     void onDrawVerticalScrollBar (Canvas& canvas , Drawable* scrollBar,const Rect&);
     void resetSubtreeAccessibilityStateChanged();
+    bool traverseAtGranularity(int granularity, bool forward,  bool extendSelection);
     void ensureTransformationInfo();
 public:
     View(Context*ctx,const AttributeSet&attrs);
@@ -983,7 +1005,20 @@ public:
     const ColorStateList* getBackgroundTintList()const;
     virtual int getSolidColor()const;
 
+    AccessibilityDelegate* getAccessibilityDelegate()const;
+    void setAccessibilityDelegate(AccessibilityDelegate* delegate);
+    AccessibilityNodeProvider* getAccessibilityNodeProvider()const;
     bool isActionableForAccessibility()const;
+    void notifyViewAccessibilityStateChangedIfNeeded(int changeType);
+    virtual void notifySubtreeAccessibilityStateChangedIfNeeded();
+    bool dispatchNestedPrePerformAccessibilityAction(int action, Bundle arguments);
+    bool performAccessibilityAction(int action, Bundle arguments);
+    bool performAccessibilityActionInternal(int action, Bundle arguments);
+    std::string getIterableTextForAccessibility();
+    bool isAccessibilitySelectionExtendable()const;
+    int getAccessibilitySelectionStart()const;
+    int getAccessibilitySelectionEnd()const;
+    void setAccessibilitySelection(int start, int end);
     void setTransitionVisibility(int visibility);
 
     bool isTemporarilyDetached()const;
@@ -1064,10 +1099,23 @@ public:
     // Attribute
     virtual View& clearFlag(int flag);
     bool isAccessibilityFocused()const;
+    View& setAccessibilityPaneTitle(const std::string& accessibilityPaneTitle);
+    std::string getAccessibilityPaneTitle() const;
     View& sendAccessibilityEvent(int eventType);
     View& sendAccessibilityEventInternal(int eventType);
     View& sendAccessibilityEventUnchecked(AccessibilityEvent& event);
     View& sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event);
+    virtual bool dispatchPopulateAccessibilityEvent(AccessibilityEvent& event);
+    virtual bool dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event);
+    virtual void onPopulateAccessibilityEvent(AccessibilityEvent& event);
+    void onPopulateAccessibilityEventInternal(AccessibilityEvent& event);
+    virtual void onInitializeAccessibilityEvent(AccessibilityEvent& event);
+    void onInitializeAccessibilityEventInternal(AccessibilityEvent& event);
+    AccessibilityNodeInfo* createAccessibilityNodeInfo();
+    AccessibilityNodeInfo* createAccessibilityNodeInfoInternal();
+    void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info);
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info);
+    void addExtraDataToAccessibilityNodeInfo(AccessibilityNodeInfo& info,const std::string& extraDataKey,Bundle arguments);
     bool requestAccessibilityFocus();
     View& clearAccessibilityFocus();
     View& clearAccessibilityFocusNoCallbacks(int action);
@@ -1135,6 +1183,10 @@ public:
     int getImportantForAccessibility();
     void setImportantForAccessibility(int mode);
     bool isImportantForAccessibility()const;
+    ViewGroup* getParentForAccessibility();
+    View*getSelfOrParentImportantForA11y();
+    void addChildrenForAccessibility(std::vector<View*>& outChildren);
+    bool includeForAccessibility()const;
     void setAccessibilityLiveRegion(int mode);
     int  getAccessibilityLiveRegion() const;
     virtual bool requestFocus(int direction,Rect* previouslyFocusedRect);
@@ -1320,10 +1372,12 @@ public:
     int mWindowLeft;
     int mWindowTop;
     int mAccessibilityWindowId;
+    int mAccessibilityFetchFlags;
     int mSystemUiVisibility;
     int mDisabledSystemUiVisibility;
     int mGlobalSystemUiVisibility;
     int mDisplayState;
+    Drawable*mAccessibilityFocusDrawable;
     Rect mOverscanInsets;
     Rect mContentInsets;
     Rect mVisibleInsets;
@@ -1438,6 +1492,21 @@ public:
     void rememberPressedState();
 };
 
+class View::SendViewScrolledAccessibilityEvent{
+private:
+    friend View;
+    View*mView;
+    Runnable mRunnable;
+    void reset();
+public:
+    int mDeltaX;
+    int mDeltaY;
+    bool mIsPending;
+    SendViewScrolledAccessibilityEvent(View*v);
+    void post(int dx, int dy);
+    void run();
+};
+
 class View::TooltipInfo{
 public:
     std::string mTooltipText;
@@ -1530,51 +1599,27 @@ public:
 
 class View::AccessibilityDelegate {
 public:
-    void sendAccessibilityEvent(View& host, int eventType) {
-        host.sendAccessibilityEventInternal(eventType);
-    }
+    virtual void sendAccessibilityEvent(View& host, int eventType);
 
-#if __TODO__
-    bool performAccessibilityAction(View& host, int action,Bundle* args) {
-        return host.performAccessibilityActionInternal(action, args);
-    }
+    virtual bool performAccessibilityAction(View& host, int action,Bundle args);
 
-    void sendAccessibilityEventUnchecked(View& host,AccessibilityEvent& event) {
-        host.sendAccessibilityEventUncheckedInternal(event);
-    }
+    virtual void sendAccessibilityEventUnchecked(View& host,AccessibilityEvent& event);
 
-    bool dispatchPopulateAccessibilityEvent(View& host,AccessibilityEvent& event) {
-        return host.dispatchPopulateAccessibilityEventInternal(event);
-    }
+    virtual bool dispatchPopulateAccessibilityEvent(View& host,AccessibilityEvent& event);
 
-    void onPopulateAccessibilityEvent(View& host,AccessibilityEvent& event) {
-        host.onPopulateAccessibilityEventInternal(event);
-    }
+    virtual void onPopulateAccessibilityEvent(View& host,AccessibilityEvent& event);
 
-    void onInitializeAccessibilityEvent(View& host,AccessibilityEvent& event) {
-        host.onInitializeAccessibilityEventInternal(event);
-    }
+    virtual void onInitializeAccessibilityEvent(View& host,AccessibilityEvent& event);
 
-    void onInitializeAccessibilityNodeInfo(View& host,AccessibilityNodeInfo& info) {
-        host.onInitializeAccessibilityNodeInfoInternal(info);
-    }
+    virtual void onInitializeAccessibilityNodeInfo(View& host,AccessibilityNodeInfo& info);
 
-    void addExtraDataToAccessibilityNodeInfo(View& host,AccessibilityNodeInfo& info,
-            const std::string& extraDataKey, Bundle* arguments) {
-        host.addExtraDataToAccessibilityNodeInfo(info, extraDataKey, arguments);
-    }
+    virtual void addExtraDataToAccessibilityNodeInfo(View& host,AccessibilityNodeInfo& info,
+            const std::string& extraDataKey,Bundle arguments);
 
-    bool onRequestSendAccessibilityEvent(ViewGroup& host, View& child,AccessibilityEvent& event) {
-        return host.onRequestSendAccessibilityEventInternal(child, event);
-    }
+    virtual bool onRequestSendAccessibilityEvent(ViewGroup& host, View& child,AccessibilityEvent& event);
 
-    AccessibilityNodeProvider* getAccessibilityNodeProvider(View& host) {
-        return nullptr;
-    }
-    AccessibilityNodeInfo createAccessibilityNodeInfo(View& host) {
-        return host.createAccessibilityNodeInfoInternal();
-    }
-#endif
+    virtual AccessibilityNodeProvider* getAccessibilityNodeProvider(View& host)const;
+    virtual AccessibilityNodeInfo* createAccessibilityNodeInfo(View& host);
 };
 }//endof namespace cdroid
 

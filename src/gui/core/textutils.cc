@@ -124,6 +124,10 @@ const std::string TextUtils::unicode2utf8(const std::wstring&u32s){
     return u8s;
 }
 
+bool TextUtils::isEmpty(const std::string&text){
+    return text.empty();
+}
+
 bool TextUtils::startWith(const std::string&str,const std::string&head){
     return str.compare(0, head.size(), head) == 0;
 }

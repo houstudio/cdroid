@@ -15,15 +15,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301, USA.
  */
+#include <widget/R.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <view/viewoverlay.h>
 #include <view/roundscrollbarrenderer.h>
 #include <view/handleractionqueue.h>
-//#include <view/accessibility/accessibilitywindowinfo.h>
+#include <view/accessibility/accessibilitywindowinfo.h>
 #include <widget/edgeeffect.h>
 #include <animation/animationutils.h>
 #include <core/systemclock.h>
+#include <core/textutils.h>
 #include <porting/cdlog.h>
 #include <string.h>
 #include <algorithm>
@@ -359,6 +361,7 @@ void View::initView(){
     mAccessibilityDelegate = nullptr;
     mPendingCheckForLongPress = nullptr;
     mInputEventConsistencyVerifier = nullptr;
+    mSendViewScrolledAccessibilityEvent = nullptr;
     if(InputEventConsistencyVerifier::isInstrumentationEnabled()&&View::VIEW_DEBUG)
         mInputEventConsistencyVerifier = new InputEventConsistencyVerifier(nullptr,0);
 
@@ -443,6 +446,7 @@ View::~View(){
     delete mScrollIndicatorDrawable;
     delete mDefaultFocusHighlight;
     delete mInputEventConsistencyVerifier;
+    delete mSendViewScrolledAccessibilityEvent;
 
     delete mBackground;
     delete mBackgroundTint;
@@ -1472,7 +1476,7 @@ void View::onDetachedFromWindowInternal() {
     removeUnsetPressCallback();
     removeLongPressCallback();
     removePerformClickCallback();
-    //cancel(mSendViewScrolledAccessibilityEvent);
+    cancel(mSendViewScrolledAccessibilityEvent);
     stopNestedScroll();
 
     // Anything that started animating right before detach should already
@@ -3414,6 +3418,22 @@ const std::string&View::getHint()const{
     return mHint;
 }
 
+View::AccessibilityDelegate* View::getAccessibilityDelegate() const{
+    return mAccessibilityDelegate;
+}
+
+void View::setAccessibilityDelegate(AccessibilityDelegate* delegate) {
+    mAccessibilityDelegate = delegate;
+}
+
+AccessibilityNodeProvider* View::getAccessibilityNodeProvider()const{
+    if (mAccessibilityDelegate != nullptr) {
+        return mAccessibilityDelegate->getAccessibilityNodeProvider(*(View*)this);
+    } else {
+        return nullptr;
+    }
+}
+
 static int sNextAccessibilityViewId = 0;
 int View::getAccessibilityViewId(){
     if (mAccessibilityViewId == NO_ID) {
@@ -3424,7 +3444,7 @@ int View::getAccessibilityViewId(){
 
 int View::getAccessibilityWindowId()const{
     return mAttachInfo? mAttachInfo->mAccessibilityWindowId
-           : -1/*AccessibilityWindowInfo::UNDEFINED_WINDOW_ID*/;
+           : AccessibilityWindowInfo::UNDEFINED_WINDOW_ID;
 }
 
 void View::setContentDescription(const std::string&content){
@@ -3444,12 +3464,280 @@ bool View::hasListenersForAccessibility() const{
     return mTouchDelegate || (info&&(info->mOnKeyListener || info->mOnTouchListener 
             || info->mOnGenericMotionListener || info->mOnHoverListener /*|| info->mOnDragListener*/));
 }
+
+void View::notifyViewAccessibilityStateChangedIfNeeded(int changeType){
+    /*if (!AccessibilityManager::getInstance(mContext).isEnabled() ||( mAttachInfo == nullptr)) {
+        return;
+    }*/
+
+    // Changes to views with a pane title count as window state changes, as the pane title
+    // marks them as significant parts of the UI.
+    if ((changeType != AccessibilityEvent::CONTENT_CHANGE_TYPE_SUBTREE)
+            && isAccessibilityPane()) {
+        // If the pane isn't visible, content changed events are sufficient unless we're
+        // reporting that the view just disappeared
+        if ((getVisibility() == VISIBLE)
+                || (changeType == AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_DISAPPEARED)) {
+            AccessibilityEvent* event = AccessibilityEvent::obtain();
+            event->setEventType(AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED);
+            event->setContentChangeTypes(changeType);
+            event->setSource(this);
+            onPopulateAccessibilityEvent(*event);
+            if (mParent != nullptr) {
+                mParent->requestSendAccessibilityEvent(this, *event);
+            }
+            return;
+        }
+    }
+
+    // If this is a live region, we should send a subtree change event
+    // from this view immediately. Otherwise, we can let it propagate up.
+    if (getAccessibilityLiveRegion() != ACCESSIBILITY_LIVE_REGION_NONE) {
+        AccessibilityEvent* event = AccessibilityEvent::obtain();
+        event->setEventType(AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
+        event->setContentChangeTypes(changeType);
+        sendAccessibilityEventUnchecked(*event);
+    } else if (mParent != nullptr) {
+        mParent->notifySubtreeAccessibilityStateChanged(this, this, changeType);
+    }
+}
+
+void View::notifySubtreeAccessibilityStateChangedIfNeeded(){
+    /*if (!AccessibilityManager::getInstance(mContext).isEnabled() || (mAttachInfo == nullptr)) {
+        return;
+    }*/
+
+    if ((mPrivateFlags2 & PFLAG2_SUBTREE_ACCESSIBILITY_STATE_CHANGED) == 0) {
+        mPrivateFlags2 |= PFLAG2_SUBTREE_ACCESSIBILITY_STATE_CHANGED;
+        if (mParent != nullptr) {
+            mParent->notifySubtreeAccessibilityStateChanged(
+                this, this, AccessibilityEvent::CONTENT_CHANGE_TYPE_SUBTREE);
+        }
+    }
+}
+
 void View::setTransitionVisibility(int visibility){
     mViewFlags = (mViewFlags & ~View::VISIBILITY_MASK) | visibility;
 }
 
 void View::resetSubtreeAccessibilityStateChanged(){
     mPrivateFlags2 &= ~PFLAG2_SUBTREE_ACCESSIBILITY_STATE_CHANGED;
+}
+
+bool View::dispatchNestedPrePerformAccessibilityAction(int action, Bundle arguments) {
+    for (ViewGroup* p = getParent(); p != nullptr; p = p->getParent()) {
+        if (p->onNestedPrePerformAccessibilityAction(this, action, arguments)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool View::performAccessibilityAction(int action, Bundle arguments) {
+    if (mAccessibilityDelegate != nullptr) {
+        return mAccessibilityDelegate->performAccessibilityAction(*this, action, arguments);
+    } else {
+        return performAccessibilityActionInternal(action, arguments);
+    }
+}
+
+bool View::performAccessibilityActionInternal(int action, Bundle arguments) {
+    if (isNestedScrollingEnabled()
+            && (action == AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD
+            || action == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD
+            || action == R::id::accessibilityActionScrollUp
+            || action == R::id::accessibilityActionScrollLeft
+            || action == R::id::accessibilityActionScrollDown
+            || action == R::id::accessibilityActionScrollRight)) {
+        if (dispatchNestedPrePerformAccessibilityAction(action, arguments)) {
+            return true;
+        }
+    }
+
+    switch (action) {
+    case AccessibilityNodeInfo::ACTION_CLICK: {
+        if (isClickable()) {
+            performClickInternal();
+            return true;
+        }
+    } break;
+    case AccessibilityNodeInfo::ACTION_LONG_CLICK: {
+        if (isLongClickable()) {
+            performLongClick();
+            return true;
+        }
+    } break;
+    case AccessibilityNodeInfo::ACTION_FOCUS: {
+        if (!hasFocus()) {
+            // Get out of touch mode since accessibility
+            // wants to move focus around.
+            getRootView()->ensureTouchMode(false);
+            return requestFocus();
+        }
+    } break;
+    case AccessibilityNodeInfo::ACTION_CLEAR_FOCUS: {
+        if (hasFocus()) {
+            clearFocus();
+            return !isFocused();
+        }
+    } break;
+    case AccessibilityNodeInfo::ACTION_SELECT: {
+        if (!isSelected()) {
+            setSelected(true);
+            return isSelected();
+        }
+    } break;
+    case AccessibilityNodeInfo::ACTION_CLEAR_SELECTION: {
+        if (isSelected()) {
+            setSelected(false);
+            return !isSelected();
+        }
+    } break;
+    case AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS: {
+        if (!isAccessibilityFocused()) {
+            return requestAccessibilityFocus();
+        }
+    } break;
+    case AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS: {
+        if (isAccessibilityFocused()) {
+            clearAccessibilityFocus();
+            return true;
+        }
+    } break;
+#if 0
+    case AccessibilityNodeInfo::ACTION_NEXT_AT_MOVEMENT_GRANULARITY: {
+        if (arguments != nullptr) {
+            const int granularity = arguments.getInt(
+                    AccessibilityNodeInfo::ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT);
+            const bool extendSelection = arguments.getBoolean(
+                    AccessibilityNodeInfo::ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN);
+            return traverseAtGranularity(granularity, true, extendSelection);
+        }
+    } break;
+    case AccessibilityNodeInfo::ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY: {
+        if (arguments != nullptr) {
+            const int granularity = arguments.getInt(
+                    AccessibilityNodeInfo::ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT);
+            const bool extendSelection = arguments.getBoolean(
+                    AccessibilityNodeInfo::ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN);
+            return traverseAtGranularity(granularity, false, extendSelection);
+        }
+    } break;
+    case AccessibilityNodeInfo::ACTION_SET_SELECTION: {
+        std::string text = getIterableTextForAccessibility();
+        if (text.empty()) {
+            return false;
+        }
+        const int start = (arguments != nullptr) ? arguments.getInt(
+                AccessibilityNodeInfo::ACTION_ARGUMENT_SELECTION_START_INT, -1) : -1;
+        const int end = (arguments != nullptr) ? arguments.getInt(
+        AccessibilityNodeInfo::ACTION_ARGUMENT_SELECTION_END_INT, -1) : -1;
+        // Only cursor position can be specified (selection length == 0)
+        if ((getAccessibilitySelectionStart() != start
+                || getAccessibilitySelectionEnd() != end) && (start == end)) {
+            setAccessibilitySelection(start, end);
+            notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+            return true;
+        }
+    } break;
+    case R::id::accessibilityActionShowOnScreen: {
+        if (mAttachInfo != nullptr) {
+            Rect r;
+            getDrawingRect(r);
+            return requestRectangleOnScreen(r, true);
+        }
+    } break;
+    case R::id::accessibilityActionContextClick: {
+        if (isContextClickable()) {
+            performContextClick();
+            return true;
+        }
+    } break;
+    case R::id::accessibilityActionShowTooltip: {
+        if ((mTooltipInfo != nullptr) && (mTooltipInfo->mTooltipPopup != nullptr)) {
+            // Tooltip already showing
+            return false;
+        }
+        return showLongClickTooltip(0, 0);
+    }
+    case R::id::accessibilityActionHideTooltip: {
+        if ((mTooltipInfo == nullptr) || (mTooltipInfo->mTooltipPopup == nullptr)) {
+            // No tooltip showing
+            return false;
+        }
+        hideTooltip();
+        return true;
+    }
+#endif
+    }
+    return false;
+}
+
+bool View::traverseAtGranularity(int granularity, bool forward,  bool extendSelection) {
+    std::string text = getIterableTextForAccessibility();
+    if (text.empty()) {
+        return false;
+    }
+#if 0
+    TextSegmentIterator iterator = getIteratorForGranularity(granularity);
+    if (iterator == null) {
+        return false;
+    }
+    int current = getAccessibilitySelectionEnd();
+    if (current == ACCESSIBILITY_CURSOR_POSITION_UNDEFINED) {
+        current = forward ? 0 : text.length();
+    }
+    final int[] range = forward ? iterator.following(current) : iterator.preceding(current);
+    if (range == null) {
+        return false;
+    }
+    final int segmentStart = range[0];
+    final int segmentEnd = range[1];
+    int selectionStart;
+    int selectionEnd;
+    if (extendSelection && isAccessibilitySelectionExtendable()) {
+        selectionStart = getAccessibilitySelectionStart();
+        if (selectionStart == ACCESSIBILITY_CURSOR_POSITION_UNDEFINED) {
+            selectionStart = forward ? segmentStart : segmentEnd;
+        }
+        selectionEnd = forward ? segmentEnd : segmentStart;
+    } else {
+        selectionStart = selectionEnd= forward ? segmentEnd : segmentStart;
+    }
+    setAccessibilitySelection(selectionStart, selectionEnd);
+    const int action = forward ? AccessibilityNodeInfo::ACTION_NEXT_AT_MOVEMENT_GRANULARITY
+            : AccessibilityNodeInfo::ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY;
+    sendViewTextTraversedAtGranularityEvent(action, granularity, segmentStart, segmentEnd);
+#endif
+    return false;//true
+}
+
+std::string View::getIterableTextForAccessibility(){
+    return getContentDescription();
+}
+
+bool View::isAccessibilitySelectionExtendable()const{
+    return false;
+}
+
+int View::getAccessibilitySelectionStart()const{
+    return mAccessibilityCursorPosition;
+}
+
+int View::getAccessibilitySelectionEnd()const{
+    return getAccessibilitySelectionStart();
+}
+
+void View::setAccessibilitySelection(int start, int end){
+    if (start ==  end && end == mAccessibilityCursorPosition) {
+        return;
+    }
+    if ((start >= 0) && (start == end) && (end <= getIterableTextForAccessibility().length())) {
+        mAccessibilityCursorPosition = start;
+    } else {
+        mAccessibilityCursorPosition = -1;//ACCESSIBILITY_CURSOR_POSITION_UNDEFINED;
+    }
+    sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_TEXT_SELECTION_CHANGED);
 }
 
 bool View::isTemporarilyDetached()const{
@@ -4108,14 +4396,34 @@ int View::getBackgroundTintMode() const{
   *        from (in addition to direction).  Will be <code>null</code> otherwise.
   */
 void View::onFocusChanged(bool gainFocus,int direct,Rect*previouslyFocusedRect){
-    if(mListenerInfo&&mListenerInfo->mOnFocusChangeListener)
-        mListenerInfo->mOnFocusChangeListener(*this,gainFocus);
-    switchDefaultFocusHighlight();
-    if(!gainFocus){
-        if(isPressed())setPressed(false);
-        onFocusLost();
+    if(gainFocus){
+        sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_FOCUSED);
+    }else{
+        //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
     }
-    refreshDrawableState();
+     // Here we check whether we still need the default focus highlight, and switch it on/off.
+    switchDefaultFocusHighlight();
+    InputMethodManager& imm = InputMethodManager::getInstance();
+    if (!gainFocus) {
+        if (isPressed()) {
+            setPressed(false);
+        }
+        if (mAttachInfo && mAttachInfo->mHasWindowFocus) {
+            imm.focusOut(this);
+        }
+        onFocusLost();
+    } else if ( mAttachInfo && mAttachInfo->mHasWindowFocus) {
+        imm.focusIn(this);
+    }
+
+    invalidate();
+    if(mListenerInfo&&mListenerInfo->mOnFocusChangeListener){
+        mListenerInfo->mOnFocusChangeListener(*this,gainFocus);
+    }
+    if (mAttachInfo) {
+        mAttachInfo->mKeyDispatchState.reset(this);
+    }
+    //notifyEnterOrExitForAutoFillIfNeeded(gainFocus);
 }
 
 Drawable* View::getForeground()const{
@@ -4166,6 +4474,29 @@ View& View::setForeground(Drawable* foreground){
     requestLayout();
     invalidate(true);
     return *this;
+}
+
+View& View::setAccessibilityPaneTitle(const std::string& accessibilityPaneTitle) {
+    if (accessibilityPaneTitle!=mAccessibilityPaneTitle) {
+        mAccessibilityPaneTitle = accessibilityPaneTitle;
+        notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_TITLE);
+    }
+    return *this;
+}
+
+/**
+ * Get the title of the pane for purposes of accessibility.
+ *
+ * @return The current pane title.
+ *
+ * {@see #setAccessibilityPaneTitle}.
+ */
+std::string View::getAccessibilityPaneTitle() const{
+    return mAccessibilityPaneTitle;
+}
+
+bool View::isAccessibilityPane() const{
+    return !mAccessibilityPaneTitle.empty();
 }
 
 bool View::isForegroundInsidePadding()const{
@@ -4562,7 +4893,7 @@ bool View::requestAccessibilityFocus(){
     }
     if ((mPrivateFlags2 & PFLAG2_ACCESSIBILITY_FOCUSED) == 0) {
         mPrivateFlags2 |= PFLAG2_ACCESSIBILITY_FOCUSED;
-        //ViewGroup* viewRootImpl = getRootView();
+        ViewGroup* viewRootImpl = getRootView();
         //if (viewRootImpl) viewRootImpl->setAccessibilityFocus(this, nullptr);
         invalidate();
         sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED);
@@ -5456,10 +5787,45 @@ bool View::requestRectangleOnScreen(Rect& rectangle, bool immediate){
 }
 
 View& View::clearAccessibilityFocus(){
+    clearAccessibilityFocusNoCallbacks(0);
+
+    // Clear the global reference of accessibility focus if this view or
+    // any of its descendants had accessibility focus. This will NOT send
+    // an event or update internal state if focus is cleared from a
+    // descendant view, which may leave views in inconsistent states.
+    ViewGroup* viewRootImpl = getRootView();
+    /*if (viewRootImpl) {
+        View* focusHost = viewRootImpl->getAccessibilityFocusedHost();
+        if (focusHost && ViewRootImpl->isViewDescendantOf(focusHost, this)) {
+            viewRootImpl->setAccessibilityFocus(nullptr, nullptr);
+        }
+    }*/
     return *this;
 }
 
 void View::sendAccessibilityHoverEvent(int eventType){
+    // Since we are not delivering to a client accessibility events from not
+    // important views (unless the clinet request that) we need to fire the
+    // event from the deepest view exposed to the client. As a consequence if
+    // the user crosses a not exposed view the client will see enter and exit
+    // of the exposed predecessor followed by and enter and exit of that same
+    // predecessor when entering and exiting the not exposed descendant. This
+    // is fine since the client has a clear idea which view is hovered at the
+    // price of a couple more events being sent. This is a simple and
+    // working solution.
+    View* source = this;
+    while (true) {
+        if (source->includeForAccessibility()) {
+            source->sendAccessibilityEvent(eventType);
+            return;
+        }
+        ViewGroup* parent = source->getParent();
+        if (parent) {
+            source = (View*) parent;
+        } else {
+            return;
+        }
+    }
 }
 
 View& View::clearAccessibilityFocusNoCallbacks(int action){
@@ -5467,16 +5833,24 @@ View& View::clearAccessibilityFocusNoCallbacks(int action){
 }
 
 View& View::sendAccessibilityEvent(int eventType){
+    if (mAccessibilityDelegate != nullptr) {
+        mAccessibilityDelegate->sendAccessibilityEvent(*this, eventType);
+    } else {
+        sendAccessibilityEventInternal(eventType);
+    }
     return *this;
 }
 
 View& View::sendAccessibilityEventInternal(int eventType){
+    /*if (AccessibilityManager.getInstance(mContext).isEnabled()) {
+         sendAccessibilityEventUnchecked(AccessibilityEvent::obtain(eventType));
+    }*/
     return *this;
 }
 
 View& View::sendAccessibilityEventUnchecked(AccessibilityEvent& event) {
     if (mAccessibilityDelegate) {
-        //mAccessibilityDelegate->sendAccessibilityEventUnchecked(this, event);
+        mAccessibilityDelegate->sendAccessibilityEventUnchecked(*this, event);
     } else {
         sendAccessibilityEventUncheckedInternal(event);
     }
@@ -5484,7 +5858,220 @@ View& View::sendAccessibilityEventUnchecked(AccessibilityEvent& event) {
 }
 
 View& View::sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event){
+       // Panes disappearing are relevant even if though the view is no longer visible.
+    const bool isWindowStateChanged =
+            (event.getEventType() == AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED);
+    const bool isWindowDisappearedEvent = isWindowStateChanged && ((event.getContentChangeTypes()
+            & AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_DISAPPEARED) != 0);
+    if (!isShown() && !isWindowDisappearedEvent) {
+        return *this;
+    }
+    onInitializeAccessibilityEvent(event);
+    // Only a subset of accessibility events populates text content.
+    if ((event.getEventType() & POPULATING_ACCESSIBILITY_EVENT_TYPES) != 0) {
+        dispatchPopulateAccessibilityEvent(event);
+    }
+    // In the beginning we called #isShown(), so we know that getParent() is not null.
+    ViewGroup* parent = getParent();
+    if (parent != nullptr) {
+        getParent()->requestSendAccessibilityEvent(this, event);
+    }
     return *this;
+}
+
+bool View::dispatchPopulateAccessibilityEvent(AccessibilityEvent& event) {
+    if (mAccessibilityDelegate != nullptr) {
+        return mAccessibilityDelegate->dispatchPopulateAccessibilityEvent(*this, event);
+    } else {
+        return dispatchPopulateAccessibilityEventInternal(event);
+    }
+}
+
+bool View::dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event) {
+    onPopulateAccessibilityEvent(event);
+    return false;
+}
+
+void View::onPopulateAccessibilityEvent(AccessibilityEvent& event) {
+    if (mAccessibilityDelegate != nullptr) {
+        mAccessibilityDelegate->onPopulateAccessibilityEvent(*this, event);
+    } else {
+        onPopulateAccessibilityEventInternal(event);
+    }
+}
+
+void View::onPopulateAccessibilityEventInternal(AccessibilityEvent& event) {
+    if ((event.getEventType() == AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED)
+            && !TextUtils::isEmpty(getAccessibilityPaneTitle())) {
+        event.getText().push_back(getAccessibilityPaneTitle());
+    }
+}
+
+void View::onInitializeAccessibilityEvent(AccessibilityEvent& event) {
+    if (mAccessibilityDelegate != nullptr) {
+        mAccessibilityDelegate->onInitializeAccessibilityEvent(*this, event);
+    } else {
+        onInitializeAccessibilityEventInternal(event);
+    }
+}
+
+void View::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
+}
+
+AccessibilityNodeInfo* View::createAccessibilityNodeInfo() {
+    if (mAccessibilityDelegate != nullptr) {
+        return mAccessibilityDelegate->createAccessibilityNodeInfo(*this);
+    } else {
+        return createAccessibilityNodeInfoInternal();
+    }
+}
+
+AccessibilityNodeInfo* View::createAccessibilityNodeInfoInternal(){
+    AccessibilityNodeProvider* provider = getAccessibilityNodeProvider();
+    if (provider != nullptr) {
+        return provider->createAccessibilityNodeInfo(AccessibilityNodeProvider::HOST_VIEW_ID);
+    } else {
+        AccessibilityNodeInfo* info = AccessibilityNodeInfo::obtain(this);
+        onInitializeAccessibilityNodeInfo(*info);
+        return info;
+    }
+    return nullptr;
+}
+
+void View::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info){
+    if (mAccessibilityDelegate != nullptr) {
+        mAccessibilityDelegate->onInitializeAccessibilityNodeInfo(*this, info);
+    } else {
+        onInitializeAccessibilityNodeInfoInternal(info);
+    }
+}
+
+void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
+    if (mAttachInfo == nullptr) {
+        return;
+    }
+    Rect bounds;
+    getDrawingRect(bounds);
+    info.setBoundsInParent(bounds);
+    getBoundsOnScreen(bounds, true);
+    info.setBoundsInScreen(bounds);
+    ViewGroup* parent = getParentForAccessibility();
+    if (parent) {
+        info.setParent(parent);
+    }
+#if 0
+    if (mID != View::NO_ID) {
+        View* rootView = getRootView();
+        if (rootView == nullptr) {
+            rootView = this;
+        }
+        View* label = rootView->findLabelForView(this, mID);
+        if (label != nullptr) {
+            info.setLabeledBy(label);
+        }
+        if ((mAttachInfo->mAccessibilityFetchFlags
+               & AccessibilityNodeInfo::FLAG_REPORT_VIEW_IDS) != 0
+               && Resources.resourceHasPackage(mID)) {
+           std::string viewId = getResources().getResourceName(mID);
+           info.setViewIdResourceName(viewId);
+        }
+    }
+    if (mLabelForId != View::NO_ID) {
+        View* rootView = getRootView();
+        if (rootView == nullptr) {
+            rootView = this;
+        }
+        View* labeled = rootView->findViewInsideOutShouldExist(this, mLabelForId);
+        if (labeled != nullptr) {
+            info.setLabelFor(labeled);
+        }
+    }
+    if (mAccessibilityTraversalBeforeId != View::NO_ID) {
+        View* rootView = getRootView();
+        if (rootView == nullptr) {
+            rootView = this;
+        }
+        View* next = rootView->findViewInsideOutShouldExist(this, mAccessibilityTraversalBeforeId);
+        if (next && next->includeForAccessibility()) {
+            info.setTraversalBefore(next);
+        }
+    }
+    if (mAccessibilityTraversalAfterId != View::NO_ID) {
+        View* rootView = getRootView();
+        if (rootView == nullptr) {
+            rootView = this;
+        }
+        View* next = rootView->findViewInsideOutShouldExist(this,mAccessibilityTraversalAfterId);
+        if (next && next->includeForAccessibility()) {
+            info.setTraversalAfter(next);
+        }
+    }
+    info.setVisibleToUser(isVisibleToUser());
+    info.setImportantForAccessibility(isImportantForAccessibility());
+    info.setPackageName(mContext->getPackageName());
+    info.setClassName(getAccessibilityClassName());
+    info.setContentDescription(getContentDescription());
+    info.setEnabled(isEnabled());
+    info.setClickable(isClickable());
+    info.setFocusable(isFocusable());
+    info.setScreenReaderFocusable(isScreenReaderFocusable());
+    info.setFocused(isFocused());
+    info.setAccessibilityFocused(isAccessibilityFocused());
+    info.setSelected(isSelected());
+    info.setLongClickable(isLongClickable());
+    info.setContextClickable(isContextClickable());
+    info.setLiveRegion(getAccessibilityLiveRegion());
+    if (mTooltipInfo && mTooltipInfo->mTooltipText.size()) {
+        info.setTooltipText(mTooltipInfo.mTooltipText);
+        info.addAction((mTooltipInfo->mTooltipPopup == nullptr)
+                ? AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_TOOLTIP
+                : AccessibilityNodeInfo::AccessibilityAction::ACTION_HIDE_TOOLTIP);
+    }
+    // TODO: These make sense only if we are in an AdapterView but all
+    // views can be selected. Maybe from accessibility perspective
+    // we should report as selectable view in an AdapterView.
+    info.addAction(AccessibilityNodeInfo::ACTION_SELECT);
+    info.addAction(AccessibilityNodeInfo::ACTION_CLEAR_SELECTION);
+    if (isFocusable()) {
+        if (isFocused()) {
+            info.addAction(AccessibilityNodeInfo::ACTION_CLEAR_FOCUS);
+        } else {
+            info.addAction(AccessibilityNodeInfo::ACTION_FOCUS);
+        }
+    }
+    if (!isAccessibilityFocused()) {
+        info.addAction(AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);
+    } else {
+        info.addAction(AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS);
+    }
+    if (isClickable() && isEnabled()) {
+        info.addAction(AccessibilityNodeInfo::ACTION_CLICK);
+    }
+    if (isLongClickable() && isEnabled()) {
+        info.addAction(AccessibilityNodeInfo::ACTION_LONG_CLICK);
+    }
+    if (isContextClickable() && isEnabled()) {
+        info.addAction(AccessibilityAction::ACTION_CONTEXT_CLICK);
+    }
+    std::string text = getIterableTextForAccessibility();
+    if (text.length()) {
+        info.setTextSelection(getAccessibilitySelectionStart(), getAccessibilitySelectionEnd());
+        info.addAction(AccessibilityNodeInfo::ACTION_SET_SELECTION);
+        info.addAction(AccessibilityNodeInfo::ACTION_NEXT_AT_MOVEMENT_GRANULARITY);
+        info.addAction(AccessibilityNodeInfo::ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY);
+        info.setMovementGranularities(AccessibilityNodeInfo::MOVEMENT_GRANULARITY_CHARACTER
+               | AccessibilityNodeInfo::MOVEMENT_GRANULARITY_WORD
+               | AccessibilityNodeInfo::MOVEMENT_GRANULARITY_PARAGRAPH);
+    }
+    info.addAction(AccessibilityAction::ACTION_SHOW_ON_SCREEN);
+    populateAccessibilityNodeInfoDrawingOrderInParent(info);
+    info.setPaneTitle(mAccessibilityPaneTitle);
+    info.setHeading(isAccessibilityHeading());
+#endif
+}
+
+void View::addExtraDataToAccessibilityNodeInfo(AccessibilityNodeInfo& info,const std::string& extraDataKey,Bundle arguments){
+     //NOTHING
 }
 
 bool View::requestFocus(int direction){
@@ -5638,8 +6225,34 @@ bool View::isImportantForAccessibility()const{
 
     return (mode == IMPORTANT_FOR_ACCESSIBILITY_YES)
 	    || isActionableForAccessibility()
-        || hasListenersForAccessibility() /*|| getAccessibilityNodeProvider() != null
-        || getAccessibilityLiveRegion() != ACCESSIBILITY_LIVE_REGION_NONE || isAccessibilityPane()*/;
+        || hasListenersForAccessibility() || (getAccessibilityNodeProvider() != nullptr)
+        || (getAccessibilityLiveRegion() != ACCESSIBILITY_LIVE_REGION_NONE) || isAccessibilityPane();
+}
+
+ViewGroup* View::getParentForAccessibility(){
+    if(mParent){
+        if(mParent->includeForAccessibility()) return mParent;
+        else return mParent->getParentForAccessibility();
+    }
+    return nullptr;
+}
+
+View* View::getSelfOrParentImportantForA11y() {
+    if (isImportantForAccessibility()) return this;
+    ViewGroup* parent = getParentForAccessibility();
+    return parent;
+}
+
+void View::addChildrenForAccessibility(std::vector<View*>& outChildren){
+    //NOTHING;
+}
+
+bool View::includeForAccessibility()const{
+    if (mAttachInfo != nullptr) {
+        return ((mAttachInfo->mAccessibilityFetchFlags & AccessibilityNodeInfo::FLAG_INCLUDE_NOT_IMPORTANT_VIEWS) != 0)
+           || isImportantForAccessibility();
+    }
+    return false;
 }
 
 bool View::hasAncestorThatBlocksDescendantFocus()const{
@@ -5647,7 +6260,7 @@ bool View::hasAncestorThatBlocksDescendantFocus()const{
    ViewGroup* ancestor =mParent;
    while (ancestor) {
        const ViewGroup*vgAncestor =ancestor;
-       if (vgAncestor->getDescendantFocusability() == ViewGroup::FOCUS_BLOCK_DESCENDANTS
+       if ((vgAncestor->getDescendantFocusability() == ViewGroup::FOCUS_BLOCK_DESCENDANTS)
                  || (!focusableInTouchMode && vgAncestor->shouldBlockFocusForTouchscreen())) {
             return true;
        } else {
@@ -6177,6 +6790,10 @@ void View::onSizeChanged(int w,int h,int ow,int oh){
 }
 
 void View::onScrollChanged(int l, int t, int oldl, int oldt){
+    notifySubtreeAccessibilityStateChangedIfNeeded();
+    /*if (AccessibilityManager::getInstance(mContext)->isEnabled()) {
+         postSendViewScrolledAccessibilityEventCallback(l - oldl, t - oldt);
+    }*/
     mBackgroundSizeChanged = true;
     mBoundsChangedmDefaultFocusHighlightSizeChanged = true;
     if (mForegroundInfo != nullptr) {
@@ -6679,6 +7296,7 @@ void View::setHovered(bool hovered) {
 
 bool View::performClick(){
     bool result = false;
+    //notifyAutofillManagerOnClick();
     if(mListenerInfo && mListenerInfo->mOnClickListener){
          playSoundEffect(SoundEffectConstants::CLICK);
          mListenerInfo->mOnClickListener(*this);
@@ -6699,6 +7317,7 @@ bool View::callOnClick() {
 
 bool View::performLongClickInternal(float x, float y){
     bool handled = false;
+    sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_LONG_CLICKED);
     if(mListenerInfo && mListenerInfo->mOnLongClickListener){
         handled = mListenerInfo->mOnLongClickListener(*this);
     }
@@ -8052,6 +8671,37 @@ void View::CheckForLongPress::run(){
     }
 }
 
+View::SendViewScrolledAccessibilityEvent::SendViewScrolledAccessibilityEvent(View*v):mView(v){
+    mIsPending = false;
+    mDeltaX = mDeltaY =0;
+    mRunnable = std::bind(&SendViewScrolledAccessibilityEvent::run,this);
+}
+
+void View::SendViewScrolledAccessibilityEvent::post(int dx, int dy) {
+    mDeltaX += dx;
+    mDeltaY += dy;
+    if (!mIsPending) {
+        mIsPending = true;
+        mView->postDelayed(mRunnable, ViewConfiguration::getSendRecurringAccessibilityEventsInterval());
+    }
+}
+
+void View::SendViewScrolledAccessibilityEvent::run() {
+    if (0/*AccessibilityManager.getInstance(mContext).isEnabled()*/) {
+        AccessibilityEvent* event = AccessibilityEvent::obtain(AccessibilityEvent::TYPE_VIEW_SCROLLED);
+        event->setScrollDeltaX(mDeltaX);
+        event->setScrollDeltaY(mDeltaY);
+        mView->sendAccessibilityEventUnchecked(*event);
+    }
+    reset();
+}
+
+void View::SendViewScrolledAccessibilityEvent::reset() {
+    mIsPending = false;
+    mDeltaX = 0;
+    mDeltaY = 0;
+}
+
 View::TintInfo::TintInfo(){
     mTintList = nullptr;
     mHasTintList = false;
@@ -8203,4 +8853,65 @@ void View::BaseSavedState::writeToParcel(Parcel& out, int flags) {
     out.writeBoolean(mHideHighlight);
     out.writeInt(mAutofillViewId);
 }
+
+///////////////////////////////////////////////////////////////////////////
+
+void View::postSendViewScrolledAccessibilityEventCallback(int dx, int dy) {
+    if (mSendViewScrolledAccessibilityEvent == nullptr) {
+        mSendViewScrolledAccessibilityEvent = new SendViewScrolledAccessibilityEvent(this);
+    }
+    mSendViewScrolledAccessibilityEvent->post(dx, dy);
+}
+
+void View::cancel(SendViewScrolledAccessibilityEvent* callback){
+    if ( (callback == nullptr) || !callback->mIsPending) return;
+     removeCallbacks(callback->mRunnable);
+     callback->reset();
+}
+
+void View::AccessibilityDelegate::sendAccessibilityEvent(View& host, int eventType) {
+    host.sendAccessibilityEventInternal(eventType);
+}
+
+bool View::AccessibilityDelegate::performAccessibilityAction(View& host, int action,Bundle args) {
+    return host.performAccessibilityActionInternal(action, args);
+}
+
+void View::AccessibilityDelegate::sendAccessibilityEventUnchecked(View& host,AccessibilityEvent& event) {
+    host.sendAccessibilityEventUncheckedInternal(event);
+}
+
+bool View::AccessibilityDelegate::dispatchPopulateAccessibilityEvent(View& host,AccessibilityEvent& event) {
+    return host.dispatchPopulateAccessibilityEventInternal(event);
+}
+
+void View::AccessibilityDelegate::onPopulateAccessibilityEvent(View& host,AccessibilityEvent& event) {
+    host.onPopulateAccessibilityEventInternal(event);
+}
+
+void View::AccessibilityDelegate::onInitializeAccessibilityEvent(View& host,AccessibilityEvent& event) {
+    host.onInitializeAccessibilityEventInternal(event);
+}
+
+void View::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(View& host,AccessibilityNodeInfo& info) {
+    host.onInitializeAccessibilityNodeInfoInternal(info);
+}
+
+void View::AccessibilityDelegate::addExtraDataToAccessibilityNodeInfo(View& host,AccessibilityNodeInfo& info,
+        const std::string& extraDataKey, Bundle arguments) {
+    host.addExtraDataToAccessibilityNodeInfo(info, extraDataKey, arguments);
+}
+
+bool View::AccessibilityDelegate::onRequestSendAccessibilityEvent(ViewGroup& host, View& child,AccessibilityEvent& event) {
+    return host.onRequestSendAccessibilityEventInternal(&child, event);
+}
+
+AccessibilityNodeProvider* View::AccessibilityDelegate::getAccessibilityNodeProvider(View& host)const{
+    return nullptr;
+}
+
+AccessibilityNodeInfo* View::AccessibilityDelegate::createAccessibilityNodeInfo(View& host) {
+    return host.createAccessibilityNodeInfoInternal();
+}
+
 }//endof namespace

@@ -12,6 +12,7 @@ public:
     static const std::wstring utf8tounicode(const std::string&utf8);
     static const std::u16string utf8_utf16(const std::string&utf8);
     static const std::string unicode2utf8(const std::wstring&);
+    static bool isEmpty(const std::string&);
     static bool startWith(const std::string&str,const std::string&head);
     static bool endWith(const std::string&str,const std::string&tail);
     static std::string join(const std::string&sep,const std::vector<std::string>&parts);

@@ -988,7 +988,7 @@ void ViewGroup::attachViewToParent(View* child, int index, LayoutParams* params)
         requestChildFocus(child, child->findFocus());
     }
     dispatchVisibilityAggregated(isAttachedToWindow() && getWindowVisibility() == VISIBLE&& isShown());
-    //notifySubtreeAccessibilityStateChangedIfNeeded();
+    notifySubtreeAccessibilityStateChangedIfNeeded();
 }
 
 void ViewGroup::dispatchWindowSystemUiVisiblityChanged(int visible) {
@@ -1491,7 +1491,7 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
 
     if (child->hasTransientState()) childHasTransientStateChanged(child, true);
 
-    //if (child->getVisibility() !=GONE) notifySubtreeAccessibilityStateChangedIfNeeded();
+    if (child->getVisibility() !=GONE) notifySubtreeAccessibilityStateChangedIfNeeded();
 
     int transientCount = mTransientIndices.size();
     for (int i = 0; i < transientCount; ++i) {
@@ -1742,7 +1742,7 @@ void ViewGroup::removeViewInternal(int index, View* view){
     }
     dispatchViewRemoved(view);
 
-    //if (view->getVisibility() != View::GONE)notifySubtreeAccessibilityStateChangedIfNeeded();
+    if (view->getVisibility() != View::GONE)notifySubtreeAccessibilityStateChangedIfNeeded();
 
     const int transientCount =  mTransientIndices.size();
     for (int i = 0; i < transientCount; ++i) {
@@ -2352,6 +2352,57 @@ bool ViewGroup::onRequestFocusInDescendants(int direction,Rect* previouslyFocuse
 
 bool ViewGroup::requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate) {
     return false;
+}
+
+bool ViewGroup::requestSendAccessibilityEvent(View* child, AccessibilityEvent& event){
+    if (mParent == nullptr) {
+        return false;
+    }
+    const bool propagate = onRequestSendAccessibilityEvent(child, event);
+    if (!propagate) {
+        return false;
+    }
+    return mParent->requestSendAccessibilityEvent(this, event);
+}
+
+bool ViewGroup::onRequestSendAccessibilityEvent(View* child, AccessibilityEvent& event){
+    if (mAccessibilityDelegate != nullptr) {
+        return mAccessibilityDelegate->onRequestSendAccessibilityEvent(*this, *child, event);
+    } else {
+        return onRequestSendAccessibilityEventInternal(child, event);
+    }
+}
+
+bool ViewGroup::onRequestSendAccessibilityEventInternal(View* child, AccessibilityEvent& event){
+    return true;
+}
+
+void ViewGroup::notifySubtreeAccessibilityStateChanged(View* child, View* source, int changeType) {
+    // If this is a live region, we should send a subtree change event
+    // from this view. Otherwise, we can let it propagate up.
+    if (getAccessibilityLiveRegion() != ACCESSIBILITY_LIVE_REGION_NONE) {
+        notifyViewAccessibilityStateChangedIfNeeded(
+                AccessibilityEvent::CONTENT_CHANGE_TYPE_SUBTREE);
+    } else if (mParent != nullptr) {
+        mParent->notifySubtreeAccessibilityStateChanged(this, source, changeType);
+    }
+}
+
+void ViewGroup::notifySubtreeAccessibilityStateChangedIfNeeded() {
+    if (/*!AccessibilityManager::getInstance(mContext).isEnabled() ||*/ (mAttachInfo == nullptr)||1) {
+        return;
+    }
+    // If something important for a11y is happening in this subtree, make sure it's dispatched
+    // from a view that is important for a11y so it doesn't get lost.
+    if ((getImportantForAccessibility() != IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS)
+            && !isImportantForAccessibility() && (getChildCount() > 0)) {
+        ViewGroup* a11yParent = getParentForAccessibility();
+        if (a11yParent!=nullptr) {
+            a11yParent->notifySubtreeAccessibilityStateChangedIfNeeded();
+            return;
+        }
+    }
+    View::notifySubtreeAccessibilityStateChangedIfNeeded();
 }
 
 void ViewGroup::requestChildFocus(View*child,View*focused){
@@ -3402,6 +3453,23 @@ MotionEvent* ViewGroup::obtainMotionEventNoHistoryOrSelf(MotionEvent* event) {
         return event;
     }
     return MotionEvent::obtainNoHistory(*event);
+}
+
+int ViewGroup::getNumChildrenForAccessibility() const{
+    int numChildrenForAccessibility = 0;
+    for (int i = 0; i < getChildCount(); i++) {
+        View* child = getChildAt(i);
+        if (child->includeForAccessibility()) {
+            numChildrenForAccessibility++;
+        } else if (dynamic_cast<ViewGroup*>(child)) {
+            numChildrenForAccessibility += ((ViewGroup*)child)->getNumChildrenForAccessibility();
+        }
+    }
+    return numChildrenForAccessibility;
+}
+
+bool ViewGroup::onNestedPrePerformAccessibilityAction(View* target, int action, Bundle args) {
+    return false;
 }
 
 void ViewGroup::dispatchDetachedFromWindow(){
