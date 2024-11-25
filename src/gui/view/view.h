@@ -1228,7 +1228,7 @@ public:
     bool isImportantForAccessibility()const;
     ViewGroup* getParentForAccessibility();
     View*getSelfOrParentImportantForA11y();
-    void addChildrenForAccessibility(std::vector<View*>& outChildren);
+    virtual void addChildrenForAccessibility(std::vector<View*>& outChildren);
     bool includeForAccessibility()const;
     void setAccessibilityLiveRegion(int mode);
     int  getAccessibilityLiveRegion() const;

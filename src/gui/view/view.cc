@@ -1656,6 +1656,13 @@ void View::onVisibilityAggregated(bool isVisible) {
     if (dr && isVisible != dr->isVisible()) {
         dr->setVisible(isVisible, false);
     }
+    if (!TextUtils::isEmpty(getAccessibilityPaneTitle())) {
+        /*if (isVisible != oldVisible) {
+            notifyViewAccessibilityStateChangedIfNeeded(isVisible
+                    ? AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_APPEARED
+                    : AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_DISAPPEARED);
+        }*/
+    }
 }
 
 bool View::dispatchNestedScroll(int dxConsumed, int dyConsumed,
@@ -4461,7 +4468,7 @@ void View::onFocusChanged(bool gainFocus,int direct,Rect*previouslyFocusedRect){
     if(gainFocus){
         sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_FOCUSED);
     }else{
-        //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+        notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
     }
      // Here we check whether we still need the default focus highlight, and switch it on/off.
     switchDefaultFocusHighlight();
@@ -4729,6 +4736,8 @@ bool View::canTakeFocus()const{
 }
 
 View& View::setFlags(int flags,int mask) {
+    const bool accessibilityEnabled = AccessibilityManager::getInstance(mContext).isEnabled();
+    const bool oldIncludeForAccessibility = accessibilityEnabled && includeForAccessibility();
     int old = mViewFlags;
     mViewFlags = (mViewFlags & ~mask) | (flags & mask);
     int changed = mViewFlags ^ old;
@@ -4863,7 +4872,7 @@ View& View::setFlags(int flags,int mask) {
             if (mParent  && (getWindowVisibility() == VISIBLE) && mParent->isShown()) {
                 dispatchVisibilityAggregated(newVisibility == VISIBLE);
             }
-            //notifySubtreeAccessibilityStateChangedIfNeeded();
+            notifySubtreeAccessibilityStateChangedIfNeeded();
         }
     }
 
@@ -4900,7 +4909,6 @@ View& View::setFlags(int flags,int mask) {
         }
     }
 
-#if 0
     if (accessibilityEnabled) {
         // If we're an accessibility pane and the visibility changed, we already have sent
         // a state change, so we really don't need to report other changes.
@@ -4911,15 +4919,14 @@ View& View::setFlags(int flags,int mask) {
                 || (changed & CLICKABLE) != 0 || (changed & LONG_CLICKABLE) != 0
                 || (changed & CONTEXT_CLICKABLE) != 0) {
             if (oldIncludeForAccessibility != includeForAccessibility()) {
-                //notifySubtreeAccessibilityStateChangedIfNeeded();
+                notifySubtreeAccessibilityStateChangedIfNeeded();
             } else {
-                //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_UNDEFINED);
+                notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
             }
         } else if ((changed & ENABLED_MASK) != 0) {
-            //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_UNDEFINED);
+            notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
         }
     }
-#endif
     return *this;
 }
 
@@ -5211,6 +5218,11 @@ void View::setSelected(bool selected){
         if (!selected) resetPressedState();
         refreshDrawableState();
         dispatchSetSelected(selected);
+        if (selected) {
+            sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
+        } else {
+            notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+        }
     }
 }
 

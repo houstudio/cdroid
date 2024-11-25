@@ -545,6 +545,27 @@ bool ViewGroup::hasHoveredChild() const{
     return mFirstHoverTarget != nullptr;
 }
 
+void ViewGroup::addChildrenForAccessibility(std::vector<View*>& outChildren){
+    if (getAccessibilityNodeProvider() != nullptr) {
+        return;
+    }
+#if 0
+    ChildListForAccessibility children = ChildListForAccessibility.obtain(this, true);
+    const int childrenCount = children.getChildCount();
+    for (int i = 0; i < childrenCount; i++) {
+        View* child = children->getChildAt(i);
+        if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
+            if (child->includeForAccessibility()) {
+                outChildren.push_back(child);
+            } else {
+                child->addChildrenForAccessibility(outChildren);
+            }
+        }
+    }
+    children->recycle();
+#endif
+}
+
 bool ViewGroup::pointInHoveredChild(MotionEvent& event) {
     if (mFirstHoverTarget) {
         return isTransformedTouchPointInView(event.getXDispatchLocation(0),
@@ -635,6 +656,33 @@ void ViewGroup::dispatchMovedToDisplay(Display& display, Configuration& config) 
         child->dispatchMovedToDisplay(display, config);
     }
 }
+
+bool ViewGroup::dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event){
+    bool handled = false;
+    if (includeForAccessibility()) {
+        handled = View::dispatchPopulateAccessibilityEventInternal(event);
+        if (handled) {
+            return handled;
+        }
+    }
+#if 0
+    // Let our children have a shot in populating the event.
+    ChildListForAccessibility* children = ChildListForAccessibility::obtain(this, true);
+    int childCount = children.getChildCount();
+    for (int i = 0; i < childCount; i++) {
+        View* child = children.getChildAt(i);
+        if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
+            handled = child->dispatchPopulateAccessibilityEvent(event);
+            if (handled) {
+                return handled;
+            }
+        }
+    }
+    children->recycle();
+#endif
+    return false;
+}
+
 bool ViewGroup::dispatchGenericPointerEvent(MotionEvent& event) {
     // Send the event to the child under the pointer.
     const int childrenCount = (int)mChildren.size();
@@ -1229,6 +1277,29 @@ std::vector<View*> ViewGroup::buildTouchDispatchChildList(){
     return buildOrderedChildList();
 }
 
+View* ViewGroup::findChildWithAccessibilityFocus() {
+    ViewGroup* viewRoot = getRootView();//ViewRootImpl();
+    if (viewRoot == nullptr) {
+        return nullptr;
+    }
+
+    View* current = nullptr;//viewRoot->getAccessibilityFocusedHost();
+    if (current == nullptr) {
+        return nullptr;
+    }
+
+    ViewGroup* parent = current->getParent();
+    while (parent) {
+        if (parent == this) {
+            return current;
+        }
+        current = parent;
+        parent = current->getParent();
+    }
+
+    return nullptr;
+}
+
 PointerIcon* ViewGroup::onResolvePointerIcon(MotionEvent& event, int pointerIndex) {
     const float x = event.getX(pointerIndex);
     const float y = event.getY(pointerIndex);
@@ -1511,8 +1582,14 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
         // manually assembling the hierarchy, update the ancestor default-focus chain.
         setDefaultFocus(child);
     }
-    //touchAccessibilityNodeProviderIfNeeded(child);
+    touchAccessibilityNodeProviderIfNeeded(child);
     return *child;
+}
+
+void ViewGroup::touchAccessibilityNodeProviderIfNeeded(View* child) {
+   /*if (mContext->isAutofillCompatibilityEnabled()) {
+       child->getAccessibilityNodeProvider();
+   }*/
 }
 
 LayoutParams* ViewGroup::generateLayoutParams(const AttributeSet& attrs)const{
@@ -1849,6 +1926,26 @@ View*ViewGroup::findViewById(int id){
         if(c)return c;
     }
     return View::findViewById(id);
+}
+
+View* ViewGroup::findViewByAccessibilityIdTraversal(int accessibilityId) {
+    View* foundView = View::findViewByAccessibilityIdTraversal(accessibilityId);
+    if (foundView != nullptr) {
+        return foundView;
+    }
+
+    if (getAccessibilityNodeProvider() != nullptr) {
+        return nullptr;
+    }
+
+    for (auto child:mChildren) {
+        foundView = child->findViewByAccessibilityIdTraversal(accessibilityId);
+        if (foundView != nullptr) {
+            return foundView;
+        }
+    }
+
+    return nullptr;
 }
 
 void ViewGroup::dispatchWindowFocusChanged(bool hasFocus) {

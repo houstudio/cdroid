@@ -135,6 +135,7 @@ private:
     static View*getAndVerifyPreorderedView(const std::vector<View*>&,const std::vector<View*>&, int childIndex);
     TouchTarget* getTouchTarget(View* child);
     TouchTarget* addTouchTarget(View* child, int pointerIdBits);
+    View*findChildWithAccessibilityFocus();
     void resetTouchState();
     static bool resetCancelNextUpFlag(View* view);
     void clearTouchTargets();
@@ -154,6 +155,7 @@ private:
     void setTouchscreenBlocksFocusNoRefocus(bool touchscreenBlocksFocus);
     void handlePointerCaptureChanged(bool hasCapture);
 
+    void touchAccessibilityNodeProviderIfNeeded(View* child);
     void addInArray(View* child, int index);
     bool removeViewInternal(View* view);
     void removeViewInternal(int index, View* view);
@@ -189,6 +191,7 @@ protected:
     void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
     void dispatchScreenStateChanged(int screenState)override;
     void dispatchMovedToDisplay(Display& display, Configuration& config)override;
+    bool dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event)override;
     void dispatchWindowVisibilityChanged(int visibility)override;
     bool dispatchVisibilityAggregated(bool isVisible)override;
     void dispatchConfigurationChanged(Configuration& newConfig)override;
@@ -267,6 +270,7 @@ protected:
     void dispatchSetPressed(bool pressed)override;
     void dispatchDrawableHotspotChanged(float x,float y)override;
     bool hasHoveredChild()const override;
+    void addChildrenForAccessibility(std::vector<View*>& outChildren)override;
     bool pointInHoveredChild(MotionEvent& event)override;
     virtual int getChildDrawingOrder(int childCount, int i);
     std::vector<View*> buildOrderedChildList();
@@ -397,6 +401,7 @@ public:
     virtual View* findViewById(int id)override;
     View* findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)override;
     View* findViewWithTagTraversal(void*tag)override;
+    View* findViewByAccessibilityIdTraversal(int accessibilityId)override;
     virtual void resetResolvedPadding()override;
     virtual bool shouldDelayChildPressedState();
     bool hasPointerCapture()const override;
