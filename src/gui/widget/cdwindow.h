@@ -52,7 +52,10 @@ private:
     bool enterTouchMode();
     bool leaveTouchMode();
     void playSoundImpl(int);
+    void handleWindowContentChangedEvent(AccessibilityEvent& event);
 protected:
+    View* mAccessibilityFocusedHost;
+    AccessibilityNodeInfo* mAccessibilityFocusedVirtualView;
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;
     /*mPendingRgn init by mInvalidRgn,and also can be modified by windowmanager,if the window above the window 
@@ -75,6 +78,7 @@ protected:
     int processKeyEvent(KeyEvent&event);
     int processPointerEvent(MotionEvent&event);
     Cairo::RefPtr<Canvas>getCanvas();
+    void setAccessibilityFocus(View* view, AccessibilityNodeInfo* node);
     ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
@@ -101,6 +105,7 @@ public:
     View& setAlpha(float a);
     void sendToBack();
     void bringToFront();
+    bool requestSendAccessibilityEvent(View* child, AccessibilityEvent& event)override;
     virtual bool onKeyUp(int keyCode,KeyEvent& evt) override;
     virtual bool onKeyDown(int keyCode,KeyEvent& evt) override;
     virtual void onBackPressed();

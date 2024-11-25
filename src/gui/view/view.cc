@@ -339,10 +339,12 @@ View::View(Context*ctx,const AttributeSet&attrs){
 void View::initView(){
     mViewCount ++;
     LOGV_IF(View::VIEW_DEBUG,"mViewCount=%d",mViewCount);
-    mID = NO_ID;
-    mAutofillViewId =NO_ID;
+    mID = mLabelForId = NO_ID;
+    mAutofillViewId = NO_ID;
     mAccessibilityViewId = NO_ID;
     mDrawingCacheBackgroundColor = 0;
+    mAccessibilityTraversalBeforeId= NO_ID;
+    mAccessibilityTraversalAfterId = NO_ID;
     mContext  = nullptr;
     mParent   = nullptr;
     mKeyedTags = nullptr;
@@ -489,6 +491,19 @@ View* View::findViewById(int id){
 
 View* View::findViewTraversal(int id){
     if( id == mID )return this;
+    return nullptr;
+}
+
+View* View::findViewByAccessibilityId(int accessibilityId){
+    if(accessibilityId)return nullptr;
+    View*view = findViewByAccessibilityIdTraversal(accessibilityId);
+    if(view!=nullptr)
+        return view->includeForAccessibility()?view:nullptr;
+    return nullptr;
+}
+
+View* View::findViewByAccessibilityIdTraversal(int accessibilityId){
+    if (getAccessibilityViewId() == accessibilityId) return this;
     return nullptr;
 }
 
@@ -3228,7 +3243,7 @@ void View::getFocusedRect(Rect&r){
 
 View& View::setId(int id){
     mID = id;
-    if((mID==View::NO_ID)){// && (mLabelForId!=View::NO_ID)){
+    if((mID==View::NO_ID) && (mLabelForId!=View::NO_ID)){
         mID = generateViewId();
     }
     return *this;
@@ -3236,6 +3251,45 @@ View& View::setId(int id){
 
 int View::getId() const{
     return mID;
+}
+
+int View::getLabelFor()const{
+    return mLabelForId;
+}
+
+View& View::setLabelFor(int id) {
+    if (mLabelForId != id) {
+        mLabelForId = id;
+        if ((mLabelForId != View::NO_ID) && (mID == View::NO_ID)) {
+            mID = generateViewId();
+        }
+        notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+    }
+    return *this;
+}
+
+View& View::setAccessibilityTraversalBefore(int beforeId){
+    if (mAccessibilityTraversalBeforeId != beforeId) {
+        mAccessibilityTraversalBeforeId = beforeId;
+        notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+    }
+    return *this;
+}
+
+int View::getAccessibilityTraversalBefore()const{
+    return mAccessibilityTraversalBeforeId;
+}
+
+View& View::setAccessibilityTraversalAfter(int afterId){
+    if (mAccessibilityTraversalAfterId != afterId) {
+        mAccessibilityTraversalAfterId = afterId;
+        notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+    }
+    return *this;
+}
+
+int View::getAccessibilityTraversalAfter()const{
+    return mAccessibilityTraversalAfterId;
 }
 
 int View::generateViewId(){
@@ -4935,7 +4989,7 @@ bool View::requestAccessibilityFocus(){
 
 bool View::isAccessibilityFocusedViewOrHost() {
     ViewGroup* viewRootImpl = getRootView();
-    return isAccessibilityFocused();// || (viewRootImpl && viewRootImpl->getAccessibilityFocusedHost() == this);
+    return isAccessibilityFocused() ;//|| (viewRootImpl && viewRootImpl->getAccessibilityFocusedHost() == this);
 }
 
 bool View::hasDefaultFocus()const{
@@ -6064,13 +6118,13 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
     if (parent) {
         info.setParent(parent);
     }
-#if 0
+#if 1
     if (mID != View::NO_ID) {
         View* rootView = getRootView();
         if (rootView == nullptr) {
             rootView = this;
         }
-        View* label = rootView->findLabelForView(this, mID);
+        /*View* label = rootView->findLabelForView(this, mID);
         if (label != nullptr) {
             info.setLabeledBy(label);
         }
@@ -6079,7 +6133,7 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
                && Resources.resourceHasPackage(mID)) {
            std::string viewId = getResources().getResourceName(mID);
            info.setViewIdResourceName(viewId);
-        }
+        }*/
     }
     if (mLabelForId != View::NO_ID) {
         View* rootView = getRootView();
@@ -6114,7 +6168,7 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
     info.setVisibleToUser(isVisibleToUser());
     info.setImportantForAccessibility(isImportantForAccessibility());
     info.setPackageName(mContext->getPackageName());
-    info.setClassName(getAccessibilityClassName());
+    //info.setClassName(getAccessibilityClassName());
     info.setContentDescription(getContentDescription());
     info.setEnabled(isEnabled());
     info.setClickable(isClickable());
@@ -6127,15 +6181,15 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
     info.setContextClickable(isContextClickable());
     info.setLiveRegion(getAccessibilityLiveRegion());
     if (mTooltipInfo && mTooltipInfo->mTooltipText.size()) {
-        info.setTooltipText(mTooltipInfo.mTooltipText);
-        info.addAction((mTooltipInfo->mTooltipPopup == nullptr)
-                ? AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_TOOLTIP
-                : AccessibilityNodeInfo::AccessibilityAction::ACTION_HIDE_TOOLTIP);
+        info.setTooltipText(mTooltipInfo->mTooltipText);
+        //info.addAction((mTooltipInfo->mTooltipPopup == nullptr)
+        //        ? AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_TOOLTIP
+        //        : AccessibilityNodeInfo::AccessibilityAction::ACTION_HIDE_TOOLTIP);
     }
     // TODO: These make sense only if we are in an AdapterView but all
     // views can be selected. Maybe from accessibility perspective
     // we should report as selectable view in an AdapterView.
-    info.addAction(AccessibilityNodeInfo::ACTION_SELECT);
+    /*info.addAction(AccessibilityNodeInfo::ACTION_SELECT);
     info.addAction(AccessibilityNodeInfo::ACTION_CLEAR_SELECTION);
     if (isFocusable()) {
         if (isFocused()) {
@@ -6156,7 +6210,7 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
         info.addAction(AccessibilityNodeInfo::ACTION_LONG_CLICK);
     }
     if (isContextClickable() && isEnabled()) {
-        info.addAction(AccessibilityAction::ACTION_CONTEXT_CLICK);
+        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CONTEXT_CLICK);
     }
     std::string text = getIterableTextForAccessibility();
     if (text.length()) {
@@ -6167,8 +6221,8 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
         info.setMovementGranularities(AccessibilityNodeInfo::MOVEMENT_GRANULARITY_CHARACTER
                | AccessibilityNodeInfo::MOVEMENT_GRANULARITY_WORD
                | AccessibilityNodeInfo::MOVEMENT_GRANULARITY_PARAGRAPH);
-    }
-    info.addAction(AccessibilityAction::ACTION_SHOW_ON_SCREEN);
+    }*/
+    //info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_ON_SCREEN);
     populateAccessibilityNodeInfoDrawingOrderInParent(info);
     info.setPaneTitle(mAccessibilityPaneTitle);
     info.setHeading(isAccessibilityHeading());
@@ -6176,7 +6230,101 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
 }
 
 void View::addExtraDataToAccessibilityNodeInfo(AccessibilityNodeInfo& info,const std::string& extraDataKey,Bundle arguments){
-     //NOTHING
+    //NOTHING
+}
+
+void View::populateAccessibilityNodeInfoDrawingOrderInParent(AccessibilityNodeInfo& info){
+    if ((mPrivateFlags & PFLAG_HAS_BOUNDS) == 0) {
+        info.setDrawingOrder(0);
+        return;
+    }
+    int drawingOrderInParent = 1;
+    // Iterate up the hierarchy if parents are not important for a11y
+    View* viewAtDrawingLevel = this;
+    ViewGroup* parent = getParentForAccessibility();
+#if 0
+    while (viewAtDrawingLevel != parent) {
+        ViewGroup* currentParent = viewAtDrawingLevel->getParent();
+        if (!(currentParent instanceof ViewGroup)) {
+            // Should only happen for the Decor
+            drawingOrderInParent = 0;
+            break;
+        } else {
+            ViewGroup* parentGroup = (ViewGroup) currentParent;
+            const int childCount = parentGroup.getChildCount();
+            if (childCount > 1) {
+                List<View> preorderedList = parentGroup.buildOrderedChildList();
+                if (preorderedList != null) {
+                    const int childDrawIndex = preorderedList.indexOf(viewAtDrawingLevel);
+                    for (int i = 0; i < childDrawIndex; i++) {
+                        drawingOrderInParent += numViewsForAccessibility(preorderedList.get(i));
+                    }
+                } else {
+                    final int childIndex = parentGroup.indexOfChild(viewAtDrawingLevel);
+                    final bool customOrder = parentGroup.isChildrenDrawingOrderEnabled();
+                    final int childDrawIndex = ((childIndex >= 0) && customOrder) ? parentGroup
+                            .getChildDrawingOrder(childCount, childIndex) : childIndex;
+                    final int numChildrenToIterate = customOrder ? childCount : childDrawIndex;
+                    if (childDrawIndex != 0) {
+                        for (int i = 0; i < numChildrenToIterate; i++) {
+                            final int otherDrawIndex = (customOrder ?
+                                    parentGroup.getChildDrawingOrder(childCount, i) : i);
+                            if (otherDrawIndex < childDrawIndex) {
+                                drawingOrderInParent +=
+                                        numViewsForAccessibility(parentGroup.getChildAt(i));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        viewAtDrawingLevel = (View) currentParent;
+    }
+#endif
+    info.setDrawingOrder(drawingOrderInParent);
+}
+
+bool View::isVisibleToUserForAutofill(int virtualId)const{
+    return false;
+}
+
+bool View::isVisibleToUser() {
+    return isVisibleToUser(nullptr);
+}
+
+bool View::isVisibleToUser(Rect* boundInView) {
+    if (mAttachInfo != nullptr) {
+        // Attached to invisible window means this view is not visible.
+        if (mAttachInfo->mWindowVisibility != View::VISIBLE) {
+            return false;
+        }
+        // An invisible predecessor or one with alpha zero means
+        // that this view is not visible to the user.
+        View* current = this;
+        while (current) {
+            View* view = current;
+            // We have attach info so this view is attached and there is no
+            // need to check whether we reach to ViewRootImpl on the way up.
+            if (view->getAlpha() <= 0 || view->getTransitionAlpha() <= 0 ||
+                    view->getVisibility() != VISIBLE) {
+                return false;
+            }
+            current = view->mParent;
+        }
+        // Check if the view is entirely covered by its predecessors.
+        Rect visibleRect;
+        Point offset;
+        if (!getGlobalVisibleRect(visibleRect, &offset)) {
+            return false;
+        }
+        // Check if the visible portion intersects the rectangle of interest.
+        if (boundInView != nullptr) {
+            visibleRect.offset(-offset.x, -offset.y);
+            return boundInView->intersect(visibleRect);
+        }
+        return true;
+    }
+    return false;
 }
 
 bool View::requestFocus(int direction){
@@ -6541,6 +6689,38 @@ void View::setFocusable(int focusable){
 
 bool View::isFocusableInTouchMode()const{
     return FOCUSABLE_IN_TOUCH_MODE == (mViewFlags & FOCUSABLE_IN_TOUCH_MODE);
+}
+
+bool View::isScreenReaderFocusable() const{
+    return (mPrivateFlags3 & PFLAG3_SCREEN_READER_FOCUSABLE) != 0;
+}
+
+View& View::setScreenReaderFocusable(bool screenReaderFocusable) {
+    updatePflags3AndNotifyA11yIfChanged(PFLAG3_SCREEN_READER_FOCUSABLE, screenReaderFocusable);
+    return *this;
+}
+
+void View::updatePflags3AndNotifyA11yIfChanged(int mask, bool newValue) {
+   int pflags3 = mPrivateFlags3;
+   if (newValue) {
+       pflags3 |= mask;
+   } else {
+       pflags3 &= ~mask;
+   }
+
+   if (pflags3 != mPrivateFlags3) {
+       mPrivateFlags3 = pflags3;
+       notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+   }
+}
+
+bool View::isAccessibilityHeading() const{
+    return (mPrivateFlags3 & PFLAG3_ACCESSIBILITY_HEADING) != 0;
+}
+
+View& View::setAccessibilityHeading(bool isHeading) {
+    updatePflags3AndNotifyA11yIfChanged(PFLAG3_ACCESSIBILITY_HEADING, isHeading);
+    return *this;
 }
 
 bool View::isSaveFromParentEnable()const{

@@ -552,7 +552,9 @@ private:
     void initializeScrollIndicatorsInternal();
     void setFocusedInCluster(View* cluster);
     void updateFocusedInCluster(View* oldFocus,int direction);
+    void updatePflags3AndNotifyA11yIfChanged(int mask, bool newValue);
     bool dispatchGenericMotionEventInternal(MotionEvent& event);
+    void populateAccessibilityNodeInfoDrawingOrderInParent(AccessibilityNodeInfo& info);
     bool applyLegacyAnimation(ViewGroup* parent, int64_t drawingTime, Animation* a, bool scalingRequired);
     bool needRtlPropertiesResolution()const;
     bool skipInvalidate()const;
@@ -605,6 +607,9 @@ protected:
     int mSystemUiVisibility;
     int mTransientStateCount;
     int mWindowAttachCount;
+    int mLabelForId;
+    int mAccessibilityTraversalBeforeId;
+    int mAccessibilityTraversalAfterId;
     bool mLeftPaddingDefined;
     bool mRightPaddingDefined;
     bool mCachingFailed;
@@ -758,6 +763,7 @@ protected:
     bool isOnScrollbar(int x,int y);
     bool isOnScrollbarThumb(int x,int y);
     bool isDraggingScrollBar()const;
+    bool isVisibleToUser(Rect* boundInView);
     virtual void onConfigurationChanged(Configuration& newConfig);
     virtual bool overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX,
               int  scrollRangeY, int maxOverScrollX, int maxOverScrollY, bool isTouchEvent);
@@ -889,6 +895,10 @@ public:
     bool isFocusableInTouchMode()const;
     virtual void setFocusable(int focusable);
     virtual void setFocusableInTouchMode(bool focusableInTouchMode);
+    bool isScreenReaderFocusable()const;
+    View& setScreenReaderFocusable(bool screenReaderFocusable);
+    bool isAccessibilityHeading() const;
+    View& setAccessibilityHeading(bool isHeading);
     virtual void drawableHotspotChanged(float x, float y);
     virtual void dispatchDrawableHotspotChanged(float x,float y);
     void refreshDrawableState();
@@ -1049,9 +1059,15 @@ public:
     static bool isViewIdGenerated(int id);
     View& setId(int id);
     int  getId()const;
+    View& setLabelFor(int);
+    int  getLabelFor()const;
     int  getAccessibilityViewId();
     int getAutofillViewId();
     int getAccessibilityWindowId()const;
+    View& setAccessibilityTraversalBefore(int beforeId);
+    int getAccessibilityTraversalBefore()const;
+    View& setAccessibilityTraversalAfter(int afterId);
+    int getAccessibilityTraversalAfter()const;
     int  getAutoFillViewId();
     void setTag(void*);
     void*getTag()const;
@@ -1139,6 +1155,8 @@ public:
     void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info);
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info);
     void addExtraDataToAccessibilityNodeInfo(AccessibilityNodeInfo& info,const std::string& extraDataKey,Bundle arguments);
+    bool isVisibleToUserForAutofill(int virtualId)const;
+    bool isVisibleToUser();
     bool requestAccessibilityFocus();
     View& clearAccessibilityFocus();
     View& clearAccessibilityFocusNoCallbacks(int action);
@@ -1232,6 +1250,8 @@ public:
     virtual View* findViewById(int id);
     virtual View* findViewWithTag(void*);
     virtual View* findViewTraversal(int);
+    virtual View* findViewByAccessibilityId(int accessibilityId);
+    virtual View* findViewByAccessibilityIdTraversal(int accessibilityId);
     virtual View* findViewByPredicateTraversal(std::function<bool(const View*)>,View* childToSkip);
     virtual View* findViewWithTagTraversal(void* tag);
     View* findViewByPredicate(std::function<bool(const View*)>);
