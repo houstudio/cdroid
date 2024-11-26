@@ -33,6 +33,9 @@ public:
     void setStepSize(float stepSize);
     float getStepSize()const;
     void setMax(int max);
+
+    std::string getAccessibilityClassName()const override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
 };
 
 }

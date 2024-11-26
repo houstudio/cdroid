@@ -1,4 +1,5 @@
 #include <widget/adapterview.h>
+#include <view/accessibility/accessibilitymanager.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <systemclock.h>
@@ -30,6 +31,12 @@ void AdapterView::initAdapterView(){
     mBlockLayoutRequests=false;
     mPendingSelectionNotifier =nullptr;
     mSelectionNotifier =nullptr;
+
+    // If not explicitly specified this view is important for accessibility.
+    if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+        setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
+    }
+
     mDesiredFocusableState = getFocusable();
     if (mDesiredFocusableState == FOCUSABLE_AUTO) {
         // Starts off without an adapter, so NOT_FOCUSABLE by default.
@@ -164,6 +171,7 @@ void AdapterView::handleDataChanged(){
         mNeedSync = false;
         checkSelectionChanged();
     }
+    notifySubtreeAccessibilityStateChangedIfNeeded();
 }
 
 int AdapterView::findSyncPosition(){
@@ -262,8 +270,11 @@ int AdapterView::getLastVisiblePosition(){
 }
 
 void AdapterView::setEmptyView(View* emptyView){
-    mEmptyView=emptyView;
-    bool empty = (mAdapter==nullptr || mAdapter->isEmpty());
+    mEmptyView = emptyView;
+    if(emptyView&&emptyView->getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+        emptyView->setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
+    }
+    const bool empty = (mAdapter==nullptr) || mAdapter->isEmpty();
     updateEmptyStatus(empty);
 }
 
@@ -412,7 +423,8 @@ void AdapterView::doSectionNotify(){
 
 void AdapterView::selectionChanged(){
     mPendingSelectionNotifier = nullptr;
-    if (mOnItemSelectedListener.onItemSelected){
+    if (mOnItemSelectedListener.onItemSelected
+            ||AccessibilityManager::getInstance(mContext).isEnabled()){
         if (mInLayout || mBlockLayoutRequests) {
             // If we are in a layout traversal, defer notification
             // by posting. This ensures that the view tree is
@@ -437,7 +449,7 @@ void AdapterView::selectionChanged(){
 
 void AdapterView::dispatchOnItemSelected() {
     fireOnSelected();
-    //performAccessibilityActionsOnSelected();
+    performAccessibilityActionsOnSelected();
 }
 
 void AdapterView::fireOnSelected() {
@@ -449,6 +461,75 @@ void AdapterView::fireOnSelected() {
     } else if(mOnItemSelectedListener.onNothingSelected){
         mOnItemSelectedListener.onNothingSelected(*this);
     }
+}
+
+void AdapterView::performAccessibilityActionsOnSelected() {
+    if (!AccessibilityManager::getInstance(mContext).isEnabled()) {
+        return;
+    }
+    const int position = getSelectedItemPosition();
+    if (position >= 0) {
+        // we fire selection events here not in View
+        sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
+    }
+}
+
+std::string AdapterView::getAccessibilityClassName()const{
+    return "AdapterView";
+}
+
+bool AdapterView::dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event){
+    View* selectedView = getSelectedView();
+    if (selectedView && selectedView->getVisibility() == VISIBLE
+            && selectedView->dispatchPopulateAccessibilityEvent(event)) {
+        return true;
+    }
+    return false;
+}
+
+bool AdapterView::onRequestSendAccessibilityEventInternal(View* child, AccessibilityEvent& event){
+    if (ViewGroup::onRequestSendAccessibilityEventInternal(child, event)) {
+        // Add a record for ourselves as well.
+        AccessibilityEvent* record = AccessibilityEvent::obtain();
+        onInitializeAccessibilityEvent(*record);
+        // Populate with the text of the requesting child.
+        child->dispatchPopulateAccessibilityEvent(*record);
+        event.appendRecord(record);
+        return true;
+    }
+    return false;
+}
+
+void AdapterView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+   ViewGroup::onInitializeAccessibilityNodeInfoInternal(info);
+   info.setScrollable(isScrollableForAccessibility());
+   View* selectedView = getSelectedView();
+   if (selectedView != nullptr) {
+        info.setEnabled(selectedView->isEnabled());
+    }
+}
+
+void AdapterView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
+    ViewGroup::onInitializeAccessibilityEventInternal(event);
+    event.setScrollable(isScrollableForAccessibility());
+    View* selectedView = getSelectedView();
+    if (selectedView != nullptr) {
+        event.setEnabled(selectedView->isEnabled());
+    }
+    event.setCurrentItemIndex(getSelectedItemPosition());
+    event.setFromIndex(getFirstVisiblePosition());
+    event.setToIndex(getLastVisiblePosition());
+    event.setItemCount(getCount());
+}
+
+bool AdapterView::isScrollableForAccessibility() {
+    Adapter* adapter = getAdapter();
+    if (adapter != nullptr) {
+        const int itemCount = adapter->getCount();
+        return itemCount > 0
+            && (getFirstVisiblePosition() > 0 || getLastVisiblePosition() < itemCount - 1);
+    }
+    return false;
 }
 
 bool AdapterView::performItemClick(View& view, int position, long id){

@@ -152,4 +152,15 @@ bool RatingBar::canUserSetProgress()const{
     return AbsSeekBar::canUserSetProgress() && !isIndicator();
 }
 
+std::string RatingBar::getAccessibilityClassName()const{
+    return "RatingBar";
+}
+
+void RatingBar::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+    AbsSeekBar::onInitializeAccessibilityNodeInfoInternal(info);
+
+    if (canUserSetProgress()) {
+        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_PROGRESS.getId());
+    }
+}
 }

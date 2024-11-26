@@ -19,4 +19,12 @@ PointerIcon* ImageButton::onResolvePointerIcon(MotionEvent& event, int pointerIn
     return ImageView::onResolvePointerIcon(event, pointerIndex);
 }
 
+bool ImageButton::onSetAlpha(int alph){
+    return false;
+}
+
+std::string ImageButton::getAccessibilityClassName()const{
+    return "ImageButton";
+}
+
 }

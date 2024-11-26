@@ -54,6 +54,8 @@ private:
     void updateEmptyStatus(bool empty);
     void dispatchOnItemSelected();
     void fireOnSelected();
+    void performAccessibilityActionsOnSelected();
+    bool isScrollableForAccessibility();
     void doSectionNotify();
 protected:
     bool mDataChanged;
@@ -128,6 +130,12 @@ public:
     OnItemSelectedListener getOnItemSelectedListener()const;
     void setOnItemLongClickListener(OnItemLongClickListener listener);
     OnItemLongClickListener getOnItemLongClickListener() const;
+
+    std::string getAccessibilityClassName()const override;
+    bool dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event)override;
+    bool onRequestSendAccessibilityEventInternal(View* child, AccessibilityEvent& event)override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
+    void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
 };
 
 class AdapterDataSetObserver:public DataSetObserver{
