@@ -26,6 +26,55 @@ namespace cdroid {
 #define ATTR_ANIMATE_FOCUS (0x2000) /*flag to open animate focus*/
 
 class ViewGroup : public View {
+private:
+    static constexpr int FLAG_CLIP_CHILDREN   = 0x01;
+    static constexpr int FLAG_CLIP_TO_PADDING = 0x02;
+    static constexpr int FLAG_INVALIDATE_REQUIRED= 0x4;
+    static constexpr int FLAG_RUN_ANIMATION   = 0x8;
+    static constexpr int FLAG_ANIMATION_DONE  = 0x10;
+    static constexpr int FLAG_PADDING_NOT_NULL= 0x20;
+
+    static constexpr int FLAG_ANIMATION_CACHE = 0x40;
+    static constexpr int FLAG_OPTIMIZE_INVALIDATE  = 0x80;
+    static constexpr int FLAG_CLEAR_TRANSFORMATION = 0x100;
+    static constexpr int FLAG_NOTIFY_ANIMATION_LISTENER = 0x200;
+    static constexpr int FLAG_USE_CHILD_DRAWING_ORDER   = 0x400;
+    static constexpr int FLAG_SUPPORT_STATIC_TRANSFORMATIONS = 0x800;
+
+    static constexpr int FLAG_ADD_STATES_FROM_CHILDREN  = 0x2000;
+    static constexpr int FLAG_ALWAYS_DRAWN_WITH_CACHE   = 0x4000;
+    static constexpr int FLAG_CHILDREN_DRAWN_WITH_CACHE = 0x8000;
+    static constexpr int FLAG_NOTIFY_CHILDREN_ON_DRAWABLE_STATE_CHANGE = 0x10000;
+
+    static constexpr int FLAG_MASK_FOCUSABILITY  = 0x60000;
+    static constexpr int FLAG_SPLIT_MOTION_EVENTS= 0x200000;
+    static constexpr int FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW =0x400000;
+    static constexpr int FLAG_LAYOUT_MODE_WAS_EXPLICITLY_SET      =0x800000;
+    static constexpr int FLAG_IS_TRANSITION_GROUP    = 0x1000000;
+    static constexpr int FLAG_IS_TRANSITION_GROUP_SET= 0x2000000;
+    static constexpr int FLAG_TOUCHSCREEN_BLOCKS_FOCUS= 0x4000000;
+    static constexpr int FLAG_START_ACTION_MODE_FOR_CHILD_IS_TYPED = 0x8000000;
+    static constexpr int FLAG_START_ACTION_MODE_FOR_CHILD_IS_NOT_TYPED = 0x10000000;
+    static constexpr int FLAG_SHOW_CONTEXT_MENU_WITH_COORDS = 0x20000000;
+
+    static constexpr int LAYOUT_MODE_UNDEFINED   = -1;
+protected:
+    static constexpr int CLIP_TO_PADDING_MASK = FLAG_CLIP_TO_PADDING | FLAG_PADDING_NOT_NULL;
+    static constexpr int FLAG_DISALLOW_INTERCEPT = 0x80000;
+public:
+    static constexpr int FOCUS_BEFORE_DESCENDANTS= 0x20000;
+    static constexpr int FOCUS_AFTER_DESCENDANTS = 0x40000;
+    static constexpr int FOCUS_BLOCK_DESCENDANTS = 0x60000;
+    
+    static constexpr int PERSISTENT_NO_CACHE = 0x0;
+    /*Used to indicate that the animation drawing cache should be kept in memory.*/
+    static constexpr int PERSISTENT_ANIMATION_CACHE = 0x1;
+    /*Used to indicate that the scrolling drawing cache should be kept in memory.*/
+    static constexpr int PERSISTENT_SCROLLING_CACHE = 0x2;
+    static constexpr int PERSISTENT_ALL_CACHES      = 0x03;
+    static constexpr int LAYOUT_MODE_CLIP_BOUNDS = 0;
+    static constexpr int LAYOUT_MODE_OPTICAL_BOUNDS = 1;
+    static constexpr int LAYOUT_MODE_DEFAULT = LAYOUT_MODE_CLIP_BOUNDS;
 public:
     typedef cdroid::LayoutParams LayoutParams;
     typedef cdroid::MarginLayoutParams MarginLayoutParams;
@@ -34,61 +83,6 @@ public:
         CallbackBase<void,ViewGroup&/*parent*/,View* /*child*/>onChildViewRemoved;
     }OnHierarchyChangeListener;
     DECLARE_UIEVENT(void,OnAnimationFinished);
-    enum{
-        FLAG_CLIP_CHILDREN   = 0x01,
-        FLAG_CLIP_TO_PADDING = 0x02,
-        FLAG_INVALIDATE_REQUIRED= 0x4,
-        FLAG_RUN_ANIMATION   = 0x8,
-        FLAG_ANIMATION_DONE  = 0x10,
-        FLAG_PADDING_NOT_NULL= 0x20,
-        CLIP_TO_PADDING_MASK = FLAG_CLIP_TO_PADDING | FLAG_PADDING_NOT_NULL,
-
-        FLAG_ANIMATION_CACHE = 0x40,
-        FLAG_OPTIMIZE_INVALIDATE  = 0x80,
-        FLAG_CLEAR_TRANSFORMATION = 0x100,
-        FLAG_NOTIFY_ANIMATION_LISTENER = 0x200,
-        FLAG_USE_CHILD_DRAWING_ORDER   = 0x400,
-        FLAG_SUPPORT_STATIC_TRANSFORMATIONS = 0x800,
-
-        FLAG_ADD_STATES_FROM_CHILDREN  = 0x2000,
-        FLAG_ALWAYS_DRAWN_WITH_CACHE   = 0x4000,
-        FLAG_CHILDREN_DRAWN_WITH_CACHE = 0x8000,
-        FLAG_NOTIFY_CHILDREN_ON_DRAWABLE_STATE_CHANGE = 0x10000,
-
-        FOCUS_BEFORE_DESCENDANTS= 0x20000,
-        FOCUS_AFTER_DESCENDANTS = 0x40000,
-        FOCUS_BLOCK_DESCENDANTS = 0x60000,
-        FLAG_MASK_FOCUSABILITY  = 0x60000,
-        FLAG_DISALLOW_INTERCEPT = 0x80000,
-        FLAG_SPLIT_MOTION_EVENTS= 0x200000,
-        FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW =0x400000,
-        FLAG_LAYOUT_MODE_WAS_EXPLICITLY_SET      =0x800000,
-        FLAG_IS_TRANSITION_GROUP    = 0x1000000,
-        FLAG_IS_TRANSITION_GROUP_SET= 0x2000000,
-        FLAG_TOUCHSCREEN_BLOCKS_FOCUS= 0x4000000,
-        FLAG_START_ACTION_MODE_FOR_CHILD_IS_TYPED = 0x8000000,
-        FLAG_START_ACTION_MODE_FOR_CHILD_IS_NOT_TYPED = 0x10000000,
-        FLAG_SHOW_CONTEXT_MENU_WITH_COORDS = 0x20000000,
-    };
-    enum{
-        PERSISTENT_NO_CACHE = 0x0,
-       /**
-       * Used to indicate that the animation drawing cache should be kept in memory.
-       */
-       PERSISTENT_ANIMATION_CACHE = 0x1,
-
-       /**
-       * Used to indicate that the scrolling drawing cache should be kept in memory.
-       */
-       PERSISTENT_SCROLLING_CACHE = 0x2,
-       PERSISTENT_ALL_CACHES      =0x03
-    };
-    enum{
-        LAYOUT_MODE_UNDEFINED  =-1,
-        LAYOUT_MODE_CLIP_BOUNDS=0,
-        LAYOUT_MODE_OPTICAL_BOUNDS=1,
-        LAYOUT_MODE_DEFAULT = LAYOUT_MODE_CLIP_BOUNDS
-    };
 private:
     friend class View;
     friend class UIEventSource;

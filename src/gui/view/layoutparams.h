@@ -11,10 +11,8 @@ class View;
 class Canvas;
 class LayoutParams{
 public:
-    enum{
-        MATCH_PARENT=-1,
-        WRAP_CONTENT=-2,
-    };
+    static constexpr int MATCH_PARENT = -1;
+    static constexpr int WRAP_CONTENT = -2;
 protected:
     static const std::string sizeToString(int size);
     void setBaseAttributes(const AttributeSet& a, int widthAttr, int heightAttr);
@@ -33,16 +31,15 @@ public:
 
 class MarginLayoutParams:public LayoutParams{
 private:
-    enum{
-        DEFAULT_MARGIN_RELATIVE=INT_MIN,
-        LAYOUT_DIRECTION_MASK = 0x00000003,
-        LEFT_MARGIN_UNDEFINED_MASK = 0x00000004,
-        RIGHT_MARGIN_UNDEFINED_MASK = 0x00000008,
-        RTL_COMPATIBILITY_MODE_MASK = 0x00000010,
-        NEED_RESOLUTION_MASK = 0x00000020,
-        DEFAULT_MARGIN_RESOLVED = 0,
-        UNDEFINED_MARGIN = DEFAULT_MARGIN_RELATIVE
-    };
+    static constexpr int DEFAULT_MARGIN_RELATIVE=INT_MIN;
+    static constexpr int LAYOUT_DIRECTION_MASK = 0x00000003;
+    static constexpr int LEFT_MARGIN_UNDEFINED_MASK = 0x00000004;
+    static constexpr int RIGHT_MARGIN_UNDEFINED_MASK = 0x00000008;
+    static constexpr int RTL_COMPATIBILITY_MODE_MASK = 0x00000010;
+    static constexpr int NEED_RESOLUTION_MASK = 0x00000020;
+    static constexpr int DEFAULT_MARGIN_RESOLVED = 0;
+    static constexpr int UNDEFINED_MARGIN = DEFAULT_MARGIN_RELATIVE;
+private:
     void doResolveMargins();
 protected:
     int mMarginFlags;

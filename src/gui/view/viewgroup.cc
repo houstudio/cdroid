@@ -153,7 +153,7 @@ void ViewGroup::initGroup(){
     mGroupFlags|= FOCUS_BEFORE_DESCENDANTS;
     //mGroupFlags!= FLAG_ALWAYS_DRAWN_WITH_CACHE;
     mLayoutMode = LAYOUT_MODE_UNDEFINED;
-    mFocused    = nullptr;
+    mFocused      = nullptr;
     mDefaultFocus = nullptr;
     mFocusedInCluster = nullptr;
     mFirstTouchTarget = nullptr;
@@ -167,8 +167,8 @@ void ViewGroup::initGroup(){
     mChildCountWithTransientState= 0;
     mChildUnhandledKeyListeners  = 0;
     mInvalidRgn=Region::create();
-    mChildTransformation =nullptr;
-    mInvalidationTransformation =nullptr;
+    mChildTransformation = nullptr;
+    mInvalidationTransformation = nullptr;
     mTransition = nullptr;
     mPersistentDrawingCache = PERSISTENT_SCROLLING_CACHE;
     setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
@@ -196,18 +196,18 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
     setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,resid));
 
     const int flags=atts.getInt("descendantFocusability",std::map<const std::string,int>{
-        {"beforeDescendants",FOCUS_BEFORE_DESCENDANTS},
-        {"afterDescendants",FOCUS_AFTER_DESCENDANTS},
-        {"blocksDescendants",FOCUS_BLOCK_DESCENDANTS}
+        {"beforeDescendants",(int)FOCUS_BEFORE_DESCENDANTS},
+        {"afterDescendants" ,(int)FOCUS_AFTER_DESCENDANTS},
+        {"blocksDescendants",(int)FOCUS_BLOCK_DESCENDANTS}
     },FOCUS_BEFORE_DESCENDANTS);
     setDescendantFocusability(flags);
 
     if(atts.getBoolean("animateLayoutChanges",false))
         setLayoutTransition(new LayoutTransition());
     const int layoutMode = atts.getInt("layoutMode",std::map<const std::string,int>{
-        {"undefined",LAYOUT_MODE_UNDEFINED},
-        {"clipBounds",LAYOUT_MODE_CLIP_BOUNDS},
-        {"opticalBounds",LAYOUT_MODE_OPTICAL_BOUNDS}
+        {"undefined" ,(int)LAYOUT_MODE_UNDEFINED},
+        {"clipBounds",(int)LAYOUT_MODE_CLIP_BOUNDS},
+        {"opticalBounds",(int)LAYOUT_MODE_OPTICAL_BOUNDS}
     },LAYOUT_MODE_UNDEFINED);
     setAddStatesFromChildren(atts.getBoolean("addStatesFromChildren",false));
     setMotionEventSplittingEnabled(atts.getBoolean("splitMotionEvents",false));

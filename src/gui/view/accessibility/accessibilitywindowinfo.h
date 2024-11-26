@@ -41,12 +41,12 @@ private:
     int mBooleanProperties;
     int mId = UNDEFINED_WINDOW_ID;
     int mParentId = UNDEFINED_WINDOW_ID;
+    int mConnectionId = UNDEFINED_WINDOW_ID;
+    int64_t mAnchorId;// = AccessibilityNodeInfo::UNDEFINED_NODE_ID;
     Rect mBoundsInScreen;
     std::vector<long> mChildIds;
     std::string mTitle;
-    long mAnchorId;// = AccessibilityNodeInfo::UNDEFINED_NODE_ID;
 
-    int mConnectionId = UNDEFINED_WINDOW_ID;
 private:
     AccessibilityWindowInfo();
 public:

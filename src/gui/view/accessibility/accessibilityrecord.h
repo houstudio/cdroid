@@ -45,8 +45,8 @@ protected:
 
     int mAddedCount= UNDEFINED;
     int mRemovedCount = UNDEFINED;
-    long mSourceNodeId = AccessibilityNodeInfo::UNDEFINED_NODE_ID;
     int mSourceWindowId = AccessibilityWindowInfo::UNDEFINED_WINDOW_ID;
+    int64_t mSourceNodeId = AccessibilityNodeInfo::UNDEFINED_NODE_ID;
 
     std::string mClassName;
     std::string mContentDescription;

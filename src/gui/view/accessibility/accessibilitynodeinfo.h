@@ -186,7 +186,7 @@ private:
 
     static constexpr int BOOLEAN_PROPERTY_IS_HEADING = 0x0200000;
 
-    static constexpr long VIRTUAL_DESCENDANT_ID_MASK = 0xffffffff00000000L;
+    static constexpr int64_t VIRTUAL_DESCENDANT_ID_MASK = 0xffffffff00000000L;
     
     static int sNumInstancesInUse;
 private:
@@ -199,12 +199,12 @@ private:
 
     // Data.
     int mWindowId;// = AccessibilityWindowInfo::UNDEFINED_WINDOW_ID;
-    long mSourceNodeId = UNDEFINED_NODE_ID;
-    long mParentNodeId = UNDEFINED_NODE_ID;
-    long mLabelForId = UNDEFINED_NODE_ID;
-    long mLabeledById = UNDEFINED_NODE_ID;
-    long mTraversalBefore = UNDEFINED_NODE_ID;
-    long mTraversalAfter = UNDEFINED_NODE_ID;
+    int64_t mSourceNodeId = UNDEFINED_NODE_ID;
+    int64_t mParentNodeId = UNDEFINED_NODE_ID;
+    int64_t mLabelForId = UNDEFINED_NODE_ID;
+    int64_t mLabeledById = UNDEFINED_NODE_ID;
+    int64_t mTraversalBefore = UNDEFINED_NODE_ID;
+    int64_t mTraversalAfter = UNDEFINED_NODE_ID;
 
     int mBooleanProperties;
     Rect mBoundsInParent;

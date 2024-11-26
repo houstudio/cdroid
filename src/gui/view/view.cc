@@ -69,7 +69,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     mMinWidth  = attrs.getDimensionPixelSize("minWidth",0);
     mMinHeight = attrs.getDimensionPixelSize("minHeight",0);
     setLayerType(attrs.getInt("layerType",std::map<const std::string,int>{
-           {"software",LAYER_TYPE_SOFTWARE},{"hardware",LAYER_TYPE_HARDWARE}
+           {"software",(int)LAYER_TYPE_SOFTWARE},{"hardware",(int)LAYER_TYPE_HARDWARE}
         },LAYER_TYPE_NONE));
     const int quality=attrs.getInt("drawingCacheQuality",std::map<const std::string,int>{
            {"auto",(int)DRAWING_CACHE_QUALITY_AUTO},
@@ -94,24 +94,25 @@ View::View(Context*ctx,const AttributeSet&attrs){
     }
     mPrivateFlags2 &= ~(PFLAG2_LAYOUT_DIRECTION_MASK | PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK);
     const int layoutDirection = attrs.getInt("layoutDirection",std::map<const std::string,int>{
-           {"ltr", (int)LAYOUT_DIRECTION_LTR},{"rtl",(int)LAYOUT_DIRECTION_RTL},
+           {"ltr"    ,(int)LAYOUT_DIRECTION_LTR}    ,{"rtl",(int)LAYOUT_DIRECTION_RTL},
            {"inherit",(int)LAYOUT_DIRECTION_INHERIT},{"local",(int)LAYOUT_DIRECTION_LOCALE}
 	},LAYOUT_DIRECTION_DEFAULT);
     mPrivateFlags2 |= (layoutDirection << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT);
 
     const int textDirection = attrs.getInt("textDirection",std::map<const std::string,int>{
-		 {"inherit",TEXT_DIRECTION_INHERIT}, {"locale",TEXT_DIRECTION_LOCALE},
-		 {"anyRtl",TEXT_DIRECTION_ANY_RTL},  {"ltr",TEXT_DIRECTION_LTR},  {"rtl",TEXT_DIRECTION_RTL},
-		 {"firstStrong",TEXT_DIRECTION_FIRST_STRONG}, {"fisrtStringLtr",TEXT_DIRECTION_FIRST_STRONG_LTR},
-		 {"firstStrongRtl",TEXT_DIRECTION_FIRST_STRONG_RTL}},-1);
+		 {"inherit",(int)TEXT_DIRECTION_INHERIT}, {"locale",(int)TEXT_DIRECTION_LOCALE},
+		 {"anyRtl" ,(int)TEXT_DIRECTION_ANY_RTL}, {"ltr",(int)TEXT_DIRECTION_LTR},
+         {"rtl",(int)TEXT_DIRECTION_RTL},         {"firstStrong",(int)TEXT_DIRECTION_FIRST_STRONG},
+         {"fisrtStringLtr",(int)TEXT_DIRECTION_FIRST_STRONG_LTR},
+		 {"firstStrongRtl",(int)TEXT_DIRECTION_FIRST_STRONG_RTL}},-1);
     if (textDirection != -1) {
         mPrivateFlags2 |= textDirection<< PFLAG2_TEXT_DIRECTION_MASK_SHIFT;
     }
     const int textAlignment = attrs.getInt("textAlignment",std::map<const std::string,int>{
-        {"inherit" , TEXT_ALIGNMENT_INHERIT},    {"gravity" , TEXT_ALIGNMENT_GRAVITY},
-        {"textStart",TEXT_ALIGNMENT_TEXT_START}, {"textEnd" , TEXT_ALIGNMENT_TEXT_END},
-        {"center"  , TEXT_ALIGNMENT_CENTER},     {"viewStart",TEXT_ALIGNMENT_VIEW_START},
-        {"viewEnd"  ,TEXT_ALIGNMENT_VIEW_END}    },TEXT_ALIGNMENT_DEFAULT);
+        {"inherit" , (int)TEXT_ALIGNMENT_INHERIT},    {"gravity" , (int)TEXT_ALIGNMENT_GRAVITY},
+        {"textStart",(int)TEXT_ALIGNMENT_TEXT_START}, {"textEnd" , (int)TEXT_ALIGNMENT_TEXT_END},
+        {"center"  , (int)TEXT_ALIGNMENT_CENTER},     {"viewStart",(int)TEXT_ALIGNMENT_VIEW_START},
+        {"viewEnd"  ,(int)TEXT_ALIGNMENT_VIEW_END}    },(int)TEXT_ALIGNMENT_DEFAULT);
     // Clear any text alignment flag already set
     mPrivateFlags2 &= ~PFLAG2_TEXT_ALIGNMENT_MASK;
     // Set the text alignment flag depending on the value of the attribute
@@ -181,9 +182,9 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
 
     const int fadingEdges = attrs.getInt("requiresFadingEdge",std::map<const std::string,int>({
-	   {"none",FADING_EDGE_NONE},
-	   {"horizontal",FADING_EDGE_HORIZONTAL},
-	   {"vertical",FADING_EDGE_VERTICAL}
+	   {"none",(int)FADING_EDGE_NONE},
+	   {"horizontal",(int)FADING_EDGE_HORIZONTAL},
+	   {"vertical"  ,(int)FADING_EDGE_VERTICAL}
 	}),FADING_EDGE_NONE);
     if( fadingEdges != FADING_EDGE_NONE ){
         viewFlagValues |= fadingEdges;
@@ -212,8 +213,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
          },mOverScrollMode);
 
     mVerticalScrollbarPosition = attrs.getInt("verticalScrollbarPosition",std::map<const std::string,int>{
-           {"defaultPosition",SCROLLBAR_POSITION_DEFAULT}, {"left",SCROLLBAR_POSITION_LEFT},
-           {"right",SCROLLBAR_POSITION_RIGHT} },SCROLLBAR_POSITION_DEFAULT);
+           {"defaultPosition",(int)SCROLLBAR_POSITION_DEFAULT}, {"left",(int)SCROLLBAR_POSITION_LEFT},
+           {"right",(int)SCROLLBAR_POSITION_RIGHT} },(int)SCROLLBAR_POSITION_DEFAULT);
 
     if (scrollbarStyle != SCROLLBARS_INSIDE_OVERLAY) {
         viewFlagValues |= scrollbarStyle & SCROLLBARS_STYLE_MASK;
@@ -221,8 +222,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
     }
 
     const int scrollIndicators = (attrs.getInt("scrollIndicators",std::map<const std::string,int>({
-           {"top",SCROLL_INDICATOR_TOP}, 	  {"left",SCROLL_INDICATOR_LEFT},
-           {"right",SCROLL_INDICATOR_RIGHT}, {"bottom",SCROLL_INDICATOR_BOTTOM}
+           {"top"  ,(int)SCROLL_INDICATOR_TOP}  , {"left"  ,(int)SCROLL_INDICATOR_LEFT},
+           {"right",(int)SCROLL_INDICATOR_RIGHT}, {"bottom",(int)SCROLL_INDICATOR_BOTTOM}
            }),0)<<SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)&SCROLL_INDICATORS_PFLAG3_MASK;
     if(scrollIndicators) mPrivateFlags3 |= scrollIndicators;
     if(attrs.getBoolean("isScrollContainer",false)) setScrollContainer(true);

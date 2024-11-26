@@ -17,7 +17,7 @@ AccessibilityManager::AccessibilityManager(Context* context/*, IAccessibilityMan
     //mCallback = new MyCallback();
     //mHandler = new Handler(context.getMainLooper(), mCallback);
     mUserId = userId;
-    mIsEnabled = false;
+    mIsEnabled = true;
     mRelevantEventTypes = AccessibilityEvent::TYPES_ALL_MASK;
     //tryConnectToServiceLocked(service);
 }
