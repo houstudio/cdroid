@@ -299,9 +299,9 @@ protected:
     void clear()override;
 public:
     void setSealed(bool);
-    void getRecordCount()const;
-    //void appendRecord(AccessibilityRecord&);
-    //AccessibilityRecord getRecord(int);
+    size_t getRecordCount()const;
+    void appendRecord(AccessibilityRecord*);
+    AccessibilityRecord* getRecord(int)const;
     int getEventType()const;
     int getContentChangeTypes()const;
     void setContentChangeTypes(int changeTypes);
@@ -315,6 +315,7 @@ public:
     static AccessibilityEvent* obtain(const AccessibilityEvent& event);
     static AccessibilityEvent* obtain();
     void recycle()override;
+    std::string toString()const;
     static std::string eventTypeToString(int eventType);
 };
 }

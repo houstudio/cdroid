@@ -602,6 +602,8 @@ private:
     void updatePflags3AndNotifyA11yIfChanged(int mask, bool newValue);
     bool dispatchGenericMotionEventInternal(MotionEvent& event);
     void populateAccessibilityNodeInfoDrawingOrderInParent(AccessibilityNodeInfo& info);
+    static int numViewsForAccessibility(View* view);
+    View* findLabelForView(View* view, int labeledId);
     bool applyLegacyAnimation(ViewGroup* parent, int64_t drawingTime, Animation* a, bool scalingRequired);
     bool needRtlPropertiesResolution()const;
     bool skipInvalidate()const;
@@ -1270,7 +1272,7 @@ public:
     virtual View*findFocus();
     bool requestFocus(int direction=FOCUS_DOWN);
     bool requestFocusFromTouch();
-    int getImportantForAccessibility();
+    int getImportantForAccessibility()const;
     void setImportantForAccessibility(int mode);
     bool isImportantForAccessibility()const;
     ViewGroup* getParentForAccessibility();

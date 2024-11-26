@@ -52,10 +52,7 @@ private:
     bool enterTouchMode();
     bool leaveTouchMode();
     void playSoundImpl(int);
-    void handleWindowContentChangedEvent(AccessibilityEvent& event);
 protected:
-    View* mAccessibilityFocusedHost;
-    AccessibilityNodeInfo* mAccessibilityFocusedVirtualView;
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;
     /*mPendingRgn init by mInvalidRgn,and also can be modified by windowmanager,if the window above the window 

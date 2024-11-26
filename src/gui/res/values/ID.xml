@@ -160,5 +160,7 @@
   <id name="item_touch_helper_previous_elevation">0x00000485</id>
   <id name="accessibilityActionMoveWindow">0x00000486</id>
   <id name="autofill">0x00000487</id>
+  <id name="accessibilityActionShowTooltip">0x00000488</id>
+  <id name="accessibilityActionHideTooltip">0x00000489</id>
 </resources>
 

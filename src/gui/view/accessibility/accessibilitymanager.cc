@@ -17,7 +17,9 @@ AccessibilityManager::AccessibilityManager(Context* context/*, IAccessibilityMan
     //mCallback = new MyCallback();
     //mHandler = new Handler(context.getMainLooper(), mCallback);
     mUserId = userId;
-    mIsEnabled = true;
+    mIsEnabled = false;
+    mIsTouchExplorationEnabled = false;
+    mIsHighTextContrastEnabled = false;
     mRelevantEventTypes = AccessibilityEvent::TYPES_ALL_MASK;
     //tryConnectToServiceLocked(service);
 }
@@ -106,6 +108,7 @@ void AccessibilityManager::sendAccessibilityEvent(AccessibilityEvent& event) {
     }
     LOGI_IF(Debug,"send dispatchedEvent %p",dispatchedEvent);
 #endif
+    LOGD("sendAccessibilityEvent:%s",event.toString().c_str());
     if (&event != dispatchedEvent) {
         event.recycle();
     }

@@ -94,6 +94,8 @@ private:
     View* mFocused;
     View* mDefaultFocus;
     View* mFocusedInCluster;
+    View* mAccessibilityFocusedHost;
+    AccessibilityNodeInfo* mAccessibilityFocusedVirtualView;
     class LayoutTransition*mTransition;
     std::vector<View*>mTransitioningViews;
     std::vector<View*>mVisibilityChangingChildren;
@@ -163,6 +165,8 @@ private:
     void addDisappearingView(View* v);
     bool updateLocalSystemUiVisibility(int localValue, int localChanges)override;
     PointerIcon* dispatchResolvePointerIcon(MotionEvent& event, int pointerIndex,View* child);
+
+    View* getAccessibilityFocusedHost()const;
 protected:
     int mGroupFlags;
     int mPersistentDrawingCache;
@@ -277,6 +281,9 @@ protected:
     virtual void onChildVisibilityChanged(View* child, int oldVisibility, int newVisibility);
     void dispatchVisibilityChanged(View& changedView, int visibility)override;
     void resetResolvedDrawables()override;
+
+    void setAccessibilityFocus(View* view, AccessibilityNodeInfo* node);
+    void handleWindowContentChangedEvent(AccessibilityEvent& event);
 public:
     ViewGroup(int w,int h);
     ViewGroup(int x,int y,int w,int h);
@@ -385,6 +392,7 @@ public:
 
     virtual LayoutParams* generateLayoutParams(const AttributeSet& attrs)const;
     static int getChildMeasureSpec(int spec, int padding, int childDimension);
+    static bool isViewDescendantOf(View* child, View* parent);
     virtual void removeView(View* view);/*only remove view from children,no deleteion*/
     virtual void removeViewAt(int idx);
     virtual void removeAllViews();
@@ -441,6 +449,7 @@ public:
     virtual void cancelInvalidate(View* view);
     //ViewRootImpl
     void requestPointerCapture(bool);
+    AccessibilityNodeInfo*getAccessibilityFocusedVirtualView()const;
 };
 
 }  // namespace cdroid

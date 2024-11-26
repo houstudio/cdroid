@@ -2,6 +2,7 @@
 #include <view/accessibility/accessibilitywindowinfo.h>
 #include <view/view.h>
 #include <core/bitset.h>
+#include <widget/R.h>
 #if 10
 namespace cdroid{
 Pools::SimplePool<AccessibilityNodeInfo> AccessibilityNodeInfo::sPool(MAX_POOL_SIZE);

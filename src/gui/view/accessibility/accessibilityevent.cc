@@ -20,12 +20,16 @@ void AccessibilityEvent::init(const AccessibilityEvent&event){
 void AccessibilityEvent::setSealed(bool sealed){
 }
 
-void AccessibilityEvent::getRecordCount()const{
+size_t AccessibilityEvent::getRecordCount()const{
+    return (int)mRecords.size();
 }
-/*void appendRecord(AccessibilityRecord&){
+
+void AccessibilityEvent::appendRecord(AccessibilityRecord*){
 }
-AccessibilityRecord getRecord(int){
-}*/
+
+AccessibilityRecord* AccessibilityEvent::getRecord(int i)const{
+    return mRecords.at(i);
+}
 
 int AccessibilityEvent::getEventType()const{
     return mEventType;
@@ -112,7 +116,6 @@ AccessibilityEvent*AccessibilityEvent::obtainWindowsChangedEvent(
 AccessibilityEvent* AccessibilityEvent::obtain(int eventType) {
     AccessibilityEvent* event = AccessibilityEvent::obtain();
     event->setEventType(eventType);
-    LOGD("event %p type=%x/%d",event,eventType,eventType);
     return event;
 }
 
@@ -136,12 +139,10 @@ AccessibilityEvent* AccessibilityEvent::obtain(const AccessibilityEvent& event) 
 AccessibilityEvent*AccessibilityEvent::obtain() {
     AccessibilityEvent* event = sPool.acquire();
     if (event == nullptr) event = new AccessibilityEvent();
-    LOGD("obtain %p",event);
     return event;
 }
 
 void AccessibilityEvent::recycle() {
-    LOGD("release %p",this);
     clear();
     sPool.release(this);
 }
@@ -173,6 +174,44 @@ static int numberOfTrailingZeros(T value) {
     return count;
 }
 
+std::string AccessibilityEvent::toString() const{
+    std::ostringstream builder;
+    builder<<"EventType: "<<eventTypeToString(mEventType);
+    builder<<"; EventTime: "<<mEventTime;
+    builder<<"; PackageName: "<<mPackageName;
+    if (!DEBUG_CONCISE_TOSTRING || mMovementGranularity != 0) {
+        builder<<"; MovementGranularity: "<<mMovementGranularity;
+    }
+    if (!DEBUG_CONCISE_TOSTRING || mAction != 0) {
+        builder<<"; Action: "<<mAction;
+    }
+    if (!DEBUG_CONCISE_TOSTRING || mContentChangeTypes != 0) {
+        builder<<"; ContentChangeTypes: "<<
+                contentChangeTypesToString(mContentChangeTypes);
+    }
+    if (!DEBUG_CONCISE_TOSTRING || mWindowChangeTypes != 0) {
+        builder<<"; WindowChangeTypes: "<<
+                windowChangeTypesToString(mWindowChangeTypes);
+    }
+    //super.appendTo(builder);
+    /*if ( DEBUG_CONCISE_TOSTRING) {
+        if (!DEBUG_CONCISE_TOSTRING) {
+            builder<<"\n";
+        }
+        if (DEBUG) {
+            builder<<"; SourceWindowId: "<<mSourceWindowId;
+            builder<<"; SourceNodeId: "<<mSourceNodeId;
+        }
+        for (int i = 0; i < getRecordCount(); i++) {
+            builder<<"  Record "<<i<<":";
+            getRecord(i).appendTo(builder)<<"\n";
+        }
+    } else */{
+        builder<<"; recordCount: "<<getRecordCount();
+    }
+    return builder.str();
+}
+
 std::string AccessibilityEvent::eventTypeToString(int eventType){
     if (eventType == TYPES_ALL_MASK) {
         return "TYPES_ALL_MASK";
@@ -191,7 +230,7 @@ std::string AccessibilityEvent::eventTypeToString(int eventType){
 
         eventTypeCount++;
     }
-    if (eventTypeCount > 1) {
+    if (eventTypeCount) {
         builder<<']';
     }
     return builder.str();

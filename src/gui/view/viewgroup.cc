@@ -154,11 +154,13 @@ void ViewGroup::initGroup(){
     //mGroupFlags!= FLAG_ALWAYS_DRAWN_WITH_CACHE;
     mLayoutMode = LAYOUT_MODE_UNDEFINED;
     mFocused      = nullptr;
+    mTransition   = nullptr;
     mDefaultFocus = nullptr;
     mFocusedInCluster = nullptr;
     mFirstTouchTarget = nullptr;
     mFirstHoverTarget = nullptr;
     mTooltipHoverTarget = nullptr;
+    mAccessibilityFocusedHost  = nullptr;
     mLayoutAnimationController = nullptr;
     mHoveredSelf = false;
     mPointerCapture  = false;
@@ -169,7 +171,7 @@ void ViewGroup::initGroup(){
     mInvalidRgn=Region::create();
     mChildTransformation = nullptr;
     mInvalidationTransformation = nullptr;
-    mTransition = nullptr;
+    mAccessibilityFocusedVirtualView = nullptr;
     mPersistentDrawingCache = PERSISTENT_SCROLLING_CACHE;
     setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
     mLayoutTransitionListener.startTransition=[this](LayoutTransition&transition,ViewGroup*container,View*view,int transitionType){
@@ -1277,13 +1279,137 @@ std::vector<View*> ViewGroup::buildTouchDispatchChildList(){
     return buildOrderedChildList();
 }
 
+View* ViewGroup::getAccessibilityFocusedHost()const{
+    return mAccessibilityFocusedHost;
+}
+
+AccessibilityNodeInfo*ViewGroup::getAccessibilityFocusedVirtualView()const{
+    return mAccessibilityFocusedVirtualView;
+}
+
+void ViewGroup::setAccessibilityFocus(View* view, AccessibilityNodeInfo* node){
+    if (mAccessibilityFocusedVirtualView != nullptr) {
+
+        AccessibilityNodeInfo* focusNode = mAccessibilityFocusedVirtualView;
+        View* focusHost = mAccessibilityFocusedHost;
+
+        // Wipe the state of the current accessibility focus since
+        // the call into the provider to clear accessibility focus
+        // will fire an accessibility event which will end up calling
+        // this method and we want to have clean state when this
+        // invocation happens.
+        mAccessibilityFocusedHost = nullptr;
+        mAccessibilityFocusedVirtualView = nullptr;
+
+        // Clear accessibility focus on the host after clearing state since
+        // this method may be reentrant.
+        focusHost->clearAccessibilityFocusNoCallbacks( AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);
+
+        AccessibilityNodeProvider* provider = focusHost->getAccessibilityNodeProvider();
+        if (provider != nullptr) {
+            // Invalidate the area of the cleared accessibility focus.
+            Rect mTempRect;
+            focusNode->getBoundsInParent(mTempRect);
+            focusHost->invalidate(mTempRect);
+            // Clear accessibility focus in the virtual node.
+            const int virtualNodeId = AccessibilityNodeInfo::getVirtualDescendantId(focusNode->getSourceNodeId());
+            provider->performAction(virtualNodeId, AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS, nullptr);
+        }
+        focusNode->recycle();
+    }
+    if ((mAccessibilityFocusedHost != nullptr) && (mAccessibilityFocusedHost != view))  {
+        // Clear accessibility focus in the view.
+        mAccessibilityFocusedHost->clearAccessibilityFocusNoCallbacks(AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);
+    }
+
+    // Set the new focus host and node.
+    mAccessibilityFocusedHost = view;
+    mAccessibilityFocusedVirtualView = node;
+
+    /*if (mAttachInfo.mThreadedRenderer != null) {
+        mAttachInfo.mThreadedRenderer.invalidateRoot();
+    }*/
+}
+
+void ViewGroup::handleWindowContentChangedEvent(AccessibilityEvent& event){
+    View* focusedHost = mAccessibilityFocusedHost;
+    if ((focusedHost == nullptr) || (mAccessibilityFocusedVirtualView == nullptr)) {
+        // No virtual view focused, nothing to do here.
+        return;
+    }
+
+    AccessibilityNodeProvider* provider = focusedHost->getAccessibilityNodeProvider();
+    if (provider == nullptr) {
+        // Error state: virtual view with no provider. Clear focus.
+        mAccessibilityFocusedHost = nullptr;
+        mAccessibilityFocusedVirtualView = nullptr;
+        focusedHost->clearAccessibilityFocusNoCallbacks(0);
+        return;
+    }
+
+    // We only care about change types that may affect the bounds of the
+    // focused virtual view.
+    const int changes = event.getContentChangeTypes();
+    if ((changes & AccessibilityEvent::CONTENT_CHANGE_TYPE_SUBTREE) == 0
+            && changes != AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED) {
+        return;
+    }
+
+    const long eventSourceNodeId = event.getSourceNodeId();
+    const int changedViewId = AccessibilityNodeInfo::getAccessibilityViewId(eventSourceNodeId);
+
+    // Search up the tree for subtree containment.
+    bool hostInSubtree = false;
+    View* root = mAccessibilityFocusedHost;
+    while (root != nullptr && !hostInSubtree) {
+        if (changedViewId == root->getAccessibilityViewId()) {
+            hostInSubtree = true;
+        } else {
+            ViewGroup* parent = root->getParent();
+            root = parent;
+        }
+    }
+
+    // We care only about changes in subtrees containing the host view.
+    if (!hostInSubtree) {
+        return;
+    }
+
+    const long focusedSourceNodeId = mAccessibilityFocusedVirtualView->getSourceNodeId();
+    int focusedChildId = AccessibilityNodeInfo::getVirtualDescendantId(focusedSourceNodeId);
+
+    // Refresh the node for the focused virtual view.
+    Rect oldBounds;
+    mAccessibilityFocusedVirtualView->getBoundsInScreen(oldBounds);
+    mAccessibilityFocusedVirtualView = provider->createAccessibilityNodeInfo(focusedChildId);
+    if (mAccessibilityFocusedVirtualView == nullptr) {
+        // Error state: The node no longer exists. Clear focus.
+        mAccessibilityFocusedHost = nullptr;
+        focusedHost->clearAccessibilityFocusNoCallbacks(0);
+
+        // This will probably fail, but try to keep the provider's internal
+        // state consistent by clearing focus.
+        provider->performAction(focusedChildId,
+                AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS,nullptr);
+                //AccessibilityAction::ACTION_CLEAR_ACCESSIBILITY_FOCUS.getId(), nullptr);
+        //invalidateRectOnScreen(oldBounds);
+    } else {
+        // The node was refreshed, invalidate bounds if necessary.
+        Rect newBounds = mAccessibilityFocusedVirtualView->getBoundsInScreen();
+        if (oldBounds!=newBounds) {
+            oldBounds.Union(newBounds);
+            //invalidateRectOnScreen(oldBounds);
+        }
+    }
+}
+
 View* ViewGroup::findChildWithAccessibilityFocus() {
     ViewGroup* viewRoot = getRootView();//ViewRootImpl();
     if (viewRoot == nullptr) {
         return nullptr;
     }
 
-    View* current = nullptr;//viewRoot->getAccessibilityFocusedHost();
+    View* current = viewRoot->getAccessibilityFocusedHost();
     if (current == nullptr) {
         return nullptr;
     }
@@ -1451,7 +1577,15 @@ int ViewGroup::getChildMeasureSpec(int spec, int padding, int childDimension){
     return MeasureSpec::makeMeasureSpec(resultSize, resultMode);
 }
 
-View&ViewGroup::addView(View* view){
+bool ViewGroup::isViewDescendantOf(View* child, View* parent) {
+    if (child == parent) {
+        return true;
+    }
+    ViewGroup* theParent = child->getParent();
+    return isViewDescendantOf((View*) theParent, parent);
+}
+
+View& ViewGroup::addView(View* view){
     return addView(view,-1);
 }
 
@@ -3261,6 +3395,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
         bool alreadyDispatchedToNewTouchTarget = false;
 
         if(!canceled && !intercepted){
+            View* childWithAccessibilityFocus = ev.isTargetAccessibilityFocus() ? findChildWithAccessibilityFocus() : nullptr;
             if( (actionMasked == MotionEvent::ACTION_DOWN) || (split && (actionMasked == MotionEvent::ACTION_POINTER_DOWN))
                || (actionMasked == MotionEvent::ACTION_HOVER_MOVE) ){
                 const int actionIndex = ev.getActionIndex(); // always 0 for down
@@ -3278,6 +3413,21 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
                     for(int i = childrenCount-1;i >= 0;i--){
                         const int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
                         View* child = getAndVerifyPreorderedView(preorderedList, children, childIndex);
+
+                        if (childWithAccessibilityFocus != nullptr) {
+                            if (childWithAccessibilityFocus != child) {
+                                continue;
+                            }
+                            childWithAccessibilityFocus = nullptr;
+                            i = childrenCount - 1;
+                        }
+
+                        if (!canViewReceivePointerEvents(*child) || !isTransformedTouchPointInView(x, y,*child, nullptr)) {
+                            ev.setTargetAccessibilityFocus(false);
+                            continue;
+                        }
+
+
                         if (!canViewReceivePointerEvents(*child) || !isTransformedTouchPointInView(x, y,*child, nullptr)) {
                             ev.setTargetAccessibilityFocus(false);
                             continue;

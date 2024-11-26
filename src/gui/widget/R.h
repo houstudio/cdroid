@@ -166,6 +166,8 @@ namespace R{
          static constexpr int item_touch_helper_previous_elevation= 0x00000485 ;/*1157*/
          static constexpr int accessibilityActionMoveWindow= 0x00000486 ;/*1158*/
          static constexpr int autofill                = 0x00000487 ;/*1159*/
+         static constexpr int accessibilityActionShowTooltip= 0x00000488 ;/*1160*/
+         static constexpr int accessibilityActionHideTooltip= 0x00000489 ;/*1161*/
     };/*namespace id*/
 
     namespace strings{
