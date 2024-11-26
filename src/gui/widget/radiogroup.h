@@ -38,6 +38,7 @@ public:
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
     View& addView(View* child, int index,ViewGroup::LayoutParams* params)override;
     int getCheckedRadioButtonId()const;
+    std::string getAccessibilityClassName()const override;
     void setOnHierarchyChangeListener(const ViewGroup::OnHierarchyChangeListener& listener)override;
     void setOnCheckedChangeListener(CompoundButton::OnCheckedChangeListener listener);
     void check(int id);

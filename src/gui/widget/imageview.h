@@ -87,6 +87,7 @@ public:
     int getBaseline()override;
     void setBaselineAlignBottom(bool aligned);
     bool getBaselineAlignBottom()const;
+    void onPopulateAccessibilityEventInternal(AccessibilityEvent& event)override;
     bool getAdjustViewBounds()const;
     void setAdjustViewBounds(bool adjustViewBounds);
     /*resid can be assets's resource or local filepath*/

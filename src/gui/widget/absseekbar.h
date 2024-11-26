@@ -71,6 +71,10 @@ public:
     virtual bool canUserSetProgress()const;
     void onRtlPropertiesChanged(int layoutDirection)override;
     void drawableHotspotChanged(float x,float y)override;
+
+    std::string getAccessibilityClassName()const override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
+    bool performAccessibilityActionInternal(int action, Bundle arguments)override;
 };
 
 }//namespace

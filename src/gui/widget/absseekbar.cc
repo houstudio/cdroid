@@ -649,6 +649,66 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
     return true;
 }
 
+std::string AbsSeekBar::getAccessibilityClassName()const{
+    return "AbsSeekBar";
+}
+
+void AbsSeekBar::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+    ProgressBar::onInitializeAccessibilityNodeInfoInternal(info);
+
+    if (isEnabled()) {
+        const int progress = getProgress();
+        if (progress > getMin()) {
+            info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD);
+        }
+        if (progress < getMax()) {
+            info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
+        }
+    }
+}
+
+bool AbsSeekBar::performAccessibilityActionInternal(int action, Bundle arguments){
+     if (ProgressBar::performAccessibilityActionInternal(action, arguments)) {
+         return true;
+     }
+
+     if (!isEnabled()) {
+         return false;
+     }
+
+     switch (action) {
+     case R::id::accessibilityActionSetProgress: {
+         if (!canUserSetProgress()) {
+             return false;
+         }
+         if (arguments == nullptr /*|| !arguments.containsKey(AccessibilityNodeInfo::ACTION_ARGUMENT_PROGRESS_VALUE)*/) {
+             return false;
+         }
+         //const float value = arguments.getFloat( AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE);
+         return false;//setProgressInternal((int) value, true, true);
+     }
+     case AccessibilityNodeInfo::ACTION_SCROLL_FORWARD:
+     case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD: {
+         if (!canUserSetProgress()) {
+             return false;
+         }
+         const int range = getMax() - getMin();
+         int increment = std::max(1.f, std::round((float) range / 20));
+         if (action == AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD) {
+             increment = -increment;
+         }
+
+         // Let progress bar handle clamping values.
+         if (setProgressInternal(getProgress() + increment, true, true)) {
+             onKeyChange();
+             return true;
+         }
+         return false;
+     }
+     }
+     return false;
+}
+
 bool AbsSeekBar::canUserSetProgress()const{
     return !isIndeterminate() && isEnabled();
 }

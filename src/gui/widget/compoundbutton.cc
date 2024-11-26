@@ -177,12 +177,27 @@ void CompoundButton::applyButtonTint() {
     }
 }
 
+std::string CompoundButton::getAccessibilityClassName()const{
+    return "CompoundButton";
+}
+
+void CompoundButton::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
+    Button::onInitializeAccessibilityEventInternal(event);
+    event.setChecked(mChecked);
+}
+
+void CompoundButton::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+    Button::onInitializeAccessibilityNodeInfoInternal(info);
+    info.setCheckable(true);
+    info.setChecked(mChecked);
+}
+
 void CompoundButton::doSetChecked(bool checked){
     if (mChecked != checked) {
         mCheckedFromResource = false;
         mChecked = checked;
         refreshDrawableState();
-        //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_UNDEFINED);
+        notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
         // Avoid infinite recursions if setChecked() is called from a listener
         if (mBroadcasting)return;
 

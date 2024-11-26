@@ -108,7 +108,7 @@ void AccessibilityManager::sendAccessibilityEvent(AccessibilityEvent& event) {
     }
     LOGI_IF(Debug,"send dispatchedEvent %p",dispatchedEvent);
 #endif
-    LOGD("sendAccessibilityEvent:%s",event.toString().c_str());
+    LOGD("%s",event.toString().c_str());
     if (&event != dispatchedEvent) {
         event.recycle();
     }

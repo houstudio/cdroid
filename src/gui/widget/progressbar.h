@@ -9,6 +9,7 @@ namespace cdroid{
 class ProgressBar:public View{
 private:
     static constexpr int MAX_LEVEL = 10000;
+    static constexpr int TIMEOUT_SEND_ACCESSIBILITY_EVENT = 200;
     static constexpr int PROGRESS_ANIM_DURATION = 80;
     struct RefreshData{
         int id;
@@ -35,6 +36,7 @@ private:
     bool mRefreshIsPosted;
     std::map<int,RefreshData>mDatas;
     Runnable mRefreshProgressRunnable;
+    Runnable mAccessibilityEventSender;
     Animator::AnimatorListener mAnimtorListener;
     bool mShouldStartAnimationDrawable;
     class ProgressTintInfo*mProgressTintInfo;
@@ -56,6 +58,7 @@ private:
     void applyPrimaryProgressTint();
     void applyProgressBackgroundTint();
     void applySecondaryProgressTint();
+    void scheduleAccessibilityEventSender();
 protected:
     static constexpr int HORIZONTAL= 0;
     static constexpr int VERTICAL  = 1;
@@ -94,7 +97,7 @@ protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
-    virtual void onProgressRefresh(float scale, bool fromUser, int progress){};
+    virtual void onProgressRefresh(float scale, bool fromUser, int progress);
     virtual void onVisualProgressChanged(int id, float progress);
     virtual void onDraw(Canvas&canvas)override;
 public:
@@ -140,6 +143,10 @@ public:
     Drawable* getTintTarget(int layerId, bool shouldFallback);
     void setProgressDrawableTiled(Drawable* d);
     void drawableHotspotChanged(float x, float y)override;
+
+    std::string getAccessibilityClassName()const override;
+    void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
 };
 
 }

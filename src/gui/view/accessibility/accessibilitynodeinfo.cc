@@ -3,7 +3,7 @@
 #include <view/view.h>
 #include <core/bitset.h>
 #include <widget/R.h>
-#if 10
+
 namespace cdroid{
 Pools::SimplePool<AccessibilityNodeInfo> AccessibilityNodeInfo::sPool(MAX_POOL_SIZE);
 int AccessibilityNodeInfo::sNumInstancesInUse = 0;
@@ -23,6 +23,9 @@ int64_t AccessibilityNodeInfo::makeNodeId(int accessibilityViewId, int virtualDe
 
 AccessibilityNodeInfo::AccessibilityNodeInfo() {
     /* do nothing */
+    mRangeInfo = nullptr;
+    mCollectionInfo = nullptr;
+    mCollectionItemInfo = nullptr;
 }
 
 void AccessibilityNodeInfo::setSource(View* source) {
@@ -1432,18 +1435,18 @@ std::string AccessibilityNodeInfo::getActionSymbolicName(int action){
     case ACTION_COLLAPSE:   return "ACTION_COLLAPSE";
     case ACTION_DISMISS:    return "ACTION_DISMISS";
     case ACTION_SET_TEXT:   return "ACTION_SET_TEXT";
-#if 0
-    case R.id.accessibilityActionShowOnScreen:  return "ACTION_SHOW_ON_SCREEN";
-    case R.id.accessibilityActionScrollToPosition: return "ACTION_SCROLL_TO_POSITION";
-    case R.id.accessibilityActionScrollUp:      return "ACTION_SCROLL_UP";
-    case R.id.accessibilityActionScrollLeft:    return "ACTION_SCROLL_LEFT";
-    case R.id.accessibilityActionScrollDown:    return "ACTION_SCROLL_DOWN";
-    case R.id.accessibilityActionScrollRight:   return "ACTION_SCROLL_RIGHT";
-    case R.id.accessibilityActionSetProgress:   return "ACTION_SET_PROGRESS";
-    case R.id.accessibilityActionContextClick:  return "ACTION_CONTEXT_CLICK";
-    case R.id.accessibilityActionShowTooltip:   return "ACTION_SHOW_TOOLTIP";
-    case R.id.accessibilityActionHideTooltip:   return "ACTION_HIDE_TOOLTIP";
-#endif
+
+    case R::id::accessibilityActionShowOnScreen:  return "ACTION_SHOW_ON_SCREEN";
+    case R::id::accessibilityActionScrollToPosition: return "ACTION_SCROLL_TO_POSITION";
+    case R::id::accessibilityActionScrollUp:      return "ACTION_SCROLL_UP";
+    case R::id::accessibilityActionScrollLeft:    return "ACTION_SCROLL_LEFT";
+    case R::id::accessibilityActionScrollDown:    return "ACTION_SCROLL_DOWN";
+    case R::id::accessibilityActionScrollRight:   return "ACTION_SCROLL_RIGHT";
+    case R::id::accessibilityActionSetProgress:   return "ACTION_SET_PROGRESS";
+    case R::id::accessibilityActionContextClick:  return "ACTION_CONTEXT_CLICK";
+    case R::id::accessibilityActionShowTooltip:   return "ACTION_SHOW_TOOLTIP";
+    case R::id::accessibilityActionHideTooltip:   return "ACTION_HIDE_TOOLTIP";
+
     default:        return "ACTION_UNKNOWN";
     }
 }
@@ -1912,4 +1915,3 @@ void AccessibilityNodeInfo::CollectionItemInfo::clear() {
 }
 
 }/*endof namespace*/
-#endif

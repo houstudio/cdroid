@@ -11,6 +11,9 @@ public:
     CheckBox(const std::string&txt,int w,int h):CompoundButton(txt,w,h){
         setButtonDrawable("cdroid:drawable/btn_check.xml");
     }
+    std::string getAccessibilityClassName()const override{
+        return "CheckBox";
+    }
 };
 DECLARE_WIDGET2(CheckBox,"cdroid:attr/checkboxStyle")
 

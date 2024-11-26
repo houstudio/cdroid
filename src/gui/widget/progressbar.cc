@@ -1,4 +1,5 @@
 #include <widget/progressbar.h>
+#include <view/accessibility/accessibilitymanager.h>
 #include <animation/objectanimator.h>
 #include <widget/R.h>
 #include <cdlog.h>
@@ -413,6 +414,12 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
     }
     if (isPrimary && callBackToApp) {
         onProgressRefresh(scale, fromUser, progress);
+    }
+}
+
+void ProgressBar::onProgressRefresh(float scale, bool fromUser, int progress) {
+    if (AccessibilityManager::getInstance(mContext).isEnabled()) {
+        //scheduleAccessibilityEventSender();
     }
 }
 
@@ -1022,6 +1029,38 @@ void ProgressBar::setProgressDrawableTiled(Drawable* d) {
         d = tileify(d, false);
     }
     setProgressDrawable(d);
+}
+
+std::string ProgressBar::getAccessibilityClassName()const{
+    return "ProgressBar";
+}
+
+void ProgressBar::scheduleAccessibilityEventSender() {
+    if (mAccessibilityEventSender == nullptr) {
+        mAccessibilityEventSender = [this](){
+            sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
+        };
+    } else {
+        removeCallbacks(mAccessibilityEventSender);
+    }
+    postDelayed(mAccessibilityEventSender, TIMEOUT_SEND_ACCESSIBILITY_EVENT);
+}
+
+void ProgressBar::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
+    View::onInitializeAccessibilityEventInternal(event);
+    event.setItemCount(mMax - mMin);
+    event.setCurrentItemIndex(mProgress);
+}
+
+void ProgressBar::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+    View::onInitializeAccessibilityNodeInfoInternal(info);
+
+    if (!isIndeterminate()) {
+        AccessibilityNodeInfo::RangeInfo* rangeInfo = AccessibilityNodeInfo::RangeInfo::obtain(
+                AccessibilityNodeInfo::RangeInfo::RANGE_TYPE_INT, getMin(), getMax(),
+                getProgress());
+        info.setRangeInfo(rangeInfo);
+    }
 }
 
 }//end namespace

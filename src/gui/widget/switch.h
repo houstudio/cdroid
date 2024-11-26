@@ -140,8 +140,10 @@ public:
 
     bool getShowText()const;
     void setShowText(bool showText);
-
+    std::string getAccessibilityClassName()const override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
+    void onPopulateAccessibilityEventInternal(AccessibilityEvent& event)override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     bool onTouchEvent(MotionEvent& ev)override;
     std::string getButtonStateDescription();//override;
     void draw(Canvas&)override;

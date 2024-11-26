@@ -1,5 +1,5 @@
 #include <widget/imageview.h>
-#include <app.h>
+#include <core/textutils.h>
 #include <cdlog.h>
 using namespace Cairo;
 namespace cdroid{
@@ -304,6 +304,14 @@ Drawable*ImageView::getDrawable(){
         mRecycleableBitmapDrawable = nullptr;
     }
     return mDrawable;
+}
+
+void ImageView::onPopulateAccessibilityEventInternal(AccessibilityEvent& event){
+    View::onPopulateAccessibilityEventInternal(event);
+    const std::string contentDescription = getContentDescription();
+    if (!TextUtils::isEmpty(contentDescription)) {
+         event.getText().push_back(contentDescription);
+    }
 }
 
 bool ImageView::getAdjustViewBounds()const{

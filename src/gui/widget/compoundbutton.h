@@ -38,6 +38,9 @@ public:
     const ColorStateList* getButtonTintList()const;
     void setButtonTintMode(PorterDuffMode tintMode);
     PorterDuffMode getButtonTintMode()const;
+    std::string getAccessibilityClassName()const override;
+    void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     int getCompoundPaddingLeft()override;
     int getCompoundPaddingRight()override;
     //inerited from Checkable

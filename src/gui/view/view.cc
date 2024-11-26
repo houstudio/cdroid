@@ -4605,6 +4605,10 @@ bool View::isAccessibilityPane() const{
     return !mAccessibilityPaneTitle.empty();
 }
 
+std::string View::getAccessibilityClassName()const{
+    return "View";
+}
+
 bool View::isForegroundInsidePadding()const{
     return mForegroundInfo ? mForegroundInfo->mInsidePadding : true;
 }

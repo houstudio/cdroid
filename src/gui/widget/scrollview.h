@@ -85,6 +85,7 @@ public:
     ScrollView(Context*ctx,const AttributeSet&atts);
     ~ScrollView()override;
     int getMaxScrollAmount();
+    std::string getAccessibilityClassName() const override;
     bool shouldDelayChildPressedState()override;
     View& addView(View* child)override;
     View& addView(View* child, int index)override;
@@ -99,7 +100,10 @@ public:
     void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;
     bool onTouchEvent(MotionEvent& ev)override;
-    bool onGenericMotionEvent(MotionEvent& event);
+    bool onGenericMotionEvent(MotionEvent& event)override;
+    bool performAccessibilityActionInternal(int action, Bundle arguments)override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
+    void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
     bool pageScroll(int direction);
     bool fullScroll(int direction);
     bool arrowScroll(int direction);

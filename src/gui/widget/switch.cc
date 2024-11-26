@@ -1,5 +1,6 @@
 #include <widget/switch.h>
 #include <core/mathutils.h>
+#include <core/textutils.h>
 #include <view/viewgroup.h>
 
 namespace cdroid{
@@ -341,7 +342,7 @@ std::string Switch::getTextOn()const{
 }
 
 void Switch::setTextOn(const std::string&text){
-    mTextOn=text;
+    mTextOn = text;
     invalidate();
 }
 
@@ -350,7 +351,7 @@ std::string Switch::getTextOff()const{
 }
 
 void Switch::setTextOff(const std::string&text){
-    mTextOff=text;
+    mTextOff = text;
     invalidate();
 }
 
@@ -362,6 +363,32 @@ void Switch::setShowText(bool showText) {
     if (mShowText != showText) {
         mShowText = showText;
         requestLayout();
+    }
+}
+std::string Switch::getAccessibilityClassName()const{
+    return "Switch";
+}
+
+void Switch::onPopulateAccessibilityEventInternal(AccessibilityEvent& event){
+    CompoundButton::onPopulateAccessibilityEventInternal(event);
+    const std::string text = isChecked() ? mTextOn : mTextOff;
+    if (!text.empty()) {
+         event.getText().push_back(text);
+    }
+}
+
+void Switch::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+    CompoundButton::onInitializeAccessibilityNodeInfoInternal(info);
+    const std::string switchText = isChecked() ? mTextOn : mTextOff;
+    if (!TextUtils::isEmpty(switchText)) {
+        const std::string  oldText = info.getText();
+        if (TextUtils::isEmpty(oldText)) {
+            info.setText(switchText);
+        } else {
+            std::ostringstream newText;
+            newText<<oldText<<' '<<switchText;
+            info.setText(newText.str());
+        }
     }
 }
 

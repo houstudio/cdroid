@@ -1,5 +1,7 @@
 #include <widget/scrollview.h>
-#include <focusfinder.h>
+#include <widget/R.h>
+#include <view/focusfinder.h>
+#include <view/accessibility/accessibilitynodeinfo.h>
 #include <cdlog.h>
 namespace cdroid {
 
@@ -621,6 +623,67 @@ void ScrollView::onOverScrolled(int scrollX, int scrollY, bool clampedX, bool cl
         FrameLayout::scrollTo(scrollX, scrollY);
     }
     awakenScrollBars();
+}
+
+bool ScrollView::performAccessibilityActionInternal(int action, Bundle arguments){
+    if (FrameLayout::performAccessibilityActionInternal(action, arguments)) {
+        return true;
+    }
+    if (!isEnabled()) {
+        return false;
+    }
+    switch (action) {
+    case AccessibilityNodeInfo::ACTION_SCROLL_FORWARD:
+    case R::id::accessibilityActionScrollDown: {
+            const int viewportHeight = getHeight() - mPaddingBottom - mPaddingTop;
+            const int targetScrollY = std::min(mScrollY + viewportHeight, getScrollRange());
+            if (targetScrollY != mScrollY) {
+                smoothScrollTo(0, targetScrollY);
+                return true;
+            }
+        } return false;
+    case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD:
+    case R::id::accessibilityActionScrollUp: {
+            const int viewportHeight = getHeight() - mPaddingBottom - mPaddingTop;
+            const int targetScrollY = std::max(mScrollY - viewportHeight, 0);
+            if (targetScrollY != mScrollY) {
+                smoothScrollTo(0, targetScrollY);
+                return true;
+            }
+        } return false;
+    }
+    return false;
+}
+
+std::string ScrollView::getAccessibilityClassName() const{
+    return "ScrollView";
+}
+
+void ScrollView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
+    FrameLayout::onInitializeAccessibilityNodeInfoInternal(info);
+    if (isEnabled()) {
+        const int scrollRange = getScrollRange();
+        if (scrollRange > 0) {
+            info.setScrollable(true);
+            if (mScrollY > 0) {
+                info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD);
+                info.addAction(R::id::accessibilityActionScrollUp);//AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP);
+            }
+            if (mScrollY < scrollRange) {
+                info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
+                info.addAction(R::id::accessibilityActionScrollDown);//AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN);
+            }
+        }
+    }
+}
+void ScrollView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event) {
+    FrameLayout::onInitializeAccessibilityEventInternal(event);
+    const bool scrollable = getScrollRange() > 0;
+    event.setScrollable(scrollable);
+    event.setScrollX(mScrollX);
+    event.setScrollY(mScrollY);
+    event.setMaxScrollX(mScrollX);
+    event.setMaxScrollY(getScrollRange());
 }
 
 int ScrollView::getScrollRange() {

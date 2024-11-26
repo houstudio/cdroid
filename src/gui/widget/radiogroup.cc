@@ -86,6 +86,10 @@ int RadioGroup::getCheckedRadioButtonId()const{
     return mCheckedId;
 }
 
+std::string RadioGroup::getAccessibilityClassName()const{
+    return "RadioGroup";
+}
+
 void RadioGroup::setCheckedId(int id){
     mCheckedId = id;
     if (mOnCheckedChangeListener != nullptr) {

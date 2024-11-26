@@ -1088,7 +1088,7 @@ public:
     virtual void notifySubtreeAccessibilityStateChangedIfNeeded();
     bool dispatchNestedPrePerformAccessibilityAction(int action, Bundle arguments);
     bool performAccessibilityAction(int action, Bundle arguments);
-    bool performAccessibilityActionInternal(int action, Bundle arguments);
+    virtual bool performAccessibilityActionInternal(int action, Bundle arguments);
     std::string getIterableTextForAccessibility();
     bool isAccessibilitySelectionExtendable()const;
     int getAccessibilitySelectionStart()const;
@@ -1189,6 +1189,7 @@ public:
     void notifyEnterOrExitForAutoFillIfNeeded(bool enter);
     View& setAccessibilityPaneTitle(const std::string& accessibilityPaneTitle);
     std::string getAccessibilityPaneTitle() const;
+    virtual std::string getAccessibilityClassName() const;
     View& sendAccessibilityEvent(int eventType);
     View& sendAccessibilityEventInternal(int eventType);
     View& sendAccessibilityEventUnchecked(AccessibilityEvent& event);
@@ -1196,13 +1197,13 @@ public:
     virtual bool dispatchPopulateAccessibilityEvent(AccessibilityEvent& event);
     virtual bool dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event);
     virtual void onPopulateAccessibilityEvent(AccessibilityEvent& event);
-    void onPopulateAccessibilityEventInternal(AccessibilityEvent& event);
+    virtual void onPopulateAccessibilityEventInternal(AccessibilityEvent& event);
     virtual void onInitializeAccessibilityEvent(AccessibilityEvent& event);
-    void onInitializeAccessibilityEventInternal(AccessibilityEvent& event);
+    virtual void onInitializeAccessibilityEventInternal(AccessibilityEvent& event);
     AccessibilityNodeInfo* createAccessibilityNodeInfo();
     AccessibilityNodeInfo* createAccessibilityNodeInfoInternal();
     void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info);
-    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info);
+    virtual void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info);
     void addExtraDataToAccessibilityNodeInfo(AccessibilityNodeInfo& info,const std::string& extraDataKey,Bundle arguments);
     bool isVisibleToUserForAutofill(int virtualId)const;
     bool isVisibleToUser();

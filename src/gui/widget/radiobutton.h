@@ -9,6 +9,9 @@ public:
     RadioButton(Context*ctx,const AttributeSet& attrs)
 	  :ToggleButton(ctx,attrs){
     }
+    std::string getAccessibilityClassName()const override{
+        return "RadioButton";
+    }
 };
 
 }//namespace
