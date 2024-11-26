@@ -1,8 +1,8 @@
 #include <widget/listview.h>
 #include <widget/checkable.h>
-#include <focusfinder.h>
-#include <cdtypes.h>
-#include <cdlog.h>
+#include <view/focusfinder.h>
+#include <widget/R.h>
+#include <porting/cdlog.h>
 
 namespace cdroid {
 
@@ -2869,6 +2869,55 @@ bool ListView::shouldAdjustHeightForDivider(int itemIndex) {
     }
 
     return false;
+}
+
+std::string ListView::getAccessibilityClassName()const{
+    return "ListView";
+}
+
+void ListView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+    AbsListView::onInitializeAccessibilityNodeInfoInternal(info);
+
+    const int rowsCount = getCount();
+    const int selectionMode = getSelectionModeForAccessibility();
+    AccessibilityNodeInfo::CollectionInfo* collectionInfo = AccessibilityNodeInfo::CollectionInfo::obtain(
+            rowsCount, 1, false, selectionMode);
+    info.setCollectionInfo(collectionInfo);
+
+    if (rowsCount > 0) {
+        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_TO_POSITION.getId());
+    }
+}
+
+bool ListView::performAccessibilityActionInternal(int action, Bundle arguments){
+   if (AbsListView::performAccessibilityActionInternal(action, arguments)) {
+        return true;
+    }
+
+    switch (action) {
+    case R::id::accessibilityActionScrollToPosition: {
+        const  int row = 0;//TODO arguments.getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_ROW_INT, -1);
+        const int position = std::min(row, getCount() - 1);
+        if (row >= 0) {
+            // The accessibility service gets data asynchronously, so
+            // we'll be a little lenient by clamping the last position.
+            smoothScrollToPosition(position);
+            return true;
+        }
+    } break;
+    }
+    return false;
+}
+
+void ListView::onInitializeAccessibilityNodeInfoForItem(View* view, int position, AccessibilityNodeInfo& info){
+    AbsListView::onInitializeAccessibilityNodeInfoForItem(view, position, info);
+
+    const LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
+    const bool isHeading = lp && lp->viewType == ITEM_VIEW_TYPE_HEADER_OR_FOOTER;
+    const bool isSelected = isItemChecked(position);
+    AccessibilityNodeInfo::CollectionItemInfo* itemInfo = AccessibilityNodeInfo::CollectionItemInfo::obtain(
+            position, 1, 0, 1, isHeading, isSelected);
+    info.setCollectionItemInfo(itemInfo);
 }
 
 HeaderViewListAdapter* ListView::wrapHeaderListAdapterInternal(

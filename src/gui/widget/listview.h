@@ -192,6 +192,11 @@ public:
     bool onKeyMultiple(int keyCode, int repeatCount, KeyEvent& event)override;
     void setSelectionAfterHeaderView();
     bool dispatchKeyEvent(KeyEvent& event)override;
+
+    std::string getAccessibilityClassName()const override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
+    bool performAccessibilityActionInternal(int action, Bundle arguments)override;
+    void onInitializeAccessibilityNodeInfoForItem(View* view, int position, AccessibilityNodeInfo& info)override;
 };
 
 }//namespace
