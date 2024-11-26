@@ -6020,38 +6020,35 @@ View& View::clearAccessibilityFocusNoCallbacks(int action){
     return *this;
 }
 
-View& View::sendAccessibilityEvent(int eventType){
+void View::sendAccessibilityEvent(int eventType){
     if (mAccessibilityDelegate != nullptr) {
         mAccessibilityDelegate->sendAccessibilityEvent(*this, eventType);
     } else {
         sendAccessibilityEventInternal(eventType);
     }
-    return *this;
 }
 
-View& View::sendAccessibilityEventInternal(int eventType){
+void View::sendAccessibilityEventInternal(int eventType){
     if (AccessibilityManager::getInstance(mContext).isEnabled()) {
         sendAccessibilityEventUnchecked(*AccessibilityEvent::obtain(eventType));
     }
-    return *this;
 }
 
-View& View::sendAccessibilityEventUnchecked(AccessibilityEvent& event) {
+void View::sendAccessibilityEventUnchecked(AccessibilityEvent& event) {
     if (mAccessibilityDelegate) {
         mAccessibilityDelegate->sendAccessibilityEventUnchecked(*this, event);
     } else {
         sendAccessibilityEventUncheckedInternal(event);
     }
-    return *this;
 }
 
-View& View::sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event){
+void View::sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event){
        // Panes disappearing are relevant even if though the view is no longer visible.
     const bool isWindowStateChanged = (event.getEventType() == AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED);
     const bool isWindowDisappearedEvent = isWindowStateChanged && ((event.getContentChangeTypes()
             & AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_DISAPPEARED) != 0);
     if (!isShown() && !isWindowDisappearedEvent) {
-        return *this;
+        return ;
     }
     onInitializeAccessibilityEvent(event);
     // Only a subset of accessibility events populates text content.
@@ -6063,7 +6060,6 @@ View& View::sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event){
     if (parent != nullptr) {
         getParent()->requestSendAccessibilityEvent(this, event);
     }
-    return *this;
 }
 
 bool View::dispatchPopulateAccessibilityEvent(AccessibilityEvent& event) {

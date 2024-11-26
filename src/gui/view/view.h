@@ -1190,10 +1190,10 @@ public:
     View& setAccessibilityPaneTitle(const std::string& accessibilityPaneTitle);
     std::string getAccessibilityPaneTitle() const;
     virtual std::string getAccessibilityClassName() const;
-    View& sendAccessibilityEvent(int eventType);
-    View& sendAccessibilityEventInternal(int eventType);
-    View& sendAccessibilityEventUnchecked(AccessibilityEvent& event);
-    View& sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event);
+    virtual void sendAccessibilityEvent(int eventType);
+    virtual void sendAccessibilityEventInternal(int eventType);
+    virtual void sendAccessibilityEventUnchecked(AccessibilityEvent& event);
+    virtual void sendAccessibilityEventUncheckedInternal(AccessibilityEvent& event);
     virtual bool dispatchPopulateAccessibilityEvent(AccessibilityEvent& event);
     virtual bool dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event);
     virtual void onPopulateAccessibilityEvent(AccessibilityEvent& event);

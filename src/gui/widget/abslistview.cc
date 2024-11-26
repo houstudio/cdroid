@@ -3,6 +3,9 @@
 #include <widget/recyclebin.h>
 #include <widget/fastscroller.h>
 #include <widget/edittext.h>
+#include <widget/R.h>
+#include <view/accessibility/accessibilitynodeinfo.h>
+#include <view/accessibility/accessibilitymanager.h>
 #include <core/neverdestroyed.h>
 #include <cdtypes.h>
 #include <cdlog.h>
@@ -135,6 +138,16 @@ AbsListView::~AbsListView() {
     delete mFlingRunnable;
 }
 
+View* AbsListView::getAccessibilityFocusedChild(View* focusedView) {
+    ViewGroup* viewParent = focusedView->getParent();
+    while (/*(viewParent instanceof View) && */(viewParent != this)) {
+        focusedView = viewParent;
+        viewParent = viewParent->getParent();
+    }
+
+    return focusedView;
+}
+
 void AbsListView::updateScrollIndicators() {
     if ( mScrollUp ) mScrollUp->setVisibility(canScrollUp() ? View::VISIBLE : View::INVISIBLE);
     if (mScrollDown) mScrollDown->setVisibility(canScrollDown() ? View::VISIBLE : View::INVISIBLE);
@@ -182,6 +195,21 @@ void AbsListView::setSmoothScrollbarEnabled(bool enable) {
     mSmoothScrollbarEnabled = enable;
 }
 
+int AbsListView::getSelectionModeForAccessibility(){
+    const int choiceMode = getChoiceMode();
+    switch (choiceMode) {
+    case CHOICE_MODE_NONE:
+        return AccessibilityNodeInfo::CollectionInfo::SELECTION_MODE_NONE;
+    case CHOICE_MODE_SINGLE:
+        return AccessibilityNodeInfo::CollectionInfo::SELECTION_MODE_SINGLE;
+    case CHOICE_MODE_MULTIPLE:
+    case CHOICE_MODE_MULTIPLE_MODAL:
+        return AccessibilityNodeInfo::CollectionInfo::SELECTION_MODE_MULTIPLE;
+    default:
+        return AccessibilityNodeInfo::CollectionInfo::SELECTION_MODE_NONE;
+    }
+}
+
 bool AbsListView::isSmoothScrollbarEnabled()const {
     return mSmoothScrollbarEnabled;
 }
@@ -198,6 +226,116 @@ void AbsListView::invokeOnItemScrollListener() {
 void AbsListView::setOnScrollListener(OnScrollListener l) {
     mOnScrollListener = l;
     invokeOnItemScrollListener();
+}
+
+std::string AbsListView::getAccessibilityClassName()const{
+    return "AbsListView";
+}
+
+void AbsListView::sendAccessibilityEventUnchecked(AccessibilityEvent& event){
+    // Since this class calls onScrollChanged even if the mFirstPosition and the
+    // child count have not changed we will avoid sending duplicate accessibility
+    // events.
+    if (event.getEventType() == AccessibilityEvent::TYPE_VIEW_SCROLLED) {
+        const int firstVisiblePosition = getFirstVisiblePosition();
+        const int lastVisiblePosition = getLastVisiblePosition();
+        if (mLastAccessibilityScrollEventFromIndex == firstVisiblePosition
+                && mLastAccessibilityScrollEventToIndex == lastVisiblePosition) {
+            return;
+        } else {
+            mLastAccessibilityScrollEventFromIndex = firstVisiblePosition;
+            mLastAccessibilityScrollEventToIndex = lastVisiblePosition;
+        }
+    }
+    AdapterView::sendAccessibilityEventUnchecked(event);
+}
+
+void AbsListView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+    AdapterView::onInitializeAccessibilityNodeInfoInternal(info);
+    if (isEnabled()) {
+        if (canScrollUp()) {
+            info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD.getId());
+            info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP.getId());
+            info.setScrollable(true);
+        }
+        if (canScrollDown()) {
+            info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD.getId());
+            info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN.getId());
+            info.setScrollable(true);
+        }
+    }
+
+    info.removeAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK.getId());
+    info.setClickable(false);
+}
+
+bool AbsListView::performAccessibilityActionInternal(int action, Bundle arguments){
+    if (AdapterView::performAccessibilityActionInternal(action, arguments)) {
+        return true;
+    }
+    switch (action) {
+    case AccessibilityNodeInfo::ACTION_SCROLL_FORWARD:
+    case R::id::accessibilityActionScrollDown:
+        if (isEnabled() && canScrollDown()) {
+            const int viewportHeight = getHeight() - mListPadding.top - mListPadding.height;
+            smoothScrollBy(viewportHeight, PositionScroller::SCROLL_DURATION);
+            return true;
+        }
+        return false;
+    case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD:
+    case R::id::accessibilityActionScrollUp:
+        if (isEnabled() && canScrollUp()) {
+            const int viewportHeight = getHeight() - mListPadding.top - mListPadding.height;
+            smoothScrollBy(-viewportHeight, PositionScroller::SCROLL_DURATION);
+            return true;
+        }
+        return false;
+    }
+    return false;
+}
+
+View* AbsListView::findViewByAccessibilityIdTraversal(int accessibilityId){
+    if (accessibilityId == getAccessibilityViewId()) {
+        return this;
+    }
+    return AdapterView::findViewByAccessibilityIdTraversal(accessibilityId);
+}
+
+void AbsListView::onInitializeAccessibilityNodeInfoForItem(View* view, int position, AccessibilityNodeInfo& info){
+    if (position == INVALID_POSITION) {
+        // The item doesn't exist, so there's not much we can do here.
+        return;
+    }
+
+    bool isItemEnabled;
+    ViewGroup::LayoutParams* lp = view->getLayoutParams();
+    if (dynamic_cast<AbsListView::LayoutParams*>(lp)) {
+        isItemEnabled = ((AbsListView::LayoutParams*) lp)->isEnabled;
+    } else {
+        isItemEnabled = false;
+    }
+
+    if (!isEnabled() || !isItemEnabled) {
+        info.setEnabled(false);
+        return;
+    }
+
+    if (position == getSelectedItemPosition()) {
+        info.setSelected(true);
+        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_SELECTION.getId());
+    } else {
+        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SELECT.getId());
+    }
+
+    if (isItemClickable(view)) {
+        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK.getId());
+        info.setClickable(true);
+    }
+
+    if (isLongClickable()) {
+        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_LONG_CLICK.getId());
+        info.setLongClickable(true);
+    }
 }
 
 void AbsListView::setScrollingCacheEnabled(bool enabled) {
@@ -478,6 +616,10 @@ void AbsListView::positionSelector(int position, View* sel, bool manageHotspot, 
 
 void AbsListView::positionSelector(int position, View* sel) {
     positionSelector(position, sel, false, -1, -1);
+}
+
+bool AbsListView::isItemClickable(View* view) {
+    return !view->hasExplicitFocusable();
 }
 
 void AbsListView::positionSelectorLikeTouch(int position, View* sel, float x, float y) {
@@ -1522,9 +1664,9 @@ void AbsListView::reclaimViews(std::vector<View*>& views) {
         View* child = getChildAt(i);
         AbsListView::LayoutParams* lp = (AbsListView::LayoutParams*) child->getLayoutParams();
         // Don't reclaim header or footer views, or views that should be ignored
-        if (lp  && mRecycler->shouldRecycleViewType(lp->viewType)) {
+        if (lp && mRecycler->shouldRecycleViewType(lp->viewType)) {
             views.push_back(child);
-            //child.setAccessibilityDelegate(null);
+            child->setAccessibilityDelegate(nullptr);
             if (listener != nullptr) {
                 // Pretend they went through the scrap heap
                 listener(*child);//.onMovedToScrapHeap(child);
@@ -1572,21 +1714,23 @@ View*AbsListView::obtainView(int position, bool*outMetadata) {
         }
     }
 
-    if (mCacheColorHint != 0) child->setDrawingCacheBackgroundColor(mCacheColorHint);
+    if (mCacheColorHint != 0){
+        child->setDrawingCacheBackgroundColor(mCacheColorHint);
+    }
 
     if (child->getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         child->setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
     setItemViewLayoutParams(child, position);
 
-    /*if (AccessibilityManager.getInstance(mContext).isEnabled()) {
-        if (mAccessibilityDelegate == null) {
-            mAccessibilityDelegate = new ListItemAccessibilityDelegate();
+    if (AccessibilityManager::getInstance(mContext).isEnabled()) {
+        if (mAccessibilityDelegate == nullptr) {
+            //TODO mAccessibilityDelegate = new ListItemAccessibilityDelegate();
         }
-        if (child.getAccessibilityDelegate() == null) {
-            child.setAccessibilityDelegate(mAccessibilityDelegate);
+        if (child->getAccessibilityDelegate() == nullptr) {
+            child->setAccessibilityDelegate(mAccessibilityDelegate);
         }
-    }*/
+    }
     return child;
 }
 
@@ -4329,5 +4473,80 @@ void AbsListView::FlingRunnable::checkFlyWheel() {
     }
 }
 
+//////////////////////////////////ListItemAccessibilityDelegate///////////////////////////////////////
+
+void AbsListView::ListItemAccessibilityDelegate::onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info) {
+    AccessibilityDelegate::onInitializeAccessibilityNodeInfo(host, info);
+#if 0
+    const int position = getPositionForView(host);
+    onInitializeAccessibilityNodeInfoForItem(host, position, info);
+#endif
+}
+
+
+bool AbsListView::ListItemAccessibilityDelegate::performAccessibilityAction(View& host, int action, Bundle arguments) {
+#if 0
+    if (AccessibilityDelegate::performAccessibilityAction(host, action, arguments)) {
+        return true;
+    }
+
+    const int position = getPositionForView(host);
+    if (position == INVALID_POSITION || mAdapter == null) {
+        // Cannot perform actions on invalid items.
+        return false;
+    }
+
+    if (position >= mAdapter.getCount()) {
+        // The position is no longer valid, likely due to a data set
+        // change. We could fail here for all data set changes, since
+        // there is a chance that the data bound to the view may no
+        // longer exist at the same position within the adapter, but
+        // it's more consistent with the standard touch interaction to
+        // click at whatever may have moved into that position.
+        return false;
+    }
+
+    bool isItemEnabled;
+    const ViewGroup::LayoutParams* lp = host.getLayoutParams();
+    if (dynamic_cast<AbsListView::LayoutParams*>(lp)) {
+        isItemEnabled = ((AbsListView::LayoutParams*) lp)->isEnabled;
+    } else {
+        isItemEnabled = false;
+    }
+
+    if (!isEnabled() || !isItemEnabled) {
+        // Cannot perform actions on disabled items.
+        return false;
+    }
+
+    switch (action) {
+    case AccessibilityNodeInfo::ACTION_CLEAR_SELECTION:
+        if (getSelectedItemPosition() == position) {
+            setSelection(INVALID_POSITION);
+            return true;
+        }
+        return false;
+    case AccessibilityNodeInfo::ACTION_SELECT:
+        if (getSelectedItemPosition() != position) {
+            setSelection(position);
+            return true;
+        }
+        return false;
+    case AccessibilityNodeInfo::ACTION_CLICK:
+        if (isItemClickable(host)) {
+            const long id = getItemIdAtPosition(position);
+            return performItemClick(host, position, id);
+        }
+        return false;
+    case AccessibilityNodeInfo::ACTION_LONG_CLICK:
+        if (isLongClickable()) {
+            const long id = getItemIdAtPosition(position);
+            return performLongPress(host, position, id);
+        }
+        return false;
+    }
+#endif
+    return false;
+}
 }//namespace
 

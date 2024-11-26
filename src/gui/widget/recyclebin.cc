@@ -169,7 +169,7 @@ void RecycleBin::addScrapView(View* scrap, int position) {
     // detached and we do not allow detached views to fire accessibility
     // events. So we are announcing that the subtree changed giving a chance
     // to clients holding on to a view in this subtree to refresh it.
-    //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_SUBTREE);
+    LV->notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_SUBTREE);
 
     // Don't scrap views that have transient state.
     bool scrapHasTransientState = scrap->hasTransientState();
@@ -387,11 +387,11 @@ void RecycleBin::clearScrap(std::vector<View*>& scrap) {
 void RecycleBin::clearScrapForRebind(View* view) {
     LOGV("view=%p %d",view,mScrapViews[0].size());
     view->clearAccessibilityFocus();
-    //view->setAccessibilityDelegate(nullptr);
+    view->setAccessibilityDelegate(nullptr);
 }
 
 void RecycleBin::removeDetachedView(View* child, bool animate) {
-    //child->setAccessibilityDelegate(nullptr);
+    child->setAccessibilityDelegate(nullptr);
     LV->removeDetachedView(child, animate);
 }
 

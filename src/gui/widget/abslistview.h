@@ -71,6 +71,11 @@ public:
     }; 
     DECLARE_UIEVENT(void,MultiChoiceModeListener,/*ActionMode mode,*/int position, long id, bool checked);
 protected:
+    class ListItemAccessibilityDelegate:public AccessibilityDelegate{
+    public:
+       void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info)override;
+       bool performAccessibilityAction(View& host, int action, Bundle arguments)override;
+    };
     class AbsPositionScroller:public Runnable {
     public:
         virtual void start(int position)=0;
@@ -81,6 +86,7 @@ protected:
     };
     class PositionScroller:public AbsPositionScroller{
     private:
+        friend AbsListView;
         static constexpr int SCROLL_DURATION = 200;    
         static constexpr int MOVE_DOWN_POS = 1;
         static constexpr int MOVE_UP_POS = 2;
@@ -142,6 +148,9 @@ private:
     int mLastScrollState;
     bool mIsChildViewEnabled;
     bool mForceTranscriptScroll;
+    int mLastAccessibilityScrollEventFromIndex;
+    int mLastAccessibilityScrollEventToIndex;
+    ListItemAccessibilityDelegate* mAccessibilityDelegate;
     CheckForLongPress* mPendingCheckForLongPress;
     CheckForTap* mPendingCheckForTap;
     CheckForKeyLongPress* mPendingCheckForKeyLongPress;
@@ -199,6 +208,7 @@ private:
     EditText* getTextFilterInput();
     void onTouchModeChanged(bool isInTouchMode);//called by ViewTreeObserver
     void onGlobalLayout();
+    static bool isItemClickable(View* view);
     bool showContextMenuInternal(float x, float y, bool useOffsets);
     bool showContextMenuForChildInternal(View* originalView, float x, float y,bool useOffsets);
 protected:
@@ -277,6 +287,7 @@ protected:
     void updateSelectorState();
     void drawableStateChanged()override;
     virtual void layoutChildren();
+    View*getAccessibilityFocusedChild(View* focusedView);
     bool shouldDrawSelector();
     void dispatchDraw(Canvas& canvas)override;
     void dispatchSetPressed(bool pressed)override;
@@ -296,6 +307,7 @@ protected:
     int  getBottomEdgeEffectColor()const;
     int  reconcileSelectedPosition();
     void requestLayoutIfNecessary();
+    int getSelectionModeForAccessibility();
  
     bool resurrectSelection(); 
     bool resurrectSelectionIfNeeded();
@@ -343,6 +355,13 @@ public:
     void setOnScrollListener(OnScrollListener);
     bool isScrollingCacheEnabled()const;
     void setScrollingCacheEnabled(bool enabled);
+
+    std::string getAccessibilityClassName()const override;
+    void sendAccessibilityEventUnchecked(AccessibilityEvent& event)override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
+    bool performAccessibilityActionInternal(int action, Bundle arguments)override;
+    View* findViewByAccessibilityIdTraversal(int accessibilityId)override;
+    virtual void onInitializeAccessibilityNodeInfoForItem(View* view, int position, AccessibilityNodeInfo& info);
 
     void reportScrollStateChange(int newState);
     void setFastScrollEnabled(bool);
@@ -504,5 +523,6 @@ public:
     void run()override;
     void postOnAnimation();
 };
+
 }//namespace
 #endif

@@ -1635,32 +1635,33 @@ const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::Accessi
 const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_DISMISS (AccessibilityNodeInfo::ACTION_DISMISS);
 
 const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_TEXT(AccessibilityNodeInfo::ACTION_SET_TEXT);
-#if 0
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_ON_SCREEN(R.id.accessibilityActionShowOnScreen);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_TO_POSITION(R.id.accessibilityActionScrollToPosition);
+const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_ON_SCREEN(R::id::accessibilityActionShowOnScreen);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP(R.id.accessibilityActionScrollUp);
+const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_TO_POSITION(R::id::accessibilityActionScrollToPosition);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_LEFT (R.id.accessibilityActionScrollLeft);
+const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP(R::id::accessibilityActionScrollUp);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN (R.id.accessibilityActionScrollDown);
+const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_LEFT (R::id::accessibilityActionScrollLeft);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_RIGHT(R.id.accessibilityActionScrollRight);
+const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN (R::id::accessibilityActionScrollDown);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_CONTEXT_CLICK(R.id.accessibilityActionContextClick);
+const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_RIGHT(R::id::accessibilityActionScrollRight);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_PROGRESS (R.id.accessibilityActionSetProgress);
+const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_CONTEXT_CLICK(R::id::accessibilityActionContextClick);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_MOVE_WINDOW(R.id.accessibilityActionMoveWindow);
+const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_PROGRESS (R::id::accessibilityActionSetProgress);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_TOOLTIP(R.id.accessibilityActionShowTooltip);
+const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_MOVE_WINDOW(R::id::accessibilityActionMoveWindow);
 
-const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_HIDE_TOOLTIP (R.id.accessibilityActionHideTooltip);
-#endif
+const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_SHOW_TOOLTIP(R::id::accessibilityActionShowTooltip);
+
+const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::AccessibilityAction::ACTION_HIDE_TOOLTIP (R::id::accessibilityActionHideTooltip);
+
 AccessibilityNodeInfo::AccessibilityAction::AccessibilityAction(int actionId, const std::string& label) {
     if ((actionId & ACTION_TYPE_MASK) == 0 && BitSet32::count(actionId) != 1) {
-        throw std::runtime_error("Invalid standard action id");
+        //throw std::runtime_error("Invalid standard action id");
+        LOGD("Invalid standard action id:%d",actionId);
     }
 
     mActionId = actionId;

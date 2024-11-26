@@ -486,17 +486,25 @@ void AbsSeekBar::onDraw(Canvas&canvas){
 }
 
 bool AbsSeekBar::onKeyDown(int keyCode,KeyEvent&event){
-    switch(keyCode){
-    case KeyEvent::KEYCODE_DPAD_LEFT :
-    case KeyEvent::KEYCODE_MINUS:
-         setProgressInternal(getProgress()-mKeyProgressIncrement,true);
-         return true;
-    case KeyEvent::KEYCODE_DPAD_RIGHT:
-    case KeyEvent::KEYCODE_PLUS :
-         setProgressInternal(getProgress()+mKeyProgressIncrement,true);
-         return true;
-    default:return ProgressBar::onKeyDown(keyCode,event);
+    if(isEnabled()){
+        int increment = mKeyProgressIncrement;
+        switch(keyCode){
+        case KeyEvent::KEYCODE_DPAD_LEFT :
+        case KeyEvent::KEYCODE_MINUS:
+            setProgressInternal(getProgress()-increment,true);
+            return true;
+        case KeyEvent::KEYCODE_DPAD_RIGHT:
+        case KeyEvent::KEYCODE_PLUS :
+        case KeyEvent::KEYCODE_EQUALS:
+            increment = isLayoutRtl() ? -increment : increment;
+            if(setProgressInternal(getProgress() + increment,true)){
+                onKeyChange();
+                return true;
+            }
+        default:break;
+        }
     }
+    return ProgressBar::onKeyDown(keyCode,event);
 }
 
 void AbsSeekBar::startDrag(MotionEvent& event){
@@ -581,23 +589,23 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
 
     switch (event.getAction()) {
     case MotionEvent::ACTION_DOWN:
-	if(mThumb){
-             const int availableWidth = getWidth() - mPaddingLeft - mPaddingRight;
-	     const int availableHeight = getHeight() - mPaddingTop - mPaddingBottom;
-	     if(getProgressOrientation()==HORIZONTAL){
+        if(mThumb){
+            const int availableWidth = getWidth() - mPaddingLeft - mPaddingRight;
+            const int availableHeight = getHeight() - mPaddingTop - mPaddingBottom;
+	        if(getProgressOrientation()==HORIZONTAL){
                  mTouchThumbOffset = (getProgress() - getMin()) / (float) (getMax()
                     - getMin()) - (event.getX() - mPaddingLeft) / availableWidth;
                  if (std::abs(mTouchThumbOffset * availableWidth) > getThumbOffset()) {
                      mTouchThumbOffset = 0;
                  }
-	     }else{
+	        }else{
                  mTouchThumbOffset = (getProgress() - getMin()) / (float) (getMax()
                     - getMin()) - (event.getY() - mPaddingTop) / availableHeight;
                  if (std::abs(mTouchThumbOffset * availableHeight) > getThumbOffset()) {
                      mTouchThumbOffset = 0;
                  }
-	     }
-	}
+	        }
+	    }
         if (isInScrollingContainer()) {
             mTouchDownX = event.getX();
             mTouchDownY = event.getY();
@@ -611,8 +619,8 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
             trackTouchEvent(event);
         } else {
             const float x = event.getX();
-	    const float y = event.getY();
-	    const int orientation = getProgressOrientation();
+            const float y = event.getY();
+            const int orientation = getProgressOrientation();
             if (((orientation==HORIZONTAL)&&(std::abs(x - mTouchDownX) > mScaledTouchSlop))||
 	        ((orientation==VERTICAL)&&(std::abs(y - mTouchDownY) > mScaledTouchSlop))) {
                 startDrag(event);

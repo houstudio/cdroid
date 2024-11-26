@@ -19,6 +19,8 @@ public:
     SeekBar(int w,int h);
     SeekBar(Context*ctx,const AttributeSet& attrs);
     void setOnSeekBarChangeListener(const OnSeekBarChangeListener& l);
+    std::string getAccessibilityClassName()const override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
 };
 
 }//namespace

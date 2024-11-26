@@ -1,8 +1,9 @@
 #include <widget/progressbar.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <animation/objectanimator.h>
+#include <core/mathutils.h>
 #include <widget/R.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
 
 #define  MAX_LEVEL  10000
 namespace cdroid{
@@ -37,6 +38,23 @@ public:
 };
 
 DECLARE_WIDGET(ProgressBar)
+
+Pools::SimplePool<ProgressBar::RefreshData>ProgressBar::RefreshData::sPool(ProgressBar::RefreshData::POOL_MAX);
+ProgressBar::RefreshData* ProgressBar::RefreshData::obtain(int id, int progress, bool fromUser, bool animate) {
+    RefreshData* rd = sPool.acquire();
+    if (rd == nullptr) {
+        rd = new RefreshData();
+    }
+    rd->id = id;
+    rd->progress = progress;
+    rd->fromUser = fromUser;
+    rd->animate = animate;
+    return rd;
+}
+
+void ProgressBar::RefreshData::recycle() {
+    sPool.release(this);
+}
 
 ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
@@ -123,6 +141,11 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
     }
     applyProgressTints();
     applyIndeterminateTint();
+
+    // If not explicitly specified this view is important for accessibility.
+    if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+        setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
+    }
 }
 
 ProgressBar::ProgressBar(int width, int height):View(width,height){
@@ -279,8 +302,6 @@ void ProgressBar::initProgressBar(){
     mAggregatedIsVisible = false;
     mShouldStartAnimationDrawable = false;
     mRefreshIsPosted = false;
-    mDatas.insert(std::pair<int,RefreshData>(R::id::progress,RefreshData()));
-    mDatas.insert(std::pair<int,RefreshData>(R::id::secondaryProgress,RefreshData()));
 }
 
 void ProgressBar::setMin(int value){
@@ -348,21 +369,28 @@ void ProgressBar::onVisualProgressChanged(int id, float progress){
 
 void ProgressBar::onAttachedToWindow(){
     View::onAttachedToWindow();
-    mAttached = true;
-    if (mIndeterminate) startAnimation();
-
-    for (auto d:mDatas) {
-        RefreshData& rd = d.second;
-        doRefreshProgress(d.first, rd.progress, rd.fromUser, true, rd.animate);
+    if (mIndeterminate){
+        startAnimation();
     }
+    for (auto rd:mRefreshData) {
+        doRefreshProgress(rd->id, rd->progress, rd->fromUser, true, rd->animate);
+    }
+    mRefreshData.clear();
+    mAttached = true;
 }
 
 void ProgressBar::onDetachedFromWindow(){
-    if(mIndeterminate)stopAnimation();
+    if(mIndeterminate){
+        stopAnimation();
+    }
     if(mRefreshProgressRunnable){
         removeCallbacks(mRefreshProgressRunnable);
         mRefreshIsPosted = false;
     }
+    if(mAccessibilityEventSender){
+        removeCallbacks(mAccessibilityEventSender);
+    }
+    for(auto rd:mRefreshData)rd->recycle();
     View::onDetachedFromWindow();
     if(mCurrentDrawable)unscheduleDrawable(*mCurrentDrawable);
     if(mProgressDrawable)unscheduleDrawable(*mProgressDrawable);
@@ -387,6 +415,15 @@ void ProgressBar::setVisualProgress(int id, float progress){
     if (d) d->setLevel((progress * MAX_LEVEL));
     else invalidate(true);
     onVisualProgressChanged(id, progress);
+}
+
+void ProgressBar::refreshProgressRunnableProc(){
+    for(auto& rd:mRefreshData){
+         doRefreshProgress(rd->id, rd->progress, rd->fromUser, true, rd->animate);
+         rd->recycle();
+    }
+    mRefreshData.clear();
+    mRefreshIsPosted = false;
 }
 
 void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool callBackToApp, bool animate){
@@ -419,7 +456,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
 
 void ProgressBar::onProgressRefresh(float scale, bool fromUser, int progress) {
     if (AccessibilityManager::getInstance(mContext).isEnabled()) {
-        //scheduleAccessibilityEventSender();
+        scheduleAccessibilityEventSender();
     }
 }
 
@@ -444,19 +481,22 @@ void ProgressBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 }
 
 void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool animate){
-    RefreshData&rd= mDatas[id];
-    rd.progress = progress;
-    rd.fromUser = fromUser;
-    rd.animate  = animate;
-    doRefreshProgress(id, progress, fromUser, true, animate);
+    if(mRefreshProgressRunnable==nullptr){
+        mRefreshProgressRunnable = std::bind(&ProgressBar::refreshProgressRunnableProc,this);
+    }
+    RefreshData* rd = RefreshData::obtain(id, progress, fromUser, animate);
+    mRefreshData.push_back(rd);
+    if(mAttached && (!mRefreshIsPosted)){
+        post(mRefreshProgressRunnable);
+        mRefreshIsPosted = true;
+    }
 }
 
-bool ProgressBar::setProgressInternal(int value, bool fromUser,bool animate){
+bool ProgressBar::setProgressInternal(int progress, bool fromUser,bool animate){
     if(mIndeterminate)return false;
-    if(value < mMin)value = mMin;
-    if(value > mMax)value = mMax;
-    if(mProgress == value)return false;
-    mProgress = value;
+    progress = MathUtils::constrain(progress,mMin,mMax);
+    if(mProgress == progress)return false;
+    mProgress = progress;
     refreshProgress(R::id::progress,mProgress,fromUser,animate);
     return true;
 }
@@ -1038,6 +1078,7 @@ std::string ProgressBar::getAccessibilityClassName()const{
 void ProgressBar::scheduleAccessibilityEventSender() {
     if (mAccessibilityEventSender == nullptr) {
         mAccessibilityEventSender = [this](){
+            LOGD("===========progress=%d",mProgress);
             sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
         };
     } else {

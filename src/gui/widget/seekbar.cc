@@ -1,4 +1,5 @@
 #include <widget/seekbar.h>
+#include <widget/R.h>
 namespace cdroid{
 
 DECLARE_WIDGET2(SeekBar,"cdroid:attr/seekBarStyle")
@@ -33,6 +34,17 @@ void SeekBar::onStopTrackingTouch() {
 
 void SeekBar::setOnSeekBarChangeListener(const OnSeekBarChangeListener& l){
      mOnSeekBarChangeListener = l;
+}
+
+std::string SeekBar::getAccessibilityClassName()const{
+    return "SeekBar";
+}
+
+void SeekBar::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+    AbsSeekBar::onInitializeAccessibilityNodeInfoInternal(info);
+    if (canUserSetProgress()) {
+        info.addAction(R::id::accessibilityActionSetProgress);//AccessibilityNodeInfo::ACTION_SET_PROGRESS);
+    }
 }
 
 }
