@@ -105,6 +105,7 @@ public:
     View& setAlpha(float a);
     void sendToBack();
     void bringToFront();
+    void notifySubtreeAccessibilityStateChanged(View* child, View* source, int changeType)override;
     bool requestSendAccessibilityEvent(View* child, AccessibilityEvent& event)override;
     virtual bool onKeyUp(int keyCode,KeyEvent& evt) override;
     virtual bool onKeyDown(int keyCode,KeyEvent& evt) override;

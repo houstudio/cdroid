@@ -10,6 +10,7 @@ public:
     Button(Context*ctx,const AttributeSet& attrs);
     virtual ~Button();
     PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
+    std::string getAccessibilityClassName()const override;
 };
 }
 #endif

@@ -217,7 +217,7 @@ protected:
     virtual bool requestSendAccessibilityEvent(View* child, AccessibilityEvent& event);
     virtual bool onRequestSendAccessibilityEvent(View* child, AccessibilityEvent& event);
     virtual bool onRequestSendAccessibilityEventInternal(View* child, AccessibilityEvent& event);
-    void notifySubtreeAccessibilityStateChanged(View* child, View* source, int changeType);
+    virtual void notifySubtreeAccessibilityStateChanged(View* child, View* source, int changeType);
     void notifySubtreeAccessibilityStateChangedIfNeeded()override;
     bool performKeyboardGroupNavigation(int direction);
 

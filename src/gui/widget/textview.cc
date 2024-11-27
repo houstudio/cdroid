@@ -423,6 +423,10 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
       },Layout::ELLIPSIS_NONE));
     if(attrs.hasAttribute("textHintColor"))
         setHintTextColor(attrs.getColorStateList("textHintColor"));
+    // If not explicitly specified this view is important for accessibility.
+    if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+        setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
+    }
 }
 
 TextView::TextView(int width, int height):TextView(std::string(),width,height){
@@ -2644,4 +2648,26 @@ void TextView::onDraw(Canvas& canvas) {
     canvas.restore();
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+std::string TextView::getAccessibilityClassName()const{
+    return "TextView";
+}
+
+void TextView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
+    LOGD("TODO");
+}
+void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+    LOGD("TODO");
+}
+bool TextView::performAccessibilityActionInternal(int action, Bundle arguments){
+    LOGD("TODO");
+    return true;
+}
+void TextView::sendAccessibilityEventInternal(int eventType){
+    LOGD("TODO");
+}
+
+void TextView::sendAccessibilityEventUnchecked(AccessibilityEvent& event){
+    LOGD("TODO");
+}
 }  // namespace ui

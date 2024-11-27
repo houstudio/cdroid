@@ -100,6 +100,11 @@ ViewGroup::LayoutParams* Window::generateLayoutParams(const AttributeSet&atts)co
     return new MarginLayoutParams(getContext(),atts);
 }
 
+void Window::notifySubtreeAccessibilityStateChanged(View* child, View* source, int changeType){
+    LOGD("TODO source=%p changeType=%d",source,changeType);
+    //postSendWindowContentChangedCallback(Preconditions.checkNotNull(source), changeType);
+}
+
 void Window::requestTransitionStart(LayoutTransition* transition){
     auto it = std::find(mPendingTransitions.begin(),mPendingTransitions.end(),transition);
     if(it==mPendingTransitions.end())

@@ -24,5 +24,9 @@ PointerIcon* Button::onResolvePointerIcon(MotionEvent& event, int pointerIndex) 
     }
     return TextView::onResolvePointerIcon(event, pointerIndex);
 }
+
+std::string Button::getAccessibilityClassName()const{
+    return "Button";
+}
 }//endof namespace
 

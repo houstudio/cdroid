@@ -6114,6 +6114,32 @@ void View::onInitializeAccessibilityEvent(AccessibilityEvent& event) {
 }
 
 void View::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
+    event.setSource(this);
+    event.setClassName(getAccessibilityClassName());
+    event.setPackageName(mContext->getPackageName());
+    event.setEnabled(isEnabled());
+    event.setContentDescription(mContentDescription);
+
+    switch (event.getEventType()) {
+        case AccessibilityEvent::TYPE_VIEW_FOCUSED: {
+            std::vector<View*> focusablesTempList;
+            getRootView()->addFocusables(focusablesTempList, View::FOCUS_FORWARD, FOCUSABLES_ALL);
+            event.setItemCount(focusablesTempList.size());
+            auto it=std::find(focusablesTempList.begin(),focusablesTempList.end(),this);
+            event.setCurrentItemIndex(it-focusablesTempList.begin());
+            if (mAttachInfo != nullptr) {
+                focusablesTempList.clear();
+            }
+        } break;
+        case AccessibilityEvent::TYPE_VIEW_TEXT_SELECTION_CHANGED: {
+            std::string text = getIterableTextForAccessibility();
+            if (text.length() > 0) {
+                event.setFromIndex(getAccessibilitySelectionStart());
+                event.setToIndex(getAccessibilitySelectionEnd());
+                event.setItemCount(text.length());
+            }
+        } break;
+    }
 }
 
 AccessibilityNodeInfo* View::createAccessibilityNodeInfo() {
