@@ -47,20 +47,16 @@ private:
     int mRelevantEventTypes;// = AccessibilityEvent::TYPES_ALL_MASK;
     bool mIsTouchExplorationEnabled;
     bool mIsHighTextContrastEnabled;
-#if 0
+
     //AccessibilityPolicy mAccessibilityPolicy;
 
-    std::map<AccessibilityStateChangeListener, Handler> mAccessibilityStateChangeListeners;
-
-    std::map<TouchExplorationStateChangeListener, Handler> mTouchExplorationStateChangeListeners;
-
-    std::map<HighTextContrastChangeListener, Handler> mHighTextContrastStateChangeListeners;
-
-    std::map<AccessibilityServicesStateChangeListener, Handler>  mServicesStateChangeListeners;
+    std::vector<AccessibilityStateChangeListener> mAccessibilityStateChangeListeners;
+    std::vector<TouchExplorationStateChangeListener> mTouchExplorationStateChangeListeners;
+    std::vector<HighTextContrastChangeListener> mHighTextContrastStateChangeListeners;
+    std::vector<AccessibilityServicesStateChangeListener>  mServicesStateChangeListeners;
 
     //SparseArray<std::vector<AccessibilityRequestPreparer>> mRequestPreparerLists;
     //IAccessibilityManagerClient.Stub mClient;
-#endif
 private:
     void setStateLocked(int stateFlags);
     //IAccessibilityManager getServiceLocked();
@@ -94,20 +90,16 @@ public:
     std::vector<AccessibilityServiceInfo> getInstalledAccessibilityServiceList();
 
     std::vector<AccessibilityServiceInfo> getEnabledAccessibilityServiceList( int feedbackTypeFlags);
+#endif
+    void addAccessibilityStateChangeListener(AccessibilityStateChangeListener listener);
 
-    bool addAccessibilityStateChangeListener(AccessibilityStateChangeListener listener);
+    void removeAccessibilityStateChangeListener(AccessibilityStateChangeListener listener);
 
-    void addAccessibilityStateChangeListener(AccessibilityStateChangeListener listener, Handler handler);
+    void addTouchExplorationStateChangeListener(TouchExplorationStateChangeListener listener);
 
-    bool removeAccessibilityStateChangeListener(AccessibilityStateChangeListener listener);
-
-    bool addTouchExplorationStateChangeListener(TouchExplorationStateChangeListener listener);
-
-    void addTouchExplorationStateChangeListener(TouchExplorationStateChangeListener listener, Handler handler);
-
-    bool removeTouchExplorationStateChangeListener(TouchExplorationStateChangeListener listener);
-
-    void addAccessibilityServicesStateChangeListener(AccessibilityServicesStateChangeListener listener,handler);
+    void removeTouchExplorationStateChangeListener(TouchExplorationStateChangeListener listener);
+#if 0
+    void addAccessibilityServicesStateChangeListener(AccessibilityServicesStateChangeListener listener);//,handler);
 
     void removeAccessibilityServicesStateChangeListener(AccessibilityServicesStateChangeListener listener);
 

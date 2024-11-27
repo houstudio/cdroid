@@ -202,46 +202,42 @@ List<AccessibilityServiceInfo> AccessibilityManager::getEnabledAccessibilityServ
         return Collections.emptyList();
     }
 }
+#endif
 
-bool AccessibilityManager::addAccessibilityStateChangeListener(AccessibilityStateChangeListener listener) {
-    addAccessibilityStateChangeListener(listener, null);
-    return true;
+void AccessibilityManager::addAccessibilityStateChangeListener(AccessibilityStateChangeListener listener) {
+    mAccessibilityStateChangeListeners.push_back(listener);
 }
 
-void AccessibilityManager::addAccessibilityStateChangeListener(AccessibilityStateChangeListener listener, Handler handler) {
-    mAccessibilityStateChangeListeners
-                .put(listener, (handler == null) ? mHandler : handler);
+void AccessibilityManager::removeAccessibilityStateChangeListener(AccessibilityStateChangeListener listener) {
+    auto it = std::find(mAccessibilityStateChangeListeners.begin(),
+            mAccessibilityStateChangeListeners.end(),listener);
+    if(it!=mAccessibilityStateChangeListeners.end()){
+        mAccessibilityStateChangeListeners.erase(it);
+    }
 }
 
-bool AccessibilityManager::removeAccessibilityStateChangeListener(AccessibilityStateChangeListener listener) {
-    int index = mAccessibilityStateChangeListeners.indexOfKey(listener);
-    mAccessibilityStateChangeListeners.remove(listener);
-    return (index >= 0);
+void AccessibilityManager::addTouchExplorationStateChangeListener( TouchExplorationStateChangeListener listener) {
+    mTouchExplorationStateChangeListeners.push_back(listener);
 }
 
-bool AccessibilityManager::addTouchExplorationStateChangeListener(TouchExplorationStateChangeListener listener) {
-    addTouchExplorationStateChangeListener(listener, null);
-    return true;
+void AccessibilityManager::removeTouchExplorationStateChangeListener(TouchExplorationStateChangeListener listener) {
+    auto it = std::find(mTouchExplorationStateChangeListeners.begin(),
+            mTouchExplorationStateChangeListeners.end(),listener);
+    if(it!=mTouchExplorationStateChangeListeners.end()){
+        mTouchExplorationStateChangeListeners.erase(it);
+    }
 }
-
-void AccessibilityManager::addTouchExplorationStateChangeListener( TouchExplorationStateChangeListener listener, Handler handler) {
-    mTouchExplorationStateChangeListeners
-            .put(listener, (handler == null) ? mHandler : handler);
-}
-
-bool AccessibilityManager::removeTouchExplorationStateChangeListener(TouchExplorationStateChangeListener listener) {
-    int index = mTouchExplorationStateChangeListeners.indexOfKey(listener);
-    mTouchExplorationStateChangeListeners.remove(listener);
-    return (index >= 0);
-}
-
-void AccessibilityManager::addAccessibilityServicesStateChangeListener( AccessibilityServicesStateChangeListener listener, Handler handler) {
-    mServicesStateChangeListeners
-            .put(listener, (handler == null) ? mHandler : handler);
+#if 0
+void AccessibilityManager::addAccessibilityServicesStateChangeListener( AccessibilityServicesStateChangeListener listener) {
+    mServicesStateChangeListeners.put_back(listener);
 }
 
 void AccessibilityManager::removeAccessibilityServicesStateChangeListener(AccessibilityServicesStateChangeListener listener) {
-    mServicesStateChangeListeners.remove(listener);
+    auto it = std::find(mServicesStateChangeListeners.begin(),
+            mServicesStateChangeListeners.end(),listener);
+    if(it!=mServicesStateChangeListeners.end()){
+        mServicesStateChangeListeners.erase(it);
+    }
 }
 
 void AccessibilityManager::addAccessibilityRequestPreparer(AccessibilityRequestPreparer preparer) {
@@ -500,21 +496,4 @@ bool AccessibilityManager::isAccessibilityButtonSupported() {
     return res.getBoolean(com.android.internal.R.bool.config_showNavigationBar);
 }
 #endif
-/*private class MyCallback implements Handler.Callback {
-    public static constexpr int MSG_SET_STATE = 1;
-
-    @Override
-    public bool handleMessage(Message message) {
-        switch (message.what) {
-            case MSG_SET_STATE: {
-                // See comment at mClient
-                final int state = message.arg1;
-                synchronized (mLock) {
-                    setStateLocked(state);
-                }
-            } break;
-        }
-        return true;
-    }
-}*/
 }

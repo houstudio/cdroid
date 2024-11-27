@@ -7649,8 +7649,10 @@ bool View::performClick(){
          mListenerInfo->mOnClickListener(*this);
          result = true;
     }
-    sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_CLICKED);
-    notifyEnterOrExitForAutoFillIfNeeded(true);
+    if(mAttachInfo){//isAttachedToWindow())
+        sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_CLICKED);
+        notifyEnterOrExitForAutoFillIfNeeded(true);
+    }
     return result;
 }
 
