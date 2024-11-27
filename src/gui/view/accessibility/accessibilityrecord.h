@@ -441,7 +441,7 @@ public:
      *
      * @return The text.
      */
-    std::vector<std::string> getText()const;
+    std::vector<std::string>& getText();
 
     /**
      * Sets the text before a change.

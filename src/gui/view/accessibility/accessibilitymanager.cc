@@ -17,7 +17,7 @@ AccessibilityManager::AccessibilityManager(Context* context/*, IAccessibilityMan
     //mCallback = new MyCallback();
     //mHandler = new Handler(context.getMainLooper(), mCallback);
     mUserId = userId;
-    mIsEnabled = false;
+    mIsEnabled = true;
     mIsTouchExplorationEnabled = false;
     mIsHighTextContrastEnabled = false;
     mRelevantEventTypes = AccessibilityEvent::TYPES_ALL_MASK;
@@ -73,7 +73,7 @@ void AccessibilityManager::sendAccessibilityEvent(AccessibilityEvent& event) {
 #endif
     event.setEventTime(SystemClock::uptimeMillis());
 #if 0
-    if (mAccessibilityPolicy != null) {
+    if (mAccessibilityPolicy != nullptr) {
         dispatchedEvent = mAccessibilityPolicy.onAccessibilityEvent(event, mIsEnabled, mRelevantEventTypes);
         if (dispatchedEvent == null) {
             return;

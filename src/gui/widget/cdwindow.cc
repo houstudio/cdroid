@@ -275,6 +275,7 @@ void Window::draw(){
 
     mAttachInfo->mTreeObserver->dispatchOnPreDraw();
     ViewGroup::draw(*canvas);
+    drawAccessibilityFocusedDrawableIfNeeded(*canvas);
     mAttachInfo->mTreeObserver->dispatchOnDraw();
 
     if (mAttachInfo->mViewScrollChanged) {
@@ -716,6 +717,60 @@ void Window::UIEventHandler::handleIdle(){
 
     if(GraphDevice::getInstance().needCompose())
         GraphDevice::getInstance().requestCompose();
+}
+
+void Window::drawAccessibilityFocusedDrawableIfNeeded(Canvas& canvas){
+    Rect bounds;
+    if (getAccessibilityFocusedRect(bounds)) {
+        Drawable* drawable = getAccessibilityFocusedDrawable();
+        if (drawable != nullptr) {
+            drawable->setBounds(bounds);
+            drawable->draw(canvas);
+        }
+    } else if (mAttachInfo->mAccessibilityFocusDrawable != nullptr) {
+        mAttachInfo->mAccessibilityFocusDrawable->setBounds(0, 0, 0, 0);
+    }    
+}
+
+bool Window::getAccessibilityFocusedRect(Rect& bounds){
+    AccessibilityManager& manager = AccessibilityManager::getInstance(mContext);
+    if (!manager.isEnabled() || !manager.isTouchExplorationEnabled()) {
+        return false;
+    }
+
+    View* host = mAccessibilityFocusedHost;
+    if (host == nullptr || host->mAttachInfo == nullptr) {
+        return false;
+    }
+
+    AccessibilityNodeProvider* provider = host->getAccessibilityNodeProvider();
+    if (provider == nullptr) {
+        host->getBoundsOnScreen(bounds, true);
+    } else if (mAccessibilityFocusedVirtualView != nullptr) {
+        mAccessibilityFocusedVirtualView->getBoundsInScreen(bounds);
+    } else {
+        return false;
+    }
+
+    // Transform the rect into window-relative coordinates.
+    AttachInfo* attachInfo = mAttachInfo;
+    bounds.offset(0, attachInfo->mRootView->mScrollY);
+    bounds.offset(-attachInfo->mWindowLeft, -attachInfo->mWindowTop);
+    if (!bounds.intersect(0, 0, attachInfo->mRootView->getWidth(),
+            attachInfo->mRootView->getHeight())) {
+        // If no intersection, set bounds to empty.
+        bounds.setEmpty();
+    }
+    return !bounds.empty();
+}
+
+Drawable* Window::getAccessibilityFocusedDrawable(){
+    // Lazily load the accessibility focus drawable.
+    if (mAttachInfo->mAccessibilityFocusDrawable == nullptr) {
+        LOGD("TODO");
+        //mAttachInfo->mAccessibilityFocusDrawable = mContext->getDrawable(value.resourceId);
+    }
+    return mAttachInfo->mAccessibilityFocusDrawable;
 }
 
 }  //endof namespace

@@ -6018,6 +6018,20 @@ void View::sendAccessibilityHoverEvent(int eventType){
 }
 
 View& View::clearAccessibilityFocusNoCallbacks(int action){
+    if ((mPrivateFlags2 & PFLAG2_ACCESSIBILITY_FOCUSED) != 0) {
+        mPrivateFlags2 &= ~PFLAG2_ACCESSIBILITY_FOCUSED;
+        invalidate();
+        if (AccessibilityManager::getInstance(mContext).isEnabled()) {
+            AccessibilityEvent* event = AccessibilityEvent::obtain(
+                    AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED);
+            event->setAction(action);
+            if (mAccessibilityDelegate != nullptr) {
+                mAccessibilityDelegate->sendAccessibilityEventUnchecked(*this, *event);
+            } else {
+                sendAccessibilityEventUnchecked(*event);
+            }
+        }
+    }
     return *this;
 }
 
@@ -6193,7 +6207,7 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
     info.setVisibleToUser(isVisibleToUser());
     info.setImportantForAccessibility(isImportantForAccessibility());
     info.setPackageName(mContext->getPackageName());
-    //info.setClassName(getAccessibilityClassName());
+    info.setClassName(getAccessibilityClassName());
     info.setContentDescription(getContentDescription());
     info.setEnabled(isEnabled());
     info.setClickable(isClickable());
@@ -8941,13 +8955,14 @@ View::AttachInfo::AttachInfo(Context*ctx){
     mDrawingTime  = 0;
     mInTouchMode  = true;
     mKeepScreenOn = true;
+    mDisplayState = true;
     mRootView     = nullptr;
     mCanvas       = nullptr;
-    mDisplayState = true;
     mTooltipHost  = nullptr;
     mEventSource  = nullptr;
     mViewRequestingLayout = nullptr;
     mAutofilledDrawable = nullptr;
+    mAccessibilityFocusDrawable = nullptr;
     mTreeObserver = new ViewTreeObserver(ctx);
     mWindowLeft = 0;
     mWindowTop  = 0;
@@ -8955,7 +8970,8 @@ View::AttachInfo::AttachInfo(Context*ctx){
 
 View::AttachInfo::~AttachInfo(){
     delete mTreeObserver;
-    delete mAutofilledDrawable; 
+    delete mAutofilledDrawable;
+    delete mAccessibilityFocusDrawable;
 }
 
 View::CheckForTap::CheckForTap(View*v)

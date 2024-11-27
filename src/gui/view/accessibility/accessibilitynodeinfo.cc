@@ -2,6 +2,7 @@
 #include <view/accessibility/accessibilitywindowinfo.h>
 #include <view/view.h>
 #include <core/bitset.h>
+#include <core/mathutils.h>
 #include <widget/R.h>
 
 namespace cdroid{
@@ -1390,21 +1391,10 @@ AccessibilityNodeInfo::AccessibilityAction* AccessibilityNodeInfo::getActionSing
     return nullptr;
 }
 
-template<typename T>
-static int numberOfTrailingZeros(T value) {
-    if (value == 0) return sizeof(T)*8; // 32 位整数的情况下
-    int count = 0;
-    while ((value & 1) == 0) {
-        value >>= 1;
-        count++;
-    }
-    return count;
-}
-
 void AccessibilityNodeInfo::addStandardActions(long serializationIdMask) {
     long remainingIds = serializationIdMask;
     while (remainingIds > 0) {
-        const long id = 1L << numberOfTrailingZeros(remainingIds);
+        const long id = 1L << MathUtils::numberOfTrailingZeros(remainingIds);
         remainingIds &= ~id;
         AccessibilityAction* action = getActionSingletonBySerializationFlag(id);
         addAction(action);
@@ -1510,7 +1500,7 @@ std::string AccessibilityNodeInfo::toString() {
         int granularities = mMovementGranularities;
         builder<<"; MovementGranularities: [";
         while (granularities != 0) {
-            int granularity = 1 << numberOfTrailingZeros(granularities);
+            int granularity = 1 << MathUtils::numberOfTrailingZeros(granularities);
             granularities &= ~granularity;
             builder<<getMovementGranularitySymbolicName(granularity);
             if (granularities != 0) {
@@ -1772,7 +1762,7 @@ bool AccessibilityNodeInfo::RangeInfo::operator==(const RangeInfo* other)const{
 }
 
 /////////////////public static final class CollectionInfo
-    /** Selection mode where items are not selectable. */
+/** Selection mode where items are not selectable. */
 
 Pools::SimplePool<AccessibilityNodeInfo::CollectionInfo> AccessibilityNodeInfo::CollectionInfo::sPool(AccessibilityNodeInfo::CollectionInfo::MAX_POOL_SIZE);
 
@@ -1873,7 +1863,7 @@ AccessibilityNodeInfo::CollectionItemInfo::CollectionItemInfo(int rowIndex, int 
     mRowSpan = rowSpan;
     mColumnIndex = columnIndex;
     mColumnSpan = columnSpan;
-    mHeading = heading;
+    mHeading  = heading;
     mSelected = selected;
 }
 

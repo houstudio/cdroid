@@ -2039,7 +2039,7 @@ AccessibilityNodeInfo* NumberPicker::AccessibilityNodeProviderImpl::createAccess
 AccessibilityNodeInfo* NumberPicker::AccessibilityNodeProviderImpl::createAccessibilityNodeInfoForNumberPicker(int left, int top,int right, int bottom) {
     AccessibilityNodeInfo* info = AccessibilityNodeInfo::obtain();
     info->setClassName("NumberPicker");
-    //info->setPackageName(mContext.getPackageName());
+    info->setPackageName("cdroid");
     info->setSource(mNP);
 
     if (hasVirtualDecrementButton()) {

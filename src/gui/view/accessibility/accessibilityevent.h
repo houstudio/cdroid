@@ -312,6 +312,10 @@ public:
     void setEventTime(int64_t eventTime);
     std::string getPackageName()const;
     void setPackageName(const std::string&);
+    void setMovementGranularity(int granularity);
+    int getMovementGranularity()const;
+    void setAction(int action);
+    int getAction()const;
     static AccessibilityEvent* obtainWindowsChangedEvent(int windowId, int windowChangeTypes);
     static AccessibilityEvent* obtain(int eventType);
     static AccessibilityEvent* obtain(const AccessibilityEvent& event);

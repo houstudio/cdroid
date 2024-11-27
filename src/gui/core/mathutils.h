@@ -16,6 +16,16 @@ public:
         }
    }
 
+   template<typename T>
+   static int numberOfTrailingZeros(T value) {
+       if (value == 0) return sizeof(T)*8;
+       int count = 0;
+       while ((value & 1) == 0) {
+           value >>= 1;
+           count++;
+       }
+       return count;
+   }
 };
 }
 #endif

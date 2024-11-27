@@ -1,9 +1,17 @@
 #include <view/accessibility/accessibilityevent.h>
+#include <core/mathutils.h>
+#include <functional>
 namespace cdroid{
 
 Pools::SimplePool<AccessibilityEvent> AccessibilityEvent::sPool(MAX_POOL_SIZE);
 
 AccessibilityEvent::AccessibilityEvent(){
+    mEventType = 0;
+    mEventTime = 0;
+    mAction = 0;
+    mMovementGranularity = 0;
+    mContentChangeTypes = 0;
+    mWindowChangeTypes =0;
 }
 
 void AccessibilityEvent::init(const AccessibilityEvent&event){
@@ -39,8 +47,23 @@ int AccessibilityEvent::getContentChangeTypes()const{
     return mContentChangeTypes;
 }
 
+static std::string flagsToString(int flags,std::function<std::string(int)>func){
+    std::ostringstream builder;
+    int count = 0;
+    if(flags)builder<<"[";
+    while (flags != 0) {
+        const int flag = 1 << MathUtils::numberOfTrailingZeros(flags);
+        flags &= ~flag;
+        if (count > 0) builder<<", ";
+        builder<<func(flag);
+        count++;
+    }
+    if(count)builder<< "]";
+    return builder.str();
+}
 std::string AccessibilityEvent::contentChangeTypesToString(int types) {
-    return "";//BitUtils.flagsToString(types, AccessibilityEvent::singleContentChangeTypeToString);
+    return flagsToString(types,AccessibilityEvent::singleContentChangeTypeToString);
+    //return BitUtils.flagsToString(types, AccessibilityEvent::singleContentChangeTypeToString);
 }
 
 std::string AccessibilityEvent::singleContentChangeTypeToString(int type) {
@@ -70,7 +93,7 @@ void AccessibilityEvent::setWindowChanges(int changes){
 }
 
 std::string AccessibilityEvent::windowChangeTypesToString(int types) {
-    return "";//BitUtils.flagsToString(types, AccessibilityEvent::singleWindowChangeTypeToString);
+    return flagsToString(types, AccessibilityEvent::singleWindowChangeTypeToString);
 }
 
 std::string AccessibilityEvent::singleWindowChangeTypeToString(int type) {
@@ -112,6 +135,25 @@ void AccessibilityEvent::setPackageName(const std::string&name){
     enforceNotSealed();
     mPackageName = name;
 }
+
+void AccessibilityEvent::setMovementGranularity(int granularity){
+    enforceNotSealed();
+    mMovementGranularity = granularity;
+}
+
+int AccessibilityEvent::getMovementGranularity()const{
+    return mMovementGranularity;
+}
+
+void AccessibilityEvent::setAction(int action){
+    enforceNotSealed();
+    mAction = action;
+}
+
+int AccessibilityEvent::getAction()const{
+    return mAction;
+}
+
 AccessibilityEvent*AccessibilityEvent::obtainWindowsChangedEvent(
         int windowId, int windowChangeTypes) {
     AccessibilityEvent* event = AccessibilityEvent::obtain(TYPE_WINDOWS_CHANGED);

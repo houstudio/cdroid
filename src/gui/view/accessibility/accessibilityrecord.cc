@@ -226,7 +226,7 @@ void AccessibilityRecord::setClassName(const std::string& className) {
     mClassName = className;
 }
 
-std::vector<std::string> AccessibilityRecord::getText() const{
+std::vector<std::string>& AccessibilityRecord::getText(){
     return mText;
 }
 

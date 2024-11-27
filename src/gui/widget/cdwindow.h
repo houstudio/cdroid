@@ -52,6 +52,9 @@ private:
     bool enterTouchMode();
     bool leaveTouchMode();
     void playSoundImpl(int);
+    void drawAccessibilityFocusedDrawableIfNeeded(Canvas& canvas);
+    bool getAccessibilityFocusedRect(Rect& bounds);
+    Drawable* getAccessibilityFocusedDrawable();
 protected:
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;

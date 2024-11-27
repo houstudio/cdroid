@@ -96,8 +96,6 @@ private:
     View* mFocused;
     View* mDefaultFocus;
     View* mFocusedInCluster;
-    View* mAccessibilityFocusedHost;
-    AccessibilityNodeInfo* mAccessibilityFocusedVirtualView;
     class LayoutTransition*mTransition;
     std::vector<View*>mTransitioningViews;
     std::vector<View*>mVisibilityChangingChildren;
@@ -175,6 +173,8 @@ protected:
     std::vector<View*> mChildren;
     std::vector<View*> mDisappearingChildren;
     std::vector<View*> mChildrenInterestedInDrag;
+    View* mAccessibilityFocusedHost;
+    AccessibilityNodeInfo* mAccessibilityFocusedVirtualView;
     Cairo::RefPtr<Cairo::Region>mInvalidRgn;
     Transformation*mInvalidationTransformation;
     int64_t time_lastframe;
