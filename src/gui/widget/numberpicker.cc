@@ -1695,4 +1695,28 @@ void NumberPicker::pshRun(){
     }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+std::string NumberPicker::getAccessibilityClassName()const{
+    return "NumberPicker";
+}
+
+void NumberPicker::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
+    LinearLayout::onInitializeAccessibilityEventInternal(event);
+    event.setClassName("NumberPicker");
+    event.setScrollable(true);
+    event.setScrollY((mMinValue + mValue) * mSelectorElementSize);
+    event.setMaxScrollY((mMaxValue - mMinValue) * mSelectorElementSize);
+}
+
+AccessibilityNodeProvider* NumberPicker::getAccessibilityNodeProvider()const{
+    if (!mHasSelectorWheel) {
+        return LinearLayout::getAccessibilityNodeProvider();
+    }
+    /*if (mAccessibilityNodeProvider == nullptr) {
+        mAccessibilityNodeProvider = new AccessibilityNodeProviderImpl();
+    }
+    return mAccessibilityNodeProvider;*/
+    return nullptr;
+}
+
 }//namespace

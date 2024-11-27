@@ -331,6 +331,7 @@ public:
     void onViewAdded(View*)override;
     void onViewRemoved(View*)override;
     void requestLayout()override;
+    std::string getAccessibilityClassName()const override;
 };
 
 }

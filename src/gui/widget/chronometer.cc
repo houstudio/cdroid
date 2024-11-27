@@ -177,5 +177,8 @@ std::string Chronometer::getContentDescription()const{
     return formatDuration(mNow - mBase);
 }
 
+std::string Chronometer::getAccessibilityClassName()const{
+    return "Chronometer";
+}
 
 }

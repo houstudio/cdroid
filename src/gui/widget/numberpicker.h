@@ -253,6 +253,11 @@ public:
     Typeface* getTypeface()const;
     void smoothScrollToPosition(int position);
     void smoothScroll(bool increment, int steps);
+
+    std::string getAccessibilityClassName()const override;
+    void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
+    AccessibilityNodeProvider* getAccessibilityNodeProvider()const override;
+
 };
     
 }//namespace

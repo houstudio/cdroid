@@ -29,5 +29,9 @@ void TextSwitcher::setCurrentText(const std::string& text){
     ((TextView*)getCurrentView())->setText(text);
 }
 
+std::string TextSwitcher::getAccessibilityClassName()const{
+    return "TextSwitcher";
+}
+
 }
 

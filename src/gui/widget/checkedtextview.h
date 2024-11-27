@@ -48,6 +48,10 @@ public:
     View& setVisibility(int visibility)override;     
     void jumpDrawablesToCurrentState()override;
     void onRtlPropertiesChanged(int layoutDirection)override;
+
+    std::string getAccessibilityClassName()const override;
+    void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
 };
 }//endof namespace
 

@@ -3,26 +3,30 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(ImageSwicther)
+DECLARE_WIDGET(ImageSwitcher)
 
-ImageSwicther::ImageSwicther(int w,int h)
+ImageSwitcher::ImageSwitcher(int w,int h)
     :ViewSwitcher(w,h){
 }
 
-ImageSwicther::ImageSwicther(Context*ctx,const AttributeSet&atts)
+ImageSwitcher::ImageSwitcher(Context*ctx,const AttributeSet&atts)
   :ViewSwitcher(ctx,atts){
 }
 
-void ImageSwicther::setImageResource(const std::string&resid){
+void ImageSwitcher::setImageResource(const std::string&resid){
     ImageView* image = (ImageView*)getNextView();
     image->setImageResource(resid);
     showNext();
 }
 
-void ImageSwicther::setImageDrawable(Drawable* drawable){
+void ImageSwitcher::setImageDrawable(Drawable* drawable){
     ImageView* image = (ImageView*)getNextView();
     image->setImageDrawable(drawable);
     showNext();
+}
+
+std::string ImageSwitcher::getAccessibilityClassName()const{
+    return "ImageSwitcher";
 }
 
 }

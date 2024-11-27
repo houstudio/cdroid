@@ -66,6 +66,7 @@ public:
     View& addView(View* child, ViewGroup::LayoutParams* params)override;
     View& addView(View* child, int index, ViewGroup::LayoutParams* params)override;
 
+    std::string getAccessibilityClassName()const override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };
 }

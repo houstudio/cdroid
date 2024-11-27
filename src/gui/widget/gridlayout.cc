@@ -1,4 +1,5 @@
 #include <widget/gridlayout.h>
+#include <widget/space.h>
 #include <cdlog.h>
 #include <sstream>
 
@@ -160,6 +161,10 @@ int GridLayout::getAlignmentMode()const{
     return  mAlignmentMode;
 }
 
+std::string GridLayout::getAccessibilityClassName()const{
+    return "GridLayout";
+}
+
 void GridLayout::setAlignmentMode(int alignmentMode){
     mAlignmentMode= alignmentMode;
     requestLayout();
@@ -215,9 +220,9 @@ GridLayout::Alignment* GridLayout::getAlignment(int gravity, bool horizontal){
 }
 
 int GridLayout::getDefaultMargin(View* c, bool horizontal, bool leading)const{
-    /*if (dynamic_cast<Space*>(c)) {
+    if (dynamic_cast<Space*>(c)) {
         return 0;
-    }*/
+    }
     return mDefaultGap / 2;
 }
 

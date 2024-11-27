@@ -56,6 +56,7 @@ public:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     View* getVirtualChildAt(int i) override;
     int getVirtualChildCount()override;
+    std::string getAccessibilityClassName()const override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };
 }

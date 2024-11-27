@@ -48,6 +48,7 @@ public:
     void setMeasureAllChildren(bool measureAll);
     bool getMeasureAllChildren()const;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    std::string getAccessibilityClassName()const override;
 };
 }//namespace
 #endif

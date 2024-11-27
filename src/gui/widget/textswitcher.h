@@ -11,6 +11,7 @@ public:
     View& addView(View* child, int index, ViewGroup::LayoutParams* params);
     void setText(const std::string&);
     void setCurrentText(const std::string& text);
+    std::string getAccessibilityClassName()const override;
 };
 
 }

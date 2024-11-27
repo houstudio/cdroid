@@ -46,7 +46,7 @@ void CheckedTextView::setChecked(bool checked) {
     if (mChecked != checked) {
         mChecked = checked;
         refreshDrawableState();
-        //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_UNDEFINED);
+        notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
     }
 }
 
@@ -262,6 +262,21 @@ void CheckedTextView::drawableHotspotChanged(float x, float y) {
     if (mCheckMarkDrawable) {
         mCheckMarkDrawable->setHotspot(x, y);
     }
+}
+
+std::string CheckedTextView::getAccessibilityClassName()const{
+    return "CheckedTextView";
+}
+
+void CheckedTextView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event) {
+    TextView::onInitializeAccessibilityEventInternal(event);
+    event.setChecked(mChecked);
+}
+
+void CheckedTextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
+    TextView::onInitializeAccessibilityNodeInfoInternal(info);
+    info.setCheckable(true);
+    info.setChecked(mChecked);
 }
 
 }

@@ -759,6 +759,54 @@ ViewGroup::LayoutParams* RelativeLayout::generateLayoutParams(const ViewGroup::L
     return new LayoutParams(*lp);
 }
 
+bool RelativeLayout::dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event){
+    /*if (mTopToBottomLeftToRightSet == null) {
+        mTopToBottomLeftToRightSet = new TreeSet<View>(new TopToBottomLeftToRightComparator());
+    }*/
+
+    // sort children top-to-bottom and left-to-right
+    for (int i = 0, count = getChildCount(); i < count; i++) {
+        mTopToBottomLeftToRightSet.insert(getChildAt(i));
+    }
+
+    for (View* view : mTopToBottomLeftToRightSet) {
+        if (view->getVisibility() == View::VISIBLE
+                && view->dispatchPopulateAccessibilityEvent(event)) {
+            mTopToBottomLeftToRightSet.clear();
+            return true;
+        }
+    }
+    mTopToBottomLeftToRightSet.clear();
+    return false;
+}
+
+std::string RelativeLayout::getAccessibilityClassName()const {
+    return "RelativeLayout";
+}
+
+bool RelativeLayout::TopToBottomLeftToRightComparator::operator()(const View* first, const View* second)const{
+    const int topDifference = first->getTop() - second->getTop();
+    if (topDifference != 0) {
+        return topDifference;
+    }
+    // left - right
+    const int leftDifference = first->getLeft() - second->getLeft();
+    if (leftDifference != 0) {
+        return leftDifference;
+    }
+    // break tie by height
+    const int heightDiference = first->getHeight() - second->getHeight();
+    if (heightDiference != 0) {
+        return heightDiference;
+    }
+    // break tie by width
+    const int widthDiference = first->getWidth() - second->getWidth();
+    if (widthDiference != 0) {
+        return widthDiference;
+    }
+    return 0;
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 RelativeLayout::LayoutParams::LayoutParams(int w, int h)
   :MarginLayoutParams(w,h){

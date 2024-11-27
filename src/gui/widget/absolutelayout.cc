@@ -104,4 +104,7 @@ void AbsoluteLayout::onLayout(bool changed, int l, int t,int w, int h){
     }
 }
 
+std::string AbsoluteLayout::getAccessibilityClassName()const{
+    return "AbsoluteLayout";
+}
 }

@@ -157,6 +157,10 @@ int LinearLayout::getBaseline(){
     return childTop + lp->topMargin + childBaseline;
 }
 
+std::string LinearLayout::getAccessibilityClassName()const{
+    return "LinearLayout";
+}
+
 bool LinearLayout::isBaselineAligned()const {
     return mBaselineAligned;
 }

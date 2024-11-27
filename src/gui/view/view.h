@@ -1082,7 +1082,7 @@ public:
 
     AccessibilityDelegate* getAccessibilityDelegate()const;
     void setAccessibilityDelegate(AccessibilityDelegate* delegate);
-    AccessibilityNodeProvider* getAccessibilityNodeProvider()const;
+    virtual AccessibilityNodeProvider* getAccessibilityNodeProvider()const;
     bool isActionableForAccessibility()const;
     void notifyViewAccessibilityStateChangedIfNeeded(int changeType);
     virtual void notifySubtreeAccessibilityStateChangedIfNeeded();
@@ -1126,7 +1126,7 @@ public:
     virtual View& setHint(const std::string&hint);
     const std::string&getHint()const;
     void setContentDescription(const std::string&);
-    std::string getContentDescription()const;
+    virtual std::string getContentDescription()const;
     void setIsRootNamespace(bool);
     bool isRootNamespace()const;
     cdroid::Context*getContext()const;

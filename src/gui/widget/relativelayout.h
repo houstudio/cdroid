@@ -2,6 +2,7 @@
 #define __RELATIVE_LAYOUT_H__
 #include <view/viewgroup.h>
 #include <list>
+#include <set>
 namespace cdroid{
 
 class RelativeLayout:public ViewGroup{
@@ -84,6 +85,9 @@ private:
         void getSortedViews(std::vector<View*>&sorted,const int* rules,size_t ruleCount);
         std::list<Node*> findRoots(const int* rulesFilter,size_t ruleCount);
     };
+    struct TopToBottomLeftToRightComparator{
+        bool operator()(const View* lhs, const View* rhs)const;
+    };
 private:
 
     /* Used to indicate left/right/top/bottom should be inferred from constraints*/
@@ -96,7 +100,7 @@ private:
     Rect mSelfBounds;
     int mIgnoreGravity;
 
-    std::set<View*> mTopToBottomLeftToRightSet;
+    std::set<View*,TopToBottomLeftToRightComparator> mTopToBottomLeftToRightSet;
 
     bool mDirtyHierarchy;
     std::vector<View*> mSortedHorizontalChildren;
@@ -153,6 +157,9 @@ public:
     int getBaseline()override;
     void requestLayout()override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+
+    bool dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event)override;
+    std::string getAccessibilityClassName()const override;
 };
 
 }//endof namespace

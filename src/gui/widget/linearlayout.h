@@ -103,6 +103,7 @@ public:
     void setBaselineAligned(bool baselineAligned);
     bool isMeasureWithLargestChildEnabled()const;
     void setMeasureWithLargestChildEnabled(bool enabled);
+    std::string getAccessibilityClassName()const override;
 
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     virtual ~LinearLayout();

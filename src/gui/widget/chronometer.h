@@ -47,7 +47,8 @@ public:
     void start();
     void stop();
     void setStarted(bool started);
-    std::string getContentDescription()const;
+    std::string getContentDescription()const override;
+    std::string getAccessibilityClassName()const override;
 };
 }//namespace
 

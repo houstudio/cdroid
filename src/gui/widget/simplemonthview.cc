@@ -38,6 +38,12 @@ SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
     mDesiredDayHeight = atts.getDimensionPixelSize("day_height");
     mDesiredCellWidth  = atts.getDimensionPixelSize("day_width");
     mDesiredDaySelectorRadius=atts.getDimensionPixelSize("day_selector_radius");
+
+    // Set up accessibility components.
+    mTouchHelper = new MonthViewTouchHelper(this);
+    setAccessibilityDelegate(mTouchHelper);
+    setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
+
     std::string res = atts.getString("monthTextAppearance");
     if(!res.empty())setMonthTextAppearance(res);
     res = atts.getString("dayOfWeekTextAppearance");

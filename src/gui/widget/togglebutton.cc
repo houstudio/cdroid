@@ -45,7 +45,7 @@ void ToggleButton::doSetChecked(bool checked) {
 }
 
 void ToggleButton::syncTextState(){
-    bool checked = isChecked();
+    const bool checked = isChecked();
     if (checked && !mTextOn.empty()) {
         setText(mTextOn);
     } else if (!checked && !mTextOff.empty()) {
@@ -73,6 +73,10 @@ View& ToggleButton::setBackground(Drawable* d){
     CompoundButton::setBackground(d);
     updateReferenceToIndicatorDrawable(d);
     return *this;
+}
+
+std::string ToggleButton::getAccessibilityName()const{
+    return "ToggleButton";
 }
 
 }

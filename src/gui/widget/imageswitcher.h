@@ -4,12 +4,13 @@
 
 namespace cdroid{
 
-class ImageSwicther:public ViewSwitcher{
+class ImageSwitcher:public ViewSwitcher{
 public:
-    ImageSwicther(int w,int h);
-    ImageSwicther(Context*ctx,const AttributeSet&atts);
+    ImageSwitcher(int w,int h);
+    ImageSwitcher(Context*ctx,const AttributeSet&atts);
     void setImageResource(const std::string&res);
     void setImageDrawable(Drawable* drawable);
+    std::string getAccessibilityClassName()const override;
 };
 
 }

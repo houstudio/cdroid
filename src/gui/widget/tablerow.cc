@@ -98,6 +98,10 @@ int TableRow::getVirtualChildCount() {
     return mNumColumns;
 }
 
+std::string TableRow::getAccessibilityClassName()const{
+    return "TableRow";
+}
+
 void TableRow::mapIndexAndColumns() {
     if (mColumnToChildIndex.size() == 0) {
         int virtualCount = 0;

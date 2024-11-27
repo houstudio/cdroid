@@ -25,6 +25,7 @@ public:
     AbsoluteLayout(int w,int h);
     AbsoluteLayout(Context* context,const AttributeSet& attrs);
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    std::string getAccessibilityClassName()const override;
 };
 
 }

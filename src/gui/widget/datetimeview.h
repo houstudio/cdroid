@@ -31,6 +31,7 @@ public:
     void setTime(int64_t timeMillis);
     void setShowRelativeTime(bool showRelativeTime);
     View& setVisibility(int visibility)override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
 };
 
 }/*endof namespace*/

@@ -348,6 +348,10 @@ void TableLayout::mutateColumnsWidth(SparseBooleanArray& columns,bool allColumns
     }
 }
 
+std::string TableLayout::getAccessibilityClassName()const{
+    return "TableLayout";
+}
+
 ViewGroup::LayoutParams* TableLayout::generateLayoutParams(const AttributeSet& attrs)const {
     return new LayoutParams(getContext(), attrs);
 }

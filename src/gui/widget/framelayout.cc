@@ -244,6 +244,9 @@ bool FrameLayout::getMeasureAllChildren()const {
     return mMeasureAllChildren;
 }
 
+std::string FrameLayout::getAccessibilityClassName()const{
+    return "FrameLayout";
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
