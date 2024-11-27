@@ -40,6 +40,7 @@ private:
     static constexpr int DEFAULT_MAX_HEIGHT= 180;
     static constexpr int DEFAULT_MIN_WIDTH = 64;
     static constexpr float DEFAULT_FADING_EDGE_STRENGTH = .9f;
+    class AccessibilityNodeProviderImpl;
     ImageButton* mIncrementButton;
     ImageButton* mDecrementButton;
     EditText* mInputText;
@@ -105,6 +106,7 @@ private:
     Drawable* mDividerDrawable;
     Drawable* mItemBackground;
     Drawable* mVirtualButtonPressedDrawable;
+    AccessibilityNodeProviderImpl* mAccessibilityNodeProvider;
     int mDividerColor;
     int mDividerType;
     int mDividerDistance;
@@ -256,9 +258,35 @@ public:
 
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
-    AccessibilityNodeProvider* getAccessibilityNodeProvider()const override;
+    AccessibilityNodeProvider* getAccessibilityNodeProvider()override;
 
 };
-    
+
+class NumberPicker::AccessibilityNodeProviderImpl:public AccessibilityNodeProvider {
+private:
+	static constexpr int UNDEFINED = INT_MIN;
+    static constexpr int VIRTUAL_VIEW_ID_INCREMENT = 1;
+    static constexpr int VIRTUAL_VIEW_ID_INPUT = 2;
+    static constexpr int VIRTUAL_VIEW_ID_DECREMENT = 3;
+    int mAccessibilityFocusedView = UNDEFINED;
+    NumberPicker*mNP;
+private:
+    void sendAccessibilityEventForVirtualText(int eventType);
+    void sendAccessibilityEventForVirtualButton(int virtualViewId, int eventType,const std::string& text);
+    void findAccessibilityNodeInfosByTextInChild(const std::string& searchedLowerCase, int virtualViewId,std::vector<AccessibilityNodeInfo*>& outResult);
+    AccessibilityNodeInfo* createAccessibiltyNodeInfoForInputText( int left, int top, int right, int bottom);
+    AccessibilityNodeInfo* createAccessibilityNodeInfoForVirtualButton(int virtualViewId,const std::string& text, int left, int top, int right, int bottom);
+    AccessibilityNodeInfo* createAccessibilityNodeInfoForNumberPicker(int left, int top, int right, int bottom);
+    bool hasVirtualDecrementButton();
+    bool hasVirtualIncrementButton();
+    std::string getVirtualDecrementButtonText()const;
+    std::string getVirtualIncrementButtonText()const;
+public:
+    AccessibilityNodeProviderImpl(NumberPicker*);
+    AccessibilityNodeInfo* createAccessibilityNodeInfo(int virtualViewId);
+    std::vector<AccessibilityNodeInfo*> findAccessibilityNodeInfosByText(const std::string& searched, int virtualViewId);
+    bool performAction(int virtualViewId, int action, Bundle arguments);
+    void sendAccessibilityEventForVirtualView(int virtualViewId, int eventType);
+};
 }//namespace
 #endif

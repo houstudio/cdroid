@@ -1,4 +1,5 @@
 #include <widget/numberpicker.h>
+#include <view/accessibility/accessibilitymanager.h>
 #include <widget/R.h>
 #include <color.h>
 #include <textutils.h>
@@ -1708,15 +1709,414 @@ void NumberPicker::onInitializeAccessibilityEventInternal(AccessibilityEvent& ev
     event.setMaxScrollY((mMaxValue - mMinValue) * mSelectorElementSize);
 }
 
-AccessibilityNodeProvider* NumberPicker::getAccessibilityNodeProvider()const{
-    if (!mHasSelectorWheel) {
+AccessibilityNodeProvider* NumberPicker::getAccessibilityNodeProvider(){
+    if (false){//!mHasSelectorWheel) {
         return LinearLayout::getAccessibilityNodeProvider();
     }
-    /*if (mAccessibilityNodeProvider == nullptr) {
-        mAccessibilityNodeProvider = new AccessibilityNodeProviderImpl();
+    if (mAccessibilityNodeProvider == nullptr) {
+        mAccessibilityNodeProvider = new AccessibilityNodeProviderImpl((NumberPicker*)this);
     }
-    return mAccessibilityNodeProvider;*/
-    return nullptr;
+    return mAccessibilityNodeProvider;
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+NumberPicker::AccessibilityNodeProviderImpl::AccessibilityNodeProviderImpl(NumberPicker*np):mNP(np){
+}
+
+AccessibilityNodeInfo* NumberPicker::AccessibilityNodeProviderImpl::createAccessibilityNodeInfo(int virtualViewId) {
+    switch (virtualViewId) {
+        case View::NO_ID:
+            return createAccessibilityNodeInfoForNumberPicker( mNP->mScrollX, mNP->mScrollY,
+                    mNP->mScrollX + mNP->getWidth(), mNP->mScrollY + mNP->getHeight());
+        case VIRTUAL_VIEW_ID_DECREMENT:
+            return createAccessibilityNodeInfoForVirtualButton(VIRTUAL_VIEW_ID_DECREMENT,
+                    getVirtualDecrementButtonText(), mNP->mScrollX, mNP->mScrollY, mNP->mScrollX + mNP->getWidth(),
+                    mNP->mTopSelectionDividerTop + mNP->mSelectionDividerHeight);
+        case VIRTUAL_VIEW_ID_INPUT:
+            return createAccessibiltyNodeInfoForInputText(mNP->mScrollX,
+                    mNP->mTopSelectionDividerTop + mNP->mSelectionDividerHeight, mNP->mScrollX + mNP->getWidth(),
+                    mNP->mBottomSelectionDividerBottom - mNP->mSelectionDividerHeight);
+        case VIRTUAL_VIEW_ID_INCREMENT:
+            return createAccessibilityNodeInfoForVirtualButton(VIRTUAL_VIEW_ID_INCREMENT,
+                    getVirtualIncrementButtonText(), mNP->mScrollX, mNP->mBottomSelectionDividerBottom - mNP->mSelectionDividerHeight,
+                    mNP->mScrollX + mNP->getWidth(), mNP->mScrollY + mNP->getHeight());
+    }
+    return AccessibilityNodeProvider::createAccessibilityNodeInfo(virtualViewId);
+}
+
+std::vector<AccessibilityNodeInfo*> NumberPicker::AccessibilityNodeProviderImpl::findAccessibilityNodeInfosByText(const std::string& searched,
+        int virtualViewId) {
+    if (TextUtils::isEmpty(searched)) {
+        return std::vector<AccessibilityNodeInfo*>();
+    }
+    std::string searchedLowerCase = searched;//toLowerCase();
+    std::vector<AccessibilityNodeInfo*> result;
+    switch (virtualViewId) {
+        case View::NO_ID: {
+            findAccessibilityNodeInfosByTextInChild(searchedLowerCase, VIRTUAL_VIEW_ID_DECREMENT, result);
+            findAccessibilityNodeInfosByTextInChild(searchedLowerCase, VIRTUAL_VIEW_ID_INPUT, result);
+            findAccessibilityNodeInfosByTextInChild(searchedLowerCase, VIRTUAL_VIEW_ID_INCREMENT, result);
+            return result;
+        }
+        case VIRTUAL_VIEW_ID_DECREMENT:
+        case VIRTUAL_VIEW_ID_INCREMENT:
+        case VIRTUAL_VIEW_ID_INPUT:
+            findAccessibilityNodeInfosByTextInChild(searchedLowerCase, virtualViewId, result);
+            return result;
+    }
+    return AccessibilityNodeProvider::findAccessibilityNodeInfosByText(searched, virtualViewId);
+}
+
+bool NumberPicker::AccessibilityNodeProviderImpl::performAction(int virtualViewId, int action, Bundle arguments) {
+    switch (virtualViewId) {
+    case View::NO_ID: {
+        switch (action) {
+            case AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS: {
+                if (mAccessibilityFocusedView != virtualViewId) {
+                    mAccessibilityFocusedView = virtualViewId;
+                    mNP->requestAccessibilityFocus();
+                    return true;
+                }
+            } return false;
+            case AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS: {
+                if (mAccessibilityFocusedView == virtualViewId) {
+                    mAccessibilityFocusedView = UNDEFINED;
+                    mNP->clearAccessibilityFocus();
+                    return true;
+                }
+                return false;
+            }
+            case AccessibilityNodeInfo::ACTION_SCROLL_FORWARD: {
+                if (mNP->isEnabled() && (mNP->getWrapSelectorWheel() || mNP->getValue() < mNP->getMaxValue())) {
+                    mNP->changeValueByOne(true);
+                    return true;
+                }
+            } return false;
+            case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD: {
+                if (mNP->isEnabled() && (mNP->getWrapSelectorWheel() || mNP->getValue() > mNP->getMinValue())) {
+                    mNP->changeValueByOne(false);
+                    return true;
+                }
+            } return false;
+        }
+    } break;
+    case VIRTUAL_VIEW_ID_INPUT: {
+        switch (action) {
+            case AccessibilityNodeInfo::ACTION_FOCUS: {
+                if (mNP->isEnabled() && !mNP->mInputText->isFocused()) {
+                    return mNP->mInputText->requestFocus();
+                }
+            } break;
+            case AccessibilityNodeInfo::ACTION_CLEAR_FOCUS: {
+                if (mNP->isEnabled() && mNP->mInputText->isFocused()) {
+                    mNP->mInputText->clearFocus();
+                    return true;
+                }
+                return false;
+            }
+            case AccessibilityNodeInfo::ACTION_CLICK: {
+                if (mNP->isEnabled()) {
+                    mNP->performClick();
+                    return true;
+                }
+                return false;
+            }
+            case AccessibilityNodeInfo::ACTION_LONG_CLICK: {
+                if (mNP->isEnabled()) {
+                    mNP->performLongClick();
+                    return true;
+                }
+                return false;
+            }
+            case AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS: {
+                if (mAccessibilityFocusedView != virtualViewId) {
+                    mAccessibilityFocusedView = virtualViewId;
+                    sendAccessibilityEventForVirtualView(virtualViewId, AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED);
+                    mNP->mInputText->invalidate();
+                    return true;
+                }
+            } return false;
+            case  AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS: {
+                if (mAccessibilityFocusedView == virtualViewId) {
+                    mAccessibilityFocusedView = UNDEFINED;
+                    sendAccessibilityEventForVirtualView(virtualViewId, AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED);
+                    mNP->mInputText->invalidate();
+                    return true;
+                }
+            } return false;
+            default: {
+                return mNP->mInputText->performAccessibilityAction(action, arguments);
+            }
+        }
+    } return false;
+    case VIRTUAL_VIEW_ID_INCREMENT: {
+        switch (action) {
+            case AccessibilityNodeInfo::ACTION_CLICK: {
+                if (mNP->isEnabled()) {
+                    mNP->changeValueByOne(true);
+                    sendAccessibilityEventForVirtualView(virtualViewId,AccessibilityEvent::TYPE_VIEW_CLICKED);
+                    return true;
+                }
+            } return false;
+            case AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS: {
+                if (mAccessibilityFocusedView != virtualViewId) {
+                    mAccessibilityFocusedView = virtualViewId;
+                    sendAccessibilityEventForVirtualView(virtualViewId, AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED);
+                    mNP->invalidate(0, mNP->mBottomSelectionDividerBottom, mNP->mRight, mNP->mBottom-mNP->mBottomSelectionDividerBottom);
+                    return true;
+                }
+            } return false;
+            case  AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS: {
+                if (mAccessibilityFocusedView == virtualViewId) {
+                    mAccessibilityFocusedView = UNDEFINED;
+                    sendAccessibilityEventForVirtualView(virtualViewId, AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED);
+                    mNP->invalidate(0, mNP->mBottomSelectionDividerBottom, mNP->mRight, mNP->mBottom-mNP->mBottomSelectionDividerBottom);
+                    return true;
+                }
+            } return false;
+        }
+    } return false;
+    case VIRTUAL_VIEW_ID_DECREMENT: {
+        switch (action) {
+            case AccessibilityNodeInfo::ACTION_CLICK: {
+                if (mNP->isEnabled()) {
+                    bool increment = (virtualViewId == VIRTUAL_VIEW_ID_INCREMENT);
+                    mNP->changeValueByOne(increment);
+                    sendAccessibilityEventForVirtualView(virtualViewId, AccessibilityEvent::TYPE_VIEW_CLICKED);
+                    return true;
+                }
+            } return false;
+            case AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS: {
+                if (mAccessibilityFocusedView != virtualViewId) {
+                    mAccessibilityFocusedView = virtualViewId;
+                    sendAccessibilityEventForVirtualView(virtualViewId, AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED);
+                    mNP->invalidate(0, 0, mNP->mRight, mNP->mTopSelectionDividerTop);
+                    return true;
+                }
+            } return false;
+            case  AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS: {
+                if (mAccessibilityFocusedView == virtualViewId) {
+                    mAccessibilityFocusedView = UNDEFINED;
+                    sendAccessibilityEventForVirtualView(virtualViewId, AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED);
+                    mNP->invalidate(0, 0, mNP->mRight, mNP->mTopSelectionDividerTop);
+                    return true;
+                }
+            } return false;
+        }
+    } return false;
+    }
+    return AccessibilityNodeProvider::performAction(virtualViewId, action, arguments);
+}
+
+void NumberPicker::AccessibilityNodeProviderImpl::sendAccessibilityEventForVirtualView(int virtualViewId, int eventType) {
+    switch (virtualViewId) {
+    case VIRTUAL_VIEW_ID_DECREMENT:
+        if (hasVirtualDecrementButton()) {
+            sendAccessibilityEventForVirtualButton(virtualViewId, eventType,
+                    getVirtualDecrementButtonText());
+        }
+        break;
+    case VIRTUAL_VIEW_ID_INPUT:
+        sendAccessibilityEventForVirtualText(eventType);
+        break;
+    case VIRTUAL_VIEW_ID_INCREMENT:
+        if (hasVirtualIncrementButton()) {
+            sendAccessibilityEventForVirtualButton(virtualViewId, eventType,
+                    getVirtualIncrementButtonText());
+        }
+        break;
+    }
+}
+
+void NumberPicker::AccessibilityNodeProviderImpl::sendAccessibilityEventForVirtualText(int eventType) {
+    if (AccessibilityManager::getInstance(mNP->mContext).isEnabled()) {
+        AccessibilityEvent* event = AccessibilityEvent::obtain(eventType);
+        mNP->mInputText->onInitializeAccessibilityEvent(*event);
+        mNP->mInputText->onPopulateAccessibilityEvent(*event);
+        event->setSource(mNP, VIRTUAL_VIEW_ID_INPUT);
+        mNP->requestSendAccessibilityEvent(mNP, *event);
+    }
+}
+
+void NumberPicker::AccessibilityNodeProviderImpl::sendAccessibilityEventForVirtualButton(int virtualViewId, int eventType,const std::string& text) {
+    if (AccessibilityManager::getInstance(mNP->mContext).isEnabled()) {
+        AccessibilityEvent* event = AccessibilityEvent::obtain(eventType);
+        event->setClassName("Button");
+        event->setPackageName("cdroid");
+        event->getText().push_back(text);
+        event->setEnabled(mNP->isEnabled());
+        event->setSource(mNP, virtualViewId);
+        mNP->requestSendAccessibilityEvent(mNP, *event);
+    }
+}
+
+void NumberPicker::AccessibilityNodeProviderImpl::findAccessibilityNodeInfosByTextInChild(const std::string& searchedLowerCase,
+        int virtualViewId, std::vector<AccessibilityNodeInfo*>& outResult) {
+    switch (virtualViewId) {
+        case VIRTUAL_VIEW_ID_DECREMENT: {
+            std::string text = getVirtualDecrementButtonText();
+            if (!TextUtils::isEmpty(text) && text.find(searchedLowerCase)!=std::string::npos){//.toLowerCase().contains(searchedLowerCase)) {
+                outResult.push_back(createAccessibilityNodeInfo(VIRTUAL_VIEW_ID_DECREMENT));
+            }
+        } return;
+        case VIRTUAL_VIEW_ID_INPUT: {
+            std::string text = mNP->mInputText->getText();
+            if (!TextUtils::isEmpty(text) && text.find(searchedLowerCase)!=std::string::npos){//toLowerCase().contains(searchedLowerCase)) {
+                outResult.push_back(createAccessibilityNodeInfo(VIRTUAL_VIEW_ID_INPUT));
+                return;
+            }
+            std::string contentDesc = mNP->mInputText->getText();
+            if (!TextUtils::isEmpty(contentDesc) && contentDesc.find(searchedLowerCase)!=std::string::npos){//toLowerCase().contains(searchedLowerCase)) {
+                outResult.push_back(createAccessibilityNodeInfo(VIRTUAL_VIEW_ID_INPUT));
+                return;
+            }
+        } break;
+        case VIRTUAL_VIEW_ID_INCREMENT: {
+            std::string text = getVirtualIncrementButtonText();
+            if (!TextUtils::isEmpty(text) && text.find(searchedLowerCase)!=std::string::npos){//toLowerCase().contains(searchedLowerCase)) {
+                outResult.push_back(createAccessibilityNodeInfo(VIRTUAL_VIEW_ID_INCREMENT));
+            }
+        } return;
+    }
+}
+
+AccessibilityNodeInfo* NumberPicker::AccessibilityNodeProviderImpl::createAccessibiltyNodeInfoForInputText(
+        int left, int top, int right, int bottom) {
+    AccessibilityNodeInfo* info = mNP->mInputText->createAccessibilityNodeInfo();
+    info->setSource(mNP, VIRTUAL_VIEW_ID_INPUT);
+    if (mAccessibilityFocusedView != VIRTUAL_VIEW_ID_INPUT) {
+        info->addAction(AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);
+    }
+    if (mAccessibilityFocusedView == VIRTUAL_VIEW_ID_INPUT) {
+        info->addAction(AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS);
+    }
+    Rect boundsInParent;
+    boundsInParent.set(left, top, right, bottom);
+    info->setVisibleToUser(mNP->isVisibleToUser(&boundsInParent));
+    info->setBoundsInParent(boundsInParent);
+    Rect boundsInScreen = boundsInParent;
+    int locationOnScreen[2];
+    mNP->getLocationOnScreen(locationOnScreen);
+    boundsInScreen.offset(locationOnScreen[0], locationOnScreen[1]);
+    info->setBoundsInScreen(boundsInScreen);
+    return info;
+}
+
+AccessibilityNodeInfo* NumberPicker::AccessibilityNodeProviderImpl::createAccessibilityNodeInfoForVirtualButton(int virtualViewId,
+       const std::string& text, int left, int top, int right, int bottom) {
+    AccessibilityNodeInfo* info = AccessibilityNodeInfo::obtain();
+    info->setClassName("Button");
+    info->setPackageName("cdroid");
+    info->setSource(mNP, virtualViewId);
+    info->setParent(mNP);
+    info->setText(text);
+    info->setClickable(true);
+    info->setLongClickable(true);
+    info->setEnabled(mNP->isEnabled());
+    Rect boundsInParent;
+    boundsInParent.set(left, top, right, bottom);
+    info->setVisibleToUser(mNP->isVisibleToUser(&boundsInParent));
+    info->setBoundsInParent(boundsInParent);
+    Rect boundsInScreen = boundsInParent;
+    int locationOnScreen[2];
+    mNP->getLocationOnScreen(locationOnScreen);
+    boundsInScreen.offset(locationOnScreen[0], locationOnScreen[1]);
+    info->setBoundsInScreen(boundsInScreen);
+
+    if (mAccessibilityFocusedView != virtualViewId) {
+        info->addAction(AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);
+    }
+    if (mAccessibilityFocusedView == virtualViewId) {
+        info->addAction(AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS);
+    }
+    if (mNP->isEnabled()) {
+        info->addAction(AccessibilityNodeInfo::ACTION_CLICK);
+    }
+
+    return info;
+}
+
+AccessibilityNodeInfo* NumberPicker::AccessibilityNodeProviderImpl::createAccessibilityNodeInfoForNumberPicker(int left, int top,int right, int bottom) {
+    AccessibilityNodeInfo* info = AccessibilityNodeInfo::obtain();
+    info->setClassName("NumberPicker");
+    //info->setPackageName(mContext.getPackageName());
+    info->setSource(mNP);
+
+    if (hasVirtualDecrementButton()) {
+        info->addChild(mNP, VIRTUAL_VIEW_ID_DECREMENT);
+    }
+    info->addChild(mNP, VIRTUAL_VIEW_ID_INPUT);
+    if (hasVirtualIncrementButton()) {
+        info->addChild(mNP, VIRTUAL_VIEW_ID_INCREMENT);
+    }
+
+    info->setParent((View*) mNP->getParentForAccessibility());
+    info->setEnabled(mNP->isEnabled());
+    info->setScrollable(true);
+
+    const float applicationScale =1.f;//getContext().getResources().getCompatibilityInfo().applicationScale;
+
+    Rect boundsInParent;
+    boundsInParent.set(left, top, right, bottom);
+    //boundsInParent.scale(applicationScale);
+    info->setBoundsInParent(boundsInParent);
+
+    info->setVisibleToUser(mNP->isVisibleToUser());
+
+    Rect boundsInScreen = boundsInParent;
+    int locationOnScreen[2];
+    mNP->getLocationOnScreen(locationOnScreen);
+    boundsInScreen.offset(locationOnScreen[0], locationOnScreen[1]);
+    //boundsInScreen.scale(applicationScale);
+    info->setBoundsInScreen(boundsInScreen);
+
+    if (mAccessibilityFocusedView != View::NO_ID) {
+        info->addAction(AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS);
+    }
+    if (mAccessibilityFocusedView == View::NO_ID) {
+        info->addAction(AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS);
+    }
+    if (mNP->isEnabled()) {
+        if (mNP->getWrapSelectorWheel() || mNP->getValue() < mNP->getMaxValue()) {
+            info->addAction(AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
+        }
+        if (mNP->getWrapSelectorWheel() || mNP->getValue() > mNP->getMinValue()) {
+            info->addAction(AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD);
+        }
+    }
+
+    return info;
+}
+
+bool NumberPicker::AccessibilityNodeProviderImpl::hasVirtualDecrementButton() {
+    return mNP->getWrapSelectorWheel() || mNP->getValue() > mNP->getMinValue();
+}
+
+bool NumberPicker::AccessibilityNodeProviderImpl::hasVirtualIncrementButton() {
+    return mNP->getWrapSelectorWheel() || mNP->getValue() < mNP->getMaxValue();
+}
+
+std::string NumberPicker::AccessibilityNodeProviderImpl::getVirtualDecrementButtonText()const{
+    int value = mNP->mValue - 1;
+    if (mNP->mWrapSelectorWheel) {
+        value = mNP->getWrappedSelectorIndex(value);
+    }
+    if (value >= mNP->mMinValue) {
+        return (mNP->mDisplayedValues.empty()) ? mNP->formatNumber(value)
+                : mNP->mDisplayedValues[value - mNP->mMinValue];
+    }
+    return "";
+}
+
+std::string NumberPicker::AccessibilityNodeProviderImpl::getVirtualIncrementButtonText()const{
+    int value = mNP->mValue + 1;
+    if (mNP->mWrapSelectorWheel) {
+        value = mNP->getWrappedSelectorIndex(value);
+    }
+    if (value <= mNP->mMaxValue) {
+        return (mNP->mDisplayedValues.empty()) ? mNP->formatNumber(value)
+                : mNP->mDisplayedValues[value - mNP->mMinValue];
+    }
+    return "";
+}
 }//namespace

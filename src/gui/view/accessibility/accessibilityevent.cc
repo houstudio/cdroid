@@ -104,6 +104,14 @@ void AccessibilityEvent::setEventTime(int64_t eventTime) {
     mEventTime = eventTime;
 }
 
+std::string AccessibilityEvent::getPackageName()const{
+    return mPackageName;
+}
+
+void AccessibilityEvent::setPackageName(const std::string&name){
+    enforceNotSealed();
+    mPackageName = name;
+}
 AccessibilityEvent*AccessibilityEvent::obtainWindowsChangedEvent(
         int windowId, int windowChangeTypes) {
     AccessibilityEvent* event = AccessibilityEvent::obtain(TYPE_WINDOWS_CHANGED);

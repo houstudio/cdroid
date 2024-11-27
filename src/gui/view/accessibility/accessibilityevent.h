@@ -310,6 +310,8 @@ public:
     void setEventType(int eventType);
     int64_t getEventTime()const;
     void setEventTime(int64_t eventTime);
+    std::string getPackageName()const;
+    void setPackageName(const std::string&);
     static AccessibilityEvent* obtainWindowsChangedEvent(int windowId, int windowChangeTypes);
     static AccessibilityEvent* obtain(int eventType);
     static AccessibilityEvent* obtain(const AccessibilityEvent& event);

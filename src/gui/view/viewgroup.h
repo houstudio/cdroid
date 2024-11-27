@@ -61,6 +61,8 @@ private:
 protected:
     static constexpr int CLIP_TO_PADDING_MASK = FLAG_CLIP_TO_PADDING | FLAG_PADDING_NOT_NULL;
     static constexpr int FLAG_DISALLOW_INTERCEPT = 0x80000;
+    class ViewLocationHolder;
+    class ChildListForAccessibility;
 public:
     static constexpr int FOCUS_BEFORE_DESCENDANTS= 0x20000;
     static constexpr int FOCUS_AFTER_DESCENDANTS = 0x40000;
@@ -196,6 +198,7 @@ protected:
     void dispatchWindowSystemUiVisiblityChanged(int visible)override;
     void dispatchSystemUiVisibilityChanged(int visibility)override;
 
+    void resetSubtreeAccessibilityStateChanged()override;
     int getNumChildrenForAccessibility() const;
     void dispatchDetachedFromWindow()override;
     void dispatchCancelPendingInputEvents()override;
@@ -401,9 +404,10 @@ public:
     virtual void removeViewsInLayout(int start,int count);
     void removeAllViewsInLayout();
     virtual View* findViewById(int id)override;
-    View* findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip)override;
+    View* findViewByPredicateTraversal(std::function<bool(View*)>predicate,View* childToSkip)override;
     View* findViewWithTagTraversal(void*tag)override;
     View* findViewByAccessibilityIdTraversal(int accessibilityId)override;
+    std::string getAccessibilityClassName()const override;
     virtual void resetResolvedPadding()override;
     virtual bool shouldDelayChildPressedState();
     bool hasPointerCapture()const override;
@@ -452,6 +456,48 @@ public:
     AccessibilityNodeInfo*getAccessibilityFocusedVirtualView()const;
 };
 
-}  // namespace cdroid
+
+class ViewGroup::ViewLocationHolder{
+public:
+    static constexpr int COMPARISON_STRATEGY_STRIPE = 1;
+    static constexpr int COMPARISON_STRATEGY_LOCATION = 2;
+private:
+    static constexpr int MAX_POOL_SIZE = 32;
+    static int sComparisonStrategy;
+    static Pools::SimplePool<ViewLocationHolder> sPool;
+
+    Rect mLocation;
+    ViewGroup* mRoot;
+    int mLayoutDirection;
+public:
+	View* mView;
+    static ViewLocationHolder* obtain(ViewGroup* root, View* view);
+    static void setComparisonStrategy(int strategy);
+    void recycle();
+    int compareTo(ViewLocationHolder* another);
+private:
+    static int compareBoundsOfTree(ViewLocationHolder* holder1, ViewLocationHolder* holder2);
+    void init(ViewGroup* root, View* view);
+    void clear();
+};
+
+class ViewGroup::ChildListForAccessibility {
+private:
+    static constexpr int MAX_POOL_SIZE = 32;
+    static Pools::SimplePool<ChildListForAccessibility> sPool;;
+
+    std::vector<View*> mChildren;;
+    std::vector<ViewLocationHolder*> mHolders;
+public:
+    static ChildListForAccessibility* obtain(ViewGroup* parent, bool sort);
+    void recycle();
+    int getChildCount() ;
+    View* getChildAt(int index);
+private:
+    void init(ViewGroup* parent, bool sort);
+    void sort(std::vector<ViewLocationHolder*>& holders);
+    void clear();
+};
+}/*namespace cdroid*/
 
 #endif  // __CDROID_GROUPVIEW_H__

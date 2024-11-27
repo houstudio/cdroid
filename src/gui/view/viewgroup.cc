@@ -551,9 +551,8 @@ void ViewGroup::addChildrenForAccessibility(std::vector<View*>& outChildren){
     if (getAccessibilityNodeProvider() != nullptr) {
         return;
     }
-#if 0
-    ChildListForAccessibility children = ChildListForAccessibility.obtain(this, true);
-    const int childrenCount = children.getChildCount();
+    ChildListForAccessibility* children = ChildListForAccessibility::obtain(this, true);
+    const int childrenCount = children->getChildCount();
     for (int i = 0; i < childrenCount; i++) {
         View* child = children->getChildAt(i);
         if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
@@ -565,7 +564,6 @@ void ViewGroup::addChildrenForAccessibility(std::vector<View*>& outChildren){
         }
     }
     children->recycle();
-#endif
 }
 
 bool ViewGroup::pointInHoveredChild(MotionEvent& event) {
@@ -667,12 +665,12 @@ bool ViewGroup::dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& e
             return handled;
         }
     }
-#if 0
+
     // Let our children have a shot in populating the event.
     ChildListForAccessibility* children = ChildListForAccessibility::obtain(this, true);
-    int childCount = children.getChildCount();
+    int childCount = children->getChildCount();
     for (int i = 0; i < childCount; i++) {
-        View* child = children.getChildAt(i);
+        View* child = children->getChildAt(i);
         if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
             handled = child->dispatchPopulateAccessibilityEvent(event);
             if (handled) {
@@ -681,7 +679,7 @@ bool ViewGroup::dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& e
         }
     }
     children->recycle();
-#endif
+
     return false;
 }
 
@@ -2023,7 +2021,7 @@ void ViewGroup::removeViewsInternal(int start, int count){
     }
 }
 
-View* ViewGroup::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip){
+View* ViewGroup::findViewByPredicateTraversal(std::function<bool(View*)>predicate,View* childToSkip){
     if (predicate(this)) {
         return (View*)this;
     }
@@ -2040,6 +2038,10 @@ View* ViewGroup::findViewByPredicateTraversal(std::function<bool(const View*)>pr
     }
     return nullptr;
 
+}
+
+std::string ViewGroup::getAccessibilityClassName()const{
+    return "ViewGroup";
 }
 
 View* ViewGroup::findViewWithTagTraversal(void*tag){
@@ -3704,6 +3706,13 @@ MotionEvent* ViewGroup::obtainMotionEventNoHistoryOrSelf(MotionEvent* event) {
     return MotionEvent::obtainNoHistory(*event);
 }
 
+void ViewGroup::resetSubtreeAccessibilityStateChanged(){
+    View::resetSubtreeAccessibilityStateChanged();
+    for (View*child:mChildren) {
+        child->resetSubtreeAccessibilityStateChanged();
+    }
+}
+
 int ViewGroup::getNumChildrenForAccessibility() const{
     int numChildrenForAccessibility = 0;
     for (int i = 0; i < getChildCount(); i++) {
@@ -3993,4 +4002,197 @@ void ViewGroup::childDrawableStateChanged(View* child) {
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int ViewGroup::ViewLocationHolder::sComparisonStrategy = ViewGroup::ViewLocationHolder::COMPARISON_STRATEGY_STRIPE;
+Pools::SimplePool<ViewGroup::ViewLocationHolder> ViewGroup::ViewLocationHolder::sPool(ViewGroup::ViewLocationHolder::MAX_POOL_SIZE);
+ViewGroup::ViewLocationHolder* ViewGroup::ViewLocationHolder::obtain(ViewGroup* root, View* view) {
+    ViewLocationHolder* holder = sPool.acquire();
+    if (holder == nullptr) {
+        holder = new ViewLocationHolder();
+    }
+    holder->init(root, view);
+    return holder;
+}
+
+void ViewGroup::ViewLocationHolder::setComparisonStrategy(int strategy) {
+    sComparisonStrategy = strategy;
+}
+
+void ViewGroup::ViewLocationHolder::recycle() {
+    clear();
+    sPool.release(this);
+}
+
+int  ViewGroup::ViewLocationHolder::compareTo(ViewLocationHolder* another) {
+    // This instance is greater than an invalid argument.
+    if (another == nullptr) {
+        return 1;
+    }
+
+    int boundsResult = compareBoundsOfTree(this, another);
+    if (boundsResult != 0) {
+        return boundsResult;
+    }
+
+    // Just break the tie somehow. The accessibility ids are unique
+    // and stable, hence this is deterministic tie breaking.
+    return mView->getAccessibilityViewId() - another->mView->getAccessibilityViewId();
+}
+
+int ViewGroup::ViewLocationHolder::compareBoundsOfTree(ViewLocationHolder* holder1, ViewLocationHolder* holder2) {
+    if (sComparisonStrategy == COMPARISON_STRATEGY_STRIPE) {
+        // First is above second.
+        if (holder1->mLocation.bottom() - holder2->mLocation.top <= 0) {
+            return -1;
+        }
+        // First is below second.
+        if (holder1->mLocation.top - holder2->mLocation.bottom() >= 0) {
+            return 1;
+        }
+    }
+
+    // We are ordering left-to-right, top-to-bottom.
+    if (holder1->mLayoutDirection == LAYOUT_DIRECTION_LTR) {
+        const int leftDifference = holder1->mLocation.left - holder2->mLocation.left;
+        if (leftDifference != 0) {
+            return leftDifference;
+        }
+    } else { // RTL
+        const int rightDifference = holder1->mLocation.right() - holder2->mLocation.right();
+        if (rightDifference != 0) {
+            return -rightDifference;
+        }
+    }
+    // We are ordering left-to-right, top-to-bottom.
+    const int topDifference = holder1->mLocation.top - holder2->mLocation.top;
+    if (topDifference != 0) {
+        return topDifference;
+    }
+    // Break tie by height.
+    const int heightDiference = holder1->mLocation.height - holder2->mLocation.height;
+    if (heightDiference != 0) {
+        return -heightDiference;
+    }
+    // Break tie by width.
+    const int widthDifference = holder1->mLocation.width - holder2->mLocation.width;
+    if (widthDifference != 0) {
+        return -widthDifference;
+    }
+
+    // Find a child of each view with different screen bounds.
+    Rect view1Bounds;
+    Rect view2Bounds;
+    Rect tempRect;
+    holder1->mView->getBoundsOnScreen(view1Bounds, true);
+    holder2->mView->getBoundsOnScreen(view2Bounds, true);
+    View* child1 = holder1->mView->findViewByPredicateTraversal([&](View*view)->bool{
+        view->getBoundsOnScreen(tempRect, true);
+        return tempRect!=view1Bounds;
+    }, (View*)nullptr);
+    View* child2 = holder2->mView->findViewByPredicateTraversal([&](View*view)->bool{
+        view->getBoundsOnScreen(tempRect, true);
+        return tempRect!=view2Bounds;
+    }, (View*)nullptr);
+
+
+    // Compare the children recursively
+    if ((child1 != nullptr) && (child2 != nullptr)) {
+        ViewLocationHolder* childHolder1 = ViewLocationHolder::obtain(holder1->mRoot, child1);
+        ViewLocationHolder* childHolder2 = ViewLocationHolder::obtain(holder1->mRoot, child2);
+        return compareBoundsOfTree(childHolder1, childHolder2);
+    }
+
+    // If only one has a child, use that one
+    if (child1 != nullptr) {
+        return 1;
+    }
+
+    if (child2 != nullptr) {
+        return -1;
+    }
+
+    // Give up
+    return 0;
+}
+
+void ViewGroup::ViewLocationHolder::init(ViewGroup* root, View* view) {
+    Rect viewLocation = mLocation;
+    view->getDrawingRect(viewLocation);
+    root->offsetDescendantRectToMyCoords(view, viewLocation);
+    mView = view;
+    mRoot = root;
+    mLayoutDirection = root->getLayoutDirection();
+}
+
+void ViewGroup::ViewLocationHolder::clear() {
+    mView = nullptr;
+    mLocation.set(0, 0, 0, 0);
+}
+///////////////////////////////////////////////////////////////////////////////////////////////
+Pools::SimplePool<ViewGroup::ChildListForAccessibility> ViewGroup::ChildListForAccessibility::sPool(ViewGroup::ChildListForAccessibility::MAX_POOL_SIZE);
+ViewGroup::ChildListForAccessibility* ViewGroup::ChildListForAccessibility::obtain(ViewGroup* parent, bool sort) {
+    ChildListForAccessibility* list = sPool.acquire();
+    if (list == nullptr) {
+        list = new ChildListForAccessibility();
+    }
+    list->init(parent, sort);
+    return list;
+}
+
+void ViewGroup::ChildListForAccessibility::recycle() {
+    clear();
+    sPool.release(this);
+}
+
+int ViewGroup::ChildListForAccessibility::getChildCount() {
+    return mChildren.size();
+}
+
+View* ViewGroup::ChildListForAccessibility::getChildAt(int index) {
+    return mChildren.at(index);
+}
+
+void ViewGroup::ChildListForAccessibility::init(ViewGroup* parent, bool sort) {
+    std::vector<View*>& children = mChildren;
+    const int childCount = parent->getChildCount();
+    for (int i = 0; i < childCount; i++) {
+        View* child = parent->getChildAt(i);
+        children.push_back(child);
+    }
+    if (sort) {
+        std::vector<ViewGroup::ViewLocationHolder*>& holders = mHolders;
+        for (int i = 0; i < childCount; i++) {
+            View* child = children.at(i);
+            ViewLocationHolder* holder = ViewLocationHolder::obtain(parent, child);
+            holders.push_back(holder);
+        }
+        std::sort(holders.begin(),holders.end());
+        for (int i = 0; i < childCount; i++) {
+            ViewLocationHolder* holder = holders.at(i);
+            children[i]=holder->mView;
+            holder->recycle();
+        }
+        holders.clear();
+    }
+}
+
+void ViewGroup::ChildListForAccessibility::sort(std::vector<ViewGroup::ViewLocationHolder*>& holders) {
+    // This is gross but the least risky solution. The current comparison
+    // strategy breaks transitivity but produces very good results. Coming
+    // up with a new strategy requires time which we do not have, so ...
+    try {
+        ViewLocationHolder::setComparisonStrategy(ViewLocationHolder::COMPARISON_STRATEGY_STRIPE);
+        std::sort(holders.begin(),holders.end());
+    } catch (std::exception& e) {
+        // Note that in practice this occurs extremely rarely in a couple
+        // of pathological cases.
+        ViewLocationHolder::setComparisonStrategy(ViewLocationHolder::COMPARISON_STRATEGY_LOCATION);
+        std::sort(holders.begin(),holders.end());
+    }
+}
+
+void ViewGroup::ChildListForAccessibility::clear() {
+    mChildren.clear();
+}
 }  // namespace ui

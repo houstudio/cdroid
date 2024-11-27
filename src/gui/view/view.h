@@ -826,7 +826,7 @@ protected:
     virtual void onDrawScrollBars(Canvas& canvas);
     void onDrawHorizontalScrollBar(Canvas& canvas, Drawable* scrollBar,const Rect&);
     void onDrawVerticalScrollBar (Canvas& canvas , Drawable* scrollBar,const Rect&);
-    void resetSubtreeAccessibilityStateChanged();
+    virtual void resetSubtreeAccessibilityStateChanged();
     bool traverseAtGranularity(int granularity, bool forward,  bool extendSelection);
     void ensureTransformationInfo();
 public:
@@ -1082,7 +1082,7 @@ public:
 
     AccessibilityDelegate* getAccessibilityDelegate()const;
     void setAccessibilityDelegate(AccessibilityDelegate* delegate);
-    virtual AccessibilityNodeProvider* getAccessibilityNodeProvider()const;
+    virtual AccessibilityNodeProvider* getAccessibilityNodeProvider();
     bool isActionableForAccessibility()const;
     void notifyViewAccessibilityStateChangedIfNeeded(int changeType);
     virtual void notifySubtreeAccessibilityStateChangedIfNeeded();
@@ -1275,11 +1275,11 @@ public:
     bool requestFocusFromTouch();
     int getImportantForAccessibility()const;
     void setImportantForAccessibility(int mode);
-    bool isImportantForAccessibility()const;
+    bool isImportantForAccessibility();
     ViewGroup* getParentForAccessibility();
     View*getSelfOrParentImportantForA11y();
     virtual void addChildrenForAccessibility(std::vector<View*>& outChildren);
-    bool includeForAccessibility()const;
+    bool includeForAccessibility();
     void setAccessibilityLiveRegion(int mode);
     int  getAccessibilityLiveRegion() const;
     virtual bool requestFocus(int direction,Rect* previouslyFocusedRect);
@@ -1302,10 +1302,10 @@ public:
     virtual View* findViewTraversal(int);
     virtual View* findViewByAccessibilityId(int accessibilityId);
     virtual View* findViewByAccessibilityIdTraversal(int accessibilityId);
-    virtual View* findViewByPredicateTraversal(std::function<bool(const View*)>,View* childToSkip);
+    virtual View* findViewByPredicateTraversal(std::function<bool(View*)>,View* childToSkip);
     virtual View* findViewWithTagTraversal(void* tag);
-    View* findViewByPredicate(std::function<bool(const View*)>);
-    View* findViewByPredicateInsideOut(View*start,std::function<bool(const View*)>);
+    View* findViewByPredicate(std::function<bool(View*)>);
+    View* findViewByPredicateInsideOut(View*start,std::function<bool(View*)>);
 
     virtual View*focusSearch(int direction)const;
     View*findUserSetNextFocus(View*root,int direction)const;
@@ -1713,7 +1713,7 @@ public:
 
     virtual bool onRequestSendAccessibilityEvent(ViewGroup& host, View& child,AccessibilityEvent& event);
 
-    virtual AccessibilityNodeProvider* getAccessibilityNodeProvider(View& host)const;
+    virtual AccessibilityNodeProvider* getAccessibilityNodeProvider(View& host);
     virtual AccessibilityNodeInfo* createAccessibilityNodeInfo(View& host);
 };
 }//endof namespace cdroid

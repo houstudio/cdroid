@@ -524,11 +524,11 @@ View* View::findViewInsideOutShouldExist(View* root, int id)const{
     return result;
 }
 
-View* View::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip){
+View* View::findViewByPredicateTraversal(std::function<bool(View*)>predicate,View* childToSkip){
     return predicate(this)?(View*)this:nullptr;
 }
 
-View* View::findViewByPredicate(std::function<bool(const View*)>predicate){
+View* View::findViewByPredicate(std::function<bool(View*)>predicate){
     return findViewByPredicateTraversal(predicate,nullptr);
 }
 
@@ -536,7 +536,7 @@ View* View::findViewWithTagTraversal(void* tag){
     return nullptr;
 }
 
-View* View::findViewByPredicateInsideOut(View*start,std::function<bool(const View*)>predicate){
+View* View::findViewByPredicateInsideOut(View*start,std::function<bool(View*)>predicate){
     View* childToSkip = nullptr;
     for (;;) {
         View*view = start->findViewByPredicateTraversal(predicate, childToSkip);
@@ -3494,7 +3494,7 @@ void View::setAccessibilityDelegate(AccessibilityDelegate* delegate) {
     mAccessibilityDelegate = delegate;
 }
 
-AccessibilityNodeProvider* View::getAccessibilityNodeProvider()const{
+AccessibilityNodeProvider* View::getAccessibilityNodeProvider(){
     if (mAccessibilityDelegate != nullptr) {
         return mAccessibilityDelegate->getAccessibilityNodeProvider(*(View*)this);
     } else {
@@ -4967,6 +4967,7 @@ void View::bringToFront() {
 void View::onAttachedToWindow(){
     mPrivateFlags3 &= ~PFLAG3_IS_LAID_OUT;
     jumpDrawablesToCurrentState();
+    resetSubtreeAccessibilityStateChanged();
     if(isFocused()){
         InputMethodManager&imm=InputMethodManager::getInstance();
         imm.focusIn((View*)this);
@@ -6507,7 +6508,7 @@ View* View::findAccessibilityFocusHost(bool searchDescendants) {
     return nullptr;
 }
 
-bool View::isImportantForAccessibility()const{
+bool View::isImportantForAccessibility(){
     const int mode = (mPrivateFlags2 & PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_MASK) >> PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT;
     if ((mode == IMPORTANT_FOR_ACCESSIBILITY_NO) || (mode == IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS)) {
         return false;
@@ -6547,7 +6548,7 @@ void View::addChildrenForAccessibility(std::vector<View*>& outChildren){
     //NOTHING;
 }
 
-bool View::includeForAccessibility()const{
+bool View::includeForAccessibility(){
     if (mAttachInfo != nullptr) {
         return ((mAttachInfo->mAccessibilityFetchFlags & AccessibilityNodeInfo::FLAG_INCLUDE_NOT_IMPORTANT_VIEWS) != 0)
            || isImportantForAccessibility();
@@ -7715,7 +7716,7 @@ void View::getHotspotBounds(Rect& outRect) {
     }
 }
 
-void View::getBoundsOnScreen(Rect& outRect, bool clipToParent) {
+void View::getBoundsOnScreen(Rect& outRect, bool clipToParent){
     if (mAttachInfo == nullptr) {
         return;
     }
@@ -9238,7 +9239,7 @@ bool View::AccessibilityDelegate::onRequestSendAccessibilityEvent(ViewGroup& hos
     return host.onRequestSendAccessibilityEventInternal(&child, event);
 }
 
-AccessibilityNodeProvider* View::AccessibilityDelegate::getAccessibilityNodeProvider(View& host)const{
+AccessibilityNodeProvider* View::AccessibilityDelegate::getAccessibilityNodeProvider(View& host){
     return nullptr;
 }
 

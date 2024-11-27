@@ -2771,7 +2771,7 @@ View* ListView::findViewInHeadersOrFooters(const std::vector<FixedViewInfo*>& wh
     return nullptr;
 }
 
-View* ListView::findViewByPredicateTraversal(std::function<bool(const View*)>predicate,View* childToSkip) {
+View* ListView::findViewByPredicateTraversal(std::function<bool(View*)>predicate,View* childToSkip) {
     View* v = AbsListView::findViewByPredicateTraversal(predicate, childToSkip);
     if (v == nullptr) {
         v = findViewByPredicateInHeadersOrFooters(mHeaderViewInfos, predicate, childToSkip);
@@ -2783,7 +2783,7 @@ View* ListView::findViewByPredicateTraversal(std::function<bool(const View*)>pre
 }
 
 View* ListView::findViewByPredicateInHeadersOrFooters(const std::vector<FixedViewInfo*>&where,
-        std::function<bool(const View*)>predicate, View* childToSkip) {
+        std::function<bool(View*)>predicate, View* childToSkip) {
     const size_t len = where.size();
     View* v;
 
