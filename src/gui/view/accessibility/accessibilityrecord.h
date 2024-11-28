@@ -564,7 +564,8 @@ public:
      * @throws IllegalStateException If the record is already recycled.
      */
     virtual void recycle();
-private:
+    std::string toString();
+protected:
     /**
      * Gets the value of a bool property.
      *
@@ -588,26 +589,13 @@ private:
      * @param record The to initialize from.
      */
     void init(const AccessibilityRecord& record);
+    std::string singleBooleanPropertyToString(int prop);
+    std::ostringstream& appendTo(std::ostringstream& builder);
+    void appendUnless(bool defValue, int prop, std::ostringstream& builder);
 
-#if 0
-    StringBuilder appendTo(StringBuilder builder);
-    void appendUnless(bool defValue, int prop, StringBuilder builder);
-    static String singleBooleanPropertyToString(int prop);
+    void append(std::ostringstream& builder,const std::string& propName, int propValue);
 
-    void append(StringBuilder builder, String propName, int propValue);
-        if (DEBUG_CONCISE_TOSTRING && propValue == UNDEFINED) return;
-        appendPropName(builder, propName).append(propValue);
-    }
-
-    void append(StringBuilder builder, String propName, Object propValue);
-        if (DEBUG_CONCISE_TOSTRING && propValue == null) return;
-        appendPropName(builder, propName).append(propValue);
-    }
-
-    StringBuilder appendPropName(StringBuilder builder, String propName);
-        return builder.append("; ").append(propName).append(": ");
-    }
-#endif
+    std::ostringstream& appendPropName(std::ostringstream& builder,const std::string& propName);
 };
 }/*endof namespace*/
 #endif/*__ACCESSIBILITY_RECORD_H__*/

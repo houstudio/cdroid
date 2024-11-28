@@ -31,18 +31,15 @@ protected:
         void run();
     };
 private:
-    class UIEventHandler:public Handler{
-    private:
-        View*mAttachedView;
-        std::function<void()> mLayoutRunner;
-    public:
-        UIEventHandler(View*,std::function<void()>run);
-        void handleIdle()override;
-    };
+    class UIEventHandler;
+    class SendWindowContentChangedAccessibilityEvent;
+    friend SendWindowContentChangedAccessibilityEvent;
     bool mInLayout;
     bool mHandingLayoutInLayoutRequest;
     Rect mRectOfFocusedView;
+    SendWindowContentChangedAccessibilityEvent* mSendWindowContentChangedAccessibilityEvent;
     std::vector<LayoutTransition*> mPendingTransitions;
+private:
     void doLayout();
     bool performFocusNavigation(KeyEvent& event);
     static View*inflate(Context*ctx,std::istream&stream);
@@ -52,6 +49,9 @@ private:
     bool enterTouchMode();
     bool leaveTouchMode();
     void playSoundImpl(int);
+    View* getCommonPredecessor(View* first, View* second);
+    void postSendWindowContentChangedCallback(View*source,int changeType);
+    void removeSendWindowContentChangedCallback();
     void drawAccessibilityFocusedDrawableIfNeeded(Canvas& canvas);
     bool getAccessibilityFocusedRect(Rect& bounds);
     Drawable* getAccessibilityFocusedDrawable();
@@ -124,9 +124,31 @@ public:
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet&)const override;
     void requestTransitionStart(LayoutTransition* transition)override;
     void close();
-protected:
 };
 
+class Window::UIEventHandler:public Handler{
+private:
+    View*mAttachedView;
+    std::function<void()> mLayoutRunner;
+public:
+    UIEventHandler(View*,std::function<void()>run);
+    void handleIdle()override;
+};
+
+class Window::SendWindowContentChangedAccessibilityEvent{
+private:
+    int mChangeTypes = 0;
+    View* mSource;
+    Runnable mRunnable;
+    Window*mWin;
+public:
+    int64_t mLastEventTimeMillis;
+    SendWindowContentChangedAccessibilityEvent(Window*w);
+    void run();
+    void runOrPost(View* source, int changeType);
+    void removeCallbacks();
+    void removeCallbacksAndRun();
+};
 }  // namespace cdroid
 
 #endif  // UI_LIBUI_WINDOW_H_

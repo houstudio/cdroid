@@ -31,6 +31,7 @@ public:
     class RecycledViewPool;
     class EdgeEffectFactory;
     class LayoutParams;
+    friend RecyclerViewAccessibilityDelegate;
     class AdapterDataObserver{
     public:
         virtual void onChanged();
@@ -243,7 +244,7 @@ private:/*private variables*/
     int mInterceptRequestLayoutDepth;
     bool mIgnoreMotionEventTillDown;
     int mEatenAccessibilityChangeFlags;
-    //AccessibilityManager mAccessibilityManager;
+    AccessibilityManager* mAccessibilityManager;
     std::vector<OnChildAttachStateChangeListener> mOnChildAttachStateListeners;
     int mLayoutOrScrollCounter = 0;
     int mDispatchScrollCounter = 0;
@@ -389,7 +390,7 @@ protected:
     void onExitLayoutOrScroll();
     void onExitLayoutOrScroll(bool enableChangeEvents);
     bool isAccessibilityEnabled();
-    //bool shouldDeferAccessibilityEvent(AccessibilityEvent event);
+    bool shouldDeferAccessibilityEvent(AccessibilityEvent& event);
     void postAnimationRunner();
     void dispatchLayout();
     void fillRemainingScrollValues(State& state);
@@ -533,7 +534,7 @@ public:
     void setItemAnimator(ItemAnimator* animator);
     ItemAnimator* getItemAnimator();
     bool isComputingLayout();
-    //void sendAccessibilityEventUnchecked(AccessibilityEvent* event);
+    void sendAccessibilityEventUnchecked(AccessibilityEvent& event)override;
     void requestLayout()override;
     void draw(Canvas& c)override;
     void onDraw(Canvas& c)override;
@@ -587,6 +588,7 @@ class RecyclerView::LayoutManager{
 private:
     friend RecyclerView;
     friend ViewInfoStore;
+    friend RecyclerViewAccessibilityDelegate;
     bool mMeasurementCacheEnabled = true;
     bool mItemPrefetchEnabled = true;
     int mWidthMode, mHeightMode;
@@ -623,10 +625,10 @@ protected:
     bool shouldReMeasureChild(View* child, int widthSpec, int heightSpec,const LayoutParams* lp);
     bool shouldMeasureChild(View* child, int widthSpec, int heightSpec,const LayoutParams* lp);
     void stopSmoothScroller();
-    //void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info);
-    //void onInitializeAccessibilityNodeInfoForItem(View* host, AccessibilityNodeInfo info);
-    //bool performAccessibilityAction(int action, Bundle args);
-    //bool performAccessibilityActionForItem(View* view, int action,Bundle args);
+    virtual void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info);
+    virtual void onInitializeAccessibilityNodeInfoForItem(View* host, AccessibilityNodeInfo& info);
+    virtual bool performAccessibilityAction(int action, Bundle args);
+    virtual bool performAccessibilityActionForItem(View* view, int action,Bundle args);
     void setExactMeasureSpecsFrom(RecyclerView* recyclerView);
     bool shouldMeasureTwice();
     bool hasFlexibleChildInBothOrientations();
@@ -777,17 +779,17 @@ public:
     virtual void onRestoreInstanceState(Parcelable& state);
     virtual void onScrollStateChanged(int state);
     void removeAndRecycleAllViews(Recycler& recycler);
-    //void onInitializeAccessibilityNodeInfo(Recycler& recycler,State& state, AccessibilityNodeInfo info);
-    //void onInitializeAccessibilityEvent(AccessibilityEvent& event);
-    //void onInitializeAccessibilityEvent(Recycler& recycler, State& state,AccessibilityEvent event);
-    //void onInitializeAccessibilityNodeInfoForItem(Recycler& recycler,State& state, View* host, AccessibilityNodeInfo info);
+    virtual void onInitializeAccessibilityNodeInfo(Recycler& recycler,State& state, AccessibilityNodeInfo& info);
+    virtual void onInitializeAccessibilityEvent(AccessibilityEvent& event);
+    virtual void onInitializeAccessibilityEvent(Recycler& recycler, State& state,AccessibilityEvent& event);
+    virtual void onInitializeAccessibilityNodeInfoForItem(Recycler& recycler,State& state, View* host, AccessibilityNodeInfo& info);
     void requestSimpleAnimationsInNextLayout();
     int getSelectionModeForAccessibility(Recycler& recycler,State& state);
     virtual int getRowCountForAccessibility(Recycler& recycler, State& state);
     virtual int getColumnCountForAccessibility(Recycler& recycler,State& state);
-    bool isLayoutHierarchical(Recycler recycler,State& state);
-    //bool performAccessibilityAction(Recycler& recycler, State& state,int action, Bundle args);
-    //bool performAccessibilityActionForItem(Recycler& recycler,State& state, View* view, int action, Bundle args);
+    bool isLayoutHierarchical(Recycler& recycler,State& state);
+    virtual bool performAccessibilityAction(Recycler& recycler, State& state,int action, Bundle args);
+    virtual bool performAccessibilityActionForItem(Recycler& recycler,State& state, View* view, int action, Bundle args);
     static Properties* getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes);
 
 };

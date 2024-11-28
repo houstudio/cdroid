@@ -1,11 +1,13 @@
 #include <widgetEx/recyclerview/recyclerview.h>
+in
 #include <widgetEx/recyclerview/childhelper.h>
 #include <widgetEx/recyclerview/viewinfostore.h>
 #include <widgetEx/recyclerview/adapterhelper.h>
-#include <widgetEx/recyclerview/linearlayoutmanager.h>
 #include <widgetEx/recyclerview/gridlayoutmanager.h>
-#include <widgetEx/recyclerview/staggeredgridlayoutmanager.h>
 #include <widgetEx/recyclerview/defaultitemanimator.h>
+#include <widgetEx/recyclerview/linearlayoutmanager.h>
+#include <widgetEx/recyclerview/staggeredgridlayoutmanager.h>
+#include <widgetEx/recyclerview/recyclerviewaccessibilitydelegate.h>
 #include <widgetEx/recyclerview/fastscroller.h>
 #include <view/focusfinder.h>
 #include <core/neverdestroyed.h>
@@ -36,11 +38,10 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
             == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
-    //mAccessibilityManager = (AccessibilityManager) getContext()
-    //        .getSystemService(Context.ACCESSIBILITY_SERVICE);
-    //setAccessibilityDelegateCompat(new RecyclerViewAccessibilityDelegate(this));
-    // Create the layoutManager if specified.
-
+    mAccessibilityManager = &AccessibilityManager::getInstance(getContext());
+    setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
+    
+    //Create the layoutManager if specified.
     AttributeSet attrs(getContext(),getContext()->getPackageName());
     std::string layoutManagerName = attrs.getString("layoutManager","LinearLayoutManager");
     const int descendantFocusability = attrs.getInt("descendantFocusability", -1);
@@ -75,9 +76,8 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
             == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
-    //mAccessibilityManager = (AccessibilityManager) getContext()
-    //        .getSystemService(Context.ACCESSIBILITY_SERVICE);
-    //setAccessibilityDelegateCompat(new RecyclerViewAccessibilityDelegate(this));
+    mAccessibilityManager = &AccessibilityManager::getInstance(getContext());
+    setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
     // Create the layoutManager if specified.
 
     std::string layoutManagerName = attrs.getString("layoutManager");
@@ -151,6 +151,8 @@ void RecyclerView::initRecyclerView(){
     mVelocityTracker = nullptr;
     mLayout = nullptr;
     mAdapter= nullptr;
+    mAccessibilityManager = nullptr;
+    mAccessibilityDelegate = nullptr;
     mActiveOnItemTouchListener = nullptr;
     mMinMaxLayoutPositions[0] = mMinMaxLayoutPositions[1] = 0;
     mScrollOffset[0] = mScrollOffset[1] = 0;
@@ -253,8 +255,7 @@ RecyclerViewAccessibilityDelegate* RecyclerView::getCompatAccessibilityDelegate(
 }
 
 void RecyclerView::setAccessibilityDelegate(RecyclerViewAccessibilityDelegate* accessibilityDelegate) {
-   mAccessibilityDelegate = accessibilityDelegate;
-   //setAccessibilityDelegate(mAccessibilityDelegate);
+    mAccessibilityDelegate = accessibilityDelegate;
 }
 
 void RecyclerView::createLayoutManager(Context* context,const std::string& className,
@@ -2114,31 +2115,31 @@ void RecyclerView::onExitLayoutOrScroll(bool enableChangeEvents) {
 }
 
 bool RecyclerView::isAccessibilityEnabled() {
-    return false;//mAccessibilityManager != nullptr && mAccessibilityManager->isEnabled();
+    return (mAccessibilityManager != nullptr) && mAccessibilityManager->isEnabled();
 }
 
 void RecyclerView::dispatchContentChangedIfNecessary() {
     const int flags = mEatenAccessibilityChangeFlags;
     mEatenAccessibilityChangeFlags = 0;
-    if (flags != 0 && isAccessibilityEnabled()) {
-        //const AccessibilityEvent* event = AccessibilityEvent::obtain();
-        //event->setEventType(AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
-        //event->setContentChangeTypes(flags);
-        //sendAccessibilityEventUnchecked(*event);
+    if ((flags != 0) && isAccessibilityEnabled()) {
+        AccessibilityEvent* event = AccessibilityEvent::obtain();
+        event->setEventType(AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
+        event->setContentChangeTypes(flags);
+        sendAccessibilityEventUnchecked(*event);
     }
 }
 
 bool RecyclerView::isComputingLayout() {
     return mLayoutOrScrollCounter > 0;
 }
-#if 0
-bool RecyclerView::shouldDeferAccessibilityEvent(AccessibilityEvent* event) {
+
+bool RecyclerView::shouldDeferAccessibilityEvent(AccessibilityEvent& event) {
     if (isComputingLayout()) {
         int type = 0;
-        if (event != nullptr) {
-            type = event->getContentChangeTypes();
+        /*if (event != nullptr) {
+            type = event.getContentChangeTypes();
         }
-        if (type == 0) {
+        if (type == 0) */{
             type = AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED;
         }
         mEatenAccessibilityChangeFlags |= type;
@@ -2147,13 +2148,13 @@ bool RecyclerView::shouldDeferAccessibilityEvent(AccessibilityEvent* event) {
     return false;
 }
 
-void RecyclerView::sendAccessibilityEventUnchecked(AccessibilityEvent* event) {
+void RecyclerView::sendAccessibilityEventUnchecked(AccessibilityEvent& event) {
     if (shouldDeferAccessibilityEvent(event)) {
         return;
     }
     ViewGroup::sendAccessibilityEventUnchecked(event);
 }
-#endif
+
 
 RecyclerView::ItemAnimator* RecyclerView::getItemAnimator() {
     return mItemAnimator;
@@ -3784,7 +3785,7 @@ bool RecyclerView::Recycler::tryBindViewHolderByDeadline(ViewHolder& holder, int
         int position, long deadlineNs) {
     holder.mOwnerRecyclerView = mRV;//RecyclerView.this;
     const int viewType = holder.getItemViewType();
-    long startBindNs = mRV->getNanoTime();
+    int64_t startBindNs = mRV->getNanoTime();
     if (deadlineNs != FOREVER_NS
             && !mRecyclerPool->willBindInTime(viewType, startBindNs, deadlineNs)) {
         // abort - we have a deadline we can't meet
@@ -3808,7 +3809,7 @@ bool RecyclerView::Recycler::tryBindViewHolderByDeadline(ViewHolder& holder, int
     mRV->mAdapter->bindViewHolder(holder, offsetPosition);
     if(reattachedForBind)
         mRV->detachViewFromParent(holder.itemView);
-    long endBindNs = mRV->getNanoTime();
+    int64_t endBindNs = mRV->getNanoTime();
     mRecyclerPool->factorInBindTime(holder.getItemViewType(), endBindNs - startBindNs);
     attachAccessibilityDelegateOnBind(holder);
     if (mRV->mState->isPreLayout()) {
@@ -3939,7 +3940,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
             }
         }
         if (holder == nullptr) {
-            long start = mRV->getNanoTime();
+            int64_t start = mRV->getNanoTime();
             if (deadlineNs != FOREVER_NS
                     && !mRecyclerPool->willCreateInTime(type, start, deadlineNs)) {
                 // abort - we have a deadline we can't meet
@@ -3953,7 +3954,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
                     holder->mNestedRecyclerView = innerView;//new WeakReference<>(innerView);
                 }
             }
-            const long end = mRV->getNanoTime();
+            const int64_t end = mRV->getNanoTime();
             mRecyclerPool->factorInCreateTime(type, end - start);
             LOGD_IF(_Debug,"tryGetViewHolderForPositionByDeadline created new ViewHolder");
         }
@@ -4004,16 +4005,13 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
 void RecyclerView::Recycler::attachAccessibilityDelegateOnBind(ViewHolder& holder) {
     if (mRV->isAccessibilityEnabled()) {
         View* itemView = holder.itemView;
-        if (itemView->getImportantForAccessibility()
-                == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
-            itemView->setImportantForAccessibility(
-                    View::IMPORTANT_FOR_ACCESSIBILITY_YES);
+        if (itemView->getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+            itemView->setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
         }
-        /*if (!itemView->hasAccessibilityDelegate()) {
+        if (!itemView->getAccessibilityDelegate()){//hasAccessibilityDelegate()) {
             holder.addFlags(ViewHolder::FLAG_SET_A11Y_ITEM_DELEGATE);
-            itemView->setAccessibilityDelegate(
-                    mAccessibilityDelegate.getItemDelegate());
-        }*/
+            itemView->setAccessibilityDelegate( mRV->mAccessibilityDelegate->getItemDelegate());
+        }//TODO
     }
 }
 
@@ -4184,7 +4182,7 @@ void RecyclerView::Recycler::addViewHolderToRecycledViewPool(ViewHolder& holder,
     clearNestedRecyclerViewIfNotNested(holder);
     if (holder.hasAnyOfTheFlags(ViewHolder::FLAG_SET_A11Y_ITEM_DELEGATE)) {
         holder.setFlags(0, ViewHolder::FLAG_SET_A11Y_ITEM_DELEGATE);
-        //holder.itemView->setAccessibilityDelegate(nullptr);
+        holder.itemView->setAccessibilityDelegate(nullptr);
     }
     if (dispatchRecycled) {
         dispatchViewRecycled(holder);
@@ -5850,10 +5848,10 @@ void RecyclerView::LayoutManager::removeAndRecycleAllViews(Recycler& recycler) {
         }
     }
 }
-#if 0
+
 // called by accessibility delegate
 void RecyclerView::LayoutManager::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info) {
-    onInitializeAccessibilityNodeInfo(mRecyclerView->mRecycler, mRecyclerView->mState, info);
+    onInitializeAccessibilityNodeInfo(*mRecyclerView->mRecycler, *mRecyclerView->mState, info);
 }
 
 void RecyclerView::LayoutManager::onInitializeAccessibilityNodeInfo(Recycler& recycler,
@@ -5866,7 +5864,7 @@ void RecyclerView::LayoutManager::onInitializeAccessibilityNodeInfo(Recycler& re
         info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
         info.setScrollable(true);
     }
-    AccessibilityNodeInfo::CollectionInfo collectionInfo =
+    AccessibilityNodeInfo::CollectionInfo* collectionInfo =
             AccessibilityNodeInfo::CollectionInfo::obtain(getRowCountForAccessibility(recycler, state),
                  getColumnCountForAccessibility(recycler, state),
                  isLayoutHierarchical(recycler, state),
@@ -5876,12 +5874,12 @@ void RecyclerView::LayoutManager::onInitializeAccessibilityNodeInfo(Recycler& re
 
 // called by accessibility delegate
 void RecyclerView::LayoutManager::onInitializeAccessibilityEvent(AccessibilityEvent& event) {
-    onInitializeAccessibilityEvent(mRecyclerView->mRecycler, mRecyclerView->mState, event);
+    onInitializeAccessibilityEvent(*mRecyclerView->mRecycler, *mRecyclerView->mState, event);
 }
 
 void RecyclerView::LayoutManager::onInitializeAccessibilityEvent(Recycler& recycler, State& state,
         AccessibilityEvent& event) {
-    if (mRecyclerView == nullptr || event == nullptr) {
+    if (mRecyclerView == nullptr /*|| event == nullptr*/) {
         return;
     }
     event.setScrollable(mRecyclerView->canScrollVertically(1)
@@ -5895,25 +5893,24 @@ void RecyclerView::LayoutManager::onInitializeAccessibilityEvent(Recycler& recyc
 }
 
 // called by accessibility delegate
-void RecyclerView::LayoutManager::onInitializeAccessibilityNodeInfoForItem(View* host, AccessibilityNodeInfo info) {
+void RecyclerView::LayoutManager::onInitializeAccessibilityNodeInfoForItem(View* host, AccessibilityNodeInfo& info) {
     ViewHolder* vh = getChildViewHolderInt(host);
     // avoid trying to create accessibility node info for removed children
-    if (vh != null && !vh.isRemoved() && !mChildHelper.isHidden(vh.itemView)) {
-        onInitializeAccessibilityNodeInfoForItem(mRecyclerView.mRecycler,
-                mRecyclerView.mState, host, info);
+    if (vh && !vh->isRemoved() && !mChildHelper->isHidden(vh->itemView)) {
+        onInitializeAccessibilityNodeInfoForItem(*mRecyclerView->mRecycler,
+                *mRecyclerView->mState, host, info);
     }
 }
 
 void RecyclerView::LayoutManager::onInitializeAccessibilityNodeInfoForItem(Recycler& recycler,
-        State& state, View* host, AccessibilityNodeInfo info) {
+        State& state, View* host, AccessibilityNodeInfo& info) {
     int rowIndexGuess = canScrollVertically() ? getPosition(host) : 0;
     int columnIndexGuess = canScrollHorizontally() ? getPosition(host) : 0;
-    AccessibilityNodeInfoCompat.CollectionItemInfoCompat itemInfo =
-            AccessibilityNodeInfoCompat.CollectionItemInfoCompat.obtain(rowIndexGuess, 1,
-                    columnIndexGuess, 1, false, false);
+    AccessibilityNodeInfo::CollectionItemInfo* itemInfo =
+            AccessibilityNodeInfo::CollectionItemInfo::obtain(rowIndexGuess, 1,columnIndexGuess, 1, false, false);
     info.setCollectionItemInfo(itemInfo);
 }
-#endif
+
 void RecyclerView::LayoutManager::requestSimpleAnimationsInNextLayout() {
     mRequestedSimpleAnimations = true;
 }
@@ -5924,7 +5921,7 @@ int RecyclerView::LayoutManager::getSelectionModeForAccessibility(Recycler& recy
 }
 
 int RecyclerView::LayoutManager::getRowCountForAccessibility(Recycler& recycler, State& state) {
-    if (mRecyclerView == nullptr || mRecyclerView->mAdapter == nullptr) {
+    if ((mRecyclerView == nullptr) || (mRecyclerView->mAdapter == nullptr)) {
         return 1;
     }
     return canScrollVertically() ? mRecyclerView->mAdapter->getItemCount() : 1;
@@ -5932,42 +5929,41 @@ int RecyclerView::LayoutManager::getRowCountForAccessibility(Recycler& recycler,
 
 int RecyclerView::LayoutManager::getColumnCountForAccessibility(Recycler& recycler,
         State& state) {
-    if (mRecyclerView == nullptr || mRecyclerView->mAdapter == nullptr) {
+    if ((mRecyclerView == nullptr) || (mRecyclerView->mAdapter == nullptr)) {
         return 1;
     }
     return canScrollHorizontally() ? mRecyclerView->mAdapter->getItemCount() : 1;
 }
 
-bool RecyclerView::LayoutManager::isLayoutHierarchical(Recycler recycler,State& state) {
+bool RecyclerView::LayoutManager::isLayoutHierarchical(Recycler& recycler,State& state) {
     return false;
 }
-#if 0
+
 // called by accessibility delegate
 bool RecyclerView::LayoutManager::performAccessibilityAction(int action, Bundle args) {
-    return performAccessibilityAction(mRecyclerView->mRecycler, mRecyclerView->mState,
-            action, args);
+    return performAccessibilityAction(*mRecyclerView->mRecycler, *mRecyclerView->mState, action, args);
 }
 
-bool RecyclerView::LayoutManager::performAccessibilityAction(Recycler recycler, State state,
+bool RecyclerView::LayoutManager::performAccessibilityAction(Recycler& recycler, State& state,
         int action, Bundle args) {
-    if (mRecyclerView == null) {
+    if (mRecyclerView == nullptr) {
         return false;
     }
     int vScroll = 0, hScroll = 0;
     switch (action) {
-    case AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD:
+    case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD:
         if (mRecyclerView->canScrollVertically(-1)) {
             vScroll = -(getHeight() - getPaddingTop() - getPaddingBottom());
         }
-        if (mRecyclerView.canScrollHorizontally(-1)) {
+        if (mRecyclerView->canScrollHorizontally(-1)) {
             hScroll = -(getWidth() - getPaddingLeft() - getPaddingRight());
         }
         break;
-    case AccessibilityNodeInfoCompat.ACTION_SCROLL_FORWARD:
+    case AccessibilityNodeInfo::ACTION_SCROLL_FORWARD:
         if (mRecyclerView->canScrollVertically(1)) {
             vScroll = getHeight() - getPaddingTop() - getPaddingBottom();
         }
-        if (mRecyclerView.canScrollHorizontally(1)) {
+        if (mRecyclerView->canScrollHorizontally(1)) {
             hScroll = getWidth() - getPaddingLeft() - getPaddingRight();
         }
         break;
@@ -5975,22 +5971,21 @@ bool RecyclerView::LayoutManager::performAccessibilityAction(Recycler recycler, 
     if (vScroll == 0 && hScroll == 0) {
         return false;
     }
-    mRecyclerView.smoothScrollBy(hScroll, vScroll);
+    mRecyclerView->smoothScrollBy(hScroll, vScroll);
     return true;
 }
 
 // called by accessibility delegate
-bool RecyclerView::LayoutManager::performAccessibilityActionForItem(View view, int action,
-        Bundle args) {
-    return performAccessibilityActionForItem(mRecyclerView.mRecycler, mRecyclerView.mState,
+bool RecyclerView::LayoutManager::performAccessibilityActionForItem(View* view, int action, Bundle args) {
+    return performAccessibilityActionForItem(*mRecyclerView->mRecycler, *mRecyclerView->mState,
             view, action, args);
 }
 
 bool RecyclerView::LayoutManager::performAccessibilityActionForItem(Recycler& recycler,
-        State& state, View& view, int action, Bundle args) {
+        State& state, View* view, int action, Bundle args) {
     return false;
 }
-#endif
+
 
 RecyclerView::LayoutManager::Properties* RecyclerView::LayoutManager::getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes) {
     Properties* properties = new Properties();

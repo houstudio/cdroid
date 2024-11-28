@@ -48,6 +48,7 @@
 #include <view/soundeffectconstants.h>
 #include <view/hapticfeedbackconstants.h>
 #include <view/accessibility/accessibilityevent.h>
+#include <view/accessibility/accessibilitymanager.h>
 #include <view/accessibility/accessibilitynodeprovider.h>
 #include <view/inputeventconsistencyverifier.h>
 #include <animation/animation.h>
@@ -1087,7 +1088,7 @@ public:
     void notifyViewAccessibilityStateChangedIfNeeded(int changeType);
     virtual void notifySubtreeAccessibilityStateChangedIfNeeded();
     bool dispatchNestedPrePerformAccessibilityAction(int action, Bundle arguments);
-    bool performAccessibilityAction(int action, Bundle arguments);
+    virtual bool performAccessibilityAction(int action, Bundle arguments);
     virtual bool performAccessibilityActionInternal(int action, Bundle arguments);
     std::string getIterableTextForAccessibility();
     bool isAccessibilitySelectionExtendable()const;
@@ -1202,7 +1203,7 @@ public:
     virtual void onInitializeAccessibilityEventInternal(AccessibilityEvent& event);
     AccessibilityNodeInfo* createAccessibilityNodeInfo();
     AccessibilityNodeInfo* createAccessibilityNodeInfoInternal();
-    void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info);
+    virtual void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info);
     virtual void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info);
     void addExtraDataToAccessibilityNodeInfo(AccessibilityNodeInfo& info,const std::string& extraDataKey,Bundle arguments);
     bool isVisibleToUserForAutofill(int virtualId)const;

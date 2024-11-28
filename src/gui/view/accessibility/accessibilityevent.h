@@ -301,7 +301,7 @@ public:
     void setSealed(bool);
     size_t getRecordCount()const;
     void appendRecord(AccessibilityRecord*);
-    AccessibilityRecord* getRecord(int)const;
+    AccessibilityRecord* getRecord(int);
     int getEventType()const;
     int getContentChangeTypes()const;
     void setContentChangeTypes(int changeTypes);
@@ -321,7 +321,7 @@ public:
     static AccessibilityEvent* obtain(const AccessibilityEvent& event);
     static AccessibilityEvent* obtain();
     void recycle()override;
-    std::string toString()const;
+    std::string toString();
     static std::string eventTypeToString(int eventType);
 };
 }

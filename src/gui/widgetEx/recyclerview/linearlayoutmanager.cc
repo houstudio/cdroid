@@ -65,7 +65,7 @@ void LinearLayoutManager::onDetachedFromWindow(RecyclerView& view, RecyclerView:
         recycler.clear();
     }
 }
-#if 0
+
 void LinearLayoutManager::onInitializeAccessibilityEvent(AccessibilityEvent& event) {
     LayoutManager::onInitializeAccessibilityEvent(event);
     if (getChildCount() > 0) {
@@ -73,7 +73,7 @@ void LinearLayoutManager::onInitializeAccessibilityEvent(AccessibilityEvent& eve
         event.setToIndex(findLastVisibleItemPosition());
     }
 }
-#endif
+
 Parcelable* LinearLayoutManager::onSaveInstanceState() {
     if (mPendingSavedState != nullptr) {
         return new SavedState(*mPendingSavedState);
@@ -996,8 +996,8 @@ void LinearLayoutManager::recycleViewsFromStart(RecyclerView::Recycler& recycler
     if (mShouldReverseLayout) {
         for (int i = childCount - 1; i >= 0; i--) {
             View* child = getChildAt(i);
-            if (mOrientationHelper->getDecoratedEnd(child) > limit
-                    || mOrientationHelper->getTransformedEndWithDecoration(child) > limit) {
+            if ((mOrientationHelper->getDecoratedEnd(child) > limit)
+                    || (mOrientationHelper->getTransformedEndWithDecoration(child) > limit)) {
                 // stop here
                 recycleChildren(recycler, childCount - 1, i);
                 return;
@@ -1006,8 +1006,8 @@ void LinearLayoutManager::recycleViewsFromStart(RecyclerView::Recycler& recycler
     } else {
         for (int i = 0; i < childCount; i++) {
             View* child = getChildAt(i);
-            if (mOrientationHelper->getDecoratedEnd(child) > limit
-                    || mOrientationHelper->getTransformedEndWithDecoration(child) > limit) {
+            if ((mOrientationHelper->getDecoratedEnd(child) > limit)
+                    || (mOrientationHelper->getTransformedEndWithDecoration(child) > limit)) {
                 // stop here
                 recycleChildren(recycler, 0, i);
                 return;
@@ -1028,8 +1028,8 @@ void LinearLayoutManager::recycleViewsFromEnd(RecyclerView::Recycler& recycler, 
     if (mShouldReverseLayout) {
         for (int i = 0; i < childCount; i++) {
             View* child = getChildAt(i);
-            if (mOrientationHelper->getDecoratedStart(child) < limit
-                    || mOrientationHelper->getTransformedStartWithDecoration(child) < limit) {
+            if ((mOrientationHelper->getDecoratedStart(child) < limit)
+                    || (mOrientationHelper->getTransformedStartWithDecoration(child) < limit)) {
                 // stop here
                 recycleChildren(recycler, 0, i);
                 return;
@@ -1038,8 +1038,8 @@ void LinearLayoutManager::recycleViewsFromEnd(RecyclerView::Recycler& recycler, 
     } else {
         for (int i = childCount - 1; i >= 0; i--) {
             View* child = getChildAt(i);
-            if (mOrientationHelper->getDecoratedStart(child) < limit
-                    || mOrientationHelper->getTransformedStartWithDecoration(child) < limit) {
+            if ((mOrientationHelper->getDecoratedStart(child) < limit)
+                    || (mOrientationHelper->getTransformedStartWithDecoration(child) < limit)){
                 // stop here
                 recycleChildren(recycler, childCount - 1, i);
                 return;
@@ -1085,7 +1085,7 @@ int LinearLayoutManager::fill(RecyclerView::Recycler& recycler, LayoutState& lay
     }
     int remainingSpace = layoutState.mAvailable + layoutState.mExtraFillSpace;
     LayoutChunkResult* layoutChunkResult = mLayoutChunkResult;
-    while ((layoutState.mInfinite || remainingSpace > 0) && layoutState.hasMore(state)) {
+    while ((layoutState.mInfinite || (remainingSpace > 0)) && layoutState.hasMore(state)) {
         layoutChunkResult->resetInternal();
         layoutChunk(recycler, state, layoutState,*layoutChunkResult);
         if (layoutChunkResult->mFinished) {

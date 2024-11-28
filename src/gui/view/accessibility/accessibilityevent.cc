@@ -22,7 +22,6 @@ void AccessibilityEvent::init(const AccessibilityEvent&event){
     mWindowChangeTypes = event.mWindowChangeTypes;
     mEventTime = event.mEventTime;
     mPackageName = event.mPackageName;
-    //if (DEBUG_ORIGIN) originStackTrace = event.originStackTrace;
 }
 
 void AccessibilityEvent::setSealed(bool sealed){
@@ -35,7 +34,7 @@ size_t AccessibilityEvent::getRecordCount()const{
 void AccessibilityEvent::appendRecord(AccessibilityRecord*){
 }
 
-AccessibilityRecord* AccessibilityEvent::getRecord(int i)const{
+AccessibilityRecord* AccessibilityEvent::getRecord(int i){
     return mRecords.at(i);
 }
 
@@ -63,7 +62,6 @@ static std::string flagsToString(int flags,std::function<std::string(int)>func){
 }
 std::string AccessibilityEvent::contentChangeTypesToString(int types) {
     return flagsToString(types,AccessibilityEvent::singleContentChangeTypeToString);
-    //return BitUtils.flagsToString(types, AccessibilityEvent::singleContentChangeTypeToString);
 }
 
 std::string AccessibilityEvent::singleContentChangeTypeToString(int type) {
@@ -224,7 +222,7 @@ static int numberOfTrailingZeros(T value) {
     return count;
 }
 
-std::string AccessibilityEvent::toString() const{
+std::string AccessibilityEvent::toString(){
     std::ostringstream builder;
     builder<<"EventType: "<<eventTypeToString(mEventType);
     builder<<"; EventTime: "<<mEventTime;
@@ -243,8 +241,8 @@ std::string AccessibilityEvent::toString() const{
         builder<<"; WindowChangeTypes: "<<
                 windowChangeTypesToString(mWindowChangeTypes);
     }
-    //super.appendTo(builder);
-    /*if ( DEBUG_CONCISE_TOSTRING) {
+    AccessibilityRecord::appendTo(builder);
+    if ( DEBUG_CONCISE_TOSTRING) {
         if (!DEBUG_CONCISE_TOSTRING) {
             builder<<"\n";
         }
@@ -254,9 +252,9 @@ std::string AccessibilityEvent::toString() const{
         }
         for (int i = 0; i < getRecordCount(); i++) {
             builder<<"  Record "<<i<<":";
-            getRecord(i).appendTo(builder)<<"\n";
+            builder<<getRecord(i)->toString()<<"\n";
         }
-    } else */{
+    } else {
         builder<<"; recordCount: "<<getRecordCount();
     }
     return builder.str();

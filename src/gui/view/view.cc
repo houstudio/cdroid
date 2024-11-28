@@ -7526,6 +7526,16 @@ bool View::dispatchGenericMotionEvent(MotionEvent&event){
 
 bool View::dispatchTouchEvent(MotionEvent&event){
     bool result = false;
+    // If the event should be handled by accessibility focus first.
+    if (event.isTargetAccessibilityFocus()) {
+        // We don't have focus or no virtual descendant has it, do not handle the event.
+        if (!isAccessibilityFocusedViewOrHost()) {
+            return false;
+        }
+        // We have focus and got the event, then use normal event dispatch.
+        event.setTargetAccessibilityFocus(false);
+    }
+
     const int actionMasked = event.getActionMasked();
     if (mInputEventConsistencyVerifier)
         mInputEventConsistencyVerifier->onTouchEvent(event, 0);

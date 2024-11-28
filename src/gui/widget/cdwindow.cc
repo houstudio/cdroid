@@ -63,6 +63,7 @@ void Window::initWindow(){
     mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });
 #endif
     mInLayout= false;
+    mSendWindowContentChangedAccessibilityEvent = nullptr;
     mPendingRgn = Cairo::Region::create();
     setBackground(nullptr);
     /*mLayoutRequested = false;
@@ -77,6 +78,7 @@ void Window::initWindow(){
 }
 
 Window::~Window(){
+    delete mSendWindowContentChangedAccessibilityEvent;
     LOGD("%p:%d destroied!",this,mID);
 }
 
@@ -100,9 +102,42 @@ ViewGroup::LayoutParams* Window::generateLayoutParams(const AttributeSet&atts)co
     return new MarginLayoutParams(getContext(),atts);
 }
 
+View* Window::getCommonPredecessor(View* first, View* second){
+     std::set<View*> seen;
+     View* firstCurrent = first;
+     while (firstCurrent != nullptr) {
+         seen.insert(firstCurrent);
+         ViewGroup* firstCurrentParent = firstCurrent->mParent;
+         firstCurrent = firstCurrentParent;
+     }
+     View* secondCurrent = second;
+     while (secondCurrent != nullptr) {
+         if (seen.find(secondCurrent)!=seen.end()) {
+             seen.clear();
+             return secondCurrent;
+         }
+         ViewGroup* secondCurrentParent = secondCurrent->mParent;
+         secondCurrent = secondCurrentParent;
+     }
+     seen.clear();
+     return nullptr;
+}
+
+void Window::postSendWindowContentChangedCallback(View*source,int changeType){
+    if (mSendWindowContentChangedAccessibilityEvent == nullptr) {
+         mSendWindowContentChangedAccessibilityEvent = new SendWindowContentChangedAccessibilityEvent(this);
+     }
+     mSendWindowContentChangedAccessibilityEvent->runOrPost(source, changeType);
+}
+
+void Window::removeSendWindowContentChangedCallback(){
+    if (mSendWindowContentChangedAccessibilityEvent != nullptr) {
+         mSendWindowContentChangedAccessibilityEvent->removeCallbacks();
+    }
+}
+
 void Window::notifySubtreeAccessibilityStateChanged(View* child, View* source, int changeType){
-    LOGD("TODO source=%p changeType=%d",source,changeType);
-    //postSendWindowContentChangedCallback(Preconditions.checkNotNull(source), changeType);
+    postSendWindowContentChangedCallback(source, changeType);
 }
 
 void Window::requestTransitionStart(LayoutTransition* transition){
@@ -703,27 +738,6 @@ void Window::InvalidateOnAnimationRunnable::postIfNeededLocked() {
     }
 }
 
-Window::UIEventHandler::UIEventHandler(View*v,std::function<void()>r){
-    mAttachedView=v;
-    mLayoutRunner=r;
-}
-
-void Window::UIEventHandler::handleIdle(){
-    if (mAttachedView && mAttachedView->isAttachedToWindow()){
-        if(mAttachedView->isLayoutRequested())
-            mLayoutRunner();
-        if(mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
-            GraphDevice::getInstance().lock();
-            ((Window*)mAttachedView)->draw();
-            GraphDevice::getInstance().flip();
-            GraphDevice::getInstance().unlock();
-        }
-    }
-
-    if(GraphDevice::getInstance().needCompose())
-        GraphDevice::getInstance().requestCompose();
-}
-
 void Window::drawAccessibilityFocusedDrawableIfNeeded(Canvas& canvas){
     Rect bounds;
     if (getAccessibilityFocusedRect(bounds)) {
@@ -776,6 +790,92 @@ Drawable* Window::getAccessibilityFocusedDrawable(){
         //mAttachInfo->mAccessibilityFocusDrawable = mContext->getDrawable(value.resourceId);
     }
     return mAttachInfo->mAccessibilityFocusDrawable;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Window::UIEventHandler::UIEventHandler(View*v,std::function<void()>r){
+    mAttachedView=v;
+    mLayoutRunner=r;
+}
+
+void Window::UIEventHandler::handleIdle(){
+    if (mAttachedView && mAttachedView->isAttachedToWindow()){
+        if(mAttachedView->isLayoutRequested())
+            mLayoutRunner();
+        if(mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
+            GraphDevice::getInstance().lock();
+            ((Window*)mAttachedView)->draw();
+            GraphDevice::getInstance().flip();
+            GraphDevice::getInstance().unlock();
+        }
+    }
+
+    if(GraphDevice::getInstance().needCompose())
+        GraphDevice::getInstance().requestCompose();
+}
+
+Window::SendWindowContentChangedAccessibilityEvent::SendWindowContentChangedAccessibilityEvent(Window*w):mWin(w){
+    mSource   = nullptr;
+    mLastEventTimeMillis =0;
+    mRunnable = std::bind(&SendWindowContentChangedAccessibilityEvent::run,this);
+}
+
+void Window::SendWindowContentChangedAccessibilityEvent::run(){
+    //Protect against re-entrant code and attempt to do the right thing in the case that
+    // we're multithreaded.
+    View* source = mSource;
+    mSource = nullptr;
+    LOGD("mSource=%p mChangeTypes=%d",source,mChangeTypes);
+    if (source == nullptr) {
+        LOGE("Accessibility content change has no source");
+        return;
+    }
+    // The accessibility may be turned off while we were waiting so check again.
+    if (AccessibilityManager::getInstance(mWin->getContext()).isEnabled()) {
+        mLastEventTimeMillis = SystemClock::uptimeMillis();
+        AccessibilityEvent* event = AccessibilityEvent::obtain();
+        event->setEventType(AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
+        event->setContentChangeTypes(mChangeTypes);
+        source->sendAccessibilityEventUnchecked(*event);
+    } else {
+        mLastEventTimeMillis = 0;
+    }
+    // In any case reset to initial state.
+    source->resetSubtreeAccessibilityStateChanged();
+    mChangeTypes = 0;
+}
+
+void Window::SendWindowContentChangedAccessibilityEvent::runOrPost(View* source, int changeType){
+     if (mSource != nullptr) {
+         // If there is no common predecessor, then mSource points to
+         // a removed view, hence in this case always prefer the source.
+         View* predecessor = mWin->getCommonPredecessor(mSource, source);
+         if (predecessor != nullptr) {
+             predecessor = predecessor->getSelfOrParentImportantForA11y();
+         }
+         mSource = (predecessor != nullptr) ? predecessor : source;
+         mChangeTypes |= changeType;
+         return;
+     }
+     mSource = source;
+     mChangeTypes = changeType;
+     const int64_t timeSinceLastMillis = SystemClock::uptimeMillis() - mLastEventTimeMillis;
+     const int64_t minEventIntevalMillis = ViewConfiguration::getSendRecurringAccessibilityEventsInterval();
+     if (timeSinceLastMillis >= minEventIntevalMillis) {
+         removeCallbacksAndRun();
+     } else {
+         mWin->postDelayed(mRunnable, minEventIntevalMillis - timeSinceLastMillis);
+     }
+}
+
+void Window::SendWindowContentChangedAccessibilityEvent::removeCallbacks(){
+    mWin->removeCallbacks(mRunnable);
+}
+
+void Window::SendWindowContentChangedAccessibilityEvent::removeCallbacksAndRun() {
+    mWin->removeCallbacks(mRunnable);
+    run();
 }
 
 }  //endof namespace

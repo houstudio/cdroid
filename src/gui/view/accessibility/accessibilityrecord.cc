@@ -36,9 +36,9 @@ void AccessibilityRecord::setSourceNodeId(long sourceNodeId) {
 AccessibilityNodeInfo* AccessibilityRecord::getSource() {
     enforceSealed();
     if ((mConnectionId == UNDEFINED)
-            || (mSourceWindowId == AccessibilityWindowInfo::UNDEFINED_WINDOW_ID)
-            || (AccessibilityNodeInfo::getAccessibilityViewId(mSourceNodeId)
-                    == AccessibilityNodeInfo::UNDEFINED_ITEM_ID)) {
+        || (mSourceWindowId == AccessibilityWindowInfo::UNDEFINED_WINDOW_ID)
+        || (AccessibilityNodeInfo::getAccessibilityViewId(mSourceNodeId)
+                == AccessibilityNodeInfo::UNDEFINED_ITEM_ID)) {
         return nullptr;
     }
     /*AccessibilityInteractionClient client = AccessibilityInteractionClient::getInstance();
@@ -381,18 +381,19 @@ void AccessibilityRecord::clear() {
     mSourceWindowId = AccessibilityWindowInfo::UNDEFINED_WINDOW_ID;
     mConnectionId = UNDEFINED;
 }
-#if 0
-@Override
-public String toString() {
-    return appendTo(new StringBuilder()).toString();
+
+std::string AccessibilityRecord::toString() {
+    std::ostringstream oss;
+    appendTo(oss);
+    return oss.str();
 }
 
-StringBuilder appendTo(StringBuilder builder) {
-    builder.append(" [ ClassName: ").append(mClassName);
-    if (!DEBUG_CONCISE_TOSTRING || !isEmpty(mText)) {
-        appendPropName(builder, "Text").append(mText);
+std::ostringstream& AccessibilityRecord::appendTo(std::ostringstream&builder) {
+    builder<<" [ ClassName: "<<mClassName;
+    if (!DEBUG_CONCISE_TOSTRING || !mText.empty()) {
+        appendPropName(builder, "Text");//<<append(mText);
     }
-    append(builder, "ContentDescription", mContentDescription);
+    appendPropName(builder, "ContentDescription")<<mContentDescription;
     append(builder, "ItemCount", mItemCount);
     append(builder, "CurrentItemIndex", mCurrentItemIndex);
 
@@ -402,7 +403,7 @@ StringBuilder appendTo(StringBuilder builder) {
     appendUnless(false, PROPERTY_FULL_SCREEN, builder);
     appendUnless(false, PROPERTY_SCROLLABLE, builder);
 
-    append(builder, "BeforeText", mBeforeText);
+    appendPropName(builder, "BeforeText")<<mBeforeText;
     append(builder, "FromIndex", mFromIndex);
     append(builder, "ToIndex", mToIndex);
     append(builder, "ScrollX", mScrollX);
@@ -411,43 +412,38 @@ StringBuilder appendTo(StringBuilder builder) {
     append(builder, "MaxScrollY", mMaxScrollY);
     append(builder, "AddedCount", mAddedCount);
     append(builder, "RemovedCount", mRemovedCount);
-    append(builder, "ParcelableData", mParcelableData);
-    builder.append(" ]");
+    //append(builder, "ParcelableData", mParcelableData);
+    builder<<" ]";
     return builder;
 }
 
-private void appendUnless(bool defValue, int prop, StringBuilder builder) {
+void AccessibilityRecord::appendUnless(bool defValue, int prop,std::ostringstream& builder) {
     bool value = getBooleanProperty(prop);
     if (DEBUG_CONCISE_TOSTRING && value == defValue) return;
-    appendPropName(builder, singleBooleanPropertyToString(prop))
-            .append(value);
+    appendPropName(builder, singleBooleanPropertyToString(prop))<<value;
 }
 
-private static String singleBooleanPropertyToString(int prop) {
+std::string AccessibilityRecord::singleBooleanPropertyToString(int prop) {
     switch (prop) {
-        case PROPERTY_CHECKED: return "Checked";
-        case PROPERTY_ENABLED: return "Enabled";
-        case PROPERTY_PASSWORD: return "Password";
-        case PROPERTY_FULL_SCREEN: return "FullScreen";
-        case PROPERTY_SCROLLABLE: return "Scrollable";
-        case PROPERTY_IMPORTANT_FOR_ACCESSIBILITY:
-            return "ImportantForAccessibility";
-        default: return Integer.toHexString(prop);
+    case PROPERTY_CHECKED: return "Checked";
+    case PROPERTY_ENABLED: return "Enabled";
+    case PROPERTY_PASSWORD: return "Password";
+    case PROPERTY_FULL_SCREEN: return "FullScreen";
+    case PROPERTY_SCROLLABLE: return "Scrollable";
+    case PROPERTY_IMPORTANT_FOR_ACCESSIBILITY:
+        return "ImportantForAccessibility";
+    default: return std::to_string(prop);
     }
 }
 
-private void append(StringBuilder builder, String propName, int propValue) {
+void AccessibilityRecord::append(std::ostringstream& builder,const std::string& propName, int propValue) {
     if (DEBUG_CONCISE_TOSTRING && propValue == UNDEFINED) return;
-    appendPropName(builder, propName).append(propValue);
+    appendPropName(builder, propName)<<propValue;
 }
 
-private void append(StringBuilder builder, String propName, Object propValue) {
-    if (DEBUG_CONCISE_TOSTRING && propValue == null) return;
-    appendPropName(builder, propName).append(propValue);
+std::ostringstream& AccessibilityRecord::appendPropName(std::ostringstream& builder,const std::string& propName) {
+    builder<<"; "<<propName<<": ";
+    return builder;
 }
 
-private StringBuilder appendPropName(StringBuilder builder, String propName) {
-    return builder.append("; ").append(propName).append(": ");
-}
-#endif
 }

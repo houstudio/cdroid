@@ -116,7 +116,7 @@ public:
     virtual bool getRecycleChildrenOnDetach()const;
     void setRecycleChildrenOnDetach(bool recycleChildrenOnDetach);
     void onDetachedFromWindow(RecyclerView& view, RecyclerView::Recycler& recycler)override;
-    //void onInitializeAccessibilityEvent(AccessibilityEvent& event)override;
+    void onInitializeAccessibilityEvent(AccessibilityEvent& event)override;
     Parcelable* onSaveInstanceState()override;
     void onRestoreInstanceState(Parcelable& state)override;
     bool canScrollHorizontally()const override;
