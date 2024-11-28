@@ -179,7 +179,6 @@ if(ENABLE_RECYCLERVIEW)
     list(APPEND CDROID_SOURCES
         widgetEx/recyclerview/viewinfostore.cc
         widgetEx/recyclerview/viewboundscheck.cc
-        widgetEx/recyclerview/staggeredgridlayoutmanager.cc
         widgetEx/recyclerview/snaphelper.cc
         widgetEx/recyclerview/simpleitemanimator.cc
         widgetEx/recyclerview/scrollbarhelper.cc
@@ -197,6 +196,8 @@ if(ENABLE_RECYCLERVIEW)
         widgetEx/recyclerview/divideritemdecoration.cc
         widgetEx/recyclerview/defaultitemanimator.cc
         widgetEx/recyclerview/childhelper.cc
+        widgetEx/recyclerview/staggeredgridlayoutmanager.cc
+        widgetEx/recyclerview/recyclerviewaccessibilitydelegate.cc
         #widgetEx/recyclerview/carousellayoutmanager.cc
         widgetEx/recyclerview/adapterhelper.cc
         widgetEx/viewgrouputils.cc
