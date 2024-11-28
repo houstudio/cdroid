@@ -58,7 +58,6 @@ private:
     void applyPrimaryProgressTint();
     void applyProgressBackgroundTint();
     void applySecondaryProgressTint();
-    void refreshProgressRunnableProc();
     void scheduleAccessibilityEventSender();
 protected:
     static constexpr int HORIZONTAL= 0;

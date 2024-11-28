@@ -2666,8 +2666,76 @@ void TextView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event)
         event.setItemCount(text.length());
     }
 }
+
 void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
-    LOGD("TODO");
+    View::onInitializeAccessibilityNodeInfoInternal(info);
+    const bool isPassword =false;// hasPasswordTransformationMethod();
+    info.setPassword(isPassword);
+    info.setText(getText());//getTextForAccessibility());
+    info.setHintText(mHint);
+    info.setShowingHintText(isShowingHint());
+#if 0
+    if (mBufferType == BufferType.EDITABLE) {
+        info.setEditable(true);
+        if (isEnabled()) {
+            info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_TEXT);
+        }
+    }
+
+    if (mEditor != null) {
+        info.setInputType(mEditor.mInputType);
+
+        if (mEditor.mError != null) {
+            info.setContentInvalid(true);
+            info.setError(mEditor.mError);
+        }
+    }
+
+    if (!TextUtils.isEmpty(mText)) {
+        info.addAction(AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY);
+        info.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY);
+        info.setMovementGranularities(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER
+                | AccessibilityNodeInfo.MOVEMENT_GRANULARITY_WORD
+                | AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE
+                | AccessibilityNodeInfo.MOVEMENT_GRANULARITY_PARAGRAPH
+                | AccessibilityNodeInfo.MOVEMENT_GRANULARITY_PAGE);
+        info.addAction(AccessibilityNodeInfo.ACTION_SET_SELECTION);
+        info.setAvailableExtraData(
+                Arrays.asList(EXTRA_DATA_TEXT_CHARACTER_LOCATION_KEY));
+    }
+
+    if (isFocused()) {
+        if (canCopy()) {
+            info.addAction(AccessibilityNodeInfo.ACTION_COPY);
+        }
+        if (canPaste()) {
+            info.addAction(AccessibilityNodeInfo.ACTION_PASTE);
+        }
+        if (canCut()) {
+            info.addAction(AccessibilityNodeInfo.ACTION_CUT);
+        }
+        if (canShare()) {
+            info.addAction(new AccessibilityNodeInfo.AccessibilityAction(
+                    ACCESSIBILITY_ACTION_SHARE,
+                    getResources().getString(com.android.internal.R.string.share)));
+        }
+        if (canProcessText()) {  // also implies mEditor is not null.
+            mEditor.mProcessTextIntentActionsHandler.onInitializeAccessibilityNodeInfo(info);
+        }
+    }
+
+    // Check for known input filter types.
+    const int numFilters = mFilters.length;
+    for (int i = 0; i < numFilters; i++) {
+        final InputFilter filter = mFilters[i];
+        if (filter instanceof InputFilter.LengthFilter) {
+            info.setMaxTextLength(((InputFilter.LengthFilter) filter).getMax());
+        }
+    }
+#endif
+    if (!isSingleLine()) {
+        info.setMultiLine(true);
+    }
 }
 bool TextView::performAccessibilityActionInternal(int action, Bundle arguments){
     LOGD("TODO");
@@ -2675,9 +2743,20 @@ bool TextView::performAccessibilityActionInternal(int action, Bundle arguments){
 }
 void TextView::sendAccessibilityEventInternal(int eventType){
     LOGD("TODO");
+    /*if (eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED && mEditor != null) {
+        mEditor.mProcessTextIntentActionsHandler.initializeAccessibilityActions();
+    }*/
+    View::sendAccessibilityEventInternal(eventType);
 }
 
 void TextView::sendAccessibilityEventUnchecked(AccessibilityEvent& event){
     LOGD("TODO");
+    // Do not send scroll events since first they are not interesting for
+    // accessibility and second such events a generated too frequently.
+    // For details see the implementation of bringTextIntoView().
+    if (event.getEventType() == AccessibilityEvent::TYPE_VIEW_SCROLLED) {
+        return;
+    }
+    View::sendAccessibilityEventUnchecked(event);
 }
 }  // namespace ui

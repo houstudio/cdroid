@@ -64,7 +64,7 @@ public:
         int mDrawableWidthTop, mDrawableWidthBottom, mDrawableHeightLeft, mDrawableHeightRight;
         int mDrawableHeightStart, mDrawableHeightEnd, mDrawableHeightError, mDrawableHeightTemp;
         int mDrawablePadding;
-	int mDrawableSaved = DRAWABLE_NONE;
+        int mDrawableSaved = DRAWABLE_NONE;
         Rect mCompoundRect;
     private:
 	void applyErrorDrawableIfNeeded(int layoutDirection);

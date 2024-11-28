@@ -132,9 +132,6 @@ bool AbsSeekBar::verifyDrawable(Drawable* who)const{
     return who == mThumb || who == mTickMark || ProgressBar::verifyDrawable(who);
 }
 
-void AbsSeekBar::onProgressRefresh(float scale, bool fromUser, int progress){
-}
-
 void AbsSeekBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     Drawable* d = getCurrentDrawable();
     const int thumbHeight = mThumb == nullptr ? 0 : mThumb->getIntrinsicHeight();

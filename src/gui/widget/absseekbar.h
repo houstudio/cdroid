@@ -46,7 +46,6 @@ protected:
     virtual void drawTrack(Canvas&canvas);
     virtual void drawTickMarks(Canvas&canvas);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
-    virtual void onProgressRefresh(float scale, bool fromUser, int progress);
     void onVisualProgressChanged(int id, float scale)override;
     void drawableStateChanged()override;
 

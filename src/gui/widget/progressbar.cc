@@ -365,6 +365,7 @@ void ProgressBar::onResolveDrawables(int layoutDirection){
 }
 
 void ProgressBar::onVisualProgressChanged(int id, float progress){
+    //Stub method
 }
 
 void ProgressBar::onAttachedToWindow(){
@@ -415,15 +416,6 @@ void ProgressBar::setVisualProgress(int id, float progress){
     if (d) d->setLevel((progress * MAX_LEVEL));
     else invalidate(true);
     onVisualProgressChanged(id, progress);
-}
-
-void ProgressBar::refreshProgressRunnableProc(){
-    for(auto& rd:mRefreshData){
-         doRefreshProgress(rd->id, rd->progress, rd->fromUser, true, rd->animate);
-         rd->recycle();
-    }
-    mRefreshData.clear();
-    mRefreshIsPosted = false;
 }
 
 void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool callBackToApp, bool animate){
@@ -482,7 +474,14 @@ void ProgressBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
 void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool animate){
     if(mRefreshProgressRunnable==nullptr){
-        mRefreshProgressRunnable = std::bind(&ProgressBar::refreshProgressRunnableProc,this);
+        mRefreshProgressRunnable = [this](){
+            for(auto& rd:mRefreshData){
+                doRefreshProgress(rd->id, rd->progress, rd->fromUser, true, rd->animate);
+                rd->recycle();
+            }
+            mRefreshData.clear();
+            mRefreshIsPosted = false;
+        };
     }
     RefreshData* rd = RefreshData::obtain(id, progress, fromUser, animate);
     mRefreshData.push_back(rd);

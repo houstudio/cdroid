@@ -11,8 +11,8 @@ private:
 public:
     DECLARE_UIEVENT(void,AfterTextChanged,EditText&);
 protected:
-    int mPasswordChar;
     Runnable mRBLink;
+    int mPasswordChar;
     int mInputType;
     std::wstring mInputPattern;
     AfterTextChanged afterChanged;
