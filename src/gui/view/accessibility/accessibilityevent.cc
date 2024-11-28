@@ -246,7 +246,7 @@ std::string AccessibilityEvent::toString(){
         if (!DEBUG_CONCISE_TOSTRING) {
             builder<<"\n";
         }
-        if (DEBUG) {
+        if (Debug) {
             builder<<"; SourceWindowId: "<<mSourceWindowId;
             builder<<"; SourceNodeId: "<<mSourceNodeId;
         }

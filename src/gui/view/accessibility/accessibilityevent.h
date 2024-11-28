@@ -4,6 +4,7 @@
 namespace cdroid{
 class AccessibilityEvent:public AccessibilityRecord{
 private:
+    static constexpr bool Debug = false;
     static constexpr int MAX_POOL_SIZE = 10;
 public:
     static constexpr bool DEBUG_ORIGIN = false;
