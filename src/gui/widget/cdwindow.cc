@@ -162,6 +162,78 @@ void Window::bringToFront(){
     WindowManager::getInstance().bringToFront(this);
 }
 
+void Window::handleWindowContentChangedEvent(AccessibilityEvent& event){
+    View* focusedHost = mAccessibilityFocusedHost;
+    if ((focusedHost == nullptr) || (mAccessibilityFocusedVirtualView == nullptr)) {
+        // No virtual view focused, nothing to do here.
+        return;
+    }
+
+    AccessibilityNodeProvider* provider = focusedHost->getAccessibilityNodeProvider();
+    if (provider == nullptr) {
+        // Error state: virtual view with no provider. Clear focus.
+        mAccessibilityFocusedHost = nullptr;
+        mAccessibilityFocusedVirtualView = nullptr;
+        focusedHost->clearAccessibilityFocusNoCallbacks(0);
+        return;
+    }
+
+    // We only care about change types that may affect the bounds of the
+    // focused virtual view.
+    const int changes = event.getContentChangeTypes();
+    if ((changes & AccessibilityEvent::CONTENT_CHANGE_TYPE_SUBTREE) == 0
+            && changes != AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED) {
+        return;
+    }
+
+    const long eventSourceNodeId = event.getSourceNodeId();
+    const int changedViewId = AccessibilityNodeInfo::getAccessibilityViewId(eventSourceNodeId);
+
+    // Search up the tree for subtree containment.
+    bool hostInSubtree = false;
+    View* root = mAccessibilityFocusedHost;
+    while (root != nullptr && !hostInSubtree) {
+        if (changedViewId == root->getAccessibilityViewId()) {
+            hostInSubtree = true;
+        } else {
+            ViewGroup* parent = root->getParent();
+            root = parent;
+        }
+    }
+
+    // We care only about changes in subtrees containing the host view.
+    if (!hostInSubtree) {
+        return;
+    }
+
+    const long focusedSourceNodeId = mAccessibilityFocusedVirtualView->getSourceNodeId();
+    int focusedChildId = AccessibilityNodeInfo::getVirtualDescendantId(focusedSourceNodeId);
+
+    // Refresh the node for the focused virtual view.
+    Rect oldBounds;
+    mAccessibilityFocusedVirtualView->getBoundsInScreen(oldBounds);
+    mAccessibilityFocusedVirtualView = provider->createAccessibilityNodeInfo(focusedChildId);
+    if (mAccessibilityFocusedVirtualView == nullptr) {
+        // Error state: The node no longer exists. Clear focus.
+        mAccessibilityFocusedHost = nullptr;
+        focusedHost->clearAccessibilityFocusNoCallbacks(0);
+
+        // This will probably fail, but try to keep the provider's internal
+        // state consistent by clearing focus.
+        provider->performAction(focusedChildId,
+                AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS,nullptr);
+                //AccessibilityAction::ACTION_CLEAR_ACCESSIBILITY_FOCUS.getId(), nullptr);
+        //invalidateRectOnScreen(oldBounds);
+    } else {
+        // The node was refreshed, invalidate bounds if necessary.
+        Rect newBounds = mAccessibilityFocusedVirtualView->getBoundsInScreen();
+        if (oldBounds!=newBounds) {
+            oldBounds.Union(newBounds);
+            //invalidateRectOnScreen(oldBounds);
+        }
+    }
+}
+
 bool Window::requestSendAccessibilityEvent(View* child, AccessibilityEvent& event) {
     if (child== nullptr/* || mStopped || mPausedForTransition*/) {
         return false;

@@ -55,6 +55,7 @@ private:
     void drawAccessibilityFocusedDrawableIfNeeded(Canvas& canvas);
     bool getAccessibilityFocusedRect(Rect& bounds);
     Drawable* getAccessibilityFocusedDrawable();
+    void handleWindowContentChangedEvent(AccessibilityEvent& event);
 protected:
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;

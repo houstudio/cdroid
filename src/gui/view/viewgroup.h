@@ -166,7 +166,6 @@ private:
     bool updateLocalSystemUiVisibility(int localValue, int localChanges)override;
     PointerIcon* dispatchResolvePointerIcon(MotionEvent& event, int pointerIndex,View* child);
 
-    View* getAccessibilityFocusedHost()const;
 protected:
     int mGroupFlags;
     int mPersistentDrawingCache;
@@ -286,7 +285,6 @@ protected:
     void resetResolvedDrawables()override;
 
     void setAccessibilityFocus(View* view, AccessibilityNodeInfo* node);
-    void handleWindowContentChangedEvent(AccessibilityEvent& event);
 public:
     ViewGroup(int w,int h);
     ViewGroup(int x,int y,int w,int h);
@@ -453,6 +451,7 @@ public:
     virtual void cancelInvalidate(View* view);
     //ViewRootImpl
     void requestPointerCapture(bool);
+    View* getAccessibilityFocusedHost()const;
     AccessibilityNodeInfo*getAccessibilityFocusedVirtualView()const;
 };
 

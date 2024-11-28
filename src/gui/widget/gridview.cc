@@ -1,5 +1,7 @@
 #include <widget/gridview.h>
 #include <widget/checkable.h>
+#include <widget/R.h>
+#include <core/mathutils.h>
 #include <cdlog.h>
 
 namespace cdroid {
@@ -895,33 +897,31 @@ void GridView::layoutChildren() {
 
     setSelectedPositionInt(mNextSelectedPosition);
 
-    /*AccessibilityNodeInfo accessibilityFocusLayoutRestoreNode = nullptr;
+    AccessibilityNodeInfo* accessibilityFocusLayoutRestoreNode = nullptr;
     View* accessibilityFocusLayoutRestoreView = nullptr;
     int accessibilityFocusPosition = INVALID_POSITION;
 
     // Remember which child, if any, had accessibility focus. This must
     // occur before recycling any views, since that will clear
     // accessibility focus.
-    ViewRootImpl viewRootImpl = getViewRootImpl();
-    if (viewRootImpl != null) {
-        View focusHost = viewRootImpl.getAccessibilityFocusedHost();
-        if (focusHost != null) {
-            View focusChild = getAccessibilityFocusedChild(focusHost);
-            if (focusChild != null) {
-                if (!dataChanged || focusChild.hasTransientState()
-                        || mAdapterHasStableIds) {
+    ViewGroup* viewRootImpl = getRootView();
+    if (viewRootImpl != nullptr) {
+        View* focusHost = viewRootImpl->getAccessibilityFocusedHost();
+        if (focusHost != nullptr) {
+            View* focusChild = getAccessibilityFocusedChild(focusHost);
+            if (focusChild != nullptr) {
+                if (!dataChanged || focusChild->hasTransientState()|| mAdapterHasStableIds) {
                     // The views won't be changing, so try to maintain
                     // focus on the current host and virtual view.
                     accessibilityFocusLayoutRestoreView = focusHost;
-                    accessibilityFocusLayoutRestoreNode = viewRootImpl
-                                                          .getAccessibilityFocusedVirtualView();
+                    accessibilityFocusLayoutRestoreNode = viewRootImpl->getAccessibilityFocusedVirtualView();
                 }
 
                 // Try to maintain focus at the same position.
                 accessibilityFocusPosition = getPositionForView(focusChild);
             }
         }
-    }*/
+    }
 
     // Pull all children into the RecycleBin.
     // These views will be reused if possible
@@ -1023,31 +1023,27 @@ void GridView::layoutChildren() {
     }
 
     // Attempt to restore accessibility focus, if necessary.
-    /*if (viewRootImpl != null) {
-        View newAccessibilityFocusedView = viewRootImpl.getAccessibilityFocusedHost();
-        if (newAccessibilityFocusedView == null) {
-            if (accessibilityFocusLayoutRestoreView != null
-                    && accessibilityFocusLayoutRestoreView.isAttachedToWindow()) {
-                AccessibilityNodeProvider provider =
-                    accessibilityFocusLayoutRestoreView.getAccessibilityNodeProvider();
-                if (accessibilityFocusLayoutRestoreNode != null && provider != null) {
-                    int virtualViewId = AccessibilityNodeInfo.getVirtualDescendantId(
-                                            accessibilityFocusLayoutRestoreNode.getSourceNodeId());
-                    provider.performAction(virtualViewId,
-                                           AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null);
+    if (viewRootImpl != nullptr) {
+        View* newAccessibilityFocusedView = viewRootImpl->getAccessibilityFocusedHost();
+        if (newAccessibilityFocusedView == nullptr) {
+            if (accessibilityFocusLayoutRestoreView != nullptr
+                    && accessibilityFocusLayoutRestoreView->isAttachedToWindow()) {
+                AccessibilityNodeProvider* provider = accessibilityFocusLayoutRestoreView->getAccessibilityNodeProvider();
+                if (accessibilityFocusLayoutRestoreNode && provider) {
+                    int virtualViewId = AccessibilityNodeInfo::getVirtualDescendantId(
+                                            accessibilityFocusLayoutRestoreNode->getSourceNodeId());
+                    provider->performAction(virtualViewId, AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS, nullptr);
                 } else {
-                    accessibilityFocusLayoutRestoreView.requestAccessibilityFocus();
+                    accessibilityFocusLayoutRestoreView->requestAccessibilityFocus();
                 }
             } else if (accessibilityFocusPosition != INVALID_POSITION) {
                 // Bound the position within the visible children.
-                int position = MathUtils.constrain(
-                                   accessibilityFocusPosition - mFirstPosition, 0,
-                                   getChildCount() - 1);
+                const int position = MathUtils::constrain(accessibilityFocusPosition - mFirstPosition, 0, getChildCount() - 1);
                 View* restoreView = getChildAt(position);
                 if (restoreView ) restoreView->requestAccessibilityFocus();
             }
         }
-    }*/
+    }
 
     mLayoutMode = LAYOUT_NORMAL;
     mDataChanged = false;
@@ -1058,7 +1054,7 @@ void GridView::layoutChildren() {
     mNeedSync = false;
     setNextSelectedPositionInt(mSelectedPosition);
 
-    //updateScrollIndicators();
+    updateScrollIndicators();
 
     if (mItemCount > 0) {
         checkSelectionChanged();
@@ -1660,6 +1656,75 @@ int GridView::computeVerticalScrollRange() {
         result += std::abs((int) ((float) mScrollY / getHeight() * rowCount * 100));
     }
     return result;
+}
+
+std::string GridView::getAccessibilityClassName()const{
+    return "GridView";
+}
+
+void GridView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+     AbsListView::onInitializeAccessibilityNodeInfoInternal(info);
+
+     const int columnsCount = getNumColumns();
+     const int rowsCount = getCount() / columnsCount;
+     const int selectionMode = getSelectionModeForAccessibility();
+     AccessibilityNodeInfo::CollectionInfo* collectionInfo = AccessibilityNodeInfo::CollectionInfo::obtain(
+             rowsCount, columnsCount, false, selectionMode);
+     info.setCollectionInfo(collectionInfo);
+
+     if (columnsCount > 0 || rowsCount > 0) {
+         info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_TO_POSITION.getId());
+     }
+}
+
+bool GridView::performAccessibilityActionInternal(int action, Bundle arguments){
+    if (AbsListView::performAccessibilityActionInternal(action, arguments)) {
+         return true;
+    }
+
+    switch (action) {
+        case R::id::accessibilityActionScrollToPosition: {
+            // GridView only supports scrolling in one direction, so we can
+            // ignore the column argument.
+            const int numColumns = getNumColumns();
+            const int row = 0;LOGD("TODO");//arguments.getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_ROW_INT, -1);
+            const int position = std::min(row * numColumns, getCount() - 1);
+            if (row >= 0) {
+                // The accessibility service gets data asynchronously, so
+                // we'll be a little lenient by clamping the last position.
+                smoothScrollToPosition(position);
+                return true;
+            }
+        } break;
+    }
+
+    return false;
+}
+
+void GridView::onInitializeAccessibilityNodeInfoForItem(View* view, int position, AccessibilityNodeInfo&info){
+    AbsListView::onInitializeAccessibilityNodeInfoForItem(view, position, info);
+
+     const int count = getCount();
+     const int columnsCount = getNumColumns();
+     const int rowsCount = count / columnsCount;
+
+     int row, column;
+     if (!mStackFromBottom) {
+         column = position % columnsCount;
+         row = position / columnsCount;
+     } else {
+         const int invertedIndex = count - 1 - position;
+
+         column = columnsCount - 1 - (invertedIndex % columnsCount);
+         row = rowsCount - 1 - invertedIndex / columnsCount;
+     }
+
+     LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
+     bool isHeading = lp  && (lp->viewType == ITEM_VIEW_TYPE_HEADER_OR_FOOTER);
+     bool isSelected = isItemChecked(position);
+     AccessibilityNodeInfo::CollectionItemInfo* itemInfo = AccessibilityNodeInfo::CollectionItemInfo::obtain(
+             row, 1, column, 1, isHeading, isSelected);
+     info.setCollectionItemInfo(itemInfo);
 }
 
 }//namespace
