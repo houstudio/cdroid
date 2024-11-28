@@ -277,6 +277,7 @@ Drawable* ProgressBar::tileifyIndeterminate(Drawable* drawable){
 void ProgressBar::initProgressBar(){
     mMin = 0;
     mMax = 100;
+    mAttached= false;
     mProgress = 0;
     mSecondaryProgress = 0;
     mSampleWidth   = 0;
@@ -1077,7 +1078,6 @@ std::string ProgressBar::getAccessibilityClassName()const{
 void ProgressBar::scheduleAccessibilityEventSender() {
     if (mAccessibilityEventSender == nullptr) {
         mAccessibilityEventSender = [this](){
-            LOGD("===========progress=%d",mProgress);
             sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
         };
     } else {
