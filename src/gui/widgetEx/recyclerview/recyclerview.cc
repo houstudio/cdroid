@@ -1946,7 +1946,7 @@ bool RecyclerView::onGenericMotionEvent(MotionEvent& event) {
                 hScroll = 0.f;
             }
         } else if ((event.getSource() & InputDevice::SOURCE_ROTARY_ENCODER) != 0) {
-            float axisScroll = event.getAxisValue(MotionEvent::AXIS_SCROLL);
+            const float axisScroll = event.getAxisValue(MotionEvent::AXIS_SCROLL);
             if (mLayout->canScrollVertically()) {
                 // Invert the sign of the vertical scroll to align the scroll orientation
                 // with AbsListView.

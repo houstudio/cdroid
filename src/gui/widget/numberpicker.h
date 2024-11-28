@@ -198,6 +198,7 @@ public:
     bool onInterceptTouchEvent(MotionEvent& event)override;
     bool onTouchEvent(MotionEvent& event)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
+    bool dispatchHoverEvent(MotionEvent& event)override;
     bool dispatchKeyEvent(KeyEvent& event)override;
     void computeScroll()override;
     View& setEnabled(bool enabled)override;
@@ -270,6 +271,7 @@ private:
     static constexpr int VIRTUAL_VIEW_ID_DECREMENT = 3;
     int mAccessibilityFocusedView = UNDEFINED;
     NumberPicker*mNP;
+    friend NumberPicker;
 private:
     void sendAccessibilityEventForVirtualText(int eventType);
     void sendAccessibilityEventForVirtualButton(int virtualViewId, int eventType,const std::string& text);

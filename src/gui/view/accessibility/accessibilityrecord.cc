@@ -51,11 +51,11 @@ void AccessibilityRecord::setWindowId(int windowId) {
     mSourceWindowId = windowId;
 }
 
-int AccessibilityRecord::getWindowId() {
+int AccessibilityRecord::getWindowId() const{
     return mSourceWindowId;
 }
 
-bool AccessibilityRecord::isChecked() {
+bool AccessibilityRecord::isChecked() const{
     return getBooleanProperty(PROPERTY_CHECKED);
 }
 
@@ -64,7 +64,7 @@ void AccessibilityRecord::setChecked(bool isChecked) {
     setBooleanProperty(PROPERTY_CHECKED, isChecked);
 }
 
-bool AccessibilityRecord::isEnabled() {
+bool AccessibilityRecord::isEnabled() const{
     return getBooleanProperty(PROPERTY_ENABLED);
 }
 
@@ -73,7 +73,7 @@ void AccessibilityRecord::setEnabled(bool isEnabled) {
     setBooleanProperty(PROPERTY_ENABLED, isEnabled);
 }
 
-bool AccessibilityRecord::isPassword() {
+bool AccessibilityRecord::isPassword() const{
     return getBooleanProperty(PROPERTY_PASSWORD);
 }
 
@@ -82,7 +82,7 @@ void AccessibilityRecord::setPassword(bool isPassword) {
     setBooleanProperty(PROPERTY_PASSWORD, isPassword);
 }
 
-bool AccessibilityRecord::isFullScreen() {
+bool AccessibilityRecord::isFullScreen() const{
     return getBooleanProperty(PROPERTY_FULL_SCREEN);
 }
 
@@ -91,7 +91,7 @@ void AccessibilityRecord::setFullScreen(bool isFullScreen) {
     setBooleanProperty(PROPERTY_FULL_SCREEN, isFullScreen);
 }
 
-bool AccessibilityRecord::isScrollable() {
+bool AccessibilityRecord::isScrollable() const{
     return getBooleanProperty(PROPERTY_SCROLLABLE);
 }
 
@@ -100,7 +100,7 @@ void AccessibilityRecord::setScrollable(bool scrollable) {
     setBooleanProperty(PROPERTY_SCROLLABLE, scrollable);
 }
 
-bool AccessibilityRecord::isImportantForAccessibility() {
+bool AccessibilityRecord::isImportantForAccessibility() const{
     return getBooleanProperty(PROPERTY_IMPORTANT_FOR_ACCESSIBILITY);
 }
 
@@ -109,7 +109,7 @@ void AccessibilityRecord::setImportantForAccessibility(bool importantForAccessib
     setBooleanProperty(PROPERTY_IMPORTANT_FOR_ACCESSIBILITY, importantForAccessibility);
 }
 
-int AccessibilityRecord::getItemCount() {
+int AccessibilityRecord::getItemCount() const{
     return mItemCount;
 }
 
@@ -286,7 +286,7 @@ void AccessibilityRecord::enforceNotSealed() {
     }
 }
 
-bool AccessibilityRecord::getBooleanProperty(int property) {
+bool AccessibilityRecord::getBooleanProperty(int property) const{
     return (mBooleanProperties & property) == property;
 }
 
@@ -392,6 +392,8 @@ std::ostringstream& AccessibilityRecord::appendTo(std::ostringstream&builder) {
     builder<<" [ ClassName: "<<mClassName;
     if (!DEBUG_CONCISE_TOSTRING || !mText.empty()) {
         appendPropName(builder, "Text");//<<append(mText);
+        for(auto t:mText)builder<<t<<",";
+        builder<<std::endl;
     }
     appendPropName(builder, "ContentDescription")<<mContentDescription;
     append(builder, "ItemCount", mItemCount);

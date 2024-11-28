@@ -562,6 +562,48 @@ bool NumberPicker::dispatchKeyEvent(KeyEvent& event){
     return LinearLayout::dispatchKeyEvent(event);
 }
 
+bool NumberPicker::dispatchHoverEvent(MotionEvent& event) {
+    if (0){//!mHasSelectorWheel) {
+        return LinearLayout::dispatchHoverEvent(event);
+    }
+
+    if (AccessibilityManager::getInstance(mContext).isEnabled()) {
+        const int eventY = (int) event.getY();
+        int hoveredVirtualViewId;
+        if (eventY < mTopSelectionDividerTop) {
+            hoveredVirtualViewId = AccessibilityNodeProviderImpl::VIRTUAL_VIEW_ID_DECREMENT;
+        } else if (eventY > mBottomSelectionDividerBottom) {
+            hoveredVirtualViewId = AccessibilityNodeProviderImpl::VIRTUAL_VIEW_ID_INCREMENT;
+        } else {
+            hoveredVirtualViewId = AccessibilityNodeProviderImpl::VIRTUAL_VIEW_ID_INPUT;
+        }
+        const int action = event.getActionMasked();
+        AccessibilityNodeProviderImpl* provider =(AccessibilityNodeProviderImpl*) getAccessibilityNodeProvider();
+        switch (action) {
+            case MotionEvent::ACTION_HOVER_ENTER: {
+                provider->sendAccessibilityEventForVirtualView(hoveredVirtualViewId, AccessibilityEvent::TYPE_VIEW_HOVER_ENTER);
+                mLastHoveredChildVirtualViewId = hoveredVirtualViewId;
+                provider->performAction(hoveredVirtualViewId, AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS, nullptr);
+            } break;
+            case MotionEvent::ACTION_HOVER_MOVE: {
+                if (mLastHoveredChildVirtualViewId != hoveredVirtualViewId
+                        && mLastHoveredChildVirtualViewId != View::NO_ID) {
+                    provider->sendAccessibilityEventForVirtualView( mLastHoveredChildVirtualViewId, AccessibilityEvent::TYPE_VIEW_HOVER_EXIT);
+                    provider->sendAccessibilityEventForVirtualView(hoveredVirtualViewId, AccessibilityEvent::TYPE_VIEW_HOVER_ENTER);
+                    mLastHoveredChildVirtualViewId = hoveredVirtualViewId;
+                    provider->performAction(hoveredVirtualViewId, AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS, nullptr);
+                }
+            } break;
+            case MotionEvent::ACTION_HOVER_EXIT: {
+                provider->sendAccessibilityEventForVirtualView(hoveredVirtualViewId, AccessibilityEvent::TYPE_VIEW_HOVER_EXIT);
+                mLastHoveredChildVirtualViewId = View::NO_ID;
+            } break;
+        }
+    }
+
+    return false;
+}
+
 void NumberPicker::computeScroll() {
     Scroller* scroller = mFlingScroller;
     if (scroller->isFinished()) {
@@ -1531,11 +1573,22 @@ void NumberPicker::validateInputTextView(View* v){
 }
 
 bool NumberPicker::updateInputTextView(){
-    std::string text = (mDisplayedValues.size() == 0) ? formatNumber(mValue) : mDisplayedValues[mValue - mMinValue];
+    std::string text = mDisplayedValues.empty() ? formatNumber(mValue) : mDisplayedValues[mValue - mMinValue];
     if (!text.empty() ){
         std::string beforeText = mInputText->getText();
         if (text != beforeText){//!text.equals(beforeText.toString())) {
             mInputText->setText(text);
+            if (AccessibilityManager::getInstance(mContext).isEnabled()) {
+                AccessibilityEvent* event = AccessibilityEvent::obtain(AccessibilityEvent::TYPE_VIEW_TEXT_CHANGED);
+                mInputText->onInitializeAccessibilityEvent(*event);
+                mInputText->onPopulateAccessibilityEvent(*event);
+                event->setFromIndex(0);
+                event->setRemovedCount(beforeText.length());
+                event->setAddedCount(text.length());
+                event->setBeforeText(beforeText);
+                event->setSource(this, AccessibilityNodeProviderImpl::VIRTUAL_VIEW_ID_INPUT);
+                requestSendAccessibilityEvent(this, *event);
+            }
             return true;
         }
     }

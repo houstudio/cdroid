@@ -2654,7 +2654,17 @@ std::string TextView::getAccessibilityClassName()const{
 }
 
 void TextView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
-    LOGD("TODO");
+    View::onInitializeAccessibilityEventInternal(event);
+
+    const bool isPassword =false;//hasPasswordTransformationMethod();
+    event.setPassword(isPassword);
+
+    if (event.getEventType() == AccessibilityEvent::TYPE_VIEW_TEXT_SELECTION_CHANGED) {
+        std::string text = getText();
+        event.setFromIndex(0);//Selection.getSelectionStart(mText));
+        event.setToIndex(text.length());//Selection.getSelectionEnd(mText));
+        event.setItemCount(text.length());
+    }
 }
 void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
     LOGD("TODO");

@@ -122,14 +122,14 @@ public:
      *
      * @return The window id.
      */
-    int getWindowId();
+    int getWindowId()const;
 
     /**
      * Gets if the source is checked.
      *
      * @return True if the view is checked, false otherwise.
      */
-    bool isChecked();
+    bool isChecked()const;
 
     /**
      * Sets if the source is checked.
@@ -145,7 +145,7 @@ public:
      *
      * @return True if the view is enabled, false otherwise.
      */
-    bool isEnabled();
+    bool isEnabled()const;
 
     /**
      * Sets if the source is enabled.
@@ -161,7 +161,7 @@ public:
      *
      * @return True if the view is a password field, false otherwise.
      */
-    bool isPassword();
+    bool isPassword()const;
 
     /**
      * Sets if the source is a password field.
@@ -177,7 +177,7 @@ public:
      *
      * @return True if the source is full screen, false otherwise.
      */
-    bool isFullScreen();
+    bool isFullScreen()const;
 
     /**
      * Sets if the source is taking the entire screen.
@@ -193,7 +193,7 @@ public:
      *
      * @return True if the source is scrollable, false otherwise.
      */
-    bool isScrollable();
+    bool isScrollable()const;
 
     /**
      * Sets if the source is scrollable.
@@ -217,7 +217,7 @@ public:
      *
      * @hide
      */
-    bool isImportantForAccessibility();
+    bool isImportantForAccessibility()const;
 
     /**
      * Sets if the source is important for accessibility.
@@ -235,7 +235,7 @@ public:
      *
      * @return The number of items.
      */
-    int getItemCount();
+    int getItemCount()const;
 
     /**
      * Sets the number of items that can be visited.
@@ -572,7 +572,7 @@ protected:
      * @param property The property.
      * @return The value.
      */
-    bool getBooleanProperty(int property);
+    bool getBooleanProperty(int property)const;
 
     /**
      * Sets a bool property.
