@@ -1,5 +1,4 @@
 #include <widgetEx/recyclerview/recyclerview.h>
-in
 #include <widgetEx/recyclerview/childhelper.h>
 #include <widgetEx/recyclerview/viewinfostore.h>
 #include <widgetEx/recyclerview/adapterhelper.h>
