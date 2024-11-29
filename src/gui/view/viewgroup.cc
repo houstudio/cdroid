@@ -2818,6 +2818,38 @@ bool ViewGroup::getChildVisibleRect(View*child,Rect&r,Point*offset,bool forcePar
     return rectIsVisible;
 }
 
+bool ViewGroup::gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>&region){
+     // If no transparent regions requested, we are always opaque.
+     const bool meOpaque = (mPrivateFlags & View::PFLAG_REQUEST_TRANSPARENT_REGIONS) == 0;
+     if (meOpaque && region == nullptr) {
+         // The caller doesn't care about the region, so stop now.
+         return true;
+     }
+     View::gatherTransparentRegion(region);
+     // Instead of naively traversing the view tree, we have to traverse according to the Z
+     // order here. We need to go with the same order as dispatchDraw().
+     // One example is that after surfaceView punch a hole, we will still allow other views drawn
+     // on top of that hole. In this case, those other views should be able to cut the
+     // transparent region into smaller area.
+     const size_t childrenCount = mChildren.size();
+     bool noneOfTheChildrenAreTransparent = true;
+     if (childrenCount > 0) {
+         std::vector<View*> preorderedList = buildOrderedChildList();
+         const bool customOrder = preorderedList.empty()  && isChildrenDrawingOrderEnabled();
+         for (size_t i = 0; i < childrenCount; i++) {
+             const int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
+             View* child = getAndVerifyPreorderedView(preorderedList, mChildren, childIndex);
+             if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE || child->getAnimation() != nullptr) {
+                 if (!child->gatherTransparentRegion(region)) {
+                     noneOfTheChildrenAreTransparent = false;
+                 }
+             }
+         }
+         preorderedList.clear();
+     }
+     return meOpaque || noneOfTheChildrenAreTransparent;
+}
+
 bool ViewGroup::canAnimate()const{
     return mLayoutAnimationController!=nullptr;
 }

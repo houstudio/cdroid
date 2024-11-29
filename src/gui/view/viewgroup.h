@@ -331,6 +331,7 @@ public:
     void offsetChildrenTopAndBottom(int offset);
     void offsetChildrenLeftAndRight(int offset);
     virtual bool getChildVisibleRect(View*child,Rect&r,Point*offset);
+    bool gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>&region)override;
 
     void addFocusables(std::vector<View*>& views, int direction, int focusableMode)override;
     void addKeyboardNavigationClusters(std::vector<View*>&views,int drection)override;

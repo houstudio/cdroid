@@ -918,7 +918,7 @@ public:
     void setAnimation(Animation* animation);
 
     void applyDrawableToTransparentRegion(Drawable* dr,const Cairo::RefPtr<Cairo::Region>& region);
-    bool gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>& region);
+    virtual bool gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>& region);
     void setSoundEffectsEnabled(bool soundEffectsEnabled);
     bool isSoundEffectsEnabled()const;
     void playSoundEffect(int soundConstant);
