@@ -210,7 +210,7 @@ void WindowManager::moveWindow(Window*w,int x,int y){
         //GraphDevice::getInstance().invalidate(rcw2);
         for(auto it = mWindows.begin();it<itw;it++){
            Rect rc = w->getBound();
-           RefPtr<Region>newrgn = Region::create((RectangleInt&)rc);
+           RefPtr<Cairo::Region>newrgn = Cairo::Region::create((RectangleInt&)rc);
            for( auto it2 = it+1 ; it2 < itw ; it2++){
                Rect r = (*it)->getBound();
                newrgn->subtract((const RectangleInt&)r);
@@ -326,16 +326,20 @@ void WindowManager::onMotion(MotionEvent&event) {
 
 void WindowManager::onKeyEvent(KeyEvent&event) {
     // Notify the focused child
+    if(mActiveWindow){
+        mActiveWindow->processKeyEvent(event);
+        return ;
+    }
     for (auto itr = mWindows.rbegin() ;itr != mWindows.rend();itr++) {
         Window*win = (*itr);
         if ( win->hasFlag(View::FOCUSABLE) && (win->getVisibility()==View::VISIBLE) ) {
-            int keyCode = event.getKeyCode();
+            const int keyCode = event.getKeyCode();
             LOGV("Window:%p Key:%s[%x] action=%d",win,event.getLabel(),keyCode,event.getAction());
             win->processKeyEvent(event);
             //dispatchKeyEvent(event);
             return;
         }
-  }
+    }
 }
 
 void WindowManager::clip(Window*win){
