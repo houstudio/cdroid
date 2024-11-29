@@ -63,6 +63,7 @@ void Window::initWindow(){
     mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });
 #endif
     mInLayout= false;
+    mAccessibilityManager =&AccessibilityManager::getInstance(mContext);
     mSendWindowContentChangedAccessibilityEvent = nullptr;
     mPendingRgn = Cairo::Region::create();
     setBackground(nullptr);
@@ -75,6 +76,22 @@ void Window::initWindow(){
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setFocusable(true);
     setKeyboardNavigationCluster(true);
+    AccessibilityManager::AccessibilityStateChangeListener acsl([this](bool enabled) {
+        LOGD("%d",enabled);
+        if (enabled||1) {
+            if (mAttachInfo->mHasWindowFocus||1) {
+                sendAccessibilityEvent(AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED);
+                View* focusedView = findFocus();
+                if ((focusedView != nullptr) && (focusedView != this)) {
+                    focusedView->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_FOCUSED);
+                }
+                LOGD("focusedView=%d",focusedView);
+            }
+        } else {
+            //mHandler.obtainMessage(MSG_CLEAR_ACCESSIBILITY_FOCUS_HOST).sendToTarget();
+        }
+    });
+    mAccessibilityManager->addAccessibilityStateChangeListener(acsl);
 }
 
 Window::~Window(){
@@ -482,7 +499,12 @@ RefPtr<Canvas>Window::getCanvas(){
             break;
         }
     }
-    const int num = mInvalidRgn->get_num_rectangles();
+    Cairo::RefPtr<Cairo::Region>transRgn = Cairo::Region::create({0,0,getWidth(),getHeight()});
+    setWillNotDraw(true);
+    gatherTransparentRegion(transRgn);
+    mInvalidRgn->subtract(trgn);
+    const int num=mInvalidRgn->get_num_rectangles();
+    LOGD("invalidateRegions=%d+%d=%d",num,num2,num3);
     canvas->reset_clip();
     for(int i=0;i<num;i++){
         RectangleInt r = mInvalidRgn->get_rectangle(i);

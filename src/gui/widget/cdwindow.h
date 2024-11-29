@@ -37,6 +37,7 @@ private:
     bool mInLayout;
     bool mHandingLayoutInLayoutRequest;
     Rect mRectOfFocusedView;
+    AccessibilityManager*mAccessibilityManager;
     SendWindowContentChangedAccessibilityEvent* mSendWindowContentChangedAccessibilityEvent;
     std::vector<LayoutTransition*> mPendingTransitions;
 private:
