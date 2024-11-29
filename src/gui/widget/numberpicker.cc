@@ -1,9 +1,9 @@
 #include <widget/numberpicker.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <widget/R.h>
-#include <color.h>
-#include <textutils.h>
-#include <cdlog.h>
+#include <core/color.h>
+#include <core/textutils.h>
+#include <porting/cdlog.h>
 #include <core/neverdestroyed.h>
 
 //https://gitee.com/awang/WheelView/blob/master/src/com/wangjie/wheelview/WheelView.java

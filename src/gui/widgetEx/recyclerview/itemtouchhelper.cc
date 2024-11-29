@@ -4,6 +4,25 @@
 
 namespace cdroid{
 
+class DragScrollInterpolator:public Interpolator{//sDragScrollInterpolator = new Interpolator() {
+public:
+    DragScrollInterpolator(){}
+    float getInterpolation(float t){
+        return t * t * t * t * t;
+    }
+};
+
+class DragViewScrollInterpolator:public Interpolator{// sDragViewScrollCapInterpolator = new Interpolator() {
+public:
+    DragViewScrollInterpolator(){}
+    float getInterpolation(float t) {
+        t -= 1.0f;
+        return t * t * t * t * t + 1.0f;
+    }
+};
+static NeverDestroyed<DragScrollInterpolator>sDragScrollInterpolator;
+static NeverDestroyed<DragViewScrollInterpolator>sDragViewScrollCapInterpolator;
+
 ItemTouchHelper::ItemTouchHelper(Callback* callback) {
     mCallback = callback;
     mRecyclerView = nullptr;
@@ -1186,16 +1205,14 @@ int ItemTouchHelper::Callback::interpolateOutOfBoundsScroll(RecyclerView& recycl
     // might be negative if other direction
     float outOfBoundsRatio = std::min(1.f, 1.f * absOutOfBounds / viewSize);
     outOfBoundsRatio -=1.f;
-    outOfBoundsRatio = outOfBoundsRatio*outOfBoundsRatio*outOfBoundsRatio*outOfBoundsRatio*outOfBoundsRatio+1.f;
-    const int cappedScroll = (int) (direction * maxScroll*outOfBoundsRatio);//* sDragViewScrollCapInterpolator->getInterpolation(outOfBoundsRatio));
+    const int cappedScroll = (int) (direction * maxScroll* sDragViewScrollCapInterpolator->getInterpolation(outOfBoundsRatio));
     float timeRatio;
     if (msSinceStartScroll > DRAG_SCROLL_ACCELERATION_LIMIT_TIME_MS) {
         timeRatio = 1.f;
     } else {
         timeRatio = (float) msSinceStartScroll / DRAG_SCROLL_ACCELERATION_LIMIT_TIME_MS;
     }
-    timeRatio = timeRatio*timeRatio*timeRatio*timeRatio*timeRatio;
-    const int value = (int) (cappedScroll * timeRatio);/*sDragScrollInterpolator->getInterpolation(timeRatio)*/;
+    const int value = (int) (cappedScroll * timeRatio*sDragScrollInterpolator->getInterpolation(timeRatio));
     if (value == 0) {
         return viewSizeOutOfBounds > 0 ? 1 : -1;
     }
@@ -1347,6 +1364,8 @@ void ItemTouchHelper::RecoverAnimation::onAnimationCancel(Animator& animation) {
 void ItemTouchHelper::RecoverAnimation::onAnimationRepeat(Animator& animation) {
 
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 }/*endof namespace*/
 

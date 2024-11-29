@@ -135,8 +135,6 @@ public:
             | ((START | END) << (2 * DIRECTION_FLAG_COUNT));
 private:
     friend ItemTouchHelper;
-    static Interpolator *sDragScrollInterpolator;
-    static Interpolator *sDragViewScrollCapInterpolator;
     int mCachedMaxScrollSpeed = -1;
     int getMaxDragScroll(RecyclerView& recyclerView);
 protected:
