@@ -168,7 +168,7 @@ void ViewGroup::initGroup(){
     mTooltipHoveredSelf = false;
     mChildCountWithTransientState= 0;
     mChildUnhandledKeyListeners  = 0;
-    mInvalidRgn=Region::create();
+    mInvalidRgn = Cairo::Region::create();
     mChildTransformation = nullptr;
     mInvalidationTransformation = nullptr;
     mAccessibilityFocusedVirtualView = nullptr;

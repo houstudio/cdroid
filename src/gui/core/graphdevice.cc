@@ -246,11 +246,11 @@ void GraphDevice::unlock(){
     mMutex.unlock();
 }
 
-void GraphDevice::computeVisibleRegion(std::vector<Window*>&windows,std::vector<RefPtr<Region>>&regions){
+void GraphDevice::computeVisibleRegion(std::vector<Window*>&windows,std::vector<Cairo::RefPtr<Cairo::Region>>&regions){
     /*visibleregion is windowbased*/
     for (auto w=windows.begin() ;w!= windows.end();w++){
         const Rect rcw = (*w)->getBound();
-        RefPtr<Region>newrgn = Region::create((RectangleInt&)rcw);
+        RefPtr<Cairo::Region>newrgn = Cairo::Region::create((RectangleInt&)rcw);
         if((*w)->getVisibility()!=View::VISIBLE||(*w)->isAttachedToWindow()==false)continue;
 
         for(auto w1=w+1;w1!=windows.end();w1++){
@@ -298,8 +298,8 @@ void GraphDevice::composeSurfaces(){
     const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
     std::vector<Rect>wBounds;
     std::vector<Window*>wins;
-    std::vector<RefPtr<Canvas>>wSurfaces;
-    std::vector<RefPtr<Region>>winVisibleRgns;
+    std::vector<Cairo::RefPtr<Canvas>>wSurfaces;
+    std::vector<Cairo::RefPtr<Cairo::Region>>winVisibleRgns;
     WindowManager::getInstance().enumWindows([&wSurfaces,&wBounds,&wins](Window*w)->bool{
         if( (w->getVisibility()==View::VISIBLE) && w->mAttachInfo && w->mAttachInfo->mCanvas){
             wSurfaces.push_back(w->mAttachInfo->mCanvas);
@@ -314,8 +314,8 @@ void GraphDevice::composeSurfaces(){
     mPrimaryContext->set_operator(Cairo::Context::Operator::SOURCE);
     for(int i=0;i< wSurfaces.size();i++){
         Rect rcw = wBounds[i];
-        RefPtr<Region> rgn = wins[i]->mPendingRgn;
         GFXHANDLE hdlSurface  = wSurfaces[i]->mHandle;
+        Cairo::RefPtr<Cairo::Region> rgn = wins[i]->mPendingRgn;
         if(rgn->empty())continue; 
         rgn->intersect(wins[i]->mVisibleRgn);/*it is already empty*/
         LOGV_IF(!rgn->empty(),"surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());

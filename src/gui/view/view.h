@@ -69,6 +69,7 @@ class ViewOverlay;
 class Window;
 class UIEventSource;
 class HandlerActionQueue;
+using Region = Cairo::RefPtr<Cairo::Region>;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 private:
     static constexpr int POPULATING_ACCESSIBILITY_EVENT_TYPES=
@@ -916,6 +917,8 @@ public:
     void clearAnimation();
     void setAnimation(Animation* animation);
 
+    void applyDrawableToTransparentRegion(Drawable* dr,const Cairo::RefPtr<Cairo::Region>& region);
+    bool gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>& region);
     void setSoundEffectsEnabled(bool soundEffectsEnabled);
     bool isSoundEffectsEnabled()const;
     void playSoundEffect(int soundConstant);

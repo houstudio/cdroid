@@ -1012,6 +1012,67 @@ bool View::onSetAlpha(int alpha) {
     return false;
 }
 
+void View::applyDrawableToTransparentRegion(Drawable* dr, const Cairo::RefPtr<Cairo::Region>& region){
+    Region r = nullptr;//dr.getTransparentRegion();
+    Rect db = dr->getBounds();
+    AttachInfo* attachInfo = mAttachInfo;
+    if (r != nullptr && attachInfo != nullptr) {
+        int location[2];
+        const int w = getWidth();//getRight()-getLeft();
+        const int h = getHeight();//getBottom()-getTop();
+        if (db.left > 0) r->do_union({0, 0, db.left, h});
+
+        if (db.right() < w) r->do_union({db.right(), 0, w-db.right(), h});
+
+        if (db.top > 0) r->do_union({0, 0, w, db.top});
+
+        if (db.bottom() < h) r->do_union({0, db.bottom(), w, h-db.bottom()});
+
+        getLocationInWindow(location);
+        r->translate(location[0], location[1]);
+        region->intersect(r);//, Region.Op.INTERSECT);
+    } else {
+        region->subtract((const RectangleInt&)db);//, Region.Op.DIFFERENCE);
+    }
+}
+
+bool View::gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>& region){
+     AttachInfo* attachInfo = mAttachInfo;
+    if (region != nullptr && attachInfo != nullptr) {
+        const int pflags = mPrivateFlags;
+        if ((pflags & PFLAG_SKIP_DRAW) == 0) {
+            // The SKIP_DRAW flag IS NOT set, so this view draws. We need to
+            // remove it from the transparent region.
+            int location[2];
+            getLocationInWindow(location);
+            // When a view has Z value, then it will be better to leave some area below the view
+            // for drawing shadow. The shadow outset is proportional to the Z value. Note that
+            // the bottom part needs more offset than the left, top and right parts due to the
+            // spot light effects.
+            int shadowOffset = getZ() > 0 ? (int) getZ() : 0;
+            region->subtract({location[0] - shadowOffset, location[1] - shadowOffset,
+                    mRight - mLeft + shadowOffset*2,
+                    mBottom - mTop + (shadowOffset * 4)});//,Region.Op.DIFFERENCE);
+        } else {
+            if (mBackground && mBackground->getOpacity() != PixelFormat::TRANSPARENT) {
+                // The SKIP_DRAW flag IS set and the background drawable exists, we remove
+                // the background drawable's non-transparent parts from this transparent region.
+                applyDrawableToTransparentRegion(mBackground, region);
+            }
+            if (mForegroundInfo && mForegroundInfo->mDrawable
+                    && mForegroundInfo->mDrawable->getOpacity() != PixelFormat::TRANSPARENT) {
+                // Similarly, we remove the foreground drawable's non-transparent parts.
+                applyDrawableToTransparentRegion(mForegroundInfo->mDrawable, region);
+            }
+            if (mDefaultFocusHighlight && mDefaultFocusHighlight->getOpacity() != PixelFormat::TRANSPARENT) {
+                // Similarly, we remove the default focus highlight's non-transparent parts.
+                applyDrawableToTransparentRegion(mDefaultFocusHighlight, region);
+            }
+        }
+    }
+    return true;
+}
+
 Animation* View::getAnimation()const{
     return mCurrentAnimation;
 }
@@ -3638,55 +3699,55 @@ bool View::performAccessibilityActionInternal(int action, Bundle arguments) {
     }
 
     switch (action) {
-    case AccessibilityNodeInfo::ACTION_CLICK: {
+    case AccessibilityNodeInfo::ACTION_CLICK:
         if (isClickable()) {
             performClickInternal();
             return true;
         }
-    } break;
-    case AccessibilityNodeInfo::ACTION_LONG_CLICK: {
+        break;
+    case AccessibilityNodeInfo::ACTION_LONG_CLICK:
         if (isLongClickable()) {
             performLongClick();
             return true;
         }
-    } break;
-    case AccessibilityNodeInfo::ACTION_FOCUS: {
+        break;
+    case AccessibilityNodeInfo::ACTION_FOCUS:
         if (!hasFocus()) {
             // Get out of touch mode since accessibility
             // wants to move focus around.
             getRootView()->ensureTouchMode(false);
             return requestFocus();
         }
-    } break;
-    case AccessibilityNodeInfo::ACTION_CLEAR_FOCUS: {
+        break;
+    case AccessibilityNodeInfo::ACTION_CLEAR_FOCUS:
         if (hasFocus()) {
             clearFocus();
             return !isFocused();
         }
-    } break;
-    case AccessibilityNodeInfo::ACTION_SELECT: {
+        break;
+    case AccessibilityNodeInfo::ACTION_SELECT:
         if (!isSelected()) {
             setSelected(true);
             return isSelected();
         }
-    } break;
-    case AccessibilityNodeInfo::ACTION_CLEAR_SELECTION: {
+        break;
+    case AccessibilityNodeInfo::ACTION_CLEAR_SELECTION:
         if (isSelected()) {
             setSelected(false);
             return !isSelected();
         }
-    } break;
-    case AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS: {
+        break;
+    case AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS:
         if (!isAccessibilityFocused()) {
             return requestAccessibilityFocus();
         }
-    } break;
-    case AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS: {
+         break;
+    case AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS:
         if (isAccessibilityFocused()) {
             clearAccessibilityFocus();
             return true;
         }
-    } break;
+        break;
 #if 0
     case AccessibilityNodeInfo::ACTION_NEXT_AT_MOVEMENT_GRANULARITY: {
         if (arguments != nullptr) {

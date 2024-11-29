@@ -1486,7 +1486,6 @@ int AccessibilityNodeInfo::hashCode() {
 
 std::string AccessibilityNodeInfo::toString() {
     std::ostringstream builder;
-    //builder<<super.toString());
 
     if (Debug) {
         builder<<"; sourceNodeId: " <<mSourceNodeId;

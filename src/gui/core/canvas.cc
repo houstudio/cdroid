@@ -114,7 +114,7 @@ void Canvas::dump2png(const std::string& fname){
 #endif
 }
 
-void DumpRegion(const std::string&label,const RefPtr<Region>& rgn){
+void DumpRegion(const std::string&label,const Cairo::RefPtr<Cairo::Region>& rgn){
     RectangleInt re=rgn->get_extents();
     LOGV("%s:%d retcs",label.c_str(),rgn->get_num_rectangles());
     for(int i=0;i<rgn->get_num_rectangles();i++){
