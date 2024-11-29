@@ -1013,7 +1013,7 @@ bool View::onSetAlpha(int alpha) {
 }
 
 void View::applyDrawableToTransparentRegion(Drawable* dr, const Cairo::RefPtr<Cairo::Region>& region){
-    Region r = nullptr;//dr.getTransparentRegion();
+    Cairo::RefPtr<Cairo::Region> r = nullptr;//dr.getTransparentRegion();
     Rect db = dr->getBounds();
     AttachInfo* attachInfo = mAttachInfo;
     if (r != nullptr && attachInfo != nullptr) {

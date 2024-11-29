@@ -69,7 +69,6 @@ class ViewOverlay;
 class Window;
 class UIEventSource;
 class HandlerActionQueue;
-using Region = Cairo::RefPtr<Cairo::Region>;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 private:
     static constexpr int POPULATING_ACCESSIBILITY_EVENT_TYPES=
