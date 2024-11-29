@@ -502,9 +502,8 @@ RefPtr<Canvas>Window::getCanvas(){
     Cairo::RefPtr<Cairo::Region>transRgn = Cairo::Region::create({0,0,getWidth(),getHeight()});
     setWillNotDraw(true);
     gatherTransparentRegion(transRgn);
-    mInvalidRgn->subtract(trgn);
+    mInvalidRgn->subtract(transRgn);
     const int num=mInvalidRgn->get_num_rectangles();
-    LOGD("invalidateRegions=%d+%d=%d",num,num2,num3);
     canvas->reset_clip();
     for(int i=0;i<num;i++){
         RectangleInt r = mInvalidRgn->get_rectangle(i);

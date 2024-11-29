@@ -45,6 +45,7 @@ void AbsSpinner::initAbsSpinner() {
     mSelectionRightPadding=0;
     mSelectionBottomPadding=0;
     setFocusable(true);
+    setWillNotDraw(false);
     mRecycler=new RecycleBin(this);
 }
 
