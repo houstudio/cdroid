@@ -48,6 +48,8 @@ public:
     virtual void setEditMode(EDITMODE mode);
     void setCaretBlink(bool blink=true);
     virtual bool onKeyDown(int,KeyEvent&evt)override;
+    std::string getAccessibilityClassName()const override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
 };
 
 }//endof cdroid

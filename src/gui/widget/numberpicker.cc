@@ -165,6 +165,7 @@ NumberPicker::~NumberPicker(){
     delete mVirtualButtonPressedDrawable;
     delete mFlingScroller;
     delete mAdjustScroller;
+    delete mAccessibilityNodeProvider;
     for(auto d:mDisplayedDrawables)delete d;
 }
 
@@ -261,6 +262,7 @@ void NumberPicker::initView(){
     mSelectorElementSize = 1;//avoid divide by zero.
     mSelectionDividersDistance =UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE;
     mVelocityTracker = nullptr;
+    mAccessibilityNodeProvider = nullptr;
 
     mTouchSlop = config.getScaledTouchSlop();
     mMinimumFlingVelocity = config.getScaledMinimumFlingVelocity();

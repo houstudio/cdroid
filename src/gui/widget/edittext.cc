@@ -296,6 +296,16 @@ void EditText::onDraw(Canvas&canvas){
     }
 }
 
+std::string EditText::getAccessibilityClassName()const{
+    return "EditText";
+}
+
+void EditText::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+    TextView::onInitializeAccessibilityNodeInfoInternal(info);
+    if (isEnabled()) {
+        info.addAction(AccessibilityNodeInfo::ACTION_SET_TEXT);//AccessibilityAction::ACTION_SET_TEXT);
+    }
+}
 }//end namespace
 
 
