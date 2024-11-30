@@ -133,9 +133,10 @@ public:
     virtual void setChangingConfigurations(int);
     void setCallback(Callback*cbk);
     Callback* getCallback()const;
+    virtual Cairo::RefPtr<Cairo::Region>getTransparentRegion();
+
     void scheduleSelf(Runnable& what, int64_t when);
     virtual void unscheduleSelf(Runnable& what);
-
     virtual void invalidateSelf();
 
     virtual void draw(Canvas&ctx)=0;

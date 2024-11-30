@@ -1013,10 +1013,9 @@ bool View::onSetAlpha(int alpha) {
 }
 
 void View::applyDrawableToTransparentRegion(Drawable* dr, const Cairo::RefPtr<Cairo::Region>& region){
-    Cairo::RefPtr<Cairo::Region> r = nullptr;//dr.getTransparentRegion();
+    Cairo::RefPtr<Cairo::Region> r = dr->getTransparentRegion();
     Rect db = dr->getBounds();
-    AttachInfo* attachInfo = mAttachInfo;
-    if (r != nullptr && attachInfo != nullptr) {
+    if (r && mAttachInfo) {
         int location[2];
         const int w = getWidth();//getRight()-getLeft();
         const int h = getHeight();//getBottom()-getTop();
@@ -1037,8 +1036,7 @@ void View::applyDrawableToTransparentRegion(Drawable* dr, const Cairo::RefPtr<Ca
 }
 
 bool View::gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>& region){
-     AttachInfo* attachInfo = mAttachInfo;
-    if (region != nullptr && attachInfo != nullptr) {
+    if (region && mAttachInfo ) {
         const int pflags = mPrivateFlags;
         if ((pflags & PFLAG_SKIP_DRAW) == 0) {
             // The SKIP_DRAW flag IS NOT set, so this view draws. We need to
