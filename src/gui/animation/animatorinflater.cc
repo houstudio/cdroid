@@ -14,55 +14,68 @@ StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,cons
 }
 
 typedef struct{
+    std::string name;
+    Animator*animator;
+    std::vector<int>state;
+    AttributeSet atts;
+}AnimNode;
+typedef struct{
     Context*context;
-    std::vector<Animator*>animators;
+    std::vector<AnimNode>items;
     std::string package;
-    Animator*result;
-    std::function<ObjectAnimator*(Context*,const AttributeSet&)>fnObject;
-    std::function<ValueAnimator*(Context*,const AttributeSet&,ValueAnimator*)>fnAnimator;
+    Animator*animator;
+    StateListAnimator*statelistAnimator;
 }ParseData;
 
+class AnimatorInflater::AnimatorParser{
+public:
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
     ParseData*pd =(ParseData*)userData;
+    AnimNode an;
     AttributeSet atts;
-    atts.setContext(pd->context,pd->package);
-    atts.set(satts);
-    Animator*anim = nullptr;
-    if(strcmp(name,"objectAnimator")==0){
-        anim = pd->fnObject(pd->context,atts);
+    an.name = name;
+    an.animator = nullptr;
+    an.atts.setContext(pd->context,pd->package);
+    an.atts.set(satts);
+    if(strcmp(name,"selector")==0){
+        pd->statelistAnimator = new StateListAnimator();
+    }if(strcmp(name,"item")==0){
+        StateSet::parseState(an.state,an.atts);
+    }else if(strcmp(name,"objectAnimator")==0){
+        an.animator = AnimatorInflater::loadObjectAnimator(pd->context,an.atts);
     }else if(strcmp(name,"animator")==0){
-        anim = pd->fnAnimator(pd->context,atts,nullptr);
+        an.animator = AnimatorInflater::loadValueAnimator(pd->context,an.atts,nullptr);
     }else if(strcmp(name,"set")==0){
-        anim = new AnimatorSet();
-    }else if(strcmp(name,"propertyValuesHolder")==0){
-    }else{
-        LOGE("Unknown animator name:%s",name);
+        an.animator = new AnimatorSet();
     }
-    pd->result = anim;
-    pd->animators.push_back(anim);
+    LOGD("name:%s",(std::string(pd->items.size()*2,' ')+name).c_str());
+    pd->items.push_back(an);
 }
 
 static void endElement(void *userData, const XML_Char *name){
     ParseData*pd =(ParseData*)userData;
-    pd->animators.pop_back();
-    if((strcmp(name,"set")==0)&&pd->animators.size()){
-        AnimatorSet*aset=(AnimatorSet*)pd->animators.back();
-        aset->playTogether(pd->animators);
+    pd->items.pop_back();
+    if(strcmp(name,"item")==0){
+    }else if(strcmp(name,"objectAnimator")==0){
+    }else if(strcmp(name,"animator")==0){
+    }else if((strcmp(name,"set")==0)&&pd->items.size()){
+        AnimNode an=(AnimNode)pd->items.back();
+        AnimatorSet*aset=(AnimatorSet*)an.animator;
+        //aset->playTogether(pd->animators);
     }
 }
-
+};
 Animator* AnimatorInflater::createAnimatorFromXml(Context*ctx,const std::string&resid){
     ParseData pd;
     int len;
     char buf[128];
     XML_Parser parser=XML_ParserCreateNS(nullptr,' ');
     pd.context = ctx;
-    pd.result  = nullptr;
-    pd.fnObject  = AnimatorInflater::loadObjectAnimator;
-    pd.fnAnimator= AnimatorInflater::loadValueAnimator;
+    pd.animator  = nullptr;
+    pd.statelistAnimator = nullptr;
     std::unique_ptr<std::istream>stream=ctx->getInputStream(resid,&pd.package);
     XML_SetUserData(parser,&pd);
-    XML_SetElementHandler(parser, startElement, endElement);
+    XML_SetElementHandler(parser, AnimatorParser::startElement, AnimatorParser::endElement);
     do {
         stream->read(buf,sizeof(buf));
         len=stream->gcount();
@@ -74,11 +87,32 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*ctx,const std::string&
         }
     } while(len!=0);
     XML_ParserFree(parser);
-    return pd.result;
+    return pd.animator;
 }
 
 StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*ctx,const std::string&resid){
-    return nullptr;
+    ParseData pd;
+    int len;
+    char buf[128];
+    XML_Parser parser=XML_ParserCreateNS(nullptr,' ');
+    pd.context = ctx;
+    pd.animator  = nullptr;
+    pd.statelistAnimator = nullptr;
+    std::unique_ptr<std::istream>stream=ctx->getInputStream(resid,&pd.package);
+    XML_SetUserData(parser,&pd);
+    XML_SetElementHandler(parser, AnimatorParser::startElement, AnimatorParser::endElement);
+    do {
+        stream->read(buf,sizeof(buf));
+        len=stream->gcount();
+        if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
+            const char*es=XML_ErrorString(XML_GetErrorCode(parser));
+            LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
+            XML_ParserFree(parser);
+            return nullptr;
+        }
+    } while(len!=0);
+    XML_ParserFree(parser);
+    return pd.statelistAnimator;
 }
 
 ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const AttributeSet& atts){

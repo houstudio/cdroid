@@ -44,6 +44,12 @@ Property*PropertyValuesHolder::getProperty(){
     return mProperty;
 }
 
+void PropertyValuesHolder::setPropertyChangedListener(const Property::OnPropertyChangedListener&ls){
+   if(mProperty){
+       mProperty->setPropertyChangedListener(ls);
+   }
+}
+
 void PropertyValuesHolder::evaluate(AnimateValue& out, const AnimateValue& from, const AnimateValue& to,
            float fraction) const{
     switch(from.index()){
@@ -123,5 +129,13 @@ PropertyValuesHolder* PropertyValuesHolder::ofFloat(Property*prop,const std::vec
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Property::set(void* object, float value){
+    if(mOnPropertyChangedListener){
+        mOnPropertyChangedListener(*this,value);
+    }
+}
 
+void Property::setPropertyChangedListener(const OnPropertyChangedListener&ls){
+    mOnPropertyChangedListener = ls;
+}
 }//endof namespace

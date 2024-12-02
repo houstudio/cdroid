@@ -10,6 +10,8 @@ private:
     static constexpr int VALUE_TYPE_PATH      = 2;
     static constexpr int VALUE_TYPE_COLOR     = 3;
     static constexpr int VALUE_TYPE_UNDEFINED = 4;
+    class AnimatorParser;
+    friend AnimatorParser;
 private:
     static Animator* createAnimatorFromXml(Context*ctx,const std::string&resid);
     static StateListAnimator* createStateListAnimatorFromXml(Context*ctx,const std::string&resid);

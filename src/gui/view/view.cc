@@ -235,9 +235,14 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled",false));
     setKeyboardNavigationCluster(attrs.getBoolean("keyboardNavigationCluster", false));
     setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
+    std::string animatorResId = attrs.getString("stateListAnimator");
+    if(!animatorResId.empty()){
+        setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,animatorResId));
+    }
 
-    if(viewFlagMasks)
+    if(viewFlagMasks){
         setFlags(viewFlagValues, viewFlagMasks);
+    }
 
     ColorStateList*csl = attrs.getColorStateList("backgroundTint");
     if( (mBackgroundTint == nullptr) && csl){
@@ -5490,8 +5495,8 @@ RefPtr<ImageSurface>View::getDrawingCache(bool autoScale){
 }
 
 void View::destroyDrawingCache(){
-    mDrawingCache =nullptr;
-    mUnscaledDrawingCache =nullptr;
+    mDrawingCache = nullptr;
+    mUnscaledDrawingCache = nullptr;
 }
 
 int View::getDrawingCacheBackgroundColor()const{
@@ -5506,7 +5511,7 @@ void View::setDrawingCacheBackgroundColor(int color){
 }
 
 void View::buildDrawingCache(bool autoScale){
-    if ((mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == 0 || (autoScale ?
+    if (((mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == 0) || (autoScale ?
         mDrawingCache == nullptr : mUnscaledDrawingCache == nullptr)){ 
         buildDrawingCacheImpl(autoScale);
     }
