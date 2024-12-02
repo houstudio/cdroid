@@ -10,7 +10,7 @@ protected:
 public:
     void registerObserver(T* observer) {
         LOGD_IF(observer==nullptr,"The observer is null.");
-	auto it = std::find(mObservers.begin(),mObservers.end(),observer);
+        auto it = std::find(mObservers.begin(),mObservers.end(),observer);
         LOGE_IF(it!=mObservers.end(),"Observer %p is already registered.",observer);
         mObservers.push_back(observer);
     }

@@ -53,6 +53,7 @@
 #include <view/inputeventconsistencyverifier.h>
 #include <animation/animation.h>
 #include <animation/statelistanimator.h>
+#include <animation/animatorinflater.h>
 #include <memory>
 #include <vector>
 #include <functional>
