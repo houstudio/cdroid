@@ -68,10 +68,18 @@ LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name)
 
 bool LayoutInflater::registerInflater(const std::string&name,const std::string&defstyle,LayoutInflater::ViewInflater inflater) {
     LayoutInflater::INFLATERMAPPER& maps = getInflaterMap();
-    if(maps.find(name) != maps.end() )
-        return false;
-    maps.insert(INFLATERMAPPER::value_type(name,inflater));
-    getStyleMap().insert(std::pair<const std::string,const std::string>(name,defstyle));
+    LayoutInflater::STYLEMAPPER& smap = getStyleMap();
+    auto it = maps.find(name);
+    if(it!=maps.end() ){
+        it->second = inflater;
+    }else{
+        maps.insert(INFLATERMAPPER::value_type(name,inflater));
+    }
+    auto sit = smap.find(name);
+    if(sit!=smap.end())
+        sit->second = defstyle;
+    else
+        smap.insert(std::pair<const std::string,const std::string>(name,defstyle));
     return true;
 }
 
