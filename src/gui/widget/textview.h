@@ -99,6 +99,7 @@ private:
     float mSpacingMult;
     float mSpacingAdd;
     bool mSingleLine;
+    bool mIncludePad;
     bool mHorizontallyScrolling;
     bool mNeedsAutoSizeText;
     bool mRestartMarquee;
@@ -243,6 +244,8 @@ public:
     float getLineSpacingMultiplier()const;
     float getLineSpacingExtra()const;
 
+    void setIncludeFontPadding(bool includepad);
+    bool getIncludeFontPadding()const;
     void setMarqueeRepeatLimit(int marqueeLimit);
     int  getMarqueeRepeatLimit() const;
     int  getEllipsize() const;

@@ -108,9 +108,9 @@ void FastScroller::updateAppearance() {
     }
 
     int padding = mPreviewPadding;
-    //mPrimaryText->setIncludeFontPadding(false);
+    mPrimaryText->setIncludeFontPadding(false);
     mPrimaryText->setPadding(padding, padding, padding, padding);
-    //mSecondaryText->setIncludeFontPadding(false);
+    mSecondaryText->setIncludeFontPadding(false);
     mSecondaryText->setPadding(padding, padding, padding, padding);
 
     refreshDrawablePressedState();

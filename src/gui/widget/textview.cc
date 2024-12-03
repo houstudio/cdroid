@@ -2043,6 +2043,14 @@ void TextView::updateTextColors(){
     }
 }
 
+void TextView::setIncludeFontPadding(bool includepad){
+    mIncludePad = includepad;
+}
+
+bool TextView::getIncludeFontPadding()const{
+    return mIncludePad;
+}
+
 void TextView::setMarqueeRepeatLimit(int marqueeLimit) {
     mMarqueeRepeatLimit = marqueeLimit;
 }
