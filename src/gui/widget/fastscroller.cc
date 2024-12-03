@@ -9,6 +9,7 @@ namespace cdroid{
 
 FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
     mList = listView;
+    mDecorAnimation = nullptr;
     mOldItemCount  = listView->getCount();
     mOldChildCount = listView->getChildCount();
     mHeaderCount   = 0;
@@ -65,6 +66,7 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
 }
 
 FastScroller::~FastScroller(){
+    delete mDecorAnimation;
     //do not delete mOverlay and its children
     //they are created/freed by View/ViewGroup,
 }
@@ -487,7 +489,6 @@ void FastScroller::setState(int state) {
     if (state == mState) {
         return;
     }
-
     switch (state) {
     case STATE_NONE: transitionToHidden();  break;
     case STATE_VISIBLE: transitionToVisible();break;
@@ -510,64 +511,65 @@ void FastScroller::refreshDrawablePressedState() {
 }
 
 void FastScroller::transitionToHidden() {
-#if 0
     if (mDecorAnimation != nullptr) {
         mDecorAnimation->cancel();
+        delete mDecorAnimation;
     }
 
-    Animator fadeOut = groupAnimatorOfFloat(View.ALPHA, 0f, mThumbImage, mTrackImage,
-            mPreviewImage, mPrimaryText, mSecondaryText).setDuration(DURATION_FADE_OUT);
+    Animator* fadeOut = groupAnimatorOfFloat("alpha", 0.f, {mThumbImage, mTrackImage,
+            mPreviewImage, mPrimaryText, mSecondaryText});
+    fadeOut->setDuration(DURATION_FADE_OUT);
 
         // Push the thumb and track outside the list bounds.
-    const float offset = mLayoutFromRight ? mThumbImage.getWidth() : -mThumbImage.getWidth();
-    Animator slideOut = groupAnimatorOfFloat(
-        View::TRANSLATION_X, offset, mThumbImage, mTrackImage)
-           .setDuration(DURATION_FADE_OUT);
+    const float offset = mLayoutFromRight ? mThumbImage->getWidth() : -mThumbImage->getWidth();
+    Animator* slideOut = groupAnimatorOfFloat("translationX", offset, {mThumbImage, mTrackImage});
+    slideOut->setDuration(DURATION_FADE_OUT);
 
     mDecorAnimation = new AnimatorSet();
-    mDecorAnimation->playTogether(fadeOut, slideOut);
+    mDecorAnimation->playTogether({fadeOut, slideOut});
     mDecorAnimation->start();
-#endif
+
     mShowingPreview = false;
 }
 
 void FastScroller::transitionToVisible() {
-#if 0
     if (mDecorAnimation != nullptr) {
         mDecorAnimation->cancel();
+        delete mDecorAnimation;
     }
 
-    Animator fadeIn = groupAnimatorOfFloat(View.ALPHA, 1f, mThumbImage, mTrackImage)
-            .setDuration(DURATION_FADE_IN);
-    Animator fadeOut = groupAnimatorOfFloat(
-            View.ALPHA, 0f, mPreviewImage, mPrimaryText, mSecondaryText)
-            .setDuration(DURATION_FADE_OUT);
-    Animator slideIn = groupAnimatorOfFloat(
-            View.TRANSLATION_X, 0f, mThumbImage, mTrackImage).setDuration(DURATION_FADE_IN);
+    Animator* fadeIn = groupAnimatorOfFloat("alpha", 1.f, {mThumbImage, mTrackImage});
+    fadeIn->setDuration(DURATION_FADE_IN);
+
+    Animator* fadeOut = groupAnimatorOfFloat("alpha", 0.f, {mPreviewImage, mPrimaryText, mSecondaryText});
+    fadeOut->setDuration(DURATION_FADE_OUT);
+
+    Animator* slideIn = groupAnimatorOfFloat("translationX", 0.f, {mThumbImage, mTrackImage});
+    slideIn->setDuration(DURATION_FADE_IN);
 
     mDecorAnimation = new AnimatorSet();
-    mDecorAnimation->playTogether(fadeIn, fadeOut, slideIn);
+    mDecorAnimation->playTogether({fadeIn, fadeOut, slideIn});
     mDecorAnimation->start();
-#endif
+
     mShowingPreview = false;
 }
 
 void FastScroller::transitionToDragging() {
-#if 0
     if (mDecorAnimation != nullptr) {
         mDecorAnimation->cancel();
+        delete mDecorAnimation;
     }
 
-    Animator fadeIn = groupAnimatorOfFloat(
-            View.ALPHA, 1f, mThumbImage, mTrackImage, mPreviewImage)
-            .setDuration(DURATION_FADE_IN);
-    Animator slideIn = groupAnimatorOfFloat(
-            View.TRANSLATION_X, 0f, mThumbImage, mTrackImage).setDuration(DURATION_FADE_IN);
+    Animator* fadeIn = groupAnimatorOfFloat("alpha", 1.f, {mThumbImage, mTrackImage, mPreviewImage});
+    fadeIn->setDuration(DURATION_FADE_IN);
+
+    Animator* slideIn = groupAnimatorOfFloat("translationX", 0.f, {mThumbImage, mTrackImage});
+    slideIn->setDuration(DURATION_FADE_IN);
 
     mDecorAnimation = new AnimatorSet();
-    mDecorAnimation->playTogether(fadeIn, slideIn);
+    mDecorAnimation->playTogether({fadeIn, slideIn});
     mDecorAnimation->start();
-#endif
+
     mShowingPreview = true;
 }
 
@@ -767,56 +769,58 @@ bool FastScroller::transitionPreviewLayout(int sectionIndex) {
     }
 
     // Set and layout target immediately.
-    target.setText(text);
+    target->setText(text);
     measurePreview(target, bounds);
     applyLayout(target, bounds);
 
-    if (mPreviewAnimation != null) {
-        mPreviewAnimation.cancel();
+    if (mPreviewAnimation != nullptr) {
+        mPreviewAnimation->cancel();
     }
 
     // Cross-fade preview text.
-    Animator showTarget = animateAlpha(target, 1f).setDuration(DURATION_CROSS_FADE);
-    Animator hideShowing = animateAlpha(showing, 0f).setDuration(DURATION_CROSS_FADE);
+    Animator* showTarget = animateAlpha(target, 1.f)->setDuration(DURATION_CROSS_FADE);
+    Animator* hideShowing = animateAlpha(showing, 0.f)->setDuration(DURATION_CROSS_FADE);
     hideShowing.addListener(mSwitchPrimaryListener);
 
     // Apply preview image padding and animate bounds, if necessary.
-    bounds.left -= preview.getPaddingLeft();
-    bounds.top -= preview.getPaddingTop();
-    bounds.right += preview.getPaddingRight();
-    bounds.bottom += preview.getPaddingBottom();
-    Animator resizePreview = animateBounds(preview, bounds);
-    resizePreview.setDuration(DURATION_RESIZE);
+    bounds.left -= preview->getPaddingLeft();
+    bounds.top -= preview->getPaddingTop();
+    bounds.right += preview->getPaddingRight();
+    bounds.bottom += preview->getPaddingBottom();
+    Animator* resizePreview = animateBounds(preview, bounds);
+    resizePreview->setDuration(DURATION_RESIZE);
 
     mPreviewAnimation = new AnimatorSet();
-    AnimatorSet.Builder builder = mPreviewAnimation.play(hideShowing).with(showTarget);
-    builder.with(resizePreview);
+    AnimatorSet::Builder* builder = mPreviewAnimation->play(hideShowing);
+    builder->with(showTarget).with(resizePreview);
 
     // The current preview size is unaffected by hidden or showing. It's
     // used to set starting scales for things that need to be scaled down.
-    const int previewWidth = preview.getWidth() - preview.getPaddingLeft()
-            - preview.getPaddingRight();
+    const int previewWidth = preview->getWidth() - preview->getPaddingLeft()
+            - preview->getPaddingRight();
 
     // If target is too large, shrink it immediately to fit and expand to
     // target size. Otherwise, start at target size.
-    const int targetWidth = target.getWidth();
+    const int targetWidth = target->getWidth();
     if (targetWidth > previewWidth) {
-        target.setScaleX((float) previewWidth / targetWidth);
-        Animator scaleAnim = animateScaleX(target, 1f).setDuration(DURATION_RESIZE);
-        builder.with(scaleAnim);
+        target->setScaleX((float) previewWidth / targetWidth);
+        Animator* scaleAnim = animateScaleX(target, 1f);
+        scaleAnim->setDuration(DURATION_RESIZE);
+        builder->with(scaleAnim);
     } else {
-        target.setScaleX(1f);
+        target->setScaleX(1f);
     }
 
     // If showing is larger than target, shrink to target size.
     const int showingWidth = showing.getWidth();
     if (showingWidth > targetWidth) {
         float scale = (float) targetWidth / showingWidth;
-        Animator scaleAnim = animateScaleX(showing, scale).setDuration(DURATION_RESIZE);
-        builder.with(scaleAnim);
+        Animator* scaleAnim = animateScaleX(showing, scale);
+        scaleAnim->.setDuration(DURATION_RESIZE);
+        builder->with(scaleAnim);
     }
 
-    mPreviewAnimation.start();
+    mPreviewAnimation->start();
 #endif
     return true;//!TextUtils.isEmpty(text);
 }
@@ -1146,6 +1150,29 @@ bool FastScroller::isPointInsideY(float y) {
    float adjust = targetSizeDiff > 0 ? targetSizeDiff / 2.f : 0;
 
    return y >= (top - adjust) && y <= (bottom + adjust);
+}
+
+Animator* FastScroller::groupAnimatorOfFloat(const std::string&propName, float value,const std::vector<View*>&views){
+    AnimatorSet* animSet = new AnimatorSet();
+    AnimatorSet::Builder* builder = nullptr;
+
+    for (int i = views.size() - 1; i >= 0; i--) {
+        Animator* anim = ObjectAnimator::ofFloat(views[i], propName, {value});
+        if (builder == nullptr) {
+            builder = animSet->play(anim);
+        } else {
+            builder->with(anim);
+        }
+    }
+    return animSet;
+}
+
+Animator* FastScroller::animateScaleX(View* v, float target){
+    return ObjectAnimator::ofFloat(v, "scaleX", {target});
+}
+
+Animator* FastScroller::animateAlpha(View* v, float alpha){
+    return ObjectAnimator::ofFloat(v, "alpha", {alpha});
 }
 
 }//endof namespace

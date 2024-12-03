@@ -44,10 +44,8 @@ Property*PropertyValuesHolder::getProperty(){
     return mProperty;
 }
 
-void PropertyValuesHolder::setPropertyChangedListener(const Property::OnPropertyChangedListener&ls){
-   if(mProperty){
-       mProperty->setPropertyChangedListener(ls);
-   }
+void PropertyValuesHolder::setPropertyChangedListener(const OnPropertyChangedListener&ls){
+   mOnPropertyChangedListener = ls;
 }
 
 void PropertyValuesHolder::evaluate(AnimateValue& out, const AnimateValue& from, const AnimateValue& to,
@@ -98,20 +96,20 @@ void PropertyValuesHolder::setFraction(void*target,float fraction){
         fraction -= lowIndex;
         evaluate(mAnimateValue, mDataSource[lowIndex], mDataSource[lowIndex + 1], fraction);
     }
-    if(mProperty)mProperty->set(target,fraction);
+    if(mOnPropertyChangedListener)mOnPropertyChangedListener(mPropertyName,target,fraction);
 }
 const AnimateValue& PropertyValuesHolder::getAnimatedValue()const{
     return mAnimateValue;
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofInt(const std::string&name,const std::vector<int>&values){
-    PropertyValuesHolder*ip=new PropertyValuesHolder(name);
+    PropertyValuesHolder*ip = new PropertyValuesHolder(name);
     ip->setValues(values);
     return ip;
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofInt(Property*prop,const std::vector<int>&values){
-    PropertyValuesHolder*ip=new PropertyValuesHolder(prop);
+    PropertyValuesHolder*ip = new PropertyValuesHolder(prop);
     ip->setValues(values);
     return ip; 
 }
@@ -128,14 +126,4 @@ PropertyValuesHolder* PropertyValuesHolder::ofFloat(Property*prop,const std::vec
     return fp;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Property::set(void* object, float value){
-    if(mOnPropertyChangedListener){
-        mOnPropertyChangedListener(*this,value);
-    }
-}
-
-void Property::setPropertyChangedListener(const OnPropertyChangedListener&ls){
-    mOnPropertyChangedListener = ls;
-}
 }//endof namespace

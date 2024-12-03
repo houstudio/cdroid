@@ -503,7 +503,7 @@ RefPtr<Canvas>Window::getCanvas(){
     setWillNotDraw(true);
     int num=gatherTransparentRegion(transRgn);
     Cairo::RectangleInt rec=transRgn->get_extents();
-    LOGD_IF(num,"transRgn.rects=%d extents=(%d,%d,%d,%d)",num,rec.x,rec.y,rec.width,rec.height);
+    LOGV_IF(num,"transRgn.rects=%d extents=(%d,%d,%d,%d)",num,rec.x,rec.y,rec.width,rec.height);
     mInvalidRgn->subtract(transRgn);
     num=mInvalidRgn->get_num_rectangles();
     canvas->reset_clip();

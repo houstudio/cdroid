@@ -197,6 +197,9 @@ private:
     void layoutTrack();
     void setState(int state);
     void applyLayout(View* view,const Rect& bounds);
+    static Animator* groupAnimatorOfFloat(const std::string&propName, float value,const std::vector<View*>&views);
+    static Animator* animateScaleX(View* v, float target);
+    static Animator* animateAlpha(View* v, float alpha);
 public:
     FastScroller(AbsListView*,const std::string& scrollstyle);
     ~FastScroller();

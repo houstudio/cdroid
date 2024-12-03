@@ -28,24 +28,26 @@ inline int lerp(int startValue, int endValue, float fraction) {
 
 class Property{
 public:
-    using OnPropertyChangedListener=std::function<void(Property&,float)>;
 private:
     std::string mName;
-    OnPropertyChangedListener mOnPropertyChangedListener;
 public:
     Property(const std::string&name){
         mName = name;
     }
     virtual float get(void* t){return .0;};
-    virtual void set(void* object, float value);
-    void setPropertyChangedListener(const OnPropertyChangedListener&);
+    //virtual void set(void* object, float value);
     const std::string getName()const{return mName;}
 };
 
 class PropertyValuesHolder{
+public:
+    using PropertySetter = std::function<void(const std::string&prop,AnimateValue&v)>;
+    using PropertyGetter = std::function<AnimateValue(const std::string&prop)>;
+    using OnPropertyChangedListener = std::function<void(const std::string&,void*target,float)>;
 protected:
     std::string mPropertyName;
     Property*mProperty;
+    OnPropertyChangedListener mOnPropertyChangedListener;
     std::vector<AnimateValue>mDataSource;
     AnimateValue mStartValue;
     AnimateValue mEndValue;
@@ -61,7 +63,7 @@ public:
     const std::string getPropertyName()const;
     void setProperty(Property*p);
     Property*getProperty();
-    void setPropertyChangedListener(const Property::OnPropertyChangedListener&);
+    void setPropertyChangedListener(const OnPropertyChangedListener&);
     
     void setValues(const std::vector<int>&values);
     void setValues(const std::vector<uint32_t>&values);
