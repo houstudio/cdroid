@@ -801,7 +801,7 @@ void LinearLayoutManager::setSmoothScrollbarEnabled(bool enabled) {
      mSmoothScrollbarEnabled = enabled;
 }
 
-bool LinearLayoutManager::isSmoothScrollbarEnabled() {
+bool LinearLayoutManager::isSmoothScrollbarEnabled() const{
     return mSmoothScrollbarEnabled;
 }
 

@@ -9,7 +9,7 @@ StateListAnimator::StateListAnimator(){
     };
 }
 
-void StateListAnimator::addState(const std::vector<int>&specs, ValueAnimator* animator){
+void StateListAnimator::addState(const std::vector<int>&specs, Animator* animator){
     Tuple tuple =Tuple(specs, animator);
     animator->addListener(mAnimationListener);
     mTuples.push_back(tuple);

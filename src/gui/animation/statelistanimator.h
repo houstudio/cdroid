@@ -8,8 +8,8 @@ protected:
     class Tuple {
     public:
         std::vector<int>mSpecs;
-        ValueAnimator* mAnimator;
-        Tuple(const std::vector<int>&specs, ValueAnimator* animator) {
+        Animator* mAnimator;
+        Tuple(const std::vector<int>&specs, Animator* animator) {
             mSpecs = specs;
             mAnimator = animator;
         }
@@ -38,7 +38,7 @@ private:
     void cancel();
 public:
     StateListAnimator();
-    void addState(const std::vector<int>&specs, ValueAnimator* animator);
+    void addState(const std::vector<int>&specs, Animator* animator);
     void setState(const std::vector<int>&state);
     Animator* getRunningAnimator();
     View* getTarget();

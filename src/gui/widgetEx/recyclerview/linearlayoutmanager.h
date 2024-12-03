@@ -134,8 +134,8 @@ public:
     void onLayoutCompleted(RecyclerView::State& state)override;
     void scrollToPosition(int position)override;
     void scrollToPositionWithOffset(int position, int offset);
-    int scrollHorizontallyBy(int dx, RecyclerView::Recycler& recycler, RecyclerView::State& state);
-    int scrollVerticallyBy(int dy, RecyclerView::Recycler& recycler, RecyclerView::State& state);
+    int scrollHorizontallyBy(int dx, RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
+    int scrollVerticallyBy(int dy, RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     int computeHorizontalScrollOffset(RecyclerView::State& state)override;
     int computeVerticalScrollOffset(RecyclerView::State& state)override;
     int computeHorizontalScrollExtent(RecyclerView::State& state)override;
@@ -143,12 +143,12 @@ public:
     int computeHorizontalScrollRange(RecyclerView::State& state)override;
     int computeVerticalScrollRange(RecyclerView::State& state)override;
     void setSmoothScrollbarEnabled(bool enabled);
-    bool isSmoothScrollbarEnabled();
+    bool isSmoothScrollbarEnabled()const;
     void collectInitialPrefetchPositions(int adapterItemCount,LayoutPrefetchRegistry& layoutPrefetchRegistry);
     void setInitialPrefetchItemCount(int itemCount);
     int getInitialPrefetchItemCount();
     void collectAdjacentPrefetchPositions(int dx, int dy, RecyclerView::State& state,
-            LayoutPrefetchRegistry& layoutPrefetchRegistry);
+            LayoutPrefetchRegistry& layoutPrefetchRegistry)override;
     void assertNotInLayoutOrScroll(const std::string& message);
 
     int findFirstVisibleItemPosition();
@@ -156,7 +156,7 @@ public:
     int findLastVisibleItemPosition();
     int findLastCompletelyVisibleItemPosition();
     View* onFocusSearchFailed(View* focused, int focusDirection,
-            RecyclerView::Recycler& recycler, RecyclerView::State& state);
+            RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     bool supportsPredictiveItemAnimations()override;
     void prepareForDrop(View* view,View* target, int x, int y);
 };

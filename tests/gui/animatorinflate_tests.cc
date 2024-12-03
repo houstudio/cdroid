@@ -12,16 +12,32 @@ class ANIMATORINFLATOR:public testing::Test{
    }
 };
 
-TEST_F(ANIMATORINFLATOR,test1){
+TEST_F(ANIMATORINFLATOR,statelistanimator1){
     App app;
     StateListAnimator*sl=AnimatorInflater::loadStateListAnimator(&app,"cdroid:animator/test1.xml");
+    ASSERT_NE(sl,(void*)nullptr);
     app.exec();
 }
-TEST_F(ANIMATORINFLATOR,test2){
+TEST_F(ANIMATORINFLATOR,statelistanimator2){
     App app;
     StateListAnimator*sl=AnimatorInflater::loadStateListAnimator(&app,"cdroid:animator/test2.xml");
+    ASSERT_NE(sl,(void*)nullptr);
     app.exec();
 }
+
+TEST_F(ANIMATORINFLATOR,fade_in){
+    App app;
+    Animator*sl=AnimatorInflater::loadAnimator(&app,"cdroid:anim/fade_in");
+    ASSERT_NE(sl,(void*)nullptr);
+    app.exec();
+}
+TEST_F(ANIMATORINFLATOR,slide_in_left){
+    App app;
+    Animator*sl=AnimatorInflater::loadAnimator(&app,"cdroid:anim/slide_in_left");
+    ASSERT_NE(sl,(void*)nullptr);
+    app.exec();
+}
+
 
 
 
