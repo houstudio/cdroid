@@ -559,7 +559,7 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
     }
 
     // Remove all the finished anims
-    for (size_t i = mPlayingSet.size() - 1; i >= 0; i--) {
+    for (int i = int(mPlayingSet.size() - 1); i >= 0; i--) {
         if (mPlayingSet.at(i)->mEnded) {
             //mPlayingSet.remove(i);
         }
@@ -919,13 +919,17 @@ void AnimatorSet::Node::addChild(AnimatorSet::Node* node){
 }
 
 void AnimatorSet::Node::addSibling(AnimatorSet::Node* node){
-    mSiblings.push_back(node);
-    node->addSibling(this);
+    if(std::find(mSiblings.begin(),mSiblings.end(),node)==mSiblings.end()){
+        mSiblings.push_back(node);
+        node->addSibling(this);
+    }
 }
 
 void AnimatorSet::Node::addParent(AnimatorSet::Node* node){
-    mParents.push_back(node);
-    node->addChild(this);
+    if(std::find(mParents.begin(),mParents.end(),node)==mParents.end()){
+        mParents.push_back(node);
+        node->addChild(this);
+    }
 }
 
 void AnimatorSet::Node::addParents(const std::vector<AnimatorSet::Node*>& parents){
