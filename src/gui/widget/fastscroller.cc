@@ -2,6 +2,7 @@
 #include <widget/listview.h>
 #include <widget/headerviewlistadapter.h>
 #include <core/mathutils.h>
+#include <core/textutils.h>
 #include <float.h>
 #include <cdlog.h>
 
@@ -746,15 +747,14 @@ void FastScroller::scrollTo(float position) {
 }
 
 bool FastScroller::transitionPreviewLayout(int sectionIndex) {
-#if 0
-    Object[] sections = mSections;
-    String text = null;
-    if (sections != null && sectionIndex >= 0 && sectionIndex < sections.length) {
+    std::string text;
+    /*auto& sections = mSections;
+    if (sections.size() && sectionIndex >= 0 && sectionIndex < sections.size()) {
         Object section = sections[sectionIndex];
         if (section != null) {
             text = section.toString();
         }
-    }
+    }*/
 
     Rect bounds;
     View* preview = mPreviewImage;
@@ -778,15 +778,21 @@ bool FastScroller::transitionPreviewLayout(int sectionIndex) {
     }
 
     // Cross-fade preview text.
-    Animator* showTarget = animateAlpha(target, 1.f)->setDuration(DURATION_CROSS_FADE);
-    Animator* hideShowing = animateAlpha(showing, 0.f)->setDuration(DURATION_CROSS_FADE);
-    hideShowing.addListener(mSwitchPrimaryListener);
+    Animator* showTarget = animateAlpha(target, 1.f);
+    Animator* hideShowing = animateAlpha(showing, 0.f);
+    showTarget->setDuration(DURATION_CROSS_FADE);
+    hideShowing->setDuration(DURATION_CROSS_FADE);
+    Animator::AnimatorListener mSwitchPrimaryListener;
+    mSwitchPrimaryListener.onAnimationEnd=[this](Animator& animation,bool isReverse){
+        mShowingPrimary = !mShowingPrimary;
+    };
+    hideShowing->addListener(mSwitchPrimaryListener);
 
     // Apply preview image padding and animate bounds, if necessary.
-    bounds.left -= preview->getPaddingLeft();
+    bounds.left-= preview->getPaddingLeft();
     bounds.top -= preview->getPaddingTop();
-    bounds.right += preview->getPaddingRight();
-    bounds.bottom += preview->getPaddingBottom();
+    bounds.width  += preview->getPaddingRight() + preview->getPaddingLeft();
+    bounds.height += preview->getPaddingBottom()+ preview->getPaddingTop();
     Animator* resizePreview = animateBounds(preview, bounds);
     resizePreview->setDuration(DURATION_RESIZE);
 
@@ -804,25 +810,24 @@ bool FastScroller::transitionPreviewLayout(int sectionIndex) {
     const int targetWidth = target->getWidth();
     if (targetWidth > previewWidth) {
         target->setScaleX((float) previewWidth / targetWidth);
-        Animator* scaleAnim = animateScaleX(target, 1f);
+        Animator* scaleAnim = animateScaleX(target, 1.f);
         scaleAnim->setDuration(DURATION_RESIZE);
         builder->with(scaleAnim);
     } else {
-        target->setScaleX(1f);
+        target->setScaleX(1.f);
     }
 
     // If showing is larger than target, shrink to target size.
-    const int showingWidth = showing.getWidth();
+    const int showingWidth = showing->getWidth();
     if (showingWidth > targetWidth) {
         float scale = (float) targetWidth / showingWidth;
         Animator* scaleAnim = animateScaleX(showing, scale);
-        scaleAnim->.setDuration(DURATION_RESIZE);
+        scaleAnim->setDuration(DURATION_RESIZE);
         builder->with(scaleAnim);
     }
 
     mPreviewAnimation->start();
-#endif
-    return true;//!TextUtils.isEmpty(text);
+    return TextUtils::isEmpty(text);
 }
 
 void FastScroller::setThumbPos(float position) {
@@ -1175,6 +1180,13 @@ Animator* FastScroller::animateAlpha(View* v, float alpha){
     return ObjectAnimator::ofFloat(v, "alpha", {alpha});
 }
 
+Animator* FastScroller::animateBounds(View* v,const Rect& bounds){
+    PropertyValuesHolder* left = PropertyValuesHolder::ofInt("left", {bounds.left});
+    PropertyValuesHolder* top = PropertyValuesHolder::ofInt("top", {bounds.top});
+    PropertyValuesHolder* right = PropertyValuesHolder::ofInt("right", {bounds.width});
+    PropertyValuesHolder* bottom = PropertyValuesHolder::ofInt("bottom", {bounds.height});
+    return ObjectAnimator::ofPropertyValuesHolder(v, {left, top, right, bottom});
+}
 }//endof namespace
 
 

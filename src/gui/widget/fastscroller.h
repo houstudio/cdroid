@@ -200,6 +200,7 @@ private:
     static Animator* groupAnimatorOfFloat(const std::string&propName, float value,const std::vector<View*>&views);
     static Animator* animateScaleX(View* v, float target);
     static Animator* animateAlpha(View* v, float alpha);
+    static Animator* animateBounds(View* v,const Rect& bounds);
 public:
     FastScroller(AbsListView*,const std::string& scrollstyle);
     ~FastScroller();
