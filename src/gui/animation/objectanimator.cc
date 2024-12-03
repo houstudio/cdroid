@@ -17,55 +17,61 @@ ObjectAnimator::ObjectAnimator(void* target,const std::string& propertyName){
 }
 
 void ObjectAnimator::setTarget(void*target){
-    mTarget=target;
+    if(mTarget!=target){
+        mTarget = target;
+        mInitialized=false;
+    }
 }
 
 void* ObjectAnimator::getTarget(){
     return mTarget;
 }
 
-void ObjectAnimator::setPropertyName(const std::string&propertyName){
+void ObjectAnimator::setPropertyName(const std::string& propertyName){
     if(mValuesMap.size()){
-        auto it = mValuesMap.begin();
-        auto it2= mValuesMap.find(it->first/*oldName*/);
+        PropertyValuesHolder* valuesHolder = mValues.at(0);
+        const std::string oldName = valuesHolder->getPropertyName();
+        valuesHolder->setPropertyName(propertyName);
+
+        auto it2= mValuesMap.find(oldName);
         if(it2!=mValuesMap.end())
             mValuesMap.erase(it2);
-        mValuesMap.insert({propertyName,mValues[0]});
+        mValuesMap.insert({propertyName,valuesHolder});
     }
     mPropertyName= propertyName;
     mInitialized = false;
 }
 
-void ObjectAnimator::setProperty(const Property& property){
-    if (mValues.size()) {
+void ObjectAnimator::setProperty(Property* property){
+    if (!mValues.empty()) {
         PropertyValuesHolder* valuesHolder = mValues[0];
-        std::string oldName = valuesHolder->getPropertyName();
-        //valuesHolder->setProperty(property);
-        auto it=mValuesMap.find(oldName);
-        if(it!=mValuesMap.end()){
+        const std::string oldName = valuesHolder->getPropertyName();
+        valuesHolder->setProperty(property);
+        auto it = mValuesMap.find(oldName);
+        if(it != mValuesMap.end()){
             mValuesMap.erase(it);
         }
         mValuesMap.insert(std::map<const std::string,PropertyValuesHolder*>::value_type(mPropertyName,valuesHolder));
     }
     if (mProperty != nullptr) {
-        mPropertyName = property.getName();
+        mPropertyName = property->getName();
     }
-    //mProperty = property;
+    mProperty = property;
     // New property/values/target should cause re-initialization prior to starting
     mInitialized = false; 
 }
 
-const std::string ObjectAnimator::getPropertyName(){
+const std::string ObjectAnimator::getPropertyName()const{
     std::string propertyName;
     if(!mPropertyName.empty())
         return mPropertyName;
     else if(mProperty){
         return mProperty->getName();
-    }else if(mValuesMap.size()){
-        for(auto v:mValuesMap){
+    }else if(mValues.size()){
+        for(auto v:mValues){
             if(!propertyName.empty())
                propertyName+=",";
-            propertyName+=v.second->getPropertyName();
+            propertyName+=v->getPropertyName();
         }
     }
     return propertyName;
@@ -136,15 +142,13 @@ bool ObjectAnimator::shouldAutoCancel(const AnimationHandler::AnimationFrameCall
 }
 
 ObjectAnimator* ObjectAnimator::ofInt(void* target,const std::string& propertyName,const std::vector<int>&values){
-    ObjectAnimator*anim=new ObjectAnimator();
-    anim->setTarget(target);
+    ObjectAnimator*anim=new ObjectAnimator(target,propertyName);
     anim->setIntValues(values);
     return anim;
 }
 
 ObjectAnimator* ObjectAnimator::ofFloat(void* target,const std::string& propertyName, const std::vector<float>&values){
-    ObjectAnimator*anim=new ObjectAnimator();
-    anim->setTarget(target);
+    ObjectAnimator*anim=new ObjectAnimator(target,propertyName);
     anim->setFloatValues(values);
     return anim;
 }
@@ -163,7 +167,7 @@ ObjectAnimator* ObjectAnimator::ofFloat(void*target,Property*prop,const std::vec
     return anim;
 }
 
-ObjectAnimator* ObjectAnimator::ofPropertyValuesHolder(void*target,const std::vector< PropertyValuesHolder*>&values){
+ObjectAnimator* ObjectAnimator::ofPropertyValuesHolder(void*target,const std::vector<PropertyValuesHolder*>&values){
     ObjectAnimator*anim=new ObjectAnimator();
     anim->setTarget(target);
     anim->setValues(values);

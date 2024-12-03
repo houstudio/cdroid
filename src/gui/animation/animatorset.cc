@@ -888,8 +888,10 @@ AnimatorSet::Node* AnimatorSet::getNodeForAnimation(Animator* anim){
     Node* node = nullptr;
     if (it==mNodeMap.end()) {
         node = new Node(anim);
-        mNodeMap.insert(std::pair<Animator*,Node*>(anim, node));
+        mNodeMap.insert({anim, node});
         mNodes.push_back(node);
+    }else {
+        node= it->second;
     }
     return node;
 }
@@ -1024,7 +1026,7 @@ AnimatorSet::Builder& AnimatorSet::Builder::after(Animator* anim) {
 
 AnimatorSet::Builder& AnimatorSet::Builder::after(long delay) {
     // setup dummy ValueAnimator just to run the clock
-    ValueAnimator* anim = ValueAnimator::ofFloat({.0f, 1.f});
+    ValueAnimator* anim = ValueAnimator::ofFloat({0.f, 1.f});
     anim->setDuration(delay);
     after(anim);
     return *this;

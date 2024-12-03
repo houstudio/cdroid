@@ -17,8 +17,8 @@ public:
     void setTarget(void*target);
     void*getTarget();
     void setPropertyName(const std::string&propertyName);
-    void setProperty(const Property& property);
-    const std::string getPropertyName();
+    void setProperty(Property* property);
+    const std::string getPropertyName()const;
     void setIntValues(const std::vector<int>&)override;
     void setFloatValues(const std::vector<float>&values)override;
     static ObjectAnimator* ofInt(void* target,const std::string& propertyName, const std::vector<int>&);
