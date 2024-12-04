@@ -1,19 +1,15 @@
 #ifndef __RADIO_BUTTON_H__
 #define __RADIO_BUTTON_H__
-#include <widget/togglebutton.h>
+#include <widget/compoundbutton.h>
 namespace cdroid{
-class RadioButton:public ToggleButton{
+class RadioButton:public CompoundButton{
 public:
-    RadioButton(int w,int h):ToggleButton(w,h){
-    }
-    RadioButton(Context*ctx,const AttributeSet& attrs)
-	  :ToggleButton(ctx,attrs){
-    }
-    std::string getAccessibilityClassName()const override{
-        return "RadioButton";
-    }
+    RadioButton(const std::string&,int w,int h);
+    RadioButton(Context*ctx,const AttributeSet& attrs);
+#ifndef FUNCTION_AS_CHECKABLE
+    void toggle()override;
+#endif
+    std::string getAccessibilityClassName()const override;
 };
-
-}//namespace
-
+}/*endof namespace*/
 #endif
