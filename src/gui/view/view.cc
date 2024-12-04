@@ -1473,26 +1473,19 @@ const Display* View::getDisplay() const{
 
 void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
     mAttachInfo = info;
-    if(mOverlay)
+    if(mOverlay){
         mOverlay->getOverlayView()->dispatchAttachedToWindow(info,visibility);
-
+    }
     mWindowAttachCount++;
+    // We will need to evaluate the drawable state at least once.
     mPrivateFlags |= PFLAG_DRAWABLE_STATE_DIRTY;
     if(mFloatingTreeObserver){
         info->mTreeObserver->merge(*mFloatingTreeObserver);
         delete mFloatingTreeObserver;
         mFloatingTreeObserver = nullptr;
     }
-    onAttachedToWindow();
-    int vis = info->mWindowVisibility;
-    if (vis != GONE) {
-        onWindowVisibilityChanged(vis);
-        if (isShown()) {
-            // Calling onVisibilityAggregated directly here since the subtree will also
-            // receive dispatchAttachedToWindow and this same call
-            onVisibilityAggregated(vis == VISIBLE);
-        }
-    }
+
+    //registerPendingFrameMetricsObservers();
 
     if ((mPrivateFlags&PFLAG_SCROLL_CONTAINER) != 0) {
         mAttachInfo->mScrollContainers.push_back(this);
@@ -1504,6 +1497,32 @@ void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
         delete mRunQueue;
         mRunQueue = nullptr;
     }
+    performCollectViewAttributes(mAttachInfo,visibility);
+    onAttachedToWindow();
+
+    ListenerInfo* li = mListenerInfo;
+    std::vector<View::OnAttachStateChangeListener>listeners;
+    if(li)listeners=li->mOnAttachStateChangeListeners;
+    if (listeners.size() > 0) {
+        // NOTE: because of the use of CopyOnWriteArrayList, we *must* use an iterator to
+        // perform the dispatching. The iterator is a safe guard against listeners that
+        // could mutate the list by calling the various add/remove methods. This prevents
+        // the array from being modified while we iterate it.
+        for (OnAttachStateChangeListener listener : listeners) {
+            listener.onViewAttachedToWindow(*this);
+        }
+    }
+
+    const int vis = info->mWindowVisibility;
+    if (vis != GONE) {
+        onWindowVisibilityChanged(vis);
+        if (isShown()) {
+            // Calling onVisibilityAggregated directly here since the subtree will also
+            // receive dispatchAttachedToWindow and this same call
+            onVisibilityAggregated(vis == VISIBLE);
+        }
+    }
+
     // Send onVisibilityChanged directly instead of dispatchVisibilityChanged.
     // As all views in the subtree will already receive dispatchAttachedToWindow
     // traversing the subtree again here is not desired.
@@ -1513,6 +1532,9 @@ void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
         // If nobody has evaluated the drawable state yet, then do it now.
         refreshDrawableState();
     }
+    needGlobalAttributesUpdate(false);
+
+    //notifyEnterOrExitForAutoFillIfNeeded(true);
 }
 
 void View::dispatchDetachedFromWindow(){
@@ -2130,7 +2152,7 @@ void View::setVerticalFadingEdgeEnabled(bool verticalFadingEdgeEnabled){
 }
 
 void View::getStraightVerticalScrollBarBounds(Rect*drawBounds,Rect*touchBounds){
-    Rect*bounds = drawBounds != nullptr ? drawBounds : touchBounds;
+    Rect*bounds = (drawBounds != nullptr) ? drawBounds : touchBounds;
     if (bounds == nullptr) return;
     const int inside = (mViewFlags & SCROLLBARS_OUTSIDE_MASK) == 0 ? ~0 : 0;
     const int size = getVerticalScrollbarWidth();
@@ -2663,7 +2685,7 @@ void View::setOnHoverListener(OnHoverListener l){
 
 void View::setDrawingCacheEnabled(bool enabled) {
     mCachingFailed = false;
-    //Do not uncoimment this Lines:
+    //Do not uncomment this Lines:
     //setFlags(enabled ? DRAWING_CACHE_ENABLED : 0, DRAWING_CACHE_ENABLED);
 }
 
@@ -3690,12 +3712,12 @@ bool View::performAccessibilityAction(int action, Bundle arguments) {
 
 bool View::performAccessibilityActionInternal(int action, Bundle arguments) {
     if (isNestedScrollingEnabled()
-            && (action == AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD
-            || action == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD
-            || action == R::id::accessibilityActionScrollUp
-            || action == R::id::accessibilityActionScrollLeft
-            || action == R::id::accessibilityActionScrollDown
-            || action == R::id::accessibilityActionScrollRight)) {
+            && ((action == AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD)
+            || (action == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD)
+            || (action == R::id::accessibilityActionScrollUp)
+            || (action == R::id::accessibilityActionScrollLeft)
+            || (action == R::id::accessibilityActionScrollDown)
+            || (action == R::id::accessibilityActionScrollRight))) {
         if (dispatchNestedPrePerformAccessibilityAction(action, arguments)) {
             return true;
         }
@@ -4867,7 +4889,7 @@ View& View::setFlags(int flags,int mask) {
             mPrivateFlags |= PFLAG_DRAWN;
             invalidate(true);
 
-            //needGlobalAttributesUpdate(true);
+            needGlobalAttributesUpdate(true);
 
             // a view becoming visible is worth notifying the parent about in case nothing has
             // focus. Even if this specific view isn't focusable, it may contain something that
@@ -4893,7 +4915,7 @@ View& View::setFlags(int flags,int mask) {
 
     /* Check if the GONE bit has changed */
     if ((changed & GONE) != 0) {
-        //needGlobalAttributesUpdate(false);
+        needGlobalAttributesUpdate(false);
         requestLayout();
 
         if (((mViewFlags & VISIBILITY_MASK) == GONE)) {
@@ -4914,7 +4936,7 @@ View& View::setFlags(int flags,int mask) {
 
     /* Check if the VISIBLE bit has changed */
     if ((changed & INVISIBLE) != 0) {
-        //needGlobalAttributesUpdate(false);
+        needGlobalAttributesUpdate(false);
         /* If this view is becoming invisible, set the DRAWN flag so that
          * the next invalidate() will not be skipped.*/
         mPrivateFlags |= PFLAG_DRAWN;
@@ -5457,6 +5479,33 @@ void View::dispatchConfigurationChanged(Configuration& newConfig){
 }
 
 void View::onConfigurationChanged(Configuration& newConfig){
+}
+
+void View::dispatchCollectViewAttributes(AttachInfo* attachInfo, int visibility) {
+    performCollectViewAttributes(attachInfo, visibility);
+}
+
+void View::performCollectViewAttributes(AttachInfo* attachInfo, int visibility) {
+    if ((visibility & VISIBILITY_MASK) == VISIBLE) {
+        if ((mViewFlags & KEEP_SCREEN_ON) == KEEP_SCREEN_ON) {
+            attachInfo->mKeepScreenOn = true;
+        }
+        attachInfo->mSystemUiVisibility |= mSystemUiVisibility;
+        ListenerInfo* li = mListenerInfo;
+        if (li && (li->mOnSystemUiVisibilityChangeListener!=nullptr)) {
+            attachInfo->mHasSystemUiListeners = true;
+        }
+    }
+}
+
+void View::needGlobalAttributesUpdate(bool force) {
+    AttachInfo* ai = mAttachInfo;
+    if (ai && !ai->mRecomputeGlobalAttributes) {
+        if (force || ai->mKeepScreenOn || (ai->mSystemUiVisibility != 0)
+                || ai->mHasSystemUiListeners) {
+            ai->mRecomputeGlobalAttributes = true;
+        }
+    }
 }
 
 void View::dispatchVisibilityChanged(View& changedView,int visibility){
@@ -6247,7 +6296,7 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
     if (parent) {
         info.setParent(parent);
     }
-#if 1
+
     if (mID != View::NO_ID) {
         View* rootView = getRootView();
         if (rootView == nullptr) {
@@ -6355,7 +6404,6 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
     populateAccessibilityNodeInfoDrawingOrderInParent(info);
     info.setPaneTitle(mAccessibilityPaneTitle);
     info.setHeading(isAccessibilityHeading());
-#endif
 }
 
 void View::addExtraDataToAccessibilityNodeInfo(AccessibilityNodeInfo& info,const std::string& extraDataKey,Bundle arguments){
@@ -6367,40 +6415,42 @@ void View::populateAccessibilityNodeInfoDrawingOrderInParent(AccessibilityNodeIn
         info.setDrawingOrder(0);
         return;
     }
+
     int drawingOrderInParent = 1;
     // Iterate up the hierarchy if parents are not important for a11y
     View* viewAtDrawingLevel = this;
     ViewGroup* parent = getParentForAccessibility();
-#if 0//TODO
+
     while (viewAtDrawingLevel != parent) {
         ViewGroup* currentParent = viewAtDrawingLevel->getParent();
-        if (!(currentParent instanceof ViewGroup)) {
+        if (0/*!(currentParent instanceof ViewGroup)*/) {
             // Should only happen for the Decor
             drawingOrderInParent = 0;
             break;
         } else {
             ViewGroup* parentGroup = (ViewGroup*) currentParent;
-            const int childCount = parentGroup.getChildCount();
+            const int childCount = parentGroup->getChildCount();
             if (childCount > 1) {
-                List<View> preorderedList = parentGroup->buildOrderedChildList();
-                if (preorderedList != null) {
-                    const int childDrawIndex = preorderedList.indexOf(viewAtDrawingLevel);
+                std::vector<View*> preorderedList = parentGroup->buildOrderedChildList();
+                if (preorderedList.size()) {
+                    auto it =std::find(preorderedList.begin(),preorderedList.end(),viewAtDrawingLevel);
+                    const int childDrawIndex = std::distance(preorderedList.begin(),it);////preorderedList.indexOf(viewAtDrawingLevel);
                     for (int i = 0; i < childDrawIndex; i++) {
-                        drawingOrderInParent += numViewsForAccessibility(preorderedList.get(i));
+                        drawingOrderInParent += numViewsForAccessibility(preorderedList.at(i));
                     }
                 } else {
-                    final int childIndex = parentGroup.indexOfChild(viewAtDrawingLevel);
-                    final bool customOrder = parentGroup.isChildrenDrawingOrderEnabled();
-                    final int childDrawIndex = ((childIndex >= 0) && customOrder) ? parentGroup
-                            .getChildDrawingOrder(childCount, childIndex) : childIndex;
-                    final int numChildrenToIterate = customOrder ? childCount : childDrawIndex;
+                    const int childIndex = parentGroup->indexOfChild(viewAtDrawingLevel);
+                    const bool customOrder = parentGroup->isChildrenDrawingOrderEnabled();
+                    const int childDrawIndex = ((childIndex >= 0) && customOrder) ? parentGroup
+                            ->getChildDrawingOrder(childCount, childIndex) : childIndex;
+                    const int numChildrenToIterate = customOrder ? childCount : childDrawIndex;
                     if (childDrawIndex != 0) {
                         for (int i = 0; i < numChildrenToIterate; i++) {
-                            final int otherDrawIndex = (customOrder ?
-                                    parentGroup.getChildDrawingOrder(childCount, i) : i);
+                            const int otherDrawIndex = (customOrder ?
+                                    parentGroup->getChildDrawingOrder(childCount, i) : i);
                             if (otherDrawIndex < childDrawIndex) {
                                 drawingOrderInParent +=
-                                        numViewsForAccessibility(parentGroup.getChildAt(i));
+                                        numViewsForAccessibility(parentGroup->getChildAt(i));
                             }
                         }
                     }
@@ -6409,7 +6459,6 @@ void View::populateAccessibilityNodeInfoDrawingOrderInParent(AccessibilityNodeIn
         }
         viewAtDrawingLevel = (View*) currentParent;
     }
-#endif
     info.setDrawingOrder(drawingOrderInParent);
 }
 

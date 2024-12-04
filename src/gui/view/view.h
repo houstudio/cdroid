@@ -815,6 +815,9 @@ protected:
     bool isOnScrollbarThumb(int x,int y);
     bool isDraggingScrollBar()const;
     bool isVisibleToUser(Rect* boundInView);
+    void dispatchCollectViewAttributes(AttachInfo* attachInfo, int visibility);
+    void performCollectViewAttributes(AttachInfo* attachInfo, int visibility);
+    void needGlobalAttributesUpdate(bool force);
     virtual void onConfigurationChanged(Configuration& newConfig);
     virtual bool overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX,
               int  scrollRangeY, int maxOverScrollX, int maxOverScrollY, bool isTouchEvent);

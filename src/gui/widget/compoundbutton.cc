@@ -293,7 +293,7 @@ std::string CheckBox::getAccessibilityClassName()const{
 DECLARE_WIDGET2(RadioButton,"cdroid:attr/radioButtonStyle")
 RadioButton::RadioButton(const std::string&txt,int w,int h)
   :CompoundButton(txt,w,h){
-#if FUNCTION_AS_CHECKABLE     
+#if FUNCTION_AS_CHECKABLE
     toggle = [this](){
         if(!isChecked())doSetChecked(true);
     };
