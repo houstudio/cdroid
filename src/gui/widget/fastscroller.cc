@@ -10,7 +10,8 @@ namespace cdroid{
 
 FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
     mList = listView;
-    mDecorAnimation = nullptr;
+    mDecorAnimation  = nullptr;
+    mPreviewAnimation= nullptr;
     mOldItemCount  = listView->getCount();
     mOldChildCount = listView->getChildCount();
     mHeaderCount   = 0;
@@ -68,6 +69,7 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
 
 FastScroller::~FastScroller(){
     delete mDecorAnimation;
+    delete mPreviewAnimation;
     //do not delete mOverlay and its children
     //they are created/freed by View/ViewGroup,
 }
@@ -775,6 +777,7 @@ bool FastScroller::transitionPreviewLayout(int sectionIndex) {
 
     if (mPreviewAnimation != nullptr) {
         mPreviewAnimation->cancel();
+        delete mPreviewAnimation;
     }
 
     // Cross-fade preview text.
