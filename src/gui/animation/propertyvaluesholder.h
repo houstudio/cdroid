@@ -75,6 +75,7 @@ public:
     static PropertyValuesHolder*ofInt(Property*,const std::vector<int>&);
     static PropertyValuesHolder*ofFloat(const std::string&name,const std::vector<float>&);
     static PropertyValuesHolder*ofFloat(Property*prop,const std::vector<float>&);
+    static PropertyValuesHolder*ofObject(const std::string&propertyName,const std::vector<void*>&);
 };
 
 typedef PropertyValuesHolder  IntPropertyValuesHolder;

@@ -19,24 +19,27 @@ private:
     friend class AnimatorSet;
     static float sDurationScale;
     //static TimeInterpolator sDefaultInterpolator = new AccelerateDecelerateInterpolator();
-    int64_t mPauseTime;
     bool mResumed = false;
     bool mReversing;
-    float mOverallFraction = .0f;
-    float mCurrentFraction = .0f;
-    int64_t mLastFrameTime = -1;
-    int64_t mFirstFrameTime = -1;
     bool mRunning = false;
     bool mStarted = false;
     bool mStartListenersCalled = false;
     bool mAnimationEndRequested = false;
+    bool mSelfPulse = true;
+    bool mSuppressSelfPulseRequested = false;
+
+    float mOverallFraction = 0.f;
+    float mCurrentFraction = 0.f;
+    float mDurationScale = -1.f;
+
+    int64_t mPauseTime;
+    int64_t mLastFrameTime = -1;
+    int64_t mFirstFrameTime= -1;
+
     long mDuration = 300;
     long mStartDelay = 0;
     int mRepeatCount = 0;
     int mRepeatMode = RESTART;
-    bool mSelfPulse = true;
-    bool mSuppressSelfPulseRequested = false;
-    float mDurationScale = -1.f;
     TimeInterpolator* mInterpolator = nullptr;
     static TimeInterpolator* sDefaultInterpolator;
     std::vector<AnimatorUpdateListener> mUpdateListeners;
@@ -81,6 +84,7 @@ public:
     static ValueAnimator* ofArgb(const std::vector<int>&);
     static ValueAnimator* ofFloat(const std::vector<float>&);
     static ValueAnimator* ofPropertyValuesHolder(const std::vector<PropertyValuesHolder*>&);
+
     virtual void setValues(const std::vector<PropertyValuesHolder*>&);
     virtual void setIntValues(const std::vector<int>&);
     virtual void setFloatValues(const std::vector<float>&);

@@ -1,9 +1,10 @@
 #include <animation/propertyvaluesholder.h>
-#include "cdlog.h"
+#include <porting/cdlog.h>
+
 namespace cdroid{
 
 PropertyValuesHolder::PropertyValuesHolder(){
-    mProperty=nullptr;
+    mProperty = nullptr;
 }
 
 PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
@@ -16,7 +17,7 @@ PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
 }
 
 PropertyValuesHolder::PropertyValuesHolder(Property*prop){
-    mProperty=prop;
+    mProperty = prop;
 }
 
 PropertyValuesHolder::PropertyValuesHolder(const std::string&name){
@@ -67,7 +68,6 @@ void PropertyValuesHolder::evaluate(AnimateValue& out, const AnimateValue& from,
     }
 }
 
-
 void PropertyValuesHolder::setValues(const std::vector<int>&values){
     mDataSource.resize(values.size());
     for(size_t i=0;i<values.size();i++)
@@ -76,13 +76,13 @@ void PropertyValuesHolder::setValues(const std::vector<int>&values){
 
 void PropertyValuesHolder::setValues(const std::vector<uint32_t>&values){
     mDataSource.resize(values.size());
-    for(size_t i=0;i<values.size();i++)
+    for(size_t i = 0;i < values.size();i++)
        mDataSource[i].emplace<uint32_t>(values.at(i));
 }
 
 void PropertyValuesHolder::setValues(const std::vector<float>&values){
     mDataSource.resize(values.size());
-    for(size_t i=0;i<values.size();i++)
+    for(size_t i = 0;i < values.size();i++)
        mDataSource[i].emplace<float>(values.at(i));
 }
 
@@ -98,32 +98,38 @@ void PropertyValuesHolder::setFraction(void*target,float fraction){
     }
     if(mOnPropertyChangedListener)mOnPropertyChangedListener(mPropertyName,target,fraction);
 }
+
 const AnimateValue& PropertyValuesHolder::getAnimatedValue()const{
     return mAnimateValue;
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofInt(const std::string&name,const std::vector<int>&values){
-    PropertyValuesHolder*ip = new PropertyValuesHolder(name);
-    ip->setValues(values);
-    return ip;
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(name);
+    pvh->setValues(values);
+    return pvh;
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofInt(Property*prop,const std::vector<int>&values){
-    PropertyValuesHolder*ip = new PropertyValuesHolder(prop);
-    ip->setValues(values);
-    return ip; 
+    PropertyValuesHolder*pch = new PropertyValuesHolder(prop);
+    pch->setValues(values);
+    return pch;
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofFloat(const std::string&name,const std::vector<float>&values){
-    PropertyValuesHolder*fp=new PropertyValuesHolder(name);
-    fp->setValues(values);
-    return fp;
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(name);
+    pvh->setValues(values);
+    return pvh;
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofFloat(Property*prop,const std::vector<float>&values){
-    PropertyValuesHolder*fp=new PropertyValuesHolder(prop);
-    fp->setValues(values);
-    return fp;
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
+    pvh->setValues(values);
+    return pvh;
+}
+
+PropertyValuesHolder*PropertyValuesHolder::ofObject(const std::string&propertyName,const std::vector<void*>&values){
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(propertyName);
+    return pvh;
 }
 
 }//endof namespace

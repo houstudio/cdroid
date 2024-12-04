@@ -17,8 +17,8 @@ ValueAnimator::ValueAnimator(){
     mStarted = false;
     mStartTime = -1;
     mLastFrameTime = -1;
-    mFirstFrameTime = -1;
-    mSeekFraction = -1;
+    mFirstFrameTime= -1;
+    mSeekFraction  = -1;
     mOverallFraction = 0.f;
     mCurrentFraction = 0.f;
     mSuppressSelfPulseRequested = false;
@@ -38,15 +38,15 @@ ValueAnimator::ValueAnimator(const ValueAnimator&o){
     mInitialized = false;
     mStarted = false;
     mRunning = false;
-    mPaused = false;
+    mPaused  = false;
     mResumed = false;
     mStartListenersCalled = false;
     mStartTime = -1;
+    mPauseTime = -1;
+    mLastFrameTime  = -1;
+    mFirstFrameTime = -1;
     mStartTimeCommitted = false;
     mAnimationEndRequested = false;
-    mPauseTime = -1;
-    mLastFrameTime = -1;
-    mFirstFrameTime = -1;
     mOverallFraction = 0;
     mCurrentFraction = 0;
     mSelfPulse = true;
@@ -110,34 +110,31 @@ ValueAnimator* ValueAnimator::ofPropertyValuesHolder(const std::vector<PropertyV
 }
 
 void ValueAnimator::setIntValues(const std::vector<int>&values){
+    if(values.empty())return;
     if(mValues.size()==0){
-        IntPropertyValuesHolder*prop=new IntPropertyValuesHolder();
-        prop->setValues(values);
-        setValues({prop});
+        setValues({PropertyValuesHolder::ofInt("",values)});
     }else{
-        IntPropertyValuesHolder*prop=(IntPropertyValuesHolder*)mValues[0];
-        prop->setValues(values);
+        IntPropertyValuesHolder*valuesHolder = (IntPropertyValuesHolder*)mValues[0];
+        valuesHolder->setValues(values);
     }
 }
 
 void ValueAnimator::setFloatValues(const std::vector<float>&values){
+    if(values.empty())return;
     if(mValues.size()==0){
-        FloatPropertyValuesHolder*prop=new FloatPropertyValuesHolder();
-        prop->setValues(values);
-        setValues({prop});
+        setValues({PropertyValuesHolder::ofFloat("",values)});
     }else{
-        FloatPropertyValuesHolder*prop=(FloatPropertyValuesHolder*)mValues[0];
-        prop->setValues(values);
+        FloatPropertyValuesHolder*valuesHolder = (FloatPropertyValuesHolder*)mValues[0];
+        valuesHolder->setValues(values);
     }
 }
 
 void ValueAnimator::setValues(const std::vector<PropertyValuesHolder*>&values){
     mValues = values;
+    mValuesMap.clear();
     for(auto prop:values){
-        if(prop==nullptr)continue;
-        if(mValuesMap.find(prop->getPropertyName())!=mValuesMap.end())
-            LOG(ERROR)<< prop->getPropertyName()<<" Has exists!";
-        if(prop)mValuesMap.insert(std::map<const std::string,PropertyValuesHolder*>::value_type(prop->getPropertyName(),prop));
+        PropertyValuesHolder*valuesHolder = prop;
+        mValuesMap.insert({valuesHolder->getPropertyName(),valuesHolder});
     }
     mInitialized = false;
 }
@@ -155,7 +152,7 @@ PropertyValuesHolder* ValueAnimator::getValues(int idx){
 }
 
 PropertyValuesHolder* ValueAnimator::getValues(const std::string&propName){
-    auto itr=mValuesMap.find(propName);
+    auto itr = mValuesMap.find(propName);
     if(itr==mValuesMap.end())return nullptr;
     return itr->second;
 }

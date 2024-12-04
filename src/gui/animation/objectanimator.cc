@@ -4,14 +4,15 @@
 namespace cdroid{
 
 ObjectAnimator::ObjectAnimator(){
-    mProperty=nullptr;
+    mProperty = nullptr;
 }
 
 ObjectAnimator::~ObjectAnimator(){
-    delete  mProperty;
+    delete mProperty;
 }
 
-ObjectAnimator::ObjectAnimator(void* target,const std::string& propertyName){
+ObjectAnimator::ObjectAnimator(void* target,const std::string& propertyName)
+  :ObjectAnimator(){
     setTarget(target);
     setPropertyName(propertyName);
 }
@@ -142,33 +143,33 @@ bool ObjectAnimator::shouldAutoCancel(const AnimationHandler::AnimationFrameCall
 }
 
 ObjectAnimator* ObjectAnimator::ofInt(void* target,const std::string& propertyName,const std::vector<int>&values){
-    ObjectAnimator*anim=new ObjectAnimator(target,propertyName);
+    ObjectAnimator*anim = new ObjectAnimator(target,propertyName);
     anim->setIntValues(values);
     return anim;
 }
 
 ObjectAnimator* ObjectAnimator::ofFloat(void* target,const std::string& propertyName, const std::vector<float>&values){
-    ObjectAnimator*anim=new ObjectAnimator(target,propertyName);
+    ObjectAnimator*anim = new ObjectAnimator(target,propertyName);
     anim->setFloatValues(values);
     return anim;
 }
 
 ObjectAnimator* ObjectAnimator::ofInt(void*target,Property*prop,const std::vector<int>&values){
-    ObjectAnimator*anim=new ObjectAnimator();
+    ObjectAnimator*anim = new ObjectAnimator();
     anim->setTarget(target);
     anim->setIntValues(values);
     return anim;
 }
 
 ObjectAnimator* ObjectAnimator::ofFloat(void*target,Property*prop,const std::vector<float>&values){
-    ObjectAnimator*anim=new ObjectAnimator();
+    ObjectAnimator*anim = new ObjectAnimator();
     anim->setTarget(target);
     anim->setFloatValues(values);
     return anim;
 }
 
 ObjectAnimator* ObjectAnimator::ofPropertyValuesHolder(void*target,const std::vector<PropertyValuesHolder*>&values){
-    ObjectAnimator*anim=new ObjectAnimator();
+    ObjectAnimator*anim = new ObjectAnimator();
     anim->setTarget(target);
     anim->setValues(values);
     return anim;
