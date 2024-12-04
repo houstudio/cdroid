@@ -445,7 +445,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
         case Display::ROTATION_270: axis = MotionEvent::AXIS_Y; value = mMaxX - value; break;//tested
         }
 
-        if(mInvertX)value = mMaxX - value + mMinX;
+        if(mInvertX)value = mMaxX - mMinX - value;
         if(mSwitchXY){
             value = (value * mScreenWidth)/mTPHeight;
             axis= MotionEvent::AXIS_Y;
@@ -462,7 +462,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
         case Display::ROTATION_270: axis = MotionEvent::AXIS_X; value -= mMinY ; break;
         }
 
-        if(mInvertY)value = mMaxY - value + mMinY;
+        if(mInvertY)value = mMaxY - mMinY - value;
         if(mSwitchXY){
             value = (value * mScreenHeight)/mTPWidth;
             axis= MotionEvent::AXIS_X;
