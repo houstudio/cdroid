@@ -39,7 +39,6 @@
 #include <widget/compoundbutton.h>
 #include <widget/togglebutton.h>
 #include <widget/switch.h>
-#include <widget/checkbox.h>
 #include <widget/radiobutton.h>
 #include <widget/radiogroup.h>
 #include <widget/imagebutton.h>

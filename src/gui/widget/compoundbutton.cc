@@ -271,5 +271,20 @@ void CompoundButton::onDraw(Canvas&canvas){
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
+DECLARE_WIDGET2(CheckBox,"cdroid:attr/checkboxStyle")
+CheckBox::CheckBox(Context*ctx,const AttributeSet& attrs)
+    :CompoundButton(ctx,attrs){
 }
+
+CheckBox::CheckBox(const std::string&txt,int w,int h)
+    :CompoundButton(txt,w,h){
+    setButtonDrawable("cdroid:drawable/btn_check.xml");
+}
+
+std::string CheckBox::getAccessibilityClassName()const{
+    return "CheckBox";
+}
+
+}/*endof namespace*/
 

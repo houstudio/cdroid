@@ -54,5 +54,13 @@ public:
     void setOnCheckedChangeWidgetListener(OnCheckedChangeListener listener);
     void drawableHotspotChanged(float x,float y)override;
 };
+
+class CheckBox:public CompoundButton{
+public:
+    CheckBox(Context*ctx,const AttributeSet& attrs);
+    CheckBox(const std::string&txt,int w,int h);
+    std::string getAccessibilityClassName()const override;
+};
+
 }
 #endif

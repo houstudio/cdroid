@@ -1588,7 +1588,7 @@ void View::dispatchCancelPendingInputEvents() {
     mPrivateFlags3 &= ~PFLAG3_CALLED_SUPER;
     onCancelPendingInputEvents();
     if ((mPrivateFlags3 & PFLAG3_CALLED_SUPER) != PFLAG3_CALLED_SUPER) {
-        FATAL("View did not call through to super.onCancelPendingInputEvents()");
+        throw std::runtime_error("View did not call through to super.onCancelPendingInputEvents()");
     }
 }
 
@@ -1607,7 +1607,7 @@ void View::dispatchSaveInstanceState(SparseArray<Parcelable*>& container){
         mPrivateFlags &= ~PFLAG_SAVE_STATE_CALLED;
         Parcelable* state = onSaveInstanceState();
         if ((mPrivateFlags & PFLAG_SAVE_STATE_CALLED) == 0) {
-            LOGE("Derived class did not call super.onSaveInstanceState()");
+            throw std::runtime_error("Derived class did not call super.onSaveInstanceState()");
         }
         if (state!=nullptr){
             LOGI("Freezing %d %p",mID,state);
