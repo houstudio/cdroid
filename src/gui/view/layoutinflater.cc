@@ -69,17 +69,28 @@ LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name)
 bool LayoutInflater::registerInflater(const std::string&name,const std::string&defstyle,LayoutInflater::ViewInflater inflater) {
     LayoutInflater::INFLATERMAPPER& maps = getInflaterMap();
     LayoutInflater::STYLEMAPPER& smap = getStyleMap();
-    auto it = maps.find(name);
-    if(it!=maps.end() ){
-        it->second = inflater;
+    auto flaterIter = maps.find(name);
+    auto styleIter = smap.find(name);
+#if 1 
+    /*disable widget inflater's hack*/
+    if(flaterIter!=maps.end() ){
+        LOGW("%s is registed to %p",name.c_str(),flaterIter->second);
+        return false;
+    }
+    maps.insert(INFLATERMAPPER::value_type(name,inflater));
+    smap.insert(std::pair<const std::string,const std::string>(name,defstyle));
+#else
+    if(flaterIter!=maps.end() ){
+        flaterIter->second = inflater;
+        LOGI("%s is hacked to %p",name.c_str(),flaterIter->second);
     }else{
         maps.insert(INFLATERMAPPER::value_type(name,inflater));
     }
-    auto sit = smap.find(name);
-    if(sit!=smap.end())
-        sit->second = defstyle;
+    if(styleIter!=smap.end())
+        styleIter->second = defstyle;
     else
         smap.insert(std::pair<const std::string,const std::string>(name,defstyle));
+#endif
     return true;
 }
 
