@@ -630,7 +630,7 @@ protected:
     virtual bool performAccessibilityAction(int action, Bundle args);
     virtual bool performAccessibilityActionForItem(View* view, int action,Bundle args);
     void setExactMeasureSpecsFrom(RecyclerView* recyclerView);
-    bool shouldMeasureTwice();
+    virtual bool shouldMeasureTwice();
     bool hasFlexibleChildInBothOrientations();
 public:
     DECLARE_UIEVENT(void,LayoutPrefetchRegistry,int,int);

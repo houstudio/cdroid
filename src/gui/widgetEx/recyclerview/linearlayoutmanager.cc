@@ -1195,8 +1195,8 @@ void LinearLayoutManager::layoutChunk(RecyclerView::Recycler& recycler, Recycler
 }
 
 bool LinearLayoutManager::shouldMeasureTwice() {
-    return getHeightMode() != MeasureSpec::EXACTLY
-            && getWidthMode() != MeasureSpec::EXACTLY
+    return (getHeightMode() != MeasureSpec::EXACTLY)
+            && (getWidthMode() != MeasureSpec::EXACTLY)
             && hasFlexibleChildInBothOrientations();
 }
 

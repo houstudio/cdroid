@@ -98,7 +98,7 @@ protected:
             RecyclerView::State& state, bool stopOnFocusable);
     virtual void layoutChunk(RecyclerView::Recycler& recycler, RecyclerView::State& state,
             LayoutState& layoutState, LayoutChunkResult& result);
-    bool shouldMeasureTwice();
+    bool shouldMeasureTwice()override;
     int convertFocusDirectionToLayoutDirection(int focusDirection);
     View* findFirstVisibleChildClosestToStart(bool completelyVisible,bool acceptPartiallyVisible);
     View* findFirstVisibleChildClosestToEnd(bool completelyVisible,bool acceptPartiallyVisible);

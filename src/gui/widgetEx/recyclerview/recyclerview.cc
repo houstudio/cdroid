@@ -6014,7 +6014,7 @@ bool RecyclerView::LayoutManager::hasFlexibleChildInBothOrientations() {
     const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
-	ViewGroup::LayoutParams* lp = child->getLayoutParams();
+        ViewGroup::LayoutParams* lp = child->getLayoutParams();
         if (lp->width < 0 && lp->height < 0) {
             return true;
         }

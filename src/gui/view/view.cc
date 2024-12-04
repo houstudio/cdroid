@@ -1232,8 +1232,8 @@ void View::scrollTo(int x,int y){
         const int oY = mScrollY;
         mScrollX = x;
         mScrollY = y;
+        invalidateParentCaches();
         onScrollChanged(mScrollX, mScrollY, oX, oY);
-        invalidate(true);
         if(!awakenScrollBars(0,true))
             postInvalidateOnAnimation();
     }
