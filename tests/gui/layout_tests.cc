@@ -70,8 +70,7 @@ TEST_F(LAYOUT,radiogroup){
     AttributeSet attrs;
     RadioGroup *rg=new RadioGroup(500,300);//&app,attrs);
     for(int i=0;i<sizeof(captions)/sizeof(captions[0]);i++){
-        RadioButton*rb=new RadioButton(200,60);
-        rb->setText(captions[i]);
+        RadioButton*rb=new RadioButton(captions[i],200,60);
         rb->setId(100+i);
         rb->setPadding(0,8,0,8);
         Drawable*d=Drawable::inflate(nullptr,"/home/houzh/Miniwin/src/gui/res/drawable/btn_radio.xml");

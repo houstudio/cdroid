@@ -794,7 +794,8 @@ void ViewPager2::PageAwareAccessibilityProvider::onInitialize(CompositeOnPageCha
     class MyDataSetChangeObserver:public ViewPager2::DataSetChangeObserver{
         PageAwareAccessibilityProvider*mPP;
     public:
-        MyDataSetChangeObserver(ViewPager2*v,PageAwareAccessibilityProvider*p):DataSetChangeObserver(v),mPP(p){
+        MyDataSetChangeObserver(ViewPager2*v,PageAwareAccessibilityProvider*p)
+            :DataSetChangeObserver(v),mPP(p){
         }
         void onChanged()override{
             mPP->updatePageAccessibilityActions();

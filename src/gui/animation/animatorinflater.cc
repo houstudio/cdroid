@@ -54,7 +54,13 @@ public:
         }else if(strcmp(name,"set")==0){
             an.animator = new AnimatorSet();
             pd->mChildren.clear();
+        }else{
+            an.animator = AnimatorInflater::loadObjectAnimator(pd->context,an.atts);
         }
+
+        if( (pd->items.size()==0) && (pd->statelistAnimator==nullptr) )
+            pd->animator = an.animator;
+
         LOGD("%s",(std::string(pd->items.size()*4,' ')+name).c_str());
         pd->items.push_back(an);
     }
@@ -70,17 +76,20 @@ public:
                 pd->mChildren.push_back(back.animator);
             }
         }else if((strcmp(name,"set")==0)&&pd->items.size()){
-            AnimNode* parent = pd->fromTop(-2);
+            AnimNode* parent = pd->fromTop(pd->statelistAnimator?-2:-1);
             if(parent->name.compare("item")){
                 const int together = back.atts.getInt("ordering",std::map<const std::string,int>{
                     {"together",0}, {"sequentially",1}},0);
                 AnimatorSet*aset = (AnimatorSet*)parent->animator;
-                if(together==0)
-                    aset->playTogether(pd->mChildren);
-                else
-                    aset->playSequentially(pd->mChildren);
+                if(together==0) aset->playTogether(pd->mChildren);
+                else aset->playSequentially(pd->mChildren);
             }else{
                 parent->animator=back.animator;
+            }
+        }else{
+            AnimNode* parent = pd->fromTop(pd->statelistAnimator?-2:-1);
+            if(parent&&(parent->name.compare("set")==0)){
+                pd->mChildren.push_back(back.animator);
             }
         }
         pd->items.pop_back();

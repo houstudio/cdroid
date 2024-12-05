@@ -27,7 +27,7 @@ TEST_F(ANIMATORINFLATOR,statelistanimator2){
 
 TEST_F(ANIMATORINFLATOR,fade_in){
     App app;
-    Animator*sl=AnimatorInflater::loadAnimator(&app,"cdroid:anim/fade_in");
+    Animator*sl=AnimatorInflater::loadAnimator(&app,"cdroid:anim/fad_in");
     ASSERT_NE(sl,(void*)nullptr);
     app.exec();
 }
