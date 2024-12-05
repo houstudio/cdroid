@@ -798,7 +798,6 @@ void ViewPager2::PageAwareAccessibilityProvider::onInitialize(CompositeOnPageCha
         }
         void onChanged()override{
             mPP->updatePageAccessibilityActions();
-            LOGD("============================================");
         }
     };
 
@@ -816,7 +815,7 @@ bool ViewPager2::PageAwareAccessibilityProvider::handlesGetAccessibilityClassNam
 
 std::string ViewPager2::PageAwareAccessibilityProvider::onGetAccessibilityClassName() {
     if (!handlesGetAccessibilityClassName()) {
-        throw std::runtime_error("IllegalStateExceptio");
+        throw std::runtime_error("IllegalStateException");
     }
     return "androidx.viewpager.widget.ViewPager";
 }
