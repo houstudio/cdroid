@@ -231,6 +231,15 @@ int AttributeSet::getGravity(const std::string&key,int defvalue)const{
     return gs.size()?gravity:defvalue;
 }
 
+int AttributeSet::getDimension(const std::string&key,int def)const{
+    const char*p;
+    const std::string v = getString(key);
+    if( v.empty() ) return def;
+    def = std::strtol(v.c_str(),nullptr,10);
+    p   = strpbrk(v.c_str(),"sdp");
+    return def;
+}
+
 int AttributeSet::getDimensionPixelSize(const std::string&key,int def)const{
     const char*p;
     const std::string v = getString(key);
@@ -240,9 +249,9 @@ int AttributeSet::getDimensionPixelSize(const std::string&key,int def)const{
     if(p){
         const DisplayMetrics& dm=mContext->getDisplayMetrics();
         if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)
-	    def = (dm.density * def /*+0.5f*/);
+            def = (dm.density * def /*+0.5f*/);
         if(strncmp(p,"sp",2)==0)
-	    def = int(dm.scaledDensity * def /*+0.5f*/);
+            def = int(dm.scaledDensity * def /*+0.5f*/);
     }
     return def;
 }
