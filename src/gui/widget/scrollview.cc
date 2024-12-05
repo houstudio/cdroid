@@ -609,7 +609,7 @@ bool ScrollView::onGenericMotionEvent(MotionEvent& event) {
 }
 
 void ScrollView::onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY) {
-    if (mScroller->isFinished()) {
+    if (!mScroller->isFinished()) {
         const int oldX = mScrollX;
         const int oldY = mScrollY;
         mScrollX = scrollX;
