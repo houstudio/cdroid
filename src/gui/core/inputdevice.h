@@ -3,6 +3,7 @@
 #include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <core/bitset.h>
+#include <core/rect.h>
 #include <functional>
 #include <memory>
 #include <unordered_map>
@@ -377,6 +378,8 @@ public:
 };
 
 class TouchDevice:public InputDevice{
+private:
+    int parseVirtualKeys(const std::string&);
 protected:
     MotionEvent* mEvent;
     nsecs_t mDownTime;
@@ -403,6 +406,7 @@ protected:
     std::vector<PointerCoords>mPointerCoordsBak;
     std::vector<PointerProperties>mPointerProps;
     std::vector<PointerProperties>mPointerPropsBak;
+    std::vector<std::pair<Rect,int>>mVirtualKeyMap;
     int getActionByBits(int&pointIndex);
     void setAxisValue(int axis,int value,bool isRelative);
     int isValidEvent(int type,int code,int value)override;

@@ -142,6 +142,46 @@ bool ObjectAnimator::shouldAutoCancel(const AnimationHandler::AnimationFrameCall
     return false;    
 }
 
+void ObjectAnimator::setupStartValues() {
+    initAnimation();
+
+    void* target = getTarget();
+    if (target != nullptr) {
+        size_t numValues = mValues.size();
+        for (size_t i = 0; i < numValues; ++i) {
+            mValues[i]->setupStartValue(target);
+        }
+    }
+}
+
+void ObjectAnimator::setupEndValues() {
+    initAnimation();
+
+    void* target = getTarget();
+    if (target != nullptr) {
+        size_t numValues = mValues.size();
+        for (size_t i = 0; i < numValues; ++i) {
+            mValues[i]->setupEndValue(target);
+        }
+    }
+}
+
+void ObjectAnimator::animateValue(float fraction){
+    void* target = getTarget();
+    if (mTarget != nullptr){// && (target == nullptr)) {
+        // We lost the target reference, cancel and clean up. Note: we allow null target if the
+        /// target has never been set.
+        cancel();
+        return;
+    }
+
+    ValueAnimator::animateValue(fraction);
+    size_t numValues = mValues.size();
+    for (size_t i = 0; i < numValues; ++i) {
+        mValues[i]->setAnimatedValue(target);
+    }
+}
+
 ObjectAnimator* ObjectAnimator::ofInt(void* target,const std::string& propertyName,const std::vector<int>&values){
     ObjectAnimator*anim = new ObjectAnimator(target,propertyName);
     anim->setIntValues(values);

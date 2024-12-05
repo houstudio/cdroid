@@ -6,9 +6,9 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
-#include <cdtypes.h>
 #include <core/color.h>
 #include <core/variant.h>
+#include <animation/property.h>
 //reference:
 //http://androidxref.com/9.0.0_r3/xref/frameworks/base/libs/hwui/PropertyValuesHolder.h
 #if variant_CPP17_OR_GREATER
@@ -26,19 +26,6 @@ inline int lerp(int startValue, int endValue, float fraction) {
     return int(startValue + std::round(fraction * (endValue - startValue)));
 }
 
-class Property{
-public:
-private:
-    std::string mName;
-public:
-    Property(const std::string&name){
-        mName = name;
-    }
-    virtual float get(void* t){return .0;};
-    //virtual void set(void* object, float value);
-    const std::string getName()const{return mName;}
-};
-
 class PropertyValuesHolder{
 public:
     using PropertySetter = std::function<void(const std::string&prop,AnimateValue&v)>;
@@ -52,6 +39,7 @@ protected:
     AnimateValue mStartValue;
     AnimateValue mEndValue;
     AnimateValue mAnimateValue;
+    void setupValue(void*target);
     virtual void evaluate(AnimateValue& out, const AnimateValue& from, const AnimateValue& to, float fraction)const;
 public:
     PropertyValuesHolder();
@@ -70,6 +58,10 @@ public:
     void setValues(const std::vector<float>&values);
     virtual void setFraction(void*target,float fraction);
     const AnimateValue& getAnimatedValue()const;
+
+    void setAnimatedValue(void*target);
+    void setupStartValue(void*target);
+    void setupEndValue(void*target);
 
     static PropertyValuesHolder*ofInt(const std::string&name,const std::vector<int>&);
     static PropertyValuesHolder*ofInt(Property*,const std::vector<int>&);

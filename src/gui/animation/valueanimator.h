@@ -71,7 +71,7 @@ protected:
     virtual bool animateBasedOnTime(int64_t currentTime);
     virtual void animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse);
     void skipToEndValue(bool inReverse);
-    bool isInitialized();
+    virtual bool isInitialized();
     bool pulseAnimationFrame(int64_t frameTime);
 public:
     ValueAnimator();

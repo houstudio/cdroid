@@ -103,6 +103,24 @@ const AnimateValue& PropertyValuesHolder::getAnimatedValue()const{
     return mAnimateValue;
 }
 
+void PropertyValuesHolder::setAnimatedValue(void*target){
+    if(mProperty!=nullptr){
+        mProperty->set(target,0);
+    }
+}
+
+void PropertyValuesHolder::setupValue(void*target/*, Keyframe kf*/){
+    if(mProperty){
+    }else{
+    }
+}
+
+void PropertyValuesHolder::setupStartValue(void*target){
+}
+
+void PropertyValuesHolder::setupEndValue(void*target){
+}
+
 PropertyValuesHolder* PropertyValuesHolder::ofInt(const std::string&name,const std::vector<int>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(name);
     pvh->setValues(values);

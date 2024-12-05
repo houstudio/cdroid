@@ -16,6 +16,11 @@ public:
     ~ObjectAnimator();
     void setTarget(void*target);
     void*getTarget();
+
+    void setupStartValues();
+    void setupEndValues();
+    void animateValue(float fraction)override;
+
     void setPropertyName(const std::string&propertyName);
     void setProperty(Property* property);
     const std::string getPropertyName()const;

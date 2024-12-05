@@ -9,9 +9,10 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include <keylayoutmap.h>
 #include <core/app.h>
+#include <core/tokenizer.h>
 #include <core/windowmanager.h>
+#include <private/keylayoutmap.h>
 #if defined(__linux__)||defined(__unix__)
   #include <linux/input.h>
 #elif defined(_WIN32)||defined(_WIN64)
@@ -389,6 +390,7 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
         mInvertX = mPrefs.getBool(section,"invertX",false);
         mInvertY = mPrefs.getBool(section,"invertY",false);
         mSwitchXY= mPrefs.getBool(section,"switchXY",false);
+        parseVirtualKeys(mPrefs.getString(section,"virtualKeys"));
     }
     mTPWidth = (mMaxX!=mMinX)?std::abs(mMaxX - mMinX):mScreenWidth;
     mTPHeight= (mMaxY!=mMinY)?std::abs(mMaxY - mMinY):mScreenHeight;
@@ -404,6 +406,56 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mDeviceInfo.addSource(SOURCE_CLASS_POINTER);
     LOGI("screen(%d,%d) rotation=%d [%s] X(%d,%d) Y(%d,%d) invert=%d,%d switchXY=%d",mScreenWidth, mScreenHeight,
         display.getRotation(),section.c_str(),mMinX,mMaxX,mMinY,mMaxY,mInvertX,mInvertY,mSwitchXY);
+}
+
+static bool isAllDigits(const std::string& str) {
+    return std::find_if(str.begin(), str.end(), [](char ch) {
+        return !std::isdigit(ch);
+    }) == str.end();
+}
+
+int TouchDevice::parseVirtualKeys(const std::string&content){
+    Tokenizer*tokenizer = nullptr;
+    constexpr const char*delimiters=" ,;\r\n";
+
+    if(content.empty())
+        return 0;
+    LOGD("%s",content.c_str());
+    Tokenizer::fromContents("virtualKeyMap",content.c_str(),&tokenizer);
+    do{
+        Rect rect;
+        int key=0,err=0;
+        std::string token;
+        token = tokenizer->nextToken(delimiters);
+        if(!isAllDigits(token)) goto Error;
+        rect.left = std::stoi(token);
+        tokenizer->skipDelimiters(delimiters);
+
+        token= tokenizer->nextToken(delimiters);
+        if(!isAllDigits(token)) goto Error;
+        rect.top = std::stoi(token);
+        tokenizer->skipDelimiters(delimiters);
+
+        token = tokenizer->nextToken(delimiters);
+        if(!isAllDigits(token)) goto Error;
+        rect.width = std::stoi(token);
+        tokenizer->skipDelimiters(delimiters);
+
+        token= tokenizer->nextToken(delimiters);
+        if(!isAllDigits(token)) goto Error;
+        rect.height= std::stoi(token);
+        tokenizer->skipDelimiters(delimiters);
+
+        token= tokenizer->nextToken(delimiters);
+        key = KeyEvent::getKeyCodeFromLabel(token.c_str());
+        tokenizer->skipDelimiters(delimiters);
+        if(key==0)goto Error;
+        LOGD("area(%d,%d,%d,%d)key %d",rect.left,rect.top,rect.width,rect.height,key);
+        mVirtualKeyMap.push_back({rect,key});
+    }while(!tokenizer->isEof());
+Error:
+    delete tokenizer;
+    return (int)mVirtualKeyMap.size();
 }
 
 int TouchDevice::ABS2AXIS(int absaxis){
