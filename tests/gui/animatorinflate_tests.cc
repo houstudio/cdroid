@@ -18,9 +18,17 @@ TEST_F(ANIMATORINFLATOR,statelistanimator1){
     ASSERT_NE(sl,(void*)nullptr);
     app.exec();
 }
+
 TEST_F(ANIMATORINFLATOR,statelistanimator2){
     App app;
     StateListAnimator*sl=AnimatorInflater::loadStateListAnimator(&app,"cdroid:animator/test2.xml");
+    ASSERT_NE(sl,(void*)nullptr);
+    app.exec();
+}
+
+TEST_F(ANIMATORINFLATOR,test2){
+    App app;
+    StateListAnimator*sl=AnimatorInflater::loadStateListAnimator(&app,"cdroid:animator/test2");
     ASSERT_NE(sl,(void*)nullptr);
     app.exec();
 }
@@ -37,7 +45,5 @@ TEST_F(ANIMATORINFLATOR,slide_in_left){
     ASSERT_NE(sl,(void*)nullptr);
     app.exec();
 }
-
-
 
 
