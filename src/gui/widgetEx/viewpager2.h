@@ -12,7 +12,7 @@ class FakeDrag;
 class ScrollEventAdapter;
 class CompositeOnPageChangeCallback;
 class PageTransformerAdapter;
-
+class AccessibilityViewCommand;
 class ViewPager2:public ViewGroup {
 public:
     class PageTransformer {
@@ -39,12 +39,13 @@ public:
 private:
     class RecyclerViewImpl;
     class LinearLayoutManagerImpl;
-    class RecyclerViewImpl;
     class PagerSnapHelperImpl;
+    class AccessibilityProvider;
+    class BasicAccessibilityProvider;
+    class PageAwareAccessibilityProvider;
+    class DataSetChangeObserver;
     RecyclerView::AdapterDataObserver* mCurrentItemDataSetChangeObserver;
     // reused in layout(...)
-    Rect mTmpContainerRect;
-    Rect mTmpChildRect;
     Runnable mSmoothScrollToPositionRunnable;
     CompositeOnPageChangeCallback* mExternalPageChangeCallbacks;
     LinearLayoutManager* mLayoutManager;
@@ -63,9 +64,8 @@ protected:
     bool mCurrentItemDirty = false;
     RecyclerViewImpl* mRecyclerView;
     ScrollEventAdapter* mScrollEventAdapter;
-    //AccessibilityProvider* mAccessibilityProvider; // to avoid creation of a synthetic accessor
+    AccessibilityProvider* mAccessibilityProvider; //to avoid creation of a synthetic accessor
 private:
-    class RecyclerViewImpl;
     void initialize(Context* context, const AttributeSet& attrs);
     void setOrientation(Context* context,const AttributeSet& attrs);
     void restorePendingState();
@@ -87,7 +87,6 @@ protected:
 public:
     ViewPager2(int w,int h);
     ViewPager2(Context* context, const AttributeSet& attrs);
-    //CharSequence getAccessibilityClassName()override;
 
     void setAdapter(RecyclerView::Adapter* adapter);
     void registerCurrentItemDataSetTracker(RecyclerView::Adapter* adapter);
@@ -116,8 +115,8 @@ public:
     void setPageTransformer(PageTransformer* transformer);
     void requestTransform();
     View&setLayoutDirection(int layoutDirection)override;
-    //void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info)override;
-    //bool performAccessibilityAction(int action, Bundle arguments);
+    void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info)override;
+    bool performAccessibilityAction(int action, Bundle arguments)override;
 
     void addItemDecoration(RecyclerView::ItemDecoration* decor);
     void addItemDecoration(RecyclerView::ItemDecoration* decor, int index);
@@ -126,88 +125,71 @@ public:
     void invalidateItemDecorations();
     void removeItemDecorationAt(int index);
     void removeItemDecoration(RecyclerView::ItemDecoration* decor);
-#if 0
-    private class AccessibilityProvider {
-        void onInitialize(@NonNull CompositeOnPageChangeCallback pageChangeEventDispatcher,RecyclerView recyclerView);
-        virtual bool handlesGetAccessibilityClassName();
-        virtual String onGetAccessibilityClassName() {
-        virtual void onRestorePendingState(){}
-        virtual void onAttachAdapter(@Nullable Adapter<?> newAdapter){}
-        virtual void onDetachAdapter(@Nullable Adapter<?> oldAdapter){}
-        virtual void onSetOrientation(){}
-        virtual void onSetNewCurrentItem(){}
-        virtual void onSetUserInputEnabled(){}
-        virtual void onSetLayoutDirection(){}
-        virtual void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) { }
-        virtual bool handlesPerformAccessibilityAction(int action, Bundle arguments) {
-            return false;
-        }
-
-        virtual bool onPerformAccessibilityAction(int action, Bundle arguments) {
-            throw new IllegalStateException("Not implemented.");
-        }
-
-        virtual void onRvInitializeAccessibilityEvent(@NonNull AccessibilityEvent event){} 
-
-        virtual bool handlesLmPerformAccessibilityAction(int action) {
-            return false;
-        }
-
-        virtual bool onLmPerformAccessibilityAction(int action) {
-            throw new IllegalStateException("Not implemented.");
-        }
-
-        virtual void onLmInitializeAccessibilityNodeInfo(@NonNull AccessibilityNodeInfoCompat info) {
-        }
-
-        virtual bool handlesRvGetAccessibilityClassName() {
-            return false;
-        }
-
-        virtual CharSequence onRvGetAccessibilityClassName() {
-            throw new IllegalStateException("Not implemented.");
-        }
-    };
-
-    class BasicAccessibilityProvider:public AccessibilityProvider {
-    public:
-	bool handlesLmPerformAccessibilityAction(int action)override;
-        bool onLmPerformAccessibilityAction(int action)override
-        void onLmInitializeAccessibilityNodeInfo(AccessibilityNodeInfoCompat info)override
-
-        bool handlesRvGetAccessibilityClassName()override
-        CharSequence onRvGetAccessibilityClassName()override;
-    };
-
-    class PageAwareAccessibilityProvider:public AccessibilityProvider {
-    private:
-	AccessibilityViewCommand mActionPageForward;
-        AccessibilityViewCommand mActionPageBackward;
-        RecyclerView::AdapterDataObserver mAdapterDataObserver;
-        void addCollectionInfo(AccessibilityNodeInfo info);
-        void addScrollActions(AccessibilityNodeInfo info);
-    protected:
-        void setCurrentItemFromAccessibilityCommand(int item);
-        void updatePageAccessibilityActions();
-    public:
-        void onInitialize(@NonNull CompositeOnPageChangeCallback pageChangeEventDispatcher,
-                @NonNull RecyclerView recyclerView)override;
-        bool handlesGetAccessibilityClassName()override;
-        String onGetAccessibilityClassName()override;
-        void onRestorePendingState()override;
-        void onAttachAdapter(@Nullable Adapter<?> newAdapter)override;
-        void onDetachAdapter(@Nullable Adapter<?> oldAdapter)override;
-        void onSetOrientation()override;
-        void onSetNewCurrentItem()override;
-        void onSetUserInputEnabled()override;
-        void onSetLayoutDirection()override;
-        void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info)override;
-        bool handlesPerformAccessibilityAction(int action, Bundle arguments)override;
-        bool onPerformAccessibilityAction(int action, Bundle arguments)override;
-        void onRvInitializeAccessibilityEvent(@NonNull AccessibilityEvent event)override;
-    };
-#endif
 };/*endof ViewPager2*/
+
+class ViewPager2::AccessibilityProvider {
+protected:
+    ViewPager2*mVP;
+public:
+    AccessibilityProvider(ViewPager2*);
+    virtual void onInitialize(CompositeOnPageChangeCallback* pageChangeEventDispatcher,RecyclerView* recyclerView);
+    virtual bool handlesGetAccessibilityClassName();
+    virtual std::string onGetAccessibilityClassName();
+    virtual void onRestorePendingState();
+    virtual void onAttachAdapter(RecyclerView::Adapter*newAdapter);
+    virtual void onDetachAdapter(RecyclerView::Adapter*oldAdapter);
+    virtual void onSetOrientation();
+    virtual void onSetNewCurrentItem();
+    virtual void onSetUserInputEnabled();
+    virtual void onSetLayoutDirection();
+    virtual void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info);
+    virtual bool handlesPerformAccessibilityAction(int action, Bundle arguments);
+    virtual bool onPerformAccessibilityAction(int action, Bundle arguments);
+    virtual void onRvInitializeAccessibilityEvent(AccessibilityEvent& event);
+    virtual bool handlesLmPerformAccessibilityAction(int action);
+    virtual bool onLmPerformAccessibilityAction(int action);
+    virtual void onLmInitializeAccessibilityNodeInfo(AccessibilityNodeInfo&info);
+    virtual bool handlesRvGetAccessibilityClassName();
+    virtual std::string onRvGetAccessibilityClassName();
+};
+
+class ViewPager2::BasicAccessibilityProvider:public ViewPager2::AccessibilityProvider {
+public:
+    BasicAccessibilityProvider(ViewPager2*);
+    bool handlesLmPerformAccessibilityAction(int action)override;
+    bool onLmPerformAccessibilityAction(int action)override;
+    void onLmInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info)override;
+    bool handlesRvGetAccessibilityClassName()override;
+    std::string onRvGetAccessibilityClassName()override;
+};
+
+class ViewPager2::PageAwareAccessibilityProvider:public ViewPager2::AccessibilityProvider {
+private:
+    AccessibilityViewCommand* mActionPageForward;
+    AccessibilityViewCommand* mActionPageBackward;
+    RecyclerView::AdapterDataObserver* mAdapterDataObserver;
+    void addCollectionInfo(AccessibilityNodeInfo& info);
+    void addScrollActions(AccessibilityNodeInfo& info);
+protected:
+    void setCurrentItemFromAccessibilityCommand(int item);
+    void updatePageAccessibilityActions();
+public:
+    PageAwareAccessibilityProvider(ViewPager2*);
+    void onInitialize(CompositeOnPageChangeCallback* pageChangeEventDispatcher, RecyclerView* recyclerView)override;
+    bool handlesGetAccessibilityClassName()override;
+    std::string onGetAccessibilityClassName()override;
+    void onRestorePendingState()override;
+    void onAttachAdapter(RecyclerView::Adapter*newAdapter)override;
+    void onDetachAdapter(RecyclerView::Adapter*oldAdapter)override;
+    void onSetOrientation()override;
+    void onSetNewCurrentItem()override;
+    void onSetUserInputEnabled()override;
+    void onSetLayoutDirection()override;
+    void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info)override;
+    bool handlesPerformAccessibilityAction(int action, Bundle arguments)override;
+    bool onPerformAccessibilityAction(int action, Bundle arguments)override;
+    void onRvInitializeAccessibilityEvent(AccessibilityEvent& event)override;
+};
 
 class ViewPager2::SavedState:public BaseSavedState {
 protected:
@@ -227,9 +209,9 @@ private:
     friend ViewPager2;
     ViewPager2*mVP;
 public:
-    RecyclerViewImpl(Context* context,const AttributeSet&);
-    //CharSequence getAccessibilityClassName()override;
-    //void onInitializeAccessibilityEvent(AccessibilityEvent& event)override;
+    RecyclerViewImpl(Context* context,const AttributeSet&,ViewPager2*);
+    std::string getAccessibilityClassName()const override;
+    void onInitializeAccessibilityEvent(AccessibilityEvent& event)override;
     bool onTouchEvent(MotionEvent& event)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;
 };
@@ -241,10 +223,10 @@ protected:
     void calculateExtraLayoutSpace(RecyclerView::State& state,int extraLayoutSpace[2])override;
 public:
     LinearLayoutManagerImpl(Context* context,ViewPager2*vp);
-    /*bool performAccessibilityAction(RecyclerView::Recycler& recycler,
+    bool performAccessibilityAction(RecyclerView::Recycler& recycler,
             RecyclerView::State& state, int action, Bundle args)override;
     void onInitializeAccessibilityNodeInfo(RecyclerView::Recycler& recycler,
-            RecyclerView::State& state, AccessibilityNodeInfo& info)override;*/
+            RecyclerView::State& state, AccessibilityNodeInfo& info)override;
     bool requestChildRectangleOnScreen(RecyclerView& parent,View& child,const Rect& rect, bool immediate,bool focusedChildVisible)override;
 };
 
@@ -254,26 +236,18 @@ public:
     View* findSnapView(RecyclerView::LayoutManager& layoutManager);
 };
 
-class ViewPager2DataSetChangeObserver:public RecyclerView::AdapterDataObserver {
+class ViewPager2::DataSetChangeObserver:public RecyclerView::AdapterDataObserver {
+protected:
+    ViewPager2*mVP;
 public:
-    virtual void onChanged()=0;
+    DataSetChangeObserver(ViewPager2*v);
+    virtual void onChanged();
 
-    virtual void onItemRangeChanged(int positionStart, int itemCount)final{
-        onChanged();
-    }
-    virtual void onItemRangeChanged(int positionStart, int itemCount,
-        Object* payload)final{
-        onChanged();
-    }
-    void onItemRangeInserted(int positionStart, int itemCount) {
-        onChanged();
-    }
-    void onItemRangeRemoved(int positionStart, int itemCount)final{
-        onChanged();
-    }
-    void onItemRangeMoved(int fromPosition, int toPosition, int itemCount)final{
-        onChanged();
-    }
+    virtual void onItemRangeChanged(int positionStart, int itemCount)final;
+    virtual void onItemRangeChanged(int positionStart, int itemCount,Object* payload)final;
+    void onItemRangeInserted(int positionStart, int itemCount)override;
+    void onItemRangeRemoved(int positionStart, int itemCount)override;
+    void onItemRangeMoved(int fromPosition, int toPosition, int itemCount)override;
 };
 
 }/*endof namespace*/

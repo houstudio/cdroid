@@ -1,3 +1,4 @@
+#include <widget/R.h>
 #include <widgetEx/viewpager2.h>
 #include <widgetEx/recyclerview/pagersnaphelper.h>
 #include <widgetEx/scrolleventadapter.h>
@@ -15,7 +16,8 @@ private:
 public:
     PageTransformerAdapter(LinearLayoutManager* layoutManager) {
         mLayoutManager = layoutManager;
-	onPageScrolled = std::bind(&PageTransformerAdapter::doPageScrolled,this,
+        mPageTransformer= nullptr;
+	    onPageScrolled = std::bind(&PageTransformerAdapter::doPageScrolled,this,
             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     }
     ViewPager2::PageTransformer* getPageTransformer() {
@@ -52,12 +54,12 @@ ViewPager2::ViewPager2(Context* context,const AttributeSet& attrs)
 }
 
 void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
-    /*mAccessibilityProvider = sFeatureEnhancedA11yEnabled
-            ? new PageAwareAccessibilityProvider()
-            : new BasicAccessibilityProvider();*/
+    if(sFeatureEnhancedA11yEnabled)
+        mAccessibilityProvider = new PageAwareAccessibilityProvider(this);
+    else 
+       mAccessibilityProvider  = new BasicAccessibilityProvider(this);
     mCurrentItemDataSetChangeObserver = nullptr;
-    mRecyclerView = new RecyclerViewImpl(context,attrs);
-    mRecyclerView->mVP =this;
+    mRecyclerView = new RecyclerViewImpl(context,attrs,this);
     mRecyclerView->setId(View::generateViewId());
     mRecyclerView->setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
 
@@ -78,6 +80,7 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
             FATAL("Pages must fill the whole ViewPager2 (use match_parent)");
         }
     };
+    ls.onChildViewDetachedFromWindow = [](View& view){LOGD("onChildViewDetachedFromWindow");};
     mRecyclerView->addOnChildAttachStateChangeListener(ls);//enforceChildFillListener();
 
     // Create ScrollEventAdapter before attaching PagerSnapHelper to RecyclerView, because the
@@ -100,7 +103,7 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     currentItemUpdater.onPageSelected=[this](int position) {
             if (mCurrentItem != position) {
                 mCurrentItem = position;
-                //mAccessibilityProvider.onSetNewCurrentItem();
+                mAccessibilityProvider->onSetNewCurrentItem();
             }
         };
 
@@ -125,7 +128,7 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     mPageChangeEventDispatcher->addOnPageChangeCallback(focusClearer);
     // Allow a11y to register its listeners after currentItemUpdater (so it has the
     // right data). TODO: replace ordering comments with a test.
-    //mAccessibilityProvider->onInitialize(mPageChangeEventDispatcher, mRecyclerView);
+    mAccessibilityProvider->onInitialize(mPageChangeEventDispatcher, mRecyclerView);
     mExternalPageChangeCallbacks = new CompositeOnPageChangeCallback(0);
     mPageChangeEventDispatcher->addOnPageChangeCallback(*mExternalPageChangeCallbacks);
 
@@ -134,22 +137,13 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     mPageTransformerAdapter = new PageTransformerAdapter(mLayoutManager);
     mPageChangeEventDispatcher->addOnPageChangeCallback(*mPageTransformerAdapter);
 
-    //attachViewToParent(mRecyclerView, 0, mRecyclerView->getLayoutParams());
+    attachViewToParent(mRecyclerView, 0, mRecyclerView->getLayoutParams());
 
 }
-
-#if 0
-CharSequence ViewPager2::getAccessibilityClassName() {
-    if (mAccessibilityProvider.handlesGetAccessibilityClassName()) {
-        return mAccessibilityProvider.onGetAccessibilityClassName();
-    }
-    return super.getAccessibilityClassName();
-}
-#endif
 
 void ViewPager2::setOrientation(Context* context,const AttributeSet& attrs) {
     setOrientation(ORIENTATION_HORIZONTAL);
-          //a.getInt(R.styleable.ViewPager2_android_orientation, ORIENTATION_HORIZONTAL));
+    //a.getInt(R.styleable.ViewPager2_android_orientation, ORIENTATION_HORIZONTAL));
 }
 
 Parcelable* ViewPager2::onSaveInstanceState() {
@@ -202,7 +196,7 @@ void ViewPager2::restorePendingState() {
     mCurrentItem = std::max(0, std::min(mPendingCurrentItem, adapter->getItemCount() - 1));
     mPendingCurrentItem = RecyclerView::NO_POSITION;
     mRecyclerView->scrollToPosition(mCurrentItem);
-    //mAccessibilityProvider.onRestorePendingState();
+    mAccessibilityProvider->onRestorePendingState();
 }
 
 void ViewPager2::dispatchRestoreInstanceState(SparseArray<Parcelable*>& container) {
@@ -223,12 +217,12 @@ void ViewPager2::dispatchRestoreInstanceState(SparseArray<Parcelable*>& containe
 
 void ViewPager2::setAdapter(RecyclerView::Adapter* adapter) {
     RecyclerView::Adapter*currentAdapter = mRecyclerView->getAdapter();
-    //mAccessibilityProvider.onDetachAdapter(currentAdapter);
+    mAccessibilityProvider->onDetachAdapter(currentAdapter);
     unregisterCurrentItemDataSetTracker(currentAdapter);
     mRecyclerView->setAdapter(adapter);
     mCurrentItem = 0;
     restorePendingState();
-    //mAccessibilityProvider->onAttachAdapter(adapter);
+    mAccessibilityProvider->onAttachAdapter(adapter);
     registerCurrentItemDataSetTracker(adapter);
 }
 
@@ -273,6 +267,7 @@ void ViewPager2::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 void ViewPager2::onLayout(bool changed, int l, int t, int w, int h) {
     int width = mRecyclerView->getMeasuredWidth();
     int height = mRecyclerView->getMeasuredHeight();
+    Rect mTmpContainerRect,mTmpChildRect;
 
     // TODO(b/70666626): consider delegating padding handling to the RecyclerView to avoid
     // an unnatural page transition effect: http://shortn/_Vnug3yZpQT
@@ -318,7 +313,7 @@ int ViewPager2::getPageSize()const{
 
 void ViewPager2::setOrientation(int orientation) {
     mLayoutManager->setOrientation(orientation);
-    //mAccessibilityProvider.onSetOrientation();
+    mAccessibilityProvider->onSetOrientation();
 }
 
 int ViewPager2::getOrientation()const{
@@ -374,7 +369,7 @@ void ViewPager2::setCurrentItemInternal(int item, bool smoothScroll) {
 
     double previousItem = mCurrentItem;
     mCurrentItem = item;
-    //mAccessibilityProvider->onSetNewCurrentItem();
+    mAccessibilityProvider->onSetNewCurrentItem();
 
     if (!mScrollEventAdapter->isIdle()) {
         // Scroll in progress, overwrite previousItem with actual current position
@@ -437,14 +432,14 @@ void ViewPager2::snapToPage() {
     int snapDistance[2];
     mPagerSnapHelper->calculateDistanceToFinalSnap(*mLayoutManager,*view,snapDistance);
     //noinspection ConstantConditions
-    if (snapDistance[0] != 0 || snapDistance[1] != 0) {
+    if ((snapDistance[0] != 0) || (snapDistance[1] != 0)){
         mRecyclerView->smoothScrollBy(snapDistance[0], snapDistance[1]);
     }
 }
 
 void ViewPager2::setUserInputEnabled(bool enabled) {
     mUserInputEnabled = enabled;
-    //mAccessibilityProvider.onSetUserInputEnabled();
+    mAccessibilityProvider->onSetUserInputEnabled();
 }
 
 bool ViewPager2::isUserInputEnabled()const{
@@ -517,43 +512,39 @@ void ViewPager2::requestTransform() {
 
 View& ViewPager2::setLayoutDirection(int layoutDirection) {
     ViewGroup::setLayoutDirection(layoutDirection);
-    //mAccessibilityProvider.onSetLayoutDirection();
+    mAccessibilityProvider->onSetLayoutDirection();
     return *this;
 }
 
-#if 0
-void ViewPager2::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
-    super.onInitializeAccessibilityNodeInfo(info);
-    mAccessibilityProvider.onInitializeAccessibilityNodeInfo(info);
+void ViewPager2::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info) {
+    ViewGroup::onInitializeAccessibilityNodeInfo(info);
+    mAccessibilityProvider->onInitializeAccessibilityNodeInfo(info);
 }
 
 bool ViewPager2::performAccessibilityAction(int action, Bundle arguments) {
-    if (mAccessibilityProvider.handlesPerformAccessibilityAction(action, arguments)) {
-        return mAccessibilityProvider.onPerformAccessibilityAction(action, arguments);
+    if (mAccessibilityProvider->handlesPerformAccessibilityAction(action, arguments)) {
+        return mAccessibilityProvider->onPerformAccessibilityAction(action, arguments);
     }
-    return super.performAccessibilityAction(action, arguments);
-}
-#endif
-
-ViewPager2::RecyclerViewImpl::RecyclerViewImpl(Context* context,const AttributeSet&attr)
-    :RecyclerView(context,attr){
+    return ViewGroup::performAccessibilityAction(action, arguments);
 }
 
-#if 0
-CharSequence ViewPager2::RecyclerViewImpl::getAccessibilityClassName() {
-    if (mAccessibilityProvider.handlesRvGetAccessibilityClassName()) {
-        return mAccessibilityProvider.onRvGetAccessibilityClassName();
+ViewPager2::RecyclerViewImpl::RecyclerViewImpl(Context* context,const AttributeSet&attr,ViewPager2*vp)
+    :RecyclerView(context,attr),mVP(vp){
+}
+
+std::string ViewPager2::RecyclerViewImpl::getAccessibilityClassName() const{
+    if (mVP->mAccessibilityProvider->handlesRvGetAccessibilityClassName()) {
+        return mVP->mAccessibilityProvider->onRvGetAccessibilityClassName();
     }
-    return super.getAccessibilityClassName();
+    return ViewGroup::getAccessibilityClassName();
 }
 
 void ViewPager2::RecyclerViewImpl::onInitializeAccessibilityEvent(AccessibilityEvent& event) {
-    super.onInitializeAccessibilityEvent(event);
-    event.setFromIndex(mCurrentItem);
-    event.setToIndex(mCurrentItem);
-    mAccessibilityProvider.onRvInitializeAccessibilityEvent(event);*/
+    ViewGroup::onInitializeAccessibilityEvent(event);
+    event.setFromIndex(mVP->mCurrentItem);
+    event.setToIndex(mVP->mCurrentItem);
+    mVP->mAccessibilityProvider->onRvInitializeAccessibilityEvent(event);
 }
-#endif
 
 bool ViewPager2::RecyclerViewImpl::onTouchEvent(MotionEvent& event) {
     return mVP->isUserInputEnabled() && RecyclerView::onTouchEvent(event);
@@ -570,21 +561,19 @@ ViewPager2::LinearLayoutManagerImpl::LinearLayoutManagerImpl(Context* context,Vi
     mVP = vp;
 }
 
-#if 0 
-bool ViewPager2::LinearLayoutManagerImpl::performAccessibilityAction(@NonNull RecyclerView::Recycler recycler,
-        @NonNull RecyclerView::State state, int action, @Nullable Bundle args) {
-    if (mAccessibilityProvider.handlesLmPerformAccessibilityAction(action)) {
-        return mAccessibilityProvider.onLmPerformAccessibilityAction(action);
+bool ViewPager2::LinearLayoutManagerImpl::performAccessibilityAction(RecyclerView::Recycler& recycler,
+        RecyclerView::State& state, int action, Bundle args) {
+    if (mVP->mAccessibilityProvider->handlesLmPerformAccessibilityAction(action)) {
+        return mVP->mAccessibilityProvider->onLmPerformAccessibilityAction(action);
     }
-    return super.performAccessibilityAction(recycler, state, action, args);
+    return LinearLayoutManager::performAccessibilityAction(recycler, state, action, args);
 }
 
-void ViewPager2::LinearLayoutManagerImpl::onInitializeAccessibilityNodeInfo(@NonNull RecyclerView::Recycler recycler,
-        @NonNull RecyclerView::State state, @NonNull AccessibilityNodeInfoCompat info) {
-    super.onInitializeAccessibilityNodeInfo(recycler, state, info);
-    mAccessibilityProvider.onLmInitializeAccessibilityNodeInfo(info);
+void ViewPager2::LinearLayoutManagerImpl::onInitializeAccessibilityNodeInfo(RecyclerView::Recycler& recycler,
+        RecyclerView::State& state, AccessibilityNodeInfo&info) {
+    LinearLayoutManager::onInitializeAccessibilityNodeInfo(recycler, state, info);
+    mVP->mAccessibilityProvider->onLmInitializeAccessibilityNodeInfo(info);
 }
-#endif
 
 void ViewPager2::LinearLayoutManagerImpl::calculateExtraLayoutSpace(RecyclerView::State& state,
         int extraLayoutSpace[2]) {
@@ -665,283 +654,361 @@ void ViewPager2::SavedState::writeToParcel(Parcel& out, int flags) {
     //out.writeParcelable(mAdapterState, flags);
 }
 
-#if 0
-    // TODO(b/141956012): Suppressed during upgrade to AGP 3.6.
-    class BasicAccessibilityProvider extends AccessibilityProvider {
-        @Override
-        public bool handlesLmPerformAccessibilityAction(int action) {
-            return (action == AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD
-                    || action == AccessibilityNodeInfoCompat.ACTION_SCROLL_FORWARD)
-                    && !isUserInputEnabled();
-        }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////ViewPager2::AccessibilityProvider///////////////////////////////////////
+ViewPager2::AccessibilityProvider::AccessibilityProvider(ViewPager2*v)
+    :mVP(v){
+}
 
-        @Override
-        public bool onLmPerformAccessibilityAction(int action) {
-            if (!handlesLmPerformAccessibilityAction(action)) {
-                throw new IllegalStateException();
-            }
-            return false;
-        }
+void ViewPager2::AccessibilityProvider::onInitialize(CompositeOnPageChangeCallback* pageChangeEventDispatcher,RecyclerView* recyclerView){
+}
 
-        @Override
-        public void onLmInitializeAccessibilityNodeInfo(
-                @NonNull AccessibilityNodeInfoCompat info) {
-            if (!isUserInputEnabled()) {
-                info.removeAction(AccessibilityActionCompat.ACTION_SCROLL_BACKWARD);
-                info.removeAction(AccessibilityActionCompat.ACTION_SCROLL_FORWARD);
-                info.setScrollable(false);
-            }
-        }
+bool ViewPager2::AccessibilityProvider::handlesGetAccessibilityClassName(){
+    return "";
+}
 
+std::string ViewPager2::AccessibilityProvider::onGetAccessibilityClassName() {
+    throw std::runtime_error("Not implemented.");
+    return "";
+}
+
+void ViewPager2::AccessibilityProvider::onRestorePendingState(){
+}
+
+void ViewPager2::AccessibilityProvider::onAttachAdapter(RecyclerView::Adapter*newAdapter){
+}
+
+void ViewPager2::AccessibilityProvider::onDetachAdapter(RecyclerView::Adapter*oldAdapter){
+}
+
+void ViewPager2::AccessibilityProvider::onSetOrientation(){
+}
+
+void ViewPager2::AccessibilityProvider::onSetNewCurrentItem(){
+}
+
+void ViewPager2::AccessibilityProvider::onSetUserInputEnabled(){
+}
+
+void ViewPager2::AccessibilityProvider::onSetLayoutDirection(){
+}
+
+void ViewPager2::AccessibilityProvider::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info) {
+}
+
+bool ViewPager2::AccessibilityProvider::handlesPerformAccessibilityAction(int action, Bundle arguments) {
+    return false;
+}
+
+bool ViewPager2::AccessibilityProvider::onPerformAccessibilityAction(int action, Bundle arguments) {
+    throw std::runtime_error("Not implemented.");
+}
+
+void ViewPager2::AccessibilityProvider::onRvInitializeAccessibilityEvent(AccessibilityEvent& event){
+}
+
+bool ViewPager2::AccessibilityProvider::handlesLmPerformAccessibilityAction(int action) {
+    return false;
+}
+
+bool ViewPager2::AccessibilityProvider::onLmPerformAccessibilityAction(int action) {
+    throw std::runtime_error("Not implemented.");
+}
+
+void ViewPager2::AccessibilityProvider::onLmInitializeAccessibilityNodeInfo(AccessibilityNodeInfo&info) {
+}
+
+bool ViewPager2::AccessibilityProvider::handlesRvGetAccessibilityClassName() {
+    return false;
+}
+
+std::string ViewPager2::AccessibilityProvider::onRvGetAccessibilityClassName() {
+    throw std::runtime_error("Not implemented.");
+    return "";
+}
+
+
+///////////////////class BasicAccessibilityProvider extends AccessibilityProvider///////////////////
+bool ViewPager2::BasicAccessibilityProvider::handlesLmPerformAccessibilityAction(int action) {
+    return (action == AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD
+            || action == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD)
+            && !mVP->isUserInputEnabled();
+}
+
+bool ViewPager2::BasicAccessibilityProvider::onLmPerformAccessibilityAction(int action) {
+    if (!handlesLmPerformAccessibilityAction(action)) {
+        throw std::runtime_error("IllegalStateException");
+    }
+    return false;
+}
+
+void ViewPager2::BasicAccessibilityProvider::onLmInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info) {
+    if (mVP->isUserInputEnabled()) {
+        info.removeAction(AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD);
+        info.removeAction(AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
+        info.setScrollable(false);
+    }
+}
+
+bool ViewPager2::BasicAccessibilityProvider::handlesRvGetAccessibilityClassName() {
+    return true;
+}
+
+std::string ViewPager2::BasicAccessibilityProvider::onRvGetAccessibilityClassName() {
+    if (!handlesRvGetAccessibilityClassName()) {
+        throw std::runtime_error("IllegalStateException");
+    }
+    return "androidx.viewpager.widget.ViewPager";
+}
+
+////////////////////class PageAwareAccessibilityProvider extends AccessibilityProvider//////////////////////////////
+/*private final AccessibilityViewCommand mActionPageForward =
+    new AccessibilityViewCommand() {
         @Override
-        public bool handlesRvGetAccessibilityClassName() {
+        public bool perform(@NonNull View view,
+                @Nullable CommandArguments arguments) {
+            ViewPager2 viewPager = (ViewPager2) view;
+            setCurrentItemFromAccessibilityCommand(viewPager.getCurrentItem() + 1);
             return true;
         }
+    };
 
+private final AccessibilityViewCommand mActionPageBackward =
+    new AccessibilityViewCommand() {
         @Override
-        public CharSequence onRvGetAccessibilityClassName() {
-            if (!handlesRvGetAccessibilityClassName()) {
-                throw new IllegalStateException();
-            }
-            return "androidx.viewpager.widget.ViewPager";
+        public bool perform(@NonNull View view,
+                @Nullable CommandArguments arguments) {
+            ViewPager2 viewPager = (ViewPager2) view;
+            setCurrentItemFromAccessibilityCommand(viewPager.getCurrentItem() - 1);
+            return true;
         }
+    };*/
+
+ViewPager2::PageAwareAccessibilityProvider::PageAwareAccessibilityProvider(ViewPager2*v)
+    :AccessibilityProvider(v){
+    mAdapterDataObserver = nullptr;
+}
+
+void ViewPager2::PageAwareAccessibilityProvider::onInitialize(CompositeOnPageChangeCallback* pageChangeEventDispatcher,RecyclerView* recyclerView) {
+
+    class MyDataSetChangeObserver:public ViewPager2::DataSetChangeObserver{
+        PageAwareAccessibilityProvider*mPP;
+    public:
+        MyDataSetChangeObserver(ViewPager2*v,PageAwareAccessibilityProvider*p):DataSetChangeObserver(v),mPP(p){
+        }
+        void onChanged()override{
+            mPP->updatePageAccessibilityActions();
+            LOGD("============================================");
+        }
+    };
+
+    recyclerView->setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_NO);
+    mAdapterDataObserver = new MyDataSetChangeObserver(mVP,this);
+
+    if (mVP->getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+        mVP->setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
+    }
+}
+
+bool ViewPager2::PageAwareAccessibilityProvider::handlesGetAccessibilityClassName() {
+    return true;
+}
+
+std::string ViewPager2::PageAwareAccessibilityProvider::onGetAccessibilityClassName() {
+    if (!handlesGetAccessibilityClassName()) {
+        throw std::runtime_error("IllegalStateExceptio");
+    }
+    return "androidx.viewpager.widget.ViewPager";
+}
+
+void ViewPager2::PageAwareAccessibilityProvider::onRestorePendingState() {
+    updatePageAccessibilityActions();
+}
+
+void ViewPager2::PageAwareAccessibilityProvider::onAttachAdapter(RecyclerView::Adapter*newAdapter) {
+    updatePageAccessibilityActions();
+    if (newAdapter != nullptr) {
+        newAdapter->registerAdapterDataObserver(mAdapterDataObserver);
+    }
+}
+
+void ViewPager2::PageAwareAccessibilityProvider::onDetachAdapter(RecyclerView::Adapter*oldAdapter) {
+    if (oldAdapter != nullptr) {
+        oldAdapter->unregisterAdapterDataObserver(mAdapterDataObserver);
+    }
+}
+
+void ViewPager2::PageAwareAccessibilityProvider::onSetOrientation() {
+    updatePageAccessibilityActions();
+}
+
+void ViewPager2::PageAwareAccessibilityProvider::onSetNewCurrentItem() {
+    updatePageAccessibilityActions();
+}
+
+void ViewPager2::PageAwareAccessibilityProvider::onSetUserInputEnabled() {
+    updatePageAccessibilityActions();
+    if (false){//Build.VERSION.SDK_INT < 21) {
+        mVP->sendAccessibilityEvent(AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
+    }
+}
+
+void ViewPager2::PageAwareAccessibilityProvider::onSetLayoutDirection() {
+    updatePageAccessibilityActions();
+}
+
+void ViewPager2::PageAwareAccessibilityProvider::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info) {
+    addCollectionInfo(info);
+    if (true){//Build.VERSION.SDK_INT >= 16) {
+        addScrollActions(info);
+    }
+}
+
+bool ViewPager2::PageAwareAccessibilityProvider::handlesPerformAccessibilityAction(int action, Bundle arguments) {
+    return (action == AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD)
+            || (action == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
+}
+
+bool ViewPager2::PageAwareAccessibilityProvider::onPerformAccessibilityAction(int action, Bundle arguments) {
+    if (!handlesPerformAccessibilityAction(action, arguments)) {
+        throw std::runtime_error(" IllegalStateException");
     }
 
-    class PageAwareAccessibilityProvider extends AccessibilityProvider {
-        private final AccessibilityViewCommand mActionPageForward =
-                new AccessibilityViewCommand() {
-                    @Override
-                    public bool perform(@NonNull View view,
-                            @Nullable CommandArguments arguments) {
-                        ViewPager2 viewPager = (ViewPager2) view;
-                        setCurrentItemFromAccessibilityCommand(viewPager.getCurrentItem() + 1);
-                        return true;
-                    }
-                };
+    const int nextItem = (action == AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD)
+            ? (mVP->getCurrentItem() - 1) : (mVP->getCurrentItem() + 1);
+    setCurrentItemFromAccessibilityCommand(nextItem);
+    return true;
+}
 
-        private final AccessibilityViewCommand mActionPageBackward =
-                new AccessibilityViewCommand() {
-                    @Override
-                    public bool perform(@NonNull View view,
-                            @Nullable CommandArguments arguments) {
-                        ViewPager2 viewPager = (ViewPager2) view;
-                        setCurrentItemFromAccessibilityCommand(viewPager.getCurrentItem() - 1);
-                        return true;
-                    }
-                };
+void ViewPager2::PageAwareAccessibilityProvider::onRvInitializeAccessibilityEvent(AccessibilityEvent& event) {
+    event.setSource(mVP);
+    event.setClassName(onGetAccessibilityClassName());
+}
 
-        private RecyclerView::AdapterDataObserver mAdapterDataObserver;
+void ViewPager2::PageAwareAccessibilityProvider::setCurrentItemFromAccessibilityCommand(int item) {
+    if (mVP->isUserInputEnabled()) {
+        mVP->setCurrentItemInternal(item, true);
+    }
+}
 
-        @Override
-        public void onInitialize(@NonNull CompositeOnPageChangeCallback pageChangeEventDispatcher,
-                @NonNull RecyclerView recyclerView) {
-            ViewCompat.setImportantForAccessibility(recyclerView,
-                    ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_NO);
+void ViewPager2::PageAwareAccessibilityProvider::updatePageAccessibilityActions() {
+    ViewPager2* viewPager = mVP;
+#if 0
+    constexpr int actionIdPageLeft = R::id::accessibilityActionPageLeft;
+    constexpr int actionIdPageRight = R::id::accessibilityActionPageRight;
+    constexpr int actionIdPageUp = R::id::accessibilityActionPageUp;
+    constexpr int actionIdPageDown = R::id::accessibilityActionPageDown;
 
-            mAdapterDataObserver = new DataSetChangeObserver() {
-                @Override
-                public void onChanged() {
-                    updatePageAccessibilityActions();
-                }
-            };
+    viewPager->removeAccessibilityAction(actionIdPageLeft);
+    viewPager->removeAccessibilityAction(actionIdPageRight);
+    viewPager->removeAccessibilityAction(actionIdPageUp);
+    viewPager->removeAccessibilityAction(actionIdPageDown);
 
-            if (ViewCompat.getImportantForAccessibility(ViewPager2.this)
-                    == ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
-                ViewCompat.setImportantForAccessibility(ViewPager2.this,
-                        ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES);
-            }
+    if (mVP->getAdapter() == nullptr) {
+        return;
+    }
+
+    int itemCount = mVP->getAdapter()->getItemCount();
+    if (itemCount == 0) {
+        return;
+    }
+
+    if (!mVP->isUserInputEnabled()) {
+        return;
+    }
+
+    if (mVP->getOrientation() == ORIENTATION_HORIZONTAL) {
+        bool isLayoutRtl = mVP->isRtl();
+        int actionIdPageForward = isLayoutRtl ? actionIdPageLeft : actionIdPageRight;
+        int actionIdPageBackward = isLayoutRtl ? actionIdPageRight : actionIdPageLeft;
+
+        if (mVP->mCurrentItem < itemCount - 1) {
+            viewPager->replaceAccessibilityAction(
+                    new AccessibilityNodeInfo::AccessibilityAction(actionIdPageForward, nullptr), nullptr,
+                    mActionPageForward);
         }
-
-        @Override
-        public bool handlesGetAccessibilityClassName() {
-            return true;
+        if (mVP->mCurrentItem > 0) {
+            viewPager->replaceAccessibilityAction(
+                    new AccessibilityNodeInfo::AccessibilityAction(actionIdPageBackward, nullptr), nullptr,
+                    mActionPageBackward);
         }
-
-        @Override
-        public String onGetAccessibilityClassName() {
-            if (!handlesGetAccessibilityClassName()) {
-                throw new IllegalStateException();
-            }
-            return "androidx.viewpager.widget.ViewPager";
+    } else {
+        if (mVP->mCurrentItem < itemCount - 1) {
+            viewPager->replaceAccessibilityAction(
+                    new AccessibilityNodeInfo::AccessibilityAction(actionIdPageDown, nullptr), nullptr,
+                    mActionPageForward);
         }
-
-        @Override
-        public void onRestorePendingState() {
-            updatePageAccessibilityActions();
-        }
-
-        @Override
-        public void onAttachAdapter(@Nullable Adapter<?> newAdapter) {
-            updatePageAccessibilityActions();
-            if (newAdapter != null) {
-                newAdapter.registerAdapterDataObserver(mAdapterDataObserver);
-            }
-        }
-
-        @Override
-        public void onDetachAdapter(@Nullable Adapter<?> oldAdapter) {
-            if (oldAdapter != null) {
-                oldAdapter.unregisterAdapterDataObserver(mAdapterDataObserver);
-            }
-        }
-
-        @Override
-        public void onSetOrientation() {
-            updatePageAccessibilityActions();
-        }
-
-        @Override
-        public void onSetNewCurrentItem() {
-            updatePageAccessibilityActions();
-        }
-
-        @Override
-        public void onSetUserInputEnabled() {
-            updatePageAccessibilityActions();
-            if (Build.VERSION.SDK_INT < 21) {
-                sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED);
-            }
-        }
-
-        @Override
-        public void onSetLayoutDirection() {
-            updatePageAccessibilityActions();
-        }
-
-        @Override
-        public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
-            addCollectionInfo(info);
-            if (Build.VERSION.SDK_INT >= 16) {
-                addScrollActions(info);
-            }
-        }
-
-        @Override
-        public bool handlesPerformAccessibilityAction(int action, Bundle arguments) {
-            return action == AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD
-                    || action == AccessibilityNodeInfoCompat.ACTION_SCROLL_FORWARD;
-        }
-
-        @Override
-        public bool onPerformAccessibilityAction(int action, Bundle arguments) {
-            if (!handlesPerformAccessibilityAction(action, arguments)) {
-                throw new IllegalStateException();
-            }
-
-            int nextItem = (action == AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD)
-                    ? getCurrentItem() - 1
-                    : getCurrentItem() + 1;
-            setCurrentItemFromAccessibilityCommand(nextItem);
-            return true;
-        }
-
-        @Override
-        public void onRvInitializeAccessibilityEvent(@NonNull AccessibilityEvent event) {
-            event.setSource(ViewPager2.this);
-            event.setClassName(onGetAccessibilityClassName());
-        }
-
-        void setCurrentItemFromAccessibilityCommand(int item) {
-            if (isUserInputEnabled()) {
-                setCurrentItemInternal(item, true);
-            }
-        }
-
-        void updatePageAccessibilityActions() {
-            ViewPager2 viewPager = ViewPager2.this;
-
-            @SuppressLint("InlinedApi")
-            final int actionIdPageLeft = android.R.id.accessibilityActionPageLeft;
-            @SuppressLint("InlinedApi")
-            final int actionIdPageRight = android.R.id.accessibilityActionPageRight;
-            @SuppressLint("InlinedApi")
-            final int actionIdPageUp = android.R.id.accessibilityActionPageUp;
-            @SuppressLint("InlinedApi")
-            final int actionIdPageDown = android.R.id.accessibilityActionPageDown;
-
-            ViewCompat.removeAccessibilityAction(viewPager, actionIdPageLeft);
-            ViewCompat.removeAccessibilityAction(viewPager, actionIdPageRight);
-            ViewCompat.removeAccessibilityAction(viewPager, actionIdPageUp);
-            ViewCompat.removeAccessibilityAction(viewPager, actionIdPageDown);
-
-            if (getAdapter() == null) {
-                return;
-            }
-
-            int itemCount = getAdapter().getItemCount();
-            if (itemCount == 0) {
-                return;
-            }
-
-            if (!isUserInputEnabled()) {
-                return;
-            }
-
-            if (getOrientation() == ORIENTATION_HORIZONTAL) {
-                bool isLayoutRtl = isRtl();
-                int actionIdPageForward = isLayoutRtl ? actionIdPageLeft : actionIdPageRight;
-                int actionIdPageBackward = isLayoutRtl ? actionIdPageRight : actionIdPageLeft;
-
-                if (mCurrentItem < itemCount - 1) {
-                    ViewCompat.replaceAccessibilityAction(viewPager,
-                            new AccessibilityActionCompat(actionIdPageForward, null), null,
-                            mActionPageForward);
-                }
-                if (mCurrentItem > 0) {
-                    ViewCompat.replaceAccessibilityAction(viewPager,
-                            new AccessibilityActionCompat(actionIdPageBackward, null), null,
-                            mActionPageBackward);
-                }
-            } else {
-                if (mCurrentItem < itemCount - 1) {
-                    ViewCompat.replaceAccessibilityAction(viewPager,
-                            new AccessibilityActionCompat(actionIdPageDown, null), null,
-                            mActionPageForward);
-                }
-                if (mCurrentItem > 0) {
-                    ViewCompat.replaceAccessibilityAction(viewPager,
-                            new AccessibilityActionCompat(actionIdPageUp, null), null,
-                            mActionPageBackward);
-                }
-            }
-        }
-
-        private void addCollectionInfo(AccessibilityNodeInfo info) {
-            int rowCount = 0;
-            int colCount = 0;
-            if (getAdapter() != null) {
-                if (getOrientation() == ORIENTATION_VERTICAL) {
-                    rowCount = getAdapter().getItemCount();
-                } else {
-                    colCount = getAdapter().getItemCount();
-                }
-            }
-            AccessibilityNodeInfoCompat nodeInfoCompat = AccessibilityNodeInfoCompat.wrap(info);
-            AccessibilityNodeInfoCompat.CollectionInfoCompat collectionInfo =
-                    AccessibilityNodeInfoCompat.CollectionInfoCompat.obtain(rowCount, colCount,
-                            /* hierarchical= */false,
-                            AccessibilityNodeInfoCompat.CollectionInfoCompat.SELECTION_MODE_NONE);
-            nodeInfoCompat.setCollectionInfo(collectionInfo);
-        }
-
-        private void addScrollActions(AccessibilityNodeInfo info) {
-            final Adapter<?> adapter = getAdapter();
-            if (adapter == null) {
-                return;
-            }
-            int itemCount = adapter.getItemCount();
-            if (itemCount == 0 || !isUserInputEnabled()) {
-                return;
-            }
-            if (mCurrentItem > 0) {
-                info.addAction(AccessibilityNodeInfoCompat.ACTION_SCROLL_BACKWARD);
-            }
-            if (mCurrentItem < itemCount - 1) {
-                info.addAction(AccessibilityNodeInfoCompat.ACTION_SCROLL_FORWARD);
-            }
-            info.setScrollable(true);
+        if (mVP->mCurrentItem > 0) {
+            viewPager->replaceAccessibilityAction(
+                    new AccessibilityNodeInfo::AccessibilityAction(actionIdPageUp, nullptr), nullptr,
+                    mActionPageBackward);
         }
     }
 #endif
+}
+
+void ViewPager2::PageAwareAccessibilityProvider::addCollectionInfo(AccessibilityNodeInfo& info) {
+    int rowCount = 0;
+    int colCount = 0;
+    if (mVP->getAdapter() != nullptr) {
+        if (mVP->getOrientation() == ORIENTATION_VERTICAL) {
+            rowCount = mVP->getAdapter()->getItemCount();
+        } else {
+            colCount = mVP->getAdapter()->getItemCount();
+        }
+    }
+    AccessibilityNodeInfo::CollectionInfo* collectionInfo =
+            AccessibilityNodeInfo::CollectionInfo::obtain(rowCount, colCount,/* hierarchical= */false,
+                    AccessibilityNodeInfo::CollectionInfo::SELECTION_MODE_NONE);
+    info.setCollectionInfo(collectionInfo);
+}
+
+void ViewPager2::PageAwareAccessibilityProvider::addScrollActions(AccessibilityNodeInfo& info) {
+    RecyclerView::Adapter*adapter = mVP->getAdapter();
+    if (adapter == nullptr) {
+        return;
+    }
+    int itemCount = adapter->getItemCount();
+    if (itemCount == 0 || !mVP->isUserInputEnabled()) {
+        return;
+    }
+    if (mVP->mCurrentItem > 0) {
+        info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD);
+    }
+    if (mVP->mCurrentItem < itemCount - 1) {
+        info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
+    }
+    info.setScrollable(true);
+}
+
+ViewPager2::DataSetChangeObserver::DataSetChangeObserver(ViewPager2*v)
+    :mVP(v){
+}
+
+void ViewPager2::DataSetChangeObserver::onChanged(){
+}
+
+void ViewPager2::DataSetChangeObserver::onItemRangeChanged(int positionStart, int itemCount){
+    onChanged();
+}
+
+void ViewPager2::DataSetChangeObserver::onItemRangeChanged(int positionStart, int itemCount,
+        Object* payload){
+    onChanged();
+}
+
+void ViewPager2::DataSetChangeObserver::onItemRangeInserted(int positionStart, int itemCount) {
+    onChanged();
+}
+
+void ViewPager2::DataSetChangeObserver::onItemRangeRemoved(int positionStart, int itemCount){
+    onChanged();
+}
+
+void ViewPager2::DataSetChangeObserver::onItemRangeMoved(int fromPosition, int toPosition, int itemCount){
+    onChanged();
+}
+
+
 }/*endof namespace*/
 

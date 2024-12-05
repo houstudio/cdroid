@@ -4679,7 +4679,9 @@ void RecyclerView::dispatchChildDetached(View* child) {
     }
     const int cnt = (int)mOnChildAttachStateListeners.size();
     for (int i = cnt - 1; i >= 0; i--) {
-        mOnChildAttachStateListeners.at(i).onChildViewDetachedFromWindow(*child);
+        auto& ls = mOnChildAttachStateListeners.at(i);
+        FATAL_IF(ls.onChildViewDetachedFromWindow==nullptr,"onChildViewDetachedFromWindow cant be nullptr");
+        ls.onChildViewDetachedFromWindow(*child);
     }
 }
 
@@ -4691,7 +4693,9 @@ void RecyclerView::dispatchChildAttached(View* child) {
     }
     const int cnt = (int)mOnChildAttachStateListeners.size();
     for (int i = cnt - 1; i >= 0; i--) {
-        mOnChildAttachStateListeners.at(i).onChildViewAttachedToWindow(*child);
+        auto& ls = mOnChildAttachStateListeners.at(i);
+        FATAL_IF(ls.onChildViewAttachedToWindow==nullptr,"onChildViewAttachedToWindow cant be nullptr");
+        ls.onChildViewAttachedToWindow(*child);
     }
 }
 
