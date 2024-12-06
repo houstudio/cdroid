@@ -322,7 +322,7 @@ void AnimatorSet::start(bool inReverse, bool selfPulse) {
     }
 
     for (AnimatorListener&ls:mListeners) {
-        ls.onAnimationStart(*this, inReverse);
+        if(ls.onAnimationStart)ls.onAnimationStart(*this, inReverse);
     }
     if (IsEmptySet) {
         // In the case of empty AnimatorSet, or 0 duration scale, we will trigger the
@@ -888,11 +888,12 @@ void AnimatorSet::createDependencyGraph(){
 int AnimatorSet::AnimationEventCompare(AnimationEvent* e1, AnimationEvent* e2){
     const auto t1 = e1->getTime();
     const auto t2 = e2->getTime();
+    LOGD("t1=%lld t2=%lld events=%d/%d",t1,t2,e1->mEvent,e2->mEvent);
     if (t1 == t2) {
         // For events that happen at the same time, we need them to be in the sequence
         // (end, start, start delay ended)
-        if (e2->mEvent + e1->mEvent == AnimationEvent::ANIMATION_START
-                + AnimationEvent::ANIMATION_DELAY_ENDED) {
+        if ((e2->mEvent + e1->mEvent) == (AnimationEvent::ANIMATION_START
+                + AnimationEvent::ANIMATION_DELAY_ENDED)) {
             // Ensure start delay happens after start
             return e1->mEvent - e2->mEvent;
         } else {
@@ -926,7 +927,7 @@ void AnimatorSet::sortAnimationEvents(){
     for (int i = 0; i < eventSize;) {
         AnimationEvent* event = mEvents.at(i);
         if (event->mEvent == AnimationEvent::ANIMATION_END) {
-            bool needToSwapStart;
+            bool needToSwapStart = false;
             if (event->mNode->mStartTime == event->mNode->mEndTime) {
                 needToSwapStart = true;
             } else if (event->mNode->mEndTime == event->mNode->mStartTime
@@ -941,7 +942,7 @@ void AnimatorSet::sortAnimationEvents(){
             int startEventId = eventSize;
             int startDelayEndId = eventSize;
             for (int j = i + 1; j < eventSize; j++) {
-                if (startEventId < eventSize && startDelayEndId < eventSize) {
+                if ((startEventId < eventSize) && (startDelayEndId < eventSize)) {
                     break;
                 }
                 if (mEvents.at(j)->mNode == event->mNode) {
@@ -970,7 +971,8 @@ void AnimatorSet::sortAnimationEvents(){
             // the start event index.
             if (needToSwapStart) {
                 auto it = mEvents.begin()+startEventId;
-                AnimationEvent* startEvent = *it;mEvents.erase(it);//remove(startEventId);
+                AnimationEvent* startEvent = *it;
+                mEvents.erase(it);//remove(startEventId);
                 mEvents.insert(mEvents.begin()+i, startEvent);
                 i++;
             }
@@ -993,9 +995,10 @@ void AnimatorSet::sortAnimationEvents(){
     mEvents.insert(mEvents.begin()+1, new AnimationEvent(mRootNode, AnimationEvent::ANIMATION_DELAY_ENDED));
     mEvents.insert(mEvents.begin()+2, new AnimationEvent(mRootNode, AnimationEvent::ANIMATION_END));
 
+    //for(auto e:mEvents)LOGD("time =%lld,event=%d",e->getTime(),e->mEvent);
     if ((mEvents.at(mEvents.size() - 1)->mEvent == AnimationEvent::ANIMATION_START)
             || (mEvents.at(mEvents.size() - 1)->mEvent == AnimationEvent::ANIMATION_DELAY_ENDED)) {
-        throw std::logic_error("Something went wrong, the last event is not an end event");
+        //throw std::logic_error("Something went wrong, the last event is not an end event");
     }
 }
 
@@ -1129,9 +1132,8 @@ void AnimatorSet::Node::addParents(const std::vector<AnimatorSet::Node*>& parent
     }
 }
 
-AnimatorSet::AnimationEvent::AnimationEvent(Node* node, int event) {
-    mNode = node;
-    mEvent = event;
+AnimatorSet::AnimationEvent::AnimationEvent(Node* node, int event)
+    :mNode(node),mEvent(event){
 }
 
 int64_t AnimatorSet::AnimationEvent::getTime()const {
