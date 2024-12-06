@@ -42,10 +42,10 @@ private:
     static TimeInterpolator* sDefaultInterpolator;
     std::vector<AnimatorUpdateListener> mUpdateListeners;
 protected:
-    int64_t mStartTime = -1;
     bool mStartTimeCommitted;
-    float mSeekFraction = -1;
     bool mInitialized = false;
+    int64_t mStartTime = -1;
+    float mSeekFraction = -1;
     std::vector<PropertyValuesHolder*>mValues;
     std::map<const std::string,PropertyValuesHolder*>mValuesMap;
 private:
