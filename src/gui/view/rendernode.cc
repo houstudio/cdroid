@@ -184,4 +184,15 @@ void RenderNode::setLeftTopRightBottom(float left,float top,float right,float bo
     mBottom= bottom;
 }
 
+bool RenderNode::offsetLeftAndRight(int offset){
+    mLeft += offset;
+    mRight+= offset;
+    return true;
+}
+
+bool RenderNode::offsetTopAndBottom(int offset){
+    mTop   += offset;
+    mBottom+= offset;
+    return true;
+}
 }

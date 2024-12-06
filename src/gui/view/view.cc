@@ -4006,13 +4006,88 @@ bool View::getLocalVisibleRect(Rect& r) {
 }
 
 void View::offsetTopAndBottom(int offset){
-    mTop += offset;
-    mBottom += offset;
+    if(offset!=0){
+        const bool matrixIsIdentity = hasIdentityMatrix();
+        if(matrixIsIdentity){
+            if(isHardwareAccelerated()){
+                invalidateViewProperty(false,false);
+            }else{
+                ViewGroup*p = mParent;
+                if(p&&mAttachInfo){
+                    Rect r;
+                    int minTop,maxBottom,yLoc;
+                    if(offset<0){
+                        minTop = mTop + offset;
+                        maxBottom = mBottom;
+                        yLoc = 0;
+                    }else{
+                        minTop = mTop;
+                        maxBottom = mBottom + offset;
+                        yLoc =0;
+                    }
+                    r.set(0,yLoc,mRight-mLeft,maxBottom-minTop-yLoc);
+                    p->invalidateChild(this,r);
+                }
+            }
+        }else{
+            invalidateViewProperty(false,false);
+        }
+        mTop += offset;
+        mBottom += offset;
+        mRenderNode->offsetTopAndBottom(offset);
+        if(isHardwareAccelerated()){
+            invalidateViewProperty(false, false);
+            invalidateParentIfNeededAndWasQuickRejected();
+        } else {
+            if (!matrixIsIdentity) {
+                invalidateViewProperty(false, true);
+            }
+            invalidateParentIfNeeded();
+        }
+        notifySubtreeAccessibilityStateChangedIfNeeded();
+    }
 }
 
 void View::offsetLeftAndRight(int offset){
-    mLeft += offset;
-    mRight += offset;
+    if (offset != 0) {
+        const bool matrixIsIdentity = hasIdentityMatrix();
+        if (matrixIsIdentity) {
+            if (isHardwareAccelerated()) {
+                invalidateViewProperty(false, false);
+            } else {
+                ViewGroup* p = mParent;
+                if (p != nullptr && mAttachInfo != nullptr) {
+                    Rect r;
+                    int minLeft, maxRight;
+                    if (offset < 0) {
+                        minLeft = mLeft + offset;
+                        maxRight = mRight;
+                    } else {
+                        minLeft = mLeft;
+                        maxRight = mRight + offset;
+                    }
+                    r.set(0, 0, maxRight - minLeft, mBottom - mTop);
+                    p->invalidateChild(this, r);
+                }
+            }
+        } else {
+            invalidateViewProperty(false, false);
+        }
+
+        mLeft += offset;
+        mRight += offset;
+        mRenderNode->offsetLeftAndRight(offset);
+        if (isHardwareAccelerated()) {
+            invalidateViewProperty(false, false);
+            invalidateParentIfNeededAndWasQuickRejected();
+        } else {
+            if (!matrixIsIdentity) {
+                invalidateViewProperty(false, true);
+            }
+            invalidateParentIfNeeded();
+        }
+        notifySubtreeAccessibilityStateChangedIfNeeded();
+    }
 }
 
 int View::getRawTextDirection()const{
@@ -5826,7 +5901,7 @@ void View::invalidateParentCaches(){
 }
 
 void View::invalidateParentIfNeeded(){
-    if(mParent)mParent->invalidate(true);
+    if(isHardwareAccelerated()&&mParent)mParent->invalidate(true);
 }
 
 void View::invalidateInheritedLayoutMode(int layoutModeOfRoot){

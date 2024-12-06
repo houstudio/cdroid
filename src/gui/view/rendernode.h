@@ -54,6 +54,9 @@ public:
     void  setRight(float);
     void  setBottom(float);
     void  setLeftTopRightBottom(float,float,float,float);
+
+    bool offsetLeftAndRight(int offset);
+    bool offsetTopAndBottom(int offset);
 };
 
 }
