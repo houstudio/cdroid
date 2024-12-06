@@ -2750,7 +2750,7 @@ bool TextView::performAccessibilityActionInternal(int action, Bundle arguments){
     return true;
 }
 void TextView::sendAccessibilityEventInternal(int eventType){
-    LOGD("TODO");
+    LOGD_IF(AccessibilityManager::getInstance(mContext).isEnabled(),"TODO");
     /*if (eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED && mEditor != null) {
         mEditor.mProcessTextIntentActionsHandler.initializeAccessibilityActions();
     }*/

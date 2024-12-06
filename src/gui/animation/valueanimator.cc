@@ -173,7 +173,7 @@ PropertyValuesHolder* ValueAnimator::getValues(const std::string&propName){
 void ValueAnimator::initAnimation(){
     if(!mInitialized){
         for(auto& v:mValues){
-            //v->init();
+            v->init();
         }
         mInitialized = true;
     }
@@ -727,7 +727,7 @@ void ValueAnimator::animateValue(float fraction) {
     fraction = mInterpolator->getInterpolation(fraction);
     mCurrentFraction = fraction;
     for (auto v:mValues) {
-        v->setFraction(this,fraction);
+        v->calculateValue(fraction);
     }
     for (auto l:mUpdateListeners) {
         l(*this);

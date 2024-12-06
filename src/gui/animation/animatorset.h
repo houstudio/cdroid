@@ -78,11 +78,18 @@ private:
     std::map<Animator*, Node*> mNodeMap;
     std::vector<AnimationEvent*> mEvents;
     std::vector<Node*> mNodes;
+    AnimatorListener mDummyListener;
     bool mDependencyDirty = false;
 
     /* Indicates whether an AnimatorSet has been start()'d, whether or
      * not there is a nonzero startDelay. */
     bool mStarted = false;
+    bool mShouldIgnoreEndWithoutStart;
+    bool mShouldResetValuesAtStart;
+    bool mEndCanBeCalled;
+    bool mReversing = false;
+    bool mSelfPulse = true;
+    bool mChildrenInitialized = false;
 
     // The amount of time in ms to delay starting the animation after start() is called
     long mStartDelay = 0;
@@ -92,24 +99,18 @@ private:
 
     Node* mRootNode;// = new Node(mDelayAnim);
 
-    long mDuration = -1;
 
     TimeInterpolator* mInterpolator = nullptr;
 
     // The total duration of finishing all the Animators in the set.
     long mTotalDuration = 0;
+    long mDuration = -1;
 
-    bool mShouldIgnoreEndWithoutStart;
-    bool mShouldResetValuesAtStart;
-    bool mEndCanBeCalled;
+    int mLastEventId = -1;
     int64_t mLastFrameTime = -1;
     int64_t mFirstFrame = -1;
-    int mLastEventId = -1;
     // Indicates whether the animation is reversing.
-    bool mReversing = false;
-    bool mSelfPulse = true;
     SeekState* mSeekState;
-    bool mChildrenInitialized = false;
     int64_t mPauseTime = -1;
 private:
     void forceToEnd();

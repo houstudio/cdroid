@@ -7,8 +7,6 @@
 
 namespace cdroid{
 
-typedef std::function<float (float fraction, float startValue, float endValue)>TypeEvaluator; 
-
 class ValueAnimator:public Animator,public AnimationHandler::AnimationFrameCallback{
 public:
     static constexpr int RESTART = 1;

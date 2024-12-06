@@ -10,13 +10,19 @@ AnimatorSet::AnimatorSet(){
     mRootNode  = new Node(mDelayAnim);
     mNodeMap.insert(std::pair<Animator*,Node*>(mDelayAnim, mRootNode));
     mNodes.push_back(mRootNode);
-    bool isPreO;
     // Set the flag to ignore calling end() without start() for pre-N releases
     mShouldIgnoreEndWithoutStart = true;
-    isPreO = true;
+    const bool isPreO = true;//app.getApplicationInfo().targetSdkVersion < Build.VERSION_CODES.O;
     mShouldResetValuesAtStart = !isPreO;
     mEndCanBeCalled = !isPreO;
     mSeekState = new SeekState(this);
+    mDummyListener.onAnimationEnd=[this](Animator&animation,bool isReverse){
+        auto it = mNodeMap.find(&animation);
+        if(it==mNodeMap.end()){
+            throw std::runtime_error("Error: animation ended is not in the node map");
+        }
+        it->second->mEnded = true;
+    };
 }
 
 AnimatorSet::~AnimatorSet(){
@@ -237,6 +243,7 @@ Animator& AnimatorSet::setDuration(long duration) {
 }
 
 void AnimatorSet::setupStartValues() {
+    LOGD("%d nodes",mNodes.size());
     for (Node*node:mNodes) {
         if (node != mRootNode) {
             node->mAnimation->setupStartValues();
@@ -720,13 +727,13 @@ void AnimatorSet::startAnimation() {
 
 void AnimatorSet::addDummyListener() {
     for (int i = 1; i < mNodes.size(); i++) {
-        //mNodes.at(i)->mAnimation->addListener(mDummyListener);
+        mNodes.at(i)->mAnimation->addListener(mDummyListener);
     }
 }
 
 void AnimatorSet::removeDummyListener() {
     for (int i = 1; i < mNodes.size(); i++) {
-        //mNodes.at(i)->mAnimation->removeListener(mDummyListener);
+        mNodes.at(i)->mAnimation->removeListener(mDummyListener);
     }
 }
 

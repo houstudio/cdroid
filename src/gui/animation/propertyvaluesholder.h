@@ -25,9 +25,10 @@ inline constexpr float lerp(float fromValue, float toValue, float fraction) {
 inline int lerp(int startValue, int endValue, float fraction) {
     return int(startValue + std::round(fraction * (endValue - startValue)));
 }
-
+using TypeEvaluator = std::function<AnimateValue(float fraction,AnimateValue&startValue,AnimateValue&endValue)>;
 class PropertyValuesHolder{
 public:
+    friend class ValueAnimator;
     using PropertySetter = std::function<void(void*target,const std::string&prop,AnimateValue&v)>;
     using PropertyGetter = std::function<AnimateValue(void*target,const std::string&prop)>;
     using OnPropertyChangedListener = std::function<void(const std::string&,void*target,float)>;
@@ -37,12 +38,15 @@ protected:
     OnPropertyChangedListener mOnPropertyChangedListener;
     PropertyGetter mGetter;
     PropertySetter mSetter;
+    TypeEvaluator mEvaluator;
     std::vector<AnimateValue>mDataSource;
     AnimateValue mStartValue;
     AnimateValue mEndValue;
     AnimateValue mAnimateValue;
-    void setupValue(void*target);
-    virtual void evaluate(AnimateValue& out, const AnimateValue& from, const AnimateValue& to, float fraction)const;
+    void setupValue(void*target,int);
+    void init();
+    static AnimateValue evaluator(float fraction,const AnimateValue& from, const AnimateValue& to);
+    void calculateValue(float fraction);
 public:
     PropertyValuesHolder();
     PropertyValuesHolder(const PropertyValuesHolder&);
@@ -58,9 +62,9 @@ public:
     void setValues(const std::vector<int>&values);
     void setValues(const std::vector<uint32_t>&values);
     void setValues(const std::vector<float>&values);
-    virtual void setFraction(void*target,float fraction);
     const AnimateValue& getAnimatedValue()const;
 
+    void setEvaluator(TypeEvaluator evaluator);
     void setAnimatedValue(void*target);
     void setupStartValue(void*target);
     void setupEndValue(void*target);
