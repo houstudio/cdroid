@@ -100,12 +100,15 @@ void Animator::appendChangingConfigurations(int configs) {
 }
 
 void Animator::setupStartValues() {
+    //NOTHING
 }
 
 void Animator::setupEndValues() {
+    //NOTHING
 }
 
 void Animator::setTarget(void*target){
+    //NOTHING
 }
 
 bool Animator::canReverse() {
@@ -113,6 +116,7 @@ bool Animator::canReverse() {
 }
 
 void Animator::reverse(){
+    throw std::runtime_error("Reverse is not supported");
 }
 
 bool Animator::pulseAnimationFrame(int64_t frameTime) {
@@ -130,6 +134,7 @@ void Animator::startWithoutPulsing(bool inReverse) {
 }
 
 void Animator::skipToEndValue(bool inReverse) {
+    //NOTHING
 }
 
 bool Animator::isInitialized() {
@@ -142,6 +147,23 @@ void Animator::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayT
 AnimatorListenerAdapter::AnimatorListenerAdapter(){
     onAnimationCancel=onAnimationRepeat=onAnimationPause=onAnimationResume=[](Animator&anim){};
     onAnimationEnd=onAnimationStart=[](Animator&aim,bool reverse){};
+}
+
+Animator::AnimatorConstantState::AnimatorConstantState(Animator* animator)
+    :mAnimator(animator){
+    // ensure a reference back to here so that constante state is not gc'ed.
+    mAnimator->mConstantState = this;
+    mChangingConf = mAnimator->getChangingConfigurations();
+}
+
+int Animator::AnimatorConstantState::getChangingConfigurations() {
+    return mChangingConf;
+}
+
+Animator* Animator::AnimatorConstantState::newInstance() {
+    Animator* clone = mAnimator->clone();
+    clone->mConstantState = this;
+    return clone;
 }
 
 }//endof namespace

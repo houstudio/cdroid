@@ -16,27 +16,7 @@ public:
 
 class Animator{
 private:
-    class AnimatorConstantState:public ConstantState<Animator*> {
-        Animator* mAnimator;
-        int mChangingConf;
-    public:
-        AnimatorConstantState(Animator* animator) {
-            mAnimator = animator;
-            // ensure a reference back to here so that constante state is not gc'ed.
-            mAnimator->mConstantState = this;
-            mChangingConf = mAnimator->getChangingConfigurations();
-        }
-
-        int getChangingConfigurations()override {
-            return mChangingConf;
-        }
-
-        Animator* newInstance()override{
-            Animator* clone = mAnimator->clone();
-            clone->mConstantState = this;
-            return clone;
-        }
-    };
+    class AnimatorConstantState;
 public: 
     static constexpr long DURATION_INFINITE = -1;
     
@@ -103,6 +83,15 @@ public:
 class AnimatorListenerAdapter:public Animator::AnimatorListener,public Animator::AnimatorPauseListener{
 public:
     AnimatorListenerAdapter();
+};
+
+class Animator::AnimatorConstantState:public ConstantState<Animator*> {
+    Animator* mAnimator;
+    int mChangingConf;
+public:
+    AnimatorConstantState(Animator* animator);
+    int getChangingConfigurations()override;
+    Animator* newInstance()override;
 };
 }//endof namespace
 #endif //__ANIMATOR_H__
