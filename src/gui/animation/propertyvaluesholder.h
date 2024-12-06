@@ -28,13 +28,15 @@ inline int lerp(int startValue, int endValue, float fraction) {
 
 class PropertyValuesHolder{
 public:
-    using PropertySetter = std::function<void(const std::string&prop,AnimateValue&v)>;
-    using PropertyGetter = std::function<AnimateValue(const std::string&prop)>;
+    using PropertySetter = std::function<void(void*target,const std::string&prop,AnimateValue&v)>;
+    using PropertyGetter = std::function<AnimateValue(void*target,const std::string&prop)>;
     using OnPropertyChangedListener = std::function<void(const std::string&,void*target,float)>;
 protected:
     std::string mPropertyName;
     Property*mProperty;
     OnPropertyChangedListener mOnPropertyChangedListener;
+    PropertyGetter mGetter;
+    PropertySetter mSetter;
     std::vector<AnimateValue>mDataSource;
     AnimateValue mStartValue;
     AnimateValue mEndValue;

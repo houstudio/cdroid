@@ -111,7 +111,11 @@ void PropertyValuesHolder::setAnimatedValue(void*target){
 
 void PropertyValuesHolder::setupValue(void*target/*, Keyframe kf*/){
     if(mProperty){
+        AnimateValue value = mProperty->get(target);
+    }else if(mGetter){
+        AnimateValue value = mGetter(target,mPropertyName);
     }else{
+        LOGE("invalidate arguments mGetter,property must be setted");
     }
 }
 

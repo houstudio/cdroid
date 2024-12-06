@@ -172,6 +172,9 @@ PropertyValuesHolder* ValueAnimator::getValues(const std::string&propName){
 
 void ValueAnimator::initAnimation(){
     if(!mInitialized){
+        for(auto& v:mValues){
+            //v->init();
+        }
         mInitialized = true;
     }
 }
@@ -377,7 +380,7 @@ void ValueAnimator::start(bool playBackwards){
     mReversing = playBackwards;
     mSelfPulse = !mSuppressSelfPulseRequested;
     // Special case: reversing from seek-to-0 should act as if not seeked at all.
-    if (playBackwards && mSeekFraction != -1 && mSeekFraction != 0) {
+    if (playBackwards && (mSeekFraction != -1) && (mSeekFraction != 0) ) {
         if (mRepeatCount == INFINITE) {
             // Calculate the fraction of the current iteration.
             float fraction = (float) (mSeekFraction - std::floor(mSeekFraction));

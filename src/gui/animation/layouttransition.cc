@@ -367,14 +367,14 @@ void LayoutTransition::runChangeTransition(ViewGroup* parent, View* newView, int
     /*CleanupCallback callback = new CleanupCallback(layoutChangeListenerMap, parent);
     observer->addOnPreDrawListener(callback);
     parent->addOnAttachStateChangeListener(callback);*/
-    mOnAttachStateChange.onViewAttachedToWindow=nullptr;
+    mOnAttachStateChange.onViewAttachedToWindow =[](View&){};
     mOnAttachStateChange.onViewDetachedFromWindow=[this,&parent](View&view){
 	LOGD("%p:%d detached",&view,view.getId());
         cleanup(parent);
     };
     mOnPreDraw=[this,&parent]()->bool{
         cleanup(parent);
-	return true;
+        return true;
     };
     observer->addOnPreDrawListener(mOnPreDraw);
     parent->addOnAttachStateChangeListener(mOnAttachStateChange);
@@ -383,18 +383,11 @@ void LayoutTransition::runChangeTransition(ViewGroup* parent, View* newView, int
 void LayoutTransition::cleanup(ViewGroup*parent){
     parent->getViewTreeObserver()->removeOnPreDrawListener(mOnPreDraw);
     parent->removeOnAttachStateChangeListener(mOnAttachStateChange);
-    if (layoutChangeListenerMap.size()) {
-        /*Collection<View> views = layoutChangeListenerMap.keySet();
-        for (View view : views) {
-            View::OnLayoutChangeListener listener = layoutChangeListenerMap.get(view);
-            view->removeOnLayoutChangeListener(listener);
-        }*/
 	for(auto it:layoutChangeListenerMap){
 	    View*view=it.first;
 	    view->removeOnLayoutChangeListener(it.second);
 	}
-        layoutChangeListenerMap.clear();
-    }
+    layoutChangeListenerMap.clear();
 }
 
 void LayoutTransition::doLayoutChange(View& v, int left, int top, int right, int height,
@@ -402,15 +395,14 @@ void LayoutTransition::doLayoutChange(View& v, int left, int top, int right, int
 	ViewGroup*parent,View*child,int changeReason,int duration){
     // Tell the animation to extract end values from the changed object
     LOGD("doLayoutChange(%p:%d)",&v,v.getId());
-#if 10
     anim->setupEndValues();
     if (dynamic_cast<ValueAnimator*>(anim)) {
         bool valuesDiffer = false;
         ValueAnimator* valueAnim = (ValueAnimator*)anim;
-	std::vector<PropertyValuesHolder*> oldValues = valueAnim->getValues();
-        /*for (int i = 0; i < oldValues.size(); ++i) {
+        std::vector<PropertyValuesHolder*> oldValues = valueAnim->getValues();
+        for (int i = 0; i < oldValues.size(); ++i) {
             PropertyValuesHolder* pvh = oldValues[i];
-            if (dynamic_cast<KeyframeSet*>(pvh)) {
+            /*if (dynamic_cast<KeyframeSet*>(pvh)) {
                 KeyframeSet keyframeSet = (KeyframeSet) pvh->mKeyframes;
                 if (keyframeSet.mFirstKeyframe == nullptr ||
                         keyframeSet.mLastKeyframe == nullptr ||
@@ -420,11 +412,11 @@ void LayoutTransition::doLayoutChange(View& v, int left, int top, int right, int
                 }
             } else if (!pvh.mKeyframes.getValue(0).equals(pvh.mKeyframes.getValue(1))) {
                 valuesDiffer = true;
-            }
+            }*/
         }
         if (!valuesDiffer) {
             return;
-        }*/
+        }
     }
 
     long startDelay = 0;
@@ -475,7 +467,6 @@ void LayoutTransition::doLayoutChange(View& v, int left, int top, int right, int
     child->removeOnLayoutChangeListener(mOnLayoutChange);
     auto itc = layoutChangeListenerMap.find(child);
     layoutChangeListenerMap.erase(itc);//layoutChangeListenerMap.remove(child);
-#endif
 }
 
 void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason, Animator* baseAnimator,long duration, View* child){
@@ -486,8 +477,10 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
         return;
     }
     Animator* anim = baseAnimator;//->clone();
-    auto ita=pendingAnimations.find(child);
-    if (ita!=pendingAnimations.end()) {
+    anim->setTarget(child);
+    anim->setupStartValues();
+    auto ita = pendingAnimations.find(child);
+    if (ita != pendingAnimations.end()) {
         Animator*currentAnimator=ita->second;
         currentAnimator->cancel();
         pendingAnimations.erase(ita);

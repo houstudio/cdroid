@@ -15,8 +15,11 @@ private:
 private:
     static Animator* createAnimatorFromXml(Context*ctx,const std::string&resid);
     static StateListAnimator* createStateListAnimatorFromXml(Context*ctx,const std::string&resid);
+    static int valueTypeFromPropertyName(const std::string& name);
+    static bool isColorType(int type);
+    static PropertyValuesHolder* getPVH(const AttributeSet&atts, int valueType,const std::string& propertyName);
     static ObjectAnimator* loadObjectAnimator(Context*ctx,const AttributeSet& attrs);
-    static ValueAnimator*  loadValueAnimator(Context*context,const AttributeSet& attrs, ValueAnimator*anim);
+    static ValueAnimator* loadValueAnimator(Context*context,const AttributeSet& attrs, ValueAnimator*anim);
 public:
     static Animator* loadAnimator(Context* context,const std::string&resid);
     static StateListAnimator* loadStateListAnimator(Context* context,const std::string&resid);

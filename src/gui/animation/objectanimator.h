@@ -17,8 +17,8 @@ public:
     void setTarget(void*target);
     void*getTarget();
 
-    void setupStartValues();
-    void setupEndValues();
+    void setupStartValues()override;
+    void setupEndValues()override;
     void animateValue(float fraction)override;
 
     void setPropertyName(const std::string&propertyName);
