@@ -119,6 +119,10 @@ void Animator::reverse(){
     throw std::runtime_error("Reverse is not supported");
 }
 
+void Animator::setAllowRunningAsynchronously(bool){
+    //NOTHING
+}
+
 bool Animator::pulseAnimationFrame(int64_t frameTime) {
     // TODO: Need to find a better signal than this. There's a bug in SystemUI that's preventing
     // returning !isStarted() from working.
@@ -142,6 +146,7 @@ bool Animator::isInitialized() {
 }
 
 void Animator::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse) {
+    //NOTHING
 }
 
 AnimatorListenerAdapter::AnimatorListenerAdapter(){

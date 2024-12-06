@@ -12,9 +12,10 @@ AnimatorSet::AnimatorSet(){
     mNodes.push_back(mRootNode);
     // Set the flag to ignore calling end() without start() for pre-N releases
     mShouldIgnoreEndWithoutStart = true;
-    const bool isPreO = true;//app.getApplicationInfo().targetSdkVersion < Build.VERSION_CODES.O;
+    const bool isPreO = false;//app.getApplicationInfo().targetSdkVersion < Build.VERSION_CODES.O;
     mShouldResetValuesAtStart = !isPreO;
     mEndCanBeCalled = !isPreO;
+    mTotalDuration = 0;
     mSeekState = new SeekState(this);
     mDummyListener.onAnimationEnd=[this](Animator&animation,bool isReverse){
         auto it = mNodeMap.find(&animation);
@@ -234,7 +235,7 @@ long AnimatorSet::getDuration(){
 
 Animator& AnimatorSet::setDuration(long duration) {
     if (duration < 0) {
-        LOGE("duration must be a value of zero or greater");
+        std::logic_error("duration must be a value of zero or greater");
     }
     mDependencyDirty = true;
     // Just record the value for now - it will be used later when the AnimatorSet starts
@@ -300,26 +301,26 @@ void AnimatorSet::start(bool inReverse, bool selfPulse) {
 
     for (Node*node:mNodes) {
         node->mEnded = false;
-        //node->mAnimation->setAllowRunningAsynchronously(false);
+        node->mAnimation->setAllowRunningAsynchronously(false);
     }
 
     initAnimation();
     if (inReverse && !canReverse()) {
-        throw "Cannot reverse infinite AnimatorSet";
+        throw std::runtime_error("Cannot reverse infinite AnimatorSet");
     }
 
     mReversing = inReverse;
 
     // Now that all dependencies are set up, start the animations that should be started.
-    bool bisEmptySet = isEmptySet(this);
-    if (!bisEmptySet) {
+    const bool IsEmptySet = isEmptySet(this);
+    if (!IsEmptySet) {
         startAnimation();
     }
 
     for (AnimatorListener&ls:mListeners) {
         ls.onAnimationStart(*this, inReverse);
     }
-    if (bisEmptySet) {
+    if (IsEmptySet) {
         // In the case of empty AnimatorSet, or 0 duration scale, we will trigger the
         // onAnimationEnd() right away.
         end();
@@ -358,7 +359,7 @@ void AnimatorSet::updateAnimatorsDuration() {
 
 void AnimatorSet::skipToEndValue(bool inReverse) {
     if (!isInitialized()) {
-        throw ("Children must be initialized.");
+        throw std::runtime_error("Children must be initialized.");
     }
 
     // This makes sure the animation events are sorted an up to date.
@@ -383,9 +384,12 @@ void AnimatorSet::skipToEndValue(bool inReverse) {
 }
 
 void AnimatorSet::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse){
+    if( (currentPlayTime<0) || (lastPlayTime<0)){
+        throw std::logic_error("Error: Play time should never be negative.");
+    }
     if (inReverse) {
         if (getTotalDuration() == DURATION_INFINITE) {
-            LOGE("Cannot reverse AnimatorSet with infinite duration");
+            throw std::logic_error("Cannot reverse AnimatorSet with infinite duration");
         }
         int64_t duration = getTotalDuration() - mStartDelay;
         currentPlayTime = std::min(currentPlayTime, duration);
@@ -421,7 +425,7 @@ void AnimatorSet::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPl
 
     // Seek unfinished animation to the right time.
     for (Node*node:unfinishedNodes) {
-        long playTime = getPlayTimeForNode(currentPlayTime, node, inReverse);
+        int64_t playTime = getPlayTimeForNode(currentPlayTime, node, inReverse);
         if (!inReverse) {
             playTime -= node->mAnimation->getStartDelay();
         }
@@ -566,9 +570,11 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
     }
 
     // Remove all the finished anims
-    for (int i = int(mPlayingSet.size() - 1); i >= 0; i--) {
-        if (mPlayingSet.at(i)->mEnded) {
-            //mPlayingSet.remove(i);
+    for (auto it=mPlayingSet.rbegin();it!=mPlayingSet.rend();) {
+        if ((*it)->mEnded) {
+            it = std::vector<Node*>::reverse_iterator(mPlayingSet.erase(std::next(it).base()));//mPlayingSet.remove(i);
+        }else {
+            it ++;
         }
     }
 
@@ -651,8 +657,7 @@ void AnimatorSet::pulseFrame(AnimatorSet::Node* node, int64_t animPlayTime) {
     if (!node->mEnded) {
         float durationScale = ValueAnimator::getDurationScale();
         durationScale = durationScale == 0  ? 1 : durationScale;
-        node->mEnded = node->mAnimation->pulseAnimationFrame(
-                (long) (animPlayTime * durationScale));
+        node->mEnded = node->mAnimation->pulseAnimationFrame((animPlayTime * durationScale));
     }
 }
 
@@ -675,7 +680,7 @@ void AnimatorSet::startAnimation() {
     // Register animation callback
     addAnimationCallback(0);
 
-    if (mSeekState->getPlayTimeNormalized() == 0 && mReversing) {
+    if ((mSeekState->getPlayTimeNormalized() == 0) && mReversing) {
         // Maintain old behavior, if seeked to 0 then call reverse, we'll treat the case
         // the same as no seeking at all.
         mSeekState->reset();
@@ -690,7 +695,7 @@ void AnimatorSet::startAnimation() {
             skipToEndValue(!mReversing);
         } else {
             // If not all children are initialized and play direction is forward
-            for (size_t i = mEvents.size() - 1; i >= 0; i--) {
+            for (int i = int(mEvents.size() - 1); i >= 0; i--) {
                 if (mEvents.at(i)->mEvent == AnimationEvent::ANIMATION_DELAY_ENDED) {
                     Animator* anim = mEvents.at(i)->mNode->mAnimation;
                     // Only reset the animations that have been initialized to start value,
@@ -704,7 +709,7 @@ void AnimatorSet::startAnimation() {
         }
     }
 
-    if (mReversing || mStartDelay == 0 || mSeekState->isActive()) {
+    if (mReversing || (mStartDelay == 0) || mSeekState->isActive()) {
         int64_t playTime;
         // If no delay, we need to call start on the first animations to be consistent with old
         // behavior.
@@ -716,10 +721,10 @@ void AnimatorSet::startAnimation() {
         }
         int toId = findLatestEventIdForTime(playTime);
         handleAnimationEvents(-1, toId, playTime);
-        for (int i = int(mPlayingSet.size() - 1); i >= 0; i--) {
-            if (mPlayingSet.at(i)->mEnded) {
-                //mPlayingSet.remove(i);
-            }
+        for (auto it=mPlayingSet.rbegin();it!=mPlayingSet.rend();){
+            if ((*it)->mEnded) {
+                it = std::vector<Node*>::reverse_iterator(mPlayingSet.erase(std::next(it).base()));
+            }else{ it ++;}
         }
         mLastEventId = toId;
     }
@@ -864,12 +869,13 @@ void AnimatorSet::updatePlayTime(AnimatorSet::Node* parent,std::vector<AnimatorS
         }
         updatePlayTime(child, visited);
     }
-    //visited.remove(parent);
+    auto it = std::find(visited.begin(),visited.end(),parent);
+    if(it!=visited.end()) visited.erase(it);
 }
 
 void AnimatorSet::findSiblings(AnimatorSet::Node* node,std::vector<AnimatorSet::Node*>& siblings){
     auto it=std::find(siblings.begin(),siblings.end(),node);
-    if (it== siblings.end()){//contains(node)) {
+    if (it== siblings.end()){//!contains(node)) {
         siblings.push_back(node);
         for (Node*sibling:node->mSiblings) {
             findSiblings(sibling, siblings);
@@ -881,7 +887,7 @@ bool AnimatorSet::shouldPlayTogether() {
     updateAnimatorsDuration();
     createDependencyGraph();
     // All the child nodes are set out to play right after the delay animation
-    return mRootNode->mChildNodes.empty() || mRootNode->mChildNodes.size() == mNodes.size() - 1;
+    return mRootNode->mChildNodes.empty() || (mRootNode->mChildNodes.size() == mNodes.size() - 1);
 }
 
 long AnimatorSet::getTotalDuration() {
@@ -985,7 +991,7 @@ void AnimatorSet::SeekState::setPlayTime(int64_t playTime, bool inReverse) {
 void AnimatorSet::SeekState::updateSeekDirection(bool inReverse){
     // Change seek direction without changing the overall fraction
     if (inReverse && mAnimSet->getTotalDuration() == DURATION_INFINITE) {
-        LOGE("Error: Cannot reverse infinite animator set");
+         throw std::logic_error("Error: Cannot reverse infinite animator set");
     }
     if (mPlayTime >= 0) {
         if (inReverse != mSeekingInReverse) {

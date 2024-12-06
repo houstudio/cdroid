@@ -77,7 +77,8 @@ public:
     virtual void setupEndValues();
     virtual void setTarget(void*target);
     virtual bool canReverse();
-    virtual void reverse(); 
+    virtual void reverse();
+    virtual void setAllowRunningAsynchronously(bool);
 };
 
 class AnimatorListenerAdapter:public Animator::AnimatorListener,public Animator::AnimatorPauseListener{

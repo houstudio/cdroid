@@ -12,6 +12,7 @@ private:
         Animator* mAnimation;
         std::vector<Node*>mChildNodes;
         bool mEnded = false;
+        bool mParentsAdded = false;
 
         /**Nodes with animations that are defined to play simultaneously with the animation
          * associated with this current node. */
@@ -24,7 +25,6 @@ private:
          * the other parents' animations. */
         Node* mLatestParent = nullptr;
 
-        bool mParentsAdded = false;
         int64_t mStartTime = 0;
         int64_t mEndTime = 0;
         long mTotalDuration = 0;
