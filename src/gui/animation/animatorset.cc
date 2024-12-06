@@ -261,7 +261,7 @@ void AnimatorSet::setupEndValues() {
 }
 
 void AnimatorSet::pause() {
-    bool previouslyPaused = mPaused;
+    const bool previouslyPaused = mPaused;
     Animator::pause();
     if (!previouslyPaused && mPaused) {
         mPauseTime = -1;
@@ -269,7 +269,7 @@ void AnimatorSet::pause() {
 }
 
 void AnimatorSet::resume() {
-    bool previouslyPaused = mPaused;
+    const bool previouslyPaused = mPaused;
     Animator::resume();
     if (previouslyPaused && !mPaused) {
         if (mPauseTime >= 0) {
@@ -280,6 +280,10 @@ void AnimatorSet::resume() {
 
 void AnimatorSet::start() {
     start(false, true);
+}
+
+void AnimatorSet::startWithoutPulsing(bool inReverse) {
+    start(inReverse, false);
 }
 
 void AnimatorSet::initAnimation() {
@@ -710,14 +714,12 @@ void AnimatorSet::startAnimation() {
     }
 
     if (mReversing || (mStartDelay == 0) || mSeekState->isActive()) {
-        int64_t playTime;
+        int64_t playTime = 0;
         // If no delay, we need to call start on the first animations to be consistent with old
         // behavior.
         if (mSeekState->isActive()) {
             mSeekState->updateSeekDirection(mReversing);
             playTime = mSeekState->getPlayTime();
-        } else {
-            playTime = 0;
         }
         int toId = findLatestEventIdForTime(playTime);
         handleAnimationEvents(-1, toId, playTime);
@@ -814,10 +816,187 @@ void AnimatorSet::reverse() {
 }
 
 void AnimatorSet::createDependencyGraph(){
+    if (!mDependencyDirty) {
+        // Check whether any duration of the child animations has changed
+        bool durationChanged = false;
+        for (int i = 0; i < mNodes.size(); i++) {
+            Animator* anim = mNodes.at(i)->mAnimation;
+            if (mNodes.at(i)->mTotalDuration != anim->getTotalDuration()) {
+                durationChanged = true;
+                break;
+            }
+        }
+        if (!durationChanged) {
+            return;
+        }
+    }
 
+    mDependencyDirty = false;
+    // Traverse all the siblings and make sure they have all the parents
+    int size = mNodes.size();
+    for (int i = 0; i < size; i++) {
+        mNodes.at(i)->mParentsAdded = false;
+    }
+    for (int i = 0; i < size; i++) {
+        Node* node = mNodes.at(i);
+        if (node->mParentsAdded) {
+            continue;
+        }
+
+        node->mParentsAdded = true;
+        if (node->mSiblings.empty()){// == nullptr) {
+            continue;
+        }
+
+        // Find all the siblings
+        findSiblings(node, node->mSiblings);
+        auto it =std::find(node->mSiblings.begin(),node->mSiblings.end(),node);
+        if(it!=node->mSiblings.end())node->mSiblings.erase(it);
+
+        // Get parents from all siblings
+        int siblingSize = node->mSiblings.size();
+        for (int j = 0; j < siblingSize; j++) {
+            node->addParents(node->mSiblings.at(j)->mParents);
+        }
+
+        // Now make sure all siblings share the same set of parents
+        for (int j = 0; j < siblingSize; j++) {
+            Node* sibling = node->mSiblings.at(j);
+            sibling->addParents(node->mParents);
+            sibling->mParentsAdded = true;
+        }
+    }
+
+    for (int i = 0; i < size; i++) {
+        Node* node = mNodes.at(i);
+        if ((node != mRootNode) && node->mParents.empty()){// == nullptr)) {
+            node->addParent(mRootNode);
+        }
+    }
+
+    // Do a DFS on the tree
+    std::vector<Node*> visited(mNodes.size());
+    // Assign start/end time
+    mRootNode->mStartTime = 0;
+    mRootNode->mEndTime = mDelayAnim->getDuration();
+    updatePlayTime(mRootNode, visited);
+
+    sortAnimationEvents();
+    mTotalDuration = mEvents.at(mEvents.size() - 1)->getTime();
+}
+
+int AnimatorSet::AnimationEventCompare(AnimationEvent* e1, AnimationEvent* e2){
+    const auto t1 = e1->getTime();
+    const auto t2 = e2->getTime();
+    if (t1 == t2) {
+        // For events that happen at the same time, we need them to be in the sequence
+        // (end, start, start delay ended)
+        if (e2->mEvent + e1->mEvent == AnimationEvent::ANIMATION_START
+                + AnimationEvent::ANIMATION_DELAY_ENDED) {
+            // Ensure start delay happens after start
+            return e1->mEvent - e2->mEvent;
+        } else {
+            return e2->mEvent - e1->mEvent;
+        }
+    }
+    if (t2 == DURATION_INFINITE) {
+        return -1;
+    }
+    if (t1 == DURATION_INFINITE) {
+        return 1;
+    }
+    // When neither event happens at INFINITE time:
+    return (int) (t1 - t2);
 }
 
 void AnimatorSet::sortAnimationEvents(){
+    // Sort the list of events in ascending order of their time
+    // Create the list including the delay animation.
+    mEvents.clear();
+    for (int i = 1; i < mNodes.size(); i++) {
+        Node* node = mNodes.at(i);
+        mEvents.push_back(new AnimationEvent(node, AnimationEvent::ANIMATION_START));
+        mEvents.push_back(new AnimationEvent(node, AnimationEvent::ANIMATION_DELAY_ENDED));
+        mEvents.push_back(new AnimationEvent(node, AnimationEvent::ANIMATION_END));
+    }
+    std::sort(mEvents.begin(),mEvents.end(),AnimationEventCompare);
+
+    int eventSize = mEvents.size();
+    // For the same animation, start event has to happen before end.
+    for (int i = 0; i < eventSize;) {
+        AnimationEvent* event = mEvents.at(i);
+        if (event->mEvent == AnimationEvent::ANIMATION_END) {
+            bool needToSwapStart;
+            if (event->mNode->mStartTime == event->mNode->mEndTime) {
+                needToSwapStart = true;
+            } else if (event->mNode->mEndTime == event->mNode->mStartTime
+                    + event->mNode->mAnimation->getStartDelay()) {
+                // Swapping start delay
+                needToSwapStart = false;
+            } else {
+                i++;
+                continue;
+            }
+
+            int startEventId = eventSize;
+            int startDelayEndId = eventSize;
+            for (int j = i + 1; j < eventSize; j++) {
+                if (startEventId < eventSize && startDelayEndId < eventSize) {
+                    break;
+                }
+                if (mEvents.at(j)->mNode == event->mNode) {
+                    if (mEvents.at(j)->mEvent == AnimationEvent::ANIMATION_START) {
+                        // Found start event
+                        startEventId = j;
+                    } else if (mEvents.at(j)->mEvent == AnimationEvent::ANIMATION_DELAY_ENDED) {
+                        startDelayEndId = j;
+                    }
+                }
+
+            }
+            if (needToSwapStart && (startEventId == mEvents.size())) {
+                throw std::logic_error("Something went wrong, no start is found after "
+                        "stop for an animation that has the same start and end time.");
+
+            }
+            if (startDelayEndId == mEvents.size()) {
+                throw std::logic_error("Something went wrong, no start"
+                        "delay end is found after stop for an animation");
+
+            }
+
+            // We need to make sure start is inserted before start delay ended event,
+            // because otherwise inserting start delay ended events first would change
+            // the start event index.
+            if (needToSwapStart) {
+                auto it = mEvents.begin()+startEventId;
+                AnimationEvent* startEvent = *it;mEvents.erase(it);//remove(startEventId);
+                mEvents.insert(mEvents.begin()+i, startEvent);
+                i++;
+            }
+            auto it = mEvents.begin()+startDelayEndId;
+            AnimationEvent* startDelayEndEvent = *it;
+            mEvents.erase(it);//remove(startDelayEndId);
+            mEvents.insert(mEvents.begin()+i, startDelayEndEvent);
+            i += 2;
+        } else {
+            i++;
+        }
+    }
+
+    if (!mEvents.empty() && (mEvents.at(0)->mEvent != AnimationEvent::ANIMATION_START)) {
+        throw std::logic_error("Sorting went bad, the start event should always be at index 0");
+    }
+
+    // Add AnimatorSet's start delay node to the beginning
+    mEvents.insert(mEvents.begin()  , new AnimationEvent(mRootNode, AnimationEvent::ANIMATION_START));
+    mEvents.insert(mEvents.begin()+1, new AnimationEvent(mRootNode, AnimationEvent::ANIMATION_DELAY_ENDED));
+    mEvents.insert(mEvents.begin()+2, new AnimationEvent(mRootNode, AnimationEvent::ANIMATION_END));
+
+    if ((mEvents.at(mEvents.size() - 1)->mEvent == AnimationEvent::ANIMATION_START)
+            || (mEvents.at(mEvents.size() - 1)->mEvent == AnimationEvent::ANIMATION_DELAY_ENDED)) {
+        throw std::logic_error("Something went wrong, the last event is not an end event");
+    }
 }
 
 void AnimatorSet::updatePlayTime(AnimatorSet::Node* parent,std::vector<AnimatorSet::Node*>& visited){
@@ -862,9 +1041,8 @@ void AnimatorSet::updatePlayTime(AnimatorSet::Node* parent,std::vector<AnimatorS
                     child->mStartTime = parent->mEndTime;
                 }
 
-                long duration = child->mAnimation->getTotalDuration();
-                child->mEndTime = duration == DURATION_INFINITE ?
-                        DURATION_INFINITE : child->mStartTime + duration;
+                child->mEndTime = child->mTotalDuration == DURATION_INFINITE ?
+                        DURATION_INFINITE : child->mStartTime + child->mTotalDuration;
             }
         }
         updatePlayTime(child, visited);
@@ -874,7 +1052,7 @@ void AnimatorSet::updatePlayTime(AnimatorSet::Node* parent,std::vector<AnimatorS
 }
 
 void AnimatorSet::findSiblings(AnimatorSet::Node* node,std::vector<AnimatorSet::Node*>& siblings){
-    auto it=std::find(siblings.begin(),siblings.end(),node);
+    auto it = std::find(siblings.begin(),siblings.end(),node);
     if (it== siblings.end()){//!contains(node)) {
         siblings.push_back(node);
         for (Node*sibling:node->mSiblings) {
@@ -1018,7 +1196,7 @@ bool AnimatorSet::SeekState::isActive()const{
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 AnimatorSet::Builder::Builder(AnimatorSet*set,Animator* anim) {
-    mAnimSet =set;
+    mAnimSet = set;
     mAnimSet->mDependencyDirty = true;
     mCurrentNode = mAnimSet->getNodeForAnimation(anim);
 }

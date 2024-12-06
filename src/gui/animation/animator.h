@@ -35,14 +35,15 @@ public:
 private:
     AnimatorConstantState* mConstantState;
 protected:
+    friend class AnimatorSet;
     bool mPaused = false;
     int mChangingConfigurations = 0;
     std::vector<AnimatorListener> mListeners;
     std::vector<AnimatorPauseListener> mPauseListeners;
+    virtual void skipToEndValue(bool inReverse);
 public:
     virtual bool pulseAnimationFrame(int64_t frameTime);
-    void startWithoutPulsing(bool inReverse);
-    virtual void skipToEndValue(bool inReverse);
+    virtual void startWithoutPulsing(bool inReverse);
     virtual bool isInitialized();
     virtual void animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse);
 public:

@@ -65,7 +65,7 @@ private:
     void addAnimationCallback(long delay);
 protected:
     virtual void animateValue(float fraction);
-    void startWithoutPulsing(bool inReverse);
+    void startWithoutPulsing(bool inReverse)override;
     virtual bool animateBasedOnTime(int64_t currentTime);
     virtual void animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse);
     void skipToEndValue(bool inReverse);
