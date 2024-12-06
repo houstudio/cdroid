@@ -14,7 +14,7 @@ public:
     void start();
     bool animateBasedOnTime(int64_t currentTime)override;
     void setCurrentPlayTime(int64_t playTime)override;
-    void setTimeListener(TimeListener listener);
+    void setTimeListener(const TimeListener listener);
     void animateValue(float fraction)override;
     void initAnimation()override;
 };

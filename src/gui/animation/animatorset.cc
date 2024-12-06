@@ -508,8 +508,8 @@ void AnimatorSet::initChildren(){
 }
 
 bool AnimatorSet::doAnimationFrame(int64_t frameTime){
-    float durationScale = ValueAnimator::getDurationScale();
-    if (durationScale == .0f) {
+    const float durationScale = ValueAnimator::getDurationScale();
+    if (durationScale == 0.f) {
         // Duration scale is 0, end the animation right away.
         forceToEnd();
         return true;
@@ -547,20 +547,20 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
         mSeekState->reset();
     }
 
-    if (!mReversing && frameTime < mFirstFrame + mStartDelay * durationScale) {
+    if (!mReversing && (frameTime < (mFirstFrame + mStartDelay * durationScale))) {
         // Still during start delay in a forward playing case.
         return false;
     }
 
     // From here on, we always use unscaled play time. Note this unscaled playtime includes
     // the start delay.
-    int64_t unscaledPlayTime = int64_t((frameTime - mFirstFrame) / durationScale);
+    const int64_t unscaledPlayTime = int64_t((frameTime - mFirstFrame) / durationScale);
     mLastFrameTime = frameTime;
 
     // 1. Pulse the animators that will start or end in this frame
     // 2. Pulse the animators that will finish in a later frame
-    int latestId = findLatestEventIdForTime(unscaledPlayTime);
-    int startId = mLastEventId;
+    const int latestId = findLatestEventIdForTime(unscaledPlayTime);
+    const int startId = mLastEventId;
 
     handleAnimationEvents(startId, latestId, unscaledPlayTime);
 
@@ -584,7 +584,7 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
 
     bool finished = false;
     if (mReversing) {
-        if (mPlayingSet.size() == 1 && mPlayingSet.at(0) == mRootNode) {
+        if ((mPlayingSet.size() == 1) && (mPlayingSet.at(0) == mRootNode)) {
             // The only animation that is running is the delay animation.
             finished = true;
         } else if ( mPlayingSet.empty() && (mLastEventId < 3)) {
@@ -592,7 +592,7 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
             finished = true;
         }
     } else {
-        finished = mPlayingSet.empty() && mLastEventId == mEvents.size() - 1;
+        finished = mPlayingSet.empty() && (mLastEventId == mEvents.size() - 1);
     }
 
     if (finished) {
@@ -649,7 +649,7 @@ void AnimatorSet::handleAnimationEvents(int startId, int latestId, int64_t playT
                 node->mEnded = false;
                 node->mAnimation->startWithoutPulsing(false);
                 pulseFrame(node, 0);
-            } else if (event->mEvent == AnimationEvent::ANIMATION_END && !node->mEnded) {
+            } else if ((event->mEvent == AnimationEvent::ANIMATION_END) && !node->mEnded) {
                 // start event:
                 pulseFrame(node, getPlayTimeForNode(playTime, node));
             }
@@ -660,7 +660,7 @@ void AnimatorSet::handleAnimationEvents(int startId, int latestId, int64_t playT
 void AnimatorSet::pulseFrame(AnimatorSet::Node* node, int64_t animPlayTime) {
     if (!node->mEnded) {
         float durationScale = ValueAnimator::getDurationScale();
-        durationScale = durationScale == 0  ? 1 : durationScale;
+        durationScale = (durationScale == 0) ? 1 : durationScale;
         node->mEnded = node->mAnimation->pulseAnimationFrame((animPlayTime * durationScale));
     }
 }
@@ -888,7 +888,7 @@ void AnimatorSet::createDependencyGraph(){
 int AnimatorSet::AnimationEventCompare(AnimationEvent* e1, AnimationEvent* e2){
     const auto t1 = e1->getTime();
     const auto t2 = e2->getTime();
-    LOGD("t1=%lld t2=%lld events=%d/%d",t1,t2,e1->mEvent,e2->mEvent);
+    //LOGD("t1=%lld t2=%lld events=%d/%d",t1,t2,e1->mEvent,e2->mEvent);
     if (t1 == t2) {
         // For events that happen at the same time, we need them to be in the sequence
         // (end, start, start delay ended)

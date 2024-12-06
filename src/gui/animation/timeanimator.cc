@@ -28,8 +28,8 @@ void TimeAnimator::setCurrentPlayTime(int64_t playTime){
     animateBasedOnTime(currentTime);
 }
 
-void TimeAnimator::setTimeListener(TimeAnimator::TimeListener listener){
-    mListener=listener;
+void TimeAnimator::setTimeListener(const TimeAnimator::TimeListener listener){
+    mListener = listener;
 }
 
 void TimeAnimator::animateValue(float fraction){

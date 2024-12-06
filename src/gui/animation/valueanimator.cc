@@ -225,7 +225,7 @@ void ValueAnimator::setCurrentFraction(float fraction) {
         mSeekFraction = fraction;
     }
     mOverallFraction = fraction;
-    float currentIterationFraction = getCurrentIterationFraction(fraction, mReversing);
+    const float currentIterationFraction = getCurrentIterationFraction(fraction, mReversing);
     animateValue(currentIterationFraction);
 }
 
@@ -652,7 +652,7 @@ bool ValueAnimator::doAnimationFrame(int64_t frameTime){
     if (!mRunning) {
         // If not running, that means the animation is in the start delay phase of a forward
         // running animation. In the case of reversing, we want to run start delay in the end.
-        if (mStartTime > frameTime && mSeekFraction == -1) {
+        if ((mStartTime > frameTime) && (mSeekFraction == -1)) {
             // This is when no seek fraction is set during start delay. If developers change the
             // seek fraction during the delay, animation will start from the seeked position
             // right away.
@@ -667,7 +667,7 @@ bool ValueAnimator::doAnimationFrame(int64_t frameTime){
 
     if (mLastFrameTime < 0) {
         if (mSeekFraction >= 0) {
-            int64_t seekTime = getScaledDuration() * mSeekFraction;
+            int64_t seekTime = int64_t(getScaledDuration() * mSeekFraction);
             mStartTime = frameTime - seekTime;
             mSeekFraction = -1;
         }
@@ -679,7 +679,7 @@ bool ValueAnimator::doAnimationFrame(int64_t frameTime){
     // time to avoid animating frames at negative time intervals.  In practice, this
     // is very rare and only happens when seeking backwards.
     const int64_t currentTime = std::max(frameTime, mStartTime);
-    bool finished = animateBasedOnTime(currentTime);
+    const bool finished = animateBasedOnTime(currentTime);
 
     if (finished)  endAnimation();
     return finished;
