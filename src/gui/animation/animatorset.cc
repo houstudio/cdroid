@@ -458,11 +458,21 @@ void AnimatorSet::skipToStartValue(bool inReverse){
 }
 
 void AnimatorSet::setCurrentPlayTime(int64_t playTime){
+    if (mReversing && (getTotalDuration() == DURATION_INFINITE)) {
+        // Should never get here
+        throw std::logic_error("Error: Cannot seek in reverse in an infinite AnimatorSet");
+    }
+
+    if (((getTotalDuration() != DURATION_INFINITE) && (playTime > getTotalDuration() - mStartDelay))
+            || (playTime < 0)) {
+        throw std::logic_error("Error: Play time should always be in between 0 and duration.");
+    }
+
     initAnimation();
 
     if (!isStarted()) {
         if (mReversing) {
-            throw "Error: Something went wrong. mReversing should not be set when AnimatorSet is not started.";
+            throw std::logic_error("Error: Something went wrong. mReversing should not be set when AnimatorSet is not started.");
         }
         if (!mSeekState->isActive()) {
             findLatestEventIdForTime(0);
@@ -491,9 +501,9 @@ int64_t AnimatorSet::getCurrentPlayTime() {
     float durationScale = ValueAnimator::getDurationScale();
     durationScale = durationScale == 0 ? 1 : durationScale;
     if (mReversing) {
-        return (long) ((mLastFrameTime - mFirstFrame) / durationScale);
+        return int64_t((mLastFrameTime - mFirstFrame) / durationScale);
     } else {
-        return (long) ((mLastFrameTime - mFirstFrame - mStartDelay) / durationScale);
+        return int64_t((mLastFrameTime - mFirstFrame - mStartDelay) / durationScale);
     }
 }
 
@@ -539,9 +549,9 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
     if (mSeekState->isActive()) {
         mSeekState->updateSeekDirection(mReversing);
         if (mReversing) {
-            mFirstFrame = (long) (frameTime - mSeekState->getPlayTime() * durationScale);
+            mFirstFrame = int64_t(frameTime - mSeekState->getPlayTime() * durationScale);
         } else {
-            mFirstFrame = (long) (frameTime - (mSeekState->getPlayTime() + mStartDelay)
+            mFirstFrame = int64_t(frameTime - (mSeekState->getPlayTime() + mStartDelay)
                     * durationScale);
         }
         mSeekState->reset();
