@@ -15,7 +15,7 @@
 #include "mi_common.h"
 #include "mi_sys.h"
 #include "mi_gfx.h"
-
+#include "sstarFb.h"
 typedef struct {
     int fb;
     struct fb_fix_screeninfo fix;
@@ -222,7 +222,14 @@ int32_t GFXUnlockSurface(GFXHANDLE surface) {
 
 int32_t GFXSurfaceSetOpacity(GFXHANDLE surface,uint8_t alpha) {
     FBSURFACE*ngs=(FBSURFACE*)surface;
+    MI_FB_GlobalAlpha_t fba;//MI_FB_API.pdf
     if(ngs)ngs->alpha=alpha;
+    fba.bAlphaEnable = 1;
+    fba.bAlphaChannel= 0;
+    fba.u8Alpha0 = 255;
+    fba.u8Alpha1 = 255;
+    fba.u8GlobalAlpha = alpha;
+    ioctl (devs[ngs->dispid].fb,FBIOSET_GLOBAL_ALPHA,&fba);
     return E_OK;//dispLayer->SetOpacity(dispLayer,alpha);
 }
 
