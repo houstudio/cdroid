@@ -7,72 +7,9 @@ namespace cdroid{
 
 class AnimatorSet:public Animator,public AnimationHandler::AnimationFrameCallback{
 private:
-    class Node{
-    public:
-        Animator* mAnimation;
-        std::vector<Node*>mChildNodes;
-        bool mEnded = false;
-        bool mParentsAdded = false;
-
-        /**Nodes with animations that are defined to play simultaneously with the animation
-         * associated with this current node. */
-        std::vector<Node*> mSiblings;
-
-        /**Parent nodes are the nodes with animations preceding current node's animation. Parent
-         * nodes here are derived from user defined animation sequence. */
-        std::vector<Node*> mParents;
-        /**Latest parent is the parent node associated with a animation that finishes after all
-         * the other parents' animations. */
-        Node* mLatestParent = nullptr;
-
-        int64_t mStartTime = 0;
-        int64_t mEndTime = 0;
-        long mTotalDuration = 0;
-    public:
-        Node(Animator* animation);
-        Node* clone();
-        void addChild(Node* node);
-        void addSibling(Node* node);
-        void addParent(Node* node);
-        void addParents(const std::vector<Node*>& parents);
-    };
-    class AnimationEvent{
-    public:
-        static constexpr int ANIMATION_START = 0;
-        static constexpr int ANIMATION_DELAY_ENDED = 1;
-        static constexpr int ANIMATION_END = 2;
-        Node* mNode;
-        int mEvent;
-    public:
-        AnimationEvent(Node* node, int event);
-        int64_t getTime()const;
-    };
-    class SeekState{
-    private:
-        AnimatorSet*mAnimSet;
-        int64_t mPlayTime;
-        bool mSeekingInReverse;
-    public:
-        SeekState(AnimatorSet*set);
-        void reset();
-        void setPlayTime(int64_t playTime, bool inReverse);
-        void updateSeekDirection(bool inReverse);
-        int64_t getPlayTime()const;
-        int64_t getPlayTimeNormalized()const;
-        bool isActive()const;
-    };
-public:
-    class Builder{
-    private:
-        AnimatorSet*mAnimSet;
-        Node*mCurrentNode;
-    public:
-        Builder(AnimatorSet*set,Animator* anim);
-        Builder& with(Animator* anim);
-        Builder& before(Animator* anim);
-        Builder& after(Animator* anim);
-        Builder& after(long delay);
-    };
+    class Node;
+    class SeekState;
+    class AnimationEvent;
 private:
     std::vector<Node*> mPlayingSet;
     std::map<Animator*, Node*> mNodeMap;
@@ -99,7 +36,6 @@ private:
 
     Node* mRootNode;// = new Node(mDelayAnim);
 
-
     TimeInterpolator* mInterpolator = nullptr;
 
     // The total duration of finishing all the Animators in the set.
@@ -109,9 +45,9 @@ private:
     int mLastEventId = -1;
     int64_t mLastFrameTime = -1;
     int64_t mFirstFrame = -1;
+    int64_t mPauseTime = -1;
     // Indicates whether the animation is reversing.
     SeekState* mSeekState;
-    int64_t mPauseTime = -1;
 private:
     void forceToEnd();
     void initAnimation();
@@ -143,6 +79,7 @@ protected:
     bool isInitialized();
     void startWithoutPulsing(bool)override;
 public:
+    class Builder;
     AnimatorSet();
     ~AnimatorSet();
     void playTogether(const std::vector<Animator*>&);
@@ -177,5 +114,73 @@ public:
     long getTotalDuration()override;
 };
 
-}
+class AnimatorSet::Builder{
+private:
+    AnimatorSet*mAnimSet;
+    Node*mCurrentNode;
+public:
+    Builder(AnimatorSet*set,Animator* anim);
+    Builder& with(Animator* anim);
+    Builder& before(Animator* anim);
+    Builder& after(Animator* anim);
+    Builder& after(long delay);
+};
+
+class AnimatorSet::Node{
+public:
+    Animator* mAnimation;
+    std::vector<Node*>mChildNodes;
+    bool mEnded = false;
+    bool mParentsAdded = false;
+
+    /**Nodes with animations that are defined to play simultaneously with the animation
+     * associated with this current node. */
+    std::vector<Node*> mSiblings;
+
+    /**Parent nodes are the nodes with animations preceding current node's animation. Parent
+     * nodes here are derived from user defined animation sequence. */
+    std::vector<Node*> mParents;
+    /**Latest parent is the parent node associated with a animation that finishes after all
+     * the other parents' animations. */
+    Node* mLatestParent = nullptr;
+
+    int64_t mStartTime = 0;
+    int64_t mEndTime = 0;
+    long mTotalDuration = 0;
+public:
+    Node(Animator* animation);
+    Node* clone();
+    void addChild(Node* node);
+    void addSibling(Node* node);
+    void addParent(Node* node);
+    void addParents(const std::vector<Node*>& parents);
+};
+
+class AnimatorSet::AnimationEvent{
+public:
+    static constexpr int ANIMATION_START = 0;
+    static constexpr int ANIMATION_DELAY_ENDED = 1;
+    static constexpr int ANIMATION_END = 2;
+    Node* mNode;
+    int mEvent;
+public:
+    AnimationEvent(Node* node, int event);
+    int64_t getTime()const;
+};
+
+class AnimatorSet::SeekState{
+private:
+    AnimatorSet*mAnimSet;
+    int64_t mPlayTime;
+    bool mSeekingInReverse;
+public:
+    SeekState(AnimatorSet*set);
+    void reset();
+    void setPlayTime(int64_t playTime, bool inReverse);
+    void updateSeekDirection(bool inReverse);
+    int64_t getPlayTime()const;
+    int64_t getPlayTimeNormalized()const;
+    bool isActive()const;
+};
+}/*endof namespace*/
 #endif//__AIMATORSET_H__

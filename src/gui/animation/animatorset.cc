@@ -875,7 +875,7 @@ void AnimatorSet::createDependencyGraph(){
     }
 
     // Do a DFS on the tree
-    std::vector<Node*> visited(mNodes.size());
+    std::vector<Node*> visited;//(mNodes.size());
     // Assign start/end time
     mRootNode->mStartTime = 0;
     mRootNode->mEndTime = mDelayAnim->getDuration();
