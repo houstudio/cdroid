@@ -64,7 +64,7 @@
 #define DECLARE_UIEVENT(type, name, ...) using name = std::function<type(__VA_ARGS__)>
 
 namespace cdroid{
-
+class DragEvent;
 class ViewGroup;
 class ViewOverlay;
 class Window;

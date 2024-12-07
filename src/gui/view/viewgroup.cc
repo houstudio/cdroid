@@ -160,6 +160,7 @@ void ViewGroup::initGroup(){
     mFirstTouchTarget = nullptr;
     mFirstHoverTarget = nullptr;
     mTooltipHoverTarget = nullptr;
+    mCurrentDragStartEvent = nullptr;
     mAccessibilityFocusedHost  = nullptr;
     mLayoutAnimationController = nullptr;
     mHoveredSelf = false;
@@ -749,7 +750,7 @@ void ViewGroup::childHasTransientStateChanged(View* child, bool childHasTransien
     }
 
     const bool newHasTransientState = hasTransientState();
-    if (mParent  && oldHasTransientState != newHasTransientState)
+    if (mParent  && (oldHasTransientState != newHasTransientState))
         mParent->childHasTransientStateChanged(this, newHasTransientState);
 }
 
@@ -1013,11 +1014,12 @@ void ViewGroup::onChildVisibilityChanged(View* child, int oldVisibility, int new
         }
     }
     // in all cases, for drags
-    /*if (newVisibility == VISIBLE && mCurrentDragStartEvent != null) {
-        if (!mChildrenInterestedInDrag.contains(child)) {
+    if ((newVisibility == VISIBLE) && mCurrentDragStartEvent!=nullptr) {
+        auto it = std::find(mChildrenInterestedInDrag.begin(),mChildrenInterestedInDrag.end(),child);
+        if (it==mChildrenInterestedInDrag.end()){//!mChildrenInterestedInDrag.contains(child)) {
             notifyChildOfDragStart(child);
         }
-    }*/
+    }
 }
 
 void ViewGroup::attachViewToParent(View* child, int index, LayoutParams* params){
@@ -1038,6 +1040,38 @@ void ViewGroup::attachViewToParent(View* child, int index, LayoutParams* params)
     }
     dispatchVisibilityAggregated(isAttachedToWindow() && getWindowVisibility() == VISIBLE&& isShown());
     notifySubtreeAccessibilityStateChangedIfNeeded();
+}
+
+bool ViewGroup::notifyChildOfDragStart(View* child) {
+    // The caller guarantees that the child is not in mChildrenInterestedInDrag yet.
+
+    LOGD_IF(VIEW_DEBUG,"Sending drag-started to view:%p",child);
+#if 0
+    const float tx = mCurrentDragStartEvent.mX;
+    const float ty = mCurrentDragStartEvent.mY;
+
+    float point[2];
+    point[0] = tx;
+    point[1] = ty;
+    transformPointToViewLocal(point, child);
+
+    mCurrentDragStartEvent.mX = point[0];
+    mCurrentDragStartEvent.mY = point[1];
+    const bool canAccept = child->dispatchDragEvent(mCurrentDragStartEvent);
+    mCurrentDragStartEvent.mX = tx;
+    mCurrentDragStartEvent.mY = ty;
+    mCurrentDragStartEvent.mEventHandlerWasCalled = false;
+    if (canAccept) {
+        mChildrenInterestedInDrag.push_back(child);
+        if (!child->canAcceptDrag()) {
+            child->mPrivateFlags2 |= View::PFLAG2_DRAG_CAN_ACCEPT;
+            child->refreshDrawableState();
+        }
+    }
+    return canAccept;
+#else
+    return false;
+#endif
 }
 
 void ViewGroup::dispatchWindowSystemUiVisiblityChanged(int visible) {
@@ -1095,7 +1129,7 @@ void ViewGroup::setChildrenDrawnWithCacheEnabled(bool enabled){
 }
 
 void ViewGroup::setChildrenDrawingCacheEnabled(bool enabled){
-    if (enabled || (mPersistentDrawingCache & PERSISTENT_ALL_CACHES) != PERSISTENT_ALL_CACHES) {
+    if (enabled || ((mPersistentDrawingCache & PERSISTENT_ALL_CACHES) != PERSISTENT_ALL_CACHES)) {
         for (auto c:mChildren) {
             c->setDrawingCacheEnabled(enabled);
         }
@@ -1152,7 +1186,7 @@ void ViewGroup::setClipChildren(bool clipChildren){
     bool previousValue = (mGroupFlags & FLAG_CLIP_CHILDREN) == FLAG_CLIP_CHILDREN;
     if (clipChildren != previousValue){ 
         setBooleanFlag(FLAG_CLIP_CHILDREN, clipChildren);
-	invalidate();
+        invalidate();
     }
 }
 
@@ -1254,7 +1288,7 @@ bool ViewGroup::hasChildWithZ()const{
 std::vector<View*> ViewGroup::buildOrderedChildList() {
     std::vector<View*>preSortedChildren;
     const int childrenCount =  mChildren.size();
-    if (childrenCount <= 1 || !hasChildWithZ()) return preSortedChildren;
+    if ((childrenCount <= 1) || !hasChildWithZ()) return preSortedChildren;
 
     const bool customOrder = isChildrenDrawingOrderEnabled();
     for (int i = 0; i < childrenCount; i++) {
@@ -1265,7 +1299,7 @@ std::vector<View*> ViewGroup::buildOrderedChildList() {
 
         // insert ahead of any Views with greater Z
         int insertIndex = i;
-        while (insertIndex > 0 && preSortedChildren.at(insertIndex - 1)->getZ() > currentZ) {
+        while ((insertIndex > 0) && (preSortedChildren.at(insertIndex - 1)->getZ() > currentZ)) {
             insertIndex--;
         }
         preSortedChildren.insert(preSortedChildren.begin()+insertIndex, nextChild);
@@ -1435,8 +1469,8 @@ Transformation* ViewGroup::getChildTransformation(){
 }
 
 int ViewGroup::getChildMeasureSpec(int spec, int padding, int childDimension){
-    int specMode = MeasureSpec::getMode(spec);
-    int specSize = MeasureSpec::getSize(spec);
+    const int specMode = MeasureSpec::getMode(spec);
+    const int specSize = MeasureSpec::getSize(spec);
 
     int size = std::max(0, specSize - padding);
 
@@ -1608,7 +1642,7 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
         mAttachInfo->mKeepScreenOn = false;
         child->dispatchAttachedToWindow(mAttachInfo, (mViewFlags&VISIBILITY_MASK));
         if (mAttachInfo->mKeepScreenOn) {
-            //needGlobalAttributesUpdate(true);
+            needGlobalAttributesUpdate(true);
         }
         mAttachInfo->mKeepScreenOn = lastKeepOn;
     }
@@ -1633,9 +1667,9 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
         }
     }
 
-    /*if (mCurrentDragStartEvent != nullptr && child->getVisibility() == VISIBLE) {
+    if ((mCurrentDragStartEvent != nullptr) && (child->getVisibility() == VISIBLE)) {
         notifyChildOfDragStart(child);
-    }*/
+    }
 
     if (child->hasDefaultFocus()) {
         // When adding a child that contains default focus, either during inflation or while
@@ -1700,7 +1734,7 @@ View* ViewGroup::dispatchUnhandledKeyEvent(KeyEvent& evt){
     }
     std::vector<View*> orderedViews = buildOrderedChildList();
     if (orderedViews.size()) {
-        for (int i = orderedViews.size() - 1; i >= 0; --i) {
+        for (int i = int(orderedViews.size() - 1); i >= 0; --i) {
             View* v = orderedViews.at(i);
             View* consumer = v->dispatchUnhandledKeyEvent(evt);
             if (consumer != nullptr) {
@@ -1732,21 +1766,21 @@ void ViewGroup::measureChildren(int widthMeasureSpec, int heightMeasureSpec){
 
 void ViewGroup::measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec){
     LayoutParams* lp = child->getLayoutParams();
-    int childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec,
-        mPaddingLeft + mPaddingRight, lp->width);
-    int childHeightMeasureSpec = getChildMeasureSpec(parentHeightMeasureSpec,
-        mPaddingTop + mPaddingBottom, lp->height);
+    const int childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec,
+                  mPaddingLeft + mPaddingRight, lp->width);
+    const int childHeightMeasureSpec = getChildMeasureSpec(parentHeightMeasureSpec,
+                  mPaddingTop + mPaddingBottom, lp->height);
     child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
 }
 
 void ViewGroup::measureChildWithMargins(View* child,int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed){
-    MarginLayoutParams* lp = (MarginLayoutParams*) child->getLayoutParams();
+    const MarginLayoutParams* lp = (const MarginLayoutParams*) child->getLayoutParams();
 
-    int childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec,
+    const int childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec,
         mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin
                 + widthUsed, lp->width);
-    int childHeightMeasureSpec = getChildMeasureSpec(parentHeightMeasureSpec,
+    const int childHeightMeasureSpec = getChildMeasureSpec(parentHeightMeasureSpec,
         mPaddingTop + mPaddingBottom + lp->topMargin + lp->bottomMargin
         + heightUsed, lp->height);
     child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
@@ -1785,10 +1819,10 @@ void ViewGroup::removeAllViewsInLayout() {
     }
 
     View* focused = mFocused;
-    bool detach = mAttachInfo != nullptr;
+    const bool detach = mAttachInfo != nullptr;
     bool bclearChildFocus = false;
 
-    //needGlobalAttributesUpdate(false);
+    needGlobalAttributesUpdate(false);
     for (int i = count - 1; i >= 0; i--) {
         View* view = mChildren[i];
 
@@ -1867,7 +1901,7 @@ void ViewGroup::removeViewInternal(int index, View* view){
 
     if (view->hasTransientState())childHasTransientStateChanged(view, false);
 
-    //needGlobalAttributesUpdate(false);
+    needGlobalAttributesUpdate(false);
     removeFromArray(index);
 
     if (view->hasUnhandledKeyListener()) decrementChildUnhandledKeyListeners();
@@ -1889,10 +1923,10 @@ void ViewGroup::removeViewInternal(int index, View* view){
             mTransientIndices[i]=oldIndex-1;//mTransientIndices.set(i, oldIndex - 1);
         }
     }
-    /*if (mCurrentDragStartEvent != nullptr){
+    if (mCurrentDragStartEvent != nullptr){
         auto it =std::find(mChildrenInterestedInDrag.begin(),mChildrenInterestedInDrag.end(),view);
         if(it!=mChildrenInterestedInDrag.end())mChildrenInterestedInDrag.erase(it);
-    }*/
+    }
 }
 
 void ViewGroup::removeViewsInternal(int start, int count){
@@ -1933,7 +1967,7 @@ void ViewGroup::removeViewsInternal(int start, int count){
 
         if (view->hasTransientState()) childHasTransientStateChanged(view, false);
 
-        //needGlobalAttributesUpdate(false);
+        needGlobalAttributesUpdate(false);
 
         dispatchViewRemoved(view);
     }
@@ -2123,9 +2157,9 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
     int flags = mGroupFlags;
 
     if ((flags & FLAG_RUN_ANIMATION) != 0 && canAnimate()) {
-        bool buildCache = !isHardwareAccelerated();
+        //bool buildCache = !isHardwareAccelerated();
         for (int i=0;i<mChildren.size();i++){
-            View* child=mChildren[i];
+            View* child = mChildren[i];
             if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
                 LayoutParams* params = child->getLayoutParams();
                 attachLayoutAnimationParameters(child, params, i, childrenCount);
@@ -2228,7 +2262,7 @@ void ViewGroup::dispatchDraw(Canvas&canvas){
         invalidate(true);
     }
 
-    if ((flags & FLAG_ANIMATION_DONE) == 0 && (flags & FLAG_NOTIFY_ANIMATION_LISTENER) == 0 &&
+    if (((flags & FLAG_ANIMATION_DONE) == 0) && ((flags & FLAG_NOTIFY_ANIMATION_LISTENER) == 0) &&
             mLayoutAnimationController->isDone() && !more) {
         // We want to erase the drawing cache and notify the listener after the
         // next frame is drawn because one extra invalidate() is caused by
@@ -2246,7 +2280,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
     const bool drawAnimation = (child->mPrivateFlags & PFLAG_DRAW_ANIMATION) != 0;
 
     const bool isOpaque = child->isOpaque() && !drawAnimation 
-                 && child->getAnimation() == nullptr && child->hasIdentityMatrix();//&& childMatrix.isIdentity();
+                 && (child->getAnimation() == nullptr) && child->hasIdentityMatrix();//&& childMatrix.isIdentity();
 
     int opaqueFlag = isOpaque ? PFLAG_DIRTY_OPAQUE : PFLAG_DIRTY;
 
@@ -2258,7 +2292,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
     }
 
     Rect boundingRect = dirty;
-    if(!child->hasIdentityMatrix()||(mGroupFlags & FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0){
+    if(!child->hasIdentityMatrix()||((mGroupFlags & FLAG_SUPPORT_STATIC_TRANSFORMATIONS) != 0)){
          Matrix transformMatrix;
          Matrix childMatrix = child->getMatrix();
          if((mGroupFlags & FLAG_SUPPORT_STATIC_TRANSFORMATIONS)!=0){
@@ -2316,7 +2350,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
 
 ViewGroup*ViewGroup::invalidateChildInParent(int* location, Rect& dirty){
     if (1||(mPrivateFlags & (PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID)) != 0) {
-        // either DRAWN, or DRAWING_CACHE_VALID
+        //TODO remove 1: either DRAWN, or DRAWING_CACHE_VALID
         if ((mGroupFlags & (FLAG_OPTIMIZE_INVALIDATE | FLAG_ANIMATION_DONE)) != FLAG_OPTIMIZE_INVALIDATE) {
             dirty.offset(location[CHILD_LEFT_INDEX] - mScrollX,location[CHILD_TOP_INDEX] - mScrollY);
             if ((mGroupFlags & FLAG_CLIP_CHILDREN) == 0) {
@@ -2416,9 +2450,9 @@ View*ViewGroup::findFocus(){
 }
 
 bool ViewGroup::restoreDefaultFocus(){
-    if (mDefaultFocus != nullptr
-            && getDescendantFocusability() != FOCUS_BLOCK_DESCENDANTS
-            && (mDefaultFocus->mViewFlags & VISIBILITY_MASK) == VISIBLE
+    if ((mDefaultFocus != nullptr)
+            && (getDescendantFocusability() != FOCUS_BLOCK_DESCENDANTS)
+            && ((mDefaultFocus->mViewFlags & VISIBILITY_MASK) == VISIBLE)
             && mDefaultFocus->restoreDefaultFocus()) {
         return true;
     }
@@ -2431,7 +2465,7 @@ bool ViewGroup::hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const{
     }
 
     // Only use effective focusable value when allowed.
-    if ((allowAutoFocus || getFocusable() != FOCUSABLE_AUTO) && isFocusable()) {
+    if ((allowAutoFocus || (getFocusable() != FOCUSABLE_AUTO)) && isFocusable()) {
         return true;
     }
 
@@ -2456,7 +2490,7 @@ bool ViewGroup::hasFocusableChild(bool dispatchExplicit)const{
 }
 
 void ViewGroup::setDefaultFocus(View* child){
-    if (mDefaultFocus != nullptr && mDefaultFocus->isFocusedByDefault()) {
+    if ((mDefaultFocus != nullptr) && mDefaultFocus->isFocusedByDefault()) {
         return;
     }
     mDefaultFocus = child;
@@ -2464,7 +2498,7 @@ void ViewGroup::setDefaultFocus(View* child){
 }
 
 void ViewGroup::clearDefaultFocus(View* child){
-    if (mDefaultFocus != child && mDefaultFocus != nullptr
+    if ((mDefaultFocus != child) && (mDefaultFocus != nullptr)
                 && mDefaultFocus->isFocusedByDefault()) {
         return;
     }
@@ -2821,7 +2855,7 @@ bool ViewGroup::getChildVisibleRect(View*child,Rect&r,Point*offset,bool forcePar
 bool ViewGroup::gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>&region){
      // If no transparent regions requested, we are always opaque.
      const bool meOpaque = (mPrivateFlags & View::PFLAG_REQUEST_TRANSPARENT_REGIONS) == 0;
-     if (meOpaque && region == nullptr) {
+     if (meOpaque && (region == nullptr)) {
          // The caller doesn't care about the region, so stop now.
          return true;
      }
@@ -2839,7 +2873,7 @@ bool ViewGroup::gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>&regio
          for (size_t i = 0; i < childrenCount; i++) {
              const int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
              View* child = getAndVerifyPreorderedView(preorderedList, mChildren, childIndex);
-             if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE || child->getAnimation() != nullptr) {
+             if (((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) || (child->getAnimation() != nullptr)) {
                  if (!child->gatherTransparentRegion(region)) {
                      noneOfTheChildrenAreTransparent = false;
                  }
@@ -2969,7 +3003,7 @@ void ViewGroup::addFocusables(std::vector<View*>& views, int direction, int focu
     // to avoid the focus search finding layouts when a more precise search
     // among the focusable children would be more interesting.
     if ((descendantFocusability == FOCUS_AFTER_DESCENDANTS) && focusSelf
-            && focusableCount == views.size()) {
+            && (focusableCount == views.size())) {
         View::addFocusables(views, direction, focusableMode);
     }
 }
@@ -3084,9 +3118,8 @@ void ViewGroup::setLayoutMode(int layoutMode, bool explicitly) {
 }
 
 void ViewGroup::invalidateInheritedLayoutMode(int layoutModeOfRoot){
-    if (mLayoutMode == LAYOUT_MODE_UNDEFINED ||
-        mLayoutMode == layoutModeOfRoot ||
-        hasBooleanFlag(FLAG_LAYOUT_MODE_WAS_EXPLICITLY_SET)) {
+    if ((mLayoutMode == LAYOUT_MODE_UNDEFINED) || (mLayoutMode == layoutModeOfRoot)
+            || hasBooleanFlag(FLAG_LAYOUT_MODE_WAS_EXPLICITLY_SET)) {
         return;
     }
     setLayoutMode(LAYOUT_MODE_UNDEFINED, false);
@@ -3163,7 +3196,7 @@ bool ViewGroup::isTransitionGroup() {
         /*ViewOutlineProvider outlineProvider = getOutlineProvider();
         return getBackground() != null || getTransitionName() != null ||
                 (outlineProvider != null && outlineProvider != ViewOutlineProvider.BACKGROUND);*/
-        return false;
+        return (getBackground()!=nullptr);
     }
 }
 
@@ -3234,8 +3267,8 @@ bool ViewGroup::dispatchKeyEvent(KeyEvent&event){
         if (View::dispatchKeyEvent(event)) {
             return true;
         }
-    } else if (mFocused != nullptr && (mFocused->mPrivateFlags & PFLAG_HAS_BOUNDS)
-            == PFLAG_HAS_BOUNDS) {
+    } else if ( (mFocused != nullptr) && ((mFocused->mPrivateFlags & PFLAG_HAS_BOUNDS)
+            == PFLAG_HAS_BOUNDS) ){
         if (mFocused->dispatchKeyEvent(event)) {
             return true;
         }
@@ -3249,8 +3282,8 @@ bool ViewGroup::dispatchKeyShortcutEvent(KeyEvent&event){
     if ((mPrivateFlags & (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS))
             == (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS)) {
         return View::dispatchKeyShortcutEvent(event);
-    } else if (mFocused && (mFocused->mPrivateFlags & PFLAG_HAS_BOUNDS)
-            == PFLAG_HAS_BOUNDS) {
+    } else if (mFocused && ((mFocused->mPrivateFlags & PFLAG_HAS_BOUNDS)
+            == PFLAG_HAS_BOUNDS) ) {
         return mFocused->dispatchKeyShortcutEvent(event);
     }
     return false;
@@ -3266,8 +3299,8 @@ bool ViewGroup::dispatchTrackballEvent(MotionEvent& event) {
         if (View::dispatchTrackballEvent(event)) {
             return true;
         }
-    } else if (mFocused  && (mFocused->mPrivateFlags & PFLAG_HAS_BOUNDS)
-            == PFLAG_HAS_BOUNDS) {
+    } else if (mFocused  && ((mFocused->mPrivateFlags & PFLAG_HAS_BOUNDS)
+            == PFLAG_HAS_BOUNDS) ) {
         if (mFocused->dispatchTrackballEvent(event)) {
             return true;
         }
@@ -3708,10 +3741,10 @@ void ViewGroup::dispatchDetachedFromWindow(){
     // Tear down our drag tracking
     mChildrenInterestedInDrag.clear();// = null;
     mIsInterestedInDrag = false;
-    /*if (mCurrentDragStartEvent != null) {
-        mCurrentDragStartEvent.recycle();
-        mCurrentDragStartEvent = null;
-    }*/
+    if (mCurrentDragStartEvent != nullptr) {
+        //TODO mCurrentDragStartEvent.recycle();
+        mCurrentDragStartEvent = nullptr;
+    }
 
     for (View*child:mChildren) {
         child->dispatchDetachedFromWindow();
@@ -3840,14 +3873,14 @@ bool ViewGroup::restoreFocusNotInCluster(){
         // will refer to a view not-in a cluster.
         return restoreFocusInCluster(View::FOCUS_DOWN);
     }
-    if (isKeyboardNavigationCluster() || (mViewFlags & VISIBILITY_MASK) != VISIBLE) {
+    if (isKeyboardNavigationCluster() || ((mViewFlags & VISIBILITY_MASK) != VISIBLE)) {
         return false;
     }
     int descendentFocusability = getDescendantFocusability();
     if (descendentFocusability == FOCUS_BLOCK_DESCENDANTS) {
         return View::requestFocus(FOCUS_DOWN, nullptr);
     }
-    if (descendentFocusability == FOCUS_BEFORE_DESCENDANTS
+    if ((descendentFocusability == FOCUS_BEFORE_DESCENDANTS)
         && View::requestFocus(FOCUS_DOWN, nullptr)) {
         return true;
     }
@@ -3857,7 +3890,7 @@ bool ViewGroup::restoreFocusNotInCluster(){
             return true;
         }
     }
-    if (descendentFocusability == FOCUS_AFTER_DESCENDANTS && !hasFocusableChild(false)) {
+    if ((descendentFocusability == FOCUS_AFTER_DESCENDANTS) && !hasFocusableChild(false)) {
         return View::requestFocus(FOCUS_DOWN, nullptr);
     }
     return false;
@@ -4089,6 +4122,7 @@ void ViewGroup::ViewLocationHolder::clear() {
     mView = nullptr;
     mLocation.set(0, 0, 0, 0);
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 Pools::SimplePool<ViewGroup::ChildListForAccessibility> ViewGroup::ChildListForAccessibility::sPool(ViewGroup::ChildListForAccessibility::MAX_POOL_SIZE);
 ViewGroup::ChildListForAccessibility* ViewGroup::ChildListForAccessibility::obtain(ViewGroup* parent, bool sort) {

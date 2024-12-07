@@ -885,7 +885,7 @@ void AnimatorSet::createDependencyGraph(){
     mTotalDuration = mEvents.at(mEvents.size() - 1)->getTime();
 }
 
-int AnimatorSet::AnimationEventCompare(AnimationEvent* e1, AnimationEvent* e2){
+bool AnimatorSet::AnimationEventCompare(AnimationEvent* e1, AnimationEvent* e2){
     const auto t1 = e1->getTime();
     const auto t2 = e2->getTime();
     //LOGD("t1=%lld t2=%lld events=%d/%d",t1,t2,e1->mEvent,e2->mEvent);
@@ -895,19 +895,19 @@ int AnimatorSet::AnimationEventCompare(AnimationEvent* e1, AnimationEvent* e2){
         if ((e2->mEvent + e1->mEvent) == (AnimationEvent::ANIMATION_START
                 + AnimationEvent::ANIMATION_DELAY_ENDED)) {
             // Ensure start delay happens after start
-            return e1->mEvent - e2->mEvent;
+            return e1->mEvent - e2->mEvent<0;
         } else {
-            return e2->mEvent - e1->mEvent;
+            return e2->mEvent - e1->mEvent>0;
         }
     }
     if (t2 == DURATION_INFINITE) {
-        return -1;
+        return false;
     }
     if (t1 == DURATION_INFINITE) {
-        return 1;
+        return true;
     }
     // When neither event happens at INFINITE time:
-    return (int) (t1 - t2);
+    return (t1 - t2)<0;
 }
 
 void AnimatorSet::sortAnimationEvents(){
@@ -995,10 +995,9 @@ void AnimatorSet::sortAnimationEvents(){
     mEvents.insert(mEvents.begin()+1, new AnimationEvent(mRootNode, AnimationEvent::ANIMATION_DELAY_ENDED));
     mEvents.insert(mEvents.begin()+2, new AnimationEvent(mRootNode, AnimationEvent::ANIMATION_END));
 
-    //for(auto e:mEvents)LOGD("time =%lld,event=%d",e->getTime(),e->mEvent);
     if ((mEvents.at(mEvents.size() - 1)->mEvent == AnimationEvent::ANIMATION_START)
             || (mEvents.at(mEvents.size() - 1)->mEvent == AnimationEvent::ANIMATION_DELAY_ENDED)) {
-        //throw std::logic_error("Something went wrong, the last event is not an end event");
+        throw std::logic_error("Something went wrong, the last event is not an end event");
     }
 }
 
@@ -1017,14 +1016,17 @@ void AnimatorSet::updatePlayTime(AnimatorSet::Node* parent,std::vector<AnimatorS
     }
 
     visited.push_back(parent);
-    for (Node*child:parent->mChildNodes) {
+    int childrenSize = parent->mChildNodes.size();
+    for (int i=0;i<childrenSize;i++){
+        Node*child = parent->mChildNodes.at(i);
         auto it = std::find(visited.begin(),visited.end(),child);
         if (it!=visited.end()) {
+            int index = it-visited.begin();
             // Child has been visited, cycle found. Mark all the nodes in the cycle.
-            for (; it!=visited.end();it++) {
-                (*it)->mLatestParent = nullptr;
-                (*it)->mStartTime = DURATION_INFINITE;
-                (*it)->mEndTime = DURATION_INFINITE;
+            for (int j=index; j<visited.size();j++) {
+                visited.at(j)->mLatestParent = nullptr;
+                visited.at(j)->mStartTime = DURATION_INFINITE;
+                visited.at(j)->mEndTime = DURATION_INFINITE;
             }
             child->mStartTime = DURATION_INFINITE;
             child->mEndTime = DURATION_INFINITE;

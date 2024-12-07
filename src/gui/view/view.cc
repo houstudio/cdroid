@@ -8609,7 +8609,7 @@ bool View::performHapticFeedback(int feedbackConstant, int flags){
         return false;
     }
     //noinspection SimplifiableIfStatement
-    if ((flags & HapticFeedbackConstants::FLAG_IGNORE_VIEW_SETTING) == 0
+    if ((flags & (HapticFeedbackConstants::FLAG_IGNORE_VIEW_SETTING) == 0)
             && !isHapticFeedbackEnabled()) {
         return false;
     }
@@ -8629,7 +8629,7 @@ void View::setSystemUiVisibility(int visibility){
     if (visibility != mSystemUiVisibility) {
         mSystemUiVisibility = visibility;
         if (mParent  && mAttachInfo && !mAttachInfo->mRecomputeGlobalAttributes) {
-	    mParent->recomputeViewAttributes(this);
+            mParent->recomputeViewAttributes(this);
         }
     }
 }

@@ -117,7 +117,7 @@ private:
     void initAnimation();
     void start(bool inReverse, bool selfPulse);
     static bool isEmptySet(AnimatorSet* set);
-    static int AnimationEventCompare(AnimationEvent* e1,AnimationEvent* e2);
+    static bool AnimationEventCompare(AnimationEvent* e1,AnimationEvent* e2);
     void updateAnimatorsDuration();
     void skipToStartValue(bool inReverse);
     void initChildren();

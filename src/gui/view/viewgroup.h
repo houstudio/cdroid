@@ -108,6 +108,7 @@ private:
     bool mHoveredSelf;
     bool mTooltipHoveredSelf;
     bool mPointerCapture;
+    DragEvent*mCurrentDragStartEvent;
     Animation::AnimationListener mAnimationListener;
     LayoutTransition::TransitionListener mLayoutTransitionListener;
     class LayoutAnimationController* mLayoutAnimationController;
@@ -187,6 +188,7 @@ protected:
     bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const override;
     bool hasFocusableChild(bool dispatchExplicit)const;
     MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child)const;
+    bool notifyChildOfDragStart(View* child);
     void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
     void dispatchScreenStateChanged(int screenState)override;
     void dispatchMovedToDisplay(Display& display, Configuration& config)override;
