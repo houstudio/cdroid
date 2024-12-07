@@ -223,13 +223,13 @@ int32_t GFXUnlockSurface(GFXHANDLE surface) {
 int32_t GFXSurfaceSetOpacity(GFXHANDLE surface,uint8_t alpha) {
     FBSURFACE*ngs=(FBSURFACE*)surface;
     MI_FB_GlobalAlpha_t fba;//MI_FB_API.pdf
-    if(ngs)ngs->alpha=alpha;
     fba.bAlphaEnable = 1;
     fba.bAlphaChannel= 0;
     fba.u8Alpha0 = 255;
     fba.u8Alpha1 = 255;
     fba.u8GlobalAlpha = alpha;
-    ioctl (devs[ngs->dispid].fb,FBIOSET_GLOBAL_ALPHA,&fba);
+    if(ngs)ngs->alpha=alpha;
+    else ioctl (devs[0].fb,FBIOSET_GLOBAL_ALPHA,&fba);
     return E_OK;//dispLayer->SetOpacity(dispLayer,alpha);
 }
 
