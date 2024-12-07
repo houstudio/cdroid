@@ -90,9 +90,9 @@ public:
     TimeInterpolator*getInterpolator()override;
     Builder* play(Animator* anim);
     void cancel()override;
-    void end();
-    bool isRunning();
-    bool isStarted();
+    void end()override;
+    bool isRunning()override;
+    bool isStarted()override;
     long getStartDelay()override;
     void setStartDelay(long startDelay)override;
     long getDuration();
