@@ -1019,6 +1019,7 @@ void AnimatorSet::updatePlayTime(AnimatorSet::Node* parent,std::vector<AnimatorS
     int childrenSize = parent->mChildNodes.size();
     for (int i=0;i<childrenSize;i++){
         Node*child = parent->mChildNodes.at(i);
+        child->mTotalDuration = child->mAnimation->getTotalDuration();// Update cached duration.
         auto it = std::find(visited.begin(),visited.end(),child);
         if (it!=visited.end()) {
             int index = it-visited.begin();
