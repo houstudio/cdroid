@@ -93,8 +93,8 @@ public:
     void end();
     bool isRunning();
     bool isStarted();
-    long getStartDelay();
-    void setStartDelay(long startDelay);
+    long getStartDelay()override;
+    void setStartDelay(long startDelay)override;
     long getDuration();
     Animator& setDuration(long)override;
     void setupStartValues()override;

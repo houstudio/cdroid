@@ -8,7 +8,8 @@
 namespace cdroid{
 
 
-ValueAnimator::ValueAnimator(){
+ValueAnimator::ValueAnimator()
+  :Animator(){
     mReversing = false;
     mRepeatMode = RESTART;
     mSelfPulse = true;
@@ -189,6 +190,7 @@ int64_t ValueAnimator::getScaledDuration() const{
 
 ValueAnimator& ValueAnimator::setDuration(long duration){
     mDuration = duration;
+    LOGD("%p duration=%d",this,duration);
     return *this;
 }
 
@@ -580,8 +582,8 @@ bool ValueAnimator::animateBasedOnTime(int64_t currentTime){
             done = true;
         }
         mOverallFraction = clampFraction(fraction);
-        float currentIterationFraction = getCurrentIterationFraction(
-                mOverallFraction, mReversing);
+        float currentIterationFraction = getCurrentIterationFraction(mOverallFraction, mReversing);
+        LOGD("%p time=%lld,%lld ,%d fraction=%.3f",this,currentTime,mStartTime,mDuration,currentIterationFraction);
         animateValue(currentIterationFraction);
     }
     return done;

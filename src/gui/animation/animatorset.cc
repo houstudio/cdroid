@@ -4,11 +4,10 @@
 
 namespace cdroid{
 
-AnimatorSet::AnimatorSet(){
+AnimatorSet::AnimatorSet():Animator(){
     mDelayAnim = ValueAnimator::ofFloat({.0f, 1.f});
-    mDelayAnim->setDuration(0);
     mRootNode  = new Node(mDelayAnim);
-    mNodeMap.insert(std::pair<Animator*,Node*>(mDelayAnim, mRootNode));
+    mNodeMap.insert({mDelayAnim, mRootNode});
     mNodes.push_back(mRootNode);
     // Set the flag to ignore calling end() without start() for pre-N releases
     mShouldIgnoreEndWithoutStart = true;

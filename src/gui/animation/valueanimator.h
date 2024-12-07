@@ -97,8 +97,8 @@ public:
     virtual void setCurrentPlayTime(int64_t playTime);
     void setCurrentFraction(float fraction);
     int64_t getCurrentPlayTime();
-    long getStartDelay();
-    void setStartDelay(long startDelay);
+    long getStartDelay()override;
+    void setStartDelay(long startDelay)override;
     static long getFrameDelay();
     static void setFrameDelay(long frameDelay);
     AnimateValue getAnimatedValue();

@@ -24,10 +24,12 @@ public:
     }
 
     float get(void* object){
+        LOGD("getAlpha %p,%.3f",object,((View*)object)->getAlpha());
         return ((View*)object)->getAlpha();
     }
     
     void set(void* object, float value){
+        LOGD("setAlpha %p->%.3f",object,value);
         ((View*)object)->setAlpha(value);
     }
 };
