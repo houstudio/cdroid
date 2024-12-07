@@ -578,17 +578,16 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
 
     // Pump a frame to the on-going animators
     for (Node*node:mPlayingSet){
+        LOGD("%p 's %p unscaledPlayTime=%lld end=%d",this,node->mAnimation,unscaledPlayTime,node->mEnded);
         if (!node->mEnded) {
             pulseFrame(node, getPlayTimeForNode(unscaledPlayTime, node));
         }
     }
 
     // Remove all the finished anims
-    for (auto it=mPlayingSet.rbegin();it!=mPlayingSet.rend();) {
-        if ((*it)->mEnded) {
-            it = std::vector<Node*>::reverse_iterator(mPlayingSet.erase(std::next(it).base()));//mPlayingSet.remove(i);
-        }else {
-            it ++;
+    for (int i = int(mPlayingSet.size()-1);i>=0;i--) {
+        if (mPlayingSet.at(i)->mEnded) {
+            mPlayingSet.erase(mPlayingSet.begin()+i);
         }
     }
 
@@ -647,6 +646,7 @@ void AnimatorSet::handleAnimationEvents(int startId, int latestId, int64_t playT
         for (int i = startId + 1; i <= latestId; i++) {
             AnimationEvent* event = mEvents.at(i);
             Node* node = event->mNode;
+            LOGD("pulseFrame %p playTime=%d event=%d",node->mAnimation,playTime,event->mEvent);
             if (event->mEvent == AnimationEvent::ANIMATION_START) {
                 mPlayingSet.push_back(event->mNode);
                 if (node->mAnimation->isStarted()) {
@@ -733,10 +733,10 @@ void AnimatorSet::startAnimation() {
         }
         int toId = findLatestEventIdForTime(playTime);
         handleAnimationEvents(-1, toId, playTime);
-        for (auto it=mPlayingSet.rbegin();it!=mPlayingSet.rend();){
-            if ((*it)->mEnded) {
-                it = std::vector<Node*>::reverse_iterator(mPlayingSet.erase(std::next(it).base()));
-            }else{ it ++;}
+        for (int i=int(mPlayingSet.size()-1);i>=0;i--){
+            if (mPlayingSet.at(i)->mEnded) {
+                mPlayingSet.erase(mPlayingSet.begin()+i);
+            }
         }
         mLastEventId = toId;
     }

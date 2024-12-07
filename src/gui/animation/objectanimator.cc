@@ -4,7 +4,9 @@
 namespace cdroid{
 
 ObjectAnimator::ObjectAnimator(){
+    mTarget = nullptr;
     mProperty = nullptr;
+    mAutoCancel = false;
 }
 
 ObjectAnimator::~ObjectAnimator(){
