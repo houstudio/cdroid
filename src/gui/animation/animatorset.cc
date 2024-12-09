@@ -821,6 +821,7 @@ void AnimatorSet::addAnimationCallback(long delay) {
 }
 
 Animator*AnimatorSet::clone()const{
+    LOGE("clone");
     return nullptr;
 }
 
@@ -850,11 +851,11 @@ void AnimatorSet::createDependencyGraph(){
 
     mDependencyDirty = false;
     // Traverse all the siblings and make sure they have all the parents
-    int size = mNodes.size();
-    for (int i = 0; i < size; i++) {
+    const size_t size = mNodes.size();
+    for (size_t i = 0; i < size; i++) {
         mNodes.at(i)->mParentsAdded = false;
     }
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         Node* node = mNodes.at(i);
         if (node->mParentsAdded) {
             continue;
@@ -871,20 +872,20 @@ void AnimatorSet::createDependencyGraph(){
         if(it!=node->mSiblings.end())node->mSiblings.erase(it);
 
         // Get parents from all siblings
-        int siblingSize = node->mSiblings.size();
+        size_t siblingSize = node->mSiblings.size();
         for (int j = 0; j < siblingSize; j++) {
             node->addParents(node->mSiblings.at(j)->mParents);
         }
 
         // Now make sure all siblings share the same set of parents
-        for (int j = 0; j < siblingSize; j++) {
+        for (size_t j = 0; j < siblingSize; j++) {
             Node* sibling = node->mSiblings.at(j);
             sibling->addParents(node->mParents);
             sibling->mParentsAdded = true;
         }
     }
 
-    for (int i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         Node* node = mNodes.at(i);
         if ((node != mRootNode) && node->mParents.empty()){// == nullptr)) {
             node->addParent(mRootNode);
@@ -1033,8 +1034,8 @@ void AnimatorSet::updatePlayTime(AnimatorSet::Node* parent,std::vector<AnimatorS
     }
 
     visited.push_back(parent);
-    const int childrenSize = parent->mChildNodes.size();
-    for (int i = 0;i < childrenSize;i++){
+    const size_t childrenSize = parent->mChildNodes.size();
+    for (size_t i = 0;i < childrenSize;i++){
         Node*child = parent->mChildNodes.at(i);
         child->mTotalDuration = child->mAnimation->getTotalDuration();// Update cached duration.
         auto it = std::find(visited.begin(),visited.end(),child);
@@ -1078,6 +1079,9 @@ void AnimatorSet::findSiblings(AnimatorSet::Node* node,std::vector<AnimatorSet::
     auto it = std::find(siblings.begin(),siblings.end(),node);
     if (it== siblings.end()){//!contains(node)) {
         siblings.push_back(node);
+        if(node->mSiblings.empty()){
+            return ;
+        }
         for (Node*sibling:node->mSiblings) {
             findSiblings(sibling, siblings);
         }
@@ -1114,6 +1118,9 @@ AnimatorSet::Node* AnimatorSet::getNodeForAnimation(Animator* anim){
 
 AnimatorSet::Node::Node(Animator* animation){
     mAnimation = animation;
+    mEnded = mParentsAdded = false;
+    mStartTime = mEndTime = 0;
+    mTotalDuration = 0;
 }
 
 AnimatorSet::Node* AnimatorSet::Node::clone(){
@@ -1128,8 +1135,11 @@ AnimatorSet::Node* AnimatorSet::Node::clone(){
 }
 
 void AnimatorSet::Node::addChild(AnimatorSet::Node* node){
-    mChildNodes.push_back(node);
-    node->addParent(this);
+    auto it = std::find(mChildNodes.begin(),mChildNodes.end(),node);
+    if(it==mChildNodes.end()){
+        mChildNodes.push_back(node);
+        node->addParent(this);
+    }
 }
 
 void AnimatorSet::Node::addSibling(AnimatorSet::Node* node){
