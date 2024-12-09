@@ -181,7 +181,7 @@ void ValueAnimator::initAnimation(){
 }
 
 float ValueAnimator::resolveDurationScale() const{
-    return mDurationScale >= .0f ? mDurationScale : sDurationScale;
+    return mDurationScale >= 0.f ? mDurationScale : sDurationScale;
 }
 
 int64_t ValueAnimator::getScaledDuration() const{
@@ -282,7 +282,7 @@ int64_t ValueAnimator::getCurrentPlayTime() {
         return (long) (mDuration * mSeekFraction);
     }
     float durationScale = resolveDurationScale();
-    if (durationScale == .0f) {
+    if (durationScale == 0.f) {
         durationScale = 1.f;
     }
     return ((SystemClock::uptimeMillis() - mStartTime) / durationScale);
@@ -460,7 +460,7 @@ void ValueAnimator::end(){
     } else if (!mInitialized) {
         initAnimation();
     }
-    animateValue(shouldPlayBackward(mRepeatCount, mReversing) ? .0f : 1.f);
+    animateValue(shouldPlayBackward(mRepeatCount, mReversing) ? 0.f : 1.f);
     endAnimation();
 }
 
@@ -518,7 +518,7 @@ void ValueAnimator::startAnimation(){
     if (mSeekFraction >= 0) {
         mOverallFraction = mSeekFraction;
     } else {
-        mOverallFraction = .0f;
+        mOverallFraction = 0.f;
     }
     notifyStartListeners();
 }
@@ -565,11 +565,11 @@ void ValueAnimator::commitAnimationFrame(int64_t frameTime){
 bool ValueAnimator::animateBasedOnTime(int64_t currentTime){
     bool done = false;
     if (mRunning) {
-        int64_t scaledDuration = getScaledDuration();
-        float fraction = scaledDuration > 0 ? (float)(currentTime - mStartTime) / scaledDuration : 1.f;
-        float lastFraction = mOverallFraction;
-        bool newIteration = (int) fraction > (int) lastFraction;
-        bool lastIterationFinished = (fraction >= mRepeatCount + 1) &&  (mRepeatCount != INFINITE);
+        const int64_t scaledDuration = getScaledDuration();
+        const float fraction = scaledDuration > 0 ? (float)(currentTime - mStartTime) / scaledDuration : 1.f;
+        const float lastFraction = mOverallFraction;
+        const bool newIteration = (int) fraction > (int) lastFraction;
+        const bool lastIterationFinished = (fraction >= mRepeatCount + 1) &&  (mRepeatCount != INFINITE);
         if (scaledDuration == 0) {
             // 0 duration animator, ignore the repeat count and skip to the end
             done = true;
@@ -619,10 +619,10 @@ void ValueAnimator::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t last
 
 void ValueAnimator::skipToEndValue(bool inReverse){
     initAnimation();
-    float endFraction = inReverse ? .0f : 1.f;
+    float endFraction = inReverse ? 0.f : 1.f;
     if (mRepeatCount % 2 == 1 && mRepeatMode == REVERSE) {
         // This would end on fraction = 0
-        endFraction = .0f;
+        endFraction = 0.f;
     }
     animateValue(endFraction);
 }
@@ -635,7 +635,7 @@ bool ValueAnimator::doAnimationFrame(int64_t frameTime){
     if (mStartTime < 0) {
         // First frame. If there is start delay, start delay count down will happen *after* this
         // frame.
-        mStartTime = mReversing ? frameTime : frameTime + (mStartDelay * resolveDurationScale());
+        mStartTime = mReversing ? frameTime : (frameTime + (mStartDelay * resolveDurationScale()));
     }
 
     // Handle pause/resume
@@ -682,8 +682,8 @@ bool ValueAnimator::doAnimationFrame(int64_t frameTime){
     // is very rare and only happens when seeking backwards.
     const int64_t currentTime = std::max(frameTime, mStartTime);
     const bool finished = animateBasedOnTime(currentTime);
-
-    if (finished)  endAnimation();
+    LOGD("%p animateBasedOnTime(%lld) finished=%d",this,currentTime,finished);
+    if (finished) endAnimation();
     return finished;
 }
 

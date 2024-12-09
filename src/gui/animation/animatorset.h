@@ -86,6 +86,7 @@ public:
     void playSequentially(const std::vector<Animator*>&);
     std::vector<Animator*> getChildAnimations()const;
     void setTarget(void* target);
+    int getChangingConfigurations()override;
     void setInterpolator(TimeInterpolator*)override;
     TimeInterpolator*getInterpolator()override;
     Builder* play(Animator* anim);

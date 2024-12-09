@@ -5,13 +5,14 @@
 namespace cdroid{
 
 AnimatorSet::AnimatorSet():Animator(){
-    mDelayAnim = ValueAnimator::ofFloat({.0f, 1.f});
+    mDelayAnim = ValueAnimator::ofFloat({0.f, 1.f});
     mRootNode  = new Node(mDelayAnim);
     mNodeMap.insert({mDelayAnim, mRootNode});
     mNodes.push_back(mRootNode);
     // Set the flag to ignore calling end() without start() for pre-N releases
-    mShouldIgnoreEndWithoutStart = true;
-    const bool isPreO = false;//app.getApplicationInfo().targetSdkVersion < Build.VERSION_CODES.O;
+    //VERSION_CODES.N=24,VERSION_CODES.O=26,Android9(Pie)=28;
+    mShouldIgnoreEndWithoutStart = false;
+    const bool isPreO = false;//app.getApplicationInfo().targetSdkVersion < Build.VERSION_CODES.O
     mShouldResetValuesAtStart = !isPreO;
     mEndCanBeCalled = !isPreO;
     mTotalDuration = 0;
@@ -59,8 +60,8 @@ void AnimatorSet::playSequentially(const std::vector<Animator*>&items){
 
 std::vector<Animator*> AnimatorSet::getChildAnimations()const{
     std::vector<Animator*> childList;
-    int size = (int)mNodes.size();
-    for (int i = 0; i < size; i++) {
+    size_t size = mNodes.size();
+    for (size_t i = 0; i < size; i++) {
         Node* node = mNodes.at(i);
         if (node != mRootNode) {
             childList.push_back(node->mAnimation);
@@ -71,7 +72,6 @@ std::vector<Animator*> AnimatorSet::getChildAnimations()const{
 
 void AnimatorSet::setTarget(void*target){
     for (auto node:mNodes){//int i = 0; i < size; i++) {
-        //Node* node = mNodes.get(i);
         Animator* animation = node->mAnimation;
         if (dynamic_cast<AnimatorSet*>(animation)) {
             ((AnimatorSet*)animation)->setTarget(target);
@@ -79,6 +79,15 @@ void AnimatorSet::setTarget(void*target){
             ((ObjectAnimator*)animation)->setTarget(target);
         }
     }
+}
+
+int AnimatorSet::getChangingConfigurations() {
+    int conf = Animator::getChangingConfigurations();
+    size_t nodeCount = mNodes.size();
+    for (int i = 0; i < nodeCount; i ++) {
+        conf |= mNodes.at(i)->mAnimation->getChangingConfigurations();
+    }
+    return conf;
 }
 
 void AnimatorSet::setInterpolator(TimeInterpolator* interpolator) {
@@ -90,8 +99,9 @@ TimeInterpolator* AnimatorSet::getInterpolator() {
 }
 
 AnimatorSet::Builder* AnimatorSet::play(Animator* anim){
-    if(anim==nullptr)return nullptr;
-    return new Builder(this,anim);
+    if(anim!=nullptr)
+        return new Builder(this,anim);
+    return nullptr;
 }
 
 void AnimatorSet::cancel(){
@@ -164,13 +174,13 @@ void AnimatorSet::end() {
                 mLastEventId = mLastEventId + 1;
                 AnimationEvent* event = mEvents.at(mLastEventId);
                 Animator* anim = event->mNode->mAnimation;
-                auto it=mNodeMap.find(anim);
+                auto it = mNodeMap.find(anim);
                 if (it->second->mEnded) {
                     continue;
                 }
                 if (event->mEvent == AnimationEvent::ANIMATION_START) {
                     anim->start();
-                } else if (event->mEvent == AnimationEvent::ANIMATION_END && anim->isStarted()) {
+                } else if ((event->mEvent == AnimationEvent::ANIMATION_END) && anim->isStarted()) {
                     // Make sure anim hasn't finished before calling end() so that we don't end
                     // already ended animations, which will cause start and end callbacks to be
                     // triggered again.
@@ -215,9 +225,9 @@ void AnimatorSet::setStartDelay(long startDelay) {
             if (node == mRootNode) {
                 node->mEndTime = mStartDelay;
             } else {
-                node->mStartTime = node->mStartTime == DURATION_INFINITE ?
+                node->mStartTime = (node->mStartTime == DURATION_INFINITE) ?
                         DURATION_INFINITE : node->mStartTime + delta;
-                node->mEndTime = node->mEndTime == DURATION_INFINITE ?
+                node->mEndTime = (node->mEndTime == DURATION_INFINITE) ?
                         DURATION_INFINITE : node->mEndTime + delta;
             }
         }
@@ -498,7 +508,7 @@ int64_t AnimatorSet::getCurrentPlayTime() {
         return 0;
     }
     float durationScale = ValueAnimator::getDurationScale();
-    durationScale = durationScale == 0 ? 1 : durationScale;
+    durationScale = (durationScale == 0) ? 1 : durationScale;
     if (mReversing) {
         return int64_t((mLastFrameTime - mFirstFrame) / durationScale);
     } else {
@@ -523,13 +533,13 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
         forceToEnd();
         return true;
     }
-
     // After the first frame comes in, we need to wait for start delay to pass before updating
     // any animation values.
     if (mFirstFrame < 0) {
         mFirstFrame = frameTime;
     }
 
+    LOGD("%p frameTime=(%lld-%lld)=%d mPaused=%d mPauseTime=%lld",this,frameTime,mFirstFrame,int(frameTime-mFirstFrame),mPaused,mPauseTime); 
     // Handle pause/resume
     if (mPaused) {
         // Note: Child animations don't receive pause events. Since it's never a contract that
@@ -550,8 +560,7 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
         if (mReversing) {
             mFirstFrame = int64_t(frameTime - mSeekState->getPlayTime() * durationScale);
         } else {
-            mFirstFrame = int64_t(frameTime - (mSeekState->getPlayTime() + mStartDelay)
-                    * durationScale);
+            mFirstFrame = int64_t(frameTime - (mSeekState->getPlayTime() + mStartDelay) * durationScale);
         }
         mSeekState->reset();
     }
@@ -577,7 +586,6 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
 
     // Pump a frame to the on-going animators
     for (Node*node:mPlayingSet){
-        LOGD("%p 's %p unscaledPlayTime=%lld end=%d",this,node->mAnimation,unscaledPlayTime,node->mEnded);
         if (!node->mEnded) {
             pulseFrame(node, getPlayTimeForNode(unscaledPlayTime, node));
         }
@@ -732,7 +740,7 @@ void AnimatorSet::startAnimation() {
         }
         int toId = findLatestEventIdForTime(playTime);
         handleAnimationEvents(-1, toId, playTime);
-        for (int i=int(mPlayingSet.size()-1);i>=0;i--){
+        for (int i = int(mPlayingSet.size()-1);i>=0;i--){
             if (mPlayingSet.at(i)->mEnded) {
                 mPlayingSet.erase(mPlayingSet.begin()+i);
             }
@@ -759,17 +767,17 @@ int AnimatorSet::findLatestEventIdForTime(int64_t currentPlayTime) {
     // Call start on the first animations now to be consistent with the old behavior
     if (mReversing) {
         currentPlayTime = getTotalDuration() - currentPlayTime;
-        mLastEventId = mLastEventId == -1 ? size : mLastEventId;
-        for (int j = mLastEventId - 1; j >= 0; j--) {
+        mLastEventId = (mLastEventId == -1) ? size : mLastEventId;
+        for (int j = (mLastEventId - 1); j >= 0; j--) {
             AnimationEvent* event = mEvents.at(j);
             if (event->getTime() >= currentPlayTime) {
                 latestId = j;
             }
         }
     } else {
-        for (int i = mLastEventId + 1; i < size; i++) {
+        for (int i = (mLastEventId + 1); i < size; i++) {
             AnimationEvent* event = mEvents.at(i);
-            if (event->getTime() <= currentPlayTime) {
+            if ((event->getTime() != DURATION_INFINITE)&&(event->getTime() <= currentPlayTime)) {
                 latestId = i;
             }
         }
@@ -1025,13 +1033,13 @@ void AnimatorSet::updatePlayTime(AnimatorSet::Node* parent,std::vector<AnimatorS
     }
 
     visited.push_back(parent);
-    int childrenSize = parent->mChildNodes.size();
-    for (int i=0;i<childrenSize;i++){
+    const int childrenSize = parent->mChildNodes.size();
+    for (int i = 0;i < childrenSize;i++){
         Node*child = parent->mChildNodes.at(i);
         child->mTotalDuration = child->mAnimation->getTotalDuration();// Update cached duration.
         auto it = std::find(visited.begin(),visited.end(),child);
         if (it!=visited.end()) {
-            int index = it-visited.begin();
+            const int index = it-visited.begin();
             // Child has been visited, cycle found. Mark all the nodes in the cycle.
             for (int j=index; j<visited.size();j++) {
                 visited.at(j)->mLatestParent = nullptr;
@@ -1056,8 +1064,8 @@ void AnimatorSet::updatePlayTime(AnimatorSet::Node* parent,std::vector<AnimatorS
                     child->mStartTime = parent->mEndTime;
                 }
 
-                child->mEndTime = child->mTotalDuration == DURATION_INFINITE ?
-                        DURATION_INFINITE : child->mStartTime + child->mTotalDuration;
+                child->mEndTime = (child->mTotalDuration == DURATION_INFINITE) ?
+                        DURATION_INFINITE : (child->mStartTime + child->mTotalDuration);
             }
         }
         updatePlayTime(child, visited);
@@ -1110,7 +1118,7 @@ AnimatorSet::Node::Node(Animator* animation){
 
 AnimatorSet::Node* AnimatorSet::Node::clone(){
     Node* node =new Node(nullptr);
-    node->mAnimation  = mAnimation->clone();
+    node->mAnimation = mAnimation->clone();
     node->mChildNodes= mChildNodes;
     node->mSiblings  = mSiblings;
     node->mParents   = mParents;
@@ -1140,7 +1148,7 @@ void AnimatorSet::Node::addParent(AnimatorSet::Node* node){
 
 void AnimatorSet::Node::addParents(const std::vector<AnimatorSet::Node*>& parents){
     for (auto p:parents) {
-         addParent(p);
+        addParent(p);
     }
 }
 
@@ -1152,8 +1160,8 @@ int64_t AnimatorSet::AnimationEvent::getTime()const {
     if (mEvent == ANIMATION_START) {
         return mNode->mStartTime;
     } else if (mEvent == ANIMATION_DELAY_ENDED) {
-        return mNode->mStartTime == DURATION_INFINITE
-                ? DURATION_INFINITE : mNode->mStartTime + mNode->mAnimation->getStartDelay();
+        return (mNode->mStartTime == DURATION_INFINITE)
+                ? DURATION_INFINITE : (mNode->mStartTime + mNode->mAnimation->getStartDelay());
     } else {
         return mNode->mEndTime;
     }
@@ -1182,7 +1190,7 @@ void AnimatorSet::SeekState::setPlayTime(int64_t playTime, bool inReverse) {
 
 void AnimatorSet::SeekState::updateSeekDirection(bool inReverse){
     // Change seek direction without changing the overall fraction
-    if (inReverse && mAnimSet->getTotalDuration() == DURATION_INFINITE) {
+    if (inReverse && (mAnimSet->getTotalDuration() == DURATION_INFINITE)) {
          throw std::logic_error("Error: Cannot reverse infinite animator set");
     }
     if (mPlayTime >= 0) {

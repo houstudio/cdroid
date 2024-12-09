@@ -70,7 +70,7 @@ public:
     void addPauseListener(const AnimatorPauseListener& listener);
     void removePauseListener(const AnimatorPauseListener& listener);
     void removeAllListeners();
-    int getChangingConfigurations();
+    virtual int getChangingConfigurations();
     void setChangingConfigurations(int configs);
     void appendChangingConfigurations(int configs);
     std::shared_ptr<ConstantState<Animator*>> createConstantState();
