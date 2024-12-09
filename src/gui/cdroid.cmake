@@ -8,6 +8,7 @@ list(APPEND CDROID_SOURCES
     view/touchdelegate.cc
     view/handleractionqueue.cc
     view/inputevent.cc
+    view/dragevent.cc
     view/inputeventconsistencyverifier.cc
     view/keyevent.cc
     view/layoutinflater.cc

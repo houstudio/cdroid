@@ -4,6 +4,7 @@
 namespace cdroid{
 class ClipData;
 class ClipDescription;
+class View;
 class DragEvent{
 private:
     static constexpr bool TRACK_RECYCLED_LOCATION = false;
@@ -16,7 +17,7 @@ protected:
     void* mLocalState;
     bool mDragResult;
     bool mEventHandlerWasCalled;
-
+    friend class View;
 private:
     DragEvent* mNext;
     //RuntimeException mRecycledLocation;

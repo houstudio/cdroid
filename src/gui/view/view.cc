@@ -2679,9 +2679,9 @@ void View::setOnHoverListener(OnHoverListener l){
     getListenerInfo()->mOnHoverListener = l;
 }
 
-/*void View::setOnDragListener(OnDragListener l){
-    getListenerInfo()->
-}*/
+void View::setOnDragListener(OnDragListener l){
+    getListenerInfo()->mOnDragListener=l;
+}
 
 void View::setDrawingCacheEnabled(bool enabled) {
     mCachingFailed = false;
@@ -8674,11 +8674,102 @@ bool View::updateLocalSystemUiVisibility(int localValue, int localChanges){
 
 void View::setDisabledSystemUiVisibility(int flags){
     if (mAttachInfo && (mAttachInfo->mDisabledSystemUiVisibility != flags) ) {
-	mAttachInfo->mDisabledSystemUiVisibility = flags;
-	if (mParent != nullptr) {
-	    mParent->recomputeViewAttributes(this);
-	}
+        mAttachInfo->mDisabledSystemUiVisibility = flags;
+	    if (mParent != nullptr) {
+	        mParent->recomputeViewAttributes(this);
+        }
     }
+}
+
+bool View::startDragAndDrop(ClipData*,DragShadowBuilder*,void*myLocalState,int flags){
+    return false;
+}
+
+void View::cancelDragDrop(){
+    if (mAttachInfo == nullptr) {
+        LOGW("cancelDragAndDrop called on a detached view.");
+        return;
+    }
+    if (mAttachInfo->mDragToken != nullptr) {
+        /*try {
+            mAttachInfo.mSession.cancelDragAndDrop(mAttachInfo.mDragToken);
+        } catch (Exception e) {
+            LOGE("Unable to cancel drag", e);
+        }*/
+        mAttachInfo->mDragToken = nullptr;
+    } else {
+        LOGE("No active drag to cancel");
+    }
+}
+
+void View::updateDragShadow(DragShadowBuilder*shadowBuilder){
+    if (mAttachInfo == nullptr) {
+        LOGW("updateDragShadow called on a detached view.");
+        return;
+    }
+    if (mAttachInfo->mDragToken != nullptr) {
+        /*try {
+            Canvas canvas = mAttachInfo->mDragSurface.lockCanvas(null);
+            try {
+                canvas.drawColor(0, PorterDuff.Mode.CLEAR);
+                shadowBuilder->onDrawShadow(canvas);
+            } finally {
+                mAttachInfo.mDragSurface.unlockCanvasAndPost(canvas);
+            }
+        } catch (Exception e) {
+            LOGE("Unable to update drag shadow", e);
+        }*/
+    } else {
+        LOGE("No active drag");
+    }
+}
+
+bool View::onDragEvent(DragEvent&){
+    return false;
+}
+
+bool View::dispatchDragEvent(DragEvent&event){
+    event.mEventHandlerWasCalled = true;
+    if ((event.mAction == DragEvent::ACTION_DRAG_LOCATION) ||
+        (event.mAction == DragEvent::ACTION_DROP) ) {
+        // About to deliver an event with coordinates to this view. Notify that now this view
+        // has drag focus. This will send exit/enter events as needed.
+        //getViewRootImpl().setDragFocus(this, event);
+    }
+    return false;//callDragEventHandler(event);
+}
+
+bool View::callDragEventHandler(DragEvent& event){
+    bool result;
+
+    ListenerInfo* li = mListenerInfo;
+    //noinspection SimplifiableIfStatement
+    if ((li != nullptr) && (li->mOnDragListener != nullptr) && ((mViewFlags & ENABLED_MASK) == ENABLED)
+            && li->mOnDragListener(*this, event)) {
+        result = true;
+    } else {
+        result = onDragEvent(event);
+    }
+
+    switch (event.mAction) {
+    case DragEvent::ACTION_DRAG_ENTERED:
+        mPrivateFlags2 |= View::PFLAG2_DRAG_HOVERED;
+        refreshDrawableState();
+        break;
+    case DragEvent::ACTION_DRAG_EXITED:
+        mPrivateFlags2 &= ~View::PFLAG2_DRAG_HOVERED;
+        refreshDrawableState();
+        break;
+    case DragEvent::ACTION_DRAG_ENDED:
+        mPrivateFlags2 &= ~View::DRAG_MASK;
+        refreshDrawableState();
+        break;
+    }
+    return result;
+}
+
+bool View::canAcceptDrag(){
+    return (mPrivateFlags2 & PFLAG2_DRAG_CAN_ACCEPT) != 0;
 }
 
 void View::setMeasuredDimensionRaw(int measuredWidth, int measuredHeight) {
@@ -9187,6 +9278,7 @@ View::AttachInfo::AttachInfo(Context*ctx){
     mCanvas       = nullptr;
     mTooltipHost  = nullptr;
     mEventSource  = nullptr;
+    mDragToken = nullptr;
     mViewRequestingLayout = nullptr;
     mAutofilledDrawable = nullptr;
     mAccessibilityFocusDrawable = nullptr;
@@ -9443,6 +9535,37 @@ void View::cancel(SendViewScrolledAccessibilityEvent* callback){
     if ( (callback == nullptr) || !callback->mIsPending) return;
      removeCallbacks(callback->mRunnable);
      callback->reset();
+}
+
+View::DragShadowBuilder::DragShadowBuilder(View* view) {
+    mView = view;
+}
+
+View::DragShadowBuilder::DragShadowBuilder() {
+    mView = nullptr;
+}
+
+View* View::DragShadowBuilder::getView() {
+    return mView;
+}
+
+void View::DragShadowBuilder::onProvideShadowMetrics(Point& outShadowSize, Point& outShadowTouchPoint) {
+    View* view = mView;
+    if (view != nullptr) {
+        outShadowSize.set(view->getWidth(), view->getHeight());
+        outShadowTouchPoint.set(outShadowSize.x / 2, outShadowSize.y / 2);
+    } else {
+        LOGE("Asked for drag thumb metrics but no view");
+    }
+}
+
+void View::DragShadowBuilder::onDrawShadow(Canvas& canvas) {
+    View* view = mView;
+    if (view != nullptr) {
+        view->draw(canvas);
+    } else {
+        LOGE("Asked to draw drag shadow but no view");
+    }
 }
 
 void View::AccessibilityDelegate::sendAccessibilityEvent(View& host, int eventType) {

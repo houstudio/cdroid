@@ -29,6 +29,7 @@
 #include <core/parcel.h>
 #include <core/parcelable.h>
 #include <cairomm/pattern.h>
+#include <view/dragevent.h>
 #include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <view/abssavedstate.h>
@@ -190,6 +191,7 @@ protected:
     static constexpr int PFLAG3_SCROLL_INDICATOR_RIGHT      = 0x0800;
     static constexpr int PFLAG3_SCROLL_INDICATOR_START      = 0x1000;
     static constexpr int PFLAG3_SCROLL_INDICATOR_END        = 0x2000;
+    static constexpr int DRAG_MASK = PFLAG2_DRAG_CAN_ACCEPT | PFLAG2_DRAG_HOVERED;
         
     static constexpr int PFLAG3_ASSIST_BLOCKED          = 0x04000;
     static constexpr int PFLAG3_CLUSTER                 = 0x08000;
@@ -212,6 +214,7 @@ public:
     static bool VIEW_DEBUG;
     static int mViewCount;
     class MeasureSpec;
+    class DragShadowBuilder;
     class BaseSavedState;
     static constexpr int DEBUG_CORNERS_COLOR    = 0xFF3f7fff;
     static constexpr int DEBUG_CORNERS_SIZE_DIP = 8;
@@ -469,6 +472,7 @@ public:
     DECLARE_UIEVENT(bool,OnCapturedPointerListener,View&v, MotionEvent&);
     DECLARE_UIEVENT(void,OnClickListener,View&);
     DECLARE_UIEVENT(bool,OnLongClickListener,View&);
+    DECLARE_UIEVENT(bool,OnDragListener,View&,DragEvent&);
     DECLARE_UIEVENT(bool,OnContextClickListener,View&);
     DECLARE_UIEVENT(void,OnCreateContextMenuListener,ContextMenu&,View&,ContextMenu::ContextMenuInfo*);
     DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);
@@ -938,6 +942,14 @@ public:
     virtual void dispatchSystemUiVisibilityChanged(int visibility);
     void setDisabledSystemUiVisibility(int flags);
 
+    bool startDragAndDrop(ClipData*,DragShadowBuilder*,void*myLocalState,int flags);
+    void cancelDragDrop();
+    void updateDragShadow(DragShadowBuilder*);
+    virtual bool onDragEvent(DragEvent&);
+    virtual bool dispatchDragEvent(DragEvent&);
+    virtual bool canAcceptDrag();
+    bool callDragEventHandler(DragEvent& event);
+
     void setDrawingCacheEnabled(bool);
     bool isDrawingCacheEnabled()const;
     
@@ -1061,7 +1073,7 @@ public:
     void setOnTouchListener(OnTouchListener l);
     void setOnGenericMotionListener(OnGenericMotionListener l);
     void setOnHoverListener(OnHoverListener l);
-    //void setOnDragListener(OnDragListener&l);
+    void setOnDragListener(OnDragListener l);
     // Foreground color
 
     //foreground/background
@@ -1508,6 +1520,8 @@ public:
     std::function<bool(int,bool)>mPerformHapticFeedback;
     Cairo::RefPtr<Canvas> mCanvas;
     Drawable*mAutofilledDrawable;
+    void*mDragToken;
+    Cairo::RefPtr<Cairo::ImageSurface>mDragSurface;
     View* mTooltipHost;
     View* mViewRequestingLayout;
     ViewTreeObserver* mTreeObserver;
@@ -1565,7 +1579,7 @@ public:
     View::OnCapturedPointerListener mOnCapturedPointerListener;
     View::OnGenericMotionListener mOnGenericMotionListener;
     std::vector<View::OnUnhandledKeyEventListener> mUnhandledKeyListeners;
-    //View::OnDragListener mOnDragListener;
+    View::OnDragListener mOnDragListener;
     OnSystemUiVisibilityChangeListener mOnSystemUiVisibilityChangeListener;
     OnApplyWindowInsetsListener mOnApplyWindowInsetsListener;
 };
@@ -1722,6 +1736,17 @@ public:
 
     virtual AccessibilityNodeProvider* getAccessibilityNodeProvider(View& host);
     virtual AccessibilityNodeInfo* createAccessibilityNodeInfo(View& host);
+};
+
+class View::DragShadowBuilder {
+private:
+    View* mView;
+public:
+    DragShadowBuilder(View* view);
+    DragShadowBuilder();
+    View* getView();
+    void onProvideShadowMetrics(Point& outShadowSize, Point& outShadowTouchPoint);
+    void onDrawShadow(Canvas& canvas);
 };
 }//endof namespace cdroid
 
