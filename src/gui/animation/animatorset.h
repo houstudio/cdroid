@@ -74,9 +74,9 @@ private:
     void findSiblings(Node* node,std::vector<Node*>& siblings) ;
     Node* getNodeForAnimation(Animator* anim);
 protected:
-    void skipToEndValue(bool inReverse);
+    void skipToEndValue(bool inReverse)override;
     void animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse);
-    bool isInitialized();
+    bool isInitialized()override;
     void startWithoutPulsing(bool)override;
 public:
     class Builder;

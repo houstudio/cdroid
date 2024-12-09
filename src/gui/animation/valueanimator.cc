@@ -7,7 +7,7 @@
 
 namespace cdroid{
 
-
+TimeInterpolator*ValueAnimator::sDefaultInterpolator=AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
 ValueAnimator::ValueAnimator()
   :Animator(){
     mReversing = false;
@@ -22,15 +22,16 @@ ValueAnimator::ValueAnimator()
     mSeekFraction  = -1;
     mOverallFraction = 0.f;
     mCurrentFraction = 0.f;
-    mSuppressSelfPulseRequested = false;
+    mStartTimeCommitted =false;
     mStartListenersCalled = false;
     mAnimationEndRequested = false;
+    mSuppressSelfPulseRequested = false;
     mInitialized = false;
     mDuration = 300;
     mStartDelay = 0;
     mRepeatCount = 0;
     mDurationScale = -1.f;
-    mInterpolator = AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
+    mInterpolator = sDefaultInterpolator;
 }
 
 ValueAnimator::ValueAnimator(const ValueAnimator&o){
@@ -52,7 +53,7 @@ ValueAnimator::ValueAnimator(const ValueAnimator&o){
     mCurrentFraction = 0;
     mSelfPulse = true;
     mSuppressSelfPulseRequested = false;
-    mInterpolator = AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
+    mInterpolator = sDefaultInterpolator;
     auto& oldValues = o.mValues;
     if (oldValues.size()) {
         const int numValues = (int)oldValues.size();
@@ -69,7 +70,8 @@ ValueAnimator::~ValueAnimator(){
         delete v;
     mValues.clear();
     removeAnimationCallback();
-    //if(mInterpolator != sDefaultInterpolator)delete mInterpolator;
+    if((mInterpolator != sDefaultInterpolator)&&(mInterpolator!=LinearInterpolator::gLinearInterpolator.get()))
+        delete mInterpolator;
 }
 
 void ValueAnimator::setDurationScale(float durationScale) {
@@ -207,7 +209,7 @@ long ValueAnimator::getTotalDuration(){
 }
 
 void ValueAnimator::setCurrentPlayTime(int64_t playTime) {
-    const float fraction = mDuration > 0 ? (float) playTime / mDuration : 1;
+    const float fraction = (mDuration > 0) ? (float) playTime / mDuration : 1;
     setCurrentFraction(fraction);
 }
 
@@ -237,7 +239,7 @@ int ValueAnimator::getCurrentIteration(float fraction){
     // complete. In other words, the fraction for the current iteration would be 1, and the
     // current iteration would be overall fraction - 1.
     double iteration = std::floor(fraction);
-    if (fraction == iteration && fraction > 0) {
+    if ((fraction == iteration) && (fraction > 0)) {
         iteration--;
     }
     return (int) iteration;
@@ -247,7 +249,7 @@ float ValueAnimator::getCurrentIterationFraction(float fraction, bool inReverse)
     fraction = clampFraction(fraction);
     int iteration = getCurrentIteration(fraction);
     float currentFraction = fraction - iteration;
-    return shouldPlayBackward(iteration, inReverse) ? 1.f - currentFraction : currentFraction;
+    return shouldPlayBackward(iteration, inReverse) ? (1.f - currentFraction) : currentFraction;
 }
 
 float ValueAnimator::clampFraction(float fraction){
@@ -351,7 +353,8 @@ void ValueAnimator::removeAllUpdateListeners(){
 }
 
 void ValueAnimator::setInterpolator(TimeInterpolator* value){
-    //if(mInterpolator != sDefaultInterpolator) delete mInterpolator;
+    if((mInterpolator != sDefaultInterpolator)&&(mInterpolator!=LinearInterpolator::gLinearInterpolator.get()))
+        delete mInterpolator;
     if(value)
         mInterpolator = value;
     else
@@ -403,7 +406,7 @@ void ValueAnimator::start(bool playBackwards){
     mStartTime = -1;
     addAnimationCallback(0);
 
-    if (mStartDelay == 0 || mSeekFraction >= 0 || mReversing) {
+    if ( (mStartDelay == 0) || (mSeekFraction >= 0) || mReversing) {
         // If there's no start delay, init the animation and notify start listeners right away
         // to be consistent with the previous behavior. Otherwise, postpone this until the first
         // frame after the start delay.
@@ -446,7 +449,7 @@ void ValueAnimator::cancel(){
         }
         for (AnimatorListener ls : mListeners) {
             if(ls.onAnimationCancel)
-            ls.onAnimationCancel(*this);
+                ls.onAnimationCancel(*this);
         }
     }
     endAnimation();
@@ -620,7 +623,7 @@ void ValueAnimator::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t last
 void ValueAnimator::skipToEndValue(bool inReverse){
     initAnimation();
     float endFraction = inReverse ? 0.f : 1.f;
-    if (mRepeatCount % 2 == 1 && mRepeatMode == REVERSE) {
+    if ((mRepeatCount % 2 == 1) && (mRepeatMode == REVERSE)) {
         // This would end on fraction = 0
         endFraction = 0.f;
     }
@@ -737,10 +740,10 @@ void ValueAnimator::animateValue(float fraction) {
 }
 
 ValueAnimator*ValueAnimator::clone()const {
-    return new ValueAnimator(*this);// anim = (ValueAnimator*) Animator::clone();
-#if 0
-    if (mUpdateListeners != null) {
-        anim->mUpdateListeners = new ArrayList<AnimatorUpdateListener>(mUpdateListeners);
+    ValueAnimator*anim= new ValueAnimator(*this);
+
+    if (!mUpdateListeners.empty()) {
+        anim->mUpdateListeners = mUpdateListeners;
     }
     anim->mSeekFraction = -1;
     anim->mReversing = false;
@@ -760,7 +763,8 @@ ValueAnimator*ValueAnimator::clone()const {
     anim->mCurrentFraction = 0;
     anim->mSelfPulse = true;
     anim->mSuppressSelfPulseRequested = false;
-
+LOGD("==========================");
+#if 0
     PropertyValuesHolder[] oldValues = mValues;
     if (oldValues != null) {
         int numValues = oldValues.length;
@@ -772,8 +776,8 @@ ValueAnimator*ValueAnimator::clone()const {
             anim.mValuesMap.put(newValuesHolder.getPropertyName(), newValuesHolder);
         }
     }
-    return anim;
 #endif
+    return anim;
 }
 
 AnimationHandler& ValueAnimator::getAnimationHandler()const{

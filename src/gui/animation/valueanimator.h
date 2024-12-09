@@ -16,7 +16,6 @@ public:
 private:
     friend class AnimatorSet;
     static float sDurationScale;
-    //static TimeInterpolator sDefaultInterpolator = new AccelerateDecelerateInterpolator();
     bool mResumed = false;
     bool mReversing;
     bool mRunning = false;
@@ -68,8 +67,8 @@ protected:
     void startWithoutPulsing(bool inReverse)override;
     virtual bool animateBasedOnTime(int64_t currentTime);
     virtual void animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse);
-    void skipToEndValue(bool inReverse);
-    virtual bool isInitialized();
+    void skipToEndValue(bool inReverse)override;
+    bool isInitialized()override;
     bool pulseAnimationFrame(int64_t frameTime)override;
 public:
     ValueAnimator();
@@ -94,8 +93,8 @@ public:
     ValueAnimator& setDuration(long duration)override;
     long getDuration();
     long getTotalDuration()override;
-    virtual void setCurrentPlayTime(int64_t playTime);
     void setCurrentFraction(float fraction);
+    virtual void setCurrentPlayTime(int64_t playTime);
     int64_t getCurrentPlayTime();
     long getStartDelay()override;
     void setStartDelay(long startDelay)override;
