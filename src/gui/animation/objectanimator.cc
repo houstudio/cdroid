@@ -21,6 +21,9 @@ ObjectAnimator::ObjectAnimator(void* target,const std::string& propertyName)
 
 void ObjectAnimator::setTarget(void*target){
     if(mTarget!=target){
+        if(isStarted()){
+            cancel();
+        }
         mTarget = target;
         mInitialized=false;
     }

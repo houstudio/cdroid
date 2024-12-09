@@ -14,7 +14,7 @@ private:
 public:
     ObjectAnimator();
     ~ObjectAnimator();
-    void setTarget(void*target);
+    void setTarget(void*target)override;
     void*getTarget();
 
     void setupStartValues()override;
