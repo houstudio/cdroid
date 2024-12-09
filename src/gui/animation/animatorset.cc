@@ -106,7 +106,8 @@ AnimatorSet::Builder* AnimatorSet::play(Animator* anim){
 
 void AnimatorSet::cancel(){
     if (isStarted()) {
-        for (auto ls:mListeners) {
+        std::vector<AnimatorListener>tmpListener = mListeners;
+        for (auto ls:tmpListener) {
             if(ls.onAnimationCancel)ls.onAnimationCancel(*this);
         }
         for (auto node:mPlayingSet){//int i = 0; i < setSize; i++) {
@@ -330,7 +331,8 @@ void AnimatorSet::start(bool inReverse, bool selfPulse) {
         startAnimation();
     }
 
-    for (AnimatorListener&ls:mListeners) {
+    std::vector<AnimatorListener>tmpListeners = mListeners;
+    for (AnimatorListener&ls:tmpListeners) {
         if(ls.onAnimationStart)ls.onAnimationStart(*this, inReverse);
     }
     if (IsEmptySet) {
@@ -580,6 +582,7 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
     const int latestId = findLatestEventIdForTime(unscaledPlayTime);
     const int startId = mLastEventId;
 
+    LOGD("startId=%d latestId=%d mEvents.size=%d",startId,latestId,mEvents.size());
     handleAnimationEvents(startId, latestId, unscaledPlayTime);
 
     mLastEventId = latestId;
@@ -798,7 +801,8 @@ void AnimatorSet::endAnimation() {
     // No longer receive callbacks
     removeAnimationCallback();
     // Call end listener
-    for (Animator::AnimatorListener& ls:mListeners){
+    std::vector<AnimatorListener>tmpListeners = mListeners;
+    for (Animator::AnimatorListener& ls:tmpListeners){
         if(ls.onAnimationEnd)ls.onAnimationEnd(*this, mReversing);
     }
     removeDummyListener();
@@ -940,9 +944,9 @@ void AnimatorSet::sortAnimationEvents(){
     }
     std::sort(mEvents.begin(),mEvents.end(),AnimationEventCompare);
 
-    int eventSize = mEvents.size();
+    const size_t eventSize = mEvents.size();
     // For the same animation, start event has to happen before end.
-    for (int i = 0; i < eventSize;) {
+    for (size_t i = 0; i < eventSize;) {
         AnimationEvent* event = mEvents.at(i);
         if (event->mEvent == AnimationEvent::ANIMATION_END) {
             bool needToSwapStart = false;
@@ -959,7 +963,7 @@ void AnimatorSet::sortAnimationEvents(){
 
             int startEventId = eventSize;
             int startDelayEndId = eventSize;
-            for (int j = i + 1; j < eventSize; j++) {
+            for (size_t j = i + 1; j < eventSize; j++) {
                 if ((startEventId < eventSize) && (startDelayEndId < eventSize)) {
                     break;
                 }
@@ -1009,9 +1013,9 @@ void AnimatorSet::sortAnimationEvents(){
     }
 
     // Add AnimatorSet's start delay node to the beginning
-    mEvents.insert(mEvents.begin()  , new AnimationEvent(mRootNode, AnimationEvent::ANIMATION_START));
-    mEvents.insert(mEvents.begin()+1, new AnimationEvent(mRootNode, AnimationEvent::ANIMATION_DELAY_ENDED));
-    mEvents.insert(mEvents.begin()+2, new AnimationEvent(mRootNode, AnimationEvent::ANIMATION_END));
+    mEvents.insert(mEvents.begin(), new AnimationEvent(mRootNode, AnimationEvent::ANIMATION_END));
+    mEvents.insert(mEvents.begin(), new AnimationEvent(mRootNode, AnimationEvent::ANIMATION_DELAY_ENDED));
+    mEvents.insert(mEvents.begin(), new AnimationEvent(mRootNode, AnimationEvent::ANIMATION_START));
 
     if ((mEvents.at(mEvents.size() - 1)->mEvent == AnimationEvent::ANIMATION_START)
             || (mEvents.at(mEvents.size() - 1)->mEvent == AnimationEvent::ANIMATION_DELAY_ENDED)) {

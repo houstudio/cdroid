@@ -96,7 +96,7 @@ public:
     bool isStarted()override;
     long getStartDelay()override;
     void setStartDelay(long startDelay)override;
-    long getDuration();
+    long getDuration()override;
     Animator& setDuration(long)override;
     void setupStartValues()override;
     void setupEndValues()override;

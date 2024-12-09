@@ -91,7 +91,7 @@ public:
     PropertyValuesHolder*getValues(const std::string&propname);
     virtual void initAnimation();
     ValueAnimator& setDuration(long duration)override;
-    long getDuration();
+    long getDuration()override;
     long getTotalDuration()override;
     void setCurrentFraction(float fraction);
     virtual void setCurrentPlayTime(int64_t playTime);

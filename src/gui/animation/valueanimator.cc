@@ -7,7 +7,9 @@
 
 namespace cdroid{
 
+float ValueAnimator::sDurationScale = 1.f;
 TimeInterpolator*ValueAnimator::sDefaultInterpolator=AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
+
 ValueAnimator::ValueAnimator()
   :Animator(){
     mReversing = false;
@@ -78,7 +80,6 @@ void ValueAnimator::setDurationScale(float durationScale) {
     sDurationScale = durationScale;
 }
 
-float ValueAnimator::sDurationScale = 1.f;
 
 float ValueAnimator::getDurationScale() {
     return sDurationScale;
@@ -192,7 +193,6 @@ int64_t ValueAnimator::getScaledDuration() const{
 
 ValueAnimator& ValueAnimator::setDuration(long duration){
     mDuration = duration;
-    LOGD("%p duration=%d",this,duration);
     return *this;
 }
 
@@ -585,7 +585,7 @@ bool ValueAnimator::animateBasedOnTime(int64_t currentTime){
             done = true;
         }
         mOverallFraction = clampFraction(fraction);
-        float currentIterationFraction = getCurrentIterationFraction(mOverallFraction, mReversing);
+        const float currentIterationFraction = getCurrentIterationFraction(mOverallFraction, mReversing);
         LOGD("%p time=%lld,%lld ,%d fraction=%.3f",this,currentTime,mStartTime,mDuration,currentIterationFraction);
         animateValue(currentIterationFraction);
     }
@@ -685,7 +685,6 @@ bool ValueAnimator::doAnimationFrame(int64_t frameTime){
     // is very rare and only happens when seeking backwards.
     const int64_t currentTime = std::max(frameTime, mStartTime);
     const bool finished = animateBasedOnTime(currentTime);
-    LOGD("%p animateBasedOnTime(%lld) finished=%d",this,currentTime,finished);
     if (finished) endAnimation();
     return finished;
 }

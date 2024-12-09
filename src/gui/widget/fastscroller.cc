@@ -1086,7 +1086,7 @@ bool FastScroller::onTouchEvent(MotionEvent& me) {
             // Allow a tap to scroll.
             beginDrag();
 
-            float pos = getPosFromMotionEvent(me.getY());
+            const float pos = getPosFromMotionEvent(me.getY());
             setThumbPos(pos);
             scrollTo(pos);
             // Will hit the STATE_DRAGGING check below
@@ -1133,13 +1133,13 @@ bool FastScroller::isPointInside(float x, float y) {
 }
 
 bool FastScroller::isPointInsideX(float x) {
-    float offset = mThumbImage->getTranslationX();
-    float left = mThumbImage->getLeft() + offset;
-    float right = mThumbImage->getRight() + offset;
+    const float offset = mThumbImage->getTranslationX();
+    const float left = mThumbImage->getLeft() + offset;
+    const float right = mThumbImage->getRight() + offset;
 
     // Apply the minimum touch target size.
-    float targetSizeDiff = mMinimumTouchTarget - (right - left);
-    float adjust = targetSizeDiff > 0 ? targetSizeDiff : 0;
+    const float targetSizeDiff = mMinimumTouchTarget - (right - left);
+    const float adjust = targetSizeDiff > 0 ? targetSizeDiff : 0;
 
     if (mLayoutFromRight) {
         return x >= mThumbImage->getLeft() - adjust;
@@ -1149,22 +1149,22 @@ bool FastScroller::isPointInsideX(float x) {
 }
 
 bool FastScroller::isPointInsideY(float y) {
-   float offset = mThumbImage->getTranslationY();
-   float top = mThumbImage->getTop() + offset;
-   float bottom = mThumbImage->getBottom() + offset;
+   const float offset = mThumbImage->getTranslationY();
+   const float top = mThumbImage->getTop() + offset;
+   const float bottom = mThumbImage->getBottom() + offset;
 
    // Apply the minimum touch target size.
-   float targetSizeDiff = mMinimumTouchTarget - (bottom - top);
-   float adjust = targetSizeDiff > 0 ? targetSizeDiff / 2.f : 0;
+   const float targetSizeDiff = mMinimumTouchTarget - (bottom - top);
+   const float adjust = (targetSizeDiff > 0) ? targetSizeDiff / 2.f : 0;
 
-   return y >= (top - adjust) && y <= (bottom + adjust);
+   return (y >= (top - adjust)) && (y <= (bottom + adjust));
 }
 
 Animator* FastScroller::groupAnimatorOfFloat(const std::string&propName, float value,const std::vector<View*>&views){
     AnimatorSet* animSet = new AnimatorSet();
     AnimatorSet::Builder* builder = nullptr;
 
-    for (int i = views.size() - 1; i >= 0; i--) {
+    for (int i = int(views.size() - 1); i >= 0; i--) {
         Animator* anim = ObjectAnimator::ofFloat(views[i], propName, {value});
         if (builder == nullptr) {
             builder = animSet->play(anim);
