@@ -458,6 +458,7 @@ static void parseShapeGradient(GradientDrawable*gd,ShapeDrawable*sd,const Attrib
     if(gd) {
         gd->setColors(cls);
         gd->setGradientType(gradientType);
+        gd->setUseLevel(atts.getBoolean("useLevel",false));
         switch(gradientType) {
         case GradientDrawable::LINEAR_GRADIENT:
             gd->setOrientation(orientation);
