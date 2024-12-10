@@ -111,7 +111,7 @@ void GradientDrawable::GradientState::applyDensityScaling(int sourceDensity, int
 
     if (mThickness > 0)  mThickness = Drawable::scaleFromDensity(mThickness, sourceDensity, targetDensity, true);
 
-    if (mOpticalInsets.left||mOpticalInsets.top||mOpticalInsets.right||mOpticalInsets.bottom) {
+    if (mOpticalInsets != Insets::NONE) {
         const int left  = Drawable::scaleFromDensity(mOpticalInsets.left, sourceDensity, targetDensity, true);
         const int top   = Drawable::scaleFromDensity( mOpticalInsets.top, sourceDensity, targetDensity, true);
         const int right = Drawable::scaleFromDensity(mOpticalInsets.right, sourceDensity, targetDensity, true);

@@ -19,6 +19,7 @@ ValueAnimator::ValueAnimator()
     mResumed = false;
     mStarted = false;
     mStartTime = -1;
+    mPauseTime = 0;
     mLastFrameTime = -1;
     mFirstFrameTime= -1;
     mSeekFraction  = -1;
