@@ -21,6 +21,9 @@ int main(int argc,const char*argv[]){
         const bool down=e.getAction()==MotionEvent::ACTION_DOWN;
         v.setScaleX(down?0.5f:1.f);
         v.setScaleY(down?0.8f:1.f);
+        Animator* anim = ObjectAnimator::ofFloat(&v, "alpha", {0.f,1.f});
+        anim->setDuration(10000);
+        anim->start();
         return false;
     });
     
@@ -64,7 +67,7 @@ int main(int argc,const char*argv[]){
     w->addView(clk).setPos(600,300);*/
 
 #if 1 
-    chk=new RadioButton(120,60);
+    chk=new RadioButton("Radio",120,60);
     Drawable*dr=ctx->getDrawable("cdroid:drawable/btn_radio.xml");
     chk->setButtonDrawable(dr);
     chk->setChecked(true);

@@ -173,7 +173,7 @@ void ObjectAnimator::setupEndValues() {
 
 void ObjectAnimator::animateValue(float fraction){
     void* target = getTarget();
-    if (mTarget != nullptr){// && (target == nullptr)) {
+    if ((mTarget != nullptr) && (target == nullptr)) {
         // We lost the target reference, cancel and clean up. Note: we allow null target if the
         /// target has never been set.
         cancel();

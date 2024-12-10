@@ -610,8 +610,7 @@ void ValueAnimator::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t last
             }
         }
     }
-
-    if (mRepeatCount != INFINITE && currentPlayTime >= (mRepeatCount + 1) * mDuration) {
+    if ((mRepeatCount != INFINITE) && (currentPlayTime >= ((mRepeatCount + 1) * mDuration))) {
         skipToEndValue(inReverse);
     } else {
         // Find the current fraction:

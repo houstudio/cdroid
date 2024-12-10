@@ -22,11 +22,11 @@ PropertyValuesHolder::PropertyValuesHolder(Property*prop){
 
 PropertyValuesHolder::PropertyValuesHolder(const std::string&name){
     mPropertyName = name;
-    mProperty = nullptr;
+    mProperty = Property::propertyFromName(name);;
 }
 
 PropertyValuesHolder::~PropertyValuesHolder(){
-    delete mProperty;
+    //delete mProperty;
 }
 
 void PropertyValuesHolder::setPropertyName(const std::string& propertyName){
@@ -72,21 +72,30 @@ AnimateValue PropertyValuesHolder::evaluator(float fraction, const AnimateValue&
 }
 
 void PropertyValuesHolder::setValues(const std::vector<int>&values){
-    mDataSource.resize(values.size());
+    mDataSource.resize(std::max(values.size(),size_t(2)));
+    mDataSource.clear();
     for(size_t i=0;i<values.size();i++)
        mDataSource[i].emplace<int>(values.at(i));
+    if(values.size()==1)
+        mDataSource[1].emplace<int>(values[0]);
 }
 
 void PropertyValuesHolder::setValues(const std::vector<uint32_t>&values){
-    mDataSource.resize(values.size());
+    mDataSource.resize(std::max(values.size(),size_t(2)));
+    mDataSource.clear();
     for(size_t i = 0;i < values.size();i++)
        mDataSource[i].emplace<uint32_t>(values.at(i));
+    if(values.size()==1)
+        mDataSource[1].emplace<uint32_t>(values[0]);
 }
 
 void PropertyValuesHolder::setValues(const std::vector<float>&values){
-    mDataSource.resize(values.size());
+    mDataSource.resize(std::max(values.size(),size_t(2)));
+    mDataSource.clear();
     for(size_t i = 0;i < values.size();i++)
        mDataSource[i].emplace<float>(values.at(i));
+    if(values.size()==1)
+        mDataSource[1].emplace<float>(values[0]);
 }
 
 void PropertyValuesHolder::init(){
@@ -130,7 +139,7 @@ const AnimateValue& PropertyValuesHolder::getAnimatedValue()const{
 
 void PropertyValuesHolder::setAnimatedValue(void*target){
     if(mProperty!=nullptr){
-        mProperty->set(target,0);
+        mProperty->set(target,getAnimatedValue());
     }else if(mSetter!=0){
         AnimateValue value = getAnimatedValue();
         mSetter(target,mPropertyName,value);

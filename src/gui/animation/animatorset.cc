@@ -6,6 +6,7 @@ namespace cdroid{
 
 AnimatorSet::AnimatorSet():Animator(){
     mDelayAnim = ValueAnimator::ofFloat({0.f, 1.f});
+    mDelayAnim->setDuration(0);
     mRootNode  = new Node(mDelayAnim);
     mNodeMap.insert({mDelayAnim, mRootNode});
     mNodes.push_back(mRootNode);
@@ -541,7 +542,7 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
         mFirstFrame = frameTime;
     }
 
-    LOGD("%p frameTime=(%lld-%lld)=%d mPaused=%d mPauseTime=%lld",this,frameTime,mFirstFrame,int(frameTime-mFirstFrame),mPaused,mPauseTime); 
+    LOGD("%p frameTime=(%lld-%lld)=%d",this,frameTime,mFirstFrame,int(frameTime-mFirstFrame));
     // Handle pause/resume
     if (mPaused) {
         // Note: Child animations don't receive pause events. Since it's never a contract that
@@ -582,7 +583,7 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
     const int latestId = findLatestEventIdForTime(unscaledPlayTime);
     const int startId = mLastEventId;
 
-    LOGD("startId=%d latestId=%d mEvents.size=%d",startId,latestId,mEvents.size());
+    LOGD("%p startId=%d latestId=%d mEvents.size=%d",this,startId,latestId,mEvents.size());
     handleAnimationEvents(startId, latestId, unscaledPlayTime);
 
     mLastEventId = latestId;
@@ -656,7 +657,7 @@ void AnimatorSet::handleAnimationEvents(int startId, int latestId, int64_t playT
         for (int i = startId + 1; i <= latestId; i++) {
             AnimationEvent* event = mEvents.at(i);
             Node* node = event->mNode;
-            LOGD("pulseFrame %p playTime=%d event=%d",node->mAnimation,playTime,event->mEvent);
+            LOGD("%p pulseFrame %p playTime=%d event=%d",this,node->mAnimation,playTime,event->mEvent);
             if (event->mEvent == AnimationEvent::ANIMATION_START) {
                 mPlayingSet.push_back(event->mNode);
                 if (node->mAnimation->isStarted()) {
@@ -1106,7 +1107,7 @@ long AnimatorSet::getTotalDuration() {
 }
 
 AnimatorSet::Node* AnimatorSet::getNodeForAnimation(Animator* anim){
-    auto it= mNodeMap.find(anim);
+    auto it = mNodeMap.find(anim);
     Node* node = nullptr;
     if (it==mNodeMap.end()) {
         node = new Node(anim);
@@ -1128,7 +1129,7 @@ AnimatorSet::Node::Node(Animator* animation){
 }
 
 AnimatorSet::Node* AnimatorSet::Node::clone(){
-    Node* node =new Node(nullptr);
+    Node* node = new Node(nullptr);
     node->mAnimation = mAnimation->clone();
     node->mChildNodes= mChildNodes;
     node->mSiblings  = mSiblings;

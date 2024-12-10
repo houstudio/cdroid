@@ -523,7 +523,7 @@ void FastScroller::transitionToHidden() {
             mPreviewImage, mPrimaryText, mSecondaryText});
     fadeOut->setDuration(DURATION_FADE_OUT);
 
-        // Push the thumb and track outside the list bounds.
+    // Push the thumb and track outside the list bounds.
     const float offset = mLayoutFromRight ? mThumbImage->getWidth() : -mThumbImage->getWidth();
     Animator* slideOut = groupAnimatorOfFloat("translationX", offset, {mThumbImage, mTrackImage});
     slideOut->setDuration(DURATION_FADE_OUT);
@@ -641,7 +641,7 @@ void FastScroller::scrollTo(float position) {
     int count = mList->getCount();
     int sectionIndex = -1;
     int sectionCount = mSections.size();
-#if 10
+
     if (mSections.size()) {
         int exactSection = MathUtils::constrain(
                 (int) (position * sectionCount), 0, sectionCount - 1);
@@ -736,7 +736,7 @@ void FastScroller::scrollTo(float position) {
 
         sectionIndex = -1;
     }
-#endif
+
     if (mCurrentSection != sectionIndex) {
         mCurrentSection = sectionIndex;
         bool hasPreview = transitionPreviewLayout(sectionIndex);
