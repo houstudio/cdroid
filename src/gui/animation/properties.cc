@@ -32,7 +32,7 @@ public:
     
     void set(void* object,const AnimateValue& value){
         LOGD("setAlpha %p->%.3f",object,value);
-        //((View*)object)->setAlpha(GET_VARIANT(value,float));
+        ((View*)object)->setAlpha(GET_VARIANT(value,float));
     }
 };
 

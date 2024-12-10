@@ -75,27 +75,30 @@ void PropertyValuesHolder::setValues(const std::vector<int>&values){
     mDataSource.resize(std::max(values.size(),size_t(2)));
     mDataSource.clear();
     for(size_t i=0;i<values.size();i++)
-       mDataSource[i].emplace<int>(values.at(i));
+       mDataSource.push_back(values.at(i));
     if(values.size()==1)
-        mDataSource[1].emplace<int>(values[0]);
+        mDataSource.insert(mDataSource.begin(),values[0]);
+    mAnimateValue = values[0];
 }
 
 void PropertyValuesHolder::setValues(const std::vector<uint32_t>&values){
     mDataSource.resize(std::max(values.size(),size_t(2)));
     mDataSource.clear();
     for(size_t i = 0;i < values.size();i++)
-       mDataSource[i].emplace<uint32_t>(values.at(i));
+       mDataSource.push_back(values.at(i));
     if(values.size()==1)
-        mDataSource[1].emplace<uint32_t>(values[0]);
+        mDataSource.insert(mDataSource.begin(),values[0]);
+    mAnimateValue = values[0];
 }
 
 void PropertyValuesHolder::setValues(const std::vector<float>&values){
     mDataSource.resize(std::max(values.size(),size_t(2)));
     mDataSource.clear();
     for(size_t i = 0;i < values.size();i++)
-       mDataSource[i].emplace<float>(values.at(i));
+       mDataSource.push_back(values.at(i));
     if(values.size()==1)
-        mDataSource[1].emplace<float>(values[0]);
+        mDataSource.insert(mDataSource.begin(),values[0]);
+    mAnimateValue = values[0];
 }
 
 void PropertyValuesHolder::init(){
@@ -119,20 +122,7 @@ void PropertyValuesHolder::calculateValue(float fraction){
         mAnimateValue = mEvaluator(fraction, mDataSource[lowIndex], mDataSource[lowIndex + 1]);
     } 
 }
-#if 0
-void PropertyValuesHolder::setFraction(void*target,float fraction){
-    if (mDataSource.size()==0) mAnimateValue=mEvaluator(fraction,mStartValue, mEndValue);
-    else if (fraction <= 0.0f) mAnimateValue=mDataSource.front();
-    else if (fraction >= 1.0f) mAnimateValue=mDataSource.back();
-    else{
-        fraction *= mDataSource.size() - 1;
-        int lowIndex = std::floor(fraction);
-        fraction -= lowIndex;
-        mAnimateValue = mEvaluator(fraction, mDataSource[lowIndex], mDataSource[lowIndex + 1]);
-    }
-    if(mOnPropertyChangedListener)mOnPropertyChangedListener(mPropertyName,target,fraction);
-}
-#endif
+
 const AnimateValue& PropertyValuesHolder::getAnimatedValue()const{
     return mAnimateValue;
 }
