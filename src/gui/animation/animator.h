@@ -41,10 +41,10 @@ protected:
     std::vector<AnimatorListener> mListeners;
     std::vector<AnimatorPauseListener> mPauseListeners;
     virtual void skipToEndValue(bool inReverse);
+    virtual bool isInitialized();
 public:
     virtual bool pulseAnimationFrame(int64_t frameTime);
     virtual void startWithoutPulsing(bool inReverse);
-    virtual bool isInitialized();
     virtual void animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse);
 public:
     virtual ~Animator();

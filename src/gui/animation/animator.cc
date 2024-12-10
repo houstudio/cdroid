@@ -142,7 +142,7 @@ void Animator::skipToEndValue(bool inReverse) {
     //NOTHING
 }
 
-bool Animator::isInitialized() {
+bool Animator::isInitialized(){
     return true;
 }
 

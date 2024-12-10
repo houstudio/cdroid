@@ -21,8 +21,8 @@ int main(int argc,const char*argv[]){
         const bool down=e.getAction()==MotionEvent::ACTION_DOWN;
         v.setScaleX(down?0.5f:1.f);
         v.setScaleY(down?0.8f:1.f);
-        Animator* anim = ObjectAnimator::ofFloat(&v, "alpha", {0.f,1.f});
-        anim->setDuration(10000);
+        Animator* anim = ObjectAnimator::ofFloat(&v, "alpha", {0.f});
+        anim->setDuration(200);
         anim->start();
         return false;
     });

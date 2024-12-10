@@ -76,8 +76,6 @@ void PropertyValuesHolder::setValues(const std::vector<int>&values){
     mDataSource.clear();
     for(size_t i=0;i<values.size();i++)
        mDataSource.push_back(values.at(i));
-    if(values.size()==1)
-        mDataSource.insert(mDataSource.begin(),values[0]);
     mAnimateValue = values[0];
 }
 
@@ -86,8 +84,6 @@ void PropertyValuesHolder::setValues(const std::vector<uint32_t>&values){
     mDataSource.clear();
     for(size_t i = 0;i < values.size();i++)
        mDataSource.push_back(values.at(i));
-    if(values.size()==1)
-        mDataSource.insert(mDataSource.begin(),values[0]);
     mAnimateValue = values[0];
 }
 
@@ -96,8 +92,6 @@ void PropertyValuesHolder::setValues(const std::vector<float>&values){
     mDataSource.clear();
     for(size_t i = 0;i < values.size();i++)
        mDataSource.push_back(values.at(i));
-    if(values.size()==1)
-        mDataSource.insert(mDataSource.begin(),values[0]);
     mAnimateValue = values[0];
 }
 
@@ -139,10 +133,16 @@ void PropertyValuesHolder::setAnimatedValue(void*target){
 void PropertyValuesHolder::setupValue(void*target,int position){
     if(mProperty){
         AnimateValue value = mProperty->get(target);
-        mDataSource[position] = value;
+        if(mDataSource.size()==1)
+            mDataSource.insert(mDataSource.begin()+position,value);
+        else
+            mDataSource[position] = value;
     }else if(mGetter){
         AnimateValue value = mGetter(target,mPropertyName);
-        mDataSource[position] = value;
+        if(mDataSource.size()==1)
+            mDataSource.insert(mDataSource.begin()+position,value);
+        else
+            mDataSource[position] = value;
     }else{
         LOGE("invalidate arguments mGetter,property must be setted");
     }

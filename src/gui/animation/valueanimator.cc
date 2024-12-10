@@ -587,7 +587,6 @@ bool ValueAnimator::animateBasedOnTime(int64_t currentTime){
         }
         mOverallFraction = clampFraction(fraction);
         const float currentIterationFraction = getCurrentIterationFraction(mOverallFraction, mReversing);
-        LOGD("%p time=%lld,%lld ,%d fraction=%.3f",this,currentTime,mStartTime,mDuration,currentIterationFraction);
         animateValue(currentIterationFraction);
     }
     return done;

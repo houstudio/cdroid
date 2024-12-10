@@ -19,6 +19,25 @@ ObjectAnimator::ObjectAnimator(void* target,const std::string& propertyName)
     setPropertyName(propertyName);
 }
 
+void ObjectAnimator::initAnimation(){
+    if(!mInitialized){
+        void* target = getTarget();
+        for(auto value:mValues){
+             value->setupStartValue(target);
+        }
+        ValueAnimator::initAnimation();
+    }
+}
+
+ObjectAnimator&ObjectAnimator::setDuration(long duration){
+    ValueAnimator::setDuration(duration);
+    return *this;
+}
+
+bool ObjectAnimator::isInitialized(){
+    return mInitialized;
+}
+
 void ObjectAnimator::setTarget(void*target){
     if(mTarget!=target){
         if(isStarted()){

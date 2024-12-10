@@ -31,7 +31,7 @@ public:
     }
     
     void set(void* object,const AnimateValue& value){
-        LOGD("setAlpha %p->%.3f",object,value);
+        LOGD("setAlpha %p->%.3f",object,GET_VARIANT(value,float));
         ((View*)object)->setAlpha(GET_VARIANT(value,float));
     }
 };
@@ -42,14 +42,15 @@ public:
     }
 
     void setValue(void* object,const AnimateValue& value) {
-        LOGD("setTranslationX%p->%.3f",object,value);
-        //((View*)object)->setTranslationX(GET_VARIANT(value,float));
+        LOGD("setTranslationX%p->%.3f",object,GET_VARIANT(value,float));
+        ((View*)object)->setTranslationX(GET_VARIANT(value,float));
     }
 
     AnimateValue get(void* object) {
         return ((View*)object)->getTranslationX();
     }
 };
+
 class TRANSLATION_Y:public Property{
 public:
     TRANSLATION_Y():Property("translationY"){
@@ -105,6 +106,7 @@ public:
         return ((View*)object)->getRotation();
     }
 };
+
 class ROTATIONX:public Property{
 public:
     ROTATIONX():Property("rotationX"){
@@ -118,6 +120,7 @@ public:
         return ((View*)object)->getRotationX();
     }
 };
+
 class ROTATIONY:public Property{
 public:
     ROTATIONY():Property("rotationY"){

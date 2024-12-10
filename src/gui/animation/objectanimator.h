@@ -11,11 +11,15 @@ private:
     bool mAutoCancel;
     ObjectAnimator(void* target,const std::string& propertyName);
     bool hasSameTargetAndProperties(const Animator*anim);
+protected:
+    void initAnimation()override;
+    bool isInitialized()override;
 public:
     ObjectAnimator();
     ~ObjectAnimator();
     void setTarget(void*target)override;
     void*getTarget();
+    ObjectAnimator&setDuration(long dur)override;
 
     void setupStartValues()override;
     void setupEndValues()override;
