@@ -18,16 +18,6 @@ public:
     virtual int handleEvent(int fd, int events, void* data) = 0;
 };
 
-class SimpleLooperCallback : public LooperCallback {
-protected:
-    virtual ~SimpleLooperCallback();
-public:
-    SimpleLooperCallback(Looper_callbackFunc callback);
-    virtual int handleEvent(int fd, int events, void* data);
-private:
-    Looper_callbackFunc mCallback;
-};
-
 class MessageHandler{
 private:
     uint32_t mFlags;
@@ -61,7 +51,8 @@ private:
         int fd;
         int ident;
         int events;
-        LooperCallback* callback;
+        LooperCallback* callback1;
+        Looper_callbackFunc callback2;
         void* data;
     };
     struct Response {
@@ -117,6 +108,7 @@ private:
     void pushResponse(int events, const Request& request);
     void rebuildEpollLocked();
     void scheduleEpollRebuildLocked();
+    int  addFd(int fd, int ident, int events,const LooperCallback* callback1,Looper_callbackFunc callback2, void* data);
     static void initTLSKey();
     static void threadDestructor(void*);
 protected:

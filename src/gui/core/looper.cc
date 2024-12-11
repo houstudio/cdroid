@@ -375,7 +375,11 @@ Done: ;
             // Invoke the callback.  Note that the file descriptor may be closed by
             // the callback (and potentially even reused) before the function returns so
             // we need to be a little careful when removing the file descriptor afterwards.
-            int callbackResult = response.request.callback->handleEvent(fd, events, data);
+            int callbackResult =0;
+            if(response.request.callback1)
+                callbackResult=response.request.callback1->handleEvent(fd, events, data);
+            else
+                callbackResult=response.request.callback2(fd, events, data);
             if (callbackResult == 0) {
                 std::lock_guard<std::recursive_mutex> _l(mLock);
                 removeSequenceNumberLocked(response.seq);
@@ -383,7 +387,8 @@ Done: ;
 
             // Clear the callback reference in the response structure promptly because we
             // will not clear the response vector itself until the next poll.
-            response.request.callback = nullptr;//clear();
+            response.request.callback1 = nullptr;//clear();
+            response.request.callback2 = nullptr;
             result = POLL_CALLBACK;
         }
     }
@@ -446,14 +451,18 @@ void Looper::pushResponse(int events, const Request& request) {
 }
 
 int Looper::addFd(int fd, int ident, int events, Looper_callbackFunc callback, void* data) {
-    return addFd(fd, ident, events, callback ? new SimpleLooperCallback(callback) : nullptr, data);
+    return addFd(fd, ident, events, nullptr,callback, data);
 }
 
-int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, void* data) {
+int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback,void* data){
+    return addFd(fd, ident, events, callback,nullptr, data); 
+}
+
+int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback1,Looper_callbackFunc callback2, void* data) {
 #if DEBUG_CALLBACKS
     LOGD("%p  addFd - fd=%d, ident=%d, events=0x%x, callback=%p, data=%p", this, fd, ident, events, callback, data);
 #endif
-    if (callback == nullptr) {
+    if ((callback1 == nullptr)&&(callback2==nullptr)) {
         if (! mAllowNonCallbacks) {
             LOGE("Invalid attempt to set NULL callback but not allowed for this looper.");
             return -1;
@@ -476,14 +485,15 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
         request.fd = fd;
         request.ident = ident;
         request.events = events;
-        request.callback = const_cast<LooperCallback*>(callback);
+        request.callback1 = (LooperCallback*)callback1;
+        request.callback2 = callback2;
         request.data = data;
         if (mNextRequestSeq == -1) mNextRequestSeq = 0; // reserve sequence number -1
 
         epoll_event eventItem = createEpollEvent(request.events,seq);
         auto seq_it = mSequenceNumberByFd.find(fd);
         if (seq_it == mSequenceNumberByFd.end()) {
-            int epollResult = mEpoll->addFd(fd,eventItem);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, fd, &eventItem);
+            const int epollResult = mEpoll->addFd(fd,eventItem);
             if (epollResult < 0) {
                 LOGE("Error adding epoll events for fd %d: %s", fd, strerror(errno));
                 return -1;
@@ -491,7 +501,7 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
             mRequests.emplace(seq, request);
             mSequenceNumberByFd.emplace(fd,seq);
         } else {
-            int epollResult = mEpoll->modifyFd(fd,eventItem);////epoll_ctl(mEpollFd, EPOLL_CTL_MOD, fd, & eventItem);
+            int epollResult = mEpoll->modifyFd(fd,eventItem);
             if (epollResult < 0) {
                 if (errno == ENOENT) {
                     // Tolerate ENOENT because it means that an older file descriptor was
@@ -511,7 +521,7 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback, 
                     LOGD("%p  addFd - EPOLL_CTL_MOD failed due to file descriptor "
                             "being recycled, falling back on EPOLL_CTL_ADD: %s", this, strerror(errno));
 #endif
-                    epollResult = mEpoll->addFd(fd,eventItem);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, fd, & eventItem);
+                    epollResult = mEpoll->addFd(fd,eventItem);
                     if (epollResult < 0) {
                         LOGE("Error modifying or adding epoll events for fd %d: %s", fd, strerror(errno));
                         return -1;
@@ -696,17 +706,6 @@ bool Looper::isPolling() const {
 }
 
 LooperCallback::~LooperCallback(){
-}
-
-SimpleLooperCallback::SimpleLooperCallback(Looper_callbackFunc callback)
-    :mCallback(callback) {
-}
-
-SimpleLooperCallback::~SimpleLooperCallback() {
-}
-
-int SimpleLooperCallback::handleEvent(int fd, int events, void* data) {
-    return mCallback(fd, events, data);
 }
 
 MessageHandler::MessageHandler(){
