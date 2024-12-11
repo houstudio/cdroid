@@ -8943,7 +8943,9 @@ void View::setTranslationX(float x){
         invalidateViewProperty(true,false);
         mRenderNode->setTranslationX(x);
         invalidateViewProperty(false,true);
+
         invalidateParentIfNeededAndWasQuickRejected();
+        notifySubtreeAccessibilityStateChangedIfNeeded();
     }
 }
 
@@ -8956,7 +8958,9 @@ void View::setTranslationY(float y){
         invalidateViewProperty(true,false);
         mRenderNode->setTranslationY(y); 
         invalidateViewProperty(false,true);
+
         invalidateParentIfNeededAndWasQuickRejected();
+        notifySubtreeAccessibilityStateChangedIfNeeded();
     }
 }
 
@@ -9063,7 +9067,6 @@ void View::setAlpha(float alpha){
             invalidateViewProperty(true,false);
             mRenderNode->setAlpha(getFinalAlpha());
         }
-        invalidate();
     }
 }
 

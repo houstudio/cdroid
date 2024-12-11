@@ -25,6 +25,7 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
     mLongList = false;
     mAlwaysShow = false;
     mUpdatingLayout  = false;
+    mLayoutFromRight = false;
     mScrollCompleted = true;
     mState = STATE_VISIBLE;
     mMatchDragPosition =true;// context.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.HONEYCOMB;

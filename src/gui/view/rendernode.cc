@@ -9,13 +9,13 @@ RenderNode::RenderNode(){
     mScaleX = 1.f;
     mScaleY = 1.f;
     mElevation =.0f;
-    mTranslationX = .0f;
-    mTranslationY = .0f;
-    mTranslationZ = .0f;
+    mTranslationX = 0.f;
+    mTranslationY = 0.f;
+    mTranslationZ = 0.f;
     mPivotX = mPivotY = FLT_MIN;
-    mRotation  = .0f;
-    mRotationX = .0f;
-    mRotationY = .0f;
+    mRotation  = 0.f;
+    mRotationX = 0.f;
+    mRotationY = 0.f;
     mMatrix = identity_matrix();
 }
 
