@@ -17,15 +17,15 @@ int main(int argc,const char*argv[]){
     d=ctx->getDrawable("cdroid:drawable/btn_default.xml");
     sld=dynamic_cast<StateListDrawable*>(d);
     w->setBackgroundColor(0xFF101112);
-    btn->setOnTouchListener([](View&v,MotionEvent&e){
+    btn->setOnTouchListener([&argc](View&v,MotionEvent&e){
         const bool down=e.getAction()==MotionEvent::ACTION_DOWN;
         AnimatorSet*aset= new AnimatorSet();
         Animator* alpha = ObjectAnimator::ofFloat(&v, "alpha", {0.f});
         Animator* scale = ObjectAnimator::ofFloat(&v, "scaleX", {1.5f});
         alpha->setDuration(2000);
         scale->setDuration(2000);
-        aset->playTogether({alpha,scale});
-        //aset->playSequentially({alpha,scale});
+        if(argc%2)aset->playTogether({alpha,scale});
+        else aset->playSequentially({scale,alpha});
         aset->start();
         return false;
     });
