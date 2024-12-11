@@ -826,7 +826,52 @@ void AnimatorSet::addAnimationCallback(long delay) {
 }
 
 Animator*AnimatorSet::clone()const{
-    LOGE("clone");
+#if 0
+    AnimatorSet*anim = new AnimatorSet();
+    const int nodeCount = mNodes.size();
+    anim->mStarted = false;
+    anim->mReversing = false;
+    anim->mDependencyDirty = true;
+
+    // Walk through the old nodes list, cloning each node and adding it to the new nodemap.
+    // One problem is that the old node dependencies point to nodes in the old AnimatorSet.
+    // We need to track the old/new nodes in order to reconstruct the dependencies in the clone.
+
+    for (Node*node:mNodes){
+        Node nodeClone = node.clone();
+        // Remove the old internal listener from the cloned child
+        nodeClone.mAnimation.removeListener(mDummyListener);
+        clonesMap.put(node, nodeClone);
+        anim->mNodes->push_back(nodeClone);
+        anim->mNodeMap->put(nodeClone.mAnimation, nodeClone);
+    }
+
+    anim.mRootNode = clonesMap.get(mRootNode);
+    anim->mDelayAnim = (ValueAnimator*) anim->mRootNode->mAnimation;
+
+    // Now that we've cloned all of the nodes, we're ready to walk through their
+    // dependencies, mapping the old dependencies to the new nodes
+    for (int i = 0; i < nodeCount; i++) {
+        Node node = mNodes.get(i);
+        // Update dependencies for node's clone
+        Node nodeClone = clonesMap.get(node);
+        nodeClone.mLatestParent = node.mLatestParent == null
+                ? null : clonesMap.get(node.mLatestParent);
+        int size = node.mChildNodes == null ? 0 : node.mChildNodes.size();
+        for (int j = 0; j < size; j++) {
+            nodeClone.mChildNodes.set(j, clonesMap.get(node.mChildNodes.get(j)));
+        }
+        size = node.mSiblings == null ? 0 : node.mSiblings.size();
+        for (int j = 0; j < size; j++) {
+            nodeClone.mSiblings.set(j, clonesMap.get(node.mSiblings.get(j)));
+        }
+        size = node.mParents == null ? 0 : node.mParents.size();
+        for (int j = 0; j < size; j++) {
+            nodeClone.mParents.set(j, clonesMap.get(node.mParents.get(j)));
+        }
+    }
+    return anim;
+#endif
     return nullptr;
 }
 

@@ -46,7 +46,16 @@ Property*PropertyValuesHolder::getProperty(){
 }
 
 void PropertyValuesHolder::setPropertyChangedListener(const OnPropertyChangedListener&ls){
-   mOnPropertyChangedListener = ls;
+    mOnPropertyChangedListener = ls;
+}
+
+void PropertyValuesHolder::setupSetterAndGetter(void*target){
+    Property*prop = nullptr;
+    if(mPropertyName.empty())return;
+    prop = Property::propertyFromName(mPropertyName);
+    if(prop&&(mGetter==nullptr)){
+
+    }
 }
 
 AnimateValue PropertyValuesHolder::evaluator(float fraction, const AnimateValue& from, const AnimateValue& to){
@@ -99,6 +108,9 @@ void PropertyValuesHolder::init(){
     if(mEvaluator==nullptr){
         mEvaluator = evaluator;
     }
+    mAnimateValue =mDataSource[0];
+    mStartValue= mDataSource[0];
+    mEndValue  = mDataSource[mDataSource.size()-1];
 }
 
 void PropertyValuesHolder::setEvaluator(TypeEvaluator evaluator){

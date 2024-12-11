@@ -24,6 +24,7 @@ void ObjectAnimator::initAnimation(){
         void* target = getTarget();
         for(auto value:mValues){
              value->setupStartValue(target);
+             value->setupSetterAndGetter(target);
         }
         ValueAnimator::initAnimation();
     }

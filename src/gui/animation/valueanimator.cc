@@ -73,8 +73,9 @@ ValueAnimator::~ValueAnimator(){
         delete v;
     mValues.clear();
     removeAnimationCallback();
-    if((mInterpolator != sDefaultInterpolator)&&(mInterpolator!=LinearInterpolator::gLinearInterpolator.get()))
+    if((mInterpolator != sDefaultInterpolator)&&(mInterpolator!=LinearInterpolator::gLinearInterpolator.get())){
         delete mInterpolator;
+    }
 }
 
 void ValueAnimator::setDurationScale(float durationScale) {
@@ -761,20 +762,6 @@ ValueAnimator*ValueAnimator::clone()const {
     anim->mCurrentFraction = 0;
     anim->mSelfPulse = true;
     anim->mSuppressSelfPulseRequested = false;
-LOGD("==========================");
-#if 0
-    PropertyValuesHolder[] oldValues = mValues;
-    if (oldValues != null) {
-        int numValues = oldValues.length;
-        anim.mValues = new PropertyValuesHolder[numValues];
-        anim.mValuesMap = new HashMap<String, PropertyValuesHolder>(numValues);
-        for (int i = 0; i < numValues; ++i) {
-            PropertyValuesHolder newValuesHolder = oldValues[i].clone();
-            anim.mValues[i] = newValuesHolder;
-            anim.mValuesMap.put(newValuesHolder.getPropertyName(), newValuesHolder);
-        }
-    }
-#endif
     return anim;
 }
 

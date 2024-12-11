@@ -21,28 +21,26 @@ const std::string Property::getName()const{
 ////////////////////////////////////////////////////////////////////////////
 class ALPHA:public Property{
 public:
-    ALPHA():Property("alpha"){
-    }
+    ALPHA():Property("alpha"){}
 
     AnimateValue get(void* object){
-        LOGD("getAlpha %p,%.3f",object,((View*)object)->getAlpha());
+        LOGD("alpha %p,%.3f",object,((View*)object)->getAlpha());
         AnimateValue v =((View*)object)->getAlpha();
         return v;
     }
     
     void set(void* object,const AnimateValue& value){
-        LOGD("setAlpha %p->%.3f",object,GET_VARIANT(value,float));
+        LOGD("alpha %p->%.3f",object,GET_VARIANT(value,float));
         ((View*)object)->setAlpha(GET_VARIANT(value,float));
     }
 };
 
 class TRANSLATION_X:public Property{
 public:
-    TRANSLATION_X():Property("translationX"){
-    }
+    TRANSLATION_X():Property("translationX"){}
 
     void setValue(void* object,const AnimateValue& value) {
-        LOGD("setTranslationX%p->%.3f",object,GET_VARIANT(value,float));
+        LOGD("%p->%.3f",object,GET_VARIANT(value,float));
         ((View*)object)->setTranslationX(GET_VARIANT(value,float));
     }
 
@@ -53,8 +51,7 @@ public:
 
 class TRANSLATION_Y:public Property{
 public:
-    TRANSLATION_Y():Property("translationY"){
-    }
+    TRANSLATION_Y():Property("translationY"){}
 
     void setValue(void* object,const AnimateValue& value) {
         ((View*)object)->setTranslationY(GET_VARIANT(value,float));
@@ -65,10 +62,21 @@ public:
     }
 };
 
+class TRANSLATION_Z:public Property{
+public:
+    TRANSLATION_Z():Property("translationZ"){}
+    void setValue(void* object,const AnimateValue& value) {
+        ((View*)object)->setTranslationZ(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void* object) {
+        return ((View*)object)->getTranslationZ();
+    }
+};
+
 class XX:public Property{
 public:
-    XX():Property("x"){
-    }
+    XX():Property("x"){}
 
     void setValue(void* object,const AnimateValue& value) {
         ((View*)object)->setX(GET_VARIANT(value,float));
@@ -81,8 +89,7 @@ public:
 
 class YY:public Property{
 public:
-    YY():Property("y"){
-    }
+    YY():Property("y"){}
 
     void setValue(void* object,const AnimateValue& value) {
         ((View*)object)->setY(GET_VARIANT(value,float));
@@ -93,10 +100,21 @@ public:
     }
 };
 
+class ZZ:public Property{
+public:
+    ZZ():Property("z"){}
+    void setValue(void* object,const AnimateValue& value) {
+        ((View*)object)->setZ(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void* object) {
+        return ((View*)object)->getZ();
+    }
+};
+
 class ROTATION:public Property{
 public:
-    ROTATION():Property("rotation"){
-    }
+    ROTATION():Property("rotation"){}
 
     void setValue(void* object,const AnimateValue& value) {
         ((View*)object)->setRotation(GET_VARIANT(value,float));
@@ -107,10 +125,9 @@ public:
     }
 };
 
-class ROTATIONX:public Property{
+class ROTATION_X:public Property{
 public:
-    ROTATIONX():Property("rotationX"){
-    }
+    ROTATION_X():Property("rotationX"){}
 
     void setValue(void* object,const AnimateValue& value) {
         ((View*)object)->setRotationX(GET_VARIANT(value,float));
@@ -121,10 +138,9 @@ public:
     }
 };
 
-class ROTATIONY:public Property{
+class ROTATION_Y:public Property{
 public:
-    ROTATIONY():Property("rotationY"){
-    }
+    ROTATION_Y():Property("rotationY"){}
 
     void setValue(void* object,const AnimateValue& value) {
         ((View*)object)->setRotationY(GET_VARIANT(value,float));
@@ -135,12 +151,12 @@ public:
     }
 };
 
-class SCALEX:public Property{
+class SCALE_X:public Property{
 public:
-    SCALEX():Property("scaleX"){
-    }
+    SCALE_X():Property("scaleX"){}
 
     void setValue(void* object,const AnimateValue& value) {
+        LOGD("scaleX%p-->%f",object,GET_VARIANT(value,float));
         ((View*)object)->setScaleX(GET_VARIANT(value,float));
     }
 
@@ -149,12 +165,12 @@ public:
     }
 };
 
-class SCALEY:public Property{
+class SCALE_Y:public Property{
 public:
-    SCALEY():Property("scaleY"){
-    }
+    SCALE_Y():Property("scaleY"){}
 
     void setValue(void* object,const AnimateValue& value) {
+        LOGD("%f",GET_VARIANT(value,float));
         ((View*)object)->setScaleY(GET_VARIANT(value,float));
     }
 
@@ -165,7 +181,17 @@ public:
 
 static std::map<const std::string,Property*>props={
     {"alpha",new ALPHA()},
-    {"translationX",new TRANSLATION_X()}
+    {"rotation" ,new ROTATION()},
+    {"rotationX",new ROTATION_X()},
+    {"rotationY",new ROTATION_Y()},
+    {"scaleX",new SCALE_X()},
+    {"scaleY",new SCALE_Y()},
+    {"translationX",new TRANSLATION_X()},
+    {"translationY",new TRANSLATION_Y()},
+    {"translationZ",new TRANSLATION_Z()},
+    {"x",new XX()},
+    {"y",new YY()},
+    {"z",new ZZ()}
 };
 
 Property*Property::propertyFromName(const std::string&propertyName){

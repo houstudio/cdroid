@@ -62,6 +62,7 @@ public:
     void setAnimatedValue(void*target);
     void setupStartValue(void*target);
     void setupEndValue(void*target);
+    void setupSetterAndGetter(void*target);
 
     static PropertyValuesHolder*ofInt(const std::string&name,const std::vector<int>&);
     static PropertyValuesHolder*ofInt(Property*,const std::vector<int>&);
