@@ -23,14 +23,14 @@ class ALPHA:public Property{
 public:
     ALPHA():Property("alpha"){}
 
-    AnimateValue get(void* object){
-        LOGD("alpha %p,%.3f",object,((View*)object)->getAlpha());
+    AnimateValue get(void* object)override{
+        LOGV("alpha %p,%.3f",object,((View*)object)->getAlpha());
         AnimateValue v =((View*)object)->getAlpha();
         return v;
     }
     
-    void set(void* object,const AnimateValue& value){
-        LOGD("alpha %p->%.3f",object,GET_VARIANT(value,float));
+    void set(void* object,const AnimateValue& value)override{
+        LOGV("alpha %p->%.3f",object,GET_VARIANT(value,float));
         ((View*)object)->setAlpha(GET_VARIANT(value,float));
     }
 };
@@ -39,8 +39,8 @@ class TRANSLATION_X:public Property{
 public:
     TRANSLATION_X():Property("translationX"){}
 
-    void setValue(void* object,const AnimateValue& value) {
-        LOGD("%p->%.3f",object,GET_VARIANT(value,float));
+    void set(void* object,const AnimateValue& value)override{
+        LOGV("%p->%.3f",object,GET_VARIANT(value,float));
         ((View*)object)->setTranslationX(GET_VARIANT(value,float));
     }
 
@@ -53,7 +53,7 @@ class TRANSLATION_Y:public Property{
 public:
     TRANSLATION_Y():Property("translationY"){}
 
-    void setValue(void* object,const AnimateValue& value) {
+    void set(void* object,const AnimateValue& value)override{
         ((View*)object)->setTranslationY(GET_VARIANT(value,float));
     }
 
@@ -65,7 +65,7 @@ public:
 class TRANSLATION_Z:public Property{
 public:
     TRANSLATION_Z():Property("translationZ"){}
-    void setValue(void* object,const AnimateValue& value) {
+    void set(void* object,const AnimateValue& value)override{
         ((View*)object)->setTranslationZ(GET_VARIANT(value,float));
     }
 
@@ -78,7 +78,7 @@ class XX:public Property{
 public:
     XX():Property("x"){}
 
-    void setValue(void* object,const AnimateValue& value) {
+    void set(void* object,const AnimateValue& value)override{
         ((View*)object)->setX(GET_VARIANT(value,float));
     }
 
@@ -91,7 +91,7 @@ class YY:public Property{
 public:
     YY():Property("y"){}
 
-    void setValue(void* object,const AnimateValue& value) {
+    void set(void* object,const AnimateValue& value)override{
         ((View*)object)->setY(GET_VARIANT(value,float));
     }
 
@@ -103,7 +103,7 @@ public:
 class ZZ:public Property{
 public:
     ZZ():Property("z"){}
-    void setValue(void* object,const AnimateValue& value) {
+    void set(void* object,const AnimateValue& value)override{
         ((View*)object)->setZ(GET_VARIANT(value,float));
     }
 
@@ -116,7 +116,7 @@ class ROTATION:public Property{
 public:
     ROTATION():Property("rotation"){}
 
-    void setValue(void* object,const AnimateValue& value) {
+    void set(void* object,const AnimateValue& value)override{
         ((View*)object)->setRotation(GET_VARIANT(value,float));
     }
 
@@ -129,7 +129,7 @@ class ROTATION_X:public Property{
 public:
     ROTATION_X():Property("rotationX"){}
 
-    void setValue(void* object,const AnimateValue& value) {
+    void set(void* object,const AnimateValue& value)override{
         ((View*)object)->setRotationX(GET_VARIANT(value,float));
     }
 
@@ -142,7 +142,7 @@ class ROTATION_Y:public Property{
 public:
     ROTATION_Y():Property("rotationY"){}
 
-    void setValue(void* object,const AnimateValue& value) {
+    void set(void* object,const AnimateValue& value)override{
         ((View*)object)->setRotationY(GET_VARIANT(value,float));
     }
 
@@ -155,8 +155,8 @@ class SCALE_X:public Property{
 public:
     SCALE_X():Property("scaleX"){}
 
-    void setValue(void* object,const AnimateValue& value) {
-        LOGD("scaleX%p-->%f",object,GET_VARIANT(value,float));
+    void set(void* object,const AnimateValue& value)override{
+        LOGV("scaleX %p-->%f",object,GET_VARIANT(value,float));
         ((View*)object)->setScaleX(GET_VARIANT(value,float));
     }
 
@@ -169,8 +169,8 @@ class SCALE_Y:public Property{
 public:
     SCALE_Y():Property("scaleY"){}
 
-    void setValue(void* object,const AnimateValue& value) {
-        LOGD("%f",GET_VARIANT(value,float));
+    void set(void* object,const AnimateValue& value)override{
+        LOGV("%f",GET_VARIANT(value,float));
         ((View*)object)->setScaleY(GET_VARIANT(value,float));
     }
 
@@ -197,10 +197,10 @@ static std::map<const std::string,Property*>props={
 Property*Property::propertyFromName(const std::string&propertyName){
     auto it = props.find(propertyName);
     if(it!=props.end()){
-        LOGD_IF(propertyName.size(),"%s =%p",propertyName.c_str(),it->second);
+        LOGV_IF(propertyName.size(),"%s =%p",propertyName.c_str(),it->second);
         return it->second;
     }
-    LOGD_IF(propertyName.size(),"%s =nullptr",propertyName.c_str());
+    LOGV_IF(propertyName.size(),"%s =nullptr",propertyName.c_str());
     return nullptr;
 }
 

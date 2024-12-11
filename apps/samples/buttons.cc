@@ -21,10 +21,11 @@ int main(int argc,const char*argv[]){
         const bool down=e.getAction()==MotionEvent::ACTION_DOWN;
         AnimatorSet*aset= new AnimatorSet();
         Animator* alpha = ObjectAnimator::ofFloat(&v, "alpha", {0.f});
-        Animator* scale = ObjectAnimator::ofFloat(&v, "scaleX", {1.2f});
+        Animator* scale = ObjectAnimator::ofFloat(&v, "scaleX", {1.5f});
         alpha->setDuration(2000);
         scale->setDuration(2000);
         aset->playTogether({alpha,scale});
+        //aset->playSequentially({alpha,scale});
         aset->start();
         return false;
     });

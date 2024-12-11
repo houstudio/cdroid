@@ -542,7 +542,7 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
         mFirstFrame = frameTime;
     }
 
-    LOGD("%p frameTime=(%lld-%lld)=%d",this,frameTime,mFirstFrame,int(frameTime-mFirstFrame));
+    LOGV("%p frameTime=(%lld-%lld)=%d",this,frameTime,mFirstFrame,int(frameTime-mFirstFrame));
     // Handle pause/resume
     if (mPaused) {
         // Note: Child animations don't receive pause events. Since it's never a contract that
@@ -583,7 +583,7 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
     const int latestId = findLatestEventIdForTime(unscaledPlayTime);
     const int startId = mLastEventId;
 
-    LOGD("%p startId=%d latestId=%d mEvents.size=%d",this,startId,latestId,mEvents.size());
+    LOGV("%p startId=%d latestId=%d mEvents.size=%d",this,startId,latestId,mEvents.size());
     handleAnimationEvents(startId, latestId, unscaledPlayTime);
 
     mLastEventId = latestId;
@@ -657,7 +657,6 @@ void AnimatorSet::handleAnimationEvents(int startId, int latestId, int64_t playT
         for (int i = startId + 1; i <= latestId; i++) {
             AnimationEvent* event = mEvents.at(i);
             Node* node = event->mNode;
-            LOGD("%p pulseFrame %p playTime=%d event=%d",this,node->mAnimation,playTime,event->mEvent);
             if (event->mEvent == AnimationEvent::ANIMATION_START) {
                 mPlayingSet.push_back(event->mNode);
                 if (node->mAnimation->isStarted()) {
@@ -963,19 +962,19 @@ bool AnimatorSet::AnimationEventCompare(AnimationEvent* e1, AnimationEvent* e2){
         if ((e2->mEvent + e1->mEvent) == (AnimationEvent::ANIMATION_START
                 + AnimationEvent::ANIMATION_DELAY_ENDED)) {
             // Ensure start delay happens after start
-            return e1->mEvent - e2->mEvent<0;
+            return e1->mEvent < e2->mEvent;
         } else {
-            return e2->mEvent - e1->mEvent>0;
+            return e2->mEvent < e1->mEvent;
         }
     }
     if (t2 == DURATION_INFINITE) {
-        return false;
-    }
-    if (t1 == DURATION_INFINITE) {
         return true;
     }
+    if (t1 == DURATION_INFINITE) {
+        return false;
+    }
     // When neither event happens at INFINITE time:
-    return (t1 - t2)<0;
+    return t1 < t2;
 }
 
 void AnimatorSet::sortAnimationEvents(){
