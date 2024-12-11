@@ -19,6 +19,70 @@ const std::string Property::getName()const{
 }
 
 ////////////////////////////////////////////////////////////////////////////
+class LEFT:public Property{
+public:
+    LEFT():Property("left"){}
+
+    AnimateValue get(void* object)override{
+        LOGD("left %p,%d",object,((View*)object)->getLeft());
+        AnimateValue v =((View*)object)->getLeft();
+        return v;
+    }
+
+    void set(void* object,const AnimateValue& value)override{
+        LOGD("left %p->%d",object,GET_VARIANT(value,int));
+        ((View*)object)->setLeft(GET_VARIANT(value,int));
+    }
+};
+
+class TOP:public Property{
+public:
+    TOP():Property("top"){}
+
+    AnimateValue get(void* object)override{
+        LOGD("top %p,%d",object,((View*)object)->getTop());
+        AnimateValue v =((View*)object)->getTop();
+        return v;
+    }
+
+    void set(void* object,const AnimateValue& value)override{
+        LOGD("top %p->%d",object,GET_VARIANT(value,int));
+        ((View*)object)->setTop(GET_VARIANT(value,int));
+    }
+};
+
+class RIGHT:public Property{
+public:
+    RIGHT():Property("right"){}
+
+    AnimateValue get(void* object)override{
+        LOGD("right %p,%d",object,((View*)object)->getRight());
+        AnimateValue v =((View*)object)->getLeft();
+        return v;
+    }
+
+    void set(void* object,const AnimateValue& value)override{
+        LOGD("right %p->%d",object,GET_VARIANT(value,int));
+        ((View*)object)->setRight(GET_VARIANT(value,int));
+    }
+};
+
+class BOTTOM:public Property{
+public:
+    BOTTOM():Property("bottom"){}
+
+    AnimateValue get(void* object)override{
+        LOGD("bottom %p,%d",object,((View*)object)->getBottom());
+        AnimateValue v =((View*)object)->getBottom();
+        return v;
+    }
+
+    void set(void* object,const AnimateValue& value)override{
+        LOGD("bottom %p->%d",object,GET_VARIANT(value,int));
+        ((View*)object)->setBottom(GET_VARIANT(value,int));
+    }
+};
+
 class ALPHA:public Property{
 public:
     ALPHA():Property("alpha"){}
@@ -188,6 +252,10 @@ public:
 };
 
 static std::map<const std::string,Property*>props={
+    {"left",new LEFT()},
+    {"top",new TOP()},
+    {"right",new RIGHT()},
+    {"bottom",new BOTTOM()},
     {"alpha",new ALPHA()},
     {"rotation" ,new ROTATION()},
     {"rotationX",new ROTATION_X()},

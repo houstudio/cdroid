@@ -122,7 +122,7 @@ void FastScroller::updateAppearance() {
 
 void FastScroller::setStyle(const std::string&styleResId){
     Context* context = mList->getContext();
-    AttributeSet ta=context->obtainStyledAttributes(styleResId);//R.styleable.FastScroll, R.attr.fastScrollStyle, resId);
+    AttributeSet ta = context->obtainStyledAttributes(styleResId);//R.styleable.FastScroll, R.attr.fastScrollStyle, resId);
    
     mOverlayPosition = ta.getInt("position", OVERLAY_FLOATING);
     mPreviewResId[PREVIEW_LEFT] = ta.getString("backgroundLeft");
@@ -587,7 +587,7 @@ void FastScroller::onScroll(int firstVisibleItem, int visibleItemCount, int tota
         return;
     }
 
-    bool hasMoreItems = totalItemCount - visibleItemCount > 0;
+    const bool hasMoreItems = (totalItemCount - visibleItemCount > 0);
     if (hasMoreItems && mState != STATE_DRAGGING) {
         setThumbPos(getPosFromItemCount(firstVisibleItem, visibleItemCount, totalItemCount));
     }
