@@ -361,8 +361,7 @@ void FastScroller::measureViewToSide(View* view, View* adjacent,const Rect* marg
 
     // Align to the left or right.
     const int width = std::min(adjMaxWidth, view->getMeasuredWidth());
-    int left;
-    int right;
+    int left, right;
     if (mLayoutFromRight) {
         right = (adjacent == nullptr ? container.right() : adjacent->getLeft()) - marginRight;
         left = right - width;
@@ -374,7 +373,7 @@ void FastScroller::measureViewToSide(View* view, View* adjacent,const Rect* marg
     // Don't adjust the vertical position.
     const int top = marginTop;
     const int bottom = top + view->getMeasuredHeight();
-    out.set(left, top, right, bottom);
+    out.set(left, top, right-left, bottom-top);
 }
 
 void FastScroller::measureFloating(View* preview,const Rect* margins, Rect& out) {
@@ -406,7 +405,7 @@ void FastScroller::measureFloating(View* preview,const Rect* margins, Rect& out)
     const int bottom = top + preview->getMeasuredHeight();
     const int left = (containerWidth - width) / 2 + container.left;
     const int right = left + width;
-    out.set(left, top, right, bottom);
+    out.set(left, top, right-left, bottom-top);
 }
 
 void FastScroller::updateContainerRect() {
@@ -418,8 +417,8 @@ void FastScroller::updateContainerRect() {
     container.width = mList->getWidth();
     container.height= mList->getHeight();
 
-    if (mScrollBarStyle == View::SCROLLBARS_INSIDE_INSET
-            || mScrollBarStyle == View::SCROLLBARS_INSIDE_OVERLAY) {
+    if ((mScrollBarStyle == View::SCROLLBARS_INSIDE_INSET)
+            || (mScrollBarStyle == View::SCROLLBARS_INSIDE_OVERLAY)) {
         container.left += mList->getPaddingLeft();
         container.top  += mList->getPaddingTop();
         container.width -= (mList->getPaddingLeft()+mList->getPaddingRight());
@@ -464,7 +463,7 @@ void FastScroller::layoutTrack() {
 
     const int trackWidth = mTrackImage->getMeasuredWidth();
     const int left = mThumbImage->getLeft() + (mThumbImage->getWidth() - trackWidth) / 2;
-    mTrackImage->layout(left, top, trackWidth, bottom);
+    mTrackImage->layout(left, top, trackWidth, bottom-top);
 }
 
 void FastScroller::updateOffsetAndRange() {
