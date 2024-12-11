@@ -297,7 +297,7 @@ ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const Attrib
         },(int)VALUE_TYPE_UNDEFINED);
 
     anim->setDuration(atts.getInt("duration",300));
-    anim->setStartDelay(atts.getInt("startDelay",0));
+    anim->setStartDelay(atts.getInt("startOffset",0));
     anim->setRepeatCount(atts.getInt("repeatCount",0));
     anim->setRepeatMode(atts.getInt("repeatMode",std::map<const std::string,int>{
         {"restart" , (int)ValueAnimator::RESTART},
@@ -305,16 +305,9 @@ ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const Attrib
         {"infinite", (int)ValueAnimator::INFINITE}
     },ValueAnimator::RESTART));
 
-    std::vector<float>values;
-    if(atts.hasAttribute("valueFrom")){
-        float f=atts.getFloat("valueFrom",0.f);
-        values.push_back(f);
-    }
-    if(atts.hasAttribute("valueTo")){
-        float f = atts.getFloat("valueTo",0.f);
-        values.push_back(f);
-    }
-    anim->setFloatValues(values);
+    PropertyValuesHolder*pvh = getPVH(atts,valueType,propertyName);
+    if(pvh)
+        anim->setValues({pvh});
     return anim;
 }
 

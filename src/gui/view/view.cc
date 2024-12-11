@@ -9269,6 +9269,7 @@ View::AttachInfo::AttachInfo(Context*ctx){
     mUse32BitDrawingCache = false;
     mAccessibilityFetchFlags= 0;
     mAlwaysConsumeSystemBars= false;
+    mRecomputeGlobalAttributes=false;
     mDebugLayout  = false;
     mDrawingTime  = 0;
     mInTouchMode  = true;

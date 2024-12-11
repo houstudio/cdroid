@@ -320,12 +320,14 @@ Drawable*AnimatedImageDrawable::inflate(Context*ctx,const AttributeSet&atts){
 AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(){
     mAutoMirrored= false;
     mFrameCount  = 0;
+    mRepeatCount = REPEAT_UNDEFINED;
     mFrameSequence = nullptr;
 }
 
 AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(const AnimatedImageState& state){
     mAutoMirrored = state.mAutoMirrored;
     mFrameCount = state.mFrameCount;
+    mRepeatCount= state.mRepeatCount;
     mFrameSequence = state.mFrameSequence;
 }
 
