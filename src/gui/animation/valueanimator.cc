@@ -185,6 +185,10 @@ void ValueAnimator::initAnimation(){
     }
 }
 
+void ValueAnimator::overrideDurationScale(float durationScale) {
+     mDurationScale = durationScale;
+}
+
 float ValueAnimator::resolveDurationScale() const{
     return mDurationScale >= 0.f ? mDurationScale : sDurationScale;
 }
@@ -194,6 +198,9 @@ int64_t ValueAnimator::getScaledDuration() const{
 }
 
 ValueAnimator& ValueAnimator::setDuration(long duration){
+    if (duration < 0) {
+        throw std::logic_error("Animators cannot have negative duration");
+    }
     mDuration = duration;
     return *this;
 }
@@ -376,7 +383,8 @@ void ValueAnimator::setEvaluator(TypeEvaluator value){
 
 void ValueAnimator::notifyStartListeners() {
     if (mListeners.size() && !mStartListenersCalled) {
-        for (auto l:mListeners){
+        std::vector<AnimatorListener>tmpListeners = mListeners;
+        for (auto l:tmpListeners){
             if(l.onAnimationStart)l.onAnimationStart(*this, mReversing);
         }
     }
@@ -449,7 +457,8 @@ void ValueAnimator::cancel(){
         if (!mRunning) {// If it's not yet running, then start listeners weren't called. Call them now.
             notifyStartListeners();
         }
-        for (AnimatorListener ls : mListeners) {
+        std::vector<AnimatorListener>tmpListeners = mListeners;
+        for (AnimatorListener ls:tmpListeners) {
             if(ls.onAnimationCancel)
                 ls.onAnimationCancel(*this);
         }
@@ -548,7 +557,8 @@ void ValueAnimator::endAnimation(){
     mFirstFrameTime = -1;
     mStartTime = -1;
     if (notify && mListeners.size()) {
-        for (AnimatorListener l:mListeners) {
+        std::vector<AnimatorListener>tmpListeners = mListeners;
+        for (AnimatorListener l:tmpListeners) {
             if(l.onAnimationEnd)l.onAnimationEnd(*this, mReversing);
         }
     }
@@ -574,7 +584,7 @@ bool ValueAnimator::animateBasedOnTime(int64_t currentTime){
         const float fraction = scaledDuration > 0 ? (float)(currentTime - mStartTime) / scaledDuration : 1.f;
         const float lastFraction = mOverallFraction;
         const bool newIteration = (int) fraction > (int) lastFraction;
-        const bool lastIterationFinished = (fraction >= mRepeatCount + 1) &&  (mRepeatCount != INFINITE);
+        const bool lastIterationFinished = (fraction >= mRepeatCount + 1) && (mRepeatCount != INFINITE);
         if (scaledDuration == 0) {
             // 0 duration animator, ignore the repeat count and skip to the end
             done = true;
@@ -594,6 +604,9 @@ bool ValueAnimator::animateBasedOnTime(int64_t currentTime){
 }
 
 void ValueAnimator::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse){
+    if (currentPlayTime < 0 || lastPlayTime < 0) {
+        throw std::logic_error("Error: Play time should never be negative.");
+    }
     initAnimation();
     // Check whether repeat callback is needed only when repeat count is non-zero
     if (mRepeatCount > 0) {

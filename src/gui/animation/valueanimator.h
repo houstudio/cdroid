@@ -93,6 +93,7 @@ public:
     ValueAnimator& setDuration(long duration)override;
     long getDuration()override;
     long getTotalDuration()override;
+    void overrideDurationScale(float durationScale);
     void setCurrentFraction(float fraction);
     virtual void setCurrentPlayTime(int64_t playTime);
     int64_t getCurrentPlayTime();
