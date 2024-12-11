@@ -93,9 +93,10 @@ void Switch::init(){
 
 Switch::~Switch(){
     //delete mTextColors;
-    delete mThumbDrawable;
     //delete mTrackTintList;
     //delete mThumbTintList;
+    delete mThumbDrawable;
+    delete mTrackDrawable;
     delete mPositionAnimator;
     delete mOnLayout;
     delete mOffLayout;

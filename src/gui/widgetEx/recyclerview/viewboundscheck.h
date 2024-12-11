@@ -39,7 +39,7 @@ public:
         int mBoundFlags;
         int mRvStart, mRvEnd, mChildStart, mChildEnd;
     public:
-	BoundFlags();
+        BoundFlags();
         void setBounds(int rvStart, int rvEnd, int childStart, int childEnd);
         void setFlags(int flags, int mask);
         void addFlags(int flags);
