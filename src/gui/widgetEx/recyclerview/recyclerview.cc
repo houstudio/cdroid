@@ -5217,7 +5217,7 @@ void RecyclerView::LayoutManager::moveView(int fromIndex, int toIndex) {
 }
 
 void RecyclerView::LayoutManager::detachAndScrapView(View* child, Recycler& recycler) {
-    int index = mChildHelper->indexOfChild(child);
+    const int index = mChildHelper->indexOfChild(child);
     scrapOrRecycleView(recycler, index, child);
 }
 
@@ -5298,7 +5298,7 @@ View* RecyclerView::LayoutManager::getFocusedChild() {
         return nullptr;
     }
     View* focused = mRecyclerView->getFocusedChild();
-    if (focused == nullptr || mChildHelper->isHidden(focused)) {
+    if ((focused == nullptr) || mChildHelper->isHidden(focused)) {
         return nullptr;
     }
     return focused;
@@ -5340,8 +5340,8 @@ void RecyclerView::LayoutManager::stopIgnoringView(View* view) {
 }
 
 void RecyclerView::LayoutManager::detachAndScrapAttachedViews(Recycler& recycler) {
-    const int childCount = getChildCount();
-    for (int i = childCount - 1; i >= 0; i--) {
+    const size_t childCount = getChildCount();
+    for (int i = int(childCount - 1); i >= 0; i--) {
         View* v = getChildAt(i);
         scrapOrRecycleView(recycler, i, v);
     }

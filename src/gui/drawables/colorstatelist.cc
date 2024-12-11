@@ -198,7 +198,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 }
 
 ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const std::string&resname,const std::string&package){
-    int done=0;
+    int done = 0;
     char buf[256];
     XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
     ColorsParserData cd;
@@ -212,8 +212,9 @@ ColorStateList*ColorStateList::fromStream(Context*ctx,std::istream&stream,const 
        int rdlen = (int)stream.gcount();
        done = (rdlen==0);
        if (XML_Parse(parser, buf,rdlen,done) == XML_STATUS_ERROR) {
-           const char*es=XML_ErrorString(XML_GetErrorCode(parser));
+           const char*es = XML_ErrorString(XML_GetErrorCode(parser));
            LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
+           XML_ParserFree(parser);
            return nullptr;
        }
     } while(!done);
