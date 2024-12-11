@@ -48,6 +48,7 @@ int main(int argc,const char*argv[]){
     lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
         LOGD("clicked %d",pos);
     });
+    ValueAnimator::setDurationScale(10);
     int index=0;
     Runnable run([&](){
         View* v=lv->getChildAt(index);

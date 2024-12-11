@@ -19,11 +19,13 @@ int main(int argc,const char*argv[]){
     w->setBackgroundColor(0xFF101112);
     btn->setOnTouchListener([](View&v,MotionEvent&e){
         const bool down=e.getAction()==MotionEvent::ACTION_DOWN;
-        v.setScaleX(down?0.5f:1.f);
-        v.setScaleY(down?0.8f:1.f);
-        Animator* anim = ObjectAnimator::ofFloat(&v, "alpha", {0.f});
-        anim->setDuration(200);
-        anim->start();
+        AnimatorSet*aset= new AnimatorSet();
+        Animator* alpha = ObjectAnimator::ofFloat(&v, "alpha", {0.f});
+        Animator* scale = ObjectAnimator::ofFloat(&v, "scaleX", {1.2f});
+        alpha->setDuration(2000);
+        scale->setDuration(2000);
+        aset->playTogether({alpha,scale});
+        aset->start();
         return false;
     });
     
