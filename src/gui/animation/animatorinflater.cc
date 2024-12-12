@@ -51,16 +51,11 @@ public:
         }else if(strcmp(name,"objectAnimator")==0){
             propertyName = an.atts.getString("propertyName");
             an.animator = AnimatorInflater::loadObjectAnimator(pd->context,an.atts);
-        }else if(strcmp(name,"animator")==0){
-            propertyName = an.atts.getString("propertyName");
-            an.animator = AnimatorInflater::loadValueAnimator(pd->context,an.atts,nullptr);
+            pd->mChildren.push_back(an.animator);
         }else if(strcmp(name,"set")==0){
             an.animator = new AnimatorSet();
             pd->mChildren.clear();
-        }else{
-            an.animator = AnimatorInflater::loadObjectAnimator(pd->context,an.atts);
         }
-
         if( (pd->items.size()==0) && (pd->statelistAnimator==nullptr) )
             pd->animator = an.animator;
 
@@ -73,26 +68,18 @@ public:
         AnimNode back = pd->items.back();
         if(strcmp(name,"item")==0){
             pd->statelistAnimator->addState(back.state,back.animator);
-        }else if((strcmp(name,"objectAnimator")==0)||(strcmp(name,"animator")==0)){
-            AnimNode*parent = pd->fromTop(-2);
-            if(parent->name.compare("set")==0){
-                pd->mChildren.push_back(back.animator);
-            }
         }else if((strcmp(name,"set")==0)&&pd->items.size()){
             AnimNode* parent = pd->fromTop(pd->statelistAnimator?-2:-1);
             if(parent->name.compare("item")){
                 const int together = back.atts.getInt("ordering",std::map<const std::string,int>{
                     {"together",0}, {"sequentially",1}},0);
                 AnimatorSet*aset = (AnimatorSet*)parent->animator;
+                printf("playAnimator\r\n");
+                for(auto c:pd->mChildren)printf("%p ",c);printf("\r\n");
                 if(together==0) aset->playTogether(pd->mChildren);
                 else aset->playSequentially(pd->mChildren);
             }else{
                 parent->animator=back.animator;
-            }
-        }else{
-            AnimNode* parent = pd->fromTop(pd->statelistAnimator?-2:-1);
-            if(parent&&(parent->name.compare("set")==0)){
-                pd->mChildren.push_back(back.animator);
             }
         }
         pd->items.pop_back();
@@ -282,8 +269,8 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
 }
 
 ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const AttributeSet& atts){
-    ObjectAnimator*anim = new ObjectAnimator();
     const std::string propertyName = atts.getString("propertyName");
+    ObjectAnimator*anim = new ObjectAnimator(nullptr,propertyName);
     loadValueAnimator(ctx,atts,anim);
     return anim;
 }

@@ -9,7 +9,6 @@ private:
     std::string mPropertyName;
     Property* mProperty;
     bool mAutoCancel;
-    ObjectAnimator(void* target,const std::string& propertyName);
     bool hasSameTargetAndProperties(const Animator*anim);
 protected:
     void initAnimation()override;
@@ -17,6 +16,7 @@ protected:
 public:
     ObjectAnimator();
     ObjectAnimator(const ObjectAnimator&);
+    ObjectAnimator(void* target,const std::string& propertyName);
     ~ObjectAnimator();
     void setTarget(void*target)override;
     void*getTarget();
