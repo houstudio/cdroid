@@ -30,6 +30,7 @@
 #include <porting/cdlog.h>
 #include <string.h>
 #include <algorithm>
+#include <cfloat>
 #include <focusfinder.h>
 #include <inputmethodmanager.h>
 #include <app.h>
@@ -8901,7 +8902,41 @@ float View::getElevation()const{
 }
 
 void View::setElevation(float elevation){
-    mRenderNode->setElevation(elevation);
+    if(elevation!=getElevation()){
+        elevation = sanitizeFloatPropertyValue(elevation, "elevation");
+        invalidateViewProperty(true, false);
+        mRenderNode->setElevation(elevation);
+        invalidateViewProperty(false, true);
+        invalidateParentIfNeededAndWasQuickRejected();
+    }
+}
+
+float View::sanitizeFloatPropertyValue(float value,const std::string& propertyName) {
+     return sanitizeFloatPropertyValue(value, propertyName, -FLT_MAX , FLT_MAX);
+}
+
+float View::sanitizeFloatPropertyValue(float value,const std::string& propertyName,
+        float min, float max) {
+    // The expected "nothing bad happened" path
+    if ((value >= min) && (value <= max)) return value;
+
+    if ((value < min) || (value == -INFINITY)) {
+        LOGW("Cannot set '%s' to %f , the value must be >=",propertyName.c_str(),value, min);
+        return min;
+    }
+
+    if ((value > max) || (value == INFINITY)) {
+        LOGW("Cannot set '%s' to %f  the value must be <",propertyName.c_str(),value,max);
+        return max;
+    }
+
+    if (std::isnan(value)) {
+        LOGW("Cannot set '%s' to Nan",propertyName.c_str());
+        return 0; // Unclear which direction this NaN went so... 0?
+    }
+
+    // Shouldn't be possible to reach this.
+    throw std::runtime_error("How do you get here?? " + std::to_string(value));
 }
 
 void View::setX(float x){
@@ -8912,10 +8947,11 @@ void View::setY(float y){
     setTranslationY(y-mTop);
 }
 
-void View::setScaleX(float x){
-    if(x != getScaleX()){
+void View::setScaleX(float scaleX){
+    if(scaleX != getScaleX()){
+        scaleX = sanitizeFloatPropertyValue(scaleX, "scaleX");
         invalidateViewProperty(true,false);
-        mRenderNode->setScaleX(x);//scale cant be zero
+        mRenderNode->setScaleX(scaleX);//scale cant be zero
         invalidateViewProperty(false,true);
         invalidateParentIfNeededAndWasQuickRejected();
     }
@@ -8925,10 +8961,11 @@ float View::getScaleX()const{
     return mRenderNode->getScaleX();
 }
 
-void View::setScaleY(float y){
-    if(y!=getScaleY()){
+void View::setScaleY(float scaleY){
+    if(scaleY!=getScaleY()){
+        scaleY = sanitizeFloatPropertyValue(scaleY, "scaleY");
         invalidateViewProperty(true,false);
-        mRenderNode->setScaleY(y);//scale cant be zero
+        mRenderNode->setScaleY(scaleY);//scale cant be zero
         invalidateViewProperty(false,true);
         invalidateParentIfNeededAndWasQuickRejected();
     }
@@ -8968,10 +9005,11 @@ float View::getTranslationY()const{
     return mRenderNode->getTranslationY();
 }
 
-void View::setTranslationZ(float z){
-    if(z!=getTranslationZ()){
+void View::setTranslationZ(float translationZ){
+    if(translationZ!=getTranslationZ()){
+        translationZ = sanitizeFloatPropertyValue(translationZ, "translationZ");
         invalidateViewProperty(true,false);
-        mRenderNode->setTranslationZ(z);
+        mRenderNode->setTranslationZ(translationZ);
         invalidateViewProperty(false,true);
         invalidateParentIfNeededAndWasQuickRejected();
     }

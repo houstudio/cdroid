@@ -609,6 +609,8 @@ private:
     bool dispatchGenericMotionEventInternal(MotionEvent& event);
     void populateAccessibilityNodeInfoDrawingOrderInParent(AccessibilityNodeInfo& info);
     static int numViewsForAccessibility(View* view);
+    static float sanitizeFloatPropertyValue(float,const std::string&);
+    static float sanitizeFloatPropertyValue(float,const std::string&,float,float);
     View* findLabelForView(View* view, int labeledId);
     bool applyLegacyAnimation(ViewGroup* parent, int64_t drawingTime, Animation* a, bool scalingRequired);
     bool needRtlPropertiesResolution()const;
