@@ -39,7 +39,7 @@ public:
     static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
         AnimatorParseData*pd =(AnimatorParseData*)userData;
         AnimNode an;
-        AttributeSet atts;
+        std::string propertyName;
         an.name = name;
         an.animator = nullptr;
         an.atts.setContext(pd->context,pd->package);
@@ -49,8 +49,10 @@ public:
         }if(strcmp(name,"item")==0){
             StateSet::parseState(an.state,an.atts);
         }else if(strcmp(name,"objectAnimator")==0){
+            propertyName = an.atts.getString("propertyName");
             an.animator = AnimatorInflater::loadObjectAnimator(pd->context,an.atts);
         }else if(strcmp(name,"animator")==0){
+            propertyName = an.atts.getString("propertyName");
             an.animator = AnimatorInflater::loadValueAnimator(pd->context,an.atts,nullptr);
         }else if(strcmp(name,"set")==0){
             an.animator = new AnimatorSet();
@@ -62,7 +64,7 @@ public:
         if( (pd->items.size()==0) && (pd->statelistAnimator==nullptr) )
             pd->animator = an.animator;
 
-        LOGD("%s",(std::string(pd->items.size()*4,' ')+name).c_str());
+        LOGD("%s %s",(std::string(pd->items.size()*4,' ')+name).c_str(),propertyName.c_str());
         pd->items.push_back(an);
     }
 
@@ -281,21 +283,21 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
 
 ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const AttributeSet& atts){
     ObjectAnimator*anim = new ObjectAnimator();
+    const std::string propertyName = atts.getString("propertyName");
     loadValueAnimator(ctx,atts,anim);
     return anim;
 }
 
 ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const AttributeSet& atts, ValueAnimator*anim){
-    const std::string propertyName = atts.getString("propertyName");
-    if(anim==nullptr){
-        LOGD("propertyName=%s",propertyName.c_str());
-        anim = new ValueAnimator();
-    }
     const int valueType = atts.getInt("valueType",std::map<const std::string,int>{
             {"floatType",(int)VALUE_TYPE_FLOAT},  {"intType",(int)VALUE_TYPE_INT},
             {"colorType",(int)VALUE_TYPE_COLOR},  {"pathType",(int)VALUE_TYPE_PATH}
         },(int)VALUE_TYPE_UNDEFINED);
 
+    const std::string propertyName = atts.getString("propertyName");
+    if(anim==nullptr){
+        anim = new ValueAnimator();
+    }
     anim->setDuration(atts.getInt("duration",300));
     anim->setStartDelay(atts.getInt("startOffset",0));
     anim->setRepeatCount(atts.getInt("repeatCount",0));

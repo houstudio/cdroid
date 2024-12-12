@@ -74,7 +74,7 @@ ValueAnimator::~ValueAnimator(){
     mValues.clear();
     removeAnimationCallback();
     if((mInterpolator != sDefaultInterpolator)&&(mInterpolator!=LinearInterpolator::gLinearInterpolator.get())){
-        delete mInterpolator;
+        //delete mInterpolator;
     }
 }
 
