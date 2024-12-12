@@ -522,7 +522,7 @@ bool LayoutTransition::isChangingLayout() {
 void LayoutTransition::layoutChange(ViewGroup *parent){
     if (parent->getWindowVisibility() != View::VISIBLE)  return;
 
-    if ((mTransitionTypes & FLAG_CHANGING) == FLAG_CHANGING  && !isRunning()) {
+    if (((mTransitionTypes & FLAG_CHANGING) == FLAG_CHANGING) && !isRunning()) {
         // This method is called for all calls to layout() in the container, including
         // those caused by add/remove/hide/show events, which will already have set up
         // transition animations. Avoid setting up CHANGING animations in this case; only
@@ -532,8 +532,8 @@ void LayoutTransition::layoutChange(ViewGroup *parent){
 }
 
 bool LayoutTransition::isRunning() {
-    return (currentChangingAnimations.size() > 0 || currentAppearingAnimations.size() > 0 ||
-            currentDisappearingAnimations.size() > 0);
+    return (currentChangingAnimations.size() > 0) || (currentAppearingAnimations.size() > 0) ||
+            (currentDisappearingAnimations.size() > 0);
 }
 
 void LayoutTransition::cancel(){
@@ -673,17 +673,17 @@ void LayoutTransition::removeChild(ViewGroup* parent, View* child, bool changesL
         // Want appearing animations to finish up before proceeding
         cancel(APPEARING);
     }
-    if (changesLayout &&  (mTransitionTypes & FLAG_CHANGE_DISAPPEARING) == FLAG_CHANGE_DISAPPEARING) {
+    if (changesLayout && ((mTransitionTypes & FLAG_CHANGE_DISAPPEARING) == FLAG_CHANGE_DISAPPEARING)) {
         // Also, cancel changing animations so that we start fresh ones from current locations
         cancel(CHANGE_DISAPPEARING);
         cancel(CHANGING);
     }
-    if (hasListeners() && (mTransitionTypes & FLAG_DISAPPEARING) == FLAG_DISAPPEARING) {
+    if (hasListeners() && ((mTransitionTypes & FLAG_DISAPPEARING) == FLAG_DISAPPEARING)) {
         for (auto l :mListeners) {
             if(l.startTransition)l.startTransition(*this, parent, child, DISAPPEARING);
         }
     }
-    if (changesLayout && (mTransitionTypes & FLAG_CHANGE_DISAPPEARING) == FLAG_CHANGE_DISAPPEARING) {
+    if (changesLayout && ((mTransitionTypes & FLAG_CHANGE_DISAPPEARING) == FLAG_CHANGE_DISAPPEARING)) {
         runChangeTransition(parent, child, DISAPPEARING);
     }
     if ((mTransitionTypes & FLAG_DISAPPEARING) == FLAG_DISAPPEARING) {
@@ -716,8 +716,8 @@ void LayoutTransition::addTransitionListener(TransitionListener& listener){
 }
 
 void LayoutTransition::removeTransitionListener(TransitionListener& listener){
-    for(auto it=mListeners.begin();it!=mListeners.end();it++){
-        if(it->startTransition==listener.startTransition && it->endTransition==listener.endTransition){
+    for(auto it = mListeners.begin();it!=mListeners.end();it++){
+        if((it->startTransition==listener.startTransition) && (it->endTransition==listener.endTransition)){
             mListeners.erase(it);
             break;
         }

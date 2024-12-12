@@ -18,6 +18,7 @@ protected:
     bool mDragResult;
     bool mEventHandlerWasCalled;
     friend class View;
+    friend class ViewGroup;
 private:
     DragEvent* mNext;
     //RuntimeException mRecycledLocation;

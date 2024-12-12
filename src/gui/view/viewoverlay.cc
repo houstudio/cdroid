@@ -78,7 +78,7 @@ void ViewOverlay::OverlayViewGroup::remove(Drawable* drawable){
 }
 
 bool ViewOverlay::OverlayViewGroup::verifyDrawable(Drawable* who)const{
-    auto it=std::find(mDrawables.begin(),mDrawables.end(),who);
+    auto it = std::find(mDrawables.begin(),mDrawables.end(),who);
     return ViewGroup::verifyDrawable(who) || (it!=mDrawables.end());
 }
 

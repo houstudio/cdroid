@@ -1014,7 +1014,7 @@ void ViewGroup::onChildVisibilityChanged(View* child, int oldVisibility, int new
         }
     }
     // in all cases, for drags
-    if ((newVisibility == VISIBLE) && mCurrentDragStartEvent!=nullptr) {
+    if ((newVisibility == VISIBLE) && (mCurrentDragStartEvent!=nullptr)) {
         auto it = std::find(mChildrenInterestedInDrag.begin(),mChildrenInterestedInDrag.end(),child);
         if (it==mChildrenInterestedInDrag.end()){//!mChildrenInterestedInDrag.contains(child)) {
             notifyChildOfDragStart(child);
@@ -1038,29 +1038,29 @@ void ViewGroup::attachViewToParent(View* child, int index, LayoutParams* params)
     if (child->hasFocus()) {
         requestChildFocus(child, child->findFocus());
     }
-    dispatchVisibilityAggregated(isAttachedToWindow() && getWindowVisibility() == VISIBLE&& isShown());
+    dispatchVisibilityAggregated(isAttachedToWindow() && (getWindowVisibility() == VISIBLE) && isShown());
     notifySubtreeAccessibilityStateChangedIfNeeded();
 }
 
 bool ViewGroup::notifyChildOfDragStart(View* child) {
     // The caller guarantees that the child is not in mChildrenInterestedInDrag yet.
 
-    LOGD_IF(VIEW_DEBUG,"Sending drag-started to view:%p",child);
-#if 0
-    const float tx = mCurrentDragStartEvent.mX;
-    const float ty = mCurrentDragStartEvent.mY;
+    LOGD_IF(VIEW_DEBUG,"Sending drag-started to view:%p",&child);
+
+    const float tx = mCurrentDragStartEvent->mX;
+    const float ty = mCurrentDragStartEvent->mY;
 
     float point[2];
     point[0] = tx;
     point[1] = ty;
-    transformPointToViewLocal(point, child);
+    transformPointToViewLocal(point,*child);
 
-    mCurrentDragStartEvent.mX = point[0];
-    mCurrentDragStartEvent.mY = point[1];
-    const bool canAccept = child->dispatchDragEvent(mCurrentDragStartEvent);
-    mCurrentDragStartEvent.mX = tx;
-    mCurrentDragStartEvent.mY = ty;
-    mCurrentDragStartEvent.mEventHandlerWasCalled = false;
+    mCurrentDragStartEvent->mX = point[0];
+    mCurrentDragStartEvent->mY = point[1];
+    const bool canAccept = child->dispatchDragEvent(*mCurrentDragStartEvent);
+    mCurrentDragStartEvent->mX = tx;
+    mCurrentDragStartEvent->mY = ty;
+    mCurrentDragStartEvent->mEventHandlerWasCalled = false;
     if (canAccept) {
         mChildrenInterestedInDrag.push_back(child);
         if (!child->canAcceptDrag()) {
@@ -1069,9 +1069,6 @@ bool ViewGroup::notifyChildOfDragStart(View* child) {
         }
     }
     return canAccept;
-#else
-    return false;
-#endif
 }
 
 void ViewGroup::dispatchWindowSystemUiVisiblityChanged(int visible) {
@@ -3742,7 +3739,7 @@ void ViewGroup::dispatchDetachedFromWindow(){
     mChildrenInterestedInDrag.clear();// = null;
     mIsInterestedInDrag = false;
     if (mCurrentDragStartEvent != nullptr) {
-        //TODO mCurrentDragStartEvent.recycle();
+        mCurrentDragStartEvent->recycle();
         mCurrentDragStartEvent = nullptr;
     }
 
