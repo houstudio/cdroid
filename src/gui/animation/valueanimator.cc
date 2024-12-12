@@ -545,7 +545,7 @@ void ValueAnimator::endAnimation(){
 
     mAnimationEndRequested = true;
     mPaused = false;
-    bool notify = (mStarted || mRunning) && mListeners.size();
+    const bool notify = (mStarted || mRunning) && mListeners.size();
     if (notify && !mRunning) {
         // If it's not yet running, then start listeners weren't called. Call them now.
         notifyStartListeners();

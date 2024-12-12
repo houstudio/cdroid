@@ -70,8 +70,6 @@ private:
     std::map<View*, Animator*> currentAppearingAnimations;
     std::map<View*, Animator*> currentDisappearingAnimations;
     std::map<View*, View::OnLayoutChangeListener> layoutChangeListenerMap;
-    CallbackBase<bool>mOnPreDraw;
-    View::OnAttachStateChangeListener mOnAttachStateChange;
     View::OnLayoutChangeListener mOnLayoutChange;
 public :
     /**
