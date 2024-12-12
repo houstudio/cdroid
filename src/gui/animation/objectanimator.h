@@ -30,6 +30,7 @@ public:
     const std::string getPropertyName()const;
     void setIntValues(const std::vector<int>&)override;
     void setFloatValues(const std::vector<float>&values)override;
+    ObjectAnimator*clone()const override;
     static ObjectAnimator* ofInt(void* target,const std::string& propertyName, const std::vector<int>&);
     static ObjectAnimator* ofFloat(void* target,const std::string& propertyName,const std::vector<float>&);
     static ObjectAnimator* ofInt(void*target,Property*prop,const std::vector<int>&);

@@ -3,7 +3,7 @@
 
 namespace cdroid{
 
-ObjectAnimator::ObjectAnimator(){
+ObjectAnimator::ObjectAnimator():ValueAnimator(){
     mTarget = nullptr;
     mProperty = nullptr;
     mAutoCancel = false;
@@ -205,6 +205,11 @@ void ObjectAnimator::animateValue(float fraction){
     for (size_t i = 0; i < numValues; ++i) {
         mValues[i]->setAnimatedValue(target);
     }
+}
+
+ObjectAnimator*ObjectAnimator::clone()const{
+    ObjectAnimator*anim = new ObjectAnimator(nullptr,mPropertyName);
+    return anim;
 }
 
 ObjectAnimator* ObjectAnimator::ofInt(void* target,const std::string& propertyName,const std::vector<int>&values){

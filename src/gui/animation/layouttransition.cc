@@ -450,7 +450,9 @@ void LayoutTransition::doLayoutChange(View& v, int left, int top, int right, int
     //Animator* prevAnimation = currentChangingAnimations.get(child);
     auto it = currentChangingAnimations.find(child);
     if (it!=currentChangingAnimations.end()){//prevAnimation != nullptr) {
-        currentChangingAnimations.erase(it);//prevAnimation->cancel();
+        Animator* prevAnimation = it->second;
+        //currentChangingAnimations.erase(it);
+        prevAnimation->cancel();
     }
     //Animator* pendingAnimation = pendingAnimations.get(child);
     it = pendingAnimations.find(child);
@@ -473,10 +475,10 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
     if(layoutChangeListenerMap.find(child) !=layoutChangeListenerMap.end()){
         return;
     }
-    if (child->getWidth() == 0 && child->getHeight() == 0) {
+    if ((child->getWidth() == 0) && (child->getHeight() == 0)) {
         return;
     }
-    Animator* anim = baseAnimator;//->clone();
+    Animator* anim = baseAnimator->clone();
     anim->setTarget(child);
     anim->setupStartValues();
     auto ita = pendingAnimations.find(child);
@@ -488,7 +490,7 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
     // Cache the animation in case we need to cancel it later
     pendingAnimations[child] = anim;
 
-    mOnLayoutChange=std::bind(&LayoutTransition::doLayoutChange,this,std::placeholders::_1,
+    mOnLayoutChange = std::bind(&LayoutTransition::doLayoutChange,this,std::placeholders::_1,
         std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5,
         std::placeholders::_6,std::placeholders::_7,std::placeholders::_8,std::placeholders::_9,
         anim,parent,child,changeReason,duration);
@@ -498,7 +500,7 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
 }
 
 void LayoutTransition::startChangingAnimations(){
-    for (auto  ita : currentChangingAnimations) {
+    for (auto ita : currentChangingAnimations) {
         Animator*anim=ita.second;
         if(dynamic_cast<ObjectAnimator*>(anim)){
             ((ObjectAnimator*)anim)->setCurrentPlayTime(0);
