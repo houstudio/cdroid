@@ -19,7 +19,7 @@ public:
     virtual AnimateValue get(void* t);
     virtual void set(void* object,const AnimateValue& value);
     const std::string getName()const;
-    static Property*propertyFromName(const std::string&);
+    static Property*fromName(const std::string&);
 };
 
 }/*endof namespace*/

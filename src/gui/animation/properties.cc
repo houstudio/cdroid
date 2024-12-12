@@ -251,6 +251,34 @@ public:
     }
 };
 
+class SCROLL_X:public Property{
+public:
+    SCROLL_X():Property("scrollX"){}
+
+    void set(void* object,const AnimateValue& value)override{
+        LOGV("scrollX %p-->%d",object,GET_VARIANT(value,int));
+        ((View*)object)->setScrollX(GET_VARIANT(value,int));
+    }
+
+    AnimateValue get(void* object) {
+        return ((View*)object)->getScrollX();
+    }
+};
+
+class SCROLL_Y:public Property{
+public:
+    SCROLL_Y():Property("scrollY"){}
+
+    void set(void* object,const AnimateValue& value)override{
+        LOGV("scaleY %p->%d",GET_VARIANT(value,int));
+        ((View*)object)->setScrollY(GET_VARIANT(value,int));
+    }
+
+    AnimateValue get(void* object) {
+        return ((View*)object)->getScrollY();
+    }
+};
+
 static std::map<const std::string,Property*>props={
     {"left",new LEFT()},
     {"top",new TOP()},
@@ -262,6 +290,8 @@ static std::map<const std::string,Property*>props={
     {"rotationY",new ROTATION_Y()},
     {"scaleX",new SCALE_X()},
     {"scaleY",new SCALE_Y()},
+    {"scrollX",new SCROLL_X()},
+    {"scrollY",new SCROLL_Y()},
     {"translationX",new TRANSLATION_X()},
     {"translationY",new TRANSLATION_Y()},
     {"translationZ",new TRANSLATION_Z()},
@@ -270,7 +300,7 @@ static std::map<const std::string,Property*>props={
     {"z",new ZZ()}
 };
 
-Property*Property::propertyFromName(const std::string&propertyName){
+Property*Property::fromName(const std::string&propertyName){
     auto it = props.find(propertyName);
     if(it!=props.end()){
         LOGV_IF(propertyName.size(),"%s =%p",propertyName.c_str(),it->second);

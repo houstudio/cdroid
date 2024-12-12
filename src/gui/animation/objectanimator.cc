@@ -13,7 +13,6 @@ ObjectAnimator::ObjectAnimator(const ObjectAnimator&anim):ValueAnimator(anim){
     mTarget = nullptr;
     mProperty = nullptr;
     mAutoCancel = false;
-    setPropertyName(mPropertyName);
 }
 
 ObjectAnimator::~ObjectAnimator(){

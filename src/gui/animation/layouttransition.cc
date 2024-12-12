@@ -650,17 +650,17 @@ void LayoutTransition::addChild(ViewGroup* parent, View* child, bool changesLayo
         // Want disappearing animations to finish up before proceeding
         cancel(DISAPPEARING);
     }
-    if (changesLayout && (mTransitionTypes & FLAG_CHANGE_APPEARING) == FLAG_CHANGE_APPEARING) {
+    if (changesLayout && ((mTransitionTypes & FLAG_CHANGE_APPEARING) == FLAG_CHANGE_APPEARING)) {
         // Also, cancel changing animations so that we start fresh ones from current locations
         cancel(CHANGE_APPEARING);
         cancel(CHANGING);
     }
-    if (hasListeners() && (mTransitionTypes & FLAG_APPEARING) == FLAG_APPEARING) {
+    if (hasListeners() && ((mTransitionTypes & FLAG_APPEARING) == FLAG_APPEARING)) {
         for (auto l:mListeners) {
             if(l.startTransition)l.startTransition(*this, parent, child, APPEARING);
         }
     }
-    if (changesLayout && (mTransitionTypes & FLAG_CHANGE_APPEARING) == FLAG_CHANGE_APPEARING) {
+    if (changesLayout && ((mTransitionTypes & FLAG_CHANGE_APPEARING) == FLAG_CHANGE_APPEARING)) {
         runChangeTransition(parent, child, APPEARING);
     }
     if ((mTransitionTypes & FLAG_APPEARING) == FLAG_APPEARING) {

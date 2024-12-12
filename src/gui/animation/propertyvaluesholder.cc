@@ -13,16 +13,17 @@ PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
     mStartValue = o.mStartValue;
     mEndValue = o.mEndValue;
     mAnimateValue= o.mAnimateValue;
-    mProperty = nullptr;
+    mProperty = o.mProperty;
 }
 
-PropertyValuesHolder::PropertyValuesHolder(Property*prop){
-    mProperty = prop;
+PropertyValuesHolder::PropertyValuesHolder(Property*property){
+    mProperty = property;
+    if(property)mPropertyName = property->getName();
 }
 
 PropertyValuesHolder::PropertyValuesHolder(const std::string&name){
     mPropertyName = name;
-    mProperty = Property::propertyFromName(name);;
+    mProperty = Property::fromName(name);
 }
 
 PropertyValuesHolder::~PropertyValuesHolder(){
@@ -52,7 +53,7 @@ void PropertyValuesHolder::setPropertyChangedListener(const OnPropertyChangedLis
 void PropertyValuesHolder::setupSetterAndGetter(void*target){
     Property*prop = nullptr;
     if(mPropertyName.empty())return;
-    prop = Property::propertyFromName(mPropertyName);
+    prop = Property::fromName(mPropertyName);
     if(prop&&(mGetter==nullptr)){
 
     }
