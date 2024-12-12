@@ -9,6 +9,13 @@ ObjectAnimator::ObjectAnimator():ValueAnimator(){
     mAutoCancel = false;
 }
 
+ObjectAnimator::ObjectAnimator(const ObjectAnimator&anim):ValueAnimator(anim){
+    mTarget = nullptr;
+    mProperty = nullptr;
+    mAutoCancel = false;
+    setPropertyName(mPropertyName);
+}
+
 ObjectAnimator::~ObjectAnimator(){
     delete mProperty;
 }
@@ -208,7 +215,7 @@ void ObjectAnimator::animateValue(float fraction){
 }
 
 ObjectAnimator*ObjectAnimator::clone()const{
-    ObjectAnimator*anim = new ObjectAnimator(nullptr,mPropertyName);
+    ObjectAnimator*anim = new ObjectAnimator(*this);
     return anim;
 }
 

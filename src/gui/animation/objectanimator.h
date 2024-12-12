@@ -16,6 +16,7 @@ protected:
     bool isInitialized()override;
 public:
     ObjectAnimator();
+    ObjectAnimator(const ObjectAnimator&);
     ~ObjectAnimator();
     void setTarget(void*target)override;
     void*getTarget();
