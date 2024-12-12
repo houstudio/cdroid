@@ -86,8 +86,8 @@ class MyProperty: public Property{
 public:
    MyProperty(const std::string&name):Property(name){
    }
-   void set(void* object, float value)override{
-       LOGD("value=%f",value);
+   void set(void* object,const AnimateValue& value)override{
+       LOGD("value=%f",GET_VARIANT(value,float));
    }
 };
 TEST_F(ANIMATOR,ofProperty){
