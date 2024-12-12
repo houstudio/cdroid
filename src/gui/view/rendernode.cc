@@ -161,6 +161,15 @@ bool RenderNode::isPivotExplicitlySet()const{
     return (mPivotX!=FLT_MIN)||(mPivotY!=FLT_MIN);
 }
 
+bool RenderNode::resetPivot(){
+    if((mPivotX!=FLT_MIN)||(mPivotY!=FLT_MIN)){
+        mPivotX = FLT_MIN;
+        mPivotY = FLT_MIN;
+        return true;
+    }
+    return false;
+}
+
 void RenderNode::setLeft(float left){
     mLeft = left;
 }

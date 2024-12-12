@@ -9058,7 +9058,7 @@ float View::getPivotX()const{
 }
 
 void View::setPivotX(float x){
-    if(x!=getPivotX()){
+    if((mRenderNode->isPivotExplicitlySet()==false)||(x!=getPivotX())){
         invalidateViewProperty(true,false);
         mRenderNode->setPivotX(x);
         invalidateViewProperty(false,true);
@@ -9071,7 +9071,7 @@ float View::getPivotY()const{
 }
 
 void View::setPivotY(float y){
-    if(y!=getPivotY()){
+    if((mRenderNode->isPivotExplicitlySet()==false)||(y!=getPivotY())){
         invalidateViewProperty(true,false);
         mRenderNode->setPivotY(y);
         invalidateViewProperty(false,true);
@@ -9080,12 +9080,13 @@ void View::setPivotY(float y){
 }
 
 bool View::isPivotSet()const{
-    return false;
+    return mRenderNode->isPivotExplicitlySet();
 }
 
 void View::resetPivot(){
-    mRenderNode->setPivotX(getWidth()/2.f);
-    mRenderNode->setPivotY(getHeight()/2.f);
+    if(mRenderNode->resetPivot()){
+        invalidateViewProperty(false, false);
+    }
 }
 
 float View::getAlpha()const{

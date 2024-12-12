@@ -47,7 +47,8 @@ public:
     float getPivotX()const;
     void  setPivotY(float);
     float getPivotY()const;
-    bool  isPivotExplicitlySet()const;
+    bool resetPivot();
+    bool isPivotExplicitlySet()const;
 
     void  setLeft(float);
     void  setTop(float);
