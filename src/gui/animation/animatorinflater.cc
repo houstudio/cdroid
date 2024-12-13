@@ -171,7 +171,7 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
     const bool hasTo   = !sTo.empty();
     const int fromType = valueTypeFromPropertyName(propertyName);
     const int toType = fromType;
-    const bool getFloats = (valueType==VALUE_TYPE_FLOAT);
+    const bool getFloats = (valueType==VALUE_TYPE_FLOAT)||(fromType==VALUE_TYPE_FLOAT);
 
     if (valueType == VALUE_TYPE_PATH) {
         std::string fromString = atts.getString("valueFrom");

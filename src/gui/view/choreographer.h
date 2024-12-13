@@ -37,6 +37,7 @@ private:
         CallbackRecord* extractDueCallbacksLocked(int64_t now);
         void addCallbackLocked(int64_t dueTime, void* action,void* token);
         int removeCallbacksLocked(void* action, void* token);
+        int hasCallbacksLocked(void* action, void* token)const;
     };
 private:
     Looper *mLooper;
@@ -73,6 +74,7 @@ public:
     void postCallbackDelayed(int callbackType,const Runnable& action,void*token,long delayMillis);
     int removeCallbacks(int callbackType, const Runnable* action,void*token);
     int removeFrameCallback(const FrameCallback& callback);
+    int hasCallbacks(int callbackType, const Runnable* action,void*token)const;
     void postFrameCallbackDelayed(const FrameCallback& callback, long delayMillis);
     void postFrameCallback(const FrameCallback& callback);
 };

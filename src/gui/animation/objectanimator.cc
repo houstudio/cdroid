@@ -16,7 +16,7 @@ ObjectAnimator::ObjectAnimator(const ObjectAnimator&anim):ValueAnimator(anim){
 }
 
 ObjectAnimator::~ObjectAnimator(){
-    delete mProperty;
+    //delete mProperty;
 }
 
 ObjectAnimator::ObjectAnimator(void* target,const std::string& propertyName)
@@ -64,13 +64,13 @@ void ObjectAnimator::setPropertyName(const std::string& propertyName){
         PropertyValuesHolder* valuesHolder = mValues.at(0);
         const std::string oldName = valuesHolder->getPropertyName();
         valuesHolder->setPropertyName(propertyName);
-
         auto it2= mValuesMap.find(oldName);
         if(it2!=mValuesMap.end())
             mValuesMap.erase(it2);
         mValuesMap.insert({propertyName,valuesHolder});
     }
     mPropertyName= propertyName;
+    mProperty=Property::fromName(propertyName);
     mInitialized = false;
 }
 
@@ -153,10 +153,15 @@ bool ObjectAnimator::hasSameTargetAndProperties(const Animator*anim){
                     return false;
                 }
             }
-           return true;
-       }
-   }
-   return false;
+            return true;
+        }
+    }
+    return false;
+}
+
+void ObjectAnimator::start(){
+    AnimationHandler::getInstance().autoCancelBasedOn(this);
+    ValueAnimator::start();
 }
 
 bool ObjectAnimator::shouldAutoCancel(const AnimationHandler::AnimationFrameCallback*anim){

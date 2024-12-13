@@ -122,6 +122,10 @@ int Choreographer::removeCallbacksInternal(int callbackType,void* action, void* 
     return mCallbackQueues[callbackType]->removeCallbacksLocked(action,token);
 }
 
+int Choreographer::hasCallbacks(int callbackType, const Runnable* action,void*token)const{
+    return mCallbackQueues[callbackType]->hasCallbacksLocked((void*)action,token);
+}
+
 void Choreographer::postCallback(int callbackType,const Runnable& action, void* token){
      postCallbackDelayed(callbackType,action,token,0);
 }
@@ -320,6 +324,24 @@ int Choreographer::CallbackQueue::removeCallbacksLocked(void* action, void* toke
         callback = next;
     }
     LOGV_IF(count,"removed %d Actions",count);
+    return count;
+}
+
+int Choreographer::CallbackQueue::hasCallbacksLocked(void* action, void* token)const{
+    CallbackRecord* predecessor = nullptr;
+    int count = 0;
+    for (CallbackRecord* callback = mHead; callback != nullptr;) {
+        CallbackRecord* next = callback->next;
+        if ( ((((long)token) == FRAME_CALLBACK_TOKEN) && (callback->frameCallback==*(FrameCallback*)action) )
+             ||( ((long)token!=FRAME_CALLBACK_TOKEN) && (action == nullptr || callback->action == *(Runnable*)action)
+                     && (token == nullptr || callback->token == token) )) {
+            count++;
+        } else {
+            predecessor = callback;
+        }
+        callback = next;
+    }
+    LOGV_IF(count,"has %d Actions",count);
     return count;
 }
 

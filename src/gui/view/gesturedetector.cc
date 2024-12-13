@@ -229,7 +229,7 @@ bool GestureDetector::onTouchEvent(MotionEvent& ev) {
         if ((mInLongPress==false) && (mInContextClick==false)){
             const int motionClassification = ev.getClassification();
             //const bool hasPendingLongPress = mHandler->hasMessages(LONG_PRESS);
-            const int hasPendingLongPress = Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&mLongPressRunnable,this);
+            const int hasPendingLongPress = Choreographer::getInstance().hasCallbacks(Choreographer::CALLBACK_ANIMATION,&mLongPressRunnable,this);
             const float scrollX = mLastFocusX - focusX;
             const float scrollY = mLastFocusY - focusY;
             if (mIsDoubleTapping) {

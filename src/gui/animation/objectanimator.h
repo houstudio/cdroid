@@ -32,13 +32,14 @@ public:
     void setIntValues(const std::vector<int>&)override;
     void setFloatValues(const std::vector<float>&values)override;
     ObjectAnimator*clone()const override;
+    void setAutoCancel(bool);
+    bool shouldAutoCancel(const AnimationHandler::AnimationFrameCallback*anim);
+    void start()override;
     static ObjectAnimator* ofInt(void* target,const std::string& propertyName, const std::vector<int>&);
     static ObjectAnimator* ofFloat(void* target,const std::string& propertyName,const std::vector<float>&);
     static ObjectAnimator* ofInt(void*target,Property*prop,const std::vector<int>&);
     static ObjectAnimator* ofFloat(void*target,Property*prop,const std::vector<float>&);
     static ObjectAnimator* ofPropertyValuesHolder(void*target,const std::vector< PropertyValuesHolder*>&values);
-    void setAutoCancel(bool);
-    bool shouldAutoCancel(const AnimationHandler::AnimationFrameCallback*anim);
 };
 
 }

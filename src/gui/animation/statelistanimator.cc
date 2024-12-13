@@ -2,6 +2,9 @@
 namespace cdroid{
 
 StateListAnimator::StateListAnimator(){
+    mView = nullptr;
+    mRunningAnimator=nullptr;
+    mLastMatch = nullptr;
     mAnimationListener.onAnimationEnd=[this](Animator& animator,bool){
         if (mRunningAnimator == &animator) {
             mRunningAnimator = nullptr;
@@ -9,10 +12,16 @@ StateListAnimator::StateListAnimator(){
     };
 }
 
+StateListAnimator::~StateListAnimator(){
+    for(Tuple*tuple:mTuples){
+        delete tuple;
+    }
+    mTuples.clear();
+}
+
 void StateListAnimator::addState(const std::vector<int>&specs, Animator* animator){
-    Tuple tuple =Tuple(specs, animator);
     animator->addListener(mAnimationListener);
-    mTuples.push_back(tuple);
+    mTuples.push_back(new Tuple(specs, animator));
     mChangingConfigurations |= animator->getChangingConfigurations();
 }
 
@@ -20,9 +29,9 @@ void StateListAnimator::setState(const std::vector<int>&state){
     Tuple* match = nullptr;
     const size_t count = mTuples.size();
     for (size_t i = 0; i < count; i++) {
-        Tuple& tuple = mTuples.at(i);
-        if (StateSet::stateSetMatches(tuple.mSpecs, state)) {
-            match = &tuple;
+        Tuple* tuple = mTuples.at(i);
+        if (StateSet::stateSetMatches(tuple->mSpecs, state)) {
+            match = tuple;
             break;
         }
     }
@@ -64,7 +73,7 @@ void StateListAnimator::setTarget(View* view) {
 void StateListAnimator::clearTarget() {
     const size_t size = mTuples.size();
     for (size_t i = 0; i < size; i++) {
-        mTuples.at(i).mAnimator->setTarget(nullptr);
+        mTuples.at(i)->mAnimator->setTarget(nullptr);
     }
     mView = nullptr;
     mLastMatch = nullptr;
@@ -72,8 +81,10 @@ void StateListAnimator::clearTarget() {
 }
 
 void StateListAnimator::start(Tuple* match) {
+    match->mAnimator->setTarget(getTarget());
     mRunningAnimator = match->mAnimator;
     mRunningAnimator->start();
+    LOGD_IF(mRunningAnimator,"start mRunningAnimator %p dur=%d",mRunningAnimator,mRunningAnimator->getTotalDuration());
 }
 
 void StateListAnimator::cancel() {

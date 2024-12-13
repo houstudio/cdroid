@@ -25,7 +25,7 @@ private:
         StateListAnimator*newInstance()override;  
     };
 private:
-    std::vector<Tuple>mTuples;
+    std::vector<Tuple*>mTuples;
     Tuple* mLastMatch;
     Animator*mRunningAnimator;
     class View*mView;
@@ -38,6 +38,7 @@ private:
     void cancel();
 public:
     StateListAnimator();
+    ~StateListAnimator();
     void addState(const std::vector<int>&specs, Animator* animator);
     void setState(const std::vector<int>&state);
     Animator* getRunningAnimator();
