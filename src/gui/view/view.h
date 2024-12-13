@@ -107,7 +107,7 @@ protected:
     static constexpr int WILL_NOT_CACHE_DRAWING = 0x000020000;
     static constexpr int FOCUSABLE_IN_TOUCH_MODE= 0x000040000;
 
-    static constexpr int TOOLTIP = 0x40000;
+    static constexpr int TOOLTIP = 0x40000000;
 
     /*PFLAGS in mPrivateFlags*/
     static constexpr int PFLAG_WANTS_FOCUS      = 0x00000001;
