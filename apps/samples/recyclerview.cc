@@ -28,6 +28,7 @@ public:
         TextView* view = new TextView("",200,64);
         view->setBackgroundColor(0xff234567);
         view->setGravity(Gravity::CENTER);
+        view->setFocusableInTouchMode(true);
         view->setLayoutParams(new LayoutParams(LayoutParams::MATCH_PARENT,60));//LayoutParams::MATCH_PARENT))
         //view->setLayoutParams(new LayoutParams(640,LayoutParams::MATCH_PARENT));
         return new ViewHolder(view);
@@ -43,7 +44,7 @@ public:
 	        RecyclerView::LayoutManager*mgr = rv->getLayoutManager();
 	        RecyclerView::LayoutParams*lp=(RecyclerView::LayoutParams*)v.getLayoutParams();
 	        int pos= mgr->getPosition(&v);
-	        LOGD("click item positon=%d holder lp",position,lp);
+	        LOGD("click item positon=%d holder lp=%p",position,lp);
 	    });
     }
     void remove(int idx){
@@ -70,7 +71,7 @@ private:
 public:
     SimpleCallback(MyAdapter*adapter):ItemTouchHelper::SimpleCallback(
         ItemTouchHelper::LEFT | ItemTouchHelper::RIGHT|ItemTouchHelper::UP|ItemTouchHelper::DOWN,
-        ItemTouchHelper::LEFT | ItemTouchHelper::RIGHT){
+        ItemTouchHelper::LEFT | ItemTouchHelper::RIGHT|ItemTouchHelper::UP|ItemTouchHelper::DOWN){
         mAdapter = adapter;
     }
     bool onMove(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder,RecyclerView::ViewHolder& target)override{
@@ -79,6 +80,7 @@ public:
         mAdapter->notifyItemMoved(fromPosition, toPosition);
         return true;
     }
+
     void onSwiped(RecyclerView::ViewHolder& viewHolder, int direction)override{
         const int swipedPosition = viewHolder.getAdapterPosition();
         LOGD("direction=%d swipedPosition=%d",direction,swipedPosition);

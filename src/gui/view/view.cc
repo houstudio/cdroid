@@ -7194,7 +7194,7 @@ void View::handleTooltipKey(KeyEvent& event) {
 }
 
 void View::handleTooltipUp() {
-    if (mTooltipInfo == nullptr || mTooltipInfo->mTooltipPopup == nullptr) {
+    if ((mTooltipInfo == nullptr) || (mTooltipInfo->mTooltipPopup == nullptr)) {
         return;
     }
     removeCallbacks(mTooltipInfo->mHideTooltipRunnable);
@@ -7218,7 +7218,7 @@ void View::hideTooltip(){
         mAttachInfo->mTooltipHost = nullptr;
     }
     // The available accessibility actions have changed
-    //notifyViewAccessibilityStateChangedIfNeeded(CONTENT_CHANGE_TYPE_UNDEFINED);
+    notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
 }
 
 bool View::showLongClickTooltip(int x, int y) {
@@ -7232,10 +7232,10 @@ bool View::showHoverTooltip() {
 }
 
 bool View::showTooltip(int x, int y, bool fromLongClick){
-    if (mAttachInfo == nullptr || mTooltipInfo == nullptr) {
+    if ((mAttachInfo == nullptr) || (mTooltipInfo == nullptr)) {
         return false;
     }
-    if (fromLongClick && (mViewFlags & ENABLED_MASK) != ENABLED) {
+    if (fromLongClick && ((mViewFlags & ENABLED_MASK) != ENABLED)) {
         return false;
     }
     if (mTooltipInfo->mTooltipText.empty()) {
@@ -7526,7 +7526,7 @@ bool View::onKeyDown(int keyCode,KeyEvent& evt){
 
         if (evt.getRepeatCount()== 0){// Long clickable items don't necessarily have to be clickable.
             const bool clickable =isClickable()||isLongClickable();
-            if (clickable || (mViewFlags & TOOLTIP) == TOOLTIP) {
+            if (clickable || ((mViewFlags & TOOLTIP) == TOOLTIP)) {
                 // For the purposes of menu anchoring and drawable hotspots,
                 // key events are considered to be at the center of the view.
                 const int x = getWidth() / 2;
@@ -8151,7 +8151,7 @@ bool View::onTouchEvent(MotionEvent& event){
             return true;
         }
     }
-    if (!(clickable || (mViewFlags & TOOLTIP) == TOOLTIP))return false; 
+    if (!(clickable || ((mViewFlags & TOOLTIP) == TOOLTIP)))return false;
 
     switch(action){
     case MotionEvent::ACTION_UP:
