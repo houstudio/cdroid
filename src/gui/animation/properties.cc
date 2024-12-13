@@ -303,10 +303,9 @@ static std::map<const std::string,Property*>props={
 Property*Property::fromName(const std::string&propertyName){
     auto it = props.find(propertyName);
     if(it!=props.end()){
-        LOGV_IF(propertyName.size(),"%s =%p",propertyName.c_str(),it->second);
         return it->second;
     }
-    LOGV_IF(propertyName.size(),"%s =nullptr",propertyName.c_str());
+    LOGD_IF(!propertyName.empty(),"%s =nullptr",propertyName.c_str());
     return nullptr;
 }
 

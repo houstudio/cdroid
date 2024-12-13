@@ -59,7 +59,7 @@ public:
         if( (pd->items.size()==0) && (pd->statelistAnimator==nullptr) )
             pd->animator = an.animator;
 
-        LOGD("%s %s",(std::string(pd->items.size()*4,' ')+name).c_str(),propertyName.c_str());
+        LOGD("%s %s animator=%p",(std::string(pd->items.size()*4,' ')+name).c_str(),propertyName.c_str(),an.animator);
         pd->items.push_back(an);
     }
 
@@ -68,21 +68,24 @@ public:
         AnimNode back = pd->items.back();
         if(strcmp(name,"item")==0){
             pd->statelistAnimator->addState(back.state,back.animator);
-        }else if((strcmp(name,"set")==0)&&pd->items.size()){
-            AnimNode* parent = pd->fromTop(pd->statelistAnimator?-2:-1);
-            if(parent->name.compare("item")){
-                const int together = back.atts.getInt("ordering",std::map<const std::string,int>{
-                    {"together",0}, {"sequentially",1}},0);
-                AnimatorSet*aset = (AnimatorSet*)parent->animator;
-                printf("playAnimator\r\n");
-                for(auto c:pd->mChildren)printf("%p ",c);printf("\r\n");
-                if(together==0) aset->playTogether(pd->mChildren);
-                else aset->playSequentially(pd->mChildren);
-            }else{
+        }else if(strcmp(name,"set")==0){
+            const int together = back.atts.getInt("ordering",std::map<const std::string,int>{
+                 {"together",0}, {"sequentially",1}},0);
+            AnimatorSet*aset = (AnimatorSet*)back.animator;
+            if(together==0) aset->playTogether(pd->mChildren);
+            else aset->playSequentially(pd->mChildren);
+            if(pd->items.size()>1){
+                AnimNode* parent = pd->fromTop(pd->statelistAnimator?-2:-1);
                 parent->animator=back.animator;
             }
         }
         pd->items.pop_back();
+        if(pd->items.size()&&back.animator){
+            AnimNode* parent = pd->fromTop(-1);
+            if(parent->name.compare("item")==0){
+                parent->animator=back.animator;
+            }
+        }
         LOGD("%s",(std::string(pd->items.size()*4,' ')+name).c_str());
     }
 };

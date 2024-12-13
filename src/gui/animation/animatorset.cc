@@ -39,23 +39,23 @@ AnimatorSet::~AnimatorSet(){
 }
 
 void AnimatorSet::playTogether(const std::vector<Animator*>&items){
-    if(items.size()){
+    const int size = (int)items.size();
+    if(size){
         Builder builder(this,items[0]);
-        for (int i = 1; i < items.size(); ++i) {
+        for (int i = 1; i < size; ++i) {
             builder.with(items[i]);
         }
     }
 }
 
 void AnimatorSet::playSequentially(const std::vector<Animator*>&items){
-    if(items.size()){
-       if(items.size()==1){
-           play(items[0]);
-       } else {
-           for (int i = 0; i < items.size() - 1; ++i) {
-               play(items[i])->before(items[i + 1]);
-           }
-       }
+    const size_t size = items.size();
+    if(size==1){
+        play(items[0]);
+    } else {
+        for (int i = 0; i < int(size - 1); ++i) {
+            play(items[i])->before(items[i + 1]);
+        }
     }
 }
 
