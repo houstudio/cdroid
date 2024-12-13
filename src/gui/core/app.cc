@@ -52,8 +52,9 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
     cla.addArguments(extoptions.data(),extoptions.size());
     cla.setSwitchChars("-");
-    cla.parse(argc,argv);
+    const int rc = cla.parse(argc,argv);
     rotation = (getArgAsInt("rotate",0)/90)%4;
+    LOGE_IF(rc!=0,"Arguments error[%d]:%s",rc,cla.getError().c_str());
     if(hasSwitch("help")){
         std::cout<<cla.getUsageString()<<std::endl;
         std::cout<<"params.count="<<getParamCount()<<std::endl;
