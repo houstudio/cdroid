@@ -30,7 +30,7 @@ namespace cdroid{
 App*App::mInst=nullptr;
 
 static CLA::Argument ARGS[]={
-   {CLA::EntryType::Option, "a", "alpha",  "UI layer global alpha[0,255]", CLA::ValueType::Int, (int)CLA::EntryFlags::Manditory},
+   {CLA::EntryType::Option, "a", "alpha",  "UI layer global alpha[0,255]", CLA::ValueType::Int, (int)CLA::EntryFlags::Optional},
    {CLA::EntryType::Option, "" , "density","UI Density"  ,    CLA::ValueType::Int , (int)CLA::EntryFlags::Optional },
    {CLA::EntryType::Option, "", "data",   "app data path",        CLA::ValueType::String, (int)CLA::EntryFlags::Optional },
    {CLA::EntryType::Option, "m", "monkey", "events playback path",  CLA::ValueType::String, (int)CLA::EntryFlags::Optional },
