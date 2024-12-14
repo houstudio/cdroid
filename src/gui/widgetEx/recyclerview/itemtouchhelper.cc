@@ -887,9 +887,9 @@ int ItemTouchHelper::checkVerticalSwipe(RecyclerView::ViewHolder& viewHolder, in
 }
 
 void ItemTouchHelper::addChildDrawingOrderCallback() {
-    /*if (Build.VERSION.SDK_INT >= 21) {
+    if (true){//Build.VERSION.SDK_INT >= 21) {
         return; // we use elevation on Lollipop
-    }*/
+    }
     if (mChildDrawingOrderCallback == nullptr) {
         mChildDrawingOrderCallback = [this](int childCount, int i) {
             if (mOverdrawChild == nullptr) {
