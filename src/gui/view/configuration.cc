@@ -1498,7 +1498,7 @@ std::string Configuration::resourceQualifierString(const Configuration& config,c
 		parts.push_back(width + "x" + height);
 	}
 
-	parts.push_back(std::string("v") + BUILD::VERSION::Release);//RESOURCES_SDK_INT);
+	parts.push_back(std::string("v") + Build::VERSION::Release);//RESOURCES_SDK_INT);
 	return TextUtils::join("-", parts);
 }
 

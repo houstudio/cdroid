@@ -1,6 +1,7 @@
 #include <view/gesturedetector.h>
 #include <widgetEx/recyclerview/itemtouchhelper.h>
 #include <core/neverdestroyed.h>
+#include <core/build.h>
 
 namespace cdroid{
 
@@ -887,7 +888,7 @@ int ItemTouchHelper::checkVerticalSwipe(RecyclerView::ViewHolder& viewHolder, in
 }
 
 void ItemTouchHelper::addChildDrawingOrderCallback() {
-    if (true){//Build.VERSION.SDK_INT >= 21) {
+    if (Build::VERSION::SDK_INT >= 21) {
         return; // we use elevation on Lollipop
     }
     if (mChildDrawingOrderCallback == nullptr) {

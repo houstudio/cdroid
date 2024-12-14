@@ -1,6 +1,7 @@
 #include <widget/nestedscrollview.h>
 #include <widget/nestedscrollinghelper.h>
 #include <view/focusfinder.h>
+#include <core/build.h>
 
 namespace cdroid{
 
@@ -1538,11 +1539,11 @@ void NestedScrollView::draw(Canvas& canvas) {
             int xTranslation = 0;
             int yTranslation = std::min(0, scrollY);
             canvas.save();
-            if (/*Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP ||*/ getClipToPadding()) {
+            if (Build::VERSION::SDK_INT < Build::VERSION_CODES::LOLLIPOP || getClipToPadding()) {
                 width -= getPaddingLeft() + getPaddingRight();
                 xTranslation += getPaddingLeft();
             }
-            if (/*Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&*/ getClipToPadding()) {
+            if (Build::VERSION::SDK_INT >= Build::VERSION_CODES::LOLLIPOP && getClipToPadding()) {
                 height -= getPaddingTop() + getPaddingBottom();
                 yTranslation += getPaddingTop();
             }
@@ -1559,11 +1560,11 @@ void NestedScrollView::draw(Canvas& canvas) {
             int xTranslation = 0;
             int yTranslation = std::max(getScrollRange(), scrollY) + height;
             canvas.save();
-            if (/*Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP ||*/ getClipToPadding()) {
+            if (Build::VERSION::SDK_INT < Build::VERSION_CODES::LOLLIPOP || getClipToPadding()) {
                 width -= getPaddingLeft() + getPaddingRight();
                 xTranslation += getPaddingLeft();
             }
-            if (/*Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && */getClipToPadding()) {
+            if (Build::VERSION::SDK_INT >= Build::VERSION_CODES::LOLLIPOP && getClipToPadding()) {
                 height -= getPaddingTop() + getPaddingBottom();
                 yTranslation -= getPaddingBottom();
             }

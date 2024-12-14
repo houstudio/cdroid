@@ -452,7 +452,7 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (applyInsets) {
             int cgrav = Gravity::getAbsoluteGravity(lp->gravity, layoutDirection);
             if (ViewCompat.getFitsSystemWindows(child)) {
-                if (Build.VERSION.SDK_INT >= 21) {
+                if (Build::VERSION::SDK_INT >= 21) {
                     WindowInsets wi = (WindowInsets) mLastInsets;
                     if (cgrav == Gravity::LEFT) {
                         wi = wi.replaceSystemWindowInsets(wi.getSystemWindowInsetLeft(),
@@ -466,7 +466,7 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                     child->dispatchApplyWindowInsets(wi);
                 }
             } else {
-                if (Build.VERSION.SDK_INT >= 21) {
+                if (Build::VERSION::SDK_INT >= 21) {
                     WindowInsets wi = (WindowInsets) mLastInsets;
                     if (cgrav == Gravity.LEFT) {
                         wi = wi.replaceSystemWindowInsets(wi.getSystemWindowInsetLeft(),

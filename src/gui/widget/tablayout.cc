@@ -1,5 +1,6 @@
 #include <widget/tablayout.h>
 #include <widget/R.h>
+#include <core/build.h>
 #include <cdlog.h>
 
 namespace cdroid{
@@ -943,7 +944,7 @@ void TabLayout::TabView::updateBackgroundDrawable(Context* context) {
 
         // TODO: Add support to RippleUtils.compositeRippleColorStateList for different ripple color
         // for selected items vs non-selected items
-        /*if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+        /*if (Build::VERSION::SDK_INT >= Build::VERSION_CODES::LOLLIPOP) {
             background =new RippleDrawable(
                   rippleColor,
                   unboundedRipple ? null : contentDrawable,
@@ -977,7 +978,7 @@ void TabLayout::TabView::setSelected(bool selected) {
 
     LinearLayout::setSelected(selected);
 
-    if (changed && selected /*&& Build.VERSION.SDK_INT < 16*/) {
+    if (changed && selected && Build::VERSION::SDK_INT < 16) {
         // Pre-JB we need to manually send the TYPE_VIEW_SELECTED event
         sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
     }
