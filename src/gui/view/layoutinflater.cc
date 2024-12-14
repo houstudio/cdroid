@@ -71,7 +71,7 @@ bool LayoutInflater::registerInflater(const std::string&name,const std::string&d
     LayoutInflater::STYLEMAPPER& smap = getStyleMap();
     auto flaterIter = maps.find(name);
     auto styleIter = smap.find(name);
-#if 1 
+#if 1
     /*disable widget inflater's hack*/
     if(flaterIter!=maps.end() ){
         LOGW("%s is registed to %p",name.c_str(),flaterIter->second);

@@ -2310,7 +2310,7 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
     }
 	
     do {
-        View*view=parent;
+        View*view = parent;
         if (drawAnimation) {
             if (view) {
                  view->mPrivateFlags |= PFLAG_DRAW_ANIMATION;

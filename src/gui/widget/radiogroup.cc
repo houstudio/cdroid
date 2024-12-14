@@ -6,7 +6,6 @@
 namespace cdroid{
 
 DECLARE_WIDGET(RadioGroup)
-DECLARE_WIDGET2(RadioButton,"cdroid:attr/radioButtonStyle")
 
 RadioGroup::RadioGroup(int w,int h):LinearLayout(w,h){
     setOrientation(VERTICAL);
