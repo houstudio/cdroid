@@ -76,7 +76,8 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     LOGI("\033[1;35m          ┃┗┫╋┃┏┫╋┃┃╋┃");
     LOGI("\033[1;35m          ┗━┻━┻┛┗━┻┻━┛");
 
-    LOGI("cdroid %s Build:%d Commit:%s",Build::VERSION::Release.c_str(),Build::VERSION::BuildNumber,Build::VERSION::CommitID.c_str());
+    LOGI("cdroid %s on %s Build:%d Commit:%s",Build::VERSION::Release.c_str(),Build::VERSION::BASE_OS.c_str(),
+            Build::VERSION::BuildNumber,Build::VERSION::CommitID.c_str());
     LOGI("https://www.gitee.com/houstudio/cdroid\n");
     LOGI("App [%s] started c++=%d",mName.c_str(),__cplusplus);
 	

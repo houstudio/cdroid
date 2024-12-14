@@ -15,9 +15,31 @@ public:
         static const int Patch;
         static const int BuildNumber;
         static const int SDK_INT;
+        /**
+         * The user-visible version string.  E.g., "1.0" or "3.4b5" or "bananas".
+         *
+         * This field is an opaque string. Do not assume that its value
+         * has any particular structure or that values of RELEASE from
+         * different releases can be somehow ordered.
+         */
+        static const std::string RELEASE;
+        /**
+         * The current development codename, or the string "REL" if this is
+         * a release build.
+         */
+        static const std::string CODENAME;
+        /**
+         * The version string.  May be {@link #RELEASE} or {@link #CODENAME} if
+         * not a final release build.
+         */
+        static const std::string RELEASE_OR_CODENAME;
+        /**
+         * The base OS build the product is based on.
+         */
+        static const std::string BASE_OS;
     };
 };
-using BUILD=Build;
+using BUILD = Build;
 
 class Build::VERSION_CODES {
 public:
