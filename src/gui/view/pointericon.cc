@@ -1,6 +1,8 @@
 #include <view/pointericon.h>
+#include <porting/cdlog.h>
 #include <drawables/animationdrawable.h>
 #include <expat.h>
+#include <stdexcept>
 
 namespace cdroid{
 

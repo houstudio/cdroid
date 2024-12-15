@@ -1,6 +1,7 @@
 #ifndef __CALENDAR_H__
 #define __CALENDAR_H__
 #include <time.h>
+#include <stdint.h>
 namespace cdroid{
 
 class Calendar{

@@ -336,7 +336,7 @@ void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
 }
 
 void DefaultItemAnimator::endChangeAnimation(std::vector<ChangeInfo*>& infoList, RecyclerView::ViewHolder& item) {
-    for (int i = infoList.size() - 1; i >= 0; i--) {
+    for (int i = int(infoList.size() - 1); i >= 0; i--) {
         ChangeInfo* changeInfo = infoList.at(i);
         if (endChangeAnimationIfNecessary(*changeInfo, item)) {
             if (changeInfo->oldHolder == nullptr && changeInfo->newHolder == nullptr) {
@@ -377,7 +377,7 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
     // this will trigger end callback which should set properties to their target values.
     view->animate().cancel();
     // TODO if some other animations are chained to end, how do we cancel them as well?
-    for (int i = mPendingMoves.size() - 1; i >= 0; i--) {
+    for (int i = int(mPendingMoves.size() - 1); i >= 0; i--) {
         MoveInfo* moveInfo = mPendingMoves.at(i);
         if (moveInfo->holder == &item) {
             view->setTranslationY(0);
@@ -400,7 +400,7 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
         dispatchAddFinished(item);
     }
 
-    for (int i = mChangesList.size() - 1; i >= 0; i--) {
+    for (int i = int(mChangesList.size() - 1); i >= 0; i--) {
         std::vector<ChangeInfo*>* changes = mChangesList.at(i);
         endChangeAnimation(*changes, item);
         if (changes->empty()) {
@@ -408,7 +408,7 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
             mChangesList.erase(mChangesList.begin()+i);//.remove(i);
         }
     }
-    for (int i = mMovesList.size() - 1; i >= 0; i--) {
+    for (int i = int(mMovesList.size() - 1); i >= 0; i--) {
         std::vector<MoveInfo*>* moves = mMovesList.at(i);
         for (int j = moves->size() - 1; j >= 0; j--) {
             MoveInfo* moveInfo = moves->at(j);
@@ -425,7 +425,7 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
             }
         }
     }
-    for (int i = mAdditionsList.size() - 1; i >= 0; i--) {
+    for (int i = int(mAdditionsList.size() - 1); i >= 0; i--) {
         std::vector<RecyclerView::ViewHolder*>* additions = mAdditionsList.at(i);
         it = std::find(additions->begin(),additions->end(),&item);
         if (it!=additions->end()) {
@@ -499,7 +499,7 @@ void DefaultItemAnimator::dispatchFinishedWhenDone() {
 }
 
 void DefaultItemAnimator::endAnimations() {
-    int count = mPendingMoves.size();
+    int count = (int)mPendingMoves.size();
     for (int i = count - 1; i >= 0; i--) {
         MoveInfo* item = mPendingMoves.at(i);
         View* view = item->holder->itemView;
@@ -508,20 +508,20 @@ void DefaultItemAnimator::endAnimations() {
         dispatchMoveFinished(*item->holder);
         mPendingMoves.erase(mPendingMoves.begin()+i);//.remove(i);
     }
-    count = mPendingRemovals.size();
+    count = (int)mPendingRemovals.size();
     for (int i = count - 1; i >= 0; i--) {
         RecyclerView::ViewHolder* item = mPendingRemovals.at(i);
         dispatchRemoveFinished(*item);
         mPendingRemovals.erase(mPendingRemovals.begin()+i);//.remove(i);
     }
-    count = mPendingAdditions.size();
+    count = (int)mPendingAdditions.size();
     for (int i = count - 1; i >= 0; i--) {
         RecyclerView::ViewHolder* item = mPendingAdditions.at(i);
         item->itemView->setAlpha(1);
         dispatchAddFinished(*item);
         mPendingAdditions.erase(mPendingAdditions.begin()+i);//.remove(i);
     }
-    count = mPendingChanges.size();
+    count = (int)mPendingChanges.size();
     for (int i = count - 1; i >= 0; i--) {
         endChangeAnimationIfNecessary(*mPendingChanges.at(i));
     }
@@ -530,10 +530,10 @@ void DefaultItemAnimator::endAnimations() {
         return;
     }
 
-    int listCount = mMovesList.size();
+    int listCount = (int)mMovesList.size();
     for (int i = listCount - 1; i >= 0; i--) {
         std::vector<MoveInfo*>* moves = mMovesList.at(i);
-        count = moves->size();
+        count = (int)moves->size();
         for (int j = count - 1; j >= 0; j--) {
             MoveInfo* moveInfo = moves->at(j);
             RecyclerView::ViewHolder* item = moveInfo->holder;
@@ -548,10 +548,10 @@ void DefaultItemAnimator::endAnimations() {
             }
         }
     }
-    listCount = mAdditionsList.size();
+    listCount = (int)mAdditionsList.size();
     for (int i = listCount - 1; i >= 0; i--) {
         std::vector<RecyclerView::ViewHolder*>* additions = mAdditionsList.at(i);
-        count = additions->size();
+        count = (int)additions->size();
         for (int j = count - 1; j >= 0; j--) {
             RecyclerView::ViewHolder* item = additions->at(j);
             View* view = item->itemView;
@@ -564,10 +564,10 @@ void DefaultItemAnimator::endAnimations() {
             }
         }
     }
-    listCount = mChangesList.size();
+    listCount = (int)mChangesList.size();
     for (int i = listCount - 1; i >= 0; i--) {
         std::vector<ChangeInfo*>* changes = mChangesList.at(i);
-        count = changes->size();
+        count = (int)changes->size();
         for (int j = count - 1; j >= 0; j--) {
             endChangeAnimationIfNecessary(*changes->at(j));
             if (changes->empty()) {
@@ -586,7 +586,7 @@ void DefaultItemAnimator::endAnimations() {
 }
 
 void DefaultItemAnimator::cancelAll(std::vector<RecyclerView::ViewHolder*>& viewHolders) {
-    for (int i = viewHolders.size() - 1; i >= 0; i--) {
+    for (int i = int(viewHolders.size() - 1); i >= 0; i--) {
         viewHolders.at(i)->itemView->animate().cancel();
     }
 }

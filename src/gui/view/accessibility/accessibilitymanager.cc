@@ -1,5 +1,6 @@
 #include <core/looper.h>
 #include <core/systemclock.h>
+#include <porting/cdlog.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/accessibility/accessibilityevent.h>
 namespace cdroid{

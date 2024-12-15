@@ -91,7 +91,7 @@ public:
 };
 
 Animator* AnimatorInflater::createAnimatorFromXml(Context*ctx,const std::string&resid){
-    int len;
+    std::streamsize len;
     char buf[128];
     XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
     AnimatorParseData pd;
@@ -103,7 +103,7 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*ctx,const std::string&
     XML_SetElementHandler(parser, AnimatorParser::startElement, AnimatorParser::__endElement);
     do {
         stream->read(buf,sizeof(buf));
-        len=stream->gcount();
+        len = stream->gcount();
         if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
             const char*es=XML_ErrorString(XML_GetErrorCode(parser));
             LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));

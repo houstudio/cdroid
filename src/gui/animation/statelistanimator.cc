@@ -1,4 +1,5 @@
 #include <animation/statelistanimator.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 
 StateListAnimator::StateListAnimator(){
