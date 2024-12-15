@@ -181,6 +181,32 @@ public:
     }
 };
 
+class PIVOT_X:public Property{
+public:
+    PIVOT_X():Property("pivotX"){}
+    void set(void* object,const AnimateValue& value)override{
+        LOGV("pivotX %p->%.3f",object,GET_VARIANT(value,float));
+        ((View*)object)->setPivotX(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void* object) {
+        return ((View*)object)->getPivotX();
+    }
+};
+
+class PIVOT_Y:public Property{
+public:
+    PIVOT_Y():Property("pivotY"){}
+    void set(void* object,const AnimateValue& value)override{
+        LOGV("pivotX %p->%.3f",object,GET_VARIANT(value,float));
+        ((View*)object)->setPivotY(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void* object) {
+        return ((View*)object)->getPivotY();
+    }
+};
+
 class ROTATION:public Property{
 public:
     ROTATION():Property("rotation"){}
@@ -280,11 +306,12 @@ public:
 };
 
 static std::map<const std::string,Property*>props={
-    {"left",new LEFT()},
-    {"top",new TOP()},
-    {"right",new RIGHT()},
-    {"bottom",new BOTTOM()},
     {"alpha",new ALPHA()},
+    {"bottom",new BOTTOM()},
+    {"left",new LEFT()},
+    {"pivotX",new PIVOT_X()},
+    {"pivotY",new PIVOT_Y()},
+    {"right",new RIGHT()},
     {"rotation" ,new ROTATION()},
     {"rotationX",new ROTATION_X()},
     {"rotationY",new ROTATION_Y()},
@@ -292,6 +319,7 @@ static std::map<const std::string,Property*>props={
     {"scaleY",new SCALE_Y()},
     {"scrollX",new SCROLL_X()},
     {"scrollY",new SCROLL_Y()},
+    {"top",new TOP()},
     {"translationX",new TRANSLATION_X()},
     {"translationY",new TRANSLATION_Y()},
     {"translationZ",new TRANSLATION_Z()},

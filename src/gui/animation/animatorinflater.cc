@@ -105,7 +105,7 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*ctx,const std::string&
         stream->read(buf,sizeof(buf));
         len = stream->gcount();
         if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
-            const char*es=XML_ErrorString(XML_GetErrorCode(parser));
+            const char*es = XML_ErrorString(XML_GetErrorCode(parser));
             LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
             XML_ParserFree(parser);
             return nullptr;
@@ -146,23 +146,31 @@ bool AnimatorInflater::isColorType(int type) {
 
 int AnimatorInflater::valueTypeFromPropertyName(const std::string& name){
     static const std::map<const std::string,int>valueTypes = {
-       {"x",(int)TypedValue::TYPE_DIMENSION},
-       {"y",(int)TypedValue::TYPE_DIMENSION},
-       {"z",(int)TypedValue::TYPE_DIMENSION},
-       {"scale" ,(int)TypedValue::TYPE_FLOAT},
-       {"scaleX",(int)TypedValue::TYPE_FLOAT},
-       {"scaleY",(int)TypedValue::TYPE_FLOAT},
-       {"scaleZ",(int)TypedValue::TYPE_FLOAT},
+       {"alpha",(int)TypedValue::TYPE_FLOAT},
+       {"bottom",(int)TypedValue::TYPE_DIMENSION},
+       {"left",(int)TypedValue::TYPE_DIMENSION},
+       {"pivotX",(int)TypedValue::TYPE_FLOAT},
+       {"pivotY",(int)TypedValue::TYPE_FLOAT},
+       {"right",(int)TypedValue::TYPE_DIMENSION},
        {"rotation",(int)TypedValue::TYPE_FLOAT},
        {"rotationX",(int)TypedValue::TYPE_FLOAT},
        {"rotationY",(int)TypedValue::TYPE_FLOAT},
        {"rotationZ",(int)TypedValue::TYPE_FLOAT},
+       {"scale" ,(int)TypedValue::TYPE_FLOAT},
+       {"scaleX",(int)TypedValue::TYPE_FLOAT},
+       {"scaleY",(int)TypedValue::TYPE_FLOAT},
+       {"scaleZ",(int)TypedValue::TYPE_FLOAT},
+       {"scrollX",(int)TypedValue::TYPE_DIMENSION},
+       {"scrollY",(int)TypedValue::TYPE_DIMENSION},
        {"translationX",(int)TypedValue::TYPE_DIMENSION},
        {"translationY",(int)TypedValue::TYPE_DIMENSION},
-       {"translationX",(int)TypedValue::TYPE_DIMENSION}
+       {"translationX",(int)TypedValue::TYPE_DIMENSION},
+       {"x",(int)TypedValue::TYPE_DIMENSION},
+       {"y",(int)TypedValue::TYPE_DIMENSION},
+       {"z",(int)TypedValue::TYPE_DIMENSION},
     };
     auto it = valueTypes.find(name);
-    if(it!=valueTypes.end())return it->second;
+    if(it != valueTypes.end()) return it->second;
     return TypedValue::TYPE_NULL;
 }
 

@@ -634,8 +634,9 @@ static void endElement(void *userData, const XML_Char *name) {
 
 Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string& resname,const std::string&package) {
     ParseData pd;
-    int rdlen;
     char buf[256];
+    std::streamsize rdlen;
+
     XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
 
     //std::string basePath = resname.substr(0,resname.find_last_of("/"));
@@ -652,9 +653,9 @@ Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string&
     LOGE_IF((stream.good()==false)&&isResURL,"%s open failed",resname.c_str());
     do {
         stream.read(buf,sizeof(buf));
-        rdlen = (int)stream.gcount();
+        rdlen = stream.gcount();
         if (XML_Parse(parser, buf,rdlen,!rdlen) == XML_STATUS_ERROR) {
-            const char*es=XML_ErrorString(XML_GetErrorCode(parser));
+            const char*es = XML_ErrorString(XML_GetErrorCode(parser));
             LOGE_IF(isResURL,"%s at %s:line %ld",es, resname.c_str(),XML_GetCurrentLineNumber(parser));
             XML_ParserFree(parser);
             return nullptr;
