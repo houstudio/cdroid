@@ -109,6 +109,7 @@ void AccessibilityManager::sendAccessibilityEvent(AccessibilityEvent& event) {
     }
     LOGI_IF(Debug,"send dispatchedEvent %p",dispatchedEvent);
 #endif
+    setStateLocked(0xFFFFFFFF);
     LOGD("%s",event.toString().c_str());
     if (&event != dispatchedEvent) {
         event.recycle();
@@ -307,6 +308,7 @@ bool AccessibilityManager::sendFingerprintGesture(int keyCode) {
     }
     return service.sendFingerprintGesture(keyCode);
 }
+#endif
 
 void AccessibilityManager::setStateLocked(int stateFlags) {
     const bool enabled = (stateFlags & STATE_FLAG_ACCESSIBILITY_ENABLED) != 0;
@@ -322,19 +324,20 @@ void AccessibilityManager::setStateLocked(int stateFlags) {
     mIsTouchExplorationEnabled = touchExplorationEnabled;
     mIsHighTextContrastEnabled = highTextContrastEnabled;
 
-    if (wasEnabled != isEnabled()) {
+    if (wasEnabled != isEnabled()||1) {
         notifyAccessibilityStateChanged();
     }
 
-    if (wasTouchExplorationEnabled != touchExplorationEnabled) {
+    if (wasTouchExplorationEnabled != touchExplorationEnabled||1) {
         notifyTouchExplorationStateChanged();
     }
 
-    if (wasHighTextContrastEnabled != highTextContrastEnabled) {
+    if (wasHighTextContrastEnabled != highTextContrastEnabled||1) {
         notifyHighTextContrastStateChanged();
     }
 }
 
+#if 0
 AccessibilityServiceInfo AccessibilityManager::getInstalledServiceInfoWithComponentName(const std::string& componentName) {
     List<AccessibilityServiceInfo> installedServiceInfos =
             getInstalledAccessibilityServiceList();
@@ -434,67 +437,47 @@ void AccessibilityManager::tryConnectToServiceLocked(IAccessibilityManager servi
     mRelevantEventTypes = IntPair.second(userStateAndRelevantEvents);
     mService = service;
 }
+#endif
 
 void AccessibilityManager::notifyAccessibilityStateChanged() {
     bool isEnabled;
-    ArrayMap<AccessibilityStateChangeListener, Handler> listeners;
-    synchronized (mLock) {
-        if (mAccessibilityStateChangeListeners.isEmpty()) {
-            return;
-        }
-        isEnabled = isEnabled();
-        listeners = new ArrayMap<>(mAccessibilityStateChangeListeners);
-    }
+    std::vector<AccessibilityStateChangeListener>& listeners = mAccessibilityStateChangeListeners;
 
     const int numListeners = listeners.size();
+    LOGD("numListeners=%d",numListeners);
     for (int i = 0; i < numListeners; i++) {
-        AccessibilityStateChangeListener listener = listeners.keyAt(i);
-        listeners.valueAt(i).post(() ->
-                listener.onAccessibilityStateChanged(isEnabled));
+        AccessibilityStateChangeListener listener = listeners.at(i);
+        listener(isEnabled);
     }
 }
 
 void AccessibilityManager::notifyTouchExplorationStateChanged() {
-    const bool isTouchExplorationEnabled;
-    ArrayMap<TouchExplorationStateChangeListener, Handler> listeners;
-    synchronized (mLock) {
-        if (mTouchExplorationStateChangeListeners.isEmpty()) {
-            return;
-        }
-        isTouchExplorationEnabled = mIsTouchExplorationEnabled;
-        listeners = new ArrayMap<>(mTouchExplorationStateChangeListeners);
-    }
+    bool isTouchExplorationEnabled;
+    std::vector<TouchExplorationStateChangeListener>& listeners =mTouchExplorationStateChangeListeners;
+    isTouchExplorationEnabled = mIsTouchExplorationEnabled;
 
     const int numListeners = listeners.size();
     for (int i = 0; i < numListeners; i++) {
-        TouchExplorationStateChangeListener listener = listeners.keyAt(i);
-        listeners.valueAt(i).post(() ->
-                listener.onTouchExplorationStateChanged(isTouchExplorationEnabled));
+        TouchExplorationStateChangeListener listener = listeners.at(i);
+        listener(isTouchExplorationEnabled);
     }
 }
 
 void AccessibilityManager::notifyHighTextContrastStateChanged() {
     bool isHighTextContrastEnabled;
-    ArrayMap<HighTextContrastChangeListener, Handler> listeners;
-    synchronized (mLock) {
-        if (mHighTextContrastStateChangeListeners.isEmpty()) {
-            return;
-        }
-        isHighTextContrastEnabled = mIsHighTextContrastEnabled;
-        listeners = new ArrayMap<>(mHighTextContrastStateChangeListeners);
-    }
+    std::vector<HighTextContrastChangeListener>& listeners =mHighTextContrastStateChangeListeners;
+    isHighTextContrastEnabled = mIsHighTextContrastEnabled;
 
     const int numListeners = listeners.size();
     for (int i = 0; i < numListeners; i++) {
-        HighTextContrastChangeListener listener = listeners.keyAt(i);
-        listeners.valueAt(i).post(() ->
-                listener.onHighTextContrastStateChanged(isHighTextContrastEnabled));
+        HighTextContrastChangeListener listener = listeners.at(i);
+        listener(isHighTextContrastEnabled);
     }
 }
 
 bool AccessibilityManager::isAccessibilityButtonSupported() {
-    final Resources res = Resources.getSystem();
-    return res.getBoolean(com.android.internal.R.bool.config_showNavigationBar);
+    //final Resources res = Resources.getSystem();
+    return true;//res.getBoolean(com.android.internal.R.bool.config_showNavigationBar);
 }
-#endif
+
 }
