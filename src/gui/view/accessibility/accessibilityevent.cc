@@ -1,6 +1,8 @@
 #include <view/accessibility/accessibilityevent.h>
 #include <core/mathutils.h>
 #include <functional>
+#include <sstream>
+
 namespace cdroid{
 
 Pools::SimplePool<AccessibilityEvent> AccessibilityEvent::sPool(MAX_POOL_SIZE);

@@ -1,5 +1,7 @@
 #include <animation/animator.h>
 #include <algorithm>
+#include <stdexcept>
+
 namespace cdroid{
 Animator::~Animator(){
 }
