@@ -13,14 +13,13 @@ namespace cdroid{
 
 StaggeredGridLayoutManager::StaggeredGridLayoutManager(Context* context,const AttributeSet& attrs)
 	:LayoutManager(){//, int defStyleAttr,int defStyleRes) {
-    Properties* properties = getProperties(context, attrs,0,0);//, defStyleAttr, defStyleRes);
+    Properties properties = getProperties(context, attrs,0,0);//, defStyleAttr, defStyleRes);
     initLayoutManager();
-    setOrientation(properties->orientation);
+    setOrientation(properties.orientation);
 
-    setSpanCount(properties->spanCount);
-    setReverseLayout(properties->reverseLayout);
+    setSpanCount(properties.spanCount);
+    setReverseLayout(properties.reverseLayout);
     createOrientationHelpers();
-    delete properties;
 }
 
 StaggeredGridLayoutManager::StaggeredGridLayoutManager(int spanCount, int orientation) {

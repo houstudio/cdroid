@@ -16,8 +16,11 @@ LinearLayoutManager::LinearLayoutManager(Context* context,int orientation,bool r
     mLastStackFromEnd = false;
     mStackFromEnd = false;
     mShouldReverseLayout = false;
+    mSmoothScrollbarEnabled  = true;
     mRecycleChildrenOnDetach = true;
     mInitialPrefetchItemCount = 2;
+    mPendingScrollPosition = RecyclerView::NO_POSITION;
+    mPendingScrollPositionOffset = INVALID_OFFSET;
     mAnchorInfo = new AnchorInfo();
     mLayoutChunkResult = new LayoutChunkResult();
     setOrientation(orientation);
@@ -26,11 +29,10 @@ LinearLayoutManager::LinearLayoutManager(Context* context,int orientation,bool r
 
 LinearLayoutManager::LinearLayoutManager(Context* context, const AttributeSet& attrs)
      :LinearLayoutManager(context){
-    Properties* properties = getProperties(context, attrs,0,0);//, defStyleAttr, defStyleRes);
-    setOrientation(properties->orientation);
-    setReverseLayout(properties->reverseLayout);
-    setStackFromEnd(properties->stackFromEnd);
-    delete properties;
+    Properties properties = getProperties(context, attrs,0,0);//, defStyleAttr, defStyleRes);
+    setOrientation(properties.orientation);
+    setReverseLayout(properties.reverseLayout);
+    setStackFromEnd(properties.stackFromEnd);
 }
 
 LinearLayoutManager::~LinearLayoutManager(){
@@ -1511,7 +1513,7 @@ bool LinearLayoutManager::supportsPredictiveItemAnimations() {
  */
 // This method is only intended to be called (and should only ever be called) by
 // ItemTouchHelper.
-void LinearLayoutManager::prepareForDrop(View* view,View* target, int x, int y) {
+bool LinearLayoutManager::prepareForDrop(View* view,View* target, int x, int y) {
     assertNotInLayoutOrScroll("Cannot drop a view during a scroll or layout calculation");
     ensureLayoutState();
     resolveShouldLayoutReverse();
@@ -1539,6 +1541,7 @@ void LinearLayoutManager::prepareForDrop(View* view,View* target, int x, int y) 
                             - mOrientationHelper->getDecoratedMeasurement(view));
         }
     }
+    return true;
 }
 
 

@@ -772,6 +772,7 @@ public:
     virtual int computeVerticalScrollOffset(State& state);
     virtual int computeVerticalScrollRange(State& state);
     virtual void onMeasure(Recycler& recycler, State& state, int widthSpec,int heightSpec);
+    virtual bool prepareForDrop(View* view,View* target, int x, int y);
     void setMeasuredDimension(int widthSize, int heightSize);
     int getMinimumWidth();
     int getMinimumHeight();
@@ -790,8 +791,7 @@ public:
     bool isLayoutHierarchical(Recycler& recycler,State& state);
     virtual bool performAccessibilityAction(Recycler& recycler, State& state,int action, Bundle args);
     virtual bool performAccessibilityActionForItem(Recycler& recycler,State& state, View* view, int action, Bundle args);
-    static Properties* getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes);
-
+    static Properties getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes);
 };
 
 class RecyclerView::LayoutParams:public ViewGroup::MarginLayoutParams{

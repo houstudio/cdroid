@@ -80,7 +80,7 @@ protected:
     int mPendingScrollPosition = RecyclerView::NO_POSITION;
     int mPendingScrollPositionOffset = INVALID_OFFSET;
     SavedState* mPendingSavedState;
-    AnchorInfo* mAnchorInfo;// = new AnchorInfo();
+    AnchorInfo* mAnchorInfo;;
     bool isLayoutRTL();
     void ensureLayoutState();
     LayoutState* createLayoutState();
@@ -158,7 +158,7 @@ public:
     View* onFocusSearchFailed(View* focused, int focusDirection,
             RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     bool supportsPredictiveItemAnimations()override;
-    void prepareForDrop(View* view,View* target, int x, int y);
+    bool prepareForDrop(View* view,View* target, int x, int y)override;
 };
 
 class LinearLayoutManager::LayoutState {

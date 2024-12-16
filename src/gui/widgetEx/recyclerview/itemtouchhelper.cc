@@ -1093,12 +1093,10 @@ int ItemTouchHelper::Callback::getMaxDragScroll(RecyclerView& recyclerView) {
 
 void ItemTouchHelper::Callback::onMoved(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder, int fromPos,
 	RecyclerView::ViewHolder& target, int toPos, int x, int y) {
-     RecyclerView::LayoutManager* layoutManager = recyclerView.getLayoutManager();
-    /*if (layoutManager instanceof ViewDropHandler) {
-        ((ViewDropHandler) layoutManager).prepareForDrop(viewHolder.itemView,
-                target.itemView, x, y);
+    RecyclerView::LayoutManager* layoutManager = recyclerView.getLayoutManager();
+    if(layoutManager->prepareForDrop(viewHolder.itemView, target.itemView, x, y)){
         return;
-    }*/
+    }
 
     // if layout manager cannot handle it, do some guesswork
     if (layoutManager->canScrollHorizontally()) {
