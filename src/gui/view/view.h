@@ -698,6 +698,7 @@ protected:
     virtual void internalSetPadding(int left, int top, int right, int bottom);
     void assignParent(ViewGroup*p);
     bool debugDraw()const;
+    void setBackgroundBounds();
     int dipsToPixels(int dips)const;
     void computeOpaqueFlags();
     bool hasOpaqueScrollbars()const;

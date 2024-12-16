@@ -15,7 +15,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301, USA.
  */
-#include <widget/R.h>
+#include <string.h>
+#include <algorithm>
+#include <cfloat>
+#include <cmath>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <view/viewoverlay.h>
@@ -23,19 +26,16 @@
 #include <view/handleractionqueue.h>
 #include <view/accessibility/accessibilitywindowinfo.h>
 #include <view/accessibility/accessibilitymanager.h>
+#include <view/focusfinder.h>
+#include <widget/R.h>
 #include <widget/edgeeffect.h>
 #include <animation/animationutils.h>
 #include <core/systemclock.h>
 #include <core/textutils.h>
+#include <core/inputmethodmanager.h>
+#include <core/app.h>
+#include <core/color.h>
 #include <porting/cdlog.h>
-#include <string.h>
-#include <algorithm>
-#include <cfloat>
-#include <focusfinder.h>
-#include <inputmethodmanager.h>
-#include <app.h>
-#include <color.h>
-
 #define UNDEFINED_PADDING INT_MIN
 using namespace Cairo;
 namespace cdroid{
@@ -352,6 +352,8 @@ void View::initView(){
     mViewCount ++;
     LOGV_IF(View::VIEW_DEBUG,"mViewCount=%d",mViewCount);
     mID = mLabelForId = NO_ID;
+    mLongClickX = NAN;
+    mLongClickY = NAN;
     mAutofillViewId = NO_ID;
     mAccessibilityViewId = NO_ID;
     mDrawingCacheBackgroundColor = 0;
@@ -408,8 +410,8 @@ void View::initView(){
                  (TEXT_DIRECTION_DEFAULT << PFLAG2_TEXT_DIRECTION_MASK_SHIFT) |
                  (PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT) |
                  (TEXT_ALIGNMENT_DEFAULT << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT) |
-                 (PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT);
-                 //(IMPORTANT_FOR_ACCESSIBILITY_DEFAULT << PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT);
+                 (PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT)|
+                 (IMPORTANT_FOR_ACCESSIBILITY_DEFAULT << PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT);
     mScrollCache  = nullptr;
     mRoundScrollbarRenderer=nullptr;
     mTop = mLeft = mRight = mBottom = 0;
@@ -2791,8 +2793,8 @@ void View::setClipBounds(const Rect*clipBounds){
 
 bool View::getClipBounds(Rect&outRect){
     if(!mClipBounds.empty()){
-	outRect=mClipBounds;
-	return true;
+        outRect=mClipBounds;
+        return true;
     }
     return false;
 }
@@ -2804,8 +2806,7 @@ void View::dispatchDraw(Canvas&){
 void View::drawBackground(Canvas&canvas){
     if(mBackground==nullptr)
         return ;
-    mBackground->setBounds(0, 0,getWidth(),getHeight());
-    mBackgroundSizeChanged =false;
+    setBackgroundBounds();
     if(mScrollX||mScrollY){
         canvas.translate(mScrollX,mScrollY);
         mBackground->draw(canvas);
@@ -2815,10 +2816,18 @@ void View::drawBackground(Canvas&canvas){
     }
 }
 
+void View::setBackgroundBounds() {
+    if (mBackgroundSizeChanged && mBackground) {
+        mBackground->setBounds(0, 0, mRight - mLeft, mBottom - mTop);
+        mBackgroundSizeChanged = false;
+        //rebuildOutline();
+    }
+}
+
 void View::onDrawForeground(Canvas& canvas){
     onDrawScrollIndicators(canvas);
     onDrawScrollBars(canvas);
-    Drawable*foreground=mForegroundInfo != nullptr ? mForegroundInfo->mDrawable : nullptr;
+    Drawable*foreground = mForegroundInfo ? mForegroundInfo->mDrawable : nullptr;
     if(foreground){
         if (mForegroundInfo->mBoundsChanged) {
             mForegroundInfo->mBoundsChanged = false;
@@ -2832,7 +2841,7 @@ void View::onDrawForeground(Canvas& canvas){
                     getWidth() - getPaddingRight(), getHeight() - getPaddingBottom());
             }
 
-            int ld = getLayoutDirection();
+            const int ld = getLayoutDirection();
             Gravity::apply(mForegroundInfo->mGravity, foreground->getIntrinsicWidth(),
                     foreground->getIntrinsicHeight(), selfBounds, overlayBounds, ld);
             foreground->setBounds(overlayBounds);
@@ -2853,14 +2862,14 @@ bool View::applyLegacyAnimation(ViewGroup* parent, int64_t drawingTime, Animatio
     }
 
     Transformation* t = parent->getChildTransformation();
-    bool more = a->getTransformation(drawingTime, *t, 1.f);
+    const bool more = a->getTransformation(drawingTime, *t, 1.f);
     if (scalingRequired && mAttachInfo->mApplicationScale != 1.f) {
         if (parent->mInvalidationTransformation == nullptr) {
             parent->mInvalidationTransformation = new Transformation();
         }
         invalidationTransform = parent->mInvalidationTransformation;
         a->getTransformation(drawingTime, *invalidationTransform, 1.f);
-        const Matrix&m=invalidationTransform->getMatrix();
+        const Matrix&m = invalidationTransform->getMatrix();
         LOGV("matrix=%f,%f,%f,%f,%f,%f",m.xx,m.yy,m.xy,m.yx,m.x0,m.y0);
     } else {
         invalidationTransform = t;
@@ -2887,8 +2896,8 @@ bool View::applyLegacyAnimation(ViewGroup* parent, int64_t drawingTime, Animatio
             // The child need to draw an animation, potentially offscreen, so
             // make sure we do not cancel invalidate requests
             parent->mPrivateFlags |= PFLAG_DRAW_ANIMATION;
-            int left = mLeft + (int) region.left;
-            int top = mTop + (int) region.top;
+            const int left = mLeft + (int) region.left;
+            const int top = mTop + (int) region.top;
             parent->invalidate(left, top, region.width+1,region.height+1);
        }
     }
@@ -3188,8 +3197,8 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
     }
 
     float alpha = drawingWithRenderNode ? 1 : (getAlpha() * getTransitionAlpha());//getAlpha()
-    if (transformToApply != nullptr || alpha < 1 || !hasIdentityMatrix()
-            || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA) != 0) {
+    if ((transformToApply != nullptr) || (alpha < 1.f) || !hasIdentityMatrix()
+            || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA)) {
         if (transformToApply != nullptr || !childHasIdentityMatrix) {
             int transX = 0 , transY = 0;
 
@@ -3212,7 +3221,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
                     parent->mGroupFlags |= ViewGroup::FLAG_CLEAR_TRANSFORMATION;
                 }
 
-                float transformAlpha = transformToApply->getAlpha();
+                const float transformAlpha = transformToApply->getAlpha();
                 if (transformAlpha < 1) {
                     alpha *= transformAlpha;
                     parent->mGroupFlags |= ViewGroup::FLAG_CLEAR_TRANSFORMATION;
@@ -3226,7 +3235,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
         }
 
         // Deal with alpha if it is or used to be <1
-        if (alpha < 1.f || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA) != 0) {
+        if ((alpha < 1.f) || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA)) {
             if (alpha < 1) {
                 mPrivateFlags3 |= PFLAG3_VIEW_IS_ANIMATING_ALPHA;
             } else {
@@ -3234,7 +3243,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
             }
             parent->mGroupFlags |= ViewGroup::FLAG_CLEAR_TRANSFORMATION;
             if (!drawingWithDrawingCache) {
-                int multipliedAlpha = (int) (255 * alpha);
+                int multipliedAlpha = int(255 * alpha);
                 if (!onSetAlpha(multipliedAlpha)) {
                     /*if (drawingWithRenderNode) {
                         renderNode.setAlpha(alpha * getAlpha() * getTransitionAlpha());
@@ -6314,8 +6323,8 @@ void View::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
             std::vector<View*> focusablesTempList;
             getRootView()->addFocusables(focusablesTempList, View::FOCUS_FORWARD, FOCUSABLES_ALL);
             event.setItemCount(focusablesTempList.size());
-            auto it=std::find(focusablesTempList.begin(),focusablesTempList.end(),this);
-            event.setCurrentItemIndex(it-focusablesTempList.begin());
+            auto it = std::find(focusablesTempList.begin(),focusablesTempList.end(),this);
+            event.setCurrentItemIndex(it - focusablesTempList.begin());
             if (mAttachInfo != nullptr) {
                 focusablesTempList.clear();
             }
@@ -7916,8 +7925,8 @@ bool View::performLongClick(float x,float y){
     mLongClickX = x;
     mLongClickY = y;
     const bool handled = performLongClick();
-    mLongClickX = INT_MIN;
-    mLongClickY = INT_MIN;
+    mLongClickX = NAN;
+    mLongClickY = NAN;
     return handled;
 }
 
