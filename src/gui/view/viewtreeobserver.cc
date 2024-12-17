@@ -52,7 +52,9 @@ void ViewTreeObserver::InternalInsetsInfo::set(const ViewTreeObserver::InternalI
 
 ViewTreeObserver::ViewTreeObserver(Context* context) {
     sIllegalOnDrawModificationIsFatal = true;
-    mAlive = false;
+    mAlive = true;
+    mWindowShown =false;
+    mInDispatchOnDraw =false;
     //context.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.O;
 }
 

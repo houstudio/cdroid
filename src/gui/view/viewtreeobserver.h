@@ -61,7 +61,7 @@ private:
     bool mInDispatchOnDraw;
     static bool sIllegalOnDrawModificationIsFatal;
     bool mWindowShown;
-    bool mAlive = true;
+    bool mAlive;
 public:
     ViewTreeObserver(cdroid::Context* context);
     void merge(ViewTreeObserver& observer);
