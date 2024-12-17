@@ -517,7 +517,7 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
         ColorStateList* cls = new ColorStateList(itc->second);
         mStateColors.insert(std::pair<const std::string,ColorStateList*>(name,cls));
         return cls;
-    }else if( (itc == mColors.end()) && (name.empty()==false) ) {
+    }else if( name.size()&&(fullresid.find("attr")==std::string::npos) ) {
         const size_t slashpos = fullresid.find("/");
         try{
             ColorStateList* cls=ColorStateList::inflate(this,fullresid);

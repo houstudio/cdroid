@@ -476,9 +476,8 @@ RefPtr<Canvas>Window::getCanvas(){
         canvas = make_refptr_for_instance<Canvas>(new Canvas(canvasWidth,canvasHeight));
         mAttachInfo->mCanvas = canvas;
         Cairo::Matrix matrix = Cairo::identity_matrix();
-        LOGV("rotation=%d window.size=%dx%d canvas.size=%dx%d antialias=%d,%d,%d,%d,%d,%d,%d",rotation*90,getWidth(),getHeight(),
-             canvasWidth,canvasHeight,canvas->get_antialias(),CAIRO_ANTIALIAS_NONE,CAIRO_ANTIALIAS_GRAY,CAIRO_ANTIALIAS_SUBPIXEL,
-             CAIRO_ANTIALIAS_FAST,CAIRO_ANTIALIAS_GOOD,CAIRO_ANTIALIAS_BEST);
+        LOGV("rotation=%d window.size=%dx%d canvas.size=%dx%d antialias=%",rotation*90,getWidth(),getHeight(),
+             canvasWidth,canvasHeight,canvas->get_antialias());
         //canvas->set_antialias(Cairo::ANTIALIAS_NONE);
         switch(rotation){
         case Display::ROTATION_0:break;
