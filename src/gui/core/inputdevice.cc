@@ -54,8 +54,8 @@ static bool containsNonZeroByte(const uint8_t* array, uint32_t startIndex, uint3
     return false;
 }
 
-#define TEST_BIT(bit, array)    ((array)[(bit)/8] & (1<<((bit)%8)))
-#define SIZEOF_BITS(bits)  (((bits) + 7) / 8)
+#define TEST_BIT(bit, array) ((array)[(bit)/8] & (1<<((bit)%8)))
+#define SIZEOF_BITS(bits) (((bits) + 7) / 8)
 
 Preferences InputDevice::mPrefs;
 
@@ -667,7 +667,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
     #define TRACKING_FLAG ((1<<(ABS_MT_TRACKING_ID-ABS_MT_SLOT))|(1<<(ABS_MT_SLOT-ABS_MT_SLOT)))
         if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && ((HASMTFLAG(ABS_MT_POSITION_X)||HASMTFLAG(ABS_MT_POSITION_Y))&&(HASTRACKORSLOT==0)) ){
             mCorrectedDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
-            LOGV("mCurrBits=%x last=%x mAxisFlags=%x/%x pos=%.f,%.f code=%d",mCurrBits.value,mLastBits.value,mAxisFlags,TRACKING_FLAG,mCoord.getX(),mCoord.getY(),code);
+            LOGI("mCurrBits=%x last=%x mAxisFlags=%x/%x pos=%.f,%.f code=%d",mCurrBits.value,mLastBits.value,mAxisFlags,TRACKING_FLAG,mCoord.getX(),mCoord.getY(),code);
             if((mAxisFlags&0x80000000)==0) {mCurrBits.markBit(0); mLastBits.markBit(0);mTrack2Slot.clear();}
             if( mAxisFlags&TRACKING_FLAG ) mCurrBits.clear();
             mTrack2Slot.put(0,0); mProp.id = 0;

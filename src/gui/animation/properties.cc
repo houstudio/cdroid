@@ -24,13 +24,13 @@ public:
     LEFT():Property("left"){}
 
     AnimateValue get(void* object)override{
-        LOGD("left %p,%d",object,((View*)object)->getLeft());
+        LOGV("left %p,%d",object,((View*)object)->getLeft());
         AnimateValue v =((View*)object)->getLeft();
         return v;
     }
 
     void set(void* object,const AnimateValue& value)override{
-        LOGD("left %p->%d",object,GET_VARIANT(value,int));
+        LOGV("left %p->%d",object,GET_VARIANT(value,int));
         ((View*)object)->setLeft(GET_VARIANT(value,int));
     }
 };
@@ -40,13 +40,13 @@ public:
     TOP():Property("top"){}
 
     AnimateValue get(void* object)override{
-        LOGD("top %p,%d",object,((View*)object)->getTop());
+        LOGV("top %p,%d",object,((View*)object)->getTop());
         AnimateValue v =((View*)object)->getTop();
         return v;
     }
 
     void set(void* object,const AnimateValue& value)override{
-        LOGD("top %p->%d",object,GET_VARIANT(value,int));
+        LOGV("top %p->%d",object,GET_VARIANT(value,int));
         ((View*)object)->setTop(GET_VARIANT(value,int));
     }
 };
@@ -56,13 +56,13 @@ public:
     RIGHT():Property("right"){}
 
     AnimateValue get(void* object)override{
-        LOGD("right %p,%d",object,((View*)object)->getRight());
+        LOGV("right %p,%d",object,((View*)object)->getRight());
         AnimateValue v =((View*)object)->getLeft();
         return v;
     }
 
     void set(void* object,const AnimateValue& value)override{
-        LOGD("right %p->%d",object,GET_VARIANT(value,int));
+        LOGV("right %p->%d",object,GET_VARIANT(value,int));
         ((View*)object)->setRight(GET_VARIANT(value,int));
     }
 };
@@ -72,13 +72,13 @@ public:
     BOTTOM():Property("bottom"){}
 
     AnimateValue get(void* object)override{
-        LOGD("bottom %p,%d",object,((View*)object)->getBottom());
+        LOGV("bottom %p,%d",object,((View*)object)->getBottom());
         AnimateValue v =((View*)object)->getBottom();
         return v;
     }
 
     void set(void* object,const AnimateValue& value)override{
-        LOGD("bottom %p->%d",object,GET_VARIANT(value,int));
+        LOGV("bottom %p->%d",object,GET_VARIANT(value,int));
         ((View*)object)->setBottom(GET_VARIANT(value,int));
     }
 };

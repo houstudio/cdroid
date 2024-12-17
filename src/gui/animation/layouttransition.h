@@ -118,11 +118,11 @@ public:
     long getDuration(int transitionType);
     void enableTransitionType(int transitionType);
     void disableTransitionType(int transitionType);
-    bool isTransitionTypeEnabled(int transitionType);
+    bool isTransitionTypeEnabled(int transitionType)const;
     void setStartDelay(int transitionType, long delay);
-    long getStartDelay(int transitionType);
+    long getStartDelay(int transitionType)const;
     void setStagger(int transitionType, long duration);
-    long getStagger(int transitionType);
+    long getStagger(int transitionType)const;
     void setAnimateParentHierarchy(bool animateParentHierarchy);
 
     void setInterpolator(int transitionType, TimeInterpolator* interpolator);
@@ -132,8 +132,8 @@ public:
     Animator* getAnimator(int transitionType);
     void startChangingAnimations();
     void endChangingAnimations();
-    bool isChangingLayout();
-    bool isRunning();
+    bool isChangingLayout()const;
+    bool isRunning()const;
     void cancel();
     void cancel(int transitionType);
     void addChild(ViewGroup* parent, View* child);
