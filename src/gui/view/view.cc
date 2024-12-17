@@ -2436,8 +2436,10 @@ void View::onDrawScrollIndicators(Canvas& canvas){
         return;// No scroll indicators enabled.
 
     Drawable* dr = mScrollIndicatorDrawable;
-    if (dr == nullptr)
+    if ((dr == nullptr)||(mAttachInfo==nullptr)){
         return;//Scroll indicators aren't supported here.
+    }
+
 
     Rect rect ;
     const int h = dr->getIntrinsicHeight();
@@ -2523,8 +2525,10 @@ void View::onDrawScrollBars(Canvas& canvas){
         if (drawVerticalScrollBar) {
             Rect& bounds = mScrollCache->mScrollBarBounds;
             getVerticalScrollBarBounds(&bounds, nullptr);
+            const bool shouldDrawScrollbarAtLeft = (mVerticalScrollbarPosition == SCROLLBAR_POSITION_LEFT)
+                          || (mVerticalScrollbarPosition == SCROLLBAR_POSITION_DEFAULT && isLayoutRtl());
             mRoundScrollbarRenderer->drawRoundScrollbars(
-                canvas, (float)mScrollCache->scrollBar->getAlpha() / 255.f, bounds);
+                canvas, (float)mScrollCache->scrollBar->getAlpha() / 255.f, bounds,shouldDrawScrollbarAtLeft);
             if (bInvalidate) invalidate(true);
         }
         // Do not draw horizontal scroll bars for round wearable devices.
