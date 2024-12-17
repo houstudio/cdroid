@@ -714,8 +714,8 @@ bool ViewGroup::dispatchGenericFocusedEvent(MotionEvent&event){
     if ((mPrivateFlags & (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS))
             == (PFLAG_FOCUSED | PFLAG_HAS_BOUNDS)) {
         return View::dispatchGenericFocusedEvent(event);
-    } else if (mFocused && (mFocused->mPrivateFlags & PFLAG_HAS_BOUNDS)
-            == PFLAG_HAS_BOUNDS) {
+    } else if (mFocused && ((mFocused->mPrivateFlags & PFLAG_HAS_BOUNDS)
+            == PFLAG_HAS_BOUNDS)) {
         return mFocused->dispatchGenericMotionEvent(event);
     }
     return false;
@@ -1634,7 +1634,7 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
     const bool childHasFocus = child->hasFocus();
     if (childHasFocus) requestChildFocus(child, child->findFocus());
 
-    if (mAttachInfo  && (mGroupFlags & FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW) == 0) {
+    if (mAttachInfo  && ((mGroupFlags & FLAG_PREVENT_DISPATCH_ATTACHED_TO_WINDOW) == 0)) {
         bool lastKeepOn = mAttachInfo->mKeepScreenOn;
         mAttachInfo->mKeepScreenOn = false;
         child->dispatchAttachedToWindow(mAttachInfo, (mViewFlags&VISIBILITY_MASK));
@@ -1835,8 +1835,8 @@ void ViewGroup::removeAllViewsInLayout() {
         cancelTouchTarget(view);
         cancelHoverTarget(view);
 
-        if (view->getAnimation() ||std::find(mTransitioningViews.begin(),
-		        mTransitioningViews.end(),view)!=mTransitioningViews.end()) {
+        if (view->getAnimation() ||(std::find(mTransitioningViews.begin(),
+		        mTransitioningViews.end(),view)!=mTransitioningViews.end())) {
             addDisappearingView(view);
         } else if (detach) {
             view->dispatchDetachedFromWindow();
@@ -1929,7 +1929,7 @@ void ViewGroup::removeViewInternal(int index, View* view){
 void ViewGroup::removeViewsInternal(int start, int count){
     int end = start + count;
 
-    if (start < 0 || count < 0 || end > mChildren.size()) {
+    if ((start < 0) || (count < 0) || (end > mChildren.size())) {
         throw std::runtime_error("IndexOutOfBoundsException");
     }
 
@@ -1987,7 +1987,7 @@ View* ViewGroup::findViewByPredicateTraversal(std::function<bool(View*)>predicat
 
     for (auto v:mChildren) {
 
-        if (v != childToSkip && (v->mPrivateFlags & PFLAG_IS_ROOT_NAMESPACE) == 0) {
+        if ((v != childToSkip) && ((v->mPrivateFlags & PFLAG_IS_ROOT_NAMESPACE) == 0)) {
             v = v->findViewByPredicate(predicate);
 
             if (v != nullptr) {

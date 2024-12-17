@@ -608,6 +608,7 @@ private:
     void updatePflags3AndNotifyA11yIfChanged(int mask, bool newValue);
     bool dispatchGenericMotionEventInternal(MotionEvent& event);
     void populateAccessibilityNodeInfoDrawingOrderInParent(AccessibilityNodeInfo& info);
+    void notifySubtreeAccessibilityStateChangedByParentIfNeeded();
     static int numViewsForAccessibility(View* view);
     static float sanitizeFloatPropertyValue(float,const std::string&);
     static float sanitizeFloatPropertyValue(float,const std::string&,float,float);
@@ -1241,6 +1242,7 @@ public:
     // Enable & Visible
     virtual View& setVisibility(int visable);
     virtual int getVisibility() const;
+    bool isAggregatedVisible()const;
     int  getWindowVisibility()const;
     void getWindowVisibleDisplayFrame(Rect& outRect);
     void getWindowDisplayFrame(Rect& outRect);

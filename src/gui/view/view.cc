@@ -1608,6 +1608,8 @@ void View::onDetachedFromWindowInternal() {
     mCurrentAnimation = nullptr;
 
     if ((mViewFlags & TOOLTIP) == TOOLTIP) {
+        removeCallbacks(mTooltipInfo->mShowTooltipRunnable);
+        removeCallbacks(mTooltipInfo->mHideTooltipRunnable);
         hideTooltip();
     }
 }
@@ -1728,8 +1730,12 @@ void View::onWindowVisibilityChanged(int visibility) {
     }
 }
 
+bool View::isAggregatedVisible() const{
+    return (mPrivateFlags3 & PFLAG3_AGGREGATED_VISIBLE) != 0;
+}
+
 bool View::dispatchVisibilityAggregated(bool isVisible) {
-    bool thisVisible = getVisibility() == VISIBLE;
+    const bool thisVisible = (getVisibility() == VISIBLE);
     // If we're not visible but something is telling us we are, ignore it.
     if (thisVisible || !isVisible) {
         onVisibilityAggregated(isVisible);
@@ -1739,7 +1745,7 @@ bool View::dispatchVisibilityAggregated(bool isVisible) {
 
 void View::onVisibilityAggregated(bool isVisible) {
     // Update our internal visibility tracking so we can detect changes
-    const bool oldVisible = (mPrivateFlags3 & PFLAG3_AGGREGATED_VISIBLE) != 0;
+    const bool oldVisible = isAggregatedVisible();
     mPrivateFlags3 = isVisible ? (mPrivateFlags3 | PFLAG3_AGGREGATED_VISIBLE)
             : (mPrivateFlags3 & ~PFLAG3_AGGREGATED_VISIBLE);
     if (isVisible && mAttachInfo != nullptr) {
@@ -3706,6 +3712,17 @@ void View::notifySubtreeAccessibilityStateChangedIfNeeded(){
     }
 }
 
+void View::notifySubtreeAccessibilityStateChangedByParentIfNeeded() {
+    if (!AccessibilityManager::getInstance(mContext).isEnabled()) {
+        return;
+    }
+
+    View* sendA11yEventView = (View*) getParentForAccessibility();
+    if (sendA11yEventView && sendA11yEventView->isShown()) {
+        sendA11yEventView->notifySubtreeAccessibilityStateChangedIfNeeded();
+    }
+}
+
 void View::setTransitionVisibility(int visibility){
     mViewFlags = (mViewFlags & ~View::VISIBILITY_MASK) | visibility;
 }
@@ -5072,7 +5089,13 @@ View& View::setFlags(int flags,int mask) {
             if (mParent  && (getWindowVisibility() == VISIBLE) && mParent->isShown()) {
                 dispatchVisibilityAggregated(newVisibility == VISIBLE);
             }
-            notifySubtreeAccessibilityStateChangedIfNeeded();
+            // If this view is invisible from visible, then sending the A11y event by its
+            // parent which is shown and has the accessibility important.
+            if ((old & VISIBILITY_MASK) == VISIBLE) {
+                notifySubtreeAccessibilityStateChangedByParentIfNeeded();
+            } else {
+                notifySubtreeAccessibilityStateChangedIfNeeded();
+            }
         }
     }
 
@@ -7540,11 +7563,11 @@ void View::onCreateContextMenu(ContextMenu& menu) {
     //NOTHING
 }
 
-bool View::onKeyDown(int keyCode,KeyEvent& evt){
-    if (KeyEvent::isConfirmKey(keyCode)) {
+bool View::onKeyDown(int keyCode,KeyEvent& event){
+    if (KeyEvent::isConfirmKey(keyCode) && event.hasNoModifiers()) {
         if ((mViewFlags & ENABLED_MASK) == DISABLED)return true;
 
-        if (evt.getRepeatCount()== 0){// Long clickable items don't necessarily have to be clickable.
+        if (event.getRepeatCount()== 0){// Long clickable items don't necessarily have to be clickable.
             const bool clickable =isClickable()||isLongClickable();
             if (clickable || ((mViewFlags & TOOLTIP) == TOOLTIP)) {
                 // For the purposes of menu anchoring and drawable hotspots,
@@ -7552,7 +7575,7 @@ bool View::onKeyDown(int keyCode,KeyEvent& evt){
                 const int x = getWidth() / 2;
                 const int y = getHeight()/ 2;
                 if (clickable) setPressed(true, x, y);
-                checkForLongClick(0, x, y);
+                checkForLongClick(ViewConfiguration::getLongPressTimeout(), x, y);
                 LOGD("%p[%d] clickable=%d",this,mID,clickable,isPressed());
                 return true;
             }
@@ -7562,8 +7585,8 @@ bool View::onKeyDown(int keyCode,KeyEvent& evt){
     return false;
 }
 
-bool View::onKeyUp(int keycode,KeyEvent& event){
-    if(KeyEvent::isConfirmKey(event.getKeyCode())){
+bool View::onKeyUp(int keyCode,KeyEvent& event){
+    if(KeyEvent::isConfirmKey(keyCode) && event.hasNoModifiers()){
         if ((mViewFlags & ENABLED_MASK) == DISABLED) return true;
         if (isClickable() && isPressed()) {
             setPressed(false);
@@ -8008,7 +8031,7 @@ void View::checkForLongClick(int delayOffset,int x,int y){
         mPendingCheckForLongPress->setAnchor(x,y);
         mPendingCheckForLongPress->rememberWindowAttachCount();
         mPendingCheckForLongPress->rememberPressedState();
-        mPendingCheckForLongPress->postDelayed(ViewConfiguration::getLongPressTimeout()-delayOffset);
+        mPendingCheckForLongPress->postDelayed(delayOffset);
     }
 }
 
@@ -8217,7 +8240,7 @@ bool View::onTouchEvent(MotionEvent& event){
     case MotionEvent::ACTION_DOWN:
         mHasPerformedLongPress=false;
         if (!clickable) {
-            checkForLongClick(0, x, y);
+            checkForLongClick(ViewConfiguration::getLongPressTimeout(), x, y);
             break;
         }
 
@@ -8232,7 +8255,7 @@ bool View::onTouchEvent(MotionEvent& event){
             mPendingCheckForTap->postDelayed(ViewConfiguration::getTapTimeout());
         }else{
             setPressed(true,x,y);
-            checkForLongClick(0, x, y);
+            checkForLongClick(ViewConfiguration::getLongPressTimeout(), x, y);
         }
         break;
     case MotionEvent::ACTION_MOVE:
