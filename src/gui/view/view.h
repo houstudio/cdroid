@@ -1163,6 +1163,7 @@ public:
     int getVerticalFadingEdgeLength();
     int getHorizontalFadingEdgeLength();
     void setFadingEdgeLength(int length);
+    int getFadingEdgeLength() const;
     void transformFromViewToWindowSpace(int*);
     void mapRectFromViewToScreenCoords(RectF& rect, bool clipToParent);
     void getLocationOnScreen(int*);

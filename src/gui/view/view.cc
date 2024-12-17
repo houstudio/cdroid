@@ -1346,6 +1346,13 @@ void View::setFadingEdgeLength(int length){
     initScrollCache();
     mScrollCache->fadingEdgeLength = length;
 }
+    
+int View::getFadingEdgeLength() const{
+    if ((mScrollCache != nullptr) && ((mViewFlags & FADING_EDGE_MASK) != FADING_EDGE_NONE)) {
+        return mScrollCache->fadingEdgeLength;
+    }
+    return 0;
+}
 
 void View::transformFromViewToWindowSpace(int*inOutLocation){
     View* view = this;
