@@ -53,6 +53,8 @@ LayoutTransition::LayoutTransition() {
     mChangingAnim = defaultChange;
     mAppearingAnim = defaultFadeIn;
     mDisappearingAnim = defaultFadeOut;
+    staggerDelay = 0;
+    mTransitionTypes = FLAG_CHANGE_APPEARING | FLAG_CHANGE_DISAPPEARING | FLAG_APPEARING | FLAG_DISAPPEARING;
 }
 
 LayoutTransition::~LayoutTransition(){
@@ -148,7 +150,7 @@ void LayoutTransition::disableTransitionType(int transitionType){
     }
 }
 
-bool LayoutTransition::isTransitionTypeEnabled(int transitionType){
+bool LayoutTransition::isTransitionTypeEnabled(int transitionType)const{
     switch (transitionType) {
     case APPEARING:
         return (mTransitionTypes & FLAG_APPEARING) == FLAG_APPEARING;
@@ -184,7 +186,7 @@ void LayoutTransition::setStartDelay(int transitionType, long delay){
     }
 }
 
-long LayoutTransition::getStartDelay(int transitionType) {
+long LayoutTransition::getStartDelay(int transitionType)const{
     switch (transitionType) {
     case CHANGE_APPEARING:
         return mChangingAppearingDelay;
@@ -216,7 +218,7 @@ void LayoutTransition::setStagger(int transitionType, long duration) {
     }
 }
 
-long LayoutTransition::getStagger(int transitionType) {
+long LayoutTransition::getStagger(int transitionType)const{
     switch (transitionType) {
     case CHANGE_APPEARING:
         return mChangingAppearingStagger;
@@ -334,11 +336,11 @@ public:
         onPreDrawListener=std::bind(&CleanupCallback::onPreDraw,this);
     }
 
-    void onViewAttachedToWindow(View& v) {
+    void onViewAttachedToWindow(View& v) {LOGD("%p",&v);
     }
 
     void onViewDetachedFromWindow(View& v) {
-        LOGD("onViewDetachedFromWindow %p",this);
+        LOGD("onViewDetachedFromWindow %p %p",this,&v);
         cleanup();
     }
     bool onPreDraw() {
@@ -418,6 +420,10 @@ void LayoutTransition::cleanup(ViewGroup*parent){
 	    view->removeOnLayoutChangeListener(it.second);
 	}
     layoutChangeListenerMap.clear();*/
+}
+
+void LayoutTransition::setAnimateParentHierarchy(bool animateParentHierarchy) {
+    mAnimateParentHierarchy = animateParentHierarchy;
 }
 
 void LayoutTransition::doLayoutChange(View& v, int left, int top, int right, int height,
@@ -518,7 +524,21 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
         pendingAnimations.erase(ita);
     }
     // Cache the animation in case we need to cancel it later
-    pendingAnimations[child] = anim;
+    pendingAnimations.insert({child,anim});
+    // For the animations which don't get started, we have to have a means of
+    // removing them from the cache, lest we leak them and their target objects.
+    // We run an animator for the default duration+100 (an arbitrary time, but one
+    // which should far surpass the delay between setting them up here and
+    // handling layout events which start them.
+    ValueAnimator* pendingAnimRemover = ValueAnimator::ofFloat({0.f, 1.f});
+    pendingAnimRemover->setDuration(duration + 100);
+    Animator::AnimatorListener al;
+    al.onAnimationEnd=[this,child](Animator&,bool){
+        auto it = pendingAnimations.find(child);
+        pendingAnimations.erase(it);
+    };
+    pendingAnimRemover->addListener(al);
+    pendingAnimRemover->start();
 
     mOnLayoutChange = std::bind(&LayoutTransition::doLayoutChange,this,std::placeholders::_1,
         std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5,
@@ -526,11 +546,44 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
         anim,parent,child,changeReason,duration);
   
     child->addOnLayoutChangeListener(mOnLayoutChange);
+    al.onAnimationStart = [this,parent,child,changeReason](Animator& animator,bool) {
+        if (hasListeners()) {
+            std::vector<TransitionListener> listeners =mListeners;
+            for (TransitionListener& listener : listeners) {
+                listener.startTransition(*this, parent, child,
+                        changeReason == APPEARING ?
+                                CHANGE_APPEARING : changeReason == DISAPPEARING ?
+                                CHANGE_DISAPPEARING : CHANGING);
+            }
+        }
+    };
+
+    al.onAnimationCancel = [this,child](Animator& animator) {
+        auto it = layoutChangeListenerMap.find(child);
+        child->removeOnLayoutChangeListener(mOnLayoutChange);
+        layoutChangeListenerMap.erase(it);
+    };
+
+    al.onAnimationEnd = [this,parent,child,changeReason](Animator& animator,bool) {
+        auto it = currentChangingAnimations.find(child);
+        currentChangingAnimations.erase(it);
+        if (hasListeners()) {
+            std::vector<TransitionListener> listeners =mListeners;
+            for (TransitionListener& listener : listeners) {
+                listener.endTransition(*this, parent, child,
+                        changeReason == APPEARING ?
+                                CHANGE_APPEARING : changeReason == DISAPPEARING ?
+                                CHANGE_DISAPPEARING : CHANGING);
+            }
+        }
+    };
+    anim->addListener(al);
     layoutChangeListenerMap.insert({child,mOnLayoutChange});
 }
 
 void LayoutTransition::startChangingAnimations(){
-    for (auto ita : currentChangingAnimations) {
+    std::map<View*,Animator*>currentAnimCopy = currentChangingAnimations;
+    for (auto ita : currentAnimCopy) {
         Animator*anim=ita.second;
         if(dynamic_cast<ObjectAnimator*>(anim)){
             ((ObjectAnimator*)anim)->setCurrentPlayTime(0);
@@ -538,8 +591,10 @@ void LayoutTransition::startChangingAnimations(){
         anim->start();
     }
 }
-void LayoutTransition::endChangingAnimations(){ 
-    for (auto ita : currentChangingAnimations) {
+
+void LayoutTransition::endChangingAnimations(){
+    std::map<View*,Animator*>currentAnimCopy = currentChangingAnimations;
+    for (auto ita : currentAnimCopy) {
         Animator*anim=ita.second;
         anim->start();
         anim->cancel();//end
@@ -547,12 +602,14 @@ void LayoutTransition::endChangingAnimations(){
     currentChangingAnimations.clear();
 }
 
-bool LayoutTransition::isChangingLayout() {
+bool LayoutTransition::isChangingLayout() const{
     return (currentChangingAnimations.size() > 0);
 }
 
 void LayoutTransition::layoutChange(ViewGroup *parent){
-    if (parent->getWindowVisibility() != View::VISIBLE)  return;
+    if (parent->getWindowVisibility() != View::VISIBLE){
+        return;
+    }
 
     if (((mTransitionTypes & FLAG_CHANGING) == FLAG_CHANGING) && !isRunning()) {
         // This method is called for all calls to layout() in the container, including
@@ -563,7 +620,7 @@ void LayoutTransition::layoutChange(ViewGroup *parent){
     }
 }
 
-bool LayoutTransition::isRunning() {
+bool LayoutTransition::isRunning()const {
     return (currentChangingAnimations.size() > 0) || (currentAppearingAnimations.size() > 0) ||
             (currentDisappearingAnimations.size() > 0);
 }
@@ -693,7 +750,7 @@ void LayoutTransition::addChild(ViewGroup* parent, View* child, bool changesLayo
         cancel(CHANGING);
     }
     if (hasListeners() && ((mTransitionTypes & FLAG_APPEARING) == FLAG_APPEARING)) {
-        for (auto l:mListeners) {
+        for (auto& l:mListeners) {
             if(l.startTransition)l.startTransition(*this, parent, child, APPEARING);
         }
     }
@@ -718,7 +775,7 @@ void LayoutTransition::removeChild(ViewGroup* parent, View* child, bool changesL
         cancel(CHANGING);
     }
     if (hasListeners() && ((mTransitionTypes & FLAG_DISAPPEARING) == FLAG_DISAPPEARING)) {
-        for (auto l :mListeners) {
+        for (auto& l :mListeners) {
             if(l.startTransition)l.startTransition(*this, parent, child, DISAPPEARING);
         }
     }

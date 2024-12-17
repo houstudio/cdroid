@@ -36,7 +36,7 @@ private:
     long mChangingDisappearingStagger = 0;
     long mChangingStagger             = 0;
     long staggerDelay;
-    int  mTransitionTypes = FLAG_CHANGE_APPEARING | FLAG_CHANGE_DISAPPEARING | FLAG_APPEARING | FLAG_DISAPPEARING;
+    int  mTransitionTypes;
     bool mAnimateParentHierarchy      = true;
     std::vector<TransitionListener>mListeners;
 
@@ -123,6 +123,7 @@ public:
     long getStartDelay(int transitionType);
     void setStagger(int transitionType, long duration);
     long getStagger(int transitionType);
+    void setAnimateParentHierarchy(bool animateParentHierarchy);
 
     void setInterpolator(int transitionType, TimeInterpolator* interpolator);
     TimeInterpolator* getInterpolator(int transitionType);
