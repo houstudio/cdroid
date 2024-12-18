@@ -100,11 +100,10 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
 }
 
 RecyclerView::~RecyclerView(){
-    while(!mItemDecorations.empty()){
-        ItemDecoration*id = mItemDecorations.back();
+    for(ItemDecoration*id:mItemDecorations){
         delete id;
-        mItemDecorations.pop_back();
     }
+    mItemDecorations.clear();
     if(mVelocityTracker)
         mVelocityTracker->recycle();
     delete mChildHelper;
@@ -718,6 +717,11 @@ void RecyclerView::addItemDecoration(ItemDecoration* decor, int index) {
     }
     if (mItemDecorations.empty()){//isEmpty()) {
         setWillNotDraw(false);
+    }
+    auto it=std::find( mItemDecorations.begin(), mItemDecorations.end(),decor);
+    if(it!=mItemDecorations.end()){
+        LOGE("ItemDecoration %p has exists",decor);
+        return;
     }
     if (index < 0) {
         mItemDecorations.push_back(decor);//add(decor);
