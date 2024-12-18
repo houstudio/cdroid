@@ -155,8 +155,8 @@ void ItemTouchHelper::onRequestDisallowInterceptTouchEvent(bool disallowIntercep
 }
 
 bool ItemTouchHelper::hitTest(View& child, float x, float y, float left, float top) {
-    return x >= left  && x <= left + child.getWidth()
-            && y >= top && y <= top + child.getHeight();
+    return (x >= left)  && (x <= left + child.getWidth())
+            && (y >= top) && (y <= top + child.getHeight());
 }
 
 void ItemTouchHelper::attachToRecyclerView(RecyclerView* recyclerView) {
@@ -168,11 +168,9 @@ void ItemTouchHelper::attachToRecyclerView(RecyclerView* recyclerView) {
     }
     mRecyclerView = recyclerView;
     if (recyclerView != nullptr) {
-        /*final Resources resources = recyclerView.getResources();
-        mSwipeEscapeVelocity = resources
-                .getDimension(R.dimen.item_touch_helper_swipe_escape_velocity);
-        mMaxSwipeVelocity = resources
-                .getDimension(R.dimen.item_touch_helper_swipe_escape_max_velocity);*/
+        //cdroid::Context*ctx = recyclerView->getContext();
+        //mSwipeEscapeVelocity = ctx->getDimension("cdroid:dimen/item_touch_helper_swipe_escape_velocity");
+        //mMaxSwipeVelocity = ctx->getDimension("cdroid:dimen/item_touch_helper_swipe_escape_max_velocity);
         setupCallbacks();
     }
 }
