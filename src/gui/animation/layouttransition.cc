@@ -1,5 +1,5 @@
-#include <animation/layouttransition.h>
 #include <view/viewgroup.h>
+#include <animation/layouttransition.h>
 #include <animation/objectanimator.h>
 
 namespace cdroid{
@@ -426,87 +426,6 @@ void LayoutTransition::setAnimateParentHierarchy(bool animateParentHierarchy) {
     mAnimateParentHierarchy = animateParentHierarchy;
 }
 
-void LayoutTransition::doLayoutChange(View& v, int left, int top, int right, int height,
-        int oldLeft, int oldTop, int oldWidth, int oldHieight,Animator*anim,
-	ViewGroup*parent,View*child,int changeReason,int duration){
-    // Tell the animation to extract end values from the changed object
-    LOGD("doLayoutChange(%p:%d)",&v,v.getId());
-    anim->setupEndValues();
-    if (dynamic_cast<ValueAnimator*>(anim)) {
-        bool valuesDiffer = false;
-        ValueAnimator* valueAnim = (ValueAnimator*)anim;
-        std::vector<PropertyValuesHolder*> oldValues = valueAnim->getValues();
-        for (int i = 0; i < oldValues.size(); ++i) {
-            PropertyValuesHolder* pvh = oldValues[i];
-            /*if (dynamic_cast<KeyframeSet*>(pvh)) {
-                KeyframeSet keyframeSet = (KeyframeSet) pvh->mKeyframes;
-                if (keyframeSet.mFirstKeyframe == nullptr ||
-                        keyframeSet.mLastKeyframe == nullptr ||
-                        !keyframeSet.mFirstKeyframe.getValue().equals(
-                                keyframeSet.mLastKeyframe.getValue())) {
-                    valuesDiffer = true;
-                }
-            } else if (!pvh.mKeyframes.getValue(0).equals(pvh.mKeyframes.getValue(1))) {
-                valuesDiffer = true;
-            }*/
-        }
-        if (!valuesDiffer) {
-            return;
-        }
-    }
-
-    long startDelay = 0;
-    switch (changeReason) {
-    case APPEARING:
-        startDelay = mChangingAppearingDelay + staggerDelay;
-        staggerDelay += mChangingAppearingStagger;
-        if (mChangingAppearingInterpolator != sChangingAppearingInterpolator) {
-            anim->setInterpolator(mChangingAppearingInterpolator);
-        }
-        break;
-    case DISAPPEARING:
-        startDelay = mChangingDisappearingDelay + staggerDelay;
-        staggerDelay += mChangingDisappearingStagger;
-        if (mChangingDisappearingInterpolator !=
-                sChangingDisappearingInterpolator) {
-            anim->setInterpolator(mChangingDisappearingInterpolator);
-        }
-        break;
-    case CHANGING:
-        startDelay = mChangingDelay + staggerDelay;
-        staggerDelay += mChangingStagger;
-        if (mChangingInterpolator != sChangingInterpolator) {
-            anim->setInterpolator(mChangingInterpolator);
-        }
-        break;
-    }
-    anim->setStartDelay(startDelay);
-    anim->setDuration(duration);
-
-    //Animator* prevAnimation = currentChangingAnimations.get(child);
-    auto it = currentChangingAnimations.find(child);
-    if (it!=currentChangingAnimations.end()){//prevAnimation != nullptr) {
-        Animator* prevAnimation = it->second;
-        //currentChangingAnimations.erase(it);
-        prevAnimation->cancel();
-    }
-    //Animator* pendingAnimation = pendingAnimations.get(child);
-    it = pendingAnimations.find(child);
-    if (it!=pendingAnimations.end()){//pendingAnimation != nullptr) {
-        pendingAnimations.erase(it);//pendingAnimations->remove(child);
-    }
-    // Cache the animation in case we need to cancel it later
-    currentChangingAnimations.insert({child,anim});//put(child, anim);
-
-    parent->requestTransitionStart(this);
-
-    // this only removes listeners whose views changed - must clear the
-    // other listeners later
-    child->removeOnLayoutChangeListener(mOnLayoutChange);
-    auto itc = layoutChangeListenerMap.find(child);
-    layoutChangeListenerMap.erase(itc);//layoutChangeListenerMap.remove(child);
-}
-
 void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason, Animator* baseAnimator,long duration, View* child){
     if(layoutChangeListenerMap.find(child) !=layoutChangeListenerMap.end()){
         return;
@@ -540,27 +459,101 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
     pendingAnimRemover->addListener(al);
     pendingAnimRemover->start();
 
-    mOnLayoutChange = std::bind(&LayoutTransition::doLayoutChange,this,std::placeholders::_1,
-        std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5,
-        std::placeholders::_6,std::placeholders::_7,std::placeholders::_8,std::placeholders::_9,
-        anim,parent,child,changeReason,duration);
+    View::OnLayoutChangeListener listener;
+    listener = [this,anim,parent,child,changeReason,duration,listener](View& v, int left, int top, int width, int height,
+                    int oldLeft, int oldTop, int oldWidth, int oldHeight){
+
+        LOGD("doLayoutChange(%p:%d)",&v,v.getId());
+        anim->setupEndValues();
+        if (dynamic_cast<ValueAnimator*>(anim)) {
+            bool valuesDiffer = false;
+            ValueAnimator* valueAnim = (ValueAnimator*)anim;
+            std::vector<PropertyValuesHolder*> oldValues = valueAnim->getValues();
+            for (int i = 0; i < oldValues.size(); ++i) {
+                PropertyValuesHolder* pvh = oldValues[i];
+                /*if (dynamic_cast<KeyframeSet*>(pvh)) {
+                    KeyframeSet keyframeSet = (KeyframeSet) pvh->mKeyframes;
+                    if (keyframeSet.mFirstKeyframe == nullptr ||
+                            keyframeSet.mLastKeyframe == nullptr ||
+                            !keyframeSet.mFirstKeyframe.getValue().equals(
+                                    keyframeSet.mLastKeyframe.getValue())) {
+                        valuesDiffer = true;
+                    }
+                } else if (!pvh.mKeyframes.getValue(0).equals(pvh.mKeyframes.getValue(1))) {
+                    valuesDiffer = true;
+                }*/
+            }
+            if (!valuesDiffer) {
+                return;
+            }
+        }
+
+        long startDelay = 0;
+        switch (changeReason) {
+        case APPEARING:
+            startDelay = mChangingAppearingDelay + staggerDelay;
+            staggerDelay += mChangingAppearingStagger;
+            if (mChangingAppearingInterpolator != sChangingAppearingInterpolator) {
+                anim->setInterpolator(mChangingAppearingInterpolator);
+            }
+            break;
+        case DISAPPEARING:
+            startDelay = mChangingDisappearingDelay + staggerDelay;
+            staggerDelay += mChangingDisappearingStagger;
+            if (mChangingDisappearingInterpolator !=
+                    sChangingDisappearingInterpolator) {
+                anim->setInterpolator(mChangingDisappearingInterpolator);
+            }
+            break;
+        case CHANGING:
+            startDelay = mChangingDelay + staggerDelay;
+            staggerDelay += mChangingStagger;
+            if (mChangingInterpolator != sChangingInterpolator) {
+                anim->setInterpolator(mChangingInterpolator);
+            }
+            break;
+        }
+        anim->setStartDelay(startDelay);
+        anim->setDuration(duration);
+
+        //Animator* prevAnimation = currentChangingAnimations.get(child);
+        auto it = currentChangingAnimations.find(child);
+        if (it!=currentChangingAnimations.end()){//prevAnimation != nullptr) {
+            Animator* prevAnimation = it->second;
+            //currentChangingAnimations.erase(it);
+            prevAnimation->cancel();
+        }
+        //Animator* pendingAnimation = pendingAnimations.get(child);
+        it = pendingAnimations.find(child);
+        if (it!=pendingAnimations.end()){//pendingAnimation != nullptr) {
+            pendingAnimations.erase(it);//pendingAnimations->remove(child);
+        }
+        // Cache the animation in case we need to cancel it later
+        currentChangingAnimations.insert({child,anim});//put(child, anim);
+
+        parent->requestTransitionStart(this);
+
+        // this only removes listeners whose views changed - must clear the
+        // other listeners later
+        child->removeOnLayoutChangeListener(listener);
+        auto itc = layoutChangeListenerMap.find(child);
+        layoutChangeListenerMap.erase(itc);//layoutChangeListenerMap.remove(child);
+    };
   
-    child->addOnLayoutChangeListener(mOnLayoutChange);
     al.onAnimationStart = [this,parent,child,changeReason](Animator& animator,bool) {
         if (hasListeners()) {
             std::vector<TransitionListener> listeners =mListeners;
-            for (TransitionListener& listener : listeners) {
-                listener.startTransition(*this, parent, child,
-                        changeReason == APPEARING ?
+            for (TransitionListener& listener:listeners) {
+                listener.startTransition(*this, parent, child, changeReason == APPEARING ?
                                 CHANGE_APPEARING : changeReason == DISAPPEARING ?
                                 CHANGE_DISAPPEARING : CHANGING);
             }
         }
     };
 
-    al.onAnimationCancel = [this,child](Animator& animator) {
+    al.onAnimationCancel = [this,child,listener](Animator& animator) {
         auto it = layoutChangeListenerMap.find(child);
-        child->removeOnLayoutChangeListener(mOnLayoutChange);
+        child->removeOnLayoutChangeListener(listener);
         layoutChangeListenerMap.erase(it);
     };
 
@@ -568,17 +561,17 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
         auto it = currentChangingAnimations.find(child);
         currentChangingAnimations.erase(it);
         if (hasListeners()) {
-            std::vector<TransitionListener> listeners =mListeners;
-            for (TransitionListener& listener : listeners) {
-                listener.endTransition(*this, parent, child,
-                        changeReason == APPEARING ?
+            std::vector<TransitionListener> listeners = mListeners;
+            for (TransitionListener& listener:listeners) {
+                listener.endTransition(*this, parent, child, changeReason == APPEARING ?
                                 CHANGE_APPEARING : changeReason == DISAPPEARING ?
                                 CHANGE_DISAPPEARING : CHANGING);
             }
         }
     };
     anim->addListener(al);
-    layoutChangeListenerMap.insert({child,mOnLayoutChange});
+    child->addOnLayoutChangeListener(listener);
+    layoutChangeListenerMap.insert({child,listener});
 }
 
 void LayoutTransition::startChangingAnimations(){
@@ -690,11 +683,12 @@ void LayoutTransition::runAppearingTransition(ViewGroup* parent,View* child){
         ((ObjectAnimator*) anim)->setCurrentPlayTime(0);
     }
     AnimatorListenerAdapter lis;
-    lis.onAnimationEnd=[&](Animator& anim,bool reverse){
-        auto it=currentAppearingAnimations.find(child);
+    lis.onAnimationEnd = [this,parent,child](Animator& anim,bool reverse){
+        auto it = currentAppearingAnimations.find(child);
         if(it!=currentAppearingAnimations.end())
             currentAppearingAnimations.erase(it);
-        for (auto l: mListeners)
+        std::vector<TransitionListener>listeners = mListeners;
+        for (auto& l: listeners)
             if(l.endTransition)l.endTransition(*this, parent, child, APPEARING);
     };
     anim->addListener(lis);
@@ -709,7 +703,8 @@ void LayoutTransition::runDisappearingTransition(ViewGroup* parent,View* child){
         it->second->cancel();
     }
     if (mDisappearingAnim == nullptr) {
-        for (TransitionListener l :mListeners)
+        std::vector<TransitionListener>listeners = mListeners;
+        for (TransitionListener& l :listeners)
             if(l.endTransition)l.endTransition(*this, parent, child, DISAPPEARING);
         return;
     }
@@ -722,12 +717,13 @@ void LayoutTransition::runDisappearingTransition(ViewGroup* parent,View* child){
     anim->setTarget(child);
     const float preAnimAlpha = child->getAlpha();
     AnimatorListenerAdapter lis;
-    lis.onAnimationEnd=[&](Animator& anim,bool reverse){
-        auto it=currentDisappearingAnimations.find(child);
+    lis.onAnimationEnd = [this,parent,child,preAnimAlpha](Animator& anim,bool reverse){
+        auto it = currentDisappearingAnimations.find(child);
         if(it!=currentDisappearingAnimations.end())
             currentDisappearingAnimations.erase(it);
         child->setAlpha(preAnimAlpha);
-        for (TransitionListener l :mListeners)
+        std::vector<TransitionListener>listeners = mListeners;
+        for (TransitionListener& l:listeners)
             if(l.endTransition)l.endTransition(*this, parent, child, DISAPPEARING);
     };
     anim->addListener(lis);
