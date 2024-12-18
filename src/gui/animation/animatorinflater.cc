@@ -149,6 +149,7 @@ int AnimatorInflater::valueTypeFromPropertyName(const std::string& name){
        {"alpha",(int)TypedValue::TYPE_FLOAT},
        {"bottom",(int)TypedValue::TYPE_DIMENSION},
        {"left",(int)TypedValue::TYPE_DIMENSION},
+       {"elevation",(int)TypedValue::TYPE_FLOAT},
        {"pivotX",(int)TypedValue::TYPE_FLOAT},
        {"pivotY",(int)TypedValue::TYPE_FLOAT},
        {"right",(int)TypedValue::TYPE_DIMENSION},
