@@ -105,7 +105,6 @@ private:
     void runDisappearingTransition(ViewGroup* parent,View* child);
     void addChild(ViewGroup* parent, View* child, bool changesLayout);
     void removeChild(ViewGroup* parent, View* child, bool changesLayout);
-    void cleanup(ViewGroup*);
 public:
     LayoutTransition();
     ~LayoutTransition();

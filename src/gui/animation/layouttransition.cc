@@ -407,19 +407,30 @@ void LayoutTransition::runChangeTransition(ViewGroup* parent, View* newView, int
     // This is the cleanup step. When we get this rendering event, we know that all of
     // the appropriate animations have been set up and run. Now we can clear out the
     // layout listeners.
-    CleanupCallback* callback = new CleanupCallback(layoutChangeListenerMap, parent);
-    observer->addOnPreDrawListener(callback->onPreDrawListener);
-    parent->addOnAttachStateChangeListener(callback->onAttachStateListener);
-}
-
-void LayoutTransition::cleanup(ViewGroup*parent){
-    /*parent->getViewTreeObserver()->removeOnPreDrawListener(mOnPreDraw);
-    parent->removeOnAttachStateChangeListener(mOnAttachStateChange);
-	for(auto it:layoutChangeListenerMap){
-	    View*view=it.first;
-	    view->removeOnLayoutChangeListener(it.second);
-	}
-    layoutChangeListenerMap.clear();*/
+    ViewTreeObserver::OnPreDrawListener onPreDrawListener;
+    View::OnAttachStateChangeListener onAttachStateListener;
+    onPreDrawListener=[this,parent,onPreDrawListener,onAttachStateListener](){
+        parent->getViewTreeObserver()->removeOnPreDrawListener(onPreDrawListener);
+        parent->removeOnAttachStateChangeListener(onAttachStateListener);
+        for (auto it:layoutChangeListenerMap){
+            View*view = it.first;
+            view->removeOnLayoutChangeListener(it.second);
+        }
+        layoutChangeListenerMap.clear();
+        return true;
+    };
+    onAttachStateListener.onViewAttachedToWindow = [](View& v){};
+    onAttachStateListener.onViewDetachedFromWindow=[this,parent,onPreDrawListener,onAttachStateListener](View& v){
+        parent->getViewTreeObserver()->removeOnPreDrawListener(onPreDrawListener);
+        parent->removeOnAttachStateChangeListener(onAttachStateListener);
+        for (auto it:layoutChangeListenerMap){
+            View*view = it.first;
+            view->removeOnLayoutChangeListener(it.second);
+        }
+        layoutChangeListenerMap.clear();
+    };
+    observer->addOnPreDrawListener(onPreDrawListener);
+    parent->addOnAttachStateChangeListener(onAttachStateListener);
 }
 
 void LayoutTransition::setAnimateParentHierarchy(bool animateParentHierarchy) {
