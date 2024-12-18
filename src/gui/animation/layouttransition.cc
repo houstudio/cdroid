@@ -424,7 +424,8 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
     Animator::AnimatorListener al;
     al.onAnimationEnd=[this,child](Animator&,bool){
         auto it = pendingAnimations.find(child);
-        pendingAnimations.erase(it);
+        LOGD_IF(it!=pendingAnimations.end(),"child %p:%d's animation maybe ended",child,child->getId());
+        if(it!=pendingAnimations.end())pendingAnimations.erase(it);
     };
     pendingAnimRemover->addListener(al);
     pendingAnimRemover->start();
