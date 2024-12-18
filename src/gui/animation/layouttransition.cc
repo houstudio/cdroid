@@ -309,47 +309,6 @@ bool LayoutTransition::hasListeners()const{
    return mListeners.size()>0;
 }
 
-class CleanupCallback{//ViewTreeObserver.OnPreDrawListener,View.OnAttachStateChangeListener {
-private:
-    friend class LayoutTransition;
-    std::map<View*, View::OnLayoutChangeListener>& layoutChangeListenerMap;
-    ViewGroup* mParent;
-    ViewTreeObserver::OnPreDrawListener onPreDrawListener;
-    View::OnAttachStateChangeListener onAttachStateListener;
-private:
-    void cleanup() {
-        mParent->getViewTreeObserver()->removeOnPreDrawListener(onPreDrawListener);
-        mParent->removeOnAttachStateChangeListener(onAttachStateListener);
-        for (auto it:layoutChangeListenerMap){
-            View*view = it.first;
-            view->removeOnLayoutChangeListener(it.second);
-        }
-        layoutChangeListenerMap.clear();
-    }
-public:
-    CleanupCallback(std::map<View*, View::OnLayoutChangeListener>& listenerMap, ViewGroup* parent)
-        :layoutChangeListenerMap(listenerMap){
-        mParent = parent;
-        onAttachStateListener.onViewAttachedToWindow = [](View&){};
-        onAttachStateListener.onViewDetachedFromWindow = std::bind(&CleanupCallback::onViewDetachedFromWindow,
-                this,std::placeholders::_1);
-        onPreDrawListener=std::bind(&CleanupCallback::onPreDraw,this);
-    }
-
-    void onViewAttachedToWindow(View& v) {LOGD("%p",&v);
-    }
-
-    void onViewDetachedFromWindow(View& v) {
-        LOGD("onViewDetachedFromWindow %p %p",this,&v);
-        cleanup();
-    }
-    bool onPreDraw() {
-        LOGD("onPreDraw %p",this);
-        cleanup();
-        return true;
-    }
-};
-
 void LayoutTransition::runChangeTransition(ViewGroup* parent, View* newView, int changeReason){
     Animator* baseAnimator  = nullptr;
     Animator* parentAnimator= nullptr;
@@ -531,7 +490,6 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
         auto it = currentChangingAnimations.find(child);
         if (it!=currentChangingAnimations.end()){//prevAnimation != nullptr) {
             Animator* prevAnimation = it->second;
-            //currentChangingAnimations.erase(it);
             prevAnimation->cancel();
         }
         //Animator* pendingAnimation = pendingAnimations.get(child);
@@ -588,7 +546,7 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
 void LayoutTransition::startChangingAnimations(){
     std::map<View*,Animator*>currentAnimCopy = currentChangingAnimations;
     for (auto ita : currentAnimCopy) {
-        Animator*anim=ita.second;
+        Animator*anim = ita.second;
         if(dynamic_cast<ObjectAnimator*>(anim)){
             ((ObjectAnimator*)anim)->setCurrentPlayTime(0);
         }
@@ -599,7 +557,7 @@ void LayoutTransition::startChangingAnimations(){
 void LayoutTransition::endChangingAnimations(){
     std::map<View*,Animator*>currentAnimCopy = currentChangingAnimations;
     for (auto ita : currentAnimCopy) {
-        Animator*anim=ita.second;
+        Animator*anim = ita.second;
         anim->start();
         anim->cancel();//end
     }
@@ -679,7 +637,8 @@ void LayoutTransition::runAppearingTransition(ViewGroup* parent,View* child){
         ita->second->cancel();
     }
     if (mAppearingAnim == nullptr) {
-        for (auto l:mListeners)
+        std::vector<TransitionListener> listeners = mListeners;
+        for (auto& l:listeners)
             if(l.endTransition)l.endTransition(*this, parent, child, APPEARING);
         return;
     }
