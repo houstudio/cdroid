@@ -411,6 +411,7 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
         Animator*currentAnimator=ita->second;
         currentAnimator->cancel();
         pendingAnimations.erase(ita);
+        delete currentAnimator;
     }
     // Cache the animation in case we need to cancel it later
     pendingAnimations.insert({child,anim});
@@ -422,10 +423,13 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
     ValueAnimator* pendingAnimRemover = ValueAnimator::ofFloat({0.f, 1.f});
     pendingAnimRemover->setDuration(duration + 100);
     Animator::AnimatorListener al;
-    al.onAnimationEnd=[this,child](Animator&,bool){
+    al.onAnimationEnd=[this,child](Animator&anim,bool){
         auto it = pendingAnimations.find(child);
-        LOGD_IF(it!=pendingAnimations.end(),"child %p:%d's animation maybe ended",child,child->getId());
-        if(it!=pendingAnimations.end())pendingAnimations.erase(it);
+        delete &anim;
+        if(it != pendingAnimations.end()){
+            delete it->second;
+            pendingAnimations.erase(it);
+        }
     };
     pendingAnimRemover->addListener(al);
     pendingAnimRemover->start();
@@ -492,11 +496,14 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
         if (it!=currentChangingAnimations.end()){//prevAnimation != nullptr) {
             Animator* prevAnimation = it->second;
             prevAnimation->cancel();
+            //delete prevAnimation;
         }
         //Animator* pendingAnimation = pendingAnimations.get(child);
         it = pendingAnimations.find(child);
         if (it!=pendingAnimations.end()){//pendingAnimation != nullptr) {
+            Animator*pendingAnimation = it->second;
             pendingAnimations.erase(it);//pendingAnimations->remove(child);
+            delete pendingAnimation;
         }
         // Cache the animation in case we need to cancel it later
         currentChangingAnimations.insert({child,anim});//put(child, anim);
@@ -530,6 +537,7 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
     al.onAnimationEnd = [this,parent,child,changeReason](Animator& animator,bool) {
         auto it = currentChangingAnimations.find(child);
         currentChangingAnimations.erase(it);
+        delete &animator;
         if (hasListeners()) {
             std::vector<TransitionListener> listeners = mListeners;
             for (TransitionListener& listener:listeners) {
@@ -560,7 +568,7 @@ void LayoutTransition::endChangingAnimations(){
     for (auto ita : currentAnimCopy) {
         Animator*anim = ita.second;
         anim->start();
-        anim->cancel();//end
+        anim->cancel();
     }
     currentChangingAnimations.clear();
 }
@@ -656,8 +664,10 @@ void LayoutTransition::runAppearingTransition(ViewGroup* parent,View* child){
     AnimatorListenerAdapter lis;
     lis.onAnimationEnd = [this,parent,child](Animator& anim,bool reverse){
         auto it = currentAppearingAnimations.find(child);
-        if(it!=currentAppearingAnimations.end())
+        if(it!=currentAppearingAnimations.end()){
             currentAppearingAnimations.erase(it);
+            delete it->second;
+        }
         std::vector<TransitionListener>listeners = mListeners;
         for (auto& l: listeners)
             if(l.endTransition)l.endTransition(*this, parent, child, APPEARING);
@@ -690,8 +700,10 @@ void LayoutTransition::runDisappearingTransition(ViewGroup* parent,View* child){
     AnimatorListenerAdapter lis;
     lis.onAnimationEnd = [this,parent,child,preAnimAlpha](Animator& anim,bool reverse){
         auto it = currentDisappearingAnimations.find(child);
-        if(it!=currentDisappearingAnimations.end())
+        if(it!=currentDisappearingAnimations.end()){
             currentDisappearingAnimations.erase(it);
+            delete it->second;
+        }
         child->setAlpha(preAnimAlpha);
         std::vector<TransitionListener>listeners = mListeners;
         for (TransitionListener& l:listeners)
