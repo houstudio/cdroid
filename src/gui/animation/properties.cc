@@ -56,12 +56,12 @@ class ELEVATION:public Property{
 public:
     ELEVATION():Property("elevation"){}
     AnimateValue get(void* object)override{
-        LOGV("%p left=%d",object,((View*)object)->getElevation());
+        LOGV("%p elevation=%.3f",object,((View*)object)->getElevation());
         AnimateValue v =((View*)object)->getElevation();
         return v;
     }
     void set(void* object,const AnimateValue& value)override{
-        LOGV("%p left=%d",object,GET_VARIANT(value,float));
+        LOGV("%p elevation=%.3f",object,GET_VARIANT(value,float));
         ((View*)object)->setElevation(GET_VARIANT(value,float));
     }
 };
@@ -216,7 +216,7 @@ public:
         return ((View*)object)->getPivotY();
     }
     void set(void* object,const AnimateValue& value)override{
-        LOGV("%p pivotX=%.3f",object,GET_VARIANT(value,float));
+        LOGV("%p pivotY=%.3f",object,GET_VARIANT(value,float));
         ((View*)object)->setPivotY(GET_VARIANT(value,float));
     }
 };
