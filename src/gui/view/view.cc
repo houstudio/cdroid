@@ -9074,6 +9074,7 @@ void View::setRotation(float rotation){
         mRenderNode->setRotation(rotation);
         invalidateViewProperty(false,true);
         invalidateParentIfNeededAndWasQuickRejected();
+        notifySubtreeAccessibilityStateChangedIfNeeded();
     }
 }
 
@@ -9081,10 +9082,13 @@ float View::getRotationX()const{
     return mRenderNode->getRotationX();
 }
 
-void View::setRotationX(float x){
-    if(x!= getRotationX()){
-        mRenderNode->setRotationX(x);
+void View::setRotationX(float rotationX){
+    if(rotationX!= getRotationX()){
+        invalidateViewProperty(true,false);
+        mRenderNode->setRotationX(rotationX);
+        invalidateViewProperty(false,true);
         invalidateParentIfNeededAndWasQuickRejected();
+        notifySubtreeAccessibilityStateChangedIfNeeded();
     }
 }
 
@@ -9092,8 +9096,14 @@ float View::getRotationY()const{
     return mRenderNode->getRotationY();
 }
 
-void View::setRotationY(float y){
-     mRenderNode->setRotationY(y); 
+void View::setRotationY(float rotationY){
+    if(rotationY!= getRotationY()){
+        invalidateViewProperty(true,false);
+        mRenderNode->setRotationY(rotationY);
+        invalidateViewProperty(false,true);
+        invalidateParentIfNeededAndWasQuickRejected();
+        notifySubtreeAccessibilityStateChangedIfNeeded();
+    }
 }
 
 float View::getPivotX()const{
