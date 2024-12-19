@@ -141,7 +141,7 @@ void GraphDevice::showLogo(Cairo::Context*context,Cairo::RefPtr<Cairo::ImageSurf
     pat->add_color_stop_rgb(0.618, 1.0, 1.0, 1.);//orange
     pat->add_color_stop_rgb(1, .1, .1, .1); 
     context->set_source(pat);
-    context->move_to(rc.width-te.x_advance-32,rc.height-10);
+    context->move_to(rc.width-te.x_advance-32,rc.height+te.y_bearing-8);
     context->show_text(copyRight);
     context->fill();
     context->restore();
