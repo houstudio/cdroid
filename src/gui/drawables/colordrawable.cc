@@ -49,7 +49,7 @@ std::shared_ptr<Drawable::ConstantState>ColorDrawable::getConstantState(){
 }
 
 ColorDrawable*ColorDrawable::mutate(){
-    if (!mMutated && Drawable::mutate() == this) {
+    if (!mMutated && (Drawable::mutate() == this)) {
         mColorState=std::make_shared<ColorState>(*mColorState);
         mMutated = true;
     }

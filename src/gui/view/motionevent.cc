@@ -132,9 +132,9 @@ void PointerProperties::copyFrom(const PointerProperties& other) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-static std::vector< PointerProperties>gSharedTempPointerProperties;
-static std::vector< PointerCoords>gSharedTempPointerCoords;
-static std::vector<int>gSharedTempPointerIndexMap;
+static std::vector<PointerProperties> gSharedTempPointerProperties;
+static std::vector<PointerCoords> gSharedTempPointerCoords;
+static std::vector<int> gSharedTempPointerIndexMap;
 
 void MotionEvent::ensureSharedTempPointerCapacity(size_t desiredCapacity){
     if ( gSharedTempPointerCoords.size() < desiredCapacity) {
@@ -667,7 +667,7 @@ bool MotionEvent::addBatch(MotionEvent& event){
         return false;
     }
 
-    /*nchronized (gSharedTempLock)*/{
+    /*synchronized (gSharedTempLock)*/{
         ensureSharedTempPointerCapacity(std::max(pointerCount, 2));
         PointerProperties* pp = gSharedTempPointerProperties.data();
         PointerCoords* pc = gSharedTempPointerCoords.data();

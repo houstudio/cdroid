@@ -33,6 +33,25 @@ public:
     }
 };
 
+class BACKGROUND_COLOR:public Property{
+private:
+    ColorDrawable*cd;
+public:
+    BACKGROUND_COLOR():Property("backgroundColor"){
+        cd = nullptr;
+    }
+    AnimateValue get(void* object)override{
+        Drawable*d = ((View*)object)->getBackground();
+        cd = dynamic_cast<ColorDrawable*>(d);
+        LOGV("%p backgroundColor=%x",object,cd->getColor());
+        return cd->getColor();
+    }
+    void set(void* object,const AnimateValue& value)override{
+        LOGV("%p color=%.3f",object,GET_VARIANT(value,float));
+        cd->mutae()->setColor(GET_VARIANT(value,int));
+    }
+};
+
 class ELEVATION:public Property{
 public:
     ELEVATION():Property("elevation"){}
@@ -42,8 +61,8 @@ public:
         return v;
     }
     void set(void* object,const AnimateValue& value)override{
-        LOGV("%p left=%d",object,GET_VARIANT(value,int));
-        ((View*)object)->setElevation(GET_VARIANT(value,int));
+        LOGV("%p left=%d",object,GET_VARIANT(value,float));
+        ((View*)object)->setElevation(GET_VARIANT(value,float));
     }
 };
 
