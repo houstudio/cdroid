@@ -43,8 +43,8 @@ Typeface::Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face) {
 }
 
 Typeface::Typeface(FcPattern & font) {
-    int i,ret, weight=0;
-    double pixelSize=.0f;
+    int i,ret, weight= 0;
+    double pixelSize = 0.f;
     FcChar8* s = nullptr;
     if(FcPatternGetString(&font, FC_FILE, 0, &s) == FcResultMatch){
         mFileName = std::string((const char*)s);
@@ -161,7 +161,7 @@ Typeface* Typeface::create(Typeface*family, int style) {
     }
 
     // Return early if we're asked for the same face/style
-    if (family && family->mStyle == style) {
+    if (family && (family->mStyle == style)) {
         return family;
     }
 
@@ -204,7 +204,7 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
         const std::string family = tf->getFamily();
         std::vector<std::string>families = TextUtils::split(family,";");
         auto it = std::find(families.begin(),families.end(),familyName);
-        if( (it != families.end())||(fontKey.compare(wantFamily) == 0)) {
+        if( (it != families.end()) || (fontKey.compare(wantFamily) == 0) ) {
             familyMatched++;
         }
         if(tf->mStyle&SYSLANG_MATCHED) {
@@ -249,7 +249,7 @@ Typeface* Typeface::createWeightStyle(Typeface* base,int weight, bool italic) {
     for(auto it= sSystemFontMap->begin(); it!= sSystemFontMap->end(); it++) {
         Typeface* face = it->second;
         const int match= base->getFamily()==it->first;
-        if((it->second->isItalic()==italic)&&(match>bestMactched)) {
+        if( (it->second->isItalic()==italic) && (match>bestMactched) ) {
             typeface = face;
             bestMactched=match;
         }
