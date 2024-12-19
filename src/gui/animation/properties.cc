@@ -48,7 +48,7 @@ public:
     }
     void set(void* object,const AnimateValue& value)override{
         LOGV("%p color=%.3f",object,GET_VARIANT(value,float));
-        cd->mutae()->setColor(GET_VARIANT(value,int));
+        cd->mutate()->setColor(GET_VARIANT(value,int));
     }
 };
 
