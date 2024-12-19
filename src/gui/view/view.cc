@@ -2835,7 +2835,7 @@ void View::drawBackground(Canvas&canvas){
 
 void View::setBackgroundBounds() {
     if (mBackgroundSizeChanged && mBackground) {
-        mBackground->setBounds(0, 0, std::abs(mRight - mLeft), std::abs(mBottom - mTop));
+        mBackground->setBounds(0, 0, mRight - mLeft, mBottom - mTop);
         mBackgroundSizeChanged = false;
         //rebuildOutline();
     }
@@ -4014,11 +4014,11 @@ cdroid::Context*View::getContext()const{
 }
 
 int View::getWidth()const{
-    return std::abs(mRight - mLeft);
+    return mRight - mLeft;
 }
 
 int View::getHeight()const{
-    return std::abs(mBottom - mTop);
+    return mBottom - mTop;
 }
 
 bool View::getGlobalVisibleRect(Rect& r, Point* globalOffset) {
@@ -4094,7 +4094,7 @@ void View::offsetLeftAndRight(int offset){
                 invalidateViewProperty(false, false);
             } else {
                 ViewGroup* p = mParent;
-                if (p != nullptr && mAttachInfo != nullptr) {
+                if ((p != nullptr) && (mAttachInfo != nullptr)) {
                     Rect r;
                     int minLeft, maxRight;
                     if (offset < 0) {
