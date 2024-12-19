@@ -164,9 +164,9 @@ int AnimatorInflater::valueTypeFromPropertyName(const std::string& name){
        {"translationX",(int)VALUE_TYPE_FLOAT},
        {"translationY",(int)VALUE_TYPE_FLOAT},
        {"translationZ",(int)VALUE_TYPE_FLOAT},
-       {"x",(int)VALUE_TYPE_INT},
-       {"y",(int)VALUE_TYPE_INT},
-       {"z",(int)VALUE_TYPE_INT},
+       {"x",(int)VALUE_TYPE_FLOAT},
+       {"y",(int)VALUE_TYPE_FLOAT},
+       {"z",(int)VALUE_TYPE_FLOAT},
     };
     auto it = valueTypes.find(name);
     if(it != valueTypes.end()) return it->second;
