@@ -105,17 +105,17 @@ Matrix operator*(const Matrix& a, const Matrix& b)
 
 void Matrix::transform_rectangle(Rectangle& io)const{
     double x1,y1,x2,y2,x3,y3,x4,y4,min_x,min_y,max_x,max_y;
-    x1 =io.x;
+    x1 = io.x;
     y1 = io.y;
     
-    x2 =io.x+io.width;
-    y2=io.y;
+    x2 = io.x+io.width;
+    y2 = io.y;
     
-    x3 =io.x+io.width;
-    y3=io.y+io.height;
+    x3 = io.x+io.width;
+    y3 = io.y+io.height;
     
-    x4 =io.x;
-    y4=io.y+io.height;
+    x4 = io.x;
+    y4 = io.y+io.height;
     
     transform_point(x1,y1);
     transform_point(x2,y2);
@@ -134,7 +134,7 @@ void Matrix::transform_rectangle(Rectangle& io)const{
 }
 
 void Matrix::transform_rectangle(RectangleInt& io)const{
-    Rectangle tmp={(double)io.x,(double)io.y,(double)io.width,(double)io.height};
+    Rectangle tmp = {(double)io.x,(double)io.y,(double)io.width,(double)io.height};
     transform_rectangle(tmp);
     io.x = std::floor(tmp.x);
     io.y = std::floor(tmp.y);

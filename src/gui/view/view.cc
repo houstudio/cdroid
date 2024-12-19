@@ -2835,7 +2835,7 @@ void View::drawBackground(Canvas&canvas){
 
 void View::setBackgroundBounds() {
     if (mBackgroundSizeChanged && mBackground) {
-        mBackground->setBounds(0, 0, mRight - mLeft, mBottom - mTop);
+        mBackground->setBounds(0, 0, std::abs(mRight - mLeft), std::abs(mBottom - mTop));
         mBackgroundSizeChanged = false;
         //rebuildOutline();
     }
@@ -4014,11 +4014,11 @@ cdroid::Context*View::getContext()const{
 }
 
 int View::getWidth()const{
-    return mRight - mLeft;
+    return std::abs(mRight - mLeft);
 }
 
 int View::getHeight()const{
-    return mBottom-mTop;
+    return std::abs(mBottom - mTop);
 }
 
 bool View::getGlobalVisibleRect(Rect& r, Point* globalOffset) {
