@@ -52,8 +52,8 @@ public:
     std::vector<std::string> getStringArray(const std::string&resname,const std::string&arrayname)const;
     std::unique_ptr<std::istream> getInputStream(const std::string&resname,std::string*outpkg=nullptr)override;
     Drawable * getDrawable(const std::string&resid)override;
-    int getColor(const std::string&resid)override;
-    int getDimension(const std::string&resid)override;
+    int getColor(const std::string&resid,int def)override;
+    int getDimension(const std::string&resid,int def)override;
     size_t getArray(const std::string&resid,std::vector<int>&)override;
     size_t getArray(const std::string&resid,std::vector<std::string>&)override;
     ColorStateList* getColorStateList(const std::string&resid)override;

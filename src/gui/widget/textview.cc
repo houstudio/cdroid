@@ -335,7 +335,7 @@ TextAppearanceAttributes::TextAppearanceAttributes(){
 
 void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet&atts){
     if(atts.hasAttribute("textColorHighlight"))
-        mTextColorHighlight = ctx->getColor(atts.getString("textColorHighlight"));
+        mTextColorHighlight = ctx->getColor(atts.getString("textColorHighlight"),mTextColorHighlight);
     if(atts.hasAttribute("textColor"))
         mTextColor = ctx->getColorStateList(atts.getString("textColor"));
     if(atts.hasAttribute("textColorHint"))

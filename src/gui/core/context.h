@@ -32,8 +32,8 @@ public:
     Drawable* getDrawable(const AttributeSet&atts,const std::string&key){
         return atts.hasAttribute(key)?getDrawable(atts.getString(key)):nullptr;
     }
-    virtual int getColor(const std::string&resid)=0;
-    virtual int getDimension(const std::string&resid)=0;
+    virtual int getColor(const std::string&resid,int def)=0;
+    virtual int getDimension(const std::string&resid,int def)=0;
     virtual size_t getArray(const std::string&resname,std::vector<std::string>&)=0;
     virtual size_t getArray(const std::string&resname,std::vector<int>&)=0;
     virtual ColorStateList* getColorStateList(const std::string&resid)=0;

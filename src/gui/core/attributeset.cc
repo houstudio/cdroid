@@ -176,7 +176,7 @@ int AttributeSet::getColor(const std::string&key,int def)const{
     else if((resid[0]=='#')||(resid.find(':')==std::string::npos)) {
         return Color::parseColor(resid);
     }
-    return mContext->getColor(resid);
+    return mContext->getColor(resid,def);
 
 }
 

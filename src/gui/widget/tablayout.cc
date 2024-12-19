@@ -39,12 +39,12 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     mTabTextSize  = atts.getDimensionPixelSize("tabTextSize",mTabTextSize);
 
     if(atts.hasAttribute("tabTextColor"))
-        mTabTextColors=context->getColorStateList(atts.getString("tabTextColor"));
+        mTabTextColors = context->getColorStateList(atts.getString("tabTextColor"));
     else 
-        mTabTextColors=ColorStateList::valueOf(0xFFFFFFFF);
+        mTabTextColors = ColorStateList::valueOf(0xFFFFFFFF);
 
     if(atts.hasAttribute("tabSelectedTextColor")){
-        const int selected = context->getColor(atts.getString("tabSelectedTextColor"));
+        const int selected = atts.getColor("tabSelectedTextColor",0);
         const int defColor = mTabTextColors->getDefaultColor();
         delete mTabTextColors;
         mTabTextColors = createColorStateList(defColor, selected);

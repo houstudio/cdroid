@@ -25,7 +25,7 @@ ColorStateList::ColorStateList(int color)
 
 int ColorStateList::addStateColor(cdroid::Context*ctx,const AttributeSet&atts){
     std::vector<int>states;
-    const int color = ctx->getColor(atts.getString("color"));
+    const int color = atts.getColor("color",0);
     StateSet::parseState(states,atts);
     return addStateColor(states,color);
 }
@@ -189,7 +189,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     atts.set(props);
     if(strcmp(name,"item") == 0){
         std::vector<int>states;
-        const int color = cd->ctx->getColor(atts.getString("color"));
+        const int color = atts.getColor("color",0);
         StateSet::parseState(states,atts);
         if(cd->colors==nullptr)
            cd->colors = new ColorStateList();
