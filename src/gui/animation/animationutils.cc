@@ -6,6 +6,8 @@
 
 namespace cdroid{
 
+std::map<const std::string,std::shared_ptr<Interpolator>>AnimationUtils::mInterpolators;
+
 int64_t AnimationUtils::currentAnimationTimeMillis(){
     return SystemClock::uptimeMillis();
 }
@@ -175,7 +177,11 @@ static void startPolator(void *userData, const XML_Char *xname, const XML_Char *
 Interpolator* AnimationUtils::loadInterpolator(Context* context,const std::string&resid){
     std::streamsize rdlen;
     char buf[256];
+    auto it = mInterpolators.find(resid);
     Interpolator*interpolator = nullptr;
+    if(it!=mInterpolators.end()){
+        return it->second.get();
+    }
     XML_Parser parser = XML_ParserCreate(nullptr);
     XML_SetElementHandler(parser, startPolator,nullptr);
     XML_SetUserData(parser,&interpolator);
@@ -191,6 +197,7 @@ Interpolator* AnimationUtils::loadInterpolator(Context* context,const std::strin
         }
     }while(rdlen);
     XML_ParserFree(parser);
+    mInterpolators.insert({resid,std::shared_ptr<Interpolator>(interpolator)});
     return interpolator;
 }
 

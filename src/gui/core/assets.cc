@@ -130,7 +130,7 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
             LOGV_IF(!value.empty(),"%s =%s",key.c_str(),value.c_str());
             mStrings[key] = convertXmlToCString(value);
         }
-    } else  if(atts.size()==2) {
+    } else if(atts.size()==2) {
         std::string resource = package+":"+resid;
         if((tag0.compare("selector")==0) && (resource.find("drawable")==std::string::npos)){
             auto pos1 = resource.find(":");
@@ -444,10 +444,12 @@ Drawable* Assets::getDrawable(const std::string&resid) {
         const uint32_t cc = (uint32_t)getColor(fullresid,0);
         return new ColorDrawable(cc);
     } else if(ext.compare("xml")){
-        if(resname.find(":")==std::string::npos)
-            d = ImageDecoder::createAsDrawable(this,package+":"+resname);
-        else
-            d = ImageDecoder::createAsDrawable(this,resname);
+        if(resname.find(":")==std::string::npos){
+            struct stat st;
+            if(stat(resname.c_str(),&st))
+                resname = package+":"+resname;
+        }
+        d = ImageDecoder::createAsDrawable(this,resname);
     }
     if( (d == nullptr) && (ext.compare("xml")==0) ) {
         void*zfile = pak ? pak->getZipHandle(resname) : nullptr;
@@ -458,7 +460,7 @@ Drawable* Assets::getDrawable(const std::string&resid) {
             std::ifstream fs(fullresid);
             d = Drawable::fromStream(nullptr,fs,resname,package);
         }
-        LOGD_IF(zfile==nullptr&&fullresid.find("/")!=std::string::npos,"drawable %s load failed",fullresid.c_str());
+        LOGD_IF((zfile==nullptr)&&(fullresid.find("/")!=std::string::npos),"drawable %s load failed",fullresid.c_str());
     }
     if(d) {
         mDrawables.insert({fullresid,std::weak_ptr<Drawable::ConstantState>(d->getConstantState())});

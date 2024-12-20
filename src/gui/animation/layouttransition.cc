@@ -438,7 +438,6 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
     listener = [this,anim,parent,child,changeReason,duration,listener](View& v, int left, int top, int width, int height,
                     int oldLeft, int oldTop, int oldWidth, int oldHeight){
 
-        LOGD("doLayoutChange(%p:%d)",&v,v.getId());
         anim->setupEndValues();
         if (dynamic_cast<ValueAnimator*>(anim)) {
             bool valuesDiffer = false;

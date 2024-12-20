@@ -1,8 +1,12 @@
-#pragma once
+#ifndef __ANIMATION_UTILS_H__
+#define __ANIMATION_UTILS_H__
+#include <memory>
 #include <animation/layoutanimationcontroller.h>
 namespace cdroid{
 
 class AnimationUtils{
+private:
+    static std::map<const std::string,std::shared_ptr<Interpolator>>mInterpolators;
 public:
     static int64_t currentAnimationTimeMillis();
     static Animation* loadAnimation(Context* context,const std::string&id);
@@ -15,3 +19,4 @@ public:
 
 }//endof namespace
 
+#endif/*__ANIMATION_UTILS_H__*/

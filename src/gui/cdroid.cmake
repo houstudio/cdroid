@@ -1,3 +1,55 @@
+list(APPEND CDROID_SOURCES
+    core/app.cc
+    core/assets.cc
+    core/atexit.cc
+    core/attributeset.cc
+    core/audiomanager.cc
+    core/basebundle.cc
+    core/build.cc
+    core/bundle.cc
+    core/calendar.cc
+    core/canvas.cc
+    core/cla.cc
+    core/color.cc
+    core/display.cc
+    core/displaymetrics.cc
+    core/epollwrapper.cc
+    core/graphdevice.cc
+    core/handler.cc
+    core/inputdevice.cc
+    core/inputeventsource.cc
+    core/inputmethod.cc
+    core/inputmethodmanager.cc
+    core/insets.cc
+    core/intent.cc
+    core/iostreams.cc
+    core/keyboard.cc
+    core/keycharactermap.cc
+    core/keylayoutmap.cc
+    core/layout.cc
+    core/looper.cc
+    core/message.cc
+    core/messagequeue.cc
+    core/parcel.cc
+    core/path.cc
+    core/porterduff.cc
+    core/preferences.cc
+    core/scheduler.cc
+    core/systemclock.cc
+    core/textutils.cc
+    core/tokenizer.cc
+    core/transform.cc
+    core/typedvalue.cc
+    core/typeface.cc
+    core/uieventsource.cc
+    core/windowmanager.cc
+    core/ziparchive.cc
+)
+
+if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    message("Building on Windows with MSVC compiler")
+    list(APPEND CDROID_SOURCES core/wepoll.cc)
+endif()
 
 list(APPEND CDROID_SOURCES
     view/abssavedstate.cc

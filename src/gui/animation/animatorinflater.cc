@@ -1,5 +1,6 @@
 #include <animation/animatorset.h>
 #include <animation/animatorinflater.h>
+#include <animation/animationutils.h>
 #include <core/typedvalue.h>
 #include <expat.h>
 #include <cdlog.h>
@@ -292,8 +293,13 @@ ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const Attrib
         },(int)VALUE_TYPE_UNDEFINED);
 
     const std::string propertyName = atts.getString("propertyName");
+    const std::string intpResource = atts.getString("interpolator");
+    Interpolator* interpolator= AnimationUtils::loadInterpolator(context,intpResource);
     if(anim==nullptr){
         anim = new ValueAnimator();
+    }
+    if(interpolator){
+        anim->setInterpolator(interpolator);
     }
     anim->setDuration(atts.getInt("duration",300));
     anim->setStartDelay(atts.getInt("startOffset",0));

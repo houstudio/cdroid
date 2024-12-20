@@ -7,9 +7,6 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
 endif()
-aux_source_directory(core SRCS_GUICORE)
-aux_source_directory(view SRCS_VIEWS)
-aux_source_directory(widget SRCS_WIDGET)
 file(GLOB_RECURSE SRCS_WIDGETEX RELATIVE "${PROJECT_SOURCE_DIR}" "widgetEx/*")
 aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm  SRCS_CAIROMM)
@@ -61,13 +58,13 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 set(SOURCES_GUI
-    ${SRCS_GUICORE} ${SRCS_CAIROMM}
-    #${SRCS_VIEWS} ${SRCS_WIDGET} ${SRCS_WIDGETEX} ${SRCS_APP}
+    ${SRCS_CAIROMM}
     ${CDROID_SOURCES}
     ${SRCS_DRAWABLES}
     ${SRCS_UTILS}
     ${SRCS_ANIMATION}
     ${SRCS_TRANSITION}
+    #${SRCS_VIEWS} ${SRCS_WIDGET} ${SRCS_WIDGETEX} ${SRCS_APP}
 )
 
 add_library(cdroid SHARED ${SOURCES_GUI})
