@@ -386,8 +386,7 @@ int Typeface::loadFromFontConfig() {
         if(pos != std::string::npos)
             font = font.substr(pos+1);
         std::string fontKey = mContext->getPackageName()+":font/"+font;
-        LOGV("%d family=%s style=%s fontKey='%s' fileName=%s",i,family.c_str(),
-                style.c_str(),fontKey.c_str(),tf->mFileName.c_str());
+        LOGI("%d [%s] <%s> @%s=%s",i,family.c_str(),style.c_str(),fontKey.c_str(),tf->mFileName.c_str());
         sSystemFontMap->insert({fontKey,tf});
         std::vector<std::string>families = TextUtils::split(family,";");
         for(std::string fm:families)
