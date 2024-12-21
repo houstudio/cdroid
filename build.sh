@@ -1,5 +1,5 @@
 #处理参数，规范化参数
-ARGS=`getopt -a -o p:b:h:: --long product:,build::,help:: -- "$@"`
+ARGS=`getopt -a -o p:b:h:: --long product:,build::,options::,help:: -- "$@"`
 #echo $ARGS
 #将规范化后的命令行参数分配至位置参数（$1,$2,...)
 eval set -- "${ARGS}"
@@ -36,13 +36,13 @@ fi
 CDROID_VALID_PORTS="${OSNAME}"
 SHOWHELP=0
 PRODUCT="${OSNAME}"
+OPTIONS_FILE="../${PRODUCT,,}"
 BUILD_TYPE="Release"
 
 for key in "${!TOOLCHAINS[@]}"
 do
   CDROID_VALID_PORTS="${CDROID_VALID_PORTS},$key"
 done
-
 
 while :
 do
@@ -61,6 +61,9 @@ do
                 SHOWHELP=1
                 echo "showhelp"
                 shift
+                ;;
+        --options)
+                OPTIONS_FILE="../$2"
                 ;;
         --)
                 shift
@@ -124,16 +127,15 @@ echo PKG_CONFIG_PATH=${PKG_CONFIG_PATH}
 
 # Create cmake -D options
 CMAKE_SWITCHES=""
-CONFIG_FILE="../${PRODUCT,,}.txt"
-if [ -f "$CONFIG_FILE" ]; then
-    echo "Fetch options from '$CONFIG_FILE' "
+if [ -f "$OPTIONS_FILE" ]; then
+    echo "Fetch options from '$OPTIONS_FILE' "
     while IFS= read -r line; do
         if [[ -n "$line" && ! "$line" =~ ^# ]]; then
             key=$(echo "$line" | cut -d'=' -f1)
             value=$(echo "$line" | cut -d'=' -f2)
             CMAKE_SWITCHES+=" -D${key}=${value}"
         fi
-    done < "$CONFIG_FILE"
+    done < "$OPTIONS_FILE"
     echo "$CMAKE_SWITCHES"
 fi
 
