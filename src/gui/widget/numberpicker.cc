@@ -445,7 +445,6 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
     mVelocityTracker->addMovement(event);
     int action = event.getActionMasked();
     switch (action) {
-    case MotionEvent::ACTION_CANCEL:LOGD("ACTION_CANCEL");break;
     case MotionEvent::ACTION_MOVE:
         if (isHorizontalMode()) {
             float currentMoveX = event.getX();
