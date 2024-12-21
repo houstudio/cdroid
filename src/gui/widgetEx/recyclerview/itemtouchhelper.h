@@ -66,7 +66,6 @@ private:
     View* mOverdrawChild = nullptr;
     int mOverdrawChildPosition = -1;
     GestureDetector* mGestureDetector;
-    //ItemTouchHelperGestureListener mItemTouchHelperGestureListener;
     GestureDetector::OnGestureListener mItemTouchHelperGestureListener;
     bool mShouldReactToLongPress = true;
     void doNotReactToLongPress();

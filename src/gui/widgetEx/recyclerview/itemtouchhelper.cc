@@ -26,11 +26,16 @@ static NeverDestroyed<DragViewScrollInterpolator>sDragViewScrollCapInterpolator;
 
 ItemTouchHelper::ItemTouchHelper(Callback* callback) {
     mCallback = callback;
+    mSelected = nullptr;
     mRecyclerView = nullptr;
+    mOverdrawChild= nullptr;
     mVelocityTracker = nullptr;
     mSwipeEscapeVelocity = 120;
     mMaxSwipeVelocity = 800;
+    mOverdrawChildPosition = -1;
     mGestureDetector = nullptr;
+    mShouldReactToLongPress = true;
+
     mScrollRunnable = [this]() {
         if ((mSelected != nullptr) && scrollIfNecessary()) {
             if (mSelected != nullptr) { //it might be lost during scrolling
@@ -1294,6 +1299,7 @@ ItemTouchHelper::RecoverAnimation::RecoverAnimation(RecyclerView::ViewHolder* vi
     mTargetY = targetY;
     mOverridden = false;
     mEnded = false;
+    mIsPendingCleanup = false;
     mValueAnimator = ValueAnimator::ofFloat({0.f, 1.f});
     ValueAnimator::AnimatorUpdateListener ls;
     ls/*onAnimationUpdate*/ = [this](ValueAnimator& animation) {
