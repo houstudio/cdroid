@@ -121,10 +121,27 @@ pushd ${OUTDIR}
 export PKG_CONFIG_PATH=$DEPLIBS_DIR/lib/pkgconfig
 export PKG_CONFIG_LIBDIR=$DEPLIBS_DIR/lib/pkgconfig
 echo PKG_CONFIG_PATH=${PKG_CONFIG_PATH}
+
+# Create cmake -D options
+CMAKE_SWITCHES=""
+CONFIG_FILE="${PRODUCT,,}.txt"
+if [[ -f "$CONFIG_FILE" ]]; then
+    echo "Fetch options from '$CONFIG_FILE' "
+    while IFS= read -r line; do
+        if [[ -n "$line" && ! "$line" =~ ^# ]]; then
+            key=$(echo "$line" | cut -d'=' -f1)
+            value=$(echo "$line" | cut -d'=' -f2)
+            CMAKE_SWITCHES+=" -D${key}=${value}"
+        fi
+    done < "$CONFIG_FILE"
+    echo "$CMAKE_SWITCHES"
+fi
+
 cmake ${TOOLCHAIN_FILE} \
    -DCMAKE_INSTALL_PREFIX=./ \
    -DCMAKE_PREFIX_PATH=${DEPLIBS_DIR} \
    -DCMAKE_MODULE_PATH=${DEPLIBS_DIR} \
    -DCDROID_CHIPSET=${PRODUCT,,} \
    -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+   ${CMAKE_SWITCHES}
    ..
