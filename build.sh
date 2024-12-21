@@ -124,8 +124,8 @@ echo PKG_CONFIG_PATH=${PKG_CONFIG_PATH}
 
 # Create cmake -D options
 CMAKE_SWITCHES=""
-CONFIG_FILE="${PRODUCT,,}.txt"
-if [[ -f "$CONFIG_FILE" ]]; then
+CONFIG_FILE="../${PRODUCT,,}.txt"
+if [ -f "$CONFIG_FILE" ]; then
     echo "Fetch options from '$CONFIG_FILE' "
     while IFS= read -r line; do
         if [[ -n "$line" && ! "$line" =~ ^# ]]; then
@@ -143,5 +143,5 @@ cmake ${TOOLCHAIN_FILE} \
    -DCMAKE_MODULE_PATH=${DEPLIBS_DIR} \
    -DCDROID_CHIPSET=${PRODUCT,,} \
    -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-   ${CMAKE_SWITCHES}
+   ${CMAKE_SWITCHES} \
    ..
