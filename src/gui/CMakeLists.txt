@@ -48,7 +48,6 @@ check_function_exists(eventfd HAVE_EVENTFD)
 check_include_file("rtaudio/RtAudio.h" HAVE_RTAUDIO_H)
 
 configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
-#configure_file(gui_features.h.cmake  ${PROJECT_SOURCE_DIR}/gui_features.h)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_definitions(--include gui_features.h)
