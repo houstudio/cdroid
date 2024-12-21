@@ -28,6 +28,37 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
         mTextSize = mInputTextSize;
         mSelectorElementSize = mInputTextSize;
     }
+    mIncrementButton =(ImageButton*)findViewById(cdroid::R::id::increment);
+    mDecrementButton =(ImageButton*)findViewById(cdroid::R::id::decrement);
+    View::OnClickListener onClick= [this](View& v) {
+        hideSoftInput();
+        mInputText->clearFocus();
+        if (v.getId() == R::id::increment) {
+            changeValueByOne(true);
+        } else {
+            changeValueByOne(false);
+        }
+    };
+    View::OnLongClickListener onLongClick=[this](View& v) {
+        hideSoftInput();
+        mInputText->clearFocus();
+        if (v.getId() == R::id::increment) {
+            postChangeCurrentByOneFromLongPress(true, 0);
+        } else {
+            postChangeCurrentByOneFromLongPress(false, 0);
+        }
+        return true;
+    };
+
+    if(mIncrementButton){
+        mIncrementButton->setOnClickListener(onClick);
+        mIncrementButton->setOnLongClickListener(onLongClick);
+    }
+    if(mDecrementButton){
+        mDecrementButton->setOnClickListener(onClick);
+        mDecrementButton->setOnLongClickListener(onLongClick);
+    }
+
     setWidthAndHeight();
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     measure(MeasureSpec::makeMeasureSpec(w,MeasureSpec::EXACTLY),MeasureSpec::makeMeasureSpec(h,MeasureSpec::EXACTLY));
@@ -447,6 +478,7 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
         }
         break;
     case MotionEvent::ACTION_UP:
+    case MotionEvent::ACTION_CANCEL:
         removeBeginSoftInputCommand();
         removeChangeCurrentByOneFromLongPress();
         pshCancel();
