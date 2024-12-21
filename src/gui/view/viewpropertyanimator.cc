@@ -9,9 +9,9 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
     mView = view;
     mDurationSet = false;
     mStartDelaySet = false;
+    mInterpolatorSet = false;
     mInterpolator = nullptr;
     mTempValueAnimator = nullptr;
-    mInterpolatorSet = false;
     mAnimationStarter = std::bind(&ViewPropertyAnimator::startAnimation,this);
 
     mAnimatorEventListener.onAnimationStart = [this](Animator&animation,bool reverse){
@@ -64,8 +64,10 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
             mAnimatorOnEndMap.erase(it);
         }
         auto it2 = mAnimatorMap.find(&animation);
-        delete it2->first;
-        mAnimatorMap.erase(it2);
+        if(it2!=mAnimatorMap.end()){
+            delete it2->first;
+            mAnimatorMap.erase(it2);
+        }
     };
 
     mAnimatorEventListener2 = [this](ValueAnimator&animation){
@@ -75,7 +77,7 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
             return;
         }
 
-        bool hardwareAccelerated = false;//mView->isHardwareAccelerated();
+        const bool hardwareAccelerated = mView->isHardwareAccelerated();
         PropertyBundle& propertyBundle =it->second;/* = mAnimatorMap.get(animation);*/
 
         // alpha requires slightly different treatment than the other (transform) properties.
@@ -128,6 +130,7 @@ ViewPropertyAnimator::~ViewPropertyAnimator(){
     for(auto am:mAnimatorMap){
         delete am.first;
     }
+    mAnimatorMap.clear();
 }
 
 ViewPropertyAnimator& ViewPropertyAnimator::setDuration(long duration) {

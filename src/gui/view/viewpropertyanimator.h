@@ -44,12 +44,12 @@ protected:
             SCALE_X | SCALE_Y | ROTATION | ROTATION_X | ROTATION_Y | X | Y | Z;
 private:
     View* mView;
-    long mDuration;
     bool mDurationSet;
-    long mStartDelay;
     bool mStartDelaySet;
+    bool mInterpolatorSet;
+    long mDuration;
+    long mStartDelay;
     TimeInterpolator* mInterpolator;
-    bool mInterpolatorSet = false;
     Animator::AnimatorListener mListener;
     ValueAnimator::AnimatorUpdateListener mUpdateListener;
     ValueAnimator* mTempValueAnimator;

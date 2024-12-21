@@ -5,7 +5,7 @@ find_package(GIF)
 find_package(JPEG)
 find_package(WEBP)
 find_package(LCMS2)
-
+find_package(Fontconfig)
 set(DECODER_SRCS
     imagedecoder.cc
     gifdecoder.cc
@@ -19,11 +19,12 @@ set(DECODER_SRCS
 )
 
 include_directories(
-	./ ../
+    ./ ../
 	../../porting/include
 	${FREETYPE2_INCLUDE_DIRS}
 	${CAIRO_INCLUDE_DIRS}
 	${WEBP_INCLUDE_DIRS}
+    ${FONTCONFIG_INCLUDE_DIRS}
 	${CMAKE_BINARY_DIR}/include
     ${CMAKE_BINARY_DIR}/include/gui
 )
