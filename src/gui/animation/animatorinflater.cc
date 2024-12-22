@@ -94,12 +94,15 @@ public:
 Animator* AnimatorInflater::createAnimatorFromXml(Context*ctx,const std::string&resid){
     std::streamsize len;
     char buf[128];
-    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
     AnimatorParseData pd;
     pd.context = ctx;
     pd.animator  = nullptr;
     pd.statelistAnimator = nullptr;
     std::unique_ptr<std::istream>stream = ctx->getInputStream(resid,&pd.package);
+    if(stream ==nullptr){
+        return nullptr;
+    }
+    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
     XML_SetUserData(parser,&pd);
     XML_SetElementHandler(parser, AnimatorParser::startElement, AnimatorParser::__endElement);
     do {
@@ -119,12 +122,15 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*ctx,const std::string&
 StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*ctx,const std::string&resid){
     int len;
     char buf[128];
-    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
     AnimatorParseData pd;
     pd.context = ctx;
     pd.animator  = nullptr;
     pd.statelistAnimator = nullptr;
     std::unique_ptr<std::istream>stream = ctx->getInputStream(resid,&pd.package);
+    if(stream ==nullptr){
+        return nullptr;
+    }
+    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
     XML_SetUserData(parser,&pd);
     XML_SetElementHandler(parser, AnimatorParser::startElement, AnimatorParser::__endElement);
     do {

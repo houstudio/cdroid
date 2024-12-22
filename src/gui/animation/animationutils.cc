@@ -179,13 +179,15 @@ Interpolator* AnimationUtils::loadInterpolator(Context* context,const std::strin
     char buf[256];
     auto it = mInterpolators.find(resid);
     Interpolator*interpolator = nullptr;
+    std::unique_ptr<std::istream> stream = context->getInputStream(resid);
     if(it!=mInterpolators.end()){
         return it->second.get();
     }
+    if(stream==nullptr)
+        return nullptr;
     XML_Parser parser = XML_ParserCreate(nullptr);
     XML_SetElementHandler(parser, startPolator,nullptr);
     XML_SetUserData(parser,&interpolator);
-    std::unique_ptr<std::istream> stream = context->getInputStream(resid);
     do{
         stream->read(buf,sizeof(buf));
         rdlen = stream->gcount();

@@ -1,9 +1,9 @@
 #ifndef __ASSETS_H__
 #define __ASSETS_H__
-#include <map>
 #include <memory>
 #include <string>
 #include <functional>
+#include <unordered_map>
 #include <drawables/drawable.h>
 
 namespace cdroid{
@@ -15,15 +15,15 @@ private:
     std::string mDefault;//default resource
     std::string mThemeName;
     AttributeSet mTheme;
-    std::map<const std::string,std::string>mStrings;
-    std::map<const std::string,int>mIDS;
-    std::map<const std::string,std::vector<std::string>>mArraies;
-    std::map<const std::string,std::weak_ptr<Drawable::ConstantState>>mDrawables;
-    std::map<const std::string,class ZIPArchive*>mResources;
-    std::map<const std::string,AttributeSet>mStyles;
-    std::map<const std::string,uint32_t>mColors;
-    std::map<const std::string,int>mDimensions;
-    std::map<const std::string,ColorStateList*>mStateColors;
+    std::unordered_map<std::string,std::string>mStrings;
+    std::unordered_map<std::string,int>mIDS;
+    std::unordered_map<std::string,std::vector<std::string>>mArraies;
+    std::unordered_map<std::string,std::weak_ptr<Drawable::ConstantState>>mDrawables;
+    std::unordered_map<std::string,class ZIPArchive*>mResources;
+    std::unordered_map<std::string,AttributeSet>mStyles;
+    std::unordered_map<std::string,uint32_t>mColors;
+    std::unordered_map<std::string,int>mDimensions;
+    std::unordered_map<std::string,ColorStateList*>mStateColors;
     const std::string parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value,void*);
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid,std::string*package)const;
