@@ -43,8 +43,9 @@ class CDROIDHandler( xml.sax.ContentHandler ):
                     self.addID(value)
             if 'string/' in value:
                 self.addString(value)
-        if 'type' in attributes and 'name' in attributes:
+        if 'type' in attributes and 'name' in attributes and attributes.get("type")=="id":
             self.addID("@id/"+attributes.get('name'))
+            #print(tag+"@id/"+attributes.get('name'))
 
     def addID(self,name):
         pos=name.find('/')
