@@ -96,7 +96,7 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
             const std::string name=package+":id/"+atts.back().getString("name");
             mIDS[name] = TextUtils::strtol(value);
             LOGV("%s=%s",name.c_str(),value.c_str());
-        }else if(tag0.compare("dimen")==0||tag0.compare("integer")==0){
+        }else if((tag0.compare("dimen")==0)||(tag0.compare("integer")==0)||(tag0.compare("bool")==0)){
             const std::string name = atts[0].getString("name");
             const std::string resUri = package+":"+tag0+"/"+name;
             const std::string dimenRes = AttributeSet::normalize(package,value);
@@ -108,6 +108,10 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
                     const DisplayMetrics& dm = getDisplayMetrics();
                     if(strncmp(p,"sp",2)==0) v = int(dm.scaledDensity * v /*+0.5f*/);
                     else if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)v =int(dm.density * v /*+0.5f*/);
+                }
+                if(tag0.compare("bool")==0){
+                    //LOGV("%s=%s",resUri.c_str(),value.c_str());
+                    v = value[0]=='t'?true:false;
                 }
                 mDimensions.insert({resUri,v});
             }else if(itc!=mDimensions.end()){
@@ -130,6 +134,18 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
             const std::string key = package+":string/"+name;
             LOGV_IF(!value.empty(),"%s =%s",key.c_str(),value.c_str());
             mStrings[key] = convertXmlToCString(value);
+        } else if(tag0.compare("item")==0){
+            AttributeSet&att = atts[0];
+            if(att.getString("type").compare("dimen")==0){
+                const std::string name = att.getString("name");
+                const std::string resUri = package+":dimen/"+name;
+                if(att.getString("format").compare("float")==0){
+                    //LOGD("%s=%s",resUri.c_str(),value.c_str());
+                }else{
+                    //LOGD("%s=%s",resUri.c_str(),value.c_str());
+                    mDimensions.insert({resUri,std::stol(value)});
+                }
+            }
         }
     } else if(atts.size()==2) {
         std::string resource = package+":"+resid;
