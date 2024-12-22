@@ -96,8 +96,9 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
             const std::string name=package+":id/"+atts.back().getString("name");
             mIDS[name] = TextUtils::strtol(value);
             LOGV("%s=%s",name.c_str(),value.c_str());
-        }else if(tag0.compare("dimen")==0){
+        }else if(tag0.compare("dimen")==0||tag0.compare("integer")==0){
             const std::string name = atts[0].getString("name");
+            const std::string resUri = package+":"+tag0+"/"+name;
             const std::string dimenRes = AttributeSet::normalize(package,value);
             auto itc = mDimensions.find(dimenRes);
             if( (value.find("/") == std::string::npos) ){
@@ -108,11 +109,11 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
                     if(strncmp(p,"sp",2)==0) v = int(dm.scaledDensity * v /*+0.5f*/);
                     else if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)v =int(dm.density * v /*+0.5f*/);
                 }
-                mDimensions.insert({package+":dimen/"+name,v});
+                mDimensions.insert({resUri,v});
             }else if(itc!=mDimensions.end()){
-                mDimensions.insert({package+":dimen/"+name,itc->second});
+                mDimensions.insert({resUri,itc->second});
             }else{
-                pending->dimens.insert({package+":dimen/"+name,dimenRes});
+                pending->dimens.insert({resUri,dimenRes});
             }
         } else if(tag0.compare("color")==0) {
             const std::string name = atts[0].getString("name");
