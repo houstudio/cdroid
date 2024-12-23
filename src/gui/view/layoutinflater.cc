@@ -112,7 +112,8 @@ View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool att
         std::ifstream fin(resource);
         v=inflate(resource,fin,root,root!=nullptr,nullptr);
     }
-    LOGD("%s inflater used %ldms",resource.c_str(),long(SystemClock::uptimeMillis() - tstart));
+    const long tmused = long(SystemClock::uptimeMillis() - tstart);
+    LOGI_IF(tmused>=8,"%s inflater used %ldms",resource.c_str(),tmused);
     return v;
 }
 

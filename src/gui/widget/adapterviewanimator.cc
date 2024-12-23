@@ -58,8 +58,9 @@ void AdapterViewAnimator::configureViewAnimator(int numVisibleViews, int activeO
     mMaxNumActiveViews = numVisibleViews;
     mActiveOffset = activeOffset;
     mPreviousViews.clear();
-    for(auto v:mViewsMap)
+    for(auto v:mViewsMap){
         delete v.second;
+    }
     mViewsMap.clear();
     removeAllViewsInLayout();
     mCurrentWindowStart = 0;
@@ -137,7 +138,7 @@ int AdapterViewAnimator::modulo(int pos, int size) {
 }
 
 View* AdapterViewAnimator::getViewAtRelativeIndex(int relativeIndex){
-    if (relativeIndex >= 0 && relativeIndex <= getNumActiveViews() - 1 && mAdapter != nullptr) {
+    if ((relativeIndex >= 0) && (relativeIndex <= getNumActiveViews() - 1) && (mAdapter != nullptr)) {
         int i = modulo(mCurrentWindowStartUnbounded + relativeIndex, getWindowSize());
         auto it=mViewsMap.find(i);
         if (it!=mViewsMap.end()) {
@@ -276,8 +277,8 @@ void AdapterViewAnimator::showOnly(int childIndex, bool animate) {
     }
 
     // If the window has changed
-    if (!(newWindowStart == mCurrentWindowStart && newWindowEnd == mCurrentWindowEnd &&
-            newWindowStartUnbounded == mCurrentWindowStartUnbounded)) {
+    if (!((newWindowStart == mCurrentWindowStart) && (newWindowEnd == mCurrentWindowEnd) &&
+            (newWindowStartUnbounded == mCurrentWindowStartUnbounded))) {
         // Run through the indices in the new range
         for (int i = newWindowStart; i <= newWindowEnd; i++) {
 
@@ -294,8 +295,8 @@ void AdapterViewAnimator::showOnly(int childIndex, bool animate) {
             // If this item is in the current window, great, we just need to apply
             // the transform for it's new relative position in the window, and animate
             // between it's current and new relative positions
-            bool inOldRange = it!=mViewsMap.end()&& std::find(mPreviousViews.begin(),
-                    mPreviousViews.end(),index)==mPreviousViews.end();
+            const bool inOldRange = (it!=mViewsMap.end())&& (std::find(mPreviousViews.begin(),
+                    mPreviousViews.end(),index)==mPreviousViews.end());
 
             if (inOldRange) {
                 View* view = it->second->view;
@@ -308,7 +309,7 @@ void AdapterViewAnimator::showOnly(int childIndex, bool animate) {
                 // Get the new view from the adapter, add it and apply any transform / animation
                 const int adapterPosition = modulo(i, adapterCount);
                 View* newView = mAdapter->getView(adapterPosition, nullptr, this);
-                long itemId = mAdapter->getItemId(adapterPosition);
+                const long itemId = mAdapter->getItemId(adapterPosition);
 
                 // We wrap the new view in a FrameLayout so as to respect the contract
                 // with the adapter, that is, that we don't modify this view directly
@@ -345,7 +346,7 @@ void AdapterViewAnimator::addChild(View* child) {
     // This code is used to obtain a reference width and height of a child in case we need
     // to decide our own size. TODO: Do we want to update the size of the child that we're
     // using for reference size? If so, when?
-    if (mReferenceChildWidth == -1 || mReferenceChildHeight == -1) {
+    if ((mReferenceChildWidth == -1) || (mReferenceChildHeight == -1)) {
         const int measureSpec = MeasureSpec::makeMeasureSpec(0, MeasureSpec::UNSPECIFIED);
         child->measure(measureSpec, measureSpec);
         mReferenceChildWidth = child->getMeasuredWidth();
@@ -415,8 +416,8 @@ bool AdapterViewAnimator::onTouchEvent(MotionEvent& ev){
 
 void AdapterViewAnimator::measureChildren() {
     const int count = getChildCount();
-    int childWidth = getMeasuredWidth() - mPaddingLeft - mPaddingRight;
-    int childHeight = getMeasuredHeight() - mPaddingTop - mPaddingBottom;
+    const int childWidth = getMeasuredWidth() - mPaddingLeft - mPaddingRight;
+    const int childHeight = getMeasuredHeight() - mPaddingTop - mPaddingBottom;
 
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
