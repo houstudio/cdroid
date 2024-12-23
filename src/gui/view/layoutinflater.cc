@@ -95,7 +95,8 @@ bool LayoutInflater::registerInflater(const std::string&name,const std::string&d
 }
 
 View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool attachToRoot,AttributeSet*atts) {
-    View*v=nullptr;
+    View*v = nullptr;
+    const int64_t tstart = SystemClock::uptimeMillis();
     if(mContext) {
         std::string package;
         std::unique_ptr<std::istream>stream = mContext->getInputStream(resource,&package);
@@ -111,6 +112,7 @@ View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool att
         std::ifstream fin(resource);
         v=inflate(resource,fin,root,root!=nullptr,nullptr);
     }
+    LOGD("%s inflater used %ldms",resource.c_str(),long(SystemClock::uptimeMillis() - tstart));
     return v;
 }
 
@@ -207,7 +209,6 @@ View* LayoutInflater::inflate(const std::string&package,std::istream&stream,View
     char buf[256];
     XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
     WindowParserData pd;
-    int64_t tstart = SystemClock::uptimeMillis();
 
     pd.ctx  = mContext;
     pd.root = root;
@@ -234,7 +235,6 @@ View* LayoutInflater::inflate(const std::string&package,std::istream&stream,View
         root->requestLayout();
         root->startLayoutAnimation();
     }
-    LOGV("usedtime %ldms [%p]parsed %d views ",long(SystemClock::uptimeMillis() - tstart),&pd, pd.parsedView);
     return pd.returnedView;
 }
 
