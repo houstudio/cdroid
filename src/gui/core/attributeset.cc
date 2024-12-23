@@ -108,6 +108,11 @@ const std::string AttributeSet::getAttributeValue(const std::string&key)const{
 
 bool AttributeSet::getBoolean(const std::string&key,bool def)const{
     const std::string v = getAttributeValue(key);
+    if(v.find_first_of("@:/")!=std::string::npos){
+        const int32_t iv = mContext->getDimension(v,INT_MAX);
+        if(iv==INT_MAX)return def;
+        return bool(iv);
+    }
     if(v.empty()) return def;
 	return v.compare("true") == 0;
 }
@@ -115,6 +120,9 @@ bool AttributeSet::getBoolean(const std::string&key,bool def)const{
 int AttributeSet::getInt(const std::string&key,int def)const{
     int base = 10;
     const std::string v = getAttributeValue(key);
+    if(v.find_first_of("@:/")!=std::string::npos){
+        return mContext->getDimension(v,def);
+    }
     if(v.empty()||((v[0]>='a')&&(v[0]<='z'))){
         return def;
     }
@@ -182,6 +190,10 @@ int AttributeSet::getColor(const std::string&key,int def)const{
 
 float AttributeSet::getFloat(const std::string&key,float def)const{
     const std::string v = getAttributeValue(key);
+    if(v.find_first_of("@:/")!=std::string::npos){
+        int32_t iv = mContext->getDimension(v,def);
+        return *(float*)&iv;
+    }
     if(v.empty())return def;
     return std::strtof(v.c_str(),nullptr);
 }

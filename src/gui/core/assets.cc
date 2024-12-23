@@ -113,6 +113,7 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
                     //LOGV("%s=%s",resUri.c_str(),value.c_str());
                     v = value[0]=='t'?true:false;
                 }
+                LOGD_IF(!atts[0].getString("type").empty(),"%s=%s",resUri.c_str(),value.c_str());
                 mDimensions.insert({resUri,v});
             }else if(itc!=mDimensions.end()){
                 mDimensions.insert({resUri,itc->second});
@@ -140,11 +141,13 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
                 const std::string name = att.getString("name");
                 const std::string resUri = package+":dimen/"+name;
                 if(att.getString("format").compare("float")==0){
-                    //LOGD("%s=%s",resUri.c_str(),value.c_str());
+                    const float fv =std::strtof(value.c_str(),nullptr);
+                    mDimensions.insert({resUri,*(int32_t*)&fv});
                 }else{
-                    //LOGD("%s=%s",resUri.c_str(),value.c_str());
-                    mDimensions.insert({resUri,std::stol(value)});
+                    const int32_t v = std::stol(value);
+                    mDimensions.insert({resUri,v});
                 }
+                //LOGD("%s=%s",resUri.c_str(),value.c_str());
             }
         }
     } else if(atts.size()==2) {
