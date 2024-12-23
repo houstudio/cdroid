@@ -662,8 +662,8 @@ public:
     virtual void collectAdjacentPrefetchPositions(int dx, int dy, State& state, LayoutPrefetchRegistry& layoutPrefetchRegistry);
     virtual void collectInitialPrefetchPositions(int adapterItemCount, LayoutPrefetchRegistry& layoutPrefetchRegistry);
     bool isAttachedToWindow();
-    void postOnAnimation(Runnable action);
-    bool removeCallbacks(Runnable action);
+    void postOnAnimation(Runnable& action);
+    bool removeCallbacks(Runnable& action);
     virtual void onAttachedToWindow(RecyclerView& view);
     virtual void onDetachedFromWindow(RecyclerView& view);
     virtual void onDetachedFromWindow(RecyclerView& view, Recycler& recycler);

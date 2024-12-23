@@ -4930,13 +4930,13 @@ bool RecyclerView::LayoutManager::isAttachedToWindow() {
     return mIsAttachedToWindow;
 }
 
-void RecyclerView::LayoutManager::postOnAnimation(Runnable action) {
+void RecyclerView::LayoutManager::postOnAnimation(Runnable& action) {
     if (mRecyclerView != nullptr) {
         mRecyclerView->postOnAnimation(action);
     }
 }
 
-bool RecyclerView::LayoutManager::removeCallbacks(Runnable action) {
+bool RecyclerView::LayoutManager::removeCallbacks(Runnable& action) {
     if (mRecyclerView != nullptr) {
         return mRecyclerView->removeCallbacks(action);
     }

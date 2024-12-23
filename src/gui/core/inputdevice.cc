@@ -715,7 +715,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
             const uint32_t pointerIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
             LOGV("clearbits %d %08x,%08x trackslot.size = %d",pointerIndex,mLastBits.value,mCurrBits.value, mTrack2Slot.size());
             if(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) mCurrBits.clearBit(pointerIndex);
-            if( pointerIndex < mTrack2Slot.size())
+            if( pointerIndex < mTrack2Slot.size() )
                 mTrack2Slot.removeAt(pointerIndex);
             mPointerProps.erase (mPointerProps.begin() + pointerIndex);
             mPointerCoords.erase(mPointerCoords.begin()+ pointerIndex);
