@@ -498,6 +498,16 @@ int Assets::getDimension(const std::string&refid,int def){
     return def;
 }
 
+bool Assets::getBoolean(const std::string&refid,bool def){
+    return getDimension(refid,def);
+}
+
+float Assets::getFloat(const std::string&refid,float def){
+    const int32_t iv=getDimension(refid,INT_MAX);
+    if(iv==INT_MAX)return def;
+    return *((float*)&iv);
+}
+
 #pragma GCC push_options
 #pragma GCC optimize("O0")
 //codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
