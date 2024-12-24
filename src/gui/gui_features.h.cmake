@@ -1,4 +1,7 @@
 /*gui_features.h.cmake  Generated from configure.ac by autoheader.*/
+#ifndef __CDROID_FEATURES_H__
+#define __CDROID_FEATURES_H__
+
 #cmakedefine ENABLE_GESTURE 1
 #cmakedefine ENABLE_SPINNER 1
 #cmakedefine ENABLE_DIALOGS 1
@@ -40,7 +43,7 @@
 #define CDROID_PRODUCT      "@CDROID_CHIPSET@"
 #define CDROID_BASE_OS      "@CMAKE_SYSTEM_NAME@"
 
-#/////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
 #if !defined(ENABLE_GESTURE)
 #define ENABLE_GESTURE 0
 #endif
@@ -124,3 +127,5 @@
 #if !defined(ENABLE_LCMS)
 #define ENABLE_LCMS 0
 #endif
+
+#endif/*__CDROID_FEATURES_H__*/
