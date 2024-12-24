@@ -7,6 +7,8 @@
 #include <textutils.h>
 #include <widget/candidateview.h> 
 #include <widget/R.h>
+#include <core/app.h>
+#include <core/windowmanager.h>
 
 namespace cdroid{
 

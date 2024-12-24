@@ -1,9 +1,8 @@
 #ifndef __INPUT_METHOD_MANAGER_H__
 #define __INPUT_METHOD_MANAGER_H__
-#include <cdroid.h>
-#include <widget/keyboardview.h>
-#include <core/inputmethod.h>
 #include <map>
+#include <core/inputmethod.h>
+#include <widget/keyboardview.h>
 namespace cdroid{
 
 class InputMethodManager{

@@ -123,12 +123,12 @@ void PropertyValuesHolder::setEvaluator(TypeEvaluator evaluator){
 }
 
 void PropertyValuesHolder::calculateValue(float fraction){
-    if (mDataSource.size()==0) mAnimateValue=mEvaluator(fraction,mStartValue, mEndValue);
-    else if (fraction <= 0.0f) mAnimateValue=mDataSource.front();
-    else if (fraction >= 1.0f) mAnimateValue=mDataSource.back();
+    if (mDataSource.size()==0) mAnimateValue = mEvaluator(fraction,mStartValue, mEndValue);
+    else if (fraction <= 0.0f) mAnimateValue = mDataSource.front();
+    else if (fraction >= 1.0f) mAnimateValue = mDataSource.back();
     else{
         fraction *= mDataSource.size() - 1;
-        int lowIndex = std::floor(fraction);
+        const int lowIndex = std::floor(fraction);
         fraction -= lowIndex;
         mAnimateValue = mEvaluator(fraction, mDataSource[lowIndex], mDataSource[lowIndex + 1]);
     } 
@@ -152,14 +152,14 @@ void PropertyValuesHolder::setupValue(void*target,int position){
         AnimateValue value = mProperty->get(target);
         if(mDataSource.size()==1)
             mDataSource.insert(mDataSource.begin()+position,value);
-        /*else
-            mDataSource[position] = value;*/
+        else
+            mDataSource[position] = value;
     }else if(mGetter){
         AnimateValue value = mGetter(target,mPropertyName);
         if(mDataSource.size()==1)
             mDataSource.insert(mDataSource.begin()+position,value);
-        /*else
-            mDataSource[position] = value;*/
+        else
+            mDataSource[position] = value;
     }else{
         LOGE("invalidate arguments mGetter,property must be setted");
     }

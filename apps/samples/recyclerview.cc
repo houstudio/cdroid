@@ -87,14 +87,11 @@ public:
         mAdapter->remove(swipedPosition);
         mAdapter->notifyItemRemoved(swipedPosition);
     }
-    int interpolateOutOfBoundsScroll(RecyclerView& recyclerView, 
-                                               int viewSize, 
-                                               int viewSizeOutOfBounds, 
-                                               int totalSize, 
-                                               long msSinceStartScroll) {
+    int interpolateOutOfBoundsScroll(RecyclerView& recyclerView, int viewSize, 
+           int viewSizeOutOfBounds, int totalSize, int64_t msSinceStartScroll) override{
         const int maxScroll = recyclerView.getHeight() / 2;
-        const float decay = 0.9f;
-        int delta = (int) (viewSizeOutOfBounds * decay);
+        const float decay = 0.6f;
+        const int delta = (int) (viewSizeOutOfBounds * decay);
         if (delta < 0) {
             return std::max(delta, -maxScroll);
         } else {

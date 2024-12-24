@@ -1,6 +1,13 @@
 #ifndef __ALERT_CONTROLLER_H__
 #define __ALERT_CONTROLLER_H__
-#include <cdroid.h>
+#include <widget/button.h>
+#include <widget/edittext.h>
+#include <widget/imageview.h>
+#include <widget/progressbar.h>
+#include <widget/adapterview.h>
+#include <widget/listview.h>
+#include <widget/scrollview.h>
+#include <widget/linearlayout.h>
 #include <app/dialoginterface.h>
 
 namespace cdroid{

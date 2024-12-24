@@ -1,7 +1,9 @@
 #ifndef __SOFT_KEYBOARD_H__
 #define __SOFT_KEYBOARD_H__
-#include <cdroid.h>
+#include <vector>
 #include <istream>
+#include <core/context.h>
+#include <drawables/drawable.h>
 
 namespace cdroid{
 

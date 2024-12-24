@@ -604,7 +604,7 @@ bool ValueAnimator::animateBasedOnTime(int64_t currentTime){
 }
 
 void ValueAnimator::animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse){
-    if (currentPlayTime < 0 || lastPlayTime < 0) {
+    if ((currentPlayTime < 0) || (lastPlayTime < 0)) {
         throw std::logic_error("Error: Play time should never be negative.");
     }
     initAnimation();

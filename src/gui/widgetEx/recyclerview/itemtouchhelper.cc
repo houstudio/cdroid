@@ -506,8 +506,8 @@ std::vector<RecyclerView::ViewHolder*> ItemTouchHelper::findSwapTargets(Recycler
         if (other == viewHolder->itemView) {
             continue; //myself!
         }
-        if (other->getBottom() < top || other->getTop() > bottom
-                || other->getRight() < left || other->getLeft() > right) {
+        if ((other->getBottom() < top) || (other->getTop() > bottom)
+                || (other->getRight() < left) || (other->getLeft() > right)) {
             continue;
         }
         RecyclerView::ViewHolder* otherVh = mRecyclerView->getChildViewHolder(other);
@@ -694,17 +694,17 @@ void ItemTouchHelper::checkSelectForSwipe(int action, MotionEvent& motionEvent, 
         return;
     }
     if (absDx > absDy) {
-        if (dx < 0 && (swipeFlags & LEFT) == 0) {
+        if (dx < 0 && ((swipeFlags & LEFT) == 0)) {
             return;
         }
-        if (dx > 0 && (swipeFlags & RIGHT) == 0) {
+        if (dx > 0 && ((swipeFlags & RIGHT) == 0)) {
             return;
         }
     } else {
-        if (dy < 0 && (swipeFlags & UP) == 0) {
+        if (dy < 0 && ((swipeFlags & UP) == 0)) {
             return;
         }
-        if (dy > 0 && (swipeFlags & DOWN) == 0) {
+        if (dy > 0 && ((swipeFlags & DOWN) == 0)) {
             return;
         }
     }

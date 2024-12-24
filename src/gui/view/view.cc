@@ -32,6 +32,7 @@
 #include <animation/animationutils.h>
 #include <core/systemclock.h>
 #include <core/textutils.h>
+#include <core/windowmanager.h>
 #include <core/inputmethodmanager.h>
 #include <core/app.h>
 #include <core/color.h>
