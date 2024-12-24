@@ -957,13 +957,13 @@ bool RecyclerView::scrollByInternal(int x, int y, MotionEvent* ev) {
         }
         considerReleasingGlowsOnScroll(x, y);
     }
-    if (consumedX != 0 || consumedY != 0) {
+    if ((consumedX != 0) || (consumedY != 0)) {
         dispatchOnScrolled(consumedX, consumedY);
     }
     if (!awakenScrollBars()) {
         invalidate();
     }
-    return consumedX != 0 || consumedY != 0;
+    return (consumedX != 0) || (consumedY != 0);
 }
 
 int RecyclerView::computeHorizontalScrollOffset() {
@@ -1010,7 +1010,7 @@ int RecyclerView::computeVerticalScrollRange() {
 
 void RecyclerView::startInterceptRequestLayout() {
     mInterceptRequestLayoutDepth++;
-    if (mInterceptRequestLayoutDepth == 1 && !mLayoutFrozen) {
+    if ((mInterceptRequestLayoutDepth == 1) && !mLayoutFrozen) {
         mLayoutWasDefered = false;
     }
 }
@@ -1028,7 +1028,7 @@ void RecyclerView::stopInterceptRequestLayout(bool performLayoutChildren) {
     if (mInterceptRequestLayoutDepth == 1) {
         // when layout is frozen we should delay dispatchLayout()
         if (performLayoutChildren && mLayoutWasDefered && !mLayoutFrozen
-                && mLayout != nullptr && mAdapter != nullptr) {
+                && (mLayout != nullptr) && (mAdapter != nullptr)) {
             dispatchLayout();
         }
         if (!mLayoutFrozen) {
@@ -1043,7 +1043,7 @@ void RecyclerView::setLayoutFrozen(bool frozen) {
         assertNotInLayoutOrScroll("Do not setLayoutFrozen in layout or scroll");
         if (!frozen) {
             mLayoutFrozen = false;
-            if (mLayoutWasDefered && mLayout != nullptr && mAdapter != nullptr) {
+            if (mLayoutWasDefered && (mLayout != nullptr) && (mAdapter != nullptr)) {
                 requestLayout();
             }
             mLayoutWasDefered = false;
@@ -1082,7 +1082,7 @@ void RecyclerView::smoothScrollBy(int dx,int dy,Interpolator* interpolator) {
     if (!mLayout->canScrollVertically()) {
         dy = 0;
     }
-    if (dx != 0 || dy != 0) {
+    if ((dx != 0) || (dy != 0)) {
         mViewFlinger->smoothScrollBy(dx, dy, interpolator);
     }
 }
@@ -1207,19 +1207,19 @@ void RecyclerView::releaseGlows() {
 
 void RecyclerView::considerReleasingGlowsOnScroll(int dx, int dy) {
     bool needsInvalidate = false;
-    if (mLeftGlow && !mLeftGlow->isFinished() && dx > 0) {
+    if (mLeftGlow && !mLeftGlow->isFinished() && (dx > 0)) {
         mLeftGlow->onRelease();
         needsInvalidate = mLeftGlow->isFinished();
     }
-    if (mRightGlow && !mRightGlow->isFinished() && dx < 0) {
+    if (mRightGlow && !mRightGlow->isFinished() && (dx < 0)) {
         mRightGlow->onRelease();
         needsInvalidate |= mRightGlow->isFinished();
     }
-    if (mTopGlow && !mTopGlow->isFinished() && dy > 0) {
+    if (mTopGlow && !mTopGlow->isFinished() && (dy > 0)) {
         mTopGlow->onRelease();
         needsInvalidate |= mTopGlow->isFinished();
     }
-    if (mBottomGlow && !mBottomGlow->isFinished() && dy < 0) {
+    if (mBottomGlow && !mBottomGlow->isFinished() && (dy < 0)) {
         mBottomGlow->onRelease();
         needsInvalidate |= mBottomGlow->isFinished();
     }
@@ -1322,7 +1322,7 @@ View* RecyclerView::focusSearch(View* focused, int direction){
     if (result != nullptr) {
         return result;
     }
-    const bool canRunFocusFailure = mAdapter != nullptr && mLayout != nullptr
+    const bool canRunFocusFailure = (mAdapter != nullptr) && (mLayout != nullptr)
             && !isComputingLayout() && !mLayoutFrozen;
 
     FocusFinder ff = FocusFinder::getInstance();
@@ -1331,9 +1331,9 @@ View* RecyclerView::focusSearch(View* focused, int direction){
         // tell LayoutManager to add if it can.
         bool needsFocusFailureLayout = false;
         if (mLayout->canScrollVertically()) {
-            const int absDir =  direction == View::FOCUS_FORWARD ? View::FOCUS_DOWN : View::FOCUS_UP;
+            const int absDir =  (direction == View::FOCUS_FORWARD) ? View::FOCUS_DOWN : View::FOCUS_UP;
             const View* found = ff.findNextFocus(this, focused, absDir);
-            needsFocusFailureLayout = found == nullptr;
+            needsFocusFailureLayout = (found == nullptr);
             if (FORCE_ABS_FOCUS_SEARCH_DIRECTION) {
                 // Workaround for broken FOCUS_BACKWARD in API 15 and older devices.
                 direction = absDir;
@@ -1413,7 +1413,7 @@ bool RecyclerView::isPreferredNextFocus(View* focused, View* next, int direction
     mTempRect2.set(0, 0, next->getWidth(), next->getHeight());
     offsetDescendantRectToMyCoords(focused, mTempRect);
     offsetDescendantRectToMyCoords(next, mTempRect2);
-    const int rtl = mLayout->getLayoutDirection() == View::LAYOUT_DIRECTION_RTL ? -1 : 1;
+    const int rtl = (mLayout->getLayoutDirection() == View::LAYOUT_DIRECTION_RTL) ? -1 : 1;
     int rightness = 0;
     if ((mTempRect.left < mTempRect2.left
             || mTempRect.right() <= mTempRect2.left)
@@ -1610,7 +1610,7 @@ bool RecyclerView::dispatchOnItemTouchIntercept(MotionEvent& e) {
     const size_t listenerCount = mOnItemTouchListeners.size();
     for (size_t i = 0; i < listenerCount; i++) {
         OnItemTouchListener& listener = mOnItemTouchListeners.at(i);
-        if (listener.onInterceptTouchEvent(*this, e) && action != MotionEvent::ACTION_CANCEL) {
+        if (listener.onInterceptTouchEvent(*this, e) && (action != MotionEvent::ACTION_CANCEL)) {
             mActiveOnItemTouchListener = &listener;
             return true;
         }
@@ -1626,7 +1626,7 @@ bool RecyclerView::dispatchOnItemTouch(MotionEvent& e) {
             mActiveOnItemTouchListener = nullptr;
         } else {
             mActiveOnItemTouchListener->onTouchEvent(*this, e);
-            if (action == MotionEvent::ACTION_CANCEL || action == MotionEvent::ACTION_UP) {
+            if ((action == MotionEvent::ACTION_CANCEL) || (action == MotionEvent::ACTION_UP)) {
                 // Clean up for the next gesture.
                 mActiveOnItemTouchListener = nullptr;
             }
@@ -1722,11 +1722,11 @@ bool RecyclerView::onInterceptTouchEvent(MotionEvent& e) {
                 const int dx = x - mInitialTouchX;
                 const int dy = y - mInitialTouchY;
                 bool startScroll = false;
-                if (canScrollHorizontally && std::abs(dx) > mTouchSlop) {
+                if (canScrollHorizontally && (std::abs(dx) > mTouchSlop)) {
                     mLastTouchX = x;
                     startScroll = true;
                 }
-                if (canScrollVertically && std::abs(dy) > mTouchSlop) {
+                if (canScrollVertically && (std::abs(dy) > mTouchSlop)) {
                     mLastTouchY = y;
                     startScroll = true;
                 }
@@ -1837,7 +1837,7 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
 
             if (mScrollState != SCROLL_STATE_DRAGGING) {
                 bool startScroll = false;
-                if (bCanScrollHorizontally && std::abs(dx) > mTouchSlop) {
+                if (bCanScrollHorizontally && (std::abs(dx) > mTouchSlop)) {
                     if (dx > 0) {
                         dx -= mTouchSlop;
                     } else {
@@ -1845,7 +1845,7 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
                     }
                     startScroll = true;
                 }
-                if (bCanScrollVertically && std::abs(dy) > mTouchSlop) {
+                if (bCanScrollVertically && (std::abs(dy) > mTouchSlop)) {
                     if (dy > 0) {
                         dy -= mTouchSlop;
                     } else {
@@ -1920,7 +1920,7 @@ void RecyclerView::onPointerUp(MotionEvent& e) {
     const int actionIndex = e.getActionIndex();
     if (e.getPointerId(actionIndex) == mScrollPointerId) {
         // Pick a new pointer to pick up the slack.
-        const int newIndex = actionIndex == 0 ? 1 : 0;
+        const int newIndex = (actionIndex == 0) ? 1 : 0;
         mScrollPointerId = e.getPointerId(newIndex);
         mInitialTouchX = mLastTouchX = (int) (e.getX(newIndex) + 0.5f);
         mInitialTouchY = mLastTouchY = (int) (e.getY(newIndex) + 0.5f);
@@ -1968,7 +1968,7 @@ bool RecyclerView::onGenericMotionEvent(MotionEvent& event) {
             hScroll = 0.f;
         }
 
-        if (vScroll != 0 || hScroll != 0) {
+        if ((vScroll != 0) || (hScroll != 0)) {
             scrollByInternal((int) (hScroll * mScaledHorizontalScrollFactor),
                     (int) (vScroll * mScaledVerticalScrollFactor), &event);
         }
@@ -1994,7 +1994,7 @@ void RecyclerView::onMeasure(int widthSpec, int heightSpec) {
          */
         mLayout->onMeasure(*mRecycler, *mState, widthSpec, heightSpec);
 
-        const bool measureSpecModeIsExactly = widthMode == MeasureSpec::EXACTLY && heightMode == MeasureSpec::EXACTLY;
+        const bool measureSpecModeIsExactly = (widthMode == MeasureSpec::EXACTLY) && (heightMode == MeasureSpec::EXACTLY);
         if (measureSpecModeIsExactly || mAdapter == nullptr) {
             return;
         }
@@ -2192,17 +2192,11 @@ void RecyclerView::processAdapterUpdatesAndSetAnimationFlags() {
         mAdapterHelper->consumeUpdatesInOnePass();
     }
     const bool animationTypeSupported = mItemsAddedOrRemoved || mItemsChanged;
-    mState->mRunSimpleAnimations = mFirstLayoutComplete
-            && (mItemAnimator != nullptr)
-            && (mDataSetHasChangedAfterLayout
-            || animationTypeSupported
-            || mLayout->mRequestedSimpleAnimations)
-            && (!mDataSetHasChangedAfterLayout
-            || mAdapter->hasStableIds());
-    mState->mRunPredictiveAnimations = mState->mRunSimpleAnimations
-            && animationTypeSupported
-            && !mDataSetHasChangedAfterLayout
-            && predictiveItemAnimationsEnabled();
+    mState->mRunSimpleAnimations = mFirstLayoutComplete && (mItemAnimator != nullptr)
+            && (mDataSetHasChangedAfterLayout || animationTypeSupported || mLayout->mRequestedSimpleAnimations)
+            && (!mDataSetHasChangedAfterLayout|| mAdapter->hasStableIds());
+    mState->mRunPredictiveAnimations = mState->mRunSimpleAnimations && animationTypeSupported
+            && !mDataSetHasChangedAfterLayout  && predictiveItemAnimationsEnabled();
 }
 
 void RecyclerView::dispatchLayout() {
@@ -2240,7 +2234,7 @@ void RecyclerView::saveFocusInfo() {
         child = getFocusedChild();
     }
 
-    ViewHolder* focusedVh = child == nullptr ? nullptr : findContainingViewHolder(child);
+    ViewHolder* focusedVh = (child == nullptr) ? nullptr : findContainingViewHolder(child);
     if (focusedVh == nullptr) {
         resetFocusInfo();
     } else {
@@ -2288,8 +2282,8 @@ View* RecyclerView::findNextViewToFocus() {
 }
 
 void RecyclerView::recoverFocusFromState() {
-    if (!mPreserveFocusAfterLayout || mAdapter == nullptr || !hasFocus()
-            || getDescendantFocusability() == FOCUS_BLOCK_DESCENDANTS
+    if (!mPreserveFocusAfterLayout || (mAdapter == nullptr) || !hasFocus()
+            || (getDescendantFocusability() == FOCUS_BLOCK_DESCENDANTS)
             || (getDescendantFocusability() == FOCUS_BEFORE_DESCENDANTS && isFocused())) {
         // No-op if either of these cases happens:
         // 1. RV has no focus, or 2. RV blocks focus to its children, or 3. RV takes focus
@@ -2329,11 +2323,11 @@ void RecyclerView::recoverFocusFromState() {
     // RV first attempts to locate the previously focused item to request focus on using
     // mFocusedItemId. If such an item no longer exists, it then makes a best-effort attempt to
     // find the next best candidate to request focus on based on mFocusedItemPosition.
-    if (mState->mFocusedItemId != NO_ID && mAdapter->hasStableIds()) {
+    if ((mState->mFocusedItemId != NO_ID) && mAdapter->hasStableIds()) {
         focusTarget = findViewHolderForItemId(mState->mFocusedItemId);
     }
     View* viewToFocus = nullptr;
-    if (focusTarget == nullptr || mChildHelper->isHidden(focusTarget->itemView)
+    if ((focusTarget == nullptr) || mChildHelper->isHidden(focusTarget->itemView)
             || !focusTarget->itemView->hasFocusable()) {
         if (mChildHelper->getChildCount() > 0) {
             // At this point, RV has focus and either of these conditions are true:
@@ -2353,7 +2347,7 @@ void RecyclerView::recoverFocusFromState() {
     if (viewToFocus != nullptr) {
         if (mState->mFocusedSubChildId != NO_ID) {
             View* child = viewToFocus->findViewById(mState->mFocusedSubChildId);
-            if (child != nullptr && child->isFocusable()) {
+            if (child && child->isFocusable()) {
                 viewToFocus = child;
             }
         }
@@ -2485,7 +2479,7 @@ void RecyclerView::dispatchLayoutStep2() {
     //mPendingSavedState = nullptr;
 
     // onLayoutChildren may have caused client code to disable item animations; re-check
-    mState->mRunSimpleAnimations = mState->mRunSimpleAnimations && mItemAnimator != nullptr;
+    mState->mRunSimpleAnimations = mState->mRunSimpleAnimations && (mItemAnimator != nullptr);
     mState->mLayoutStep = State::STEP_ANIMATIONS;
     onExitLayoutOrScroll();
     stopInterceptRequestLayout(false);
@@ -2521,7 +2515,7 @@ void RecyclerView::dispatchLayoutStep3() {
                 // VH unless it is enforced by the layout manager.
                 const bool oldDisappearing = mViewInfoStore->isDisappearing(oldChangeViewHolder);
                 const bool newDisappearing = mViewInfoStore->isDisappearing(holder);
-                if (oldDisappearing && oldChangeViewHolder == holder) {
+                if (oldDisappearing && (oldChangeViewHolder == holder)) {
                     // run disappear animation instead of change
                     mViewInfoStore->addToPostLayout(holder, &animationInfo);
                 } else {

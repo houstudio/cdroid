@@ -458,7 +458,7 @@ bool ItemTouchHelper::scrollIfNecessary() {
     if (lm->canScrollVertically()) {
         int curY = (int) (mSelectedStartY + mDy);
         const int topDiff = curY - mTmpRect.top - mRecyclerView->getPaddingTop();
-        if (mDy < 0 && topDiff < 0) {
+        if ((mDy < 0) && (topDiff < 0)) {
             scrollY = topDiff;
         } else if (mDy > 0) {
             const int bottomDiff = curY + mSelected->itemView->getHeight() + mTmpRect.height
@@ -478,7 +478,7 @@ bool ItemTouchHelper::scrollIfNecessary() {
                 mSelected->itemView->getHeight(), scrollY,
                 mRecyclerView->getHeight(), scrollDuration);
     }
-    if (scrollX != 0 || scrollY != 0) {
+    if ((scrollX != 0) || (scrollY != 0)) {
         if (mDragScrollStartTimeInMs == LLONG_MIN) {
             mDragScrollStartTimeInMs = now;
         }
@@ -494,8 +494,8 @@ std::vector<RecyclerView::ViewHolder*> ItemTouchHelper::findSwapTargets(Recycler
     mDistances.clear();
     const int margin = mCallback->getBoundingBoxMargin();
     const int left = std::round(mSelectedStartX + mDx) - margin;
-    const int top = std::round(mSelectedStartY + mDy) - margin;
-    const int right = left + viewHolder->itemView->getWidth() + 2 * margin;
+    const int top  = std::round(mSelectedStartY + mDy) - margin;
+    const int right  = left + viewHolder->itemView->getWidth() + 2 * margin;
     const int bottom = top + viewHolder->itemView->getHeight() + 2 * margin;
     const int centerX = (left + right) / 2;
     const int centerY = (top + bottom) / 2;
@@ -547,9 +547,8 @@ void ItemTouchHelper::moveIfNecessary(RecyclerView::ViewHolder& viewHolder) {
     const float threshold = mCallback->getMoveThreshold(viewHolder);
     const int x = (int) (mSelectedStartX + mDx);
     const int y = (int) (mSelectedStartY + mDy);
-    if (std::abs(y - viewHolder.itemView->getTop()) < viewHolder.itemView->getHeight() * threshold
-            && std::abs(x - viewHolder.itemView->getLeft())
-            < viewHolder.itemView->getWidth() * threshold) {
+    if ((std::abs(y - viewHolder.itemView->getTop()) < viewHolder.itemView->getHeight() * threshold)
+            && (std::abs(x - viewHolder.itemView->getLeft()) < viewHolder.itemView->getWidth() * threshold)) {
         return;
     }
     std::vector<RecyclerView::ViewHolder*> swapTargets = findSwapTargets(&viewHolder);
@@ -582,7 +581,7 @@ void ItemTouchHelper::onChildViewDetachedFromWindow(View& view) {
     if (holder == nullptr) {
         return;
     }
-    if (mSelected != nullptr && holder == mSelected) {
+    if ((mSelected != nullptr) && (holder == mSelected)) {
         select(nullptr, ACTION_STATE_IDLE);
     } else {
         endRecoverAnimation(*holder, false); // this may push it into pending cleanup list.
@@ -597,8 +596,8 @@ void ItemTouchHelper::onChildViewDetachedFromWindow(View& view) {
  * Returns the animation type or 0 if cannot be found.
  */
 void ItemTouchHelper::endRecoverAnimation(RecyclerView::ViewHolder& viewHolder, bool overrided) {
-    const int recoverAnimSize = (int)mRecoverAnimations.size();
-    for (int i = recoverAnimSize - 1; i >= 0; i--) {
+    const size_t recoverAnimSize = mRecoverAnimations.size();
+    for (int i = int(recoverAnimSize - 1); i >= 0; i--) {
         RecoverAnimation* anim = mRecoverAnimations.at(i);
         if (anim->mViewHolder == &viewHolder) {
             anim->mOverridden |= overrided;
@@ -642,12 +641,12 @@ RecyclerView::ViewHolder* ItemTouchHelper::findSwipedView(MotionEvent& motionEve
     const float absDx = std::abs(dx);
     const float absDy = std::abs(dy);
 
-    if (absDx < mSlop && absDy < mSlop) {
+    if ((absDx < mSlop) && (absDy < mSlop)) {
         return nullptr;
     }
-    if (absDx > absDy && lm->canScrollHorizontally()) {
+    if ((absDx > absDy) && lm->canScrollHorizontally()) {
         return nullptr;
-    } else if (absDy > absDx && lm->canScrollVertically()) {
+    } else if ((absDy > absDx) && lm->canScrollVertically()) {
         return nullptr;
     }
     View* child = findChildView(motionEvent);
@@ -724,7 +723,7 @@ View* ItemTouchHelper::findChildView(MotionEvent& event) {
             return selectedView;
         }
     }
-    for (int i = mRecoverAnimations.size() - 1; i >= 0; i--) {
+    for (int i = int(mRecoverAnimations.size() - 1); i >= 0; i--) {
         RecoverAnimation* anim = mRecoverAnimations.at(i);
         View* view = anim->mViewHolder->itemView;
         if (hitTest(*view, x, y, anim->mX, anim->mY)) {
