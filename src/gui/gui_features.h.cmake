@@ -7,11 +7,11 @@
 #cmakedefine ENABLE_NAVIGATION 1
 #cmakedefine ENABLE_BARCODE 1
 #cmakedefine ENABLE_QRCODE 1
-#cmakedefine ENABLE_LOTTIE 1
 
 #cmakedefine ENABLE_GIF   1     
 #cmakedefine ENABLE_JPEG  1
 #cmakedefine ENABLE_WEBP  1
+#cmakedefine ENABLE_LOTTIE 1
 #cmakedefine ENABLE_TURBOJPEG 1
 #cmakedefine ENABLE_MBEDTLS   1
 #cmakedefine ENABLE_UPNP  1    
@@ -24,14 +24,13 @@
 #cmakedefine ENABLE_LITEHTML  1
 #cmakedefine ENABLE_AUDIO  1
 #cmakedefine ENABLE_LCMS   1
-#cmakedefine ENABLE_LOTTIE 1
 #cmakedefine HAVE_EPOLL 1
 #cmakedefine HAVE_POLL  1
 #cmakedefine HAVE_EVENTFD 1
 #cmakedefine HAVE_MALLINFO 1
 #cmakedefine HAVE_MALLINFO2 1
 #cmakedefine HAVE_RTAUDIO_H 1
-#define ENABLE_LCMS2   @LCMS2_FOUND@
+
 #define CDROID_VERSION "@CDROID_VERSION@"
 #define CDROID_VERSION_MAJOR @CDROID_VERSION_MAJOR@
 #define CDROID_VERSION_MINOR @CDROID_VERSION_MINOR@
