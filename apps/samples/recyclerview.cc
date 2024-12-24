@@ -108,14 +108,12 @@ int main(int argc,const char*argv[]){
     auto ps = new LinearSnapHelper();//PagerSnapHelper();
     ps->attachToRecyclerView(rv);
     MyAdapter*adapter = new MyAdapter();
-    //SimpleCallback*cbk = new SimpleCallback(adapter,(ItemTouchHelper::LEFT|ItemTouchHelper::RIGHT)<<2,(ItemTouchHelper::LEFT|ItemTouchHelper::RIGHT)<<1);
     SimpleCallback*cbk = new SimpleCallback(adapter);
     ItemTouchHelper*touchhelper=new ItemTouchHelper(cbk);
     touchhelper->attachToRecyclerView(rv);
     rv->getRecycledViewPool().setMaxRecycledViews(0,64);
     rv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     rv->setAdapter(adapter);
-    //rv->setLayoutTransition(new LayoutTransition());
     DividerItemDecoration* decoration = new DividerItemDecoration(&app, LinearLayout::VERTICAL);
 
     for(int i=0;i<100;i++){
