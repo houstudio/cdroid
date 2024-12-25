@@ -4,7 +4,7 @@ namespace cdroid{
 DECLARE_WIDGET(CheckedTextView)
 
 CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):TextView(context,a){
-    Drawable* d = context->getDrawable(a,"checkMark");
+    Drawable* d = context->getDrawable(a.getString("checkMark"));
     mCheckMarkDrawable = nullptr;
     mCheckMarkTintList = nullptr;
     mHasCheckMarkTintMode=false;

@@ -333,12 +333,8 @@ void Assets::loadStrings(const std::string&lan) {
     }
 }
 
-Cairo::RefPtr<ImageSurface>Assets::loadImage(const std::string&fullresid) {
-    return loadImage(fullresid,-1,-1);
-}
-
-Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(const std::string&resname,int width,int height){
-    return ImageDecoder::loadImage(this,resname,width,height);
+Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(std::istream&stream,int width,int height){
+   return ImageDecoder::loadImage(stream,width,height); 
 }
 
 int Assets::getId(const std::string&resname)const {
@@ -413,13 +409,13 @@ size_t Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
 
 Drawable* Assets::getDrawable(const std::string&resid) {
     Drawable* d = nullptr;
-    std::string resname,package,ext;
-    std::string fullresid = parseResource(resid,&resname,&package);
-    ZIPArchive* pak = getResource(fullresid,&resname,nullptr);
-    auto extpos = resname.rfind(".");
+    std::string resname,package,ext,fullresid;
     if(resid.empty()||(resid.compare("null")==0)) {
-        return d;
-    } else {
+        return nullptr;
+    }
+    fullresid = parseResource(resid,&resname,&package);
+    ZIPArchive* pak = getResource(fullresid,&resname,nullptr);
+    {
         auto it = mDrawables.find(fullresid);
         if( it != mDrawables.end() ) {
             if(it->second.expired()==false) {
@@ -431,6 +427,7 @@ Drawable* Assets::getDrawable(const std::string&resid) {
             mDrawables.erase(it);
         }
     }
+    auto extpos = resname.rfind(".");
     if(extpos!=std::string::npos)
         ext = resname.substr(extpos+1);
     //wrap png to drawable,make app develop simply

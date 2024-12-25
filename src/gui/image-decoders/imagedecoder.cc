@@ -210,20 +210,16 @@ static int registerBuildinCodesc(){
     return 0;
 }
 
-Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std::string&resourceId,int width,int height){
+Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int width,int height){
     constexpr unsigned lengthOfLongestSignature = 14; /* To wit: "RIFF????WEBPVP"*/
     uint8_t contents[lengthOfLongestSignature];
     std::unique_ptr<ImageDecoder>decoder;
-    std::unique_ptr<std::istream>istm;
-    if(ctx)
-        istm = ctx->getInputStream(resourceId);
-    else
-        istm = std::move(std::make_unique<std::ifstream>(resourceId));
-    istm->read((char*)contents,lengthOfLongestSignature);
-    const unsigned length = istm->gcount();
+    
+    istm.read((char*)contents,lengthOfLongestSignature);
+    const std::streamsize length = istm.gcount();
     if (length < lengthOfLongestSignature)
         return nullptr;
-    istm->seekg(0,std::ios::beg);
+    istm.seekg(0,std::ios::beg);
     if(mFactories.empty()){
         registerBuildinCodesc();
     }
@@ -231,7 +227,7 @@ Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std:
         auto f = fac.second;
         if(f.verifier(contents,lengthOfLongestSignature)){
             float scale = 1.f;
-            decoder = f.factory(*istm);
+            decoder = f.factory(istm);
             if((width>0)&&(height>0))
                 scale = std::min(float(width)/decoder->getWidth(),float(height)/decoder->getHeight());
             else if(width>0)
@@ -242,6 +238,18 @@ Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std:
         }
     }
     return nullptr;
+}
+
+Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std::string&resourceId,int width,int height){
+    constexpr unsigned lengthOfLongestSignature = 14; /* To wit: "RIFF????WEBPVP"*/
+    uint8_t contents[lengthOfLongestSignature];
+    std::unique_ptr<ImageDecoder>decoder;
+    std::unique_ptr<std::istream>istm;
+    if(ctx)
+        istm = ctx->getInputStream(resourceId);
+    else
+        istm = std::move(std::make_unique<std::ifstream>(resourceId));
+    return loadImage(*istm,width,height);
 }
 
 Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){

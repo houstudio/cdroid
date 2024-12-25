@@ -44,6 +44,7 @@ public:
     static int  computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp);
     static int  getTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp);
     static void setTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp,int);
+    static Cairo::RefPtr<Cairo::ImageSurface>loadImage(std::istream&,int width=-1,int height=-1);
     static Cairo::RefPtr<Cairo::ImageSurface>loadImage(Context*ctx,const std::string&,int width=-1,int height=-1);
     static Drawable*createAsDrawable(Context*ctx,const std::string&resourceId);
 };

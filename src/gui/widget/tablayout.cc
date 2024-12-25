@@ -27,7 +27,7 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     mTabStrip->setSelectedIndicatorHeight(atts.getDimensionPixelSize("tabIndicatorHeight",-1));
     mTabStrip->setSelectedIndicatorColor(atts.getColor("tabIndicatorColor",0));
 
-    setSelectedTabIndicator(context->getDrawable(atts,"tabIndicator")); 
+    setSelectedTabIndicator(context->getDrawable(atts.getString("tabIndicator"))); 
     setTabIndicatorGravity(atts.getGravity("tabIndicatorGravity",0));
     setTabIndicatorFullWidth(atts.getBoolean("tabIndicatorFullWidth",true));
 
@@ -793,7 +793,7 @@ TabLayout::TabItem::TabItem():View(0,0){
 }
 TabLayout::TabItem::TabItem(Context* context,const AttributeSet& attrs):View(context,attrs){
     mText=attrs.getString("text");
-    mIcon=context->getDrawable(attrs,"icon");
+    mIcon=context->getDrawable(attrs.getString("icon"));
     LOGV("%s,%p",mText.c_str(),mIcon);
 }
 

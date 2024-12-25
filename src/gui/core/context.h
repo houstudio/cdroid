@@ -26,12 +26,16 @@ public:
     virtual int getNextAutofillId()=0;
     virtual const std::string getString(const std::string&id,const std::string&lan="")=0;
     virtual std::unique_ptr<std::istream>getInputStream(const std::string&,std::string*outpkg=nullptr)=0;
-    virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname)=0;
-    virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height)=0;
-    virtual Drawable* getDrawable(const std::string&resid)=0;
-    Drawable* getDrawable(const AttributeSet&atts,const std::string&key){
-        return atts.hasAttribute(key)?getDrawable(atts.getString(key)):nullptr;
+    Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname){
+        return loadImage(resname,-1,-1);
     }
+    Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height){
+        std::unique_ptr<std::istream> stm = getInputStream(resname);
+        if(stm)return loadImage(*stm,width,height);
+        return nullptr;
+    }
+    virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream&,int width,int height)=0;
+    virtual Drawable* getDrawable(const std::string&resid)=0;
     virtual int getColor(const std::string&resid,int def=0)=0;
     virtual bool getBoolean(const std::string&resid,bool def=false)=0;
     virtual int getDimension(const std::string&resid,int def=0)=0;

@@ -31,9 +31,9 @@ void ListView::initListView(const AttributeSet&attrs) {
     mIsCacheColorOpaque =true;
     mDividerIsOpaque = true;
 
-    Drawable* d = getContext()->getDrawable(attrs,"divider");
-    Drawable* osHeader = getContext()->getDrawable(attrs,"overScrollHeader");
-    Drawable* osFooter = getContext()->getDrawable(attrs,"overScrollFooter");
+    Drawable* d = getContext()->getDrawable(attrs.getString("divider"));
+    Drawable* osHeader = getContext()->getDrawable(attrs.getString("overScrollHeader"));
+    Drawable* osFooter = getContext()->getDrawable(attrs.getString("overScrollFooter"));
 
     setOverscrollHeader(osHeader);
     setOverscrollHeader(osFooter);

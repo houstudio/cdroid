@@ -13,7 +13,12 @@
 //https://gitee.com/mirrors_line/apng-drawable.git
 namespace cdroid {
 
-#define PNG_JMPBUF(x) png_jmpbuf((png_structp) x)
+#if defined(PNG_LIBPNG_VER_MAJOR) && defined(PNG_LIBPNG_VER_MINOR) && (PNG_LIBPNG_VER_MAJOR > 1 || (PNG_LIBPNG_VER_MAJOR == 1 && PNG_LIBPNG_VER_MINOR >= 4))
+#define JMPBUF(png_ptr) png_jmpbuf(png_ptr)
+#else
+#define JMPBUF(png_ptr) png_ptr->jmpbuf
+#endif
+
 struct PRIVATE {
     png_structp png_ptr;
     png_infop info_ptr;
@@ -29,18 +34,30 @@ static void png_warning_handler(png_structp png_ptr, png_const_charp warning_msg
     LOGW("Warning: %s", warning_msg);
 }
 static void png_error_handler(png_structp png_ptr, png_const_charp error_msg) {
-    LOGE("png decoder error:%s",error_msg);
-    longjmp(png_jmpbuf(png_ptr), 1);
+    LOGE("png decoder error:%s\r\n",error_msg);
+    longjmp(JMPBUF(png_ptr), 1);
+}
+static void PNGAPI headerAvailable(png_structp png, png_infop){
+    LOGD("%p header available",png);
+    //static_cast<PNGDecoder*>(png_get_progressive_ptr(png))->headerAvailable();
+}
+static void PNGAPI rowAvailable(png_structp png, png_bytep rowBuffer, png_uint_32 rowIndex, int interlacePass){
+    LOGD("%p rowAvailable",png);
+    //static_cast<PNGDecoder*>(png_get_progressive_ptr(png))->rowAvailable(rowBuffer, rowIndex, interlacePass);
+}
+static void PNGAPI pngComplete(png_structp png, png_infop){
+    LOGD("%p pngComplete ",png);
+    //static_cast<PNGDecoder*>(png_get_progressive_ptr(png))->pngComplete();
 }
 
 PNGDecoder::PNGDecoder(std::istream&stream):ImageDecoder(stream) {
     mPrivate = new PRIVATE();
-    mPrivate->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    mPrivate->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, png_error_handler, png_warning_handler);
     mPrivate->info_ptr= png_create_info_struct(mPrivate->png_ptr);
-    mPrivate->transparency =PixelFormat::UNKNOWN;
+    png_set_progressive_read_fn(mPrivate->png_ptr, this, headerAvailable, rowAvailable, pngComplete);
+    mPrivate->transparency = PixelFormat::UNKNOWN;
     mPrivate->istream = &mStream;
     png_set_read_fn(mPrivate->png_ptr,mPrivate,istream_png_reader);
-    png_set_error_fn(mPrivate->png_ptr, nullptr, png_error_handler, png_warning_handler);
 }
 
 PNGDecoder::~PNGDecoder() {
@@ -105,7 +122,7 @@ Cairo::RefPtr<Cairo::ImageSurface> PNGDecoder::decode(float scale,void*targetPro
 #endif
     if(mTransform==nullptr)
         png_read_image(png_ptr, row_pointers.data());
-#if  ENABLE(LCMS)
+#if ENABLE(LCMS)
     else{
         uint8_t *srcLine=new uint8_t[mImageWidth*4];
         for(uint32_t i = 0;i < mImageHeight;i++){
@@ -212,8 +229,7 @@ bool PNGDecoder::decodeSize() {
     png_structp png_ptr = mPrivate->png_ptr;
     png_infop info_ptr = mPrivate->info_ptr;
 
-    if (setjmp(png_jmpbuf(png_ptr))) {
-        LOGE("Error during libpng init_io");
+    if (setjmp(JMPBUF(png_ptr))) {
         //png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         return false;
     }
@@ -259,7 +275,7 @@ bool PNGDecoder::decodeSize() {
     /* recheck header after setting EXPAND options */
     png_read_update_info (png_ptr, info_ptr);
     png_get_IHDR (png_ptr, info_ptr,(uint32_t*)&mImageWidth, (uint32_t*)&mImageHeight,
-            &bit_depth, &color_type, &interlace, NULL, NULL);
+            &bit_depth, &color_type, &interlace, nullptr, nullptr);
 
     //setGamma(nullptr,png_ptr,info_ptr);
 
