@@ -18,7 +18,7 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <gui/gui_features.h>
-#if (ENABLE(GIF)
+#if ENABLE(GIF)
 #include <gif_lib.h>
 #include <image-decoders/gifframesequence.h>
 
