@@ -304,7 +304,7 @@ int LinearLayout::getDividerWidth()const{
 View* LinearLayout::getLastNonGoneChild() {
     for (int i = getVirtualChildCount() - 1; i >= 0; i--) {
         View* child = getVirtualChildAt(i);
-        if (child != nullptr && child->getVisibility() != GONE) {
+        if (child && (child->getVisibility() != View::GONE)) {
             return child;
         }
     }
@@ -316,7 +316,7 @@ void LinearLayout::drawDividersHorizontal(Canvas& canvas){
     const bool bisLayoutRtl = isLayoutRtl();
     for (int i = 0; i < count; i++) {
         View* child = getVirtualChildAt(i);
-        if (child != nullptr && child->getVisibility() != GONE) {
+        if (child && (child->getVisibility() != View::GONE)) {
             if (hasDividerBeforeChildAt(i)) {
                 const LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
                 int position;
@@ -367,7 +367,7 @@ void LinearLayout::drawDividersVertical(Canvas& canvas){
     const int count = getVirtualChildCount();
     for (int i = 0; i < count; i++) {
         View* child = getVirtualChildAt(i);
-        if (child != nullptr && child->getVisibility() != GONE) {
+        if (child && (child->getVisibility() != View::GONE)) {
             if (hasDividerBeforeChildAt(i)) {
                 const LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
                 const int top = child->getTop() - lp->topMargin - mDividerHeight;
@@ -466,7 +466,7 @@ void LinearLayout::forceUniformHeight(int count, int widthMeasureSpec) {
     const int uniformMeasureSpec = MeasureSpec::makeMeasureSpec(getMeasuredHeight(), MeasureSpec::EXACTLY);
     for (int i = 0; i < count; ++i) {
         View* child = getVirtualChildAt(i);
-        if (child != nullptr && child->getVisibility() != GONE) {
+        if (child && (child->getVisibility() != View::GONE)) {
             LayoutParams*lp = (LayoutParams*) child->getLayoutParams();
 
             if (lp->height == LayoutParams::MATCH_PARENT) {
@@ -488,7 +488,7 @@ void LinearLayout::forceUniformWidth(int count, int heightMeasureSpec) {
     const int uniformMeasureSpec = MeasureSpec::makeMeasureSpec(getMeasuredWidth(), MeasureSpec::EXACTLY);
     for (int i = 0; i< count; ++i) {
         View* child = getVirtualChildAt(i);
-        if (child != nullptr && child->getVisibility() != GONE) {
+        if (child && (child->getVisibility() != View::GONE)) {
             LayoutParams* lp = (LayoutParams*)child->getLayoutParams();
 
             if (lp->width == LayoutParams::MATCH_PARENT) {
@@ -529,7 +529,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
     bool matchHeight = false;
     bool skippedMeasure = false;
 
-    if (mMaxAscent.size() == 0 || mMaxDescent.size() == 0) {
+    if ((mMaxAscent.size() == 0) || (mMaxDescent.size() == 0)) {
         mMaxAscent.resize(4);
         mMaxDescent.resize(4);
     }
@@ -556,7 +556,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
             continue;
         }
 
-        if (child->getVisibility() == GONE) {
+        if (child->getVisibility() == View::GONE) {
             i += getChildrenSkipCount(child, i);
             continue;
         }
@@ -570,7 +570,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
 
         totalWeight += lp->weight;
 
-        const bool useExcessSpace = lp->width == 0 && lp->weight > 0;
+        const bool useExcessSpace = (lp->width == 0) && (lp->weight > 0);
         if (widthMode == MeasureSpec::EXACTLY && useExcessSpace) {
             // Optimization: don't bother measuring children who are only
             // laid out using excess space. These views will get measured
@@ -589,9 +589,9 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
             // use as much space as it wants because we can shrink things
             // later (and re-measure).
             if (baselineAligned) {
-                int freeWidthSpec = MeasureSpec::makeSafeMeasureSpec(
+                const int freeWidthSpec = MeasureSpec::makeSafeMeasureSpec(
                             MeasureSpec::getSize(widthMeasureSpec), MeasureSpec::UNSPECIFIED);
-                int freeHeightSpec = MeasureSpec::makeSafeMeasureSpec(
+                const int freeHeightSpec = MeasureSpec::makeSafeMeasureSpec(
                             MeasureSpec::getSize(heightMeasureSpec), MeasureSpec::UNSPECIFIED);
                 child->measure(freeWidthSpec, freeHeightSpec);
             } else {
@@ -627,7 +627,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
                 mTotalLength += childWidth + lp->leftMargin + lp->rightMargin
                             + getNextLocationOffset(child);
             } else {
-                int totalLength = mTotalLength;
+                const int totalLength = mTotalLength;
                 mTotalLength = std::max(totalLength, totalLength + childWidth + lp->leftMargin
                             + lp->rightMargin + getNextLocationOffset(child));
             }
@@ -708,7 +708,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
                 continue;
             }
 
-            if (child->getVisibility() == GONE) {
+            if (child->getVisibility() == View::GONE) {
                 i += getChildrenSkipCount(child, i);
                 continue;
             }
@@ -753,7 +753,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
 
         for (int i = 0; i < count; ++i) {
             View* child = getVirtualChildAt(i);
-            if (child == nullptr || child->getVisibility() == View::GONE) {
+            if ((child == nullptr) || (child->getVisibility() == View::GONE)) {
                 continue;
             }
 
@@ -847,10 +847,10 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
 
         // We have no limit, so make all weighted views as wide as the largest child.
         // Children will have already been measured once.
-        if (useLargestChild && widthMode != MeasureSpec::EXACTLY) {
+        if (useLargestChild && (widthMode != MeasureSpec::EXACTLY)) {
             for (int i = 0; i < count; i++) {
                 View* child = getVirtualChildAt(i);
-                if (child == nullptr || child->getVisibility() == View::GONE) {
+                if ((child == nullptr) || (child->getVisibility() == View::GONE)) {
                     continue;
                 }
 
@@ -934,7 +934,7 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
             // Optimization: don't bother measuring children who are only
             // laid out using excess space. These views will get measured
             // later if we have space to distribute.
-            int totalLength = mTotalLength;
+            const int totalLength = mTotalLength;
             mTotalLength = std::max(totalLength, totalLength + lp->topMargin + lp->bottomMargin);
             skippedMeasure = true;
         } else {
@@ -964,7 +964,7 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
                 consumedExcessSpace += childHeight;
             }
 
-            int totalLength = mTotalLength;
+            const int totalLength = mTotalLength;
             mTotalLength = std::max(totalLength, totalLength + childHeight + lp->topMargin +
                     lp->bottomMargin + getNextLocationOffset(child));
 
@@ -982,7 +982,7 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
         // if we are trying to use a child index for our baseline, the above
         // book keeping only works if there are no children above it with
         // weight.  fail fast to aid the developer.
-        if (i < baselineChildIndex && lp->weight > 0) {
+        if ((i < baselineChildIndex) && (lp->weight > 0)) {
             LOGE("A child of LinearLayout with index "
                       "less than mBaselineAlignedChildIndex has weight > 0, which "
                       "won't work.  Either remove the weight, or don't set "
@@ -990,7 +990,7 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
         }
 
         bool matchWidthLocally = false;
-        if (widthMode != MeasureSpec::EXACTLY && lp->width == LayoutParams::MATCH_PARENT) {
+        if ((widthMode != MeasureSpec::EXACTLY) && (lp->width == LayoutParams::MATCH_PARENT)) {
             // The width of the linear layout will scale, and at least one
             // child said it wanted to match our width. Set a flag
             // indicating that we need to remeasure at least that view when
@@ -1004,7 +1004,7 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
         maxWidth = std::max(maxWidth, measuredWidth);
         childState |=  child->getMeasuredState();
 
-        allFillParent = allFillParent && lp->width == LayoutParams::MATCH_PARENT;
+        allFillParent = allFillParent && (lp->width == LayoutParams::MATCH_PARENT);
         if (lp->weight > 0) {
             /*
             * Widths of weighted Views are bogus if we end up
@@ -1071,7 +1071,7 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
 
         for (int i = 0; i < count; ++i) {
             View* child = getVirtualChildAt(i);
-            if (child == nullptr || child->getVisibility() ==GONE) {
+            if ((child == nullptr) || (child->getVisibility() ==GONE)) {
                 continue;
             }
 
@@ -1083,9 +1083,9 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
                 remainingWeightSum -= childWeight;
 
                 int childHeight;
-                if (mUseLargestChild && heightMode != MeasureSpec::EXACTLY) {
+                if (mUseLargestChild && (heightMode != MeasureSpec::EXACTLY)) {
                     childHeight = largestChildHeight;
-                } else if (lp->height == 0 && (!mAllowInconsistentMeasurement
+                } else if ((lp->height == 0) && (!mAllowInconsistentMeasurement
                         || heightMode == MeasureSpec::EXACTLY)) {
                     // This child needs to be laid out from scratch using
                     // only its share of excess space.
@@ -1117,9 +1117,9 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
             alternativeMaxWidth = std::max(alternativeMaxWidth,
                     matchWidthLocally ? margin : measuredWidth);
 
-            allFillParent = allFillParent && lp->width == LayoutParams::MATCH_PARENT;
+            allFillParent = allFillParent && (lp->width == LayoutParams::MATCH_PARENT);
 
-            int totalLength = mTotalLength;
+            const int totalLength = mTotalLength;
             mTotalLength = std::max(totalLength, totalLength + child->getMeasuredHeight() +
                 lp->topMargin + lp->bottomMargin + getNextLocationOffset(child));
         }
@@ -1132,10 +1132,10 @@ void LinearLayout::measureVertical(int widthMeasureSpec, int heightMeasureSpec){
         
         // We have no limit, so make all weighted views as tall as the largest child.
         // Children will have already been measured once.
-        if (useLargestChild && heightMode != MeasureSpec::EXACTLY) {
+        if (useLargestChild && (heightMode != MeasureSpec::EXACTLY)) {
             for (int i = 0; i < count; i++) {
                 View* child = getVirtualChildAt(i);
-                if (child == nullptr || child->getVisibility() == View::GONE) {
+                if ((child == nullptr) || (child->getVisibility() == View::GONE)) {
                     continue;
                 }
 
@@ -1299,7 +1299,7 @@ void LinearLayout::layoutHorizontal(int left, int top, int width, int height){
 
             LayoutParams*lp =(LayoutParams*) child->getLayoutParams();
 
-            if (baselineAligned && lp->height != LayoutParams::MATCH_PARENT) {
+            if (baselineAligned && (lp->height != LayoutParams::MATCH_PARENT)) {
                 childBaseline = child->getBaseline();
             }
 
