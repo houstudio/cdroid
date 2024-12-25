@@ -26,6 +26,11 @@ static void istream_png_reader(png_structp png_ptr, png_bytep png_data, png_size
     priv->istream->read(reinterpret_cast<char*>(png_data), data_size);
 }
 
+static void custom_error_handler(png_structp png_ptr, png_const_charp error_msg) {
+    LOGE("png decoder error:%s",error_msg);
+    longjmp(png_jmpbuf(png_ptr), 1);
+}
+
 PNGDecoder::PNGDecoder(std::istream&stream):ImageDecoder(stream) {
     mPrivate = new PRIVATE();
     mPrivate->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
@@ -33,6 +38,7 @@ PNGDecoder::PNGDecoder(std::istream&stream):ImageDecoder(stream) {
     mPrivate->transparency =PixelFormat::UNKNOWN;
     mPrivate->istream = &mStream;
     png_set_read_fn(mPrivate->png_ptr,mPrivate,istream_png_reader);
+    png_set_error_fn(mPrivate->png_ptr, nullptr, custom_error_handler, nullptr);
 }
 
 PNGDecoder::~PNGDecoder() {
