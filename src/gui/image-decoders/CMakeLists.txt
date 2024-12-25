@@ -1,10 +1,5 @@
 project(image-decoders C CXX)
 
-find_package(PNG REQUIRED)
-find_package(GIF)
-find_package(JPEG)
-find_package(WEBP)
-find_package(LCMS2)
 find_package(Fontconfig)
 set(DECODER_SRCS
     imagedecoder.cc
@@ -39,18 +34,16 @@ if(ENABLE_TURBOJPEG)
     list(APPEND IMAGE_DEPLIBS ${TURBOJPEG_LIBRARIES})
 endif()
 
-if(ENABLE_GIF AND GIF_FOUND)
+if(ENABLE_GIF)
    list(APPEND IMAGE_DEPLIBS GIF::GIF)
 endif()
 
-if(ENABLE_WEBP OR WEBP_FOUND)
+if(ENABLE_WEBP)
    list(APPEND IMAGE_DEPLIBS ${WEBP_LIBRARIES})
 endif()
 
-if(LCMS2_FOUND AND ENABLE_LCMS)
+if(ENABLE_LCMS)
     list(APPEND IMAGE_DEPLIBS ${LCMS2_LIBRARIES})
-else()
-    set(ENABLE_LCMS OFF)
 endif()
 
 add_library(image-decoders STATIC ${DECODER_SRCS})

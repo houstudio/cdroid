@@ -2,7 +2,8 @@
 #include <view/gravity.h>
 #include <wordbreak.h>
 #include <linebreak.h>
-#ifdef ENABLE_FRIBIDI
+#include <gui_features.h>
+#if ENABLE(FRIBIDI)
 #include <fribidi.h>
 #endif
 #include <cdlog.h>
@@ -616,7 +617,7 @@ void Layout::relayout(bool force){
 }
 
 static const std::string processBidi(const std::wstring&logstr){
-#ifdef ENABLE_FRIBIDI
+#if ENABLE(FRIBIDI)
     const size_t wsize = logstr.length();
     FriBidiCharType base_dir = FRIBIDI_TYPE_ON;
     FriBidiChar * visstr = new FriBidiChar[wsize] ;

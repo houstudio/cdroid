@@ -44,6 +44,9 @@
 #define CDROID_BASE_OS      "@CMAKE_SYSTEM_NAME@"
 
 /////////////////////////////////////////////////////////////
+#define USE(FEATURE) (defined(USE_##FEATURE) && USE_##FEATURE)
+#define ENABLE(FEATURE) (defined(ENABLE_##FEATURE) && ENABLE_##FEATURE)
+
 #if !defined(ENABLE_GESTURE)
 #define ENABLE_GESTURE 0
 #endif

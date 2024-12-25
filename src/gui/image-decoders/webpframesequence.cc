@@ -17,8 +17,8 @@
 #include <string.h>
 #include "cdtypes.h"
 #include "cdlog.h"
-#include <gui/gui_features.h>
-#if ENABLE_WEBP&&ENABLE_WEBP
+#include <gui_features.h>
+#if ENABLE(WEBP)
 #include <core/context.h>
 #include <webp/decode.h>
 #include <webp/demux.h>
