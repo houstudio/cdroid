@@ -34,8 +34,6 @@ protected:
     PropertySetter mSetter;
     TypeEvaluator mEvaluator;
     std::vector<AnimateValue>mDataSource;
-    AnimateValue mStartValue;
-    AnimateValue mEndValue;
     AnimateValue mAnimateValue;
     void setupValue(void*target,int);
     void init();

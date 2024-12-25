@@ -10,8 +10,6 @@ PropertyValuesHolder::PropertyValuesHolder(){
 PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
     mPropertyName = o.mPropertyName;
     mDataSource = o.mDataSource;
-    mStartValue = o.mStartValue;
-    mEndValue = o.mEndValue;
     mAnimateValue= o.mAnimateValue;
     mProperty = o.mProperty;
 }
@@ -32,6 +30,7 @@ PropertyValuesHolder::~PropertyValuesHolder(){
 
 void PropertyValuesHolder::setPropertyName(const std::string& propertyName){
     mPropertyName = propertyName;
+    mProperty = Property::fromName(mPropertyName);
 }
 
 const std::string PropertyValuesHolder::getPropertyName()const{
@@ -87,8 +86,6 @@ void PropertyValuesHolder::setValues(const std::vector<int>&values){
     for(size_t i=0;i<values.size();i++)
        mDataSource.push_back(values.at(i));
     mAnimateValue = values[0];
-    mStartValue= mDataSource[0];
-    mEndValue  = mDataSource[mDataSource.size()-1];
 }
 
 void PropertyValuesHolder::setValues(const std::vector<uint32_t>&values){
@@ -105,8 +102,6 @@ void PropertyValuesHolder::setValues(const std::vector<float>&values){
     for(size_t i = 0;i < values.size();i++)
        mDataSource.push_back(values.at(i));
     mAnimateValue = values[0];
-    mStartValue= mDataSource[0];
-    mEndValue  = mDataSource[mDataSource.size()-1];
 }
 
 void PropertyValuesHolder::init(){
@@ -114,8 +109,6 @@ void PropertyValuesHolder::init(){
         mEvaluator = evaluator;
     }
     mAnimateValue =mDataSource[0];
-    mStartValue= mDataSource[0];
-    mEndValue  = mDataSource[mDataSource.size()-1];
 }
 
 void PropertyValuesHolder::setEvaluator(TypeEvaluator evaluator){
@@ -123,8 +116,7 @@ void PropertyValuesHolder::setEvaluator(TypeEvaluator evaluator){
 }
 
 void PropertyValuesHolder::calculateValue(float fraction){
-    if (mDataSource.size()==0) mAnimateValue = mEvaluator(fraction,mStartValue, mEndValue);
-    else if (fraction <= 0.0f) mAnimateValue = mDataSource.front();
+    if (fraction <= 0.0f) mAnimateValue = mDataSource.front();
     else if (fraction >= 1.0f) mAnimateValue = mDataSource.back();
     else{
         fraction *= mDataSource.size() - 1;
