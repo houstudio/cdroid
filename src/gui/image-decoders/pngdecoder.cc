@@ -25,8 +25,10 @@ static void istream_png_reader(png_structp png_ptr, png_bytep png_data, png_size
     PRIVATE*priv = (PRIVATE*)(png_get_io_ptr(png_ptr));
     priv->istream->read(reinterpret_cast<char*>(png_data), data_size);
 }
-
-static void custom_error_handler(png_structp png_ptr, png_const_charp error_msg) {
+static void png_warning_handler(png_structp png_ptr, png_const_charp warning_msg) {
+    LOGW("Warning: %s", warning_msg);
+}
+static void png_error_handler(png_structp png_ptr, png_const_charp error_msg) {
     LOGE("png decoder error:%s",error_msg);
     longjmp(png_jmpbuf(png_ptr), 1);
 }
@@ -38,7 +40,7 @@ PNGDecoder::PNGDecoder(std::istream&stream):ImageDecoder(stream) {
     mPrivate->transparency =PixelFormat::UNKNOWN;
     mPrivate->istream = &mStream;
     png_set_read_fn(mPrivate->png_ptr,mPrivate,istream_png_reader);
-    png_set_error_fn(mPrivate->png_ptr, nullptr, custom_error_handler, nullptr);
+    png_set_error_fn(mPrivate->png_ptr, nullptr, png_error_handler, png_warning_handler);
 }
 
 PNGDecoder::~PNGDecoder() {
