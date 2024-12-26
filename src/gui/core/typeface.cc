@@ -1,3 +1,4 @@
+#include <set>
 #include <regex>
 #include <dirent.h>
 #include <cdlog.h>
@@ -296,9 +297,14 @@ void Typeface::loadPreinstalledSystemFontMap() {
 
     AtExit::registerCallback([](){
         printf("Typeface::sSystemFontMap.size=%d\r\n",int(sSystemFontMap->size()));
+        std::set<Typeface*>faces;
         for(auto it= sSystemFontMap->begin(); it!= sSystemFontMap->end(); it++) {
-            Typeface* face = it->second;
-            delete face;
+            faces.insert(it->second);
+            LOGD("%p %s",it->second,it->first.c_str());
+        }
+        for(auto it2=faces.begin();it2!=faces.end();){
+            delete *it2;
+            it2 = faces.erase(it2);
         }
         sSystemFontMap->clear();
         delete sSystemFontMap;

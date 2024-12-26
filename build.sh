@@ -1,3 +1,4 @@
+#!/bin/bash
 #处理参数，规范化参数
 ARGS=`getopt -a -o p:b:h:: --long product:,build::,options::,help:: -- "$@"`
 #echo $ARGS

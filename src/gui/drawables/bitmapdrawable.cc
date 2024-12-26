@@ -171,7 +171,7 @@ void BitmapDrawable::setTileModeY(int mode){
 }
 
 void BitmapDrawable::setTileModeXY(int xmode,int ymode){
-    if(mBitmapState->mTileModeX!=xmode||mBitmapState->mTileModeY!=ymode){
+    if((mBitmapState->mTileModeX!=xmode)||(mBitmapState->mTileModeY!=ymode)){
         mBitmapState->mTileModeX=xmode;
         mBitmapState->mTileModeY=ymode;
         mDstRectAndInsetsDirty  =true;
@@ -297,7 +297,7 @@ void BitmapDrawable::onBoundsChange(const Rect&r){
 }
 
 bool BitmapDrawable::onStateChange(const std::vector<int>&){
-    if (mBitmapState->mTint  && mBitmapState->mTintMode != PorterDuff::NOOP) {
+    if (mBitmapState->mTint  && (mBitmapState->mTintMode != PorterDuff::NOOP)) {
         mTintFilter = updateTintFilter(mTintFilter, mBitmapState->mTint, mBitmapState->mTintMode);
         return true;
     }
@@ -327,7 +327,7 @@ static void setPatternByTileMode(RefPtr<SurfacePattern>pat,int tileMode){
 }
 static int getRotateAngle(Canvas&canvas){
     double xx, yx, xy, yy, x0, y0;
-    Cairo::Matrix ctx=canvas.get_matrix();
+    Cairo::Matrix ctx = canvas.get_matrix();
     double radians = atan2(ctx.yy, ctx.xy);
     return int(radians*180.f/M_PI);
 }
@@ -347,7 +347,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         canvas.clip();
         canvas.push_group();
     }
-    if(mBitmapState->mTileModeX>=0||mBitmapState->mTileModeY>=0){
+    if((mBitmapState->mTileModeX>=0)||(mBitmapState->mTileModeY>=0)){
         RefPtr<SurfacePattern> pat =SurfacePattern::create(mBitmapState->mBitmap);
         if(mBitmapState->mTileModeX!=TileMode::DISABLED){
             RefPtr<Surface> subs = ImageSurface::create(Surface::Format::ARGB32,mBounds.width,mBitmapHeight);
@@ -390,7 +390,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         const int angle_degrees = getRotateAngle(canvas);
 	    //SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;GOOD/FAST seems more slowly than ,BILINEAR/NEAREST
         const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap)||(angle_degrees%90)
-		? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
+                        ? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
         const Pattern::Dither ditherMode = mBitmapState->mDither ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
 
         LOGV_IF(mBitmapState->mFilterBitmap&&(mBitmapWidth*mBitmapHeight>=512*512),
@@ -421,6 +421,8 @@ void BitmapDrawable::draw(Canvas&canvas){
             spat->set_filter(filterMode);
             spat->set_dither(ditherMode);
         }
+        //if(filterMode==SurfacePattern::Filter::NEAREST)
+        //    canvas.set_antialias(Cairo::ANTIALIAS_NONE);
         canvas.paint_with_alpha(alpha);
     }
 
