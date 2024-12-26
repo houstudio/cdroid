@@ -44,7 +44,7 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
     mPrimaryText = createPreviewTextView(context);
     mSecondaryText = createPreviewTextView(context);
 
-    mMinimumTouchTarget = context->getDimension("cdroid:dimen/fast_scroller_minimum_touch_target",mMinimumTouchTarget);
+    mMinimumTouchTarget = context->getDimension("cdroid:dimen/fast_scroller_minimum_touch_target");
 
     setStyle(styleResId);
 

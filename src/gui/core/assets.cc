@@ -337,6 +337,12 @@ Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(std::istream&stream,int wid
    return ImageDecoder::loadImage(stream,width,height); 
 }
 
+Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(const std::string&resname,int width,int height){
+    std::unique_ptr<std::istream> stm = getInputStream(resname);
+    if(stm)return loadImage(*stm,width,height);
+    return nullptr;
+}
+
 int Assets::getId(const std::string&resname)const {
     std::string resid,pkg;
     std::string key = resname;
@@ -441,7 +447,7 @@ Drawable* Assets::getDrawable(const std::string&resid) {
         auto itc = mColors.find(fullresid);
         auto its = mStateColors.find(fullresid);
         if( itc != mColors.end() ){
-            const uint32_t cc = (uint32_t)getColor(fullresid,0);
+            const uint32_t cc = (uint32_t)getColor(fullresid);
             LOGV("%s use colors as drawable",fullresid.c_str());
             d = new ColorDrawable(cc);
             mDrawables.insert(std::pair<std::string,std::weak_ptr<Drawable::ConstantState>>(fullresid,d->getConstantState()));
@@ -458,7 +464,7 @@ Drawable* Assets::getDrawable(const std::string&resid) {
         resname = mTheme.getString(resname.substr(5));
         d = getDrawable(resname);
     } else if(resname.find("color/")!=std::string::npos) {
-        const uint32_t cc = (uint32_t)getColor(fullresid,0);
+        const uint32_t cc = (uint32_t)getColor(fullresid);
         return new ColorDrawable(cc);
     } else if(ext.compare("xml")){
         if(resname.find(":")==std::string::npos){
@@ -485,30 +491,29 @@ Drawable* Assets::getDrawable(const std::string&resid) {
     return d;
 }
 
-int Assets::getDimension(const std::string&refid,int def){
+int Assets::getDimension(const std::string&refid){
     std::string pkg,name = refid;
     parseResource(name,nullptr,&pkg);
     name = AttributeSet::normalize(pkg,name);
     auto it = mDimensions.find(name);
     if(it != mDimensions.end()) 
         return it->second;
-    return def;
+    throw std::runtime_error("Resource not found:" + refid);
 }
 
-bool Assets::getBoolean(const std::string&refid,bool def){
-    return getDimension(refid,def);
+bool Assets::getBoolean(const std::string&refid){
+    return getDimension(refid);
 }
 
-float Assets::getFloat(const std::string&refid,float def){
-    const int32_t iv=getDimension(refid,INT_MAX);
-    if(iv==INT_MAX)return def;
+float Assets::getFloat(const std::string&refid){
+    const int32_t iv=getDimension(refid);
     return *((float*)&iv);
 }
 
 #pragma GCC push_options
 #pragma GCC optimize("O0")
 //codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
-int Assets::getColor(const std::string&refid,int def) {
+int Assets::getColor(const std::string&refid) {
     std::string pkg,name = refid;
     parseResource(name,nullptr,&pkg);
     name = AttributeSet::normalize(pkg,name);
@@ -523,15 +528,15 @@ int Assets::getColor(const std::string&refid,int def) {
             return it->second;
         name = name.substr(name.find_last_of(":?/")+1);
         clrRef = mTheme.getString(name);
-        return getColor(clrRef,def);
+        return getColor(clrRef);
     }else if((refid[0]=='#')||refid.find(':')==std::string::npos) {
         return Color::parseColor(refid);
     } else if(refid.find("color/")==std::string::npos) { //refid is defined as an color reference
         parseResource(refid,&name,nullptr);
         name = mTheme.getString(name);
-        return getColor(name,def);
+        return getColor(name);
     }
-    return def;
+    throw std::runtime_error("Resource not found:" + refid);
 }
 
 ColorStateList* Assets::getColorStateList(const std::string&fullresid) {

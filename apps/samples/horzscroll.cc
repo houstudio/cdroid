@@ -24,7 +24,7 @@ int main(int argc,const char*argv[]){
         if(ent->d_type==DT_DIR)continue;
         if(strstr(fullpath.c_str(),".png")==nullptr&&strstr(fullpath.c_str(),".jpg")==nullptr)continue;
 
-        RefPtr<Cairo::ImageSurface>img=app.loadImage(fullpath);
+        RefPtr<Cairo::ImageSurface>img=app.loadImage(fullpath,-1,-1);
         LOGI("img:%s =%p",fullpath.c_str(),img.get());
         if(img==nullptr)continue;
         ImageView*iv=new ImageView(150,30);

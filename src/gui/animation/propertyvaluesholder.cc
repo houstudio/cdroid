@@ -118,7 +118,7 @@ void PropertyValuesHolder::setEvaluator(TypeEvaluator evaluator){
 void PropertyValuesHolder::calculateValue(float fraction){
     if (fraction <= 0.0f) mAnimateValue = mDataSource.front();
     else if (fraction >= 1.0f) mAnimateValue = mDataSource.back();
-    else{
+    else {
         fraction *= mDataSource.size() - 1;
         const int lowIndex = std::floor(fraction);
         fraction -= lowIndex;
@@ -152,8 +152,6 @@ void PropertyValuesHolder::setupValue(void*target,int position){
             mDataSource.insert(mDataSource.begin()+position,value);
         else
             mDataSource[position] = value;
-    }else{
-        LOGE("invalidate arguments mGetter,property must be setted");
     }
 }
 

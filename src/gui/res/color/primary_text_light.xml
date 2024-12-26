@@ -5,7 +5,6 @@
     <item cdroid:state_pressed="true" cdroid:color="@cdroid:color/bright_foreground_light"/>
     <item cdroid:state_selected="true" cdroid:color="@cdroid:color/bright_foreground_light"/>
     <item cdroid:state_activated="true" cdroid:color="@cdroid:color/bright_foreground_light"/>
-    <item cdroid:color="@cdroid:color/bright_foreground_light"/> <!-- not selected -->
-    
+    <item cdroid:color="@cdroid:color/bright_foreground_light"/>
 </selector>
 

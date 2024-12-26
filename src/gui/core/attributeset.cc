@@ -109,9 +109,12 @@ const std::string AttributeSet::getAttributeValue(const std::string&key)const{
 bool AttributeSet::getBoolean(const std::string&key,bool def)const{
     const std::string v = getAttributeValue(key);
     if(v.find_first_of("@:/")!=std::string::npos){
-        const int32_t iv = mContext->getDimension(v,INT_MAX);
-        if(iv==INT_MAX)return def;
-        return bool(iv);
+        try{
+            const int32_t iv = mContext->getDimension(v);
+            return bool(iv);
+        }catch(std::exception&e){
+            return def;
+        }
     }
     if(v.empty()) return def;
 	return v.compare("true") == 0;
@@ -121,7 +124,11 @@ int AttributeSet::getInt(const std::string&key,int def)const{
     int base = 10;
     const std::string v = getAttributeValue(key);
     if(v.find_first_of("@:/")!=std::string::npos){
-        return mContext->getDimension(v,def);
+        try{
+            return mContext->getDimension(v);
+        }catch(std::exception&e){
+            return def;
+        }
     }
     if(v.empty()||((v[0]>='a')&&(v[0]<='z'))){
         return def;
@@ -180,19 +187,27 @@ int AttributeSet::getArray(const std::string&key,std::vector<int>&array)const{
 
 int AttributeSet::getColor(const std::string&key,int def)const{
     const std::string resid = getString(key);
-    if(resid.empty()) return def;
-    else if((resid[0]=='#')||(resid.find(':')==std::string::npos)) {
-        return Color::parseColor(resid);
+    try{
+        if(resid.empty()) return def;
+        else if((resid[0]=='#')||(resid.find(':')==std::string::npos)) {
+            return Color::parseColor(resid);
+        }
+        return mContext->getColor(resid);
+    }catch(std::exception&e){
+        return def;
     }
-    return mContext->getColor(resid,def);
 
 }
 
 float AttributeSet::getFloat(const std::string&key,float def)const{
     const std::string v = getAttributeValue(key);
     if(v.find_first_of("@:/")!=std::string::npos){
-        int32_t iv = mContext->getDimension(v,def);
-        return *(float*)&iv;
+        try{
+            int32_t iv = mContext->getDimension(v);
+            return *(float*)&iv;
+        }catch(std::exception&e){
+            return def;
+        }
     }
     if(v.empty())return def;
     return std::strtof(v.c_str(),nullptr);

@@ -26,20 +26,21 @@ public:
     virtual int getNextAutofillId()=0;
     virtual const std::string getString(const std::string&id,const std::string&lan="")=0;
     virtual std::unique_ptr<std::istream>getInputStream(const std::string&,std::string*outpkg=nullptr)=0;
+
+    virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height)=0;
     Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname){
         return loadImage(resname,-1,-1);
     }
-    Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height){
-        std::unique_ptr<std::istream> stm = getInputStream(resname);
-        if(stm)return loadImage(*stm,width,height);
-        return nullptr;
-    }
     virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream&,int width,int height)=0;
+    Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream&stream){
+        return loadImage(stream,-1,-1);
+    }
+
     virtual Drawable* getDrawable(const std::string&resid)=0;
-    virtual int getColor(const std::string&resid,int def=0)=0;
-    virtual bool getBoolean(const std::string&resid,bool def=false)=0;
-    virtual int getDimension(const std::string&resid,int def=0)=0;
-    virtual float getFloat(const std::string&resid,float def=0)=0;
+    virtual int getColor(const std::string&resid)=0;
+    virtual bool getBoolean(const std::string&resid)=0;
+    virtual int getDimension(const std::string&resid)=0;
+    virtual float getFloat(const std::string&resid)=0;
     virtual size_t getArray(const std::string&resname,std::vector<std::string>&)=0;
     virtual size_t getArray(const std::string&resname,std::vector<int>&)=0;
     virtual ColorStateList* getColorStateList(const std::string&resid)=0;
