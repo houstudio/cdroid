@@ -1,12 +1,12 @@
-#include <view/layoutinflater.h>
-#include <view/viewgroup.h>
 #include <core/atexit.h>
-#include <cdroid.h>
+#include <view/viewgroup.h>
+#include <view/layoutinflater.h>
+#include <porting/cdlog.h>
 #include <expat.h>
-#include <cdlog.h>
 #include <string.h>
 #include <fstream>
 #include <iomanip>
+
 #if defined(__linux__)||defined(__unix__)
   #include <unistd.h>
 #elif defined(_WIN32)||defined(_WIN64)
@@ -15,31 +15,23 @@
   #define PATH_MAX _MAX_PATH
   #endif
 #endif
+
 namespace cdroid {
 
 LayoutInflater::LayoutInflater(Context*context) {
-    mContext=context;
+    mContext = context;
 }
 
+LayoutInflater*LayoutInflater::mInst = nullptr;
 LayoutInflater*LayoutInflater::from(Context*context) {
-    static std::map<Context*,LayoutInflater*>mMaps;
-    auto it = mMaps.find(context);
-    if(it == mMaps.end()) {
-        LayoutInflater*flater = new LayoutInflater(context);
-        it = mMaps.insert(std::pair<Context*,LayoutInflater*>(context,flater)).first;
-        if( mMaps.size() ==1) {
-            AtExit::registerCallback([]() {
-                INFLATERMAPPER& fmap = LayoutInflater::getInflaterMap();
-                STYLEMAPPER& smap = getStyleMap();
-                fmap.clear();
-                smap.clear();
-                for(auto m:mMaps)
-                    delete m.second;
-                mMaps.clear();
-            });
-        }
+    if(mInst==nullptr){
+        mInst = new LayoutInflater(context);
+        AtExit::registerCallback([](){
+            LOGD("delete LayoutInflater %p",mInst);
+            delete mInst;
+        });
     }
-    return it->second;
+    return mInst;
 }
 
 LayoutInflater::INFLATERMAPPER& LayoutInflater::getInflaterMap() {
