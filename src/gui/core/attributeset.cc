@@ -39,17 +39,18 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
     const bool hasAT = value.size() && (property[0]=='@');
     const bool hasAsk= value.size() && (property[0]=='?');
     const bool hasSlash = value.find('/')!=std::string::npos;
-    const bool isRes = (hasAT|hasAsk) && hasSlash;
+    const bool hasColon = value.find(':')!=std::string::npos;
+    const bool isRes = (hasAT|hasAsk);// && hasSlash;
     while(isRes && ((pos=value.find_first_of("@?")) != std::string::npos) ){
         value.erase(pos,1);
     }
     
-    if( isRes && (value.find(':')==std::string::npos) && hasSlash ){
+    if( isRes && (hasColon==false) && hasSlash ){
         value = std::string(pkg+":"+value);
-        if(hasAsk)value = "?"+value;
-    }/*else if(hasAsk&&(hasSlash==false)){
+        //if(hasAsk)value = "?"+value;
+    }else if(hasAsk && (hasSlash==false) && (hasColon==false) ){
         value = std::string(pkg+":attr/"+value);
-    }*/
+    }
     return value;
 }
 
@@ -69,11 +70,14 @@ std::map<std::string,std::string>&AttributeSet::getEntries(){
 
 int AttributeSet::inherit(const AttributeSet&other){
     int inheritedCount = 0;
+    const bool isSamePackage = (mPackage.compare(other.mPackage)==0);
     for(auto it = other.mAttrs.begin(); it != other.mAttrs.end() ; it++){
         if(mAttrs.find(it->first)==mAttrs.end()){
-           mAttrs.insert(std::pair<std::string,std::string>
-              (it->first.c_str(),normalize(mPackage,it->second)));
-           inheritedCount++;
+            if(isSamePackage)
+                mAttrs.insert({it->first.c_str(),it->second});
+            else
+                mAttrs.insert({it->first,normalize(other.mPackage,it->second)});
+            inheritedCount++;
         }
     }
     return inheritedCount;
