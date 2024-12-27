@@ -222,13 +222,13 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
         if (getFloats) {
             float valueFrom,valueTo;
             if (hasFrom) {
-                if(fromType==TypedValue::TYPE_DIMENSION){
+                if(fromType==VALUE_TYPE_INT) {/*TypedValue::TYPE_DIMENSION*/
                     valueFrom = atts.getDimension("valueFrom", 0);
                 }else{
                     valueFrom = atts.getFloat("valueFrom",0);
                 }
                 if (hasTo) {
-                    if(toType==TypedValue::TYPE_DIMENSION)
+                    if(toType==VALUE_TYPE_INT)/*TypedValue::TYPE_DIMENSION*/
                         valueTo = atts.getDimension("valueTo", 0);
                     else
                         valueTo = atts.getFloat("valueTo",0);
@@ -237,16 +237,16 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
                     returnValue = PropertyValuesHolder::ofFloat(propertyName,{valueFrom});
                 }
             } else {
-                if(toType==TypedValue::TYPE_DIMENSION)
+                if(toType==VALUE_TYPE_INT)/*TypedValue::TYPE_DIMENSION*/
                     valueTo = atts.getDimension("valueTo", 0);
                 else
-                    valueTo = atts.getDimension("valueTo",0);
+                    valueTo = atts.getFloat("valueTo",0);
                 returnValue = PropertyValuesHolder::ofFloat(propertyName, {valueTo});
             }
         } else {
             int valueFrom,valueTo;
             if (hasFrom) {
-                if (fromType == TypedValue::TYPE_DIMENSION) {
+                if (fromType == VALUE_TYPE_INT) {/*TypedValue::TYPE_DIMENSION*/
                     valueFrom = (int) atts.getDimension("valueFrom", 0);
                 } else if (isColorType(fromType)) {
                     valueFrom = atts.getColor("valueFrom", 0);
@@ -254,7 +254,7 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
                     valueFrom = atts.getInt("valueFrom", 0);
                 }
                 if (hasTo) {
-                    if (toType == TypedValue::TYPE_DIMENSION) {
+                    if (toType == VALUE_TYPE_INT) {/*TypedValue::TYPE_DIMENSION*/
                         valueTo = (int) atts.getDimension("valueTo", 0);
                     } else if (isColorType(toType)) {
                         valueTo = atts.getColor("valueTo", 0);
@@ -267,7 +267,7 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
                 }
             } else {
                 if (hasTo) {
-                    if (toType == TypedValue::TYPE_DIMENSION) {
+                    if (toType == VALUE_TYPE_INT) {/*TypedValue::TYPE_DIMENSION*/
                         valueTo = (int) atts.getDimension("valueTo", 0);
                     } else if (isColorType(toType)) {
                         valueTo = atts.getColor("valueTo", 0);
