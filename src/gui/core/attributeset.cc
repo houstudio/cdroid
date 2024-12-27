@@ -34,22 +34,22 @@ void AttributeSet::setContext(Context*ctx,const std::string&package){
 
 /*@android:+id/title ,?android:attr/windowContentOverlay*/
 std::string AttributeSet::normalize(const std::string&pkg,const std::string&property){
-    size_t pos;
     std::string value= property;
     const bool hasAT = value.size() && (property[0]=='@');
     const bool hasAsk= value.size() && (property[0]=='?');
     const bool hasSlash = value.find('/')!=std::string::npos;
     const bool hasColon = value.find(':')!=std::string::npos;
     const bool isRes = (hasAT|hasAsk);// && hasSlash;
-    while(isRes && ((pos=value.find_first_of("@?")) != std::string::npos) ){
-        value.erase(pos,1);
+    if(isRes){//while(isRes && ((pos=value.find_first_of("@?")) != std::string::npos) ){
+        value.erase(0,1);
     }
-    
-    if( isRes && (hasColon==false) && hasSlash ){
-        value = std::string(pkg+":"+value);
-        //if(hasAsk)value = "?"+value;
-    }else if(hasAsk && (hasSlash==false) && (hasColon==false) ){
-        value = std::string(pkg+":attr/"+value);
+    if(hasColon==false){
+        if( isRes && hasSlash ){
+            value = std::string(pkg+":"+value);
+            //if(hasAsk)value = "?"+value;
+        }else if(hasAsk && (hasColon==false) ){
+            value = std::string(pkg+":attr/"+value);
+        }
     }
     return value;
 }
@@ -57,8 +57,9 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
 int AttributeSet::set(const char*atts[],int size){
     int rc = 0;
     for(int i = 0;atts[i]&&(size==0||i<size);i+=2,rc+=1){
-        const char* key=strrchr(atts[i],' ');
-        if(key)key++;else key=atts[i];
+        const char* key = strrchr(atts[i],' ');
+        if(key) key++;
+        else key = atts[i];
         mAttrs.insert({std::string(key),normalize(mPackage,std::string(atts[i+1]))});
     }
     return (int)mAttrs.size();
