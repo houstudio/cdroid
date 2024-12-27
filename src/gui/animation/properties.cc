@@ -23,7 +23,7 @@ class ALPHA:public Property{
 public:
     ALPHA():Property("alpha"){}
     AnimateValue get(void* object)override{
-        LOGV("%p alpha=%.3f",object,((View*)object)->getAlpha());
+        LOGD("%p alpha=%.3f",object,((View*)object)->getAlpha());
         AnimateValue v =((View*)object)->getAlpha();
         return v;
     }
@@ -128,6 +128,7 @@ class TRANSLATION_X:public Property{
 public:
     TRANSLATION_X():Property("translationX"){}
     AnimateValue get(void* object) {
+        LOGD("translationX=%f",((View*)object)->getTranslationX());
         return ((View*)object)->getTranslationX();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -336,6 +337,15 @@ Property*Property::fromName(const std::string&propertyName){
     }
     LOGD_IF(!propertyName.empty(),"%s =nullptr",propertyName.c_str());
     return nullptr;
+}
+
+bool Property::reigsterProperty(const std::string&propertyName,Property*prop){
+    auto it = props.find(propertyName);
+    if(it==props.end()){
+        props.insert({propertyName,prop});
+        return true;
+    }
+    return false;
 }
 
 }/*endof namespace*/

@@ -20,6 +20,7 @@ public:
     virtual void set(void* object,const AnimateValue& value);
     const std::string getName()const;
     static Property*fromName(const std::string&);
+    static bool reigsterProperty(const std::string&name,Property*prop);
 };
 
 }/*endof namespace*/
