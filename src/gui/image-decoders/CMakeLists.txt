@@ -1,5 +1,5 @@
 project(image-decoders C CXX)
-
+find_package(PNG REQUIRED)
 find_package(Fontconfig)
 set(DECODER_SRCS
     imagedecoder.cc

@@ -48,7 +48,6 @@ cmake_dependent_option(ENABLE_LCMS "Enable Little CMS (a color management engine
 cmake_dependent_option(ENABLE_FRIBIDI "Enable BiDi layout" ON "FRIBIDI_FOUND" OFF)
 cmake_dependent_option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." ON "HARFBUZZ_FOUND" OFF)
 
-
 set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES} ${RTAUDIO_INCLUDE_DIRS}")
 
 list(APPEND CDROID_DEPLIBS

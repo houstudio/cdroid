@@ -1,3 +1,14 @@
+# **V3.4.0
+  - AnimatorInflater
+  - AnimatorSet,PropertyValueHolder OK.
+  - Add StateListAnimator support.
+  - Fix ScrollView.onOverScrolled
+  - Fix several Invalidate Issues
+  - Fix RecyclerView's dragdrop issues
+  - ViewPager2
+  - FastScroll add animator support
+  - Add Accessibility api entries
+  - Some Bug fixes
 # **V3.0.0
   - Add CoordniatorLayout
   - Windows port working
@@ -14,7 +25,7 @@
   - add GestureDetector
 
 # **V2.0.66**
-  - some bug fixes
+  - Some bug fixes
   - RecyclerView's ItemAnimator and ItemTouchHelper is supported
   - Animation's Callback has moved to Choregrapher
   - Add HandlerActionQueue,View's Runnable can be post/removes while view it not attached.
