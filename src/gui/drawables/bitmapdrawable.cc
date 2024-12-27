@@ -19,6 +19,7 @@ BitmapDrawable::BitmapState::BitmapState(){
     mFilterBitmap = false;
     mMipMap = false;
     mDither = false;
+    mAntiAlias = false;
     mSrcDensityOverride = 0;
     mTargetDensity = 160;
     mChangingConfigurations=0;
@@ -347,6 +348,17 @@ void BitmapDrawable::draw(Canvas&canvas){
         canvas.clip();
         canvas.push_group();
     }
+    const int angle_degrees = getRotateAngle(canvas);
+    const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap)||(angle_degrees%90)
+                    ? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
+    //SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;GOOD/FAST seems more slowly than ,BILINEAR/NEAREST
+    const Pattern::Dither ditherMode = mBitmapState->mDither ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
+
+    if((filterMode==SurfacePattern::Filter::NEAREST)||(mBitmapState->mAntiAlias==false))
+        canvas.set_antialias(Cairo::ANTIALIAS_NONE);
+    else
+        canvas.set_antialias(Cairo::ANTIALIAS_DEFAULT);
+
     if((mBitmapState->mTileModeX>=0)||(mBitmapState->mTileModeY>=0)){
         RefPtr<SurfacePattern> pat =SurfacePattern::create(mBitmapState->mBitmap);
         if(mBitmapState->mTileModeX!=TileMode::DISABLED){
@@ -387,11 +399,6 @@ void BitmapDrawable::draw(Canvas&canvas){
         float dw = float(mBounds.width) , dh = float(mBounds.height);
         const float fx = dw / sw   , fy = dh / sh;
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
-        const int angle_degrees = getRotateAngle(canvas);
-	    //SurfacePattern::Filter::GOOD : SurfacePattern::Filter::FAST;GOOD/FAST seems more slowly than ,BILINEAR/NEAREST
-        const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap)||(angle_degrees%90)
-                        ? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
-        const Pattern::Dither ditherMode = mBitmapState->mDither ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
 
         LOGV_IF(mBitmapState->mFilterBitmap&&(mBitmapWidth*mBitmapHeight>=512*512),
                    "%p[%s] size=%dx%d opacity=%d . should setFilterBitmap(false) to make render faster",
@@ -401,7 +408,8 @@ void BitmapDrawable::draw(Canvas&canvas){
         canvas.clip();
         if ( (mBounds.width !=mBitmapWidth) || (mBounds.height != mBitmapHeight) ) {
             canvas.scale(dw/sw,dh/sh);
-            dx /= fx;       dy /= fy;
+            dx /= fx;
+            dy /= fy;
 #if defined(__x86_64__)||defined(__amd64__)||defined(__i386__)
             LOGD_IF((mBitmapWidth*mBitmapHeight>=512*512)||(std::min(fx,fy)<0.1f)||(std::max(fx,fy)>10.f),
                 "%p bitmap %s scaled %dx%d->%d,%d",this,mBitmapState->mResource.c_str() ,mBitmapWidth,mBitmapHeight,mBounds.width,mBounds.height);
@@ -421,8 +429,6 @@ void BitmapDrawable::draw(Canvas&canvas){
             spat->set_filter(filterMode);
             spat->set_dither(ditherMode);
         }
-        //if(filterMode==SurfacePattern::Filter::NEAREST)
-        //    canvas.set_antialias(Cairo::ANTIALIAS_NONE);
         canvas.paint_with_alpha(alpha);
     }
 
