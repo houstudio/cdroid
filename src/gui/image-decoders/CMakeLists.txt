@@ -1,5 +1,6 @@
 project(image-decoders C CXX)
 find_package(PNG REQUIRED)
+find_package(LCMS2)
 find_package(Fontconfig)
 set(DECODER_SRCS
     imagedecoder.cc
@@ -44,6 +45,7 @@ endif()
 
 if(ENABLE_LCMS)
     list(APPEND IMAGE_DEPLIBS ${LCMS2_LIBRARIES})
+    include_directories(${LCMS2_INCLUDE_DIRS})
 endif()
 
 add_library(image-decoders STATIC ${DECODER_SRCS})
