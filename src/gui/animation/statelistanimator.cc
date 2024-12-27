@@ -6,11 +6,28 @@ StateListAnimator::StateListAnimator(){
     mView = nullptr;
     mRunningAnimator=nullptr;
     mLastMatch = nullptr;
-    mAnimationListener.onAnimationEnd=[this](Animator& animator,bool){
-        if (mRunningAnimator == &animator) {
+    initAnimatorListener();
+}
+
+void StateListAnimator::initAnimatorListener(){
+    mAnimatorListener.onAnimationEnd=[this](Animator& animation,bool){
+        if (mRunningAnimator == &animation) {
             mRunningAnimator = nullptr;
         }
     };
+}
+
+StateListAnimator::StateListAnimator(const StateListAnimator&other)
+  :StateListAnimator(){
+    mTuples = other.mTuples;
+    size_t tupleSize = mTuples.size();
+    for (size_t i = 0; i < tupleSize; i++) {
+        Tuple* tuple = mTuples.at(i);
+        Animator* animatorClone = tuple->mAnimator->clone();
+        animatorClone->removeListener(mAnimatorListener);
+        this->addState(tuple->mSpecs, animatorClone);
+    }
+    this->setChangingConfigurations(getChangingConfigurations());
 }
 
 StateListAnimator::~StateListAnimator(){
@@ -21,7 +38,7 @@ StateListAnimator::~StateListAnimator(){
 }
 
 void StateListAnimator::addState(const std::vector<int>&specs, Animator* animator){
-    animator->addListener(mAnimationListener);
+    animator->addListener(mAnimatorListener);
     mTuples.push_back(new Tuple(specs, animator));
     mChangingConfigurations |= animator->getChangingConfigurations();
 }
@@ -130,7 +147,7 @@ int StateListAnimator::StateListAnimatorConstantState::getChangingConfigurations
 }
 
 StateListAnimator* StateListAnimator::StateListAnimatorConstantState::newInstance() {
-    StateListAnimator* clone = nullptr;//mAnimatorclone();
+    StateListAnimator* clone = new StateListAnimator(*mAnimator);
     clone->mConstantState = shared_from_this();
     return clone;
 }

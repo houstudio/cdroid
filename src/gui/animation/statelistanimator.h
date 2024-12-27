@@ -30,12 +30,15 @@ private:
     Animator*mRunningAnimator;
     class View*mView;
     std::shared_ptr<StateListAnimatorConstantState> mConstantState;
-    ValueAnimator::AnimatorListener mAnimationListener;
+    ValueAnimator::AnimatorListener mAnimatorListener;
     int mChangingConfigurations;
 
+    StateListAnimator(const StateListAnimator&);
+    void initAnimatorListener();
     void clearTarget();
     void start(Tuple* match);
     void cancel();
+
 public:
     StateListAnimator();
     ~StateListAnimator();
