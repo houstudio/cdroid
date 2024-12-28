@@ -23,7 +23,7 @@ class ALPHA:public Property{
 public:
     ALPHA():Property("alpha"){}
     AnimateValue get(void* object)override{
-        LOGD("%p alpha=%.3f",object,((View*)object)->getAlpha());
+        LOGV("%p alpha=%.3f",object,((View*)object)->getAlpha());
         AnimateValue v =((View*)object)->getAlpha();
         return v;
     }
@@ -128,7 +128,7 @@ class TRANSLATION_X:public Property{
 public:
     TRANSLATION_X():Property("translationX"){}
     AnimateValue get(void* object) {
-        LOGD("translationX=%f",((View*)object)->getTranslationX());
+        LOGV("translationX=%f",((View*)object)->getTranslationX());
         return ((View*)object)->getTranslationX();
     }
     void set(void* object,const AnimateValue& value)override{

@@ -15,14 +15,15 @@ protected:
         }
     };
 private:
+    friend class AnimatorInflater;
     class StateListAnimatorConstantState: public std::enable_shared_from_this<StateListAnimatorConstantState>,public ConstantState<StateListAnimator*>{
     protected:
         int mChangingConf;
         StateListAnimator*mAnimator;
     public:
         StateListAnimatorConstantState(StateListAnimator*animator);
-        int getChangingConfigurations()const;
-        StateListAnimator*newInstance()override;  
+        int getChangingConfigurations()override;
+        StateListAnimator*newInstance()override;
     };
 private:
     std::vector<Tuple*>mTuples;
@@ -33,7 +34,6 @@ private:
     ValueAnimator::AnimatorListener mAnimatorListener;
     int mChangingConfigurations;
 
-    StateListAnimator(const StateListAnimator&);
     void initAnimatorListener();
     void clearTarget();
     void start(Tuple* match);
@@ -41,6 +41,7 @@ private:
 
 public:
     StateListAnimator();
+    StateListAnimator(const StateListAnimator&);
     ~StateListAnimator();
     void addState(const std::vector<int>&specs, Animator* animator);
     void setState(const std::vector<int>&state);

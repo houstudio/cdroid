@@ -19,12 +19,11 @@ void StateListAnimator::initAnimatorListener(){
 
 StateListAnimator::StateListAnimator(const StateListAnimator&other)
   :StateListAnimator(){
-    mTuples = other.mTuples;
-    size_t tupleSize = mTuples.size();
+    size_t tupleSize = other.mTuples.size();
     for (size_t i = 0; i < tupleSize; i++) {
-        Tuple* tuple = mTuples.at(i);
+        Tuple* tuple = other.mTuples.at(i);
         Animator* animatorClone = tuple->mAnimator->clone();
-        animatorClone->removeListener(mAnimatorListener);
+        //animatorClone->removeListener(other.mAnimatorListener);
         this->addState(tuple->mSpecs, animatorClone);
     }
     this->setChangingConfigurations(getChangingConfigurations());
@@ -102,7 +101,6 @@ void StateListAnimator::start(Tuple* match) {
     match->mAnimator->setTarget(getTarget());
     mRunningAnimator = match->mAnimator;
     mRunningAnimator->start();
-    LOGD_IF(mRunningAnimator,"start mRunningAnimator %p dur=%d",mRunningAnimator,mRunningAnimator->getTotalDuration());
 }
 
 void StateListAnimator::cancel() {
@@ -131,8 +129,8 @@ void StateListAnimator::appendChangingConfigurations(int configs) {
     mChangingConfigurations |= configs;
 }
 
-std::shared_ptr<ConstantState<StateListAnimator*>>StateListAnimator::createConstantState(){
-    return mConstantState;
+std::shared_ptr<ConstantState<StateListAnimator*>> StateListAnimator::createConstantState(){
+    return std::make_shared<StateListAnimatorConstantState>(this);//mConstantState;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -142,7 +140,7 @@ StateListAnimator::StateListAnimatorConstantState::StateListAnimatorConstantStat
     mChangingConf = mAnimator->getChangingConfigurations();
 }
 
-int StateListAnimator::StateListAnimatorConstantState::getChangingConfigurations()const{
+int StateListAnimator::StateListAnimatorConstantState::getChangingConfigurations(){
     return mChangingConf;
 }
 

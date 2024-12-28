@@ -11,8 +11,16 @@ Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resi
     return createAnimatorFromXml(context,resid);
 }
 
+std::unordered_map<std::string,std::shared_ptr<StateListAnimator>>mStateAnimatorMap;
+
 StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,const std::string&resid){
-    return createStateListAnimatorFromXml(context,resid);
+    auto it = mStateAnimatorMap.find(resid);
+    if(it==mStateAnimatorMap.end()){
+        StateListAnimator*anim =createStateListAnimatorFromXml(context,resid);
+        it = mStateAnimatorMap.insert({resid,std::shared_ptr<StateListAnimator>(anim)}).first;
+    }
+    return new StateListAnimator(*it->second);
+    //return it->second->createConstantState()->newInstance();
 }
 
 typedef struct{
@@ -21,6 +29,7 @@ typedef struct{
     std::vector<int>state;
     AttributeSet atts;
 }AnimNode;
+
 typedef struct{
     Context*context;
     std::vector<AnimNode>items;
@@ -60,7 +69,7 @@ public:
         if( (pd->items.size()==0) && (pd->statelistAnimator==nullptr) )
             pd->animator = an.animator;
 
-        LOGD("%s %s animator=%p",(std::string(pd->items.size()*4,' ')+name).c_str(),propertyName.c_str(),an.animator);
+        LOGV("%s %s animator=%p",(std::string(pd->items.size()*4,' ')+name).c_str(),propertyName.c_str(),an.animator);
         pd->items.push_back(an);
     }
 
@@ -87,7 +96,7 @@ public:
                 parent->animator=back.animator;
             }
         }
-        LOGD("%s",(std::string(pd->items.size()*4,' ')+name).c_str());
+        LOGV("%s",(std::string(pd->items.size()*4,' ')+name).c_str());
     }
 };
 
