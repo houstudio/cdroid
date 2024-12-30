@@ -328,7 +328,7 @@ void GraphDevice::composeSurfaces(){
             const RectangleInt &rs= rc;
             rotateRectInWindow(rcw,(const Rect&)rs,(Rect&)rd,dx,dy,rotation);
             LOGV("blit surface[%d:%d](%d,%d,%d,%d)/(%d,%d,%d,%d) to (%d,%d)/(%d,%d) rotation=%d",i,j,
-	         rc.x,rc.y,rc.width,rc.height,rd.x,rd.y,rd.width,rd.height,ox,oy,dx,dy,rotation);
+                 rc.x,rc.y,rc.width,rc.height,rd.x,rd.y,rd.width,rd.height,ox,oy,dx,dy,rotation);
             if(hdlSurface)GFXBlit(mPrimarySurface , dx , dy , hdlSurface,(const GFXRect*)&rd);
             else mPrimaryContext->rectangle(rcw.left + rc.x , rcw.top + rc.y , rc.width , rc.height);
         }

@@ -34,24 +34,28 @@ void AttributeSet::setContext(Context*ctx,const std::string&package){
 
 /*@android:+id/title ,?android:attr/windowContentOverlay*/
 std::string AttributeSet::normalize(const std::string&pkg,const std::string&property){
-    std::string value= property;
-    const bool hasAT = value.size() && (property[0]=='@');
-    const bool hasAsk= value.size() && (property[0]=='?');
-    const bool hasSlash = value.find('/')!=std::string::npos;
-    const bool hasColon = value.find(':')!=std::string::npos;
-    const bool isRes = (hasAT|hasAsk);// && hasSlash;
-    if(isRes){//while(isRes && ((pos=value.find_first_of("@?")) != std::string::npos) ){
-        value.erase(0,1);
-    }
-    if(hasColon==false){
-        if( isRes && hasSlash ){
-            value = std::string(pkg+":"+value);
-            //if(hasAsk)value = "?"+value;
-        }else if(hasAsk && (hasColon==false) ){
-            value = std::string(pkg+":attr/"+value);
+    const bool hasColon = property.find(':')!=std::string::npos;
+    if(hasColon) {
+        return property;
+    }else {
+        std::string value= property;
+        const bool hasAT = value.size() && (property[0]=='@');
+        const bool hasAsk= value.size() && (property[0]=='?');
+        const bool hasSlash = value.find('/')!=std::string::npos;
+        const bool isRes = (hasAT|hasAsk);// && hasSlash;
+        if(isRes) {//while(isRes && ((pos=value.find_first_of("@?")) != std::string::npos) ){
+            value.erase(0,1);
         }
+        if(hasColon==false) {
+            if( isRes && hasSlash ){
+                value = std::string(pkg+":"+value);
+                //if(hasAsk)value = "?"+value;
+            }else if(hasAsk && (hasColon==false) ) {
+                value = std::string(pkg+":attr/"+value);
+            }
+        }
+        return value;
     }
-    return value;
 }
 
 int AttributeSet::set(const char*atts[],int size){
