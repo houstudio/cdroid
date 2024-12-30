@@ -47,7 +47,8 @@ bool ObjectAnimator::isInitialized(){
 }
 
 void ObjectAnimator::setTarget(void*target){
-    if(mTarget!=target){
+    const void*oldTarget = getTarget();
+    if(oldTarget!=target){
         if(isStarted()){
             cancel();
         }
