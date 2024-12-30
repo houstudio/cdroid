@@ -11,6 +11,7 @@ StateListAnimator::StateListAnimator(){
 
 void StateListAnimator::initAnimatorListener(){
     mAnimatorListener.onAnimationEnd=[this](Animator& animation,bool){
+        animation.setTarget(nullptr);
         if (mRunningAnimator == &animation) {
             mRunningAnimator = nullptr;
         }
