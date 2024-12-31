@@ -219,7 +219,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
 
     int count=0;
     PENDINGRESOURCE pending;
-    auto sttm=SystemClock::uptimeMillis();
+    auto sttm = SystemClock::uptimeMillis();
     pak->forEachEntry([this,package,&count,&pending](const std::string&res) {
         count++;
         if((res.size()>6)&&(TextUtils::startWith(res,"values")||TextUtils::startWith(res,"color"))) {

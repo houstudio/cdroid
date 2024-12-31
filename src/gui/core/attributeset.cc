@@ -35,11 +35,11 @@ void AttributeSet::setContext(Context*ctx,const std::string&package){
 /*@android:+id/title ,?android:attr/windowContentOverlay*/
 std::string AttributeSet::normalize(const std::string&pkg,const std::string&property){
     const bool hasColon = property.find(':')!=std::string::npos;
-    if(hasColon) {
+    const bool hasAT = property.size() && (property[0]=='@');
+    if(hasColon&&(hasAT==false)) {
         return property;
     }else {
         std::string value= property;
-        const bool hasAT = value.size() && (property[0]=='@');
         const bool hasAsk= value.size() && (property[0]=='?');
         const bool hasSlash = value.find('/')!=std::string::npos;
         const bool isRes = (hasAT|hasAsk);// && hasSlash;
