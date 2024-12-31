@@ -478,7 +478,6 @@ RefPtr<Canvas>Window::getCanvas(){
         Cairo::Matrix matrix = Cairo::identity_matrix();
         LOGV("rotation=%d window.size=%dx%d canvas.size=%dx%d antialias=%",rotation*90,getWidth(),getHeight(),
              canvasWidth,canvasHeight,canvas->get_antialias());
-        //canvas->set_antialias(Cairo::ANTIALIAS_NONE);
         switch(rotation){
         case Display::ROTATION_0:break;
         case Display::ROTATION_90:

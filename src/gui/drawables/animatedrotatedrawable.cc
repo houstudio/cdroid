@@ -157,6 +157,7 @@ void AnimatedRotateDrawable::updateLocalState(){
         }
     }
 }
+
 static inline float sdot(float a,float b,float c,float d){
     return a * b + c * d;
 }
@@ -172,14 +173,10 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     LOGV("%p bounds(%d,%d %d,%d) pivot=%f,%f pxy=%f,%f degrees=%f",this,bounds.left,bounds.top,bounds.width,bounds.height,
          mState->mPivotX, mState->mPivotY,px,py,mCurrentDegrees);
 
-    const float radians=M_PI*2.f*mCurrentDegrees/360.f;
-    const float fsin=sin(radians);
-    const float fcos=cos(radians);
-    const bool filteredBitmap = drawable->isFilterBitmap();
-#if 0//Anti clockwise
-    Matrix mtx(fcos,-fsin, fsin,fcos,
-            sdot(-fsin,py,1-fcos,px), sdot(fsin,px,1-fcos,py));
-#else//Clockwise
+    const float radians =M_PI*mCurrentDegrees/180.f;
+    const float fsin = sin(radians);
+    const float fcos = cos(radians);
+
     Matrix mtx(fcos,fsin, -fsin,fcos,
             sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));
     canvas.save();
@@ -190,7 +187,6 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     drawable->setBounds(bounds);
     canvas.translate(-bounds.left,-bounds.top);
     canvas.restore();
-#endif
 }
 
 Drawable*AnimatedRotateDrawable::inflate(Context*ctx,const AttributeSet&atts){
