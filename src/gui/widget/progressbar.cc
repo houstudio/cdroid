@@ -453,6 +453,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
         };
         animator->addListener(animtorListener);
         animator->start();
+        mLastProgressAnimator = animator;
     } else {
         if(isPrimary && mLastProgressAnimator){
             mLastProgressAnimator->cancel();
