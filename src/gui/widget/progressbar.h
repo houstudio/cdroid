@@ -23,7 +23,7 @@ private:
         static RefreshData*obtain(int id, int progress, bool fromUser, bool animate);
         void recycle();
     };
-    
+    friend class VISUAL_PROGRESS;    
     bool mAttached;
     float mVisualProgress;
     int mBehavior;
@@ -40,7 +40,7 @@ private:
     Animator::AnimatorListener mAnimtorListener;
     bool mShouldStartAnimationDrawable;
     class ProgressTintInfo*mProgressTintInfo;
-    ObjectAnimator*mAnimator;
+    ObjectAnimator*mLastProgressAnimator;
     bool mNoInvalidate;
     Interpolator* mInterpolator;
 

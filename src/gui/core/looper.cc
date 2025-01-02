@@ -78,7 +78,7 @@ Looper::~Looper() {
     mWakeEventFd = -1;
     delete mEpoll;
     for(EventHandler*hdl:mEventHandlers){
-        if((hdl->mFlags&3)==3)delete hdl;
+        if((hdl->mFlags&2)==2)delete hdl;
     }
     mEventHandlers.clear();
 }

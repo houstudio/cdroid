@@ -163,7 +163,7 @@ ProgressBar::~ProgressBar(){
     if(mIndeterminateDrawable)mIndeterminateDrawable->setCallback(nullptr);
     delete mProgressDrawable;
     delete mIndeterminateDrawable;
-    delete mAnimator;
+    delete mLastProgressAnimator;
     delete mAnimation;
     delete mTransformation;
 }
@@ -274,6 +274,19 @@ Drawable* ProgressBar::tileifyIndeterminate(Drawable* drawable){
     return drawable;
 }
 
+class VISUAL_PROGRESS:public Property{
+public:
+    VISUAL_PROGRESS():Property("visual_progress"){}
+    void set(void*object,const AnimateValue&value)override {
+        float fv = GET_VARIANT(value,float);
+        ((ProgressBar*)object)->setVisualProgress(R::id::progress, fv);
+        ((ProgressBar*)object)->mVisualProgress = fv;
+    }
+    AnimateValue get(void*object) override{
+        return ((ProgressBar*)object)->mVisualProgress;
+    }
+};
+
 void ProgressBar::initProgressBar(){
     mMin = 0;
     mMax = 100;
@@ -294,7 +307,7 @@ void ProgressBar::initProgressBar(){
     mCurrentDrawable = nullptr;
     mProgressDrawable= nullptr;
     mIndeterminateDrawable = nullptr;
-    mAnimator = nullptr;
+    mLastProgressAnimator = nullptr;
     mAnimation= nullptr;
     mInterpolator  = nullptr;
     mTransformation= nullptr;
@@ -303,6 +316,9 @@ void ProgressBar::initProgressBar(){
     mAggregatedIsVisible = false;
     mShouldStartAnimationDrawable = false;
     mRefreshIsPosted = false;
+    if(Property::fromName("visual_progress")==nullptr){
+        Property::reigsterProperty("visual_progress",new VISUAL_PROGRESS());
+    }
 }
 
 void ProgressBar::setMin(int value){
@@ -426,20 +442,23 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
     LOGV_IF(isPrimary,"setProgress %d->%d animate=%d",id,progress,animate);
     if (isPrimary && animate) {
         Animator::AnimatorListener animListener;
-        if(mAnimator==nullptr){
-            mAnimator = ObjectAnimator::ofFloat(this,"progress",{mVisualProgress,scale});
-            mAnimator->setAutoCancel(true);
-            mAnimator->setDuration(PROGRESS_ANIM_DURATION);
-            mAnimator->setInterpolator(DecelerateInterpolator::gDecelerateInterpolator.get());
-            mAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-                setVisualProgress(R::id::progress,GET_VARIANT(anim.getAnimatedValue(),float));
-            }));
-            mAnimator->addListener(mAnimtorListener);
-        }
-        mAnimator->end();
-        mAnimator->getValues(0)->setValues(std::vector<float>({mVisualProgress,scale}));
-        mAnimator->start();
+        ObjectAnimator* animator = ObjectAnimator::ofFloat(this,"visual_progress",{scale});
+        animator->setAutoCancel(true);
+        animator->setDuration(PROGRESS_ANIM_DURATION);
+        animator->setInterpolator(DecelerateInterpolator::gDecelerateInterpolator.get());
+        AnimatorListenerAdapter animtorListener;
+        animtorListener.onAnimationEnd=[this](Animator&anim,bool){
+            delete mLastProgressAnimator;
+            mLastProgressAnimator = nullptr;
+        };
+        animator->addListener(animtorListener);
+        animator->start();
     } else {
+        if(isPrimary && mLastProgressAnimator){
+            mLastProgressAnimator->cancel();
+            delete mLastProgressAnimator;
+            mLastProgressAnimator = nullptr;
+        }
         setVisualProgress(id, scale);
     }
     if (isPrimary && callBackToApp) {
