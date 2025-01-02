@@ -46,6 +46,7 @@ BitmapDrawable::BitmapState::BitmapState(const BitmapState&bitmapState){
     mBaseAlpha = bitmapState.mBaseAlpha;
     mAlpha = bitmapState.mAlpha;
     mDither= bitmapState.mDither;
+    mAntiAlias= bitmapState.mAntiAlias;
     mMipMap= bitmapState.mMipMap;
     mFilterBitmap = bitmapState.mFilterBitmap;
     mTransparency = bitmapState.mTransparency;
