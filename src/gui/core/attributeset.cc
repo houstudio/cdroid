@@ -43,14 +43,13 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
         const bool hasAsk= value.size() && (property[0]=='?');
         const bool hasSlash = value.find('/')!=std::string::npos;
         const bool isRes = (hasAT|hasAsk);// && hasSlash;
-        if(isRes) {//while(isRes && ((pos=value.find_first_of("@?")) != std::string::npos) ){
+        if(isRes && (property.size()>1) ) {
             value.erase(0,1);
         }
         if(hasColon==false) {
             if( isRes && hasSlash ){
                 value = std::string(pkg+":"+value);
-                //if(hasAsk)value = "?"+value;
-            }else if(hasAsk && (hasColon==false) ) {
+            }else if(hasAsk && (hasColon==false) && (property.size()>1) ) {
                 value = std::string(pkg+":attr/"+value);
             }
         }
