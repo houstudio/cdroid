@@ -357,7 +357,7 @@ void RippleDrawable::pruneRipples() {
 }
 
 int  RippleDrawable::getMaskType(){
-    if (mRipple == nullptr && mExitingRipples.size()<= 0
+    if ((mRipple == nullptr) && mExitingRipples.empty()
             && (mBackground == nullptr || !mBackground->isVisible())) {
         // We might need a mask later.
         return MASK_UNKNOWN;
@@ -398,7 +398,7 @@ void RippleDrawable::drawContent(Canvas& canvas) {
 
 void RippleDrawable::drawBackgroundAndRipples(Canvas& canvas) {
     RippleForeground* active = mRipple;
-    if (active == nullptr && mExitingRipples.size() <= 0 && (mBackground == nullptr || !mBackground->isVisible())) {
+    if ((active == nullptr) && mExitingRipples.empty() && (mBackground == nullptr || !mBackground->isVisible())) {
         // Move along, nothing to draw here.
         return;
     }

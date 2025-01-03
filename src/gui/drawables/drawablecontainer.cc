@@ -805,7 +805,7 @@ void DrawableContainer::invalidateDrawable(Drawable& who){
         mDrawableContainerState->invalidateCache();
     }
 
-    if (&who == mCurrDrawable && getCallback() != nullptr) {
+    if ((&who == mCurrDrawable) && (getCallback() != nullptr)) {
         getCallback()->invalidateDrawable(*this);
     }
 }
@@ -832,12 +832,12 @@ bool DrawableContainer::setVisible(bool visible, bool restart) {
 }
 
 int DrawableContainer::getOpacity() {
-    return mCurrDrawable == nullptr || !mCurrDrawable->isVisible() ? PixelFormat::TRANSPARENT :
+    return ((mCurrDrawable == nullptr) || !mCurrDrawable->isVisible()) ? PixelFormat::TRANSPARENT :
             mDrawableContainerState->getOpacity();
 }
 
 void DrawableContainer::draw(Canvas&canvas){
-    if(mCurrDrawable!=nullptr)
+    if(mCurrDrawable != nullptr)
         mCurrDrawable->draw(canvas);
     if (mLastDrawable != nullptr) 
         mLastDrawable->draw(canvas);
