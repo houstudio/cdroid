@@ -568,7 +568,7 @@ void Layout::relayout(bool force){
                 pushLineData(start,ytop,fontextents.descent,std::ceil(line_width - extents.x_advance));
                 ytop += mLineHeight;
                 mLineCount++;
-                if(mBreakStrategy==0){
+                if(mBreakStrategy==BREAK_STRATEGY_SIMPLE){
                     start = i;
                     total_width = extents.x_advance;
                 }else{
@@ -576,6 +576,8 @@ void Layout::relayout(bool force){
                     start +=!!(mText[start]=='\n');
                     total_width = word_width - extents.x_advance;
                 }
+                word.erase();
+                word_width=0;
             }
             break;
         case WORDBREAK_BREAK:
