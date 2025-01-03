@@ -20,6 +20,7 @@ TEST_F(ATTS,normalize){
     ASSERT_EQ(AttributeSet::normalize("cdroid","?textColor"),"cdroid:attr/textColor");
     ASSERT_EQ(AttributeSet::normalize("cdroid","?attr/textColor"),"cdroid:attr/textColor");
     ASSERT_EQ(AttributeSet::normalize("cdroid","?cdroid:attr/textColor"),"cdroid:attr/textColor");
+    ASSERT_EQ(AttributeSet::normalize("cdroid","@cdroid:color/background_light"),"cdroid:color/background_light");
 }
 
 TEST_F(ATTS,inherit1){

@@ -1,4 +1,5 @@
 #include <drawables/gradientdrawable.h>
+#include <image-decoders/imagedecoder.h>
 #include <cfloat>
 #include <color.h>
 #include <cdlog.h>
@@ -14,6 +15,7 @@ GradientDrawable::GradientState::GradientState() {
     mTint = nullptr;
     mSolidColors = nullptr;
     mStrokeColors= nullptr;
+    mImagePattern= nullptr;
     mAngle = 0;
     mStrokeWidth = -1;//if >= 0 use stroking
     mStrokeDashWidth = 0.0f;
@@ -50,6 +52,7 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig) {
     mGradientColors = orig.mGradientColors;
     mPositions = orig.mPositions;
     mStrokeColors = orig.mStrokeColors;
+    mImagePattern = orig.mImagePattern;
     mStrokeWidth = orig.mStrokeWidth;
     mStrokeDashWidth = orig.mStrokeDashWidth;
     mStrokeDashGap = orig.mStrokeDashGap;
@@ -180,6 +183,10 @@ void GradientDrawable::GradientState::setGradientColors(const std::vector<int>& 
     computeOpacity();
 }
 
+void GradientDrawable::GradientState::setImagePattern(Cairo::RefPtr<Cairo::ImageSurface>image){
+    mImagePattern = image;
+}
+
 void GradientDrawable::GradientState::computeOpacity() {
     mOpaqueOverBounds = false;
     mOpaqueOverShape = false;
@@ -190,14 +197,17 @@ void GradientDrawable::GradientState::computeOpacity() {
         }
     }
     // An unfilled shape is not opaque over bounds or shape
-    if (mGradientColors.size()==0 && mSolidColors == nullptr) {
+    if ((mGradientColors.size()==0) && (mSolidColors == nullptr)) {
         return;
     }
-
+    if(mImagePattern){
+        const int transparent=ImageDecoder::getTransparency(mImagePattern);
+        if(transparent!=PixelFormat::OPAQUE)return;
+    }
     // Colors are opaque, so opaqueOverShape=true,
     mOpaqueOverShape = true;
     // and opaqueOverBounds=true if shape fills bounds
-    mOpaqueOverBounds = mShape == RECTANGLE && mRadius <= 0  && mRadiusArray.size()==0;
+    mOpaqueOverBounds = (mShape == RECTANGLE) && (mRadius <= 0)  && mRadiusArray.empty();
 }
 
 void GradientDrawable::GradientState::setStroke(int width,const ColorStateList*colors, float dashWidth,float dashGap) {
@@ -268,6 +278,8 @@ void GradientDrawable::updateLocalState() {
     } else if(state->mGradientColors.size()) {
         //mFillPaint = SolidPattern::create_rgba(0,0,0,0)
         ensureValidRect();
+    } else if(state->mImagePattern){
+        //mFillPaint = SurfacePattern::create(state->mImagePattern);
     }
     mPadding = state->mPadding;
     if(state->mStrokeWidth>=0) {
@@ -527,6 +539,14 @@ void GradientDrawable::setColors(const std::vector<int>&colors,const std::vector
 
 const std::vector<int>&GradientDrawable::getColors()const {
     return mGradientState->mGradientColors;
+}
+
+void GradientDrawable::setImagePattern(Cairo::RefPtr<Cairo::ImageSurface>image){
+    mGradientState->mImagePattern = image;
+}
+
+void GradientDrawable::setImagePattern(Context*ctx,const std::string&res){
+    if(ctx)setImagePattern(ctx->loadImage(res));
 }
 
 void GradientDrawable::buildPathIfDirty() {
@@ -816,6 +836,8 @@ bool GradientDrawable::ensureValidRect() {
                 }
                 RefPtr<SweepGradient>pat = SweepGradient::create(x0, y0,RADIUS,M_PI/2.f,stops);
                 mFillPaint = pat;
+            } else if(st.mGradient = BITMAP_PATTERN){
+                //mFillPaint = SurfacePattern::create(st.mImagePattern);
             }
 
             // If we don't have a solid color, the alpha channel must be
@@ -825,7 +847,7 @@ bool GradientDrawable::ensureValidRect() {
         } else{ //gradientColors.size()==0
             //transparent ,mFillPaint=nullptr
         }
-        LOGE_IF((mFillPaint==nullptr)&&(mStrokePaint==nullptr),"stroke and solid must be setted one or both of them");
+        LOGE_IF((mFillPaint==nullptr)&&(mStrokePaint==nullptr)&&(st.mImagePattern==nullptr),"stroke and solid must be setted one or both of them");
     }
     return !mRect.empty();
 }
@@ -936,7 +958,7 @@ void GradientDrawable::draw(Canvas&canvas) {
     float rad = .0f;
 
     std::vector<float>radii;
-    if( (mFillPaint==nullptr) && (haveStroke==false) )return;
+    if( (mFillPaint==nullptr) && (st->mImagePattern==nullptr) && (haveStroke==false) )return;
     
     canvas.save();
     if(mFillPaint)
@@ -944,22 +966,17 @@ void GradientDrawable::draw(Canvas&canvas) {
     switch (st->mShape) {
     case RECTANGLE:
         rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
-        if(st->mRadiusArray.size())radii=st->mRadiusArray;
-        if(st->mRadius > 0.0f)radii= {rad,rad,rad,rad};
-        if(radii.size())drawRoundedRect(canvas,mRect,radii[0],radii[1],radii[2],radii[3]);
-        else canvas.rectangle(int(mRect.left),int(mRect.top),int(mRect.width),int(mRect.height));
-        if(mFillPaint)canvas.set_source(mFillPaint);
-        if (haveStroke) {
-            if(mFillPaint)canvas.fill_preserve();
-            prepareStrokeProps(canvas);
-            canvas.stroke();
-        } else if(mFillPaint) {
-            canvas.fill();
-        }
+        if(st->mRadiusArray.size())radii = st->mRadiusArray;
+        if(st->mRadius > 0.0f)radii = {rad,rad,rad,rad};
+        if(radii.size())
+            drawRoundedRect(canvas,mRect,radii[0],radii[1],radii[2],radii[3]);
+        else
+            canvas.rectangle(int(mRect.left),int(mRect.top),int(mRect.width),int(mRect.height));
+
         break;
     case LINE:
         if (haveStroke) {
-            const float y = mRect.top+mRect.height/2.f;
+            const float y = mRect.top + mRect.height/2.f;
             prepareStrokeProps(canvas);
             canvas.move_to(mRect.left, y);
             canvas.line_to(mRect.left+mRect.width, y);
@@ -973,15 +990,6 @@ void GradientDrawable::draw(Canvas&canvas) {
         canvas.begin_new_sub_path();
         canvas.arc(mRect.centerX(),mRect.centerY(),rad,0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
 		
-        if(mFillPaint)canvas.set_source(mFillPaint);
-        if (haveStroke) {
-            if(mFillPaint)canvas.fill_preserve();
-            prepareStrokeProps(canvas);
-            canvas.stroke();
-        } else if(mFillPaint){
-            canvas.set_source(mFillPaint);
-            canvas.fill();
-        }
         break;
     case RING: {
         //inner
@@ -1009,16 +1017,23 @@ void GradientDrawable::draw(Canvas&canvas) {
             canvas.begin_new_sub_path();
             canvas.arc_negative(x,y,radius,M_PI*2.f,0.f);
         }
+        }break;
+    }/*endof switch*/
+
+    if(st->mShape!=LINE){
+        const bool needFill = (mFillPaint!=nullptr)||(st->mImagePattern!=nullptr);
         if(mFillPaint)canvas.set_source(mFillPaint);
+        else if(st->mImagePattern)canvas.set_source(st->mImagePattern,0,0);
+        if(needFill){
+            if(haveStroke) canvas.fill_preserve();
+            else canvas.fill();
+        }
         if (haveStroke) {
-            if(mFillPaint)canvas.fill_preserve();
             prepareStrokeProps(canvas);
             canvas.stroke();
-        } else if(mFillPaint) {
+        } else if(mFillPaint||st->mImagePattern) {
             canvas.fill();
         }
-    }
-    break;
     }
     canvas.restore();
 }

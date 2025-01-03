@@ -411,7 +411,7 @@ static int parseColor(const std::string&value) {
     return color;
 }
 
-static void parseShapeGradient(GradientDrawable*gd,ShapeDrawable*sd,const AttributeSet&atts) {
+static void parseShapeGradient(Context*ctx,GradientDrawable*gd,ShapeDrawable*sd,const AttributeSet&atts) {
     std::vector<int32_t> cls;
     PointF center;
     GradientDrawable::Orientation orientation = GradientDrawable::TOP_BOTTOM/*DEFAULT_ORIENTATION*/;
@@ -424,7 +424,8 @@ static void parseShapeGradient(GradientDrawable*gd,ShapeDrawable*sd,const Attrib
     const int gradientType = atts.getInt("type",std::map<const std::string,int> {
         {"linear",GradientDrawable::LINEAR_GRADIENT},
         {"radial",GradientDrawable::RADIAL_GRADIENT},
-        {"sweep",GradientDrawable::SWEEP_GRADIENT}
+        {"sweep",GradientDrawable::SWEEP_GRADIENT},
+        {"pattern",GradientDrawable::BITMAP_PATTERN}
     },GradientDrawable::LINEAR_GRADIENT);
 
     const int angle = (atts.getInt("angle",0)%360+360)%360;
@@ -472,6 +473,9 @@ static void parseShapeGradient(GradientDrawable*gd,ShapeDrawable*sd,const Attrib
             center.set( atts.getFloat("centerX",0.5f), atts.getFloat("centerY",0.5f) );
             LOGD("center=(%f,%f)",center.x,center.y);
             gd->setGradientCenter(center.x,center.y);
+            break;
+        case GradientDrawable::BITMAP_PATTERN:
+            gd->setImagePattern(ctx,atts.getString("bitmap"));
             break;
         }
     } else if(sd) {
@@ -539,7 +543,7 @@ static Drawable*parseShapeDrawable(Context*ctx,const AttributeSet&atts,
 
         if( corners) parseCorners(d,nullptr, *corners);
 
-        if(gradient) parseShapeGradient(d,nullptr, *gradient);
+        if(gradient) parseShapeGradient(ctx,d,nullptr, *gradient);
         else if( solid ){
             d->setColor(solid->getColorStateList("color"));
         }
@@ -556,7 +560,7 @@ static Drawable*parseShapeDrawable(Context*ctx,const AttributeSet&atts,
     } else {
         ShapeDrawable*sd = new ShapeDrawable();
         if( corners ) parseCorners(nullptr,sd, *corners);
-        /*if(gradient)parseShapeGradient(nullptr,sd,*gradient)*/;
+        /*if(gradient)parseShapeGradient(ctx,nullptr,sd,*gradient)*/;
         FATAL("Cant reached ");
         return sd;
     }

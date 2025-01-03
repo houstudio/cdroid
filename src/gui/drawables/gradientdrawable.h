@@ -33,7 +33,8 @@ public:
     enum GradientType{
         LINEAR_GRADIENT=0,
         RADIAL_GRADIENT=1,
-        SWEEP_GRADIENT=2
+        SWEEP_GRADIENT=2,
+        BITMAP_PATTERN
     };
     enum RadiusType{
         RADIUS_TYPE_PIXELS  =0,
@@ -52,6 +53,7 @@ private:
        const ColorStateList* mStrokeColors;
        std::vector<int>mGradientColors;
        std::vector<float>mPositions;
+       Cairo::RefPtr<Cairo::ImageSurface>mImagePattern;
        int mStrokeWidth;
        float mStrokeDashWidth = 0.0f;
        float mStrokeDashGap = 0.0f;
@@ -64,12 +66,12 @@ private:
        float mThicknessRatio;
        int mInnerRadius=-1;
        int mThickness;
-       bool mDither = false;
        Insets mOpticalInsets;
        float mCenterX,mCenterY;
        float mGradientRadius = 0.5f;
        int mGradientRadiusType;
        GradientType mGradientType;
+       bool mDither = false;
        bool mUseLevel;
        bool mUseLevelForShape;
        bool mOpaqueOverBounds;
@@ -103,17 +105,18 @@ private:
        void setCornerRadii(const std::vector<float>& radii);
        void setSize(int width, int height);
        void setGradientRadius(float gradientRadius,int type);
+       void setImagePattern(Cairo::RefPtr<Cairo::ImageSurface>);
        void computeOpacity();
     };
     int mAlpha;
+    float mGradientRadius;
+    bool mPathIsDirty;
+    bool mGradientIsDirty;
+    bool mMutated;
     //RefPtr<cdroid::Path>mPath;
     //RefPtr<cdroid::Path>mRingPath;
     RectF mRect;
     Rect mPadding;
-    bool mPathIsDirty;
-    bool mGradientIsDirty;
-    bool mMutated;
-    float mGradientRadius;
     std::shared_ptr<GradientState>mGradientState;
     std::vector<double>mDashArray;
     double mStrokeWidth;
@@ -177,6 +180,8 @@ public:
     void setColor(int argb);
     void setColor(const ColorStateList* colorStateList);
     const ColorStateList* getColor();
+    void setImagePattern(Cairo::RefPtr<Cairo::ImageSurface>);
+    void setImagePattern(Context*ctx,const std::string&);
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
     int getChangingConfigurations()const override;

@@ -1,6 +1,7 @@
-# **V3.4.0
+# **V3.4.5
   - AnimatorInflater
   - AnimatorSet,PropertyValueHolder OK.
+  - GradientDrawable add pattern(image surface)gradient.
   - Add StateListAnimator support.
   - Fix ScrollView.onOverScrolled
   - Fix several Invalidate Issues

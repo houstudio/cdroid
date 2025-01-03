@@ -39,12 +39,12 @@ void AbsSeekBar::initSeekBar(){
     mTickMark = nullptr;
     mIsUserSeekable=true;
     mIsDragging = false;
-    mTouchDownX = .0;
+    mTouchDownX = 0.f;
     mHasThumbTint = false;
     mHasThumbTintMode = false;
     mDisabledAlpha = 1.f;
-    mTouchProgressOffset =.0f;
-    mTouchThumbOffset = .0f;
+    mTouchProgressOffset =0.f;
+    mTouchThumbOffset = 0.f;
     mScaledTouchSlop  = ViewConfiguration::get(mContext).getScaledTouchSlop();
     setFocusable(true);
 }
@@ -488,13 +488,13 @@ bool AbsSeekBar::onKeyDown(int keyCode,KeyEvent&event){
         switch(keyCode){
         case KeyEvent::KEYCODE_DPAD_LEFT :
         case KeyEvent::KEYCODE_MINUS:
-            setProgressInternal(getProgress()-increment,true);
-            return true;
+            increment = -increment;
+            //fallthrought
         case KeyEvent::KEYCODE_DPAD_RIGHT:
         case KeyEvent::KEYCODE_PLUS :
         case KeyEvent::KEYCODE_EQUALS:
             increment = isLayoutRtl() ? -increment : increment;
-            if(setProgressInternal(getProgress() + increment,true)){
+            if(setProgressInternal(getProgress() + increment,true,true)){
                 onKeyChange();
                 return true;
             }
