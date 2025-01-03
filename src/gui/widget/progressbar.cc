@@ -717,7 +717,7 @@ void ProgressBar::startAnimation() {
     }
     if (dynamic_cast<Animatable*>(mIndeterminateDrawable)) {
         mShouldStartAnimationDrawable = true;
-        mHasAnimation=false;
+        mHasAnimation = false;
     }else{
         mHasAnimation = true;
         if (mInterpolator == nullptr) {
@@ -747,6 +747,7 @@ void ProgressBar::startAnimation() {
 }
 
 void ProgressBar::stopAnimation() {
+    mHasAnimation = false;
     if (dynamic_cast<AnimatedRotateDrawable*>(mIndeterminateDrawable)) {
         ((AnimatedRotateDrawable*) mIndeterminateDrawable)->stop();
         mShouldStartAnimationDrawable = false;
