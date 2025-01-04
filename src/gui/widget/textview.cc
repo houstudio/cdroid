@@ -418,7 +418,9 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     const std::string txtColor = attrs.getString("textColor");
     if(!txtColor.empty())
         setTextColor(ctx->getColorStateList(txtColor));
-    setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",mMarqueeRepeatLimit));
+    setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",std::map<const std::string,int>{
+            {"marquee_forever",-1}
+        },mMarqueeRepeatLimit));
     setEllipsize(attrs.getInt("ellipsize",std::map<const std::string,int>{
         {"start",Layout::ELLIPSIS_START},{"middle",Layout::ELLIPSIS_MIDDLE},
         {"end" ,Layout::ELLIPSIS_END},{"marquee",Layout::ELLIPSIS_MARQUEE}
@@ -1214,7 +1216,7 @@ void TextView::onLayout(bool changed, int left, int top, int width, int height){
     if (mDeferScroll >= 0) {
        int curs = mDeferScroll;
        mDeferScroll = -1;
-       //bringPointIntoView(std::min(curs, mText.length()));
+       bringPointIntoView(std::min(curs, (int)getText().length()));
     }
     // Call auto-size after the width and height have been calculated.
     autoSizeText();
@@ -2446,6 +2448,42 @@ int TextView::getBreakStrategy()const{
 
 bool TextView::isSingleLine()const{
     return mSingleLine;
+}
+
+float TextView::getLeftFadingEdgeStrength(){
+    if (isMarqueeFadeEnabled() && mMarquee && !mMarquee->isStopped()) {
+        if (mMarquee->shouldDrawLeftFade()) {
+            return getHorizontalFadingEdgeStrength(mMarquee->getScroll(), 0.0f);
+        } else {
+            return 0.f;
+        }
+    } else if (getLineCount() == 1) {
+        const float lineLeft = getLayout()->getLineLeft(0);
+        if (lineLeft > mScrollX) return 0.0f;
+        return getHorizontalFadingEdgeStrength(mScrollX, lineLeft);
+    }
+    return View::getLeftFadingEdgeStrength();
+}
+
+float TextView::getRightFadingEdgeStrength(){
+    if (isMarqueeFadeEnabled() && mMarquee && !mMarquee->isStopped()) {
+        return getHorizontalFadingEdgeStrength(mMarquee->getMaxFadeScroll(), mMarquee->getScroll());
+    } else if (getLineCount() == 1) {
+        const float rightEdge = mScrollX +
+                (getWidth() - getCompoundPaddingLeft() - getCompoundPaddingRight());
+        const float lineRight = getLayout()->getLineRight(0);
+        if (lineRight < rightEdge) return 0.0f;
+        return getHorizontalFadingEdgeStrength(rightEdge, lineRight);
+    }
+    return View::getRightFadingEdgeStrength();
+}
+
+float TextView::getHorizontalFadingEdgeStrength(float position1, float position2) {
+    const int horizontalFadingEdgeLength = getHorizontalFadingEdgeLength();
+    if (horizontalFadingEdgeLength == 0) return 0.f;
+    const float diff = std::abs(position1 - position2);
+    if (diff > horizontalFadingEdgeLength) return 1.0f;
+    return diff / horizontalFadingEdgeLength;
 }
 
 bool TextView::isMarqueeFadeEnabled(){
