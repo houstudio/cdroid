@@ -194,6 +194,7 @@ private:
 
     TextView* mView;
     Layout*mLayout;
+    Choreographer*mChoreographer;
     int mStatus ;//= MARQUEE_STOPPED;
     float mPixelsPerMs;
     float mMaxScroll;
@@ -205,9 +206,9 @@ private:
 
     float mScroll;
     int64_t mLastAnimationMs;
-    Runnable /*Choreographer::FrameCallback*/ mTickCallback;
-    Runnable /*Choreographer::FrameCallback*/ mStartCallback;
-    Runnable /*Choreographer::FrameCallback*/ mRestartCallback;
+    Choreographer::FrameCallback mTickCallback;
+    Choreographer::FrameCallback mStartCallback;
+    Choreographer::FrameCallback mRestartCallback;
 
 private:
     void resetScroll() {
@@ -216,18 +217,19 @@ private:
     }
 public:
     Marquee(TextView* v,Layout*lt) {
+        const float density = v->getContext()->getDisplayMetrics().density;
         mStatus = MARQUEE_STOPPED;
-        float density = v->getContext()->getDisplayMetrics().density;
-        mPixelsPerMs = MARQUEE_DP_PER_SECOND * density / 1000.f;
+        mPixelsPerMs = (MARQUEE_DP_PER_SECOND * density) / 1000.f;
         mView = v;
         mLayout=lt;
-        mTickCallback=[this](){tick();};
-        mStartCallback=[this]( ){
+        mChoreographer=&Choreographer::getInstance();
+        mTickCallback = [this](int64_t) {tick();};
+        mStartCallback= [this](int64_t) {
             mStatus = MARQUEE_RUNNING;
-            mLastAnimationMs = SystemClock::uptimeMillis();//mChoreographer->getFrameTime();
+            mLastAnimationMs = mChoreographer->getFrameTime();
             tick();
         };
-        mRestartCallback=[this](){
+        mRestartCallback= [this](int64_t) {
             if (mStatus == MARQUEE_RUNNING) {
                 if (mRepeatLimit >= 0) mRepeatLimit--;
                 start(mRepeatLimit);
@@ -240,19 +242,19 @@ public:
             return;
         }
 
-        mView->removeCallbacks(mTickCallback);
+        mChoreographer->removeFrameCallback(mTickCallback);
 
         if (mView  && (mView->isFocused() || mView->isSelected())) {
-            int64_t currentMs = SystemClock::uptimeMillis();
-            int64_t deltaMs = currentMs - mLastAnimationMs;
+            const int64_t currentMs = mChoreographer->getFrameTime();
+            const int64_t deltaMs = currentMs - mLastAnimationMs;
+            const float deltaPx = deltaMs * mPixelsPerMs;
             mLastAnimationMs = currentMs;
-            float deltaPx = deltaMs * mPixelsPerMs;
             mScroll += deltaPx;
             if (mScroll > mMaxScroll) {
                 mScroll = mMaxScroll;
-                mView->postDelayed(mRestartCallback,MARQUEE_DELAY);
+                mChoreographer->postFrameCallbackDelayed(mRestartCallback,MARQUEE_DELAY);
             } else {
-                mView->postDelayed(mTickCallback,200);
+                mChoreographer->postFrameCallback(mTickCallback);
             }
             mView->invalidate();
         }
@@ -260,9 +262,9 @@ public:
 
     void stop() {
         mStatus = MARQUEE_STOPPED;
-        mView->removeCallbacks(mStartCallback);
-        mView->removeCallbacks(mRestartCallback);
-        mView->removeCallbacks(mTickCallback);
+        mChoreographer->removeFrameCallback(mStartCallback);
+        mChoreographer->removeFrameCallback(mRestartCallback);
+        mChoreographer->removeFrameCallback(mTickCallback);
         resetScroll();
     }
 
@@ -275,10 +277,10 @@ public:
         if (mView && mLayout ) {
             mStatus = MARQUEE_STARTING;
             mScroll = 0.0f;
-            int textWidth = mView->getWidth() - mView->getCompoundPaddingLeft()
+            const int textWidth = mView->getWidth() - mView->getCompoundPaddingLeft()
                     - mView->getCompoundPaddingRight();
-            float lineWidth = mLayout->getLineWidth(0);
-            float gap = textWidth / 3.0f;
+            const float lineWidth = mLayout->getLineWidth(0);
+            const float gap = textWidth / 3.0f;
             mGhostStart = lineWidth - textWidth + gap;
             mMaxScroll = mGhostStart + textWidth;
             mGhostOffset = lineWidth + gap;
@@ -286,16 +288,16 @@ public:
             mMaxFadeScroll = mGhostStart + lineWidth + lineWidth;
 	
             mView->invalidate();
-            mView->postDelayed(mStartCallback,200);
+            mChoreographer->postFrameCallback(mStartCallback);
         }
     }
-    float getGhostOffset(){return mGhostOffset; }
-    float getScroll() { return mScroll; }
-    float getMaxFadeScroll(){ return mMaxFadeScroll; }
-    bool shouldDrawLeftFade(){ return mScroll <= mFadeStop; }
-    bool shouldDrawGhost() {  return mStatus == MARQUEE_RUNNING && mScroll > mGhostStart; }
-    bool isRunning() { return mStatus == MARQUEE_RUNNING; }
-    bool isStopped() { return mStatus == MARQUEE_STOPPED; }
+    float getGhostOffset()const { return mGhostOffset; }
+    float getScroll()const { return mScroll; }
+    float getMaxFadeScroll()const { return mMaxFadeScroll; }
+    bool shouldDrawLeftFade()const { return mScroll <= mFadeStop; }
+    bool shouldDrawGhost()const { return (mStatus == MARQUEE_RUNNING) && (mScroll > mGhostStart); }
+    bool isRunning()const{ return mStatus == MARQUEE_RUNNING; }
+    bool isStopped()const{ return mStatus == MARQUEE_STOPPED; }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
