@@ -2655,6 +2655,12 @@ void TextView::onDraw(Canvas& canvas) {
     layout->draw(canvas);
     mLayout->getCaretRect(mCaretRect);
     mCaretRect.offset(compoundPaddingLeft+offset, extendedPaddingTop + voffsetText);
+
+    if (mMarquee && mMarquee->shouldDrawGhost()) {
+        const float dx = mMarquee->getGhostOffset();
+        canvas.translate(layout->getParagraphDirection(0) * dx, 0.0f);
+        layout->draw(canvas);//, highlight, mHighlightPaint, cursorOffsetVertical);
+    }
     canvas.restore();
 }
 
