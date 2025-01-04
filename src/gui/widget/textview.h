@@ -151,6 +151,8 @@ private:
     void startMarquee();
     void stopMarquee();
     void startStopMarquee(bool start);
+    float getHorizontalFadingEdgeStrength(float position1, float position2);
+    void applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines);
     void setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
            int typefaceIndex,int style,int weight);
     void resolveStyleAndSetTypeface(Typeface* typeface,int style,int weight);
@@ -196,6 +198,8 @@ protected:
     void resetResolvedDrawables()override;
     int viewportToContentHorizontalOffset();
     int viewportToContentVerticalOffset();
+    float getLeftFadingEdgeStrength()override;
+    float getRightFadingEdgeStrength()override;
 public:
     enum EDITMODE{
        READONLY,
@@ -273,6 +277,7 @@ public:
     int getMaxLines()const;
     int getMaxHeight()const;
     void setMaxHeight(int maxPixels);
+    void setLines(int lines);
     int getLineCount()const;
     int getLineBounds(int line, Rect&bounds);
     int getBaseline();
@@ -282,6 +287,8 @@ public:
     int getCaretPos()const;
     int getGravity()const;
     void setGravity(int gravity);
+    void setHorizontallyScrolling(bool whether);
+    bool getHorizontallyScrolling()const;
     void setSelected(bool selected)override;
     virtual int getCompoundPaddingLeft();
     virtual int getCompoundPaddingRight();

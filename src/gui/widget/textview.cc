@@ -1286,15 +1286,32 @@ int TextView::getGravity()const{
     return mGravity;
 }
 
+void TextView::setHorizontallyScrolling(bool whether) {
+    if (mHorizontallyScrolling != whether) {
+        mHorizontallyScrolling = whether;
+        if (mLayout != nullptr) {
+            //nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+bool TextView::getHorizontallyScrolling() const{
+    return mHorizontallyScrolling;
+}
+
 void TextView::setMinWidth(int minPixels){
     mMinWidth = minPixels;
     mMinWidthMode = PIXELS;
     requestLayout();
     invalidate(true);
 }
+
 int TextView::getMinWidth()const{
     return mMinWidthMode == PIXELS ? mMinWidth : -1;
 }
+
 void TextView::setMaxWidth(int maxPixels){
     mMaxWidth = maxPixels;
     mMaxWidthMode = PIXELS;
@@ -1481,6 +1498,13 @@ void TextView::setMaxHeight(int maxPixels){
 
     requestLayout();
     invalidate(true);
+}
+
+void TextView::setLines(int lines){
+    mMaximum = mMinimum= lines;
+    mMaxMode = mMinMode = LINES;
+    requestLayout();
+    invalidate();
 }
 
 int TextView::desired(Layout*layout){
@@ -2079,6 +2103,25 @@ void TextView::setEllipsize(int where){
     }
 }
 
+void TextView::applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines) {
+    mSingleLine = singleLine;
+    if (singleLine) {
+        setLines(1);
+        setHorizontallyScrolling(true);
+        /*if (applyTransformation) {
+            setTransformationMethod(SingleLineTransformationMethod.getInstance());
+        }*/
+    } else {
+        if (changeMaxLines) {
+            setMaxLines(INT_MAX);//Integer.MAX_VALUE);
+        }
+        setHorizontallyScrolling(false);
+        /*if (applyTransformation) {
+            setTransformationMethod(null);
+        }*/
+    }
+}
+
 void TextView::setTextColor(int color){
     setTextColor(ColorStateList::valueOf(color));
 }
@@ -2435,7 +2478,7 @@ void TextView::setSingleLine(bool single){
     mSingleLine = single;
     mLayout->setMultiline(!single);
     mLayout->relayout();
-    invalidate(true);
+    applySingleLine(single,true,true);
 }
 
 void TextView::setBreakStrategy(int breakStrategy){
