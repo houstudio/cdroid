@@ -231,8 +231,11 @@ float AttributeSet::getFraction(const std::string&key,int base,int pbase,float d
 
 const std::string AttributeSet::getString(const std::string&key,const std::string&def)const{
     const std::string v = getAttributeValue(key);
-    if(v.empty())return def;
-    return v;
+    if(v.empty())
+        return def;
+    if((mContext==nullptr)||(v.find('/')==std::string::npos))
+        return v;
+    return mContext->getString(v);
 }
 
 static std::map<const std::string,int>gravitykvs={

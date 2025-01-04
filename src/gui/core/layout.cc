@@ -567,20 +567,20 @@ void Layout::relayout(bool force){
             if(std::ceil(line_width+word_width) > mWidth){
                 pushLineData(start,ytop,fontextents.descent,std::ceil(line_width - extents.x_advance));
                 ytop += mLineHeight;
-                mLineCount++;
                 if(mBreakStrategy==BREAK_STRATEGY_SIMPLE){
-                    start = i - 1;
+                    start = std::max(mLineCount,int(i - 1));
                     total_width = extents.x_advance;
                     word_width = extents.x_advance;
                     word.clear();
                     word.append(1,mText[i]);
                 }else{
-                    start = i - word.length();
+                    start = std::max(mLineCount,int(i - word.length()));
                     start +=!!(mText[start]=='\n');
                     total_width = word_width - extents.x_advance;
                     word.erase();
                     word_width=0;
                 }
+                mLineCount++;
             }
             break;
         case WORDBREAK_BREAK:
