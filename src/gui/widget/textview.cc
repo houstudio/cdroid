@@ -1645,11 +1645,11 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     setMeasuredDimension(width, height);
 }
 
-std::vector<Drawable*>TextView::getCompoundDrawables(){
-    std::vector<Drawable*>ret;
-    if(mDrawables)
-        ret.assign(mDrawables->mShowing,mDrawables->mShowing+4);
-    return ret;
+std::vector<Drawable*>TextView::getCompoundDrawables()const{
+    if(mDrawables){
+        return std::vector<Drawable*>(mDrawables->mShowing,mDrawables->mShowing+4);
+    }
+    return std::vector<Drawable*>{nullptr,nullptr,nullptr,nullptr};
 }
 
 void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom){
@@ -1780,6 +1780,18 @@ void TextView::setCompoundDrawablesWithIntrinsicBounds(const std::string& left, 
     Context* context = getContext();
     setCompoundDrawablesWithIntrinsicBounds(context->getDrawable(left),context->getDrawable(top),
             context->getDrawable(right),context->getDrawable(bottom));
+}
+
+std::vector<Drawable*> TextView::getCompoundDrawablesRelative() const{
+    if (mDrawables != nullptr) {
+        Drawables* dr = mDrawables;
+        return std::vector<Drawable*>{
+            dr->mDrawableStart, dr->mShowing[Drawables::TOP],
+            dr->mDrawableEnd, dr->mShowing[Drawables::BOTTOM]
+        };
+    } else {
+        return std::vector<Drawable*>{ nullptr, nullptr, nullptr, nullptr };
+    }
 }
 
 void TextView::onResolveDrawables(int layoutDirection){

@@ -311,7 +311,8 @@ public:
 
     void setCompoundDrawablePadding(int pad);
     int getCompoundDrawablePadding()const;
-    std::vector<Drawable*>getCompoundDrawables();
+    std::vector<Drawable*>getCompoundDrawables()const;
+    std::vector<Drawable*> getCompoundDrawablesRelative() const;
     void setCompoundDrawableTintList(const ColorStateList* tint);
     const ColorStateList* getCompoundDrawableTintList();
     void drawableHotspotChanged(float x,float y)override;
