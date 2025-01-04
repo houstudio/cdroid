@@ -16,10 +16,11 @@
 #include <widget/textview.h>
 #include <cairomm/fontface.h>
 #include <core/inputmethodmanager.h>
-#include <app.h>
-#include <layout.h>
-#include <cdlog.h>
-#include <textutils.h>
+#include <core/app.h>
+#include <core/layout.h>
+#include <core/textutils.h>
+#include <porting/cdlog.h>
+#include <float.h>
 
 #define VERY_WIDE 1024*1024
 #define KEY_EVENT_NOT_HANDLED 0
@@ -191,7 +192,7 @@ private:
     static constexpr  int MARQUEE_STOPPED = 0x0;
     static constexpr  int MARQUEE_STARTING= 0x1;
     static constexpr  int MARQUEE_RUNNING = 0x2;
-
+    friend TextView;
     TextView* mView;
     Layout*mLayout;
     Choreographer*mChoreographer;
@@ -388,6 +389,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
 
     setMinHeight(attrs.getDimensionPixelSize("minHeight", -1));
     setMaxHeight(attrs.getDimensionPixelSize("maxHeight", mMaximum));
+    setTextScaleX(attrs.getFloat("textScaleX",mTextScaleX));
 
     setMinWidth(attrs.getDimensionPixelSize("minWidth", INT_MIN));
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
@@ -456,6 +458,7 @@ void TextView::initView(){
     mMinimum  = 0;
     mSpacingMult= 1.0;
     mSpacingAdd = 0.f;
+    mTextScaleX = 1.f;
     mBlinkOn  = false;
     mRestartMarquee = true;
     mCaretPos = 0;
@@ -472,6 +475,7 @@ void TextView::initView(){
     mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
     mHorizontallyScrolling =false;
     mNeedsAutoSizeText = false;
+    mUserSetTextScaleX = false;
     mEllipsize = Layout::ELLIPSIS_NONE;
     mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_NONE;
     mLayout = new Layout(18,1);
@@ -694,6 +698,21 @@ void TextView::setTextSize(float size){
 
 float TextView::getTextSize()const{
     return mLayout->getFontSize();
+}
+
+float TextView::getTextScaleX()const{
+    return mTextScaleX;
+}
+
+void TextView::setTextScaleX(float size){
+    if((size!=mTextScaleX)&&(size>FLT_EPSILON)){
+        mTextScaleX = size;
+        mUserSetTextScaleX = true;
+        if(mLayout){
+            requestLayout();
+            invalidate();
+        }
+    }
 }
 
 int TextView::computeVerticalScrollRange(){
@@ -1500,11 +1519,42 @@ void TextView::setMaxHeight(int maxPixels){
     invalidate(true);
 }
 
+void TextView::setMinLines(int minLines) {
+    mMinimum = minLines;
+    mMinMode = LINES;
+
+    requestLayout();
+    invalidate();
+}
+
+int TextView::getMinLines() const{
+    return mMinMode == LINES ? mMinimum : -1;
+}
+
 void TextView::setLines(int lines){
     mMaximum = mMinimum= lines;
     mMaxMode = mMinMode = LINES;
     requestLayout();
     invalidate();
+}
+
+bool TextView::compressText(float width) {
+    if (isHardwareAccelerated()) return false;
+
+    // Only compress the text if it hasn't been compressed by the previous pass
+    if ((width > 0.0f) && mLayout && (getLineCount() == 1) && !mUserSetTextScaleX
+            && (mTextScaleX == 1.0f)) {
+        const float textWidth = mLayout->getLineWidth(0);
+        const float overflow = (textWidth + 1.0f - width) / width;
+        if (overflow > 0.0f && overflow <= Marquee::MARQUEE_DELTA_MAX) {
+            setTextScaleX(1.0f - overflow - 0.005f);
+            post([this]() {
+                requestLayout();
+            });
+            return true;
+        }
+    }
+    return false;
 }
 
 int TextView::desired(Layout*layout){
@@ -1871,6 +1921,10 @@ void TextView::setTypeface(Typeface* tf){
 
 Typeface*TextView::getTypeface(){
     return mOriginalTypeface;
+}
+
+int TextView::getTypefaceStyle() const{
+    return mOriginalTypeface?mOriginalTypeface->getStyle():Typeface::NORMAL;
 }
 
 void TextView::setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) {
@@ -2541,10 +2595,10 @@ bool TextView::canMarquee(){
 }
 
 void TextView::startMarquee(){
-    /*if (getKeyListener() != nullptr) return;
+    //if (getKeyListener() != nullptr) return;
     if (compressText(getWidth() - getCompoundPaddingLeft() - getCompoundPaddingRight())) {
         return;
-    }*/
+    }
     if ((mMarquee == nullptr || mMarquee->isStopped()) && (isFocused() || isSelected())
                 && getLineCount() == 1 && canMarquee()) {
         if (mMarqueeFadeMode == MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS) {
@@ -2726,6 +2780,8 @@ void TextView::onDraw(Canvas& canvas) {
     }
 
     const int cursorOffsetVertical = voffsetCursor - voffsetText;
+    if(mUserSetTextScaleX)
+        canvas.scale(mTextScaleX,1.f);
     if( (std::abs(mShadowDx)>0.05f)||(std::abs(mShadowDy)>0.05f)){
         canvas.set_color(mShadowColor);
         canvas.translate(mShadowDx,mShadowDy);

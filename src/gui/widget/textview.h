@@ -98,11 +98,13 @@ private:
     float mShadowRadius, mShadowDx, mShadowDy;
     float mSpacingMult;
     float mSpacingAdd;
+    float mTextScaleX;
     bool mSingleLine;
     bool mIncludePad;
     bool mHorizontallyScrolling;
     bool mNeedsAutoSizeText;
     bool mRestartMarquee;
+    bool mUserSetTextScaleX;
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
     int mFontWeightAdjustment;
@@ -141,6 +143,7 @@ private:
     bool isShowingHint()const;
     bool bringTextIntoView();
     void autoSizeText();
+    bool compressText(float width);
     static int desired(Layout*);
     int  getBoxHeight(Layout* l);
     void prepareDrawableForDisplay(Drawable*d);
@@ -213,6 +216,7 @@ public:
     void setTypeface(Typeface* tf);
     void setTypeface(Typeface* tf,int style);
     Typeface* getTypeface();
+    int getTypefaceStyle() const;
     virtual void setText(const std::string&txt);
     const std::string getText()const;
     void  setTextAppearance(const std::string&);
@@ -235,6 +239,8 @@ public:
     void setTextSize(float size);
     void setTextSize(int unit, float size);
     float getTextSize()const;
+    float getTextScaleX()const;
+    void setTextScaleX(float);
     void setTextColor(int color);
     void setTextColor(const ColorStateList* colors);
     Layout* getLayout()const;
@@ -275,6 +281,8 @@ public:
     void setMinHeight(int minPixels);
     void setMaxLines(int maxLines);
     int getMaxLines()const;
+    void setMinLines(int minLines);
+    int getMinLines()const;
     int getMaxHeight()const;
     void setMaxHeight(int maxPixels);
     void setLines(int lines);
