@@ -35,7 +35,7 @@
 #endif
 
 #include <stdint.h>
-
+#include <WinSock2.h>
 enum EPOLL_EVENTS {
   EPOLLIN      = (int) (1U <<  0),
   EPOLLPRI     = (int) (1U <<  1),
@@ -957,7 +957,7 @@ static poll_group_t* poll_group__new(port_state_t* port_state) {
   HANDLE iocp_handle = port_get_iocp_handle(port_state);
   queue_t* poll_group_queue = port_get_poll_group_queue(port_state);
 
-  poll_group_t* poll_group = malloc(sizeof *poll_group);
+  poll_group_t* poll_group = (poll_group_t*)malloc(sizeof *poll_group);
   if (poll_group == NULL)
     return_set_error(NULL, ERROR_NOT_ENOUGH_MEMORY);
 
@@ -1063,7 +1063,7 @@ typedef struct port_state {
 } port_state_t;
 
 static inline port_state_t* port__alloc(void) {
-  port_state_t* port_state = malloc(sizeof *port_state);
+  port_state_t* port_state = (port_state_t*)malloc(sizeof *port_state);
   if (port_state == NULL)
     return_set_error(NULL, ERROR_NOT_ENOUGH_MEMORY);
 
@@ -1257,7 +1257,7 @@ int port_wait(port_state_t* port_state,
    * memory for it on the heap. */
   if ((size_t) maxevents <= array_count(stack_iocp_events)) {
     iocp_events = stack_iocp_events;
-  } else if ((iocp_events =
+  } else if ((iocp_events =(OVERLAPPED_ENTRY*)
                   malloc((size_t) maxevents * sizeof *iocp_events)) == NULL) {
     iocp_events = stack_iocp_events;
     maxevents = array_count(stack_iocp_events);
@@ -1610,7 +1610,7 @@ typedef struct sock_state {
 } sock_state_t;
 
 static inline sock_state_t* sock__alloc(void) {
-  sock_state_t* sock_state = malloc(sizeof *sock_state);
+  sock_state_t* sock_state = (sock_state_t*)malloc(sizeof *sock_state);
   if (sock_state == NULL)
     return_set_error(NULL, ERROR_NOT_ENOUGH_MEMORY);
   return sock_state;

@@ -194,7 +194,7 @@ float ValueAnimator::resolveDurationScale() const{
 }
 
 int64_t ValueAnimator::getScaledDuration() const{
-    return int64_t(mDuration) * resolveDurationScale();
+    return int64_t(mDuration * resolveDurationScale());
 }
 
 ValueAnimator& ValueAnimator::setDuration(long duration){

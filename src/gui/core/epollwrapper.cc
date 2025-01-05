@@ -41,7 +41,7 @@ private:
 public:
     explicit EPOLL(int maxEvents = 10) : maxEvents(maxEvents) {
         epfd = epoll_create1(0);
-        if (epfd == -1) {
+        if (epfd == (HANDLE) - 1) {
             throw std::runtime_error("Failed to create epoll file descriptor");
         }
     }
