@@ -125,7 +125,7 @@ void TextView::Drawables::setErrorDrawable(Drawable* dr, TextView* tv) {
 
     if (mDrawableError != nullptr) {
         Rect compoundRect = mCompoundRect;
-	std::vector<int> state = tv->getDrawableState();
+        const std::vector<int> state = tv->getDrawableState();
 
         mDrawableError->setState(state);
         compoundRect = mDrawableError->getBounds();
@@ -1647,7 +1647,8 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
 std::vector<Drawable*>TextView::getCompoundDrawables()const{
     if(mDrawables){
-        return std::vector<Drawable*>(mDrawables->mShowing,mDrawables->mShowing+4);
+        Drawable**ds = mDrawables->mShowing;
+        return std::vector<Drawable*>({ds[Drawables::LEFT],ds[Drawables::TOP],ds[Drawables::RIGHT],ds[Drawables::BOTTOM]});
     }
     return std::vector<Drawable*>{nullptr,nullptr,nullptr,nullptr};
 }

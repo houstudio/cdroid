@@ -8,7 +8,7 @@
 #elif (defined(_WIN32)||defined(_WIN64))||defined(_MSVC_VER)
 //Fast epoll for windows:
 //https://github.com/piscisaureus/wepoll
-#include <wepoll.h>
+#include <core/wepoll.h>
 #endif
 
 namespace cdroid{
