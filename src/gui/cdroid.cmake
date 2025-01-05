@@ -48,7 +48,7 @@ list(APPEND CDROID_SOURCES
 
 if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message("Building on Windows with MSVC compiler")
-    list(APPEND CDROID_SOURCES core/wepoll.cc)
+    #list(APPEND CDROID_SOURCES core/wepoll.cc)
 endif()
 
 list(APPEND CDROID_SOURCES

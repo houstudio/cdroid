@@ -11,15 +11,16 @@
 #elif defined(_WIN32)||defined(_WIN64)
 #define EPOLL_HANDLE HANDLE
 #define INVALID_HANDLE_VALUE (intptr_t(-1))
+#include <WinSock2.h>
 #define close _close
 #endif
 
 //REFERENCES:
 //Fast epoll for windows:https://github.com/piscisaureus/wepoll 
-
+#define USE_SELECT 1
 namespace cdroid{
 
-#if defined(_WIN32)||defined(_WIN64)||defined(__linux__)||defined(__unix__)
+#if (defined(_WIN32)||defined(_WIN64)||defined(__linux__)||defined(__unix__))&&!defined(USE_SELECT)
 class EPOLL:public IOEventProcessor {
 private:
     EPOLL_HANDLE epfd;
@@ -189,7 +190,7 @@ public:
 IOEventProcessor::IOEventProcessor() {}
 IOEventProcessor::~IOEventProcessor() {}
 IOEventProcessor* IOEventProcessor::create(){
-#if defined(_WIN32)||defined(_WIN64)||(defined(__linux__)||defined(__unix__))
+#if (defined(_WIN32)||defined(_WIN64)||(defined(__linux__)||defined(__unix__)))&&!defined(USE_SELECT)
     return new EPOLL();
 #else
     return new SELECTOR();

@@ -729,6 +729,8 @@ std::string ViewPager2::AccessibilityProvider::onRvGetAccessibilityClassName() {
 
 
 ///////////////////class BasicAccessibilityProvider extends AccessibilityProvider///////////////////
+ViewPager2::BasicAccessibilityProvider::BasicAccessibilityProvider(ViewPager2*vp):AccessibilityProvider(vp){
+}
 bool ViewPager2::BasicAccessibilityProvider::handlesLmPerformAccessibilityAction(int action) {
     return (action == AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD
             || action == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD)
