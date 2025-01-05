@@ -7,6 +7,7 @@
 #if defined(__linux__)||defined(__unix__)
 #include <unistd.h>
 #define EPOLL_HANDLE int
+#define INVALID_HANDLE_VALUE (intptr_t(-1))
 #elif defined(_WIN32)||defined(_WIN64)
 #define EPOLL_HANDLE HANDLE
 #endif
@@ -41,7 +42,7 @@ private:
 public:
     explicit EPOLL(int maxEvents = 10) : maxEvents(maxEvents) {
         epfd = epoll_create1(0);
-        if (epfd == (HANDLE) - 1) {
+        if (epfd == INVALID_HANDLE_VALUE) {
             throw std::runtime_error("Failed to create epoll file descriptor");
         }
     }
