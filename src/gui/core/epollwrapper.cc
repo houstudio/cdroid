@@ -10,6 +10,7 @@
 #define INVALID_HANDLE_VALUE (intptr_t(-1))
 #elif defined(_WIN32)||defined(_WIN64)
 #define EPOLL_HANDLE HANDLE
+#define close _close
 #endif
 
 //REFERENCES:
@@ -42,13 +43,17 @@ private:
 public:
     explicit EPOLL(int maxEvents = 10) : maxEvents(maxEvents) {
         epfd = epoll_create1(0);
-        if (epfd == INVALID_HANDLE_VALUE) {
+        if (epfd == (HANDLE)intptr_t(- 1)) {
             throw std::runtime_error("Failed to create epoll file descriptor");
         }
     }
 
     ~EPOLL() {
+#if defind(__linux__)||defined(__unix__)
         close(epfd);
+#else if defined(_WIN32)||defined(_WIN64)
+        epoll_close(epfd);
+#endif
     }
 
 
@@ -76,8 +81,8 @@ public:
     }
 
     int waitEvents(std::vector<epoll_event>& activeFDs, uint32_t timeout) override{
-        struct epoll_event events[maxEvents];
-        const int numEvents = epoll_wait(epfd, events, maxEvents,timeout);
+        struct std::vector<epoll_event> events(maxEvents);
+        const int numEvents = epoll_wait(epfd, events.data(), maxEvents, timeout);
         if (numEvents == -1) {
             return -1;
         }

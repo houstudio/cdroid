@@ -241,8 +241,6 @@ Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int
 }
 
 Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std::string&resourceId,int width,int height){
-    constexpr unsigned lengthOfLongestSignature = 14; /* To wit: "RIFF????WEBPVP"*/
-    uint8_t contents[lengthOfLongestSignature];
     std::unique_ptr<ImageDecoder>decoder;
     std::unique_ptr<std::istream>istm;
     if(ctx)
