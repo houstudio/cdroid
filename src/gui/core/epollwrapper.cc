@@ -43,15 +43,15 @@ private:
 public:
     explicit EPOLL(int maxEvents = 10) : maxEvents(maxEvents) {
         epfd = epoll_create1(0);
-        if (epfd == (HANDLE)intptr_t(- 1)) {
+        if (epfd == static_cast<EPOLL_HANDLE>(-1)) {
             throw std::runtime_error("Failed to create epoll file descriptor");
         }
     }
 
     ~EPOLL() {
-#if defind(__linux__)||defined(__unix__)
+#if defined(__linux__)||defined(__unix__)
         close(epfd);
-#else if defined(_WIN32)||defined(_WIN64)
+#elif defined(_WIN32)||defined(_WIN64)
         epoll_close(epfd);
 #endif
     }
