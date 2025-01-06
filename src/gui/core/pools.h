@@ -73,7 +73,7 @@ public:
             return SimplePool<T>::acquire();
         }
 
-        bool release(T element) {
+        bool release(T* element) {
             std::lock_guard<std::mutex> lock(mutex);
             return SimplePool<T>::release(element);
         }
