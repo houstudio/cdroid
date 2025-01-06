@@ -226,7 +226,7 @@ InputMethod*InputMethodManager::getInputMethod(const std::string&name){
 InputMethodManager::InputMethodManager(){
     im = nullptr;
     kcm= nullptr;
-    mInputType = -1;
+    mInputType = 0;
     imeWindow = nullptr;
 }
 
@@ -307,18 +307,18 @@ void InputMethodManager::sendKeyEvent(KeyEvent&k){
 
 void InputMethodManager::setInputType(int inputType){
     LOGV("type=%d",inputType);
+    if(mInputType==inputType)
+        return;
+    mInputType = inputType;
     if( mInst->imeWindow == nullptr){
         Point dspSize;
         mInst->imeWindow = new IMEWindow(-1,300);
-	Display& dp = WindowManager::getInstance().getDefaultDisplay();
+        Display& dp = WindowManager::getInstance().getDefaultDisplay();
         const int rotation = dp.getRotation();
         dp.getRealSize(dspSize);
-	const int screenHeight=((rotation==Display::ROTATION_90)||(rotation==Display::ROTATION_270))?dspSize.x:dspSize.y;
+        const int screenHeight=((rotation==Display::ROTATION_90)||(rotation==Display::ROTATION_270))?dspSize.x:dspSize.y;
         mInst->imeWindow->setPos(0,screenHeight-mInst->imeWindow->getHeight());
-	LOGD("screenHeight=%d imewin.height=%d",screenHeight,mInst->imeWindow->getHeight());
-    }
-    if(mInputType!=inputType){
-        mInputType=inputType;
+        LOGD("screenHeight=%d imewin.height=%d",screenHeight,mInst->imeWindow->getHeight());
     }
     switch(mInputType){
     case EditText::TYPE_NONE:
