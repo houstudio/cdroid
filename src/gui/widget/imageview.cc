@@ -356,13 +356,13 @@ void ImageView::jumpDrawablesToCurrentState(){
     if (mDrawable) mDrawable->jumpToCurrentState();
 }
 
-std::vector<int> ImageView::onCreateDrawableState(){
+std::vector<int> ImageView::onCreateDrawableState(int extraSpace){
     if (mState.size()==0) {
-        return View::onCreateDrawableState();
+        return View::onCreateDrawableState(extraSpace);
     } else if (!mMergeState) {
         return mState;
     } else {
-        std::vector<int>sts=View::onCreateDrawableState();
+        std::vector<int>sts=View::onCreateDrawableState(extraSpace+mState.size());
         return mergeDrawableStates(sts, mState);
     }
 }

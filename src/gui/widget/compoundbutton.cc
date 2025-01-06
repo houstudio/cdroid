@@ -57,8 +57,8 @@ CompoundButton::~CompoundButton(){
     //delete mButtonTintList;tintlist cant be deleted
 }
 
-std::vector<int>CompoundButton::onCreateDrawableState(){
-    std::vector<int>drawableState = Button::onCreateDrawableState();
+std::vector<int>CompoundButton::onCreateDrawableState(int extraSpace){
+    std::vector<int>drawableState = Button::onCreateDrawableState(extraSpace);
     if (isChecked()) {
         mergeDrawableStates(drawableState,StateSet::get(StateSet::VIEW_STATE_CHECKED));
     }

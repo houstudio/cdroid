@@ -1133,7 +1133,7 @@ std::vector<int>AbsListView::getDrawableStateForSelector() {
     // state arrays, and clearing the enabled state on those arrays is a
     // bad thing! If we specify we need extra space, it will create+copy
     // into a new array that is safely mutable.
-    std::vector<int> state = onCreateDrawableState();
+    std::vector<int> state = onCreateDrawableState(1);
 
     int enabledPos = -1;
     for (int i = state.size() - 1; i >= 0; i--) {

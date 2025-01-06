@@ -4436,9 +4436,9 @@ void View::jumpDrawablesToCurrentState(){
     if (mForegroundInfo  && mForegroundInfo->mDrawable )mForegroundInfo->mDrawable->jumpToCurrentState();
 }
 
-std::vector<int>View::onCreateDrawableState(){
+std::vector<int>View::onCreateDrawableState(int extraSpace){
     if (((mViewFlags & DUPLICATE_PARENT_STATE) == DUPLICATE_PARENT_STATE) &&  mParent) {
-        return mParent->onCreateDrawableState();
+        return mParent->onCreateDrawableState(extraSpace);
     }
 
     int viewStateIndex = 0;
@@ -4513,7 +4513,7 @@ void View::refreshDrawableState(){
 const std::vector<int>View::getDrawableState(){
     if(!(mPrivateFlags & PFLAG_DRAWABLE_STATE_DIRTY))
         return mDrawableState;
-    mDrawableState=onCreateDrawableState();
+    mDrawableState = onCreateDrawableState(0);
     mPrivateFlags &= ~PFLAG_DRAWABLE_STATE_DIRTY;
     return mDrawableState;
 }

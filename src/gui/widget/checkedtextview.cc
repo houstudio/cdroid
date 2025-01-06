@@ -238,8 +238,8 @@ void CheckedTextView::onDraw(Canvas& canvas) {
     }
 }
 
-std::vector<int> CheckedTextView::onCreateDrawableState(){
-    std::vector<int> drawableState = TextView::onCreateDrawableState();
+std::vector<int> CheckedTextView::onCreateDrawableState(int extraSpace){
+    std::vector<int> drawableState = TextView::onCreateDrawableState(extraSpace);
     if (isChecked()) {
         mergeDrawableStates(drawableState, StateSet::get(StateSet::VIEW_STATE_CHECKED));
     }

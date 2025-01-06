@@ -875,8 +875,8 @@ int Switch::getThumbScrollRange() {
     }
 }
 
-std::vector<int> Switch::onCreateDrawableState(){
-    std::vector<int> drawableState = CompoundButton::onCreateDrawableState();
+std::vector<int> Switch::onCreateDrawableState(int extraSpace){
+    std::vector<int> drawableState = CompoundButton::onCreateDrawableState(extraSpace);
     if (isChecked()) {
         mergeDrawableStates(drawableState,StateSet::get(StateSet::VIEW_STATE_CHECKED));
     }

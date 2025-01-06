@@ -3960,11 +3960,11 @@ void ViewGroup::jumpDrawablesToCurrentState(){
     }
 }
 
-std::vector<int> ViewGroup::onCreateDrawableState(){
+std::vector<int> ViewGroup::onCreateDrawableState(int extraSpace){
     if ((mGroupFlags & FLAG_ADD_STATES_FROM_CHILDREN) == 0) {
-        return View::onCreateDrawableState();
+        return View::onCreateDrawableState(extraSpace);
     }
-    std::vector<int>state = View::onCreateDrawableState();
+    std::vector<int>state = View::onCreateDrawableState(extraSpace);
     const int N = getChildCount();
     for (int i = 0; i < N; i++) {
         std::vector<int> childState = getChildAt(i)->getDrawableState();

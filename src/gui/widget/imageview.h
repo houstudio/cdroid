@@ -68,7 +68,7 @@ public:
     bool verifyDrawable(Drawable* dr)const override;
     void jumpDrawablesToCurrentState();
     void invalidateDrawable(Drawable& dr)override;
-    std::vector<int> onCreateDrawableState()override;
+    std::vector<int> onCreateDrawableState(int)override;
     void onRtlPropertiesChanged(int layoutDirection)override;
     void onVisibilityAggregated(bool isVisible)override;
     int getScaleType()const;

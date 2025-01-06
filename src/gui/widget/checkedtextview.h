@@ -32,7 +32,7 @@ protected:
     void internalSetPadding(int left, int top, int right, int bottom);
     void onDetachedFromWindowInternal()override;
     void onDraw(Canvas& canvas)override;
-    std::vector<int>onCreateDrawableState()override;
+    std::vector<int>onCreateDrawableState(int)override;
     void drawableStateChanged()override;
     void drawableHotspotChanged(float x, float y)override;
 public:

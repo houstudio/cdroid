@@ -733,7 +733,7 @@ protected:
     virtual void resetResolvedDrawables();
     virtual bool verifyDrawable(Drawable*)const;
     virtual void drawableStateChanged();
-    virtual std::vector<int> onCreateDrawableState();
+    virtual std::vector<int> onCreateDrawableState(int);
     virtual View& setFlags(int flag,int mask);
     virtual bool hasFlag(int flag) const;
     bool fitSystemWindows(Rect& insets);

@@ -100,7 +100,7 @@ protected:
     void onDetachedFromWindow()override;
     void onLayout(bool changed, int left, int top, int width, int height)override;
     void onDraw(Canvas&)override;
-    std::vector<int>onCreateDrawableState()override;
+    std::vector<int>onCreateDrawableState(int)override;
     void drawableStateChanged()override;
     bool verifyDrawable(Drawable* who)const override;
 public:

@@ -18,7 +18,7 @@ private:
     void initCompoundButton();
     void applyButtonTint();
 protected:
-    std::vector<int>onCreateDrawableState()override;
+    std::vector<int>onCreateDrawableState(int)override;
     int getHorizontalOffsetForDrawables()const override;
     void drawableStateChanged()override;
     bool verifyDrawable(Drawable* who)const override;

@@ -268,7 +268,7 @@ protected:
     void transformPointToViewLocal(float pint[2],View&);
     bool isTransformedTouchPointInView(float x,float y,View& child,Point*outLocalPoint);
     void drawableStateChanged()override;
-    std::vector<int> onCreateDrawableState()override;
+    std::vector<int> onCreateDrawableState(int)override;
     void dispatchSetPressed(bool pressed)override;
     void dispatchDrawableHotspotChanged(float x,float y)override;
     bool hasHoveredChild()const override;
