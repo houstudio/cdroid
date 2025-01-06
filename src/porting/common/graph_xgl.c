@@ -305,14 +305,13 @@ static unsigned int xglThreadProc(void * param)
     Colormap cmap;
     XSetWindowAttributes swa;
     Atom wm_delete_window;
-    const char* extensions = glGetString(GL_EXTENSIONS);
     char* env = getenv("SCREEN_SIZE");
     if (env) {
         width = atoi(env);
         env = strpbrk(env, "xX*,");
         if (env)height = atoi(env + 1);
     }
-    LOGI("====extensions=[%s]", extensions);    
+    LOGI("====GL_EXT_bgra=%d", isExtensionSupported("GL_EXT_bgra"));
     devs[0].display = XOpenDisplay(NULL);
     devs[0].width = width;
     devs[0].height = height;

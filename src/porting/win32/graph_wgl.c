@@ -106,8 +106,7 @@ static unsigned int __stdcall msgLooperProc(void * param)
         env = strpbrk(env, "xX*,");
         if (env)height = atoi(env + 1);
     }
-    const char* extensions = glGetString(GL_EXTENSIONS);
-    LOGI("====extensions=[%s]", extensions);
+    LOGI("====GL_EXT_bgra=%d", isExtensionSupported("GL_EXT_bgra"));
     memset(&window_class, 0, sizeof(WNDCLASSEXW));
     window_class.cbSize = sizeof(WNDCLASSEXW);
     window_class.lpfnWndProc = Window_PROC;
