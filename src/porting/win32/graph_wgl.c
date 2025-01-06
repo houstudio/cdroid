@@ -106,6 +106,8 @@ static unsigned int __stdcall msgLooperProc(void * param)
         env = strpbrk(env, "xX*,");
         if (env)height = atoi(env + 1);
     }
+    const char* extensions = glGetString(GL_EXTENSIONS);
+    LOGI("====extensions=[%s]", extensions);
     memset(&window_class, 0, sizeof(WNDCLASSEXW));
     window_class.cbSize = sizeof(WNDCLASSEXW);
     window_class.lpfnWndProc = Window_PROC;
@@ -131,7 +133,7 @@ static unsigned int __stdcall msgLooperProc(void * param)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, devs[0].buffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, devs[0].buffer);
 
     wglMakeCurrent(devs[0].hdc, devs[0].hgrc);
     glViewport(0, 0, width, height);
