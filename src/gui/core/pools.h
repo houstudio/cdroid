@@ -68,7 +68,7 @@ public:
         SynchronizedPool(int maxPoolSize):SimplePool<T>(maxPoolSize){
         }
 
-        T acquire() {
+        T* acquire() {
             std::lock_guard<std::mutex> lock(mutex);
             return SimplePool<T>::acquire();
         }
