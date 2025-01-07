@@ -41,10 +41,13 @@ public:
     DECLARE_UIEVENT(bool,WNDENUMPROC,Window*);
     class LayoutParams:public ViewGroup::LayoutParams{
     public:
+        int type;
+        int format;
         int x,y;
         int width,height;
         int gravity;
         int flags;
+        int privateFlags;
     };
 public:
     static WindowManager& getInstance();

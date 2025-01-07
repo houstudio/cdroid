@@ -1031,8 +1031,6 @@ void GradientDrawable::draw(Canvas&canvas) {
         if (haveStroke) {
             prepareStrokeProps(canvas);
             canvas.stroke();
-        } else if(mFillPaint||st->mImagePattern) {
-            canvas.fill();
         }
     }
     canvas.restore();

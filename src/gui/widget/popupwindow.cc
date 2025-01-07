@@ -5,9 +5,7 @@ namespace cdroid{
 PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs){
     init();
     mContext = context;
-    //mWindowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-    //final TypedArray a = context.obtainStyledAttributes(
-    //            attrs, R.styleable.PopupWindow, defStyleAttr, defStyleRes);
+    AttributeSet attpop= context->obtainStyledAttributes("cdroid:attr/popupWindowStyle");
     Drawable* bg = attrs.getDrawable("popupBackground");
     mElevation = attrs.getFloat/*Dimension*/("popupElevation", 0);
     mOverlapAnchor = attrs.getBoolean("overlapAnchor", false);
@@ -15,7 +13,7 @@ PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs){
     // Preserve default behavior from Gingerbread. If the animation is
     // undefined or explicitly specifies the Gingerbread animation style,
     // use a sentinel value.
-    if (a.hasValueOrEmpty(R.styleable.PopupWindow_popupAnimationStyle)) {
+    if (a.hasValueOrEmpty("popupAnimationStyle")) {
         int animStyle = a.getResourceId(R.styleable.PopupWindow_popupAnimationStyle, 0);
         if (animStyle == R.style.Animation_PopupWindow) {
             mAnimationStyle = ANIMATION_STYLE_DEFAULT;
@@ -35,8 +33,6 @@ PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs){
     } else {
         exitTransition = enterTransition == null ? null : enterTransition.clone();
     }
-
-    a.recycle();
 
     setEnterTransition(enterTransition);
     setExitTransition(exitTransition);
@@ -208,7 +204,7 @@ bool PopupWindow::isOutsideTouchable()const{
 }
 
 void PopupWindow::setOutsideTouchable(bool touchable){
-    mOutsideTouchable=touchable;
+    mOutsideTouchable = touchable;
 }
 
 bool PopupWindow::isClippingEnabled(){
@@ -241,7 +237,7 @@ bool PopupWindow::isLayoutInScreenEnabled()const{
 }
 
 void PopupWindow::setLayoutInScreenEnabled(bool enabled){
-    mLayoutInScreen=enabled;
+    mLayoutInScreen = enabled;
 }
 
 bool PopupWindow::isLaidOutInScreen(){
@@ -257,8 +253,8 @@ bool PopupWindow::isAttachedInDecor()const{
 }
 
 void PopupWindow::setAttachedInDecor(bool enabled){
-    mAttachedInDecor= enabled;
-    mAttachedInDecorSet=true;
+    mAttachedInDecor = enabled;
+    mAttachedInDecorSet = true;
 }
 
 void PopupWindow::setLayoutInsetDecor(bool enabled) {
@@ -306,7 +302,7 @@ void PopupWindow::setDropDown(bool isDropDown) {
 }
 
 void PopupWindow::setHeight(int height){
-    mHeight=height;
+    mHeight = height;
 }
 
 int PopupWindow::getHeight(){
@@ -314,7 +310,7 @@ int PopupWindow::getHeight(){
 }
 
 void PopupWindow::setWidth(int width){
-    mWidth=width;
+    mWidth = width;
 }
 
 int PopupWindow::getWidth(){
@@ -492,23 +488,24 @@ int PopupWindow::getMaxAvailableHeight(View* anchor){
 
 WindowManager::LayoutParams PopupWindow::createPopupLayoutParams(long token){
     WindowManager::LayoutParams p;// = new WindowManager.LayoutParams();
-
+    p.x = p.y = 0;
+    p.width = p.height = 0;
     // These gravity settings put the view at the top left corner of the
     // screen. The view is then positioned to the appropriate location by
     // setting the x and y offsets to match the anchor's bottom-left
     // corner.
     p.gravity = computeGravity();
     p.flags = computeFlags(p.flags);
-    /*p.type = mWindowLayoutType;
-    p.token = token;
-    p.softInputMode = mSoftInputMode;
-    p.windowAnimations = computeAnimationResource();
+    p.type = mWindowLayoutType;
+    //p.token = token;
+    //p.softInputMode = mSoftInputMode;
+    //p.windowAnimations = computeAnimationResource();
 
     if (mBackground != nullptr) {
-        p.format = mBackground.getOpacity();
+        p.format = mBackground->getOpacity();
     } else {
-        p.format = PixelFormat.TRANSLUCENT;
-    }*/
+        p.format = PixelFormat::TRANSLUCENT;
+    }
 
     if (mHeightMode < 0) {
         p.height = mLastHeight = mHeightMode;
@@ -522,11 +519,11 @@ WindowManager::LayoutParams PopupWindow::createPopupLayoutParams(long token){
         p.width = mLastWidth = mWidth;
     }
 
-    /*p.privateFlags = PRIVATE_FLAG_WILL_NOT_REPLACE_ON_RELAUNCH
-            | PRIVATE_FLAG_LAYOUT_CHILD_WINDOW_IN_PARENT_FRAME;
+    //p.privateFlags = PRIVATE_FLAG_WILL_NOT_REPLACE_ON_RELAUNCH
+    //        | PRIVATE_FLAG_LAYOUT_CHILD_WINDOW_IN_PARENT_FRAME;
 
     // Used for debugging.
-    p.setTitle("PopupWindow:" + Integer.toHexString(hashCode()));*/
+    //p.setTitle("PopupWindow:" + Integer.toHexString(hashCode()));
 
     return p;
 }
@@ -639,6 +636,18 @@ bool PopupWindow::positionInDisplayHorizontal(WindowManager::LayoutParams* outPa
     }
     outParams->x -= winOffsetX;
     return fitsInDisplay;
+}
+
+const std::string PopupWindow::computeAnimationResource() {
+    /*if (mAnimationStyle == ANIMATION_STYLE_DEFAULT) {
+        if (mIsDropdown) {
+            return mAboveAnchor
+                    ? com.android.internal.R.style.Animation_DropDownUp
+                    : com.android.internal.R.style.Animation_DropDownDown;
+        }
+        return 0;
+    }*/
+    return "";//mAnimationStyle;
 }
 
 bool PopupWindow::findDropDownPosition(View* anchor,WindowManager::LayoutParams* outParams,
