@@ -9382,6 +9382,7 @@ View::AttachInfo::AttachInfo(Context*ctx){
     mTreeObserver = new ViewTreeObserver(ctx);
     mWindowLeft = 0;
     mWindowTop  = 0;
+    mVisibleInsets.set(0,0,0,0);
 }
 
 View::AttachInfo::~AttachInfo(){
