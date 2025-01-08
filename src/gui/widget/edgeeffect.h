@@ -140,14 +140,14 @@ public:
     bool isFinished()const;
     void finish();
     void onPull(float deltaDistance);
-    void onPull(float deltaDistance, float displacement);
-    float onPullDistance(float deltaDistance, float displacement);
+    virtual void onPull(float deltaDistance, float displacement);
+    virtual float onPullDistance(float deltaDistance, float displacement);
     float getDistance()const;
-    void onRelease();
-    void onAbsorb(int velocity);
+    virtual void onRelease();
+    virtual void onAbsorb(int velocity);
     void setColor(int color);
     int getColor()const;
-    bool draw(Canvas& canvas);
+    virtual bool draw(Canvas& canvas);
     int getMaxHeight()const;
 };
 

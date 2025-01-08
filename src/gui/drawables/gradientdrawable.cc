@@ -972,7 +972,6 @@ void GradientDrawable::draw(Canvas&canvas) {
             drawRoundedRect(canvas,mRect,radii[0],radii[1],radii[2],radii[3]);
         else
             canvas.rectangle(int(mRect.left),int(mRect.top),int(mRect.width),int(mRect.height));
-
         break;
     case LINE:
         if (haveStroke) {
@@ -989,7 +988,6 @@ void GradientDrawable::draw(Canvas&canvas) {
         LOGV("%p size=%.fx%.f radius=%f strokewidth=%d",this,mRect.width,mRect.height,(float)st->mRadius,st->mStrokeWidth);
         canvas.begin_new_sub_path();
         canvas.arc(mRect.centerX(),mRect.centerY(),rad,0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
-		
         break;
     case RING: {
         //inner

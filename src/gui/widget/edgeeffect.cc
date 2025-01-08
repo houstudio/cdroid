@@ -20,16 +20,16 @@ EdgeEffect::EdgeEffect(Context* context){
     mPullDistance = 0;
     mState = STATE_IDLE;
     mGlowAlpha = 0;
-    mGlowAlphaStart = mGlowAlphaFinish = .0f;
+    mGlowAlphaStart = mGlowAlphaFinish = 0.f;
     mBaseGlowScale = 0;
     mGlowScaleY = 0;
-    mGlowScaleYStart = mGlowScaleYFinish = .0f;
+    mGlowScaleYStart = mGlowScaleYFinish = 0.f;
     mStartTime= 0;
     mColor = 0x4000FF00;
     mEdgeEffectType = TYPE_GLOW;
     mDuration = PULL_DECAY_TIME;
     mDistance = 0;
-    mVelocity = .0f;
+    mVelocity = 0.f;
 }
 
 EdgeEffect::~EdgeEffect(){
@@ -125,12 +125,12 @@ void EdgeEffect::onPull(float deltaDistance, float displacement){
 float EdgeEffect::onPullDistance(float deltaDistance, float displacement) {
     int edgeEffectBehavior = getCurrentEdgeEffectBehavior();
     if (edgeEffectBehavior == TYPE_NONE) {
-        return .0f;
+        return 0.f;
     }
     float finalDistance = std::max(.0f, deltaDistance + mDistance);
     float delta = finalDistance - mDistance;
-    if (delta == .0f && mDistance == .0f) {
-        return .0f; // No pull, don't do anything.
+    if (delta == 0.f && mDistance == 0.f) {
+        return 0.f; // No pull, don't do anything.
     }
 
     if (mState != STATE_PULL && mState != STATE_PULL_DECAY && edgeEffectBehavior == TYPE_GLOW) {
@@ -191,7 +191,7 @@ void EdgeEffect::onAbsorb(int velocity){
         mGlowScaleYFinish = std::min(0.025f + (velocity * (velocity / 100) * 0.00015f) / 2, 1.f);
         // Alpha should change for the glow as well as size.
         mGlowAlphaFinish = std::max(
-            mGlowAlphaStart, std::min(velocity * VELOCITY_GLOW_FACTOR * .00001f, MAX_ALPHA));
+            mGlowAlphaStart, std::min(velocity * VELOCITY_GLOW_FACTOR * 0.00001f, MAX_ALPHA));
         mTargetDisplacement = 0.5f;
     }else {
         finish();
