@@ -39,14 +39,15 @@ int UIEventSource::handleRunnables(){
     if ( ((mFlags&1)==0) && mAttachedView && mAttachedView->isAttachedToWindow()){
         //if(mAttachedView->isLayoutRequested())
         //    mLayoutRunner();
-        const nsecs_t nowms = SystemClock::uptimeMillis()-1;/*-1 to prevent postDelay(mRunable,0)in some Runnable*/
+        nsecs_t nowms = SystemClock::uptimeMillis()-1;/*-1 to prevent postDelay(mRunable,0)in some Runnable*/
         //maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
         while(mRunnables.size() && ((mFlags&1)==0)){
             RUNNER runner = mRunnables.front();
-            if(runner.time >= nowms)break;
+            if(runner.time > nowms)break;
             mRunnables.pop_front();
             if(runner.run)runner.run();
             count++;
+            nowms++;
         }
         if(((mFlags&1)==0)&&mAttachedView->isLayoutRequested())
             mLayoutRunner();
@@ -70,8 +71,8 @@ int UIEventSource::handleEvents(){
 //codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
 bool UIEventSource::postDelayed(const Runnable& run,long delayedtime){
     RUNNER runner;
-    runner.time = SystemClock::uptimeMillis() + delayedtime;
     runner.run = run;
+    runner.time = SystemClock::uptimeMillis() + delayedtime;
 
     for(auto itr = mRunnables.begin();itr != mRunnables.end();itr++){
         if(runner.time < itr->time){
