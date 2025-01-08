@@ -31,6 +31,12 @@ public:
    static int signum(T val) {
        return (T(0) < val) - (val < T(0));
    }
+
+   template <typename T>
+   static T lerp(T start, T stop, T amount) {
+       return start + (stop - start) * amount;
+   }
+
 };
 }
 #endif

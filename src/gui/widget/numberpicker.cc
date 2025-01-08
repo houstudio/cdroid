@@ -3,6 +3,7 @@
 #include <widget/R.h>
 #include <core/color.h>
 #include <core/textutils.h>
+#include <core/mathutils.h>
 #include <porting/cdlog.h>
 #include <core/neverdestroyed.h>
 
@@ -1182,8 +1183,8 @@ void NumberPicker::onDraw(Canvas&canvas){
             for(int i = 0; i < cStops ;i++){
                 const float offset = float(i)/cStops;
                 const float fraction = ci.getInterpolation(offset);
-                mPat->add_color_stop_rgba(offset,lerp(c2.red(),c1.red(),fraction),lerp(c2.green(),c1.green(),fraction),
-                                 lerp(c2.blue(),c1.blue(),fraction), std::abs(lerp(c2.alpha(),c1.alpha(),fraction)));
+                mPat->add_color_stop_rgba(offset,MathUtils::lerp(c2.red(),c1.red(),fraction),MathUtils::lerp(c2.green(),c1.green(),fraction),
+                                 MathUtils::lerp(c2.blue(),c1.blue(),fraction), std::abs(MathUtils::lerp(c2.alpha(),c1.alpha(),fraction)));
             }
         }
         canvas.set_source(mPat);
@@ -1199,7 +1200,7 @@ void NumberPicker::onDraw(Canvas&canvas){
         const float harfSize = (isHorizontalMode()?getWidth():getHeight())/2.f;
         const float fraction = std::abs( (isHorizontalMode()?x:y) - harfSize + mSelectorElementSize/2)/harfSize;
         if(mTextSize != mTextSize2){
-            font_size = lerp(mTextSize,mTextSize2,fraction);
+            font_size = MathUtils::lerp(float(mTextSize),float(mTextSize2),fraction);
             canvas.set_font_size(font_size);
         }
 

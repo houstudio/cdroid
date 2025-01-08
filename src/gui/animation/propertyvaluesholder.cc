@@ -58,6 +58,10 @@ void PropertyValuesHolder::setupSetterAndGetter(void*target){
     }
 }
 
+static int lerp(int startValue, int endValue, float fraction) {
+    return int(startValue + std::round(fraction * (endValue - startValue)));
+}
+
 AnimateValue PropertyValuesHolder::evaluator(float fraction, const AnimateValue& from, const AnimateValue& to){
     AnimateValue out;
     switch(from.index()){

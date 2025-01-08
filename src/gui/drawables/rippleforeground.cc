@@ -1,6 +1,7 @@
 #include <drawables/rippleforeground.h>
 #include <core/systemclock.h>
-#include <cdlog.h>
+#include <core/mathutils.h>
+#include <porting/cdlog.h>
 
 namespace cdroid{
 
@@ -164,15 +165,15 @@ void RippleForeground::exit(){
 }
 
 float RippleForeground::getCurrentX() {
-    return lerp(mClampedStartingX - mBounds.centerX(), mTargetX, mTweenX);
+    return MathUtils::lerp(mClampedStartingX - mBounds.centerX(), mTargetX, mTweenX);
 }
 
 float RippleForeground::getCurrentY() {
-    return lerp(mClampedStartingY - mBounds.centerY(), mTargetY, mTweenY);
+    return MathUtils::lerp(mClampedStartingY - mBounds.centerY(), mTargetY, mTweenY);
 }
 
 float RippleForeground::getCurrentRadius() {
-    return lerp(mStartRadius, mTargetRadius, mTweenRadius);
+    return MathUtils::lerp(mStartRadius, mTargetRadius, mTweenRadius);
 }
 
 void RippleForeground::end(){

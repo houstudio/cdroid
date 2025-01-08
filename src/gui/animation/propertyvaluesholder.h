@@ -13,12 +13,6 @@
 //http://androidxref.com/9.0.0_r3/xref/frameworks/base/libs/hwui/PropertyValuesHolder.h
 namespace cdroid{
 
-inline constexpr float lerp(float fromValue, float toValue, float fraction) {
-    return float(fromValue * (1.f - fraction) + toValue * fraction);
-}
-inline int lerp(int startValue, int endValue, float fraction) {
-    return int(startValue + std::round(fraction * (endValue - startValue)));
-}
 using TypeEvaluator = std::function<AnimateValue(float fraction,AnimateValue&startValue,AnimateValue&endValue)>;
 class PropertyValuesHolder{
 public:

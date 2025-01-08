@@ -1,5 +1,6 @@
 #include <drawables/rotatedrawable.h>
-#include <cdlog.h>
+#include <core/mathutils.h>
+#include <porting/cdlog.h>
 
 using namespace Cairo;
 namespace cdroid{
@@ -43,14 +44,10 @@ RotateDrawable::RotateDrawable(Drawable*d)
     setDrawable(d);
 }
 
-static float lerp(float start,float stop,float amount){
-    return  start + (stop - start) * amount;
-}
-
 bool RotateDrawable::onLevelChange(int level){
     DrawableWrapper::onLevelChange(level);
     const float value = level / (float) MAX_LEVEL;
-    const float degrees = lerp(mState->mFromDegrees,mState->mToDegrees, value);
+    const float degrees = MathUtils::lerp(mState->mFromDegrees,mState->mToDegrees, value);
     mState->mCurrentDegrees = degrees;
     invalidateSelf();
     return true;

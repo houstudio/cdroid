@@ -1,7 +1,8 @@
 #include <widget/tablayout.h>
 #include <widget/R.h>
 #include <core/build.h>
-#include <cdlog.h>
+#include <core/mathutils.h>
+#include <porting/cdlog.h>
 
 namespace cdroid{
 static constexpr int DEFAULT_HEIGHT_WITH_TEXT_ICON = 72;
@@ -1424,7 +1425,8 @@ void TabLayout::SlidingTabStrip::animateIndicatorToPosition(int position, int du
             animator->removeAllListeners();
             animator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this,startLeft,targetLeft,startRight,targetRight](ValueAnimator&anim) {
                 const float fraction = anim.getAnimatedFraction();
-                setIndicatorPosition(lerp(startLeft, targetLeft, fraction),lerp(startRight, targetRight, fraction));
+                setIndicatorPosition((int)MathUtils::lerp(float(startLeft), float(targetLeft), fraction),
+                                     (int)MathUtils::lerp(float(startRight), float(targetRight), fraction));
             }));
             Animator::AnimatorListener al;
             al.onAnimationEnd=[this,position](Animator&anim,bool reverse){
