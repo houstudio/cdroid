@@ -1,6 +1,7 @@
 #include <widget/listview.h>
 #include <widget/checkable.h>
 #include <view/focusfinder.h>
+#include <core/mathutils.h>
 #include <widget/R.h>
 #include <porting/cdlog.h>
 
@@ -1301,7 +1302,7 @@ void ListView::layoutChildren() {
                 }
             } else if (accessibilityFocusPosition != INVALID_POSITION) {
                 // Bound the position within the visible children.
-                int position = MathUtils.constrain(
+                int position = MathUtils::constrain(
                                          accessibilityFocusPosition - mFirstPosition, 0,
                                          getChildCount() - 1);
                 View* restoreView = getChildAt(position);
@@ -1497,10 +1498,6 @@ void ListView::setSelectionInt(int position) {
     if (awakeScrollbars) awakenScrollBars();
 }
 
-static int constrain(int amount, int low, int high) {//get the
-    return amount < low ? low : (amount > high ? high : amount);
-}
-
 int ListView::lookForSelectablePosition(int position, bool lookDown) {
     Adapter* adapter = mAdapter;
     if (adapter == nullptr || isInTouchMode()) {
@@ -1542,7 +1539,7 @@ int ListView::lookForSelectablePositionAfter(int current, int position, bool loo
 
     // Then check between the starting position and the current position.
     const int count = mAdapter->getCount();
-    current = constrain(current, -1, count - 1);
+    current = MathUtils::constrain(current, -1, count - 1);
     if (lookDown) {
         position = std::min(position - 1, count - 1);
         while ((position > current) && !mAdapter->isEnabled(position)) {

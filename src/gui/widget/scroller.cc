@@ -1,14 +1,11 @@
 #include <widget/scroller.h>
-#include <systemclock.h>
+#include <core/systemclock.h>
+#include <core/mathutils.h>
 #include <viewconfiguration.h>
 #include <animation/animationutils.h>
 #include <cdlog.h>
 
 namespace cdroid{
-
-template <typename T> int signum(T val) {
-    return (T(0) < val) - (val < T(0));
-}
 
 float Scroller::SPLINE_POSITION [NB_SAMPLES + 1];
 float Scroller::SPLINE_TIME [NB_SAMPLES + 1];
@@ -238,8 +235,8 @@ void Scroller::fling(int startX, int startY, int velocityX, int velocityY,
 
         float oldVelocityX = ndx * oldVel;
         float oldVelocityY = ndy * oldVel;
-        if (signum(velocityX) == signum(oldVelocityX) &&
-                signum(velocityY) == signum(oldVelocityY)) {
+        if (MathUtils::signum(velocityX) == MathUtils::signum(oldVelocityX) &&
+                MathUtils::signum(velocityY) == MathUtils::signum(oldVelocityY)) {
             velocityX += oldVelocityX;
             velocityY += oldVelocityY;
         }
@@ -259,7 +256,7 @@ void Scroller::fling(int startX, int startY, int velocityX, int velocityY,
     float coeffX = velocity == 0 ? 1.0f : velocityX / velocity;
     float coeffY = velocity == 0 ? 1.0f : velocityY / velocity;
     double totalDistance = getSplineFlingDistance(velocity);
-    mDistance = (int) (totalDistance * signum(velocity));
+    mDistance = (int) (totalDistance * MathUtils::signum(velocity));
      
     mMinX = minX;
     mMaxX = maxX;
@@ -338,8 +335,8 @@ void Scroller::setFinalY(int newY) {
 }
 
 bool Scroller::isScrollingInDirection(float xvel, float yvel) {
-    return !mFinished && signum(xvel) == signum(mFinalX - mStartX) &&
-            signum(yvel) == signum(mFinalY - mStartY);
+    return !mFinished && MathUtils::signum(xvel) == MathUtils::signum(mFinalX - mStartX) &&
+            MathUtils::signum(yvel) == MathUtils::signum(mFinalY - mStartY);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

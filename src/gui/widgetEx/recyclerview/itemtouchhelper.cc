@@ -2,6 +2,7 @@
 #include <widgetEx/recyclerview/itemtouchhelper.h>
 #include <core/neverdestroyed.h>
 #include <core/build.h>
+#include <core/mathutils.h>
 
 namespace cdroid{
 
@@ -261,10 +262,6 @@ void ItemTouchHelper::onDraw(Canvas& c, RecyclerView& parent, RecyclerView::Stat
     mCallback->onDraw(c, parent,mSelected, mRecoverAnimations, mActionState, dx, dy);
 }
 
-template <typename T>static  int signum(T val) {
-    return (T(0) < val) - (val < T(0));
-}
-
 class MyRecoverAnimation:public ItemTouchHelper::RecoverAnimation{
 private:
     std::function<void(Animator&,bool)>mOnAnimationEndListener;
@@ -319,12 +316,12 @@ void ItemTouchHelper::select(RecyclerView::ViewHolder* selected, int actionState
             case START:
             case END:
                 targetTranslateY = 0;
-                targetTranslateX = signum(mDx) * mRecyclerView->getWidth();
+                targetTranslateX = MathUtils::signum(mDx) * mRecyclerView->getWidth();
                 break;
             case UP:
             case DOWN:
                 targetTranslateX = 0;
-                targetTranslateY = signum(mDy) * mRecyclerView->getHeight();
+                targetTranslateY = MathUtils::signum(mDy) * mRecyclerView->getHeight();
                 break;
             default:
                 targetTranslateX = 0;
@@ -1202,7 +1199,7 @@ int ItemTouchHelper::Callback::interpolateOutOfBoundsScroll(RecyclerView& recycl
         int viewSize, int viewSizeOutOfBounds, int totalSize, int64_t msSinceStartScroll) {
     const int maxScroll = getMaxDragScroll(recyclerView);
     const int absOutOfBounds = std::abs(viewSizeOutOfBounds);
-    const int direction = (int) signum(viewSizeOutOfBounds);
+    const int direction = (int) MathUtils::signum(viewSizeOutOfBounds);
     // might be negative if other direction
     float outOfBoundsRatio = std::min(1.f, 1.f * absOutOfBounds / viewSize);
     outOfBoundsRatio -=1.f;

@@ -75,7 +75,7 @@ int ColorStateList::modulateColorAlpha(int baseColor, float alphaMod)const{
 
     const int baseAlpha = Color::alpha(baseColor);
     const int alpha = (int)(baseAlpha * alphaMod + 0.5f)&0xFF;
-    //MathUtils.constrain((int) (baseAlpha * alphaMod + 0.5f), 0, 255);
+    //MathUtils::constrain((int) (baseAlpha * alphaMod + 0.5f), 0, 255);
     return (baseColor & 0xFFFFFF) | ((unsigned int)alpha << 24);    
 }
 

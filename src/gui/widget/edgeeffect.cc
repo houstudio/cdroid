@@ -1,5 +1,6 @@
 #include <widget/edgeeffect.h>
-#include <systemclock.h>
+#include <core/systemclock.h>
+#include <core/mathutils.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <animation/valueanimator.h>
@@ -291,10 +292,6 @@ void EdgeEffect::update() {
     }
 }
 
-template <typename T> int signum(T val) {
-    return (T(0) < val) - (val < T(0));
-}
-
 void EdgeEffect::updateSpring() {
     int64_t time = AnimationUtils::currentAnimationTimeMillis();
     float deltaT = (time - mStartTime) / 1000.f; // Convert from millis to seconds
@@ -305,14 +302,14 @@ void EdgeEffect::updateSpring() {
 
     if (abs(mVelocity) <= LINEAR_VELOCITY_TAKE_OVER
                 && abs(mDistance * mHeight) < LINEAR_DISTANCE_TAKE_OVER
-                && signum(mVelocity) == -signum(mDistance)
+                && MathUtils::signum(mVelocity) == -MathUtils::signum(mDistance)
     ) {
         // This is close. The spring will slowly reach the destination. Instead, we
         // will interpolate linearly so that it arrives at its destination quicker.
-        mVelocity = signum(mVelocity) * LINEAR_VELOCITY_TAKE_OVER;
+        mVelocity = MathUtils::signum(mVelocity) * LINEAR_VELOCITY_TAKE_OVER;
 
         float targetDistance = mDistance + (mVelocity * deltaT / mHeight);
-        if (signum(targetDistance) != signum(mDistance)) {
+        if (MathUtils::signum(targetDistance) != MathUtils::signum(mDistance)) {
             // We have arrived
             mDistance = 0;
             mVelocity = 0;

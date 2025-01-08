@@ -1,6 +1,7 @@
 #include <widget/simplemonthview.h>
-#include <cdtypes.h>
-#include <cdlog.h>
+#include <core/mathutils.h>
+#include <porting/cdtypes.h>
+#include <porting/cdlog.h>
 
 namespace cdroid{
 
@@ -310,10 +311,6 @@ void SimpleMonthView::onFocusChanged(bool gainFocus,int direction,Rect* previous
     View::onFocusChanged(gainFocus, direction, previouslyFocusedRect);
 }
 
-static int constrain(int amount, int low, int high) {//get the
-     return amount < low ? low : (amount > high ? high : amount);
-}
-
 int SimpleMonthView::findClosestRow(const Rect* previouslyFocusedRect){
     if (previouslyFocusedRect == nullptr) {
         return 3;
@@ -334,7 +331,7 @@ int SimpleMonthView::findClosestRow(const Rect* previouslyFocusedRect){
         int maxDay = findDayOffset() + mDaysInMonth;
         int maxRows = (maxDay / DAYS_IN_WEEK) - ((maxDay % DAYS_IN_WEEK == 0) ? 1 : 0);
 
-        row = constrain(row, 0, maxRows);
+        row = MathUtils::constrain(row, 0, maxRows);
         LOGD("(%d,%d %d,%d) row=%d",previouslyFocusedRect->left,previouslyFocusedRect->top,previouslyFocusedRect->width,previouslyFocusedRect->height,row);
         return row;
     }
@@ -347,7 +344,7 @@ int SimpleMonthView::findClosestColumn(const Rect*previouslyFocusedRect){
         return 0; // There hasn't been a layout, so we can just choose the first column
     } else {
         int centerX = previouslyFocusedRect->centerX() - mPaddingLeft;
-        int columnFromLeft =constrain(centerX / mCellWidth, 0, DAYS_IN_WEEK - 1);
+        int columnFromLeft = MathUtils::constrain(centerX / mCellWidth, 0, DAYS_IN_WEEK - 1);
         return isLayoutRtl() ? DAYS_IN_WEEK - columnFromLeft - 1: columnFromLeft;
     }
 }
@@ -589,8 +586,8 @@ void SimpleMonthView::setMonthParams(int selectedDay, int month, int year, int w
             mToday = day;
         }
     }
-    mEnabledDayStart= constrain(enabledDayStart, 1, mDaysInMonth);
-    mEnabledDayEnd  = constrain(enabledDayEnd, mEnabledDayStart, mDaysInMonth);
+    mEnabledDayStart= MathUtils::constrain(enabledDayStart, 1, mDaysInMonth);
+    mEnabledDayEnd  = MathUtils::constrain(enabledDayEnd, mEnabledDayStart, mDaysInMonth);
 
     updateMonthYearLabel();
     updateDayOfWeekLabels();

@@ -1,8 +1,9 @@
 #include <widget/viewpager.h>
 #include <focusfinder.h>
-#include <cdtypes.h>
+#include <porting/cdtypes.h>
 #include <core/neverdestroyed.h>
-#include <cdlog.h>
+#include <core/mathutils.h>
+#include <porting/cdlog.h>
 #include <cfloat>
 #include <limits>
 
@@ -268,10 +269,6 @@ void ViewPager::scrollToItem(int item, bool smoothScroll, int velocity, bool dis
         scrollTo(destX, 0);
         pageScrolled(destX);
     }
-}
-
-static int constrain(int amount, int low, int high) {//get the
-    return amount < low ? low : (amount > high ? high : amount);
 }
 
 void ViewPager::addOnPageChangeListener(const OnPageChangeListener& listener){
@@ -1588,7 +1585,7 @@ int ViewPager::determineTargetPage(int currentPage, float pageOffset, int veloci
         ItemInfo* lastItem = mItems.at(mItems.size() - 1);
 
         // Only let the user target pages we have items for
-        targetPage=constrain(targetPage, firstItem->position, lastItem->position);
+        targetPage = MathUtils::constrain(targetPage, firstItem->position, lastItem->position);
     }
     return targetPage;
 }

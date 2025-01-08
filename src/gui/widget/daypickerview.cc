@@ -1,5 +1,6 @@
 #include <widget/daypickerview.h>
 #include <widget/simplemonthview.h>
+#include <core/mathutils.h>
 
 namespace cdroid{
 
@@ -175,15 +176,11 @@ int DayPickerView::getDiffMonths(Calendar& start, Calendar& end) {
     return end.get(Calendar::MONTH) - start.get(Calendar::MONTH) + 12 * diffYears;
 }
 
-static int constrain(int amount, int low, int high) {//get the
-    return amount < low ? low : (amount > high ? high : amount);
-}
-
 int DayPickerView::getPositionFromDay(int64_t timeInMillis) {
     Calendar ctmp=getTempCalendarForTime(timeInMillis);
     int diffMonthMax = getDiffMonths(mMinDate, mMaxDate);
     int diffMonth = getDiffMonths(mMinDate, ctmp);
-    return constrain(diffMonth, 0, diffMonthMax);
+    return MathUtils::constrain(diffMonth, 0, diffMonthMax);
 }
 
 Calendar DayPickerView::getTempCalendarForTime(int64_t timeInMillis) {

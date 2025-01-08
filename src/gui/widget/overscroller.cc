@@ -2,13 +2,11 @@
 #include <view/viewconfiguration.h>
 #include <core/systemclock.h>
 #include <widget/scroller.h>
+#include <core/mathutils.h>
 #include <cdlog.h>
 #include <cstdlib>
 
 namespace cdroid{
-template <typename T> int signum(T val) {
-    return (T(0) < val) - (val < T(0));
-}
 
 float OverScroller::SplineOverScroller::SPLINE_POSITION[NB_SAMPLES + 1];
 float OverScroller::SplineOverScroller::SPLINE_TIME[NB_SAMPLES+1];
@@ -184,7 +182,7 @@ void OverScroller::SplineOverScroller::fling(int start, int velocity, int min, i
         totalDistance = getSplineFlingDistance(velocity);
     }
 
-    mSplineDistance = (int) (totalDistance * signum(velocity));
+    mSplineDistance = (int) (totalDistance * MathUtils::signum(velocity));
     mFinal = start + mSplineDistance;
 
     // Clamp to a valid final position
@@ -254,7 +252,7 @@ void OverScroller::SplineOverScroller::notifyEdgeReached(int start, int end, int
 void OverScroller::SplineOverScroller::onEdgeReached(){
     const float velocitySquared = (float) mVelocity * mVelocity;
     float distance = velocitySquared / (2.0f * abs(mDeceleration));
-    const float sign = signum(mVelocity);
+    const float sign = MathUtils::signum(mVelocity);
 
     if (distance > mOver) {
         // Default deceleration is not sufficient to slow us down before boundary
@@ -340,7 +338,7 @@ bool OverScroller::SplineOverScroller::update(){
     case CUBIC: {
          const float t = (float) (currentTime) / mDuration;
          const float t2 = t * t;
-         const float sign = signum(mVelocity);
+         const float sign = MathUtils::signum(mVelocity);
          distance = sign * mOver * (3.0f * t2 - 2.0f * t * t2); 
          mCurrVelocity = sign * mOver * 6.0f * (- t + t2); 
          break;
@@ -490,8 +488,8 @@ void OverScroller::fling(int startX, int startY, int velocityX, int velocityY,
     if (mFlywheel && !isFinished()) {
        float oldVelocityX = mScrollerX->mCurrVelocity;
        float oldVelocityY = mScrollerY->mCurrVelocity;
-       if (signum(velocityX) == signum(oldVelocityX) &&
-           signum(velocityY) == signum(oldVelocityY)) {
+       if (MathUtils::signum(velocityX) == MathUtils::signum(oldVelocityX) &&
+           MathUtils::signum(velocityY) == MathUtils::signum(oldVelocityY)) {
            velocityX += oldVelocityX;
            velocityY += oldVelocityY;
        }
@@ -529,7 +527,8 @@ int OverScroller::timePassed()const{
 bool OverScroller::isScrollingInDirection(float xvel, float yvel)const{
     int dx = mScrollerX->mFinal - mScrollerX->mStart;
     int dy = mScrollerY->mFinal - mScrollerY->mStart;
-    return !isFinished() && signum(xvel) == signum(dx) && signum(yvel) == signum(dy);
+    return !isFinished() && MathUtils::signum(xvel) == MathUtils::signum(dx)
+        && MathUtils::signum(yvel) == MathUtils::signum(dy);
 }
 
 double OverScroller::getSplineFlingDistance(int velocity)const{

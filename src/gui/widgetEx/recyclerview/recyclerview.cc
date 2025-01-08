@@ -10,6 +10,7 @@
 #include <widgetEx/recyclerview/fastscroller.h>
 #include <view/focusfinder.h>
 #include <core/neverdestroyed.h>
+#include <core/mathutils.h>
 #include <cassert>
 
 namespace cdroid{
@@ -6593,10 +6594,6 @@ int RecyclerView::SmoothScroller::getTargetPosition() const{
     return mTargetPosition;
 }
 
-template <typename T> int signum(T val) {
-    return (T(0) < val) - (val < T(0));
-}
-
 void RecyclerView::SmoothScroller::onAnimation(int dx, int dy) {
     // TODO(b/72745539): If mRunning is false, we call stop, which is a no op if mRunning
     // is false. Also, if recyclerView is null, we call stop, and stop assumes recyclerView
@@ -6616,7 +6613,7 @@ void RecyclerView::SmoothScroller::onAnimation(int dx, int dy) {
         PointF pointF;
         const bool rc = computeScrollVectorForPosition(mTargetPosition,pointF);
         if (rc && (pointF.x != 0 || pointF.y != 0)) {
-            recyclerView->scrollStep( (int) signum(pointF.x), (int) signum(pointF.y), nullptr);
+            recyclerView->scrollStep( (int) MathUtils::signum(pointF.x), (int) MathUtils::signum(pointF.y), nullptr);
         }
     }
 

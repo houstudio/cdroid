@@ -1,5 +1,6 @@
 #include <widget/autoscrollhelper.h>
 #include <widget/abslistview.h>
+#include <core/mathutils.h>
 namespace cdroid{
 
 AutoScrollHelper::AutoScrollHelper(View* target) {
@@ -171,17 +172,6 @@ void AutoScrollHelper::requestStop() {
     }
 }
 
-template<typename T>
-T constrain(T value, T min, T max) {
-    if (value > max) {
-        return max;
-    } else if (value < min) {
-        return min;
-    } else {
-        return value;
-    }
-}
-
 float AutoScrollHelper::computeTargetVelocity(int direction, float coordinate, float srcSize, float dstSize) {
     float relativeEdge = mRelativeEdges[direction];
     float maximumEdge = mMaximumEdges[direction];
@@ -200,15 +190,15 @@ float AutoScrollHelper::computeTargetVelocity(int direction, float coordinate, f
     // clamped to the minimum and maximum values. Later, this value will be
     // adjusted for time-based acceleration.
     if (value > 0) {
-        return constrain(value * targetVelocity, minimumVelocity, maximumVelocity);
+        return MathUtils::constrain(value * targetVelocity, minimumVelocity, maximumVelocity);
     } else {
-        return -constrain(-value * targetVelocity, minimumVelocity, maximumVelocity);
+        return -MathUtils::constrain(-value * targetVelocity, minimumVelocity, maximumVelocity);
     }
 }
 
 float AutoScrollHelper::getEdgeValue(float relativeValue, float size, float maxValue, float current) {
     // For now, leading and trailing edges are always the same size.
-    const float edgeSize = constrain(relativeValue * size, NO_MIN, maxValue);
+    const float edgeSize = MathUtils::constrain(relativeValue * size, NO_MIN, maxValue);
     const float valueLeading = constrainEdgeValue(current, edgeSize);
     const float valueTrailing = constrainEdgeValue(size - current, edgeSize);
     const float value = (valueTrailing - valueLeading);
@@ -221,7 +211,7 @@ float AutoScrollHelper::getEdgeValue(float relativeValue, float size, float maxV
         return 0;
     }
 
-    return constrain(interpolated, -1.f, 1.f);
+    return MathUtils::constrain(interpolated, -1.f, 1.f);
 }
 
 float AutoScrollHelper::constrainEdgeValue(float current, float leading) {
@@ -316,7 +306,7 @@ void AutoScrollHelper::ClampedScroller::start() {
 
 void AutoScrollHelper::ClampedScroller::requestStop() {
     int64_t currentTime = AnimationUtils::currentAnimationTimeMillis();
-    mEffectiveRampDown = constrain((int) (currentTime - mStartTime), 0, mRampDownDuration);
+    mEffectiveRampDown = MathUtils::constrain((int) (currentTime - mStartTime), 0, mRampDownDuration);
     mStopValue = getValueAt(currentTime);
     mStopTime = currentTime;
 }
@@ -331,11 +321,11 @@ float AutoScrollHelper::ClampedScroller::getValueAt(int64_t currentTime) {
         return .0f;
     } else if (mStopTime < 0 || currentTime < mStopTime) {
         int64_t elapsedSinceStart = currentTime - mStartTime;
-        return 0.5f * constrain(elapsedSinceStart / (float) mRampUpDuration, .0f, 1.f);
+        return 0.5f * MathUtils::constrain(elapsedSinceStart / (float) mRampUpDuration, .0f, 1.f);
     } else {
         int64_t elapsedSinceEnd = currentTime - mStopTime;
         return (1.f - mStopValue) + mStopValue
-                * constrain(elapsedSinceEnd / (float) mEffectiveRampDown, .0f, 1.f);
+                * MathUtils::constrain(elapsedSinceEnd / (float) mEffectiveRampDown, .0f, 1.f);
     }
 }
 
