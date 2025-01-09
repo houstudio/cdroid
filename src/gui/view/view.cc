@@ -1497,6 +1497,79 @@ std::vector<Rect> View::getSystemGestureExclusionRects(){
     return std::vector<Rect>();
 }
 
+void View::setPreferKeepClear(bool preferKeepClear){
+    getListenerInfo()->mPreferKeepClear = preferKeepClear;
+    updatePositionUpdateListener();
+    Runnable run([this](){updateKeepClearRects();});
+    postUpdate(run);
+}
+
+bool View::isPreferKeepClear()const{
+    return mListenerInfo && mListenerInfo->mPreferKeepClear;
+}
+
+void View::setPreferKeepClearRects(const std::vector<Rect>& rects){
+    ListenerInfo* info = getListenerInfo();
+    info->mKeepClearRects= rects;
+    updatePositionUpdateListener();
+    Runnable run([this](){updateKeepClearRects();});
+    postUpdate(run);
+}
+
+std::vector<Rect> View::getPreferKeepClearRects()const{
+    if(mListenerInfo)return mListenerInfo->mKeepClearRects;
+    return std::vector<Rect>();
+}
+
+void View::setUnrestrictedPreferKeepClearRects(const std::vector<Rect>& rects){
+    ListenerInfo* info = getListenerInfo();
+    info->mUnrestrictedKeepClearRects = rects;
+    updatePositionUpdateListener();
+    Runnable run([this](){updateKeepClearRects();});
+    postUpdate(run);
+}
+
+std::vector<Rect>View::getUnrestrictedPreferKeepClearRects()const{
+    if(mListenerInfo)return mListenerInfo->mUnrestrictedKeepClearRects;
+    return std::vector<Rect>();
+}
+
+void View::updatePreferKeepClearForFocus(){
+}
+
+void View::updatePositionUpdateListener(){
+}
+
+void View::updateKeepClearRects() {
+    if (mAttachInfo != nullptr) {
+        //mAttachInfo->mRootView->updateKeepClearRectsForView(this);
+    }
+}
+
+std::vector<Rect>View::collectPreferKeepClearRects(){
+    ListenerInfo* info = mListenerInfo;
+    const bool keepClearForFocus = isFocused() && ViewConfiguration::get(mContext).isPreferKeepClearForFocusEnabled();
+    const bool keepBoundsClear = (info && info->mPreferKeepClear) || keepClearForFocus;
+    const bool hasCustomKeepClearRects = info && info->mKeepClearRects.size();// != null;
+
+    if (!keepBoundsClear && !hasCustomKeepClearRects) {
+        return std::vector<Rect>();
+    } else if (keepBoundsClear && !hasCustomKeepClearRects) {
+        return std::vector<Rect>{{0, 0, getWidth(), getHeight()}};
+    }
+
+    std::vector<Rect> list;
+    if (keepBoundsClear) {
+        list.push_back({0, 0, getWidth(), getHeight()});
+    }
+
+    if (hasCustomKeepClearRects) {
+        list.insert(list.end(),info->mKeepClearRects.begin(),info->mKeepClearRects.end());
+    }
+
+    return list;
+}
+
 int View::combineVisibility(int vis1, int vis2) {
     // This works because VISIBLE < INVISIBLE < GONE.
     return std::max(vis1, vis2);
@@ -1795,13 +1868,15 @@ void View::onVisibilityAggregated(bool isVisible) {
                     ? AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_APPEARED
                     : AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_DISAPPEARED);
         }
-        /*if (!getSystemGestureExclusionRects().empty()) {
-            postUpdate(updateSystemGestureExclusionRects);
+        if (!getSystemGestureExclusionRects().empty()) {
+            Runnable run([this](){updateSystemGestureExclusionRects();});
+            postUpdate(run);
         }
 
         if (!collectPreferKeepClearRects().empty()) {
-            postUpdate(updateKeepClearRects);
-        }*/
+            Runnable run([this](){updateKeepClearRects();});
+            postUpdate(run);
+        }
     }
 }
 

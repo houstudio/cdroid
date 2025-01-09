@@ -606,6 +606,8 @@ private:
     void setFocusedInCluster(View* cluster);
     void updateFocusedInCluster(View* oldFocus,int direction);
     void updatePflags3AndNotifyA11yIfChanged(int mask, bool newValue);
+    void updatePreferKeepClearForFocus();
+    void updatePositionUpdateListener();
     bool dispatchGenericMotionEventInternal(MotionEvent& event);
     void populateAccessibilityNodeInfoDrawingOrderInParent(AccessibilityNodeInfo& info);
     void notifySubtreeAccessibilityStateChangedByParentIfNeeded();
@@ -757,6 +759,8 @@ protected:
     virtual void onFocusChanged(bool,int,Rect*);
     virtual void onFocusLost();
     void updateSystemGestureExclusionRects();
+    void updateKeepClearRects();
+    std::vector<Rect>collectPreferKeepClearRects();
     bool computeFitSystemWindows(Rect& inoutInsets, Rect& outLocalInsets);
     virtual void clearParentsWantFocus();
     virtual void clearFocusInternal(View* focused, bool propagate, bool refocus);
@@ -766,6 +770,12 @@ protected:
 
     virtual void setSystemGestureExclusionRects(const std::vector<Rect>&rects);
     std::vector<Rect> getSystemGestureExclusionRects();
+    void setPreferKeepClear(bool preferKeepClear);
+    bool isPreferKeepClear()const;
+    void setPreferKeepClearRects(const std::vector<Rect>& rects);
+    std::vector<Rect> getPreferKeepClearRects()const;
+    void setUnrestrictedPreferKeepClearRects(const std::vector<Rect>& rects);
+    std::vector<Rect>getUnrestrictedPreferKeepClearRects()const;
 
     static int combineVisibility(int vis1, int vis2);
     WindowInsets* getRootWindowInsets();
@@ -1577,7 +1587,10 @@ public:
 
 class View::ListenerInfo{
 public:
+    bool mPreferKeepClear;
     std::vector<Rect> mSystemGestureExclusionRects;
+    std::vector<Rect> mKeepClearRects;
+    std::vector<Rect> mUnrestrictedKeepClearRects;
     View::OnFocusChangeListener mOnFocusChangeListener;
     std::vector<View::OnLayoutChangeListener> mOnLayoutChangeListeners;
     std::vector<View::OnAttachStateChangeListener> mOnAttachStateChangeListeners;

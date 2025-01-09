@@ -28,6 +28,7 @@ ViewConfiguration::ViewConfiguration(){
     mOverscrollDistance = OVERSCROLL_DISTANCE;
     mOverflingDistance  = OVERFLING_DISTANCE;
     mFadingMarqueeEnabled = true;
+    mPreferKeepClearForFocusEnabled = false;
     mGlobalActionsKeyTimeout = GLOBAL_ACTIONS_KEY_TIMEOUT;
     mHorizontalScrollFactor = HORIZONTAL_SCROLL_FACTOR;
     mVerticalScrollFactor = VERTICAL_SCROLL_FACTOR;
@@ -344,7 +345,7 @@ int ViewConfiguration::getScaledMinimumScalingSpan()const{
  * @hide
  * @return Whether or not marquee should use fading edges.
  */
-bool ViewConfiguration::isFadingMarqueeEnabled() {
+bool ViewConfiguration::isFadingMarqueeEnabled()const {
     return mFadingMarqueeEnabled;
 }
 

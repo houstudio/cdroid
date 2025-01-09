@@ -35,6 +35,7 @@ option(ENABLE_SPINNER "Enable Spinner" ON)
 option(ENABLE_DAYTIME_WIDGETS "Enable Daytime widgets" OFF)
 option(ENABLE_RECYCLERVIEW "Enable RecyclerView" ON)
 option(ENABLE_NAVIGATION "Enable Navigation" OFF)
+option(ENABLE_TRANSITION "Enable Transition scene animation(TODO...)" OFF)
 
 cmake_dependent_option(ENABLE_GIF "enable gif encode and decoder" ON "GIF_FOUND" OFF)
 cmake_dependent_option(ENABLE_JPEG "enable jpeg decoder" ON "JPEG_FOUND" OFF)

@@ -184,14 +184,15 @@ private:
     int mOverscrollDistance;
     int mOverflingDistance;
     bool mFadingMarqueeEnabled;
-    long mGlobalActionsKeyTimeout;
-    float mAmbiguousGestureMultiplier;
-    float mVerticalScrollFactor;
-    float mHorizontalScrollFactor;
+    bool mPreferKeepClearForFocusEnabled;
     bool mShowMenuShortcutsWhenKeyboardPresent;
     bool sHasPermanentMenuKey;
     bool sHasPermanentMenuKeySet;
     bool mIsScreenRound;
+    long mGlobalActionsKeyTimeout;
+    float mAmbiguousGestureMultiplier;
+    float mVerticalScrollFactor;
+    float mHorizontalScrollFactor;
     static ViewConfiguration*mInst;
     ViewConfiguration(Context*context);
 public:
@@ -470,7 +471,8 @@ public:
      * @hide
      * @return Whether or not marquee should use fading edges.
      */
-    bool isFadingMarqueeEnabled();
+    bool isFadingMarqueeEnabled()const;
+    bool isPreferKeepClearForFocusEnabled()const{return mPreferKeepClearForFocusEnabled;}
     /**
      * @return the duration in milliseconds before an end of a long press causes a tooltip to be
      * hidden
