@@ -397,6 +397,34 @@ void AbsSeekBar::setThumbPos(int wh, Drawable* thumb, float scale, int offset){
     }
 }
 
+void AbsSeekBar::setSystemGestureExclusionRects(const std::vector<Rect>&rects){
+    mUserGestureExclusionRects = rects;
+    updateGestureExclusionRects();
+}
+
+void AbsSeekBar::updateGestureExclusionRects(){
+    if (mThumb == nullptr) {
+        ProgressBar::setSystemGestureExclusionRects(mUserGestureExclusionRects);
+        return;
+    }
+    mGestureExclusionRects.clear();
+    mThumbRect=mThumb->getBounds();//mThumbRect);
+    mThumbRect.offset(mPaddingLeft - mThumbOffset, mPaddingTop);
+    growRectTo(mThumbRect, std::min(getHeight(), mThumbExclusionMaxSize));
+    mGestureExclusionRects.push_back(mThumbRect);
+    //mGestureExclusionRects.addAll(mUserGestureExclusionRects);
+    ProgressBar::setSystemGestureExclusionRects(mGestureExclusionRects);
+}
+
+void AbsSeekBar::growRectTo(Rect& r, int minimumSize){
+}
+
+void AbsSeekBar::onResolveDrawables(int layoutDirection){
+    ProgressBar::onResolveDrawables(layoutDirection);
+    if (mThumb != nullptr) {
+        mThumb->setLayoutDirection(layoutDirection);
+    }
+}
 
 void AbsSeekBar::drawThumb(Canvas&canvas) {
     if (mThumb != nullptr) {

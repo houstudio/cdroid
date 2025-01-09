@@ -39,15 +39,14 @@ int UIEventSource::handleRunnables(){
     if ( ((mFlags&1)==0) && mAttachedView && mAttachedView->isAttachedToWindow()){
         //if(mAttachedView->isLayoutRequested())
         //    mLayoutRunner();
-        nsecs_t nowms = SystemClock::uptimeMillis()-1;/*-1 to prevent postDelay(mRunable,0)in some Runnable*/
+        const nsecs_t nowms = SystemClock::uptimeMillis()-1;/*-1 to prevent postDelay(mRunable,0)in some Runnable*/
         //maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
         while(mRunnables.size() && ((mFlags&1)==0)){
             RUNNER runner = mRunnables.front();
-            if(runner.time > nowms)break;
+            if(runner.time >= nowms)break;
             mRunnables.pop_front();
             if(runner.run)runner.run();
             count++;
-            nowms++;
         }
         if(((mFlags&1)==0)&&mAttachedView->isLayoutRequested())
             mLayoutRunner();

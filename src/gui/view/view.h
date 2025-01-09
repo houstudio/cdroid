@@ -737,6 +737,8 @@ protected:
     virtual View& setFlags(int flag,int mask);
     virtual bool hasFlag(int flag) const;
     bool fitSystemWindows(Rect& insets);
+    void applyInsets(const Rect& insets);
+    void postUpdate(Runnable r);
     virtual void dispatchSetSelected(bool selected);
     virtual void dispatchSetPressed(bool pressed);
     virtual void dispatchVisibilityChanged(View& changedView,int visiblity);
@@ -754,12 +756,16 @@ protected:
     virtual void dispatchDraw(Canvas&);
     virtual void onFocusChanged(bool,int,Rect*);
     virtual void onFocusLost();
+    void updateSystemGestureExclusionRects();
     bool computeFitSystemWindows(Rect& inoutInsets, Rect& outLocalInsets);
     virtual void clearParentsWantFocus();
     virtual void clearFocusInternal(View* focused, bool propagate, bool refocus);
     virtual void handleFocusGainInternal(int direction,Rect*previouslyFocusedRect);
     bool awakenScrollBars();
     bool awakenScrollBars(int startDelay, bool invalidate);
+
+    virtual void setSystemGestureExclusionRects(const std::vector<Rect>&rects);
+    std::vector<Rect> getSystemGestureExclusionRects();
 
     static int combineVisibility(int vis1, int vis2);
     WindowInsets* getRootWindowInsets();
@@ -1571,7 +1577,8 @@ public:
 
 class View::ListenerInfo{
 public:
-    View::OnFocusChangeListener  mOnFocusChangeListener;
+    std::vector<Rect> mSystemGestureExclusionRects;
+    View::OnFocusChangeListener mOnFocusChangeListener;
     std::vector<View::OnLayoutChangeListener> mOnLayoutChangeListeners;
     std::vector<View::OnAttachStateChangeListener> mOnAttachStateChangeListeners;
     View::OnScrollChangeListener mOnScrollChangeListener;

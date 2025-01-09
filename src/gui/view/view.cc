@@ -1473,6 +1473,30 @@ bool View::isNestedScrollingEnabled()const{
                 PFLAG3_NESTED_SCROLLING_ENABLED;
 }
 
+void View::postUpdate(Runnable r) {
+    // Potentially racey from a background thread. It's ok if it's not perfect.
+    /*final Handler h = getHandler();
+    if (h != null) {
+        h.postAtFrontOfQueue(r);
+    }*/
+}
+
+void View::updateSystemGestureExclusionRects() {
+    if (mAttachInfo != nullptr) {
+        //mAttachInfo->mRootView->updateSystemGestureExclusionRectsForView(this);
+    }
+}
+
+void View::setSystemGestureExclusionRects(const std::vector<Rect>&rects){
+}
+
+std::vector<Rect> View::getSystemGestureExclusionRects(){
+    if(mListenerInfo){
+        return mListenerInfo->mSystemGestureExclusionRects;
+    }
+    return std::vector<Rect>();
+}
+
 int View::combineVisibility(int vis1, int vis2) {
     // This works because VISIBLE < INVISIBLE < GONE.
     return std::max(vis1, vis2);
@@ -1771,6 +1795,13 @@ void View::onVisibilityAggregated(bool isVisible) {
                     ? AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_APPEARED
                     : AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_DISAPPEARED);
         }
+        /*if (!getSystemGestureExclusionRects().empty()) {
+            postUpdate(updateSystemGestureExclusionRects);
+        }
+
+        if (!collectPreferKeepClearRects().empty()) {
+            postUpdate(updateKeepClearRects);
+        }*/
     }
 }
 

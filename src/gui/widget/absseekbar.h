@@ -9,17 +9,21 @@ private:
     bool mSplitTrack;
     bool mHasThumbTint;
     bool mHasThumbTintMode;
+    bool mIsDragging;
+    bool mHasTickMarkTint = false;
+    bool mHasTickMarkTintMode = false;
+
     float mDisabledAlpha;
     float mTouchDownX;
     float mTouchDownY;
     int  mScaledTouchSlop;
     int  mTouchThumbOffset;
     int  mTickMarkTintMode;
+    int  mThumbExclusionMaxSize;
+    Rect mThumbRect;
     ColorStateList* mTickMarkTintList;
-    bool mIsDragging;
-    bool mHasTickMarkTint = false;
-    bool mHasTickMarkTintMode = false;
-
+    std::vector<Rect>mUserGestureExclusionRects;
+    std::vector<Rect>mGestureExclusionRects;
     void initSeekBar();
     float getScale()const;
     void startDrag(MotionEvent& event);
@@ -27,6 +31,7 @@ private:
     void applyThumbTint();
     void updateThumbAndTrackPos(int w, int h);
     void setThumbPos(int w, Drawable* thumb, float scale, int offset);
+    void updateGestureExclusionRects();
     void applyTickMarkTint();
 protected:
     int mKeyProgressIncrement;
@@ -70,7 +75,9 @@ public:
     virtual bool canUserSetProgress()const;
     void onRtlPropertiesChanged(int layoutDirection)override;
     void drawableHotspotChanged(float x,float y)override;
-
+    void setSystemGestureExclusionRects(const std::vector<Rect>&rects)override;
+    void growRectTo(Rect& r, int minimumSize);
+    void onResolveDrawables(int layoutDirection)override;
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     bool performAccessibilityActionInternal(int action, Bundle arguments)override;
