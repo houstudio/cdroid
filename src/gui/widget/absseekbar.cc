@@ -412,7 +412,9 @@ void AbsSeekBar::updateGestureExclusionRects(){
     mThumbRect.offset(mPaddingLeft - mThumbOffset, mPaddingTop);
     growRectTo(mThumbRect, std::min(getHeight(), mThumbExclusionMaxSize));
     mGestureExclusionRects.push_back(mThumbRect);
-    //mGestureExclusionRects.addAll(mUserGestureExclusionRects);
+    mGestureExclusionRects.insert(mGestureExclusionRects.end(),
+            mUserGestureExclusionRects.begin(),
+            mUserGestureExclusionRects.end());
     ProgressBar::setSystemGestureExclusionRects(mGestureExclusionRects);
 }
 

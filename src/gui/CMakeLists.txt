@@ -13,7 +13,6 @@ aux_source_directory(cairomm  SRCS_CAIROMM)
 aux_source_directory(animation SRCS_ANIMATION)
 aux_source_directory(private SRCS_PRIVATE)
 aux_source_directory(utils SRCS_UTILS)
-aux_source_directory(transition SRCS_TRANSITION)
 aux_source_directory(navigation SRCS_NAVIGATION)
 add_subdirectory(image-decoders)
 aux_source_directory(image-decoders SRCS_IMAGEDECODERS)
@@ -62,7 +61,6 @@ set(SOURCES_GUI
     ${SRCS_DRAWABLES}
     ${SRCS_UTILS}
     ${SRCS_ANIMATION}
-    ${SRCS_TRANSITION}
     #${SRCS_VIEWS} ${SRCS_WIDGET} ${SRCS_WIDGETEX} ${SRCS_APP}
 )
 

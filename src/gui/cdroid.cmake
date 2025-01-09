@@ -265,7 +265,11 @@ list(APPEND CDROID_SOURCES
     widgetEx/fakedrag.cc
     #widgetEx/mathglview.cc
 )
-
+if(ENABLE_TRANSITION)
+    list(APPEND CDROID_SOURCES
+        transition/scene.cc
+        )
+endif()
 if(ENABLE_LOTTIE)
     list(APPEND CDROID_SOURCES widgetEx/rlottieview.cc)
 endif(ENABLE_LOTTIE)
