@@ -81,6 +81,7 @@ public:
     void setBounds(int x,int y,int w,int h);
     void setBounds(const Rect&r);
     const Rect&getBounds()const;
+    void copyBounds(Rect&)const;
     virtual Rect getDirtyBounds();
     virtual Drawable*mutate();
     virtual void clearMutated();

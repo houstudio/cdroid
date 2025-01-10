@@ -53,6 +53,10 @@ const Rect&Drawable::getBounds()const {
     return mBounds;
 }
 
+void Drawable::copyBounds(Rect&bounds)const{
+    bounds = mBounds;
+}
+
 Rect Drawable::getDirtyBounds() {
     return mBounds;
 }

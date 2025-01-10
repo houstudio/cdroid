@@ -20,6 +20,9 @@ AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,att
 
     const bool useDisabledAlpha = attrs.getBoolean("useDisabledAlpha", true);
     mDisabledAlpha = useDisabledAlpha?attrs.getFloat("disabledAlpha", 0.5f):1.f;
+    mSplitTrack = attrs.getBoolean("splitTrack",false);
+    const bool useDisableAlphs = attrs.getBoolean("useDisableAlpha",true);
+    mThumbExclusionMaxSize = ctx->getDimension("android:dimen/seekbar_thumb_exclusion_max_size");
 
     applyThumbTint();
     applyTickMarkTint();
@@ -139,15 +142,15 @@ void AbsSeekBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int dw = 0;
     int dh = 0;
     if (d != nullptr) {
-	if(getProgressOrientation()==HORIZONTAL){
+	    if(getProgressOrientation()==HORIZONTAL){
             dw = std::max(mMinWidth, std::min(mMaxWidth, d->getIntrinsicWidth()));
             dh = std::max(mMinHeight, std::min(mMaxHeight, d->getIntrinsicHeight()));
             dh = std::max(thumbHeight, dh);
-	}else{
+	    }else{
             dw = std::max(mMinWidth, std::min(mMaxWidth, d->getIntrinsicWidth()));
             dh = std::max(mMinHeight, std::min(mMaxHeight, d->getIntrinsicHeight()));
             dw = std::max(thumbWidth, dw);
-	}
+        }
     }
     dw += mPaddingLeft + mPaddingRight;
     dh += mPaddingTop + mPaddingBottom;
@@ -395,6 +398,7 @@ void AbsSeekBar::setThumbPos(int wh, Drawable* thumb, float scale, int offset){
         }
         thumb->setBounds(left, top,right-left,bottom-top);//thumbWidth,thumbHeight);
     }
+    updateGestureExclusionRects();
 }
 
 void AbsSeekBar::setSystemGestureExclusionRects(const std::vector<Rect>&rects){
@@ -408,7 +412,7 @@ void AbsSeekBar::updateGestureExclusionRects(){
         return;
     }
     mGestureExclusionRects.clear();
-    mThumbRect=mThumb->getBounds();//mThumbRect);
+    mThumb->copyBounds(mThumbRect);
     mThumbRect.offset(mPaddingLeft - mThumbOffset, mPaddingTop);
     growRectTo(mThumbRect, std::min(getHeight(), mThumbExclusionMaxSize));
     mGestureExclusionRects.push_back(mThumbRect);
@@ -434,7 +438,7 @@ void AbsSeekBar::drawThumb(Canvas&canvas) {
         canvas.save();
         // Translate the padding. For the x, we need to allow the thumb to
         // draw in its extra space
-	if(getProgressOrientation()==HORIZONTAL)
+        if(getProgressOrientation()==HORIZONTAL)
             canvas.translate( mPaddingLeft - mThumbOffset, mPaddingTop);
         else
             canvas.translate( mPaddingLeft, mPaddingTop - mThumbOffset);
@@ -444,12 +448,12 @@ void AbsSeekBar::drawThumb(Canvas&canvas) {
 }
 
 void  AbsSeekBar::drawTickMarks(Canvas&canvas){
-    int count = getMax() - getMin();
-    if (count > 1&& mTickMark) {
-        int w = mTickMark->getIntrinsicWidth();
-        int h = mTickMark->getIntrinsicHeight();
-        int halfW = w >= 0 ? w / 2 : 1;
-        int halfH = h >= 0 ? h / 2 : 1;
+    const int count = getMax() - getMin();
+    if ((count > 1)&& mTickMark) {
+        const int w = mTickMark->getIntrinsicWidth();
+        const int h = mTickMark->getIntrinsicHeight();
+        const int halfW = w >= 0 ? w / 2 : 1;
+        const int halfH = h >= 0 ? h / 2 : 1;
         mTickMark->setBounds(-halfW, -halfH, halfW, halfH);
 
         float spacing = (getProgressOrientation()==HORIZONTAL?getWidth():getHeight())/ (float) count;
@@ -461,9 +465,9 @@ void  AbsSeekBar::drawTickMarks(Canvas&canvas){
         for (int i = 0; i <= count; i++) {
             mTickMark->draw(canvas);
 	    if(getProgressOrientation()==HORIZONTAL)
-                canvas.translate(spacing, 0);
+            canvas.translate(spacing, 0);
 	    else
-                canvas.translate(0, spacing);
+            canvas.translate(0, spacing);
         }
         canvas.restore();
     }
@@ -471,8 +475,7 @@ void  AbsSeekBar::drawTickMarks(Canvas&canvas){
 
 void AbsSeekBar::drawTrack(Canvas&canvas){
     Drawable* thumbDrawable = mThumb;
-    const int mPaddingTop=0,mPaddingLeft=0;
-    if (thumbDrawable != nullptr && mSplitTrack) {
+    if ((thumbDrawable != nullptr) && mSplitTrack) {
         const Insets insets = thumbDrawable->getOpticalInsets();
         Rect tempRect = thumbDrawable->getBounds();
         tempRect.offset(mPaddingLeft - mThumbOffset, mPaddingTop);
@@ -480,7 +483,17 @@ void AbsSeekBar::drawTrack(Canvas&canvas){
         tempRect.width-= (insets.left+insets.right);
 
         canvas.save();
+#if 0
         //canvas.clipRect(tempRect, Op.DIFFERENCE);
+        Cairo::Path*current_clip=canvas.copy_path();
+        canvas.begin_new_path();
+        canvas.rectangle(tempRect.left,tempRect.top,tempRect.width,tempRect.height);
+        //canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
+        canvas.clip();
+        canvas.append_path(*current_clip);
+        canvas.clip();
+        delete current_clip;
+#endif
         ProgressBar::drawTrack(canvas);
         drawTickMarks(canvas);
         canvas.restore();
