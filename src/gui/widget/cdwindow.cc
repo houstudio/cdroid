@@ -497,23 +497,23 @@ RefPtr<Canvas>Window::getCanvas(){
             break;
         }
     }
-#if 0
-    Cairo::RefPtr<Cairo::Region>transRgn = Cairo::Region::create({0,0,getWidth(),getHeight()});
-    setWillNotDraw(true);
-    int num=gatherTransparentRegion(transRgn);
-    Cairo::RectangleInt rec=transRgn->get_extents();
+#if 1
+    Cairo::RefPtr<Cairo::Region>transRgn = Cairo::Region::create();//{0,0,getWidth(),getHeight()});
+    //setWillNotDraw(true);
+    int num = gatherTransparentRegion(transRgn);
+    Cairo::RectangleInt rec = transRgn->get_extents();
     LOGV_IF(num,"transRgn.rects=%d extents=(%d,%d,%d,%d)",num,rec.x,rec.y,rec.width,rec.height);
     mInvalidRgn->subtract(transRgn);
 #endif
-    int num=mInvalidRgn->get_num_rectangles();
+    num = mInvalidRgn->get_num_rectangles();
     canvas->reset_clip();
-    for(int i=0;i<num;i++){
+    for(int i = 0;i < num; i ++){
         RectangleInt r = mInvalidRgn->get_rectangle(i);
         canvas->rectangle(r.x,r.y,r.width,r.height);
     }
     mPendingRgn->do_union(mInvalidRgn);
     mInvalidRgn->subtract(mInvalidRgn);
-    if(num>0)canvas->clip();
+    if(num > 0)canvas->clip();
     return canvas;
 }
 
