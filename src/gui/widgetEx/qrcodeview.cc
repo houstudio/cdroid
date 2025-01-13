@@ -16,14 +16,14 @@ QRCodeView::QRCodeView(int w,int h):View(w,h){
 QRCodeView::QRCodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
     initView();
 
-    mEccLevel = attrs.getInt("eccLevel",std::map<const std::string,int>{
+    mEccLevel = attrs.getInt("eccLevel",std::unordered_map<std::string,int>{
             {"low",ECC_LOW},    /* 7%*/
             {"medium",ECC_MEDIUM}, /*15%*/
             {"quartor",ECC_QUARTOR},/*20%*/
             {"high",ECC_HIGH}    /*30%*/
     },mEccLevel);
 
-    mEncodeMode = attrs.getInt("encodeMode",std::map<const std::string,int>{
+    mEncodeMode = attrs.getInt("encodeMode",std::unordered_map<std::string,int>{
             {"numberic",MODE_NUMERIC},
             {"alphanumeric",MODE_ALPHANUMERIC},
             {"utf8" , MODE_UTF8},

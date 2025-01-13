@@ -529,7 +529,7 @@ private:
     TouchDelegate*mTouchDelegate;
     ViewPropertyAnimator* mAnimator;
     ViewGroup* mNestedScrollingParent;
-    std::map<uint64_t,uint64_t>mMeasureCache;
+    std::unordered_map<uint64_t,uint64_t>mMeasureCache;
     std::string mStartActivityRequestWho;
     ScrollabilityCache*mScrollCache;
 

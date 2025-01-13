@@ -70,10 +70,10 @@ View::View(Context*ctx,const AttributeSet&attrs){
     mID = attrs.getResourceId("id",View::NO_ID);
     mMinWidth  = attrs.getDimensionPixelSize("minWidth",0);
     mMinHeight = attrs.getDimensionPixelSize("minHeight",0);
-    setLayerType(attrs.getInt("layerType",std::map<const std::string,int>{
+    setLayerType(attrs.getInt("layerType",std::unordered_map<std::string,int>{
            {"software",(int)LAYER_TYPE_SOFTWARE},{"hardware",(int)LAYER_TYPE_HARDWARE}
         },LAYER_TYPE_NONE));
-    const int quality=attrs.getInt("drawingCacheQuality",std::map<const std::string,int>{
+    const int quality=attrs.getInt("drawingCacheQuality",std::unordered_map<std::string,int>{
            {"auto",(int)DRAWING_CACHE_QUALITY_AUTO},
            {"low" ,(int)DRAWING_CACHE_QUALITY_LOW },
            {"high",(int)DRAWING_CACHE_QUALITY_HIGH}
@@ -83,7 +83,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
         viewFlagMasks  |= DRAWING_CACHE_QUALITY_MASK;
     }
     mContentDescription = attrs.getString("contentDescription");
-    setVisibility(attrs.getInt("visibility",std::map<const std::string,int>{
+    setVisibility(attrs.getInt("visibility",std::unordered_map<std::string,int>{
            {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}   },(int)VISIBLE));
 
     if(!attrs.getBoolean("soundEffectsEnabled",true)){
@@ -95,13 +95,13 @@ View::View(Context*ctx,const AttributeSet&attrs){
         viewFlagMasks |= HAPTIC_FEEDBACK_ENABLED;
     }
     mPrivateFlags2 &= ~(PFLAG2_LAYOUT_DIRECTION_MASK | PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK);
-    const int layoutDirection = attrs.getInt("layoutDirection",std::map<const std::string,int>{
+    const int layoutDirection = attrs.getInt("layoutDirection",std::unordered_map<std::string,int>{
            {"ltr"    ,(int)LAYOUT_DIRECTION_LTR}    ,{"rtl",(int)LAYOUT_DIRECTION_RTL},
            {"inherit",(int)LAYOUT_DIRECTION_INHERIT},{"local",(int)LAYOUT_DIRECTION_LOCALE}
 	},LAYOUT_DIRECTION_DEFAULT);
     mPrivateFlags2 |= (layoutDirection << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT);
 
-    const int textDirection = attrs.getInt("textDirection",std::map<const std::string,int>{
+    const int textDirection = attrs.getInt("textDirection",std::unordered_map<std::string,int>{
 		 {"inherit",(int)TEXT_DIRECTION_INHERIT}, {"locale",(int)TEXT_DIRECTION_LOCALE},
 		 {"anyRtl" ,(int)TEXT_DIRECTION_ANY_RTL}, {"ltr",(int)TEXT_DIRECTION_LTR},
          {"rtl",(int)TEXT_DIRECTION_RTL},         {"firstStrong",(int)TEXT_DIRECTION_FIRST_STRONG},
@@ -110,7 +110,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     if (textDirection != -1) {
         mPrivateFlags2 |= textDirection<< PFLAG2_TEXT_DIRECTION_MASK_SHIFT;
     }
-    const int textAlignment = attrs.getInt("textAlignment",std::map<const std::string,int>{
+    const int textAlignment = attrs.getInt("textAlignment",std::unordered_map<std::string,int>{
         {"inherit" , (int)TEXT_ALIGNMENT_INHERIT},    {"gravity" , (int)TEXT_ALIGNMENT_GRAVITY},
         {"textStart",(int)TEXT_ALIGNMENT_TEXT_START}, {"textEnd" , (int)TEXT_ALIGNMENT_TEXT_END},
         {"center"  , (int)TEXT_ALIGNMENT_CENTER},     {"viewStart",(int)TEXT_ALIGNMENT_VIEW_START},
@@ -121,7 +121,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     mPrivateFlags2 |= (textAlignment<<PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT);
     //setTextAlignment( textAlignment );
 
-    setImportantForAccessibility(attrs.getInt("importantForAccessibility",std::map<const std::string,int>{
+    setImportantForAccessibility(attrs.getInt("importantForAccessibility",std::unordered_map<std::string,int>{
                 {"auto",(int)IMPORTANT_FOR_ACCESSIBILITY_AUTO},
                 {"yes" ,(int)IMPORTANT_FOR_ACCESSIBILITY_YES },
                 {"no"  ,(int)IMPORTANT_FOR_ACCESSIBILITY_NO}
@@ -188,7 +188,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     }
     setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
 
-    const int fadingEdges = attrs.getInt("requiresFadingEdge",std::map<const std::string,int>({
+    const int fadingEdges = attrs.getInt("requiresFadingEdge",std::unordered_map<std::string,int>({
 	   {"none",(int)FADING_EDGE_NONE},
 	   {"horizontal",(int)FADING_EDGE_HORIZONTAL},
 	   {"vertical"  ,(int)FADING_EDGE_VERTICAL}
@@ -201,25 +201,25 @@ View::View(Context*ctx,const AttributeSet&attrs){
     }
 
 
-    const int scrollbars = attrs.getInt("scrollbars",std::map<const std::string,int>({
+    const int scrollbars = attrs.getInt("scrollbars",std::unordered_map<std::string,int>({
            {"none",(int)SCROLLBARS_NONE}, {"horizontal",(int)SCROLLBARS_HORIZONTAL},
            {"vertical",(int)SCROLLBARS_VERTICAL} }),SCROLLBARS_NONE);
     if(scrollbars != SCROLLBARS_NONE){
         viewFlagValues |= scrollbars;
         viewFlagMasks  |= SCROLLBARS_MASK;
     }
-    const int scrollbarStyle = attrs.getInt("scrollbarStyle",std::map<const std::string,int>({ 
+    const int scrollbarStyle = attrs.getInt("scrollbarStyle",std::unordered_map<std::string,int>({ 
         {"insideOverlay" ,(int)SCROLLBARS_INSIDE_OVERLAY },
         {"insideInset"   ,(int)SCROLLBARS_INSIDE_OVERLAY },
         {"outsideOverlay",(int)SCROLLBARS_OUTSIDE_OVERLAY},
         {"outsideInset"  ,(int)SCROLLBARS_OUTSIDE_OVERLAY} }),SCROLLBARS_INSIDE_OVERLAY);
 
-    mOverScrollMode = attrs.getInt("overScrollMode",std::map<const std::string,int>{
+    mOverScrollMode = attrs.getInt("overScrollMode",std::unordered_map<std::string,int>{
            {"never",(int)OVER_SCROLL_NEVER} , {"always",(int)OVER_SCROLL_ALWAYS},
            {"ifContentScrolls",(int)OVER_SCROLL_IF_CONTENT_SCROLLS}
          },mOverScrollMode);
 
-    mVerticalScrollbarPosition = attrs.getInt("verticalScrollbarPosition",std::map<const std::string,int>{
+    mVerticalScrollbarPosition = attrs.getInt("verticalScrollbarPosition",std::unordered_map<std::string,int>{
            {"defaultPosition",(int)SCROLLBAR_POSITION_DEFAULT}, {"left",(int)SCROLLBAR_POSITION_LEFT},
            {"right",(int)SCROLLBAR_POSITION_RIGHT} },(int)SCROLLBAR_POSITION_DEFAULT);
 
@@ -228,7 +228,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
         viewFlagMasks  |= SCROLLBARS_STYLE_MASK;
     }
 
-    const int scrollIndicators = (attrs.getInt("scrollIndicators",std::map<const std::string,int>({
+    const int scrollIndicators = (attrs.getInt("scrollIndicators",std::unordered_map<std::string,int>({
            {"top"  ,(int)SCROLL_INDICATOR_TOP}  , {"left"  ,(int)SCROLL_INDICATOR_LEFT},
            {"right",(int)SCROLL_INDICATOR_RIGHT}, {"bottom",(int)SCROLL_INDICATOR_BOTTOM}
            }),0)<<SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)&SCROLL_INDICATORS_PFLAG3_MASK;
@@ -252,7 +252,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
         mBackgroundTint->mTintList = csl;
         mBackgroundTint->mHasTintList = true;
     }
-    const std::map<const std::string,int>tintModes={
+    const std::unordered_map<std::string,int>tintModes={
            {"add",PorterDuff::Mode::ADD},       {"multiply",PorterDuff::Mode::MULTIPLY},
            {"screen",PorterDuff::Mode::SCREEN}, {"src_atop",PorterDuff::Mode::SRC_ATOP},
            {"src_in",PorterDuff::Mode::SRC_IN}, {"src_over",PorterDuff::Mode::SRC_OVER} };

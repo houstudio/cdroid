@@ -54,9 +54,9 @@ public:
     ~Private()
     {
         if (autoDelete) {
-	    for(auto o:objectList)delete o;
+           for(auto o:objectList)delete o;
         }
-	for(auto x:axes)delete x.second;
+        for(auto x:axes)delete x.second;
     }
 
     PlotView *q;
@@ -82,7 +82,7 @@ public:
     int tickLabelSize;
     // padding
     // hashmap with the axes we have
-    std::map<Axis, PlotAxis *> axes;
+    std::unordered_map<Axis, PlotAxis *> axes;
     // List of PlotObjects
     std::vector<PlotObject *> objectList;
     // Limits of the plot area in data units
@@ -106,7 +106,7 @@ PlotView::PlotView(cdroid::Context*ctx,const cdroid::AttributeSet&atts)
     d->secondDataRect.set(0,0,0,0); // default: no secondary data rect
     // sets the default limits
     d->calcDataRectLimits(0.0, 1.0, 0.0, 1.0);
-    const std::map<const std::string,int>dirs={{"left",1},{"top",2},{"right",4},{"bottom",8},
+    const std::unordered_map<std::string,int>dirs={{"left",1},{"top",2},{"right",4},{"bottom",8},
 	    {"horizontal",5},{"vertical",10},{"all",15}};
     d->showGrid = atts.getBoolean("showGrid",false);
     d->cGrid = atts.getInt("gridColor",d->cGrid);

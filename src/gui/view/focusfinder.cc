@@ -510,7 +510,7 @@ bool FocusFinder::isTouchCandidate(int x, int y,const Rect&destRect, int directi
 
 void FocusFinder::sort(std::vector<View*>&views, int start, int end, ViewGroup* root, bool isRtl){
     const int count = end - start;
-    std::map<View*,Rect>mRectByView;
+    std::unordered_map<View*,Rect>mRectByView;
     if (count < 2) {
         return;
     }
@@ -519,7 +519,7 @@ void FocusFinder::sort(std::vector<View*>&views, int start, int end, ViewGroup* 
         Rect next;
         views[i]->getDrawingRect(next);
         root->offsetDescendantRectToMyCoords(views[i], next);
-        mRectByView.insert(std::map<View*,Rect>::value_type(views[i], next));
+        mRectByView.insert(std::unordered_map<View*,Rect>::value_type(views[i], next));
     }
 
     // Sort top-to-bottom std::stable_sort(since c++17),line525 caused infinity loop!!!

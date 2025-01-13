@@ -212,7 +212,7 @@ void ViewPropertyAnimator::start() {
     startAnimation();
 }
 
-std::set<Animator*>ViewPropertyAnimator::map2set(const std::map<Animator*, ViewPropertyAnimator::PropertyBundle>&amap){
+std::set<Animator*>ViewPropertyAnimator::map2set(const std::unordered_map<Animator*, ViewPropertyAnimator::PropertyBundle>&amap){
     std::set<Animator*>aset;
     for(auto a:amap){
         aset.insert(a.first);

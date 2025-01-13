@@ -3,7 +3,7 @@
 
 namespace cdroid{
 
-std::map<std::string,Intent::WindowFactory>Intent::mIntentMaps;
+std::unordered_map<std::string,Intent::WindowFactory>Intent::mIntentMaps;
 
 Intent::Intent(const std::string&action){
     mAction=action;

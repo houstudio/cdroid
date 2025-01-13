@@ -1036,7 +1036,7 @@ void GradientDrawable::draw(Canvas&canvas) {
 
 Drawable*GradientDrawable::inflate(Context*ctx,const AttributeSet&atts) {
     GradientDrawable*d = new GradientDrawable();
-    const int shapeType = atts.getInt("shape",std::map<const std::string,int> {
+    const int shapeType = atts.getInt("shape",std::unordered_map<std::string,int> {
         {"rectangle",GradientDrawable::Shape::RECTANGLE},{"oval",GradientDrawable::Shape::OVAL},
         {"line",GradientDrawable::Shape::LINE},          {"ring",GradientDrawable::Shape::RING}
     },GradientDrawable::Shape::RECTANGLE);

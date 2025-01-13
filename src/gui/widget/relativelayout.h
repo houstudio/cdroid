@@ -69,7 +69,7 @@ private:
             View*view;
             /*The list of dependents for this node; a dependent is a node
              * that needs this node to be processed first.*/
-            std::map<Node*,DependencyGraph*>dependents;
+            std::unordered_map<Node*,DependencyGraph*>dependents;
             /** The list of dependencies for this node.*/
             SparseArray<Node*> dependencies;
             Node(View*v);

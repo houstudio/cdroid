@@ -6,7 +6,7 @@ namespace cdroid{
 
 class AnimationUtils{
 private:
-    static std::map<const std::string,std::shared_ptr<Interpolator>>mInterpolators;
+    static std::unordered_map<std::string,std::shared_ptr<Interpolator>>mInterpolators;
 public:
     static int64_t currentAnimationTimeMillis();
     static Animation* loadAnimation(Context* context,const std::string&id);

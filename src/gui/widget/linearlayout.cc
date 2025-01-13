@@ -73,7 +73,7 @@ void LinearLayout::initView(){
     mAllowInconsistentMeasurement= false;
 }
 
-static std::map<const std::string,int>orientationkvs={
+static std::unordered_map<std::string,int>orientationkvs={
     {"horizontal",LinearLayout::HORIZONTAL},
     {"vertical",LinearLayout::VERTICAL}//
 };
@@ -94,7 +94,7 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
     mBaselineAlignedChildIndex=attrs.getInt("baselineAlignedChildIndex",-1);
     mUseLargestChild = attrs.getBoolean("measureWithLargestChild",false);
 
-    mShowDividers = attrs.getInt("showDividers",std::map<const std::string,int>{
+    mShowDividers = attrs.getInt("showDividers",std::unordered_map<std::string,int>{
 	   {"none",SHOW_DIVIDER_NONE},
 	   {"beginning",SHOW_DIVIDER_BEGINNING},
 	   {"middle",SHOW_DIVIDER_MIDDLE},

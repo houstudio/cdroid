@@ -39,7 +39,7 @@ public:
         static void drainCache();
     };
 protected:
-    std::map<RecyclerView::ViewHolder*, InfoRecord*> mLayoutHolderMap;
+    std::unordered_map<RecyclerView::ViewHolder*, InfoRecord*> mLayoutHolderMap;
     LongSparseArray<RecyclerView::ViewHolder*> mOldChangedHolders;
 private:
     friend RecyclerView;

@@ -65,13 +65,13 @@ private:
     Runnable mPendingOnStartAction;
     Runnable mPendingOnEndAction;
 
-    std::map<Animator*, PropertyBundle> mAnimatorMap;
-    std::map<Animator*, Runnable> mAnimatorSetupMap;
-    std::map<Animator*, Runnable> mAnimatorCleanupMap;
-    std::map<Animator*, Runnable> mAnimatorOnStartMap;
-    std::map<Animator*, Runnable> mAnimatorOnEndMap;
+    std::unordered_map<Animator*, PropertyBundle> mAnimatorMap;
+    std::unordered_map<Animator*, Runnable> mAnimatorSetupMap;
+    std::unordered_map<Animator*, Runnable> mAnimatorCleanupMap;
+    std::unordered_map<Animator*, Runnable> mAnimatorOnStartMap;
+    std::unordered_map<Animator*, Runnable> mAnimatorOnEndMap;
 private:
-    static std::set<Animator*>map2set(const std::map<Animator*,PropertyBundle>&amap);
+    static std::set<Animator*>map2set(const std::unordered_map<Animator*,PropertyBundle>&amap);
     void animateProperty(int constantName, float toValue);
     void animatePropertyBy(int constantName, float byValue);
     void animatePropertyBy(int constantName, float startValue, float byValue);

@@ -1,6 +1,6 @@
 #ifndef __VELOCITY_TRACKER_H__
 #define __VELOCITY_TRACKER_H__
-#include <map>
+#include <unordered_map>
 #include <array>
 #include <memory>
 #include <core/pools.h>
@@ -97,7 +97,7 @@ public:
 private:
     int mStrategy;
     VelocityTrackerState*mTrackerState;
-    static std::map<const std::string,int>STRATEGIES;
+    static std::unordered_map<std::string,int>STRATEGIES;
     static int toStrategyId(const char*);
     static Pools::SimplePool<VelocityTracker>sPool;
     friend Pools::SimplePool<VelocityTracker>;
@@ -144,7 +144,7 @@ struct VelocityTracker::ComputedVelocity {
         mVelocities[axis][id] = velocity;
     }
 private:
-    std::map<int32_t /*axis*/, std::map<int32_t /*pointerId*/, float /*velocity*/>> mVelocities;
+    std::unordered_map<int32_t /*axis*/, std::unordered_map<int32_t /*pointerId*/, float /*velocity*/>> mVelocities;
 };
 
 class VelocityTracker::VelocityTrackerState {
@@ -210,8 +210,8 @@ private:
     float chooseWeight(int32_t pointerId,uint32_t index) const;
     const uint32_t mDegree;
     const Weighting mWeighting;
-    std::map<int32_t/*pointerId*/,size_t/*position inArray*/> mIndex;
-    std::map<int32_t/*pointerId*/,std::array<Movement,HISTORY_SIZE>>mMovements;
+    std::unordered_map<int32_t/*pointerId*/,size_t/*position inArray*/> mIndex;
+    std::unordered_map<int32_t/*pointerId*/,std::array<Movement,HISTORY_SIZE>>mMovements;
 };
 
 class IntegratingVelocityTrackerStrategy : public VelocityTrackerStrategy {
@@ -267,8 +267,8 @@ private:
         nsecs_t eventTime;
         float position;
     };
-    std::map<int32_t /*pointerId*/, size_t /*positionInArray*/> mIndex;
-    std::map<int32_t /*pointerId*/, std::array<Movement, HISTORY_SIZE>> mMovements;
+    std::unordered_map<int32_t /*pointerId*/, size_t /*positionInArray*/> mIndex;
+    std::unordered_map<int32_t /*pointerId*/, std::array<Movement, HISTORY_SIZE>> mMovements;
 };
 
 class ImpulseVelocityTrackerStrategy : public VelocityTrackerStrategy {
@@ -293,8 +293,8 @@ private:
         float position;
     };
     const bool mDeltaValues;
-    std::map<int32_t /*pointerId*/, size_t /*positionInArray*/> mIndex;
-    std::map<int32_t /*pointerId*/, std::array<Movement, HISTORY_SIZE>> mMovements;
+    std::unordered_map<int32_t /*pointerId*/, size_t /*positionInArray*/> mIndex;
+    std::unordered_map<int32_t /*pointerId*/, std::array<Movement, HISTORY_SIZE>> mMovements;
 };
 }
 #endif

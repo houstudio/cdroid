@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 #include <cairomm/surface.h>
 #include <core/context.h>
 
@@ -21,7 +22,7 @@ public:
         Registry(uint32_t,Factory&,Verifier&);
     };
 private:
-    static std::map<const std::string,Registry>mFactories;
+    static std::unordered_map<std::string,Registry>mFactories;
     static uint32_t mHeaderBytesRequired;
 protected:
     struct PRIVATE*mPrivate;

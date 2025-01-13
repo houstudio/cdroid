@@ -44,7 +44,7 @@ protected:
     int mMaxNumActiveViews = 1;
 
     /* Map of the children of the {@link AdapterViewAnimator}.*/
-    std::map<int, ViewAndMetaData*> mViewsMap;
+    std::unordered_map<int, ViewAndMetaData*> mViewsMap;
 
     /* List of views pending removal from the {@link AdapterViewAnimator}*/
     std::vector<int> mPreviousViews;

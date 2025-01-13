@@ -449,7 +449,7 @@ Insets BitmapDrawable::getOpticalInsets() {
 Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
     const std::string src=atts.getString("src");
     const int gravity= atts.getGravity("gravity",Gravity::CENTER);
-    static std::map<const std::string,int>kvs={
+    static std::unordered_map<std::string,int>kvs={
 	      {"disabled",TileMode::DISABLED}, {"clamp",TileMode::CLAMP},
 		  {"repeat",TileMode::REPEAT},  {"mirror",TileMode::MIRROR}};
     const int tileMode = atts.getInt("tileMode",kvs,-1);

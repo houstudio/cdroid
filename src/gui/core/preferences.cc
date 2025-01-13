@@ -171,6 +171,38 @@ int Preferences::getInt(const std::string&section,const std::string&key,int def)
     return def;
 }
 
+static std::vector<std::string> split(const std::string & path) {
+    std::vector<std::string> vec;
+    size_t begin;
+    begin = path.find_first_not_of("|");
+    while (begin != std::string::npos) {
+        size_t end = path.find_first_of("|", begin);
+        vec.push_back(path.substr(begin, end-begin));
+        begin = path.find_first_not_of("|", end);
+    }
+    return vec;
+}
+
+int Preferences::getInt(const std::string&section,const std::string&key,const std::map<std::string,int>&kvs,int def){
+    const std::string vstr = getString(section,key,"");
+    if( vstr.size() && (vstr.find('|') != std::string::npos) ){
+        std::vector<std::string> gs = split(vstr);
+        int result= 0;
+        int count = 0;
+        for(std::string s:gs){
+            auto it = kvs.find(s);
+            if(it != kvs.end()){
+                result |= it->second;
+                count++;
+            }
+        }
+        return count ? result : def;
+    }else{
+        auto it = kvs.find(vstr);
+        return it == kvs.end() ? def : it->second;
+    }    
+}
+
 float Preferences::getFloat(const std::string&section,const std::string&key,float def){
     auto sec=mPrefs.find(section);
     if(sec==mPrefs.end())return def;

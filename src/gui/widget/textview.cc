@@ -346,7 +346,7 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
     if(atts.hasAttribute("textColorLink"))
         mTextColorLink = ctx->getColorStateList(atts.getString("textColorLink"));
     mTextSize = atts.getDimensionPixelSize("textSize",mTextSize);
-    mTextStyle= atts.getInt("textStyle",std::map<const std::string,int>{
+    mTextStyle= atts.getInt("textStyle",std::unordered_map<std::string,int>{
 	   {"normal",(int)Typeface::NORMAL},
 	   {"bold"  ,(int)Typeface::BOLD},
 	   {"italic",(int)Typeface::ITALIC}
@@ -399,7 +399,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
 
     setLineSpacing( attrs.getDimensionPixelSize("lineSpacingExtra",0),
              attrs.getFloat("lineSpacingMultiplier",1.f) );
-    const int breakStrategy = attrs.getInt("breakStrategy",std::map<const std::string,int>{
+    const int breakStrategy = attrs.getInt("breakStrategy",std::unordered_map<std::string,int>{
         {"simple"  ,(int)Layout::BREAK_STRATEGY_SIMPLE},
         {"balanced",(int)Layout::BREAK_STRATEGY_BALANCED},
         {"high_quality",(int)Layout::BREAK_STRATEGY_HIGH_QUALITY},
@@ -420,10 +420,10 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     const std::string txtColor = attrs.getString("textColor");
     if(!txtColor.empty())
         setTextColor(ctx->getColorStateList(txtColor));
-    setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",std::map<const std::string,int>{
+    setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",std::unordered_map<std::string,int>{
             {"marquee_forever",-1}
         },mMarqueeRepeatLimit));
-    setEllipsize(attrs.getInt("ellipsize",std::map<const std::string,int>{
+    setEllipsize(attrs.getInt("ellipsize",std::unordered_map<std::string,int>{
         {"start",Layout::ELLIPSIS_START},{"middle",Layout::ELLIPSIS_MIDDLE},
         {"end" ,Layout::ELLIPSIS_END},{"marquee",Layout::ELLIPSIS_MARQUEE}
       },Layout::ELLIPSIS_NONE));

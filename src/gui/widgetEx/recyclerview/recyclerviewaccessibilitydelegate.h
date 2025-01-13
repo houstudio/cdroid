@@ -40,7 +40,7 @@ private:
 class RecyclerViewAccessibilityDelegate::ItemDelegate:public View::AccessibilityDelegate{
     RecyclerViewAccessibilityDelegate* mRecyclerViewDelegate;
 private:
-    std::map<View*, AccessibilityDelegate*> mOriginalItemDelegates;
+    std::unordered_map<View*, AccessibilityDelegate*> mOriginalItemDelegates;
 
     /**
      * Creates an item delegate for the given {@code RecyclerViewAccessibilityDelegate}.

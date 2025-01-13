@@ -198,7 +198,7 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
     std::string resid = atts.getString("layoutAnimation");
     setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,resid));
 
-    const int flags=atts.getInt("descendantFocusability",std::map<const std::string,int>{
+    const int flags=atts.getInt("descendantFocusability",std::unordered_map<std::string,int>{
         {"beforeDescendants",(int)FOCUS_BEFORE_DESCENDANTS},
         {"afterDescendants" ,(int)FOCUS_AFTER_DESCENDANTS},
         {"blocksDescendants",(int)FOCUS_BLOCK_DESCENDANTS}
@@ -207,7 +207,7 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
 
     if(atts.getBoolean("animateLayoutChanges",false))
         setLayoutTransition(new LayoutTransition());
-    const int layoutMode = atts.getInt("layoutMode",std::map<const std::string,int>{
+    const int layoutMode = atts.getInt("layoutMode",std::unordered_map<std::string,int>{
         {"undefined" ,(int)LAYOUT_MODE_UNDEFINED},
         {"clipBounds",(int)LAYOUT_MODE_CLIP_BOUNDS},
         {"opticalBounds",(int)LAYOUT_MODE_OPTICAL_BOUNDS}

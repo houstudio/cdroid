@@ -13,8 +13,8 @@ private:
     Context*mContext;
     LayoutInflater(Context*ctx);
     static LayoutInflater*mInst;
-    typedef std::map<const std::string,ViewInflater>INFLATERMAPPER;
-    typedef std::map<const std::string,std::string>STYLEMAPPER;
+    typedef std::unordered_map<std::string,ViewInflater>INFLATERMAPPER;
+    typedef std::unordered_map<std::string,std::string>STYLEMAPPER;
     static INFLATERMAPPER& getInflaterMap();
     static STYLEMAPPER& getStyleMap();
 public:

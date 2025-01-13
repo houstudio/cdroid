@@ -26,6 +26,7 @@ public:
    int getUpdates()const;
    bool getBool(const std::string&section,const std::string&key,bool def=false);
    int getInt(const std::string&section,const std::string&key,int def=0);
+   int getInt(const std::string&section,const std::string&key,const std::map<std::string,int>&kv,int def);
    float getFloat(const std::string&section,const std::string&key,float def=.0);
    double getDouble(const std::string&section,const std::string&key,double def=.0);
    std::string getString(const std::string&section,const std::string&key,const std::string&def="");

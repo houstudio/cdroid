@@ -13,7 +13,7 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
     mBaseline = attrs.getDimensionPixelSize("baseline",-1);
     setAdjustViewBounds(attrs.getBoolean("adjustViewBounds",false));
     mCropToPadding = attrs.getBoolean("cropToPadding",false);
-    const int scaleType = attrs.getInt("scaleType",std::map<const std::string,int>{
+    const int scaleType = attrs.getInt("scaleType",std::unordered_map<std::string,int>{
             {"matrix",ScaleType::MATRIX}, {"fitXY",ScaleType::FIT_XY},
             {"fitStart",ScaleType::FIT_START},{"fitCenter",ScaleType::FIT_CENTER},
             {"fitEnd",ScaleType::FIT_END},   {"center",ScaleType::CENTER},

@@ -10,7 +10,7 @@ class Intent{
 public:
     typedef std::function< Window*(int,int) > WindowFactory;
 private:
-    static std::map<std::string,WindowFactory>mIntentMaps;
+    static std::unordered_map<std::string,WindowFactory>mIntentMaps;
     std::string mAction;
     Context*mContext;
 public:

@@ -68,7 +68,7 @@ int AttributeSet::set(const char*atts[],int size){
     return (int)mAttrs.size();
 }
 
-std::map<std::string,std::string>&AttributeSet::getEntries(){
+std::unordered_map<std::string,std::string>&AttributeSet::getEntries(){
     return mAttrs;
 }
 
@@ -146,7 +146,7 @@ int AttributeSet::getInt(const std::string&key,int def)const{
     return std::strtol(v.c_str(),nullptr,base);
 }
 
-int AttributeSet::getInt(const std::string&key,const std::map<const std::string,int>&kvs,int def)const{
+int AttributeSet::getInt(const std::string&key,const std::unordered_map<std::string,int>&kvs,int def)const{
     const std::string vstr = getAttributeValue(key);
     if( vstr.size() && (vstr.find('|') != std::string::npos) ){
         std::vector<std::string> gs = split(vstr);
@@ -238,7 +238,7 @@ const std::string AttributeSet::getString(const std::string&key,const std::strin
     return mContext->getString(v);
 }
 
-static std::map<const std::string,int>gravitykvs={
+static std::unordered_map<std::string,int>gravitykvs={
     {"none"  , Gravity::NO_GRAVITY},
     {"top"   , Gravity::TOP}   ,
     {"bottom", Gravity::BOTTOM},    

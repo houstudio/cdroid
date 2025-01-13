@@ -82,7 +82,7 @@ LayerDrawable::LayerState::LayerState(){
         mPaddingBottom=attrs->getInt("paddingBottom");
         mPaddingStart =attrs->getInt("paddingStart");
         mPaddingEnd  = attrs->getInt("paddingEnd");
-        mPaddingMode = attrs->getInt("paddingMode",std::map<const std::string,int>{
+        mPaddingMode = attrs->getInt("paddingMode",std::unordered_map<std::string,int>{
 	        {"nest",PADDING_MODE_NEST},
 	        {"inner",PADDING_MODE_INNER},
 	        {"stack",PADDING_MODE_STACK}

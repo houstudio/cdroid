@@ -9,20 +9,20 @@ class TableRow:public LinearLayout{
 public:
     class LayoutParams:public LinearLayout::LayoutParams{
     public:
-	int span;
-	int column;
-	int mOffset [2];
-	enum{
-		LOCATION=0,
-		LOCATION_NEXT=1
-	};
-	LayoutParams();
-	LayoutParams(int column);
+	    int span;
+	    int column;
+	    int mOffset [2];
+	    enum{
+		    LOCATION=0,
+		    LOCATION_NEXT=1
+	    };
+	    LayoutParams();
+	    LayoutParams(int column);
         LayoutParams(Context* c,const AttributeSet&attrs);
-	LayoutParams(int w, int h);
-	LayoutParams(int w, int h, float initWeight);
-	LayoutParams(const LayoutParams& p);
-	LayoutParams(const MarginLayoutParams& source);
+	    LayoutParams(int w, int h);
+	    LayoutParams(int w, int h, float initWeight);
+	    LayoutParams(const LayoutParams& p);
+	    LayoutParams(const MarginLayoutParams& source);
     };
 
 private:
@@ -30,7 +30,7 @@ private:
     int mNumColumns;
     std::vector<int>mColumnWidths;
     std::vector<int>mConstrainedColumnWidths;
-	std::map<int,int>mColumnToChildIndex;
+	std::unordered_map<int,int>mColumnToChildIndex;
 
     void initTableRow();
     void mapIndexAndColumns();

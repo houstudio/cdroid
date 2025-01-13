@@ -89,7 +89,7 @@ GridLayout::GridLayout(int w,int h)
 GridLayout::GridLayout(Context*ctx,const AttributeSet&attrs)
     :ViewGroup(ctx,attrs){
     initGridLayout();
-    setOrientation(attrs.getInt("orientation",std::map<const std::string,int>{
+    setOrientation(attrs.getInt("orientation",std::unordered_map<std::string,int>{
         {"horizontal",(int)HORIZONTAL},
         {"vertical",(int)VERTICAL}//
     },DEFAULT_ORIENTATION));

@@ -14,7 +14,7 @@ EditText::EditText(Context*ctx,const AttributeSet& attrs)
   :TextView(ctx,attrs){
     initEditText();
     mHint = ctx->getString(attrs.getString("hint"));
-    mInputType = attrs.getInt("inputType",std::map<const std::string,int>{
+    mInputType = attrs.getInt("inputType",std::unordered_map<std::string,int>{
 		    {"none",TYPE_NONE}    , {"any", TYPE_ANY},
 		    {"number",TYPE_NUMBER}, {"text",TYPE_TEXT},
 		    {"textPassword",TYPE_PASSWORD},{"ip",TYPE_IP},

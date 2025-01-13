@@ -9,7 +9,7 @@
 
 namespace cdroid{
 
-static std::map<const std::string,int>edgeFlagKVS={
+static std::unordered_map<std::string,int>edgeFlagKVS={
    {"left"  ,(int)Keyboard::EDGE_LEFT},
    {"right" ,(int)Keyboard::EDGE_RIGHT},
    {"top"   ,(int)Keyboard::EDGE_TOP},

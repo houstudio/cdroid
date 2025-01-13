@@ -102,7 +102,7 @@ void ClipDrawable::draw(Canvas& canvas){
 Drawable*ClipDrawable::inflate(Context*ctx,const AttributeSet&atts){
     Drawable*d = Drawable::createWrappedDrawable(ctx,atts);
     const int gravity= atts.getGravity("gravity",Gravity::LEFT);
-    const int orientation = atts.getInt("clipOrientation",std::map<const std::string,int>{
+    const int orientation = atts.getInt("clipOrientation",std::unordered_map<std::string,int>{
         {"horizontal",(int)HORIZONTAL},{"vertical",(int)VERTICAL}
     },HORIZONTAL);
     d = new ClipDrawable(d,gravity,orientation);

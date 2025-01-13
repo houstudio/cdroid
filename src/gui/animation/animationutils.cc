@@ -6,7 +6,7 @@
 
 namespace cdroid{
 
-std::map<const std::string,std::shared_ptr<Interpolator>>AnimationUtils::mInterpolators;
+std::unordered_map<std::string,std::shared_ptr<Interpolator>>AnimationUtils::mInterpolators;
 
 int64_t AnimationUtils::currentAnimationTimeMillis(){
     return SystemClock::uptimeMillis();

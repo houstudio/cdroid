@@ -48,7 +48,7 @@ Spinner::Spinner(Context*ctx,const AttributeSet&atts)
     mForwardingListener = nullptr;
     mGravity = atts.getGravity("gravity",Gravity::CENTER);
     mDisableChildrenWhenDisabled = atts.getBoolean("disableChildrenWhenDisabled",false);
-    const int mode = atts.getInt("spinnerMode",std::map<const std::string,int>{
+    const int mode = atts.getInt("spinnerMode",std::unordered_map<std::string,int>{
         {"dialog",(int)MODE_DIALOG},{"dropdown",(int)MODE_DROPDOWN}
     },MODE_DIALOG);
 

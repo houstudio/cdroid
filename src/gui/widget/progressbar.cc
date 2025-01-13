@@ -80,7 +80,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
     mMaxWidth = attrs.getDimensionPixelSize("maxWidth", mMaxWidth);
     mMinHeight= attrs.getDimensionPixelSize("minHeight", mMinHeight);
     mMaxHeight= attrs.getDimensionPixelSize("maxHeight", mMaxHeight);
-    mBehavior = attrs.getInt("inteterminateBehavior",std::map<const std::string,int>{
+    mBehavior = attrs.getInt("inteterminateBehavior",std::unordered_map<std::string,int>{
        {"none",0},{"repeat",(int)Animation::RESTART},{"cycle",(int)Animation::INFINITE} },mBehavior);
 
     mOnlyIndeterminate=attrs.getBoolean("indeterminateOnly",mOnlyIndeterminate);

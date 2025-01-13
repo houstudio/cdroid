@@ -20,7 +20,7 @@ static const nsecs_t ASSUME_POINTER_STOPPED_TIME = 40*NANOS_PER_MS;
 // velocity after the pointer starts moving again.
 // Axes specifying location on a 2D plane (i.e. X and Y).
 
-static const std::map<int32_t/*axis*/, int/*Strategy*/> DEFAULT_STRATEGY_BY_AXIS = {
+static const std::unordered_map<int32_t/*axis*/, int/*Strategy*/> DEFAULT_STRATEGY_BY_AXIS = {
     {MotionEvent::AXIS_X, (int)VelocityTracker::VELOCITY_TRACKER_STRATEGY_LSQ2},
     {MotionEvent::AXIS_Y, (int)VelocityTracker::VELOCITY_TRACKER_STRATEGY_LSQ2},
     {MotionEvent::AXIS_SCROLL, (int)VelocityTracker::VELOCITY_TRACKER_STRATEGY_IMPULSE}
@@ -95,7 +95,7 @@ private:
     const int mOverrideStrategy;
     int32_t mActivePointerId;
     static Pools::SimplePool<VelocityTracker>sPool;
-    std::map<int32_t /*axis*/, std::unique_ptr<VelocityTrackerStrategy>> mConfiguredStrategies;
+    std::unordered_map<int32_t /*axis*/, std::unique_ptr<VelocityTrackerStrategy>> mConfiguredStrategies;
 private:
     void configureStrategy(int32_t axis);
     static std::unique_ptr<VelocityTrackerStrategy> createStrategy(int strategy,bool deltaValues);
@@ -385,7 +385,7 @@ float VelocityTracker::VelocityTrackerState::getVelocity(int32_t axis, int32_t i
 //////////////////////////////////////////////////////////////////////////////////////////
 Pools::SimplePool<VelocityTracker>VelocityTracker::sPool(4);
 
-std::map<const std::string,int>VelocityTracker::STRATEGIES = {
+std::unordered_map<std::string,int>VelocityTracker::STRATEGIES = {
      // Strategy string and IDs mapping lookup.
      {"impulse", (int)VELOCITY_TRACKER_STRATEGY_IMPULSE},
      {"lsq1", (int)VELOCITY_TRACKER_STRATEGY_LSQ1},

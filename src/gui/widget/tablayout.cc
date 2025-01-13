@@ -57,7 +57,7 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
 
     mTabBackgroundResId= atts.getString("tabBackground");
     mContentInsetStart  = atts.getDimensionPixelSize("tabContentStart", 0);
-    mMode = atts.getInt("tabMode",std::map<const std::string,int>{{"scrollable",0},{"fixed",1}},mMode);
+    mMode = atts.getInt("tabMode",std::unordered_map<std::string,int>{{"scrollable",0},{"fixed",1}},mMode);
     mSmoothScroll = atts.getBoolean("smoothScroll",true);
     mTabGravity =atts.getGravity("tabGravity",0);
     mInlineLabel=atts.getBoolean("tabInlineLabel",false);

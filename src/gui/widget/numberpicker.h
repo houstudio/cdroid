@@ -74,7 +74,7 @@ private:
     OnScrollListener mOnScrollListener;
     std::vector<int>mSelectorIndices;
     long mLongPressUpdateInterval;
-    std::map<int,std::string> mSelectorIndexToStringCache;
+    std::unordered_map<int,std::string> mSelectorIndexToStringCache;
     int mSelectorElementSize;
     int mInitialScrollOffset=INT_MIN;
     int mCurrentScrollOffset;

@@ -389,7 +389,7 @@ Drawable*Drawable::createWrappedDrawable(Context*ctx,const AttributeSet&atts) {
     return dr;
 }
 
-static std::map<const std::string,DrawableParser>drawableParsers= {
+static std::unordered_map<std::string,DrawableParser>drawableParsers= {
     {"color", ColorDrawable::inflate},
     {"shape", ShapeDrawable::inflate},
     {"bitmap", BitmapDrawable::inflate},
@@ -425,7 +425,7 @@ static void parseShapeGradient(Context*ctx,GradientDrawable*gd,ShapeDrawable*sd,
     if(atts.hasAttribute("endColor"))
         cls.push_back(atts.getColor("endColor",0));
 
-    const int gradientType = atts.getInt("type",std::map<const std::string,int> {
+    const int gradientType = atts.getInt("type",std::unordered_map<std::string,int> {
         {"linear",GradientDrawable::LINEAR_GRADIENT},
         {"radial",GradientDrawable::RADIAL_GRADIENT},
         {"sweep",GradientDrawable::SWEEP_GRADIENT},

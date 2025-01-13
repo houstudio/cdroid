@@ -1569,7 +1569,7 @@ void NumberPicker::decrementSelectorIndices(std::vector<int>&selectorIndices) {
 
 void NumberPicker::ensureCachedScrollSelectorValue(int selectorIndex) {
     std::string scrollSelectorValue;
-    std::map<int,std::string>& cache = mSelectorIndexToStringCache;
+    std::unordered_map<int,std::string>& cache = mSelectorIndexToStringCache;
     auto itr= cache.find(selectorIndex);
 
     if (cache.size()&&(itr != cache.end())) return;

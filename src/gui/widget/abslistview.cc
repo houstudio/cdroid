@@ -102,12 +102,12 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     setScrollingCacheEnabled(atts.getBoolean("scrollingCache",true));
     setSmoothScrollbarEnabled(atts.getBoolean("smoothScrollbar",true));
     setTextFilterEnabled(atts.getBoolean("textFilterEnabled",false));
-    setChoiceMode(atts.getInt("choiceMode",std::map<const std::string,int> {
+    setChoiceMode(atts.getInt("choiceMode",std::unordered_map<std::string,int> {
         {"none",(int)CHOICE_MODE_NONE},
         {"singleChoice",(int)CHOICE_MODE_SINGLE},
         {"multipleChoice",(int)CHOICE_MODE_MULTIPLE}
     },(int)CHOICE_MODE_NONE));
-    setTranscriptMode(atts.getInt("transcriptMode",std::map<const std::string,int>{
+    setTranscriptMode(atts.getInt("transcriptMode",std::unordered_map<std::string,int>{
         {"disabled",(int)TRANSCRIPT_MODE_DISABLED},
         {"normal",(int)TRANSCRIPT_MODE_NORMAL},
         {"alwaysScroll",(int)TRANSCRIPT_MODE_ALWAYS_SCROLL}},(int)TRANSCRIPT_MODE_DISABLED));

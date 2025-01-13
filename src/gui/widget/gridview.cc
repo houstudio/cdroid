@@ -17,7 +17,7 @@ GridView::GridView(Context*ctx,const AttributeSet&atts)
     initGridView();
     setHorizontalSpacing(atts.getDimensionPixelOffset("horizontalSpacing",10));
     setVerticalSpacing(atts.getDimensionPixelOffset("verticalSpacing",0));
-    int index = atts.getInt("strechMode",std::map<const std::string,int> {
+    int index = atts.getInt("strechMode",std::unordered_map<std::string,int> {
         {"none", NO_STRETCH},
         {"spacingWidth",STRETCH_SPACING},
         {"columnWidth", STRETCH_COLUMN_WIDTH},

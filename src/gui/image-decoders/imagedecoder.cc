@@ -45,7 +45,7 @@ ImageDecoder::~ImageDecoder(){
 }
 
 uint32_t ImageDecoder::mHeaderBytesRequired = 0;
-std::map<const std::string,ImageDecoder::Registry> ImageDecoder::mFactories;
+std::unordered_map<std::string,ImageDecoder::Registry> ImageDecoder::mFactories;
 
 ImageDecoder::Registry::Registry(uint32_t msize,Factory& fun,Verifier& v)
   :magicSize(msize),factory(fun),verifier(v){

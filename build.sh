@@ -15,6 +15,7 @@ TOOLCHAINS["HI3536"]=${TOPDIR}/cmake/hisiv500-toolchain.cmake
 TOOLCHAINS["INGENIC"]=${TOPDIR}/cmake/ingenic-x2600-toolchain.cmake
 TOOLCHAINS["TINAT113"]=${TOPDIR}/cmake/tinat113-toolchain.cmake
 TOOLCHAINS["RK3506"]=${TOPDIR}/cmake/rk3506-toolchain.cmake
+TOOLCHAINS["ANDROID"]=${TOPDIR}/cmake/android.toolchain.cmake
 declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg,key must be uppercase
 
 #VCPKGROOT=/opt/vcpkg
@@ -30,6 +31,7 @@ DEPLIBS["INGENIC"]=${VCPKGROOT}/installed/ingenic-linux
 DEPLIBS["TINAT113"]=${VCPKGROOT}/installed/tinat113-linux-dynamic
 DEPLIBS["RK3506"]=${VCPKGROOT}/installed/rk3506-linux-dynamic
 DEPLIBS["WIN32"]=${VCPKGROOT}/installed/x64-windows:${VCPKGROOT}/installed/x64-windows-release
+DEPLIBS["ANDROID"]=${VCPKGROOT}/installed/arm64-android
 OSNAME=""
 if [ "$(uname)" = "Linux" ]; then
     OSNAME="x64"

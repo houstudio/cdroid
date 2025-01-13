@@ -8,7 +8,7 @@ namespace cdroid{
 
 LayoutAnimationController::LayoutAnimationController(Context* context, const AttributeSet& attrs){
     mDelay = attrs.getFloat("delay");
-    mOrder = attrs.getInt("animationOrder",std::map<const std::string,int>{
+    mOrder = attrs.getInt("animationOrder",std::unordered_map<std::string,int>{
        {"normal" ,(int)ORDER_NORMAL},
        {"reverse",(int)ORDER_REVERSE},
        {"random" ,(int)ORDER_RANDOM}

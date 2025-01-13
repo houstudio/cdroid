@@ -1,8 +1,8 @@
 #ifndef __DIRECTEDACYCLICGRAPH_H__
 #define __DIRECTEEACYCLICGRAPH_H__
 #include <set>
-#include <map>
 #include <vector>
+#include <unordered_map>
 #include <core/pools.h>
 
 namespace cdroid{
@@ -13,7 +13,7 @@ private:
     std::vector<T*> mSortResult;
     std::set<T*> mSortTmpMarked;
     Pools::SimplePool<std::vector<T*>> *mListPool;// (10);
-    std::map<T*, std::vector<T*>*> mGraph;
+    std::unordered_map<T*, std::vector<T*>*> mGraph;
 private:
     void dfs(T* node, std::vector<T*>&result, std::set<T*>& tmpMarked) {
         if (std::find(result.begin(),result.end(),node)!=result.end()) {//result.contains(node)) {

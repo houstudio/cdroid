@@ -79,7 +79,7 @@ public:
         if(strcmp(name,"item")==0){
             pd->statelistAnimator->addState(back.state,back.animator);
         }else if(strcmp(name,"set")==0){
-            const int together = back.atts.getInt("ordering",std::map<const std::string,int>{
+            const int together = back.atts.getInt("ordering",std::unordered_map<std::string,int>{
                  {"together",0}, {"sequentially",1}},0);
             AnimatorSet*aset = (AnimatorSet*)back.animator;
             if(together==0) aset->playTogether(pd->mChildren);
@@ -302,7 +302,7 @@ ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const Attribute
 }
 
 ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const AttributeSet& atts, ValueAnimator*anim){
-    const int valueType = atts.getInt("valueType",std::map<const std::string,int>{
+    const int valueType = atts.getInt("valueType",std::unordered_map<std::string,int>{
             {"floatType",(int)VALUE_TYPE_FLOAT},  {"intType",(int)VALUE_TYPE_INT},
             {"colorType",(int)VALUE_TYPE_COLOR},  {"pathType",(int)VALUE_TYPE_PATH}
         },(int)VALUE_TYPE_UNDEFINED);
@@ -319,7 +319,7 @@ ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const Attrib
     anim->setDuration(atts.getInt("duration",300));
     anim->setStartDelay(atts.getInt("startOffset",0));
     anim->setRepeatCount(atts.getInt("repeatCount",0));
-    anim->setRepeatMode(atts.getInt("repeatMode",std::map<const std::string,int>{
+    anim->setRepeatMode(atts.getInt("repeatMode",std::unordered_map<std::string,int>{
         {"restart" , (int)ValueAnimator::RESTART},
         {"reverse" , (int)ValueAnimator::REVERSE},
         {"infinite", (int)ValueAnimator::INFINITE}
