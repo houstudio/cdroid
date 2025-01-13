@@ -5559,8 +5559,8 @@ void RecyclerView::LayoutManager::layoutDecoratedWithMargins(View* child, int le
     const LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
     const Rect& insets = lp->mDecorInsets;
     child->layout(left + insets.left + lp->leftMargin, top + insets.top + lp->topMargin,
-            width - insets.left - insets.width - lp->rightMargin,
-            height - insets.top - insets.height - lp->bottomMargin);
+            width - insets.left - insets.width - lp->leftMargin- lp->rightMargin,
+            height - insets.top - insets.height - lp->topMargin - lp->bottomMargin);
 }
 
 void RecyclerView::LayoutManager::getTransformedBoundingBox(View* child, bool includeDecorInsets,
