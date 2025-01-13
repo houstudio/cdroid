@@ -37,6 +37,11 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
     const bool hasColon = property.find(':')!=std::string::npos;
     const bool hasAT = property.size() && (property[0]=='@');
     if(hasColon&&(hasAT==false)) {
+        if(property.compare(0,7,"android")==0){
+            std::string value =property;
+            value[1]='c';/*android cahnge to cdroid*/
+            return value.substr(1);
+        }
         return property;
     }else {
         std::string value= property;
