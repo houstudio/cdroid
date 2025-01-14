@@ -650,7 +650,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
                 mButtonState &= ~MotionEvent::BUTTON_SECONDARY;
             break;
         case BTN_TOOL_FINGER:break;
-        default:if((code<BTN_MOUSE)||(code<=BTN_GEAR_UP)){
+        default:if((code<BTN_MOUSE)||(code>BTN_GEAR_UP)){
             KeyEvent*keyEvent = KeyEvent::obtain(mDownTime,(1000LL*sec+usec/1000),
                     (value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/, code/*KeyCode*/,0/*repeat*/,
                     0/*metaState*/,getId()/*deviceId*/,code/*scancode*/,0/*flags*/,getSources(),0/*displayid*/);
