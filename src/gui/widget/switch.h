@@ -80,6 +80,7 @@ private:
     Layout* mOffLayout;
     //TransformationMethod2 mSwitchTransformationMethod;
     ObjectAnimator* mPositionAnimator;
+    class THUMB_POS;
 private:
     void init();
     void setSwitchTypefaceByIndex(int typefaceIndex, int styleIndex);

@@ -76,6 +76,18 @@ Switch::Switch(Context* context,const AttributeSet& a)
     setChecked(isChecked());
 }
 
+class Switch::THUMB_POS:public Property{
+public:
+    THUMB_POS():Property("thumbPos"){}
+    void set(void*object,const AnimateValue&value)override {
+        float fv = GET_VARIANT(value,float);
+        ((Switch*)object)->setThumbPosition(fv);
+    }
+    AnimateValue get(void*object) override{
+        return ((Switch*)object)->mThumbPosition;
+    }
+};
+
 void Switch::init(){
     mTouchMode =TOUCH_MODE_IDLE;
     mTextColors    = nullptr;
@@ -89,6 +101,9 @@ void Switch::init(){
     mSwitchLeft= mSwitchRight  =0;
     mSwitchTop = mSwitchBottom =0;
     mVelocityTracker  = VelocityTracker::obtain();
+    if(Property::fromName("thumbPos")==nullptr){
+        Property::reigsterProperty("thumbPos",new THUMB_POS());
+    }
 }
 
 Switch::~Switch(){
@@ -594,13 +609,10 @@ void Switch::stopDrag(MotionEvent& ev){
 
 void Switch::animateThumbToCheckedState(bool newCheckedState){
     const float targetPosition = newCheckedState ? 1 : 0;
-    mPositionAnimator = ObjectAnimator::ofFloat(this,"thumbpos",{mThumbPosition,targetPosition});
+    mPositionAnimator = ObjectAnimator::ofFloat(this,"thumbPos",{targetPosition});
     mPositionAnimator->setDuration(THUMB_ANIMATION_DURATION);
     mPositionAnimator->setAutoCancel(true);
     mPositionAnimator->start();
-    mPositionAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
-         setThumbPosition(GET_VARIANT(anim.getAnimatedValue(),float));
-    }));
 }
 
 void Switch::cancelPositionAnimator(){
