@@ -686,7 +686,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         slot = mTrack2Slot.indexOfKey(mProp.id);
 #else
         slot = mProp.id;
-        if( (mProp.id==-1) && ((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) )
+        if( (mProp.id==-1) )// && ((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) )
             mProp.id = 0;
 #endif
         slot = slot>=0?slot:0;
@@ -697,6 +697,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         mMoveTime = (sec * 1000LL + usec/1000);
         lastEvent = (mEvents.size() > 1) ? (MotionEvent*)mEvents.back() : nullptr;
         pointerCount = (mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) ? std::max(mLastBits.count(),mCurrBits.count()) : 1;
+        if(pointerCount==0)break;/*pointerCount==0 is KeyEvent!*/
         if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (action == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
             auto lastTime = lastEvent->getDownTime();
             lastEvent->addSample(mMoveTime,mPointerCoords.data());
