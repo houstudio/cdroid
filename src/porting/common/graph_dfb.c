@@ -82,7 +82,7 @@ int32_t GFXUnlockSurface(GFXHANDLE surface) {
     return ret;
 }
 
-int32_t GFXSurfaceSetOpacity(GFXHANDLE surface,int8_t alpha) {
+int32_t GFXSurfaceSetOpacity(GFXHANDLE surface,uint8_t alpha) {
     LOGV("setopacity=%d",alpha);
     IDirectFBSurface*surf=(IDirectFBSurface*)surface;
     IDirectFBDisplayLayer *dispLayer;
