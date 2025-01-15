@@ -674,6 +674,7 @@ public:
     void startSmoothScroll(SmoothScroller* smoothScroller);
     bool isSmoothScrolling() const;
     int getLayoutDirection() const;
+    virtual bool isLayoutReversed()const;
     void endAnimation(View* view);
     void addDisappearingView(View* child);
     void addDisappearingView(View* child, int index);

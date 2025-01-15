@@ -124,6 +124,7 @@ public:
     void onRestoreInstanceState(Parcelable& state)override;
     bool canScrollHorizontally()const override;
     bool canScrollVertically()const override;
+    bool isLayoutReversed()const override;
     virtual void setStackFromEnd(bool stackFromEnd);
     bool getStackFromEnd()const;
     int getOrientation()const;

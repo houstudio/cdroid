@@ -5050,6 +5050,10 @@ int RecyclerView::LayoutManager::getLayoutDirection() const{
     return mRecyclerView->getLayoutDirection();
 }
 
+bool RecyclerView::LayoutManager::isLayoutReversed() const{
+    return false;
+}
+
 void RecyclerView::LayoutManager::endAnimation(View* view) {
     if (mRecyclerView->mItemAnimator != nullptr) {
         mRecyclerView->mItemAnimator->endAnimation(*getChildViewHolderInt(view));

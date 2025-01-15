@@ -15,7 +15,7 @@ public:
     static constexpr int GAP_HANDLING_NONE = 0;
     static constexpr int GAP_HANDLING_LAZY = 1;
     static constexpr int GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS = 2;
-    static constexpr int INVALID_OFFSET = INT_MIN;//Integer.MIN_VALUE;
+    static constexpr int INVALID_OFFSET = INT_MIN;
     class SavedState;
     class AnchorInfo;
     class FullSpanItem;
@@ -27,28 +27,28 @@ private:
     int mSpanCount = -1;
     int mOrientation;
     int mSizePerSpan;
+    int mFullSizeSpec;
+    int mGapStrategy = GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS;
     class LayoutState* mLayoutState;
     BitSet* mRemainingSpans;
-    int mGapStrategy = GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS;
     bool mLastLayoutFromEnd;
     bool mLastLayoutRTL;
-    SavedState* mPendingSavedState;
-    int mFullSizeSpec;
-    Rect mTmpRect;
-    AnchorInfo* mAnchorInfo;// = new AnchorInfo();
     bool mLaidOutInvalidFullSpan = false;
     bool mSmoothScrollbarEnabled = true;
+    SavedState* mPendingSavedState;
+    Rect mTmpRect;
+    AnchorInfo* mAnchorInfo;;
     std::vector<int> mPrefetchDistances;
     Runnable mCheckForGapsRunnable;
 protected:
-    std::vector<Span*>mSpans;//Span[] mSpans;
+    std::vector<Span*>mSpans;
     OrientationHelper* mPrimaryOrientation;
     OrientationHelper* mSecondaryOrientation;
     bool mReverseLayout = false;
     bool mShouldReverseLayout = false;
     int mPendingScrollPosition = RecyclerView::NO_POSITION;
     int mPendingScrollPositionOffset = INVALID_OFFSET;
-    LazySpanLookup* mLazySpanLookup;// = new LazySpanLookup();
+    LazySpanLookup* mLazySpanLookup;
 private:
     void initLayoutManager();
     void resolveShouldLayoutReverse();

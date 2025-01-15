@@ -168,6 +168,10 @@ bool LinearLayoutManager::canScrollVertically()const{
     return mOrientation == VERTICAL;
 }
 
+bool LinearLayoutManager::isLayoutReversed() const{
+    return mReverseLayout;
+}
+
 void LinearLayoutManager::setStackFromEnd(bool stackFromEnd) {
     assertNotInLayoutOrScroll("");
     if (mStackFromEnd == stackFromEnd) {
