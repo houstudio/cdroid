@@ -1,7 +1,7 @@
 #ifndef __ACCESSIBILITY_NODE_PROVIDER_H__
 #define __ACCESSIBILITY_NODE_PROVIDER_H__
+#include <core/parcel.h>
 namespace cdroid{
-using Bundle=void*;
 class AccessibilityNodeInfo;
 class AccessibilityNodeProvider {
 public:

@@ -6,14 +6,19 @@ namespace cdroid{
 class GridLayoutManager:public LinearLayoutManager {
 private:
     static constexpr bool _Debug = false;
+    static constexpr int INVALID_POSITION = -1;
 public:
     static constexpr int DEFAULT_SPAN_COUNT = -1;
     class SpanSizeLookup;
     class DefaultSpanSizeLookup;
     class LayoutParams;
+private:
+    int  mPositionTargetedByScrollInDirection = INVALID_POSITION;
 protected:
     bool mPendingSpanCountChange = false;
     int mSpanCount = DEFAULT_SPAN_COUNT;
+    int mRowWithAccessibilityFocus = INVALID_POSITION;
+    int mColumnWithAccessibilityFocus = INVALID_POSITION;
     std::vector<int>mCachedBorders;/*int []*/
     std::vector<View*>mSet;//[] mSet;
     SparseIntArray mPreLayoutSpanSizeCache;
@@ -22,6 +27,17 @@ protected:
     // re-used variable to acquire decor insets from RecyclerView
     Rect mDecorInsets;
 private:
+    int findScrollTargetPositionOnTheRight(int startingRow, int startingColumn, int startingAdapterPosition);
+    int findScrollTargetPositionOnTheLeft(int startingRow, int startingColumn, int startingAdapterPosition);
+    int findScrollTargetPositionAbove(int startingRow, int startingColumn, int startingAdapterPosition);
+    int findScrollTargetPositionBelow(int startingRow, int startingColumn, int startingAdapterPosition);
+    int getRowIndex(int position);
+    int getColumnIndex(int position);
+    std::set<int> getRowIndices(int position);
+    std::set<int> getColumnIndices(int position);
+    std::set<int> getRowOrColumnIndices(int rowOrColumnIndex, int position);
+    View* findChildWithAccessibilityFocus();
+    bool hasAccessibilityFocusChanged(int adapterPosition);
     void clearPreLayoutSpanMappingCache();
     void cachePreLayoutSpanMapping();
     void calculateItemBorders(int totalSpace);
@@ -40,6 +56,8 @@ private:
             int consumedSpanCount, bool layingOutInPrimaryDirection);
 
 protected:
+    int findPositionOfLastItemOnARowAboveForHorizontalGrid(int startingRow);
+    int findPositionOfFirstItemOnARowBelowForHorizontalGrid(int startingRow);
     static int* calculateItemBorders(std::vector<int>&cachedBorders, int spanCount, int totalSpace);
     int getSpaceForSpanRange(int startSpan, int spanSize); 
 
@@ -59,8 +77,9 @@ public:
     void setStackFromEnd(bool stackFromEnd)override;
     int getRowCountForAccessibility(RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     int getColumnCountForAccessibility(RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
-    //void onInitializeAccessibilityNodeInfoForItem(RecyclerView::Recycler& recycler,
-    //        RecyclerView::State& state, View* host, AccessibilityNodeInfo& info)override;
+    void onInitializeAccessibilityNodeInfoForItem(RecyclerView::Recycler& recycler,
+            RecyclerView::State& state, View* host, AccessibilityNodeInfo& info)override;
+    bool performAccessibilityAction(int action,Bundle args)override;
     void onLayoutChildren(RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     void onLayoutCompleted(RecyclerView::State& state)override;
 

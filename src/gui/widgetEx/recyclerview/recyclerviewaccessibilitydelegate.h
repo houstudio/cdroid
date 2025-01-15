@@ -12,9 +12,9 @@ public:
 
     bool performAccessibilityAction(View& host, int action, Bundle args) override;
 
-    void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info)override;
+    void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info) override;
 
-    void onInitializeAccessibilityEvent(View& host, AccessibilityEvent& event)override;
+    void onInitializeAccessibilityEvent(View& host, AccessibilityEvent& event) override;
 
     /**
      * Gets the AccessibilityDelegate for an individual item in the RecyclerView.
@@ -62,14 +62,14 @@ public:
      */
     AccessibilityDelegate* getAndRemoveOriginalDelegateForItem(View* itemView);
 
-    void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info)override;
-    bool performAccessibilityAction(View& host, int action, Bundle args)override;
-    void sendAccessibilityEvent(View& host, int eventType)override;
-    void sendAccessibilityEventUnchecked(View& host,AccessibilityEvent& event)override;
-    bool dispatchPopulateAccessibilityEvent(View& host,AccessibilityEvent& event)override;
-    void onPopulateAccessibilityEvent(View& host, AccessibilityEvent& event)override;
-    void onInitializeAccessibilityEvent(View& host, AccessibilityEvent& event)override;
-    bool onRequestSendAccessibilityEvent(ViewGroup& host,View& child, AccessibilityEvent& event)override;
+    void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info) override;
+    bool performAccessibilityAction(View& host, int action, Bundle args) override;
+    void sendAccessibilityEvent(View& host, int eventType) override;
+    void sendAccessibilityEventUnchecked(View& host,AccessibilityEvent& event) override;
+    bool dispatchPopulateAccessibilityEvent(View& host,AccessibilityEvent& event) override;
+    void onPopulateAccessibilityEvent(View& host, AccessibilityEvent& event) override;
+    void onInitializeAccessibilityEvent(View& host, AccessibilityEvent& event) override;
+    bool onRequestSendAccessibilityEvent(ViewGroup& host,View& child, AccessibilityEvent& event) override;
     AccessibilityNodeProvider* getAccessibilityNodeProvider(View& host);
 };
 };/*endof namespace*/

@@ -1,5 +1,7 @@
 #include <widgetEx/recyclerview/gridlayoutmanager.h>
 #include <widgetEx/recyclerview/orientationhelper.h>
+#include <core/build.h>
+#include <widget/R.h>
 
 namespace cdroid{
 
@@ -57,29 +59,435 @@ int GridLayoutManager::getColumnCountForAccessibility(RecyclerView::Recycler& re
     // Column count is one more than the last item's column index.
     return getSpanGroupIndex(recycler, state, state.getItemCount() - 1) + 1;
 }
-#if 0
+
 void GridLayoutManager::onInitializeAccessibilityNodeInfoForItem(RecyclerView::Recycler& recycler,
-        RecyclerView::State& state, View* host, AccessibilityNodeInfoCompat info) {
-    ViewGroup.LayoutParams lp = host.getLayoutParams();
-    if (!(lp instanceof LayoutParams)) {
-        super.onInitializeAccessibilityNodeInfoForItem(host, info);
+        RecyclerView::State& state, View* host, AccessibilityNodeInfo& info) {
+    ViewGroup::LayoutParams* lp = host->getLayoutParams();
+    if (dynamic_cast<LayoutParams*>(lp)==nullptr) {
+        LinearLayoutManager::onInitializeAccessibilityNodeInfoForItem(host, info);
         return;
     }
-    LayoutParams glp = (LayoutParams) lp;
-    int spanGroupIndex = getSpanGroupIndex(recycler, state, glp.getViewLayoutPosition());
+    LayoutParams* glp = (LayoutParams*) lp;
+    int spanGroupIndex = getSpanGroupIndex(recycler, state, glp->getViewLayoutPosition());
     if (mOrientation == HORIZONTAL) {
-        info.setCollectionItemInfo(AccessibilityNodeInfoCompat.CollectionItemInfoCompat.obtain(
-                glp.getSpanIndex(), glp.getSpanSize(),
-                spanGroupIndex, 1,
-                mSpanCount > 1 && glp.getSpanSize() == mSpanCount, false));
+        info.setCollectionItemInfo(AccessibilityNodeInfo::CollectionItemInfo::obtain(
+                glp->getSpanIndex(), glp->getSpanSize(), spanGroupIndex, 1,
+                mSpanCount > 1 && glp->getSpanSize() == mSpanCount, false));
     } else { // VERTICAL
-        info.setCollectionItemInfo(AccessibilityNodeInfoCompat.CollectionItemInfoCompat.obtain(
-                spanGroupIndex , 1,
-                glp.getSpanIndex(), glp.getSpanSize(),
-                mSpanCount > 1 && glp.getSpanSize() == mSpanCount, false));
+        info.setCollectionItemInfo(AccessibilityNodeInfo::CollectionItemInfo::obtain(
+                spanGroupIndex , 1, glp->getSpanIndex(), glp->getSpanSize(),
+                mSpanCount > 1 && glp->getSpanSize() == mSpanCount, false));
     }
 }
-#endif
+
+static std::set<int>sSupportedDirectionsForActionScrollInDirection={
+    View::FOCUS_LEFT,View::FOCUS_RIGHT,View::FOCUS_UP,View::FOCUS_DOWN
+};
+
+bool GridLayoutManager::performAccessibilityAction(int action,Bundle args){
+    // TODO (267511848): when U constants are finalized:
+    //  - convert if/else blocks to switch statement
+    //  - remove SDK check
+    //  - remove the -1 check (this check makes accessibilityActionScrollInDirection
+    //  no-op for < 34; see action definition in AccessibilityNodeInfoCompat.java).
+    if (action == -1//AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_IN_DIRECTION.getId()
+            && action != -1) {
+        View* viewWithAccessibilityFocus = findChildWithAccessibilityFocus();
+        if (viewWithAccessibilityFocus == nullptr) {
+            // TODO(b/268487724#comment2): handle rare cases when the requesting service does
+            //  not place accessibility focus on a child. Consider scrolling forward/backward?
+            return false;
+        }
+
+        // Direction must be specified.
+        if (args == nullptr) {
+            return false;
+        }
+
+        const int direction = -1;//args.getInt( AccessibilityNodeInfo::ACTION_ARGUMENT_DIRECTION_INT, INVALID_POSITION);
+
+        if (!sSupportedDirectionsForActionScrollInDirection.count/*contains*/(direction)) {
+            if (_Debug) {
+                LOGW("Direction equals which is unsupported when using ACTION_SCROLL_IN_DIRECTION",direction);
+            }
+            return false;
+        }
+
+        RecyclerView::ViewHolder* vh =  mRecyclerView->getChildViewHolder(viewWithAccessibilityFocus);
+        if (vh == nullptr) {
+            /*if (_Debug) {
+                throw new RuntimeException(
+                        "viewHolder is null for " + viewWithAccessibilityFocus);
+            }*/
+            return false;
+        }
+
+        int startingAdapterPosition = vh->getAbsoluteAdapterPosition();
+        int startingRow = getRowIndex(startingAdapterPosition);
+        int startingColumn = getColumnIndex(startingAdapterPosition);
+
+        if (startingRow < 0 || startingColumn < 0) {
+            /*if (_Debug) {
+                throw new RuntimeException("startingRow equals " + startingRow + ", and "
+                        + "startingColumn equals " + startingColumn + ", and neither can be "
+                        + "less than 0.");
+            }*/
+            return false;
+        }
+
+        if (hasAccessibilityFocusChanged(startingAdapterPosition)) {
+            mRowWithAccessibilityFocus = startingRow;
+            mColumnWithAccessibilityFocus = startingColumn;
+        }
+
+        int scrollTargetPosition;
+
+        int row = (mRowWithAccessibilityFocus == INVALID_POSITION) ? startingRow : mRowWithAccessibilityFocus;
+        int column = (mColumnWithAccessibilityFocus == INVALID_POSITION) ? startingColumn : mColumnWithAccessibilityFocus;
+
+        switch (direction) {
+        case View::FOCUS_LEFT:
+            scrollTargetPosition = findScrollTargetPositionOnTheLeft(row, column, startingAdapterPosition);
+            break;
+        case View::FOCUS_RIGHT:
+            scrollTargetPosition = findScrollTargetPositionOnTheRight(row, column, startingAdapterPosition);
+            break;
+        case View::FOCUS_UP:
+            scrollTargetPosition = findScrollTargetPositionAbove(row, column, startingAdapterPosition);
+            break;
+        case View::FOCUS_DOWN:
+            scrollTargetPosition = findScrollTargetPositionBelow(row, column, startingAdapterPosition);
+            break;
+        default:
+            return false;
+        }
+
+        if (scrollTargetPosition == INVALID_POSITION  && mOrientation == RecyclerView::HORIZONTAL) {
+            // TODO (b/268487724): handle RTL.
+            // Handle case in grids with horizontal orientation where the scroll target is on
+            // a different row.
+            if (direction == View::FOCUS_LEFT) {
+                scrollTargetPosition = findPositionOfLastItemOnARowAboveForHorizontalGrid(
+                        startingRow);
+            } else if (direction == View::FOCUS_RIGHT) {
+                scrollTargetPosition = findPositionOfFirstItemOnARowBelowForHorizontalGrid(
+                        startingRow);
+            }
+        }
+
+        if (scrollTargetPosition != INVALID_POSITION) {
+            scrollToPosition(scrollTargetPosition);
+            mPositionTargetedByScrollInDirection = scrollTargetPosition;
+            return true;
+        }
+
+        return false;
+    } else if (action == R::id::accessibilityActionScrollToPosition) {
+        int noRow = -1;
+        int noColumn = -1;
+        if (args != nullptr) {
+            int rowArg = -1;//args.getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_ROW_INT, noRow);
+            int columnArg = -1;//args.getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_COLUMN_INT, noColumn);
+
+            if (rowArg == noRow || columnArg == noColumn) {
+                return false;
+            }
+
+            int itemCount = mRecyclerView->mAdapter->getItemCount();
+
+            int position = -1;
+            for (int i = 0; i < itemCount; i++) {
+                // Corresponds to a column value if the orientation is VERTICAL and a row value
+                // if the orientation is HORIZONTAL
+                int spanIndex = getSpanIndex(*mRecyclerView->mRecycler, *mRecyclerView->mState, i);
+
+                // Corresponds to a row value if the orientation is VERTICAL and a column value
+                // if the orientation is HORIZONTAL
+                int spanGroupIndex = getSpanGroupIndex(*mRecyclerView->mRecycler, *mRecyclerView->mState, i);
+
+                if (mOrientation == VERTICAL) {
+                    if (spanIndex == columnArg && spanGroupIndex == rowArg) {
+                        position = i;
+                        break;
+                    }
+                } else { // horizontal
+                    if (spanIndex == rowArg && spanGroupIndex == columnArg) {
+                        position = i;
+                        break;
+                    }
+                }
+            }
+
+            if (position > -1) {
+                scrollToPositionWithOffset(position, 0);
+                return true;
+            }
+            return false;
+        }
+    }
+    return LinearLayoutManager::performAccessibilityAction(action,args);
+}
+
+int GridLayoutManager::findScrollTargetPositionOnTheRight(int startingRow, int startingColumn, int startingAdapterPosition){
+    int scrollTargetPosition = INVALID_POSITION;
+    for (int i = startingAdapterPosition + 1; i < getItemCount(); i++) {
+        int currentRow = getRowIndex(i);
+        int currentColumn = getColumnIndex(i);
+
+        if (currentRow < 0 || currentColumn < 0) {
+            /*if (_Debug) {
+                throw new RuntimeException("currentRow equals " + currentRow + ", and "
+                        + "currentColumn equals " + currentColumn + ", and neither can be "
+                        + "less than 0.");
+            }*/
+            return INVALID_POSITION;
+        }
+
+        if (mOrientation == VERTICAL) {
+            /*
+             * For grids with vertical orientation...
+             * 1   2   3
+             * 4   5   5
+             * 6   7
+             * ... the scroll target may lie on the same or a following row.
+             */
+            // TODO (b/268487724): handle RTL.
+            if ((currentRow == startingRow && currentColumn > startingColumn)
+                    || (currentRow > startingRow)) {
+                mRowWithAccessibilityFocus = currentRow;
+                mColumnWithAccessibilityFocus = currentColumn;
+                return i;
+            }
+        } else { // HORIZONTAL
+            /*
+             * For grids with horizontal orientation, the scroll target may span multiple
+             * rows. For example, in this grid...
+             * 1   4   6
+             * 2   5   7
+             * 3   5   8
+             * ... moving from 3 to 5 is considered staying on the "same row" because 5 spans
+             *  multiple rows and the row indices for 5 include 3's row.
+             */
+            if (currentColumn > startingColumn && getRowIndices(i).count/*contains*/(startingRow)) {
+                // Note: mRowWithAccessibilityFocus not updated since the scroll target is on
+                // the same row.
+                mColumnWithAccessibilityFocus = currentColumn;
+                return i;
+            }
+        }
+    }
+
+    return scrollTargetPosition;
+}
+
+int GridLayoutManager::findScrollTargetPositionOnTheLeft(int startingRow, int startingColumn, int startingAdapterPosition){
+    int scrollTargetPosition = INVALID_POSITION;
+    for (int i = startingAdapterPosition - 1; i >= 0; i--) {
+        int currentRow = getRowIndex(i);
+        int currentColumn = getColumnIndex(i);
+
+        if (currentRow < 0 || currentColumn < 0) {
+            /*if (_Debug) {
+                throw new RuntimeException("currentRow equals " + currentRow + ", and "
+                        + "currentColumn equals " + currentColumn + ", and neither can be "
+                        + "less than 0.");
+            }*/
+            return INVALID_POSITION;
+        }
+
+        if (mOrientation == VERTICAL) {
+            /*
+             * For grids with vertical orientation...
+             * 1   2   3
+             * 4   5   5
+             * 6   7
+             * ... the scroll target may lie on the same or a preceding row.
+             */
+            // TODO (b/268487724): handle RTL.
+            if ((currentRow == startingRow && currentColumn < startingColumn)
+                    || (currentRow < startingRow)) {
+                scrollTargetPosition = i;
+                mRowWithAccessibilityFocus = currentRow;
+                mColumnWithAccessibilityFocus = currentColumn;
+                break;
+            }
+        } else { // HORIZONTAL
+            /*
+             * For grids with horizontal orientation, the scroll target may span multiple
+             * rows. For example, in this grid...
+             * 1   4   6
+             * 2   5   7
+             * 3   5   8
+             * ... moving from 8 to 5 or from 7 to 5 is considered staying on the "same row"
+             * because the row indices for 5 include 8's and 7's row.
+             */
+            if (getRowIndices(i).count/*contains*/(startingRow) && currentColumn < startingColumn) {
+                // Note: mRowWithAccessibilityFocus not updated since the scroll target is on
+                // the same row.
+                mColumnWithAccessibilityFocus = currentColumn;
+                return i;
+            }
+        }
+    }
+    return scrollTargetPosition;
+}
+
+int GridLayoutManager::findScrollTargetPositionAbove(int startingRow, int startingColumn, int startingAdapterPosition){
+    int scrollTargetPosition = INVALID_POSITION;
+    for (int i = startingAdapterPosition - 1; i >= 0; i--) {
+        int currentRow = getRowIndex(i);
+        int currentColumn = getColumnIndex(i);
+
+        if (currentRow < 0 || currentColumn < 0) {
+            /*if (_Debug) {
+                throw new RuntimeException("currentRow equals " + currentRow + ", and "
+                        + "currentColumn equals " + currentColumn + ", and neither can be "
+                        + "less than 0.");
+            }*/
+            return INVALID_POSITION;
+        }
+
+        if (mOrientation == VERTICAL) {
+            /*
+             * The scroll target may span multiple columns. For example, in this grid...
+             * 1   2   3
+             * 4   4   5
+             * 6   7
+             * ... moving from 7 to 4 interprets as staying in second column, and moving from
+             * 6 to 4 interprets as staying in the first column.
+             */
+            if (currentRow < startingRow && getColumnIndices(i).count/*contains*/(startingColumn)) {
+                scrollTargetPosition = i;
+                mRowWithAccessibilityFocus = currentRow;
+                // Note: mColumnWithAccessibilityFocus not updated since the scroll target is on
+                // the same column.
+                break;
+            }
+        } else { // HORIZONTAL
+            /*
+             * The scroll target may span multiple rows. In this grid...
+             * 1   4
+             * 2   5
+             * 2
+             * 3
+             * ... 2 spans two rows and moving up from 3 to 2 interprets moving to the third
+             * row.
+             */
+            if (currentRow < startingRow && currentColumn == startingColumn) {
+                std::set<int> rowIndices = getRowIndices(i);
+                scrollTargetPosition = i;
+                mRowWithAccessibilityFocus = *rowIndices.rbegin();//Collections.max(rowIndices);
+                // Note: mColumnWithAccessibilityFocus not updated since the scroll target is on
+                // the same column.
+                break;
+            }
+        }
+    }
+    return scrollTargetPosition;
+}
+
+int GridLayoutManager::findScrollTargetPositionBelow(int startingRow, int startingColumn, int startingAdapterPosition){
+    int scrollTargetPosition = INVALID_POSITION;
+    for (int i = startingAdapterPosition + 1; i < getItemCount(); i++) {
+        int currentRow = getRowIndex(i);
+        int currentColumn = getColumnIndex(i);
+
+        if (currentRow < 0 || currentColumn < 0) {
+            /*if (_Debug) {
+                throw new RuntimeException("currentRow equals " + currentRow + ", and "
+                        + "currentColumn equals " + currentColumn + ", and neither can be "
+                        + "less than 0.");
+            }*/
+            return INVALID_POSITION;
+        }
+
+        if (mOrientation == VERTICAL) {
+            /*
+             * The scroll target may span multiple columns. For example, in this grid...
+             * 1   2   3
+             * 4   4   5
+             * 6   7
+             * ... moving from 2 to 4 interprets as staying in second column, and moving from
+             * 1 to 4 interprets as staying in the first column.
+             */
+            if ((currentRow > startingRow) && (currentColumn == startingColumn
+                    || getColumnIndices(i).count/*contains*/(startingColumn))) {
+                scrollTargetPosition = i;
+                mRowWithAccessibilityFocus = currentRow;
+                break;
+            }
+        } else { // HORIZONTAL
+            /*
+             * The scroll target may span multiple rows. In this grid...
+             * 1   4
+             * 2   5
+             * 2
+             * 3
+             * ... 2 spans two rows and moving down from 1 to 2 interprets moving to the second
+             * row.
+             */
+            if (currentRow > startingRow && currentColumn == startingColumn) {
+                scrollTargetPosition = i;
+                mRowWithAccessibilityFocus = getRowIndex(i);
+                break;
+            }
+        }
+    }
+    return scrollTargetPosition;
+}
+
+int GridLayoutManager::getRowIndex(int position){
+    return mOrientation == VERTICAL ? getSpanGroupIndex(*mRecyclerView->mRecycler, *mRecyclerView->mState, position)
+              : getSpanIndex(*mRecyclerView->mRecycler, *mRecyclerView->mState, position);
+}
+
+int GridLayoutManager::getColumnIndex(int position){
+    return mOrientation == HORIZONTAL ? getSpanGroupIndex(*mRecyclerView->mRecycler, *mRecyclerView->mState, position)
+                : getSpanIndex(*mRecyclerView->mRecycler,*mRecyclerView->mState, position);
+}
+
+std::set<int> GridLayoutManager::getRowIndices(int position){
+    return getRowOrColumnIndices(getRowIndex(position), position);
+}
+
+std::set<int> GridLayoutManager::getColumnIndices(int position){
+    return getRowOrColumnIndices(getColumnIndex(position), position);
+}
+
+std::set<int> GridLayoutManager::getRowOrColumnIndices(int rowOrColumnIndex, int position){
+    std::set<int> indices;
+    int spanSize = getSpanSize(*mRecyclerView->mRecycler, *mRecyclerView->mState, position);
+    for (int i = rowOrColumnIndex;  i <  rowOrColumnIndex + spanSize; i++) {
+        indices.insert(i);
+    }
+    return indices;
+}
+
+View* GridLayoutManager::findChildWithAccessibilityFocus(){
+    View* child = nullptr;
+    // SDK check needed for View#isAccessibilityFocused()
+    if (Build::VERSION::SDK_INT >= Build::VERSION_CODES::LOLLIPOP) {
+        bool childFound = false;
+        int i;
+        for (i = 0; i < getChildCount(); i++) {
+            View*view = getChildAt(i);
+            if (view&&view->isAccessibilityFocused()) {
+                childFound = true;
+                break;
+            }
+        }
+        if (childFound) {
+            child = getChildAt(i);
+        }
+    }
+    return child;
+}
+
+bool GridLayoutManager::hasAccessibilityFocusChanged(int adapterPosition){
+    return !getRowIndices(adapterPosition).count/*contains*/(mRowWithAccessibilityFocus)
+           || !getColumnIndices(adapterPosition).count/*contains*/(mColumnWithAccessibilityFocus);
+}
+
 void GridLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, RecyclerView::State& state) {
     if (state.isPreLayout()) {
         cachePreLayoutSpanMapping();
@@ -193,6 +601,131 @@ void GridLayoutManager::setMeasuredDimension(Rect& childrenBounds, int wSpec, in
                 getMinimumHeight());
     }
     LinearLayoutManager::setMeasuredDimension(width, height);
+}
+
+int GridLayoutManager::findPositionOfLastItemOnARowAboveForHorizontalGrid(int startingRow){
+    if (startingRow < 0) {
+        /*if (_Debug) {
+            throw new RuntimeException(
+                    "startingRow equals " + startingRow + ". It cannot be less than zero");
+        }*/
+        return INVALID_POSITION;
+    }
+
+    if (mOrientation == VERTICAL) {
+        // This only handles cases of grids with horizontal orientation.
+        /*if (_Debug) {
+            Log.w(TAG, "You should not "
+                    + "use findPositionOfLastItemOnARowAboveForHorizontalGrid(...) with grids "
+                    + "with VERTICAL orientation");
+        }*/
+        return INVALID_POSITION;
+    }
+
+    // Map where the keys are row numbers and values are the adapter positions of the last
+    // item in each row. This map is used to locate a scroll target on a previous row in grids
+    // with horizontal orientation. In this example...
+    // 1   4   7
+    // 2   5   8
+    // 3   6
+    // ... the generated map - {2 -> 5, 1 -> 7, 0 -> 6} - can be used to scroll from,
+    // say, "2" (adapter position 1) in the second row to "7" (adapter position 6) in the
+    // preceding row.
+    //
+    // Sometimes cells span multiple rows. In this example:
+    // 1   4   7
+    // 2   5   7
+    // 3   6   8
+    // ... the generated map - {0 -> 6, 1 -> 6, 2 -> 7} - can be used to scroll left from,
+    // say, "3" (adapter position 2) in the third row to "7" (adapter position 6) on the
+    // second row, and then to "5" (adapter position 4).
+    std::map<int,int> rowToLastItemPositionMap;
+    for (int position = 0; position < getItemCount(); position++) {
+        std::set<int> rows = getRowIndices(position);
+        for (int row: rows) {
+            if (row < 0) {
+                /*if (DEBUG) {
+                    throw new RuntimeException(
+                            "row equals " + row + ". It cannot be less than zero");
+                }*/
+                return INVALID_POSITION;
+            }
+            rowToLastItemPositionMap.insert({row, position});
+        }
+    }
+
+    for (auto it : rowToLastItemPositionMap/*.keySet()*/) {
+        if (it.first/*row*/ < startingRow) {
+            const int scrollTargetPosition = it.second;//rowToLastItemPositionMap.get(row);
+            mRowWithAccessibilityFocus = it.first/*row*/;
+            mColumnWithAccessibilityFocus = getColumnIndex(scrollTargetPosition);
+            return scrollTargetPosition;
+        }
+    }
+    return INVALID_POSITION;
+}
+
+int GridLayoutManager::findPositionOfFirstItemOnARowBelowForHorizontalGrid(int startingRow){
+    if (startingRow < 0) {
+        /*if (DEBUG) {
+            throw new RuntimeException(
+                    "startingRow equals " + startingRow + ". It cannot be less than zero");
+        }*/
+        return INVALID_POSITION;
+    }
+
+    if (mOrientation == VERTICAL) {
+        // This only handles cases of grids with horizontal orientation.
+        /*if (_Debug) {
+            LOGW"You should not "
+                    + "use findPositionOfFirstItemOnARowBelowForHorizontalGrid(...) with grids "
+                    + "with VERTICAL orientation");
+        }*/
+        return INVALID_POSITION;
+    }
+
+    // Map where the keys are row numbers and values are the adapter positions of the first
+    // item in each row. This map is used to locate a scroll target on a following row in grids
+    // with horizontal orientation. In this example:
+    // 1   4   7
+    // 2   5   8
+    // 3   6
+    // ... the generated map - {0 -> 0, 1 -> 1, 2 -> 2} - can be used to scroll from, say,
+    // "7" (adapter position 6) in the first row to "2" (adapter position 1) in the next row.
+    // Sometimes cells span multiple rows. In this example:
+    // 1   3   6
+    // 1   4   7
+    // 2   5   8
+    // ... the generated map - {0 -> 0, 1 -> 0, 2 -> 1} - can be used to scroll right from,
+    // say, "6" (adapter position 5) in the first row to "1" (adapter position 0) on the
+    // second row, and then to "4" (adapter position 3).
+    std::map<int,int> rowToFirstItemPositionMap;
+    for (int position = 0; position < getItemCount(); position++) {
+        std::set<int> rows = getRowIndices(position);
+        for (int row : rows) {
+            if (row < 0) {
+                /*if (DEBUG) {
+                    throw new RuntimeException(
+                            "row equals " + row + ". It cannot be less than zero");
+                }*/
+                return INVALID_POSITION;
+            }
+            // We only care about the first item on each row.
+            if (rowToFirstItemPositionMap.find(row)==rowToFirstItemPositionMap.end()){
+                rowToFirstItemPositionMap.insert({row, position});
+            }
+        }
+    }
+
+    for (auto it : rowToFirstItemPositionMap) {
+        if (it.first/*row*/ > startingRow) {
+            const int scrollTargetPosition = it.second;//rowToFirstItemPositionMap.get(row);
+            mRowWithAccessibilityFocus = it.first/*row*/;
+            mColumnWithAccessibilityFocus = 0;
+            return scrollTargetPosition;
+        }
+    }
+    return INVALID_POSITION;
 }
 
 void GridLayoutManager::calculateItemBorders(int totalSpace) {

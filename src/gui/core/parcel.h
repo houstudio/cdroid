@@ -5,7 +5,7 @@
 #include <vector>
 namespace cdroid{
 class Parcelable;
-using Bundle=void*;
+using Bundle = void*;
 class Parcel{
 private:
     static constexpr int POOL_SIZE = 6;

@@ -14,8 +14,9 @@ if(COMMAND cmake_policy)
    #make vcpkg happy:)
 endif(COMMAND cmake_policy)
 
-set(DISABLE_FORCE_DEBUG_POSTFIX ON)
+add_compile_options(-Wno-deprecated-declarations)
 
+set(DISABLE_FORCE_DEBUG_POSTFIX ON)
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
    add_definitions(-DDEBUG) 
 endif()

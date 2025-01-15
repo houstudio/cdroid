@@ -5,6 +5,7 @@
 #include <core/parcelable.h>
 namespace cdroid{
 class GridLayoutManager;
+
 class LinearLayoutManager:public RecyclerView::LayoutManager{
 private:
     static constexpr bool _Debug=false;
@@ -106,6 +107,7 @@ protected:
             int start, int end, int itemCount);
     View* findOneVisibleChild(int fromIndex, int toIndex, bool completelyVisible,bool acceptPartiallyVisible);
     View* findOnePartiallyOrCompletelyInvisibleChild(int fromIndex, int toIndex);
+    bool performAccessibilityAction(int action,Bundle args)override;
 public:
     LinearLayoutManager(Context* context);
     LinearLayoutManager(Context* context,int orientation,bool reverseLayout);
@@ -117,6 +119,7 @@ public:
     void setRecycleChildrenOnDetach(bool recycleChildrenOnDetach);
     void onDetachedFromWindow(RecyclerView& view, RecyclerView::Recycler& recycler)override;
     void onInitializeAccessibilityEvent(AccessibilityEvent& event)override;
+    void onInitializeAccessibilityNodeInfo(RecyclerView::Recycler&recycler, RecyclerView::State& state, AccessibilityNodeInfo&info)override;
     Parcelable* onSaveInstanceState()override;
     void onRestoreInstanceState(Parcelable& state)override;
     bool canScrollHorizontally()const override;

@@ -566,7 +566,7 @@ bool ViewPager2::LinearLayoutManagerImpl::performAccessibilityAction(RecyclerVie
     if (mVP->mAccessibilityProvider->handlesLmPerformAccessibilityAction(action)) {
         return mVP->mAccessibilityProvider->onLmPerformAccessibilityAction(action);
     }
-    return LinearLayoutManager::performAccessibilityAction(recycler, state, action, args);
+    return /*Linear*/LayoutManager::performAccessibilityAction(recycler, state, action, args);
 }
 
 void ViewPager2::LinearLayoutManagerImpl::onInitializeAccessibilityNodeInfo(RecyclerView::Recycler& recycler,

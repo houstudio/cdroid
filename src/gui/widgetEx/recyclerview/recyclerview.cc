@@ -38,7 +38,6 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
             == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
-    mAccessibilityManager = &AccessibilityManager::getInstance(getContext());
     setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
     
     //Create the layoutManager if specified.
@@ -76,7 +75,6 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
             == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
-    mAccessibilityManager = &AccessibilityManager::getInstance(getContext());
     setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
     // Create the layoutManager if specified.
 
@@ -134,9 +132,10 @@ void RecyclerView::initRecyclerView(){
     mIgnoreMotionEventTillDown = false;
     mPostedAnimatorRunner = false;
     mDataSetHasChangedAfterLayout = false;
+    mAdapterUpdateDuringMeasure = false;
+    mLowResRotaryEncoderFeature = false;
     mEatenAccessibilityChangeFlags =0;
     mInterceptRequestLayoutDepth = 0;
-    mAdapterUpdateDuringMeasure = false;
     mState = new State();
     mAdapterHelper = nullptr;
     mViewInfoStore = new ViewInfoStore();
@@ -150,7 +149,6 @@ void RecyclerView::initRecyclerView(){
     mVelocityTracker = nullptr;
     mLayout = nullptr;
     mAdapter= nullptr;
-    mAccessibilityManager = nullptr;
     mAccessibilityDelegate = nullptr;
     mActiveOnItemTouchListener = nullptr;
     mMinMaxLayoutPositions[0] = mMinMaxLayoutPositions[1] = 0;
@@ -161,6 +159,7 @@ void RecyclerView::initRecyclerView(){
     mScrollingChildHelper = nullptr;
     mFirstLayoutComplete = false;
     mEdgeEffectFactory = new EdgeEffectFactory();
+    mAccessibilityManager = &AccessibilityManager::getInstance(getContext());
     mItemAnimatorListener = std::bind(&RecyclerView::doAnimatorFinished,this,std::placeholders::_1);
     setItemAnimator(new DefaultItemAnimator());
 
@@ -225,7 +224,6 @@ void RecyclerView::doUpdateChildViews(){
     consumePendingUpdateOperations();
 }
 
-
 //mItemAnimatorRunner
 void RecyclerView::doItemAnimator() {
     if (mItemAnimator != nullptr) {
@@ -236,7 +234,7 @@ void RecyclerView::doItemAnimator() {
 
 void RecyclerView::doAnimatorFinished(ViewHolder& item) {
     item.setIsRecyclable(true);
-    if (item.mShadowedHolder != nullptr && item.mShadowingHolder == nullptr) { // old vh
+    if ((item.mShadowedHolder != nullptr) && (item.mShadowingHolder == nullptr)) { // old vh
         item.mShadowedHolder = nullptr;
     }
     // always null this because an OldViewHolder can never become NewViewHolder w/o being
@@ -1994,9 +1992,10 @@ void RecyclerView::onMeasure(int widthSpec, int heightSpec) {
          * {@link LayoutManager#isAutoMeasureEnabled()} returns true.
          */
         mLayout->onMeasure(*mRecycler, *mState, widthSpec, heightSpec);
-
-        const bool measureSpecModeIsExactly = (widthMode == MeasureSpec::EXACTLY) && (heightMode == MeasureSpec::EXACTLY);
-        if (measureSpecModeIsExactly || mAdapter == nullptr) {
+        // Calculate and track whether we should skip measurement here because the MeasureSpec
+        // modes in both dimensions are EXACTLY.
+        mLastAutoMeasureSkippedDueToExact =(widthMode == MeasureSpec::EXACTLY) && (heightMode == MeasureSpec::EXACTLY);
+        if (mLastAutoMeasureSkippedDueToExact || mAdapter == nullptr) {
             return;
         }
 
@@ -2023,6 +2022,8 @@ void RecyclerView::onMeasure(int widthSpec, int heightSpec) {
             // now we can get the width and height from the children.
             mLayout->setMeasuredDimensionFromChildren(widthSpec, heightSpec);
         }
+        mLastAutoMeasureNonExactMeasuredWidth = getMeasuredWidth();
+        mLastAutoMeasureNonExactMeasuredHeight= getMeasuredHeight();
     } else {
         if (mHasFixedSize) {
             mLayout->onMeasure(*mRecycler, *mState, widthSpec, heightSpec);
@@ -2212,12 +2213,23 @@ void RecyclerView::dispatchLayout() {
         return;
     }
     mState->mIsMeasuring = false;
+    // If the last time we measured children in onMeasure, we skipped the measurement and layout
+    // of RV children because the MeasureSpec in both dimensions was EXACTLY, and current
+    // dimensions of the RV are not equal to the last measured dimensions of RV, we need to
+    // measure and layout children one last time.
+    const bool needsRemeasureDueToExactSkip = mLastAutoMeasureSkippedDueToExact
+               && (mLastAutoMeasureNonExactMeasuredWidth != getWidth()
+               || mLastAutoMeasureNonExactMeasuredHeight != getHeight());
+    mLastAutoMeasureNonExactMeasuredWidth =0;
+    mLastAutoMeasureNonExactMeasuredHeight=0;
+    mLastAutoMeasureSkippedDueToExact = false;
+
     if (mState->mLayoutStep == State::STEP_START) {
         dispatchLayoutStep1();
         mLayout->setExactMeasureSpecsFrom(this);
         dispatchLayoutStep2();
-    } else if (mAdapterHelper->hasUpdates() || mLayout->getWidth() != getWidth()
-            || mLayout->getHeight() != getHeight()) {
+    } else if (mAdapterHelper->hasUpdates() || needsRemeasureDueToExactSkip
+            || (mLayout->getWidth() != getWidth()) || (mLayout->getHeight() != getHeight())) {
         // First 2 steps are done in onMeasure but looks like we have to run again due to
         // changed size.
         mLayout->setExactMeasureSpecsFrom(this);
@@ -2245,7 +2257,7 @@ void RecyclerView::saveFocusInfo() {
         // removed item.
         mState->mFocusedItemPosition = mDataSetHasChangedAfterLayout ? NO_POSITION
                 : (focusedVh->isRemoved() ? focusedVh->mOldPosition
-                        : focusedVh->getAdapterPosition());
+                        : focusedVh->getAbsoluteAdapterPosition());
         mState->mFocusedSubChildId = getDeepestFocusedViewWithId(focusedVh->itemView);
     }
 }
@@ -2915,7 +2927,7 @@ void RecyclerView::viewRangeUpdate(int positionStart, int itemCount, Object* pay
     for (int i = 0; i < childCount; i++) {
         View* child = mChildHelper->getUnfilteredChildAt(i);
         ViewHolder* holder = getChildViewHolderInt(child);
-        if (holder == nullptr || holder->shouldIgnore()) {
+        if ((holder == nullptr) || holder->shouldIgnore()) {
             continue;
         }
         if ( (holder->mPosition >= positionStart) && (holder->mPosition < positionEnd) ) {
@@ -2974,7 +2986,7 @@ void RecyclerView::setPreserveFocusAfterLayout(bool preserveFocusAfterLayout) {
 
 RecyclerView::ViewHolder* RecyclerView::getChildViewHolder(View* child) {
     ViewGroup* parent = child->getParent();
-    if (parent != nullptr && parent != this) {
+    if ((parent != nullptr) && (parent != this)) {
         LOGE("View %p is not a direct child of %p",child,this);
     }
     return getChildViewHolderInt(child);
@@ -2982,7 +2994,7 @@ RecyclerView::ViewHolder* RecyclerView::getChildViewHolder(View* child) {
 
 View* RecyclerView::findContainingItemView(View* view) {
     ViewGroup* parent = view->getParent();
-    while (parent != nullptr && parent != this/* && parent instanceof View*/) {
+    while ((parent != nullptr) && (parent != this)/* && parent instanceof View*/) {
         view = (View*) parent;
         parent = view->getParent();
     }
@@ -3008,7 +3020,7 @@ int RecyclerView::getChildPosition(View* child) {
 
 int RecyclerView::getChildAdapterPosition(View* child) {
     ViewHolder* holder = getChildViewHolderInt(child);
-    return holder ? holder->getAdapterPosition() : NO_POSITION;
+    return holder ? holder->getAbsoluteAdapterPosition() : NO_POSITION;
 }
 
 int RecyclerView::getChildLayoutPosition(View* child) {
@@ -4551,6 +4563,11 @@ void RecyclerView::Adapter::onBindViewHolder(ViewHolder& holder, int position,st
     onBindViewHolder(holder, position);
 }
 
+int RecyclerView::Adapter::findRelativeAdapterPositionIn(Adapter&adapter,ViewHolder&,int localPosition){
+    if(&adapter==this)return localPosition;
+    return NO_POSITION;
+}
+
 RecyclerView::ViewHolder* RecyclerView::Adapter::createViewHolder(ViewGroup* parent, int viewType) {
     ViewHolder* holder = onCreateViewHolder(parent, viewType);
     if (holder->itemView->getParent() != nullptr) {
@@ -5950,8 +5967,7 @@ bool RecyclerView::LayoutManager::performAccessibilityAction(int action, Bundle 
     return performAccessibilityAction(*mRecyclerView->mRecycler, *mRecyclerView->mState, action, args);
 }
 
-bool RecyclerView::LayoutManager::performAccessibilityAction(Recycler& recycler, State& state,
-        int action, Bundle args) {
+bool RecyclerView::LayoutManager::performAccessibilityAction(Recycler& recycler, State& state, int action, Bundle args) {
     if (mRecyclerView == nullptr) {
         return false;
     }
@@ -5974,7 +5990,7 @@ bool RecyclerView::LayoutManager::performAccessibilityAction(Recycler& recycler,
         }
         break;
     }
-    if (vScroll == 0 && hScroll == 0) {
+    if ((vScroll == 0) && (hScroll == 0)) {
         return false;
     }
     mRecyclerView->smoothScrollBy(hScroll, vScroll);
@@ -5982,13 +5998,11 @@ bool RecyclerView::LayoutManager::performAccessibilityAction(Recycler& recycler,
 }
 
 // called by accessibility delegate
-bool RecyclerView::LayoutManager::performAccessibilityActionForItem(View* view, int action, Bundle args) {
-    return performAccessibilityActionForItem(*mRecyclerView->mRecycler, *mRecyclerView->mState,
-            view, action, args);
+bool RecyclerView::LayoutManager::performAccessibilityActionForItem(View& view, int action, Bundle args) {
+    return performAccessibilityActionForItem(*mRecyclerView->mRecycler, *mRecyclerView->mState,view, action, args);
 }
 
-bool RecyclerView::LayoutManager::performAccessibilityActionForItem(Recycler& recycler,
-        State& state, View* view, int action, Bundle args) {
+bool RecyclerView::LayoutManager::performAccessibilityActionForItem(Recycler& recycler, State& state, View& view, int action, Bundle args) {
     return false;
 }
 
@@ -6071,6 +6085,7 @@ RecyclerView::ViewHolder::ViewHolder(View* itemView) {
     mShadowingHolder= nullptr;
     mOwnerRecyclerView = nullptr;
     mNestedRecyclerView= nullptr;
+    mBindingAdapter = nullptr;
 }
 
 RecyclerView::ViewHolder::~ViewHolder(){
@@ -6123,10 +6138,40 @@ int RecyclerView::ViewHolder::getLayoutPosition()const{
 }
 
 int RecyclerView::ViewHolder::getAdapterPosition(){
+#if 0
     if (mOwnerRecyclerView == nullptr) {
         return NO_POSITION;
     }
     return mOwnerRecyclerView->getAdapterPositionFor(this);
+#else
+    return getBindingAdapterPosition();
+#endif
+}
+
+int RecyclerView::ViewHolder::getBindingAdapterPosition(){
+    if ((mBindingAdapter == nullptr)||(mOwnerRecyclerView == nullptr)) {
+        return NO_POSITION;
+    }
+    Adapter*rvAdapter = mOwnerRecyclerView->getAdapter();
+    if (rvAdapter == nullptr) {
+        return NO_POSITION;
+    }
+    const int globalPosition = mOwnerRecyclerView->getAdapterPositionInRecyclerView(this);
+    if (globalPosition == NO_POSITION) {
+        return NO_POSITION;
+    }
+    return rvAdapter->findRelativeAdapterPositionIn(*mBindingAdapter,*this, globalPosition);
+}
+
+int RecyclerView::ViewHolder::getAbsoluteAdapterPosition(){
+    if (mOwnerRecyclerView == nullptr) {
+        return NO_POSITION;
+    }
+    return mOwnerRecyclerView->getAdapterPositionInRecyclerView(this);
+}
+
+RecyclerView::Adapter*RecyclerView::ViewHolder::getBindingAdapter()const{
+    return mBindingAdapter;
 }
 
 int RecyclerView::ViewHolder::getOldPosition() const{
@@ -6353,6 +6398,15 @@ void RecyclerView::dispatchPendingImportantForAccessibilityChanges() {
     mPendingAccessibilityImportanceChange.clear();
 }
 
+int RecyclerView::getAdapterPositionInRecyclerView(ViewHolder* viewHolder){
+    if (viewHolder->hasAnyOfTheFlags(ViewHolder::FLAG_INVALID
+            | ViewHolder::FLAG_REMOVED | ViewHolder::FLAG_ADAPTER_POSITION_UNKNOWN)
+            || !viewHolder->isBound()) {
+        return RecyclerView::NO_POSITION;
+    }
+    return mAdapterHelper->applyPendingUpdatesToPosition(viewHolder->mPosition);
+}
+
 int RecyclerView::getAdapterPositionFor(ViewHolder* viewHolder) {
     if (viewHolder->hasAnyOfTheFlags(ViewHolder::FLAG_INVALID
             | ViewHolder::FLAG_REMOVED | ViewHolder::FLAG_ADAPTER_POSITION_UNKNOWN)
@@ -6488,6 +6542,13 @@ int RecyclerView::LayoutParams::getViewAdapterPosition() {
     return mViewHolder->getAdapterPosition();
 }
 
+int RecyclerView::LayoutParams::getAbsoluteAdapterPosition() {
+    return mViewHolder->getAbsoluteAdapterPosition();
+}
+
+int RecyclerView::LayoutParams::getBindingAdapterPosition() {
+    return mViewHolder->getBindingAdapterPosition();
+}
 //////////////////////////////////RecyclerView::AdapterDataObserver///////////////////////////////
 
 void RecyclerView::AdapterDataObserver::onChanged() {

@@ -133,7 +133,7 @@ bool RecyclerViewAccessibilityDelegate::ItemDelegate::performAccessibilityAction
             return true;
         }
         return mRecyclerViewDelegate->mRecyclerView->getLayoutManager()
-                ->performAccessibilityActionForItem(&host, action, args);
+                ->performAccessibilityActionForItem(host, action, args);
     } else {
         return AccessibilityDelegate::performAccessibilityAction(host, action, args);
     }

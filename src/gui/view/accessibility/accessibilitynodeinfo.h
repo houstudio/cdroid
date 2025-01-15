@@ -10,7 +10,6 @@
 #include <view/accessibility/accessibilitynodeprovider.h>
 #include <view/accessibility/accessibilitywindowinfo.h>
 namespace cdroid{
-using Bundle=void*;
 class View;
 class AccessibilityWindowInfo;
 class AccessibilityNodeInfo{// implements Parcelable {

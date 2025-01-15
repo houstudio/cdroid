@@ -12,12 +12,38 @@ class ChildHelper;
 class AdapterHelper;
 class ViewInfoStore;
 class GapWorker;
+class GridLayoutManager;
 class RecyclerViewAccessibilityDelegate;
-typedef void* Bundle;
 
 class RecyclerView:public ViewGroup{
 private:
     static constexpr bool _Debug=false;
+    static constexpr bool FORCE_INVALIDATE_DISPLAY_LIST = false;//Build.VERSION.SDK_INT == 18 || Build.VERSION.SDK_INT == 19 || Build.VERSION.SDK_INT == 20;
+    static constexpr bool ALLOW_SIZE_IN_UNSPECIFIED_SPEC = false;//Build.VERSION.SDK_INT >= 23;
+    static constexpr bool POST_UPDATES_ON_ANIMATION = true;//Build.VERSION.SDK_INT >= 16;
+    static constexpr bool ALLOW_THREAD_GAP_WORK = false;//Build.VERSION.SDK_INT >= 21;
+    static constexpr bool FORCE_ABS_FOCUS_SEARCH_DIRECTION = false;//Build.VERSION.SDK_INT <= 15;
+    static constexpr bool IGNORE_DETACHED_FOCUSED_CHILD = false;//Build.VERSION.SDK_INT <= 15;
+    static constexpr bool DISPATCH_TEMP_DETACH = false;
+    static constexpr int INVALID_POINTER = -1;
+
+    class RecyclerViewDataObserver;
+    class ViewFlinger;
+protected:
+    class AdapterDataObservable;
+public:
+    static constexpr int HORIZONTAL = LinearLayout::HORIZONTAL;
+    static constexpr int VERTICAL = LinearLayout::VERTICAL;
+    static constexpr int DEFAULT_ORIENTATION = VERTICAL;
+    static constexpr int NO_POSITION = -1;
+    static constexpr long NO_ID = -1;
+    static constexpr int INVALID_TYPE = -1;
+    static constexpr int TOUCH_SLOP_DEFAULT = 0;
+    static constexpr int TOUCH_SLOP_PAGING = 1;
+    static constexpr int SCROLL_STATE_IDLE = 0;
+    static constexpr int SCROLL_STATE_DRAGGING = 1;
+    static constexpr int SCROLL_STATE_SETTLING = 2; 
+    static constexpr long FOREVER_NS = LONG_MAX;
 public:
     class SmoothScroller;
     class FastScroller;
@@ -27,20 +53,14 @@ public:
     class State;
     class SavedState;
     class LayoutManager;
-    class AdapterDataObservable;
     class RecycledViewPool;
     class EdgeEffectFactory;
     class LayoutParams;
+    class AdapterDataObserver;
+    class ItemDecoration;
+    class OnItemTouchListener;
+    friend GridLayoutManager;
     friend RecyclerViewAccessibilityDelegate;
-    class AdapterDataObserver{
-    public:
-        virtual void onChanged();
-        virtual void onItemRangeChanged(int positionStart, int itemCount);
-        virtual void onItemRangeChanged(int positionStart, int itemCount,Object* payload);
-        virtual void onItemRangeInserted(int positionStart, int itemCount);
-        virtual void onItemRangeRemoved(int positionStart, int itemCount);
-        virtual void onItemRangeMoved(int fromPosition, int toPosition, int itemCount);
-    };
     DECLARE_UIEVENT(bool,OnFlingListener,int,int);
     class ItemAnimator{
     public:
@@ -111,59 +131,6 @@ public:
        void dispatchAnimationsFinished();/*final*/
        ItemHolderInfo* obtainHolderInfo();
     };
-private:
-    //static constexpr int  NESTED_SCROLLING_ATTRS = {16843830 /* android.R.attr.nestedScrollingEnabled */};
-    //static constexpr int[] CLIP_TO_PADDING_ATTR = {android.R.attr.clipToPadding};
-
-    static constexpr bool FORCE_INVALIDATE_DISPLAY_LIST = false;//Build.VERSION.SDK_INT == 18 || Build.VERSION.SDK_INT == 19 || Build.VERSION.SDK_INT == 20;
-    static constexpr bool ALLOW_SIZE_IN_UNSPECIFIED_SPEC = false;//Build.VERSION.SDK_INT >= 23;
-    static constexpr bool POST_UPDATES_ON_ANIMATION = true;//Build.VERSION.SDK_INT >= 16;
-    static constexpr bool ALLOW_THREAD_GAP_WORK = false;//Build.VERSION.SDK_INT >= 21;
-    static constexpr bool FORCE_ABS_FOCUS_SEARCH_DIRECTION = false;//Build.VERSION.SDK_INT <= 15;
-    static constexpr bool IGNORE_DETACHED_FOCUSED_CHILD = false;//Build.VERSION.SDK_INT <= 15;
-    static constexpr bool DISPATCH_TEMP_DETACH = false;
-    static constexpr int INVALID_POINTER = -1;
-private:/*private classes*/
-    class ViewFlinger{
-    private:
-        friend RecyclerView;
-        int mLastFlingX;
-        int mLastFlingY;
-        bool mEatRunOnAnimationRequest=false;
-        bool mReSchedulePostAnimationCallback = false;
-        OverScroller* mScroller;
-        Interpolator* mInterpolator;
-        RecyclerView* mRV;
-        Runnable mRunnable;
-        float distanceInfluenceForSnapDuration(float f);
-        int computeScrollDuration(int dx, int dy, int vx, int vy);
-    public:
-        ViewFlinger(RecyclerView*v);
-        ~ViewFlinger();
-        void run();
-        void disableRunOnAnimationRequests();
-        void enableRunOnAnimationRequests();
-        void postOnAnimation();
-        void fling(int velocityX, int velocityY);
-        void smoothScrollBy(int dx, int dy);
-        void smoothScrollBy(int dx, int dy, int vx, int vy);
-        void smoothScrollBy(int dx, int dy, int duration);
-        void smoothScrollBy(int dx, int dy, Interpolator* interpolator);
-        void smoothScrollBy(int dx, int dy, int duration, Interpolator* interpolator);
-        void stop();
-    };
-    class RecyclerViewDataObserver:public AdapterDataObserver{
-    private:
-        RecyclerView*mRV;
-    public:
-        RecyclerViewDataObserver(RecyclerView*rv);
-        void onChanged()override;
-        void onItemRangeChanged(int positionStart, int itemCount, Object* payload)override;
-        void onItemRangeInserted(int positionStart, int itemCount)override;
-        void onItemRangeRemoved(int positionStart, int itemCount)override;
-        void onItemRangeMoved(int fromPosition, int toPosition, int itemCount)override;
-        void triggerUpdateProcessor();
-    };
 public:/*public classes*/
     class OnScrollListener:public EventSet{
     public:
@@ -175,14 +142,6 @@ public:/*public classes*/
         CallbackBase<void,View&>onChildViewAttachedToWindow;
         CallbackBase<void,View&>onChildViewDetachedFromWindow;
     };
-    //ItemAnimator::ItemAnimatorListener
-    /*struct ItemAnimatorListener {
-        void onAnimationFinished(ViewHolder& item);
-    };
-    //ItemAnimator::ItemAnimatorListener
-    struct ItemAnimatorFinishedListener {
-        void onAnimationsFinished();
-    };*/
     typedef CallbackBase<int,int,int>ChildDrawingOrderCallback;
     typedef std::function<View*(Recycler&,int,int)>ViewCacheExtension;
     /*class ViewCacheExtension {
@@ -190,65 +149,15 @@ public:/*public classes*/
         virtual View* getViewForPositionAndType(Recycler& recycler, int position,int type)=0;
     };*/
 
-    class Adapter{//<ViewHolder>{
-    private:
-        AdapterDataObservable* mObservable;
-        bool mHasStableIds;
-    public:
-        Adapter();
-        virtual ~Adapter();
-        virtual ViewHolder*onCreateViewHolder(ViewGroup* parent, int viewType)=0;
-        virtual void onBindViewHolder(ViewHolder& holder, int position)=0;
-        void onBindViewHolder(ViewHolder& holder, int position,std::vector<Object*>& payloads);
-        ViewHolder*createViewHolder(ViewGroup* parent, int viewType);
-        void bindViewHolder(ViewHolder& holder, int position);
-        virtual int getItemViewType(int position);
-        void setHasStableIds(bool hasStableIds);
-        virtual long getItemId(int position);
-        virtual int getItemCount()=0;
-        virtual bool hasStableIds();
-        virtual void onViewRecycled(ViewHolder& holder);
-        virtual bool onFailedToRecycleView(ViewHolder& holder);
-        virtual void onViewAttachedToWindow(ViewHolder& holder);
-        virtual void onViewDetachedFromWindow(ViewHolder& holder);
-        bool hasObservers()const;
-        void registerAdapterDataObserver(AdapterDataObserver* observer);
-        void unregisterAdapterDataObserver(AdapterDataObserver* observer);
-        virtual void onAttachedToRecyclerView(RecyclerView& recyclerView);
-        virtual void onDetachedFromRecyclerView(RecyclerView& recyclerView);
-        virtual void notifyDataSetChanged()final;
-        virtual void notifyItemChanged(int position)final;
-        virtual void notifyItemChanged(int position,Object* payload)final;
-        virtual void notifyItemRangeChanged(int positionStart, int itemCount)final;
-        virtual void notifyItemRangeChanged(int positionStart, int itemCount,Object* payload)final;
-        virtual void notifyItemInserted(int position)final;
-        virtual void notifyItemMoved(int fromPosition, int toPosition)final;
-        virtual void notifyItemRangeInserted(int positionStart, int itemCount)final;
-        virtual void notifyItemRemoved(int position)final;
-        virtual void notifyItemRangeRemoved(int positionStart, int itemCount)final;
-    };
-    class ItemDecoration{
-    public:
-        virtual void onDraw(Canvas& c,RecyclerView& parent,State& state);
-        virtual void onDrawOver(Canvas& c,RecyclerView& parent,State& state);
-        virtual void getItemOffsets(Rect& outRect, View& view,RecyclerView& parent, State& state);
-    };
-    class OnItemTouchListener:public EventSet{
-    public:
-        CallbackBase<bool,RecyclerView&,MotionEvent&>onInterceptTouchEvent;//(RecyclerView& rv,MotionEvent& e);
-        CallbackBase<void,RecyclerView&,MotionEvent&>onTouchEvent;//(RecyclerView& rv,MotionEvent& e);
-        CallbackBase<void,bool>onRequestDisallowInterceptTouchEvent;//(bool disallowIntercept);
-    };
 private:/*private variables*/
     OnItemTouchListener* mActiveOnItemTouchListener;
     int mInterceptRequestLayoutDepth;
-    bool mIgnoreMotionEventTillDown;
     int mEatenAccessibilityChangeFlags;
     AccessibilityManager* mAccessibilityManager;
     std::vector<OnChildAttachStateChangeListener> mOnChildAttachStateListeners;
     int mLayoutOrScrollCounter = 0;
     int mDispatchScrollCounter = 0;
-    EdgeEffectFactory* mEdgeEffectFactory;// = new EdgeEffectFactory();
+    EdgeEffectFactory* mEdgeEffectFactory;
     EdgeEffect* mLeftGlow, *mTopGlow, *mRightGlow, *mBottomGlow;    
 
     int mScrollState = SCROLL_STATE_IDLE;
@@ -265,7 +174,11 @@ private:/*private variables*/
     // This value is used when handling rotary encoder generic motion events.
     float mScaledHorizontalScrollFactor;// = Float.MIN_VALUE;
     float mScaledVerticalScrollFactor;// = Float.MIN_VALUE;
+    bool mIgnoreMotionEventTillDown;
     bool mPreserveFocusAfterLayout = true;
+    bool mLastAutoMeasureSkippedDueToExact;
+    bool mLowResRotaryEncoderFeature;
+    bool mClipToPadding;
 
     OnScrollListener mScrollListener;
     std::vector<OnScrollListener> mScrollListeners;
@@ -278,9 +191,19 @@ private:/*private variables*/
     int mScrollConsumed[2];
     int mNestedOffsets[2];
     int mScrollStepConsumed[2];
-
+    int mLastAutoMeasureNonExactMeasuredWidth = 0;
+    int mLastAutoMeasureNonExactMeasuredHeight = 0;
+    
+    RecyclerViewDataObserver* mObserver;
+    Recycler* mRecycler;
+    SavedState* mPendingSavedState;
+    AdapterHelper* mAdapterHelper;
+    ChildHelper* mChildHelper;
+    ViewInfoStore* mViewInfoStore;
     Runnable mItemAnimatorRunner;
+    Runnable mUpdateChildViewsRunnable;
     void*/*ViewInfoStore_ProcessCallback*/ mViewInfoProcessCallback;
+private:
     void initRecyclerView();
     void doItemAnimator();
     void doUpdateChildViews();
@@ -430,32 +353,11 @@ protected:
     void dispatchChildAttached(View* child);
     bool setChildImportantForAccessibilityInternal(ViewHolder* viewHolder,int importantForAccessibility);
     void dispatchPendingImportantForAccessibilityChanges();
+    int getAdapterPositionInRecyclerView(ViewHolder* viewHolder);
     int getAdapterPositionFor(ViewHolder* viewHolder);
     void initFastScroller(StateListDrawable* verticalThumbDrawable, Drawable* verticalTrackDrawable, 
              StateListDrawable* horizontalThumbDrawable, Drawable* horizontalTrackDrawable,const AttributeSet&);
     int getChildDrawingOrder(int childCount, int i)override;
-public:
-    static constexpr int HORIZONTAL = LinearLayout::HORIZONTAL;
-    static constexpr int VERTICAL = LinearLayout::VERTICAL;
-    static constexpr int DEFAULT_ORIENTATION = VERTICAL;
-    static constexpr int NO_POSITION = -1;
-    static constexpr long NO_ID = -1;
-    static constexpr int INVALID_TYPE = -1;
-    static constexpr int TOUCH_SLOP_DEFAULT = 0;
-    static constexpr int TOUCH_SLOP_PAGING = 1;
-    static constexpr int SCROLL_STATE_IDLE = 0;
-    static constexpr int SCROLL_STATE_DRAGGING = 1;
-    static constexpr int SCROLL_STATE_SETTLING = 2; 
-    static constexpr long FOREVER_NS = LONG_MAX;
-private:
-    RecyclerViewDataObserver* mObserver;
-    Recycler* mRecycler;
-    SavedState* mPendingSavedState;
-    AdapterHelper* mAdapterHelper;
-    ChildHelper* mChildHelper;
-    ViewInfoStore* mViewInfoStore;
-    bool mClipToPadding;
-    Runnable mUpdateChildViewsRunnable;
 public:
     RecyclerView(int w,int h);
     RecyclerView(Context* context,const AttributeSet& attrs);
@@ -584,6 +486,94 @@ public:
     bool dispatchNestedPreFling(float velocityX, float velocityY);
 };
 
+class RecyclerView::ViewFlinger{
+private:
+    friend RecyclerView;
+    int mLastFlingX;
+    int mLastFlingY;
+    bool mEatRunOnAnimationRequest=false;
+    bool mReSchedulePostAnimationCallback = false;
+    OverScroller* mScroller;
+    Interpolator* mInterpolator;
+    RecyclerView* mRV;
+    Runnable mRunnable;
+    float distanceInfluenceForSnapDuration(float f);
+    int computeScrollDuration(int dx, int dy, int vx, int vy);
+public:
+    ViewFlinger(RecyclerView*v);
+    ~ViewFlinger();
+    void run();
+    void disableRunOnAnimationRequests();
+    void enableRunOnAnimationRequests();
+    void postOnAnimation();
+    void fling(int velocityX, int velocityY);
+    void smoothScrollBy(int dx, int dy);
+    void smoothScrollBy(int dx, int dy, int vx, int vy);
+    void smoothScrollBy(int dx, int dy, int duration);
+    void smoothScrollBy(int dx, int dy, Interpolator* interpolator);
+    void smoothScrollBy(int dx, int dy, int duration, Interpolator* interpolator);
+    void stop();
+};
+class RecyclerView::AdapterDataObserver{
+public:
+    virtual void onChanged();
+    virtual void onItemRangeChanged(int positionStart, int itemCount);
+    virtual void onItemRangeChanged(int positionStart, int itemCount,Object* payload);
+    virtual void onItemRangeInserted(int positionStart, int itemCount);
+    virtual void onItemRangeRemoved(int positionStart, int itemCount);
+    virtual void onItemRangeMoved(int fromPosition, int toPosition, int itemCount);
+};
+
+class RecyclerView::Adapter{
+private:
+    AdapterDataObservable* mObservable;
+    bool mHasStableIds;
+public:
+    Adapter();
+    virtual ~Adapter();
+    virtual ViewHolder*onCreateViewHolder(ViewGroup* parent, int viewType)=0;
+    virtual void onBindViewHolder(ViewHolder& holder, int position)=0;
+    void onBindViewHolder(ViewHolder& holder, int position,std::vector<Object*>& payloads);
+    int findRelativeAdapterPositionIn(Adapter&,ViewHolder&,int localPosition);
+    ViewHolder*createViewHolder(ViewGroup* parent, int viewType);
+    void bindViewHolder(ViewHolder& holder, int position);
+    virtual int getItemViewType(int position);
+    void setHasStableIds(bool hasStableIds);
+    virtual long getItemId(int position);
+    virtual int getItemCount()=0;
+    virtual bool hasStableIds();
+    virtual void onViewRecycled(ViewHolder& holder);
+    virtual bool onFailedToRecycleView(ViewHolder& holder);
+    virtual void onViewAttachedToWindow(ViewHolder& holder);
+    virtual void onViewDetachedFromWindow(ViewHolder& holder);
+    bool hasObservers()const;
+    void registerAdapterDataObserver(AdapterDataObserver* observer);
+    void unregisterAdapterDataObserver(AdapterDataObserver* observer);
+    virtual void onAttachedToRecyclerView(RecyclerView& recyclerView);
+    virtual void onDetachedFromRecyclerView(RecyclerView& recyclerView);
+    virtual void notifyDataSetChanged()final;
+    virtual void notifyItemChanged(int position)final;
+    virtual void notifyItemChanged(int position,Object* payload)final;
+    virtual void notifyItemRangeChanged(int positionStart, int itemCount)final;
+    virtual void notifyItemRangeChanged(int positionStart, int itemCount,Object* payload)final;
+    virtual void notifyItemInserted(int position)final;
+    virtual void notifyItemMoved(int fromPosition, int toPosition)final;
+    virtual void notifyItemRangeInserted(int positionStart, int itemCount)final;
+    virtual void notifyItemRemoved(int position)final;
+    virtual void notifyItemRangeRemoved(int positionStart, int itemCount)final;
+};
+class RecyclerView::ItemDecoration{
+public:
+    virtual void onDraw(Canvas& c,RecyclerView& parent,State& state);
+    virtual void onDrawOver(Canvas& c,RecyclerView& parent,State& state);
+    virtual void getItemOffsets(Rect& outRect, View& view,RecyclerView& parent, State& state);
+};
+class RecyclerView::OnItemTouchListener:public EventSet{
+public:
+    CallbackBase<bool,RecyclerView&,MotionEvent&>onInterceptTouchEvent;//(RecyclerView& rv,MotionEvent& e);
+    CallbackBase<void,RecyclerView&,MotionEvent&>onTouchEvent;//(RecyclerView& rv,MotionEvent& e);
+    CallbackBase<void,bool>onRequestDisallowInterceptTouchEvent;//(bool disallowIntercept);
+};
 class RecyclerView::LayoutManager{
 private:
     friend RecyclerView;
@@ -628,7 +618,7 @@ protected:
     virtual void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info);
     virtual void onInitializeAccessibilityNodeInfoForItem(View* host, AccessibilityNodeInfo& info);
     virtual bool performAccessibilityAction(int action, Bundle args);
-    virtual bool performAccessibilityActionForItem(View* view, int action,Bundle args);
+    virtual bool performAccessibilityActionForItem(View& view, int action,Bundle args);
     void setExactMeasureSpecsFrom(RecyclerView* recyclerView);
     virtual bool shouldMeasureTwice();
     bool hasFlexibleChildInBothOrientations();
@@ -790,7 +780,7 @@ public:
     virtual int getColumnCountForAccessibility(Recycler& recycler,State& state);
     bool isLayoutHierarchical(Recycler& recycler,State& state);
     virtual bool performAccessibilityAction(Recycler& recycler, State& state,int action, Bundle args);
-    virtual bool performAccessibilityActionForItem(Recycler& recycler,State& state, View* view, int action, Bundle args);
+    virtual bool performAccessibilityActionForItem(Recycler& recycler,State& state, View& view, int action, Bundle args);
     static Properties getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes);
 };
 
@@ -811,9 +801,22 @@ public:
     bool isViewInvalid();
     bool isItemRemoved();
     bool isItemChanged();
+    /**
+     * @deprecated use {@link #getViewLayoutPosition()} or {@link #getViewAdapterPosition()}
+     */
+    [[deprecated("getViewPosition is deprecated use getViewAdapterPosition PLS.")]]
     int getViewPosition();
     int getViewLayoutPosition();
+    /**
+     * @deprecated This method is confusing when nested adapters are used.
+     * If you are calling from the context of an {@link Adapter},
+     * use {@link #getBindingAdapterPosition()}. If you need the position that
+     * {@link RecyclerView} sees, use {@link #getAbsoluteAdapterPosition()}.
+     */
+    [[deprecated("getViewAdapterPosition is deprecated use getBindingAdapterPosition PLS.")]]
     int getViewAdapterPosition();
+    int getAbsoluteAdapterPosition();
+    int getBindingAdapterPosition();
 };
 
 class RecyclerView::EdgeEffectFactory {
@@ -969,7 +972,12 @@ protected:
     RecyclerView* mOwnerRecyclerView;
     std::vector<Object*> mPayloads;
     std::vector<Object*>* mUnmodifiedPayloads;
-
+    RecyclerView::Adapter* mBindingAdapter;
+public:
+    View*itemView;
+public:
+    ViewHolder(View* itemView);
+    virtual ~ViewHolder();
     void flagRemovedAndOffsetPosition(int mNewPosition, int offset, bool applyToPreLayout);
     void offsetPosition(int offset, bool applyToPreLayout);
     void clearOldPosition();
@@ -993,22 +1001,38 @@ protected:
     std::vector<Object*>* getUnmodifiedPayloads();
     void resetInternal();
     bool isUpdated();
-public:
-    View*itemView;
-public:
-    ViewHolder(View* itemView);
-    virtual ~ViewHolder();
-    int getPosition()const;// final;
-    int getLayoutPosition() const;// final;
-    int getAdapterPosition();// final;
-    int getOldPosition()const;// final;
-    long getItemId()const;// final;
-    int getItemViewType()const;// final;
+    /**
+     * @see #getLayoutPosition()
+     * @see #getBindingAdapterPosition()
+     * @see #getAbsoluteAdapterPosition()
+     * @deprecated This method is deprecated because its meaning is ambiguous due to the async
+     * handling of adapter updates. You should use {@link #getLayoutPosition()},
+     * {@link #getBindingAdapterPosition()} or {@link #getAbsoluteAdapterPosition()}
+     * depending on your use case.
+     */
+    [[deprecated("use getLayoutPosition,getBindingAdapterPosition,getAbsoluteAdapterPosition")]]
+    int getPosition() const;
+    int getLayoutPosition() const;
+    /**
+     * @return {@link #getBindingAdapterPosition()}
+     * @deprecated This method is confusing when adapters nest other adapters.
+     * If you are calling this in the context of an Adapter, you probably want to call
+     * {@link #getBindingAdapterPosition()} or if you want the position as {@link RecyclerView}
+     * sees it, you should call {@link #getAbsoluteAdapterPosition()}.
+     */
+    [[deprecated("use getBindingAdapterPosition or getAbsoluteAdapterPosition")]]
+    int getAdapterPosition();
+    int getBindingAdapterPosition();
+    int getAbsoluteAdapterPosition();
+    RecyclerView::Adapter*getBindingAdapter()const;
+    int getOldPosition()const;
+    long getItemId()const;
+    int getItemViewType()const;
     std::string toString();
-    void setIsRecyclable(bool recyclable);//final;
+    void setIsRecyclable(bool recyclable);
     bool shouldIgnore();
     bool isInvalid();
-    bool isRecyclable()const;// final;
+    bool isRecyclable()const;
     bool isRemoved();
 };
 
@@ -1092,6 +1116,19 @@ public:
     void notifyItemRangeInserted(int positionStart, int itemCount);
     void notifyItemRangeRemoved(int positionStart, int itemCount);
     void notifyItemMoved(int fromPosition, int toPosition);
+};
+
+class RecyclerView::RecyclerViewDataObserver:public RecyclerView::AdapterDataObserver{
+private:
+    RecyclerView*mRV;
+public:
+    RecyclerViewDataObserver(RecyclerView*rv);
+    void onChanged()override;
+    void onItemRangeChanged(int positionStart, int itemCount, Object* payload)override;
+    void onItemRangeInserted(int positionStart, int itemCount)override;
+    void onItemRangeRemoved(int positionStart, int itemCount)override;
+    void onItemRangeMoved(int fromPosition, int toPosition, int itemCount)override;
+    void triggerUpdateProcessor();
 };
 
 class RecyclerView::SavedState:public AbsSavedState{
