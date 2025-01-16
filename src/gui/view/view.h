@@ -48,6 +48,7 @@
 #include <view/viewtreeobserver.h>
 #include <view/soundeffectconstants.h>
 #include <view/hapticfeedbackconstants.h>
+#include <view/scrollfeedbackprovider.h>
 #include <view/accessibility/accessibilityevent.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/accessibility/accessibilitynodeprovider.h>
@@ -586,6 +587,8 @@ private:
 
     void sizeChange(int newWidth,int newHeight,int oldWidth,int oldHeight);
     void setMeasuredDimensionRaw(int measuredWidth, int measuredHeight);
+    bool isPerformHapticFeedbackSuppressed(int feedbackConstant, int flags);
+    int  computeHapticFeedbackPrivateFlags();
     void initializeScrollbarsInternal(const AttributeSet&attrs);
     void initializeScrollBarDrawable();
     void initScrollCache();
@@ -952,6 +955,7 @@ public:
     void setHapticFeedbackEnabled(bool hapticFeedbackEnabled);
     bool isHapticFeedbackEnabled()const;
     bool performHapticFeedback(int feedbackConstant, int flags=0);
+    void performHapticFeedbackForInputDevice(int feedbackConstant, int inputDeviceId,int inputSource, int flags);
 
     void setSystemUiVisibility(int visibility);
     int getSystemUiVisibility()const;
@@ -1190,11 +1194,11 @@ public:
     void setNestedScrollingEnabled(bool benabled);
     bool isNestedScrollingEnabled()const;
     bool hasNestedScrollingParent()const;
-    bool dispatchNestedScroll(int dxConsumed, int dyConsumed,
+    virtual bool dispatchNestedScroll(int dxConsumed, int dyConsumed,
             int dxUnconsumed, int dyUnconsumed,int* offsetInWindow);
-    bool dispatchNestedPreScroll(int dx, int dy,int* consumed,int* offsetInWindow);
-    bool dispatchNestedFling(float velocityX, float velocityY, bool consumed);
-    bool dispatchNestedPreFling(float velocityX, float velocityY);
+    virtual bool dispatchNestedPreScroll(int dx, int dy,int* consumed,int* offsetInWindow);
+    virtual bool dispatchNestedFling(float velocityX, float velocityY, bool consumed);
+    virtual bool dispatchNestedPreFling(float velocityX, float velocityY);
     int  getRawTextDirection()const;
     void setTextDirection(int textDirection);
     virtual int  getTextDirection()const;

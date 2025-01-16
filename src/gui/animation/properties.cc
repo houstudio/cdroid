@@ -1,5 +1,6 @@
 #include <animation/property.h>
 #include <view/view.h>
+
 namespace cdroid{
 
 Property::Property(const std::string&name){
@@ -306,7 +307,7 @@ public:
     }
 };
 
-static std::map<const std::string,Property*>props={
+static std::unordered_map<std::string,Property*>props={
     {"alpha",new ALPHA()},
     {"bottom",new BOTTOM()},
     {"elevation",new ELEVATION()},

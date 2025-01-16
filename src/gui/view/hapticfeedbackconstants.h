@@ -101,7 +101,19 @@ public:
      * A haptic effect to signal the rejection or failure of a user interaction.
      */
      static constexpr int REJECT = 17;
+    /**
+     * A haptic effect to provide texture while scrolling.
+     *
+     * @hide
+     */
+     static constexpr int SCROLL_TICK = 18;
 
+    /**
+     * A haptic effect to signal that a list element has been focused while scrolling.
+     *
+     * @hide
+     */
+     static constexpr int SCROLL_ITEM_FOCUS = 19;
     /**
      * A haptic effect to provide texture while a rotary input device is being scrolled.
      *
@@ -116,14 +128,68 @@ public:
      * @hide
      */
      static constexpr int ROTARY_SCROLL_ITEM_FOCUS = 19;
-
     /**
-     * A haptic effect to signal reaching the scrolling limits of a list while scrolling using a
-     * rotary input device.
+     * A haptic effect to signal reaching the scrolling limits of a list while scrolling.
      *
      * @hide
      */
-     static constexpr int ROTARY_SCROLL_LIMIT = 20;
+     static constexpr int SCROLL_LIMIT = 20;
+
+    /**
+     * The user has toggled a switch or button into the on position.
+     */
+     static constexpr int TOGGLE_ON = 21;
+
+    /**
+     * The user has toggled a switch or button into the off position.
+     */
+     static constexpr int TOGGLE_OFF = 22;
+    /**
+     * The user is executing a swipe/drag-style gesture, such as pull-to-refresh, where the
+     * gesture action is “eligible” at a certain threshold of movement, and can be cancelled by
+     * moving back past the threshold. This constant indicates that the user's motion has just
+     * passed the threshold for the action to be activated on release.
+     *
+     * @see #GESTURE_THRESHOLD_DEACTIVATE
+     */
+     static constexpr int GESTURE_THRESHOLD_ACTIVATE = 23;
+
+    /**
+     * The user is executing a swipe/drag-style gesture, such as pull-to-refresh, where the
+     * gesture action is “eligible” at a certain threshold of movement, and can be cancelled by
+     * moving back past the threshold. This constant indicates that the user's motion has just
+     * re-crossed back "under" the threshold for the action to be activated, meaning the gesture is
+     * currently in a cancelled state.
+     *
+     * @see #GESTURE_THRESHOLD_ACTIVATE
+     */
+     static constexpr int GESTURE_THRESHOLD_DEACTIVATE = 24;
+    
+    /**
+     * The user has started a drag-and-drop gesture. The drag target has just been "picked up".
+     */
+     static constexpr int DRAG_START = 25;
+
+    /**
+     * The user is switching between a series of potential choices, for example items in a list
+     * or discrete points on a slider.
+     *
+     * <p>See also {@link #SEGMENT_FREQUENT_TICK} for cases where density of choices is high, and
+     * the haptics should be lighter or suppressed for a better user experience.
+     */
+     static constexpr int SEGMENT_TICK = 26;
+    /**
+     * The user is switching between a series of many potential choices, for example minutes on a
+     * clock face, or individual percentages. This constant is expected to be very soft, so as
+     * not to be uncomfortable when performed a lot in quick succession. If the device can’t make
+     * a suitably soft vibration, then it may not make any vibration.
+     *
+     * <p>Some specializations of this constant exist for specific actions, notably
+     * {@link #CLOCK_TICK} and {@link #TEXT_HANDLE_MOVE}.
+     *
+     * <p>See also {@link #SEGMENT_TICK}.
+     */
+     static constexpr int SEGMENT_FREQUENT_TICK = 27;
 
     /**
      * The phone has booted with safe mode enabled.

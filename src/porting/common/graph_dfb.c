@@ -7,8 +7,6 @@
 #include <direct/messages.h>
 #include <cdlog.h>
 
-NGL_MODULE(GRAPH);
-
 static IDirectFB *directfb=NULL;
 static IDirectFBSurface*primarySurface;
 static IDirectFBDisplayLayer *primaryLayer;

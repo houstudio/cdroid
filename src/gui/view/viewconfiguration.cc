@@ -212,6 +212,48 @@ int ViewConfiguration::getScaledMaximumFlingVelocity() {
     return mMaximumFlingVelocity;
 }
 
+bool ViewConfiguration::isHapticScrollFeedbackEnabled(int inputDeviceId, int axis, int source) {
+    if (!isInputDeviceInfoValid(inputDeviceId, axis, source)) return false;
+
+    if (source == InputDevice::SOURCE_ROTARY_ENCODER && axis == MotionEvent::AXIS_SCROLL) {
+        return mRotaryEncoderHapticScrollFeedbackEnabled;
+    }
+
+    if ((source & InputDevice::SOURCE_TOUCHSCREEN) != 0) {
+        return mViewTouchScreenHapticScrollFeedbackEnabled;
+    }
+
+    return false;
+}
+
+int ViewConfiguration::getHapticScrollFeedbackTickInterval(int inputDeviceId, int axis, int source) {
+    if (!mRotaryEncoderHapticScrollFeedbackEnabled) {
+        return NO_HAPTIC_SCROLL_TICK_INTERVAL;
+    }
+
+    if (!isInputDeviceInfoValid(inputDeviceId, axis, source)) {
+        return NO_HAPTIC_SCROLL_TICK_INTERVAL;
+    }
+
+    if (source == InputDevice::SOURCE_ROTARY_ENCODER && axis == MotionEvent::AXIS_SCROLL) {
+        return mRotaryEncoderHapticScrollFeedbackTickIntervalPixels;
+    }
+
+    return NO_HAPTIC_SCROLL_TICK_INTERVAL;
+}
+
+bool ViewConfiguration::isViewBasedRotaryEncoderHapticScrollFeedbackEnabled() {
+    return mViewBasedRotaryEncoderScrollHapticsEnabledConfig;//&& Flags.useViewBasedRotaryEncoderScrollHaptics();
+}
+
+bool ViewConfiguration::isInputDeviceInfoValid(int id, int axis, int source) {
+#if 0
+    InputDevice* device = InputManagerGlobal.getInstance().getInputDevice(id);
+    return device != nullptr && device->getMotionRange(axis, source) != nullptr;
+#else
+    return false;
+#endif
+}
 /**
  * @return Amount to scroll in response to a {@link MotionEvent#ACTION_SCROLL} event. Multiply
  * this by the event's axis value to obtain the number of pixels to be scrolled.

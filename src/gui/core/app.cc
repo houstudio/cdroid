@@ -1,23 +1,23 @@
-#include <app.h>
-#include <cdlog.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <signal.h>
-#include <cdgraph.h>
-#include <windowmanager.h>
 #include <assets.h>
-#include <cairomm/surface.h>
-#include <inputmethodmanager.h>
 #include <getopt.h>
 #include <fcntl.h>
 #include <string.h>
 #include <thread>
-#include <cdinput.h>
-#include <inputeventsource.h>
 #include <mutex>
-#include <cla.h>
+
+#include <porting/cdlog.h>
+#include <porting/cdgraph.h>
+
+#include <core/app.h>
+#include <core/cla.h>
 #include <core/build.h>
 #include <core/atexit.h>
+#include <core/inputeventsource.h>
+#include <core/windowmanager.h>
+#include <core/inputmethodmanager.h>
 
 #if defined(__linux__)||defined(__unix__)
 extern "C" char *__progname;

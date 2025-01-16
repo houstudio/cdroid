@@ -40,7 +40,7 @@ NestedScrollingChildHelper::NestedScrollingChildHelper( View* view) {
 
 void NestedScrollingChildHelper::setNestedScrollingEnabled(bool enabled) {
     if (mIsNestedScrollingEnabled) {
-	mView->stopNestedScroll();
+         mView->stopNestedScroll();
     }
     mIsNestedScrollingEnabled = enabled;
 }
@@ -100,6 +100,12 @@ bool NestedScrollingChildHelper::dispatchNestedScroll(int dxConsumed, int dyCons
         int dxUnconsumed, int dyUnconsumed, int* offsetInWindow) {
     return dispatchNestedScrollInternal(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,
             offsetInWindow, View::TYPE_TOUCH,nullptr);
+}
+
+bool NestedScrollingChildHelper::dispatchNestedScroll(int dxConsumed, int dyConsumed,
+        int dxUnconsumed, int dyUnconsumed,int* offsetInWindow, int type){
+    int consumed[2];
+    return dispatchNestedScrollInternal(dxConsumed,dyConsumed,dxUnconsumed,dyUnconsumed,offsetInWindow,type,consumed);
 }
 
 bool NestedScrollingChildHelper::dispatchNestedScroll(int dxConsumed, int dyConsumed,

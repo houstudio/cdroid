@@ -3137,29 +3137,54 @@ bool ViewGroup::isTransformedTouchPointInView(float x,float y, View& child,Point
 }
 
 bool ViewGroup::onStartNestedScroll(View* child, View* target, int nestedScrollAxes){
+    return onStartNestedScroll(child,target,nestedScrollAxes,TYPE_TOUCH);
+}
+
+bool ViewGroup::onStartNestedScroll(View* child, View* target, int nestedScrollAxes,int type){
     return false;
 }
 
 void ViewGroup::onNestedScrollAccepted(View* child, View* target, int axes){
+    onNestedScrollAccepted(child,target,axes,TYPE_TOUCH);
+}
+
+void ViewGroup::onNestedScrollAccepted(View* child, View* target, int axes,int type){
     mNestedScrollAxes = axes;
 }
 
 void ViewGroup::onStopNestedScroll(View* child){
+    onStopNestedScroll(child,TYPE_TOUCH);
+}
+
+void ViewGroup::onStopNestedScroll(View* child,int type){
     // Stop any recursive nested scrolling.
     stopNestedScroll();
     mNestedScrollAxes = 0;
 }
 
 void ViewGroup::onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed){
+    onNestedScroll(target,dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, TYPE_TOUCH);
+}
+
+void ViewGroup::onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int type){
+    int consumed[2];
+    onNestedScroll(target,dxConsumed,dyConsumed,dxUnconsumed,dyUnconsumed,type,consumed);
+}
+
+void ViewGroup::onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int type,int*consumed){
     // Re-dispatch up the tree by default
     dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, nullptr);
 }
 
 void ViewGroup::onNestedPreScroll(View* target, int dx, int dy, int*consumed){
-    dispatchNestedPreScroll(dx, dy, consumed, nullptr);
+    onNestedPreScroll(target,dx, dy, consumed,TYPE_TOUCH);
 }
 
-int  ViewGroup::getNestedScrollAxes()const{
+void ViewGroup::onNestedPreScroll(View* target, int dx, int dy, int*consumed,int type){
+    dispatchNestedPreScroll(dx, dy, consumed, nullptr/*offsetInWindow*/);
+}
+
+int  ViewGroup::getNestedScrollAxes(){
     return mNestedScrollAxes;
 }
 

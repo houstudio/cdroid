@@ -82,6 +82,7 @@ list(APPEND CDROID_SOURCES
     view/scalegesturedetector.cc
     view/windowinsets.cc
     #view/menu.cc
+    view/hapticscrollfeedbackprovider.cc
     view/accessibility/accessibilityevent.cc
     view/accessibility/accessibilityrecord.cc
     view/accessibility/accessibilitywindowinfo.cc

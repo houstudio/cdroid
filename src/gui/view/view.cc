@@ -8768,6 +8768,38 @@ bool View::performHapticFeedback(int feedbackConstant, int flags){
             (flags & HapticFeedbackConstants::FLAG_IGNORE_GLOBAL_SETTING) != 0);
 }
 
+void View::performHapticFeedbackForInputDevice(int feedbackConstant, int inputDeviceId,int inputSource, int flags){
+    if (isPerformHapticFeedbackSuppressed(feedbackConstant, flags)) {
+        return;
+    }
+
+    const int privFlags = computeHapticFeedbackPrivateFlags();
+    /*mAttachInfo.mRootCallbacks.performHapticFeedbackForInputDevice(
+            feedbackConstant, inputDeviceId, inputSource, flags, privFlags);*/
+}
+
+bool View::isPerformHapticFeedbackSuppressed(int feedbackConstant, int flags) {
+    /*if (feedbackConstant == HapticFeedbackConstants::NO_HAPTICS
+            || (mAttachInfo == nullptr) || mAttachInfo->mSession == nullptr) {
+        return true;
+    }*/
+    //noinspection SimplifiableIfStatement
+    if ((flags & HapticFeedbackConstants::FLAG_IGNORE_VIEW_SETTING) == 0
+            && !isHapticFeedbackEnabled()) {
+        return true;
+    }
+    return false;
+}
+
+int View::computeHapticFeedbackPrivateFlags() {
+    int privFlags = 0;
+    /*if (mAttachInfo.mViewRootImpl != nullptr
+            && mAttachInfo.mViewRootImpl.mWindowAttributes.type == TYPE_INPUT_METHOD) {
+        privFlags = HapticFeedbackConstants::PRIVATE_FLAG_APPLY_INPUT_METHOD_SETTINGS;
+    }*/
+    return privFlags;
+}
+
 void View::setHapticFeedbackEnabled(bool hapticFeedbackEnabled) {
     setFlags(hapticFeedbackEnabled ? HAPTIC_FEEDBACK_ENABLED: 0, HAPTIC_FEEDBACK_ENABLED);
 }

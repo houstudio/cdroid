@@ -116,7 +116,7 @@ public:
     void onNestedPreScroll(View* target, int dx, int dy, int consumed[]);
     bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed);
     bool onNestedPreFling(View* target, float velocityX, float velocityY);
-    int getNestedScrollAxes();
+    int getNestedScrollAxes()override;
     bool shouldDelayChildPressedState()override;
     int getMaxScrollAmount();
     View& addView(View* child)override;

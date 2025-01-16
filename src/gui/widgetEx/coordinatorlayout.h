@@ -124,21 +124,20 @@ public:
     bool doViewsOverlap(View& first, View& second);
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 
-    bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes);//override;
-    bool onStartNestedScroll(View* child, View* target, int axes, int type);// override;
-    void onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes);//override;
-    void onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes, int type);// override;
-    void onStopNestedScroll(View* target);//override;
-    void onStopNestedScroll(View* target, int type);// override;
+    bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes)override;
+    bool onStartNestedScroll(View* child, View* target, int axes, int type)override;
+    void onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes)override;
+    void onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes, int type) override;
+    void onStopNestedScroll(View* target)override;
+    void onStopNestedScroll(View* target, int type)override;
     void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed);
-    void onNestedScroll(View* target, int dxConsumed, int dyConsumed,
-    int dxUnconsumed, int dyUnconsumed, int type);// override;
+    void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int type)override;
     void onNestedPreScroll(View* target, int dx, int dy, int consumed[]) override;
 
-    void onNestedPreScroll(View* target, int dx, int dy, int* consumed, int  type);// override;
-    bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed);// override;
-    bool onNestedPreFling(View* target, float velocityX, float velocityY);// override;
-    int getNestedScrollAxes();//override;
+    void onNestedPreScroll(View* target, int dx, int dy, int* consumed, int  type)override;
+    bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed)override;
+    bool onNestedPreFling(View* target, float velocityX, float velocityY)override;
+    int getNestedScrollAxes()override;
 
     bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate)override;
 

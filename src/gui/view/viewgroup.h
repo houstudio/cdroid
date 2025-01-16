@@ -415,13 +415,19 @@ public:
 
     virtual bool onInterceptHoverEvent(MotionEvent& event);
     virtual bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes);
+    virtual bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes,int type);
     virtual void onNestedScrollAccepted(View* child, View* target, int axes);
+    virtual void onNestedScrollAccepted(View* child, View* target, int axes,int type);
     virtual void onStopNestedScroll(View* child);
+    virtual void onStopNestedScroll(View* child,int type);
     virtual void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed);
+    virtual void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int type);
+    virtual void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int type,int*consumed);
     virtual void onNestedPreScroll(View* target, int dx, int dy, int*consumed);
-    bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed);
-    int getNestedScrollAxes()const;
-    bool onNestedPreFling(View* target, float velocityX, float velocityY);
+    virtual void onNestedPreScroll(View* target, int dx, int dy, int*consumed,int type);
+    virtual bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed);
+    virtual int getNestedScrollAxes();
+    virtual bool onNestedPreFling(View* target, float velocityX, float velocityY);
 
     void setMotionEventSplittingEnabled(bool split);
     bool isMotionEventSplittingEnabled()const; 
