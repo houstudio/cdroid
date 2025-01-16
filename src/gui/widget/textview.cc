@@ -238,6 +238,10 @@ public:
         };
     }
 
+    ~Marquee(){
+        stop();
+    }
+
     void tick() {
         if (mStatus != MARQUEE_RUNNING) {
             return;
@@ -500,6 +504,7 @@ TextView::~TextView() {
     //delete mTextColor;
     //delete mHintTextColor;
     //delete mLinkTextColor;
+    delete mMarquee;
     delete mScroller;
     delete mLayout;
     delete mHintLayout;

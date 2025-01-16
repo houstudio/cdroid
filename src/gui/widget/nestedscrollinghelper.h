@@ -27,7 +27,8 @@ private :
 private:
     ViewGroup* getNestedScrollingParentForType(int type);
     void setNestedScrollingParentForType(int type, ViewGroup* p);
-
+    bool dispatchNestedScrollInternal(int dxConsumed, int dyConsumed,int dxUnconsumed,
+            int dyUnconsumed,int* offsetInWindow,int type, int*consumed);
 public:
     NestedScrollingChildHelper(View* view);
     void setNestedScrollingEnabled(bool enabled);
@@ -40,15 +41,12 @@ public:
     void stopNestedScroll();
 
     void stopNestedScroll(int type);
-    bool dispatchNestedScroll(int dxConsumed, int dyConsumed,
-        int dxUnconsumed, int dyUnconsumed, int offsetInWindow[]);
+    bool dispatchNestedScroll(int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int* offsetInWindow);
+    bool dispatchNestedScroll(int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int* offsetInWindow,int type);
+    bool dispatchNestedScroll(int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int* offsetInWindow,int type,int*cvomsumed);
 
-    bool dispatchNestedScroll(int dxConsumed, int dyConsumed,
-       int dxUnconsumed, int dyUnconsumed, int offsetInWindow[],int type);
-
-    bool dispatchNestedPreScroll(int dx, int dy, int consumed[],int offsetInWindow[]);
-
-    bool dispatchNestedPreScroll(int dx, int dy, int consumed[] ,int offsetInWindow[],int type);
+    bool dispatchNestedPreScroll(int dx, int dy, int* consumed ,int* offsetInWindow);
+    bool dispatchNestedPreScroll(int dx, int dy, int* consumed ,int* offsetInWindow,int type);
     bool dispatchNestedFling(float velocityX, float velocityY, bool consumed);
     bool dispatchNestedPreFling(float velocityX, float velocityY);
     void onDetachedFromWindow();

@@ -100,10 +100,10 @@ public:
     void stopNestedScroll();
     bool hasNestedScrollingParent();
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,
-        int dyUnconsumed, int offsetInWindow[]);
-    bool dispatchNestedPreScroll(int dx, int dy, int consumed[], int offsetInWindow[]);
-    bool dispatchNestedFling(float velocityX, float velocityY, bool consumed);
-    bool dispatchNestedPreFling(float velocityX, float velocityY);
+        int dyUnconsumed, int offsetInWindow[])override;
+    bool dispatchNestedPreScroll(int dx, int dy, int consumed[], int offsetInWindow[])override;
+    bool dispatchNestedFling(float velocityX, float velocityY, bool consumed)override;
+    bool dispatchNestedPreFling(float velocityX, float velocityY)override;
     bool onStartNestedScroll(View* child,View* target, int axes,int type);
     void onNestedScrollAccepted(View* child,View* target, int axes,int type);
     void onStopNestedScroll(View* target, int type);

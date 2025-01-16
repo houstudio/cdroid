@@ -97,13 +97,18 @@ void NestedScrollingChildHelper::stopNestedScroll( int type) {
 }
 
 bool NestedScrollingChildHelper::dispatchNestedScroll(int dxConsumed, int dyConsumed,
-        int dxUnconsumed, int dyUnconsumed, int offsetInWindow[]) {
-    return dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,
-            offsetInWindow, View::TYPE_TOUCH);
+        int dxUnconsumed, int dyUnconsumed, int* offsetInWindow) {
+    return dispatchNestedScrollInternal(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed,
+            offsetInWindow, View::TYPE_TOUCH,nullptr);
 }
 
 bool NestedScrollingChildHelper::dispatchNestedScroll(int dxConsumed, int dyConsumed,
-        int dxUnconsumed, int dyUnconsumed,int offsetInWindow[], int type) {
+        int dxUnconsumed, int dyUnconsumed,int* offsetInWindow, int type,int*consumed){
+    return dispatchNestedScrollInternal(dxConsumed,dyConsumed,dxUnconsumed,dyUnconsumed,offsetInWindow,type,consumed);
+}
+
+bool NestedScrollingChildHelper::dispatchNestedScrollInternal(int dxConsumed, int dyConsumed,
+        int dxUnconsumed, int dyUnconsumed,int* offsetInWindow, int type,int*consumed) {
     if (isNestedScrollingEnabled()) {
         ViewGroup* parent = getNestedScrollingParentForType(type);
         if (parent == nullptr) {
@@ -118,8 +123,11 @@ bool NestedScrollingChildHelper::dispatchNestedScroll(int dxConsumed, int dyCons
                 startX = offsetInWindow[0];
                 startY = offsetInWindow[1];
             }
-
-	    parent->onNestedScroll(mView, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed/*, type*/);
+            if(consumed==nullptr){
+                consumed = mTempNestedScrollConsumed;
+                consumed[0] = consumed[1] =0;
+            }
+	        parent->onNestedScroll(mView, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, type,consumed);
 
             if (offsetInWindow != nullptr) {
                 mView->getLocationInWindow(offsetInWindow);
@@ -137,12 +145,12 @@ bool NestedScrollingChildHelper::dispatchNestedScroll(int dxConsumed, int dyCons
 }
 
 bool NestedScrollingChildHelper::dispatchNestedPreScroll(int dx, int dy,
-	int consumed[], int offsetInWindow[]) {
+        int* consumed, int* offsetInWindow){
     return dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow, View::TYPE_TOUCH);
 }
 
 bool NestedScrollingChildHelper::dispatchNestedPreScroll(int dx, int dy,
-	int consumed[], int offsetInWindow[], int type) {
+        int consumed[], int offsetInWindow[], int type) {
     if (isNestedScrollingEnabled()) {
         ViewGroup*parent = getNestedScrollingParentForType(type);
         if (parent == nullptr) {
@@ -221,4 +229,5 @@ void NestedScrollingChildHelper::setNestedScrollingParentForType(int type, ViewG
     case View::TYPE_NON_TOUCH: mNestedScrollingParentNonTouch = p;  break;
     }
 }
+
 }/*endof namespace*/

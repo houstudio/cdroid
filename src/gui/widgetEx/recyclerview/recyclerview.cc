@@ -11,6 +11,7 @@
 #include <view/focusfinder.h>
 #include <core/neverdestroyed.h>
 #include <core/mathutils.h>
+#include <core/build.h>
 #include <cassert>
 
 namespace cdroid{
@@ -124,9 +125,9 @@ RecyclerView::~RecyclerView(){
 }
 
 void RecyclerView::initRecyclerView(){
-    mLayoutFrozen = false;
     mIsAttached   = false;
     mHasFixedSize = true;
+    mLayoutSuppressed = false;
     mEnableFastScroller = false;
     mClipToPadding = true;
     mIgnoreMotionEventTillDown = false;
@@ -151,6 +152,7 @@ void RecyclerView::initRecyclerView(){
     mAdapter= nullptr;
     mAccessibilityDelegate = nullptr;
     mActiveOnItemTouchListener = nullptr;
+    mInterceptingOnItemTouchListener = nullptr;
     mMinMaxLayoutPositions[0] = mMinMaxLayoutPositions[1] = 0;
     mScrollOffset[0] = mScrollOffset[1] = 0;
     mScrollConsumed[0] = mScrollConsumed[1] = 0;
@@ -217,7 +219,7 @@ void RecyclerView::doUpdateChildViews(){
         // if we are not attached yet, mark us as requiring layout and skip
         return;
     }
-    if (mLayoutFrozen) {
+    if (mLayoutSuppressed) {
         mLayoutWasDefered = true;
         return; //we'll process updates when ice age ends.
     }
@@ -476,7 +478,7 @@ void RecyclerView::setScrollingTouchSlop(int slopConstant) {
 
 void RecyclerView::swapAdapter(Adapter* adapter, bool removeAndRecycleExistingViews) {
     // bail out if layout is frozen
-    setLayoutFrozen(false);
+    suppressLayout(false);
     setAdapterInternal(adapter, true, removeAndRecycleExistingViews);
     processDataSetCompletelyChanged(true);
     requestLayout();
@@ -484,7 +486,7 @@ void RecyclerView::swapAdapter(Adapter* adapter, bool removeAndRecycleExistingVi
 
 void RecyclerView::setAdapter(Adapter* adapter) {
     // bail out if layout is frozen
-    setLayoutFrozen(false);
+    suppressLayout(false);
     setAdapterInternal(adapter, false, true);
     processDataSetCompletelyChanged(false);
     requestLayout();
@@ -534,8 +536,24 @@ RecyclerView::Adapter* RecyclerView::getAdapter() {
     return mAdapter;
 }
 
-void RecyclerView::setRecyclerListener(RecyclerListener listener) {
+void RecyclerView::setRecyclerListener(const RecyclerListener& listener) {
     mRecyclerListener = listener;
+}
+
+void RecyclerView::addRecyclerListener(const RecyclerListener& listener) {
+    mRecyclerListeners.push_back(listener);
+}
+
+/**
+ * Removes the provided listener from RecyclerListener list.
+ *
+ * @param listener Listener to unregister.
+ */
+void RecyclerView::removeRecyclerListener(const RecyclerListener& listener) {
+    auto it=std::find(mRecyclerListeners.begin(),mRecyclerListeners.end(),listener);
+    if(it!=mRecyclerListeners.end()){
+        mRecyclerListeners.erase(it);
+    }
 }
 
 int RecyclerView::getBaseline() {
@@ -796,7 +814,7 @@ void RecyclerView::clearOnScrollListeners() {
 }
 
 void RecyclerView::scrollToPosition(int position) {
-    if (mLayoutFrozen) {
+    if (mLayoutSuppressed) {
         return;
     }
     stopScroll();
@@ -818,7 +836,7 @@ void RecyclerView::jumpToPositionForSmoothScroller(int position) {
 }
 
 void RecyclerView::smoothScrollToPosition(int position) {
-    if (mLayoutFrozen) {
+    if (mLayoutSuppressed) {
         return;
     }
     if (mLayout == nullptr) {
@@ -829,24 +847,141 @@ void RecyclerView::smoothScrollToPosition(int position) {
     mLayout->smoothScrollToPosition(*this, *mState, position);
 }
 
+bool RecyclerView::dispatchKeyEvent(KeyEvent& event) {
+    // Let child to dispatch first, then handle ours if child didn't do it.
+    if (ViewGroup::dispatchKeyEvent(event)) {
+        return true;
+    }
+
+    LayoutManager* layoutManager = getLayoutManager();
+    // If there is no layout manager, then there is nothing to handle key events for.
+    if (layoutManager == nullptr) {
+        return false;
+    }
+    bool isReversed;
+    int targetOffset,height,width;
+    const int keyCode = event.getKeyCode();
+    if (layoutManager->canScrollVertically()) {
+        switch (keyCode) {
+            case KeyEvent::KEYCODE_PAGE_DOWN:
+            case KeyEvent::KEYCODE_PAGE_UP:
+                height = getMeasuredHeight();
+                if (keyCode == KeyEvent::KEYCODE_PAGE_DOWN) {
+                    smoothScrollBy(0, height, nullptr, RecyclerView::UNDEFINED_DURATION);
+                } else {
+                    smoothScrollBy(0, -height, nullptr, RecyclerView::UNDEFINED_DURATION);
+                }
+                return true;
+
+            case KeyEvent::KEYCODE_MOVE_HOME:
+            case KeyEvent::KEYCODE_MOVE_END:
+                isReversed = layoutManager->isLayoutReversed();
+
+                if (keyCode == KeyEvent::KEYCODE_MOVE_HOME) {
+                    targetOffset = isReversed ? getAdapter()->getItemCount() : 0;
+                } else {
+                    targetOffset = isReversed ? 0 : getAdapter()->getItemCount();
+                }
+
+                smoothScrollToPosition(targetOffset);
+                return true;
+        }
+    } else if (layoutManager->canScrollHorizontally()) {
+        switch (keyCode) {
+            case KeyEvent::KEYCODE_PAGE_DOWN:
+            case KeyEvent::KEYCODE_PAGE_UP:
+                width = getMeasuredWidth();
+                if (keyCode == KeyEvent::KEYCODE_PAGE_DOWN) {
+                    smoothScrollBy(width, 0, nullptr, RecyclerView::UNDEFINED_DURATION);
+                } else {
+                    smoothScrollBy(-width, 0, nullptr, RecyclerView::UNDEFINED_DURATION);
+                }
+                return true;
+
+            case KeyEvent::KEYCODE_MOVE_HOME:
+            case KeyEvent::KEYCODE_MOVE_END:
+                isReversed = layoutManager->isLayoutReversed();
+
+                if (keyCode == KeyEvent::KEYCODE_MOVE_HOME) {
+                    targetOffset = isReversed ? getAdapter()->getItemCount() : 0;
+                } else {
+                    targetOffset = isReversed ? 0 : getAdapter()->getItemCount();
+                }
+
+                smoothScrollToPosition(targetOffset);
+                return true;
+        }
+    }
+
+    return false;
+}
+
 void RecyclerView::scrollTo(int x, int y) {
     LOGW("RecyclerView does not support scrolling to an absolute position. Use scrollToPosition instead");
 }
 
 void RecyclerView::scrollBy(int x, int y) {
     if (mLayout == nullptr) {
-        LOGE("Cannot scroll without a LayoutManager set. "
-               "Call setLayoutManager with a non-null argument.");
+        LOGE("Cannot scroll without a LayoutManager set. Call setLayoutManager with a non-null argument.");
         return;
     }
-    if (mLayoutFrozen) {
+    if (mLayoutSuppressed) {
         return;
     }
     const bool canScrollHorizontal = mLayout->canScrollHorizontally();
     const bool canScrollVertical = mLayout->canScrollVertically();
     if (canScrollHorizontal || canScrollVertical) {
-        scrollByInternal(canScrollHorizontal ? x : 0, canScrollVertical ? y : 0, nullptr);
+        scrollByInternal(canScrollHorizontal ? x : 0, canScrollVertical ? y : 0,
+                /*horizontalAxis*/-1,/*verticalAxis*/-1,/*ev*/nullptr,TYPE_TOUCH);
     }
+}
+
+void RecyclerView::nestedScrollByInternal(int x,int y,int horizontalAxis,int verticalAxis,
+       MotionEvent* motionEvent,int type) {
+    if (mLayout == nullptr) {
+        LOGE("Cannot scroll without a LayoutManager set. Call setLayoutManager with a non-null argument.");
+        return;
+    }
+    if (mLayoutSuppressed) {
+        return;
+    }
+    mReusableIntPair[0] = 0;
+    mReusableIntPair[1] = 0;
+    bool canScrollHorizontal = mLayout->canScrollHorizontally();
+    bool canScrollVertical = mLayout->canScrollVertically();
+
+    int nestedScrollAxis = View::SCROLL_AXIS_NONE;
+    if (canScrollHorizontal) {
+        nestedScrollAxis |= View::SCROLL_AXIS_HORIZONTAL;
+    }
+    if (canScrollVertical) {
+        nestedScrollAxis |= View::SCROLL_AXIS_VERTICAL;
+    }
+
+    // If there is no MotionEvent, treat it as center-aligned edge effect:
+    float verticalDisplacement = motionEvent == nullptr ? getHeight() / 2.f : motionEvent->getY();
+    float horizontalDisplacement = motionEvent == nullptr ? getWidth() / 2.f : motionEvent->getX();
+    x -= releaseHorizontalGlow(x, verticalDisplacement);
+    y -= releaseVerticalGlow(y, horizontalDisplacement);
+    startNestedScroll(nestedScrollAxis, type);
+    if (dispatchNestedPreScroll(
+            canScrollHorizontal ? x : 0,
+            canScrollVertical ? y : 0,
+            mReusableIntPair, mScrollOffset, type
+    )) {
+        x -= mReusableIntPair[0];
+        y -= mReusableIntPair[1];
+    }
+
+    scrollByInternal(
+            canScrollHorizontal ? x : 0,
+            canScrollVertical ? y : 0,
+            horizontalAxis, verticalAxis,
+            motionEvent, type);
+    /*if (mGapWorker != nullptr && (x != 0 || y != 0)) {
+        mGapWorker->postFromTraversal(this, x, y);
+    }*/
+    stopNestedScroll(type);
 }
 
 void RecyclerView::scrollStep(int dx, int dy,int* consumed) {
@@ -924,12 +1059,14 @@ bool RecyclerView::hasUpdatedView() {
     return false;
 }
 
-bool RecyclerView::scrollByInternal(int x, int y, MotionEvent* ev) {
+bool RecyclerView::scrollByInternal(int x, int y,int horizontalAxis,int verticalAxis, MotionEvent* ev,int type) {
     int unconsumedX = 0, unconsumedY = 0;
     int consumedX = 0, consumedY = 0;
 
     consumePendingUpdateOperations();
     if (mAdapter != nullptr) {
+        mReusableIntPair[0] = 0;
+        mReusableIntPair[1] = 0;
         scrollStep(x, y, mScrollStepConsumed);
         consumedX = mScrollStepConsumed[0];
         consumedY = mScrollStepConsumed[1];
@@ -940,19 +1077,36 @@ bool RecyclerView::scrollByInternal(int x, int y, MotionEvent* ev) {
         invalidate();
     }
 
-    if (dispatchNestedScroll(consumedX, consumedY, unconsumedX, unconsumedY, mScrollOffset,
-            View::TYPE_TOUCH)) {
-        // Update the last touch co-ords, taking any scroll offset into account
-        mLastTouchX -= mScrollOffset[0];
-        mLastTouchY -= mScrollOffset[1];
-        if (ev != nullptr) {
-            ev->offsetLocation(float(mScrollOffset[0]), float(mScrollOffset[1]));
+    mReusableIntPair[0] = 0;
+    mReusableIntPair[1] = 0;
+
+    dispatchNestedScroll(consumedX, consumedY, unconsumedX, unconsumedY, mScrollOffset,type,mReusableIntPair);
+    unconsumedX -= mReusableIntPair[0];
+    unconsumedY -= mReusableIntPair[1];
+    bool consumedNestedScroll = mReusableIntPair[0] != 0 || mReusableIntPair[1] != 0;
+    // Update the last touch co-ords, taking any scroll offset into account
+    mLastTouchX -= mScrollOffset[0];
+    mLastTouchY -= mScrollOffset[1];
+    mNestedOffsets[0] += mScrollOffset[0];
+    mNestedOffsets[1] += mScrollOffset[1];
+
+    if (ev != nullptr) {
+        if (consumedX != 0) {
+            getScrollFeedbackProvider()->onScrollProgress(
+                ev->getDeviceId(), ev->getSource(), horizontalAxis, consumedX);
         }
-        mNestedOffsets[0] += mScrollOffset[0];
-        mNestedOffsets[1] += mScrollOffset[1];
-    } else if (getOverScrollMode() != View::OVER_SCROLL_NEVER) {
+        if (consumedY != 0) {
+            getScrollFeedbackProvider()->onScrollProgress(
+                ev->getDeviceId(), ev->getSource(), verticalAxis, consumedY);
+        }
+    }
+    if (getOverScrollMode() != View::OVER_SCROLL_NEVER) {
         if (ev != nullptr && !ev->isFromSource(InputDevice::SOURCE_MOUSE)) {
-            pullGlows(ev->getX(), unconsumedX, ev->getY(), unconsumedY);
+            pullGlows(ev,ev->getX(),horizontalAxis, unconsumedX,
+                    ev->getY(), verticalAxis,unconsumedY);
+            if(ev->isFromSource(InputDevice::SOURCE_ROTARY_ENCODER)){
+                releaseGlows();
+            }
         }
         considerReleasingGlowsOnScroll(x, y);
     }
@@ -963,6 +1117,64 @@ bool RecyclerView::scrollByInternal(int x, int y, MotionEvent* ev) {
         invalidate();
     }
     return (consumedX != 0) || (consumedY != 0);
+}
+
+int RecyclerView::releaseHorizontalGlow(int deltaX, float y) {
+    // First allow releasing existing overscroll effect:
+    float consumed = 0;
+    float displacement = y / getHeight();
+    float pullDistance = (float) deltaX / getWidth();
+    if (mLeftGlow != nullptr && mLeftGlow->getDistance() != 0) {
+        if (canScrollHorizontally(-1)) {
+            mLeftGlow->onRelease();
+        } else {
+            consumed = -mLeftGlow->onPullDistance(-pullDistance,1 - displacement);
+            if (mLeftGlow->getDistance() == 0) {
+                mLeftGlow->onRelease();
+            }
+        }
+        invalidate();
+    } else if (mRightGlow != nullptr && mRightGlow->getDistance() != 0) {
+        if (canScrollHorizontally(1)) {
+            mRightGlow->onRelease();
+        } else {
+            consumed = mRightGlow->onPullDistance(pullDistance, displacement);
+            if (mRightGlow->getDistance() == 0) {
+                mRightGlow->onRelease();
+            }
+        }
+        invalidate();
+    }
+    return std::round(consumed * getWidth());
+}
+
+int RecyclerView::releaseVerticalGlow(int deltaY, float x) {
+    // First allow releasing existing overscroll effect:
+    float consumed = 0;
+    float displacement = x / getWidth();
+    float pullDistance = (float) deltaY / getHeight();
+    if (mTopGlow != nullptr && mTopGlow->getDistance() != 0) {
+        if (canScrollVertically(-1)) {
+            mTopGlow->onRelease();
+        } else {
+            consumed = -mTopGlow->onPullDistance(-pullDistance, displacement);
+            if (mTopGlow->getDistance() == 0) {
+                mTopGlow->onRelease();
+            }
+        }
+        invalidate();
+    } else if (mBottomGlow != nullptr && mBottomGlow->getDistance() != 0) {
+        if (canScrollVertically(1)) {
+            mBottomGlow->onRelease();
+        } else {
+            consumed = mBottomGlow->onPullDistance(pullDistance,1 - displacement);
+            if (mBottomGlow->getDistance() == 0) {
+                mBottomGlow->onRelease();
+            }
+        }
+        invalidate();
+    }
+    return std::round(consumed * getHeight());
 }
 
 int RecyclerView::computeHorizontalScrollOffset() {
@@ -1009,7 +1221,7 @@ int RecyclerView::computeVerticalScrollRange() {
 
 void RecyclerView::startInterceptRequestLayout() {
     mInterceptRequestLayoutDepth++;
-    if ((mInterceptRequestLayoutDepth == 1) && !mLayoutFrozen) {
+    if ((mInterceptRequestLayoutDepth == 1) && !mLayoutSuppressed) {
         mLayoutWasDefered = false;
     }
 }
@@ -1021,27 +1233,27 @@ void RecyclerView::stopInterceptRequestLayout(bool performLayoutChildren) {
             "times than startInterceptRequestLayout.");
         mInterceptRequestLayoutDepth = 1;
     }
-    if (!performLayoutChildren && !mLayoutFrozen) {
+    if (!performLayoutChildren && !mLayoutSuppressed) {
         mLayoutWasDefered = false;
     }
     if (mInterceptRequestLayoutDepth == 1) {
         // when layout is frozen we should delay dispatchLayout()
-        if (performLayoutChildren && mLayoutWasDefered && !mLayoutFrozen
+        if (performLayoutChildren && mLayoutWasDefered && !mLayoutSuppressed
                 && (mLayout != nullptr) && (mAdapter != nullptr)) {
             dispatchLayout();
         }
-        if (!mLayoutFrozen) {
+        if (!mLayoutSuppressed) {
             mLayoutWasDefered = false;
         }
     }
     mInterceptRequestLayoutDepth--;
 }
 
-void RecyclerView::setLayoutFrozen(bool frozen) {
-    if (frozen != mLayoutFrozen) {
-        assertNotInLayoutOrScroll("Do not setLayoutFrozen in layout or scroll");
+void RecyclerView::suppressLayout(bool frozen) {
+    if (frozen != mLayoutSuppressed) {
+        assertNotInLayoutOrScroll("Do not suppressLayout in layout or scroll");
         if (!frozen) {
-            mLayoutFrozen = false;
+            mLayoutSuppressed = false;
             if (mLayoutWasDefered && (mLayout != nullptr) && (mAdapter != nullptr)) {
                 requestLayout();
             }
@@ -1051,15 +1263,15 @@ void RecyclerView::setLayoutFrozen(bool frozen) {
             MotionEvent* cancelEvent = MotionEvent::obtain(now, now,
                     MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
             onTouchEvent(*cancelEvent);
-            mLayoutFrozen = true;
+            mLayoutSuppressed = true;
             mIgnoreMotionEventTillDown = true;
             stopScroll();
         }
     }
 }
 
-bool RecyclerView::isLayoutFrozen() {
-    return mLayoutFrozen;
+bool RecyclerView::isLayoutSuppressed() const{
+    return mLayoutSuppressed;
 }
 
 void RecyclerView::smoothScrollBy(int dx,int dy) {
@@ -1067,12 +1279,20 @@ void RecyclerView::smoothScrollBy(int dx,int dy) {
 }
 
 void RecyclerView::smoothScrollBy(int dx,int dy,Interpolator* interpolator) {
+    smoothScrollBy(dx,dy,interpolator,UNDEFINED_DURATION);
+}
+
+void RecyclerView::smoothScrollBy(int dx,int dy,Interpolator* interpolator,int duration){
+    smoothScrollBy(dx,dy,interpolator,duration,false);
+}
+
+void RecyclerView::smoothScrollBy(int dx,int dy,Interpolator* interpolator,int duration,bool withNestedScrolling){
     if (mLayout == nullptr) {
         LOGE("Cannot smooth scroll without a LayoutManager set. "
                "Call setLayoutManager with a non-null argument.");
         return;
     }
-    if (mLayoutFrozen) {
+    if (mLayoutSuppressed) {
         return;
     }
     if (!mLayout->canScrollHorizontally()) {
@@ -1082,17 +1302,39 @@ void RecyclerView::smoothScrollBy(int dx,int dy,Interpolator* interpolator) {
         dy = 0;
     }
     if ((dx != 0) || (dy != 0)) {
-        mViewFlinger->smoothScrollBy(dx, dy, interpolator);
+        bool durationSuggestsAnimation = duration == UNDEFINED_DURATION || duration > 0;
+        if (durationSuggestsAnimation) {
+            if (withNestedScrolling) {
+                int nestedScrollAxis = View::SCROLL_AXIS_NONE;
+                if (dx != 0) {
+                    nestedScrollAxis |= View::SCROLL_AXIS_HORIZONTAL;
+                }
+                if (dy != 0) {
+                    nestedScrollAxis |= View::SCROLL_AXIS_VERTICAL;
+                }
+                startNestedScroll(nestedScrollAxis, TYPE_NON_TOUCH);
+            }
+            mViewFlinger->smoothScrollBy(dx, dy, duration, interpolator);
+        } else {
+            scrollBy(dx, dy);
+        }
     }
 }
 
 bool RecyclerView::fling(int velocityX, int velocityY) {
+    return fling(velocityX,velocityY,mMinFlingVelocity, mMaxFlingVelocity);
+}
+
+bool RecyclerView::flingNoThresholdCheck(int velocityX, int velocityY){
+    return fling(velocityX, velocityY, 0, INT_MAX);
+}
+
+bool RecyclerView::fling(int velocityX, int velocityY, int minFlingVelocity, int maxFlingVelocity){
     if (mLayout == nullptr) {
-        LOGE("Cannot fling without a LayoutManager set. "
-            "Call setLayoutManager with a non-null argument.");
+        LOGE("Cannot fling without a LayoutManager set. Call setLayoutManager with a non-null argument.");
         return false;
     }
-    if (mLayoutFrozen) {
+    if (mLayoutSuppressed) {
         return false;
     }
 
@@ -1109,7 +1351,52 @@ bool RecyclerView::fling(int velocityX, int velocityY) {
         // If we don't have any velocity, return false
         return false;
     }
-
+    // Flinging while the edge effect is active should affect the edge effect,
+    // not scrolling.
+    int flingX =0,flingY=0;
+    if (velocityX != 0) {
+        if (mLeftGlow != nullptr && mLeftGlow->getDistance() != 0) {
+            if (shouldAbsorb(mLeftGlow, -velocityX, getWidth())) {
+                mLeftGlow->onAbsorb(-velocityX);
+            } else {
+                flingX = velocityX;
+            }
+            velocityX = 0;
+        } else if (mRightGlow != nullptr && mRightGlow->getDistance() != 0) {
+            if (shouldAbsorb(mRightGlow, velocityX, getWidth())) {
+                mRightGlow->onAbsorb(velocityX);
+            } else {
+                flingX = velocityX;
+            }
+            velocityX = 0;
+        }
+    }
+    if (velocityY != 0) {
+        if (mTopGlow != nullptr && mTopGlow->getDistance() != 0) {
+            if (shouldAbsorb(mTopGlow, -velocityY, getHeight())) {
+                mTopGlow->onAbsorb(-velocityY);
+            } else {
+                flingY = velocityY;
+            }
+            velocityY = 0;
+        } else if (mBottomGlow != nullptr && mBottomGlow->getDistance() != 0) {
+            if (shouldAbsorb(mBottomGlow, velocityY, getHeight())) {
+                mBottomGlow->onAbsorb(velocityY);
+            } else {
+                flingY = velocityY;
+            }
+            velocityY = 0;
+        }
+    }
+    if (flingX != 0 || flingY != 0) {
+        flingX = std::max(-maxFlingVelocity, std::min(flingX, maxFlingVelocity));
+        flingY = std::max(-maxFlingVelocity, std::min(flingY, maxFlingVelocity));
+        startNestedScrollForType(TYPE_NON_TOUCH);
+        mViewFlinger->fling(flingX, flingY);
+    }
+    if (velocityX == 0 && velocityY == 0) {
+        return flingX != 0 || flingY != 0;
+    }
     if (!dispatchNestedPreFling(float(velocityX), float(velocityY))) {
         const bool canScroll = bCanScrollHorizontal || bCanScrollVertical;
         dispatchNestedFling(velocityX, velocityY, canScroll);
@@ -1134,6 +1421,61 @@ bool RecyclerView::fling(int velocityX, int velocityY) {
     return false;
 }
 
+void RecyclerView::startNestedScrollForType(int type){
+    const bool canScrollHorizontal = mLayout->canScrollHorizontally();
+    const bool canScrollVertical = mLayout->canScrollVertically();
+    int nestedScrollAxis = View::SCROLL_AXIS_NONE;
+    if (canScrollHorizontal) {
+        nestedScrollAxis |= View::SCROLL_AXIS_HORIZONTAL;
+    }
+    if (canScrollVertical) {
+        nestedScrollAxis |= View::SCROLL_AXIS_VERTICAL;
+    }
+    startNestedScroll(nestedScrollAxis, type);
+}
+
+bool RecyclerView::shouldAbsorb(EdgeEffect* edgeEffect, int velocity, int size){
+    if (velocity > 0) {
+        return true;
+    }
+    const float distance = edgeEffect->getDistance() * size;
+
+    // This is flinging without the spring, so let's see if it will fling past the overscroll
+    const float flingDistance = getSplineFlingDistance(-velocity);
+
+    return flingDistance < distance;
+}
+
+int RecyclerView::consumeFlingInHorizontalStretch(int unconsumedX){
+    return consumeFlingInStretch(unconsumedX, mLeftGlow, mRightGlow, getWidth());
+}
+
+int RecyclerView::consumeFlingInVerticalStretch(int unconsumedY){
+    return consumeFlingInStretch(unconsumedY, mTopGlow, mBottomGlow, getHeight());
+}
+
+int RecyclerView::consumeFlingInStretch(int unconsumed, EdgeEffect* startGlow, EdgeEffect* endGlow,int size){
+    if (unconsumed > 0 && startGlow != nullptr && startGlow->getDistance() != 0.f) {
+            const float deltaDistance = -unconsumed * FLING_DESTRETCH_FACTOR / size;
+            const int consumed = std::round(-size / FLING_DESTRETCH_FACTOR
+                    * startGlow->onPullDistance(deltaDistance, 0.5f));
+            if (consumed != unconsumed) {
+                startGlow->finish();
+            }
+            return unconsumed - consumed;
+        }
+        if (unconsumed < 0 && endGlow != nullptr && endGlow->getDistance() != 0.f) {
+            const float deltaDistance = unconsumed * FLING_DESTRETCH_FACTOR / size;
+            const int consumed = std::round(size / FLING_DESTRETCH_FACTOR
+                    * endGlow->onPullDistance(deltaDistance, 0.5f));
+            if (consumed != unconsumed) {
+                endGlow->finish();
+            }
+            return unconsumed - consumed;
+        }
+        return unconsumed;
+}
+
 void RecyclerView::stopScroll() {
     setScrollState(SCROLL_STATE_IDLE);
     stopScrollersInternal();
@@ -1154,25 +1496,43 @@ int RecyclerView::getMaxFlingVelocity() const{
     return mMaxFlingVelocity;
 }
 
-void RecyclerView::pullGlows(float x, float overscrollX, float y, float overscrollY) {
+void RecyclerView::pullGlows(MotionEvent* ev,
+        float x,int horizontalAxis,float overscrollX,
+        float y,int verticalAxis,float overscrollY){//float x, float overscrollX, float y, float overscrollY) {
     bool bInvalidate = false;
     if (overscrollX < 0) {
         ensureLeftGlow();
         mLeftGlow->onPull(-overscrollX / getWidth(), 1.f - y  / getHeight());
+        if (ev != nullptr) {
+            getScrollFeedbackProvider()->onScrollLimit(
+                ev->getDeviceId(), ev->getSource(), horizontalAxis, /* isStart= */ true);
+        }
         bInvalidate = true;
     } else if (overscrollX > 0) {
         ensureRightGlow();
         mRightGlow->onPull(overscrollX / getWidth(), y / getHeight());
+        if (ev != nullptr) {
+            getScrollFeedbackProvider()->onScrollLimit(
+                ev->getDeviceId(), ev->getSource(), horizontalAxis, /* isStart= */ false);
+        }
         bInvalidate = true;
     }
 
     if (overscrollY < 0) {
         ensureTopGlow();
         mTopGlow->onPull(-overscrollY / getHeight(), x / getWidth());
+        if (ev != nullptr) {
+            getScrollFeedbackProvider()->onScrollLimit(
+                ev->getDeviceId(), ev->getSource(), verticalAxis, /* isStart= */ true);
+        }
         bInvalidate = true;
     } else if (overscrollY > 0) {
         ensureBottomGlow();
         mBottomGlow->onPull(overscrollY / getHeight(), 1.f - x / getWidth());
+        if (ev != nullptr) {
+            getScrollFeedbackProvider()->onScrollLimit(
+                ev->getDeviceId(), ev->getSource(), verticalAxis, /* isStart= */ false);
+        }
         bInvalidate = true;
     }
 
@@ -1230,18 +1590,22 @@ void RecyclerView::considerReleasingGlowsOnScroll(int dx, int dy) {
 void RecyclerView::absorbGlows(int velocityX, int velocityY) {
     if (velocityX < 0) {
         ensureLeftGlow();
-        mLeftGlow->onAbsorb(-velocityX);
+        if(mLeftGlow->isFinished())
+            mLeftGlow->onAbsorb(-velocityX);
     } else if (velocityX > 0) {
         ensureRightGlow();
-        mRightGlow->onAbsorb(velocityX);
+        if(mRightGlow->isFinished())
+            mRightGlow->onAbsorb(velocityX);
     }
 
     if (velocityY < 0) {
         ensureTopGlow();
-        mTopGlow->onAbsorb(-velocityY);
+        if(mTopGlow->isFinished())
+            mTopGlow->onAbsorb(-velocityY);
     } else if (velocityY > 0) {
         ensureBottomGlow();
-        mBottomGlow->onAbsorb(velocityY);
+        if(mBottomGlow->isFinished())
+            mBottomGlow->onAbsorb(velocityY);
     }
 
     if ((velocityX != 0) || (velocityY != 0)) {
@@ -1322,7 +1686,7 @@ View* RecyclerView::focusSearch(View* focused, int direction){
         return result;
     }
     const bool canRunFocusFailure = (mAdapter != nullptr) && (mLayout != nullptr)
-            && !isComputingLayout() && !mLayoutFrozen;
+            && !isComputingLayout() && !mLayoutSuppressed;
 
     FocusFinder ff = FocusFinder::getInstance();
     if (canRunFocusFailure && (direction == View::FOCUS_FORWARD || direction == View::FOCUS_BACKWARD)) {
@@ -1600,6 +1964,52 @@ void RecyclerView::removeOnItemTouchListener(OnItemTouchListener listener) {
     mOnItemTouchListeners.erase(it);
 }
 
+bool RecyclerView::dispatchToOnItemTouchListeners(MotionEvent& e) {
+
+    // OnItemTouchListeners should receive calls to their methods in the same pattern that
+    // ViewGroups do. That pattern is a bit confusing, which in turn makes the below code a
+    // bit confusing.  Here are rules for the pattern:
+    //
+    // 1. A single MotionEvent should not be passed to either OnInterceptTouchEvent or
+    // OnTouchEvent twice.
+    // 2. ACTION_DOWN MotionEvents may be passed to both onInterceptTouchEvent and
+    // onTouchEvent.
+    // 3. All other MotionEvents should be passed to either onInterceptTouchEvent or
+    // onTouchEvent, not both.
+
+    // Side Note: We don't currently perfectly mimic how MotionEvents work in the view system.
+    // If we were to do so, for every MotionEvent, any OnItemTouchListener that is before the
+    // intercepting OnItemTouchEvent should still have a chance to intercept, and if it does,
+    // the previously intercepting OnItemTouchEvent should get an ACTION_CANCEL event.
+
+    if (mInterceptingOnItemTouchListener == nullptr) {
+        if (e.getAction() == MotionEvent::ACTION_DOWN) {
+            return false;
+        }
+        return findInterceptingOnItemTouchListener(e);
+    } else {
+        mInterceptingOnItemTouchListener->onTouchEvent(*this, e);
+        const int action = e.getAction();
+        if (action == MotionEvent::ACTION_CANCEL || action == MotionEvent::ACTION_UP) {
+            mInterceptingOnItemTouchListener = nullptr;
+        }
+        return true;
+    }
+}
+
+bool RecyclerView::findInterceptingOnItemTouchListener(MotionEvent& e) {
+    const int action = e.getAction();
+    const int listenerCount = mOnItemTouchListeners.size();
+    for (int i = 0; i < listenerCount; i++) {
+        OnItemTouchListener& listener = mOnItemTouchListeners.at(i);
+        if (listener.onInterceptTouchEvent(*this, e) && action != MotionEvent::ACTION_CANCEL) {
+            mInterceptingOnItemTouchListener = &listener;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool RecyclerView::dispatchOnItemTouchIntercept(MotionEvent& e) {
     const int action = e.getAction();
     if (action == MotionEvent::ACTION_CANCEL || action == MotionEvent::ACTION_DOWN) {
@@ -1649,7 +2059,7 @@ bool RecyclerView::dispatchOnItemTouch(MotionEvent& e) {
 }
 
 bool RecyclerView::onInterceptTouchEvent(MotionEvent& e) {
-    if (mLayoutFrozen) {
+    if (mLayoutSuppressed) {
         // When layout is frozen,  RV does not intercept the motion event.
         // A child view e.g. a button may still get the click.
         return false;
@@ -1761,7 +2171,7 @@ void RecyclerView::requestDisallowInterceptTouchEvent(bool disallowIntercept) {
 }
 
 bool RecyclerView::onTouchEvent(MotionEvent& e) {
-    if (mLayoutFrozen || mIgnoreMotionEventTillDown) {
+    if (mLayoutSuppressed || mIgnoreMotionEventTillDown) {
         return false;
     }
     if (dispatchOnItemTouch(e)) {
@@ -1864,7 +2274,8 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
                 if (scrollByInternal(
                         bCanScrollHorizontally ? dx : 0,
                         bCanScrollVertically ? dy : 0,
-                        vtev)) {
+                        MotionEvent::AXIS_X, MotionEvent::AXIS_Y,
+                        &e,TYPE_TOUCH)) {
                     getParent()->requestDisallowInterceptTouchEvent(true);
                 }
                 /*if (mGapWorker != nullptr && (dx != 0 || dy != 0)) {
@@ -1930,9 +2341,13 @@ bool RecyclerView::onGenericMotionEvent(MotionEvent& event) {
     if (mLayout == nullptr) {
         return false;
     }
-    if (mLayoutFrozen) {
+    if (mLayoutSuppressed) {
         return false;
     }
+    int flingAxis = 0;
+    int horizontalAxis =0;
+    int verticalAxis = 0;
+    bool useSmoothScroll = false;
     if (event.getAction() == MotionEvent::ACTION_SCROLL) {
         float vScroll, hScroll;
         if ((event.getSource() & InputDevice::SOURCE_CLASS_POINTER) != 0) {
@@ -1940,11 +2355,13 @@ bool RecyclerView::onGenericMotionEvent(MotionEvent& event) {
                 // Inverse the sign of the vertical scroll to align the scroll orientation
                 // with AbsListView.
                 vScroll = -event.getAxisValue(MotionEvent::AXIS_VSCROLL);
+                verticalAxis = MotionEvent::AXIS_VSCROLL;
             } else {
                 vScroll = 0.f;
             }
             if (mLayout->canScrollHorizontally()) {
                 hScroll = event.getAxisValue((int)MotionEvent::AXIS_HSCROLL);
+                horizontalAxis = MotionEvent::AXIS_HSCROLL;
             } else {
                 hScroll = 0.f;
             }
@@ -1954,22 +2371,43 @@ bool RecyclerView::onGenericMotionEvent(MotionEvent& event) {
                 // Invert the sign of the vertical scroll to align the scroll orientation
                 // with AbsListView.
                 vScroll = -axisScroll;
+                verticalAxis = MotionEvent::AXIS_SCROLL;
                 hScroll = 0.f;
             } else if (mLayout->canScrollHorizontally()) {
                 vScroll = 0.f;
                 hScroll = axisScroll;
+                horizontalAxis = MotionEvent::AXIS_SCROLL;
             } else {
                 vScroll = 0.f;
                 hScroll = 0.f;
             }
+            // Use smooth scrolling for low resolution rotary encoders to avoid the visible
+            // pixel jumps that would be caused by doing regular scrolling.
+            useSmoothScroll = mLowResRotaryEncoderFeature;
+            // Support fling for rotary encoders.
+            flingAxis = MotionEvent::AXIS_SCROLL;
         } else {
             vScroll = 0.f;
             hScroll = 0.f;
         }
 
-        if ((vScroll != 0) || (hScroll != 0)) {
-            scrollByInternal((int) (hScroll * mScaledHorizontalScrollFactor),
-                    (int) (vScroll * mScaledVerticalScrollFactor), &event);
+        int scaledVScroll = (int) (vScroll * mScaledVerticalScrollFactor);
+        int scaledHScroll = (int) (hScroll * mScaledHorizontalScrollFactor);
+        if (useSmoothScroll) {
+            OverScroller* overScroller = mViewFlinger->mOverScroller;
+            // Account for any remaining scroll from a previous generic motion event.
+            scaledVScroll += overScroller->getFinalY() - overScroller->getCurrY();
+            scaledHScroll += overScroller->getFinalX() - overScroller->getCurrX();
+            smoothScrollBy(scaledHScroll, scaledVScroll, /* interpolator= */ nullptr,
+                    UNDEFINED_DURATION, /* withNestedScrolling= */ true);
+        } else {
+            nestedScrollByInternal(scaledHScroll, scaledVScroll, horizontalAxis,
+                    verticalAxis, &event, TYPE_NON_TOUCH);
+        }
+
+        if (flingAxis != 0 && !useSmoothScroll) {
+            //TODO
+            //mDifferentialMotionFlingController->onMotionEvent(event, flingAxis);
         }
     }
     return false;
@@ -2382,7 +2820,7 @@ int RecyclerView::getDeepestFocusedViewWithId(View* view) {
 
 void RecyclerView::fillRemainingScrollValues(State& state) {
     if (getScrollState() == SCROLL_STATE_SETTLING) {
-        OverScroller* scroller = mViewFlinger->mScroller;
+        OverScroller* scroller = mViewFlinger->mOverScroller;
         state.mRemainingScrollHorizontal = scroller->getFinalX() - scroller->getCurrX();
         state.mRemainingScrollVertical = scroller->getFinalY() - scroller->getCurrY();
     } else {
@@ -2724,7 +3162,7 @@ void RecyclerView::onLayout(bool changed, int l, int t, int w, int h) {
 }
 
 void RecyclerView::requestLayout() {
-    if ((mInterceptRequestLayoutDepth == 0) && !mLayoutFrozen) {
+    if ((mInterceptRequestLayoutDepth == 0) && !mLayoutSuppressed) {
         ViewGroup::requestLayout();
     } else {
         mLayoutWasDefered = true;
@@ -3219,6 +3657,17 @@ void RecyclerView::onScrollStateChanged(int state) {
     // Do nothing
 }
 
+/**
+* Copied from OverScroller, this returns the distance that a fling with the given velocity
+* will go.
+* @param velocity The velocity of the fling
+* @return The distance that will be traveled by a fling of the given velocity.
+*/
+float RecyclerView::getSplineFlingDistance(int velocity) {
+    const double l =std::log(INFLEXION * std::abs(velocity) / (SCROLL_FRICTION * mPhysicalCoef));
+    const double decelMinusOne = DECELERATION_RATE - 1.0;
+    return (float) (SCROLL_FRICTION * mPhysicalCoef * std::exp(DECELERATION_RATE / decelMinusOne * l));
+}
 void RecyclerView::dispatchOnScrollStateChanged(int state) {
     // Let the LayoutManager go first; this allows it to bring any properties into
     // a consistent state before the RecyclerView subclass responds.
@@ -3253,11 +3702,11 @@ RecyclerView::ViewFlinger::ViewFlinger(RecyclerView*rv) {
     mRV = rv;
     mInterpolator = nullptr;
     mRunnable = std::bind(&ViewFlinger::run,this);
-    mScroller = new OverScroller(mRV->getContext(), sQuinticInterpolator.get());
+    mOverScroller = new OverScroller(mRV->getContext(), sQuinticInterpolator.get());
 }
 
 RecyclerView::ViewFlinger::~ViewFlinger(){
-    delete mScroller;
+    delete mOverScroller;
 }
 
 void RecyclerView::ViewFlinger::run() {
@@ -3269,7 +3718,7 @@ void RecyclerView::ViewFlinger::run() {
     mRV->consumePendingUpdateOperations();
     // keep a local reference so that if it is changed during onAnimation method, it won't
     // cause unexpected behaviors
-    OverScroller* scroller = mScroller;
+    OverScroller* scroller = mOverScroller;
     SmoothScroller* smoothScroller = mRV->mLayout->mSmoothScroller;
     if (scroller->computeScrollOffset()) {
         int* scrollConsumed = mRV->mScrollConsumed;
@@ -3403,7 +3852,7 @@ void RecyclerView::ViewFlinger::postOnAnimation() {
 void RecyclerView::ViewFlinger::fling(int velocityX, int velocityY) {
     mRV->setScrollState(SCROLL_STATE_SETTLING);
     mLastFlingX = mLastFlingY = 0;
-    mScroller->fling(0, 0, velocityX, velocityY, INT_MIN, INT_MAX, INT_MIN, INT_MAX);
+    mOverScroller->fling(0, 0, velocityX, velocityY, INT_MIN, INT_MAX, INT_MIN, INT_MAX);
     postOnAnimation();
 }
 
@@ -3455,23 +3904,23 @@ void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy, Interpolator* int
 void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy, int duration, Interpolator* interpolator) {
     if (mInterpolator != interpolator) {
         mInterpolator = interpolator;
-        mScroller->setInterpolator(mInterpolator);
+        mOverScroller->setInterpolator(mInterpolator);
     }
     mRV->setScrollState(SCROLL_STATE_SETTLING);
     mLastFlingX = mLastFlingY = 0;
-    mScroller->startScroll(0, 0, dx, dy, duration);
-    /*if (Build.VERSION.SDK_INT < 23) {//Android 6
+    mOverScroller->startScroll(0, 0, dx, dy, duration);
+    if (Build::VERSION::SDK_INT < 23) {//Android 6
         // b/64931938 before API 23, startScroll() does not reset getCurX()/getCurY()
         // to start values, which causes fillRemainingScrollValues() put in obsolete values
         // for LayoutManager.onLayoutChildren().
-        mScroller->computeScrollOffset();
-    }*/
+        mOverScroller->computeScrollOffset();
+    }
     postOnAnimation();
 }
 
 void RecyclerView::ViewFlinger::stop() {
     mRV->removeCallbacks(mRunnable);//this);
-    mScroller->abortAnimation();
+    mOverScroller->abortAnimation();
 }
 
 //////////////////////*endof ViewFlinger*///////////////////////
@@ -6479,6 +6928,10 @@ bool RecyclerView::dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUn
             dxUnconsumed, dyUnconsumed, offsetInWindow, type);
 }
 
+bool RecyclerView::dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed, int offsetInWindow[2], int type,int consumed[2]){
+    return getScrollingChildHelper()->dispatchNestedScroll(dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, offsetInWindow, type, consumed);
+}
+
 bool RecyclerView::dispatchNestedPreScroll(int dx, int dy, int consumed[2], int offsetInWindow[2]) {
     return getScrollingChildHelper()->dispatchNestedPreScroll(dx, dy, consumed, offsetInWindow);
 }
@@ -7161,5 +7614,13 @@ NestedScrollingChildHelper* RecyclerView::getScrollingChildHelper() {
     }
     return mScrollingChildHelper;
 }
+
+ScrollFeedbackProvider* RecyclerView::getScrollFeedbackProvider() {
+    if (mScrollFeedbackProvider == nullptr) {
+        mScrollFeedbackProvider = ScrollFeedbackProvider::createProvider(this);
+    }
+    return mScrollFeedbackProvider;
+}
+
 //reference:androidx.recyclerview.widget/RecyclerView
 }/*endof namespace*/

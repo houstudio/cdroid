@@ -27,6 +27,10 @@ private:
     static constexpr bool DISPATCH_TEMP_DETACH = false;
     static constexpr int INVALID_POINTER = -1;
 
+    static constexpr float FLING_DESTRETCH_FACTOR = 4.f;
+    static constexpr float SCROLL_FRICTION = 0.015f;
+    static constexpr float INFLEXION = 0.35f; // Tension lines cross at (INFLEXION, 1)
+    static constexpr float DECELERATION_RATE = (float) (std::log(0.78) / std::log(0.9));
     class RecyclerViewDataObserver;
     class ViewFlinger;
 protected:
@@ -40,6 +44,7 @@ public:
     static constexpr int INVALID_TYPE = -1;
     static constexpr int TOUCH_SLOP_DEFAULT = 0;
     static constexpr int TOUCH_SLOP_PAGING = 1;
+    static constexpr int UNDEFINED_DURATION = INT_MIN;
     static constexpr int SCROLL_STATE_IDLE = 0;
     static constexpr int SCROLL_STATE_DRAGGING = 1;
     static constexpr int SCROLL_STATE_SETTLING = 2; 
@@ -168,12 +173,11 @@ private:/*private variables*/
     int mLastTouchX;
     int mLastTouchY;
     int mTouchSlop;
-    OnFlingListener mOnFlingListener;
     int mMinFlingVelocity;
     int mMaxFlingVelocity;
+    OnFlingListener mOnFlingListener;
+    float mPhysicalCoef;
     // This value is used when handling rotary encoder generic motion events.
-    float mScaledHorizontalScrollFactor;// = Float.MIN_VALUE;
-    float mScaledVerticalScrollFactor;// = Float.MIN_VALUE;
     bool mIgnoreMotionEventTillDown;
     bool mPreserveFocusAfterLayout = true;
     bool mLastAutoMeasureSkippedDueToExact;
@@ -185,12 +189,14 @@ private:/*private variables*/
     ItemAnimator::ItemAnimatorListener mItemAnimatorListener;
     ChildDrawingOrderCallback mChildDrawingOrderCallback;
     NestedScrollingChildHelper* mScrollingChildHelper;
+    ScrollFeedbackProvider* mScrollFeedbackProvider;
  
     int mMinMaxLayoutPositions[2];
     int mScrollOffset[2];
     int mScrollConsumed[2];
     int mNestedOffsets[2];
     int mScrollStepConsumed[2];
+    int mReusableIntPair[2];
     int mLastAutoMeasureNonExactMeasuredWidth = 0;
     int mLastAutoMeasureNonExactMeasuredHeight = 0;
     
@@ -218,8 +224,21 @@ private:
     void addAnimatingView(ViewHolder& viewHolder);
     void scrollStep(int dx, int dy,int* consumed);
     bool hasUpdatedView();
+    float getSplineFlingDistance(int velocity);
+    bool flingNoThresholdCheck(int velocityX, int velocityY);
+    bool fling(int velocityX, int velocityY, int minFlingVelocity, int maxFlingVelocity);
+    void startNestedScrollForType(int type);
+    void nestedScrollByInternal(
+            int x,int y,int horizontalAxis,int verticalAxis,
+            MotionEvent* motionEvent,int type);
+    bool shouldAbsorb(EdgeEffect* edgeEffect, int velocity, int size);
+    int consumeFlingInStretch(int unconsumed, EdgeEffect* startGlow, EdgeEffect* endGlow,int size);
     void stopScrollersInternal();
-    void pullGlows(float x, float overscrollX, float y, float overscrollY);
+    void pullGlows(MotionEvent* ev,
+            float x,int horizontalAxis,float overscrollX,
+            float y,int verticalAxis,float overscrollY);
+    int releaseHorizontalGlow(int deltaX, float y);
+    int releaseVerticalGlow(int deltaY, float x);
     void releaseGlows();
 
     bool isPreferredNextFocus(View* focused, View* next, int direction);
@@ -242,13 +261,15 @@ private:
     void dispatchLayoutStep2();
     void dispatchLayoutStep3();
 
-    void handleMissingPreInfoForChangeError(long key,
-            ViewHolder* holder, ViewHolder* oldChangeViewHolder);
+    void handleMissingPreInfoForChangeError(long key,ViewHolder* holder, ViewHolder* oldChangeViewHolder);
     void findMinMaxChildLayoutPositions(int*into);
+    bool dispatchToOnItemTouchListeners(MotionEvent& e);
+    bool findInterceptingOnItemTouchListener(MotionEvent& e);
     bool didChildRangeChange(int minPositionPreLayout, int maxPositionPreLayout);
     void animateChange(ViewHolder& oldHolder,ViewHolder& newHolder,ItemAnimator::ItemHolderInfo& preInfo,
 	     ItemAnimator::ItemHolderInfo& postInfo,bool oldHolderDisappearing, bool newHolderDisappearing);
     NestedScrollingChildHelper* getScrollingChildHelper();
+    ScrollFeedbackProvider* getScrollFeedbackProvider();
 protected:
     static constexpr int MAX_SCROLL_DURATION = 2000;
     Rect mTempRect;
@@ -257,6 +278,8 @@ protected:
     Adapter* mAdapter;
     LayoutManager* mLayout;
     RecyclerListener mRecyclerListener;
+    OnItemTouchListener* mInterceptingOnItemTouchListener;
+    std::vector<RecyclerListener>mRecyclerListeners;
     std::vector<ItemDecoration*> mItemDecorations;
     std::vector<OnItemTouchListener> mOnItemTouchListeners;
     bool mIsAttached;
@@ -264,7 +287,7 @@ protected:
     bool mEnableFastScroller;
     bool mFirstLayoutComplete;
     bool mLayoutWasDefered;
-    bool mLayoutFrozen;
+    bool mLayoutSuppressed;
     bool mAdapterUpdateDuringMeasure;
     bool mDataSetHasChangedAfterLayout = false;
     bool mDispatchItemsChangedEvent = false;
@@ -272,6 +295,9 @@ protected:
     bool mItemsAddedOrRemoved = false;
     bool mItemsChanged = false;
     bool mPostedAnimatorRunner = false;
+    // This value is used when handling rotary encoder generic motion events.
+    float mScaledHorizontalScrollFactor;
+    float mScaledVerticalScrollFactor;
 
     ItemAnimator* mItemAnimator;
     ViewFlinger* mViewFlinger;
@@ -288,7 +314,9 @@ protected:
     void dispatchRestoreInstanceState(SparseArray<Parcelable*>& container);
     bool removeAnimatingView(View* view);
     void consumePendingUpdateOperations();
-    bool scrollByInternal(int x, int y, MotionEvent* ev);
+    int consumeFlingInHorizontalStretch(int unconsumedX);
+    int consumeFlingInVerticalStretch(int unconsumedY);
+    bool scrollByInternal(int x, int y,int horizontlAxis,int verticalAxis, MotionEvent* ev,int type);
     void startInterceptRequestLayout();
     void stopInterceptRequestLayout(bool performLayoutChildren);
     void considerReleasingGlowsOnScroll(int dx, int dy);
@@ -373,7 +401,10 @@ public:
     void setAdapter(Adapter* adapter);
     Adapter* getAdapter();
     void removeAndRecycleViews();
-    void setRecyclerListener(RecyclerListener listener);
+    void setRecyclerListener(const RecyclerListener& listener);
+    void addRecyclerListener(const RecyclerListener& listener);
+    void removeRecyclerListener(const RecyclerListener& listener);
+
     int getBaseline()override;
     void addOnChildAttachStateChangeListener(OnChildAttachStateChangeListener listener);
     void removeOnChildAttachStateChangeListener(OnChildAttachStateChangeListener listener);
@@ -404,16 +435,19 @@ public:
     void smoothScrollToPosition(int position);
     void scrollTo(int x, int y);
     void scrollBy(int x, int y);
+    bool dispatchKeyEvent(KeyEvent&)override;
     int computeHorizontalScrollOffset()override;
     int computeHorizontalScrollExtent()override;
     int computeHorizontalScrollRange()override;
     int computeVerticalScrollOffset()override;
     int computeVerticalScrollExtent()override;
     int computeVerticalScrollRange()override;
-    void setLayoutFrozen(bool frozen);
-    bool isLayoutFrozen();
+    void suppressLayout(bool suppress);
+    bool isLayoutSuppressed()const;
     void smoothScrollBy(int dx,int dy);
     void smoothScrollBy(int dx,int dy,Interpolator* interpolator);
+    void smoothScrollBy(int dx,int dy,Interpolator* interpolator,int duration);
+    void smoothScrollBy(int dx,int dy,Interpolator* interpolator,int duration,bool withtNestedScrolling);
     bool fling(int velocityX, int velocityY);
     void stopScroll();
     int getMinFlingVelocity()const;
@@ -480,7 +514,8 @@ public:
     bool hasNestedScrollingParent(int type);
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed, int offsetInWindow[2]);
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed, int offsetInWindow[2], int type);
-    bool dispatchNestedPreScroll(int dx, int dy, int consumed[2], int offsetInWindow[2]);
+    bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed, int offsetInWindow[2], int type,int consumed[2]);
+    bool dispatchNestedPreScroll(int dx, int dy, int consumed[2], int offsetInWindow[2])override;
     bool dispatchNestedPreScroll(int dx, int dy, int consumed[2], int offsetInWindow[2],int type);
     bool dispatchNestedFling(float velocityX, float velocityY, bool consumed);
     bool dispatchNestedPreFling(float velocityX, float velocityY);
@@ -493,7 +528,7 @@ private:
     int mLastFlingY;
     bool mEatRunOnAnimationRequest=false;
     bool mReSchedulePostAnimationCallback = false;
-    OverScroller* mScroller;
+    OverScroller* mOverScroller;
     Interpolator* mInterpolator;
     RecyclerView* mRV;
     Runnable mRunnable;
@@ -1079,7 +1114,6 @@ public:
 class RecyclerView::SmoothScroller::Action{
 public:
     friend RecyclerView::SmoothScroller;
-    static constexpr int UNDEFINED_DURATION = INT_MIN;
 private:
     int mDx;
     int mDy;
