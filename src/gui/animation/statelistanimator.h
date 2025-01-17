@@ -5,15 +5,7 @@ namespace cdroid{
 
 class StateListAnimator{
 protected:
-    class Tuple {
-    public:
-        std::vector<int>mSpecs;
-        Animator* mAnimator;
-        Tuple(const std::vector<int>&specs, Animator* animator) {
-            mSpecs = specs;
-            mAnimator = animator;
-        }
-    };
+    class Tuple;
 private:
     friend class AnimatorInflater;
     class StateListAnimatorConstantState: public std::enable_shared_from_this<StateListAnimatorConstantState>,public ConstantState<StateListAnimator*>{
@@ -54,5 +46,14 @@ public:
     void appendChangingConfigurations(int configs);
     std::shared_ptr<ConstantState<StateListAnimator*>>createConstantState();
 };
+
+class StateListAnimator::Tuple{
+public:
+    std::vector<int>mSpecs;
+    Animator* mAnimator;
+    Tuple(const std::vector<int>&specs, Animator* animator);
+    ~Tuple();
+};
+
 }//endof namespace
 #endif//__STATELIST_ANIMATOR_H__

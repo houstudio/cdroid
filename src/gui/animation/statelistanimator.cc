@@ -2,6 +2,14 @@
 #include <porting/cdlog.h>
 namespace cdroid{
 
+StateListAnimator::Tuple::Tuple(const std::vector<int>&specs, Animator* animator) {
+    mSpecs = specs;
+    mAnimator = animator;
+}
+StateListAnimator::Tuple::~Tuple(){
+    delete mAnimator;
+}
+
 StateListAnimator::StateListAnimator(){
     mView = nullptr;
     mRunningAnimator=nullptr;
