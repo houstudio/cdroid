@@ -184,9 +184,13 @@ void RecyclerView::initRecyclerView(){
     visCBK->processDisappeared=[this](ViewHolder* viewHolder,ItemAnimator::ItemHolderInfo* info, ItemAnimator::ItemHolderInfo* postInfo){
         mRecycler->unscrapView(*viewHolder);
         animateDisappearance(*viewHolder, *info, postInfo);
+        delete info;
+        delete postInfo;
     };
     visCBK->processAppeared=[this](ViewHolder* viewHolder, ItemAnimator::ItemHolderInfo* preInfo, ItemAnimator::ItemHolderInfo* info){
         animateAppearance(*viewHolder, preInfo, *info);
+        delete preInfo;
+        delete info;
     };
 
     visCBK->processPersistent=[this](ViewHolder* viewHolder,ItemAnimator::ItemHolderInfo* preInfo,ItemAnimator::ItemHolderInfo* postInfo){
@@ -198,6 +202,8 @@ void RecyclerView::initRecyclerView(){
         } else if (mItemAnimator->animatePersistence(*viewHolder, *preInfo, *postInfo)) {
             postAnimationRunner();
         }
+        delete preInfo;
+        delete postInfo;
     };
     visCBK->unused=[this](ViewHolder* viewHolder){
         mLayout->removeAndRecycleView(viewHolder->itemView, *mRecycler);
