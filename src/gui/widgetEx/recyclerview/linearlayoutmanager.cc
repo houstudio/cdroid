@@ -257,7 +257,7 @@ void LinearLayoutManager::calculateExtraLayoutSpace(RecyclerView::State& state,i
     // If calculateExtraLayoutSpace is not overridden, call the
     // deprecated getExtraLayoutSpace for backwards compatibility
     //@SuppressWarnings("deprecation")
-    int extraScrollSpace = getExtraLayoutSpace(state);
+    const int extraScrollSpace = getExtraLayoutSpace(state);
     if (mLayoutState->mLayoutDirection == LayoutState::LAYOUT_START) {
         extraLayoutSpaceStart = extraScrollSpace;
     } else {
@@ -564,30 +564,31 @@ bool LinearLayoutManager::updateAnchorFromChildren(RecyclerView::Recycler& recyc
         return false;
     }
     View* focused = getFocusedChild();
-    if (focused != nullptr && anchorInfo.isViewValidAsAnchor(focused, state)) {
+    if ((focused != nullptr) && anchorInfo.isViewValidAsAnchor(focused, state)) {
         anchorInfo.assignFromViewAndKeepVisibleRect(focused, getPosition(focused));
         return true;
     }
     if (mLastStackFromEnd != mStackFromEnd) {
         return false;
     }
-    View* referenceChild = anchorInfo.mLayoutFromEnd
-            ? findReferenceChildClosestToEnd(recycler, state)
-            : findReferenceChildClosestToStart(recycler, state);
+    View* referenceChild = findReferenceChild(recycler, state,
+            anchorInfo.mLayoutFromEnd,mStackFromEnd);
     if (referenceChild != nullptr) {
         anchorInfo.assignFromView(referenceChild, getPosition(referenceChild));
         // If all visible views are removed in 1 pass, reference child might be out of bounds.
         // If that is the case, offset it back to 0 so that we use these pre-layout children.
         if (!state.isPreLayout() && supportsPredictiveItemAnimations()) {
             // validate this child is at least partially visible. if not, offset it to start
-            const bool notVisible =  mOrientationHelper->getDecoratedStart(referenceChild)
-		    >= mOrientationHelper->getEndAfterPadding()
-                    || mOrientationHelper->getDecoratedEnd(referenceChild)
-                    < mOrientationHelper->getStartAfterPadding();
-            if (notVisible) {
-                anchorInfo.mCoordinate = anchorInfo.mLayoutFromEnd
-                        ? mOrientationHelper->getEndAfterPadding()
-                        : mOrientationHelper->getStartAfterPadding();
+            const int childStart = mOrientationHelper->getDecoratedStart(referenceChild);
+            const int childEnd = mOrientationHelper->getDecoratedEnd(referenceChild);
+            const int boundsStart = mOrientationHelper->getStartAfterPadding();
+            const int boundsEnd = mOrientationHelper->getEndAfterPadding();
+            // b/148869110: usually if childStart >= boundsEnd the child is out of
+            // bounds, except if the child is 0 pixels!
+            bool outOfBoundsBefore = childEnd <= boundsStart && childStart < boundsStart;
+            bool outOfBoundsAfter = childStart >= boundsEnd && childEnd > boundsEnd;
+            if (outOfBoundsBefore || outOfBoundsAfter) {
+                anchorInfo.mCoordinate = anchorInfo.mLayoutFromEnd ? boundsEnd : boundsStart;
             }
         }
         return true;
@@ -1319,51 +1320,78 @@ View* LinearLayoutManager::findFirstVisibleChildClosestToEnd(bool completelyVisi
     }
 }
 
-View* LinearLayoutManager::findReferenceChildClosestToEnd(RecyclerView::Recycler& recycler, RecyclerView::State& state) {
-    return mShouldReverseLayout ? findFirstReferenceChild(recycler, state) :
-            findLastReferenceChild(recycler, state);
-}
-
-View* LinearLayoutManager::findReferenceChildClosestToStart(RecyclerView::Recycler& recycler,RecyclerView::State& state) {
-    return mShouldReverseLayout ? findLastReferenceChild(recycler, state) :
-            findFirstReferenceChild(recycler, state);
-}
-
-View* LinearLayoutManager::findFirstReferenceChild(RecyclerView::Recycler& recycler, RecyclerView::State& state) {
-    return findReferenceChild(recycler, state, 0, getChildCount(), state.getItemCount());
-}
-
-View* LinearLayoutManager::findLastReferenceChild(RecyclerView::Recycler& recycler, RecyclerView::State& state) {
-    return findReferenceChild(recycler, state, getChildCount() - 1, -1, state.getItemCount());
-}
-
 View* LinearLayoutManager::findReferenceChild(RecyclerView::Recycler& recycler, RecyclerView::State& state,
-        int start, int end, int itemCount) {
+        bool layoutFromEnd, bool traverseChildrenInReverseOrder) {
     ensureLayoutState();
-    View* invalidMatch = nullptr;
-    View* outOfBoundsMatch = nullptr;
+
+    // Determine which direction through the view children we are going iterate.
+    int start = 0;
+    int end = getChildCount();
+    int diff = 1;
+    if (traverseChildrenInReverseOrder) {
+        start = getChildCount() - 1;
+        end = -1;
+        diff = -1;
+    }
+
+    int itemCount = state.getItemCount();
+
     const int boundsStart = mOrientationHelper->getStartAfterPadding();
     const int boundsEnd = mOrientationHelper->getEndAfterPadding();
-    const int diff = end > start ? 1 : -1;
+
+    View* invalidMatch  = nullptr;
+    View* bestFirstFind = nullptr;
+    View* bestSecondFind= nullptr;
+
     for (int i = start; i != end; i += diff) {
         View* view = getChildAt(i);
         const int position = getPosition(view);
+        const int childStart = mOrientationHelper->getDecoratedStart(view);
+        const int childEnd = mOrientationHelper->getDecoratedEnd(view);
         if (position >= 0 && position < itemCount) {
             if (((RecyclerView::LayoutParams*) view->getLayoutParams())->isItemRemoved()) {
                 if (invalidMatch == nullptr) {
                     invalidMatch = view; // removed item, least preferred
                 }
-            } else if (mOrientationHelper->getDecoratedStart(view) >= boundsEnd
-                    || mOrientationHelper->getDecoratedEnd(view) < boundsStart) {
-                if (outOfBoundsMatch == nullptr) {
-                    outOfBoundsMatch = view; // item is not visible, less preferred
-                }
             } else {
-                return view;
+                // b/148869110: usually if childStart >= boundsEnd the child is out of
+                // bounds, except if the child is 0 pixels!
+                bool outOfBoundsBefore = childEnd <= boundsStart && childStart < boundsStart;
+                bool outOfBoundsAfter = childStart >= boundsEnd && childEnd > boundsEnd;
+                if (outOfBoundsBefore || outOfBoundsAfter) {
+                    // The item is out of bounds.
+                    // We want to find the items closest to the in bounds items and because we
+                    // are always going through the items linearly, the 2 items we want are the
+                    // last out of bounds item on the side we start searching on, and the first
+                    // out of bounds item on the side we are ending on.  The side that we are
+                    // ending on ultimately takes priority because we want items later in the
+                    // layout to move forward if no in bounds anchors are found.
+                    if (layoutFromEnd) {
+                        if (outOfBoundsAfter) {
+                            bestFirstFind = view;
+                        } else if (bestSecondFind == nullptr) {
+                            bestSecondFind = view;
+                        }
+                    } else {
+                        if (outOfBoundsBefore) {
+                            bestFirstFind = view;
+                        } else if (bestSecondFind == nullptr) {
+                            bestSecondFind = view;
+                        }
+                    }                
+                } else {
+                    // We found an in bounds item, greedily return it.
+                    return view;
+                }
             }
         }
     }
-    return outOfBoundsMatch != nullptr ? outOfBoundsMatch : invalidMatch;
+    // We didn't find an in bounds item so we will settle for an item in this order:
+    // 1. bestSecondFind
+    // 2. bestFirstFind
+    // 3. invalidMatch
+    return bestSecondFind != nullptr ? bestSecondFind :
+                (bestFirstFind != nullptr ? bestFirstFind : invalidMatch);
 }
 
 View* LinearLayoutManager::findPartiallyOrCompletelyInvisibleChildClosestToEnd() {
@@ -1452,17 +1480,18 @@ View* LinearLayoutManager::findOnePartiallyOrCompletelyInvisibleChild(int fromIn
                     acceptableBoundsFlag);
 }
 
-View* LinearLayoutManager::onFocusSearchFailed(View* focused, int focusDirection,
+View* LinearLayoutManager::onFocusSearchFailed(View* focused, int direction,
         RecyclerView::Recycler& recycler, RecyclerView::State& state) {
     resolveShouldLayoutReverse();
     if (getChildCount() == 0) {
         return nullptr;
     }
 
-    const int layoutDir = convertFocusDirectionToLayoutDirection(focusDirection);
+    const int layoutDir = convertFocusDirectionToLayoutDirection(direction);
     if (layoutDir == LayoutState::INVALID_LAYOUT) {
         return nullptr;
     }
+
     ensureLayoutState();
     const int maxScroll = (int) (MAX_SCROLL_FACTOR * mOrientationHelper->getTotalSpace());
     updateLayoutState(layoutDir, maxScroll, false, state);

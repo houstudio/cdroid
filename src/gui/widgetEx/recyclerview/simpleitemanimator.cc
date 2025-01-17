@@ -46,27 +46,27 @@ bool SimpleItemAnimator::animateAppearance(RecyclerView::ViewHolder& viewHolder,
 }
 
 bool SimpleItemAnimator::animatePersistence(RecyclerView::ViewHolder& viewHolder,
-        ItemHolderInfo& preInfo, ItemHolderInfo& postInfo) {
-    if (preInfo.left != postInfo.left || preInfo.top != postInfo.top) {
+        ItemHolderInfo& preLayoutInfo, ItemHolderInfo& postLayoutInfo) {
+    if (preLayoutInfo.left != postLayoutInfo.left || preLayoutInfo.top != postLayoutInfo.top) {
         LOGD_IF(_Debug,"%p PERSISTENT: %p with view %p",this,&viewHolder,viewHolder.itemView);
-        return animateMove(viewHolder, preInfo.left, preInfo.top, postInfo.left, postInfo.top);
+        return animateMove(viewHolder, preLayoutInfo.left, preLayoutInfo.top, postLayoutInfo.left, postLayoutInfo.top);
     }
     dispatchMoveFinished(viewHolder);
     return false;
 }
 
 bool SimpleItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder,
-        ItemHolderInfo& preInfo, ItemHolderInfo& postInfo) {
+        ItemHolderInfo& preLayoutInfo, ItemHolderInfo& postLayoutInfo) {
     LOGD_IF(_Debug,"%p CHANGED: %p with view %p",this,&oldHolder,oldHolder.itemView);
-    const int fromLeft = preInfo.left;
-    const int fromTop = preInfo.top;
+    const int fromLeft = preLayoutInfo.left;
+    const int fromTop = preLayoutInfo.top;
     int toLeft, toTop;
     if (newHolder.shouldIgnore()) {
-        toLeft = preInfo.left;
-        toTop = preInfo.top;
+        toLeft = preLayoutInfo.left;
+        toTop = preLayoutInfo.top;
     } else {
-        toLeft = postInfo.left;
-        toTop = postInfo.top;
+        toLeft = postLayoutInfo.left;
+        toTop = postLayoutInfo.top;
     }
     return animateChange(oldHolder, newHolder, fromLeft, fromTop, toLeft, toTop);
 }

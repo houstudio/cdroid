@@ -313,6 +313,14 @@ void StaggeredGridLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycl
     onLayoutChildren(recycler, state, true);
 }
 
+void StaggeredGridLayoutManager::onAdapterChanged(RecyclerView::Adapter* oldAdapter,
+        RecyclerView::Adapter* newAdapter) {
+    // RV will remove all views so we should clear all spans and assignments of views into spans
+    mLazySpanLookup->clear();
+    for (int i = 0; i < mSpanCount; i++) {
+        mSpans[i]->clear();
+    }
+}
 
 void StaggeredGridLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, RecyclerView::State& state,
         bool shouldCheckForGaps) {
@@ -787,6 +795,10 @@ int StaggeredGridLayoutManager::updateSpecWithExtra(int spec, int startInset, in
 void StaggeredGridLayoutManager::onRestoreInstanceState(Parcelable& state) {
     if (dynamic_cast<SavedState*>(&state)) {
         mPendingSavedState =(SavedState*) &state;
+        if (mPendingScrollPosition != RecyclerView::NO_POSITION) {
+            mPendingSavedState->invalidateAnchorPositionInfo();
+            mPendingSavedState->invalidateSpanInfo();
+        }        
         requestLayout();
     } else if (_Debug) {
         LOGD("invalid saved state class");
@@ -2232,10 +2244,11 @@ int StaggeredGridLayoutManager::LazySpanLookup::invalidateAfter(int position) {
         std::fill(mData.begin() + position, mData.end() , (int)LayoutParams::INVALID_SPAN_ID);
         return (int)mData.size();
     } else {
-        // just invalidate items in between
-        //Arrays.fill(mData, position, endPosition + 1, LayoutParams::INVALID_SPAN_ID);
-         std::fill(mData.begin() + position,mData.begin() + endPosition + 1, (int)LayoutParams::INVALID_SPAN_ID);
-        return endPosition + 1;
+        // Just invalidate items in between `position` and the next full span item, or the
+        // end of the tracked spans in mData if it's not been lengthened yet.
+        const int invalidateToIndex = std::min(endPosition + 1, (int)mData.size());
+        std::fill(mData.begin() + position,mData.begin() + invalidateToIndex, (int)LayoutParams::INVALID_SPAN_ID);
+        return invalidateToIndex;
     }
 }
 

@@ -16,6 +16,7 @@ private:
     int  mPositionTargetedByScrollInDirection = INVALID_POSITION;
 protected:
     bool mPendingSpanCountChange = false;
+    bool mUsingSpansToEstimateScrollBarDimensions;
     int mSpanCount = DEFAULT_SPAN_COUNT;
     int mRowWithAccessibilityFocus = INVALID_POSITION;
     int mColumnWithAccessibilityFocus = INVALID_POSITION;
@@ -54,7 +55,8 @@ private:
             bool alreadyMeasured);
     void assignSpans(RecyclerView::Recycler& recycler, RecyclerView::State& state, int count,
             int consumedSpanCount, bool layingOutInPrimaryDirection);
-
+    int computeScrollRangeWithSpanInfo(RecyclerView::State& state);
+    int computeScrollOffsetWithSpanInfo(RecyclerView::State& state);
 protected:
     int findPositionOfLastItemOnARowAboveForHorizontalGrid(int startingRow);
     int findPositionOfFirstItemOnARowBelowForHorizontalGrid(int startingRow);
@@ -62,9 +64,9 @@ protected:
     int getSpaceForSpanRange(int startSpan, int spanSize); 
 
     void onAnchorReady(RecyclerView::Recycler& recycler, RecyclerView::State& state,
-                       AnchorInfo& anchorInfo, int itemDirection)override;
+            AnchorInfo& anchorInfo, int itemDirection)override;
     View* findReferenceChild(RecyclerView::Recycler& recycler, RecyclerView::State& state,
-                            int start, int end, int itemCount)override;
+            bool layoutFromEnd, bool traverseChildrenInReverseOrder)override;
     void collectPrefetchPositionsForLayoutState(RecyclerView::State& state, LayoutState& layoutState,
             LayoutPrefetchRegistry& layoutPrefetchRegistry)override;
     void layoutChunk(RecyclerView::Recycler& recycler, RecyclerView::State& state,
@@ -79,6 +81,8 @@ public:
     int getColumnCountForAccessibility(RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     void onInitializeAccessibilityNodeInfoForItem(RecyclerView::Recycler& recycler,
             RecyclerView::State& state, View* host, AccessibilityNodeInfo& info)override;
+    void onInitializeAccessibilityNodeInfo(RecyclerView::Recycler& recycler,
+            RecyclerView::State& state, AccessibilityNodeInfo& info)override;
     bool performAccessibilityAction(int action,Bundle args)override;
     void onLayoutChildren(RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     void onLayoutCompleted(RecyclerView::State& state)override;
@@ -106,25 +110,36 @@ public:
     View* onFocusSearchFailed(View* focused, int focusDirection,
             RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     bool supportsPredictiveItemAnimations()override;
-
+    int computeHorizontalScrollRange(RecyclerView::State& state)override;
+    int computeVerticalScrollRange(RecyclerView::State& state)override;
+    int computeHorizontalScrollOffset(RecyclerView::State& state)override;
+    int computeVerticalScrollOffset(RecyclerView::State& state)override;
+    void setUsingSpansToEstimateScrollbarDimensions(bool useSpansToEstimateScrollBarDimensions);
+    bool isUsingSpansToEstimateScrollbarDimensions() const;
 };
 
 class GridLayoutManager::SpanSizeLookup {
 protected:
-    SparseIntArray mSpanIndexCache;// = new SparseIntArray();
+    SparseIntArray mSpanIndexCache;
+    SparseIntArray mSpanGroupIndexCache;
 private:
     bool mCacheSpanIndices = false;
+    bool mCacheSpanGroupIndices = false;
 protected:
     friend class GridLayoutManager;
     int getCachedSpanIndex(int position, int spanCount);
-    int findReferenceIndexFromCache(int position);
+    static int findFirstKeyLessThan(SparseIntArray&cache,int position);
 public:
     virtual int getSpanSize(int position)=0;
     void setSpanIndexCacheEnabled(bool cacheSpanIndices);
+    void setSpanGroupIndexCacheEnabled(bool cacheSpanGroupIndices);
     void invalidateSpanIndexCache();
+    void invalidateSpanGroupIndexCache();
     bool isSpanIndexCacheEnabled();
+    bool isSpanGroupIndexCacheEnabled();
     virtual int getSpanIndex(int position, int spanCount);
     int getSpanGroupIndex(int adapterPosition, int spanCount);
+    int getCachedSpanGroupIndex(int position, int spanCount);
 };
 
 class GridLayoutManager::DefaultSpanSizeLookup:public GridLayoutManager::SpanSizeLookup {

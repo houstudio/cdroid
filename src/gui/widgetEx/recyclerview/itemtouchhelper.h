@@ -85,7 +85,7 @@ private:
     void select(RecyclerView::ViewHolder* selected, int actionState);
 
     void postDispatchSwipe(RecoverAnimation* anim,int swipeDir);
-    bool hasRunningRecoverAnim();
+    bool hasRunningRecoverAnim()const;
     bool scrollIfNecessary();
     std::vector<RecyclerView::ViewHolder*> findSwapTargets(RecyclerView::ViewHolder* viewHolder);
     void moveIfNecessary(RecyclerView::ViewHolder& viewHolder);
@@ -108,6 +108,7 @@ private:
     void onRequestDisallowInterceptTouchEvent(bool disallowIntercept);
 public:
     ItemTouchHelper(Callback* callback);
+    ~ItemTouchHelper();
     void attachToRecyclerView(RecyclerView* recyclerView);
     void onDrawOver(Canvas& c, RecyclerView& parent, RecyclerView::State& state)override;
     void onDraw(Canvas& c, RecyclerView& parent, RecyclerView::State& state)override;

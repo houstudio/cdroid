@@ -18,9 +18,9 @@ public:
     bool animateAppearance(RecyclerView::ViewHolder& viewHolder,
             ItemHolderInfo* preLayoutInfo, ItemHolderInfo& postLayoutInfo)override;
     bool animatePersistence(RecyclerView::ViewHolder& viewHolder,
-            ItemHolderInfo& preInfo, ItemHolderInfo& postInfo)override;
+            ItemHolderInfo& preLayoutInfo, ItemHolderInfo& postLayoutInfo)override;
     bool animateChange(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder,
-            ItemHolderInfo& preInfo, ItemHolderInfo& postInfo)override;
+            ItemHolderInfo& preLayoutInfo, ItemHolderInfo& postLayoutInfo)override;
     virtual bool animateRemove(RecyclerView::ViewHolder& holder)=0;
 
     virtual bool animateAdd(RecyclerView::ViewHolder& holder)=0;

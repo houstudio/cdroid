@@ -72,7 +72,7 @@ public:
     bool animateAdd(RecyclerView::ViewHolder& holder)override;
     bool animateMove(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY)override;
     bool animateChange(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder,
-            int fromX, int fromY, int toX, int toY)override;
+            int fromLeft, int fromTop, int toLeft, int toTop)override;
     void endAnimation(RecyclerView::ViewHolder& item)override;
     bool isRunning()override;
     void endAnimations()override;

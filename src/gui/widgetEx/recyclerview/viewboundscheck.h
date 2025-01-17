@@ -27,8 +27,8 @@ public:
     static constexpr int MASK = GT | EQ | LT;
 
     struct Callback {
-        CallbackBase<int>getChildCount;
-        CallbackBase<View*>getParent;
+        //CallbackBase<int>getChildCount;
+        //CallbackBase<View*>getParent;
         CallbackBase<View*,int>getChildAt;
         CallbackBase<int>getParentStart;
         CallbackBase<int>getParentEnd;
@@ -41,7 +41,6 @@ public:
     public:
         BoundFlags();
         void setBounds(int rvStart, int rvEnd, int childStart, int childEnd);
-        void setFlags(int flags, int mask);
         void addFlags(int flags);
         void resetFlags();
         int compare(int x, int y);

@@ -126,6 +126,7 @@ public:
     void setMeasuredDimension(Rect& childrenBounds, int wSpec, int hSpec)override;
     void onLayoutChildren(RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     void onLayoutCompleted(RecyclerView::State& state)override;
+    void onAdapterChanged(RecyclerView::Adapter* oldAdapter, RecyclerView::Adapter* newAdapter)override;
     bool supportsPredictiveItemAnimations()override;
     int findFirstVisibleItemPositions(std::vector<int>& into);
     int findFirstCompletelyVisibleItemPositions(std::vector<int>& into);

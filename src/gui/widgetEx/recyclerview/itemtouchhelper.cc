@@ -22,8 +22,8 @@ public:
         return t * t * t * t * t + 1.0f;
     }
 };
-static NeverDestroyed<DragScrollInterpolator>sDragScrollInterpolator;
-static NeverDestroyed<DragViewScrollInterpolator>sDragViewScrollCapInterpolator;
+static NeverDestroyed<DragScrollInterpolator> sDragScrollInterpolator;
+static NeverDestroyed<DragViewScrollInterpolator> sDragViewScrollCapInterpolator;
 
 ItemTouchHelper::ItemTouchHelper(Callback* callback) {
     mCallback = callback;
@@ -52,6 +52,12 @@ ItemTouchHelper::ItemTouchHelper(Callback* callback) {
     mOnItemTouchListener.onInterceptTouchEvent = std::bind(&ItemTouchHelper::onInterceptTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
     mOnItemTouchListener.onTouchEvent = std::bind(&ItemTouchHelper::onTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
     mOnItemTouchListener.onRequestDisallowInterceptTouchEvent = std::bind(&ItemTouchHelper::onRequestDisallowInterceptTouchEvent,this,std::placeholders::_1);
+}
+
+ItemTouchHelper::~ItemTouchHelper(){
+#if ENABLE(GESTURE)
+    delete mGestureDetector;
+#endif
 }
 
 bool ItemTouchHelper::onInterceptTouchEvent(RecyclerView& recyclerView,MotionEvent& event) {
@@ -198,6 +204,7 @@ void ItemTouchHelper::destroyCallbacks() {
     const int recoverAnimSize = (int)mRecoverAnimations.size();
     for (int i = recoverAnimSize - 1; i >= 0; i--) {
         RecoverAnimation* recoverAnimation = mRecoverAnimations.at(0);
+        recoverAnimation->cancel();
         mCallback->clearView(*mRecyclerView, *recoverAnimation->mViewHolder);
         delete recoverAnimation;
     }
@@ -210,8 +217,8 @@ void ItemTouchHelper::destroyCallbacks() {
 
 void ItemTouchHelper::startGestureDetection() {
 #if ENABLE(GESTURE)
-    mItemTouchHelperGestureListener.onDown=std::bind(&ItemTouchHelper::onGestureDown,this,std::placeholders::_1);
-    mItemTouchHelperGestureListener.onLongPress=std::bind(&ItemTouchHelper::onGestureLongPress,this,std::placeholders::_1);
+    mItemTouchHelperGestureListener.onDown = std::bind(&ItemTouchHelper::onGestureDown,this,std::placeholders::_1);
+    mItemTouchHelperGestureListener.onLongPress = std::bind(&ItemTouchHelper::onGestureLongPress,this,std::placeholders::_1);
     mGestureDetector = new GestureDetector(mRecyclerView->getContext(),mItemTouchHelperGestureListener);
 #endif
 }
@@ -397,7 +404,7 @@ void ItemTouchHelper::postDispatchSwipe(RecoverAnimation* anim,int swipeDir) {
     MyRecoverAnimation*myAnim = dynamic_cast<MyRecoverAnimation*>(anim);
     myAnim->mRunnable = ([this,anim,swipeDir]() {
         if (mRecyclerView && mRecyclerView->isAttachedToWindow() && !anim->mOverridden
-                && (anim->mViewHolder->getAdapterPosition() != RecyclerView::NO_POSITION) ) {
+                && (anim->mViewHolder->getAbsoluteAdapterPosition() != RecyclerView::NO_POSITION) ) {
             RecyclerView::ItemAnimator* animator = mRecyclerView->getItemAnimator();
             // if animator is running or we have other active recover animations, we try
             // not to call onSwiped because DefaultItemAnimator is not good at merging
@@ -413,7 +420,7 @@ void ItemTouchHelper::postDispatchSwipe(RecoverAnimation* anim,int swipeDir) {
     mRecyclerView->post(myAnim->mRunnable);
 }
 
-bool ItemTouchHelper::hasRunningRecoverAnim() {
+bool ItemTouchHelper::hasRunningRecoverAnim() const{
     const int size = mRecoverAnimations.size();
     for (int i = 0; i < size; i++) {
         if (!mRecoverAnimations.at(i)->mEnded) {
@@ -559,8 +566,8 @@ void ItemTouchHelper::moveIfNecessary(RecyclerView::ViewHolder& viewHolder) {
         mDistances.clear();
         return;
     }
-    const int toPosition = target->getAdapterPosition();
-    const int fromPosition = viewHolder.getAdapterPosition();
+    const int toPosition = target->getAbsoluteAdapterPosition();
+    const int fromPosition = viewHolder.getAbsoluteAdapterPosition();
     if (mCallback->onMove(*mRecyclerView, viewHolder, *target)) {
         // keep target visible
         mCallback->onMoved(*mRecyclerView, viewHolder, fromPosition,

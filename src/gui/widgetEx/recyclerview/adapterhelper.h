@@ -75,7 +75,7 @@ public:
     AdapterHelper(Callback callback, bool disableRecycler);
     ~AdapterHelper();
     AdapterHelper& addUpdateOp(const std::vector<UpdateOp*>&);
-    int applyPendingUpdatesToPosition(int position);
+    int applyPendingUpdatesToPosition(int position)const;
     UpdateOp* obtainUpdateOp(int cmd, int positionStart, int itemCount, Object* payload);
     void recycleUpdateOp(UpdateOp* op);
 };

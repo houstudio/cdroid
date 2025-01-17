@@ -67,6 +67,13 @@ int ChildHelper::getOffset(int index){
 }
 
 void ChildHelper::removeView(View* view){
+    if (mRemoveStatus == REMOVE_STATUS_IN_REMOVE) {
+        throw std::logic_error("Cannot call removeView(At) within removeView(At)");
+    } else if (mRemoveStatus == REMOVE_STATUS_IN_REMOVE_IF_HIDDEN) {
+        throw std::logic_error("Cannot call removeView(At) within removeViewIfHidden");
+    }
+    mRemoveStatus = REMOVE_STATUS_IN_REMOVE;
+    mViewInRemoveView = view;
     const int index = mCallback.indexOfChild(view);
     if (index < 0) {
         return;
@@ -76,19 +83,32 @@ void ChildHelper::removeView(View* view){
     }
     mCallback.removeViewAt(index);
     LOGD_IF(_Debug,"remove View off:%d",index);
+
+    mRemoveStatus = REMOVE_STATUS_NONE;
+    mViewInRemoveView = nullptr;
 }
 
 void ChildHelper::removeViewAt(int index){
-    int offset = getOffset(index);
+    if (mRemoveStatus == REMOVE_STATUS_IN_REMOVE) {
+        throw std::logic_error("Cannot call removeView(At) within removeView(At)");
+    } else if (mRemoveStatus == REMOVE_STATUS_IN_REMOVE_IF_HIDDEN) {
+        throw std::logic_error("Cannot call removeView(At) within removeViewIfHidden");
+    }
+    const int offset = getOffset(index);
     View* view = mCallback.getChildAt(offset);
     if (view == nullptr) {
         return;
     }
+    mRemoveStatus = REMOVE_STATUS_IN_REMOVE;
+    mViewInRemoveView = view;
     if (mBucket->remove(offset)) {
         unhideViewInternal(view);
     }
     mCallback.removeViewAt(offset);
     LOGD_IF(_Debug,"removeViewAt %d off:%d",index,offset);
+
+    mRemoveStatus = REMOVE_STATUS_NONE;
+    mViewInRemoveView = nullptr;
 }
 
 View* ChildHelper::getChildAt(int index){
@@ -203,17 +223,30 @@ void ChildHelper::unhide(View* view){
 }
 
 bool ChildHelper::removeViewIfHidden(View* view){
+    if (mRemoveStatus == REMOVE_STATUS_IN_REMOVE) {
+        if (mViewInRemoveView != view) {
+            throw std::logic_error("Cannot call removeViewIfHidden within removeView (At) for a different view");
+        }
+        // removeView ends the ItemAnimation and triggers removeViewIfHidden
+        return false;
+    } else if (mRemoveStatus == REMOVE_STATUS_IN_REMOVE_IF_HIDDEN) {
+        throw std::logic_error("Cannot call removeViewIfHidden within removeViewIfHidden");
+    }
+    mRemoveStatus = REMOVE_STATUS_IN_REMOVE_IF_HIDDEN;
     const int index = mCallback.indexOfChild(view);
     if (index == -1) {
         LOGE_IF(unhideViewInternal(view),"view is in hidden list but not in view group");
+        mRemoveStatus = REMOVE_STATUS_NONE;
         return true;
     }
     if (mBucket->get(index)) {
         mBucket->remove(index);
         LOGE_IF(!unhideViewInternal(view),"removed a hidden view but it is not in hidden views list");
         mCallback.removeViewAt(index);
+        mRemoveStatus = REMOVE_STATUS_NONE;
         return true;
     }
+    mRemoveStatus = REMOVE_STATUS_NONE;
     return false;
 }
 
@@ -290,7 +323,7 @@ void ChildHelper::Bucket::insert(int index,bool value){
         const bool lastBit = (mData & LAST_BIT) != 0;
         long mask = (1L << index) - 1;
         const long before = mData & mask;
-        const long after = ((mData & ~mask)) << 1;
+        const long after = (mData & ~mask) << 1;
         mData = before | after;
         if (value) {
             set(index);

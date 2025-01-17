@@ -15,10 +15,6 @@ void ViewBoundsCheck::BoundFlags::setBounds(int rvStart, int rvEnd, int childSta
     mChildEnd = childEnd;
 }
 
-void ViewBoundsCheck::BoundFlags::setFlags(int flags, int mask) {
-    mBoundFlags = (mBoundFlags & ~mask) | (flags & mask);
-}
-
 void ViewBoundsCheck::BoundFlags::addFlags(int flags) {
     mBoundFlags |= flags;
 }

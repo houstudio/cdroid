@@ -492,7 +492,7 @@ void AdapterHelper::consumeUpdatesInOnePass() {
     mExistingUpdateTypes = 0;
 }
 
-int AdapterHelper::applyPendingUpdatesToPosition(int position) {
+int AdapterHelper::applyPendingUpdatesToPosition(int position)const {
     const size_t size = mPendingUpdates.size();
     for (size_t i = 0; i < size; i++) {
         UpdateOp* op = mPendingUpdates.at(i);
@@ -502,7 +502,7 @@ int AdapterHelper::applyPendingUpdatesToPosition(int position) {
                 position += op->itemCount;
             }
             break;
-	case UpdateOp::REMOVE:
+        case UpdateOp::REMOVE:
             if (op->positionStart <= position) {
                 const int end = op->positionStart + op->itemCount;
                 if (end > position) {
@@ -511,7 +511,7 @@ int AdapterHelper::applyPendingUpdatesToPosition(int position) {
                 position -= op->itemCount;
             }
             break;
-	case UpdateOp::MOVE:
+        case UpdateOp::MOVE:
             if (op->positionStart == position) {
                 position = op->itemCount; //position end
             } else {

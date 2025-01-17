@@ -118,22 +118,17 @@ void RecyclerView::FastScroller::setState(int state) {
     mState = state;
 }
 
-bool RecyclerView::FastScroller::isLayoutRTL() {
+bool RecyclerView::FastScroller::isLayoutRTL() const{
     return mRecyclerView->getLayoutDirection() == View::LAYOUT_DIRECTION_RTL;
 }
 
-bool RecyclerView::FastScroller::isDragging() {
+bool RecyclerView::FastScroller::isDragging() const{
     return mState == STATE_DRAGGING;
 }
 
-bool RecyclerView::FastScroller::isVisible() {
+bool RecyclerView::FastScroller::isVisible() const{
     return mState == STATE_VISIBLE;
 }
-
-bool RecyclerView::FastScroller::isHidden() {
-    return mState == STATE_HIDDEN;
-}
-
 
 void RecyclerView::FastScroller::show() {
     switch (mAnimationState) {
@@ -148,10 +143,6 @@ void RecyclerView::FastScroller::show() {
         mShowHideAnimator->start();
         break;
     }
-}
-
-void RecyclerView::FastScroller::hide() {
-    hide(0);
 }
 
 void RecyclerView::FastScroller::hide(int duration) {

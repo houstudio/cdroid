@@ -37,7 +37,7 @@ void GridLayoutManager::setStackFromEnd(bool stackFromEnd) {
 int GridLayoutManager::getRowCountForAccessibility(RecyclerView::Recycler& recycler,
         RecyclerView::State& state) {
     if (mOrientation == HORIZONTAL) {
-        return mSpanCount;
+        return std::min(mSpanCount,getItemCount());
     }
     if (state.getItemCount() < 1) {
         return 0;
@@ -50,7 +50,7 @@ int GridLayoutManager::getRowCountForAccessibility(RecyclerView::Recycler& recyc
 int GridLayoutManager::getColumnCountForAccessibility(RecyclerView::Recycler& recycler,
         RecyclerView::State& state) {
     if (mOrientation == VERTICAL) {
-        return mSpanCount;
+        return std::min(mSpanCount,getItemCount());
     }
     if (state.getItemCount() < 1) {
         return 0;
@@ -71,12 +71,23 @@ void GridLayoutManager::onInitializeAccessibilityNodeInfoForItem(RecyclerView::R
     int spanGroupIndex = getSpanGroupIndex(recycler, state, glp->getViewLayoutPosition());
     if (mOrientation == HORIZONTAL) {
         info.setCollectionItemInfo(AccessibilityNodeInfo::CollectionItemInfo::obtain(
-                glp->getSpanIndex(), glp->getSpanSize(), spanGroupIndex, 1,
-                mSpanCount > 1 && glp->getSpanSize() == mSpanCount, false));
+                glp->getSpanIndex(), glp->getSpanSize(), spanGroupIndex, 1, false, false));
     } else { // VERTICAL
         info.setCollectionItemInfo(AccessibilityNodeInfo::CollectionItemInfo::obtain(
-                spanGroupIndex , 1, glp->getSpanIndex(), glp->getSpanSize(),
-                mSpanCount > 1 && glp->getSpanSize() == mSpanCount, false));
+                spanGroupIndex , 1, glp->getSpanIndex(), glp->getSpanSize(),false, false));
+    }
+}
+
+void GridLayoutManager::onInitializeAccessibilityNodeInfo(RecyclerView::Recycler& recycler,
+            RecyclerView::State& state, AccessibilityNodeInfo& info){
+    LinearLayoutManager::onInitializeAccessibilityNodeInfo(recycler, state, info);
+    // Set the class name so this is treated as a grid. A11y services should identify grids
+    // and list via CollectionInfos, but an almost empty grid may be incorrectly identified
+    // as a list.
+    info.setClassName("GridView");
+
+    if (mRecyclerView->mAdapter != nullptr && mRecyclerView->mAdapter->getItemCount() > 1) {
+        //info.addAction(AccessibilityAction::ACTION_SCROLL_IN_DIRECTION);
     }
 }
 
@@ -502,6 +513,17 @@ void GridLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, Recyc
 void GridLayoutManager::onLayoutCompleted(RecyclerView::State& state) {
     LinearLayoutManager::onLayoutCompleted(state);
     mPendingSpanCountChange = false;
+    if (mPositionTargetedByScrollInDirection != INVALID_POSITION) {
+        View* viewTargetedByScrollInDirection = findViewByPosition(
+                mPositionTargetedByScrollInDirection);
+        if (viewTargetedByScrollInDirection != nullptr) {
+            // Send event after the scroll associated with ACTION_SCROLL_IN_DIRECTION (see
+            // performAccessibilityAction()) concludes and layout completes. Accessibility
+            // services can listen for this event and change UI state as needed.
+            //viewTargetedByScrollInDirection->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_TARGETED_BY_SCROLL);
+            mPositionTargetedByScrollInDirection = INVALID_POSITION;
+        }
+    }
 }
 
 void GridLayoutManager::clearPreLayoutSpanMappingCache() {
@@ -521,19 +543,23 @@ void GridLayoutManager::cachePreLayoutSpanMapping() {
 
 void GridLayoutManager::onItemsAdded(RecyclerView& recyclerView, int positionStart, int itemCount) {
     mSpanSizeLookup->invalidateSpanIndexCache();
+    mSpanSizeLookup->invalidateSpanGroupIndexCache();
 }
 
 void GridLayoutManager::onItemsChanged(RecyclerView& recyclerView) {
     mSpanSizeLookup->invalidateSpanIndexCache();
+    mSpanSizeLookup->invalidateSpanGroupIndexCache();
 }
 
 void GridLayoutManager::onItemsRemoved(RecyclerView& recyclerView, int positionStart, int itemCount) {
     mSpanSizeLookup->invalidateSpanIndexCache();
+    mSpanSizeLookup->invalidateSpanGroupIndexCache();
 }
 
 void GridLayoutManager::onItemsUpdated(RecyclerView& recyclerView, int positionStart, int itemCount,
         Object* payload) {
     mSpanSizeLookup->invalidateSpanIndexCache();
+    mSpanSizeLookup->invalidateSpanGroupIndexCache();
 }
 
 void GridLayoutManager::onItemsMoved(RecyclerView& recyclerView, int from, int to, int itemCount) {
@@ -825,13 +851,24 @@ void GridLayoutManager::ensureAnchorIsInCorrectSpan(RecyclerView::Recycler& recy
 }
 
 View* GridLayoutManager::findReferenceChild(RecyclerView::Recycler& recycler, RecyclerView::State& state,
-                        int start, int end, int itemCount) {
+        bool layoutFromEnd, bool traverseChildrenInReverseOrder) {
+    int start = 0;
+    int end = getChildCount();
+    int diff = 1;
+    if (traverseChildrenInReverseOrder) {
+        start = getChildCount() - 1;
+        end = -1;
+        diff = -1;
+    }
+
+    int itemCount = state.getItemCount();
+
     ensureLayoutState();
     View* invalidMatch = nullptr;
     View* outOfBoundsMatch = nullptr;
+
     const int boundsStart = mOrientationHelper->getStartAfterPadding();
     const int boundsEnd = mOrientationHelper->getEndAfterPadding();
-    const int diff = end > start ? 1 : -1;
 
     for (int i = start; i != end; i += diff) {
         View* view = getChildAt(i);
@@ -1314,18 +1351,150 @@ bool GridLayoutManager::supportsPredictiveItemAnimations() {
     return mPendingSavedState == nullptr && !mPendingSpanCountChange;
 }
 
+int GridLayoutManager::computeHorizontalScrollRange(RecyclerView::State& state) {
+    if (mUsingSpansToEstimateScrollBarDimensions) {
+        return computeScrollRangeWithSpanInfo(state);
+    } else {
+        return LinearLayoutManager::computeHorizontalScrollRange(state);
+    }
+}
+
+int GridLayoutManager::computeVerticalScrollRange(RecyclerView::State& state) {
+    if (mUsingSpansToEstimateScrollBarDimensions) {
+        return computeScrollRangeWithSpanInfo(state);
+    } else {
+        return LinearLayoutManager::computeVerticalScrollRange(state);
+    }
+}
+
+int GridLayoutManager::computeHorizontalScrollOffset(RecyclerView::State& state) {
+    if (mUsingSpansToEstimateScrollBarDimensions) {
+        return computeScrollOffsetWithSpanInfo(state);
+    } else {
+        return LinearLayoutManager::computeHorizontalScrollOffset(state);
+    }
+}
+
+int GridLayoutManager::computeVerticalScrollOffset(RecyclerView::State& state) {
+    if (mUsingSpansToEstimateScrollBarDimensions) {
+        return computeScrollOffsetWithSpanInfo(state);
+    } else {
+        return LinearLayoutManager::computeVerticalScrollOffset(state);
+    }
+}
+
+void GridLayoutManager::setUsingSpansToEstimateScrollbarDimensions(bool useSpansToEstimateScrollBarDimensions) {
+    mUsingSpansToEstimateScrollBarDimensions = useSpansToEstimateScrollBarDimensions;
+}
+
+bool GridLayoutManager::isUsingSpansToEstimateScrollbarDimensions() const{
+    return mUsingSpansToEstimateScrollBarDimensions;
+}
+
+int GridLayoutManager::computeScrollRangeWithSpanInfo(RecyclerView::State& state) {
+    if (getChildCount() == 0 || state.getItemCount() == 0) {
+        return 0;
+    }
+    ensureLayoutState();
+
+    View* startChild = findFirstVisibleChildClosestToStart(!isSmoothScrollbarEnabled(), true);
+    View* endChild = findFirstVisibleChildClosestToEnd(!isSmoothScrollbarEnabled(), true);
+
+    if (startChild == nullptr || endChild == nullptr) {
+        return 0;
+    }
+    if (!isSmoothScrollbarEnabled()) {
+        return mSpanSizeLookup->getCachedSpanGroupIndex(
+                state.getItemCount() - 1, mSpanCount) + 1;
+    }
+
+    // smooth scrollbar enabled. try to estimate better.
+    const int laidOutArea = mOrientationHelper->getDecoratedEnd(endChild)
+            - mOrientationHelper->getDecoratedStart(startChild);
+
+    const int firstVisibleSpan =
+            mSpanSizeLookup->getCachedSpanGroupIndex(getPosition(startChild), mSpanCount);
+    const int lastVisibleSpan = mSpanSizeLookup->getCachedSpanGroupIndex(getPosition(endChild),
+            mSpanCount);
+    const int totalSpans = mSpanSizeLookup->getCachedSpanGroupIndex(state.getItemCount() - 1,
+            mSpanCount) + 1;
+    const int laidOutSpans = lastVisibleSpan - firstVisibleSpan + 1;
+
+    // estimate a size for full list.
+    return (int) (((float) laidOutArea / laidOutSpans) * totalSpans);
+}
+
+int GridLayoutManager::computeScrollOffsetWithSpanInfo(RecyclerView::State& state) {
+    if (getChildCount() == 0 || state.getItemCount() == 0) {
+        return 0;
+    }
+    ensureLayoutState();
+
+    bool smoothScrollEnabled = isSmoothScrollbarEnabled();
+    View* startChild = findFirstVisibleChildClosestToStart(!smoothScrollEnabled, true);
+    View* endChild = findFirstVisibleChildClosestToEnd(!smoothScrollEnabled, true);
+    if (startChild == nullptr || endChild == nullptr) {
+        return 0;
+    }
+    int startChildSpan = mSpanSizeLookup->getCachedSpanGroupIndex(getPosition(startChild),
+            mSpanCount);
+    int endChildSpan = mSpanSizeLookup->getCachedSpanGroupIndex(getPosition(endChild),
+            mSpanCount);
+
+    const int minSpan = std::min(startChildSpan, endChildSpan);
+    const int maxSpan = std::max(startChildSpan, endChildSpan);
+    const int totalSpans = mSpanSizeLookup->getCachedSpanGroupIndex(state.getItemCount() - 1,
+            mSpanCount) + 1;
+
+    const int spansBefore = mShouldReverseLayout
+            ? std::max(0, totalSpans - maxSpan - 1)
+            : std::max(0, minSpan);
+    if (!smoothScrollEnabled) {
+        return spansBefore;
+    }
+    const int laidOutArea = std::abs(mOrientationHelper->getDecoratedEnd(endChild)
+            - mOrientationHelper->getDecoratedStart(startChild));
+
+    const int firstVisibleSpan =
+            mSpanSizeLookup->getCachedSpanGroupIndex(getPosition(startChild), mSpanCount);
+    const int lastVisibleSpan = mSpanSizeLookup->getCachedSpanGroupIndex(getPosition(endChild),
+            mSpanCount);
+    const int laidOutSpans = lastVisibleSpan - firstVisibleSpan + 1;
+    const float avgSizePerSpan = (float) laidOutArea / laidOutSpans;
+
+    return std::round(spansBefore * avgSizePerSpan + (mOrientationHelper->getStartAfterPadding()
+        - mOrientationHelper->getDecoratedStart(startChild)));
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void GridLayoutManager::SpanSizeLookup::setSpanIndexCacheEnabled(bool cacheSpanIndices) {
+    if (!cacheSpanIndices) {
+        mSpanGroupIndexCache.clear();
+    }
     mCacheSpanIndices = cacheSpanIndices;
+}
+
+void GridLayoutManager::SpanSizeLookup::setSpanGroupIndexCacheEnabled(bool cacheSpanGroupIndices)  {
+    if (!cacheSpanGroupIndices) {
+        mSpanGroupIndexCache.clear();
+    }
+    mCacheSpanGroupIndices = cacheSpanGroupIndices;
 }
 
 void GridLayoutManager::SpanSizeLookup::invalidateSpanIndexCache() {
     mSpanIndexCache.clear();
 }
 
+void GridLayoutManager::SpanSizeLookup::invalidateSpanGroupIndexCache(){
+    mSpanGroupIndexCache.clear();
+}
+
 bool GridLayoutManager::SpanSizeLookup::isSpanIndexCacheEnabled() {
     return mCacheSpanIndices;
+}
+
+bool GridLayoutManager::SpanSizeLookup::isSpanGroupIndexCacheEnabled() {
+    return mCacheSpanGroupIndices;
 }
 
 int GridLayoutManager::SpanSizeLookup::getCachedSpanIndex(int position, int spanCount) {
@@ -1341,6 +1510,19 @@ int GridLayoutManager::SpanSizeLookup::getCachedSpanIndex(int position, int span
     return value;
 }
 
+int GridLayoutManager::SpanSizeLookup::getCachedSpanGroupIndex(int position, int spanCount) {
+    if (!mCacheSpanGroupIndices) {
+        return getSpanGroupIndex(position, spanCount);
+    }
+    const int existing = mSpanGroupIndexCache.get(position, -1);
+    if (existing != -1) {
+        return existing;
+    }
+    const int value = getSpanGroupIndex(position, spanCount);
+    mSpanGroupIndexCache.put(position, value);
+    return value;
+}
+
 int GridLayoutManager::SpanSizeLookup::getSpanIndex(int position, int spanCount) {
     int positionSpanSize = getSpanSize(position);
     if (positionSpanSize == spanCount) {
@@ -1350,7 +1532,7 @@ int GridLayoutManager::SpanSizeLookup::getSpanIndex(int position, int spanCount)
     int startPos = 0;
     // If caching is enabled, try to jump
     if (mCacheSpanIndices && mSpanIndexCache.size() > 0) {
-        int prevKey = findReferenceIndexFromCache(position);
+        int prevKey = findFirstKeyLessThan(mSpanIndexCache,position);
         if (prevKey >= 0) {
             span = mSpanIndexCache.get(prevKey) + getSpanSize(prevKey);
             startPos = prevKey + 1;
@@ -1372,13 +1554,13 @@ int GridLayoutManager::SpanSizeLookup::getSpanIndex(int position, int spanCount)
     return 0;
 }
 
-int GridLayoutManager::SpanSizeLookup::findReferenceIndexFromCache(int position) {
+int GridLayoutManager::SpanSizeLookup::findFirstKeyLessThan(SparseIntArray&cache,int position) {
     int lo = 0;
-    int hi = mSpanIndexCache.size() - 1;
+    int hi = cache.size() - 1;
 
     while (lo <= hi) {
         int mid = (lo + hi) >> 1;
-        int midVal = mSpanIndexCache.keyAt(mid);
+        int midVal = cache.keyAt(mid);
         if (midVal < position) {
             lo = mid + 1;
         } else {
@@ -1386,17 +1568,31 @@ int GridLayoutManager::SpanSizeLookup::findReferenceIndexFromCache(int position)
         }
     }
     int index = lo - 1;
-    if (index >= 0 && index < mSpanIndexCache.size()) {
-        return mSpanIndexCache.keyAt(index);
+    if (index >= 0 && index < cache.size()) {
+        return cache.keyAt(index);
     }
     return -1;
 }
 
 int GridLayoutManager::SpanSizeLookup::getSpanGroupIndex(int adapterPosition, int spanCount) {
-    int span = 0;
+    int span  = 0;
     int group = 0;
-    int positionSpanSize = getSpanSize(adapterPosition);
-    for (int i = 0; i < adapterPosition; i++) {
+    int start = 0;
+    if(mCacheSpanGroupIndices){
+        // This finds the first non empty cached group cache key.
+        int prevKey = findFirstKeyLessThan(mSpanGroupIndexCache, adapterPosition);
+        if (prevKey != -1) {
+            group = mSpanGroupIndexCache.get(prevKey);
+            start = prevKey + 1;
+            span = getCachedSpanIndex(prevKey, spanCount) + getSpanSize(prevKey);
+            if (span == spanCount) {
+                span = 0;
+                group++;
+            }
+        }
+    }
+    const int positionSpanSize = getSpanSize(adapterPosition);
+    for (int i = start; i < adapterPosition; i++) {
         int size = getSpanSize(i);
         span += size;
         if (span == spanCount) {

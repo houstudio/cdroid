@@ -3,6 +3,13 @@
 #include <widgetEx/recyclerview/recyclerview.h>
 namespace cdroid{
 class ChildHelper{
+private:
+    /** Not in call to removeView/removeViewAt/removeViewIfHidden. */
+    static constexpr int REMOVE_STATUS_NONE = 0;
+    /** Within a call to removeView/removeViewAt. */
+    static constexpr int REMOVE_STATUS_IN_REMOVE = 1;
+    /** Within a call to removeViewIfHidden. */
+    static constexpr int REMOVE_STATUS_IN_REMOVE_IF_HIDDEN = 2;
 public:
     struct Callback{
         std::function<int()>getChildCount;
@@ -23,6 +30,10 @@ public:
     std::vector<View*>mHiddenViews;
 private:
     static constexpr bool _Debug = false;
+    int mRemoveStatus = REMOVE_STATUS_NONE;
+    /** The view to remove in REMOVE_STATUS_IN_REMOVE. */
+    View* mViewInRemoveView;
+private:
     void hideViewInternal(View* child);
     bool unhideViewInternal(View* child);
     int getOffset(int index);

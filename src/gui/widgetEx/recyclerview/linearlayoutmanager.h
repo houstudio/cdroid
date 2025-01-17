@@ -63,11 +63,6 @@ private:
     View* getChildClosestToStart();
     View* getChildClosestToEnd();
 
-    View* findReferenceChildClosestToEnd(RecyclerView::Recycler& recycler, RecyclerView::State& state);
-    View* findReferenceChildClosestToStart(RecyclerView::Recycler& recycler,RecyclerView::State& state);
-    View* findFirstReferenceChild(RecyclerView::Recycler& recycler, RecyclerView::State& state);
-    View* findLastReferenceChild(RecyclerView::Recycler& recycler, RecyclerView::State& state);
-
     View* findPartiallyOrCompletelyInvisibleChildClosestToEnd();
     View* findPartiallyOrCompletelyInvisibleChildClosestToStart();
     View* findFirstPartiallyOrCompletelyInvisibleChild();
@@ -104,7 +99,7 @@ protected:
     View* findFirstVisibleChildClosestToStart(bool completelyVisible,bool acceptPartiallyVisible);
     View* findFirstVisibleChildClosestToEnd(bool completelyVisible,bool acceptPartiallyVisible);
     virtual View* findReferenceChild(RecyclerView::Recycler& recycler, RecyclerView::State& state,
-            int start, int end, int itemCount);
+            bool layoutFromEnd, bool traverseChildrenInReverseOrder);
     View* findOneVisibleChild(int fromIndex, int toIndex, bool completelyVisible,bool acceptPartiallyVisible);
     View* findOnePartiallyOrCompletelyInvisibleChild(int fromIndex, int toIndex);
     bool performAccessibilityAction(int action,Bundle args)override;

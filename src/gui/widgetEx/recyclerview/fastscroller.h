@@ -72,7 +72,7 @@ private:
     void destroyCallbacks();
     void requestRedraw();
     void setState(int state);
-    bool isLayoutRTL();
+    bool isLayoutRTL()const;
     void cancelHide();
     void resetHideDelay(int delay);
     void drawVerticalScrollbar(Canvas& canvas);
@@ -89,8 +89,7 @@ protected:
             Drawable* horizontalTrackDrawable, int defaultWidth, int scrollbarMinimumRange,
             int margin);
     ~FastScroller();
-    bool isVisible();
-    bool isHidden();
+    bool isVisible()const;
     void hide(int duration);
     void updateScrollPosition(int offsetX, int offsetY);
     bool isPointInsideVerticalThumb(float x, float y);
@@ -106,9 +105,8 @@ protected:
     void onRequestDisallowInterceptTouchEvent(bool disallowIntercept);
 public:
     void attachToRecyclerView(RecyclerView* recyclerView);
-    bool isDragging();
+    bool isDragging()const;
     void show();
-    void hide();
     void onDrawOver(Canvas& canvas, RecyclerView& parent, RecyclerView::State& state)override;
 };
 }/*endof namspace*/
