@@ -419,6 +419,7 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
                 view->setTranslationY(0);
                 view->setTranslationX(0);
                 dispatchMoveFinished(item);
+                delete moveInfo;//TOBE TEST
                 moves->erase(moves->begin()+j);//.remove(j);
                 if (moves->empty()) {
                     delete moves;
