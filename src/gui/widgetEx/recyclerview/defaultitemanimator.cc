@@ -14,6 +14,7 @@ DefaultItemAnimator::MoveInfo::MoveInfo(RecyclerView::ViewHolder& holder, int fr
 DefaultItemAnimator::ChangeInfo::ChangeInfo(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder) {
     this->oldHolder = &oldHolder;
     this->newHolder = &newHolder;
+    this->useCount = 0;
 }
 
 DefaultItemAnimator::ChangeInfo::ChangeInfo(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder,
@@ -22,6 +23,7 @@ DefaultItemAnimator::ChangeInfo::ChangeInfo(RecyclerView::ViewHolder& oldHolder,
     this->fromY = fromY;
     this->toX = toX;
     this->toY = toY;
+    this->useCount = 0;
 }
 
 void DefaultItemAnimator::runPendingAnimations() {
@@ -77,7 +79,7 @@ void DefaultItemAnimator::runPendingAnimations() {
             if(it!=mChangesList.end()){
                 for (ChangeInfo* change : *changes) {
                     animateChangeImpl(*change);
-                    delete change;
+                    //delete change;
                 }
                 changes->clear();
                 delete changes;
@@ -305,6 +307,10 @@ void DefaultItemAnimator::onChangeAnimationEnd(bool old,ChangeInfo*changeInfo,An
         if(it!=mChangeAnimations.end())
             mChangeAnimations.erase(it);
         dispatchFinishedWhenDone();
+        LOGD("changeInfo %p useCount=%d",changeInfo,changeInfo->useCount);
+        if(--changeInfo->useCount==0){
+            delete changeInfo;
+        }
     }
 
 }
@@ -322,6 +328,7 @@ void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
         oldViewAnim.translationY(changeInfo.toY - changeInfo.fromY);
  
         Animator::AnimatorListener al;
+        changeInfo.useCount++;
         al.onAnimationStart = std::bind(&DefaultItemAnimator::onChangeAnimationStart,this,true,&changeInfo,std::placeholders::_1,std::placeholders::_2);
         al.onAnimationEnd = std::bind(&DefaultItemAnimator::onChangeAnimationEnd,this,true,&changeInfo,std::placeholders::_1,std::placeholders::_2);
         oldViewAnim.alpha(0).setListener(al).start();
@@ -330,6 +337,7 @@ void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
         ViewPropertyAnimator& newViewAnimation = newView->animate();
         mChangeAnimations.push_back(changeInfo.newHolder);
         Animator::AnimatorListener al;
+        changeInfo.useCount++;
         al.onAnimationStart = std::bind(&DefaultItemAnimator::onChangeAnimationStart,this,false,&changeInfo,std::placeholders::_1,std::placeholders::_2);
         al.onAnimationEnd = std::bind(&DefaultItemAnimator::onChangeAnimationEnd,this,false,&changeInfo,std::placeholders::_1,std::placeholders::_2);
         newViewAnimation.translationX(0).translationY(0).setDuration(getChangeDuration())
@@ -342,6 +350,9 @@ void DefaultItemAnimator::endChangeAnimation(std::vector<ChangeInfo*>& infoList,
         ChangeInfo* changeInfo = infoList.at(i);
         if (endChangeAnimationIfNecessary(*changeInfo, item)) {
             if (changeInfo->oldHolder == nullptr && changeInfo->newHolder == nullptr) {
+                LOGD("changeInfo %p useCount=%d",changeInfo,changeInfo->useCount);
+                if(--changeInfo->useCount==0)
+                    delete changeInfo;//TOBE TEST
                 infoList.erase(infoList.begin()+i);//remove(changeInfo);
             }
         }

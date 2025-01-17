@@ -36,7 +36,7 @@ protected:
     class ChangeInfo {
     public:
         RecyclerView::ViewHolder* oldHolder, *newHolder;
-        int fromX, fromY, toX, toY;
+        int fromX, fromY, toX, toY ,useCount;
     private:
        	ChangeInfo(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder);
     public:
