@@ -386,6 +386,7 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
             view->setTranslationX(0);
             dispatchMoveFinished(item);
             mPendingMoves.erase(mPendingMoves.begin()+i);//remove(i);
+            delete moveInfo;
         }
     }
     endChangeAnimation(mPendingChanges, item);
