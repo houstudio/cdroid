@@ -609,10 +609,17 @@ void Switch::stopDrag(MotionEvent& ev){
 
 void Switch::animateThumbToCheckedState(bool newCheckedState){
     const float targetPosition = newCheckedState ? 1 : 0;
-    mPositionAnimator = ObjectAnimator::ofFloat(this,"thumbPos",{targetPosition});
-    mPositionAnimator->setDuration(THUMB_ANIMATION_DURATION);
-    mPositionAnimator->setAutoCancel(true);
-    mPositionAnimator->start();
+    AnimatorListenerAdapter animtorListener;
+    ObjectAnimator* animator = ObjectAnimator::ofFloat(this,"thumbPos",{targetPosition});
+    animator->setDuration(THUMB_ANIMATION_DURATION);
+    animator->setAutoCancel(true);
+    animtorListener.onAnimationEnd=[this](Animator&anim,bool){
+        delete mPositionAnimator;
+        mPositionAnimator = nullptr;
+    };
+    animator->addListener(animtorListener);
+    animator->start();
+    mPositionAnimator = animator;
 }
 
 void Switch::cancelPositionAnimator(){

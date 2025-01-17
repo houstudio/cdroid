@@ -34,6 +34,7 @@ AnimatorSet::~AnimatorSet(){
     }
     for(auto nd:mNodes)
         delete nd;
+    for(auto e:mEvents)delete e;
     mNodeMap.clear();
     mNodes.clear();
     delete mSeekState;
