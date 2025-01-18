@@ -2972,6 +2972,8 @@ void RecyclerView::dispatchLayoutStep3() {
                         animateChange(*oldChangeViewHolder, *holder, *preInfo, *postInfo,
                                 oldDisappearing, newDisappearing);
                     }
+                    delete preInfo;
+                    delete postInfo;
                 }
             } else {
                 mViewInfoStore->addToPostLayout(holder, &animationInfo);
