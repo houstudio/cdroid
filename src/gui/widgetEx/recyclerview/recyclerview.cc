@@ -1925,6 +1925,7 @@ void RecyclerView::onDetachedFromWindow() {
     }
     mPendingAccessibilityImportanceChange.clear();
     removeCallbacks(mItemAnimatorRunner);
+    removeCallbacks(mUpdateChildViewsRunnable);
     mViewInfoStore->onDetach();
     mRecycler->onDetachedFromWindow();
     //TODO PoolingContainer::callPoolingContainerOnReleaseForChildren(this);
