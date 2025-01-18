@@ -28,6 +28,10 @@ void DividerItemDecoration::setDrawable(Drawable* drawable) {
     mDivider = drawable;
 }
 
+Drawable*DividerItemDecoration::getDrawable()const{
+    return mDivider;
+}
+
 void DividerItemDecoration::onDraw(Canvas& c, RecyclerView& parent, RecyclerView::State& state) {
     if (parent.getLayoutManager() == nullptr || mDivider == nullptr) {
         return;

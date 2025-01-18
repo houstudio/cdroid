@@ -20,6 +20,7 @@ public:
     virtual ~DividerItemDecoration();
     void setOrientation(int orientation);
     void setDrawable(Drawable* drawable);
+    Drawable*getDrawable()const;
     void onDraw(Canvas& c, RecyclerView& parent, RecyclerView::State& state)override;
     void getItemOffsets(Rect& outRect, View& view, RecyclerView& parent,RecyclerView::State& state)override;
 };
