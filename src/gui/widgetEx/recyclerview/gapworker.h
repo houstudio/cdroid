@@ -26,11 +26,13 @@ private:
      * in between calls.
      */
     std::vector<Task*> mTasks;
+    Runnable mRunnable;
     friend RecyclerView;
     friend RecyclerView::LayoutManager;
 private:
     void buildTaskList();
-    /*RecyclerView::ViewHolder*/void* prefetchPositionWithDeadline(RecyclerView* view, int position, int64_t deadlineNs);
+    static int TaskComparator(Task* lhs, Task* rhs);
+    void* prefetchPositionWithDeadline(RecyclerView* view, int position, int64_t deadlineNs);
     void prefetchInnerRecyclerViewWithDeadline(RecyclerView* innerView,int64_t deadlineNs);
     void flushTaskWithDeadline(Task* task, int64_t deadlineNs);
     void flushTasksWithDeadline(int64_t deadlineNs); 
@@ -49,8 +51,8 @@ protected:
      * Prefetch information associated with a specific RecyclerView.
      */
     class LayoutPrefetchRegistryImpl:public RecyclerView::LayoutManager::LayoutPrefetchRegistry {
-        int mPrefetchDx;
-        int mPrefetchDy;
+        int mPrefetchDx=5;
+        int mPrefetchDy=5;
         int mCount;
         std::vector<int> mPrefetchArray;
     protected:
@@ -65,6 +67,7 @@ protected:
         void addPosition(int layoutPosition, int pixelDistance)override;
     };
 public:
+    GapWorker();
     void add(RecyclerView* recyclerView);
     void remove(RecyclerView* recyclerView);
     void prefetch(int64_t deadlineNs);

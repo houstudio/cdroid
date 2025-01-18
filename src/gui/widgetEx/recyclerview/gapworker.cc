@@ -1,4 +1,3 @@
-#if 10
 #include <widgetEx/recyclerview/recyclerview.h>
 #include <widgetEx/recyclerview/gapworker.h>
 #include <widgetEx/recyclerview/adapterhelper.h>
@@ -89,6 +88,10 @@ void GapWorker::LayoutPrefetchRegistryImpl::clearPrefetchPositions() {
 }
 
 /////////////////////////////////////
+GapWorker::GapWorker(){
+    mRunnable= std::bind(&GapWorker::run,this);
+}
+
 void GapWorker::add(RecyclerView* recyclerView) {
     auto it = std::find(mRecyclerViews.begin(),mRecyclerViews.end(),recyclerView);
     if (RecyclerView::sDebugAssertionsEnabled && (it==mRecyclerViews.end()) ) {
@@ -117,38 +120,36 @@ void GapWorker::postFromTraversal(RecyclerView* recyclerView, int prefetchDx, in
         }
         if (mPostTimeNs == 0) {
             mPostTimeNs = recyclerView->getNanoTime();
-            //recyclerView->post(this);
+            recyclerView->post(mRunnable);
+            LOGE("postFromTraversal %p",this);
         }
     }
     LayoutPrefetchRegistryImpl* prefetchRegistry = (LayoutPrefetchRegistryImpl*)recyclerView->mPrefetchRegistry;
     prefetchRegistry->setPrefetchVector(prefetchDx, prefetchDy);
 }
 
-#if 0
-static Comparator<Task> sTaskComparator = new Comparator<Task>() {
-    public int compare(Task lhs, Task rhs) {
-        // first, prioritize non-cleared tasks
-        if ((lhs.view == null) != (rhs.view == null)) {
-            return lhs.view == null ? 1 : -1;
-        }
-
-        // then prioritize those (we think) are needed for next frame
-        if (lhs.neededNextFrame != rhs.neededNextFrame) {
-            return lhs.neededNextFrame ? -1 : 1;
-        }
-
-        // then prioritize _highest_ view velocity
-        int deltaViewVelocity = rhs.viewVelocity - lhs.viewVelocity;
-        if (deltaViewVelocity != 0) return deltaViewVelocity;
-
-        // then prioritize _lowest_ distance to item
-        int deltaDistanceToItem = lhs.distanceToItem - rhs.distanceToItem;
-        if (deltaDistanceToItem != 0) return deltaDistanceToItem;
-
-        return 0;
+int GapWorker::TaskComparator(GapWorker::Task* lhs, GapWorker::Task* rhs) {
+    // first, prioritize non-cleared tasks
+    if ((lhs->view == nullptr) != (rhs->view == nullptr)) {
+        return lhs->view == nullptr ? 1 : -1;
     }
-};
-#endif
+
+    // then prioritize those (we think) are needed for next frame
+    if (lhs->neededNextFrame != rhs->neededNextFrame) {
+        return lhs->neededNextFrame ? -1 : 1;
+    }
+
+    // then prioritize _highest_ view velocity
+    int deltaViewVelocity = rhs->viewVelocity - lhs->viewVelocity;
+    if (deltaViewVelocity != 0) return deltaViewVelocity;
+
+    // then prioritize _lowest_ distance to item
+    int deltaDistanceToItem = lhs->distanceToItem - rhs->distanceToItem;
+    if (deltaDistanceToItem != 0) return deltaDistanceToItem;
+
+    return 0;
+}
+
 void GapWorker::buildTaskList() {
     // Update PrefetchRegistry in each view
     const int viewCount = mRecyclerViews.size();
@@ -194,9 +195,8 @@ void GapWorker::buildTaskList() {
             totalTaskIndex++;
         }
     }
-
     // ... and priority sort
-    //std::sort(mTasks.begin(),mTasks.end(), sTaskComparator);
+    std::sort(mTasks.begin(),mTasks.end(), TaskComparator);
 }
 
 bool GapWorker::isPrefetchPositionAttached(RecyclerView* view, int position) {
@@ -286,6 +286,7 @@ void GapWorker::flushTaskWithDeadline(Task* task, int64_t deadlineNs) {
 void GapWorker::flushTasksWithDeadline(int64_t deadlineNs) {
     for (int i = 0; i < mTasks.size(); i++) {
         Task* task = mTasks.at(i);
+        LOGD("task[%d]",i);
         if (task->view == nullptr) {
             break; // done with populated tasks
         }
@@ -295,6 +296,7 @@ void GapWorker::flushTasksWithDeadline(int64_t deadlineNs) {
 }
 
 void GapWorker::prefetch(int64_t deadlineNs) {
+    LOGD("");
     buildTaskList();
     flushTasksWithDeadline(deadlineNs);
 }
@@ -305,6 +307,7 @@ void GapWorker::run() {
     // valid in animation/input callbacks, so query it here to be safe.
     const size_t size = mRecyclerViews.size();
     int64_t latestFrameVsyncMs = 0;
+    LOGD("%d recyclerview",size);
     for (int i = 0; i < size; i++) {
         RecyclerView* view = mRecyclerViews.at(i);
         if (view->getWindowVisibility() == View::VISIBLE) {
@@ -319,5 +322,5 @@ void GapWorker::run() {
         mPostTimeNs = 0;
     }
 }
+
 }/*endof namespace*/
-#endif

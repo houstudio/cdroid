@@ -252,6 +252,7 @@ if(ENABLE_RECYCLERVIEW)
         widgetEx/recyclerview/childhelper.cc
         widgetEx/recyclerview/staggeredgridlayoutmanager.cc
         widgetEx/recyclerview/recyclerviewaccessibilitydelegate.cc
+        widgetEx/recyclerview/gapworker.cc
         #widgetEx/recyclerview/carousellayoutmanager.cc
         widgetEx/recyclerview/adapterhelper.cc
         widgetEx/viewgrouputils.cc
