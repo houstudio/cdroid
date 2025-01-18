@@ -80,8 +80,8 @@ public:
             int bottom;
             int changeFlags;
             ItemHolderInfo();
-            ItemHolderInfo& setFrom(RecyclerView::ViewHolder& holder);
-            ItemHolderInfo& setFrom(RecyclerView::ViewHolder& holder,int flags);
+            ItemHolderInfo* setFrom(RecyclerView::ViewHolder& holder);
+            ItemHolderInfo* setFrom(RecyclerView::ViewHolder& holder,int flags);
         };
         /*struct ItemAnimatorListener {
             CallbackBase<void,ViewHolder&> onAnimationFinished;
@@ -118,8 +118,8 @@ public:
        void setRemoveDuration(long removeDuration);
        long getChangeDuration();
        void setChangeDuration(long changeDuration);
-       ItemHolderInfo& recordPreLayoutInformation(State& state,ViewHolder& viewHolder, int changeFlags,std::vector<Object*>& payloads);
-       ItemHolderInfo& recordPostLayoutInformation(State& state,ViewHolder& viewHolder);
+       ItemHolderInfo* recordPreLayoutInformation(State& state,ViewHolder& viewHolder, int changeFlags,std::vector<Object*>& payloads);
+       ItemHolderInfo* recordPostLayoutInformation(State& state,ViewHolder& viewHolder);
 
        virtual bool animateDisappearance(ViewHolder& viewHolder,ItemHolderInfo& preLayoutInfo, ItemHolderInfo* postLayoutInfo)=0;
        virtual bool animateAppearance(ViewHolder& viewHolder,ItemHolderInfo* preLayoutInfo, ItemHolderInfo& postLayoutInfo)=0;

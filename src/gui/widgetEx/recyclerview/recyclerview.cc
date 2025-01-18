@@ -2840,9 +2840,9 @@ void RecyclerView::dispatchLayoutStep1() {
             if (holder->shouldIgnore() || (holder->isInvalid() && !mAdapter->hasStableIds())) {
                 continue;
             }
-            ItemAnimator::ItemHolderInfo& animationInfo = mItemAnimator->recordPreLayoutInformation(*mState, *holder,
+            ItemAnimator::ItemHolderInfo* animationInfo = mItemAnimator->recordPreLayoutInformation(*mState, *holder,
                    ItemAnimator::buildAdapterChangeFlagsForAnimations(holder),*holder->getUnmodifiedPayloads());
-            mViewInfoStore->addToPreLayout(holder, &animationInfo);
+            mViewInfoStore->addToPreLayout(holder, animationInfo);
             if (mState->mTrackOldChangeHolders && holder->isUpdated() && !holder->isRemoved()
                     && !holder->shouldIgnore() && !holder->isInvalid()) {
                 long key = getChangedHolderKey(*holder);
@@ -2883,12 +2883,12 @@ void RecyclerView::dispatchLayoutStep1() {
                 if (!wasHidden) {
                     flags |= ItemAnimator::FLAG_APPEARED_IN_PRE_LAYOUT;
                 }
-                ItemAnimator::ItemHolderInfo& animationInfo = mItemAnimator->recordPreLayoutInformation(
+                ItemAnimator::ItemHolderInfo* animationInfo = mItemAnimator->recordPreLayoutInformation(
                         *mState, *viewHolder, flags,*viewHolder->getUnmodifiedPayloads());
                 if (wasHidden) {
-                    recordAnimationInfoIfBouncedHiddenView(viewHolder, &animationInfo);
+                    recordAnimationInfoIfBouncedHiddenView(viewHolder, animationInfo);
                 } else {
-                    mViewInfoStore->addToAppearedInPreLayoutHolders(viewHolder, &animationInfo);
+                    mViewInfoStore->addToAppearedInPreLayoutHolders(viewHolder, animationInfo);
                 }
             }
         }
@@ -2943,7 +2943,7 @@ void RecyclerView::dispatchLayoutStep3() {
                 continue;
             }
             long key = getChangedHolderKey(*holder);
-            ItemAnimator::ItemHolderInfo& animationInfo = mItemAnimator->recordPostLayoutInformation(*mState, *holder);
+            ItemAnimator::ItemHolderInfo* animationInfo = mItemAnimator->recordPostLayoutInformation(*mState, *holder);
             ViewHolder* oldChangeViewHolder = mViewInfoStore->getFromOldChangeHolders(key);
             if (oldChangeViewHolder && !oldChangeViewHolder->shouldIgnore()) {
                 // run a change animation
@@ -2960,11 +2960,11 @@ void RecyclerView::dispatchLayoutStep3() {
                 const bool newDisappearing = mViewInfoStore->isDisappearing(holder);
                 if (oldDisappearing && (oldChangeViewHolder == holder)) {
                     // run disappear animation instead of change
-                    mViewInfoStore->addToPostLayout(holder, &animationInfo);
+                    mViewInfoStore->addToPostLayout(holder, animationInfo);
                 } else {
                     ItemAnimator::ItemHolderInfo* preInfo = mViewInfoStore->popFromPreLayout(oldChangeViewHolder);
                     // we add and remove so that any post info is merged.
-                    mViewInfoStore->addToPostLayout(holder, &animationInfo);
+                    mViewInfoStore->addToPostLayout(holder, animationInfo);
                     ItemAnimator::ItemHolderInfo* postInfo = mViewInfoStore->popFromPostLayout(holder);
                     if (preInfo == nullptr) {
                         handleMissingPreInfoForChangeError(key, holder, oldChangeViewHolder);
@@ -2976,7 +2976,7 @@ void RecyclerView::dispatchLayoutStep3() {
                     delete postInfo;
                 }
             } else {
-                mViewInfoStore->addToPostLayout(holder, &animationInfo);
+                mViewInfoStore->addToPostLayout(holder, animationInfo);
             }
         }
 
@@ -4486,9 +4486,9 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
         if (mRV->mState->mRunSimpleAnimations) {
             int changeFlags = ItemAnimator::buildAdapterChangeFlagsForAnimations(holder);
             changeFlags |= ItemAnimator::FLAG_APPEARED_IN_PRE_LAYOUT;
-            ItemAnimator::ItemHolderInfo& info = mRV->mItemAnimator->recordPreLayoutInformation(
+            ItemAnimator::ItemHolderInfo* info = mRV->mItemAnimator->recordPreLayoutInformation(
 	            *mRV->mState, *holder, changeFlags, *holder->getUnmodifiedPayloads());
-            mRV->recordAnimationInfoIfBouncedHiddenView(holder,&info);
+            mRV->recordAnimationInfoIfBouncedHiddenView(holder,info);
         }
     }
 
@@ -7680,12 +7680,12 @@ void RecyclerView::ItemAnimator::setListener(RecyclerView::ItemAnimator::ItemAni
     mListener = listener;
 }
 
-RecyclerView::ItemAnimator::ItemHolderInfo& RecyclerView::ItemAnimator::recordPreLayoutInformation(State& state,
+RecyclerView::ItemAnimator::ItemHolderInfo* RecyclerView::ItemAnimator::recordPreLayoutInformation(State& state,
        ViewHolder& viewHolder, int changeFlags,std::vector<Object*>& payloads) {
     return obtainHolderInfo()->setFrom(viewHolder);
 }
 
-RecyclerView::ItemAnimator::ItemHolderInfo& RecyclerView::ItemAnimator::recordPostLayoutInformation(State& state,ViewHolder& viewHolder) {
+RecyclerView::ItemAnimator::ItemHolderInfo* RecyclerView::ItemAnimator::recordPostLayoutInformation(State& state,ViewHolder& viewHolder) {
     return obtainHolderInfo()->setFrom(viewHolder);
 }
 
@@ -7760,17 +7760,17 @@ RecyclerView::ItemAnimator::ItemHolderInfo* RecyclerView::ItemAnimator::obtainHo
 RecyclerView::ItemAnimator::ItemHolderInfo::ItemHolderInfo() {
 }
 
-RecyclerView::ItemAnimator::ItemHolderInfo& RecyclerView::ItemAnimator::ItemHolderInfo::setFrom(RecyclerView::ViewHolder& holder) {
+RecyclerView::ItemAnimator::ItemHolderInfo* RecyclerView::ItemAnimator::ItemHolderInfo::setFrom(RecyclerView::ViewHolder& holder) {
     return setFrom(holder, 0);
 }
 
-RecyclerView::ItemAnimator::ItemHolderInfo& RecyclerView::ItemAnimator::ItemHolderInfo::setFrom(RecyclerView::ViewHolder& holder,int flags) {
+RecyclerView::ItemAnimator::ItemHolderInfo* RecyclerView::ItemAnimator::ItemHolderInfo::setFrom(RecyclerView::ViewHolder& holder,int flags) {
     View* view = holder.itemView;
     this->left = view->getLeft();
     this->top = view->getTop();
     this->right = view->getRight();
     this->bottom = view->getBottom();
-    return *this;
+    return this;
 }
 //endof ItemAnimator
 /////////////////////////////////////////////////////////////////////////////////////////
