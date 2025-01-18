@@ -43,7 +43,7 @@ int UIEventSource::handleRunnables(){
         //maybe user will removed runnable itself in its runnable'proc,so we use removed flag to flag it
         while(mRunnables.size() && ((mFlags&1)==0)){
             RUNNER runner = mRunnables.front();
-            if(runner.time >= nowms)break;
+            if(runner.time > nowms)break;
             mRunnables.pop_front();
             if(runner.run)runner.run();
             count++;
