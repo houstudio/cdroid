@@ -95,12 +95,7 @@ int LinearSnapHelper::distanceToCenter(RecyclerView::LayoutManager& layoutManage
         View& targetView, OrientationHelper& helper) {
     const int childCenter = helper.getDecoratedStart(&targetView)
             + (helper.getDecoratedMeasurement(&targetView) / 2);
-    int containerCenter;
-    if (layoutManager.getClipToPadding()) {
-        containerCenter = helper.getStartAfterPadding() + helper.getTotalSpace() / 2;
-    } else {
-        containerCenter = helper.getEnd() / 2;
-    }
+    const int containerCenter = helper.getStartAfterPadding() + helper.getTotalSpace() / 2;
     return childCenter - containerCenter;
 }
 
@@ -125,12 +120,7 @@ View* LinearSnapHelper::findCenterView(RecyclerView::LayoutManager& layoutManage
     }
 
     View* closestChild = nullptr;
-    int center;
-    if (layoutManager.getClipToPadding()) {
-        center = helper.getStartAfterPadding() + helper.getTotalSpace() / 2;
-    } else {
-        center = helper.getEnd() / 2;
-    }
+    const int center = helper.getStartAfterPadding() + helper.getTotalSpace() / 2;
     int absClosest = INT_MAX;//Integer.MAX_VALUE;
 
     for (int i = 0; i < childCount; i++) {
@@ -139,7 +129,7 @@ View* LinearSnapHelper::findCenterView(RecyclerView::LayoutManager& layoutManage
                 + (helper.getDecoratedMeasurement(child) / 2);
         int absDistance = std::abs(childCenter - center);
 
-        /** if child center is closer than previous closest, set it as closest  **/
+        /* if child center is closer than previous closest, set it as closest  */
         if (absDistance < absClosest) {
             absClosest = absDistance;
             closestChild = child;

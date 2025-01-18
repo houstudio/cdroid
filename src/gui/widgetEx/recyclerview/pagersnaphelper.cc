@@ -39,7 +39,7 @@ int PagerSnapHelper::findTargetSnapPosition(RecyclerView::LayoutManager& layoutM
         int velocityY) {
     const int itemCount = layoutManager.getItemCount();
     OrientationHelper* orientationHelper = getOrientationHelper(layoutManager);
-    if ((itemCount == 0)||(orientationHelper==nullptr)) {
+    if ( (itemCount == 0) || (orientationHelper==nullptr) ) {
         return RecyclerView::NO_POSITION;
     }
 
@@ -86,11 +86,11 @@ int PagerSnapHelper::findTargetSnapPosition(RecyclerView::LayoutManager& layoutM
     if (visibleView == nullptr) {
         return RecyclerView::NO_POSITION;
     }
-    int visiblePosition = layoutManager.getPosition(visibleView);
-    int snapToPosition = visiblePosition
+    const int visiblePosition = layoutManager.getPosition(visibleView);
+    const int snapToPosition = visiblePosition
             + (isReverseLayout(layoutManager) == forwardDirection ? -1 : +1);
 
-    if (snapToPosition < 0 || snapToPosition >= itemCount) {
+    if ( (snapToPosition < 0) || (snapToPosition >= itemCount) ){
         return RecyclerView::NO_POSITION;
     }
     return snapToPosition;    
