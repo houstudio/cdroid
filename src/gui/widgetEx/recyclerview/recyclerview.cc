@@ -4152,6 +4152,7 @@ void RecyclerView::RecycledViewPool::detachForPoolingContainer(Adapter*adapter, 
             std::vector<ViewHolder*> scrapHeap = mScrap.get(mScrap.keyAt(keyIndex))->mScrapHeap;
             for (int i = 0; i < scrapHeap.size(); i++) {
                 delete scrapHeap.at(i)->itemView;
+                scrapHeap.at(i)->itemView = nullptr;
                 //PoolingContainer.callPoolingContainerOnRelease(scrapHeap.at(i)->itemView);
             }
         }
@@ -5030,6 +5031,7 @@ void RecyclerView::Recycler::onAttachedToWindow() {
 void RecyclerView::Recycler::onDetachedFromWindow() {
     for (int i = 0; i < mCachedViews.size(); i++) {
         delete mCachedViews.at(i)->itemView;
+        mCachedViews.at(i)->itemView = nullptr;
         //PoolingContainer.callPoolingContainerOnRelease(mCachedViews.at(i)->itemView);
     }
     poolingContainerDetach(mRV->mAdapter);
@@ -5053,7 +5055,7 @@ void RecyclerView::Recycler::viewRangeUpdate(int positionStart, int itemCount) {
         }
 
         const int pos = holder->mPosition;
-        if (pos >= positionStart && pos < positionEnd) {
+        if ((pos >= positionStart) && (pos < positionEnd) ) {
             holder->addFlags(ViewHolder::FLAG_UPDATE);
             recycleCachedViewAt(i);
             // cached views should not be flagged as changed because this will cause them
@@ -5303,13 +5305,6 @@ void RecyclerView::dispatchChildAttached(View* child) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 RecyclerView::LayoutManager::LayoutManager(){
-    /*mHorizontalBoundCheckCallback.getChildCount=[this]()->int {
-        return this->getChildCount();
-    };
-
-    mHorizontalBoundCheckCallback.getParent=[this]()->View* {
-        return mRecyclerView;
-    };*/
 
     mHorizontalBoundCheckCallback.getChildAt=[this](int index)->View* {
         return this->getChildAt(index);
@@ -5333,14 +5328,6 @@ RecyclerView::LayoutManager::LayoutManager(){
         return this->getDecoratedRight(view) + params->rightMargin;
     };
 
-    //private final ViewBoundsCheck.Callback mVerticalBoundCheckCallback =
-    /*mVerticalBoundCheckCallback.getChildCount=[this]() {
-        return this->getChildCount();
-    };
-
-    mVerticalBoundCheckCallback.getParent=[this]()->View* {
-        return mRecyclerView;
-    };*/
 
     mVerticalBoundCheckCallback.getChildAt=[this](int index)->View* {
         return this->getChildAt(index);
@@ -6333,8 +6320,8 @@ bool RecyclerView::LayoutManager::isFocusedChildVisibleAfterScrolling(RecyclerVi
     Rect& bounds = mRecyclerView->mTempRect;
     getDecoratedBoundsWithMargins(focusedChild, bounds);
 
-    if (bounds.left - dx >= parentRight || bounds.right() - dx <= parentLeft
-            || bounds.top - dy >= parentBottom || bounds.bottom() - dy <= parentTop) {
+    if ((bounds.left - dx >= parentRight) || (bounds.right() - dx <= parentLeft)
+            || (bounds.top - dy >= parentBottom) || (bounds.bottom() - dy <= parentTop) ){
         return false;
     }
     return true;
