@@ -959,7 +959,7 @@ void GridLayoutManager::collectPrefetchPositionsForLayoutState(RecyclerView::Sta
     int count = 0;
     while (count < mSpanCount && layoutState.hasMore(state) && remainingSpan > 0) {
         const int pos = layoutState.mCurrentPosition;
-        layoutPrefetchRegistry(pos, std::max(0, layoutState.mScrollingOffset));//addPosition
+        layoutPrefetchRegistry.addPosition(pos, std::max(0, layoutState.mScrollingOffset));
         const int spanSize = mSpanSizeLookup->getSpanSize(pos);
         remainingSpan -= spanSize;
         layoutState.mCurrentPosition += layoutState.mItemDirection;

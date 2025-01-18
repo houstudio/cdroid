@@ -17,11 +17,11 @@ class RecyclerViewAccessibilityDelegate;
 
 class RecyclerView:public ViewGroup{
 private:
-    static constexpr bool _Debug=false;
+    //static constexpr bool _Debug=false;
     static constexpr bool FORCE_INVALIDATE_DISPLAY_LIST = false;//Build.VERSION.SDK_INT == 18 || Build.VERSION.SDK_INT == 19 || Build.VERSION.SDK_INT == 20;
     static constexpr bool ALLOW_SIZE_IN_UNSPECIFIED_SPEC = false;//Build.VERSION.SDK_INT >= 23;
     static constexpr bool POST_UPDATES_ON_ANIMATION = true;//Build.VERSION.SDK_INT >= 16;
-    static constexpr bool ALLOW_THREAD_GAP_WORK = false;//Build.VERSION.SDK_INT >= 21;
+    static constexpr bool ALLOW_THREAD_GAP_WORK = true;//Build.VERSION.SDK_INT >= 21;
     static constexpr bool FORCE_ABS_FOCUS_SEARCH_DIRECTION = false;//Build.VERSION.SDK_INT <= 15;
     static constexpr bool IGNORE_DETACHED_FOCUSED_CHILD = false;//Build.VERSION.SDK_INT <= 15;
     static constexpr bool DISPATCH_TEMP_DETACH = false;
@@ -37,6 +37,7 @@ protected:
     static bool sDebugAssertionsEnabled;
     static bool sVerboseLoggingEnabled;
     class AdapterDataObservable;
+    friend class GapWorker;
 public:
     static constexpr int HORIZONTAL = LinearLayout::HORIZONTAL;
     static constexpr int VERTICAL = LinearLayout::VERTICAL;
@@ -301,7 +302,7 @@ protected:
     ItemAnimator* mItemAnimator;
     ViewFlinger* mViewFlinger;
     GapWorker* mGapWorker;
-    //GapWorker::LayoutPrefetchRegistryImpl* mPrefetchRegistry;
+    /*GapWorker::LayoutPrefetchRegistryImpl*/void* mPrefetchRegistry;
     State* mState;
     RecyclerViewAccessibilityDelegate* mAccessibilityDelegate;
     std::vector<ViewHolder*> mPendingAccessibilityImportanceChange;
@@ -630,8 +631,10 @@ public:
     CallbackBase<void,RecyclerView&,MotionEvent&>onTouchEvent;//(RecyclerView& rv,MotionEvent& e);
     CallbackBase<void,bool>onRequestDisallowInterceptTouchEvent;//(bool disallowIntercept);
 };
+
 class RecyclerView::LayoutManager{
 private:
+    friend GapWorker;
     friend RecyclerView;
     friend ViewInfoStore;
     friend RecyclerViewAccessibilityDelegate;
@@ -678,9 +681,10 @@ protected:
     virtual bool shouldMeasureTwice();
     bool hasFlexibleChildInBothOrientations();
 public:
-    DECLARE_UIEVENT(void,LayoutPrefetchRegistry,int,int);
-    //    void addPosition(int layoutPosition, int pixelDistance);
-    //};
+    class LayoutPrefetchRegistry{
+    public:
+        virtual void addPosition(int layoutPosition, int pixelDistance)=0;
+    };
     struct Properties {
         /** @attr ref androidx.recyclerview.R.styleable#RecyclerView_android_orientation */
         int orientation;
@@ -926,6 +930,7 @@ public:
 
 class RecyclerView::Recycler{
 private:
+    friend GapWorker;
     friend RecyclerView;
     RecyclerView*mRV;
     static constexpr int DEFAULT_CACHE_SIZE = 2;
@@ -994,8 +999,9 @@ public:
 
 class RecyclerView::ViewHolder{
 private:
-    friend RecyclerView;
     friend ChildHelper;
+    friend GapWorker;
+    friend RecyclerView;
     friend RecyclerView::ItemAnimator;
     int mFlags;
     int mIsRecyclableCount = 0;
@@ -1214,6 +1220,7 @@ public:
 
 class RecyclerView::State{
 protected:
+    friend GapWorker;
     friend RecyclerView;
     static constexpr int STEP_START = 1;
     static constexpr int STEP_LAYOUT = 1 << 1;

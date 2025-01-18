@@ -913,7 +913,7 @@ void LinearLayoutManager::collectPrefetchPositionsForLayoutState(RecyclerView::S
         LayoutPrefetchRegistry& layoutPrefetchRegistry) {
     const int pos = layoutState.mCurrentPosition;
     if (pos >= 0 && pos < state.getItemCount()) {
-        layoutPrefetchRegistry(pos, std::max(0, layoutState.mScrollingOffset));//addPosition
+        layoutPrefetchRegistry.addPosition(pos, std::max(0, layoutState.mScrollingOffset));
     }
 }
 
@@ -940,7 +940,7 @@ void LinearLayoutManager::collectInitialPrefetchPositions(int adapterItemCount, 
     int targetPos = anchorPos;
     for (int i = 0; i < mInitialPrefetchItemCount; i++) {
         if (targetPos >= 0 && targetPos < adapterItemCount) {
-            layoutPrefetchRegistry(targetPos, 0);//addPosition
+            layoutPrefetchRegistry.addPosition(targetPos, 0);//addPosition
         } else {
             break; // no more to prefetch
         }

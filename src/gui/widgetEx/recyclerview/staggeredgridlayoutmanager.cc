@@ -1644,8 +1644,7 @@ void StaggeredGridLayoutManager::collectAdjacentPrefetchPositions(int dx, int dy
 
     // then assign them in order to the next N views (where N = span count)
     for (int i = 0; i < itemPrefetchCount && mLayoutState->hasMore(state); i++) {
-        //layoutPrefetchRegistry.addPosition(mLayoutState->mCurrentPosition, mPrefetchDistances[i]);
-	layoutPrefetchRegistry(mLayoutState->mCurrentPosition, mPrefetchDistances[i]);
+        layoutPrefetchRegistry.addPosition(mLayoutState->mCurrentPosition, mPrefetchDistances[i]);
         mLayoutState->mCurrentPosition += mLayoutState->mItemDirection;
     }
 }

@@ -295,7 +295,7 @@ void DefaultItemAnimator::onChangeAnimationStart(bool old,ChangeInfo*changeInfo,
 
 void DefaultItemAnimator::onChangeAnimationEnd(bool old,ChangeInfo*changeInfo,Animator& animator,bool isReverse){
     RecyclerView::ViewHolder* holder = old?changeInfo->oldHolder:changeInfo->newHolder;
-    View*view = holder == nullptr ? nullptr : holder->itemView;
+    View*view = (holder == nullptr) ? nullptr : holder->itemView;
     if(view&&holder){
         ViewPropertyAnimator& animator = view->animate();
 	    animator.setListener({});
@@ -312,7 +312,6 @@ void DefaultItemAnimator::onChangeAnimationEnd(bool old,ChangeInfo*changeInfo,An
             delete changeInfo;
         }
     }
-
 }
 
 void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
@@ -351,7 +350,7 @@ void DefaultItemAnimator::endChangeAnimation(std::vector<ChangeInfo*>& infoList,
         if (endChangeAnimationIfNecessary(*changeInfo, item)) {
             if (changeInfo->oldHolder == nullptr && changeInfo->newHolder == nullptr) {
                 LOGD("changeInfo %p useCount=%d",changeInfo,changeInfo->useCount);
-                if(--changeInfo->useCount==0)
+                if(--changeInfo->useCount<=0)
                     delete changeInfo;//TOBE TEST
                 infoList.erase(infoList.begin()+i);//remove(changeInfo);
             }

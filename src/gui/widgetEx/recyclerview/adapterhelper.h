@@ -35,6 +35,7 @@ public:
         std::function<void(int,int)> offsetPositionsForMove;//(int from, int to);
     };
 private:
+    friend GapWorker;
     friend RecyclerView;
     int mExistingUpdateTypes;
     Pools::SimplePool<UpdateOp>* mUpdateOpPool;// = new Pools.SimplePool<UpdateOp>(UpdateOp.POOL_SIZE)
