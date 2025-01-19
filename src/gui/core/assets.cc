@@ -71,9 +71,9 @@ void Assets::setTheme(const std::string&theme) {
 }
 
 typedef struct{
-    std::map<const std::string,const std::string>colors;
-    std::map<const std::string,const std::string>dimens;
-    std::map<const std::string,std::vector<AttributeSet>>colorStateList;
+    std::unordered_map<std::string,const std::string>colors;
+    std::unordered_map<std::string,const std::string>dimens;
+    std::unordered_map<std::string,std::vector<AttributeSet>>colorStateList;
 }PENDINGRESOURCE;
 
 static std::string convertXmlToCString(const std::string& xml) {
