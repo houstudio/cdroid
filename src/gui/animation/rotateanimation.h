@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __ROTATE_ANIMATION_H__
+#define __ROTATE_ANIMATION_H__
 
 #include <animation/animation.h>
 namespace cdroid{
@@ -30,4 +31,5 @@ public:
     RotateAnimation*clone()const override;
 };
 
-}
+}/*endof namespace*/
+#endif/*__ROTATE_ANIMATION_H__*/

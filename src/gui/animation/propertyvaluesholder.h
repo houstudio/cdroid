@@ -1,6 +1,6 @@
-#pragma once
+#ifndef __PROPERTY_VALUES_HOLDER_H__
+#define __PROPERTY_VALUES_HOLDER_H__
 
-#include <map>
 #include <string>
 #include <functional>
 #include <vector>
@@ -8,6 +8,7 @@
 #include <iostream>
 #include <core/color.h>
 #include <core/variant.h>
+#include <unordered_map>
 #include <animation/property.h>
 //reference:
 //http://androidxref.com/9.0.0_r3/xref/frameworks/base/libs/hwui/PropertyValuesHolder.h
@@ -67,3 +68,4 @@ typedef PropertyValuesHolder  IntPropertyValuesHolder;
 typedef PropertyValuesHolder  FloatPropertyValuesHolder;
 
 }//endof namespace
+#endif/*__PROPERTY_VALUES_HOLDER_H__*/

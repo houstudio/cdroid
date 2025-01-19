@@ -12,7 +12,7 @@ private:
     class AnimationEvent;
 private:
     std::vector<Node*> mPlayingSet;
-    std::map<Animator*, Node*> mNodeMap;
+    std::unordered_map<Animator*, Node*> mNodeMap;
     std::vector<AnimationEvent*> mEvents;
     std::vector<Node*> mNodes;
     AnimatorListener mDummyListener;

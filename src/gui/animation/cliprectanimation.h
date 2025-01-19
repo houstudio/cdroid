@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __CLIPRECT_ANIMATION_H__
+#define __CLIPRECT_ANIMATION_H__
 #include <animation/animation.h>
 
 namespace cdroid{
@@ -40,3 +41,4 @@ public:
 };
 
 }//endif namespace
+#endif/*__CLIPRECT_ANIMATION_H__*/

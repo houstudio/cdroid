@@ -85,7 +85,7 @@ void ObjectAnimator::setProperty(Property* property){
         if(it != mValuesMap.end()){
             mValuesMap.erase(it);
         }
-        mValuesMap.insert(std::map<const std::string,PropertyValuesHolder*>::value_type(mPropertyName,valuesHolder));
+        mValuesMap.insert(std::unordered_map<std::string,PropertyValuesHolder*>::value_type(mPropertyName,valuesHolder));
     }
     if (mProperty != nullptr) {
         mPropertyName = property->getName();

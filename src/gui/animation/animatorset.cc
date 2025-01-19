@@ -837,7 +837,7 @@ Animator*AnimatorSet::clone()const{
     // One problem is that the old node dependencies point to nodes in the old AnimatorSet.
     // We need to track the old/new nodes in order to reconstruct the dependencies in the clone.
 
-    std::map<Node*,Node*>clonesMap;
+    std::unordered_map<Node*,Node*>clonesMap;
     for (Node*node:mNodes){
         Node* nodeClone = node->clone();
         // Remove the old internal listener from the cloned child

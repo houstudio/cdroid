@@ -552,7 +552,7 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
 }
 
 void LayoutTransition::startChangingAnimations(){
-    std::map<View*,Animator*>currentAnimCopy = currentChangingAnimations;
+    std::unordered_map<View*,Animator*>currentAnimCopy = currentChangingAnimations;
     for (auto ita : currentAnimCopy) {
         Animator*anim = ita.second;
         if(dynamic_cast<ObjectAnimator*>(anim)){
@@ -563,7 +563,7 @@ void LayoutTransition::startChangingAnimations(){
 }
 
 void LayoutTransition::endChangingAnimations(){
-    std::map<View*,Animator*>currentAnimCopy = currentChangingAnimations;
+    std::unordered_map<View*,Animator*>currentAnimCopy = currentChangingAnimations;
     for (auto ita : currentAnimCopy) {
         Animator*anim = ita.second;
         anim->start();
@@ -596,7 +596,7 @@ bool LayoutTransition::isRunning()const {
 }
 
 void LayoutTransition::cancel(){
-    std::map<View*,Animator*>currentAnimCopy = currentChangingAnimations;
+    std::unordered_map<View*,Animator*>currentAnimCopy = currentChangingAnimations;
     for (auto it:currentAnimCopy) {
         it.second->cancel();
     }
@@ -614,7 +614,7 @@ void LayoutTransition::cancel(){
 }
 
 void LayoutTransition::cancel(int transitionType){
-    std::map<View*,Animator*>currentAnimCopy;
+    std::unordered_map<View*,Animator*>currentAnimCopy;
     switch (transitionType) {
     case CHANGE_APPEARING:
     case CHANGE_DISAPPEARING:

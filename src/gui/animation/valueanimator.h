@@ -3,7 +3,7 @@
 #include <animation/animatorset.h>
 #include <animation/propertyvaluesholder.h>
 #include <animation/animationhandler.h>
-#include <map>
+#include <unordered_map>
 
 namespace cdroid{
 
@@ -46,7 +46,7 @@ protected:
     int64_t mStartTime = -1;
     float mSeekFraction = -1;
     std::vector<PropertyValuesHolder*>mValues;
-    std::map<const std::string,PropertyValuesHolder*>mValuesMap;
+    std::unordered_map<std::string,PropertyValuesHolder*>mValuesMap;
 private:
     float resolveDurationScale()const;
     int64_t getScaledDuration()const;

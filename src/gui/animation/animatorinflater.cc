@@ -161,7 +161,7 @@ bool AnimatorInflater::isColorType(int type) {
 }
 
 int AnimatorInflater::valueTypeFromPropertyName(const std::string& name){
-    static const std::map<const std::string,int>valueTypes = {
+    static const std::unordered_map<std::string,int>valueTypes = {
        {"alpha",(int)VALUE_TYPE_FLOAT},
        {"bottom",(int)VALUE_TYPE_INT},
        {"left",(int)VALUE_TYPE_INT},

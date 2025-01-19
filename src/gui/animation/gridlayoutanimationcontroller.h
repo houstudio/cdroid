@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __GRIDLAYOUT_ANIMATION_CONTROLLER_H__
+#define __GRIDLAYOUT_ANIMATION_CONTROLLER_H__
 #include <animation/layoutanimationcontroller.h>
 
 namespace cdroid{
@@ -61,4 +62,5 @@ public:
     void setDirectionPriority(int directionPriority);
     bool willOverlap()override;
 };
-}//endof namespace
+}/*endof namespace*/
+#endif/*__GRIDLAYOUT_ANIMATION_CONTROLLER_H__*/

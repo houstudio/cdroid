@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __OBJECT_ANIMATOR_H__
+#define __OBJECT_ANIMATOR_H__
+
 #include <animation/valueanimator.h>
 #include <animation/animationhandler.h>
 namespace cdroid{
@@ -42,4 +44,5 @@ public:
     static ObjectAnimator* ofPropertyValuesHolder(void*target,const std::vector< PropertyValuesHolder*>&values);
 };
 
-}
+}/*endof namespace*/
+#endif/*__OBJECT_ANIMATOR_H__*/

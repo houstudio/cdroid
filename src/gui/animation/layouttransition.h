@@ -1,6 +1,6 @@
 #ifndef __LAYOUT_TRANSITION_H__
 #define __LAYOUT_TRANSITION_H__
-#include <map>
+#include <unordered_map>
 #include <functional>
 #include <view/view.h>
 #include <animation/animator.h>
@@ -65,11 +65,11 @@ private:
     Animator* mChangingDisappearingAnim = nullptr;
     Animator* mChangingAnim = nullptr;
 
-    std::map<View*, Animator*> pendingAnimations;
-    std::map<View*, Animator*> currentChangingAnimations;
-    std::map<View*, Animator*> currentAppearingAnimations;
-    std::map<View*, Animator*> currentDisappearingAnimations;
-    std::map<View*, View::OnLayoutChangeListener> layoutChangeListenerMap;
+    std::unordered_map<View*, Animator*> pendingAnimations;
+    std::unordered_map<View*, Animator*> currentChangingAnimations;
+    std::unordered_map<View*, Animator*> currentAppearingAnimations;
+    std::unordered_map<View*, Animator*> currentDisappearingAnimations;
+    std::unordered_map<View*, View::OnLayoutChangeListener> layoutChangeListenerMap;
 public :
     /**
      * A flag indicating the animation that runs on those items that are changing
