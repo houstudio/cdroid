@@ -191,6 +191,7 @@ if(ENABLE_DAYTIME_WIDGETS)
         widget/daypickerview.cc
         widget/daypickerviewpager.cc
         widget/simplemonthview.cc
+        widget/explorebytouchhelper.cc
         widget/calendarview.cc
         #widget/calendarviewlegacydelegate.cc
     )
