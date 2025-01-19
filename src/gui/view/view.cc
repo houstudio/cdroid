@@ -3758,6 +3758,23 @@ std::string View::getContentDescription()const{
     return mContentDescription;
 }
 
+void View::setStateDescription(const std::string& stateDescription) {
+    if (mStateDescription==stateDescription) {
+        return;
+    }
+    mStateDescription = stateDescription;
+    if (!stateDescription.empty()
+            && getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+        setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
+    }
+    if (AccessibilityManager::getInstance(mContext).isEnabled()) {
+        AccessibilityEvent* event = AccessibilityEvent::obtain();
+        event->setEventType(AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
+        //event->setContentChangeTypes(AccessibilityEvent::CONTENT_CHANGE_TYPE_STATE_DESCRIPTION);
+        sendAccessibilityEventUnchecked(*event);
+    }
+}
+
 bool View::isActionableForAccessibility()const{
     return (isClickable() || isLongClickable() || isFocusable());
 }

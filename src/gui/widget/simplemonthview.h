@@ -3,6 +3,7 @@
 #include <view/view.h>
 #include <core/calendar.h>
 #include <core/typeface.h>
+#include <widget/explorebytouchhelper.h>
 namespace cdroid{
 
 class SimpleMonthView:public View{
@@ -14,12 +15,14 @@ private:
     static constexpr int DEFAULT_SELECTED_DAY=-1;
     static constexpr int DEFAULT_WEEK_START=Calendar::SUNDAY;
     static constexpr int SELECTED_HIGHLIGHT_ALPHA = 0xB0;
+    class MonthViewTouchHelper;
 
     Calendar mCalendar;
     std::string mDayOfWeekLabels[7];
     Typeface*mDayTypeface;
     Typeface*mMonthTypeface;
     Typeface*mDayOfWeekTypeface;
+    MonthViewTouchHelper*mTouchHelper;
     int mDayTextSize;
     int mMonthTextSize;
     int mDayOfWeekTextSize;
@@ -106,6 +109,7 @@ protected:
 public:
     SimpleMonthView(int,int);
     SimpleMonthView(Context*,const AttributeSet&atts);
+    ~SimpleMonthView();
     int getMonthHeight()const;
     int getCellWidth()const;
      
@@ -130,5 +134,40 @@ public:
     PointerIcon*onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
 };
 
+ /**
+  * Provides a virtual view hierarchy for interfacing with an accessibility
+  * service.
+  */
+class SimpleMonthView::MonthViewTouchHelper:public ExploreByTouchHelper {
+private:
+    static const std::string DATE_FORMAT;
+    SimpleMonthView*mSMV;
+    Rect mTempRect;
+    //final Calendar mTempCalendar = Calendar.getInstance();
+
+    /**
+     * Generates a description for a given virtual view.
+     *
+     * @param id the day to generate a description for
+     * @return a description of the virtual view
+     */
+    std::string getDayDescription(int id);
+
+    /**
+     * Generates displayed text for a given virtual view.
+     *
+     * @param id the day to generate text for
+     * @return the visible text of the virtual view
+     */
+    std::string getDayText(int id);
+protected:
+    int getVirtualViewAt(float x, float y)override;
+    void getVisibleVirtualViews(std::vector<int>& virtualViewIds)override;
+    void onPopulateEventForVirtualView(int virtualViewId, AccessibilityEvent& event)override;
+    void onPopulateNodeForVirtualView(int virtualViewId, AccessibilityNodeInfo& node)override;
+    bool onPerformActionForVirtualView(int virtualViewId, int action, Bundle arguments)override;
+public:
+    MonthViewTouchHelper(View* host);
+};
 }//namespace
 #endif

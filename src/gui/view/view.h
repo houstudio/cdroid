@@ -682,6 +682,7 @@ protected:
     Rect mClipBounds;
     std::string mHint;
     std::string mContentDescription;
+    std::string mStateDescription;
     std::string mAccessibilityPaneTitle;
     Cairo::RefPtr<Cairo::ImageSurface> mDrawingCache;
     Cairo::RefPtr<Cairo::ImageSurface> mUnscaledDrawingCache;
@@ -1170,6 +1171,7 @@ public:
     const std::string&getHint()const;
     void setContentDescription(const std::string&);
     virtual std::string getContentDescription()const;
+    void setStateDescription(const std::string& stateDescription);
     void setIsRootNamespace(bool);
     bool isRootNamespace()const;
     cdroid::Context*getContext()const;

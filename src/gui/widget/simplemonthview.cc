@@ -41,8 +41,8 @@ SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
     mDesiredDaySelectorRadius=atts.getDimensionPixelSize("day_selector_radius");
 
     // Set up accessibility components.
-    //mTouchHelper = new MonthViewTouchHelper(this);
-    //setAccessibilityDelegate(mTouchHelper);
+    mTouchHelper = new MonthViewTouchHelper(this);
+    setAccessibilityDelegate(mTouchHelper);
     setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
 
     std::string res = atts.getString("monthTextAppearance");
@@ -51,6 +51,10 @@ SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
     if(!res.empty())setDayOfWeekTextAppearance(res);
     res = atts.getString("dayTextAppearance");
     if(!res.empty())setDayTextAppearance(res);
+}
+
+SimpleMonthView::~SimpleMonthView(){
+    delete mTouchHelper;
 }
 
 void SimpleMonthView::initMonthView(){
@@ -762,4 +766,111 @@ PointerIcon* SimpleMonthView::onResolvePointerIcon(MotionEvent& event, int point
     }
     return View::onResolvePointerIcon(event, pointerIndex);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * Provides a virtual view hierarchy for interfacing with an accessibility
+ * service.
+ */
+const std::string SimpleMonthView::MonthViewTouchHelper::DATE_FORMAT="dd MMMM yyyy";
+SimpleMonthView::MonthViewTouchHelper::MonthViewTouchHelper(View* host)
+    :ExploreByTouchHelper(host){
+    mSMV=(SimpleMonthView*)host;
+}
+
+int SimpleMonthView::MonthViewTouchHelper::getVirtualViewAt(float x, float y) {
+    const int day = mSMV->getDayAtLocation((int) (x + 0.5f), (int) (y + 0.5f));
+    if (day != -1) {
+        return day;
+    }
+    return ExploreByTouchHelper::INVALID_ID;
+}
+
+void SimpleMonthView::MonthViewTouchHelper::getVisibleVirtualViews(std::vector<int>& virtualViewIds) {
+    for (int day = 1; day <= mSMV->mDaysInMonth; day++) {
+        virtualViewIds.push_back(day);
+    }
+}
+
+void SimpleMonthView::MonthViewTouchHelper::onPopulateEventForVirtualView(int virtualViewId, AccessibilityEvent& event) {
+    event.setContentDescription(getDayDescription(virtualViewId));
+}
+
+void SimpleMonthView::MonthViewTouchHelper::onPopulateNodeForVirtualView(int virtualViewId, AccessibilityNodeInfo& node) {
+    const bool hasBounds = mSMV->getBoundsForDay(virtualViewId, mTempRect);
+
+    if (!hasBounds) {
+        // The day is invalid, kill the node.
+        mTempRect.setEmpty();
+        node.setContentDescription("");
+        node.setBoundsInParent(mTempRect);
+        node.setVisibleToUser(false);
+        return;
+    }
+
+    node.setText(getDayText(virtualViewId));
+    node.setContentDescription(getDayDescription(virtualViewId));
+    if (virtualViewId == mSMV->mToday) {
+        /*RelativeDateTimeFormatter fmt = RelativeDateTimeFormatter.getInstance();
+        node.setStateDescription(fmt.format(RelativeDateTimeFormatter.Direction.THIS,
+                RelativeDateTimeFormatter.AbsoluteUnit.DAY));*/
+    }
+    if (virtualViewId == mSMV->mActivatedDay) {
+        node.setSelected(true);
+    }
+    node.setBoundsInParent(mTempRect);
+
+    const bool isDayEnabled = mSMV->isDayEnabled(virtualViewId);
+    if (isDayEnabled) {
+        node.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK.getId());
+    }
+
+    node.setEnabled(isDayEnabled);
+    node.setClickable(true);
+
+    if (virtualViewId == mSMV->mActivatedDay) {
+        // TODO: This should use activated once that's supported.
+        node.setChecked(true);
+    }
+
+}
+
+bool SimpleMonthView::MonthViewTouchHelper::onPerformActionForVirtualView(int virtualViewId, int action,Bundle arguments) {
+    switch (action) {
+        case AccessibilityNodeInfo::ACTION_CLICK:
+            return mSMV->onDayClicked(virtualViewId);
+    }
+
+    return false;
+}
+
+/**
+ * Generates a description for a given virtual view.
+ *
+ * @param id the day to generate a description for
+ * @return a description of the virtual view
+ */
+std::string SimpleMonthView::MonthViewTouchHelper::getDayDescription(int id) {
+    if (mSMV->isValidDayOfMonth(id)) {
+        //mTempCalendar.set(mSMV->mYear, mSMV->mMonth, id);
+        return "";//DateFormat.format(DATE_FORMAT, mTempCalendar.getTimeInMillis());
+    }
+
+    return "";
+}
+
+/**
+ * Generates displayed text for a given virtual view.
+ *
+ * @param id the day to generate text for
+ * @return the visible text of the virtual view
+ */
+std::string SimpleMonthView::MonthViewTouchHelper::getDayText(int id) {
+    if (mSMV->isValidDayOfMonth(id)) {
+        return "";//mDayFormatter.format(id);
+    }
+
+    return "";
+}
+
 }//namespace
