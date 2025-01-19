@@ -33,7 +33,7 @@ public:
      * @see View#createAccessibilityNodeInfo()
      * @see AccessibilityNodeInfo
      */
-    AccessibilityNodeInfo* createAccessibilityNodeInfo(int virtualViewId) {
+    virtual AccessibilityNodeInfo* createAccessibilityNodeInfo(int virtualViewId) {
         return nullptr;
     }
 
@@ -72,7 +72,7 @@ public:
      * @see #createAccessibilityNodeInfo(int)
      * @see AccessibilityNodeInfo
      */
-    bool performAction(int virtualViewId, int action, Bundle arguments) {
+    virtual bool performAction(int virtualViewId, int action, Bundle arguments) {
         return false;
     }
 

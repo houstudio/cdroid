@@ -1244,7 +1244,7 @@ public:
     virtual void onPopulateAccessibilityEventInternal(AccessibilityEvent& event);
     virtual void onInitializeAccessibilityEvent(AccessibilityEvent& event);
     virtual void onInitializeAccessibilityEventInternal(AccessibilityEvent& event);
-    AccessibilityNodeInfo* createAccessibilityNodeInfo();
+    virtual AccessibilityNodeInfo* createAccessibilityNodeInfo();
     AccessibilityNodeInfo* createAccessibilityNodeInfoInternal();
     virtual void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info);
     virtual void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info);

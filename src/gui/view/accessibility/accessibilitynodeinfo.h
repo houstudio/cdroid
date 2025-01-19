@@ -354,7 +354,7 @@ public:
 
     bool performAction(int action);
 
-    bool performAction(int action, Bundle arguments);
+    virtual bool performAction(int action, Bundle arguments);
 
     std::vector<AccessibilityNodeInfo*> findAccessibilityNodeInfosByText(const std::string& text);
 
