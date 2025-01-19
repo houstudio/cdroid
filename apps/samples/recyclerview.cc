@@ -75,14 +75,14 @@ public:
         mAdapter = adapter;
     }
     bool onMove(RecyclerView& recyclerView,RecyclerView::ViewHolder& viewHolder,RecyclerView::ViewHolder& target)override{
-        const int fromPosition=viewHolder.getPosition();
-        const int toPosition=target.getPosition();
+        const int fromPosition=viewHolder.getAbsoluteAdapterPosition();
+        const int toPosition=target.getAbsoluteAdapterPosition();
         mAdapter->notifyItemMoved(fromPosition, toPosition);
         return true;
     }
 
     void onSwiped(RecyclerView::ViewHolder& viewHolder, int direction)override{
-        const int swipedPosition = viewHolder.getAdapterPosition();
+        const int swipedPosition = viewHolder.getAbsoluteAdapterPosition();
         LOGD("direction=%d swipedPosition=%d",direction,swipedPosition);
         mAdapter->remove(swipedPosition);
         mAdapter->notifyItemRemoved(swipedPosition);
@@ -105,6 +105,7 @@ int main(int argc,const char*argv[]){
     w->setBackgroundColor(0xFF112233);
     RecyclerView*rv=new RecyclerView(800,480);
     rv->setLayoutManager(new GridLayoutManager(&app,argc));
+    rv->getLayoutManager()->setItemPrefetchEnabled(true);
     auto ps = new LinearSnapHelper();//PagerSnapHelper();
     ps->attachToRecyclerView(rv);
     MyAdapter*adapter = new MyAdapter();
