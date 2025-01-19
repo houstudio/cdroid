@@ -983,6 +983,7 @@ bool AnimatorSet::AnimationEventCompare(AnimationEvent* e1, AnimationEvent* e2){
 void AnimatorSet::sortAnimationEvents(){
     // Sort the list of events in ascending order of their time
     // Create the list including the delay animation.
+    for(auto e:mEvents)delete e;
     mEvents.clear();
     for (int i = 1; i < mNodes.size(); i++) {
         Node* node = mNodes.at(i);
