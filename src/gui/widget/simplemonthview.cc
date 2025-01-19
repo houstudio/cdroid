@@ -41,8 +41,8 @@ SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
     mDesiredDaySelectorRadius=atts.getDimensionPixelSize("day_selector_radius");
 
     // Set up accessibility components.
-    mTouchHelper = new MonthViewTouchHelper(this);
-    setAccessibilityDelegate(mTouchHelper);
+    //mTouchHelper = new MonthViewTouchHelper(this);
+    //setAccessibilityDelegate(mTouchHelper);
     setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
 
     std::string res = atts.getString("monthTextAppearance");
