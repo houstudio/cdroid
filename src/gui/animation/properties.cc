@@ -308,27 +308,27 @@ public:
 };
 
 static std::unordered_map<std::string,std::shared_ptr<Property>>props={
-    {"alpha",std::shared_ptr<ALPHA>()},
-    {"bottom",std::shared_ptr<BOTTOM>()},
-    {"elevation",std::shared_ptr<ELEVATION>()},
-    {"left",std::shared_ptr<LEFT>()},
-    {"pivotX",std::shared_ptr<PIVOT_X>()},
-    {"pivotY",std::shared_ptr<PIVOT_Y>()},
-    {"right" ,std::shared_ptr<RIGHT>()},
-    {"rotation" ,std::shared_ptr<ROTATION>()},
-    {"rotationX",std::shared_ptr<ROTATION_X>()},
-    {"rotationY",std::shared_ptr<ROTATION_Y>()},
-    {"scaleX" ,std::shared_ptr<SCALE_X>()},
-    {"scaleY" ,std::shared_ptr<SCALE_Y>()},
-    {"scrollX",std::shared_ptr<SCROLL_X>()},
-    {"scrollY",std::shared_ptr<SCROLL_Y>()},
-    {"top",std::shared_ptr<TOP>()},
-    {"translationX",std::shared_ptr<TRANSLATION_X>()},
-    {"translationY",std::shared_ptr<TRANSLATION_Y>()},
-    {"translationZ",std::shared_ptr<TRANSLATION_Z>()},
-    {"x",std::shared_ptr<XX>()},
-    {"y",std::shared_ptr<YY>()},
-    {"z",std::shared_ptr<ZZ>()}
+    {"alpha",std::make_shared<ALPHA>()},
+    {"bottom",std::make_shared<BOTTOM>()},
+    {"elevation",std::make_shared<ELEVATION>()},
+    {"left",std::make_shared<LEFT>()},
+    {"pivotX",std::make_shared<PIVOT_X>()},
+    {"pivotY",std::make_shared<PIVOT_Y>()},
+    {"right" ,std::make_shared<RIGHT>()},
+    {"rotation" ,std::make_shared<ROTATION>()},
+    {"rotationX",std::make_shared<ROTATION_X>()},
+    {"rotationY",std::make_shared<ROTATION_Y>()},
+    {"scaleX" ,std::make_shared<SCALE_X>()},
+    {"scaleY" ,std::make_shared<SCALE_Y>()},
+    {"scrollX",std::make_shared<SCROLL_X>()},
+    {"scrollY",std::make_shared<SCROLL_Y>()},
+    {"top",std::make_shared<TOP>()},
+    {"translationX",std::make_shared<TRANSLATION_X>()},
+    {"translationY",std::make_shared<TRANSLATION_Y>()},
+    {"translationZ",std::make_shared<TRANSLATION_Z>()},
+    {"x",std::make_shared<XX>()},
+    {"y",std::make_shared<YY>()},
+    {"z",std::make_shared<ZZ>()}
 };
 
 Property*Property::fromName(const std::string&propertyName){
