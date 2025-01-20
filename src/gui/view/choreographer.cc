@@ -15,7 +15,6 @@ Choreographer::Choreographer(){
     mLastFrameTimeNanos = 0;
     mFrameIntervalNanos = static_cast<nsecs_t>(1E9/getRefreshRate());
     mCallbackPool = nullptr;
-    setOwned(true);
     for(int i = 0;i <= CALLBACK_LAST;i++){
         mCallbackQueues[i] = new CallbackQueue(this);
     }

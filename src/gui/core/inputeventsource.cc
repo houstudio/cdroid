@@ -1,17 +1,16 @@
-#include <inputeventsource.h>
-#include <cdlog.h>
+#include <core/inputeventsource.h>
+#include <core/windowmanager.h>
+#include <core/systemclock.h>
+#include <porting/cdlog.h>
 #include <unordered_map>
-#include <windowmanager.h>
 #include <thread>
 #include <chrono>
-#include <systemclock.h>
 
 namespace cdroid{
 InputEventSource::InputEventSource(){
     InputInit();
-    setOwned(true);
     mScreenSaveTimeOut = -1;
-    mRunning = false;
+    mRunning = true;
     mIsPlayback = false;
     mIsScreenSaveActived = false;
     mLastPlaybackEventTime = SystemClock::uptimeMillis();
@@ -24,12 +23,7 @@ InputEventSource::InputEventSource(){
 
 void InputEventSource::doEventsConsume(){
     INPUTEVENT es[128];
-    while(1){
-        if(mRunning == false){
-            std::chrono::milliseconds dur(50);
-            std::this_thread::sleep_for(dur);
-            continue;
-        }
+    while(mRunning){
         const int count = InputGetEvents(es,sizeof(es)/sizeof(INPUTEVENT),20);
         std::lock_guard<std::mutex> lock(mtxEvents);
         if(count)mLastInputEventTime = SystemClock::uptimeMillis();
@@ -51,6 +45,8 @@ void InputEventSource::doEventsConsume(){
 }
 
 InputEventSource::~InputEventSource(){
+    mRunning=false;
+    Looper::getMainLooper()->removeEventHandler(this);
     if(frecord.is_open())
        frecord.close();
     LOGD("%p Destroied",this);
@@ -123,8 +119,6 @@ int InputEventSource::checkEvents(){
         if(devEvents==0)
             needCancel(dev.second.get());
     }
-    if(mRunning==false)
-        mRunning = true;
     if( ((now - mLastInputEventTime) > mScreenSaveTimeOut) && (mScreenSaveTimeOut>0)
             && ( mIsScreenSaveActived == false ) && mScreenSaver){
         mScreenSaver(true);
