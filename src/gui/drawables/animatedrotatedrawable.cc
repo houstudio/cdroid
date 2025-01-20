@@ -182,9 +182,9 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     canvas.save();
     canvas.translate(bounds.left,bounds.top);
     canvas.transform(mtx);
-    drawable->setBounds(0,0,w,h);
+    setDrawableBoundsNoNotify(0,0,w,h);
     drawable->draw(canvas);
-    drawable->setBounds(bounds);
+    setDrawableBoundsNoNotify(bounds.left,bounds.top,bounds.width,bounds.height);
     canvas.translate(-bounds.left,-bounds.top);
     canvas.restore();
 }

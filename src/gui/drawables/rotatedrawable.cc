@@ -135,7 +135,7 @@ static inline float sdot(float a,float b,float c,float d){
 
 void RotateDrawable::draw(Canvas& canvas) {
     Drawable*d = getDrawable();
-    const Rect& bounds = getBounds();
+    const Rect bounds = getBounds();
     const float px = mState->mPivotXRel ? (bounds.width * mState->mPivotX) : mState->mPivotX;
     const float py = mState->mPivotYRel ? (bounds.height * mState->mPivotY) : mState->mPivotY;
     LOGV("%p bounds(%d,%d %d,%d) pivot=%f,%f pxy=%f,%f degrees=%f",this,bounds.left,bounds.top,bounds.width,bounds.height,
@@ -150,9 +150,9 @@ void RotateDrawable::draw(Canvas& canvas) {
     canvas.save();
     canvas.translate(bounds.left,bounds.top);
     canvas.transform(mtx);
-    d->setBounds(0,0,bounds.width,bounds.height);
+    setDrawableBoundsNoNotify(0,0,bounds.width,bounds.height);
     d->draw(canvas);
-    d->setBounds(bounds);
+    setDrawableBoundsNoNotify(bounds.left,bounds.top,bounds.width,bounds.height);
     canvas.restore();
     LOGV("pos=%d,%d/%.f,%.f level=%d degress=%d",bounds.left,bounds.top,px,py,getLevel(),int(mState->mCurrentDegrees));
 }

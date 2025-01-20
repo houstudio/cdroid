@@ -123,7 +123,7 @@ WebPFrameSequence::WebPFrameSequence(std::istream&stream)
     }
     mLoopCount = WebPDemuxGetI(mDemux, WEBP_FF_LOOP_COUNT);
     mFormatFlags = WebPDemuxGetI(mDemux, WEBP_FF_FORMAT_FLAGS);
-    LOGD("FrameSequence_webp created with size = %d x %d, number of frames = %d, flags = 0x%X",
+    LOGD("WebpFrameSequence created with size = %dx%dx%d, flags = 0x%X",
           getWidth(), getHeight(), getFrameCount(), mFormatFlags);
     constructDependencyChain();
 }

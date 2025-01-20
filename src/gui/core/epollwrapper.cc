@@ -1,5 +1,5 @@
-#include <map>
 #include <stdexcept>
+#include <unordered_map>
 #include <core/looper.h>
 #include <core/epollwrapper.h>
 #include <porting/cdlog.h>
@@ -104,7 +104,7 @@ private:
     fd_set readSet;
     fd_set writeSet;
     int maxFD;
-    std::map<int,uint64_t>mSeqs;
+    std::unordered_map<int,uint64_t>mSeqs;
 public:
     SELECTOR() {
         maxFD = 0;

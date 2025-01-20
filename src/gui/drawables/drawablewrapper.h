@@ -29,6 +29,7 @@ private:
 protected:
     virtual std::shared_ptr<DrawableWrapperState> mutateConstantState();
     DrawableWrapper(std::shared_ptr<DrawableWrapperState>state);
+    void setDrawableBoundsNoNotify(int x,int y,int w,int h);
     bool onStateChange(const std::vector<int>& state)override;
     bool onLevelChange(int level)override;
     void onBoundsChange(const Rect& bounds)override;
