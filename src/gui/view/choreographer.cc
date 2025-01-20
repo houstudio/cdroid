@@ -15,9 +15,27 @@ Choreographer::Choreographer(){
     mLastFrameTimeNanos = 0;
     mFrameIntervalNanos = static_cast<nsecs_t>(1E9/getRefreshRate());
     mCallbackPool = nullptr;
+    setOwned(true);
     for(int i = 0;i <= CALLBACK_LAST;i++){
         mCallbackQueues[i] = new CallbackQueue(this);
     }
+    LOGD("%p",this);
+}
+
+Choreographer::~Choreographer(){
+    for(int i = 0;i <= CALLBACK_LAST;i++){
+        delete mCallbackQueues[i];
+    }
+    int count=0;
+    CallbackRecord*next=mCallbackPool;
+    while(next){
+        CallbackRecord*nn=next->next;
+        delete next;
+        next=nn;
+        count++;
+    }
+    mLooper->removeEventHandler(this);
+    LOGD("%p released %d CallbackRecords",this,count);
 }
 
 float Choreographer::getRefreshRate() {

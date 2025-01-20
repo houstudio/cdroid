@@ -9,7 +9,7 @@
 namespace cdroid{
 InputEventSource::InputEventSource(){
     InputInit();
-    setOwned(false);
+    setOwned(true);
     mScreenSaveTimeOut = -1;
     mRunning = false;
     mIsPlayback = false;
@@ -19,6 +19,7 @@ InputEventSource::InputEventSource(){
     auto func = std::bind(&InputEventSource::doEventsConsume,this);
     std::thread th(func);
     th.detach();
+    LOGD("%p",this);
 }
 
 void InputEventSource::doEventsConsume(){

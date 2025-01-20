@@ -50,6 +50,7 @@ private:
     static long sFrameDelay;
     friend NeverDestroyed<Choreographer>;
     Choreographer();
+    ~Choreographer();
     static float getRefreshRate();
     CallbackRecord* obtainCallbackLocked(int64_t dueTime,void* action,void* token);
     void recycleCallbackLocked(CallbackRecord* callback);
