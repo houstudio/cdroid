@@ -121,7 +121,7 @@ void GapWorker::postFromTraversal(RecyclerView* recyclerView, int prefetchDx, in
         if (mPostTimeNs == 0) {
             mPostTimeNs = recyclerView->getNanoTime();
             recyclerView->post(mRunnable);
-            LOGE("postFromTraversal %p",this);
+            LOGD("postFromTraversal %p",this);
         }
     }
     LayoutPrefetchRegistryImpl* prefetchRegistry = (LayoutPrefetchRegistryImpl*)recyclerView->mPrefetchRegistry;
@@ -286,7 +286,6 @@ void GapWorker::flushTaskWithDeadline(Task* task, int64_t deadlineNs) {
 void GapWorker::flushTasksWithDeadline(int64_t deadlineNs) {
     for (int i = 0; i < mTasks.size(); i++) {
         Task* task = mTasks.at(i);
-        LOGD("task[%d]",i);
         if (task->view == nullptr) {
             break; // done with populated tasks
         }
@@ -296,7 +295,6 @@ void GapWorker::flushTasksWithDeadline(int64_t deadlineNs) {
 }
 
 void GapWorker::prefetch(int64_t deadlineNs) {
-    LOGD("");
     buildTaskList();
     flushTasksWithDeadline(deadlineNs);
 }
@@ -307,7 +305,6 @@ void GapWorker::run() {
     // valid in animation/input callbacks, so query it here to be safe.
     const size_t size = mRecyclerViews.size();
     int64_t latestFrameVsyncMs = 0;
-    LOGD("%d recyclerview",size);
     for (int i = 0; i < size; i++) {
         RecyclerView* view = mRecyclerViews.at(i);
         if (view->getWindowVisibility() == View::VISIBLE) {

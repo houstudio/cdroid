@@ -307,34 +307,34 @@ public:
     }
 };
 
-static std::unordered_map<std::string,Property*>props={
-    {"alpha",new ALPHA()},
-    {"bottom",new BOTTOM()},
-    {"elevation",new ELEVATION()},
-    {"left",new LEFT()},
-    {"pivotX",new PIVOT_X()},
-    {"pivotY",new PIVOT_Y()},
-    {"right",new RIGHT()},
-    {"rotation" ,new ROTATION()},
-    {"rotationX",new ROTATION_X()},
-    {"rotationY",new ROTATION_Y()},
-    {"scaleX",new SCALE_X()},
-    {"scaleY",new SCALE_Y()},
-    {"scrollX",new SCROLL_X()},
-    {"scrollY",new SCROLL_Y()},
-    {"top",new TOP()},
-    {"translationX",new TRANSLATION_X()},
-    {"translationY",new TRANSLATION_Y()},
-    {"translationZ",new TRANSLATION_Z()},
-    {"x",new XX()},
-    {"y",new YY()},
-    {"z",new ZZ()}
+static std::unordered_map<std::string,std::shared_ptr<Property>>props={
+    {"alpha",std::shared_ptr<ALPHA>()},
+    {"bottom",std::shared_ptr<BOTTOM>()},
+    {"elevation",std::shared_ptr<ELEVATION>()},
+    {"left",std::shared_ptr<LEFT>()},
+    {"pivotX",std::shared_ptr<PIVOT_X>()},
+    {"pivotY",std::shared_ptr<PIVOT_Y>()},
+    {"right" ,std::shared_ptr<RIGHT>()},
+    {"rotation" ,std::shared_ptr<ROTATION>()},
+    {"rotationX",std::shared_ptr<ROTATION_X>()},
+    {"rotationY",std::shared_ptr<ROTATION_Y>()},
+    {"scaleX" ,std::shared_ptr<SCALE_X>()},
+    {"scaleY" ,std::shared_ptr<SCALE_Y>()},
+    {"scrollX",std::shared_ptr<SCROLL_X>()},
+    {"scrollY",std::shared_ptr<SCROLL_Y>()},
+    {"top",std::shared_ptr<TOP>()},
+    {"translationX",std::shared_ptr<TRANSLATION_X>()},
+    {"translationY",std::shared_ptr<TRANSLATION_Y>()},
+    {"translationZ",std::shared_ptr<TRANSLATION_Z>()},
+    {"x",std::shared_ptr<XX>()},
+    {"y",std::shared_ptr<YY>()},
+    {"z",std::shared_ptr<ZZ>()}
 };
 
 Property*Property::fromName(const std::string&propertyName){
     auto it = props.find(propertyName);
     if(it!=props.end()){
-        return it->second;
+        return it->second.get();
     }
     LOGD_IF(!propertyName.empty(),"%s =nullptr",propertyName.c_str());
     return nullptr;
@@ -343,7 +343,8 @@ Property*Property::fromName(const std::string&propertyName){
 bool Property::reigsterProperty(const std::string&propertyName,Property*prop){
     auto it = props.find(propertyName);
     if(it==props.end()){
-        props.insert({propertyName,prop});
+        std::shared_ptr<Property>ptr(prop);
+        props.insert({propertyName,ptr});
         return true;
     }
     return false;
