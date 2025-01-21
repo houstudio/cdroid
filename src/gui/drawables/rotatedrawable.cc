@@ -144,8 +144,7 @@ void RotateDrawable::draw(Canvas& canvas) {
     const float radians = M_PI*mState->mCurrentDegrees/180.f;
     const float fsin = sin(radians);
     const float fcos = cos(radians);
-    Matrix mtx(fcos,fsin, -fsin,fcos,
-            sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));
+    Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));
 
     canvas.save();
     canvas.translate(bounds.left,bounds.top);
