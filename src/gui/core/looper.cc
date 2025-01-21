@@ -1,9 +1,11 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include <core/looper.h>
 #include <string.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <core/looper.h>
+#include <core/systemclock.h>
 #include <core/epollwrapper.h>
+#include <core/neverdestroyed.h>
 #if defined(_WIN32)||defined(_WIN64)||defined(_MSVC_VER)
   #include <io.h>
   #define close  _close
@@ -20,12 +22,11 @@
 #endif
 #include <cdlog.h>
 #include <limits.h>
-#include <systemclock.h>
 
 #define DEBUG_POLL_AND_WAKE 0
 #define DEBUG_CALLBACKS 0
 
-/*REF:system/core/libutils/Looper.cpp*/
+/*REF:http://androidxref.com/9.0.0_r3/xref/system/core/libutils/Looper.cpp*/
 namespace cdroid{
 
 // Maximum number of file descriptors for which to retrieve poll events each iteration.
@@ -57,7 +58,7 @@ namespace {
     }
 } 
 
-Looper* Looper::sMainLooper = nullptr;
+Looper* Looper::sMainLooper;
 Looper::Looper(bool allowNonCallbacks) :
         mAllowNonCallbacks(allowNonCallbacks),
         mSendingMessage(false),mPolling(false),
@@ -323,7 +324,7 @@ int Looper::pollInner(int timeoutMillis) {
             }
         }
     }
-Done: ;
+Done:
     // Invoke pending message callbacks.
     mNextMessageUptime = LLONG_MAX;
     while (mMessageEnvelopes.size() != 0) {

@@ -21,7 +21,7 @@ public:
     class InfoRecord {
         static constexpr int FLAG_DISAPPEARED = 1;
         static constexpr int FLAG_APPEAR = 1 << 1;
-        static constexpr int FLAG_PRE = 1 << 2;
+        static constexpr int FLAG_PRE  = 1 << 2;
         static constexpr int FLAG_POST = 1 << 3;
         static constexpr int FLAG_APPEAR_AND_DISAPPEAR = FLAG_APPEAR | FLAG_DISAPPEARED;
         static constexpr int FLAG_PRE_AND_POST = FLAG_PRE | FLAG_POST;
@@ -29,21 +29,25 @@ public:
         int flags;
         RecyclerView::ItemAnimator::ItemHolderInfo* preInfo;
         RecyclerView::ItemAnimator::ItemHolderInfo* postInfo;
-        static Pools::SimplePool<InfoRecord> sPool;
     private:
         friend ViewInfoStore;
     public:
         InfoRecord();
-        static InfoRecord* obtain();
-        static void recycle(InfoRecord* record);
-        static void drainCache();
+        //static InfoRecord* obtain();
+        //static void recycle(InfoRecord* record);
+        //static void drainCache();
     };
+private:
+    Pools::SimplePool<InfoRecord>* mPool;
 protected:
     std::unordered_map<RecyclerView::ViewHolder*, InfoRecord*> mLayoutHolderMap;
     LongSparseArray<RecyclerView::ViewHolder*> mOldChangedHolders;
 private:
     friend RecyclerView;
     RecyclerView::ItemAnimator::ItemHolderInfo* popFromLayoutStep(RecyclerView::ViewHolder* vh, int flag);
+    InfoRecord* obtain();
+    void recycle(InfoRecord* record);
+    void drainCache();
 protected:
     void clear();
     void addToPreLayout(RecyclerView::ViewHolder* holder, RecyclerView::ItemAnimator::ItemHolderInfo* info);
@@ -61,6 +65,8 @@ protected:
     void removeViewHolder(RecyclerView::ViewHolder* holder);
     void onDetach();
 public:
+    ViewInfoStore();
+    ~ViewInfoStore();
     void onViewDetached(RecyclerView::ViewHolder* viewHolder);
 };
 }/*endof namespace*/
