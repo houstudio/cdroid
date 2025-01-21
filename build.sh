@@ -22,7 +22,7 @@ declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg
 VCPKGROOT=${HOME}/vcpkg
 
 DEPLIBS["X64"]=${VCPKGROOT}/installed/x64-linux-dynamic
-DEPLIBS["SIGMA"]=${VCPKGROOT}/installed/arm-linux-dynamic
+DEPLIBS["SIGMA"]=${VCPKGROOT}/installed/sigma-linux-dynamic
 DEPLIBS["RISCVD211"]=${VCPKGROOT}/installed/riscv64-linux-dynamic
 DEPLIBS["R818"]=${VCPKGROOT}/installed/r818-linux
 DEPLIBS["D211"]=${VCPKGROOT}/installed/riscv64-d211-linux
