@@ -5,19 +5,7 @@
 
 namespace cdroid{
 class ViewInfoStore {
-public:
-    struct ProcessCallback {
-        std::function<void(RecyclerView::ViewHolder*,RecyclerView::ItemAnimator::ItemHolderInfo*,
-			RecyclerView::ItemAnimator::ItemHolderInfo*)> processDisappeared;
-	    //(RecyclerView::ViewHolder* viewHolder,RecyclerView::ItemAnimator::ItemHolderInfo* preInfo, RecyclerView::ItemAnimator::ItemHolderInfo* postInfo);
-	    std::function<void(RecyclerView::ViewHolder*,RecyclerView::ItemAnimator::ItemHolderInfo*,
-			RecyclerView::ItemAnimator::ItemHolderInfo*)> processAppeared;
-	    //(RecyclerView::ViewHolder* viewHolder, RecyclerView::ItemAnimator::ItemHolderInfo* preInfo,RecyclerView::ItemAnimator::ItemHolderInfo* postInfo);
-	    std::function<void(RecyclerView::ViewHolder*,RecyclerView::ItemAnimator::ItemHolderInfo*,RecyclerView::ItemAnimator::ItemHolderInfo*)> processPersistent;
-	    //(RecyclerView::ViewHolder* viewHolder,RecyclerView::ItemAnimator::ItemHolderInfo* preInfo, RecyclerView::ItemAnimator::ItemHolderInfo* postInfo);
-	    std::function<void(RecyclerView::ViewHolder*)>unused;//(RecyclerView::ViewHolder* holder);
-    };
-
+protected:
     class InfoRecord {
         static constexpr int FLAG_DISAPPEARED = 1;
         static constexpr int FLAG_APPEAR = 1 << 1;
@@ -33,21 +21,31 @@ public:
         friend ViewInfoStore;
     public:
         InfoRecord();
-        //static InfoRecord* obtain();
-        //static void recycle(InfoRecord* record);
-        //static void drainCache();
+    };
+public:
+    struct ProcessCallback {
+        std::function<void(RecyclerView::ViewHolder*,RecyclerView::ItemAnimator::ItemHolderInfo*,
+			RecyclerView::ItemAnimator::ItemHolderInfo*)> processDisappeared;
+	    //(RecyclerView::ViewHolder* viewHolder,RecyclerView::ItemAnimator::ItemHolderInfo* preInfo, RecyclerView::ItemAnimator::ItemHolderInfo* postInfo);
+	    std::function<void(RecyclerView::ViewHolder*,RecyclerView::ItemAnimator::ItemHolderInfo*,
+			RecyclerView::ItemAnimator::ItemHolderInfo*)> processAppeared;
+	    //(RecyclerView::ViewHolder* viewHolder, RecyclerView::ItemAnimator::ItemHolderInfo* preInfo,RecyclerView::ItemAnimator::ItemHolderInfo* postInfo);
+	    std::function<void(RecyclerView::ViewHolder*,RecyclerView::ItemAnimator::ItemHolderInfo*,RecyclerView::ItemAnimator::ItemHolderInfo*)> processPersistent;
+	    //(RecyclerView::ViewHolder* viewHolder,RecyclerView::ItemAnimator::ItemHolderInfo* preInfo, RecyclerView::ItemAnimator::ItemHolderInfo* postInfo);
+	    std::function<void(RecyclerView::ViewHolder*)>unused;//(RecyclerView::ViewHolder* holder);
     };
 private:
     Pools::SimplePool<InfoRecord>* mPool;
 protected:
     std::unordered_map<RecyclerView::ViewHolder*, InfoRecord*> mLayoutHolderMap;
     LongSparseArray<RecyclerView::ViewHolder*> mOldChangedHolders;
+
+    InfoRecord* obtainInfoRecord();
+    void recycleInfoRecord(InfoRecord* record);
+    void drainInfoRecordCache();
 private:
     friend RecyclerView;
     RecyclerView::ItemAnimator::ItemHolderInfo* popFromLayoutStep(RecyclerView::ViewHolder* vh, int flag);
-    InfoRecord* obtain();
-    void recycle(InfoRecord* record);
-    void drainCache();
 protected:
     void clear();
     void addToPreLayout(RecyclerView::ViewHolder* holder, RecyclerView::ItemAnimator::ItemHolderInfo* info);
