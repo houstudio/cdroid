@@ -428,7 +428,7 @@ VelocityTracker*VelocityTracker::obtain(const char*strategy){
 void VelocityTracker::recycle(){
     if(mStrategy ==VELOCITY_TRACKER_STRATEGY_DEFAULT){
         clear();
-	sPool.release(this);
+        sPool.release(this);
     }
 }
 
