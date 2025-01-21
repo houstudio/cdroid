@@ -53,16 +53,6 @@ bool RotateDrawable::onLevelChange(int level){
     return true;
 }
 
-/*void RotateDrawable::onBoundsChange(const Rect& bounds){
-    Drawable*d = getDrawable();
-    const float px = mState->mPivotXRel ? (bounds.width * mState->mPivotX) : mState->mPivotX;
-    const float py = mState->mPivotYRel ? (bounds.height * mState->mPivotY) : mState->mPivotY;
-    Rect bound= bounds;
-    //bound.left = -int(px);
-    //bound.top = -int(py);
-    d->setBounds(bound);
-}*/
-
 float RotateDrawable::getFromDegrees()const{
     return mState->mFromDegrees;
 }

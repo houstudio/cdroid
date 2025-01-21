@@ -22,7 +22,6 @@ private:
     RotateDrawable(std::shared_ptr<RotateState>state);
 protected:
     bool onLevelChange(int level)override;
-    //void onBoundsChange(const Rect& bounds)override;
     std::shared_ptr<DrawableWrapperState> mutateConstantState();
 public:
     RotateDrawable(Drawable*d=nullptr);
