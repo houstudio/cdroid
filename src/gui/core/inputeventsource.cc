@@ -45,7 +45,7 @@ void InputEventSource::doEventsConsume(){
 }
 
 InputEventSource::~InputEventSource(){
-    mRunning=false;
+    mRunning = false;
     Looper::getMainLooper()->removeEventHandler(this);
     if(frecord.is_open())
        frecord.close();
@@ -255,8 +255,10 @@ void InputEventSource::playback(const std::string&fname){
              }
          }
     };
-    std::thread th(func,fname);
-    th.detach();
+    if(!fname.empty()){
+        std::thread th(func,fname);
+        th.detach();
+    }
 }
 }//end namespace
 
