@@ -2050,6 +2050,7 @@ bool RecyclerView::onInterceptTouchEvent(MotionEvent& e) {
                 listener.onInterceptTouchEvent(*this, *cancelEvent);
             }
         }
+        cancelEvent->recycle();
         return true;
     }
 
