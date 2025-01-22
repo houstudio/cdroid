@@ -55,6 +55,7 @@ ValueAnimator::ValueAnimator(const ValueAnimator&o){
     mOverallFraction = 0;
     mCurrentFraction = 0;
     mSelfPulse = true;
+    mDuration  = o.mDuration;
     mSuppressSelfPulseRequested = false;
     mInterpolator = sDefaultInterpolator;
     auto& oldValues = o.mValues;
