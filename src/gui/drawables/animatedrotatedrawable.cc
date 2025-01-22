@@ -168,8 +168,8 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     const int w = bounds.width;
     const int h = bounds.height;
 
-    const float px = bounds.left+(mState->mPivotXRel ? (w * mState->mPivotX) : mState->mPivotX);
-    const float py = bounds.top +(mState->mPivotYRel ? (h * mState->mPivotY) : mState->mPivotY);
+    const float px = bounds.left + (mState->mPivotXRel ? (w * mState->mPivotX) : mState->mPivotX);
+    const float py = bounds.top  + (mState->mPivotYRel ? (h * mState->mPivotY) : mState->mPivotY);
     LOGV("%p bounds(%d,%d %d,%d) pivot=%f,%f pxy=%f,%f degrees=%f",this,bounds.left,bounds.top,bounds.width,bounds.height,
          mState->mPivotX, mState->mPivotY,px,py,mCurrentDegrees);
 
@@ -179,12 +179,8 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));
 
     canvas.save();
-    canvas.translate(bounds.left,bounds.top);
     canvas.transform(mtx);
-    setDrawableBoundsNoNotify(0,0,w,h);
     drawable->draw(canvas);
-    setDrawableBoundsNoNotify(bounds.left,bounds.top,bounds.width,bounds.height);
-    canvas.translate(-bounds.left,-bounds.top);
     canvas.restore();
 }
 

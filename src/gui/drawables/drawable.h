@@ -62,7 +62,6 @@ public:
         DEFAULT_TINT_MODE=PorterDuff::Mode::SRC_IN
     };
 protected:
-    friend class DrawableWrapper;
     int mLevel;
     bool mVisible;
     int mLayoutDirection;

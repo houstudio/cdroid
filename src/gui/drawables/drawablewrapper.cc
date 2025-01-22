@@ -98,9 +98,6 @@ bool DrawableWrapper::hasFocusStateSpecified()const{
     return mDrawable && mDrawable->hasFocusStateSpecified();
 }
 
-void DrawableWrapper::setDrawableBoundsNoNotify(int x,int y,int w,int h) {
-    mDrawable->mBounds.set(x,y,w,h);
-}
 bool DrawableWrapper::onStateChange(const std::vector<int>& state) {
     if (mDrawable && mDrawable->isStateful()) {
         bool changed = mDrawable->setState(state);
