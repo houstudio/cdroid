@@ -22,7 +22,7 @@ void ViewInfoStore::addToPreLayout(RecyclerView::ViewHolder* holder, RecyclerVie
     auto it = mLayoutHolderMap.find(holder);
     if(it !=mLayoutHolderMap.end())record = it->second;
     if (record == nullptr) {
-        record = /*InfoRecord::*/obtainInfoRecord();
+        record = obtainInfoRecord();
         mLayoutHolderMap.insert({holder,record});
     }
     record->preInfo = info;
@@ -50,7 +50,7 @@ RecyclerView::ItemAnimator::ItemHolderInfo* ViewInfoStore::popFromLayoutStep(Rec
         return nullptr;
     }
     InfoRecord* record = it->second;
-    if (record != nullptr && (record->flags & flag) != 0) {
+    if ((record != nullptr) && (record->flags & flag) != 0) {
         record->flags &= ~flag;
         RecyclerView::ItemAnimator::ItemHolderInfo* info;
         if (flag == InfoRecord::FLAG_PRE) {
@@ -63,7 +63,7 @@ RecyclerView::ItemAnimator::ItemHolderInfo* ViewInfoStore::popFromLayoutStep(Rec
         // if not pre-post flag is left, clear.
         if ((record->flags & (InfoRecord::FLAG_PRE | InfoRecord::FLAG_POST)) == 0) {
             mLayoutHolderMap.erase(it);
-            /*InfoRecord::*/recycleInfoRecord(record);
+            recycleInfoRecord(record);
         }
         return info;
     }
@@ -79,7 +79,7 @@ void ViewInfoStore::addToAppearedInPreLayoutHolders(RecyclerView::ViewHolder* ho
     auto it = mLayoutHolderMap.find(holder);
     if(it!=mLayoutHolderMap.end())record = it->second;
     if (record == nullptr) {
-        record = /*InfoRecord::*/obtainInfoRecord();
+        record = obtainInfoRecord();
         mLayoutHolderMap.insert({holder,record});
     }
     record->flags |= InfoRecord::FLAG_APPEAR;
@@ -102,7 +102,7 @@ void ViewInfoStore::addToPostLayout(RecyclerView::ViewHolder* holder, RecyclerVi
     auto it = mLayoutHolderMap.find(holder);
     if(it!=mLayoutHolderMap.end())record = it->second;
     if (record == nullptr) {
-        record = /*InfoRecord::*/obtainInfoRecord();
+        record = obtainInfoRecord();
         mLayoutHolderMap.insert({holder,record});
     }
     record->postInfo = info;
@@ -132,7 +132,7 @@ void ViewInfoStore::removeFromDisappearedInLayout(RecyclerView::ViewHolder* hold
 
 void ViewInfoStore::process(ProcessCallback callback) {
     for(auto it = mLayoutHolderMap.begin();it!=mLayoutHolderMap.end();){
-	RecyclerView::ViewHolder* viewHolder = it->first;
+        RecyclerView::ViewHolder* viewHolder = it->first;
         InfoRecord* record = it->second;
         it = mLayoutHolderMap.erase(it);
         if ((record->flags & InfoRecord::FLAG_APPEAR_AND_DISAPPEAR) == InfoRecord::FLAG_APPEAR_AND_DISAPPEAR) {
@@ -164,7 +164,9 @@ void ViewInfoStore::process(ProcessCallback callback) {
         } else if (_Debug) {
             LOGE("record without any reasonable flag combination:/");
         }
-        /*InfoRecord::*/recycleInfoRecord(record);
+        delete record->preInfo;
+        delete record->postInfo;
+        recycleInfoRecord(record);
     }
 }
 
@@ -179,13 +181,13 @@ void ViewInfoStore::removeViewHolder(RecyclerView::ViewHolder* holder) {
     if( it!= mLayoutHolderMap.end() ){
         InfoRecord*info = it->second;
         if(info)
-            /*InfoRecord::*/recycleInfoRecord(info);
+            recycleInfoRecord(info);
         mLayoutHolderMap.erase(it);
     }
 }
 
 void ViewInfoStore::onDetach() {
-    /*InfoRecord::*/drainInfoRecordCache();
+    drainInfoRecordCache();
 }
 
 void ViewInfoStore::onViewDetached(RecyclerView::ViewHolder* viewHolder) {
@@ -210,7 +212,7 @@ ViewInfoStore::InfoRecord* ViewInfoStore::obtainInfoRecord() {
 void ViewInfoStore::recycleInfoRecord(InfoRecord* record) {
     record->flags = 0;
     record->preInfo = nullptr;
-    record->postInfo = nullptr;
+    record->postInfo= nullptr;
     mPool->release(record);
 }
 

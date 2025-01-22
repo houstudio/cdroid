@@ -185,19 +185,18 @@ void RecyclerView::initRecyclerView(){
     mMaxFlingVelocity = vc.getScaledMaximumFlingVelocity();
     setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
     ViewInfoStore::ProcessCallback* visCBK = new ViewInfoStore::ProcessCallback;
-    visCBK->processDisappeared=[this](ViewHolder* viewHolder,ItemAnimator::ItemHolderInfo* info, ItemAnimator::ItemHolderInfo* postInfo){
+
+    visCBK->processDisappeared = [this](ViewHolder* viewHolder,ItemAnimator::ItemHolderInfo* info, ItemAnimator::ItemHolderInfo* postInfo){
         mRecycler->unscrapView(*viewHolder);
         animateDisappearance(*viewHolder, *info, postInfo);
-        delete info;
-        delete postInfo;
+        //delete info; delete postInfo;
     };
-    visCBK->processAppeared=[this](ViewHolder* viewHolder, ItemAnimator::ItemHolderInfo* preInfo, ItemAnimator::ItemHolderInfo* info){
+    visCBK->processAppeared = [this](ViewHolder* viewHolder, ItemAnimator::ItemHolderInfo* preInfo, ItemAnimator::ItemHolderInfo* info){
         animateAppearance(*viewHolder, preInfo, *info);
-        delete preInfo;
-        delete info;
+        //delete preInfo; delete info;
     };
 
-    visCBK->processPersistent=[this](ViewHolder* viewHolder,ItemAnimator::ItemHolderInfo* preInfo,ItemAnimator::ItemHolderInfo* postInfo){
+    visCBK->processPersistent = [this](ViewHolder* viewHolder,ItemAnimator::ItemHolderInfo* preInfo,ItemAnimator::ItemHolderInfo* postInfo){
         viewHolder->setIsRecyclable(false);
         if (mDataSetHasChangedAfterLayout) {
             if (mItemAnimator->animateChange(*viewHolder, *viewHolder, *preInfo, *postInfo)) {
@@ -206,10 +205,9 @@ void RecyclerView::initRecyclerView(){
         } else if (mItemAnimator->animatePersistence(*viewHolder, *preInfo, *postInfo)) {
             postAnimationRunner();
         }
-        delete preInfo;
-        delete postInfo;
+        //delete preInfo; delete postInfo;
     };
-    visCBK->unused=[this](ViewHolder* viewHolder){
+    visCBK->unused = [this](ViewHolder* viewHolder){
         mLayout->removeAndRecycleView(viewHolder->itemView, *mRecycler);
     };
     mViewInfoProcessCallback = visCBK;
@@ -218,9 +216,9 @@ void RecyclerView::initRecyclerView(){
 }
 
 void RecyclerView::initAutofill() {
-    /*if (getImportantForAutofill()== View::IMPORTANT_FOR_AUTOFILL_AUTO) {
-        setImportantForAutofill(View::IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
-    }*/
+    if (getImportantForAutofill()== View::IMPORTANT_FOR_AUTOFILL_AUTO) {
+        //setImportantForAutofill(View::IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
+    }
 }
 
 //Runnable mUpdateChildViewsRunnable
