@@ -137,7 +137,6 @@ public:
     static PooledInputEventFactory& getInstance();
 private:
     const size_t mMaxPoolSize;
-    static PooledInputEventFactory*mInst;
     std::queue<KeyEvent*> mKeyEventPool;
     std::queue<MotionEvent*> mMotionEventPool;
 };

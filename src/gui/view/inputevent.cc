@@ -3,6 +3,7 @@
 #include <view/motionevent.h>
 #include <core/inputdevice.h>
 #include <core/atexit.h>
+#include <core/neverdestroyed.h>
 #include <porting/cdlog.h>
 // --- InputEvent ---
 namespace cdroid{
@@ -56,18 +57,13 @@ void InputEvent::recycle(){
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // --- PooledInputEventFactory ---
-PooledInputEventFactory*PooledInputEventFactory::mInst=nullptr;
-
+NeverDestroyed<PooledInputEventFactory>mInst(20);
 PooledInputEventFactory& PooledInputEventFactory::getInstance(){
-    if(nullptr==mInst){
-        mInst = new PooledInputEventFactory(20);
-        AtExit::registerCallback([](){delete mInst;});
-    }
-    return *mInst;
+    return *mInst.get();
 }
 
-PooledInputEventFactory::PooledInputEventFactory(size_t maxPoolSize) :
-        mMaxPoolSize(maxPoolSize) {
+PooledInputEventFactory::PooledInputEventFactory(size_t maxPoolSize)
+    :mMaxPoolSize(maxPoolSize) {
 }
 
 PooledInputEventFactory::~PooledInputEventFactory() {
