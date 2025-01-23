@@ -15,7 +15,7 @@ TOOLCHAINS["HI3536"]=${TOPDIR}/cmake/hisiv500-toolchain.cmake
 TOOLCHAINS["INGENIC"]=${TOPDIR}/cmake/ingenic-x2600-toolchain.cmake
 TOOLCHAINS["TINAT113"]=${TOPDIR}/cmake/tinat113-toolchain.cmake
 TOOLCHAINS["RK3506"]=${TOPDIR}/cmake/rk3506-toolchain.cmake
-TOOLCHAINS["ANDROID"]=${TOPDIR}/cmake/android.toolchain.cmake
+TOOLCHAINS["ANDROID"]=${TOPDIR}/cmake/android.cmake #toolchain.cmake
 declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg,key must be uppercase
 
 #VCPKGROOT=/opt/vcpkg
