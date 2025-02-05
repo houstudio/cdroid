@@ -17,7 +17,7 @@
 
 //REFERENCES:
 //Fast epoll for windows:https://github.com/piscisaureus/wepoll 
-#define USE_SELECT 1
+//#define USE_SELECT 0
 namespace cdroid{
 
 #if (defined(_WIN32)||defined(_WIN64)||defined(__linux__)||defined(__unix__))&&!defined(USE_SELECT)
