@@ -123,7 +123,6 @@ void GapWorker::postFromTraversal(RecyclerView* recyclerView, int prefetchDx, in
         if (mPostTimeNs == 0) {
             mPostTimeNs = recyclerView->getNanoTime();
             recyclerView->post(mRunnable);
-            LOGD("postFromTraversal %p",this);
         }
     }
     LayoutPrefetchRegistryImpl* prefetchRegistry = (LayoutPrefetchRegistryImpl*)recyclerView->mPrefetchRegistry;
