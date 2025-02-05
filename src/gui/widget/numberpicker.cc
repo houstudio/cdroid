@@ -758,10 +758,10 @@ int NumberPicker::computeVerticalScrollExtent() {
     return isHorizontalMode()?0:getHeight();
 }
 
-void NumberPicker::setOnClickListener(OnClickListener onClickListener){
+void NumberPicker::setOnClickListener(const OnClickListener& onClickListener){
     mOnClickListener = onClickListener;
 }
-void NumberPicker::setOnValueChangedListener(OnValueChangeListener onValueChangedListener){
+void NumberPicker::setOnValueChangedListener(const OnValueChangeListener& onValueChangedListener){
     mOnValueChangeListener=onValueChangedListener;
 }
 

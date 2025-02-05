@@ -203,8 +203,8 @@ public:
     void computeScroll()override;
     View& setEnabled(bool enabled)override;
     void scrollBy(int x, int y)override;
-    void setOnClickListener(OnClickListener onClickListener);
-    void setOnValueChangedListener(OnValueChangeListener onValueChangedListener);
+    void setOnClickListener(const OnClickListener& onClickListener)override;
+    void setOnValueChangedListener(const OnValueChangeListener& onValueChangedListener);
     void setOnScrollListener(const OnScrollListener& onScrollListener);
     void setFormatter(Formatter formatter);
 

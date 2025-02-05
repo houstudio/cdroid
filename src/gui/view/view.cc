@@ -2693,7 +2693,7 @@ View::ListenerInfo*View::getListenerInfo(){
     return mListenerInfo;
 }
 
-void View::setOnClickListener(OnClickListener l){
+void View::setOnClickListener(const OnClickListener& l){
     if(!isClickable())
         setClickable(true);
     getListenerInfo()->mOnClickListener=l;
@@ -2703,13 +2703,13 @@ bool View::hasOnClickListener()const{
     return mListenerInfo&&(mListenerInfo->mOnClickListener!=nullptr);
 }
 
-void View::setOnLongClickListener(OnLongClickListener l){
+void View::setOnLongClickListener(const OnLongClickListener& l){
     if(!isLongClickable())
         setLongClickable(true);
     getListenerInfo()->mOnLongClickListener=l;
 }
 
-void View::setOnContextClickListener(OnContextClickListener l) {
+void View::setOnContextClickListener(const OnContextClickListener& l) {
     if (!isContextClickable()) {
         setContextClickable(true);
     }
@@ -2730,15 +2730,15 @@ void View::setOnCreateContextMenuListener(OnCreateContextMenuListener l) {
     getListenerInfo()->mOnCreateContextMenuListener = l;
 }
 
-void View::setOnFocusChangeListener(OnFocusChangeListener listtener){
+void View::setOnFocusChangeListener(const OnFocusChangeListener& listtener){
     getListenerInfo()->mOnFocusChangeListener = listtener;
 }
 
-void View::addOnLayoutChangeListener(OnLayoutChangeListener listener){
+void View::addOnLayoutChangeListener(const OnLayoutChangeListener& listener){
     getListenerInfo()->mOnLayoutChangeListeners.push_back(listener);
 }
 
-void View::removeOnLayoutChangeListener(OnLayoutChangeListener listener){
+void View::removeOnLayoutChangeListener(const OnLayoutChangeListener& listener){
     if(mListenerInfo){
         std::vector<View::OnLayoutChangeListener>&ls= mListenerInfo->mOnLayoutChangeListeners;
         auto it= std::find(ls.begin(),ls.end(),listener);
@@ -2746,7 +2746,7 @@ void View::removeOnLayoutChangeListener(OnLayoutChangeListener listener){
     }
 }
 
-void View::addOnAttachStateChangeListener(OnAttachStateChangeListener listener) {
+void View::addOnAttachStateChangeListener(const OnAttachStateChangeListener& listener) {
     ListenerInfo* li = getListenerInfo();
     if (li) {
         std::vector<OnAttachStateChangeListener>&ls = li->mOnAttachStateChangeListeners;
@@ -2759,7 +2759,7 @@ static bool operator == (const View::OnAttachStateChangeListener& left, const Vi
            (left.onViewDetachedFromWindow==right.onViewDetachedFromWindow);
 }
 
-void View::removeOnAttachStateChangeListener(OnAttachStateChangeListener listener) {
+void View::removeOnAttachStateChangeListener(const OnAttachStateChangeListener& listener) {
     if ((mListenerInfo == nullptr) || mListenerInfo->mOnAttachStateChangeListeners.empty()) {
         return;
     }
@@ -2786,7 +2786,7 @@ bool View::dispatchActivityResult(const std::string& who, int requestCode, int r
 void View::onActivityResult(int requestCode, int resultCode, Intent data){
 }
 
-void View::setOnScrollChangeListener(OnScrollChangeListener l){
+void View::setOnScrollChangeListener(const OnScrollChangeListener& l){
     getListenerInfo()->mOnScrollChangeListener=l;
 }
 
