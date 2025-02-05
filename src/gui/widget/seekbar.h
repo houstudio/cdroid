@@ -6,9 +6,9 @@ namespace cdroid{
 class SeekBar:public AbsSeekBar{
 public:
     struct OnSeekBarChangeListener{
-        CallbackBase<void,SeekBar&,int,bool> onProgressChanged;//(SeekBar seekBar, int progress, boolean fromUser);
-        CallbackBase<void,SeekBar&>onStartTrackingTouch;
-        CallbackBase<void,SeekBar&>onStopTrackingTouch;
+        std::function<void(SeekBar&,int,bool)> onProgressChanged;//(SeekBar seekBar, int progress, boolean fromUser);
+        std::function<void(SeekBar&)>onStartTrackingTouch;
+        std::function<void(SeekBar&)>onStopTrackingTouch;
     };
 protected:
     OnSeekBarChangeListener  mOnSeekBarChangeListener;

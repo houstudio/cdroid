@@ -67,6 +67,11 @@ int main(int argc,const char*argv[]){
     d=ctx->getDrawable("cdroid:drawable/progress_horizontal");
     sb->setProgressDrawable(d);
     sb2->setProgressDrawable(d->getConstantState()->newDrawable());
+    sb2->setOnSeekBarChangeListener((const SeekBar::OnSeekBarChangeListener){
+            .onProgressChanged=[](SeekBar&sb,int,bool)->void{return;},
+            .onStartTrackingTouch=[](SeekBar&sb)->void{},
+            .onStopTrackingTouch=[](SeekBar&)->void{}
+        });
 
     d=ctx->getDrawable("cdroid:drawable/seek_thumb.xml");
     sb->setThumb(d);
