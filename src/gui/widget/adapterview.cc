@@ -553,7 +553,7 @@ AdapterView::OnItemClickListener AdapterView::getOnItemClickListener() const{
     return mOnItemClickListener;
 }
 
-void AdapterView::setOnItemSelectedListener(OnItemSelectedListener listener) {
+void AdapterView::setOnItemSelectedListener(const OnItemSelectedListener& listener) {
     mOnItemSelectedListener = listener;
 }
 
@@ -561,7 +561,7 @@ AdapterView::OnItemSelectedListener AdapterView::getOnItemSelectedListener()cons
     return mOnItemSelectedListener;
 }
 
-void AdapterView::setOnItemLongClickListener(OnItemLongClickListener listener){
+void AdapterView::setOnItemLongClickListener(const OnItemLongClickListener& listener){
     if (!isLongClickable()) setLongClickable(true);
     mOnItemLongClickListener = listener;
 }

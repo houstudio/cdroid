@@ -126,9 +126,9 @@ public:
     
     void setOnItemClickListener(OnItemClickListener listener);
     OnItemClickListener getOnItemClickListener() const;
-    void setOnItemSelectedListener(OnItemSelectedListener listener);
+    void setOnItemSelectedListener(const OnItemSelectedListener& listener);
     OnItemSelectedListener getOnItemSelectedListener()const;
-    void setOnItemLongClickListener(OnItemLongClickListener listener);
+    void setOnItemLongClickListener(const OnItemLongClickListener& listener);
     OnItemLongClickListener getOnItemLongClickListener() const;
 
     std::string getAccessibilityClassName()const override;
