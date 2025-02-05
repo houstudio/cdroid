@@ -89,7 +89,9 @@ void GapWorker::LayoutPrefetchRegistryImpl::clearPrefetchPositions() {
 
 /////////////////////////////////////
 GapWorker::GapWorker(){
-    mRunnable= std::bind(&GapWorker::run,this);
+    mPostTimeNs = 0;
+    mFrameIntervalNs =0;
+    mRunnable = std::bind(&GapWorker::run,this);
 }
 
 void GapWorker::add(RecyclerView* recyclerView) {

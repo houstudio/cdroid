@@ -1,3 +1,13 @@
+# **V3.6.0
+  - Fix AnimatorSet,ObjectAnimator's memleak
+  - Fix some Recyclerview's memleak
+  - Fix RotateDrawable AnimatedRotateDrawable's invalidate issues
+  - Fix Globale Properties's memleak(make valgrind happy)
+  - Fix DefaultItemAnimator's memleak
+  - Fix StateListAnimator's memleak
+  - Fix Switch's memleak caused by thumb's animator
+  - RecyclerView add GapWorker support(with prefetch support features)
+
 # **V3.4.5
   - AnimatorInflater
   - AnimatorSet,PropertyValueHolder OK.

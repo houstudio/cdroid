@@ -143,7 +143,7 @@ public:
     int computeVerticalScrollRange(RecyclerView::State& state)override;
     void setSmoothScrollbarEnabled(bool enabled);
     bool isSmoothScrollbarEnabled()const;
-    void collectInitialPrefetchPositions(int adapterItemCount,LayoutPrefetchRegistry& layoutPrefetchRegistry);
+    void collectInitialPrefetchPositions(int adapterItemCount,LayoutPrefetchRegistry& layoutPrefetchRegistry)override;
     void setInitialPrefetchItemCount(int itemCount);
     int getInitialPrefetchItemCount();
     void collectAdjacentPrefetchPositions(int dx, int dy, RecyclerView::State& state,

@@ -998,9 +998,9 @@ void RecyclerView::nestedScrollByInternal(int x,int y,int horizontalAxis,int ver
             canScrollVertical ? y : 0,
             horizontalAxis, verticalAxis,
             motionEvent, type);
-    /*if ((mGapWorker != nullptr) && (x != 0 || y != 0)) {
+    if ((mGapWorker != nullptr) && (x != 0 || y != 0)) {
         mGapWorker->postFromTraversal(this, x, y);
-    }*/
+    }
     stopNestedScroll(type);
 }
 
@@ -2279,9 +2279,9 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
                         &e,TYPE_TOUCH)) {
                     getParent()->requestDisallowInterceptTouchEvent(true);
                 }
-                /*if (mGapWorker != nullptr && (dx != 0 || dy != 0)) {
+                if ((mGapWorker != nullptr) && (dx != 0 || dy != 0)) {
                     mGapWorker->postFromTraversal(this, dx, dy);
-                }*/
+                }
             }
         } break;
 
