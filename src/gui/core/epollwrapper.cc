@@ -85,7 +85,7 @@ public:
     int waitEvents(std::vector<epoll_event>& activeFDs, uint32_t timeout) override{
         struct std::vector<epoll_event> events(maxEvents);
         const int numEvents = epoll_wait(epfd, events.data(), maxEvents, timeout);
-        if (numEvents == -1) {
+        if (numEvents<0) {
             return -1;
         }
         activeFDs.clear();
@@ -93,7 +93,7 @@ public:
             events[i].events=toLoopEvents(events[i].events);
             activeFDs.push_back(events[i]);
         }
-        return int(activeFDs.size());
+        return numEvents;
     }
 };
 
@@ -162,7 +162,7 @@ public:
         fd_set tmpWriteSet = writeSet;
         tv.tv_sec = ms / 1000;
         tv.tv_usec = (ms % 1000) * 1000;
-        int numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &tv);
+        const int numEvents = select(maxFD + 1, &tmpReadSet, &tmpWriteSet, nullptr, &tv);
         if (numEvents == -1) {
             //LOGW("Failed to select file descriptors，select's return value seems some error in MSVC");
             return 0;
@@ -182,7 +182,7 @@ public:
                 activeFDs.push_back(e);
             }
         }
-        return (int)activeFDs.size();
+        return numEvents;
     }
 };
 #endif
