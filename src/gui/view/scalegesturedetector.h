@@ -18,8 +18,8 @@ public:
      * </ul>
      */
     struct OnScaleGestureListener {
-        CallbackBase<bool,ScaleGestureDetector&> onScale;
-        CallbackBase<bool,ScaleGestureDetector&> onScaleBegin;
+        std::function<bool(ScaleGestureDetector&)> onScale;
+        std::function<bool(ScaleGestureDetector&)> onScaleBegin;
 
         /**
          * Responds to the end of a scale gesture. Reported by existing
@@ -32,7 +32,7 @@ public:
          * @param detector The detector reporting the event - use this to
          *          retrieve extended info about event state.
          */
-        CallbackBase<void,ScaleGestureDetector&> onScaleEnd;
+        std::function<void(ScaleGestureDetector&)> onScaleEnd;
     };
 private:
     Context* mContext;

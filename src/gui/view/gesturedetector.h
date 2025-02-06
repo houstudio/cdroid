@@ -23,7 +23,7 @@ public:
          *
          * @param e The down motion event.
          */
-        CallbackBase<bool,MotionEvent&> onDown;
+        std::function<bool(MotionEvent&)> onDown;
 
         /**
          * The user has performed a down {@link MotionEvent} and not performed
@@ -33,7 +33,7 @@ public:
          *
          * @param e The down motion event
          */
-        CallbackBase<void,MotionEvent&> onShowPress;
+        std::function<void(MotionEvent&)> onShowPress;
 
         /**
          * Notified when a tap occurs with the up {@link MotionEvent}
@@ -42,7 +42,7 @@ public:
          * @param e The up motion event that completed the first tap
          * @return true if the event is consumed, else false
          */
-        CallbackBase<bool,MotionEvent&> onSingleTapUp;
+        std::function<bool(MotionEvent&)> onSingleTapUp;
 
         /**
          * Notified when a scroll occurs with the initial on down {@link MotionEvent} and the
@@ -60,9 +60,9 @@ public:
          *              and {@code e2}.
          * @return true if the event is consumed, else false
          */
-        CallbackBase<bool,MotionEvent*,MotionEvent&,float,float> onScroll;//(MotionEvent* e1,MotionEvent& e2, float distanceX, float distanceY);
+        std::function<bool(MotionEvent*,MotionEvent&,float,float)> onScroll;//(MotionEvent* e1,MotionEvent& e2, float distanceX, float distanceY);
 
-        CallbackBase<void,MotionEvent&> onLongPress;
+        std::function<void(MotionEvent&)> onLongPress;
 
         /**
          * Notified of a fling event when it occurs with the initial on down {@link MotionEvent}
@@ -78,7 +78,7 @@ public:
          *              along the y axis.
          * @return true if the event is consumed, else false
          */
-        CallbackBase<bool,MotionEvent*,MotionEvent&,float,float> onFling;//(MotionEvent*e1,MotionEvent& e2, float velocityX,float velocityY);
+        std::function<bool(MotionEvent*,MotionEvent&,float,float)> onFling;//(MotionEvent*e1,MotionEvent& e2, float velocityX,float velocityY);
     };
 
     /**
@@ -97,7 +97,7 @@ public:
          * @param e The down motion event of the single-tap.
          * @return true if the event is consumed, else false
          */
-        CallbackBase<bool,MotionEvent&> onSingleTapConfirmed;
+        std::function<bool(MotionEvent&)> onSingleTapConfirmed;
 
         /**
          * Notified when a double-tap occurs. Triggered on the down event of second tap.
@@ -105,7 +105,7 @@ public:
          * @param e The down motion event of the first tap of the double-tap.
          * @return true if the event is consumed, else false
          */
-        CallbackBase<bool,MotionEvent&> onDoubleTap;
+        std::function<bool(MotionEvent&)> onDoubleTap;
 
         /**
          * Notified when an event within a double-tap gesture occurs, including
@@ -114,7 +114,7 @@ public:
          * @param e The motion event that occurred during the double-tap gesture.
          * @return true if the event is consumed, else false
          */
-        CallbackBase<bool,MotionEvent&> onDoubleTapEvent;
+        std::function<bool(MotionEvent&)> onDoubleTapEvent;
     };
 
     typedef CallbackBase<bool,MotionEvent&>OnContextClickListener;

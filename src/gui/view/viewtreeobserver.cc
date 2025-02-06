@@ -126,10 +126,6 @@ void ViewTreeObserver::merge(ViewTreeObserver& observer) {
 void ViewTreeObserver::addOnWindowAttachListener(const OnWindowAttachListener& listener) {
     checkIsAlive();
 
-    /*if (mOnWindowAttachListeners == nullptr) {
-        mOnWindowAttachListeners  = new CopyOnWriteArrayList<OnWindowAttachListener>();
-    }*/
-
     mOnWindowAttachListeners.push_back(listener);
 }
 
@@ -143,105 +139,81 @@ void ViewTreeObserver::removeOnWindowAttachListener(const OnWindowAttachListener
     }
 }
 
-void ViewTreeObserver::addOnWindowFocusChangeListener(OnWindowFocusChangeListener listener) {
+void ViewTreeObserver::addOnWindowFocusChangeListener(const OnWindowFocusChangeListener& listener) {
     checkIsAlive();
-
-    /*if (mOnWindowFocusListeners == nullptr) {
-        mOnWindowFocusListeners  = new CopyOnWriteArrayList<OnWindowFocusChangeListener>();
-    }*/
 
     mOnWindowFocusListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnWindowFocusChangeListener(OnWindowFocusChangeListener victim) {
+void ViewTreeObserver::removeOnWindowFocusChangeListener(const OnWindowFocusChangeListener& victim) {
     checkIsAlive();
     auto it = std::find(mOnWindowFocusListeners.begin(),mOnWindowFocusListeners.end(),victim);
     if(it!=mOnWindowFocusListeners.end())
        mOnWindowFocusListeners.erase(it);
 }
 
-void ViewTreeObserver::addOnGlobalFocusChangeListener(OnGlobalFocusChangeListener listener) {
+void ViewTreeObserver::addOnGlobalFocusChangeListener(const OnGlobalFocusChangeListener& listener) {
     checkIsAlive();
-
-    /*if (mOnGlobalFocusListeners == nullptr) {
-        mOnGlobalFocusListeners = new CopyOnWriteArrayList<OnGlobalFocusChangeListener>();
-    }*/
 
     mOnGlobalFocusListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnGlobalFocusChangeListener(OnGlobalFocusChangeListener victim) {
+void ViewTreeObserver::removeOnGlobalFocusChangeListener(const OnGlobalFocusChangeListener& victim) {
     checkIsAlive();
     auto it = std::find(mOnGlobalFocusListeners.begin(),mOnGlobalFocusListeners.end(),victim);
     if(it != mOnGlobalFocusListeners.end())
         mOnGlobalFocusListeners.erase(it);
 }
 
-void ViewTreeObserver::addOnGlobalLayoutListener(OnGlobalLayoutListener listener) {
+void ViewTreeObserver::addOnGlobalLayoutListener(const OnGlobalLayoutListener& listener) {
     checkIsAlive();
-
-    /*if (mOnGlobalLayoutListeners == nullptr) {
-        mOnGlobalLayoutListeners = new CopyOnWriteArray<OnGlobalLayoutListener>();
-    }*/
 
     mOnGlobalLayoutListeners.push_back(listener);
 }
 
 //@Deprecated
-void ViewTreeObserver::removeGlobalOnLayoutListener(OnGlobalLayoutListener victim) {
+void ViewTreeObserver::removeGlobalOnLayoutListener(const OnGlobalLayoutListener& victim) {
     removeOnGlobalLayoutListener(victim);
 }
 
-void ViewTreeObserver::removeOnGlobalLayoutListener(OnGlobalLayoutListener victim) {
+void ViewTreeObserver::removeOnGlobalLayoutListener(const OnGlobalLayoutListener& victim) {
     checkIsAlive();
     auto it = std::find(mOnGlobalLayoutListeners.begin(),mOnGlobalLayoutListeners.end(),victim);
     if(it != mOnGlobalLayoutListeners.end())
         mOnGlobalLayoutListeners.erase(it);
 }
 
-void ViewTreeObserver::addOnPreDrawListener(OnPreDrawListener listener) {
+void ViewTreeObserver::addOnPreDrawListener(const OnPreDrawListener& listener) {
     checkIsAlive();
-
-    /*if (mOnPreDrawListeners == nullptr) {
-        mOnPreDrawListeners = new CopyOnWriteArray<OnPreDrawListener>();
-    }*/
 
     mOnPreDrawListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnPreDrawListener(OnPreDrawListener victim) {
+void ViewTreeObserver::removeOnPreDrawListener(const OnPreDrawListener& victim) {
     checkIsAlive();
     auto it = std::find(mOnPreDrawListeners.begin(),mOnPreDrawListeners.end(),victim);
     if(it!=mOnPreDrawListeners.end())
 	mOnPreDrawListeners.erase(it);
 }
 
-void ViewTreeObserver::addOnWindowShownListener(OnWindowShownListener listener) {
+void ViewTreeObserver::addOnWindowShownListener(const OnWindowShownListener& listener) {
     checkIsAlive();
-
-    /*if (mOnWindowShownListeners == nullptr) {
-        mOnWindowShownListeners = new CopyOnWriteArray<OnWindowShownListener>();
-    }*/
 
     mOnWindowShownListeners.push_back(listener);
     if (mWindowShown) {
-        listener();//.onWindowShown();
+        mOnWindowShownListeners.back()();/*call listener.onWindowShown()*/
     }
 }
 
-void ViewTreeObserver::removeOnWindowShownListener(OnWindowShownListener victim) {
+void ViewTreeObserver::removeOnWindowShownListener(const OnWindowShownListener& victim) {
     checkIsAlive();
     auto it = std::find(mOnWindowShownListeners.begin(),mOnWindowShownListeners.end(),victim);
     if(it!=mOnWindowShownListeners.end())
         mOnWindowShownListeners.erase(it);
 }
 
-void ViewTreeObserver::addOnDrawListener(OnDrawListener listener) {
+void ViewTreeObserver::addOnDrawListener(const OnDrawListener& listener) {
     checkIsAlive();
-
-    /*if (mOnDrawListeners == nullptr) {
-        mOnDrawListeners = new ArrayList<OnDrawListener>();
-    }*/
 
     if (mInDispatchOnDraw) {
         /*IllegalStateException ex = new IllegalStateException(
@@ -255,7 +227,7 @@ void ViewTreeObserver::addOnDrawListener(OnDrawListener listener) {
     mOnDrawListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnDrawListener(OnDrawListener victim) {
+void ViewTreeObserver::removeOnDrawListener(const OnDrawListener& victim) {
     checkIsAlive();
     if (mInDispatchOnDraw) {
         /*IllegalStateException ex = new IllegalStateException(
@@ -270,41 +242,33 @@ void ViewTreeObserver::removeOnDrawListener(OnDrawListener victim) {
     if(it!=mOnDrawListeners.end())mOnDrawListeners.erase(it);
 }
 
-void ViewTreeObserver::addOnScrollChangedListener(OnScrollChangedListener listener) {
+void ViewTreeObserver::addOnScrollChangedListener(const OnScrollChangedListener& listener) {
     checkIsAlive();
-
-    /*if (mOnScrollChangedListeners == nullptr) {
-        mOnScrollChangedListeners = new CopyOnWriteArray<OnScrollChangedListener>();
-    }*/
 
     mOnScrollChangedListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnScrollChangedListener(OnScrollChangedListener victim) {
+void ViewTreeObserver::removeOnScrollChangedListener(const OnScrollChangedListener& victim) {
     checkIsAlive();
     auto it = std::find(mOnScrollChangedListeners.begin(),mOnScrollChangedListeners.end(),victim);
     if(it!=mOnScrollChangedListeners.end())
         mOnScrollChangedListeners.erase(it);
 }
 
-void ViewTreeObserver::addOnTouchModeChangeListener(OnTouchModeChangeListener listener) {
+void ViewTreeObserver::addOnTouchModeChangeListener(const OnTouchModeChangeListener& listener) {
     checkIsAlive();
-
-    /*if (mOnTouchModeChangeListeners == nullptr) {
-        mOnTouchModeChangeListeners = new CopyOnWriteArrayList<OnTouchModeChangeListener>();
-    }*/
 
     mOnTouchModeChangeListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnTouchModeChangeListener(OnTouchModeChangeListener victim) {
+void ViewTreeObserver::removeOnTouchModeChangeListener(const OnTouchModeChangeListener& victim) {
     checkIsAlive();
     auto it = std::find(mOnTouchModeChangeListeners.begin(),mOnTouchModeChangeListeners.end(),victim);
     if(it != mOnTouchModeChangeListeners.end())
        mOnTouchModeChangeListeners.erase(it);
 }
 
-void ViewTreeObserver::addOnComputeInternalInsetsListener(OnComputeInternalInsetsListener listener) {
+void ViewTreeObserver::addOnComputeInternalInsetsListener(const OnComputeInternalInsetsListener& listener) {
     checkIsAlive();
 
     if (mOnComputeInternalInsetsListeners.size()) {
@@ -314,19 +278,19 @@ void ViewTreeObserver::addOnComputeInternalInsetsListener(OnComputeInternalInset
     mOnComputeInternalInsetsListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnComputeInternalInsetsListener(OnComputeInternalInsetsListener victim) {
+void ViewTreeObserver::removeOnComputeInternalInsetsListener(const OnComputeInternalInsetsListener& victim) {
     checkIsAlive();
     auto it = std::find(mOnComputeInternalInsetsListeners.begin(),mOnComputeInternalInsetsListeners.end(),victim);
     if(it!=mOnComputeInternalInsetsListeners.end())
         mOnComputeInternalInsetsListeners.erase(it);
 }
 
-void ViewTreeObserver::addOnEnterAnimationCompleteListener(OnEnterAnimationCompleteListener listener) {
+void ViewTreeObserver::addOnEnterAnimationCompleteListener(const OnEnterAnimationCompleteListener& listener) {
     checkIsAlive();
     mOnEnterAnimationCompleteListeners.push_back(listener);
 }
 
-void ViewTreeObserver::removeOnEnterAnimationCompleteListener(OnEnterAnimationCompleteListener listener) {
+void ViewTreeObserver::removeOnEnterAnimationCompleteListener(const OnEnterAnimationCompleteListener& listener) {
     checkIsAlive();
     auto it =std::find(mOnEnterAnimationCompleteListeners.begin(),mOnEnterAnimationCompleteListeners.end(),listener);
     if(it != mOnEnterAnimationCompleteListeners.end())
