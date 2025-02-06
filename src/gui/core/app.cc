@@ -13,6 +13,7 @@
 
 #include <core/app.h>
 #include <core/cla.h>
+#include <core/args.h>
 #include <core/build.h>
 #include <core/atexit.h>
 #include <core/inputeventsource.h>
@@ -49,6 +50,27 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     mQuitFlag = false;
     mExitCode = 0;
     mInst = this;
+    
+    args::ArgumentParser parser(argc?argv[0]:"");
+    args::Flag debug(parser, "debug", "enable debug mode", {'d', "debug"});
+    args::Flag fps(parser,"fps","show fps info",{"fps"});
+    args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
+    args::ValueFlag <int> framedelay(parser,"framedelay","animation frame delay",{'f',"framedelay"});
+    args::ValueFlag <int> density(parser,"density","UI Density",{'D',"density"});
+    args::ValueFlag <int> rotate(parser,"rotate", "display rotate",{'R',"rotate"});
+    args::ValueFlag <std::string> monkey(parser,"monkey","events playback path",{'m',"monkey"});
+    args::ValueFlag <std::string> record(parser,"record","events record path",{'r',"record"});
+    args::Positional<std::string> datadir(parser,"data","data directory",".");
+    try{
+        parser.ParseCLI(argc,argv);
+        std::cout<<"----"<<args::get(datadir)<<std::endl;//app ./src will print ./src
+    }catch(args::Help){
+        std::cout << parser;
+    }catch(args::ParseError&e){
+        std::cerr << e.what() << std::endl;
+        std::cerr << parser;
+    }catch(...){}
+
     cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
     cla.addArguments(extoptions.data(),extoptions.size());
     cla.setSwitchChars("-");
@@ -60,7 +82,7 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
         std::cout<<"params.count="<<getParamCount()<<std::endl;
         exit(EXIT_SUCCESS);
         LogSetModuleLevel(nullptr,LOG_FATAL);
-        mQuitFlag=1;
+        mQuitFlag = true;
     }
     Typeface::setContext(this);
     onInit();
@@ -90,10 +112,12 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     setOpacity(getArgAsInt("alpha",255));
     Typeface::loadFaceFromResource(this);
     DisplayMetrics::DENSITY_DEVICE = getArgAsInt("density",DisplayMetrics::getDeviceDensity());
+
     AtExit::registerCallback([this](){
         LOGD("Exit...");
         mQuitFlag = true;
     });
+
     InputEventSource*inputsource=&InputEventSource::getInstance();//(getArg("record",""));
     addEventHandler(inputsource);
     inputsource->playback(getArg("monkey",""));
