@@ -76,12 +76,15 @@ void DrawerLayout::setScrimColor(int color) {
     invalidate();
 }
 
-void DrawerLayout::addDrawerListener(DrawerListener listener) {
+void DrawerLayout::addDrawerListener(const DrawerListener& listener) {
     mListeners.push_back(listener);
 }
 
-void DrawerLayout::removeDrawerListener(DrawerListener listener){
-    
+void DrawerLayout::removeDrawerListener(const DrawerListener& listener){
+    auto it = std::find(mListeners.begin(),mListeners.end(),listener);
+    if(it!=mListeners.end()){
+        mListeners.erase(it);
+    }
 }
 
 void DrawerLayout::setDrawerLockMode(int lockMode) {

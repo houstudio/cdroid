@@ -174,12 +174,15 @@ void TabLayout::addTabFromItemView(TabItem* item){
     delete item;//added by zhhou
 }
 
-void TabLayout::addOnTabSelectedListener(OnTabSelectedListener listener){
+void TabLayout::addOnTabSelectedListener(const OnTabSelectedListener& listener){
     mSelectedListeners.push_back(listener);
 }
 
-void TabLayout::removeOnTabSelectedListener(OnTabSelectedListener listener) {
-    //mSelectedListeners.remove(listener);
+void TabLayout::removeOnTabSelectedListener(const OnTabSelectedListener& listener) {
+    auto it = std::find(mSelectedListeners.begin(),mSelectedListeners.end(),listener);
+    if(it!=mSelectedListeners.end()){
+        mSelectedListeners.erase(it);
+    }
 }
 
 void TabLayout::clearOnTabSelectedListeners() {

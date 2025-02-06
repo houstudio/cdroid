@@ -22,9 +22,9 @@ public:
     };
     class OnPageChangeListener:public virtual EventSet{
     public:
-        CallbackBase<void,int,float,int>onPageScrolled;//void onPageScrolled(int position, float positionOffset, int positionOffsetPixels)
-        CallbackBase<void,int>onPageSelected;//void onPageSelected(int position);
-        CallbackBase<void,int>onPageScrollStateChanged;//void onPageScrollStateChanged(int state);
+        std::function<void(int,float,int)>onPageScrolled;//void onPageScrolled(int position, float positionOffset, int positionOffsetPixels)
+        std::function<void(int)>onPageSelected;//void onPageSelected(int position);
+        std::function<void(int)>onPageScrollStateChanged;//void onPageScrollStateChanged(int state);
     };
 private:
     static constexpr int MAX_SCROLL_X =2<<23;

@@ -22,22 +22,23 @@ public:
     /**The drawer's lock state is reset to default.*/
     static constexpr int LOCK_MODE_UNDEFINED = 3;
 
-    struct DrawerListener{
-        CallbackBase<void,View&, float>onDrawerSlide;
+    class DrawerListener:public EventSet{
+    public:
+        std::function<void(View&, float)>onDrawerSlide;
 
         /* Called when a drawer has settled in a completely open state.
          * The drawer is interactive at this point.
          * @param drawerView Drawer view that is now open */
-        CallbackBase<void,View&>onDrawerOpened;
+        std::function<void(View&)>onDrawerOpened;
 
         /* Called when a drawer has settled in a completely closed state.
          * @param drawerView Drawer view that is now closed */
-        CallbackBase<void,View&> onDrawerClosed;
+        std::function<void(View&)> onDrawerClosed;
 
         /* Called when the drawer motion state changes. The new state will
          * be one of {@link #STATE_IDLE}, {@link #STATE_DRAGGING} or {@link #STATE_SETTLING}.
          * @param newState The new drawer motion state */
-        CallbackBase<void,int> onDrawerStateChanged; 
+        std::function<void(int)> onDrawerStateChanged; 
     };
     class LayoutParams:public ViewGroup::MarginLayoutParams{
     public:
@@ -194,8 +195,8 @@ public:
     void setDrawerShadow(Drawable* shadowDrawable,int gravity);
     void setDrawerShadow(const std::string& resId,int gravity);
     void setScrimColor(int color);
-    void addDrawerListener(DrawerListener listener);
-    void removeDrawerListener(DrawerListener listener);
+    void addDrawerListener(const DrawerListener& listener);
+    void removeDrawerListener(const DrawerListener& listener);
     void setDrawerLockMode(int lockMode);
     void setDrawerLockMode(int lockMode,int edgeGravity);
     void setDrawerLockMode(int lockMode,View* drawerView);

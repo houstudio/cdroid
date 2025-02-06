@@ -82,11 +82,11 @@ public:
         Tab* getTab();
     };
 
-    class  OnTabSelectedListener{
+    class  OnTabSelectedListener:public EventSet{
     public:
-       CallbackBase<void,Tab&>onTabSelected;
-       CallbackBase<void,Tab&>onTabUnselected;
-       CallbackBase<void,Tab&>onTabReselected;
+        std::function<void(Tab&)>onTabSelected;
+        std::function<void(Tab&)>onTabUnselected;
+        std::function<void(Tab&)>onTabReselected;
     };
 
     class TabItem:public View{
@@ -247,8 +247,8 @@ public:
     void addTab(Tab* tab, bool setSelected);
     void addTab(Tab* tab, int position, bool setSelected);
 
-    void addOnTabSelectedListener(OnTabSelectedListener listener);
-    void removeOnTabSelectedListener(OnTabSelectedListener listener);
+    void addOnTabSelectedListener(const OnTabSelectedListener& listener);
+    void removeOnTabSelectedListener(const OnTabSelectedListener& listener);
     void clearOnTabSelectedListeners();
     Tab* newTab();
     int  getTabCount()const;
