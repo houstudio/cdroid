@@ -103,7 +103,7 @@ protected:
 public:
     ProgressBar(int width, int height);
     ProgressBar(Context*ctx,const AttributeSet&attrs);
-    ~ProgressBar();
+    ~ProgressBar()override;
     void setMin(int value);
     void setMax(int value);
     int getMin()const {return mMin;}
