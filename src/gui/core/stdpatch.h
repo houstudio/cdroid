@@ -57,6 +57,12 @@ constexpr inline double fmod(float x, float y){
 /*constexpr inline int abs(int j){return ::abs(j);}
 constexpr inline long labs(long j){return ::labs(j);}
 constexpr inline long long llabs(long long j){return llabs(j);}*/
+
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
 }
 #endif
 #endif/*__STD_PATCH_H__*/

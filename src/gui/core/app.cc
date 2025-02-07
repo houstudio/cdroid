@@ -55,12 +55,14 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     args::Flag debug(parser, "debug", "enable debug mode", {'d', "debug"});
     args::Flag fps(parser,"fps","show fps info",{"fps"});
     args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
+    args::ValueFlag <int> alpha(parser,"alpha",  "UI layer global alpha[0,255]",{'a',"alpha"});
     args::ValueFlag <int> framedelay(parser,"framedelay","animation frame delay",{'f',"framedelay"});
     args::ValueFlag <int> density(parser,"density","UI Density",{'D',"density"});
     args::ValueFlag <int> rotate(parser,"rotate", "display rotate",{'R',"rotate"});
+    args::ValueFlag <std::string> logo(parser,"logo" , "show logo",{'l',"logo"});
     args::ValueFlag <std::string> monkey(parser,"monkey","events playback path",{'m',"monkey"});
     args::ValueFlag <std::string> record(parser,"record","events record path",{'r',"record"});
-    args::Positional<std::string> datadir(parser,"data","data directory",".");
+    args::ValueFlag <std::string> datadir(parser,"data","data directory",{'D',"data"});
     try{
         parser.ParseCLI(argc,argv);
         std::cout<<"----"<<args::get(datadir)<<std::endl;//app ./src will print ./src
@@ -77,9 +79,8 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     const int rc = cla.parse(argc,argv);
     rotation = (getArgAsInt("rotate",0)/90)%4;
     LOGE_IF(rc!=0,"Arguments error[%d]:%s",rc,cla.getError().c_str());
-    if(hasSwitch("help")){
-        std::cout<<cla.getUsageString()<<std::endl;
-        std::cout<<"params.count="<<getParamCount()<<std::endl;
+    if(help){
+        std::cout<<parser<<std::endl;
         exit(EXIT_SUCCESS);
         LogSetModuleLevel(nullptr,LOG_FATAL);
         mQuitFlag = true;
@@ -102,16 +103,23 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
             Build::VERSION::CODENAME.c_str(),Build::VERSION::BuildNumber,Build::VERSION::CommitID.c_str());
     LOGI("https://www.gitee.com/houstudio/cdroid\n");
     LOGI("App [%s] started c++=%d",mName.c_str(),__cplusplus);
-	
-    View::VIEW_DEBUG = hasSwitch("debug");
+
     Looper::prepareMainLooper();
-    Choreographer::setFrameDelay(getArgAsInt("framedelay",Choreographer::DEFAULT_FRAME_DELAY));
-    WindowManager::getInstance().setDisplayRotation(rotation);
-    GraphDevice::getInstance().setRotation(rotation).setLogo(getArg("logo")).showFPS(hasSwitch("fps")).init();
+    GraphDevice& graph =GraphDevice::getInstance();
+    if(rotate){
+        const int rotation = (rotate.Get()/90)%4;
+        WindowManager::getInstance().setDisplayRotation(rotation);
+        graph.setRotation(rotation);
+    }
+    if(logo) graph.setLogo(logo.Get());
+    graph.showFPS(fps).init();
+    View::VIEW_DEBUG = debug;
+    DisplayMetrics::DENSITY_DEVICE = DisplayMetrics::getDeviceDensity();
+    if(alpha) setOpacity(alpha.Get());
+    if(density) DisplayMetrics::DENSITY_DEVICE = density.Get();//getArgAsInt("density",DisplayMetrics::getDeviceDensity());
+    if(framedelay)Choreographer::setFrameDelay(framedelay.Get());
     Typeface::loadPreinstalledSystemFontMap();
-    setOpacity(getArgAsInt("alpha",255));
     Typeface::loadFaceFromResource(this);
-    DisplayMetrics::DENSITY_DEVICE = getArgAsInt("density",DisplayMetrics::getDeviceDensity());
 
     AtExit::registerCallback([this](){
         LOGD("Exit...");
