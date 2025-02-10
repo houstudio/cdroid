@@ -26,6 +26,22 @@ Message*Message::obtain(){
     return new Message();
 }
 
+Message* Message::obtain(int what){
+    return obtain(what,0,0);
+}
+
+Message* Message::obtain(int what,int arg1,int arg2){
+   return obtain(what,arg1,arg2,nullptr);
+}
+
+Message* Message::obtain(int what,int arg1,int arg2,void*obj){
+    Message*m = obtain();
+    m->arg1=arg1;
+    m->arg2=arg2;
+    m->obj=obj;
+    return m;
+}
+
 Message*Message::obtain(const Message&orig){
     Message* m = obtain();
     m->what = orig.what;

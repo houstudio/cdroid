@@ -42,6 +42,9 @@ public:
     void recycleUnchecked();
     static Message* obtain();
     static Message* obtain(const Message&);
+    static Message* obtain(int what);
+    static Message* obtain(int what,int arg1,int arg2);
+    static Message* obtain(int what,int arg1,int arg2,void*obj);
     static Message* obtain(Handler* h);
 };
 

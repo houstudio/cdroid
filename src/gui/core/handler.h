@@ -15,6 +15,7 @@ private:
 public:
     Handler();
     Handler(Callback callback);
+    Handler(Looper*looper,Callback callback);
     virtual ~Handler();
     void handleMessage(Message& msg)override;
     void handleIdle()override;
@@ -32,6 +33,10 @@ public:
     bool sendMessageDelayed(Message& msg, long delayMillis);
     bool sendMessageAtTime(Message& msg, int64_t uptimeMillis);
 
+    Message*obtainMessage();
+    Message*obtainMessage(int what);
+    Message*obtainMessage(int what,int arg1,int arg2);
+    Message*obtainMessage(int what,int arg1,int arg2,void*obj);
     bool hasCallbacks(Runnable r);
     void removeCallbacks(const Runnable& r);
     bool post(Runnable r);

@@ -3,13 +3,16 @@
 
 namespace cdroid{
 
-Handler::Handler(){
-    mLooper = Looper::getMainLooper();
-    mLooper->addHandler(this);
+Handler::Handler():Handler(nullptr,nullptr){
 }
 
-Handler::Handler(Callback callback):Handler(){
-    mCallback = callback;
+Handler::Handler(Callback callback)
+    :Handler(Looper::getMainLooper(),callback){
+}
+
+Handler::Handler(Looper*looper,Callback callback):
+    mLooper(looper),mCallback(callback){
+    mLooper->addHandler(this);
 }
 
 Handler::~Handler(){
@@ -67,6 +70,22 @@ void Handler::dispatchMessage(Message& msg) {
         }
         handleMessage(msg);
     }
+}
+
+Message*Handler::obtainMessage(){
+    return Message::obtain();
+}
+
+Message*Handler::obtainMessage(int what){
+    return Message::obtain(what);
+}
+
+Message*Handler::obtainMessage(int what,int arg1,int arg2){
+    return Message::obtain(what,arg1,arg2);
+}
+
+Message*Handler::obtainMessage(int what,int arg1,int arg2,void*obj){
+    return Message::obtain(what,arg1,arg2,obj);
 }
 
 bool Handler::sendMessage(Message& msg){
