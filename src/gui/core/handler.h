@@ -11,7 +11,7 @@ private:
     Callback mCallback;
 private:
     static void handleCallback(Message& message);
-    static Message getPostMessage(Runnable& r);
+    static Message* getPostMessage(Runnable& r);
 public:
     Handler();
     Handler(Callback callback);

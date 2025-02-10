@@ -10,7 +10,7 @@
 
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
-
+#define ARGS_NOEXCEPT 1
 #include <core/app.h>
 #include <core/cla.h>
 #include <core/args.h>
@@ -66,11 +66,13 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     try{
         parser.ParseCLI(argc,argv);
         std::cout<<"----"<<args::get(datadir)<<std::endl;//app ./src will print ./src
+#ifndef ARGS_NOEXCEPT
     }catch(args::Help){
         std::cout << parser;
     }catch(args::ParseError&e){
         std::cerr << e.what() << std::endl;
         std::cerr << parser;
+#endif
     }catch(...){}
 
     cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
@@ -128,7 +130,9 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
 
     InputEventSource*inputsource=&InputEventSource::getInstance();//(getArg("record",""));
     addEventHandler(inputsource);
-    inputsource->playback(getArg("monkey",""));
+    if(monkey){
+        inputsource->playback(monkey.Get());
+    }
 }
 
 App::~App(){

@@ -16,9 +16,9 @@ Handler::~Handler(){
     mLooper->removeMessages(this);
 }
 
-Message Handler::getPostMessage(Runnable& r){
-    Message m;// = Message.obtain();
-    m.callback = r;
+Message* Handler::getPostMessage(Runnable& r){
+    Message* m = Message::obtain();
+    m->callback = r;
     return m;
 }
 
@@ -78,15 +78,15 @@ bool Handler::sendEmptyMessage(int what){
 }
 
 bool Handler::sendEmptyMessageDelayed(int what, long delayMillis) {
-    Message msg;// = Message.obtain();
-    msg.what = what;
-    return sendMessageDelayed(msg, delayMillis);
+    Message* msg = Message::obtain();
+    msg->what = what;
+    return sendMessageDelayed(*msg, delayMillis);
 }
 
 bool Handler::sendEmptyMessageAtTime(int what, int64_t uptimeMillis) {
-    Message msg;// = Message.obtain();
-    msg.what = what;
-    return sendMessageAtTime(msg, uptimeMillis);
+    Message* msg = Message::obtain();
+    msg->what = what;
+    return sendMessageAtTime(*msg, uptimeMillis);
 }
 
 bool Handler::sendMessageDelayed(Message& msg, long delayMillis){
@@ -113,18 +113,18 @@ bool Handler::sendMessageAtTime(Message& msg, int64_t uptimeMillis) {
 }
 
 bool Handler::post(Runnable r){
-    Message msg = getPostMessage(r);
-    return sendMessageDelayed(msg, 0);
+    Message* msg = getPostMessage(r);
+    return sendMessageDelayed(*msg, 0);
 }
 
 bool Handler::postAtTime(Runnable r, int64_t uptimeMillis){
-    Message msg = getPostMessage(r);
-    return sendMessageAtTime(msg, uptimeMillis);
+    Message* msg = getPostMessage(r);
+    return sendMessageAtTime(*msg, uptimeMillis);
 }
 
 bool Handler::postDelayed(Runnable r, long delayMillis){
-    Message msg = getPostMessage(r);
-    return sendMessageDelayed(msg, delayMillis);
+    Message* msg = getPostMessage(r);
+    return sendMessageDelayed(*msg, delayMillis);
 }
 
 }
