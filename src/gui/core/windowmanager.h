@@ -52,7 +52,7 @@ public:
 public:
     static WindowManager& getInstance();
     void setDisplayRotation(int display,int rotation);
-    //int  getDisplayRotation(int display=0)const;
+    int  getDisplayRotation(int display=0)const;
     Display&getDefaultDisplay();
     Display*getDisplay(int display);
     void addWindow(Window*w);
