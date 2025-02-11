@@ -54,7 +54,7 @@ void WindowManager::setDisplayRotation(int display,int rot){
     LOGD("display %d rotation = %d",display,rot);
 }
 
-int WindowManager::setDisplayRotation(int display)const{
+int WindowManager::getDisplayRotation(int display)const{
     if((display>=0) && (display<mDisplays.size()))
         return mDisplays[display].mDisplayInfo.rotation;
     return -1;
