@@ -692,7 +692,7 @@ void Looper::removeMessages(const MessageHandler* handler, int what) {
     } // release lock
 }
 
-void Looper::removeCallbacks(const MessageHandler* handler,Runnable r){
+void Looper::removeCallbacks(const MessageHandler* handler,const Runnable& r){
     std::lock_guard<std::recursive_mutex> _l(mLock);
     for( auto it = mMessageEnvelopes.begin();it != mMessageEnvelopes.end();){
         if((it->handler==handler) && (it->message.callback==r)){

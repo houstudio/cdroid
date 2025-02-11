@@ -3,7 +3,7 @@
 
 namespace cdroid{
 
-Handler::Handler():Handler(nullptr,nullptr){
+Handler::Handler():Handler(nullptr){
 }
 
 Handler::Handler(Callback callback)

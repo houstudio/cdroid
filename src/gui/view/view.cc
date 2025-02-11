@@ -9246,6 +9246,7 @@ void View::setRotationX(float rotationX){
         invalidateParentIfNeededAndWasQuickRejected();
         notifySubtreeAccessibilityStateChangedIfNeeded();
     }
+    LOGW("cdroid dosn't support rotationX");
 }
 
 float View::getRotationY()const{
@@ -9260,6 +9261,7 @@ void View::setRotationY(float rotationY){
         invalidateParentIfNeededAndWasQuickRejected();
         notifySubtreeAccessibilityStateChangedIfNeeded();
     }
+    LOGW("cdroid dosn't support rotationY");
 }
 
 float View::getPivotX()const{

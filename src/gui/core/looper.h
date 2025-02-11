@@ -159,7 +159,7 @@ public:
     void sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,const Message& message);
     void removeMessages(const MessageHandler* handler);
     void removeMessages(const MessageHandler* handler, int what);
-    void removeCallbacks(const MessageHandler* handler,Runnable r);
+    void removeCallbacks(const MessageHandler* handler,const Runnable& r);
     bool isPolling() const;
 
     void addHandler(MessageHandler*);
