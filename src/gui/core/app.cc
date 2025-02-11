@@ -110,7 +110,7 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     GraphDevice& graph =GraphDevice::getInstance();
     if(rotate){
         const int rotation = (rotate.Get()/90)%4;
-        WindowManager::getInstance().setDisplayRotation(rotation);
+        WindowManager::getInstance().setDisplayRotation(0,rotation);
         graph.setRotation(rotation);
     }
     if(logo) graph.setLogo(logo.Get());

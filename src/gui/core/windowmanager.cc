@@ -47,13 +47,11 @@ WindowManager::~WindowManager() {
     LOGD("%p Destroied",this);
 }
 
-void WindowManager::setDisplayRotation(int rot){
+void WindowManager::setDisplayRotation(int display,int rot){
     mDisplayRotation = rot;
-    LOGD("rotation = %d",rot);
-}
-
-int WindowManager::getDisplayRotation()const{
-    return mDisplayRotation;
+    if(display<mDisplays.size())
+        mDisplays[display].mDisplayInfo.rotation=rot;
+    LOGD("display %d rotation = %d",display,rot);
 }
 
 Display& WindowManager::getDefaultDisplay(){
@@ -68,6 +66,12 @@ Display& WindowManager::getDefaultDisplay(){
         }
     }
     return mDisplays.at(Display::DEFAULT_DISPLAY); 
+}
+
+Display*WindowManager::getDisplay(int display){
+    if((display>=0) && (display<mDisplays.size()))
+        return &mDisplays.at(display);
+    return nullptr;
 }
 
 void WindowManager::addWindow(Window*win){

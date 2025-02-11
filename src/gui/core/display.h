@@ -3,7 +3,7 @@
 #include <core/rect.h>
 #include <core/displaymetrics.h>
 namespace cdroid{
-
+class WindowManager;
 struct DisplayInfo{
     int type;
     /**
@@ -42,6 +42,7 @@ private:
     int mType;
     bool mIsValid;
     DisplayInfo mDisplayInfo;
+    friend WindowManager;
 public:
     static constexpr int DEFAULT_DISPLAY = 0;
     static constexpr int INVALID_DISPLAY = -1;
