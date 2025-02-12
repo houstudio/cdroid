@@ -15,6 +15,7 @@ enum ScaleType{
     CENTER_CROP  =6,
     CENTER_INSIDE=7
 };
+
 class ImageView : public View {
 private:
     bool mColorMod;
@@ -31,6 +32,7 @@ private:
     void applyImageTint();
     void applyColorMod();
     bool isFilledByImage()const;
+    void imageDrawableCallback(Drawable*d,const std::string&uri,const std::string resid);
 protected:
     std::string mResource;
     int mScaleType;
@@ -92,6 +94,9 @@ public:
     void setAdjustViewBounds(bool adjustViewBounds);
     /*resid can be assets's resource or local filepath*/
     void setImageResource(const std::string&resid);
+    Runnable setImageResourceAsync(const std::string&resid);
+    void setImageURI(const std::string&uri);
+    Runnable setImageURIAsync(const std::string&uri);
     void setImageDrawable(Drawable* drawable);
     void setImageBitmap(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
     void setImageTintList(const ColorStateList*tint);

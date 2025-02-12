@@ -554,6 +554,22 @@ void ImageView::setImageResource(const std::string& resId) {
     invalidate(true);
 }
 
+void ImageView::imageDrawableCallback(Drawable*d,const std::string&uri,const std::string resid){
+}
+
+Runnable ImageView::setImageResourceAsync(const std::string&resid){
+    Runnable r;
+    return r;
+}
+
+void ImageView::setImageURI(const std::string&uri){
+}
+
+Runnable ImageView::setImageURIAsync(const std::string&uri){
+    Runnable r;
+    return r;
+}
+
 void ImageView::setImageTintList(const ColorStateList*tint){
     if(mDrawableTintList!=tint){
         mDrawableTintList = tint;
