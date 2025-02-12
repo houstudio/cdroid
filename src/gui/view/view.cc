@@ -505,7 +505,7 @@ View* View::findViewById(int id){
 }
 
 View* View::findViewTraversal(int id){
-    if( id == mID )return this;
+    if( id == mID )return (View*)this;
     return nullptr;
 }
 
@@ -9259,7 +9259,6 @@ void View::setRotationX(float rotationX){
         invalidateParentIfNeededAndWasQuickRejected();
         notifySubtreeAccessibilityStateChangedIfNeeded();
     }
-    LOGV("cdroid dosn't support rotationX");
 }
 
 float View::getRotationY()const{
@@ -9274,7 +9273,6 @@ void View::setRotationY(float rotationY){
         invalidateParentIfNeededAndWasQuickRejected();
         notifySubtreeAccessibilityStateChangedIfNeeded();
     }
-    LOGV("cdroid dosn't support rotationY");
 }
 
 float View::getPivotX()const{

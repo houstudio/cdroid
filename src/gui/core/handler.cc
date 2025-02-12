@@ -19,7 +19,7 @@ Handler::~Handler(){
     mLooper->removeMessages(this);
 }
 
-Message Handler::getPostMessage(Runnable& r){
+Message Handler::getPostMessage(const Runnable& r){
     Message m =obtainMessage();
     m.callback = r;
     return m;
@@ -43,7 +43,7 @@ void Handler::removeMessages(int what,void*object){
     mLooper->removeMessages(this,what);
 }
 
-bool Handler::hasCallbacks(Runnable r){
+bool Handler::hasCallbacks(const Runnable& r){
     return true;
 }
 
@@ -94,7 +94,7 @@ Message Handler::obtainMessage(int what,int arg1,int arg2,void*obj){
     return m;
 }
 
-bool Handler::sendMessage(Message& msg){
+bool Handler::sendMessage(const Message& msg){
     return sendMessageDelayed(msg, 0);
 }
 
@@ -112,29 +112,29 @@ bool Handler::sendEmptyMessageAtTime(int what, int64_t uptimeMillis) {
     return sendMessageAtTime(msg, uptimeMillis);
 }
 
-bool Handler::sendMessageDelayed(Message& msg, long delayMillis){
+bool Handler::sendMessageDelayed(const Message& msg, long delayMillis){
     if (delayMillis < 0) {
         delayMillis = 0;
     }
     return sendMessageAtTime(msg, SystemClock::uptimeMillis() + delayMillis);
 }
 
-bool Handler::sendMessageAtTime(Message& msg, int64_t uptimeMillis) {
+bool Handler::sendMessageAtTime(const Message& msg, int64_t uptimeMillis) {
     mLooper->sendMessageAtTime(uptimeMillis,this,msg);
     return true;
 }
 
-bool Handler::post(Runnable r){
+bool Handler::post(const Runnable& r){
     Message msg = getPostMessage(r);
     return sendMessageDelayed(msg, 0);
 }
 
-bool Handler::postAtTime(Runnable r, int64_t uptimeMillis){
+bool Handler::postAtTime(const Runnable& r, int64_t uptimeMillis){
     Message msg = getPostMessage(r);
     return sendMessageAtTime(msg, uptimeMillis);
 }
 
-bool Handler::postDelayed(Runnable r, long delayMillis){
+bool Handler::postDelayed(const Runnable& r, long delayMillis){
     Message msg = getPostMessage(r);
     return sendMessageDelayed(msg, delayMillis);
 }
