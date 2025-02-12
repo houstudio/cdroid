@@ -405,7 +405,7 @@ public:
     virtual void removeViewsInLayout(int start,int count);
     void removeAllViewsInLayout();
     virtual View* findViewById(int id)override;
-    View* findViewByPredicateTraversal(std::function<bool(View*)>predicate,View* childToSkip)override;
+    View* findViewByPredicateTraversal(const Predicate<View*>&predicate,View* childToSkip)override;
     View* findViewWithTagTraversal(void*tag)override;
     View* findViewByAccessibilityIdTraversal(int accessibilityId)override;
     std::string getAccessibilityClassName()const override;

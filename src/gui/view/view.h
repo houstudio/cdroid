@@ -28,6 +28,7 @@
 #include <core/display.h>
 #include <core/parcel.h>
 #include <core/parcelable.h>
+#include <core/predicate.h>
 #include <cairomm/pattern.h>
 #include <view/dragevent.h>
 #include <view/keyevent.h>
@@ -1349,10 +1350,10 @@ public:
     virtual View* findViewTraversal(int);
     virtual View* findViewByAccessibilityId(int accessibilityId);
     virtual View* findViewByAccessibilityIdTraversal(int accessibilityId);
-    virtual View* findViewByPredicateTraversal(std::function<bool(View*)>,View* childToSkip);
+    virtual View* findViewByPredicateTraversal(const Predicate<View*>&predicate,View* childToSkip);
     virtual View* findViewWithTagTraversal(void* tag);
-    View* findViewByPredicate(std::function<bool(View*)>);
-    View* findViewByPredicateInsideOut(View*start,std::function<bool(View*)>);
+    View* findViewByPredicate(const Predicate<View*>&predicate);
+    View* findViewByPredicateInsideOut(View*start,const Predicate<View*>&predicate);
 
     virtual View*focusSearch(int direction)const;
     View*findUserSetNextFocus(View*root,int direction)const;

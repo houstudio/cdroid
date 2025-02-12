@@ -125,9 +125,9 @@ protected:
     void onFinishInflate()override;
     View* findViewTraversal(int id)override;
     View* findViewInHeadersOrFooters(const std::vector<FixedViewInfo*>& where, int id);
-    View*findViewByPredicateTraversal(std::function<bool(View*)>predicate,View* childToSkip)override;
+    View*findViewByPredicateTraversal(const Predicate<View*>&predicate,View* childToSkip)override;
     View* findViewByPredicateInHeadersOrFooters(const std::vector<FixedViewInfo*>&where,
-            std::function<bool(View*)>predicate, View* childToSkip);
+            const Predicate<View*>&predicate, View* childToSkip);
     View* findViewWithTagInHeadersOrFooters(std::vector<FixedViewInfo*>& where, void* tag);
     int getHeightForPosition(int position)override;
     View* fillFromTop(int nextTop);

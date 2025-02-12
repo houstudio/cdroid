@@ -526,18 +526,28 @@ View* View::findViewWithTag(void*tag){
     return findViewWithTagTraversal(tag);
 }
 
+using ViewPtr=View*;
+class MatchIdPredicate:public Predicate<ViewPtr> {
+public:
+    int mId;
+    bool test(const ViewPtr& view)const override {
+        return (view->getId() == mId);
+    }
+};
+
 View* View::findViewInsideOutShouldExist(View* root, int id)const{
-    View* result = root->findViewByPredicateInsideOut((View*)this,[id](const View*v)->bool{
+    MatchIdPredicate matchId;//(id);
+    View* result = root->findViewByPredicateInsideOut((View*)this,matchId);/*[id](const View*v)->bool{
         return v->mID == id;
-    }); 
+    });*/
     return result;
 }
 
-View* View::findViewByPredicateTraversal(std::function<bool(View*)>predicate,View* childToSkip){
-    return predicate(this)?(View*)this:nullptr;
+View* View::findViewByPredicateTraversal(const Predicate<View*>&predicate,View* childToSkip){
+    return predicate.test((View*)this)?(View*)this:nullptr;
 }
 
-View* View::findViewByPredicate(std::function<bool(View*)>predicate){
+View* View::findViewByPredicate(const Predicate<View*>&predicate){
     return findViewByPredicateTraversal(predicate,nullptr);
 }
 
@@ -545,7 +555,7 @@ View* View::findViewWithTagTraversal(void* tag){
     return nullptr;
 }
 
-View* View::findViewByPredicateInsideOut(View*start,std::function<bool(View*)>predicate){
+View* View::findViewByPredicateInsideOut(View*start,const Predicate<View*>&predicate){
     View* childToSkip = nullptr;
     for (;;) {
         View*view = start->findViewByPredicateTraversal(predicate, childToSkip);
@@ -7260,9 +7270,9 @@ View* View::findUserSetNextFocus(View*root,int direction)const{
             return findViewInsideOutShouldExist(root, mNextFocusForwardId);
     case FOCUS_BACKWARD: 
          if (mID == NO_ID) return nullptr;
-         return root->findViewByPredicateInsideOut((View*)this,[this](const View*v) {
+         return root->findViewByPredicateInsideOut((View*)this,Predicate<ViewPtr>([this](const View*v) {
                return v->mNextFocusForwardId == mID;
-         });
+         }));
      }
      return nullptr;
 }
@@ -7274,9 +7284,9 @@ View*View::findUserSetNextKeyboardNavigationCluster(View*root,int direction)cons
             return findViewInsideOutShouldExist(root, mNextClusterForwardId);
     case FOCUS_BACKWARD: 
         if (mID == NO_ID) return nullptr;
-        return root->findViewByPredicateInsideOut((View*)this,[this](const View*v){ 
+        return root->findViewByPredicateInsideOut((View*)this,Predicate<View*>([this](const View*v){ 
             return v->mNextClusterForwardId == mID;
-        });
+        }));
     }
     return nullptr;
 }
@@ -9246,7 +9256,7 @@ void View::setRotationX(float rotationX){
         invalidateParentIfNeededAndWasQuickRejected();
         notifySubtreeAccessibilityStateChangedIfNeeded();
     }
-    LOGW("cdroid dosn't support rotationX");
+    LOGV("cdroid dosn't support rotationX");
 }
 
 float View::getRotationY()const{
@@ -9261,7 +9271,7 @@ void View::setRotationY(float rotationY){
         invalidateParentIfNeededAndWasQuickRejected();
         notifySubtreeAccessibilityStateChangedIfNeeded();
     }
-    LOGW("cdroid dosn't support rotationY");
+    LOGV("cdroid dosn't support rotationY");
 }
 
 float View::getPivotX()const{

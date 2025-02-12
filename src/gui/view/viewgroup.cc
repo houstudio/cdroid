@@ -1980,8 +1980,8 @@ void ViewGroup::removeViewsInternal(int start, int count){
     }
 }
 
-View* ViewGroup::findViewByPredicateTraversal(std::function<bool(View*)>predicate,View* childToSkip){
-    if (predicate(this)) {
+View* ViewGroup::findViewByPredicateTraversal(const Predicate<View*>&predicate,View* childToSkip){
+    if (predicate.test(this)) {
         return (View*)this;
     }
 
@@ -4101,14 +4101,14 @@ int ViewGroup::ViewLocationHolder::compareBoundsOfTree(ViewLocationHolder* holde
     Rect tempRect;
     holder1->mView->getBoundsOnScreen(view1Bounds, true);
     holder2->mView->getBoundsOnScreen(view2Bounds, true);
-    View* child1 = holder1->mView->findViewByPredicateTraversal([&](View*view)->bool{
+    View* child1 = holder1->mView->findViewByPredicateTraversal(Predicate<View*>([&](View*view)->bool{
         view->getBoundsOnScreen(tempRect, true);
         return tempRect!=view1Bounds;
-    }, (View*)nullptr);
-    View* child2 = holder2->mView->findViewByPredicateTraversal([&](View*view)->bool{
+    }),nullptr);
+    View* child2 = holder2->mView->findViewByPredicateTraversal(Predicate<View*>([&](View*view)->bool{
         view->getBoundsOnScreen(tempRect, true);
         return tempRect!=view2Bounds;
-    }, (View*)nullptr);
+    }),nullptr);
 
 
     // Compare the children recursively
