@@ -528,18 +528,28 @@ View* View::findViewWithTag(void*tag){
 
 using ViewPtr=View*;
 class MatchIdPredicate:public Predicate<ViewPtr> {
-public:
+private:
     int mId;
+public:
+    MatchIdPredicate(int id):mId(id){}
     bool test(const ViewPtr& view)const override {
         return (view->getId() == mId);
     }
 };
 
+class MatchLabelForPredicate:public  Predicate<ViewPtr> {
+private:
+    int mLabeledId;
+public:
+    MatchLabelForPredicate(int id):mLabeledId(id){}
+    bool test(const ViewPtr& view)const override {
+        return (view->getLabelFor() == mLabeledId);
+    }
+};
+
 View* View::findViewInsideOutShouldExist(View* root, int id)const{
-    MatchIdPredicate matchId;//(id);
-    View* result = root->findViewByPredicateInsideOut((View*)this,matchId);/*[id](const View*v)->bool{
-        return v->mID == id;
-    });*/
+    MatchIdPredicate matchId(id);
+    View* result = root->findViewByPredicateInsideOut((View*)this,matchId);
     return result;
 }
 
@@ -6727,15 +6737,8 @@ int View::numViewsForAccessibility(View* view) {
 }
 
 View* View::findLabelForView(View* view, int labeledId) {
-#if 0//TODO
-    if (mMatchLabelForPredicate == null) {
-        mMatchLabelForPredicate = new MatchLabelForPredicate();
-    }
-    mMatchLabelForPredicate.mLabeledId = labeledId;
+    MatchLabelForPredicate mMatchLabelForPredicate(labeledId);
     return findViewByPredicateInsideOut(view, mMatchLabelForPredicate);
-#else
-    return nullptr;
-#endif
 }
 
 bool View::isVisibleToUserForAutofill(int virtualId)const{
