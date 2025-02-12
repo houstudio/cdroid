@@ -65,13 +65,17 @@ void InputEventSource::onDeviceChanged(const INPUTEVENT*es){
         LOGI_IF(dev,"device %s:%d/%d is removed", dev->getName().c_str(), es->device,dev->getId());
         LOGI_IF(dev==nullptr,"remove unknwon dev %d",es->device);
         if(itr!=mDevices.end())mDevices.erase(itr);
-	break;
-    default:LOGI("dev %d unknown event %d",es->device,es->type);break;
+        break;
+    default:
+        LOGI("dev %d unknown event %d",es->device,es->type);
+        break;
     }
 }
 
-static NeverDestroyed<InputEventSource>mInst;
+std::unique_ptr<InputEventSource>InputEventSource::mInst;
 InputEventSource& InputEventSource::getInstance(){
+    if(mInst==nullptr)
+        mInst = std::unique_ptr<InputEventSource>(new InputEventSource());
     return *mInst;
 }
 

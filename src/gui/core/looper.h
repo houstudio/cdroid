@@ -27,6 +27,7 @@ protected:
     void setOwned(bool looper);
     virtual ~MessageHandler();
 public:
+    virtual void dispatchMessage(Message&);
     virtual void handleMessage(Message& message)=0;
     virtual void handleIdle();
 };

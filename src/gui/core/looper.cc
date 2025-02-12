@@ -343,10 +343,7 @@ Done:
 #if DEBUG_POLL_AND_WAKE||DEBUG_CALLBACKS
                 LOGD("%psending message: handler=%p, what=%d",this, handler, message.what);
 #endif
-                if(message.callback)
-                    message.callback();
-                else 
-                    handler->handleMessage(message);
+                handler->dispatchMessage(message);
             }//release handler
 
             mLock.lock();
@@ -719,6 +716,13 @@ MessageHandler::~MessageHandler(){
 void MessageHandler::setOwned(bool looper){
     if(looper)mFlags|=2;
     else mFlags&=~2;
+}
+
+void MessageHandler::dispatchMessage(Message&message){
+    if(message.callback)
+        message.callback();
+    else
+        handleMessage(message);
 }
 
 void MessageHandler::handleIdle(){

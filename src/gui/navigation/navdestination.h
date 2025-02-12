@@ -1,5 +1,6 @@
 #ifndef __NAV_DESTINATION_H__
 #define __NAV_DESTINATION_H__
+#include <map>
 #include <vector>
 #include <string>
 #include <utility>
@@ -12,7 +13,7 @@ class Navigator;
 class NavGraph;
 class NavOptions;
 class NavDeepLink;
-typedef std::map<const std::string,nonstd::any> Bundle;
+//typedef std::map<const std::string,nonstd::any> Bundle;
 
 class NavDestination {
 public:

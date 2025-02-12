@@ -26,6 +26,8 @@ private:
     nsecs_t mLastInputEventTime;/*for screensaver*/
     std::ofstream frecord;
     std::unordered_map<int,std::shared_ptr<InputDevice>>mDevices;
+    static std::unique_ptr<InputEventSource>mInst;
+private:
     std::shared_ptr<InputDevice>getDevice(int fd);
     void doEventsConsume();
     bool needCancel(InputDevice*dev);
@@ -33,7 +35,6 @@ private:
     InputEvent*parseEvent(const char*);
 protected:
     InputEventSource();
-    friend NeverDestroyed<InputEventSource>;
     void onDeviceChanged(const INPUTEVENT*es);
 public:
     static InputEventSource& getInstance();
