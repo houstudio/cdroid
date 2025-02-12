@@ -5,11 +5,23 @@
 #include <mutex>
 #include <list>
 #include <cstdint>
-#include <core/message.h>
+#include <core/callbackbase.h>
 
 namespace cdroid{
 typedef int64_t nsecs_t;
 typedef int (*Looper_callbackFunc)(int fd, int events, void* data);
+
+struct Message{
+    int what;
+    int arg1;
+    int arg2;
+    int flags;
+    void*obj;
+    Runnable callback;
+    class Handler*target;
+public:
+    Message(int what=0);
+};
 
 class LooperCallback{
 protected:

@@ -19,9 +19,9 @@ Handler::~Handler(){
     mLooper->removeMessages(this);
 }
 
-Message* Handler::getPostMessage(Runnable& r){
-    Message* m = Message::obtain();
-    m->callback = r;
+Message Handler::getPostMessage(Runnable& r){
+    Message m =obtainMessage();
+    m.callback = r;
     return m;
 }
 
@@ -72,20 +72,26 @@ void Handler::dispatchMessage(Message& msg) {
     }
 }
 
-Message*Handler::obtainMessage(){
-    return Message::obtain();
+Message Handler::obtainMessage(){
+    return obtainMessage(0);
 }
 
-Message*Handler::obtainMessage(int what){
-    return Message::obtain(what);
+Message Handler::obtainMessage(int what){
+    return obtainMessage(what,0,0); 
 }
 
-Message*Handler::obtainMessage(int what,int arg1,int arg2){
-    return Message::obtain(what,arg1,arg2);
+Message Handler::obtainMessage(int what,int arg1,int arg2){
+    return obtainMessage(what,arg1,arg2,nullptr);
 }
 
-Message*Handler::obtainMessage(int what,int arg1,int arg2,void*obj){
-    return Message::obtain(what,arg1,arg2,obj);
+Message Handler::obtainMessage(int what,int arg1,int arg2,void*obj){
+    Message m;
+    m.what=what;
+    m.arg1=arg1;
+    m.arg2=arg2;
+    m.obj =obj;
+    m.target=this;
+    return m;
 }
 
 bool Handler::sendMessage(Message& msg){
@@ -97,15 +103,13 @@ bool Handler::sendEmptyMessage(int what){
 }
 
 bool Handler::sendEmptyMessageDelayed(int what, long delayMillis) {
-    Message* msg = Message::obtain();
-    msg->what = what;
-    return sendMessageDelayed(*msg, delayMillis);
+    Message msg = obtainMessage(what);
+    return sendMessageDelayed(msg, delayMillis);
 }
 
 bool Handler::sendEmptyMessageAtTime(int what, int64_t uptimeMillis) {
-    Message* msg = Message::obtain();
-    msg->what = what;
-    return sendMessageAtTime(*msg, uptimeMillis);
+    Message msg = obtainMessage(what);
+    return sendMessageAtTime(msg, uptimeMillis);
 }
 
 bool Handler::sendMessageDelayed(Message& msg, long delayMillis){
@@ -116,34 +120,23 @@ bool Handler::sendMessageDelayed(Message& msg, long delayMillis){
 }
 
 bool Handler::sendMessageAtTime(Message& msg, int64_t uptimeMillis) {
-#if 0
-    MessageQueue queue = mQueue;
-    if (queue == null) {
-        RuntimeException e = new RuntimeException(
-            this + " sendMessageAtTime() called with no mQueue");
-        Log.w("Looper", e.getMessage(), e);
-        return false;
-    }
-    return enqueueMessage(queue, msg, uptimeMillis);
-#else
     mLooper->sendMessageAtTime(uptimeMillis,this,msg);
-#endif
     return true;
 }
 
 bool Handler::post(Runnable r){
-    Message* msg = getPostMessage(r);
-    return sendMessageDelayed(*msg, 0);
+    Message msg = getPostMessage(r);
+    return sendMessageDelayed(msg, 0);
 }
 
 bool Handler::postAtTime(Runnable r, int64_t uptimeMillis){
-    Message* msg = getPostMessage(r);
-    return sendMessageAtTime(*msg, uptimeMillis);
+    Message msg = getPostMessage(r);
+    return sendMessageAtTime(msg, uptimeMillis);
 }
 
 bool Handler::postDelayed(Runnable r, long delayMillis){
-    Message* msg = getPostMessage(r);
-    return sendMessageDelayed(*msg, delayMillis);
+    Message msg = getPostMessage(r);
+    return sendMessageDelayed(msg, delayMillis);
 }
 
 }

@@ -28,8 +28,6 @@ list(APPEND CDROID_SOURCES
     core/keylayoutmap.cc
     core/layout.cc
     core/looper.cc
-    core/message.cc
-    #core/messagequeue.cc
     core/parcel.cc
     core/path.cc
     core/porterduff.cc

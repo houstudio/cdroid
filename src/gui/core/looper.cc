@@ -706,6 +706,13 @@ bool Looper::isPolling() const {
 LooperCallback::~LooperCallback(){
 }
 
+Message::Message(int msg){
+    what= msg;
+    arg1 = arg2 =0;
+    obj = nullptr;
+    target= nullptr;
+}
+
 MessageHandler::MessageHandler(){
     mFlags = 0;
 }
