@@ -1,7 +1,7 @@
 #include <cstring>
 #include <fstream>
 #include <core/context.h>
-#include <core/audiomanager.h>
+#include <media/audiomanager.h>
 #include <view/soundeffectconstants.h>
 #include <porting/cdlog.h>
 #if ENABLE(AUDIO)
@@ -66,12 +66,9 @@ AudioManager::AudioManager(){
     parameters.nChannels = 1;
     parameters.firstChannel = 0;
     RtAudioFormat format = RTAUDIO_FLOAT32;
-    try{
-        mDAC->openStream(&parameters, nullptr, format, 44100, &mBufferFrames, &AudioCallback, (void *)this);
-        mDAC->startStream();
-    }catch(RtAudioError&e){
-        LOGE("%x %s",e.what(),e.getMessage().c_str());
-    }
+    RtAudioErrorType rtError=mDAC->openStream(&parameters, nullptr, format, 44100, &mBufferFrames, &AudioCallback, (void *)this);
+    mDAC->startStream();
+    LOGE_IF(rtError,"%x %s",rtError);
 #endif
     uint8_t buff[16]={0};
     uint8_t*p = buff;

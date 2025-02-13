@@ -3,7 +3,6 @@ list(APPEND CDROID_SOURCES
     core/assets.cc
     core/atexit.cc
     core/attributeset.cc
-    core/audiomanager.cc
     #core/basebundle.cc
     core/build.cc
     #core/bundle.cc
@@ -43,6 +42,11 @@ list(APPEND CDROID_SOURCES
     core/windowmanager.cc
     core/ziparchive.cc
 )
+
+list(APPEND CDROID_SOURCES
+    media/audiomanager.cc
+    media/soundpool.cc
+    )
 
 if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message("Building on Windows with MSVC compiler")
