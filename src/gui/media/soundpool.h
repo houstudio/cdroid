@@ -18,9 +18,11 @@ public:
 private:
     struct Sound {
         std::vector<char> data;
-        unsigned int sampleRate;
-        unsigned int channels;
+        uint32_t sampleRate;
+        uint32_t channels;
+        uint32_t position;
         float volume;
+        bool playing;
     };
 
     std::unique_ptr<RtAudio> audio;

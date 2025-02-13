@@ -1,6 +1,7 @@
 #include <cstring>
 #include <fstream>
 #include <core/context.h>
+#include <media/soundpool.h>
 #include <media/audiomanager.h>
 #include <view/soundeffectconstants.h>
 #include <porting/cdlog.h>
@@ -9,16 +10,6 @@
 #endif
 
 namespace cdroid{
-
-int AudioManager::AudioCallback(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
-      double streamTime, /*RtAudioStreamStatus*/uint32_t status, void *userData){
-    AudioManager*thiz=(AudioManager*)userData;
-    float *buffer = (float*)thiz->mBuffer;
-    for(uint32_t i=0;i<nBufferFrames;i++)
-        buffer[i]=float(i)/nBufferFrames;
-    memcpy(outputBuffer, buffer, nBufferFrames * sizeof(float));
-    return 0;
-}
 
 int readChunk(std::istream&is){
     uint8_t buf[32];
@@ -52,28 +43,8 @@ int readChunk(std::istream&is){
 
 AudioManager::AudioManager(){
     mContext = nullptr;
-#if ENABLE(AUDIO)
-    RtAudio::StreamParameters parameters;
-    mDAC = std::make_shared<RtAudio>();
-    mBuffer= new char[1024];
-    mBufferFrames = 0;
-    LOGD("%d AudioDevice Found",mDAC->getDeviceCount());
-    for (unsigned int i = 0; i < mDAC->getDeviceCount(); i++) {
-        RtAudio::DeviceInfo info = mDAC->getDeviceInfo(i);
-        LOGD("Device[%d](%s) %dxIn + %dxOut", i,info.name.c_str(),info.duplexChannels,info.outputChannels);
-    }
-    parameters.deviceId = mDAC->getDefaultOutputDevice();
-    parameters.nChannels = 1;
-    parameters.firstChannel = 0;
-    RtAudioFormat format = RTAUDIO_FLOAT32;
-    RtAudioErrorType rtError=mDAC->openStream(&parameters, nullptr, format, 44100, &mBufferFrames, &AudioCallback, (void *)this);
-    mDAC->startStream();
-    LOGE_IF(rtError,"%x %s",rtError);
-#endif
-    uint8_t buff[16]={0};
-    uint8_t*p = buff;
-    std::ifstream f("/home/houzh/Alarm05.wav");
-    readChunk(f);
+    mSoundPool=std::make_unique<SoundPool>();
+    //readChunk(f);
 }
 
 AudioManager::AudioManager(Context*ctx):AudioManager(){
@@ -90,8 +61,10 @@ void AudioManager::setContext(Context* context){
     mSoundEffects.put(SoundEffectConstants::NAVIGATION_REPEAT_UP,"navigation_repeat_up");
     mSoundEffects.put(SoundEffectConstants::NAVIGATION_REPEAT_RIGHT,"navigation_repeat_right");
     mSoundEffects.put(SoundEffectConstants::NAVIGATION_REPEAT_DOWN,"navigation_repeat_down");
-    for(int i=SoundEffectConstants::CLICK;i<=SoundEffectConstants::NAVIGATION_REPEAT_DOWN+1;i++)
+    for(int i=SoundEffectConstants::CLICK;i<=SoundEffectConstants::NAVIGATION_REPEAT_DOWN+1;i++){
+        //mSoundPool.load();
         playSoundEffect(i);
+    }
 }
 
 void  AudioManager::playSoundEffect(int effectType){

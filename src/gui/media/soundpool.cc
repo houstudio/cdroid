@@ -12,13 +12,16 @@ SoundPool::SoundPool() : nextSoundId(1) {
     if (audio->getDeviceCount() < 1) {
         LOGE("No audio devices found!");
     }
+    LOGI("RtAudio.Version=%s",RtAudio::getVersion().c_str(),audio->getDeviceCount());
 #endif
 }
 
 SoundPool::~SoundPool() {
+#if ENABLE(AUDIO)
     if (audio->isStreamOpen()) {
         audio->closeStream();
     }
+#endif
 }
 
 int SoundPool::load(const std::string& filePath) {
