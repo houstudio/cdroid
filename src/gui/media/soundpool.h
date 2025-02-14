@@ -5,6 +5,7 @@
 #include <memory>
 #include <iostream>
 #include <unordered_map>
+class RtAudio;
 namespace cdroid{
 class SoundPool {
 private:
