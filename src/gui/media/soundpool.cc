@@ -6,29 +6,34 @@
 #include <rtaudio/RtAudio.h>
 #endif
 namespace cdroid{
+struct SoundPool::Channel{
+    std::shared_ptr<RtAudio>audio;
+    int playingSounds;
+};
+struct SoundPool::Sound{
+    std::vector<char> data;
+    int32_t format;
+    int32_t channels;
+    int32_t sampleRate;
+    int32_t byteRate;
+    int16_t blockAlign;
+    int16_t bitsPerSample;
+    uint32_t position;
+    float volume;
+    bool playing;
+};
 
 SoundPool::SoundPool(){
-#if ENABLE(AUDIO)
-    audio = new RtAudio();
-    if (audio->getDeviceCount() < 1) {
-        LOGE("No audio devices found!");
-    }
-    LOGI("RtAudio.Version=%s",RtAudio::getVersion().c_str(),audio->getDeviceCount());
-    for(int i=0;i<audio->getDeviceCount();i++){
-        RtAudio::DeviceInfo info = audio->getDeviceInfo(i);
-        LOGI("%c dev[%d]:%s",(i==audio->getDefaultOutputDevice())?'*':' ',i,info.name.c_str());
-    }
-#else
-    audio =nullptr;
-#endif
 }
 
 SoundPool::~SoundPool() {
 #if ENABLE(AUDIO)
-    if (audio->isStreamOpen()) {
-        audio->closeStream();
+    for(int i=0;i<mAudioChannels.size();i++){
+	auto audio=mAudioChannels.valueAt(i)->audio;
+        if (audio->isStreamOpen()) {
+            audio->closeStream();
+        }
     }
-    delete audio;
 #endif
 }
 
@@ -73,70 +78,90 @@ int32_t SoundPool::load(const std::string& filePath) {
         LOGE("Failed to open file: ",filePath.c_str());
         return -1;
     }
-    Sound sound;
-    readChunk(file,sound);
-    LOGD("\tAudioFormat:%d Channels=%d sampleRate=%d",sound.format,sound.channels,sound.sampleRate);
-    LOGD("\tByteRate:%d blockAlign=%d bitsPerSample=%d",sound.byteRate,sound.blockAlign,sound.bitsPerSample);
+    auto sound=std::make_shared<Sound>();
+    readChunk(file,*sound);
+    LOGD("\tAudioFormat:%d Channels=%d sampleRate=%d",sound->format,sound->channels,sound->sampleRate);
+    LOGD("\tByteRate:%d blockAlign=%d bitsPerSample=%d",sound->byteRate,sound->blockAlign,sound->bitsPerSample);
 
     // For simplicity, assume the file is a raw PCM file with known parameters
-    const int soundId = sounds.size();
-    sound.position=0;
-    sound.playing=false;
-    sound.volume=1.f;
-    switch(sound.format){
-    case 1:switch(sound.bitsPerSample){
-           case  8:sound.format = RTAUDIO_SINT8 ;break;
-           case 16:sound.format = RTAUDIO_SINT16;break;
-           case 32:sound.format = RTAUDIO_SINT32;break;
+    const int soundId = mSounds.size();
+    sound->position=0;
+    sound->playing=false;
+    sound->volume=1.f;
+    switch(sound->format){
+    case 1:switch(sound->bitsPerSample){
+           case  8:sound->format = RTAUDIO_SINT8 ;break;
+           case 16:sound->format = RTAUDIO_SINT16;break;
+           case 32:sound->format = RTAUDIO_SINT32;break;
            }break;
     case 2:/*TODO:MS-ADPCM(Microsoft Adaptive Differential Pulse Code Modulation)*/break;
-    case 3:sound.format=(sound.bitsPerSample=32)?RTAUDIO_FLOAT32:RTAUDIO_FLOAT64;break;
+    case 3:sound->format=(sound->bitsPerSample=32)?RTAUDIO_FLOAT32:RTAUDIO_FLOAT64;break;
     }
-    sounds[soundId] = sound;
+    mSounds.put(soundId,sound);
     return soundId;
 }
 
 void SoundPool::play(int soundId) {
-    auto it=sounds.find(soundId);
-    if (it == sounds.end()) {
+    auto sound=mSounds.get(soundId);
+    if (sound==nullptr) {
         LOGE("Sound ID %d not found!",soundId);
         return;
     }
-    auto& sound=it->second;
-    sound.position=0;
-    sound.playing=true;
 #if ENABLE(AUDIO)
+    auto channel = mAudioChannels.get(sound->format);
+    if(channel==nullptr){
+	channel =std::make_shared<Channel>();
+	channel->playingSounds=0;
+	channel->audio = std::make_shared<RtAudio>();
+	mAudioChannels.put(sound->format,channel);
+    }
+    if(sound->playing==false){
+        sound->position=0;
+        sound->playing =true;
+	channel->playingSounds++;
+    }
+    auto& audio = channel->audio;
     if (!audio->isStreamOpen()) {
         RtAudio::StreamParameters parameters;
         parameters.deviceId = audio->getDefaultOutputDevice();
-        parameters.nChannels = sound.channels;
+        parameters.nChannels = sound->channels;
         parameters.firstChannel = 0;
 
-        unsigned int bufferFrames = 512;
+        unsigned int bufferFrames = 512;/*0 to detected the lowest allowable value*/;
 #if RTAUDIO_VERSION_MAJOR>5
-        RtAudioErrorType rtError=audio->openStream(&parameters, nullptr, RTAUDIO_SINT16, sound.sampleRate, &bufferFrames, &audioCallback, this);
-        LOGE_IF(rtError,"openStream=%d",rtError);
+        RtAudioErrorType rtError=audio->openStream(&parameters, nullptr, RTAUDIO_SINT16, sound->sampleRate, &bufferFrames, &audioCallback, this);
+        LOGD("openStream=%d bufferFrames=%d",rtError,bufferFrames);
 #else
-        audio->openStream(&parameters, nullptr,sound.format, sound.sampleRate, &bufferFrames, &audioCallback, this);
+        audio->openStream(&parameters, nullptr,sound->format, sound->sampleRate, &bufferFrames, &audioCallback, this);
+        LOGD("openStream.bufferFrames=%d",bufferFrames);
 #endif
     }
-    audio->startStream();
+    if(!audio->isStreamRunning())
+        audio->startStream();
 #endif
 }
 
 void SoundPool::stop(int soundId) {
 #if ENABLE(AUDIO)
-    if (audio->isStreamRunning()) {
-        audio->stopStream();
+    auto sound = mSounds.get(soundId);
+    if( (sound==nullptr)||(sound->playing==false))
+	return;
+    auto channel = mAudioChannels.get(sound->format);
+    sound->playing = false;
+    sound->position= 0;
+    channel->playingSounds--;
+    if(channel->playingSounds==0){
+	auto audio = channel->audio;
+	audio->stopStream();
+	mAudioChannels.remove(sound->format);
     }
-    sounds[soundId].playing=false;
-    sounds[soundId].position=0;
 #endif
 }
 
 void SoundPool::setVolume(int soundId, float volume) {
-    if (sounds.find(soundId) != sounds.end()) {
-        sounds[soundId].volume = volume;
+    auto sound=mSounds.get(soundId);
+    if (sound!=nullptr){
+        sound->volume = volume;
     }
 }
 
@@ -145,19 +170,19 @@ void SoundPool::sendOneSample(SoundPool::Sound&sound,void*outputBuffer,uint32_t 
         switch(sound.format){
         case RTAUDIO_SINT8 :{
                 int8_t sample = *(int8_t*)(sound.data.data()+sound.position);
-                ((int8_t*)outputBuffer)[2*i+c] = static_cast<int8_t>(sample * sound.volume); // Left channel
+                ((int8_t*)outputBuffer)[2*i+c] = static_cast<int8_t>(sample * sound.volume);
             }break;
         case RTAUDIO_SINT16:{
                 int16_t sample = *(int16_t*)(sound.data.data()+sound.position);
-                ((int16_t*)outputBuffer)[2*i+c] = static_cast<int16_t>(sample * sound.volume); // Left channel
+                ((int16_t*)outputBuffer)[2*i+c] = static_cast<int16_t>(sample * sound.volume);
             }break;
         case RTAUDIO_SINT32:{
                 int32_t sample = *(int32_t*)(sound.data.data()+sound.position);
-                ((int32_t*)outputBuffer)[2*i+c] = static_cast<int32_t>(sample * sound.volume); // Left channel
+                ((int32_t*)outputBuffer)[2*i+c] = static_cast<int32_t>(sample * sound.volume);
             }break;
         case RTAUDIO_FLOAT32:{
                 float sample = *(float*)(sound.data.data()+sound.position);
-                ((float*)outputBuffer)[2*i+c] = static_cast<float>(sample * sound.volume); // Left channel
+                ((float*)outputBuffer)[2*i+c] = static_cast<float>(sample * sound.volume);
             }break;
         }
         sound.position += (sound.bitsPerSample>>3);
@@ -168,15 +193,15 @@ int32_t SoundPool::audioCallback(void* outputBuffer, void* inputBuffer, unsigned
                              double streamTime, uint32_t/*RtAudioStreamStatus*/ status, void* userData) {
     SoundPool* soundPool = static_cast<SoundPool*>(userData);
     int16_t *buffer=(int16_t*)outputBuffer;
-    for (auto& pair : soundPool->sounds) {
-        Sound& sound = pair.second;
-        if (!sound.playing) continue;
+    for (int k=0;k<soundPool->mSounds.size();k++) {
+        auto sound = soundPool->mSounds.valueAt(k);
+        if (!sound->playing) continue;
         for (unsigned long i = 0; i < nBufferFrames; ++i) {
-            if (sound.position < sound.data.size()) {
-                soundPool->sendOneSample(sound,outputBuffer,i);
+            if (sound->position < sound->data.size()) {
+                soundPool->sendOneSample(*sound,outputBuffer,i);
             } else {
-                sound.playing = false;
-                sound.position= 0;
+                sound->playing = false;
+                sound->position= 0;
                 break;
             }
         }

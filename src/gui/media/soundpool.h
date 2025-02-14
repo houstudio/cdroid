@@ -5,24 +5,15 @@
 #include <memory>
 #include <iostream>
 #include <unordered_map>
+#include <core/sparsearray.h>
 class RtAudio;
 namespace cdroid{
 class SoundPool {
 private:
-    struct Sound {
-        std::vector<char> data;
-        int32_t format;
-        int32_t channels;
-        int32_t sampleRate;
-        int32_t byteRate;
-        int16_t blockAlign;
-        int16_t bitsPerSample;
-        uint32_t position;
-        float volume;
-        bool playing;
-    };
-    class RtAudio* audio;
-    std::unordered_map<int, Sound> sounds;
+    struct Sound;
+    struct Channel;
+    SparseArray<std::shared_ptr<Channel>>mAudioChannels;
+    SparseArray<std::shared_ptr<Sound>>mSounds;
     int32_t readChunk(std::istream&,Sound&s);
     void sendOneSample(SoundPool::Sound&sound,void*outputBuffer,uint32_t i);
     static int32_t audioCallback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
