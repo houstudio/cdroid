@@ -7,13 +7,15 @@
 #endif
 namespace cdroid{
 
-SoundPool::SoundPool() : nextSoundId(1) {
+SoundPool::SoundPool(){
 #if ENABLE(AUDIO)
-    audio = std::make_unique<RtAudio>();
+    audio = new RtAudio();
     if (audio->getDeviceCount() < 1) {
         LOGE("No audio devices found!");
     }
     LOGI("RtAudio.Version=%s",RtAudio::getVersion().c_str(),audio->getDeviceCount());
+#else
+    audio =nullptr;
 #endif
 }
 
@@ -22,12 +24,14 @@ SoundPool::~SoundPool() {
     if (audio->isStreamOpen()) {
         audio->closeStream();
     }
+    delete audio;
 #endif
 }
 
-int readChunk(std::istream&is,std::vector<char>&data){
+int32_t SoundPool::readChunk(std::istream&is,SoundPool::Sound&s){
     uint8_t buf[32];
     uint32_t ret=8;
+    auto& data=s.data;
     is.read((char*)buf,8);
     uint32_t chunkSize = buf[4]|(buf[5]<<8)|(buf[6]<<16)|(buf[7]<<24);
     LOGD("chunkId:%c%c%c%c size %d",buf[0],buf[1],buf[2],buf[3],chunkSize);
@@ -36,17 +40,23 @@ int readChunk(std::istream&is,std::vector<char>&data){
         is.read((char*)buf,4);
         ret+=4;
         LOGD("chunkType:%c%c%c%c",buf[0],buf[1],buf[2],buf[3]);
-        while(subChunkSize<chunkSize-4)subChunkSize+=readChunk(is,data);
+        while(subChunkSize<chunkSize-4)subChunkSize+=readChunk(is,s);
         is.seekg(chunkSize-4,std::ios_base::cur);
     }else{
         if(memcmp(buf,"fmt",3)==0){
             is.read((char*)buf,chunkSize);
-            LOGD("\tAudioFormat:%d",buf[0]|buf[1]<<8);
-            LOGD("\tChannels:%d",buf[2]|buf[3]<<8);
-            LOGD("\tSampleRate:%d", buf[4]|(buf[5]<<8)|(buf[6]<<16)|(buf[7]<<24));
-            LOGD("\tByteRate:%d",buf[8]|(buf[9]<<8)|(buf[10]<<16)|(buf[11]<<24));
-            LOGD("\tBlockAlign:%d",buf[12]|buf[13]);
-            LOGD("\tBitsPerSample:%d",buf[14],buf[15]);
+            s.format  = (buf[0]|buf[1]<<8);
+            s.channels= (buf[2]|buf[3]<<8);
+            s.sampleRate=buf[4]|(buf[5]<<8)|(buf[6]<<16)|(buf[7]<<24);
+            s.byteRate  =buf[8]|(buf[9]<<8)|(buf[10]<<16)|(buf[11]<<24);
+            s.blockAlign= buf[12]|(buf[13]<<8);
+            s.bitsPerSample=buf[14]|(buf[15]<<8);
+            LOGD("\tAudioFormat:%d Channels=%d sampleRate=%d",s.format,s.channels,s.sampleRate);
+            LOGD("\tByteRate:%d blockAlign=%d bitsPerSample=%d",s.byteRate,s.blockAlign,s.bitsPerSample);
+        }else if(memcmp(buf,"data",4)==0){
+            const size_t oldsize=data.size();
+            data.resize(oldsize+chunkSize);
+            is.read(data.data()+oldsize,chunkSize);
         }else{
             is.seekg(chunkSize,std::ios_base::cur);
         }
@@ -55,14 +65,14 @@ int readChunk(std::istream&is,std::vector<char>&data){
     return ret;
 }
 
-int SoundPool::load(const std::string& filePath) {
+int32_t SoundPool::load(const std::string& filePath) {
     std::ifstream file(filePath, std::ios::binary);
     if (!file) {
         LOGE("Failed to open file: ",filePath.c_str());
         return -1;
     }
     Sound sound;
-    readChunk(file,sound.data);
+    readChunk(file,sound);
     file.seekg(0, std::ios::end);
     sound.data.resize(file.tellg());
     file.seekg(0, std::ios::beg);
@@ -76,7 +86,7 @@ int SoundPool::load(const std::string& filePath) {
     sound.playing= true;
     sound.position=0;
 
-    int soundId = nextSoundId++;
+    int soundId = sounds.size();
     sounds[soundId] = sound;
     return soundId;
 }
@@ -115,22 +125,23 @@ void SoundPool::setVolume(int soundId, float volume) {
     }
 }
 
-int SoundPool::audioCallback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
+int32_t SoundPool::audioCallback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
                              double streamTime, uint32_t/*RtAudioStreamStatus*/ status, void* userData) {
     SoundPool* soundPool = static_cast<SoundPool*>(userData);
     int16_t *buffer=(int16_t*)outputBuffer;
-    // Implement audio playback logic here
     for (auto& pair : soundPool->sounds) {
         Sound& sound = pair.second;
         if (sound.playing) {
             for (unsigned long i = 0; i < nBufferFrames; ++i) {
                 if (sound.position < sound.data.size()) {
-                    int16_t sample = sound.data[sound.position];
-                    buffer[i * 2] += static_cast<int16_t>(sample * sound.volume); // Left channel
-                    buffer[i * 2 + 1] += static_cast<int16_t>(sample * sound.volume); // Right channel
-                    sound.position += sound.channels;
+                    for(int c=0;c<sound.channels;c++){
+                        int16_t sample = *(int16_t*)(sound.data.data()+sound.position);
+                        buffer[i * 2+c] = static_cast<int16_t>(sample * sound.volume); // Left channel
+                        sound.position += (sound.bitsPerSample/8);
+                    }
                 } else {
                     sound.playing = false;
+                    sound.position= 0;
                     break;
                 }
             }
