@@ -13,10 +13,10 @@ SoundPool::SoundPool(){
     if (audio->getDeviceCount() < 1) {
         LOGE("No audio devices found!");
     }
-    std::vector<std::string> devs=audio->getDeviceNames();
     LOGI("RtAudio.Version=%s",RtAudio::getVersion().c_str(),audio->getDeviceCount());
-    for(int i=0;i<devs.size();i++){
-        LOGI("%c dev[%d]:%s",(i==audio->getDefaultOutputDevice())?'*':' ',i,devs[i].c_str());
+    for(int i=0;i<audio->getDeviceCount();i++){
+        RtAudio::DeviceInfo info = audio->getDeviceInfo(i);
+        LOGI("%c dev[%d]:%s",(i==audio->getDefaultOutputDevice())?'*':' ',i,info.name.c_str());
     }
 #else
     audio =nullptr;
@@ -102,8 +102,12 @@ void SoundPool::play(int soundId) {
         parameters.firstChannel = 0;
 
         unsigned int bufferFrames = 512;
+#if RTAUDIO_VERSION_MAJOR>5
         RtAudioErrorType rtError=audio->openStream(&parameters, nullptr, RTAUDIO_SINT16, sounds[soundId].sampleRate, &bufferFrames, &audioCallback, this);
         LOGE_IF(rtError,"openStream=%d",rtError);
+#else
+        audio->openStream(&parameters, nullptr, RTAUDIO_SINT16, sounds[soundId].sampleRate, &bufferFrames, &audioCallback, this);
+#endif
     }
     audio->startStream();
 #endif
