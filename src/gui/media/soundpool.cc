@@ -85,8 +85,24 @@ void SoundPool::setVolume(int soundId, float volume) {
 int SoundPool::audioCallback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
                              double streamTime, uint32_t/*RtAudioStreamStatus*/ status, void* userData) {
     SoundPool* soundPool = static_cast<SoundPool*>(userData);
+    int16_t *buffer=(int16_t*)outputBuffer;
     // Implement audio playback logic here
-    //memcpy(outputBuffer, buffer, nBufferFrames * sizeof(float));
+    for (auto& pair : soundPool->sounds) {
+        Sound& sound = pair.second;
+        if (sound.playing) {
+            for (unsigned long i = 0; i < nBufferFrames; ++i) {
+                if (sound.position < sound.data.size()) {
+                    int16_t sample = sound.data[sound.position];
+                    buffer[i * 2] += static_cast<int16_t>(sample * sound.volume); // Left channel
+                    buffer[i * 2 + 1] += static_cast<int16_t>(sample * sound.volume); // Right channel
+                    sound.position += sound.channels;
+                } else {
+                    sound.playing = false;
+                    break;
+                }
+            }
+        }
+    }
     return 0;
 }
 }/*endof namespace*/
