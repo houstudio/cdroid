@@ -123,17 +123,19 @@ void SoundPool::play(int soundId) {
     auto& audio = channel->audio;
     if (!audio->isStreamOpen()) {
         RtAudio::StreamParameters parameters;
-        parameters.deviceId = audio->getDefaultOutputDevice();
-        parameters.nChannels = sound->channels;
+        const int deviceId = audio->getDefaultOutputDevice();
+        RtAudio::DeviceInfo dinfo = audio->getDeviceInfo(deviceId);
+        parameters.deviceId = deviceId;
+        parameters.nChannels = dinfo.outputChannels;//sound->channels;
         parameters.firstChannel = 0;
 
         unsigned int bufferFrames = 512;/*0 to detected the lowest allowable value*/;
 #if RTAUDIO_VERSION_MAJOR>5
         RtAudioErrorType rtError=audio->openStream(&parameters, nullptr, RTAUDIO_SINT16, sound->sampleRate, &bufferFrames, &audioCallback, this);
-        LOGD("openStream=%d bufferFrames=%d",rtError,bufferFrames);
+        LOGD("openStream=%d bufferFrames=%d outputChanels=%d inputChannels=%d",rtError,bufferFrames,dinfo.outputChannels,dinfo.inputChannels);
 #else
         audio->openStream(&parameters, nullptr,sound->format, sound->sampleRate, &bufferFrames, &audioCallback, this);
-        LOGD("openStream.bufferFrames=%d",bufferFrames);
+        LOGD("openStream.bufferFrames=%d outputChanels=%d inputChannels=%d",bufferFrames,dinfo.outputChannels,dinfo.inputChannels);
 #endif
     }
     if(!audio->isStreamRunning())
