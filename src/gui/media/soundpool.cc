@@ -13,7 +13,11 @@ SoundPool::SoundPool(){
     if (audio->getDeviceCount() < 1) {
         LOGE("No audio devices found!");
     }
+    std::vector<std::string> devs=audio->getDeviceNames();
     LOGI("RtAudio.Version=%s",RtAudio::getVersion().c_str(),audio->getDeviceCount());
+    for(int i=0;i<devs.size();i++){
+        LOGI("%c dev[%d]:%s",(i==audio->getDefaultOutputDevice())?'*':' ',i,devs[i].c_str());
+    }
 #else
     audio =nullptr;
 #endif
