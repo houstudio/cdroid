@@ -97,25 +97,27 @@ int32_t SoundPool::load(const std::string& filePath) {
 }
 
 void SoundPool::play(int soundId) {
-    if (sounds.find(soundId) == sounds.end()) {
+    auto it=sounds.find(soundId);
+    if (it == sounds.end()) {
         LOGE("Sound ID %d not found!",soundId);
         return;
     }
-    sounds[soundId].position=0;
-    sounds[soundId].playing=true;
+    auto& sound=it->second;
+    sound.position=0;
+    sound.playing=true;
 #if ENABLE(AUDIO)
     if (!audio->isStreamOpen()) {
         RtAudio::StreamParameters parameters;
         parameters.deviceId = audio->getDefaultOutputDevice();
-        parameters.nChannels = sounds[soundId].channels;
+        parameters.nChannels = sound.channels;
         parameters.firstChannel = 0;
 
         unsigned int bufferFrames = 512;
 #if RTAUDIO_VERSION_MAJOR>5
-        RtAudioErrorType rtError=audio->openStream(&parameters, nullptr, RTAUDIO_SINT16, sounds[soundId].sampleRate, &bufferFrames, &audioCallback, this);
+        RtAudioErrorType rtError=audio->openStream(&parameters, nullptr, RTAUDIO_SINT16, sound.sampleRate, &bufferFrames, &audioCallback, this);
         LOGE_IF(rtError,"openStream=%d",rtError);
 #else
-        audio->openStream(&parameters, nullptr,sound.format, sounds[soundId].sampleRate, &bufferFrames, &audioCallback, this);
+        audio->openStream(&parameters, nullptr,sound.format, sound.sampleRate, &bufferFrames, &audioCallback, this);
 #endif
     }
     audio->startStream();
