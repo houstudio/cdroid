@@ -126,16 +126,16 @@ void SoundPool::play(int soundId) {
         const int deviceId = audio->getDefaultOutputDevice();
         RtAudio::DeviceInfo dinfo = audio->getDeviceInfo(deviceId);
         parameters.deviceId = deviceId;
-        parameters.nChannels = dinfo.outputChannels;//sound->channels;
+        parameters.nChannels = std::min(2U,dinfo.outputChannels);//sound->channels;
         parameters.firstChannel = 0;
 
         unsigned int bufferFrames = 512;/*0 to detected the lowest allowable value*/;
 #if RTAUDIO_VERSION_MAJOR>5
         RtAudioErrorType rtError=audio->openStream(&parameters, nullptr, RTAUDIO_SINT16, sound->sampleRate, &bufferFrames, &audioCallback, this);
-        LOGD("openStream=%d bufferFrames=%d outputChanels=%d inputChannels=%d",rtError,bufferFrames,dinfo.outputChannels,dinfo.inputChannels);
+        LOGD("%s openStream=%d bufferFrames=%d outputChanels=%d inputChannels=%d",dinfo.name.c_str(),rtError,bufferFrames,dinfo.outputChannels,dinfo.inputChannels);
 #else
         audio->openStream(&parameters, nullptr,sound->format, sound->sampleRate, &bufferFrames, &audioCallback, this);
-        LOGD("openStream.bufferFrames=%d outputChanels=%d inputChannels=%d",bufferFrames,dinfo.outputChannels,dinfo.inputChannels);
+        LOGD("%s openStream.bufferFrames=%d outputChanels=%d inputChannels=%d",dinfo.name.c_str(),bufferFrames,dinfo.outputChannels,dinfo.inputChannels);
 #endif
     }
     if(!audio->isStreamRunning())
