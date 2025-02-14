@@ -24,6 +24,7 @@ private:
     class RtAudio* audio;
     std::unordered_map<int, Sound> sounds;
     int32_t readChunk(std::istream&,Sound&s);
+    void sendOneSample(SoundPool::Sound&sound,void*outputBuffer,uint32_t i);
     static int32_t audioCallback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
                     double streamTime, uint32_t status, void* userData);
 public:

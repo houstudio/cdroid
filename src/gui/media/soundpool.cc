@@ -140,25 +140,44 @@ void SoundPool::setVolume(int soundId, float volume) {
     }
 }
 
+void SoundPool::sendOneSample(SoundPool::Sound&sound,void*outputBuffer,uint32_t i){
+    for(int c=0;c<sound.channels;c++){
+        switch(sound.format){
+        case RTAUDIO_SINT8 :{
+                int8_t sample = *(int8_t*)(sound.data.data()+sound.position);
+                ((int8_t*)outputBuffer)[2*i+c] = static_cast<int8_t>(sample * sound.volume); // Left channel
+            }break;
+        case RTAUDIO_SINT16:{
+                int16_t sample = *(int16_t*)(sound.data.data()+sound.position);
+                ((int16_t*)outputBuffer)[2*i+c] = static_cast<int16_t>(sample * sound.volume); // Left channel
+            }break;
+        case RTAUDIO_SINT32:{
+                int32_t sample = *(int32_t*)(sound.data.data()+sound.position);
+                ((int32_t*)outputBuffer)[2*i+c] = static_cast<int32_t>(sample * sound.volume); // Left channel
+            }break;
+        case RTAUDIO_FLOAT32:{
+                float sample = *(float*)(sound.data.data()+sound.position);
+                ((float*)outputBuffer)[2*i+c] = static_cast<float>(sample * sound.volume); // Left channel
+            }break;
+        }
+        sound.position += (sound.bitsPerSample>>3);
+    }
+}
+
 int32_t SoundPool::audioCallback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
                              double streamTime, uint32_t/*RtAudioStreamStatus*/ status, void* userData) {
     SoundPool* soundPool = static_cast<SoundPool*>(userData);
     int16_t *buffer=(int16_t*)outputBuffer;
     for (auto& pair : soundPool->sounds) {
         Sound& sound = pair.second;
-        if (sound.playing) {
-            for (unsigned long i = 0; i < nBufferFrames; ++i) {
-                if (sound.position < sound.data.size()) {
-                    for(int c=0;c<sound.channels;c++){
-                        int16_t sample = *(int16_t*)(sound.data.data()+sound.position);
-                        buffer[i * 2+c] = static_cast<int16_t>(sample * sound.volume); // Left channel
-                        sound.position += (sound.bitsPerSample>>3);
-                    }
-                } else {
-                    sound.playing = false;
-                    sound.position= 0;
-                    break;
-                }
+        if (!sound.playing) continue;
+        for (unsigned long i = 0; i < nBufferFrames; ++i) {
+            if (sound.position < sound.data.size()) {
+                soundPool->sendOneSample(sound,outputBuffer,i);
+            } else {
+                sound.playing = false;
+                sound.position= 0;
+                break;
             }
         }
     }
