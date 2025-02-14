@@ -83,6 +83,15 @@ int32_t SoundPool::load(const std::string& filePath) {
     sound.position=0;
     sound.playing=false;
     sound.volume=1.f;
+    switch(sound.format){
+    case 1:switch(sound.bitsPerSample){
+           case  8:sound.format = RTAUDIO_SINT8 ;break;
+           case 16:sound.format = RTAUDIO_SINT16;break;
+           case 32:sound.format = RTAUDIO_SINT32;break;
+           }break;
+    case 2:/*TODO:MS-ADPCM(Microsoft Adaptive Differential Pulse Code Modulation)*/break;
+    case 3:sound.format=(sound.bitsPerSample=32)?RTAUDIO_FLOAT32:RTAUDIO_FLOAT64;break;
+    }
     sounds[soundId] = sound;
     return soundId;
 }
@@ -106,7 +115,7 @@ void SoundPool::play(int soundId) {
         RtAudioErrorType rtError=audio->openStream(&parameters, nullptr, RTAUDIO_SINT16, sounds[soundId].sampleRate, &bufferFrames, &audioCallback, this);
         LOGE_IF(rtError,"openStream=%d",rtError);
 #else
-        audio->openStream(&parameters, nullptr, RTAUDIO_SINT16, sounds[soundId].sampleRate, &bufferFrames, &audioCallback, this);
+        audio->openStream(&parameters, nullptr,sound.format, sounds[soundId].sampleRate, &bufferFrames, &audioCallback, this);
 #endif
     }
     audio->startStream();
