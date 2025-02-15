@@ -15,7 +15,7 @@ private:
     SparseArray<std::shared_ptr<Channel>>mAudioChannels;
     SparseArray<std::shared_ptr<Sound>>mSounds;
     int32_t readChunk(std::istream&,Sound&s);
-    void sendOneSample(SoundPool::Sound&sound,void*outputBuffer,uint32_t i);
+    void sendOneSample(Channel*channel,void*outputBuffer,uint32_t i);
     static int32_t audioCallback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
                     double streamTime, uint32_t status, void* userData);
 public:
