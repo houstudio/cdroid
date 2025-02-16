@@ -3411,7 +3411,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
             if (offsetForScroll){
                 canvas.rectangle(sx,sy,getWidth(),getHeight());
             } else {
-                if (!scalingRequired/*||cache == nullptr*/) {
+                if (!scalingRequired||(cache == nullptr)) {
                     canvas.rectangle(0,0,getWidth(), getHeight());
                 } else {
                     canvas.rectangle(0, 0, cache->get_width(), cache->get_height());
