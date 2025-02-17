@@ -247,6 +247,7 @@ Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std:
         istm = ctx->getInputStream(resourceId);
     else
         istm = std::move(std::make_unique<std::ifstream>(resourceId));
+    if((istm==nullptr)||(!*istm))return nullptr;
     return loadImage(*istm,width,height);
 }
 

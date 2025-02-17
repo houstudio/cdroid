@@ -10,6 +10,7 @@
 #include <textutils.h>
 #include <expat.h>
 #include <limits.h>
+#include <unistd.h>
 #include <core/systemclock.h>
 #include <image-decoders/imagedecoder.h>
 
@@ -316,6 +317,8 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
         if(stream)return std::unique_ptr<std::istream>(stream);
     }
     if(fullresid.empty()||resname.empty())return nullptr;
+    struct stat fs;
+    if(stat(fullresid.c_str(),&fs)<0)return nullptr;
     return std::make_unique<std::ifstream>(fullresid);
 }
 

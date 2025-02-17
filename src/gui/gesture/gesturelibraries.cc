@@ -40,10 +40,10 @@ public:
         if (!mResourceId.empty()) {
             if(mContext){
                 auto fs=mContext->getInputStream(mResourceId,nullptr);
-                if(fs)mStore->load(*fs);
+                if(fs&&(*fs))mStore->load(*fs);
             }else{
                 std::ifstream fs(mResourceId);
-                mStore->load(fs, true);
+                if(fs)mStore->load(fs, true);
             }
             LOGD("load the gesture library from %s",mResourceId.c_str());
             return true;

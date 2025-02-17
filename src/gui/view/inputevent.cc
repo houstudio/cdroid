@@ -57,7 +57,7 @@ void InputEvent::recycle(){
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // --- PooledInputEventFactory ---
-NeverDestroyed<PooledInputEventFactory>mInst(20);
+static NeverDestroyed<PooledInputEventFactory>mInst(20);
 PooledInputEventFactory& PooledInputEventFactory::getInstance(){
     return *mInst.get();
 }

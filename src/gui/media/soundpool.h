@@ -4,16 +4,20 @@
 #include <string>
 #include <memory>
 #include <iostream>
+#include <mutex>
 #include <unordered_map>
 #include <core/sparsearray.h>
 class RtAudio;
 namespace cdroid{
+class Context;
 class SoundPool {
 private:
     struct Sound;
     struct Channel;
     struct Stream;
     int32_t mNextStreamId;
+    uint32_t mMaxStreams;
+    std::recursive_mutex mLock;
     SparseArray<std::shared_ptr<Channel>>mAudioChannels;
     SparseArray<std::shared_ptr<Sound>> mSounds;
     SparseArray<std::shared_ptr<Stream>>mStreams;
@@ -22,9 +26,10 @@ private:
     static int32_t audioCallback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
                     double streamTime, uint32_t status, void* userData);
 public:
-    SoundPool();
+    SoundPool(int maxStreams, int streamType, int srcQuality);
     ~SoundPool();
-    int32_t load(const std::string& filePath);
+    int32_t load(const std::string& filePath,int priority);
+    int32_t load(Context* context, const std::string& resId, int priority);
     bool unload(int soundID);
     int play(int soundId);
     int play(int soundId,float volume);

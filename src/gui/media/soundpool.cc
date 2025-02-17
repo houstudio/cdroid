@@ -1,4 +1,5 @@
 #include <media/soundpool.h>
+#include <core/context.h>
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -25,6 +26,7 @@ struct SoundPool::Sound{
     int32_t byteRate;
     int16_t blockAlign;
     int16_t bitsPerSample;
+    int playingSounds;
 };
 
 struct SoundPool::Stream{
@@ -38,8 +40,9 @@ struct SoundPool::Stream{
     bool playing;
 };
 
-SoundPool::SoundPool(){
+SoundPool::SoundPool(int maxStreams, int streamType, int srcQuality){
     mNextStreamId=0;
+    mMaxStreams=std::max(1,maxStreams);
 #if ENABLE(AUDIO)
     std::ostringstream oss;
     std::vector<RtAudio::Api>apis;
@@ -75,14 +78,14 @@ int32_t SoundPool::readChunk(std::istream&is,SoundPool::Sound&sound){
     auto& data=sound.data;
     is.read((char*)buf,8);
     uint32_t chunkSize = buf[4]|(buf[5]<<8)|(buf[6]<<16)|(buf[7]<<24);
-    LOGD("chunkId:%c%c%c%c size %d",buf[0],buf[1],buf[2],buf[3],chunkSize);
+    LOGD("chunkId:%c%c%c%c size %d gc=%d",buf[0],buf[1],buf[2],buf[3],chunkSize,is.gcount());
     if((memcmp(buf,"RIFF",4)==0)||(memcmp(buf,"list",4)==0)){
         uint32_t subChunkSize=0;
         is.read((char*)buf,4);
         ret+=4;
         LOGD("chunkType:%c%c%c%c",buf[0],buf[1],buf[2],buf[3]);
         while(subChunkSize<chunkSize-4)subChunkSize+=readChunk(is,sound);
-        is.seekg(chunkSize-4,std::ios_base::cur);
+        //is.seekg(chunkSize-4,std::ios_base::cur);
     }else{
         if(memcmp(buf,"fmt",3)==0){
             is.read((char*)buf,chunkSize);
@@ -104,42 +107,58 @@ int32_t SoundPool::readChunk(std::istream&is,SoundPool::Sound&sound){
     return ret;
 }
 
-int32_t SoundPool::load(const std::string& filePath) {
-    std::ifstream file(filePath, std::ios::binary);
-    if (!file) {
-        LOGE("Failed to open file: ",filePath.c_str());
-        return -1;
-    }
+int32_t SoundPool::load(Context* context, const std::string& resId, int priority){
     auto sound = std::make_shared<Sound>();
-    readChunk(file,*sound);
+    if(context){
+	auto is = context->getInputStream(resId);
+	if(is==nullptr)return -1;
+        readChunk(*is,*sound);
+    }else{
+        std::ifstream file(resId, std::ios::in|std::ios::binary);
+        if(!file) return -1;
+        readChunk(file,*sound);
+    }
     LOGD("\tAudioFormat:%d Channels=%d sampleRate=%d",sound->format,sound->channels,sound->sampleRate);
     LOGD("\tByteRate:%d blockAlign=%d bitsPerSample=%d",sound->byteRate,sound->blockAlign,sound->bitsPerSample);
 
     // For simplicity, assume the file is a raw PCM file with known parameters
-    const int soundId = mSounds.size();
+    std::lock_guard<std::recursive_mutex>_l(mLock);
+    const int soundId = mSounds.size()+1;
+    sound->playingSounds=0;
     switch(sound->format){
-    case 1:switch(sound->bitsPerSample){
-           case  8:sound->format = RTAUDIO_SINT8 ;break;
-           case 16:sound->format = RTAUDIO_SINT16;break;
-           case 32:sound->format = RTAUDIO_SINT32;break;
-           }break;
+    case 1:
+        switch(sound->bitsPerSample){
+        case  8:sound->format = RTAUDIO_SINT8 ;break;
+        case 16:sound->format = RTAUDIO_SINT16;break;
+        case 32:sound->format = RTAUDIO_SINT32;break;
+        }break;
     case 2:/*TODO:MS-ADPCM(Microsoft Adaptive Differential Pulse Code Modulation)*/break;
     case 3:sound->format=(sound->bitsPerSample=32)?RTAUDIO_FLOAT32:RTAUDIO_FLOAT64;break;
     }
-    mSounds.put(soundId,sound);
-    return soundId;
+    if(sound->format){
+        mSounds.put(soundId,sound);
+        return soundId;
+    }
+    return -1;
 }
 
+int32_t SoundPool::load(const std::string& filePath,int priority) {
+    return load(nullptr,filePath,priority);
+}
+
+#define SOUNDKEY(s) ((s)->sampleRate*100+(s)->channels*10+(s)->format)
 bool SoundPool::unload(int soundId){
-    auto s = mSounds.get(soundId);
-    if(s.playingSound==0){
-        mSounds.remove(soundId);
-        return true;
+    std::lock_guard<std::recursive_mutex>_l(mLock);
+    auto sound = mSounds.get(soundId);
+    if(sound){
+        if(sound->playingSounds==0){
+            mSounds.remove(soundId);
+            return true;
+        }
     }
     return false;
 }
 
-#define SOUNDKEY(s) ((s)->sampleRate*10+(s)->format)
 int SoundPool::play(int soundId){
     return play(soundId,1.f);
 }
@@ -153,6 +172,7 @@ int SoundPool::play(int soundId,float leftVolume, float rightVolume) {
 }
 
 int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority, int loop, float rate){
+    std::lock_guard<std::recursive_mutex>_l(mLock);
     auto sound=mSounds.get(soundId);
     if (sound==nullptr) {
         LOGE("Sound ID %d not found!",soundId);
@@ -165,13 +185,13 @@ int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority
         channel = std::make_shared<Channel>();
         channel->pool = this;
         channel->playingSounds = 0;
-        channel->channels=0;
+        channel->channels=sound->channels;
         channel->format=sound->format;
         channel->channelKey=channelKey;
         channel->audio = std::make_shared<RtAudio>();
         mAudioChannels.put(channelKey,channel);
     }
-    const int32_t streamId = mNextStreamId++;
+    const int32_t streamId = ++mNextStreamId;
     auto stream=std::make_shared<Stream>();
     stream->soundId=soundId;
     stream->position=0;
@@ -182,7 +202,7 @@ int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority
     stream->rate=rate;
     mStreams.put(streamId,stream);
     channel->playingSounds++;
-
+LOGD("soundId %d as stream %d channelKey=%d",soundId,streamId,channelKey);
     auto& audio = channel->audio;
     if (!audio->isStreamOpen()) {
         RtAudio::StreamParameters parameters;
@@ -204,12 +224,13 @@ int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority
     if(!audio->isStreamRunning())
         audio->startStream();
 #endif
-    mNextStreamId++;
+    sound->playingSounds++;
     return streamId;
 }
 
 void SoundPool::stop(int streamId) {
 #if ENABLE(AUDIO)
+    std::lock_guard<std::recursive_mutex>_l(mLock);
     auto stream = mStreams.get(streamId);
     auto sound = mSounds.get(stream->soundId);
     if(sound==nullptr)return;
@@ -219,6 +240,7 @@ void SoundPool::stop(int streamId) {
     auto channel = mAudioChannels.get(channelKey);
     stream->playing = false;
     stream->position= 0;
+    sound->playingSounds--;
     channel->playingSounds--;
     if(channel->playingSounds==0){
         auto audio = channel->audio;
@@ -230,28 +252,33 @@ void SoundPool::stop(int streamId) {
 }
 
 void SoundPool::pause(int streamId){
+    std::lock_guard<std::recursive_mutex>_l(mLock);
     auto stream =mStreams.get(streamId);
     if(stream)stream->playing=false;
 }
 
 void SoundPool::resume(int streamId){
+    std::lock_guard<std::recursive_mutex>_l(mLock);
     auto stream =mStreams.get(streamId);
     if(stream)stream->playing=true;
 }
 
 void SoundPool::autoPause(){
+    std::lock_guard<std::recursive_mutex>_l(mLock);
     for(int i=0;i<mStreams.size();i++){
         mStreams.valueAt(i)->playing=false;
     }
 }
 
 void SoundPool::autoResume(){
+    std::lock_guard<std::recursive_mutex>_l(mLock);
     for(int i=0;i<mStreams.size();i++){
         mStreams.valueAt(i)->playing=true;
     }
 }
 
 void SoundPool::setVolume(int streamId, float leftVolume, float rightVolume){
+    std::lock_guard<std::recursive_mutex>_l(mLock);
     auto stream =mStreams.get(streamId);
     if (stream!=nullptr){
         stream->leftVolume=leftVolume;
@@ -264,11 +291,13 @@ void SoundPool::setVolume(int streamId, float volume) {
 }
 
 void SoundPool::setPriority(int streamId, int priority){
+    std::lock_guard<std::recursive_mutex>_l(mLock);
     auto stream =mStreams.get(streamId);
     if(stream)stream->priority=priority;
 }
 
 void SoundPool::setLoop(int streamId, int loop){
+    std::lock_guard<std::recursive_mutex>_l(mLock);
     auto stream =mStreams.get(streamId);
     if(stream!=nullptr)stream->loop=loop;
 }
@@ -286,8 +315,9 @@ void SoundPool::sendOneSample(SoundPool::Channel*channel,void*outputBuffer,uint3
     for(int c=0;c<channel->channels;c++){
         for(int i=0;i<mStreams.size();i++){
             auto stream=mStreams.valueAt(i);
-            auto sound =mSounds.valueAt(stream->soundId);
-            void*sample=(void*)(sound->data.data()+stream->position);
+            auto sound =mSounds.get(stream->soundId);
+            const uint32_t position=stream->position*stream->rate;
+            const void*sample=(void*)(sound->data.data()+position+(sound->bitsPerSample>>3)*c);
             if((SOUNDKEY(sound)!=channel->channelKey)||(stream->playing==false))continue;
             switch(sound->format){
             case RTAUDIO_SINT8 : sumedSampleInt[c]+=static_cast<int8_t>(*((int8_t*)sample)*stream->leftVolume); break;
@@ -295,12 +325,17 @@ void SoundPool::sendOneSample(SoundPool::Channel*channel,void*outputBuffer,uint3
             case RTAUDIO_SINT32: sumedSampleInt[c]+=static_cast<int32_t>(*((int32_t*)sample)*stream->leftVolume);break;
             case RTAUDIO_FLOAT32:sumedSampleFloat[c]+=static_cast<float>(*((float*)sample)*stream->leftVolume);break;
             }
-            if(stream->position>=sound->data.size()){
+            if((position>=sound->data.size())&&stream->playing){
                 stream->playing = false;
+                sound->playingSounds--;
                 channel->playingSounds--;
             }
-            stream->position += (sound->bitsPerSample>>3);
         }
+    }
+    for(int i=0;i<mStreams.size();i++){
+        auto stream=mStreams.valueAt(i);
+        auto sound =mSounds.get(stream->soundId);
+        if(stream->playing)stream->position+=(sound->bitsPerSample>>3)*sound->channels;
     }
     for(int c=0;c<channel->channels&&playingSounds;c++){
         switch(channel->format){
@@ -316,6 +351,7 @@ int32_t SoundPool::audioCallback(void* outputBuffer, void* inputBuffer, unsigned
                              double streamTime, uint32_t/*RtAudioStreamStatus*/ status, void* userData) {
     Channel* channel = static_cast<Channel*>(userData);
     SoundPool*soundPool = channel->pool;
+    std::lock_guard<std::recursive_mutex>_l(soundPool->mLock);
     for(int i = 0; i < nBufferFrames ; i++)
         soundPool->sendOneSample(channel,outputBuffer,i);
     for(int i = soundPool->mStreams.size() - 1; i >= 0 ; i--){
