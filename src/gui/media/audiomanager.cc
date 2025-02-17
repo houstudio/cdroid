@@ -95,7 +95,7 @@ AudioManager::AudioManager(Context*ctx):mContext(ctx){
         const std::string sf=ss->begin()->second->find(m.second)->second;
         auto it=std::find(SOUND_EFFECT_FILES.begin(),SOUND_EFFECT_FILES.end(),sf);
         if(it==SOUND_EFFECT_FILES.end()){
-            sid=mSoundPool->load("/home/houzh/"+sf,0);//SOUND_EFFECT_FILES.size();
+            sid=mSoundPool->load(sf,0);//SOUND_EFFECT_FILES.size();
             SOUND_EFFECT_FILES.push_back(sf);
             file2sid.insert({sf,sid});
         }else {
@@ -125,7 +125,7 @@ void  AudioManager::playSoundEffect(int effectType, float volume){
         return;
     }
     std::string sndfile=SOUND_EFFECT_FILES[effectType];
-    const int sid = SOUND_EFFECT_FILES_MAP[effectType];//mSoundPool->load("/home/houzh/"+sndfile,0);
+    const int sid = SOUND_EFFECT_FILES_MAP[effectType];
     const int stid= mSoundPool->play(sid,volume);
     LOGD("effectType=%d soundid=%d/%d streamid=%d file=%s",effectType,sid,SOUND_EFFECT_FILES_MAP[effectType],stid,sndfile.c_str());
 }
