@@ -168,7 +168,7 @@ int SoundPool::play(int soundId,float volume){
 }
 
 int SoundPool::play(int soundId,float leftVolume, float rightVolume) {
-    return play(soundId,leftVolume,rightVolume,0,0,1.f);
+    return play(soundId,leftVolume,rightVolume,0,1,1.f);
 }
 
 int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority, int loop, float rate){
@@ -190,6 +190,11 @@ int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority
         channel->channelKey=channelKey;
         channel->audio = std::make_shared<RtAudio>();
         mAudioChannels.put(channelKey,channel);
+#if RTAUDIO_VERSION_MAJOR>5
+        channel->audio->setErrorCallback([](RtAudioErrorType type,const std::string&errorText){
+            LOGW("%d:%s",type,errorText.c_str());
+        });
+#endif
     }
     const int32_t streamId = ++mNextStreamId;
     auto stream=std::make_shared<Stream>();
@@ -202,7 +207,7 @@ int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority
     stream->rate=rate;
     mStreams.put(streamId,stream);
     channel->playingSounds++;
-LOGD("soundId %d as stream %d channelKey=%d",soundId,streamId,channelKey);
+
     auto& audio = channel->audio;
     if (!audio->isStreamOpen()) {
         RtAudio::StreamParameters parameters;
@@ -217,7 +222,10 @@ LOGD("soundId %d as stream %d channelKey=%d",soundId,streamId,channelKey);
         RtAudioErrorType rtError=audio->openStream(&parameters, nullptr, RTAUDIO_SINT16, sound->sampleRate, &bufferFrames, &audioCallback, channel.get());
         LOGD("%s openStream=%d bufferFrames=%d outputChanels=%d inputChannels=%d",dinfo.name.c_str(),rtError,bufferFrames,dinfo.outputChannels,dinfo.inputChannels);
 #else
-        audio->openStream(&parameters, nullptr,sound->format, sound->sampleRate, &bufferFrames, &audioCallback, channel.get());
+        audio->openStream(&parameters, nullptr,sound->format, sound->sampleRate, &bufferFrames, &audioCallback, channel.get(),nullptr/*StreamOptions*/,
+                [](RtAudioError::Type type, const std::string &errorText){
+            LOGW("%d:%s",type,errorText.c_str());
+        });
         LOGD("%s openStream.bufferFrames=%d outputChanels=%d inputChannels=%d",dinfo.name.c_str(),bufferFrames,dinfo.outputChannels,dinfo.inputChannels);
 #endif
     }
@@ -326,9 +334,10 @@ void SoundPool::sendOneSample(SoundPool::Channel*channel,void*outputBuffer,uint3
             case RTAUDIO_FLOAT32:sumedSampleFloat[c]+=static_cast<float>(*((float*)sample)*stream->leftVolume);break;
             }
             if((position>=sound->data.size())&&stream->playing){
-                stream->playing = false;
                 sound->playingSounds--;
                 channel->playingSounds--;
+                stream->loop--;
+                stream->playing = (stream->loop>0);
             }
         }
     }
@@ -356,7 +365,7 @@ int32_t SoundPool::audioCallback(void* outputBuffer, void* inputBuffer, unsigned
         soundPool->sendOneSample(channel,outputBuffer,i);
     for(int i = soundPool->mStreams.size() - 1; i >= 0 ; i--){
         auto s = soundPool->mStreams.valueAt(i);
-        if((s->playing==false)&&(s->loop==0)){
+        if(s->playing==false){
             soundPool->mStreams.removeAt(i);
         }
     }
