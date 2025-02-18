@@ -228,6 +228,7 @@ int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority
         });
         LOGD("%s openStream.bufferFrames=%d outputChanels=%d inputChannels=%d",dinfo.name.c_str(),bufferFrames,dinfo.outputChannels,dinfo.inputChannels);
 #endif
+        LOGD("vol=%.2f,%.2f loop=%d rate=%d",leftVolume,rightVolume,loop,rate);
     }
     if(!audio->isStreamRunning())
         audio->startStream();
@@ -337,6 +338,7 @@ void SoundPool::sendOneSample(SoundPool::Channel*channel,void*outputBuffer,uint3
                 sound->playingSounds--;
                 channel->playingSounds--;
                 stream->loop--;
+                stream->position= 0;
                 stream->playing = (stream->loop>0);
             }
         }
