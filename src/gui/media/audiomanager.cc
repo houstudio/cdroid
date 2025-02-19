@@ -4,6 +4,7 @@
 #include <map>
 #include <core/context.h>
 #include <core/app.h>
+#include <core/environment.h>
 #include <media/soundpool.h>
 #include <media/audiomanager.h>
 #include <view/soundeffectconstants.h>
@@ -95,7 +96,7 @@ AudioManager::AudioManager(Context*ctx):mContext(ctx){
         const std::string sf=ss->begin()->second->find(m.second)->second;
         auto it=std::find(SOUND_EFFECT_FILES.begin(),SOUND_EFFECT_FILES.end(),sf);
         if(it==SOUND_EFFECT_FILES.end()){
-            sid=mSoundPool->load(sf,0);//SOUND_EFFECT_FILES.size();
+            sid=mSoundPool->load(Environment::getProductDirectory()+"/"+sf,0);//SOUND_EFFECT_FILES.size();
             SOUND_EFFECT_FILES.push_back(sf);
             file2sid.insert({sf,sid});
         }else {
