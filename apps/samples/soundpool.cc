@@ -1,11 +1,9 @@
 #include <media/soundpool.h>
 #include <media/audiomanager.h>
+#include <core/environment.h>
 #include <cdroid.h>
 #include <unistd.h>
 int main(int argc,const char*argv[]){
-    /*App app(argc,argv);
-    AudioManager& am=AudioManager::getInstance();
-    am.playSoundEffect(AudioManager::FX_KEY_CLICK,1.f);*/
     cdroid::SoundPool sp(8,0,0);
     for(int i=1;i<argc;i++){
         int sid =sp.load(argv[i],0);
