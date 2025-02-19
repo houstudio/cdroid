@@ -41,6 +41,7 @@ list(APPEND CDROID_SOURCES
     core/uieventsource.cc
     core/windowmanager.cc
     core/ziparchive.cc
+    core/environment.cc
 )
 
 list(APPEND CDROID_SOURCES

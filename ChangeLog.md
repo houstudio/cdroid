@@ -1,5 +1,5 @@
 # **V3.6.0
-  - Add SoundPool
+  - Add SoundPool,Environment
   - Fix AnimatorSet,ObjectAnimator's memleak
   - Fix some Recyclerview's memleak
   - Fix RotateDrawable AnimatedRotateDrawable's invalidate issues
