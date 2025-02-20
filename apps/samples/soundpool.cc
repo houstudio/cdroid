@@ -4,6 +4,12 @@
 #include <cdroid.h>
 #include <unistd.h>
 int main(int argc,const char*argv[]){
+    if(argc<2){
+        App app(argc,argv);
+        auto& am=AudioManager::getInstance();
+        am.playSoundEffect(AudioManager::FX_KEY_CLICK,1.f);
+        return app.exec();
+    }
     cdroid::SoundPool sp(8,0,0);
     for(int i=1;i<argc;i++){
         int sid =sp.load(argv[i],0);
