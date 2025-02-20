@@ -5,11 +5,17 @@ namespace cdroid{
 DECLARE_WIDGET2(RatingBar,"cdroid:attr/ratingBarStyle")
 
 RatingBar::RatingBar(int w,int h):AbsSeekBar(w,h){
+    mNumStars = 5;
+    mIsUserSeekable = true;
+    mProgressOnStartTracking=0;
     mTouchProgressOffset = 0.6f;
+    setStepSize(0.5f);
 }
 
 RatingBar::RatingBar(Context*ctx,const AttributeSet&atts)
     :AbsSeekBar(ctx,atts){
+    mIsUserSeekable = true;
+
     setIsIndicator(atts.getBoolean("isIndicator",!mIsUserSeekable));
     const int numStars  = atts.getInt("numStars",mNumStars);
     const float rating  = atts.getFloat("rating",-1);
