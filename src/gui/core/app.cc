@@ -64,7 +64,7 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     args::ValueFlag <std::string> record(parser,"record","events record path",{'r',"record"});
     args::ValueFlag <std::string> datadir(parser,"data","data directory",{'D',"data"});
     try{
-        parser.ParseCLI(argc,argv);
+        if(argc&&argv)parser.ParseCLI(argc,argv);
         std::cout<<"----"<<args::get(datadir)<<std::endl;//app ./src will print ./src
 #ifndef ARGS_NOEXCEPT
     }catch(args::Help){

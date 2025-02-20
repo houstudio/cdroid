@@ -58,7 +58,7 @@ SoundPool::SoundPool(int maxStreams, int streamType, int srcQuality){
     oss<<"]";
     LOG(INFO)<<oss.str();
 #else
-    LOG(INFO)<<"RtAudio "<<RtAudio::getVersion()<<" is not supoorted";
+    LOG(INFO)<<"RtAudio is not supoorted";
 #endif
 }
 
@@ -126,7 +126,7 @@ int32_t SoundPool::load(Context* context, const std::string& resId, int priority
     }
     LOGD("\tAudioFormat:%d Channels=%d sampleRate=%d",sound->format,sound->channels,sound->sampleRate);
     LOGD("\tByteRate:%d blockAlign=%d bitsPerSample=%d",sound->byteRate,sound->blockAlign,sound->bitsPerSample);
-
+#if ENABLE(AUDIO)
     // For simplicity, assume the file is a raw PCM file with known parameters
     std::lock_guard<std::recursive_mutex>_l(mLock);
     const int soundId = mSounds.size()+1;
@@ -145,6 +145,7 @@ int32_t SoundPool::load(Context* context, const std::string& resId, int priority
         mSounds.put(soundId,sound);
         return soundId;
     }
+#endif
     return -1;
 }
 
@@ -179,7 +180,7 @@ int SoundPool::play(int soundId,float leftVolume, float rightVolume) {
 
 int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority, int loop, float rate){
     std::lock_guard<std::recursive_mutex>_l(mLock);
-    auto sound=mSounds.get(soundId);
+    auto sound = mSounds.get(soundId);
     if (sound==nullptr) {
         LOGE("Sound ID %d not found!",soundId);
         return -1;
@@ -240,17 +241,19 @@ int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority
     }
     if(!audio->isStreamRunning())
         audio->startStream();
-#endif
     sound->playingSounds++;
     return streamId;
+#else/*!ENABLE(AUDIO)*/
+    return -1;
+#endif
 }
 
 void SoundPool::stop(int streamId) {
 #if ENABLE(AUDIO)
     std::lock_guard<std::recursive_mutex>_l(mLock);
     auto stream = mStreams.get(streamId);
-    auto sound = mSounds.get(stream->soundId);
-    if(sound==nullptr)return;
+    auto sound  = mSounds.get(stream->soundId);
+    if(sound == nullptr)return;
     if(stream->playing==false)return;
 
     const int channelKey=SOUNDKEY(sound);
@@ -271,26 +274,40 @@ void SoundPool::stop(int streamId) {
 void SoundPool::pause(int streamId){
     std::lock_guard<std::recursive_mutex>_l(mLock);
     auto stream =mStreams.get(streamId);
-    if(stream)stream->playing=false;
+    if(stream&&stream->playing){
+        stream->playing=false;
+        auto sound  = mSounds.get(stream->soundId);
+        const int channelKey=SOUNDKEY(sound);
+        auto channel = mAudioChannels.get(channelKey);
+        sound->playingSounds--;
+        channel->playingSounds--;
+    }
 }
 
 void SoundPool::resume(int streamId){
     std::lock_guard<std::recursive_mutex>_l(mLock);
     auto stream =mStreams.get(streamId);
-    if(stream)stream->playing=true;
+    if(stream){
+        stream->playing=true;
+        auto sound  = mSounds.get(stream->soundId);
+        const int channelKey=SOUNDKEY(sound);
+        auto channel = mAudioChannels.get(channelKey);
+        sound->playingSounds++;
+        channel->playingSounds++;
+    }
 }
 
 void SoundPool::autoPause(){
     std::lock_guard<std::recursive_mutex>_l(mLock);
     for(int i=0;i<mStreams.size();i++){
-        mStreams.valueAt(i)->playing=false;
+        pause(mStreams.keyAt(i));
     }
 }
 
 void SoundPool::autoResume(){
     std::lock_guard<std::recursive_mutex>_l(mLock);
     for(int i=0;i<mStreams.size();i++){
-        mStreams.valueAt(i)->playing=true;
+        resume(mStreams.keyAt(i));
     }
 }
 
@@ -325,6 +342,7 @@ void SoundPool::setRate(int streamId, float rate){
 }
 
 void SoundPool::sendOneSample(SoundPool::Channel*channel,void*outputBuffer,uint32_t i){
+#if ENABLE(AUDIO)
     const int playingSounds = channel->playingSounds;
     std::vector<int64_t> sumedSampleInt(playingSounds*4,0);
     std::vector<float> sumedSampleFloat(playingSounds*4,0.f);
@@ -367,6 +385,7 @@ void SoundPool::sendOneSample(SoundPool::Channel*channel,void*outputBuffer,uint3
         case RTAUDIO_FLOAT32: ((float*)outputBuffer)[2*i+c] = static_cast<float>(sumedSampleFloat[c]/playingSounds);break;
         }
     }
+#endif
 }
 
 int32_t SoundPool::audioCallback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
