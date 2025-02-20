@@ -58,7 +58,7 @@ SoundPool::SoundPool(int maxStreams, int streamType, int srcQuality){
     oss<<"]";
     LOG(INFO)<<oss.str();
 #else
-    LOG(INFO)<<"RtAudio is not supoorted";
+    LOG(INFO)<<"RtAudio is not supported";
 #endif
 }
 
@@ -111,6 +111,7 @@ int32_t SoundPool::readChunk(std::istream&is,SoundPool::Sound&sound){
 int32_t SoundPool::load(Context* context, const std::string& resId, int priority){
     auto sound = std::make_shared<Sound>();
     std::unique_ptr<std::istream> is;
+#if ENABLE(AUDIO)
     if(context) is = context->getInputStream(resId);
     if((is==nullptr)||!(*is)){
         is = std::make_unique<std::ifstream>(resId, std::ios::in|std::ios::binary);
@@ -126,7 +127,6 @@ int32_t SoundPool::load(Context* context, const std::string& resId, int priority
     }
     LOGD("\tAudioFormat:%d Channels=%d sampleRate=%d",sound->format,sound->channels,sound->sampleRate);
     LOGD("\tByteRate:%d blockAlign=%d bitsPerSample=%d",sound->byteRate,sound->blockAlign,sound->bitsPerSample);
-#if ENABLE(AUDIO)
     // For simplicity, assume the file is a raw PCM file with known parameters
     std::lock_guard<std::recursive_mutex>_l(mLock);
     const int soundId = mSounds.size()+1;
@@ -179,21 +179,21 @@ int SoundPool::play(int soundId,float leftVolume, float rightVolume) {
 }
 
 int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority, int loop, float rate){
+#if ENABLE(AUDIO)
     std::lock_guard<std::recursive_mutex>_l(mLock);
     auto sound = mSounds.get(soundId);
     if (sound==nullptr) {
         LOGE("Sound ID %d not found!",soundId);
         return -1;
     }
-#if ENABLE(AUDIO)
     const int channelKey = SOUNDKEY(sound);
     auto channel = mAudioChannels.get(channelKey);
     if(channel==nullptr){
         channel = std::make_shared<Channel>();
         channel->pool = this;
         channel->playingSounds = 0;
-        channel->channels=sound->channels;
-        channel->format=sound->format;
+        channel->channels = sound->channels;
+        channel->format = sound->format;
         channel->channelKey = channelKey;
         channel->audio = std::make_shared<RtAudio>();
         mAudioChannels.put(channelKey,channel);
@@ -205,14 +205,14 @@ int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority
 #endif
     }
     const int32_t streamId = ++mNextStreamId;
-    auto stream=std::make_shared<Stream>();
-    stream->soundId=soundId;
-    stream->position=0;
-    stream->leftVolume=leftVolume;
-    stream->rightVolume=rightVolume;
-    stream->playing =true;
-    stream->loop=loop;
-    stream->rate=rate;
+    auto stream = std::make_shared<Stream>();
+    stream->soundId = soundId;
+    stream->position= 0;
+    stream->leftVolume = leftVolume;
+    stream->rightVolume= rightVolume;
+    stream->playing = true;
+    stream->loop = loop;
+    stream->rate = rate;
     mStreams.put(streamId,stream);
     channel->playingSounds++;
 
