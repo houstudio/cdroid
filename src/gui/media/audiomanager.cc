@@ -4,7 +4,6 @@
 #include <map>
 #include <core/context.h>
 #include <core/app.h>
-#include <core/environment.h>
 #include <media/soundpool.h>
 #include <media/audiomanager.h>
 #include <view/soundeffectconstants.h>
@@ -49,14 +48,21 @@ AudioManager&AudioManager::getInstance(){
 }
 
 AudioManager::AudioManager(Context*ctx):mContext(ctx){
+    loadSoundEffects();
+}
+
+void AudioManager::loadSoundEffects(){
     char buf[256];
     std::streamsize len = 0;
 
-    std::unique_ptr<std::istream>stream;
-    if(ctx)stream = ctx->getInputStream("@xml/audio_assets");
-    if((stream==nullptr)||(!*stream))
-        stream = ctx->getInputStream("@cdroid:xml/audio_assets");
-    if((stream==nullptr)||(!*stream))return;
+    std::unique_ptr<std::istream> stream = mContext->getInputStream("@xml/audio_assets");
+    if((stream==nullptr)||(!*stream)){
+        stream = mContext->getInputStream("@cdroid:xml/audio_assets");
+    }
+    if((stream==nullptr)||(!*stream)){
+        LOGW("@xml/audio_assets and @cdroid:xml/audio_assets not exist!");
+        return;
+    }
 
     XML_Parser parser = XML_ParserCreate(nullptr);
     mSoundPool = std::make_unique<SoundPool>((int)NUM_SOUND_EFFECTS,0,0);
@@ -97,7 +103,7 @@ AudioManager::AudioManager(Context*ctx):mContext(ctx){
         const std::string sf = ss->begin()->second->find(m.second)->second;
         auto it = std::find(SOUND_EFFECT_FILES.begin(),SOUND_EFFECT_FILES.end(),sf);
         if(it==SOUND_EFFECT_FILES.end()){
-            sid = mSoundPool->load(Environment::getProductDirectory()+"/media/audio/ui/"+sf,0);//SOUND_EFFECT_FILES.size();
+            sid = mSoundPool->load(mContext,sf,0);//SOUND_EFFECT_FILES.size();
             SOUND_EFFECT_FILES.push_back(sf);
             file2sid.insert({sf,sid});
         }else {
@@ -118,6 +124,14 @@ void AudioManager::loadTouchSoundAssetDefaults(){
 }
 
 void  AudioManager::playSoundEffect(int effectType){
+    playSoundEffect(effectType,1.f);
+}
+
+void AudioManager::unloadSoundEffects(){
+    mSoundPool = nullptr;
+}
+
+void  AudioManager::playSoundEffect(int effectType,int userId){
     playSoundEffect(effectType,1.f);
 }
 

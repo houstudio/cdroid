@@ -2,6 +2,8 @@
 #include <core/textutils.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 namespace cdroid{
 #if 0
@@ -15,11 +17,11 @@ const std::string Environment::DIR_ODM_ROOT = getDirectory(ENV_ODM_ROOT, "/odm")
 const std::string Environment::DIR_VENDOR_ROOT = getDirectory(ENV_VENDOR_ROOT, "/vendor");
 const std::string Environment::DIR_PRODUCT_ROOT = getDirectory(ENV_PRODUCT_ROOT, "/product");
 #endif
-Environment::UserEnvironment Environment::sCurrentUser(getuid());
+Environment::UserEnvironment Environment::sCurrentUser(-1);
 bool Environment::sUserRequired=false;
-void Environment::initForCurrentUser() {
-    //const int userId = UserHandle.myUserId();
-    //sCurrentUser = new UserEnvironment(userId);
+void Environment::initForCurrentUser(int userId) {
+    if(userId==-1)userId= getuid();
+    sCurrentUser.mUserId = userId;
 }
 
 std::string Environment::getRootDirectory() {
@@ -213,27 +215,37 @@ bool Environment::isStandardDirectory(const std::string& dir) {
 
 int Environment::classifyExternalStorageDirectory(const std::string& dir) {
     int res = 0;
-#if 0
-    for (File f : FileUtils.listFilesOrEmpty(dir)) {
-        if (f.isFile() && isInterestingFile(f)) {
+    struct dirent* entry = nullptr;
+    DIR* dp = opendir(dir.c_str());
+    if(dp==nullptr)return 0;
+    while((entry = readdir(dp))!= nullptr){
+        if (entry->d_name[0] == '.') continue; 
+        struct stat statbuf;
+        std::string fullPath = dir + "/" + entry->d_name;
+        if (stat(fullPath.c_str(), &statbuf) == -1) {
+            std::cerr << "Could not stat file: " << fullPath << std::endl;
+            continue;
+        }
+
+        if (S_ISREG(statbuf.st_mode) && isInterestingFile(fullPath)) {
             res |= HAS_OTHER;
-        } else if (f.isDirectory() && hasInterestingFiles(f)) {
-            const std::string name = f.getName();
-            if (name==DIRECTORY_MUSIC) res |= HAS_MUSIC;
-            else if (name==DIRECTORY_PODCASTS) res |= HAS_PODCASTS;
-            else if (name==DIRECTORY_RINGTONES) res |= HAS_RINGTONES;
-            else if (name==DIRECTORY_ALARMS) res |= HAS_ALARMS;
-            else if (name==DIRECTORY_NOTIFICATIONS) res |= HAS_NOTIFICATIONS;
-            else if (name==DIRECTORY_PICTURES) res |= HAS_PICTURES;
-            else if (name==DIRECTORY_MOVIES) res |= HAS_MOVIES;
-            else if (name==DIRECTORY_DOWNLOADS) res |= HAS_DOWNLOADS;
-            else if (name==DIRECTORY_DCIM) res |= HAS_DCIM;
-            else if (name==DIRECTORY_DOCUMENTS) res |= HAS_DOCUMENTS;
-            else if (name==DIRECTORY_ANDROID) res |= HAS_ANDROID;
+        } else if (S_ISDIR(statbuf.st_mode) && hasInterestingFiles(fullPath)) {
+            const std::string name = entry->d_name;
+            if (name == DIRECTORY_MUSIC) res |= HAS_MUSIC;
+            else if (name == DIRECTORY_PODCASTS) res |= HAS_PODCASTS;
+            else if (name == DIRECTORY_RINGTONES) res |= HAS_RINGTONES;
+            else if (name == DIRECTORY_ALARMS) res |= HAS_ALARMS;
+            else if (name == DIRECTORY_NOTIFICATIONS) res |= HAS_NOTIFICATIONS;
+            else if (name == DIRECTORY_PICTURES) res |= HAS_PICTURES;
+            else if (name == DIRECTORY_MOVIES) res |= HAS_MOVIES;
+            else if (name == DIRECTORY_DOWNLOADS) res |= HAS_DOWNLOADS;
+            else if (name == DIRECTORY_DCIM) res |= HAS_DCIM;
+            else if (name == DIRECTORY_DOCUMENTS) res |= HAS_DOCUMENTS;
+            else if (name == DIRECTORY_ANDROID) res |= HAS_ANDROID;
             else res |= HAS_OTHER;
         }
     }
-#endif
+    closedir(dp);
     return res;
 }
 
@@ -254,7 +266,7 @@ bool Environment::hasInterestingFiles(const std::string& dir) {
 
 bool Environment::isInterestingFile(const std::string& file) {
     /*if (file.isFile()) {
-        final String name = file.getName().toLowerCase();
+        const std::string name = file.getName().toLowerCase();
         if (name.endsWith(".exe") || name.equals("autorun.inf")
                 || name.equals("launchpad.zip") || name.equals(".nomedia")) {
             return false;
@@ -390,8 +402,12 @@ std::string Environment::maybeTranslateEmulatedPathToInternal(std::string& path)
 ///////////////////////////////////////////////////////////////////////////
 Environment::UserEnvironment::UserEnvironment(int userId)
     :mUserId (userId){
-    struct passwd *pwd = getpwuid(userId);
-    LOGD("userId=%d %s",userId,pwd->pw_name);
+    struct passwd *pwd = nullptr;
+    if(userId==-1){
+        mUserId=getuid();
+        pwd = getpwuid(userId);
+    }
+    LOGD("userId=%d %s",mUserId,(pwd?pwd->pw_name:"null"));
 }
 
 std::vector<std::string> Environment::UserEnvironment::getExternalDirs() {

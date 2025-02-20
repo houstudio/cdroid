@@ -76,7 +76,7 @@ private:
     static void throwIfUserRequired();
 public:
     static constexpr const char*const DIR_ANDROID = "Android";
-    static void initForCurrentUser();
+    static void initForCurrentUser(int userId);
     static std::string getRootDirectory();
     static std::string getStorageDirectory();
     static std::string getOemDirectory();
@@ -194,7 +194,8 @@ public:
 
 class Environment::UserEnvironment {
 private:
-    const int mUserId;
+    int mUserId;
+    friend Environment;
 public:
     UserEnvironment(int userId);
 

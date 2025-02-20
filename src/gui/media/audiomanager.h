@@ -29,8 +29,11 @@ private:
     void loadTouchSoundAssetDefaults();
 public:
     static AudioManager&getInstance();
-    void  playSoundEffect(int effectType);
-    void  playSoundEffect(int effectType, float volume);
+    void playSoundEffect(int effectType);
+    void playSoundEffect(int effectType,int userId);
+    void playSoundEffect(int effectType, float volume);
+    void loadSoundEffects();
+    void unloadSoundEffects();
 };
 
 }/*endof namespace*/
