@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<transition xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:drawable="@cdroid:mipmap/list_selector_background_pressed"  />
-    <item cdroid:drawable="@cdroid:mipmap/list_selector_background_longpress"  />
+<transition xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@android:mipmap/list_selector_background_pressed"  />
+    <item android:drawable="@android:mipmap/list_selector_background_longpress"  />
 </transition>

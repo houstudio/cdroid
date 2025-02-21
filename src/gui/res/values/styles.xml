@@ -658,22 +658,22 @@
     </style>
 
     <!-- @hide -->
-     <style name="TextAppearance.SearchResult">
-         <item name="textStyle">normal</item>
-         <item name="textColor">?textColorPrimaryInverse</item>
-         <item name="textColorHint">?textColorHintInverse</item>
-     </style>	
+    <style name="TextAppearance.SearchResult">
+        <item name="textStyle">normal</item>
+        <item name="textColor">?textColorPrimaryInverse</item>
+        <item name="textColorHint">?textColorHintInverse</item>
+    </style>
 
-     <!-- @hide -->
-     <style name="TextAppearance.SearchResult.Title">
-         <item name="textSize">18sp</item>
-     </style>
+    <!-- @hide -->
+    <style name="TextAppearance.SearchResult.Title">
+        <item name="textSize">18sp</item>
+    </style>
 
-     <!-- @hide -->
-     <style name="TextAppearance.SearchResult.Subtitle">
-         <item name="textSize">14sp</item>
-         <item name="textColor">?textColorSecondaryInverse</item>
-     </style>
+    <!-- @hide -->
+    <style name="TextAppearance.SearchResult.Subtitle">
+        <item name="textSize">14sp</item>
+        <item name="textColor">?textColorSecondaryInverse</item>
+    </style>
 
     <style name="TextAppearance.WindowTitle">
         <item name="textColor">#fff</item>
@@ -688,6 +688,9 @@
 
     <style name="TextAppearance.Toast">
         <item name="fontFamily">sans-serif-condensed</item>
+        <item name="textSize">14sp</item>
+        <item name="lineHeight">20sp</item>
+        <item name="textColor">?android:attr/textColorPrimary</item>
     </style>
 
     <style name="TextAppearance.Tooltip">

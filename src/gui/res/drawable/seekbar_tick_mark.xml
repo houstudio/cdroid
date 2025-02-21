@@ -1,5 +1,5 @@
-<shape xmlns:cdroid="http://schemas.android.com/apk/res/android"
-       cdroid:shape="oval" cdroid:tint="?attr/colorControlNormal">
-    <size cdroid:width="8dp" cdroid:height="8dp" />
-    <solid cdroid:color="#FFFF0000" />
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+       android:shape="oval" android:tint="?attr/colorControlNormal">
+    <size android:width="8dp" android:height="8dp" />
+    <solid android:color="#FFFF0000" />
 </shape>

@@ -10,12 +10,12 @@
     <color name="transparent">#00000000</color>
     <color name="background_dark">#ff000000</color>
     <color name="background_light">#ffffffff</color>
-    <color name="bright_foreground_dark">@cdroid:color/background_light</color>
-    <color name="bright_foreground_light">@cdroid:color/background_dark</color>
+    <color name="bright_foreground_dark">@android:color/background_light</color>
+    <color name="bright_foreground_light">@android:color/background_dark</color>
     <color name="bright_foreground_dark_disabled">#80ffffff</color>
     <color name="bright_foreground_light_disabled">#80000000</color>
-    <color name="bright_foreground_dark_inverse">@cdroid:color/bright_foreground_light</color>
-    <color name="bright_foreground_light_inverse">@cdroid:color/bright_foreground_dark</color>
+    <color name="bright_foreground_dark_inverse">@android:color/bright_foreground_light</color>
+    <color name="bright_foreground_light_inverse">@android:color/bright_foreground_dark</color>
     <color name="dim_foreground_dark">#bebebe</color>
     <color name="dim_foreground_dark_disabled">#80bebebe</color>
     <color name="dim_foreground_dark_inverse">#323232</color>
@@ -31,8 +31,12 @@
     <color name="link_text_dark">#5c5cff</color>
     <color name="link_text_light">#0000ee</color>
     <color name="suggestion_highlight_text">#177bbd</color>
+    <!-- For date picker widget -->
+    <drawable name="selected_day_background">#ff0092f4</drawable>
+
     <!-- For settings framework -->
     <color name="lighter_gray">#ddd</color>
+    <!-- A dark gray, equivalent to 0xffaaaaaa -->
     <color name="darker_gray">#aaa</color>
 
     <!-- For security permissions -->
@@ -42,13 +46,13 @@
 
     <!-- For search-related UIs -->
     <color name="search_url_text_normal">#7fa87f</color>
-    <color name="search_url_text_selected">@cdroid:color/black</color>
-    <color name="search_url_text_pressed">@cdroid:color/black</color>
-    <color name="search_widget_corpus_item_background">@cdroid:color/lighter_gray</color>
+    <color name="search_url_text_selected">@android:color/black</color>
+    <color name="search_url_text_pressed">@android:color/black</color>
+    <color name="search_widget_corpus_item_background">@android:color/lighter_gray</color>
 
     <!-- SlidingTab -->
-    <color name="sliding_tab_text_color_active">@cdroid:color/black</color>
-    <color name="sliding_tab_text_color_shadow">@cdroid:color/black</color>
+    <color name="sliding_tab_text_color_active">@android:color/black</color>
+    <color name="sliding_tab_text_color_shadow">@android:color/black</color>
 
     <!-- keyguard tab -->
     <color name="keyguard_text_color_normal">#ffffff</color>

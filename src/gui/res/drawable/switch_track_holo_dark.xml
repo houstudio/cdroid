@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_focused="true"  cdroid:drawable="@cdroid:mipmap/switch_bg_focused_holo_dark" />
-    <item cdroid:drawable="@cdroid:mipmap/switch_bg_holo_dark" />
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true"  android:drawable="@android:mipmap/switch_bg_focused_holo_dark" />
+    <item android:drawable="@android:mipmap/switch_bg_holo_dark" />
 </selector>

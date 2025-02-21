@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RecycleListView
-    xmlns:cdroid="http://schemas.android.com/apk/res/android"
-    cdroid:id="@+id/select_dialog_listview"
-    cdroid:layout_width="match_parent"
-    cdroid:layout_height="match_parent"
-    cdroid:layout_marginTop="5px"
-    cdroid:cacheColorHint="@null"
-    cdroid:divider="?attr/listDividerAlertDialog"
-    cdroid:scrollbars="vertical"
-    cdroid:overScrollMode="ifContentScrolls"
-    cdroid:textAlignment="viewStart"/>
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/select_dialog_listview"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="5px"
+    android:cacheColorHint="@null"
+    android:divider="?attr/listDividerAlertDialog"
+    android:scrollbars="vertical"
+    android:overScrollMode="ifContentScrolls"
+    android:textAlignment="viewStart"/>

@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<inset xmlns:cdroid="http://schemas.android.com/apk/res/android"
-       cdroid:insetLeft="@dimen/button_inset_horizontal_material"
-       cdroid:insetTop="@dimen/button_inset_vertical_material"
-       cdroid:insetRight="@dimen/button_inset_horizontal_material"
-       cdroid:insetBottom="@dimen/button_inset_vertical_material">
-    <layer-list cdroid:paddingMode="stack">
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+       android:insetLeft="@dimen/button_inset_horizontal_material"
+       android:insetTop="@dimen/button_inset_vertical_material"
+       android:insetRight="@dimen/button_inset_horizontal_material"
+       android:insetBottom="@dimen/button_inset_vertical_material">
+    <layer-list android:paddingMode="stack">
         <item>
-            <ripple cdroid:color="?attr/colorControlHighlight">
+            <ripple android:color="?attr/colorControlHighlight">
                 <item>
-                    <shape cdroid:shape="rectangle"
-                           cdroid:tint="?attr/colorButtonNormal">
-                        <corners cdroid:topLeftRadius="@dimen/control_corner_material"
-                                 cdroid:topRightRadius="@dimen/control_corner_material"/>
-                        <solid cdroid:color="@color/white" />
-                        <padding cdroid:left="@dimen/button_padding_horizontal_material"
-                                 cdroid:top="@dimen/button_padding_vertical_material"
-                                 cdroid:right="@dimen/button_padding_horizontal_material"
-                                 cdroid:bottom="@dimen/button_padding_vertical_material" />
+                    <shape android:shape="rectangle"
+                           android:tint="?attr/colorButtonNormal">
+                        <corners android:topLeftRadius="@dimen/control_corner_material"
+                                 android:topRightRadius="@dimen/control_corner_material"/>
+                        <solid android:color="@color/white" />
+                        <padding android:left="@dimen/button_padding_horizontal_material"
+                                 android:top="@dimen/button_padding_vertical_material"
+                                 android:right="@dimen/button_padding_horizontal_material"
+                                 android:bottom="@dimen/button_padding_vertical_material" />
                     </shape>
                 </item>
             </ripple>
         </item>
-        <item cdroid:gravity="bottom|fill_horizontal">
-            <shape cdroid:shape="rectangle">
-                <size cdroid:height="2dp" />
-                <solid cdroid:color="@color/control_checkable_material" />
+        <item android:gravity="bottom|fill_horizontal">
+            <shape android:shape="rectangle">
+                <size android:height="2dp" />
+                <solid android:color="@color/control_checkable_material" />
             </shape>
         </item>
     </layer-list>

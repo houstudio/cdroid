@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<layer-list xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:gravity="center_vertical|fill_horizontal"
-          cdroid:start="4dp"
-          cdroid:end="4dp">
-        <shape cdroid:shape="rectangle"
-               cdroid:tint="@color/switch_track_material">
-            <corners cdroid:radius="7dp" />
-            <solid cdroid:color="@color/white_disabled_material" />
-            <size cdroid:height="14dp" />
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:gravity="center_vertical|fill_horizontal"
+          android:start="4dp"
+          android:end="4dp">
+        <shape android:shape="rectangle"
+               android:tint="@color/switch_track_material">
+            <corners android:radius="7dp" />
+            <solid android:color="@color/white_disabled_material" />
+            <size android:height="14dp" />
         </shape>
     </item>
 </layer-list>

@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<FrameLayout xmlns:cdroid="http://schemas.android.com/apk/res/android"
-    cdroid:layout_width="match_parent"
-    cdroid:layout_height="wrap_content">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
-    <LinearLayout cdroid:id="@cdroid:+id/body"
-        cdroid:orientation="horizontal"
-        cdroid:layout_width="match_parent"
-        cdroid:layout_height="match_parent"
-        cdroid:baselineAligned="false"
-        cdroid:paddingStart="8dip"
-        cdroid:paddingTop="10dip"
-        cdroid:paddingEnd="8dip"
-        cdroid:paddingBottom="10dip">
+    <LinearLayout android:id="@android:+id/body"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:baselineAligned="false"
+        android:paddingStart="8dip"
+        android:paddingTop="10dip"
+        android:paddingEnd="8dip"
+        android:paddingBottom="10dip">
 
-        <ProgressBar cdroid:id="@cdroid:id/progress"
-            style="?cdroid:attr/progressBarStyle"
-            cdroid:layout_width="wrap_content"
-            cdroid:layout_height="wrap_content"
-            cdroid:max="10000"
-            cdroid:layout_marginEnd="12dip" />
+        <ProgressBar android:id="@android:id/progress"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:max="10000"
+            android:layout_marginEnd="12dip" />
 
-        <TextView cdroid:id="@cdroid:+id/message"
-            cdroid:layout_width="match_parent"
-            cdroid:layout_height="wrap_content"
-            cdroid:layout_gravity="center_vertical" />
+        <TextView android:id="@android:+id/message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical" />
     </LinearLayout>
 </FrameLayout>

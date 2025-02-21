@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item cdroid:state_pressed="true"  cdroid:state_window_focused="true"
-          cdroid:drawable="cdroid:mipmap/seek_thumb_pressed" />
+    <item android:state_pressed="true"  android:state_window_focused="true"
+          android:drawable="android:mipmap/seek_thumb_pressed" />
 
-    <item cdroid:state_focused="true"  cdroid:state_window_focused="true"
-          cdroid:drawable="cdroid:mipmap/seek_thumb_selected" />
+    <item android:state_focused="true"  android:state_window_focused="true"
+          android:drawable="android:mipmap/seek_thumb_selected" />
 
-    <item cdroid:state_selected="true" cdroid:state_window_focused="true"
-          cdroid:drawable="cdroid:mipmap/seek_thumb_selected" />
+    <item android:state_selected="true" android:state_window_focused="true"
+          android:drawable="android:mipmap/seek_thumb_selected" />
 
-    <item cdroid:drawable="cdroid:mipmap/seek_thumb_normal" />
+    <item android:drawable="android:mipmap/seek_thumb_normal" />
 
 </selector>

@@ -29,6 +29,7 @@
   <item type="id" name="icon2" />
   <item type="id" name="input" />
   <item type="id" name="left_icon" />
+  <item type="id" name="line1" />
   <item type="id" name="list" />
   <item type="id" name="list_container" />
   <item type="id" name="menu" />
@@ -58,10 +59,23 @@
   <item type="id" name="candidatesArea" />
   <item type="id" name="inputArea" />
   <item type="id" name="inputExtractEditText" />
+  <!-- View id for the action of text editor inside of an extracted text
+        {@link InputMethodService#onCreateExtractTextView IME extract view}. -->
+  <item type="id" name="inputExtractAction" />
+  <!-- View id for the accessories (such as the extracted input action button) of text editor
+       inside of an extracted text {@link InputMethodService#onCreateExtractTextView IME extract
+       view}. This layout must contain the {@link #inputExtractAction}. -->
+  <item type="id" name="inputExtractAccessories" />
   <item type="id" name="selectAll" />
   <item type="id" name="cut" />
   <item type="id" name="copy" />
   <item type="id" name="paste" />
+  <!-- Editor action that makes selected text bold. -->
+  <item type="id" name="bold" />
+  <!-- Editor action that makes selected text italic. -->
+  <item type="id" name="italic" />
+  <!-- Editor action that makes selected text underline. -->
+  <item type="id" name="underline" />
   <item type="id" name="copyUrl" />
   <item type="id" name="selectTextMode" />
   <item type="id" name="switchInputMethod" />
@@ -102,6 +116,10 @@
   <item type="id" name="selection_end_handle" />
   <item type="id" name="insertion_handle" />
   <item type="id" name="floating_toolbar_menu_item_image_button" />
+  <item type="id" name="camera" />
+  <item type="id" name="mic" />
+  <item type="id" name="overlay" />
+  <item type="id" name="app_ops" />
 
   <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_SHOW_ON_SCREEN}. -->
   <item type="id" name="accessibilityActionShowOnScreen" />
@@ -121,6 +139,18 @@
   <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_SCROLL_RIGHT}. -->
   <item type="id" name="accessibilityActionScrollRight" />
 
+  <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_PAGE_UP}. -->
+  <item type="id" name="accessibilityActionPageUp" />
+
+  <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_PAGE_DOWN}. -->
+  <item type="id" name="accessibilityActionPageDown" />
+
+  <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_PAGE_LEFT}. -->
+  <item type="id" name="accessibilityActionPageLeft" />
+
+  <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_PAGE_RIGHT}. -->
+  <item type="id" name="accessibilityActionPageRight" />
+
   <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_SET_PROGRESS}. -->
   <item type="id" name="accessibilityActionSetProgress" />
 
@@ -139,11 +169,114 @@
   <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_MOVE_WINDOW}. -->
   <item type="id" name="accessibilityActionMoveWindow" />
 
+  <!-- A tag used to save an animator in top -->
+  <item type="id" name="tag_top_animator" />
+
+  <!-- A tag used to save the current top override -->
+  <item type="id" name="tag_top_override" />
+
+  <!-- A tag used to save the original top of a view -->
+  <item type="id" name="tag_layout_top" />
+
+  <!-- A tag used to save whether a view was laid out before -->
+  <item type="id" name="tag_is_first_layout" />
+
+  <!-- A tag used to save an animator in alpha -->
+  <item type="id" name="tag_alpha_animator" />
+
+  <!-- A tag used to save the clip children in a tag -->
+  <item type="id" name="clip_children_tag" />
+
+  <!-- A tag used to save the set of deactivated children that clip -->
+  <item type="id" name="clip_children_set_tag" />
+
+  <!-- A tag used to save the clip to padding in a tag -->
+  <item type="id" name="clip_to_padding_tag" />
+
   <!-- Action used to manually trigger an autofill request -->
   <item type="id" name="autofill" />
+
   <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_SHOW_TOOLTIP}. -->
   <item type="id" name="accessibilityActionShowTooltip" />
 
   <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_HIDE_TOOLTIP}. -->
   <item type="id" name="accessibilityActionHideTooltip" />
+
+  <!-- A tag used to save the view added to a transition overlay -->
+  <item type="id" name="transition_overlay_view_tag" />
+
+  <!-- A tag used to save the notification action object -->
+  <item type="id" name="notification_action_index_tag" />
+
+  <!-- A tag used to save the index where the custom view is stored -->
+  <item type="id" name="notification_custom_view_index_tag" />
+
+  <!-- A tag used to store the margin end for this view when the right icon is visible -->
+  <item type="id" name="tag_margin_end_when_icon_gone" />
+
+  <!-- A tag used to store the margin end for this view when the right icon is gone -->
+  <item type="id" name="tag_margin_end_when_icon_visible" />
+
+  <!-- A tag used on the notification @id/left_icon to indicate that this view should be pupulated with the drawable from @id/right_icon when visible. -->
+  <item type="id" name="tag_uses_right_icon_drawable" />
+
+  <!-- A tag used on notification @id/right_icon to indicate that this view should remain visible even when the @id/left_icon is shown. -->
+  <item type="id" name="tag_keep_when_showing_left_icon" />
+
+  <!-- Marks the "copy to clipboard" button in the ChooserActivity -->
+  <item type="id" name="chooser_copy_button" />
+
+  <!-- Marks the "nearby" button in the ChooserActivity -->
+  <item type="id" name="chooser_nearby_button" />
+
+  <!-- Marks the "edit" button in the ChooserActivity -->
+  <item type="id" name="chooser_edit_button" />
+
+  <!-- Accessibility action identifier for {@link android.accessibilityservice.AccessibilityService#GLOBAL_ACTION_BACK}. -->
+  <item type="id" name="accessibilitySystemActionBack" />
+
+  <!-- Accessibility action identifier for {@link android.accessibilityservice.AccessibilityService#GLOBAL_ACTION_HOME}. -->
+  <item type="id" name="accessibilitySystemActionHome" />
+
+  <!-- Accessibility action identifier for {@link android.accessibilityservice.AccessibilityService#GLOBAL_ACTION_RECENTS}. -->
+  <item type="id" name="accessibilitySystemActionRecents" />
+
+  <!-- Accessibility action identifier for {@link android.accessibilityservice.AccessibilityService#GLOBAL_ACTION_NOTIFICATIONS}. -->
+  <item type="id" name="accessibilitySystemActionNotifications" />
+
+  <!-- Accessibility action identifier for {@link android.accessibilityservice.AccessibilityService#GLOBAL_ACTION_QUICK_SETTINGS}. -->
+  <item type="id" name="accessibilitySystemActionQuickSettings" />
+
+  <!-- Accessibility action identifier for {@link android.accessibilityservice.AccessibilityService#GLOBAL_ACTION_POWER_DIALOG}. -->
+  <item type="id" name="accessibilitySystemActionPowerDialog" />
+
+  <!-- Accessibility action identifier for {@link android.accessibilityservice.AccessibilityService#GLOBAL_ACTION_TOGGLE_SPLIT_SCREEN}. -->
+  <item type="id" name="accessibilitySystemActionToggleSplitScreen" />
+
+  <!-- Accessibility action identifier for {@link android.accessibilityservice.AccessibilityService#GLOBAL_ACTION_LOCK_SCREEN}. -->
+  <item type="id" name="accessibilitySystemActionLockScreen" />
+
+  <!-- Accessibility action identifier for {@link android.accessibilityservice.AccessibilityService#GLOBAL_ACTION_TAKE_SCREENSHOT}. -->
+  <item type="id" name="accessibilitySystemActionTakeScreenshot" />
+
+  <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_PRESS_AND_HOLD}. -->
+  <item type="id" name="accessibilityActionPressAndHold" />
+
+  <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_IME_ENTER}. -->
+  <item type="id" name="accessibilityActionImeEnter" />
+
+  <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_DRAG_START}. -->
+  <item type="id" name="accessibilityActionDragStart" />
+
+  <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_DRAG_DROP}. -->
+  <item type="id" name="accessibilityActionDragDrop" />
+
+  <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_DRAG_CANCEL}. -->
+  <item type="id" name="accessibilityActionDragCancel" />
+
+  <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_SHOW_TEXT_SUGGESTIONS}. -->
+  <item type="id" name="accessibilityActionShowTextSuggestions" />
+
+  <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_SCROLL_IN_DIRECTION}. -->
+  <item type="id" name="accessibilityActionScrollInDirection" />
 </resources>

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:cdroid="http://schemas.android.com/apk/res/android"
-    cdroid:layout_width="0dip"
-    cdroid:layout_height="64dip"
-    cdroid:layout_weight="1"
-    cdroid:layout_marginStart="-3dip"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="0dip"
+    android:layout_height="64dip"
+    android:layout_weight="1"
+    android:layout_marginStart="-3dip"
     cdroi:layout_marginEnd="-3dip"
-    cdroid:background="@drawable/tab_indicator">
-    <ImageView cdroid:id="@+id/icon"
-        cdroid:layout_width="wrap_content"
-        cdroid:layout_height="wrap_content"
-        cdroid:layout_centerHorizontal="true"/>
+    android:background="@drawable/tab_indicator">
+    <ImageView android:id="@+id/icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"/>
     <TextView id="@+id/title"
-        cdroid:layout_width="wrap_content"
-        cdroid:layout_height="wrap_content"
-        cdroid:layout_alignParentBottom="true"
-        cdroid:layout_centerHorizontal="true"
-        cdroid:style="?attr/tabWidgetStyle" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:style="?attr/tabWidgetStyle" />
 </RelativeLayout>

@@ -1,8 +1,8 @@
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <!--item cdroid:state_window_focused="false" state_enabled="true" cdroid:drawable="mipmap/textfield_default" />
-    <item cdroid:state_window_focused="false" state_enabled="false" cdroid:drawable="mipmap/textfield_disabled" /-->
-    <item cdroid:state_enabled="true" cdroid:state_focused="true" cdroid:drawable="cdroid:mipmap/textfield_selected" />
-    <item cdroid:state_enabled="true" cdroid:drawable="cdroid:mipmap/textfield_default" />
-    <item cdroid:state_focused="true" cdroid:drawable="cdroid:mipmap/textfield_disabled_selected" />
-    <item cdroid:drawable="cdroid:mipmap/textfield_disabled" />
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--item android:state_window_focused="false" android::state_enabled="true" android:drawable="@mipmap/textfield_default" />
+    <item android:state_window_focused="false" android::state_enabled="false" android:drawable="@mipmap/textfield_disabled" /-->
+    <item android:state_enabled="true" android:state_focused="true" android:drawable="@mipmap/textfield_selected" />
+    <item android:state_enabled="true" android:drawable="@mipmap/textfield_default" />
+    <item android:state_focused="true" android:drawable="@mipmap/textfield_disabled_selected" />
+    <item android:drawable="@mipmap/textfield_disabled" />
 </selector>

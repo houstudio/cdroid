@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<shape xmlns:cdroid="http://schemas.android.com/apk/res/android"
-       cdroid:tint="?attr/colorControlNormal"
-       cdroid:shape="rectangle">
-    <solid cdroid:color="#39ffffff" />
-    <size cdroid:width="8dp" />
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+       android:tint="?attr/colorControlNormal"
+       android:shape="rectangle">
+    <solid android:color="#39ffffff" />
+    <size android:width="8dp" />
 </shape>

@@ -1,108 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
-<animated-selector xmlns:cdroid="http://schemas.android.com/apk/res/android"
-    cdroid:constantSize="true">
-    <item cdroid:state_enabled="false" cdroid:id="@cdroid:+id/off">
+<animated-selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:constantSize="true">
+    <item android:state_enabled="false" android:id="@android:+id/off">
         <nine-patch
-            cdroid:src="@mipmap/btn_switch_to_on_mtrl_00001"
-            cdroid:gravity="center"
-            cdroid:tintMode="multiply"
-            cdroid:tint="?attr/colorSwitchThumbNormal" />
+            android:src="@mipmap/btn_switch_to_on_mtrl_00001"
+            android:gravity="center"
+            android:tintMode="multiply"
+            android:tint="?attr/colorSwitchThumbNormal" />
     </item>
     <item
-        cdroid:state_checked="true"
-        cdroid:id="@cdroid:+id/on">
+        android:state_checked="true"
+        android:id="@android:+id/on">
         <nine-patch
-            cdroid:src="@mipmap/btn_switch_to_on_mtrl_00012"
-            cdroid:gravity="center"
-            cdroid:tintMode="multiply"
-            cdroid:tint="?attr/colorControlActivated" />
+            android:src="@mipmap/btn_switch_to_on_mtrl_00012"
+            android:gravity="center"
+            android:tintMode="multiply"
+            android:tint="?attr/colorControlActivated" />
     </item>
-    <item cdroid:id="@+id/off">
+    <item android:id="@+id/off">
         <nine-patch
-            cdroid:src="@mipmap/btn_switch_to_on_mtrl_00001"
-            cdroid:gravity="center"
-            cdroid:tintMode="multiply"
-            cdroid:tint="?attr/colorSwitchThumbNormal" />
+            android:src="@mipmap/btn_switch_to_on_mtrl_00001"
+            android:gravity="center"
+            android:tintMode="multiply"
+            android:tint="?attr/colorSwitchThumbNormal" />
     </item>
     <transition
-        cdroid:fromId="@cdroid:+id/off"
-        cdroid:toId="@cdroid:+id/on">
+        android:fromId="@android:+id/off"
+        android:toId="@android:+id/on">
         <animation-list>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00001" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_on_mtrl_00001" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorSwitchThumbNormal" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00002" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_on_mtrl_00002" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorSwitchThumbNormal" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00003" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_on_mtrl_00003" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorSwitchThumbNormal" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00004" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_on_mtrl_00004" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorSwitchThumbNormal" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00005" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_on_mtrl_00005" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorSwitchThumbNormal" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00006" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_on_mtrl_00006" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorSwitchThumbNormal" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00007" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_on_mtrl_00007" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorControlActivated" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00008" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_on_mtrl_00008" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorControlActivated" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00009" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_on_mtrl_00009" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorControlActivated" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00010" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_on_mtrl_00010" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorControlActivated" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00011" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_on_mtrl_00011" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorControlActivated" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00012" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_on_mtrl_00012" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorControlActivated" />
             </item>
         </animation-list>
     </transition>
-    <transition cdroid:fromId="@cdroid:+id/on" cdroid:toId="@cdroid:+id/off">
+    <transition android:fromId="@android:+id/on" android:toId="@android:+id/off">
         <animation-list>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00001" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_off_mtrl_00001" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorControlActivated" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00002" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_off_mtrl_00002" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorControlActivated" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00003" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_off_mtrl_00003" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorControlActivated" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00004" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_off_mtrl_00004" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorControlActivated" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00005" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_off_mtrl_00005" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorControlActivated" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00006" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_off_mtrl_00006" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorControlActivated" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00007" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_off_mtrl_00007" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorSwitchThumbNormal" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00008" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_off_mtrl_00008" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorSwitchThumbNormal" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00009" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_off_mtrl_00009" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorSwitchThumbNormal" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00010" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_off_mtrl_00010" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorSwitchThumbNormal" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00011" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_off_mtrl_00011" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorSwitchThumbNormal" />
             </item>
-            <item cdroid:duration="15">
-                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00012" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            <item android:duration="15">
+                <nine-patch android:src="@mipmap/btn_switch_to_off_mtrl_00012" android:gravity="center" android:tintMode="multiply" android:tint="?attr/colorSwitchThumbNormal" />
             </item>
         </animation-list>
     </transition>

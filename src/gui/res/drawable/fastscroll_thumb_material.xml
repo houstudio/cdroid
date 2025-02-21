@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_pressed="true">
-        <shape cdroid:tint="?attr/colorControlActivated"
-               cdroid:shape="rectangle">
-            <solid cdroid:color="@color/white" />
-            <size cdroid:width="8dp" cdroid:height="48dp" />
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:tint="?attr/colorControlActivated"
+               android:shape="rectangle">
+            <solid android:color="@color/white" />
+            <size android:width="8dp" android:height="48dp" />
         </shape>
     </item>
     <item>
-        <shape cdroid:tint="?attr/colorControlNormal"
-               cdroid:shape="rectangle">
-            <solid cdroid:color="@color/white" />
-            <size cdroid:width="8dp" cdroid:height="48dp" />
+        <shape android:tint="?attr/colorControlNormal"
+               android:shape="rectangle">
+            <solid android:color="@color/white" />
+            <size android:width="8dp" android:height="48dp" />
         </shape>
     </item>
 </selector>

@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <!--item cdroid:state_checked="true" cdroid:state_window_focused="false"
-          cdroid:drawable="mipmap/btn_radio_on" />
-    <item cdroid:state_checked="false" cdroid:state_window_focused="false"
-          cdroid:drawable="mipmap/btn_radio_off" /-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--item android:state_checked="true" android:state_window_focused="false"
+          android:drawable="mipmap/btn_radio_on" />
+    <item android:state_checked="false" android:state_window_focused="false"
+          android:drawable="mipmap/btn_radio_off" /-->
           
-    <item cdroid:state_checked="true" cdroid:state_pressed="true"
-          cdroid:drawable="@mipmap/btn_radio_on_pressed" />
-    <item cdroid:state_checked="false" cdroid:state_pressed="true"
-          cdroid:drawable="@mipmap/btn_radio_off_pressed" />
+    <item android:state_checked="true" android:state_pressed="true"
+          android:drawable="@mipmap/btn_radio_on_pressed" />
+    <item android:state_checked="false" android:state_pressed="true"
+          android:drawable="@mipmap/btn_radio_off_pressed" />
 
-    <item cdroid:state_checked="true" cdroid:state_focused="true"
-          cdroid:drawable="@mipmap/btn_radio_on_selected" />
-    <item cdroid:state_checked="false" cdroid:state_focused="true"
-          cdroid:drawable="@mipmap/btn_radio_off_selected" />
+    <item android:state_checked="true" android:state_focused="true"
+          android:drawable="@mipmap/btn_radio_on_selected" />
+    <item android:state_checked="false" android:state_focused="true"
+          android:drawable="@mipmap/btn_radio_off_selected" />
 
-    <item cdroid:state_checked="false" cdroid:drawable="@mipmap/btn_radio_off" />
-    <item cdroid:state_checked="true" cdroid:drawable="@mipmap/btn_radio_on" />
+    <item android:state_checked="false" android:drawable="@mipmap/btn_radio_off" />
+    <item android:state_checked="true" android:drawable="@mipmap/btn_radio_on" />
 </selector>

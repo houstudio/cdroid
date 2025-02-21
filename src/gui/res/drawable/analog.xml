@@ -1,12 +1,12 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item id="0" drawable="cdroid:mipmap/watch"/>
+    <item id="0" drawable="android:mipmap/watch"/>
     <item id="1" gravity="center_horizontal">
-	<rotate drawable="cdroid:mipmap/clock_hand_hour" 
+	<rotate drawable="android:mipmap/clock_hand_hour" 
 	    pivotX="0.5" pivotY="1.0"
         framesCount="60"    frameDuration="60000"/>
     </item>
     <item  id="2"  gravity="center_horizontal">
-	<rotate drawable="cdroid:mipmap/clock_hand_minute" 
+	<rotate drawable="android:mipmap/clock_hand_minute" 
 	    pivotX="0.5"     pivotY="1.0"
         framesCount="60" rameDuration="1000"/>
     </item>

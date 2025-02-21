@@ -1,44 +1,44 @@
-<layer-list xmlns:cdroid="http://schemas.android.com/apk/res/android">
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
  
-    <item cdroid:id="@+cdroid:id/background">
-        <shape cdroid:shape="rectangle">
-            <corners cdroid:radius="5dip" />
+    <item android:id="@+android:id/background">
+        <shape android:shape="rectangle">
+            <corners android:radius="5dip" />
             <gradient
-                    cdroid:startColor="#ff9d9e9d"
-                    cdroid:centerColor="#ff5a5d5a"
-                    cdroid:centerX="0.75"
-                    cdroid:endColor="#ff747674"
-                    cdroid:angle="90"
+                    android:startColor="#ff9d9e9d"
+                    android:centerColor="#ff5a5d5a"
+                    android:centerX="0.75"
+                    android:endColor="#ff747674"
+                    android:angle="90"
                     />
         </shape>
     </item>
  
-    <item cdroid:id="@+cdroid:id/progress">
-        <clip cdroid:clipOrientation="vertical" cdroid:gravity = "bottom">
-            <shape cdroid:shape="rectangle">
-                <corners cdroid:radius="5dip" />
+    <item android:id="@+android:id/progress">
+        <clip android:clipOrientation="vertical" android:gravity = "bottom">
+            <shape android:shape="rectangle">
+                <corners android:radius="5dip" />
                 <gradient
-                        cdroid:startColor="#80ffd300"
-                        cdroid:centerColor="#80ffb600"
-                        cdroid:centerX="0.75"
-                        cdroid:endColor="#a0ffcb00"
-                        cdroid:angle="90"
+                        android:startColor="#80ffd300"
+                        android:centerColor="#80ffb600"
+                        android:centerX="0.75"
+                        android:endColor="#a0ffcb00"
+                        android:angle="90"
                         />
             </shape>
         </clip>
     </item>
  
-    <item cdroid:id="@+cdroid:id/secondaryProgress">
-        <clip  cdroid:clipOrientation="vertical"
-               cdroid:gravity = "bottom">
-            <shape cdroid:shape="rectangle">
-                <corners cdroid:radius="5dip" />
+    <item android:id="@+android:id/secondaryProgress">
+        <clip  android:clipOrientation="vertical"
+               android:gravity = "bottom">
+            <shape android:shape="rectangle">
+                <corners android:radius="5dip" />
                 <gradient
-                        cdroid:startColor="#ffffd300"
-                        cdroid:centerColor="#ffffb600"
-                        cdroid:centerX="0.75"
-                        cdroid:endColor="#ffffcb00"
-                        cdroid:angle="90"
+                        android:startColor="#ffffd300"
+                        android:centerColor="#ffffb600"
+                        android:centerX="0.75"
+                        android:endColor="#ffffcb00"
+                        android:angle="90"
                         />
             </shape>
         </clip>

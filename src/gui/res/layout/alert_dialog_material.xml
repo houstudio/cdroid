@@ -1,68 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.android.internal.widget.AlertDialogLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    cdroid:id="@+id/parentPanel"
-    cdroid:layout_width="match_parent"
-    cdroid:layout_height="wrap_content"
-    cdroid:gravity="start|top"
-    cdroid:orientation="vertical">
+    android:id="@+id/parentPanel"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="start|top"
+    android:orientation="vertical">
 
     <include layout="@layout/alert_dialog_title_material" />
 
     <FrameLayout
-        cdroid:id="@+id/contentPanel"
-        cdroid:layout_width="match_parent"
-        cdroid:layout_height="wrap_content"
-        cdroid:minHeight="48dp">
+        android:id="@+id/contentPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp">
 
         <ScrollView
-            cdroid:id="@+id/scrollView"
-            cdroid:layout_width="match_parent"
-            cdroid:layout_height="wrap_content"
-            cdroid:clipToPadding="false">
+            android:id="@+id/scrollView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false">
 
             <LinearLayout
-                cdroid:layout_width="match_parent"
-                cdroid:layout_height="wrap_content"
-                cdroid:orientation="vertical">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
                 <Space
-                    cdroid:id="@+id/textSpacerNoTitle"
-                    cdroid:visibility="gone"
-                    cdroid:layout_width="match_parent"
-                    cdroid:layout_height="@dimen/dialog_padding_top_material" />
+                    android:id="@+id/textSpacerNoTitle"
+                    android:visibility="gone"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dialog_padding_top_material" />
 
                 <TextView
-                    cdroid:id="@+id/message"
-                    cdroid:layout_width="match_parent"
-                    cdroid:layout_height="wrap_content"
-                    cdroid:paddingEnd="?attr/dialogPreferredPadding"
-                    cdroid:paddingStart="?attr/dialogPreferredPadding"
+                    android:id="@+id/message"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingEnd="?attr/dialogPreferredPadding"
+                    android:paddingStart="?attr/dialogPreferredPadding"
                     style="@style/TextAppearance.Material.Subhead" />
 
                 <Space
-                    cdroid:id="@+id/textSpacerNoButtons"
-                    cdroid:visibility="gone"
-                    cdroid:layout_width="match_parent"
-                    cdroid:layout_height="@dimen/dialog_padding_top_material" />
+                    android:id="@+id/textSpacerNoButtons"
+                    android:visibility="gone"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dialog_padding_top_material" />
             </LinearLayout>
         </ScrollView>
     </FrameLayout>
 
     <FrameLayout
-        cdroid:id="@+id/customPanel"
-        cdroid:layout_width="match_parent"
-        cdroid:layout_height="wrap_content"
-        cdroid:minHeight="48dp">
+        android:id="@+id/customPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp">
 
         <FrameLayout
-            cdroid:id="@+id/custom"
-            cdroid:layout_width="match_parent"
-            cdroid:layout_height="wrap_content" />
+            android:id="@+id/custom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
     </FrameLayout>
 
     <include
-        cdroid:layout_width="match_parent"
-        cdroid:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         layout="@layout/alert_dialog_button_bar_material" />
 </com.android.internal.widget.AlertDialogLayout>

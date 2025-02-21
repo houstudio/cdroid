@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_focused="true" cdroid:drawable="cdroid:mipmap/editbox_background_focus_yellow" />
-    <item cdroid:state_enabled="false" cdroid:drawable="cdroid:mipmap/editbox_background_normal" />
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true" android:drawable="@mipmap/editbox_background_focus_yellow" />
+    <item android:state_enabled="false" android:drawable="@mipmap/editbox_background_normal" />
 </selector>
 

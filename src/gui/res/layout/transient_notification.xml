@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:cdroid="http://schemas.android.com/apk/res/android"
-    cdroid:layout_width="match_parent"
-    cdroid:layout_height="match_parent"
-    cdroid:orientation="vertical"
-    cdroid:background="?attr/toastFrameBackground">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/toastFrameBackground">
 
     <TextView
-        cdroid:id="@id/message"
-        cdroid:layout_width="wrap_content"
-        cdroid:layout_height="wrap_content"
-        cdroid:layout_weight="1"
-        cdroid:layout_gravity="center_horizontal"
-        cdroid:textAppearance="@style/TextAppearance.Toast"
-        cdroid:textColor="@color/bright_foreground_dark"
-        cdroid:shadowColor="#BB000000"
-        cdroid:shadowRadius="2.75"
+        android:id="@id/message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_gravity="center_horizontal"
+        android:textAppearance="@style/TextAppearance.Toast"
+        android:textColor="@color/bright_foreground_dark"
+        android:shadowColor="#BB000000"
+        android:shadowRadius="2.75"
         />
 </LinearLayout>
 
