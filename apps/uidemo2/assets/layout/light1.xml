@@ -5,12 +5,13 @@
 
     <ImageView
         android:id="@+id/imageView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="256dp"
+        android:layout_height="256dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="30dp"
-        android:src="@mipmap/housele_light_img_light1" />
+        android:src="@drawable/test"
+        />
 
     <ImageView
         android:id="@+id/light1"
@@ -25,9 +26,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="一位灯光面板"
-        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="8dp"
+        android:layout_above="@+id/ratingbar1"
         android:layout_marginBottom="20dp"
+        />
+    <RatingBar
+        android:id="@+id/ratingbar1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         />
 </RelativeLayout>
