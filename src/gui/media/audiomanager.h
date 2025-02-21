@@ -18,7 +18,9 @@ public:
     static constexpr int FX_KEYPRESS_DELETE = 7;
     static constexpr int FX_KEYPRESS_RETURN = 8;
     static constexpr int FX_KEYPRESS_INVALID= 9;
-    static constexpr int NUM_SOUND_EFFECTS = 10;
+    static constexpr int FX_BACK= 10;
+    static constexpr int FX_HOME= 11;
+    static constexpr int NUM_SOUND_EFFECTS = 12;
 private:
     Context*mContext;
     std::unique_ptr<SoundPool>mSoundPool;

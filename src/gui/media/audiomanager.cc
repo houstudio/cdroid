@@ -14,28 +14,16 @@
 namespace cdroid{
 
 using SoundEffect  = std::unordered_map<std::string,std::string>;
-using SoundEffects = std::unordered_map<std::string,std::shared_ptr<SoundEffect>>;
-
-typedef struct{
-    SoundEffects effects;
-    SoundEffects::iterator it;
-}SoundEffectData;
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
-   SoundEffectData*data=(SoundEffectData*)userData;
-   SoundEffects&ss=data->effects;
+   SoundEffect*data=(SoundEffect*)userData;
    AttributeSet atts(nullptr,"");
    atts.set(satts);
-   if(strcmp(name,"group")==0){
-       const std::string groupName = atts.getString("name");
-       LOGD("groupname=%s",groupName.c_str());
-       data->it = ss.emplace(groupName,std::make_shared<SoundEffect>()).first;
-   }else if(strcmp(name,"asset")==0){
-       const std::string groupName = data->it->first;
+   if(strcmp(name,"asset")==0){
        const std::string id = atts.getString("id");
        const std::string file = atts.getString("file");
-       data->it->second->emplace(id,file);
-       LOGD("%s %s:%s",groupName.c_str(),id.c_str(),file.c_str());
+       data->emplace(id,file);
+       LOGD("%s:%s",id.c_str(),file.c_str());
    }
 }
 
@@ -66,7 +54,7 @@ void AudioManager::loadSoundEffects(){
 
     XML_Parser parser = XML_ParserCreate(nullptr);
     mSoundPool = std::make_unique<SoundPool>((int)NUM_SOUND_EFFECTS,0,0);
-    SoundEffectData sounds;
+    SoundEffect sounds;
     XML_SetUserData(parser,&sounds);
     XML_SetElementHandler(parser, startElement, nullptr);
     SOUND_EFFECT_FILES_MAP.resize((int)NUM_SOUND_EFFECTS);
@@ -82,7 +70,6 @@ void AudioManager::loadSoundEffects(){
     } while(len!=0);
     XML_ParserFree(parser);
 
-    SoundEffects* ss = &sounds.effects;
 #define EFF(A){(int)A,#A}
     std::map<int,std::string>mm={
         EFF(FX_KEY_CLICK),
@@ -94,13 +81,15 @@ void AudioManager::loadSoundEffects(){
         EFF(FX_KEYPRESS_SPACEBAR),
         EFF(FX_KEYPRESS_DELETE),
         EFF(FX_KEYPRESS_RETURN),
-        EFF(FX_KEYPRESS_INVALID)
+        EFF(FX_KEYPRESS_INVALID),
+        EFF(FX_BACK),
+        EFF(FX_HOME)
     };
     std::unordered_map<std::string,int>file2sid;
     for(auto m:mm){
         int sid = -1;
         const int fx = m.first;
-        const std::string sf = ss->begin()->second->find(m.second)->second;
+        const std::string sf = sounds.find(m.second)->second;
         auto it = std::find(SOUND_EFFECT_FILES.begin(),SOUND_EFFECT_FILES.end(),sf);
         if(it==SOUND_EFFECT_FILES.end()){
             sid = mSoundPool->load(mContext,sf,0);//SOUND_EFFECT_FILES.size();
@@ -113,7 +102,6 @@ void AudioManager::loadSoundEffects(){
         SOUND_EFFECT_FILES_MAP[fx] = sid;
         LOGD("%d %s->%s soundid=%d",fx,m.second.c_str(),sf.c_str(),sid);
     }
-    LOGD("%s",ss->begin()->first.c_str());
 }
 
 void AudioManager::loadTouchSoundAssetDefaults(){
