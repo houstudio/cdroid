@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Used as the canonical button shape. -->
+
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+       android:insetLeft="@dimen/button_inset_horizontal_material"
+       android:insetTop="@dimen/button_inset_vertical_material"
+       android:insetRight="@dimen/button_inset_horizontal_material"
+       android:insetBottom="@dimen/button_inset_vertical_material">
+    <shape android:shape="rectangle"
+           android:tint="?attr/colorButtonNormal">
+        <corners android:radius="?attr/buttonCornerRadius" />
+        <solid android:color="@color/white" />
+        <padding android:left="@dimen/button_padding_horizontal_material"
+                 android:top="@dimen/button_padding_vertical_material"
+                 android:right="@dimen/button_padding_horizontal_material"
+                 android:bottom="@dimen/button_padding_vertical_material" />
+    </shape>
+</inset>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+       android:shape="oval"
+       android:tint="?attr/colorControlNormal">
+    <size android:width="@dimen/progress_bar_height_material"
+          android:height="@dimen/progress_bar_height_material" />
+    <solid android:color="@color/white" />
+</shape>

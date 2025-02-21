@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-selector xmlns:cdroid="http://schemas.android.com/apk/res/android"
+    cdroid:constantSize="true">
+    <item cdroid:state_enabled="false" cdroid:id="@cdroid:+id/off">
+        <nine-patch
+            cdroid:src="@mipmap/btn_switch_to_on_mtrl_00001"
+            cdroid:gravity="center"
+            cdroid:tintMode="multiply"
+            cdroid:tint="?attr/colorSwitchThumbNormal" />
+    </item>
+    <transition
+        cdroid:fromId="@cdroid:+id/off"
+        cdroid:toId="@cdroid:+id/on">
+        <animation-list>
+            <item cdroid:duration="15">
+                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00001" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            </item>
+            <item cdroid:duration="15">
+                <nine-patch cdroid:src="@mipmap/btn_switch_to_on_mtrl_00002" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorSwitchThumbNormal" />
+            </item>
+        </animation-list>
+    </transition>
+    <transition cdroid:fromId="@cdroid:+id/on" cdroid:toId="@cdroid:+id/off">
+        <animation-list>
+            <item cdroid:duration="15">
+                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00010" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            </item>
+            <item cdroid:duration="15">
+                <nine-patch cdroid:src="@mipmap/btn_switch_to_off_mtrl_00011" cdroid:gravity="center" cdroid:tintMode="multiply" cdroid:tint="?attr/colorControlActivated" />
+            </item>
+        </animation-list>
+    </transition>
+</animated-selector>
