@@ -89,7 +89,8 @@ void AudioManager::loadSoundEffects(){
     for(auto m:mm){
         int sid = -1;
         const int fx = m.first;
-        const std::string sf = sounds.find(m.second)->second;
+        const auto its = sounds.find(m.second);
+        const std::string sf = its!=sounds.end()?its->second:"";
         auto it = std::find(SOUND_EFFECT_FILES.begin(),SOUND_EFFECT_FILES.end(),sf);
         if(it==SOUND_EFFECT_FILES.end()){
             sid = mSoundPool->load(mContext,sf,0);//SOUND_EFFECT_FILES.size();
