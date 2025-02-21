@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <audio_assets version="1.0">
-    <group name="touch_sounds">
-        <asset id="FX_KEY_CLICK" file="Effect_Tick.wav"/>
-        <asset id="FX_FOCUS_NAVIGATION_UP" file="Effect_Tick.wav"/>
-        <asset id="FX_FOCUS_NAVIGATION_DOWN" file="Effect_Tick.wav"/>
-        <asset id="FX_FOCUS_NAVIGATION_LEFT" file="Effect_Tick.wav"/>
-        <asset id="FX_FOCUS_NAVIGATION_RIGHT" file="Effect_Tick.wav"/>
-        <asset id="FX_KEYPRESS_STANDARD" file="KeypressStandard.wav"/>
-        <asset id="FX_KEYPRESS_SPACEBAR" file="KeypressSpacebar.wav"/>
-        <asset id="FX_KEYPRESS_DELETE" file="KeypressDelete.wav"/>
-        <asset id="FX_KEYPRESS_RETURN" file="KeypressReturn.wav"/>
-        <asset id="FX_KEYPRESS_INVALID" file="KeypressInvalid.wav"/>
-    </group>
+    <asset id="FX_KEY_CLICK" file="Effect_Tick.wav"/>
+    <asset id="FX_FOCUS_NAVIGATION_UP" file="Effect_Tick.wav"/>
+    <asset id="FX_FOCUS_NAVIGATION_DOWN" file="Effect_Tick.wav"/>
+    <asset id="FX_FOCUS_NAVIGATION_LEFT" file="Effect_Tick.wav"/>
+    <asset id="FX_FOCUS_NAVIGATION_RIGHT" file="Effect_Tick.wav"/>
+    <asset id="FX_KEYPRESS_STANDARD" file="KeypressStandard.wav"/>
+    <asset id="FX_KEYPRESS_SPACEBAR" file="KeypressSpacebar.wav"/>
+    <asset id="FX_KEYPRESS_DELETE" file="KeypressDelete.wav"/>
+    <asset id="FX_KEYPRESS_RETURN" file="KeypressReturn.wav"/>
+    <asset id="FX_KEYPRESS_INVALID" file="KeypressInvalid.wav"/>
+    <asset id="FX_BACK" file="Effect_Tick.wav"/>
 </audio_assets>
