@@ -171,12 +171,12 @@ bool Drawable::setLevel(int level) {
     return false;
 }
 
-int Drawable::getMinimumWidth()const {
+int Drawable::getMinimumWidth() {
     const int intrinsicWidth = getIntrinsicWidth();
     return intrinsicWidth > 0 ? intrinsicWidth : 0;
 }
 
-int Drawable::getMinimumHeight()const {
+int Drawable::getMinimumHeight() {
     const int intrinsicHeight = getIntrinsicHeight();
     return intrinsicHeight > 0 ? intrinsicHeight : 0;
 }
@@ -193,11 +193,11 @@ int Drawable::getLayoutDirection()const {
     return mLayoutDirection;
 }
 
-int Drawable::getIntrinsicWidth()const {
+int Drawable::getIntrinsicWidth() {
     return -1;
 }
 
-int Drawable::getIntrinsicHeight()const {
+int Drawable::getIntrinsicHeight() {
     return -1;
 }
 

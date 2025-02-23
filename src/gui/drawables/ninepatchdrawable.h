@@ -56,8 +56,8 @@ public:
     bool isAutoMirrored()override;
     void setFilterBitmap(bool filter)override;
     bool isFilterBitmap()const override;
-    int getIntrinsicWidth() const override;
-    int getIntrinsicHeight()const override;
+    int getIntrinsicWidth() override;
+    int getIntrinsicHeight() override;
     NinePatchDrawable*mutate()override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;

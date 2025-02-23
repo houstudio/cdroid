@@ -865,7 +865,7 @@ int LayerDrawable::resolveGravity(int gravity, int width, int height,
     return gravity;
 }
 
-int LayerDrawable::getIntrinsicWidth()const{
+int LayerDrawable::getIntrinsicWidth(){
     int width = -1;
     int padL = 0;
     int padR = 0;
@@ -900,7 +900,7 @@ int LayerDrawable::getIntrinsicWidth()const{
     return width;
 }
 
-int LayerDrawable::getIntrinsicHeight()const{
+int LayerDrawable::getIntrinsicHeight() {
     int height = -1;
     int padT = 0;
     int padB = 0;

@@ -601,7 +601,7 @@ void DrawableContainer::jumpToCurrentState(){
     }
 }
 
-int DrawableContainer::getIntrinsicWidth()const {
+int DrawableContainer::getIntrinsicWidth() {
     LOGV("%p constSize=%d cur=%p size=%d",this,mDrawableContainerState->isConstantSize(),mCurrDrawable,
         (mCurrDrawable?mCurrDrawable->getIntrinsicWidth():-1));
     if (mDrawableContainerState->isConstantSize()) {
@@ -610,21 +610,21 @@ int DrawableContainer::getIntrinsicWidth()const {
     return mCurrDrawable != nullptr ? mCurrDrawable->getIntrinsicWidth() : -1;
 }
 
-int DrawableContainer::getIntrinsicHeight()const{
+int DrawableContainer::getIntrinsicHeight() {
     if (mDrawableContainerState->isConstantSize()) {
         return mDrawableContainerState->getConstantHeight();
     }
     return mCurrDrawable != nullptr ? mCurrDrawable->getIntrinsicHeight() : -1;
 }
 
-int DrawableContainer::getMinimumWidth()const{
+int DrawableContainer::getMinimumWidth() {
     if (mDrawableContainerState->isConstantSize()) {
         return mDrawableContainerState->getConstantMinimumWidth();
     }
     return mCurrDrawable != nullptr ? mCurrDrawable->getMinimumWidth() : 0;
 }
 
-int DrawableContainer::getMinimumHeight()const{
+int DrawableContainer::getMinimumHeight() {
     if (mDrawableContainerState->isConstantSize()) {
         return mDrawableContainerState->getConstantMinimumHeight();
     }

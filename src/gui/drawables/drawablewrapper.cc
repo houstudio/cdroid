@@ -117,11 +117,11 @@ void DrawableWrapper::onBoundsChange(const Rect& bounds) {
     }
 }
 
-int DrawableWrapper::getIntrinsicWidth()const {
+int DrawableWrapper::getIntrinsicWidth() {
     return mDrawable != nullptr ? mDrawable->getIntrinsicWidth() : -1;
 }
 
-int DrawableWrapper::getIntrinsicHeight()const {
+int DrawableWrapper::getIntrinsicHeight() {
     return mDrawable != nullptr ? mDrawable->getIntrinsicHeight() : -1;
 }
 

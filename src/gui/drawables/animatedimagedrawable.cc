@@ -93,12 +93,12 @@ int AnimatedImageDrawable::getRepeatCount()const{
     return mRepeatCount;
 }
 
-int AnimatedImageDrawable::getIntrinsicWidth()const{
+int AnimatedImageDrawable::getIntrinsicWidth() {
     auto frameSequence = mAnimatedImageState->mFrameSequence;
     return frameSequence ? frameSequence->getWidth():mIntrinsicWidth;
 }
 
-int AnimatedImageDrawable::getIntrinsicHeight()const{
+int AnimatedImageDrawable::getIntrinsicHeight() {
     auto frameSequence = mAnimatedImageState->mFrameSequence;
     return frameSequence ? frameSequence->getHeight():mIntrinsicHeight;
 }

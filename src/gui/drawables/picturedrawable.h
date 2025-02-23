@@ -13,9 +13,8 @@ public:
     Picture getPicture();
     void setPicture(Picture picture);
     void draw(Canvas& canvas);
-    int getIntrinsicWidth()const override;
-
-    int getIntrinsicHeight()const override;
+    int getIntrinsicWidth() override;
+    int getIntrinsicHeight() override;
     int getOpacity()override;
     void setColorFilter(ColorFilter* colorFilter);
     void setAlpha(int alpha)override;

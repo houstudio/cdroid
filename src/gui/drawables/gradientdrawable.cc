@@ -431,11 +431,11 @@ int GradientDrawable::getShape()const {
     return mGradientState->mShape;
 }
 
-int GradientDrawable::getIntrinsicWidth()const {
+int GradientDrawable::getIntrinsicWidth() {
     return mGradientState->mWidth;
 }
 
-int GradientDrawable::getIntrinsicHeight()const {
+int GradientDrawable::getIntrinsicHeight() {
     return mGradientState->mHeight;
 }
 

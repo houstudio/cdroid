@@ -150,11 +150,11 @@ bool NinePatchDrawable::isFilterBitmap()const{
     return mFilterBitmap;
 }
 
-int NinePatchDrawable::getIntrinsicWidth()const{
+int NinePatchDrawable::getIntrinsicWidth() {
     return mBitmapWidth;
 }
 
-int NinePatchDrawable::getIntrinsicHeight()const {
+int NinePatchDrawable::getIntrinsicHeight() {
     return mBitmapHeight;
 }
 

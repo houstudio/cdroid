@@ -35,8 +35,8 @@ protected:
 public:
     DrawableWrapper(Drawable*d=nullptr);
     ~DrawableWrapper();
-    int getIntrinsicWidth ()const override;
-    int getIntrinsicHeight()const override;
+    int getIntrinsicWidth () override;
+    int getIntrinsicHeight() override;
     int getChangingConfigurations()const override;
     void getHotspotBounds(Rect& outRect)const override;
     void setDrawable(Drawable* dr);

@@ -38,8 +38,8 @@ public:
     InsetDrawable(Drawable*drawable,int inset);
     InsetDrawable(Drawable* drawable,int insetLeft,int insetTop,int insetRight,int insetBottom);
     std::shared_ptr<ConstantState>getConstantState()override;
-    int getIntrinsicWidth()const override;
-    int getIntrinsicHeight()const override;
+    int getIntrinsicWidth() override;
+    int getIntrinsicHeight() override;
     bool getPadding(Rect& padding)override;
     int getOpacity()override;
     Insets getOpticalInsets()override;

@@ -72,8 +72,8 @@ public:
     void setFilterBitmap(bool filter)override;
     bool isFilterBitmap()const override;
     void setDither(bool)override;
-    int getIntrinsicWidth()const override;
-    int getIntrinsicHeight()const override;
+    int getIntrinsicWidth() override;
+    int getIntrinsicHeight() override;
     int getOpacity()override;
     int getTileModeX()const;
     int getTileModeY()const;

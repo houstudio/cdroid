@@ -5,6 +5,7 @@
 #include <drawables/colorstatelist.h>
 #include <drawables/colorfilters.h>
 #include <core/attributeset.h>
+#include <core/porterduff.h>
 #include <core/context.h>
 #include <view/gravity.h>
 #include <core/insets.h>
@@ -123,10 +124,10 @@ public:
     virtual void setFilterBitmap(bool filter);
     virtual bool isFilterBitmap()const;
 
-    virtual int getIntrinsicWidth() const;
-    virtual int getIntrinsicHeight()const;
-    virtual int getMinimumWidth() const;
-    virtual int getMinimumHeight()const;
+    virtual int getIntrinsicWidth();
+    virtual int getIntrinsicHeight();
+    virtual int getMinimumWidth();
+    virtual int getMinimumHeight();
 
     virtual bool setVisible(bool visible, bool restart);
     virtual bool isVisible()const;

@@ -159,8 +159,8 @@ public:
     void setPadding(int left,int top,int right,int bottom);
     void setShape(int shape);
     int getShape()const;
-    int getIntrinsicWidth()const;
-    int getIntrinsicHeight()const;
+    int getIntrinsicWidth() override;
+    int getIntrinsicHeight() override;
     Insets getOpticalInsets()override;
     void setSize(int width, int height);
     void setGradientType(int gradient);

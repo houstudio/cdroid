@@ -55,8 +55,8 @@ public:
     std::shared_ptr<ConstantState>getConstantState()override;
     void setRepeatCount(int repeatCount);
     int getRepeatCount()const;
-    int getIntrinsicWidth()const override;
-    int getIntrinsicHeight()const override;
+    int getIntrinsicWidth() override;
+    int getIntrinsicHeight() override;
     void setAlpha(int alpha)override;
     int getAlpha()const override;
     int getOpacity()override;

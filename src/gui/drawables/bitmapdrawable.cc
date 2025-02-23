@@ -148,11 +148,11 @@ void BitmapDrawable::setDither(bool dither){
     invalidateSelf();
 }
 
-int BitmapDrawable::getIntrinsicWidth()const{
+int BitmapDrawable::getIntrinsicWidth() {
     return mBitmapWidth;
 }
 
-int BitmapDrawable::getIntrinsicHeight()const{
+int BitmapDrawable::getIntrinsicHeight() {
     return mBitmapHeight;
 }
 

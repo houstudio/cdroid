@@ -112,10 +112,10 @@ public:
     int getAlpha()const override;
     void setDither(bool dither)override;
     int getOpacity()override;
-    int getIntrinsicWidth() const override;
-    int getIntrinsicHeight()const override;
-    int getMinimumWidth() const override;
-    int getMinimumHeight()const override;
+    int getIntrinsicWidth() override;
+    int getIntrinsicHeight() override;
+    int getMinimumWidth() override;
+    int getMinimumHeight() override;
     void getHotspotBounds(Rect& outRect)const override;
     void setHotspotBounds(int left, int top, int width, int height)override;
     void setColorFilter(ColorFilter*colorFilter)override;

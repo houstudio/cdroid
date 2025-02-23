@@ -120,8 +120,8 @@ public:
     void setId(int index, int id);
     int getNumberOfLayers()const;
 
-    int getIntrinsicWidth() const override;
-    int getIntrinsicHeight()const override;
+    int getIntrinsicWidth() override;
+    int getIntrinsicHeight() override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
     void setAutoMirrored(bool mirrored)override;

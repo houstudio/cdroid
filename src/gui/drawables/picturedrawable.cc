@@ -26,11 +26,11 @@ void PictureDrawable::draw(Canvas& canvas){
     }
 }
 
-int PictureDrawable::getIntrinsicWidth()const{
+int PictureDrawable::getIntrinsicWidth() {
     return mPicture ? mPicture->ink_extents().width : -1;
 }
 
-int PictureDrawable::getIntrinsicHeight()const{
+int PictureDrawable::getIntrinsicHeight() {
     return mPicture ? mPicture->ink_extents().height: -1;
 }
 
