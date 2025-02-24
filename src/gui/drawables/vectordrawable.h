@@ -17,6 +17,7 @@ using VirtualRefBasePtr=cdroid::hw::Tree*;
 class VectorDrawable:public Drawable {
 public:
     class VectorDrawableState;
+    class VectorParser;
 private:
     static constexpr const char*const SHAPE_CLIP_PATH = "clip-path";
     static constexpr const char*const SHAPE_GROUP = "group";
@@ -42,7 +43,7 @@ private:
 private:
     VectorDrawable(std::shared_ptr<VectorDrawableState> state);
     //void updateLocalState(Resources res);
-    //void updateStateFromTypedArray(TypedArray a);
+    void updateStateFromTypedArray(Context*,const AttributeSet&atts);
     void inflateChildElements(Context*,const AttributeSet& attrs,Theme theme);
     bool needMirroring();
 protected:

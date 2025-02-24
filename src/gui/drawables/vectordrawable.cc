@@ -280,11 +280,30 @@ VectorDrawable* VectorDrawable::create(Context*ctx, const std::string&rid) {
     return drawable;
 }
 
-
+typedef struct {
+    Context*ctx;
+    std::string package;
+    VectorDrawable*vd;
+}KVDATA;
+class VectorDrawable::VectorParser{
+public:
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
+    KVDATA*d=(KVDATA*)userData;
+    AttributeSet atts(d->ctx,d->package);
+    atts.set(satts);
+    atts.dump();
+    if(strcmp(name,"vector")==0){
+        d->vd->updateStateFromTypedArray(d->ctx,atts);
+    }else if(strcmp(name,SHAPE_PATH)==0){
+    }else if(strcmp(name,SHAPE_CLIP_PATH)==0){
+    }else if(strcmp(name,SHAPE_GROUP)==0){
+    }
 }
+
 static void endElement(void *userData, const XML_Char *name){
 }
+};
+
 void VectorDrawable::inflate(Context*ctx,const std::string&resId){
 #if 0
     if (mVectorState.mRootGroup != null || mVectorState.mNativeTree != null) {
@@ -321,13 +340,19 @@ void VectorDrawable::inflate(Context*ctx,const std::string&resId){
 #else
     char buf[256];
     std::streamsize len;
-    auto stream = ctx->getInputStream(resId);
+    std::string package;
+    std::unique_ptr<std::istream> stream;
+    if(ctx) ctx->getInputStream(resId,&package);
     if((stream==nullptr)||!(*stream))
         stream = std::make_unique<std::ifstream>(resId);
     if(!(*stream))return;
+    KVDATA data;
     XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
-    XML_SetUserData(parser,this);
-    XML_SetElementHandler(parser, startElement, endElement);
+    data.ctx=ctx;
+    data.package=package;
+    data.vd=this;
+    XML_SetUserData(parser,&data);
+    XML_SetElementHandler(parser, VectorParser::startElement, VectorParser::endElement);
      do {
         stream->read(buf,sizeof(buf));
         len = stream->gcount();
@@ -336,46 +361,45 @@ void VectorDrawable::inflate(Context*ctx,const std::string&resId){
             LOGE("%s:%s at line %ld",resId.c_str(),es, XML_GetCurrentLineNumber(parser));
             XML_ParserFree(parser);
             return;
-        }
+        }LOGD("%s",buf);
     } while(len!=0);
     XML_ParserFree(parser);
 #endif
 }
 
-#if 0
-void VectorDrawable::updateStateFromTypedArray(TypedArray a) throws XmlPullParserException {
+void VectorDrawable::updateStateFromTypedArray(Context*ctx,const AttributeSet&atts){
     auto state = mVectorState;
 
     // Account for any configuration changes.
-    state->mChangingConfigurations |= a.getChangingConfigurations();
+    state->mChangingConfigurations = 0;//|= a.getChangingConfigurations();
 
     // Extract the theme attributes, if any.
-    //state->mThemeAttrs = a.extractThemeAttrs();
+    //state->mThemeAttrs = atts.extractThemeAttrs();
 
-    const int tintMode = a.getInt(R.styleable.VectorDrawable_tintMode, -1);
+    const int tintMode = atts.getInt("tintMode", -1);
     if (tintMode != -1) {
-        state->mTintMode = Drawable::parseTintMode(tintMode, Mode::SRC_IN);
+        //state->mTintMode = Drawable::parseTintMode(tintMode, Mode::SRC_IN);
     }
 
-    ColorStateList* tint = a.getColorStateList("tint");
+    ColorStateList* tint = atts.getColorStateList("tint");
     if (tint != nullptr) {
         state->mTint = tint;
     }
 
-    state->mAutoMirrored = a.getBoolean("autoMirrored", state.mAutoMirrored);
+    state->mAutoMirrored = atts.getBoolean("autoMirrored", state->mAutoMirrored);
 
-    float viewportWidth = a.getFloat("viewportWidth", state.mViewportWidth);
-    float viewportHeight = a.getFloat("viewportHeight", state.mViewportHeight);
+    const float viewportWidth = atts.getFloat("viewportWidth", state->mViewportWidth);
+    const float viewportHeight = atts.getFloat("viewportHeight", state->mViewportHeight);
     state->setViewportSize(viewportWidth, viewportHeight);
 
-    if (state.mViewportWidth <= 0) {
+    if (state->mViewportWidth <= 0) {
         LOGE("<vector> tag requires viewportWidth > 0");
-    } else if (state.mViewportHeight <= 0) {
+    } else if (state->mViewportHeight <= 0) {
         LOGE("<vector> tag requires viewportHeight > 0");
     }
 
-    state->mBaseWidth = a.getDimensionPixelSize("width", state.mBaseWidth);
-    state->mBaseHeight = a.getDimensionPixelSize("height", state.mBaseHeight);
+    state->mBaseWidth = atts.getDimensionPixelSize("width", state->mBaseWidth);
+    state->mBaseHeight = atts.getDimensionPixelSize("height", state->mBaseHeight);
 
     if (state->mBaseWidth <= 0) {
         LOGE("<vector> tag requires width > 0");
@@ -383,22 +407,24 @@ void VectorDrawable::updateStateFromTypedArray(TypedArray a) throws XmlPullParse
         LOGE("<vector> tag requires height > 0");
     }
 
-    int insetLeft = a.getDimensionPixelOffset("opticalInsetLeft", state.mOpticalInsets.left);
-    int insetTop = a.getDimensionPixelOffset("opticalInsetTop", state.mOpticalInsets.top);
-    int insetRight = a.getDimensionPixelOffset("opticalInsetRight", state.mOpticalInsets.right);
-    int insetBottom = a.getDimensionPixelOffset("opticalInsetBottom", state.mOpticalInsets.bottom);
+    const int insetLeft = atts.getDimensionPixelOffset("opticalInsetLeft", state->mOpticalInsets.left);
+    const int insetTop = atts.getDimensionPixelOffset("opticalInsetTop", state->mOpticalInsets.top);
+    const int insetRight = atts.getDimensionPixelOffset("opticalInsetRight", state->mOpticalInsets.right);
+    const int insetBottom = atts.getDimensionPixelOffset("opticalInsetBottom", state->mOpticalInsets.bottom);
     state->mOpticalInsets = Insets::of(insetLeft, insetTop, insetRight, insetBottom);
 
-    const float alphaInFloat = a.getFloat("alpha", state->getAlpha());
+    const float alphaInFloat = atts.getFloat("alpha", state->getAlpha());
     state->setAlpha(alphaInFloat);
 
-    const std::string name = a.getString("name");
+    const std::string name = atts.getString("name");
     if (!name.empty()) {
         state->mRootName = name;
-        state->mVGTargetsMap.put(name, state);
+        //state->mVGTargetsMap.emplace(name, state);
     }
+
 }
 
+#if 0
 void VectorDrawable::inflateChildElements(Resources res, XmlPullParser parser, AttributeSet attrs,
         Theme theme){
     final VectorDrawableState state = mVectorState;
@@ -750,7 +776,7 @@ VectorDrawable::VGroup::VGroup(const VGroup* copy,std::unordered_map<std::string
 
 VectorDrawable::VGroup::VGroup() {
     //mNativePtr = nCreateGroup();
-    auto grp=new hw::Group();
+    mNativePtr=new hw::Group();
 }
 
 Property* VectorDrawable::VGroup::getProperty(const std::string& propertyName) {
