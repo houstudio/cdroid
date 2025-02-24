@@ -76,6 +76,7 @@ int QRCodeView::getEncodeMode()const{
 void QRCodeView::setDotColor(int color){
     if(mDotColor!=color){
         mDotColor=color;
+        encode();
         invalidate();
     }
 }
@@ -172,7 +173,7 @@ void QRCodeView::encode(){
 
     const uint32_t image_stride = mQRImage->get_stride()/4;
     uint32_t*qimg = (uint32_t*)mQRImage->get_data();
-    mDotColor = 0xFF000000;
+    //mDotColor = 0xFF000000;
     const int barBgColor = (~mDotColor)|0xFF000000;
     for(int32_t y = 0,idx = 0; y < mQrCodeWidth; y++){
         for(int32_t x = 0; x < mQrCodeWidth; x++){
