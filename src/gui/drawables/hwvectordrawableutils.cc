@@ -26,7 +26,7 @@ bool VectorDrawableUtils::canMorph(const PathData& morphFrom, const PathData& mo
     return true;
 }
 
-bool VectorDrawableUtils::interpolatePathData(PathData* outData, const PathData& morphFrom,
+bool VectorDrawableUtils::interpolatePathData(PathData& outData, const PathData& morphFrom,
                                               const PathData& morphTo, float fraction) {
     if (!canMorph(morphFrom, morphTo)) {
         return false;
@@ -39,12 +39,9 @@ bool VectorDrawableUtils::interpolatePathData(PathData* outData, const PathData&
 * Convert an array of PathVerb to Path.
 */
 void VectorDrawableUtils::verbsToPath(Cairo::RefPtr<cdroid::Path>& outPath, const PathData& data) {
-#if 0
     PathResolver resolver;
     char previousCommand = 'm';
     size_t start = 0;
-    cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,1,1);
-    cairo_t cr=cairo_create(surface);
     outPath->reset();
     for (unsigned int i = 0; i < data.verbs.size(); i++) {
         size_t verbSize = data.verbSizes[i];
@@ -53,7 +50,6 @@ void VectorDrawableUtils::verbsToPath(Cairo::RefPtr<cdroid::Path>& outPath, cons
         previousCommand = data.verbs[i];
         start += verbSize;
     }
-#endif
 }
 
 /**
@@ -65,14 +61,14 @@ void VectorDrawableUtils::verbsToPath(Cairo::RefPtr<cdroid::Path>& outPath, cons
  * @param nodeTo The end value as a PathVerb
  * @param fraction The fraction to interpolate.
  */
-void VectorDrawableUtils::interpolatePaths(PathData* outData, const PathData& from,
+void VectorDrawableUtils::interpolatePaths(PathData& outData, const PathData& from,
                                            const PathData& to, float fraction) {
-    outData->points.resize(from.points.size());
-    outData->verbSizes = from.verbSizes;
-    outData->verbs = from.verbs;
+    outData.points.resize(from.points.size());
+    outData.verbSizes = from.verbSizes;
+    outData.verbs = from.verbs;
 
     for (size_t i = 0; i < from.points.size(); i++) {
-        outData->points[i] = from.points[i] * (1 - fraction) + to.points[i] * fraction;
+        outData.points[i] = from.points[i] * (1 - fraction) + to.points[i] * fraction;
     }
 }
 

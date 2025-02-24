@@ -3,13 +3,17 @@
 #include <unordered_map>
 #include <core/typedvalue.h>
 #include <drawables/drawable.h>
+#include <drawables/pathparser.h>
 #include <animation/property.h>
 namespace cdroid{
-
-class PathData;
-class VectorDrawableRoot;
+namespace hw{
+    class Group;
+    class ClipPath;
+    class FullPath;
+    class Tree;
+}
 using Theme = std::string;
-using VirtualRefBasePtr=cdroid::VectorDrawableRoot*;
+using VirtualRefBasePtr=cdroid::hw::Tree*;
 class VectorDrawable:public Drawable {
 public:
     class VectorDrawableState;
@@ -80,7 +84,7 @@ public:
      */
     float getPixelSize();
     static VectorDrawable* create(Context*,const std::string&resId);
-    //void inflate(Resources r, XmlPullParser parser,AttributeSet attrs,Theme theme);
+    void inflate(Context*,const std::string&);
     int getChangingConfigurations()const override;
     void setAutoMirrored(bool mirrored) override;
     bool isAutoMirrored() override;
@@ -94,6 +98,7 @@ public:
     class VFullPath;
 
     class VObject {
+        friend VectorDrawableState;
         friend VGroup;
         VirtualRefBasePtr mTreePtr = nullptr;
     public:
@@ -113,84 +118,6 @@ public:
         virtual int getNativeSize()const =0;
         virtual Property* getProperty(const std::string& propertyName)=0;
     };
-private:
-    static int nDraw(long rendererPtr, long canvasWrapperPtr,
-           long colorFilterPtr, Rect bounds, bool needsMirroring, bool canReuseCache);
-    static bool nGetFullPathProperties(long pathPtr, uint8_t* properties,int length);
-    static void nSetName(long nodePtr, const std::string& name);
-    static bool nGetGroupProperties(long groupPtr, float* properties,int length);
-    static void nSetPathString(long pathPtr, const std::string& pathString, int length);
-
-    // ------------- @FastNative ------------------
-
-    static long nCreateTree(long rootGroupPtr);
-    static long nCreateTreeFromCopy(long treeToCopy, long rootGroupPtr);
-    static void nSetRendererViewportSize(long rendererPtr, float viewportWidth,float viewportHeight);
-    static bool nSetRootAlpha(long rendererPtr, float alpha);
-    static float nGetRootAlpha(long rendererPtr);
-    static void nSetAntiAlias(long rendererPtr, bool aa);
-    static void nSetAllowCaching(long rendererPtr, bool allowCaching);
-
-    static long nCreateFullPath();
-    static long nCreateFullPath(long nativeFullPathPtr);
-
-    static void nUpdateFullPathProperties(long pathPtr, float strokeWidth,
-        int strokeColor, float strokeAlpha, int fillColor, float fillAlpha, float trimPathStart,
-        float trimPathEnd, float trimPathOffset, float strokeMiterLimit, int strokeLineCap,
-        int strokeLineJoin, int fillType);
-    static void nUpdateFullPathFillGradient(long pathPtr, long fillGradientPtr);
-    static void nUpdateFullPathStrokeGradient(long pathPtr, long strokeGradientPtr);
-
-    static long nCreateClipPath();
-    static long nCreateClipPath(long clipPathPtr);
-
-    static long nCreateGroup();
-    static long nCreateGroup(long groupPtr);
-    static void nUpdateGroupProperties(long groupPtr, float rotate, float pivotX,
-            float pivotY, float scaleX, float scaleY, float translateX, float translateY);
-
-    static void nAddChild(long groupPtr, long nodePtr);
-
-    /**
-     * The setters and getters below for paths and groups are here temporarily, and will be
-     * removed once the animation in AVD is replaced with RenderNodeAnimator, in which case the
-     * animation will modify these properties in native. By then no JNI hopping would be necessary
-     * for VD during animation, and these setters and getters will be obsolete.
-     */
-    // Setters and getters during animation.
-    static float nGetRotation(long groupPtr);
-    static void nSetRotation(long groupPtr, float rotation);
-    static float nGetPivotX(long groupPtr);
-    static void nSetPivotX(long groupPtr, float pivotX);
-    static float nGetPivotY(long groupPtr);
-    static void nSetPivotY(long groupPtr, float pivotY);
-    static float nGetScaleX(long groupPtr);
-    static void nSetScaleX(long groupPtr, float scaleX);
-    static float nGetScaleY(long groupPtr);
-    static void nSetScaleY(long groupPtr, float scaleY);
-    static float nGetTranslateX(long groupPtr);
-    static void nSetTranslateX(long groupPtr, float translateX);
-    static float nGetTranslateY(long groupPtr);
-    static void nSetTranslateY(long groupPtr, float translateY);
-
-    // Setters and getters for VPath during animation.
-    static void nSetPathData(long pathPtr, long pathDataPtr);
-    static float nGetStrokeWidth(long pathPtr);
-    static void nSetStrokeWidth(long pathPtr, float width);
-    static int nGetStrokeColor(long pathPtr);
-    static void nSetStrokeColor(long pathPtr, int strokeColor);
-    static float nGetStrokeAlpha(long pathPtr);
-    static void nSetStrokeAlpha(long pathPtr, float alpha);
-    static int nGetFillColor(long pathPtr);
-    static void nSetFillColor(long pathPtr, int fillColor);
-    static float nGetFillAlpha(long pathPtr);
-    static void nSetFillAlpha(long pathPtr, float fillAlpha);
-    static float nGetTrimPathStart(long pathPtr);
-    static void nSetTrimPathStart(long pathPtr, float trimPathStart);
-    static float nGetTrimPathEnd(long pathPtr);
-    static void nSetTrimPathEnd(long pathPtr, float trimPathEnd);
-    static float nGetTrimPathOffset(long pathPtr);
-    static void nSetTrimPathOffset(long pathPtr, float trimPathOffset);
 };
 
 class VectorDrawable::VectorDrawableState:public std::enable_shared_from_this<VectorDrawableState> ,public ConstantState {
@@ -210,7 +137,7 @@ protected:
     Insets mOpticalInsets;// = Insets.NONE;
     std::string mRootName;
     VGroup* mRootGroup;
-    VirtualRefBasePtr mNativeTree = nullptr;
+    hw::Tree* mNativeTree = nullptr;
 
     int mDensity = DisplayMetrics::DENSITY_DEFAULT;
     std::unordered_map<std::string,void*> mVGTargetsMap;
@@ -289,7 +216,7 @@ private:
     static Property* /*<VGroup, float>*/ ROTATION;
     static std::unordered_map<std::string, Property*> sPropertyMap;
     // Temp array to store transform values obtained from native.
-    float mTransform[6];
+    float mTransform[8];
     /////////////////////////////////////////////////////
     // Variables below need to be copied (deep copy if applicable) for mutation.
     std::vector<VObject*> mChildren;
@@ -304,7 +231,8 @@ private:
     // The native object will be created in the constructor and will be destroyed in native
     // when the neither java nor native has ref to the tree. This pointer should be valid
     // throughout this VGroup Java object's life.
-    long mNativePtr;
+    hw::Group* mNativePtr;
+    friend VectorDrawableState;
 public:
     VGroup(const VGroup* copy,std::unordered_map<std::string, void*>& targetsMap);
     VGroup();
@@ -317,7 +245,7 @@ public:
     void setTree(VirtualRefBasePtr treeRoot)override;
     long getNativePtr();
     void inflate(Context*,const AttributeSet& attrs, Theme theme);
-    //void updateStateFromTypedArray(TypedArray a);
+    void updateStateFromTypedArray(Context*,const AttributeSet&atts);
     bool onStateChange(const std::vector<int>& stateSet);
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
@@ -348,7 +276,7 @@ public:
 class VectorDrawable::VPath:public VectorDrawable::VObject {
 protected:
     friend VGroup;
-    PathData* mPathData = nullptr;
+    PathParser::PathData* mPathData = nullptr;
     std::string mPathName;
     int mChangingConfigurations;
     static Property* /*<VPath*, PathData*>*/ PATH_DATA;
@@ -358,9 +286,9 @@ public:
     Property* getProperty(const std::string& propertyName);
     std::string getPathName()const;
     /* Setters and Getters, used by animator from AnimatedVectorDrawable. */
-    PathData* getPathData();
+    PathParser::PathData* getPathData();
     // TODO: Move the PathEvaluator and this setter and the getter above into native.
-    void setPathData(PathData* pathData);
+    void setPathData(const PathParser::PathData* pathData);
 };
 
 /**
@@ -368,7 +296,7 @@ public:
  */
 class VectorDrawable::VClipPath:public VPath {
 private:
-    long mNativePtr;
+    hw::ClipPath* mNativePtr;
     static constexpr int NATIVE_ALLOCATION_SIZE = 120;
 public:
     VClipPath();
@@ -383,7 +311,7 @@ public:
     bool isStateful() const override;
     bool hasFocusStateSpecified() const override;
     int getNativeSize() const override;
-    //void updateStateFromTypedArray(TypedArray a);
+    void updateStateFromTypedArray(Context*,const AttributeSet&atts);
 };
 
 /**
@@ -427,9 +355,9 @@ private:
 
     ComplexColor* mStrokeColors = nullptr;
     ComplexColor* mFillColors = nullptr;
-    long mNativePtr;
+    hw::FullPath* mNativePtr;
 private:
-    //void updateStateFromTypedArray(TypedArray a);
+    void updateStateFromTypedArray(Context*,const AttributeSet&atts);
     bool canComplexColorApplyTheme(ComplexColor* complexColor);
 public:
     VFullPath();

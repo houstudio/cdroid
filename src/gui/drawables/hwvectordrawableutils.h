@@ -10,10 +10,10 @@ class VectorDrawableUtils {
 public:
     static double PathMeasure(const Cairo::RefPtr<cdroid::Path>&path);
     static bool canMorph(const PathData& morphFrom, const PathData& morphTo);
-    static bool interpolatePathData(PathData* outData, const PathData& morphFrom,
+    static bool interpolatePathData(PathData& outData, const PathData& morphFrom,
                                                 const PathData& morphTo, float fraction);
     static void verbsToPath(Cairo::RefPtr<cdroid::Path>& outPath, const PathData& data);
-    static void interpolatePaths(PathData* outPathData, const PathData& from, const PathData& to,
+    static void interpolatePaths(PathData& outPathData, const PathData& from, const PathData& to,
                                  float fraction);
 };
 }  /*namespace vectordrawable*/

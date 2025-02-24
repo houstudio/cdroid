@@ -85,17 +85,17 @@ protected:
     PropertyChangedListener* mPropertyChangedListener = nullptr;
 };
 
+struct PathData {
+    std::vector<char> verbs;
+    std::vector<size_t> verbSizes;
+    std::vector<float> points;
+    bool operator==(const PathData& data) const {
+        return verbs == data.verbs && verbSizes == data.verbSizes && points == data.points;
+    }
+};
+
 class Path : public Node {
 public:
-    struct Data {
-        std::vector<char> verbs;
-        std::vector<size_t> verbSizes;
-        std::vector<float> points;
-        bool operator==(const Data& data) const {
-            return verbs == data.verbs && verbSizes == data.verbSizes && points == data.points;
-        }
-    };
-
     class PathProperties : public Properties {
     public:
         explicit PathProperties(Node* node) : Properties(node) {}
@@ -103,7 +103,7 @@ public:
             mData = prop.mData;
             onPropertyChanged();
         }
-        void setData(const Data& data) {
+        void setData(const PathData& data) {
             // Updates the path data. Note that we don't generate a new Skia path right away
             // because there are cases where the animation is changing the path data, but the view
             // that hosts the VD has gone off screen, in which case we won't even draw. So we
@@ -114,10 +114,10 @@ public:
             mData = data;
             onPropertyChanged();
         }
-        const Data& getData() const { return mData; }
+        const PathData& getData() const { return mData; }
 
     private:
-        Data mData;
+        PathData mData;
     };
 
     Path(const Path& path);
@@ -635,13 +635,12 @@ private:
     Cache mStagingCache;
     Cache mCache;
 
-    PropertyChangedListener mPropertyChangedListener =
-            PropertyChangedListener(&mCache.dirty, &mStagingCache.dirty);
+    PropertyChangedListener mPropertyChangedListener = PropertyChangedListener(&mCache.dirty, &mStagingCache.dirty);
 
     mutable bool mWillBeConsumed = false;
 };
 }/*endof namespace vectordrawable*/
-typedef hw::Path::Data PathData;
+//typedef hw::Path::Data PathData;
 typedef hw::Tree VectorDrawableRoot;
 }/*endof namespace cdroid*/
 #endif/*__HWUI_VECTOR_DRAWABLE_H__*/

@@ -262,8 +262,7 @@ void PathParser::dump(const PathData& data) {
     LOGD("points are : %s", os.str().c_str());
 }
 
-#if 0
-void PathParser::parseAsciiStringForSkPath(SkPath* skPath, ParseResult* result, const char* pathStr,
+void PathParser::parseAsciiStringForPath(Cairo::RefPtr<cdroid::Path>& skPath, ParseResult* result, const char* pathStr,
                                            size_t strLen) {
     PathData pathData;
     getPathDataFromAsciiString(&pathData, result, pathStr, strLen);
@@ -280,7 +279,6 @@ void PathParser::parseAsciiStringForSkPath(SkPath* skPath, ParseResult* result, 
     VectorDrawableUtils::verbsToPath(skPath, pathData);
     return;
 }
-#endif
 
 }/*vectordrawable*/
 }/*cdroid*/

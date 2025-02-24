@@ -5,7 +5,7 @@
 #include <porting/cdlog.h>
 namespace cdroid{
 namespace hw{
-
+const int Tree::MAX_CACHED_BITMAP_SIZE = 2048;
 void Path::dump() {
     LOGD("Path: %s has %zu points", mName.c_str(), mProperties.getData().points.size());
 }
@@ -13,7 +13,7 @@ void Path::dump() {
 // Called from UI thread during the initial setup/theme change.
 Path::Path(const char* pathStr, size_t strLength) {
     PathParser::ParseResult result;
-    Data data;
+    PathData data;
     PathParser::getPathDataFromAsciiString(&data, &result, pathStr, strLength);
     mStagingProperties.setData(data);
 }
@@ -375,5 +375,90 @@ bool Group::isValidProperty(int propertyId) {
 bool Group::GroupProperties::isValidProperty(int propertyId) {
     return propertyId >= 0 && propertyId < static_cast<int>(Property::count);
 }
+
+int Tree::draw(Canvas& outCanvas, ColorFilter* colorFilter, const Rect& bounds, bool needsMirroring, bool canReuseCache) {
+    // The imageView can scale the canvas in different ways, in order to
+    // avoid blurry scaling, we have to draw into a bitmap with exact pixel
+    // size first. This bitmap size is determined by the bounds and the
+    // canvas scale.
+    //SkMatrix canvasMatrix;
+    //outCanvas->getMatrix(&canvasMatrix);
+    float canvasScaleX = 1.0f;
+    float canvasScaleY = 1.0f;
+    /*if (canvasMatrix.getSkewX() == 0 && canvasMatrix.getSkewY() == 0) {
+        // Only use the scale value when there's no skew or rotation in the canvas matrix.
+        // TODO: Add a cts test for drawing VD on a canvas with negative scaling factors.
+        canvasScaleX = fabs(canvasMatrix.getScaleX());
+        canvasScaleY = fabs(canvasMatrix.getScaleY());
+    }*/
+    int scaledWidth = (int)(bounds.width * canvasScaleX);
+    int scaledHeight = (int)(bounds.height * canvasScaleY);
+    scaledWidth = std::min(Tree::MAX_CACHED_BITMAP_SIZE, scaledWidth);
+    scaledHeight = std::min(Tree::MAX_CACHED_BITMAP_SIZE, scaledHeight);
+
+    if (scaledWidth <= 0 || scaledHeight <= 0) {
+        return 0;
+    }
+
+    mStagingProperties.setScaledSize(scaledWidth, scaledHeight);
+    outCanvas.save();//int saveCount =outCanvas->save(SaveFlags::MatrixClip);
+    outCanvas.translate(bounds.left, bounds.top);
+
+    // Handle RTL mirroring.
+    if (needsMirroring) {
+        outCanvas.translate(bounds.width, 0);
+        outCanvas.scale(-1.0f, 1.0f);
+    }
+    mStagingProperties.setColorFilter(colorFilter);
+
+    // At this point, canvas has been translated to the right position.
+    // And we use this bound for the destination rect for the drawBitmap, so
+    // we offset to (0, 0);
+    Rect tmpBounds = bounds;
+    //tmpBounds.offsetTo(0, 0);
+    mStagingProperties.setBounds(tmpBounds);
+    //outCanvas->drawVectorDrawable(this);
+    outCanvas.save();//outCanvas->restoreToCount(saveCount);
+    return scaledWidth * scaledHeight;
+}
+
+void Tree::updateBitmapCache(Bitmap& bitmap, bool useStagingData) {
+    Bitmap outCache;
+    //bitmap.getSkBitmap(&outCache);
+    int cacheWidth = outCache->get_width();
+    int cacheHeight = outCache->get_height();
+    LOGD("VectorDrawable repaint %dx%d", cacheWidth, cacheHeight);
+    //outCache.eraseColor(SK_ColorTRANSPARENT);
+    Canvas outCanvas(outCache);
+    float viewportWidth = useStagingData ? mStagingProperties.getViewportWidth() : mProperties.getViewportWidth();
+    float viewportHeight= useStagingData ? mStagingProperties.getViewportHeight() : mProperties.getViewportHeight();
+    float scaleX = cacheWidth / viewportWidth;
+    float scaleY = cacheHeight / viewportHeight;
+    outCanvas.scale(scaleX, scaleY);
+    mRootNode->draw(outCanvas, useStagingData);
+}
+
+bool Tree::allocateBitmapIfNeeded(Cache& cache, int width, int height) {
+    /*if (!canReuseBitmap(cache.bitmap.get(), width, height)) {
+#ifndef ANDROID_ENABLE_LINEAR_BLENDING
+        sk_sp<SkColorSpace> colorSpace = nullptr;
+#else
+        sk_sp<SkColorSpace> colorSpace = SkColorSpace::MakeSRGB();
+#endif
+        SkImageInfo info = SkImageInfo::MakeN32(width, height, kPremul_SkAlphaType, colorSpace);
+        cache.bitmap = Cairo::ImageSurface::create(width, height);//Bitmap::allocateHeapBitmap(info);
+        return true;
+    }*/
+    return false;
+}
+
+void Tree::onPropertyChanged(TreeProperties* prop) {
+    if (prop == &mStagingProperties) {
+        mStagingCache.dirty = true;
+    } else {
+        mCache.dirty = true;
+    }
+}
+
 }/*endof namespace vectordrawable*/
 }/*endof namespace cdroid*/
