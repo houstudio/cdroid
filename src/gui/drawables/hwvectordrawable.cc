@@ -123,7 +123,7 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     Cairo::RefPtr<cdroid::Path> tempStagingPath=std::make_shared<cdroid::Path>();
     const FullPathProperties& properties = useStagingData ? mStagingProperties : mProperties;
     const Cairo::RefPtr<cdroid::Path> renderPath = getUpdatedPath(useStagingData, tempStagingPath);
-
+    LOGD("%p %s",this,mName.c_str());
     // Draw path's fill, if fill color or gradient is valid
     bool needsFill = false;
     bool needsStroke = false;
@@ -147,7 +147,7 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
 
     outCanvas.set_antialias(mAntiAlias?Cairo::ANTIALIAS_GRAY:Cairo::ANTIALIAS_NONE);
     renderPath->append_to_context(&outCanvas);
-    outCanvas.set_source_rgb(1,0,0);needsFill=true;
+    outCanvas.set_source_rgb(1,0,0);needsFill=true;needsStroke=true;
     if (needsFill) {
         //outCanvas.set_source(properties.getFillGradient());
         //paint.setStyle(SkPaint::Style::kFill_Style);
@@ -158,7 +158,7 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     }
 
     // Draw path's stroke, if stroke color or Gradient is valid
-    outCanvas.set_source_rgb(1,0,0);needsStroke=true;
+    outCanvas.set_source_rgb(0,1,0);
     if (needsStroke) {
         //outCanvas.set_source(properties.getStrokeGradient());
         //paint.setAntiAlias(mAntiAlias);
@@ -246,9 +246,11 @@ void Group::draw(Canvas& outCanvas, bool useStagingData) {
     const GroupProperties& prop = useStagingData ? mStagingProperties : mProperties;
     getLocalMatrix(stackedMatrix, prop);
     outCanvas.save();
+    LOGD("%p:%s",this,mName.c_str());
     outCanvas.transform(stackedMatrix);
     // Draw the group tree in the same order as the XML file.
     for (auto& child : mChildren) {
+        child->dump();
         child->draw(outCanvas, useStagingData);
     }
     outCanvas.restore();
@@ -278,16 +280,6 @@ void Group::syncProperties() {
 }
 
 void Group::getLocalMatrix(Cairo::Matrix& outMatrix, const GroupProperties& properties) {
-#if 0
-    outMatrix->reset();
-    // TODO: use rotate(mRotate, mPivotX, mPivotY) and scale with pivot point, instead of
-    // translating to pivot for rotating and scaling, then translating back.
-    outMatrix->postTranslate(-properties.getPivotX(), -properties.getPivotY());
-    outMatrix->postScale(properties.getScaleX(), properties.getScaleY());
-    outMatrix->postRotate(properties.getRotation(), 0, 0);
-    outMatrix->postTranslate(properties.getTranslateX() + properties.getPivotX(),
-                             properties.getTranslateY() + properties.getPivotY());
-#else
     outMatrix.translate(-properties.getPivotX(), -properties.getPivotY());
     // 第二步：进行缩放操作
     outMatrix.scale(properties.getScaleX(), properties.getScaleY());
@@ -299,7 +291,6 @@ void Group::getLocalMatrix(Cairo::Matrix& outMatrix, const GroupProperties& prop
     // 第四步：平移回原来的位置加上平移量
     outMatrix.translate(properties.getTranslateX() + properties.getPivotX(),
                         properties.getTranslateY() + properties.getPivotY());
-#endif
 }
 
 void Group::addChild(Node* child) {
@@ -463,10 +454,10 @@ void Tree::updateBitmapCache(Bitmap& bitmap, bool useStagingData) {
     LOGD("VectorDrawable repaint %dx%d", cacheWidth, cacheHeight);
     //outCache.eraseColor(SK_ColorTRANSPARENT);
     Canvas outCanvas(outCache);
-    float viewportWidth = useStagingData ? mStagingProperties.getViewportWidth() : mProperties.getViewportWidth();
-    float viewportHeight= useStagingData ? mStagingProperties.getViewportHeight() : mProperties.getViewportHeight();
-    float scaleX = cacheWidth / viewportWidth;
-    float scaleY = cacheHeight / viewportHeight;
+    const float viewportWidth = useStagingData ? mStagingProperties.getViewportWidth() : mProperties.getViewportWidth();
+    const float viewportHeight= useStagingData ? mStagingProperties.getViewportHeight() : mProperties.getViewportHeight();
+    const float scaleX = cacheWidth / viewportWidth;
+    const float scaleY = cacheHeight / viewportHeight;
     outCanvas.scale(scaleX, scaleY);
     mRootNode->draw(outCanvas, useStagingData);
 }

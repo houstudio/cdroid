@@ -1,7 +1,8 @@
-#if 10
 #include <stack>
 #include <fstream>
+#include <unordered_map>
 #include <expat.h>
+#include <core/canvas.h>
 #include <drawables/hwpathparser.h>
 #include <drawables/vectordrawable.h>
 #include <drawables/hwvectordrawable.h>
@@ -13,6 +14,9 @@ VectorDrawable::VectorDrawable()
 
 
 VectorDrawable::VectorDrawable(std::shared_ptr<VectorDrawableState> state) {
+    mMutated = false;
+    mColorFilter= nullptr;
+    mTintFilter = nullptr;
     mVectorState = state;
     updateLocalState();
 }
@@ -61,9 +65,9 @@ void VectorDrawable::draw(Canvas& canvas) {
     }
 
     // Color filters always override tint filters.
-    ColorFilter* colorFilter = (mColorFilter == nullptr ? mTintFilter : mColorFilter);
+    const ColorFilter* colorFilter = (mColorFilter == nullptr ? mTintFilter : mColorFilter);
     //long colorFilterNativeInstance = colorFilter == nullptr ? 0 :colorFilter.getNativeInstance();
-    bool canReuseCache = mVectorState->canReuseCache();
+    const bool canReuseCache = mVectorState->canReuseCache();
     /*int pixelCount = nDraw(mVectorState->getNativeRenderer(), canvas.getNativeCanvasWrapper(),
             colorFilterNativeInstance, mTmpBounds, needMirroring(), canReuseCache)*/;
     const int pixelCount = mVectorState->mNativeTree->draw(canvas,nullptr,mTmpBounds,needMirroring(),canReuseCache);
@@ -292,13 +296,13 @@ private:
     bool noPathTag;
 public:
     VectorParser(Context*c,const std::string&pkg,VectorDrawable*d){
-        ctx= c; 
+        ctx= c;
         vd = d;
         state = nullptr;
         currentGroup= nullptr;
         package = pkg;
-        noPathTag=true;
-        state =d->mVectorState.get();
+        noPathTag = true;
+        state = d->mVectorState.get();
         groupStack.push(state->mRootGroup);
     }
     static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
@@ -306,7 +310,6 @@ public:
         AttributeSet atts(d->ctx,d->package);
         VGroup* currentGroup = d->groupStack.top();//peek();
         atts.set(satts);
-        atts.dump();
         if(strcmp(name,"vector")==0){
             d->vd->updateStateFromTypedArray(d->ctx,atts);
         }else if(strcmp(name,SHAPE_PATH)==0){
@@ -449,7 +452,9 @@ void VectorDrawable::updateStateFromTypedArray(Context*ctx,const AttributeSet&at
     const std::string name = atts.getString("name");
     if (!name.empty()) {
         state->mRootName = name;
-        //state->mVGTargetsMap.emplace(name, state);
+        state->mRootGroup->mGroupName=name;
+        LOGD("%p rootName=%s",state->mRootGroup,name.c_str());
+        state->mVGTargetsMap.emplace(name, state.get());
     }
 
 }
@@ -504,6 +509,12 @@ Property* VectorDrawable::VectorDrawableState::getProperty(const std::string& pr
 // If copy is not null, deep copy the given VectorDrawableState. Otherwise, create a
 // native vector drawable tree with an empty root group.
 VectorDrawable::VectorDrawableState::VectorDrawableState(const VectorDrawableState* copy) {
+    mTint = nullptr;
+    mNativeTree = nullptr;
+    mCachedTint = nullptr;
+    mCacheDirty = false;
+    mRootGroup = nullptr;
+    mCachedAutoMirrored = false;
     if (copy != nullptr) {
         //mThemeAttrs = copy->mThemeAttrs;
         mChangingConfigurations = copy->mChangingConfigurations;
@@ -546,7 +557,6 @@ void VectorDrawable::VectorDrawableState::createNativeTreeFromCopy(const VectorD
 // (i.e. in constructors of VectorDrawableState and in inflate).
 void VectorDrawable::VectorDrawableState::onTreeConstructionFinished() {
     mRootGroup->setTree(mNativeTree);
-    mAllocationOfAllNodes = mRootGroup->getNativeSize();
 }
 
 long VectorDrawable::VectorDrawableState::getNativeRenderer() {
@@ -822,15 +832,6 @@ bool VectorDrawable::VGroup::hasFocusStateSpecified() const{
     return result;
 }
 
-int VectorDrawable::VGroup::getNativeSize() const{
-    // Return the native allocation needed for the subtree.
-    int size = NATIVE_ALLOCATION_SIZE;
-    for (int i = 0; i < mChildren.size(); i++) {
-        size += mChildren.at(i)->getNativeSize();
-    }
-    return size;
-}
-
 bool VectorDrawable::VGroup::canApplyTheme() {
     if (mThemeAttrs != nullptr) {
         return true;
@@ -967,7 +968,7 @@ VectorDrawable::VPath::VPath() {
 VectorDrawable::VPath::VPath(const VPath* copy) {
     mPathName = copy->mPathName;
     mChangingConfigurations = copy->mChangingConfigurations;
-    //mPathData = copy->mPathData == nullptr ? nullptr : new PathData(copy->mPathData);
+    mPathData = copy->mPathData == nullptr ? nullptr : new PathParser::PathData(*copy->mPathData);
 }
 
 std::string VectorDrawable::VPath::getPathName() const{
@@ -983,10 +984,12 @@ PathParser::PathData* VectorDrawable::VPath::getPathData() {
 // TODO: Move the PathEvaluator and this setter and the getter above into native.
 void VectorDrawable::VPath::setPathData(const PathParser::PathData* pathData) {
     mPathData->setPathData(*pathData);
+    LOGD("TODO");
     if (isTreeValid()) {
         //nSetPathData(getNativePtr(), mPathData->getNativePtr());
         hw::PathData*dst=(hw::PathData*)getNativePtr();
         hw::PathData*src=(hw::PathData*)mPathData->getNativePtr();
+        //((hw::Path*)getNativePtr())->mutateStagingProperties()->setData(*pathData);
         *dst=*src;
     }
 }
@@ -1034,10 +1037,6 @@ bool VectorDrawable::VClipPath::isStateful() const{
 
 bool VectorDrawable::VClipPath::hasFocusStateSpecified()const {
     return false;
-}
-
-int VectorDrawable::VClipPath::getNativeSize() const{
-    return NATIVE_ALLOCATION_SIZE;
 }
 
 void VectorDrawable::VClipPath::updateStateFromTypedArray(Context*,const AttributeSet&atts) {
@@ -1172,10 +1171,6 @@ bool VectorDrawable::VFullPath::hasFocusStateSpecified() const{
             ((ColorStateList*) mFillColors)->hasFocusStateSpecified());
 }
 
-int VectorDrawable::VFullPath::getNativeSize() const{
-    return NATIVE_ALLOCATION_SIZE;
-}
-
 long VectorDrawable::VFullPath::getNativePtr() {
     return (long)mNativePtr;
 }
@@ -1225,7 +1220,6 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(Context*,const Attribu
         hw::PathParser::getPathDataFromAsciiString(&data, &result, pathString.c_str(), pathString.length());
         ((hw::Path*)mNativePtr)->mutateStagingProperties()->setData(data);
     }
-    atts.dump();
 #if 0
     ComplexColor* fillColors = atts.getComplexColor("fillColor");
     if (fillColors != nullptr) {
@@ -1264,16 +1258,22 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(Context*,const Attribu
     mNativePtr->mutateStagingProperties()->setStrokeGradient(strokeGradient);
 #endif
     fillAlpha = atts.getFloat("fillAlpha", fillAlpha);
-
-    strokeLineCap = atts.getInt("strokeLineCap", strokeLineCap);
-    strokeLineJoin = atts.getInt("strokeLineJoin", strokeLineJoin);
+    strokeLineCap = atts.getInt("strokeLineCap",std::unordered_map<std::string,int>{
+            {"butt", (int)Cairo::Context::LineCap::BUTT},
+            {"round",(int)Cairo::Context::LineCap::ROUND},
+            {"squre",(int)Cairo::Context::LineCap::SQUARE} }, strokeLineCap);
+    strokeLineJoin = atts.getInt("strokeLineJoin",std::unordered_map<std::string,int>{
+            {"bevel",(int)Cairo::Context::LineJoin::BEVEL},
+            {"miter",(int)Cairo::Context::LineJoin::MITER}, 
+            {"sound",(int)Cairo::Context::LineJoin::ROUND} }, strokeLineJoin);
     strokeMiterLimit = atts.getFloat("strokeMiterLimit", strokeMiterLimit);
     strokeAlpha = atts.getFloat("strokeAlpha",strokeAlpha);
     strokeWidth = atts.getFloat("strokeWidth",strokeWidth);
     trimPathEnd = atts.getFloat("trimPathEnd",trimPathEnd);
     trimPathOffset = atts.getFloat("trimPathOffset", trimPathOffset);
     trimPathStart = atts.getFloat("trimPathStart", trimPathStart);
-    fillType = atts.getInt("fillType", fillType);
+    fillType = atts.getInt("fillType",std::unordered_map<std::string,int>{
+            {"evenAdd",0},{"nonZero",0}}, fillType);
 
     //nUpdateFullPathProperties(
     mNativePtr->mutateStagingProperties()->updateProperties(strokeWidth, strokeColor, strokeAlpha,
@@ -1436,4 +1436,3 @@ void VectorDrawable::VFullPath::setTrimPathOffset(float trimPathOffset) {
 }
 
 }/*endof namespace*/
-#endif

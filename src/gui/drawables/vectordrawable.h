@@ -112,7 +112,6 @@ public:
         virtual bool onStateChange(const std::vector<int>& state)=0;
         virtual bool isStateful()const=0;
         virtual bool hasFocusStateSpecified()const=0;
-        virtual int getNativeSize()const =0;
         virtual Property* getProperty(const std::string& propertyName)=0;
     };
 };
@@ -150,12 +149,9 @@ protected:
     // these bitmaps separately.
     int mLastSWCachePixelCount = 0;
     int mLastHWCachePixelCount = 0;
-    int mAllocationOfAllNodes = 0;
 
     static Property* /*<VectorDrawableState, float>*/ ALPHA;
     // This tracks the total native allocation for all the nodes.
-
-    static constexpr int NATIVE_ALLOCATION_SIZE = 316;
 private:
     void createNativeTree(VGroup* rootGroup);
     void createNativeTreeFromCopy(const VectorDrawableState& copy, VGroup* rootGroup);
@@ -197,8 +193,6 @@ private:
     static constexpr int TRANSLATE_Y_INDEX = 6;
     static constexpr int TRANSFORM_PROPERTY_COUNT = 7;
 
-    static constexpr int NATIVE_ALLOCATION_SIZE = 100;
-
     static std::unordered_map<std::string, int> sPropertyIndexMap;
 
     static int getPropertyIndex(const std::string& propertyName);
@@ -213,7 +207,7 @@ private:
     static Property* /*<VGroup, float>*/ ROTATION;
     static std::unordered_map<std::string, Property*> sPropertyMap;
     // Temp array to store transform values obtained from native.
-    float mTransform[8];
+    //float mTransform[8];
     /////////////////////////////////////////////////////
     // Variables below need to be copied (deep copy if applicable) for mutation.
     std::vector<VObject*> mChildren;
@@ -229,6 +223,7 @@ private:
     // when the neither java nor native has ref to the tree. This pointer should be valid
     // throughout this VGroup Java object's life.
     hw::Group* mNativePtr;
+    friend VectorDrawable;
     friend VectorDrawableState;
 public:
     VGroup(const VGroup* copy,std::unordered_map<std::string, void*>& targetsMap);
@@ -240,13 +235,12 @@ public:
 
     void addChild(VObject* child);
     void setTree(VirtualRefBasePtr treeRoot)override;
-    long getNativePtr();
+    long getNativePtr()override;
     void inflate(Context*,const AttributeSet& attrs, Theme theme);
     void updateStateFromTypedArray(Context*,const AttributeSet&atts);
     bool onStateChange(const std::vector<int>& stateSet);
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
-    int getNativeSize()const override;
 
     bool canApplyTheme()override;
     void applyTheme(Theme t);
@@ -294,12 +288,11 @@ public:
 class VectorDrawable::VClipPath:public VPath {
 private:
     hw::ClipPath* mNativePtr;
-    static constexpr int NATIVE_ALLOCATION_SIZE = 120;
 public:
     VClipPath();
 
     VClipPath(const VClipPath* copy);
-    long getNativePtr();
+    long getNativePtr()override;
     void inflate(Context*,const AttributeSet& attrs, Theme theme);
     bool canApplyTheme() override;
 
@@ -307,7 +300,6 @@ public:
     bool onStateChange(const std::vector<int>& stateSet) override;
     bool isStateful() const override;
     bool hasFocusStateSpecified() const override;
-    int getNativeSize() const override;
     void updateStateFromTypedArray(Context*,const AttributeSet&atts);
 };
 
@@ -330,7 +322,6 @@ private:
     static constexpr int FILL_TYPE_INDEX = 11;
     static constexpr int TOTAL_PROPERTY_COUNT = 12;
 
-    static constexpr int NATIVE_ALLOCATION_SIZE = 264;
     // Property map for animatable attributes.
     static std::unordered_map<std::string, int> sPropertyIndexMap;
     // Below are the Properties that wrap the setters to avoid reflection overhead in animations
@@ -364,7 +355,6 @@ public:
     bool onStateChange(const std::vector<int>& stateSet) override;
     bool isStateful() const override;
     bool hasFocusStateSpecified()const override;
-    int getNativeSize() const override;
     long getNativePtr() override;
     void inflate(Context*,const AttributeSet& attrs, Theme theme);
 
