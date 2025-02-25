@@ -28,23 +28,19 @@ private:
     PorterDuffColorFilter* mTintFilter;
     ColorFilter* mColorFilter;
     bool mMutated;
+    /** Whether DPI-scaled width, height, and insets need to be updated. */
+    bool mDpiScaledDirty = true;
     /** The density of the display on which this drawable will be rendered. */
     int mTargetDensity;
-
     // Given the virtual display setup, the dpi can be different than the inflation's dpi.
     // Therefore, we need to scale the values we got from the getDimension*().
     int mDpiScaledWidth = 0;
     int mDpiScaledHeight = 0;
     Insets mDpiScaledInsets;// = Insets.NONE;
-
-    /** Whether DPI-scaled width, height, and insets need to be updated. */
-    bool mDpiScaledDirty = true;
-    Rect mTmpBounds;
 private:
     VectorDrawable(std::shared_ptr<VectorDrawableState> state);
-    //void updateLocalState(Resources res);
+    void updateLocalState();
     void updateStateFromTypedArray(Context*,const AttributeSet&atts);
-    void inflateChildElements(Context*,const AttributeSet& attrs,Theme theme);
     bool needMirroring();
 protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
@@ -129,7 +125,6 @@ protected:
     int mChangingConfigurations;
     ColorStateList* mTint = nullptr;
     int mTintMode = DEFAULT_TINT_MODE;
-    bool mAutoMirrored;
 
     int mBaseWidth = 0;
     int mBaseHeight = 0;
@@ -147,6 +142,7 @@ protected:
     int mCachedThemeAttrs[2];
     ColorStateList* mCachedTint;
     PorterDuff::Mode mCachedTintMode;
+    bool mAutoMirrored;
     bool mCachedAutoMirrored;
     bool mCacheDirty;
 

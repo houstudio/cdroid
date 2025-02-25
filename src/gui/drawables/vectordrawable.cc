@@ -1,4 +1,5 @@
 #if 10
+#include <stack>
 #include <fstream>
 #include <expat.h>
 #include <drawables/hwpathparser.h>
@@ -16,15 +17,15 @@ VectorDrawable::VectorDrawable(std::shared_ptr<VectorDrawableState> state) {
     //updateLocalState(res);
 }
 
-/*void VectorDrawable::updateLocalState(Resources res) {
-    const int density = Drawable::resolveDensity(res, mVectorState::mDensity);
+void VectorDrawable::updateLocalState() {
+    const int density = Drawable::resolveDensity(mVectorState->mDensity);
     if (mTargetDensity != density) {
         mTargetDensity = density;
         mDpiScaledDirty = true;
     }
 
     mTintFilter = updateTintFilter(mTintFilter, mVectorState->mTint, mVectorState->mTintMode);
-}*/
+}
 
 Drawable* VectorDrawable::mutate() {
     if (!mMutated && Drawable::mutate() == this) {
@@ -260,9 +261,8 @@ void VectorDrawable::applyTheme(Theme t) {
  * @hide
  */
 float VectorDrawable::getPixelSize() {
-    if ((mVectorState == nullptr) ||(mVectorState->mBaseWidth == 0) ||
-            (mVectorState->mBaseHeight == 0) || (mVectorState->mViewportHeight == 0) ||
-            (mVectorState->mViewportWidth == 0)) {
+    if ((mVectorState == nullptr) ||(mVectorState->mBaseWidth == 0) || (mVectorState->mBaseHeight == 0)
+            || (mVectorState->mViewportHeight == 0) || (mVectorState->mViewportWidth == 0)) {
         return 1; // fall back to 1:1 pixel mapping.
     }
     float intrinsicWidth = mVectorState->mBaseWidth;
@@ -280,64 +280,93 @@ VectorDrawable* VectorDrawable::create(Context*ctx, const std::string&rid) {
     return drawable;
 }
 
-typedef struct {
+class VectorDrawable::VectorParser{
+private:
+    friend VectorDrawable;
     Context*ctx;
     std::string package;
+    VectorDrawableState*state;
     VectorDrawable*vd;
-}KVDATA;
-class VectorDrawable::VectorParser{
+    std::stack<VectorDrawable::VGroup*>groupStack;
+    VectorDrawable::VGroup*currentGroup;
+    bool noPathTag;
 public:
-static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
-    KVDATA*d=(KVDATA*)userData;
-    AttributeSet atts(d->ctx,d->package);
-    atts.set(satts);
-    atts.dump();
-    if(strcmp(name,"vector")==0){
-        d->vd->updateStateFromTypedArray(d->ctx,atts);
-    }else if(strcmp(name,SHAPE_PATH)==0){
-    }else if(strcmp(name,SHAPE_CLIP_PATH)==0){
-    }else if(strcmp(name,SHAPE_GROUP)==0){
+    VectorParser(Context*c,const std::string&pkg,VectorDrawable*d){
+        ctx= ctx; 
+        vd = d;
+        state = nullptr;
+        currentGroup= nullptr;
+        package = pkg;
+        noPathTag=true;
+        state =d->mVectorState.get();
+        groupStack.push(state->mRootGroup);
     }
-}
+    static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
+        VectorParser*d=(VectorParser*)userData;
+        AttributeSet atts(d->ctx,d->package);
+        VGroup* currentGroup = d->groupStack.top();//peek();
+        atts.set(satts);
+        atts.dump();
+        if(strcmp(name,"vector")==0){
+            d->vd->updateStateFromTypedArray(d->ctx,atts);
+        }else if(strcmp(name,SHAPE_PATH)==0){
+            VFullPath*path=new VFullPath();
+            path->inflate(d->ctx,atts,"");
+            currentGroup->addChild(path);
+            if(!path->getPathName().empty())
+                d->state->mVGTargetsMap.emplace(path->getPathName(),path);
+            d->noPathTag = false;
+            //d->state->mChangingConfigurations |= path->mChangingConfigurations;
+        }else if(strcmp(name,SHAPE_CLIP_PATH)==0){
+            VClipPath*path=new VClipPath();
+            path->inflate(d->ctx,atts,"");
+            currentGroup->addChild(path);
+            if(!path->getPathName().empty())
+                d->state->mVGTargetsMap.emplace(path->getPathName(),path);
+            //d->state->mChangingConfigurations |= path->mChangingConfigurations;
+        }else if(strcmp(name,SHAPE_GROUP)==0){
+            VGroup*newChildGroup=new VGroup();
+            newChildGroup->inflate(d->ctx,atts,"");
+            currentGroup->addChild(newChildGroup);
+            d->groupStack.push(newChildGroup);
+            if(!newChildGroup->getGroupName().empty())
+                d->state->mVGTargetsMap.emplace(newChildGroup->getGroupName(),newChildGroup);
+            //d->state->mChangingConfigurations |= path->mChangingConfigurations;
+        }
+    }
 
-static void endElement(void *userData, const XML_Char *name){
-}
-};
+    static void endElement(void *userData, const XML_Char *name){
+        VectorParser*d=(VectorParser*)userData;
+        if(strcmp(name,SHAPE_PATH)==0){
+            d->groupStack.pop();
+        }
+    }
+};/*VectorDrawable::VectorParser*/
 
 void VectorDrawable::inflate(Context*ctx,const std::string&resId){
-#if 0
-    if (mVectorState.mRootGroup != null || mVectorState.mNativeTree != null) {
+
+    if (mVectorState->mRootGroup != nullptr || mVectorState->mNativeTree != nullptr) {
         // This VD has been used to display other VD resource content, clean up.
-        if (mVectorState.mRootGroup != null) {
+        if (mVectorState->mRootGroup != nullptr) {
             // Subtract the native allocation for all the nodes.
-            VMRuntime.getRuntime().registerNativeFree(mVectorState.mRootGroup.getNativeSize());
             // Remove child nodes' reference to tree
-            mVectorState.mRootGroup.setTree(null);
+            mVectorState->mRootGroup->setTree(nullptr);
         }
-        mVectorState.mRootGroup = new VGroup();
-        if (mVectorState.mNativeTree != null) {
+        mVectorState->mRootGroup = new VGroup();
+        if (mVectorState->mNativeTree != nullptr) {
             // Subtract the native allocation for the tree wrapper, which contains root node
             // as well as rendering related data.
-            VMRuntime.getRuntime().registerNativeFree(mVectorState.NATIVE_ALLOCATION_SIZE);
-            mVectorState.mNativeTree.release();
+            delete mVectorState->mNativeTree;//->release();
         }
-        mVectorState.createNativeTree(mVectorState.mRootGroup);
+        mVectorState->createNativeTree(mVectorState->mRootGroup);
     }
-    VectorDrawableState state = mVectorState;
-    //state.setDensity(Drawable.resolveDensity(r, 0));
 
-    //final TypedArray a = obtainAttributes(r, theme, attrs, R.styleable.VectorDrawable);
-    updateStateFromTypedArray(a);
+    auto state = mVectorState;
+    mVectorState->setDensity(Drawable::resolveDensity(0));
 
     mDpiScaledDirty = true;
+    mVectorState->mCacheDirty = true;
 
-    state.mCacheDirty = true;
-    inflateChildElements(r, parser, attrs, theme);
-
-    state.onTreeConstructionFinished();
-    // Update local properties.
-    updateLocalState(r);
-#else
     char buf[256];
     std::streamsize len;
     std::string package;
@@ -346,11 +375,9 @@ void VectorDrawable::inflate(Context*ctx,const std::string&resId){
     if((stream==nullptr)||!(*stream))
         stream = std::make_unique<std::ifstream>(resId);
     if(!(*stream))return;
-    KVDATA data;
+    VectorParser data(ctx,package,this);
     XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
-    data.ctx=ctx;
-    data.package=package;
-    data.vd=this;
+    //data.groupStack.push(data.state->mRootGroup);
     XML_SetUserData(parser,&data);
     XML_SetElementHandler(parser, VectorParser::startElement, VectorParser::endElement);
      do {
@@ -364,7 +391,10 @@ void VectorDrawable::inflate(Context*ctx,const std::string&resId){
         }LOGD("%s",buf);
     } while(len!=0);
     XML_ParserFree(parser);
-#endif
+    LOGE_IF(data.noPathTag,"<shape> tag not founded"); 
+    mVectorState->onTreeConstructionFinished();
+    // Update local properties.
+    updateLocalState();
 }
 
 void VectorDrawable::updateStateFromTypedArray(Context*ctx,const AttributeSet&atts){
@@ -423,77 +453,6 @@ void VectorDrawable::updateStateFromTypedArray(Context*ctx,const AttributeSet&at
     }
 
 }
-
-#if 0
-void VectorDrawable::inflateChildElements(Resources res, XmlPullParser parser, AttributeSet attrs,
-        Theme theme){
-    final VectorDrawableState state = mVectorState;
-    bool noPathTag = true;
-
-    // Use a stack to help to build the group tree.
-    // The top of the stack is always the current group.
-    final Stack<VGroup> groupStack = new Stack<VGroup>();
-    groupStack.push(state.mRootGroup);
-
-    int eventType = parser.getEventType();
-    final int innerDepth = parser.getDepth() + 1;
-
-    // Parse everything until the end of the vector element.
-    while (eventType != XmlPullParser.END_DOCUMENT
-            && (parser.getDepth() >= innerDepth || eventType != XmlPullParser.END_TAG)) {
-        if (eventType == XmlPullParser.START_TAG) {
-            final String tagName = parser.getName();
-            final VGroup currentGroup = groupStack.peek();
-
-            if (SHAPE_PATH.equals(tagName)) {
-                final VFullPath path = new VFullPath();
-                path.inflate(res, attrs, theme);
-                currentGroup.addChild(path);
-                if (path.getPathName() != null) {
-                    state.mVGTargetsMap.put(path.getPathName(), path);
-                }
-                noPathTag = false;
-                state.mChangingConfigurations |= path.mChangingConfigurations;
-            } else if (SHAPE_CLIP_PATH.equals(tagName)) {
-                final VClipPath path = new VClipPath();
-                path.inflate(res, attrs, theme);
-                currentGroup.addChild(path);
-                if (path.getPathName() != null) {
-                    state.mVGTargetsMap.put(path.getPathName(), path);
-                }
-                state.mChangingConfigurations |= path.mChangingConfigurations;
-            } else if (SHAPE_GROUP.equals(tagName)) {
-                VGroup newChildGroup = new VGroup();
-                newChildGroup.inflate(res, attrs, theme);
-                currentGroup.addChild(newChildGroup);
-                groupStack.push(newChildGroup);
-                if (newChildGroup.getGroupName() != null) {
-                    state.mVGTargetsMap.put(newChildGroup.getGroupName(),
-                            newChildGroup);
-                }
-                state.mChangingConfigurations |= newChildGroup.mChangingConfigurations;
-            }
-        } else if (eventType == XmlPullParser.END_TAG) {
-            final String tagName = parser.getName();
-            if (SHAPE_GROUP.equals(tagName)) {
-                groupStack.pop();
-            }
-        }
-        eventType = parser.next();
-    }
-
-    if (noPathTag) {
-        final StringBuffer tag = new StringBuffer();
-
-        if (tag.length() > 0) {
-            tag.append(" or ");
-        }
-        tag.append(SHAPE_PATH);
-
-        throw new XmlPullParserException("no " + tag + " defined");
-    }
-}
-#endif
 
 int VectorDrawable::getChangingConfigurations()const {
     return Drawable::getChangingConfigurations() | mVectorState->getChangingConfigurations();
