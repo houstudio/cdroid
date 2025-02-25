@@ -150,10 +150,10 @@ protected:
     // these bitmaps separately.
     int mLastSWCachePixelCount = 0;
     int mLastHWCachePixelCount = 0;
+    int mAllocationOfAllNodes = 0;
 
     static Property* /*<VectorDrawableState, float>*/ ALPHA;
     // This tracks the total native allocation for all the nodes.
-    int mAllocationOfAllNodes = 0;
 
     static constexpr int NATIVE_ALLOCATION_SIZE = 316;
 private:

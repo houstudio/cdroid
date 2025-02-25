@@ -470,7 +470,7 @@ public:
     // canvas. Returns the number of pixels needed for the bitmap cache.
     int draw(Canvas& outCanvas, ColorFilter* colorFilter, const Rect& bounds,
              bool needsMirroring, bool canReuseCache);
-    void drawStaging(Canvas* canvas);
+    void drawStaging(Canvas& canvas);
 
     Bitmap& getBitmapUpdateIfDirty();
     void setAllowCaching(bool allowCaching) { mAllowCaching = allowCaching; }
@@ -616,9 +616,9 @@ private:
         Bitmap bitmap;  // used by HWUI pipeline and software
         bool dirty = true;
     };
-
+    void updatePaint(TreeProperties*prop,Cairo::RefPtr<Cairo::Pattern>&stroke,Cairo::RefPtr<Cairo::Pattern>&fill);
     bool allocateBitmapIfNeeded(Cache& cache, int width, int height);
-    bool canReuseBitmap(Bitmap*, int width, int height);
+    bool canReuseBitmap(Bitmap&, int width, int height)const;
     void updateBitmapCache(Bitmap& outCache, bool useStagingData);
 
     // Cap the bitmap size, such that it won't hurt the performance too much

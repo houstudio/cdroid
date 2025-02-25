@@ -120,7 +120,7 @@ static inline uint32_t applyAlpha(uint32_t color, float alpha) {
 }
 
 void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
-    Cairo::RefPtr<cdroid::Path> tempStagingPath;
+    Cairo::RefPtr<cdroid::Path> tempStagingPath=std::make_shared<cdroid::Path>();
     const FullPathProperties& properties = useStagingData ? mStagingProperties : mProperties;
     const Cairo::RefPtr<cdroid::Path> renderPath = getUpdatedPath(useStagingData, tempStagingPath);
 
@@ -147,8 +147,9 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
 
     outCanvas.set_antialias(mAntiAlias?Cairo::ANTIALIAS_GRAY:Cairo::ANTIALIAS_NONE);
     renderPath->append_to_context(&outCanvas);
+    outCanvas.set_source_rgb(1,0,0);needsFill=true;
     if (needsFill) {
-        outCanvas.set_source(properties.getFillGradient());
+        //outCanvas.set_source(properties.getFillGradient());
         //paint.setStyle(SkPaint::Style::kFill_Style);
         //setAntiAlias(mAntiAlias);
         if(needsStroke)
@@ -157,8 +158,9 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     }
 
     // Draw path's stroke, if stroke color or Gradient is valid
+    outCanvas.set_source_rgb(1,0,0);needsStroke=true;
     if (needsStroke) {
-        outCanvas.set_source(properties.getStrokeGradient());
+        //outCanvas.set_source(properties.getStrokeGradient());
         //paint.setAntiAlias(mAntiAlias);
         outCanvas.set_line_join((Cairo::Context::LineJoin)properties.getStrokeLineJoin());
         //paint.setStrokeJoin(SkPaint::Join(properties.getStrokeLineJoin()));
@@ -244,7 +246,7 @@ void Group::draw(Canvas& outCanvas, bool useStagingData) {
     const GroupProperties& prop = useStagingData ? mStagingProperties : mProperties;
     getLocalMatrix(stackedMatrix, prop);
     outCanvas.save();
-    outCanvas.transform(stackedMatrix);//outCanvas.concat(stackedMatrix);
+    outCanvas.transform(stackedMatrix);
     // Draw the group tree in the same order as the XML file.
     for (auto& child : mChildren) {
         child->draw(outCanvas, useStagingData);
@@ -417,13 +419,44 @@ int Tree::draw(Canvas& outCanvas, ColorFilter* colorFilter, const Rect& bounds, 
     Rect tmpBounds = bounds;
     //tmpBounds.offsetTo(0, 0);
     mStagingProperties.setBounds(tmpBounds);
-    //outCanvas->drawVectorDrawable(this);
+    drawStaging(outCanvas);//outCanvas->drawVectorDrawable(this);
     outCanvas.save();//outCanvas->restoreToCount(saveCount);
     return scaledWidth * scaledHeight;
 }
 
+void Tree::drawStaging(Canvas& outCanvas) {
+    bool redrawNeeded = allocateBitmapIfNeeded(mStagingCache, mStagingProperties.getScaledWidth(),
+                                               mStagingProperties.getScaledHeight());
+    // draw bitmap cache
+    if (redrawNeeded || mStagingCache.dirty) {
+        updateBitmapCache(mStagingCache.bitmap, true);
+        mStagingCache.dirty = false;
+    }
+
+    /*SkPaint tmpPaint;
+    SkPaint* paint = updatePaint(&tmpPaint, &mStagingProperties);
+    outCanvas.drawBitmap(*mStagingCache.bitmap, 0, 0, mStagingCache.bitmap->get_width(),
+                          mStagingCache.bitmap->get_height(), mStagingProperties.getBounds().left,
+                          mStagingProperties.getBounds().top,
+                          mStagingProperties.getBounds().right(),
+                          mStagingProperties.getBounds().bottom(), paint);*/
+    outCanvas.set_source(mStagingCache.bitmap,0,0);
+    outCanvas.paint();
+}
+
+void Tree::updatePaint(Tree::TreeProperties*prop,Cairo::RefPtr<Cairo::Pattern>&stroke,Cairo::RefPtr<Cairo::Pattern>&fill){
+    /*if (prop->getRootAlpha() == 1.0f && prop->getColorFilter() == nullptr) {
+        return nullptr;
+    } else {
+        outPaint->setColorFilter(sk_ref_sp(prop->getColorFilter()));
+        outPaint->setFilterQuality(kLow_SkFilterQuality);
+        outPaint->setAlpha(prop->getRootAlpha() * 255);
+        return outPaint;
+    }*/
+}
+
 void Tree::updateBitmapCache(Bitmap& bitmap, bool useStagingData) {
-    Bitmap outCache;
+    Bitmap outCache=bitmap;
     //bitmap.getSkBitmap(&outCache);
     int cacheWidth = outCache->get_width();
     int cacheHeight = outCache->get_height();
@@ -439,17 +472,15 @@ void Tree::updateBitmapCache(Bitmap& bitmap, bool useStagingData) {
 }
 
 bool Tree::allocateBitmapIfNeeded(Cache& cache, int width, int height) {
-    /*if (!canReuseBitmap(cache.bitmap.get(), width, height)) {
-#ifndef ANDROID_ENABLE_LINEAR_BLENDING
-        sk_sp<SkColorSpace> colorSpace = nullptr;
-#else
-        sk_sp<SkColorSpace> colorSpace = SkColorSpace::MakeSRGB();
-#endif
-        SkImageInfo info = SkImageInfo::MakeN32(width, height, kPremul_SkAlphaType, colorSpace);
-        cache.bitmap = Cairo::ImageSurface::create(width, height);//Bitmap::allocateHeapBitmap(info);
+    if (!canReuseBitmap(cache.bitmap, width, height)) {
+        cache.bitmap = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,width, height);//Bitmap::allocateHeapBitmap(info);
         return true;
-    }*/
+    }
     return false;
+}
+
+bool Tree::canReuseBitmap(Bitmap& bitmap, int width, int height)const {
+    return bitmap && (width <= bitmap->get_width()) && (height <= bitmap->get_height());
 }
 
 void Tree::onPropertyChanged(TreeProperties* prop) {

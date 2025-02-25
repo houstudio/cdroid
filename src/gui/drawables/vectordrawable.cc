@@ -14,7 +14,7 @@ VectorDrawable::VectorDrawable()
 
 VectorDrawable::VectorDrawable(std::shared_ptr<VectorDrawableState> state) {
     mVectorState = state;
-    //updateLocalState(res);
+    updateLocalState();
 }
 
 void VectorDrawable::updateLocalState() {
@@ -41,7 +41,7 @@ void VectorDrawable::clearMutated() {
 }
 
 void* VectorDrawable::getTargetByName(const std::string& name) {
-    auto it =mVectorState->mVGTargetsMap.find(name);
+    auto it = mVectorState->mVGTargetsMap.find(name);
     return it->second;//mVectorState->mVGTargetsMap.get(name);
 }
 
@@ -66,7 +66,7 @@ void VectorDrawable::draw(Canvas& canvas) {
     bool canReuseCache = mVectorState->canReuseCache();
     /*int pixelCount = nDraw(mVectorState->getNativeRenderer(), canvas.getNativeCanvasWrapper(),
             colorFilterNativeInstance, mTmpBounds, needMirroring(), canReuseCache)*/;
-    int pixelCount = mVectorState->mNativeTree->draw(canvas,nullptr,mTmpBounds,needMirroring(),canReuseCache);
+    const int pixelCount = mVectorState->mNativeTree->draw(canvas,nullptr,mTmpBounds,needMirroring(),canReuseCache);
     if (pixelCount == 0) {
         // Invalid canvas matrix or drawable bounds. This would not affect existing bitmap
         // cache, if any.
@@ -139,7 +139,7 @@ bool VectorDrawable::onStateChange(const std::vector<int>&stateSet) {
     // When the VD is stateful, we need to mutate the drawable such that we don't share the
     // cache bitmap with others. Such that the state change only affect this new cached bitmap.
     if (isStateful()) {
-        mutate();
+        //mutate();
     }
     auto state = mVectorState;
     if (state->onStateChange(stateSet)) {
@@ -265,12 +265,12 @@ float VectorDrawable::getPixelSize() {
             || (mVectorState->mViewportHeight == 0) || (mVectorState->mViewportWidth == 0)) {
         return 1; // fall back to 1:1 pixel mapping.
     }
-    float intrinsicWidth = mVectorState->mBaseWidth;
-    float intrinsicHeight = mVectorState->mBaseHeight;
-    float viewportWidth = mVectorState->mViewportWidth;
-    float viewportHeight = mVectorState->mViewportHeight;
-    float scaleX = viewportWidth / intrinsicWidth;
-    float scaleY = viewportHeight / intrinsicHeight;
+    const float intrinsicWidth = mVectorState->mBaseWidth;
+    const float intrinsicHeight = mVectorState->mBaseHeight;
+    const float viewportWidth = mVectorState->mViewportWidth;
+    const float viewportHeight = mVectorState->mViewportHeight;
+    const float scaleX = viewportWidth / intrinsicWidth;
+    const float scaleY = viewportHeight / intrinsicHeight;
     return std::min(scaleX, scaleY);
 }
 
@@ -292,7 +292,7 @@ private:
     bool noPathTag;
 public:
     VectorParser(Context*c,const std::string&pkg,VectorDrawable*d){
-        ctx= ctx; 
+        ctx= c; 
         vd = d;
         state = nullptr;
         currentGroup= nullptr;
@@ -371,7 +371,7 @@ void VectorDrawable::inflate(Context*ctx,const std::string&resId){
     std::streamsize len;
     std::string package;
     std::unique_ptr<std::istream> stream;
-    if(ctx) ctx->getInputStream(resId,&package);
+    if(ctx) stream = ctx->getInputStream(resId,&package);
     if((stream==nullptr)||!(*stream))
         stream = std::make_unique<std::ifstream>(resId);
     if(!(*stream))return;
@@ -388,7 +388,7 @@ void VectorDrawable::inflate(Context*ctx,const std::string&resId){
             LOGE("%s:%s at line %ld",resId.c_str(),es, XML_GetCurrentLineNumber(parser));
             XML_ParserFree(parser);
             return;
-        }LOGD("%s",buf);
+        }
     } while(len!=0);
     XML_ParserFree(parser);
     LOGE_IF(data.noPathTag,"<shape> tag not founded"); 
@@ -710,7 +710,7 @@ VectorDrawable::VGroup::VGroup(const VGroup* copy,std::unordered_map<std::string
     //nCreateGroup((long)copy->mNativePtr);
     mNativePtr = new hw::Group(*copy->mNativePtr);
 
-    const std::vector<VObject*>& children = copy->mChildren;
+    const std::vector<VObject*> children = copy->mChildren;
     for (int i = 0; i < children.size(); i++) {
         VObject* copyChild = children.at(i);
         if (dynamic_cast<VGroup*>(copyChild)) {
@@ -772,24 +772,14 @@ long VectorDrawable::VGroup::getNativePtr() {
 
 
 void VectorDrawable::VGroup::inflate(Context*, const AttributeSet&atts, Theme theme) {
-    /*final TypedArray a = obtainAttributes(res, theme, attrs,R.styleable.VectorDrawableGroup);
-    updateStateFromTypedArray(a);
-    a.recycle();*/
-    // Account for any configuration changes.
-    //mChangingConfigurations |= a.getChangingConfigurations();
-
-    // Extract the theme attributes, if any.
-    bool success = true;//nGetGroupProperties(mNativePtr, mTransform, TRANSFORM_PROPERTY_COUNT);
-    if (!success) {
-        LOGE("Error: inconsistent property count");
-    }
-    float rotate = atts.getFloat("rotation",mTransform[ROTATION_INDEX]);
-    float pivotX = atts.getFloat("pivotX",mTransform[PIVOT_X_INDEX]);
-    float pivotY = atts.getFloat("pivotY", mTransform[PIVOT_Y_INDEX]);
-    float scaleX = atts.getFloat("scaleX",mTransform[SCALE_X_INDEX]);
-    float scaleY = atts.getFloat("scaleY",mTransform[SCALE_Y_INDEX]);
-    float translateX = atts.getFloat("translateX",mTransform[TRANSLATE_X_INDEX]);
-    float translateY = atts.getFloat("translateY",mTransform[TRANSLATE_Y_INDEX]);
+    const auto properties=mNativePtr->stagingProperties();
+    float rotate = atts.getFloat("rotation",properties->getRotation());
+    float pivotX = atts.getFloat("pivotX",properties->getPivotX());
+    float pivotY = atts.getFloat("pivotY",properties->getPivotY());
+    float scaleX = atts.getFloat("scaleX",properties->getScaleX());
+    float scaleY = atts.getFloat("scaleY",properties->getScaleY());
+    float translateX = atts.getFloat("translateX",properties->getTranslateX());
+    float translateY = atts.getFloat("translateY",properties->getTranslateY());
 
     mGroupName = atts.getString("name");
     if (!mGroupName.empty()) {
@@ -878,80 +868,87 @@ void VectorDrawable::VGroup::applyTheme(Theme t) {
 
 /* Setters and Getters, used by animator from AnimatedVectorDrawable. */
 float VectorDrawable::VGroup::getRotation() {
-    return isTreeValid() ? mNativePtr->stagingProperties()->getRotation():0;//nGetRotation(mNativePtr) : 0;
+    return isTreeValid() ? mNativePtr->stagingProperties()->getRotation():0;
 }
 
 void VectorDrawable::VGroup::setRotation(float rotation) {
     if (isTreeValid()) {
-        mNativePtr->mutateStagingProperties()->setRotation(rotation);//nSetRotation(mNativePtr, rotation);
+        //nSetRotation(mNativePtr, rotation);
+        mNativePtr->mutateStagingProperties()->setRotation(rotation);
     }
 }
 
 float VectorDrawable::VGroup::getPivotX() {
-    return isTreeValid() ? mNativePtr->stagingProperties()->getPivotX():0;//nGetPivotX(mNativePtr) : 0;
+    return isTreeValid() ? mNativePtr->stagingProperties()->getPivotX():0;
 }
 
 void VectorDrawable::VGroup::setPivotX(float pivotX) {
     if (isTreeValid()) {
-        mNativePtr->mutateStagingProperties()->setPivotX(pivotX);//nSetPivotX(mNativePtr, pivotX);
+        //nSetPivotX(mNativePtr, pivotX);
+        mNativePtr->mutateStagingProperties()->setPivotX(pivotX);
     }
 }
 
 float VectorDrawable::VGroup::getPivotY() {
-    return isTreeValid() ? mNativePtr->stagingProperties()->getPivotY():0;//nGetPivotY(mNativePtr) : 0;
+    return isTreeValid() ? mNativePtr->stagingProperties()->getPivotY():0;
 }
 
 void VectorDrawable::VGroup::setPivotY(float pivotY) {
     if (isTreeValid()) {
-        mNativePtr->mutateStagingProperties()->setPivotY(pivotY);//nSetPivotY(mNativePtr, pivotY);
+        //nSetPivotY(mNativePtr, pivotY);
+        mNativePtr->mutateStagingProperties()->setPivotY(pivotY);
     }
 }
 
 float VectorDrawable::VGroup::getScaleX() {
-    return isTreeValid() ? mNativePtr->stagingProperties()->getScaleX():0;//nGetScaleX(mNativePtr) : 0;
+    return isTreeValid() ? mNativePtr->stagingProperties()->getScaleX():0;
 }
 
 void VectorDrawable::VGroup::setScaleX(float scaleX) {
     if (isTreeValid()) {
-        mNativePtr->mutateStagingProperties()->setScaleX(scaleX);//nSetScaleX(mNativePtr, scaleX);
+        //nSetScaleX(mNativePtr, scaleX);
+        mNativePtr->mutateStagingProperties()->setScaleX(scaleX);
     }
 }
 
 float VectorDrawable::VGroup::getScaleY() {
-    return isTreeValid() ? mNativePtr->stagingProperties()->getScaleY():0;//nGetScaleY(mNativePtr) : 0;
+    return isTreeValid() ? mNativePtr->stagingProperties()->getScaleY():0;
 }
 
 void VectorDrawable::VGroup::setScaleY(float scaleY) {
     if (isTreeValid()) {
-        mNativePtr->mutateStagingProperties()->setScaleY(scaleY);//nSetScaleY(mNativePtr, scaleY);
+        //nSetScaleY(mNativePtr, scaleY);
+        mNativePtr->mutateStagingProperties()->setScaleY(scaleY);
     }
 }
 
 float VectorDrawable::VGroup::getTranslateX() {
-    return isTreeValid() ? mNativePtr->stagingProperties()->getTranslateX():0;//nGetTranslateX(mNativePtr) : 0;
+    return isTreeValid() ? mNativePtr->stagingProperties()->getTranslateX():0;
 }
 
 void VectorDrawable::VGroup::setTranslateX(float translateX) {
     if (isTreeValid()) {
-        mNativePtr->mutateStagingProperties()->setTranslateX(translateX);//nSetTranslateX(mNativePtr, translateX);
+        //nSetTranslateX(mNativePtr, translateX);
+        mNativePtr->mutateStagingProperties()->setTranslateX(translateX);
     }
 }
 
 float VectorDrawable::VGroup::getTranslateY() {
-    return isTreeValid() ? mNativePtr->stagingProperties()->getTranslateY():0;//nGetTranslateY(mNativePtr) : 0;
+    return isTreeValid() ? mNativePtr->stagingProperties()->getTranslateY():0;
 }
 
 void VectorDrawable::VGroup::setTranslateY(float translateY) {
     if (isTreeValid()) {
-        mNativePtr->mutateStagingProperties()->setTranslateY(translateY);//nSetTranslateY(mNativePtr, translateY);
+        //nSetTranslateY(mNativePtr, translateY);
+        mNativePtr->mutateStagingProperties()->setTranslateY(translateY);
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
  * Common Path information for clip path and normal path.
+ *static abstract class VPath extends VObject
  */
-//static abstract class VPath extends VObject {
 
 Property* /*<VPath, PathParser.PathData>*/VectorDrawable::VPath::PATH_DATA;
 
@@ -1006,7 +1003,8 @@ VectorDrawable::VClipPath::VClipPath() {
 
 VectorDrawable::VClipPath::VClipPath(const VClipPath* copy)
     :VPath(copy){
-    mNativePtr = new hw::ClipPath(*copy->mNativePtr);//nCreateClipPath(copy->mNativePtr);
+    //nCreateClipPath(copy->mNativePtr);
+    mNativePtr = new hw::ClipPath(*copy->mNativePtr);
 }
 
 long VectorDrawable::VClipPath::getNativePtr() {
@@ -1190,36 +1188,19 @@ void VectorDrawable::VFullPath::inflate(Context*ctx,const AttributeSet& attrs, T
 }
 
 void VectorDrawable::VFullPath::updateStateFromTypedArray(Context*,const AttributeSet& atts) {
-    /*const int byteCount = TOTAL_PROPERTY_COUNT * 4;
-    if (mPropertyData == null) {
-        // Lazy initialization: If the path is created through copy constructor, this may
-        // never get called.
-        mPropertyData = new byte[byteCount];
-    }
-    // The bulk getters/setters of property data (e.g. stroke width, color, etc) allows us
-    // to pull current values from native and store modifications with only two methods,
-    // minimizing JNI overhead.
-    bool success = nGetFullPathProperties(mNativePtr, mPropertyData, byteCount);
-    bool success =mNativePtr->stagingProperties()->copyProperties(mPropertyData,byteCount);
-    if (!success) {
-        LOGE("Error: inconsistent property count");
-    }*/
-
-    //ByteBuffer properties = ByteBuffer.wrap(mPropertyData);
-    //properties.order(ByteOrder.nativeOrder());
     auto properties = mNativePtr->stagingProperties();
-    float strokeWidth = properties->getStrokeWidth();//getFloat(STROKE_WIDTH_INDEX * 4);
-    int strokeColor = properties->getStrokeColor();//getInt(STROKE_COLOR_INDEX * 4);
-    float strokeAlpha = properties->getStrokeAlpha();//getFloat(STROKE_ALPHA_INDEX * 4);
-    int fillColor =  properties->getFillColor();//getInt(FILL_COLOR_INDEX * 4);
-    float fillAlpha = properties->getFillAlpha();//getFloat(FILL_ALPHA_INDEX * 4);
-    float trimPathStart = properties->getTrimPathStart();//getFloat(TRIM_PATH_START_INDEX * 4);
-    float trimPathEnd = properties->getTrimPathEnd();//getFloat(TRIM_PATH_END_INDEX * 4);
-    float trimPathOffset = properties->getTrimPathOffset();//getFloat(TRIM_PATH_OFFSET_INDEX * 4);
-    int strokeLineCap =  properties->getStrokeLineCap();//getInt(STROKE_LINE_CAP_INDEX * 4);
-    int strokeLineJoin = properties->getStrokeLineJoin();//getInt(STROKE_LINE_JOIN_INDEX * 4);
-    float strokeMiterLimit = properties->getStrokeMiterLimit();//getFloat(STROKE_MITER_LIMIT_INDEX * 4);
-    int fillType = properties->getFillType();//getInt(FILL_TYPE_INDEX * 4);
+    float strokeWidth = properties->getStrokeWidth();
+    int strokeColor = properties->getStrokeColor();
+    float strokeAlpha = properties->getStrokeAlpha();
+    int fillColor =  properties->getFillColor();
+    float fillAlpha = properties->getFillAlpha();
+    float trimPathStart = properties->getTrimPathStart();
+    float trimPathEnd = properties->getTrimPathEnd();
+    float trimPathOffset = properties->getTrimPathOffset();
+    int strokeLineCap =  properties->getStrokeLineCap();
+    int strokeLineJoin = properties->getStrokeLineJoin();
+    float strokeMiterLimit = properties->getStrokeMiterLimit();
+    int fillType = properties->getFillType();
     //Shader fillGradient = null;
     //Shader strokeGradient = null;
     // Account for any configuration changes.
@@ -1305,8 +1286,8 @@ bool VectorDrawable::VFullPath::canApplyTheme() {
         return true;
     }
 
-    bool fillCanApplyTheme = canComplexColorApplyTheme(mFillColors);
-    bool strokeCanApplyTheme = canComplexColorApplyTheme(mStrokeColors);
+    const bool fillCanApplyTheme = canComplexColorApplyTheme(mFillColors);
+    const bool strokeCanApplyTheme = canComplexColorApplyTheme(mStrokeColors);
     if (fillCanApplyTheme || strokeCanApplyTheme) {
         return true;
     }
@@ -1453,21 +1434,6 @@ void VectorDrawable::VFullPath::setTrimPathOffset(float trimPathOffset) {
         mNativePtr->mutateStagingProperties()->setTrimPathOffset(trimPathOffset);
     }
 }
-
-//VectorDrawable's native Methods
-
-// ------------- @FastNative ------------------
-
-//long VectorDrawable::nCreateTree(long rootGroupPtr){return 0;}
-//long VectorDrawable::nCreateTreeFromCopy(long treeToCopy, long rootGroupPtr){return 0;}
-//void VectorDrawable::nSetRendererViewportSize(long rendererPtr, float viewportWidth,float viewportHeight){}
-/**
- * The setters and getters below for paths and groups are here temporarily, and will be
- * removed once the animation in AVD is replaced with RenderNodeAnimator, in which case the
- * animation will modify these properties in native. By then no JNI hopping would be necessary
- * for VD during animation, and these setters and getters will be obsolete.
- */
-// Setters and getters during animation.
 
 }/*endof namespace*/
 #endif
