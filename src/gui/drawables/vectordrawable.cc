@@ -340,7 +340,7 @@ public:
 
     static void endElement(void *userData, const XML_Char *name){
         VectorParser*d=(VectorParser*)userData;
-        if(strcmp(name,SHAPE_PATH)==0){
+        if(strcmp(name,SHAPE_GROUP)==0){
             d->groupStack.pop();
         }
     }
@@ -968,7 +968,7 @@ VectorDrawable::VPath::VPath() {
 VectorDrawable::VPath::VPath(const VPath* copy) {
     mPathName = copy->mPathName;
     mChangingConfigurations = copy->mChangingConfigurations;
-    mPathData = copy->mPathData == nullptr ? nullptr : new PathParser::PathData(*copy->mPathData);
+    mPathData = (copy->mPathData == nullptr) ? nullptr : new PathParser::PathData(*copy->mPathData);
 }
 
 std::string VectorDrawable::VPath::getPathName() const{
@@ -987,10 +987,9 @@ void VectorDrawable::VPath::setPathData(const PathParser::PathData* pathData) {
     LOGD("TODO");
     if (isTreeValid()) {
         //nSetPathData(getNativePtr(), mPathData->getNativePtr());
-        hw::PathData*dst=(hw::PathData*)getNativePtr();
+        hw::Path*dst=(hw::Path*)getNativePtr();
         hw::PathData*src=(hw::PathData*)mPathData->getNativePtr();
-        //((hw::Path*)getNativePtr())->mutateStagingProperties()->setData(*pathData);
-        *dst=*src;
+        dst->mutateStagingProperties()->setData(*src);
     }
 }
 

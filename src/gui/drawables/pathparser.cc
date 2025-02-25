@@ -27,8 +27,7 @@ std::shared_ptr<cdroid::Path> PathParser::createPathFromPathData(const std::stri
  */
 void PathParser::createPathFromPathData(std::shared_ptr<cdroid::Path>& outPath,const PathParser::PathData& data) {
     //nCreatePathFromPathData(outPath.mNativePath, data.mNativePathData);
-    hw::PathData* pd=(hw::PathData*)data.mNativePathData;
-    hw::VectorDrawableUtils::verbsToPath(outPath, *pd);
+    hw::VectorDrawableUtils::verbsToPath(outPath, *data.mNativePathData);
 }
 
 /**
@@ -78,10 +77,9 @@ PathParser::PathData::PathData(const std::string& pathString) {
     if (pathString.empty()) {
         LOGE("Invalid pathData: %s",pathString.c_str());
     }
-    hw::PathData*pd = new hw::PathData();
+    mNativePathData = new hw::PathData();
     hw::PathParser::ParseResult result;
-    hw::PathParser::getPathDataFromAsciiString(pd, &result, pathString.c_str(), pathString.length());
-
+    hw::PathParser::getPathDataFromAsciiString(mNativePathData, &result, pathString.c_str(), pathString.length());
 }
 
 long PathParser::PathData::getNativePtr() {
