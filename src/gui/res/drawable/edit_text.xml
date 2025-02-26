@@ -1,6 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_window_focused="false" android::state_enabled="true" android:drawable="@mipmap/textfield_default" />
-    <item android:state_window_focused="false" android::state_enabled="false" android:drawable="@mipmap/textfield_disabled" />
+    <item android:state_window_focused="false" android:state_enabled="true" android:drawable="@mipmap/textfield_default" />
+    <item android:state_window_focused="false" android:state_enabled="false" android:drawable="@mipmap/textfield_disabled" />
     <item android:state_enabled="true" android:state_focused="true" android:drawable="@mipmap/textfield_selected" />
     <item android:state_enabled="true" android:drawable="@mipmap/textfield_default" />
     <item android:state_focused="true" android:drawable="@mipmap/textfield_disabled_selected" />
