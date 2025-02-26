@@ -111,7 +111,6 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
                     else if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)v =int(dm.density * v /*+0.5f*/);
                 }
                 if(tag0.compare("bool")==0){
-                    //LOGV("%s=%s",resUri.c_str(),value.c_str());
                     v = value[0]=='t'?true:false;
                 }
                 LOGD_IF(!atts[0].getString("type").empty(),"%s=%s",resUri.c_str(),value.c_str());
@@ -122,14 +121,15 @@ void Assets::parseItem(const std::string&package,const std::string&resid,const s
                 pending->dimens.insert({resUri,dimenRes});
             }
         } else if(tag0.compare("color")==0) {
-            const std::string name = atts[0].getString("name");
+            std::string name = atts[0].getString("name");
             const std::string colorRes = AttributeSet::normalize(package,value);
             auto itc = mColors.find(colorRes);
+            name = package+":color/"+name;
             if((value[0]=='#')||(itc!=mColors.end())){
                 const uint32_t color = (value[0]=='#')?Color::parseColor(value):itc->second;
-                mColors.insert({package+":color/"+name,color});
+                mColors.insert({name,color});
             }else if (itc==mColors.end()){
-                pending->colors.insert({package+":color/"+name,colorRes});
+                pending->colors.insert({name,colorRes});
             }
         } else if(tag0.compare("string")==0) {
             const std::string name= atts[0].getString("name");
@@ -224,7 +224,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     pak->forEachEntry([this,package,&count,&pending](const std::string&res) {
         count++;
         if((res.size()>6)&&(TextUtils::startWith(res,"values")||TextUtils::startWith(res,"color"))) {
-            LOGV("LoadKeyValues from:%s ...",res.c_str());
+            LOGV("LoadKeyValues from:%s",res.c_str());
             std::string resid = AttributeSet::normalize(package,res);//package+":"+res;
             resid = resid.substr(0,resid.find(".xml"));
             loadKeyValues(package+":"+res,&pending,std::bind(&Assets::parseItem,this,package,resid,std::placeholders::_1,
@@ -236,7 +236,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         setTheme("cdroid:style/Theme");
     for(auto c:pending.colors){
         auto it = mColors.find(c.second);
-        LOGD_IF(it==mColors.end(),"color %s losting refto %s",c.first.c_str(),c.second.c_str());
+        LOGD_IF(it==mColors.end(),"%s-->%s [X]",c.first.c_str(),c.second.c_str());
         if( it != mColors.end() ) mColors.insert({c.first,it->second});
     }
     for(auto d:pending.dimens){
@@ -517,13 +517,17 @@ float Assets::getFloat(const std::string&refid){
 #pragma GCC optimize("O0")
 //codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
 int Assets::getColor(const std::string&refid) {
-    std::string pkg,name = refid;
-    parseResource(name,nullptr,&pkg);
+    std::string pkg,relname,name = refid;
+    parseResource(name,&relname,&pkg);
     name = AttributeSet::normalize(pkg,name);
     auto it = mColors.find(name);
     if(it != mColors.end()) {
         return it->second;
-    } else if(refid.find("?")!=std::string::npos){
+    } if(relname.compare(0,4,"attr")==0){
+        relname=relname.substr(5);
+        name =  mTheme.getString(relname);
+        return getColor(name);
+    }else if(refid.find("?")!=std::string::npos){
         std::string clrRef = name;//mTheme.getString(name.substr(6));
         TextUtils::replace(clrRef,"attr","color");
         it = mColors.find(clrRef);
@@ -543,8 +547,8 @@ int Assets::getColor(const std::string&refid) {
 }
 
 ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
-    std::string pkg,name = fullresid;
-    parseResource(name,nullptr,&pkg);
+    std::string pkg,name = fullresid,relname;
+    parseResource(name,&relname,&pkg);
     name = AttributeSet::normalize(pkg,name);
     auto itc = mColors.find(name);
     auto its = mStateColors.find(name);
