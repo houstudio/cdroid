@@ -3,46 +3,46 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Enabled states -->
         
-    <!--item android:state_checked="true" android:state_window_focused="false"
+    <item android:state_checked="true" android:state_window_focused="false"
           android:state_enabled="true"
-          android:drawable="mipmap/btn_check_ong" />
+          android:drawable="@mipmap/btn_check_on" />
     <item android:state_checked="false" android:state_window_focused="false"
           android:state_enabled="true"
-          android:drawable="mipmap/btn_check_offg" /-->
+          android:drawable="@mipmap/btn_check_off" />
 
     <item android:state_checked="true" android:state_pressed="true"
           android:state_enabled="true"
-          android:drawable="android:mipmap/btn_check_on_pressed" />
+          android:drawable="@mipmap/btn_check_on_pressed" />
     <item android:state_checked="false" android:state_pressed="true"
           android:state_enabled="true"
-          android:drawable="android:mipmap/btn_check_off_pressed" />
+          android:drawable="@mipmap/btn_check_off_pressed" />
 
     <item android:state_checked="true" android:state_focused="true"
           android:state_enabled="true"
-          android:drawable="android:mipmap/btn_check_on_selected" />
+          android:drawable="@mipmap/btn_check_on_selected" />
     <item android:state_checked="false" android:state_focused="true"
           android:state_enabled="true"
-          android:drawable="android:mipmap/btn_check_off_selected" />
+          android:drawable="@mipmap/btn_check_off_selected" />
 
     <item android:state_checked="false" android:state_enabled="true"
-          android:drawable="android:mipmap/btn_check_off" />
+          android:drawable="@mipmap/btn_check_off" />
     <item android:state_checked="true"  android:state_enabled="true"
-          android:drawable="android:mipmap/btn_check_on" />
+          android:drawable="@mipmap/btn_check_on" />
 
 
     <!-- Disabled states -->
 
     <item android:state_checked="true" android:state_window_focused="false"
-          android:drawable="android:mipmap/btn_check_on_disable" />
+          android:drawable="@mipmap/btn_check_on_disable" />
     <item android:state_checked="false" android:state_window_focused="false"
-          android:drawable="android:mipmap/btn_check_off_disable" />
+          android:drawable="@mipmap/btn_check_off_disable" />
 
     <item android:state_checked="true" android:state_focused="true"
-          android:drawable="android:mipmap/btn_check_on_disable_focused" />
+          android:drawable="@mipmap/btn_check_on_disable_focused" />
     <item android:state_checked="false" android:state_focused="true"
-          android:drawable="android:mipmap/btn_check_off_disable_focused" />
+          android:drawable="@mipmap/btn_check_off_disable_focused" />
 
-    <item android:state_checked="false" android:drawable="android:mipmap/btn_check_off_disable" />
-    <item android:state_checked="true" android:drawable="android:mipmap/btn_check_on_disable" />
+    <item android:state_checked="false" android:drawable="@mipmap/btn_check_off_disable" />
+    <item android:state_checked="true" android:drawable="@mipmap/btn_check_on_disable" />
 
 </selector>

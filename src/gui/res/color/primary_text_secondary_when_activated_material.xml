@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        cdroid:state_activated="true"
-        cdroid:color="?attr/textColorPrimary" />
+        android:state_activated="true"
+        android:color="?attr/textColorPrimary" />
     <item
-        cdroid:color="?attr/textColorSecondary" />
+        android:color="?attr/textColorSecondary" />
 </selector>

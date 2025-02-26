@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_enabled="false"
-        cdroid:alpha="?attr/disabledAlpha"
-        cdroid:color="?attr/colorForeground"/>
-    <item cdroid:alpha="?attr/primaryContentAlpha"
-        cdroid:color="?attr/colorForeground"/>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false"
+        android:alpha="?attr/disabledAlpha"
+        android:color="?attr/colorForeground"/>
+    <item android:alpha="?attr/primaryContentAlpha"
+        android:color="?attr/colorForeground"/>
 </selector>

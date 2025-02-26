@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_enabled="false" cdroid:color="#808080"/>
-    <item cdroid:state_window_focused="false" cdroid:color="#808080"/>
-    <item cdroid:state_pressed="true" cdroid:color="#808080"/>
-    <item cdroid:state_selected="true" cdroid:color="#808080"/>
-    <item cdroid:color="#808080"/> <!-- not selected -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false" android:color="#808080"/>
+    <item android:state_window_focused="false" android:color="#808080"/>
+    <item android:state_pressed="true" android:color="#808080"/>
+    <item android:state_selected="true" android:color="#808080"/>
+    <item android:color="#808080"/> <!-- not selected -->
 </selector>
 

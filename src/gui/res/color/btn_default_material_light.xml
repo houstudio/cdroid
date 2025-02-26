@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_enabled="false"
-          cdroid:alpha="?attr/disabledAlpha"
-          cdroid:color="@color/button_material_light"/>
-    <item cdroid:color="@color/button_material_light"/>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false"
+          android:alpha="?attr/disabledAlpha"
+          android:color="@color/button_material_light"/>
+    <item android:color="@color/button_material_light"/>
 </selector>

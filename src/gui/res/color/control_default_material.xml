@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_enabled="false"
-          cdroid:alpha="?attr/disabledAlpha"
-          cdroid:color="?attr/colorControlNormal" />
-    <item cdroid:color="?attr/colorControlActivated" />
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false"
+          android:alpha="?attr/disabledAlpha"
+          android:color="?attr/colorControlNormal" />
+    <item android:color="?attr/colorControlActivated" />
 </selector>

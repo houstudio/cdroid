@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.android.internal.graphics.drawable.AnimationScaleListDrawable
         xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@android:drawable/progress_static_material" />
-    <item android:drawable="@android:drawable/progress_indeterminate_anim_medium_material" />
+    <item android:drawable="@drawable/progress_static_material" />
+    <item android:drawable="@drawable/progress_indeterminate_anim_medium_material" />
 </com.android.internal.graphics.drawable.AnimationScaleListDrawable>

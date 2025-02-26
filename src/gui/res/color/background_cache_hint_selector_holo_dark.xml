@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_accelerated="false"
-            cdroid:color="@cdroid:color/background_holo_dark" />
-    <item cdroid:color="@cdroid:color/transparent" />
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_accelerated="false"
+            android:color="@color/background_holo_dark" />
+    <item android:color="@color/transparent" />
 </selector>

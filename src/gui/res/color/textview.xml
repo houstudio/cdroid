@@ -1,5 +1,0 @@
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_focused="true" cdroid:alpha="#ff" cdroid:color="#ffff0000"/>
-    <item cdroid:state_pressed="true" cdroid:alpha="#ff" cdroid:color="#ff00ff00"/>
-    <item cdroid:alpha="#ff"     cdroid:color="#ff0000ff"/>
-</selector>

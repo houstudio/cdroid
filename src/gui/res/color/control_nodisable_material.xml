@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:color="?attr/colorControlNormal" />
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/colorControlNormal" />
 </selector>

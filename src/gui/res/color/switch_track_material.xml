@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_enabled="false"
-          cdroid:color="?attr/colorForeground"
-          cdroid:alpha="?attr/disabledAlpha" />
-    <item cdroid:state_checked="true"
-          cdroid:color="?attr/colorControlActivated" />
-    <item cdroid:color="?attr/colorForeground" />
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false"
+          android:color="?attr/colorForeground"
+          android:alpha="?attr/disabledAlpha" />
+    <item android:state_checked="true"
+          android:color="?attr/colorControlActivated" />
+    <item android:color="?attr/colorForeground" />
 </selector>

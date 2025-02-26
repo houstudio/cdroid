@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_enabled="false"
-          cdroid:alpha="@dimen/disabled_alpha_material_light"
-          cdroid:color="@color/primary_text_default_material_light"/>
-    <item cdroid:color="@color/primary_text_default_material_light"/>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false"
+          android:alpha="@dimen/disabled_alpha_material_light"
+          android:color="@color/primary_text_default_material_light"/>
+    <item android:color="@color/primary_text_default_material_light"/>
 </selector>

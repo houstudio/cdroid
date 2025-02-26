@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:color="#eeeeee"/> <!-- not selected -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="#eeeeee"/> <!-- not selected -->
 </selector>
 

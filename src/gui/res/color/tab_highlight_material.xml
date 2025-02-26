@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:alpha="@dimen/highlight_alpha_material_colored"
-          cdroid:color="?attr/colorControlActivated" />
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:alpha="@dimen/highlight_alpha_material_colored"
+          android:color="?attr/colorControlActivated" />
 </selector>

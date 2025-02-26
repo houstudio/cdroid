@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
-    <item cdroid:state_pressed="true" cdroid:color="@cdroid:color/search_url_text_pressed"/>
-    <item cdroid:state_selected="true" cdroid:color="@cdroid:color/search_url_text_selected"/>
-    <item cdroid:color="@cdroid:color/search_url_text_normal"/> <!-- not selected -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true" android:color="@color/search_url_text_pressed"/>
+    <item android:state_selected="true" android:color="@color/search_url_text_selected"/>
+    <item android:color="@color/search_url_text_normal"/> <!-- not selected -->
 </selector>
