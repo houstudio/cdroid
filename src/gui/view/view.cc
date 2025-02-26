@@ -4766,7 +4766,7 @@ void View::applyBackgroundTint() {
 
 View& View::setBackgroundColor(int color){
     if(dynamic_cast<ColorDrawable*>(mBackground)){
-        ((ColorDrawable*)mBackground)->setColor(color);
+        ((ColorDrawable*)mBackground->mutate())->setColor(color);
     }else
         setBackground(new ColorDrawable(color));
     return *this;
