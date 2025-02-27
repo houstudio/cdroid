@@ -147,7 +147,7 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
 
     outCanvas.set_antialias(mAntiAlias?Cairo::ANTIALIAS_GRAY:Cairo::ANTIALIAS_NONE);
     renderPath->append_to_context(&outCanvas);
-    outCanvas.set_source_rgb(1,0,0);needsFill=true;needsStroke=true;
+    outCanvas.set_color(properties.getFillColor());needsFill=true;needsStroke=true;
     if (needsFill) {
         //outCanvas.set_source(properties.getFillGradient());
         //paint.setStyle(SkPaint::Style::kFill_Style);
@@ -158,7 +158,7 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     }
 
     // Draw path's stroke, if stroke color or Gradient is valid
-    outCanvas.set_source_rgb(0,1,0);
+    outCanvas.set_color(properties.getStrokeColor());
     if (needsStroke) {
         //outCanvas.set_source(properties.getStrokeGradient());
         //paint.setAntiAlias(mAntiAlias);
@@ -244,6 +244,7 @@ void Group::draw(Canvas& outCanvas, bool useStagingData) {
     // apply the current group's matrix to the canvas
     Cairo::Matrix stackedMatrix = Cairo::identity_matrix();
     const GroupProperties& prop = useStagingData ? mStagingProperties : mProperties;
+    double scalex=prop.getScaleX();
     getLocalMatrix(stackedMatrix, prop);
     outCanvas.save();
     LOGD("%p:%s",this,mName.c_str());
@@ -454,12 +455,15 @@ void Tree::updateBitmapCache(Bitmap& bitmap, bool useStagingData) {
     LOGD("VectorDrawable repaint %dx%d", cacheWidth, cacheHeight);
     //outCache.eraseColor(SK_ColorTRANSPARENT);
     Canvas outCanvas(outCache);
+    outCanvas.set_source_rgba(0,0,0,0);
+    outCanvas.paint();
     const float viewportWidth = useStagingData ? mStagingProperties.getViewportWidth() : mProperties.getViewportWidth();
     const float viewportHeight= useStagingData ? mStagingProperties.getViewportHeight() : mProperties.getViewportHeight();
     const float scaleX = cacheWidth / viewportWidth;
     const float scaleY = cacheHeight / viewportHeight;
     outCanvas.scale(scaleX, scaleY);
     mRootNode->draw(outCanvas, useStagingData);
+    bitmap->write_to_png("vector.png");
 }
 
 bool Tree::allocateBitmapIfNeeded(Cache& cache, int width, int height) {

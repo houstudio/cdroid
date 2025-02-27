@@ -154,7 +154,7 @@ protected:
     // This tracks the total native allocation for all the nodes.
 private:
     void createNativeTree(VGroup* rootGroup);
-    void createNativeTreeFromCopy(const VectorDrawableState& copy, VGroup* rootGroup);
+    void createNativeTreeFromCopy(const VectorDrawableState* copy, VGroup* rootGroup);
     void applyDensityScaling(int sourceDensity, int targetDensity);
 protected:
     Property* getProperty(const std::string& propertyName);
@@ -345,6 +345,7 @@ private:
     ComplexColor* mFillColors = nullptr;
     hw::FullPath* mNativePtr;
 private:
+    friend VectorParser;
     void updateStateFromTypedArray(Context*,const AttributeSet&atts);
     bool canComplexColorApplyTheme(ComplexColor* complexColor);
 public:

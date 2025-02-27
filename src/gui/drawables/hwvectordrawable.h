@@ -510,7 +510,7 @@ public:
             Rect bounds;
             int scaledWidth = 0;
             int scaledHeight = 0;
-            ColorFilter* colorFilter;
+            ColorFilter* colorFilter=nullptr;
         } mNonAnimatableProperties;
         bool mNonAnimatablePropertiesDirty = true;
 

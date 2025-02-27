@@ -17,6 +17,7 @@ VectorDrawable::VectorDrawable(std::shared_ptr<VectorDrawableState> state) {
     mMutated = false;
     mColorFilter= nullptr;
     mTintFilter = nullptr;
+    mTargetDensity=0;
     mVectorState = state;
     updateLocalState();
 }
@@ -33,7 +34,9 @@ void VectorDrawable::updateLocalState() {
 
 Drawable* VectorDrawable::mutate() {
     if (!mMutated && Drawable::mutate() == this) {
-        mVectorState = std::make_shared<VectorDrawableState>(mVectorState.get());
+        auto ss=mVectorState;
+        mVectorState = nullptr;
+        mVectorState = std::make_shared<VectorDrawableState>(ss.get());
         mMutated = true;
     }
     return this;
@@ -65,18 +68,27 @@ void VectorDrawable::draw(Canvas& canvas) {
     }
 
     // Color filters always override tint filters.
-    const ColorFilter* colorFilter = (mColorFilter == nullptr ? mTintFilter : mColorFilter);
+    ColorFilter* colorFilter = (mColorFilter == nullptr ? mTintFilter : mColorFilter);
     //long colorFilterNativeInstance = colorFilter == nullptr ? 0 :colorFilter.getNativeInstance();
     const bool canReuseCache = mVectorState->canReuseCache();
     /*int pixelCount = nDraw(mVectorState->getNativeRenderer(), canvas.getNativeCanvasWrapper(),
             colorFilterNativeInstance, mTmpBounds, needMirroring(), canReuseCache)*/;
+    /*if(colorFilter){
+        canvas.rectangle(mTmpBounds.left,mTmpBounds.top,mTmpBounds.width,mTmpBounds.height);
+        canvas.clip();
+        canvas.push_group();
+    }*/
     const int pixelCount = mVectorState->mNativeTree->draw(canvas,nullptr,mTmpBounds,needMirroring(),canReuseCache);
+    /*if(colorFilter){
+        mTintFilter->apply(canvas,mBounds);
+        canvas.pop_group_to_source();
+        canvas.paint();
+    }*/
     if (pixelCount == 0) {
         // Invalid canvas matrix or drawable bounds. This would not affect existing bitmap
         // cache, if any.
         return;
     }
-
     int deltaInBytes;
     // Track different bitmap cache based whether the canvas is hw accelerated. By doing so,
     // we don't over count bitmap cache allocation: if the input canvas is always of the same
@@ -143,7 +155,7 @@ bool VectorDrawable::onStateChange(const std::vector<int>&stateSet) {
     // When the VD is stateful, we need to mutate the drawable such that we don't share the
     // cache bitmap with others. Such that the state change only affect this new cached bitmap.
     if (isStateful()) {
-        //mutate();
+        mutate();
     }
     auto state = mVectorState;
     if (state->onStateChange(stateSet)) {
@@ -291,6 +303,10 @@ private:
     std::string package;
     VectorDrawableState*state;
     VectorDrawable*vd;
+    VFullPath*path;
+    int gradientType;
+    int gradientUseage;/*0-->stroke 1-->fill*/
+    Cairo::RefPtr<Cairo::Gradient> gradient;
     std::stack<VectorDrawable::VGroup*>groupStack;
     VectorDrawable::VGroup*currentGroup;
     bool noPathTag;
@@ -310,6 +326,7 @@ public:
         AttributeSet atts(d->ctx,d->package);
         VGroup* currentGroup = d->groupStack.top();//peek();
         atts.set(satts);
+        LOGD("%s",name);
         if(strcmp(name,"vector")==0){
             d->vd->updateStateFromTypedArray(d->ctx,atts);
         }else if(strcmp(name,SHAPE_PATH)==0){
@@ -318,6 +335,7 @@ public:
             currentGroup->addChild(path);
             if(!path->getPathName().empty())
                 d->state->mVGTargetsMap.emplace(path->getPathName(),path);
+            d->path = path;
             d->noPathTag = false;
             //d->state->mChangingConfigurations |= path->mChangingConfigurations;
         }else if(strcmp(name,SHAPE_CLIP_PATH)==0){
@@ -335,6 +353,26 @@ public:
             if(!newChildGroup->getGroupName().empty())
                 d->state->mVGTargetsMap.emplace(newChildGroup->getGroupName(),newChildGroup);
             //d->state->mChangingConfigurations |= path->mChangingConfigurations;
+        }else if(strstr(name,"attr")!=0){
+            std::string name=atts.getString("name");
+            d->gradientUseage=name.find("stroke")!=std::string::npos?0:1;
+            LOGD("  attr=%s usage=%d",name.c_str(),d->gradientUseage);
+        }else if(strcmp(name,"gradient")==0){
+            d->gradientType=atts.getInt("type",std::unordered_map<std::string,int>{
+                    {"linear",0},{"radial",1},{"sweep",2}},0);
+            switch( d->gradientType){
+            case 0:d->gradient=Cairo::LinearGradient::create(0.f,0.f,0.f,0.f);break;
+            case 1:d->gradient=Cairo::RadialGradient::create(0.f,0.f,1.f,0.f,0.f,0.f);break;
+            case 2:break;
+            }
+            //if(d->gradientUseage==0)d->path->mStrokeColors=d->gradient;
+            //else d->path->mFillColors=d->gradient;
+        }else if(strcmp(name,"item")==0){
+            const float offset =atts.getFloat("offset",0.f);
+            const uint32_t color =atts.getColor("color",0);
+            Color c(color);
+            LOGD("colorstop(%f,%x)",offset,color);
+            d->gradient->add_color_stop_rgba(offset,c.red(),c.green(),c.blue(),c.alpha());
         }
     }
 
@@ -342,6 +380,9 @@ public:
         VectorParser*d=(VectorParser*)userData;
         if(strcmp(name,SHAPE_GROUP)==0){
             d->groupStack.pop();
+        }else if(strcmp(name,SHAPE_PATH)==0){
+            d->path = nullptr;
+            d->gradient=nullptr;
         }
     }
 };/*VectorDrawable::VectorParser*/
@@ -454,7 +495,7 @@ void VectorDrawable::updateStateFromTypedArray(Context*ctx,const AttributeSet&at
         state->mRootName = name;
         state->mRootGroup->mGroupName=name;
         LOGD("%p rootName=%s",state->mRootGroup,name.c_str());
-        state->mVGTargetsMap.emplace(name, state.get());
+        //state->mVGTargetsMap.emplace(name, state.get());
     }
 
 }
@@ -532,7 +573,7 @@ VectorDrawable::VectorDrawableState::VectorDrawableState(const VectorDrawableSta
         mRootName = copy->mRootName;
         mDensity = copy->mDensity;
         if (!copy->mRootName.empty()) {
-            mVGTargetsMap.emplace(copy->mRootName, this);
+            //mVGTargetsMap.emplace(copy->mRootName, this);
         }
     } else {
         mRootGroup = new VGroup();
@@ -548,9 +589,9 @@ void VectorDrawable::VectorDrawableState::createNativeTree(VGroup* rootGroup) {
 
 // Create a new native tree with the given root group, and copy the properties from the
 // given VectorDrawableState's native tree.
-void VectorDrawable::VectorDrawableState::createNativeTreeFromCopy(const VectorDrawableState& copy, VGroup* rootGroup) {
+void VectorDrawable::VectorDrawableState::createNativeTreeFromCopy(const VectorDrawableState* copy, VGroup* rootGroup) {
     //mNativeTree = new VirtualRefBasePtr(nCreateTreeFromCopy(copy->mNativeTree.get(), rootGroup->mNativePtr));
-    mNativeTree = new hw::Tree(copy.mNativeTree, rootGroup->mNativePtr);
+    mNativeTree = new hw::Tree(copy->mNativeTree, rootGroup->mNativePtr);
 }
 
 // This should be called every time after a new RootGroup and all its subtrees are created
@@ -744,6 +785,7 @@ VectorDrawable::VGroup::VGroup(const VGroup* copy,std::unordered_map<std::string
 }
 
 VectorDrawable::VGroup::VGroup() {
+    mIsStateful =false;
     //mNativePtr = nCreateGroup();
     mNativePtr=new hw::Group();
 }
@@ -763,8 +805,11 @@ std::string VectorDrawable::VGroup::getGroupName()const{
 }
 
 void VectorDrawable::VGroup::addChild(VObject* child) {
+    mIsStateful =false;
     //nAddChild(mNativePtr, child->getNativePtr());
-    mNativePtr->addChild((hw::Node*)child->getNativePtr());
+    hw::Group*group=mNativePtr;
+    hw::Node*cld=(hw::Node*)child->getNativePtr();
+    group->addChild(cld);
     mChildren.push_back(child);
     mIsStateful |= child->isStateful();
 }
@@ -1219,42 +1264,42 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(Context*,const Attribu
         hw::PathParser::getPathDataFromAsciiString(&data, &result, pathString.c_str(), pathString.length());
         ((hw::Path*)mNativePtr)->mutateStagingProperties()->setData(data);
     }
-#if 0
-    ComplexColor* fillColors = atts.getComplexColor("fillColor");
+#if 10
+    ComplexColor* fillColors = atts.getColorStateList("fillColor");
     if (fillColors != nullptr) {
         // If the colors is a gradient color, or the color state list is stateful, keep the
         // colors information. Otherwise, discard the colors and keep the default color.
-        if (fillColors instanceof  GradientColor) {
+        /*if (fillColors instanceof  GradientColor) {
             mFillColors = fillColors;
             fillGradient = ((GradientColor) fillColors).getShader();
-        } else if (fillColors.isStateful()) {
+        } else */if (fillColors->isStateful()) {
             mFillColors = fillColors;
         } else {
             mFillColors = nullptr;
         }
-        fillColor = fillColors.getDefaultColor();
+        fillColor = fillColors->getDefaultColor();
     }
 
-    ComplexColor* strokeColors = a.getComplexColor("strokeColor");
+    ComplexColor* strokeColors = atts.getColorStateList("strokeColor");
     if (strokeColors != nullptr) {
         // If the colors is a gradient color, or the color state list is stateful, keep the
         // colors information. Otherwise, discard the colors and keep the default color.
-        if (strokeColors instanceof GradientColor) {
+        /*if (strokeColors instanceof GradientColor) {
             mStrokeColors = strokeColors;
             strokeGradient = ((GradientColor) strokeColors).getShader();
-        } else if (strokeColors.isStateful()) {
+        } else */if (strokeColors->isStateful()) {
             mStrokeColors = strokeColors;
         } else {
             mStrokeColors = nullptr;
         }
-        strokeColor = strokeColors.getDefaultColor();
+        strokeColor = strokeColors->getDefaultColor();
     }
 
     // Update the gradient info, even if the gradiet is null.
     //nUpdateFullPathFillGradient(mNativePtr,fillGradient != nullptr ? fillGradient.getNativeInstance() : 0);
     //nUpdateFullPathStrokeGradient(mNativePtr,strokeGradient != nullptr ? strokeGradient.getNativeInstance() : 0);
-    mNativePtr->mutateStagingProperties()->setFillGradient(fillGradient);
-    mNativePtr->mutateStagingProperties()->setStrokeGradient(strokeGradient);
+    //mNativePtr->mutateStagingProperties()->setFillGradient(fillGradient);
+    //mNativePtr->mutateStagingProperties()->setStrokeGradient(strokeGradient);
 #endif
     fillAlpha = atts.getFloat("fillAlpha", fillAlpha);
     strokeLineCap = atts.getInt("strokeLineCap",std::unordered_map<std::string,int>{
@@ -1272,7 +1317,8 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(Context*,const Attribu
     trimPathOffset = atts.getFloat("trimPathOffset", trimPathOffset);
     trimPathStart = atts.getFloat("trimPathStart", trimPathStart);
     fillType = atts.getInt("fillType",std::unordered_map<std::string,int>{
-            {"evenAdd",0},{"nonZero",0}}, fillType);
+            {"evenOdd",(int)Cairo::Context::FillRule::EVEN_ODD},
+            {"nonZero",(int)Cairo::Context::FillRule::WINDING} }, fillType);
 
     //nUpdateFullPathProperties(
     mNativePtr->mutateStagingProperties()->updateProperties(strokeWidth, strokeColor, strokeAlpha,
