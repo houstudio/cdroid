@@ -3,6 +3,7 @@
 #include <drawables/hwpathmeasure.h>
 #include <drawables/hwpathparser.h>
 #include <porting/cdlog.h>
+#include <float.h>
 namespace cdroid{
 namespace hw{
 const int Tree::MAX_CACHED_BITMAP_SIZE = 2048;
@@ -247,11 +248,13 @@ void Group::draw(Canvas& outCanvas, bool useStagingData) {
     double scalex=prop.getScaleX();
     getLocalMatrix(stackedMatrix, prop);
     outCanvas.save();
-    LOGD("%p:%s",this,mName.c_str());
+    LOGD("%p:%s pivot=%.2f,%.2f translat=%.2f,%.2f scale=%.2f,%.2f",this,mName.c_str(),
+            prop.getPivotX(),prop.getPivotY(),
+            prop.getTranslateX(),prop.getTranslateY(),
+            prop.getScaleX(),prop.getScaleY());
     outCanvas.transform(stackedMatrix);
     // Draw the group tree in the same order as the XML file.
     for (auto& child : mChildren) {
-        child->dump();
         child->draw(outCanvas, useStagingData);
     }
     outCanvas.restore();
@@ -280,10 +283,15 @@ void Group::syncProperties() {
     }
 }
 
+static float limitScale(float scale){
+    const float sign = (scale >= 0) ? 1.0f : -1.0f;
+    return (std::abs(scale)<FLT_EPSILON)?sign*FLT_EPSILON:scale;
+}
+
 void Group::getLocalMatrix(Cairo::Matrix& outMatrix, const GroupProperties& properties) {
     outMatrix.translate(-properties.getPivotX(), -properties.getPivotY());
     // 第二步：进行缩放操作
-    outMatrix.scale(properties.getScaleX(), properties.getScaleY());
+    outMatrix.scale(limitScale(properties.getScaleX()), limitScale(properties.getScaleY()));
 
     // 第三步：绕原点进行旋转，Cairo 的旋转角度是弧度制
     double radians = properties.getRotation() * M_PI / 180.0;

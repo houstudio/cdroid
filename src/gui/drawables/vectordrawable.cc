@@ -835,7 +835,6 @@ void VectorDrawable::VGroup::inflate(Context*, const AttributeSet&atts, Theme th
     float scaleY = atts.getFloat("scaleY",properties->getScaleY());
     float translateX = atts.getFloat("translateX",properties->getTranslateX());
     float translateY = atts.getFloat("translateY",properties->getTranslateY());
-
     mGroupName = atts.getString("name");
     if (!mGroupName.empty()) {
         //nSetName(mNativePtr, mGroupName);
