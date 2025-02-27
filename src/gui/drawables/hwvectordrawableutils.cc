@@ -45,8 +45,7 @@ void VectorDrawableUtils::verbsToPath(Cairo::RefPtr<cdroid::Path>& outPath, cons
     outPath->reset();
     for (unsigned int i = 0; i < data.verbs.size(); i++) {
         size_t verbSize = data.verbSizes[i];
-        resolver.addCommand(outPath, previousCommand, data.verbs[i], &data.points, start,
-                            start + verbSize);
+        resolver.addCommand(outPath, previousCommand, data.verbs[i], &data.points, start,start + verbSize);
         previousCommand = data.verbs[i];
         start += verbSize;
     }

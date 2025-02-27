@@ -327,11 +327,11 @@ bool Group::GroupProperties::copyProperties(float* outProperties, int length) co
 float Group::GroupProperties::getPropertyValue(int propertyId) const {
     Property currentProperty = static_cast<Property>(propertyId);
     switch (currentProperty) {
-        case Property::rotate:    return getRotation();
-        case Property::pivotX:    return getPivotX();
-        case Property::pivotY:    return getPivotY();
-        case Property::scaleX:    return getScaleX();
-        case Property::scaleY:    return getScaleY();
+        case Property::rotate:  return getRotation();
+        case Property::pivotX:  return getPivotX();
+        case Property::pivotY:  return getPivotY();
+        case Property::scaleX:  return getScaleX();
+        case Property::scaleY:  return getScaleY();
         case Property::translateX:return getTranslateX();
         case Property::translateY:return getTranslateY();
         default:
@@ -344,29 +344,14 @@ float Group::GroupProperties::getPropertyValue(int propertyId) const {
 void Group::GroupProperties::setPropertyValue(int propertyId, float value) {
     Property currentProperty = static_cast<Property>(propertyId);
     switch (currentProperty) {
-        case Property::rotate:
-            setRotation(value);
-            break;
-        case Property::pivotX:
-            setPivotX(value);
-            break;
-        case Property::pivotY:
-            setPivotY(value);
-            break;
-        case Property::scaleX:
-            setScaleX(value);
-            break;
-        case Property::scaleY:
-            setScaleY(value);
-            break;
-        case Property::translateX:
-            setTranslateX(value);
-            break;
-        case Property::translateY:
-            setTranslateY(value);
-            break;
-        default:
-            FATAL("Invalid property index: %d", propertyId);
+    case Property::rotate:  setRotation(value); break;
+    case Property::pivotX:  setPivotX(value);   break;
+    case Property::pivotY:  setPivotY(value);   break;
+    case Property::scaleX:  setScaleX(value);   break;
+    case Property::scaleY:  setScaleY(value);   break;
+    case Property::translateX:  setTranslateX(value);   break;
+    case Property::translateY:  setTranslateY(value);   break;
+    default: FATAL("Invalid property index: %d", propertyId);
     }
 }
 
@@ -383,16 +368,16 @@ int Tree::draw(Canvas& outCanvas, ColorFilter* colorFilter, const Rect& bounds, 
     // avoid blurry scaling, we have to draw into a bitmap with exact pixel
     // size first. This bitmap size is determined by the bounds and the
     // canvas scale.
-    //SkMatrix canvasMatrix;
-    //outCanvas->getMatrix(&canvasMatrix);
+    Cairo::Matrix canvasMatrix;
+    outCanvas.get_matrix(canvasMatrix);
     float canvasScaleX = 1.0f;
     float canvasScaleY = 1.0f;
-    /*if (canvasMatrix.getSkewX() == 0 && canvasMatrix.getSkewY() == 0) {
+    if (canvasMatrix.xy==0/*getSkewX() == 0*/ && canvasMatrix.yx==0/*getSkewY() == 0*/) {
         // Only use the scale value when there's no skew or rotation in the canvas matrix.
         // TODO: Add a cts test for drawing VD on a canvas with negative scaling factors.
-        canvasScaleX = fabs(canvasMatrix.getScaleX());
-        canvasScaleY = fabs(canvasMatrix.getScaleY());
-    }*/
+        canvasScaleX = fabs(canvasMatrix.xx);//getScaleX());
+        canvasScaleY = fabs(canvasMatrix.yy);//getScaleY());
+    }
     int scaledWidth = (int)(bounds.width * canvasScaleX);
     int scaledHeight = (int)(bounds.height * canvasScaleY);
     scaledWidth = std::min(Tree::MAX_CACHED_BITMAP_SIZE, scaledWidth);
@@ -417,7 +402,7 @@ int Tree::draw(Canvas& outCanvas, ColorFilter* colorFilter, const Rect& bounds, 
     // And we use this bound for the destination rect for the drawBitmap, so
     // we offset to (0, 0);
     Rect tmpBounds = bounds;
-    //tmpBounds.offsetTo(0, 0);
+    tmpBounds.left=0;tmpBounds.top= 0;
     mStagingProperties.setBounds(tmpBounds);
     drawStaging(outCanvas);//outCanvas->drawVectorDrawable(this);
     outCanvas.save();//outCanvas->restoreToCount(saveCount);
@@ -441,6 +426,8 @@ void Tree::drawStaging(Canvas& outCanvas) {
                           mStagingProperties.getBounds().right(),
                           mStagingProperties.getBounds().bottom(), paint);*/
     outCanvas.set_source(mStagingCache.bitmap,0,0);
+    outCanvas.scale(float(mStagingProperties.getBounds().width)/mStagingCache.bitmap->get_width(),
+            float(mStagingProperties.getBounds().height)/mStagingCache.bitmap->get_height());
     outCanvas.paint();
 }
 

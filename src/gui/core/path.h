@@ -2,6 +2,7 @@
 #define __CDROID_PATH_H__
 #include <core/rect.h>
 #include <cairomm/context.h>
+#include <functional>
 #include <vector>
 namespace cdroid{
 
@@ -13,6 +14,7 @@ public:
     Path(const Path&);
     void append_to_context(Cairo::Context*)const;
     void append_to_context(const Cairo::RefPtr<Cairo::Context>&to)const;
+    int fromSVGPathData(const std::string&pathData,std::function<void(int8_t,const std::vector<float>&)>);
     void move_to(double x, double y);
     void line_to(double x, double y);
     void rel_move_to(double x,double y);
@@ -33,7 +35,7 @@ public:
     void close_path();
     void append_path(const Path&);
     void compute_bounds(RectF&, bool include_stroke);
-    void approximate(std::vector<float>&,float acceptableError);
+    //void approximate(std::vector<float>&,float acceptableError);
 };
 }
 #endif

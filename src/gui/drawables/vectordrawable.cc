@@ -326,7 +326,6 @@ public:
         AttributeSet atts(d->ctx,d->package);
         VGroup* currentGroup = d->groupStack.top();//peek();
         atts.set(satts);
-        LOGD("%s",name);
         if(strcmp(name,"vector")==0){
             d->vd->updateStateFromTypedArray(d->ctx,atts);
         }else if(strcmp(name,SHAPE_PATH)==0){
