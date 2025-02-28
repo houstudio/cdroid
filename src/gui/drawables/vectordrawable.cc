@@ -400,6 +400,7 @@ void VectorDrawable::inflate(Context*ctx,const std::string&resId){
             // Subtract the native allocation for the tree wrapper, which contains root node
             // as well as rendering related data.
             delete mVectorState->mNativeTree;//->release();
+            mVectorState->mNativeTree = nullptr;
         }
         mVectorState->createNativeTree(mVectorState->mRootGroup);
     }
@@ -689,6 +690,7 @@ bool VectorDrawable::VectorDrawableState::onStateChange(const std::vector<int>& 
 
 VectorDrawable::VectorDrawableState::~VectorDrawableState(){
     int bitmapCacheSize = mLastHWCachePixelCount * 4 + mLastSWCachePixelCount * 4;
+    delete mRootGroup;
 }
 
 /**
@@ -746,6 +748,18 @@ std::unordered_map<std::string, Property*> VectorDrawable::VGroup::sPropertyMap 
     {"rotation", ROTATION}
 };
 
+VectorDrawable::VGroup::VGroup() {
+    mIsStateful =false;
+    //mNativePtr = nCreateGroup();
+    mNativePtr = new hw::Group();
+}
+
+VectorDrawable::VGroup::~VGroup(){
+    for(auto child:mChildren){
+        delete child;
+    }
+    delete mNativePtr;
+}
 
 // Temp array to store transform values obtained from native.
 VectorDrawable::VGroup::VGroup(const VGroup* copy,std::unordered_map<std::string, void*>& targetsMap) {
@@ -783,12 +797,6 @@ VectorDrawable::VGroup::VGroup(const VGroup* copy,std::unordered_map<std::string
     }
 }
 
-VectorDrawable::VGroup::VGroup() {
-    mIsStateful =false;
-    //mNativePtr = nCreateGroup();
-    mNativePtr=new hw::Group();
-}
-
 Property* VectorDrawable::VGroup::getProperty(const std::string& propertyName) {
     auto it=sPropertyMap.find(propertyName);
     if (it!=sPropertyMap.end()) {
@@ -806,9 +814,9 @@ std::string VectorDrawable::VGroup::getGroupName()const{
 void VectorDrawable::VGroup::addChild(VObject* child) {
     mIsStateful =false;
     //nAddChild(mNativePtr, child->getNativePtr());
-    hw::Group*group=mNativePtr;
-    hw::Node*cld=(hw::Node*)child->getNativePtr();
-    group->addChild(cld);
+    hw::Group*group = mNativePtr;
+    hw::Node*childNode = (hw::Node*)child->getNativePtr();
+    group->addChild(childNode);
     mChildren.push_back(child);
     mIsStateful |= child->isStateful();
 }
@@ -1027,11 +1035,10 @@ PathParser::PathData* VectorDrawable::VPath::getPathData() {
 // TODO: Move the PathEvaluator and this setter and the getter above into native.
 void VectorDrawable::VPath::setPathData(const PathParser::PathData* pathData) {
     mPathData->setPathData(*pathData);
-    LOGD("TODO");
     if (isTreeValid()) {
         //nSetPathData(getNativePtr(), mPathData->getNativePtr());
-        hw::Path*dst=(hw::Path*)getNativePtr();
-        hw::PathData*src=(hw::PathData*)mPathData->getNativePtr();
+        hw::Path*dst = (hw::Path*)getNativePtr();
+        hw::PathData*src = (hw::PathData*)mPathData->getNativePtr();
         dst->mutateStagingProperties()->setData(*src);
     }
 }
@@ -1050,6 +1057,10 @@ VectorDrawable::VClipPath::VClipPath(const VClipPath* copy)
     :VPath(copy){
     //nCreateClipPath(copy->mNativePtr);
     mNativePtr = new hw::ClipPath(*copy->mNativePtr);
+}
+
+VectorDrawable::VClipPath::~VClipPath(){
+    delete mNativePtr;
 }
 
 long VectorDrawable::VClipPath::getNativePtr() {
@@ -1151,6 +1162,10 @@ VectorDrawable::VFullPath::VFullPath(const VFullPath* copy):VPath(copy){
     //mThemeAttrs = copy->mThemeAttrs;
     mStrokeColors = copy->mStrokeColors;
     mFillColors = copy->mFillColors;
+}
+
+VectorDrawable::VFullPath::~VFullPath(){
+    delete mNativePtr;
 }
 
 Property* VectorDrawable::VFullPath::getProperty(const std::string& propertyName) {

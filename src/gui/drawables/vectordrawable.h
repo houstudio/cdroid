@@ -49,7 +49,6 @@ protected:
     void setAllowCaching(bool allowCaching);
 public:
     VectorDrawable();
-
     Drawable* mutate() override;
     void clearMutated() override;
     std::shared_ptr<ConstantState> getConstantState() override;
@@ -124,7 +123,6 @@ protected:
     int mChangingConfigurations;
     ColorStateList* mTint = nullptr;
     int mTintMode = DEFAULT_TINT_MODE;
-
     int mBaseWidth = 0;
     int mBaseHeight = 0;
     float mViewportWidth = 0;
@@ -194,7 +192,6 @@ private:
     static constexpr int TRANSFORM_PROPERTY_COUNT = 7;
 
     static std::unordered_map<std::string, int> sPropertyIndexMap;
-
     static int getPropertyIndex(const std::string& propertyName);
 
     // Below are the Properties that wrap the setters to avoid reflection overhead in animations
@@ -226,9 +223,9 @@ private:
     friend VectorDrawable;
     friend VectorDrawableState;
 public:
-    VGroup(const VGroup* copy,std::unordered_map<std::string, void*>& targetsMap);
     VGroup();
-
+    ~VGroup();
+    VGroup(const VGroup* copy,std::unordered_map<std::string, void*>& targetsMap);
     Property* getProperty(const std::string& propertyName)override;
 
     std::string getGroupName()const;
@@ -290,12 +287,11 @@ private:
     hw::ClipPath* mNativePtr;
 public:
     VClipPath();
-
     VClipPath(const VClipPath* copy);
+    ~VClipPath();
     long getNativePtr()override;
     void inflate(Context*,const AttributeSet& attrs, Theme theme);
     bool canApplyTheme() override;
-
     void applyTheme(Theme theme) override;
     bool onStateChange(const std::vector<int>& stateSet) override;
     bool isStateful() const override;
@@ -351,6 +347,7 @@ private:
 public:
     VFullPath();
     VFullPath(const VFullPath* copy);
+    ~VFullPath();
     Property* getProperty(const std::string& propertyName)override;
     int getPropertyIndex(const std::string& propertyName);
     bool onStateChange(const std::vector<int>& stateSet) override;
