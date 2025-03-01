@@ -73,17 +73,17 @@ void VectorDrawable::draw(Canvas& canvas) {
     const bool canReuseCache = mVectorState->canReuseCache();
     /*int pixelCount = nDraw(mVectorState->getNativeRenderer(), canvas.getNativeCanvasWrapper(),
             colorFilterNativeInstance, mTmpBounds, needMirroring(), canReuseCache)*/;
-    /*if(colorFilter){
+    if(colorFilter){
         canvas.rectangle(mTmpBounds.left,mTmpBounds.top,mTmpBounds.width,mTmpBounds.height);
         canvas.clip();
         canvas.push_group();
-    }*/
+    }
     const int pixelCount = mVectorState->mNativeTree->draw(canvas,nullptr,mTmpBounds,needMirroring(),canReuseCache);
-    /*if(colorFilter){
+    if(colorFilter){
         mTintFilter->apply(canvas,mBounds);
         canvas.pop_group_to_source();
         canvas.paint();
-    }*/
+    }
     if (pixelCount == 0) {
         // Invalid canvas matrix or drawable bounds. This would not affect existing bitmap
         // cache, if any.

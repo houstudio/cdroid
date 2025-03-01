@@ -405,7 +405,7 @@ int Tree::draw(Canvas& outCanvas, ColorFilter* colorFilter, const Rect& bounds, 
     tmpBounds.left=0;tmpBounds.top= 0;
     mStagingProperties.setBounds(tmpBounds);
     drawStaging(outCanvas);//outCanvas->drawVectorDrawable(this);
-    outCanvas.save();//outCanvas->restoreToCount(saveCount);
+    outCanvas.restore();//outCanvas->restoreToCount(saveCount);
     return scaledWidth * scaledHeight;
 }
 
