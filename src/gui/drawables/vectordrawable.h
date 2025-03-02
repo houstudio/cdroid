@@ -14,10 +14,12 @@ namespace hw{
 }
 using Theme = std::string;
 using VirtualRefBasePtr=cdroid::hw::Tree*;
+class AnimatedVectorDrawable;
 class VectorDrawable:public Drawable {
 public:
     class VectorDrawableState;
     class VectorParser;
+    friend AnimatedVectorDrawable;
 private:
     static constexpr const char*const SHAPE_CLIP_PATH = "clip-path";
     static constexpr const char*const SHAPE_GROUP = "group";

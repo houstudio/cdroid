@@ -162,7 +162,6 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     outCanvas.set_color(properties.getStrokeColor());
     if (needsStroke) {
         //outCanvas.set_source(properties.getStrokeGradient());
-        //paint.setAntiAlias(mAntiAlias);
         outCanvas.set_line_join((Cairo::Context::LineJoin)properties.getStrokeLineJoin());
         //paint.setStrokeJoin(SkPaint::Join(properties.getStrokeLineJoin()));
         outCanvas.set_line_cap((Cairo::Context::LineCap)properties.getStrokeLineCap());
@@ -245,13 +244,9 @@ void Group::draw(Canvas& outCanvas, bool useStagingData) {
     // apply the current group's matrix to the canvas
     Cairo::Matrix stackedMatrix = Cairo::identity_matrix();
     const GroupProperties& prop = useStagingData ? mStagingProperties : mProperties;
-    double scalex=prop.getScaleX();
+    double scalex = prop.getScaleX();
     getLocalMatrix(stackedMatrix, prop);
     outCanvas.save();
-    LOGD("%p:%s pivot=%.2f,%.2f translat=%.2f,%.2f scale=%.2f,%.2f",this,mName.c_str(),
-            prop.getPivotX(),prop.getPivotY(),
-            prop.getTranslateX(),prop.getTranslateY(),
-            prop.getScaleX(),prop.getScaleY());
     outCanvas.transform(stackedMatrix);
     // Draw the group tree in the same order as the XML file.
     for (auto& child : mChildren) {
@@ -290,16 +285,13 @@ static float limitScale(float scale){
 
 void Group::getLocalMatrix(Cairo::Matrix& outMatrix, const GroupProperties& properties) {
     outMatrix.translate(-properties.getPivotX(), -properties.getPivotY());
-    // 第二步：进行缩放操作
     outMatrix.scale(limitScale(properties.getScaleX()), limitScale(properties.getScaleY()));
 
-    // 第三步：绕原点进行旋转，Cairo 的旋转角度是弧度制
-    double radians = properties.getRotation() * M_PI / 180.0;
+    const double radians = properties.getRotation() * M_PI / 180.0;
     outMatrix.rotate(radians);
 
-    // 第四步：平移回原来的位置加上平移量
-    outMatrix.translate(properties.getTranslateX() + properties.getPivotX(),
-                        properties.getTranslateY() + properties.getPivotY());
+    Cairo::Matrix translate = Cairo::translation_matrix(properties.getTranslateX(),properties.getTranslateY());
+    outMatrix.multiply(outMatrix,translate);
 }
 
 void Group::addChild(Node* child) {
@@ -312,8 +304,7 @@ void Group::addChild(Node* child) {
 bool Group::GroupProperties::copyProperties(float* outProperties, int length) const {
     int propertyCount = static_cast<int>(Property::count);
     if (length != propertyCount) {
-        FATAL("Properties needs exactly %d bytes, a byte array of size %d is provided",
-                         propertyCount, length);
+        FATAL("Properties needs exactly %d bytes, a byte array of size %d is provided",propertyCount, length);
         return false;
     }
 
@@ -404,8 +395,8 @@ int Tree::draw(Canvas& outCanvas, ColorFilter* colorFilter, const Rect& bounds, 
     Rect tmpBounds = bounds;
     tmpBounds.left=0;tmpBounds.top= 0;
     mStagingProperties.setBounds(tmpBounds);
-    drawStaging(outCanvas);//outCanvas->drawVectorDrawable(this);
-    outCanvas.restore();//outCanvas->restoreToCount(saveCount);
+    drawStaging(outCanvas);
+    outCanvas.restore();
     return scaledWidth * scaledHeight;
 }
 
@@ -458,7 +449,6 @@ void Tree::updateBitmapCache(Bitmap& bitmap, bool useStagingData) {
     const float scaleY = cacheHeight / viewportHeight;
     outCanvas.scale(scaleX, scaleY);
     mRootNode->draw(outCanvas, useStagingData);
-    bitmap->write_to_png("vector.png");
 }
 
 bool Tree::allocateBitmapIfNeeded(Cache& cache, int width, int height) {
