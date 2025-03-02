@@ -197,7 +197,7 @@ void Path::arc_to(double rx, double ry, double angle, bool largeArc, bool sweepF
     }
 
     // Calculate the center in the rotated system
-    double sign = (largeArc == sweepFlag) ? -1 : 1;
+    double sign = (largeArc != sweepFlag) ? -1 : 1;
     double sq = ((rx * rx * ry * ry) - (rx * rx * y1 * y1) - (ry * ry * x1 * x1)) / ((rx * rx * y1 * y1) + (ry * ry * x1 * x1));
     sq = (sq < 0) ? 0 : sq;
     double coef = sign * sqrt(sq);
@@ -239,7 +239,10 @@ void Path::arc_to(double rx, double ry, double angle, bool largeArc, bool sweepF
     mCTX->rotate(angle);
 
     // Draw the arc
-    mCTX->arc(0, 0, 1, startAng, startAng + sweepAng);
+    if(sweepFlag)
+        mCTX->arc_negative(0, 0, 1, startAng, startAng + sweepAng);
+    else
+        mCTX->arc(0, 0, 1, startAng, startAng + sweepAng);
 
     // Restore the transformation matrix
     mCTX->restore();

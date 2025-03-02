@@ -294,6 +294,46 @@ void GradientDrawable::updateLocalState() {
     state->computeOpacity();
 }
 
+void GradientDrawable::getOutline(Outline& outline) {
+    auto st = mGradientState;
+    const Rect bounds = getBounds();
+    float rad , halfStrokeWidth;
+    int top;
+    // only report non-zero alpha if shape being drawn has consistent opacity over shape. Must
+    // either not have a stroke, or have same stroke/fill opacity
+#if 0
+    const bool useFillOpacity = st->mOpaqueOverShape && (mGradientState->mStrokeWidth <= 0
+            || mStrokePaint == nullptr || mStrokePaint->getAlpha() == mFillPaint->getAlpha());
+    outline.setAlpha(useFillOpacity ? modulateAlpha(mFillPaint->getAlpha()) / 255.0f: 0.0f);
+
+    switch (st->mShape) {
+        case RECTANGLE:
+            if (!st->mRadiusArray.empty()){// != null) {
+                buildPathIfDirty();
+                outline.setConvexPath(mPath);
+                return;
+            }
+            rad = 0;
+            if (st->mRadius > 0.0f) {
+                // clamp the radius based on width & height, matching behavior in draw()
+                rad = std::min(st->mRadius,std::min(bounds.width, bounds.height) * 0.5f);
+            }
+            outline.setRoundRect(bounds, rad);
+            return;
+        case OVAL:  outline.setOval(bounds); return;
+        case LINE:
+            // Hairlines (0-width stroke) must have a non-empty outline for
+            // shadows to draw correctly, so we'll use a very small width.
+            halfStrokeWidth = mStrokePaint == nullptr ? 0.0001f : mStrokePaint->getStrokeWidth() * 0.5f;
+            top = (int) std::floor(bounds.centerY() - halfStrokeWidth);
+            outline.setRect(bounds.left, top, bounds.width, halfStrokeWidth*2);
+            return;
+        default:break;
+            // TODO: support more complex shapes
+    }
+#endif
+}
+
 GradientDrawable* GradientDrawable::mutate() {
     if (!mMutated && Drawable::mutate() == this) {
         mGradientState=std::make_shared<GradientState>(*mGradientState);

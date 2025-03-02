@@ -194,6 +194,7 @@ public:
     int getOpacity()const;
     void getGradientCenter(float&x,float&y)const;
     std::shared_ptr<ConstantState>getConstantState()override;
+    void getOutline(Outline&)override;
     GradientDrawable*mutate()override;
     void clearMutated()override;
     void draw(Canvas&canvas)override;
