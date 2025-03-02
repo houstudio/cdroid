@@ -49,6 +49,11 @@ Insets Drawable::getOpticalInsets() {
     return Insets();
 }
 
+void Drawable::getOutline(Outline&outline){
+    outline.setRect(getBounds());
+    outline.setAlpha(0);
+}
+
 const Rect&Drawable::getBounds()const {
     return mBounds;
 }

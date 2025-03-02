@@ -55,6 +55,13 @@ ShapeDrawable::~ShapeDrawable(){
     delete mTintFilter;
 }
 
+void ShapeDrawable::getOutline(Outline& outline) {
+    if (mShapeState->mShape != nullptr) {
+        LOGD("TODO");// mShapeState->mShape->getOutline(outline);
+        outline.setAlpha(getAlpha() / 255.0f);
+    }
+}
+
 std::shared_ptr<Drawable::ConstantState>ShapeDrawable::getConstantState(){
     return mShapeState;
 }

@@ -327,12 +327,14 @@ static void setPatternByTileMode(RefPtr<SurfacePattern>pat,int tileMode){
     case TileMode::MIRROR: pat->set_extend(Pattern::Extend::REFLECT); break;
     }
 }
+
 static int getRotateAngle(Canvas&canvas){
     double xx, yx, xy, yy, x0, y0;
     Cairo::Matrix ctx = canvas.get_matrix();
     double radians = atan2(ctx.yy, ctx.xy);
     return int(radians*180.f/M_PI);
 }
+
 void BitmapDrawable::draw(Canvas&canvas){
     if(mBitmapState->mBitmap==nullptr) return;
     updateDstRectAndInsetsIfDirty();
@@ -444,6 +446,16 @@ void BitmapDrawable::draw(Canvas&canvas){
 Insets BitmapDrawable::getOpticalInsets() {
     updateDstRectAndInsetsIfDirty();
     return mOpticalInsets;
+}
+
+void BitmapDrawable::getOutline(Outline& outline) {
+    updateDstRectAndInsetsIfDirty();
+    outline.setRect(mDstRect);
+
+    // Only opaque Bitmaps can report a non-0 alpha,
+    // since only they are guaranteed to fill their bounds
+    const int opaqueOverShape = getOpacity()==255;//mBitmapState->mBitmap != nullptr&& !mBitmapState->mBitmap->hasAlpha();
+    outline.setAlpha(opaqueOverShape ? getAlpha() / 255.0f : 0.0f);
 }
 
 Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){

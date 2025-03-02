@@ -107,6 +107,7 @@ public:
     Drawable*getChild(int index);
     bool getPadding(Rect&padding)override;
     Insets getOpticalInsets()override;
+    void getOutline(Outline&)override;
     int getChangingConfigurations()const override;
     void setAlpha(int)override;
     int getAlpha()const override;

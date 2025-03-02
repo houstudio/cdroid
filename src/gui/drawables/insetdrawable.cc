@@ -134,6 +134,10 @@ int InsetDrawable::getIntrinsicHeight() {
         + mState->mInsetBottom.mDimension;
 }
 
+void InsetDrawable::getOutline(Outline&outline){
+    getDrawable()->getOutline(outline);
+}
+
 std::shared_ptr<Drawable::ConstantState>InsetDrawable::getConstantState(){
     return mState;
 }

@@ -52,6 +52,7 @@ public:
     void setIntrinsicHeight(int height);
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
+    void getOutline(Outline&)override;
     std::shared_ptr<ConstantState>getConstantState()override;
     ShapeDrawable*mutate()override;
     void clearMutated()override;

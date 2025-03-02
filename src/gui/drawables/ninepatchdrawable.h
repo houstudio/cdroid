@@ -49,6 +49,7 @@ public:
     Insets getOpticalInsets()override;
     void setAlpha(int alpha)override;
     bool getPadding(Rect& padding) override;
+    void getOutline(Outline&)override;
     int getAlpha()const override;
     void setTintList(const ColorStateList* tint)override;
     void setTintMode(int mode)override;

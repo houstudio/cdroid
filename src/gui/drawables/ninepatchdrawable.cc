@@ -112,6 +112,27 @@ bool NinePatchDrawable::getPadding(Rect& padding){
     return (padding.left | padding.top | padding.width | padding.height) != 0;
 }
 
+void NinePatchDrawable::getOutline(Outline& outline) {
+    const Rect bounds = getBounds();
+    if (bounds.empty()) {
+        return;
+    }
+    LOGD("TODO");
+    /*if (mNinePatchState != nullptr && mOutlineInsets != nullptr) {
+        //NinePatch.InsetStruct insets =mNinePatchState.mNinePatch.getBitmap().getNinePatchInsets();
+        if (insets != null) {
+            outline.setRoundRect(bounds.left + mOutlineInsets.left,
+                    bounds.top + mOutlineInsets.top,
+                    bounds.width - mOutlineInsets.right,
+                    bounds.height - mOutlineInsets.bottom,
+                    mOutlineRadius);
+            outline.setAlpha(insets.outlineAlpha * (getAlpha() / 255.0f));
+            return;
+        }
+    }*/
+    Drawable::getOutline(outline);
+}
+
 int NinePatchDrawable::getAlpha()const{
     return mAlpha;
 }

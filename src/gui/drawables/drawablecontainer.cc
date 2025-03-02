@@ -446,6 +446,12 @@ Insets DrawableContainer::getOpticalInsets(){
     return  mCurrDrawable?mCurrDrawable->getOpticalInsets():Insets();
 }
 
+void DrawableContainer::getOutline(Outline& outline) {
+    if (mCurrDrawable != nullptr) {
+        mCurrDrawable->getOutline(outline);
+    }
+}
+
 int DrawableContainer::getChangingConfigurations()const{
     return Drawable::getChangingConfigurations()
              | mDrawableContainerState->getChangingConfigurations();

@@ -40,6 +40,7 @@ public:
     std::shared_ptr<ConstantState>getConstantState()override;
     int getIntrinsicWidth() override;
     int getIntrinsicHeight() override;
+    void getOutline(Outline&) override;
     bool getPadding(Rect& padding)override;
     int getOpacity()override;
     Insets getOpticalInsets()override;

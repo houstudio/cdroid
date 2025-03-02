@@ -90,6 +90,7 @@ public:
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas&canvas)override;
     Insets getOpticalInsets()override;
+    void getOutline(Outline&)override;
     static Drawable*inflate(Context*,const AttributeSet&atts);
 };
 

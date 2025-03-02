@@ -37,6 +37,7 @@ public:
     ~DrawableWrapper();
     int getIntrinsicWidth () override;
     int getIntrinsicHeight() override;
+    void getOutline(Outline&) override;
     int getChangingConfigurations()const override;
     void getHotspotBounds(Rect& outRect)const override;
     void setDrawable(Drawable* dr);

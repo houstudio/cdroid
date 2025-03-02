@@ -1,12 +1,14 @@
 #include <core/outline.h>
 namespace cdroid{
-//private static final float RADIUS_UNDEFINED = Float.NEGATIVE_INFINITY;
-Outline::Outline() {}
+
+Outline::Outline() {
+   mPath = nullptr;
+}
 
 /**
  * Constructs an Outline with a copy of the data in src.
  */
-Outline::Outline(const Outline& src) {
+Outline::Outline(const Outline& src):Outline(){
     set(src);
 }
 

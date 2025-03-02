@@ -9,6 +9,7 @@
 #include <core/context.h>
 #include <view/gravity.h>
 #include <core/insets.h>
+#include <core/outline.h>
 #include <vector>
 
 namespace cdroid{
@@ -107,6 +108,7 @@ public:
     virtual void getHotspotBounds(Rect&outRect)const;
     virtual bool getPadding(Rect&padding);
     virtual Insets getOpticalInsets();
+    virtual void getOutline(Outline&);
     virtual bool isStateful()const;
     virtual bool hasFocusStateSpecified()const;
     virtual Drawable*getCurrent();

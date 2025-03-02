@@ -133,6 +133,11 @@ int ColorDrawable::getOpacity() {
     return PixelFormat::TRANSLUCENT;
 }
 
+void ColorDrawable::getOutline(Outline& outline) {
+    outline.setRect(getBounds());
+    outline.setAlpha(getAlpha() / 255.0f);
+}
+
 void ColorDrawable::draw(Canvas&canvas){
     LOGV("%p color=%x  bounds=%d,%d-%d,%d mTintFilter=%p",this,mColorState->mUseColor,
 	mBounds.left,mBounds.top,mBounds.width,mBounds.height,mTintFilter);
