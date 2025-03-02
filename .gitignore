@@ -1,4 +1,4 @@
-out*
+./out*
 apps/*
 !apps/createPrj.py
 !apps/samples

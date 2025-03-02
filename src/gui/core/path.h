@@ -27,6 +27,7 @@ public:
     void arc(double xc, double yc, double radius, double angle1, double angle2);
     void arc_to(double x1, double y1, double x2, double y2, double radius);
     void arc_to(double rx, double ry, double angle, bool largeArc, bool sweepFlag, double x, double y);
+    void add_oval(int left,int top,int width,int height);
     void rectangle(double x, double y, double width, double height);
     void round_rectangle(double x,double y,double width,double height,const std::vector<float>& radii);
     void round_rectangle(const RectF&rect,const std::vector<float>& radii);
@@ -35,6 +36,7 @@ public:
     void close_path();
     void append_path(const Path&);
     void compute_bounds(RectF&, bool include_stroke);
+    bool is_convex()const;
     //void approximate(std::vector<float>&,float acceptableError);
 };
 }

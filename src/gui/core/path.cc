@@ -18,6 +18,65 @@ void Path::reset(){
     mCTX->begin_new_path();
 }
 
+bool Path::is_convex()const{
+    cairo_path_t *path = cairo_copy_path(mCTX->cobj());
+    int i, j, k;
+    int num_points = 0;
+    double *points = NULL;
+    int sign = 0;
+
+    // 统计路径中的点数
+    for (i = 0; i < path->num_data; i += path->data[i].header.length) {
+        if (path->data[i].header.type == CAIRO_PATH_MOVE_TO ||
+            path->data[i].header.type == CAIRO_PATH_LINE_TO) {
+            num_points++;
+        }
+    }
+
+    // 至少需要三个点才能构成多边形
+    if (num_points < 3) {
+        return false;
+    }
+
+    points = (double *)malloc(num_points * 2 * sizeof(double));
+    if (points == NULL) {
+        return false;
+    }
+
+    // 提取路径中的点
+    j = 0;
+    for (i = 0; i < path->num_data; i += path->data[i].header.length) {
+        if (path->data[i].header.type == CAIRO_PATH_MOVE_TO ||
+            path->data[i].header.type == CAIRO_PATH_LINE_TO) {
+            points[j++] = path->data[i + 1].point.x;
+            points[j++] = path->data[i + 1].point.y;
+        }
+    }
+
+    // 检查多边形的凹凸性
+    for (i = 0; i < num_points; i++) {
+        j = (i + 1) % num_points;
+        k = (i + 2) % num_points;
+
+        double dx1 = points[2 * j] - points[2 * i];
+        double dy1 = points[2 * j + 1] - points[2 * i + 1];
+        double dx2 = points[2 * k] - points[2 * j];
+        double dy2 = points[2 * k + 1] - points[2 * j + 1];
+
+        double cross_product = dx1 * dy2 - dy1 * dx2;
+
+        if (sign == 0) {
+            sign = (cross_product > 0) ? 1 : -1;
+        } else if ((cross_product > 0 && sign < 0) || (cross_product < 0 && sign > 0)) {
+            free(points);
+            return false;
+        }
+    }
+
+    free(points);
+    return true;
+}
+
 void Path::begin_new_sub_path(){
     mCTX->begin_new_sub_path();
 }
@@ -183,6 +242,26 @@ void Path::arc_to(double rx, double ry, double angle, bool largeArc, bool sweepF
     mCTX->arc(0, 0, 1, startAng, startAng + sweepAng);
 
     // Restore the transformation matrix
+    mCTX->restore();
+}
+
+void Path::add_oval(int left,int top,int width,int height){
+    double center_x = left + width / 2;
+    double center_y = top + height / 2;
+    double radius_x = width / 2;
+    double radius_y = height / 2;
+
+    // 保存当前绘图状态
+    mCTX->save();
+
+    // 平移到椭圆的中心位置
+    mCTX->translate(center_x, center_y);
+
+    // 缩放坐标系，以绘制椭圆
+    mCTX->scale(radius_x, radius_y);
+
+    // 绘制一个单位圆，由于前面进行了缩放，实际上绘制的是椭圆
+    mCTX->arc(0.0, 0.0, 1.0, 0.0, 2 * M_PI);
     mCTX->restore();
 }
 
