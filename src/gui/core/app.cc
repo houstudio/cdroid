@@ -30,20 +30,6 @@ namespace cdroid{
 
 App*App::mInst=nullptr;
 
-static CLA::Argument ARGS[]={
-   {CLA::EntryType::Option, "a", "alpha",  "UI layer global alpha[0,255]", CLA::ValueType::Int, (int)CLA::EntryFlags::Optional},
-   {CLA::EntryType::Option, "" , "density","UI Density"  ,    CLA::ValueType::Int , (int)CLA::EntryFlags::Optional },
-   {CLA::EntryType::Option, "", "data",   "app data path",        CLA::ValueType::String, (int)CLA::EntryFlags::Optional },
-   {CLA::EntryType::Option, "m", "monkey", "events playback path",  CLA::ValueType::String, (int)CLA::EntryFlags::Optional },
-   {CLA::EntryType::Option, "r", "record", "events record path", CLA::ValueType::String,   (int)CLA::EntryFlags::Optional},
-   {CLA::EntryType::Option, "R", "rotate", "display rotate ", CLA::ValueType::Int,   (int)CLA::EntryFlags::Optional},
-   {CLA::EntryType::Option, "f", "framedelay","animation frame delay",CLA::ValueType::Int,   (int)CLA::EntryFlags::Optional},
-   {CLA::EntryType::Switch, "h", "help", "display help info ", CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
-   {CLA::EntryType::Switch, "d", "debug", "open debug", CLA::ValueType::None,   (int)CLA::EntryFlags::Optional},
-   {CLA::EntryType::Option, "l", "logo" , "show logo" , CLA::ValueType::String, (int)CLA::EntryFlags::Optional},
-   {CLA::EntryType::Switch, "", "fps"  , "Show FPS ",CLA::ValueType::None,   (int)CLA::EntryFlags::Optional}
-};
-
 App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions){
     int rotation;
     LogParseModules(argc,argv);
@@ -75,12 +61,6 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
 #endif
     }catch(...){}
 
-    cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
-    cla.addArguments(extoptions.data(),extoptions.size());
-    cla.setSwitchChars("-");
-    const int rc = cla.parse(argc,argv);
-    rotation = (getArgAsInt("rotate",0)/90)%4;
-    LOGE_IF(rc!=0,"Arguments error[%d]:%s",rc,cla.getError().c_str());
     if(help){
         std::cout<<parser<<std::endl;
         exit(EXIT_SUCCESS);

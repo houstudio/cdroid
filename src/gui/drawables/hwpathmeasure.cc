@@ -84,8 +84,9 @@ double PathMeasure::getLength() {
 }
 
 bool PathMeasure::getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::Path>& dst, bool startWithMoveTo) {
-    double length = 0.0;
-    Point first_point,last_point;
+    double length = 0.0,segment_length;
+    Point p1,p2,p3;
+    Point first_point,last_point,current_point;
     bool segment_started = false;
     auto m_path=mPath->copy_path();
     for (int i = 0; i < m_path->num_data; ) {
@@ -100,9 +101,9 @@ bool PathMeasure::getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::
                 }
                 i += 2;
                 break;
-            case CAIRO_PATH_LINE_TO: {
-                Point current_point = { data[1].point.x, data[1].point.y };
-                double segment_length = distance(last_point, current_point);
+            case CAIRO_PATH_LINE_TO:
+                current_point = { data[1].point.x, data[1].point.y };
+                segment_length = distance(last_point, current_point);
                 if (length + segment_length >= startD && length <= stopD) {
                     if (!segment_started) {
                         dst->move_to(interpolate(last_point, current_point, (startD - length) / segment_length).x,
@@ -121,12 +122,11 @@ bool PathMeasure::getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::
                 last_point = current_point;
                 i += 2;
                 break;
-            }
-            case CAIRO_PATH_CURVE_TO: {
-                Point p1 = { data[1].point.x, data[1].point.y };
-                Point p2 = { data[2].point.x, data[2].point.y };
-                Point p3 = { data[3].point.x, data[3].point.y };
-                double segment_length = curveLength(last_point, p1, p2, p3);
+            case CAIRO_PATH_CURVE_TO:
+                p1 = { data[1].point.x, data[1].point.y };
+                p2 = { data[2].point.x, data[2].point.y };
+                p3 = { data[3].point.x, data[3].point.y };
+                segment_length = curveLength(last_point, p1, p2, p3);
                 if (length + segment_length >= startD && length <= stopD) {
                     if (!segment_started) {
                         dst->move_to(interpolateCurve(last_point, p1, p2, p3, (startD - length) / segment_length).x,
@@ -136,7 +136,7 @@ bool PathMeasure::getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::
                     if (length + segment_length > stopD) {
                         dst->curve_to(p1.x, p1.y, p2.x, p2.y, interpolateCurve(last_point, p1, p2, p3, (stopD - length) / segment_length).x,
                                       interpolateCurve(last_point, p1, p2, p3, (stopD - length) / segment_length).y);
-                        i=m_path->num_data;//make for goto end
+                        i = m_path->num_data;//make for goto end
                     } else {
                         dst->curve_to(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
                     }
@@ -145,9 +145,25 @@ bool PathMeasure::getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::
                 last_point = p3;
                 i += 4;
                 break;
-            }
             case CAIRO_PATH_CLOSE_PATH:
-                dst->line_to(first_point.x,first_point.y);
+                segment_length = distance(last_point, first_point);
+                if (length + segment_length >= startD && length <= stopD) {
+                    if (!segment_started) {
+                        dst->move_to(interpolate(last_point, first_point, (startD - length) / segment_length).x,
+                                    interpolate(last_point, first_point, (startD - length) / segment_length).y);
+                        segment_started = true;
+                    }
+                    if (length + segment_length > stopD) {
+                        dst->line_to(interpolate(last_point, first_point, (stopD - length) / segment_length).x,
+                                    interpolate(last_point, first_point, (stopD - length) / segment_length).y);
+                        //segment_found = true;
+                        i=m_path->num_data;//return segment_found;
+                    } else {
+                        dst->line_to(first_point.x, first_point.y);
+                    }
+                }
+                length += segment_length;
+                last_point = first_point;
                 i += 1;
                 break;
             default:  break;
