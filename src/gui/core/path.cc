@@ -16,7 +16,7 @@ Path::Path(const Path&o):Path(){
 }
 
 Path::cobject* Path::copy_path()const{
-    auto cresult = cairo_copy_path_flat(mCTX->cobj());
+    auto cresult = cairo_copy_path(mCTX->cobj());
     return cresult;
 }
 

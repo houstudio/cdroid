@@ -4,8 +4,7 @@ namespace hw{
 
 
 PathMeasure::PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool){
-    mPath = inPath;
-    mTotalLength = calculateTotalLength();
+    mPath=inPath;
 }
 
 double PathMeasure::distance(const Point& p1, const Point& p2) {
@@ -44,12 +43,8 @@ PathMeasure::Point PathMeasure::interpolateCurve(const Point& p0, const Point& p
     return p;
 }
 
-double PathMeasure::getLength(){
-    return mTotalLength;
-}
-
-double PathMeasure::calculateTotalLength() {
-    Point last_point;
+double PathMeasure::getLength() {
+    Point first_point,last_point;
     double length =0;
     auto m_path=mPath->copy_path();
     for (int i = 0; i < m_path->num_data; ) {
@@ -57,6 +52,7 @@ double PathMeasure::calculateTotalLength() {
         switch (data->header.type) {
         case CAIRO_PATH_MOVE_TO:
             last_point = { data[1].point.x, data[1].point.y };
+            first_point=last_point;
             i += 2;
             break;
         case CAIRO_PATH_LINE_TO: {
@@ -72,12 +68,12 @@ double PathMeasure::calculateTotalLength() {
             Point p3 = { data[3].point.x, data[3].point.y };
             length += curveLength(last_point, p1, p2, p3);
             last_point = p3;
-            i += 6;
+            i += 4;
             break;
         }
         case CAIRO_PATH_CLOSE_PATH:
-            length+=distance(last_point,{data[1].point.x, data[1].point.y});
-            i += 2;
+            length += distance(last_point,first_point);
+            i += 1;
             break;
         default:
             break;
@@ -97,7 +93,7 @@ bool PathMeasure::getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::
         switch (data->header.type) {
             case CAIRO_PATH_MOVE_TO:
                 last_point = { data[1].point.x, data[1].point.y };
-                first_point=last_point;
+                first_point = last_point;
                 if (startWithMoveTo && !segment_started && length >= startD) {
                     dst->move_to(last_point.x, last_point.y);
                     segment_started = true;
@@ -147,31 +143,13 @@ bool PathMeasure::getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::
                 }
                 length += segment_length;
                 last_point = p3;
-                i += 6;
+                i += 4;
                 break;
             }
-            case CAIRO_PATH_CLOSE_PATH:{
-                double segment_length =distance(last_point,first_point);
-                if(length+segment_length>=startD&&length<=stopD){
-                    if(!segment_started){
-                        dst->move_to(interpolate(last_point, first_point, (startD - length) / segment_length).x,
-                            interpolate(last_point, first_point, (startD - length) / segment_length).y);
-                        segment_started = true;
-                    }
-                    if (length + segment_length > stopD) {
-                        dst->line_to(interpolate(last_point, first_point, (stopD - length) / segment_length).x,
-                            interpolate(last_point, first_point, (stopD - length) / segment_length).y);
-                        //segment_found = true;
-                        i=m_path->num_data;//return segment_found;
-                    } else {
-                        dst->line_to(first_point.x, first_point.y);
-                    }
-                }
-                length +=segment_length;
-                last_point=first_point;
-                i += 2;
+            case CAIRO_PATH_CLOSE_PATH:
+                dst->line_to(first_point.x,first_point.y);
+                i += 1;
                 break;
-            }
             default:  break;
         }
     }
