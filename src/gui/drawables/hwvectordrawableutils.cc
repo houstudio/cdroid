@@ -10,7 +10,7 @@ public:
     float ctrlPointY = 0;
     float currentSegmentStartX = 0;
     float currentSegmentStartY = 0;
-    void addCommand(Cairo::RefPtr<cdroid::Path> outPath, char previousCmd, char cmd, const std::vector<float>* points,size_t start, size_t end);
+    void addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previousCmd, char cmd, const std::vector<float>* points,size_t start, size_t end);
 };
 
 bool VectorDrawableUtils::canMorph(const PathData& morphFrom, const PathData& morphTo) {
@@ -38,6 +38,7 @@ bool VectorDrawableUtils::interpolatePathData(PathData& outData, const PathData&
 /**
 * Convert an array of PathVerb to Path.
 */
+
 void VectorDrawableUtils::verbsToPath(Cairo::RefPtr<cdroid::Path>& outPath, const PathData& data) {
     PathResolver resolver;
     char previousCommand = 'm';
@@ -72,7 +73,7 @@ void VectorDrawableUtils::interpolatePaths(PathData& outData, const PathData& fr
 }
 
 // Use the given verb, and points in the range [start, end) to insert a command into the SkPath.
-void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path> outPath, char previousCmd, char cmd,
+void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previousCmd, char cmd,
                               const std::vector<float>* points, size_t start, size_t end) {
     int incr = 2;
     float reflectiveCtrlPointX;
@@ -225,8 +226,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path> outPath, char previous
                 currentY = points->at(k + 3);
                 break;
             case 'q':  // Draws a quadratic Bézier (relative)
-                outPath->rel_quad_to(points->at(k + 0), points->at(k + 1), points->at(k + 2),
-                                 points->at(k + 3));
+                outPath->rel_quad_to(points->at(k + 0), points->at(k + 1), points->at(k + 2),points->at(k + 3));
                 ctrlPointX = currentX + points->at(k + 0);
                 ctrlPointY = currentY + points->at(k + 1);
                 currentX += points->at(k + 2);

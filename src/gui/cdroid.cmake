@@ -29,6 +29,7 @@ list(APPEND CDROID_SOURCES
     core/looper.cc
     core/parcel.cc
     core/path.cc
+    core/outline.cc
     core/porterduff.cc
     core/preferences.cc
     core/scheduler.cc

@@ -86,7 +86,7 @@ const Cairo::RefPtr<cdroid::Path> FullPath::getUpdatedPath(bool useStagingData,C
     Cairo::RefPtr<cdroid::Path> outPath;
 
     if (useStagingData) {
-        Cairo::RefPtr<cdroid::Path> inPath = tempStagingPath;
+        Cairo::RefPtr<cdroid::Path> inPath = std::make_shared<cdroid::Path>(*tempStagingPath);
         applyTrim(tempStagingPath, inPath, mStagingProperties.getTrimPathStart(),
                   mStagingProperties.getTrimPathEnd(), mStagingProperties.getTrimPathOffset());
         outPath = tempStagingPath;
@@ -124,10 +124,10 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     Cairo::RefPtr<cdroid::Path> tempStagingPath=std::make_shared<cdroid::Path>();
     const FullPathProperties& properties = useStagingData ? mStagingProperties : mProperties;
     const Cairo::RefPtr<cdroid::Path> renderPath = getUpdatedPath(useStagingData, tempStagingPath);
-    LOGD("%p %s",this,mName.c_str());
     // Draw path's fill, if fill color or gradient is valid
     bool needsFill = false;
     bool needsStroke = false;
+    LOGD("%p %s",this,mName.c_str());
     if (properties.getFillGradient() != nullptr) {
         //paint.setColor(applyAlpha(SK_ColorBLACK, properties.getFillAlpha()));
         //paint.setShader(sk_sp<SkShader>(SkSafeRef(properties.getFillGradient())));
