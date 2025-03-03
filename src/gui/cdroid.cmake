@@ -36,6 +36,7 @@ list(APPEND CDROID_SOURCES
     core/systemclock.cc
     core/textutils.cc
     core/tokenizer.cc
+    core/xmlpullparser.cc
     #core/transform.cc
     core/typedvalue.cc
     core/typeface.cc
