@@ -64,9 +64,9 @@ static void applyTrim(Cairo::RefPtr<cdroid::Path>& outPath, const Cairo::RefPtr<
         return;
     }
     PathMeasure measure(inPath,false);
-    float len = measure.getLength();
-    float start = len * fmod((trimPathStart + trimPathOffset), 1.0f);
-    float end = len * fmod((trimPathEnd + trimPathOffset), 1.0f);
+    const float len = measure.getLength();
+    const float start = len * fmod((trimPathStart + trimPathOffset), 1.0f);
+    const float end = len * fmod((trimPathEnd + trimPathOffset), 1.0f);
 
     if (start > end) {
         measure.getSegment(start, len, outPath, true);

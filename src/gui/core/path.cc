@@ -1,6 +1,7 @@
 #include <core/path.h>
 #include <cairomm/surface.h>
 #include <cairomm/context.h>
+#include <cairomm/private.h>
 #include <porting/cdlog.h>
 #include <map>
 namespace cdroid{
@@ -16,7 +17,6 @@ Path::Path(const Path&o):Path(){
 
 Path::cobject* Path::copy_path()const{
     auto cresult = cairo_copy_path_flat(mCTX->cobj());
-    //check_object_status_and_throw_exception(*this);
     return cresult;
 }
 
@@ -78,7 +78,7 @@ bool Path::is_convex()const{
             return false;
         }
     }
-
+    cairo_path_destroy(path);
     free(points);
     return true;
 }
@@ -92,12 +92,12 @@ void Path::close_path(){
 }
 
 void Path::append_to_context(Cairo::Context*to)const{
-    const Cairo::RefPtr<Cairo::Path>from=Cairo::make_refptr_for_instance<Cairo::Path>(mCTX->copy_path());
+    const Cairo::RefPtr<Cairo::Path>from = Cairo::make_refptr_for_instance<Cairo::Path>(mCTX->copy_path());
     to->append_path(*from);
 }
 
 void Path::append_to_context(const Cairo::RefPtr<Cairo::Context>&to)const{
-    Cairo::RefPtr<Cairo::Path>from=Cairo::make_refptr_for_instance<Cairo::Path>(mCTX->copy_path()); 
+    Cairo::RefPtr<Cairo::Path>from = Cairo::make_refptr_for_instance<Cairo::Path>(mCTX->copy_path());
     to->append_path(*from);
 }
 
