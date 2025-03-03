@@ -14,6 +14,12 @@ Path::Path(const Path&o):Path(){
     o.append_to_context(mCTX);
 }
 
+Path::cobject* Path::copy_path()const{
+    auto cresult = cairo_copy_path_flat(mCTX->cobj());
+    //check_object_status_and_throw_exception(*this);
+    return cresult;
+}
+
 void Path::reset(){
     mCTX->begin_new_path();
 }

@@ -10,10 +10,12 @@ class Path{
 private:
     Cairo::RefPtr<Cairo::Context>mCTX;     
 public:
+    typedef cairo_path_t cobject;
     Path();
     Path(const Path&);
     void append_to_context(Cairo::Context*)const;
     void append_to_context(const Cairo::RefPtr<Cairo::Context>&to)const;
+    cobject* copy_path()const;
     int fromSVGPathData(const std::string&pathData,std::function<void(int8_t,const std::vector<float>&)>);
     void move_to(double x, double y);
     void line_to(double x, double y);

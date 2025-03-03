@@ -6,6 +6,8 @@
 namespace cdroid {
 namespace hw{
 class PathMeasure{
+private:
+    Cairo::RefPtr<cdroid::Path>mPath;
 public:
     PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool);
     double getLength();

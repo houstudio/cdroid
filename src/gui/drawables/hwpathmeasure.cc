@@ -44,6 +44,7 @@ static double cubic_bezier_length(double x0, double y0, double x1, double y1, do
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 PathMeasure::PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool){
+    mPath=inPath;
 }
 
 // 计算路径的长度
@@ -51,7 +52,7 @@ double PathMeasure::getLength(){
     double length = 0.0;
     double prev_x = 0.0;
     double prev_y = 0.0;
-    cairo_path_t* cpath ;//= path->cobj();
+    cairo_path_t* cpath = mPath->copy_path();
     for (int i=0;i<cpath->num_data;i+=i += cpath->data[i].header.length) {
         cairo_path_data_t*e=&cpath->data[i];
         switch (e->header.type) {
@@ -88,6 +89,7 @@ double PathMeasure::getLength(){
                 break;
         }
     }
+    cairo_path_destroy(cpath);
     return length;
 }
 
