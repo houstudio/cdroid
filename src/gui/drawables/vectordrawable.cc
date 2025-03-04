@@ -355,7 +355,7 @@ public:
         }else if(strstr(name,"attr")!=0){
             std::string name=atts.getString("name");
             d->gradientUseage=name.find("stroke")!=std::string::npos?0:1;
-            LOGD("  attr=%s usage=%d",name.c_str(),d->gradientUseage);
+            LOGD("attr=%s",name.c_str());
         }else if(strcmp(name,"gradient")==0){
             d->gradientType=atts.getInt("type",std::unordered_map<std::string,int>{
                     {"linear",0},{"radial",1},{"sweep",2}},0);
@@ -370,7 +370,7 @@ public:
             const float offset =atts.getFloat("offset",0.f);
             const uint32_t color =atts.getColor("color",0);
             Color c(color);
-            LOGD("colorstop(%f,%x)",offset,color);
+            LOGD("  colorstop(%f,%x)",offset,color);
             d->gradient->add_color_stop_rgba(offset,c.red(),c.green(),c.blue(),c.alpha());
         }
     }

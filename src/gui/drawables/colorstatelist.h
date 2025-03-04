@@ -4,13 +4,9 @@
 #include <iostream>
 #include <core/context.h>
 #include <core/attributeset.h>
+#include <core/complexcolor.h>
 
 namespace cdroid{
-class ComplexColor{
-public:
-   virtual bool isStateful()const{ return false; }
-   virtual int getDefaultColor()const=0;
-};
 
 class ColorStateList:public ComplexColor{
 private:
