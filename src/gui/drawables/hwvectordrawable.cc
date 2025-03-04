@@ -127,7 +127,6 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     // Draw path's fill, if fill color or gradient is valid
     bool needsFill = false;
     bool needsStroke = false;
-    LOGD("%p %s",this,mName.c_str());
     if (properties.getFillGradient() != nullptr) {
         //paint.setColor(applyAlpha(SK_ColorBLACK, properties.getFillAlpha()));
         //paint.setShader(sk_sp<SkShader>(SkSafeRef(properties.getFillGradient())));
@@ -150,7 +149,8 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     renderPath->append_to_context(&outCanvas);
     outCanvas.set_color(properties.getFillColor());needsFill=true;needsStroke=true;
     if (needsFill) {
-        //outCanvas.set_source(properties.getFillGradient());
+        if(properties.getFillGradient())
+            outCanvas.set_source(properties.getFillGradient());
         //paint.setStyle(SkPaint::Style::kFill_Style);
         //setAntiAlias(mAntiAlias);
         if(needsStroke)
@@ -161,7 +161,8 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     // Draw path's stroke, if stroke color or Gradient is valid
     outCanvas.set_color(properties.getStrokeColor());
     if (needsStroke) {
-        //outCanvas.set_source(properties.getStrokeGradient());
+        if(properties.getStrokeGradient())
+            outCanvas.set_source(properties.getStrokeGradient());
         outCanvas.set_line_join((Cairo::Context::LineJoin)properties.getStrokeLineJoin());
         //paint.setStrokeJoin(SkPaint::Join(properties.getStrokeLineJoin()));
         outCanvas.set_line_cap((Cairo::Context::LineCap)properties.getStrokeLineCap());

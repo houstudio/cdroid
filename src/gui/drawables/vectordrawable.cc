@@ -355,22 +355,35 @@ public:
         }else if(strstr(name,"attr")!=0){
             std::string name=atts.getString("name");
             d->gradientUseage=name.find("stroke")!=std::string::npos?0:1;
-            LOGD("attr=%s",name.c_str());
         }else if(strcmp(name,"gradient")==0){
+            float startX,startY,endX,endY,centerX,centerY,radius;
             d->gradientType=atts.getInt("type",std::unordered_map<std::string,int>{
                     {"linear",0},{"radial",1},{"sweep",2}},0);
             switch( d->gradientType){
-            case 0:d->gradient=Cairo::LinearGradient::create(0.f,0.f,0.f,0.f);break;
-            case 1:d->gradient=Cairo::RadialGradient::create(0.f,0.f,1.f,0.f,0.f,0.f);break;
+            case 0:
+                startX=atts.getFloat("startX",0);
+                startY=atts.getFloat("startY",0);
+                endX =atts.getFloat("endX",0);
+                endY =atts.getFloat("endY",0);
+                d->gradient=Cairo::LinearGradient::create(startX,startY,endX,endY);break;
+            case 1:
+                centerX=atts.getFloat("centerX",0);
+                centerY=atts.getFloat("centerY",0);
+                radius=atts.getFloat("gradientRadius",0);
+                d->gradient=Cairo::RadialGradient::create(centerX,centerY,0,centerX,centerY,radius);break;
             case 2:break;
             }
-            //if(d->gradientUseage==0)d->path->mStrokeColors=d->gradient;
-            //else d->path->mFillColors=d->gradient;
+            if(d->gradientUseage==0){
+                //d->path->mStrokeGradient=d->gradient;
+                d->path->mNativePtr->mutateStagingProperties()->setStrokeGradient(d->gradient);
+            } else {
+                //d->path->mFillGradient=d->gradient;
+                d->path->mNativePtr->mutateStagingProperties()->setFillGradient(d->gradient);
+            }
         }else if(strcmp(name,"item")==0){
             const float offset =atts.getFloat("offset",0.f);
             const uint32_t color =atts.getColor("color",0);
             Color c(color);
-            LOGD("  colorstop(%f,%x)",offset,color);
             d->gradient->add_color_stop_rgba(offset,c.red(),c.green(),c.blue(),c.alpha());
         }
     }
@@ -1313,6 +1326,7 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(Context*,const Attribu
     //nUpdateFullPathStrokeGradient(mNativePtr,strokeGradient != nullptr ? strokeGradient.getNativeInstance() : 0);
     //mNativePtr->mutateStagingProperties()->setFillGradient(fillGradient);
     //mNativePtr->mutateStagingProperties()->setStrokeGradient(strokeGradient);
+    //LOGD("path %p gradient=%p,%p",this,mStrokeGradient.get(),mFillGradient.get());
 #endif
     fillAlpha = atts.getFloat("fillAlpha", fillAlpha);
     strokeLineCap = atts.getInt("strokeLineCap",std::unordered_map<std::string,int>{
