@@ -176,7 +176,7 @@ void Outline::setOval(int left, int top, int width, int height) {
     }
 
     mMode = MODE_CONVEX_PATH;
-    mPath->add_oval(left, top, width, height);//, Path.Direction.CW);
+    mPath->add_oval(left, top, width, height,true);//, Path.Direction.CW);
     mRect.setEmpty();
     mRadius = RADIUS_UNDEFINED;
 }

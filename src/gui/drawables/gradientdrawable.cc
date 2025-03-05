@@ -461,7 +461,7 @@ void GradientDrawable::setPadding(int left,int top,int right,int bottom) {
 }
 
 void GradientDrawable::setShape(/*@Shape*/ int shape) {
-    //mRingPath = nullptr;
+    mRingPath = nullptr;
     mPathIsDirty = true;
     mGradientState->setShape(shape);
     invalidateSelf();
@@ -592,10 +592,61 @@ void GradientDrawable::setImagePattern(Context*ctx,const std::string&res){
 void GradientDrawable::buildPathIfDirty() {
     if (mPathIsDirty) {
         ensureValidRect();
-        //mPath->reset();
-        //mPath->round_rectangle(mRect,mGradientState->mRadiusArray);
+        mPath->reset();
+        mPath->round_rectangle(mRect,mGradientState->mRadiusArray);
         mPathIsDirty = false;
     }
+}
+
+Cairo::RefPtr<cdroid::Path> GradientDrawable::buildRing(GradientState* st) {
+    if (mRingPath != nullptr && (!st->mUseLevelForShape || !mPathIsDirty)) return mRingPath;
+    mPathIsDirty = false;
+
+    const float sweep = st->mUseLevelForShape ? (360.0f * getLevel() / 10000.0f) : 360.f;
+
+    RectF bounds;
+    bounds.set(mRect.left,mRect.top,mRect.width,mRect.height);
+
+    const float x = bounds.width / 2.0f;
+    const float y = bounds.height / 2.0f;
+
+    const float thickness = st->mThickness != -1 ? st->mThickness : bounds.width / st->mThicknessRatio;
+    // inner radius
+    const float radius = st->mInnerRadius != -1 ? st->mInnerRadius : bounds.width / st->mInnerRadiusRatio;
+
+    RectF innerBounds;
+    innerBounds.set(bounds.left,bounds.top,bounds.width,bounds.height);
+    innerBounds.inset(x - radius, y - radius);
+
+    bounds.set(innerBounds.left,innerBounds.top,innerBounds.width,innerBounds.height);
+    bounds.inset(-thickness, -thickness);
+
+    if (mRingPath == nullptr) {
+        mRingPath = std::make_shared<cdroid::Path>();
+    } else {
+        mRingPath->reset();
+    }
+
+    // arcTo treats the sweep angle mod 360, so check for that, since we
+    // think 360 means draw the entire oval
+    if (sweep < 360 && sweep > -360) {
+        //mRingPath->setFillType(Path.FillType.EVEN_ODD);
+        // inner top
+        mRingPath->move_to(x + radius, y);
+        // outer top
+        mRingPath->line_to(x + radius + thickness, y);
+        // outer arc
+        mRingPath->arc_to(bounds, 0.0f, sweep, false);
+        // inner arc
+        mRingPath->arc_to(innerBounds, sweep, -sweep, false);
+        mRingPath->close_path();
+    } else {
+        // add the entire ovals
+        mRingPath->add_oval(bounds, true);//Path.Direction.CW);
+        mRingPath->add_oval(innerBounds, false);//Path.Direction.CCW);
+    }
+
+    return mRingPath;
 }
 
 void GradientDrawable::setColor(int argb) {
@@ -730,7 +781,7 @@ void GradientDrawable::setTintList(const ColorStateList*tint){
 
 void GradientDrawable::onBoundsChange(const Rect& r) {
     Drawable::onBoundsChange(r);
-    //mRingPath = null;
+    mRingPath = nullptr;
     mPathIsDirty = true;
     mGradientIsDirty = true;
 }
@@ -1152,7 +1203,7 @@ void GradientDrawable::inflateChildElements(XmlPullParser&parser,const Attribute
         } else if (name.compare("stroke")==0) {
             updateGradientDrawableStroke(event.attributes);
         } else if (name.compare("corners")==0) {
-            updateDrawableCorners(atts);
+            updateDrawableCorners(event.attributes);
         } else if (name.compare("padding")==0) {
             updateGradientDrawablePadding(event.attributes);
         } else {

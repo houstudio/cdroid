@@ -113,8 +113,8 @@ private:
     bool mPathIsDirty;
     bool mGradientIsDirty;
     bool mMutated;
-    //RefPtr<cdroid::Path>mPath;
-    //RefPtr<cdroid::Path>mRingPath;
+    Cairo::RefPtr<cdroid::Path>mPath;
+    Cairo::RefPtr<cdroid::Path>mRingPath;
     RectF mRect;
     Rect mPadding;
     std::shared_ptr<GradientState>mGradientState;
@@ -124,6 +124,7 @@ private:
     Cairo::RefPtr<Cairo::Pattern>mFillPaint;
     bool ensureValidRect();
     void buildPathIfDirty();
+    Cairo::RefPtr<cdroid::Path> buildRing(GradientState* st);
     bool isOpaqueForState()const;
     int modulateAlpha(int alpha);
     void setStrokeInternal(int width, int color, float dashWidth, float dashGap);

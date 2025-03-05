@@ -179,6 +179,34 @@ void Path::arc_to(double x1, double y1, double x2, double y2, double radius) {
     mCTX->arc(centerX, centerY, radius, angle1, angle2);
 }
 
+void Path::arc_to(const RectF&r, double startAngle, double sweepAngle, bool forceMoveTo){
+    arc_to(r.left,r.top,r.width,r.height,startAngle,sweepAngle,forceMoveTo);
+}
+
+void Path::arc_to(double left, double top, double width, double height,
+           double startAngle, double sweepAngle, bool forceMoveTo) {
+    double centerX = left + width / 2.0;
+    double centerY = top + height / 2.0;
+    double radiusX = width / 2.0;
+    double radiusY = height / 2.0;
+
+    double startRad = startAngle * (M_PI / 180.0);
+    double sweepRad = sweepAngle * (M_PI / 180.0);
+
+    double startX = centerX + radiusX * cos(startRad);
+    double startY = centerY + radiusY * sin(startRad);
+
+    if (forceMoveTo) {
+        mCTX->move_to(startX, startY);
+    }
+
+    if (sweepRad >= 0) {
+        mCTX->arc(centerX, centerY, radiusX, startRad, startRad + sweepRad);
+    } else {
+        mCTX->arc_negative(centerX, centerY, radiusX, startRad, startRad + sweepRad);
+    }
+}
+
 void Path::arc_to(double rx, double ry, double angle, bool largeArc, bool sweepFlag, double x, double y) {
     // Current point
     double x0, y0;
@@ -254,23 +282,25 @@ void Path::arc_to(double rx, double ry, double angle, bool largeArc, bool sweepF
     mCTX->restore();
 }
 
-void Path::add_oval(int left,int top,int width,int height){
+void Path::add_oval(const RectF&r,bool isClockWise){
+    add_oval(r.left,r.top,r.width,r.height,isClockWise);
+}
+
+void Path::add_oval(int left,int top,int width,int height,bool clockWise){
     double center_x = left + width / 2;
     double center_y = top + height / 2;
     double radius_x = width / 2;
     double radius_y = height / 2;
 
-    // 保存当前绘图状态
     mCTX->save();
 
-    // 平移到椭圆的中心位置
     mCTX->translate(center_x, center_y);
 
-    // 缩放坐标系，以绘制椭圆
     mCTX->scale(radius_x, radius_y);
-
-    // 绘制一个单位圆，由于前面进行了缩放，实际上绘制的是椭圆
-    mCTX->arc(0.0, 0.0, 1.0, 0.0, 2 * M_PI);
+    if(clockWise)
+        mCTX->arc(0.0, 0.0, 1.0, 0.0, 2 * M_PI);
+    else
+        mCTX->arc_negative(0,0,1.0, 0.0, 2 * M_PI);
     mCTX->restore();
 }
 

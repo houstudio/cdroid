@@ -28,8 +28,11 @@ public:
     void rel_quad_to(double dx1, double dy1, double dx2, double dy2);
     void arc(double xc, double yc, double radius, double angle1, double angle2);
     void arc_to(double x1, double y1, double x2, double y2, double radius);
+    void arc_to(const RectF&, double startAngle, double sweepAngle, bool forceMoveTo);
+    void arc_to(double left, double top, double width, double height, double startAngle, double sweepAngle, bool forceMoveTo);
     void arc_to(double rx, double ry, double angle, bool largeArc, bool sweepFlag, double x, double y);
-    void add_oval(int left,int top,int width,int height);
+    void add_oval(const RectF&,bool isClockWise);
+    void add_oval(int left,int top,int width,int height,bool isClockWise);
     void rectangle(double x, double y, double width, double height);
     void round_rectangle(double x,double y,double width,double height,const std::vector<float>& radii);
     void round_rectangle(const RectF&rect,const std::vector<float>& radii);

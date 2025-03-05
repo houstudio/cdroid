@@ -1111,7 +1111,7 @@ void LayerDrawable::updateLayerFromTypedArray(ChildDrawable*layer,const Attribut
     layer->mHeight = atts.getDimensionPixelSize("height", layer->mHeight);
     layer->mGravity= atts.getGravity("gravity", layer->mGravity);
     layer->mId = atts.getResourceId("id", layer->mId);
-    atts.dump();
+
     Drawable* dr = atts.getDrawable("drawable");
     if (dr != nullptr) {
         if (layer->mDrawable != nullptr) {
