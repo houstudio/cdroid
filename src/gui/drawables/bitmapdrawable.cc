@@ -461,20 +461,20 @@ void BitmapDrawable::getOutline(Outline& outline) {
 }
 
 void BitmapDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-   Drawable::inflate(parser,atts);
-   auto bmp=ImageDecoder::loadImage(nullptr,atts.getString("src"));
-   mBitmapState->mBitmap = bmp;
-   static std::unordered_map<std::string,int>kvs={
+    Drawable::inflate(parser,atts);
+    auto bmp = ImageDecoder::loadImage(atts.getContext(),atts.getString("src"));
+    mBitmapState->mBitmap = bmp;
+    static std::unordered_map<std::string,int>kvs={
           {"disabled",TileMode::DISABLED}, {"clamp",TileMode::CLAMP},
           {"repeat",TileMode::REPEAT},  {"mirror",TileMode::MIRROR}};
-   const int tileMode=atts.getInt("tileMode",kvs,-1);
-   mBitmapState->mTileModeX =atts.getInt("tileModeX",kvs,tileMode);
-   mBitmapState->mTileModeY =atts.getInt("tileModeY",kvs,tileMode);
-   mBitmapState->mGravity = atts.getGravity("gravity",Gravity::CENTER);
-   mBitmapState->mDither = atts.getBoolean("antialias",true);
-   mBitmapState->mFilterBitmap=atts.getBoolean("filter",false);
-   mBitmapState->mAntiAlias=atts.getBoolean("antialias",true);
-   computeBitmapSize();
+    const int tileMode=atts.getInt("tileMode",kvs,-1);
+    mBitmapState->mTileModeX =atts.getInt("tileModeX",kvs,tileMode);
+    mBitmapState->mTileModeY =atts.getInt("tileModeY",kvs,tileMode);
+    mBitmapState->mGravity = atts.getGravity("gravity",Gravity::CENTER);
+    mBitmapState->mDither = atts.getBoolean("antialias",true);
+    mBitmapState->mFilterBitmap=atts.getBoolean("filter",false);
+    mBitmapState->mAntiAlias=atts.getBoolean("antialias",true);
+    setBitmap(bmp);//computeBitmapSize();
 }
 
 }

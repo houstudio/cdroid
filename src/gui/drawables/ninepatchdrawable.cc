@@ -236,15 +236,54 @@ void NinePatchDrawable::draw(Canvas&canvas){
 
 void NinePatchDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
    Drawable::inflate(parser,atts);
-   auto bmp= ImageDecoder::loadImage(atts.getContext(),atts.getString("src"));
-   auto np = std::make_shared<NinePatch>(bmp);
-   mNinePatchState->mNinePatch=np;
-   mNinePatchState->mPadding= np->getPadding();
-   mNinePatchState->mDither = atts.getBoolean("dither");
-   mNinePatchState->mBaseAlpha=atts.getFloat("alpha", mNinePatchState->mBaseAlpha);
-   mNinePatchState->mTint =atts.getColorStateList("tint");
+   updateStateFromTypedArray(atts);
 }
 
+void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
+    auto state = mNinePatchState;
+
+    // Account for any configuration changes.
+    //state->mChangingConfigurations |= a.getChangingConfigurations();
+
+    // Extract the theme attributes, if any.
+    //state.mThemeAttrs = a.extractThemeAttrs();
+
+    state->mDither = a.getBoolean("dither", state->mDither);
+
+    const std::string srcResId = a.getString("src", 0);
+    if (!srcResId.empty()) {
+        Rect padding ,opticalInsets;
+        Cairo::RefPtr<Cairo::ImageSurface> bitmap;
+
+        bitmap = ImageDecoder::loadImage(a.getContext(),srcResId);
+        if (bitmap == nullptr) {
+            throw std::logic_error(//a.getPositionDescription() +
+                    ": <nine-patch> requires a valid src attribute");
+        }/* else if (bitmap.getNinePatchChunk() == null) {
+            throw std::logic_error(//a.getPositionDescription() +
+                    ": <nine-patch> requires a valid 9-patch source image");
+        }*/
+
+        //bitmap.getOpticalInsets(opticalInsets);
+
+        state->mNinePatch = std::make_shared<NinePatch>(bitmap);
+        state->mPadding = state->mNinePatch->getPadding();
+        state->mOpticalInsets = Insets::of(opticalInsets);
+    }
+
+    state->mAutoMirrored = a.getBoolean("autoMirrored", state->mAutoMirrored);
+    state->mBaseAlpha = a.getFloat("alpha", state->mBaseAlpha);
+
+    const int tintMode = a.getInt("tintMode", -1);
+    if (tintMode != -1) {
+        //state->mTintMode = Drawable::parseTintMode(tintMode, Mode.SRC_IN);
+    }
+
+    ColorStateList* tint = a.getColorStateList("tint");
+    if (tint != nullptr) {
+        state->mTint = tint;
+    }
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 NinePatchDrawable::NinePatchState::NinePatchState(){

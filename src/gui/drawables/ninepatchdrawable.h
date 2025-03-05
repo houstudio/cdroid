@@ -39,6 +39,7 @@ private:
     std::shared_ptr<NinePatchState>mNinePatchState;
     PorterDuffColorFilter*mTintFilter;
     NinePatchDrawable(std::shared_ptr<NinePatchState>state);
+    void updateStateFromTypedArray(const AttributeSet&a);
 protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
 public:
