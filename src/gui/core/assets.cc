@@ -12,6 +12,7 @@
 #include <limits.h>
 #include <unistd.h>
 #include <core/systemclock.h>
+#include <drawables/drawableinflater.h>
 #include <image-decoders/imagedecoder.h>
 
 using namespace Cairo;
@@ -478,15 +479,7 @@ Drawable* Assets::getDrawable(const std::string&resid) {
         d = ImageDecoder::createAsDrawable(this,resname);
     }
     if( (d == nullptr) && (ext.compare("xml")==0) ) {
-        void*zfile = pak ? pak->getZipHandle(resname) : nullptr;
-        if(zfile) {
-            ZipInputStream zs(zfile);
-            d = Drawable::fromStream(this,zs,resname,package);
-        } else if(!resname.empty()) {
-            std::ifstream fs(fullresid);
-            d = Drawable::fromStream(nullptr,fs,resname,package);
-        }
-        LOGD_IF((zfile==nullptr)&&(fullresid.find("/")!=std::string::npos),"drawable %s load failed",fullresid.c_str());
+        d = DrawableInflater::loadDrawable(this,fullresid);//fromStream(this,zs,resname,package);
     }
     if(d) {
         mDrawables.insert({fullresid,std::weak_ptr<Drawable::ConstantState>(d->getConstantState())});

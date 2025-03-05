@@ -70,6 +70,8 @@ int BitmapDrawable::BitmapState::getChangingConfigurations()const{
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
+BitmapDrawable::BitmapDrawable():BitmapDrawable(std::make_shared<BitmapState>(nullptr)){
+}
 
 BitmapDrawable::BitmapDrawable(RefPtr<ImageSurface>img){
     mBitmapState = std::make_shared<BitmapState>(img);
@@ -458,25 +460,21 @@ void BitmapDrawable::getOutline(Outline& outline) {
     outline.setAlpha(opaqueOverShape ? getAlpha() / 255.0f : 0.0f);
 }
 
-Drawable*BitmapDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    const std::string src=atts.getString("src");
-    const int gravity= atts.getGravity("gravity",Gravity::CENTER);
-    static std::unordered_map<std::string,int>kvs={
-	      {"disabled",TileMode::DISABLED}, {"clamp",TileMode::CLAMP},
-		  {"repeat",TileMode::REPEAT},  {"mirror",TileMode::MIRROR}};
-    const int tileMode = atts.getInt("tileMode",kvs,-1);
-    const int tileModeX= atts.getInt("tileModeX",kvs,tileMode);
-    const int tileModeY= atts.getInt("tileModeY",kvs,tileMode);
- 
-    BitmapDrawable*d = new BitmapDrawable(ctx,src);
-    LOGD("bitmap=%p",d);
-    d->setGravity(gravity);
-    d->setFilterBitmap(atts.getBoolean("filter",false));
-    d->setTileModeXY(tileModeX,tileModeY);
-    d->setAntiAlias(atts.getBoolean("antialias",true));
-    d->setDither(atts.getBoolean("dither",false));
-    d->setMipMap(atts.getBoolean("mipMap",true));
-    return d;
+void BitmapDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+   Drawable::inflate(parser,atts);
+   auto bmp=ImageDecoder::loadImage(nullptr,atts.getString("src"));
+   mBitmapState->mBitmap = bmp;
+   static std::unordered_map<std::string,int>kvs={
+          {"disabled",TileMode::DISABLED}, {"clamp",TileMode::CLAMP},
+          {"repeat",TileMode::REPEAT},  {"mirror",TileMode::MIRROR}};
+   const int tileMode=atts.getInt("tileMode",kvs,-1);
+   mBitmapState->mTileModeX =atts.getInt("tileModeX",kvs,tileMode);
+   mBitmapState->mTileModeY =atts.getInt("tileModeY",kvs,tileMode);
+   mBitmapState->mGravity = atts.getGravity("gravity",Gravity::CENTER);
+   mBitmapState->mDither = atts.getBoolean("antialias",true);
+   mBitmapState->mFilterBitmap=atts.getBoolean("filter",false);
+   mBitmapState->mAntiAlias=atts.getBoolean("antialias",true);
+   computeBitmapSize();
 }
 
 }

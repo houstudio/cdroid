@@ -27,6 +27,10 @@ AttributeSet::AttributeSet(Context*ctx,const std::string&package)
     :mContext(ctx),mPackage(package){
 }
 
+Context*AttributeSet::getContext()const{
+    return mContext;
+}
+
 void AttributeSet::setContext(Context*ctx,const std::string&package){
     mContext = ctx;
     mPackage = package;

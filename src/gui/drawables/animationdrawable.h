@@ -24,6 +24,7 @@ private:
     void setFrame(int frame,bool unschedule,bool animate);
     AnimationDrawable(std::shared_ptr<AnimationState>);
     AnimationDrawable(Context*,const AttributeSet&);
+    void inflateChildElements(XmlPullParser& parser,const AttributeSet& atts);
 protected:
     void setConstantState(std::shared_ptr<DrawableContainerState>state)override;
     void run();
@@ -46,7 +47,7 @@ public:
     void nextFrame(bool unschedule);
     AnimationDrawable*mutate()override;
     void clearMutated()override;
-    static Drawable*inflate(Context*ctx,const AttributeSet&);
+    void inflate(XmlPullParser& parser,const AttributeSet& atts)override;
 };
 
 }

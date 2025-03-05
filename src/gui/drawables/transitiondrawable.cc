@@ -145,8 +145,4 @@ void TransitionDrawable::draw(Canvas&canvas){
     if (!done) invalidateSelf();
 }
 
-Drawable*TransitionDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    return new TransitionDrawable(ctx,atts);
-}
-
 }

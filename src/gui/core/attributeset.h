@@ -8,15 +8,16 @@
 namespace cdroid{
 class Drawable;
 class ColorStateList;
-
+class Context;
 class AttributeSet{
 private:
     std::string mPackage;
-    class Context*mContext;
+    Context*mContext;
     std::unordered_map<std::string,std::string>mAttrs;
 public:
     AttributeSet();
     AttributeSet(Context*ctx,const std::string&package);
+    Context*getContext()const;
     void setContext(Context*,const std::string&package);
     bool add(const std::string&,const std::string&value);
     bool hasAttribute(const std::string&key)const;

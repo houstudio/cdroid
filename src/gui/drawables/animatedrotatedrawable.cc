@@ -184,17 +184,16 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     canvas.restore();
 }
 
-Drawable*AnimatedRotateDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    AnimatedRotateDrawable*ad = new AnimatedRotateDrawable();
-    ad->setPivotX(atts.getFraction("pivotX",1,1,0));
-    ad->setPivotY(atts.getFraction("pivotY",1,1,0));
-    ad->setPivotXRelative(true);
-    ad->setPivotYRelative(true);
-    ad->setFramesCount(atts.getInt("framesCount"));
-    ad->setFramesDuration(atts.getInt("frameDuration"));
-    Drawable*child = createWrappedDrawable(ctx,atts);
-    ad->setDrawable(child);
-    return ad;
+void AnimatedRotateDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    DrawableWrapper::inflate(parser,atts);
+    mState->mPivotX = atts.getFloat("pivotX",0.5f);
+    mState->mPivotY = atts.getFloat("pivotY",0.5f);
+    mState->mPivotXRel= (mState->mPivotX<=1.f);
+    mState->mPivotYRel= (mState->mPivotY<=1.f);
+    mState->mFramesCount  = atts.getInt("framesCount",mState->mFramesCount);
+    mState->mFrameDuration= atts.getInt("frameDuration",mState->mFrameDuration);
+    updateLocalState();
 }
+
 }
 

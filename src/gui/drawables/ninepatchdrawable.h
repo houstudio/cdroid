@@ -42,6 +42,7 @@ private:
 protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
 public:
+    NinePatchDrawable();
     NinePatchDrawable(Context*,const std::string&resid);
     NinePatchDrawable(Cairo::RefPtr<Cairo::ImageSurface>bmp);
     ~NinePatchDrawable();
@@ -64,7 +65,7 @@ public:
     bool hasFocusStateSpecified()const override;
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas&canvas)override;
-    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
+    void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
 };
 }
 #endif

@@ -133,9 +133,31 @@ bool StateListDrawable::onStateChange(const std::vector<int>&stateSet){
     return selectDrawable(idx)||changed;
 }
 
-Drawable*StateListDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    StateListDrawable*sd=new StateListDrawable(ctx,atts);
-    return sd;
+void StateListDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    Drawable::inflateWithAttributes(parser,atts);
+    inflateChildElements(parser,atts);
+}
+
+void StateListDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSet&atts){
+    int type,depth;
+    XmlPullParser::XmlEvent event;
+    const int innerDepth = parser.getDepth();
+    while( ((type=parser.next(event,depth))!=XmlPullParser::END_DOCUMENT)
+            &&(depth>=innerDepth)||(type==XmlPullParser::END_TAG)){
+        if(type!=XmlPullParser::START_TAG)continue;
+        if((depth>innerDepth)||event.name.compare("item"))continue;
+
+        std::vector<int>states;
+        Drawable*dr = event.attributes.getDrawable("drawable");
+        StateSet::parseState(states,event.attributes);
+        if(dr==nullptr){
+            while((type=parser.next(event,depth))==XmlPullParser::TEXT){}
+            if(type!=XmlPullParser::START_TAG)
+                throw std::logic_error("<item> tag requires a 'drawable' attribute or child tag defining a drawable");
+            dr = Drawable::createFromXmlInner(parser,event.attributes);
+        }
+        mStateListState->addStateSet(states,dr);
+    }
 }
 
 }

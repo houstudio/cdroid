@@ -143,19 +143,17 @@ void RotateDrawable::draw(Canvas& canvas) {
     LOGV("pos=%d,%d/%.f,%.f level=%d degress=%d",bounds.left,bounds.top,px,py,getLevel(),int(mState->mCurrentDegrees));
 }
 
-Drawable*RotateDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    Drawable*d = createWrappedDrawable(ctx,atts);
-    RotateDrawable*rd = new RotateDrawable(d);
-    const float px = atts.getFraction("pivotX",1,1,0.5f);
-    const float py = atts.getFraction("pivotY",1,1,0.5f);
-    rd->setPivotX(px);
-    rd->setPivotY(py);
-    rd->setPivotXRelative(px<=1.f);
-    rd->setPivotYRelative(py<=1.f);
-    rd->setFromDegrees(atts.getFloat("fromDegrees",0));
-    rd->setToDegrees(atts.getFloat("toDegrees",360.0));
-    rd->onLevelChange(0);
-    return rd;
+void RotateDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    DrawableWrapper::inflate(parser,atts);
+    mState->mPivotX = atts.getFraction("pivotX",1,1,0.5);
+    mState->mPivotXRel = (mState->mPivotX <=1.f);
+
+    mState->mPivotY = atts.getFraction("pivotY",1,1.0f, 0.5f);
+    mState->mPivotYRel = (mState->mPivotY <=1.0f);
+
+    mState->mFromDegrees = atts.getFloat("fromDegrees", mState->mFromDegrees);
+    mState->mToDegrees = atts.getFloat("toDegrees", mState->mToDegrees);
+    mState->mCurrentDegrees = mState->mFromDegrees;
 }
 
 }

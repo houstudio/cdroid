@@ -131,6 +131,14 @@ private:
     void updateLocalState();
     void prepareStrokeProps(Canvas&canvas);
     void getPatternAlpha(int& strokeAlpha,int& fillApha);
+    void updateStateFromTypedArray(const AttributeSet&atts);
+    void inflateChildElements(XmlPullParser&,const AttributeSet&);
+    void updateGradientDrawableSize(const AttributeSet&);
+    void updateGradientDrawableGradient(const AttributeSet&);
+    void updateGradientDrawableSolid(const AttributeSet&);
+    void updateGradientDrawableStroke(const AttributeSet&);
+    void updateDrawableCorners(const AttributeSet&);
+    void updateGradientDrawablePadding(const AttributeSet&);
 protected:
     void onBoundsChange(const Rect& r)override;
     bool onLevelChange(int level)override;
@@ -198,6 +206,7 @@ public:
     GradientDrawable*mutate()override;
     void clearMutated()override;
     void draw(Canvas&canvas)override;
+    void inflate(XmlPullParser&,const AttributeSet&)override;
     static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };
 

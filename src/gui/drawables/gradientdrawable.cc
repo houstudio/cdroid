@@ -1074,6 +1074,235 @@ void GradientDrawable::draw(Canvas&canvas) {
     canvas.restore();
 }
 
+void GradientDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    Drawable::inflate(parser, atts);
+    mGradientState->setDensity(Drawable::resolveDensity( 0));
+    updateStateFromTypedArray(atts);
+    inflateChildElements(parser,atts);
+    updateLocalState();
+}
+
+void GradientDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
+    auto state = mGradientState;
+
+    // Account for any configuration changes.
+    //state.mChangingConfigurations |= a.getChangingConfigurations();
+
+    // Extract the theme attributes, if any.
+    //state.mThemeAttrs = a.extractThemeAttrs();
+
+    state->mShape = atts.getInt("shape",std::unordered_map<std::string,int> {
+        {"rectangle",GradientDrawable::Shape::RECTANGLE},{"oval",GradientDrawable::Shape::OVAL},
+        {"line",GradientDrawable::Shape::LINE},          {"ring",GradientDrawable::Shape::RING}
+    }, state->mShape);
+    state->mDither = atts.getBoolean("dither", state->mDither);
+
+    if (state->mShape == RING) {
+        state->mInnerRadius = atts.getDimensionPixelSize("innerRadius", state->mInnerRadius);
+
+        if (state->mInnerRadius == -1) {
+            state->mInnerRadiusRatio = atts.getFloat("innerRadiusRatio", state->mInnerRadiusRatio);
+        }
+
+        state->mThickness = atts.getDimensionPixelSize("thickness", state->mThickness);
+
+        if (state->mThickness == -1) {
+            state->mThicknessRatio = atts.getFloat("thicknessRatio", state->mThicknessRatio);
+        }
+
+        state->mUseLevelForShape = atts.getBoolean("useLevel", state->mUseLevelForShape);
+    }
+
+    const int tintMode = atts.getInt("tintMode", -1);
+    if (tintMode != -1) {
+        //state->mBlendMode = Drawable::parseBlendMode(tintMode, BlendMode.SRC_IN);
+    }
+
+    ColorStateList* tint = atts.getColorStateList("tint");
+    if (tint != nullptr) {
+        state->mTint = tint;
+    }
+
+    const int insetLeft = atts.getDimensionPixelSize("opticalInsetLeft", state->mOpticalInsets.left);
+    const int insetTop = atts.getDimensionPixelSize("opticalInsetTop", state->mOpticalInsets.top);
+    const int insetRight = atts.getDimensionPixelSize("opticalInsetRight", state->mOpticalInsets.right);
+    const int insetBottom = atts.getDimensionPixelSize("opticalInsetBottom", state->mOpticalInsets.bottom);
+    state->mOpticalInsets = Insets::of(insetLeft, insetTop, insetRight, insetBottom);
+}
+
+void GradientDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSet&atts){
+    int type,depth;
+    XmlPullParser::XmlEvent event;
+    const int innerDepth = parser.getDepth();
+
+    while (((type=parser.next(event,depth)) != XmlPullParser::END_DOCUMENT)
+           && (depth >= innerDepth || type != XmlPullParser::END_TAG)) {
+        if (type != XmlPullParser::START_TAG) continue;
+
+        if (depth > innerDepth) continue;
+
+        const std::string name = event.name;//parser.getName();
+
+        if (name.compare("size")==0) {
+            updateGradientDrawableSize(event.attributes);
+        } else if (name.compare("gradient")==0) {
+            updateGradientDrawableGradient(event.attributes);
+        } else if (name.compare("solid")==0) {
+            updateGradientDrawableSolid(event.attributes);
+        } else if (name.compare("stroke")==0) {
+            updateGradientDrawableStroke(event.attributes);
+        } else if (name.compare("corners")==0) {
+            updateDrawableCorners(atts);
+        } else if (name.compare("padding")==0) {
+            updateGradientDrawablePadding(event.attributes);
+        } else {
+            LOGW("drawable", "Bad element under <shape>: " + name);
+        }
+    }
+}
+    
+void GradientDrawable::updateGradientDrawableSize(const AttributeSet&atts){
+    auto st = mGradientState;
+    st->mWidth = atts.getDimensionPixelSize("width",st->mWidth);
+    st->mHeight = atts.getDimensionPixelSize("height",st->mHeight);
+}
+
+void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
+    auto st = mGradientState;
+    st->mCenterX = atts.getFraction("centerX",100,0, st->mCenterX);
+    st->mCenterY = atts.getFraction("centerY",100,0, st->mCenterY);
+    st->mUseLevel = atts.getBoolean("useLevel", st->mUseLevel);
+    st->mGradient = atts.getInt("type",std::unordered_map<std::string,int> {
+        {"linear",GradientDrawable::LINEAR_GRADIENT},
+        {"radial",GradientDrawable::RADIAL_GRADIENT},
+        {"sweep",GradientDrawable::SWEEP_GRADIENT},
+        {"pattern",GradientDrawable::BITMAP_PATTERN}}, st->mGradient);
+
+    // TODO: Update these to be themeable.
+    const int startColor = atts.getColor("startColor", 0);
+    const bool hasCenterColor = atts.hasAttribute("centerColor");
+    const int centerColor = atts.getColor("centerColor", 0);
+    const int endColor = atts.getColor("endColor", 0);
+
+    if (hasCenterColor) {
+        st->mGradientColors.resize(3);
+        st->mGradientColors[0] = startColor;
+        st->mGradientColors[1] = centerColor;
+        st->mGradientColors[2] = endColor;
+
+        st->mPositions.resize(3);
+        st->mPositions[0] = 0.0f;
+        // Since 0.5f is default value, try to take the one that isn't 0.5f
+        st->mPositions[1] = st->mCenterX != 0.5f ? st->mCenterX : st->mCenterY;
+        st->mPositions[2] = 1.f;
+    } else {
+        st->mPositions.resize(2);
+        st->mGradientColors.resize(2);
+        st->mGradientColors[0] = startColor;
+        st->mGradientColors[1] = endColor;
+        st->mPositions[0] = 0;
+        st->mPositions[1] =-1.f;
+    }
+
+    if (st->mGradient == LINEAR_GRADIENT) {
+        const int angle = ((int) atts.getFloat("angle", st->mAngle))%360;
+
+        if (angle % 45 != 0) {
+            throw std::logic_error(//a.getPositionDescription()
+                    "<gradient> tag requires 'angle' attribute to be a multiple of 45");
+        }
+
+        st->mAngle = angle;
+
+        switch (angle) {
+        case 0:  st->mOrientation = Orientation::LEFT_RIGHT;  break;
+        case 45: st->mOrientation = Orientation::BL_TR;       break;
+        case 90: st->mOrientation = Orientation::BOTTOM_TOP;  break;
+        case 135:st->mOrientation = Orientation::BR_TL;       break;
+        case 180:st->mOrientation = Orientation::RIGHT_LEFT;  break;
+        case 225:st->mOrientation = Orientation::TR_BL;       break;
+        case 270:st->mOrientation = Orientation::TOP_BOTTOM;  break;
+        case 315:st->mOrientation = Orientation::TL_BR;       break;
+        }
+    } else {
+        std::string tv = atts.getString("gradientRadius");
+        if (!tv.empty()) {
+            float radius;
+            int radiusType;
+            if (tv.find("%")!=std::string::npos){//=tv.type == TypedValue.TYPE_FRACTION) {
+                radius = atts.getFraction("gradientRadius",100,0,1.0f);
+
+                //int unit = (tv.data >> TypedValue.COMPLEX_UNIT_SHIFT) & TypedValue.COMPLEX_UNIT_MASK;
+                /*if (unit == TypedValue.COMPLEX_UNIT_FRACTION_PARENT) {
+                    radiusType = RADIUS_TYPE_FRACTION_PARENT;
+                } else */{
+                    radiusType = RADIUS_TYPE_FRACTION;
+                }
+            } else if (tv.find("p")!=std::string::npos){/*dp px sp*///type == TypedValue.TYPE_DIMENSION) {
+                radius = atts.getDimension("gradientRadius",0);
+                radiusType = RADIUS_TYPE_PIXELS;
+            } else {
+                radius = atts.getFloat("gradientRadius");
+                radiusType = RADIUS_TYPE_PIXELS;
+            }
+
+            st->mGradientRadius = radius;
+            st->mGradientRadiusType = radiusType;
+        } else if (st->mGradient == RADIAL_GRADIENT) {
+            throw std::logic_error(//a.getPositionDescription()
+                    "<gradient> tag requires 'gradientRadius'attribute with radial type");
+        }
+    }
+}
+
+void GradientDrawable::updateGradientDrawableSolid(const AttributeSet&atts){
+    ColorStateList*colorStateList = atts.getColorStateList("color");
+    if(colorStateList)  setColor(colorStateList);
+}
+
+void GradientDrawable::updateGradientDrawableStroke(const AttributeSet&atts){
+    auto st = mGradientState;
+    const int defaultStrokeWidth = std::max(0,st->mStrokeWidth);
+    const int width = atts.getDimensionPixelSize("width",defaultStrokeWidth);
+    const float dashWidth = atts.getDimension("dashWidth",st->mStrokeDashWidth);
+    const ColorStateList*colorStateList = atts.getColorStateList("color");
+    if (colorStateList==nullptr)colorStateList=st->mStrokeColors;
+    if(dashWidth!=0.0f){
+        float dashGap = atts.getDimension("dashGap",st->mStrokeDashGap);
+        setStroke(width,colorStateList,dashWidth,dashGap);
+    }else{
+        setStroke(width,colorStateList);
+    }
+}
+
+void GradientDrawable::updateDrawableCorners(const AttributeSet&atts){
+    auto st = mGradientState;
+    const int radius = atts.getDimensionPixelSize("radius", (int) st->mRadius);
+    setCornerRadius(radius);
+
+    // TODO: Update these to be themeable.
+    const float topLeftRadius = atts.getDimensionPixelSize("topLeftRadius", radius);
+    const float topRightRadius = atts.getDimensionPixelSize("topRightRadius", radius);
+    const float bottomLeftRadius = atts.getDimensionPixelSize("bottomLeftRadius", radius);
+    const float bottomRightRadius = atts.getDimensionPixelSize("bottomRightRadius", radius);
+
+    if ( (topLeftRadius != radius) || (topRightRadius != radius) ||
+            (bottomLeftRadius != radius) || (bottomRightRadius != radius)) {
+        // The corner radii are specified in clockwise order (see Path.addRoundRect())
+        setCornerRadii(std::vector<float>{ topLeftRadius, topLeftRadius, topRightRadius, topRightRadius,
+                bottomRightRadius, bottomRightRadius, bottomLeftRadius, bottomLeftRadius });
+    }
+}
+
+void GradientDrawable::updateGradientDrawablePadding(const AttributeSet&atts){
+    Rect pad = mGradientState->mPadding;
+    pad.set(atts.getDimensionPixelOffset("left", pad.left),
+            atts.getDimensionPixelOffset("top", pad.top),
+            atts.getDimensionPixelOffset("right", pad.width),
+            atts.getDimensionPixelOffset("bottom", pad.height));
+    mPadding = pad;
+}
+
 Drawable*GradientDrawable::inflate(Context*ctx,const AttributeSet&atts) {
     GradientDrawable*d = new GradientDrawable();
     const int shapeType = atts.getInt("shape",std::unordered_map<std::string,int> {

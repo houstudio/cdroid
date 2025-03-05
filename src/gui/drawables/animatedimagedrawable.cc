@@ -296,24 +296,38 @@ void AnimatedImageDrawable::onBoundsChange(const Rect& bounds) {
     }*/
 }
 
-Drawable*AnimatedImageDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    const std::string res = atts.getString("drawable");
-    AnimatedImageDrawable*d = nullptr;
-    if(ctx){
-        d = dynamic_cast<AnimatedImageDrawable*>(ctx->getDrawable(res));
-        LOGD_IF(d,"%s %p",res.c_str(),d);
+void AnimatedImageDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    Drawable::inflate(parser,atts);
+    std::string srcResid =atts.getString("src");
+    if(!srcResid.empty()){
+        Drawable* drawable = nullptr;
+        // This may have previously been set without a src if we were waiting for a  theme.
+        /*const int repeatCount = mState->mRepeatCount;
+        // Transfer the state of other to this one. other will be discarded.
+        AnimatedImageDrawable* other = (AnimatedImageDrawable*) drawable;
+        mState = other.mState;
+        other.mState = null;
+        mIntrinsicWidth =  other.mIntrinsicWidth;
+        mIntrinsicHeight = other.mIntrinsicHeight;
+        if (repeatCount != REPEAT_UNDEFINED) {
+            this.setRepeatCount(repeatCount);
+        }*/
+        auto frmSequence = FrameSequence::create(atts.getContext(),srcResid);
+        if(frmSequence==nullptr)return;
+        mAnimatedImageState->mFrameSequence = frmSequence;
+        mRepeatCount = frmSequence->getDefaultLoopCount();
+        if(mRepeatCount<=0)
+            mRepeatCount = REPEAT_UNDEFINED;
+        this->mFrameSequenceState = frmSequence->createState();
     }
-    if(d==nullptr){
-        d = new AnimatedImageDrawable(ctx,res);
-        const bool autoStart = atts.getBoolean("autoStart");
-        const int repeatCount= atts.getInt("repeatCount",REPEAT_UNDEFINED);
-        if(autoStart)d->start();
-        if(repeatCount!=REPEAT_UNDEFINED){
-            d->mAnimatedImageState->mRepeatCount = repeatCount;
-            d->setRepeatCount(repeatCount);
-        }
+    mAnimatedImageState->mAutoMirrored = atts.getBoolean("autoMirrored",0);
+    const int repeatCount= atts.getInt("repeatCount",REPEAT_UNDEFINED);
+    const bool autoStart = atts.getBoolean("autoStart",false);
+    if(repeatCount!=REPEAT_UNDEFINED)
+        setRepeatCount(repeatCount);
+    if(autoStart && mFrameSequenceState){
+        start();
     }
-    return d;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

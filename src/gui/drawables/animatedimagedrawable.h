@@ -72,7 +72,7 @@ public:
     void registerAnimationCallback(Animatable2::AnimationCallback callback);
     bool unregisterAnimationCallback(Animatable2::AnimationCallback callback);
     void clearAnimationCallbacks();
-    static Drawable*inflate(Context*,const AttributeSet&);
+    void inflate(XmlPullParser&,const AttributeSet&atts)override;
 };
 
 }//end namespace

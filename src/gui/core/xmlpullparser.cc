@@ -7,17 +7,21 @@ namespace cdroid{
 struct EventData{
     XmlPullParser::XmlEvent event;
     int depth;
+    int type;
     int lineNumber;
     EventData(){
-        depth=0;
-        lineNumber=0;
+        depth = 0;
+        lineNumber = 0;
     }
 };
 struct Private{
     XML_Parser parser;
     int depth;
+    Context*context;
+    std::string package;
     std::unique_ptr<std::istream>stream;
     std::queue<std::unique_ptr<EventData>> eventQueue;
+    std::string mTagName;
     bool endDocument;
 };
 class XmlPullParser::AttrParser{
@@ -26,9 +30,10 @@ public:
         auto ed=std::make_unique<EventData>();
         XmlEvent& event=ed->event;
         Private*data=(Private*)userData;
-        event.type = START_TAG;
         event.name = name;
+        event.attributes.setContext(data->context,data->package);
         event.attributes.set(attrs);
+        ed->type = START_TAG;
         ed->depth=data->depth;
         data->depth++;
         data->eventQueue.push(std::move(ed));
@@ -37,8 +42,8 @@ public:
         auto ed=std::make_unique<EventData>();
         XmlEvent& event=ed->event;;
         Private*data=(Private*)userData;
-        event.type = END_TAG;
         event.name = name;
+        ed->type = END_TAG;
         ed->depth= --data->depth;
         data->eventQueue.push(std::move(ed));
     }
@@ -46,8 +51,8 @@ public:
         auto ed=std::make_unique<EventData>();
         XmlEvent& event=ed->event;
         Private*data=(Private*)userData;
-        event.type = TEXT;
         event.text.assign(s, len);
+        ed->type = TEXT;
         ed->depth= data->depth;
         data->eventQueue.push(std::move(ed));
     }
@@ -55,6 +60,8 @@ public:
 
 XmlPullParser::XmlPullParser(){
     mData = new Private;
+    mData->depth =0;
+    mData->context = nullptr;
     mData->endDocument = false;
     mData->parser = XML_ParserCreateNS(NULL,' ');
     XML_SetUserData(mData->parser, mData);
@@ -67,8 +74,17 @@ XmlPullParser::XmlPullParser(Context*ctx,const std::string&resid):XmlPullParser(
 }
 
 void XmlPullParser::setContent(Context*ctx,const std::string&resid){
-    mData->stream = ctx? ctx->getInputStream(resid)
-        :std::make_unique<std::ifstream>(resid);
+    if(ctx){
+        mData->stream = ctx->getInputStream(resid,&mData->package);
+    }
+    mData->context = ctx;
+    if((mData->stream==nullptr)||(!*mData->stream)){
+        mData->stream = std::make_unique<std::ifstream>(resid);
+    }
+}
+
+XmlPullParser::operator bool()const{
+   return (mData->stream!=nullptr)&&(*mData->stream);
 }
 
 XmlPullParser::~XmlPullParser() {
@@ -80,13 +96,17 @@ int XmlPullParser::getDepth()const{
     return mData->eventQueue.empty()?0:mData->eventQueue.front()->depth;
 }
 
+std::string XmlPullParser::getName()const{
+    return mData->mTagName;
+}
+
 bool XmlPullParser::readChunk(){
     char buff[128];
     std::streamsize len;
     mData->stream->read(buff,sizeof(buff));
     len = mData->stream->gcount();
     if(len>0){
-        const bool isEnd=mData->stream->eof();
+        const bool isEnd = mData->stream->eof();
         if(XML_Parse(mData->parser,buff,len,isEnd)==XML_STATUS_ERROR){
             throw std::runtime_error("XML parsing error: " + std::string(XML_ErrorString(XML_GetErrorCode(mData->parser))));
         }
@@ -95,22 +115,31 @@ bool XmlPullParser::readChunk(){
     return false;
 }
 
-bool XmlPullParser::next(XmlEvent& event) {
+int XmlPullParser::next(XmlEvent& event){
+    int depth;
+    return next(event,depth);
+}
+
+int XmlPullParser::next(XmlEvent& event,int &depth) {
     while(mData->eventQueue.empty() && !mData->endDocument){
         if(!readChunk()){
             mData->endDocument = true;
-            auto ed=std::make_unique<EventData>();
-            XmlEvent& endEvent=ed->event;
-            endEvent.type=END_DOCUMENT;
+            auto ed = std::make_unique<EventData>();
+            XmlEvent& endEvent = ed->event;
+            endEvent.type = END_DOCUMENT;
             mData->eventQueue.push(std::move(ed));
         }
     }
     if(!mData->eventQueue.empty()){
-        event = mData->eventQueue.front()->event;
+        auto front =mData->eventQueue.front().get();
+        event = front->event;
+        const int type= front->type;
+        mData->mTagName = event.name;
+        depth= front->depth;
         mData->eventQueue.pop();
-        return true;
+        return type;
     }
-    return false;
+    return END_DOCUMENT;
 }
 
 }/*endof namespace*/

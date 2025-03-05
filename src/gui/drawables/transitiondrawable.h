@@ -34,7 +34,6 @@ public:
     bool isCrossFadeEnabled()const;
     void setCrossFadeEnabled(bool enabled);
     void draw(Canvas&canvas)override;
-    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };
 
 }

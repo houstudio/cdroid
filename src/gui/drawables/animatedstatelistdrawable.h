@@ -8,6 +8,9 @@
 namespace cdroid{
 
 class AnimatedStateListDrawable:public StateListDrawable{
+private:
+    static constexpr const char* ELEMENT_TRANSITION = "transition";
+    static constexpr const char* ELEMENT_ITEM = "item";
 protected:
     class AnimatedStateListState:public StateListState{
     private:
@@ -113,6 +116,10 @@ private:
 private:
     bool selectTransition(int toIndex);
     AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListState> state);
+    void init();
+    void inflateChildElement(XmlPullParser&,const AttributeSet&);
+    int parseItem(XmlPullParser&,const AttributeSet&);
+    int parseTransition(XmlPullParser&,const AttributeSet&);
 protected:
     AnimatedStateListDrawable(Context*,const AttributeSet&);
     bool onStateChange(const std::vector<int>&stateSet)override;
@@ -128,7 +135,7 @@ public:
     void jumpToCurrentState()override;
     AnimatedStateListDrawable* mutate()override;
     void clearMutated()override;
-    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
+    void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
 };
 
 }//endof namespace

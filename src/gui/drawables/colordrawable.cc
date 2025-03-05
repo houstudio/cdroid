@@ -44,6 +44,11 @@ ColorDrawable::~ColorDrawable(){
     delete mTintFilter;
 }
 
+void ColorDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    mColorState->mBaseColor = atts.getColor("color", mColorState->mBaseColor);
+    mColorState->mUseColor = mColorState->mBaseColor;
+}
+
 std::shared_ptr<Drawable::ConstantState>ColorDrawable::getConstantState(){
     return std::dynamic_pointer_cast<ConstantState>(mColorState);
 }
@@ -159,11 +164,6 @@ void ColorDrawable::draw(Canvas&canvas){
     if(mTintFilter)
         mTintFilter->apply(canvas,mBounds);
     canvas.restore();
-}
-
-Drawable*ColorDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    int color=atts.getColor("color");
-    return new ColorDrawable(color);
 }
 
 }

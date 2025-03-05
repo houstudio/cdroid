@@ -36,12 +36,12 @@ public:
     void setTintMode(int tintMode)override;
     bool isStateful()const override;
     int getChangingConfigurations()const override;
+    void inflate(XmlPullParser&,const AttributeSet&)override;
     ColorDrawable*mutate()override;
     void clearMutated()override;
     bool hasFocusStateSpecified()const override;
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas&canvas)override;
-    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };
 }
 #endif

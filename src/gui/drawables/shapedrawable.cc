@@ -215,7 +215,29 @@ void ShapeDrawable::draw(Canvas&canvas){
     }
 }
 
-Drawable*ShapeDrawable::inflate(Context*ctx,const AttributeSet&atts){
+void ShapeDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    Drawable::inflate(parser,atts);
+    updateStateFromTypedArray(atts);
+
+    int type,depth;
+    XmlPullParser::XmlEvent event;
+    const int outerDepth = parser.getDepth();
+    while (((type = parser.next(event,depth)) != XmlPullParser::END_DOCUMENT)
+            && (type != XmlPullParser::END_TAG || parser.getDepth() > outerDepth)) {
+        if (type != XmlPullParser::START_TAG) {
+            continue;
+        }
+
+        const std::string name = parser.getName();
+        // call our subclass
+        if (!inflateTag(name,parser,event.attributes)) {
+            LOGW("Unknown element: %s for ShapeDrawable %p",name.c_str(),this);
+        }
+    }
+
+    // Update local properties.
+    updateLocalState();
+#if 0
     const std::string type = atts.getString("shape");//rectangle,line,oval,ring
     Shape*shape = nullptr;
     if(type.compare("rectangle")==0)  shape = new RoundRectShape();
@@ -233,7 +255,47 @@ Drawable*ShapeDrawable::inflate(Context*ctx,const AttributeSet&atts){
     }
     ShapeDrawable*d = new ShapeDrawable();
     d->setShape(shape);
-    return d;
+#endif
+}
+
+void ShapeDrawable::updateStateFromTypedArray(const AttributeSet&a) {
+    auto state = mShapeState;
+
+    // Account for any configuration changes.
+    //state.mChangingConfigurations |= a.getChangingConfigurations();
+
+    // Extract the theme attributes, if any.
+    //state.mThemeAttrs = a.extractThemeAttrs();
+
+    //int color = paint.getColor();
+    //color = a.getColor("color", color);
+
+    //boolean dither = paint.isDither();
+    state->mDither = a.getBoolean("dither", state->mDither);
+
+    state->mIntrinsicWidth = (int) a.getDimension("width", state->mIntrinsicWidth);
+    state->mIntrinsicHeight = (int) a.getDimension("height", state->mIntrinsicHeight);
+
+    const int tintMode = a.getInt("tintMode", -1);
+    if (tintMode != -1) {
+        //state->mBlendMode = Drawable::parseBlendMode(tintMode, BlendMode::SRC_IN);
+    }
+
+    ColorStateList* tint = a.getColorStateList("tint");
+    if (tint != nullptr) {
+        state->mTint = tint;
+    }
+}
+
+int ShapeDrawable::inflateTag(const std::string&name,XmlPullParser&parser,const AttributeSet&a){
+    if (name.compare("padding")==0) {
+        setPadding(a.getDimensionPixelOffset("left", 0),
+                a.getDimensionPixelOffset("top", 0),
+                a.getDimensionPixelOffset("right", 0),
+                a.getDimensionPixelOffset("bottom", 0));
+        return true;
+    }
+    return false;
 }
 
 }

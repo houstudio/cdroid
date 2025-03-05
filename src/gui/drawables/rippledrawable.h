@@ -103,7 +103,7 @@ public:
     void invalidateSelf(bool invalidateMask);
     void pruneRipples();
     Rect getDirtyBounds();
-    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
+    void inflate(XmlPullParser&,const AttributeSet&atts)override;
 };
 
 }

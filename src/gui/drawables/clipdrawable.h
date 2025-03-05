@@ -28,7 +28,7 @@ public:
     int getGravity()const;
     int getOrientation()const;
     void draw(Canvas& canvas)override;
-    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
+    void inflate(XmlPullParser&,const AttributeSet&)override;
 };
 
 }

@@ -29,7 +29,10 @@ public:
     ~XmlPullParser();
     void setContent(Context*ctx,const std::string&resid);
     int getDepth()const;
-    bool next(XmlEvent& event);
+    std::string getName()const;
+    int next(XmlEvent& event,int&depth);
+    int next(XmlEvent& event);
+    operator bool()const;
 };
 }
 #endif /*__XML_PULLPARSER_H__*/

@@ -88,9 +88,48 @@ void LevelListDrawable::addLevel(int low,int high,Drawable* drawable) {
         onLevelChange(getLevel());
     }
 }
+void LevelListDrawable::inflate(XmlPullParser& parser,const AttributeSet& atts){
+    DrawableContainer::inflate(parser,atts);
+    inflateChildElements(parser,atts);
+}
 
-Drawable*LevelListDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    return new LevelListDrawable();
+void LevelListDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& atts){
+    int type,depth,low = 0;
+    const int innerDepth = parser.getDepth();
+    XmlPullParser::XmlEvent event;
+    while (((type = parser.next(event,depth)) != XmlPullParser::END_DOCUMENT)
+            && (depth >= innerDepth || type != XmlPullParser::END_TAG)) {
+        if (type != XmlPullParser::START_TAG) {
+            continue;
+        }
+
+        if ((depth > innerDepth) || event.name.compare("item")) {
+            continue;
+        }
+        AttributeSet& a = event.attributes;
+        low = a.getInt("minLevel", 0);
+        int high = a.getInt("maxLevel", 0);
+        Drawable*dr = a.getDrawable("drawable");
+
+        if (high < 0) {
+            throw std::logic_error(//parser.getPositionDescription()
+                ": <item> tag requires a 'maxLevel' attribute");
+        }
+
+        if (dr==nullptr) {
+            while ((type = parser.next(event,depth)) == XmlPullParser::TEXT) {}
+            if (type != XmlPullParser::START_TAG) {
+                throw std::logic_error(
+                                ": <item> tag requires a 'drawable' attribute or "
+                                "child tag defining a drawable");
+                //parser.getPositionDescription()
+            }
+            dr = Drawable::createFromXmlInner(parser,a);
+        }
+        mLevelListState->addLevel(low, high, dr);
+    }
+
+    onLevelChange(getLevel());
 }
 
 }

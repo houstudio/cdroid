@@ -26,6 +26,8 @@ private:
     Drawable*mDrawable;
     std::shared_ptr<DrawableWrapperState>mState;
     void updateLocalState();
+    void updateStateFromTypedArray(const AttributeSet&atts);
+    void inflateChildDrawable(XmlPullParser& parser,const AttributeSet& attrs);
 protected:
     virtual std::shared_ptr<DrawableWrapperState> mutateConstantState();
     DrawableWrapper(std::shared_ptr<DrawableWrapperState>state);
@@ -60,6 +62,7 @@ public:
     void setTintMode(int)override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
+    void inflate(XmlPullParser&,const AttributeSet&atts)override;
 };
 
 }

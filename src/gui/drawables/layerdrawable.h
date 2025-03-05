@@ -77,7 +77,9 @@ private:
     void computeNestedPadding(Rect& padding);
     void computeStackedPadding(Rect& padding);
     ChildDrawable* createLayer(Drawable* dr);
-    Drawable*getFirstNonNullDrawable()const;
+    Drawable* getFirstNonNullDrawable()const;
+    void inflateLayers(XmlPullParser& parser,const AttributeSet& atts);
+    void updateLayerFromTypedArray(ChildDrawable*layer,const AttributeSet&atts);
 protected:
     virtual std::shared_ptr<LayerState> createConstantState(LayerState* state,const AttributeSet*);
     void onBoundsChange(const Rect& bounds)override;
@@ -165,7 +167,7 @@ public:
     void scheduleDrawable(Drawable& who,Runnable& what, int64_t when);
     void unscheduleDrawable(Drawable& who,Runnable& what);
     void draw(Canvas&canvas)override;
-    static Drawable*inflate(Context*,const AttributeSet&atts);
+    void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
 };
 }
 #endif

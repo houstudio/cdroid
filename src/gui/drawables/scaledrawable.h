@@ -23,12 +23,13 @@ protected:
     bool onLevelChange(int level)override;
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;
 public:
+    ScaleDrawable();
     ScaleDrawable(Drawable* drawable, int gravity,float scaleWidth,float scaleHeight);
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas& canvas);
     int getOpacity()override;
     int getGravity()const;
-    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
+    void inflate(XmlPullParser&,const AttributeSet&atts)override;
 };
 
 }

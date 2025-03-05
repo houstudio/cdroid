@@ -7,6 +7,9 @@ using namespace Cairo;
 namespace cdroid{
 //https://github.com/soramimi/QtNinePatch/blob/master/NinePatch.cpp
 
+NinePatchDrawable::NinePatchDrawable():NinePatchDrawable(std::make_shared<NinePatchState>(nullptr)){
+}
+
 NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
     mNinePatchState = state;
     mAlpha = 255;
@@ -231,9 +234,15 @@ void NinePatchDrawable::draw(Canvas&canvas){
     }
 }
 
-Drawable*NinePatchDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    RefPtr<ImageSurface>bmp = ImageDecoder::loadImage(ctx,atts.getString("src"));
-    return new NinePatchDrawable(bmp);
+void NinePatchDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+   Drawable::inflate(parser,atts);
+   auto bmp= ImageDecoder::loadImage(atts.getContext(),atts.getString("src"));
+   auto np = std::make_shared<NinePatch>(bmp);
+   mNinePatchState->mNinePatch=np;
+   mNinePatchState->mPadding= np->getPadding();
+   mNinePatchState->mDither = atts.getBoolean("dither");
+   mNinePatchState->mBaseAlpha=atts.getFloat("alpha", mNinePatchState->mBaseAlpha);
+   mNinePatchState->mTint =atts.getColorStateList("tint");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

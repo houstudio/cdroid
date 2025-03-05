@@ -12,6 +12,7 @@ private:
         int mDimension;
         int getDimension(int boundSize)const;
         void set(float,int);
+        void set(float);
     };
     class InsetState:public DrawableWrapper::DrawableWrapperState{
     private:
@@ -44,7 +45,7 @@ public:
     bool getPadding(Rect& padding)override;
     int getOpacity()override;
     Insets getOpticalInsets()override;
-    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
+    void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
 };
 
 }//namespace

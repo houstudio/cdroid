@@ -243,4 +243,52 @@ void DrawableWrapper::draw(Canvas&canvas){
     }
 }
 
+void DrawableWrapper::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    auto state = mState;
+    if (state == nullptr) {
+        return;
+    }
+    // The density may have changed since the last update. This will
+    // apply scaling to any existing constant state properties.
+    //final int densityDpi = r.getDisplayMetrics().densityDpi;
+    //final int targetDensity = densityDpi == 0 ? DisplayMetrics.DENSITY_DEFAULT : densityDpi;
+    //state->setDensity(targetDensity);
+    //state->mSrcDensityOverride = mSrcDensityOverride;
+
+    updateStateFromTypedArray(atts);
+    inflateChildDrawable(parser, atts);
+}
+
+void DrawableWrapper::updateStateFromTypedArray(const AttributeSet&atts) {
+    auto state = mState;
+    if (state == nullptr) {
+        return;
+    }
+
+    // Account for any configuration changes.
+    //state.mChangingConfigurations |= a.getChangingConfigurations();
+
+    // Extract the theme attributes, if any.
+    //state.mThemeAttrs = a.extractThemeAttrs();
+    if (atts.hasAttribute("drawable")) {
+        setDrawable(atts.getDrawable("drawable"));
+    }
+}
+
+void DrawableWrapper::inflateChildDrawable(XmlPullParser& parser,const AttributeSet& attrs){
+    // Seek to the first child element.
+    Drawable* dr = nullptr;
+    int type;
+    XmlPullParser::XmlEvent event;
+    const int outerDepth = parser.getDepth();
+    while ((type = parser.next(event)) != XmlPullParser::END_DOCUMENT
+            && (type != XmlPullParser::END_TAG || parser.getDepth() > outerDepth)) {
+        if (type == XmlPullParser::START_TAG) {
+            dr = Drawable::createFromXmlInnerForDensity(parser, event.attributes,0/*mState->mSrcDensityOverride*/);
+        }
+    }
+
+    if (dr != nullptr)  setDrawable(dr);
+}
+
 }

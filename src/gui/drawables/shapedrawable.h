@@ -17,6 +17,7 @@ private:
         int mIntrinsicWidth;
         int mIntrinsicHeight;
         int mAlpha;
+        bool mDither;
         ShapeState();
         ShapeState(const ShapeState&orig);
         ~ShapeState();
@@ -29,6 +30,8 @@ private:
     void updateShape();
     ShapeDrawable(std::shared_ptr<ShapeState>state);
     void updateLocalState();
+    void updateStateFromTypedArray(const AttributeSet&a);
+    int inflateTag(const std::string&,XmlPullParser&,const AttributeSet&);
 protected:
     void onBoundsChange(const Rect&bounds)override;
     bool onStateChange(const std::vector<int>&stateset)override;
@@ -57,7 +60,7 @@ public:
     ShapeDrawable*mutate()override;
     void clearMutated()override;
     void draw(Canvas&canvas)override;
-    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
+    void inflate(XmlPullParser&,const AttributeSet&)override;
 };
 
 }

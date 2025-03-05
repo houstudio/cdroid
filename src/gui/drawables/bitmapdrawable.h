@@ -56,6 +56,7 @@ protected:
     void onBoundsChange(const Rect&r)override;
     bool onStateChange(const std::vector<int>&)override;
 public:
+    BitmapDrawable();
     BitmapDrawable(Cairo::RefPtr<Cairo::ImageSurface>img);
     BitmapDrawable(Context*ctx,const std::string&resname);
     ~BitmapDrawable();
@@ -91,7 +92,7 @@ public:
     void draw(Canvas&canvas)override;
     Insets getOpticalInsets()override;
     void getOutline(Outline&)override;
-    static Drawable*inflate(Context*,const AttributeSet&atts);
+    void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
 };
 
 }

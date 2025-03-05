@@ -50,7 +50,7 @@ public:
     bool isRunning()override;
     void nextFrame();
     void draw(Canvas& canvas)override;
-    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
+    void inflate(XmlPullParser&,const AttributeSet&atts)override;
 };
 
 }

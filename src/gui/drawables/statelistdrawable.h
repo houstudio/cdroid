@@ -30,13 +30,14 @@ public:
     void addState(const std::vector<int>&stateSet,Drawable*drawable);
     bool isStateful()const override{return true;}
     bool hasFocusStateSpecified()const override;
+    void inflate(XmlPullParser&,const AttributeSet&atts)override;
+    void inflateChildElements(XmlPullParser&parser,const AttributeSet&atts);
     StateListDrawable*mutate()override;
     void clearMutated()override;
     int getStateCount()const;
     const std::vector<int>&getStateSet(int idx)const;
     Drawable*getStateDrawable(int index);
     int getStateDrawableIndex(const std::vector<int>&state)const;
-    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };
 
 }

@@ -4,6 +4,7 @@
 #include <drawables/stateset.h>
 #include <drawables/colorstatelist.h>
 #include <drawables/colorfilters.h>
+#include <core/xmlpullparser.h>
 #include <core/attributeset.h>
 #include <core/porterduff.h>
 #include <core/context.h>
@@ -87,6 +88,10 @@ public:
     virtual Rect getDirtyBounds();
     virtual Drawable*mutate();
     virtual void clearMutated();
+    virtual void inflate(XmlPullParser&parser,const AttributeSet&);
+    void inflateWithAttributes(XmlPullParser&parser,const AttributeSet&);
+    static Drawable*createFromXmlInner(XmlPullParser&parser,const AttributeSet&);
+    static Drawable*createFromXmlInnerForDensity(XmlPullParser&parser,const AttributeSet&,int);
     virtual void setColorFilter(ColorFilter*);
     virtual ColorFilter*getColorFilter();
     void setColorFilter(int color,PorterDuff::Mode mode);
@@ -149,10 +154,6 @@ public:
     static PorterDuff::Mode parseTintMode(int value, PorterDuff::Mode defaultMode);
     static float scaleFromDensity(float pixels, int sourceDensity, int targetDensity);
     static int scaleFromDensity(int pixels, int sourceDensity, int targetDensity, bool isSize);
-    static Drawable*createWrappedDrawable(Context* ctx,const AttributeSet&atts);
-    static Drawable*fromStream(Context*ctx,std::istream&stream,const std::string& basePath=std::string(),
-	              const std::string&package=std::string());
-    static Drawable*inflate(Context* ctx,const std::string& pathName);
 };
 
 }

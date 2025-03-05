@@ -99,15 +99,10 @@ void ClipDrawable::draw(Canvas& canvas){
     }
 }
 
-Drawable*ClipDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    Drawable*d = Drawable::createWrappedDrawable(ctx,atts);
-    const int gravity= atts.getGravity("gravity",Gravity::LEFT);
-    const int orientation = atts.getInt("clipOrientation",std::unordered_map<std::string,int>{
-        {"horizontal",(int)HORIZONTAL},{"vertical",(int)VERTICAL}
-    },HORIZONTAL);
-    d = new ClipDrawable(d,gravity,orientation);
-    LOGV("%p gravity=%d horizontal=%d",d,gravity,Gravity::isHorizontal(gravity));
-    return d;
+void ClipDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    DrawableWrapper::inflate(parser,atts);
+    mState->mOrientation = atts.getInt("clipOrientation", mState->mOrientation);
+    mState->mGravity = atts.getGravity("gravity", mState->mGravity);
 }
 
 }

@@ -594,9 +594,15 @@ Rect RippleDrawable::getDirtyBounds() {
         return getBounds();
     }
 }
-Drawable*RippleDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    RippleDrawable*rd=nullptr;
-    return rd;
+
+void RippleDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    
+    // Force padding default to STACK before inflating.
+    setPaddingMode(PADDING_MODE_STACK);
+    LayerDrawable::inflate(parser,atts);
+    mState->mColor = atts.getColorStateList("color");
+    mState->mMaxRadius = atts.getDimensionPixelSize("radius", mState->mMaxRadius);
+    updateLocalState();
 }
 
 void RippleDrawable::updateLocalState() {

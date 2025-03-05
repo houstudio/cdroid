@@ -240,7 +240,7 @@ void LayerDrawable::LayerState::invalidateCache(){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-LayerDrawable::LayerDrawable():LayerDrawable(nullptr){
+LayerDrawable::LayerDrawable():LayerDrawable(std::make_shared<LayerState>()){
 }
 
 LayerDrawable::LayerDrawable(const std::vector<Drawable*>&drawables)
@@ -1056,8 +1056,78 @@ void LayerDrawable::draw(Canvas&canvas){
     }
 }
 
-Drawable*LayerDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    return new LayerDrawable();
+void LayerDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    Drawable::inflate(parser,atts);
+    inflateLayers(parser,atts);
+    ensurePadding();
+    refreshPadding();
 }
+
+void LayerDrawable::inflateLayers(XmlPullParser& parser,const AttributeSet& atts){
+    int type,depth,low = 0;
+    const int innerDepth = parser.getDepth();
+    XmlPullParser::XmlEvent event;
+    while (((type = parser.next(event,depth)) != XmlPullParser::END_DOCUMENT)
+            && (depth >= innerDepth|| type != XmlPullParser::END_TAG)) {
+        if (type != XmlPullParser::START_TAG) {
+            continue;
+        }
+
+        if (depth > innerDepth || event.name.compare("item")) {
+            continue;
+        }
+
+        ChildDrawable*layer = new ChildDrawable(mLayerState->mDensity);
+        updateLayerFromTypedArray(layer,event.attributes);
+
+        if (layer->mDrawable==nullptr) {
+            while ((type = parser.next(event,depth)) == XmlPullParser::TEXT) {}
+            if (type != XmlPullParser::START_TAG) {
+                throw std::logic_error(//parser.getPositionDescription()
+                                ": <item> tag requires a 'drawable' attribute or "
+                                "child tag defining a drawable");
+            }
+            layer->mDrawable = Drawable::createFromXmlInner(parser, event.attributes);
+            layer->mDrawable->setCallback(this);
+        }
+        addLayer(layer);
+    }
+}
+
+void LayerDrawable::updateLayerFromTypedArray(ChildDrawable*layer,const AttributeSet&atts){
+    auto state = mLayerState;
+
+    // Account for any configuration changes.
+    //state->mChildrenChangingConfigurations |= a.getChangingConfigurations();
+    //layer->mThemeAttrs = a.extractThemeAttrs();
+
+    layer->mInsetL = atts.getDimensionPixelOffset("left", layer->mInsetL);
+    layer->mInsetT = atts.getDimensionPixelOffset("top", layer->mInsetT);
+    layer->mInsetR = atts.getDimensionPixelOffset("right", layer->mInsetR);
+    layer->mInsetB = atts.getDimensionPixelOffset("bottom", layer->mInsetB);
+    layer->mInsetS = atts.getDimensionPixelOffset("start", layer->mInsetS);
+    layer->mInsetE = atts.getDimensionPixelOffset("end", layer->mInsetE);
+    layer->mWidth  = atts.getDimensionPixelSize("width", layer->mWidth);
+    layer->mHeight = atts.getDimensionPixelSize("height", layer->mHeight);
+    layer->mGravity= atts.getGravity("gravity", layer->mGravity);
+    layer->mId = atts.getResourceId("id", layer->mId);
+    atts.dump();
+    Drawable* dr = atts.getDrawable("drawable");
+    if (dr != nullptr) {
+        if (layer->mDrawable != nullptr) {
+            // It's possible that a drawable was already set, in which case
+            // we should clear the callback. We may have also integrated the
+            // drawable's changing configurations, but we don't have enough
+            // information to revert that change.
+            layer->mDrawable->setCallback(nullptr);
+        }
+
+        // Take ownership of the new drawable.
+        layer->mDrawable = dr;
+        layer->mDrawable->setCallback(this);
+        state->mChildrenChangingConfigurations |= layer->mDrawable->getChangingConfigurations();
+    }
+}
+
 }
 

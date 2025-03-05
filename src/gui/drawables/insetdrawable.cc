@@ -6,6 +6,10 @@ void InsetDrawable::InsetValue::set(float f,int d){
     mFraction = f;
     mDimension= d;
 }
+void InsetDrawable::InsetValue::set(float f){
+   mFraction =(f<1.f)?f:0.f;
+   mDimension=(f>=1.f)?int(f):0;
+}
 
 int InsetDrawable::InsetValue::getDimension(int boundSize)const{
     return (int) (boundSize * mFraction) + mDimension;
@@ -142,14 +146,20 @@ std::shared_ptr<Drawable::ConstantState>InsetDrawable::getConstantState(){
     return mState;
 }
 
-Drawable*InsetDrawable::inflate(Context*ctx,const AttributeSet&atts){
-    const int inset = atts.getInt("inset",0);
-    const int insetLeft = atts.getInt("insetLeft",inset);
-    const int insetTop  = atts.getInt("insetTop",inset);
-    const int insetRight = atts.getInt("insetRight",inset);
-    const int insetBottom= atts.getInt("insetBottom",inset);
-    Drawable*d = createWrappedDrawable(ctx,atts);
-    return new InsetDrawable(d,insetLeft,insetTop,insetRight,insetBottom);
+void InsetDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    DrawableWrapper::inflate(parser,atts);
+    // Inset attribute may be overridden by more specific attributes.
+    if (atts.hasAttribute("inset")) {
+        const float inset = atts.getFloat("inset", 0);
+        mState->mInsetLeft.set(inset);
+        mState->mInsetTop.set(inset);
+        mState->mInsetRight.set(inset);
+        mState->mInsetBottom.set(inset);
+    }
+    mState->mInsetLeft.set(atts.getFloat("insetLeft", 0.f));
+    mState->mInsetTop.set(atts.getFloat("insetTop", 0.f));
+    mState->mInsetRight.set(atts.getFloat("insetRight", 0.f));
+    mState->mInsetBottom.set(atts.getFloat("insetBottom", 0.f));
 }
 
 }

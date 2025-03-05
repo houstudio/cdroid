@@ -6,6 +6,7 @@
 #include <string.h>
 #include <textutils.h>
 #include <core/windowmanager.h>
+#include <drawables/drawableinflater.h>
 
 using namespace Cairo;
 namespace cdroid {
@@ -72,6 +73,32 @@ Drawable*Drawable::mutate() {
 
 void Drawable::clearMutated() {
 }
+
+void Drawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    mVisible = atts.getBoolean("visible", mVisible);
+}
+
+void Drawable::inflateWithAttributes(XmlPullParser&parser,const AttributeSet&atts){
+    mVisible = atts.getBoolean("visible",mVisible);
+}
+
+Drawable* Drawable::createFromXmlInner(XmlPullParser&parser,const AttributeSet&atts){
+    return DrawableInflater::inflateFromXml(parser.getName(),parser,atts);
+}
+
+Drawable* Drawable::createFromXmlInnerForDensity(XmlPullParser&parser,const AttributeSet&atts,int){
+    return DrawableInflater::inflateFromXml(parser.getName(),parser,atts);
+}
+
+/*int Drawable::getDimensionOrFraction(const std::string&value,int base,int def){
+    if(value.find("%")!=std::string::npos){
+    LOGD("%d %s[%.f]=%.2f",base,value.c_str(),std::stof(value),base*std::stof(value)/100);
+        return base*std::stof(value)/100;
+    }else if(value.find("px")!=std::string::npos){
+        return std::stoi(value);
+    }
+    return def;
+}*/
 
 int Drawable::getOpacity() {
     return UNKNOWN;
@@ -308,390 +335,6 @@ int Drawable::scaleFromDensity(int pixels, int sourceDensity, int targetDensity,
     if (rounded != 0)     return rounded;
     else if (pixels > 0) return 1;
     else return -1;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////// Drawable inflate//////////////////////////////////////////////
-
-typedef std::function<Drawable*(Context*ctx, const AttributeSet&attrs)>DrawableParser;
-
-class ParseItem {
-  public:
-    Drawable*drawable;
-    AttributeSet props;
-    std::string name;
-    ParseItem() {
-        drawable=nullptr;
-    }
-};
-
-class ParseData {
-public:
-    std::vector<std::shared_ptr<ParseItem> >items;
-    std::vector<AttributeSet> attrs;
-    std::vector<std::string>  names;
-    Drawable* drawable;
-    XML_Parser parser;
-    Context* ctx;
-    std::string package;
-    std::string resourceFile;
-    ParseData():drawable(nullptr),parser(nullptr),ctx(nullptr){
-    }
-    void push(const std::string&name,AttributeSet&atts) {
-        std::shared_ptr<ParseItem> item = std::make_shared<ParseItem>();
-        item->name  = name;
-        item->props = atts;
-        items.push_back(item);
-    }
-    bool upperIsItem()const {
-        const int idx = items.size()-2;
-        return (items.size()>1) && ((items.at(idx)->name.compare("item")==0)
-            ||(items.at(idx)->name.compare("transition")==0));
-    }
-    bool upperIsShape()const {
-        return (items.size()>1) && (items.at(items.size()-2)->name.compare("shape")==0);
-    }
-    bool upperIsWrapper()const {
-        if(items.size()<=1)return false;
-        auto upper = items.at(items.size()-2);
-        return upper->drawable && dynamic_cast<DrawableWrapper*>(upper->drawable);
-    }
-    bool upperIsContainer() {
-        if(items.size()<=1)return false;
-        auto upper = items.at(items.size()-2);
-        return upper->drawable;
-    }
-    void pop2Upper(Drawable*d) {
-        auto upper = items.at(items.size()-2);
-        if(upperIsItem()&&(upper->drawable==nullptr)) upper->drawable = d;
-        else if(upperIsWrapper()) {
-            DrawableWrapper* dwrap = dynamic_cast<DrawableWrapper*>(upper->drawable);
-            dwrap->setDrawable(d);
-        }
-    }
-};
-
-
-Drawable*Drawable::createWrappedDrawable(Context*ctx,const AttributeSet&atts) {
-    RefPtr<ImageSurface> img;
-    std::string resname = atts.getString("color");
-    if(!resname.empty()) {
-        int color=Color::parseColor(resname);
-        return new ColorDrawable(color);
-    }
-    resname=atts.getString("drawable");
-    if(resname.empty())
-        return nullptr;
-
-    if(resname.find("xml")!=std::string::npos) {
-        return Drawable::inflate(ctx,resname);
-    }
-    Drawable*dr=ctx->getDrawable(resname);
-    if(dr){
-        auto cs = dr->getConstantState();
-        if(cs)cs->mResource=resname;
-    }
-    return dr;
-}
-
-static std::unordered_map<std::string,DrawableParser>drawableParsers= {
-    {"color", ColorDrawable::inflate},
-    {"shape", ShapeDrawable::inflate},
-    {"bitmap", BitmapDrawable::inflate},
-    {"nine-patch", NinePatchDrawable::inflate},
-    {"inset", InsetDrawable::inflate},
-    {"scale", ScaleDrawable::inflate},
-    {"rotate", RotateDrawable::inflate},
-    {"clip", ClipDrawable::inflate},
-    {"transition", TransitionDrawable::inflate},
-    {"layer-list", LayerDrawable::inflate},
-    {"level-list", LevelListDrawable::inflate},
-    {"selector", StateListDrawable::inflate},
-    {"animated-selector",AnimatedStateListDrawable::inflate},
-    {"item", Drawable::createWrappedDrawable },
-    {"ripple", RippleDrawable::inflate},
-    {"animated-rotate", AnimatedRotateDrawable::inflate},
-    {"animation-list", AnimationDrawable::inflate},
-    {"animated-image", AnimatedImageDrawable::inflate}
-};
-
-static int parseColor(const std::string&value) {
-    int color=Color::parseColor(value);
-    return color;
-}
-
-static void parseShapeGradient(Context*ctx,GradientDrawable*gd,ShapeDrawable*sd,const AttributeSet&atts) {
-    std::vector<int32_t> cls;
-    PointF center;
-    GradientDrawable::Orientation orientation = GradientDrawable::TOP_BOTTOM/*DEFAULT_ORIENTATION*/;
-    cls.push_back(atts.getColor("startColor",0));
-    if(atts.hasAttribute("centerColor"))
-        cls.push_back(atts.getColor("centerColor"));
-    if(atts.hasAttribute("endColor"))
-        cls.push_back(atts.getColor("endColor",0));
-
-    const int gradientType = atts.getInt("type",std::unordered_map<std::string,int> {
-        {"linear",GradientDrawable::LINEAR_GRADIENT},
-        {"radial",GradientDrawable::RADIAL_GRADIENT},
-        {"sweep",GradientDrawable::SWEEP_GRADIENT},
-        {"pattern",GradientDrawable::BITMAP_PATTERN}
-    },GradientDrawable::LINEAR_GRADIENT);
-
-    const int angle = (atts.getInt("angle",0)%360+360)%360;
-
-    switch(angle) {
-    case 0 :
-        orientation = GradientDrawable::LEFT_RIGHT;
-        break;
-    case 45:
-        orientation = GradientDrawable::BL_TR     ;
-        break;
-    case 90:
-        orientation = GradientDrawable::BOTTOM_TOP;
-        break;
-    case 135:
-        orientation = GradientDrawable::BR_TL     ;
-        break;
-    case 180:
-        orientation = GradientDrawable::RIGHT_LEFT;
-        break;
-    case 225:
-        orientation = GradientDrawable::TR_BL     ;
-        break;
-    case 270:
-        orientation = GradientDrawable::TOP_BOTTOM;
-        break;
-    case 315:
-        orientation = GradientDrawable::TL_BR     ;
-        break;
-    }
-    if(gd) {
-        gd->setColors(cls);
-        gd->setGradientType(gradientType);
-        gd->setUseLevel(atts.getBoolean("useLevel",false));
-        switch(gradientType) {
-        case GradientDrawable::LINEAR_GRADIENT:
-            gd->setOrientation(orientation);
-            break;
-        case GradientDrawable::RADIAL_GRADIENT:
-            center.set( atts.getFloat("centerX"), atts.getFloat("centerY") );
-            gd->setGradientCenter(center.x,center.y);
-            gd->setGradientRadius(atts.getDimensionPixelSize("gradientRadius"));
-            break;
-        case GradientDrawable::SWEEP_GRADIENT:
-            center.set( atts.getFloat("centerX",0.5f), atts.getFloat("centerY",0.5f) );
-            LOGD("center=(%f,%f)",center.x,center.y);
-            gd->setGradientCenter(center.x,center.y);
-            break;
-        case GradientDrawable::BITMAP_PATTERN:
-            gd->setImagePattern(ctx,atts.getString("bitmap"));
-            break;
-        }
-    } else if(sd) {
-        //sd->setGradientColors(cls);
-        //sd->setGradientCenterX(center.x);
-        //sd->setGradientCenterY(center.y);
-    }
-}
-
-static void parseCorners(GradientDrawable*gd,ShapeDrawable*sd,const AttributeSet&atts) {
-    int radius = atts.getDimensionPixelSize("radius",-1);
-    float topLeftRadius = atts.getDimensionPixelSize("topLeftRadius",radius);
-    float topRightRadius= atts.getDimensionPixelSize("topRightRadius",radius);
-    float bottomRightRadius= atts.getDimensionPixelSize("bottomRightRadius",radius);
-    float bottomLeftRadius = atts.getDimensionPixelSize("bottomLeftRadius",radius);
-    std::vector<float> radii = {topLeftRadius,topRightRadius,bottomRightRadius,bottomLeftRadius};
-    if(gd)
-        gd->setCornerRadii(radii);
-}
-
-static void startElement(void *userData, const XML_Char *name, const XML_Char **satts) {
-    ParseData* pd = static_cast<ParseData*>(userData);
-    auto it = drawableParsers.find(name);
-    AttributeSet atts(pd->ctx,pd->package);
-    atts.set(satts);
-    pd->push(name,atts);
-
-    if(it!=drawableParsers.end()) {
-        auto item = pd->items.back();
-        if( strcmp(name,"shape") || (atts.hasAttribute("drawable") &&((strcmp(name,"item")==0)||(strcmp(name,"transition")==0)))){
-            Drawable* d = it->second(pd->ctx,atts);
-            const std::string strDrawable = atts.getString("drawable");
-            if(d){
-                auto cs = d->getConstantState();
-                if(cs){
-                   cs->mResource = strDrawable;
-                   LOGV_IF(!strDrawable.empty(),"res=%s",strDrawable.c_str());
-                }
-            }
-            item->drawable = d;
-        }
-        //LOGV("created drawable %s:%p props:%d",name,item->drawable,item->props.size());
-    }
-}
-
-static Drawable*parseShapeDrawable(Context*ctx,const AttributeSet&atts,
-	    const std::vector<AttributeSet>&props,const std::vector<std::string>&names) {
-    const AttributeSet* corners = nullptr,*gradient = nullptr,*padding = nullptr;
-    const AttributeSet* size = nullptr, *stroke = nullptr,*solid = nullptr;
-
-    for(auto  i = 0 ; i < props.size() ; i++) {
-        const AttributeSet& p = props.at(i);
-        std::string tag = names.at(i);
-        if(tag.compare("corners") ==0) corners = &p;
-        if(tag.compare("gradient")==0) gradient= &p;
-        if(tag.compare("size") ==0)   size = &p;
-        if(tag.compare("stroke") ==0) stroke= &p;
-        if(tag.compare("solid") ==0)  solid = &p;
-        if(tag.compare("padding")==0) padding=&p;
-    }
-
-    LOGE_IF(!(gradient||solid||stroke),"stroke solid gradient property error!");
-    if(gradient||solid||stroke) {
-        GradientDrawable*d = (GradientDrawable*)GradientDrawable::inflate(ctx,atts);
-
-        if( corners) parseCorners(d,nullptr, *corners);
-
-        if(gradient) parseShapeGradient(ctx,d,nullptr, *gradient);
-        else if( solid ){
-            d->setColor(solid->getColorStateList("color"));
-        }
-
-        if( size )d->setSize(size->getDimensionPixelSize("width",-1),size->getDimensionPixelSize("height",-1));
-
-        if( stroke ) {
-            d->setStroke(stroke->getDimensionPixelSize("width",1),stroke->getColorStateList("color"),
-                stroke->getDimensionPixelSize("dashWidth"),stroke->getDimensionPixelSize("dashGap"));
-        }
-        if( padding ) d->setPadding(padding->getDimensionPixelSize("left"),padding->getDimensionPixelSize("top"),
-                padding->getDimensionPixelSize("right"),padding->getDimensionPixelSize("bottom"));
-        return d;
-    } else {
-        ShapeDrawable*sd = new ShapeDrawable();
-        if( corners ) parseCorners(nullptr,sd, *corners);
-        /*if(gradient)parseShapeGradient(ctx,nullptr,sd,*gradient)*/;
-        FATAL("Cant reached ");
-        return sd;
-    }
-}
-
-static void endElement(void *userData, const XML_Char *name) {
-    ParseData*pd = static_cast<ParseData*>(userData);
-
-    auto it = drawableParsers.find(name);
-    if(it == drawableParsers.end()) {
-        auto pitem   = pd->items.back();
-        pd->attrs.push_back(pitem->props);
-        pd->names.push_back(pitem->name);
-    } else if(pd->attrs.size()) { /*here coming shape drawable*/
-        Drawable*leaf = parseShapeDrawable(pd->ctx,pd->items.back()->props,pd->attrs,pd->names);
-        pd->attrs.clear();
-        pd->names.clear();
-        if(pd->upperIsItem()||pd->upperIsWrapper()) {
-            pd->pop2Upper(leaf);
-        }
-        pd->drawable = leaf;
-        //LOGV("%p coming drawable %s %p upperIsShape=%d",pd,name,leaf,pd->upperIsShape());
-    } else { /*item (stub drawable) or other drawable*/
-        //LOGV("%p coming drawable %s",pd,name);
-        Drawable* topchild = nullptr,*parent = nullptr;
-        auto backItem = pd->items.back();
-        const AttributeSet atts = backItem->props;
-        //if( (backItem->name.compare("item")==0) || ((backItem->name.compare("transition")==0)&&(pd->items.size()>1)) ){
-        if(pd->upperIsItem()||pd->upperIsWrapper()) {
-            const std::string drawableResourceId = atts.getString("drawable");
-            if( backItem->drawable == nullptr ) {
-                backItem->drawable= pd->ctx->getDrawable(drawableResourceId);
-            }
-            pd->pop2Upper(backItem->drawable);
-        }
-        if(pd->items.size()>1) {
-            auto pitem = pd->items.back();
-            topchild = pitem->drawable;
-            pitem  = pd->items[pd->items.size()-2];
-            parent = pitem->drawable;
-        }
-
-        if(dynamic_cast<StateListDrawable*>(parent)) {
-            std::vector<int> state;
-            StateListDrawable*sld = dynamic_cast<StateListDrawable*>(parent);
-            AnimatedStateListDrawable*asld = dynamic_cast<AnimatedStateListDrawable*>(parent);
-            StateSet::parseState(state,atts);
-            const int id = atts.getResourceId("id",-1);
-            if(asld) asld->addState(state,topchild,id);
-            else sld->addState(state,topchild);
-            LOGV("%p add %s %p to StateListDrawable %p id=%d",pd,name,topchild,parent,id);
-        } else if(dynamic_cast<LevelListDrawable*>(parent)) {
-            int minLevel = atts.getInt("minLevel",INT_MIN);//get child level info
-            int maxLevel = atts.getInt("maxLevel",INT_MIN);
-            if( minLevel == INT_MIN ) minLevel = maxLevel;
-            if( maxLevel == INT_MIN ) maxLevel = minLevel;
-            ((LevelListDrawable*)parent)->addLevel(minLevel,maxLevel,topchild);
-            LOGV("%p add %s %p to LevelListDrawable %p level=(%d,%d)",pd,name,topchild,parent,minLevel,maxLevel);
-        } else if(dynamic_cast<LayerDrawable*>(parent)) {
-            LayerDrawable* ld = dynamic_cast<LayerDrawable*>(parent);
-            const int idx = ld->addLayer(topchild);
-            ld->setLayerAttributes(idx,atts);
-            LOGV("%p add %s %p to Layer/TransitionDrawable %p index=%d gravity=%x size=%dx%d",pd,name,topchild,
-                 parent,idx,ld->getLayerGravity(idx),ld->getLayerWidth(idx),ld->getLayerHeight(idx));
-        } else if(dynamic_cast<AnimationDrawable*>(parent)) {
-            AnimationDrawable* ad = (AnimationDrawable*)parent;
-            const int duration = atts.getInt("duration",0);
-            ad->addFrame(topchild,duration);
-            LOGV("%p add %s %p to AnimationDrawable %p duration=%d",pd,name,topchild,parent,duration);
-        }
-        if(pd->items.size()==1) pd->drawable=pd->items.back()->drawable;
-    }
-    pd->items.pop_back();//popup item
-}
-
-Drawable*Drawable::fromStream(Context*ctx,std::istream&stream,const std::string& resname,const std::string&package) {
-    ParseData pd;
-    char buf[256];
-    std::streamsize rdlen;
-
-    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
-
-    //std::string basePath = resname.substr(0,resname.find_last_of("/"));
-    //basePath = basePath.substr(0,basePath.find_last_of("/"));
-
-    pd.parser = parser;
-    pd.ctx = ctx;
-    pd.package = package;
-    pd.resourceFile = resname;
-    XML_SetUserData(parser,&pd);
-    pd.items.clear();
-    XML_SetElementHandler(parser, startElement, endElement);
-    const bool isResURL = strpbrk(resname.c_str(),"@/:")!=nullptr;
-    LOGE_IF((stream.good()==false)&&isResURL,"%s open failed",resname.c_str());
-    do {
-        stream.read(buf,sizeof(buf));
-        rdlen = stream.gcount();
-        if (XML_Parse(parser, buf,rdlen,!rdlen) == XML_STATUS_ERROR) {
-            const char*es = XML_ErrorString(XML_GetErrorCode(parser));
-            LOGE_IF(isResURL,"%s at %s:line %ld",es, resname.c_str(),XML_GetCurrentLineNumber(parser));
-            XML_ParserFree(parser);
-            return nullptr;
-        }
-    } while(rdlen);
-    XML_ParserFree(parser);
-    LOGV("%p parsed drawable [%p] from %s",&pd,pd.drawable,resname.c_str());
-    return pd.drawable;
-}
-
-Drawable*Drawable::inflate(Context*ctx,const std::string& resname) {
-    Drawable*d = nullptr;
-    if(ctx == nullptr) {
-        std::ifstream fs(resname);
-        if(fs.good())d = fromStream(ctx,fs,resname,"");
-    } else if(!resname.empty()) {
-        /*std::string package;
-        std::unique_ptr<std::istream> is = ctx->getInputStream(resname,&package);
-        d = fromStream(ctx,*is,resname,package);*/
-        d = ctx->getDrawable(resname);
-        LOGE_IF(d==nullptr,"%s load failed",resname.c_str());
-    }
-    return d;
 }
 
 }

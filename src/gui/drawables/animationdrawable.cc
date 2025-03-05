@@ -148,9 +148,56 @@ void AnimationDrawable::clearMutated(){
     mMutated = false;
 }
 
-Drawable*AnimationDrawable::inflate(Context*ctx,const AttributeSet&attrs){
-    AnimationDrawable*d = new AnimationDrawable(ctx,attrs);
-    return d;
+void AnimationDrawable::inflate(XmlPullParser& parser,const AttributeSet& atts){
+    DrawableContainer::inflateWithAttributes(parser,atts);
+
+    mAnimationState->mVariablePadding = atts.getBoolean("variablePadding", mAnimationState->mVariablePadding);
+    mAnimationState->mOneShot = atts.getBoolean("oneshot", mAnimationState->mOneShot);
+
+    //updateDensity();
+    inflateChildElements(parser,atts);
+    setFrame(0,true,false);
+}
+
+void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& atts){
+    int type , depth;
+    XmlPullParser::XmlEvent event;
+    const int innerDepth = parser.getDepth();
+    while ((type=parser.next(event,depth)) != XmlPullParser::END_DOCUMENT
+            && (depth >= innerDepth || type != XmlPullParser::END_TAG)) {
+        if (type != XmlPullParser::START_TAG) {
+            continue;
+        }
+
+        if ((depth > innerDepth) || event.name.compare("item")) {
+            continue;
+        }
+
+        const int duration = atts.getInt("duration", -1);
+        if (duration < 0) {
+            throw std::logic_error(//parser.getPositionDescription()
+                    ": <item> tag requires a 'duration' attribute");
+        }
+
+        Drawable* dr = atts.getDrawable("drawable");
+
+        if (dr == nullptr) {
+            while ((type=parser.next(event,depth)) == XmlPullParser::TEXT) {
+                // Empty
+            }
+            if (type != XmlPullParser::START_TAG) {
+                throw std::logic_error(//parser.getPositionDescription()
+                        ": <item> tag requires a 'drawable' attribute or child tag"
+                        " defining a drawable");
+            }
+            dr = Drawable::createFromXmlInner(parser, event.attributes);
+        }
+
+        mAnimationState->addFrame(dr, duration);
+        if (dr != nullptr) {
+            dr->setCallback(mCallback);
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
