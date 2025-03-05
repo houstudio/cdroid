@@ -167,14 +167,13 @@ void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
         if ((depth > innerDepth) || event.name.compare("item")) {
             continue;
         }
-
-        const int duration = atts.getInt("duration", -1);
+        const int duration = event.attributes.getInt("duration", -1);
         if (duration < 0) {
             throw std::logic_error(//parser.getPositionDescription()
                     ": <item> tag requires a 'duration' attribute");
         }
 
-        Drawable* dr = atts.getDrawable("drawable");
+        Drawable* dr = event.attributes.getDrawable("drawable");
 
         if (dr == nullptr) {
             while ((type=parser.next(event,depth)) == XmlPullParser::TEXT) {
