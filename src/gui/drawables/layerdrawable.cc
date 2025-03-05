@@ -1058,6 +1058,13 @@ void LayerDrawable::draw(Canvas&canvas){
 
 void LayerDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(parser,atts);
+    const int density = Drawable::resolveDensity( 0);
+    mLayerState->setDensity(density);
+
+    updateStateFromTypedArray(atts);
+    for (ChildDrawable*layer:mLayerState->mChildren) {
+        layer->setDensity(density);
+    }
     inflateLayers(parser,atts);
     ensurePadding();
     refreshPadding();
@@ -1092,6 +1099,25 @@ void LayerDrawable::inflateLayers(XmlPullParser& parser,const AttributeSet& atts
         }
         addLayer(layer);
     }
+}
+
+void LayerDrawable::updateStateFromTypedArray(const AttributeSet&a) {
+    auto state = mLayerState;
+
+    // Account for any configuration changes.
+    //state->mChangingConfigurations |= a.getChangingConfigurations();
+    // Extract the theme attributes, if any.
+    //state->mThemeAttrs = a.extractThemeAttrs();
+
+    state->mOpacityOverride = a.getInt("opacity", state->mOpacityOverride);
+    state->mPaddingTop = a.getDimensionPixelOffset("paddingTop", state->mPaddingTop);
+    state->mPaddingBottom = a.getDimensionPixelOffset("paddingBottom", state->mPaddingBottom);
+    state->mPaddingLeft = a.getDimensionPixelOffset("paddingLeft", state->mPaddingLeft);
+    state->mPaddingRight = a.getDimensionPixelOffset("paddingRight", state->mPaddingRight);
+    state->mPaddingStart = a.getDimensionPixelOffset("paddingStart", state->mPaddingStart);
+    state->mPaddingEnd = a.getDimensionPixelOffset("paddingEnd", state->mPaddingEnd);
+    state->mAutoMirrored = a.getBoolean("autoMirrored", state->mAutoMirrored);
+    state->mPaddingMode = a.getInt("paddingMode", state->mPaddingMode);
 }
 
 void LayerDrawable::updateLayerFromTypedArray(ChildDrawable*layer,const AttributeSet&atts){

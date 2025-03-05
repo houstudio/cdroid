@@ -79,6 +79,7 @@ private:
     ChildDrawable* createLayer(Drawable* dr);
     Drawable* getFirstNonNullDrawable()const;
     void inflateLayers(XmlPullParser& parser,const AttributeSet& atts);
+    void updateStateFromTypedArray(const AttributeSet&atts);
     void updateLayerFromTypedArray(ChildDrawable*layer,const AttributeSet&atts);
 protected:
     virtual std::shared_ptr<LayerState> createConstantState(LayerState* state,const AttributeSet*);
