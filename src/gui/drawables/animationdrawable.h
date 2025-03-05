@@ -23,7 +23,7 @@ private:
 private:
     void setFrame(int frame,bool unschedule,bool animate);
     AnimationDrawable(std::shared_ptr<AnimationState>);
-    AnimationDrawable(Context*,const AttributeSet&);
+    void updateStateFromTypedArray(const AttributeSet&a);
     void inflateChildElements(XmlPullParser& parser,const AttributeSet& atts);
 protected:
     void setConstantState(std::shared_ptr<DrawableContainerState>state)override;

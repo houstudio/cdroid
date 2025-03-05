@@ -18,15 +18,6 @@ AnimationDrawable::AnimationDrawable(std::shared_ptr<AnimationDrawable::Animatio
     mRunnable = std::bind(&AnimationDrawable::run,this);
 }
 
-AnimationDrawable::AnimationDrawable(Context*ctx,const AttributeSet&atts)
-    :AnimationDrawable(){
-    mAnimationState->setConstantSize(atts.getBoolean("constantSize"));
-    mAnimationState->setVariablePadding(atts.getBoolean("variablePadding"));
-    mAnimationState->setEnterFadeDuration(atts.getInt("enterFadeDuration"));
-    mAnimationState->setExitFadeDuration(atts.getInt("exitFadeDuration"));
-    mAnimationState->mOneShot = atts.getBoolean("oneshot",false);
-}
-
 AnimationDrawable::~AnimationDrawable(){
     mRunnable = nullptr;
 }
@@ -150,13 +141,17 @@ void AnimationDrawable::clearMutated(){
 
 void AnimationDrawable::inflate(XmlPullParser& parser,const AttributeSet& atts){
     DrawableContainer::inflateWithAttributes(parser,atts);
-
-    mAnimationState->mVariablePadding = atts.getBoolean("variablePadding", mAnimationState->mVariablePadding);
-    mAnimationState->mOneShot = atts.getBoolean("oneshot", mAnimationState->mOneShot);
+    updateStateFromTypedArray(atts);
 
     //updateDensity();
     inflateChildElements(parser,atts);
     setFrame(0,true,false);
+}
+
+void AnimationDrawable::updateStateFromTypedArray(const AttributeSet&atts){
+    auto state = mAnimationState;
+    state->mVariablePadding = atts.getBoolean("variablePadding", state->mVariablePadding);
+    state->mOneShot = atts.getBoolean("oneshot", state->mOneShot);
 }
 
 void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& atts){
