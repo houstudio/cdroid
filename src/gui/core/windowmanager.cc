@@ -238,8 +238,7 @@ Window*WindowManager::getActiveWindow()const{
 }
 
 void WindowManager::sendToBack(Window*win){
-    win->mLayer = (win->window_type<<16);
-    if(mActiveWindow==win) return;
+    win->mLayer = (win->window_type<<16);/*make win's layer to lowerest*/
     std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
         return (w2->mLayer - w1->mLayer)>0;
     });
@@ -249,7 +248,7 @@ void WindowManager::sendToBack(Window*win){
         w->mLayer = (w->window_type<<16)|(idx+1);
     }
     mActiveWindow = mWindows.back();
-    win->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
+    mActiveWindow->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
     win->post([win](){win->onDeactive();});
     Window*newActWin = mActiveWindow;
     mActiveWindow->post([newActWin](){
