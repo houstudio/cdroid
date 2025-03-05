@@ -43,14 +43,6 @@ StateListDrawable::StateListDrawable(){
     setConstantState(state);
 }
 
-StateListDrawable::StateListDrawable(Context*ctx,const AttributeSet&atts)
-   :StateListDrawable(){//DrawableContainer(ctx,atts){
-    mStateListState->setConstantSize(atts.getBoolean("constantSize"));
-    mStateListState->setVariablePadding(atts.getBoolean("variablePadding"));
-    mStateListState->setEnterFadeDuration(atts.getInt("enterFadeDuration"));
-    mStateListState->setExitFadeDuration(atts.getInt("exitFadeDuration"));
-}
-
 StateListDrawable::StateListDrawable(const ColorStateList&cls){
     auto state = std::make_shared<StateListState>(nullptr,this);
     setConstantState(state);
@@ -135,7 +127,24 @@ bool StateListDrawable::onStateChange(const std::vector<int>&stateSet){
 
 void StateListDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflateWithAttributes(parser,atts);
+    updateStateFromTypedArray(atts);
     inflateChildElements(parser,atts);
+}
+
+void StateListDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
+    auto state = mStateListState;
+
+    // Account for any configuration changes.
+    //state->mChangingConfigurations |= a.getChangingConfigurations();
+    // Extract the theme attributes, if any.
+    //state->mThemeAttrs = a.extractThemeAttrs();
+
+    state->mVariablePadding = atts.getBoolean("variablePadding", state->mVariablePadding);
+    state->mConstantSize = atts.getBoolean("constantSize", state->mConstantSize);
+    state->mEnterFadeDuration = atts.getInt("enterFadeDuration", state->mEnterFadeDuration);
+    state->mExitFadeDuration = atts.getInt("exitFadeDuration", state->mExitFadeDuration);
+    state->mDither = atts.getBoolean("dither", state->mDither);
+    state->mAutoMirrored = atts.getBoolean("autoMirrored", state->mAutoMirrored);
 }
 
 void StateListDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSet&atts){
