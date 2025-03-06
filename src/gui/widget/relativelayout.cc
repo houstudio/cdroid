@@ -1059,7 +1059,7 @@ void RelativeLayout::LayoutParams::resolveLayoutDirection(int layoutDirection) {
         resolveRules(layoutDirection);
     }
     // This will set the layout direction.
-    ViewGroup::LayoutParams::resolveLayoutDirection(layoutDirection);
+    ViewGroup::MarginLayoutParams::resolveLayoutDirection(layoutDirection);
 }
 
 bool RelativeLayout::LayoutParams::shouldResolveLayoutDirection(int layoutDirection) {
