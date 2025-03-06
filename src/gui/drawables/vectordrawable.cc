@@ -6,6 +6,7 @@
 #include <drawables/hwpathparser.h>
 #include <drawables/vectordrawable.h>
 #include <drawables/hwvectordrawable.h>
+#include <drawables/drawableinflater.h>
 namespace cdroid{
 
 VectorDrawable::VectorDrawable()
@@ -291,115 +292,12 @@ float VectorDrawable::getPixelSize() {
 }
 
 VectorDrawable* VectorDrawable::create(Context*ctx, const std::string&rid) {
-    VectorDrawable* drawable = new VectorDrawable();
-    drawable->inflate(ctx,rid);
+    VectorDrawable* drawable = (VectorDrawable*)DrawableInflater::loadDrawable(ctx,rid);//new VectorDrawable();
+    //drawable->inflate(ctx,rid);
     return drawable;
 }
 
-class VectorDrawable::VectorParser{
-private:
-    friend VectorDrawable;
-    Context*ctx;
-    std::string package;
-    VectorDrawableState*state;
-    VectorDrawable*vd;
-    VFullPath*path;
-    int gradientType;
-    int gradientUseage;/*0-->stroke 1-->fill*/
-    Cairo::RefPtr<Cairo::Gradient> gradient;
-    std::stack<VectorDrawable::VGroup*>groupStack;
-    VectorDrawable::VGroup*currentGroup;
-    bool noPathTag;
-public:
-    VectorParser(Context*c,const std::string&pkg,VectorDrawable*d){
-        ctx= c;
-        vd = d;
-        state = nullptr;
-        currentGroup= nullptr;
-        package = pkg;
-        noPathTag = true;
-        state = d->mVectorState.get();
-        groupStack.push(state->mRootGroup);
-    }
-    static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
-        VectorParser*d=(VectorParser*)userData;
-        AttributeSet atts(d->ctx,d->package);
-        VGroup* currentGroup = d->groupStack.top();//peek();
-        atts.set(satts);
-        if(strcmp(name,"vector")==0){
-            d->vd->updateStateFromTypedArray(d->ctx,atts);
-        }else if(strcmp(name,SHAPE_PATH)==0){
-            VFullPath*path=new VFullPath();
-            path->inflate(d->ctx,atts,"");
-            currentGroup->addChild(path);
-            if(!path->getPathName().empty())
-                d->state->mVGTargetsMap.emplace(path->getPathName(),path);
-            d->path = path;
-            d->noPathTag = false;
-            //d->state->mChangingConfigurations |= path->mChangingConfigurations;
-        }else if(strcmp(name,SHAPE_CLIP_PATH)==0){
-            VClipPath*path=new VClipPath();
-            path->inflate(d->ctx,atts,"");
-            currentGroup->addChild(path);
-            if(!path->getPathName().empty())
-                d->state->mVGTargetsMap.emplace(path->getPathName(),path);
-            //d->state->mChangingConfigurations |= path->mChangingConfigurations;
-        }else if(strcmp(name,SHAPE_GROUP)==0){
-            VGroup*newChildGroup=new VGroup();
-            newChildGroup->inflate(d->ctx,atts,"");
-            currentGroup->addChild(newChildGroup);
-            d->groupStack.push(newChildGroup);
-            if(!newChildGroup->getGroupName().empty())
-                d->state->mVGTargetsMap.emplace(newChildGroup->getGroupName(),newChildGroup);
-            //d->state->mChangingConfigurations |= path->mChangingConfigurations;
-        }else if(strstr(name,"attr")!=0){
-            std::string name=atts.getString("name");
-            d->gradientUseage=name.find("stroke")!=std::string::npos?0:1;
-        }else if(strcmp(name,"gradient")==0){
-            float startX,startY,endX,endY,centerX,centerY,radius;
-            d->gradientType=atts.getInt("type",std::unordered_map<std::string,int>{
-                    {"linear",0},{"radial",1},{"sweep",2}},0);
-            switch( d->gradientType){
-            case 0:
-                startX=atts.getFloat("startX",0);
-                startY=atts.getFloat("startY",0);
-                endX =atts.getFloat("endX",0);
-                endY =atts.getFloat("endY",0);
-                d->gradient=Cairo::LinearGradient::create(startX,startY,endX,endY);break;
-            case 1:
-                centerX=atts.getFloat("centerX",0);
-                centerY=atts.getFloat("centerY",0);
-                radius=atts.getFloat("gradientRadius",0);
-                d->gradient=Cairo::RadialGradient::create(centerX,centerY,0,centerX,centerY,radius);break;
-            case 2:break;
-            }
-            if(d->gradientUseage==0){
-                //d->path->mStrokeGradient=d->gradient;
-                d->path->mNativePtr->mutateStagingProperties()->setStrokeGradient(d->gradient);
-            } else {
-                //d->path->mFillGradient=d->gradient;
-                d->path->mNativePtr->mutateStagingProperties()->setFillGradient(d->gradient);
-            }
-        }else if(strcmp(name,"item")==0){
-            const float offset =atts.getFloat("offset",0.f);
-            const uint32_t color =atts.getColor("color",0);
-            Color c(color);
-            d->gradient->add_color_stop_rgba(offset,c.red(),c.green(),c.blue(),c.alpha());
-        }
-    }
-
-    static void endElement(void *userData, const XML_Char *name){
-        VectorParser*d=(VectorParser*)userData;
-        if(strcmp(name,SHAPE_GROUP)==0){
-            d->groupStack.pop();
-        }else if(strcmp(name,SHAPE_PATH)==0){
-            d->path = nullptr;
-            d->gradient=nullptr;
-        }
-    }
-};/*VectorDrawable::VectorParser*/
-
-void VectorDrawable::inflate(Context*ctx,const std::string&resId){
+void VectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
 
     if (mVectorState->mRootGroup != nullptr || mVectorState->mNativeTree != nullptr) {
         // This VD has been used to display other VD resource content, clean up.
@@ -421,40 +319,17 @@ void VectorDrawable::inflate(Context*ctx,const std::string&resId){
     auto state = mVectorState;
     mVectorState->setDensity(Drawable::resolveDensity(0));
 
+    updateStateFromTypedArray(atts);
     mDpiScaledDirty = true;
     mVectorState->mCacheDirty = true;
 
-    char buf[256];
-    std::streamsize len;
-    std::string package;
-    std::unique_ptr<std::istream> stream;
-    if(ctx) stream = ctx->getInputStream(resId,&package);
-    if((stream==nullptr)||!(*stream))
-        stream = std::make_unique<std::ifstream>(resId);
-    if(!(*stream))return;
-    VectorParser data(ctx,package,this);
-    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
-    //data.groupStack.push(data.state->mRootGroup);
-    XML_SetUserData(parser,&data);
-    XML_SetElementHandler(parser, VectorParser::startElement, VectorParser::endElement);
-     do {
-        stream->read(buf,sizeof(buf));
-        len = stream->gcount();
-        if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
-            const char*es=XML_ErrorString(XML_GetErrorCode(parser));
-            LOGE("%s:%s at line %ld",resId.c_str(),es, XML_GetCurrentLineNumber(parser));
-            XML_ParserFree(parser);
-            return;
-        }
-    } while(len!=0);
-    XML_ParserFree(parser);
-    LOGE_IF(data.noPathTag,"<shape> tag not founded"); 
+    inflateChildElements(parser,atts);
     mVectorState->onTreeConstructionFinished();
     // Update local properties.
     updateLocalState();
 }
 
-void VectorDrawable::updateStateFromTypedArray(Context*ctx,const AttributeSet&atts){
+void VectorDrawable::updateStateFromTypedArray(const AttributeSet&atts){
     auto state = mVectorState;
 
     // Account for any configuration changes.
@@ -511,6 +386,72 @@ void VectorDrawable::updateStateFromTypedArray(Context*ctx,const AttributeSet&at
         //state->mVGTargetsMap.emplace(name, state.get());
     }
 
+}
+
+void VectorDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSet&atts){
+    auto state = mVectorState;
+    bool noPathTag = true;
+
+    // Use a stack to help to build the group tree.
+    // The top of the stack is always the current group.
+    std::stack<VGroup*> groupStack;;
+    groupStack.push(state->mRootGroup);
+
+    int eventType;
+    const int innerDepth = parser.getDepth();
+    XmlPullParser::XmlEvent event;
+    // Parse everything until the end of the vector element.
+    while (((eventType =parser.next(event))!= XmlPullParser::END_DOCUMENT)
+            && (parser.getDepth() >= innerDepth || eventType != XmlPullParser::END_TAG)) {
+        if (eventType == XmlPullParser::START_TAG) {
+            const std::string tagName = parser.getName();
+            VGroup* currentGroup = groupStack.top();
+
+            if (tagName.compare(SHAPE_PATH)==0) {
+                VFullPath* path = new VFullPath();
+                path->inflate(parser,event.attributes);
+                currentGroup->addChild(path);
+                if (!path->getPathName().empty()) {
+                    state->mVGTargetsMap.emplace(path->getPathName(), path);
+                }
+                noPathTag = false;
+                //state->mChangingConfigurations |= path->mChangingConfigurations;
+            } else if (tagName.compare(SHAPE_CLIP_PATH)==0) {
+                VClipPath* path = new VClipPath();
+                path->inflate(parser,event.attributes);
+                currentGroup->addChild(path);
+                if (!path->getPathName().empty()) {
+                    state->mVGTargetsMap.emplace(path->getPathName(), path);
+                }
+                //state->mChangingConfigurations |= path->mChangingConfigurations;
+            } else if (tagName.compare(SHAPE_GROUP)==0) {
+                VGroup* newChildGroup = new VGroup();
+                newChildGroup->inflate(parser,event.attributes);
+                currentGroup->addChild(newChildGroup);
+                groupStack.push(newChildGroup);
+                if (!newChildGroup->getGroupName().empty()) {
+                    state->mVGTargetsMap.emplace(newChildGroup->getGroupName(), newChildGroup);
+                }
+                state->mChangingConfigurations |= newChildGroup->mChangingConfigurations;
+            }
+        } else if (eventType == XmlPullParser::END_TAG) {
+            const std::string tagName = parser.getName();
+            if (tagName.compare(SHAPE_GROUP)==0) {
+                groupStack.pop();
+            }
+        }
+    }
+
+    /*if (noPathTag) {
+        std::ostringstream tag = new StringBuffer();
+
+        if (tag.length() > 0) {
+            tag.append(" or ");
+        }
+        tag.append(SHAPE_PATH);
+
+        throw new XmlPullParserException("no " + tag + " defined");
+    }*/
 }
 
 int VectorDrawable::getChangingConfigurations()const {
@@ -846,7 +787,7 @@ long VectorDrawable::VGroup::getNativePtr() {
 }
 
 
-void VectorDrawable::VGroup::inflate(Context*, const AttributeSet&atts, Theme theme) {
+void VectorDrawable::VGroup::inflate(XmlPullParser&parser,const AttributeSet&atts) {
     const auto properties=mNativePtr->stagingProperties();
     float rotate = atts.getFloat("rotation",properties->getRotation());
     float pivotX = atts.getFloat("pivotX",properties->getPivotX());
@@ -1081,8 +1022,8 @@ long VectorDrawable::VClipPath::getNativePtr() {
 }
 
 
-void VectorDrawable::VClipPath::inflate(Context*ctx,const AttributeSet& attrs, Theme theme) {
-    updateStateFromTypedArray(ctx,attrs);
+void VectorDrawable::VClipPath::inflate(XmlPullParser&,const AttributeSet& attrs) {
+    updateStateFromTypedArray(attrs);
 }
 
 bool VectorDrawable::VClipPath::canApplyTheme() {
@@ -1105,7 +1046,7 @@ bool VectorDrawable::VClipPath::hasFocusStateSpecified()const {
     return false;
 }
 
-void VectorDrawable::VClipPath::updateStateFromTypedArray(Context*,const AttributeSet&atts) {
+void VectorDrawable::VClipPath::updateStateFromTypedArray(const AttributeSet&atts) {
     // Account for any configuration changes.
     mChangingConfigurations =0;//|= a.getChangingConfigurations();
 
@@ -1245,14 +1186,15 @@ long VectorDrawable::VFullPath::getNativePtr() {
     return (long)mNativePtr;
 }
 
-void VectorDrawable::VFullPath::inflate(Context*ctx,const AttributeSet& attrs, Theme theme) {
+void VectorDrawable::VFullPath::inflate(XmlPullParser&parser,const AttributeSet& attrs) {
     /*final TypedArray a = obtainAttributes(r, theme, attrs,R.styleable.VectorDrawablePath);
     updateStateFromTypedArray(a);
     a.recycle();*/
-    updateStateFromTypedArray(ctx,attrs);
+    updateStateFromTypedArray(attrs);
+    inflateGradients(parser,attrs);
 }
 
-void VectorDrawable::VFullPath::updateStateFromTypedArray(Context*,const AttributeSet& atts) {
+void VectorDrawable::VFullPath::updateStateFromTypedArray(const AttributeSet& atts) {
     auto properties = mNativePtr->stagingProperties();
     float strokeWidth = properties->getStrokeWidth();
     int strokeColor = properties->getStrokeColor();
@@ -1351,6 +1293,59 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(Context*,const Attribu
     mNativePtr->mutateStagingProperties()->updateProperties(strokeWidth, strokeColor, strokeAlpha,
             fillColor, fillAlpha, trimPathStart, trimPathEnd, trimPathOffset,
             strokeMiterLimit, strokeLineCap, strokeLineJoin, fillType);
+}
+
+void VectorDrawable::VFullPath::inflateGradients(XmlPullParser&parser,const AttributeSet&atts){
+    int eventType,depth,gradientType,strokeFill=-1;
+    const int innerDepth = parser.getDepth();
+    XmlPullParser::XmlEvent event;
+    Cairo::RefPtr<Cairo::Gradient>gradient;
+    // Parse everything until the end of the vector element.
+    while (((eventType =parser.next(event,depth))!= XmlPullParser::END_DOCUMENT)
+            && (depth >= innerDepth || eventType != XmlPullParser::END_TAG)) {
+        std::string tagName = parser.getName();
+        if ((eventType==XmlPullParser::END_TAG)&&tagName.compare("gradient")==0){
+            if(strokeFill==0)mNativePtr->mutateStagingProperties()->setStrokeGradient(gradient);
+            else mNativePtr->mutateStagingProperties()->setFillGradient(gradient);
+            LOGV("===add gradient %p to %s",gradient.get(),(gradientType?"fill":"stroke"));
+        }
+        if(tagName.compare("path")==0)break;
+        if (eventType != XmlPullParser::START_TAG)continue;
+        if(tagName.find("attr")!=std::string::npos){
+            const std::string name =event.attributes.getString("name");
+            LOGV("tag=%s name=%s depth=%d/%d",tagName.c_str(),name.c_str(),innerDepth,parser.getDepth());
+            strokeFill=(name.find("stroke")!=std::string::npos)?0:1;
+        }
+        if(tagName.compare("gradient")==0){
+            AttributeSet& a = event.attributes;
+            float centerX,centerY,radius;
+            gradientType = a.getInt("type",std::unordered_map<std::string,int>{
+                    {"linear",0},{"radial",1},{"sweep",2}},0);
+            switch(gradientType){
+            case 0:
+                gradient = Cairo::LinearGradient::create(
+                        a.getFloat("startX",0), a.getFloat("startY",0),
+                        a.getFloat("endX",0) , a.getFloat("endY",0));
+                break;
+            case 1:
+                centerX= a.getFloat("centerX",0);
+                centerY= a.getFloat("centerY",0);
+                radius = a.getFloat("gradientRadius",0);
+                gradient=Cairo::RadialGradient::create(centerX,centerY,0,centerX,centerY,radius);
+                break;
+            case 2:
+            default:LOGD("TODO: GradientType=%s",a.getString("type").c_str());break;
+            }
+        }
+        if(tagName.compare("item")==0){
+            AttributeSet& a = event.attributes;
+            const float offset = a.getFloat("offset",0.f);
+            const uint32_t color =a.getColor("color",0);
+            Color c(color);
+            LOGV("gradient %p %.2f colorstop=%x",gradient.get(),offset,color);
+            gradient->add_color_stop_rgba(offset,c.red(),c.green(),c.blue(),c.alpha());
+        }
+    }
 }
 
 bool VectorDrawable::VFullPath::canApplyTheme() {

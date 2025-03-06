@@ -18,7 +18,10 @@ class AnimatedVectorDrawable;
 class VectorDrawable:public Drawable {
 public:
     class VectorDrawableState;
-    class VectorParser;
+    class VGroup;
+    class VPath;
+    class VClipPath;
+    class VFullPath;
     friend AnimatedVectorDrawable;
 private:
     static constexpr const char*const SHAPE_CLIP_PATH = "clip-path";
@@ -42,8 +45,9 @@ private:
 private:
     VectorDrawable(std::shared_ptr<VectorDrawableState> state);
     void updateLocalState();
-    void updateStateFromTypedArray(Context*,const AttributeSet&atts);
     bool needMirroring();
+    void updateStateFromTypedArray(const AttributeSet&atts);
+    void inflateChildElements(XmlPullParser&parser,const AttributeSet&);
 protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
     void* getTargetByName(const std::string& name);
@@ -82,19 +86,13 @@ public:
      */
     float getPixelSize();
     static VectorDrawable* create(Context*,const std::string&resId);
-    void inflate(Context*,const std::string&);
     int getChangingConfigurations()const override;
     void setAutoMirrored(bool mirrored) override;
     bool isAutoMirrored() override;
     long getNativeTree();
     void setAntiAlias(bool aa);
+    void inflate(XmlPullParser&,const AttributeSet&)override;
 public:
-    class VectorDrawableState;
-    class VGroup;
-    class VPath;
-    class VClipPath;
-    class VFullPath;
-
     class VObject {
         friend VectorDrawableState;
         friend VGroup;
@@ -107,7 +105,7 @@ public:
             mTreePtr = ptr;
         }
         virtual long getNativePtr()=0;
-        virtual void inflate(Context*,const AttributeSet& attrs, Theme theme)=0;
+        virtual void inflate(XmlPullParser&,const AttributeSet& attrs)=0;
         virtual bool canApplyTheme()=0;
         virtual void applyTheme(Theme t)=0;
         virtual bool onStateChange(const std::vector<int>& state)=0;
@@ -235,7 +233,6 @@ public:
     void addChild(VObject* child);
     void setTree(VirtualRefBasePtr treeRoot)override;
     long getNativePtr()override;
-    void inflate(Context*,const AttributeSet& attrs, Theme theme);
     void updateStateFromTypedArray(Context*,const AttributeSet&atts);
     bool onStateChange(const std::vector<int>& stateSet);
     bool isStateful()const override;
@@ -258,6 +255,7 @@ public:
     void setTranslateX(float translateX);
     float getTranslateY();
     void setTranslateY(float translateY);
+    void inflate(XmlPullParser&,const AttributeSet&atts)override;
 };
 
 /**
@@ -292,13 +290,13 @@ public:
     VClipPath(const VClipPath* copy);
     ~VClipPath();
     long getNativePtr()override;
-    void inflate(Context*,const AttributeSet& attrs, Theme theme);
     bool canApplyTheme() override;
     void applyTheme(Theme theme) override;
     bool onStateChange(const std::vector<int>& stateSet) override;
     bool isStateful() const override;
     bool hasFocusStateSpecified() const override;
-    void updateStateFromTypedArray(Context*,const AttributeSet&atts);
+    void updateStateFromTypedArray(const AttributeSet&atts);
+    void inflate(XmlPullParser&,const AttributeSet& attrs)override;
 };
 
 /**
@@ -343,9 +341,9 @@ private:
     ComplexColor* mFillColors = nullptr;
     hw::FullPath* mNativePtr;
 private:
-    friend VectorParser;
-    void updateStateFromTypedArray(Context*,const AttributeSet&atts);
+    void updateStateFromTypedArray(const AttributeSet&atts);
     bool canComplexColorApplyTheme(ComplexColor* complexColor);
+    void inflateGradients(XmlPullParser&,const AttributeSet&atts);
 public:
     VFullPath();
     VFullPath(const VFullPath* copy);
@@ -356,7 +354,7 @@ public:
     bool isStateful() const override;
     bool hasFocusStateSpecified()const override;
     long getNativePtr() override;
-    void inflate(Context*,const AttributeSet& attrs, Theme theme);
+    void inflate(XmlPullParser&,const AttributeSet& attrs)override;
 
     bool canApplyTheme()override;
     void applyTheme(Theme t)override;

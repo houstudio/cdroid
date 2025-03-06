@@ -125,44 +125,26 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     const FullPathProperties& properties = useStagingData ? mStagingProperties : mProperties;
     const Cairo::RefPtr<cdroid::Path> renderPath = getUpdatedPath(useStagingData, tempStagingPath);
     // Draw path's fill, if fill color or gradient is valid
-    bool needsFill = false;
-    bool needsStroke = false;
-    if (properties.getFillGradient() != nullptr) {
-        //paint.setColor(applyAlpha(SK_ColorBLACK, properties.getFillAlpha()));
-        //paint.setShader(sk_sp<SkShader>(SkSafeRef(properties.getFillGradient())));
-        needsFill = true;
-    } else if (properties.getFillColor() != 0/*SK_ColorTRANSPARENT*/) {
-        //paint.setColor(applyAlpha(properties.getFillColor(), properties.getFillAlpha()));
-        needsFill = true;
-    }
+    const bool needsFill = (properties.getFillGradient() != nullptr)||(properties.getFillAlpha()&&properties.getFillColor());
+    const bool needsStroke = (properties.getStrokeGradient()!=nullptr)||(properties.getStrokeColor()&&properties.getStrokeAlpha());
 
-    if (properties.getStrokeGradient() != nullptr) {
-        //paint.setColor(applyAlpha(SK_ColorBLACK, properties.getStrokeAlpha()));
-        //paint.setShader(sk_sp<SkShader>(SkSafeRef(properties.getStrokeGradient())));
-        needsStroke = true;
-    } else if (properties.getStrokeColor() != 0/*SK_ColorTRANSPARENT*/) {
-        //paint.setColor(applyAlpha(properties.getStrokeColor(), properties.getStrokeAlpha()));
-        needsStroke = true;
-    }
 
     outCanvas.set_antialias(mAntiAlias?Cairo::ANTIALIAS_GRAY:Cairo::ANTIALIAS_NONE);
     renderPath->append_to_context(&outCanvas);
-    outCanvas.set_color(properties.getFillColor());needsFill=true;needsStroke=true;
+    //outCanvas.set_color(properties.getFillColor());needsFill=true;needsStroke=true;
     if (needsFill) {
         if(properties.getFillGradient())
             outCanvas.set_source(properties.getFillGradient());
-        //paint.setStyle(SkPaint::Style::kFill_Style);
-        //setAntiAlias(mAntiAlias);
+        else outCanvas.set_color(properties.getFillColor());
         if(needsStroke)
             outCanvas.fill_preserve();
         else outCanvas.fill();//drawPath(renderPath, paint);
     }
 
-    // Draw path's stroke, if stroke color or Gradient is valid
-    outCanvas.set_color(properties.getStrokeColor());
     if (needsStroke) {
         if(properties.getStrokeGradient())
             outCanvas.set_source(properties.getStrokeGradient());
+        else outCanvas.set_color(properties.getStrokeColor());
         outCanvas.set_line_join((Cairo::Context::LineJoin)properties.getStrokeLineJoin());
         //paint.setStrokeJoin(SkPaint::Join(properties.getStrokeLineJoin()));
         outCanvas.set_line_cap((Cairo::Context::LineCap)properties.getStrokeLineCap());
