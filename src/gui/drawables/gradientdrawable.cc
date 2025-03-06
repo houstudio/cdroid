@@ -1234,7 +1234,7 @@ void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
     const bool hasCenterColor = atts.hasAttribute("centerColor");
     const int centerColor = atts.getColor("centerColor", 0);
     const int endColor = atts.getColor("endColor", 0);
-
+    setImagePattern(atts.getContext(),atts.getString("bitmap"));
     if (hasCenterColor) {
         st->mGradientColors.resize(3);
         st->mGradientColors[0] = startColor;
@@ -1252,7 +1252,7 @@ void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
         st->mGradientColors[0] = startColor;
         st->mGradientColors[1] = endColor;
         st->mPositions[0] = 0;
-        st->mPositions[1] =-1.f;
+        st->mPositions[1] = 1.f;
     }
 
     if (st->mGradient == LINEAR_GRADIENT) {
@@ -1304,6 +1304,7 @@ void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
                     "<gradient> tag requires 'gradientRadius'attribute with radial type");
         }
     }
+    mGradientIsDirty =true;
 }
 
 void GradientDrawable::updateGradientDrawableSolid(const AttributeSet&atts){
