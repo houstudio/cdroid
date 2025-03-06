@@ -7,6 +7,7 @@ namespace cdroid{
 
 ClipDrawable::ClipState::ClipState():DrawableWrapperState(){
     mGravity = Gravity::LEFT;
+    mOrientation = HORIZONTAL;
 }
 
 ClipDrawable::ClipState::ClipState(const ClipState& state)
@@ -101,7 +102,9 @@ void ClipDrawable::draw(Canvas& canvas){
 
 void ClipDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     DrawableWrapper::inflate(parser,atts);
-    mState->mOrientation = atts.getInt("clipOrientation", mState->mOrientation);
+    mState->mOrientation = atts.getInt("clipOrientation",std::unordered_map<std::string,int>{
+        {"horizontal",(int)HORIZONTAL},{"vertical",(int)VERTICAL}
+    }, mState->mOrientation);
     mState->mGravity = atts.getGravity("gravity", mState->mGravity);
 }
 
