@@ -55,6 +55,7 @@ protected:
     void setAllowCaching(bool allowCaching);
 public:
     VectorDrawable();
+    ~VectorDrawable()override;
     Drawable* mutate() override;
     void clearMutated() override;
     std::shared_ptr<ConstantState> getConstantState() override;
@@ -272,6 +273,7 @@ protected:
 public:
     VPath();
     VPath(const VPath* copy);
+    ~VPath()override;
     Property* getProperty(const std::string& propertyName);
     std::string getPathName()const;
     /* Setters and Getters, used by animator from AnimatedVectorDrawable. */

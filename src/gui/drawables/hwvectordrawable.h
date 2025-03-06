@@ -451,7 +451,7 @@ private:
     GroupProperties mProperties = GroupProperties(this);
     GroupProperties mStagingProperties = GroupProperties(this);
     bool mStagingPropertiesDirty = true;
-    std::vector<std::unique_ptr<Node> > mChildren;
+    std::vector<Node*> mChildren;
 };
 
 using Bitmap=Cairo::RefPtr<Cairo::ImageSurface>;
@@ -627,7 +627,7 @@ private:
     const static int MAX_CACHED_BITMAP_SIZE;
 
     bool mAllowCaching = true;
-    std::unique_ptr<Group> mRootNode;
+    Group* mRootNode;
 
     TreeProperties mProperties = TreeProperties(this);
     TreeProperties mStagingProperties = TreeProperties(this);
@@ -640,7 +640,5 @@ private:
     mutable bool mWillBeConsumed = false;
 };
 }/*endof namespace vectordrawable*/
-//typedef hw::Path::Data PathData;
-typedef hw::Tree VectorDrawableRoot;
 }/*endof namespace cdroid*/
 #endif/*__HWUI_VECTOR_DRAWABLE_H__*/

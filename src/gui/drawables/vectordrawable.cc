@@ -23,6 +23,11 @@ VectorDrawable::VectorDrawable(std::shared_ptr<VectorDrawableState> state) {
     updateLocalState();
 }
 
+VectorDrawable::~VectorDrawable(){
+    delete mTintFilter;
+    delete mColorFilter;
+}
+
 void VectorDrawable::updateLocalState() {
     const int density = Drawable::resolveDensity(mVectorState->mDensity);
     if (mTargetDensity != density) {
@@ -646,6 +651,7 @@ bool VectorDrawable::VectorDrawableState::onStateChange(const std::vector<int>& 
 VectorDrawable::VectorDrawableState::~VectorDrawableState(){
     int bitmapCacheSize = mLastHWCachePixelCount * 4 + mLastSWCachePixelCount * 4;
     delete mRootGroup;
+    delete mNativeTree;
 }
 
 /**
@@ -713,7 +719,7 @@ VectorDrawable::VGroup::~VGroup(){
     for(auto child:mChildren){
         delete child;
     }
-    //delete mNativePtr;
+    delete mNativePtr;
 }
 
 // Temp array to store transform values obtained from native.
@@ -975,6 +981,10 @@ VectorDrawable::VPath::VPath(const VPath* copy) {
     mPathName = copy->mPathName;
     mChangingConfigurations = copy->mChangingConfigurations;
     mPathData = (copy->mPathData == nullptr) ? nullptr : new PathParser::PathData(*copy->mPathData);
+}
+
+VectorDrawable::VPath::~VPath(){
+    delete mPathData;
 }
 
 std::string VectorDrawable::VPath::getPathName() const{
