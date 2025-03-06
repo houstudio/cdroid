@@ -388,17 +388,28 @@ void AnimatedStateListDrawable::AnimatedVectorDrawableTransition::stop(){
 }
 
 void AnimatedStateListDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    StateListDrawable::inflate(parser,atts);
+    StateListDrawable::inflateWithAttributes(parser,atts);
 
-    mState->setVariablePadding(atts.getBoolean("variablePadding", mState->mVariablePadding));
-    mState->setConstantSize(atts.getBoolean("constantSize", mState->mConstantSize));
-    mState->setEnterFadeDuration(atts.getInt("enterFadeDuration", mState->mEnterFadeDuration));
-    mState->setExitFadeDuration(atts.getInt("exitFadeDuration", mState->mExitFadeDuration));
-
-    setDither(atts.getBoolean("dither", mState->mDither));
-    setAutoMirrored(atts.getBoolean("autoMirrored", mState->mAutoMirrored));
+    updateStateFromTypedArray(atts);
+    //updateDensity();
     inflateChildElement(parser,atts);
     init();
+}
+
+void AnimatedStateListDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
+    auto state = mState;
+
+    // Account for any configuration changes.
+    //state->mChangingConfigurations |= a.getChangingConfigurations();
+    // Extract the theme attributes, if any.
+    //state->mThemeAttrs = a.extractThemeAttrs();
+
+    state->mVariablePadding = atts.getBoolean("variablePadding", state->mVariablePadding);
+    state->mConstantSize = atts.getBoolean("constantSize", state->mConstantSize);
+    state->mEnterFadeDuration = atts.getInt("enterFadeDuration", state->mEnterFadeDuration);
+    state->mExitFadeDuration = atts.getInt("exitFadeDuration", state->mExitFadeDuration);
+    state->mDither = atts.getBoolean("dither", state->mDither);
+    state->mAutoMirrored = atts.getBoolean("autoMirrored", state->mAutoMirrored);
 }
 
 void AnimatedStateListDrawable::init(){
@@ -416,11 +427,11 @@ void AnimatedStateListDrawable::inflateChildElement(XmlPullParser&parser,const A
         }
 
         if (depth > innerDepth) continue;
-
+LOGD("%s",event.name.c_str());
         if (event.name.compare(ELEMENT_ITEM)==0) {
-            parseItem(parser, atts);
+            parseItem(parser, event.attributes);
         } else if (event.name.compare(ELEMENT_TRANSITION)==0) {
-            parseTransition(parser, atts);
+            parseTransition(parser, event.attributes);
         }
     }
 }
@@ -444,7 +455,7 @@ int AnimatedStateListDrawable::parseItem(XmlPullParser&parser,const AttributeSet
             throw std::logic_error(//parser.getPositionDescription()
                     ": <item> tag requires a 'drawable' attribute or child tag defining a drawable");
         }
-        dr = Drawable::createFromXmlInner(parser, atts);
+        dr = Drawable::createFromXmlInner(parser, event.attributes);
     }
 
     return mState->addStateSet(states, dr, keyframeId);
@@ -468,7 +479,7 @@ int AnimatedStateListDrawable::parseTransition(XmlPullParser&parser,const Attrib
             throw std::logic_error(//parser.getPositionDescription()
                             ": <transition> tag requires a 'drawable' attribute or child tag defining a drawable");
         }
-        dr = Drawable::createFromXmlInner(parser, atts);
+        dr = Drawable::createFromXmlInner(parser, event.attributes);
     }
 
     return mState->addTransition(fromId, toId, dr, reversible);
