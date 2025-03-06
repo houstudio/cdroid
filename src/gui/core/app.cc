@@ -49,6 +49,11 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     args::ValueFlag <std::string> monkey(parser,"monkey","events playback path",{'m',"monkey"});
     args::ValueFlag <std::string> record(parser,"record","events record path",{'r',"record"});
     args::ValueFlag <std::string> datadir(parser,"data","data directory",{'D',"data"});
+    
+    //cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
+    cla.addArguments(extoptions.data(),extoptions.size());
+    cla.setSwitchChars("-");
+    const int rc = cla.parse(argc,argv);
     try{
         if(argc&&argv)parser.ParseCLI(argc,argv);
         std::cout<<"----"<<args::get(datadir)<<std::endl;//app ./src will print ./src
