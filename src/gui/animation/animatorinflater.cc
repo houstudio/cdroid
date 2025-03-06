@@ -79,10 +79,10 @@ public:
         if(strcmp(name,"item")==0){
             pd->statelistAnimator->addState(back.state,back.animator);
         }else if(strcmp(name,"set")==0){
-            const int together = back.atts.getInt("ordering",std::unordered_map<std::string,int>{
-                 {"together",0}, {"sequentially",1}},0);
+            const int ordering = back.atts.getInt("ordering",std::unordered_map<std::string,int>{
+                 {"together",(int)TOGETHER}, {"sequentially",(int)SEQUENTIALLY}},TOGETHER);
             AnimatorSet*aset = (AnimatorSet*)back.animator;
-            if(together==0) aset->playTogether(pd->mChildren);
+            if(ordering==TOGETHER) aset->playTogether(pd->mChildren);
             else aset->playSequentially(pd->mChildren);
             if(pd->items.size()>1){
                 AnimNode* parent = pd->fromTop(pd->statelistAnimator?-2:-1);
