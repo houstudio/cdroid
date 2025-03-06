@@ -20,8 +20,8 @@ private:
         Cairo::RefPtr<NinePatch>mNinePatch;
         NinePatchState();
         NinePatchState(const NinePatchState&state);
-        NinePatchState(Cairo::RefPtr<Cairo::ImageSurface>bitmap,const Rect*padding=nullptr);
-        NinePatchState(Context*ctx,const std::string&resid);
+        void setBitmap(Cairo::RefPtr<Cairo::ImageSurface>bitmap,const Rect*padding=nullptr);
+        void setBitmap(Context*ctx,const std::string&resid,const Rect*padding=nullptr);
         NinePatchDrawable*newDrawable()override;
         void draw(Canvas&canvas,const Rect&rect,int alpha);
         int getChangingConfigurations()const override;

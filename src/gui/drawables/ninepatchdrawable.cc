@@ -7,7 +7,7 @@ using namespace Cairo;
 namespace cdroid{
 //https://github.com/soramimi/QtNinePatch/blob/master/NinePatch.cpp
 
-NinePatchDrawable::NinePatchDrawable():NinePatchDrawable(std::make_shared<NinePatchState>(nullptr)){
+NinePatchDrawable::NinePatchDrawable():NinePatchDrawable(std::make_shared<NinePatchState>()){
 }
 
 NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
@@ -20,8 +20,8 @@ NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
     computeBitmapSize();
 }
 
-NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid){
-    mNinePatchState = std::make_shared<NinePatchState>(ctx,resid);//->getImage(resid));
+NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid):NinePatchDrawable(){
+    mNinePatchState->setBitmap(ctx,resid);
     mAlpha = 255;
     mMutated = false;
     mFilterBitmap = false;
@@ -29,8 +29,8 @@ NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid){
     computeBitmapSize();
 }
 
-NinePatchDrawable::NinePatchDrawable(RefPtr<ImageSurface>bmp){
-    mNinePatchState = std::make_shared<NinePatchState>(bmp);
+NinePatchDrawable::NinePatchDrawable(RefPtr<ImageSurface>bmp):NinePatchDrawable(){
+    mNinePatchState->setBitmap(bmp);
     mAlpha = 255;
     mMutated = false;
     mFilterBitmap = false;
@@ -43,9 +43,10 @@ NinePatchDrawable::~NinePatchDrawable(){
 }
 
 void NinePatchDrawable::computeBitmapSize(){
-    const RefPtr<ImageSurface> ninePatch = mNinePatchState->mNinePatch->mImage;
     mPadding.setEmpty();
-    if (ninePatch == nullptr) return;
+    if ( (mNinePatchState->mNinePatch==nullptr)|| (mNinePatchState->mNinePatch->mImage==nullptr))return;
+    const RefPtr<ImageSurface> ninePatch = mNinePatchState->mNinePatch->mImage;
+
     const int sourceDensity =160;// ninePatch.getDensity();
     const int targetDensity =160;// mTargetDensity;
 
@@ -250,7 +251,7 @@ void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
 
     state->mDither = a.getBoolean("dither", state->mDither);
 
-    const std::string srcResId = a.getString("src", 0);
+    const std::string srcResId = a.getString("src");
     if (!srcResId.empty()) {
         Rect padding ,opticalInsets;
         Cairo::RefPtr<Cairo::ImageSurface> bitmap;
@@ -298,16 +299,16 @@ NinePatchDrawable::NinePatchState::NinePatchState(){
     mOpticalInsets.set(0,0,0,0);
 }
 
-NinePatchDrawable::NinePatchState::NinePatchState(Context*ctx,const std::string&resid)
-	:NinePatchDrawable::NinePatchState(){
-    mNinePatch =RefPtr<NinePatch>(new NinePatch(ctx,resid));
-    mPadding = mNinePatch->getPadding();
+void NinePatchDrawable::NinePatchState::setBitmap(Context*ctx,const std::string&resid,const Rect*padding){
+    auto bitmap = ctx->loadImage(resid,-1,-1);
+    setBitmap(bitmap,padding);
 }
 
-NinePatchDrawable::NinePatchState::NinePatchState(RefPtr<ImageSurface>bitmap,const Rect*padding)
-  :NinePatchDrawable::NinePatchState(){
-    mNinePatch = RefPtr<NinePatch>(new NinePatch(bitmap));
-    mPadding = mNinePatch->getPadding();
+void NinePatchDrawable::NinePatchState::setBitmap(RefPtr<ImageSurface>bitmap,const Rect*padding){
+    if(bitmap){
+        mNinePatch = RefPtr<NinePatch>(new NinePatch(bitmap));
+        mPadding = mNinePatch->getPadding();
+    }
     if(padding)mPadding=*padding;
     LOGV("ninpatch %p size=%dx%d padding=(%d,%d,%d,%d)",this,bitmap->get_width(),bitmap->get_height(),
         mPadding.left,mPadding.top,mPadding.width,mPadding.height);
