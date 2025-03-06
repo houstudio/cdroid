@@ -1080,7 +1080,7 @@ void LayerDrawable::inflateLayers(XmlPullParser& parser,const AttributeSet& atts
             continue;
         }
 
-        if (depth > innerDepth || event.name.compare("item")) {
+        if ((depth > innerDepth) || event.name.compare("item")) {
             continue;
         }
 

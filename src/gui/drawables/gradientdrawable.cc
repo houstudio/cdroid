@@ -1138,7 +1138,6 @@ void GradientDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
 
     // Account for any configuration changes.
     //state.mChangingConfigurations |= a.getChangingConfigurations();
-
     // Extract the theme attributes, if any.
     //state.mThemeAttrs = a.extractThemeAttrs();
 
@@ -1146,6 +1145,7 @@ void GradientDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
         {"rectangle",GradientDrawable::Shape::RECTANGLE},{"oval",GradientDrawable::Shape::OVAL},
         {"line",GradientDrawable::Shape::LINE},          {"ring",GradientDrawable::Shape::RING}
     }, state->mShape);
+
     state->mDither = atts.getBoolean("dither", state->mDither);
 
     if (state->mShape == RING) {
