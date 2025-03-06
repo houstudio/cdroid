@@ -98,6 +98,7 @@ public:
         friend VGroup;
         VirtualRefBasePtr mTreePtr = nullptr;
     public:
+        virtual ~VObject() = default;
         bool isTreeValid() {
             return mTreePtr != nullptr;// && mTreePtr.get() != 0;
         }
@@ -288,7 +289,7 @@ private:
 public:
     VClipPath();
     VClipPath(const VClipPath* copy);
-    ~VClipPath();
+    ~VClipPath()override;
     long getNativePtr()override;
     bool canApplyTheme() override;
     void applyTheme(Theme theme) override;
@@ -347,7 +348,7 @@ private:
 public:
     VFullPath();
     VFullPath(const VFullPath* copy);
-    ~VFullPath();
+    ~VFullPath()override;
     Property* getProperty(const std::string& propertyName)override;
     int getPropertyIndex(const std::string& propertyName);
     bool onStateChange(const std::vector<int>& stateSet) override;

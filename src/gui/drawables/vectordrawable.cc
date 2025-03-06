@@ -306,6 +306,7 @@ void VectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
             // Remove child nodes' reference to tree
             mVectorState->mRootGroup->setTree(nullptr);
         }
+        delete mVectorState->mRootGroup;//
         mVectorState->mRootGroup = new VGroup();
         if (mVectorState->mNativeTree != nullptr) {
             // Subtract the native allocation for the tree wrapper, which contains root node
@@ -712,7 +713,7 @@ VectorDrawable::VGroup::~VGroup(){
     for(auto child:mChildren){
         delete child;
     }
-    delete mNativePtr;
+    //delete mNativePtr;
 }
 
 // Temp array to store transform values obtained from native.
