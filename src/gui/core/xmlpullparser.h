@@ -25,8 +25,10 @@ private:
     bool readChunk();
 public:
     XmlPullParser();
+    XmlPullParser(const std::string&);
     XmlPullParser(Context*ctx,const std::string&resid);
     ~XmlPullParser();
+    void setContent(const std::string&);
     void setContent(Context*ctx,const std::string&resid);
     int getDepth()const;
     std::string getName()const;
