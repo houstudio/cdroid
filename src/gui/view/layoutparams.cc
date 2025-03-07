@@ -81,7 +81,7 @@ MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
             mMarginFlags |= NEED_RESOLUTION_MASK;
         }
     }
-    mMarginFlags |= RTL_COMPATIBILITY_MODE_MASK;
+    //mMarginFlags |= RTL_COMPATIBILITY_MODE_MASK;
     mMarginFlags |= View::LAYOUT_DIRECTION_LTR;
 }
 

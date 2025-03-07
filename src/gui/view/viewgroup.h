@@ -285,6 +285,7 @@ protected:
     virtual void onChildVisibilityChanged(View* child, int oldVisibility, int newVisibility);
     void dispatchVisibilityChanged(View& changedView, int visibility)override;
     void resetResolvedDrawables()override;
+    void resolveDrawables()override;
 
     void setAccessibilityFocus(View* view, AccessibilityNodeInfo* node);
 public:
@@ -364,15 +365,6 @@ public:
     int getTransientViewCount() const;
     int getTransientViewIndex(int position)const;
     View*getTransientView(int position) const;
-    bool canResolveLayoutDirection()const override;
-    bool isLayoutDirectionResolved()const override;
-    int getLayoutDirection()const override;
-    bool canResolveTextDirection()const override;
-    bool isTextDirectionResolved()const override;
-    int getTextDirection()const override;
-    bool canResolveTextAlignment()const override;
-    bool isTextAlignmentResolved()const override;
-    int getTextAlignment()const override;
 
     PointerIcon* onResolvePointerIcon(MotionEvent&, int)override;
 
@@ -382,6 +374,16 @@ public:
     LayoutAnimationController* getLayoutAnimation();
     void setLayoutAnimationListener(Animation::AnimationListener animationListener);
     virtual void requestTransitionStart(LayoutTransition* transition);
+    bool resolveRtlPropertiesIfNeeded()override;
+    bool resolveLayoutDirection()override;
+    bool resolveTextDirection()override;
+    bool resolveTextAlignment()override;
+    void resolvePadding()override;
+    void resolveLayoutParams()override;
+    void resetResolvedLayoutDirection()override;
+    void resetResolvedTextDirection()override;
+    void resetResolvedTextAlignment()override;
+
     Animation::AnimationListener getLayoutAnimationListener();
     void setLayoutTransition(LayoutTransition*);
     LayoutTransition*getLayoutTransition()const; 

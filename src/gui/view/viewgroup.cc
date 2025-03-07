@@ -233,42 +233,6 @@ ViewGroup::~ViewGroup() {
     delete mTransition;
 }
 
-bool ViewGroup::canResolveLayoutDirection()const{
-    return true;
-}
-
-bool ViewGroup::isLayoutDirectionResolved()const{
-    return true;
-}
-
-int ViewGroup::getLayoutDirection()const{
-    return View::LAYOUT_DIRECTION_RESOLVED_DEFAULT;
-}
-
-bool ViewGroup::canResolveTextDirection()const{
-    return true;
-}
-
-bool ViewGroup::isTextDirectionResolved()const{
-    return true;
-}
-
-int ViewGroup::getTextDirection()const{
-    return View::TEXT_DIRECTION_RESOLVED_DEFAULT;
-}
-
-bool ViewGroup::canResolveTextAlignment()const{
-    return true;
-}
-
-bool ViewGroup::isTextAlignmentResolved()const{
-    return true;
-}
-
-int ViewGroup::getTextAlignment()const{
-    return View::TEXT_ALIGNMENT_RESOLVED_DEFAULT;
-}
-
 bool ViewGroup::ensureTouchMode(bool){
     return false;
 }
@@ -2914,6 +2878,120 @@ void ViewGroup::setLayoutAnimationListener(Animation::AnimationListener animatio
 void ViewGroup::requestTransitionStart(LayoutTransition* transition){
     ViewGroup*root = getRootView();
     if(root)root->requestTransitionStart(transition);
+}
+
+bool ViewGroup::resolveRtlPropertiesIfNeeded(){
+    bool result = View::resolveRtlPropertiesIfNeeded();
+    // We dont need to resolve the children RTL properties if nothing has changed for the parent
+    if (result) {
+        for (View*child:mChildren) {
+            if (child->isLayoutDirectionInherited()) {
+                child->resolveRtlPropertiesIfNeeded();
+            }
+        }
+    }
+    return result;
+}
+
+bool ViewGroup::resolveLayoutDirection() {
+    const bool result = View::resolveLayoutDirection();
+    if (result) {
+        int count = getChildCount();
+        for (View*child:mChildren) {
+            if (child->isLayoutDirectionInherited()) {
+                child->resolveLayoutDirection();
+            }
+        }
+    }
+    return result;
+}
+
+bool ViewGroup::resolveTextDirection() {
+    const bool result = View::resolveTextDirection();
+    if (result) {
+        for (View*child:mChildren) {
+            if (child->isTextDirectionInherited()) {
+                child->resolveTextDirection();
+            }
+        }
+    }
+    return result;
+}
+
+bool ViewGroup::resolveTextAlignment() {
+    const bool result = View::resolveTextAlignment();
+    if (result) {
+        for (View*child:mChildren) {
+            if (child->isTextAlignmentInherited()) {
+                child->resolveTextAlignment();
+            }
+        }
+    }
+    return result;
+}
+
+void ViewGroup::resolvePadding() {
+    View::resolvePadding();
+    int count = getChildCount();
+    for (int i = 0; i < count; i++) {
+        View* child = getChildAt(i);
+        if (child->isLayoutDirectionInherited() && !child->isPaddingResolved()) {
+            child->resolvePadding();
+        }
+    }
+}
+
+void ViewGroup::resolveDrawables() {
+    View::resolveDrawables();
+    for (View*child:mChildren) {
+        if (child->isLayoutDirectionInherited() && !child->areDrawablesResolved()) {
+            child->resolveDrawables();
+        }
+    }
+}
+
+void ViewGroup::resolveLayoutParams() {
+    View::resolveLayoutParams();
+    int count = getChildCount();
+    for (int i = 0; i < count; i++) {
+        View* child = getChildAt(i);
+        child->resolveLayoutParams();
+    }
+}
+
+void ViewGroup::resetResolvedTextDirection(){
+    View::resetResolvedTextDirection();
+
+    int count = getChildCount();
+    for (int i = 0; i < count; i++) {
+        View* child = getChildAt(i);
+        if (child->isTextDirectionInherited()) {
+            child->resetResolvedTextDirection();
+        }
+    }
+}
+
+void ViewGroup::resetResolvedTextAlignment(){
+    View::resetResolvedTextAlignment();
+    int count = getChildCount();
+    for (int i = 0; i < count; i++) {
+        View* child = getChildAt(i);
+        if (child->isTextAlignmentInherited()) {
+            child->resetResolvedTextAlignment();
+        }
+    }
+}
+
+void ViewGroup::resetResolvedLayoutDirection() {
+    View::resetResolvedLayoutDirection();
+
+    int count = getChildCount();
+    for (int i = 0; i < count; i++) {
+        View* child = getChildAt(i);
+        if (child->isLayoutDirectionInherited()) {
+            child->resetResolvedLayoutDirection();
+        }
+    }
 }
 
 Animation::AnimationListener ViewGroup::getLayoutAnimationListener(){

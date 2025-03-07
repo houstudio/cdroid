@@ -937,9 +937,9 @@ public:
     std::string getTooltipText()const;
     virtual void resolvePadding();
     virtual void onRtlPropertiesChanged(int layoutDirection);
-    bool resolveLayoutDirection();
-    virtual bool canResolveTextDirection()const;
-    virtual bool canResolveLayoutDirection()const;
+    virtual bool resolveLayoutDirection();
+    bool canResolveTextDirection()const;
+    bool canResolveLayoutDirection()const;
     int getMinimumHeight();
     void setMinimumHeight(int minHeight);
     int getMinimumWidth();
@@ -981,8 +981,8 @@ public:
     
     void setDefaultFocusHighlightEnabled(bool defaultFocusHighlightEnabled);
     bool getDefaultFocusHighlightEnabled()const;
-    virtual bool isLayoutDirectionResolved()const;
-    virtual int getLayoutDirection()const;
+    bool isLayoutDirectionResolved()const;
+    int getLayoutDirection()const;
     virtual bool isOpaque()const;
     virtual View&setLayoutDirection(int layoutDirection);
     bool isLayoutRtl()const;
@@ -1204,15 +1204,15 @@ public:
     virtual bool dispatchNestedPreFling(float velocityX, float velocityY);
     int  getRawTextDirection()const;
     void setTextDirection(int textDirection);
-    virtual int  getTextDirection()const;
-    virtual bool canResolveTextAlignment()const;
-    void resetResolvedTextAlignment();
+    int  getTextDirection()const;
+    bool canResolveTextAlignment()const;
+    virtual void resetResolvedTextAlignment();
     bool isTextAlignmentInherited()const;
-    virtual bool isTextAlignmentResolved()const;
+    bool isTextAlignmentResolved()const;
     virtual bool resolveTextAlignment();
     int  getRawTextAlignment()const;
     void setTextAlignment(int textAlignment);
-    virtual int  getTextAlignment()const;
+    int  getTextAlignment()const;
 
     //Pointer
     virtual bool hasPointerCapture()const;
@@ -1411,7 +1411,7 @@ public:
 
     virtual int getBaseline();
     static bool isLayoutModeOptical(View*);
-    bool resolveRtlPropertiesIfNeeded();
+    virtual bool resolveRtlPropertiesIfNeeded();
     void resetRtlProperties();
     
     virtual void dispatchScreenStateChanged(int screenState);
@@ -1419,9 +1419,9 @@ public:
     virtual void dispatchMovedToDisplay(Display& display, Configuration& config);
     virtual void onMovedToDisplay(int displayId, Configuration& config);
 
-    void resetResolvedTextDirection();
-    void resetResolvedLayoutDirection();
-    void resetResolvedPaddingInternal();
+    virtual void resetResolvedTextDirection();
+    virtual void resetResolvedLayoutDirection();
+    virtual void resetResolvedPaddingInternal();
     virtual void resetResolvedPadding();
     const Display* getDisplay()const;
     void measure(int widthMeasureSpec, int heightMeasureSpec);
@@ -1486,8 +1486,8 @@ public:
     bool hasRtlSupport()const;
     bool isRtlCompatibilityMode()const;
     bool isTextDirectionInherited()const;
-    virtual bool isTextDirectionResolved()const;
-    bool resolveTextDirection();
+    bool isTextDirectionResolved()const;
+    virtual bool resolveTextDirection();
     virtual void requestLayout();
     void forceLayout();
     virtual void resolveLayoutParams();
