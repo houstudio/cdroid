@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <core/systemclock.h>
+#include <core/xmlpullparser.h>
+#include <drawables/drawableinflater.h>
 #include <core/path.h>
 #include <image-decoders/imagedecoder.h>
 #if defined(_WIN32)||defined(_WIN64)
@@ -76,6 +78,13 @@ public:
         postCompose();
         sleep(2);
     }
+    Drawable*fromStream(const std::string&content){
+        int type;
+        XmlPullParser parser(content);
+        XmlPullParser::XmlEvent event;
+        while((type=parser.next(event)!=XmlPullParser::START_TAG)){}
+        return DrawableInflater::inflateFromXml(parser.getName(),parser,event.attributes);
+    }
 };
 
 Canvas* DRAWABLE::ctx=nullptr;
@@ -92,8 +101,7 @@ TEST_F(DRAWABLE,parsexml){
 
 TEST_F(DRAWABLE,color){
     const char*text="<color color=\"red\"/>";
-    std::istringstream is(text);
-    ColorDrawable*d=(ColorDrawable*)Drawable::fromStream(nullptr,is);
+    ColorDrawable*d=(ColorDrawable*)fromStream(text);
     ASSERT_NE(d,(void*)nullptr);
     d->setBounds(50,50,600,400);
     d->draw(*ctx);	
@@ -418,7 +426,7 @@ TEST_F(DRAWABLE,arcshape){
     ctx->fill();
 }
 TEST_F(DRAWABLE,statelist){
-    StateListDrawable*sd=dynamic_cast<StateListDrawable*>(Drawable::inflate(nullptr,
+    StateListDrawable*sd=dynamic_cast<StateListDrawable*>(DrawableInflater::loadDrawable(nullptr,
 			"/home/houzh/Miniwin/src/gui/res/drawable/btn_check.xml"));
     sd->setBounds(100,100,64,64);
     std::vector<int>states={StateSet::ENABLED,StateSet::FOCUSED,StateSet::CHECKED};
@@ -436,8 +444,7 @@ TEST_F(DRAWABLE,inflateshape){
         cdroid:centerColor=\"#ff00ff00\"  cdroid:endColor=\"#ff0000ff\"  cdroid:gradientRadius=\"200dp\" \
         cdroid:type=\"radial\"/></shape>";
     int64_t t1=SystemClock::uptimeMillis();
-    std::istringstream is(text);
-    Drawable*d=Drawable::fromStream(nullptr,is);
+    Drawable*d = fromStream(text);
     d->setBounds(100,100,400,400);
     int64_t t2=SystemClock::uptimeMillis();
     d->draw(*ctx);
@@ -452,8 +459,7 @@ TEST_F(DRAWABLE,inflateclip){
         cdroid:centerColor=\"#ff00ff00\"  cdroid:endColor=\"#ff0000ff\"  cdroid:gradientRadius=\"200dp\" \
         cdroid:type=\"radial\"/></shape></clip>";
     int64_t t1=SystemClock::uptimeMillis();
-    std::istringstream is(text);
-    Drawable*d=Drawable::fromStream(nullptr,is);
+    Drawable*d=fromStream(text);
     d->setBounds(100,100,400,400);
     int64_t t2=SystemClock::uptimeMillis();
     for(int i=0;i<10000;i+=100){
@@ -478,8 +484,7 @@ TEST_F(DRAWABLE,inflatelayer){
               cdroid:centerX=\"0.5\" cdroid:centerY=\"0.5\" cdroid:endColor=\"#a0ff00ff\" cdroid:angle=\"90\"/>\
             </shape> </clip> </item></layer-list>";
 
-   std::istringstream is(text);
-   Drawable*d=Drawable::fromStream(nullptr,is);
+   Drawable*d=fromStream(text);
    d->setBounds(100,100,400,400);
    int64_t t2=SystemClock::uptimeMillis();
    LayerDrawable*ld=dynamic_cast<LayerDrawable*>(d);
@@ -507,8 +512,7 @@ TEST_F(DRAWABLE,inflateselector){
 	<item cdroid:color=\"#ffff0000\" cdroid:state_selected=\"true\"/>\
         <item cdroid:color=\"#ff00ff00\" cdroid:state_focused=\"true\"/>\
 	<item cdroid:color=\"#ff0000ff\" /></selector>";
-   std::istringstream is(text);
-   Drawable*d=Drawable::fromStream(nullptr,is);
+   Drawable*d =fromStream(text);
    d->setBounds(100,100,400,400);
    ASSERT_NE((void*)nullptr,(void*)d);
    StateListDrawable*sd=dynamic_cast<StateListDrawable*>(d);
@@ -523,8 +527,7 @@ TEST_F(DRAWABLE,inflatetransition){
 	<item cdroid:color=\"#ffff0000\" cdroid:state_selected=\"true\"/>\
 	<item cdroid:color=\"#ff00ff00\" cdroid:state_focused=\"true\"/>\
 	</transition>";
-   std::istringstream is(text);
-   Drawable*d=Drawable::fromStream(nullptr,is);
+   Drawable*d = fromStream(text);
    d->setBounds(100,100,400,400);
    ASSERT_NE((void*)nullptr,(void*)d);
    TransitionDrawable*td=dynamic_cast<TransitionDrawable*>(d);
@@ -557,8 +560,7 @@ TEST_F(DRAWABLE,inflatelevellist){
 	<item cdroid:minLevel=\"3\" cdroid:maxLevel=\"4\">\
 	<shape cdroid:shape=\"oval\"><solid cdroid:color=\"#ffff00ff\"/></shape>\
 	</item>	</level-list>";
-   std::istringstream is(text);
-   Drawable*d=Drawable::fromStream(nullptr,is);
+   Drawable*d = fromStream(text);
    d->setBounds(100,100,500,500);
    LevelListDrawable*ld=dynamic_cast<LevelListDrawable*>(d);
    ASSERT_NE((void*)nullptr,ld->getChild(0));

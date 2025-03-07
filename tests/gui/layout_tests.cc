@@ -5,7 +5,7 @@
 #include <widget/absolutelayout.h>
 #include <widget/gridlayout.h>
 #include <widget/radiogroup.h>
-
+#include <drawables/drawableinflater.h>
 class LAYOUT:public testing::Test{
 
    public :
@@ -47,7 +47,7 @@ TEST_F(LAYOUT,linear){
 #endif
 #if 10
     ProgressBar*pb2=new ProgressBar(72,72);
-    Drawable*d=Drawable::inflate(nullptr,"/home/houzh/Miniwin/src/gui/res/drawable/progress_large.xml");
+    Drawable*d=DrawableInflater::loadDrawable(&app,"@cdroid:drawable/progress_large");
     lp =new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);//,1.0f);
     lp->gravity=Gravity::BOTTOM;//CENTER_VERTICAL);
     pb2->setIndeterminateDrawable(d);
@@ -73,7 +73,7 @@ TEST_F(LAYOUT,radiogroup){
         RadioButton*rb=new RadioButton(captions[i],200,60);
         rb->setId(100+i);
         rb->setPadding(0,8,0,8);
-        Drawable*d=Drawable::inflate(nullptr,"/home/houzh/Miniwin/src/gui/res/drawable/btn_radio.xml");
+        Drawable*d=DrawableInflater::loadDrawable(&app,"@cdroid:drawable/btn_radio");
         rb->setButtonDrawable(d);
         rb->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
         rb->setTextColor(0xFFFF0000);
