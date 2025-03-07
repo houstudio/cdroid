@@ -41,7 +41,7 @@ Drawable* DrawableInflater::inflateFromXmlForDensity(const std::string& name,Xml
     /*if (drawable == nullptr) {
         drawable = inflateFromClass(name);
     }*/
-    //drawable->setSrcDensityOverride(density);
+    drawable->setSrcDensityOverride(density);
     drawable->inflate(parser, attrs);
     return drawable;
 }

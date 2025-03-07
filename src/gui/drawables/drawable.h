@@ -65,10 +65,11 @@ public:
         DEFAULT_TINT_MODE=PorterDuff::Mode::SRC_IN
     };
 protected:
-    int mLevel;
     bool mVisible;
+    int mLevel;
     int mLayoutDirection;
     int mChangingConfigurations;
+    int mSrcDensityOverride;
     Rect mBounds;
     ColorFilter*mColorFilter;
     Callback*mCallback;
@@ -97,6 +98,7 @@ public:
     void setColorFilter(int color,PorterDuff::Mode mode);
     void clearColorFilter();
     void setTint(int color);
+    void setSrcDensityOverride(int density);
     /*
      * To make memory manager simple,
      * The Drawable must deep copy from the tint,and own the new instance 

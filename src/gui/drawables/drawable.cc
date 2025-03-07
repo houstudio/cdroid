@@ -178,6 +178,10 @@ void Drawable::setTintList(const ColorStateList* tint) {
 void Drawable::setTintMode(int mode) {
 }
 
+void Drawable::setSrcDensityOverride(int density){
+    mSrcDensityOverride = density;
+}
+
 bool Drawable::isStateful()const {
     return false;
 }
