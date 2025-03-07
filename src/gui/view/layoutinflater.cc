@@ -85,7 +85,7 @@ bool LayoutInflater::registerInflater(const std::string&name,const std::string&d
 #endif
     return true;
 }
-
+#ifndef NEW_LAYOUT_INFLATER
 View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool attachToRoot,AttributeSet*atts) {
     View*v = nullptr;
     const int64_t tstart = SystemClock::uptimeMillis();
@@ -186,7 +186,6 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         v->setLayoutParams(lp);
     }
 }
-
 static void endElement(void *userData, const XML_Char *name) {
     WindowParserData*pd = (WindowParserData*)userData;
     if(strcmp(name,"include")==0) return;
@@ -229,6 +228,243 @@ View* LayoutInflater::inflate(const std::string&package,std::istream&stream,View
         root->startLayoutAnimation();
     }
     return pd.returnedView;
+}
+#else
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool attachToRoot,AttributeSet*atts){
+    int type,depth;
+    XmlPullParser parser(mContext,resource);
+    View*result = root;
+    XmlPullParser::XmlEvent event;
+    const int innerDepth = parser.getDepth();
+    while(((type=parser.next(event,depth))!=XmlPullParser::START_TAG)
+            &&(type==XmlPullParser::END_TAG)){
+        //Empty
+    }
+
+    if(type!=XmlPullParser::START_TAG)throw std::logic_error("No start tag found");
+    const std::string name = parser.getName();
+    if(name.compare(TAG_MERGE)==0){
+        rInflate(parser,root,mContext,event.attributes,false);
+    }else{
+        View*temp = createViewFromTag(root,name,mContext,event.attributes,false);
+        ViewGroup::LayoutParams*params = nullptr;
+        if(root!=nullptr){
+            params =root->generateLayoutParams(event.attributes);
+            if(!attachToRoot)temp->setLayoutParams(params);
+        }
+        rInflateChildren(parser,temp,event.attributes,true);
+        if((root!=nullptr)&&attachToRoot) root->addView(temp,params);
+        if((root==nullptr)||(attachToRoot==false)) result = temp;
+    }
+    return result;
+}
+#endif
+
+View* LayoutInflater::createView(const std::string& name, const std::string& prefix,const AttributeSet& attrs){
+    return nullptr;
+}
+
+View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Context* context,const AttributeSet& attrs,bool ignoreThemeAttr) {
+#if 0
+    if (name.compare("view")==0) {
+        //name = attrs.getAttributeValue(nullptr, "class");
+    }
+
+    // Apply a theme wrapper, if allowed and one is specified.
+
+    View* view;
+    if (mFactory2 != null) {
+        view = mFactory2.onCreateView(parent, name, context, attrs);
+    } else if (mFactory != null) {
+        view = mFactory.onCreateView(name, context, attrs);
+    } else {
+        view = null;
+    }
+
+    if (view == null && mPrivateFactory != null) {
+        view = mPrivateFactory.onCreateView(parent, name, context, attrs);
+    }
+
+    if (view == null) {
+        final Object lastContext = mConstructorArgs[0];
+        mConstructorArgs[0] = context;
+        try {
+            if (-1 == name.indexOf('.')) {
+                view = onCreateView(parent, name, attrs);
+            } else {
+                view = createView(name, null, attrs);
+            }
+        } finally {
+            mConstructorArgs[0] = lastContext;
+        }
+    }
+    return view;
+#else
+   std::string styleName = attrs.getString("style");
+   AttributeSet temp(attrs);
+   LayoutInflater::ViewInflater inflater = LayoutInflater::getInflater(name);
+    if(!styleName.empty()) {
+        AttributeSet style = context->obtainStyledAttributes(styleName);
+        temp.inherit(style);
+    }
+    styleName = LayoutInflater::from(context)->getDefaultStyle(name);
+    if(!styleName.empty()) {
+        AttributeSet defstyle = context->obtainStyledAttributes(styleName);
+        temp.inherit(defstyle);
+    }
+    View*view = inflater(context,temp);
+    return view;
+#endif
+}
+
+void LayoutInflater::rInflateChildren(XmlPullParser& parser, View* parent,const AttributeSet& attrs,bool finishInflate){
+    rInflate(parser, parent, parent->getContext(), attrs, finishInflate);
+}
+
+void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* context,const AttributeSet& attrs, bool finishInflate){
+    const int depth = parser.getDepth();
+    int type;
+    XmlPullParser::XmlEvent event;
+    bool pendingRequestFocus = false;
+
+    while (((type = parser.next(event)) != XmlPullParser::END_TAG ||
+            parser.getDepth() > depth) && type != XmlPullParser::END_DOCUMENT) {
+
+        if (type != XmlPullParser::START_TAG) {
+            continue;
+        }
+
+        const std::string name = parser.getName();
+        AttributeSet& a = event.attributes;
+        if (name.compare(TAG_REQUEST_FOCUS)==0) {
+            pendingRequestFocus = true;
+            consumeChildElements(parser);
+        } else if (name.compare(TAG_TAG)==0) {
+            parseViewTag(parser, parent, a);
+        } else if (name.compare(TAG_INCLUDE)==0) {
+            if (parser.getDepth() == 0) {
+                throw std::logic_error("<include /> cannot be the root element");
+            }
+            parseInclude(parser, context, parent, a);
+        } else if (name.compare(TAG_MERGE)==0) {
+            throw std::logic_error("<merge /> must be the root element");
+        } else {
+            View* view = createViewFromTag(parent, name, context, a,false);
+            ViewGroup* viewGroup = (ViewGroup*) parent;
+            ViewGroup::LayoutParams* params = viewGroup->generateLayoutParams(a);
+            rInflateChildren(parser, view, a, true);
+            viewGroup->addView(view, params);
+        }
+    }
+
+    if (pendingRequestFocus) {
+        parent->restoreDefaultFocus();
+    }
+
+    if (finishInflate) {
+        //parent->onFinishInflate();
+    }
+}
+
+void LayoutInflater::consumeChildElements(XmlPullParser& parser){
+    int type;
+    XmlPullParser::XmlEvent event;
+    const int currentDepth = parser.getDepth();
+    while (((type = parser.next(event)) != XmlPullParser::END_TAG ||
+            parser.getDepth() > currentDepth) && type != XmlPullParser::END_DOCUMENT) {
+        // Empty
+    }
+}
+
+void LayoutInflater::parseViewTag(XmlPullParser& parser, View* view,const AttributeSet& attrs){
+#if 0
+    Context* context = view.getContext();
+    final TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.ViewTag);
+    final int key = ta.getResourceId(R.styleable.ViewTag_id, 0);
+    final CharSequence value = ta.getText(R.styleable.ViewTag_value);
+    view.setTag(key, value);
+    consumeChildElements(parser);
+#endif
+}
+
+void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View* parent,const AttributeSet& attrs){
+    int type;
+    if (dynamic_cast<ViewGroup*>(parent)) {
+        // Apply a theme wrapper, if requested. This is sort of a weird
+        // edge case, since developers think the <include> overwrites
+        // values in the AttributeSet of the included View. So, if the
+        // included View has a theme attribute, we'll need to ignore it.
+
+        // If the layout is pointing to a theme attribute, we have to
+        // massage the value to get a resource identifier out of it.
+        const bool hasThemeOverride = false;
+        std::string layout = attrs.getString("layout");
+        if (layout.empty()) {
+            throw std::logic_error("You must specify a layout in the include tag: <include layout=\"@layout/layoutID\" />");
+            // Attempt to resolve the "?attr/name" string to an attribute
+            // within the default (e.g. application) package.
+            //layout = context.getResources().getIdentifier(value.substring(1), "attr", context.getPackageName());
+        }
+
+        XmlPullParser childParser(context,layout);
+        XmlPullParser::XmlEvent event;
+
+        while ((type = childParser.next(event)) != XmlPullParser::START_TAG &&
+                type != XmlPullParser::END_DOCUMENT) {
+            // Empty.
+        }
+
+        if (type != XmlPullParser::START_TAG) {
+            throw std::logic_error(//childParser.getPositionDescription() +
+                    ": No start tag found!");
+        }
+
+        const std::string childName = childParser.getName();
+        AttributeSet& childAttrs = event.attributes;
+
+        if (childName.compare(TAG_MERGE)==0){
+            // The <merge> tag doesn't support android:theme, so nothing special to do here.
+            rInflate(childParser, parent, context, childAttrs, false);
+        } else {
+            View* view = createViewFromTag(parent, childName,context, childAttrs, hasThemeOverride);
+            ViewGroup* group = (ViewGroup*) parent;
+
+            const int id = attrs.getResourceId("id", View::NO_ID);
+            const int visibility = attrs.getInt("visibility", -1);
+
+            // We try to load the layout params set in the <include /> tag.
+            // If the parent can't generate layout params (ex. missing width
+            // or height for the framework ViewGroups, though this is not
+            // necessarily true of all ViewGroups) then we expect it to throw
+            // a runtime exception.
+            // We catch this exception and set localParams accordingly: true
+            // means we successfully loaded layout params from the <include>
+            // tag, false means we need to rely on the included layout params.
+            ViewGroup::LayoutParams* params = group->generateLayoutParams(attrs);
+            if (params == nullptr) {
+                params = group->generateLayoutParams(childAttrs);
+            }
+            view->setLayoutParams(params);
+
+            // Inflate all children.
+            rInflateChildren(childParser, view, childAttrs, true);
+
+            if (id != View::NO_ID) {
+                view->setId(id);
+            }
+
+            switch (visibility) {
+            case 0: view->setVisibility(View::VISIBLE);   break;
+            case 1: view->setVisibility(View::INVISIBLE); break;
+            case 2: view->setVisibility(View::GONE);      break;
+            }
+            group->addView(view);
+        }
+    } else {
+        throw std::logic_error("<include /> can only be used inside of a ViewGroup");
+    }
+    LayoutInflater::consumeChildElements(parser);
 }
 
 }//endof namespace
