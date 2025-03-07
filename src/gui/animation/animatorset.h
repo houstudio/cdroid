@@ -108,7 +108,7 @@ public:
     bool doAnimationFrame(int64_t frameTime)override;
     void commitAnimationFrame(int64_t frameTime)override;
     bool pulseAnimationFrame(int64_t frameTime)override;
-    Animator* clone()const override;
+    AnimatorSet* clone()const override;
     bool canReverse()override;
     void reverse()override;
     bool shouldPlayTogether();

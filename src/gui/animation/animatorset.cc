@@ -826,7 +826,7 @@ void AnimatorSet::addAnimationCallback(long delay) {
     AnimationHandler::getInstance().addAnimationFrameCallback(this, delay);
 }
 
-Animator*AnimatorSet::clone()const{
+AnimatorSet*AnimatorSet::clone()const{
     AnimatorSet*anim = new AnimatorSet();
     const int nodeCount = mNodes.size();
     anim->mStarted = false;
