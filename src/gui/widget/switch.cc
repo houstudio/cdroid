@@ -14,11 +14,11 @@ Switch::Switch(int w,int h):CompoundButton(std::string(),w,h){
 Switch::Switch(Context* context,const AttributeSet& a)
   :CompoundButton(context,a){
     init();
-    mThumbDrawable = context->getDrawable(a.getString("thumb"));
+    mThumbDrawable = a.getDrawable("thumb");
     if (mThumbDrawable) {
         mThumbDrawable->setCallback(this);
     }
-    mTrackDrawable = context->getDrawable(a.getString("track"));
+    mTrackDrawable = a.getDrawable("track");
     if (mTrackDrawable) {
         mTrackDrawable->setCallback(this);
     }
@@ -32,9 +32,9 @@ Switch::Switch(Context* context,const AttributeSet& a)
 
     mUseFallbackLineSpacing = true;//context.getApplicationInfo().targetSdkVersion >= VERSION_CODES.P;
 
-    const std::string thumbTint = a.getString("thumbTint");
-    if (!thumbTint.empty()) {
-        mThumbTintList = context->getColorStateList(thumbTint);
+    ColorStateList*thumbTint = a.getColorStateList("thumbTint");
+    if (thumbTint!=nullptr) {
+        mThumbTintList = thumbTint;//context->getColorStateList(thumbTint);
         mHasThumbTint = true;
     }
     /*BlendMode thumbTintMode = Drawable.parseBlendMode( a.getInt(com.android.internal.R.styleable.Switch_thumbTintMode, -1),null);
@@ -46,7 +46,7 @@ Switch::Switch(Context* context,const AttributeSet& a)
         applyThumbTint();
     }
 
-    ColorStateList* trackTintList = context->getColorStateList("trackTint");
+    ColorStateList* trackTintList = a.getColorStateList("trackTint");
     if (trackTintList) {
         mTrackTintList = trackTintList;
         mHasTrackTint = true;

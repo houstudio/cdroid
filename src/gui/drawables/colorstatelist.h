@@ -5,19 +5,25 @@
 #include <core/context.h>
 #include <core/attributeset.h>
 #include <core/complexcolor.h>
+#include <core/xmlpullparser.h>
 
 namespace cdroid{
 
 class ColorStateList:public ComplexColor{
 private:
+    static constexpr int DEFAULT_COLOR = 0xFFFF0000;
     static std::vector<std::vector<int>>EMPTY;
     int mDefaultColor;
     bool mIsOpaque;
     int mChangingConfigurations;
     std::vector<int>mColors;
     std::vector<std::vector<int>>mStateSpecs;
+private:
+    void inflate(XmlPullParser& parser,const AttributeSet&atts);
     void onColorsChanged();
     int modulateColorAlpha(int baseColor, float alphaMod)const;
+protected:
+    static ColorStateList* createFromXmlInner(XmlPullParser& parser,const AttributeSet& attrs);
 public:
     ColorStateList();
     ColorStateList(int color);
@@ -40,10 +46,9 @@ public:
     const std::vector<int>& getColors()const;
     bool hasState(int state)const ;
     void dump()const;
-    static ColorStateList*valueOf(int color);
-    static ColorStateList*fromStream(Context*ctx,std::istream&is,const std::string&resname,
-	          const std::string&package=std::string());
-    static ColorStateList*inflate(Context*ctx,const std::string&resname);
+    static ColorStateList* valueOf(int color);
+    static ColorStateList* createFromXml(XmlPullParser& parser);
+    static ColorStateList* inflate(Context*ctx,const std::string&resname);
 };
 
 }

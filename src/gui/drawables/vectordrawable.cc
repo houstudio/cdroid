@@ -1,7 +1,6 @@
 #include <stack>
 #include <fstream>
 #include <unordered_map>
-#include <expat.h>
 #include <core/canvas.h>
 #include <drawables/hwpathparser.h>
 #include <drawables/vectordrawable.h>

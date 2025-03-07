@@ -20,7 +20,6 @@
 #include <windowmanager.h>
 #include <cdlog.h>
 #include <uieventsource.h>
-#include <expat.h>
 #include <systemclock.h>
 #include <fstream>
 

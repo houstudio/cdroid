@@ -1,10 +1,5 @@
-#include <color.h>
-#include <drawables.h>
-#include <expat.h>
-#include <fstream>
-#include <cdlog.h>
-#include <string.h>
-#include <textutils.h>
+#include <drawables/drawable.h>
+#include <porting/cdlog.h>
 #include <core/windowmanager.h>
 #include <drawables/drawableinflater.h>
 
