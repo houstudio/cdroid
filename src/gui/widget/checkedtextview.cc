@@ -209,7 +209,7 @@ void CheckedTextView::onDraw(Canvas& canvas) {
 
        switch (verticalGravity) {
        case Gravity::BOTTOM:
-           y = getHeight() - height;
+            y = getHeight() - height;
             break;
        case Gravity::CENTER_VERTICAL:
             y = (getHeight() - height) / 2;
@@ -219,15 +219,13 @@ void CheckedTextView::onDraw(Canvas& canvas) {
        const bool checkMarkAtStart = isCheckMarkAtStart();
        const int width = getWidth();
        const int top = y;
-       const int bottom = top + height;
-       int left;
-       int right;
+       int left,right;
        if (checkMarkAtStart) {
            left = mBasePadding;
-           right = left + mCheckMarkWidth;
+           //right = left + mCheckMarkWidth;
        } else {
-           right = width - mBasePadding;
-           left = right - mCheckMarkWidth;
+           //right = width - mBasePadding;
+           left = width - mBasePadding - mCheckMarkWidth;
        }
        checkMarkDrawable->setBounds(mScrollX + left, top, mCheckMarkWidth, height);
        checkMarkDrawable->draw(canvas);

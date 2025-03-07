@@ -1,7 +1,7 @@
 #include <view/pointericon.h>
 #include <porting/cdlog.h>
 #include <drawables/animationdrawable.h>
-#include <expat.h>
+#include <core/xmlpullparser.h>
 #include <stdexcept>
 
 namespace cdroid{
@@ -139,34 +139,30 @@ Bitmap PointerIcon::getBitmapFromDrawable(BitmapDrawable* bitmapDrawable) {
     return scaled;
 }
 
-static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
-}
-
 void PointerIcon::loadResource(Context* context, const std::string& resourceId) {
     float hotSpotX,hotSpotY;
-    std::streamsize len;
-    char buf[256];
-    AttributeSet attrs(context,"");
-    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
-    std::unique_ptr<std::istream>stream = context->getInputStream(resourceId);
-    XML_SetUserData(parser,&attrs);
-    XML_SetElementHandler(parser, startElement, nullptr);
-    do {
-        stream->read(buf,sizeof(buf));
-        len = stream->gcount();
-        if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
-            const char*es = XML_ErrorString(XML_GetErrorCode(parser));
-            LOGE("%s:%s at line %ld",resourceId.c_str(),es, XML_GetCurrentLineNumber(parser));
-            XML_ParserFree(parser);
-            break;
-        }
-    } while(len!=0);
-    XML_ParserFree(parser);
-    if(attrs.size()<3)
-        throw std::runtime_error("Exception parsing pointer icon resource.");
-    Drawable* drawable = attrs.getDrawable("bitmap");
-    hotSpotX = attrs.getDimensionPixelSize("hotSpotX");
-    hotSpotY = attrs.getDimensionPixelSize("hotSpotY");
+    XmlPullParser::XmlEvent event;
+    XmlPullParser parser(context,resourceId);
+    int type;
+    while ((type=parser.next(event)) != XmlPullParser::START_TAG
+               && type != XmlPullParser::END_DOCUMENT) {
+        //EMPTY
+    }
+
+    if (type != XmlPullParser::START_TAG);
+    //XmlUtils.beginDocument(parser, "pointer-icon");
+    AttributeSet& a = event.attributes;
+    const std::string bitmapRes = a.getString("bitmap");
+    hotSpotX = a.getDimension("hotSpotX", 0);
+    hotSpotY = a.getDimension("hotSpotY", 0);
+
+    if (bitmapRes.empty()) {
+        throw std::logic_error("<pointer-icon> is missing bitmap attribute.");
+    }
+
+    Drawable* drawable = nullptr;
+    drawable = context->getDrawable(bitmapRes);
+
     if (dynamic_cast<AnimationDrawable*>(drawable)) {
         // Extract animation frame bitmaps.
         AnimationDrawable* animationDrawable = (AnimationDrawable*) drawable;
@@ -177,28 +173,25 @@ void PointerIcon::loadResource(Context* context, const std::string& resourceId) 
         } else {
             // Assumes they have the exact duration.
             mDurationPerFrame = animationDrawable->getDuration(0);
-            mBitmapFrames.resize(frames-1);// = new Bitmap[frames - 1];
+            mBitmapFrames.resize(frames-1);
             const int width = drawable->getIntrinsicWidth();
             const int height = drawable->getIntrinsicHeight();
             for (int i = 1; i < frames; ++i) {
                 Drawable* drawableFrame = animationDrawable->getFrame(i);
-                if (!dynamic_cast<BitmapDrawable*>(drawableFrame)) {
-                    throw std::runtime_error("Frame of an animated pointer icon must refer to a bitmap drawable.");
+                if (!(dynamic_cast<BitmapDrawable*>(drawableFrame))) {
+                    throw std::logic_error("Frame of an animated pointer icon must refer to a bitmap drawable.");
                 }
-                if ((drawableFrame->getIntrinsicWidth() != width) ||
-                    (drawableFrame->getIntrinsicHeight() != height)) {
-                    std::ostringstream oss;
-                    oss<<"The bitmap size of " <<i<<"-th frame is different. All frames "
-                        "should have the exact same size and share the same hotspot.";
-                    throw std::runtime_error(oss.str());
+                if (drawableFrame->getIntrinsicWidth() != width ||
+                    drawableFrame->getIntrinsicHeight() != height) {
+                    throw std::logic_error("All frames should have the exact same size and share the same hotspot.");
                 }
                 BitmapDrawable* bitmapDrawableFrame = (BitmapDrawable*) drawableFrame;
                 mBitmapFrames[i - 1] = getBitmapFromDrawable(bitmapDrawableFrame);
             }
         }
     }
-    if (!dynamic_cast<BitmapDrawable*>(drawable)) {
-        throw std::runtime_error("<pointer-icon> bitmap attribute must refer to a bitmap drawable.");
+    if (dynamic_cast<BitmapDrawable*>(drawable)==nullptr) {
+        throw std::logic_error("<pointer-icon> bitmap attribute must refer to a bitmap drawable.");
     }
 
     BitmapDrawable* bitmapDrawable = (BitmapDrawable*) drawable;
