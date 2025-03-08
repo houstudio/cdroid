@@ -2,8 +2,8 @@
 #include <animation/animatorinflater.h>
 #include <animation/animationutils.h>
 #include <core/typedvalue.h>
+#include <porting/cdlog.h>
 #include <expat.h>
-#include <cdlog.h>
 
 namespace cdroid{
 
@@ -202,21 +202,21 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
     if (valueType == VALUE_TYPE_PATH) {
         std::string fromString = atts.getString("valueFrom");
         std::string toString = atts.getString("valueTo");
-        /*PathParser.PathData nodesFrom = fromString == null ? null : new PathParser.PathData(fromString);
-        PathParser.PathData nodesTo = toString == null  ? null : new PathParser.PathData(toString);
+        /*PathParser::PathData* nodesFrom = fromString == null ? null : new PathParser::PathData(fromString);
+          PathParser::PathData* nodesTo = toString == null  ? null : new PathParser::PathData(toString);
 
-        if (nodesFrom != null || nodesTo != null) {
+        if (nodesFrom != nullptr || nodesTo != nullptr) {
             if (nodesFrom != null) {
                 TypeEvaluator evaluator = new PathDataEvaluator();
                 if (nodesTo != null) {
-                    if (!PathParser.canMorph(nodesFrom, nodesTo)) {
+                    if (!PathParser::canMorph(nodesFrom, nodesTo)) {
                         throw std::runtime_error(std::string(" Can't morph from") + fromString + " to " + toString);
                     }
                     returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, nodesFrom, nodesTo);
                 } else {
                     returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, (Object) nodesFrom);
                 }
-            } else if (nodesTo != null) {
+            } else if (nodesTo != nullptr) {
                 TypeEvaluator evaluator = new PathDataEvaluator();
                 returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, (Object) nodesTo);
             }
