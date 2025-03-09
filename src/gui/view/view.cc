@@ -4724,6 +4724,7 @@ View& View::setBackground(Drawable*background){
             bRequestLayout=true;
         }
     }else{
+        delete mBackground;
         mBackground = nullptr;
         if ((mViewFlags & WILL_NOT_DRAW) != 0  && (mDefaultFocusHighlight == nullptr)
               && (mForegroundInfo == nullptr || mForegroundInfo->mDrawable == nullptr)) {
