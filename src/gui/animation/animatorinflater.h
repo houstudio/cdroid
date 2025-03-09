@@ -12,19 +12,23 @@ private:
     static constexpr int VALUE_TYPE_UNDEFINED = 4;
     static constexpr int TOGETHER = 0;
     static constexpr int SEQUENTIALLY = 1;
-    class AnimatorParser;
-    friend AnimatorParser;
 private:
-    static Animator* createAnimatorFromXml(Context*ctx,const std::string&resid);
-    static StateListAnimator* createStateListAnimatorFromXml(Context*ctx,const std::string&resid);
+    static Animator* createAnimatorFromXml(Context*ctx,XmlPullParser& parser,float pixelSize);
+    static Animator* createAnimatorFromXml(Context*ctx,XmlPullParser&parser,const AttributeSet& atts,
+                         AnimatorSet*parent,int sequenceOrdering,float pixelSize);
+    static StateListAnimator* createStateListAnimatorFromXml(Context*ctx,XmlPullParser&,const AttributeSet&);
     static int valueTypeFromPropertyName(const std::string& name);
+    static int inferValueTypeFromValues(const AttributeSet&atts, const std::string& valueFromId,const std::string& valueToId);
     static bool isColorType(int type);
     static PropertyValuesHolder* getPVH(const AttributeSet&atts, int valueType,const std::string& propertyName);
-    static ObjectAnimator* loadObjectAnimator(Context*ctx,const AttributeSet& attrs);
-    static ValueAnimator* loadValueAnimator(Context*context,const AttributeSet& attrs, ValueAnimator*anim);
+    static void parseAnimatorFromTypeArray(ValueAnimator* anim,const AttributeSet&atts, float pixelSize);
+    static ObjectAnimator* loadObjectAnimator(Context*ctx,const AttributeSet& attrs,float );
+    static ValueAnimator* loadValueAnimator(Context*context,const AttributeSet& attrs, ValueAnimator*anim,float);
+    static ValueAnimator* loadAnimator(Context*ctx,const AttributeSet& attrs, ValueAnimator* anim, float pathErrorScale);
 public:
     static Animator* loadAnimator(Context* context,const std::string&resid);
-    static StateListAnimator* loadStateListAnimator(Context* context,const std::string&resid);
+    static Animator* loadAnimator(Context* context,const std::string&resid,float pathErrorScale);
+    static StateListAnimator* loadStateListAnimator(Context*context,const std::string&resid);
 };
 }//endof namespace
 #endif

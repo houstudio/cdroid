@@ -1,3 +1,12 @@
+# **
+  - Add VectorDrawable
+  - Add XmlPullParser
+  - Add DrawableInflater
+  - Fix LayoutDirection's inherite
+  - AnimatedStateListDrawable working
+  - Change all drawables's parser to XmlPullPaser,drawables'inflate is more strong than ever
+  - Fix WindowManager::sendToBack
+  - Other's bug fixes"
 # **V3.6.0
   - Add SoundPool,Environment
   - Fix AnimatorSet,ObjectAnimator's memleak

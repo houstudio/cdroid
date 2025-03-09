@@ -2,13 +2,31 @@
 #include <animation/animatorinflater.h>
 #include <animation/animationutils.h>
 #include <core/typedvalue.h>
+#include <drawables/pathparser.h>
 #include <porting/cdlog.h>
-#include <expat.h>
 
 namespace cdroid{
 
 Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid){
-    return createAnimatorFromXml(context,resid);
+    return loadAnimator(context,resid,1.f);
+}
+
+Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid,float){
+    XmlPullParser parser(context,resid);
+    Animator* animator = createAnimatorFromXml(context, parser, 1.f/*pathErrorScale*/);
+    if (animator != nullptr) {
+        //animator->appendChangingConfigurations(getChangingConfigs(resources, id));
+        /*ConstantState<Animator> constantState = animator->createConstantState();
+        if (constantState != nullptr) {
+            if (DBG_ANIMATOR_INFLATER) {
+                Log.d(TAG, "caching animator for res %s",id.c_str());
+            }
+            animatorCache.put(id, theme, constantState);
+            // create a new animator so that cached version is never used by the user
+            animator = constantState.newInstance(resources, theme);
+        }*/
+    }
+    return animator;
 }
 
 std::unordered_map<std::string,std::shared_ptr<StateListAnimator>>mStateAnimatorMap;
@@ -16,144 +34,103 @@ std::unordered_map<std::string,std::shared_ptr<StateListAnimator>>mStateAnimator
 StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,const std::string&resid){
     auto it = mStateAnimatorMap.find(resid);
     if(it==mStateAnimatorMap.end()){
-        StateListAnimator*anim =createStateListAnimatorFromXml(context,resid);
+        XmlPullParser parser(context,resid);
+        StateListAnimator*anim =createStateListAnimatorFromXml(context,parser,AttributeSet());
         it = mStateAnimatorMap.insert({resid,std::shared_ptr<StateListAnimator>(anim)}).first;
     }
     return new StateListAnimator(*it->second);
     //return it->second->createConstantState()->newInstance();
 }
 
-typedef struct{
-    std::string name;
-    Animator*animator;
-    std::vector<int>state;
-    AttributeSet atts;
-}AnimNode;
+Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser& parser,float pixelSize){
+    return createAnimatorFromXml(context,parser, AttributeSet(), nullptr, 0,pixelSize);
+}
+Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&parser,const AttributeSet& atts,
+        AnimatorSet*parent,int sequenceOrdering,float pixelSize){
+     Animator* anim = nullptr;
+     std::vector<Animator*> childAnims;
 
-typedef struct{
-    Context*context;
-    std::vector<AnimNode>items;
-    std::string package;
-    Animator*animator;
-    std::vector<Animator*>mChildren;
-    StateListAnimator*statelistAnimator;
-    AnimNode*fromTop(int pos){
-        int size =(int)items.size();
-        if(size+pos<0||pos>0)return nullptr;
-        return &items.at(size+pos);
-    }
-}AnimatorParseData;
+    // Make sure we are on a start tag.
+    int type,depth;
+    const int innerDepth = parser.getDepth();
+    XmlPullParser::XmlEvent event;
+    while ((((type = parser.next(event,depth)) != XmlPullParser::END_TAG) || (depth >= innerDepth))
+            && (type != XmlPullParser::END_DOCUMENT)) {
 
-class AnimatorInflater::AnimatorParser{
-public:
-    static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
-        AnimatorParseData*pd =(AnimatorParseData*)userData;
-        AnimNode an;
-        std::string propertyName;
-        an.name = name;
-        an.animator = nullptr;
-        an.atts.setContext(pd->context,pd->package);
-        an.atts.set(satts);
-        if(strcmp(name,"selector")==0){
-            pd->statelistAnimator = new StateListAnimator();
-        }if(strcmp(name,"item")==0){
-            StateSet::parseState(an.state,an.atts);
-        }else if(strcmp(name,"objectAnimator")==0){
-            propertyName = an.atts.getString("propertyName");
-            an.animator = AnimatorInflater::loadObjectAnimator(pd->context,an.atts);
-            pd->mChildren.push_back(an.animator);
-        }else if(strcmp(name,"set")==0){
-            an.animator = new AnimatorSet();
-            pd->mChildren.clear();
+        if (type != XmlPullParser::START_TAG) {
+            continue;
         }
-        if( (pd->items.size()==0) && (pd->statelistAnimator==nullptr) )
-            pd->animator = an.animator;
 
-        LOGV("%s %s animator=%p",(std::string(pd->items.size()*4,' ')+name).c_str(),propertyName.c_str(),an.animator);
-        pd->items.push_back(an);
-    }
-
-    static void __endElement(void *userData, const XML_Char *name){
-        AnimatorParseData*pd =(AnimatorParseData*)userData;
-        AnimNode back = pd->items.back();
-        if(strcmp(name,"item")==0){
-            pd->statelistAnimator->addState(back.state,back.animator);
-        }else if(strcmp(name,"set")==0){
-            const int ordering = back.atts.getInt("ordering",std::unordered_map<std::string,int>{
-                 {"together",(int)TOGETHER}, {"sequentially",(int)SEQUENTIALLY}},TOGETHER);
-            AnimatorSet*aset = (AnimatorSet*)back.animator;
-            if(ordering==TOGETHER) aset->playTogether(pd->mChildren);
-            else aset->playSequentially(pd->mChildren);
-            if(pd->items.size()>1){
-                AnimNode* parent = pd->fromTop(pd->statelistAnimator?-2:-1);
-                parent->animator=back.animator;
+        std::string name = parser.getName();
+        bool gotValues = false;
+        LOG(DEBUG)<<std::string(depth,'*')<<parser.getName();
+        if (name.compare("objectAnimator")==0) {
+            anim = loadObjectAnimator(context,event.attributes, pixelSize);
+        } else if (name.compare("animator")==0) {
+            anim = loadAnimator(context, event.attributes, nullptr, pixelSize);
+        } else if (name.compare("set")==0) {
+            anim = new AnimatorSet();
+            //anim->appendChangingConfigurations(a.getChangingConfigurations());
+            const int ordering = atts.getInt("ordering", TOGETHER);
+            createAnimatorFromXml(context, parser, event.attributes, (AnimatorSet*) anim, ordering,pixelSize);
+        } else if (name.compare("propertyValuesHolder")==0) {
+            /*PropertyValuesHolder[] values = loadValues(parser,Xml.asAttributeSet(parser));
+            if (values != null && anim != null && (anim instanceof ValueAnimator)) {
+                ((ValueAnimator*) anim)->setValues(values);
             }
+            gotValues = true;*/
+        } else {
+            LOGE("Unknown animator name:%s",name.c_str());
         }
-        pd->items.pop_back();
-        if(pd->items.size()&&back.animator){
-            AnimNode* parent = pd->fromTop(-1);
-            if(parent->name.compare("item")==0){
-                parent->animator=back.animator;
-            }
-        }
-        LOGV("%s",(std::string(pd->items.size()*4,' ')+name).c_str());
-    }
-};
 
-Animator* AnimatorInflater::createAnimatorFromXml(Context*ctx,const std::string&resid){
-    std::streamsize len;
-    char buf[128];
-    AnimatorParseData pd;
-    pd.context = ctx;
-    pd.animator  = nullptr;
-    pd.statelistAnimator = nullptr;
-    std::unique_ptr<std::istream>stream = ctx->getInputStream(resid,&pd.package);
-    if(stream ==nullptr){
-        return nullptr;
-    }
-    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
-    XML_SetUserData(parser,&pd);
-    XML_SetElementHandler(parser, AnimatorParser::startElement, AnimatorParser::__endElement);
-    do {
-        stream->read(buf,sizeof(buf));
-        len = stream->gcount();
-        if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
-            const char*es = XML_ErrorString(XML_GetErrorCode(parser));
-            LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
-            XML_ParserFree(parser);
-            return nullptr;
+        if ((parent != nullptr) && !gotValues) {
+            childAnims.push_back(anim);
         }
-    } while(len!=0);
-    XML_ParserFree(parser);
-    return pd.animator;
+    }
+    if ((parent != nullptr) && childAnims.size()) {
+        std::vector<Animator*> animsArray =childAnims;
+        if (sequenceOrdering == TOGETHER) {
+            parent->playTogether(animsArray);
+        } else {
+            parent->playSequentially(animsArray);
+        }
+    }
+    return anim;
 }
 
-StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*ctx,const std::string&resid){
-    int len;
-    char buf[128];
-    AnimatorParseData pd;
-    pd.context = ctx;
-    pd.animator  = nullptr;
-    pd.statelistAnimator = nullptr;
-    std::unique_ptr<std::istream>stream = ctx->getInputStream(resid,&pd.package);
-    if(stream ==nullptr){
-        return nullptr;
-    }
-    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
-    XML_SetUserData(parser,&pd);
-    XML_SetElementHandler(parser, AnimatorParser::startElement, AnimatorParser::__endElement);
-    do {
-        stream->read(buf,sizeof(buf));
-        len = stream->gcount();
-        if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
-            const char*es = XML_ErrorString(XML_GetErrorCode(parser));
-            LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
-            XML_ParserFree(parser);
-            return nullptr;
+StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*context,XmlPullParser&parser,const AttributeSet&atts){
+    StateListAnimator* stateListAnimator = new StateListAnimator();
+    while (true) {
+        int depth;
+        XmlPullParser::XmlEvent event;
+        const int type = parser.next(event,depth);
+        const std::string name =parser.getName();
+        switch (type) {
+        case XmlPullParser::END_DOCUMENT:
+        case XmlPullParser::END_TAG:
+            return stateListAnimator;
+
+        case XmlPullParser::START_TAG:// parse item
+            LOG(DEBUG)<<std::string(depth,'*')<<name;
+            if (name.compare("item")==0) {
+                std::vector<int>states;
+                Animator* animator = nullptr;
+                StateSet::parseState(states,event.attributes);
+                std::string animId =event.attributes.getString("animator");
+                if(!animId.empty()){
+                    animator = loadAnimator(context, animId);
+                }else{
+                    animator = createAnimatorFromXml(context,parser,event.attributes, nullptr, 0,1.f);
+                }
+
+                if (animator == nullptr) {
+                    throw std::logic_error("animation state item must have a valid animation");
+                }
+                stateListAnimator->addState(states, animator);
+            }
+            break;
         }
-    } while(len!=0);
-    XML_ParserFree(parser);
-    return pd.statelistAnimator;
+    }
 }
 
 bool AnimatorInflater::isColorType(int type) {
@@ -189,6 +166,21 @@ int AnimatorInflater::valueTypeFromPropertyName(const std::string& name){
     return TypedValue::TYPE_NULL;
 }
 
+int AnimatorInflater::inferValueTypeFromValues(const AttributeSet&atts, const std::string& valueFromId,const std::string& valueToId) {
+    bool hasFrom = !valueFromId.empty();
+    int fromType = hasFrom ? valueTypeFromPropertyName(valueFromId) : 0;
+    bool hasTo = !valueToId.empty();
+    int toType = hasTo ? valueTypeFromPropertyName(valueToId) : 0;
+    int valueType;
+    // Check whether it's color type. If not, fall back to default type (i.e. float type)
+    if ((hasFrom && isColorType(fromType)) || (hasTo && isColorType(toType))) {
+        valueType = VALUE_TYPE_COLOR;
+    } else {
+        valueType = VALUE_TYPE_FLOAT;
+    }
+    return valueType;
+}
+
 PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int valueType,const std::string& propertyName){
     PropertyValuesHolder* returnValue = nullptr;
     const std::string sFrom = atts.getString("valueFrom");
@@ -200,27 +192,27 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
     const bool getFloats = (valueType==VALUE_TYPE_FLOAT)||(fromType==VALUE_TYPE_FLOAT);
 
     if (valueType == VALUE_TYPE_PATH) {
-        std::string fromString = atts.getString("valueFrom");
-        std::string toString = atts.getString("valueTo");
-        /*PathParser::PathData* nodesFrom = fromString == null ? null : new PathParser::PathData(fromString);
-          PathParser::PathData* nodesTo = toString == null  ? null : new PathParser::PathData(toString);
+        const std::string fromString = atts.getString("valueFrom");
+        const std::string toString = atts.getString("valueTo");
+        PathParser::PathData* nodesFrom = fromString.empty() ? nullptr : new PathParser::PathData(fromString);
+        PathParser::PathData* nodesTo = toString.empty()  ? nullptr : new PathParser::PathData(toString);
 
         if (nodesFrom != nullptr || nodesTo != nullptr) {
-            if (nodesFrom != null) {
-                TypeEvaluator evaluator = new PathDataEvaluator();
-                if (nodesTo != null) {
-                    if (!PathParser::canMorph(nodesFrom, nodesTo)) {
+            if (nodesFrom != nullptr) {
+                //TypeEvaluator evaluator = new PathDataEvaluator();
+                if (nodesTo != nullptr) {
+                    if (!PathParser::canMorph(*nodesFrom, *nodesTo)) {
                         throw std::runtime_error(std::string(" Can't morph from") + fromString + " to " + toString);
                     }
-                    returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, nodesFrom, nodesTo);
+                    //returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, nodesFrom, nodesTo);
                 } else {
-                    returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, (Object) nodesFrom);
+                    //returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, (Object) nodesFrom);
                 }
             } else if (nodesTo != nullptr) {
-                TypeEvaluator evaluator = new PathDataEvaluator();
-                returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, (Object) nodesTo);
+                //TypeEvaluator evaluator = new PathDataEvaluator();
+                //returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, (Object) nodesTo);
             }
-        }*/
+        }
     } else {
         /*TypeEvaluator evaluator = nullptr;
         // Integer and float value types are handled here.
@@ -294,14 +286,77 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
     return returnValue;
 }
 
-ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const AttributeSet& atts){
+void AnimatorInflater::parseAnimatorFromTypeArray(ValueAnimator* anim,const AttributeSet&atts, float pixelSize) {
+    const long duration = atts.getInt("duration", 300);
+    const long startDelay = atts.getInt("startOffset", 0);
+
+    int valueType = atts.getInt("valueType", VALUE_TYPE_UNDEFINED);
+
+    if (valueType == VALUE_TYPE_UNDEFINED) {
+        valueType = inferValueTypeFromValues(atts, "valueFrom","valueTo");
+    }
+    PropertyValuesHolder* pvh = getPVH(atts, valueType,atts.getString("propertyName"));
+    if (pvh != nullptr) {
+        anim->setValues({pvh});
+    }
+
+    anim->setDuration(duration);
+    anim->setStartDelay(startDelay);
+
+    if (atts.hasAttribute("repeatCount")) {
+        anim->setRepeatCount(atts.getInt("repeatCount", 0));
+    }
+    if (atts.hasAttribute("repeatMode")) {
+        anim->setRepeatMode(atts.getInt("repeatMode",ValueAnimator::RESTART));
+    }
+
+    /*if (arrayObjectAnimator != nullptr) {
+        setupObjectAnimator(anim, arrayObjectAnimator, valueType, pixelSize);
+    }*/
+}
+
+ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const AttributeSet& atts,float){
     const std::string propertyName = atts.getString("propertyName");
     ObjectAnimator*anim = new ObjectAnimator(nullptr,propertyName);
-    loadValueAnimator(ctx,atts,anim);
+    loadAnimator(ctx,atts,anim,1.f);
     return anim;
 }
 
-ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const AttributeSet& atts, ValueAnimator*anim){
+ValueAnimator* AnimatorInflater::loadAnimator(Context*context,const AttributeSet& attrs, ValueAnimator* anim, float pathErrorScale){
+    // If anim is not null, then it is an object animator.
+    /*if (anim != nullptr) {
+        if (theme != null) {
+            arrayObjectAnimator = theme.obtainStyledAttributes(attrs,R.styleable.PropertyAnimator, 0, 0);
+        } else {
+            arrayObjectAnimator = res.obtainAttributes(attrs, R.styleable.PropertyAnimator);
+        }
+        anim.appendChangingConfigurations(arrayObjectAnimator.getChangingConfigurations());
+    }*/
+
+    if (anim == nullptr) {
+        anim = new ValueAnimator();
+    }
+    //anim->appendChangingConfigurations(arrayAnimator.getChangingConfigurations());
+
+    parseAnimatorFromTypeArray(anim,attrs, pathErrorScale);
+
+    const std::string resID = attrs.getString("interpolator");
+    if (!resID.empty()) {
+        Interpolator* interpolator = AnimationUtils::loadInterpolator(context, resID);
+        /*if (interpolator instanceof BaseInterpolator) {
+            anim.appendChangingConfigurations(((BaseInterpolator) interpolator).getChangingConfiguration());
+        }*/
+        anim->setInterpolator(interpolator);
+    }
+
+    /*arrayAnimator.recycle();
+    if (arrayObjectAnimator != null) {
+        arrayObjectAnimator.recycle();
+    }*/
+    return anim;
+}
+
+ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const AttributeSet& atts, ValueAnimator*anim,float){
     const int valueType = atts.getInt("valueType",std::unordered_map<std::string,int>{
             {"floatType",(int)VALUE_TYPE_FLOAT},  {"intType",(int)VALUE_TYPE_INT},
             {"colorType",(int)VALUE_TYPE_COLOR},  {"pathType",(int)VALUE_TYPE_PATH}
@@ -309,7 +364,10 @@ ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const Attrib
 
     const std::string propertyName = atts.getString("propertyName");
     const std::string intpResource = atts.getString("interpolator");
-    Interpolator* interpolator= AnimationUtils::loadInterpolator(context,intpResource);
+    Interpolator* interpolator= nullptr;
+    if(!intpResource.empty()){
+        AnimationUtils::loadInterpolator(context,intpResource);
+    }
     if(anim==nullptr){
         anim = new ValueAnimator();
     }

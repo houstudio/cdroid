@@ -745,7 +745,7 @@ void TabLayout::updateTabViews(bool requestLayout){
 }
 
 ColorStateList* TabLayout::createColorStateList(int defaultColor, int selectedColor){
-    std::vector<std::vector<int>>states;// = new int[2][];
+    std::vector<std::vector<int>>states;
     std::vector<int>colors;
 
     states.push_back(StateSet::get(StateSet::VIEW_STATE_SELECTED));

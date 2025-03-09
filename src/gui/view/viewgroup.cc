@@ -196,7 +196,9 @@ void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
     setClipToPadding(atts.getBoolean("clipToPadding",true));
     //setAnimationCacheEnabled
     std::string resid = atts.getString("layoutAnimation");
-    setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,resid));
+    if(!resid.empty()){
+        setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,resid));
+    }
 
     const int flags=atts.getInt("descendantFocusability",std::unordered_map<std::string,int>{
         {"beforeDescendants",(int)FOCUS_BEFORE_DESCENDANTS},

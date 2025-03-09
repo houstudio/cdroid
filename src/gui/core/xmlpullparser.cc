@@ -82,7 +82,7 @@ void XmlPullParser::setContent(Context*ctx,const std::string&resid){
         mData->stream = ctx->getInputStream(resid,&mData->package);
     }
     mData->context = ctx;
-    if((mData->stream==nullptr)||(!*mData->stream)){
+    if(((mData->stream==nullptr)||(!*mData->stream))&&resid.size()){
         mData->stream = std::make_unique<std::ifstream>(resid);
     }
 }
