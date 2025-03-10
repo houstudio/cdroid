@@ -32,6 +32,7 @@ private:
     int mFrameDelay;
     int mRepeatCount;
     int mRepeated;/*repeated played rounds*/
+    float mAlpha;
     std::shared_ptr<AnimatedImageState> mAnimatedImageState;
     Cairo::RefPtr<Cairo::ImageSurface>mImage;
     FrameSequenceState*mFrameSequenceState;

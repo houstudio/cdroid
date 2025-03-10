@@ -23,6 +23,7 @@ AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState>
     mAnimatedImageState = state;
     mCurrentFrame= -1;
     mNextFrame= 0;
+    mAlpha =1.f;
     mFrameScheduled = false;
     mImageHandler = nullptr;
     mFrameSequenceState = nullptr;
@@ -105,6 +106,7 @@ int AnimatedImageDrawable::getIntrinsicHeight() {
 
 void AnimatedImageDrawable::setAlpha(int alpha){
     mAnimatedImageState->mAlpha = alpha&0xFF;
+    mAlpha = float(alpha&0xFF)/255.f;
     invalidateSelf();
 }
 
@@ -192,7 +194,7 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
         canvas.set_source(mImage,mBounds.left,mBounds.top);
         canvas.set_operator(isOpaque?Cairo::Context::Operator::SOURCE:Cairo::Context::Operator::OVER);
         canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
-        canvas.fill();
+        canvas.paint_with_alpha(mAlpha);
     }else{
 #if ENABLE(DMABLIT)
         Rect rd = {0,0,mBounds.width,mBounds.height};
