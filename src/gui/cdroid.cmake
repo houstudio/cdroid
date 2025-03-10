@@ -70,6 +70,7 @@ list(APPEND CDROID_SOURCES
     view/layoutinflater.cc
     view/layoutparams.cc
     view/motionevent.cc
+    view/viewoutlineprovider.cc
     view/pointericon.cc
     view/rendernode.cc
     view/roundscrollbarrenderer.cc
