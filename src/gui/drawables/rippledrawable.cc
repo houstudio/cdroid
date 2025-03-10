@@ -562,18 +562,18 @@ void RippleDrawable::drawPatterned(Canvas& canvas) {
 #endif
 }
 
-Rect RippleDrawable::getDirtyBounds() {
+Rect RippleDrawable::getDirtyBounds() const{
     if (!isBounded()) {
         Rect drawingBounds = mDrawingBounds;
         Rect dirtyBounds = mDirtyBounds;
-        dirtyBounds=drawingBounds;
+        dirtyBounds = drawingBounds;
         drawingBounds.set(0,0,0,0);
 
         int cX = (int) mHotspotBounds.centerX();
         int cY = (int) mHotspotBounds.centerY();
         Rect rippleBounds;
 
-        std::vector<RippleForeground*>& activeRipples = mExitingRipples;
+        const std::vector<RippleForeground*>& activeRipples = mExitingRipples;
         const int N = (int)mExitingRipples.size();
         for (int i = 0; i < N; i++) {
             activeRipples[i]->getBounds(rippleBounds);

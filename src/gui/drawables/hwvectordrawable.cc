@@ -424,8 +424,11 @@ void Tree::updateBitmapCache(Bitmap& bitmap, bool useStagingData) {
     LOGD("VectorDrawable repaint %dx%d", cacheWidth, cacheHeight);
     //outCache.eraseColor(SK_ColorTRANSPARENT);
     Canvas outCanvas(outCache);
+    const auto op = outCanvas.get_operator();
+    outCanvas.set_operator(Cairo::Context::Operator::SOURCE);
     outCanvas.set_source_rgba(0,0,0,0);
     outCanvas.paint();
+    outCanvas.set_operator(op);
     const float viewportWidth = useStagingData ? mStagingProperties.getViewportWidth() : mProperties.getViewportWidth();
     const float viewportHeight= useStagingData ? mStagingProperties.getViewportHeight() : mProperties.getViewportHeight();
     const float scaleX = cacheWidth / viewportWidth;

@@ -58,7 +58,7 @@ void Drawable::copyBounds(Rect&bounds)const{
     bounds = mBounds;
 }
 
-Rect Drawable::getDirtyBounds() {
+Rect Drawable::getDirtyBounds() const{
     return mBounds;
 }
 

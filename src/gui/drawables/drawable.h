@@ -86,7 +86,7 @@ public:
     void setBounds(const Rect&r);
     const Rect&getBounds()const;
     void copyBounds(Rect&)const;
-    virtual Rect getDirtyBounds();
+    virtual Rect getDirtyBounds()const;
     virtual Drawable*mutate();
     virtual void clearMutated();
     virtual void inflate(XmlPullParser&parser,const AttributeSet&);

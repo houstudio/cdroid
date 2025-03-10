@@ -934,6 +934,7 @@ void View::internalSetPadding(int left, int top, int right, int bottom){
     if (changed) {
         requestLayout();
         invalidate();
+        invalidateOutline();
     }
 }
 
@@ -2970,7 +2971,7 @@ void View::setBackgroundBounds() {
     if (mBackgroundSizeChanged && mBackground) {
         mBackground->setBounds(0, 0, mRight - mLeft, mBottom - mTop);
         mBackgroundSizeChanged = false;
-        //rebuildOutline();
+        rebuildOutline();
     }
 }
 
@@ -4750,6 +4751,7 @@ View& View::setBackground(Drawable*background){
     if(bRequestLayout) requestLayout();
     mBackgroundSizeChanged = true;
     invalidate(true);
+    invalidateOutline();
     return *this;
 }
 
@@ -5324,6 +5326,8 @@ void View::onAttachedToWindow(){
     mPrivateFlags3 &= ~PFLAG3_IS_LAID_OUT;
     jumpDrawablesToCurrentState();
     resetSubtreeAccessibilityStateChanged();
+    // rebuild, since Outline not maintained while View is detached
+    rebuildOutline();
     if(isFocused()){
         InputMethodManager&imm=InputMethodManager::getInstance();
         imm.focusIn((View*)this);
@@ -6224,8 +6228,12 @@ void View::postInvalidateOnAnimation(int left, int top, int width, int height) {
 }
 
  
-void View::invalidateDrawable(Drawable& who){
-    if(verifyDrawable(&who)) invalidate(true);
+void View::invalidateDrawable(Drawable& drawable){
+    if(verifyDrawable(&drawable)){
+        const Rect dirty = drawable.getDirtyBounds();
+        invalidate(mScrollX + dirty.left,mScrollY + dirty.top,dirty.width,dirty.height);
+        rebuildOutline();
+    }
 }
 
 void View::scheduleDrawable(Drawable& who,Runnable& what, int64_t when){
@@ -7532,7 +7540,8 @@ void View::sizeChange(int newWidth,int newHeight,int oldWidth,int oldHeight){
             if(mParent && canTakeFocus())
                  mParent->focusableViewAvailable(this);
         }
-    } 
+    }
+    rebuildOutline();
 }
 
 void View::onSizeChanged(int w,int h,int ow,int oh){
