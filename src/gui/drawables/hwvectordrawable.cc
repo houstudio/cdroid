@@ -418,16 +418,15 @@ void Tree::updatePaint(Tree::TreeProperties*prop,Cairo::RefPtr<Cairo::Pattern>&s
 
 void Tree::updateBitmapCache(Bitmap& bitmap, bool useStagingData) {
     Bitmap outCache=bitmap;
-    //bitmap.getSkBitmap(&outCache);
     int cacheWidth = outCache->get_width();
     int cacheHeight = outCache->get_height();
-    LOGD("VectorDrawable repaint %dx%d", cacheWidth, cacheHeight);
     //outCache.eraseColor(SK_ColorTRANSPARENT);
     Canvas outCanvas(outCache);
     const auto op = outCanvas.get_operator();
     outCanvas.set_operator(Cairo::Context::Operator::SOURCE);
-    outCanvas.set_source_rgba(0,0,0,0);
-    outCanvas.paint();
+    outCanvas.set_source_rgba(0,0,0,1);
+    outCanvas.rectangle(0,0,cacheWidth,cacheHeight);
+    outCanvas.fill();
     outCanvas.set_operator(op);
     const float viewportWidth = useStagingData ? mStagingProperties.getViewportWidth() : mProperties.getViewportWidth();
     const float viewportHeight= useStagingData ? mStagingProperties.getViewportHeight() : mProperties.getViewportHeight();

@@ -54,7 +54,7 @@ void VectorDrawable::clearMutated() {
 
 void* VectorDrawable::getTargetByName(const std::string& name) {
     auto it = mVectorState->mVGTargetsMap.find(name);
-    return it->second;//mVectorState->mVGTargetsMap.get(name);
+    return (it==mVectorState->mVGTargetsMap.end())?nullptr:it->second;
 }
 
 std::shared_ptr<Drawable::ConstantState> VectorDrawable::getConstantState() {
@@ -114,7 +114,7 @@ int VectorDrawable::getAlpha() const{
 }
 
 void VectorDrawable::setAlpha(int alpha) {
-    if (mVectorState->setAlpha(alpha / 255.f)) {
+    if (mVectorState->setAlpha(float(alpha&0xFF) / 255.f)) {
         invalidateSelf();
     }
 }
@@ -1288,7 +1288,7 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const AttributeSet& at
     strokeLineJoin = atts.getInt("strokeLineJoin",std::unordered_map<std::string,int>{
             {"bevel",(int)Cairo::Context::LineJoin::BEVEL},
             {"miter",(int)Cairo::Context::LineJoin::MITER}, 
-            {"sound",(int)Cairo::Context::LineJoin::ROUND} }, strokeLineJoin);
+            {"round",(int)Cairo::Context::LineJoin::ROUND} }, strokeLineJoin);
     strokeMiterLimit = atts.getFloat("strokeMiterLimit", strokeMiterLimit);
     strokeAlpha = atts.getFloat("strokeAlpha",strokeAlpha);
     strokeWidth = atts.getFloat("strokeWidth",strokeWidth);
