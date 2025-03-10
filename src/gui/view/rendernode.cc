@@ -16,6 +16,7 @@ RenderNode::RenderNode(){
     mRotation  = 0.f;
     mRotationX = 0.f;
     mRotationY = 0.f;
+    mClipToOutline = false;
     mMatrix = identity_matrix();
 }
 
@@ -203,5 +204,13 @@ bool RenderNode::offsetTopAndBottom(int offset){
     mTop   += offset;
     mBottom+= offset;
     return true;
+}
+
+bool RenderNode::getClipToOutline()const{
+    return mClipToOutline;
+}
+
+void RenderNode::setClipToOutline(bool clip){
+    mClipToOutline = clip;
 }
 }

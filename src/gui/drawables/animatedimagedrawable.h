@@ -41,6 +41,7 @@ private:
     void* mImageHandler;
     void postOnAnimationStart();
     void postOnAnimationEnd();
+    void updateStateFromTypedArray(const AttributeSet&atts,int srcDensityOverride);
     AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state);
 protected:
     void onBoundsChange(const Rect& bounds)override;

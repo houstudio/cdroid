@@ -298,6 +298,10 @@ void AnimatedImageDrawable::onBoundsChange(const Rect& bounds) {
 
 void AnimatedImageDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(parser,atts);
+    updateStateFromTypedArray(atts, mSrcDensityOverride);
+}
+
+void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,int srcDensityOverride){
     std::string srcResid =atts.getString("src");
     if(!srcResid.empty()){
         Drawable* drawable = nullptr;
@@ -320,7 +324,7 @@ void AnimatedImageDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts
             mRepeatCount = REPEAT_UNDEFINED;
         this->mFrameSequenceState = frmSequence->createState();
     }
-    mAnimatedImageState->mAutoMirrored = atts.getBoolean("autoMirrored",0);
+    mAnimatedImageState->mAutoMirrored = atts.getBoolean("autoMirrored",false);
     const int repeatCount= atts.getInt("repeatCount",REPEAT_UNDEFINED);
     const bool autoStart = atts.getBoolean("autoStart",false);
     if(repeatCount!=REPEAT_UNDEFINED)

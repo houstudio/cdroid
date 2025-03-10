@@ -13,6 +13,7 @@ private:
     float mPivotX,mPivotY;
     float mTranslationX,mTranslationY,mTranslationZ;
     float mLeft,mTop,mRight,mBottom;
+    bool mClipToOutline;
     Cairo::Matrix mMatrix;
 public:
     RenderNode();
@@ -58,6 +59,8 @@ public:
 
     bool offsetLeftAndRight(int offset);
     bool offsetTopAndBottom(int offset);
+    bool getClipToOutline()const;
+    void setClipToOutline(bool clip);
 };
 
 }

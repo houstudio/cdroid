@@ -2944,7 +2944,7 @@ void View::setClipBounds(const Rect*clipBounds){
 
 bool View::getClipBounds(Rect&outRect){
     if(!mClipBounds.empty()){
-        outRect=mClipBounds;
+        outRect = mClipBounds;
         return true;
     }
     return false;
@@ -9413,13 +9413,13 @@ void View::setStateListAnimator(StateListAnimator*stateListAnimator){
 }
 
 bool View::getClipToOutline() const{
-    return false;//mRenderNode->getClipToOutline();
+    return mRenderNode->getClipToOutline();
 }
 
 void View::setClipToOutline(bool clipToOutline) {
     damageInParent();
     if (getClipToOutline() != clipToOutline) {
-        //mRenderNode->setClipToOutline(clipToOutline);
+        mRenderNode->setClipToOutline(clipToOutline);
     }
 }
 
