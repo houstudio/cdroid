@@ -54,6 +54,7 @@
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/accessibility/accessibilitynodeprovider.h>
 #include <view/inputeventconsistencyverifier.h>
+#include <view/viewoutlineprovider.h>
 #include <animation/animation.h>
 #include <animation/statelistanimator.h>
 #include <animation/animatorinflater.h>
@@ -90,6 +91,11 @@ private:
     
     static constexpr int FOCUSABLE_MASK  = 0x00000011;
     static constexpr int FITS_SYSTEM_WINDOWS = 0x00000002;
+
+    static constexpr int PROVIDER_BACKGROUND = 0;
+    static constexpr int PROVIDER_NONE = 1;
+    static constexpr int PROVIDER_BOUNDS = 2;
+    static constexpr int PROVIDER_PADDED_BOUNDS = 3;
 protected:
     static constexpr int VISIBILITY_MASK = 0x0000000C;
     static constexpr int ENABLED_MASK    = 0x00000020;
@@ -633,6 +639,8 @@ private:
     bool isAutofillable();
     void postSendViewScrolledAccessibilityEventCallback(int dx, int dy);
     void cancel(SendViewScrolledAccessibilityEvent* callback);
+    void setOutlineProviderFromAttribute(int providerInt);
+    void rebuildOutline();
 protected:
     static bool sIgnoreMeasureCache;
     static bool sAlwaysRemeasureExactly;
@@ -694,7 +702,7 @@ protected:
     SparseArray<void*>* mKeyedTags;
     Animation* mCurrentAnimation;
     std::vector<int> mDrawableState;
-
+    ViewOutlineProvider mOutlineProvider;
     int mTop,mLeft,mRight,mBottom;
     ViewGroup * mParent;
     AttachInfo* mAttachInfo;
@@ -1474,6 +1482,11 @@ public:
     void  setRotationY(float);
     StateListAnimator* getStateListAnimator()const;
     void setStateListAnimator(StateListAnimator*);
+    bool getClipToOutline()const;
+    void setClipToOutline(bool clip2Outline);
+    void setOutlineProvider(ViewOutlineProvider provider);
+    ViewOutlineProvider getOutlineProvider()const;
+    void invalidateOutline();
     ViewPropertyAnimator& animate();
     LayoutParams*getLayoutParams();
     int getRawLayoutDirection()const;

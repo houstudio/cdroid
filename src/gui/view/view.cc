@@ -264,6 +264,11 @@ View::View(Context*ctx,const AttributeSet&attrs){
         mBackgroundTint->mHasTintMode = true;
     }
     setBackground(attrs.getDrawable("background"));
+    const int providerInt = attrs.getInt("outlineProvider",std::unordered_map<std::string,int>{
+            {"none", (int)PROVIDER_NONE},    {"background",(int)PROVIDER_BACKGROUND},
+            {"bounds",(int)PROVIDER_BOUNDS}, {"paddedBounds",(int)PROVIDER_PADDED_BOUNDS}
+        },(int)PROVIDER_BACKGROUND);
+    setOutlineProviderFromAttribute(providerInt);
 
     setForeground(attrs.getDrawable("foreground"));
     const int fgTintMode = Drawable::parseTintMode(attrs.getInt("foregroundTintMode",tintModes,PorterDuff::Mode::NOOP),PorterDuff::Mode::NOOP);
@@ -380,6 +385,7 @@ void View::initView(){
     mPendingCheckForLongPress = nullptr;
     mInputEventConsistencyVerifier = nullptr;
     mSendViewScrolledAccessibilityEvent = nullptr;
+    mOutlineProvider = OutlineProvider::BACKGROUND;
     if(InputEventConsistencyVerifier::isInstrumentationEnabled()&&View::VIEW_DEBUG)
         mInputEventConsistencyVerifier = new InputEventConsistencyVerifier(nullptr,0);
 
@@ -9397,7 +9403,67 @@ void View::setStateListAnimator(StateListAnimator*stateListAnimator){
     }    
 }
 
-LayoutParams*View::getLayoutParams(){
+bool View::getClipToOutline() const{
+    return false;//mRenderNode->getClipToOutline();
+}
+
+void View::setClipToOutline(bool clipToOutline) {
+    damageInParent();
+    if (getClipToOutline() != clipToOutline) {
+        //mRenderNode->setClipToOutline(clipToOutline);
+    }
+}
+
+void View::setOutlineProviderFromAttribute(int providerInt) {
+    switch (providerInt) {
+    case PROVIDER_BACKGROUND:
+        setOutlineProvider(OutlineProvider::BACKGROUND);
+        break;
+    case PROVIDER_NONE:
+        setOutlineProvider(nullptr);
+        break;
+    case PROVIDER_BOUNDS:
+        setOutlineProvider(OutlineProvider::BOUNDS);
+        break;
+    case PROVIDER_PADDED_BOUNDS:
+        setOutlineProvider(OutlineProvider::PADDED_BOUNDS);
+        break;
+    }
+}
+
+void View::setOutlineProvider(ViewOutlineProvider provider) {
+    mOutlineProvider = provider;
+    invalidateOutline();
+}
+
+ViewOutlineProvider View::getOutlineProvider() const{
+    return mOutlineProvider;
+}
+
+void View::invalidateOutline() {
+    rebuildOutline();
+
+    notifySubtreeAccessibilityStateChangedIfNeeded();
+    invalidateViewProperty(false, false);
+}
+
+void View::rebuildOutline() {
+    // Unattached views ignore this signal, and outline is recomputed in onAttachedToWindow()
+    if (mAttachInfo == nullptr) return;
+
+    if (mOutlineProvider == nullptr) {
+        // no provider, remove outline
+        //mRenderNode->setOutline(nullptr);
+    } else {
+        Outline outline;//= mAttachInfo.mTmpOutline;
+        outline.setEmpty();
+        outline.setAlpha(1.0f);
+
+        mOutlineProvider(*this, outline);
+        //mRenderNode.setOutline(outline);
+    }
+}
+LayoutParams*View::getLayoutParams()    {
     return mLayoutParams;
 }
 

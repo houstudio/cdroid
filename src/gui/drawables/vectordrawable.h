@@ -50,7 +50,6 @@ private:
     void inflateChildElements(XmlPullParser&parser,const AttributeSet&);
 protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
-    void* getTargetByName(const std::string& name);
     void computeVectorSize();
     void setAllowCaching(bool allowCaching);
 public:
@@ -72,6 +71,7 @@ public:
     int getIntrinsicWidth() override;
     int getIntrinsicHeight() override;
     Insets getOpticalInsets() override;
+    void* getTargetByName(const std::string& name);
     /*
      * Update local dimensions to adjust for a target density that may differ
      * from the source density against which the constant state was loaded.
