@@ -41,8 +41,12 @@ void PropertyValuesHolder::setProperty(Property*p){
     mProperty = p;
 }
 
-Property*PropertyValuesHolder::getProperty(){
+Property*PropertyValuesHolder::getProperty()const{
     return mProperty;
+}
+
+int PropertyValuesHolder::getValueType()const{
+    return mValueType;
 }
 
 void PropertyValuesHolder::setPropertyChangedListener(const OnPropertyChangedListener&ls){
@@ -141,16 +145,16 @@ void PropertyValuesHolder::getPropertyValues(PropertyValues& values){
 #if 0
     //values.type = mValueType;
     values.startValue = mKeyframes.getValue(0);
-    if (values.startValue instanceof PathParser.PathData) {
+    if (values.startValue instanceof PathParser::PathData) {
         // PathData evaluator returns the same mutable PathData object when query fraction,
         // so we have to make a copy here.
-        values.startValue = new PathParser.PathData((PathParser.PathData) values.startValue);
+        values.startValue = new PathParser::PathData((PathParser::PathData) values.startValue);
     }
     values.endValue = mKeyframes.getValue(1);
-    if (values.endValue instanceof PathParser.PathData) {
+    if (values.endValue instanceof PathParser::PathData) {
         // PathData evaluator returns the same mutable PathData object when query fraction,
         // so we have to make a copy here.
-        values.endValue = new PathParser.PathData((PathParser.PathData) values.endValue);
+        values.endValue = new PathParser::PathData((PathParser::PathData) values.endValue);
     }
     // TODO: We need a better way to get data out of keyframes.
     if (mKeyframes instanceof PathKeyframes.FloatKeyframesBase

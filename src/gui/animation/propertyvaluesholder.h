@@ -18,12 +18,15 @@ namespace cdroid{
 using TypeEvaluator = std::function<AnimateValue(float fraction,AnimateValue&startValue,AnimateValue&endValue)>;
 class PropertyValuesHolder{
 public:
+    static constexpr int CLASS_INT = 0;
+    static constexpr int CLASS_FLOAT=1;
     friend class ValueAnimator;
     using PropertySetter = std::function<void(void*target,const std::string&prop,AnimateValue&v)>;
     using PropertyGetter = std::function<AnimateValue(void*target,const std::string&prop)>;
     using OnPropertyChangedListener = std::function<void(const std::string&,void*target,float)>;
     class PropertyValues {
     public:
+        int type;
         std::string propertyName;
         PathParser::PathData startValue;//It seems only used for PathParser::PathData
         PathParser::PathData endValue;//
@@ -31,6 +34,7 @@ public:
         DataSource dataSource;
     };
 protected:
+    int mValueType;
     std::string mPropertyName;
     Property*mProperty;
     OnPropertyChangedListener mOnPropertyChangedListener;
@@ -52,7 +56,8 @@ public:
     void setPropertyName(const std::string& propertyName);
     const std::string getPropertyName()const;
     void setProperty(Property*p);
-    Property*getProperty();
+    Property*getProperty()const;
+    int getValueType()const;
     void setPropertyChangedListener(const OnPropertyChangedListener&);
     
     void setValues(const std::vector<int>&values);

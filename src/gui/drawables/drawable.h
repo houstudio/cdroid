@@ -30,10 +30,11 @@ public:
 
 class Animatable2:public Animatable{
 public:
-    typedef struct{
+    class AnimationCallback:public EventSet{
+    public:
         CallbackBase<void,Drawable&> onAnimationStart;
         CallbackBase<void,Drawable&> onAnimationEnd;
-    }AnimationCallback;
+    };
     virtual void registerAnimationCallback(AnimationCallback callback)=0;
     virtual bool unregisterAnimationCallback(AnimationCallback callback)=0;
 };

@@ -1,10 +1,6 @@
 #include <widget/linearlayout.h>
 #include <cdlog.h>
  
-#define INDEX_CENTER_VERTICAL 0
-#define INDEX_TOP             1
-#define INDEX_BOTTOM          2
-#define INDEX_FILL            3
 namespace cdroid {
 
 DECLARE_WIDGET(LinearLayout)
@@ -70,10 +66,11 @@ void LinearLayout::initView(){
     mUseLargestChild = false;
     mBaselineAligned = false;
     mBaselineAlignedChildIndex   = -1;
-    mAllowInconsistentMeasurement= false;
+    mLayoutDirection = View::LAYOUT_DIRECTION_UNDEFINED;
+    mAllowInconsistentMeasurement= false;//version <= Build::VERSION_CODES::M;
 }
 
-static std::unordered_map<std::string,int>orientationkvs={
+static const std::unordered_map<std::string,int>orientationkvs={
     {"horizontal",LinearLayout::HORIZONTAL},
     {"vertical",LinearLayout::VERTICAL}//
 };
@@ -98,8 +95,7 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
 	   {"none",SHOW_DIVIDER_NONE},
 	   {"beginning",SHOW_DIVIDER_BEGINNING},
 	   {"middle",SHOW_DIVIDER_MIDDLE},
-	   {"end",SHOW_DIVIDER_END}
-        },SHOW_DIVIDER_NONE);
+	   {"end",SHOW_DIVIDER_END} },SHOW_DIVIDER_NONE);
     mDividerPadding = attrs.getInt("dividerPadding",0);
     setDividerDrawable(attrs.getDrawable("divider"));
 }
@@ -1237,6 +1233,16 @@ void LinearLayout::layoutVertical(int left, int top, int width, int height){
             childTop += childHeight + lp->bottomMargin + getNextLocationOffset(child);
 
             i += getChildrenSkipCount(child, i);
+        }
+    }
+}
+
+void LinearLayout::onRtlPropertiesChanged(int layoutDirection) {
+    ViewGroup::onRtlPropertiesChanged(layoutDirection);
+    if (layoutDirection != mLayoutDirection) {
+        mLayoutDirection = layoutDirection;
+        if (mOrientation == HORIZONTAL) {
+            requestLayout();
         }
     }
 }

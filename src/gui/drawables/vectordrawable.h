@@ -120,6 +120,7 @@ public:
 class VectorDrawable::VectorDrawableState:public std::enable_shared_from_this<VectorDrawableState> ,public ConstantState {
 protected:
     friend VectorDrawable;
+    friend AnimatedVectorDrawable;
     // Variables below need to be copied (deep copy if applicable) for mutation.
     int mThemeAttrs[2];
     int mChangingConfigurations;
@@ -224,6 +225,7 @@ private:
     hw::Group* mNativePtr;
     friend VectorDrawable;
     friend VectorDrawableState;
+    friend AnimatedVectorDrawable;
 public:
     VGroup();
     ~VGroup();
