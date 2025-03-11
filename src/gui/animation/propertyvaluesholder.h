@@ -10,6 +10,7 @@
 #include <core/variant.h>
 #include <unordered_map>
 #include <animation/property.h>
+#include <drawables/pathparser.h>
 //reference:
 //http://androidxref.com/9.0.0_r3/xref/frameworks/base/libs/hwui/PropertyValuesHolder.h
 namespace cdroid{
@@ -21,6 +22,14 @@ public:
     using PropertySetter = std::function<void(void*target,const std::string&prop,AnimateValue&v)>;
     using PropertyGetter = std::function<AnimateValue(void*target,const std::string&prop)>;
     using OnPropertyChangedListener = std::function<void(const std::string&,void*target,float)>;
+    class PropertyValues {
+    public:
+        std::string propertyName;
+        PathParser::PathData startValue;//It seems only used for PathParser::PathData
+        PathParser::PathData endValue;//
+        using DataSource = std::function<AnimateValue(float fraction)>;
+        DataSource dataSource;
+    };
 protected:
     std::string mPropertyName;
     Property*mProperty;
@@ -49,6 +58,7 @@ public:
     void setValues(const std::vector<int>&values);
     void setValues(const std::vector<uint32_t>&values);
     void setValues(const std::vector<float>&values);
+    void getPropertyValues(PropertyValues&values);
     const AnimateValue& getAnimatedValue()const;
 
     void setEvaluator(TypeEvaluator evaluator);
