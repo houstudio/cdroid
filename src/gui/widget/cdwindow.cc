@@ -66,6 +66,8 @@ void Window::initWindow(){
     mSendWindowContentChangedAccessibilityEvent = nullptr;
     mPendingRgn = Cairo::Region::create();
     setBackground(nullptr);
+    setLayoutDirection(View::LAYOUT_DIRECTION_LTR);
+    setTextDirection(View::TEXT_DIRECTION_LTR);
     /*mLayoutRequested = false;
     mTraversalScheduled = false;
     mTraversalRunnable = [this](){
