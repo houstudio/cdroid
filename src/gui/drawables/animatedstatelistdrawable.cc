@@ -181,6 +181,104 @@ void AnimatedStateListDrawable::setConstantState(std::shared_ptr<DrawableContain
     }
 }
 
+void AnimatedStateListDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    StateListDrawable::inflateWithAttributes(parser,atts);
+
+    updateStateFromTypedArray(atts);
+    //updateDensity();
+    inflateChildElement(parser,atts);
+    init();
+}
+
+void AnimatedStateListDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
+    auto state = mState;
+
+    // Account for any configuration changes.
+    //state->mChangingConfigurations |= a.getChangingConfigurations();
+    // Extract the theme attributes, if any.
+    //state->mThemeAttrs = a.extractThemeAttrs();
+
+    state->mVariablePadding = atts.getBoolean("variablePadding", state->mVariablePadding);
+    state->mConstantSize = atts.getBoolean("constantSize", state->mConstantSize);
+    state->mEnterFadeDuration = atts.getInt("enterFadeDuration", state->mEnterFadeDuration);
+    state->mExitFadeDuration = atts.getInt("exitFadeDuration", state->mExitFadeDuration);
+    state->mDither = atts.getBoolean("dither", state->mDither);
+    state->mAutoMirrored = atts.getBoolean("autoMirrored", state->mAutoMirrored);
+}
+
+void AnimatedStateListDrawable::init(){
+    onStateChange(getState());
+}
+
+void AnimatedStateListDrawable::inflateChildElement(XmlPullParser&parser,const AttributeSet&atts){
+    int type,depth;
+    XmlPullParser::XmlEvent event;
+    const int innerDepth = parser.getDepth();
+    while (((type = parser.next(event,depth)) != XmlPullParser::END_DOCUMENT)
+            && (depth >= innerDepth || type != XmlPullParser::END_TAG)) {
+        if (type != XmlPullParser::START_TAG) {
+            continue;
+        }
+
+        if (depth > innerDepth) continue;
+
+        if (event.name.compare(ELEMENT_ITEM)==0) {
+            parseItem(parser, event.attributes);
+        } else if (event.name.compare(ELEMENT_TRANSITION)==0) {
+            parseTransition(parser, event.attributes);
+        }
+    }
+}
+
+int AnimatedStateListDrawable::parseItem(XmlPullParser&parser,const AttributeSet&atts){
+    const int keyframeId = atts.getResourceId("id", 0);
+    Drawable* dr = atts.getDrawable("drawable");
+
+    std::vector<int> states;
+    StateSet::parseState(states,atts);
+
+    // Loading child elements modifies the state of the AttributeSet's
+    // underlying parser, so it needs to happen after obtaining
+    // attributes and extracting states.
+    if (dr == nullptr) {
+        int type;
+        XmlPullParser::XmlEvent event;
+        while ((type = parser.next(event)) == XmlPullParser::TEXT) {
+        }
+        if (type != XmlPullParser::START_TAG) {
+            throw std::logic_error(//parser.getPositionDescription()
+                    ": <item> tag requires a 'drawable' attribute or child tag defining a drawable");
+        }
+        dr = Drawable::createFromXmlInner(parser, event.attributes);
+    }
+
+    return mState->addStateSet(states, dr, keyframeId);
+}
+
+int AnimatedStateListDrawable::parseTransition(XmlPullParser&parser,const AttributeSet&atts){
+    const int fromId = atts.getResourceId("fromId", 0);
+    const int toId = atts.getResourceId("toId", 0);
+    const bool reversible = atts.getBoolean("reversible", false);
+    Drawable* dr = atts.getDrawable("drawable");
+
+    // Loading child elements modifies the state of the AttributeSet's
+    // underlying parser, so it needs to happen after obtaining
+    // attributes and extracting states.
+    if (dr == nullptr) {
+        int type;
+        XmlPullParser::XmlEvent event;
+        while ((type = parser.next(event)) == XmlPullParser::TEXT) {
+        }
+        if (type != XmlPullParser::START_TAG) {
+            throw std::logic_error(//parser.getPositionDescription()
+                            ": <transition> tag requires a 'drawable' attribute or child tag defining a drawable");
+        }
+        dr = Drawable::createFromXmlInner(parser, event.attributes);
+    }
+
+    return mState->addTransition(fromId, toId, dr, reversible);
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 void AnimatedStateListDrawable::Transition::reverse(){
     //NOTHING
@@ -378,111 +476,12 @@ void AnimatedStateListDrawable::AnimatedVectorDrawableTransition::reverse(){
     if (canReverse()) {
         //mAvd->reverse();
     } else {
-        LOGW("Can't reverse, either the reversible is set to false,"
-               " or the AnimatedVectorDrawable can't reverse");
+        LOGW("Can't reverse, either the reversible is set to false, or the AnimatedVectorDrawable can't reverse");
     }
 }
 
 void AnimatedStateListDrawable::AnimatedVectorDrawableTransition::stop(){
     //mAvd->stop();
-}
-
-void AnimatedStateListDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    StateListDrawable::inflateWithAttributes(parser,atts);
-
-    updateStateFromTypedArray(atts);
-    //updateDensity();
-    inflateChildElement(parser,atts);
-    init();
-}
-
-void AnimatedStateListDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
-    auto state = mState;
-
-    // Account for any configuration changes.
-    //state->mChangingConfigurations |= a.getChangingConfigurations();
-    // Extract the theme attributes, if any.
-    //state->mThemeAttrs = a.extractThemeAttrs();
-
-    state->mVariablePadding = atts.getBoolean("variablePadding", state->mVariablePadding);
-    state->mConstantSize = atts.getBoolean("constantSize", state->mConstantSize);
-    state->mEnterFadeDuration = atts.getInt("enterFadeDuration", state->mEnterFadeDuration);
-    state->mExitFadeDuration = atts.getInt("exitFadeDuration", state->mExitFadeDuration);
-    state->mDither = atts.getBoolean("dither", state->mDither);
-    state->mAutoMirrored = atts.getBoolean("autoMirrored", state->mAutoMirrored);
-}
-
-void AnimatedStateListDrawable::init(){
-    onStateChange(getState());
-}
-
-void AnimatedStateListDrawable::inflateChildElement(XmlPullParser&parser,const AttributeSet&atts){
-    int type,depth;
-    XmlPullParser::XmlEvent event;
-    const int innerDepth = parser.getDepth();
-    while (((type = parser.next(event,depth)) != XmlPullParser::END_DOCUMENT)
-            && (depth >= innerDepth || type != XmlPullParser::END_TAG)) {
-        if (type != XmlPullParser::START_TAG) {
-            continue;
-        }
-
-        if (depth > innerDepth) continue;
-LOGD("%s",event.name.c_str());
-        if (event.name.compare(ELEMENT_ITEM)==0) {
-            parseItem(parser, event.attributes);
-        } else if (event.name.compare(ELEMENT_TRANSITION)==0) {
-            parseTransition(parser, event.attributes);
-        }
-    }
-}
-
-int AnimatedStateListDrawable::parseItem(XmlPullParser&parser,const AttributeSet&atts){
-    const int keyframeId = atts.getResourceId("id", 0);
-    Drawable* dr = atts.getDrawable("drawable");
-
-    std::vector<int> states;
-    StateSet::parseState(states,atts);
-
-    // Loading child elements modifies the state of the AttributeSet's
-    // underlying parser, so it needs to happen after obtaining
-    // attributes and extracting states.
-    if (dr == nullptr) {
-        int type;
-        XmlPullParser::XmlEvent event;
-        while ((type = parser.next(event)) == XmlPullParser::TEXT) {
-        }
-        if (type != XmlPullParser::START_TAG) {
-            throw std::logic_error(//parser.getPositionDescription()
-                    ": <item> tag requires a 'drawable' attribute or child tag defining a drawable");
-        }
-        dr = Drawable::createFromXmlInner(parser, event.attributes);
-    }
-
-    return mState->addStateSet(states, dr, keyframeId);
-}
-
-int AnimatedStateListDrawable::parseTransition(XmlPullParser&parser,const AttributeSet&atts){
-    const int fromId = atts.getResourceId("fromId", 0);
-    const int toId = atts.getResourceId("toId", 0);
-    const bool reversible = atts.getBoolean("reversible", false);
-    Drawable* dr = atts.getDrawable("drawable");
-
-    // Loading child elements modifies the state of the AttributeSet's
-    // underlying parser, so it needs to happen after obtaining
-    // attributes and extracting states.
-    if (dr == nullptr) {
-        int type;
-        XmlPullParser::XmlEvent event;
-        while ((type = parser.next(event)) == XmlPullParser::TEXT) {
-        }
-        if (type != XmlPullParser::START_TAG) {
-            throw std::logic_error(//parser.getPositionDescription()
-                            ": <transition> tag requires a 'drawable' attribute or child tag defining a drawable");
-        }
-        dr = Drawable::createFromXmlInner(parser, event.attributes);
-    }
-
-    return mState->addTransition(fromId, toId, dr, reversible);
 }
 
 
