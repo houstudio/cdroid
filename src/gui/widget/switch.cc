@@ -95,6 +95,10 @@ void Switch::init(){
     mThumbTintList = nullptr;
     mTrackDrawable = nullptr;
     mTrackTintList = nullptr;
+    mSwitchMinWidth= 0;
+    mSwitchWidth = 0;
+    mSwitchHeight= 0;
+    mThumbWidth = 0;
     mPositionAnimator = nullptr;
     mOnLayout  = makeLayout("");
     mOffLayout = makeLayout("");
@@ -460,9 +464,8 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         paddingRight = std::max(paddingRight, inset.right);
     }
 
-    int switchWidth = std::max(mSwitchMinWidth,
-            2 * mThumbWidth + paddingLeft + paddingRight);
-    int switchHeight = std::max(trackHeight, thumbHeight);
+    const int switchWidth = std::max(mSwitchMinWidth,2 * mThumbWidth + paddingLeft + paddingRight);
+    const int switchHeight = std::max(trackHeight, thumbHeight);
     mSwitchWidth  = switchWidth;
     mSwitchHeight = switchHeight;
     CompoundButton::onMeasure(widthMeasureSpec, heightMeasureSpec);

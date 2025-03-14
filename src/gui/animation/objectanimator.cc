@@ -240,6 +240,7 @@ ObjectAnimator* ObjectAnimator::ofFloat(void* target,const std::string& property
 ObjectAnimator* ObjectAnimator::ofInt(void*target,Property*prop,const std::vector<int>&values){
     ObjectAnimator*anim = new ObjectAnimator();
     anim->setTarget(target);
+    anim->setProperty(prop);
     anim->setIntValues(values);
     return anim;
 }
@@ -247,6 +248,7 @@ ObjectAnimator* ObjectAnimator::ofInt(void*target,Property*prop,const std::vecto
 ObjectAnimator* ObjectAnimator::ofFloat(void*target,Property*prop,const std::vector<float>&values){
     ObjectAnimator*anim = new ObjectAnimator();
     anim->setTarget(target);
+    anim->setProperty(prop);
     anim->setFloatValues(values);
     return anim;
 }

@@ -116,7 +116,7 @@ bool AnimatedStateListDrawable::selectTransition(int toIndex){
         return false;
     }
 
-    bool hasReversibleFlag = mState->transitionHasReversibleFlag(fromId, toId);
+    const bool hasReversibleFlag = mState->transitionHasReversibleFlag(fromId, toId);
 
     // This may fail if we're already on the transition, but that's okay!
     selectDrawable(transitionIndex);
