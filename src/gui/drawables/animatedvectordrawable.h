@@ -26,8 +26,8 @@ private:
     std::vector<Animatable2::AnimationCallback> mAnimationCallbacks;
     Animator::AnimatorListener mAnimatorListener;
 private:
-    bool shouldIgnoreInvalidAnimation();
-    void updateAnimatorProperty(Animator* animator, const std::string& targetName,VectorDrawable* vectorDrawable, bool ignoreInvalidAnim);
+    static bool shouldIgnoreInvalidAnimation();
+    static void updateAnimatorProperty(Animator* animator, const std::string& targetName,VectorDrawable* vectorDrawable, bool ignoreInvalidAnim);
     static bool containsSameValueType(const PropertyValuesHolder* holder,const Property* property);
     void fallbackOntoUI();
 protected:
@@ -69,7 +69,7 @@ public:
     void reverse();
     bool canReverse();
     void registerAnimationCallback(const Animatable2::AnimationCallback& callback);
-    void unregisterAnimationCallback(const Animatable2::AnimationCallback& callback);
+    bool unregisterAnimationCallback(const Animatable2::AnimationCallback& callback);
     void removeAnimatorSetListener();
     void clearAnimationCallbacks();
 };
@@ -84,7 +84,7 @@ private:
         float pathErrorScale;
         std::string target;
         PendingAnimator(const std::string& animResId, float pathErrorScale, const std::string& target);
-        Animator* newInstance();
+        Animator* newInstance(Context*);
     };
     int mChangingConfigurations;
     VectorDrawable* mVectorDrawable;
@@ -100,7 +100,7 @@ public:
     bool canApplyTheme();
     Drawable*newDrawable()override;
     int getChangingConfigurations() const override;
-    void addPendingAnimator(int resId, float pathErrorScale, const std::string& target);
+    void addPendingAnimator(const std::string& resId, float pathErrorScale, const std::string& target);
     void addTargetAnimator(const std::string& targetName, Animator* animator);
     void prepareLocalAnimators(AnimatorSet* animatorSet);
     Animator*prepareLocalAnimator(int index);
