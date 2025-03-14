@@ -415,13 +415,28 @@ void AnimatedStateListDrawable::AnimatableTransition::stop() {
     mA->stop();
 }
 
-/***************************/
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CURRENT_INDEX:public Property{
+public:
+    CURRENT_INDEX():Property("currentIndex"){
+    }
+    AnimateValue get(void* object){
+        AnimateValue v = ((AnimationDrawable*)object)->getCurrentIndex();
+        return v;
+    }
+    void set(void* object,const AnimateValue& value){
+        AnimationDrawable*ad=(AnimationDrawable*)object;
+        ad->setCurrentIndex(GET_VARIANT(value,int));
+    }
+};
+
 AnimatedStateListDrawable::AnimationDrawableTransition::AnimationDrawableTransition(AnimationDrawable* ad, bool reversed, bool hasReversibleFlag){
     const int frameCount = ad->getNumberOfFrames();
     const int fromFrame = reversed ? frameCount - 1 : 0;
     const int toFrame = reversed ? 0 : frameCount - 1;
     mFrameInterpolator = new FrameInterpolator(ad, reversed);
-    ObjectAnimator* anim = ObjectAnimator::ofInt(ad, "currentIndex",{fromFrame, toFrame});
+    mProperty =new CURRENT_INDEX();
+    ObjectAnimator* anim = ObjectAnimator::ofInt(ad, mProperty,{fromFrame, toFrame});
     anim->setAutoCancel(true);
     anim->setDuration(mFrameInterpolator->getTotalDuration());
     anim->setInterpolator(mFrameInterpolator);
@@ -431,6 +446,7 @@ AnimatedStateListDrawable::AnimationDrawableTransition::AnimationDrawableTransit
 }
 
 AnimatedStateListDrawable::AnimationDrawableTransition::~AnimationDrawableTransition(){
+    delete mProperty;
     delete mFrameInterpolator;
 	delete mAnim;
 	delete mDrawable;

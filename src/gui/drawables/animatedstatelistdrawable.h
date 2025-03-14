@@ -109,9 +109,9 @@ public:
 
 class AnimatedStateListDrawable::AnimationDrawableTransition:public Transition {
 private:
+    Property*mProperty;
     ObjectAnimator* mAnim;
-    FrameInterpolator*mFrameInterpolator;
-	
+    FrameInterpolator*mFrameInterpolator;	
     // Even AnimationDrawable is always reversible technically, but
     // we should obey the XML's android:reversible flag.
     bool mHasReversibleFlag;
