@@ -321,6 +321,8 @@ void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,in
         auto frmSequence = FrameSequence::create(atts.getContext(),srcResid);
         if(frmSequence==nullptr)return;
         mAnimatedImageState->mFrameSequence = frmSequence;
+        mIntrinsicWidth = frmSequence->getWidth();
+        mIntrinsicHeight= frmSequence->getHeight();
         mRepeatCount = frmSequence->getDefaultLoopCount();
         if(mRepeatCount<=0)
             mRepeatCount = REPEAT_UNDEFINED;
