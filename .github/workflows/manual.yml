@@ -1,0 +1,31 @@
+name: Sync from Gitee
+
+on:
+  schedule:
+    - cron: '0 */60 * * *'  # 每 6 小时同步一次（UTC 时间）
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitHub repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # 拉取完整历史记录
+
+      - name: Sync from Gitee
+        run: |
+          # 添加 Gitee 远程仓库
+          git remote add gitee https://gitee.com/houstudio/Cdroid.git
+          # 从 Gitee 拉取代码
+          git fetch gitee
+          # 合并 Gitee 的代码到当前分支
+          git merge gitee/master --allow-unrelated-histories
+          # 推送到 GitHub
+          git push origin master
+        env:
+          GIT_AUTHOR_NAME: ${{ github.actor }}
+          GIT_AUTHOR_EMAIL: ${{ github.actor }}@users.noreply.github.com
+          GIT_COMMITTER_NAME: ${{ github.actor }}
+          GIT_COMMITTER_EMAIL: ${{ github.actor }}@users.noreply.github.com
