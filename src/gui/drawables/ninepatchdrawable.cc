@@ -16,6 +16,7 @@ NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
     mMutated = false;
     mFilterBitmap = false;
     mTintFilter = nullptr;
+    mOutlineRadius=0.f;
     mPadding.setEmpty();
     computeBitmapSize();
 }
@@ -23,6 +24,7 @@ NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
 NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid):NinePatchDrawable(){
     mNinePatchState->setBitmap(ctx,resid);
     mAlpha = 255;
+    mOutlineRadius=0.f;
     mMutated = false;
     mFilterBitmap = false;
     mTintFilter = nullptr;
@@ -32,6 +34,7 @@ NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid):NinePa
 NinePatchDrawable::NinePatchDrawable(RefPtr<ImageSurface>bmp):NinePatchDrawable(){
     mNinePatchState->setBitmap(bmp);
     mAlpha = 255;
+    mOutlineRadius=0.f;
     mMutated = false;
     mFilterBitmap = false;
     mTintFilter = nullptr;
@@ -122,18 +125,19 @@ void NinePatchDrawable::getOutline(Outline& outline) {
         return;
     }
     LOGD("TODO");
-    /*if (mNinePatchState != nullptr && mOutlineInsets != nullptr) {
+    if (mNinePatchState != nullptr/*&& mOutlineInsets != nullptr*/) {
         //NinePatch.InsetStruct insets =mNinePatchState.mNinePatch.getBitmap().getNinePatchInsets();
-        if (insets != null) {
-            outline.setRoundRect(bounds.left + mOutlineInsets.left,
-                    bounds.top + mOutlineInsets.top,
-                    bounds.width - mOutlineInsets.right,
-                    bounds.height - mOutlineInsets.bottom,
+        Insets insets = mNinePatchState->mOpticalInsets;
+        if (insets!=Insets::NONE) {
+            outline.setRoundRect(bounds.left + insets.left,//mOutlineInsets.left,
+                    bounds.top + insets.top,//mOutlineInsets.top,
+                    bounds.width - insets.right,//mOutlineInsets.right,
+                    bounds.height - insets.bottom,//mOutlineInsets.bottom,
                     mOutlineRadius);
-            outline.setAlpha(insets.outlineAlpha * (getAlpha() / 255.0f));
+            outline.setAlpha(/*insets.outlineAlpha */ (getAlpha() / 255.0f));
             return;
         }
-    }*/
+    }
     Drawable::getOutline(outline);
 }
 
@@ -238,6 +242,7 @@ void NinePatchDrawable::draw(Canvas&canvas){
 void NinePatchDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
    Drawable::inflate(parser,atts);
    updateStateFromTypedArray(atts);
+   computeBitmapSize();
 }
 
 void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
@@ -255,20 +260,20 @@ void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
     if (!srcResId.empty()) {
         Rect padding ,opticalInsets;
         Cairo::RefPtr<Cairo::ImageSurface> bitmap;
-
-        bitmap = ImageDecoder::loadImage(a.getContext(),srcResId);
+        auto is= a.getContext()->getInputStream(srcResId);
+        bitmap = ImageDecoder::loadImage(*is,-1,-1);
         if (bitmap == nullptr) {
             throw std::logic_error(//a.getPositionDescription() +
                     ": <nine-patch> requires a valid src attribute");
-        }/* else if (bitmap.getNinePatchChunk() == null) {
-            throw std::logic_error(//a.getPositionDescription() +
-                    ": <nine-patch> requires a valid 9-patch source image");
-        }*/
-
-        //bitmap.getOpticalInsets(opticalInsets);
-
-        state->mNinePatch = std::make_shared<NinePatch>(bitmap);
-        state->mPadding = state->mNinePatch->getPadding();
+        } else {//if (bitmap.getNinePatchChunk() == null) {
+            state->mNinePatch = std::make_shared<NinePatch>(bitmap);
+            state->mPadding = state->mNinePatch->getPadding();
+            if(state->mPadding.empty()){
+                throw std::logic_error(//a.getPositionDescription() +
+                     ": <nine-patch> requires a valid 9-patch source image");
+            }
+        }
+        opticalInsets = state->mNinePatch->getOpticalInsets();
         state->mOpticalInsets = Insets::of(opticalInsets);
     }
 

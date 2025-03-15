@@ -30,6 +30,7 @@ private:
     int mBitmapWidth;
     int mBitmapHeight;
     int mTargetDensity;
+    float mOutlineRadius;
     Insets mOpticalInsets;
     Rect mPadding;
     bool mMutated;

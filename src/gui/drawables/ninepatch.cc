@@ -12,7 +12,8 @@ NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
     : mImage(image){
     mContentArea = getContentArea();
     mOpacity = ImageDecoder::getTransparency(mImage);
-    mAlpha =1.f;
+    mAlpha = 1.f;
+    mOpticalInsets =getOpticalInsetsFromBitmap(image);
     getResizeArea();
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
         //throw new ExceptionNot9Patch;
@@ -129,6 +130,10 @@ Rect NinePatch::getPadding()const{
     return mPadding;
 }
 
+Rect NinePatch::getOpticalInsets()const{
+    return mOpticalInsets;
+}
+
 void NinePatch::drawScaledPart(const Rect& oldRect, const Rect& newRect,Cairo::Context&painter) {
     if (newRect.width && newRect.height) {
         const double scaleX=(double)newRect.width/oldRect.width;
@@ -171,6 +176,43 @@ static inline bool IsColorBlack(Cairo::RefPtr<ImageSurface>img,int i,int j) {
     uint8_t a = data[3];
     if (a < 128) return false;
     return (r < 128 && g < 128 && b < 128);
+}
+
+int NinePatch::analyzeEdge(Cairo::RefPtr<ImageSurface>img, int fixedIndex, int start, int end, bool isBottom) {
+    uint8_t *data=(uint8_t*)img->get_data();
+    for (int i = start; i < end; i++) {
+        uint32_t* pixel;
+        if (isBottom) {
+            // 底部边缘：固定行，遍历列
+            pixel = (uint32_t*)(data+img->get_stride()*i+fixedIndex*4);
+        } else {
+            // 右侧边缘：固定列，遍历行
+            pixel = (uint32_t*)(data+img->get_stride()*fixedIndex+i*4);
+        }
+
+        // 如果像素不是完全透明，则返回当前索引
+        if (*pixel!=0) {
+            return i;
+        }
+    }
+    return 0;
+}
+
+Rect NinePatch::getOpticalInsetsFromBitmap(Cairo::RefPtr<ImageSurface>bitmap) {
+    Rect insets;
+    int width = bitmap->get_width();
+    int height = bitmap->get_height();
+
+    // 分析右侧边缘像素
+    insets.width = analyzeEdge(bitmap, width - 2, 1, height-2, false); // 右侧
+    // 分析底部边缘像素
+    insets.height = analyzeEdge(bitmap, height - 2, 1, width-2, true); // 底部
+
+    // 左侧和顶部通常不用于 Optical Insets，设置为 0
+    insets.left = 0;
+    insets.top = 0;
+
+    return insets;
 }
 
 Rect NinePatch::getContentArea() {
