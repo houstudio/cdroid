@@ -8,10 +8,11 @@ class NinePatch {
 private:
     int mWidth = -1;/*CacheImage.Width*/
     int mHeight= -1;/*CacheImage.Height*/
+    int mOpacity;
+    int mRadius;
     Rect mContentArea;
     Rect mPadding;
     Rect mOpticalInsets;
-    int mOpacity;
     float mAlpha;
     std::vector<std::pair< int, int >>mResizeDistancesY;
     std::vector<std::pair< int, int >>mResizeDistancesX;
@@ -24,7 +25,8 @@ private:
     void getFactor(int width, int height, double& factorX, double& factorY);
     void updateCachedImage(int width, int height,Cairo::Context*);
     int analyzeEdge(Cairo::RefPtr<Cairo::ImageSurface>img, int fixedIndex, int start, int end, bool isBottom);
-    Rect getOpticalInsetsFromBitmap(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
+    int getCornerRadius(Cairo::RefPtr<Cairo::ImageSurface> bitmap,int start,int step);
+    Rect getOpticalInsets(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
 public:
     NinePatch(Cairo::RefPtr<Cairo::ImageSurface> image);
     NinePatch(cdroid::Context*ctx,const std::string&resid);
@@ -37,6 +39,7 @@ public:
     Rect getContentArea(int  widht, int  height);
     Rect getPadding()const;
     Rect getOpticalInsets()const;
+    int getRadius()const;
 };
 }/*endof namespace*/
 #endif

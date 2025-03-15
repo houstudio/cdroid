@@ -13,7 +13,8 @@ NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
     mContentArea = getContentArea();
     mOpacity = ImageDecoder::getTransparency(mImage);
     mAlpha = 1.f;
-    mOpticalInsets =getOpticalInsetsFromBitmap(image);
+    mOpticalInsets =getOpticalInsets(image);
+    mRadius = getCornerRadius(image,1,1);
     getResizeArea();
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
         //throw new ExceptionNot9Patch;
@@ -134,6 +135,10 @@ Rect NinePatch::getOpticalInsets()const{
     return mOpticalInsets;
 }
 
+int NinePatch::getRadius()const{
+    return mRadius;
+}
+
 void NinePatch::drawScaledPart(const Rect& oldRect, const Rect& newRect,Cairo::Context&painter) {
     if (newRect.width && newRect.height) {
         const double scaleX=(double)newRect.width/oldRect.width;
@@ -183,14 +188,11 @@ int NinePatch::analyzeEdge(Cairo::RefPtr<ImageSurface>img, int fixedIndex, int s
     for (int i = start; i < end; i++) {
         uint32_t* pixel;
         if (isBottom) {
-            // 底部边缘：固定行，遍历列
             pixel = (uint32_t*)(data+img->get_stride()*i+fixedIndex*4);
         } else {
-            // 右侧边缘：固定列，遍历行
             pixel = (uint32_t*)(data+img->get_stride()*fixedIndex+i*4);
         }
 
-        // 如果像素不是完全透明，则返回当前索引
         if (*pixel!=0) {
             return i;
         }
@@ -198,17 +200,33 @@ int NinePatch::analyzeEdge(Cairo::RefPtr<ImageSurface>img, int fixedIndex, int s
     return 0;
 }
 
-Rect NinePatch::getOpticalInsetsFromBitmap(Cairo::RefPtr<ImageSurface>bitmap) {
+int NinePatch::getCornerRadius(Cairo::RefPtr<ImageSurface> bitmap,int start,int step) {
+    const int width = bitmap->get_width();
+    const int height = bitmap->get_height();
+
+    int cornerRadius = 0;
+
+    const int end=std::min(width, height);
+    for (int i = start; i < end; i+=step) {
+        uint32_t* pixel = (uint32_t*)(bitmap->get_data()+bitmap->get_stride()*i+ i*4);
+
+        if (*pixel != 0) {
+            break;
+        }
+        cornerRadius++;
+    }
+
+    return cornerRadius;
+}
+
+Rect NinePatch::getOpticalInsets(Cairo::RefPtr<ImageSurface>bitmap) {
     Rect insets;
     int width = bitmap->get_width();
     int height = bitmap->get_height();
 
-    // 分析右侧边缘像素
     insets.width = analyzeEdge(bitmap, width - 2, 1, height-2, false); // 右侧
-    // 分析底部边缘像素
     insets.height = analyzeEdge(bitmap, height - 2, 1, width-2, true); // 底部
 
-    // 左侧和顶部通常不用于 Optical Insets，设置为 0
     insets.left = 0;
     insets.top = 0;
 
