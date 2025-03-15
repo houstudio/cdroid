@@ -301,16 +301,15 @@ void GradientDrawable::getOutline(Outline& outline) {
     int top;
     // only report non-zero alpha if shape being drawn has consistent opacity over shape. Must
     // either not have a stroke, or have same stroke/fill opacity
-#if 0
     const bool useFillOpacity = st->mOpaqueOverShape && (mGradientState->mStrokeWidth <= 0
-            || mStrokePaint == nullptr || mStrokePaint->getAlpha() == mFillPaint->getAlpha());
-    outline.setAlpha(useFillOpacity ? modulateAlpha(mFillPaint->getAlpha()) / 255.0f: 0.0f);
+            || mStrokePaint == nullptr /*|| mStrokePaint->getAlpha() == mFillPaint->getAlpha()*/);
+    outline.setAlpha(255);//useFillOpacity ? modulateAlpha(mFillPaint->getAlpha()) / 255.0f: 0.0f);
 
     switch (st->mShape) {
         case RECTANGLE:
             if (!st->mRadiusArray.empty()){// != null) {
                 buildPathIfDirty();
-                outline.setConvexPath(mPath);
+                outline.setConvexPath(*mPath);
                 return;
             }
             rad = 0;
@@ -324,14 +323,13 @@ void GradientDrawable::getOutline(Outline& outline) {
         case LINE:
             // Hairlines (0-width stroke) must have a non-empty outline for
             // shadows to draw correctly, so we'll use a very small width.
-            halfStrokeWidth = mStrokePaint == nullptr ? 0.0001f : mStrokePaint->getStrokeWidth() * 0.5f;
+            halfStrokeWidth = mStrokePaint == nullptr ? 0.0001f : mGradientState->mStrokeWidth * 0.5f;
             top = (int) std::floor(bounds.centerY() - halfStrokeWidth);
             outline.setRect(bounds.left, top, bounds.width, halfStrokeWidth*2);
             return;
         default:break;
             // TODO: support more complex shapes
     }
-#endif
 }
 
 GradientDrawable* GradientDrawable::mutate() {
@@ -658,15 +656,13 @@ void GradientDrawable::setColor(int argb) {
 
 void GradientDrawable::setColor(const ColorStateList* colorStateList) {
     mGradientState->setSolidColors(colorStateList);
-    int color;
-    if (colorStateList == nullptr) {
-        color = Color::TRANSPARENT;
-    } else {
+    int color = Color::TRANSPARENT;
+    if (colorStateList) {
         const std::vector<int>& stateSet = getState();
         color = colorStateList->getColorForState(stateSet,0);
     }
     Color c(color);
-    mFillPaint=SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
+    mFillPaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
     invalidateSelf();
 }
 

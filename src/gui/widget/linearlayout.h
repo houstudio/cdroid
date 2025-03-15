@@ -27,6 +27,12 @@ public:
         LayoutParams(const ViewGroup::LayoutParams&source);
     };
 private:
+    static constexpr int VERTICAL_GRAVITY_COUNT = 4;
+    static constexpr int INDEX_CENTER_VERTICAL = 0;
+    static constexpr int INDEX_TOP = 1;
+    static constexpr int INDEX_BOTTOM = 2;
+    static constexpr int INDEX_FILL = 3;
+private:
     bool mAllowInconsistentMeasurement;
     bool mBaselineAligned;
     int mBaselineAlignedChildIndex;
@@ -104,7 +110,7 @@ public:
     bool isMeasureWithLargestChildEnabled()const;
     void setMeasureWithLargestChildEnabled(bool enabled);
     std::string getAccessibilityClassName()const override;
-
+    void onRtlPropertiesChanged(int layoutDirection) override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     virtual ~LinearLayout();
 };

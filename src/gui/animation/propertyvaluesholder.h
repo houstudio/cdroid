@@ -10,6 +10,7 @@
 #include <core/variant.h>
 #include <unordered_map>
 #include <animation/property.h>
+#include <drawables/pathparser.h>
 //reference:
 //http://androidxref.com/9.0.0_r3/xref/frameworks/base/libs/hwui/PropertyValuesHolder.h
 namespace cdroid{
@@ -17,11 +18,23 @@ namespace cdroid{
 using TypeEvaluator = std::function<AnimateValue(float fraction,AnimateValue&startValue,AnimateValue&endValue)>;
 class PropertyValuesHolder{
 public:
+    static constexpr int CLASS_INT = 0;
+    static constexpr int CLASS_FLOAT=1;
     friend class ValueAnimator;
     using PropertySetter = std::function<void(void*target,const std::string&prop,AnimateValue&v)>;
     using PropertyGetter = std::function<AnimateValue(void*target,const std::string&prop)>;
     using OnPropertyChangedListener = std::function<void(const std::string&,void*target,float)>;
+    class PropertyValues {
+    public:
+        int type;
+        std::string propertyName;
+        PathParser::PathData startValue;//It seems only used for PathParser::PathData
+        PathParser::PathData endValue;//
+        using DataSource = std::function<AnimateValue(float fraction)>;
+        DataSource dataSource;
+    };
 protected:
+    int mValueType;
     std::string mPropertyName;
     Property*mProperty;
     OnPropertyChangedListener mOnPropertyChangedListener;
@@ -43,12 +56,14 @@ public:
     void setPropertyName(const std::string& propertyName);
     const std::string getPropertyName()const;
     void setProperty(Property*p);
-    Property*getProperty();
+    Property*getProperty()const;
+    int getValueType()const;
     void setPropertyChangedListener(const OnPropertyChangedListener&);
     
     void setValues(const std::vector<int>&values);
     void setValues(const std::vector<uint32_t>&values);
     void setValues(const std::vector<float>&values);
+    void getPropertyValues(PropertyValues&values);
     const AnimateValue& getAnimatedValue()const;
 
     void setEvaluator(TypeEvaluator evaluator);

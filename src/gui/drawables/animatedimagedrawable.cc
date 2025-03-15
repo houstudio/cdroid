@@ -1,6 +1,7 @@
 #include <drawables/animatedimagedrawable.h>
-#include <systemclock.h>
-#include <cdlog.h>
+#include <core/systemclock.h>
+#include <porting/cdlog.h>
+#include <view/view.h>
 #include <view/gravity.h>
 #include <view/choreographer.h>
 #include <image-decoders/imagedecoder.h>
@@ -193,7 +194,11 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
         const bool isOpaque = mAnimatedImageState->mFrameSequence->isOpaque();
         canvas.set_source(mImage,mBounds.left,mBounds.top);
         canvas.set_operator(isOpaque?Cairo::Context::Operator::SOURCE:Cairo::Context::Operator::OVER);
-        canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
+        canvas.translate(mBounds.left,mBounds.top);
+        if(mAnimatedImageState->mAutoMirrored && (getLayoutDirection() == View::LAYOUT_DIRECTION_RTL)){
+            canvas.scale(-1,1);
+        }
+        canvas.rectangle(0,0,mBounds.width,mBounds.height);
         canvas.paint_with_alpha(mAlpha);
     }else{
 #if ENABLE(DMABLIT)
@@ -321,6 +326,8 @@ void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,in
         auto frmSequence = FrameSequence::create(atts.getContext(),srcResid);
         if(frmSequence==nullptr)return;
         mAnimatedImageState->mFrameSequence = frmSequence;
+        mIntrinsicWidth = frmSequence->getWidth();
+        mIntrinsicHeight= frmSequence->getHeight();
         mRepeatCount = frmSequence->getDefaultLoopCount();
         if(mRepeatCount<=0)
             mRepeatCount = REPEAT_UNDEFINED;

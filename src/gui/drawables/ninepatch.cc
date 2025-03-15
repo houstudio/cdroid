@@ -12,7 +12,9 @@ NinePatch::NinePatch(Cairo::RefPtr<ImageSurface> image)
     : mImage(image){
     mContentArea = getContentArea();
     mOpacity = ImageDecoder::getTransparency(mImage);
-    mAlpha =1.f;
+    mAlpha = 1.f;
+    mOpticalInsets =getOpticalInsets(image);
+    mRadius = getCornerRadius(image,1,1);
     getResizeArea();
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
         //throw new ExceptionNot9Patch;
@@ -129,6 +131,14 @@ Rect NinePatch::getPadding()const{
     return mPadding;
 }
 
+Rect NinePatch::getOpticalInsets()const{
+    return mOpticalInsets;
+}
+
+int NinePatch::getRadius()const{
+    return mRadius;
+}
+
 void NinePatch::drawScaledPart(const Rect& oldRect, const Rect& newRect,Cairo::Context&painter) {
     if (newRect.width && newRect.height) {
         const double scaleX=(double)newRect.width/oldRect.width;
@@ -171,6 +181,56 @@ static inline bool IsColorBlack(Cairo::RefPtr<ImageSurface>img,int i,int j) {
     uint8_t a = data[3];
     if (a < 128) return false;
     return (r < 128 && g < 128 && b < 128);
+}
+
+int NinePatch::analyzeEdge(Cairo::RefPtr<ImageSurface>img, int fixedIndex, int start, int end, bool isBottom) {
+    uint8_t *data=(uint8_t*)img->get_data();
+    for (int i = start; i < end; i++) {
+        uint32_t* pixel;
+        if (isBottom) {
+            pixel = (uint32_t*)(data+img->get_stride()*i+fixedIndex*4);
+        } else {
+            pixel = (uint32_t*)(data+img->get_stride()*fixedIndex+i*4);
+        }
+
+        if (*pixel!=0) {
+            return i;
+        }
+    }
+    return 0;
+}
+
+int NinePatch::getCornerRadius(Cairo::RefPtr<ImageSurface> bitmap,int start,int step) {
+    const int width = bitmap->get_width();
+    const int height = bitmap->get_height();
+
+    int cornerRadius = 0;
+
+    const int end=std::min(width, height);
+    for (int i = start; i < end; i+=step) {
+        uint32_t* pixel = (uint32_t*)(bitmap->get_data()+bitmap->get_stride()*i+ i*4);
+
+        if (*pixel != 0) {
+            break;
+        }
+        cornerRadius++;
+    }
+
+    return cornerRadius;
+}
+
+Rect NinePatch::getOpticalInsets(Cairo::RefPtr<ImageSurface>bitmap) {
+    Rect insets;
+    int width = bitmap->get_width();
+    int height = bitmap->get_height();
+
+    insets.width = analyzeEdge(bitmap, width - 2, 1, height-2, false); // 右侧
+    insets.height = analyzeEdge(bitmap, height - 2, 1, width-2, true); // 底部
+
+    insets.left = 0;
+    insets.top = 0;
+
+    return insets;
 }
 
 Rect NinePatch::getContentArea() {
