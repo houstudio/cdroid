@@ -63,7 +63,6 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
 
         std::string name = parser.getName();
         bool gotValues = false;
-        LOG(DEBUG)<<std::string(depth,'*')<<parser.getName();
         if (name.compare("objectAnimator")==0) {
             anim = loadObjectAnimator(context,event.attributes, pixelSize);
         } else if (name.compare("animator")==0) {
@@ -107,11 +106,8 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
         const std::string name =parser.getName();
         switch (type) {
         case XmlPullParser::END_DOCUMENT:
-        case XmlPullParser::END_TAG:
-            return stateListAnimator;
-
+        case XmlPullParser::END_TAG:  return stateListAnimator;
         case XmlPullParser::START_TAG:// parse item
-            LOG(DEBUG)<<std::string(depth,'*')<<name;
             if (name.compare("item")==0) {
                 std::vector<int>states;
                 Animator* animator = nullptr;
