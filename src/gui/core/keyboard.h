@@ -4,11 +4,15 @@
 #include <istream>
 #include <core/context.h>
 #include <drawables/drawable.h>
-
+#include <core/xmlpullparser.h>
 namespace cdroid{
 
-
 class Keyboard{
+private:
+    static constexpr const char* TAG_KEYBOARD = "Keyboard";
+    static constexpr const char* TAG_ROW = "Row";
+    static constexpr const char* TAG_KEY = "Key";
+    static constexpr float SEARCH_DISTANCE = 1.8f;
 public:
     static constexpr int EDGE_LEFT  = 0x01;
     static constexpr int EDGE_RIGHT = 0x02;
@@ -22,53 +26,9 @@ public:
     static constexpr int KEYCODE_BACKSPACE= -6;
     static constexpr int KEYCODE_MODE_CHANGE=-7;/*used change number/letter keyboardlayout*/
     static constexpr int KEYCODE_IME_CHANGE =-8;/*used to change inputmethod*/
-    class Key{
-    private:
-        void*parent;
-    public:
-        std::vector<int> codes;
-        bool modifier;/*backspace,delete...*/
-        bool sticky;/*shift: two state key*/
-        bool on;/*for sticky keys*/
-        bool pressed;
-        bool repeatable; /** Whether this key repeats itself when held down */
-        int x;
-        int y;
-        int width;
-        int height;
-        int gap;/*The horizontal gap before this key*/
-        int edgeFlags;
-        std::string label;
-        std::string text;
-        Drawable* icon;
-        Drawable* iconPreview;
-        std::string action;
-        std::string popupResId;
-        Key(void*parent=nullptr);
-        Key(void*parent,int x,int y,Context*ctx,const AttributeSet&attrs);
-        void onPressed();
-        void onReleased(bool inside);
-        int parseCSV(const std::string& value,std::vector<int>& codes);
-        bool isInside(int x, int y);
-        int squaredDistanceFrom(int x, int y);
-        std::vector<int>getCurrentDrawableState()const;
-    };
-    class Row{
-    public:
-       Keyboard*parent;
-       int defaultWidth;
-       /** Default height of a key in this row. */
-       int defaultHeight;
-       /** Default horizontal gap between keys in this row. */
-       int defaultHorizontalGap;
-       /** Vertical gap following this row. */
-       int verticalGap;
-       int rowEdgeFlags;
-       int mode;
-       std::vector<Key*>mKeys;
-    public:
-       Row(Keyboard*parent,Context*ctx,const AttributeSet&attrs);
-    };
+
+    class Key;
+    class Row;
 private:
     static constexpr int GRID_WIDTH = 10;
     static constexpr int GRID_HEIGHT = 5;
@@ -99,16 +59,21 @@ private:
     std::vector<Row*> rows;
     friend Row;
     friend Key;
+private:
     void computeNearestNeighbors();
+    void skipToEndOfRow(XmlPullParser& parser);
+    void parseKeyboardAttributes(XmlPullParser& parser,const AttributeSet&atts);
 protected:
     int  keyboardWidth;
     int  keyboardHeight;
     Key* getKeyByCode(int code);
+    Row* createRowFromXml(XmlPullParser& parser,const AttributeSet&atts);
+    Key* createKeyFromXml(Row*parent, int x, int y,XmlPullParser&,const AttributeSet&);
+    void loadKeyboard(Context*context, XmlPullParser& parser);
 public:
     Keyboard(Context* context,const std::string&resid,int w,int h,int modeId=0);
     Keyboard(Context* context,const std::string& xmlLayoutResId, int modeId=0);
     ~Keyboard();
-    void loadKeyboard(Context*,const std::string&);
     void resize(int w,int h);
     std::vector<Key*>& getKeys();
     std::vector<Key*>& getModifierKeys();
@@ -132,6 +97,55 @@ public:
     void setShifted(int code,bool state);
     bool getShifted(int code)const;
     std::vector<int> getNearestKeys(int x, int y);
+};
+
+class Keyboard::Key{
+private:
+    Row*parent;
+public:
+    std::vector<int> codes;
+    bool modifier;/*backspace,delete...*/
+    bool sticky;/*shift: two state key*/
+    bool on;/*for sticky keys*/
+    bool pressed;
+    bool repeatable; /** Whether this key repeats itself when held down */
+    int x;
+    int y;
+    int width;
+    int height;
+    int gap;/*The horizontal gap before this key*/
+    int edgeFlags;
+    std::string label;
+    std::string text;
+    Drawable* icon;
+    Drawable* iconPreview;
+    std::string action;
+    std::string popupResId;
+    Key(Row*parent=nullptr);
+    Key(Row*parent,int x,int y,XmlPullParser&,const AttributeSet&);
+    void onPressed();
+    void onReleased(bool inside);
+    int parseCSV(const std::string& value,std::vector<int>& codes);
+    bool isInside(int x, int y);
+    int squaredDistanceFrom(int x, int y);
+    std::vector<int>getCurrentDrawableState()const;
+};
+
+class Keyboard::Row{
+public:
+   Keyboard*parent;
+   int defaultWidth;
+   /** Default height of a key in this row. */
+   int defaultHeight;
+   /** Default horizontal gap between keys in this row. */
+   int defaultHorizontalGap;
+   /** Vertical gap following this row. */
+   int verticalGap;
+   int rowEdgeFlags;
+   int mode;
+   std::vector<Key*>mKeys;
+public:
+   Row(Context*ctx,Keyboard*parent,XmlPullParser&parser,const AttributeSet&attrs);
 };
 
 }//namespace
