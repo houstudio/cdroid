@@ -4153,9 +4153,9 @@ void RecyclerView::RecycledViewPool::detachForPoolingContainer(Adapter*adapter, 
         for (int keyIndex = 0; keyIndex < mScrap.size(); keyIndex++) {
             std::vector<ViewHolder*> scrapHeap = mScrap.get(mScrap.keyAt(keyIndex))->mScrapHeap;
             for (int i = 0; i < scrapHeap.size(); i++) {
-                delete scrapHeap.at(i)->itemView;
-                scrapHeap.at(i)->itemView = nullptr;
-                //PoolingContainer.callPoolingContainerOnRelease(scrapHeap.at(i)->itemView);
+                //delete scrapHeap.at(i)->itemView;
+                //scrapHeap.at(i)->itemView = nullptr;
+                //TODO:PoolingContainer.callPoolingContainerOnRelease(scrapHeap.at(i)->itemView);
             }
         }
     }
@@ -5032,9 +5032,9 @@ void RecyclerView::Recycler::onAttachedToWindow() {
 
 void RecyclerView::Recycler::onDetachedFromWindow() {
     for (int i = 0; i < mCachedViews.size(); i++) {
-        delete mCachedViews.at(i)->itemView;
-        mCachedViews.at(i)->itemView = nullptr;
-        //PoolingContainer.callPoolingContainerOnRelease(mCachedViews.at(i)->itemView);
+        //delete mCachedViews.at(i)->itemView;
+        //mCachedViews.at(i)->itemView = nullptr;
+        //TODO:PoolingContainer.callPoolingContainerOnRelease(mCachedViews.at(i)->itemView);
     }
     poolingContainerDetach(mRV->mAdapter);
 }
