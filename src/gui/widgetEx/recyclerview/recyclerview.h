@@ -621,6 +621,7 @@ public:
 };
 class RecyclerView::ItemDecoration{
 public:
+    virtual ~ItemDecoration()=default;
     virtual void onDraw(Canvas& c,RecyclerView& parent,State& state);
     virtual void onDrawOver(Canvas& c,RecyclerView& parent,State& state);
     virtual void getItemOffsets(Rect& outRect, View& view,RecyclerView& parent, State& state);

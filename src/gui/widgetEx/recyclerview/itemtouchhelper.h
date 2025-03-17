@@ -108,7 +108,7 @@ private:
     void onRequestDisallowInterceptTouchEvent(bool disallowIntercept);
 public:
     ItemTouchHelper(Callback* callback);
-    ~ItemTouchHelper();
+    ~ItemTouchHelper()override;
     void attachToRecyclerView(RecyclerView* recyclerView);
     void onDrawOver(Canvas& c, RecyclerView& parent, RecyclerView::State& state)override;
     void onDraw(Canvas& c, RecyclerView& parent, RecyclerView::State& state)override;
