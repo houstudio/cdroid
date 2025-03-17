@@ -15,8 +15,8 @@ int main(int argc,const char*argv[]){
         TextView*tv =new TextView(txt,100,100);
         tv->setId(1000+i);
         tv->setTextSize(64);
-        GridLayout::Spec rowspec=GridLayout::spec(GridLayout::UNDEFINED,1,1);
-        GridLayout::Spec colspec=GridLayout::spec(GridLayout::UNDEFINED,1+(i==0),1);
+        auto rowspec=GridLayout::spec(GridLayout::UNDEFINED,1,1);
+        auto colspec=GridLayout::spec(GridLayout::UNDEFINED,1+(i==0),1);
         GridLayout::LayoutParams*lp=new GridLayout::LayoutParams(rowspec,colspec);
         lp->setMargins(5,5,5,5);
         gl->addView(tv,lp); 
