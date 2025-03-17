@@ -2,7 +2,7 @@ name: Sync from Gitee
 
 on:
   schedule:
-    - cron: '0 */60 * * *'  # 每 6 小时同步一次（UTC 时间）
+    - cron: '0 */120 * * *'  # 每 120 小时同步一次（UTC 时间）
   workflow_dispatch:  # 允许手动触发
 
 jobs:
