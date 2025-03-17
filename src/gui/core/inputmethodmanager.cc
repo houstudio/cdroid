@@ -50,7 +50,7 @@ public:
        Keyboard*keyboard = kbdView->getKeyboard();
        std::vector<Keyboard::Key*>&keys = keyboard->getKeys();
        for(int i=0;i<keys.size();i++){
-           Keyboard::Key k = keys[i];
+           Keyboard::Key& k = *keys[i];
            if((isalpha(k.codes[0])==false)||k.modifier||k.sticky)continue;
            k.codes[0]=islower(k.codes[0])?toupper(k.codes[0]):tolower(k.codes[0]);
        }
