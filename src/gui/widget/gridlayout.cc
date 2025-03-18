@@ -733,7 +733,7 @@ GridLayout::Arc::Arc(const GridLayout::Interval& span,const GridLayout::MutableI
 
 //--------------------------------------------------------------------------
 
-void *GridLayout::Alignment::getBounds(){
+GridLayout::Bounds *GridLayout::Alignment::getBounds(){
     return new Bounds();
 }
 
@@ -770,9 +770,7 @@ int GridLayout::Bounds::getOffset(GridLayout*gl,View*c,GridLayout::Alignment*a,i
     return before - a->getAlignmentValue(c, size, gl->getLayoutMode());
 }
 
-void GridLayout::Bounds::include(GridLayout* gl, View* c,void* pvspec, void* pvaxis, int size) {
-    Axis*axis=(Axis*)pvaxis;
-    Spec*spec=(Spec*)pvspec;
+void GridLayout::Bounds::include(GridLayout* gl, View* c,Spec* spec, Axis* axis, int size) {
     this->flexibility &= spec->getFlexibility();
     bool horizontal = axis->horizontal;
     Alignment* alignment = spec->getAbsoluteAlignment(axis->horizontal);
@@ -962,7 +960,7 @@ public:
         int baseline = view->getBaseline();
         return baseline == -1 ? GridLayout::UNDEFINED : baseline;
     }
-    void*getBounds(){
+    GridLayout::Bounds*getBounds()override{
         return new BaseBounds();
     }
 };
@@ -1078,7 +1076,7 @@ void GridLayout::Axis::computeGroupBounds(){
         Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
         const int size = grd->getMeasurementIncludingMargin(c, horizontal) +
                 ((spec.weight == 0) ? 0 : getDeltas()[i]);
-        groupBounds.getValue(i).include(grd, c, (void*)&spec, (void*)this, size);
+        groupBounds.getValue(i).include(grd, c, &spec, this, size);
     }
 }
 

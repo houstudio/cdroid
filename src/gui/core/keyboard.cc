@@ -1,11 +1,10 @@
-#include <cdtypes.h>
-#include <cdlog.h>
-#include <textutils.h>
-#include <keyboard.h>
-#include <tokenizer.h>
+#include <porting/cdlog.h>
+#include <core/textutils.h>
+#include <core/keyboard.h>
+#include <core/tokenizer.h>
+#include <core/xmlpullparser.h>
 #include <vector>
 #include <fstream>
-#include <expat.h>
 
 namespace cdroid{
 
@@ -27,7 +26,7 @@ int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int ba
     return def;
 }
 
-Keyboard::Key::Key(void*parent,int x,int y,Context*context,const AttributeSet&attrs)
+Keyboard::Key::Key(Row*parent,int x,int y,XmlPullParser&parser,const AttributeSet&attrs)
   :Keyboard::Key(parent){
     this->x = x;
     this->y = y;
@@ -39,7 +38,7 @@ Keyboard::Key::Key(void*parent,int x,int y,Context*context,const AttributeSet&at
     edgeFlags =row->rowEdgeFlags | attrs.getInt("keyEdgeFlags",edgeFlagKVS,0);
     this->x += gap;
     const std::string resicon=attrs.getString("keyIcon");
-    icon  = resicon.empty()?nullptr:context->getDrawable(resicon);
+    icon  = resicon.empty()?nullptr:attrs.getContext()->getDrawable(resicon);
     label = attrs.getString("keyLabel");
     text  = attrs.getString("keyOutputText");
     parseCSV(attrs.getString("codes"),codes);
@@ -53,9 +52,8 @@ Keyboard::Key::Key(void*parent,int x,int y,Context*context,const AttributeSet&at
     LOGV("Key[%x]%s(%d,%d,%d,%d) gap=%d",codes[0],label.c_str(),x,y,width,height,gap);
 }
 
-Keyboard::Key::Key(void*p){
-    parent = p;
-    Row*row= (Row*)parent;
+Keyboard::Key::Key(Row*row){
+    parent = row;
     sticky = modifier = 0;
     x=  y  = gap =0;
     width  = row->defaultWidth;
@@ -154,151 +152,36 @@ std::vector<int>Keyboard::Key::getCurrentDrawableState()const{
     return KEY_STATE_NORMAL;
 }
 
-Keyboard::Row::Row(Keyboard*p,Context*ctx,const AttributeSet&attrs){
+Keyboard::Row::Row(Context*ctx,Keyboard*p,XmlPullParser&parseer,const AttributeSet&attrs){
     parent =p;
     defaultWidth = getDimensionOrFraction(attrs,"keyWidth",   parent->mDisplayWidth, parent->mDefaultWidth);
     defaultHeight= getDimensionOrFraction(attrs,"keyHeight", parent->mDisplayHeight, parent->mDefaultHeight);
     defaultHorizontalGap = getDimensionOrFraction(attrs,"horizontalGap", parent->mDisplayWidth, parent->mDefaultHorizontalGap);
     verticalGap  = getDimensionOrFraction(attrs,"verticalGap", parent->mDisplayHeight, parent->mDefaultVerticalGap);
-    rowEdgeFlags = attrs.getInt("rowEdgeFlags", EDGE_TOP|EDGE_BOTTOM);
+    rowEdgeFlags = attrs.getInt("rowEdgeFlags",edgeFlagKVS,0);
     mode = attrs.getInt("keyboardMode",0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Keyboard::Keyboard(Context*context,const std::string& xmlLayoutResId,int width,int height,int modeId){
-    mDisplayWidth = width;
-    mDisplayHeight= height;
+    const DisplayMetrics& dm = context->getDisplayMetrics();
+    mDisplayWidth = width;//dm.widthPixels;
+    mDisplayHeight= height;//dm.heightPixels;
     mShifted =false;
     mDefaultHorizontalGap = 0;
     mDefaultWidth = mDisplayWidth / 10;
     mDefaultVerticalGap = 0;
     mDefaultHeight= mDefaultWidth;
     mKeyboardMode = modeId;
-    loadKeyboard(context,xmlLayoutResId);
-}
-
-Keyboard::Keyboard(Context* context,const std::string& xmlLayoutResId, int modeId){
-    DisplayMetrics dm = context->getDisplayMetrics();
-    mDisplayWidth = dm.widthPixels;
-    mDisplayHeight= dm.heightPixels;
-    mDefaultHorizontalGap = 0;
-    mDefaultWidth = mDisplayWidth / 10;
-    mDefaultVerticalGap = 0;
-    mDefaultHeight = mDefaultWidth;
-    mKeyboardMode = modeId;
-    loadKeyboard(context,xmlLayoutResId);
+    XmlPullParser parser(context,xmlLayoutResId);
+    loadKeyboard(context,parser);
 }
 
 Keyboard::~Keyboard(){
     for(auto k:mKeys)
        delete k;
     mKeys.clear(); 
-}
-
-typedef struct{
-    std::vector<Keyboard::Row*>*rows;
-    std::vector<Keyboard::Key*>*keys;
-    Context * context;
-    Keyboard* keyboard;
-    Keyboard::Row*row;
-    Keyboard::Key*key;
-    std::string package;
-    int x,y;
-    int displayWidth,displayHeight;
-    int defaultKeyWidth;
-    int keyboardMode;
-    int minWidth;//min width for keyboard's key row
-}KeyboardData;
-
-static void startTag(void *userData, const XML_Char *name, const XML_Char **satts){
-    KeyboardData*pd = (KeyboardData*)userData;
-    AttributeSet atts(pd->context,pd->package);
-    Context*context = pd->context;
-    Keyboard* keyboard= pd->keyboard;
-    Keyboard::Row*row = pd->row;
-    atts.set(satts);
-    if(0 == strcmp(name,"Keyboard")){
-        int sz = getDimensionOrFraction(atts,"keyWidth",pd->displayWidth,pd->defaultKeyWidth);
-        keyboard->setKeyWidth(sz);
-        sz = getDimensionOrFraction(atts,"horizontalGap",pd->displayWidth,keyboard->getHorizontalGap());
-        keyboard->setHorizontalGap(sz);
-        sz = getDimensionOrFraction(atts,"verticalGap",pd->displayHeight,keyboard->getVerticalGap());
-        keyboard->setVerticalGap(sz);
-        sz = getDimensionOrFraction(atts,"keyHeight",pd->displayHeight,0);
-        keyboard->setKeyHeight(sz);
-        pd->minWidth = pd->y = 0;
-    }else if(0 == strcmp(name,"Row")){
-        pd->row = row = new Keyboard::Row(keyboard,context,atts);
-        row->rowEdgeFlags = atts.getInt("rowEdgeFlags",0);
-        pd->x = 0;
-    }else if(0 == strcmp(name,"Key")){
-        if(row->mode == pd->keyboardMode){
-            Keyboard::Key*key=new Keyboard::Key(row,pd->x,pd->y,context,atts);
-            if(row->mode == pd->keyboardMode)
-                row->mKeys.push_back(key);
-            pd->key=key;
-        }
-    }
-}
-
-static void endTag(void *userData, const XML_Char *name){
-    KeyboardData*pd = (KeyboardData*)userData;
-    Keyboard* keyboard= pd->keyboard;
-    Keyboard::Row*row = pd->row;
-    if(0 == strcmp(name,"Key")){
-        if(row->mode == pd->keyboardMode){
-            Keyboard::Key*key = pd->key;
-            pd->keys->push_back(key);
-            pd->x += key->width+key->gap;
-            if(key->codes[0]==Keyboard::KEYCODE_SHIFT||key->codes[0]==Keyboard::KEYCODE_ALT)
-                keyboard->getModifierKeys().push_back(key);
-        }
-    }else if(0==strcmp(name,"Row")){
-        pd->y += (row->defaultHeight + row->verticalGap);
-        pd->minWidth = std::max(pd->x,pd->minWidth);
-        pd->x = 0;
-        if(row->mode == pd->keyboardMode)
-            pd->rows->push_back(pd->row);
-        else delete pd->row;
-    }
-}
-
-void Keyboard::loadKeyboard(Context*context,const std::string&resid){
-    std::string package;
-    XML_Parser parser= XML_ParserCreateNS(NULL,' ');
-
-    context->getInputStream(resid,&package);
-    KeyboardData pd = {&rows,&mKeys,context,this,nullptr,nullptr,package,0,0};
-    XML_SetUserData(parser,&pd);
-    XML_SetElementHandler(parser, startTag, endTag);
-    pd.displayWidth = mDisplayWidth;
-    pd.displayHeight= mDisplayHeight;
-    pd.keyboardMode = mKeyboardMode;
-    pd.defaultKeyWidth=mDefaultWidth;
-    std::unique_ptr<std::istream>stream=context->getInputStream(resid);
-    if(stream){
-	int len = 0;
-        do{
-            char buf[256];
-            stream->read(buf,sizeof(buf));
-            len=(int)stream->gcount();
-            if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
-                const char*es=XML_ErrorString(XML_GetErrorCode(parser));
-                LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
-                XML_ParserFree(parser);
-                return ;
-            }
-        } while(len!=0);
-    }
-    XML_ParserFree(parser);
-    mTotalHeight= pd.y - mDefaultVerticalGap;
-    mTotalWidth = pd.minWidth;
-    mProximityThreshold = mDefaultWidth*.6f;//SEARCH_DISTANCE;
-    mProximityThreshold*= mProximityThreshold;
-    LOGD("%s endof loadkeyboard %d rows %d keys gaps=%d,%d parsed.Size=%dx%d display=%dx%d",
-	resid.c_str(),rows.size(),mKeys.size(), getHorizontalGap(),getVerticalGap(),
-	mTotalWidth,mTotalHeight,mDisplayWidth,mDisplayHeight);
 }
 
 void Keyboard::resize(int newWidth,int newHeight){
@@ -327,6 +210,7 @@ void Keyboard::resize(int newWidth,int newHeight){
             }
         }
     }
+    LOGD("resizeTO(%dx%d)",newWidth,newHeight);
     mTotalWidth = newWidth;
 }
 
@@ -408,7 +292,7 @@ void Keyboard::computeNearestNeighbors() {
     mCellWidth = (getMinWidth()+ GRID_WIDTH - 1) / GRID_WIDTH;
     mCellHeight= (getHeight()  + GRID_HEIGHT- 1) / GRID_HEIGHT;
     mGridNeighbors.resize(GRID_SIZE);
-    int indices[256] ;//= new int[mKeys.size()];
+    std::vector<int> indices(mKeys.size());
     const int gridWidth  = GRID_WIDTH * mCellWidth;
     const int gridHeight = GRID_HEIGHT * mCellHeight;
     for (int x = 0; x < gridWidth; x += mCellWidth) {
@@ -416,17 +300,16 @@ void Keyboard::computeNearestNeighbors() {
             int count = 0;
             for (int i = 0; i < mKeys.size(); i++) {
                 Key* key = mKeys.at(i);
-                if (key->squaredDistanceFrom(x, y) < mProximityThreshold ||
-                    key->squaredDistanceFrom(x + mCellWidth - 1, y) < mProximityThreshold ||
-                    key->squaredDistanceFrom(x + mCellWidth - 1, y + mCellHeight - 1) 
-                        < mProximityThreshold ||
-                        key->squaredDistanceFrom(x, y + mCellHeight - 1) < mProximityThreshold) {
+                if ( (key->squaredDistanceFrom(x, y) < mProximityThreshold) ||
+                     (key->squaredDistanceFrom(x + mCellWidth - 1, y) < mProximityThreshold) ||
+                     (key->squaredDistanceFrom(x + mCellWidth - 1, y + mCellHeight - 1) < mProximityThreshold) ||
+                     (key->squaredDistanceFrom(x, y + mCellHeight - 1) < mProximityThreshold) ) {
                     indices[count++] = i;
                 }
             }
             const int idx=(y / mCellHeight) * GRID_WIDTH + (x / mCellWidth);
-            mGridNeighbors[idx] = std::vector<int>(indices,indices+count);
-            //LOGV("Key[%d] has %d neighbors",idx,mGridNeighbors[idx].size());
+            mGridNeighbors[idx] = std::vector<int>(indices.begin(),indices.begin()+count);
+            LOGV("Key[%d] has %d neighbors cellsize=%dx%d",idx,mGridNeighbors[idx].size(),mCellWidth,mCellHeight);
         }
     }
 }
@@ -440,6 +323,98 @@ std::vector<int> Keyboard::getNearestKeys(int x, int y){
         }
     }
     return std::vector<int>();
+}
+
+Keyboard::Row* Keyboard::createRowFromXml(XmlPullParser& parser,const AttributeSet&atts) {
+    return new Row(atts.getContext(),this, parser,atts);
+}
+
+Keyboard::Key* Keyboard::createKeyFromXml(Row* parent, int x, int y,XmlPullParser& parser,const AttributeSet&atts) {
+    return new Key(parent, x, y, parser,atts);
+}
+
+void Keyboard::loadKeyboard(Context*context, XmlPullParser& parser){
+    bool inKey = false;
+    bool inRow = false;
+    bool leftMostKey = false;
+    int row = 0,eventType=0;
+    int x=0 , y = 0;
+    Key* key = nullptr;
+    Row* currentRow = nullptr;
+    bool skipRow = false;
+    XmlPullParser::XmlEvent event;
+    while ((eventType = parser.next(event)) != XmlPullParser::END_DOCUMENT) {
+        if (eventType == XmlPullParser::START_TAG) {
+            std::string tag = parser.getName();
+            if (tag.compare(TAG_ROW)==0) {
+                inRow = true;
+                x = 0;
+                currentRow = createRowFromXml(parser,event.attributes);
+                rows.push_back(currentRow);
+                skipRow = currentRow->mode != 0 && currentRow->mode != mKeyboardMode;
+                if (skipRow) {
+                    skipToEndOfRow(parser);
+                    inRow = false;
+                }
+           } else if (tag.compare(TAG_KEY)==0) {
+                inKey = true;
+                key = createKeyFromXml(currentRow, x, y, parser,event.attributes);
+                mKeys.push_back(key);
+                if (key->codes[0] == KEYCODE_SHIFT) {
+                    // Find available shift key slot and put this shift key in it
+                    for (int i = 0; i < mShiftKeys.size(); i++) {
+                        if (mShiftKeys[i] == nullptr) {
+                            mShiftKeys[i] = key;
+                            mShiftKeyIndices[i] = mKeys.size()-1;
+                            break;
+                        }
+                    }
+                    mModifierKeys.push_back(key);
+                } else if (key->codes[0] == KEYCODE_ALT) {
+                    mModifierKeys.push_back(key);
+                }
+                currentRow->mKeys.push_back(key);
+            } else if (tag.compare(TAG_KEYBOARD)==0) {
+                parseKeyboardAttributes(parser,event.attributes);
+            }
+        } else if (eventType == XmlPullParser::END_TAG) {
+            if (inKey) {
+                inKey = false;
+                x += key->gap + key->width;
+                if (x > mTotalWidth) {
+                    mTotalWidth = x;
+                }
+            } else if (inRow) {
+                inRow = false;
+                y += currentRow->verticalGap;
+                y += currentRow->defaultHeight;
+                row++;
+            } else {
+                // TODO: error or extend?
+            }
+        }
+    }
+    mTotalHeight = y - mDefaultVerticalGap;
+}
+
+void Keyboard::skipToEndOfRow(XmlPullParser&parser){
+    int eventType;
+    XmlPullParser::XmlEvent event;
+    while ((eventType = parser.next(event)) != XmlPullParser::END_DOCUMENT) {
+        if ((eventType == XmlPullParser::END_TAG) && (parser.getName().compare(TAG_ROW)==0)) {
+            break;
+        }
+    }
+}
+
+void Keyboard::parseKeyboardAttributes(XmlPullParser& parser,const AttributeSet&atts) {
+
+    mDefaultWidth = getDimensionOrFraction(atts,"keyWidth", mDisplayWidth, mDisplayWidth / 10);
+    mDefaultHeight = getDimensionOrFraction(atts,"keyHeight", mDisplayHeight, 50);
+    mDefaultHorizontalGap = getDimensionOrFraction(atts,"horizontalGap", mDisplayWidth, 0);
+    mDefaultVerticalGap = getDimensionOrFraction(atts,"verticalGap", mDisplayHeight, 0);
+    mProximityThreshold = (int) (mDefaultWidth * 0.6f);//SEARCH_DISTANCE);
+    mProximityThreshold*= mProximityThreshold; // Square it for comparison
 }
 
 }//end namespace cdroid

@@ -20,6 +20,9 @@ public:
     static constexpr bool DEFAULT_ORDER_PRESERVED = true;
     static constexpr int DEFAULT_ALIGNMENT_MODE = ALIGN_MARGINS;
 public:
+    class Bounds;
+    class Spec;
+    class Axis;
     class MutableInt{
     public:
         int value;
@@ -53,7 +56,7 @@ public:
         int getSizeInCell(View*v,int viewSize,int cellSize){
             return viewSize;
         }
-        virtual void* getBounds();
+        virtual Bounds* getBounds();
         int hashCode()const;
     };
     static Alignment*UNDEFINED_ALIGNMENT,*LEADING,*TRAILING,*TOP,*BOTTOM,*START,*END,*BASELINE,*LEFT,*RIGHT,*CENTER,*FILL;
@@ -67,7 +70,7 @@ public:
         virtual void include(int before,int after);
         virtual int size(bool min);
         virtual int getOffset(GridLayout*gl,View*v,Alignment*,int size,bool horizontal);
-        void include(GridLayout* gl,View* c,void* spec,void* axis, int size);
+        void include(GridLayout* gl,View* c,Spec* spec,Axis* axis, int size);
     };
     class Spec{
     public:

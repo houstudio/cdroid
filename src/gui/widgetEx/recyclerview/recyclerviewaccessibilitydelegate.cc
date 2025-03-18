@@ -12,6 +12,10 @@ RecyclerViewAccessibilityDelegate::RecyclerViewAccessibilityDelegate(RecyclerVie
     }
 }
 
+RecyclerViewAccessibilityDelegate::~RecyclerViewAccessibilityDelegate(){
+    delete mItemDelegate;
+}
+
 bool RecyclerViewAccessibilityDelegate::shouldIgnore() {
     return mRecyclerView->hasPendingAdapterUpdates();
 }

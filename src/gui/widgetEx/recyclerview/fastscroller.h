@@ -88,7 +88,7 @@ protected:
             Drawable* verticalTrackDrawable, StateListDrawable* horizontalThumbDrawable,
             Drawable* horizontalTrackDrawable, int defaultWidth, int scrollbarMinimumRange,
             int margin);
-    ~FastScroller();
+    ~FastScroller()override;
     bool isVisible()const;
     void hide(int duration);
     void updateScrollPosition(int offsetX, int offsetY);

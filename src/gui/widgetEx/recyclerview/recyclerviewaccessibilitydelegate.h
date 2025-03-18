@@ -9,7 +9,7 @@ protected:
 public:
     class ItemDelegate;
     RecyclerViewAccessibilityDelegate(RecyclerView* recyclerView);
-
+    virtual ~RecyclerViewAccessibilityDelegate();
     bool performAccessibilityAction(View& host, int action, Bundle args) override;
 
     void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info) override;
