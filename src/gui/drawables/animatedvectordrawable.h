@@ -175,7 +175,7 @@ private:
     bool mIsReversible = false;
     bool mIsInfinite = false;
     // TODO: Consider using NativeAllocationRegistery to track native allocation
-    VirtualRefBasePtr mSetRefBasePtr;
+    hwui::Tree*/*VirtualRefBasePtr*/ mSetRefBasePtr;
     //WeakReference<RenderNode> mLastSeenTarget = null;
     int mLastListenerId = 0;
     std::vector<int> mPendingAnimationActions;

@@ -28,8 +28,8 @@ public:
     public:
         int type;
         std::string propertyName;
-        PathParser::PathData startValue;//It seems only used for PathParser::PathData
-        PathParser::PathData endValue;//
+        AnimateValue startValue;//It seems only used for PathParser::PathData
+        AnimateValue endValue;//
         using DataSource = std::function<AnimateValue(float fraction)>;
         DataSource dataSource;
     };

@@ -8,6 +8,7 @@
 namespace cdroid{
 namespace hwui{
     class Group;
+    class Path;
     class ClipPath;
     class FullPath;
     class Tree;
