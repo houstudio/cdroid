@@ -13,7 +13,6 @@ namespace hwui{
     class Tree;
 }
 using Theme = std::string;
-using VirtualRefBasePtr=cdroid::hwui::Tree*;
 class AnimatedVectorDrawable;
 class VectorDrawable:public Drawable {
 public:
@@ -97,13 +96,13 @@ public:
     class VObject {
         friend VectorDrawableState;
         friend VGroup;
-        VirtualRefBasePtr mTreePtr = nullptr;
+        hwui::Tree* mTreePtr = nullptr;
     public:
         virtual ~VObject() = default;
         bool isTreeValid() {
             return mTreePtr != nullptr;// && mTreePtr.get() != 0;
         }
-        virtual void setTree(VirtualRefBasePtr ptr) {
+        virtual void setTree(hwui::Tree* ptr) {
             mTreePtr = ptr;
         }
         virtual long getNativePtr()=0;
@@ -227,7 +226,7 @@ public:
     std::string getGroupName()const;
 
     void addChild(VObject* child);
-    void setTree(VirtualRefBasePtr treeRoot)override;
+    void setTree(hwui::Tree* treeRoot)override;
     long getNativePtr()override;
     void updateStateFromTypedArray(Context*,const AttributeSet&atts);
     bool onStateChange(const std::vector<int>& stateSet);

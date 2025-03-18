@@ -447,16 +447,11 @@ void VectorDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSe
         }
     }
 
-    /*if (noPathTag) {
-        std::ostringstream tag = new StringBuffer();
-
-        if (tag.length() > 0) {
-            tag.append(" or ");
-        }
-        tag.append(SHAPE_PATH);
-
-        throw new XmlPullParserException("no " + tag + " defined");
-    }*/
+    if (noPathTag) {
+        std::ostringstream tag;
+        tag<<"no "<<SHAPE_PATH<<" defined";
+        throw std::logic_error(tag.str());
+    }
 }
 
 int VectorDrawable::getChangingConfigurations()const {
@@ -859,7 +854,7 @@ void VectorDrawable::VGroup::addChild(VObject* child) {
     mIsStateful |= child->isStateful();
 }
 
-void VectorDrawable::VGroup::setTree(VirtualRefBasePtr treeRoot) {
+void VectorDrawable::VGroup::setTree(hwui::Tree* treeRoot) {
     VObject::setTree(treeRoot);
     for (int i = 0; i < mChildren.size(); i++) {
         mChildren.at(i)->setTree(treeRoot);
