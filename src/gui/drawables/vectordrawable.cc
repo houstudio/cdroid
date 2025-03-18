@@ -774,21 +774,14 @@ int VectorDrawable::VGroup::getPropertyIndex(const std::string& propertyName) {
 
 
 // Below are the Properties that wrap the setters to avoid reflection overhead in animations
-Property* /*<VGroup,float>*/ VectorDrawable::VGroup::TRANSLATE_X ;
-Property* /*<VGroup,float>*/ VectorDrawable::VGroup::TRANSLATE_Y ;
-Property* /*<VGroup,float>*/ VectorDrawable::VGroup::SCALE_X ;
-Property* /*<VGroup,float>*/ VectorDrawable::VGroup::SCALE_Y ;
-Property* /*<VGroup,float>*/ VectorDrawable::VGroup::PIVOT_X ;
-Property* /*<VGroup,float>*/ VectorDrawable::VGroup::PIVOT_Y ;
-Property* /*<VGroup,float>*/ VectorDrawable::VGroup::ROTATION ;
-std::unordered_map<std::string, Property*> VectorDrawable::VGroup::sPropertyMap ={
-    {"translateX", TRANSLATE_X},
-    {"translateY", TRANSLATE_Y},
-    {"scaleX", SCALE_X},
-    {"scaleY", SCALE_Y},
-    {"pivotX", PIVOT_X},
-    {"pivotY", PIVOT_Y},
-    {"rotation", ROTATION}
+const std::unordered_map<std::string, const std::shared_ptr<Property>> VectorDrawable::VGroup::sPropertyMap ={
+    {"translateX", std::make_shared<TRANSLATE_X>()},
+    {"translateY", std::make_shared<TRANSLATE_Y>()},
+    {"scaleX", std::make_shared<SCALE_X>()},
+    {"scaleY", std::make_shared<SCALE_Y>()},
+    {"pivotX", std::make_shared<PIVOT_X>()},
+    {"pivotY", std::make_shared<PIVOT_Y>()},
+    {"rotation", std::make_shared<ROTATION>()}
 };
 
 VectorDrawable::VGroup::VGroup() {
@@ -843,7 +836,7 @@ VectorDrawable::VGroup::VGroup(const VGroup* copy,std::unordered_map<std::string
 Property* VectorDrawable::VGroup::getProperty(const std::string& propertyName) {
     auto it=sPropertyMap.find(propertyName);
     if (it!=sPropertyMap.end()) {
-        return it->second;
+        return it->second.get();
     } else {
         // property not found
         return nullptr;
@@ -1169,11 +1162,11 @@ void VectorDrawable::VClipPath::updateStateFromTypedArray(const AttributeSet&att
 class STROKE_WIDTH:public Property{
 public:
     STROKE_WIDTH():Property("strokeWidth") {}
-    void set(void*object, const AnimateValue& value) {
+    void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setStrokeWidth(GET_VARIANT(value,float));
     }
 
-    AnimateValue get(void*object) {
+    AnimateValue get(void*object) override{
         return ((VectorDrawable::VFullPath*)object)->getStrokeWidth();
     }
 };
@@ -1181,11 +1174,11 @@ public:
 class STROKE_COLOR:public Property{
 public:
     STROKE_COLOR():Property("strokeColor") {}
-    void set(void*object, const AnimateValue& value) {
+    void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setStrokeColor(GET_VARIANT(value,uint32_t));
     }
 
-    AnimateValue get(void*object) {
+    AnimateValue get(void*object) override{
         return ((VectorDrawable::VFullPath*)object)->getStrokeColor();
     }
 };
@@ -1193,11 +1186,11 @@ public:
 class STROKE_ALPHA:public Property{
 public:
     STROKE_ALPHA():Property("strokeAlpha") {}
-    void set(void*object, const AnimateValue& value) {
+    void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setStrokeAlpha(GET_VARIANT(value,float));
     }
 
-    AnimateValue get(void*object) {
+    AnimateValue get(void*object) override{
         return ((VectorDrawable::VFullPath*)object)->getStrokeAlpha();
     }
 };
@@ -1205,11 +1198,11 @@ public:
 class FILL_COLOR:public Property{
 public:
     FILL_COLOR():Property("fillColor") {}
-    void set(void*object, const AnimateValue& value) {
+    void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setFillColor(GET_VARIANT(value,uint32_t));
     }
 
-    AnimateValue get(void*object) {
+    AnimateValue get(void*object) override{
         return ((VectorDrawable::VFullPath*)object)->getFillColor();
     }
 };
@@ -1217,11 +1210,11 @@ public:
 class FILL_ALPHA:public Property{
 public:
     FILL_ALPHA():Property("fillAlpha") {}
-    void set(void*object, const AnimateValue& value) {
+    void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setFillAlpha(GET_VARIANT(value,float));
     }
 
-    AnimateValue get(void*object) {
+    AnimateValue get(void*object) override{
         return ((VectorDrawable::VFullPath*)object)->getFillAlpha();
     }
 };
@@ -1229,11 +1222,11 @@ public:
 class TRIM_PATH_START:public Property{
 public:
     TRIM_PATH_START():Property("trimPathStart") {}
-    void set(void*object, const AnimateValue& value) {
+    void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setTrimPathStart(GET_VARIANT(value,float));
     }
 
-    AnimateValue get(void*object) {
+    AnimateValue get(void*object) override{
         return ((VectorDrawable::VFullPath*)object)->getTrimPathStart();
     }
 };
@@ -1241,11 +1234,11 @@ public:
 class TRIM_PATH_END:public Property{
 public:
     TRIM_PATH_END():Property("trimPathEnd") {}
-    void set(void*object, const AnimateValue& value) {
+    void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setTrimPathEnd(GET_VARIANT(value,float));
     }
 
-    AnimateValue get(void*object) {
+    AnimateValue get(void*object) override{
         return ((VectorDrawable::VFullPath*)object)->getTrimPathEnd();
     }
 };
@@ -1253,10 +1246,10 @@ public:
 class TRIM_PATH_OFFSET:public Property{
 public:
     TRIM_PATH_OFFSET():Property("trimPathOffset") {}
-    void set(void*object, const AnimateValue& value) {
+    void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setTrimPathOffset(GET_VARIANT(value,float));
     }
-    AnimateValue get(void*object) {
+    AnimateValue get(void*object) override{
         return ((VectorDrawable::VFullPath*)object)->getTrimPathOffset();
     }
 };
@@ -1275,24 +1268,16 @@ std::unordered_map<std::string, int> VectorDrawable::VFullPath::sPropertyIndexMa
 };
 
 // Below are the Properties that wrap the setters to avoid reflection overhead in animations
-Property* /*<VFullPath, float>*/ VectorDrawable::VFullPath::STROKE_WIDTH;
-Property* /*<VFullPath, int>*/ VectorDrawable::VFullPath::STROKE_COLOR;
-Property* /*<VFullPath, float>*/ VectorDrawable::VFullPath::STROKE_ALPHA;
-Property* /*<VFullPath, int>*/ VectorDrawable::VFullPath::FILL_COLOR;
-Property* /*<VFullPath, float>*/ VectorDrawable::VFullPath::FILL_ALPHA;
-Property* /*<VFullPath, float>*/ VectorDrawable::VFullPath::TRIM_PATH_START;
-Property* /*<VFullPath, float>*/ VectorDrawable::VFullPath::TRIM_PATH_END;
-Property* /*<VFullPath, float>*/ VectorDrawable::VFullPath::TRIM_PATH_OFFSET;
 
-std::unordered_map<std::string, Property*> VectorDrawable::VFullPath::sPropertyMap={
-    {"strokeWidth", STROKE_WIDTH},
-    {"strokeColor", STROKE_COLOR},
-    {"strokeAlpha", STROKE_ALPHA},
-    {"fillColor", FILL_COLOR},
-    {"fillAlpha", FILL_ALPHA},
-    {"trimPathStart", TRIM_PATH_START},
-    {"trimPathEnd", TRIM_PATH_END},
-    {"trimPathOffset", TRIM_PATH_OFFSET}
+const std::unordered_map<std::string, const std::shared_ptr<Property>> VectorDrawable::VFullPath::sPropertyMap={
+    {"strokeWidth", std::make_shared<STROKE_WIDTH>()},
+    {"strokeColor", std::make_shared<STROKE_COLOR>()},
+    {"strokeAlpha", std::make_shared<STROKE_ALPHA>()},
+    {"fillColor", std::make_shared<FILL_COLOR>()},
+    {"fillAlpha", std::make_shared<FILL_ALPHA>()},
+    {"trimPathStart", std::make_shared<TRIM_PATH_START>()},
+    {"trimPathEnd", std::make_shared<TRIM_PATH_END>()},
+    {"trimPathOffset", std::make_shared<TRIM_PATH_OFFSET>()}
 };
 
 VectorDrawable::VFullPath::VFullPath() {
@@ -1317,7 +1302,7 @@ Property* VectorDrawable::VFullPath::getProperty(const std::string& propertyName
     }
     auto it =sPropertyMap.find(propertyName);
     if (it!=sPropertyMap.end()) {
-        return it->second;
+        return it->second.get();
     } else {
         // property not found
         return nullptr;

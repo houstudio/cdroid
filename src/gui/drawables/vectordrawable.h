@@ -197,15 +197,7 @@ private:
     static std::unordered_map<std::string, int> sPropertyIndexMap;
     static int getPropertyIndex(const std::string& propertyName);
 
-    // Below are the Properties that wrap the setters to avoid reflection overhead in animations
-    static Property* /*<VGroup, float>*/ TRANSLATE_X;
-    static Property* /*<VGroup, float>*/ TRANSLATE_Y;
-    static Property* /*<VGroup, float>*/ SCALE_X;
-    static Property* /*<VGroup, float>*/ SCALE_Y;
-    static Property* /*<VGroup, float>*/ PIVOT_X;
-    static Property* /*<VGroup, float>*/ PIVOT_Y;
-    static Property* /*<VGroup, float>*/ ROTATION;
-    static std::unordered_map<std::string, Property*> sPropertyMap;
+    static const std::unordered_map<std::string,const std::shared_ptr<Property>> sPropertyMap;
     // Temp array to store transform values obtained from native.
     //float mTransform[8];
     /////////////////////////////////////////////////////
@@ -325,16 +317,7 @@ private:
 
     // Property map for animatable attributes.
     static std::unordered_map<std::string, int> sPropertyIndexMap;
-    // Below are the Properties that wrap the setters to avoid reflection overhead in animations
-    static Property* /*<VFullPath, float>*/ STROKE_WIDTH;
-    static Property* /*<VFullPath, int>*/ STROKE_COLOR;
-    static Property* /*<VFullPath, float>*/ STROKE_ALPHA;
-    static Property* /*<VFullPath, int>*/ FILL_COLOR;
-    static Property* /*<VFullPath, float>*/ FILL_ALPHA;
-    static Property* /*<VFullPath, float>*/ TRIM_PATH_START;
-    static Property* /*<VFullPath, float>*/ TRIM_PATH_END;
-    static Property* /*<VFullPath, float>*/TRIM_PATH_OFFSET;
-    static std::unordered_map<std::string, Property*> sPropertyMap;
+    static const std::unordered_map<std::string, const std::shared_ptr<Property>> sPropertyMap;
 
     // Temp array to store property data obtained from native getter.
     uint8_t* mPropertyData;
