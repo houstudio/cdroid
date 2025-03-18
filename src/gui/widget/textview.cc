@@ -473,6 +473,7 @@ void TextView::initView(){
     mMinMode = LINES;
     mDeferScroll = -1;
     mMaxLength= -1;
+    mSingleLine = false;
     mMarqueeRepeatLimit =3;
     mLastLayoutDirection = -1;
     mFontWeightAdjustment= 16;//INT_MAX;
@@ -494,7 +495,6 @@ void TextView::initView(){
     mShadowDy = .0;
     mShadowColor = 0;
     mCurTextColor= mCurHintTextColor=0;
-    mSingleLine = false;
     mEditMode   = READONLY;
     setTextColor(0xFFFFFFFF);
     setHintTextColor(0xFFFFFFFF);
