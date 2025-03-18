@@ -1,6 +1,6 @@
 #include <drawables/hwvectordrawableutils.h>
 namespace cdroid {
-namespace hw{
+namespace hwui{
 
 class PathResolver {
 public:

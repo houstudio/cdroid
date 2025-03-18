@@ -827,7 +827,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimator(ObjectAn
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForGroup(const std::vector<PropertyValuesHolder*>& values,
         ObjectAnimator* animator, VectorDrawable::VGroup* target,long startTime) {
 
-    long nativePtr = target->getNativePtr();
+    long nativePtr = target->getNativePtr();//hwui::Group
     int propertyId;
     for (int i = 0; i < values.size(); i++) {
         // TODO: We need to support the rare case in AVD where no start value is provided
@@ -852,10 +852,10 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForGroup(
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForPath( ObjectAnimator* animator, VectorDrawable::VPath* target,long startTime) {
 
-    long nativePtr = target->getNativePtr();
+    long nativePtr = target->getNativePtr();//hwui::Path
     long startPathDataPtr = ((PathParser::PathData*) mTmpValues.startValue)->getNativePtr();
     long endPathDataPtr = ((PathParser::PathData*) mTmpValues.endValue)->getNativePtr();
-    long propertyPtr = nCreatePathDataPropertyHolder(nativePtr, startPathDataPtr,endPathDataPtr);
+    long propertyPtr = nCreatePathDataPropertyHolder(nativePtr, startPathDataPtr,endPathDataPtr);/*PathMorph*/
     createNativeChildAnimator(propertyPtr, startTime, animator);
 }
 
@@ -863,7 +863,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForFullPa
 
     int propertyId = target->getPropertyIndex(mTmpValues.propertyName);
     long propertyPtr;
-    long nativePtr = target->getNativePtr();
+    long nativePtr = target->getNativePtr();//hwui::FullPath
     if (mTmpValues.type == PropertyValuesHolder::CLASS_FLOAT) {
         if (propertyId < 0) {
             if (mDrawable->mAnimatedVectorState->mShouldIgnoreInvalidAnim) {

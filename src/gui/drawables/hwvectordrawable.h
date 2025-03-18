@@ -7,7 +7,7 @@
 #include <core/path.h>
 #include <drawables/colorfilters.h>
 namespace cdroid{
-namespace hw{
+namespace hwui{
 #define VD_SET_PRIMITIVE_FIELD_WITH_FLAG(field, value, flag) \
     (VD_SET_PRIMITIVE_FIELD_AND_NOTIFY(field, (value)) ? ((flag) = true, true) : false)
 #define VD_SET_PROP(field, value) ((value) != (field) ? ((field) = (value), true) : false)
@@ -639,6 +639,6 @@ private:
 
     mutable bool mWillBeConsumed = false;
 };
-}/*endof namespace vectordrawable*/
+}/*endof namespace hwui*/
 }/*endof namespace cdroid*/
 #endif/*__HWUI_VECTOR_DRAWABLE_H__*/

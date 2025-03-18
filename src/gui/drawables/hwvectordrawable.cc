@@ -5,7 +5,7 @@
 #include <porting/cdlog.h>
 #include <float.h>
 namespace cdroid{
-namespace hw{
+namespace hwui{
 const int Tree::MAX_CACHED_BITMAP_SIZE = 2048;
 void Path::dump() {
     LOGD("Path: %s has %zu points", mName.c_str(), mProperties.getData().points.size());
@@ -121,7 +121,7 @@ static inline uint32_t applyAlpha(uint32_t color, float alpha) {
 }
 
 void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
-    Cairo::RefPtr<cdroid::Path> tempStagingPath=std::make_shared<cdroid::Path>();
+    Cairo::RefPtr<cdroid::Path> tempStagingPath = std::make_shared<cdroid::Path>();
     const FullPathProperties& properties = useStagingData ? mStagingProperties : mProperties;
     const Cairo::RefPtr<cdroid::Path> renderPath = getUpdatedPath(useStagingData, tempStagingPath);
     // Draw path's fill, if fill color or gradient is valid

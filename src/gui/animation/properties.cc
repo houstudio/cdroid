@@ -20,6 +20,7 @@ const std::string Property::getName()const{
 }
 
 ////////////////////////////////////////////////////////////////////////////
+namespace {
 class ALPHA:public Property{
 public:
     ALPHA():Property("alpha"){}
@@ -306,7 +307,7 @@ public:
         ((View*)object)->setScrollY(GET_VARIANT(value,int));
     }
 };
-
+}
 static std::unordered_map<std::string,std::shared_ptr<Property>>props={
     {"alpha",std::make_shared<ALPHA>()},
     {"bottom",std::make_shared<BOTTOM>()},

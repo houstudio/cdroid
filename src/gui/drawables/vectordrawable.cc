@@ -465,7 +465,7 @@ int VectorDrawable::getChangingConfigurations()const {
 
 void VectorDrawable::setAllowCaching(bool allowCaching) {
     //nSetAllowCaching(mVectorState->getNativeRenderer(), allowCaching);
-    hw::Tree*tree=(hw::Tree*)mVectorState->getNativeRenderer();
+    hwui::Tree*tree=(hwui::Tree*)mVectorState->getNativeRenderer();
     mVectorState->mNativeTree->setAllowCaching(allowCaching);
 }
 
@@ -543,14 +543,14 @@ VectorDrawable::VectorDrawableState::VectorDrawableState(const VectorDrawableSta
 
 void VectorDrawable::VectorDrawableState::createNativeTree(VGroup* rootGroup) {
    // mNativeTree = new VirtualRefBasePtr(nCreateTree(rootGroup->mNativePtr));
-   mNativeTree = new hw::Tree(rootGroup->mNativePtr);
+   mNativeTree = new hwui::Tree(rootGroup->mNativePtr);
 }
 
 // Create a new native tree with the given root group, and copy the properties from the
 // given VectorDrawableState's native tree.
 void VectorDrawable::VectorDrawableState::createNativeTreeFromCopy(const VectorDrawableState* copy, VGroup* rootGroup) {
     //mNativeTree = new VirtualRefBasePtr(nCreateTreeFromCopy(copy->mNativeTree.get(), rootGroup->mNativePtr));
-    mNativeTree = new hw::Tree(copy->mNativeTree, rootGroup->mNativePtr);
+    mNativeTree = new hwui::Tree(copy->mNativeTree, rootGroup->mNativePtr);
 }
 
 // This should be called every time after a new RootGroup and all its subtrees are created
@@ -658,17 +658,18 @@ VectorDrawable::VectorDrawableState::~VectorDrawableState(){
  * has changed.
  */
 bool VectorDrawable::VectorDrawableState::setAlpha(float alpha) {
-    hw::Tree*tree = (hw::Tree*)mNativeTree;
+    hwui::Tree*tree = (hwui::Tree*)mNativeTree;
     return tree->mutateStagingProperties()->setRootAlpha(alpha);
 }
 
 float VectorDrawable::VectorDrawableState::getAlpha() {
-    hw::Tree*tree = (hw::Tree*)mNativeTree;
+    hwui::Tree*tree = (hwui::Tree*)mNativeTree;
     return tree->stagingProperties().getRootAlpha();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 //static class VGroup extends VObject {
+namespace{/*anonymous namespace*/
 class TRANSLATE_X:public Property{
 public:
     TRANSLATE_X():Property("translateX") {}
@@ -752,6 +753,7 @@ public:
         return ((VectorDrawable::VGroup*)object)->getRotation();
     }
 };
+}/*endof anonymous namespace*/
 std::unordered_map<std::string, int> VectorDrawable::VGroup::sPropertyIndexMap ={
     {"translateX", (int)TRANSLATE_X_INDEX},
     {"translateY", (int)TRANSLATE_Y_INDEX},
@@ -787,7 +789,7 @@ const std::unordered_map<std::string, const std::shared_ptr<Property>> VectorDra
 VectorDrawable::VGroup::VGroup() {
     mIsStateful =false;
     //mNativePtr = nCreateGroup();
-    mNativePtr = new hw::Group();
+    mNativePtr = new hwui::Group();
 }
 
 VectorDrawable::VGroup::~VGroup(){
@@ -808,7 +810,7 @@ VectorDrawable::VGroup::VGroup(const VGroup* copy,std::unordered_map<std::string
         targetsMap.emplace(mGroupName, this);
     }
     //nCreateGroup((long)copy->mNativePtr);
-    mNativePtr = new hw::Group(*copy->mNativePtr);
+    mNativePtr = new hwui::Group(*copy->mNativePtr);
 
     const std::vector<VObject*> children = copy->mChildren;
     for (int i = 0; i < children.size(); i++) {
@@ -850,8 +852,8 @@ std::string VectorDrawable::VGroup::getGroupName()const{
 void VectorDrawable::VGroup::addChild(VObject* child) {
     mIsStateful =false;
     //nAddChild(mNativePtr, child->getNativePtr());
-    hw::Group*group = mNativePtr;
-    hw::Node*childNode = (hw::Node*)child->getNativePtr();
+    hwui::Group*group = mNativePtr;
+    hwui::Node*childNode = (hwui::Node*)child->getNativePtr();
     group->addChild(childNode);
     mChildren.push_back(child);
     mIsStateful |= child->isStateful();
@@ -1035,9 +1037,17 @@ void VectorDrawable::VGroup::setTranslateY(float translateY) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
  * Common Path information for clip path and normal path.
- *static abstract class VPath extends VObject
- */
-
+ *static abstract class VPath extends VObject*/
+/*class PATH_DATA:public Property{
+public:
+    PATH_DATA():Property("pathData"){}
+    void set(void* object, PathParser::PathData data) {
+        ((VectorDrawable::VPath*)object)->setPathData(data);
+    }
+    PathParser.PathData get(void* object) {
+        return ((VectorDrawable::VPath*)object)->getPathData();
+    }
+};*/
 Property* /*<VPath, PathParser.PathData>*/VectorDrawable::VPath::PATH_DATA;
 
 Property* VectorDrawable::VPath::getProperty(const std::string& propertyName) {
@@ -1077,8 +1087,8 @@ void VectorDrawable::VPath::setPathData(const PathParser::PathData* pathData) {
     mPathData->setPathData(*pathData);
     if (isTreeValid()) {
         //nSetPathData(getNativePtr(), mPathData->getNativePtr());
-        hw::Path*dst = (hw::Path*)getNativePtr();
-        hw::PathData*src = (hw::PathData*)mPathData->getNativePtr();
+        hwui::Path*dst = (hwui::Path*)getNativePtr();
+        hwui::PathData*src = (hwui::PathData*)mPathData->getNativePtr();
         dst->mutateStagingProperties()->setData(*src);
     }
 }
@@ -1090,13 +1100,13 @@ void VectorDrawable::VPath::setPathData(const PathParser::PathData* pathData) {
 //static class VClipPath extends VPath {
     
 VectorDrawable::VClipPath::VClipPath() {
-    mNativePtr = new hw::ClipPath();//nCreateClipPath();
+    mNativePtr = new hwui::ClipPath();//nCreateClipPath();
 }
 
 VectorDrawable::VClipPath::VClipPath(const VClipPath* copy)
     :VPath(copy){
     //nCreateClipPath(copy->mNativePtr);
-    mNativePtr = new hw::ClipPath(*copy->mNativePtr);
+    mNativePtr = new hwui::ClipPath(*copy->mNativePtr);
 }
 
 VectorDrawable::VClipPath::~VClipPath(){
@@ -1147,10 +1157,10 @@ void VectorDrawable::VClipPath::updateStateFromTypedArray(const AttributeSet&att
     if (!pathDataString.empty()) {
         mPathData = new PathParser::PathData(pathDataString);
         //nSetPathString(mNativePtr, pathDataString, pathDataString.length());
-        hw::PathData data;
-        hw::PathParser::ParseResult result;
-        hw::PathParser::getPathDataFromAsciiString(&data, &result, pathDataString.c_str(), pathDataString.length());
-        ((hw::Path*)mNativePtr)->mutateStagingProperties()->setData(data);
+        hwui::PathData data;
+        hwui::PathParser::ParseResult result;
+        hwui::PathParser::getPathDataFromAsciiString(&data, &result, pathDataString.c_str(), pathDataString.length());
+        ((hwui::Path*)mNativePtr)->mutateStagingProperties()->setData(data);
         //mNativePtr->mutateStagingProperties()->setData(pathDataString);
     }
 }
@@ -1159,6 +1169,7 @@ void VectorDrawable::VClipPath::updateStateFromTypedArray(const AttributeSet&att
 /**
  * Normal path, which contains all the fill / paint information.
  */
+namespace{/*anonymous namespace*/
 class STROKE_WIDTH:public Property{
 public:
     STROKE_WIDTH():Property("strokeWidth") {}
@@ -1253,7 +1264,7 @@ public:
         return ((VectorDrawable::VFullPath*)object)->getTrimPathOffset();
     }
 };
-
+}/*endof nnonymous namespace*/
 //static class VFullPath extends VPath
 // Property map for animatable attributes.
 std::unordered_map<std::string, int> VectorDrawable::VFullPath::sPropertyIndexMap={
@@ -1281,11 +1292,11 @@ const std::unordered_map<std::string, const std::shared_ptr<Property>> VectorDra
 };
 
 VectorDrawable::VFullPath::VFullPath() {
-    mNativePtr = new hw::FullPath();//nCreateFullPath();
+    mNativePtr = new hwui::FullPath();//nCreateFullPath();
 }
 
 VectorDrawable::VFullPath::VFullPath(const VFullPath* copy):VPath(copy){
-    mNativePtr = new hw::FullPath(*copy->mNativePtr);//nCreateFullPath(copy->mNativePtr);
+    mNativePtr = new hwui::FullPath(*copy->mNativePtr);//nCreateFullPath(copy->mNativePtr);
     //mThemeAttrs = copy->mThemeAttrs;
     mStrokeColors = copy->mStrokeColors;
     mFillColors = copy->mFillColors;
@@ -1400,10 +1411,10 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const AttributeSet& at
     if (!pathString.empty()) {
         mPathData = new PathParser::PathData(pathString);
         //nSetPathString(mNativePtr, pathString, pathString.length());
-        hw::PathData data;
-        hw::PathParser::ParseResult result;
-        hw::PathParser::getPathDataFromAsciiString(&data, &result, pathString.c_str(), pathString.length());
-        ((hw::Path*)mNativePtr)->mutateStagingProperties()->setData(data);
+        hwui::PathData data;
+        hwui::PathParser::ParseResult result;
+        hwui::PathParser::getPathDataFromAsciiString(&data, &result, pathString.c_str(), pathString.length());
+        ((hwui::Path*)mNativePtr)->mutateStagingProperties()->setData(data);
     }
 #if 10
     ComplexColor* fillColors = atts.getColorStateList("fillColor");

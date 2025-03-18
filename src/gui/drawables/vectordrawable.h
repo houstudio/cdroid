@@ -6,14 +6,14 @@
 #include <drawables/pathparser.h>
 #include <animation/property.h>
 namespace cdroid{
-namespace hw{
+namespace hwui{
     class Group;
     class ClipPath;
     class FullPath;
     class Tree;
 }
 using Theme = std::string;
-using VirtualRefBasePtr=cdroid::hw::Tree*;
+using VirtualRefBasePtr=cdroid::hwui::Tree*;
 class AnimatedVectorDrawable;
 class VectorDrawable:public Drawable {
 public:
@@ -133,7 +133,7 @@ protected:
     Insets mOpticalInsets;// = Insets.NONE;
     std::string mRootName;
     VGroup* mRootGroup;
-    hw::Tree* mNativeTree = nullptr;
+    hwui::Tree* mNativeTree = nullptr;
 
     int mDensity = DisplayMetrics::DENSITY_DEFAULT;
     std::unordered_map<std::string,void*> mVGTargetsMap;
@@ -214,7 +214,7 @@ private:
     // The native object will be created in the constructor and will be destroyed in native
     // when the neither java nor native has ref to the tree. This pointer should be valid
     // throughout this VGroup Java object's life.
-    hw::Group* mNativePtr;
+    hwui::Group* mNativePtr;
     friend VectorDrawable;
     friend VectorDrawableState;
     friend AnimatedVectorDrawable;
@@ -281,7 +281,7 @@ public:
  */
 class VectorDrawable::VClipPath:public VPath {
 private:
-    hw::ClipPath* mNativePtr;
+    hwui::ClipPath* mNativePtr;
 public:
     VClipPath();
     VClipPath(const VClipPath* copy);
@@ -327,7 +327,7 @@ private:
 
     ComplexColor* mStrokeColors = nullptr;
     ComplexColor* mFillColors = nullptr;
-    hw::FullPath* mNativePtr;
+    hwui::FullPath* mNativePtr;
 private:
     void updateStateFromTypedArray(const AttributeSet&atts);
     bool canComplexColorApplyTheme(ComplexColor* complexColor);

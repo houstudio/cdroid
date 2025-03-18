@@ -1,7 +1,7 @@
 #include <porting/cdlog.h>
 #include <drawables/hwpathparser.h>
 namespace cdroid{
-namespace hw{
+namespace hwui{
     
 static size_t nextStart(const char* s, size_t length, size_t startIndex) {
     size_t index = startIndex;
