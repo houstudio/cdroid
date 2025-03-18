@@ -1,4 +1,6 @@
 #include <drawables/animatedstatelistdrawable.h>
+#include <drawables/animatedrotatedrawable.h>
+#include <drawables/animatedimagedrawable.h>
 #include <cdlog.h>
 
 namespace cdroid{
@@ -126,11 +128,11 @@ bool AnimatedStateListDrawable::selectTransition(int toIndex){
     if (dynamic_cast<AnimationDrawable*>(d)) {
         bool reversed = mState->isTransitionReversed(fromId, toId);
         transition = new AnimationDrawableTransition((AnimationDrawable*) d,reversed, hasReversibleFlag);
-    } else if (dynamic_cast<AnimatedVectorDrawable*>(d)) {
+    } else if (0&&dynamic_cast<AnimatedVectorDrawable*>(d)) {
         bool reversed = mState->isTransitionReversed(fromId, toId);
         transition = new AnimatedVectorDrawableTransition((AnimatedVectorDrawable*) d, reversed, hasReversibleFlag);
     } else if (dynamic_cast<Animatable*>(d)) {
-        transition = new AnimatableTransition((Animatable*) d);
+        transition = new AnimatableTransition(d);
     } else {
         // We don't know how to animate this transition.
         return false;
@@ -402,17 +404,30 @@ float AnimatedStateListDrawable::FrameInterpolator::getInterpolation(float input
 }
 
 //----------------------------------------------------------------------------------------------------------
-AnimatedStateListDrawable::AnimatableTransition::AnimatableTransition(Animatable* a) {
-    mA = a;
-    mDrawable = dynamic_cast<Drawable*>(mA);
+AnimatedStateListDrawable::AnimatableTransition::AnimatableTransition(Drawable* a) {
+    mDrawable = dynamic_cast<Drawable*>(a);
 }
 
 void AnimatedStateListDrawable::AnimatableTransition::start() {
-    mA->start();
+    if(dynamic_cast<AnimatedRotateDrawable*>(mDrawable)){
+        AnimatedRotateDrawable*ard=(AnimatedRotateDrawable*)mDrawable;
+        ard->start();
+    }else if(dynamic_cast<AnimatedImageDrawable*>(mDrawable)){
+        AnimatedImageDrawable*aid=(AnimatedImageDrawable*)mDrawable;
+        aid->start();
+    }
+    //mA->start();
 }
 
 void AnimatedStateListDrawable::AnimatableTransition::stop() {
-    mA->stop();
+    if(dynamic_cast<AnimatedRotateDrawable*>(mDrawable)){
+        AnimatedRotateDrawable*ard=(AnimatedRotateDrawable*)mDrawable;
+        ard->stop();
+    }else if(dynamic_cast<AnimatedImageDrawable*>(mDrawable)){
+        AnimatedImageDrawable*aid=(AnimatedImageDrawable*)mDrawable;
+        aid->stop();
+    }
+    //mA->stop();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
