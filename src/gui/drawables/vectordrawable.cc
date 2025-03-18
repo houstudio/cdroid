@@ -669,6 +669,89 @@ float VectorDrawable::VectorDrawableState::getAlpha() {
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 //static class VGroup extends VObject {
+class TRANSLATE_X:public Property{
+public:
+    TRANSLATE_X():Property("translateX") {}
+    void set(void* object, const AnimateValue& value) override{
+        ((VectorDrawable::VGroup*)object)->setTranslateX(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void* object) override{
+        return ((VectorDrawable::VGroup*)object)->getTranslateX();
+    }
+};
+
+class TRANSLATE_Y:public Property{
+public:
+    TRANSLATE_Y():Property("translateY") {}
+    void set(void*object, const AnimateValue& value) override{
+        ((VectorDrawable::VGroup*)object)->setTranslateY(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void* object) override{
+        return ((VectorDrawable::VGroup*)object)->getTranslateY();
+    }
+};
+
+class SCALE_X:public Property{
+public:
+    SCALE_X():Property("scaleX") {}
+    void set(void* object, const AnimateValue& value)override {
+        ((VectorDrawable::VGroup*)object)->setScaleX(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void* object) override{
+        return ((VectorDrawable::VGroup*)object)->getScaleX();
+    }
+};
+
+class SCALE_Y:public Property{
+public:
+    SCALE_Y():Property("scaleY") {}
+    void set(void* object, const AnimateValue& value) override{
+        ((VectorDrawable::VGroup*)object)->setScaleY(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void* object) override{
+        return ((VectorDrawable::VGroup*)object)->getScaleY();
+    }
+};
+
+class PIVOT_X:public Property{
+public:
+    PIVOT_X():Property("pivotX") {}
+    void set(void*object, const AnimateValue& value) override{
+        ((VectorDrawable::VGroup*)object)->setPivotX(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void* object) override{
+        return ((VectorDrawable::VGroup*)object)->getPivotX();
+    }
+};
+
+class PIVOT_Y:public Property{
+public:
+    PIVOT_Y():Property("pivotY") {}
+    void set(void* object, const AnimateValue& value) override{
+        ((VectorDrawable::VGroup*)object)->setPivotY(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void* object) override{
+        return ((VectorDrawable::VGroup*)object)->getPivotY();
+    }
+};
+
+class ROTATION:public Property{
+public:
+    ROTATION():Property("rotation") {}
+    void set(void* object, const AnimateValue& value) override{
+        ((VectorDrawable::VGroup*)object)->setRotation(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void* object) override{
+        return ((VectorDrawable::VGroup*)object)->getRotation();
+    }
+};
 std::unordered_map<std::string, int> VectorDrawable::VGroup::sPropertyIndexMap ={
     {"translateX", (int)TRANSLATE_X_INDEX},
     {"translateY", (int)TRANSLATE_Y_INDEX},
@@ -1083,6 +1166,101 @@ void VectorDrawable::VClipPath::updateStateFromTypedArray(const AttributeSet&att
 /**
  * Normal path, which contains all the fill / paint information.
  */
+class STROKE_WIDTH:public Property{
+public:
+    STROKE_WIDTH():Property("strokeWidth") {}
+    void set(void*object, const AnimateValue& value) {
+        ((VectorDrawable::VFullPath*)object)->setStrokeWidth(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void*object) {
+        return ((VectorDrawable::VFullPath*)object)->getStrokeWidth();
+    }
+};
+
+class STROKE_COLOR:public Property{
+public:
+    STROKE_COLOR():Property("strokeColor") {}
+    void set(void*object, const AnimateValue& value) {
+        ((VectorDrawable::VFullPath*)object)->setStrokeColor(GET_VARIANT(value,uint32_t));
+    }
+
+    AnimateValue get(void*object) {
+        return ((VectorDrawable::VFullPath*)object)->getStrokeColor();
+    }
+};
+
+class STROKE_ALPHA:public Property{
+public:
+    STROKE_ALPHA():Property("strokeAlpha") {}
+    void set(void*object, const AnimateValue& value) {
+        ((VectorDrawable::VFullPath*)object)->setStrokeAlpha(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void*object) {
+        return ((VectorDrawable::VFullPath*)object)->getStrokeAlpha();
+    }
+};
+
+class FILL_COLOR:public Property{
+public:
+    FILL_COLOR():Property("fillColor") {}
+    void set(void*object, const AnimateValue& value) {
+        ((VectorDrawable::VFullPath*)object)->setFillColor(GET_VARIANT(value,uint32_t));
+    }
+
+    AnimateValue get(void*object) {
+        return ((VectorDrawable::VFullPath*)object)->getFillColor();
+    }
+};
+
+class FILL_ALPHA:public Property{
+public:
+    FILL_ALPHA():Property("fillAlpha") {}
+    void set(void*object, const AnimateValue& value) {
+        ((VectorDrawable::VFullPath*)object)->setFillAlpha(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void*object) {
+        return ((VectorDrawable::VFullPath*)object)->getFillAlpha();
+    }
+};
+
+class TRIM_PATH_START:public Property{
+public:
+    TRIM_PATH_START():Property("trimPathStart") {}
+    void set(void*object, const AnimateValue& value) {
+        ((VectorDrawable::VFullPath*)object)->setTrimPathStart(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void*object) {
+        return ((VectorDrawable::VFullPath*)object)->getTrimPathStart();
+    }
+};
+
+class TRIM_PATH_END:public Property{
+public:
+    TRIM_PATH_END():Property("trimPathEnd") {}
+    void set(void*object, const AnimateValue& value) {
+        ((VectorDrawable::VFullPath*)object)->setTrimPathEnd(GET_VARIANT(value,float));
+    }
+
+    AnimateValue get(void*object) {
+        return ((VectorDrawable::VFullPath*)object)->getTrimPathEnd();
+    }
+};
+
+class TRIM_PATH_OFFSET:public Property{
+public:
+    TRIM_PATH_OFFSET():Property("trimPathOffset") {}
+    void set(void*object, const AnimateValue& value) {
+        ((VectorDrawable::VFullPath*)object)->setTrimPathOffset(GET_VARIANT(value,float));
+    }
+    AnimateValue get(void*object) {
+        return ((VectorDrawable::VFullPath*)object)->getTrimPathOffset();
+    }
+};
+
 //static class VFullPath extends VPath
 // Property map for animatable attributes.
 std::unordered_map<std::string, int> VectorDrawable::VFullPath::sPropertyIndexMap={
