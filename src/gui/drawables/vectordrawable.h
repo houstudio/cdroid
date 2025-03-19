@@ -6,14 +6,14 @@
 #include <drawables/pathparser.h>
 #include <animation/property.h>
 namespace cdroid{
-namespace hw{
+namespace hwui{
     class Group;
+    class Path;
     class ClipPath;
     class FullPath;
     class Tree;
 }
 using Theme = std::string;
-using VirtualRefBasePtr=cdroid::hw::Tree*;
 class AnimatedVectorDrawable;
 class VectorDrawable:public Drawable {
 public:
@@ -97,13 +97,13 @@ public:
     class VObject {
         friend VectorDrawableState;
         friend VGroup;
-        VirtualRefBasePtr mTreePtr = nullptr;
+        hwui::Tree* mTreePtr = nullptr;
     public:
         virtual ~VObject() = default;
         bool isTreeValid() {
             return mTreePtr != nullptr;// && mTreePtr.get() != 0;
         }
-        virtual void setTree(VirtualRefBasePtr ptr) {
+        virtual void setTree(hwui::Tree* ptr) {
             mTreePtr = ptr;
         }
         virtual long getNativePtr()=0;
@@ -133,7 +133,7 @@ protected:
     Insets mOpticalInsets;// = Insets.NONE;
     std::string mRootName;
     VGroup* mRootGroup;
-    hw::Tree* mNativeTree = nullptr;
+    hwui::Tree* mNativeTree = nullptr;
 
     int mDensity = DisplayMetrics::DENSITY_DEFAULT;
     std::unordered_map<std::string,void*> mVGTargetsMap;
@@ -197,15 +197,7 @@ private:
     static std::unordered_map<std::string, int> sPropertyIndexMap;
     static int getPropertyIndex(const std::string& propertyName);
 
-    // Below are the Properties that wrap the setters to avoid reflection overhead in animations
-    static Property* /*<VGroup, float>*/ TRANSLATE_X;
-    static Property* /*<VGroup, float>*/ TRANSLATE_Y;
-    static Property* /*<VGroup, float>*/ SCALE_X;
-    static Property* /*<VGroup, float>*/ SCALE_Y;
-    static Property* /*<VGroup, float>*/ PIVOT_X;
-    static Property* /*<VGroup, float>*/ PIVOT_Y;
-    static Property* /*<VGroup, float>*/ ROTATION;
-    static std::unordered_map<std::string, Property*> sPropertyMap;
+    static const std::unordered_map<std::string,const std::shared_ptr<Property>> sPropertyMap;
     // Temp array to store transform values obtained from native.
     //float mTransform[8];
     /////////////////////////////////////////////////////
@@ -222,7 +214,7 @@ private:
     // The native object will be created in the constructor and will be destroyed in native
     // when the neither java nor native has ref to the tree. This pointer should be valid
     // throughout this VGroup Java object's life.
-    hw::Group* mNativePtr;
+    hwui::Group* mNativePtr;
     friend VectorDrawable;
     friend VectorDrawableState;
     friend AnimatedVectorDrawable;
@@ -235,7 +227,7 @@ public:
     std::string getGroupName()const;
 
     void addChild(VObject* child);
-    void setTree(VirtualRefBasePtr treeRoot)override;
+    void setTree(hwui::Tree* treeRoot)override;
     long getNativePtr()override;
     void updateStateFromTypedArray(Context*,const AttributeSet&atts);
     bool onStateChange(const std::vector<int>& stateSet);
@@ -289,7 +281,7 @@ public:
  */
 class VectorDrawable::VClipPath:public VPath {
 private:
-    hw::ClipPath* mNativePtr;
+    hwui::ClipPath* mNativePtr;
 public:
     VClipPath();
     VClipPath(const VClipPath* copy);
@@ -325,16 +317,7 @@ private:
 
     // Property map for animatable attributes.
     static std::unordered_map<std::string, int> sPropertyIndexMap;
-    // Below are the Properties that wrap the setters to avoid reflection overhead in animations
-    static Property* /*<VFullPath, float>*/ STROKE_WIDTH;
-    static Property* /*<VFullPath, int>*/ STROKE_COLOR;
-    static Property* /*<VFullPath, float>*/ STROKE_ALPHA;
-    static Property* /*<VFullPath, int>*/ FILL_COLOR;
-    static Property* /*<VFullPath, float>*/ FILL_ALPHA;
-    static Property* /*<VFullPath, float>*/ TRIM_PATH_START;
-    static Property* /*<VFullPath, float>*/ TRIM_PATH_END;
-    static Property* /*<VFullPath, float>*/TRIM_PATH_OFFSET;
-    static std::unordered_map<std::string, Property*> sPropertyMap;
+    static const std::unordered_map<std::string, const std::shared_ptr<Property>> sPropertyMap;
 
     // Temp array to store property data obtained from native getter.
     uint8_t* mPropertyData;
@@ -344,7 +327,7 @@ private:
 
     ComplexColor* mStrokeColors = nullptr;
     ComplexColor* mFillColors = nullptr;
-    hw::FullPath* mNativePtr;
+    hwui::FullPath* mNativePtr;
 private:
     void updateStateFromTypedArray(const AttributeSet&atts);
     bool canComplexColorApplyTheme(ComplexColor* complexColor);

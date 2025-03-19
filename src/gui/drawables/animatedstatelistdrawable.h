@@ -99,10 +99,8 @@ public:
 };
 
 class AnimatedStateListDrawable::AnimatableTransition:public Transition {
-private:
-    Animatable* mA;
 public:
-    AnimatableTransition(Animatable* a);
+    AnimatableTransition(Drawable* a);
     void start()override;
     void stop()override;
 };

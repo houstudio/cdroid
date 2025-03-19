@@ -4,7 +4,7 @@
 #include <cairomm/context.h>
 #include <drawables/hwvectordrawable.h>
 namespace cdroid {
-namespace hw{
+namespace hwui{
 class PathMeasure{
 private:
     using Point =CPoint<double>;

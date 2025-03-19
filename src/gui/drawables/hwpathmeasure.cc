@@ -1,6 +1,6 @@
 #include <drawables/hwpathmeasure.h>
 namespace cdroid {
-namespace hw{
+namespace hwui{
 
 
 PathMeasure::PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool){

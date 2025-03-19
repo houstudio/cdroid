@@ -4,7 +4,7 @@
 #include <drawables/hwvectordrawableutils.h>
 #include <core/path.h>
 namespace cdroid{
-namespace hw{
+namespace hwui{
 class PathParser {
 public:
     struct ParseResult {

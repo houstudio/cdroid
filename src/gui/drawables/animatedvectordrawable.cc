@@ -8,24 +8,26 @@ AnimatedVectorDrawable::AnimatedVectorDrawable()
     :AnimatedVectorDrawable(nullptr){
 }
 
+class MyCallback:public Drawable::Callback{
+private:
+    AnimatedVectorDrawable*avd;
+public:
+    MyCallback(AnimatedVectorDrawable*a):avd(a){}
+    void invalidateDrawable(Drawable& who)override{
+        avd->invalidateSelf();
+    }
+    void scheduleDrawable(Drawable& who, Runnable& what, int64_t when)override{
+        avd->scheduleSelf(what, when);
+    }
+    void unscheduleDrawable(Drawable& who, Runnable& what)override{
+        avd->unscheduleSelf(what);
+    }
+};
 AnimatedVectorDrawable::AnimatedVectorDrawable(std::shared_ptr<AnimatedVectorDrawableState> state){
     mCallback =  nullptr;
     mAnimatedVectorState = std::make_shared<AnimatedVectorDrawableState>(state, mCallback);
     mAnimatorSet = new VectorDrawableAnimatorRT(this);
-    //mRes = res;
-    /*private final Callback mCallback = new Callback() {
-        public void invalidateDrawable(Drawable who) {
-            invalidateSelf();
-        }
-
-        public void scheduleDrawable(Drawable who, Runnable what, long when) {
-            scheduleSelf(what, when);
-        }
-
-        public void unscheduleDrawable(Drawable who, Runnable what) {
-            unscheduleSelf(what);
-        }
-    };*/
+    mCallback = new MyCallback(this);
 }
 
 AnimatedVectorDrawable* AnimatedVectorDrawable::mutate() {
@@ -165,66 +167,52 @@ Insets AnimatedVectorDrawable::getOpticalInsets() {
 
 void AnimatedVectorDrawable::inflate(Context*ctx,const std::string&resid){
     auto state = mAnimatedVectorState;
-#if 0
-    int eventType = parser.getEventType();
+    XmlPullParser parser(ctx,resid);
+    XmlPullParser::XmlEvent event;
+    int eventType;
     float pathErrorScale = 1;
     const int innerDepth = parser.getDepth();
 
     // Parse everything until the end of the animated-vector element.
-    while (eventType != XmlPullParser.END_DOCUMENT
-            && (parser.getDepth() >= innerDepth || eventType != XmlPullParser.END_TAG)) {
-        if (eventType == XmlPullParser.START_TAG) {
-            std::string tagName = parser.getName();
-            if (ANIMATED_VECTOR.equals(tagName)) {
-                 TypedArray a = obtainAttributes(res, theme, attrs,
-                        R.styleable.AnimatedVectorDrawable);
-                int drawableRes = a.getResourceId(
-                        R.styleable.AnimatedVectorDrawable_drawable, 0);
-                if (drawableRes != 0) {
-                    VectorDrawable* vectorDrawable = (VectorDrawable) res.getDrawable(
-                            drawableRes, theme).mutate();
-                    vectorDrawable.setAllowCaching(false);
-                    vectorDrawable.setCallback(mCallback);
-                    pathErrorScale = vectorDrawable.getPixelSize();
-                    if (state.mVectorDrawable != null) {
-                        state.mVectorDrawable.setCallback(null);
+    while ((eventType=parser.next(event)) != XmlPullParser::END_DOCUMENT
+            && (parser.getDepth() >= innerDepth || eventType != XmlPullParser::END_TAG)) {
+        if (eventType == XmlPullParser::START_TAG) {
+            const std::string tagName = parser.getName();
+            auto& a = event.attributes;
+            if (tagName.compare(ANIMATED_VECTOR)==0) {
+                std::string drawableRes = a.getString("drawable");
+                if (!drawableRes.empty()) {
+                    VectorDrawable* vectorDrawable = (VectorDrawable*) ctx->getDrawable(drawableRes)->mutate();
+                    vectorDrawable->setAllowCaching(false);
+                    vectorDrawable->setCallback(mCallback);
+                    pathErrorScale = vectorDrawable->getPixelSize();
+                    if (state->mVectorDrawable != nullptr) {
+                        state->mVectorDrawable->setCallback(nullptr);
                     }
-                    state.mVectorDrawable = vectorDrawable;
+                    state->mVectorDrawable = vectorDrawable;
                 }
-                a.recycle();
-            } else if (TARGET.equals(tagName)) {
-                TypedArray a = obtainAttributes(res, theme, attrs,
-                        R.styleable.AnimatedVectorDrawableTarget);
-                std::string target = a.getString(
-                        R.styleable.AnimatedVectorDrawableTarget_name);
-                int animResId = a.getResourceId(
-                        R.styleable.AnimatedVectorDrawableTarget_animation, 0);
-                if (animResId != 0) {
-                    if (theme != null) {
+            } else if (tagName.compare(TARGET)==0) {
+                std::string target = a.getString("name");
+                std::string animResId = a.getString("animation");
+                if (!animResId.empty()) {
+                    /*if (theme != null) {
                         // The animator here could be ObjectAnimator or AnimatorSet.
                         Animator* animator = AnimatorInflater::loadAnimator(res, theme, animResId, pathErrorScale);
-                        updateAnimatorProperty(animator, target, state.mVectorDrawable,
-                                state.mShouldIgnoreInvalidAnim);
-                        state.addTargetAnimator(target, animator);
-                    } else {
+                        updateAnimatorProperty(animator, target, state->mVectorDrawable,state->mShouldIgnoreInvalidAnim);
+                        state->addTargetAnimator(target, animator);
+                    } else */{
                         // The animation may be theme-dependent. As a
                         // workaround until Animator has full support for
                         // applyTheme(), postpone loading the animator
                         // until we have a theme in applyTheme().
-                        state.addPendingAnimator(animResId, pathErrorScale, target);
-
+                        state->addPendingAnimator(animResId, pathErrorScale, target);
                     }
                 }
-                a.recycle();
             }
         }
-
-        eventType = parser.next();
     }
-#endif
     // If we don't have any pending animations, we don't need to hold a
     // reference to the resources.
-    //mRes = state.mPendingAnims == null ? null : res;
 }
 
 void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const std::string& targetName,VectorDrawable* vectorDrawable, bool ignoreInvalidAnim) {
@@ -365,7 +353,7 @@ AnimatedVectorDrawable::AnimatedVectorDrawableState::AnimatedVectorDrawableState
 
 bool AnimatedVectorDrawable::AnimatedVectorDrawableState::canApplyTheme() {
     return (mVectorDrawable != nullptr && mVectorDrawable->canApplyTheme())
-            || mPendingAnims.size();//|| Drawable::canApplyTheme();
+            || mPendingAnims.size()|| Drawable::canApplyTheme();
 }
 
 Drawable* AnimatedVectorDrawable::AnimatedVectorDrawableState::newDrawable() {
@@ -748,7 +736,7 @@ AnimatedVectorDrawable::VectorDrawableAnimatorRT::VectorDrawableAnimatorRT(Anima
     mSetPtr = nCreateAnimatorSet();//PropertyValuesAnimatorSet();
     // Increment ref count on native AnimatorSet, so it doesn't get released before Java
     // side is done using it.
-    mSetRefBasePtr = VirtualRefBasePtr(mSetPtr);
+    mSetRefBasePtr = (hwui::Tree*)mSetPtr;
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::init(AnimatorSet* set) {
@@ -757,8 +745,8 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::init(AnimatorSet* set) {
         throw std::runtime_error("VectorDrawableAnimator cannot be re-initialized");
     }
     parseAnimatorSet(set, 0);
-    long vectorDrawableTreePtr = mDrawable->mAnimatedVectorState->mVectorDrawable->getNativeTree();
-    nSetVectorDrawableTarget(mSetPtr, vectorDrawableTreePtr);
+    hwui::Tree*vectorDrawableTreePtr = (hwui::Tree*)mDrawable->mAnimatedVectorState->mVectorDrawable->getNativeTree();//hwui::Tree
+    //TODO nSetVectorDrawableTarget(mSetPtr, vectorDrawableTreePtr);
     mInitialized = true;
     mIsInfinite = set->getTotalDuration() == Animator::DURATION_INFINITE;
 
@@ -810,8 +798,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimator(ObjectAn
     } else if (dynamic_cast<VectorDrawable::VPath*>(target)) {
         for (int i = 0; i < values.size(); i++) {
             values[i]->getPropertyValues(mTmpValues);
-            if (dynamic_cast<PathParser::PathData*>(mTmpValues.endValue) &&
-                    mTmpValues.propertyName.compare("pathData")==0) {
+            if (/*dynamic_cast<PathParser::PathData*>(mTmpValues.endValue) &&*/ mTmpValues.propertyName.compare("pathData")==0) {
                 createRTAnimatorForPath(animator, (VectorDrawable::VPath*) target,startTime);
             }  else if (dynamic_cast<VectorDrawable::VFullPath*>(target)) {
                 createRTAnimatorForFullPath(animator, (VectorDrawable::VFullPath*) target,startTime);
@@ -827,7 +814,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimator(ObjectAn
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForGroup(const std::vector<PropertyValuesHolder*>& values,
         ObjectAnimator* animator, VectorDrawable::VGroup* target,long startTime) {
 
-    long nativePtr = target->getNativePtr();
+    hwui::Group* nativePtr = (hwui::Group*)target->getNativePtr();//hwui::Group
     int propertyId;
     for (int i = 0; i < values.size(); i++) {
         // TODO: We need to support the rare case in AVD where no start value is provided
@@ -844,7 +831,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForGroup(
         long propertyPtr = nCreateGroupPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
         if (mTmpValues.dataSource != nullptr) {
             std::vector<float>dataPoints = createFloatDataPoints(mTmpValues.dataSource,animator->getDuration());
-            nSetPropertyHolderData(propertyPtr, dataPoints, dataPoints.size());
+            //TODO nSetPropertyHolderData(propertyPtr, dataPoints, dataPoints.size());
         }
         createNativeChildAnimator(propertyPtr, startTime, animator);
     }
@@ -852,10 +839,12 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForGroup(
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForPath( ObjectAnimator* animator, VectorDrawable::VPath* target,long startTime) {
 
-    long nativePtr = target->getNativePtr();
-    long startPathDataPtr = ((PathParser::PathData*) mTmpValues.startValue)->getNativePtr();
-    long endPathDataPtr = ((PathParser::PathData*) mTmpValues.endValue)->getNativePtr();
-    long propertyPtr = nCreatePathDataPropertyHolder(nativePtr, startPathDataPtr,endPathDataPtr);
+    hwui::Path* nativePtr = (hwui::Path*)target->getNativePtr();//hwui::Path
+    std::shared_ptr<PathParser::PathData>startPathData = GET_VARIANT(mTmpValues.startValue,std::shared_ptr<PathParser::PathData>);
+    std::shared_ptr<PathParser::PathData>endPathData = GET_VARIANT(mTmpValues.endValue,std::shared_ptr<PathParser::PathData>);
+    hwui::PathData* startPathDataPtr = (hwui::PathData*)startPathData->getNativePtr();
+    hwui::PathData* endPathDataPtr = (hwui::PathData*)endPathData->getNativePtr();
+    long propertyPtr = nCreatePathDataPropertyHolder(nativePtr, startPathDataPtr,endPathDataPtr);/*PathMorph*/
     createNativeChildAnimator(propertyPtr, startTime, animator);
 }
 
@@ -863,7 +852,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForFullPa
 
     int propertyId = target->getPropertyIndex(mTmpValues.propertyName);
     long propertyPtr;
-    long nativePtr = target->getNativePtr();
+    hwui::FullPath* nativePtr = (hwui::FullPath*)target->getNativePtr();//hwui::FullPath
     if (mTmpValues.type == PropertyValuesHolder::CLASS_FLOAT) {
         if (propertyId < 0) {
             if (mDrawable->mAnimatedVectorState->mShouldIgnoreInvalidAnim) {
@@ -916,7 +905,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForRootGr
             break;
         }
     }
-    if (startValue == null && endValue == null) {
+    if (startValue == INFINITY && endValue == INFINITY) {
         if (mDrawable->mAnimatedVectorState->mShouldIgnoreInvalidAnim) {
             return;
         } else {

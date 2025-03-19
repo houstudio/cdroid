@@ -2,8 +2,9 @@
 #define __ANIMATION_PROPERTY_H__
 #include <string>
 #include <core/variant.h>
+#include <drawables/pathparser.h>
 namespace cdroid{
-typedef nonstd::variant<int,uint32_t,float>AnimateValue;
+typedef nonstd::variant<int,uint32_t,float,std::shared_ptr<PathParser::PathData>>AnimateValue;
 
 #if variant_CPP17_OR_GREATER
    #define GET_VARIANT(vt,type) std::get<type>(vt)

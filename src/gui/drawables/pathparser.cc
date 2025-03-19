@@ -13,9 +13,9 @@ std::shared_ptr<cdroid::Path> PathParser::createPathFromPathData(const std::stri
     }
     //Path path = new Path();
     //nParseStringForPath(path.mNativePath, pathString, pathString.length());
-    hw::PathParser::ParseResult result;
+    hwui::PathParser::ParseResult result;
     Cairo::RefPtr<cdroid::Path>path;
-    hw::PathParser::parseAsciiStringForPath(path, &result, pathString.c_str(), pathString.length());
+    hwui::PathParser::parseAsciiStringForPath(path, &result, pathString.c_str(), pathString.length());
     return path;
 }
 
@@ -27,7 +27,7 @@ std::shared_ptr<cdroid::Path> PathParser::createPathFromPathData(const std::stri
  */
 void PathParser::createPathFromPathData(std::shared_ptr<cdroid::Path>& outPath,const PathParser::PathData& data) {
     //nCreatePathFromPathData(outPath.mNativePath, data.mNativePathData);
-    hw::VectorDrawableUtils::verbsToPath(outPath, *data.mNativePathData);
+    hwui::VectorDrawableUtils::verbsToPath(outPath, *data.mNativePathData);
 }
 
 /**
@@ -37,9 +37,9 @@ void PathParser::createPathFromPathData(std::shared_ptr<cdroid::Path>& outPath,c
  */
 bool PathParser::canMorph(const PathParser::PathData& pathDataFrom,const PathParser::PathData& pathDataTo) {
     //return nCanMorph(pathDataFrom.mNativePathData, pathDataTo.mNativePathData);
-    hw::PathData*from=(hw::PathData*)pathDataFrom.mNativePathData;
-    hw::PathData*to =(hw::PathData*)pathDataTo.mNativePathData;
-    return hw::VectorDrawableUtils::canMorph(*from,*to);
+    hwui::PathData*from=(hwui::PathData*)pathDataFrom.mNativePathData;
+    hwui::PathData*to =(hwui::PathData*)pathDataTo.mNativePathData;
+    return hwui::VectorDrawableUtils::canMorph(*from,*to);
 }
 
 /**
@@ -53,10 +53,10 @@ bool PathParser::canMorph(const PathParser::PathData& pathDataFrom,const PathPar
  */
 bool PathParser::interpolatePathData(PathParser::PathData& outData,const PathParser::PathData& fromData,const PathParser::PathData& toData,
         float fraction) {
-    hw::PathData*out=(hw::PathData*)outData.mNativePathData;
-    hw::PathData*from=(hw::PathData*)fromData.mNativePathData;
-    hw::PathData*to=(hw::PathData*)toData.mNativePathData;
-    return hw::VectorDrawableUtils::interpolatePathData(*out,*from,*to,fraction);
+    hwui::PathData*out=(hwui::PathData*)outData.mNativePathData;
+    hwui::PathData*from=(hwui::PathData*)fromData.mNativePathData;
+    hwui::PathData*to=(hwui::PathData*)toData.mNativePathData;
+    return hwui::VectorDrawableUtils::interpolatePathData(*out,*from,*to,fraction);
 }
 
 /**
@@ -66,20 +66,20 @@ bool PathParser::interpolatePathData(PathParser::PathData& outData,const PathPar
  * generate commands to manipulate a Path.
  */
 PathParser::PathData::PathData() {
-    mNativePathData = new hw::PathData();
+    mNativePathData = new hwui::PathData();
 }
 
 PathParser::PathData::PathData(const PathParser::PathData& data) {
-    mNativePathData = new hw::PathData(*data.mNativePathData);
+    mNativePathData = new hwui::PathData(*data.mNativePathData);
 }
 
 PathParser::PathData::PathData(const std::string& pathString) {
     if (pathString.empty()) {
         LOGE("Invalid pathData: %s",pathString.c_str());
     }
-    mNativePathData = new hw::PathData();
-    hw::PathParser::ParseResult result;
-    hw::PathParser::getPathDataFromAsciiString(mNativePathData, &result, pathString.c_str(), pathString.length());
+    mNativePathData = new hwui::PathData();
+    hwui::PathParser::ParseResult result;
+    hwui::PathParser::getPathDataFromAsciiString(mNativePathData, &result, pathString.c_str(), pathString.length());
 }
 
 long PathParser::PathData::getNativePtr() {
@@ -93,14 +93,14 @@ long PathParser::PathData::getNativePtr() {
  * @param source The source path represented in PathData
  */
 void PathParser::PathData::setPathData(const PathParser::PathData& source) {
-    hw::PathData*thiz =(hw::PathData*)mNativePathData;
-    hw::PathData*other=(hw::PathData*)source.mNativePathData;
+    hwui::PathData*thiz =(hwui::PathData*)mNativePathData;
+    hwui::PathData*other=(hwui::PathData*)source.mNativePathData;
     *thiz = *other;
 }
 
 PathParser::PathData::~PathData() {
     if (mNativePathData != nullptr) {
-        delete (hw::PathData*)mNativePathData;
+        delete (hwui::PathData*)mNativePathData;
         mNativePathData = nullptr;
     }
 }

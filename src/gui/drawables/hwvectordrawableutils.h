@@ -4,7 +4,7 @@
 #include <cairomm/context.h>
 #include <drawables/hwvectordrawable.h>
 namespace cdroid {
-namespace hw {
+namespace hwui {
 
 class VectorDrawableUtils {
 public:
@@ -16,6 +16,6 @@ public:
     static void interpolatePaths(PathData& outPathData, const PathData& from, const PathData& to,
                                  float fraction);
 };
-}  /*namespace vectordrawable*/
+}  /*namespace hwui*/
 }  /*namespace cddroid*/
 #endif /*__HWUI_VECTORDRAWABLE_UTILS_H__*/

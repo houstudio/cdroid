@@ -2,7 +2,7 @@
 #define __PARTH_PARSER_H__
 #include <core/path.h>
 namespace cdroid{
-namespace hw{
+namespace hwui{
     struct PathData;
 }
 class PathParser {
@@ -50,7 +50,7 @@ public:
 class PathParser::PathData {
 private:
     friend PathParser;
-    hw::PathData* mNativePathData;
+    hwui::PathData* mNativePathData;
 public:
     PathData();
     PathData(const PathData& data);
