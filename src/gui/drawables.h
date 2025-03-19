@@ -24,4 +24,6 @@
 #include <drawables/gradientdrawable.h>
 #include <drawables/scrollbardrawable.h>
 #include <drawables/rippledrawable.h>
+#include <drawables/drawableinflater.h>
+#include <drawables/animatedvectordrawable.h>
 #include <drawables/animatedstatelistdrawable.h>

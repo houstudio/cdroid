@@ -3,6 +3,9 @@
 #include <drawables/vectordrawable.h>
 #include <animation/objectanimator.h>
 namespace cdroid{
+namespace hwui{
+    class PropertyValuesAnimatorSet;
+};
 class AnimatedVectorDrawable: public Drawable{// implements Animatable2 {
 public:
     class AnimatedVectorDrawableState;
@@ -168,7 +171,7 @@ private:
     Animator::AnimatorListener mListener;
     std::vector<long> mStartDelays;
     PropertyValuesHolder::PropertyValues mTmpValues;// =  new PropertyValuesHolder.PropertyValues();
-    long mSetPtr = 0;
+    hwui::PropertyValuesAnimatorSet* mSetPtr = nullptr;
     bool mContainsSequentialAnimators = false;
     bool mStarted = false;
     bool mInitialized = false;

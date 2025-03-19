@@ -1,0 +1,91 @@
+#ifndef __PROPERTY_VALUES_ANIMATORSET_H__
+#define __PROPERTY_VALUES_ANIMATORSET_H__
+#include <animation/interpolators.h>
+#include <animation/propertyvaluesholder.h>
+#include <animation/valueanimator.h>
+namespace cdroid {
+namespace hwui {
+class Tree;
+using  VectorDrawableRoot= Tree;
+class PropertyAnimator {
+public:
+    PropertyAnimator(PropertyValuesHolder* holder, Interpolator* interpolator, long startDelay,
+                     long duration, int repeatCount, int repeatMode);
+    void setCurrentPlayTime(int64_t playTime);
+    long getTotalDuration() { return mTotalDuration; }
+    // fraction range: [0, 1], iteration range [0, repeatCount]
+    void setFraction(float fraction, long iteration);
+
+private:
+    std::unique_ptr<PropertyValuesHolder> mPropertyValuesHolder;
+    std::unique_ptr<Interpolator> mInterpolator;
+    long mStartDelay;
+    long mDuration;
+    uint32_t mRepeatCount;
+    long mTotalDuration;
+    int mRepeatMode;
+    double mLatestFraction = 0;
+};
+
+// TODO: This class should really be named VectorDrawableAnimator
+class PropertyValuesAnimatorSet/* : public BaseRenderNodeAnimator */{
+private:
+    int64_t mStartTime;
+    long mDuration;
+    long mStartDelay;
+
+    float mLastFraction = 0.0f;
+    bool mInitialized = false;
+    Tree/*VectorDrawableRoot*/* mVectorDrawable;
+    bool mIsInfinite = false;
+    // This request id gets incremented (on UI thread only) when a new request to modfiy the
+    // lifecycle of an animation happens, namely when start/end/reset/reverse is called.
+    uint32_t mRequestId = 0;
+    std::vector<std::unique_ptr<PropertyAnimator> > mAnimators;
+private:
+    friend class PropertyAnimatorSetListener;
+    void init();
+public:
+    PropertyValuesAnimatorSet();
+    void setInterpolator(Interpolator* interpolator);
+    void setStartValue(float value);
+    void setDuration(long duration);
+    void setStartDelay(long startDelay);
+    //void start(const Animator::AnimationListener& listener);
+    //void reverse(const Animator::AnimationListener& listener);
+    virtual void reset();// override;
+    virtual void end();// override;
+
+    void addPropertyAnimator(PropertyValuesHolder* propertyValuesHolder,Interpolator* interpolators, 
+            long startDelays, long durations,int repeatCount, int repeatMode);
+    //virtual uint32_t dirtyMask();
+    bool isInfinite() { return mIsInfinite; }
+    void setVectorDrawable(VectorDrawableRoot* vd) { mVectorDrawable = vd; }
+    VectorDrawableRoot* getVectorDrawable() const { return mVectorDrawable; }
+    //AnimationListener* getOneShotListener() { return mOneShotListener; }
+    void clearOneShotListener() { /*mOneShotListener = nullptr;*/ }
+    uint32_t getRequestId() const { return mRequestId; }
+
+protected:
+    //virtual float getValue(RenderNode* target) const override;
+    //virtual void setValue(RenderNode* target, float value) override;
+    virtual void onPlayTimeChanged(int64_t playTime);// override;
+
+private:
+    //void onFinished(BaseRenderNodeAnimator* animator);
+    // Listener set from outside
+    //Animator::AnimationListener mOneShotListener;
+};
+
+/*class PropertyAnimatorSetListener : public Animator::AnimationListener {
+public:
+    explicit PropertyAnimatorSetListener(PropertyValuesAnimatorSet* set) : mSet(set) {}
+    virtual void onAnimationFinished(BaseRenderNodeAnimator* animator) override;
+
+private:
+    PropertyValuesAnimatorSet* mSet;
+};*/
+
+}  // namespace hwui
+}  // namespace cdroid
+#endif/*__PROPERTY_VALUES_ANIMATORSET_H__*/
