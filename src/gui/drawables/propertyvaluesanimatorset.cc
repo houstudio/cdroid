@@ -24,7 +24,7 @@ void PropertyValuesAnimatorSet::setStartDelay(long startDelay){
 }
 
 void PropertyValuesAnimatorSet::addPropertyAnimator(PropertyValuesHolder* propertyValuesHolder,
-        Interpolator* interpolator, long startDelay, long duration, int repeatCount,int repeatMode) {
+        TimeInterpolator* interpolator, long startDelay, long duration, int repeatCount,int repeatMode) {
     PropertyAnimator* animator = new PropertyAnimator(
             propertyValuesHolder, interpolator, startDelay, duration, repeatCount, repeatMode);
     mAnimators.emplace_back(animator);
@@ -117,8 +117,8 @@ void PropertyValuesAnimatorSet::init() {
     return RenderNode::DISPLAY_LIST;
 }*/
 
-PropertyAnimator::PropertyAnimator(PropertyValuesHolder* holder, Interpolator* interpolator,
-                                   long startDelay, long duration, int repeatCount,int repeatMode)
+PropertyAnimator::PropertyAnimator(PropertyValuesHolder* holder, TimeInterpolator* interpolator,
+                    long startDelay, long duration, int repeatCount,int repeatMode)
         : mPropertyValuesHolder(holder)
         , mInterpolator(interpolator)
         , mStartDelay(startDelay)

@@ -112,6 +112,7 @@ public:
 
 class AnimatedVectorDrawable::VectorDrawableAnimator {
 public:
+    virtual ~VectorDrawableAnimator()=default;
     virtual void init(AnimatorSet* set)=0;
 	virtual void start()=0;
 	virtual void end()=0;
@@ -141,6 +142,7 @@ private:
     void invalidateOwningView();
 public:
     VectorDrawableAnimatorUI(AnimatedVectorDrawable* drawable);
+    ~VectorDrawableAnimatorUI()override;
     void init(AnimatorSet* set)override;
     void start()override;
     void end()override;
@@ -196,7 +198,7 @@ private:
 
     static std::vector<float> createFloatDataPoints(PropertyValuesHolder::PropertyValues::DataSource dataSource, long duration);
     static std::vector<int> createIntDataPoints(PropertyValuesHolder::PropertyValues::DataSource dataSource, long duration);
-    void createNativeChildAnimator(long propertyPtr, long extraDelay,ObjectAnimator* animator);
+    void createNativeChildAnimator(PropertyValuesHolder* holder, long extraDelay,ObjectAnimator* animator);
     
     void handlePendingAction(int pendingAnimationAction);
     bool useLastSeenTarget();
@@ -217,6 +219,7 @@ protected:
     //void recordLastSeenTarget(DisplayListCanvas canvas);
 public:
     VectorDrawableAnimatorRT(AnimatedVectorDrawable* drawable);
+    ~VectorDrawableAnimatorRT()override;
     void init(AnimatorSet* set)override;
     void start()override;
     void end()override;

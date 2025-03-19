@@ -613,6 +613,11 @@ void AnimatedVectorDrawable::clearAnimationCallbacks() {
 // operation.
 AnimatedVectorDrawable::VectorDrawableAnimatorUI::VectorDrawableAnimatorUI(AnimatedVectorDrawable* drawable) {
     mDrawable = drawable;
+    mSet = nullptr;
+}
+
+AnimatedVectorDrawable::VectorDrawableAnimatorUI::~VectorDrawableAnimatorUI(){
+    delete mSet;
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::init(AnimatorSet* set) {
@@ -741,6 +746,10 @@ AnimatedVectorDrawable::VectorDrawableAnimatorRT::VectorDrawableAnimatorRT(Anima
     mSetRefBasePtr = (hwui::Tree*)mSetPtr;
 }
 
+AnimatedVectorDrawable::VectorDrawableAnimatorRT::~VectorDrawableAnimatorRT(){
+    delete mSetPtr;
+}
+
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::init(AnimatorSet* set) {
     if (mInitialized) {
         // Already initialized
@@ -831,12 +840,13 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForGroup(
             LOGE_IF(DBG_ANIMATION_VECTOR_DRAWABLE,"Unsupported property: for Vector Drawable Group",mTmpValues.propertyName.c_str());
             continue;
         }
-        long propertyPtr;//= nCreateGroupPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
+        //long propertyPtr = nCreateGroupPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
         Property*prop = target->getProperty(mTmpValues.propertyName);
-        propertyPtr = (long)PropertyValuesHolder::ofFloat(prop,{GET_VARIANT(mTmpValues.startValue,float),GET_VARIANT(mTmpValues.endValue,float)});
+        auto propertyPtr = PropertyValuesHolder::ofFloat(prop,{GET_VARIANT(mTmpValues.startValue,float),GET_VARIANT(mTmpValues.endValue,float)});
         if (mTmpValues.dataSource != nullptr) {
-            std::vector<float>dataPoints = createFloatDataPoints(mTmpValues.dataSource,animator->getDuration());
-            //TODO nSetPropertyHolderData(propertyPtr, dataPoints, dataPoints.size());
+            const std::vector<float>dataPoints = createFloatDataPoints(mTmpValues.dataSource,animator->getDuration());
+            //nSetPropertyHolderData(propertyPtr, dataPoints, dataPoints.size());
+            propertyPtr->setValues(dataPoints);
         }
         createNativeChildAnimator(propertyPtr, startTime, animator);
     }
@@ -849,15 +859,16 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForPath( 
     std::shared_ptr<PathParser::PathData>endPathData = GET_VARIANT(mTmpValues.endValue,std::shared_ptr<PathParser::PathData>);
     hwui::PathData* startPathDataPtr = (hwui::PathData*)startPathData->getNativePtr();
     hwui::PathData* endPathDataPtr = (hwui::PathData*)endPathData->getNativePtr();
-    long propertyPtr;// = nCreatePathDataPropertyHolder(nativePtr, startPathDataPtr,endPathDataPtr);/*PathMorph*/
-
+    //long propertyPtr = nCreatePathDataPropertyHolder(nativePtr, startPathDataPtr,endPathDataPtr);/*PathMorph*/
+    PropertyValuesHolder *propertyPtr=nullptr;
     createNativeChildAnimator(propertyPtr, startTime, animator);
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForFullPath(ObjectAnimator* animator,VectorDrawable::VFullPath* target, long startTime) {
 
     int propertyId = target->getPropertyIndex(mTmpValues.propertyName);
-    long propertyPtr;
+    Property*prop = target->getProperty(mTmpValues.propertyName);
+    PropertyValuesHolder* propertyPtr = nullptr;
     hwui::FullPath* nativePtr = (hwui::FullPath*)target->getNativePtr();//hwui::FullPath
     if (mTmpValues.type == PropertyValuesHolder::CLASS_FLOAT) {
         if (propertyId < 0) {
@@ -867,20 +878,23 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForFullPa
                 LOGE("Property: %s  is not supported for FullPath",mTmpValues.propertyName.c_str());
             }
         }
-        propertyPtr;// = nCreatePathPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
+        //propertyPtr = nCreatePathPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
+        propertyPtr = PropertyValuesHolder::ofFloat(prop,{GET_VARIANT(mTmpValues.startValue,float),GET_VARIANT(mTmpValues.endValue,float)});
         if (mTmpValues.dataSource != nullptr) {
             // Pass keyframe data to native, if any.
-            std::vector<float> dataPoints = createFloatDataPoints(mTmpValues.dataSource,animator->getDuration());
+            const std::vector<float> dataPoints = createFloatDataPoints(mTmpValues.dataSource,animator->getDuration());
             //nSetPropertyHolderData(propertyPtr, dataPoints, dataPoints.size());
+            propertyPtr->setValues(dataPoints);
         }
 
     } else if (mTmpValues.type == PropertyValuesHolder::CLASS_INT) {
-        propertyPtr;// = nCreatePathColorPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
-        propertyPtr = (long)PropertyValuesHolder::ofInt(nullptr,{(int)GET_VARIANT(mTmpValues.startValue,int32_t),GET_VARIANT(mTmpValues.endValue,int32_t)});
+        //propertyPtr = nCreatePathColorPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
+        propertyPtr = PropertyValuesHolder::ofInt(prop,{(int)GET_VARIANT(mTmpValues.startValue,int32_t),GET_VARIANT(mTmpValues.endValue,int32_t)});
         if (mTmpValues.dataSource != nullptr) {
             // Pass keyframe data to native, if any.
-            std::vector<int> dataPoints = createIntDataPoints(mTmpValues.dataSource,animator->getDuration());
+            const std::vector<int> dataPoints = createIntDataPoints(mTmpValues.dataSource,animator->getDuration());
             //nSetPropertyHolderData(propertyPtr, dataPoints, dataPoints.size());
+            propertyPtr->setValues(dataPoints);
         }
     } else {
         if (mDrawable->mAnimatedVectorState->mShouldIgnoreInvalidAnim) {
@@ -919,8 +933,8 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForRootGr
             throw std::logic_error("No alpha values are specified");
         }
     }
-    long propertyPtr;// = nCreateRootAlphaPropertyHolder(nativePtr, startValue, endValue);
-    propertyPtr = (long)PropertyValuesHolder::ofFloat(nullptr,{startValue,endValue});
+    //long propertyPtr = nCreateRootAlphaPropertyHolder(nativePtr, startValue, endValue);
+    PropertyValuesHolder*propertyPtr = PropertyValuesHolder::ofFloat(nullptr,{startValue,endValue});
     if (mTmpValues.dataSource != nullptr) {
         // Pass keyframe data to native, if any.
         std::vector<float> dataPoints = createFloatDataPoints(mTmpValues.dataSource,animator->getDuration());
@@ -975,18 +989,18 @@ std::vector<int> AnimatedVectorDrawable::VectorDrawableAnimatorRT::createIntData
     return values;
 }
 
-void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createNativeChildAnimator(long propertyPtr, long extraDelay,ObjectAnimator* animator) {
+void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createNativeChildAnimator(PropertyValuesHolder* holder, long extraDelay,ObjectAnimator* animator) {
     long duration = animator->getDuration();
-    int repeatCount = animator->getRepeatCount();
+    const int repeatCount = animator->getRepeatCount();
     long startDelay = extraDelay + animator->getStartDelay();
-    TimeInterpolator* interpolator = animator->getInterpolator();
-    long nativeInterpolator = 0;//RenderNodeAnimatorSetHelper.createNativeInterpolator(interpolator, duration);
+    auto interpolator = animator->getInterpolator();
 
     startDelay *= ValueAnimator::getDurationScale();
     duration *= ValueAnimator::getDurationScale();
 
     mStartDelays.push_back(startDelay);
     //nAddAnimator(mSetPtr, propertyPtr, nativeInterpolator, startDelay, duration,repeatCount, animator->getRepeatMode());
+    mSetPtr->addPropertyAnimator(holder, interpolator, startDelay, duration, repeatCount, animator->getRepeatMode());
 }
 
 /*void AnimatedVectorDrawable::VectorDrawableAnimatorRT::recordLastSeenTarget(DisplayListCanvas canvas) {

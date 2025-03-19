@@ -9,7 +9,7 @@ class Tree;
 using  VectorDrawableRoot= Tree;
 class PropertyAnimator {
 public:
-    PropertyAnimator(PropertyValuesHolder* holder, Interpolator* interpolator, long startDelay,
+    PropertyAnimator(PropertyValuesHolder* holder, TimeInterpolator* interpolator, long startDelay,
                      long duration, int repeatCount, int repeatMode);
     void setCurrentPlayTime(int64_t playTime);
     long getTotalDuration() { return mTotalDuration; }
@@ -18,7 +18,7 @@ public:
 
 private:
     std::unique_ptr<PropertyValuesHolder> mPropertyValuesHolder;
-    std::unique_ptr<Interpolator> mInterpolator;
+    std::unique_ptr<TimeInterpolator> mInterpolator;
     long mStartDelay;
     long mDuration;
     uint32_t mRepeatCount;
@@ -56,7 +56,7 @@ public:
     virtual void reset();// override;
     virtual void end();// override;
 
-    void addPropertyAnimator(PropertyValuesHolder* propertyValuesHolder,Interpolator* interpolators, 
+    void addPropertyAnimator(PropertyValuesHolder* propertyValuesHolder,TimeInterpolator* interpolators,
             long startDelays, long durations,int repeatCount, int repeatMode);
     //virtual uint32_t dirtyMask();
     bool isInfinite() { return mIsInfinite; }
