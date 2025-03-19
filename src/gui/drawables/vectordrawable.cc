@@ -782,7 +782,7 @@ const std::unordered_map<std::string, const std::shared_ptr<Property>> VectorDra
 };
 
 VectorDrawable::VGroup::VGroup() {
-    mIsStateful =false;
+    mIsStateful = false;
     //mNativePtr = nCreateGroup();
     mNativePtr = new hwui::Group();
 }

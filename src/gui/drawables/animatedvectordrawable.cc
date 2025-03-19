@@ -225,12 +225,15 @@ void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const st
         for (int i = 0; i < holders.size(); i++) {
             PropertyValuesHolder* pvh = holders[i];
             std::string propertyName = pvh->getPropertyName();
-            Object* targetNameObj = (Object*)vectorDrawable->getTargetByName(targetName);
+            void* targetNameObj = vectorDrawable->getTargetByName(targetName);
             Property* property = nullptr;
-            if (dynamic_cast<VectorDrawable::VObject*>(targetNameObj)) {
+            /*if (dynamic_cast<VectorDrawable::VObject*>(targetNameObj)) {
                 property = ((VectorDrawable::VObject*) targetNameObj)->getProperty(propertyName);
-            } else if (dynamic_cast<VectorDrawable::VectorDrawableState*>(targetNameObj)) {
+            }*/if (targetNameObj==vectorDrawable->getConstantState().get()){
+                //dynamic_cast<VectorDrawable::VectorDrawableState*>(targetNameObj)) {
                 property = ((VectorDrawable::VectorDrawableState*) targetNameObj)->getProperty(propertyName);
+            }else {//if (dynamic_cast<VectorDrawable::VObject*>(targetNameObj)){
+                property = ((VectorDrawable::VObject*) targetNameObj)->getProperty(propertyName);
             }
             if (property != nullptr) {
                 if (containsSameValueType(pvh, property)) {
@@ -353,7 +356,7 @@ AnimatedVectorDrawable::AnimatedVectorDrawableState::AnimatedVectorDrawableState
 
 bool AnimatedVectorDrawable::AnimatedVectorDrawableState::canApplyTheme() {
     return (mVectorDrawable != nullptr && mVectorDrawable->canApplyTheme())
-            || mPendingAnims.size()|| Drawable::canApplyTheme();
+            || mPendingAnims.size() ;//|| Drawable::canApplyTheme();
 }
 
 Drawable* AnimatedVectorDrawable::AnimatedVectorDrawableState::newDrawable() {
@@ -436,8 +439,8 @@ Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnima
     if (!mShouldIgnoreInvalidAnim) {
         if (target == nullptr) {
             LOGE("Target with the name %s cannot be found in the VectorDrawable to be animated.",targetName.c_str());
-        } else if (!(dynamic_cast<VectorDrawable::VectorDrawableState*>(target))
-                && !(dynamic_cast<VectorDrawable::VObject*>(target))) {
+        } else if ((target!= mVectorDrawable->getConstantState().get())//dynamic_cast<VectorDrawable::VectorDrawableState*>(target))
+                /*&& !(dynamic_cast<VectorDrawable::VObject*>(target))*/) {
             LOGE("Target should be either VGroup, VPath or ConstantState, is not supported");
         }
     }
@@ -793,21 +796,22 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::parseAnimatorSet(Animator
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimator(ObjectAnimator* animator, long startTime) {
     std::vector<PropertyValuesHolder*> values = animator->getValues();
     void* target = animator->getTarget();
-    if (dynamic_cast<VectorDrawable::VGroup*>(target)) {
+    VectorDrawable::VObject*targetObj=(VectorDrawable::VObject*)target;
+    if (target ==mDrawable->getConstantState().get()){
+        createRTAnimatorForRootGroup(values, animator,(VectorDrawable::VectorDrawableState*) target, startTime);
+    }else if(dynamic_cast<VectorDrawable::VGroup*>(targetObj)){//VGroup
         createRTAnimatorForGroup(values, animator, (VectorDrawable::VGroup*) target,startTime);
-    } else if (dynamic_cast<VectorDrawable::VPath*>(target)) {
+    }else if(dynamic_cast<VectorDrawable::VPath*>(targetObj)){
         for (int i = 0; i < values.size(); i++) {
             values[i]->getPropertyValues(mTmpValues);
             if (/*dynamic_cast<PathParser::PathData*>(mTmpValues.endValue) &&*/ mTmpValues.propertyName.compare("pathData")==0) {
                 createRTAnimatorForPath(animator, (VectorDrawable::VPath*) target,startTime);
-            }  else if (dynamic_cast<VectorDrawable::VFullPath*>(target)) {
+            }  else if (dynamic_cast<VectorDrawable::VFullPath*>(targetObj)){
                 createRTAnimatorForFullPath(animator, (VectorDrawable::VFullPath*) target,startTime);
             } else if (!mDrawable->mAnimatedVectorState->mShouldIgnoreInvalidAnim) {
                 throw std::logic_error("ClipPath only supports PathData property");
             }
         }
-    } else if (dynamic_cast<VectorDrawable::VectorDrawableState*>(target)) {
-        createRTAnimatorForRootGroup(values, animator,(VectorDrawable::VectorDrawableState*) target, startTime);
     }
 }
 
