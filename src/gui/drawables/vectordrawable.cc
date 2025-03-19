@@ -12,7 +12,6 @@ VectorDrawable::VectorDrawable()
     :VectorDrawable(std::make_shared<VectorDrawableState>(nullptr)){
 }
 
-
 VectorDrawable::VectorDrawable(std::shared_ptr<VectorDrawableState> state) {
     mMutated = false;
     mColorFilter= nullptr;
@@ -386,9 +385,9 @@ void VectorDrawable::updateStateFromTypedArray(const AttributeSet&atts){
     const std::string name = atts.getString("name");
     if (!name.empty()) {
         state->mRootName = name;
-        state->mRootGroup->mGroupName=name;
+        state->mRootGroup->mGroupName = name;
         LOGD("%p rootName=%s",state->mRootGroup,name.c_str());
-        //state->mVGTargetsMap.emplace(name, state.get());
+        state->mVGTargetsMap.emplace(name, state.get());
     }
 
 }
@@ -420,7 +419,7 @@ void VectorDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSe
                     state->mVGTargetsMap.emplace(path->getPathName(), path);
                 }
                 noPathTag = false;
-                //state->mChangingConfigurations |= path->mChangingConfigurations;
+                state->mChangingConfigurations |= path->mChangingConfigurations;
             } else if (tagName.compare(SHAPE_CLIP_PATH)==0) {
                 VClipPath* path = new VClipPath();
                 path->inflate(parser,event.attributes);
@@ -428,7 +427,7 @@ void VectorDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSe
                 if (!path->getPathName().empty()) {
                     state->mVGTargetsMap.emplace(path->getPathName(), path);
                 }
-                //state->mChangingConfigurations |= path->mChangingConfigurations;
+                state->mChangingConfigurations |= path->mChangingConfigurations;
             } else if (tagName.compare(SHAPE_GROUP)==0) {
                 VGroup* newChildGroup = new VGroup();
                 newChildGroup->inflate(parser,event.attributes);

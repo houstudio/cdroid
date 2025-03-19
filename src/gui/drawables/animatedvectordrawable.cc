@@ -1,4 +1,3 @@
-#if 10
 #include <core/systemclock.h>
 #include <animation/animatorinflater.h>
 #include <drawables/animatedvectordrawable.h>
@@ -1229,4 +1228,3 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::transferPendingActions(Ve
     mPendingAnimationActions.clear();
 }
 }/*endof namespace*/
-#endif

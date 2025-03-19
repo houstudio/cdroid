@@ -260,6 +260,8 @@ public:
 class VectorDrawable::VPath:public VectorDrawable::VObject {
 protected:
     friend VGroup;
+    friend VectorDrawable;
+    friend AnimatedVectorDrawable;
     PathParser::PathData* mPathData = nullptr;
     std::string mPathName;
     int mChangingConfigurations;
