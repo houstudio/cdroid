@@ -61,7 +61,7 @@ public:
     int getIntrinsicHeight();
     void getOutline(Outline& outline);
     Insets getOpticalInsets();
-    void inflate(Context*ctx,const std::string&resid);
+    void inflate(XmlPullParser&,const AttributeSet&)override;
     void forceAnimationOnUI();
     bool canApplyTheme();
     bool isRunning();

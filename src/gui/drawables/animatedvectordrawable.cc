@@ -165,14 +165,13 @@ Insets AnimatedVectorDrawable::getOpticalInsets() {
     return mAnimatedVectorState->mVectorDrawable->getOpticalInsets();
 }
 
-void AnimatedVectorDrawable::inflate(Context*ctx,const std::string&resid){
+void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&attrs){
     auto state = mAnimatedVectorState;
-    XmlPullParser parser(ctx,resid);
     XmlPullParser::XmlEvent event;
     int eventType;
     float pathErrorScale = 1;
     const int innerDepth = parser.getDepth();
-
+    Context*ctx = attrs.getContext();
     // Parse everything until the end of the animated-vector element.
     while ((eventType=parser.next(event)) != XmlPullParser::END_DOCUMENT
             && (parser.getDepth() >= innerDepth || eventType != XmlPullParser::END_TAG)) {
@@ -181,6 +180,7 @@ void AnimatedVectorDrawable::inflate(Context*ctx,const std::string&resid){
             auto& a = event.attributes;
             if (tagName.compare(ANIMATED_VECTOR)==0) {
                 std::string drawableRes = a.getString("drawable");
+                LOGD("drawable=%s",drawableRes.c_str());
                 if (!drawableRes.empty()) {
                     VectorDrawable* vectorDrawable = (VectorDrawable*) ctx->getDrawable(drawableRes)->mutate();
                     vectorDrawable->setAllowCaching(false);
@@ -194,6 +194,7 @@ void AnimatedVectorDrawable::inflate(Context*ctx,const std::string&resid){
             } else if (tagName.compare(TARGET)==0) {
                 std::string target = a.getString("name");
                 std::string animResId = a.getString("animation");
+                LOGD("target %s animation %s",target.c_str(),animResId.c_str());
                 if (!animResId.empty()) {
                     /*if (theme != null) {
                         // The animator here could be ObjectAnimator or AnimatorSet.
