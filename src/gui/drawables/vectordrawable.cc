@@ -490,12 +490,23 @@ void VectorDrawable::setAntiAlias(bool aa) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///static class VectorDrawableState extends ConstantState {
-
-Property* /*<VectorDrawableState, Float>*/ VectorDrawable::VectorDrawableState::ALPHA;
+namespace {
+class PROP_ALPHA:public Property{
+public:
+    PROP_ALPHA():Property("alpha") {}
+    void setValue(void*object,const AnimateValue& value) {
+        ((VectorDrawable::VectorDrawableState*)object)->setAlpha(GET_VARIANT(value,float));
+    }
+    AnimateValue get(void*object) {
+        return ((VectorDrawable::VectorDrawableState*)object)->getAlpha();
+    }
+};
+}
+const std::shared_ptr<Property> VectorDrawable::VectorDrawableState::ALPHA=std::make_shared<PROP_ALPHA>();
 
 Property* VectorDrawable::VectorDrawableState::getProperty(const std::string& propertyName) {
     if (ALPHA->getName().compare(propertyName)==0) {
-        return ALPHA;
+        return ALPHA.get();
     }
     return nullptr;
 }
@@ -1032,21 +1043,23 @@ void VectorDrawable::VGroup::setTranslateY(float translateY) {
 /**
  * Common Path information for clip path and normal path.
  *static abstract class VPath extends VObject*/
-/*class PATH_DATA:public Property{
+namespace {
+class PROP_PATH_DATA:public Property{
 public:
-    PATH_DATA():Property("pathData"){}
-    void set(void* object, PathParser::PathData data) {
-        ((VectorDrawable::VPath*)object)->setPathData(data);
+    PROP_PATH_DATA():Property("pathData"){}
+    void set(void* object,const AnimateValue& data) override{
+        //((VectorDrawable::VPath*)object)->setPathData(data);
     }
-    PathParser.PathData get(void* object) {
-        return ((VectorDrawable::VPath*)object)->getPathData();
+    AnimateValue get(void* object) override{
+        return 0;//((VectorDrawable::VPath*)object)->getPathData();
     }
-};*/
-Property* /*<VPath, PathParser.PathData>*/VectorDrawable::VPath::PATH_DATA;
+};
+}
+const std::shared_ptr<Property> VectorDrawable::VPath::PATH_DATA=std::make_shared<PROP_PATH_DATA>();
 
 Property* VectorDrawable::VPath::getProperty(const std::string& propertyName) {
     if (PATH_DATA->getName().compare(propertyName)==0) {
-        return PATH_DATA;
+        return PATH_DATA.get();
     }
     // property not found
     return nullptr;
