@@ -168,16 +168,15 @@ Insets AnimatedVectorDrawable::getOpticalInsets() {
 void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&attrs){
     auto state = mAnimatedVectorState;
     XmlPullParser::XmlEvent event;
-    int eventType;
+    int eventType=XmlPullParser::START_TAG;
     float pathErrorScale = 1;
+    AttributeSet a =attrs;
     const int innerDepth = parser.getDepth();
     Context*ctx = attrs.getContext();
     // Parse everything until the end of the animated-vector element.
-    while ((eventType=parser.next(event)) != XmlPullParser::END_DOCUMENT
-            && (parser.getDepth() >= innerDepth || eventType != XmlPullParser::END_TAG)) {
+    while ( (parser.getDepth() >= innerDepth || eventType != XmlPullParser::END_TAG)) {
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tagName = parser.getName();
-            auto& a = event.attributes;
             if (tagName.compare(ANIMATED_VECTOR)==0) {
                 std::string drawableRes = a.getString("drawable");
                 LOGD("drawable=%s",drawableRes.c_str());
@@ -194,7 +193,7 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
             } else if (tagName.compare(TARGET)==0) {
                 std::string target = a.getString("name");
                 std::string animResId = a.getString("animation");
-                LOGD("target %s animation %s",target.c_str(),animResId.c_str());
+                LOGD("%s -> %s",target.c_str(),animResId.c_str());
                 if (!animResId.empty()) {
                     /*if (theme != null) {
                         // The animator here could be ObjectAnimator or AnimatorSet.
@@ -211,6 +210,8 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
                 }
             }
         }
+        eventType =parser.next(event);
+        a = event.attributes;
     }
     // If we don't have any pending animations, we don't need to hold a
     // reference to the resources.
