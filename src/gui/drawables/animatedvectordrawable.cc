@@ -76,6 +76,7 @@ void AnimatedVectorDrawable::draw(Canvas& canvas) {
         }
     }
     mAnimatorSet->onDraw(canvas);
+    canvas.dump2png("animatedvector.png");
     mAnimatedVectorState->mVectorDrawable->draw(canvas);
 }
 
@@ -173,6 +174,7 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
     AttributeSet a =attrs;
     const int innerDepth = parser.getDepth();
     Context*ctx = attrs.getContext();
+    state->mContext = ctx;
     // Parse everything until the end of the animated-vector element.
     while ( (parser.getDepth() >= innerDepth || eventType != XmlPullParser::END_TAG)) {
         if (eventType == XmlPullParser::START_TAG) {
@@ -436,17 +438,17 @@ Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnima
     Animator* animator = mAnimators.at(index);
     Animator* localAnimator = animator->clone();
     auto it = mTargetNameMap.find(animator);
-    std::string targetName = it->second;;
+    std::string targetName = it->second;
     void* target = mVectorDrawable->getTargetByName(targetName);
     if (!mShouldIgnoreInvalidAnim) {
         if (target == nullptr) {
             LOGE("Target with the name %s cannot be found in the VectorDrawable to be animated.",targetName.c_str());
         } else if ((target!= mVectorDrawable->getConstantState().get())//dynamic_cast<VectorDrawable::VectorDrawableState*>(target))
-                /*&& !(dynamic_cast<VectorDrawable::VObject*>(target))*/) {
+                && false/*!(dynamic_cast<VectorDrawable::VObject*>(target))*/) {
             LOGE("Target should be either VGroup, VPath or ConstantState, is not supported");
         }
     }
-    localAnimator->setTarget(target);
+    localAnimator->setTarget(target,"VectorDrawable");
     return localAnimator;
 }
 
@@ -463,7 +465,7 @@ void AnimatedVectorDrawable::AnimatedVectorDrawableState::inflatePendingAnimator
 
         for (int i = 0, count = pendingAnims.size(); i < count; i++) {
             PendingAnimator* pendingAnimator = pendingAnims.at(i);
-            Animator* animator = pendingAnimator->newInstance(nullptr);
+            Animator* animator = pendingAnimator->newInstance(mContext);
             updateAnimatorProperty(animator, pendingAnimator->target, mVectorDrawable,mShouldIgnoreInvalidAnim);
             addTargetAnimator(pendingAnimator->target, animator);
         }

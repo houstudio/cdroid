@@ -68,9 +68,9 @@ public:
 
     void setEvaluator(TypeEvaluator evaluator);
     void setAnimatedValue(void*target);
-    void setupStartValue(void*target);
-    void setupEndValue(void*target);
-    void setupSetterAndGetter(void*target);
+    void setupStartValue(void*target,const std::string&targetClass);
+    void setupEndValue(void*target,const std::string&targetClass);
+    void setupSetterAndGetter(void*target,const std::string&targetClass);
 
     static PropertyValuesHolder*ofInt(const std::string&name,const std::vector<int>&);
     static PropertyValuesHolder*ofInt(Property*,const std::vector<int>&);

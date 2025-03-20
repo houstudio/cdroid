@@ -90,8 +90,9 @@ private:
         Animator* newInstance(Context*);
     };
     int mChangingConfigurations;
-    VectorDrawable* mVectorDrawable;
     bool mShouldIgnoreInvalidAnim;
+    Context*mContext;
+    VectorDrawable* mVectorDrawable;
     /** Animators that require a theme before inflation. */
     std::vector<PendingAnimator*> mPendingAnims;
     /** Fully inflated animators awaiting cloning into an AnimatorSet. */

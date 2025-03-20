@@ -20,7 +20,8 @@ public:
     virtual AnimateValue get(void* t);
     virtual void set(void* object,const AnimateValue& value);
     const std::string getName()const;
-    static Property*fromName(const std::string&);
+    static Property*fromName(const std::string&propertyName);
+    static Property*fromName(const std::string&className,const std::string&propertyName);
     static bool reigsterProperty(const std::string&name,Property*prop);
 };
 

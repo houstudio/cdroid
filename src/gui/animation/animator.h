@@ -76,7 +76,7 @@ public:
     std::shared_ptr<ConstantState<Animator*>> createConstantState();
     virtual void setupStartValues();
     virtual void setupEndValues();
-    virtual void setTarget(void*target);
+    virtual void setTarget(void*target,const std::string&targetClass);
     virtual bool canReverse();
     virtual void reverse();
     virtual void setAllowRunningAsynchronously(bool);

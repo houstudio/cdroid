@@ -493,27 +493,27 @@ AnimatedStateListDrawable::AnimatedVectorDrawableTransition::AnimatedVectorDrawa
 }
 
 bool AnimatedStateListDrawable::AnimatedVectorDrawableTransition::canReverse(){
-    return mHasReversibleFlag;// && mAvd->canReverse();
+    return mHasReversibleFlag && mAvd->canReverse();
 }
 
 void AnimatedStateListDrawable::AnimatedVectorDrawableTransition::start(){
     if (mReversed) {
         reverse();
     } else {
-        //mAvd->start();
+        mAvd->start();
     }
 }
 
 void AnimatedStateListDrawable::AnimatedVectorDrawableTransition::reverse(){
     if (canReverse()) {
-        //mAvd->reverse();
+        mAvd->reverse();
     } else {
         LOGW("Can't reverse, either the reversible is set to false, or the AnimatedVectorDrawable can't reverse");
     }
 }
 
 void AnimatedStateListDrawable::AnimatedVectorDrawableTransition::stop(){
-    //mAvd->stop();
+    mAvd->stop();
 }
 
 

@@ -69,22 +69,22 @@ void AdapterViewAnimator::configureViewAnimator(int numVisibleViews, int activeO
 
 void AdapterViewAnimator::transformViewForTransition(int fromIndex, int toIndex, View* view, bool animate) {
     if (fromIndex == -1) {
-        mInAnimation->setTarget(view);
+        mInAnimation->setTarget(view,"View");
         mInAnimation->start();
     } else if (toIndex == -1) {
-        mOutAnimation->setTarget(view);
+        mOutAnimation->setTarget(view,"View");
         mOutAnimation->start();
     }
 }
 
 ObjectAnimator* AdapterViewAnimator::getDefaultInAnimation() {
-    ObjectAnimator* anim = ObjectAnimator::ofFloat(nullptr, "alpha",{0.0f, 1.0f});
+    ObjectAnimator* anim = ObjectAnimator::ofFloat(nullptr,"View","alpha",{0.0f, 1.0f});
     anim->setDuration(DEFAULT_ANIMATION_DURATION);
     return anim;
 }
 
 ObjectAnimator* AdapterViewAnimator::getDefaultOutAnimation() {
-    ObjectAnimator* anim = ObjectAnimator::ofFloat(nullptr, "alpha",{1.0f, 0.0f});
+    ObjectAnimator* anim = ObjectAnimator::ofFloat(nullptr,"View", "alpha",{1.0f, 0.0f});
     anim->setDuration(DEFAULT_ANIMATION_DURATION);
     return anim;
 }

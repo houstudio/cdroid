@@ -19,7 +19,7 @@ StateListAnimator::StateListAnimator(){
 
 void StateListAnimator::initAnimatorListener(){
     mAnimatorListener.onAnimationEnd=[this](Animator& animation,bool){
-        animation.setTarget(nullptr);
+        animation.setTarget(nullptr,"");
         if (mRunningAnimator == &animation) {
             mRunningAnimator = nullptr;
         }
@@ -99,7 +99,7 @@ void StateListAnimator::setTarget(View* view) {
 void StateListAnimator::clearTarget() {
     const size_t size = mTuples.size();
     for (size_t i = 0; i < size; i++) {
-        mTuples.at(i)->mAnimator->setTarget(nullptr);
+        mTuples.at(i)->mAnimator->setTarget(nullptr,"");
     }
     mView = nullptr;
     mLastMatch = nullptr;
@@ -107,7 +107,7 @@ void StateListAnimator::clearTarget() {
 }
 
 void StateListAnimator::start(Tuple* match) {
-    match->mAnimator->setTarget(getTarget());
+    match->mAnimator->setTarget(getTarget(),"View");
     mRunningAnimator = match->mAnimator;
     mRunningAnimator->start();
 }
