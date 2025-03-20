@@ -7,6 +7,7 @@
 #include <core/sparsearray.h>
 namespace cdroid{
 
+class AnimatedVectorDrawable;
 class AnimatedStateListDrawable:public StateListDrawable{
 private:
     static constexpr const char* ELEMENT_TRANSITION = "transition";
@@ -18,7 +19,6 @@ protected:
     class AnimatableTransition;
     class AnimationDrawableTransition;
     class AnimatedVectorDrawableTransition;
-    typedef Drawable AnimatedVectorDrawable;
 private:
     std::shared_ptr<AnimatedStateListState> mState;
     /** The currently running transition, if any. */

@@ -151,7 +151,7 @@ protected:
     int mLastSWCachePixelCount = 0;
     int mLastHWCachePixelCount = 0;
 
-    static Property* /*<VectorDrawableState, float>*/ ALPHA;
+    static const std::shared_ptr<Property> ALPHA;
     // This tracks the total native allocation for all the nodes.
 private:
     void createNativeTree(VGroup* rootGroup);
@@ -260,10 +260,12 @@ public:
 class VectorDrawable::VPath:public VectorDrawable::VObject {
 protected:
     friend VGroup;
+    friend VectorDrawable;
+    friend AnimatedVectorDrawable;
     PathParser::PathData* mPathData = nullptr;
     std::string mPathName;
     int mChangingConfigurations;
-    static Property* /*<VPath*, PathData*>*/ PATH_DATA;
+    static const std::shared_ptr<Property> PATH_DATA;
 public:
     VPath();
     VPath(const VPath* copy);

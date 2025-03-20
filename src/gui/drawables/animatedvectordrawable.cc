@@ -1,7 +1,7 @@
-#if 0
 #include <core/systemclock.h>
 #include <animation/animatorinflater.h>
 #include <drawables/animatedvectordrawable.h>
+#include <drawables/propertyvaluesanimatorset.h>
 namespace cdroid{
 
 AnimatedVectorDrawable::AnimatedVectorDrawable()
@@ -165,22 +165,21 @@ Insets AnimatedVectorDrawable::getOpticalInsets() {
     return mAnimatedVectorState->mVectorDrawable->getOpticalInsets();
 }
 
-void AnimatedVectorDrawable::inflate(Context*ctx,const std::string&resid){
+void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&attrs){
     auto state = mAnimatedVectorState;
-    XmlPullParser parser(ctx,resid);
     XmlPullParser::XmlEvent event;
-    int eventType;
+    int eventType=XmlPullParser::START_TAG;
     float pathErrorScale = 1;
+    AttributeSet a =attrs;
     const int innerDepth = parser.getDepth();
-
+    Context*ctx = attrs.getContext();
     // Parse everything until the end of the animated-vector element.
-    while ((eventType=parser.next(event)) != XmlPullParser::END_DOCUMENT
-            && (parser.getDepth() >= innerDepth || eventType != XmlPullParser::END_TAG)) {
+    while ( (parser.getDepth() >= innerDepth || eventType != XmlPullParser::END_TAG)) {
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tagName = parser.getName();
-            auto& a = event.attributes;
             if (tagName.compare(ANIMATED_VECTOR)==0) {
                 std::string drawableRes = a.getString("drawable");
+                LOGD("drawable=%s",drawableRes.c_str());
                 if (!drawableRes.empty()) {
                     VectorDrawable* vectorDrawable = (VectorDrawable*) ctx->getDrawable(drawableRes)->mutate();
                     vectorDrawable->setAllowCaching(false);
@@ -194,6 +193,7 @@ void AnimatedVectorDrawable::inflate(Context*ctx,const std::string&resid){
             } else if (tagName.compare(TARGET)==0) {
                 std::string target = a.getString("name");
                 std::string animResId = a.getString("animation");
+                LOGD("%s -> %s",target.c_str(),animResId.c_str());
                 if (!animResId.empty()) {
                     /*if (theme != null) {
                         // The animator here could be ObjectAnimator or AnimatorSet.
@@ -210,6 +210,8 @@ void AnimatedVectorDrawable::inflate(Context*ctx,const std::string&resid){
                 }
             }
         }
+        eventType =parser.next(event);
+        a = event.attributes;
     }
     // If we don't have any pending animations, we don't need to hold a
     // reference to the resources.
@@ -225,12 +227,15 @@ void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const st
         for (int i = 0; i < holders.size(); i++) {
             PropertyValuesHolder* pvh = holders[i];
             std::string propertyName = pvh->getPropertyName();
-            Object* targetNameObj = (Object*)vectorDrawable->getTargetByName(targetName);
+            void* targetNameObj = vectorDrawable->getTargetByName(targetName);
             Property* property = nullptr;
-            if (dynamic_cast<VectorDrawable::VObject*>(targetNameObj)) {
+            /*if (dynamic_cast<VectorDrawable::VObject*>(targetNameObj)) {
                 property = ((VectorDrawable::VObject*) targetNameObj)->getProperty(propertyName);
-            } else if (dynamic_cast<VectorDrawable::VectorDrawableState*>(targetNameObj)) {
+            }*/if (targetNameObj==vectorDrawable->getConstantState().get()){
+                //dynamic_cast<VectorDrawable::VectorDrawableState*>(targetNameObj)) {
                 property = ((VectorDrawable::VectorDrawableState*) targetNameObj)->getProperty(propertyName);
+            }else {//if (dynamic_cast<VectorDrawable::VObject*>(targetNameObj)){
+                property = ((VectorDrawable::VObject*) targetNameObj)->getProperty(propertyName);
             }
             if (property != nullptr) {
                 if (containsSameValueType(pvh, property)) {
@@ -252,7 +257,7 @@ void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const st
 
 bool AnimatedVectorDrawable::containsSameValueType(const PropertyValuesHolder* holder,const Property* property) {
     const int type1 = holder->getValueType();
-    const int type2 = property->getType();
+    const int type2 = 0;//property->getType();
     if (type1 == PropertyValuesHolder::CLASS_FLOAT) {
         return type2 == PropertyValuesHolder::CLASS_FLOAT;
     } else if (type1 == PropertyValuesHolder::CLASS_INT) {
@@ -353,7 +358,7 @@ AnimatedVectorDrawable::AnimatedVectorDrawableState::AnimatedVectorDrawableState
 
 bool AnimatedVectorDrawable::AnimatedVectorDrawableState::canApplyTheme() {
     return (mVectorDrawable != nullptr && mVectorDrawable->canApplyTheme())
-            || mPendingAnims.size()|| Drawable::canApplyTheme();
+            || mPendingAnims.size() ;//|| Drawable::canApplyTheme();
 }
 
 Drawable* AnimatedVectorDrawable::AnimatedVectorDrawableState::newDrawable() {
@@ -436,8 +441,8 @@ Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnima
     if (!mShouldIgnoreInvalidAnim) {
         if (target == nullptr) {
             LOGE("Target with the name %s cannot be found in the VectorDrawable to be animated.",targetName.c_str());
-        } else if (!(dynamic_cast<VectorDrawable::VectorDrawableState*>(target))
-                && !(dynamic_cast<VectorDrawable::VObject*>(target))) {
+        } else if ((target!= mVectorDrawable->getConstantState().get())//dynamic_cast<VectorDrawable::VectorDrawableState*>(target))
+                /*&& !(dynamic_cast<VectorDrawable::VObject*>(target))*/) {
             LOGE("Target should be either VGroup, VPath or ConstantState, is not supported");
         }
     }
@@ -543,7 +548,7 @@ bool AnimatedVectorDrawable::canReverse() {
 }
 
 void AnimatedVectorDrawable::registerAnimationCallback(const Animatable2::AnimationCallback& callback) {
-    if (callback.onAnimationStart == nullptr&&callback.onAnimationEnd==nullptr) {
+    if ((callback.onAnimationStart == nullptr)&&(callback.onAnimationEnd==nullptr)) {
         return;
     }
 
@@ -581,7 +586,7 @@ void AnimatedVectorDrawable::removeAnimatorSetListener() {
 }
 
 bool AnimatedVectorDrawable::unregisterAnimationCallback(const Animatable2::AnimationCallback& callback) {
-    if (mAnimationCallbacks.empty() || callback.onAnimationStart == nullptr||callback.onAnimationEnd==nullptr) {
+    if (mAnimationCallbacks.empty() ||((callback.onAnimationStart == nullptr)&&(callback.onAnimationEnd==nullptr))) {
         // Nothing to be removed.
         return false;
     }
@@ -610,6 +615,11 @@ void AnimatedVectorDrawable::clearAnimationCallbacks() {
 // operation.
 AnimatedVectorDrawable::VectorDrawableAnimatorUI::VectorDrawableAnimatorUI(AnimatedVectorDrawable* drawable) {
     mDrawable = drawable;
+    mSet = nullptr;
+}
+
+AnimatedVectorDrawable::VectorDrawableAnimatorUI::~VectorDrawableAnimatorUI(){
+    delete mSet;
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::init(AnimatorSet* set) {
@@ -628,7 +638,6 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::init(AnimatorSet* set) {
             mSet->addListener(mListenerArray.at(i));
         }
         mListenerArray.clear();
-        //mListenerArray = null;
     }
 }
 
@@ -693,17 +702,17 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::removeListener(const Anim
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::onDraw(Canvas& canvas) {
-    if (mSet != nullptr && mSet->isStarted()) {
+    if ((mSet != nullptr) && mSet->isStarted()) {
         invalidateOwningView();
     }
 }
 
 bool AnimatedVectorDrawable::VectorDrawableAnimatorUI::isStarted() {
-    return mSet != nullptr && mSet->isStarted();
+    return (mSet != nullptr) && mSet->isStarted();
 }
 
 bool AnimatedVectorDrawable::VectorDrawableAnimatorUI::isRunning() {
-    return mSet != nullptr && mSet->isRunning();
+    return (mSet != nullptr) && mSet->isRunning();
 }
 
 bool AnimatedVectorDrawable::VectorDrawableAnimatorUI::isInfinite() {
@@ -733,10 +742,14 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::invalidateOwningView() {
 
 AnimatedVectorDrawable::VectorDrawableAnimatorRT::VectorDrawableAnimatorRT(AnimatedVectorDrawable* drawable) {
     mDrawable = drawable;
-    mSetPtr = nCreateAnimatorSet();//PropertyValuesAnimatorSet();
+    mSetPtr = new hwui::PropertyValuesAnimatorSet();//nCreateAnimatorSet();//PropertyValuesAnimatorSet();
     // Increment ref count on native AnimatorSet, so it doesn't get released before Java
     // side is done using it.
     mSetRefBasePtr = (hwui::Tree*)mSetPtr;
+}
+
+AnimatedVectorDrawable::VectorDrawableAnimatorRT::~VectorDrawableAnimatorRT(){
+    delete mSetPtr;
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::init(AnimatorSet* set) {
@@ -768,7 +781,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::init(AnimatorSet* set) {
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::parseAnimatorSet(AnimatorSet* set, long startTime) {
     auto animators = set->getChildAnimations();
 
-    bool playTogether = set->shouldPlayTogether();
+    const bool playTogether = set->shouldPlayTogether();
     // Convert AnimatorSet to VectorDrawableAnimatorRT
     for (int i = 0; i < animators.size(); i++) {
         Animator* animator = animators.at(i);
@@ -793,21 +806,22 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::parseAnimatorSet(Animator
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimator(ObjectAnimator* animator, long startTime) {
     std::vector<PropertyValuesHolder*> values = animator->getValues();
     void* target = animator->getTarget();
-    if (dynamic_cast<VectorDrawable::VGroup*>(target)) {
+    VectorDrawable::VObject*targetObj=(VectorDrawable::VObject*)target;
+    if (target ==mDrawable->getConstantState().get()){
+        createRTAnimatorForRootGroup(values, animator,(VectorDrawable::VectorDrawableState*) target, startTime);
+    }else if(dynamic_cast<VectorDrawable::VGroup*>(targetObj)){//VGroup
         createRTAnimatorForGroup(values, animator, (VectorDrawable::VGroup*) target,startTime);
-    } else if (dynamic_cast<VectorDrawable::VPath*>(target)) {
+    }else if(dynamic_cast<VectorDrawable::VPath*>(targetObj)){
         for (int i = 0; i < values.size(); i++) {
             values[i]->getPropertyValues(mTmpValues);
             if (/*dynamic_cast<PathParser::PathData*>(mTmpValues.endValue) &&*/ mTmpValues.propertyName.compare("pathData")==0) {
                 createRTAnimatorForPath(animator, (VectorDrawable::VPath*) target,startTime);
-            }  else if (dynamic_cast<VectorDrawable::VFullPath*>(target)) {
+            }  else if (dynamic_cast<VectorDrawable::VFullPath*>(targetObj)){
                 createRTAnimatorForFullPath(animator, (VectorDrawable::VFullPath*) target,startTime);
             } else if (!mDrawable->mAnimatedVectorState->mShouldIgnoreInvalidAnim) {
                 throw std::logic_error("ClipPath only supports PathData property");
             }
         }
-    } else if (dynamic_cast<VectorDrawable::VectorDrawableState*>(target)) {
-        createRTAnimatorForRootGroup(values, animator,(VectorDrawable::VectorDrawableState*) target, startTime);
     }
 }
 
@@ -828,10 +842,13 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForGroup(
             LOGE_IF(DBG_ANIMATION_VECTOR_DRAWABLE,"Unsupported property: for Vector Drawable Group",mTmpValues.propertyName.c_str());
             continue;
         }
-        long propertyPtr = nCreateGroupPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
+        //long propertyPtr = nCreateGroupPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
+        Property*prop = target->getProperty(mTmpValues.propertyName);
+        auto propertyPtr = PropertyValuesHolder::ofFloat(prop,{GET_VARIANT(mTmpValues.startValue,float),GET_VARIANT(mTmpValues.endValue,float)});
         if (mTmpValues.dataSource != nullptr) {
-            std::vector<float>dataPoints = createFloatDataPoints(mTmpValues.dataSource,animator->getDuration());
-            //TODO nSetPropertyHolderData(propertyPtr, dataPoints, dataPoints.size());
+            const std::vector<float>dataPoints = createFloatDataPoints(mTmpValues.dataSource,animator->getDuration());
+            //nSetPropertyHolderData(propertyPtr, dataPoints, dataPoints.size());
+            propertyPtr->setValues(dataPoints);
         }
         createNativeChildAnimator(propertyPtr, startTime, animator);
     }
@@ -844,14 +861,16 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForPath( 
     std::shared_ptr<PathParser::PathData>endPathData = GET_VARIANT(mTmpValues.endValue,std::shared_ptr<PathParser::PathData>);
     hwui::PathData* startPathDataPtr = (hwui::PathData*)startPathData->getNativePtr();
     hwui::PathData* endPathDataPtr = (hwui::PathData*)endPathData->getNativePtr();
-    long propertyPtr = nCreatePathDataPropertyHolder(nativePtr, startPathDataPtr,endPathDataPtr);/*PathMorph*/
+    //long propertyPtr = nCreatePathDataPropertyHolder(nativePtr, startPathDataPtr,endPathDataPtr);/*PathMorph*/
+    PropertyValuesHolder *propertyPtr=nullptr;
     createNativeChildAnimator(propertyPtr, startTime, animator);
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForFullPath(ObjectAnimator* animator,VectorDrawable::VFullPath* target, long startTime) {
 
     int propertyId = target->getPropertyIndex(mTmpValues.propertyName);
-    long propertyPtr;
+    Property*prop = target->getProperty(mTmpValues.propertyName);
+    PropertyValuesHolder* propertyPtr = nullptr;
     hwui::FullPath* nativePtr = (hwui::FullPath*)target->getNativePtr();//hwui::FullPath
     if (mTmpValues.type == PropertyValuesHolder::CLASS_FLOAT) {
         if (propertyId < 0) {
@@ -861,19 +880,23 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForFullPa
                 LOGE("Property: %s  is not supported for FullPath",mTmpValues.propertyName.c_str());
             }
         }
-        propertyPtr = nCreatePathPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
+        //propertyPtr = nCreatePathPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
+        propertyPtr = PropertyValuesHolder::ofFloat(prop,{GET_VARIANT(mTmpValues.startValue,float),GET_VARIANT(mTmpValues.endValue,float)});
         if (mTmpValues.dataSource != nullptr) {
             // Pass keyframe data to native, if any.
-            std::vector<float> dataPoints = createFloatDataPoints(mTmpValues.dataSource,animator->getDuration());
+            const std::vector<float> dataPoints = createFloatDataPoints(mTmpValues.dataSource,animator->getDuration());
             //nSetPropertyHolderData(propertyPtr, dataPoints, dataPoints.size());
+            propertyPtr->setValues(dataPoints);
         }
 
     } else if (mTmpValues.type == PropertyValuesHolder::CLASS_INT) {
-        propertyPtr = nCreatePathColorPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
+        //propertyPtr = nCreatePathColorPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
+        propertyPtr = PropertyValuesHolder::ofInt(prop,{(int)GET_VARIANT(mTmpValues.startValue,int32_t),GET_VARIANT(mTmpValues.endValue,int32_t)});
         if (mTmpValues.dataSource != nullptr) {
             // Pass keyframe data to native, if any.
-            std::vector<int> dataPoints = createIntDataPoints(mTmpValues.dataSource,animator->getDuration());
+            const std::vector<int> dataPoints = createIntDataPoints(mTmpValues.dataSource,animator->getDuration());
             //nSetPropertyHolderData(propertyPtr, dataPoints, dataPoints.size());
+            propertyPtr->setValues(dataPoints);
         }
     } else {
         if (mDrawable->mAnimatedVectorState->mShouldIgnoreInvalidAnim) {
@@ -912,11 +935,12 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForRootGr
             throw std::logic_error("No alpha values are specified");
         }
     }
-    long propertyPtr = nCreateRootAlphaPropertyHolder(nativePtr, startValue, endValue);
+    //long propertyPtr = nCreateRootAlphaPropertyHolder(nativePtr, startValue, endValue);
+    PropertyValuesHolder*propertyPtr = PropertyValuesHolder::ofFloat(nullptr,{startValue,endValue});
     if (mTmpValues.dataSource != nullptr) {
         // Pass keyframe data to native, if any.
         std::vector<float> dataPoints = createFloatDataPoints(mTmpValues.dataSource,animator->getDuration());
-        nSetPropertyHolderData(propertyPtr, dataPoints, dataPoints.size());
+        //nSetPropertyHolderData(propertyPtr, dataPoints, dataPoints.size());
     }
     createNativeChildAnimator(propertyPtr, startTime, animator);
 }
@@ -967,18 +991,18 @@ std::vector<int> AnimatedVectorDrawable::VectorDrawableAnimatorRT::createIntData
     return values;
 }
 
-void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createNativeChildAnimator(long propertyPtr, long extraDelay,ObjectAnimator* animator) {
+void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createNativeChildAnimator(PropertyValuesHolder* holder, long extraDelay,ObjectAnimator* animator) {
     long duration = animator->getDuration();
-    int repeatCount = animator->getRepeatCount();
+    const int repeatCount = animator->getRepeatCount();
     long startDelay = extraDelay + animator->getStartDelay();
-    TimeInterpolator* interpolator = animator->getInterpolator();
-    long nativeInterpolator = 0;//RenderNodeAnimatorSetHelper.createNativeInterpolator(interpolator, duration);
+    auto interpolator = animator->getInterpolator();
 
     startDelay *= ValueAnimator::getDurationScale();
     duration *= ValueAnimator::getDurationScale();
 
     mStartDelays.push_back(startDelay);
     //nAddAnimator(mSetPtr, propertyPtr, nativeInterpolator, startDelay, duration,repeatCount, animator->getRepeatMode());
+    mSetPtr->addPropertyAnimator(holder, interpolator, startDelay, duration, repeatCount, animator->getRepeatMode());
 }
 
 /*void AnimatedVectorDrawable::VectorDrawableAnimatorRT::recordLastSeenTarget(DisplayListCanvas canvas) {
@@ -1137,7 +1161,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::reverseAnimation() {
 }
 
 long AnimatedVectorDrawable::VectorDrawableAnimatorRT::getAnimatorNativePtr() {
-    return mSetPtr;
+    return (long)mSetPtr;
 }
 
 bool AnimatedVectorDrawable::VectorDrawableAnimatorRT::canReverse() {
@@ -1220,4 +1244,3 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::transferPendingActions(Ve
     mPendingAnimationActions.clear();
 }
 }/*endof namespace*/
-#endif

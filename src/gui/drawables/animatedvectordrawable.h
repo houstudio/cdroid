@@ -3,6 +3,9 @@
 #include <drawables/vectordrawable.h>
 #include <animation/objectanimator.h>
 namespace cdroid{
+namespace hwui{
+    class PropertyValuesAnimatorSet;
+};
 class AnimatedVectorDrawable: public Drawable{// implements Animatable2 {
 public:
     class AnimatedVectorDrawableState;
@@ -58,7 +61,7 @@ public:
     int getIntrinsicHeight();
     void getOutline(Outline& outline);
     Insets getOpticalInsets();
-    void inflate(Context*ctx,const std::string&resid);
+    void inflate(XmlPullParser&,const AttributeSet&)override;
     void forceAnimationOnUI();
     bool canApplyTheme();
     bool isRunning();
@@ -109,6 +112,7 @@ public:
 
 class AnimatedVectorDrawable::VectorDrawableAnimator {
 public:
+    virtual ~VectorDrawableAnimator()=default;
     virtual void init(AnimatorSet* set)=0;
 	virtual void start()=0;
 	virtual void end()=0;
@@ -138,6 +142,7 @@ private:
     void invalidateOwningView();
 public:
     VectorDrawableAnimatorUI(AnimatedVectorDrawable* drawable);
+    ~VectorDrawableAnimatorUI()override;
     void init(AnimatorSet* set)override;
     void start()override;
     void end()override;
@@ -168,7 +173,7 @@ private:
     Animator::AnimatorListener mListener;
     std::vector<long> mStartDelays;
     PropertyValuesHolder::PropertyValues mTmpValues;// =  new PropertyValuesHolder.PropertyValues();
-    long mSetPtr = 0;
+    hwui::PropertyValuesAnimatorSet* mSetPtr = nullptr;
     bool mContainsSequentialAnimators = false;
     bool mStarted = false;
     bool mInitialized = false;
@@ -193,7 +198,7 @@ private:
 
     static std::vector<float> createFloatDataPoints(PropertyValuesHolder::PropertyValues::DataSource dataSource, long duration);
     static std::vector<int> createIntDataPoints(PropertyValuesHolder::PropertyValues::DataSource dataSource, long duration);
-    void createNativeChildAnimator(long propertyPtr, long extraDelay,ObjectAnimator* animator);
+    void createNativeChildAnimator(PropertyValuesHolder* holder, long extraDelay,ObjectAnimator* animator);
     
     void handlePendingAction(int pendingAnimationAction);
     bool useLastSeenTarget();
@@ -214,6 +219,7 @@ protected:
     //void recordLastSeenTarget(DisplayListCanvas canvas);
 public:
     VectorDrawableAnimatorRT(AnimatedVectorDrawable* drawable);
+    ~VectorDrawableAnimatorRT()override;
     void init(AnimatorSet* set)override;
     void start()override;
     void end()override;

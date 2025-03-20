@@ -1,5 +1,3 @@
-#include <drawables/drawableinflater.h>
-#include <drawables/vectordrawable.h>
 #include <drawables.h>
 namespace cdroid{
 /**
@@ -50,7 +48,7 @@ static const std::unordered_map<std::string,std::function<Drawable*()>>drawableP
     {"animated-rotate", [](){return new AnimatedRotateDrawable();}},
     {"animation-list" , [](){return new AnimationDrawable();}},
     {"animated-image" , [](){return new AnimatedImageDrawable();}},
-    //{"animated-vector", [](){return new AnimatedVectorDrawable();}},
+    {"animated-vector", [](){return new AnimatedVectorDrawable();}},
     {"animated-selector", [](){return new AnimatedStateListDrawable();}},
     {"selector" , [](){return new StateListDrawable();}},
     {"level-list",[](){return new LevelListDrawable();}},

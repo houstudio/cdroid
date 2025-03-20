@@ -1,6 +1,7 @@
 #include <drawables/animatedstatelistdrawable.h>
 #include <drawables/animatedrotatedrawable.h>
 #include <drawables/animatedimagedrawable.h>
+#include <drawables/animatedvectordrawable.h>
 #include <cdlog.h>
 
 namespace cdroid{
