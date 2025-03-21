@@ -55,9 +55,14 @@ ValueAnimator::ValueAnimator(const ValueAnimator&o){
     mOverallFraction = 0;
     mCurrentFraction = 0;
     mSelfPulse = true;
-    mDuration  = o.mDuration;
     mSuppressSelfPulseRequested = false;
     mInterpolator = sDefaultInterpolator;
+    mDuration   = o.mDuration;
+    mReversing  = o.mReversing;
+    mRepeatMode = o.mRepeatMode;
+    mRepeatCount= o.mRepeatCount;
+    mStartDelay = o.mStartDelay;
+    mDurationScale = o.mDurationScale;
     auto& oldValues = o.mValues;
     if (oldValues.size()) {
         const int numValues = (int)oldValues.size();

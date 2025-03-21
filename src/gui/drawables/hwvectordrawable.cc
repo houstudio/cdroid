@@ -153,7 +153,7 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
         outCanvas.set_line_width(properties.getStrokeWidth());//paint.setStrokeWidth(properties.getStrokeWidth());
         outCanvas.stroke();//drawPath(renderPath, paint);
     }
-    if(!mName.empty())outCanvas.dump2png(mName+".png");
+    //if(!mName.empty())outCanvas.dump2png(mName+".png");
 }
 
 void FullPath::syncProperties() {

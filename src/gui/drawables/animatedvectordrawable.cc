@@ -84,7 +84,6 @@ void AnimatedVectorDrawable::draw(Canvas& canvas) {
         }
     }
     mAnimatorSet->onDraw(canvas);
-    canvas.dump2png("animatedvector.png");
     mAnimatedVectorState->mVectorDrawable->draw(canvas);
 }
 
