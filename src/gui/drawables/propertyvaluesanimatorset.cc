@@ -1,12 +1,12 @@
 #include <drawables/propertyvaluesanimatorset.h>
-
 #include <algorithm>
-
+#ifdef ENABLE_VECTOR_RENDER_THREAD
 namespace cdroid {
 namespace hwui {
 
 PropertyValuesAnimatorSet::PropertyValuesAnimatorSet()/* : BaseRenderNodeAnimator(1.0f) */{
     setStartValue(0);
+    mStartDelay =0;
     mLastFraction = 0.0f;
     setInterpolator(new LinearInterpolator());
     //setListener(new PropertyAnimatorSetListener(this));
@@ -148,6 +148,7 @@ void PropertyAnimator::setCurrentPlayTime(int64_t playTime) {
         iteration = (playTime - mStartDelay) / mDuration;
         currentIterationFraction = ((playTime - mStartDelay) % mDuration) / (float)mDuration;
     }
+    LOGD("currentIterationFraction=%.3f",currentIterationFraction);
     setFraction(currentIterationFraction, iteration);
 }
 
@@ -175,3 +176,4 @@ void PropertyAnimator::setFraction(float fraction, long iteration) {
 }*/
 }
 }
+#endif/*ENABLE_VECTOR_RENDER_THREAD*/

@@ -163,7 +163,8 @@ public:
     void pause()override;
     void resume()override;
 };
-
+#ifdef ENABLE_VECTOR_RENDER_THREAD
+//It is now unusable in cdroid disable it 
 class AnimatedVectorDrawable::VectorDrawableAnimatorRT:public VectorDrawableAnimator {
 private:
     static constexpr int START_ANIMATION = 1;
@@ -239,5 +240,6 @@ public:
     void pause()override;
     void resume()override;
 };
+#endif
 }/*endof namespace*/
 #endif/*__ANIMATED_VECTOR_DRAWABLE_H__*/

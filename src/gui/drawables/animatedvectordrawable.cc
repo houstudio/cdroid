@@ -1,7 +1,9 @@
 #include <core/systemclock.h>
 #include <animation/animatorinflater.h>
 #include <drawables/animatedvectordrawable.h>
+#ifdef ENABLE_VECTOR_RENDER_THREAD
 #include <drawables/propertyvaluesanimatorset.h>
+#endif
 namespace cdroid{
 
 AnimatedVectorDrawable::AnimatedVectorDrawable()
@@ -28,7 +30,8 @@ AnimatedVectorDrawable::AnimatedVectorDrawable(std::shared_ptr<AnimatedVectorDra
     mMutated = false;
     mAnimatorSetFromXml = nullptr;
     mAnimatedVectorState = std::make_shared<AnimatedVectorDrawableState>(state, mCallback);
-    mAnimatorSet = new VectorDrawableAnimatorRT(this);
+    mAnimatorSet = new VectorDrawableAnimatorUI(this);
+    //mAnimatorSet = new VectorDrawableAnimatorRT(this);
     mCallback = new MyCallback(this);
 }
 
@@ -75,6 +78,7 @@ int AnimatedVectorDrawable::getChangingConfigurations() const{
 }
 
 void AnimatedVectorDrawable::draw(Canvas& canvas) {
+#ifdef ENABLE_VECTOR_RENDER_THREAD
     if (/*!canvas.isHardwareAccelerated() &&*/ dynamic_cast<VectorDrawableAnimatorRT*>(mAnimatorSet)) {
         // If we have SW canvas and the RT animation is waiting to start, We need to fallback
         // to UI thread animation for AVD.
@@ -83,6 +87,7 @@ void AnimatedVectorDrawable::draw(Canvas& canvas) {
             fallbackOntoUI();
         }
     }
+#endif
     mAnimatorSet->onDraw(canvas);
     mAnimatedVectorState->mVectorDrawable->draw(canvas);
 }
@@ -277,6 +282,7 @@ bool AnimatedVectorDrawable::containsSameValueType(const PropertyValuesHolder* h
 }
 
 void AnimatedVectorDrawable::forceAnimationOnUI() {
+#ifdef ENABLE_VECTOR_RENDER_THREAD
     if (dynamic_cast<VectorDrawableAnimatorRT*>(mAnimatorSet)) {
         VectorDrawableAnimatorRT* animator = (VectorDrawableAnimatorRT*) mAnimatorSet;
         if (animator->isRunning()) {
@@ -285,9 +291,11 @@ void AnimatedVectorDrawable::forceAnimationOnUI() {
         }
         fallbackOntoUI();
     }
+#endif
 }
 
 void AnimatedVectorDrawable::fallbackOntoUI() {
+#ifdef ENABLE_VECTOR_RENDER_THREAD
     if (dynamic_cast<VectorDrawableAnimatorRT*>(mAnimatorSet)) {
         VectorDrawableAnimatorRT* oldAnim = (VectorDrawableAnimatorRT*) mAnimatorSet;
         mAnimatorSet = new VectorDrawableAnimatorUI(this);
@@ -300,6 +308,7 @@ void AnimatedVectorDrawable::fallbackOntoUI() {
         }
         oldAnim->transferPendingActions(mAnimatorSet);
     }
+#endif
 }
 
 bool AnimatedVectorDrawable::canApplyTheme() {
@@ -627,13 +636,14 @@ void AnimatedVectorDrawable::clearAnimationCallbacks() {
 
     mAnimationCallbacks.clear();
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//private static class VectorDrawableAnimatorUI:public VectorDrawableAnimator {
-// mSet is only initialized in init(). So we need to check whether it is null before any
-// operation.
+//class VectorDrawableAnimatorUI:public VectorDrawableAnimator
+// mSet is only initialized in init(). So we need to check whether it is null before any operation.
 AnimatedVectorDrawable::VectorDrawableAnimatorUI::VectorDrawableAnimatorUI(AnimatedVectorDrawable* drawable) {
     mDrawable = drawable;
     mSet = nullptr;
+    LOGD("VectorDrawableAnimatorUI %p on vector %p",this,mDrawable);
 }
 
 AnimatedVectorDrawable::VectorDrawableAnimatorUI::~VectorDrawableAnimatorUI(){
@@ -662,9 +672,10 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::init(AnimatorSet* set) {
 // Although start(), reset() and reverse() should call init() already, it is better to
 // protect these functions from NPE in any situation.
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::start() {
-    if (mSet == nullptr || mSet->isStarted()) {
+    if ((mSet == nullptr) || mSet->isStarted()) {
         return;
     }
+    LOGD("%p",this);
     mSet->start();
     invalidateOwningView();
 }
@@ -673,6 +684,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::end() {
     if (mSet == nullptr) {
         return;
     }
+    LOGD("%p",this);
     mSet->end();
 }
 
@@ -680,6 +692,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::reset() {
     if (mSet == nullptr) {
         return;
     }
+    LOGD("%p",this);
     start();
     mSet->cancel();
 }
@@ -688,6 +701,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::reverse() {
     if (mSet == nullptr) {
         return;
     }
+    LOGD("%p",this);
     mSet->reverse();
     invalidateOwningView();
 }
@@ -755,9 +769,9 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::invalidateOwningView() {
     mDrawable->invalidateSelf();
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///    public static class VectorDrawableAnimatorRT implements VectorDrawableAnimator {
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///class VectorDrawableAnimatorRT implements VectorDrawableAnimator
+#ifdef ENABLE_VECTOR_RENDER_THREAD
 AnimatedVectorDrawable::VectorDrawableAnimatorRT::VectorDrawableAnimatorRT(AnimatedVectorDrawable* drawable) {
     mDrawable = drawable;
     mSetPtr = new hwui::PropertyValuesAnimatorSet();//nCreateAnimatorSet();//PropertyValuesAnimatorSet();
@@ -1083,6 +1097,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::start() {
     if (!mInitialized) {
         return;
     }
+    LOGD("%p",this);
 
     if (useLastSeenTarget()) {
         if (DBG_ANIMATION_VECTOR_DRAWABLE) {
@@ -1143,10 +1158,11 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::startAnimation() {
                         ->mRootName.c_str());
     }*/
     mStarted = true;
-    //nStart(mSetPtr, this, ++mLastListenerId);
+    LOGD("%p",this);
+    //mSetPtr->start();//nStart(mSetPtr, this, ++mLastListenerId);
     invalidateOwningView();
     if (mListener.onAnimationStart != nullptr) {
-        //mListener.onAnimationStart(null);
+        //mListener.o/::nAnimationStart(null);
     }
 }
 
@@ -1158,20 +1174,24 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::endAnimation() {
                         mDrawable->getConstantState().get())->mVectorDrawable->getConstantState())
                         ->mRootName.c_str());
     }*/
-    //nEnd(mSetPtr);
+    LOGD("%p",this);
+    mSetPtr->end();//nEnd(mSetPtr);
     invalidateOwningView();
 }
 
 // This should only be called after animator has been added to the RenderNode target.
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::resetAnimation() {
     //nReset(mSetPtr);
+    LOGD("%p",this);
+    mSetPtr->reset();
     invalidateOwningView();
 }
 
 // This should only be called after animator has been added to the RenderNode target.
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::reverseAnimation() {
     mStarted = true;
-    //nReverse(mSetPtr, this, ++mLastListenerId);
+    LOGD("%p",this);
+    //mSetPtr->reverse();//nReverse(mSetPtr, this, ++mLastListenerId);
     invalidateOwningView();
     if (mListener.onAnimationStart != nullptr) {
         //mListener.onAnimationStart(nullptr);
@@ -1261,4 +1281,5 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::transferPendingActions(Ve
     }
     mPendingAnimationActions.clear();
 }
+#endif
 }/*endof namespace*/
