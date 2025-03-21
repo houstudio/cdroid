@@ -52,7 +52,7 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
      std::vector<Animator*> childAnims;
 
     // Make sure we are on a start tag.
-    int type,depth;
+    int type=0,depth=0;
     const int innerDepth = parser.getDepth();
     XmlPullParser::XmlEvent event;
     while ((((type = parser.next(event,depth)) != XmlPullParser::END_TAG) || (depth >= innerDepth))

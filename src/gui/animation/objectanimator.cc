@@ -11,9 +11,10 @@ ObjectAnimator::ObjectAnimator():ValueAnimator(){
 }
 
 ObjectAnimator::ObjectAnimator(const ObjectAnimator&anim):ValueAnimator(anim){
-    mTarget = nullptr;
-    mProperty = nullptr;
-    mAutoCancel = false;
+    mTarget = anim.mTarget;
+    mProperty = anim.mProperty;
+    mTargetClass =anim.mTargetClass;
+    mAutoCancel = anim.mAutoCancel;
 }
 
 ObjectAnimator::~ObjectAnimator(){
