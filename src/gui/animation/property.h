@@ -18,7 +18,7 @@ public:
     static constexpr int INT_CLASS =0 ;
     static constexpr int COLOR_CLASS=1;
     static constexpr int FLOAT_CLASS=2;
-    static constexpr int PATHDATA_CLASS=3;
+    static constexpr int PATH_CLASS=3;
 protected:
     int mType;
     std::string mName;
