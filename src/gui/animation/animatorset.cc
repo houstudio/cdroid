@@ -1171,6 +1171,12 @@ AnimatorSet::Node* AnimatorSet::getNodeForAnimation(Animator* anim){
     return node;
 }
 
+std::string AnimatorSet::toString()const{
+    std::string str ="AnimatorSet@";
+    str+=std::to_string((long)this);
+    return str;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 AnimatorSet::Node::Node(Animator* animation){

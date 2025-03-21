@@ -530,10 +530,10 @@ void AnimatedVectorDrawable::reset() {
 
 void AnimatedVectorDrawable::start() {
     ensureAnimatorSet();
-    /*if (DBG_ANIMATION_VECTOR_DRAWABLE) {
-        LOGD("calling start on AVD: %s at: %p"
-                ((VectorDrawableState*) ((AnimatedVectorDrawableState*)getConstantState())->mVectorDrawable->getConstantState())->mRootName.c_str(), this);
-    }*/
+    if (DBG_ANIMATION_VECTOR_DRAWABLE) {
+        auto vds = mAnimatedVectorState->mVectorDrawable->getConstantState();
+        LOGD("calling start on AVD: %s at: %p",((VectorDrawable::VectorDrawableState*) vds.get())->mRootName.c_str(), this);
+    }
     mAnimatorSet->start();
 }
 

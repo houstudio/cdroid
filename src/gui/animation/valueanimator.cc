@@ -788,4 +788,8 @@ AnimationHandler& ValueAnimator::getAnimationHandler()const{
     return AnimationHandler::getInstance();
 }
 
+std::string ValueAnimator::toString()const{
+    return "ValueAnimator@"+std::to_string((long)this);
+}
+
 }//endof namespace 

@@ -80,6 +80,7 @@ public:
     virtual bool canReverse();
     virtual void reverse();
     virtual void setAllowRunningAsynchronously(bool);
+    virtual std::string toString()const{return "";}
 };
 
 class AnimatorListenerAdapter:public Animator::AnimatorListener,public Animator::AnimatorPauseListener{

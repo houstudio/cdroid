@@ -128,6 +128,7 @@ public:
     float getAnimatedFraction();
     ValueAnimator* clone()const override;
     AnimationHandler& getAnimationHandler()const;
+    std::string toString()const override;
 };
 
 }//endof namespace

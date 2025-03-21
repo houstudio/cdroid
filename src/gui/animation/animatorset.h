@@ -81,7 +81,7 @@ protected:
 public:
     class Builder;
     AnimatorSet();
-    ~AnimatorSet();
+    ~AnimatorSet()override;
     void playTogether(const std::vector<Animator*>&);
     void playSequentially(const std::vector<Animator*>&);
     std::vector<Animator*> getChildAnimations()const;
@@ -113,6 +113,7 @@ public:
     void reverse()override;
     bool shouldPlayTogether();
     long getTotalDuration()override;
+    std::string toString()const override;
 };
 
 class AnimatorSet::Builder{

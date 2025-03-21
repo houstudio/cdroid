@@ -272,4 +272,10 @@ ObjectAnimator* ObjectAnimator::ofFloat(void*target,Property*prop,const std::vec
     return anim;
 }
 
+std::string ObjectAnimator::toString()const{
+    std::string str =std::string("ObjectAnimator@")+std::to_string((long)this);
+    str+=":"+mPropertyName;
+    return str;
+}
+
 }
