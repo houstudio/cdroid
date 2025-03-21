@@ -1309,7 +1309,7 @@ ItemTouchHelper::RecoverAnimation::RecoverAnimation(RecyclerView::ViewHolder* vi
        setFraction(animation.getAnimatedFraction());
     };
     mValueAnimator->addUpdateListener(ls);
-    mValueAnimator->setTarget(viewHolder->itemView);
+    mValueAnimator->setTarget(viewHolder->itemView,"View");
     mAnimatorListener.onAnimationStart = std::bind(&RecoverAnimation::onAnimationStart,this,std::placeholders::_1,std::placeholders::_2);
     mAnimatorListener.onAnimationEnd   = std::bind(&RecoverAnimation::onAnimationEnd,this,std::placeholders::_1,std::placeholders::_2);
     mAnimatorListener.onAnimationCancel= std::bind(&RecoverAnimation::onAnimationCancel,this,std::placeholders::_1);

@@ -156,6 +156,12 @@ int AnimatorInflater::valueTypeFromPropertyName(const std::string& name){
        {"x",(int)VALUE_TYPE_FLOAT},
        {"y",(int)VALUE_TYPE_FLOAT},
        {"z",(int)VALUE_TYPE_FLOAT},
+////////////////////////////////////////////////////////////////
+       {"strokeWidth",(int)VALUE_TYPE_FLOAT},
+       {"strokeColor",(int)VALUE_TYPE_INT},
+       {"strokeAlpha",(int)VALUE_TYPE_FLOAT},
+       {"fillColor",(int)VALUE_TYPE_INT},
+       {"fillAlpha",(int)VALUE_TYPE_FLOAT}
     };
     auto it = valueTypes.find(name);
     if(it != valueTypes.end()) return it->second;
@@ -309,11 +315,14 @@ void AnimatorInflater::parseAnimatorFromTypeArray(ValueAnimator* anim,const Attr
     /*if (arrayObjectAnimator != nullptr) {
         setupObjectAnimator(anim, arrayObjectAnimator, valueType, pixelSize);
     }*/
+    const std::string propertyName = atts.getString("propertyName");
+    if((propertyName.empty()==false)&&dynamic_cast<ObjectAnimator*>(anim)){
+       ((ObjectAnimator*)anim)->setPropertyName(propertyName);
+    }
 }
 
 ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const AttributeSet& atts,float){
-    const std::string propertyName = atts.getString("propertyName");
-    ObjectAnimator*anim = new ObjectAnimator(nullptr,propertyName);
+    ObjectAnimator*anim = new ObjectAnimator();//propertyName);
     loadAnimator(ctx,atts,anim,1.f);
     return anim;
 }

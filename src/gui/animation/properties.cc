@@ -334,10 +334,17 @@ static std::unordered_map<std::string,std::shared_ptr<Property>>props={
 
 Property*Property::fromName(const std::string&propertyName){
     auto it = props.find(propertyName);
+    if(propertyName.empty())
+        return nullptr;
     if(it!=props.end()){
         return it->second.get();
     }
     LOGD_IF(!propertyName.empty(),"%s =nullptr",propertyName.c_str());
+    return nullptr;
+}
+
+Property*Property::fromName(const std::string&className,const std::string&propertyName){
+    if(className.empty()||className.compare("View")==0)return fromName(propertyName);
     return nullptr;
 }
 

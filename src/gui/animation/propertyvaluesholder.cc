@@ -5,6 +5,7 @@ namespace cdroid{
 
 PropertyValuesHolder::PropertyValuesHolder(){
     mProperty = nullptr;
+    mValueType= CLASS_FLOAT;
 }
 
 PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
@@ -12,16 +13,19 @@ PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
     mDataSource = o.mDataSource;
     mAnimateValue= o.mAnimateValue;
     mProperty = o.mProperty;
+    mValueType= o.mValueType;
 }
 
 PropertyValuesHolder::PropertyValuesHolder(Property*property){
     mProperty = property;
+    mValueType= CLASS_FLOAT;
     if(property)mPropertyName = property->getName();
 }
 
 PropertyValuesHolder::PropertyValuesHolder(const std::string&name){
     mPropertyName = name;
-    mProperty = Property::fromName(name);
+    mValueType= CLASS_FLOAT;
+    mProperty = nullptr;
 }
 
 PropertyValuesHolder::~PropertyValuesHolder(){
@@ -30,7 +34,6 @@ PropertyValuesHolder::~PropertyValuesHolder(){
 
 void PropertyValuesHolder::setPropertyName(const std::string& propertyName){
     mPropertyName = propertyName;
-    mProperty = Property::fromName(mPropertyName);
 }
 
 const std::string PropertyValuesHolder::getPropertyName()const{
@@ -53,12 +56,10 @@ void PropertyValuesHolder::setPropertyChangedListener(const OnPropertyChangedLis
     mOnPropertyChangedListener = ls;
 }
 
-void PropertyValuesHolder::setupSetterAndGetter(void*target){
-    Property*prop = nullptr;
+void PropertyValuesHolder::setupSetterAndGetter(void*target,const std::string&targetClass){
     if(mPropertyName.empty())return;
-    prop = Property::fromName(mPropertyName);
-    if(prop&&(mGetter==nullptr)){
-
+    if(mProperty==nullptr){
+        mProperty = Property::fromName(targetClass,mPropertyName);
     }
 }
 
@@ -141,9 +142,9 @@ const AnimateValue& PropertyValuesHolder::getAnimatedValue()const{
 void PropertyValuesHolder::getPropertyValues(PropertyValues& values){
     init();
     values.propertyName = mPropertyName;
-    LOGD("TODO");
+    values.type = mValueType;
+    LOGD("TODO property=%p %s",mProperty,mPropertyName.c_str());
 #if 0
-    //values.type = mValueType;
     values.startValue = mKeyframes.getValue(0);
     if (values.startValue instanceof PathParser::PathData) {
         // PathData evaluator returns the same mutable PathData object when query fraction,
@@ -200,13 +201,13 @@ void PropertyValuesHolder::setupValue(void*target,int position){
     }
 }
 
-void PropertyValuesHolder::setupStartValue(void*target){
+void PropertyValuesHolder::setupStartValue(void*target,const std::string&targetClass){
     if(!mDataSource.empty()){
         setupValue(target,0);
     }
 }
 
-void PropertyValuesHolder::setupEndValue(void*target){
+void PropertyValuesHolder::setupEndValue(void*target,const std::string&targetClass){
     if(!mDataSource.empty()){
         setupValue(target,mDataSource.size()-1);
     }

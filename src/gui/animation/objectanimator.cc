@@ -20,9 +20,9 @@ ObjectAnimator::~ObjectAnimator(){
     //delete mProperty;
 }
 
-ObjectAnimator::ObjectAnimator(void* target,const std::string& propertyName)
+ObjectAnimator::ObjectAnimator(void* target,const std::string&targetClass,const std::string& propertyName)
   :ObjectAnimator(){
-    setTarget(target);
+    setTarget(target,targetClass);
     setPropertyName(propertyName);
 }
 
@@ -30,9 +30,10 @@ void ObjectAnimator::initAnimation(){
     if(!mInitialized){
         void* target = getTarget();
         for(auto value:mValues){
-             value->setupStartValue(target);
-             value->setupSetterAndGetter(target);
+            value->setupSetterAndGetter(target,mTargetClass);
+            value->setupStartValue(target,mTargetClass);
         }
+        LOGD("values.size=%d %s.%s p=%p",mValues.size(),mTargetClass.c_str(),getPropertyName().c_str(),mProperty);
         ValueAnimator::initAnimation();
     }
 }
@@ -46,13 +47,14 @@ bool ObjectAnimator::isInitialized(){
     return mInitialized;
 }
 
-void ObjectAnimator::setTarget(void*target){
+void ObjectAnimator::setTarget(void*target,const std::string&targetClass){
     const void*oldTarget = getTarget();
     if(oldTarget!=target){
         if(isStarted()){
             cancel();
         }
         mTarget = target;
+        mTargetClass = targetClass;
         mInitialized=false;
     }
 }
@@ -72,7 +74,7 @@ void ObjectAnimator::setPropertyName(const std::string& propertyName){
         mValuesMap.insert({propertyName,valuesHolder});
     }
     mPropertyName= propertyName;
-    mProperty=Property::fromName(propertyName);
+    //mProperty=Property::fromName(propertyName);
     mInitialized = false;
 }
 
@@ -187,7 +189,7 @@ void ObjectAnimator::setupStartValues() {
     if (target != nullptr) {
         size_t numValues = mValues.size();
         for (size_t i = 0; i < numValues; ++i) {
-            mValues[i]->setupStartValue(target);
+            mValues[i]->setupStartValue(target,mTargetClass);
         }
     }
 }
@@ -199,7 +201,7 @@ void ObjectAnimator::setupEndValues() {
     if (target != nullptr) {
         size_t numValues = mValues.size();
         for (size_t i = 0; i < numValues; ++i) {
-            mValues[i]->setupEndValue(target);
+            mValues[i]->setupEndValue(target,mTargetClass);
         }
     }
 }
@@ -225,21 +227,38 @@ ObjectAnimator*ObjectAnimator::clone()const{
     return anim;
 }
 
-ObjectAnimator* ObjectAnimator::ofInt(void* target,const std::string& propertyName,const std::vector<int>&values){
-    ObjectAnimator*anim = new ObjectAnimator(target,propertyName);
+ObjectAnimator* ObjectAnimator::ofInt(void* target,const std::string&targetClass,const std::string& propertyName,const std::vector<int>&values){
+    ObjectAnimator*anim = new ObjectAnimator(target,targetClass,propertyName);
     anim->setIntValues(values);
     return anim;
 }
 
-ObjectAnimator* ObjectAnimator::ofFloat(void* target,const std::string& propertyName, const std::vector<float>&values){
-    ObjectAnimator*anim = new ObjectAnimator(target,propertyName);
+ObjectAnimator* ObjectAnimator::ofFloat(void* target,const std::string&targetClass,const std::string& propertyName, const std::vector<float>&values){
+    ObjectAnimator*anim = new ObjectAnimator(target,targetClass,propertyName);
     anim->setFloatValues(values);
     return anim;
 }
 
+ObjectAnimator* ObjectAnimator::ofPropertyValuesHolder(void*target,const std::string&targetClass,const std::vector<PropertyValuesHolder*>&values){
+    ObjectAnimator*anim = new ObjectAnimator();
+    anim->setTarget(target,targetClass);
+    anim->setValues(values);
+    return anim;
+}
+
+ObjectAnimator* ObjectAnimator::ofInt(void* target,const std::string& propertyName, const std::vector<int>&values){
+    return ofInt(target,"View",propertyName,values);
+}
+ObjectAnimator* ObjectAnimator::ofFloat(void* target,const std::string& propertyName,const std::vector<float>&values){
+    return ofFloat(target,"View",propertyName,values);
+}
+ObjectAnimator* ObjectAnimator::ofPropertyValuesHolder(void*target,const std::vector< PropertyValuesHolder*>&values){
+    return ofPropertyValuesHolder(target,"View",values);
+}
+
 ObjectAnimator* ObjectAnimator::ofInt(void*target,Property*prop,const std::vector<int>&values){
     ObjectAnimator*anim = new ObjectAnimator();
-    anim->setTarget(target);
+    anim->setTarget(target,"");
     anim->setProperty(prop);
     anim->setIntValues(values);
     return anim;
@@ -247,16 +266,9 @@ ObjectAnimator* ObjectAnimator::ofInt(void*target,Property*prop,const std::vecto
 
 ObjectAnimator* ObjectAnimator::ofFloat(void*target,Property*prop,const std::vector<float>&values){
     ObjectAnimator*anim = new ObjectAnimator();
-    anim->setTarget(target);
+    anim->setTarget(target,"");
     anim->setProperty(prop);
     anim->setFloatValues(values);
-    return anim;
-}
-
-ObjectAnimator* ObjectAnimator::ofPropertyValuesHolder(void*target,const std::vector<PropertyValuesHolder*>&values){
-    ObjectAnimator*anim = new ObjectAnimator();
-    anim->setTarget(target);
-    anim->setValues(values);
     return anim;
 }
 
