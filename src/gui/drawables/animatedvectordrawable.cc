@@ -23,12 +23,19 @@ public:
         avd->unscheduleSelf(what);
     }
 };
+
 AnimatedVectorDrawable::AnimatedVectorDrawable(std::shared_ptr<AnimatedVectorDrawableState> state){
     mMutated = false;
     mAnimatorSetFromXml = nullptr;
     mAnimatedVectorState = std::make_shared<AnimatedVectorDrawableState>(state, mCallback);
     mAnimatorSet = new VectorDrawableAnimatorRT(this);
     mCallback = new MyCallback(this);
+}
+
+AnimatedVectorDrawable::~AnimatedVectorDrawable(){
+    delete mCallback;
+    delete mAnimatorSet;
+    delete mAnimatorSetFromXml;
 }
 
 AnimatedVectorDrawable* AnimatedVectorDrawable::mutate() {
@@ -360,6 +367,10 @@ AnimatedVectorDrawable::AnimatedVectorDrawableState::AnimatedVectorDrawableState
     } else {
         mVectorDrawable = new VectorDrawable();
     }
+}
+
+AnimatedVectorDrawable::AnimatedVectorDrawableState::~AnimatedVectorDrawableState(){
+    delete  mVectorDrawable;
 }
 
 bool AnimatedVectorDrawable::AnimatedVectorDrawableState::canApplyTheme() {

@@ -40,6 +40,7 @@ protected:
 public:
     AnimatedVectorDrawable();
     AnimatedVectorDrawable(std::shared_ptr<AnimatedVectorDrawableState> state);
+    ~AnimatedVectorDrawable()override;
     AnimatedVectorDrawable*mutate()override;
     void clearMutated()override;
     std::shared_ptr<Drawable::ConstantState> getConstantState()override;
@@ -101,6 +102,7 @@ private:
     std::unordered_map<Animator*, std::string> mTargetNameMap;
 public:
     AnimatedVectorDrawableState(std::shared_ptr<AnimatedVectorDrawableState>copy,Callback* owner);
+    ~AnimatedVectorDrawableState()override;
     bool canApplyTheme();
     Drawable*newDrawable()override;
     int getChangingConfigurations() const override;
