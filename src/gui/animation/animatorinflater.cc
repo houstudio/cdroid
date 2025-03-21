@@ -313,7 +313,7 @@ void AnimatorInflater::parseAnimatorFromTypeArray(ValueAnimator* anim,const Attr
     anim->setStartDelay(startDelay);
 
     if (atts.hasAttribute("repeatCount")) {
-        anim->setRepeatCount(atts.getInt("repeatCount", 0));
+        anim->setRepeatCount(atts.getInt("repeatCount", ValueAnimator::INFINITE));
     }
     if (atts.hasAttribute("repeatMode")) {
         anim->setRepeatMode(atts.getInt("repeatMode",ValueAnimator::RESTART));
