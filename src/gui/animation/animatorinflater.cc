@@ -70,7 +70,8 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
         } else if (name.compare("set")==0) {
             anim = new AnimatorSet();
             //anim->appendChangingConfigurations(a.getChangingConfigurations());
-            const int ordering = atts.getInt("ordering", TOGETHER);
+            const int ordering = atts.getInt("ordering",std::unordered_map<std::string,int>{
+                    {"together",TOGETHER},{"sequentially",SEQUENTIALLY}}, TOGETHER);
             createAnimatorFromXml(context, parser, event.attributes, (AnimatorSet*) anim, ordering,pixelSize);
         } else if (name.compare("propertyValuesHolder")==0) {
             /*PropertyValuesHolder[] values = loadValues(parser,Xml.asAttributeSet(parser));

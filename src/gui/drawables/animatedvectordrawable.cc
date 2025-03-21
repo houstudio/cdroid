@@ -24,7 +24,8 @@ public:
     }
 };
 AnimatedVectorDrawable::AnimatedVectorDrawable(std::shared_ptr<AnimatedVectorDrawableState> state){
-    mCallback =  nullptr;
+    mMutated = false;
+    mAnimatorSetFromXml = nullptr;
     mAnimatedVectorState = std::make_shared<AnimatedVectorDrawableState>(state, mCallback);
     mAnimatorSet = new VectorDrawableAnimatorRT(this);
     mCallback = new MyCallback(this);
@@ -193,16 +194,16 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
                     state->mVectorDrawable = vectorDrawable;
                 }
             } else if (tagName.compare(TARGET)==0) {
-                std::string target = a.getString("name");
-                std::string animResId = a.getString("animation");
-                LOGD("%s -> %s",target.c_str(),animResId.c_str());
+                const std::string target = a.getString("name");
+                const std::string animResId = a.getString("animation");
                 if (!animResId.empty()) {
-                    /*if (theme != null) {
+                    if (true/*theme != nullptr*/) {
                         // The animator here could be ObjectAnimator or AnimatorSet.
-                        Animator* animator = AnimatorInflater::loadAnimator(res, theme, animResId, pathErrorScale);
+                        Animator* animator = AnimatorInflater::loadAnimator(ctx, animResId, pathErrorScale);
                         updateAnimatorProperty(animator, target, state->mVectorDrawable,state->mShouldIgnoreInvalidAnim);
                         state->addTargetAnimator(target, animator);
-                    } else */{
+                        LOGD("%s -> %s %p",target.c_str(),animResId.c_str(),animator);
+                    } else {
                         // The animation may be theme-dependent. As a
                         // workaround until Animator has full support for
                         // applyTheme(), postpone loading the animator
@@ -259,11 +260,11 @@ void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const st
 
 bool AnimatedVectorDrawable::containsSameValueType(const PropertyValuesHolder* holder,const Property* property) {
     const int type1 = holder->getValueType();
-    const int type2 = 0;//property->getType();
-    if (type1 == PropertyValuesHolder::CLASS_FLOAT) {
-        return type2 == PropertyValuesHolder::CLASS_FLOAT;
-    } else if (type1 == PropertyValuesHolder::CLASS_INT) {
-        return type2 == PropertyValuesHolder::CLASS_INT;
+    const int type2 = property->getType();
+    if (type1 == Property::FLOAT_CLASS) {
+        return type2 == Property::FLOAT_CLASS;
+    } else if (type1 == Property::INT_CLASS) {
+        return type2 == Property::INT_CLASS;
     } else {
         return type1 == type2;
     }
@@ -325,6 +326,9 @@ void AnimatedVectorDrawable::applyTheme(Theme t) {
 //static class AnimatedVectorDrawableState:public Drawable::ConstantState
 AnimatedVectorDrawable::AnimatedVectorDrawableState::AnimatedVectorDrawableState(std::shared_ptr<AnimatedVectorDrawableState> copy,Callback* owner) {
     mShouldIgnoreInvalidAnim = AnimatedVectorDrawable::shouldIgnoreInvalidAnimation();
+    mChangingConfigurations =0;
+    mContext = nullptr;
+
     if (copy != nullptr) {
         mChangingConfigurations = copy->mChangingConfigurations;
 
@@ -417,11 +421,11 @@ void AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnimators(
     }
 
     // Perform a deep copy of the constant state's animators.
-    const int count = /*mAnimators == null ? 0 : */mAnimators.size();
+    const size_t count = mAnimators.size();
     if (count > 0) {
         Animator* firstAnim = prepareLocalAnimator(0);
         AnimatorSet::Builder* builder = animatorSet->play(firstAnim);
-        for (int i = 1; i < count; ++i) {
+        for (size_t i = 1; i < count; ++i) {
             Animator* nextAnim = prepareLocalAnimator(i);
             builder->with(nextAnim);
         }
@@ -443,8 +447,9 @@ Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnima
     if (!mShouldIgnoreInvalidAnim) {
         if (target == nullptr) {
             LOGE("Target with the name %s cannot be found in the VectorDrawable to be animated.",targetName.c_str());
-        } else if ((target!= mVectorDrawable->getConstantState().get())//dynamic_cast<VectorDrawable::VectorDrawableState*>(target))
-                && false/*!(dynamic_cast<VectorDrawable::VObject*>(target))*/) {
+        } else if ((target!= mVectorDrawable->getConstantState().get())&&false){
+            /*((dynamic_cast<VectorDrawable::VectorDrawableState*>(target))
+              && !(dynamic_cast<VectorDrawable::VObject*>(target)))*/
             LOGE("Target should be either VGroup, VPath or ConstantState, is not supported");
         }
     }
@@ -836,7 +841,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForGroup(
         // TODO: We need to support the rare case in AVD where no start value is provided
         values[i]->getPropertyValues(mTmpValues);
         propertyId = VectorDrawable::VGroup::getPropertyIndex(mTmpValues.propertyName);
-        if (mTmpValues.type != PropertyValuesHolder::CLASS_FLOAT) {
+        if (mTmpValues.type != Property::FLOAT_CLASS) {
             LOGE_IF(DBG_ANIMATION_VECTOR_DRAWABLE,"Unsupported type: %d. Only float value is supported for Groups.",mTmpValues.type);
             continue;
         }
@@ -874,7 +879,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForFullPa
     Property*prop = target->getProperty(mTmpValues.propertyName);
     PropertyValuesHolder* propertyPtr = nullptr;
     hwui::FullPath* nativePtr = (hwui::FullPath*)target->getNativePtr();//hwui::FullPath
-    if (mTmpValues.type == PropertyValuesHolder::CLASS_FLOAT) {
+    if (mTmpValues.type == Property::FLOAT_CLASS) {
         if (propertyId < 0) {
             if (mDrawable->mAnimatedVectorState->mShouldIgnoreInvalidAnim) {
                 return;
@@ -891,7 +896,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForFullPa
             propertyPtr->setValues(dataPoints);
         }
 
-    } else if (mTmpValues.type == PropertyValuesHolder::CLASS_INT) {
+    } else if (mTmpValues.type == Property::INT_CLASS) {
         //propertyPtr = nCreatePathColorPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
         propertyPtr = PropertyValuesHolder::ofInt(prop,{(int)GET_VARIANT(mTmpValues.startValue,int32_t),GET_VARIANT(mTmpValues.endValue,int32_t)});
         if (mTmpValues.dataSource != nullptr) {

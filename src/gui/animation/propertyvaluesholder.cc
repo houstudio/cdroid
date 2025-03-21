@@ -5,7 +5,7 @@ namespace cdroid{
 
 PropertyValuesHolder::PropertyValuesHolder(){
     mProperty = nullptr;
-    mValueType= CLASS_FLOAT;
+    mValueType= Property::UNDEFINED;
 }
 
 PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
@@ -18,13 +18,13 @@ PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
 
 PropertyValuesHolder::PropertyValuesHolder(Property*property){
     mProperty = property;
-    mValueType= CLASS_FLOAT;
+    mValueType= property->getType();;
     if(property)mPropertyName = property->getName();
 }
 
 PropertyValuesHolder::PropertyValuesHolder(const std::string&name){
     mPropertyName = name;
-    mValueType= CLASS_FLOAT;
+    mValueType= Property::UNDEFINED;
     mProperty = nullptr;
 }
 
@@ -42,6 +42,7 @@ const std::string PropertyValuesHolder::getPropertyName()const{
 
 void PropertyValuesHolder::setProperty(Property*p){
     mProperty = p;
+    mValueType= p?p->getType():Property::UNDEFINED;
 }
 
 Property*PropertyValuesHolder::getProperty()const{
@@ -60,6 +61,7 @@ void PropertyValuesHolder::setupSetterAndGetter(void*target,const std::string&ta
     if(mPropertyName.empty())return;
     if(mProperty==nullptr){
         mProperty = Property::fromName(targetClass,mPropertyName);
+        mValueType= mProperty->getType();
     }
 }
 
@@ -90,24 +92,27 @@ AnimateValue PropertyValuesHolder::evaluator(float fraction, const AnimateValue&
 }
 
 void PropertyValuesHolder::setValues(const std::vector<int>&values){
-    mDataSource.resize(std::max(values.size(),size_t(2)));
+    //mDataSource.resize(std::max(values.size(),size_t(2)));
     mDataSource.clear();
+    mValueType = Property::INT_CLASS;
     for(size_t i=0;i<values.size();i++)
        mDataSource.push_back(values.at(i));
     mAnimateValue = values[0];
 }
 
 void PropertyValuesHolder::setValues(const std::vector<uint32_t>&values){
-    mDataSource.resize(std::max(values.size(),size_t(2)));
+    //mDataSource.resize(std::max(values.size(),size_t(2)));
     mDataSource.clear();
+    mValueType = Property::INT_CLASS;
     for(size_t i = 0;i < values.size();i++)
        mDataSource.push_back(values.at(i));
     mAnimateValue = values[0];
 }
 
 void PropertyValuesHolder::setValues(const std::vector<float>&values){
-    mDataSource.resize(std::max(values.size(),size_t(2)));
+    //mDataSource.resize(std::max(values.size(),size_t(2)));
     mDataSource.clear();
+    mValueType = Property::FLOAT_CLASS;
     for(size_t i = 0;i < values.size();i++)
        mDataSource.push_back(values.at(i));
     mAnimateValue = values[0];
@@ -143,6 +148,8 @@ void PropertyValuesHolder::getPropertyValues(PropertyValues& values){
     init();
     values.propertyName = mPropertyName;
     values.type = mValueType;
+    values.startValue=mDataSource[0];
+    values.endValue=mDataSource[mDataSource.size()-1];
     LOGD("TODO property=%p %s",mProperty,mPropertyName.c_str());
 #if 0
     values.startValue = mKeyframes.getValue(0);
@@ -215,24 +222,28 @@ void PropertyValuesHolder::setupEndValue(void*target,const std::string&targetCla
 
 PropertyValuesHolder* PropertyValuesHolder::ofInt(const std::string&name,const std::vector<int>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(name);
+    pvh->mValueType=Property::INT_CLASS;
     pvh->setValues(values);
     return pvh;
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofInt(Property*prop,const std::vector<int>&values){
-    PropertyValuesHolder*pch = new PropertyValuesHolder(prop);
-    pch->setValues(values);
-    return pch;
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
+    pvh->mValueType=Property::INT_CLASS;
+    pvh->setValues(values);
+    return pvh;
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofFloat(const std::string&name,const std::vector<float>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(name);
+    pvh->mValueType=Property::FLOAT_CLASS;
     pvh->setValues(values);
     return pvh;
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofFloat(Property*prop,const std::vector<float>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
+    pvh->mValueType=Property::FLOAT_CLASS;
     pvh->setValues(values);
     return pvh;
 }
