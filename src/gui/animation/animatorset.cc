@@ -825,7 +825,7 @@ void AnimatorSet::addAnimationCallback(long delay) {
     }
     AnimationHandler::getInstance().addAnimationFrameCallback(this, delay);
 }
-static int cloneCount=0;
+
 AnimatorSet*AnimatorSet::clone()const{
     AnimatorSet*anim = new AnimatorSet();
     const int nodeCount = mNodes.size();
@@ -836,7 +836,7 @@ AnimatorSet*AnimatorSet::clone()const{
     // Walk through the old nodes list, cloning each node and adding it to the new nodemap.
     // One problem is that the old node dependencies point to nodes in the old AnimatorSet.
     // We need to track the old/new nodes in order to reconstruct the dependencies in the clone.
-cloneCount++;
+
     std::unordered_map<Node*,Node*>clonesMap;
     for (Node*node:mNodes){
         Node* nodeClone = node->clone();
