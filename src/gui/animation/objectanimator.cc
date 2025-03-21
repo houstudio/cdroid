@@ -33,7 +33,6 @@ void ObjectAnimator::initAnimation(){
             value->setupSetterAndGetter(target,mTargetClass);
             value->setupStartValue(target,mTargetClass);
         }
-        LOGD("values.size=%d %s.%s p=%p",mValues.size(),mTargetClass.c_str(),getPropertyName().c_str(),mProperty);
         ValueAnimator::initAnimation();
     }
 }
