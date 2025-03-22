@@ -13,13 +13,22 @@ typedef nonstd::variant<int,uint32_t,float,std::shared_ptr<PathParser::PathData>
 #endif
 
 class Property{
-private:
+public:
+    static constexpr int UNDEFINED =-1;
+    static constexpr int INT_CLASS =0 ;
+    static constexpr int COLOR_CLASS=1;
+    static constexpr int FLOAT_CLASS=2;
+    static constexpr int PATH_CLASS=3;
+protected:
+    int mType;
     std::string mName;
 public:
     Property(const std::string&name);
+    Property(const std::string&name,int type);
     virtual AnimateValue get(void* t);
     virtual void set(void* object,const AnimateValue& value);
     const std::string getName()const;
+    int getType()const;
     static Property*fromName(const std::string&propertyName);
     static Property*fromName(const std::string&className,const std::string&propertyName);
     static bool reigsterProperty(const std::string&name,Property*prop);

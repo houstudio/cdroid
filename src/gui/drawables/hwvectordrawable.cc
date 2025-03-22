@@ -153,6 +153,7 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
         outCanvas.set_line_width(properties.getStrokeWidth());//paint.setStrokeWidth(properties.getStrokeWidth());
         outCanvas.stroke();//drawPath(renderPath, paint);
     }
+    //if(!mName.empty())outCanvas.dump2png(mName+".png");
 }
 
 void FullPath::syncProperties() {
@@ -400,6 +401,7 @@ void Tree::drawStaging(Canvas& outCanvas) {
                           mStagingProperties.getBounds().right(),
                           mStagingProperties.getBounds().bottom(), paint);*/
     outCanvas.set_source(mStagingCache.bitmap,0,0);
+    outCanvas.set_operator(Cairo::Context::Operator::SOURCE);
     outCanvas.scale(float(mStagingProperties.getBounds().width)/mStagingCache.bitmap->get_width(),
             float(mStagingProperties.getBounds().height)/mStagingCache.bitmap->get_height());
     outCanvas.paint();
@@ -417,16 +419,15 @@ void Tree::updatePaint(Tree::TreeProperties*prop,Cairo::RefPtr<Cairo::Pattern>&s
 }
 
 void Tree::updateBitmapCache(Bitmap& bitmap, bool useStagingData) {
-    Bitmap outCache=bitmap;
-    int cacheWidth = outCache->get_width();
-    int cacheHeight = outCache->get_height();
-    //outCache.eraseColor(SK_ColorTRANSPARENT);
+    Bitmap outCache = bitmap;
+    const int cacheWidth = outCache->get_width();
+    const int cacheHeight = outCache->get_height();
     Canvas outCanvas(outCache);
     const auto op = outCanvas.get_operator();
-    outCanvas.set_operator(Cairo::Context::Operator::SOURCE);
-    outCanvas.set_source_rgba(0,0,0,1);
-    outCanvas.rectangle(0,0,cacheWidth,cacheHeight);
-    outCanvas.fill();
+    outCanvas.set_operator(Cairo::Context::Operator::CLEAR);
+    outCanvas.set_source_rgba(0,0,0,0);
+    //outCanvas.rectangle(0,0,cacheWidth,cacheHeight);
+    outCanvas.paint();
     outCanvas.set_operator(op);
     const float viewportWidth = useStagingData ? mStagingProperties.getViewportWidth() : mProperties.getViewportWidth();
     const float viewportHeight= useStagingData ? mStagingProperties.getViewportHeight() : mProperties.getViewportHeight();

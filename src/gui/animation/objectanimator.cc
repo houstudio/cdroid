@@ -11,9 +11,10 @@ ObjectAnimator::ObjectAnimator():ValueAnimator(){
 }
 
 ObjectAnimator::ObjectAnimator(const ObjectAnimator&anim):ValueAnimator(anim){
-    mTarget = nullptr;
-    mProperty = nullptr;
-    mAutoCancel = false;
+    mTarget = anim.mTarget;
+    mProperty = anim.mProperty;
+    mTargetClass =anim.mTargetClass;
+    mAutoCancel = anim.mAutoCancel;
 }
 
 ObjectAnimator::~ObjectAnimator(){
@@ -33,7 +34,6 @@ void ObjectAnimator::initAnimation(){
             value->setupSetterAndGetter(target,mTargetClass);
             value->setupStartValue(target,mTargetClass);
         }
-        LOGD("values.size=%d %s.%s p=%p",mValues.size(),mTargetClass.c_str(),getPropertyName().c_str(),mProperty);
         ValueAnimator::initAnimation();
     }
 }
@@ -270,6 +270,12 @@ ObjectAnimator* ObjectAnimator::ofFloat(void*target,Property*prop,const std::vec
     anim->setProperty(prop);
     anim->setFloatValues(values);
     return anim;
+}
+
+std::string ObjectAnimator::toString()const{
+    std::string str =std::string("ObjectAnimator@")+std::to_string((long)this);
+    str+=":"+mPropertyName;
+    return str;
 }
 
 }

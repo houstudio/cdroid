@@ -5,6 +5,12 @@ namespace cdroid{
 
 Property::Property(const std::string&name){
     mName = name;
+    mType = UNDEFINED;
+}
+
+Property::Property(const std::string&name,int type){
+    mName = name;
+    mType = type;
 }
 
 AnimateValue Property::get(void* t){
@@ -15,6 +21,10 @@ AnimateValue Property::get(void* t){
 void Property::set(void* object,const AnimateValue& value){
 }
 
+int Property::getType()const{
+    return mType;
+}
+
 const std::string Property::getName()const{
     return mName;
 }
@@ -23,7 +33,7 @@ const std::string Property::getName()const{
 namespace {
 class ALPHA:public Property{
 public:
-    ALPHA():Property("alpha"){}
+    ALPHA():Property("alpha",FLOAT_CLASS){}
     AnimateValue get(void* object)override{
         LOGV("%p alpha=%.3f",object,((View*)object)->getAlpha());
         AnimateValue v =((View*)object)->getAlpha();
@@ -39,7 +49,7 @@ class BACKGROUND_COLOR:public Property{
 private:
     ColorDrawable*cd;
 public:
-    BACKGROUND_COLOR():Property("backgroundColor"){
+    BACKGROUND_COLOR():Property("backgroundColor",COLOR_CLASS){
         cd = nullptr;
     }
     AnimateValue get(void* object)override{
@@ -56,7 +66,7 @@ public:
 
 class ELEVATION:public Property{
 public:
-    ELEVATION():Property("elevation"){}
+    ELEVATION():Property("elevation",FLOAT_CLASS){}
     AnimateValue get(void* object)override{
         LOGV("%p elevation=%.3f",object,((View*)object)->getElevation());
         AnimateValue v =((View*)object)->getElevation();
@@ -70,7 +80,7 @@ public:
 
 class LEFT:public Property{
 public:
-    LEFT():Property("left"){}
+    LEFT():Property("left",INT_CLASS){}
     AnimateValue get(void* object)override{
         LOGV("%p left=%d",object,((View*)object)->getLeft());
         AnimateValue v =((View*)object)->getLeft();
@@ -84,7 +94,7 @@ public:
 
 class TOP:public Property{
 public:
-    TOP():Property("top"){}
+    TOP():Property("top",INT_CLASS){}
     AnimateValue get(void* object)override{
         LOGV("%p top=%d",object,((View*)object)->getTop());
         AnimateValue v =((View*)object)->getTop();
@@ -98,7 +108,7 @@ public:
 
 class RIGHT:public Property{
 public:
-    RIGHT():Property("right"){}
+    RIGHT():Property("right",INT_CLASS){}
     AnimateValue get(void* object)override{
         LOGV("%p right=%d",object,((View*)object)->getRight());
         AnimateValue v =((View*)object)->getRight();
@@ -112,7 +122,7 @@ public:
 
 class BOTTOM:public Property{
 public:
-    BOTTOM():Property("bottom"){}
+    BOTTOM():Property("bottom",INT_CLASS){}
 
     AnimateValue get(void* object)override{
         LOGV("%p bottom=%d",object,((View*)object)->getBottom());
@@ -128,7 +138,7 @@ public:
 
 class TRANSLATION_X:public Property{
 public:
-    TRANSLATION_X():Property("translationX"){}
+    TRANSLATION_X():Property("translationX",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         LOGV("translationX=%f",((View*)object)->getTranslationX());
         return ((View*)object)->getTranslationX();
@@ -141,7 +151,7 @@ public:
 
 class TRANSLATION_Y:public Property{
 public:
-    TRANSLATION_Y():Property("translationY"){}
+    TRANSLATION_Y():Property("translationY",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getTranslationY();
     }
@@ -153,7 +163,7 @@ public:
 
 class TRANSLATION_Z:public Property{
 public:
-    TRANSLATION_Z():Property("translationZ"){}
+    TRANSLATION_Z():Property("translationZ",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getTranslationZ();
     }
@@ -165,7 +175,7 @@ public:
 
 class XX:public Property{
 public:
-    XX():Property("x"){}
+    XX():Property("x",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getX();
     }
@@ -178,7 +188,7 @@ public:
 
 class YY:public Property{
 public:
-    YY():Property("y"){}
+    YY():Property("y",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getY();
     }
@@ -190,7 +200,7 @@ public:
 
 class ZZ:public Property{
 public:
-    ZZ():Property("z"){}
+    ZZ():Property("z",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getZ();
     }
@@ -202,7 +212,7 @@ public:
 
 class PIVOT_X:public Property{
 public:
-    PIVOT_X():Property("pivotX"){}
+    PIVOT_X():Property("pivotX",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getPivotX();
     }
@@ -214,7 +224,7 @@ public:
 
 class PIVOT_Y:public Property{
 public:
-    PIVOT_Y():Property("pivotY"){}
+    PIVOT_Y():Property("pivotY",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getPivotY();
     }
@@ -226,7 +236,7 @@ public:
 
 class ROTATION:public Property{
 public:
-    ROTATION():Property("rotation"){}
+    ROTATION():Property("rotation",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getRotation();
     }
@@ -238,7 +248,7 @@ public:
 
 class ROTATION_X:public Property{
 public:
-    ROTATION_X():Property("rotationX"){}
+    ROTATION_X():Property("rotationX",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getRotationX();
     }
@@ -250,7 +260,7 @@ public:
 
 class ROTATION_Y:public Property{
 public:
-    ROTATION_Y():Property("rotationY"){}
+    ROTATION_Y():Property("rotationY",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getRotationY();
     }
@@ -262,7 +272,7 @@ public:
 
 class SCALE_X:public Property{
 public:
-    SCALE_X():Property("scaleX"){}
+    SCALE_X():Property("scaleX",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getScaleX();
     }
@@ -274,7 +284,7 @@ public:
 
 class SCALE_Y:public Property{
 public:
-    SCALE_Y():Property("scaleY"){}
+    SCALE_Y():Property("scaleY",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getScaleY();
     }
@@ -286,7 +296,7 @@ public:
 
 class SCROLL_X:public Property{
 public:
-    SCROLL_X():Property("scrollX"){}
+    SCROLL_X():Property("scrollX",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getScrollX();
     }
@@ -298,7 +308,7 @@ public:
 
 class SCROLL_Y:public Property{
 public:
-    SCROLL_Y():Property("scrollY"){}
+    SCROLL_Y():Property("scrollY",FLOAT_CLASS){}
     AnimateValue get(void* object) {
         return ((View*)object)->getScrollY();
     }

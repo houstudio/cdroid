@@ -21,7 +21,7 @@ protected:
 public:
     ObjectAnimator();
     ObjectAnimator(const ObjectAnimator&);
-    ~ObjectAnimator();
+    ~ObjectAnimator()override;
     void setTarget(void*target,const std::string&targetCass)override;
     void*getTarget();
     ObjectAnimator&setDuration(long dur)override;
@@ -49,6 +49,7 @@ public:
 
     static ObjectAnimator* ofInt(void*target,Property*prop,const std::vector<int>&);
     static ObjectAnimator* ofFloat(void*target,Property*prop,const std::vector<float>&);
+    std::string toString()const override;
 };
 
 }/*endof namespace*/

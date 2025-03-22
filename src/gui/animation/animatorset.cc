@@ -859,18 +859,22 @@ AnimatorSet*AnimatorSet::clone()const{
         nodeClone->mLatestParent = node->mLatestParent == nullptr
                 ? nullptr : clonesMap.find(node->mLatestParent)->second;
         int size = node->mChildNodes.size();
+        bool found=false;
         for (int j = 0; j < size; j++) {
             auto it = clonesMap.find(node->mChildNodes.at(j));
+            found= it!=clonesMap.end();
             nodeClone->mChildNodes.push_back(it->second);
         }
         size = node->mSiblings.size();
         for (int j = 0; j < size; j++) {
             auto it = clonesMap.find(node->mSiblings.at(j));
+            found= it!=clonesMap.end();
             nodeClone->mSiblings.push_back(it->second);
         }
         size = node->mParents.size();
         for (int j = 0; j < size; j++) {
             auto it =clonesMap.find(node->mParents.at(j));
+            found= it!=clonesMap.end();
             nodeClone->mParents.push_back(it->second);
         }
     }
@@ -1165,6 +1169,12 @@ AnimatorSet::Node* AnimatorSet::getNodeForAnimation(Animator* anim){
         node= it->second;
     }
     return node;
+}
+
+std::string AnimatorSet::toString()const{
+    std::string str ="AnimatorSet@";
+    str+=std::to_string((long)this);
+    return str;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////

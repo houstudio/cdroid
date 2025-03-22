@@ -40,6 +40,7 @@ protected:
 public:
     AnimatedVectorDrawable();
     AnimatedVectorDrawable(std::shared_ptr<AnimatedVectorDrawableState> state);
+    ~AnimatedVectorDrawable()override;
     AnimatedVectorDrawable*mutate()override;
     void clearMutated()override;
     std::shared_ptr<Drawable::ConstantState> getConstantState()override;
@@ -101,6 +102,7 @@ private:
     std::unordered_map<Animator*, std::string> mTargetNameMap;
 public:
     AnimatedVectorDrawableState(std::shared_ptr<AnimatedVectorDrawableState>copy,Callback* owner);
+    ~AnimatedVectorDrawableState()override;
     bool canApplyTheme();
     Drawable*newDrawable()override;
     int getChangingConfigurations() const override;
@@ -161,7 +163,8 @@ public:
     void pause()override;
     void resume()override;
 };
-
+#ifdef ENABLE_VECTOR_RENDER_THREAD
+//It is now unusable in cdroid disable it 
 class AnimatedVectorDrawable::VectorDrawableAnimatorRT:public VectorDrawableAnimator {
 private:
     static constexpr int START_ANIMATION = 1;
@@ -237,5 +240,6 @@ public:
     void pause()override;
     void resume()override;
 };
+#endif
 }/*endof namespace*/
 #endif/*__ANIMATED_VECTOR_DRAWABLE_H__*/

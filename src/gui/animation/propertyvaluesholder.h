@@ -18,8 +18,6 @@ namespace cdroid{
 using TypeEvaluator = std::function<AnimateValue(float fraction,AnimateValue&startValue,AnimateValue&endValue)>;
 class PropertyValuesHolder{
 public:
-    static constexpr int CLASS_INT = 0;
-    static constexpr int CLASS_FLOAT=1;
     friend class ValueAnimator;
     using PropertySetter = std::function<void(void*target,const std::string&prop,AnimateValue&v)>;
     using PropertyGetter = std::function<AnimateValue(void*target,const std::string&prop)>;

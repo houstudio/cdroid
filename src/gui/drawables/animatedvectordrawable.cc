@@ -1,7 +1,9 @@
 #include <core/systemclock.h>
 #include <animation/animatorinflater.h>
 #include <drawables/animatedvectordrawable.h>
+#ifdef ENABLE_VECTOR_RENDER_THREAD
 #include <drawables/propertyvaluesanimatorset.h>
+#endif
 namespace cdroid{
 
 AnimatedVectorDrawable::AnimatedVectorDrawable()
@@ -23,11 +25,20 @@ public:
         avd->unscheduleSelf(what);
     }
 };
+
 AnimatedVectorDrawable::AnimatedVectorDrawable(std::shared_ptr<AnimatedVectorDrawableState> state){
-    mCallback =  nullptr;
+    mMutated = false;
+    mAnimatorSetFromXml = nullptr;
     mAnimatedVectorState = std::make_shared<AnimatedVectorDrawableState>(state, mCallback);
-    mAnimatorSet = new VectorDrawableAnimatorRT(this);
+    mAnimatorSet = new VectorDrawableAnimatorUI(this);
+    //mAnimatorSet = new VectorDrawableAnimatorRT(this);
     mCallback = new MyCallback(this);
+}
+
+AnimatedVectorDrawable::~AnimatedVectorDrawable(){
+    delete mCallback;
+    delete mAnimatorSet;
+    delete mAnimatorSetFromXml;
 }
 
 AnimatedVectorDrawable* AnimatedVectorDrawable::mutate() {
@@ -67,6 +78,7 @@ int AnimatedVectorDrawable::getChangingConfigurations() const{
 }
 
 void AnimatedVectorDrawable::draw(Canvas& canvas) {
+#ifdef ENABLE_VECTOR_RENDER_THREAD
     if (/*!canvas.isHardwareAccelerated() &&*/ dynamic_cast<VectorDrawableAnimatorRT*>(mAnimatorSet)) {
         // If we have SW canvas and the RT animation is waiting to start, We need to fallback
         // to UI thread animation for AVD.
@@ -75,8 +87,8 @@ void AnimatedVectorDrawable::draw(Canvas& canvas) {
             fallbackOntoUI();
         }
     }
+#endif
     mAnimatorSet->onDraw(canvas);
-    canvas.dump2png("animatedvector.png");
     mAnimatedVectorState->mVectorDrawable->draw(canvas);
 }
 
@@ -193,16 +205,16 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
                     state->mVectorDrawable = vectorDrawable;
                 }
             } else if (tagName.compare(TARGET)==0) {
-                std::string target = a.getString("name");
-                std::string animResId = a.getString("animation");
-                LOGD("%s -> %s",target.c_str(),animResId.c_str());
+                const std::string target = a.getString("name");
+                const std::string animResId = a.getString("animation");
                 if (!animResId.empty()) {
-                    /*if (theme != null) {
+                    if (true/*theme != nullptr*/) {
                         // The animator here could be ObjectAnimator or AnimatorSet.
-                        Animator* animator = AnimatorInflater::loadAnimator(res, theme, animResId, pathErrorScale);
+                        Animator* animator = AnimatorInflater::loadAnimator(ctx, animResId, pathErrorScale);
                         updateAnimatorProperty(animator, target, state->mVectorDrawable,state->mShouldIgnoreInvalidAnim);
                         state->addTargetAnimator(target, animator);
-                    } else */{
+                        LOGD("%s -> %s %p",target.c_str(),animResId.c_str(),animator);
+                    } else {
                         // The animation may be theme-dependent. As a
                         // workaround until Animator has full support for
                         // applyTheme(), postpone loading the animator
@@ -259,17 +271,18 @@ void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const st
 
 bool AnimatedVectorDrawable::containsSameValueType(const PropertyValuesHolder* holder,const Property* property) {
     const int type1 = holder->getValueType();
-    const int type2 = 0;//property->getType();
-    if (type1 == PropertyValuesHolder::CLASS_FLOAT) {
-        return type2 == PropertyValuesHolder::CLASS_FLOAT;
-    } else if (type1 == PropertyValuesHolder::CLASS_INT) {
-        return type2 == PropertyValuesHolder::CLASS_INT;
+    const int type2 = property->getType();
+    if (type1 == Property::FLOAT_CLASS) {
+        return type2 == Property::FLOAT_CLASS;
+    } else if (type1 == Property::INT_CLASS) {
+        return type2 == Property::INT_CLASS;
     } else {
         return type1 == type2;
     }
 }
 
 void AnimatedVectorDrawable::forceAnimationOnUI() {
+#ifdef ENABLE_VECTOR_RENDER_THREAD
     if (dynamic_cast<VectorDrawableAnimatorRT*>(mAnimatorSet)) {
         VectorDrawableAnimatorRT* animator = (VectorDrawableAnimatorRT*) mAnimatorSet;
         if (animator->isRunning()) {
@@ -278,9 +291,11 @@ void AnimatedVectorDrawable::forceAnimationOnUI() {
         }
         fallbackOntoUI();
     }
+#endif
 }
 
 void AnimatedVectorDrawable::fallbackOntoUI() {
+#ifdef ENABLE_VECTOR_RENDER_THREAD
     if (dynamic_cast<VectorDrawableAnimatorRT*>(mAnimatorSet)) {
         VectorDrawableAnimatorRT* oldAnim = (VectorDrawableAnimatorRT*) mAnimatorSet;
         mAnimatorSet = new VectorDrawableAnimatorUI(this);
@@ -293,6 +308,7 @@ void AnimatedVectorDrawable::fallbackOntoUI() {
         }
         oldAnim->transferPendingActions(mAnimatorSet);
     }
+#endif
 }
 
 bool AnimatedVectorDrawable::canApplyTheme() {
@@ -325,6 +341,9 @@ void AnimatedVectorDrawable::applyTheme(Theme t) {
 //static class AnimatedVectorDrawableState:public Drawable::ConstantState
 AnimatedVectorDrawable::AnimatedVectorDrawableState::AnimatedVectorDrawableState(std::shared_ptr<AnimatedVectorDrawableState> copy,Callback* owner) {
     mShouldIgnoreInvalidAnim = AnimatedVectorDrawable::shouldIgnoreInvalidAnimation();
+    mChangingConfigurations =0;
+    mContext = nullptr;
+
     if (copy != nullptr) {
         mChangingConfigurations = copy->mChangingConfigurations;
 
@@ -356,6 +375,10 @@ AnimatedVectorDrawable::AnimatedVectorDrawableState::AnimatedVectorDrawableState
     } else {
         mVectorDrawable = new VectorDrawable();
     }
+}
+
+AnimatedVectorDrawable::AnimatedVectorDrawableState::~AnimatedVectorDrawableState(){
+    delete  mVectorDrawable;
 }
 
 bool AnimatedVectorDrawable::AnimatedVectorDrawableState::canApplyTheme() {
@@ -417,14 +440,15 @@ void AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnimators(
     }
 
     // Perform a deep copy of the constant state's animators.
-    const int count = /*mAnimators == null ? 0 : */mAnimators.size();
+    const size_t count = mAnimators.size();
     if (count > 0) {
         Animator* firstAnim = prepareLocalAnimator(0);
         AnimatorSet::Builder* builder = animatorSet->play(firstAnim);
-        for (int i = 1; i < count; ++i) {
+        for (size_t i = 1; i < count; ++i) {
             Animator* nextAnim = prepareLocalAnimator(i);
             builder->with(nextAnim);
         }
+        delete builder;
     }
 }
 
@@ -443,8 +467,9 @@ Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnima
     if (!mShouldIgnoreInvalidAnim) {
         if (target == nullptr) {
             LOGE("Target with the name %s cannot be found in the VectorDrawable to be animated.",targetName.c_str());
-        } else if ((target!= mVectorDrawable->getConstantState().get())//dynamic_cast<VectorDrawable::VectorDrawableState*>(target))
-                && false/*!(dynamic_cast<VectorDrawable::VObject*>(target))*/) {
+        } else if ((target!= mVectorDrawable->getConstantState().get())&&false){
+            /*((dynamic_cast<VectorDrawable::VectorDrawableState*>(target))
+              && !(dynamic_cast<VectorDrawable::VObject*>(target)))*/
             LOGE("Target should be either VGroup, VPath or ConstantState, is not supported");
         }
     }
@@ -505,10 +530,10 @@ void AnimatedVectorDrawable::reset() {
 
 void AnimatedVectorDrawable::start() {
     ensureAnimatorSet();
-    /*if (DBG_ANIMATION_VECTOR_DRAWABLE) {
-        LOGD("calling start on AVD: %s at: %p"
-                ((VectorDrawableState*) ((AnimatedVectorDrawableState*)getConstantState())->mVectorDrawable->getConstantState())->mRootName.c_str(), this);
-    }*/
+    if (DBG_ANIMATION_VECTOR_DRAWABLE) {
+        auto vds = mAnimatedVectorState->mVectorDrawable->getConstantState();
+        LOGD("calling start on AVD: %s at: %p",((VectorDrawable::VectorDrawableState*) vds.get())->mRootName.c_str(), this);
+    }
     mAnimatorSet->start();
 }
 
@@ -611,13 +636,14 @@ void AnimatedVectorDrawable::clearAnimationCallbacks() {
 
     mAnimationCallbacks.clear();
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//private static class VectorDrawableAnimatorUI:public VectorDrawableAnimator {
-// mSet is only initialized in init(). So we need to check whether it is null before any
-// operation.
+//class VectorDrawableAnimatorUI:public VectorDrawableAnimator
+// mSet is only initialized in init(). So we need to check whether it is null before any operation.
 AnimatedVectorDrawable::VectorDrawableAnimatorUI::VectorDrawableAnimatorUI(AnimatedVectorDrawable* drawable) {
     mDrawable = drawable;
     mSet = nullptr;
+    LOGD("VectorDrawableAnimatorUI %p on vector %p",this,mDrawable);
 }
 
 AnimatedVectorDrawable::VectorDrawableAnimatorUI::~VectorDrawableAnimatorUI(){
@@ -646,9 +672,10 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::init(AnimatorSet* set) {
 // Although start(), reset() and reverse() should call init() already, it is better to
 // protect these functions from NPE in any situation.
 void AnimatedVectorDrawable::VectorDrawableAnimatorUI::start() {
-    if (mSet == nullptr || mSet->isStarted()) {
+    if ((mSet == nullptr) || mSet->isStarted()) {
         return;
     }
+    LOGD("%p",this);
     mSet->start();
     invalidateOwningView();
 }
@@ -657,6 +684,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::end() {
     if (mSet == nullptr) {
         return;
     }
+    LOGD("%p",this);
     mSet->end();
 }
 
@@ -664,6 +692,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::reset() {
     if (mSet == nullptr) {
         return;
     }
+    LOGD("%p",this);
     start();
     mSet->cancel();
 }
@@ -672,6 +701,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::reverse() {
     if (mSet == nullptr) {
         return;
     }
+    LOGD("%p",this);
     mSet->reverse();
     invalidateOwningView();
 }
@@ -739,9 +769,9 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::invalidateOwningView() {
     mDrawable->invalidateSelf();
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///    public static class VectorDrawableAnimatorRT implements VectorDrawableAnimator {
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///class VectorDrawableAnimatorRT implements VectorDrawableAnimator
+#ifdef ENABLE_VECTOR_RENDER_THREAD
 AnimatedVectorDrawable::VectorDrawableAnimatorRT::VectorDrawableAnimatorRT(AnimatedVectorDrawable* drawable) {
     mDrawable = drawable;
     mSetPtr = new hwui::PropertyValuesAnimatorSet();//nCreateAnimatorSet();//PropertyValuesAnimatorSet();
@@ -836,7 +866,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForGroup(
         // TODO: We need to support the rare case in AVD where no start value is provided
         values[i]->getPropertyValues(mTmpValues);
         propertyId = VectorDrawable::VGroup::getPropertyIndex(mTmpValues.propertyName);
-        if (mTmpValues.type != PropertyValuesHolder::CLASS_FLOAT) {
+        if (mTmpValues.type != Property::FLOAT_CLASS) {
             LOGE_IF(DBG_ANIMATION_VECTOR_DRAWABLE,"Unsupported type: %d. Only float value is supported for Groups.",mTmpValues.type);
             continue;
         }
@@ -874,7 +904,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForFullPa
     Property*prop = target->getProperty(mTmpValues.propertyName);
     PropertyValuesHolder* propertyPtr = nullptr;
     hwui::FullPath* nativePtr = (hwui::FullPath*)target->getNativePtr();//hwui::FullPath
-    if (mTmpValues.type == PropertyValuesHolder::CLASS_FLOAT) {
+    if (mTmpValues.type == Property::FLOAT_CLASS) {
         if (propertyId < 0) {
             if (mDrawable->mAnimatedVectorState->mShouldIgnoreInvalidAnim) {
                 return;
@@ -891,7 +921,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForFullPa
             propertyPtr->setValues(dataPoints);
         }
 
-    } else if (mTmpValues.type == PropertyValuesHolder::CLASS_INT) {
+    } else if (mTmpValues.type == Property::INT_CLASS) {
         //propertyPtr = nCreatePathColorPropertyHolder(nativePtr, propertyId,mTmpValues.startValue, mTmpValues.endValue);
         propertyPtr = PropertyValuesHolder::ofInt(prop,{(int)GET_VARIANT(mTmpValues.startValue,int32_t),GET_VARIANT(mTmpValues.endValue,int32_t)});
         if (mTmpValues.dataSource != nullptr) {
@@ -1067,6 +1097,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::start() {
     if (!mInitialized) {
         return;
     }
+    LOGD("%p",this);
 
     if (useLastSeenTarget()) {
         if (DBG_ANIMATION_VECTOR_DRAWABLE) {
@@ -1127,10 +1158,11 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::startAnimation() {
                         ->mRootName.c_str());
     }*/
     mStarted = true;
-    //nStart(mSetPtr, this, ++mLastListenerId);
+    LOGD("%p",this);
+    //mSetPtr->start();//nStart(mSetPtr, this, ++mLastListenerId);
     invalidateOwningView();
     if (mListener.onAnimationStart != nullptr) {
-        //mListener.onAnimationStart(null);
+        //mListener.o/::nAnimationStart(null);
     }
 }
 
@@ -1142,20 +1174,24 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::endAnimation() {
                         mDrawable->getConstantState().get())->mVectorDrawable->getConstantState())
                         ->mRootName.c_str());
     }*/
-    //nEnd(mSetPtr);
+    LOGD("%p",this);
+    mSetPtr->end();//nEnd(mSetPtr);
     invalidateOwningView();
 }
 
 // This should only be called after animator has been added to the RenderNode target.
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::resetAnimation() {
     //nReset(mSetPtr);
+    LOGD("%p",this);
+    mSetPtr->reset();
     invalidateOwningView();
 }
 
 // This should only be called after animator has been added to the RenderNode target.
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::reverseAnimation() {
     mStarted = true;
-    //nReverse(mSetPtr, this, ++mLastListenerId);
+    LOGD("%p",this);
+    //mSetPtr->reverse();//nReverse(mSetPtr, this, ++mLastListenerId);
     invalidateOwningView();
     if (mListener.onAnimationStart != nullptr) {
         //mListener.onAnimationStart(nullptr);
@@ -1245,4 +1281,5 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::transferPendingActions(Ve
     }
     mPendingAnimationActions.clear();
 }
+#endif
 }/*endof namespace*/

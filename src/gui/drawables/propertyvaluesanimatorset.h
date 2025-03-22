@@ -29,6 +29,16 @@ private:
 
 // TODO: This class should really be named VectorDrawableAnimator
 class PropertyValuesAnimatorSet/* : public BaseRenderNodeAnimator */{
+
+public:
+    /*class PropertyAnimatorSetListener : public Animator::AnimationListener {
+    public:
+        explicit PropertyAnimatorSetListener(PropertyValuesAnimatorSet* set) : mSet(set) {}
+        virtual void onAnimationFinished(BaseRenderNodeAnimator* animator) override;
+    private:
+        PropertyValuesAnimatorSet* mSet;
+    };*/
+
 private:
     int64_t mStartTime;
     long mDuration;
@@ -76,15 +86,6 @@ private:
     // Listener set from outside
     //Animator::AnimationListener mOneShotListener;
 };
-
-/*class PropertyAnimatorSetListener : public Animator::AnimationListener {
-public:
-    explicit PropertyAnimatorSetListener(PropertyValuesAnimatorSet* set) : mSet(set) {}
-    virtual void onAnimationFinished(BaseRenderNodeAnimator* animator) override;
-
-private:
-    PropertyValuesAnimatorSet* mSet;
-};*/
 
 }  // namespace hwui
 }  // namespace cdroid
