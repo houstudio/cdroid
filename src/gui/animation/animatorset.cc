@@ -28,6 +28,75 @@ AnimatorSet::AnimatorSet():Animator(){
     };
 }
 
+AnimatorSet::AnimatorSet(const AnimatorSet&other){
+    const int nodeCount = other.mNodes.size();
+    mStarted = false;
+    mLastFrameTime = -1;
+    mFirstFrame = -1;
+    mLastEventId = -1;
+    mPaused = false;
+    mPauseTime = -1;
+    mSeekState = new SeekState(this);
+    mSelfPulse = true;
+    mStartListenersCalled = false;
+    mReversing = false;
+    mDependencyDirty = true;
+
+    mDummyListener.onAnimationEnd=[this](Animator&animation,bool isReverse){
+        auto it = mNodeMap.find(&animation);
+        if(it==mNodeMap.end()){
+            throw std::runtime_error("Error: animation ended is not in the node map");
+        }
+        it->second->mEnded = true;
+    };
+
+    // Walk through the old nodes list, cloning each node and adding it to the new nodemap.
+    // One problem is that the old node dependencies point to nodes in the old AnimatorSet.
+    // We need to track the old/new nodes in order to reconstruct the dependencies in the clone.
+
+    std::unordered_map<Node*,Node*>clonesMap;
+    for (Node*node:other.mNodes){
+        Node* nodeClone = node->clone();
+        // Remove the old internal listener from the cloned child
+        nodeClone->mAnimation->removeListener(mDummyListener);
+        clonesMap.insert({node, nodeClone});
+        mNodes.push_back(nodeClone);
+        tmNodeMap.insert({nodeClone->mAnimation, nodeClone});
+    }
+
+    mRootNode = clonesMap.find(other.mRootNode)->second;
+    mDelayAnim = (ValueAnimator*) this->mRootNode->mAnimation;
+
+    // Now that we've cloned all of the nodes, we're ready to walk through their
+    // dependencies, mapping the old dependencies to the new nodes
+    for (int i = 0; i < nodeCount; i++) {
+        Node* node = other.mNodes.at(i);
+        // Update dependencies for node's clone
+        Node* nodeClone = clonesMap.find(node)->second;
+        nodeClone->mLatestParent = node->mLatestParent == nullptr
+                ? nullptr : clonesMap.find(node->mLatestParent)->second;
+        int size = node->mChildNodes.size();
+        bool found=false;
+        for (int j = 0; j < size; j++) {
+            auto it = clonesMap.find(node->mChildNodes.at(j));
+            found= it!=clonesMap.end();
+            nodeClone->mChildNodes.push_back(it->second);
+        }
+        size = node->mSiblings.size();
+        for (int j = 0; j < size; j++) {
+            auto it = clonesMap.find(node->mSiblings.at(j));
+            found= it!=clonesMap.end();
+            nodeClone->mSiblings.push_back(it->second);
+        }
+        size = node->mParents.size();
+        for (int j = 0; j < size; j++) {
+            auto it =clonesMap.find(node->mParents.at(j));
+            found= it!=clonesMap.end();
+            nodeClone->mParents.push_back(it->second);
+        }
+    }
+}
+
 AnimatorSet::~AnimatorSet(){
     for(auto nd:mNodeMap){
         delete nd.first;
@@ -108,7 +177,7 @@ AnimatorSet::Builder* AnimatorSet::play(Animator* anim){
 }
 
 void AnimatorSet::cancel(){
-    if (isStarted()) {
+    if (isStarted()|| mStartListenersCalled) {
         std::vector<AnimatorListener>tmpListener = mListeners;
         for (auto ls:tmpListener) {
             if(ls.onAnimationCancel)ls.onAnimationCancel(*this);
@@ -827,58 +896,7 @@ void AnimatorSet::addAnimationCallback(long delay) {
 }
 
 AnimatorSet*AnimatorSet::clone()const{
-    AnimatorSet*anim = new AnimatorSet();
-    const int nodeCount = mNodes.size();
-    anim->mStarted = false;
-    anim->mReversing = false;
-    anim->mDependencyDirty = true;
-
-    // Walk through the old nodes list, cloning each node and adding it to the new nodemap.
-    // One problem is that the old node dependencies point to nodes in the old AnimatorSet.
-    // We need to track the old/new nodes in order to reconstruct the dependencies in the clone.
-
-    std::unordered_map<Node*,Node*>clonesMap;
-    for (Node*node:mNodes){
-        Node* nodeClone = node->clone();
-        // Remove the old internal listener from the cloned child
-        nodeClone->mAnimation->removeListener(mDummyListener);
-        clonesMap.insert({node, nodeClone});
-        anim->mNodes.push_back(nodeClone);
-        anim->mNodeMap.insert({nodeClone->mAnimation, nodeClone});
-    }
-
-    anim->mRootNode = clonesMap.find(mRootNode)->second;
-    anim->mDelayAnim = (ValueAnimator*) anim->mRootNode->mAnimation;
-
-    // Now that we've cloned all of the nodes, we're ready to walk through their
-    // dependencies, mapping the old dependencies to the new nodes
-    for (int i = 0; i < nodeCount; i++) {
-        Node* node = mNodes.at(i);
-        // Update dependencies for node's clone
-        Node* nodeClone = clonesMap.find(node)->second;
-        nodeClone->mLatestParent = node->mLatestParent == nullptr
-                ? nullptr : clonesMap.find(node->mLatestParent)->second;
-        int size = node->mChildNodes.size();
-        bool found=false;
-        for (int j = 0; j < size; j++) {
-            auto it = clonesMap.find(node->mChildNodes.at(j));
-            found= it!=clonesMap.end();
-            nodeClone->mChildNodes.push_back(it->second);
-        }
-        size = node->mSiblings.size();
-        for (int j = 0; j < size; j++) {
-            auto it = clonesMap.find(node->mSiblings.at(j));
-            found= it!=clonesMap.end();
-            nodeClone->mSiblings.push_back(it->second);
-        }
-        size = node->mParents.size();
-        for (int j = 0; j < size; j++) {
-            auto it =clonesMap.find(node->mParents.at(j));
-            found= it!=clonesMap.end();
-            nodeClone->mParents.push_back(it->second);
-        }
-    }
-    return anim;
+    return new AnimatorSet(*this);
 }
 
 bool AnimatorSet::canReverse() {
