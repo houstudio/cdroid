@@ -49,6 +49,7 @@ private:
     // Indicates whether the animation is reversing.
     SeekState* mSeekState;
 private:
+    AnimatorSet(const AnimatorSet&);
     void forceToEnd();
     void initAnimation();
     void start(bool inReverse, bool selfPulse);

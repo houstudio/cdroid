@@ -37,6 +37,7 @@ private:
 protected:
     friend class AnimatorSet;
     bool mPaused = false;
+    bool mStartListenersCalled = false;
     int mChangingConfigurations = 0;
     std::vector<AnimatorListener> mListeners;
     std::vector<AnimatorPauseListener> mPauseListeners;
