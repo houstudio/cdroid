@@ -1,4 +1,4 @@
-#if 0
+#if 10
 #include <animation/valueanimator.h>
 #include <drawables/animationscalelistdrawable.h>
 namespace cdroid{
@@ -7,7 +7,7 @@ AnimationScaleListDrawable::AnimationScaleListDrawable():AnimationScaleListDrawa
 
 AnimationScaleListDrawable::AnimationScaleListDrawable(std::shared_ptr<AnimationScaleListState> state) {
     // Every scale list drawable has its own constant state.
-    auto newState = std::make_shared<AnimationScaleListState>(state, this);
+    auto newState = std::make_shared<AnimationScaleListState>(state.get(), this);
     setConstantState(newState);
     onStateChange(getState());
 }
@@ -109,8 +109,6 @@ bool AnimationScaleListDrawable::isRunning(){
     onStateChange(getState());
 }*/
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 void AnimationScaleListDrawable::setConstantState(std::shared_ptr<DrawableContainerState> state){
     DrawableContainer::setConstantState(state);
 
@@ -118,6 +116,8 @@ void AnimationScaleListDrawable::setConstantState(std::shared_ptr<DrawableContai
         mAnimationScaleListState = std::dynamic_pointer_cast<AnimationScaleListState>(state);
     }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 AnimationScaleListDrawable::AnimationScaleListState::AnimationScaleListState(const AnimationScaleListState* orig, AnimationScaleListDrawable* owner)
     :DrawableContainerState(orig, owner){
