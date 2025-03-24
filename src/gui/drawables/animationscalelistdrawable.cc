@@ -1,4 +1,4 @@
-#if 10
+#include <drawables.h>
 #include <animation/valueanimator.h>
 #include <drawables/animationscalelistdrawable.h>
 namespace cdroid{
@@ -83,23 +83,45 @@ void AnimationScaleListDrawable::clearMutated(){
 
 void AnimationScaleListDrawable::start(){
     Drawable* dr = getCurrent();
-    if (dr != nullptr && dynamic_cast<Animatable*>(dr)) {
+    if ((dr != nullptr) && dynamic_cast<Animatable*>(dr)) {
         ((Animatable*) dr)->start();
+        if(dynamic_cast<AnimatedImageDrawable*>(dr))
+            ((AnimatedImageDrawable*)dr)->start();
+        else if(dynamic_cast<AnimatedRotateDrawable*>(dr))
+            ((AnimatedRotateDrawable*)dr)->start();
+        else if(dynamic_cast<AnimationDrawable*>(dr))
+            ((AnimationDrawable*)dr)->start();
+        else if(dynamic_cast<AnimatedVectorDrawable*>(dr))
+            ((AnimatedVectorDrawable*)dr)->start();
     }
 }
 
 void AnimationScaleListDrawable::stop(){
     Drawable* dr = getCurrent();
-    if (dr != nullptr && dynamic_cast<Animatable*>(dr)) {
-        ((Animatable*) dr)->stop();
+    if ((dr != nullptr) && dynamic_cast<Animatable*>(dr)) {
+        if(dynamic_cast<AnimationDrawable*>(dr))
+            ((AnimationDrawable*)dr)->stop();
+        else if(dynamic_cast<AnimatedRotateDrawable*>(dr))
+            ((AnimatedRotateDrawable*)dr)->stop();
+        else if(dynamic_cast<AnimatedImageDrawable*>(dr))
+            ((AnimatedImageDrawable*)dr)->stop();
+        else if(dynamic_cast<AnimatedVectorDrawable*>(dr))
+            ((AnimatedVectorDrawable*)dr)->stop();
     }
 }
 
 bool AnimationScaleListDrawable::isRunning(){
     bool result = false;
     Drawable* dr = getCurrent();
-    if (dr != nullptr && dynamic_cast<Animatable*>(dr)) {
-        result = ((Animatable*) dr)->isRunning();
+    if ((dr != nullptr) && dynamic_cast<Animatable*>(dr)) {
+        if(dynamic_cast<AnimationDrawable*>(dr))
+            result = ((AnimationDrawable*)dr)->isRunning();
+        else if(dynamic_cast<AnimatedRotateDrawable*>(dr))
+            result = ((AnimatedRotateDrawable*)dr)->isRunning();
+        else if(dynamic_cast<AnimatedImageDrawable*>(dr))
+            result = ((AnimatedImageDrawable*)dr)->isRunning();
+        else if(dynamic_cast<AnimatedVectorDrawable*>(dr))
+            result = ((AnimatedVectorDrawable*)dr)->isRunning();
     }
     return result;
 }
@@ -152,7 +174,7 @@ int AnimationScaleListDrawable::AnimationScaleListState::addDrawable(Drawable* d
 }
 
 AnimationScaleListDrawable* AnimationScaleListDrawable::AnimationScaleListState::newDrawable(){
-    return new AnimationScaleListDrawable(std::dynamic_pointer_cast<AnimationScaleListState>(shared_from_this()));//, nullptr);
+    return new AnimationScaleListDrawable(std::dynamic_pointer_cast<AnimationScaleListState>(shared_from_this()));
 }
 
 /*bool AnimationScaleListDrawable::AnimationScaleListState::canApplyTheme() {
@@ -167,4 +189,3 @@ int AnimationScaleListDrawable::AnimationScaleListState::getCurrentDrawableIndex
 }
 
 }/*endof namespace*/
-#endif
