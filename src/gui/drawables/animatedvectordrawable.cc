@@ -272,10 +272,10 @@ void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const st
 bool AnimatedVectorDrawable::containsSameValueType(const PropertyValuesHolder* holder,const Property* property) {
     const int type1 = holder->getValueType();
     const int type2 = property->getType();
-    if (type1 == Property::FLOAT_CLASS) {
-        return type2 == Property::FLOAT_CLASS;
-    } else if (type1 == Property::INT_CLASS) {
-        return (type2 == Property::INT_CLASS)||(type2==Property::COLOR_CLASS);
+    if (type1 == Property::FLOAT_TYPE) {
+        return type2 == Property::FLOAT_TYPE;
+    } else if (type1 == Property::INT_TYPE) {
+        return (type2 == Property::INT_TYPE)||(type2==Property::COLOR_TYPE);
     } else {
         return type1 == type2;
     }
