@@ -275,7 +275,7 @@ bool AnimatedVectorDrawable::containsSameValueType(const PropertyValuesHolder* h
     if (type1 == Property::FLOAT_CLASS) {
         return type2 == Property::FLOAT_CLASS;
     } else if (type1 == Property::INT_CLASS) {
-        return type2 == Property::INT_CLASS;
+        return (type2 == Property::INT_CLASS)||(type2==Property::COLOR_CLASS);
     } else {
         return type1 == type2;
     }

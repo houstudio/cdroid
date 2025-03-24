@@ -1217,11 +1217,11 @@ class FILL_COLOR:public Property{
 public:
     FILL_COLOR():Property("fillColor",COLOR_CLASS) {}
     void set(void*object, const AnimateValue& value) override{
-        ((VectorDrawable::VFullPath*)object)->setFillColor(GET_VARIANT(value,uint32_t));
+        ((VectorDrawable::VFullPath*)object)->setFillColor((uint32_t)GET_VARIANT(value,int32_t));
     }
 
     AnimateValue get(void*object) override{
-        return ((VectorDrawable::VFullPath*)object)->getFillColor();
+        return int32_t(((VectorDrawable::VFullPath*)object)->getFillColor());
     }
 };
 

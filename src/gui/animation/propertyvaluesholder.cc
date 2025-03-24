@@ -88,10 +88,20 @@ AnimateValue PropertyValuesHolder::evaluator(float fraction, const AnimateValue&
 AnimateValue PropertyValuesHolder::ArgbEvaluator(float fraction,const AnimateValue&from,const AnimateValue&to){
     const uint32_t fromArgb = (uint32_t)GET_VARIANT(from,int32_t);
     const uint32_t toArgb = (uint32_t)GET_VARIANT(to,int32_t);
-    float a = lerp((fromArgb>>24)/255.f,(toArgb>>24)/255.f,fraction);
-    float r = lerp(((fromArgb>>16)&0xFF)/255.f,((toArgb>>16)&0xFF)/255.f,fraction);
-    float g = lerp(((fromArgb>>8)&0xFF)/255.f,((toArgb>>8)&0xFF)/255.f,fraction);
-    float b = lerp((fromArgb&0xFF)/255.f,(toArgb&0xFF)/255.f,fraction);
+    const float startA = ((fromArgb >> 24) & 0xff) / 255.0f;
+    const float startR = ((fromArgb >> 16) & 0xff) / 255.0f;
+    const float startG = ((fromArgb >>  8) & 0xff) / 255.0f;
+    const float startB = ( fromArgb        & 0xff) / 255.0f;
+
+    const float endA = ((toArgb >> 24) & 0xff) / 255.0f;
+    const float endR = ((toArgb >> 16) & 0xff) / 255.0f;
+    const float endG = ((toArgb >>  8) & 0xff) / 255.0f;
+    const float endB = ( toArgb        & 0xff) / 255.0f;
+
+    const float a = startA + fraction * (endA - startA);
+    const float r = startR + fraction * (endR - startR);
+    const float g = startG + fraction * (endG - startG);
+    const float b = startB + fraction * (endB - startB);
     uint32_t color = ((uint32_t)(a*255.f)<<24)|((uint32_t)(r*255)<<16)|((uint32_t)(g*255)<<8)|((uint32_t)(b*255));
     AnimateValue out = int32_t(color);
     return out;
