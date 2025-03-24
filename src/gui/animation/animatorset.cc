@@ -61,7 +61,7 @@ AnimatorSet::AnimatorSet(const AnimatorSet&other){
         nodeClone->mAnimation->removeListener(mDummyListener);
         clonesMap.insert({node, nodeClone});
         mNodes.push_back(nodeClone);
-        tmNodeMap.insert({nodeClone->mAnimation, nodeClone});
+        mNodeMap.insert({nodeClone->mAnimation, nodeClone});
     }
 
     mRootNode = clonesMap.find(other.mRootNode)->second;
@@ -80,19 +80,19 @@ AnimatorSet::AnimatorSet(const AnimatorSet&other){
         for (int j = 0; j < size; j++) {
             auto it = clonesMap.find(node->mChildNodes.at(j));
             found= it!=clonesMap.end();
-            nodeClone->mChildNodes.push_back(it->second);
+            if(found)nodeClone->mChildNodes.push_back(it->second);
         }
         size = node->mSiblings.size();
         for (int j = 0; j < size; j++) {
             auto it = clonesMap.find(node->mSiblings.at(j));
             found= it!=clonesMap.end();
-            nodeClone->mSiblings.push_back(it->second);
+            if(found)nodeClone->mSiblings.push_back(it->second);
         }
         size = node->mParents.size();
         for (int j = 0; j < size; j++) {
             auto it =clonesMap.find(node->mParents.at(j));
             found= it!=clonesMap.end();
-            nodeClone->mParents.push_back(it->second);
+            if(found)nodeClone->mParents.push_back(it->second);
         }
     }
 }

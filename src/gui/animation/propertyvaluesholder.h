@@ -15,7 +15,7 @@
 //http://androidxref.com/9.0.0_r3/xref/frameworks/base/libs/hwui/PropertyValuesHolder.h
 namespace cdroid{
 
-using TypeEvaluator = std::function<AnimateValue(float fraction,AnimateValue&startValue,AnimateValue&endValue)>;
+using TypeEvaluator = std::function<AnimateValue(float fraction,const AnimateValue&startValue,const AnimateValue&endValue)>;
 class PropertyValuesHolder{
 public:
     friend class ValueAnimator;
@@ -31,6 +31,8 @@ public:
         using DataSource = std::function<AnimateValue(float fraction)>;
         DataSource dataSource;
     };
+    static AnimateValue ArgbEvaluator(float fraction,const AnimateValue& from, const AnimateValue& to);
+    static AnimateValue PathDataEvaluator(float fraction,const AnimateValue& from, const AnimateValue& to);
 protected:
     int mValueType;
     std::string mPropertyName;
@@ -59,7 +61,6 @@ public:
     void setPropertyChangedListener(const OnPropertyChangedListener&);
     
     void setValues(const std::vector<int>&values);
-    void setValues(const std::vector<uint32_t>&values);
     void setValues(const std::vector<float>&values);
     void getPropertyValues(PropertyValues&values);
     const AnimateValue& getAnimatedValue()const;

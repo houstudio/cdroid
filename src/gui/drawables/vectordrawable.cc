@@ -1215,7 +1215,7 @@ public:
 
 class FILL_COLOR:public Property{
 public:
-    FILL_COLOR():Property("fillColor",FLOAT_CLASS) {}
+    FILL_COLOR():Property("fillColor",COLOR_CLASS) {}
     void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setFillColor(GET_VARIANT(value,uint32_t));
     }

@@ -14,6 +14,7 @@ PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
     mAnimateValue= o.mAnimateValue;
     mProperty = o.mProperty;
     mValueType= o.mValueType;
+    mEvaluator= o.mEvaluator;
 }
 
 PropertyValuesHolder::PropertyValuesHolder(Property*property){
@@ -75,14 +76,7 @@ AnimateValue PropertyValuesHolder::evaluator(float fraction, const AnimateValue&
     case 0:
         out = (int)((1.f - fraction)*GET_VARIANT(from,int) +  fraction * GET_VARIANT(to,int));
         break;
-    case 1:{
-        float a = lerp((GET_VARIANT(from,uint32_t)>>24)/255.f,(GET_VARIANT(to,uint32_t)>>24)/255.f,fraction);
-        float r = lerp(((GET_VARIANT(from,uint32_t)>>16)&0xFF)/255.f,((GET_VARIANT(to,uint32_t)>>16)&0xFF)/255.f,fraction);
-        float g = lerp(((GET_VARIANT(from,uint32_t)>>8)&0xFF)/255.f,((GET_VARIANT(to,uint32_t)>>8)&0xFF)/255.f,fraction);
-        float b = lerp((GET_VARIANT(from,uint32_t)&0xFF)/255.f,(GET_VARIANT(to,uint32_t)&0xFF)/255.f,fraction);
-        out = ((uint32_t)(a*255.f)<<24)|((uint32_t)(r*255)<<16)|((uint32_t)(g*255)<<8)|((uint32_t)(b*255));
-        }break;
-    case 2:
+    case 1:
         out = GET_VARIANT(from,float) * (1.f - fraction) + GET_VARIANT(to,float) * fraction;
         break;
     default:
@@ -91,16 +85,24 @@ AnimateValue PropertyValuesHolder::evaluator(float fraction, const AnimateValue&
     return out;
 }
 
-void PropertyValuesHolder::setValues(const std::vector<int>&values){
-    //mDataSource.resize(std::max(values.size(),size_t(2)));
-    mDataSource.clear();
-    mValueType = Property::INT_CLASS;
-    for(size_t i=0;i<values.size();i++)
-       mDataSource.push_back(values.at(i));
-    mAnimateValue = values[0];
+AnimateValue PropertyValuesHolder::ArgbEvaluator(float fraction,const AnimateValue&from,const AnimateValue&to){
+    const uint32_t fromArgb = (uint32_t)GET_VARIANT(from,int32_t);
+    const uint32_t toArgb = (uint32_t)GET_VARIANT(to,int32_t);
+    float a = lerp((fromArgb>>24)/255.f,(toArgb>>24)/255.f,fraction);
+    float r = lerp(((fromArgb>>16)&0xFF)/255.f,((toArgb>>16)&0xFF)/255.f,fraction);
+    float g = lerp(((fromArgb>>8)&0xFF)/255.f,((toArgb>>8)&0xFF)/255.f,fraction);
+    float b = lerp((fromArgb&0xFF)/255.f,(toArgb&0xFF)/255.f,fraction);
+    uint32_t color = ((uint32_t)(a*255.f)<<24)|((uint32_t)(r*255)<<16)|((uint32_t)(g*255)<<8)|((uint32_t)(b*255));
+    AnimateValue out = int32_t(color);
+    return out;
 }
 
-void PropertyValuesHolder::setValues(const std::vector<uint32_t>&values){
+AnimateValue PropertyValuesHolder::PathDataEvaluator(float fraction,const AnimateValue&from,const AnimateValue&to){
+    AnimateValue out;
+    return out;
+}
+
+void PropertyValuesHolder::setValues(const std::vector<int>&values){
     //mDataSource.resize(std::max(values.size(),size_t(2)));
     mDataSource.clear();
     mValueType = Property::INT_CLASS;
