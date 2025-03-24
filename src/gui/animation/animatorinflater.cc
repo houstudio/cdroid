@@ -300,7 +300,10 @@ void AnimatorInflater::parseAnimatorFromTypeArray(ValueAnimator* anim,const Attr
         anim->setRepeatCount(atts.getInt("repeatCount", ValueAnimator::INFINITE));
     }
     if (atts.hasAttribute("repeatMode")) {
-        anim->setRepeatMode(atts.getInt("repeatMode",ValueAnimator::RESTART));
+        anim->setRepeatMode(atts.getInt("repeatMode",std::unordered_map<std::string,int>{
+                    {"restart",(int)ValueAnimator::RESTART},
+                    {"reverse",(int)ValueAnimator::REVERSE}
+            },ValueAnimator::RESTART));
     }
 
     /*if (arrayObjectAnimator != nullptr) {
