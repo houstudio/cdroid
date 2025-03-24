@@ -15,7 +15,7 @@
 //http://androidxref.com/9.0.0_r3/xref/frameworks/base/libs/hwui/PropertyValuesHolder.h
 namespace cdroid{
 
-using TypeEvaluator = std::function<AnimateValue(float fraction,const AnimateValue&startValue,const AnimateValue&endValue)>;
+using TypeEvaluator = AnimateValue&(*)(float fraction,AnimateValue&out,const AnimateValue&startValue,const AnimateValue&endValue);
 class PropertyValuesHolder{
 public:
     friend class ValueAnimator;
@@ -31,8 +31,8 @@ public:
         using DataSource = std::function<AnimateValue(float fraction)>;
         DataSource dataSource;
     };
-    static AnimateValue ArgbEvaluator(float fraction,const AnimateValue& from, const AnimateValue& to);
-    static AnimateValue PathDataEvaluator(float fraction,const AnimateValue& from, const AnimateValue& to);
+    static AnimateValue& ArgbEvaluator(float fraction,AnimateValue& out,const AnimateValue& from, const AnimateValue& to);
+    static AnimateValue& PathDataEvaluator(float fraction,AnimateValue& out,const AnimateValue& from, const AnimateValue& to);
 protected:
     int mValueType;
     std::string mPropertyName;
@@ -45,7 +45,7 @@ protected:
     AnimateValue mAnimateValue;
     void setupValue(void*target,int);
     void init();
-    static AnimateValue evaluator(float fraction,const AnimateValue& from, const AnimateValue& to);
+    static AnimateValue& evaluator(float fraction,AnimateValue&out,const AnimateValue& from, const AnimateValue& to);
     void calculateValue(float fraction);
 public:
     PropertyValuesHolder();
@@ -62,20 +62,23 @@ public:
     
     void setValues(const std::vector<int>&values);
     void setValues(const std::vector<float>&values);
+    void setValues(const std::vector<PathParser::PathData>&values);
     void getPropertyValues(PropertyValues&values);
     const AnimateValue& getAnimatedValue()const;
 
     void setEvaluator(TypeEvaluator evaluator);
     void setAnimatedValue(void*target);
-    void setupStartValue(void*target,const std::string&targetClass);
-    void setupEndValue(void*target,const std::string&targetClass);
-    void setupSetterAndGetter(void*target,const std::string&targetClass);
+    void setupStartValue(void*target);
+    void setupEndValue(void*target);
+    void setupSetterAndGetter(void*target);
 
     static PropertyValuesHolder*ofInt(const std::string&name,const std::vector<int>&);
     static PropertyValuesHolder*ofInt(Property*,const std::vector<int>&);
     static PropertyValuesHolder*ofFloat(const std::string&name,const std::vector<float>&);
     static PropertyValuesHolder*ofFloat(Property*prop,const std::vector<float>&);
     static PropertyValuesHolder*ofObject(const std::string&propertyName,const std::vector<void*>&);
+    static PropertyValuesHolder*ofObject(Property*prop,const std::vector<PathParser::PathData>&);
+    static PropertyValuesHolder*ofObject(const std::string&propertyName,const std::vector<PathParser::PathData>&);
 };
 
 typedef PropertyValuesHolder  IntPropertyValuesHolder;

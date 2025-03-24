@@ -110,7 +110,7 @@ void Animator::setupEndValues() {
     //NOTHING
 }
 
-void Animator::setTarget(void*target,const std::string&){
+void Animator::setTarget(void*target){
     //NOTHING
 }
 

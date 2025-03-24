@@ -158,7 +158,8 @@ static const std::unordered_map<std::string,int>valueTypes = {
     {"strokeColor",(int)Property::COLOR_TYPE},
     {"strokeAlpha",(int)Property::FLOAT_TYPE},
     {"fillColor",(int)Property::COLOR_TYPE},
-    {"fillAlpha",(int)Property::FLOAT_TYPE}
+    {"fillAlpha",(int)Property::FLOAT_TYPE},
+    {"pathData",(int)Property::PATH_TYPE}
 };
 
 int AnimatorInflater::inferValueTypeFromPropertyName(const AttributeSet&atts, const std::string& propertyName) {
@@ -189,24 +190,26 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
     if (valueType == Property::PATH_TYPE) {
         const std::string fromString = atts.getString("valueFrom");
         const std::string toString = atts.getString("valueTo");
-        PathParser::PathData* nodesFrom = fromString.empty() ? nullptr : new PathParser::PathData(fromString);
-        PathParser::PathData* nodesTo = toString.empty()  ? nullptr : new PathParser::PathData(toString);
+        PathParser::PathData nodesFrom = fromString.empty() ? PathParser::PathData() : PathParser::PathData(fromString);
+        PathParser::PathData nodesTo = toString.empty()  ? PathParser::PathData() : PathParser::PathData(toString);
 
-        if (nodesFrom != nullptr || nodesTo != nullptr) {
-            if (nodesFrom != nullptr) {
-                //TypeEvaluator evaluator = new PathDataEvaluator();
-                if (nodesTo != nullptr) {
-                    if (!PathParser::canMorph(*nodesFrom, *nodesTo)) {
+        if (fromString.size() || toString.size()) {
+            if (fromString.size()) {
+                PathParser::PathData nodesFrom(fromString);
+                if (toString.size()) {
+                    PathParser::PathData nodesTo(toString);
+                    if (!PathParser::canMorph(nodesFrom, nodesTo)) {
                         throw std::runtime_error(std::string(" Can't morph from") + fromString + " to " + toString);
                     }
-                    //returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, nodesFrom, nodesTo);
+                    returnValue = PropertyValuesHolder::ofObject(propertyName, {nodesFrom, nodesTo});
                 } else {
-                    //returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, (Object) nodesFrom);
+                    returnValue = PropertyValuesHolder::ofObject(propertyName, {nodesFrom});
                 }
-            } else if (nodesTo != nullptr) {
-                //TypeEvaluator evaluator = new PathDataEvaluator();
-                //returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, (Object) nodesTo);
+            } else if (toString.size()) {
+                PathParser::PathData nodesTo(toString);
+                returnValue = PropertyValuesHolder::ofObject(propertyName,{nodesTo});
             }
+            if(returnValue)returnValue->setEvaluator(PropertyValuesHolder::PathDataEvaluator);
         }
     } else {
         TypeEvaluator evaluator = nullptr;

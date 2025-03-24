@@ -142,13 +142,13 @@ std::vector<Animator*> AnimatorSet::getChildAnimations()const{
     return childList;
 }
 
-void AnimatorSet::setTarget(void*target,const std::string&targetClass){
+void AnimatorSet::setTarget(void*target){
     for (auto node:mNodes){//int i = 0; i < size; i++) {
         Animator* animation = node->mAnimation;
         if (dynamic_cast<AnimatorSet*>(animation)) {
-            ((AnimatorSet*)animation)->setTarget(target,targetClass);
+            ((AnimatorSet*)animation)->setTarget(target);
         } else if (dynamic_cast<ObjectAnimator*>(animation)) {
-            ((ObjectAnimator*)animation)->setTarget(target,targetClass);
+            ((ObjectAnimator*)animation)->setTarget(target);
         }
     }
 }

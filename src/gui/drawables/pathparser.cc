@@ -14,7 +14,7 @@ std::shared_ptr<cdroid::Path> PathParser::createPathFromPathData(const std::stri
     //Path path = new Path();
     //nParseStringForPath(path.mNativePath, pathString, pathString.length());
     hwui::PathParser::ParseResult result;
-    Cairo::RefPtr<cdroid::Path>path;
+    Cairo::RefPtr<cdroid::Path> path;
     hwui::PathParser::parseAsciiStringForPath(path, &result, pathString.c_str(), pathString.length());
     return path;
 }
@@ -37,8 +37,8 @@ void PathParser::createPathFromPathData(std::shared_ptr<cdroid::Path>& outPath,c
  */
 bool PathParser::canMorph(const PathParser::PathData& pathDataFrom,const PathParser::PathData& pathDataTo) {
     //return nCanMorph(pathDataFrom.mNativePathData, pathDataTo.mNativePathData);
-    hwui::PathData*from=(hwui::PathData*)pathDataFrom.mNativePathData;
-    hwui::PathData*to =(hwui::PathData*)pathDataTo.mNativePathData;
+    hwui::PathData*from = (hwui::PathData*)pathDataFrom.mNativePathData;
+    hwui::PathData*to = (hwui::PathData*)pathDataTo.mNativePathData;
     return hwui::VectorDrawableUtils::canMorph(*from,*to);
 }
 
@@ -53,9 +53,9 @@ bool PathParser::canMorph(const PathParser::PathData& pathDataFrom,const PathPar
  */
 bool PathParser::interpolatePathData(PathParser::PathData& outData,const PathParser::PathData& fromData,const PathParser::PathData& toData,
         float fraction) {
-    hwui::PathData*out=(hwui::PathData*)outData.mNativePathData;
-    hwui::PathData*from=(hwui::PathData*)fromData.mNativePathData;
-    hwui::PathData*to=(hwui::PathData*)toData.mNativePathData;
+    hwui::PathData*out = (hwui::PathData*)outData.mNativePathData;
+    hwui::PathData*from= (hwui::PathData*)fromData.mNativePathData;
+    hwui::PathData*to = (hwui::PathData*)toData.mNativePathData;
     return hwui::VectorDrawableUtils::interpolatePathData(*out,*from,*to,fraction);
 }
 
@@ -96,6 +96,13 @@ void PathParser::PathData::setPathData(const PathParser::PathData& source) {
     hwui::PathData*thiz =(hwui::PathData*)mNativePathData;
     hwui::PathData*other=(hwui::PathData*)source.mNativePathData;
     *thiz = *other;
+}
+
+PathParser::PathData&PathParser::PathData::operator=(const PathParser::PathData&other){
+    if(&other!=this){
+        *mNativePathData=*other.mNativePathData;
+    }
+    return *this;
 }
 
 PathParser::PathData::~PathData() {

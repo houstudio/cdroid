@@ -6,6 +6,8 @@ namespace cdroid{
 PropertyValuesHolder::PropertyValuesHolder(){
     mProperty = nullptr;
     mValueType= Property::UNDEFINED;
+    mEvaluator= evaluator;
+    LOGD("%p,%s",this,mPropertyName.c_str());
 }
 
 PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
@@ -15,18 +17,23 @@ PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
     mProperty = o.mProperty;
     mValueType= o.mValueType;
     mEvaluator= o.mEvaluator;
+    LOGD("%p,%s",this,mPropertyName.c_str());
 }
 
 PropertyValuesHolder::PropertyValuesHolder(Property*property){
     mProperty = property;
-    mValueType= property->getType();;
+    mValueType= property->getType();
+    mEvaluator= evaluator;
     if(property)mPropertyName = property->getName();
+    LOGD("%p,%s",this,mPropertyName.c_str());
 }
 
 PropertyValuesHolder::PropertyValuesHolder(const std::string&name){
     mPropertyName = name;
     mValueType= Property::UNDEFINED;
     mProperty = nullptr;
+    mEvaluator= evaluator;
+    LOGD("%p,%s",this,mPropertyName.c_str());
 }
 
 PropertyValuesHolder::~PropertyValuesHolder(){
@@ -58,10 +65,10 @@ void PropertyValuesHolder::setPropertyChangedListener(const OnPropertyChangedLis
     mOnPropertyChangedListener = ls;
 }
 
-void PropertyValuesHolder::setupSetterAndGetter(void*target,const std::string&targetClass){
+void PropertyValuesHolder::setupSetterAndGetter(void*target){
     if(mPropertyName.empty())return;
     if(mProperty==nullptr){
-        mProperty = Property::fromName(targetClass,mPropertyName);
+        mProperty = Property::fromName(mPropertyName);
         mValueType= mProperty->getType();
     }
 }
@@ -70,8 +77,7 @@ static int lerp(int startValue, int endValue, float fraction) {
     return int(startValue + std::round(fraction * (endValue - startValue)));
 }
 
-AnimateValue PropertyValuesHolder::evaluator(float fraction, const AnimateValue& from, const AnimateValue& to){
-    AnimateValue out;
+AnimateValue& PropertyValuesHolder::evaluator(float fraction,AnimateValue&out, const AnimateValue& from, const AnimateValue& to){
     switch(from.index()){
     case 0:
         out = (int)((1.f - fraction)*GET_VARIANT(from,int) +  fraction * GET_VARIANT(to,int));
@@ -85,7 +91,7 @@ AnimateValue PropertyValuesHolder::evaluator(float fraction, const AnimateValue&
     return out;
 }
 
-AnimateValue PropertyValuesHolder::ArgbEvaluator(float fraction,const AnimateValue&from,const AnimateValue&to){
+AnimateValue& PropertyValuesHolder::ArgbEvaluator(float fraction,AnimateValue& out,const AnimateValue&from,const AnimateValue&to){
     const uint32_t fromArgb = (uint32_t)GET_VARIANT(from,int32_t);
     const uint32_t toArgb = (uint32_t)GET_VARIANT(to,int32_t);
     const float startA = ((fromArgb >> 24) & 0xff) / 255.0f;
@@ -103,12 +109,17 @@ AnimateValue PropertyValuesHolder::ArgbEvaluator(float fraction,const AnimateVal
     const float g = startG + fraction * (endG - startG);
     const float b = startB + fraction * (endB - startB);
     uint32_t color = ((uint32_t)(a*255.f)<<24)|((uint32_t)(r*255)<<16)|((uint32_t)(g*255)<<8)|((uint32_t)(b*255));
-    AnimateValue out = int32_t(color);
+    out = int32_t(color);
     return out;
 }
 
-AnimateValue PropertyValuesHolder::PathDataEvaluator(float fraction,const AnimateValue&from,const AnimateValue&to){
-    AnimateValue out;
+AnimateValue& PropertyValuesHolder::PathDataEvaluator(float fraction,AnimateValue& out,const AnimateValue&from,const AnimateValue&to){
+    auto& fromPathData= GET_VARIANT(from,PathParser::PathData);
+    auto& toPathData  = GET_VARIANT(to,PathParser::PathData);
+    auto& outPathData = GET_VARIANT(out,PathParser::PathData);
+    if (!PathParser::interpolatePathData(outPathData, fromPathData, toPathData, fraction)) {
+        throw std::runtime_error("Can't interpolate between two incompatible pathData");
+    }
     return out;
 }
 
@@ -130,6 +141,15 @@ void PropertyValuesHolder::setValues(const std::vector<float>&values){
     mAnimateValue = values[0];
 }
 
+void PropertyValuesHolder::setValues(const std::vector<PathParser::PathData>&values){
+    mDataSource.clear();
+    mValueType = Property::PATH_TYPE;
+    for(size_t i = 0;i < values.size();i++)
+       mDataSource.push_back(values.at(i));
+    mAnimateValue = values[0];
+    mEvaluator= PathDataEvaluator;
+}
+
 void PropertyValuesHolder::init(){
     if(mEvaluator==nullptr){
         mEvaluator = evaluator;
@@ -148,7 +168,7 @@ void PropertyValuesHolder::calculateValue(float fraction){
         fraction *= mDataSource.size() - 1;
         const int lowIndex = std::floor(fraction);
         fraction -= lowIndex;
-        mAnimateValue = mEvaluator(fraction, mDataSource[lowIndex], mDataSource[lowIndex + 1]);
+        (*mEvaluator)(fraction, mAnimateValue,mDataSource[lowIndex], mDataSource[lowIndex + 1]);
     } 
 }
 
@@ -160,9 +180,9 @@ void PropertyValuesHolder::getPropertyValues(PropertyValues& values){
     init();
     values.propertyName = mPropertyName;
     values.type = mValueType;
-    values.startValue=mDataSource[0];
-    values.endValue=mDataSource[mDataSource.size()-1];
-    LOGD("TODO property=%p %s",mProperty,mPropertyName.c_str());
+    values.startValue = mDataSource[0];
+    values.endValue = mDataSource[mDataSource.size()-1];
+    mAnimateValue = mDataSource[0];
 #if 0
     values.startValue = mKeyframes.getValue(0);
     if (values.startValue instanceof PathParser::PathData) {
@@ -220,13 +240,13 @@ void PropertyValuesHolder::setupValue(void*target,int position){
     }
 }
 
-void PropertyValuesHolder::setupStartValue(void*target,const std::string&targetClass){
+void PropertyValuesHolder::setupStartValue(void*target){
     if(!mDataSource.empty()){
         setupValue(target,0);
     }
 }
 
-void PropertyValuesHolder::setupEndValue(void*target,const std::string&targetClass){
+void PropertyValuesHolder::setupEndValue(void*target){
     if(!mDataSource.empty()){
         setupValue(target,mDataSource.size()-1);
     }
@@ -234,34 +254,43 @@ void PropertyValuesHolder::setupEndValue(void*target,const std::string&targetCla
 
 PropertyValuesHolder* PropertyValuesHolder::ofInt(const std::string&name,const std::vector<int>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(name);
-    pvh->mValueType=Property::INT_TYPE;
     pvh->setValues(values);
     return pvh;
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofInt(Property*prop,const std::vector<int>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
-    pvh->mValueType=Property::INT_TYPE;
     pvh->setValues(values);
     return pvh;
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofFloat(const std::string&name,const std::vector<float>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(name);
-    pvh->mValueType=Property::FLOAT_TYPE;
     pvh->setValues(values);
     return pvh;
 }
 
 PropertyValuesHolder* PropertyValuesHolder::ofFloat(Property*prop,const std::vector<float>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
-    pvh->mValueType=Property::FLOAT_TYPE;
     pvh->setValues(values);
     return pvh;
 }
 
 PropertyValuesHolder*PropertyValuesHolder::ofObject(const std::string&propertyName,const std::vector<void*>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(propertyName);
+    //pvh->setValues(values);
+    return pvh;
+}
+
+PropertyValuesHolder*PropertyValuesHolder::ofObject(Property*prop,const std::vector<PathParser::PathData>&values){
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
+    pvh->setValues(values);
+    return pvh;
+}
+
+PropertyValuesHolder*PropertyValuesHolder::ofObject(const std::string&propertyName,const std::vector<PathParser::PathData>&values){
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(propertyName);
+    pvh->setValues(values);
     return pvh;
 }
 

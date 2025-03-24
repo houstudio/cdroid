@@ -473,7 +473,7 @@ Animator* AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnima
             LOGE("Target should be either VGroup, VPath or ConstantState, is not supported");
         }
     }
-    localAnimator->setTarget(target,"VectorDrawable");
+    localAnimator->setTarget(target);
     return localAnimator;
 }
 

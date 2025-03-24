@@ -1164,7 +1164,7 @@ Animator* FastScroller::groupAnimatorOfFloat(const std::string&propName, float v
     AnimatorSet::Builder* builder = nullptr;
 
     for (int i = int(views.size() - 1); i >= 0; i--) {
-        Animator* anim = ObjectAnimator::ofFloat(views[i],"View",propName, {value});
+        Animator* anim = ObjectAnimator::ofFloat(views[i],propName, {value});
         if (builder == nullptr) {
             builder = animSet->play(anim);
         } else {
@@ -1176,11 +1176,11 @@ Animator* FastScroller::groupAnimatorOfFloat(const std::string&propName, float v
 }
 
 Animator* FastScroller::animateScaleX(View* v, float target){
-    return ObjectAnimator::ofFloat(v,"View","scaleX", {target});
+    return ObjectAnimator::ofFloat(v,"scaleX", {target});
 }
 
 Animator* FastScroller::animateAlpha(View* v, float alpha){
-    return ObjectAnimator::ofFloat(v,"View","alpha", {alpha});
+    return ObjectAnimator::ofFloat(v,"alpha", {alpha});
 }
 
 Animator* FastScroller::animateBounds(View* v,const Rect& bounds){
@@ -1188,7 +1188,7 @@ Animator* FastScroller::animateBounds(View* v,const Rect& bounds){
     PropertyValuesHolder* top = PropertyValuesHolder::ofInt("top", {bounds.top});
     PropertyValuesHolder* right = PropertyValuesHolder::ofInt("right", {bounds.width});
     PropertyValuesHolder* bottom = PropertyValuesHolder::ofInt("bottom", {bounds.height});
-    return ObjectAnimator::ofPropertyValuesHolder(v,"View", {left, top, right, bottom});
+    return ObjectAnimator::ofPropertyValuesHolder(v,{left, top, right, bottom});
 }
 }//endof namespace
 

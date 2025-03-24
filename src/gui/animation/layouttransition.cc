@@ -27,7 +27,7 @@ LayoutTransition::LayoutTransition() {
         PropertyValuesHolder* pvhBottom = PropertyValuesHolder::ofInt("bottom",{0, 1});
         PropertyValuesHolder* pvhScrollX = PropertyValuesHolder::ofInt("scrollX",{0, 1});
         PropertyValuesHolder* pvhScrollY = PropertyValuesHolder::ofInt("scrollY",{0, 1});
-        defaultChangeIn = ObjectAnimator::ofPropertyValuesHolder(nullptr,"View",
+        defaultChangeIn = ObjectAnimator::ofPropertyValuesHolder(nullptr,
 			{pvhLeft, pvhTop, pvhRight, pvhBottom, pvhScrollX, pvhScrollY});
         defaultChangeIn->setDuration(DEFAULT_DURATION);
         defaultChangeIn->setStartDelay(mChangingAppearingDelay);
@@ -39,11 +39,11 @@ LayoutTransition::LayoutTransition() {
         defaultChange->setStartDelay(mChangingDelay);
         defaultChange->setInterpolator(mChangingInterpolator);
 
-        defaultFadeIn = ObjectAnimator::ofFloat(nullptr,"View","alpha",{0.f, 1.f});
+        defaultFadeIn = ObjectAnimator::ofFloat(nullptr,"alpha",{0.f, 1.f});
         defaultFadeIn->setDuration(DEFAULT_DURATION);
         defaultFadeIn->setStartDelay(mAppearingDelay);
         defaultFadeIn->setInterpolator(mAppearingInterpolator);
-        defaultFadeOut = ObjectAnimator::ofFloat(nullptr,"View","alpha",{1.f, 0.f});
+        defaultFadeOut = ObjectAnimator::ofFloat(nullptr,"alpha",{1.f, 0.f});
         defaultFadeOut->setDuration(DEFAULT_DURATION);
         defaultFadeOut->setStartDelay(mDisappearingDelay);
         defaultFadeOut->setInterpolator(mDisappearingInterpolator);
@@ -404,7 +404,7 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
         return;
     }
     Animator* anim = baseAnimator->clone();
-    anim->setTarget(child,"View");
+    anim->setTarget(child);
     anim->setupStartValues();
     auto ita = pendingAnimations.find(child);
     if (ita != pendingAnimations.end()) {
@@ -651,7 +651,7 @@ void LayoutTransition::runAppearingTransition(ViewGroup* parent,View* child){
         return;
     }
     Animator* anim = mAppearingAnim->clone();
-    anim->setTarget(child,"View");
+    anim->setTarget(child);
     anim->setStartDelay(mAppearingDelay);
     anim->setDuration(mAppearingDuration);
     if (mAppearingInterpolator != sAppearingInterpolator) {
@@ -694,7 +694,7 @@ void LayoutTransition::runDisappearingTransition(ViewGroup* parent,View* child){
     if (mDisappearingInterpolator != sDisappearingInterpolator) {
         anim->setInterpolator(mDisappearingInterpolator);
     }
-    anim->setTarget(child,"View");
+    anim->setTarget(child);
     const float preAnimAlpha = child->getAlpha();
     AnimatorListenerAdapter lis;
     lis.onAnimationEnd = [this,parent,child,preAnimAlpha](Animator& anim,bool reverse){
