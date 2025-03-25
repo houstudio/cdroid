@@ -212,7 +212,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
         {"insideOverlay" ,(int)SCROLLBARS_INSIDE_OVERLAY },
         {"insideInset"   ,(int)SCROLLBARS_INSIDE_INSET },
         {"outsideOverlay",(int)SCROLLBARS_OUTSIDE_OVERLAY},
-        {"outsideInset"  ,(int)SCROLLBARS_OUTSIDE_INSET} }),mOverScrollMode);
+        {"outsideInset"  ,(int)SCROLLBARS_OUTSIDE_INSET} }),SCROLLBARS_INSIDE_OVERLAY);
 
     mOverScrollMode = attrs.getInt("overScrollMode",std::unordered_map<std::string,int>{
            {"never",(int)OVER_SCROLL_NEVER} , {"always",(int)OVER_SCROLL_ALWAYS},
