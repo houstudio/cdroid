@@ -128,7 +128,7 @@ TEST_F(ANIMATOR,translate){
     yprop.setValues(std::vector<int>({0,200,200}));
 
     PropertyValuesHolder cprop;
-    cprop.setValues(std::vector<uint32_t>({0xFF000000,0xFFFF8844}));
+    cprop.setValues(std::vector<int32_t>({int(0xFF000000),int(0xFFFF8844)}));
 
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&xprop,&yprop,&cprop});
     anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([tv](ValueAnimator&anim){
@@ -136,7 +136,7 @@ TEST_F(ANIMATOR,translate){
         PropertyValuesHolder*yp=anim.getValues(1);
         PropertyValuesHolder*cp=anim.getValues(2);
         tv->setPos(GET_VARIANT(xp->getAnimatedValue(),int),GET_VARIANT(yp->getAnimatedValue(),int));
-        tv->setBackgroundColor(GET_VARIANT(cp->getAnimatedValue(),uint32_t));
+        tv->setBackgroundColor(GET_VARIANT(cp->getAnimatedValue(),int32_t));
     }));
 
     anim->setDuration(5000);
