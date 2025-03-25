@@ -28,7 +28,7 @@ protected:
     void setConstantState(std::shared_ptr<DrawableContainerState> state) override;
 public:
     AnimationScaleListDrawable();
-    void inflate(Context*context,XmlPullParser& parser,const AttributeSet& attrs);
+    void inflate(XmlPullParser& parser,const AttributeSet& attrs)override;
     AnimationScaleListDrawable* mutate() override;
     void clearMutated() override;
     void start() override;

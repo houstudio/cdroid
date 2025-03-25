@@ -23,7 +23,7 @@ bool AnimationScaleListDrawable::onStateChange(const std::vector<int>& stateSet)
 }
 
 
-void AnimationScaleListDrawable::inflate(Context*context,XmlPullParser& parser,const AttributeSet& attrs){
+void AnimationScaleListDrawable::inflate(XmlPullParser& parser,const AttributeSet& attrs){
     //updateDensity();
     inflateChildElements(parser, attrs);
     onStateChange(getState());
@@ -34,36 +34,33 @@ void AnimationScaleListDrawable::inflate(Context*context,XmlPullParser& parser,c
  */
 void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& attrs){
     auto state = mAnimationScaleListState;
-    const int innerDepth = parser.getDepth() + 1;
+    const int innerDepth = parser.getDepth();
     XmlPullParser::XmlEvent event;
-    int type;
-    int depth;
-    while ((type = parser.next(event)) != XmlPullParser::END_DOCUMENT
-            && ((depth = parser.getDepth()) >= innerDepth
-            || type != XmlPullParser::END_TAG)) {
+    int type, depth;
+    while ((type = parser.next(event,depth)) != XmlPullParser::END_DOCUMENT
+            && (depth >= innerDepth || type != XmlPullParser::END_TAG)) {
         if (type != XmlPullParser::START_TAG) {
             continue;
         }
 
-        if (depth > innerDepth || !parser.getName().compare("item")==0) {
+        if ((depth > innerDepth) || parser.getName().compare("item")) {
             continue;
         }
 
         // Either pick up the android:drawable attribute.
-        Drawable* dr = attrs.getDrawable("drawable");
+        Drawable* dr = event.attributes.getDrawable("drawable");
 
         // Or parse the child element under <item>.
         if (dr == nullptr) {
-            while ((type = parser.next(event)) == XmlPullParser::TEXT) {
+            while ((type = parser.next(event,depth)) == XmlPullParser::TEXT) {
             }
             if (type != XmlPullParser::START_TAG) {
                 throw std::logic_error(//parser.getPositionDescription()
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
             }
-            dr = Drawable::createFromXmlInner(parser, attrs);
+            dr = Drawable::createFromXmlInner(parser, event.attributes);
         }
-
         state->addDrawable(dr);
     }
 }
