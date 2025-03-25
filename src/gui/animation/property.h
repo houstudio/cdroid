@@ -4,7 +4,7 @@
 #include <core/variant.h>
 #include <drawables/pathparser.h>
 namespace cdroid{
-typedef nonstd::variant<int,uint32_t,float,std::shared_ptr<PathParser::PathData>>AnimateValue;
+typedef nonstd::variant<int,float,PathParser::PathData>AnimateValue;
 
 #if variant_CPP17_OR_GREATER
    #define GET_VARIANT(vt,type) std::get<type>(vt)
@@ -15,10 +15,10 @@ typedef nonstd::variant<int,uint32_t,float,std::shared_ptr<PathParser::PathData>
 class Property{
 public:
     static constexpr int UNDEFINED =-1;
-    static constexpr int INT_CLASS =0 ;
-    static constexpr int COLOR_CLASS=1;
-    static constexpr int FLOAT_CLASS=2;
-    static constexpr int PATH_CLASS=3;
+    static constexpr int INT_TYPE = 0;
+    static constexpr int COLOR_TYPE=1;
+    static constexpr int FLOAT_TYPE=2;
+    static constexpr int PATH_TYPE =3;
 protected:
     int mType;
     std::string mName;

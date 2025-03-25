@@ -442,7 +442,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
     LOGV_IF(isPrimary,"setProgress %d->%d animate=%d",id,progress,animate);
     if (isPrimary && animate) {
         Animator::AnimatorListener animListener;
-        ObjectAnimator* animator = ObjectAnimator::ofFloat(this,"ProgressBar","visual_progress",{scale});
+        ObjectAnimator* animator = ObjectAnimator::ofFloat(this,"visual_progress",{scale});
         animator->setAutoCancel(true);
         animator->setDuration(PROGRESS_ANIM_DURATION);
         animator->setInterpolator(DecelerateInterpolator::gDecelerateInterpolator.get());

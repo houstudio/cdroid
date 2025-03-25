@@ -1,4 +1,5 @@
 #include <drawables.h>
+#include <drawables/animationscalelistdrawable.h>
 namespace cdroid{
 /**
  * Loads the drawable resource with the specified identifier.
@@ -45,6 +46,9 @@ Drawable* DrawableInflater::inflateFromXmlForDensity(const std::string& name,Xml
 }
 
 static const std::unordered_map<std::string,std::function<Drawable*()>>drawableParsers={
+    {"AnimationScaleListDrawable",[](){return new AnimationScaleListDrawable();}},
+    {"com.android.internal.graphics.drawable.AnimationScaleListDrawable",
+        [](){return new AnimationScaleListDrawable();}},
     {"animated-rotate", [](){return new AnimatedRotateDrawable();}},
     {"animation-list" , [](){return new AnimationDrawable();}},
     {"animated-image" , [](){return new AnimatedImageDrawable();}},

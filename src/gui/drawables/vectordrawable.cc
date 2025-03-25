@@ -677,7 +677,7 @@ float VectorDrawable::VectorDrawableState::getAlpha() {
 namespace{/*anonymous namespace*/
 class TRANSLATE_X:public Property{
 public:
-    TRANSLATE_X():Property("translateX",FLOAT_CLASS) {}
+    TRANSLATE_X():Property("translateX",FLOAT_TYPE) {}
     void set(void* object, const AnimateValue& value) override{
         ((VectorDrawable::VGroup*)object)->setTranslateX(GET_VARIANT(value,float));
     }
@@ -689,7 +689,7 @@ public:
 
 class TRANSLATE_Y:public Property{
 public:
-    TRANSLATE_Y():Property("translateY",FLOAT_CLASS) {}
+    TRANSLATE_Y():Property("translateY",FLOAT_TYPE) {}
     void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VGroup*)object)->setTranslateY(GET_VARIANT(value,float));
     }
@@ -701,7 +701,7 @@ public:
 
 class SCALE_X:public Property{
 public:
-    SCALE_X():Property("scaleX",FLOAT_CLASS) {}
+    SCALE_X():Property("scaleX",FLOAT_TYPE) {}
     void set(void* object, const AnimateValue& value)override {
         ((VectorDrawable::VGroup*)object)->setScaleX(GET_VARIANT(value,float));
     }
@@ -713,7 +713,7 @@ public:
 
 class SCALE_Y:public Property{
 public:
-    SCALE_Y():Property("scaleY",FLOAT_CLASS) {}
+    SCALE_Y():Property("scaleY",FLOAT_TYPE) {}
     void set(void* object, const AnimateValue& value) override{
         ((VectorDrawable::VGroup*)object)->setScaleY(GET_VARIANT(value,float));
     }
@@ -725,7 +725,7 @@ public:
 
 class PIVOT_X:public Property{
 public:
-    PIVOT_X():Property("pivotX",FLOAT_CLASS) {}
+    PIVOT_X():Property("pivotX",FLOAT_TYPE) {}
     void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VGroup*)object)->setPivotX(GET_VARIANT(value,float));
     }
@@ -737,7 +737,7 @@ public:
 
 class PIVOT_Y:public Property{
 public:
-    PIVOT_Y():Property("pivotY",FLOAT_CLASS) {}
+    PIVOT_Y():Property("pivotY",FLOAT_TYPE) {}
     void set(void* object, const AnimateValue& value) override{
         ((VectorDrawable::VGroup*)object)->setPivotY(GET_VARIANT(value,float));
     }
@@ -749,7 +749,7 @@ public:
 
 class ROTATION:public Property{
 public:
-    ROTATION():Property("rotation",FLOAT_CLASS) {}
+    ROTATION():Property("rotation",FLOAT_TYPE) {}
     void set(void* object, const AnimateValue& value) override{
         ((VectorDrawable::VGroup*)object)->setRotation(GET_VARIANT(value,float));
     }
@@ -1046,7 +1046,7 @@ void VectorDrawable::VGroup::setTranslateY(float translateY) {
 namespace {
 class PROP_PATH_DATA:public Property{
 public:
-    PROP_PATH_DATA():Property("pathData",PATH_CLASS){}
+    PROP_PATH_DATA():Property("pathData",PATH_TYPE){}
     void set(void* object,const AnimateValue& data) override{
         //((VectorDrawable::VPath*)object)->setPathData(data);
     }
@@ -1179,7 +1179,7 @@ void VectorDrawable::VClipPath::updateStateFromTypedArray(const AttributeSet&att
 namespace{/*anonymous namespace*/
 class STROKE_WIDTH:public Property{
 public:
-    STROKE_WIDTH():Property("strokeWidth",FLOAT_CLASS) {}
+    STROKE_WIDTH():Property("strokeWidth",FLOAT_TYPE) {}
     void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setStrokeWidth(GET_VARIANT(value,float));
     }
@@ -1191,7 +1191,7 @@ public:
 
 class STROKE_COLOR:public Property{
 public:
-    STROKE_COLOR():Property("strokeColor",COLOR_CLASS) {}
+    STROKE_COLOR():Property("strokeColor",COLOR_TYPE) {}
     void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setStrokeColor(GET_VARIANT(value,uint32_t));
     }
@@ -1203,7 +1203,7 @@ public:
 
 class STROKE_ALPHA:public Property{
 public:
-    STROKE_ALPHA():Property("strokeAlpha",FLOAT_CLASS) {}
+    STROKE_ALPHA():Property("strokeAlpha",FLOAT_TYPE) {}
     void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setStrokeAlpha(GET_VARIANT(value,float));
     }
@@ -1215,19 +1215,19 @@ public:
 
 class FILL_COLOR:public Property{
 public:
-    FILL_COLOR():Property("fillColor",FLOAT_CLASS) {}
+    FILL_COLOR():Property("fillColor",COLOR_TYPE) {}
     void set(void*object, const AnimateValue& value) override{
-        ((VectorDrawable::VFullPath*)object)->setFillColor(GET_VARIANT(value,uint32_t));
+        ((VectorDrawable::VFullPath*)object)->setFillColor((uint32_t)GET_VARIANT(value,int32_t));
     }
 
     AnimateValue get(void*object) override{
-        return ((VectorDrawable::VFullPath*)object)->getFillColor();
+        return int32_t(((VectorDrawable::VFullPath*)object)->getFillColor());
     }
 };
 
 class FILL_ALPHA:public Property{
 public:
-    FILL_ALPHA():Property("fillAlpha",FLOAT_CLASS) {}
+    FILL_ALPHA():Property("fillAlpha",FLOAT_TYPE) {}
     void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setFillAlpha(GET_VARIANT(value,float));
     }
@@ -1239,7 +1239,7 @@ public:
 
 class TRIM_PATH_START:public Property{
 public:
-    TRIM_PATH_START():Property("trimPathStart",FLOAT_CLASS) {}
+    TRIM_PATH_START():Property("trimPathStart",FLOAT_TYPE) {}
     void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setTrimPathStart(GET_VARIANT(value,float));
     }
@@ -1251,7 +1251,7 @@ public:
 
 class TRIM_PATH_END:public Property{
 public:
-    TRIM_PATH_END():Property("trimPathEnd",FLOAT_CLASS) {}
+    TRIM_PATH_END():Property("trimPathEnd",FLOAT_TYPE) {}
     void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setTrimPathEnd(GET_VARIANT(value,float));
     }
@@ -1263,7 +1263,7 @@ public:
 
 class TRIM_PATH_OFFSET:public Property{
 public:
-    TRIM_PATH_OFFSET():Property("trimPathOffset",FLOAT_CLASS) {}
+    TRIM_PATH_OFFSET():Property("trimPathOffset",FLOAT_TYPE) {}
     void set(void*object, const AnimateValue& value) override{
         ((VectorDrawable::VFullPath*)object)->setTrimPathOffset(GET_VARIANT(value,float));
     }

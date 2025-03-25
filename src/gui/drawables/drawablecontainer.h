@@ -40,6 +40,7 @@ protected:
         const ColorStateList*mTintList;
         std::vector<Drawable*>mDrawables;
         SparseArray<std::shared_ptr<ConstantState>>mDrawableFutures;
+    public:
         DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own);
         ~DrawableContainerState()override;
         DrawableContainer*newDrawable()override{return nullptr;}//must be overrided by inherited

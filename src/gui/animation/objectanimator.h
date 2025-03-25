@@ -14,7 +14,7 @@ private:
     bool mAutoCancel;
 private:
     bool hasSameTargetAndProperties(const Animator*anim);
-    ObjectAnimator(void* target,const std::string&targetClass,const std::string& propertyName);
+    ObjectAnimator(void* target,const std::string& propertyName);
 protected:
     void initAnimation()override;
     bool isInitialized()override;
@@ -22,7 +22,7 @@ public:
     ObjectAnimator();
     ObjectAnimator(const ObjectAnimator&);
     ~ObjectAnimator()override;
-    void setTarget(void*target,const std::string&targetCass)override;
+    void setTarget(void*target)override;
     void*getTarget();
     ObjectAnimator&setDuration(long dur)override;
 
@@ -39,9 +39,6 @@ public:
     void setAutoCancel(bool);
     bool shouldAutoCancel(const AnimationHandler::AnimationFrameCallback*anim);
     void start()override;
-    static ObjectAnimator* ofInt(void* target,const std::string&targetClass,const std::string& propertyName, const std::vector<int>&);
-    static ObjectAnimator* ofFloat(void* target,const std::string&targetClass,const std::string& propertyName,const std::vector<float>&);
-    static ObjectAnimator* ofPropertyValuesHolder(void*target,const std::string&targetClass,const std::vector< PropertyValuesHolder*>&values);
 
     static ObjectAnimator* ofInt(void* target,const std::string& propertyName, const std::vector<int>&);
     static ObjectAnimator* ofFloat(void* target,const std::string& propertyName,const std::vector<float>&);

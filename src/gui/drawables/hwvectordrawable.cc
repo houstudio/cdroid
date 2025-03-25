@@ -268,11 +268,10 @@ static float limitScale(float scale){
 }
 
 void Group::getLocalMatrix(Cairo::Matrix& outMatrix, const GroupProperties& properties) {
-    outMatrix.translate(-properties.getPivotX(), -properties.getPivotY());
+    outMatrix.translate(properties.getPivotX(), properties.getPivotY());
     outMatrix.scale(limitScale(properties.getScaleX()), limitScale(properties.getScaleY()));
-
-    const double radians = properties.getRotation() * M_PI / 180.0;
-    outMatrix.rotate(radians);
+    outMatrix.rotate(properties.getRotation() * M_PI / 180.0);
+    outMatrix.translate(-properties.getPivotX(), -properties.getPivotY());
 
     Cairo::Matrix translate = Cairo::translation_matrix(properties.getTranslateX(),properties.getTranslateY());
     outMatrix.multiply(outMatrix,translate);

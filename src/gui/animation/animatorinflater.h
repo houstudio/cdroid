@@ -17,9 +17,7 @@ private:
     static Animator* createAnimatorFromXml(Context*ctx,XmlPullParser&parser,const AttributeSet& atts,
                          AnimatorSet*parent,int sequenceOrdering,float pixelSize);
     static StateListAnimator* createStateListAnimatorFromXml(Context*ctx,XmlPullParser&,const AttributeSet&);
-    static int valueTypeFromPropertyName(const std::string& name);
-    static int inferValueTypeFromValues(const AttributeSet&atts, const std::string& valueFromId,const std::string& valueToId);
-    static bool isColorType(int type);
+    static int inferValueTypeFromPropertyName(const AttributeSet&atts, const std::string& propertyName);
     static PropertyValuesHolder* getPVH(const AttributeSet&atts, int valueType,const std::string& propertyName);
     static void parseAnimatorFromTypeArray(ValueAnimator* anim,const AttributeSet&atts, float pixelSize);
     static ObjectAnimator* loadObjectAnimator(Context*ctx,const AttributeSet& attrs,float );

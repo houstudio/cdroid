@@ -64,6 +64,7 @@ public:
      * @param source The source path represented in PathData
      */
     void setPathData(const PathData& source);
+    PathData&operator=(const PathData&other);
     ~PathData();
 };
 }/*endof namespace*/

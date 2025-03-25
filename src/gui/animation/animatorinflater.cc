@@ -131,56 +131,48 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
     }
 }
 
-bool AnimatorInflater::isColorType(int type) {
-    return (type >= TypedValue::TYPE_FIRST_COLOR_INT) && (type <= TypedValue::TYPE_LAST_COLOR_INT);
-}
-
-int AnimatorInflater::valueTypeFromPropertyName(const std::string& name){
-    static const std::unordered_map<std::string,int>valueTypes = {
-       {"alpha",(int)Property::FLOAT_CLASS},
-       {"bottom",(int)Property::INT_CLASS},
-       {"left",(int)Property::INT_CLASS},
-       {"elevation",(int)Property::FLOAT_CLASS},
-       {"pivotX",(int)Property::FLOAT_CLASS},
-       {"pivotY",(int)Property::FLOAT_CLASS},
-       {"right",(int)Property::INT_CLASS},
-       {"rotation",(int)Property::FLOAT_CLASS},
-       {"rotationX",(int)Property::FLOAT_CLASS},
-       {"rotationY",(int)Property::FLOAT_CLASS},
-       {"scaleX",(int)Property::FLOAT_CLASS},
-       {"scaleY",(int)Property::FLOAT_CLASS},
-       {"scrollX",(int)Property::INT_CLASS},
-       {"scrollY",(int)Property::INT_CLASS},
-       {"top",(int)Property::INT_CLASS},
-       {"translationX",(int)Property::FLOAT_CLASS},
-       {"translationY",(int)Property::FLOAT_CLASS},
-       {"translationZ",(int)Property::FLOAT_CLASS},
-       {"x",(int)Property::FLOAT_CLASS},
-       {"y",(int)Property::FLOAT_CLASS},
-       {"z",(int)Property::FLOAT_CLASS},
+static const std::unordered_map<std::string,int>valueTypes = {
+    {"alpha",(int)Property::FLOAT_TYPE},
+    {"bottom",(int)Property::INT_TYPE},
+    {"left",(int)Property::INT_TYPE},
+    {"elevation",(int)Property::FLOAT_TYPE},
+    {"pivotX",(int)Property::FLOAT_TYPE},
+    {"pivotY",(int)Property::FLOAT_TYPE},
+    {"right",(int)Property::INT_TYPE},
+    {"rotation",(int)Property::FLOAT_TYPE},
+    {"rotationX",(int)Property::FLOAT_TYPE},
+    {"rotationY",(int)Property::FLOAT_TYPE},
+    {"scaleX",(int)Property::FLOAT_TYPE},
+    {"scaleY",(int)Property::FLOAT_TYPE},
+    {"scrollX",(int)Property::INT_TYPE},
+    {"scrollY",(int)Property::INT_TYPE},
+    {"top",(int)Property::INT_TYPE},
+    {"translationX",(int)Property::FLOAT_TYPE},
+    {"translationY",(int)Property::FLOAT_TYPE},
+    {"translationZ",(int)Property::FLOAT_TYPE},
+    {"x",(int)Property::FLOAT_TYPE},
+    {"y",(int)Property::FLOAT_TYPE},
+    {"z",(int)Property::FLOAT_TYPE},
 ////////////////////////////////////////////////////////////////
-       {"strokeWidth",(int)Property::FLOAT_CLASS},
-       {"strokeColor",(int)Property::INT_CLASS},
-       {"strokeAlpha",(int)Property::FLOAT_CLASS},
-       {"fillColor",(int)Property::INT_CLASS},
-       {"fillAlpha",(int)Property::FLOAT_CLASS}
-    };
-    auto it = valueTypes.find(name);
-    if(it != valueTypes.end()) return it->second;
-    return TypedValue::TYPE_NULL;
-}
+    {"strokeWidth",(int)Property::FLOAT_TYPE},
+    {"strokeColor",(int)Property::COLOR_TYPE},
+    {"strokeAlpha",(int)Property::FLOAT_TYPE},
+    {"fillColor",(int)Property::COLOR_TYPE},
+    {"fillAlpha",(int)Property::FLOAT_TYPE},
+    {"pathData",(int)Property::PATH_TYPE}
+};
 
-int AnimatorInflater::inferValueTypeFromValues(const AttributeSet&atts, const std::string& valueFromId,const std::string& valueToId) {
-    bool hasFrom = !valueFromId.empty();
-    int fromType = hasFrom ? valueTypeFromPropertyName(valueFromId) : 0;
-    bool hasTo = !valueToId.empty();
-    int toType = hasTo ? valueTypeFromPropertyName(valueToId) : 0;
-    int valueType;
-    // Check whether it's color type. If not, fall back to default type (i.e. float type)
-    if ((hasFrom && isColorType(fromType)) || (hasTo && isColorType(toType))) {
-        valueType = VALUE_TYPE_COLOR;
-    } else {
-        valueType = Property::FLOAT_CLASS;
+int AnimatorInflater::inferValueTypeFromPropertyName(const AttributeSet&atts, const std::string& propertyName) {
+    const int valueType = atts.getInt("valueType",std::unordered_map<std::string,int>{
+         {"intType", (int)Property::INT_TYPE},
+         {"colorType",(int)Property::COLOR_TYPE},
+         {"floatType",(int)Property::FLOAT_TYPE},
+         {"pathType",(int)Property::PATH_TYPE}
+         }, Property::UNDEFINED);
+    if(valueType==Property::UNDEFINED){
+        auto it = valueTypes.find(propertyName);
+        if(it != valueTypes.end()) return it->second;
+        return Property::UNDEFINED;
     }
     return valueType;
 }
@@ -191,49 +183,51 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
     const std::string sTo = atts.getString("valueTo");
     const bool hasFrom = !sFrom.empty();
     const bool hasTo   = !sTo.empty();
-    const int fromType = valueTypeFromPropertyName(propertyName);
+    const int fromType = inferValueTypeFromPropertyName(atts,propertyName);
     const int toType = fromType;
-    const bool getFloats = (valueType==Property::FLOAT_CLASS)||(fromType==Property::FLOAT_CLASS);
+    const bool getFloats = (valueType==Property::FLOAT_TYPE)||(fromType==Property::FLOAT_TYPE);
 
-    if (valueType == Property::PATH_CLASS) {
+    if (valueType == Property::PATH_TYPE) {
         const std::string fromString = atts.getString("valueFrom");
         const std::string toString = atts.getString("valueTo");
-        PathParser::PathData* nodesFrom = fromString.empty() ? nullptr : new PathParser::PathData(fromString);
-        PathParser::PathData* nodesTo = toString.empty()  ? nullptr : new PathParser::PathData(toString);
+        PathParser::PathData nodesFrom = fromString.empty() ? PathParser::PathData() : PathParser::PathData(fromString);
+        PathParser::PathData nodesTo = toString.empty()  ? PathParser::PathData() : PathParser::PathData(toString);
 
-        if (nodesFrom != nullptr || nodesTo != nullptr) {
-            if (nodesFrom != nullptr) {
-                //TypeEvaluator evaluator = new PathDataEvaluator();
-                if (nodesTo != nullptr) {
-                    if (!PathParser::canMorph(*nodesFrom, *nodesTo)) {
+        if (fromString.size() || toString.size()) {
+            if (fromString.size()) {
+                PathParser::PathData nodesFrom(fromString);
+                if (toString.size()) {
+                    PathParser::PathData nodesTo(toString);
+                    if (!PathParser::canMorph(nodesFrom, nodesTo)) {
                         throw std::runtime_error(std::string(" Can't morph from") + fromString + " to " + toString);
                     }
-                    //returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, nodesFrom, nodesTo);
+                    returnValue = PropertyValuesHolder::ofObject(propertyName, {nodesFrom, nodesTo});
                 } else {
-                    //returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, (Object) nodesFrom);
+                    returnValue = PropertyValuesHolder::ofObject(propertyName, {nodesFrom});
                 }
-            } else if (nodesTo != nullptr) {
-                //TypeEvaluator evaluator = new PathDataEvaluator();
-                //returnValue = PropertyValuesHolder::ofObject(propertyName, evaluator, (Object) nodesTo);
+            } else if (toString.size()) {
+                PathParser::PathData nodesTo(toString);
+                returnValue = PropertyValuesHolder::ofObject(propertyName,{nodesTo});
             }
+            if(returnValue)returnValue->setEvaluator(PropertyValuesHolder::PathDataEvaluator);
         }
     } else {
-        /*TypeEvaluator evaluator = nullptr;
+        TypeEvaluator evaluator = nullptr;
         // Integer and float value types are handled here.
-        if (valueType == VALUE_TYPE_COLOR) {
+        if (valueType == Property::COLOR_TYPE) {
             // special case for colors: ignore valueType and get ints
-            evaluator = ArgbEvaluator.getInstance();
-        }*/
+            evaluator = PropertyValuesHolder::ArgbEvaluator;
+        }
         if (getFloats) {
             float valueFrom,valueTo;
             if (hasFrom) {
-                if(fromType==Property::INT_CLASS) {/*TypedValue::TYPE_DIMENSION*/
+                if(fromType==Property::INT_TYPE) {/*TypedValue::TYPE_DIMENSION*/
                     valueFrom = atts.getDimension("valueFrom", 0);
                 }else{
                     valueFrom = atts.getFloat("valueFrom",0);
                 }
                 if (hasTo) {
-                    if(toType==Property::INT_CLASS)/*TypedValue::TYPE_DIMENSION*/
+                    if(toType==Property::INT_TYPE)/*TypedValue::TYPE_DIMENSION*/
                         valueTo = atts.getDimension("valueTo", 0);
                     else
                         valueTo = atts.getFloat("valueTo",0);
@@ -242,7 +236,7 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
                     returnValue = PropertyValuesHolder::ofFloat(propertyName,{valueFrom});
                 }
             } else {
-                if(toType==Property::INT_CLASS)/*TypedValue::TYPE_DIMENSION*/
+                if(toType==Property::INT_TYPE)/*TypedValue::TYPE_DIMENSION*/
                     valueTo = atts.getDimension("valueTo", 0);
                 else
                     valueTo = atts.getFloat("valueTo",0);
@@ -251,17 +245,17 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
         } else {
             int valueFrom,valueTo;
             if (hasFrom) {
-                if (fromType == Property::INT_CLASS) {/*TypedValue::TYPE_DIMENSION*/
+                if (fromType == Property::INT_TYPE) {/*TypedValue::TYPE_DIMENSION*/
                     valueFrom = (int) atts.getDimension("valueFrom", 0);
-                } else if (isColorType(fromType)) {
+                } else if (fromType==Property::COLOR_TYPE) {
                     valueFrom = atts.getColor("valueFrom", 0);
                 } else {
                     valueFrom = atts.getInt("valueFrom", 0);
                 }
                 if (hasTo) {
-                    if (toType == Property::INT_CLASS) {/*TypedValue::TYPE_DIMENSION*/
+                    if (toType == Property::INT_TYPE) {/*TypedValue::TYPE_DIMENSION*/
                         valueTo = (int) atts.getDimension("valueTo", 0);
-                    } else if (isColorType(toType)) {
+                    } else if (toType==Property::COLOR_TYPE) {
                         valueTo = atts.getColor("valueTo", 0);
                     } else {
                         valueTo = atts.getInt("valueTo", 0);
@@ -272,9 +266,9 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
                 }
             } else {
                 if (hasTo) {
-                    if (toType == Property::INT_CLASS) {/*TypedValue::TYPE_DIMENSION*/
+                    if (toType == Property::INT_TYPE) {/*TypedValue::TYPE_DIMENSION*/
                         valueTo = (int) atts.getDimension("valueTo", 0);
-                    } else if (isColorType(toType)) {
+                    } else if (toType==Property::COLOR_TYPE) {
                         valueTo = atts.getColor("valueTo", 0);
                     } else {
                         valueTo = atts.getInt("valueTo", 0);
@@ -283,9 +277,9 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
                 }
             }
         }
-        /*if (returnValue != null && evaluator != null) {
-            returnValue.setEvaluator(evaluator);
-        }*/
+        if (returnValue != nullptr && evaluator != nullptr) {
+            returnValue->setEvaluator(evaluator);
+        }
     }
     return returnValue;
 }
@@ -293,18 +287,11 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
 void AnimatorInflater::parseAnimatorFromTypeArray(ValueAnimator* anim,const AttributeSet&atts, float pixelSize) {
     const long duration = atts.getInt("duration", 300);
     const long startDelay = atts.getInt("startOffset", 0);
+    const std::string propertyName = atts.getString("propertyName");
 
-    int valueType = atts.getInt("valueType",std::unordered_map<std::string,int>{
-            {"intType", (int)Property::INT_CLASS},
-            {"colorType",(int)Property::COLOR_CLASS},
-            {"floatType",(int)Property::FLOAT_CLASS},
-            {"pathType",(int)Property::PATH_CLASS}
-            }, Property::UNDEFINED);
+    const int valueType = inferValueTypeFromPropertyName(atts,propertyName);
 
-    if (valueType == Property::UNDEFINED) {
-        valueType = inferValueTypeFromValues(atts, "valueFrom","valueTo");
-    }
-    PropertyValuesHolder* pvh = getPVH(atts, valueType,atts.getString("propertyName"));
+    PropertyValuesHolder* pvh = getPVH(atts, valueType,propertyName);
     if (pvh != nullptr) {
         anim->setValues({pvh});
     }
@@ -316,13 +303,15 @@ void AnimatorInflater::parseAnimatorFromTypeArray(ValueAnimator* anim,const Attr
         anim->setRepeatCount(atts.getInt("repeatCount", ValueAnimator::INFINITE));
     }
     if (atts.hasAttribute("repeatMode")) {
-        anim->setRepeatMode(atts.getInt("repeatMode",ValueAnimator::RESTART));
+        anim->setRepeatMode(atts.getInt("repeatMode",std::unordered_map<std::string,int>{
+                    {"restart",(int)ValueAnimator::RESTART},
+                    {"reverse",(int)ValueAnimator::REVERSE}
+            },ValueAnimator::RESTART));
     }
 
     /*if (arrayObjectAnimator != nullptr) {
         setupObjectAnimator(anim, arrayObjectAnimator, valueType, pixelSize);
     }*/
-    const std::string propertyName = atts.getString("propertyName");
     if((propertyName.empty()==false)&&dynamic_cast<ObjectAnimator*>(anim)){
        ((ObjectAnimator*)anim)->setPropertyName(propertyName);
     }
@@ -370,10 +359,10 @@ ValueAnimator* AnimatorInflater::loadAnimator(Context*context,const AttributeSet
 
 ValueAnimator*  AnimatorInflater::loadValueAnimator(Context*context,const AttributeSet& atts, ValueAnimator*anim,float){
     const int valueType = atts.getInt("valueType",std::unordered_map<std::string,int>{
-            {"intType",(int)Property::INT_CLASS},
-            {"floatType",(int)Property::FLOAT_CLASS},
-            {"colorType",(int)Property::COLOR_CLASS},
-            {"pathType",(int)Property::PATH_CLASS}
+            {"intType",(int)Property::INT_TYPE},
+            {"floatType",(int)Property::FLOAT_TYPE},
+            {"colorType",(int)Property::COLOR_TYPE},
+            {"pathType",(int)Property::PATH_TYPE}
         },(int)Property::UNDEFINED);
 
     const std::string propertyName = atts.getString("propertyName");

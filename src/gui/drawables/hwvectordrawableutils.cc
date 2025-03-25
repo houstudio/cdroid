@@ -26,8 +26,8 @@ bool VectorDrawableUtils::canMorph(const PathData& morphFrom, const PathData& mo
     return true;
 }
 
-bool VectorDrawableUtils::interpolatePathData(PathData& outData, const PathData& morphFrom,
-                                              const PathData& morphTo, float fraction) {
+bool VectorDrawableUtils::interpolatePathData(PathData& outData,
+        const PathData& morphFrom,const PathData& morphTo, float fraction) {
     if (!canMorph(morphFrom, morphTo)) {
         return false;
     }
@@ -61,8 +61,8 @@ void VectorDrawableUtils::verbsToPath(Cairo::RefPtr<cdroid::Path>& outPath, cons
  * @param nodeTo The end value as a PathVerb
  * @param fraction The fraction to interpolate.
  */
-void VectorDrawableUtils::interpolatePaths(PathData& outData, const PathData& from,
-                                           const PathData& to, float fraction) {
+void VectorDrawableUtils::interpolatePaths(PathData& outData,
+        const PathData& from,const PathData& to, float fraction) {
     outData.points.resize(from.points.size());
     outData.verbSizes = from.verbSizes;
     outData.verbs = from.verbs;
@@ -73,8 +73,8 @@ void VectorDrawableUtils::interpolatePaths(PathData& outData, const PathData& fr
 }
 
 // Use the given verb, and points in the range [start, end) to insert a command into the SkPath.
-void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previousCmd, char cmd,
-                              const std::vector<float>* points, size_t start, size_t end) {
+void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previousCmd,
+        char cmd,const std::vector<float>* points, size_t start, size_t end) {
     int incr = 2;
     float reflectiveCtrlPointX;
     float reflectiveCtrlPointY;
