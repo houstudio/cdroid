@@ -22,8 +22,12 @@ ColorStateList::ColorStateList(int color)
 
 int ColorStateList::addStateColor(cdroid::Context*ctx,const AttributeSet&atts){
     std::vector<int>states;
-    const int color = atts.getColor("color",0);
-    const int alpha = atts.getInt("alpha",255);
+    int color = atts.getColor("color",0);
+    int alpha = 0;
+    if(atts.hasAttribute("alpha")){
+        alpha = atts.getInt("alpha",255);
+        color&=0xFFFFFF;
+    }
     StateSet::parseState(states,atts);
     return addStateColor(states,color|(alpha<<24));
 }
