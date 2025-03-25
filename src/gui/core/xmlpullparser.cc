@@ -25,6 +25,7 @@ struct Private{
     std::string mTagName;
     bool endDocument;
 };
+
 class XmlPullParser::AttrParser{
 public:
     static void startElementHandler(void* userData, const XML_Char* name, const XML_Char** attrs){
@@ -154,6 +155,12 @@ int XmlPullParser::next(XmlEvent& event,int &depth) {
     }
     mData->parsedDepth =0;
     return END_DOCUMENT;
+}
+
+std::string XmlPullParser::getPositionDescription()const{
+    std::ostringstream oss;
+    oss<<XML_GetCurrentLineNumber(mData->parser)<":"<<XML_GetCurrentColumnNumber(mData->parser);
+    return oss.str();
 }
 
 }/*endof namespace*/
