@@ -1048,10 +1048,11 @@ class PROP_PATH_DATA:public Property{
 public:
     PROP_PATH_DATA():Property("pathData",PATH_TYPE){}
     void set(void* object,const AnimateValue& data) override{
-        //((VectorDrawable::VPath*)object)->setPathData(data);
+        PathParser::PathData pathData =GET_VARIANT(data,PathParser::PathData);
+        ((VectorDrawable::VPath*)object)->setPathData(&pathData);
     }
     AnimateValue get(void* object) override{
-        return 0;//((VectorDrawable::VPath*)object)->getPathData();
+        return *((VectorDrawable::VPath*)object)->getPathData();
     }
 };
 }

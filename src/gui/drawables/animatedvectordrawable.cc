@@ -193,7 +193,7 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
             const std::string tagName = parser.getName();
             if (tagName.compare(ANIMATED_VECTOR)==0) {
                 std::string drawableRes = a.getString("drawable");
-                LOGD("drawable=%s",drawableRes.c_str());
+                LOGV("drawable=%s",drawableRes.c_str());
                 if (!drawableRes.empty()) {
                     VectorDrawable* vectorDrawable = (VectorDrawable*) ctx->getDrawable(drawableRes)->mutate();
                     vectorDrawable->setAllowCaching(false);
@@ -213,7 +213,7 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
                         Animator* animator = AnimatorInflater::loadAnimator(ctx, animResId, pathErrorScale);
                         updateAnimatorProperty(animator, target, state->mVectorDrawable,state->mShouldIgnoreInvalidAnim);
                         state->addTargetAnimator(target, animator);
-                        LOGD("%s -> %s %p",target.c_str(),animResId.c_str(),animator);
+                        LOGV("%s -> %s %p",target.c_str(),animResId.c_str(),animator);
                     } else {
                         // The animation may be theme-dependent. As a
                         // workaround until Animator has full support for
