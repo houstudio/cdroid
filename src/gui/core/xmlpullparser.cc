@@ -159,7 +159,7 @@ int XmlPullParser::next(XmlEvent& event,int &depth) {
 
 std::string XmlPullParser::getPositionDescription()const{
     std::ostringstream oss;
-    oss<<XML_GetCurrentLineNumber(mData->parser)<":"<<XML_GetCurrentColumnNumber(mData->parser);
+    oss<<XML_GetCurrentLineNumber(mData->parser)<<":"<<XML_GetCurrentColumnNumber(mData->parser);
     return oss.str();
 }
 
