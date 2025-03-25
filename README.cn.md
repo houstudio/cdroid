@@ -27,13 +27,15 @@
 ![Pott](https://gitee.com/houstudio/cdroid/raw/master/docs/images/screenshots/plot.png)
 
 # **UI Components:**
-|  View         |    TextView    |  Button            |  ImageView    |  ImageButton  | CompoundButton |
-|---------------|----------------|--------------------|---------------|---------------|----------------|
-| ToggleButton  |    CheckBox    | RadioButton        |  ProgressBar  |  SeekBar      | Chronometer    |
-|  AnalogClock  |   ViewGroup    | RadioGroup         |  ScrollView   |  ViewPager    | SimpleMonthView|
-|  Switch       |   RatingBar    | NumberPicker       |  ListView     |  GridView     | RecyclerView   |
-| ViewFlipper   |  ViewAnimator  | AdapterViewAnimator| Calendarview  |SimpleMonthView| Chronometer    |
-|  ScrollView   |NestedScrollView|HorizontalScrollView| DateTimeView  |   ViewPager2  | YearPickerView |
+|  View         |     TextView      |  Button            |  ImageView    |  ImageButton  |
+|---------------|-------------------|--------------------|---------------|---------------|
+|CompoundButton |    ToggleButton   |     CheckBox       |  RadioButton  |  ProgressBar  |
+|   SeekBar     |   Chronometer     |    AnalogClock     |   ViewGroup   |  RadioGroup   |
+|  ScrollView   |    ViewPager      |  SimpleMonthView   |    Switch     |   RatingBar   |
+| NumberPicker  |     ListView      |     GridView       | RecyclerView  |  ViewFlipper  |
+| ViewAnimator  |AdapterViewAnimator|    Calendarview    |SimpleMonthView|  Chronometer  |
+|  ScrollView   | NestedScrollView  |HorizontalScrollView| DateTimeView  |   ViewPager2  |
+|YearPickerView |                   |                    |               |               |
 
 # **Supported Layouts:**
 | FrameLayout |  LinearLayout  | RelativeLayout | TableRow |
@@ -41,11 +43,12 @@
 | TableLayout | AbsoluteLayout |  GridLayout    |          |
 
 # **Supported Drawables:**
-|   ColorDrawable   | BitmapDrawable |    NinepatchDrawable     |  InsetDrawable   |  ShapeDrawable      |
-|-------------------|----------------|--------------------------|------------------|---------------------|
-|TransitionDrawable | LayerDrawable  |    StateListDrawable     |LevelListDrawable |    ClipDrawable     |
-|GradientDrawable   | RotateDrawable |  AnimatedRotateDrawable  |ScaleDrawable     |AnimatedImageDrawable|
-|VectorDrawable     | RippleDrawable |AnimatedStateListDrawable |AnimationDrawable |                     |
+|   ColorDrawable   |  BitmapDrawable  |    NinepatchDrawable     |  InsetDrawable  |
+|-------------------|------------------|--------------------------|-----------------|
+|ShapeDrawable      |TransitionDrawable|  AnimatedVectorDrawable  |StateListDrawable|
+| LevelListDrawable |   ClipDrawable   |  AnimatedRotateDrawable  | RotateDrawable  |
+|GradientDrawable   |  ScaleDrawable   |  AnimatedImageDrawable   | VectorDrawable  |
+|  RippleDrawable   |AnimationDrawable |AnimatedStateListDrawable |  LayerDrawable  |
 
 # **Porting guide:**
 
