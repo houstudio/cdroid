@@ -650,6 +650,16 @@ int Assets::loadKeyValues(const std::string&fullresid,void*pending,std::function
     XML_ParserFree(parser);
     return 0;
 }
+
+int Assets::loadKeyValues(const std::string&resid){
+    XmlPullParser parser(this,resid);
+    XmlPullParser::XmlEvent event;
+    int type,depth;
+    while((type=parser.next(event,depth)!=XmlPullParser::END_DOCUMENT)){
+    }
+    return 0;
+}
+
 #pragma GCC pop_options
 
 void Assets::clearStyles() {
