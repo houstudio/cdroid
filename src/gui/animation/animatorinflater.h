@@ -24,6 +24,7 @@ private:
     static ValueAnimator* loadValueAnimator(Context*context,const AttributeSet& attrs, ValueAnimator*anim,float);
     static ValueAnimator* loadAnimator(Context*ctx,const AttributeSet& attrs, ValueAnimator* anim, float pathErrorScale);
     static std::vector<PropertyValuesHolder*> loadValues(XmlPullParser& parser,const  AttributeSet& attrs);
+    static PropertyValuesHolder* loadPvh(XmlPullParser& parser,const std::string& propertyName, int valueType);
 public:
     static Animator* loadAnimator(Context* context,const std::string&resid);
     static Animator* loadAnimator(Context* context,const std::string&resid,float pathErrorScale);

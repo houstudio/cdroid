@@ -52,7 +52,7 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
      std::vector<Animator*> childAnims;
 
     // Make sure we are on a start tag.
-    int type=0,depth=0;
+    int type = 0,depth = 0;
     const int innerDepth = parser.getDepth();
     XmlPullParser::XmlEvent event;
     while ((((type = parser.next(event,depth)) != XmlPullParser::END_TAG) || (depth >= innerDepth))
@@ -134,32 +134,118 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
 std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(XmlPullParser& parser,const  AttributeSet& attrs){
     std::vector<PropertyValuesHolder*> values;
     XmlPullParser::XmlEvent event;
-    int type;
-    LOGD("TODO:FIXME");
-    while ((type = parser.next(event)) != XmlPullParser::END_TAG &&
-            type != XmlPullParser::END_DOCUMENT) {
+    int type = XmlPullParser::START_TAG;
+    while ((type != XmlPullParser::END_TAG) && (type != XmlPullParser::END_DOCUMENT)) {
         if (type != XmlPullParser::START_TAG) {
-            //parser.next();
+            type = parser.next(event);
             continue;
         }
-
         std::string name = parser.getName();
-
         if (name.compare("propertyValuesHolder")==0) {
             const std::string propertyName = attrs.getString("propertyName");
-            const int valueType = attrs.getInt("valueType", VALUE_TYPE_UNDEFINED);
-
-            PropertyValuesHolder* pvh = nullptr;//loadPvh(parser, propertyName, valueType);
+            const int valueType = attrs.getInt("valueType",std::unordered_map<std::string,int>{
+                 {"intType", (int)Property::INT_TYPE},    {"colorType",(int)Property::COLOR_TYPE},
+                 {"floatType",(int)Property::FLOAT_TYPE}, {"pathType",(int)Property::PATH_TYPE}},
+                 Property::UNDEFINED);
+            LOGD("propertyValuesHolder.%s type=%d",propertyName.c_str(),valueType);
+            PropertyValuesHolder* pvh = loadPvh(parser, propertyName, valueType);
             if (pvh == nullptr) {
-                //pvh = getPVH(a, valueType,propertyName);
+                pvh = getPVH(attrs, valueType,propertyName);
             }
             if (pvh != nullptr) {
                 values.push_back(pvh);
             }
         }
-        //parser.next();
+        type = parser.next(event);
+
     }
     return values;
+}
+
+PropertyValuesHolder* AnimatorInflater::loadPvh(XmlPullParser& parser,const std::string& propertyName, int valueType){
+    int type;
+    PropertyValuesHolder* value = nullptr;
+#if 0
+    ArrayList<Keyframe> keyframes = null;
+
+    while ((type = parser.next()) != XmlPullParser::END_TAG &&
+            type != XmlPullParser::END_DOCUMENT) {
+        const std::string name = parser.getName();
+        if (name.compare("keyframe")==0) {
+            if (valueType == VALUE_TYPE_UNDEFINED) {
+                valueType = inferValueTypeOfKeyframe(res, theme, Xml.asAttributeSet(parser));
+            }
+            Keyframe keyframe = loadKeyframe(res, theme, Xml.asAttributeSet(parser), valueType);
+            if (keyframe != null) {
+                if (keyframes == null) {
+                    keyframes = new ArrayList<Keyframe>();
+                }
+                keyframes.add(keyframe);
+            }
+            parser.next();
+        }
+    }
+
+    int count;
+    if (keyframes != null && (count = keyframes.size()) > 0) {
+        // make sure we have keyframes at 0 and 1
+        // If we have keyframes with set fractions, add keyframes at start/end
+        // appropriately. If start/end have no set fractions:
+        // if there's only one keyframe, set its fraction to 1 and add one at 0
+        // if >1 keyframe, set the last fraction to 1, the first fraction to 0
+        Keyframe firstKeyframe = keyframes.get(0);
+        Keyframe lastKeyframe = keyframes.get(count - 1);
+        float endFraction = lastKeyframe.getFraction();
+        if (endFraction < 1) {
+            if (endFraction < 0) {
+                lastKeyframe.setFraction(1);
+            } else {
+                keyframes.add(keyframes.size(), createNewKeyframe(lastKeyframe, 1));
+                ++count;
+            }
+        }
+        float startFraction = firstKeyframe.getFraction();
+        if (startFraction != 0) {
+            if (startFraction < 0) {
+                firstKeyframe.setFraction(0);
+            } else {
+                keyframes.add(0, createNewKeyframe(firstKeyframe, 0));
+                ++count;
+            }
+        }
+        Keyframe[] keyframeArray = new Keyframe[count];
+        keyframes.toArray(keyframeArray);
+        for (int i = 0; i < count; ++i) {
+            Keyframe keyframe = keyframeArray[i];
+            if (keyframe.getFraction() < 0) {
+                if (i == 0) {
+                    keyframe.setFraction(0);
+                } else if (i == count - 1) {
+                    keyframe.setFraction(1);
+                } else {
+                    // figure out the start/end parameters of the current gap
+                    // in fractions and distribute the gap among those keyframes
+                    int startIndex = i;
+                    int endIndex = i;
+                    for (int j = startIndex + 1; j < count - 1; ++j) {
+                        if (keyframeArray[j].getFraction() >= 0) {
+                            break;
+                        }
+                        endIndex = j;
+                    }
+                    float gap = keyframeArray[endIndex + 1].getFraction() -
+                            keyframeArray[startIndex - 1].getFraction();
+                    distributeKeyframes(keyframeArray, gap, startIndex, endIndex);
+                }
+            }
+        }
+        value = PropertyValuesHolder.ofKeyframe(propertyName, keyframeArray);
+        if (valueType == VALUE_TYPE_COLOR) {
+            value.setEvaluator(ArgbEvaluator.getInstance());
+        }
+    }
+#endif
+    return value;
 }
 
 static const std::unordered_map<std::string,int>valueTypes = {
