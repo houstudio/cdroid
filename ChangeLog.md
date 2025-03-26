@@ -1,5 +1,7 @@
-# **
+# **V3.8.0
   - Add VectorDrawable
+  - Add AnimatedVectorDrawable
+  - Add AnimationScaleListDrawable
   - Add XmlPullParser
   - Add DrawableInflater
   - Fix LayoutDirection's inherite
