@@ -22,7 +22,7 @@ protected:
 private:
     std::shared_ptr<AnimatedStateListState> mState;
     /** The currently running transition, if any. */
-    Transition* mTransition;
+    std::shared_ptr<Transition> mTransition;
     /** Index to be set after the transition ends. */
     int mTransitionToIndex = -1;
     /** Index away from which we are transitioning. */
@@ -109,7 +109,7 @@ class AnimatedStateListDrawable::AnimationDrawableTransition:public Transition {
 private:
     Property*mProperty;
     ObjectAnimator* mAnim;
-    FrameInterpolator*mFrameInterpolator;	
+    FrameInterpolator*mFrameInterpolator;
     // Even AnimationDrawable is always reversible technically, but
     // we should obey the XML's android:reversible flag.
     bool mHasReversibleFlag;
@@ -121,6 +121,7 @@ public:
     void reverse()override;
     void stop()override;
 };
+
 class AnimatedStateListDrawable::AnimatedVectorDrawableTransition:public Transition {
 private:
     AnimatedVectorDrawable* mAvd;

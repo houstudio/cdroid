@@ -79,7 +79,7 @@ bool AnimatedStateListDrawable::onStateChange(const std::vector<int>&stateSet){
 
 bool AnimatedStateListDrawable::selectTransition(int toIndex){
     int fromIndex;
-    Transition* currentTransition = mTransition;
+    std::shared_ptr<Transition> currentTransition = mTransition;
     if (currentTransition != nullptr) {
         if (toIndex == mTransitionToIndex) {
             // Already animating to that keyframe.
@@ -124,16 +124,16 @@ bool AnimatedStateListDrawable::selectTransition(int toIndex){
     // This may fail if we're already on the transition, but that's okay!
     selectDrawable(transitionIndex);
 
-    Transition* transition = nullptr;
+    std::shared_ptr<Transition> transition = nullptr;
     Drawable* d = getCurrent();
     if (dynamic_cast<AnimationDrawable*>(d)) {
-        bool reversed = mState->isTransitionReversed(fromId, toId);
-        transition = new AnimationDrawableTransition((AnimationDrawable*) d,reversed, hasReversibleFlag);
+        const bool reversed = mState->isTransitionReversed(fromId, toId);
+        transition = std::make_shared<AnimationDrawableTransition>((AnimationDrawable*) d,reversed, hasReversibleFlag);
     } else if (dynamic_cast<AnimatedVectorDrawable*>(d)) {
-        bool reversed = mState->isTransitionReversed(fromId, toId);
-        transition = new AnimatedVectorDrawableTransition((AnimatedVectorDrawable*) d, reversed, hasReversibleFlag);
+        const bool reversed = mState->isTransitionReversed(fromId, toId);
+        transition = std::make_shared<AnimatedVectorDrawableTransition>((AnimatedVectorDrawable*) d, reversed, hasReversibleFlag);
     } else if (dynamic_cast<Animatable*>(d)) {
-        transition = new AnimatableTransition(d);
+        transition = std::make_shared<AnimatableTransition>(d);
     } else {
         // We don't know how to animate this transition.
         return false;
@@ -283,20 +283,12 @@ int AnimatedStateListDrawable::parseTransition(XmlPullParser&parser,const Attrib
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-void AnimatedStateListDrawable::Transition::reverse(){
-    //NOTHING
-}
-
-bool AnimatedStateListDrawable::Transition::canReverse(){
-    return false;
-}
-
 AnimatedStateListDrawable::AnimatedStateListState::AnimatedStateListState(const AnimatedStateListDrawable::AnimatedStateListState* orig,AnimatedStateListDrawable* owner)
   :StateListState(orig,owner){
 }
 
 void AnimatedStateListDrawable::AnimatedStateListState::mutate() {
-    //mTransitions = mTransitions.clone();
+    //mTransitions = mTransitions->clone();
     //mStateIds = mStateIds.clone();
 }
 
@@ -404,7 +396,15 @@ float AnimatedStateListDrawable::FrameInterpolator::getInterpolation(float input
     return i / (float) N + frameElapsed;
 }
 
-//----------------------------------------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void AnimatedStateListDrawable::Transition::reverse(){
+    //NOTHING
+}
+
+bool AnimatedStateListDrawable::Transition::canReverse(){
+    return false;
+}
+
 AnimatedStateListDrawable::AnimatableTransition::AnimatableTransition(Drawable* a) {
     mDrawable = dynamic_cast<Drawable*>(a);
 }
@@ -417,7 +417,6 @@ void AnimatedStateListDrawable::AnimatableTransition::start() {
         AnimatedImageDrawable*aid=(AnimatedImageDrawable*)mDrawable;
         aid->start();
     }
-    //mA->start();
 }
 
 void AnimatedStateListDrawable::AnimatableTransition::stop() {
@@ -428,30 +427,32 @@ void AnimatedStateListDrawable::AnimatableTransition::stop() {
         AnimatedImageDrawable*aid=(AnimatedImageDrawable*)mDrawable;
         aid->stop();
     }
-    //mA->stop();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CURRENT_INDEX:public Property{
-public:
-    CURRENT_INDEX():Property("currentIndex"){
-    }
-    AnimateValue get(void* object){
-        AnimateValue v = ((AnimationDrawable*)object)->getCurrentIndex();
-        return v;
-    }
-    void set(void* object,const AnimateValue& value){
-        AnimationDrawable*ad=(AnimationDrawable*)object;
-        ad->setCurrentIndex(GET_VARIANT(value,int));
-    }
-};
+namespace{
+    class PROP_CURRENT_INDEX:public Property{
+    public:
+        PROP_CURRENT_INDEX():Property("currentIndex"){
+        }
+        AnimateValue get(void* object){
+            AnimateValue v = ((AnimationDrawable*)object)->getCurrentIndex();
+            return v;
+        }
+        void set(void* object,const AnimateValue& value){
+            AnimationDrawable*ad=(AnimationDrawable*)object;
+            ad->setCurrentIndex(GET_VARIANT(value,int));
+        }
+    };
+}
 
+static const std::shared_ptr<Property>CURRENT_INDEX=std::make_shared<PROP_CURRENT_INDEX>();
 AnimatedStateListDrawable::AnimationDrawableTransition::AnimationDrawableTransition(AnimationDrawable* ad, bool reversed, bool hasReversibleFlag){
     const int frameCount = ad->getNumberOfFrames();
     const int fromFrame = reversed ? frameCount - 1 : 0;
     const int toFrame = reversed ? 0 : frameCount - 1;
     mFrameInterpolator = new FrameInterpolator(ad, reversed);
-    mProperty =new CURRENT_INDEX();
+    mProperty = CURRENT_INDEX.get();
     ObjectAnimator* anim = ObjectAnimator::ofInt(ad, mProperty,{fromFrame, toFrame});
     anim->setAutoCancel(true);
     anim->setDuration(mFrameInterpolator->getTotalDuration());
@@ -462,7 +463,6 @@ AnimatedStateListDrawable::AnimationDrawableTransition::AnimationDrawableTransit
 }
 
 AnimatedStateListDrawable::AnimationDrawableTransition::~AnimationDrawableTransition(){
-    delete mProperty;
     delete mFrameInterpolator;
 	delete mAnim;
 	delete mDrawable;
@@ -484,7 +484,7 @@ void AnimatedStateListDrawable::AnimationDrawableTransition::stop() {
     mAnim->cancel();
 }
 
-/***************************/
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 AnimatedStateListDrawable::AnimatedVectorDrawableTransition::AnimatedVectorDrawableTransition(AnimatedVectorDrawable* avd,bool reversed, bool hasReversibleFlag){
     mAvd = avd;
     mDrawable = mAvd;
@@ -515,6 +515,5 @@ void AnimatedStateListDrawable::AnimatedVectorDrawableTransition::reverse(){
 void AnimatedStateListDrawable::AnimatedVectorDrawableTransition::stop(){
     mAvd->stop();
 }
-
 
 }//endof namespace
