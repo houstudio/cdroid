@@ -108,7 +108,7 @@ bool AnimatedStateListDrawable::selectTransition(int toIndex){
 
     const int fromId = mState->getKeyframeIdAt(fromIndex);
     const int toId = mState->getKeyframeIdAt(toIndex);
-    if (toId == 0 || fromId == 0) {
+    if ((toId == 0) || (fromId == 0)) {
         // Missing a keyframe ID.
         return false;
     }
@@ -129,7 +129,7 @@ bool AnimatedStateListDrawable::selectTransition(int toIndex){
     if (dynamic_cast<AnimationDrawable*>(d)) {
         bool reversed = mState->isTransitionReversed(fromId, toId);
         transition = new AnimationDrawableTransition((AnimationDrawable*) d,reversed, hasReversibleFlag);
-    } else if (0&&dynamic_cast<AnimatedVectorDrawable*>(d)) {
+    } else if (dynamic_cast<AnimatedVectorDrawable*>(d)) {
         bool reversed = mState->isTransitionReversed(fromId, toId);
         transition = new AnimatedVectorDrawableTransition((AnimatedVectorDrawable*) d, reversed, hasReversibleFlag);
     } else if (dynamic_cast<Animatable*>(d)) {
