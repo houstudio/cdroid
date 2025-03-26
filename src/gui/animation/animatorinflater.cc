@@ -71,7 +71,7 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
         } else if (name.compare("set")==0) {
             anim = new AnimatorSet();
             //anim->appendChangingConfigurations(a.getChangingConfigurations());
-            const int ordering = atts.getInt("ordering",std::unordered_map<std::string,int>{
+            const int ordering = event.attributes.getInt("ordering",std::unordered_map<std::string,int>{
                     {"together",(int)TOGETHER},{"sequentially",(int)SEQUENTIALLY}}, TOGETHER);
             createAnimatorFromXml(context, parser, event.attributes, (AnimatorSet*) anim, ordering,pixelSize);
         } else if (name.compare("propertyValuesHolder")==0) {
@@ -214,7 +214,7 @@ PropertyValuesHolder*AnimatorInflater::getPVH(const AttributeSet&atts, int value
     } else {
         TypeEvaluator evaluator = nullptr;
         // Integer and float value types are handled here.
-        if (valueType == Property::COLOR_TYPE) {
+        if ((fromType == Property::COLOR_TYPE)||(toType==Property::COLOR_TYPE)) {
             // special case for colors: ignore valueType and get ints
             evaluator = PropertyValuesHolder::ArgbEvaluator;
         }
