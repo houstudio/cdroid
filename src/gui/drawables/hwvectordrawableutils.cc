@@ -123,7 +123,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
 
     for (unsigned int k = start; k < end; k += incr) {
         switch (cmd) {
-            case 'm':  // moveto - Start a new sub-path (relative)
+            case 'm':// moveto - Start a new sub-path (relative)
                 currentX += points->at(k + 0);
                 currentY += points->at(k + 1);
                 if (k > start) {
@@ -137,7 +137,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
                     currentSegmentStartY = currentY;
                 }
                 break;
-            case 'M':  // moveto - Start a new sub-path
+            case 'M':// moveto - Start a new sub-path
                 currentX = points->at(k + 0);
                 currentY = points->at(k + 1);
                 if (k > start) {
@@ -151,33 +151,33 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
                     currentSegmentStartY = currentY;
                 }
                 break;
-            case 'l':  // lineto - Draw a line from the current point (relative)
+            case 'l':// lineto - Draw a line from the current point (relative)
                 outPath->rel_line_to(points->at(k + 0), points->at(k + 1));
                 currentX += points->at(k + 0);
                 currentY += points->at(k + 1);
                 break;
-            case 'L':  // lineto - Draw a line from the current point
+            case 'L':// lineto - Draw a line from the current point
                 outPath->line_to(points->at(k + 0), points->at(k + 1));
                 currentX = points->at(k + 0);
                 currentY = points->at(k + 1);
                 break;
-            case 'h':  // horizontal lineto - Draws a horizontal line (relative)
+            case 'h':// horizontal lineto - Draws a horizontal line (relative)
                 outPath->rel_line_to(points->at(k + 0), 0);
                 currentX += points->at(k + 0);
                 break;
-            case 'H':  // horizontal lineto - Draws a horizontal line
+            case 'H':// horizontal lineto - Draws a horizontal line
                 outPath->line_to(points->at(k + 0), currentY);
                 currentX = points->at(k + 0);
                 break;
-            case 'v':  // vertical lineto - Draws a vertical line from the current point (r)
+            case 'v':// vertical lineto - Draws a vertical line from the current point (r)
                 outPath->rel_line_to(0, points->at(k + 0));
                 currentY += points->at(k + 0);
                 break;
-            case 'V':  // vertical lineto - Draws a vertical line from the current point
+            case 'V':// vertical lineto - Draws a vertical line from the current point
                 outPath->line_to(currentX, points->at(k + 0));
                 currentY = points->at(k + 0);
                 break;
-            case 'c':  // curveto - Draws a cubic Bézier curve (relative)
+            case 'c':// curveto - Draws a cubic Bézier curve (relative)
                 outPath->rel_curve_to/*rCubicTo*/(points->at(k + 0), points->at(k + 1), points->at(k + 2),
                                   points->at(k + 3), points->at(k + 4), points->at(k + 5));
 
@@ -187,7 +187,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
                 currentY += points->at(k + 5);
 
                 break;
-            case 'C':  // curveto - Draws a cubic Bézier curve
+            case 'C':// curveto - Draws a cubic Bézier curve
                 outPath->curve_to/*cubicTo*/(points->at(k + 0), points->at(k + 1), points->at(k + 2),
                                  points->at(k + 3), points->at(k + 4), points->at(k + 5));
                 currentX = points->at(k + 4);
@@ -195,7 +195,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
                 ctrlPointX = points->at(k + 2);
                 ctrlPointY = points->at(k + 3);
                 break;
-            case 's':  // smooth curveto - Draws a cubic Bézier curve (reflective cp)
+            case 's':// smooth curveto - Draws a cubic Bézier curve (reflective cp)
                 reflectiveCtrlPointX = 0;
                 reflectiveCtrlPointY = 0;
                 if (previousCmd == 'c' || previousCmd == 's' || previousCmd == 'C' ||
@@ -210,7 +210,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
                 currentX += points->at(k + 2);
                 currentY += points->at(k + 3);
                 break;
-            case 'S':  // shorthand/smooth curveto Draws a cubic Bézier curve(reflective cp)
+            case 'S':// shorthand/smooth curveto Draws a cubic Bézier curve(reflective cp)
                 reflectiveCtrlPointX = currentX;
                 reflectiveCtrlPointY = currentY;
                 if (previousCmd == 'c' || previousCmd == 's' || previousCmd == 'C' ||
@@ -225,21 +225,21 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
                 currentX = points->at(k + 2);
                 currentY = points->at(k + 3);
                 break;
-            case 'q':  // Draws a quadratic Bézier (relative)
+            case 'q':// Draws a quadratic Bézier (relative)
                 outPath->rel_quad_to(points->at(k + 0), points->at(k + 1), points->at(k + 2),points->at(k + 3));
                 ctrlPointX = currentX + points->at(k + 0);
                 ctrlPointY = currentY + points->at(k + 1);
                 currentX += points->at(k + 2);
                 currentY += points->at(k + 3);
                 break;
-            case 'Q':  // Draws a quadratic Bézier
+            case 'Q':// Draws a quadratic Bézier
                 outPath->quad_to(points->at(k + 0), points->at(k + 1), points->at(k + 2),points->at(k + 3));
                 ctrlPointX = points->at(k + 0);
                 ctrlPointY = points->at(k + 1);
                 currentX = points->at(k + 2);
                 currentY = points->at(k + 3);
                 break;
-            case 't':  // Draws a quadratic Bézier curve(reflective control point)(relative)
+            case 't':// Draws a quadratic Bézier curve(reflective control point)(relative)
                 reflectiveCtrlPointX = 0;
                 reflectiveCtrlPointY = 0;
                 if (previousCmd == 'q' || previousCmd == 't' || previousCmd == 'Q' ||
@@ -253,7 +253,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
                 currentX += points->at(k + 0);
                 currentY += points->at(k + 1);
                 break;
-            case 'T':  // Draws a quadratic Bézier curve (reflective control point)
+            case 'T':// Draws a quadratic Bézier curve (reflective control point)
                 reflectiveCtrlPointX = currentX;
                 reflectiveCtrlPointY = currentY;
                 if (previousCmd == 'q' || previousCmd == 't' || previousCmd == 'Q' ||
@@ -267,7 +267,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
                 currentX = points->at(k + 0);
                 currentY = points->at(k + 1);
                 break;
-            case 'a':  // Draws an elliptical arc
+            case 'a':// Draws an elliptical arc
                 // (rx ry x-axis-rotation large-arc-flag sweep-flag x y)
                 outPath->arc_to(points->at(k + 0), points->at(k + 1), points->at(k + 2),
                                /*(SkPath::ArcSize)*/ (points->at(k + 3) != 0),
@@ -278,7 +278,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
                 ctrlPointX = currentX;
                 ctrlPointY = currentY;
                 break;
-            case 'A':  // Draws an elliptical arc
+            case 'A':// Draws an elliptical arc
                 outPath->arc_to(points->at(k + 0), points->at(k + 1), points->at(k + 2),
                                /*(SkPath::ArcSize)*/ (points->at(k + 3) != 0),
                                /*(SkPathDirection)*/ (points->at(k + 4) == 0),
@@ -296,12 +296,10 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
     }
 }
 
-// 计算两点间的距离
 static double distance(double x1, double y1, double x2, double y2) {
     return std::sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
-// 近似计算二次贝塞尔曲线的长度
 static double quadratic_bezier_length(double x0, double y0, double x1, double y1, double x2, double y2, int segments = 10) {
     double length = 0.0;
     double prev_x = x0;
@@ -318,7 +316,6 @@ static double quadratic_bezier_length(double x0, double y0, double x1, double y1
     return length;
 }
 
-// 近似计算三次贝塞尔曲线的长度
 static double cubic_bezier_length(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3, int segments = 10) {
     double length = 0.0;
     double prev_x = x0;
@@ -335,7 +332,6 @@ static double cubic_bezier_length(double x0, double y0, double x1, double y1, do
     return length;
 }
 
-// 计算路径的长度
 double VectorDrawableUtils::PathMeasure(const Cairo::RefPtr<cdroid::Path>&path){
     double length = 0.0;
     double prev_x = 0.0;
