@@ -23,6 +23,7 @@ private:
     static ObjectAnimator* loadObjectAnimator(Context*ctx,const AttributeSet& attrs,float );
     static ValueAnimator* loadValueAnimator(Context*context,const AttributeSet& attrs, ValueAnimator*anim,float);
     static ValueAnimator* loadAnimator(Context*ctx,const AttributeSet& attrs, ValueAnimator* anim, float pathErrorScale);
+    static std::vector<PropertyValuesHolder*> loadValues(XmlPullParser& parser,const  AttributeSet& attrs);
 public:
     static Animator* loadAnimator(Context* context,const std::string&resid);
     static Animator* loadAnimator(Context* context,const std::string&resid,float pathErrorScale);

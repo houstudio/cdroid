@@ -75,11 +75,11 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
                     {"together",(int)TOGETHER},{"sequentially",(int)SEQUENTIALLY}}, TOGETHER);
             createAnimatorFromXml(context, parser, event.attributes, (AnimatorSet*) anim, ordering,pixelSize);
         } else if (name.compare("propertyValuesHolder")==0) {
-            /*PropertyValuesHolder[] values = loadValues(parser,Xml.asAttributeSet(parser));
-            if (values != null && anim != null && (anim instanceof ValueAnimator)) {
+            std::vector<PropertyValuesHolder*>values = loadValues(parser,event.attributes);
+            if (values.size() && (dynamic_cast<ValueAnimator*>(anim))) {
                 ((ValueAnimator*) anim)->setValues(values);
             }
-            gotValues = true;*/
+            gotValues = true;
         } else {
             LOGE("Unknown animator name:%s",name.c_str());
         }
@@ -129,6 +129,37 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
             break;
         }
     }
+}
+ 
+std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(XmlPullParser& parser,const  AttributeSet& attrs){
+    std::vector<PropertyValuesHolder*> values;
+    XmlPullParser::XmlEvent event;
+    int type;
+    LOGD("TODO:FIXME");
+    while ((type = parser.next(event)) != XmlPullParser::END_TAG &&
+            type != XmlPullParser::END_DOCUMENT) {
+        if (type != XmlPullParser::START_TAG) {
+            //parser.next();
+            continue;
+        }
+
+        std::string name = parser.getName();
+
+        if (name.compare("propertyValuesHolder")==0) {
+            const std::string propertyName = attrs.getString("propertyName");
+            const int valueType = attrs.getInt("valueType", VALUE_TYPE_UNDEFINED);
+
+            PropertyValuesHolder* pvh = nullptr;//loadPvh(parser, propertyName, valueType);
+            if (pvh == nullptr) {
+                //pvh = getPVH(a, valueType,propertyName);
+            }
+            if (pvh != nullptr) {
+                values.push_back(pvh);
+            }
+        }
+        //parser.next();
+    }
+    return values;
 }
 
 static const std::unordered_map<std::string,int>valueTypes = {
