@@ -264,6 +264,10 @@ static const std::unordered_map<std::string,int>valueTypes = {
     {"scrollX",(int)Property::INT_TYPE},
     {"scrollY",(int)Property::INT_TYPE},
     {"top",(int)Property::INT_TYPE},
+
+    {"translateX",(int)Property::FLOAT_TYPE},
+    {"translateY",(int)Property::FLOAT_TYPE},
+
     {"translationX",(int)Property::FLOAT_TYPE},
     {"translationY",(int)Property::FLOAT_TYPE},
     {"translationZ",(int)Property::FLOAT_TYPE},
