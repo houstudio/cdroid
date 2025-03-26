@@ -125,17 +125,18 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     const FullPathProperties& properties = useStagingData ? mStagingProperties : mProperties;
     const Cairo::RefPtr<cdroid::Path> renderPath = getUpdatedPath(useStagingData, tempStagingPath);
     // Draw path's fill, if fill color or gradient is valid
-    const bool needsFill = (properties.getFillGradient() != nullptr)||(properties.getFillAlpha()&&properties.getFillColor());
-    const bool needsStroke = (properties.getStrokeGradient()!=nullptr)||(properties.getStrokeColor()&&properties.getStrokeAlpha());
+    const uint32_t fillAlpha  = uint32_t(properties.getFillAlpha()*255.f)<<24;
+    const uint32_t strokeAlpha= uint32_t(properties.getStrokeAlpha()*255.f)<<24;
+    const bool needsFill  = (properties.getFillGradient() != nullptr) || (fillAlpha  && properties.getFillColor());
+    const bool needsStroke= (properties.getStrokeGradient()!=nullptr) || (strokeAlpha&& properties.getStrokeColor());
 
 
     outCanvas.set_antialias(mAntiAlias?Cairo::ANTIALIAS_GRAY:Cairo::ANTIALIAS_NONE);
     renderPath->append_to_context(&outCanvas);
-    //outCanvas.set_color(properties.getFillColor());needsFill=true;needsStroke=true;
     if (needsFill) {
         if(properties.getFillGradient())
             outCanvas.set_source(properties.getFillGradient());
-        else outCanvas.set_color(properties.getFillColor());
+        else outCanvas.set_color(properties.getFillColor()|fillAlpha);
         if(needsStroke)
             outCanvas.fill_preserve();
         else outCanvas.fill();//drawPath(renderPath, paint);
@@ -144,7 +145,7 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     if (needsStroke) {
         if(properties.getStrokeGradient())
             outCanvas.set_source(properties.getStrokeGradient());
-        else outCanvas.set_color(properties.getStrokeColor());
+        else outCanvas.set_color(properties.getStrokeColor()|strokeAlpha);
         outCanvas.set_line_join((Cairo::Context::LineJoin)properties.getStrokeLineJoin());
         //paint.setStrokeJoin(SkPaint::Join(properties.getStrokeLineJoin()));
         outCanvas.set_line_cap((Cairo::Context::LineCap)properties.getStrokeLineCap());

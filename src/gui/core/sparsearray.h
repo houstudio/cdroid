@@ -77,10 +77,10 @@ using SparseArray = SparseArrayImpl<int,T>;
 
 using SparseBooleanArray = SparseArrayImpl<int, bool>;
 using SparseIntArray = SparseArrayImpl<int,int>;
-using SparseLongArray= SparseArrayImpl<int,long>;
+using SparseLongArray= SparseArrayImpl<int,int64_t>;
 
 template<typename T>
-using LongSparseArray= SparseArrayImpl<long,T>;
+using LongSparseArray= SparseArrayImpl<int64_t,T>;
 
 using LongSparseLongArray=LongSparseArray<long>;
 }

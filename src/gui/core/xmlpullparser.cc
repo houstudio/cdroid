@@ -17,6 +17,7 @@ struct EventData{
 struct Private{
     XML_Parser parser;
     int depth;
+    int parsedDepth;
     Context*context;
     std::string package;
     std::unique_ptr<std::istream>stream;
@@ -24,6 +25,7 @@ struct Private{
     std::string mTagName;
     bool endDocument;
 };
+
 class XmlPullParser::AttrParser{
 public:
     static void startElementHandler(void* userData, const XML_Char* name, const XML_Char** attrs){
@@ -61,6 +63,7 @@ public:
 XmlPullParser::XmlPullParser(){
     mData = new Private;
     mData->depth =0;
+    mData->parsedDepth=0;
     mData->context = nullptr;
     mData->endDocument = false;
     mData->parser = XML_ParserCreateNS(NULL,' ');
@@ -101,7 +104,8 @@ XmlPullParser::~XmlPullParser() {
 }
 
 int XmlPullParser::getDepth()const{
-    return mData->eventQueue.empty()?0:mData->eventQueue.front()->depth;
+    //return mData->eventQueue.empty()?0:mData->eventQueue.front()->depth;
+    return mData->parsedDepth;
 }
 
 std::string XmlPullParser::getName()const{
@@ -143,11 +147,20 @@ int XmlPullParser::next(XmlEvent& event,int &depth) {
         event = front->event;
         const int type= front->type;
         mData->mTagName = event.name;
-        depth= front->depth;
+        depth = front->depth;
+        if(type==START_TAG)mData->parsedDepth++;
+        else if(type==END_TAG)mData->parsedDepth--;
         mData->eventQueue.pop();
         return type;
     }
+    mData->parsedDepth =0;
     return END_DOCUMENT;
+}
+
+std::string XmlPullParser::getPositionDescription()const{
+    std::ostringstream oss;
+    oss<<XML_GetCurrentLineNumber(mData->parser)<<":"<<XML_GetCurrentColumnNumber(mData->parser);
+    return oss.str();
 }
 
 }/*endof namespace*/

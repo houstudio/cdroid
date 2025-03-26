@@ -32,6 +32,7 @@ public:
     void setContent(Context*ctx,const std::string&resid);
     int getDepth()const;
     std::string getName()const;
+    std::string getPositionDescription()const;
     int next(XmlEvent& event,int&depth);
     int next(XmlEvent& event);
     operator bool()const;

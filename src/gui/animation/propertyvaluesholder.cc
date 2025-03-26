@@ -17,7 +17,6 @@ PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
     mProperty = o.mProperty;
     mValueType= o.mValueType;
     mEvaluator= o.mEvaluator;
-    LOGD("%p,%s",this,mPropertyName.c_str());
 }
 
 PropertyValuesHolder::PropertyValuesHolder(Property*property){
@@ -25,7 +24,6 @@ PropertyValuesHolder::PropertyValuesHolder(Property*property){
     mValueType= property->getType();
     mEvaluator= evaluator;
     if(property)mPropertyName = property->getName();
-    LOGD("%p,%s",this,mPropertyName.c_str());
 }
 
 PropertyValuesHolder::PropertyValuesHolder(const std::string&name){
@@ -33,7 +31,6 @@ PropertyValuesHolder::PropertyValuesHolder(const std::string&name){
     mValueType= Property::UNDEFINED;
     mProperty = nullptr;
     mEvaluator= evaluator;
-    LOGD("%p,%s",this,mPropertyName.c_str());
 }
 
 PropertyValuesHolder::~PropertyValuesHolder(){
