@@ -8,14 +8,16 @@ PathMeasure::PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool){
 }
 
 double PathMeasure::distance(const Point& p1, const Point& p2) {
-    return std::sqrt(std::pow(p2.x - p1.x, 2) + std::pow(p2.y - p1.y, 2));
+    const double dx = p2.x - p1.x;
+    const double dy = p2.y - p1.y;
+    return std::sqrt(dx*dx+dy*dy);
 }
 
 double PathMeasure::curveLength(const Point& p0, const Point& p1, const Point& p2, const Point& p3) {
     // Approximate the length of a cubic Bezier curve using a simple method
     double length = 0.0;
     Point prev = p0;
-    const int steps = 100;
+    const int steps = 36;
     for (int i = 1; i <= steps; ++i) {
         double t = static_cast<double>(i) / steps;
         Point point = interpolateCurve(p0, p1, p2, p3, t);
@@ -43,6 +45,7 @@ PathMeasure::Point PathMeasure::interpolateCurve(const Point& p0, const Point& p
     return p;
 }
 
+#define CURVE_SKIP_POINTS 4
 double PathMeasure::getLength() {
     Point first_point,last_point;
     double length =0;
@@ -68,7 +71,7 @@ double PathMeasure::getLength() {
             Point p3 = { data[3].point.x, data[3].point.y };
             length += curveLength(last_point, p1, p2, p3);
             last_point = p3;
-            i += 4;
+            i += CURVE_SKIP_POINTS;
             break;
         }
         case CAIRO_PATH_CLOSE_PATH:
@@ -79,6 +82,7 @@ double PathMeasure::getLength() {
         }
     }
     cairo_path_destroy(m_path);
+    LOGD("length=%f",length);
     return length;
 }
 
@@ -88,7 +92,7 @@ bool PathMeasure::getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::
     Point first_point,last_point,current_point;
     bool segment_started = false,segment_found = false;
     auto m_path = mPath->copy_path();
-    for (int i = 0; i < m_path->num_data; ) {
+    for (int i = 0; i < m_path->num_data && (length<stopD); ) {
         cairo_path_data_t* data = &m_path->data[i];
         switch (data->header.type) {
         case CAIRO_PATH_MOVE_TO:
@@ -112,7 +116,8 @@ bool PathMeasure::getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::
                 if (length + segment_length > stopD) {
                     Point p = interpolate(last_point, current_point, (stopD - length) / segment_length);
                     dst->line_to(p.x,p.y);
-                    goto theEND;//make for goto end
+                    current_point = p;
+                    segment_found = true ;
                 } else {
                     dst->line_to(current_point.x, current_point.y);
                 }
@@ -130,19 +135,22 @@ bool PathMeasure::getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::
                 if (!segment_started) {
                     Point p = interpolateCurve(last_point, p1, p2, p3, (startD - length)/segment_length);
                     dst->move_to(p.x,p.y);
+                    LOGV("(%f,%f),(%f,%f),(%f,%f),(%f,%f),(%f,%f),(%f,%f)",last_point.x,last_point.y,p1.x, p1.y, p2.x, p2.y,p3.x,p3.y,p.x,p.y);
                     segment_started = true;
                 }
                 if (length + segment_length > stopD) {
                     Point p = interpolateCurve(last_point, p1, p2, p3, (stopD - length) / segment_length);
                     dst->curve_to(p1.x, p1.y, p2.x, p2.y,p.x,p.y);
-                    goto theEND;//make for goto end
+                    segment_found = true;
+                    LOGV("(%f,%f),(%f,%f),(%f,%f),(%f,%f),(%f,%f)",p1.x, p1.y, p2.x, p2.y,p3.x,p3.y,p.x,p.y);
                 } else {
                     dst->curve_to(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
                 }
             }
             length += segment_length;
+            LOGV("segment[%d/%d]=%f/%f",i,m_path->num_data,stopD-startD,length);
+            i += CURVE_SKIP_POINTS;
             last_point = p3;
-            i += 4;
             break;
         case CAIRO_PATH_CLOSE_PATH:
             segment_length = distance(last_point, first_point);
@@ -156,7 +164,6 @@ bool PathMeasure::getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::
                     Point p = interpolate(last_point, first_point, (stopD - length) / segment_length);
                     dst->line_to(p.x,p.y);
                     segment_found = true;
-                    goto theEND;//return segment_found;
                 } else {
                     dst->line_to(first_point.x, first_point.y);
                 }
@@ -168,7 +175,6 @@ bool PathMeasure::getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::
         default:  break;
         }
     }
-theEND:
     cairo_path_destroy(m_path);
     return true;
 }
