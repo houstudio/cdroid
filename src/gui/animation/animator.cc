@@ -59,8 +59,8 @@ bool Animator::isStarted() {
     return isRunning();
 }
 
-std::shared_ptr<ConstantState<Animator*>> Animator::createConstantState(){
-    return nullptr;//new AnimatorConstantState(this);
+std::shared_ptr<Animator::AnimatorConstantState> Animator::createConstantState(){
+    return std::make_shared<AnimatorConstantState>(this);
 }
 
 void Animator::addListener(const AnimatorListener& listener) {
@@ -160,7 +160,7 @@ AnimatorListenerAdapter::AnimatorListenerAdapter(){
 Animator::AnimatorConstantState::AnimatorConstantState(Animator* animator)
     :mAnimator(animator){
     // ensure a reference back to here so that constante state is not gc'ed.
-    mAnimator->mConstantState = this;
+    mAnimator->mConstantState = shared_from_this();
     mChangingConf = mAnimator->getChangingConfigurations();
 }
 
@@ -170,7 +170,7 @@ int Animator::AnimatorConstantState::getChangingConfigurations() {
 
 Animator* Animator::AnimatorConstantState::newInstance() {
     Animator* clone = mAnimator->clone();
-    clone->mConstantState = this;
+    clone->mConstantState = shared_from_this();
     return clone;
 }
 

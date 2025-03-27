@@ -107,6 +107,7 @@ const Cairo::RefPtr<cdroid::Path> FullPath::getUpdatedPath(bool useStagingData,C
     }
     return outPath;
 }
+
 void FullPath::dump() {
     Path::dump();
     LOGD("stroke width, color, alpha: %f, %d, %f, fill color, alpha: %d, %f",
@@ -130,13 +131,13 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     const bool needsFill  = (properties.getFillGradient() != nullptr) || (fillAlpha  && properties.getFillColor());
     const bool needsStroke= (properties.getStrokeGradient()!=nullptr) || (strokeAlpha&& properties.getStrokeColor());
 
-
     outCanvas.set_antialias(mAntiAlias?Cairo::ANTIALIAS_GRAY:Cairo::ANTIALIAS_NONE);
     renderPath->append_to_context(&outCanvas);
     if (needsFill) {
         if(properties.getFillGradient())
             outCanvas.set_source(properties.getFillGradient());
         else outCanvas.set_color(properties.getFillColor()|fillAlpha);
+        outCanvas.set_fill_rule((Cairo::Context::FillRule)properties.getFillType());// EVEN_ODD WINDING
         if(needsStroke)
             outCanvas.fill_preserve();
         else outCanvas.fill();//drawPath(renderPath, paint);
@@ -154,7 +155,6 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
         outCanvas.set_line_width(properties.getStrokeWidth());//paint.setStrokeWidth(properties.getStrokeWidth());
         outCanvas.stroke();//drawPath(renderPath, paint);
     }
-    //if(!mName.empty())outCanvas.dump2png(mName+".png");
 }
 
 void FullPath::syncProperties() {

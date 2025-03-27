@@ -8,7 +8,6 @@ namespace hwui {
 
 class VectorDrawableUtils {
 public:
-    static double PathMeasure(const Cairo::RefPtr<cdroid::Path>&path);
     static bool canMorph(const PathData& morphFrom, const PathData& morphTo);
     static bool interpolatePathData(PathData& outData, const PathData& morphFrom,
                                                 const PathData& morphTo, float fraction);

@@ -14,11 +14,23 @@ int main(int argc,const char*argv[]){
     delete anim;
     delete anim2;*/
     if(argc>1)d=DrawableInflater::loadDrawable(&app,argv[1]);
-    else d= DrawableInflater::loadDrawable(&app,"@cdroid:drawable/btn_radio_on_to_off_mtrl_animation");
+    else d= DrawableInflater::loadDrawable(&app,"@cdroid:drawable/btn_check_material_anim");
+    LOGD("drawable=%p",d);
     tv->setBackground(d);
     if(dynamic_cast<AnimatedVectorDrawable*>(d)){
         ((AnimatedVectorDrawable*)d)->start();
+        d->setLevel(3000);
     }
+    tv->setOnClickListener([](View&view){
+        Drawable *d =view.getBackground();
+        static bool checked = false;
+        d->setState(checked?StateSet::CHECKED_STATE_SET:StateSet::NOTHING);
+        LOGD("checked=%d",checked);
+        checked=!checked;
+        if(dynamic_cast<AnimatedVectorDrawable*>(d)){
+            ((AnimatedVectorDrawable*)d)->start();
+        }
+    });
     app.exec();
     return 0;
 }

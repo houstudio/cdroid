@@ -33,7 +33,7 @@ public:
          CallbackBase<void,Animator&> onAnimationResume;
     };
 private:
-    AnimatorConstantState* mConstantState;
+    std::shared_ptr<AnimatorConstantState> mConstantState;
 protected:
     friend class AnimatorSet;
     bool mPaused = false;
@@ -74,7 +74,7 @@ public:
     virtual int getChangingConfigurations();
     void setChangingConfigurations(int configs);
     void appendChangingConfigurations(int configs);
-    std::shared_ptr<ConstantState<Animator*>> createConstantState();
+    virtual std::shared_ptr<AnimatorConstantState> createConstantState();
     virtual void setupStartValues();
     virtual void setupEndValues();
     virtual void setTarget(void*target);
@@ -89,7 +89,7 @@ public:
     AnimatorListenerAdapter();
 };
 
-class Animator::AnimatorConstantState:public ConstantState<Animator*> {
+class Animator::AnimatorConstantState:public std::enable_shared_from_this<AnimatorConstantState>,public ConstantState<Animator*> {
     Animator* mAnimator;
     int mChangingConf;
 public:

@@ -1466,7 +1466,7 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const AttributeSet& at
     strokeLineCap = atts.getInt("strokeLineCap",std::unordered_map<std::string,int>{
             {"butt", (int)Cairo::Context::LineCap::BUTT},
             {"round",(int)Cairo::Context::LineCap::ROUND},
-            {"squre",(int)Cairo::Context::LineCap::SQUARE} }, strokeLineCap);
+            {"square",(int)Cairo::Context::LineCap::SQUARE} }, strokeLineCap);
     strokeLineJoin = atts.getInt("strokeLineJoin",std::unordered_map<std::string,int>{
             {"bevel",(int)Cairo::Context::LineJoin::BEVEL},
             {"miter",(int)Cairo::Context::LineJoin::MITER}, 
