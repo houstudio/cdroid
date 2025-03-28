@@ -22,6 +22,7 @@ public:
 private:
     int mQrCodeWidth;
     int mDotColor;
+    int mBarBgColor;
     int mEccLevel;
     int mEncodeMode;
     float mZoom;
@@ -50,6 +51,8 @@ public:
     int getEncodeMode()const;
     void setDotColor(int color);
     int getDotColor()const;
+    void setBarBgColor(int color);
+    int getBarBgColor()const;
     void setLogo(Drawable*);
     void setLogoResource(const std::string&);
     Drawable* getLogo()const;
