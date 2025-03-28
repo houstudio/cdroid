@@ -72,25 +72,17 @@ XmlPullParser::XmlPullParser(){
 }
 
 XmlPullParser::XmlPullParser(const std::string&content):XmlPullParser(){
-    setContent(content);
+    mData->stream = std::make_unique<std::istringstream>(content);
 }
 
 XmlPullParser::XmlPullParser(Context*ctx,const std::string&resid):XmlPullParser(){
-    setContent(ctx,resid);
-}
-
-void XmlPullParser::setContent(Context*ctx,const std::string&resid){
     if(ctx){
-        mData->stream = ctx->getInputStream(resid,&mData->package);
+        mData->stream=ctx->getInputStream(resid,&mData->package);
     }
     mData->context = ctx;
     if(((mData->stream==nullptr)||(!*mData->stream))&&resid.size()){
-        mData->stream = std::make_unique<std::ifstream>(resid);
+        mData->stream=std::make_unique<std::ifstream>(resid);
     }
-}
-
-void XmlPullParser::setContent(const std::string&content){
-    mData->stream = std::make_unique<std::istringstream>(content);
 }
 
 XmlPullParser::operator bool()const{
