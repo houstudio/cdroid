@@ -29,20 +29,19 @@ struct Private{
 class XmlPullParser::AttrParser{
 public:
     static void startElementHandler(void* userData, const XML_Char* name, const XML_Char** attrs){
-        auto ed=std::make_unique<EventData>();
-        XmlEvent& event=ed->event;
+        auto ed = std::make_unique<EventData>();
+        XmlEvent& event = ed->event;
         Private*data=(Private*)userData;
         event.name = name;
         event.attributes.setContext(data->context,data->package);
         event.attributes.set(attrs);
         ed->type = START_TAG;
-        ed->depth=data->depth;
-        data->depth++;
+        ed->depth= data->depth++;
         data->eventQueue.push(std::move(ed));
     }
     static void endElementHandler(void* userData, const XML_Char* name){
         auto ed=std::make_unique<EventData>();
-        XmlEvent& event=ed->event;;
+        XmlEvent& event = ed->event;
         Private*data=(Private*)userData;
         event.name = name;
         ed->type = END_TAG;
@@ -50,10 +49,10 @@ public:
         data->eventQueue.push(std::move(ed));
     }
     static void characterDataHandler(void* userData, const XML_Char* s, int len){
-        auto ed=std::make_unique<EventData>();
-        XmlEvent& event=ed->event;
-        Private*data=(Private*)userData;
-        event.text.assign(s, len);
+        auto ed = std::make_unique<EventData>();
+        XmlEvent& event = ed->event;
+        Private*data = (Private*)userData;
+        event.text.assign(s,len);
         ed->type = TEXT;
         ed->depth= data->depth;
         data->eventQueue.push(std::move(ed));
@@ -62,8 +61,8 @@ public:
 
 XmlPullParser::XmlPullParser(){
     mData = new Private;
-    mData->depth =0;
-    mData->parsedDepth=0;
+    mData->depth = 0;
+    mData->parsedDepth = 0;
     mData->context = nullptr;
     mData->endDocument = false;
     mData->parser = XML_ParserCreateNS(NULL,' ');

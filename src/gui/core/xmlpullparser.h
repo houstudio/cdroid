@@ -8,10 +8,14 @@ namespace cdroid{
 class XmlPullParser {
 public:
     enum EventType {
+        BAD_DOCUMENT,
+        START_DOCUMENT,
+        END_DOCUMENT,
+
         START_TAG,
         END_TAG,
         TEXT,
-        END_DOCUMENT
+        COMMENT
     };
     struct XmlEvent {
         EventType type;
