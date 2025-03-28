@@ -64,6 +64,7 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
 
     // Re-set whether nested scrolling is enabled so that it is set on all API levels
     setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled", true));
+    setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
 }
 
 RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
@@ -100,6 +101,7 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
 
     // Re-set whether nested scrolling is enabled so that it is set on all API levels
     setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled", true));
+    setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
 }
 
 RecyclerView::~RecyclerView(){
@@ -183,7 +185,6 @@ void RecyclerView::initRecyclerView(){
     mScaledVerticalScrollFactor = vc.getScaledVerticalScrollFactor();
     mMinFlingVelocity = vc.getScaledMinimumFlingVelocity();
     mMaxFlingVelocity = vc.getScaledMaximumFlingVelocity();
-    setWillNotDraw(getOverScrollMode() == View::OVER_SCROLL_NEVER);
     ViewInfoStore::ProcessCallback* visCBK = new ViewInfoStore::ProcessCallback;
 
     visCBK->processDisappeared = [this](ViewHolder* viewHolder,ItemAnimator::ItemHolderInfo* info, ItemAnimator::ItemHolderInfo* postInfo){
