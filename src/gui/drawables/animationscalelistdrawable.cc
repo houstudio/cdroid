@@ -36,7 +36,7 @@ void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,cons
     auto state = mAnimationScaleListState;
     int type, depth;
     XmlPullParser::XmlEvent event;
-    const int innerDepth = parser.getDepth();
+    const int innerDepth = parser.getDepth()+1;
     while ((type = parser.next(event)) != XmlPullParser::END_DOCUMENT
             && ((depth=parser.getDepth()) >= innerDepth || type != XmlPullParser::END_TAG)) {
         if (type != XmlPullParser::START_TAG) {

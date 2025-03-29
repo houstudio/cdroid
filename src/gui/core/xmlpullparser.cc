@@ -9,6 +9,7 @@ struct Private{
     Context*context;
     int depth;
     std::string package;
+    std::string resourceId;
     std::unique_ptr<std::istream>stream;
     std::queue<std::unique_ptr<XmlPullParser::XmlEvent>> eventQueue;
     std::string mTagName;
@@ -71,6 +72,7 @@ XmlPullParser::XmlPullParser(Context*ctx,const std::string&resid):XmlPullParser(
     if(((mData->stream==nullptr)||(!*mData->stream))&&resid.size()){
         mData->stream=std::make_unique<std::ifstream>(resid);
     }
+    mData->resourceId=resid;
     auto event = std::make_unique<XmlEvent>(START_DOCUMENT);
     event->depth= mData->depth++;
     event->lineNumber=0;
@@ -126,6 +128,7 @@ int XmlPullParser::next(XmlEvent& event) {
         const bool done = mData->stream->eof();
         if(XML_Parse(mData->parser,buff,len,done)==XML_STATUS_ERROR){
             mData->endDocument = true;
+            LOGE("%s:%s",mData->resourceId.c_str(),getPositionDescription().c_str());
             mData->eventQueue.push(std::make_unique<XmlEvent>(BAD_DOCUMENT));
             break;
         }

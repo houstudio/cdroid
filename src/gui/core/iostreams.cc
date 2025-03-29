@@ -46,7 +46,7 @@ std::streambuf::int_type ZipStreamBuf::underflow() {//Unbuffered get
     }
     setg(buffer,buffer,buffer + n);
 
-    return gptr()==egptr()?traits_type::eof():traits_type::to_int_type(*gptr());
+    return traits_type::to_int_type(*gptr());
 }
 
 std::streambuf::pos_type  ZipStreamBuf::seekoff(std::streambuf::off_type off, std::ios_base::seekdir way,

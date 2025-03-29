@@ -181,7 +181,7 @@ Insets AnimatedVectorDrawable::getOpticalInsets() {
 void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&attrs){
     auto state = mAnimatedVectorState;
     XmlPullParser::XmlEvent event;
-    int eventType=XmlPullParser::START_TAG;
+    int eventType= parser.getEventType();//XmlPullParser::START_TAG;
     float pathErrorScale = 1;
     AttributeSet a =attrs;
     const int innerDepth = parser.getDepth()+1;
