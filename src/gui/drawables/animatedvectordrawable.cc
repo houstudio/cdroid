@@ -184,7 +184,7 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
     int eventType=XmlPullParser::START_TAG;
     float pathErrorScale = 1;
     AttributeSet a =attrs;
-    const int innerDepth = parser.getDepth();
+    const int innerDepth = parser.getDepth()+1;
     Context*ctx = attrs.getContext();
     state->mContext = ctx;
     // Parse everything until the end of the animated-vector element.

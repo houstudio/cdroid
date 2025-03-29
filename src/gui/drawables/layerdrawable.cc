@@ -1072,7 +1072,7 @@ void LayerDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
 
 void LayerDrawable::inflateLayers(XmlPullParser& parser,const AttributeSet& atts){
     int type,depth,low = 0;
-    const int innerDepth = parser.getDepth();
+    const int innerDepth = parser.getDepth()+1;
     XmlPullParser::XmlEvent event;
     while (((type = parser.next(event,depth)) != XmlPullParser::END_DOCUMENT)
             && (depth >= innerDepth|| type != XmlPullParser::END_TAG)) {

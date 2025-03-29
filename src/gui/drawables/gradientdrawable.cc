@@ -1180,16 +1180,15 @@ void GradientDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
 void GradientDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSet&atts){
     int type,depth;
     XmlPullParser::XmlEvent event;
-    const int innerDepth = parser.getDepth();
+    const int innerDepth = parser.getDepth()+1;
 
     while (((type=parser.next(event,depth)) != XmlPullParser::END_DOCUMENT)
            && (depth >= innerDepth || type != XmlPullParser::END_TAG)) {
-        if (type != XmlPullParser::START_TAG) continue;
+        if ( (type != XmlPullParser::START_TAG) || (depth > innerDepth) ){
+            continue;
+        }
 
-        if (depth > innerDepth) continue;
-
-        const std::string name = event.name;//parser.getName();
-
+        const std::string name = parser.getName();
         if (name.compare("size")==0) {
             updateGradientDrawableSize(event.attributes);
         } else if (name.compare("gradient")==0) {

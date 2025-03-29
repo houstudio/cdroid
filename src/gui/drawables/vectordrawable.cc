@@ -402,7 +402,7 @@ void VectorDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSe
     groupStack.push(state->mRootGroup);
 
     int eventType;
-    const int innerDepth = parser.getDepth();
+    const int innerDepth = parser.getDepth()+1;
     XmlPullParser::XmlEvent event;
     // Parse everything until the end of the vector element.
     while (((eventType =parser.next(event))!= XmlPullParser::END_DOCUMENT)

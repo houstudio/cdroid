@@ -150,7 +150,7 @@ void StateListDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
 void StateListDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSet&atts){
     int type,depth;
     XmlPullParser::XmlEvent event;
-    const int innerDepth = parser.getDepth();
+    const int innerDepth = parser.getDepth()+1;
     while( ((type=parser.next(event,depth))!=XmlPullParser::END_DOCUMENT)
             &&(depth>=innerDepth)||(type==XmlPullParser::END_TAG)){
         if(type!=XmlPullParser::START_TAG)continue;

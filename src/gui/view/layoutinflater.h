@@ -26,8 +26,7 @@ private:
 private:
     static INFLATERMAPPER& getInflaterMap();
     static STYLEMAPPER& getStyleMap();
-    View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*);
-/////
+
     static void consumeChildElements(XmlPullParser& parser);
     void parseViewTag(XmlPullParser&parser, View*parent,const AttributeSet& attrs);
     void parseInclude(XmlPullParser&parser, Context*,View*prent,const AttributeSet& attrs);
@@ -36,6 +35,7 @@ public:
     static ViewInflater getInflater(const std::string&);
     static bool registerInflater(const std::string&name,const std::string&,ViewInflater fun);
     const std::string getDefaultStyle(const std::string&name)const;
+    View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*);
 #ifndef NEW_LAYOUT_INFLATER
     View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot=true,AttributeSet*atts=nullptr);
 #endif
