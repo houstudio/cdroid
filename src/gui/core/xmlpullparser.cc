@@ -70,10 +70,13 @@ XmlPullParser::XmlPullParser(Context*ctx,const std::string&resid):XmlPullParser(
     }
     mData->context = ctx;
     if(((mData->stream==nullptr)||(!*mData->stream))&&resid.size()){
-        mData->stream=std::make_unique<std::ifstream>(resid);
+        auto fs =std::make_unique<std::ifstream>(resid);
+        if(fs->is_open()){
+            mData->stream= std::move(fs);
+        }
     }
     mData->resourceId=resid;
-    auto event = std::make_unique<XmlEvent>(START_DOCUMENT);
+    auto event = std::make_unique<XmlEvent>(mData->stream?START_DOCUMENT:END_DOCUMENT);
     event->depth= mData->depth++;
     event->lineNumber=0;
     mData->eventQueue.push(std::move(event));
