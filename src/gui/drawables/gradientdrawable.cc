@@ -1182,8 +1182,8 @@ void GradientDrawable::inflateChildElements(XmlPullParser&parser,const Attribute
     XmlPullParser::XmlEvent event;
     const int innerDepth = parser.getDepth()+1;
 
-    while (((type=parser.next(event,depth)) != XmlPullParser::END_DOCUMENT)
-           && (depth >= innerDepth || type != XmlPullParser::END_TAG)) {
+    while (((type=parser.next(event)) != XmlPullParser::END_DOCUMENT)
+           && ((depth=parser.getDepth()) >= innerDepth || type != XmlPullParser::END_TAG)) {
         if ( (type != XmlPullParser::START_TAG) || (depth > innerDepth) ){
             continue;
         }

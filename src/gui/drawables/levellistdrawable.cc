@@ -97,8 +97,8 @@ void LevelListDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
     int type,depth,low = 0;
     const int innerDepth = parser.getDepth()+1;
     XmlPullParser::XmlEvent event;
-    while (((type = parser.next(event,depth)) != XmlPullParser::END_DOCUMENT)
-            && (depth >= innerDepth || type != XmlPullParser::END_TAG)) {
+    while (((type = parser.next(event)) != XmlPullParser::END_DOCUMENT)
+            && ((depth=parser.getDepth()) >= innerDepth || type != XmlPullParser::END_TAG)) {
         if (type != XmlPullParser::START_TAG) {
             continue;
         }
@@ -117,7 +117,7 @@ void LevelListDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
         }
 
         if (dr==nullptr) {
-            while ((type = parser.next(event,depth)) == XmlPullParser::TEXT) {}
+            while ((type = parser.next(event)) == XmlPullParser::TEXT) {}
             if (type != XmlPullParser::START_TAG) {
                 throw std::logic_error(
                                 ": <item> tag requires a 'drawable' attribute or "

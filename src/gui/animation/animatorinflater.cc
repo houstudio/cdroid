@@ -55,7 +55,7 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
     int type = 0,depth = 0;
     const int innerDepth = parser.getDepth()+1;
     XmlPullParser::XmlEvent event;
-    while ((((type = parser.next(event,depth)) != XmlPullParser::END_TAG) || (depth >= innerDepth))
+    while ((((type = parser.next(event)) != XmlPullParser::END_TAG) || (parser.getDepth() >= innerDepth))
             && (type != XmlPullParser::END_DOCUMENT)) {
 
         if (type != XmlPullParser::START_TAG) {
@@ -102,9 +102,8 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
 StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*context,XmlPullParser&parser,const AttributeSet&atts){
     StateListAnimator* stateListAnimator = new StateListAnimator();
     while (true) {
-        int depth;
         XmlPullParser::XmlEvent event;
-        const int type = parser.next(event,depth);
+        const int type = parser.next(event);
         const std::string name =parser.getName();
         switch (type) {
         case XmlPullParser::END_DOCUMENT:

@@ -65,11 +65,11 @@ LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,
 
 LayoutAnimationController* AnimationUtils::createLayoutAnimationFromXml(Context* c,
         XmlPullParser& parser,const AttributeSet& attrs){
-    int type,depth;
+    int type;
     XmlPullParser::XmlEvent event;
-    const int innerDepth = parser.getDepth();
+    const int depth = parser.getDepth();
     LayoutAnimationController* controller = nullptr;
-    while (((type = parser.next(event,depth)) != XmlPullParser::END_TAG || innerDepth > depth)
+    while (((type = parser.next(event)) != XmlPullParser::END_TAG || parser.getDepth()>depth)
             && type != XmlPullParser::END_DOCUMENT) {
 
         if (type != XmlPullParser::START_TAG) {
@@ -117,11 +117,11 @@ Interpolator* AnimationUtils::loadInterpolator(Context*context,const std::string
 }
 
 Interpolator* AnimationUtils::createInterpolatorFromXml(Context* context,XmlPullParser&parser){
-    int type,depth;
-    const int innerDepth = parser.getDepth();
+    int type;
+    const int depth = parser.getDepth();
     BaseInterpolator*interpolator = nullptr;
     XmlPullParser::XmlEvent event;
-    while(((type = parser.next(event,depth)) != XmlPullParser::END_TAG || innerDepth > depth)
+    while(((type = parser.next(event)) != XmlPullParser::END_TAG || parser.getDepth() > depth)
                 && type != XmlPullParser::END_DOCUMENT){
         if (type != XmlPullParser::START_TAG) {
             continue;

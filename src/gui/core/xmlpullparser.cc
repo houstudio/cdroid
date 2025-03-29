@@ -110,12 +110,7 @@ std::string XmlPullParser::getName()const{
     return mData->eventQueue.front()->name;
 }
 
-int XmlPullParser::next(XmlEvent& event){
-    int depth;
-    return next(event,depth);
-}
-
-int XmlPullParser::next(XmlEvent& event,int &depth) {
+int XmlPullParser::next(XmlEvent& event) {
     const EventType currentEvent = mData->eventQueue.front()->type;
     if((currentEvent==BAD_DOCUMENT)||(currentEvent==END_DOCUMENT)){
         event.type = currentEvent;
@@ -139,8 +134,7 @@ int XmlPullParser::next(XmlEvent& event,int &depth) {
         }
     }
     event =*mData->eventQueue.front();
-    depth =event.depth;
-    return  mData->eventQueue.front()->type;
+    return mData->eventQueue.front()->type;
 }
 
 std::string XmlPullParser::getPositionDescription()const{

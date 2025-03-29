@@ -42,7 +42,6 @@ public:
     int getEventType()const;
     int getLineNumber()const;
     int getColumnNumber()const;
-    int next(XmlEvent& event,int&depth);
     int next(XmlEvent& event);
     const AttributeSet&asAttributeSet()const;
     operator bool()const;

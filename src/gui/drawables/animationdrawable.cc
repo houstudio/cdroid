@@ -155,11 +155,11 @@ void AnimationDrawable::updateStateFromTypedArray(const AttributeSet&atts){
 }
 
 void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& atts){
-    int type , depth;
+    int type,depth;
     XmlPullParser::XmlEvent event;
     const int innerDepth = parser.getDepth()+1;
-    while ((type=parser.next(event,depth)) != XmlPullParser::END_DOCUMENT
-            && (depth >= innerDepth || type != XmlPullParser::END_TAG)) {
+    while ((type=parser.next(event)) != XmlPullParser::END_DOCUMENT
+            && ((depth=parser.getDepth()) >= innerDepth || type != XmlPullParser::END_TAG)) {
         if (type != XmlPullParser::START_TAG) {
             continue;
         }
@@ -176,7 +176,7 @@ void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
         Drawable* dr = event.attributes.getDrawable("drawable");
 
         if (dr == nullptr) {
-            while ((type=parser.next(event,depth)) == XmlPullParser::TEXT) {
+            while ((type=parser.next(event)) == XmlPullParser::TEXT) {
                 // Empty
             }
             if (type != XmlPullParser::START_TAG) {
