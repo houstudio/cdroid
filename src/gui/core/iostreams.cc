@@ -9,10 +9,11 @@
 
 namespace cdroid {
 
-ZipStreamBuf::ZipStreamBuf()
-    : zipfile(nullptr)
+ZipStreamBuf::ZipStreamBuf(void*zf)
+    : zipfile(zf)
     , bufferPosition(0){
     buffer = new char_type[BUFSIZ];
+    setg(buffer, buffer, buffer);
 }
 
 ZipStreamBuf::~ZipStreamBuf() {
@@ -21,14 +22,6 @@ ZipStreamBuf::~ZipStreamBuf() {
         zip_fclose((zip_file_t*)zipfile);
         zipfile = nullptr;
     }
-}
-
-ZipStreamBuf* ZipStreamBuf::select(void* zfile) {
-    if (zfile == nullptr) return nullptr;
-    zipfile = zfile;
-    // allocate buffer
-    setg(buffer, buffer, buffer);
-    return this;
 }
 
 std::streambuf::int_type ZipStreamBuf::underflow() {//Unbuffered get
@@ -116,10 +109,14 @@ std::streambuf::pos_type  MemoryBuf::seekoff(std::streambuf::off_type off, std::
     return buffpos;
 }
 
-ZipInputStream::ZipInputStream(void*zfile) : std::istream(nullptr) {
-    init(&_sb);
-    if(!_sb.select(zfile))setstate(std::ios_base::failbit);
-    else clear();
+ZipInputStream::ZipInputStream(void*zipfile){
+    _sb=new ZipStreamBuf(zipfile);
+    init(_sb);
+    if(zipfile==nullptr){
+        setstate(std::ios_base::failbit);
+    }else{
+        clear();
+    }
 }
 
 }//namespace
