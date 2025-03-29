@@ -30,7 +30,8 @@ QRCodeView::QRCodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
             {"kanji", MODE_KANJI}
     },mEncodeMode);
 
-    mDotColor = attrs.getColor("dotColor",mDotColor);
+    mDotColor  = attrs.getColor("dotColor",mDotColor);
+    mBarBgColor= attrs.getColor("barBgColor",mBarBgColor);
     mLogoDrawable = attrs.getDrawable("logo");
 }
 
@@ -44,6 +45,7 @@ void QRCodeView::initView(){
     mEccLevel = ECC_MEDIUM;
     mEncodeMode = MODE_UTF8;
     mDotColor = 0xFF000000;
+    mBarBgColor= (~mDotColor)|0xFF000000;
     mShowLogo = true;
     mLogoDrawable = nullptr;
     setBackgroundColor(0xFF000000);
@@ -83,6 +85,18 @@ void QRCodeView::setDotColor(int color){
 
 int QRCodeView::getDotColor()const{
     return mDotColor;
+}
+
+void QRCodeView::setBarBgColor(int color){
+    if(mBarBgColor!=color){
+        mBarBgColor = color;
+        encode( );
+        invalidate();
+    }
+}
+
+int QRCodeView::getBarBgColor()const{
+    return mBarBgColor;
 }
 
 void QRCodeView::setText(const std::string&text){
@@ -173,11 +187,9 @@ void QRCodeView::encode(){
 
     const uint32_t image_stride = mQRImage->get_stride()/4;
     uint32_t*qimg = (uint32_t*)mQRImage->get_data();
-    //mDotColor = 0xFF000000;
-    const int barBgColor = (~mDotColor)|0xFF000000;
     for(int32_t y = 0,idx = 0; y < mQrCodeWidth; y++){
         for(int32_t x = 0; x < mQrCodeWidth; x++){
-            qimg[x] = qr0.getModule(x, y)?mDotColor:barBgColor;
+            qimg[x] = qr0.getModule(x, y)?mDotColor:mBarBgColor;
         }
         idx += mQrCodeWidth;
         qimg += image_stride;

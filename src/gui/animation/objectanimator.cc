@@ -194,7 +194,6 @@ void ObjectAnimator::setupStartValues() {
 void ObjectAnimator::setupEndValues() {
     initAnimation();
     void* target = getTarget();
-    LOGD("target=%p %d valueHolder",target,mValues.size());
     if (target != nullptr) {
         size_t numValues = mValues.size();
         for (size_t i = 0; i < numValues; ++i) {

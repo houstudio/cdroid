@@ -8,10 +8,14 @@ namespace cdroid{
 class XmlPullParser {
 public:
     enum EventType {
+        BAD_DOCUMENT,
+        START_DOCUMENT,
+        END_DOCUMENT,
+
         START_TAG,
         END_TAG,
         TEXT,
-        END_DOCUMENT
+        COMMENT
     };
     struct XmlEvent {
         EventType type;
@@ -23,13 +27,11 @@ private:
     class AttrParser;
     struct Private* mData;
     bool readChunk();
-public:
     XmlPullParser();
+public:
     XmlPullParser(const std::string&);
     XmlPullParser(Context*ctx,const std::string&resid);
     ~XmlPullParser();
-    void setContent(const std::string&);
-    void setContent(Context*ctx,const std::string&resid);
     int getDepth()const;
     std::string getName()const;
     std::string getPositionDescription()const;
