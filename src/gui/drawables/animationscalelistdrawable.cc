@@ -34,11 +34,11 @@ void AnimationScaleListDrawable::inflate(XmlPullParser& parser,const AttributeSe
  */
 void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& attrs){
     auto state = mAnimationScaleListState;
-    const int innerDepth = parser.getDepth();
-    XmlPullParser::XmlEvent event;
     int type, depth;
-    while ((type = parser.next(event,depth)) != XmlPullParser::END_DOCUMENT
-            && (depth >= innerDepth || type != XmlPullParser::END_TAG)) {
+    XmlPullParser::XmlEvent event;
+    const int innerDepth = parser.getDepth()+1;
+    while ((type = parser.next(event)) != XmlPullParser::END_DOCUMENT
+            && ((depth=parser.getDepth()) >= innerDepth || type != XmlPullParser::END_TAG)) {
         if (type != XmlPullParser::START_TAG) {
             continue;
         }
@@ -52,7 +52,7 @@ void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,cons
 
         // Or parse the child element under <item>.
         if (dr == nullptr) {
-            while ((type = parser.next(event,depth)) == XmlPullParser::TEXT) {
+            while ((type = parser.next(event)) == XmlPullParser::TEXT) {
             }
             if (type != XmlPullParser::START_TAG) {
                 throw std::logic_error(//parser.getPositionDescription()

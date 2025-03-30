@@ -655,7 +655,7 @@ int Assets::loadKeyValues(const std::string&resid){
     XmlPullParser parser(this,resid);
     XmlPullParser::XmlEvent event;
     int type,depth;
-    while((type=parser.next(event,depth)!=XmlPullParser::END_DOCUMENT)){
+    while((type=parser.next(event)!=XmlPullParser::END_DOCUMENT)){
     }
     return 0;
 }

@@ -280,7 +280,7 @@ void DrawableWrapper::inflateChildDrawable(XmlPullParser& parser,const Attribute
     Drawable* dr = nullptr;
     int type;
     XmlPullParser::XmlEvent event;
-    const int outerDepth = parser.getDepth();
+    const int outerDepth = parser.getDepth()+1;
     while ((type = parser.next(event)) != XmlPullParser::END_DOCUMENT
             && (type != XmlPullParser::END_TAG || parser.getDepth() > outerDepth)) {
         if (type == XmlPullParser::START_TAG) {

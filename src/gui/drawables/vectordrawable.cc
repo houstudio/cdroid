@@ -402,7 +402,7 @@ void VectorDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSe
     groupStack.push(state->mRootGroup);
 
     int eventType;
-    const int innerDepth = parser.getDepth();
+    const int innerDepth = parser.getDepth()+1;
     XmlPullParser::XmlEvent event;
     // Parse everything until the end of the vector element.
     while (((eventType =parser.next(event))!= XmlPullParser::END_DOCUMENT)
@@ -1488,13 +1488,13 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const AttributeSet& at
 }
 
 void VectorDrawable::VFullPath::inflateGradients(XmlPullParser&parser,const AttributeSet&atts){
-    int eventType,depth,gradientType,strokeFill=-1;
+    int eventType,gradientType,strokeFill=-1;
     const int innerDepth = parser.getDepth();
     XmlPullParser::XmlEvent event;
     Cairo::RefPtr<Cairo::Gradient>gradient;
     // Parse everything until the end of the vector element.
-    while (((eventType =parser.next(event,depth))!= XmlPullParser::END_DOCUMENT)
-            && (depth >= innerDepth || eventType != XmlPullParser::END_TAG)) {
+    while (((eventType =parser.next(event))!= XmlPullParser::END_DOCUMENT)
+            && (parser.getDepth() >= innerDepth || eventType != XmlPullParser::END_TAG)) {
         std::string tagName = parser.getName();
         if ((eventType==XmlPullParser::END_TAG)&&tagName.compare("gradient")==0){
             if(strokeFill==0)mNativePtr->mutateStagingProperties()->setStrokeGradient(gradient);

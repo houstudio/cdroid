@@ -19,14 +19,18 @@ public:
     };
     struct XmlEvent {
         EventType type;
+        int depth;
+        int lineNumber;
         std::string name;
         std::string text;
         AttributeSet attributes;
+        XmlEvent();
+        XmlEvent(EventType tp);
+        XmlEvent(EventType tp,const std::string&name);
     };
 private:
     class AttrParser;
     struct Private* mData;
-    bool readChunk();
     XmlPullParser();
 public:
     XmlPullParser(const std::string&);
@@ -35,8 +39,11 @@ public:
     int getDepth()const;
     std::string getName()const;
     std::string getPositionDescription()const;
-    int next(XmlEvent& event,int&depth);
+    int getEventType()const;
+    int getLineNumber()const;
+    int getColumnNumber()const;
     int next(XmlEvent& event);
+    const AttributeSet&asAttributeSet()const;
     operator bool()const;
 };
 }

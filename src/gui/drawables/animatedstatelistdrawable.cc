@@ -216,14 +216,12 @@ void AnimatedStateListDrawable::init(){
 void AnimatedStateListDrawable::inflateChildElement(XmlPullParser&parser,const AttributeSet&atts){
     int type,depth;
     XmlPullParser::XmlEvent event;
-    const int innerDepth = parser.getDepth();
-    while (((type = parser.next(event,depth)) != XmlPullParser::END_DOCUMENT)
-            && (depth >= innerDepth || type != XmlPullParser::END_TAG)) {
-        if (type != XmlPullParser::START_TAG) {
+    const int innerDepth = parser.getDepth()+1;
+    while (((type = parser.next(event)) != XmlPullParser::END_DOCUMENT)
+            && ((depth=parser.getDepth()) >= innerDepth || type != XmlPullParser::END_TAG)) {
+        if ( (type != XmlPullParser::START_TAG) || (depth > innerDepth) ) {
             continue;
         }
-
-        if (depth > innerDepth) continue;
 
         if (event.name.compare(ELEMENT_ITEM)==0) {
             parseItem(parser, event.attributes);

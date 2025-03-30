@@ -219,10 +219,10 @@ void ShapeDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(parser,atts);
     updateStateFromTypedArray(atts);
 
-    int type,depth;
+    int type;
     XmlPullParser::XmlEvent event;
     const int outerDepth = parser.getDepth();
-    while (((type = parser.next(event,depth)) != XmlPullParser::END_DOCUMENT)
+    while (((type = parser.next(event)) != XmlPullParser::END_DOCUMENT)
             && (type != XmlPullParser::END_TAG || parser.getDepth() > outerDepth)) {
         if (type != XmlPullParser::START_TAG) {
             continue;

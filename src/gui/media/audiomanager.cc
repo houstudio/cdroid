@@ -1,9 +1,9 @@
 #include <cstring>
 #include <fstream>
-#include <expat.h>
 #include <map>
 #include <core/context.h>
 #include <core/app.h>
+#include <core/xmlpullparser.h>
 #include <media/soundpool.h>
 #include <media/audiomanager.h>
 #include <view/soundeffectconstants.h>
@@ -12,20 +12,6 @@
 #include <rtaudio/RtAudio.h>
 #endif
 namespace cdroid{
-
-using SoundEffect  = std::unordered_map<std::string,std::string>;
-
-static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
-   SoundEffect*data=(SoundEffect*)userData;
-   AttributeSet atts(nullptr,"");
-   atts.set(satts);
-   if(strcmp(name,"asset")==0){
-       const std::string id = atts.getString("id");
-       const std::string file = atts.getString("file");
-       data->emplace(id,file);
-       LOGD("%s:%s",id.c_str(),file.c_str());
-   }
-}
 
 static std::unique_ptr<AudioManager>mInst;
 AudioManager&AudioManager::getInstance(){
@@ -40,36 +26,23 @@ AudioManager::AudioManager(Context*ctx):mContext(ctx){
 }
 
 void AudioManager::loadSoundEffects(){
-    char buf[256];
-    std::streamsize len = 0;
-
-    std::unique_ptr<std::istream> stream = mContext->getInputStream("@xml/audio_assets");
-    if((stream==nullptr)||(!*stream)){
-        stream = mContext->getInputStream("@cdroid:xml/audio_assets");
-    }
-    if((stream==nullptr)||(!*stream)){
-        LOGW("@xml/audio_assets and @cdroid:xml/audio_assets not exist!");
-        return;
-    }
-
-    XML_Parser parser = XML_ParserCreate(nullptr);
     mSoundPool = std::make_unique<SoundPool>((int)NUM_SOUND_EFFECTS,0,0);
-    SoundEffect sounds;
-    XML_SetUserData(parser,&sounds);
-    XML_SetElementHandler(parser, startElement, nullptr);
     SOUND_EFFECT_FILES_MAP.resize((int)NUM_SOUND_EFFECTS);
-    do {
-        stream->read(buf,sizeof(buf));
-        len = stream->gcount();
-        if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
-            const char*es = XML_ErrorString(XML_GetErrorCode(parser));
-            LOGE("audio_assets.xml:%s at line %ld",es, XML_GetCurrentLineNumber(parser));
-            XML_ParserFree(parser);
-            return ;
+    auto parser = std::make_unique<XmlPullParser>(mContext,"@xml/audio_assets");
+    if(!(*parser)) parser = std::make_unique<XmlPullParser>(mContext,"@cdroid:xml/audio_assets");
+    int type;
+    std::unordered_map<std::string,std::string> sounds;
+    XmlPullParser::XmlEvent event;
+    while(((type= parser->next(event))!=XmlPullParser::END_DOCUMENT)){
+        if(type!=XmlPullParser::START_TAG)continue;
+        std::string tagName = parser->getName();
+        if(tagName.compare("asset")==0){
+            const std::string id = event.attributes.getString("id");
+            const std::string file = event.attributes.getString("file");
+            sounds.emplace(id,file);
+            LOGD("%s:%s",id.c_str(),file.c_str());;
         }
-    } while(len!=0);
-    XML_ParserFree(parser);
-
+    }
 #define EFF(A){(int)A,#A}
     std::map<int,std::string>mm={
         EFF(FX_KEY_CLICK),

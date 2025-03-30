@@ -416,8 +416,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         }
 
         if (type != XmlPullParser::START_TAG) {
-            throw std::logic_error(//childParser.getPositionDescription() +
-                    ": No start tag found!");
+            throw std::logic_error(childParser.getPositionDescription()+": No start tag found!");
         }
 
         const std::string childName = childParser.getName();
