@@ -57,7 +57,6 @@ void Preferences::load(std::istream&istream){
             if(tagName.compare("item")==0){
                 TextUtils::trim(value);
                 setValue(section,key,value);
-                LOGD("%s.%s=%s",section.c_str(),key.c_str(),value.c_str());
                 value.clear();
             }
             break;
