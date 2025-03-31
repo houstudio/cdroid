@@ -1,25 +1,13 @@
-#include <preferences.h>
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#if defined(_WIN32)||defined(_WIN64)
-  #include <fcntl.h>
-  #include <io.h>
-  #ifndef F_OK
-    #define F_OK 0
-    #define W_OK 2
-    #define R_OK 4
-  #endif
-#elif defined(__linux__)||defined(__unix__)
-  #include <unistd.h>
-#endif
-#include <cdtypes.h>
-#include <cdlog.h>
-#include <expat.h>
-#include <string.h>
-#include <textutils.h>
+#include <core/preferences.h>
+#include <porting/cdtypes.h>
+#include <porting/cdlog.h>
+#include <core/textutils.h>
 #include <core/attributeset.h>
 #include <core/iostreams.h>
+#include <core/xmlpullparser.h>
 
 namespace cdroid{
 
@@ -31,78 +19,53 @@ Preferences::~Preferences(){
    if(updates&&!mFileName.empty())
        save(mFileName);
 }
-typedef struct{
-   Preferences*pref;
-   std::string section;
-   std::string key;
-   std::string value;
-}PREFPARSER;
-
-static void startElement(void *userData, const XML_Char *name, const XML_Char **satts){
-    PREFPARSER*kvp=(PREFPARSER*)userData;
-    if(strcmp(name,"section")==0){//root node is not in KVPARSER::attrs
-        AttributeSet atts;
-        atts.set(satts);
-        kvp->section=atts.getString("name");
-    }else if(strcmp(name,"item")==0){
-        AttributeSet atts;
-        atts.set(satts);
-	kvp->key=atts.getString("name");
-        kvp->value=std::string();
-    }
-}
-
-static void CharacterHandler(void *userData,const XML_Char *s, int len){
-    PREFPARSER*kvp=(PREFPARSER*)userData;
-    kvp->value+=std::string(s,len);
-}
-
-static void endElement(void *userData, const XML_Char *name){
-    PREFPARSER*kvp=(PREFPARSER*)userData;
-    if(strcmp(name,"item")==0){//root node is not in KVPARSER::attrs
-        TextUtils::trim(kvp->value);
-	kvp->pref->setValue(kvp->section,kvp->key,kvp->value);
-    }
-}
 
 void Preferences::load(const std::string&fname){
-    if(access(fname.c_str(),F_OK)==0){
-        std::ifstream fin(fname);
-        mFileName=fname;
+    std::ifstream fin(fname);
+    if(fin.is_open()){
         load(fin);
-    }else if(fname.find("<sections>")!=std::string::npos){
-        load(fname.c_str(),fname.length());
+    }else {
+        std::istringstream sin(fname);
+        load(sin);
     }
 }
 
 void Preferences::load(const char*buf,size_t len){
     if(buf&&len){
-        MemoryInputStream stream(buf,len);
-        load(stream);
+        std::istringstream sin(std::string(buf,len));
+        load(sin);
     }
 }
 
 void Preferences::load(std::istream&istream){
-    XML_Parser parser=XML_ParserCreate(nullptr);
-    int len = 0;
-    PREFPARSER kvp;
-    kvp.pref=this;
-    XML_SetUserData(parser,&kvp);
-    XML_SetElementHandler(parser, startElement, endElement);
-    XML_SetCharacterDataHandler(parser,CharacterHandler);
-    if((istream.good()==false)||istream.eof())return;
-    do {
-        std::string str;
-        std::getline(istream,str);
-        len=str.length();
-        if (XML_Parse(parser, str.c_str(),len,len==0) == XML_STATUS_ERROR) {
-            const char*es=XML_ErrorString(XML_GetErrorCode(parser));
-            LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
-            XML_ParserFree(parser);
-            return;
+    auto strm = std::make_unique<std::istream>(istream.rdbuf());
+    XmlPullParser parser(nullptr,std::move(strm));
+    XmlPullParser::XmlEvent event;
+    int type;
+    std::string section,key,value;
+    while(((type=parser.next(event))!=XmlPullParser::END_DOCUMENT)&&(type!=XmlPullParser::BAD_DOCUMENT)){
+        std::string tagName = parser.getName();
+        switch(type){
+        case XmlPullParser::START_TAG:
+            if(tagName.compare("item")==0){
+                key = event.attributes.getString("name");
+            }else if(tagName.compare("section")==0){
+                section = event.attributes.getString("name");
+            }
+            break;
+        case XmlPullParser::END_TAG:
+            if(tagName.compare("item")==0){
+                TextUtils::trim(value);
+                setValue(section,key,value);
+                LOGD("%s.%s=%s",section.c_str(),key.c_str(),value.c_str());
+                value.clear();
+            }
+            break;
+        case XmlPullParser::TEXT:
+            value.append(event.text);
+            break;
         }
-    } while(len!=0);
-    XML_ParserFree(parser);
+    }
     updates = 0; 
 }
 

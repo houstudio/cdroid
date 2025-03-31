@@ -64,6 +64,15 @@ XmlPullParser::XmlPullParser(const std::string&content):XmlPullParser(){
     mData->stream = std::make_unique<std::istringstream>(content);
 }
 
+XmlPullParser::XmlPullParser(Context*ctx,std::unique_ptr<std::istream>strm):XmlPullParser(){
+    mData->context= ctx;
+    mData->stream = std::move(strm);
+    auto event = std::make_unique<XmlEvent>(mData->stream->good()?START_DOCUMENT:END_DOCUMENT);
+    event->depth= mData->depth++;
+    event->lineNumber = 0;
+    mData->eventQueue.push(std::move(event));
+}
+
 XmlPullParser::XmlPullParser(Context*ctx,const std::string&resid):XmlPullParser(){
     if(ctx){
         mData->stream = ctx->getInputStream(resid,&mData->package);
