@@ -148,19 +148,20 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
             mStrings[key] = convertXmlToCString(value);
         }else if(tag.compare("item")==0){
             const std::string type = event.attributes.getString("type");
-            if(type.compare("dimen")==0||type.compare("integer")==0||type.compare("bool")==0){
+            if(type.compare("dimen")==0||type.compare("integer")==0||type.compare("bool")==0||type.compare("fraction")==0){
                 const std::string resUri = package+":dimen/"+event.attributes.getString("name");
                 const std::string format = event.attributes.getString("format");
                 std::string value = getTrimedValue(parser);
-                if(format.compare("float")==0){
-                    const float fv =std::strtof(value.c_str(),nullptr);
+                if((format.compare("float")==0)||(type[0]=='f')){
+                    float fv =std::strtof(value.c_str(),nullptr);
+                    if(type[0]=='f') fv/=100.f;
                     mDimensions.insert({resUri,*(int32_t*)&fv});
                 }else{
                     const int32_t v = std::stol(value);
                     mDimensions.insert({resUri,v});
                 }
-            }else{
-                //LOGD("CANT REACHED---------%s",type.c_str());
+            }else if(type.compare("id")){
+                LOGD("CANT REACHED---------%s %s",type.c_str(),event.attributes.getString("name").c_str());
             }
         }else if(tag.compare("selector")==0){//for colorstatelist
             std::string key = event.attributes.getString("name");
@@ -189,7 +190,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 if(pos!=std::string::npos)key=key.substr(pos+1);
                 its->second.add(key,value);
             }
-        }else if((tag.compare("string-array")==0)||(tag.compare("array")==0)){
+        }else if((tag.compare("string-array")==0)||(tag.compare("array")==0)||(tag.compare("integer-array")==0)){
             const std::string key = package+":array/"+event.attributes.getString("name");
             std::vector<std::string>array;
             depth = parser.getDepth()+1;
