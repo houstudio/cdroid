@@ -1179,10 +1179,9 @@ void GradientDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
 
 void GradientDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSet&atts){
     int type,depth;
-    XmlPullParser::XmlEvent event;
     const int innerDepth = parser.getDepth()+1;
 
-    while (((type=parser.next(event)) != XmlPullParser::END_DOCUMENT)
+    while (((type=parser.next()) != XmlPullParser::END_DOCUMENT)
            && ((depth=parser.getDepth()) >= innerDepth || type != XmlPullParser::END_TAG)) {
         if ( (type != XmlPullParser::START_TAG) || (depth > innerDepth) ){
             continue;
@@ -1190,17 +1189,17 @@ void GradientDrawable::inflateChildElements(XmlPullParser&parser,const Attribute
 
         const std::string name = parser.getName();
         if (name.compare("size")==0) {
-            updateGradientDrawableSize(event.attributes);
+            updateGradientDrawableSize(atts);
         } else if (name.compare("gradient")==0) {
-            updateGradientDrawableGradient(event.attributes);
+            updateGradientDrawableGradient(atts);
         } else if (name.compare("solid")==0) {
-            updateGradientDrawableSolid(event.attributes);
+            updateGradientDrawableSolid(atts);
         } else if (name.compare("stroke")==0) {
-            updateGradientDrawableStroke(event.attributes);
+            updateGradientDrawableStroke(atts);
         } else if (name.compare("corners")==0) {
-            updateDrawableCorners(event.attributes);
+            updateDrawableCorners(atts);
         } else if (name.compare("padding")==0) {
-            updateGradientDrawablePadding(event.attributes);
+            updateGradientDrawablePadding(atts);
         } else {
             LOGW("drawable", "Bad element under <shape>: " + name);
         }

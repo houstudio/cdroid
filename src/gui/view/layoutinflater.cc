@@ -325,10 +325,9 @@ void LayoutInflater::rInflateChildren(XmlPullParser& parser, View* parent,const 
 void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* context,const AttributeSet& attrs, bool finishInflate){
     const int depth = parser.getDepth();
     int type;
-    XmlPullParser::XmlEvent event;
     bool pendingRequestFocus = false;
 
-    while (((type = parser.next(event)) != XmlPullParser::END_TAG ||
+    while (((type = parser.next()) != XmlPullParser::END_TAG ||
             parser.getDepth() > depth) && (type != XmlPullParser::END_DOCUMENT)) {
 
         if (type != XmlPullParser::START_TAG) {
@@ -336,24 +335,23 @@ void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* cont
         }
 
         const std::string name = parser.getName();
-        AttributeSet& a = event.attributes;
         if (name.compare(TAG_REQUEST_FOCUS)==0) {
             pendingRequestFocus = true;
             consumeChildElements(parser);
         } else if (name.compare(TAG_TAG)==0) {
-            parseViewTag(parser, parent, a);
+            parseViewTag(parser, parent, attrs);
         } else if (name.compare(TAG_INCLUDE)==0) {
             if (parser.getDepth() == 0) {
                 throw std::logic_error("<include /> cannot be the root element");
             }
-            parseInclude(parser, context, parent, a);
+            parseInclude(parser, context, parent, attrs);
         } else if (name.compare(TAG_MERGE)==0) {
             throw std::logic_error("<merge /> must be the root element");
         } else {
-            View* view = createViewFromTag(parent, name, context, a,false);
+            View* view = createViewFromTag(parent, name, context, attrs,false);
             ViewGroup* viewGroup = (ViewGroup*) parent;
-            ViewGroup::LayoutParams* params = viewGroup->generateLayoutParams(a);
-            rInflateChildren(parser, view, a, true);
+            ViewGroup::LayoutParams* params = viewGroup->generateLayoutParams(attrs);
+            rInflateChildren(parser, view, attrs, true);
             viewGroup->addView(view, params);
         }
     }
@@ -369,9 +367,8 @@ void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* cont
 
 void LayoutInflater::consumeChildElements(XmlPullParser& parser){
     int type;
-    XmlPullParser::XmlEvent event;
     const int currentDepth = parser.getDepth();
-    while (((type = parser.next(event)) != XmlPullParser::END_TAG ||
+    while (((type = parser.next()) != XmlPullParser::END_TAG ||
             parser.getDepth() > currentDepth) && type != XmlPullParser::END_DOCUMENT) {
         // Empty
     }
@@ -408,9 +405,8 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         }
 
         XmlPullParser childParser(context,layout);
-        XmlPullParser::XmlEvent event;
 
-        while ((type = childParser.next(event)) != XmlPullParser::START_TAG &&
+        while ((type = childParser.next()) != XmlPullParser::START_TAG &&
                 type != XmlPullParser::END_DOCUMENT) {
             // Empty.
         }
@@ -420,7 +416,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         }
 
         const std::string childName = childParser.getName();
-        AttributeSet& childAttrs = event.attributes;
+        AttributeSet childAttrs(&childParser);
 
         if (childName.compare(TAG_MERGE)==0){
             // The <merge> tag doesn't support android:theme, so nothing special to do here.

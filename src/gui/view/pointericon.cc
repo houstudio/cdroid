@@ -141,20 +141,19 @@ Bitmap PointerIcon::getBitmapFromDrawable(BitmapDrawable* bitmapDrawable) {
 
 void PointerIcon::loadResource(Context* context, const std::string& resourceId) {
     float hotSpotX,hotSpotY;
-    XmlPullParser::XmlEvent event;
     XmlPullParser parser(context,resourceId);
+    AttributeSet attrs(&parser);
     int type;
-    while ((type=parser.next(event)) != XmlPullParser::START_TAG
+    while ((type=parser.next()) != XmlPullParser::START_TAG
                && type != XmlPullParser::END_DOCUMENT) {
         //EMPTY
     }
 
     if (type != XmlPullParser::START_TAG);
     //XmlUtils.beginDocument(parser, "pointer-icon");
-    AttributeSet& a = event.attributes;
-    const std::string bitmapRes = a.getString("bitmap");
-    hotSpotX = a.getDimension("hotSpotX", 0);
-    hotSpotY = a.getDimension("hotSpotY", 0);
+    const std::string bitmapRes = attrs.getString("bitmap");
+    hotSpotX = attrs.getDimension("hotSpotX", 0);
+    hotSpotY = attrs.getDimension("hotSpotY", 0);
 
     if (bitmapRes.empty()) {
         throw std::logic_error("<pointer-icon> is missing bitmap attribute.");

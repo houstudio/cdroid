@@ -88,7 +88,7 @@ ColorStateList*ColorStateList::withAlpha(int alpha)const{
     return new ColorStateList(mStateSpecs,colors);
 }
 
-void ColorStateList::inflate(XmlPullParser& parser,const AttributeSet&atts){
+void ColorStateList::inflate(XmlPullParser& parser,const AttributeSet&attrs){
     const int innerDepth = parser.getDepth()+1;
     int depth, type;
 
@@ -96,15 +96,13 @@ void ColorStateList::inflate(XmlPullParser& parser,const AttributeSet&atts){
     int defaultColor = DEFAULT_COLOR;
 
     bool hasUnresolvedAttrs = false;
-    XmlPullParser::XmlEvent event;
 
-    while ((type = parser.next(event)) != XmlPullParser::END_DOCUMENT
+    while ((type = parser.next()) != XmlPullParser::END_DOCUMENT
            && ((depth = parser.getDepth()) >= innerDepth || type != XmlPullParser::END_TAG)) {
         if (type != XmlPullParser::START_TAG || depth > innerDepth
                 || parser.getName().compare("item")) {
             continue;
         }
-        AttributeSet&attrs = event.attributes;
         //changingConfigurations |= a.getChangingConfigurations();
 
         // Parse all unrecognized attributes as state specifiers.
@@ -141,9 +139,9 @@ ColorStateList* ColorStateList::createFromXmlInner(XmlPullParser& parser,const A
 }
 
 ColorStateList* ColorStateList::createFromXml(XmlPullParser& parser) {
-    XmlPullParser::XmlEvent event;
     int type;
-    while ((type = parser.next(event)) != XmlPullParser::START_TAG
+    AttributeSet attrs(&parser);
+    while ((type = parser.next()) != XmlPullParser::START_TAG
                && type != XmlPullParser::END_DOCUMENT) {
         // Seek parser to start tag.
     }
@@ -152,7 +150,7 @@ ColorStateList* ColorStateList::createFromXml(XmlPullParser& parser) {
         throw std::logic_error("No start tag found");
     }
 
-    return createFromXmlInner(parser, event.attributes);
+    return createFromXmlInner(parser, attrs);
 }
 
 ColorStateList&ColorStateList::operator=(const ColorStateList&other){
@@ -249,22 +247,20 @@ bool ColorStateList::hasState(int state)const{
 
 ColorStateList*ColorStateList::inflate(Context*ctx,const std::string&resname){
     XmlPullParser parser(ctx,resname);
-    XmlPullParser::XmlEvent event;
     int type;
     ColorStateList *colorStateList = nullptr;
     const int depth = parser.getDepth();
-
+    AttributeSet atts(&parser);
     if(resname.size()&&(resname[0]=='#'||(resname.find("/")!=std::string::npos))){
         const int color = Color::parseColor(resname);
         return new ColorStateList(color);
     }
 
-    while((type=parser.next(event))!=XmlPullParser::END_DOCUMENT){
-        const std::string tagName = event.name;
+    while((type=parser.next())!=XmlPullParser::END_DOCUMENT){
+        const std::string tagName = parser.getName();
         if((type!=XmlPullParser::START_TAG)||tagName.compare("item")){
             continue;
         }
-        AttributeSet& atts =event.attributes;
         std::vector<int>states;
         const int color = atts.getColor("color");
         StateSet::parseState(states,atts);

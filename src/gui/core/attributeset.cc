@@ -1,6 +1,7 @@
 #include <attributeset.h>
 #include <widget/linearlayout.h>
 #include <core/windowmanager.h>
+#include <core/xmlpullparser.h>
 #include <color.h>
 #include <string.h>
 #include <vector>
@@ -23,8 +24,36 @@ static std::vector<std::string> split(const std::string & path) {
 AttributeSet::AttributeSet():AttributeSet(nullptr,""){
 }
 
+AttributeSet::AttributeSet(XmlPullParser*p){
+    parser = p;
+    mContext =p->getContext();
+    mPackage = parser->getPackage();
+}
 AttributeSet::AttributeSet(Context*ctx,const std::string&package)
     :mContext(ctx),mPackage(package){
+    parser = nullptr;
+}
+
+AttributeSet&AttributeSet::operator=(const AttributeSet&o){
+    if(parser){
+        LOGD("TODO");
+    }else if(o.parser){
+        const int count = o.size();
+        parser = nullptr;
+        mContext=o.mContext;
+        mPackage=o.mPackage;
+        for(int i=0;i<count;i++){
+            std::string  key,value;
+            o.parser->getAttribute(i,key,value);
+            mAttrs.insert({key,normalize(mPackage,value)});
+        }
+    }else if(o.parser==nullptr){
+        parser = o.parser;
+        mContext=o.mContext;
+        mPackage=o.mPackage;
+        mAttrs = o.mAttrs;
+    }
+    return*this;
 }
 
 Context*AttributeSet::getContext()const{
@@ -68,6 +97,7 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
 
 int AttributeSet::set(const char*atts[],int size){
     int rc = 0;
+    if(parser)return 0;
     for(int i = 0;atts[i]&&(size==0||i<size);i+=2,rc+=1){
         const char* key = strrchr(atts[i],' ');
         if(key) key++;
@@ -97,6 +127,7 @@ int AttributeSet::inherit(const AttributeSet&other){
 }
 
 bool AttributeSet::add(const std::string&key,const std::string&value){
+    if(parser)return false;
     auto itr = mAttrs.find(key);
     std::string ks = key;
     size_t pos = ks.find(' ');
@@ -109,17 +140,21 @@ bool AttributeSet::add(const std::string&key,const std::string&value){
 }
 
 bool AttributeSet::hasAttribute(const std::string&key)const{
-    return mAttrs.find(key)!=mAttrs.end();
+    return parser?parser->hasAttribute(key):mAttrs.find(key)!=mAttrs.end();
 }
 
 size_t AttributeSet::size()const{
-    return mAttrs.size();
+    return parser?parser->getAttributeCount():mAttrs.size();
 }
 
 const std::string AttributeSet::getAttributeValue(const std::string&key)const{
-    auto it = mAttrs.find(key);
-    if( it != mAttrs.end() )
-        return it->second;
+    if(parser==nullptr){
+        auto it = mAttrs.find(key);
+        if(it != mAttrs.end())
+            return it->second;
+    }else if(parser){
+        return parser->getAttributeValue(key);
+    }
     return std::string();
 }
 
@@ -138,7 +173,6 @@ bool AttributeSet::getBoolean(const std::string&key,bool def)const{
 }
 
 int AttributeSet::getInt(const std::string&key,int def)const{
-    int base = 10;
     const std::string v = getAttributeValue(key);
     if(v.find_first_of("@:/")!=std::string::npos){
         try{
@@ -150,8 +184,7 @@ int AttributeSet::getInt(const std::string&key,int def)const{
     if(v.empty()||((v[0]>='a')&&(v[0]<='z'))){
         return def;
     }
-    if(((v.length()>2)&&(v[1]=='x'||v[1]=='X'))||(v[0]=='#'))
-        base = 16;
+    const int base =(((v.length()>2)&&(v[1]=='x'||v[1]=='X'))||(v[0]=='#'))?16:10;
     return std::strtol(v.c_str(),nullptr,base);
 }
 
@@ -329,8 +362,17 @@ Drawable* AttributeSet::getDrawable(const std::string&key)const{
 }
 
 void AttributeSet::dump()const{
-    for(auto it = mAttrs.begin();it != mAttrs.end();it++){
-       LOGD("%s = %s",it->first.c_str(),it->second.c_str());
+    if(parser==0){
+        for(auto it = mAttrs.begin();it != mAttrs.end();it++){
+           LOGD("%s = %s",it->first.c_str(),it->second.c_str());
+        }
+    }else{
+        const int count = parser->getAttributeCount();
+        for(int i=0;i<count;i++){
+            std::string key,value;
+            parser->getAttribute(i,key,value);
+            LOGD("%s = %s",key.c_str(),value.c_str());
+        }
     }
 }
 

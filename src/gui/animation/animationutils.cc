@@ -14,19 +14,18 @@ int64_t AnimationUtils::currentAnimationTimeMillis(){
 Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resid){
     Animation*anim = nullptr;
     int type,depth;
-    XmlPullParser::XmlEvent event;
     XmlPullParser parser(context,resid);
-    return createAnimationFromXml(context,parser,nullptr,event.attributes);
+    AttributeSet attrs(&parser);
+    return createAnimationFromXml(context,parser,nullptr,attrs);
 }
 
 Animation* AnimationUtils::createAnimationFromXml(Context* c, XmlPullParser& parser,AnimationSet* parent,const AttributeSet& attrs){
     // Make sure we are on a start tag.
     int type;
     Animation* anim = nullptr;
-    XmlPullParser::XmlEvent event;
     const int depth = parser.getDepth();
 
-    while (((type=parser.next(event)) != XmlPullParser::END_TAG || parser.getDepth() > depth)
+    while (((type=parser.next()) != XmlPullParser::END_TAG || parser.getDepth() > depth)
            && (type != XmlPullParser::END_DOCUMENT) && (type!=XmlPullParser::BAD_DOCUMENT) ) {
 
         if (type != XmlPullParser::START_TAG) {
@@ -34,18 +33,18 @@ Animation* AnimationUtils::createAnimationFromXml(Context* c, XmlPullParser& par
         }
         std::string  name = parser.getName();
         if (name.compare("set")==0) {
-            anim = new AnimationSet(c, event.attributes);
-            createAnimationFromXml(c, parser, (AnimationSet*)anim, event.attributes);
+            anim = new AnimationSet(c, attrs);
+            createAnimationFromXml(c, parser, (AnimationSet*)anim, attrs);
         } else if (name.compare("alpha")==0) {
-            anim = new AlphaAnimation(c, event.attributes);
+            anim = new AlphaAnimation(c, attrs);
         } else if (name.compare("scale")==0) {
-            anim = new ScaleAnimation(c, event.attributes);
+            anim = new ScaleAnimation(c, attrs);
         }  else if (name.compare("rotate")==0) {
-            anim = new RotateAnimation(c, event.attributes);
+            anim = new RotateAnimation(c, attrs);
         }  else if (name.compare("translate")==0) {
-            anim = new TranslateAnimation(c, event.attributes);
+            anim = new TranslateAnimation(c, attrs);
         } else if (name.compare("cliprect")==0) {
-            anim = new ClipRectAnimation(c, event.attributes);
+            anim = new ClipRectAnimation(c, attrs);
         } else {
             LOGW("Unknown animation name:%s",name.c_str());
         }
@@ -58,18 +57,17 @@ Animation* AnimationUtils::createAnimationFromXml(Context* c, XmlPullParser& par
 
 LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
     int type,depth;
-    XmlPullParser::XmlEvent event;
     XmlPullParser parser(context,resid);
-    return createLayoutAnimationFromXml(context,parser,event.attributes);
+    AttributeSet attrs(&parser);;
+    return createLayoutAnimationFromXml(context,parser,attrs);
 }
 
 LayoutAnimationController* AnimationUtils::createLayoutAnimationFromXml(Context* c,
         XmlPullParser& parser,const AttributeSet& attrs){
     int type;
-    XmlPullParser::XmlEvent event;
     const int depth = parser.getDepth();
     LayoutAnimationController* controller = nullptr;
-    while (((type = parser.next(event)) != XmlPullParser::END_TAG || parser.getDepth()>depth)
+    while (((type = parser.next()) != XmlPullParser::END_TAG || parser.getDepth()>depth)
             && (type != XmlPullParser::END_DOCUMENT) && (type!=XmlPullParser::BAD_DOCUMENT) ) {
 
         if (type != XmlPullParser::START_TAG) {
@@ -78,9 +76,9 @@ LayoutAnimationController* AnimationUtils::createLayoutAnimationFromXml(Context*
 
         const std::string name = parser.getName();
         if (name.compare("layoutAnimation")==0) {
-            controller = new LayoutAnimationController(c, event.attributes);
+            controller = new LayoutAnimationController(c, attrs);
         } else if (name.compare("gridLayoutAnimation")==0) {
-            controller = new GridLayoutAnimationController(c, event.attributes);
+            controller = new GridLayoutAnimationController(c, attrs);
         } else {
             LOGE("Unknown layout animation name:%s ",name.c_str());
         }
@@ -119,15 +117,14 @@ Interpolator* AnimationUtils::createInterpolatorFromXml(Context* context,XmlPull
     int type;
     const int depth = parser.getDepth();
     BaseInterpolator*interpolator = nullptr;
-    XmlPullParser::XmlEvent event;
-    while(((type = parser.next(event)) != XmlPullParser::END_TAG || parser.getDepth() > depth)
+    AttributeSet attrs(&parser);
+    while(((type = parser.next()) != XmlPullParser::END_TAG || parser.getDepth() > depth)
                 && type != XmlPullParser::END_DOCUMENT){
         if (type != XmlPullParser::START_TAG) {
             continue;
         }
 
         const std::string name = parser.getName();
-        const AttributeSet& attrs = event.attributes;
         if (0==name.compare("linearInterpolator")) {
             interpolator = new LinearInterpolator();
         } else if (0==name.compare("accelerateInterpolator")) {

@@ -35,9 +35,8 @@ void AnimationScaleListDrawable::inflate(XmlPullParser& parser,const AttributeSe
 void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& attrs){
     auto state = mAnimationScaleListState;
     int type, depth;
-    XmlPullParser::XmlEvent event;
     const int innerDepth = parser.getDepth()+1;
-    while ((type = parser.next(event)) != XmlPullParser::END_DOCUMENT
+    while ((type = parser.next()) != XmlPullParser::END_DOCUMENT
             && ((depth=parser.getDepth()) >= innerDepth || type != XmlPullParser::END_TAG)) {
         if (type != XmlPullParser::START_TAG) {
             continue;
@@ -48,18 +47,18 @@ void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,cons
         }
 
         // Either pick up the android:drawable attribute.
-        Drawable* dr = event.attributes.getDrawable("drawable");
+        Drawable* dr = attrs.getDrawable("drawable");
 
         // Or parse the child element under <item>.
         if (dr == nullptr) {
-            while ((type = parser.next(event)) == XmlPullParser::TEXT) {
+            while ((type = parser.next()) == XmlPullParser::TEXT) {
             }
             if (type != XmlPullParser::START_TAG) {
                 throw std::logic_error(//parser.getPositionDescription()
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
             }
-            dr = Drawable::createFromXmlInner(parser, event.attributes);
+            dr = Drawable::createFromXmlInner(parser,attrs);
         }
         state->addDrawable(dr);
     }

@@ -91,26 +91,26 @@ typedef struct{
 }PENDINGRESOURCE;
 
 static std::string getTrimedValue(XmlPullParser&parser){
-    XmlPullParser::XmlEvent event;
-    while(parser.next(event)!=XmlPullParser::END_TAG){}
-    std::string value = event.text;
+    while(parser.next()!=XmlPullParser::END_TAG){}
+    std::string value = parser.getText();
     TextUtils::trim(value);
     return value;
 }
+
 int Assets::loadKeyValues(const std::string&package,const std::string&resid,void*params){
     XmlPullParser parser(this,resid);
-    XmlPullParser::XmlEvent event;
     int type,depth;
+    AttributeSet attrs(&parser);
     PENDINGRESOURCE*pending=(PENDINGRESOURCE*)params;
-    while((type=parser.next(event))!=XmlPullParser::END_DOCUMENT){
+    while((type=parser.next())!=XmlPullParser::END_DOCUMENT){
         const std::string tag = parser.getName();
         if(type!=XmlPullParser::START_TAG)continue;
         if(tag.compare("id")==0){
-            std::string key = package +":id/"+event.attributes.getString("name");
+            std::string key = package +":id/"+attrs.getString("name");
             std::string value= getTrimedValue(parser);
             mIDS[key] = TextUtils::strtol(value);
         }else if((tag.compare("dimen")==0)||(tag.compare("integer")==0)||(tag.compare("bool")==0)){
-            const std::string resUri = package+":"+tag+"/"+event.attributes.getString("name");
+            const std::string resUri = package+":"+tag+"/"+attrs.getString("name");
             std::string value = getTrimedValue(parser);
             const std::string dimenRes = AttributeSet::normalize(package,value);
             auto itc = mDimensions.find(dimenRes);
@@ -132,7 +132,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 pending->dimens.insert({resUri,dimenRes});
             }
         }else if(tag.compare("color")==0){
-            std::string colorUri = package+":color/"+event.attributes.getString("name");
+            std::string colorUri = package+":color/"+attrs.getString("name");
             std::string value = getTrimedValue(parser);
             const std::string colorRef = AttributeSet::normalize(package,value);
             auto itc = mColors.find(colorRef);
@@ -143,14 +143,14 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 pending->colors.insert({colorUri,colorRef});
             }
         }else if(tag.compare("string")==0){
-            std::string key = package+":string/"+event.attributes.getString("name");
+            std::string key = package+":string/"+attrs.getString("name");
             std::string value = getTrimedValue(parser);
             mStrings[key] = convertXmlToCString(value);
         }else if(tag.compare("item")==0){
-            const std::string type = event.attributes.getString("type");
+            const std::string type = attrs.getString("type");
             if(type.compare("dimen")==0||type.compare("integer")==0||type.compare("bool")==0||type.compare("fraction")==0){
-                const std::string resUri = package+":dimen/"+event.attributes.getString("name");
-                const std::string format = event.attributes.getString("format");
+                const std::string resUri = package+":dimen/"+attrs.getString("name");
+                const std::string format = attrs.getString("format");
                 std::string value = getTrimedValue(parser);
                 if((format.compare("float")==0)||(type[0]=='f')){
                     float fv =std::strtof(value.c_str(),nullptr);
@@ -161,29 +161,31 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                     mDimensions.insert({resUri,v});
                 }
             }else if(type.compare("id")){
-                LOGD("CANT REACHED---------%s %s",type.c_str(),event.attributes.getString("name").c_str());
+                LOGD("CANT REACHED---------%s %s",type.c_str(),attrs.getString("name").c_str());
             }
         }else if(tag.compare("selector")==0){//for colorstatelist
-            std::string key = event.attributes.getString("name");
-            AttributeSet att(this,package);
+            std::string key = attrs.getString("name");
             depth = parser.getDepth()+1;
-            auto it = pending->colorStateList.insert({resid,std::vector<AttributeSet>()}).first;
-            while(((type=parser.next(event))!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
+            std::string resUri = resid.substr(0,resid.find(".xml"));;
+            auto it = pending->colorStateList.insert({resUri,std::vector<AttributeSet>()}).first;
+            while(((type=parser.next())!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
                 if(type!=XmlPullParser::START_TAG)continue;
-                it->second.push_back(event.attributes);
+                AttributeSet itemAtts;
+                itemAtts = attrs;//event.attributes;
+                it->second.push_back(itemAtts);
             }
         }else if(tag.compare("style")==0){
-            const std::string styleName = package+":style/"+event.attributes.getString("name");
+            const std::string styleName = package+":style/"+attrs.getString("name");
             auto its =mStyles.find(styleName);
             if(its==mStyles.end()){
-                const std::string styleParent=event.attributes.getString("parent");
-                its =mStyles.insert(its,{styleName,AttributeSet()});
+                const std::string styleParent = attrs.getString("parent");
+                its =mStyles.insert(its,{styleName,AttributeSet(this,package)});
                 if(styleParent.size())its->second.add("parent",styleParent);
             }
             depth = parser.getDepth()+1;
-            while(((type=parser.next(event))!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
+            while(((type=parser.next())!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
                 if(type!=XmlPullParser::START_TAG)continue;
-                std::string key  = event.attributes.getString("name");
+                std::string key  = attrs.getString("name");
                 std::string value= getTrimedValue(parser);
                 value = AttributeSet::normalize(package,value);
                 size_t pos =key.find(':');
@@ -191,10 +193,10 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 its->second.add(key,value);
             }
         }else if((tag.compare("string-array")==0)||(tag.compare("array")==0)||(tag.compare("integer-array")==0)){
-            const std::string key = package+":array/"+event.attributes.getString("name");
+            const std::string key = package+":array/"+attrs.getString("name");
             std::vector<std::string>array;
             depth = parser.getDepth()+1;
-            while(((type=parser.next(event))!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
+            while(((type=parser.next())!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
                 if(type!=XmlPullParser::START_TAG)continue;
                 std::string value= getTrimedValue(parser);
                 array.push_back(value);

@@ -220,9 +220,8 @@ void ShapeDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     updateStateFromTypedArray(atts);
 
     int type;
-    XmlPullParser::XmlEvent event;
     const int outerDepth = parser.getDepth();
-    while (((type = parser.next(event)) != XmlPullParser::END_DOCUMENT)
+    while (((type = parser.next()) != XmlPullParser::END_DOCUMENT)
             && (type != XmlPullParser::END_TAG || parser.getDepth() > outerDepth)) {
         if (type != XmlPullParser::START_TAG) {
             continue;
@@ -230,7 +229,7 @@ void ShapeDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
 
         const std::string name = parser.getName();
         // call our subclass
-        if (!inflateTag(name,parser,event.attributes)) {
+        if (!inflateTag(name,parser,atts)) {
             LOGW("Unknown element: %s for ShapeDrawable %p",name.c_str(),this);
         }
     }
