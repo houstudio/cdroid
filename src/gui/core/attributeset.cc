@@ -42,8 +42,8 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
     const bool hasAT = property.size() && (property[0]=='@');
     if(hasColon&&(hasAT==false)) {
         if(property.compare(0,8,"android:")==0){
-            std::string value =property;
-            value[1]='c';/*android cahnge to cdroid*/
+            std::string value = property;
+            value[1] = 'c';/*android cahnge to cdroid*/
             return value.substr(1);
         }
         return property;
@@ -59,7 +59,7 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
             if( isRes && hasSlash ){
                 value = std::string(pkg+":"+value);
             }else if(hasAsk && (hasColon==false) && (property.size()>1) ) {
-                value = std::string(pkg+":attr/"+value);
+                value = std::string(pkg + ":attr/" + value);
             }
         }
         return value;
@@ -266,11 +266,11 @@ static std::unordered_map<std::string,int>gravitykvs={
 };
 
 int AttributeSet::getGravity(const std::string&key,int defvalue)const{
-    int gravity=0;
-    const std::string prop=getString(key);
-    std::vector<std::string>gs=split(prop);
+    int gravity = 0;
+    const std::string prop = getString(key);
+    std::vector<std::string>gs = split(prop);
     for(auto s:gs){
-        auto it=gravitykvs.find(s);
+        auto it = gravitykvs.find(s);
         if(it!=gravitykvs.end()){
             gravity|=it->second;
         }
@@ -308,7 +308,7 @@ int AttributeSet::getDimensionPixelOffset(const std::string&key,int def)const{
 }
 
 int AttributeSet::getLayoutDimension(const std::string&key,int def)const{
-    const std::string v=getString(key);
+    const std::string v = getString(key);
     if(v.empty())return def;
     switch(v[0]){
     case 'f':
@@ -324,12 +324,12 @@ ColorStateList*AttributeSet::getColorStateList(const std::string&key)const{
 }
 
 Drawable* AttributeSet::getDrawable(const std::string&key)const{
-    const std::string resid=getString(key);
+    const std::string resid = getString(key);
     return mContext->getDrawable(resid);
 }
 
 void AttributeSet::dump()const{
-    for(auto it=mAttrs.begin();it!=mAttrs.end();it++){
+    for(auto it = mAttrs.begin();it != mAttrs.end();it++){
        LOGD("%s = %s",it->first.c_str(),it->second.c_str());
     }
 }

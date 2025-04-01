@@ -128,8 +128,8 @@ void FullPath::draw(Canvas& outCanvas, bool useStagingData) {
     // Draw path's fill, if fill color or gradient is valid
     const uint32_t fillAlpha  = uint32_t(properties.getFillAlpha()*255.f)<<24;
     const uint32_t strokeAlpha= uint32_t(properties.getStrokeAlpha()*255.f)<<24;
-    const bool needsFill  = (properties.getFillGradient() != nullptr) || (fillAlpha  && properties.getFillColor());
-    const bool needsStroke= (properties.getStrokeGradient()!=nullptr) || (strokeAlpha&& properties.getStrokeColor());
+    const bool needsFill  = (properties.getFillGradient() != nullptr) || fillAlpha;
+    const bool needsStroke= (properties.getStrokeGradient()!=nullptr) || strokeAlpha;
 
     outCanvas.set_antialias(mAntiAlias?Cairo::ANTIALIAS_GRAY:Cairo::ANTIALIAS_NONE);
     renderPath->append_to_context(&outCanvas);
@@ -426,7 +426,6 @@ void Tree::updateBitmapCache(Bitmap& bitmap, bool useStagingData) {
     const auto op = outCanvas.get_operator();
     outCanvas.set_operator(Cairo::Context::Operator::CLEAR);
     outCanvas.set_source_rgba(0,0,0,0);
-    //outCanvas.rectangle(0,0,cacheWidth,cacheHeight);
     outCanvas.paint();
     outCanvas.set_operator(op);
     const float viewportWidth = useStagingData ? mStagingProperties.getViewportWidth() : mProperties.getViewportWidth();

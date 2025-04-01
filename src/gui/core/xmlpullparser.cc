@@ -25,26 +25,26 @@ class XmlPullParser::AttrParser{
 public:
     static void startElementHandler(void* userData, const XML_Char* name, const XML_Char** attrs){
         auto event = std::make_unique<XmlEvent>(START_TAG,name);
-        Private*data=(Private*)userData;
-        event->depth= data->depth++;
-        event->lineNumber= XML_GetCurrentLineNumber(data->parser);
+        Private*data =(Private*)userData;
+        event->depth = data->depth++;
+        event->lineNumber = XML_GetCurrentLineNumber(data->parser);
         event->attributes.setContext(data->context,data->package);
         event->attributes.set(attrs);
         data->eventQueue.push(std::move(event));
     }
     static void endElementHandler(void* userData, const XML_Char* name){
         auto event = std::make_unique<XmlEvent>(END_TAG,name);
-        Private*data=(Private*)userData;
-        event->depth= --data->depth;
-        event->lineNumber= XML_GetCurrentLineNumber(data->parser);
+        Private*data =(Private*)userData;
+        event->depth = --data->depth;
+        event->lineNumber = XML_GetCurrentLineNumber(data->parser);
         data->eventQueue.push(std::move(event));
     }
     static void characterDataHandler(void* userData, const XML_Char* s, int len){
         auto event = std::make_unique<XmlEvent>(TEXT);
         Private*data = (Private*)userData;
         event->text.assign(s,len);
-        event->depth= data->depth;
-        event->lineNumber= XML_GetCurrentLineNumber(data->parser);
+        event->depth = data->depth;
+        event->lineNumber = XML_GetCurrentLineNumber(data->parser);
         data->eventQueue.push(std::move(event));
     }
 };
@@ -64,21 +64,30 @@ XmlPullParser::XmlPullParser(const std::string&content):XmlPullParser(){
     mData->stream = std::make_unique<std::istringstream>(content);
 }
 
+XmlPullParser::XmlPullParser(Context*ctx,std::unique_ptr<std::istream>strm):XmlPullParser(){
+    mData->context= ctx;
+    mData->stream = std::move(strm);
+    auto event = std::make_unique<XmlEvent>(mData->stream->good()?START_DOCUMENT:END_DOCUMENT);
+    event->depth= mData->depth++;
+    event->lineNumber = 0;
+    mData->eventQueue.push(std::move(event));
+}
+
 XmlPullParser::XmlPullParser(Context*ctx,const std::string&resid):XmlPullParser(){
     if(ctx){
-        mData->stream=ctx->getInputStream(resid,&mData->package);
+        mData->stream = ctx->getInputStream(resid,&mData->package);
     }
     mData->context = ctx;
     if(((mData->stream==nullptr)||(!*mData->stream))&&resid.size()){
-        auto fs =std::make_unique<std::ifstream>(resid);
+        auto fs = std::make_unique<std::ifstream>(resid);
         if(fs->is_open()){
             mData->stream= std::move(fs);
         }
     }
-    mData->resourceId=resid;
+    mData->resourceId = resid;
     auto event = std::make_unique<XmlEvent>(mData->stream?START_DOCUMENT:END_DOCUMENT);
     event->depth= mData->depth++;
-    event->lineNumber=0;
+    event->lineNumber = 0;
     mData->eventQueue.push(std::move(event));
 }
 

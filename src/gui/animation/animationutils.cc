@@ -27,7 +27,7 @@ Animation* AnimationUtils::createAnimationFromXml(Context* c, XmlPullParser& par
     const int depth = parser.getDepth();
 
     while (((type=parser.next(event)) != XmlPullParser::END_TAG || parser.getDepth() > depth)
-           && type != XmlPullParser::END_DOCUMENT) {
+           && (type != XmlPullParser::END_DOCUMENT) && (type!=XmlPullParser::BAD_DOCUMENT) ) {
 
         if (type != XmlPullParser::START_TAG) {
             continue;
@@ -70,14 +70,13 @@ LayoutAnimationController* AnimationUtils::createLayoutAnimationFromXml(Context*
     const int depth = parser.getDepth();
     LayoutAnimationController* controller = nullptr;
     while (((type = parser.next(event)) != XmlPullParser::END_TAG || parser.getDepth()>depth)
-            && type != XmlPullParser::END_DOCUMENT) {
+            && (type != XmlPullParser::END_DOCUMENT) && (type!=XmlPullParser::BAD_DOCUMENT) ) {
 
         if (type != XmlPullParser::START_TAG) {
             continue;
         }
 
         const std::string name = parser.getName();
-
         if (name.compare("layoutAnimation")==0) {
             controller = new LayoutAnimationController(c, event.attributes);
         } else if (name.compare("gridLayoutAnimation")==0) {
