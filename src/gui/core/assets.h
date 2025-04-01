@@ -32,9 +32,7 @@ protected:
     DisplayMetrics mDisplayMetrics;
     void loadStrings(const std::string&lan);
     int addResource(const std::string&path,const std::string&name=std::string());
-    int loadKeyValues(const std::string&resid,void*pending,
-        std::function<void(const std::vector<std::string>&tags,const std::vector<AttributeSet>&,const std::string&,void*)>func);
-    int loadKeyValues(const std::string&resid);
+    int loadKeyValues(const std::string&package,const std::string&resid,void*p);
 public:
     Assets();
     Assets(const std::string&path);
