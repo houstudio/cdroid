@@ -170,24 +170,24 @@ int XmlPullParser::getAttributeCount()const{
 bool XmlPullParser::hasAttribute(const std::string&key)const{
     auto &atts = mData->eventQueue.front()->atts;
     auto it = atts.find(key);
-    return it!=atts.end();
+    return it != atts.end();
 }
 
 std::string XmlPullParser::getAttributeValue(const std::string&key){
     auto &atts = mData->eventQueue.front()->atts;
     auto it = atts.find(key);
-    if(it!=atts.end())
+    if(it != atts.end())
         return it->second;
     return std::string("");
 }
 
 bool XmlPullParser::getAttribute(int index,std::string&key,std::string&value)const{
     auto &atts = mData->eventQueue.front()->atts;
-    if(index<0||index>=atts.size())return false;
-    auto it =atts.begin();
-    for(int i=0;i<index;i++)it++;
-    key  =it->first;
-    value=it->second;
+    if( (index<0) || (index>=atts.size()) )return false;
+    auto it = atts.begin();
+    for(int i = 0; i < index;i++)it++;
+    key  = it->first;
+    value= it->second;
     return true;
 }
 
@@ -215,41 +215,9 @@ int XmlPullParser::next(){
             mData->eventQueue.push(std::make_unique<XmlEvent>(END_DOCUMENT));
         }
     }
-    //mData->attributes=event.attributes;
     return mData->eventQueue.front()->type;
 }
-#if 0
-int XmlPullParser::next(XmlEvent& event) {
-    const EventType currentEvent = mData->eventQueue.front()->type;
-    if((currentEvent==BAD_DOCUMENT)||(currentEvent==END_DOCUMENT)){
-        event.type = currentEvent;
-        event.name.clear();
-        return currentEvent;
-    }
-    mData->eventQueue.pop();
-    while(mData->eventQueue.empty()){
-        char buff[128];
-        std::streamsize len;
-        mData->stream->read(buff,sizeof(buff));
-        len = mData->stream->gcount();
-        const bool done = mData->stream->eof();
-        if(XML_Parse(mData->parser,buff,len,done)==XML_STATUS_ERROR){
-            const XML_Error xmlError = XML_GetErrorCode(mData->parser);
-            const char*errMsg=XML_ErrorString(xmlError);
-            mData->endDocument = true;
-            LOGE("%d:%s %s:%s",xmlError,errMsg,mData->resourceId.c_str(),getPositionDescription().c_str());
-            mData->eventQueue.push(std::make_unique<XmlEvent>(BAD_DOCUMENT));
-            break;
-        }
-        if(done){
-            mData->eventQueue.push(std::make_unique<XmlEvent>(END_DOCUMENT));
-        }
-    }
-    event =*mData->eventQueue.front();
-    //mData->attributes=event.attributes;
-    return mData->eventQueue.front()->type;
-}
-#endif
+
 std::string XmlPullParser::getPositionDescription()const{
     std::ostringstream oss;
     oss<<XML_GetCurrentLineNumber(mData->parser)<<":"<<XML_GetCurrentColumnNumber(mData->parser);
