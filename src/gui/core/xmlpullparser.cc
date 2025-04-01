@@ -163,8 +163,10 @@ int XmlPullParser::next(XmlEvent& event) {
         len = mData->stream->gcount();
         const bool done = mData->stream->eof();
         if(XML_Parse(mData->parser,buff,len,done)==XML_STATUS_ERROR){
+            const XML_Error xmlError = XML_GetErrorCode(mData->parser);
+            const char*errMsg=XML_ErrorString(xmlError);
             mData->endDocument = true;
-            LOGE("%s:%s",mData->resourceId.c_str(),getPositionDescription().c_str());
+            LOGE("%d:%s %s:%s",xmlError,errMsg,mData->resourceId.c_str(),getPositionDescription().c_str());
             mData->eventQueue.push(std::make_unique<XmlEvent>(BAD_DOCUMENT));
             break;
         }

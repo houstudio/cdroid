@@ -247,7 +247,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         for(auto attr:cs.second) cls->addStateColor(this,attr);
         mStateColors.insert({cs.first,cls});
     }
-    LOGI("%s %d resource,[%d id,%d colors,%d stateColors, %d array,%d style,%d string,%d dimens] mTheme.size=%d used %dms",
+    LOGI("%s %d resource [%d id,%d colors,%d stateColors, %d array,%d style,%d string,%d dimens] mTheme.size=%d used %dms",
          package.c_str(),count, mIDS.size(),mColors.size(),mStateColors.size(),mArraies.size(), mStyles.size(),
          mStrings.size(),mDimensions.size(),mTheme.size(),int(SystemClock::uptimeMillis()-sttm));
     return pak?0:-1;
