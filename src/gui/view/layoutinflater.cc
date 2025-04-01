@@ -237,8 +237,8 @@ View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool a
     View*result = root;
     XmlPullParser::XmlEvent event;
     const int innerDepth = parser.getDepth();
-    while(((type=parser.next(event,depth))!=XmlPullParser::START_TAG)
-            &&(type==XmlPullParser::END_TAG)){
+    while(((type=parser.next(event))!=XmlPullParser::START_TAG)
+            &&(type!=XmlPullParser::END_DOCUMENT)){
         //Empty
     }
 
@@ -329,7 +329,7 @@ void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* cont
     bool pendingRequestFocus = false;
 
     while (((type = parser.next(event)) != XmlPullParser::END_TAG ||
-            parser.getDepth() > depth) && type != XmlPullParser::END_DOCUMENT) {
+            parser.getDepth() > depth) && (type != XmlPullParser::END_DOCUMENT)) {
 
         if (type != XmlPullParser::START_TAG) {
             continue;
