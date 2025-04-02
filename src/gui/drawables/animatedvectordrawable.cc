@@ -671,7 +671,6 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::start() {
     if ((mSet == nullptr) || mSet->isStarted()) {
         return;
     }
-    LOGD("%p",this);
     mSet->start();
     invalidateOwningView();
 }
@@ -680,7 +679,6 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::end() {
     if (mSet == nullptr) {
         return;
     }
-    LOGD("%p",this);
     mSet->end();
 }
 
@@ -688,7 +686,6 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::reset() {
     if (mSet == nullptr) {
         return;
     }
-    LOGD("%p",this);
     start();
     mSet->cancel();
 }
@@ -697,7 +694,6 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorUI::reverse() {
     if (mSet == nullptr) {
         return;
     }
-    LOGD("%p",this);
     mSet->reverse();
     invalidateOwningView();
 }

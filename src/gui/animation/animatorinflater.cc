@@ -10,41 +10,66 @@ namespace cdroid{
 Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid){
     return loadAnimator(context,resid,1.f);
 }
-
+#if 1
 Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid,float){
     XmlPullParser parser(context,resid);
     Animator* animator = createAnimatorFromXml(context, parser, 1.f/*pathErrorScale*/);
-    if (animator != nullptr) {
-        //animator->appendChangingConfigurations(getChangingConfigs(resources, id));
-        /*ConstantState<Animator> constantState = animator->createConstantState();
-        if (constantState != nullptr) {
-            if (DBG_ANIMATOR_INFLATER) {
-                Log.d(TAG, "caching animator for res %s",id.c_str());
-            }
-            animatorCache.put(id, theme, constantState);
-            // create a new animator so that cached version is never used by the user
-            animator = constantState.newInstance(resources, theme);
-        }*/
-    }
     return animator;
 }
 
-std::unordered_map<std::string,std::shared_ptr<StateListAnimator>>mStateAnimatorMap;
-
+static std::unordered_map<std::string,std::shared_ptr<StateListAnimator>>mStateAnimatorMap;
 StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,const std::string&resid){
     auto it = mStateAnimatorMap.find(resid);
     if(it==mStateAnimatorMap.end()){
         XmlPullParser parser(context,resid);
-        AttributeSet attrs(&parser);
+        const AttributeSet attrs(&parser);
         StateListAnimator*anim =createStateListAnimatorFromXml(context,parser,attrs);
         it = mStateAnimatorMap.insert({resid,std::shared_ptr<StateListAnimator>(anim)}).first;
     }
     return new StateListAnimator(*it->second);
-    //return it->second->createConstantState()->newInstance();
+}
+#else
+static std::unordered_map<std::string,std::shared_ptr<ConstantState<Animator*>>>mAnimatorCache;
+Animator* AnimatorInflater::loadAnimator(Context* context,const std::string&resid,float){
+    XmlPullParser parser(context,resid);
+    Animator* animator = nullptr;
+    auto itc = mAnimatorCache.find(resid);
+    if(itc!= mAnimatorCache.end()){
+        animator=itc->second->newInstance();
+    } else{
+        animator = createAnimatorFromXml(context, parser, 1.f/*pathErrorScale*/);
+        if (animator != nullptr) {
+            auto  constantState = animator->createConstantState();
+            if (constantState != nullptr) {
+                LOGD("caching animator for res %s",resid.c_str());
+                mAnimatorCache.insert({resid, constantState});
+                // create a new animator so that cached version is never used by the user
+                animator = constantState->newInstance();//resources, theme);
+            }
+        }
+    }
+    return animator;
 }
 
+static std::unordered_map<std::string,std::shared_ptr<ConstantState<StateListAnimator*>>>mStateAnimatorMap;
+StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,const std::string&resid){
+    auto itc = mStateAnimatorMap.find(resid);
+    StateListAnimator* animator =nullptr;
+    if(itc!=mStateAnimatorMap.end()){
+        animator = itc->second->newInstance();
+        LOGD("load %s from StateAnimatorCache",resid.c_str());
+    }else{
+        XmlPullParser parser(context,resid);
+        const AttributeSet attrs(&parser);
+        animator =createStateListAnimatorFromXml(context,parser,attrs);
+        auto constantState = animator->createConstantState();
+        mStateAnimatorMap.insert({resid,constantState});
+    }
+    return animator;//new StateListAnimator(*it->second);
+}
+#endif
 Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser& parser,float pixelSize){
-    AttributeSet attrs(&parser);
+    const AttributeSet attrs(&parser);
     return createAnimatorFromXml(context,parser, attrs, nullptr, 0,pixelSize);
 }
 
@@ -71,7 +96,6 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
             anim = loadAnimator(context, attrs, nullptr, pixelSize);
         } else if (name.compare("set")==0) {
             anim = new AnimatorSet();
-            //anim->appendChangingConfigurations(a.getChangingConfigurations());
             const int ordering = attrs.getInt("ordering",std::unordered_map<std::string,int>{
                     {"together",(int)TOGETHER},{"sequentially",(int)SEQUENTIALLY}}, TOGETHER);
             createAnimatorFromXml(context, parser, attrs, (AnimatorSet*) anim, ordering,pixelSize);
