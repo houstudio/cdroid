@@ -379,14 +379,10 @@ void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* cont
 }
 
 void LayoutInflater::parseViewTag(XmlPullParser& parser, View* view,const AttributeSet& attrs){
-#if 0
-    Context* context = view.getContext();
-    final TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.ViewTag);
-    final int key = ta.getResourceId(R.styleable.ViewTag_id, 0);
-    final CharSequence value = ta.getText(R.styleable.ViewTag_value);
-    view.setTag(key, value);
+    const int key = attrs.getResourceId("id", 0);
+    const std::string value = attrs.getString("value");
+    //view->setTag(key, value);
     consumeChildElements(parser);
-#endif
 }
 
 void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View* parent,const AttributeSet& attrs){
