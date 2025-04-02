@@ -25,6 +25,7 @@ struct Private{
     std::string package;
     std::string resourceId;
     std::string mText;
+    std::array<char,1024>buffer;
     std::unique_ptr<std::istream>stream;
     std::queue<std::unique_ptr<XmlEvent>> eventQueue;
     std::string mTagName;
@@ -36,6 +37,7 @@ public:
     static void startElementHandler(void* userData, const XML_Char* name, const XML_Char** attrs){
         auto event = std::make_unique<XmlEvent>(START_TAG,name);
         Private*data =(Private*)userData;
+        data->mText.clear();
         event->depth = data->depth++;
         event->lineNumber = XML_GetCurrentLineNumber(data->parser);
         for(int i = 0;attrs[i];i+=2){
@@ -61,7 +63,6 @@ public:
         event->depth= depth;
         event->text = data->mText;
         event->lineNumber = XML_GetCurrentLineNumber(data->parser);
-        data->mText.clear();
         data->eventQueue.push(std::move(event));
     }
     static void characterDataHandler(void* userData, const XML_Char* s, int len){
@@ -190,12 +191,11 @@ int XmlPullParser::next(){
     }
     mData->eventQueue.pop();
     while(mData->eventQueue.empty()){
-        char buff[128];
         std::streamsize len;
-        mData->stream->read(buff,sizeof(buff));
+        mData->stream->read(mData->buffer.data(),mData->buffer.size());
         len = mData->stream->gcount();
         const bool done = mData->stream->eof();
-        if(XML_Parse(mData->parser,buff,len,done)==XML_STATUS_ERROR){
+        if(XML_Parse(mData->parser,mData->buffer.data(),len,done)==XML_STATUS_ERROR){
             const XML_Error xmlError = XML_GetErrorCode(mData->parser);
             const char*errMsg=XML_ErrorString(xmlError);
             mData->endDocument = true;
