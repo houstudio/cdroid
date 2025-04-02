@@ -16,9 +16,6 @@ Drawable* DrawableInflater::loadDrawable(Context* context, const std::string&id)
     while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
         //NOTHING
     }
-    if(id.find("bg_home_puress_anim_pic")!=std::string::npos){
-        LOGD("");
-    }
     return inflateFromXml(parser.getName(),parser,attrs);//event.attributes);//loadDrawable(context, id);
 }
 

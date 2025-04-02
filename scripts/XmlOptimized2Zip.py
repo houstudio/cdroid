@@ -48,6 +48,6 @@ if __name__ == "__main__":
     zip_file_path = sys.argv[3]
     process_xml_files(input_directory, output_directory)
     zip_xml_files(output_directory, zip_file_path)
-    # 可选：删除临时目录
+    # remove temp directory
     shutil.rmtree(output_directory)
 
