@@ -56,7 +56,6 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
     const int rc = cla.parse(argc,argv);
     try{
         if(argc&&argv)parser.ParseCLI(argc,argv);
-        std::cout<<"----"<<args::get(datadir)<<std::endl;//app ./src will print ./src
 #ifndef ARGS_NOEXCEPT
     }catch(args::Help){
         std::cout << parser;
