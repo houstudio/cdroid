@@ -403,9 +403,8 @@ void VectorDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSe
 
     int eventType;
     const int innerDepth = parser.getDepth()+1;
-    XmlPullParser::XmlEvent event;
     // Parse everything until the end of the vector element.
-    while (((eventType =parser.next(event))!= XmlPullParser::END_DOCUMENT)
+    while (((eventType =parser.next())!= XmlPullParser::END_DOCUMENT)
             && (parser.getDepth() >= innerDepth || eventType != XmlPullParser::END_TAG)) {
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tagName = parser.getName();
@@ -413,7 +412,7 @@ void VectorDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSe
 
             if (tagName.compare(SHAPE_PATH)==0) {
                 VFullPath* path = new VFullPath();
-                path->inflate(parser,event.attributes);
+                path->inflate(parser,atts);
                 currentGroup->addChild(path);
                 if (!path->getPathName().empty()) {
                     state->mVGTargetsMap.emplace(path->getPathName(), path);
@@ -422,7 +421,7 @@ void VectorDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSe
                 state->mChangingConfigurations |= path->mChangingConfigurations;
             } else if (tagName.compare(SHAPE_CLIP_PATH)==0) {
                 VClipPath* path = new VClipPath();
-                path->inflate(parser,event.attributes);
+                path->inflate(parser,atts);
                 currentGroup->addChild(path);
                 if (!path->getPathName().empty()) {
                     state->mVGTargetsMap.emplace(path->getPathName(), path);
@@ -430,7 +429,7 @@ void VectorDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSe
                 state->mChangingConfigurations |= path->mChangingConfigurations;
             } else if (tagName.compare(SHAPE_GROUP)==0) {
                 VGroup* newChildGroup = new VGroup();
-                newChildGroup->inflate(parser,event.attributes);
+                newChildGroup->inflate(parser,atts);
                 currentGroup->addChild(newChildGroup);
                 groupStack.push(newChildGroup);
                 if (!newChildGroup->getGroupName().empty()) {
@@ -1490,10 +1489,9 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const AttributeSet& at
 void VectorDrawable::VFullPath::inflateGradients(XmlPullParser&parser,const AttributeSet&atts){
     int eventType,gradientType,strokeFill=-1;
     const int innerDepth = parser.getDepth();
-    XmlPullParser::XmlEvent event;
     Cairo::RefPtr<Cairo::Gradient>gradient;
     // Parse everything until the end of the vector element.
-    while (((eventType =parser.next(event))!= XmlPullParser::END_DOCUMENT)
+    while (((eventType =parser.next())!= XmlPullParser::END_DOCUMENT)
             && (parser.getDepth() >= innerDepth || eventType != XmlPullParser::END_TAG)) {
         std::string tagName = parser.getName();
         if ((eventType==XmlPullParser::END_TAG)&&tagName.compare("gradient")==0){
@@ -1504,35 +1502,33 @@ void VectorDrawable::VFullPath::inflateGradients(XmlPullParser&parser,const Attr
         if(tagName.compare("path")==0)break;
         if (eventType != XmlPullParser::START_TAG)continue;
         if(tagName.find("attr")!=std::string::npos){
-            const std::string name =event.attributes.getString("name");
+            const std::string name = atts.getString("name");
             LOGV("tag=%s name=%s depth=%d/%d",tagName.c_str(),name.c_str(),innerDepth,parser.getDepth());
             strokeFill=(name.find("stroke")!=std::string::npos)?0:1;
         }
         if(tagName.compare("gradient")==0){
-            AttributeSet& a = event.attributes;
             float centerX,centerY,radius;
-            gradientType = a.getInt("type",std::unordered_map<std::string,int>{
+            gradientType = atts.getInt("type",std::unordered_map<std::string,int>{
                     {"linear",0},{"radial",1},{"sweep",2}},0);
             switch(gradientType){
             case 0:
                 gradient = Cairo::LinearGradient::create(
-                        a.getFloat("startX",0), a.getFloat("startY",0),
-                        a.getFloat("endX",0) , a.getFloat("endY",0));
+                        atts.getFloat("startX",0), atts.getFloat("startY",0),
+                        atts.getFloat("endX",0) , atts.getFloat("endY",0));
                 break;
             case 1:
-                centerX= a.getFloat("centerX",0);
-                centerY= a.getFloat("centerY",0);
-                radius = a.getFloat("gradientRadius",0);
+                centerX= atts.getFloat("centerX",0);
+                centerY= atts.getFloat("centerY",0);
+                radius = atts.getFloat("gradientRadius",0);
                 gradient=Cairo::RadialGradient::create(centerX,centerY,0,centerX,centerY,radius);
                 break;
             case 2:
-            default:LOGD("TODO: GradientType=%s",a.getString("type").c_str());break;
+            default:LOGD("TODO: GradientType=%s",atts.getString("type").c_str());break;
             }
         }
         if(tagName.compare("item")==0){
-            AttributeSet& a = event.attributes;
-            const float offset = a.getFloat("offset",0.f);
-            const uint32_t color =a.getColor("color",0);
+            const float offset = atts.getFloat("offset",0.f);
+            const uint32_t color =atts.getColor("color",0);
             Color c(color);
             LOGV("gradient %p %.2f colorstop=%x",gradient.get(),offset,color);
             gradient->add_color_stop_rgba(offset,c.red(),c.green(),c.blue(),c.alpha());

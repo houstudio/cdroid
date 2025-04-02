@@ -156,27 +156,26 @@ void AnimationDrawable::updateStateFromTypedArray(const AttributeSet&atts){
 
 void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& atts){
     int type,depth;
-    XmlPullParser::XmlEvent event;
     const int innerDepth = parser.getDepth()+1;
-    while ((type=parser.next(event)) != XmlPullParser::END_DOCUMENT
+    while ((type=parser.next()) != XmlPullParser::END_DOCUMENT
             && ((depth=parser.getDepth()) >= innerDepth || type != XmlPullParser::END_TAG)) {
         if (type != XmlPullParser::START_TAG) {
             continue;
         }
 
-        if ((depth > innerDepth) || event.name.compare("item")) {
+        if ((depth > innerDepth) || parser.getName().compare("item")) {
             continue;
         }
-        const int duration = event.attributes.getInt("duration", -1);
+        const int duration = atts.getInt("duration", -1);
         if (duration < 0) {
             throw std::logic_error(//parser.getPositionDescription()
                     ": <item> tag requires a 'duration' attribute");
         }
 
-        Drawable* dr = event.attributes.getDrawable("drawable");
+        Drawable* dr = atts.getDrawable("drawable");
 
         if (dr == nullptr) {
-            while ((type=parser.next(event)) == XmlPullParser::TEXT) {
+            while ((type=parser.next()) == XmlPullParser::TEXT) {
                 // Empty
             }
             if (type != XmlPullParser::START_TAG) {
@@ -184,7 +183,7 @@ void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
                         ": <item> tag requires a 'drawable' attribute or child tag"
                         " defining a drawable");
             }
-            dr = Drawable::createFromXmlInner(parser, event.attributes);
+            dr = Drawable::createFromXmlInner(parser, atts);
         }
 
         mAnimationState->addFrame(dr, duration);

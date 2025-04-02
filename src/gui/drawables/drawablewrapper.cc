@@ -279,12 +279,11 @@ void DrawableWrapper::inflateChildDrawable(XmlPullParser& parser,const Attribute
     // Seek to the first child element.
     Drawable* dr = nullptr;
     int type;
-    XmlPullParser::XmlEvent event;
     const int outerDepth = parser.getDepth()+1;
-    while ((type = parser.next(event)) != XmlPullParser::END_DOCUMENT
+    while ((type = parser.next()) != XmlPullParser::END_DOCUMENT
             && (type != XmlPullParser::END_TAG || parser.getDepth() > outerDepth)) {
         if (type == XmlPullParser::START_TAG) {
-            dr = Drawable::createFromXmlInnerForDensity(parser, event.attributes,0/*mState->mSrcDensityOverride*/);
+            dr = Drawable::createFromXmlInnerForDensity(parser,attrs,0/*mState->mSrcDensityOverride*/);
         }
     }
 

@@ -96,20 +96,18 @@ void LevelListDrawable::inflate(XmlPullParser& parser,const AttributeSet& atts){
 void LevelListDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& atts){
     int type,depth,low = 0;
     const int innerDepth = parser.getDepth()+1;
-    XmlPullParser::XmlEvent event;
-    while (((type = parser.next(event)) != XmlPullParser::END_DOCUMENT)
+    while (((type = parser.next()) != XmlPullParser::END_DOCUMENT)
             && ((depth=parser.getDepth()) >= innerDepth || type != XmlPullParser::END_TAG)) {
         if (type != XmlPullParser::START_TAG) {
             continue;
         }
 
-        if ((depth > innerDepth) || event.name.compare("item")) {
+        if ((depth > innerDepth) || parser.getName().compare("item")) {
             continue;
         }
-        AttributeSet& a = event.attributes;
-        low = a.getInt("minLevel", 0);
-        int high = a.getInt("maxLevel", 0);
-        Drawable*dr = a.getDrawable("drawable");
+        low = atts.getInt("minLevel", 0);
+        int high = atts.getInt("maxLevel", 0);
+        Drawable*dr = atts.getDrawable("drawable");
 
         if (high < 0) {
             throw std::logic_error(//parser.getPositionDescription()
@@ -117,14 +115,14 @@ void LevelListDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
         }
 
         if (dr==nullptr) {
-            while ((type = parser.next(event)) == XmlPullParser::TEXT) {}
+            while ((type = parser.next()) == XmlPullParser::TEXT) {}
             if (type != XmlPullParser::START_TAG) {
                 throw std::logic_error(
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
                 //parser.getPositionDescription()
             }
-            dr = Drawable::createFromXmlInner(parser,a);
+            dr = Drawable::createFromXmlInner(parser,atts);
         }
         mLevelListState->addLevel(low, high, dr);
     }

@@ -173,7 +173,6 @@ void AdapterHelper::dispatchAndUpdateViewHolders(UpdateOp* op) {
         for (UpdateOp* updateOp : mPostponedList) {
             LOGD("%s",updateOp->toString().c_str());
         }
-        LOGD("----");
     }
 
     // handle each pos 1 by 1 to ensure continuity. If it breaks, dispatch partial
@@ -226,7 +225,6 @@ void AdapterHelper::dispatchAndUpdateViewHolders(UpdateOp* op) {
         for (UpdateOp* updateOp : mPostponedList) {
             LOGD("%s",updateOp->toString().c_str());
         }
-        LOGD("----");
     }
 }
 void AdapterHelper::dispatchFirstPassAndUpdateViewHolders(UpdateOp* op, int offsetStart) {
@@ -306,7 +304,6 @@ int AdapterHelper::updatePositionWithPostponed(int pos, int cmd) {
             for (UpdateOp* updateOp : mPostponedList) {
                 LOGD(updateOp->toString().c_str());
             }
-            LOGD("----");
         }
     }
     for (int i = int(mPostponedList.size() - 1); i >= 0; i--) {

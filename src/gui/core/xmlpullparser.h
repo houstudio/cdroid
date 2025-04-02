@@ -17,17 +17,6 @@ public:
         TEXT,
         COMMENT
     };
-    struct XmlEvent {
-        EventType type;
-        int depth;
-        int lineNumber;
-        std::string name;
-        std::string text;
-        AttributeSet attributes;
-        XmlEvent();
-        XmlEvent(EventType tp);
-        XmlEvent(EventType tp,const std::string&name);
-    };
 private:
     class AttrParser;
     struct Private* mData;
@@ -37,14 +26,20 @@ public:
     XmlPullParser(Context*ctx,const std::string&resid);
     XmlPullParser(Context*,std::unique_ptr<std::istream>);
     ~XmlPullParser();
+    Context*getContext()const;
+    std::string getPackage()const;
     int getDepth()const;
     std::string getName()const;
+    std::string getText()const;
     std::string getPositionDescription()const;
     int getEventType()const;
     int getLineNumber()const;
     int getColumnNumber()const;
-    int next(XmlEvent& event);
-    const AttributeSet&asAttributeSet()const;
+    int next();
+    int getAttributeCount()const;
+    std::string getAttributeValue(const std::string&key);
+    bool getAttribute(int idx,std::string&key,std::string&value)const;
+    bool hasAttribute(const std::string&key)const;
     operator bool()const;
 };
 }

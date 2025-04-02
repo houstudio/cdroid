@@ -35,7 +35,8 @@ StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,cons
     auto it = mStateAnimatorMap.find(resid);
     if(it==mStateAnimatorMap.end()){
         XmlPullParser parser(context,resid);
-        StateListAnimator*anim =createStateListAnimatorFromXml(context,parser,parser.asAttributeSet());
+        AttributeSet attrs(&parser);
+        StateListAnimator*anim =createStateListAnimatorFromXml(context,parser,attrs);
         it = mStateAnimatorMap.insert({resid,std::shared_ptr<StateListAnimator>(anim)}).first;
     }
     return new StateListAnimator(*it->second);
@@ -43,10 +44,11 @@ StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,cons
 }
 
 Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser& parser,float pixelSize){
-    return createAnimatorFromXml(context,parser, parser.asAttributeSet(), nullptr, 0,pixelSize);
+    AttributeSet attrs(&parser);
+    return createAnimatorFromXml(context,parser, attrs, nullptr, 0,pixelSize);
 }
 
-Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&parser,const AttributeSet& atts,
+Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&parser,const AttributeSet& attrs,
         AnimatorSet*parent,int sequenceOrdering,float pixelSize){
      Animator* anim = nullptr;
      std::vector<Animator*> childAnims;
@@ -54,8 +56,7 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
     // Make sure we are on a start tag.
     int type = 0,depth = 0;
     const int innerDepth = parser.getDepth()+1;
-    XmlPullParser::XmlEvent event;
-    while ((((type = parser.next(event)) != XmlPullParser::END_TAG) || (parser.getDepth() >= innerDepth))
+    while ((((type = parser.next()) != XmlPullParser::END_TAG) || (parser.getDepth() >= innerDepth))
             && (type != XmlPullParser::END_DOCUMENT) && (type != XmlPullParser::BAD_DOCUMENT) ) {
 
         if (type != XmlPullParser::START_TAG) {
@@ -65,17 +66,17 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
         std::string name = parser.getName();
         bool gotValues = false;
         if (name.compare("objectAnimator")==0) {
-            anim = loadObjectAnimator(context,event.attributes, pixelSize);
+            anim = loadObjectAnimator(context,attrs, pixelSize);
         } else if (name.compare("animator")==0) {
-            anim = loadAnimator(context, event.attributes, nullptr, pixelSize);
+            anim = loadAnimator(context, attrs, nullptr, pixelSize);
         } else if (name.compare("set")==0) {
             anim = new AnimatorSet();
             //anim->appendChangingConfigurations(a.getChangingConfigurations());
-            const int ordering = event.attributes.getInt("ordering",std::unordered_map<std::string,int>{
+            const int ordering = attrs.getInt("ordering",std::unordered_map<std::string,int>{
                     {"together",(int)TOGETHER},{"sequentially",(int)SEQUENTIALLY}}, TOGETHER);
-            createAnimatorFromXml(context, parser, event.attributes, (AnimatorSet*) anim, ordering,pixelSize);
+            createAnimatorFromXml(context, parser, attrs, (AnimatorSet*) anim, ordering,pixelSize);
         } else if (name.compare("propertyValuesHolder")==0) {
-            std::vector<PropertyValuesHolder*>values = loadValues(parser,event.attributes);
+            std::vector<PropertyValuesHolder*>values = loadValues(parser,attrs);
             if (values.size() && (dynamic_cast<ValueAnimator*>(anim))) {
                 ((ValueAnimator*) anim)->setValues(values);
             }
@@ -99,11 +100,10 @@ Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser&
     return anim;
 }
 
-StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*context,XmlPullParser&parser,const AttributeSet&atts){
+StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*context,XmlPullParser&parser,const AttributeSet&attrs){
     StateListAnimator* stateListAnimator = new StateListAnimator();
     while (true) {
-        XmlPullParser::XmlEvent event;
-        const int type = parser.next(event);
+        const int type = parser.next();
         const std::string name =parser.getName();
         switch (type) {
         case XmlPullParser::END_DOCUMENT:
@@ -112,12 +112,12 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
             if (name.compare("item")==0) {
                 std::vector<int>states;
                 Animator* animator = nullptr;
-                StateSet::parseState(states,event.attributes);
-                std::string animId =event.attributes.getString("animator");
+                StateSet::parseState(states,attrs);
+                std::string animId = attrs.getString("animator");
                 if(!animId.empty()){
                     animator = loadAnimator(context, animId);
                 }else{
-                    animator = createAnimatorFromXml(context,parser,event.attributes, nullptr, 0,1.f);
+                    animator = createAnimatorFromXml(context,parser,attrs, nullptr, 0,1.f);
                 }
 
                 if (animator == nullptr) {
@@ -132,11 +132,10 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
  
 std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(XmlPullParser& parser,const  AttributeSet& attrs){
     std::vector<PropertyValuesHolder*> values;
-    XmlPullParser::XmlEvent event;
     int type = XmlPullParser::START_TAG;
     while ((type != XmlPullParser::END_TAG) && (type != XmlPullParser::END_DOCUMENT) && (type != XmlPullParser::END_DOCUMENT)) {
         if (type != XmlPullParser::START_TAG) {
-            type = parser.next(event);
+            type = parser.next();
             continue;
         }
         std::string name = parser.getName();
@@ -155,7 +154,7 @@ std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(XmlPullParser& p
                 values.push_back(pvh);
             }
         }
-        type = parser.next(event);
+        type = parser.next();
 
     }
     return values;

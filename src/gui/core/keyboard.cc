@@ -342,14 +342,14 @@ void Keyboard::loadKeyboard(Context*context, XmlPullParser& parser){
     Key* key = nullptr;
     Row* currentRow = nullptr;
     bool skipRow = false;
-    XmlPullParser::XmlEvent event;
-    while ((eventType = parser.next(event)) != XmlPullParser::END_DOCUMENT) {
+    AttributeSet attrs(&parser);
+    while ((eventType = parser.next()) != XmlPullParser::END_DOCUMENT) {
         if (eventType == XmlPullParser::START_TAG) {
             std::string tag = parser.getName();
             if (tag.compare(TAG_ROW)==0) {
                 inRow = true;
                 x = 0;
-                currentRow = createRowFromXml(parser,event.attributes);
+                currentRow = createRowFromXml(parser,attrs);
                 rows.push_back(currentRow);
                 skipRow = currentRow->mode != 0 && currentRow->mode != mKeyboardMode;
                 if (skipRow) {
@@ -358,7 +358,7 @@ void Keyboard::loadKeyboard(Context*context, XmlPullParser& parser){
                 }
            } else if (tag.compare(TAG_KEY)==0) {
                 inKey = true;
-                key = createKeyFromXml(currentRow, x, y, parser,event.attributes);
+                key = createKeyFromXml(currentRow, x, y, parser,attrs);
                 mKeys.push_back(key);
                 if (key->codes[0] == KEYCODE_SHIFT) {
                     // Find available shift key slot and put this shift key in it
@@ -375,7 +375,7 @@ void Keyboard::loadKeyboard(Context*context, XmlPullParser& parser){
                 }
                 currentRow->mKeys.push_back(key);
             } else if (tag.compare(TAG_KEYBOARD)==0) {
-                parseKeyboardAttributes(parser,event.attributes);
+                parseKeyboardAttributes(parser,attrs);
             }
         } else if (eventType == XmlPullParser::END_TAG) {
             if (inKey) {
@@ -399,8 +399,7 @@ void Keyboard::loadKeyboard(Context*context, XmlPullParser& parser){
 
 void Keyboard::skipToEndOfRow(XmlPullParser&parser){
     int eventType;
-    XmlPullParser::XmlEvent event;
-    while ((eventType = parser.next(event)) != XmlPullParser::END_DOCUMENT) {
+    while ((eventType = parser.next()) != XmlPullParser::END_DOCUMENT) {
         if ((eventType == XmlPullParser::END_TAG) && (parser.getName().compare(TAG_ROW)==0)) {
             break;
         }

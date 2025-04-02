@@ -40,17 +40,17 @@ void Preferences::load(const char*buf,size_t len){
 void Preferences::load(std::istream&istream){
     auto strm = std::make_unique<std::istream>(istream.rdbuf());
     XmlPullParser parser(nullptr,std::move(strm));
-    XmlPullParser::XmlEvent event;
+    AttributeSet attrs(&parser);
     int type;
     std::string section,key,value;
-    while(((type=parser.next(event))!=XmlPullParser::END_DOCUMENT)&&(type!=XmlPullParser::BAD_DOCUMENT)){
+    while(((type=parser.next())!=XmlPullParser::END_DOCUMENT)&&(type!=XmlPullParser::BAD_DOCUMENT)){
         std::string tagName = parser.getName();
         switch(type){
         case XmlPullParser::START_TAG:
             if(tagName.compare("item")==0){
-                key = event.attributes.getString("name");
+                key = attrs.getString("name");
             }else if(tagName.compare("section")==0){
-                section = event.attributes.getString("name");
+                section = attrs.getString("name");
             }
             break;
         case XmlPullParser::END_TAG:
@@ -61,7 +61,7 @@ void Preferences::load(std::istream&istream){
             }
             break;
         case XmlPullParser::TEXT:
-            value.append(event.text);
+            value.append(parser.getText());
             break;
         }
     }

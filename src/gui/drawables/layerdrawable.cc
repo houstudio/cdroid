@@ -1073,28 +1073,28 @@ void LayerDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
 void LayerDrawable::inflateLayers(XmlPullParser& parser,const AttributeSet& atts){
     int type,depth,low = 0;
     const int innerDepth = parser.getDepth()+1;
-    XmlPullParser::XmlEvent event;
-    while (((type = parser.next(event)) != XmlPullParser::END_DOCUMENT)
+    while (((type = parser.next()) != XmlPullParser::END_DOCUMENT)
             && ((depth=parser.getDepth()) >= innerDepth|| type != XmlPullParser::END_TAG)) {
         if (type != XmlPullParser::START_TAG) {
             continue;
         }
 
-        if ((depth > innerDepth) || event.name.compare("item")) {
+        if ((depth > innerDepth) || parser.getName().compare("item")) {
             continue;
         }
 
         ChildDrawable*layer = new ChildDrawable(mLayerState->mDensity);
-        updateLayerFromTypedArray(layer,event.attributes);
+        updateLayerFromTypedArray(layer,atts);
 
         if (layer->mDrawable==nullptr) {
-            while ((type = parser.next(event)) == XmlPullParser::TEXT) {}
-            if (type != XmlPullParser::START_TAG) {
+            while ((type = parser.next()) == XmlPullParser::TEXT) {
+            }
+            if (type != XmlPullParser::START_TAG){
                 throw std::logic_error(//parser.getPositionDescription()
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
             }
-            layer->mDrawable = Drawable::createFromXmlInner(parser, event.attributes);
+            layer->mDrawable = Drawable::createFromXmlInner(parser,atts);
             layer->mDrawable->setCallback(this);
         }
         addLayer(layer);
@@ -1156,4 +1156,3 @@ void LayerDrawable::updateLayerFromTypedArray(ChildDrawable*layer,const Attribut
 }
 
 }
-

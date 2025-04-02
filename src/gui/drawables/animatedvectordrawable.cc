@@ -180,10 +180,8 @@ Insets AnimatedVectorDrawable::getOpticalInsets() {
 
 void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&attrs){
     auto state = mAnimatedVectorState;
-    XmlPullParser::XmlEvent event;
     int eventType= parser.getEventType();//XmlPullParser::START_TAG;
     float pathErrorScale = 1;
-    AttributeSet a =attrs;
     const int innerDepth = parser.getDepth()+1;
     Context*ctx = attrs.getContext();
     state->mContext = ctx;
@@ -192,7 +190,7 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tagName = parser.getName();
             if (tagName.compare(ANIMATED_VECTOR)==0) {
-                std::string drawableRes = a.getString("drawable");
+                std::string drawableRes = attrs.getString("drawable");
                 LOGV("drawable=%s",drawableRes.c_str());
                 if (!drawableRes.empty()) {
                     VectorDrawable* vectorDrawable = (VectorDrawable*) ctx->getDrawable(drawableRes)->mutate();
@@ -205,8 +203,8 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
                     state->mVectorDrawable = vectorDrawable;
                 }
             } else if (tagName.compare(TARGET)==0) {
-                const std::string target = a.getString("name");
-                const std::string animResId = a.getString("animation");
+                const std::string target = attrs.getString("name");
+                const std::string animResId = attrs.getString("animation");
                 if (!animResId.empty()) {
                     if (true/*theme != nullptr*/) {
                         // The animator here could be ObjectAnimator or AnimatorSet.
@@ -224,8 +222,7 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
                 }
             }
         }
-        eventType =parser.next(event);
-        a = event.attributes;
+        eventType =parser.next();
     }
     // If we don't have any pending animations, we don't need to hold a
     // reference to the resources.

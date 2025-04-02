@@ -10,13 +10,16 @@ namespace cdroid{
  */
 Drawable* DrawableInflater::loadDrawable(Context* context, const std::string&id) {
     XmlPullParser parser(context,id);
-    XmlPullParser::XmlEvent event;
     int type;
+    AttributeSet attrs(&parser);
     if(!parser)return nullptr;
-    while( ((type=parser.next(event))!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
+    while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
         //NOTHING
     }
-    return inflateFromXml(parser.getName(),parser,event.attributes);//loadDrawable(context, id);
+    if(id.find("bg_home_puress_anim_pic")!=std::string::npos){
+        LOGD("");
+    }
+    return inflateFromXml(parser.getName(),parser,attrs);//event.attributes);//loadDrawable(context, id);
 }
 
 Drawable* DrawableInflater::inflateFromXml(const std::string& name,XmlPullParser& parser,const AttributeSet& attrs){
