@@ -1,5 +1,6 @@
 #include <core/xmlpullparser.h>
 #include <core/context.h>
+#include <core/app.h>
 #include <expat.h>
 #include <iostream>
 #include <fstream>
@@ -85,6 +86,11 @@ XmlPullParser::XmlPullParser(){
 
 XmlPullParser::XmlPullParser(const std::string&content):XmlPullParser(){
     mData->stream = std::make_unique<std::istringstream>(content);
+    auto event = std::make_unique<XmlEvent>(START_DOCUMENT);
+    mData->context = &App::getInstance();
+    event->depth= mData->depth++;
+    event->lineNumber = 0;
+    mData->eventQueue.push(std::move(event));
 }
 
 XmlPullParser::XmlPullParser(Context*ctx,std::unique_ptr<std::istream>strm):XmlPullParser(){

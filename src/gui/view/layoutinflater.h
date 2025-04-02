@@ -45,6 +45,8 @@ public:
     void rInflateChildren(XmlPullParser& parser, View* parent,const AttributeSet& attrs,bool finishInflate);
     void rInflate(XmlPullParser& parser, View* parent, Context* context,const AttributeSet& attrs, bool finishInflate);
 #ifdef NEW_LAYOUT_INFLATER
+    View* inflate(XmlPullParser& parser,ViewGroup* root);
+    View* inflate(XmlPullParser& parser,ViewGroup* root, bool attachToRoot);
     View*inflate(const std::string&resource,ViewGroup* root, bool attachToRoot=true,AttributeSet*atts=nullptr);
 #endif
 };

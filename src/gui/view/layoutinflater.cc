@@ -120,6 +120,7 @@ typedef struct {
     AttributeSet* atts;
     View*returnedView;
     int parsedView;
+    int depth;
 } WindowParserData;
 
 static void startElement(void *userData, const XML_Char *name, const XML_Char **satts) {
@@ -133,6 +134,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
     else if(pd->atts) {
         pd->atts->inherit(atts);
     }
+    //std::cout<<std::setw(pd->depth++*2)<<"<"<<name<<">"<<std::endl;
     if(strcmp(name,"merge")==0) {
         pd->views.push_back(parent);
         pd->flags.push_back(1);
@@ -188,6 +190,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
 }
 static void endElement(void *userData, const XML_Char *name) {
     WindowParserData*pd = (WindowParserData*)userData;
+    //std::cout<<std::setw((--pd->depth)*2)<<"<"<<name<<">"<<std::endl;
     if(strcmp(name,"include")==0) return;
 
     if((pd->views.size()==1) && (pd->flags.back()==0))
@@ -208,6 +211,7 @@ View* LayoutInflater::inflate(const std::string&package,std::istream&stream,View
     pd.parsedView  = 0;
     pd.returnedView= nullptr;
     pd.atts = atts;
+    pd.depth= 0;
     pd.attachToRoot= attachToRoot;
     XML_SetUserData(parser,&pd);
     XML_SetElementHandler(parser, startElement, endElement);
@@ -223,7 +227,7 @@ View* LayoutInflater::inflate(const std::string&package,std::istream&stream,View
     } while( len != 0 );
     XML_ParserFree(parser);
     if(root && attachToRoot) {
-        //if(pd.returnedView)root->addView(pd.returnedView);already added in startElementd
+        //if(pd.returnedView)root->addView(pd.returnedView);already added in startElement
         root->requestLayout();
         root->startLayoutAnimation();
     }
@@ -231,13 +235,15 @@ View* LayoutInflater::inflate(const std::string&package,std::istream&stream,View
 }
 #else
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool attachToRoot,AttributeSet*atts){
-    int type,depth;
-    XmlPullParser parser(mContext,resource);
+View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root){
+    return inflate(parser,root,root!=nullptr);
+}
+
+View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root, bool attachToRoot){
+    int type;
     View*result = root;
-    XmlPullParser::XmlEvent event;
-    const int innerDepth = parser.getDepth();
-    while(((type=parser.next(event))!=XmlPullParser::START_TAG)
+    const AttributeSet attrs(&parser);
+    while(((type=parser.next())!=XmlPullParser::START_TAG)
             &&(type!=XmlPullParser::END_DOCUMENT)){
         //Empty
     }
@@ -245,19 +251,24 @@ View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool a
     if(type!=XmlPullParser::START_TAG)throw std::logic_error("No start tag found");
     const std::string name = parser.getName();
     if(name.compare(TAG_MERGE)==0){
-        rInflate(parser,root,mContext,event.attributes,false);
+        rInflate(parser,root,mContext,attrs,false);
     }else{
-        View*temp = createViewFromTag(root,name,mContext,event.attributes,false);
+        View*temp = createViewFromTag(root,name,mContext,attrs,false);
         ViewGroup::LayoutParams*params = nullptr;
         if(root!=nullptr){
-            params =root->generateLayoutParams(event.attributes);
+            params =root->generateLayoutParams(attrs);
             if(!attachToRoot)temp->setLayoutParams(params);
         }
-        rInflateChildren(parser,temp,event.attributes,true);
+        rInflateChildren(parser,temp,attrs,true);
         if((root!=nullptr)&&attachToRoot) root->addView(temp,params);
         if((root==nullptr)||(attachToRoot==false)) result = temp;
     }
     return result;
+}
+
+View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool attachToRoot,AttributeSet*atts){
+    XmlPullParser parser(mContext,resource);
+    return inflate(parser,root,attachToRoot);
 }
 #endif
 
@@ -302,7 +313,8 @@ View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Co
     return view;
 #else
    std::string styleName = attrs.getString("style");
-   AttributeSet temp(attrs);
+   AttributeSet temp;
+   temp=attrs;
    LayoutInflater::ViewInflater inflater = LayoutInflater::getInflater(name);
     if(!styleName.empty()) {
         AttributeSet style = context->obtainStyledAttributes(styleName);
@@ -323,8 +335,8 @@ void LayoutInflater::rInflateChildren(XmlPullParser& parser, View* parent,const 
 }
 
 void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* context,const AttributeSet& attrs, bool finishInflate){
-    const int depth = parser.getDepth();
     int type;
+    const int depth = parser.getDepth();
     bool pendingRequestFocus = false;
 
     while (((type = parser.next()) != XmlPullParser::END_TAG ||
@@ -365,15 +377,6 @@ void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* cont
     }
 }
 
-void LayoutInflater::consumeChildElements(XmlPullParser& parser){
-    int type;
-    const int currentDepth = parser.getDepth();
-    while (((type = parser.next()) != XmlPullParser::END_TAG ||
-            parser.getDepth() > currentDepth) && type != XmlPullParser::END_DOCUMENT) {
-        // Empty
-    }
-}
-
 void LayoutInflater::parseViewTag(XmlPullParser& parser, View* view,const AttributeSet& attrs){
 #if 0
     Context* context = view.getContext();
@@ -396,16 +399,15 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         // If the layout is pointing to a theme attribute, we have to
         // massage the value to get a resource identifier out of it.
         const bool hasThemeOverride = false;
-        std::string layout = attrs.getString("layout");
+        const std::string layout = attrs.getString("layout");
         if (layout.empty()) {
             throw std::logic_error("You must specify a layout in the include tag: <include layout=\"@layout/layoutID\" />");
             // Attempt to resolve the "?attr/name" string to an attribute
             // within the default (e.g. application) package.
             //layout = context.getResources().getIdentifier(value.substring(1), "attr", context.getPackageName());
         }
-
         XmlPullParser childParser(context,layout);
-
+        LOGD("%s Parser=%p parent(%s)=%p:%X", layout.c_str(),&childParser,parent->getAccessibilityClassName().c_str(),parent,parent->getId());
         while ((type = childParser.next()) != XmlPullParser::START_TAG &&
                 type != XmlPullParser::END_DOCUMENT) {
             // Empty.
@@ -416,7 +418,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         }
 
         const std::string childName = childParser.getName();
-        AttributeSet childAttrs(&childParser);
+        const AttributeSet childAttrs(&childParser);
 
         if (childName.compare(TAG_MERGE)==0){
             // The <merge> tag doesn't support android:theme, so nothing special to do here.
@@ -460,6 +462,15 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         throw std::logic_error("<include /> can only be used inside of a ViewGroup");
     }
     LayoutInflater::consumeChildElements(parser);
+}
+
+void LayoutInflater::consumeChildElements(XmlPullParser& parser){
+    int type;
+    const int currentDepth = parser.getDepth();
+    while (((type = parser.next()) != XmlPullParser::END_TAG ||
+            parser.getDepth() > currentDepth) && type != XmlPullParser::END_DOCUMENT) {
+        // Empty
+    }
 }
 
 }//endof namespace
