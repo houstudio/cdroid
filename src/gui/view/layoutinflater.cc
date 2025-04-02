@@ -261,7 +261,8 @@ View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root, bool attach
         }
         rInflateChildren(parser,temp,attrs,true);
         if((root!=nullptr)&&attachToRoot) root->addView(temp,params);
-        if((root==nullptr)||(attachToRoot==false)) result = temp;
+        //if((root==nullptr)||(attachToRoot==false)) result = temp;
+        return temp;
     }
     return result;
 }
