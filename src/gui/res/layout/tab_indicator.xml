@@ -4,7 +4,7 @@
     android:layout_height="64dip"
     android:layout_weight="1"
     android:layout_marginStart="-3dip"
-    cdroi:layout_marginEnd="-3dip"
+    android:layout_marginEnd="-3dip"
     android:background="@drawable/tab_indicator">
     <ImageView android:id="@+id/icon"
         android:layout_width="wrap_content"
