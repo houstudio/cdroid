@@ -51,13 +51,13 @@ public:
         auto event = std::make_unique<XmlEvent>(END_TAG,name);
         Private*data =(Private*)userData;
         const int depth = --data->depth;
-        /*if(!data->mText.empty()){
+        if(!data->mText.empty()){
             auto te = std::make_unique<XmlEvent>(TEXT,name);
             te->lineNumber = XML_GetCurrentLineNumber(data->parser);
             te->text = data->mText;
             te->depth= depth;
             data->eventQueue.push(std::move(te));
-        }*/
+        }
         event->depth= depth;
         event->text = data->mText;
         event->lineNumber = XML_GetCurrentLineNumber(data->parser);
@@ -68,14 +68,6 @@ public:
         auto event = std::make_unique<XmlEvent>(TEXT);
         Private*data = (Private*)userData;
         data->mText.append(s,len);
-        event->text.assign(s,len);
-        event->depth = data->depth;
-
-        auto te = std::make_unique<XmlEvent>(TEXT,std::string(s,len));
-        te->lineNumber = XML_GetCurrentLineNumber(data->parser);
-        te->text = data->mText;
-        te->depth= data->depth;
-        data->eventQueue.push(std::move(te));
     }
 };
 
