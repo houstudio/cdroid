@@ -21,7 +21,7 @@ MACRO(SUBDIRLIST result curdir)
     SET(${result} ${dirlist})
 ENDMACRO()
 
-find_package(Python)
+find_package(Python 3.7)
 
 function(CreatePAK project ResourceDIR PakPath rhpath)
     add_custom_target(${project}_assets
