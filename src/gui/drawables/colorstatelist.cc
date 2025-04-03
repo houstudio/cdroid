@@ -140,7 +140,7 @@ ColorStateList* ColorStateList::createFromXmlInner(XmlPullParser& parser,const A
 
 ColorStateList* ColorStateList::createFromXml(XmlPullParser& parser) {
     int type;
-    AttributeSet attrs(&parser);
+    const AttributeSet attrs(&parser);
     while ((type = parser.next()) != XmlPullParser::START_TAG
                && type != XmlPullParser::END_DOCUMENT) {
         // Seek parser to start tag.

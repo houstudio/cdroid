@@ -21,13 +21,16 @@ MACRO(SUBDIRLIST result curdir)
     SET(${result} ${dirlist})
 ENDMACRO()
 
-find_package(Python)
+find_package(Python 3.7)
 
 function(CreatePAK project ResourceDIR PakPath rhpath)
     add_custom_target(${project}_assets
         COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/idgen.py ${project} ${ResourceDIR} ${rhpath}
-        COMMAND zip -q -r -D -1 ${PakPath} ./  -i "*.xml"
+        
+        COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/XmlOptimized2Zip.py ${ResourceDIR} ${CMAKE_CURRENT_BINARY_DIR}/temp_xml ${PakPath}
+        #COMMAND zip -q -r -D -1 ${PakPath} ./  -i "*.xml"
         COMMAND zip -q -r -D -0 ${PakPath} ./  -i "*.png" "*.jpg" "*.jpeg" "*.gif" "*.apng" "*.webp" "*.ttf" "*.otf" "*.ttc"
+        #COMMAND rm -rf ${CMAKE_CURRENT_BINARY_DIR}/temp_xml
         WORKING_DIRECTORY ${ResourceDIR}
         COMMENT "Pckage Assets from ${ResourceDIR} to:${PakPath}")
     add_dependencies(${project} ${project}_assets)

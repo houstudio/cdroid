@@ -9,15 +9,12 @@ namespace cdroid{
  * @return a drawable, or {@code null} if the drawable failed to load
  */
 Drawable* DrawableInflater::loadDrawable(Context* context, const std::string&id) {
-    XmlPullParser parser(context,id);
     int type;
-    AttributeSet attrs(&parser);
+    XmlPullParser parser(context,id);
+    const AttributeSet attrs(&parser);
     if(!parser)return nullptr;
     while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
         //NOTHING
-    }
-    if(id.find("bg_home_puress_anim_pic")!=std::string::npos){
-        LOGD("");
     }
     return inflateFromXml(parser.getName(),parser,attrs);//event.attributes);//loadDrawable(context, id);
 }

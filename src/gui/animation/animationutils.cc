@@ -15,7 +15,7 @@ Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resi
     Animation*anim = nullptr;
     int type,depth;
     XmlPullParser parser(context,resid);
-    AttributeSet attrs(&parser);
+    const AttributeSet attrs(&parser);
     return createAnimationFromXml(context,parser,nullptr,attrs);
 }
 
@@ -58,7 +58,7 @@ Animation* AnimationUtils::createAnimationFromXml(Context* c, XmlPullParser& par
 LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
     int type,depth;
     XmlPullParser parser(context,resid);
-    AttributeSet attrs(&parser);;
+    const AttributeSet attrs(&parser);;
     return createLayoutAnimationFromXml(context,parser,attrs);
 }
 
@@ -117,7 +117,7 @@ Interpolator* AnimationUtils::createInterpolatorFromXml(Context* context,XmlPull
     int type;
     const int depth = parser.getDepth();
     BaseInterpolator*interpolator = nullptr;
-    AttributeSet attrs(&parser);
+    const AttributeSet attrs(&parser);
     while(((type = parser.next()) != XmlPullParser::END_TAG || parser.getDepth() > depth)
                 && type != XmlPullParser::END_DOCUMENT){
         if (type != XmlPullParser::START_TAG) {
