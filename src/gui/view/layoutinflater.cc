@@ -149,7 +149,7 @@ static void startElement(void *userData, const XML_Char *name, const XML_Char **
         View* includedView = LayoutInflater::from(pd->ctx)->inflate(layout,parent,true,&atts);
         if(includedView) { //for merge as rootnode,the includedView will be null.
             LayoutParams*lp = parent->generateLayoutParams(atts);
-            includedView->setId(pd->ctx->getId(atts.getString("id")));
+            includedView->setId(atts.getResourceId("id"));//pd->ctx->getId(atts.getString("id")));
             includedView->setLayoutParams(lp);
         }
         return;
@@ -424,8 +424,8 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             View* view = createViewFromTag(parent, childName,context, childAttrs, hasThemeOverride);
             ViewGroup* group = (ViewGroup*) parent;
 
-            const int id = attrs.getResourceId("id", View::NO_ID);
-            const int visibility = attrs.getInt("visibility", -1);
+            //const int id = attrs.getResourceId("id", View::NO_ID);
+            //const int visibility = attrs.getInt("visibility", -1);
 
             // We try to load the layout params set in the <include /> tag.
             // If the parent can't generate layout params (ex. missing width
@@ -444,7 +444,8 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // Inflate all children.
             rInflateChildren(childParser, view, childAttrs, true);
 
-            if (id != View::NO_ID) {
+            /*visibility & id has been setted in createViewFromTag*/
+            /*if (id != View::NO_ID) {
                 view->setId(id);
             }
 
@@ -452,7 +453,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             case 0: view->setVisibility(View::VISIBLE);   break;
             case 1: view->setVisibility(View::INVISIBLE); break;
             case 2: view->setVisibility(View::GONE);      break;
-            }
+            }*/
             group->addView(view);
         }
     } else {

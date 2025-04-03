@@ -167,6 +167,7 @@ void ViewGroup::initGroup(){
     mPointerCapture  = false;
     mIsInterestedInDrag = false;
     mTooltipHoveredSelf = false;
+    mLayoutCalledWhileSuppressed = false;
     mChildCountWithTransientState= 0;
     mChildUnhandledKeyListeners  = 0;
     mInvalidRgn = Cairo::Region::create();
