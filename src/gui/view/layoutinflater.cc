@@ -232,7 +232,6 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         }
         int type;
         XmlPullParser childParser(context,layout);
-        LOGD("%s Parser=%p parent(%s)=%p:%X", layout.c_str(),&childParser,parent->getAccessibilityClassName().c_str(),parent,parent->getId());
         while ((type = childParser.next()) != XmlPullParser::START_TAG &&
                 type != XmlPullParser::END_DOCUMENT) {
             // Empty.
