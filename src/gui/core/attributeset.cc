@@ -226,10 +226,12 @@ float AttributeSet::getFloat(const std::string&key,float def)const{
 }
 
 float AttributeSet::getFraction(const std::string&key,int base,int pbase,float def)const{
+    char*p;
     const std::string v = getAttributeValue(key);
     if(v.empty()) return def;
-    float ret = std::strtof(v.c_str(),nullptr);
-    if( v.find('%') != std::string::npos )ret /= 100.f;
+    float ret = std::strtof(v.c_str(),&p);
+    if(*p=='%')ret /= 100.f;
+    //if( v.find('%') != std::string::npos )ret /= 100.f;
     return ret;
 }
 
@@ -274,21 +276,21 @@ int AttributeSet::getGravity(const std::string&key,int defvalue)const{
 }
 
 int AttributeSet::getDimension(const std::string&key,int def)const{
-    const char*p;
+    char*p;
     const std::string v = getString(key);
     if( v.empty() ) return def;
-    def = std::strtol(v.c_str(),nullptr,10);
-    p   = strpbrk(v.c_str(),"sdp");
+    def = std::strtol(v.c_str(),&p,10);
+    //p   = strpbrk(v.c_str(),"sdp");
     return def;
 }
 
 int AttributeSet::getDimensionPixelSize(const std::string&key,int def)const{
-    const char*p;
+    char *p;
     const std::string v = getString(key);
     if( v.empty() ) return def;
-    def = std::strtol(v.c_str(),nullptr,10);
-    p   = strpbrk(v.c_str(),"sdp");
-    if(p){
+    def = std::strtol(v.c_str(),&p,10);
+    //p = strpbrk(v.c_str(),"sdp");
+    if(*p){
         const DisplayMetrics& dm=mContext->getDisplayMetrics();
         if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)
             def = (dm.density * def /*+0.5f*/);

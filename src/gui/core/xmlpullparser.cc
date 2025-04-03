@@ -21,6 +21,7 @@ struct XmlEvent {
     }
 };
 
+static std::queue <std::unique_ptr<XmlEvent>> eventPool;
 struct Private{
     XML_Parser parser;
     int depth;
@@ -29,11 +30,9 @@ struct Private{
     std::array <char,512> buffer;
     std::unique_ptr <std::istream> stream;
     std::queue <std::unique_ptr<XmlEvent>> eventQueue;
-    std::queue <std::unique_ptr<XmlEvent>> eventPool;
     std::unique_ptr<XmlEvent>acquire(XmlPullParser::EventType type,const std::string&text = std::string()){
         std::unique_ptr<XmlEvent> event = eventPool.size() ? std::move(eventPool.front()) : std::make_unique<XmlEvent>();
-        if(type!=XmlPullParser::TEXT) event->name = text;
-        else event->text = text;
+        event->name = text;
         event->type = type;
         if(eventPool.size()) eventPool.pop();
         return event;
@@ -68,9 +67,10 @@ public:
         auto event = data->acquire(END_TAG,name);
         const int depth = --data->depth;
         if(!data->mText.empty()){
-            auto te = data->acquire(TEXT,name);
+            auto te = data->acquire(TEXT);
             te->lineNumber = XML_GetCurrentLineNumber(data->parser);
             te->depth= depth;
+            te->text = data->mText;
             data->eventQueue.push(std::move(te));
         }
         event->depth= depth;
