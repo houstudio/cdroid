@@ -386,7 +386,6 @@ void LayoutInflater::parseViewTag(XmlPullParser& parser, View* view,const Attrib
 }
 
 void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View* parent,const AttributeSet& attrs){
-    int type;
     if (dynamic_cast<ViewGroup*>(parent)) {
         // Apply a theme wrapper, if requested. This is sort of a weird
         // edge case, since developers think the <include> overwrites
@@ -403,6 +402,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // within the default (e.g. application) package.
             //layout = context.getResources().getIdentifier(value.substring(1), "attr", context.getPackageName());
         }
+        int type;
         XmlPullParser childParser(context,layout);
         LOGD("%s Parser=%p parent(%s)=%p:%X", layout.c_str(),&childParser,parent->getAccessibilityClassName().c_str(),parent,parent->getId());
         while ((type = childParser.next()) != XmlPullParser::START_TAG &&
