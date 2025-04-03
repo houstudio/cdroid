@@ -142,10 +142,10 @@ View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Co
     }
     return view;
 #else
-   std::string styleName = attrs.getString("style");
-   AttributeSet temp;
-   temp = attrs;
-   LayoutInflater::ViewInflater inflater = LayoutInflater::getInflater(name);
+    std::string styleName = attrs.getString("style");
+    AttributeSet temp;
+    temp = attrs;
+    LayoutInflater::ViewInflater inflater = LayoutInflater::getInflater(name);
     if(!styleName.empty()) {
         AttributeSet style = context->obtainStyledAttributes(styleName);
         temp.inherit(style);
