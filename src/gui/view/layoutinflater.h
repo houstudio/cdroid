@@ -3,7 +3,7 @@
 #include <core/attributeset.h>
 #include <core/context.h>
 #include <core/xmlpullparser.h>
-//#define NEW_LAYOUT_INFLATER 1
+
 namespace cdroid{
 class View;
 class ViewGroup;
@@ -30,20 +30,17 @@ private:
     static void consumeChildElements(XmlPullParser& parser);
     void parseViewTag(XmlPullParser&parser, View*parent,const AttributeSet& attrs);
     void parseInclude(XmlPullParser&parser, Context*,View*prent,const AttributeSet& attrs);
+protected:
+    View*createViewFromTag(View* parent,const std::string& name, Context* context,const AttributeSet& attrs,bool ignoreThemeAttr);
+    void rInflateChildren(XmlPullParser& parser, View* parent,const AttributeSet& attrs,bool finishInflate);
+    void rInflate(XmlPullParser& parser, View* parent, Context* context,const AttributeSet& attrs, bool finishInflate);
 public:
     static LayoutInflater*from(Context*context);
     static ViewInflater getInflater(const std::string&);
     static bool registerInflater(const std::string&name,const std::string&,ViewInflater fun);
     const std::string getDefaultStyle(const std::string&name)const;
     View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*);
-#ifndef NEW_LAYOUT_INFLATER
-    View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot=true,AttributeSet*atts=nullptr);
-#endif
     View*createView(const std::string& name, const std::string& prefix,const AttributeSet& attrs);
-    View*createViewFromTag(View* parent,const std::string& name, Context* context,const AttributeSet& attrs,bool ignoreThemeAttr);
-    void rInflateChildren(XmlPullParser& parser, View* parent,const AttributeSet& attrs,bool finishInflate);
-    void rInflate(XmlPullParser& parser, View* parent, Context* context,const AttributeSet& attrs, bool finishInflate);
-#ifdef NEW_LAYOUT_INFLATER
     View* inflate(XmlPullParser& parser,ViewGroup* root);
     /**
       * Inflate a new view hierarchy from the specified xml resource. Throws
@@ -63,8 +60,7 @@ public:
       *         In cdroid ,we allways return  the root of the inflated XML file.
       */
     View* inflate(XmlPullParser& parser,ViewGroup* root, bool attachToRoot);
-    View*inflate(const std::string&resource,ViewGroup* root, bool attachToRoot=true,AttributeSet*atts=nullptr);
-#endif
+    View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot=true,AttributeSet*atts=nullptr);
 };
 
 template<typename T>

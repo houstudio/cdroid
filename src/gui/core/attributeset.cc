@@ -123,6 +123,21 @@ int AttributeSet::inherit(const AttributeSet&other){
             inheritedCount++;
         }
     }
+    if(other.parser && (parser==nullptr) ){
+        const int count = other.size();
+        for(int i =0 ;i <count;i++){
+            std::string key,value;
+            other.parser->getAttribute(i,key,value);
+            auto it = mAttrs.find(key);
+            if(it==mAttrs.end()){
+                if(isSamePackage)
+                    mAttrs.insert({key,value});
+                else
+                    mAttrs.insert({key,normalize(other.mPackage,value)});
+                inheritedCount++;
+            }
+        }
+    }
     return inheritedCount;
 }
 
