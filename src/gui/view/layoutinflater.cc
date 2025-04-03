@@ -72,7 +72,7 @@ View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root){
 View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root, bool attachToRoot){
     int type;
     View*result = root;
-    const AttributeSet attrs(&parser);
+    const AttributeSet& attrs = parser;
     while(((type=parser.next())!=XmlPullParser::START_TAG)
             &&(type!=XmlPullParser::END_DOCUMENT)){
         //Empty
@@ -184,11 +184,11 @@ void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* cont
             parseViewTag(parser, parent, attrs);
         } else if (name.compare(TAG_INCLUDE)==0) {
             if (parser.getDepth() == 0) {
-                throw std::logic_error("<include /> cannot be the root element");
+                throw std::logic_error("<include/> cannot be the root element");
             }
             parseInclude(parser, context, parent, attrs);
         } else if (name.compare(TAG_MERGE)==0) {
-            throw std::logic_error("<merge /> must be the root element");
+            throw std::logic_error("<merge/> must be the root element");
         } else {
             View* view = createViewFromTag(parent, name, context, attrs,false);
             ViewGroup* viewGroup = (ViewGroup*) parent;
@@ -227,9 +227,8 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         const std::string layout = attrs.getString("layout");
         if (layout.empty()) {
             throw std::logic_error("You must specify a layout in the include tag: <include layout=\"@layout/layoutID\" />");
-            // Attempt to resolve the "?attr/name" string to an attribute
-            // within the default (e.g. application) package.
-            //layout = context.getResources().getIdentifier(value.substring(1), "attr", context.getPackageName());
+            // Attempt to resolve the "?attr/name" string to an attribute within the default (e.g. application) package.
+            // layout = context.getResources().getIdentifier(value.substring(1), "attr", context.getPackageName());
         }
         int type;
         XmlPullParser childParser(context,layout);
@@ -244,7 +243,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         }
 
         const std::string childName = childParser.getName();
-        const AttributeSet childAttrs(&childParser);
+        const AttributeSet& childAttrs = childParser;
 
         if (childName.compare(TAG_MERGE)==0){
             // The <merge> tag doesn't support android:theme, so nothing special to do here.

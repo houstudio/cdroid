@@ -100,7 +100,7 @@ static std::string getTrimedValue(XmlPullParser&parser){
 int Assets::loadKeyValues(const std::string&package,const std::string&resid,void*params){
     XmlPullParser parser(this,resid);
     int type,depth;
-    AttributeSet attrs(&parser);
+    const AttributeSet& attrs=(AttributeSet&)parser;
     PENDINGRESOURCE*pending=(PENDINGRESOURCE*)params;
     while((type=parser.next())!=XmlPullParser::END_DOCUMENT){
         const std::string tag = parser.getName();
@@ -253,7 +253,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     const size_t preloadCount = mColors.size()+mDimensions.size()+mStateColors.size()+mArraies.size()+mStyles.size()+mStrings.size();
     LOGI("[%s] load %d assets from %d files [%d id,%d colors,%d stateColors, %d array,%d style,%d string,%d dimens] mTheme.size=%d used %dms",
          package.c_str(),preloadCount,count, mIDS.size(),mColors.size(),mStateColors.size(),mArraies.size(), mStyles.size(),
-         mStrings.size(),mDimensions.size(),mTheme.size(),int(SystemClock::uptimeMillis()-sttm));
+         mStrings.size(),mDimensions.size(),mTheme.getAttributeCount(),int(SystemClock::uptimeMillis()-sttm));
     return pak?0:-1;
 }
 

@@ -32,7 +32,7 @@ void AudioManager::loadSoundEffects(){
     if(!(*parser)) parser = std::make_unique<XmlPullParser>(mContext,"@cdroid:xml/audio_assets");
     int type;
     std::unordered_map<std::string,std::string> sounds;
-    AttributeSet attrs(parser.get());
+    const AttributeSet& attrs =(*parser);
     while(((type= parser->next())!=XmlPullParser::END_DOCUMENT)){
         if(type!=XmlPullParser::START_TAG)continue;
         std::string tagName = parser->getName();

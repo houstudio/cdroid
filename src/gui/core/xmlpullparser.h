@@ -5,7 +5,7 @@
 #include <memory>
 #include <core/attributeset.h>
 namespace cdroid{
-class XmlPullParser {
+class XmlPullParser:public AttributeSet{
 public:
     enum EventType {
         BAD_DOCUMENT,
@@ -26,8 +26,6 @@ public:
     XmlPullParser(Context*ctx,const std::string&resid);
     XmlPullParser(Context*,std::unique_ptr<std::istream>);
     ~XmlPullParser();
-    Context*getContext()const;
-    std::string getPackage()const;
     int getDepth()const;
     std::string getName()const;
     std::string getText()const;
@@ -36,10 +34,6 @@ public:
     int getLineNumber()const;
     int getColumnNumber()const;
     int next();
-    int getAttributeCount()const;
-    std::string getAttributeValue(const std::string&key);
-    bool getAttribute(int idx,std::string&key,std::string&value)const;
-    bool hasAttribute(const std::string&key)const;
     operator bool()const;
 };
 }
