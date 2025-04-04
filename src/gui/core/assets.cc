@@ -123,12 +123,12 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
             const std::string dimenRes = AttributeSet::normalize(package,value);
             auto itc = mDimensions.find(dimenRes);
             if(value.find("/")==std::string::npos){
-                int v = std::strtol(value.c_str(),nullptr,10);
-                const char* p = strpbrk(value.c_str(),"sdp");
-                if(p){
+                char*endP;
+                int v = std::strtol(value.c_str(),&endP,10);
+                if(*endP){
                     const DisplayMetrics& dm = getDisplayMetrics();
-                    if(strncmp(p,"sp",2)==0) v = int(dm.scaledDensity * v /*+0.5f*/);
-                    else if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)v =int(dm.density * v /*+0.5f*/);
+                    if(*endP=='s'/*sp*/) v = int(dm.scaledDensity * v /*+0.5f*/);
+                    else if(*endP=='d'/*dp dip*/)v =int(dm.density * v /*+0.5f*/);
                 }
                 if(tag.compare("bool")==0){
                     v = value[0]=='t'?true:false;
