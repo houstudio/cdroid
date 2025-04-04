@@ -52,6 +52,7 @@ MarginLayoutParams::MarginLayoutParams(Context*c,const AttributeSet& attrs)
     mMarginFlags = 0;
     if(margin>=0){
         leftMargin = topMargin = rightMargin = bottomMargin = margin;
+        startMargin= endMargin = DEFAULT_MARGIN_RELATIVE;
     }else{
         int horizontalMargin = attrs.getDimensionPixelSize("layout_marginHorizontal",-1);
         int verticalMargin = attrs.getDimensionPixelSize("layout_marginVertical",-1);

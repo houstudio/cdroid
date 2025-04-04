@@ -22,7 +22,7 @@ StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,cons
     auto it = mStateAnimatorMap.find(resid);
     if(it==mStateAnimatorMap.end()){
         XmlPullParser parser(context,resid);
-        const AttributeSet attrs(&parser);
+        const AttributeSet& attrs = parser;
         StateListAnimator*anim =createStateListAnimatorFromXml(context,parser,attrs);
         it = mStateAnimatorMap.insert({resid,std::shared_ptr<StateListAnimator>(anim)}).first;
     }
@@ -69,7 +69,7 @@ StateListAnimator* AnimatorInflater::loadStateListAnimator(Context* context,cons
 }
 #endif
 Animator* AnimatorInflater::createAnimatorFromXml(Context*context,XmlPullParser& parser,float pixelSize){
-    const AttributeSet attrs(&parser);
+    const AttributeSet& attrs = parser;
     return createAnimatorFromXml(context,parser, attrs, nullptr, 0,pixelSize);
 }
 

@@ -342,7 +342,7 @@ void Keyboard::loadKeyboard(Context*context, XmlPullParser& parser){
     Key* key = nullptr;
     Row* currentRow = nullptr;
     bool skipRow = false;
-    AttributeSet attrs(&parser);
+    const AttributeSet& attrs = parser;
     while ((eventType = parser.next()) != XmlPullParser::END_DOCUMENT) {
         if (eventType == XmlPullParser::START_TAG) {
             std::string tag = parser.getName();

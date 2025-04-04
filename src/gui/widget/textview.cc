@@ -682,7 +682,7 @@ void TextView::setTextAppearance(const std::string&appearance){
     TextAppearanceAttributes attributes;
     if(appearance.empty()==false){
         AttributeSet attrs = mContext->obtainStyledAttributes(appearance);
-        if(attrs.size()){
+        if(attrs.getAttributeCount()){
             attributes.readTextAppearance(mContext,attrs);
             applyTextAppearance(&attributes);
         }

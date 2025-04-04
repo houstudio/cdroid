@@ -40,6 +40,8 @@ AnimatorSet::AnimatorSet(const AnimatorSet&other){
     mSelfPulse = true;
     mStartListenersCalled = false;
     mReversing = false;
+    mShouldResetValuesAtStart=other.mShouldResetValuesAtStart;
+    mShouldIgnoreEndWithoutStart = other.mShouldIgnoreEndWithoutStart;
     mDependencyDirty = true;
 
     mDummyListener.onAnimationEnd=[this](Animator&animation,bool isReverse){

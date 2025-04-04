@@ -2,19 +2,9 @@
 #include <view/viewgroup.h>
 #include <view/layoutinflater.h>
 #include <porting/cdlog.h>
-#include <expat.h>
 #include <string.h>
 #include <fstream>
 #include <iomanip>
-
-#if defined(__linux__)||defined(__unix__)
-  #include <unistd.h>
-#elif defined(_WIN32)||defined(_WIN64)
-  #include <direct.h>
-  #ifndef PATH_MAX
-  #define PATH_MAX _MAX_PATH
-  #endif
-#endif
 
 namespace cdroid {
 
@@ -63,7 +53,7 @@ bool LayoutInflater::registerInflater(const std::string&name,const std::string&d
     LayoutInflater::STYLEMAPPER& smap = getStyleMap();
     auto flaterIter = maps.find(name);
     auto styleIter = smap.find(name);
-#if 1
+
     /*disable widget inflater's hack*/
     if(flaterIter!=maps.end() ){
         LOGW("%s is registed to %p",name.c_str(),flaterIter->second);
@@ -71,169 +61,9 @@ bool LayoutInflater::registerInflater(const std::string&name,const std::string&d
     }
     maps.insert(INFLATERMAPPER::value_type(name,inflater));
     smap.insert(std::pair<const std::string,const std::string>(name,defstyle));
-#else
-    if(flaterIter!=maps.end() ){
-        flaterIter->second = inflater;
-        LOGI("%s is hacked to %p",name.c_str(),flaterIter->second);
-    }else{
-        maps.insert(INFLATERMAPPER::value_type(name,inflater));
-    }
-    if(styleIter!=smap.end())
-        styleIter->second = defstyle;
-    else
-        smap.insert(std::pair<const std::string,const std::string>(name,defstyle));
-#endif
     return true;
 }
-#ifndef NEW_LAYOUT_INFLATER
-View* LayoutInflater::inflate(const std::string&resource,ViewGroup*root,bool attachToRoot,AttributeSet*atts) {
-    View*v = nullptr;
-    const int64_t tstart = SystemClock::uptimeMillis();
-    if(mContext) {
-        std::string package;
-        std::unique_ptr<std::istream>stream = mContext->getInputStream(resource,&package);
-        LOGV("inflate from %s",resource.c_str());
-        if(stream && stream->good()) {
-            v = inflate(package,*stream,root,attachToRoot && (root!=nullptr),atts);
-        } else {
-            char cwdpath[PATH_MAX]="your work directory";
-            char* result = getcwd(cwdpath,PATH_MAX);
-            LOGE("faild to load resource %s [%s.pak] must be copied to [%s]",resource.c_str(),package.c_str(),result);
-        }
-    } else {
-        std::ifstream fin(resource);
-        v=inflate(resource,fin,root,root!=nullptr,nullptr);
-    }
-    const long tmused = long(SystemClock::uptimeMillis() - tstart);
-    LOGI_IF(tmused>=8,"%s inflater used %ldms",resource.c_str(),tmused);
-    return v;
-}
 
-typedef struct {
-    Context*ctx;
-    std::string package;
-    XML_Parser parser;
-    bool attachToRoot;
-    ViewGroup* root;
-    std::vector<View*>views;//the first element is rootview setted by inflate
-    std::vector<int>flags;
-    AttributeSet* atts;
-    View*returnedView;
-    int parsedView;
-    int depth;
-} WindowParserData;
-
-static void startElement(void *userData, const XML_Char *name, const XML_Char **satts) {
-    WindowParserData*pd = (WindowParserData*)userData;
-    AttributeSet atts(pd->ctx,pd->package);
-    LayoutInflater::ViewInflater inflater = LayoutInflater::getInflater(name);
-    ViewGroup*parent = pd->root;
-    atts.set(satts);
-    if(pd->views.size())
-        parent = dynamic_cast<ViewGroup*>(pd->views.back());
-    else if(pd->atts) {
-        pd->atts->inherit(atts);
-    }
-    //std::cout<<std::setw(pd->depth++*2)<<"<"<<name<<">"<<std::endl;
-    if(strcmp(name,"merge")==0) {
-        pd->views.push_back(parent);
-        pd->flags.push_back(1);
-        if(pd->root == nullptr|| !pd->attachToRoot)
-            FATAL("<merge /> can be used only with a valid ViewGroup root(%p) and attachToRoot=true",pd->root);
-        return ;
-    }
-
-    if(strcmp(name,"include")==0) {
-        /**the included layout's root node maybe merge,so we must use attachToRoot =true*/
-        const std::string layout = atts.getString("layout");
-        View* includedView = LayoutInflater::from(pd->ctx)->inflate(layout,parent,true,&atts);
-        if(includedView) { //for merge as rootnode,the includedView will be null.
-            LayoutParams*lp = parent->generateLayoutParams(atts);
-            includedView->setId(pd->ctx->getId(atts.getString("id")));
-            includedView->setLayoutParams(lp);
-        }
-        return;
-    }
-
-    if( inflater == nullptr ) {
-        pd->views.push_back(nullptr);
-        LOGE("Unknown Parser for %s",name);
-        return;
-    }
-
-    std::string stname = atts.getString("style");
-    if(!stname.empty()) {
-        AttributeSet style = pd->ctx->obtainStyledAttributes(stname);
-        atts.inherit(style);
-    }
-    stname = LayoutInflater::from(pd->ctx)->getDefaultStyle(name);
-    if(!stname.empty()) {
-        AttributeSet defstyle = pd->ctx->obtainStyledAttributes(stname);
-        atts.inherit(defstyle);
-    }
-
-    View*v = inflater(pd->ctx,atts);
-    pd->parsedView++;
-    pd->flags.push_back(0);
-    pd->views.push_back(v);
-    LOG(VERBOSE)<<std::setw(pd->views.size()*8)<<v<<":"<<v->getId()<<"["<<name<<"]"<<stname;
-    if( ( parent && ( parent != pd->root )) || ( pd->attachToRoot && pd->root ) ) {
-        LayoutParams*lp = parent->generateLayoutParams(atts);
-        parent->addView(v,lp);
-    } else if (dynamic_cast<ViewGroup*>(v)) {
-        LayoutParams*lp = ((ViewGroup*)v)->generateLayoutParams(atts);
-        v->setLayoutParams(lp);
-    } else if(pd->root){
-        LayoutParams*lp = pd->root->generateLayoutParams(atts);
-        v->setLayoutParams(lp);
-    }
-}
-static void endElement(void *userData, const XML_Char *name) {
-    WindowParserData*pd = (WindowParserData*)userData;
-    //std::cout<<std::setw((--pd->depth)*2)<<"<"<<name<<">"<<std::endl;
-    if(strcmp(name,"include")==0) return;
-
-    if((pd->views.size()==1) && (pd->flags.back()==0))
-        pd->returnedView = pd->views.back();
-    pd->flags.pop_back();
-    pd->views.pop_back();
-}
-
-View* LayoutInflater::inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*atts) {
-    size_t len = 0;
-    char buf[256];
-    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
-    WindowParserData pd;
-
-    pd.ctx  = mContext;
-    pd.root = root;
-    pd.package=package;
-    pd.parsedView  = 0;
-    pd.returnedView= nullptr;
-    pd.atts = atts;
-    pd.depth= 0;
-    pd.attachToRoot= attachToRoot;
-    XML_SetUserData(parser,&pd);
-    XML_SetElementHandler(parser, startElement, endElement);
-    do {
-        stream.read(buf,sizeof(buf));
-        len = stream.gcount();
-        if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
-            const char*es = XML_ErrorString(XML_GetErrorCode(parser));
-            LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
-            XML_ParserFree(parser);
-            return nullptr;
-        }
-    } while( len != 0 );
-    XML_ParserFree(parser);
-    if(root && attachToRoot) {
-        //if(pd.returnedView)root->addView(pd.returnedView);already added in startElement
-        root->requestLayout();
-        root->startLayoutAnimation();
-    }
-    return pd.returnedView;
-}
-#else
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root){
     return inflate(parser,root,root!=nullptr);
@@ -242,7 +72,7 @@ View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root){
 View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root, bool attachToRoot){
     int type;
     View*result = root;
-    const AttributeSet attrs(&parser);
+    const AttributeSet& attrs = parser;
     while(((type=parser.next())!=XmlPullParser::START_TAG)
             &&(type!=XmlPullParser::END_DOCUMENT)){
         //Empty
@@ -271,7 +101,6 @@ View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool a
     XmlPullParser parser(mContext,resource);
     return inflate(parser,root,attachToRoot);
 }
-#endif
 
 View* LayoutInflater::createView(const std::string& name, const std::string& prefix,const AttributeSet& attrs){
     return nullptr;
@@ -313,10 +142,10 @@ View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Co
     }
     return view;
 #else
-   std::string styleName = attrs.getString("style");
-   AttributeSet temp;
-   temp=attrs;
-   LayoutInflater::ViewInflater inflater = LayoutInflater::getInflater(name);
+    std::string styleName = attrs.getString("style");
+    AttributeSet temp;
+    temp = attrs;
+    LayoutInflater::ViewInflater inflater = LayoutInflater::getInflater(name);
     if(!styleName.empty()) {
         AttributeSet style = context->obtainStyledAttributes(styleName);
         temp.inherit(style);
@@ -355,11 +184,11 @@ void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* cont
             parseViewTag(parser, parent, attrs);
         } else if (name.compare(TAG_INCLUDE)==0) {
             if (parser.getDepth() == 0) {
-                throw std::logic_error("<include /> cannot be the root element");
+                throw std::logic_error("<include/> cannot be the root element");
             }
             parseInclude(parser, context, parent, attrs);
         } else if (name.compare(TAG_MERGE)==0) {
-            throw std::logic_error("<merge /> must be the root element");
+            throw std::logic_error("<merge/> must be the root element");
         } else {
             View* view = createViewFromTag(parent, name, context, attrs,false);
             ViewGroup* viewGroup = (ViewGroup*) parent;
@@ -398,13 +227,11 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         const std::string layout = attrs.getString("layout");
         if (layout.empty()) {
             throw std::logic_error("You must specify a layout in the include tag: <include layout=\"@layout/layoutID\" />");
-            // Attempt to resolve the "?attr/name" string to an attribute
-            // within the default (e.g. application) package.
-            //layout = context.getResources().getIdentifier(value.substring(1), "attr", context.getPackageName());
+            // Attempt to resolve the "?attr/name" string to an attribute within the default (e.g. application) package.
+            // layout = context.getResources().getIdentifier(value.substring(1), "attr", context.getPackageName());
         }
         int type;
         XmlPullParser childParser(context,layout);
-        LOGD("%s Parser=%p parent(%s)=%p:%X", layout.c_str(),&childParser,parent->getAccessibilityClassName().c_str(),parent,parent->getId());
         while ((type = childParser.next()) != XmlPullParser::START_TAG &&
                 type != XmlPullParser::END_DOCUMENT) {
             // Empty.
@@ -415,7 +242,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         }
 
         const std::string childName = childParser.getName();
-        const AttributeSet childAttrs(&childParser);
+        const AttributeSet& childAttrs = childParser;
 
         if (childName.compare(TAG_MERGE)==0){
             // The <merge> tag doesn't support android:theme, so nothing special to do here.
@@ -423,9 +250,6 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         } else {
             View* view = createViewFromTag(parent, childName,context, childAttrs, hasThemeOverride);
             ViewGroup* group = (ViewGroup*) parent;
-
-            const int id = attrs.getResourceId("id", View::NO_ID);
-            const int visibility = attrs.getInt("visibility", -1);
 
             // We try to load the layout params set in the <include /> tag.
             // If the parent can't generate layout params (ex. missing width
@@ -435,24 +259,14 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // We catch this exception and set localParams accordingly: true
             // means we successfully loaded layout params from the <include>
             // tag, false means we need to rely on the included layout params.
-            ViewGroup::LayoutParams* params = group->generateLayoutParams(attrs);
-            if (params == nullptr) {
-                params = group->generateLayoutParams(childAttrs);
-            }
+            AttributeSet unionedAttrs;
+            unionedAttrs = attrs;
+            unionedAttrs.inherit(childAttrs);
+            ViewGroup::LayoutParams* params = group->generateLayoutParams(unionedAttrs);
             view->setLayoutParams(params);
 
             // Inflate all children.
             rInflateChildren(childParser, view, childAttrs, true);
-
-            if (id != View::NO_ID) {
-                view->setId(id);
-            }
-
-            switch (visibility) {
-            case 0: view->setVisibility(View::VISIBLE);   break;
-            case 1: view->setVisibility(View::INVISIBLE); break;
-            case 2: view->setVisibility(View::GONE);      break;
-            }
             group->addView(view);
         }
     } else {

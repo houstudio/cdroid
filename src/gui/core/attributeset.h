@@ -2,6 +2,7 @@
 #define __ATTRIBUTESET_H__
 #include <string>
 #include <vector>
+#include <memory>
 #include <unordered_map>
 #include <core/displaymetrics.h>
 
@@ -11,23 +12,20 @@ class ColorStateList;
 class Context;
 class XmlPullParser;
 class AttributeSet{
-private:
+protected:
     std::string mPackage;
     Context*mContext;
-    XmlPullParser*parser;
-    std::unordered_map<std::string,std::string>mAttrs;
+    std::shared_ptr<std::unordered_map<std::string,std::string>>mAttrs;
 public:
     AttributeSet();
-    AttributeSet(XmlPullParser*);
     AttributeSet(Context*ctx,const std::string&package);
     Context*getContext()const;
     void setContext(Context*,const std::string&package);
     bool add(const std::string&,const std::string&value);
     bool hasAttribute(const std::string&key)const;
-    size_t size()const;
+    size_t getAttributeCount()const;
     int set(const char*atts[],int size=0);
     static std::string normalize(const std::string&pkg,const std::string&property);
-    std::unordered_map<std::string,std::string>&getEntries();
     int inherit(const AttributeSet&other);
     const std::string getAttributeValue(const std::string&key)const;
     bool getBoolean(const std::string&key,bool def=false)const;
@@ -49,7 +47,6 @@ public:
     Drawable*getDrawable(const std::string&key)const;
     int getArray(const std::string&key,std::vector<std::string>&array)const;
     int getArray(const std::string&key,std::vector<int>&array)const;
-    AttributeSet&operator=(const AttributeSet&);
     void dump()const;
 };
 }

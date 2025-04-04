@@ -41,7 +41,7 @@ ViewConfiguration::ViewConfiguration(Context* context):ViewConfiguration(){
     WindowManager::getInstance().getDefaultDisplay().getMetrics(metrics);
     const float sizeAndDensity = metrics.density;
     atts = context->obtainStyledAttributes(context->getPackageName()+":style/view_Configuration");
-    if(atts.size()==0)
+    if(atts.getAttributeCount()==0)
         atts = context->obtainStyledAttributes("cdroid:style/view_Configuration");
     mEdgeSlop = (int) (sizeAndDensity * EDGE_SLOP + 0.5f);
     mFadingEdgeLength = int(sizeAndDensity*FADING_EDGE_LENGTH + 0.5f);
@@ -53,7 +53,7 @@ ViewConfiguration::ViewConfiguration(Context* context):ViewConfiguration(){
     mOverflingDistance = (int) (sizeAndDensity * OVERFLING_DISTANCE + 0.5f);
     mAmbiguousGestureMultiplier = atts.getFloat("config_ambiguousGestureMultiplier",AMBIGUOUS_GESTURE_MULTIPLIER);
 
-    if(atts.size()){
+    if(atts.getAttributeCount()){
         mIsScreenRound = atts.getBoolean("config_isScreenRound",false);
         mScrollbarSize = atts.getDimensionPixelSize("config_scrollbarSize",mScrollbarSize);
         mFadingMarqueeEnabled = atts.getBoolean("config_ui_enableFadingMarquee",mFadingMarqueeEnabled);
@@ -66,7 +66,7 @@ ViewConfiguration::ViewConfiguration(Context* context):ViewConfiguration(){
 
     mPagingTouchSlop = mTouchSlop * 2;
     mDoubleTapTouchSlop = mTouchSlop;
-    if(atts.size()){
+    if(atts.getAttributeCount()){
         mMinimumFlingVelocity = atts.getDimensionPixelSize("config_viewMinFlingVelocity",mMinimumFlingVelocity);
         mMaximumFlingVelocity = atts.getDimensionPixelSize("config_viewMaxFlingVelocity",mMaximumFlingVelocity);
         mHorizontalScrollFactor = atts.getDimensionPixelSize("config_horizontalScrollFactor",mHorizontalScrollFactor);

@@ -40,7 +40,7 @@ void Preferences::load(const char*buf,size_t len){
 void Preferences::load(std::istream&istream){
     auto strm = std::make_unique<std::istream>(istream.rdbuf());
     XmlPullParser parser(nullptr,std::move(strm));
-    AttributeSet attrs(&parser);
+    const AttributeSet& attrs = parser;
     int type;
     std::string section,key,value;
     while(((type=parser.next())!=XmlPullParser::END_DOCUMENT)&&(type!=XmlPullParser::BAD_DOCUMENT)){

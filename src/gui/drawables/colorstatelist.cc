@@ -140,7 +140,7 @@ ColorStateList* ColorStateList::createFromXmlInner(XmlPullParser& parser,const A
 
 ColorStateList* ColorStateList::createFromXml(XmlPullParser& parser) {
     int type;
-    const AttributeSet attrs(&parser);
+    const AttributeSet& attrs = parser;
     while ((type = parser.next()) != XmlPullParser::START_TAG
                && type != XmlPullParser::END_DOCUMENT) {
         // Seek parser to start tag.
@@ -250,7 +250,7 @@ ColorStateList*ColorStateList::inflate(Context*ctx,const std::string&resname){
     int type;
     ColorStateList *colorStateList = nullptr;
     const int depth = parser.getDepth();
-    AttributeSet atts(&parser);
+    const AttributeSet& atts = parser;
     if(resname.size()&&(resname[0]=='#'||(resname.find("/")!=std::string::npos))){
         const int color = Color::parseColor(resname);
         return new ColorStateList(color);

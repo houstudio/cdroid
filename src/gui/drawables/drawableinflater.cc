@@ -11,7 +11,7 @@ namespace cdroid{
 Drawable* DrawableInflater::loadDrawable(Context* context, const std::string&id) {
     int type;
     XmlPullParser parser(context,id);
-    const AttributeSet attrs(&parser);
+    const AttributeSet& attrs = parser;
     if(!parser)return nullptr;
     while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
         //NOTHING

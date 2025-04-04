@@ -11,8 +11,7 @@ namespace cdroid{
 
 static std::vector<std::string> split(const std::string & path) {
     std::vector<std::string> vec;
-    size_t begin;
-    begin = path.find_first_not_of("|");
+    size_t begin = path.find_first_not_of("|");
     while (begin != std::string::npos) {
         size_t end = path.find_first_of("|", begin);
         vec.push_back(path.substr(begin, end-begin));
@@ -24,36 +23,9 @@ static std::vector<std::string> split(const std::string & path) {
 AttributeSet::AttributeSet():AttributeSet(nullptr,""){
 }
 
-AttributeSet::AttributeSet(XmlPullParser*p){
-    parser = p;
-    mContext =p->getContext();
-    mPackage = parser->getPackage();
-}
 AttributeSet::AttributeSet(Context*ctx,const std::string&package)
     :mContext(ctx),mPackage(package){
-    parser = nullptr;
-}
-
-AttributeSet&AttributeSet::operator=(const AttributeSet&o){
-    if(parser){
-        LOGD("TODO");
-    }else if(o.parser){
-        const int count = o.size();
-        parser = nullptr;
-        mContext=o.mContext;
-        mPackage=o.mPackage;
-        for(int i=0;i<count;i++){
-            std::string  key,value;
-            o.parser->getAttribute(i,key,value);
-            mAttrs.insert({key,normalize(mPackage,value)});
-        }
-    }else if(o.parser==nullptr){
-        parser = o.parser;
-        mContext=o.mContext;
-        mPackage=o.mPackage;
-        mAttrs = o.mAttrs;
-    }
-    return*this;
+    mAttrs = std::make_shared<std::unordered_map<std::string,std::string>>();
 }
 
 Context*AttributeSet::getContext()const{
@@ -97,29 +69,24 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
 
 int AttributeSet::set(const char*atts[],int size){
     int rc = 0;
-    if(parser)return 0;
     for(int i = 0;atts[i]&&(size==0||i<size);i+=2,rc+=1){
         const char* key = strrchr(atts[i],' ');
         if(key) key++;
         else key = atts[i];
-        mAttrs.insert({std::string(key),normalize(mPackage,std::string(atts[i+1]))});
+        mAttrs->insert({std::string(key),normalize(mPackage,std::string(atts[i+1]))});
     }
-    return (int)mAttrs.size();
-}
-
-std::unordered_map<std::string,std::string>&AttributeSet::getEntries(){
-    return mAttrs;
+    return (int)mAttrs->size();
 }
 
 int AttributeSet::inherit(const AttributeSet&other){
     int inheritedCount = 0;
     const bool isSamePackage = (mPackage.compare(other.mPackage)==0);
-    for(auto it = other.mAttrs.begin(); it != other.mAttrs.end() ; it++){
-        if(mAttrs.find(it->first)==mAttrs.end()){
+    for(auto it = other.mAttrs->begin(); it != other.mAttrs->end() ; it++){
+        if(mAttrs->find(it->first)==mAttrs->end()){
             if(isSamePackage)
-                mAttrs.insert({it->first.c_str(),it->second});
+                mAttrs->insert({it->first.c_str(),it->second});
             else
-                mAttrs.insert({it->first,normalize(other.mPackage,it->second)});
+                mAttrs->insert({it->first,normalize(other.mPackage,it->second)});
             inheritedCount++;
         }
     }
@@ -127,34 +94,29 @@ int AttributeSet::inherit(const AttributeSet&other){
 }
 
 bool AttributeSet::add(const std::string&key,const std::string&value){
-    if(parser)return false;
-    auto itr = mAttrs.find(key);
+    auto itr = mAttrs->find(key);
     std::string ks = key;
     size_t pos = ks.find(' ');
     if( pos != std::string::npos )ks = ks.substr(pos+1);
-    if(itr == mAttrs.end())
-        mAttrs.insert({(std::string)ks,normalize(mPackage,value)});
+    if(itr == mAttrs->end())
+        mAttrs->insert({(std::string)ks,normalize(mPackage,value)});
     else
         itr->second = value;
     return true;
 }
 
 bool AttributeSet::hasAttribute(const std::string&key)const{
-    return parser?parser->hasAttribute(key):mAttrs.find(key)!=mAttrs.end();
+    return mAttrs->find(key)!=mAttrs->end();
 }
 
-size_t AttributeSet::size()const{
-    return parser?parser->getAttributeCount():mAttrs.size();
+size_t AttributeSet::getAttributeCount()const{
+    return mAttrs->size();
 }
 
 const std::string AttributeSet::getAttributeValue(const std::string&key)const{
-    if(parser==nullptr){
-        auto it = mAttrs.find(key);
-        if(it != mAttrs.end())
-            return it->second;
-    }else if(parser){
-        return parser->getAttributeValue(key);
-    }
+    auto it = mAttrs->find(key);
+    if(it != mAttrs->end())
+        return it->second;
     return std::string();
 }
 
@@ -264,10 +226,12 @@ float AttributeSet::getFloat(const std::string&key,float def)const{
 }
 
 float AttributeSet::getFraction(const std::string&key,int base,int pbase,float def)const{
+    char*p;
     const std::string v = getAttributeValue(key);
     if(v.empty()) return def;
-    float ret = std::strtof(v.c_str(),nullptr);
-    if( v.find('%') != std::string::npos )ret /= 100.f;
+    float ret = std::strtof(v.c_str(),&p);
+    if(*p=='%')ret /= 100.f;
+    //if( v.find('%') != std::string::npos )ret /= 100.f;
     return ret;
 }
 
@@ -312,21 +276,21 @@ int AttributeSet::getGravity(const std::string&key,int defvalue)const{
 }
 
 int AttributeSet::getDimension(const std::string&key,int def)const{
-    const char*p;
+    char*p;
     const std::string v = getString(key);
     if( v.empty() ) return def;
-    def = std::strtol(v.c_str(),nullptr,10);
-    p   = strpbrk(v.c_str(),"sdp");
+    def = std::strtol(v.c_str(),&p,10);
+    //p   = strpbrk(v.c_str(),"sdp");
     return def;
 }
 
 int AttributeSet::getDimensionPixelSize(const std::string&key,int def)const{
-    const char*p;
+    char *p;
     const std::string v = getString(key);
     if( v.empty() ) return def;
-    def = std::strtol(v.c_str(),nullptr,10);
-    p   = strpbrk(v.c_str(),"sdp");
-    if(p){
+    def = std::strtol(v.c_str(),&p,10);
+    //p = strpbrk(v.c_str(),"sdp");
+    if(*p){
         const DisplayMetrics& dm=mContext->getDisplayMetrics();
         if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)
             def = (dm.density * def /*+0.5f*/);
@@ -362,17 +326,8 @@ Drawable* AttributeSet::getDrawable(const std::string&key)const{
 }
 
 void AttributeSet::dump()const{
-    if(parser==0){
-        for(auto it = mAttrs.begin();it != mAttrs.end();it++){
-           LOGD("%s = %s",it->first.c_str(),it->second.c_str());
-        }
-    }else{
-        const int count = parser->getAttributeCount();
-        for(int i=0;i<count;i++){
-            std::string key,value;
-            parser->getAttribute(i,key,value);
-            LOGD("%s = %s",key.c_str(),value.c_str());
-        }
+    for(auto it = mAttrs->begin();it != mAttrs->end();it++){
+        LOGD("%s = %s",it->first.c_str(),it->second.c_str());
     }
 }
 
