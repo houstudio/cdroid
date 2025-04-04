@@ -19,7 +19,13 @@ struct XmlEvent {
     XmlEvent(XmlPullParser::EventType tp,const std::string&name_):XmlEvent(tp){
        name= name_;
     }
+    void dump();
 };
+void XmlEvent::dump(){
+    for(auto it = atts->begin();it != atts->end();it++){
+        LOGD("%s = %s",it->first.c_str(),it->second.c_str());
+    }
+}
 
 static std::queue <std::unique_ptr<XmlEvent>> eventPool;
 struct Private{
@@ -34,6 +40,7 @@ struct Private{
         std::unique_ptr<XmlEvent> event = eventPool.size() ? std::move(eventPool.front()) : std::make_unique<XmlEvent>();
         event->name = text;
         event->type = type;
+        event->lineNumber = XML_GetCurrentLineNumber(parser);
         if(eventPool.size()) eventPool.pop();
         return event;
     }
@@ -52,14 +59,12 @@ public:
         auto event = data->acquire(START_TAG,name);
         data->mText.clear();
         event->depth = data->depth++;
-        event->lineNumber = XML_GetCurrentLineNumber(data->parser);
         for(int i = 0;attrs[i];i+=2){
             const char* key = strrchr(attrs[i],' ');
             if(key) key++;
             else key = attrs[i];
             event->atts->insert({std::string(key),AttributeSet::normalize(parser->mPackage,std::string(attrs[i+1]))});
         }
-
         data->eventQueue.push(std::move(event));
     }
     static void endElementHandler(void* userData, const XML_Char* name){
@@ -68,14 +73,11 @@ public:
         const int depth = --data->depth;
         if(!data->mText.empty()){
             auto te = data->acquire(TEXT);
-            te->lineNumber = XML_GetCurrentLineNumber(data->parser);
             te->depth= depth;
             te->text = data->mText;
             data->eventQueue.push(std::move(te));
         }
         event->depth= depth;
-        event->text = data->mText;
-        event->lineNumber = XML_GetCurrentLineNumber(data->parser);
         data->eventQueue.push(std::move(event));
     }
     static void characterDataHandler(void* userData, const XML_Char* s, int len){

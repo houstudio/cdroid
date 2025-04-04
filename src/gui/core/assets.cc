@@ -91,8 +91,13 @@ typedef struct{
 }PENDINGRESOURCE;
 
 static std::string getTrimedValue(XmlPullParser&parser){
-    while(parser.next()!=XmlPullParser::END_TAG){}
-    std::string value = parser.getText();
+    std::string value;
+    int type;
+    while((type=parser.next())!=XmlPullParser::END_TAG){
+        if(type==XmlPullParser::TEXT){
+            value = parser.getText();
+        }
+    }
     TextUtils::trim(value);
     return value;
 }
