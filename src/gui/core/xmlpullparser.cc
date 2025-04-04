@@ -71,18 +71,15 @@ public:
         Private*data =((XmlPullParser*)userData)->mData;
         auto event = data->acquire(END_TAG,name);
         const int depth = --data->depth;
-        if(!data->mText.empty()){
-            auto te = data->acquire(TEXT);
-            te->depth= depth;
-            te->text = data->mText;
-            data->eventQueue.push(std::move(te));
-        }
         event->depth= depth;
         data->eventQueue.push(std::move(event));
     }
     static void characterDataHandler(void* userData, const XML_Char* s, int len){
         Private*data = ((XmlPullParser*)userData)->mData;
-        data->mText.append(s,len);
+        auto event = data->acquire(TEXT,"");
+        event->text.append(s,len);
+        event->depth = data->depth;
+        data->eventQueue.push(std::move(event));
     }
 };
 

@@ -91,11 +91,11 @@ typedef struct{
 }PENDINGRESOURCE;
 
 static std::string getTrimedValue(XmlPullParser&parser){
-    std::string value;
     int type;
+    std::string value;
     while((type=parser.next())!=XmlPullParser::END_TAG){
         if(type==XmlPullParser::TEXT){
-            value = parser.getText();
+            value.append(parser.getText());
         }
     }
     TextUtils::trim(value);
@@ -103,12 +103,15 @@ static std::string getTrimedValue(XmlPullParser&parser){
 }
 
 int Assets::loadKeyValues(const std::string&package,const std::string&resid,void*params){
-    XmlPullParser parser(this,resid);
     int type,depth;
+    XmlPullParser parser(this,resid);
     const AttributeSet& attrs=(AttributeSet&)parser;
     PENDINGRESOURCE*pending=(PENDINGRESOURCE*)params;
+    std::vector<std::string>tagStack;
     while((type=parser.next())!=XmlPullParser::END_DOCUMENT){
         const std::string tag = parser.getName();
+        if(type ==XmlPullParser::START_TAG)tagStack.push_back(tag);
+        else if(type==XmlPullParser::END_TAG)tagStack.pop_back();
         if(type!=XmlPullParser::START_TAG)continue;
         if(tag.compare("id")==0){
             std::string key = package +":id/"+attrs.getString("name");
@@ -166,7 +169,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                     mDimensions.insert({resUri,v});
                 }
             }else if(type.compare("id")){
-                LOGD("CANT REACHED---------%s %s",type.c_str(),attrs.getString("name").c_str());
+                LOGD("CANT REACHED---------%s depth=%d %s",type.c_str(),parser.getDepth(),attrs.getString("name").c_str());
             }
         }else if(tag.compare("selector")==0){//for colorstatelist
             std::string key = attrs.getString("name");
