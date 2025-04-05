@@ -9,6 +9,7 @@ struct XmlEvent {
     XmlPullParser::EventType type;
     int depth;
     int lineNumber;
+    int columnNumber;
     std::string name;
     std::string text;
     std::shared_ptr<std::unordered_map<std::string,std::string>>atts;
@@ -59,6 +60,7 @@ struct Private{
         event->atts->clear();
         event->text.clear();
         event->lineNumber = XML_GetCurrentLineNumber(parser);
+        event->columnNumber=XML_GetCurrentColumnNumber(parser);
         eventPool.pop();
         return event;
     }
@@ -168,7 +170,7 @@ int XmlPullParser::getLineNumber()const{
 }
 
 int XmlPullParser::getColumnNumber()const{
-    return 0;
+    return mData->eventQueue.front()->columnNumber;
 }
 
 std::string XmlPullParser::getName()const{
