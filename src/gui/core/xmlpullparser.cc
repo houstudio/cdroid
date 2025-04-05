@@ -19,9 +19,14 @@ struct XmlEvent {
     XmlEvent(XmlPullParser::EventType tp,const std::string&name_):XmlEvent(tp){
        name= name_;
     }
+    void dump();
 };
+void XmlEvent::dump(){
+    for(auto it = atts->begin();it != atts->end();it++){
+        LOGD("%s = %s",it->first.c_str(),it->second.c_str());
+    }
+}
 
-static std::queue <std::unique_ptr<XmlEvent>> eventPool;
 struct Private{
     XML_Parser parser;
     int depth;
@@ -29,18 +34,38 @@ struct Private{
     std::string mText;
     std::array <char,512> buffer;
     std::unique_ptr <std::istream> stream;
-    std::queue <std::unique_ptr<XmlEvent>> eventQueue;
-    std::unique_ptr<XmlEvent>acquire(XmlPullParser::EventType type,const std::string&text = std::string()){
-        std::unique_ptr<XmlEvent> event = eventPool.size() ? std::move(eventPool.front()) : std::make_unique<XmlEvent>();
+    std::queue <XmlEvent*> eventQueue;
+    std::queue <XmlEvent*> eventPool;
+    ~Private(){
+	std::string unused;
+	const size_t qs=eventQueue.size();
+	const size_t ps=eventPool.size();
+	while(eventQueue.size()){
+	    unused+=eventQueue.front()->name+",";
+	    delete eventQueue.front();
+	    eventQueue.pop();
+	}
+        //LOGD("delere Private %d,%d %s unused=%s",qs,ps,resourceId.c_str(),unused.c_str());
+	while(eventPool.size()){
+	    delete eventPool.front();
+	    eventPool.pop();
+	}
+    }
+    XmlEvent*acquire(XmlPullParser::EventType type,const std::string&text = std::string()){
+        if(eventPool.size()==0) eventPool.push(new XmlEvent());
+	auto event  = eventPool.front();
         event->name = text;
         event->type = type;
-        if(eventPool.size()) eventPool.pop();
+        event->lineNumber = XML_GetCurrentLineNumber(parser);
+        eventPool.pop();
         return event;
     }
-    void release(std::unique_ptr<XmlEvent>event){
+    void release(XmlEvent*event){
+        delete event;return;
         event->atts->clear();
+	event->name.clear();
         event->text.clear();
-        eventPool.push(std::move(event));
+        eventPool.push(event);
     }
 };
 
@@ -52,35 +77,27 @@ public:
         auto event = data->acquire(START_TAG,name);
         data->mText.clear();
         event->depth = data->depth++;
-        event->lineNumber = XML_GetCurrentLineNumber(data->parser);
         for(int i = 0;attrs[i];i+=2){
             const char* key = strrchr(attrs[i],' ');
             if(key) key++;
             else key = attrs[i];
             event->atts->insert({std::string(key),AttributeSet::normalize(parser->mPackage,std::string(attrs[i+1]))});
         }
-
-        data->eventQueue.push(std::move(event));
+        data->eventQueue.push(event);
     }
     static void endElementHandler(void* userData, const XML_Char* name){
         Private*data =((XmlPullParser*)userData)->mData;
         auto event = data->acquire(END_TAG,name);
         const int depth = --data->depth;
-        if(!data->mText.empty()){
-            auto te = data->acquire(TEXT);
-            te->lineNumber = XML_GetCurrentLineNumber(data->parser);
-            te->depth= depth;
-            te->text = data->mText;
-            data->eventQueue.push(std::move(te));
-        }
         event->depth= depth;
-        event->text = data->mText;
-        event->lineNumber = XML_GetCurrentLineNumber(data->parser);
-        data->eventQueue.push(std::move(event));
+        data->eventQueue.push(event);
     }
     static void characterDataHandler(void* userData, const XML_Char* s, int len){
         Private*data = ((XmlPullParser*)userData)->mData;
-        data->mText.append(s,len);
+        auto event = data->acquire(TEXT,"");
+        event->text.append(s,len);
+        event->depth = data->depth;
+        data->eventQueue.push(event);
     }
 };
 
@@ -100,7 +117,7 @@ XmlPullParser::XmlPullParser(const std::string&content):XmlPullParser(){
     event->depth= mData->depth++;
     event->lineNumber = 0;
     mAttrs = event->atts;
-    mData->eventQueue.push(std::move(event));}
+    mData->eventQueue.push(event);}
 
 XmlPullParser::XmlPullParser(Context*ctx,std::unique_ptr<std::istream>strm):XmlPullParser(){
     mContext = ctx;
@@ -109,7 +126,7 @@ XmlPullParser::XmlPullParser(Context*ctx,std::unique_ptr<std::istream>strm):XmlP
     event->depth= mData->depth++;
     event->lineNumber = 0;
     mAttrs = event->atts;
-    mData->eventQueue.push(std::move(event));
+    mData->eventQueue.push(event);
 }
 
 XmlPullParser::XmlPullParser(Context*ctx,const std::string&resid):XmlPullParser(){
@@ -128,7 +145,7 @@ XmlPullParser::XmlPullParser(Context*ctx,const std::string&resid):XmlPullParser(
     event->depth= mData->depth++;
     event->lineNumber = 0;
     mAttrs = event->atts;
-    mData->eventQueue.push(std::move(event));
+    mData->eventQueue.push(event);
 }
 
 XmlPullParser::operator bool()const{
@@ -169,7 +186,7 @@ int XmlPullParser::next(){
     if((currentEvent==BAD_DOCUMENT)||(currentEvent==END_DOCUMENT)){
         return currentEvent;
     }
-    mData->release(std::move(mData->eventQueue.front()));
+    mData->release(mData->eventQueue.front());
     mData->eventQueue.pop();
     while(mData->eventQueue.empty()){
         std::streamsize len;
@@ -180,7 +197,7 @@ int XmlPullParser::next(){
             const XML_Error xmlError = XML_GetErrorCode(mData->parser);
             const char*errMsg = XML_ErrorString(xmlError);
             LOGE("%d:%s %s:%s",xmlError,errMsg,mData->resourceId.c_str(),getPositionDescription().c_str());
-            mData->eventQueue.push(std::make_unique<XmlEvent>(BAD_DOCUMENT));
+            mData->eventQueue.push(mData->acquire(BAD_DOCUMENT));
             break;
         }
         if(done){

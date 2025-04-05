@@ -91,19 +91,27 @@ typedef struct{
 }PENDINGRESOURCE;
 
 static std::string getTrimedValue(XmlPullParser&parser){
-    while(parser.next()!=XmlPullParser::END_TAG){}
-    std::string value = parser.getText();
+    int type;
+    std::string value;
+    while((type=parser.next())!=XmlPullParser::END_TAG){
+        if(type==XmlPullParser::TEXT){
+            value.append(parser.getText());
+        }
+    }
     TextUtils::trim(value);
     return value;
 }
 
 int Assets::loadKeyValues(const std::string&package,const std::string&resid,void*params){
-    XmlPullParser parser(this,resid);
     int type,depth;
+    XmlPullParser parser(this,resid);
     const AttributeSet& attrs=(AttributeSet&)parser;
     PENDINGRESOURCE*pending=(PENDINGRESOURCE*)params;
+    std::vector<std::string>tagStack;
     while((type=parser.next())!=XmlPullParser::END_DOCUMENT){
         const std::string tag = parser.getName();
+        if(type ==XmlPullParser::START_TAG)tagStack.push_back(tag);
+        else if(type==XmlPullParser::END_TAG)tagStack.pop_back();
         if(type!=XmlPullParser::START_TAG)continue;
         if(tag.compare("id")==0){
             std::string key = package +":id/"+attrs.getString("name");
@@ -115,12 +123,12 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
             const std::string dimenRes = AttributeSet::normalize(package,value);
             auto itc = mDimensions.find(dimenRes);
             if(value.find("/")==std::string::npos){
-                int v = std::strtol(value.c_str(),nullptr,10);
-                const char* p = strpbrk(value.c_str(),"sdp");
-                if(p){
+                char*endP;
+                int v = std::strtol(value.c_str(),&endP,10);
+                if(*endP){
                     const DisplayMetrics& dm = getDisplayMetrics();
-                    if(strncmp(p,"sp",2)==0) v = int(dm.scaledDensity * v /*+0.5f*/);
-                    else if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)v =int(dm.density * v /*+0.5f*/);
+                    if(*endP=='s'/*sp*/) v = int(dm.scaledDensity * v /*+0.5f*/);
+                    else if(*endP=='d'/*dp dip*/)v =int(dm.density * v /*+0.5f*/);
                 }
                 if(tag.compare("bool")==0){
                     v = value[0]=='t'?true:false;
@@ -161,7 +169,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                     mDimensions.insert({resUri,v});
                 }
             }else if(type.compare("id")){
-                LOGD("CANT REACHED---------%s %s",type.c_str(),attrs.getString("name").c_str());
+                LOGD("CANT REACHED---------%s depth=%d %s",type.c_str(),parser.getDepth(),attrs.getString("name").c_str());
             }
         }else if(tag.compare("selector")==0){//for colorstatelist
             std::string key = attrs.getString("name");
