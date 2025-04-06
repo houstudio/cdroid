@@ -9,6 +9,7 @@ struct XmlEvent {
     XmlPullParser::EventType type;
     int depth;
     int lineNumber;
+    int columnNumber;
     std::string name;
     std::string text;
     std::shared_ptr<std::unordered_map<std::string,std::string>>atts;
@@ -37,34 +38,33 @@ struct Private{
     std::queue <XmlEvent*> eventQueue;
     std::queue <XmlEvent*> eventPool;
     ~Private(){
-	std::string unused;
-	const size_t qs=eventQueue.size();
-	const size_t ps=eventPool.size();
-	while(eventQueue.size()){
-	    unused+=eventQueue.front()->name+",";
-	    delete eventQueue.front();
-	    eventQueue.pop();
-	}
+        std::string unused;
+        const size_t qs=eventQueue.size();
+        const size_t ps=eventPool.size();
+        while(eventQueue.size()){
+            unused+=eventQueue.front()->name+",";
+            delete eventQueue.front();
+            eventQueue.pop();
+        }
         //LOGD("delere Private %d,%d %s unused=%s",qs,ps,resourceId.c_str(),unused.c_str());
-	while(eventPool.size()){
-	    delete eventPool.front();
-	    eventPool.pop();
-	}
+        while(eventPool.size()){
+            delete eventPool.front();
+            eventPool.pop();
+        }
     }
     XmlEvent*acquire(XmlPullParser::EventType type,const std::string&text = std::string()){
         if(eventPool.size()==0) eventPool.push(new XmlEvent());
-	auto event  = eventPool.front();
+        auto event  = eventPool.front();
         event->name = text;
         event->type = type;
+        event->atts->clear();
+        event->text.clear();
         event->lineNumber = XML_GetCurrentLineNumber(parser);
+        event->columnNumber=XML_GetCurrentColumnNumber(parser);
         eventPool.pop();
         return event;
     }
     void release(XmlEvent*event){
-        delete event;return;
-        event->atts->clear();
-	event->name.clear();
-        event->text.clear();
         eventPool.push(event);
     }
 };
@@ -170,7 +170,7 @@ int XmlPullParser::getLineNumber()const{
 }
 
 int XmlPullParser::getColumnNumber()const{
-    return 0;
+    return mData->eventQueue.front()->columnNumber;
 }
 
 std::string XmlPullParser::getName()const{

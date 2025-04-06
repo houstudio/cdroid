@@ -608,12 +608,14 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
             name.erase(pos,1);
         pos = name.find("attr");
     }
+    name = parseResource(name,nullptr,&pkg);
     auto it = mStyles.find(name);
-    if(it != mStyles.end())atts = it->second;
-    const std::string parent = atts.getString("parent");
-    parseResource(name,nullptr,&pkg);
-    atts.setContext(this,pkg);
+    if(it != mStyles.end()){
+        atts = it->second;
+    }
+    std::string parent = atts.getString("parent");
     if(parent.length()) {
+        parent = parseResource(parent,nullptr,&pkg);
         AttributeSet parentAtts = obtainStyledAttributes(parent);
         atts.inherit(parentAtts);
     }
