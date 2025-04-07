@@ -88,16 +88,28 @@ View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root, bool attach
         if(root!=nullptr){
             params =root->generateLayoutParams(attrs);
             if(!attachToRoot)temp->setLayoutParams(params);
+        }else if(dynamic_cast<ViewGroup*>(temp)){
+            params =((ViewGroup*)temp)->generateLayoutParams(attrs);
+            temp->setLayoutParams(params);
         }
         rInflateChildren(parser,temp,attrs,true);
-        if((root!=nullptr)&&attachToRoot) root->addView(temp,params);
+        if((root!=nullptr)&&attachToRoot){
+            root->addView(temp,params);
+            root->requestLayout();
+            root->startLayoutAnimation();
+        }
         //if((root==nullptr)||(attachToRoot==false)) result = temp;
+
         return temp;
     }
     return result;
 }
 
-View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool attachToRoot,AttributeSet*atts){
+View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root){
+    return inflate(resource,root,root!=nullptr);
+}
+
+View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool attachToRoot){
     XmlPullParser parser(mContext,resource);
     return inflate(parser,root,attachToRoot);
 }

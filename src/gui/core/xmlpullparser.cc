@@ -38,15 +38,10 @@ struct Private{
     std::queue <XmlEvent*> eventQueue;
     std::queue <XmlEvent*> eventPool;
     ~Private(){
-        std::string unused;
-        const size_t qs=eventQueue.size();
-        const size_t ps=eventPool.size();
         while(eventQueue.size()){
-            unused+=eventQueue.front()->name+",";
             delete eventQueue.front();
             eventQueue.pop();
         }
-        //LOGD("delere Private %d,%d %s unused=%s",qs,ps,resourceId.c_str(),unused.c_str());
         while(eventPool.size()){
             delete eventPool.front();
             eventPool.pop();

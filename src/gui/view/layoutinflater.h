@@ -60,7 +60,8 @@ public:
       *         In cdroid ,we allways return  the root of the inflated XML file.
       */
     View* inflate(XmlPullParser& parser,ViewGroup* root, bool attachToRoot);
-    View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot=true,AttributeSet*atts=nullptr);
+    View* inflate(const std::string&resource,ViewGroup* root);
+    View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot);
 };
 
 template<typename T>
