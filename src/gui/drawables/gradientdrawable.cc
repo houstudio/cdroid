@@ -1059,7 +1059,7 @@ void GradientDrawable::draw(Canvas&canvas) {
         }else if(st->mRadius>0.0f){
             rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
             if(st->mRadiusArray.size())radii = st->mRadiusArray;
-            if(st->mRadius > 0.0f)radii = {rad,rad,rad,rad};
+            if(st->mRadius > 0.0f)radii.assign(8,rad);
             if(radii.size())
                 drawRoundedRect(canvas,mRect,radii[0],radii[1],radii[2],radii[3]);
             else
@@ -1077,8 +1077,7 @@ void GradientDrawable::draw(Canvas&canvas) {
         break;
     case OVAL:
         rad = mRect.height/2.f;
-        canvas.scale(float(mRect.width)/mRect.height,1.f);
-        LOGV("%p size=%.fx%.f radius=%f strokewidth=%d",this,mRect.width,mRect.height,(float)st->mRadius,st->mStrokeWidth);
+        canvas.scale(double(mRect.width)/mRect.height,1.f);
         canvas.begin_new_sub_path();
         canvas.arc(mRect.centerX(),mRect.centerY(),rad,0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
         break;
