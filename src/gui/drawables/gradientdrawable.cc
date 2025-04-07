@@ -1056,8 +1056,6 @@ void GradientDrawable::draw(Canvas&canvas) {
         if(st->mRadiusArray.size()){
             buildPathIfDirty();
             mPath->append_to_context(&canvas);
-            //if(haveStroke) canvas.fill_preserve(); else canvas.fill();
-            //if(haveStroke) canvas.stroke();
         }else if(st->mRadius>0.0f){
             rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
             if(st->mRadiusArray.size())radii = st->mRadiusArray;
@@ -1066,8 +1064,6 @@ void GradientDrawable::draw(Canvas&canvas) {
                 drawRoundedRect(canvas,mRect,radii[0],radii[1],radii[2],radii[3]);
             else
                 canvas.rectangle(int(mRect.left),int(mRect.top),int(mRect.width),int(mRect.height));
-            //if(haveStroke) canvas.fill_preserve();else canvas.fill();
-            //if(haveStroke) canvas.stroke();
         }
         break;
     case LINE:
@@ -1086,32 +1082,36 @@ void GradientDrawable::draw(Canvas&canvas) {
         canvas.begin_new_sub_path();
         canvas.arc(mRect.centerX(),mRect.centerY(),rad,0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
         break;
-    case RING: {
-        //inner
-        float innerRadius = float(st->mInnerRadius);
-        RectF bounds= {mRect.left,mRect.top,mRect.width,mRect.height};
-        float thickness = st->mThickness!=-1 ? st->mThickness:(bounds.width/st->mThicknessRatio);
-        float radius = st->mInnerRadius!=-1 ? st->mInnerRadius :(bounds.width/st->mInnerRadiusRatio);
-        canvas.scale(bounds.width/bounds.height,1.f);
-        RectF innerBounds = bounds;
-        const float x = bounds.centerX();
-        const float y = bounds.centerY();
-        if(innerRadius<=0.f)
-            innerRadius=std::min(mRect.width,mRect.height)/2.f-thickness;
-        canvas.begin_new_sub_path();
-        if( sweep<360.f && sweep>-360.f ) {
-            const double end_angle = M_PI*2*sweep/360.f;
-            canvas.set_fill_rule(Cairo::Context::FillRule::WINDING);//EVEN_ODD);//WINDING);
-            canvas.move_to(x + radius,y);
-            canvas.arc(x,y,radius + thickness,0.f,end_angle);
-            canvas.arc_negative(x,y,radius,end_angle,0.f);
-            canvas.close_path();
-        } else {
-            //canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
-            canvas.arc(x,y,radius + thickness,0,M_PI*2.f);
+    case RING:
+        if(1){/*new ring with cdroid::Path*/
+            auto path = buildRing(st.get());
+            path->append_to_context(&canvas);
+        }else {/*old ring*/
+            //inner
+            float innerRadius = float(st->mInnerRadius);
+            RectF bounds= {mRect.left,mRect.top,mRect.width,mRect.height};
+            float thickness = st->mThickness!=-1 ? st->mThickness:(bounds.width/st->mThicknessRatio);
+            float radius = st->mInnerRadius!=-1 ? st->mInnerRadius :(bounds.width/st->mInnerRadiusRatio);
+            canvas.scale(bounds.width/bounds.height,1.f);
+            RectF innerBounds = bounds;
+            const float x = bounds.centerX();
+            const float y = bounds.centerY();
+            if(innerRadius<=0.f)
+                innerRadius=std::min(mRect.width,mRect.height)/2.f-thickness;
             canvas.begin_new_sub_path();
-            canvas.arc_negative(x,y,radius,M_PI*2.f,0.f);
-        }
+            if( sweep<360.f && sweep>-360.f ) {
+                const double end_angle = M_PI*2*sweep/360.f;
+                canvas.set_fill_rule(Cairo::Context::FillRule::WINDING);//EVEN_ODD);//WINDING);
+                canvas.move_to(x + radius,y);
+                canvas.arc(x,y,radius + thickness,0.f,end_angle);
+                canvas.arc_negative(x,y,radius,end_angle,0.f);
+                canvas.close_path();
+            } else {
+                //canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
+                canvas.arc(x,y,radius + thickness,0,M_PI*2.f);
+                canvas.begin_new_sub_path();
+                canvas.arc_negative(x,y,radius,M_PI*2.f,0.f);
+            }
         }break;
     }/*endof switch*/
 
