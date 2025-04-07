@@ -1053,13 +1053,22 @@ void GradientDrawable::draw(Canvas&canvas) {
         mFillPaint->set_dither(ditherMode);
     switch (st->mShape) {
     case RECTANGLE:
-        rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
-        if(st->mRadiusArray.size())radii = st->mRadiusArray;
-        if(st->mRadius > 0.0f)radii = {rad,rad,rad,rad};
-        if(radii.size())
-            drawRoundedRect(canvas,mRect,radii[0],radii[1],radii[2],radii[3]);
-        else
-            canvas.rectangle(int(mRect.left),int(mRect.top),int(mRect.width),int(mRect.height));
+        if(st->mRadiusArray.size()){
+            buildPathIfDirty();
+            mPath->append_to_context(&canvas);
+            //if(haveStroke) canvas.fill_preserve(); else canvas.fill();
+            //if(haveStroke) canvas.stroke();
+        }else if(st->mRadius>0.0f){
+            rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
+            if(st->mRadiusArray.size())radii = st->mRadiusArray;
+            if(st->mRadius > 0.0f)radii = {rad,rad,rad,rad};
+            if(radii.size())
+                drawRoundedRect(canvas,mRect,radii[0],radii[1],radii[2],radii[3]);
+            else
+                canvas.rectangle(int(mRect.left),int(mRect.top),int(mRect.width),int(mRect.height));
+            //if(haveStroke) canvas.fill_preserve();else canvas.fill();
+            //if(haveStroke) canvas.stroke();
+        }
         break;
     case LINE:
         if (haveStroke) {
