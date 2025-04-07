@@ -40,7 +40,7 @@ AnimatorSet::AnimatorSet(const AnimatorSet&other){
     mSelfPulse = true;
     mStartListenersCalled = false;
     mReversing = false;
-    mShouldResetValuesAtStart=other.mShouldResetValuesAtStart;
+    mShouldResetValuesAtStart = other.mShouldResetValuesAtStart;
     mShouldIgnoreEndWithoutStart = other.mShouldIgnoreEndWithoutStart;
     mDependencyDirty = true;
 
