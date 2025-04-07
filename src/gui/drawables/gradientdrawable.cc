@@ -1082,7 +1082,7 @@ void GradientDrawable::draw(Canvas&canvas) {
         canvas.arc(mRect.centerX(),mRect.centerY(),rad,0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
         break;
     case RING:
-        if(1){/*new ring with cdroid::Path*/
+        if(0){/*new ring with cdroid::Path*/
             auto path = buildRing(st.get());
             path->append_to_context(&canvas);
         }else {/*old ring*/
