@@ -2,7 +2,7 @@ name: Sync from Gitee
 
 on:
   schedule:
-    - cron: '0 */120 * * *'  # 每 120 小时同步一次（UTC 时间）
+    - cron: '0 */240 * * *'  # 每 120 小时同步一次（UTC 时间）
   workflow_dispatch:  # 允许手动触发
 
 jobs:
@@ -24,6 +24,7 @@ jobs:
           git merge gitee/master --allow-unrelated-histories
           # 推送到 GitHub
           git push origin master
+          git push origin --tags
         env:
           GIT_AUTHOR_NAME: ${{ github.actor }}
           GIT_AUTHOR_EMAIL: ${{ github.actor }}@users.noreply.github.com
