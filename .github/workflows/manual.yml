@@ -18,8 +18,8 @@ jobs:
         run: |
           # 添加 Gitee 远程仓库
           git remote add gitee https://gitee.com/houstudio/Cdroid.git
-          # 从 Gitee 拉取代码
-          git fetch gitee
+          # 从 Gitee 拉取代码和标签
+          git fetch --tags gitee
           # 合并 Gitee 的代码到当前分支
           git merge gitee/master --allow-unrelated-histories
           # 推送到 GitHub
