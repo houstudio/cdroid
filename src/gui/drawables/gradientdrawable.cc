@@ -255,6 +255,7 @@ GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state) {
     mGradientRadius = 0.5f;
     mStrokeWidth =-1;
     mAlpha = 255;
+    mPath = std::make_shared<cdroid::Path>();
     updateLocalState();
 }
 
