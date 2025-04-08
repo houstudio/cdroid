@@ -448,7 +448,7 @@ void ProgressBar::setVisualProgress(int id, float progress){
 }
 
 void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool callBackToApp, bool animate){
-    int range = mMax - mMin;
+    const int range = mMax - mMin;
     const float scale = range > 0 ? (float)(progress - mMin) / (float) range : 0;
     const bool isPrimary = id == R::id::progress;
     LOGV_IF(isPrimary,"setProgress %d->%d animate=%d",id,progress,animate);

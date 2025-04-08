@@ -1,5 +1,9 @@
 #include <ziparchive.h>
 #include <iostreams.h>
+#ifndef _Nullable
+#define _Nullable
+#define _Nonnull
+#endif
 #include <zip.h>
 #include <sys/types.h>
 #include <sys/stat.h>
