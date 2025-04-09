@@ -119,11 +119,8 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
     XmlPullParser parser(this,resid);
     const AttributeSet& attrs=(AttributeSet&)parser;
     PENDINGRESOURCE*pending=(PENDINGRESOURCE*)params;
-    std::vector<std::string>tagStack;
     while((type=parser.next())!=XmlPullParser::END_DOCUMENT){
         const std::string tag = parser.getName();
-        if(type ==XmlPullParser::START_TAG)tagStack.push_back(tag);
-        else if(type==XmlPullParser::END_TAG)tagStack.pop_back();
         if(type!=XmlPullParser::START_TAG)continue;
         if(tag.compare("id")==0){
             std::string key = package +":id/"+attrs.getString("name");

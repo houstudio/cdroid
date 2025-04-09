@@ -40,6 +40,7 @@ public:
     static ViewInflater getInflater(const std::string&);
     static bool registerInflater(const std::string&name,const std::string&,ViewInflater fun);
     const std::string getDefaultStyle(const std::string&name)const;
+    [[deprecated("This function is deprecated")]]
     View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*);
     View* inflate(XmlPullParser& parser,ViewGroup* root);
     /**
