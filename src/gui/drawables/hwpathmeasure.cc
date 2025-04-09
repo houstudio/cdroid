@@ -82,7 +82,6 @@ double PathMeasure::getLength() {
         }
     }
     cairo_path_destroy(m_path);
-    LOGD("length=%f",length);
     return length;
 }
 
