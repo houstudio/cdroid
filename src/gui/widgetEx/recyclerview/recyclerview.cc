@@ -3758,7 +3758,7 @@ void RecyclerView::ViewFlinger::run() {
         if (mRV->mAdapter != nullptr) {
             mRV->mReusableIntPair[0] = 0;
             mRV->mReusableIntPair[1] = 0;
-            mRV->scrollStep(unconsumedX,unconsumedY, mRV->mScrollStepConsumed);
+            mRV->scrollStep(unconsumedX,unconsumedY, mRV->mReusableIntPair);
             consumedX = mRV->mReusableIntPair[0];
             consumedY = mRV->mReusableIntPair[1];
             unconsumedX -= consumedX;

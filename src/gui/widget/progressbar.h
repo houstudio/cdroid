@@ -11,18 +11,6 @@ private:
     static constexpr int MAX_LEVEL = 10000;
     static constexpr int TIMEOUT_SEND_ACCESSIBILITY_EVENT = 200;
     static constexpr int PROGRESS_ANIM_DURATION = 80;
-    class RefreshData{
-    private:
-        static constexpr int POOL_MAX = 24;
-        static Pools::SimplePool<RefreshData>sPool;
-    public:
-        int id;
-        int progress;
-        bool fromUser;
-        bool animate;
-        static RefreshData*obtain(int id, int progress, bool fromUser, bool animate);
-        void recycle();
-    };
     friend class VISUAL_PROGRESS;    
     bool mAttached;
     float mVisualProgress;
@@ -34,7 +22,7 @@ private:
     bool mHasAnimation;
     bool mInDrawing;
     bool mRefreshIsPosted;
-    std::vector<RefreshData*>mRefreshData;
+    std::vector<class RefreshData*>mRefreshData;
     Runnable mRefreshProgressRunnable;
     Runnable mAccessibilityEventSender;
     Animator::AnimatorListener mAnimtorListener;

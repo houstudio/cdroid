@@ -12,7 +12,6 @@ class Assets:public Context{
 private:
     int mNextAutofillViewId;
     std::string mLanguage;
-    std::string mDefault;//default resource
     std::string mThemeName;
     AttributeSet mTheme;
     std::unordered_map<std::string,std::string>mStrings;

@@ -37,24 +37,34 @@ public:
     }
 };
 
-DECLARE_WIDGET(ProgressBar)
-
-Pools::SimplePool<ProgressBar::RefreshData>ProgressBar::RefreshData::sPool(ProgressBar::RefreshData::POOL_MAX);
-ProgressBar::RefreshData* ProgressBar::RefreshData::obtain(int id, int progress, bool fromUser, bool animate) {
-    RefreshData* rd = sPool.acquire();
-    if (rd == nullptr) {
-        rd = new RefreshData();
+class RefreshData{
+private:
+    static constexpr int POOL_MAX = 24;
+    static std::unique_ptr<Pools::SimplePool<RefreshData>>sPool;
+public:
+    int id;
+    int progress;
+    bool fromUser;
+    bool animate;
+    static RefreshData*obtain(int id, int progress, bool fromUser, bool animate){
+        RefreshData* rd = sPool->acquire();
+        if (rd == nullptr) {
+            rd = new RefreshData();
+        }
+        rd->id = id;
+        rd->progress = progress;
+        rd->fromUser = fromUser;
+        rd->animate = animate;
+        return rd;
     }
-    rd->id = id;
-    rd->progress = progress;
-    rd->fromUser = fromUser;
-    rd->animate = animate;
-    return rd;
-}
+    void recycle(){
+        sPool->release(this);
+    }
+};
 
-void ProgressBar::RefreshData::recycle() {
-    sPool.release(this);
-}
+std::unique_ptr<Pools::SimplePool<RefreshData>>RefreshData::sPool=std::make_unique<Pools::SimplePool<RefreshData>>((int)RefreshData::POOL_MAX);
+
+DECLARE_WIDGET(ProgressBar)
 
 ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
@@ -161,6 +171,7 @@ ProgressBar::ProgressBar(int width, int height):View(width,height){
 ProgressBar::~ProgressBar(){
     if(mProgressDrawable)mProgressDrawable->setCallback(nullptr);
     if(mIndeterminateDrawable)mIndeterminateDrawable->setCallback(nullptr);
+    for(auto rd:mRefreshData)rd->recycle();
     delete mProgressDrawable;
     delete mIndeterminateDrawable;
     delete mLastProgressAnimator;
@@ -409,6 +420,7 @@ void ProgressBar::onDetachedFromWindow(){
         removeCallbacks(mAccessibilityEventSender);
     }
     for(auto rd:mRefreshData)rd->recycle();
+    mRefreshData.clear();
     View::onDetachedFromWindow();
     if(mCurrentDrawable)unscheduleDrawable(*mCurrentDrawable);
     if(mProgressDrawable)unscheduleDrawable(*mProgressDrawable);
@@ -436,7 +448,7 @@ void ProgressBar::setVisualProgress(int id, float progress){
 }
 
 void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool callBackToApp, bool animate){
-    int range = mMax - mMin;
+    const int range = mMax - mMin;
     const float scale = range > 0 ? (float)(progress - mMin) / (float) range : 0;
     const bool isPrimary = id == R::id::progress;
     LOGV_IF(isPrimary,"setProgress %d->%d animate=%d",id,progress,animate);
