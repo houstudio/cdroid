@@ -304,7 +304,8 @@ static const std::unordered_map<std::string,int>valueTypes = {
     {"fillAlpha",(int)Property::FLOAT_TYPE},
     {"pathData",(int)Property::PATH_TYPE},
     {"trimPathStart",(int)Property::FLOAT_TYPE},
-    {"trimPathEnd",(int)Property::FLOAT_TYPE}
+    {"trimPathEnd",(int)Property::FLOAT_TYPE},
+    {"trimPathOffset",(int)Property::FLOAT_TYPE}
 };
 
 int AnimatorInflater::inferValueTypeFromPropertyName(const AttributeSet&atts, const std::string& propertyName) {
