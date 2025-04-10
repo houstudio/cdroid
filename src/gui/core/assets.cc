@@ -73,14 +73,26 @@ void Assets::setTheme(const std::string&theme) {
 
 
 static std::string convertXmlToCString(const std::string& xml) {
-    size_t pos;
-    std::string result = xml;
-    while((pos=result.find("\\n"))!=std::string::npos)
-	result.replace(pos,2,"\n");
-    while((pos=result.find("\\'"))!=std::string::npos)
-	result.replace(pos,2,"\'");
-    while((pos=result.find("\\\""))!=std::string::npos)
-        result.replace(pos,2,"\"");
+    static std::unordered_map<std::string, std::string> escapeMap = {
+        {"\\n", "\n"},     {"\\'", "\'"},   {"\\\"", "\""}
+    };
+    std::string result;
+    result.reserve(xml.length());
+
+    for (size_t i = 0; i < xml.length(); ++i) {
+        bool replaced = false;
+        for (const auto& pair : escapeMap) {
+            if (xml.compare(i, pair.first.length(), pair.first) == 0) {
+                result.append(pair.second);
+                i += pair.first.length() - 1;
+                replaced = true;
+                break;
+            }
+        }
+        if (!replaced) {
+            result += xml[i];
+        }
+    }
     return result;
 }
 
@@ -107,11 +119,8 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
     XmlPullParser parser(this,resid);
     const AttributeSet& attrs=(AttributeSet&)parser;
     PENDINGRESOURCE*pending=(PENDINGRESOURCE*)params;
-    std::vector<std::string>tagStack;
     while((type=parser.next())!=XmlPullParser::END_DOCUMENT){
         const std::string tag = parser.getName();
-        if(type ==XmlPullParser::START_TAG)tagStack.push_back(tag);
-        else if(type==XmlPullParser::END_TAG)tagStack.pop_back();
         if(type!=XmlPullParser::START_TAG)continue;
         if(tag.compare("id")==0){
             std::string key = package +":id/"+attrs.getString("name");
@@ -200,7 +209,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 if(pos!=std::string::npos)key=key.substr(pos+1);
                 its->second.add(key,value);
             }
-        }else if((tag.compare("string-array")==0)||(tag.compare("array")==0)||(tag.compare("integer-array")==0)){
+        }else if(tag.find("array")!=std::string::npos){
             const std::string key = package+":array/"+attrs.getString("name");
             std::vector<std::string>array;
             depth = parser.getDepth()+1;

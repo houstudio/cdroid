@@ -65,6 +65,12 @@ bool LayoutInflater::registerInflater(const std::string&name,const std::string&d
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+View* LayoutInflater::inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*){
+    auto strm = std::make_unique<std::istream>(stream.rdbuf());
+    XmlPullParser parser(nullptr,std::move(strm));
+    return inflate(parser,root,attachToRoot);
+}
+
 View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root){
     return inflate(parser,root,root!=nullptr);
 }

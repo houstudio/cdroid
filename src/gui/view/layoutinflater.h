@@ -31,7 +31,8 @@ private:
     void parseViewTag(XmlPullParser&parser, View*parent,const AttributeSet& attrs);
     void parseInclude(XmlPullParser&parser, Context*,View*prent,const AttributeSet& attrs);
 protected:
-    View*createViewFromTag(View* parent,const std::string& name, Context* context,const AttributeSet& attrs,bool ignoreThemeAttr);
+    View* createView(const std::string& name, const std::string& prefix,const AttributeSet& attrs);
+    View* createViewFromTag(View* parent,const std::string& name, Context* context,const AttributeSet& attrs,bool ignoreThemeAttr);
     void rInflateChildren(XmlPullParser& parser, View* parent,const AttributeSet& attrs,bool finishInflate);
     void rInflate(XmlPullParser& parser, View* parent, Context* context,const AttributeSet& attrs, bool finishInflate);
 public:
@@ -39,8 +40,8 @@ public:
     static ViewInflater getInflater(const std::string&);
     static bool registerInflater(const std::string&name,const std::string&,ViewInflater fun);
     const std::string getDefaultStyle(const std::string&name)const;
+    [[deprecated("This function is deprecated")]]
     View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*);
-    View*createView(const std::string& name, const std::string& prefix,const AttributeSet& attrs);
     View* inflate(XmlPullParser& parser,ViewGroup* root);
     /**
       * Inflate a new view hierarchy from the specified xml resource. Throws

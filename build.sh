@@ -15,7 +15,8 @@ TOOLCHAINS["HI3536"]=${TOPDIR}/cmake/hisiv500-toolchain.cmake
 TOOLCHAINS["INGENIC"]=${TOPDIR}/cmake/ingenic-x2600-toolchain.cmake
 TOOLCHAINS["TINAT113"]=${TOPDIR}/cmake/tinat113-toolchain.cmake
 TOOLCHAINS["RK3506"]=${TOPDIR}/cmake/rk3506-toolchain.cmake
-TOOLCHAINS["ANDROID"]=${TOPDIR}/cmake/android.cmake #toolchain.cmake
+#TOOLCHAINS["ANDROID"]=${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake #${TOPDIR}/cmake/android.cmake #toolchain.cmake
+TOOLCHAINS["ANDROID"]=${ANDROID_NDK_HOME}/build/cmake/android-legacy.toolchain.cmake
 declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg,key must be uppercase
 
 #VCPKGROOT=/opt/vcpkg
@@ -93,9 +94,11 @@ echo "build=${BUILD_TYPE}/${BUILD_TYPE,,}"
 if [ "$PRODUCT" = "X64" ] || [ "$PRODUCT" = "WIN32" ]; then
     echo "x64"
     TOOLCHAIN_FILE=""
+elif [ "$PRODUCT" = "ANDROID" ]; then
+    TOOLCHAIN_FILE=${VCPKGROOT}/scripts/buildsystems/vcpkg.cmake
 elif [ "$PRODUCT" != "X64" ] && [ "$PRODUCT" != "WIN32" ]; then
-    TOOLCHAIN_FILE="-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAINS[${PRODUCT}]}"
-    if [ "$TOOLCHAIN_FILE" = "-DCMAKE_TOOLCHAIN_FILE=" ]; then
+    TOOLCHAIN_FILE=${TOOLCHAINS[${PRODUCT}]}
+    if [ "$TOOLCHAIN_FILE" = "" ]; then
        SHOWHELP=1
     fi
 fi
@@ -144,7 +147,7 @@ if [ -f "$OPTIONS_FILE" ]; then
     echo "$CMAKE_SWITCHES"
 fi
 
-cmake ${TOOLCHAIN_FILE} \
+cmake -DCMAKE_TOOLCHAIN_FILE="${TOOLCHAIN_FILE}" \
    -DCMAKE_INSTALL_PREFIX=./ \
    -DCMAKE_PREFIX_PATH=${DEPLIBS_DIR} \
    -DCMAKE_MODULE_PATH=${DEPLIBS_DIR} \

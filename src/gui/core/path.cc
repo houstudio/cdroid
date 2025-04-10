@@ -354,10 +354,8 @@ void Path::append_path(const Path&other){
 void Path::compute_bounds(RectF&bounds, bool include_stroke){
     double x1, y1, x2, y2;
     if (include_stroke) {
-        // 计算描边路径的边界
         mCTX->get_stroke_extents(x1, y1, x2, y2);
     } else {
-        // 计算填充路径的边界
         mCTX->get_fill_extents(x1, y1, x2, y2);
     }
     LOGD("%s extents: (%.f,%.d,%.f,%.d)",(include_stroke?"Stroke":"Fill"),x1,y1,x2,y2);
