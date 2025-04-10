@@ -279,7 +279,6 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // tag, false means we need to rely on the included layout params.
             ViewGroup::LayoutParams* params = group->generateLayoutParams(childAttrs);
             view->setLayoutParams(params);
-            view->setId(unionedAttrs.getResourceId("id",View::NO_ID));
 
             // Inflate all children.
             rInflateChildren(childParser, view, childAttrs, true);
