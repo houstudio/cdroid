@@ -260,12 +260,13 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
         }
 
         const std::string childName = childParser.getName();
-        const AttributeSet& childAttrs = childParser;
+        AttributeSet& childAttrs = childParser;
 
         if (childName.compare(TAG_MERGE)==0){
             // The <merge> tag doesn't support android:theme, so nothing special to do here.
             rInflate(childParser, parent, context, childAttrs, false);
         } else {
+            childAttrs.inherit(attrs);
             View* view = createViewFromTag(parent, childName,context, childAttrs, hasThemeOverride);
             ViewGroup* group = (ViewGroup*) parent;
 
@@ -277,10 +278,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // We catch this exception and set localParams accordingly: true
             // means we successfully loaded layout params from the <include>
             // tag, false means we need to rely on the included layout params.
-            AttributeSet unionedAttrs;
-            unionedAttrs = attrs;
-            unionedAttrs.inherit(childAttrs);
-            ViewGroup::LayoutParams* params = group->generateLayoutParams(unionedAttrs);
+            ViewGroup::LayoutParams* params = group->generateLayoutParams(childAttrs);
             view->setLayoutParams(params);
 
             // Inflate all children.
