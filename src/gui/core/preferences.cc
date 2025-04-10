@@ -24,9 +24,6 @@ void Preferences::load(const std::string&fname){
     std::ifstream fin(fname);
     if(fin.is_open()){
         load(fin);
-    }else {
-        std::istringstream sin(fname);
-        load(sin);
     }
 }
 
