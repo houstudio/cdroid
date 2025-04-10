@@ -269,7 +269,6 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             childAttrs.inherit(attrs);
             View* view = createViewFromTag(parent, childName,context, childAttrs, hasThemeOverride);
             ViewGroup* group = (ViewGroup*) parent;
-
             // We try to load the layout params set in the <include /> tag.
             // If the parent can't generate layout params (ex. missing width
             // or height for the framework ViewGroups, though this is not
@@ -280,6 +279,7 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // tag, false means we need to rely on the included layout params.
             ViewGroup::LayoutParams* params = group->generateLayoutParams(childAttrs);
             view->setLayoutParams(params);
+            view->setId(unionedAttrs.getResourceId("id",View::NO_ID));
 
             // Inflate all children.
             rInflateChildren(childParser, view, childAttrs, true);
