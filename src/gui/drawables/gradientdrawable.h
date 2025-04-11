@@ -24,23 +24,25 @@ public:
         /** draw the gradient from the top-left to the bottom-right */
         TL_BR,
     };
-    enum Shape{
-        RECTANGLE   =0,
-        OVAL        =1,
-        LINE        =2,
-        RING        =3
-    };
-    enum GradientType{
-        LINEAR_GRADIENT=0,
-        RADIAL_GRADIENT=1,
-        SWEEP_GRADIENT=2,
-        BITMAP_PATTERN
-    };
-    enum RadiusType{
-        RADIUS_TYPE_PIXELS  =0,
-        RADIUS_TYPE_FRACTION=1,
-        RADIUS_TYPE_FRACTION_PARENT=2
-    };
+    static constexpr bool sWrapNegativeAngleMeasurements = true;
+    /*Shape is a rectangle, possibly with rounded corners*/
+    static constexpr int RECTANGLE = 0;
+    static constexpr int OVAL      = 1;
+    static constexpr int LINE      = 2;
+    static constexpr int RING      = 3;
+    
+    /* Gradient is linear (default.)*/
+    static constexpr int LINEAR_GRADIENT= 0;
+    static constexpr int RADIAL_GRADIENT= 1;
+    static constexpr int SWEEP_GRADIENT = 2;
+    static constexpr int BITMAP_PATTERN = 3;
+private:
+    static constexpr int RADIUS_TYPE_PIXELS  =0;
+    static constexpr int RADIUS_TYPE_FRACTION=1;
+    static constexpr int RADIUS_TYPE_FRACTION_PARENT = 2;
+    static constexpr Orientation DEFAULT_ORIENTATION = Orientation::TOP_BOTTOM;
+    static constexpr float DEFAULT_INNER_RADIUS_RATIO = 3.0f;
+    static constexpr float DEFAULT_THICKNESS_RATIO = 9.0f;
 private:
     class GradientState:public std::enable_shared_from_this<GradientState>,public ConstantState{
     public:
@@ -70,7 +72,7 @@ private:
        float mCenterX,mCenterY;
        float mGradientRadius = 0.5f;
        int mGradientRadiusType;
-       GradientType mGradientType;
+       int mGradientType;
        bool mDither = false;
        bool mUseLevel;
        bool mUseLevelForShape;
