@@ -2,6 +2,7 @@
 #define __SHAPE_H__
 #include <core/canvas.h>
 #include <core/path.h>
+#include <core/outline.h>
 namespace cdroid{
 
 class Shape{
@@ -48,6 +49,7 @@ public:
     void setGradientCenterX(float x);
     void setGradientCenterY(float y);
     virtual void draw(Canvas&canvas,int x,int y)=0;
+    virtual void getOutline(Outline&outline){}
     virtual Shape*clone()const=0;
 };
 
@@ -67,7 +69,8 @@ public:
     void setInnerRadii(const std::vector<float>&);
     void setRadius(float radius);
     void draw(Canvas&canvas,int x=0,int y=0)override;
-    Shape*clone()const override;
+    void getOutline(Outline&)override;
+    RectShape*clone()const override;
 };
 
 class ArcShape:public RectShape{
@@ -79,7 +82,7 @@ public:
     ArcShape(float startAngle,float sweepAngle);
     float getStartAngle()const{ return mStartAngle; }
     float getSweepAngle()const{ return mSweepAngle; }
-    Shape*clone()const override;
+    ArcShape*clone()const override;
     void draw(Canvas&canvas,int x=0,int y=0)override;
 };
 
@@ -112,7 +115,7 @@ public:
     RoundRectShape();
     RoundRectShape(const std::vector<float>&outRadii,const Rect&inset,const std::vector<float>&innerRadii);
     void draw(Canvas&canvas,int x=0,int y=0)override;
-    Shape*clone()const override;
+    RoundRectShape*clone()const override;
 };
 
 class PathShape:public Shape{

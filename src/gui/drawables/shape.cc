@@ -217,7 +217,13 @@ void RectShape::setRadius(float radius){
     for(int i=0;i<4;i++)mOuterRadii[i]=radius; 
 }
 
-Shape*RectShape::clone()const{
+void RectShape::getOutline(Outline&outline){
+    /*RectF
+    outline.setRect((int) Math.ceil(rect.left), (int) Math.ceil(rect.top),
+                (int) Math.floor(rect.right), (int) Math.floor(rect.bottom));*/
+}
+
+RectShape*RectShape::clone()const{
     return new RectShape(*this);
 }
 
@@ -240,7 +246,7 @@ ArcShape::ArcShape(const ArcShape&o):RectShape(o){
     mSweepAngle=o.mSweepAngle;
 }
 
-Shape*ArcShape::clone()const{
+ArcShape*ArcShape::clone()const{
     return new ArcShape(*this);
 }
 
@@ -334,7 +340,7 @@ RoundRectShape::RoundRectShape(const RoundRectShape&o):RectShape(o){
     mInset=o.mInset;
 }
 
-Shape*RoundRectShape::clone()const{
+RoundRectShape*RoundRectShape::clone()const{
     return new RoundRectShape(*this);
 }
 

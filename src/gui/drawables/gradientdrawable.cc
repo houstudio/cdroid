@@ -1050,18 +1050,13 @@ void GradientDrawable::draw(Canvas&canvas) {
         mFillPaint->set_dither(ditherMode);
     switch (st->mShape) {
     case RECTANGLE:
-        if(st->mRadiusArray.size()){
-            buildPathIfDirty();
-            mPath->append_to_context(&canvas);
-        }else if(st->mRadius>0.0f){
-            rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
-            if(st->mRadiusArray.size())radii = st->mRadiusArray;
-            if(st->mRadius > 0.0f)radii.assign(8,rad);
-            if(radii.size())
-                drawRoundedRect(canvas,mRect,radii[0],radii[1],radii[2],radii[3]);
-            else
-                canvas.rectangle(int(mRect.left),int(mRect.top),int(mRect.width),int(mRect.height));
-        }
+        rad = std::min(st->mRadius,std::min(mRect.width, mRect.height) * 0.5f);
+        if(st->mRadiusArray.size())radii = st->mRadiusArray;
+        if(st->mRadius > 0.0f)radii.assign(8,rad);
+        if(radii.size())
+            drawRoundedRect(canvas,mRect,radii[0],radii[1],radii[2],radii[3]);
+        else
+            canvas.rectangle(int(mRect.left),int(mRect.top),int(mRect.width),int(mRect.height));
         break;
     case LINE:
         if (haveStroke) {
