@@ -6,9 +6,6 @@
 using namespace Cairo;
 namespace cdroid {
 
-#define DEFAULT_INNER_RADIUS_RATIO 3.0f
-#define DEFAULT_THICKNESS_RATIO 9.0f
-
 GradientDrawable::GradientState::GradientState() {
     mShape  = RECTANGLE;
     mGradient = LINEAR_GRADIENT;
@@ -1147,13 +1144,13 @@ void GradientDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
     //state.mThemeAttrs = a.extractThemeAttrs();
 
     state->mShape = atts.getInt("shape",std::unordered_map<std::string,int> {
-        {"rectangle",GradientDrawable::Shape::RECTANGLE},{"oval",GradientDrawable::Shape::OVAL},
-        {"line",GradientDrawable::Shape::LINE},          {"ring",GradientDrawable::Shape::RING}
+        {"rectangle",(int)GradientDrawable::RECTANGLE},{"oval",(int)GradientDrawable::OVAL},
+        {"line",(int)GradientDrawable::LINE},          {"ring",(int)GradientDrawable::RING}
     }, state->mShape);
 
     state->mDither = atts.getBoolean("dither", state->mDither);
 
-    if (state->mShape == RING) {
+    if (state->mShape == GradientDrawable::RING) {
         state->mInnerRadius = atts.getDimensionPixelSize("innerRadius", state->mInnerRadius);
 
         if (state->mInnerRadius == -1) {
@@ -1227,10 +1224,10 @@ void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
     st->mCenterY = atts.getFraction("centerY",100,0, st->mCenterY);
     st->mUseLevel = atts.getBoolean("useLevel", st->mUseLevel);
     st->mGradient = atts.getInt("type",std::unordered_map<std::string,int> {
-        {"linear",GradientDrawable::LINEAR_GRADIENT},
-        {"radial",GradientDrawable::RADIAL_GRADIENT},
-        {"sweep",GradientDrawable::SWEEP_GRADIENT},
-        {"pattern",GradientDrawable::BITMAP_PATTERN}}, st->mGradient);
+        {"linear" , (int)GradientDrawable::LINEAR_GRADIENT},
+        {"radial" , (int)GradientDrawable::RADIAL_GRADIENT},
+        {"sweep"  , (int)GradientDrawable::SWEEP_GRADIENT},
+        {"pattern", (int)GradientDrawable::BITMAP_PATTERN}}, st->mGradient);
 
     // TODO: Update these to be themeable.
     const int startColor = atts.getColor("startColor", 0);
@@ -1258,16 +1255,19 @@ void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
         st->mPositions[1] = 1.f;
     }
 
-    if (st->mGradient == LINEAR_GRADIENT) {
-        const int angle = ((int) atts.getFloat("angle", st->mAngle))%360;
-
-        if (angle % 45 != 0) {
-            throw std::logic_error(//a.getPositionDescription()
-                    "<gradient> tag requires 'angle' attribute to be a multiple of 45");
-        }
-
-        st->mAngle = angle;
-
+    const int angle = ((int) atts.getFloat("angle", st->mAngle))%360;
+    // GradientDrawable historically has not parsed negative angle measurements and always
+    // stays on the default orientation for API levels older than Q.
+    // Only configure the orientation if the angle is greater than zero.
+    // Otherwise fallback on Orientation.TOP_BOTTOM
+    // In Android Q and later, actually wrap the negative angle measurement to the correct
+    // value
+    if (sWrapNegativeAngleMeasurements) {
+        st->mAngle = ((angle % 360) + 360) % 360; // offset negative angle measures
+    } else {
+        st->mAngle = angle % 360;
+    }
+    if (st->mAngle>=0) {
         switch (angle) {
         case 0:  st->mOrientation = Orientation::LEFT_RIGHT;  break;
         case 45: st->mOrientation = Orientation::BL_TR;       break;
@@ -1279,33 +1279,31 @@ void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
         case 315:st->mOrientation = Orientation::TL_BR;       break;
         }
     } else {
-        std::string tv = atts.getString("gradientRadius");
-        if (!tv.empty()) {
-            float radius;
-            int radiusType;
-            if (tv.find("%")!=std::string::npos){//=tv.type == TypedValue.TYPE_FRACTION) {
-                radius = atts.getFraction("gradientRadius",100,0,1.0f);
+        st->mOrientation = DEFAULT_ORIENTATION;
+    }
+    std::string tv = atts.getString("gradientRadius");
+    if (!tv.empty()) {
+        float radius;
+        int radiusType;
+        if (tv.find("%")!=std::string::npos){//=tv.type == TypedValue.TYPE_FRACTION) {
+            radius = atts.getFraction("gradientRadius",100,0,1.0f);
 
-                //int unit = (tv.data >> TypedValue.COMPLEX_UNIT_SHIFT) & TypedValue.COMPLEX_UNIT_MASK;
-                /*if (unit == TypedValue.COMPLEX_UNIT_FRACTION_PARENT) {
-                    radiusType = RADIUS_TYPE_FRACTION_PARENT;
-                } else */{
-                    radiusType = RADIUS_TYPE_FRACTION;
-                }
-            } else if (tv.find("p")!=std::string::npos){/*dp px sp*///type == TypedValue.TYPE_DIMENSION) {
-                radius = atts.getDimension("gradientRadius",0);
-                radiusType = RADIUS_TYPE_PIXELS;
-            } else {
-                radius = atts.getFloat("gradientRadius");
-                radiusType = RADIUS_TYPE_PIXELS;
+            //int unit = (tv.data >> TypedValue.COMPLEX_UNIT_SHIFT) & TypedValue.COMPLEX_UNIT_MASK;
+            /*if (unit == TypedValue.COMPLEX_UNIT_FRACTION_PARENT) {
+                radiusType = RADIUS_TYPE_FRACTION_PARENT;
+            } else */{
+                radiusType = RADIUS_TYPE_FRACTION;
             }
-
-            st->mGradientRadius = radius;
-            st->mGradientRadiusType = radiusType;
-        } else if (st->mGradient == RADIAL_GRADIENT) {
-            throw std::logic_error(//a.getPositionDescription()
-                    "<gradient> tag requires 'gradientRadius'attribute with radial type");
+        } else if (tv.find("p")!=std::string::npos){/*dp px sp*///type == TypedValue.TYPE_DIMENSION) {
+            radius = atts.getDimension("gradientRadius",0);
+            radiusType = RADIUS_TYPE_PIXELS;
+        } else {
+            radius = atts.getFloat("gradientRadius");
+            radiusType = RADIUS_TYPE_PIXELS;
         }
+
+        st->mGradientRadius = radius;
+        st->mGradientRadiusType = radiusType;
     }
     mGradientIsDirty =true;
 }
@@ -1361,12 +1359,12 @@ void GradientDrawable::updateGradientDrawablePadding(const AttributeSet&atts){
 Drawable*GradientDrawable::inflate(Context*ctx,const AttributeSet&atts) {
     GradientDrawable*d = new GradientDrawable();
     const int shapeType = atts.getInt("shape",std::unordered_map<std::string,int> {
-        {"rectangle",GradientDrawable::Shape::RECTANGLE},{"oval",GradientDrawable::Shape::OVAL},
-        {"line",GradientDrawable::Shape::LINE},          {"ring",GradientDrawable::Shape::RING}
-    },GradientDrawable::Shape::RECTANGLE);
+        {"rectangle",(int)GradientDrawable::RECTANGLE},{"oval",(int)GradientDrawable::OVAL},
+        {"line",(int)GradientDrawable::LINE},          {"ring",(int)GradientDrawable::RING}
+    },(int)GradientDrawable::RECTANGLE);
     d->setShape(shapeType);
 
-    if(shapeType == GradientDrawable::Shape::RING) {
+    if(shapeType == GradientDrawable::RING) {
         int tmp = atts.getDimensionPixelSize("innerRadius",-1);
         d->setInnerRadius(tmp);
         if(tmp == -1){

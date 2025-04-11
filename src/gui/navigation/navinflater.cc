@@ -1,5 +1,5 @@
-#if 10
-#include <expat.h>
+#if 0
+#include <core/xmlpullparser.h>
 #include <navigation/navaction.h>
 #include <navigation/navgraph.h>
 #include <navigation/navinflater.h>
@@ -23,72 +23,38 @@ NavGraph* NavInflater::inflateMetadataGraph() {
     return nullptr;
 }
 
-class NavInflater::NaviParser{
-public:
-    NavInflater*mInflater;
-    std::string package;
-    Context*mContext;
-    Navigator*navigator;
-    NavDestination*navdst;
-public:
-    NaviParser(Context*ctx,NavInflater*flater):mContext(ctx),mInflater(flater),navdst(nullptr){
-    }
-    static void startElement(void *userData, const XML_Char *name, const XML_Char **satts);
-    static void endElement(void *userData, const XML_Char *name);
-};
-
-void  NavInflater::NaviParser::startElement(void *userData, const XML_Char *name, const XML_Char **satts){
-    NaviParser*nvdat=(NaviParser*)userData;
-    AttributeSet atts(nvdat->mContext,nvdat->package);
-    atts.set(satts);
-    if(strcmp(name,"argument")==0){
-    }else if(strcmp(name,"deepLink")==0){
-    }else if(strcmp(name,"action")==0){
-    }else if(strcmp(name,"include")==0){
-    }else if(strcmp(name,"fragment")==0){
-    }else if(strcmp(name,"navigation")==0){
-        nvdat->navdst = nvdat->mInflater->inflate(name,atts);
-    }
-}
-
-void  NavInflater::NaviParser::endElement(void *userData, const XML_Char *name){
-}
-
 NavGraph* NavInflater::inflate(const std::string& graphResId) {
-    int len = 0;
-    std::string package;
-    NaviParser pd(mContext,this);
-    XML_Parser parser = XML_ParserCreateNS(nullptr,' ');
-    XML_SetUserData(parser,&pd);
-    XML_SetElementHandler(parser, NaviParser::startElement, NaviParser::endElement);
-    std::unique_ptr<std::istream>stream = mContext->getInputStream(graphResId,&package);
-    do {
-        char buf[256];
-        stream->read(buf,sizeof(buf));
-        len = stream->gcount();
-        if (XML_Parse(parser, buf,len,len==0) == XML_STATUS_ERROR) {
-            const char*es = XML_ErrorString(XML_GetErrorCode(parser));
-            LOGE("%s at line %ld",es, XML_GetCurrentLineNumber(parser));
-            XML_ParserFree(parser);
-            return nullptr;
-        }
-    } while( len != 0 );
-    return nullptr;
+    XmlPullParser parser(mContext,graphResId);
+    AttributeSet& attrs = parser;
+    int type;
+    while ((type = parser.next()) != XmlPullParser::START_TAG
+            && type != XmlPullParser::END_DOCUMENT) {
+        // Empty loop
+    }
+    if (type != XmlPullParser::START_TAG) {
+        throw std::runtime_error("No start tag found");
+    }
+
+    std::string rootElement = parser.getName();
+    NavDestination* destination = inflate(parser, attrs);
+    if (dynamic_cast<NavGraph*>(destination)==nullptr) {
+        throw ("Root element <" + rootElement + ">" + " did not inflate into a NavGraph");
+    }
+    return (NavGraph) destination;
 }
 
 NavDestination* NavInflater::inflate(const std::string&name,const AttributeSet& attrs){
-    Navigator* navigator = mNavigatorProvider->getNavigator(name);//parser.getName());
+    Navigator* navigator = mNavigatorProvider->getNavigator(parser.getName());
     NavDestination* dest = navigator->createDestination();
 
     dest->onInflate(mContext, attrs);
 
-    const int innerDepth =0;// parser.getDepth() + 1;
-    int type;
-    int depth;
-    /*while ((type = parser.next()) != XmlPullParser.END_DOCUMENT
+    const int innerDepth =parser.getDepth() + 1;
+    int type, depth;
+    while ((type = parser.next()) != XmlPullParser::END_DOCUMENT
             && ((depth = parser.getDepth()) >= innerDepth
-            || type != XmlPullParser.END_TAG)) {
-        if (type != XmlPullParser.START_TAG) {
+            || type != XmlPullParser::END_TAG)) {
+        if (type != XmlPullParser::START_TAG) {
             continue;
         }
 
@@ -97,13 +63,13 @@ NavDestination* NavInflater::inflate(const std::string&name,const AttributeSet& 
         }
 
         const std::string name = parser.getName();
-        if (TAG_ARGUMENT.equals(name)) {
+        if (name.compare("argument")==0) {
             inflateArgument(res, dest, attrs);
-        } else if (TAG_DEEP_LINK.equals(name)) {
+        } else if (name.compare("deepLink")==0) {
             inflateDeepLink(res, dest, attrs);
-        } else if (TAG_ACTION.equals(name)) {
+        } else if (name.compare("action")==0) {
             inflateAction(res, dest, attrs);
-        } else if (TAG_INCLUDE.equals(name) && dynamic_cast<NavGraph*>(dest)) {
+        } else if ((name.compare("include")==0) && dynamic_cast<NavGraph*>(dest)) {
             TypedArray a = res.obtainAttributes(attrs, R.styleable.NavInclude);
             const int id = a.getResourceId(R.styleable.NavInclude_graph, 0);
             ((NavGraph*) dest)->addDestination(inflate(id));
@@ -111,7 +77,7 @@ NavDestination* NavInflater::inflate(const std::string&name,const AttributeSet& 
         } else if (dynamic_cast<NavGraph*>(dest)) {
             ((NavGraph*)dest)->addDestination(inflate(res, parser, attrs));
         }
-    }*/
+    }
 
     return dest;
 }
