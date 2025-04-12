@@ -1090,7 +1090,7 @@ void LayerDrawable::inflateLayers(XmlPullParser& parser,const AttributeSet& atts
             while ((type = parser.next()) == XmlPullParser::TEXT) {
             }
             if (type != XmlPullParser::START_TAG){
-                throw std::logic_error(//parser.getPositionDescription()
+                throw std::logic_error(parser.getPositionDescription()+
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
             }

@@ -57,7 +57,7 @@ ShapeDrawable::~ShapeDrawable(){
 
 void ShapeDrawable::getOutline(Outline& outline) {
     if (mShapeState->mShape != nullptr) {
-        LOGD("TODO");// mShapeState->mShape->getOutline(outline);
+        mShapeState->mShape->getOutline(outline);
         outline.setAlpha(getAlpha() / 255.0f);
     }
 }
@@ -215,6 +215,18 @@ void ShapeDrawable::draw(Canvas&canvas){
     }
 }
 
+int ShapeDrawable::inflateTag(const std::string&name,XmlPullParser&parser,const AttributeSet&a){
+    if (name.compare("padding")==0) {
+        setPadding(a.getDimensionPixelOffset("left", 0),
+                a.getDimensionPixelOffset("top", 0),
+                a.getDimensionPixelOffset("right", 0),
+                a.getDimensionPixelOffset("bottom", 0));
+        return true;
+    }
+    return false;
+}
+
+
 void ShapeDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(parser,atts);
     updateStateFromTypedArray(atts);
@@ -236,25 +248,6 @@ void ShapeDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
 
     // Update local properties.
     updateLocalState();
-#if 0
-    const std::string type = atts.getString("shape");//rectangle,line,oval,ring
-    Shape*shape = nullptr;
-    if(type.compare("rectangle")==0)  shape = new RoundRectShape();
-    else if(type.compare("ring")==0||type.compare("oval")==0){
-        OvalShape*oval = new OvalShape();
-        shape = oval;
-        oval->setThickness(atts.getInt("thickness"));
-        oval->setThicknessRatio(atts.getFloat("thicknessRatio",.0f));
-        oval->setInnerRadius(atts.getInt("innerRadius",0)); 
-        oval->setInnerRadiusRatio(atts.getFloat("innerRadiusRatio",.0f));
-    }else if(type.compare( "arc")==0){
-        const float start= atts.getFloat("startAngle",0);
-        const float end  = atts.getFloat("endAngle",360);
-        shape = new ArcShape(start,end);
-    }
-    ShapeDrawable*d = new ShapeDrawable();
-    d->setShape(shape);
-#endif
 }
 
 void ShapeDrawable::updateStateFromTypedArray(const AttributeSet&a) {
@@ -284,17 +277,6 @@ void ShapeDrawable::updateStateFromTypedArray(const AttributeSet&a) {
     if (tint != nullptr) {
         state->mTint = tint;
     }
-}
-
-int ShapeDrawable::inflateTag(const std::string&name,XmlPullParser&parser,const AttributeSet&a){
-    if (name.compare("padding")==0) {
-        setPadding(a.getDimensionPixelOffset("left", 0),
-                a.getDimensionPixelOffset("top", 0),
-                a.getDimensionPixelOffset("right", 0),
-                a.getDimensionPixelOffset("bottom", 0));
-        return true;
-    }
-    return false;
 }
 
 }

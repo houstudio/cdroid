@@ -78,7 +78,7 @@ View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root){
 View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root, bool attachToRoot){
     int type;
     View*result = root;
-    const AttributeSet& attrs = parser;
+    AttributeSet& attrs = parser;
     while(((type=parser.next())!=XmlPullParser::START_TAG)
             &&(type!=XmlPullParser::END_DOCUMENT)){
         //Empty
@@ -124,7 +124,7 @@ View* LayoutInflater::createView(const std::string& name, const std::string& pre
     return nullptr;
 }
 
-View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Context* context,const AttributeSet& attrs,bool ignoreThemeAttr) {
+View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Context* context,AttributeSet& attrs,bool ignoreThemeAttr) {
 #if 0
     if (name.compare("view")==0) {
         //name = attrs.getAttributeValue(nullptr, "class");
@@ -160,29 +160,28 @@ View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Co
     }
     return view;
 #else
+    const int vid = attrs.getResourceId("id");
     std::string styleName = attrs.getString("style");
-    AttributeSet temp;
-    temp = attrs;
     LayoutInflater::ViewInflater inflater = LayoutInflater::getInflater(name);
     if(!styleName.empty()) {
         AttributeSet style = context->obtainStyledAttributes(styleName);
-        temp.inherit(style);
+        attrs.inherit(style);
     }
     styleName = LayoutInflater::from(context)->getDefaultStyle(name);
     if(!styleName.empty()) {
         AttributeSet defstyle = context->obtainStyledAttributes(styleName);
-        temp.inherit(defstyle);
+        attrs.inherit(defstyle);
     }
-    View*view = inflater(context,temp);
+    View*view = inflater(context,attrs);
     return view;
 #endif
 }
 
-void LayoutInflater::rInflateChildren(XmlPullParser& parser, View* parent,const AttributeSet& attrs,bool finishInflate){
+void LayoutInflater::rInflateChildren(XmlPullParser& parser, View* parent,AttributeSet& attrs,bool finishInflate){
     rInflate(parser, parent, parent->getContext(), attrs, finishInflate);
 }
 
-void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* context,const AttributeSet& attrs, bool finishInflate){
+void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* context,AttributeSet& attrs, bool finishInflate){
     int type;
     const int depth = parser.getDepth();
     bool pendingRequestFocus = false;

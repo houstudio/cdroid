@@ -223,9 +223,9 @@ Rect NinePatch::getOpticalInsets(Cairo::RefPtr<ImageSurface>bitmap) {
     Rect insets;
     int width = bitmap->get_width();
     int height = bitmap->get_height();
-
-    insets.width = analyzeEdge(bitmap, width - 2, 1, height-2, false); // 右侧
-    insets.height = analyzeEdge(bitmap, height - 2, 1, width-2, true); // 底部
+    //TODO insets is TODO
+    insets.width = 0;//analyzeEdge(bitmap, width - 2, 1, height-2, false); // 右侧
+    insets.height = 0;//analyzeEdge(bitmap, height - 2, 1, width-2, true); // 底部
 
     insets.left = 0;
     insets.top = 0;

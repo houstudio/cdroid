@@ -1,3 +1,7 @@
+# **V3.8.6
+  - XmlPullParser is more compatible with android.
+  - Resource parser changed to xmlpullparser,more faster versions.
+  - Bug fixes
 # **V3.8.0
   - Add VectorDrawable
   - Add AnimatedVectorDrawable

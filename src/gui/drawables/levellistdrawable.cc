@@ -110,17 +110,16 @@ void LevelListDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
         Drawable*dr = atts.getDrawable("drawable");
 
         if (high < 0) {
-            throw std::logic_error(//parser.getPositionDescription()
+            throw std::logic_error(parser.getPositionDescription()+
                 ": <item> tag requires a 'maxLevel' attribute");
         }
 
         if (dr==nullptr) {
             while ((type = parser.next()) == XmlPullParser::TEXT) {}
             if (type != XmlPullParser::START_TAG) {
-                throw std::logic_error(
+                throw std::logic_error(parser.getPositionDescription()+
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
-                //parser.getPositionDescription()
             }
             dr = Drawable::createFromXmlInner(parser,atts);
         }

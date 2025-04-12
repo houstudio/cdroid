@@ -54,7 +54,7 @@ void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,cons
             while ((type = parser.next()) == XmlPullParser::TEXT) {
             }
             if (type != XmlPullParser::START_TAG) {
-                throw std::logic_error(//parser.getPositionDescription()
+                throw std::logic_error(parser.getPositionDescription()+
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
             }

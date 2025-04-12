@@ -22,7 +22,6 @@ private:
     struct Private* mData;
     XmlPullParser();
 public:
-    XmlPullParser(const std::string&);
     XmlPullParser(Context*ctx,const std::string&resid);
     XmlPullParser(Context*,std::unique_ptr<std::istream>);
     ~XmlPullParser();

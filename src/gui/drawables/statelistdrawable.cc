@@ -129,6 +129,7 @@ void StateListDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflateWithAttributes(parser,atts);
     updateStateFromTypedArray(atts);
     inflateChildElements(parser,atts);
+    onStateChange(getState());
 }
 
 void StateListDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
