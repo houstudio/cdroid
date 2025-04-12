@@ -105,15 +105,6 @@ XmlPullParser::XmlPullParser(){
     XML_SetCharacterDataHandler(mData->parser, AttrParser::characterDataHandler);
 }
 
-XmlPullParser::XmlPullParser(const std::string&content):XmlPullParser(){
-    mData->stream = std::make_unique<std::istringstream>(content);
-    auto event = mData->acquire(START_DOCUMENT);
-    mContext = &App::getInstance();
-    event->depth= mData->depth++;
-    event->lineNumber = 0;
-    mAttrs = event->atts;
-    mData->eventQueue.push(event);}
-
 XmlPullParser::XmlPullParser(Context*ctx,std::unique_ptr<std::istream>strm):XmlPullParser(){
     mContext = ctx;
     mData->stream = std::move(strm);
