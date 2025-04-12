@@ -168,8 +168,7 @@ void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
         }
         const int duration = atts.getInt("duration", -1);
         if (duration < 0) {
-            throw std::logic_error(//parser.getPositionDescription()
-                    ": <item> tag requires a 'duration' attribute");
+            throw std::logic_error(parser.getPositionDescription()+": <item> tag requires a 'duration' attribute");
         }
 
         Drawable* dr = atts.getDrawable("drawable");
@@ -179,7 +178,7 @@ void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
                 // Empty
             }
             if (type != XmlPullParser::START_TAG) {
-                throw std::logic_error(//parser.getPositionDescription()
+                throw std::logic_error(parser.getPositionDescription()+
                         ": <item> tag requires a 'drawable' attribute or child tag"
                         " defining a drawable");
             }
