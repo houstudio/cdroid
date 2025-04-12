@@ -40,6 +40,7 @@ void Preferences::load(std::istream&istream){
     const AttributeSet& attrs = parser;
     int type;
     std::string section,key,value;
+    istream.rdbuf(nullptr);
     while(((type=parser.next())!=XmlPullParser::END_DOCUMENT)&&(type!=XmlPullParser::BAD_DOCUMENT)){
         std::string tagName = parser.getName();
         switch(type){
