@@ -1,19 +1,7 @@
+namespace cdroid{
 #if 0
-static jobject blurBitmap(JNIEnv *env,jobject /* this */, jobject bmp, jfloat intensity) {
-    if (intensity <= 0) {
-        return bmp;
-    }
-    AndroidBitmapInfo info = {0};//初始化BitmapInfo结构体
-    uint8_t *data = nullptr;//初始化Bitmap图像数据指针
-    AndroidBitmap_getInfo(env, bmp, &info);
-    AndroidBitmap_lockPixels(env, bmp, (void **) &data);//锁定Bitmap，并且获得指针
-    GaussianBlurFilter(data, info.width, info.height, intensity);
-    AndroidBitmap_unlockPixels(env, bmp);//解锁
-    return bmp;
-}
-#endif
 
-void CalGaussianCoeff(float sigma, float *a0, float *a1, float *a2, float *a3, float *b1, float *b2,
+static void CalGaussianCoeff(float sigma, float *a0, float *a1, float *a2, float *a3, float *b1, float *b2,
                       float *cprev, float *cnext) {
     float alpha, lamma, k;
 
@@ -32,7 +20,7 @@ void CalGaussianCoeff(float sigma, float *a0, float *a1, float *a2, float *a3, f
     *cnext = (*a2 + *a3) / (1 + *b1 + *b2);
 }
 
-void gaussianVertical(uint8_t *bufferPerLine, uint8_t *lpRowInitial,
+static void gaussianVertical(uint8_t *bufferPerLine, uint8_t *lpRowInitial,
                       uint8_t *lpColInitial, int height, int width, int Channels, float a0a1,
                       float a2a3, float b1b2, float cprev, float cnext) {
 
@@ -142,7 +130,7 @@ void gaussianVertical(uint8_t *bufferPerLine, uint8_t *lpRowInitial,
     }
 }
 
-void gaussianHorizontal(uint8_t *bufferPerLine, uint8_t *lpRowInitial,
+static void gaussianHorizontal(uint8_t *bufferPerLine, uint8_t *lpRowInitial,
                         uint8_t *lpColumn, int width, int height, int Channels, int Nwidth,
                         float a0a1, float a2a3, float b1b2, float cprev, float cnext) {
     int HeightStep = Channels * height;
@@ -295,5 +283,8 @@ void GaussianBlurFilter(uint8_t *input, int Width, int Height, float GaussianSig
     free(bufferPerLine);
     free(tempData);
 }
-
+#else
+void GaussianBlurFilter(uint8_t *input, int Width, int Height, float GaussianSigma){}
+#endif
+}/*endof namespace*/
 
