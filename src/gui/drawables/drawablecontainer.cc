@@ -45,7 +45,7 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
     mVariablePadding = false;
     mConstantSize = false;
     mCheckedConstantState = true;
-    mCheckedConstantSize  = 0;
+    mCheckedConstantSize  = false;
     mCanConstantState = true;
     mAutoMirrored = false;
     mMutated = false;

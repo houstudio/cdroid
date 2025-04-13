@@ -307,7 +307,7 @@ void DefaultItemAnimator::onChangeAnimationEnd(bool old,ChangeInfo*changeInfo,An
         if(it!=mChangeAnimations.end())
             mChangeAnimations.erase(it);
         dispatchFinishedWhenDone();
-        LOGD("changeInfo %p useCount=%d",changeInfo,changeInfo->useCount);
+        //LOGD("changeInfo %p useCount=%d",changeInfo,changeInfo->useCount);
         if(--changeInfo->useCount==0){
             delete changeInfo;
         }

@@ -63,7 +63,7 @@ void GapWorker::LayoutPrefetchRegistryImpl::addPosition(int layoutPosition, int 
     // add position
     mPrefetchArray[storagePosition] = layoutPosition;
     mPrefetchArray[storagePosition + 1] = pixelDistance;
-    LOGD("addPosition(%d,%d)",layoutPosition,pixelDistance);
+    //LOGD("addPosition(%d,%d)",layoutPosition,pixelDistance);
     mCount++;
 }
 

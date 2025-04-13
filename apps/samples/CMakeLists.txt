@@ -18,7 +18,7 @@ include_directories(
    ${FREETYPE_INCLUDE_DIRS}
 )
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-set(CMAKE_CXX_FLAGS "-Wl,--copy-dt-needed-entries")  #prevent error adding symbols: DSO missing from command line
+    #set(CMAKE_CXX_FLAGS "-Wl,--copy-dt-needed-entries")  #prevent error adding symbols: DSO missing from command line
 endif()
 link_directories(${CMAKE_BINARY_DIR}/lib)
 file(GLOB ExamplesFileList  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.cc")

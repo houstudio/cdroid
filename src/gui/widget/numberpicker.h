@@ -29,7 +29,7 @@ private:
     static constexpr int DEFAULT_SELECTOR_WHEEL_ITEM_COUNT =3;
     static constexpr int DEFAULT_WHEEL_ITEM_COUNT = 3;
     static constexpr int DEFAULT_LONG_PRESS_UPDATE_INTERVAL =300;
-    static constexpr int SELECTOR_MAX_FLING_VELOCITY_ADJUSTMENT =8;
+    static constexpr int SELECTOR_MAX_FLING_VELOCITY_ADJUSTMENT =4;/*android is 8,use 4 to make picker faster*/
     static constexpr int SELECTOR_ADJUSTMENT_DURATION_MILLIS =800;
     static constexpr int SNAP_SCROLL_DURATION =300;
     static constexpr float TOP_AND_BOTTOM_FADING_EDGE_STRENGTH =0.9f;
