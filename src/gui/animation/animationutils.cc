@@ -89,21 +89,21 @@ LayoutAnimationController* AnimationUtils::createLayoutAnimationFromXml(Context*
 
 Animation* AnimationUtils::makeInAnimation(Context* c, bool fromLeft){
     Animation*a = loadAnimation(c,fromLeft?"cdroid:anim/slide_in_left.xml":"cdroid:anim/slide_in_right.xml");
-    a->setInterpolator(new DecelerateInterpolator());
+    a->setInterpolator(DecelerateInterpolator::gDecelerateInterpolator.get());
     a->setStartTime(currentAnimationTimeMillis());
     return a;
 }
 
 Animation* AnimationUtils::makeOutAnimation(Context* c, bool toRight){
     Animation*a = loadAnimation(c,toRight?"cdroid:anim/slide_out_right.xml":"cdroid:anim/slide_out_left.xml");
-    a->setInterpolator(new AccelerateInterpolator());
+    a->setInterpolator(AccelerateInterpolator::gAccelerateInterpolator.get());
     a->setStartTime(currentAnimationTimeMillis());
     return a;
 }
 
 Animation* AnimationUtils::makeInChildBottomAnimation(Context* c){
     Animation*a = loadAnimation(c,"cdroid:anim/slide_in_child_bottom.xml");
-    a->setInterpolator(new AccelerateInterpolator());
+    a->setInterpolator(AccelerateInterpolator::gAccelerateInterpolator.get());
     a->setStartTime(currentAnimationTimeMillis());
     return a;
 }
