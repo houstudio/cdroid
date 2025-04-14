@@ -1,5 +1,6 @@
 #ifndef __CDROID_PREDICATE_H__
 #define __CDROID_PREDICATE_H__
+#include <functional>
 namespace cdroid{
 
 template<typename T>
@@ -35,9 +36,14 @@ public:
             return!this->test(t);
         });
     }
+    static Predicate<T> isEqual(const T& value) {
+        return Predicate<T>([value](const T& t) {
+            return t == value;
+        });
+    }
 };
 
-/*int main() {
+/*int main(int argc,char*argv[]) {
     Predicate<int> p1 = Predicate<int>::isEqual(5);
     Predicate<int> p2 = Predicate<int>::isEqual(10);
 
