@@ -201,8 +201,36 @@ void PathInterpolator::initCubic(float x1, float y1, float x2, float y2) {
 }
 
 void PathInterpolator::initPath(cdroid::Path&path){
-  auto m_path=path.copy_path();
-  cairo_path_destroy(m_path);
+    std::vector<float> pointComponents;
+    path.approximate(pointComponents,PRECISION);
+
+    const int numPoints = pointComponents.size() / 3;
+    if (pointComponents[1] != 0 || pointComponents[2] != 0
+            || pointComponents[pointComponents.size() - 2] != 1
+            || pointComponents[pointComponents.size() - 1] != 1) {
+        throw std::logic_error("The Path must start at (0,0) and end at (1,1)");
+    }
+
+    mX.resize(numPoints);
+    mY.resize(numPoints);
+    float prevX = 0;
+    float prevFraction = 0;
+    int componentIndex = 0;
+    for (int i = 0; i < numPoints; i++) {
+        float fraction = pointComponents[componentIndex++];
+        float x = pointComponents[componentIndex++];
+        float y = pointComponents[componentIndex++];
+        if (fraction == prevFraction && x != prevX) {
+            throw std::logic_error("The Path cannot have discontinuity in the X axis.");
+        }
+        if (x < prevX) {
+            throw std::logic_error("The Path cannot loop back on itself.");
+        }
+        mX[i] = x;
+        mY[i] = y;
+        prevX = x;
+        prevFraction = fraction;
+    }
 }
 
 float PathInterpolator::getInterpolation(float t) {

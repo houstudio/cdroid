@@ -42,7 +42,7 @@ public:
     void append_path(const Path&);
     void compute_bounds(RectF&, bool include_stroke);
     bool is_convex()const;
-    //void approximate(std::vector<float>&,float acceptableError);
+    void approximate(std::vector<float>&,float acceptableError);
 };
 }
 #endif
