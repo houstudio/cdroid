@@ -424,17 +424,6 @@ static PointF cubicBezierCalculation(float t, const PointF* points) {
     return {x, y};
 }
 
-static float quadraticCoordinateCalculation(float t, float p0, float p1, float p2) {
-    float oneMinusT = 1 - t;
-    return oneMinusT * ((oneMinusT * p0) + (t * p1)) + t * ((oneMinusT * p1) + (t * p2));
-}
-
-static PointF quadraticBezierCalculation(float t, const PointF* points) {
-    float x = quadraticCoordinateCalculation(t, points[0].x, points[1].x, points[2].x);
-    float y = quadraticCoordinateCalculation(t, points[0].y, points[1].y, points[2].y);
-    return {x, y};
-}
-
 // Subdivide a section of the Bezier curve, set the mid-point and the mid-t value.
 // Returns true if further subdivision is necessary as defined by errorSquared.
 static bool subdividePoints(const PointF* points, BezierCalculation bezierFunction, float t0,
@@ -491,7 +480,7 @@ static void addBezier(const PointF* points,BezierCalculation bezierFunction, std
         addLine(segmentPoints, lengths, iter->second);
     }
 }
-#if 10
+
 static void createVerbSegments(int verb,const PointF* points,
     std::vector<PointF>& segmentPoints,std::vector<float>& lengths, float errorSquared, float errorConic) {
     switch (verb) {
@@ -504,29 +493,14 @@ static void createVerbSegments(int verb,const PointF* points,
     case CAIRO_PATH_LINE_TO://SkPath::kLine_Verb:
         addLine(segmentPoints, lengths, points[1]);
         break;
-    /*case SkPath::kQuad_Verb:
-        addBezier(points, quadraticBezierCalculation, segmentPoints, lengths,errorSquared, false);
-        break;*/
     case CAIRO_PATH_CURVE_TO://SkPath::kCubic_Verb:
         addBezier(points, cubicBezierCalculation, segmentPoints, lengths,errorSquared, true);
         break;
-    /*case SkPath::kConic_Verb: {
-        SkAutoConicToQuads converter;
-        const SkPoint* quads = converter.computeQuads(
-                points, pathIter.conicWeight(), errorConic);
-        for (int i = 0; i < converter.countQuads(); i++) {
-            // Note: offset each subsequent quad by 2, since end points are shared
-            const SkPoint* quad = quads + i * 2;
-            addBezier(quad, quadraticBezierCalculation, segmentPoints, lengths,errorConic, false);
-        }
-        break;
-    }*/
     default:
         LOGE("Path enum changed, new types %d may have been added.",verb);
         break;
     }
 }
-#endif
 
 void Path::approximate(std::vector<float>&approximation,float acceptableError){
     PointF points[4];
@@ -537,31 +511,34 @@ void Path::approximate(std::vector<float>&approximation,float acceptableError){
     if (acceptableError < 0) {
         throw std::logic_error("AcceptableError must be greater than or equal to 0");
     }
-#if 0
-    while ((verb = pathIter.next(points, false)) != SkPath::kDone_Verb) {
-        createVerbSegments(pathIter, verb, points, segmentPoints, lengths,
-                errorSquared, errorConic);
-    }
-#else
     int numVerbs =0;
     cairo_path_t *crPath = cairo_copy_path(mCTX->cobj());
+    PointF first_point,last_point;
     for (int i = 0; i < crPath->num_data;){
         cairo_path_data_t* data = &crPath->data[i];
         PointF points[4];
         int ptCount = 0;
         switch(data->header.type){
         case CAIRO_PATH_MOVE_TO:
-        case CAIRO_PATH_LINE_TO:ptCount=2;break;
+            last_point.set(data[1].point.x, data[1].point.y);
+            first_point=last_point;
+            ptCount =2;break;
+        case CAIRO_PATH_LINE_TO:
+            ptCount=2;break;
         case CAIRO_PATH_CLOSE_PATH:ptCount=1;break;
-        case CAIRO_PATH_CURVE_TO:ptCount=4;break;
+        case CAIRO_PATH_CURVE_TO:
+            ptCount=4;
+
+            break;
         }
-        for(int j=0;j<ptCount;j++)
+        points[0]=last_point;
+        for(int j=1;j<ptCount;j++)
             points[j].set(data[j].point.x,data[j].point.y);
         createVerbSegments(data->header.type,points,segmentPoints,lengths,errorSquared,errorConic);
         i+=ptCount;
         numVerbs++;
+        last_point.set(data[ptCount-1].point.x,data[ptCount-1].point.y);
     }
-#endif
     if (segmentPoints.empty()) {
         if (numVerbs == 1) {
             auto pt = crPath->data[0].point;
