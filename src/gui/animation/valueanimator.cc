@@ -79,7 +79,7 @@ ValueAnimator::~ValueAnimator(){
         delete v;
     mValues.clear();
     removeAnimationCallback();
-    if((mInterpolator != sDefaultInterpolator)&&(mInterpolator!=LinearInterpolator::gLinearInterpolator.get())){
+    if(!Interpolator::isSystemGlobalInterpolator(mInterpolator)){
         //delete mInterpolator;
     }
 }
@@ -368,7 +368,7 @@ void ValueAnimator::removeAllUpdateListeners(){
 }
 
 void ValueAnimator::setInterpolator(TimeInterpolator* value){
-    if((mInterpolator != sDefaultInterpolator)&&(mInterpolator!=LinearInterpolator::gLinearInterpolator.get()))
+    if(!Interpolator::isSystemGlobalInterpolator(mInterpolator))//(mInterpolator != sDefaultInterpolator)&&(mInterpolator!=LinearInterpolator::gLinearInterpolator.get()))
         delete mInterpolator;
     if(value)
         mInterpolator = value;

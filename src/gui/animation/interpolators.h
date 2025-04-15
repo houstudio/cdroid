@@ -2,6 +2,7 @@
 #define __INTERPOLATOR_H__
 #include <math.h>
 #include <vector>
+#include <core/path.h>
 #include <core/attributeset.h>
 #include <core/neverdestroyed.h>
 namespace cdroid{
@@ -15,6 +16,7 @@ public:
 
 class Interpolator:public TimeInterpolator{
 public:
+    static bool isSystemGlobalInterpolator(TimeInterpolator*i);
 };
 
 class BaseInterpolator:public Interpolator{
@@ -119,8 +121,9 @@ private:
     PathInterpolator(float controlX1, float controlY1, float controlX2, float controlY2);
     void initQuad(float controlX, float controlY);
     void initCubic(float x1, float y1, float x2, float y2);
-    void initPath(void*);
+    void initPath(cdroid::Path&path);
 public:
+    PathInterpolator(cdroid::Path&path);
     PathInterpolator(Context*,const AttributeSet&);
     ~PathInterpolator()override;
     float getInterpolation(float t)override;

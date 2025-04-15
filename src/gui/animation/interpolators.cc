@@ -129,6 +129,9 @@ float AccelerateDecelerateInterpolator::getInterpolation(float input) {
     return (float)(cos((input + 1) * M_PI) / 2.0f) + 0.5f;
 }
 
+PathInterpolator::PathInterpolator(cdroid::Path&path){
+}
+
 PathInterpolator::PathInterpolator(float controlX, float controlY) {
     initQuad(controlX, controlY);
 }
@@ -170,19 +173,20 @@ PathInterpolator::~PathInterpolator(){
 }
 
 void PathInterpolator::initQuad(float controlX, float controlY) {
-#if 0
-    Path path = new Path();
-    path.moveTo(0, 0);
-    path.quadTo(controlX, controlY, 1f, 1f);
+    Path path;
+    path.move_to(0, 0);
+    path.quad_to(controlX, controlY, 1.f, 1.f);
     initPath(path);
-#endif
 }
 
 void PathInterpolator::initCubic(float x1, float y1, float x2, float y2) {
-#if 0
-    Path path = new Path();
-    path.moveTo(0, 0);
-    path.cubicTo(x1, y1, x2, y2, 1f, 1f);
+#if 1
+    Path path;
+    path.move_to(0, 0);
+    double x = 0,y = 0;
+    //path.cubicTo(x1, y1, x2, y2, 1f, 1f);
+    path.curve_to(x  + 2.0/3.0 * (x1 - x),  y  + 2.0/3.0 * (y1 - y),
+            x2 + 2.0/3.0 * (x1 - x2), y2 + 2.0/3.0 * (y1 - y2),x2,y2);
     initPath(path);
 #else
     unsigned char data[4];
@@ -196,7 +200,9 @@ void PathInterpolator::initCubic(float x1, float y1, float x2, float y2) {
 #endif
 }
 
-void PathInterpolator::initPath(void*){
+void PathInterpolator::initPath(cdroid::Path&path){
+  auto m_path=path.copy_path();
+  cairo_path_destroy(m_path);
 }
 
 float PathInterpolator::getInterpolation(float t) {
@@ -384,4 +390,18 @@ const NeverDestroyed<FastOutLinearInInterpolator>FastOutLinearInInterpolator::gF
 const NeverDestroyed<AccelerateInterpolator>AccelerateInterpolator::gAccelerateInterpolator(1.f);
 const NeverDestroyed<AccelerateDecelerateInterpolator>AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator;
 
+bool Interpolator::isSystemGlobalInterpolator(TimeInterpolator*i){
+    if( (i!=nullptr)
+            ||(i==LinearInterpolator::gLinearInterpolator.get())
+            ||(i==DecelerateInterpolator::gDecelerateInterpolator.get())
+            ||(i==FastOutSlowInInterpolator::gFastOutSlowInInterpolator.get())
+            ||(i==LinearOutSlowInInterpolator::gLinearOutSlowInInterpolator.get())
+            ||(i==FastOutLinearInInterpolator::gFastOutLinearInInterpolator.get())
+            ||(i==AccelerateInterpolator::gAccelerateInterpolator.get())
+            ||(i==AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get())
+      ){
+        return true;
+    }
+    return false;
+}
 }//endof namespace
