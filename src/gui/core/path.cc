@@ -114,23 +114,34 @@ void Path::rel_move_to(double x,double y){
 }
 
 void Path::line_to(double x,double y){
+    if(!mCTX->has_current_point()){
+        mCTX->move_to(0,0);
+    }
     mCTX->line_to(x,y);
 }
 
 void Path::rel_line_to(double x,double y){
+    if(!mCTX->has_current_point()){
+        mCTX->move_to(0,0);
+    }
     mCTX->rel_line_to(x,y);
 }
 
 void Path::curve_to(double x1, double y1, double x2, double y2, double x3, double y3){
+    if(!mCTX->has_current_point())
+        mCTX->move_to(0,0);
     mCTX->curve_to(x1,y1,x2,y2,x3,y3);
 }
 
 void Path::rel_curve_to(double x1, double y1, double x2, double y2, double x3, double y3){
+    if(!mCTX->has_current_point()){
+        mCTX->move_to(0,0);
+    }
     mCTX->rel_curve_to(x1,y1,x2,y2,x3,y3);
 }
 
 void Path::quad_to(double x1, double y1, double x2, double y2){
-    double x0, y0;
+    double x0=0, y0=0;
     mCTX->get_current_point(x0,y0);
 
     //Control points for cubic bezier curve
@@ -143,7 +154,7 @@ void Path::quad_to(double x1, double y1, double x2, double y2){
 }
 
 void Path::rel_quad_to(double dx1, double dy1, double dx2, double dy2){
-    double x0, y0;
+    double x0=0, y0=0;
     mCTX->get_current_point(x0,y0);
     double x1 = x0 + dx1;
     double y1 = y0 + dy1;
@@ -164,7 +175,7 @@ void Path::arc(double xc, double yc, double radius, double angle1, double angle2
 
 void Path::arc_to(double x1, double y1, double x2, double y2, double radius) {
     // Current point
-    double x0, y0;
+    double x0=0, y0=0;
     mCTX->get_current_point(x0, y0);
 
     // Calculate the angles
