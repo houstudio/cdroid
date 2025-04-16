@@ -13,6 +13,9 @@ struct CPoint{
     T x;
     T y;
     void set(T _x,T _y){x=_x;y=_y;};
+    bool operator==(const CPoint&b)const{
+        return (x==b.x)&&(y==b.y);
+    }
     static constexpr CPoint Make(T x,T y){return {x,y};}
 };
 

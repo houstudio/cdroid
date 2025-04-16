@@ -113,6 +113,7 @@ public:
 
 class PathInterpolator:public BaseInterpolator{
 private:
+    static constexpr float PRECISION = 0.002f;
     std::vector<float>mX;
     std::vector<float>mY;
 private:

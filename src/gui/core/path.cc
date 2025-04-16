@@ -114,23 +114,34 @@ void Path::rel_move_to(double x,double y){
 }
 
 void Path::line_to(double x,double y){
+    if(!mCTX->has_current_point()){
+        mCTX->move_to(0,0);
+    }
     mCTX->line_to(x,y);
 }
 
 void Path::rel_line_to(double x,double y){
+    if(!mCTX->has_current_point()){
+        mCTX->move_to(0,0);
+    }
     mCTX->rel_line_to(x,y);
 }
 
 void Path::curve_to(double x1, double y1, double x2, double y2, double x3, double y3){
+    if(!mCTX->has_current_point())
+        mCTX->move_to(0,0);
     mCTX->curve_to(x1,y1,x2,y2,x3,y3);
 }
 
 void Path::rel_curve_to(double x1, double y1, double x2, double y2, double x3, double y3){
+    if(!mCTX->has_current_point()){
+        mCTX->move_to(0,0);
+    }
     mCTX->rel_curve_to(x1,y1,x2,y2,x3,y3);
 }
 
 void Path::quad_to(double x1, double y1, double x2, double y2){
-    double x0, y0;
+    double x0=0, y0=0;
     mCTX->get_current_point(x0,y0);
 
     //Control points for cubic bezier curve
@@ -143,7 +154,7 @@ void Path::quad_to(double x1, double y1, double x2, double y2){
 }
 
 void Path::rel_quad_to(double dx1, double dy1, double dx2, double dy2){
-    double x0, y0;
+    double x0=0, y0=0;
     mCTX->get_current_point(x0,y0);
     double x1 = x0 + dx1;
     double y1 = y0 + dy1;
@@ -164,7 +175,7 @@ void Path::arc(double xc, double yc, double radius, double angle1, double angle2
 
 void Path::arc_to(double x1, double y1, double x2, double y2, double radius) {
     // Current point
-    double x0, y0;
+    double x0=0, y0=0;
     mCTX->get_current_point(x0, y0);
 
     // Calculate the angles
@@ -366,4 +377,197 @@ int Path::fromSVGPathData(const std::string&pathData,std::function<void(int8_t,c
     return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+typedef PointF (*BezierCalculation)(float t, const PointF* points);
+static void addMove(std::vector<PointF>& segmentPoints, std::vector<float>& lengths,const PointF& point) {
+    float length = 0;
+    if (!lengths.empty()) {
+        length = lengths.back();
+    }
+    segmentPoints.push_back(point);
+    lengths.push_back(length);
 }
+
+static double PointDistance(const PointF& p1, const PointF& p2) {
+    const double dx = p2.x - p1.x;
+    const double dy = p2.y - p1.y;
+    return std::sqrt(dx*dx+dy*dy);
+}
+
+static void addLine(std::vector<PointF>& segmentPoints, std::vector<float>& lengths,const PointF& toPoint) {
+    if (segmentPoints.empty()) {
+        segmentPoints.push_back({0, 0});
+        lengths.push_back(0);
+    } else if (segmentPoints.back() == toPoint) {
+        return; // Empty line
+    }
+    float length = lengths.back() + PointDistance(segmentPoints.back(), toPoint);
+    segmentPoints.push_back(toPoint);
+    lengths.push_back(length);
+}
+
+static float cubicCoordinateCalculation(float t, float p0, float p1, float p2, float p3) {
+    float oneMinusT = 1 - t;
+    float oneMinusTSquared = oneMinusT * oneMinusT;
+    float oneMinusTCubed = oneMinusTSquared * oneMinusT;
+    float tSquared = t * t;
+    float tCubed = tSquared * t;
+    return (oneMinusTCubed * p0) + (3 * oneMinusTSquared * t * p1)
+            + (3 * oneMinusT * tSquared * p2) + (tCubed * p3);
+}
+
+static PointF cubicBezierCalculation(float t, const PointF* points) {
+    float x = cubicCoordinateCalculation(t, points[0].x, points[1].x,
+        points[2].x, points[3].x);
+    float y = cubicCoordinateCalculation(t, points[0].y, points[1].y,
+        points[2].y, points[3].y);
+    return {x, y};
+}
+
+// Subdivide a section of the Bezier curve, set the mid-point and the mid-t value.
+// Returns true if further subdivision is necessary as defined by errorSquared.
+static bool subdividePoints(const PointF* points, BezierCalculation bezierFunction, float t0,
+    const PointF &p0,float t1, const PointF &p1, float& midT, PointF &midPoint, float errorSquared) {
+    midT = (t1 + t0) / 2;
+    float midX = (p1.x + p0.x) / 2;
+    float midY = (p1.y + p0.y) / 2;
+
+    midPoint = (*bezierFunction)(midT, points);
+    float xError = midPoint.x - midX;
+    float yError = midPoint.y - midY;
+    float midErrorSquared = (xError * xError) + (yError * yError);
+    return midErrorSquared > errorSquared;
+}
+
+static void addBezier(const PointF* points,BezierCalculation bezierFunction, std::vector<PointF>& segmentPoints,
+        std::vector<float>& lengths, float errorSquared, bool doubleCheckDivision) {
+    typedef std::map<float, PointF> PointMap;
+    PointMap tToPoint;
+
+    tToPoint[0] = (*bezierFunction)(0, points);
+    tToPoint[1] = (*bezierFunction)(1, points);
+
+    PointMap::iterator iter = tToPoint.begin();
+    PointMap::iterator next = iter;
+    ++next;
+    while (next != tToPoint.end()) {
+        bool needsSubdivision = true;
+        PointF midPoint;
+        do {
+            float midT;
+            needsSubdivision = subdividePoints(points, bezierFunction, iter->first,
+                iter->second, next->first, next->second, midT, midPoint, errorSquared);
+            if (!needsSubdivision && doubleCheckDivision) {
+                PointF quarterPoint;
+                float quarterT;
+                needsSubdivision = subdividePoints(points, bezierFunction, iter->first,
+                    iter->second, midT, midPoint, quarterT, quarterPoint, errorSquared);
+                if (needsSubdivision) {
+                    // Found an inflection point. No need to double-check.
+                    doubleCheckDivision = false;
+                }
+            }
+            if (needsSubdivision) {
+                next = tToPoint.insert(iter, PointMap::value_type(midT, midPoint));
+            }
+        } while (needsSubdivision);
+        iter = next;
+        next++;
+    }
+
+    // Now that each division can use linear interpolation with less than the allowed error
+    for (iter = tToPoint.begin(); iter != tToPoint.end(); ++iter) {
+        addLine(segmentPoints, lengths, iter->second);
+    }
+}
+
+static void createVerbSegments(int verb,const PointF* points,
+    std::vector<PointF>& segmentPoints,std::vector<float>& lengths, float errorSquared, float errorConic) {
+    switch (verb) {
+    case CAIRO_PATH_MOVE_TO://SkPath::kMove_Verb:
+        addMove(segmentPoints, lengths, points[0]);
+        break;
+    case CAIRO_PATH_CLOSE_PATH://SkPath::kClose_Verb:
+        addLine(segmentPoints, lengths, points[0]);
+        break;
+    case CAIRO_PATH_LINE_TO://SkPath::kLine_Verb:
+        addLine(segmentPoints, lengths, points[1]);
+        break;
+    case CAIRO_PATH_CURVE_TO://SkPath::kCubic_Verb:
+        addBezier(points, cubicBezierCalculation, segmentPoints, lengths,errorSquared, true);
+        break;
+    default:
+        LOGE("Path enum changed, new types %d may have been added.",verb);
+        break;
+    }
+}
+
+void Path::approximate(std::vector<float>&approximation,float acceptableError){
+    PointF points[4];
+    std::vector<PointF> segmentPoints;
+    std::vector<float> lengths;
+    float errorSquared = acceptableError * acceptableError;
+    float errorConic = acceptableError / 2; // somewhat arbitrary
+    if (acceptableError < 0) {
+        throw std::logic_error("AcceptableError must be greater than or equal to 0");
+    }
+    int numVerbs =0;
+    cairo_path_t *crPath = cairo_copy_path(mCTX->cobj());
+    PointF first_point,last_point;
+    for (int i = 0; i < crPath->num_data;){
+        cairo_path_data_t* data = &crPath->data[i];
+        PointF points[4];
+        int ptCount = 0;
+        switch(data->header.type){
+        case CAIRO_PATH_MOVE_TO:
+            last_point.set(data[1].point.x, data[1].point.y);
+            first_point=last_point;
+            ptCount =2;break;
+        case CAIRO_PATH_LINE_TO:
+            ptCount=2;break;
+        case CAIRO_PATH_CLOSE_PATH:ptCount=1;break;
+        case CAIRO_PATH_CURVE_TO:
+            ptCount=4;
+
+            break;
+        }
+        points[0]=last_point;
+        for(int j=1;j<ptCount;j++)
+            points[j].set(data[j].point.x,data[j].point.y);
+        createVerbSegments(data->header.type,points,segmentPoints,lengths,errorSquared,errorConic);
+        i+=ptCount;
+        numVerbs++;
+        last_point.set(data[ptCount-1].point.x,data[ptCount-1].point.y);
+    }
+    if (segmentPoints.empty()) {
+        if (numVerbs == 1) {
+            auto pt = crPath->data[0].point;
+            addMove(segmentPoints, lengths,{float(pt.x),float(pt.y)});//path.getPoint(0));
+        } else {
+            // Invalid or empty path. Fall back to point(0,0)
+            addMove(segmentPoints, lengths, {0.f,0.f});
+        }
+    }
+
+    float totalLength = lengths.back();
+    if (totalLength == 0) {
+        // Lone Move instructions should still be able to animate at the same value.
+        segmentPoints.push_back(segmentPoints.back());
+        lengths.push_back(1);
+        totalLength = 1;
+    }
+
+    const size_t numPoints = segmentPoints.size();
+    const size_t approximationArraySize = numPoints * 3;
+
+    approximation.resize(approximationArraySize);
+
+    int approximationIndex = 0;
+    for (size_t i = 0; i < numPoints; i++) {
+        const PointF& point = segmentPoints[i];
+        approximation[approximationIndex++] = lengths[i] / totalLength;
+        approximation[approximationIndex++] = point.x;
+        approximation[approximationIndex++] = point.y;
+    }
+}
+}/*endof namespace*/
