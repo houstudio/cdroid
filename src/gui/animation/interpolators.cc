@@ -180,7 +180,6 @@ void PathInterpolator::initQuad(float controlX, float controlY) {
 }
 
 void PathInterpolator::initCubic(float x1, float y1, float x2, float y2) {
-#if 1
     Path path;
     path.move_to(0, 0);
     double x = 0,y = 0;
@@ -188,16 +187,6 @@ void PathInterpolator::initCubic(float x1, float y1, float x2, float y2) {
     path.curve_to(x  + 2.0/3.0 * (x1 - x),  y  + 2.0/3.0 * (y1 - y),
             x2 + 2.0/3.0 * (x1 - x2), y2 + 2.0/3.0 * (y1 - y2),x2,y2);
     initPath(path);
-#else
-    unsigned char data[4];
-    double x,y;
-    Cairo::RefPtr<Cairo::ImageSurface>surface=Cairo::ImageSurface::create(data,Cairo::Surface::Format::A8,1,1,4);
-    Cairo::RefPtr<Cairo::Context>ctx=Cairo::Context::create(surface);
-    ctx->get_current_point(x,y);
-    ctx->curve_to( x  + 2.0/3.0 * (x1 - x),  y  + 2.0/3.0 * (y1 - y),
-                   x2 + 2.0/3.0 * (x1 - x2), y2 + 2.0/3.0 * (y1 - y2),
-                   x2, y2);
-#endif
 }
 
 void PathInterpolator::initPath(cdroid::Path&path){
