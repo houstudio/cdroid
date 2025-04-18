@@ -265,7 +265,12 @@ if(ENABLE_RECYCLERVIEW)
         widgetEx/coordinatorlayout.cc
     )
 endif(ENABLE_RECYCLERVIEW)
-
+if(ENABLE_FLEXBOXLAYOUT)
+    list(APPEND CDROID_SOURCES
+        widgetEx/flexbox/flexboxlayout.cc
+        widgetEx/flexbox/flexboxhelper.cc
+    )
+endif(ENABLE_FLEXBOXLAYOUT)
 list(APPEND CDROID_SOURCES
     widgetEx/viewpager2.cc
     widgetEx/scrolleventadapter.cc
