@@ -2,11 +2,41 @@
 namespace cdroid{
 
 FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGroup(context,attrs){
-    mFlexDirection = attrs.getInt("flexDirection", (int)FlexDirection::ROW);
-    mFlexWrap = attrs.getInt("flexWrap", (int)FlexWrap::NOWRAP);
-    mJustifyContent = attrs.getInt("justifyContent", (int)JustifyContent::FLEX_START);
-    mAlignItems = attrs.getInt("alignItems", (int)AlignItems::FLEX_START);
-    mAlignContent = attrs.getInt("alignContent", (int)AlignContent::FLEX_START);
+    init();
+    mFlexDirection = attrs.getInt("flexDirection",std::unordered_map<std::string,int>{
+            {"column",FlexDirection::COLUMN},
+            {"column_reverse",FlexDirection::COLUMN_REVERSE},
+            {"row",FlexDirection::ROW},
+            {"row_reverse",FlexDirection::ROW_REVERSE},
+        }, (int)FlexDirection::ROW);
+    mFlexWrap = attrs.getInt("flexWrap",std::unordered_map<std::string,int>{
+            {"nowrap" , FlexWrap::NOWRAP},
+            {"wrap" , FlexWrap::WRAP},
+            {"wrap_reverse" , FlexWrap::WRAP_REVERSE}
+        }, (int)FlexWrap::NOWRAP);
+    mJustifyContent = attrs.getInt("justifyContent",std::unordered_map<std::string,int>{
+            {"flex_start",JustifyContent::FLEX_START},
+            {"flex_end", JustifyContent::FLEX_END},
+            {"center"  , JustifyContent::CENTER},
+            {"space_between", JustifyContent::SPACE_BETWEEN},
+            {"space_around" , JustifyContent::SPACE_AROUND},
+            {"space_evenly" , JustifyContent::SPACE_EVENLY}
+        }, (int)JustifyContent::FLEX_START);
+    mAlignItems = attrs.getInt("alignItems",std::unordered_map<std::string,int>{
+            {"flex_start",(int)AlignItems::FLEX_START},
+            {"flex_end", (int)AlignItems::FLEX_END},
+            {"center"  , (int)AlignItems::CENTER},
+            {"baseline", (int)AlignItems::BASELINE},
+            {"stretch" , (int)AlignItems::STRETCH}
+        }, (int)AlignItems::FLEX_START);
+    mAlignContent = attrs.getInt("alignContent",std::unordered_map<std::string,int>{
+            {"flex_start", (int)AlignContent::FLEX_START},
+            {"flex_end"  , (int)AlignContent::FLEX_END},
+            {"center" , (int)AlignContent::CENTER},
+            {"space_between",(int)AlignContent::SPACE_BETWEEN},
+            {"space_around" ,(int)AlignContent::SPACE_AROUND},
+            {"stretch" , (int)AlignContent::STRETCH}
+        }, (int)AlignContent::FLEX_START);
     mMaxLine = attrs.getInt("maxLine", NOT_SET);
     Drawable* drawable = attrs.getDrawable("dividerDrawable");
     if (drawable != nullptr) {
@@ -21,25 +51,46 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGro
     if (drawableVertical != nullptr) {
         setDividerDrawableVertical(drawableVertical);
     }
-    int dividerMode = attrs.getInt("showDivider", SHOW_DIVIDER_NONE);
+    std::unordered_map<std::string,int>divs={
+            {"beginning",(int)SHOW_DIVIDER_BEGINNING},
+            {"midle",(int)SHOW_DIVIDER_MIDDLE},
+            {"end",(int)SHOW_DIVIDER_END},
+            {"none",(int)SHOW_DIVIDER_NONE}
+        };
+    int dividerMode = attrs.getInt("showDivider",divs,SHOW_DIVIDER_NONE);
     if (dividerMode != SHOW_DIVIDER_NONE) {
         mShowDividerVertical = dividerMode;
         mShowDividerHorizontal = dividerMode;
     }
-    int dividerModeVertical = attrs.getInt("showDividerVertical", SHOW_DIVIDER_NONE);
+    int dividerModeVertical = attrs.getInt("showDividerVertical",divs, SHOW_DIVIDER_NONE);
     if (dividerModeVertical != SHOW_DIVIDER_NONE) {
         mShowDividerVertical = dividerModeVertical;
     }
-    int dividerModeHorizontal = attrs.getInt("showDividerHorizontal", SHOW_DIVIDER_NONE);
+    int dividerModeHorizontal = attrs.getInt("showDividerHorizontal",divs, SHOW_DIVIDER_NONE);
     if (dividerModeHorizontal != SHOW_DIVIDER_NONE) {
         mShowDividerHorizontal = dividerModeHorizontal;
     }
 }
 
+FlexboxLayout::~FlexboxLayout(){
+    delete mFlexLinesResult;
+    delete mFlexboxHelper;
+    if(mDividerDrawableHorizontal==mDividerDrawableVertical){
+        delete mDividerDrawableHorizontal;
+    }else{
+        delete mDividerDrawableHorizontal;
+        delete mDividerDrawableVertical;
+    }
+}
+
+void FlexboxLayout::init(){
+    mFlexLinesResult = new FlexboxHelper::FlexLinesResult;
+    mFlexboxHelper = nullptr;//mFlexboxHelper(this);
+    mDividerDrawableHorizontal = nullptr;
+    mDividerDrawableVertical = nullptr;
+}
+
 void FlexboxLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    /*if (mOrderCache == null) {
-        mOrderCache = new SparseIntArray(getChildCount());
-    }*/
     if (mFlexboxHelper->isOrderChangedFromLastMeasurement(mOrderCache)) {
         mReorderedIndices = mFlexboxHelper->createReorderedIndices(mOrderCache);
     }
@@ -69,7 +120,7 @@ View* FlexboxLayout::getFlexItemAt(int index) {
 }
 
 View* FlexboxLayout::getReorderedChildAt(int index) {
-    if (index < 0 || index >= mReorderedIndices.size()) {
+    if ((index < 0) || (index >= mReorderedIndices.size())) {
         return nullptr;
     }
     return getChildAt(mReorderedIndices[index]);
@@ -80,9 +131,6 @@ View* FlexboxLayout::getReorderedFlexItemAt(int index) {
 }
 
 View& FlexboxLayout::addView(View* child, int index, ViewGroup::LayoutParams* params) {
-    /*if (mOrderCache == null) {
-        mOrderCache = new SparseIntArray(getChildCount());
-    }*/
     // Create an array for the reordered indices before the View is added in the parent
     // ViewGroup since otherwise reordered indices won't be in effect before the
     // FlexboxLayout's onMeasure is called.

@@ -3,7 +3,6 @@
 #include <view/viewgroup.h>
 #include <widgetEx/flexbox/flexline.h>
 #include <widgetEx/flexbox/flexitem.h>
-//#include <widgetEx/flexbox/alignself.h>
 #include <widgetEx/flexbox/flexwrap.h>
 #include <widgetEx/flexbox/aligndefs.h>
 #include <widgetEx/flexbox/justifycontent.h>
@@ -48,11 +47,12 @@ private:
     std::vector<int> mReorderedIndices;
     SparseIntArray mOrderCache;
 
-    FlexboxHelper* mFlexboxHelper;;
+    FlexboxHelper* mFlexboxHelper;
 
     std::vector<FlexLine> mFlexLines;
     FlexboxHelper::FlexLinesResult* mFlexLinesResult;
 private:
+    void init();
     void measureHorizontal(int widthMeasureSpec, int heightMeasureSpec);
     void measureVertical(int widthMeasureSpec, int heightMeasureSpec);
     void setMeasuredDimensionForFlex(int flexDirection, int widthMeasureSpec,int heightMeasureSpec, int childState);
@@ -77,6 +77,7 @@ protected:
 public:
     class LayoutParams;
     FlexboxLayout(Context* context,const AttributeSet& attrs);
+    ~FlexboxLayout()override;
     View& addView(View* child, int index,ViewGroup::LayoutParams* params)override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
     
