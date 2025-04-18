@@ -287,7 +287,11 @@ void GradientDrawable::updateLocalState() {
             auto cls = state->mStrokeColors;
             strokeStateColor = cls->getColorForState(currentState,0);
         }
-        setStroke(state->mStrokeWidth,strokeStateColor,state->mStrokeDashWidth,state->mStrokeDashGap);
+        //setStroke(state->mStrokeWidth,strokeStateColor,state->mStrokeDashWidth,state->mStrokeDashGap);
+        Color cc(strokeStateColor);
+        mStrokePaint = SolidPattern::create_rgba((float)cc.red(),(float)cc.green(),(float)cc.blue(),(float)cc.alpha());
+        mStrokeWidth = state->mStrokeWidth;
+        mDashArray = std::vector<double> {state->mStrokeDashWidth,state->mStrokeDashGap};
     }
     state->computeOpacity();
 }
