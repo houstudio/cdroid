@@ -92,13 +92,13 @@ std::vector<int> FlexboxHelper::sortOrdersIntoReorderedIndices(int childCount, s
 }
 
 void FlexboxHelper::calculateHorizontalFlexLines(FlexLinesResult* result, int widthMeasureSpec, int heightMeasureSpec) {
-    calculateFlexLines(result, widthMeasureSpec, heightMeasureSpec, INT_MAX, 0, NO_POSITION, nullptr);
+    calculateFlexLines(result, widthMeasureSpec, heightMeasureSpec, INT_MAX, 0, (int)NO_POSITION, nullptr);
 }
 
 void FlexboxHelper::calculateHorizontalFlexLines(FlexLinesResult* result, int widthMeasureSpec,
         int heightMeasureSpec, int needsCalcAmount, int fromIndex,std::vector<FlexLine>* existingLines) {
     calculateFlexLines(result, widthMeasureSpec, heightMeasureSpec, needsCalcAmount,
-            fromIndex, NO_POSITION, existingLines);
+            fromIndex, (int)NO_POSITION, existingLines);
 }
 
 void FlexboxHelper::calculateHorizontalFlexLinesToIndex(FlexLinesResult* result, int widthMeasureSpec,
@@ -108,12 +108,12 @@ void FlexboxHelper::calculateHorizontalFlexLinesToIndex(FlexLinesResult* result,
 }
 
 void FlexboxHelper::calculateVerticalFlexLines(FlexLinesResult* result, int widthMeasureSpec, int heightMeasureSpec) {
-    calculateFlexLines(result, heightMeasureSpec, widthMeasureSpec, INT_MAX,0, NO_POSITION, nullptr);
+    calculateFlexLines(result, heightMeasureSpec, widthMeasureSpec, INT_MAX,0, (int)NO_POSITION, nullptr);
 }
 
 void FlexboxHelper::calculateVerticalFlexLines(FlexLinesResult* result, int widthMeasureSpec,
         int heightMeasureSpec, int needsCalcAmount, int fromIndex,std::vector<FlexLine>* existingLines) {
-    calculateFlexLines(result, heightMeasureSpec, widthMeasureSpec, needsCalcAmount,fromIndex, NO_POSITION, existingLines);
+    calculateFlexLines(result, heightMeasureSpec, widthMeasureSpec, needsCalcAmount,fromIndex, (int)NO_POSITION, existingLines);
 }
 
 void FlexboxHelper::calculateVerticalFlexLinesToIndex(FlexLinesResult* result, int widthMeasureSpec,
@@ -140,7 +140,7 @@ void FlexboxHelper::calculateFlexLines(FlexLinesResult* result, int mainMeasureS
 
     result->mFlexLines = flexLines;
 
-    bool reachedToIndex = toIndex == NO_POSITION;
+    bool reachedToIndex = (toIndex == (int)NO_POSITION);
 
     int mainPaddingStart = getPaddingStartMain(isMainHorizontal);
     int mainPaddingEnd = getPaddingEndMain(isMainHorizontal);
@@ -329,9 +329,9 @@ void FlexboxHelper::calculateFlexLines(FlexLinesResult* result, int mainMeasureS
             sumCrossSize += flexLine.mCrossSize;
         }
 
-        if (toIndex != NO_POSITION && flexLines.size() > 0
-                && flexLines.at(flexLines.size() - 1).mLastIndex >= toIndex
-                && i >= toIndex && !reachedToIndex) {
+        if ((toIndex != (int)NO_POSITION) && (flexLines.size() > 0)
+                && (flexLines.at(flexLines.size() - 1).mLastIndex >= toIndex)
+                && (i >= toIndex) && !reachedToIndex) {
             // Calculated to include a flex line which includes the flex item having the
             // toIndex.
             // Let the sumCrossSize start from the negative value of the last flex line's
@@ -1371,11 +1371,9 @@ void FlexboxHelper::ensureIndexToFlexLine(int size) {
 }
 
 void FlexboxHelper::clearFlexLines(std::vector<FlexLine>& flexLines, int fromFlexItem) {
-    //assert mIndexToFlexLine != null;
-    //assert mMeasureSpecCache != null;
 
     int fromFlexLine = mIndexToFlexLine[fromFlexItem];
-    if (fromFlexLine == NO_POSITION) {
+    if (fromFlexLine == (int)NO_POSITION) {
         fromFlexLine = 0;
     }
 
@@ -1387,9 +1385,9 @@ void FlexboxHelper::clearFlexLines(std::vector<FlexLine>& flexLines, int fromFle
 
     int fillTo = mIndexToFlexLine.size() - 1;
     if (fromFlexItem > fillTo) {
-        std::fill(mIndexToFlexLine.begin(),mIndexToFlexLine.end(), NO_POSITION);
+        std::fill(mIndexToFlexLine.begin(),mIndexToFlexLine.end(), (int)NO_POSITION);
     } else {
-        std::fill(mIndexToFlexLine.begin()+ fromFlexItem, mIndexToFlexLine.begin()+fillTo, NO_POSITION);
+        std::fill(mIndexToFlexLine.begin()+ fromFlexItem, mIndexToFlexLine.begin()+fillTo, (int)NO_POSITION);
     }
 
     fillTo = mMeasureSpecCache.size() - 1;
