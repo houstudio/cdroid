@@ -5,7 +5,11 @@ namespace cdroid{
 
 class ScaleDrawable:public DrawableWrapper{
 private:
+    static constexpr int MAX_LEVEL = 10000;
+private:
     class ScaleState:public DrawableWrapperState{
+    private:
+        static constexpr float DO_NOT_SCALE = -1.f;
     public:
         float mScaleWidth;
         float mScaleHeight;

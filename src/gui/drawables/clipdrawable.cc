@@ -3,8 +3,6 @@
 
 namespace cdroid{
 
-#define MAX_LEVEL 10000
-
 ClipDrawable::ClipState::ClipState():DrawableWrapperState(){
     mGravity = Gravity::LEFT;
     mOrientation = HORIZONTAL;

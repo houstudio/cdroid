@@ -2,8 +2,6 @@
 
 namespace cdroid{
 
-#define MAX_LEVEL 10000
-#define DO_NOT_SCALE 1.0f
 ScaleDrawable::ScaleState::ScaleState():DrawableWrapperState(){
     mScaleWidth = DO_NOT_SCALE;
     mScaleHeight= DO_NOT_SCALE;

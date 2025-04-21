@@ -4,7 +4,7 @@
 
 using namespace Cairo;
 namespace cdroid{
-#define MAX_LEVEL 10000
+
 RotateDrawable::RotateState::RotateState()
     :DrawableWrapperState(){
     mFromDegrees =.0;

@@ -5,6 +5,8 @@ namespace cdroid{
 
 class RotateDrawable:public DrawableWrapper{
 private:
+    static constexpr int MAX_LEVEL = 10000;
+private:
     class RotateState:public DrawableWrapperState{
     public:
        float mFromDegrees;
