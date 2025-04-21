@@ -88,6 +88,7 @@ public:
     int getTintMode()const;
     BitmapDrawable*mutate()override;
     void clearMutated()override;
+    bool isStateful() const override;
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas&canvas)override;
     Insets getOpticalInsets()override;
