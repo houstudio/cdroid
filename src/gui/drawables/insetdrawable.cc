@@ -148,6 +148,11 @@ std::shared_ptr<Drawable::ConstantState>InsetDrawable::getConstantState(){
 
 void InsetDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     // Inset attribute may be overridden by more specific attributes.
+    updateStateFromTypedArray(atts);
+    DrawableWrapper::inflate(parser,atts);
+}
+
+void InsetDrawable::updateStateFromTypedArray(const AttributeSet&atts){
     if (atts.hasAttribute("inset")) {
         const float inset = atts.getFloat("inset", 0);
         mState->mInsetLeft.set(inset);
@@ -159,8 +164,6 @@ void InsetDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     mState->mInsetTop.set(atts.getFloat("insetTop", 0.f));
     mState->mInsetRight.set(atts.getFloat("insetRight", 0.f));
     mState->mInsetBottom.set(atts.getFloat("insetBottom", 0.f));
-    DrawableWrapper::inflate(parser,atts);
 }
-
-}
+}/*endof namespace*/
 

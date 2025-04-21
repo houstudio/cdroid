@@ -101,13 +101,16 @@ void ClipDrawable::draw(Canvas& canvas){
 }
 
 void ClipDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    const int orientation = atts.getInt("clipOrientation",std::unordered_map<std::string,int>{
-        {"horizontal",(int)HORIZONTAL},{"vertical",(int)VERTICAL}
-    }, mState->mOrientation);
-    const int gravity = atts.getGravity("gravity", mState->mGravity);
+    updateStateFromTypedArray(atts);
     DrawableWrapper::inflate(parser,atts);
-    mState->mOrientation = orientation;
-    mState->mGravity = gravity;
 }
 
+void ClipDrawable::updateStateFromTypedArray(const AttributeSet&atts){
+    mState->mOrientation = atts.getInt("clipOrientation",std::unordered_map<std::string,int>{
+            {"horizontal",(int)HORIZONTAL},
+            {"vertical",(int)VERTICAL}
+        }, mState->mOrientation);
+    mState->mGravity = atts.getGravity("gravity", mState->mGravity);
 }
+
+}/*endof namespace*/

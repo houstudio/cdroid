@@ -20,6 +20,7 @@ private:
     };
     std::shared_ptr<RotateState>mState;
     RotateDrawable(std::shared_ptr<RotateState>state);
+    void updateStateFromTypedArray(const AttributeSet&atts);
 protected:
     bool onLevelChange(int level)override;
     std::shared_ptr<DrawableWrapperState> mutateConstantState();

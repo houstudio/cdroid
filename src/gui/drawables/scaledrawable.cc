@@ -109,12 +109,16 @@ void ScaleDrawable::draw(Canvas& canvas) {
 extern int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def);
 
 void ScaleDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    updateStateFromTypedArray(atts);
+    DrawableWrapper::inflate(parser,atts);
+}
+
+void ScaleDrawable::updateStateFromTypedArray(const AttributeSet&atts){
     mState->mScaleWidth = getDimensionOrFraction(atts,"scaleWidth", 100, mState->mScaleWidth);
     mState->mScaleHeight = getDimensionOrFraction(atts,"scaleHeight", 100, mState->mScaleHeight);
     mState->mGravity = atts.getGravity("scaleGravity", mState->mGravity);
     mState->mUseIntrinsicSizeAsMin = atts.getBoolean("useIntrinsicSizeAsMinimum", mState->mUseIntrinsicSizeAsMin);
     mState->mInitialLevel = atts.getInt("level", mState->mInitialLevel);
-    DrawableWrapper::inflate(parser,atts);
 }
 
 }
