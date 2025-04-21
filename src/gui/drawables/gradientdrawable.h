@@ -210,7 +210,6 @@ public:
     void clearMutated()override;
     void draw(Canvas&canvas)override;
     void inflate(XmlPullParser&,const AttributeSet&)override;
-    static Drawable*inflate(Context*ctx,const AttributeSet&atts);
 };
 
 }

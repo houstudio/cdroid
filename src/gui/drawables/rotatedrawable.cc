@@ -144,7 +144,6 @@ void RotateDrawable::draw(Canvas& canvas) {
 }
 
 void RotateDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    DrawableWrapper::inflate(parser,atts);
     mState->mPivotX = atts.getFraction("pivotX",1,1,mState->mPivotX);
     mState->mPivotXRel = (mState->mPivotX <=1.f);
 
@@ -154,6 +153,7 @@ void RotateDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     mState->mFromDegrees = atts.getFloat("fromDegrees", mState->mFromDegrees);
     mState->mToDegrees = atts.getFloat("toDegrees", mState->mToDegrees);
     mState->mCurrentDegrees = mState->mFromDegrees;
+    DrawableWrapper::inflate(parser,atts);
 }
 
 }

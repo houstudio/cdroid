@@ -1,6 +1,8 @@
 #include <widgetEx/flexbox/flexboxlayout.h>
 namespace cdroid{
 
+DECLARE_WIDGET(FlexboxLayout)
+
 FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGroup(context,attrs){
     init();
     mFlexDirection = attrs.getInt("flexDirection",std::unordered_map<std::string,int>{
@@ -84,6 +86,15 @@ FlexboxLayout::~FlexboxLayout(){
 }
 
 void FlexboxLayout::init(){
+    mFlexDirection= FlexDirection::ROW;
+    mFlexWrap = FlexWrap::NOWRAP;
+    mJustifyContent = JustifyContent::FLEX_START;
+    mAlignItems  = (int)AlignItems::FLEX_START;
+    mAlignContent= (int)AlignContent::FLEX_START;
+    mMaxLine = NOT_SET;
+    mShowDividerVertical  = SHOW_DIVIDER_NONE;
+    mShowDividerHorizontal= SHOW_DIVIDER_NONE;
+
     mFlexLinesResult = new FlexboxHelper::FlexLinesResult;
     mFlexboxHelper = nullptr;//mFlexboxHelper(this);
     mDividerDrawableHorizontal = nullptr;
@@ -150,7 +161,7 @@ void FlexboxLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpe
 
     // TODO: Consider the case any individual child's mAlignSelf is set to ALIGN_SELF_BASELINE
     if (mAlignItems == (int)AlignItems::BASELINE) {
-        for (FlexLine flexLine : mFlexLines) {
+        for (FlexLine& flexLine : mFlexLines) {
             // The largest height value that also take the baseline shift into account
             int largestHeightInLine = INT_MIN;
             for (int i = 0; i < flexLine.mItemCount; i++) {
@@ -276,7 +287,7 @@ void FlexboxLayout::setMeasuredDimensionForFlex(int flexDirection, int widthMeas
 
 int FlexboxLayout::getLargestMainSize() {
     int largestSize = INT_MIN;
-    for (FlexLine flexLine : mFlexLines) {
+    for (FlexLine& flexLine : mFlexLines) {
         largestSize = std::max(largestSize, flexLine.mMainSize);
     }
     return largestSize;
@@ -285,7 +296,7 @@ int FlexboxLayout::getLargestMainSize() {
 int FlexboxLayout::getSumOfCrossSize() {
     int sum = 0;
     for (int i = 0, size = mFlexLines.size(); i < size; i++) {
-        FlexLine flexLine = mFlexLines.at(i);
+        FlexLine& flexLine = mFlexLines.at(i);
 
         // Judge if the beginning or middle dividers are required
         if (hasDividerBeforeFlexLine(i)) {
@@ -314,8 +325,8 @@ bool FlexboxLayout::isMainAxisDirectionHorizontal() {
 }
 
 void FlexboxLayout::onLayout(bool changed, int left, int top, int right, int bottom) {
-    int layoutDirection = this->getLayoutDirection();
-    bool isRtl;
+    const int layoutDirection = getLayoutDirection();
+    bool isRtl = false;
     switch (mFlexDirection) {
         case FlexDirection::ROW:
             isRtl = layoutDirection == View::LAYOUT_DIRECTION_RTL;
@@ -363,7 +374,7 @@ void FlexboxLayout::layoutHorizontal(bool isRtl, int left, int top, int right, i
     // SPACE_BETWEEN or SPACE_AROUND
     float childRight;
     for (int i = 0, size = mFlexLines.size(); i < size; i++) {
-        FlexLine flexLine = mFlexLines.at(i);
+        FlexLine& flexLine = mFlexLines.at(i);
         if (hasDividerBeforeFlexLine(i)) {
             childBottom -= mDividerHorizontalHeight;
             childTop += mDividerHorizontalHeight;
@@ -494,7 +505,7 @@ void FlexboxLayout::layoutVertical(bool isRtl, bool fromBottomToTop, int left, i
     float childBottom;
 
     for (int i = 0, size = mFlexLines.size(); i < size; i++) {
-        FlexLine flexLine = mFlexLines.at(i);
+        FlexLine& flexLine = mFlexLines.at(i);
         if (hasDividerBeforeFlexLine(i)) {
             childLeft += mDividerVerticalWidth;
             childRight -= mDividerVerticalWidth;
@@ -613,7 +624,7 @@ void FlexboxLayout::onDraw(Canvas& canvas) {
         return;
     }
 
-    int layoutDirection = this->getLayoutDirection();
+    const int layoutDirection = getLayoutDirection();
     bool isRtl;
     bool fromBottomToTop = false;
     switch (mFlexDirection) {
@@ -653,7 +664,7 @@ void FlexboxLayout::drawDividersHorizontal(Canvas& canvas, bool isRtl, bool from
     int paddingRight = getPaddingRight();
     int horizontalDividerLength = std::max(0, getWidth() - paddingRight - paddingLeft);
     for (int i = 0, size = mFlexLines.size(); i < size; i++) {
-        FlexLine flexLine = mFlexLines.at(i);
+        FlexLine& flexLine = mFlexLines.at(i);
         for (int j = 0; j < flexLine.mItemCount; j++) {
             int viewIndex = flexLine.mFirstIndex + j;
             View* view = getReorderedChildAt(viewIndex);
@@ -697,8 +708,7 @@ void FlexboxLayout::drawDividersHorizontal(Canvas& canvas, bool isRtl, bool from
             } else {
                 horizontalDividerTop = flexLine.mTop - mDividerHorizontalHeight;
             }
-            drawHorizontalDivider(canvas, paddingLeft, horizontalDividerTop,
-                    horizontalDividerLength);
+            drawHorizontalDivider(canvas, paddingLeft, horizontalDividerTop,horizontalDividerLength);
         }
         // Judge if the end divider is needed before the flex line
         if (hasEndDividerAfterFlexLine(i)) {
@@ -720,7 +730,7 @@ void FlexboxLayout::drawDividersVertical(Canvas& canvas, bool isRtl, bool fromBo
     int paddingBottom = getPaddingBottom();
     int verticalDividerLength = std::max(0, getHeight() - paddingBottom - paddingTop);
     for (int i = 0, size = mFlexLines.size(); i < size; i++) {
-        FlexLine flexLine = mFlexLines.at(i);
+        FlexLine& flexLine = mFlexLines.at(i);
 
         // Draw horizontal dividers if needed
         for (int j = 0; j < flexLine.mItemCount; j++) {
@@ -739,7 +749,6 @@ void FlexboxLayout::drawDividersVertical(Canvas& canvas, bool isRtl, bool fromBo
                 } else {
                     dividerTop = view->getTop() - lp->topMargin - mDividerHorizontalHeight;
                 }
-
                 drawHorizontalDivider(canvas, flexLine.mLeft, dividerTop, flexLine.mCrossSize);
             }
 
@@ -752,7 +761,6 @@ void FlexboxLayout::drawDividersVertical(Canvas& canvas, bool isRtl, bool fromBo
                     } else {
                         dividerTop = view->getBottom() + lp->bottomMargin;
                     }
-
                     drawHorizontalDivider(canvas, flexLine.mLeft, dividerTop,flexLine.mCrossSize);
                 }
             }
@@ -984,7 +992,11 @@ void FlexboxLayout::setDividerDrawableHorizontal(Drawable* divider) {
     if (divider == mDividerDrawableHorizontal) {
         return;
     }
+    if(mDividerDrawableHorizontal!=mDividerDrawableVertical){
+        delete mDividerDrawableHorizontal;
+    }
     mDividerDrawableHorizontal = divider;
+
     if (divider != nullptr) {
         mDividerHorizontalHeight = divider->getIntrinsicHeight();
     } else {
@@ -997,6 +1009,9 @@ void FlexboxLayout::setDividerDrawableHorizontal(Drawable* divider) {
 void FlexboxLayout::setDividerDrawableVertical(Drawable* divider) {
     if (divider == mDividerDrawableVertical) {
         return;
+    }
+    if(mDividerDrawableHorizontal!=mDividerDrawableVertical){
+        delete mDividerDrawableVertical;
     }
     mDividerDrawableVertical = divider;
     if (divider != nullptr) {
@@ -1133,13 +1148,20 @@ FlexboxLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& a
     mOrder = attrs.getInt("layout_order", (int)ORDER_DEFAULT);
     mFlexGrow = attrs.getFloat("layout_flexGrow", (int)FLEX_GROW_DEFAULT);
     mFlexShrink = attrs.getFloat("layout_flexShrink",(float)FLEX_SHRINK_DEFAULT);
-    mAlignSelf = attrs.getInt("layout_alignSelf", (int)AlignSelf::AUTO);
+    mAlignSelf = attrs.getInt("layout_alignSelf",std::unordered_map<std::string,int>{
+            {"auto" , (int)AlignSelf::AUTO},
+            {"flex_start",(int)AlignSelf::FLEX_START},
+            {"flex_end", (int)AlignSelf::FLEX_END},
+            {"center"  , (int)AlignSelf::CENTER},
+            {"baseline", (int)AlignSelf::BASELINE},
+            {"stretch" , (int)AlignSelf::STRETCH},
+        }, (int)AlignSelf::AUTO);
     mFlexBasisPercent = attrs.getFraction("layout_flexBasisPercent", 1, 1,(float)FLEX_BASIS_PERCENT_DEFAULT);
     mMinWidth = attrs.getDimensionPixelSize("layout_minWidth", (int)NOT_SET);
     mMinHeight = attrs.getDimensionPixelSize("layout_minHeight",(int)NOT_SET);
-    mMaxWidth = attrs.getDimensionPixelSize("layout_maxWidth",(int)MAX_SIZE);
+    mMaxWidth  = attrs.getDimensionPixelSize("layout_maxWidth",(int)MAX_SIZE);
     mMaxHeight = attrs.getDimensionPixelSize("layout_maxHeight",(int)MAX_SIZE);
-    mWrapBefore = attrs.getBoolean("layout_wrapBefore", false);
+    mWrapBefore= attrs.getBoolean("layout_wrapBefore", false);
 }
 
 FlexboxLayout::LayoutParams::LayoutParams(const LayoutParams& source):ViewGroup::MarginLayoutParams(source){

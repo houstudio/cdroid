@@ -1355,34 +1355,4 @@ void GradientDrawable::updateGradientDrawablePadding(const AttributeSet&atts){
     mPadding = pad;
 }
 
-Drawable*GradientDrawable::inflate(Context*ctx,const AttributeSet&atts) {
-    GradientDrawable*d = new GradientDrawable();
-    const int shapeType = atts.getInt("shape",std::unordered_map<std::string,int> {
-        {"rectangle",(int)GradientDrawable::RECTANGLE},{"oval",(int)GradientDrawable::OVAL},
-        {"line",(int)GradientDrawable::LINE},          {"ring",(int)GradientDrawable::RING}
-    },(int)GradientDrawable::RECTANGLE);
-    d->setShape(shapeType);
-
-    if(shapeType == GradientDrawable::RING) {
-        int tmp = atts.getDimensionPixelSize("innerRadius",-1);
-        d->setInnerRadius(tmp);
-        if(tmp == -1){
-            d->setInnerRadiusRatio(atts.getDimensionPixelSize("innerRadiusRatio",-1));
-        }
-        tmp = atts.getDimensionPixelSize("thickness",-1);
-        d->setThickness(tmp);
-        if( tmp == -1){
-            d->setThicknessRatio(atts.getDimensionPixelSize("thicknessRatio"));
-        }
-        d->mGradientState->mUseLevelForShape=atts.getBoolean("useLevel");
-    }
-    auto state = d->mGradientState;
-    const int insetLeft = atts.getDimensionPixelSize("opticalInsetLeft", state->mOpticalInsets.left);
-    const int insetTop = atts.getDimensionPixelSize("opticalInsetTop", state->mOpticalInsets.top);
-    const int insetRight = atts.getDimensionPixelSize("opticalInsetRight", state->mOpticalInsets.right);
-    const int insetBottom = atts.getDimensionPixelSize("opticalInsetBottom", state->mOpticalInsets.bottom);
-    state->mOpticalInsets.set(insetLeft, insetTop, insetRight, insetBottom);
-    return d;
-}
-
 }//end namespace
