@@ -56,8 +56,8 @@ private:
     void measureHorizontal(int widthMeasureSpec, int heightMeasureSpec);
     void measureVertical(int widthMeasureSpec, int heightMeasureSpec);
     void setMeasuredDimensionForFlex(int flexDirection, int widthMeasureSpec,int heightMeasureSpec, int childState);
-    void layoutHorizontal(bool isRtl, int left, int top, int right, int bottom);
-    void layoutVertical(bool isRtl, bool fromBottomToTop, int left, int top,int right, int bottom);
+    void layoutHorizontal(bool isRtl, int left, int top, int width, int height);
+    void layoutVertical(bool isRtl, bool fromBottomToTop, int left, int top,int width, int height);
     void drawDividersHorizontal(Canvas& canvas, bool isRtl, bool fromBottomToTop);
     void drawDividersVertical(Canvas& canvas, bool isRtl, bool fromBottomToTop);
     void drawVerticalDivider(Canvas& canvas, int left, int top, int length);

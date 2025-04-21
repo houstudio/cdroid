@@ -1094,6 +1094,7 @@ void GradientDrawable::draw(Canvas&canvas) {
             if(innerRadius<=0.f)
                 innerRadius=std::min(mRect.width,mRect.height)/2.f-thickness;
             canvas.begin_new_sub_path();
+            LOGD("uselevel=%d ring innerRadius=%.f thickness=%.f sweep=%.f",st->mUseLevelForShape,innerRadius,thickness,sweep);
             if( sweep<360.f && sweep>-360.f ) {
                 const double end_angle = M_PI*2*sweep/360.f;
                 canvas.set_fill_rule(Cairo::Context::FillRule::WINDING);//EVEN_ODD);//WINDING);
@@ -1106,6 +1107,7 @@ void GradientDrawable::draw(Canvas&canvas) {
                 canvas.arc(x,y,radius + thickness,0,M_PI*2.f);
                 canvas.begin_new_sub_path();
                 canvas.arc_negative(x,y,radius,M_PI*2.f,0.f);
+                canvas.dump2png("ring.png");LOGD("ring innerRadius=%.f thickness=%.f",innerRadius,thickness);
             }
         }break;
     }/*endof switch*/
@@ -1162,7 +1164,7 @@ void GradientDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
             state->mThicknessRatio = atts.getFloat("thicknessRatio", state->mThicknessRatio);
         }
 
-        state->mUseLevelForShape = atts.getBoolean("useLevel", state->mUseLevelForShape);
+        state->mUseLevelForShape = atts.getBoolean("useLevel");// state->mUseLevelForShape);
     }
 
     const int tintMode = atts.getInt("tintMode", -1);
