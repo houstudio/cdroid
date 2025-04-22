@@ -32,7 +32,7 @@ public:
         data_[key] = value;
     }
 
-    void putBool(const std::string& key, bool value) {
+    void putBoolean(const std::string& key, bool value) {
         data_[key] = value;
     }
 
@@ -74,7 +74,7 @@ public:
         return getValue<std::string>(key);
     }
 
-    bool getBool(const std::string& key) const {
+    bool getBoolean(const std::string& key) const {
         return getValue<bool>(key);
     }
 
