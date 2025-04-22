@@ -185,15 +185,18 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
 }
 
 void AnimatedRotateDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    updateStateFromTypedArray(atts);
     DrawableWrapper::inflate(parser,atts);
+    updateLocalState();
+}
+
+void AnimatedRotateDrawable::updateStateFromTypedArray(const AttributeSet&atts){
     mState->mPivotX = atts.getFraction("pivotX",1,1,mState->mPivotX);
     mState->mPivotY = atts.getFraction("pivotY",1,1, mState->mPivotY);
     mState->mPivotXRel= (mState->mPivotX<=1.f);
     mState->mPivotYRel= (mState->mPivotY<=1.f);
     mState->mFramesCount  = atts.getInt("framesCount",mState->mFramesCount);
     mState->mFrameDuration= atts.getInt("frameDuration",mState->mFrameDuration);
-    updateLocalState();
 }
-
 }
 

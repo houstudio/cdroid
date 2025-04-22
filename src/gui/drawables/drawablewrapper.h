@@ -36,7 +36,7 @@ protected:
     void onBoundsChange(const Rect& bounds)override;
 public:
     DrawableWrapper(Drawable*d=nullptr);
-    ~DrawableWrapper();
+    ~DrawableWrapper()override;
     int getIntrinsicWidth () override;
     int getIntrinsicHeight() override;
     void getOutline(Outline&) override;

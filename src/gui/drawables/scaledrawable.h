@@ -5,7 +5,11 @@ namespace cdroid{
 
 class ScaleDrawable:public DrawableWrapper{
 private:
+    static constexpr int MAX_LEVEL = 10000;
+private:
     class ScaleState:public DrawableWrapperState{
+    private:
+        static constexpr float DO_NOT_SCALE = -1.f;
     public:
         float mScaleWidth;
         float mScaleHeight;
@@ -18,6 +22,7 @@ private:
     };
     std::shared_ptr<ScaleState>mState;
     ScaleDrawable(std::shared_ptr<ScaleState> state);
+    void updateStateFromTypedArray(const AttributeSet&atts);
 protected:
     void onBoundsChange(const Rect& bounds)override;
     bool onLevelChange(int level)override;

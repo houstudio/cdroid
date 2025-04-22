@@ -5,6 +5,8 @@ namespace cdroid{
 
 class RotateDrawable:public DrawableWrapper{
 private:
+    static constexpr int MAX_LEVEL = 10000;
+private:
     class RotateState:public DrawableWrapperState{
     public:
        float mFromDegrees;
@@ -20,6 +22,7 @@ private:
     };
     std::shared_ptr<RotateState>mState;
     RotateDrawable(std::shared_ptr<RotateState>state);
+    void updateStateFromTypedArray(const AttributeSet&atts);
 protected:
     bool onLevelChange(int level)override;
     std::shared_ptr<DrawableWrapperState> mutateConstantState();

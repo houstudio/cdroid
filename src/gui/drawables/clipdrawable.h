@@ -4,6 +4,8 @@
 namespace cdroid{
 
 class ClipDrawable:public DrawableWrapper{
+private:
+    static constexpr int MAX_LEVEL = 10000;
 public:
     static constexpr int HORIZONTAL = 1;
     static constexpr int VERTICAL = 2;
@@ -18,6 +20,7 @@ private:
     };
     std::shared_ptr<ClipState>mState;
     ClipDrawable(std::shared_ptr<ClipState>state);
+    void updateStateFromTypedArray(const AttributeSet&atts);
 protected:
     bool onLevelChange(int level)override;
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;

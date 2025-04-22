@@ -308,6 +308,11 @@ bool BitmapDrawable::onStateChange(const std::vector<int>&){
     return false;    
 }
 
+bool BitmapDrawable::isStateful() const{
+    return (mBitmapState->mTint != nullptr && mBitmapState->mTint->isStateful())
+            || Drawable::isStateful();
+}
+
 BitmapDrawable*BitmapDrawable::mutate(){
     if (!mMutated && Drawable::mutate() == this) {
         mBitmapState=std::make_shared<BitmapState>(*mBitmapState);

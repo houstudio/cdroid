@@ -2,8 +2,6 @@
 
 namespace cdroid{
 
-#define MAX_LEVEL 10000
-#define DO_NOT_SCALE 1.0f
 ScaleDrawable::ScaleState::ScaleState():DrawableWrapperState(){
     mScaleWidth = DO_NOT_SCALE;
     mScaleHeight= DO_NOT_SCALE;
@@ -109,7 +107,11 @@ void ScaleDrawable::draw(Canvas& canvas) {
 extern int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def);
 
 void ScaleDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    updateStateFromTypedArray(atts);
     DrawableWrapper::inflate(parser,atts);
+}
+
+void ScaleDrawable::updateStateFromTypedArray(const AttributeSet&atts){
     mState->mScaleWidth = getDimensionOrFraction(atts,"scaleWidth", 100, mState->mScaleWidth);
     mState->mScaleHeight = getDimensionOrFraction(atts,"scaleHeight", 100, mState->mScaleHeight);
     mState->mGravity = atts.getGravity("scaleGravity", mState->mGravity);

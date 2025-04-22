@@ -45,15 +45,15 @@ bool DrawableWrapper::DrawableWrapperState::canConstantState()const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 DrawableWrapper::DrawableWrapper(Drawable*dr){
-    mState=nullptr;
-    mDrawable =dr;
-    mMutated=false;
+    mState = nullptr;
+    mDrawable= dr;
+    mMutated = false;
 }
 
 DrawableWrapper::DrawableWrapper(std::shared_ptr<DrawableWrapperState>state){
-    mState=state;
-    mDrawable=nullptr;
-    mMutated=false;
+    mState = state;
+    mDrawable= nullptr;
+    mMutated = false;
     updateLocalState();
 }
 
@@ -65,7 +65,10 @@ void DrawableWrapper::updateLocalState() {
 }
 
 DrawableWrapper::~DrawableWrapper(){
+    if(mDrawable)
+        mDrawable->setCallback(nullptr);
     delete mDrawable;
+    mDrawable = nullptr;
 }
 
 void DrawableWrapper::setDrawable(Drawable*dr){

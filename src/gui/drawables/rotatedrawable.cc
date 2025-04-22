@@ -4,7 +4,7 @@
 
 using namespace Cairo;
 namespace cdroid{
-#define MAX_LEVEL 10000
+
 RotateDrawable::RotateState::RotateState()
     :DrawableWrapperState(){
     mFromDegrees =.0;
@@ -144,7 +144,11 @@ void RotateDrawable::draw(Canvas& canvas) {
 }
 
 void RotateDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    updateStateFromTypedArray(atts);
     DrawableWrapper::inflate(parser,atts);
+}
+
+void RotateDrawable::updateStateFromTypedArray(const AttributeSet&atts){
     mState->mPivotX = atts.getFraction("pivotX",1,1,mState->mPivotX);
     mState->mPivotXRel = (mState->mPivotX <=1.f);
 
@@ -155,5 +159,4 @@ void RotateDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     mState->mToDegrees = atts.getFloat("toDegrees", mState->mToDegrees);
     mState->mCurrentDegrees = mState->mFromDegrees;
 }
-
-}
+}/*endof namespace*/
