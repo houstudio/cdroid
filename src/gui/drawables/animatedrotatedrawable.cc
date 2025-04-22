@@ -177,11 +177,12 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     const float fsin = sin(radians);
     const float fcos = cos(radians);
     Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));
-
-    canvas.save();
-    canvas.transform(mtx);
-    drawable->draw(canvas);
-    canvas.restore();
+    if(drawable){
+        canvas.save();
+        canvas.transform(mtx);
+        drawable->draw(canvas);
+        canvas.restore();
+    }
 }
 
 void AnimatedRotateDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){

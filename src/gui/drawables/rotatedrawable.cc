@@ -136,10 +136,12 @@ void RotateDrawable::draw(Canvas& canvas) {
     const float fcos = cos(radians);
     Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));
 
-    canvas.save();
-    canvas.transform(mtx);
-    if(d)d->draw(canvas);
-    canvas.restore();
+    if(d){
+        canvas.save();
+        canvas.transform(mtx);
+        d->draw(canvas);
+        canvas.restore();
+    }
     LOGV("pos=%d,%d/%.f,%.f level=%d degress=%d",bounds.left,bounds.top,px,py,getLevel(),int(mState->mCurrentDegrees));
 }
 

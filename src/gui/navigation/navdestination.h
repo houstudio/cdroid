@@ -6,14 +6,13 @@
 #include <utility>
 #include <core/context.h>
 #include <core/sparsearray.h>
-#include <core/any.h>
+#include <core/bundle.h>
 namespace cdroid{
 class NavAction;
 class Navigator;
 class NavGraph;
 class NavOptions;
 class NavDeepLink;
-//typedef std::map<const std::string,nonstd::any> Bundle;
 
 class NavDestination {
 public:
