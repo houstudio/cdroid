@@ -183,13 +183,17 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
         }else if(tag.compare("selector")==0){//for colorstatelist
             std::string key = attrs.getString("name");
             depth = parser.getDepth()+1;
-            std::string resUri = resid.substr(0,resid.find(".xml"));;
-            auto it = pending->colorStateList.insert({resUri,std::vector<AttributeSet>()}).first;
+            std::string resUri = resid.substr(0,resid.find(".xml"));
+            std::unordered_map<std::string,std::vector<AttributeSet>>::iterator it;
+            it = pending->colorStateList.end();
             while(((type=parser.next())!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
                 if(type!=XmlPullParser::START_TAG)continue;
-                AttributeSet itemAtts;
-                itemAtts = attrs;//event.attributes;
-                it->second.push_back(itemAtts);
+                AttributeSet itemAtts(attrs);
+                //itemAtts = attrs;
+                if(it==pending->colorStateList.end()){
+                    it = pending->colorStateList.insert({resUri,{itemAtts}}).first;
+                }else
+                    it->second.push_back(itemAtts);
             }
         }else if(tag.compare("style")==0){
             const std::string styleName = package+":style/"+attrs.getString("name");
@@ -264,7 +268,9 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     }
     for(auto cs:pending.colorStateList){
         ColorStateList*cls = new ColorStateList();
-        for(auto attr:cs.second) if(attr.getAttributeCount())cls->addStateColor(this,attr);
+        for(auto attr:cs.second){
+            cls->addStateColor(this,attr);
+        }
         mStateColors.insert({cs.first,cls});
     }
     const size_t preloadCount = mColors.size()+mDimensions.size()+mStateColors.size()+mArraies.size()+mStyles.size()+mStrings.size();

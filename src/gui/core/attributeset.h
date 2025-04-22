@@ -18,6 +18,7 @@ protected:
     std::shared_ptr<std::unordered_map<std::string,std::string>>mAttrs;
 public:
     AttributeSet();
+    AttributeSet(const AttributeSet&);
     AttributeSet(Context*ctx,const std::string&package);
     Context*getContext()const;
     void setContext(Context*,const std::string&package);
@@ -47,6 +48,7 @@ public:
     Drawable*getDrawable(const std::string&key)const;
     int getArray(const std::string&key,std::vector<std::string>&array)const;
     int getArray(const std::string&key,std::vector<int>&array)const;
+    AttributeSet& operator =(const AttributeSet&other);
     void dump()const;
 };
 }
