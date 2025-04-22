@@ -138,7 +138,7 @@ void RotateDrawable::draw(Canvas& canvas) {
 
     canvas.save();
     canvas.transform(mtx);
-    d->draw(canvas);
+    if(d)d->draw(canvas);
     canvas.restore();
     LOGV("pos=%d,%d/%.f,%.f level=%d degress=%d",bounds.left,bounds.top,px,py,getLevel(),int(mState->mCurrentDegrees));
 }
