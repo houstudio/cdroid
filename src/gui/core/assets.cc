@@ -264,7 +264,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     }
     for(auto cs:pending.colorStateList){
         ColorStateList*cls = new ColorStateList();
-        for(auto attr:cs.second) cls->addStateColor(this,attr);
+        for(auto attr:cs.second) if(attr.getAttributeCount())cls->addStateColor(this,attr);
         mStateColors.insert({cs.first,cls});
     }
     const size_t preloadCount = mColors.size()+mDimensions.size()+mStateColors.size()+mArraies.size()+mStyles.size()+mStrings.size();
