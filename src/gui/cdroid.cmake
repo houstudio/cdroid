@@ -309,7 +309,7 @@ if(ENABLE_NAVIGATION)
         navigation/navigation.cc
         navigation/navigator.cc
         navigation/navinflater.cc
-        navigation/navoption.cc
+        navigation/navoptions.cc
         navigation/simplenavigatorprovider.cc
     )
 endif(ENABLE_NAVIGATION)
