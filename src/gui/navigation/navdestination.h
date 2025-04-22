@@ -46,7 +46,7 @@ public:
     void addDefaultArguments(Bundle& args);
 
     void addDeepLink(/*@NonNull*/const std::string& uriPattern);
-    virtual std::pair<NavDestination*, Bundle>* matchDeepLink(/*Uri*/const std::string& uri);
+    virtual std::pair<NavDestination*, Bundle*>* matchDeepLink(/*Uri*/const std::string& uri);
     std::vector<int> buildDeepLinkIds();
     NavAction* getAction(int id);
     void putAction(int actionId, int destId);

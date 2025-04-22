@@ -37,7 +37,7 @@ public:
 
     void onInflate(Context* context,const AttributeSet& attrs) override;
     //@Override @Nullable
-    std::pair<NavDestination*, Bundle>* matchDeepLink(/*Uri*/const std::string& uri) override;
+    std::pair<NavDestination*, Bundle*>* matchDeepLink(/*Uri*/const std::string& uri) override;
 
     /**
      * Adds a destination to this NavGraph. The destination must have an

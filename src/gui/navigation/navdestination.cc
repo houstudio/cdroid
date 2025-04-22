@@ -67,15 +67,15 @@ void NavDestination::addDeepLink(const std::string& uriPattern) {
     mDeepLinks.push_back(new NavDeepLink(uriPattern));
 }
 
-std::pair<NavDestination*, Bundle>* NavDestination::matchDeepLink(/*@NonNull Uri*/const std::string& uri) {
+std::pair<NavDestination*, Bundle*>* NavDestination::matchDeepLink(/*@NonNull Uri*/const std::string& uri) {
     if (mDeepLinks.empty()){// == nullptr) {
         return nullptr;
     }
     for (NavDeepLink* deepLink : mDeepLinks) {
-        Bundle matchingArguments = deepLink->getMatchingArguments(uri);
-        //if (matchingArguments != nullptr) {
-            return new std::pair<NavDestination*, Bundle>{this, matchingArguments};
-        //}
+        Bundle* matchingArguments = deepLink->getMatchingArguments(uri);
+        if (matchingArguments != nullptr) {
+            return new std::pair<NavDestination*, Bundle*>{this, matchingArguments};
+        }
     }
     return nullptr;
 }

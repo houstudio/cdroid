@@ -27,7 +27,7 @@ private:
     Context* mContext;
     NavigatorProvider* mNavigatorProvider;
 private:
-    NavDestination* inflate(const std::string&name, const AttributeSet& attrs);
+    NavDestination* inflate(XmlPullParser&, const AttributeSet& attrs);
     void inflateArgument(NavDestination& dest, const AttributeSet& attrs);
     void inflateDeepLink(NavDestination& dest, const AttributeSet& attrs);
     void inflateAction(NavDestination& dest,  const AttributeSet& attrs);

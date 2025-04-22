@@ -1,4 +1,3 @@
-#if 0
 #include <core/xmlpullparser.h>
 #include <navigation/navaction.h>
 #include <navigation/navgraph.h>
@@ -40,10 +39,10 @@ NavGraph* NavInflater::inflate(const std::string& graphResId) {
     if (dynamic_cast<NavGraph*>(destination)==nullptr) {
         throw ("Root element <" + rootElement + ">" + " did not inflate into a NavGraph");
     }
-    return (NavGraph) destination;
+    return (NavGraph*) destination;
 }
 
-NavDestination* NavInflater::inflate(const std::string&name,const AttributeSet& attrs){
+NavDestination* NavInflater::inflate(XmlPullParser&parser,const AttributeSet& attrs){
     Navigator* navigator = mNavigatorProvider->getNavigator(parser.getName());
     NavDestination* dest = navigator->createDestination();
 
@@ -64,18 +63,16 @@ NavDestination* NavInflater::inflate(const std::string&name,const AttributeSet& 
 
         const std::string name = parser.getName();
         if (name.compare("argument")==0) {
-            inflateArgument(res, dest, attrs);
+            inflateArgument(*dest, attrs);
         } else if (name.compare("deepLink")==0) {
-            inflateDeepLink(res, dest, attrs);
+            inflateDeepLink(*dest, attrs);
         } else if (name.compare("action")==0) {
-            inflateAction(res, dest, attrs);
+            inflateAction(*dest, attrs);
         } else if ((name.compare("include")==0) && dynamic_cast<NavGraph*>(dest)) {
-            TypedArray a = res.obtainAttributes(attrs, R.styleable.NavInclude);
-            const int id = a.getResourceId(R.styleable.NavInclude_graph, 0);
+            const std::string id = attrs.getString("graph");
             ((NavGraph*) dest)->addDestination(inflate(id));
-            a.recycle();
         } else if (dynamic_cast<NavGraph*>(dest)) {
-            ((NavGraph*)dest)->addDestination(inflate(res, parser, attrs));
+            ((NavGraph*)dest)->addDestination(inflate(parser, attrs));
         }
     }
 
@@ -83,15 +80,11 @@ NavDestination* NavInflater::inflate(const std::string&name,const AttributeSet& 
 }
 
 void NavInflater::inflateArgument(NavDestination& dest,const AttributeSet& attrs){
-    /*TypedArray a = res.obtainAttributes(attrs, R.styleable.NavArgument);
-    std::string name = attrs.getString("name");//a.getString(R.styleable.NavArgument_android_name);
+    const std::string name = attrs.getString("name");
+    const std::string argType = attrs.getString("argType");
+    const std::string defValue= attrs.getString("defaultValue");
 
-    TypedValue value = sTmpValue.get();
-    if (value == nullptr) {
-        value = new TypedValue();
-        sTmpValue.set(value);
-    }
-    if (a.getValue(R.styleable.NavArgument_android_defaultValue, value)) {
+    /*if (a.getValue(R.styleable.NavArgument_android_defaultValue, value)) {
         switch (value.type) {
         case TypedValue.TYPE_STRING:
             dest.getDefaultArguments().putString(name, value.string.toString());
@@ -121,8 +114,7 @@ void NavInflater::inflateDeepLink(NavDestination& dest, const AttributeSet& attr
     //TypedArray a = res.obtainAttributes(attrs, R.styleable.NavDeepLink);
     std::string uri = attrs.getString("uri");//R.styleable.NavDeepLink_uri);
     if (uri.empty()){//
-        //throw new IllegalArgumentException("Every <" + TAG_DEEP_LINK
-        //        + "> must include an app:uri");
+        throw std::runtime_error("Every <deepLink> must include an app:uri");
     }
     //uri = uri.replace(APPLICATION_ID_PLACEHOLDER, mContext.getPackageName());
     dest.addDeepLink(uri);
@@ -149,4 +141,3 @@ void NavInflater::inflateAction(NavDestination& dest,const AttributeSet& attrs) 
     dest.putAction(id, action);
 }
 }/*endof namespace*/
-#endif
