@@ -1854,7 +1854,7 @@ std::vector<AccessibilityNodeInfo*> NumberPicker::AccessibilityNodeProviderImpl:
     return AccessibilityNodeProvider::findAccessibilityNodeInfosByText(searched, virtualViewId);
 }
 
-bool NumberPicker::AccessibilityNodeProviderImpl::performAction(int virtualViewId, int action, Bundle arguments) {
+bool NumberPicker::AccessibilityNodeProviderImpl::performAction(int virtualViewId, int action, Bundle* arguments) {
     switch (virtualViewId) {
     case View::NO_ID: {
         switch (action) {

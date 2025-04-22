@@ -2908,7 +2908,7 @@ void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
         info.setMultiLine(true);
     }
 }
-bool TextView::performAccessibilityActionInternal(int action, Bundle arguments){
+bool TextView::performAccessibilityActionInternal(int action, Bundle* arguments){
     LOGD("TODO");
     return true;
 }

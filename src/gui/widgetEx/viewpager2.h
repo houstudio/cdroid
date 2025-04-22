@@ -116,7 +116,7 @@ public:
     void requestTransform();
     View&setLayoutDirection(int layoutDirection)override;
     void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info)override;
-    bool performAccessibilityAction(int action, Bundle arguments)override;
+    bool performAccessibilityAction(int action, Bundle* arguments)override;
 
     void addItemDecoration(RecyclerView::ItemDecoration* decor);
     void addItemDecoration(RecyclerView::ItemDecoration* decor, int index);
@@ -143,8 +143,8 @@ public:
     virtual void onSetUserInputEnabled();
     virtual void onSetLayoutDirection();
     virtual void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info);
-    virtual bool handlesPerformAccessibilityAction(int action, Bundle arguments);
-    virtual bool onPerformAccessibilityAction(int action, Bundle arguments);
+    virtual bool handlesPerformAccessibilityAction(int action, Bundle* arguments);
+    virtual bool onPerformAccessibilityAction(int action, Bundle* arguments);
     virtual void onRvInitializeAccessibilityEvent(AccessibilityEvent& event);
     virtual bool handlesLmPerformAccessibilityAction(int action);
     virtual bool onLmPerformAccessibilityAction(int action);
@@ -186,8 +186,8 @@ public:
     void onSetUserInputEnabled()override;
     void onSetLayoutDirection()override;
     void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info)override;
-    bool handlesPerformAccessibilityAction(int action, Bundle arguments)override;
-    bool onPerformAccessibilityAction(int action, Bundle arguments)override;
+    bool handlesPerformAccessibilityAction(int action, Bundle* arguments)override;
+    bool onPerformAccessibilityAction(int action, Bundle* arguments)override;
     void onRvInitializeAccessibilityEvent(AccessibilityEvent& event)override;
 };
 
@@ -224,7 +224,7 @@ protected:
 public:
     LinearLayoutManagerImpl(Context* context,ViewPager2*vp);
     bool performAccessibilityAction(RecyclerView::Recycler& recycler,
-            RecyclerView::State& state, int action, Bundle args)override;
+            RecyclerView::State& state, int action, Bundle* args)override;
     void onInitializeAccessibilityNodeInfo(RecyclerView::Recycler& recycler,
             RecyclerView::State& state, AccessibilityNodeInfo& info)override;
     bool requestChildRectangleOnScreen(RecyclerView& parent,View& child,const Rect& rect, bool immediate,bool focusedChildVisible)override;

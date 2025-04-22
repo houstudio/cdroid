@@ -19,13 +19,8 @@ NavDestination::NavDestination(/*@NonNull Navigator<? extends NavDestination>*/N
 }
 
 void NavDestination::onInflate(Context* context, const AttributeSet& attrs) {
-    /*final TypedArray a = context.getResources().obtainAttributes(attrs,
-            R.styleable.Navigator);
-    setId(a.getResourceId(R.styleable.Navigator_android_id, 0));
-    setLabel(a.getText(R.styleable.Navigator_android_label));
-    a.recycle();*/
-    mId = 0;//attrs.getInteger("id");
-
+    setId(attrs.getResourceId("id", 0));
+    setLabel(attrs.getString("label"));
 }
 
 void NavDestination::setParent(NavGraph* parent) {

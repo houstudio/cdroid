@@ -2886,7 +2886,7 @@ void ListView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
     }
 }
 
-bool ListView::performAccessibilityActionInternal(int action, Bundle arguments){
+bool ListView::performAccessibilityActionInternal(int action, Bundle* arguments){
    if (AbsListView::performAccessibilityActionInternal(action, arguments)) {
         return true;
     }

@@ -95,7 +95,7 @@ static std::set<int>sSupportedDirectionsForActionScrollInDirection={
     View::FOCUS_LEFT,View::FOCUS_RIGHT,View::FOCUS_UP,View::FOCUS_DOWN
 };
 
-bool GridLayoutManager::performAccessibilityAction(int action,Bundle args){
+bool GridLayoutManager::performAccessibilityAction(int action,Bundle* args){
     // TODO (267511848): when U constants are finalized:
     //  - convert if/else blocks to switch statement
     //  - remove SDK check

@@ -101,7 +101,7 @@ public:
     bool onInterceptTouchEvent(MotionEvent& ev)override;
     bool onTouchEvent(MotionEvent& ev)override;
     bool onGenericMotionEvent(MotionEvent& event)override;
-    bool performAccessibilityActionInternal(int action, Bundle arguments)override;
+    bool performAccessibilityActionInternal(int action, Bundle* arguments)override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
     bool pageScroll(int direction);

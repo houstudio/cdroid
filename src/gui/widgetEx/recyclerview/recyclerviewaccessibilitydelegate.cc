@@ -20,7 +20,7 @@ bool RecyclerViewAccessibilityDelegate::shouldIgnore() {
     return mRecyclerView->hasPendingAdapterUpdates();
 }
 
-bool RecyclerViewAccessibilityDelegate::performAccessibilityAction(View& host, int action, Bundle args) {
+bool RecyclerViewAccessibilityDelegate::performAccessibilityAction(View& host, int action, Bundle* args) {
     if (AccessibilityDelegate::performAccessibilityAction(host, action, args)) {
         return true;
     }
@@ -125,7 +125,7 @@ void RecyclerViewAccessibilityDelegate::ItemDelegate::onInitializeAccessibilityN
     }
 }
 
-bool RecyclerViewAccessibilityDelegate::ItemDelegate::performAccessibilityAction(View& host, int action, Bundle args) {
+bool RecyclerViewAccessibilityDelegate::ItemDelegate::performAccessibilityAction(View& host, int action, Bundle* args) {
     if (!mRecyclerViewDelegate->shouldIgnore()
             && mRecyclerViewDelegate->mRecyclerView->getLayoutManager() != nullptr) {
         View::AccessibilityDelegate* originalDelegate = getDelegateByHost(host);

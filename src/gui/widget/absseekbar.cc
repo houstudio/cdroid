@@ -715,7 +715,7 @@ void AbsSeekBar::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo
     }
 }
 
-bool AbsSeekBar::performAccessibilityActionInternal(int action, Bundle arguments){
+bool AbsSeekBar::performAccessibilityActionInternal(int action, Bundle* arguments){
      if (ProgressBar::performAccessibilityActionInternal(action, arguments)) {
          return true;
      }

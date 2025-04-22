@@ -10,7 +10,7 @@ public:
     class ItemDelegate;
     RecyclerViewAccessibilityDelegate(RecyclerView* recyclerView);
     virtual ~RecyclerViewAccessibilityDelegate();
-    bool performAccessibilityAction(View& host, int action, Bundle args) override;
+    bool performAccessibilityAction(View& host, int action, Bundle* args) override;
 
     void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info) override;
 
@@ -63,7 +63,7 @@ public:
     AccessibilityDelegate* getAndRemoveOriginalDelegateForItem(View* itemView);
 
     void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info) override;
-    bool performAccessibilityAction(View& host, int action, Bundle args) override;
+    bool performAccessibilityAction(View& host, int action, Bundle* args) override;
     void sendAccessibilityEvent(View& host, int eventType) override;
     void sendAccessibilityEventUnchecked(View& host,AccessibilityEvent& event) override;
     bool dispatchPopulateAccessibilityEvent(View& host,AccessibilityEvent& event) override;

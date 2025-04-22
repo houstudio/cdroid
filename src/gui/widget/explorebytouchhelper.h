@@ -237,9 +237,9 @@ private:
      */
     AccessibilityNodeInfo* createNodeForChild(int virtualViewId);
 
-    bool performAction(int virtualViewId, int action, Bundle arguments);
-    bool performActionForHost(int action, Bundle arguments);
-    bool performActionForChild(int virtualViewId, int action, Bundle arguments);
+    bool performAction(int virtualViewId, int action, Bundle* arguments);
+    bool performActionForHost(int action, Bundle* arguments);
+    bool performActionForChild(int virtualViewId, int action, Bundle* arguments);
     bool manageFocusForChild(int virtualViewId, int action);
     /**
      * Computes whether the specified {@link Rect} intersects with the visible
@@ -447,7 +447,7 @@ public:
         return mExp->createNode(virtualViewId);
     }
 
-    bool performAction(int virtualViewId, int action, Bundle arguments)override {
+    bool performAction(int virtualViewId, int action, Bundle* arguments)override {
         return mExp->performAction(virtualViewId, action, arguments);
     }
 };

@@ -6543,7 +6543,7 @@ bool RecyclerView::LayoutManager::isLayoutHierarchical(Recycler& recycler,State&
 }
 
 // called by accessibility delegate
-bool RecyclerView::LayoutManager::performAccessibilityAction(int action, Bundle args) {
+bool RecyclerView::LayoutManager::performAccessibilityAction(int action, Bundle* args) {
     return performAccessibilityAction(*mRecyclerView->mRecycler, *mRecyclerView->mState, action, args);
 }
 
@@ -6565,7 +6565,7 @@ static int floatCompare(float a, float b) {
         return 0;
     }
 }
-bool RecyclerView::LayoutManager::performAccessibilityAction(Recycler& recycler, State& state, int action, Bundle args) {
+bool RecyclerView::LayoutManager::performAccessibilityAction(Recycler& recycler, State& state, int action, Bundle* args) {
     if (mRecyclerView == nullptr) {
         return false;
     }
@@ -6644,11 +6644,11 @@ bool RecyclerView::LayoutManager::performAccessibilityAction(Recycler& recycler,
 }
 
 // called by accessibility delegate
-bool RecyclerView::LayoutManager::performAccessibilityActionForItem(View& view, int action, Bundle args) {
+bool RecyclerView::LayoutManager::performAccessibilityActionForItem(View& view, int action, Bundle* args) {
     return performAccessibilityActionForItem(*mRecyclerView->mRecycler, *mRecyclerView->mState,view, action, args);
 }
 
-bool RecyclerView::LayoutManager::performAccessibilityActionForItem(Recycler& recycler, State& state, View& view, int action, Bundle args) {
+bool RecyclerView::LayoutManager::performAccessibilityActionForItem(Recycler& recycler, State& state, View& view, int action, Bundle* args) {
     return false;
 }
 

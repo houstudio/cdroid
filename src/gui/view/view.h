@@ -1139,9 +1139,9 @@ public:
     bool isActionableForAccessibility()const;
     void notifyViewAccessibilityStateChangedIfNeeded(int changeType);
     virtual void notifySubtreeAccessibilityStateChangedIfNeeded();
-    bool dispatchNestedPrePerformAccessibilityAction(int action, Bundle arguments);
-    virtual bool performAccessibilityAction(int action, Bundle arguments);
-    virtual bool performAccessibilityActionInternal(int action, Bundle arguments);
+    bool dispatchNestedPrePerformAccessibilityAction(int action, Bundle* arguments);
+    virtual bool performAccessibilityAction(int action, Bundle* arguments);
+    virtual bool performAccessibilityActionInternal(int action, Bundle* arguments);
     std::string getIterableTextForAccessibility();
     bool isAccessibilitySelectionExtendable()const;
     int getAccessibilitySelectionStart()const;
@@ -1259,7 +1259,7 @@ public:
     AccessibilityNodeInfo* createAccessibilityNodeInfoInternal();
     virtual void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info);
     virtual void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info);
-    void addExtraDataToAccessibilityNodeInfo(AccessibilityNodeInfo& info,const std::string& extraDataKey,Bundle arguments);
+    void addExtraDataToAccessibilityNodeInfo(AccessibilityNodeInfo& info,const std::string& extraDataKey,Bundle* arguments);
     bool isVisibleToUserForAutofill(int virtualId)const;
     bool isVisibleToUser();
     bool requestAccessibilityFocus();
@@ -1763,7 +1763,7 @@ class View::AccessibilityDelegate {
 public:
     virtual void sendAccessibilityEvent(View& host, int eventType);
 
-    virtual bool performAccessibilityAction(View& host, int action,Bundle args);
+    virtual bool performAccessibilityAction(View& host, int action,Bundle* args);
 
     virtual void sendAccessibilityEventUnchecked(View& host,AccessibilityEvent& event);
 
@@ -1776,7 +1776,7 @@ public:
     virtual void onInitializeAccessibilityNodeInfo(View& host,AccessibilityNodeInfo& info);
 
     virtual void addExtraDataToAccessibilityNodeInfo(View& host,AccessibilityNodeInfo& info,
-            const std::string& extraDataKey,Bundle arguments);
+            const std::string& extraDataKey,Bundle* arguments);
 
     virtual bool onRequestSendAccessibilityEvent(ViewGroup& host, View& child,AccessibilityEvent& event);
 

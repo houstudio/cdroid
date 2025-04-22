@@ -269,7 +269,7 @@ void AbsListView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInf
     info.setClickable(false);
 }
 
-bool AbsListView::performAccessibilityActionInternal(int action, Bundle arguments){
+bool AbsListView::performAccessibilityActionInternal(int action, Bundle* arguments){
     if (AdapterView::performAccessibilityActionInternal(action, arguments)) {
         return true;
     }
@@ -4484,7 +4484,7 @@ void AbsListView::ListItemAccessibilityDelegate::onInitializeAccessibilityNodeIn
 }
 
 
-bool AbsListView::ListItemAccessibilityDelegate::performAccessibilityAction(View& host, int action, Bundle arguments) {
+bool AbsListView::ListItemAccessibilityDelegate::performAccessibilityAction(View& host, int action, Bundle* arguments) {
 #if 0
     if (AccessibilityDelegate::performAccessibilityAction(host, action, arguments)) {
         return true;

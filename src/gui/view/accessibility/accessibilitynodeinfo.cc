@@ -64,7 +64,7 @@ int AccessibilityNodeInfo::getWindowId() const{
     return mWindowId;
 }
 
-bool AccessibilityNodeInfo::refresh(Bundle arguments, bool bypassCache) {
+bool AccessibilityNodeInfo::refresh(Bundle* arguments, bool bypassCache) {
     enforceSealed();
     if (!canPerformRequestOverConnection(mSourceNodeId)) {
         return false;
@@ -89,7 +89,7 @@ bool AccessibilityNodeInfo::refresh() {
     return refresh(nullptr, true);
 }
 
-bool AccessibilityNodeInfo::refreshWithExtraData(const std::string& extraDataKey, Bundle args) {
+bool AccessibilityNodeInfo::refreshWithExtraData(const std::string& extraDataKey, Bundle* args) {
     //args.putString(EXTRA_DATA_REQUESTED_KEY, extraDataKey);
     return refresh(args, true);
 }
@@ -305,7 +305,7 @@ bool AccessibilityNodeInfo::performAction(int action) {
     //return client.performAccessibilityAction(mConnectionId, mWindowId, mSourceNodeId,action, nullptr);
 }
 
-bool AccessibilityNodeInfo::performAction(int action, Bundle arguments) {
+bool AccessibilityNodeInfo::performAction(int action, Bundle* arguments) {
     enforceSealed();
     if (!canPerformRequestOverConnection(mSourceNodeId)) {
         return false;
@@ -794,7 +794,7 @@ void AccessibilityNodeInfo::setInputType(int inputType) {
     mInputType = inputType;
 }
 
-Bundle AccessibilityNodeInfo::getExtras() {
+Bundle* AccessibilityNodeInfo::getExtras() {
     if (mExtras == nullptr) {
         mExtras = new Bundle();
     }
@@ -1129,7 +1129,7 @@ void AccessibilityNodeInfo::writeToParcelNoRecycle(Parcel parcel, int flags) {
 
     if (isBitSet(nonDefaultFields, fieldIndex++)) parcel.writeStringArrayList(mExtraDataKeys);
 
-    if (isBitSet(nonDefaultFields, fieldIndex++)) parcel.writeBundle(mExtras);
+    if (isBitSet(nonDefaultFields, fieldIndex++)) parcel.writeBundle(*mExtras);
 
     if (isBitSet(nonDefaultFields, fieldIndex++)) {
         parcel.writeInt(mRangeInfo->getType());
@@ -1218,7 +1218,7 @@ void AccessibilityNodeInfo::init(const AccessibilityNodeInfo& other) {
 
     mExtraDataKeys = other.mExtraDataKeys;
 
-    mExtras = other.mExtras != nullptr ? new Bundle(other.mExtras) : nullptr;
+    mExtras = other.mExtras != nullptr ? new Bundle(*other.mExtras) : nullptr;
 
     if (mRangeInfo != nullptr) mRangeInfo->recycle();
     mRangeInfo = (other.mRangeInfo != nullptr)

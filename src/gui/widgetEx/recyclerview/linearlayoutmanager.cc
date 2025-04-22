@@ -89,7 +89,7 @@ void LinearLayoutManager::onInitializeAccessibilityNodeInfo(RecyclerView::Recycl
     }
 }
 
-bool LinearLayoutManager::performAccessibilityAction(int action,Bundle args){
+bool LinearLayoutManager::performAccessibilityAction(int action,Bundle* args){
     if (LayoutManager::performAccessibilityAction(action, args)) {
         return true;
     }

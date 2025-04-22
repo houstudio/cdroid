@@ -335,7 +335,7 @@ public:
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
-    bool performAccessibilityActionInternal(int action, Bundle arguments)override;
+    bool performAccessibilityActionInternal(int action, Bundle* arguments)override;
     void sendAccessibilityEventInternal(int eventType)override;
     void sendAccessibilityEventUnchecked(AccessibilityEvent& event)override;
 };

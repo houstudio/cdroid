@@ -74,7 +74,7 @@ protected:
     class ListItemAccessibilityDelegate:public AccessibilityDelegate{
     public:
        void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info)override;
-       bool performAccessibilityAction(View& host, int action, Bundle arguments)override;
+       bool performAccessibilityAction(View& host, int action, Bundle* arguments)override;
     };
     class AbsPositionScroller:public Runnable {
     public:
@@ -359,7 +359,7 @@ public:
     std::string getAccessibilityClassName()const override;
     void sendAccessibilityEventUnchecked(AccessibilityEvent& event)override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
-    bool performAccessibilityActionInternal(int action, Bundle arguments)override;
+    bool performAccessibilityActionInternal(int action, Bundle* arguments)override;
     View* findViewByAccessibilityIdTraversal(int accessibilityId)override;
     virtual void onInitializeAccessibilityNodeInfoForItem(View* view, int position, AccessibilityNodeInfo& info);
 

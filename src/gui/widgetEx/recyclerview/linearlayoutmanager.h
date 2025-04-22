@@ -102,7 +102,7 @@ protected:
             bool layoutFromEnd, bool traverseChildrenInReverseOrder);
     View* findOneVisibleChild(int fromIndex, int toIndex, bool completelyVisible,bool acceptPartiallyVisible);
     View* findOnePartiallyOrCompletelyInvisibleChild(int fromIndex, int toIndex);
-    bool performAccessibilityAction(int action,Bundle args)override;
+    bool performAccessibilityAction(int action,Bundle* args)override;
 public:
     LinearLayoutManager(Context* context);
     LinearLayoutManager(Context* context,int orientation,bool reverseLayout);
