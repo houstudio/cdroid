@@ -3822,7 +3822,7 @@ int ViewGroup::getNumChildrenForAccessibility() const{
     return numChildrenForAccessibility;
 }
 
-bool ViewGroup::onNestedPrePerformAccessibilityAction(View* target, int action, Bundle args) {
+bool ViewGroup::onNestedPrePerformAccessibilityAction(View* target, int action, Bundle* args) {
     return false;
 }
 

@@ -3882,7 +3882,7 @@ void View::resetSubtreeAccessibilityStateChanged(){
     mPrivateFlags2 &= ~PFLAG2_SUBTREE_ACCESSIBILITY_STATE_CHANGED;
 }
 
-bool View::dispatchNestedPrePerformAccessibilityAction(int action, Bundle arguments) {
+bool View::dispatchNestedPrePerformAccessibilityAction(int action, Bundle* arguments) {
     for (ViewGroup* p = getParent(); p != nullptr; p = p->getParent()) {
         if (p->onNestedPrePerformAccessibilityAction(this, action, arguments)) {
             return true;
@@ -3891,7 +3891,7 @@ bool View::dispatchNestedPrePerformAccessibilityAction(int action, Bundle argume
     return false;
 }
 
-bool View::performAccessibilityAction(int action, Bundle arguments) {
+bool View::performAccessibilityAction(int action, Bundle* arguments) {
     if (mAccessibilityDelegate != nullptr) {
         return mAccessibilityDelegate->performAccessibilityAction(*this, action, arguments);
     } else {
@@ -3899,7 +3899,7 @@ bool View::performAccessibilityAction(int action, Bundle arguments) {
     }
 }
 
-bool View::performAccessibilityActionInternal(int action, Bundle arguments) {
+bool View::performAccessibilityActionInternal(int action, Bundle* arguments) {
     if (isNestedScrollingEnabled()
             && ((action == AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD)
             || (action == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD)
@@ -6684,7 +6684,7 @@ void View::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info
     info.setHeading(isAccessibilityHeading());
 }
 
-void View::addExtraDataToAccessibilityNodeInfo(AccessibilityNodeInfo& info,const std::string& extraDataKey,Bundle arguments){
+void View::addExtraDataToAccessibilityNodeInfo(AccessibilityNodeInfo& info,const std::string& extraDataKey,Bundle* arguments){
     //NOTHING
 }
 
@@ -9914,7 +9914,7 @@ void View::AccessibilityDelegate::sendAccessibilityEvent(View& host, int eventTy
     host.sendAccessibilityEventInternal(eventType);
 }
 
-bool View::AccessibilityDelegate::performAccessibilityAction(View& host, int action,Bundle args) {
+bool View::AccessibilityDelegate::performAccessibilityAction(View& host, int action,Bundle* args) {
     return host.performAccessibilityActionInternal(action, args);
 }
 
@@ -9939,7 +9939,7 @@ void View::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(View& host,A
 }
 
 void View::AccessibilityDelegate::addExtraDataToAccessibilityNodeInfo(View& host,AccessibilityNodeInfo& info,
-        const std::string& extraDataKey, Bundle arguments) {
+        const std::string& extraDataKey, Bundle* arguments) {
     host.addExtraDataToAccessibilityNodeInfo(info, extraDataKey, arguments);
 }
 

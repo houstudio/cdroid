@@ -235,7 +235,7 @@ private:
     int mLiveRegion;// = View::ACCESSIBILITY_LIVE_REGION_NONE;
     int mConnectionId = UNDEFINED_CONNECTION_ID;
 
-    Bundle mExtras;
+    Bundle* mExtras;
 
     RangeInfo *mRangeInfo;
     CollectionInfo* mCollectionInfo;
@@ -290,11 +290,11 @@ public:
 
     int getWindowId() const;
 
-    bool refresh(Bundle arguments, bool bypassCache);
+    bool refresh(Bundle* arguments, bool bypassCache);
 
     bool refresh();
 
-    bool refreshWithExtraData(const std::string& extraDataKey, Bundle args);
+    bool refreshWithExtraData(const std::string& extraDataKey, Bundle* args);
 
     std::vector<long> getChildNodeIds() const;
 
@@ -354,7 +354,7 @@ public:
 
     bool performAction(int action);
 
-    virtual bool performAction(int action, Bundle arguments);
+    virtual bool performAction(int action, Bundle* arguments);
 
     std::vector<AccessibilityNodeInfo*> findAccessibilityNodeInfosByText(const std::string& text);
 
@@ -548,7 +548,7 @@ public:
 
     void setInputType(int inputType);
 
-    Bundle getExtras();
+    Bundle* getExtras();
 
     bool hasExtras() const;
 

@@ -3,9 +3,9 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <core/bundle.h>
 namespace cdroid{
 class Parcelable;
-using Bundle = void*;
 class Parcel{
 private:
     static constexpr int POOL_SIZE = 6;
@@ -72,7 +72,7 @@ public:
     double readDouble();
     std::string readString();
     std::string readCharSequence();
-    Bundle readBundle();
+    Bundle* readBundle();
     std::vector<std::string>createStringArrayList();
 
     void writeByte(uint8_t val);

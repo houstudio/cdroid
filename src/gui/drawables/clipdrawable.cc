@@ -89,7 +89,7 @@ void ClipDrawable::draw(Canvas& canvas){
     Gravity::apply(mState->mGravity, w, h, bounds, r, layoutDirection);
     LOGV("%p lvl=%d rect=%d,%d-%d,%d gravity=%d bounds=%d,%d-%d,%d  wh=%d,%d",
             this,level,r.left,r.top,r.width,r.height, mState->mGravity,bounds.left,bounds.top,bounds.width,bounds.height,w,h);
-    if (w > 0 && h > 0) {
+    if ((dr!=nullptr) && (w > 0) && (h > 0)) {
         canvas.save();
         canvas.rectangle(r.left,r.top,r.width,r.height);
         canvas.clip();

@@ -19,13 +19,8 @@ NavDestination::NavDestination(/*@NonNull Navigator<? extends NavDestination>*/N
 }
 
 void NavDestination::onInflate(Context* context, const AttributeSet& attrs) {
-    /*final TypedArray a = context.getResources().obtainAttributes(attrs,
-            R.styleable.Navigator);
-    setId(a.getResourceId(R.styleable.Navigator_android_id, 0));
-    setLabel(a.getText(R.styleable.Navigator_android_label));
-    a.recycle();*/
-    mId = 0;//attrs.getInteger("id");
-
+    setId(attrs.getResourceId("id", 0));
+    setLabel(attrs.getString("label"));
 }
 
 void NavDestination::setParent(NavGraph* parent) {
@@ -72,15 +67,15 @@ void NavDestination::addDeepLink(const std::string& uriPattern) {
     mDeepLinks.push_back(new NavDeepLink(uriPattern));
 }
 
-std::pair<NavDestination*, Bundle>* NavDestination::matchDeepLink(/*@NonNull Uri*/const std::string& uri) {
+std::pair<NavDestination*, Bundle*>* NavDestination::matchDeepLink(/*@NonNull Uri*/const std::string& uri) {
     if (mDeepLinks.empty()){// == nullptr) {
         return nullptr;
     }
     for (NavDeepLink* deepLink : mDeepLinks) {
-        Bundle matchingArguments = deepLink->getMatchingArguments(uri);
-        //if (matchingArguments != nullptr) {
-            return new std::pair<NavDestination*, Bundle>{this, matchingArguments};
-        //}
+        Bundle* matchingArguments = deepLink->getMatchingArguments(uri);
+        if (matchingArguments != nullptr) {
+            return new std::pair<NavDestination*, Bundle*>{this, matchingArguments};
+        }
     }
     return nullptr;
 }

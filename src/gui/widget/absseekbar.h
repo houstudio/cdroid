@@ -80,7 +80,7 @@ public:
     void onResolveDrawables(int layoutDirection)override;
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
-    bool performAccessibilityActionInternal(int action, Bundle arguments)override;
+    bool performAccessibilityActionInternal(int action, Bundle* arguments)override;
 };
 
 }//namespace

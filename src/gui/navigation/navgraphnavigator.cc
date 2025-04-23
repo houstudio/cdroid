@@ -35,8 +35,7 @@ void NavGraphNavigator::navigate(/*@NonNull NavGraph*/NavDestination* destinatio
     NavDestination* startDestination = ((NavGraph*)destination)->findNode(startId, false);
     if (startDestination == nullptr) {
         const std::string dest = NavDestination::getDisplayName(mContext, startId);
-        /*throw new IllegalArgumentException("navigation destination " + dest
-                + " is not a direct child of this NavGraph");*/
+        /*throw std::logic_error("navigation destination %s is not a direct child of this NavGraph",dest.c_str());*/
     }
     dispatchOnNavigatorNavigated(destination->getId(), BACK_STACK_DESTINATION_ADDED);
     startDestination->navigate(args, navOptions);

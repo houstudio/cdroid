@@ -55,7 +55,7 @@ public:
      * @see AccessibilityNodeInfo#setExtraAvailableData
      */
     void addExtraDataToAccessibilityNodeInfo(
-            int virtualViewId, AccessibilityNodeInfo* info, const std::string& extraDataKey, Bundle arguments) {
+            int virtualViewId, AccessibilityNodeInfo* info, const std::string& extraDataKey, Bundle* arguments) {
     }
 
     /**
@@ -72,7 +72,7 @@ public:
      * @see #createAccessibilityNodeInfo(int)
      * @see AccessibilityNodeInfo
      */
-    virtual bool performAction(int virtualViewId, int action, Bundle arguments) {
+    virtual bool performAction(int virtualViewId, int action, Bundle* arguments) {
         return false;
     }
 

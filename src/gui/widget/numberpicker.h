@@ -287,7 +287,7 @@ public:
     AccessibilityNodeProviderImpl(NumberPicker*);
     AccessibilityNodeInfo* createAccessibilityNodeInfo(int virtualViewId);
     std::vector<AccessibilityNodeInfo*> findAccessibilityNodeInfosByText(const std::string& searched, int virtualViewId);
-    bool performAction(int virtualViewId, int action, Bundle arguments);
+    bool performAction(int virtualViewId, int action, Bundle* arguments)override;
     void sendAccessibilityEventForVirtualView(int virtualViewId, int eventType);
 };
 }//namespace

@@ -521,7 +521,7 @@ void ViewPager2::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info) 
     mAccessibilityProvider->onInitializeAccessibilityNodeInfo(info);
 }
 
-bool ViewPager2::performAccessibilityAction(int action, Bundle arguments) {
+bool ViewPager2::performAccessibilityAction(int action, Bundle* arguments) {
     if (mAccessibilityProvider->handlesPerformAccessibilityAction(action, arguments)) {
         return mAccessibilityProvider->onPerformAccessibilityAction(action, arguments);
     }
@@ -562,7 +562,7 @@ ViewPager2::LinearLayoutManagerImpl::LinearLayoutManagerImpl(Context* context,Vi
 }
 
 bool ViewPager2::LinearLayoutManagerImpl::performAccessibilityAction(RecyclerView::Recycler& recycler,
-        RecyclerView::State& state, int action, Bundle args) {
+        RecyclerView::State& state, int action, Bundle* args) {
     if (mVP->mAccessibilityProvider->handlesLmPerformAccessibilityAction(action)) {
         return mVP->mAccessibilityProvider->onLmPerformAccessibilityAction(action);
     }
@@ -696,11 +696,11 @@ void ViewPager2::AccessibilityProvider::onSetLayoutDirection(){
 void ViewPager2::AccessibilityProvider::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info) {
 }
 
-bool ViewPager2::AccessibilityProvider::handlesPerformAccessibilityAction(int action, Bundle arguments) {
+bool ViewPager2::AccessibilityProvider::handlesPerformAccessibilityAction(int action, Bundle* arguments) {
     return false;
 }
 
-bool ViewPager2::AccessibilityProvider::onPerformAccessibilityAction(int action, Bundle arguments) {
+bool ViewPager2::AccessibilityProvider::onPerformAccessibilityAction(int action, Bundle* arguments) {
     throw std::runtime_error("Not implemented.");
 }
 
@@ -866,12 +866,12 @@ void ViewPager2::PageAwareAccessibilityProvider::onInitializeAccessibilityNodeIn
     }
 }
 
-bool ViewPager2::PageAwareAccessibilityProvider::handlesPerformAccessibilityAction(int action, Bundle arguments) {
+bool ViewPager2::PageAwareAccessibilityProvider::handlesPerformAccessibilityAction(int action, Bundle* arguments) {
     return (action == AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD)
             || (action == AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
 }
 
-bool ViewPager2::PageAwareAccessibilityProvider::onPerformAccessibilityAction(int action, Bundle arguments) {
+bool ViewPager2::PageAwareAccessibilityProvider::onPerformAccessibilityAction(int action, Bundle* arguments) {
     if (!handlesPerformAccessibilityAction(action, arguments)) {
         throw std::runtime_error(" IllegalStateException");
     }

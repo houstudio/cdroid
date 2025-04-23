@@ -19,7 +19,7 @@ std::string Parcel::readString(){
     return std::string();
 }
 
-Bundle Parcel::readBundle(){
+Bundle* Parcel::readBundle(){
     return nullptr;
 }
 

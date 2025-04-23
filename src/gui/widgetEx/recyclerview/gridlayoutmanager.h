@@ -83,7 +83,7 @@ public:
             RecyclerView::State& state, View* host, AccessibilityNodeInfo& info)override;
     void onInitializeAccessibilityNodeInfo(RecyclerView::Recycler& recycler,
             RecyclerView::State& state, AccessibilityNodeInfo& info)override;
-    bool performAccessibilityAction(int action,Bundle args)override;
+    bool performAccessibilityAction(int action,Bundle* args);
     void onLayoutChildren(RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     void onLayoutCompleted(RecyclerView::State& state)override;
 

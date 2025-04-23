@@ -15,7 +15,7 @@ public:
      */
     NavDeepLink(const std::string& uri);
     bool matches(/*@NonNull Uri*/const std::string& deepLink)const;
-    Bundle getMatchingArguments(/*@NonNull Uri*/const std::string& deepLink);
+    Bundle* getMatchingArguments(/*@NonNull Uri*/const std::string& deepLink);
 };
 }/*endof namespace*/
 #endif/*__NAV_DEEPLINK_H__*/

@@ -349,7 +349,7 @@ public:
     View*getChildAt(int idx)const;
     int indexOfChild(View* child)const;
     void setChildrenDrawingCacheEnabled(bool);
-    virtual bool onNestedPrePerformAccessibilityAction(View* target, int action, Bundle args);
+    virtual bool onNestedPrePerformAccessibilityAction(View* target, int action, Bundle* args);
     bool isLayoutModeOptical()const;
     void cleanupLayoutState(View* child)const;
 

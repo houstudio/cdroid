@@ -676,8 +676,8 @@ protected:
     void stopSmoothScroller();
     virtual void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info);
     virtual void onInitializeAccessibilityNodeInfoForItem(View* host, AccessibilityNodeInfo& info);
-    virtual bool performAccessibilityAction(int action, Bundle args);
-    virtual bool performAccessibilityActionForItem(View& view, int action,Bundle args);
+    virtual bool performAccessibilityAction(int action, Bundle* args);
+    virtual bool performAccessibilityActionForItem(View& view, int action,Bundle* args);
     void setExactMeasureSpecsFrom(RecyclerView* recyclerView);
     virtual bool shouldMeasureTwice();
     bool hasFlexibleChildInBothOrientations();
@@ -840,8 +840,8 @@ public:
     virtual int getRowCountForAccessibility(Recycler& recycler, State& state);
     virtual int getColumnCountForAccessibility(Recycler& recycler,State& state);
     bool isLayoutHierarchical(Recycler& recycler,State& state);
-    virtual bool performAccessibilityAction(Recycler& recycler, State& state,int action, Bundle args);
-    virtual bool performAccessibilityActionForItem(Recycler& recycler,State& state, View& view, int action, Bundle args);
+    virtual bool performAccessibilityAction(Recycler& recycler, State& state,int action, Bundle* args);
+    virtual bool performAccessibilityActionForItem(Recycler& recycler,State& state, View& view, int action, Bundle* args);
     static Properties getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes);
 };
 

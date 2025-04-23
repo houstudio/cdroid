@@ -28,6 +28,21 @@ AttributeSet::AttributeSet(Context*ctx,const std::string&package)
     mAttrs = std::make_shared<std::unordered_map<std::string,std::string>>();
 }
 
+AttributeSet::AttributeSet(const AttributeSet&other):AttributeSet(other.mContext,other.mPackage){
+    for(auto a:*other.mAttrs){
+        mAttrs->insert({a.first,a.second});
+    }
+}
+
+AttributeSet& AttributeSet::operator =(const AttributeSet&other){
+    mContext=other.mContext;
+    mPackage=other.mPackage;
+    for(auto a:*other.mAttrs){
+        mAttrs->insert({a.first,a.second});
+    }
+    return *this;
+}
+
 Context*AttributeSet::getContext()const{
     return mContext;
 }

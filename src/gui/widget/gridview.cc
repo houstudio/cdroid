@@ -1677,7 +1677,7 @@ void GridView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
      }
 }
 
-bool GridView::performAccessibilityActionInternal(int action, Bundle arguments){
+bool GridView::performAccessibilityActionInternal(int action, Bundle* arguments){
     if (AbsListView::performAccessibilityActionInternal(action, arguments)) {
          return true;
     }

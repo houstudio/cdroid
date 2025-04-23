@@ -26,16 +26,16 @@ void NavGraph::onInflate(Context* context, const AttributeSet& attrs){
     setStartDestination(attrs.getResourceId("startDestination", 0));
 }
 
-std::pair<NavDestination*, Bundle>* NavGraph::matchDeepLink(/*@NonNull Uri*/const std::string& uri) {
+std::pair<NavDestination*, Bundle*>* NavGraph::matchDeepLink(/*@NonNull Uri*/const std::string& uri) {
     // First search through any deep links directly added to this NavGraph
-    std::pair<NavDestination*, Bundle>*result = NavDestination::matchDeepLink(uri);
+    std::pair<NavDestination*, Bundle*>*result = NavDestination::matchDeepLink(uri);
     if (result != nullptr) {
         return result;
     }
     // Then search through all child destinations for a matching deep link
 #if 0
     for (NavDestination* child : this) {
-        std::pair<NavDestination*, Bundle>* childResult = child->matchDeepLink(uri);
+        std::pair<NavDestination*, Bundle*>* childResult = child->matchDeepLink(uri);
         if (childResult != nullptr) {
             return childResult;
         }
@@ -44,7 +44,7 @@ std::pair<NavDestination*, Bundle>* NavGraph::matchDeepLink(/*@NonNull Uri*/cons
     const size_t  size = mNodes.size();
     for(int i=0;i<size;i++){
         NavDestination*child = mNodes.valueAt(i);
-	std::pair<NavDestination*, Bundle>* childResult = child->matchDeepLink(uri);
+	std::pair<NavDestination*, Bundle*>* childResult = child->matchDeepLink(uri);
 	if(childResult)return childResult;
     }
 #endif

@@ -625,7 +625,7 @@ void ScrollView::onOverScrolled(int scrollX, int scrollY, bool clampedX, bool cl
     awakenScrollBars();
 }
 
-bool ScrollView::performAccessibilityActionInternal(int action, Bundle arguments){
+bool ScrollView::performAccessibilityActionInternal(int action, Bundle* arguments){
     if (FrameLayout::performAccessibilityActionInternal(action, arguments)) {
         return true;
     }

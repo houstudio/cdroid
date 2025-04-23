@@ -156,7 +156,7 @@ protected:
 public:
     ListView(int w,int h);
     ListView(Context* context,const AttributeSet& attrs);
-    ~ListView();
+    ~ListView()override;
     void setAdapter(Adapter* adapter)override;
     void setSelection(int position);
     bool getItemsCanFocus()const;
@@ -195,7 +195,7 @@ public:
 
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
-    bool performAccessibilityActionInternal(int action, Bundle arguments)override;
+    bool performAccessibilityActionInternal(int action, Bundle* arguments)override;
     void onInitializeAccessibilityNodeInfoForItem(View* view, int position, AccessibilityNodeInfo& info)override;
 };
 

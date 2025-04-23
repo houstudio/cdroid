@@ -24,7 +24,7 @@ bool NavDeepLink::matches(/*@NonNull Uri*/const std::string& deepLink)const {
     return false;//mPattern.matcher(deepLink.toString()).matches();
 }
 
-Bundle NavDeepLink::getMatchingArguments(/*@NonNull Uri*/const std::string& deepLink) {
+Bundle* NavDeepLink::getMatchingArguments(/*@NonNull Uri*/const std::string& deepLink) {
 #if 0
     Matcher matcher = mPattern.matcher(deepLink.toString());
     if (!matcher.matches()) {
@@ -37,7 +37,7 @@ Bundle NavDeepLink::getMatchingArguments(/*@NonNull Uri*/const std::string& deep
         bundle.putString(argument, Uri.decode(matcher.group(index + 1)));
     }
 #endif
-    return Bundle();
+    return new Bundle();
 }
 #endif
 }/*endof namespace*/
