@@ -20,13 +20,7 @@ struct XmlEvent {
     XmlEvent(XmlPullParser::EventType tp,const std::string&name_):XmlEvent(tp){
        name= name_;
     }
-    void dump();
 };
-void XmlEvent::dump(){
-    for(auto it = atts->begin();it != atts->end();it++){
-        LOGD("%s = %s",it->first.c_str(),it->second.c_str());
-    }
-}
 
 struct Private{
     XML_Parser parser;
