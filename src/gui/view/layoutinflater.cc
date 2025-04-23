@@ -160,7 +160,6 @@ View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Co
     }
     return view;
 #else
-    const int vid = attrs.getResourceId("id");
     std::string styleName = attrs.getString("style");
     LayoutInflater::ViewInflater inflater = LayoutInflater::getInflater(name);
     if(!styleName.empty()) {
@@ -220,7 +219,7 @@ void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* cont
     }
 
     if (finishInflate) {
-        //parent->onFinishInflate();
+        parent->onFinishInflate();
     }
 }
 
