@@ -197,6 +197,7 @@ namespace R{
          static constexpr int accessibilityActionDragCancel= 0x000004A4 ;/*1188*/
          static constexpr int accessibilityActionShowTextSuggestions= 0x000004A5 ;/*1189*/
          static constexpr int accessibilityActionScrollInDirection= 0x000004A6 ;/*1190*/
+         static constexpr int nav_controller_view_tag = 0x000004A7 ;/*1191*/
     };/*namespace id*/
 
     namespace strings{

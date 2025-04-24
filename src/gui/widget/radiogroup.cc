@@ -8,15 +8,15 @@ namespace cdroid{
 DECLARE_WIDGET(RadioGroup)
 
 RadioGroup::RadioGroup(int w,int h):LinearLayout(w,h){
-    setOrientation(VERTICAL);
     init();
+    setOrientation(VERTICAL);
 }
 
 RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
     :LinearLayout(context,attrs){
+    init();
     mCheckedId = attrs.getResourceId("id",View::NO_ID);
     mInitialCheckedId = (mCheckedId!=View::NO_ID);
-    init();
 }
 
 LayoutParams* RadioGroup::generateLayoutParams(const AttributeSet& attrs)const {
@@ -57,7 +57,7 @@ void RadioGroup::onChildViewAdded(ViewGroup& parent, View* child){
 
 void RadioGroup::onChildViewRemoved(ViewGroup& parent, View* child){
     if((&parent==this)&&dynamic_cast<RadioButton*>(child)){
-	((RadioButton*)child)->setOnCheckedChangeWidgetListener(nullptr);
+	    ((RadioButton*)child)->setOnCheckedChangeWidgetListener(nullptr);
     }
     if(mOnHierarchyChangeListener.onChildViewRemoved)
         mOnHierarchyChangeListener.onChildViewRemoved(parent, child);
@@ -65,6 +65,8 @@ void RadioGroup::onChildViewRemoved(ViewGroup& parent, View* child){
 
 void RadioGroup::init(){
     ViewGroup::OnHierarchyChangeListener lhs;
+    mCheckedId = View::NO_ID;
+    mInitialCheckedId = false;
     mChildOnCheckedChangeListener=std::bind(&RadioGroup::onRadioChecked,this,std::placeholders::_1,std::placeholders::_2);
     lhs.onChildViewAdded  = std::bind(&RadioGroup::onChildViewAdded,this,std::placeholders::_1,std::placeholders::_2);
     lhs.onChildViewRemoved= std::bind(&RadioGroup::onChildViewRemoved,this,std::placeholders::_1,std::placeholders::_2);
