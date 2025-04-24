@@ -74,6 +74,7 @@ class ViewOverlay;
 class Window;
 class UIEventSource;
 class HandlerActionQueue;
+class LayoutInflater;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 private:
     static constexpr int POPULATING_ACCESSIBILITY_EVENT_TYPES=
@@ -497,6 +498,7 @@ public:
 private:
     friend ViewGroup;
     friend Window;
+    friend LayoutInflater;
     friend ViewPropertyAnimator;
     class TooltipInfo;
     class CheckForTap;
