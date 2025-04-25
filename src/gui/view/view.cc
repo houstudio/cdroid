@@ -7590,7 +7590,7 @@ bool View::dispatchKeyShortcutEvent(KeyEvent&event){
 
 bool View::dispatchTooltipHoverEvent(MotionEvent& event){
     if (mTooltipInfo == nullptr) {
-            return false;
+        return false;
     }
     switch(event.getAction()) {
     case MotionEvent::ACTION_HOVER_MOVE:

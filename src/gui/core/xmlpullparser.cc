@@ -2,8 +2,9 @@
 #include <core/context.h>
 #include <core/app.h>
 #include <expat.h>
-#include <iostream>
+#include <array>
 #include <fstream>
+#include <iostream>
 namespace cdroid{
 struct XmlEvent {
     XmlPullParser::EventType type;
