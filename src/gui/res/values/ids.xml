@@ -279,4 +279,6 @@
 
   <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_SCROLL_IN_DIRECTION}. -->
   <item type="id" name="accessibilityActionScrollInDirection" />
+
+  <item type="id" name="nav_controller_view_tag" />
 </resources>

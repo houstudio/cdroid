@@ -191,5 +191,6 @@
   <id name="accessibilityActionDragCancel">0x000004a4</id>
   <id name="accessibilityActionShowTextSuggestions">0x000004a5</id>
   <id name="accessibilityActionScrollInDirection">0x000004a6</id>
+  <id name="nav_controller_view_tag">0x000004a7</id>
 </resources>
 

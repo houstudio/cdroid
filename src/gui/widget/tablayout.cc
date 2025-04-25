@@ -41,14 +41,19 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
 
     if(atts.hasAttribute("tabTextColor"))
         mTabTextColors = context->getColorStateList(atts.getString("tabTextColor"));
-    else 
-        mTabTextColors = ColorStateList::valueOf(0xFFFFFFFF);
+    else{ 
+        mTabTextColors = new ColorStateList(0xFFFFFFFF);
+        mOwnedTabTextColors = true;
+    }
 
     if(atts.hasAttribute("tabSelectedTextColor")){
         const int selected = atts.getColor("tabSelectedTextColor",0);
         const int defColor = mTabTextColors->getDefaultColor();
-        delete mTabTextColors;
+        if(mOwnedTabTextColors){
+            delete mTabTextColors;
+        }
         mTabTextColors = createColorStateList(defColor, selected);
+        mOwnedTabTextColors =true;
     }
 
     mTabIndicatorAnimationDuration = atts.getInt("tabIndicatorAnimationDuration", 300);
@@ -65,7 +70,9 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
 }
 
 TabLayout::~TabLayout(){
-    delete mTabTextColors;
+    if(mOwnedTabTextColors){
+        delete mTabTextColors;/*ColorStateList is global holded by keymap ,cant destroied*/
+    }
     delete mScrollAnimator;
     delete mAdapterChangeListener;
     delete mPagerAdapterObserver;
@@ -79,6 +86,7 @@ void TabLayout::initTabLayout(){
     mTabPaddingEnd  = mTabPaddingBottom= 0;
     mTabTextSize = 20;
     mContentInsetStart = 0;
+    mOwnedTabTextColors= false;
     mTabTextColors  = nullptr;
     mSelectedTab    = nullptr;
     mScrollAnimator = nullptr;
@@ -333,7 +341,9 @@ const ColorStateList* TabLayout::getTabTextColors()const{
 }
 
 void TabLayout::setTabTextColors(int normalColor, int selectedColor){
-    setTabTextColors(createColorStateList(normalColor, selectedColor));
+    ColorStateList *cls = createColorStateList(normalColor, selectedColor);
+    mOwnedTabTextColors =true;
+    setTabTextColors(cls);
 }
 
 void TabLayout::setupWithViewPager(ViewPager* viewPager, bool autoRefresh, bool implicitSetup){

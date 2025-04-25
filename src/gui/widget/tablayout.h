@@ -196,6 +196,7 @@ protected:
     int  mTabPaddingEnd;
     int  mTabPaddingBottom;
     int  mTabTextAppearance;
+    bool mOwnedTabTextColors;
     const ColorStateList* mTabTextColors;
     const ColorStateList* mTabIconTint;
     const ColorStateList* mTabRippleColorStateList;
