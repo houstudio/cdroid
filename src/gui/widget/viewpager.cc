@@ -522,7 +522,7 @@ void ViewPager::dataSetChanged(){
 
     if (isUpdating)  mAdapter->finishUpdate(this);
 
-    std::sort(mItems.begin(),mItems.end(),[](ItemInfo*a,ItemInfo*b)->bool{return a->position-b->position;});
+    std::sort(mItems.begin(),mItems.end(),[](ItemInfo*a,ItemInfo*b)->bool{return a->position < b->position;});
 
     if (needPopulate) {  // Reset our known page widths; populate will recompute them.
         for (auto child:mChildren){
@@ -700,13 +700,13 @@ void ViewPager::populate(int newCurrentItem){
 void ViewPager::sortChildDrawingOrder(){
     if (mDrawingOrder != DRAW_ORDER_DEFAULT) {
         mDrawingOrderedChildren = mChildren;
-        std::sort(mDrawingOrderedChildren.begin(),mDrawingOrderedChildren.end(), [](View*lhs,View*rhs)->int{
+        std::sort(mDrawingOrderedChildren.begin(),mDrawingOrderedChildren.end(), [](View*lhs,View*rhs)->bool{
             LayoutParams* llp = (LayoutParams*) lhs->getLayoutParams();
             LayoutParams* rlp = (LayoutParams*) rhs->getLayoutParams();
             if (llp->isDecor != rlp->isDecor) {
-                return llp->isDecor ? 1 : -1;
+                return !llp->isDecor ;//? 1 : -1;
             }
-            return (llp->position > rlp->position);
+            return (llp->position < rlp->position);
         });
    }
 }
