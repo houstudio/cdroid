@@ -497,7 +497,6 @@ void ViewPager::dataSetChanged(){
         if (newPos == PagerAdapter::POSITION_NONE) {
             ItemInfo*item = mItems.at(i);
             mItems.erase(mItems.begin()+i);
-            if(item != &mTempItem)delete item;
             i--;
 
             if (!isUpdating) {
@@ -512,6 +511,7 @@ void ViewPager::dataSetChanged(){
                 newCurrItem = std::max(0, std::min(mCurItem, adapterCount - 1));
                 needPopulate = true;
             }
+            if(item != &mTempItem)delete item;
             continue;
         }
 
