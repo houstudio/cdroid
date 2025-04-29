@@ -26,6 +26,7 @@ private:
     OnChronometerTickListener mOnChronometerTickListener;
     bool mCountDown;
 private:
+    void init();
     void tickRunner();
     void updateText(int64_t now);
     void updateRunning();

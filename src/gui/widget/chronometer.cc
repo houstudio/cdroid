@@ -5,14 +5,23 @@ namespace cdroid{
 DECLARE_WIDGET(Chronometer)
 
 Chronometer::Chronometer(int w,int h):TextView(std::string(),w,h){
-    mTickRunnable=nullptr;
+    init();
 }
 
 Chronometer::Chronometer(Context*ctx,const AttributeSet&atts)
   :TextView(ctx,atts){
-    mTickRunnable=nullptr;
+    init();
+    setFormat(atts.getString("format"));
+    setCountDown(atts.getBoolean("countDown",false));
 }
-    
+
+void Chronometer::init(){
+    mBase = SystemClock::elapsedRealtime();
+    mCountDown = false;
+    mStarted = false;
+    updateText(mBase);
+}
+
 void Chronometer::setCountDown(bool countDown) {
     mCountDown = countDown;
     updateText(SystemClock::elapsedRealtime());
