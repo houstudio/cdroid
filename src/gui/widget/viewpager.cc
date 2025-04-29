@@ -213,6 +213,10 @@ void ViewPager::setCurrentItem(int item, bool smoothScroll) {
     setCurrentItemInternal(item, smoothScroll, false);
 }
 
+void ViewPager::setCurrentItemInternal(int item, bool smoothScroll, bool always) {
+    setCurrentItemInternal(item, smoothScroll, always, 0);
+}
+
 void ViewPager::setCurrentItemInternal(int item, bool smoothScroll, bool always,int velocity){
     if (mAdapter == nullptr || mAdapter->getCount() <= 0) {
         setScrollingCacheEnabled(false);
@@ -445,8 +449,8 @@ void ViewPager::smoothScrollTo(int x, int y, int velocity){
     if (velocity > 0) {
         duration = 4 * std::round(1000 * std::abs(distance / velocity));
     } else {
-        float pageWidth = width * mAdapter->getPageWidth(mCurItem);
-        float pageDelta = (float) std::abs(dx) / (pageWidth + mPageMargin);
+        const float pageWidth = width * mAdapter->getPageWidth(mCurItem);
+        const float pageDelta = (float) std::abs(dx) / (pageWidth + mPageMargin);
         duration = (int) ((pageDelta + 1) * 100);
     }
     duration = std::min(duration,(int)MAX_SETTLE_DURATION);
@@ -656,10 +660,8 @@ void ViewPager::populate(int newCurrentItem){
             }
         }
         calculatePageOffsets(curItem, curIndex, oldCurInfo);
+        mAdapter->setPrimaryItem(this, mCurItem, curItem != nullptr ? curItem->object : nullptr);
     }
-
-
-    mAdapter->setPrimaryItem(this, mCurItem, curItem != nullptr ? curItem->object : nullptr);
 
     mAdapter->finishUpdate(this);
 
@@ -874,9 +876,13 @@ ViewPager::ItemInfo* ViewPager::infoForPosition(int position)const{
     return nullptr;
 }
 
+void ViewPager::onAttachedToWindow() {
+    ViewGroup::onAttachedToWindow();
+    mFirstLayout = true;
+}
+
 void ViewPager::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
-    setMeasuredDimension(getDefaultSize(0, widthMeasureSpec),
-    getDefaultSize(0, heightMeasureSpec));
+    setMeasuredDimension(getDefaultSize(0, widthMeasureSpec),getDefaultSize(0, heightMeasureSpec));
 
     const int measuredWidth = getMeasuredWidth();
     const int maxGutterSize = measuredWidth / 10;
@@ -1366,7 +1372,7 @@ bool ViewPager::onTouchEvent(MotionEvent& ev){
     }
     mVelocityTracker->addMovement(ev);
     
-    int action = ev.getAction();
+    const int action = ev.getAction();
     bool needsInvalidate = false;
     
     switch (action & MotionEvent::ACTION_MASK) {
