@@ -20,6 +20,7 @@ void Chronometer::init(){
     mCountDown = false;
     mStarted = false;
     updateText(mBase);
+    mTickRunnable = std::bind(&Chronometer::tickRunner,this);
 }
 
 void Chronometer::setCountDown(bool countDown) {
@@ -34,9 +35,9 @@ bool Chronometer::isCountDown()const{
 bool Chronometer::isTheFinalCountDown()const{
     /*getContext().startActivity(
         new Intent(Intent.ACTION_VIEW, Uri.parse("https://youtu.be/9jK-NcRmVcw"))
-                .addCategory(Intent.CATEGORY_BROWSABLE)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT
-                        | Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT));*/
+                .addCategory(Intent::CATEGORY_BROWSABLE)
+                .addFlags(Intent::FLAG_ACTIVITY_NEW_DOCUMENT
+                        | Intent::FLAG_ACTIVITY_LAUNCH_ADJACENT));*/
     return true;
 }
 
@@ -101,8 +102,8 @@ void Chronometer::updateText(int64_t now) {
         //text = getResources().getString(R.string.negative_duration, text);
     }
 
-    /*if (mFormat != nullptr) {
-        Locale loc = Locale.getDefault();
+    if (!mFormat.empty()) {
+        /*Locale loc = Locale.getDefault();
         if (mFormatter == nullptr || !loc.equals(mFormatterLocale)) {
             mFormatterLocale = loc;
             mFormatter = new Formatter(mFormatBuilder, loc);
@@ -111,15 +112,20 @@ void Chronometer::updateText(int64_t now) {
         mFormatterArgs[0] = text;
 
         mFormatter.format(mFormat, mFormatterArgs);
-        text = mFormatBuilder.toString();
-    }*/
+        text = mFormatBuilder.toString();*/
+        text = mFormat;
+        auto pos = text.find("%s");
+        if(pos!=std::string::npos){
+            char stm[16];
+            sprintf(stm,"%02d%c%02d",int(seconds/60),((seconds%60)%2?':':' '),int(seconds%60));
+            text.replace(pos,2,stm);
+        }
+    }
     setText(text);
 }
 
 void Chronometer::updateRunning() {
-    bool running = mVisible && mStarted && isShown();
-    if(mTickRunnable==nullptr)
-        mTickRunnable=std::bind(&Chronometer::tickRunner,this);
+    const bool running = mVisible && mStarted && isShown();
     if (running != mRunning) {
         if (running) {
             updateText(SystemClock::elapsedRealtime());
