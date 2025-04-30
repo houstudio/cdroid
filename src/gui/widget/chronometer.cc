@@ -13,12 +13,14 @@ Chronometer::Chronometer(Context*ctx,const AttributeSet&atts)
     init();
     setFormat(atts.getString("format"));
     setCountDown(atts.getBoolean("countDown",false));
+    mColonBlinking = atts.getBoolean("colonBlinking",mColonBlinking);
 }
 
 void Chronometer::init(){
     mBase = SystemClock::elapsedRealtime();
-    mCountDown = false;
     mStarted = false;
+    mCountDown = false;
+    mColonBlinking = false;
     updateText(mBase);
     mTickRunnable = std::bind(&Chronometer::tickRunner,this);
 }
@@ -117,7 +119,7 @@ void Chronometer::updateText(int64_t now) {
         auto pos = text.find("%s");
         if(pos!=std::string::npos){
             char stm[16];
-            sprintf(stm,"%02d%c%02d",int(seconds/60),((seconds%60)%2?':':' '),int(seconds%60));
+            sprintf(stm,"%02d%c%02d",int(seconds/60),((((seconds%60)%2==0)||mColonBlinking==false)?':':' '),int(seconds%60));
             text.replace(pos,2,stm);
         }
     }

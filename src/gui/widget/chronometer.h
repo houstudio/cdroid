@@ -20,6 +20,7 @@ private:
     bool mStarted;
     bool mRunning;
     bool mLogged;
+    bool mColonBlinking;
     Runnable mTickRunnable;
     std::string mFormat;
     Formatter mFormatter;
