@@ -20,12 +20,14 @@ private:
     bool mStarted;
     bool mRunning;
     bool mLogged;
+    bool mColonBlinking;
     Runnable mTickRunnable;
     std::string mFormat;
     Formatter mFormatter;
     OnChronometerTickListener mOnChronometerTickListener;
     bool mCountDown;
 private:
+    void init();
     void tickRunner();
     void updateText(int64_t now);
     void updateRunning();

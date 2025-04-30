@@ -185,7 +185,8 @@ protected:
     int getChildDrawingOrder(int childCount, int i)override;
     void onDetachedFromWindow()override;
     void setScrollState(int newState);
-    void setCurrentItemInternal(int item, bool smoothScroll, bool always,int velocity=0);
+    void setCurrentItemInternal(int item, bool smoothScroll, bool always);
+    void setCurrentItemInternal(int item, bool smoothScroll, bool always,int velocity);
     void drawableStateChanged()override;
     bool verifyDrawable(Drawable* who)const override;
     ItemInfo* addNewItem(int position, int index);
@@ -195,6 +196,7 @@ protected:
     bool pageLeft();
     bool pageRight();
     bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect)override;
+    void onAttachedToWindow()override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onSizeChanged(int w, int h, int oldw, int oldh)override;
     void onLayout(bool changed, int l, int t, int w, int h)override;
