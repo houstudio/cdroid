@@ -3817,10 +3817,9 @@ void RecyclerView::ViewFlinger::run() {
         // make sure we don't stop scrolling if it has changed and it's pending an initial
         // run.
         SmoothScroller* smoothScroller = mRV->mLayout->mSmoothScroller;
-        bool smoothScrollerPending =
-                smoothScroller != nullptr && smoothScroller->isPendingInitialRun();
+        const bool smoothScrollerPending = smoothScroller != nullptr && smoothScroller->isPendingInitialRun();
 
-        if(smoothScrollerPending && doneScrolling){
+        if(!smoothScrollerPending && doneScrolling){
             // If we are done scrolling and the layout's SmoothScroller is not pending,
             // do the things we do at the end of a scroll and don't postOnAnimation.
 
