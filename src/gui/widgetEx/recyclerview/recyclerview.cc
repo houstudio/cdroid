@@ -3840,7 +3840,7 @@ void RecyclerView::ViewFlinger::run() {
                 mRV->mGapWorker->postFromTraversal(mRV, consumedX, consumedY);
             }
         }
-        /*if (Build.VERSION.SDK_INT >= 35) {
+        /*if (Build::VERSION::SDK_INT >= 35) {
             Api35Impl.setFrameContentVelocity(RecyclerView.this,
                     Math.abs(scroller.getCurrVelocity()));
         }*/

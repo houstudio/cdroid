@@ -374,6 +374,13 @@ ViewPropertyAnimator& ViewPropertyAnimator::withEndAction(Runnable runnable){
     return *this;
 }
 
+bool ViewPropertyAnimator::hasActions()const{
+    return  mPendingSetupAction!=nullptr
+                || mPendingCleanupAction!=nullptr
+                || mPendingOnStartAction!=nullptr
+                || mPendingOnEndAction==nullptr;
+}
+
 void ViewPropertyAnimator::startAnimation(){
     /*if (mRTBackend != nullptr && mRTBackend.startAnimation(this)) {
         return;

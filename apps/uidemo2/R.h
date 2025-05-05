@@ -56,19 +56,20 @@ namespace R{
          static constexpr int listview                = 0x0000273F ;/*10047*/
          static constexpr int addbutton               = 0x00002740 ;/*10048*/
          static constexpr int light1                  = 0x00002741 ;/*10049*/
-         static constexpr int light2                  = 0x00002742 ;/*10050*/
-         static constexpr int light3                  = 0x00002743 ;/*10051*/
-         static constexpr int light4                  = 0x00002744 ;/*10052*/
-         static constexpr int sencetype               = 0x00002745 ;/*10053*/
-         static constexpr int gridview                = 0x00002746 ;/*10054*/
-         static constexpr int smokesensor             = 0x00002747 ;/*10055*/
-         static constexpr int powerstate              = 0x00002748 ;/*10056*/
-         static constexpr int detail                  = 0x00002749 ;/*10057*/
-         static constexpr int socket                  = 0x0000274A ;/*10058*/
-         static constexpr int poweron                 = 0x0000274B ;/*10059*/
-         static constexpr int poweroff                = 0x0000274C ;/*10060*/
-         static constexpr int volumn_down             = 0x0000274D ;/*10061*/
-         static constexpr int volumn_up               = 0x0000274E ;/*10062*/
+         static constexpr int ratingbar1              = 0x00002742 ;/*10050*/
+         static constexpr int light2                  = 0x00002743 ;/*10051*/
+         static constexpr int light3                  = 0x00002744 ;/*10052*/
+         static constexpr int light4                  = 0x00002745 ;/*10053*/
+         static constexpr int sencetype               = 0x00002746 ;/*10054*/
+         static constexpr int gridview                = 0x00002747 ;/*10055*/
+         static constexpr int smokesensor             = 0x00002748 ;/*10056*/
+         static constexpr int powerstate              = 0x00002749 ;/*10057*/
+         static constexpr int detail                  = 0x0000274A ;/*10058*/
+         static constexpr int socket                  = 0x0000274B ;/*10059*/
+         static constexpr int poweron                 = 0x0000274C ;/*10060*/
+         static constexpr int poweroff                = 0x0000274D ;/*10061*/
+         static constexpr int volumn_down             = 0x0000274E ;/*10062*/
+         static constexpr int volumn_up               = 0x0000274F ;/*10063*/
     };/*namespace id*/
 
     namespace strings{

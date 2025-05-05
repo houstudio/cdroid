@@ -1,20 +1,10 @@
-#if 0
+#if 10
+#include <core/bundle.h>
 #include <navigation/navoptions.h>
 #include <navigation/navcontroller.h>
 #include <navigation/navdestination.h>
 
 namespace cdroid{
-/*
-public class NavController {
-    private static final String KEY_NAVIGATOR_STATE = "android-support-nav:controller:navigatorState";
-    private static final String KEY_NAVIGATOR_STATE_NAMES = "android-support-nav:controller:navigatorState:names";
-    private static final String KEY_GRAPH_ID = "android-support-nav:controller:graphId";
-    private static final String KEY_BACK_STACK_IDS = "android-support-nav:controller:backStackIds";
-    static final String KEY_DEEP_LINK_IDS = "android-support-nav:controller:deepLinkIds";
-    static final String KEY_DEEP_LINK_EXTRAS = "android-support-nav:controller:deepLinkExtras";
-    //The {@link Intent} that triggered a deep link to the current destination.
-    public static final String KEY_DEEP_LINK_INTENT = "android-support-nav:controller:deepLinkIntent";
-*/
 
 class MySimpleNavigatorProvider:public SimpleNavigatorProvider{//mNavigatorProvider = new SimpleNavigatorProvider() {
 public:
@@ -30,8 +20,7 @@ public:
     }
 };
 
-NavController::onNavigatorNavigated(Navigator& navigator,/*IdRes*/int destId,
-        /*Navigator.BackStackEffect*/int backStackEffect) {
+NavController::onNavigatorNavigated(Navigator& navigator,int destId,int backStackEffect) {
     if (destId != 0) {
         // First remove popped destinations off the back stack
         if (backStackEffect == Navigator::BACK_STACK_DESTINATION_POPPED) {
@@ -54,23 +43,6 @@ NavController::onNavigatorNavigated(Navigator& navigator,/*IdRes*/int destId,
     }
 }
 
-/**
- * Constructs a new controller for a given {@link Context}. Controllers should not be
- * used outside of their context and retain a hard reference to the context supplied.
- * If you need a global controller, pass {@link Context#getApplicationContext()}.
- *
- * <p>Apps should generally not construct controllers, instead obtain a relevant controller
- * directly from a navigation host via {@link NavHost#getNavController()} or by using one of
- * the utility methods on the {@link Navigation} class.</p>
- *
- * <p>Note that controllers that are not constructed with an {@link Activity} context
- * (or a wrapped activity context) will only be able to navigate to
- * {@link android.content.Intent#FLAG_ACTIVITY_NEW_TASK new tasks} or
- * {@link android.content.Intent#FLAG_ACTIVITY_NEW_DOCUMENT new document tasks} when
- * navigating to new activities.</p>
- *
- * @param context context for this controller
- */
 NavController::NavController(Context* context) {
     mContext = context;
     mOnNavigatedListener=std::bind(&NavController::onNavigatorNavigated,this,std::placeholders::_1,

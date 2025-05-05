@@ -1,7 +1,8 @@
 #include <view/view.h>
-
+#include <widget/cdwindow.h>
 namespace cdroid{
 class NavController;
+
 class Navigation {
 private:
     // No instances. Static utilities only.
@@ -21,7 +22,7 @@ private:
      * {@link NavHost} or is not within a NavHost.
      */
 public:
-    static NavController* findNavController(Context*,  int viewId);
+    static NavController* findNavController(Activity*activity,int viewId);
 
     /**
      * Find a {@link NavController} given a local {@link View}.

@@ -1,5 +1,6 @@
-namespace cdroid{
 #if 0
+#include <navigation/navdeeplinkbuilder.h>
+namespace cdroid{
 public NavDeepLinkBuilder::NavDeepLinkBuilder(Context* context) {
     mContext = context;
     if (mContext instanceof Activity) {
@@ -50,7 +51,7 @@ public NavDeepLinkBuilder& NavDeepLinkBuilder::setGraph(int navGraphId) {
  * @param navGraph The {@link NavGraph} containing the deep link destination
  * @return this object for chaining
  */
-public NavDeepLinkBuilder& NavDeepLinkBuilder::setGraph(NavGraph& navGraph) {
+public NavDeepLinkBuilder& NavDeepLinkBuilder::setGraph(NavGraph* navGraph) {
     mGraph = navGraph;
     if (mDestId != 0) {
         fillInIntent();
@@ -203,5 +204,5 @@ private static class PermissiveNavigatorProvider extends SimpleNavigatorProvider
         }
     }
 }
+}/*endof namespace*/
 #endif
-}

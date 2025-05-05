@@ -2,16 +2,19 @@
 #define __NAV_CONTROLLER_H__
 #include <vector>
 #include <deque>
+#include <core/bundle.h>
 #include <core/callbackbase.h>
 #include <navigation/navinflater.h>
 #include <navigation/navdestination.h>
+#include <navigation/navdirections.h>
+#include <navigation/navdeeplinkbuilder.h>
 #include <navigation/simplenavigatorprovider.h>
 
 namespace cdroid{
 
 class NavController{
 public:
-    typedef CallbackBase<void,NavController&controller,NavDestination&>OnNavigatedListener;
+    typedef CallbackBase<void,NavController&,NavDestination&>OnNavigatedListener;
 private:
     Context* mContext;
     Activity* mActivity;
@@ -49,12 +52,12 @@ public:
     NavDestination* getCurrentDestination();
     void navigate(/*@IdRes*/ int resId);
     void navigate(/*@IdRes*/ int resId, Bundle* args);
-    void navigate(/*@IdRes*/ int resId, /*Nullable*/Bundle* args, /*Nullable*/ NavOptions* navOptions);
-    void navigate(/*@NonNull*/ NavDirections& directions);
-    void navigate(/*@NonNull*/ NavDirections& directions, /*Nullable*/NavOptions* navOptions);
-    NavDeepLinkBuilder createDeepLink();
+    void navigate(/*@IdRes*/ int resId, Bundle* args, NavOptions* navOptions);
+    void navigate(NavDirections& directions);
+    void navigate(NavDirections& directions, NavOptions* navOptions);
+    NavDeepLinkBuilder* createDeepLink();
     Bundle* saveState();
-    void restoreState(/*Nullable*/ Bundle* navState);
+    void restoreState(Bundle* navState);
 };
 
 }
