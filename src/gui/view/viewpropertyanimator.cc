@@ -7,6 +7,7 @@ namespace cdroid{
 
 ViewPropertyAnimator::ViewPropertyAnimator(View* view){
     mView = view;
+    view->ensureTransformationInfo();
     mDurationSet = false;
     mStartDelaySet = false;
     mInterpolatorSet = false;
@@ -233,8 +234,6 @@ void ViewPropertyAnimator::cancel() {
     mPendingOnStartAction = nullptr;
     mPendingOnEndAction   = nullptr;
     mView->removeCallbacks(mAnimationStarter);
-
-    //if (mRTBackend != null)  mRTBackend.cancelAll();
 }
 
 ViewPropertyAnimator& ViewPropertyAnimator::x(float value){
@@ -360,31 +359,22 @@ ViewPropertyAnimator& ViewPropertyAnimator::alphaBy(float value){
 
 ViewPropertyAnimator& ViewPropertyAnimator::withStartAction(Runnable runnable){
     mPendingOnStartAction = runnable;
-    //if (runnable != nullptr && mAnimatorOnStartMap == nullptr) {
-    //    mAnimatorOnStartMap = new HashMap<Animator*, Runnable>();
-    //}
     return *this;
 }
 
 ViewPropertyAnimator& ViewPropertyAnimator::withEndAction(Runnable runnable){
     mPendingOnEndAction = runnable;
-    //if (runnable != nullptr && mAnimatorOnEndMap == nullptr) {
-    //    mAnimatorOnEndMap = new HashMap<Animator, Runnable>();
-    //}
     return *this;
 }
 
 bool ViewPropertyAnimator::hasActions()const{
-    return  mPendingSetupAction!=nullptr
-                || mPendingCleanupAction!=nullptr
-                || mPendingOnStartAction!=nullptr
-                || mPendingOnEndAction==nullptr;
+    return  (mPendingSetupAction!=nullptr)
+                || (mPendingCleanupAction!=nullptr)
+                || (mPendingOnStartAction!=nullptr)
+                || (mPendingOnEndAction==nullptr);
 }
 
 void ViewPropertyAnimator::startAnimation(){
-    /*if (mRTBackend != nullptr && mRTBackend.startAnimation(this)) {
-        return;
-    }*/
     mView->setHasTransientState(true);
     ValueAnimator* animator = ValueAnimator::ofFloat({0,1.0f});
     std::vector<NameValuesHolder> nameValueList =mPendingAnimations;
@@ -472,7 +462,6 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
     node->getMatrix(matrix);
     rect.set(mView->getLeft(),mView->getTop(),mView->getWidth(),mView->getHeight());
     matrix.transform_rectangle((Cairo::RectangleInt&)rect);
-    mView->ensureTransformationInfo();
     switch (propertyConstant) {
     case TRANSLATION_X: node->setTranslationX(value);     break;
     case TRANSLATION_Y: node->setTranslationY(value);     break;
@@ -484,7 +473,7 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
     case SCALE_Y:       node->setScaleY(value);           break;
     case X:  node->setTranslationX(value - mView->mLeft); break;
     case Y:  node->setTranslationY(value - mView->mTop);  break;
-    case Z:  node->setTranslationZ(value - node->getElevation());   break;
+    case Z:  node->setTranslationZ(value - node->getElevation());  break;
     case ALPHA:
              mView->mTransformationInfo->mAlpha = value;
              node->setAlpha(value);
@@ -497,7 +486,6 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
 
 float ViewPropertyAnimator::getValue(int propertyConstant)const{
     RenderNode* node = mView->mRenderNode;
-    mView->ensureTransformationInfo();
     switch (propertyConstant) {
     case TRANSLATION_X: return node->getTranslationX();
     case TRANSLATION_Y: return node->getTranslationY();
@@ -525,7 +513,7 @@ bool ViewPropertyAnimator::PropertyBundle::cancel(int propertyConstant){
         for (auto it = mNameValuesHolder.begin();it!=mNameValuesHolder.end();it++){
             NameValuesHolder& nameValuesHolder = (*it);
             if (nameValuesHolder.mNameConstant == propertyConstant) {
-                it = mNameValuesHolder.erase(it);//remove(i);
+                it = mNameValuesHolder.erase(it);
                 mPropertyMask &= ~propertyConstant;
                 return true;
             }
