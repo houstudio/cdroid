@@ -4,12 +4,6 @@
 
 
 namespace cdroid{
-#define TRANSITION_STARTING 0
-#define TRANSITION_RUNNING  1
-#define TRANSITION_NONE     2
-
-/*TransitionDrawable::TransitionState::TransitionState(const Context*ctx,const AttributeSet&atts){   
-}*/
 
 TransitionDrawable::TransitionState::TransitionState(TransitionState* orig, TransitionDrawable* owner)
     :LayerState::LayerState(orig,owner){
@@ -24,25 +18,18 @@ TransitionDrawable::TransitionDrawable()
     :LayerDrawable(std::make_shared<TransitionState>(nullptr,this)){
 }
 
-TransitionDrawable::TransitionDrawable(Context*ctx,const AttributeSet&atts)
-   :LayerDrawable(std::make_shared<TransitionState>(nullptr,this)){
-    mAlpha = 0;
-    mCrossFade = false;
-    mTransitionState = TRANSITION_NONE;
-}
-
 TransitionDrawable::TransitionDrawable(const std::vector<Drawable*>drawables)
     :LayerDrawable(drawables){
-    mAlpha=0;
+    mAlpha = 0;
     mCrossFade =false;
-    mTransitionState=TRANSITION_NONE;
+    mTransitionState = TRANSITION_NONE;
 }
 
 TransitionDrawable::TransitionDrawable(std::shared_ptr<TransitionState> state)
     :LayerDrawable(state){    
-    mAlpha=0;
-    mCrossFade =false;
-    mTransitionState=TRANSITION_NONE;
+    mAlpha = 0;
+    mCrossFade = false;
+    mTransitionState = TRANSITION_NONE;
 }
 
 std::shared_ptr<LayerDrawable::LayerState> TransitionDrawable::createConstantState(LayerState* state,const AttributeSet*attrs){
@@ -89,8 +76,7 @@ void TransitionDrawable::reverseTransition(int duration) {
     mReverse = !mReverse;
     mFrom = mAlpha;
     mTo = mReverse ? 0 : 255;
-    mDuration = (int) (mReverse ? time - mStartTimeMillis :
-                mOriginalDuration - (time - mStartTimeMillis));
+    mDuration = (int) (mReverse ? time - mStartTimeMillis : mOriginalDuration - (time - mStartTimeMillis));
     mTransitionState = TRANSITION_STARTING;
 }
 
@@ -99,7 +85,7 @@ bool TransitionDrawable::isCrossFadeEnabled()const{
 }
 
 void TransitionDrawable::setCrossFadeEnabled(bool enabled){
-    mCrossFade= enabled;
+    mCrossFade = enabled;
 }
 
 void TransitionDrawable::draw(Canvas&canvas){

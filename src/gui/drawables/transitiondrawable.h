@@ -6,6 +6,10 @@ namespace cdroid{
 
 class TransitionDrawable:public LayerDrawable{
 private:
+    static constexpr int TRANSITION_STARTING = 0;
+    static constexpr int TRANSITION_RUNNING = 1;
+    static constexpr int TRANSITION_NONE = 2;
+private:
     int  mTransitionState;
     bool mReverse;
     int64_t mStartTimeMillis;
@@ -24,7 +28,6 @@ private:
 
     TransitionDrawable(std::shared_ptr<TransitionState> state);
     std::shared_ptr<LayerDrawable::LayerState> createConstantState(LayerState* state,const AttributeSet*)override;
-    TransitionDrawable(Context*,const AttributeSet&);
 public:
     TransitionDrawable();
     TransitionDrawable(const std::vector<Drawable*>drawables);
@@ -36,6 +39,5 @@ public:
     void draw(Canvas&canvas)override;
 };
 
-}
-
+}/*endof namespace*/
 #endif

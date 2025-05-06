@@ -37,7 +37,8 @@ bool Spinner::SpinnerForwardingListener::onForwardingStarted(){
 Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
     mPopupContext = mContext;
     mGravity = Gravity::CENTER;
-    mDisableChildrenWhenDisabled=true;
+    mDropDownWidth =0;
+    mDisableChildrenWhenDisabled = true;
     mPopup = new DropdownPopup(mContext,this);
     mForwardingListener = new SpinnerForwardingListener(this,(DropdownPopup*)mPopup); 
 }
