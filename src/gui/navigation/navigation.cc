@@ -1,5 +1,6 @@
-#if 0 
 #include <navigation/navigation.h>
+#include <navigation/navcontroller.h>
+#include <widget/R.h>
 
 namespace cdroid{
 
@@ -19,11 +20,11 @@ Navigation::Navigation() {
  * @throws IllegalStateException if the given viewId does not correspond with a
  * {@link NavHost} or is not within a NavHost.
  */
-NavController* Navigation::findNavController(Context*activity,int viewId) {
-    View* view = Activity::requireViewById(activity, viewId);
+NavController* Navigation::findNavController(Activity*activity,int viewId) {
+    View* view = activity->findViewById(viewId);//requireViewById( viewId);
     NavController* navController = findViewNavController(view);
     if (navController == nullptr) {
-        FATAL("Activity %p does not have a NavController set on %d",activity viewId);
+        FATAL("Activity %p does not have a NavController set on %d",activity,viewId);
     }
     return navController;
 }
@@ -74,8 +75,8 @@ View::OnClickListener Navigation::createNavigateOnClickListener(int resId) {
  * @return a new click listener for setting on an arbitrary view
  */
 View::OnClickListener Navigation::createNavigateOnClickListener(int resId,Bundle* args) {
-    View::OnClickListener clk=[redId,args](View&view) {
-        findNavController(view)->navigate(resId, args);
+    View::OnClickListener clk=[resId,args](View&view) {
+        findNavController(&view)->navigate(resId, args);
     };
     return clk;
 }
@@ -112,14 +113,7 @@ NavController* Navigation::findViewNavController(View* view) {
 }
 
 NavController* Navigation::getViewNavController(View* view) {
-    Object tag = view->getTag(R::id::nav_controller_view_tag);
-    NavController* controller = nullptr;
-    if (tag instanceof WeakReference) {
-        controller = ((WeakReference<NavController>) tag).get();
-    } else if (tag instanceof NavController) {
-        controller = (NavController) tag;
-    }
-    return controller;
+    void* tag = view->getTag(R::id::nav_controller_view_tag);
+    return (NavController*) tag;
 }
 }/*endof namespace*/
-#endif

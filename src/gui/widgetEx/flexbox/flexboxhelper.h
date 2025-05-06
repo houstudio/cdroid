@@ -1,6 +1,5 @@
 #ifndef __FLEX_HELPER_H__
 #define __FLEX_HELPER_H__
-#include <vector>
 #include <view/viewgroup.h>
 #include <widgetEx/flexbox/flexline.h>
 namespace cdroid{

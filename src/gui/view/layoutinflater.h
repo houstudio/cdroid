@@ -10,6 +10,9 @@ class ViewGroup;
 class LayoutInflater{
 public:
     typedef std::function<View*(Context*ctx, const AttributeSet&attrs)>ViewInflater;
+    typedef std::function<bool(const std::string&)>Filter;
+    typedef std::function<View*(const std::string&,Context*,AttributeSet&)>Factory;
+    typedef std::function<View*(View*,const std::string&,Context*,AttributeSet&)>Factory2;
 private:
     static constexpr const char* TAG_MERGE = "merge";
     static constexpr const char* TAG_INCLUDE = "include";
@@ -19,6 +22,10 @@ private:
     static constexpr const char* ATTR_LAYOUT = "layout";
 
     Context*mContext;
+    Factory mFactory;
+    Factory2 mFactory2;
+    Factory2 mPrivateFactory;
+    Filter mFilter;
     LayoutInflater(Context*ctx);
     static LayoutInflater*mInst;
     typedef std::unordered_map<std::string,ViewInflater>INFLATERMAPPER;
@@ -40,6 +47,14 @@ public:
     static ViewInflater getInflater(const std::string&);
     static bool registerInflater(const std::string&name,const std::string&,ViewInflater fun);
     const std::string getDefaultStyle(const std::string&name)const;
+    Context*getContext()const;
+    Factory getFactory()const;
+    Factory2 getFactory2()const;
+    void setFactory(Factory factory);
+    void setFactory2(Factory2 factory);
+    void setPrivateFactory(Factory2 factory);
+    Filter getFilter()const;
+    void setFilter(Filter f);
     [[deprecated("This function is deprecated")]]
     View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*);
     View* inflate(XmlPullParser& parser,ViewGroup* root);

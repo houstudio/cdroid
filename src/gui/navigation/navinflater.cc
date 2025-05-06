@@ -81,33 +81,25 @@ NavDestination* NavInflater::inflate(XmlPullParser&parser,const AttributeSet& at
 
 void NavInflater::inflateArgument(NavDestination& dest,const AttributeSet& attrs){
     const std::string name = attrs.getString("name");
-    const std::string argType = attrs.getString("argType");
+    const int argType = attrs.getInt("argType",std::unordered_map<std::string,int>{
+            {"string",0},{"integer",1},{"dimension",2},{"float",3}
+        },0);
     const std::string defValue= attrs.getString("defaultValue");
-
-    /*if (a.getValue(R.styleable.NavArgument_android_defaultValue, value)) {
-        switch (value.type) {
-        case TypedValue.TYPE_STRING:
-            dest.getDefaultArguments().putString(name, value.string.toString());
-            break;
-        case TypedValue.TYPE_DIMENSION:
-            dest.getDefaultArguments().putInt(name,
-                    (int) value.getDimension(res.getDisplayMetrics()));
-            break;
-        case TypedValue.TYPE_FLOAT:
-            dest.getDefaultArguments().putFloat(name, value.getFloat());
-            break;
-        case TypedValue.TYPE_REFERENCE:
-            dest.getDefaultArguments().putInt(name, value.data);
-            break;
-        default:
-            if (value.type >= TypedValue.TYPE_FIRST_INT
-                    && value.type <= TypedValue.TYPE_LAST_INT) {
-                dest.getDefaultArguments().putInt(name, value.data);
-            } else {
-                //throw ("unsupported argument type " + value.type);
-            }
-        }
-    }*/
+    switch(argType){
+    case 0:
+        dest.getDefaultArguments().putString(name, defValue);
+        break;
+    case 1:
+        dest.getDefaultArguments().putInt(name,std::stoi(defValue));
+        break;
+    case 2:
+    case 3:
+        if(defValue.find("p")!=std::string::npos)
+            dest.getDefaultArguments().putInt(name,std::stoi(defValue));
+        else
+            dest.getDefaultArguments().putFloat(name, std::stof(defValue));
+        break;
+    }
 }
 
 void NavInflater::inflateDeepLink(NavDestination& dest, const AttributeSet& attrs) {

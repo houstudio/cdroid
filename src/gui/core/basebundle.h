@@ -16,7 +16,20 @@ private:
 
 public:
     // Put methods for single values
+
+    void putByte(const std::string& key, uint8_t value){
+        data_[key] = value;
+    }
+
+    void putShort(const std::string& key, int16_t value){
+        data_[key] = value;
+    }
+
     void putInt(const std::string& key, int value) {
+        data_[key] = value;
+    }
+
+    void putLong(const std::string& key,int64_t value){
         data_[key] = value;
     }
 
@@ -37,7 +50,19 @@ public:
     }
 
     // Put methods for arrays
+    void putByteArray(const std::string& key, const std::vector<int8_t>& value){
+        data_[key] = value;
+    }
+
+    void putShortArray(const std::string& key, const std::vector<int16_t>& value){
+        data_[key] = value;
+    }
+
     void putIntArray(const std::string& key, const std::vector<int>& value) {
+        data_[key] = value;
+    }
+
+    void putLongArray(const std::string& key, const std::vector<int64_t>& value) {
         data_[key] = value;
     }
 
@@ -53,13 +78,24 @@ public:
         data_[key] = value;
     }
 
-    void putBoolArray(const std::string& key, const std::vector<bool>& value) {
+    void putBooleanArray(const std::string& key, const std::vector<bool>& value) {
         data_[key] = value;
     }
 
     // Get methods for single values
+    int8_t getByte(const std::string& key) const{
+        return getValue<int8_t>(key);
+    }
+
+    int16_t getShort(const std::string&key) const{
+        return getValue<int16_t>(key);
+    }
     int getInt(const std::string& key) const {
         return getValue<int>(key);
+    }
+
+    int64_t getLong(const std::string& key) const {
+        return getValue<int64_t>(key);
     }
 
     float getFloat(const std::string& key) const {
@@ -79,8 +115,20 @@ public:
     }
 
     // Get methods for arrays
+     std::vector<int8_t> getByteArray(const std::string& key) const {
+        return getValue<std::vector<int8_t>>(key);
+    }
+
+    std::vector<int16_t> getShortArray(const std::string& key) const {
+        return getValue<std::vector<int16_t>>(key);
+    }
+
     std::vector<int> getIntArray(const std::string& key) const {
         return getValue<std::vector<int>>(key);
+    }
+
+    std::vector<int64_t> getLongArray(const std::string& key) const {
+        return getValue<std::vector<int64_t>>(key);
     }
 
     std::vector<float> getFloatArray(const std::string& key) const {
@@ -95,7 +143,7 @@ public:
         return getValue<std::vector<std::string>>(key);
     }
 
-    std::vector<bool> getBoolArray(const std::string& key) const {
+    std::vector<bool> getBooleanArray(const std::string& key) const {
         return getValue<std::vector<bool>>(key);
     }
 
@@ -124,8 +172,6 @@ public:
         return data_.empty();
     }
 
-private:
-    // Helper method to retrieve a value with type checking
     template<typename T>
     T getValue(const std::string& key) const {
         auto it = data_.find(key);
@@ -138,6 +184,20 @@ private:
             throw std::runtime_error("Type mismatch for key: " + key);
         }
     }
+
+    template<typename T>
+    T getValue(const std::string& key,const T&defaultValue) const {
+        auto it = data_.find(key);
+        if (it == data_.end()) {
+            return defaultValue;
+        }
+        try {
+            return any_cast<T>(it->second);
+        } catch (const bad_any_cast& e) {
+            throw std::runtime_error("Type mismatch for key: " + key);
+        }
+    }
+
 };
 
 } // namespace cdroid

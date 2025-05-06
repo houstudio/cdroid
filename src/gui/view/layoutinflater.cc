@@ -65,6 +65,40 @@ bool LayoutInflater::registerInflater(const std::string&name,const std::string&d
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Context*LayoutInflater::getContext()const{
+    return mContext;
+}
+
+LayoutInflater::Factory LayoutInflater::getFactory()const{
+    return mFactory;
+}
+
+LayoutInflater::Factory2 LayoutInflater::getFactory2()const{
+    return mFactory2;
+}
+void LayoutInflater::setFactory(Factory factory){
+    mFactory = factory;
+}
+
+void LayoutInflater::setFactory2(Factory2 factory){
+    mFactory2 = factory;
+}
+
+void LayoutInflater::setPrivateFactory(Factory2 factory){
+    if(mFactory==nullptr){
+        mPrivateFactory = factory;
+    }else{
+    }
+}
+
+LayoutInflater::Filter LayoutInflater::getFilter()const{
+    return mFilter;
+}
+
+void LayoutInflater::setFilter(Filter f){
+    mFilter = f;
+}
+
 View* LayoutInflater::inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*){
     auto strm = std::make_unique<std::istream>(stream.rdbuf());
     XmlPullParser parser(nullptr,std::move(strm));

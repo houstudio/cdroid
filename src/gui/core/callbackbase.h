@@ -28,11 +28,6 @@ public:
         mFunctor = b.mFunctor;
         return *this;
     }
-    //for std::move
-    CallbackBase& operator=(CallbackBase&& other) noexcept {
-        mFunctor = other.mFunctor;//std::move(other.mFunctor);
-        return *this;
-    }
     CallbackBase&operator=(std::nullptr_t){
         mFunctor= nullptr;
         return *this;

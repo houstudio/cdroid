@@ -50,18 +50,19 @@
   <id name="listview">0x0000273f</id>
   <id name="addbutton">0x00002740</id>
   <id name="light1">0x00002741</id>
-  <id name="light2">0x00002742</id>
-  <id name="light3">0x00002743</id>
-  <id name="light4">0x00002744</id>
-  <id name="sencetype">0x00002745</id>
-  <id name="gridview">0x00002746</id>
-  <id name="smokesensor">0x00002747</id>
-  <id name="powerstate">0x00002748</id>
-  <id name="detail">0x00002749</id>
-  <id name="socket">0x0000274a</id>
-  <id name="poweron">0x0000274b</id>
-  <id name="poweroff">0x0000274c</id>
-  <id name="volumn_down">0x0000274d</id>
-  <id name="volumn_up">0x0000274e</id>
+  <id name="ratingbar1">0x00002742</id>
+  <id name="light2">0x00002743</id>
+  <id name="light3">0x00002744</id>
+  <id name="light4">0x00002745</id>
+  <id name="sencetype">0x00002746</id>
+  <id name="gridview">0x00002747</id>
+  <id name="smokesensor">0x00002748</id>
+  <id name="powerstate">0x00002749</id>
+  <id name="detail">0x0000274a</id>
+  <id name="socket">0x0000274b</id>
+  <id name="poweron">0x0000274c</id>
+  <id name="poweroff">0x0000274d</id>
+  <id name="volumn_down">0x0000274e</id>
+  <id name="volumn_up">0x0000274f</id>
 </resources>
 

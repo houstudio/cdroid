@@ -527,7 +527,7 @@ void FocusFinder::sort(std::vector<View*>&views, int start, int end, ViewGroup* 
         if(first==second)return 0;
         Rect firstRect = mRectByView[first];
         Rect secondRect= mRectByView[second];
-        int result = firstRect.top -secondRect.top;;
+        int result = firstRect.top -secondRect.top;
         if(result==0)
            result = firstRect.bottom()- secondRect.bottom();
         return result<0;
