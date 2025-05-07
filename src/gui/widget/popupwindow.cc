@@ -65,6 +65,8 @@ void PopupWindow::init(){
     mIsDropdown= false;
     mFocusable = true;
     mTouchable = true;
+    mAboveAnchor = false;
+    mClipToScreen = false;
     mOutsideTouchable = false;
     mClippingEnabled  = true;
     mSplitTouchEnabled= -1;
@@ -79,6 +81,7 @@ void PopupWindow::init(){
 
     mWidth = LayoutParams::WRAP_CONTENT;
     mHeight = LayoutParams::WRAP_CONTENT;
+    mWidthMode = mHeightMode =0;
     mParentRootView = nullptr;
     mAnchor = nullptr;
     mAnchorRoot = nullptr;
