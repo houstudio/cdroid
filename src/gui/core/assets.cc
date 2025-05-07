@@ -613,12 +613,15 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
     std::string pkg,name = resname;
     size_t pos = name.find("attr");
     while(pos!=std::string::npos) {
+        std::string key;
         name = name.replace(pos,4,"style");
         if((pos=name.find('?'))!=std::string::npos)
             name.erase(pos,1);
         if((pos =name.find('/'))!=std::string::npos)
             name=name.substr(pos+1);
-        name = mTheme.getString(name);
+        key=name;
+        name = mTheme.getString(key);
+        atts.add(key,name);
         if((pos=name.find('@'))!=std::string::npos)
             name.erase(pos,1);
         pos = name.find("attr");
@@ -628,6 +631,7 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
     if(it != mStyles.end()){
         atts = it->second;
     }
+    atts.setContext(this,pkg);
     std::string parent = atts.getString("parent");
     if(parent.length()) {
         parent = parseResource(parent,nullptr,&pkg);
