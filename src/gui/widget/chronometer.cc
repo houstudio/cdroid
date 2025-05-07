@@ -134,7 +134,7 @@ void Chronometer::updateText(int64_t now) {
             pos=text.find("H");
             if(pos!=std::string::npos){
                 sprintf(stm,"%d",int(seconds/3600));
-                text.replace(pos,2,stm);
+                text.replace(pos,1+(text[pos+1]=='H'),stm);
             }
         }else{
             text = stm;
