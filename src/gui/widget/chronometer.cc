@@ -104,7 +104,7 @@ void Chronometer::updateText(int64_t now) {
         //text = getResources().getString(R.string.negative_duration, text);
     }
 
-    if (!mFormat.empty()) {
+    if (1) {
         /*Locale loc = Locale.getDefault();
         if (mFormatter == nullptr || !loc.equals(mFormatterLocale)) {
             mFormatterLocale = loc;
@@ -117,10 +117,12 @@ void Chronometer::updateText(int64_t now) {
         text = mFormatBuilder.toString();*/
         text = mFormat;
         auto pos = text.find("%s");
+        char stm[32];
+        sprintf(stm,"%02d%c%02d",int(seconds/60),((((seconds%60)%2==0)||mColonBlinking==false)?':':' '),int(seconds%60));
         if(pos!=std::string::npos){
-            char stm[16];
-            sprintf(stm,"%02d%c%02d",int(seconds/60),((((seconds%60)%2==0)||mColonBlinking==false)?':':' '),int(seconds%60));
             text.replace(pos,2,stm);
+        }else{
+            text = stm;
         }
     }
     setText(text);
