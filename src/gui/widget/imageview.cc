@@ -401,7 +401,6 @@ bool ImageView::setFrame(int l, int t, int w, int h){
 
 void ImageView::configureBounds(){
     if (mDrawable == nullptr || !mHaveFrame) return;
-    const int mPaddingLeft=0,mPaddingRight=0,mPaddingTop=0,mPaddingBottom=0;
     const int dwidth = mDrawableWidth;
     const int dheight = mDrawableHeight;
 
