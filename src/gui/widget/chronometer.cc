@@ -11,7 +11,7 @@ Chronometer::Chronometer(int w,int h):TextView(std::string(),w,h){
 Chronometer::Chronometer(Context*ctx,const AttributeSet&atts)
   :TextView(ctx,atts){
     init();
-    setFormat(atts.getString("format"));
+    setFormat(atts.getString("format",mFormat));
     setCountDown(atts.getBoolean("countDown",false));
     mColonBlinking = atts.getBoolean("colonBlinking",mColonBlinking);
 }
@@ -21,6 +21,7 @@ void Chronometer::init(){
     mStarted = false;
     mCountDown = false;
     mColonBlinking = false;
+    mFormat = "MM:SS";
     updateText(mBase);
     mTickRunnable = std::bind(&Chronometer::tickRunner,this);
 }
@@ -104,7 +105,7 @@ void Chronometer::updateText(int64_t now) {
         //text = getResources().getString(R.string.negative_duration, text);
     }
 
-    if (!mFormat.empty()) {
+    if (1) {
         /*Locale loc = Locale.getDefault();
         if (mFormatter == nullptr || !loc.equals(mFormatterLocale)) {
             mFormatterLocale = loc;
@@ -116,11 +117,27 @@ void Chronometer::updateText(int64_t now) {
         mFormatter.format(mFormat, mFormatterArgs);
         text = mFormatBuilder.toString();*/
         text = mFormat;
-        auto pos = text.find("%s");
+        auto pos = text.find("SS");
+        char stm[32];
+        sprintf(stm,"%02d%c%02d",int(seconds/60),((((seconds%60)%2==0)||mColonBlinking==false)?':':' '),int(seconds%60));
         if(pos!=std::string::npos){
-            char stm[16];
-            sprintf(stm,"%02d%c%02d",int(seconds/60),((((seconds%60)%2==0)||mColonBlinking==false)?':':' '),int(seconds%60));
+            sprintf(stm,"%02d",int(seconds%60));
             text.replace(pos,2,stm);
+            if(mColonBlinking&&(seconds%2==0)){
+                text.replace(pos-1,1," ");
+            }
+            pos=text.find("MM");
+            if(pos!=std::string::npos){
+                sprintf(stm,"%02d",int((seconds%3600)/60));
+                text.replace(pos,2,stm);
+            }
+            pos=text.find("H");
+            if(pos!=std::string::npos){
+                sprintf(stm,"%d",int(seconds/3600));
+                text.replace(pos,1+(text[pos+1]=='H'),stm);
+            }
+        }else{
+            text = stm;
         }
     }
     setText(text);
