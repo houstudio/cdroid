@@ -24,11 +24,32 @@ ENDMACRO()
 find_package(Python 3.7 REQUIRED)
 
 function(CreatePAK project ResourceDIR PakPath rhpath)
+    set(CHECK_LXML_SCRIPT "
+import sys
+try:
+    import lxml
+    print('lxml is available')
+    sys.exit(0)
+except ImportError:
+    print('lxml is not available')
+    sys.exit(1)
+")
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -c "${CHECK_LXML_SCRIPT}"
+        RESULT_VARIABLE CHECK_LXML_RESULT
+        OUTPUT_VARIABLE CHECK_LXML_OUTPUT
+        ERROR_VARIABLE CHECK_LXML_ERROR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_STRIP_TRAILING_WHITESPACE)
+
+    if(CHECK_LXML_RESULT EQUAL 0)
+        set(XMLPACKAGE ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/XmlOptimized2Zip.py ${ResourceDIR} ${CMAKE_CURRENT_BINARY_DIR}/temp_xml ${PakPath})
+    else()
+        set(XMLPACKAGE zip -q -r -D -1 ${PakPath} ./  -i "*.xml")
+    endif()
     add_custom_target(${project}_assets
         COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/idgen.py ${project} ${ResourceDIR} ${rhpath}
-        
-        COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/XmlOptimized2Zip.py ${ResourceDIR} ${CMAKE_CURRENT_BINARY_DIR}/temp_xml ${PakPath}
-        #COMMAND zip -q -r -D -1 ${PakPath} ./  -i "*.xml"
+        COMMAND ${XMLPACKAGE}
         COMMAND zip -q -r -D -0 ${PakPath} ./  -i "*.png" "*.jpg" "*.jpeg" "*.gif" "*.apng" "*.webp" "*.ttf" "*.otf" "*.ttc"
         COMMAND cp  ${PakPath} ${CMAKE_BINARY_DIR}
         WORKING_DIRECTORY ${ResourceDIR}
@@ -36,7 +57,7 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
     add_dependencies(${project} ${project}_assets)
 
     if(CMAKE_BUILD_TYPE STREQUAL "Release")
-        file(REMOVE_RECURSE ${REMOVE_TEMPL_XMLDIR})
+        file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/temp_xml)
     endif()
     install(FILES ${PakPath} DESTINATION data)
 endfunction()
