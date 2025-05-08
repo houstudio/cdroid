@@ -30,10 +30,14 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
         COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/XmlOptimized2Zip.py ${ResourceDIR} ${CMAKE_CURRENT_BINARY_DIR}/temp_xml ${PakPath}
         #COMMAND zip -q -r -D -1 ${PakPath} ./  -i "*.xml"
         COMMAND zip -q -r -D -0 ${PakPath} ./  -i "*.png" "*.jpg" "*.jpeg" "*.gif" "*.apng" "*.webp" "*.ttf" "*.otf" "*.ttc"
-        #COMMAND rm -rf ${CMAKE_CURRENT_BINARY_DIR}/temp_xml
+        COMMAND cp  ${PakPath} ${CMAKE_BINARY_DIR}
         WORKING_DIRECTORY ${ResourceDIR}
         COMMENT "Pckage Assets from ${ResourceDIR} to:${PakPath}")
     add_dependencies(${project} ${project}_assets)
+
+    if(CMAKE_BUILD_TYPE STREQUAL "Release")
+        file(REMOVE_RECURSE ${REMOVE_TEMPL_XMLDIR})
+    endif()
     install(FILES ${PakPath} DESTINATION data)
 endfunction()
 
