@@ -76,7 +76,7 @@ private:
     Node* getNodeForAnimation(Animator* anim);
 protected:
     void skipToEndValue(bool inReverse)override;
-    void animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse);
+    void animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse)override;
     bool isInitialized()override;
     void startWithoutPulsing(bool)override;
 public:

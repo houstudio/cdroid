@@ -1,5 +1,6 @@
 #include <media/soundpool.h>
 #include <core/context.h>
+#include <porting/cdlog.h>
 #include <iostream>
 #include <fstream>
 #include <cstring>

@@ -132,7 +132,7 @@ void InputEventConsistencyVerifier::onKeyEvent(KeyEvent& event, int nestingLevel
     case KeyEvent::ACTION_MULTIPLE:
         break;
     default:
-        problem("Invalid action %s for key event" ,KeyEvent::actionToString(action));
+        problem("Invalid action %s for key event" ,KeyEvent::actionToString(action).c_str());
             break;
     }
     finishEvent();
@@ -324,7 +324,7 @@ void InputEventConsistencyVerifier::onTouchEvent(MotionEvent& event, int nesting
                     }
                     ensureHistorySizeIsZeroForThisAction(event);
                 } else {
-                    problem("Invalid action %s for touch event.",MotionEvent::actionToString(action));
+                    problem("Invalid action %s for touch event.",MotionEvent::actionToString(action).c_str());
                 }
                 break;
             }
@@ -501,7 +501,7 @@ void InputEventConsistencyVerifier::ensurePointerCountIsOneForThisAction(MotionE
     const size_t pointerCount = event.getPointerCount();
     if (pointerCount != 1) {
         problem("Pointer count is %d but it should always be 1 for %s",
-		pointerCount, MotionEvent::actionToString(event.getAction()));
+		pointerCount, MotionEvent::actionToString(event.getAction()).c_str());
     }
 }
 
@@ -509,7 +509,7 @@ void InputEventConsistencyVerifier::ensureActionButtonIsNonZeroForThisAction(Mot
     const int actionButton = event.getActionButton();
     if (actionButton == 0) {
         problem("No action button set. Action button should always be non-zero for %s",
-                MotionEvent::actionToString(event.getAction()));
+                MotionEvent::actionToString(event.getAction()).c_str());
 
     }
 }
@@ -518,7 +518,7 @@ void InputEventConsistencyVerifier::ensureHistorySizeIsZeroForThisAction(MotionE
     const size_t historySize = event.getHistorySize();
     if (historySize != 0) {
         problem("History size is %d but it should always be 0 for %s",
-		historySize,MotionEvent::actionToString(event.getAction()));
+		historySize,MotionEvent::actionToString(event.getAction()).c_str());
     }
 }
 

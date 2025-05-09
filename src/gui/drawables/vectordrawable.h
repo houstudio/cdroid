@@ -64,7 +64,7 @@ public:
     void setColorFilter(ColorFilter* colorFilter)override;
     ColorFilter* getColorFilter()override;
     void setTintList(const ColorStateList* tint)override;
-    void setTintMode(int tintMode);
+    void setTintMode(int tintMode)override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
     int getOpacity() override;
@@ -230,12 +230,12 @@ public:
     void setTree(hwui::Tree* treeRoot)override;
     long getNativePtr()override;
     void updateStateFromTypedArray(Context*,const AttributeSet&atts);
-    bool onStateChange(const std::vector<int>& stateSet);
+    bool onStateChange(const std::vector<int>& stateSet)override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
 
     bool canApplyTheme()override;
-    void applyTheme(Theme t);
+    void applyTheme(Theme t)override;
     /* Setters and Getters, used by animator from AnimatedVectorDrawable. */
     float getRotation();
     void setRotation(float rotation);
@@ -270,7 +270,7 @@ public:
     VPath();
     VPath(const VPath* copy);
     ~VPath()override;
-    Property* getProperty(const std::string& propertyName);
+    Property* getProperty(const std::string& propertyName)override;
     std::string getPathName()const;
     /* Setters and Getters, used by animator from AnimatedVectorDrawable. */
     PathParser::PathData* getPathData();

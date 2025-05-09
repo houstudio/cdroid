@@ -29,7 +29,7 @@ private:
 protected:
     ~CheckedTextView();
     bool verifyDrawable(Drawable* who)const override;
-    void internalSetPadding(int left, int top, int right, int bottom);
+    void internalSetPadding(int left, int top, int right, int bottom)override;
     void onDetachedFromWindowInternal()override;
     void onDraw(Canvas& canvas)override;
     std::vector<int>onCreateDrawableState(int)override;

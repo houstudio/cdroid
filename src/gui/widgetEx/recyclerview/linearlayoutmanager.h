@@ -148,7 +148,7 @@ public:
     int getInitialPrefetchItemCount();
     void collectAdjacentPrefetchPositions(int dx, int dy, RecyclerView::State& state,
             LayoutPrefetchRegistry& layoutPrefetchRegistry)override;
-    void assertNotInLayoutOrScroll(const std::string& message);
+    void assertNotInLayoutOrScroll(const std::string& message)override;
 
     int findFirstVisibleItemPosition();
     int findFirstCompletelyVisibleItemPosition();

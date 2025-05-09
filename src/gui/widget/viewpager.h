@@ -237,11 +237,11 @@ public:
     void computeScroll()override;
     bool executeKeyEvent(KeyEvent& event);
     bool dispatchKeyEvent(KeyEvent& event)override;
-    bool onInterceptTouchEvent(MotionEvent& ev);
+    bool onInterceptTouchEvent(MotionEvent& ev)override;
     bool onTouchEvent(MotionEvent& ev)override;
     bool arrowScroll(int direction);
     bool canScrollHorizontally(int direction)override;
-    void addFocusables(std::vector<View*>& views, int direction, int focusableMode);
+    void addFocusables(std::vector<View*>& views, int direction, int focusableMode)override;
     void addTouchables(std::vector<View*>& views)override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs);
     void onRtlPropertiesChanged(int layoutDirection)override;

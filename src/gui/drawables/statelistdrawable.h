@@ -9,7 +9,7 @@ protected:
     public:
         std::vector<std::vector<int>>mStateSets;
         StateListState(const StateListState*orig,StateListDrawable*own);
-        void mutate();
+        void mutate()override;
         StateListDrawable*newDrawable()override;
         int addStateSet(const std::vector<int>&stateSet, Drawable*drawable);
         int indexOfStateSet(const std::vector<int>&stateSet);

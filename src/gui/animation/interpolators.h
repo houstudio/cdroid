@@ -138,7 +138,7 @@ protected:
     LookupTableInterpolator(const std::vector<float>&values);
     LookupTableInterpolator(const float*values,int count);
 public:
-    float getInterpolation(float input);
+    float getInterpolation(float input)override;
     ~LookupTableInterpolator()override;
 };
 

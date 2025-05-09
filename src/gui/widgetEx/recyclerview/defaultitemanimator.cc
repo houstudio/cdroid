@@ -276,7 +276,10 @@ bool DefaultItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder, Rec
     oldHolder.itemView->setTranslationX(prevTranslationX);
     oldHolder.itemView->setTranslationY(prevTranslationY);
     oldHolder.itemView->setAlpha(prevAlpha);
-    if (&newHolder != nullptr) {
+#ifndef __clang__
+    if (&newHolder != nullptr) 
+#endif
+    {
         // carry over translation values
         resetAnimation(newHolder);
         newHolder.itemView->setTranslationX(-deltaX);

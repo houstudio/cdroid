@@ -39,10 +39,10 @@ public:
     void setContentView(View*view);
     void addContentView(View* view,ViewGroup::LayoutParams* params);
     void setTitle(const std::string&);
-    bool onKeyDown(int keyCode,KeyEvent& event);
-    bool onKeyLongPress(int keyCode,KeyEvent& event);
-    bool onKeyUp(int keyCode,KeyEvent& event);
-    bool onKeyMultiple(int keyCode, int repeatCount,KeyEvent& event);
+    bool onKeyDown(int keyCode,KeyEvent& event)override;
+    bool onKeyLongPress(int keyCode,KeyEvent& event)override;
+    bool onKeyUp(int keyCode,KeyEvent& event)override;
+    bool onKeyMultiple(int keyCode, int repeatCount,KeyEvent& event)override;
     void onBackPressed();
     void setCancelable(bool flag);
     void setCanceledOnTouchOutside(bool);

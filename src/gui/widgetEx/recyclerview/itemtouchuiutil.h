@@ -22,8 +22,8 @@ public:
             int actionState, bool isCurrentlyActive)override;
     void onDrawOver(Canvas& c, RecyclerView& recyclerView, View& view, float dX, float dY,
             int actionState, bool isCurrentlyActive)override;
-    void clearView(View& view);
-    void onSelected(View& view);
+    void clearView(View& view)override;
+    void onSelected(View& view)override;
 };
 }
 #endif/*__ITEMTOUCHUI_UTIL_H__*/

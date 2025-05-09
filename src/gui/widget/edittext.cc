@@ -249,7 +249,7 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
 
 void EditText::blinkCaret(){
     if(isFocused()){
-        invalidate(&mCaretRect);
+        invalidate((const Rect*)&mCaretRect);
         postDelayed(mRBLink,500);
     }
 }

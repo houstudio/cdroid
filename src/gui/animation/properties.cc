@@ -139,7 +139,7 @@ public:
 class TRANSLATION_X:public Property{
 public:
     TRANSLATION_X():Property("translationX",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         LOGV("translationX=%f",((View*)object)->getTranslationX());
         return ((View*)object)->getTranslationX();
     }
@@ -152,7 +152,7 @@ public:
 class TRANSLATION_Y:public Property{
 public:
     TRANSLATION_Y():Property("translationY",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getTranslationY();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -164,7 +164,7 @@ public:
 class TRANSLATION_Z:public Property{
 public:
     TRANSLATION_Z():Property("translationZ",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getTranslationZ();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -176,7 +176,7 @@ public:
 class XX:public Property{
 public:
     XX():Property("x",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getX();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -189,7 +189,7 @@ public:
 class YY:public Property{
 public:
     YY():Property("y",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getY();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -201,7 +201,7 @@ public:
 class ZZ:public Property{
 public:
     ZZ():Property("z",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getZ();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -213,7 +213,7 @@ public:
 class PIVOT_X:public Property{
 public:
     PIVOT_X():Property("pivotX",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getPivotX();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -225,7 +225,7 @@ public:
 class PIVOT_Y:public Property{
 public:
     PIVOT_Y():Property("pivotY",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getPivotY();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -237,7 +237,7 @@ public:
 class ROTATION:public Property{
 public:
     ROTATION():Property("rotation",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getRotation();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -249,7 +249,7 @@ public:
 class ROTATION_X:public Property{
 public:
     ROTATION_X():Property("rotationX",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getRotationX();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -261,7 +261,7 @@ public:
 class ROTATION_Y:public Property{
 public:
     ROTATION_Y():Property("rotationY",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getRotationY();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -273,7 +273,7 @@ public:
 class SCALE_X:public Property{
 public:
     SCALE_X():Property("scaleX",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getScaleX();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -285,7 +285,7 @@ public:
 class SCALE_Y:public Property{
 public:
     SCALE_Y():Property("scaleY",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getScaleY();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -297,7 +297,7 @@ public:
 class SCROLL_X:public Property{
 public:
     SCROLL_X():Property("scrollX",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getScrollX();
     }
     void set(void* object,const AnimateValue& value)override{
@@ -309,7 +309,7 @@ public:
 class SCROLL_Y:public Property{
 public:
     SCROLL_Y():Property("scrollY",FLOAT_TYPE){}
-    AnimateValue get(void* object) {
+    AnimateValue get(void* object) override{
         return ((View*)object)->getScrollY();
     }
     void set(void* object,const AnimateValue& value)override{

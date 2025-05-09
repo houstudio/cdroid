@@ -40,7 +40,7 @@ public:
     View* getSelectedView()override;
     void setAdapter(Adapter*adapter)override;
     void setSelection(int position, bool animate);
-    void setSelection(int position);
+    void setSelection(int position)override;
     virtual void setSelectionInt(int position, bool animate);
     int pointToPosition(int x, int y);
     void requestLayout()override;

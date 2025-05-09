@@ -84,7 +84,7 @@ public:
     bool isShowing()const;
     void hide();
     bool onTouchEvent(MotionEvent& event)override;
-    bool onTrackballEvent(MotionEvent& ev);//override;
+    bool onTrackballEvent(MotionEvent& ev)override;
     bool dispatchKeyEvent(KeyEvent& event)override;
     View& setEnabled(bool enabled)override;
     void setPrevNextListeners(OnClickListener next,OnClickListener prev);

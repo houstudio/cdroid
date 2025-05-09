@@ -95,7 +95,7 @@ void AccessibilityManager::sendAccessibilityEvent(AccessibilityEvent& event) {
 
     if ((dispatchedEvent->getEventType() & mRelevantEventTypes) == 0) {
         LOGI_IF(Debug,"Not dispatching irrelevant event: %p that is not among ",
-            dispatchedEvent, AccessibilityEvent::eventTypeToString(mRelevantEventTypes));
+            dispatchedEvent, AccessibilityEvent::eventTypeToString(mRelevantEventTypes).c_str());
         return;
     }
 #if 0

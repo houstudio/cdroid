@@ -1,6 +1,8 @@
 #include <gesture/learner.h>
 #include <gesture/instance.h>
 namespace cdroid{
+Learner::~Learner(){
+}
 void Learner::addInstance(Instance* instance) {
     mInstances.push_back(instance);
 }

@@ -141,7 +141,7 @@ protected:
 
     int findMotionRow(int y)override;
     bool canAnimate()const override;
-    void setSelectionInt(int position);
+    void setSelectionInt(int position)override;
     void drawDivider(Canvas&canvas,const Rect&bounds, int childIndex);
     void drawOverscrollHeader(Canvas&canvas, Drawable* drawable,Rect& bounds);
     void drawOverscrollFooter(Canvas&canvas, Drawable* drawable,Rect& bounds);
@@ -158,7 +158,7 @@ public:
     ListView(Context* context,const AttributeSet& attrs);
     ~ListView()override;
     void setAdapter(Adapter* adapter)override;
-    void setSelection(int position);
+    void setSelection(int position)override;
     bool getItemsCanFocus()const;
     void setItemsCanFocus(bool itemsCanFocus);
     bool isOpaque()const override;
@@ -177,17 +177,17 @@ public:
     int lookForSelectablePosition(int position, bool lookDown)override;
     void addHeaderView(View* v,void* data, bool isSelectable);
     void addHeaderView(View* v);
-    int getHeaderViewsCount()const;
+    int getHeaderViewsCount()const override;
     bool removeHeaderView(View* v);
     void addFooterView(View* v,void* data, bool isSelectable);
     void addFooterView(View* v);
-    int getFooterViewsCount()const;
+    int getFooterViewsCount()const override;
     bool removeFooterView(View* v);
     void setHeaderDividersEnabled(bool headerDividersEnabled);
     bool areHeaderDividersEnabled()const;
     void setFooterDividersEnabled(bool footerDividersEnabled);
     bool areFooterDividersEnabled()const;
-    bool requestChildRectangleOnScreen(View* child, Rect& rect, bool immediate);
+    bool requestChildRectangleOnScreen(View* child, Rect& rect, bool immediate)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyMultiple(int keyCode, int repeatCount, KeyEvent& event)override;
     void setSelectionAfterHeaderView();

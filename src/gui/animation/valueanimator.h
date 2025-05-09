@@ -66,7 +66,7 @@ protected:
     virtual void animateValue(float fraction);
     void startWithoutPulsing(bool inReverse)override;
     virtual bool animateBasedOnTime(int64_t currentTime);
-    virtual void animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse);
+    void animateBasedOnPlayTime(int64_t currentPlayTime, int64_t lastPlayTime, bool inReverse)override;
     void skipToEndValue(bool inReverse)override;
     bool isInitialized()override;
     bool pulseAnimationFrame(int64_t frameTime)override;

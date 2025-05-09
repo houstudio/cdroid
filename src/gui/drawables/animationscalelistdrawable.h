@@ -11,7 +11,7 @@ protected:
         int mAnimatableDrawableIndex = -1;
     public:
         AnimationScaleListState(const AnimationScaleListState* orig, AnimationScaleListDrawable* owner);
-        void mutate();
+        void mutate()override;
         int addDrawable(Drawable* drawable);
         AnimationScaleListDrawable* newDrawable() override;
         //bool canApplyTheme() override;

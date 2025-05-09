@@ -11,7 +11,7 @@ private:
     int64_t mPreviousTime;
 public:
     TimeAnimator();
-    void start();
+    void start()override;
     bool animateBasedOnTime(int64_t currentTime)override;
     void setCurrentPlayTime(int64_t playTime)override;
     void setTimeListener(const TimeListener listener);

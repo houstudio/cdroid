@@ -70,11 +70,11 @@ private:
     void ensureGlows();
     static int clamp(int n, int my, int child);
 protected:
-    float getTopFadingEdgeStrength();
-    float getBottomFadingEdgeStrength();
-    void onScrollChanged(int l, int t, int oldl, int oldt);
-    void onMeasure(int widthMeasureSpec, int heightMeasureSpec);
-    void onOverScrolled(int scrollX, int scrollY,bool clampedX, bool clampedY);
+    float getTopFadingEdgeStrength()override;
+    float getBottomFadingEdgeStrength()override;
+    void onScrollChanged(int l, int t, int oldl, int oldt)override;
+    void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
+    void onOverScrolled(int scrollX, int scrollY,bool clampedX, bool clampedY)override;
     bool overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY,
         int scrollRangeX, int scrollRangeY,int maxOverScrollX, int maxOverScrollY,bool isTouchEvent)override;
     int getScrollRange();
@@ -82,8 +82,8 @@ protected:
     void measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed)override;
     int computeScrollDeltaToGetChildRectOnScreen(Rect rect);
-    void onLayout(bool changed, int l, int t, int w, int h);
-    void onSizeChanged(int w, int h, int oldw, int oldh);
+    void onLayout(bool changed, int l, int t, int w, int h)override;
+    void onSizeChanged(int w, int h, int oldw, int oldh)override;
 public:
     NestedScrollView(int w,int h);
     NestedScrollView(Context* context,const AttributeSet&attrs);
@@ -104,18 +104,18 @@ public:
     bool dispatchNestedPreScroll(int dx, int dy, int consumed[], int offsetInWindow[])override;
     bool dispatchNestedFling(float velocityX, float velocityY, bool consumed)override;
     bool dispatchNestedPreFling(float velocityX, float velocityY)override;
-    bool onStartNestedScroll(View* child,View* target, int axes,int type);
-    void onNestedScrollAccepted(View* child,View* target, int axes,int type);
-    void onStopNestedScroll(View* target, int type);
-    void onNestedScroll(View* target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type);
-    void onNestedPreScroll(View* target, int dx, int dy,int consumed[], int type);
+    bool onStartNestedScroll(View* child,View* target, int axes,int type)override;
+    void onNestedScrollAccepted(View* child,View* target, int axes,int type)override;
+    void onStopNestedScroll(View* target, int type)override;
+    void onNestedScroll(View* target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type)override;
+    void onNestedPreScroll(View* target, int dx, int dy,int consumed[], int type)override;
     bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes)override;
     void onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes)override;
     void onStopNestedScroll(View* target)override;
-    void onNestedScroll(View* target, int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed);
-    void onNestedPreScroll(View* target, int dx, int dy, int consumed[]);
-    bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed);
-    bool onNestedPreFling(View* target, float velocityX, float velocityY);
+    void onNestedScroll(View* target, int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed)override;
+    void onNestedPreScroll(View* target, int dx, int dy, int consumed[])override;
+    bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed)override;
+    bool onNestedPreFling(View* target, float velocityX, float velocityY)override;
     int getNestedScrollAxes()override;
     bool shouldDelayChildPressedState()override;
     int getMaxScrollAmount();
@@ -128,9 +128,9 @@ public:
     void setFillViewport(bool fillViewport);
     bool isSmoothScrollingEnabled();
     void setSmoothScrollingEnabled(bool smoothScrollingEnabled);
-    bool dispatchKeyEvent(KeyEvent& event);
+    bool dispatchKeyEvent(KeyEvent& event)override;
     bool executeKeyEvent(KeyEvent& event);
-    void requestDisallowInterceptTouchEvent(bool disallowIntercept);
+    void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;
     bool onTouchEvent(MotionEvent& ev)override;
     bool onGenericMotionEvent(MotionEvent& event)override;
@@ -139,16 +139,16 @@ public:
     bool arrowScroll(int direction);
     void smoothScrollBy(int dx, int dy);
     void smoothScrollTo(int x, int y);
-    int computeVerticalScrollRange();
+    int computeVerticalScrollRange()override;
 
-    int computeVerticalScrollOffset();
-    int computeVerticalScrollExtent();
-    int computeHorizontalScrollRange();
-    int computeHorizontalScrollOffset();
-    int computeHorizontalScrollExtent();
+    int computeVerticalScrollOffset()override;
+    int computeVerticalScrollExtent()override;
+    int computeHorizontalScrollRange()override;
+    int computeHorizontalScrollOffset()override;
+    int computeHorizontalScrollExtent()override;
 
-    void computeScroll();
-    void requestChildFocus(View* child, View* focused);
+    void computeScroll()override;
+    void requestChildFocus(View* child, View* focused)override;
     bool requestChildRectangleOnScreen(View* child, Rect rectangle, bool immediate);
     void requestLayout()override;
     void onAttachedToWindow()override;

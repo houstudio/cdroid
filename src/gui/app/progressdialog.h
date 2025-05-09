@@ -58,7 +58,7 @@ public:
     void setIndeterminateDrawable(Drawable* d);
     void setIndeterminate(bool indeterminate);
     bool isIndeterminate()const;
-    void setMessage(const std::string& message);
+    void setMessage(const std::string& message)override;
     void setProgressStyle(int style);
 };
 }

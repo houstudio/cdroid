@@ -30,7 +30,7 @@ private:
     static constexpr float FLING_DESTRETCH_FACTOR = 4.f;
     static constexpr float SCROLL_FRICTION = 0.015f;
     static constexpr float INFLEXION = 0.35f; // Tension lines cross at (INFLEXION, 1)
-    static constexpr float DECELERATION_RATE = (float) (std::log(0.78) / std::log(0.9));
+    static constexpr float DECELERATION_RATE = 2.3582018154259448f;//(float) (std::log(0.78) / std::log(0.9));
     class RecyclerViewDataObserver;
     class ViewFlinger;
 protected:
@@ -110,34 +110,35 @@ public:
         static constexpr int FLAG_MOVED = 1<<11;//ViewHolder::FLAG_MOVED;
         static constexpr int FLAG_APPEARED_IN_PRE_LAYOUT = 1<<12;//ViewHolder::FLAG_APPEARED_IN_PRE_LAYOUT;
     public:
-       long getMoveDuration();
-       void setMoveDuration(long moveDuration);
-       long getAddDuration();
-       void setAddDuration(long addDuration);
-       long getRemoveDuration();
-       void setRemoveDuration(long removeDuration);
-       long getChangeDuration();
-       void setChangeDuration(long changeDuration);
-       ItemHolderInfo* recordPreLayoutInformation(State& state,ViewHolder& viewHolder, int changeFlags,std::vector<Object*>& payloads);
-       ItemHolderInfo* recordPostLayoutInformation(State& state,ViewHolder& viewHolder);
+        virtual ~ItemAnimator()=default;
+        long getMoveDuration();
+        void setMoveDuration(long moveDuration);
+        long getAddDuration();
+        void setAddDuration(long addDuration);
+        long getRemoveDuration();
+        void setRemoveDuration(long removeDuration);
+        long getChangeDuration();
+        void setChangeDuration(long changeDuration);
+        ItemHolderInfo* recordPreLayoutInformation(State& state,ViewHolder& viewHolder, int changeFlags,std::vector<Object*>& payloads);
+        ItemHolderInfo* recordPostLayoutInformation(State& state,ViewHolder& viewHolder);
 
-       virtual bool animateDisappearance(ViewHolder& viewHolder,ItemHolderInfo& preLayoutInfo, ItemHolderInfo* postLayoutInfo)=0;
-       virtual bool animateAppearance(ViewHolder& viewHolder,ItemHolderInfo* preLayoutInfo, ItemHolderInfo& postLayoutInfo)=0;
-       virtual bool animatePersistence(ViewHolder& viewHolder,ItemHolderInfo& preLayoutInfo, ItemHolderInfo& postLayoutInfo)=0;
-       virtual bool animateChange(ViewHolder& oldHolder,ViewHolder& newHolder,ItemHolderInfo& preLayoutInfo,ItemHolderInfo& postLayoutInfo)=0;
-       virtual void runPendingAnimations()=0;
-       virtual void endAnimation(ViewHolder& item)=0;
-       virtual void endAnimations()=0;
-       virtual bool isRunning()=0;
-       void dispatchAnimationFinished(ViewHolder& viewHolder);/*final*/
-       virtual void onAnimationFinished(ViewHolder& viewHolder);
-       void dispatchAnimationStarted(ViewHolder& viewHolder);/*final*/
-       virtual void onAnimationStarted(ViewHolder& viewHolder);
-       bool isRunning(ItemAnimatorFinishedListener listener);/*final*/
-       virtual bool canReuseUpdatedViewHolder(ViewHolder& viewHolder);
-       virtual bool canReuseUpdatedViewHolder(ViewHolder& viewHolder,std::vector<Object*>& payloads);
-       void dispatchAnimationsFinished();/*final*/
-       ItemHolderInfo* obtainHolderInfo();
+        virtual bool animateDisappearance(ViewHolder& viewHolder,ItemHolderInfo& preLayoutInfo, ItemHolderInfo* postLayoutInfo)=0;
+        virtual bool animateAppearance(ViewHolder& viewHolder,ItemHolderInfo* preLayoutInfo, ItemHolderInfo& postLayoutInfo)=0;
+        virtual bool animatePersistence(ViewHolder& viewHolder,ItemHolderInfo& preLayoutInfo, ItemHolderInfo& postLayoutInfo)=0;
+        virtual bool animateChange(ViewHolder& oldHolder,ViewHolder& newHolder,ItemHolderInfo& preLayoutInfo,ItemHolderInfo& postLayoutInfo)=0;
+        virtual void runPendingAnimations()=0;
+        virtual void endAnimation(ViewHolder& item)=0;
+        virtual void endAnimations()=0;
+        virtual bool isRunning()=0;
+        void dispatchAnimationFinished(ViewHolder& viewHolder);/*final*/
+        virtual void onAnimationFinished(ViewHolder& viewHolder);
+        void dispatchAnimationStarted(ViewHolder& viewHolder);/*final*/
+        virtual void onAnimationStarted(ViewHolder& viewHolder);
+        bool isRunning(ItemAnimatorFinishedListener listener);/*final*/
+        virtual bool canReuseUpdatedViewHolder(ViewHolder& viewHolder);
+        virtual bool canReuseUpdatedViewHolder(ViewHolder& viewHolder,std::vector<Object*>& payloads);
+        void dispatchAnimationsFinished();/*final*/
+        ItemHolderInfo* obtainHolderInfo();
     };
 public:/*public classes*/
     class OnScrollListener:public EventSet{
@@ -309,9 +310,9 @@ protected:
 
     void initAdapterManager();
     Parcelable* onSaveInstanceState()override;
-    void onRestoreInstanceState(Parcelable& state);
-    void dispatchSaveInstanceState(SparseArray<Parcelable*>& container);
-    void dispatchRestoreInstanceState(SparseArray<Parcelable*>& container);
+    void onRestoreInstanceState(Parcelable& state)override;
+    void dispatchSaveInstanceState(SparseArray<Parcelable*>& container)override;
+    void dispatchRestoreInstanceState(SparseArray<Parcelable*>& container)override;
     bool removeAnimatingView(View* view);
     void consumePendingUpdateOperations();
     int consumeFlingInHorizontalStretch(int unconsumedX);
@@ -433,8 +434,8 @@ public:
     void scrollToPosition(int position);
     void jumpToPositionForSmoothScroller(int position);
     void smoothScrollToPosition(int position);
-    void scrollTo(int x, int y);
-    void scrollBy(int x, int y);
+    void scrollTo(int x, int y)override;
+    void scrollBy(int x, int y)override;
     void nestedScrollBy(int x, int y);
     bool dispatchKeyEvent(KeyEvent&)override;
     int computeHorizontalScrollOffset()override;
@@ -514,13 +515,13 @@ public:
     void stopNestedScroll(int type);
     bool hasNestedScrollingParent();
     bool hasNestedScrollingParent(int type);
-    bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed, int offsetInWindow[2]);
+    bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed, int offsetInWindow[2])override;
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed, int offsetInWindow[2], int type);
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed, int offsetInWindow[2], int type,int consumed[2]);
     bool dispatchNestedPreScroll(int dx, int dy, int consumed[2], int offsetInWindow[2])override;
     bool dispatchNestedPreScroll(int dx, int dy, int consumed[2], int offsetInWindow[2],int type);
-    bool dispatchNestedFling(float velocityX, float velocityY, bool consumed);
-    bool dispatchNestedPreFling(float velocityX, float velocityY);
+    bool dispatchNestedFling(float velocityX, float velocityY, bool consumed)override;
+    bool dispatchNestedPreFling(float velocityX, float velocityY)override;
 };
 
 class RecyclerView::ViewFlinger{

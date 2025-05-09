@@ -180,7 +180,7 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
             Rect rc = w1->getBound();
             rc.intersect(rw);
             rc.offset(-w1->getLeft(),-w1->getTop());
-            w1->invalidate(&rc);
+            w1->invalidate((const Rect*)&rc);
             w1->mPendingRgn->do_union({rc.left,rc.top,rc.width,rc.height});
         }
     #if USE_UIEVENTHANDLER

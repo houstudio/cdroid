@@ -551,7 +551,7 @@ void AbsSeekBar::startDrag(MotionEvent& event){
     setPressed(true);
     if (mThumb != nullptr) {
         // This may be within the padding region.
-        invalidate(&mThumb->getBounds());
+        invalidate((const Rect*)&mThumb->getBounds());
     }
     onStartTrackingTouch();
     trackTouchEvent(event);

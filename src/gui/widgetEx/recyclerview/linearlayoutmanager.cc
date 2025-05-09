@@ -1559,8 +1559,7 @@ void LinearLayoutManager::validateChildOrder() {
             int screenLoc = mOrientationHelper->getDecoratedStart(child);
             if (pos < lastPos) {
                 logChildren();
-                LOGE("detected invalid position . loc invalid? "
-                        + (screenLoc < lastScreenLoc));
+                LOGE("detected invalid position . loc invalid=%d " , (screenLoc < lastScreenLoc));
             }
             if (screenLoc > lastScreenLoc) {
                 logChildren();
@@ -1574,8 +1573,7 @@ void LinearLayoutManager::validateChildOrder() {
             int screenLoc = mOrientationHelper->getDecoratedStart(child);
             if (pos < lastPos) {
                 logChildren();
-                LOGE("detected invalid position. loc invalid? "
-                        + (screenLoc < lastScreenLoc));
+                LOGE("detected invalid position. loc invalid=%d", (screenLoc < lastScreenLoc));
             }
             if (screenLoc < lastScreenLoc) {
                 logChildren();

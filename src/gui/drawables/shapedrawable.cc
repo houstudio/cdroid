@@ -1,3 +1,4 @@
+#include <porting/cdlog.h>
 #include <drawables/shapedrawable.h>
 namespace cdroid{
 

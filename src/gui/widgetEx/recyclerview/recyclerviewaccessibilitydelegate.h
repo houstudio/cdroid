@@ -70,7 +70,7 @@ public:
     void onPopulateAccessibilityEvent(View& host, AccessibilityEvent& event) override;
     void onInitializeAccessibilityEvent(View& host, AccessibilityEvent& event) override;
     bool onRequestSendAccessibilityEvent(ViewGroup& host,View& child, AccessibilityEvent& event) override;
-    AccessibilityNodeProvider* getAccessibilityNodeProvider(View& host);
+    AccessibilityNodeProvider* getAccessibilityNodeProvider(View& host)override;
 };
 };/*endof namespace*/
 #endif/*__RECYCLERVIEW_ACCESSIBILITY_DELEGATE_H__*/

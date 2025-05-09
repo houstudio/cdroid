@@ -22,10 +22,10 @@ public:
     AnimationSet(bool shareInterpolator);
     ~AnimationSet()override;
     AnimationSet* clone()const override;
-    void setFillAfter(bool fillAfter);
-    void setFillBefore(bool fillBefore);
-    void setRepeatMode(int repeatMode);
-    void setStartOffset(long startOffset);
+    void setFillAfter(bool fillAfter)override;
+    void setFillBefore(bool fillBefore)override;
+    void setRepeatMode(int repeatMode)override;
+    void setStartOffset(long startOffset)override;
     bool hasAlpha() override;
     void setDuration(long durationMillis)override;
     void addAnimation(Animation* a);
@@ -36,7 +36,7 @@ public:
     long computeDurationHint()override;
     void initializeInvalidateRegion(int left, int top, int right, int bottom);
     bool getTransformation(int64_t currentTime, Transformation& t)override;
-    void scaleCurrentDuration(float scale);
+    void scaleCurrentDuration(float scale)override;
     void initialize(int width, int height, int parentWidth, int parentHeight)override;
     void reset()override;
     void restoreChildrenStartOffset();

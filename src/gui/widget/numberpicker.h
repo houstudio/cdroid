@@ -181,7 +181,7 @@ protected:
     int computeVerticalScrollOffset()override;
     int computeVerticalScrollRange()override;
     int computeVerticalScrollExtent()override;
-    void drawableStateChanged();
+    void drawableStateChanged()override;
     void onDraw(Canvas&canvas)override;
 public:
     NumberPicker(int w,int h);
@@ -240,7 +240,7 @@ public:
     void setWrapSelectorWheel(bool);
     void setOnLongPressUpdateInterval(long);
 
-    void jumpDrawablesToCurrentState();
+    void jumpDrawablesToCurrentState()override;
     void onResolveDrawables(int layoutDirection)override;
     void setTextColor(int color);
     virtual void setTextColor(int color,int color2);
@@ -285,7 +285,7 @@ private:
     std::string getVirtualIncrementButtonText()const;
 public:
     AccessibilityNodeProviderImpl(NumberPicker*);
-    AccessibilityNodeInfo* createAccessibilityNodeInfo(int virtualViewId);
+    AccessibilityNodeInfo* createAccessibilityNodeInfo(int virtualViewId)override;
     std::vector<AccessibilityNodeInfo*> findAccessibilityNodeInfosByText(const std::string& searched, int virtualViewId);
     bool performAction(int virtualViewId, int action, Bundle* arguments)override;
     void sendAccessibilityEventForVirtualView(int virtualViewId, int eventType);

@@ -1068,9 +1068,9 @@ void GridLayoutManager::layoutChunk(RecyclerView::Recycler& recycler, RecyclerVi
         if (mOrientationHelper->getDecoratedMeasurement(view) != maxSize) {
             LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
             Rect decorInsets = lp->mDecorInsets;
-            const int verticalInsets = decorInsets.top + decorInsets.height;//bottom
+            const int verticalInsets = decorInsets.top + decorInsets.height
                     + lp->topMargin + lp->bottomMargin;
-            const int horizontalInsets = decorInsets.left + decorInsets.width;//right
+            const int horizontalInsets = decorInsets.left + decorInsets.width
                     + lp->leftMargin + lp->rightMargin;
             const int totalSpaceInOther = getSpaceForSpanRange(lp->mSpanIndex, lp->mSpanSize);
             int wSpec, hSpec;
@@ -1142,9 +1142,9 @@ void GridLayoutManager::layoutChunk(RecyclerView::Recycler& recycler, RecyclerVi
 void GridLayoutManager::measureChild(View* view, int otherDirParentSpecMode, bool alreadyMeasured) {
     const LayoutParams* lp = (const LayoutParams*) view->getLayoutParams();
     const Rect& decorInsets = lp->mDecorInsets;
-    const int verticalInsets = decorInsets.top + decorInsets.height;//bottom
+    const int verticalInsets = decorInsets.top + decorInsets.height
             + lp->topMargin + lp->bottomMargin;
-    const int horizontalInsets = decorInsets.left + decorInsets.width;//right
+    const int horizontalInsets = decorInsets.left + decorInsets.width
             + lp->leftMargin + lp->rightMargin;
     const int availableSpaceInOther = getSpaceForSpanRange(lp->mSpanIndex, lp->mSpanSize);
     int wSpec, hSpec;

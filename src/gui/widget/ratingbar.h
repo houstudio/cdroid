@@ -32,7 +32,7 @@ public:
     float getRating()const;
     void setStepSize(float stepSize);
     float getStepSize()const;
-    void setMax(int max);
+    void setMax(int max)override;
 
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;

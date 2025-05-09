@@ -1,1 +1,2 @@
-#add_subdirectory(wpa)
+add_subdirectory(wpa)
+

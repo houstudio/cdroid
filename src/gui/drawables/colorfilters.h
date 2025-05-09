@@ -8,6 +8,7 @@ namespace cdroid{
 class ColorFilter{
 public:
     virtual void apply(Canvas&canvas,const Rect&)=0;
+    virtual ~ColorFilter()=default;
 };
 
 class ColorMatrixColorFilter:public ColorFilter{

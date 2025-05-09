@@ -48,13 +48,13 @@ protected:
     void onSizeChanged(int w,int h,int oldw,int oldh)override;
     bool verifyDrawable(Drawable* who)const override;
     virtual void drawThumb(Canvas&canvas);
-    virtual void drawTrack(Canvas&canvas);
+    void drawTrack(Canvas&canvas)override;
     virtual void drawTickMarks(Canvas&canvas);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onVisualProgressChanged(int id, float scale)override;
     void drawableStateChanged()override;
 
-    void onDraw(Canvas&canvas);
+    void onDraw(Canvas&canvas)override;
     bool onKeyDown(int keycode,KeyEvent&event)override;
     bool onTouchEvent(MotionEvent& event)override;
 public:

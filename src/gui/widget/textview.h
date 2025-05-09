@@ -288,7 +288,7 @@ public:
     void setLines(int lines);
     int getLineCount()const;
     int getLineBounds(int line, Rect&bounds);
-    int getBaseline();
+    int getBaseline()override;
     int getBaselineOffset();
     void setCaretPos(int pos);
     bool moveCaret2Line(int line);

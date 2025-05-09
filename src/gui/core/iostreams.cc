@@ -5,7 +5,7 @@
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <cstdio>
-
+#include <iostream>
 
 namespace cdroid {
 
@@ -109,8 +109,8 @@ std::streambuf::pos_type  MemoryBuf::seekoff(std::streambuf::off_type off, std::
     return buffpos;
 }
 
-ZipInputStream::ZipInputStream(void*zipfile){
-    _sb=new ZipStreamBuf(zipfile);
+ZipInputStream::ZipInputStream(void*zipfile):std::istream(new ZipStreamBuf(zipfile)){
+    _sb=(ZipStreamBuf*)rdbuf();
     init(_sb);
     if(zipfile==nullptr){
         setstate(std::ios_base::failbit);

@@ -5,7 +5,7 @@ class View;
 class ViewConfiguration;
 class ScrollFeedbackProvider {
 public:
-
+    virtual ~ScrollFeedbackProvider()=default;
     /**
      * Creates a {@link ScrollFeedbackProvider} implementation for this device.
      *

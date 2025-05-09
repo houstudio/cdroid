@@ -109,7 +109,7 @@ View* FocusFinder::findNextUserSpecifiedFocus(ViewGroup* root, View* focused, in
             return userSetNextFocus;
         }
         userSetNextFocus = userSetNextFocus->findUserSetNextFocus(root, direction);
-        if (cycleStep = !cycleStep) {
+        if (!!(cycleStep = !cycleStep)) {
             cycleCheck = cycleCheck->findUserSetNextFocus(root, direction);
             if (cycleCheck == userSetNextFocus) {
                 // found a cycle, user-specified focus forms a loop and none of the views

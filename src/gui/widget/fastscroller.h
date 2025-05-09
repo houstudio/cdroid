@@ -1,4 +1,4 @@
-#ifndef __FASTSCROLLER_H_
+#ifndef __FASTSCROLLER_H__
 #define __FASTSCROLLER_H__
 #include <widget/imageview.h>
 #include <widget/textview.h>

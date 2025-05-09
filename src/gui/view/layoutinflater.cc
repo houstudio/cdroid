@@ -56,7 +56,7 @@ bool LayoutInflater::registerInflater(const std::string&name,const std::string&d
 
     /*disable widget inflater's hack*/
     if(flaterIter!=maps.end() ){
-        LOGW("%s is registed to %p",name.c_str(),flaterIter->second);
+        LOGW("%s is registed to %p",name.c_str(),static_cast<void*>(&flaterIter->second));
         return false;
     }
     maps.insert(INFLATERMAPPER::value_type(name,inflater));

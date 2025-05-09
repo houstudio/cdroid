@@ -16,6 +16,7 @@ public:
     };
     class AnimationFrameCallbackProvider {
     public:
+        virtual ~AnimationFrameCallbackProvider()=default;
         virtual void postFrameCallback(const Choreographer::FrameCallback& callback)=0;
         virtual void postCommitCallback(Runnable& runnable)=0;
         virtual int64_t getFrameTime()=0;

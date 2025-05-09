@@ -1,3 +1,4 @@
+#include <cmath>
 namespace cdroid{
 
 static void CalGaussianCoeff(float sigma, float *a0, float *a1, float *a2, float *a3, float *b1, float *b2,
@@ -6,9 +7,9 @@ static void CalGaussianCoeff(float sigma, float *a0, float *a1, float *a2, float
 
     if (sigma < 0.5f)
         sigma = 0.5f;
-    alpha = (float) exp((0.726) * (0.726)) / sigma;
-    lamma = (float) exp(-alpha);
-    *b2 = (float) exp(-2 * alpha);
+    alpha = (float) std::exp((0.726) * (0.726)) / sigma;
+    lamma = (float) std::exp(-alpha);
+    *b2 = (float) std::exp(-2.f * alpha);
     k = (1 - lamma) * (1 - lamma) / (1 + 2 * alpha * lamma - (*b2));
     *a0 = k;
     *a1 = k * (alpha - 1) * lamma;

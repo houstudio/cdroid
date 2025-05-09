@@ -164,9 +164,9 @@ public:
     void clearMutated()override;
     bool onLayoutDirectionChanged(int layoutDirection)override;
     std::shared_ptr<ConstantState>getConstantState()override;
-    void invalidateDrawable(Drawable& who);
-    void scheduleDrawable(Drawable& who,Runnable& what, int64_t when);
-    void unscheduleDrawable(Drawable& who,Runnable& what);
+    void invalidateDrawable(Drawable& who)override;
+    void scheduleDrawable(Drawable& who,Runnable& what, int64_t when)override;
+    void unscheduleDrawable(Drawable& who,Runnable& what)override;
     void draw(Canvas&canvas)override;
     void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
 };

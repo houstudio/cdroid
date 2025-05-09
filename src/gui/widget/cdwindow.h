@@ -127,7 +127,7 @@ public:
     void requestTransitionStart(LayoutTransition* transition)override;
     void close();
 };
-
+typedef Window Activity;
 class Window::UIEventHandler:public Handler{
 private:
     View*mAttachedView;

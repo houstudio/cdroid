@@ -1,4 +1,5 @@
 #include <core/systemclock.h>
+#include <porting/cdlog.h>
 #include <animation/animatorinflater.h>
 #include <drawables/animatedvectordrawable.h>
 #ifdef ENABLE_VECTOR_RENDER_THREAD

@@ -1,10 +1,12 @@
 #include <core/xmlpullparser.h>
+#include <porting/cdlog.h>
 #include <core/context.h>
 #include <core/app.h>
 #include <expat.h>
 #include <array>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 namespace cdroid{
 struct XmlEvent {
     XmlPullParser::EventType type;

@@ -1,7 +1,7 @@
 #include <drawables/ninepatch.h>
 #include <core/context.h>
 #include <image-decoders/imagedecoder.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
 
 using namespace Cairo;
 
@@ -83,7 +83,7 @@ void NinePatch::draw(Canvas& painter, const Rect&rect,float alpha){
         oss<<"IncorrectHeight("<<height<<"must>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight)";
     }
     const bool hasErrors = (oss.str().empty()==false);
-    LOGE_IF(hasErrors,"%s",oss.str());
+    LOGE_IF(hasErrors,"%s",oss.str().c_str());
     mWidth = rect.width;
     mHeight= rect.height;
 	painter.save();

@@ -68,7 +68,7 @@ public:
     ImageView(Context*ctx,const AttributeSet&attrs);
     virtual ~ImageView();
     bool verifyDrawable(Drawable* dr)const override;
-    void jumpDrawablesToCurrentState();
+    void jumpDrawablesToCurrentState()override;
     void invalidateDrawable(Drawable& dr)override;
     std::vector<int> onCreateDrawableState(int)override;
     void onRtlPropertiesChanged(int layoutDirection)override;

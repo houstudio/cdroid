@@ -132,7 +132,7 @@ public:
     int findFirstCompletelyVisibleItemPositions(std::vector<int>& into);
     int findLastVisibleItemPositions(std::vector<int>&into);
     int findLastCompletelyVisibleItemPositions(std::vector<int>& into);
-    int computeHorizontalScrollOffset(RecyclerView::State& state);
+    int computeHorizontalScrollOffset(RecyclerView::State& state)override;
     int computeVerticalScrollOffset(RecyclerView::State& state)override;
     int computeHorizontalScrollExtent(RecyclerView::State& state)override;
 
@@ -171,7 +171,7 @@ public:
     RecyclerView::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams& lp)const override;
     bool checkLayoutParams(const RecyclerView::LayoutParams* lp)const override;
     int getOrientation()const;
-    View* onFocusSearchFailed(View* focused, int direction, RecyclerView::Recycler& recycler, RecyclerView::State& state);
+    View* onFocusSearchFailed(View* focused, int direction, RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
 };/*StaggeredGridLayoutManager*/
 
 class StaggeredGridLayoutManager::LayoutParams:public RecyclerView::LayoutParams {

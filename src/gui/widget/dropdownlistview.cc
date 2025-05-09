@@ -5,10 +5,13 @@ namespace cdroid{
 
 DropDownListView::DropDownListView(Context*context,bool hijackfocus):ListView(context,AttributeSet(context,"")){
     mScrollHelper = nullptr;
+    mHijackFocus = hijackfocus;
+    mDrawsInPressedState = false;
+    mResolveHoverRunnable = nullptr;LOGD("DropDownListView created: %p",this);
 }
 
 DropDownListView::~DropDownListView(){
-    delete mScrollHelper;
+    LOGD("DropDownListView destroyed %p",this);delete mScrollHelper;
     removeCallbacks(mResolveHoverRunnable);
 }
 
@@ -209,4 +212,27 @@ bool DropDownListView::isFocused()const{
 bool DropDownListView::hasFocus()const{
     return mHijackFocus || ListView::hasFocus();
 }
+
+////////////////////////////////////////////////////////////////////////////////////
+DropDownListView::ResolveHoverRunnable::ResolveHoverRunnable(DropDownListView*v){
+    mDLV = v;
+    mRunnable = std::bind(&ResolveHoverRunnable::run,this);
+}
+
+void DropDownListView::ResolveHoverRunnable::run() {
+    // Resolved hover event as standard hover exit.
+    //mResolveHoverRunnable = null;
+    mDLV->drawableStateChanged();
+}
+
+void DropDownListView::ResolveHoverRunnable::cancel() {
+    //mResolveHoverRunnable = null;
+    mDLV->removeCallbacks(mRunnable);
+}
+
+void DropDownListView::ResolveHoverRunnable::post() {
+    mDLV->post(mRunnable);
+}
+
+
 }

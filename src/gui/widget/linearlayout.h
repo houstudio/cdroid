@@ -72,7 +72,7 @@ protected:
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
 
-    virtual void onLayout(bool changed, int l, int t, int w, int h);
+    void onLayout(bool changed, int l, int t, int w, int h)override;
     void layoutVertical(int left, int top, int width, int height);
     void layoutHorizontal(int left, int top, int width, int height);
     virtual void measureHorizontal(int widthMeasureSpec, int heightMeasureSpec);

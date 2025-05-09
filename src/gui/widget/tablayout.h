@@ -142,7 +142,7 @@ private:
     protected:
         void calculateTabViewContentBounds(TabLayout::TabView* tabView, Rect& contentBounds);
         void onMeasure(int widthMeasureSpec,int heightMeasureSpec)override;
-        void onLayout(bool changed, int l, int t, int r, int b);
+        void onLayout(bool changed, int l, int t, int r, int b)override;
     public:
         SlidingTabStrip(Context* context,const AttributeSet&atts,TabLayout*parent);
         ~SlidingTabStrip()override;

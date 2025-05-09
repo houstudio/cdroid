@@ -83,7 +83,7 @@ public:
             RecyclerView::State& state, View* host, AccessibilityNodeInfo& info)override;
     void onInitializeAccessibilityNodeInfo(RecyclerView::Recycler& recycler,
             RecyclerView::State& state, AccessibilityNodeInfo& info)override;
-    bool performAccessibilityAction(int action,Bundle* args);
+    bool performAccessibilityAction(int action,Bundle* args)override;
     void onLayoutChildren(RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     void onLayoutCompleted(RecyclerView::State& state)override;
 
@@ -130,6 +130,7 @@ protected:
     int getCachedSpanIndex(int position, int spanCount);
     static int findFirstKeyLessThan(SparseIntArray&cache,int position);
 public:
+    virtual ~SpanSizeLookup()=default;
     virtual int getSpanSize(int position)=0;
     void setSpanIndexCacheEnabled(bool cacheSpanIndices);
     void setSpanGroupIndexCacheEnabled(bool cacheSpanGroupIndices);

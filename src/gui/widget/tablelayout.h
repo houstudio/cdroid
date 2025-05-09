@@ -33,10 +33,10 @@ private:
     void mutateColumnsWidth(SparseBooleanArray & columns,bool allColumns, int size, int totalWidth);
 protected:
     void onLayout(bool changed, int l, int t, int w, int h)override;
-    void onMeasure(int widthMeasureSpec, int heightMeasureSpec);
+    void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void measureChildBeforeLayout(View* child, int childIndex,int widthMeasureSpec, 
             int totalWidth,int heightMeasureSpec, int totalHeight)override;
-    void measureVertical(int widthMeasureSpec, int heightMeasureSpec);
+    void measureVertical(int widthMeasureSpec, int heightMeasureSpec)override;
 
     ViewGroup::LayoutParams* generateDefaultLayoutParams() const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p) const override;

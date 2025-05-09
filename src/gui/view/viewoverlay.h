@@ -12,7 +12,7 @@ public:
         std::vector<Drawable*>mDrawables;
     protected:
         bool verifyDrawable(Drawable* who)const override;
-        void dispatchDraw(Canvas& canvas);
+        void dispatchDraw(Canvas& canvas)override;
         void onLayout(bool changed, int l, int t, int w, int h)override;
         void invalidateViewProperty(bool invalidateParent, bool forceRedraw)override;
         void invalidateParentCaches()override;

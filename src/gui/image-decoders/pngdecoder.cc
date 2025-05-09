@@ -243,7 +243,7 @@ bool PNGDecoder::decodeSize() {
     }
 
     /* expand gray bit depth if needed */
-    if ( (color_type == PNG_COLOR_TYPE_GRAY) /*&& (bit_depth < 8)*/ ) {
+    if ( (color_type == PNG_COLOR_TYPE_GRAY) && (bit_depth < 8) ) {
         png_set_expand_gray_1_2_4_to_8(png_ptr);
     }
 
