@@ -1,9 +1,11 @@
 project (android C CXX)
 
 set(ANDROID_SRCS
-     ../common/cdlog.cc
      ../common/input_linux.cc
-     #cdplayer.c misc.c
+     cdlog.cc
+     cdplayer.c
+     #misc.c
+     #./android_native_app_glue.c
     )
 
 include(CheckIncludeFile)
@@ -32,7 +34,7 @@ find_package(OpenGL)
 include_directories(../common ../include ${PIXMAN_INCLUDE_DIRS})
 
 add_library(tvhal SHARED ${ANDROID_SRCS} ../common/graph_fb.c)
-target_link_libraries(tvhal)
+target_link_libraries(tvhal log android)
 
 include_directories(./
     ../common ../include
