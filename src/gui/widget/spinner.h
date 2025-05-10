@@ -107,7 +107,7 @@ protected:
     int mDropDownWidth;
     SpinnerPopup *mPopup;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
-    void onLayout(bool changed, int l, int t, int w, int h);
+    void onLayout(bool changed, int l, int t, int w, int h)override;
     void layout(int delta, bool animate)override;
     void computeContentWidth();
 public:

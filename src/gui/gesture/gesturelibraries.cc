@@ -15,7 +15,7 @@ public:
     StreamGestureLibrary(Context*ctx,const std::string&resid):mContext(ctx),mResourceId(resid){
     }
 
-    bool isReadOnly() const{
+    bool isReadOnly() const override{
         return mContext!=nullptr;
     }
 

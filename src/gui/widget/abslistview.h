@@ -380,7 +380,7 @@ public:
     void setSelector(const std::string&resid);
     void getFocusedRect(Rect& r)override;
 
-    void setScrollBarStyle(int style);
+    void setScrollBarStyle(int style)override;
     void setSmoothScrollbarEnabled(bool);
     bool isSmoothScrollbarEnabled()const;
     void setStackFromBottom(bool stackFromBottom);
@@ -404,7 +404,7 @@ public:
     bool showContextMenu()override;
     bool showContextMenu(float x, float y)override;
     bool showContextMenuForChild(View* originalView)override;
-    bool showContextMenuForChild(View* originalView, float x, float y);
+    bool showContextMenuForChild(View* originalView, float x, float y)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;
@@ -414,10 +414,10 @@ public:
     void onRtlPropertiesChanged(int layoutDirection)override;
     bool onGenericMotionEvent(MotionEvent& event)override;
     void fling(int velocity);
-    bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes);
-    void onNestedScrollAccepted(View* child, View* target, int axes);
-    void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed);
-    bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed);
+    bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes)override;
+    void onNestedScrollAccepted(View* child, View* target, int axes)override;
+    void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed)override;
+    bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed)override;
     void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
     void addTouchables(std::vector<View*>& views)override;
     View* getSelectedView()override;

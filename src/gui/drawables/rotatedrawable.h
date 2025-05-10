@@ -25,7 +25,7 @@ private:
     void updateStateFromTypedArray(const AttributeSet&atts);
 protected:
     bool onLevelChange(int level)override;
-    std::shared_ptr<DrawableWrapperState> mutateConstantState();
+    std::shared_ptr<DrawableWrapperState> mutateConstantState()override;
 public:
     RotateDrawable(Drawable*d=nullptr);
     float getFromDegrees()const;

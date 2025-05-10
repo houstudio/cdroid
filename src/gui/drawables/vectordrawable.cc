@@ -2,6 +2,7 @@
 #include <fstream>
 #include <unordered_map>
 #include <core/canvas.h>
+#include <porting/cdlog.h>
 #include <drawables/hwpathparser.h>
 #include <drawables/vectordrawable.h>
 #include <drawables/hwvectordrawable.h>
@@ -571,9 +572,9 @@ long VectorDrawable::VectorDrawableState::getNativeRenderer() {
 }
 
 bool VectorDrawable::VectorDrawableState::canReuseCache() {
-    if (!mCacheDirty && mCachedThemeAttrs == mThemeAttrs
-            && mCachedTint == mTint && mCachedTintMode == mTintMode
-            && mCachedAutoMirrored == mAutoMirrored) {
+    if (!mCacheDirty && (memcmp(mCachedThemeAttrs,mThemeAttrs,sizeof(int)*2)==0)
+            && (mCachedTint == mTint) && (mCachedTintMode == mTintMode)
+            && (mCachedAutoMirrored == mAutoMirrored) ) {
         return true;
     }
     updateCacheStates();
@@ -926,7 +927,10 @@ bool VectorDrawable::VGroup::hasFocusStateSpecified() const{
 }
 
 bool VectorDrawable::VGroup::canApplyTheme() {
-    if (mThemeAttrs != nullptr) {
+#ifndef __clang__
+    if (mThemeAttrs != nullptr)
+#endif
+    {
         return true;
     }
 
@@ -1537,7 +1541,10 @@ void VectorDrawable::VFullPath::inflateGradients(XmlPullParser&parser,const Attr
 }
 
 bool VectorDrawable::VFullPath::canApplyTheme() {
-    if (mThemeAttrs != nullptr) {
+#ifndef __clang__
+    if (mThemeAttrs != nullptr)
+#endif
+    {
         return true;
     }
 

@@ -65,10 +65,10 @@ protected:
     void setTopEdgeEffectColor(int color);
     int  getTopEdgeEffectColor()const;
     int getBottomEdgeEffectColor()const;
-    void onMeasure(int widthMeasureSpec, int heightMeasureSpec);
+    void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY)override;
-    int computeVerticalScrollRange();
-    int computeVerticalScrollOffset();
+    int computeVerticalScrollRange()override;
+    int computeVerticalScrollOffset()override;
     void initOrResetVelocityTracker();
     void initVelocityTrackerIfNotExists();
     void recycleVelocityTracker();
@@ -95,7 +95,7 @@ public:
     void setFillViewport(bool fillViewport);
     bool isSmoothScrollingEnabled()const;
     void setSmoothScrollingEnabled(bool smoothScrollingEnabled);
-    bool dispatchKeyEvent(KeyEvent& event);
+    bool dispatchKeyEvent(KeyEvent& event)override;
     bool executeKeyEvent(KeyEvent& event);
     void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;
@@ -113,13 +113,13 @@ public:
     void requestLayout()override;
     void scrollTo(int x, int y)override;
     void scrollToDescendant(View* child);
-    void setOverScrollMode(int mode);
+    void setOverScrollMode(int mode)override;
     bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes)override;
     void onNestedScrollAccepted(View* child, View* target, int axes)override;
     void onStopNestedScroll(View* target)override;
     void onNestedScroll(View* target, int dxConsumed, int dyConsumed,
-            int dxUnconsumed, int dyUnconsumed);
-    bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed);
+            int dxUnconsumed, int dyUnconsumed)override;
+    bool onNestedFling(View* target, float velocityX, float velocityY, bool consumed)override;
     void fling(int velocityY);
 };
 

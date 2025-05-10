@@ -121,13 +121,13 @@ public:
     static KeyEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,int code, int repeat, int metaState,
                int deviceId, int scancode, int flags, int source,int displayId=0/*,std::string characters*/);
     static KeyEvent* obtain(const KeyEvent& other);
-    virtual int getType()const {return INPUT_EVENT_TYPE_KEY;}
+    virtual int getType()const override{return INPUT_EVENT_TYPE_KEY;}
     KeyEvent*copy()const override{return obtain(*this);}
     int getKeyCode()const {return mKeyCode;}
     void setKeyCode(int k){mKeyCode=k;}
     int getFlags()const{return mFlags;}
-    inline bool isTainted()const{return (mFlags&FLAG_TAINTED)!=0;}
-    inline void setTainted(bool tainted){
+    inline bool isTainted()const override{return (mFlags&FLAG_TAINTED)!=0;}
+    inline void setTainted(bool tainted)override{
         if(tainted)mFlags|=FLAG_TAINTED;
         else mFlags&=~FLAG_TAINTED;
     }

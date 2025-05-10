@@ -207,7 +207,7 @@ public:
     void copyFrom(const MotionEvent* other, bool keepHistory);
     MotionEvent*split(int idBits);
     void setSource(int)override;
-    virtual int getType()const{return INPUT_EVENT_TYPE_MOTION;}
+    int getType()const override{return INPUT_EVENT_TYPE_MOTION;}
     inline void setAction(int32_t action) { mAction = action; }
     inline int32_t getActionMasked() const { return mAction &ACTION_MASK; }
     int getActionIndex()const{
@@ -219,8 +219,8 @@ public:
     inline size_t getPointerCount() const { return mPointerProperties.size(); }
     inline int32_t getFlags() const { return mFlags; }
     inline void setFlags(int32_t flags) { mFlags = flags; }
-    inline bool isTainted()const{return (mFlags&FLAG_TAINTED)!=0;}
-    inline void setTainted(bool tainted){
+    inline bool isTainted()const override{return (mFlags&FLAG_TAINTED)!=0;}
+    inline void setTainted(bool tainted)override{
         if(tainted)mFlags|=FLAG_TAINTED;
         else mFlags&=~FLAG_TAINTED;
     }
@@ -339,7 +339,7 @@ public:
             mFlags&=~FLAG_TARGET_ACCESSIBILITY_FOCUS;
     }
     static const std::string actionToString(int action);
-    void toStream(std::ostream& os)const;
+    void toStream(std::ostream& os)const override;
 };
 }/*endof namespace*/
 #endif/*__MOTION_EVENT_H__*/

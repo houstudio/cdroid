@@ -12,11 +12,11 @@ public:
     PictureDrawable(Picture picture);
     Picture getPicture();
     void setPicture(Picture picture);
-    void draw(Canvas& canvas);
+    void draw(Canvas& canvas)override;
     int getIntrinsicWidth() override;
     int getIntrinsicHeight() override;
     int getOpacity()override;
-    void setColorFilter(ColorFilter* colorFilter);
+    void setColorFilter(ColorFilter* colorFilter)override;
     void setAlpha(int alpha)override;
 };
 

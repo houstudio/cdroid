@@ -50,6 +50,7 @@ class Drawable{
 public:
     class Callback{
     public:
+        virtual ~Callback()=default;
         virtual void invalidateDrawable(Drawable& who)=0;
         virtual void scheduleDrawable(Drawable& who,Runnable& what, int64_t when)=0;
         virtual void unscheduleDrawable(Drawable& who,Runnable& what)=0;

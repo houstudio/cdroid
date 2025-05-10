@@ -1,3 +1,4 @@
+#include <porting/cdlog.h>
 #include <drawables/hwvectordrawableutils.h>
 namespace cdroid {
 namespace hwui{

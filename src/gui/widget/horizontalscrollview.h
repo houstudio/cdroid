@@ -57,8 +57,8 @@ private:
     bool isViewDescendantOf(View* child, View* parent);
     bool shouldDisplayEdgeEffects()const;
 protected:
-    float getLeftFadingEdgeStrength();
-    float getRightFadingEdgeStrength();
+    float getLeftFadingEdgeStrength()override;
+    float getRightFadingEdgeStrength()override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onOverScrolled(int scrollX, int scrollY,bool clampedX, bool clampedY)override;
     int computeHorizontalScrollRange()override;
@@ -69,8 +69,8 @@ protected:
     int computeScrollDeltaToGetChildRectOnScreen(Rect& rect);
     bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect)override;
     void onLayout(bool changed, int l, int t, int w, int h)override;
-    void onSizeChanged(int w, int h, int oldw, int oldh);
-    void draw(Canvas& canvas);
+    void onSizeChanged(int w, int h, int oldw, int oldh)override;
+    void draw(Canvas& canvas)override;
 public:
     HorizontalScrollView(int w,int h);
     HorizontalScrollView(Context*ctx,const AttributeSet&atts);
@@ -81,10 +81,10 @@ public:
     int getLeftEdgeEffectColor()const;
     int getRightEdgeEffectColor()const;
     int getMaxScrollAmount();
-    View& addView(View* child);
-    View& addView(View* child, int index);
-    View& addView(View* child, ViewGroup::LayoutParams* params);
-    View& addView(View* child, int index,ViewGroup::LayoutParams* params);
+    View& addView(View* child)override;
+    View& addView(View* child, int index)override;
+    View& addView(View* child, ViewGroup::LayoutParams* params)override;
+    View& addView(View* child, int index,ViewGroup::LayoutParams* params)override;
     bool isFillViewport()const;
     void setFillViewport(bool fillViewport);
     bool isSmoothScrollingEnabled()const;
@@ -94,19 +94,19 @@ public:
     void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;
     bool onTouchEvent(MotionEvent& ev)override;
-    bool onGenericMotionEvent(MotionEvent& event);
+    bool onGenericMotionEvent(MotionEvent& event)override;
     bool shouldDelayChildPressedState()override;
     bool pageScroll(int direction);
     bool fullScroll(int direction);
     bool arrowScroll(int direction);
     void smoothScrollBy(int dx, int dy);
     void smoothScrollTo(int x, int y);
-    void computeScroll();
+    void computeScroll()override;
     void requestChildFocus(View* child, View* focused)override;
     bool requestChildRectangleOnScreen(View* child, Rect rectangle,bool immediate);
-    void requestLayout();
+    void requestLayout()override;
     void fling(int velocityX);
-    void scrollTo(int x, int y);
+    void scrollTo(int x, int y)override;
 };
 
 }

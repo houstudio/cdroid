@@ -50,7 +50,7 @@ public:
     Drawable*getHorizontalThumbDrawable()const;
     Drawable*getHorizontalTrackDrawable()const;
     int getSize(bool vertical);
-    ScrollBarDrawable* mutate();
+    ScrollBarDrawable* mutate()override;
     void setAlpha(int alpha)override;
     int getAlpha() const override;
     int getOpacity()override;

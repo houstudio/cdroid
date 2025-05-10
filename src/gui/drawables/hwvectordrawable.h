@@ -307,7 +307,7 @@ public:
             }
         }
     }
-    virtual void setAntiAlias(bool aa) { mAntiAlias = aa; }
+    void setAntiAlias(bool aa) override{ mAntiAlias = aa; }
     void forEachFillColor(const std::function<void(uint32_t)>& func) const override {
         func(mStagingProperties.getFillColor());
     }
@@ -331,7 +331,7 @@ public:
     ClipPath(const char* path, size_t strLength) : Path(path, strLength) {}
     ClipPath() : Path() {}
     void draw(Canvas& outCanvas, bool useStagingData) override;
-    virtual void setAntiAlias(bool aa) {}
+    void setAntiAlias(bool aa)override {}
 };
 
 class Group : public Node {
@@ -422,7 +422,7 @@ public:
     void dump() override;
     static bool isValidProperty(int propertyId);
 
-    virtual void onPropertyChanged(Properties* properties) override {
+    void onPropertyChanged(Properties* properties) override {
         if (properties == &mStagingProperties) {
             mStagingPropertiesDirty = true;
             if (mPropertyChangedListener) {
@@ -435,7 +435,7 @@ public:
         }
     }
 
-    virtual void setAntiAlias(bool aa) {
+    void setAntiAlias(bool aa) override{
         for (auto& child : mChildren) {
             child->setAntiAlias(aa);
         }

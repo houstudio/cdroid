@@ -29,7 +29,7 @@ public:
     long getItemId(int position)const override;
     bool hasStableIds()const override;
     View* getView(int position, View* convertView, ViewGroup* parent)override;
-    int getItemViewType(int position)const;
+    int getItemViewType(int position)const override;
     int getViewTypeCount()const override;
     void registerDataSetObserver(DataSetObserver* observer)override;
     void unregisterDataSetObserver(DataSetObserver* observer)override;

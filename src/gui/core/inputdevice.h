@@ -374,7 +374,7 @@ protected:
     int isValidEvent(int type,int code,int value)override;
 public:
     KeyDevice(int fd);
-    virtual int putEvent(long sec,long usec,int type,int code,int value);
+    int putEvent(long sec,long usec,int type,int code,int value)override;
 };
 
 class TouchDevice:public InputDevice{
@@ -413,7 +413,7 @@ protected:
     int ABS2AXIS(int absaxis);
 public:
     TouchDevice(int fd);
-    virtual int putEvent(long sec,long usec,int type,int code,int value);
+    int putEvent(long sec,long usec,int type,int code,int value)override;
 };
 
 class MouseDevice:public TouchDevice{
@@ -423,7 +423,7 @@ protected:
     int isValidEvent(int type,int code,int value)override;
 public:
     MouseDevice(int fd);
-    virtual int putEvent(long sec,long usec,int type,int code,int value);
+    int putEvent(long sec,long usec,int type,int code,int value)override;
 };
 }//namespace
 #endif 

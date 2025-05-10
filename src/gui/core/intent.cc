@@ -1,5 +1,5 @@
 #include <core/intent.h>
-
+#include <sstream>
 namespace cdroid{
 
 Intent::Intent() {

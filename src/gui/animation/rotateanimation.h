@@ -27,7 +27,7 @@ public:
     RotateAnimation(float fromDegrees, float toDegrees, float pivotX, float pivotY);
     RotateAnimation(float fromDegrees, float toDegrees, int pivotXType, float pivotXValue,
             int pivotYType, float pivotYValue);
-    void initialize(int width, int height, int parentWidth, int parentHeight);
+    void initialize(int width, int height, int parentWidth, int parentHeight)override;
     RotateAnimation*clone()const override;
 };
 

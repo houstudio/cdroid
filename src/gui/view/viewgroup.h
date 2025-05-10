@@ -340,7 +340,7 @@ public:
     void addKeyboardNavigationClusters(std::vector<View*>&views,int drection)override;
     void setTouchscreenBlocksFocus(bool touchscreenBlocksFocus);
     virtual void setOnHierarchyChangeListener(const OnHierarchyChangeListener& listener);
-    bool restoreFocusNotInCluster();
+    bool restoreFocusNotInCluster()override;
     View*keyboardNavigationClusterSearch(View* currentCluster,int direction)override;
     bool requestFocus(int direction=FOCUS_DOWN,Rect*previouslyFocusedRect=nullptr)override;
     virtual bool requestLayoutDuringLayout(View* view);

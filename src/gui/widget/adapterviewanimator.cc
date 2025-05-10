@@ -376,7 +376,7 @@ bool AdapterViewAnimator::onTouchEvent(MotionEvent& ev){
     View*v =nullptr;
     switch (action) {
     case MotionEvent::ACTION_DOWN:
-        if (v=getCurrentView()) {
+        if ((v=getCurrentView())!=nullptr) {
             if (isTransformedTouchPointInView(ev.getX(), ev.getY(), *v, nullptr)) {
                 mTouchMode = TOUCH_MODE_DOWN_IN_CURRENT_VIEW;
                 postDelayed(mPendingCheckForTap, ViewConfiguration::getTapTimeout());

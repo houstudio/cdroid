@@ -71,11 +71,11 @@ public:
     GridView(Context*ctx,const AttributeSet&atts);
     Adapter*getAdapter()override;
     void setAdapter(Adapter* adapter)override;
-    void setSelection(int position);
+    void setSelection(int position)override;
     bool dispatchKeyEvent(KeyEvent& event)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;
-    bool onKeyMultiple(int keyCode, int repeatCount, KeyEvent& event);
+    bool onKeyMultiple(int keyCode, int repeatCount, KeyEvent& event)override;
     void setGravity(int gravity);
     int getGravity()const;
     void setHorizontalSpacing(int horizontalSpacing);

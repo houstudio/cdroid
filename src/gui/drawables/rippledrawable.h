@@ -93,12 +93,12 @@ public:
     void setRadius(int radius);
     int  getRadius()const;
     bool setDrawableByLayerId(int id, Drawable* drawable)override;
-    void setPaddingMode(int mode);
+    void setPaddingMode(int mode)override;
     bool canApplyTheme()override;
     void getHotspotBounds(Rect&out)const override;
     void setHotspot(float x,float y)override;
     void setHotspotBounds(int left,int top,int w,int h)override;
-    void draw(Canvas& canvas);
+    void draw(Canvas& canvas)override;
     void invalidateSelf()override;
     void invalidateSelf(bool invalidateMask);
     void pruneRipples();

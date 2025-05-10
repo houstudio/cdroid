@@ -1,5 +1,5 @@
 #ifndef __DIRECTEDACYCLICGRAPH_H__
-#define __DIRECTEEACYCLICGRAPH_H__
+#define __DIRECTEDACYCLICGRAPH_H__
 #include <set>
 #include <vector>
 #include <unordered_map>

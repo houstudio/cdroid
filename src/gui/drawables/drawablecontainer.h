@@ -95,7 +95,7 @@ protected:
     void onBoundsChange(const Rect&bounds)override;
     bool onStateChange(const std::vector<int>&state)override;
     bool onLevelChange(int level)override;
-    bool onLayoutDirectionChanged(int layoutDirection);
+    bool onLayoutDirectionChanged(int layoutDirection)override;
 public:
     DrawableContainer();
     ~DrawableContainer()override;

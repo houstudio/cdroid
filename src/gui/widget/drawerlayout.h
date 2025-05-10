@@ -92,7 +92,7 @@ private:
         void onViewPositionChanged(View& changedView, int left, int top, int dx, int dy)override;
         void onViewCaptured(View& capturedChild, int activePointerId)override;
         void onViewReleased(View& releasedChild, float xvel, float yvel)override;
-        void onEdgeTouched(int edgeFlags, int pointerId);
+        void onEdgeTouched(int edgeFlags, int pointerId)override;
         void peekDrawer();
         bool onEdgeLock(int edgeFlags)override;
         void onEdgeDragStarted(int edgeFlags, int pointerId)override;
@@ -210,10 +210,10 @@ public:
     Drawable* getStatusBarBackgroundDrawable() ;
     void setStatusBarBackground(const std::string& resId);
     void setStatusBarBackgroundColor(int color);
-    void onRtlPropertiesChanged(int layoutDirection);
+    void onRtlPropertiesChanged(int layoutDirection)override;
     void onDraw(Canvas& c)override;
     bool onInterceptTouchEvent(MotionEvent& ev)override;
-    bool dispatchGenericMotionEvent(MotionEvent& event);//override;
+    bool dispatchGenericMotionEvent(MotionEvent& event)override;
     bool onTouchEvent(MotionEvent& ev)override;
     void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
     void closeDrawers();

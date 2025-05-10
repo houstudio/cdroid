@@ -1240,9 +1240,9 @@ std::string Configuration::resourceQualifierString(const Configuration& config,c
 	std::vector<std::string> parts;
 
 	if (config.mcc != 0) {
-		parts.push_back("mcc" + config.mcc);
+		parts.push_back("mcc" + std::to_string(config.mcc));
 		if (config.mnc != 0) {
-			parts.push_back("mnc" + config.mnc);
+			parts.push_back("mnc" + std::to_string(config.mnc));
 		}
 	}
 
@@ -1413,7 +1413,7 @@ std::string Configuration::resourceQualifierString(const Configuration& config,c
 			parts.push_back("nodpi");
 			break;
 		default:
-			parts.push_back(config.densityDpi + "dpi");
+			parts.push_back(std::to_string(config.densityDpi) + "dpi");
 			break;
 	}
 
@@ -1495,7 +1495,7 @@ std::string Configuration::resourceQualifierString(const Configuration& config,c
 			//noinspection SuspiciousNameCombination
 			height = metrics->widthPixels;
 		}
-		parts.push_back(width + "x" + height);
+		parts.push_back(std::to_string(width) + "x" + std::to_string(height));
 	}
 
 	parts.push_back(std::string("v") + Build::VERSION::Release);//RESOURCES_SDK_INT);

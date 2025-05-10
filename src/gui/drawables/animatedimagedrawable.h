@@ -62,7 +62,7 @@ public:
     void setAlpha(int alpha)override;
     int getAlpha()const override;
     int getOpacity()override;
-    void setAutoMirrored(bool);
+    void setAutoMirrored(bool)override;
     bool isAutoMirrored()const;
     bool onLayoutDirectionChanged(int layoutDirection)override;
     void draw(Canvas& canvas)override;
@@ -71,8 +71,8 @@ public:
     void stop()override;
     void restart(int fromFrame=0);
     AnimatedImageDrawable*mutate()override;
-    void registerAnimationCallback(Animatable2::AnimationCallback callback);
-    bool unregisterAnimationCallback(Animatable2::AnimationCallback callback);
+    void registerAnimationCallback(Animatable2::AnimationCallback callback)override;
+    bool unregisterAnimationCallback(Animatable2::AnimationCallback callback)override;
     void clearAnimationCallbacks();
     void inflate(XmlPullParser&,const AttributeSet&atts)override;
 };

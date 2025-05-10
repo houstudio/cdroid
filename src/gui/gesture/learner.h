@@ -9,6 +9,7 @@ class Learner {
 private:
     std::vector<Instance*> mInstances;
 public:
+    virtual ~Learner();
     /**
      * Add an instance to the learner
      *

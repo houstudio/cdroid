@@ -33,6 +33,7 @@ public:
         SWEEP =3
     };
     Shape();
+    virtual ~Shape()=default;
     int getWidth()const;
     int getHeight()const;
     void resize(int width, int height);

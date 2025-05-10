@@ -149,8 +149,9 @@ void PointerIcon::loadResource(Context* context, const std::string& resourceId) 
         //EMPTY
     }
 
-    if (type != XmlPullParser::START_TAG);
-    //XmlUtils.beginDocument(parser, "pointer-icon");
+    if (type != XmlPullParser::START_TAG){
+       //XmlUtils.beginDocument(parser, "pointer-icon");
+    }
     const std::string bitmapRes = attrs.getString("bitmap");
     hotSpotX = attrs.getDimension("hotSpotX", 0);
     hotSpotY = attrs.getDimension("hotSpotY", 0);

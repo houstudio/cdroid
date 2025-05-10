@@ -865,7 +865,7 @@ void AccessibilityNodeInfo::enforceValidFocusDirection(int direction) {
     case View::FOCUS_BACKWARD:
         return;
     default:
-        throw std::runtime_error("Unknown direction: " + direction);
+        LOGE("Unknown direction: %d",direction);
     }
 }
 
@@ -1574,7 +1574,7 @@ std::string AccessibilityNodeInfo::idItemToString(int item) {
         case ROOT_ITEM_ID: return "ROOT";
         case UNDEFINED_ITEM_ID: return "UNDEFINED";
         case AccessibilityNodeProvider::HOST_VIEW_ID: return "HOST";
-        default: return "" + item;
+        default: return std::to_string(item);
     }
 }
 

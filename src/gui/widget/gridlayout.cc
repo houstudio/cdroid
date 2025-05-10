@@ -950,10 +950,10 @@ protected:
         }
     };
 public:
-    int getGravityOffset(View* view, int cellDelta){ 
+    int getGravityOffset(View* view, int cellDelta)override{ 
         return 0; // baseline gravity is top
     }
-    int getAlignmentValue(View* view, int viewSize, int mode) {
+    int getAlignmentValue(View* view, int viewSize, int mode) override{
         if (view->getVisibility() == View::GONE) {
             return 0;
         }

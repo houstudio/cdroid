@@ -219,7 +219,7 @@ void ViewInfoStore::recycleInfoRecord(InfoRecord* record) {
 void ViewInfoStore::drainInfoRecordCache() {
     //noinspection StatementWithEmptyBody
     InfoRecord*info = nullptr;
-    while (info=mPool->acquire()) { 
+    while ((info=mPool->acquire())!=nullptr) { 
         delete info;
     }
 }

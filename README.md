@@ -81,7 +81,7 @@
 *The cdroid.pak and yourapp's pak must be in your working directory*
 * cp src/gui/cdroid.pak ./
 * cp apps/appname/appname.pak ./
-### 8.run samples(in directory outX64-Debug
+### 8.run samples(in directory outX64-Debug)
 * apps/samples/helloworld
 * apps/uidemo1/uidemo1
 

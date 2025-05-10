@@ -28,7 +28,7 @@ public:
     ~ColorDrawable();
     void setColor(int color);
     int getColor()const;
-    int getAlpha()const;
+    int getAlpha()const override;
     void setAlpha(int a)override;
     int getOpacity()override;
     void getOutline(Outline&)override;

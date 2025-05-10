@@ -467,7 +467,7 @@ protected:
 
     static constexpr int PFLAG2_ACCESSIBILITY_LIVE_REGION_MASK = (ACCESSIBILITY_LIVE_REGION_NONE
             | ACCESSIBILITY_LIVE_REGION_POLITE | ACCESSIBILITY_LIVE_REGION_ASSERTIVE)<< PFLAG2_ACCESSIBILITY_LIVE_REGION_SHIFT;
-
+public:
     class AttachInfo;
     class TransformationInfo;
     class TintInfo;

@@ -6,6 +6,7 @@ namespace cdroid{
 
 class DropDownListView:public ListView{
 private:
+    class ResolveHoverRunnable;
     bool mListSelectionHidden;
     bool mHijackFocus;
     bool mDrawsInPressedState;
@@ -31,5 +32,15 @@ public:
     bool hasFocus()const override;
 };
 
+class DropDownListView::ResolveHoverRunnable{
+private:
+    DropDownListView*mDLV;
+    Runnable mRunnable;
+public:
+    ResolveHoverRunnable(DropDownListView*v);
+    void run();
+    void cancel();
+    void post();
+};
 }//endof namespace
 #endif

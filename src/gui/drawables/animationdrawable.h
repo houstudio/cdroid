@@ -9,7 +9,7 @@ private:
         bool mOneShot; 
         std::vector<int>mDurations;
         AnimationState(const AnimationState*,AnimationDrawable*owner);
-        void mutate();
+        void mutate()override;
         AnimationDrawable*newDrawable()override;
         void addFrame(Drawable*,int dur);
         long getTotalDuration()const;

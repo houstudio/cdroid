@@ -1,6 +1,7 @@
 #include <drawables/pathparser.h>
 #include <drawables/hwpathparser.h>
 #include <drawables/hwvectordrawable.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 
 /**

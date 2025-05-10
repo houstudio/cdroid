@@ -925,7 +925,7 @@ bool GradientDrawable::ensureValidRect() {
                 }
                 RefPtr<SweepGradient>pat = SweepGradient::create(x0, y0,RADIUS,M_PI/2.f,stops);
                 mFillPaint = pat;
-            } else if(st.mGradient = BITMAP_PATTERN){
+            } else if(st.mGradient == BITMAP_PATTERN){
                 //mFillPaint = SurfacePattern::create(st.mImagePattern);
             }
 
@@ -1206,7 +1206,7 @@ void GradientDrawable::inflateChildElements(XmlPullParser&parser,const Attribute
         } else if (name.compare("padding")==0) {
             updateGradientDrawablePadding(atts);
         } else {
-            LOGW("drawable", "Bad element under <shape>: " + name);
+            LOGW("drawable", "Bad element %s under <shape>: ",name.c_str());
         }
     }
 }

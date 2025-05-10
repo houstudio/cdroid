@@ -15,6 +15,7 @@ protected:
 public:
     OrientationHelper(RecyclerView::LayoutManager* layoutManager);
 public:
+    virtual ~OrientationHelper()=default;
     RecyclerView::LayoutManager* getLayoutManager();
     void onLayoutComplete();
     int getTotalSpaceChange();

@@ -241,7 +241,7 @@ protected:
     ViewPager2*mVP;
 public:
     DataSetChangeObserver(ViewPager2*v);
-    virtual void onChanged();
+    void onChanged()override;
 
     virtual void onItemRangeChanged(int positionStart, int itemCount)final;
     virtual void onItemRangeChanged(int positionStart, int itemCount,Object* payload)final;

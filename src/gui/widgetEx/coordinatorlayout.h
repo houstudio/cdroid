@@ -130,7 +130,7 @@ public:
     void onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes, int type) override;
     void onStopNestedScroll(View* target)override;
     void onStopNestedScroll(View* target, int type)override;
-    void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed);
+    void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed)override;
     void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int type)override;
     void onNestedPreScroll(View* target, int dx, int dy, int consumed[]) override;
 

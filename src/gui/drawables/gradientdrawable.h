@@ -96,7 +96,7 @@ private:
        bool hasCenterColor()const;
        void applyDensityScaling(int sourceDensity, int targetDensity);
        GradientDrawable* newDrawable()override;
-       int getChangingConfigurations()const;
+       int getChangingConfigurations()const override;
        void setShape(int shape);
        void setGradientType(int gradient);
        void setGradientCenter(float x, float y);
@@ -145,7 +145,7 @@ private:
 protected:
     void onBoundsChange(const Rect& r)override;
     bool onLevelChange(int level)override;
-    bool onStateChange(const std::vector<int>& stateSet);
+    bool onStateChange(const std::vector<int>& stateSet)override;
 public:
     GradientDrawable();
     GradientDrawable(Orientation orientation,const std::vector<int>&colors);
@@ -198,7 +198,7 @@ public:
     int getChangingConfigurations()const override;
     void setAlpha(int a)override;
     int getAlpha()const override;
-    void setDither(bool dither);
+    void setDither(bool dither)override;
     void setColorFilter(ColorFilter*)override;
     ColorFilter*getColorFilter()override;
     void setTintList(const ColorStateList*tint)override;
