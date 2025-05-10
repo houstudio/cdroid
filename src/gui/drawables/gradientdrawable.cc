@@ -280,18 +280,16 @@ void GradientDrawable::updateLocalState() {
         //mFillPaint = SurfacePattern::create(state->mImagePattern);
     }
     mPadding = state->mPadding;
-    if(state->mStrokeWidth>=0) {
-        int strokeStateColor = 0;
+    if( (state->mStrokeWidth>=0) && (state->mStrokeColors!=nullptr)) {
+        /*int strokeStateColor = 0;
         if(state->mStrokeColors) {
             const std::vector<int>currentState = getState();
             auto cls = state->mStrokeColors;
             strokeStateColor = cls->getColorForState(currentState,0);
+        }*/
+        if(state->mStrokeColors){
+            setStroke(state->mStrokeWidth,state->mStrokeColors,state->mStrokeDashWidth,state->mStrokeDashGap);
         }
-        //setStroke(state->mStrokeWidth,strokeStateColor,state->mStrokeDashWidth,state->mStrokeDashGap);
-        Color cc(strokeStateColor);
-        mStrokePaint = SolidPattern::create_rgba((float)cc.red(),(float)cc.green(),(float)cc.blue(),(float)cc.alpha());
-        mStrokeWidth = state->mStrokeWidth;
-        mDashArray = std::vector<double> {state->mStrokeDashWidth,state->mStrokeDashGap};
     }
     state->computeOpacity();
 }
