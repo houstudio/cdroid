@@ -34,6 +34,7 @@ public:
     int getInt(const std::string&key,const std::unordered_map<std::string,int>&keyvaluemaps,int def=0)const;
     int getResourceId(const std::string&key,int def=0)const;
     int getColor(const std::string&key,int def=0xFFFFFFFF)const;
+    int getColorWithException(const std::string&key)const;
     float getFloat(const std::string&key,float def=.0)const;
     const std::string getString(const std::string&key,const std::string&def=std::string())const;
     int getGravity(const std::string&key,int defvalue=0)const;
