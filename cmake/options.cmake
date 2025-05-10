@@ -17,6 +17,7 @@ find_package(GIF)
 find_package(JPEG)
 find_package(WEBP)
 find_package(LCMS2)
+find_package(Iconv)
 #find_package(LUNASVG)
 #find_package(MathGL)
 #find_package(RLOTTIE)
@@ -56,13 +57,14 @@ list(APPEND CDROID_DEPLIBS
     ${ZLIB_LIBRARIES}
     ${BZIP2_LIBRARIES}
     ${PNG_LIBRARIES}
-    ${FREETYPE2_LIBRARIES}
+    ${FREETYPE_LIBRARIES}
     ${PIXMAN_LIBRARIES}
     ${EXPAT_LIBRARIES}
     ${FONTCONFIG_LIBRARIES}
     ${CAIRO_LIBRARIES}
     ${UNIBREAK_LIBRARIES}
     ${ZIP_LIBRARIES}
+    ${Iconv_LIBRARIES}
 )
 
 if(RTAUDIO_FOUND)

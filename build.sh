@@ -6,6 +6,10 @@ ARGS=`getopt -a -o p:b:h:: --long product:,build::,options::,help:: -- "$@"`
 eval set -- "${ARGS}"
 TOPDIR=$(dirname "$(readlink -f "$0")")
 declare -A TOOLCHAINS #key/value dict ,key is platform,value is toolchain,key must be uppercase
+
+#VCPKGROOT=/opt/vcpkg
+VCPKGROOT=${HOME}/vcpkg
+
 TOOLCHAINS["SIGMA"]=${TOPDIR}/cmake/ssd202-mtitoolchain.cmake
 TOOLCHAINS["ALI3528"]=${TOPDIR}/cmake/ali3528-mtitoolchain.cmake
 TOOLCHAINS["RISCVD211"]=${TOPDIR}/cmake/riscv64-d211-toolchain.cmake
@@ -15,12 +19,8 @@ TOOLCHAINS["HI3536"]=${TOPDIR}/cmake/hisiv500-toolchain.cmake
 TOOLCHAINS["INGENIC"]=${TOPDIR}/cmake/ingenic-x2600-toolchain.cmake
 TOOLCHAINS["TINAT113"]=${TOPDIR}/cmake/tinat113-toolchain.cmake
 TOOLCHAINS["RK3506"]=${TOPDIR}/cmake/rk3506-toolchain.cmake
-#TOOLCHAINS["ANDROID"]=${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake #${TOPDIR}/cmake/android.cmake #toolchain.cmake
-TOOLCHAINS["ANDROID"]=${ANDROID_NDK_HOME}/build/cmake/android-legacy.toolchain.cmake
+TOOLCHAINS["ANDROID"]=${VCPKGROOT}/scripts/buildsystems/vcpkg.cmake
 declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg,key must be uppercase
-
-#VCPKGROOT=/opt/vcpkg
-VCPKGROOT=${HOME}/vcpkg
 
 DEPLIBS["X64"]=${VCPKGROOT}/installed/x64-linux-dynamic
 DEPLIBS["SIGMA"]=${VCPKGROOT}/installed/sigma-linux-dynamic
@@ -33,6 +33,7 @@ DEPLIBS["TINAT113"]=${VCPKGROOT}/installed/tinat113-linux-dynamic
 DEPLIBS["RK3506"]=${VCPKGROOT}/installed/rk3506-linux-dynamic
 DEPLIBS["WIN32"]=${VCPKGROOT}/installed/x64-windows:${VCPKGROOT}/installed/x64-windows-release
 DEPLIBS["ANDROID"]=${VCPKGROOT}/installed/arm64-android
+
 OSNAME=""
 if [ "$(uname)" = "Linux" ]; then
     OSNAME="x64"
@@ -94,8 +95,6 @@ echo "build=${BUILD_TYPE}/${BUILD_TYPE,,}"
 if [ "$PRODUCT" = "X64" ] || [ "$PRODUCT" = "WIN32" ]; then
     echo "x64"
     TOOLCHAIN_FILE=""
-elif [ "$PRODUCT" = "ANDROID" ]; then
-    TOOLCHAIN_FILE=${VCPKGROOT}/scripts/buildsystems/vcpkg.cmake
 elif [ "$PRODUCT" != "X64" ] && [ "$PRODUCT" != "WIN32" ]; then
     TOOLCHAIN_FILE=${TOOLCHAINS[${PRODUCT}]}
     if [ "$TOOLCHAIN_FILE" = "" ]; then
@@ -135,23 +134,27 @@ echo PKG_CONFIG_PATH=${PKG_CONFIG_PATH}
 
 # Create cmake -D options
 CMAKE_SWITCHES=""
+echo "OPTIONS_FILE=$OPTIONS_FILE"
 if [ -f "$OPTIONS_FILE" ]; then
     echo "Fetch options from '$OPTIONS_FILE' "
     while IFS= read -r line; do
         if [[ -n "$line" && ! "$line" =~ ^# ]]; then
-            key=$(echo "$line" | cut -d'=' -f1)
-            value=$(echo "$line" | cut -d'=' -f2)
-            CMAKE_SWITCHES+=" -D${key}=${value}"
+            key="${line%%=*}"
+            value="${line#*=}"
+            expanded_value=$(echo "$value" | envsubst)
+            CMAKE_SWITCHES+=" -D${key}=${expanded_value}"
+            echo ${key}=${expanded_value}
         fi
     done < "$OPTIONS_FILE"
     echo "$CMAKE_SWITCHES"
 fi
 
-cmake -DCMAKE_TOOLCHAIN_FILE="${TOOLCHAIN_FILE}" \
-   -DCMAKE_INSTALL_PREFIX=./ \
-   -DCMAKE_PREFIX_PATH=${DEPLIBS_DIR} \
-   -DCMAKE_MODULE_PATH=${DEPLIBS_DIR} \
-   -DCDROID_CHIPSET=${PRODUCT,,} \
-   -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-   ${CMAKE_SWITCHES} \
-   ..
+cmake \
+    -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
+    -DCMAKE_INSTALL_PREFIX=./ \
+    -DCMAKE_PREFIX_PATH=${DEPLIBS_DIR} \
+    -DCMAKE_MODULE_PATH=${DEPLIBS_DIR} \
+    -DCDROID_CHIPSET=${PRODUCT,,} \
+    -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+    ${CMAKE_SWITCHES} \
+        ..
