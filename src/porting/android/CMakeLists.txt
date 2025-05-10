@@ -4,6 +4,7 @@ set(ANDROID_SRCS
      ../common/input_linux.cc
      cdlog.cc
      cdplayer.c
+     nativeapp.cc
      #misc.c
      #./android_native_app_glue.c
     )
@@ -34,7 +35,7 @@ find_package(OpenGL)
 include_directories(../common ../include ${PIXMAN_INCLUDE_DIRS})
 
 add_library(tvhal SHARED ${ANDROID_SRCS} ../common/graph_fb.c)
-target_link_libraries(tvhal log android)
+target_link_libraries(tvhal log android EGL GLESv2)
 
 include_directories(./
     ../common ../include
