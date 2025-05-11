@@ -165,8 +165,10 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     setTextColor(mTextColor,atts.getColor("textColor2",mTextColor));
     setSelectedTextColor(atts.getColor("selectedTextColor"));
     const ColorStateList*colors = mInputText->getTextColors();
-    if(colors->isStateful())
+    if(colors&&colors->isStateful())
         setSelectedTextColor(colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),mInputTextColor));
+    else
+        setSelectedTextColor(mInputText->getCurrentTextColor());
     updateInputTextView();
 
     setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
