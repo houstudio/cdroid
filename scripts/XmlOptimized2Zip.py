@@ -49,5 +49,5 @@ if __name__ == "__main__":
     process_xml_files(input_directory, output_directory)
     zip_xml_files(output_directory, zip_file_path)
     # remove temp directory
-    shutil.rmtree(output_directory)
+    #shutil.rmtree(output_directory)
 

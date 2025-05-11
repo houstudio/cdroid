@@ -50,6 +50,8 @@ private:
        int mShape;
        int mGradient;// = LINEAR_GRADIENT
        int mAngle;
+       int mSolidColor;
+       int mStrokeColor;
        Orientation mOrientation;
        const ColorStateList* mSolidColors;
        const ColorStateList* mStrokeColors;
@@ -60,7 +62,7 @@ private:
        float mStrokeDashWidth = 0.0f;
        float mStrokeDashGap = 0.0f;
        float mRadius = 0.0f;
-       std::vector<float>mRadiusArray;/**/
+       std::vector<float>mRadiusArray;
        Rect mPadding;
        int mWidth=-1;
        int mHeight=-1;
@@ -102,6 +104,7 @@ private:
        void setGradientCenter(float x, float y);
        void setGradientColors(const std::vector<int>&colors);
        void setSolidColors(const ColorStateList* colors);
+       void setStroke(int width,int color,float dashWidth,float dashGap);
        void setStroke(int width,const ColorStateList* colors,float dashWidth,float dashGap);
        void setCornerRadius(float radius);
        void setCornerRadii(const std::vector<float>& radii);

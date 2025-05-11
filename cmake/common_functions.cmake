@@ -21,7 +21,10 @@ MACRO(SUBDIRLIST result curdir)
     SET(${result} ${dirlist})
 ENDMACRO()
 
-find_package(Python 3.7 REQUIRED)
+if(NOT Python_EXECUTABLE)
+    #compiled error with vcpkg (for Android platform)
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+endif()
 
 function(CreatePAK project ResourceDIR PakPath rhpath)
     set(CHECK_LXML_SCRIPT "

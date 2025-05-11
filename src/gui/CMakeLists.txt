@@ -61,7 +61,6 @@ set(SOURCES_GUI
     ${SRCS_DRAWABLES}
     ${SRCS_UTILS}
     ${SRCS_ANIMATION}
-    #${SRCS_VIEWS} ${SRCS_WIDGET} ${SRCS_WIDGETEX} ${SRCS_APP}
 )
 
 add_library(cdroid SHARED ${SOURCES_GUI})

@@ -212,6 +212,16 @@ int AttributeSet::getArray(const std::string&key,std::vector<int>&array)const{
     return 0;
 }
 
+int AttributeSet::getColorWithException(const std::string&key)const{
+    const std::string resid = getString(key);
+    if(resid.empty()){
+        throw std::invalid_argument("color cant be empty");
+    } else if((resid[0]=='#')||(resid.find(':')==std::string::npos)) {
+        return Color::parseColor(resid);
+    }
+    return mContext->getColor(resid);
+}
+
 int AttributeSet::getColor(const std::string&key,int def)const{
     const std::string resid = getString(key);
     try{
