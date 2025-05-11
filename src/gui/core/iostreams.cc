@@ -110,8 +110,7 @@ std::streambuf::pos_type  MemoryBuf::seekoff(std::streambuf::off_type off, std::
 }
 
 ZipInputStream::ZipInputStream(void*zipfile):std::istream(new ZipStreamBuf(zipfile)){
-    _sb=(ZipStreamBuf*)rdbuf();
-    init(_sb);
+    init((ZipStreamBuf*)rdbuf());
     if(zipfile==nullptr){
         setstate(std::ios_base::failbit);
     }else{

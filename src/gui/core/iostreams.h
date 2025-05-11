@@ -7,7 +7,7 @@ namespace cdroid{
 class ZipStreamBuf : public std::streambuf {
 public:
   ZipStreamBuf(void*zipfile);
-  virtual ~ZipStreamBuf();
+  virtual ~ZipStreamBuf()override;
 
   virtual pos_type  seekoff(off_type,std::ios_base::seekdir,std::ios_base::openmode /*__mode*/ = std::ios_base::in | std::ios_base::out)override;
   virtual pos_type  seekpos(pos_type,std::ios_base::openmode /*__mode*/ = std::ios_base::in | std::ios_base::out)override;
@@ -27,8 +27,6 @@ class ZipInputStream : public std::istream {
 public:
   ZipInputStream(void*zfile);
   ~ZipInputStream()override{delete rdbuf();}
-private:
-  ZipStreamBuf* _sb;
 };
 
 class MemoryBuf: public std::streambuf {
