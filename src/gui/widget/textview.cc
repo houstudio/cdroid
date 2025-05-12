@@ -309,9 +309,12 @@ public:
 class TextAppearanceAttributes{
 public:
     int mTextColorHighlight = 0;
-    ColorStateList* mTextColor = nullptr;
-    ColorStateList* mTextColorHint = nullptr;
-    ColorStateList* mTextColorLink = nullptr;
+    int mTextColor;
+    int mTextColorHint;
+    int mTextColorLink;
+    ColorStateList* mTextColors = nullptr;
+    ColorStateList* mTextColorHints = nullptr;
+    ColorStateList* mTextColorLinks = nullptr;
     int mTextSize = 0;
     std::string mFontFamily;
     Typeface* mFontTypeface;
@@ -335,20 +338,35 @@ public:
 };
 
 TextAppearanceAttributes::TextAppearanceAttributes(){
-    mTextColor    = nullptr;
-    mTextColorHint= nullptr;
-    mTextColorLink= nullptr;
+    mTextColors    = nullptr;
+    mTextColorHints= nullptr;
+    mTextColorLinks= nullptr;
 }
 
 void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet&atts){
     if(atts.hasAttribute("textColorHighlight"))
         mTextColorHighlight = atts.getColor("textColorHighlight",mTextColorHighlight);
-    if(atts.hasAttribute("textColor"))
-        mTextColor = ctx->getColorStateList(atts.getString("textColor"));
-    if(atts.hasAttribute("textColorHint"))
-        mTextColorHint = ctx->getColorStateList(atts.getString("textColorHint"));
-    if(atts.hasAttribute("textColorLink"))
-        mTextColorLink = ctx->getColorStateList(atts.getString("textColorLink"));
+    if(atts.hasAttribute("textColor")){
+        try{
+            mTextColor = atts.getColorWithException("textColor");
+        }catch(std::exception&e){
+            mTextColors= atts.getColorStateList("textColor");
+        }
+    }
+    if(atts.hasAttribute("textColorHint")){
+        try{
+            mTextColorHint = atts.getColorWithException("textColorHint");
+        }catch(std::exception&e){
+            mTextColorHints= atts.getColorStateList("textColorHint");
+        }
+    }
+    if(atts.hasAttribute("textColorLink")){
+        try{
+            mTextColorLink = atts.getColorWithException("textColorLink");
+        }catch(std::exception&e){
+            mTextColorLinks= atts.getColorStateList("textColorLink");
+        }
+    }
     mTextSize = atts.getDimensionPixelSize("textSize",mTextSize);
     mTextStyle= atts.getInt("textStyle",std::unordered_map<std::string,int>{
 	   {"normal",(int)Typeface::NORMAL},
@@ -421,9 +439,6 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
         attributes.readTextAppearance(ctx,attrs);
     }
     applyTextAppearance(&attributes);
-    const std::string txtColor = attrs.getString("textColor");
-    if(!txtColor.empty())
-        setTextColor(ctx->getColorStateList(txtColor));
     setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",std::unordered_map<std::string,int>{
             {"marquee_forever",-1}
         },mMarqueeRepeatLimit));
@@ -431,8 +446,6 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
         {"start",Layout::ELLIPSIS_START},{"middle",Layout::ELLIPSIS_MIDDLE},
         {"end" ,Layout::ELLIPSIS_END},{"marquee",Layout::ELLIPSIS_MARQUEE}
       },Layout::ELLIPSIS_NONE));
-    if(attrs.hasAttribute("textHintColor"))
-        setHintTextColor(attrs.getColorStateList("textHintColor"));
     // If not explicitly specified this view is important for accessibility.
     if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
@@ -599,11 +612,14 @@ int TextView::getLayoutAlignment()const{
 }
 
 void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
-    if (attr->mTextColor) setTextColor(attr->mTextColor);
+    if (attr->mTextColors)setTextColor(attr->mTextColors);
+    else setTextColor(attr->mTextColor);
 
-    if (attr->mTextColorHint) setHintTextColor(attr->mTextColorHint);
+    if (attr->mTextColorHints)setHintTextColor(attr->mTextColorHints);
+    else setHintTextColor(attr->mTextColorHint);
 
-    if (attr->mTextColorLink) setLinkTextColor(attr->mTextColorLink);
+    if (attr->mTextColorLinks)setLinkTextColor(attr->mTextColorLinks);
+    else setLinkTextColor(attr->mTextColorLink);
 
     if (attr->mTextColorHighlight) setHighlightColor(attr->mTextColorHighlight);
 
@@ -2195,7 +2211,9 @@ void TextView::applySingleLine(bool singleLine, bool applyTransformation, bool c
 }
 
 void TextView::setTextColor(int color){
-    setTextColor(ColorStateList::valueOf(color));
+    mCurTextColor = color;
+    invalidate();
+    //setTextColor(ColorStateList::valueOf(color));
 }
 
 void TextView::setTextColor(const ColorStateList* colors){
@@ -2233,7 +2251,8 @@ int TextView::getHighlightColor()const{
 }
 
 void TextView::setHintTextColor(int color){
-    setHintTextColor(ColorStateList::valueOf(color));
+    mCurHintTextColor = color;
+    //setHintTextColor(ColorStateList::valueOf(color));
 }
 
 void TextView::setHintTextColor(const ColorStateList* colors){
@@ -2253,7 +2272,7 @@ int TextView::getCurrentHintTextColor()const{
 
 
 void TextView::setLinkTextColor(int color){
-    setLinkTextColor(ColorStateList::valueOf(color));
+    //setLinkTextColor(ColorStateList::valueOf(color));
 }
 
 void TextView::setLinkTextColor(const ColorStateList* colors){

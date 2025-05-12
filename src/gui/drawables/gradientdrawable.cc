@@ -697,13 +697,14 @@ bool GradientDrawable::onStateChange(const std::vector<int>& stateSet) {
             mFillPaint = SolidPattern::create_rgba((float)cc.red(),(float)cc.green(),(float)cc.blue(),(float)cc.alpha());
             bInvalidateSelf = true;
         }
-    }else if(mFillPaint==nullptr){
+    }/*else if(mFillPaint==nullptr){
         const Color cc(st->mSolidColor);
         mFillPaint = SolidPattern::create_rgba((float)cc.red(),(float)cc.green(),(float)cc.blue(),(float)cc.alpha());
         bInvalidateSelf = true;
-    }
+    }*/
 
-    if (mStrokePaint != nullptr) {
+    //if (mStrokePaint != nullptr)
+    {
         if (st->mStrokeColors) {
             RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mStrokePaint);
             pat->get_rgba(r,g,b,a);
@@ -714,11 +715,11 @@ bool GradientDrawable::onStateChange(const std::vector<int>& stateSet) {
                 mStrokePaint =SolidPattern::create_rgba((float)cc.red(),(float)cc.green(),(float)cc.blue(),(float)cc.alpha());
                 bInvalidateSelf = true;
             }
-        }else if((st->mStrokeWidth!=0.f)){
+        }/*else if(st->mStrokeWidth!=0.f){
             const Color cc(st->mStrokeColor);
             bInvalidateSelf = true;
             mStrokePaint = SolidPattern::create_rgba((float)cc.red(),(float)cc.green(),(float)cc.blue(),(float)cc.alpha());
-        }
+        }*/
     }
 
     /*if (s->mTint != nullptr && s.mBlendMode != null) {
