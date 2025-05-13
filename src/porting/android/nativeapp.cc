@@ -35,6 +35,9 @@ struct engine {
     struct saved_state state;
 };
 extern "C" int primarySurfaceTexture;/*defined in graph_egl*/
+static GLuint createShaderProgram();
+static void getScreenSize(struct android_app *state);
+static void drawTexture(GLuint shaderProgram, GLuint textureId);
 /*Initialize an EGL context for the current display.*/
 static int engine_init_display(struct engine *engine) {
     LOGI("engine_init_display");
@@ -75,6 +78,7 @@ static int engine_init_display(struct engine *engine) {
     engine->surface = surface;
     engine->width = w;
     engine->height= h;
+    engine->shaderProgram = createShaderProgram();
 
     glHint(GL_PROGRAM_BINARY_RETRIEVABLE_HINT,GL_FASTEST); /* 指定颜色和纹理坐标的插值质量 使用速度最快的模式 */
     glEnable(GL_CULL_FACE);
@@ -181,17 +185,13 @@ static void engine_handle_cmd(struct android_app *app, int32_t cmd) {
     }
 }
 
-static void getScreenSize(struct android_app *state);
-static GLuint createShaderProgram();
-static void drawTexture(GLuint shaderProgram, GLuint textureId);
 static void onVsyncCallback(long frameTimeNanos, void* data) {
     struct android_app *app =(struct android_app*)data;
     struct engine*eng=(struct engine*)app->userData;
-    if(eng->shaderProgram==0)
-        eng->shaderProgram =createShaderProgram();
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    drawTexture(eng->shaderProgram,primarySurfaceTexture);
+    if(eng->shaderProgram!=0)
+        drawTexture(eng->shaderProgram,primarySurfaceTexture);
     eglSwapBuffers(eng->display, eng->surface);
     AChoreographer_postFrameCallback(eng->choreographer, onVsyncCallback, app);
 }
