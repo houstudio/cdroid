@@ -423,10 +423,12 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
         if (!mFlingScroller->isFinished()) {
             mFlingScroller->forceFinished(true);
             mAdjustScroller->forceFinished(true);
+            onScrollerFinished(mFlingScroller);
             onScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
         } else if (!mAdjustScroller->isFinished()) {
             mFlingScroller->forceFinished(true);
             mAdjustScroller->forceFinished(true);
+            onScrollerFinished(mAdjustScroller);
         } else if (mLastDownEventY >= mTopDividerTop
                 && mLastDownEventY <= mBottomDividerBottom) {
             mPerformClickOnTap = true;
