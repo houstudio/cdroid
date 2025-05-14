@@ -132,7 +132,7 @@ Process::State Process::state() const {
 int Process::pipeFdCallback(int fd, int events, void* data){
     Process*thiz =(Process*)data;
     int status;
-    char buffer[1024];
+    char buffer[256];
     if((fd==thiz->stdoutPipe_[0])&&(events&Looper::EVENT_INPUT)){
         const int bytesRead = read(fd, buffer, sizeof(buffer));
         thiz->stdoutBuffer_.append(buffer, bytesRead);
@@ -151,7 +151,15 @@ int Process::pipeFdCallback(int fd, int events, void* data){
         if (thiz->onFinishListener) {
             thiz->onFinishListener(*thiz);
         }
+    }else if(result==-1){
+        /*if(errno==ECHILD){ LOGE("No child process."); }
+        else if(errno==EINTR){LOGE("waitpid interrupted by signal, retrying...");}*/
+        thiz->exitCode_ = -1;
+        if(thiz->onErrorListener){
+            thiz->onErrorListener(*thiz);
+        }
     }
+    /*(result==0)child process is running DO NOTHING*/
     return 0;
 }
 
