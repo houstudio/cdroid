@@ -82,6 +82,9 @@ void Process::start(const std::string& program, const std::vector<std::string>& 
             // Start monitoring thread
             monitorThread_ = std::thread(&Process::monitorProcess, this);
         }else{
+            const int flags = fcntl(stdoutPipe_[0], F_GETFL, 0);
+            fcntl(stdoutPipe_[0], F_SETFL, flags | O_NONBLOCK);
+            fcntl(stderrPipe_[0], F_SETFL, flags | O_NONBLOCK);
             mLooper->addFd(stdoutPipe_[0],0,Looper::EVENT_INPUT,pipeFdCallback,this);
             mLooper->addFd(stderrPipe_[0],0,Looper::EVENT_INPUT,pipeFdCallback,this);
         }
@@ -131,14 +134,18 @@ Process::State Process::state() const {
 
 int Process::pipeFdCallback(int fd, int events, void* data){
     Process*thiz =(Process*)data;
-    int status;
-    char buffer[256];
+    int status,bytesRead;
+    char buffer[128];
     if((fd==thiz->stdoutPipe_[0])&&(events&Looper::EVENT_INPUT)){
-        const int bytesRead = read(fd, buffer, sizeof(buffer));
-        thiz->stdoutBuffer_.append(buffer, bytesRead);
+        do{
+            bytesRead =read(fd, buffer, sizeof(buffer));
+            if(bytesRead>0)thiz->stdoutBuffer_.append(buffer, bytesRead);
+        }while(bytesRead>0);
     }else if((fd==thiz->stderrPipe_[0])&&(events&Looper::EVENT_INPUT)){
-        const int bytesRead = read(fd, buffer, sizeof(buffer));
-        thiz->stderrBuffer_.append(buffer, bytesRead);
+        do{
+            bytesRead = read(fd, buffer, sizeof(buffer));
+            if(bytesRead>0)thiz->stderrBuffer_.append(buffer, bytesRead);
+        }while(bytesRead>0);
     }
     pid_t result = waitpid(thiz->pid_, &status, WNOHANG);
     if (result == thiz->pid_) {
