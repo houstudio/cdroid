@@ -461,8 +461,7 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
     Matrix matrix;
     Rect rect1,rect2;
     node->getMatrix(matrix);
-    rect1.set(mView->getLeft(),mView->getTop(),mView->getWidth(),mView->getHeight());
-    rect2 = rect1;
+    rect1.set(mView->getLeft(),mView->getTop(), mView->getWidth(),mView->getHeight());
     matrix.transform_rectangle((Cairo::RectangleInt&)rect1);
     switch (propertyConstant) {
     case TRANSLATION_X: node->setTranslationX(value);     break;
@@ -482,11 +481,18 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
              break;
     }
     node->getMatrix(matrix);
+    rect2.set(mView->getLeft(),mView->getTop(), mView->getWidth(),mView->getHeight());
     matrix.transform_rectangle((Cairo::RectangleInt&)rect2);
+    rect1.inflate(1,1);
+    rect2.inflate(1,1);
+    LOGV("(%d,%d,%d,%d)==>(%d,%d,%d,%d),(%d,%d,%d,%d)",rect.left,rect.top,rect.width,rect.height,
+            rect1.left,rect1.top,rect1.width,rect1.height,
+            rect2.left,rect2.top,rect2.width,rect2.height);
     rect2.Union(rect1);
-    if(mView->mParent)
+    if(mView->mParent){
         mView->mParent->invalidate(rect2);
-    else if(dynamic_cast<Window*>(mView)){
+    } else if(dynamic_cast<Window*>(mView)){
+        mView->mParent->invalidate(rect2);
         LOGV("Window's animate is TODO:%p",mView);
     }
 }
