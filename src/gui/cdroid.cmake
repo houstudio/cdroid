@@ -32,6 +32,7 @@ list(APPEND CDROID_SOURCES
     core/outline.cc
     core/porterduff.cc
     core/preferences.cc
+    core/process.cc
     core/scheduler.cc
     core/systemclock.cc
     core/textutils.cc
