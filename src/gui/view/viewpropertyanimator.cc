@@ -485,7 +485,7 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
     matrix.transform_rectangle((Cairo::RectangleInt&)rect2);
     rect1.inflate(1,1);
     rect2.inflate(1,1);
-    LOGV("(%d,%d,%d,%d)==>(%d,%d,%d,%d),(%d,%d,%d,%d)",rect.left,rect.top,rect.width,rect.height,
+    LOGV("(%d,%d,%d,%d),(%d,%d,%d,%d)",
             rect1.left,rect1.top,rect1.width,rect1.height,
             rect2.left,rect2.top,rect2.width,rect2.height);
     rect2.Union(rect1);
