@@ -116,6 +116,8 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
             }
         }
         node->getMatrix(matrix);
+        //LOGD("matrix=(%.3f,%.3f , %.3f,%.3f , %.3f,%.3f) node.scale=%.3f,%.3f",matrix.xx,matrix.yx,matrix.xy,matrix.yy,
+        //    matrix.x0,matrix.y0,node->getScaleX(),node->getScaleY());
         rect2.set(mView->getLeft(),mView->getTop(), mView->getWidth(),mView->getHeight());
         matrix.transform_rectangle((Cairo::RectangleInt&)rect2);
         rect1.inflate(1,1);rect2.inflate(1,1);
