@@ -123,8 +123,7 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
         if(mView->mParent){
             mView->mParent->invalidate(rect2);
         } else if(dynamic_cast<Window*>(mView)){
-            mView->mParent->invalidate(rect2);
-            LOGV("Window's animate is TODO:%p",mView);
+            mView->invalidate(rect2);
         }
 
         if ((propertyMask & TRANSFORM_MASK) != 0) {
