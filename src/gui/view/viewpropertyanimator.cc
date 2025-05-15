@@ -99,6 +99,13 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
         std::vector<NameValuesHolder>& valueList = propertyBundle.mNameValuesHolder;
 
         const int count = valueList.size();
+        RenderNode* node = mView->mRenderNode;
+        Matrix matrix;
+        Rect rect1,rect2;
+        node->getMatrix(matrix);
+        rect1.set(mView->getLeft(),mView->getTop(), mView->getWidth(),mView->getHeight());
+        matrix.transform_rectangle((Cairo::RectangleInt&)rect1);
+
         for (int i = 0; i < count; ++i) {
             NameValuesHolder& values = valueList.at(i);
             const float value = values.mFromValue + fraction * values.mDeltaValue;
@@ -107,6 +114,17 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
             } else */{
                 setValue(values.mNameConstant, value);
             }
+        }
+        node->getMatrix(matrix);
+        rect2.set(mView->getLeft(),mView->getTop(), mView->getWidth(),mView->getHeight());
+        matrix.transform_rectangle((Cairo::RectangleInt&)rect2);
+        rect1.inflate(1,1);rect2.inflate(1,1);
+        rect2.Union(rect1);
+        if(mView->mParent){
+            mView->mParent->invalidate(rect2);
+        } else if(dynamic_cast<Window*>(mView)){
+            mView->mParent->invalidate(rect2);
+            LOGV("Window's animate is TODO:%p",mView);
         }
 
         if ((propertyMask & TRANSFORM_MASK) != 0) {
@@ -458,11 +476,6 @@ void ViewPropertyAnimator::animatePropertyBy(int constantName, float startValue,
 
 void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
     RenderNode* node = mView->mRenderNode;
-    Matrix matrix;
-    Rect rect1,rect2;
-    node->getMatrix(matrix);
-    rect1.set(mView->getLeft(),mView->getTop(), mView->getWidth(),mView->getHeight());
-    matrix.transform_rectangle((Cairo::RectangleInt&)rect1);
     switch (propertyConstant) {
     case TRANSLATION_X: node->setTranslationX(value);     break;
     case TRANSLATION_Y: node->setTranslationY(value);     break;
@@ -479,21 +492,6 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
              mView->mTransformationInfo->mAlpha = value;
              node->setAlpha(value);
              break;
-    }
-    node->getMatrix(matrix);
-    rect2.set(mView->getLeft(),mView->getTop(), mView->getWidth(),mView->getHeight());
-    matrix.transform_rectangle((Cairo::RectangleInt&)rect2);
-    rect1.inflate(1,1);
-    rect2.inflate(1,1);
-    LOGV("(%d,%d,%d,%d),(%d,%d,%d,%d)",
-            rect1.left,rect1.top,rect1.width,rect1.height,
-            rect2.left,rect2.top,rect2.width,rect2.height);
-    rect2.Union(rect1);
-    if(mView->mParent){
-        mView->mParent->invalidate(rect2);
-    } else if(dynamic_cast<Window*>(mView)){
-        mView->mParent->invalidate(rect2);
-        LOGV("Window's animate is TODO:%p",mView);
     }
 }
 
