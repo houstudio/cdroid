@@ -1,5 +1,6 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <widget/cdwindow.h>
 #include <view/viewpropertyanimator.h>
 #include "cdlog.h"
 
@@ -98,6 +99,13 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
         std::vector<NameValuesHolder>& valueList = propertyBundle.mNameValuesHolder;
 
         const int count = valueList.size();
+        RenderNode* node = mView->mRenderNode;
+        Matrix matrix;
+        Rect rect1,rect2;
+        node->getMatrix(matrix);
+        rect1.set(mView->getLeft(),mView->getTop(), mView->getWidth(),mView->getHeight());
+        matrix.transform_rectangle((Cairo::RectangleInt&)rect1);
+
         for (int i = 0; i < count; ++i) {
             NameValuesHolder& values = valueList.at(i);
             const float value = values.mFromValue + fraction * values.mDeltaValue;
@@ -106,6 +114,18 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
             } else */{
                 setValue(values.mNameConstant, value);
             }
+        }
+        node->getMatrix(matrix);
+        //LOGD("matrix=(%.3f,%.3f , %.3f,%.3f , %.3f,%.3f) node.scale=%.3f,%.3f",matrix.xx,matrix.yx,matrix.xy,matrix.yy,
+        //    matrix.x0,matrix.y0,node->getScaleX(),node->getScaleY());
+        rect2.set(mView->getLeft(),mView->getTop(), mView->getWidth(),mView->getHeight());
+        matrix.transform_rectangle((Cairo::RectangleInt&)rect2);
+        rect1.inflate(1,1);rect2.inflate(1,1);
+        rect2.Union(rect1);
+        if(mView->mParent){
+            mView->mParent->invalidate(rect2);
+        } else if(dynamic_cast<Window*>(mView)){
+            mView->invalidate(rect2);
         }
 
         if ((propertyMask & TRANSFORM_MASK) != 0) {
@@ -457,11 +477,6 @@ void ViewPropertyAnimator::animatePropertyBy(int constantName, float startValue,
 
 void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
     RenderNode* node = mView->mRenderNode;
-    Matrix matrix;
-    Rect rect;
-    node->getMatrix(matrix);
-    rect.set(mView->getLeft(),mView->getTop(),mView->getWidth(),mView->getHeight());
-    matrix.transform_rectangle((Cairo::RectangleInt&)rect);
     switch (propertyConstant) {
     case TRANSLATION_X: node->setTranslationX(value);     break;
     case TRANSLATION_Y: node->setTranslationY(value);     break;
@@ -479,9 +494,6 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
              node->setAlpha(value);
              break;
     }
-    rect.inflate(1,1);
-    if(mView->mParent)
-        mView->mParent->invalidate(rect);
 }
 
 float ViewPropertyAnimator::getValue(int propertyConstant)const{

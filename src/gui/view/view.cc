@@ -4512,6 +4512,7 @@ bool View::setFrame(int left,int top,int width,int height){
         }
         notifySubtreeAccessibilityStateChangedIfNeeded();
     }
+    mRenderNode->setLeftTopRightBottom(mLeft, mTop, mRight, mBottom);
     return changed;
 }
 

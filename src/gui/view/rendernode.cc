@@ -16,6 +16,8 @@ RenderNode::RenderNode(){
     mRotation  = 0.f;
     mRotationX = 0.f;
     mRotationY = 0.f;
+    mLeft = mTop =0;
+    mRight = mBottom =0;
     mClipToOutline = false;
     mMatrix = identity_matrix();
 }
