@@ -487,7 +487,7 @@ void ViewPropertyAnimator::setValue(int propertyConstant, float value) {
     case SCALE_X:       node->setScaleX(value);           break;
     case SCALE_Y:       node->setScaleY(value);           break;
     case X:  node->setTranslationX(value - mView->mLeft); break;
-    case Y:  node->setTranslationY(value - mView->mTop);  break;
+    case Y:  node->setTranslationY(value - mView->mTop ); break;
     case Z:  node->setTranslationZ(value - node->getElevation());  break;
     case ALPHA:
              mView->mTransformationInfo->mAlpha = value;
