@@ -78,10 +78,10 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig) {
     mTint = orig.mTint?new ColorStateList(*orig.mTint):nullptr;
     mTintMode = orig.mTintMode;
     //mThemeAttrs = orig.mThemeAttrs;
-    mAttrSize = orig.mAttrSize;
-    mAttrGradient = orig.mAttrGradient;
+    mAttrSize  = orig.mAttrSize;
     mAttrSolid = orig.mAttrSolid;
-    mAttrStroke = orig.mAttrStroke;
+    mAttrGradient= orig.mAttrGradient;
+    mAttrStroke  = orig.mAttrStroke;
     mAttrCorners = orig.mAttrCorners;
     mAttrPadding = orig.mAttrPadding;
 
@@ -684,9 +684,9 @@ const ColorStateList* GradientDrawable::getColor() {
 
 bool GradientDrawable::onStateChange(const std::vector<int>& stateSet) {
     bool bInvalidateSelf = false;
+    double r,g,b,a;
 
     auto st = mGradientState;
-    double r,g,b,a;
     if (st->mSolidColors != nullptr) {
         RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mFillPaint);
         pat->get_rgba(r,g,b,a);
