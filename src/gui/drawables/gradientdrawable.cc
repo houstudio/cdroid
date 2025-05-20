@@ -848,56 +848,43 @@ bool GradientDrawable::ensureValidRect() {
                 const float level = st.mUseLevel ? getLevel() / 10000.0f : 1.0f;
                 switch (st.mOrientation) {
                 case TOP_BOTTOM:
-                    x0 = r.left;
-                    y0 = r.top;
-                    x1 = x0;
-                    y1 = level *r.height;
+                    x0 = r.left;  y0 = r.top;
+                    x1 = x0;      y1 = level *r.height;
                     break;
                 case TR_BL:
-                    x0 = r.width;
-                    y0 = r.top;
+                    x0 = r.width; y0 = r.top;
                     x1 = level * r.left;
                     y1 = level *r.height;
                     break;
                 case RIGHT_LEFT:
-                    x0 = r.width;
-                    y0 = r.top;
-                    x1 = level * r.left;
-                    y1 = y0;
+                    x0 = r.width; y0 = r.top;
+                    y1 = y0;      x1 = level * r.left;
                     break;
                 case BR_TL:
-                    x0 = r.width;
-                    y0 = r.height;
+                    x0 = r.width; y0 = r.height;
                     x1 = level * r.left;
                     y1 = level * r.top;
                     break;
                 case BOTTOM_TOP:
-                    x0 = r.left;
-                    y0 = r.height;
-                    x1 = x0;
-                    y1 = level * r.top;
+                    x0 = r.left;  y0 = r.height;
+                    x1 = x0;      y1 = level * r.top;
                     break;
                 case BL_TR:
-                    x0 = r.left;
-                    y0 = r.height;
+                    x0 = r.left;  y0 = r.height;
                     x1 = level * r.width;
                     y1 = level * r.top;
                     break;
                 case LEFT_RIGHT:
-                    x0 = r.left;
-                    y0 = r.top;
-                    x1 = level * r.width;
-                    y1 = y0;
+                    x0 = r.left;  y0 = r.top;
+                    y1 = y0;      x1 = level * r.width;
                     break;
                 default:/*TL_BR*/
-                    x0 = r.left;
-                    y0 = r.top;
+                    x0 = r.left;  y0 = r.top;
                     x1 = level * r.width;
                     y1 = level *r.height;
                     break;
                 }
-                RefPtr<Cairo::LinearGradient>pat=LinearGradient::create(x0, y0, x1, y1);
-                //gradientColors, st.mPositions, Shader.TileMode.CLAMP));
+                RefPtr<Cairo::LinearGradient>pat = LinearGradient::create(x0, y0, x1, y1);
                 for(int i=0; i<gradientColors.size(); i++) {
                     Color c((uint32_t)gradientColors[i]);
                     pat->add_color_stop_rgba(st.mPositions[i],c.red(),c.green(),c.blue(),(c.alpha()*mAlpha)/255.f);
@@ -1168,13 +1155,11 @@ void GradientDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
 
     if (state->mShape == GradientDrawable::RING) {
         state->mInnerRadius = atts.getDimensionPixelSize("innerRadius", state->mInnerRadius);
-
         if (state->mInnerRadius == -1) {
             state->mInnerRadiusRatio = atts.getFloat("innerRadiusRatio", state->mInnerRadiusRatio);
         }
 
         state->mThickness = atts.getDimensionPixelSize("thickness", state->mThickness);
-
         if (state->mThickness == -1) {
             state->mThicknessRatio = atts.getFloat("thicknessRatio", state->mThicknessRatio);
         }
