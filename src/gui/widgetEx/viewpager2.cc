@@ -143,9 +143,6 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     // events must be fired after scroll events
     mPageTransformerAdapter = new PageTransformerAdapter(mLayoutManager);
     mPageChangeEventDispatcher->addOnPageChangeCallback(*mPageTransformerAdapter);
-
-    attachViewToParent(mRecyclerView, 0, mRecyclerView->getLayoutParams());
-
 }
 
 void ViewPager2::setOrientation(Context* context,const AttributeSet& attrs) {
