@@ -53,6 +53,14 @@ ViewPager2::ViewPager2(Context* context,const AttributeSet& attrs)
     initialize(context, attrs);
 }
 
+ViewPager2::~ViewPager2(){
+    delete mFakeDragger;
+    delete mPagerSnapHelper;
+    delete mPageChangeEventDispatcher;
+    delete mExternalPageChangeCallbacks;
+    delete mPageTransformerAdapter;
+}
+
 void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     if(sFeatureEnhancedA11yEnabled)
         mAccessibilityProvider = new PageAwareAccessibilityProvider(this);
@@ -68,8 +76,7 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     mRecyclerView->setScrollingTouchSlop(RecyclerView::TOUCH_SLOP_PAGING);
     setOrientation(context, attrs);
 
-    mRecyclerView->setLayoutParams(
-            new ViewGroup::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::MATCH_PARENT));
+    mRecyclerView->setLayoutParams(new ViewGroup::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::MATCH_PARENT));
     attachViewToParent(mRecyclerView, 0, mRecyclerView->getLayoutParams());
 
     RecyclerView::OnChildAttachStateChangeListener ls;
