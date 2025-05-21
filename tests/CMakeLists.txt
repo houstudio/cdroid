@@ -1,3 +1,4 @@
+set(CMAKE_CXX_STANDARD 17)
 find_package(GTEST)
 if (BUILD_CDROID_TESTS AND GTEST_FOUND)
   add_subdirectory(gui)

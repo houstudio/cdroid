@@ -602,9 +602,8 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
     }
     if(!handled){
         switch(action){
-        case KeyEvent::ACTION_UP  ://handled = onKeyUp(event.getKeyCode(),event);break;
-        case KeyEvent::ACTION_DOWN://handled = onKeyDown(event.getKeyCode(),event);break;
-             handled = ViewGroup::dispatchKeyEvent(event);break;
+        case KeyEvent::ACTION_UP  :
+        case KeyEvent::ACTION_DOWN: handled = ViewGroup::dispatchKeyEvent(event); break;
         default:break;
         }
     }
@@ -614,10 +613,10 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
 bool Window::performFocusNavigation(KeyEvent& event){
     int direction = -1;
     switch (event.getKeyCode()) {
-    case KeyEvent::KEYCODE_DPAD_LEFT:  direction = View::FOCUS_LEFT;    break;
-    case KeyEvent::KEYCODE_DPAD_RIGHT: direction = View::FOCUS_RIGHT;   break;
-    case KeyEvent::KEYCODE_DPAD_UP:    direction = View::FOCUS_UP;      break;
-    case KeyEvent::KEYCODE_DPAD_DOWN:  direction = View::FOCUS_DOWN;    break;
+    case KeyEvent::KEYCODE_DPAD_LEFT:  direction = View::FOCUS_LEFT;  break;
+    case KeyEvent::KEYCODE_DPAD_RIGHT: direction = View::FOCUS_RIGHT; break;
+    case KeyEvent::KEYCODE_DPAD_UP:    direction = View::FOCUS_UP;    break;
+    case KeyEvent::KEYCODE_DPAD_DOWN:  direction = View::FOCUS_DOWN;  break;
     case KeyEvent::KEYCODE_TAB:
         if (event.hasNoModifiers()) {
             direction = View::FOCUS_FORWARD;

@@ -30,10 +30,24 @@ AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState>
     mFrameSequenceState = nullptr;
     auto frmSequence = mAnimatedImageState->mFrameSequence;
     LOGD("%p frmSequence=%p",this,frmSequence);
+
     if(frmSequence){
         mFrameSequenceState = frmSequence->createState();
         mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,frmSequence->getWidth(),frmSequence->getHeight());
     }
+
+    mRunnable = [this](){
+        if(mStarting && mAnimatedImageState->mFrameCount){
+            invalidateSelf();
+            mNextFrame = (mNextFrame + 1)%mAnimatedImageState->mFrameCount;
+        }
+        if( mNextFrame == mAnimatedImageState->mFrameCount - 1){
+            mRepeated ++;
+            mStarting = (mRepeated < mRepeatCount)||(mRepeatCount < 0);
+        }
+        mCurrentFrame = (mNextFrame - 1) % mAnimatedImageState->mFrameCount;
+        mFrameScheduled = false;
+    };
 }
 
 AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::string&res)
@@ -164,20 +178,6 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
           mAnimatedImageState->mFrameCount,mStarting,mRepeated,mRepeatCount,mFrameDelay);
     if( mStarting && ( (mRepeated < mRepeatCount) || (mRepeatCount < 0))){
         if (mFrameDelay > 0) {
-            if (mRunnable == nullptr) {
-                mRunnable = [this](){
-                    if(mStarting && mAnimatedImageState->mFrameCount){
-                        invalidateSelf();
-                        mNextFrame = (mNextFrame + 1)%mAnimatedImageState->mFrameCount;
-                    }
-                    if( mNextFrame == mAnimatedImageState->mFrameCount - 1){
-                        mRepeated ++;
-                        mStarting = (mRepeated < mRepeatCount)||(mRepeatCount < 0);
-                    }
-                    mCurrentFrame = (mNextFrame - 1) % mAnimatedImageState->mFrameCount;
-                    mFrameScheduled = false;
-                };
-            }
             if(!mFrameScheduled){
                 unscheduleSelf(mRunnable);
                 scheduleSelf(mRunnable, SystemClock::uptimeMillis() + mFrameDelay);
