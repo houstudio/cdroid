@@ -75,6 +75,7 @@ class Window;
 class UIEventSource;
 class HandlerActionQueue;
 class LayoutInflater;
+class HapticScrollFeedbackProvider;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 private:
     static constexpr int POPULATING_ACCESSIBILITY_EVENT_TYPES=
@@ -219,6 +220,13 @@ protected:
     static constexpr int PFLAG3_AGGREGATED_VISIBLE      = 0x20000000;
     static constexpr int PFLAG3_AUTOFILLID_EXPLICITLY_SET = 0x40000000;
     static constexpr int PFLAG3_ACCESSIBILITY_HEADING   = 0x80000000;
+
+    /** Indicates if rotary scroll haptics support for the view has been determined. */
+    static constexpr int PFLAG4_ROTARY_HAPTICS_DETERMINED = 0x100000;
+    static constexpr int PFLAG4_ROTARY_HAPTICS_ENABLED = 0x200000;
+    static constexpr int PFLAG4_ROTARY_HAPTICS_SCROLL_SINCE_LAST_ROTARY_INPUT = 0x400000;
+    static constexpr int PFLAG4_ROTARY_HAPTICS_WAITING_FOR_SCROLL_EVENT = 0x800000;
+    static constexpr int PFLAG4_CONTENT_SENSITIVITY_SHIFT = 24;
 public:
     static bool VIEW_DEBUG;
     static int mViewCount;
@@ -643,6 +651,10 @@ private:
     void cancel(SendViewScrolledAccessibilityEvent* callback);
     void setOutlineProviderFromAttribute(int providerInt);
     void rebuildOutline();
+    HapticScrollFeedbackProvider*getScrollFeedbackProvider();
+    void doRotaryProgressForScrollHaptics(MotionEvent& rotaryEvent);
+    void doRotaryLimitForScrollHaptics(MotionEvent& rotaryEvent);
+    void processScrollEventForRotaryEncoderHaptics();
 protected:
     static bool sIgnoreMeasureCache;
     static bool sAlwaysRemeasureExactly;
@@ -659,6 +671,7 @@ protected:
     int mPrivateFlags;
     int mPrivateFlags2;
     int mPrivateFlags3;
+    int mPrivateFlags4;
     int mPaddingLeft;
     int mPaddingRight;
     int mPaddingTop;
@@ -705,6 +718,7 @@ protected:
     Animation* mCurrentAnimation;
     std::vector<int> mDrawableState;
     ViewOutlineProvider mOutlineProvider;
+    HapticScrollFeedbackProvider* mScrollFeedbackProvider;
     int mTop,mLeft,mRight,mBottom;
     ViewGroup * mParent;
     AttachInfo* mAttachInfo;

@@ -24,6 +24,7 @@
 #include <view/viewoverlay.h>
 #include <view/roundscrollbarrenderer.h>
 #include <view/handleractionqueue.h>
+#include <view/hapticscrollfeedbackprovider.h>
 #include <view/accessibility/accessibilitywindowinfo.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/focusfinder.h>
@@ -384,6 +385,7 @@ void View::initView(){
     mAccessibilityDelegate = nullptr;
     mPendingCheckForLongPress = nullptr;
     mInputEventConsistencyVerifier = nullptr;
+    mScrollFeedbackProvider = nullptr;
     mSendViewScrolledAccessibilityEvent = nullptr;
     mOutlineProvider = OutlineProvider::BACKGROUND;
     if(InputEventConsistencyVerifier::isInstrumentationEnabled()&&View::VIEW_DEBUG)
@@ -469,6 +471,7 @@ View::~View(){
     delete mTooltipInfo;
     delete mScrollIndicatorDrawable;
     delete mDefaultFocusHighlight;
+    delete mScrollFeedbackProvider;
     delete mInputEventConsistencyVerifier;
     delete mSendViewScrolledAccessibilityEvent;
 
@@ -5323,6 +5326,37 @@ void View::bringToFront() {
     }
 }
 
+HapticScrollFeedbackProvider* View::getScrollFeedbackProvider() {
+    if (mScrollFeedbackProvider == nullptr) {
+        mScrollFeedbackProvider = new HapticScrollFeedbackProvider(this,
+                &ViewConfiguration::get(mContext), /* disabledIfViewPlaysScrollHaptics= */ false);
+    }
+    return mScrollFeedbackProvider;
+}
+
+void View::doRotaryProgressForScrollHaptics(MotionEvent& rotaryEvent) {
+    const float axisScrollValue = rotaryEvent.getAxisValue(MotionEvent::AXIS_SCROLL);
+    const float verticalScrollFactor =  ViewConfiguration::get(mContext).getScaledVerticalScrollFactor();
+    const int scrollAmount = -std::round(axisScrollValue * verticalScrollFactor);
+    getScrollFeedbackProvider()->onScrollProgress(
+            rotaryEvent.getDeviceId(), InputDevice::SOURCE_ROTARY_ENCODER,
+            MotionEvent::AXIS_SCROLL, scrollAmount);
+}
+
+void View::doRotaryLimitForScrollHaptics(MotionEvent& rotaryEvent) {
+    const bool isStart = rotaryEvent.getAxisValue(MotionEvent::AXIS_SCROLL) > 0;
+    getScrollFeedbackProvider()->onScrollLimit(
+            rotaryEvent.getDeviceId(), InputDevice::SOURCE_ROTARY_ENCODER,
+            MotionEvent::AXIS_SCROLL, isStart);
+}
+
+void View::processScrollEventForRotaryEncoderHaptics() {
+    /*if ((mPrivateFlags4 |= PFLAG4_ROTARY_HAPTICS_WAITING_FOR_SCROLL_EVENT) != 0) {
+        mPrivateFlags4 |= PFLAG4_ROTARY_HAPTICS_SCROLL_SINCE_LAST_ROTARY_INPUT;
+        mPrivateFlags4 &= ~PFLAG4_ROTARY_HAPTICS_WAITING_FOR_SCROLL_EVENT;
+    }*/
+}
+
 void View::onAttachedToWindow(){
     mPrivateFlags3 &= ~PFLAG3_IS_LAID_OUT;
     jumpDrawablesToCurrentState();
@@ -7813,12 +7847,44 @@ bool View::dispatchCapturedPointerEvent(MotionEvent& event){
 }
 
 bool View::dispatchGenericMotionEventInternal(MotionEvent& event){
+    const bool isRotaryEncoderEvent = event.isFromSource(InputDevice::SOURCE_ROTARY_ENCODER);
+    if (isRotaryEncoderEvent) {
+        // Determine and cache rotary scroll haptics support if it's not yet determined.
+        // Caching the support is important for two reasons:
+        // 1) Limits call to `ViewConfiguration#get`, which we should avoid if possible.
+        // 2) Limits latency from the `ViewConfiguration` API, which may be slow due to feature
+        //    flag querying.
+        if ((mPrivateFlags4 & PFLAG4_ROTARY_HAPTICS_DETERMINED) == 0) {
+            if (ViewConfiguration::get(mContext).isViewBasedRotaryEncoderHapticScrollFeedbackEnabled()) {
+                mPrivateFlags4 |= PFLAG4_ROTARY_HAPTICS_ENABLED;
+            }
+            mPrivateFlags4 |= PFLAG4_ROTARY_HAPTICS_DETERMINED;
+        }
+    }
+    const bool processForRotaryScrollHaptics = isRotaryEncoderEvent && ((mPrivateFlags4 & PFLAG4_ROTARY_HAPTICS_ENABLED) != 0);
+    if (processForRotaryScrollHaptics) {
+        mPrivateFlags4 &= ~PFLAG4_ROTARY_HAPTICS_SCROLL_SINCE_LAST_ROTARY_INPUT;
+        mPrivateFlags4 |= PFLAG4_ROTARY_HAPTICS_WAITING_FOR_SCROLL_EVENT;
+    }
+    //noinspection SimplifiableIfStatement
     if (mListenerInfo && mListenerInfo->mOnGenericMotionListener
           && ((mViewFlags & ENABLED_MASK) == ENABLED)
           && mListenerInfo->mOnGenericMotionListener(*this, event)) {
         return true;
     }
-    if (onGenericMotionEvent(event)) {
+    const bool onGenericMotionEventResult = onGenericMotionEvent(event);
+    // Process scroll haptics after `onGenericMotionEvent`, since that's where scrolling usually
+    // happens. Some views may return false from `onGenericMotionEvent` even if they have done
+    // scrolling, so disregard the return value when processing for scroll haptics.
+    if (processForRotaryScrollHaptics) {
+        if ((mPrivateFlags4 & PFLAG4_ROTARY_HAPTICS_SCROLL_SINCE_LAST_ROTARY_INPUT) != 0) {
+            doRotaryProgressForScrollHaptics(event);
+        } else {
+            doRotaryLimitForScrollHaptics(event);
+        }
+    }
+
+    if (onGenericMotionEventResult) {
         return true;
     }
 
