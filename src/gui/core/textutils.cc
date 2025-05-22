@@ -190,6 +190,22 @@ std::vector<std::string> TextUtils::split(const std::string& s,const std::string
     return elems;
 }
 
+std::vector<std::string> TextUtils::split(const std::string& s,int delim){
+    std::vector<std::string> elems;
+    size_t pos = 0;
+    size_t len = s.length();
+    while (pos < len){
+        int find_pos = s.find(delim, pos);
+        if (find_pos < 0){
+            elems.push_back(s.substr(pos, len - pos));
+            break;
+        }
+        elems.push_back(s.substr(pos, find_pos - pos));
+        pos = find_pos + 1;
+    }
+    return elems;
+}
+
 int TextUtils::UTF2UCS(const char*utf,wchar_t*unicode){
     const unsigned char *p = (const unsigned char*)utf;
     int e = 0, n = 0;
