@@ -429,6 +429,7 @@ void View::initView(){
     mUserPaddingLeft = mUserPaddingRight  = 0;
     mUserPaddingTop  = mUserPaddingBottom = 0;
     mPrivateFlags  = mPrivateFlags3 = 0;
+    mPrivateFlags4 = 0;
     mPrivateFlags |= PFLAG_DRAWABLE_STATE_DIRTY;
     mNextFocusLeftId= mNextFocusRightId= NO_ID;
     mNextFocusUpId  = mNextFocusDownId = NO_ID;
