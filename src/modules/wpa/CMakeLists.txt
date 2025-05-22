@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2.2)
+cmake_minimum_required(VERSION 3.8)
 project(wpa_ctrl C CXX)
 set(EXECUTABLE_BUILD_TYPE Release)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -47,7 +47,13 @@ add_definitions(
     -DCONFIG_WPS=y
     -DCONFIG_WPS_NFC=y
     -DCONFIG_TLS_DEFAULT_CIPHERS="DEFAULT:!EXP:!LOW:3DES")
-
+if(ANDROID)
+    add_definitions(
+        -DAID_SYSTEM=1000  #/* system server */
+        -DAID_WIFI=1010  #/* wifi subsystem */
+        -DANDROID_SOCKET_NAMESPACE_RESERVED=1
+        )
+endif()
 add_library(wpa_ctrl wpa_ctrl.c utils/os_unix.c utils/wpabuf.c)
 target_include_directories(wpa_ctrl PUBLIC 
    "utils"   "./"
@@ -57,5 +63,5 @@ target_include_directories(wpa_ctrl PUBLIC
    ${CMAKE_BINARY_DIR}/include/porting)
 target_compile_options(wpa_ctrl PUBLIC -Wall -Wextra -Wno-variadic-macros)
 
-add_executable(wpatest main.cc wpasockclient.cc)
+add_executable(wpatest main.cc wpasockclient.cc wifiscanner.cc)
 target_link_libraries(wpatest wpa_ctrl cdroid)

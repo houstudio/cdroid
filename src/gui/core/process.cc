@@ -95,7 +95,8 @@ void Process::write(const std::string& data) {
     if (state_ != Running) {
         throw std::runtime_error("Process is not running");
     }
-    ::write(stdinPipe_[1], data.c_str(), data.size());
+    auto ret=::write(stdinPipe_[1], data.c_str(), data.size());
+    LOGE_IF(ret<0,"write Error");
 }
 
 std::string Process::readAllStandardOutput() {

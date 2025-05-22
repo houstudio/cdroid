@@ -20,6 +20,7 @@ public:
     static std::string& replace(std::string&str,const std::string&sfind,const std::string&sreplace);
     static long strtol(const std::string&value);
     static std::vector<std::string> split(const std::string& s,const std::string& delim);
+    static std::vector<std::string> split(const std::string& s,int delim);
     static int UCS2UTF(wchar_t wc,char*oututf,int outlen);
     static int UTF2UCS(const char*utf,wchar_t*unicode);
 };

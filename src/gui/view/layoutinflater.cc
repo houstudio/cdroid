@@ -101,7 +101,7 @@ void LayoutInflater::setFilter(Filter f){
 
 View* LayoutInflater::inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*){
     auto strm = std::make_unique<std::istream>(stream.rdbuf());
-    XmlPullParser parser(nullptr,std::move(strm));
+    XmlPullParser parser(mContext,std::move(strm));
     return inflate(parser,root,attachToRoot);
 }
 
