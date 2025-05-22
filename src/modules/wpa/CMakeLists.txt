@@ -55,7 +55,7 @@ if(ANDROID)
         )
 endif()
 add_library(wpa_ctrl wpa_ctrl.c utils/os_unix.c utils/wpabuf.c)
-target_include_directories(wpa_ctrl PUBLIC 
+include_directories(wpa_ctrl PUBLIC 
    "utils"   "./"
    ${CDROID_INCLUDE_DIRS}
    ${CDROID_DEPINCLUDES}
