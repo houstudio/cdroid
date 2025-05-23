@@ -44,6 +44,7 @@ private:
     class BasicAccessibilityProvider;
     class PageAwareAccessibilityProvider;
     class DataSetChangeObserver;
+    std::vector<OnPageChangeCallback> mPageChangeCallbacks;
     RecyclerView::AdapterDataObserver* mCurrentItemDataSetChangeObserver;
     // reused in layout(...)
     Runnable mSmoothScrollToPositionRunnable;
@@ -52,7 +53,7 @@ private:
     int mPendingCurrentItem = RecyclerView::NO_POSITION;
     Parcelable* mPendingAdapterState;
     PagerSnapHelper* mPagerSnapHelper;
-    CompositeOnPageChangeCallback* mPageChangeEventDispatcher;
+    OnPageChangeCallback mPageChangeEventDispatcher;
     FakeDrag* mFakeDragger;
     PageTransformerAdapter* mPageTransformerAdapter;
     RecyclerView::ItemAnimator* mSavedItemAnimator = nullptr;
@@ -132,7 +133,7 @@ protected:
     ViewPager2*mVP;
 public:
     AccessibilityProvider(ViewPager2*);
-    virtual void onInitialize(CompositeOnPageChangeCallback* pageChangeEventDispatcher,RecyclerView* recyclerView);
+    virtual void onInitialize(OnPageChangeCallback pageChangeEventDispatcher,RecyclerView* recyclerView);
     virtual bool handlesGetAccessibilityClassName();
     virtual std::string onGetAccessibilityClassName();
     virtual void onRestorePendingState();
@@ -175,7 +176,7 @@ protected:
     void updatePageAccessibilityActions();
 public:
     PageAwareAccessibilityProvider(ViewPager2*);
-    void onInitialize(CompositeOnPageChangeCallback* pageChangeEventDispatcher, RecyclerView* recyclerView)override;
+    void onInitialize(OnPageChangeCallback pageChangeEventDispatcher, RecyclerView* recyclerView)override;
     bool handlesGetAccessibilityClassName()override;
     std::string onGetAccessibilityClassName()override;
     void onRestorePendingState()override;

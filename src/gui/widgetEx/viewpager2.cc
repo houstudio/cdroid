@@ -56,7 +56,7 @@ ViewPager2::ViewPager2(Context* context,const AttributeSet& attrs)
 ViewPager2::~ViewPager2(){
     delete mFakeDragger;
     delete mPagerSnapHelper;
-    delete mPageChangeEventDispatcher;
+    //delete mPageChangeEventDispatcher;
     delete mExternalPageChangeCallbacks;
     delete mPageTransformerAdapter;
 }
@@ -101,8 +101,24 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     // don't want to respond on the events sent out during the attach process
     mRecyclerView->addOnScrollListener(*mScrollEventAdapter);
 
-    mPageChangeEventDispatcher = new CompositeOnPageChangeCallback(3);
-    mScrollEventAdapter->setOnPageChangeCallback(*mPageChangeEventDispatcher);
+    //mPageChangeEventDispatcher.addOnPageChangeCallback=[](){};
+    //mPageChangeEventDispatcher.removeOnPageChangeCallback=[](){};
+    mPageChangeEventDispatcher.onPageScrolled=[this](int position, float positionOffset,int positionOffsetPixels){
+        for (OnPageChangeCallback callback : mPageChangeCallbacks) {
+            callback.onPageScrolled(position, positionOffset, positionOffsetPixels);
+        }
+    };
+    mPageChangeEventDispatcher.onPageSelected=[this](int position){
+        for (OnPageChangeCallback callback : mPageChangeCallbacks) {
+             callback.onPageSelected(position);
+        }
+    };
+    mPageChangeEventDispatcher.onPageScrollStateChanged=[this](int state){
+        for (OnPageChangeCallback callback : mPageChangeCallbacks) {
+             callback.onPageScrollStateChanged(state);
+        }
+    };
+    mScrollEventAdapter->setOnPageChangeCallback(mPageChangeEventDispatcher);
 
     // Callback that updates mCurrentItem after swipes. Also triggered in other cases, but in
     // all those cases mCurrentItem will only be overwritten with the same value.
@@ -131,18 +147,18 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
 
     // Add currentItemUpdater before mExternalPageChangeCallbacks, because we need to update
     // internal state first
-    mPageChangeEventDispatcher->addOnPageChangeCallback(currentItemUpdater);
-    mPageChangeEventDispatcher->addOnPageChangeCallback(focusClearer);
+    mPageChangeCallbacks.push_back(currentItemUpdater);//mPageChangeEventDispatcher->addOnPageChangeCallback(currentItemUpdater);
+    mPageChangeCallbacks.push_back(focusClearer);//mPageChangeEventDispatcher->addOnPageChangeCallback(focusClearer);
     // Allow a11y to register its listeners after currentItemUpdater (so it has the
     // right data). TODO: replace ordering comments with a test.
     mAccessibilityProvider->onInitialize(mPageChangeEventDispatcher, mRecyclerView);
     mExternalPageChangeCallbacks = new CompositeOnPageChangeCallback(0);
-    mPageChangeEventDispatcher->addOnPageChangeCallback(*mExternalPageChangeCallbacks);
+    mPageChangeCallbacks.push_back(*mExternalPageChangeCallbacks);//mPageChangeEventDispatcher->addOnPageChangeCallback(*mExternalPageChangeCallbacks);
 
     // Add mPageTransformerAdapter after mExternalPageChangeCallbacks, because page transform
     // events must be fired after scroll events
     mPageTransformerAdapter = new PageTransformerAdapter(mLayoutManager);
-    mPageChangeEventDispatcher->addOnPageChangeCallback(*mPageTransformerAdapter);
+    mPageChangeCallbacks.push_back(*mPageTransformerAdapter);//mPageChangeEventDispatcher->addOnPageChangeCallback(*mPageTransformerAdapter);
 }
 
 void ViewPager2::setOrientation(Context* context,const AttributeSet& attrs) {
@@ -302,7 +318,7 @@ void ViewPager2::updateCurrentItem() {
 
     if (snapPosition != mCurrentItem && getScrollState() == SCROLL_STATE_IDLE) {
         /** TODO: revisit if push to {@link ScrollEventAdapter} / separate component */
-        mPageChangeEventDispatcher->onPageSelected(snapPosition);
+        mPageChangeEventDispatcher.onPageSelected(snapPosition);
     }
 
     mCurrentItemDirty = false;
@@ -472,11 +488,16 @@ bool ViewPager2::canScrollVertically(int direction)const{
 }
 
 void ViewPager2::registerOnPageChangeCallback(OnPageChangeCallback callback) {
-    mExternalPageChangeCallbacks->addOnPageChangeCallback(callback);
+    //mExternalPageChangeCallbacks->addOnPageChangeCallback(callback);
+    mPageChangeCallbacks.push_back(callback);
 }
 
 void ViewPager2::unregisterOnPageChangeCallback(OnPageChangeCallback callback) {
-    mExternalPageChangeCallbacks->removeOnPageChangeCallback(callback);
+    //mExternalPageChangeCallbacks->removeOnPageChangeCallback(callback);
+    auto it = std::find(mPageChangeCallbacks.begin(),mPageChangeCallbacks.end(),callback);
+    if(it!=mPageChangeCallbacks.end()){
+        mPageChangeCallbacks.erase(it);
+    }
 }
 
 void ViewPager2::setPageTransformer(PageTransformer* transformer) {
@@ -664,7 +685,7 @@ ViewPager2::AccessibilityProvider::AccessibilityProvider(ViewPager2*v)
     :mVP(v){
 }
 
-void ViewPager2::AccessibilityProvider::onInitialize(CompositeOnPageChangeCallback* pageChangeEventDispatcher,RecyclerView* recyclerView){
+void ViewPager2::AccessibilityProvider::onInitialize(OnPageChangeCallback pageChangeEventDispatcher,RecyclerView* recyclerView){
 }
 
 bool ViewPager2::AccessibilityProvider::handlesGetAccessibilityClassName(){
@@ -795,7 +816,7 @@ ViewPager2::PageAwareAccessibilityProvider::PageAwareAccessibilityProvider(ViewP
     mAdapterDataObserver = nullptr;
 }
 
-void ViewPager2::PageAwareAccessibilityProvider::onInitialize(CompositeOnPageChangeCallback* pageChangeEventDispatcher,RecyclerView* recyclerView) {
+void ViewPager2::PageAwareAccessibilityProvider::onInitialize(OnPageChangeCallback pageChangeEventDispatcher,RecyclerView* recyclerView) {
 
     class MyDataSetChangeObserver:public ViewPager2::DataSetChangeObserver{
         PageAwareAccessibilityProvider*mPP;

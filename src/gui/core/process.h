@@ -45,16 +45,18 @@ public:
     Process();
     Process(Looper*looper);
     ~Process();
-    void setListener(const std::function<void(Process&)>onFinished);
-    void setListener(const std::function<void(Process&)>onFinished,const std::function<void(Process&)>onError);
-    void start(const std::string& program, const std::vector<std::string>& arguments);
+    void exec(const std::string& program,const std::vector<std::string>&arguments);
+    void exec(const std::string& program,const std::vector<std::string>&arguments,const std::function<void(Process&)>onFinished);
+    void exec(const std::string& program,const std::vector<std::string>&arguments,
+            const std::function<void(Process&)>onFinished,const std::function<void(Process&)>onError);
+    int  wait()const;
     void write(const std::string& data);
     std::string readAllStandardOutput();
     std::string readAllStandardError();
     void terminate();
     void kill();
-    int exitCode() const;
-    State state() const;
+    int exitCode()const;
+    State state()const;
 };
 }/*endof namespace*/
 #endif /*__PROCESS_H__*/
