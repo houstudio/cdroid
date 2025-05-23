@@ -107,7 +107,7 @@ void ScrollEventAdapter::onScrolled(RecyclerView& recyclerView, int dx, int dy) 
 }
 
 void ScrollEventAdapter::updateScrollEventValues() {
-    ScrollEventValues values = mScrollValues;
+    ScrollEventValues& values = mScrollValues;
 
     values.mPosition = mLayoutManager->findFirstVisibleItemPosition();
     if (values.mPosition == RecyclerView::NO_POSITION) {
