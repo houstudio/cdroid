@@ -45,7 +45,7 @@ public:
         return (mFunctor!=nullptr)&&(*mFunctor != nullptr);
     }
     virtual R operator()(Args...args){
-        if(*mFunctor)return (*mFunctor)(std::forward<Args>(args)...);
+        if(*this)return (*mFunctor)(std::forward<Args>(args)...);
         return R();
     }
 };
