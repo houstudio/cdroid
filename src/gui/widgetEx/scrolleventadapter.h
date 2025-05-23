@@ -53,7 +53,7 @@ public:
     void notifyProgrammaticScroll(int target, bool smooth);
     void notifyBeginFakeDrag();
     void notifyEndFakeDrag();
-    void setOnPageChangeCallback(ViewPager2::OnPageChangeCallback callback);
+    void setOnPageChangeCallback(const ViewPager2::OnPageChangeCallback& callback);
     int getScrollState();
     bool isIdle();
     bool isDragging();

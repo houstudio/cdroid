@@ -44,16 +44,17 @@ private:
     class BasicAccessibilityProvider;
     class PageAwareAccessibilityProvider;
     class DataSetChangeObserver;
-    std::vector<OnPageChangeCallback> mPageChangeCallbacks;
+    ViewPager2::OnPageChangeCallback mPageChangeEventDispatcher;
+    ViewPager2::OnPageChangeCallback mExternalPageChangeCallbacks;
+    std::vector<ViewPager2::OnPageChangeCallback> mPageChangeCallbacks;
+    std::vector<ViewPager2::OnPageChangeCallback> mPageChangeCallbacksExternal;
     RecyclerView::AdapterDataObserver* mCurrentItemDataSetChangeObserver;
     // reused in layout(...)
     Runnable mSmoothScrollToPositionRunnable;
-    CompositeOnPageChangeCallback* mExternalPageChangeCallbacks;
     LinearLayoutManager* mLayoutManager;
     int mPendingCurrentItem = RecyclerView::NO_POSITION;
     Parcelable* mPendingAdapterState;
     PagerSnapHelper* mPagerSnapHelper;
-    OnPageChangeCallback mPageChangeEventDispatcher;
     FakeDrag* mFakeDragger;
     PageTransformerAdapter* mPageTransformerAdapter;
     RecyclerView::ItemAnimator* mSavedItemAnimator = nullptr;
@@ -111,8 +112,8 @@ public:
     int getOffscreenPageLimit()const;
     virtual bool canScrollHorizontally(int direction)const;
     virtual bool canScrollVertically(int direction)const;
-    void registerOnPageChangeCallback(OnPageChangeCallback callback);
-    void unregisterOnPageChangeCallback(OnPageChangeCallback callback);
+    void registerOnPageChangeCallback(const ViewPager2::OnPageChangeCallback& callback);
+    void unregisterOnPageChangeCallback(const ViewPager2::OnPageChangeCallback& callback);
     void setPageTransformer(PageTransformer* transformer);
     void requestTransform();
     View&setLayoutDirection(int layoutDirection)override;

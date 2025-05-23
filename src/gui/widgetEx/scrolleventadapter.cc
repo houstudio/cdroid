@@ -228,7 +228,7 @@ void ScrollEventAdapter::notifyEndFakeDrag() {
     }
 }
 
-void ScrollEventAdapter::setOnPageChangeCallback(ViewPager2::OnPageChangeCallback callback) {
+void ScrollEventAdapter::setOnPageChangeCallback(const ViewPager2::OnPageChangeCallback& callback) {
     mCallback = callback;
 }
 
