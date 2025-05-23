@@ -1,3 +1,10 @@
+# **V3.9.x
+  - add BaseBundle,Bundle
+  - add BitmapDrawable::isStateful
+  - add porting/android
+  - fix ViewPage2
+  - fix Assets's parser
+  - fix ViewPager's crash issue while Adapter.getItemPosition return NONE
 # **V3.8.6
   - XmlPullParser is more compatible with android.
   - Resource parser changed to xmlpullparser,more faster versions.

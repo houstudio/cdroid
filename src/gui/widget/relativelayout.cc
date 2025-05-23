@@ -206,13 +206,13 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             }
 
             if (child != ignore || verticalGravity) {
-                left =std::min(left, params->mLeft - params->leftMargin);
+                left= std::min(left, params->mLeft - params->leftMargin);
                 top = std::min(top, params->mTop - params->topMargin);
             }
 
             if (child != ignore || horizontalGravity) {
                 right = std::max(right, params->mRight + params->rightMargin);
-                bottom =std::max(bottom, params->mBottom + params->bottomMargin);
+                bottom= std::max(bottom, params->mBottom + params->bottomMargin);
             }
         }
     }
@@ -225,7 +225,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         View* child = views[i];
         if (child->getVisibility() != GONE) {
             LayoutParams* childParams = (LayoutParams*) child->getLayoutParams();
-            if (baselineView == nullptr || baselineParams == nullptr
+            if ((baselineView == nullptr) || (baselineParams == nullptr)
                     || compareLayoutPosition(childParams, baselineParams) < 0) {
                 baselineView = child;
                 baselineParams = childParams;
@@ -250,10 +250,10 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
                 if (child->getVisibility() != GONE) {
                     LayoutParams* params = (LayoutParams*) child->getLayoutParams();
                     const int* rules = params->getRules(layoutDirection);
-                    if (rules[CENTER_IN_PARENT] != 0 || rules[CENTER_HORIZONTAL] != 0) {
+                    if ((rules[CENTER_IN_PARENT] != 0) || (rules[CENTER_HORIZONTAL] != 0)) {
                         centerHorizontal(child, params, width);
                     } else if (rules[ALIGN_PARENT_RIGHT] != 0) {
-                        int childWidth = child->getMeasuredWidth();
+                        const int childWidth = child->getMeasuredWidth();
                         params->mLeft = width - mPaddingRight - childWidth;
                         params->mRight = params->mLeft + childWidth;
                     }
@@ -280,10 +280,10 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
                 if (child->getVisibility() != GONE) {
                     LayoutParams* params = (LayoutParams*) child->getLayoutParams();
                     const int* rules = params->getRules(layoutDirection);
-                    if (rules[CENTER_IN_PARENT] != 0 || rules[CENTER_VERTICAL] != 0) {
+                    if ((rules[CENTER_IN_PARENT] != 0) || (rules[CENTER_VERTICAL] != 0)) {
                         centerVertical(child, params, height);
                     } else if (rules[ALIGN_PARENT_BOTTOM] != 0) {
-                        int childHeight = child->getMeasuredHeight();
+                        const int childHeight = child->getMeasuredHeight();
                         params->mTop = height - mPaddingBottom - childHeight;
                         params->mBottom = params->mTop + childHeight;
                     }
@@ -294,8 +294,8 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
     if (horizontalGravity || verticalGravity) {
         Rect selfBounds = mSelfBounds;
-        selfBounds.set(mPaddingLeft, mPaddingTop, width - mPaddingRight,
-                height - mPaddingBottom);
+        selfBounds.set(mPaddingLeft, mPaddingTop, width - mPaddingLeft - mPaddingRight,
+                height - mPaddingTop - mPaddingBottom);
 
         Rect contentBounds = mContentBounds;
         Gravity::apply(mGravity, right - left, bottom - top, selfBounds, contentBounds,
@@ -306,7 +306,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         if (horizontalOffset != 0 || verticalOffset != 0) {
             for (int i = 0; i < count; i++) {
                 View* child = views[i];
-                if (child->getVisibility() != GONE && child != ignore) {
+                if ((child->getVisibility() != GONE) && (child != ignore)) {
                     LayoutParams* params = (LayoutParams*) child->getLayoutParams();
                     if (horizontalGravity) {
                         params->mLeft += horizontalOffset;
@@ -403,7 +403,7 @@ int RelativeLayout::getChildMeasureSpec(int childStart, int childEnd, int childS
     // RelativeLayout's measure spec."
     const bool isUnspecified = mySize < 0;
     if (isUnspecified && !mAllowBrokenMeasureSpecs) {
-        if (childStart != VALUE_NOT_SET && childEnd != VALUE_NOT_SET) {
+        if ((childStart != VALUE_NOT_SET) && (childEnd != VALUE_NOT_SET)) {
             // Constraints fixed both edges, so child has an exact size.
             childSpecSize = std::max(0, childEnd - childStart);
             childSpecMode = MeasureSpec::EXACTLY;
@@ -435,7 +435,7 @@ int RelativeLayout::getChildMeasureSpec(int childStart, int childEnd, int childS
     // Figure out maximum size available to this view
     const int maxAvailable = tempEnd - tempStart;
 
-    if (childStart != VALUE_NOT_SET && childEnd != VALUE_NOT_SET) {
+    if ((childStart != VALUE_NOT_SET) && (childEnd != VALUE_NOT_SET)) {
         // Constraints fixed both edges, so child must be an exact size.
         childSpecMode = isUnspecified ? MeasureSpec::UNSPECIFIED : MeasureSpec::EXACTLY;
         childSpecSize = std::max(0, maxAvailable);
@@ -465,7 +465,7 @@ int RelativeLayout::getChildMeasureSpec(int childStart, int childEnd, int childS
             } else {
                 // We can grow in this dimension. Child can be as big as it
                 // wants.
-               childSpecMode = MeasureSpec::UNSPECIFIED;
+                childSpecMode = MeasureSpec::UNSPECIFIED;
                 childSpecSize = 0;
             }
         }
@@ -478,15 +478,15 @@ bool RelativeLayout::positionChildHorizontal(View* child, LayoutParams* params, 
     const int layoutDirection = getLayoutDirection();
     const int* rules = params->getRules(layoutDirection);
 
-    if (params->mLeft == VALUE_NOT_SET && params->mRight != VALUE_NOT_SET) {
+    if ((params->mLeft == VALUE_NOT_SET) && (params->mRight != VALUE_NOT_SET)) {
         // Right is fixed, but left varies
         params->mLeft = params->mRight - child->getMeasuredWidth();
-    } else if (params->mLeft != VALUE_NOT_SET && params->mRight == VALUE_NOT_SET) {
+    } else if ((params->mLeft != VALUE_NOT_SET) && (params->mRight == VALUE_NOT_SET)) {
         // Left is fixed, but right varies
         params->mRight = params->mLeft + child->getMeasuredWidth();
-    } else if (params->mLeft == VALUE_NOT_SET && params->mRight == VALUE_NOT_SET) {
+    } else if ((params->mLeft == VALUE_NOT_SET) && (params->mRight == VALUE_NOT_SET)) {
         // Both left and right vary
-        if (rules[CENTER_IN_PARENT] != 0 || rules[CENTER_HORIZONTAL] != 0) {
+        if ((rules[CENTER_IN_PARENT] != 0) || (rules[CENTER_HORIZONTAL] != 0)) {
             if (!wrapContent) {
                 centerHorizontal(child, params, myWidth);
             } else {
@@ -515,15 +515,15 @@ void RelativeLayout::positionAtEdge(View* child, LayoutParams* params, int myWid
 bool RelativeLayout::positionChildVertical(View* child, LayoutParams* params, int myHeight, bool wrapContent){
     const int* rules = params->getRules();
 
-    if (params->mTop == VALUE_NOT_SET && params->mBottom != VALUE_NOT_SET) {
+    if ((params->mTop == VALUE_NOT_SET) && (params->mBottom != VALUE_NOT_SET)) {
         // Bottom is fixed, but top varies
         params->mTop = params->mBottom - child->getMeasuredHeight();
-    } else if (params->mTop != VALUE_NOT_SET && params->mBottom == VALUE_NOT_SET) {
+    } else if ((params->mTop != VALUE_NOT_SET) && (params->mBottom == VALUE_NOT_SET)) {
         // Top is fixed, but bottom varies
         params->mBottom = params->mTop + child->getMeasuredHeight();
-    } else if (params->mTop == VALUE_NOT_SET && params->mBottom == VALUE_NOT_SET) {
+    } else if ((params->mTop == VALUE_NOT_SET) && (params->mBottom == VALUE_NOT_SET)) {
         // Both top and bottom vary
-        if (rules[CENTER_IN_PARENT] != 0 || rules[CENTER_VERTICAL] != 0) {
+        if ((rules[CENTER_IN_PARENT] != 0) || (rules[CENTER_VERTICAL] != 0)) {
             if (!wrapContent) {
                 centerVertical(child, params, myHeight);
             } else {
@@ -555,7 +555,7 @@ void RelativeLayout::applyHorizontalSizeRules(RelativeLayout::LayoutParams* chil
     if (anchorParams) {
         childParams->mRight = anchorParams->mLeft - (anchorParams->leftMargin +
                 childParams->rightMargin);
-    } else if (childParams->alignWithParent && rules[LEFT_OF] != 0) {
+    } else if (childParams->alignWithParent && (rules[LEFT_OF] != 0)) {
         if (myWidth >= 0) {
             childParams->mRight = myWidth - mPaddingRight - childParams->rightMargin;
         }
@@ -565,21 +565,21 @@ void RelativeLayout::applyHorizontalSizeRules(RelativeLayout::LayoutParams* chil
     if (anchorParams) {
         childParams->mLeft = anchorParams->mRight + (anchorParams->rightMargin +
                 childParams->leftMargin);
-    } else if (childParams->alignWithParent && rules[RIGHT_OF] != 0) {
+    } else if (childParams->alignWithParent && (rules[RIGHT_OF] != 0)) {
         childParams->mLeft = mPaddingLeft + childParams->leftMargin;
     }
 
     anchorParams = getRelatedViewParams(rules, ALIGN_LEFT);
     if (anchorParams) {
         childParams->mLeft = anchorParams->mLeft + childParams->leftMargin;
-    } else if (childParams->alignWithParent && rules[ALIGN_LEFT] != 0) {
+    } else if (childParams->alignWithParent && (rules[ALIGN_LEFT] != 0)) {
         childParams->mLeft = mPaddingLeft + childParams->leftMargin;
     }
 
     anchorParams = getRelatedViewParams(rules, ALIGN_RIGHT);
     if (anchorParams) {
         childParams->mRight = anchorParams->mRight - childParams->rightMargin;
-    } else if (childParams->alignWithParent && rules[ALIGN_RIGHT] != 0) {
+    } else if (childParams->alignWithParent && (rules[ALIGN_RIGHT] != 0)) {
         if (myWidth >= 0) {
             childParams->mRight = myWidth - mPaddingRight - childParams->rightMargin;
         }
@@ -619,7 +619,7 @@ void RelativeLayout::applyVerticalSizeRules(RelativeLayout::LayoutParams* childP
     if (anchorParams) {
         childParams->mBottom = anchorParams->mTop - (anchorParams->topMargin +
                 childParams->bottomMargin);
-    } else if (childParams->alignWithParent && rules[ABOVE] != 0) {
+    } else if (childParams->alignWithParent && (rules[ABOVE] != 0)) {
         if (myHeight >= 0) {
             childParams->mBottom = myHeight - mPaddingBottom - childParams->bottomMargin;
         }
@@ -629,21 +629,21 @@ void RelativeLayout::applyVerticalSizeRules(RelativeLayout::LayoutParams* childP
     if (anchorParams) {
         childParams->mTop = anchorParams->mBottom + (anchorParams->bottomMargin +
                 childParams->topMargin);
-    } else if (childParams->alignWithParent && rules[BELOW] != 0) {
+    } else if (childParams->alignWithParent && (rules[BELOW] != 0)) {
         childParams->mTop = mPaddingTop + childParams->topMargin;
     }
 
     anchorParams = getRelatedViewParams(rules, ALIGN_TOP);
     if (anchorParams) {
         childParams->mTop = anchorParams->mTop + childParams->topMargin;
-    } else if (childParams->alignWithParent && rules[ALIGN_TOP] != 0) {
+    } else if (childParams->alignWithParent && (rules[ALIGN_TOP] != 0)) {
         childParams->mTop = mPaddingTop + childParams->topMargin;
     }
 
     anchorParams = getRelatedViewParams(rules, ALIGN_BOTTOM);
     if (anchorParams) {
         childParams->mBottom = anchorParams->mBottom - childParams->bottomMargin;
-    } else if (childParams->alignWithParent && rules[ALIGN_BOTTOM] != 0) {
+    } else if (childParams->alignWithParent && (rules[ALIGN_BOTTOM] != 0)) {
         if (myHeight >= 0) {
             childParams->mBottom = myHeight - mPaddingBottom - childParams->bottomMargin;
         }
@@ -672,7 +672,7 @@ View* RelativeLayout::getRelatedView(const int* rules, int relation){
             rules = ((LayoutParams*) v->getLayoutParams())->getRules(v->getLayoutDirection());
             node = mGraph->mKeyNodes.get((rules[relation]));
             // ignore self dependency. for more info look in git commit: da3003
-            if (node == nullptr || v == node->view) return nullptr;
+            if ((node == nullptr) || (v == node->view)) return nullptr;
             v = node->view;
         }
         return v;
@@ -711,7 +711,7 @@ void RelativeLayout::centerHorizontal(View* child, LayoutParams* params, int myW
     const int childWidth = child->getMeasuredWidth();
     const int left = (myWidth - childWidth) / 2;
     params->mLeft = left;
-    params->mRight = left + childWidth;
+    params->mRight= left + childWidth;
 }
 
 void RelativeLayout::centerVertical(View* child, LayoutParams* params, int myHeight){
@@ -770,7 +770,7 @@ bool RelativeLayout::dispatchPopulateAccessibilityEventInternal(AccessibilityEve
     }
 
     for (View* view : mTopToBottomLeftToRightSet) {
-        if (view->getVisibility() == View::VISIBLE
+        if ((view->getVisibility() == View::VISIBLE)
                 && view->dispatchPopulateAccessibilityEvent(event)) {
             mTopToBottomLeftToRightSet.clear();
             return true;
