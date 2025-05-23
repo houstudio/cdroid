@@ -99,7 +99,10 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     mPagerSnapHelper->attachToRecyclerView(mRecyclerView);
     // Add mScrollEventAdapter after attaching mPagerSnapHelper to mRecyclerView, because we
     // don't want to respond on the events sent out during the attach process
-    mRecyclerView->addOnScrollListener(*mScrollEventAdapter);
+    RecyclerView::OnScrollListener scrollCBK;
+    scrollCBK.onScrolled = std::bind(&ScrollEventAdapter::onScrolled,mScrollEventAdapter,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3);
+    scrollCBK.onScrollStateChanged = std::bind(&ScrollEventAdapter::onScrollStateChanged,mScrollEventAdapter,std::placeholders::_1,std::placeholders::_2);
+    mRecyclerView->addOnScrollListener(scrollCBK);
 
     //mPageChangeEventDispatcher.addOnPageChangeCallback=[](){};
     //mPageChangeEventDispatcher.removeOnPageChangeCallback=[](){};

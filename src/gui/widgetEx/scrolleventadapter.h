@@ -3,7 +3,7 @@
 #include <widgetEx/recyclerview/recyclerview.h>
 #include <widgetEx/viewpager2.h>
 namespace cdroid{
-class ScrollEventAdapter:public RecyclerView::OnScrollListener {
+class ScrollEventAdapter{
 private:
     static constexpr int STATE_IDLE = 0;
     static constexpr int STATE_IN_PROGRESS_MANUAL_DRAG = 1;
@@ -46,8 +46,8 @@ private:
     int getPosition();
 public:
     ScrollEventAdapter(ViewPager2* viewPager);
-    void onScrollStateChanged(RecyclerView& recyclerView, int newState);//override;
-    void onScrolled(RecyclerView& recyclerView, int dx, int dy);//override;
+    virtual void onScrollStateChanged(RecyclerView& recyclerView, int newState);
+    virtual void onScrolled(RecyclerView& recyclerView, int dx, int dy);
 
     void notifyDataSetChangeHappened();
     void notifyProgrammaticScroll(int target, bool smooth);
