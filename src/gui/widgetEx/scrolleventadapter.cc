@@ -31,7 +31,7 @@ void ScrollEventAdapter::onScrollStateChanged(RecyclerView& recyclerView, int ne
         return;
     }
 
-    if (isInAnyDraggingState() && newState == RecyclerView::SCROLL_STATE_SETTLING) {
+    if (isInAnyDraggingState() && (newState == RecyclerView::SCROLL_STATE_SETTLING)) {
         // Only go through the settling phase if the drag actually moved the page
         if (mScrollHappened) {
             dispatchStateChanged(RecyclerView::SCROLL_STATE_SETTLING);
@@ -42,7 +42,7 @@ void ScrollEventAdapter::onScrollStateChanged(RecyclerView& recyclerView, int ne
     }
 
     // Drag is finished (dragging || settling -> idle)
-    if (isInAnyDraggingState() && newState == RecyclerView::SCROLL_STATE_IDLE) {
+    if (isInAnyDraggingState() && (newState == RecyclerView::SCROLL_STATE_IDLE)) {
         bool dispatchIdle = false;
         updateScrollEventValues();
         if (!mScrollHappened) {
@@ -62,13 +62,12 @@ void ScrollEventAdapter::onScrollStateChanged(RecyclerView& recyclerView, int ne
         }
     }
 
-    if (mAdapterState == STATE_IN_PROGRESS_SMOOTH_SCROLL
-            && newState == RecyclerView::SCROLL_STATE_IDLE && mDataSetChangeHappened) {
+    if ((mAdapterState == STATE_IN_PROGRESS_SMOOTH_SCROLL)
+            && (newState == RecyclerView::SCROLL_STATE_IDLE) && mDataSetChangeHappened) {
         updateScrollEventValues();
         if (mScrollValues.mOffsetPx == 0) {
             if (mTarget != mScrollValues.mPosition) {
-                dispatchSelected(
-                        mScrollValues.mPosition == NO_POSITION ? 0 : mScrollValues.mPosition);
+                dispatchSelected( (mScrollValues.mPosition == NO_POSITION) ? 0 : mScrollValues.mPosition);
             }
             dispatchStateChanged(RecyclerView::SCROLL_STATE_IDLE);
             resetState();
@@ -83,10 +82,10 @@ void ScrollEventAdapter::onScrolled(RecyclerView& recyclerView, int dx, int dy) 
     if (mDispatchSelected) {
         // Drag started settling, need to calculate target page and dispatch onPageSelected now
         mDispatchSelected = false;
-        bool scrollingForward = dy > 0 || (dy == 0 && dx < 0 == mViewPager->isRtl());
+        bool scrollingForward = (dy > 0) || (dy == 0 && dx < 0 == mViewPager->isRtl());
 
-        mTarget = scrollingForward && mScrollValues.mOffsetPx != 0
-                ? mScrollValues.mPosition + 1 : mScrollValues.mPosition;
+        mTarget = (scrollingForward && (mScrollValues.mOffsetPx != 0))
+                ? (mScrollValues.mPosition + 1) : mScrollValues.mPosition;
         if (mDragStartPosition != mTarget) {
             dispatchSelected(mTarget);
         }
@@ -108,7 +107,7 @@ void ScrollEventAdapter::onScrolled(RecyclerView& recyclerView, int dx, int dy) 
 }
 
 void ScrollEventAdapter::updateScrollEventValues() {
-    ScrollEventValues values = mScrollValues;
+    ScrollEventValues& values = mScrollValues;
 
     values.mPosition = mLayoutManager->findFirstVisibleItemPosition();
     if (values.mPosition == RecyclerView::NO_POSITION) {
@@ -228,7 +227,7 @@ void ScrollEventAdapter::notifyEndFakeDrag() {
     }
 }
 
-void ScrollEventAdapter::setOnPageChangeCallback(ViewPager2::OnPageChangeCallback callback) {
+void ScrollEventAdapter::setOnPageChangeCallback(const ViewPager2::OnPageChangeCallback& callback) {
     mCallback = callback;
 }
 

@@ -23,16 +23,18 @@ Process::~Process() {
     }
 }
 
-void Process::setListener(const std::function<void(Process&)>onFinished){
-    setListener(onFinished,nullptr);
+void Process::exec(const std::string& program,const std::vector<std::string>&arguments){
+    exec(program,arguments,nullptr,nullptr);
 }
 
-void Process::setListener(const std::function<void(Process&)>onFinished,const std::function<void(Process&)>onError){
-    this->onFinishListener = onFinished;
-    this->onErrorListener = onError;
+void Process::exec(const std::string& program,const std::vector<std::string>&arguments,const std::function<void(Process&)>onFinished){
+    exec(program,arguments,onFinished,nullptr);
 }
 
-void Process::start(const std::string& program, const std::vector<std::string>& arguments) {
+void Process::exec(const std::string& program,const std::vector<std::string>&arguments,
+        const std::function<void(Process&)>onFinished,const std::function<void(Process&)>onError){
+    onFinishListener = onFinished;
+    onErrorListener = onError;
     if (state_ != NotRunning) {
         throw std::runtime_error("Process is already running");
     }
@@ -91,6 +93,14 @@ void Process::start(const std::string& program, const std::vector<std::string>& 
     }
 }
 
+int Process::wait()const{
+    siginfo_t info;
+    if(pid_){
+        waitid(P_PID, pid_, &info, WEXITED);
+        return 0;
+    }
+    return -1;
+}
 void Process::write(const std::string& data) {
     if (state_ != Running) {
         throw std::runtime_error("Process is not running");

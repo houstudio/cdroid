@@ -44,15 +44,17 @@ private:
     class BasicAccessibilityProvider;
     class PageAwareAccessibilityProvider;
     class DataSetChangeObserver;
+    ViewPager2::OnPageChangeCallback mPageChangeEventDispatcher;
+    ViewPager2::OnPageChangeCallback mExternalPageChangeCallbacks;
+    std::vector<ViewPager2::OnPageChangeCallback> mPageChangeCallbacks;
+    std::vector<ViewPager2::OnPageChangeCallback> mPageChangeCallbacksExternal;
     RecyclerView::AdapterDataObserver* mCurrentItemDataSetChangeObserver;
     // reused in layout(...)
     Runnable mSmoothScrollToPositionRunnable;
-    CompositeOnPageChangeCallback* mExternalPageChangeCallbacks;
     LinearLayoutManager* mLayoutManager;
     int mPendingCurrentItem = RecyclerView::NO_POSITION;
     Parcelable* mPendingAdapterState;
     PagerSnapHelper* mPagerSnapHelper;
-    CompositeOnPageChangeCallback* mPageChangeEventDispatcher;
     FakeDrag* mFakeDragger;
     PageTransformerAdapter* mPageTransformerAdapter;
     RecyclerView::ItemAnimator* mSavedItemAnimator = nullptr;
@@ -110,8 +112,8 @@ public:
     int getOffscreenPageLimit()const;
     virtual bool canScrollHorizontally(int direction)const;
     virtual bool canScrollVertically(int direction)const;
-    void registerOnPageChangeCallback(OnPageChangeCallback callback);
-    void unregisterOnPageChangeCallback(OnPageChangeCallback callback);
+    void registerOnPageChangeCallback(const ViewPager2::OnPageChangeCallback& callback);
+    void unregisterOnPageChangeCallback(const ViewPager2::OnPageChangeCallback& callback);
     void setPageTransformer(PageTransformer* transformer);
     void requestTransform();
     View&setLayoutDirection(int layoutDirection)override;
@@ -132,7 +134,7 @@ protected:
     ViewPager2*mVP;
 public:
     AccessibilityProvider(ViewPager2*);
-    virtual void onInitialize(CompositeOnPageChangeCallback* pageChangeEventDispatcher,RecyclerView* recyclerView);
+    virtual void onInitialize(OnPageChangeCallback pageChangeEventDispatcher,RecyclerView* recyclerView);
     virtual bool handlesGetAccessibilityClassName();
     virtual std::string onGetAccessibilityClassName();
     virtual void onRestorePendingState();
@@ -175,7 +177,7 @@ protected:
     void updatePageAccessibilityActions();
 public:
     PageAwareAccessibilityProvider(ViewPager2*);
-    void onInitialize(CompositeOnPageChangeCallback* pageChangeEventDispatcher, RecyclerView* recyclerView)override;
+    void onInitialize(OnPageChangeCallback pageChangeEventDispatcher, RecyclerView* recyclerView)override;
     bool handlesGetAccessibilityClassName()override;
     std::string onGetAccessibilityClassName()override;
     void onRestorePendingState()override;

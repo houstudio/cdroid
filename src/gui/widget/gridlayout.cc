@@ -1262,12 +1262,21 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
                 if (originalCulprits != nullptr) {
                     logError(axisName, arcs, *originalCulprits);
                 }
+                if(originalCulprits != nullptr){
+                    delete originalCulprits;
+                }
                 return true;
             }
         }
 
-        if (!modifyOnError)// cannot solve with these constraints
+        if (!modifyOnError){
+            if(originalCulprits != nullptr){
+                delete originalCulprits;
+            }
             return false; 
+        }// cannot solve with these constraints
+
+        
 
         std::vector<bool>* culprits = new std::vector<bool>;
         culprits->resize(arcs.size());
@@ -1292,6 +1301,9 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
                 arc.valid = false;
                 break;
             }
+        }
+        if (p != 0 ){
+            delete culprits;
         }
     }
     delete originalCulprits;
