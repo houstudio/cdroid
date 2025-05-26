@@ -191,7 +191,7 @@ bool DropDownListView::touchModeDrawsInPressedState() {
 View* DropDownListView::obtainView(int position, bool* isScrap) {
     View* view = ListView::obtainView(position, isScrap);
     if (dynamic_cast<TextView*>(view)) {
-        //((TextView*) view)->setHorizontallyScrolling(true);
+        ((TextView*) view)->setHorizontallyScrolling(true);
     }
     return view;
 }
@@ -233,6 +233,5 @@ void DropDownListView::ResolveHoverRunnable::cancel() {
 void DropDownListView::ResolveHoverRunnable::post() {
     mDLV->post(mRunnable);
 }
-
 
 }
