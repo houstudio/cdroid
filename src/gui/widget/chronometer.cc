@@ -67,7 +67,7 @@ std::string Chronometer::getFormat()const{
     return mFormat;
 }
 
-void Chronometer::setOnChronometerTickListener(OnChronometerTickListener listener) {
+void Chronometer::setOnChronometerTickListener(const OnChronometerTickListener& listener) {
     mOnChronometerTickListener = listener;
 }
 
