@@ -409,7 +409,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setRelativeDrawablesIfNeeded(start, end);
 
     setCompoundDrawablePadding(attrs.getDimensionPixelSize("drawablePadding",0));
-
+    setHeight(attrs.getDimensionPixelSize("height",-1));
     setMinHeight(attrs.getDimensionPixelSize("minHeight", -1));
     setMaxHeight(attrs.getDimensionPixelSize("maxHeight", mMaximum));
     setTextScaleX(attrs.getFloat("textScaleX",mTextScaleX));
@@ -418,7 +418,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
     setSingleLine(attrs.getBoolean("singleLine",mSingleLine));
     setGravity(attrs.getGravity("gravity",Gravity::TOP|Gravity::START));
-    mMaxLength= attrs.getInt("maxLength",-1);
+    mMaxLength = attrs.getInt("maxLength",-1);
 
     setLineSpacing( attrs.getDimensionPixelSize("lineSpacingExtra",0),
              attrs.getFloat("lineSpacingMultiplier",1.f) );
@@ -451,6 +451,13 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
+
+    const int lineHeight = attrs.getDimensionPixelSize("lineHeight",-1);
+    const int firstBaselineToTopHeight = attrs.getDimensionPixelSize("firstBaselineToTopHeight",-1);
+    const int lastBaselineToBottomHeight = attrs.getDimensionPixelSize("lastBaselineToBottomHeight", -1);
+    if (firstBaselineToTopHeight >= 0) setFirstBaselineToTopHeight(firstBaselineToTopHeight);
+    if (lastBaselineToBottomHeight >= 0) setLastBaselineToBottomHeight(lastBaselineToBottomHeight);
+    if(lineHeight>=0) setLineHeight(lineHeight);
 }
 
 TextView::TextView(int width, int height):TextView(std::string(),width,height){
@@ -695,6 +702,63 @@ void TextView::setRawTextSize(float size, bool shouldRequestLayout){
     }
 }
 
+void TextView::setPadding(int left, int top, int right, int bottom){
+    if ((left != mPaddingLeft) || (right != mPaddingRight)
+            || (top != mPaddingTop) ||(bottom != mPaddingBottom)) {
+        mLayout->relayout(true);
+        mHintLayout->relayout(true);
+    }
+    // the super call will requestLayout()
+    View::setPadding(left, top, right, bottom);
+    invalidate();
+}
+
+void TextView::setPaddingRelative(int start, int top, int end, int bottom){
+    if ( (start != getPaddingStart()) || (end != getPaddingEnd())
+            || (top != mPaddingTop) || (bottom != mPaddingBottom)) {
+        mLayout->relayout(true);//nullLayouts();
+        mHintLayout->relayout(true);
+    }
+
+    // the super call will requestLayout()
+    View::setPaddingRelative(start, top, end, bottom);
+    invalidate();
+}
+
+void TextView::setFirstBaselineToTopHeight(int firstBaselineToTopHeight){
+    const Cairo::FontExtents& fontMetrics = mLayout->getFontExtents();//MetricsInt();
+    const int fontMetricsTop = fontMetrics.ascent;
+
+    // TODO: Decide if we want to ignore density ratio (i.e. when the user changes font size
+    // in settings). At the moment, we don't.
+
+    if (firstBaselineToTopHeight > std::abs(fontMetricsTop)) {
+        const int paddingTop = firstBaselineToTopHeight - (-fontMetricsTop);
+        setPadding(getPaddingLeft(), paddingTop, getPaddingRight(), getPaddingBottom());
+    }
+}
+
+void TextView::setLastBaselineToBottomHeight(int lastBaselineToBottomHeight){
+    const Cairo::FontExtents& fontMetrics = mLayout->getFontExtents();//FontMetricsInt();
+    const int fontMetricsBottom = fontMetrics.descent;
+
+    // TODO: Decide if we want to ignore density ratio (i.e. when the user changes font size
+    // in settings). At the moment, we don't.
+
+    if (lastBaselineToBottomHeight > std::abs(fontMetricsBottom)) {
+        const int paddingBottom = lastBaselineToBottomHeight - fontMetricsBottom;
+        setPadding(getPaddingLeft(), getPaddingTop(), getPaddingRight(), paddingBottom);
+    }
+}
+
+int TextView::getFirstBaselineToTopHeight(){
+    return getPaddingTop() - mLayout->getFontExtents().ascent;
+}
+
+int TextView::getLastBaselineToBottomHeight(){
+    return getPaddingBottom() - mLayout->getFontExtents().descent;
+}
+
 void TextView::setTextAppearance(const std::string&appearance){
     TextAppearanceAttributes attributes;
     if(appearance.empty()==false){
@@ -806,6 +870,14 @@ bool TextView::moveCaret2Line(int line){
         return true;
     }
     return false;
+}
+
+void TextView::setWidth(int pixels) {
+    mMaxWidth = mMinWidth = pixels;
+    mMaxWidthMode = mMinWidthMode = PIXELS;
+
+    requestLayout();
+    invalidate();
 }
 
 void TextView::setLineSpacing(float add, float mult) {
@@ -1556,6 +1628,14 @@ int TextView::getMinLines() const{
 void TextView::setLines(int lines){
     mMaximum = mMinimum= lines;
     mMaxMode = mMinMode = LINES;
+    requestLayout();
+    invalidate();
+}
+
+void TextView::setHeight(int pixels) {
+    mMaximum = mMinimum = pixels;
+    mMaxMode = mMinMode = PIXELS;
+
     requestLayout();
     invalidate();
 }

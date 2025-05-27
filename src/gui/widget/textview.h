@@ -254,6 +254,13 @@ public:
     float getLineSpacingMultiplier()const;
     float getLineSpacingExtra()const;
 
+    void setPadding(int left, int top, int right, int bottom)override;
+    void setPaddingRelative(int start, int top, int end, int bottom)override;
+    void setFirstBaselineToTopHeight(int firstBaselineToTopHeight);
+    void setLastBaselineToBottomHeight(int lastBaselineToBottomHeight);
+    int getFirstBaselineToTopHeight();
+    int getLastBaselineToBottomHeight();
+
     void setIncludeFontPadding(bool includepad);
     bool getIncludeFontPadding()const;
     void setMarqueeRepeatLimit(int marqueeLimit);
@@ -276,6 +283,7 @@ public:
     int getMinWidth()const;
     void setMaxWidth(int maxPixels);
     int getMaxWidth()const;
+    void setWidth(int pixels);
 
     int getMinHeight()const;
     void setMinHeight(int minPixels);
@@ -285,6 +293,7 @@ public:
     int getMinLines()const;
     int getMaxHeight()const;
     void setMaxHeight(int maxPixels);
+    void setHeight(int pixels);
     void setLines(int lines);
     int getLineCount()const;
     int getLineBounds(int line, Rect&bounds);

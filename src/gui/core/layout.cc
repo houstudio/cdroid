@@ -96,6 +96,7 @@ void Layout::setFontSize(float size){
         mFontSize=size;
         mLayout++;
         mContext->set_font_size(mFontSize);
+        mContext->get_font_extents(mFontExtents);
     }
 }
 
@@ -138,6 +139,10 @@ double Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe
     mContext->get_text_extents(utext,te);
     if(fe)mContext->get_font_extents(*fe);
     return te.x_advance;
+}
+
+const Cairo::FontExtents& Layout::getFontExtents()const{
+    return mFontExtents;
 }
 
 int Layout::getEllipsizedWidth() const{
