@@ -44,7 +44,7 @@ public:
     int64_t getBase()const;
     void setFormat(const std::string& format);
     std::string getFormat()const;
-    void setOnChronometerTickListener(OnChronometerTickListener listener);
+    void setOnChronometerTickListener(const OnChronometerTickListener& listener);
     OnChronometerTickListener getOnChronometerTickListener()const;
     void start();
     void stop();

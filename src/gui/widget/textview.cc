@@ -392,6 +392,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
 
     setText(ctx->getString(attrs.getString("text")));
     setHint(ctx->getString(attrs.getString("hint")));
+    setHorizontallyScrolling(attrs.getBoolean("scrollHorizontally",mHorizontallyScrolling));
 
     Drawable* left = attrs.getDrawable("drawableLeft");
     Drawable*right = attrs.getDrawable("drawableRight");
