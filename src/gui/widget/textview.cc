@@ -484,7 +484,6 @@ void TextView::initView(){
     mSpacingMult= 1.0;
     mSpacingAdd = 0.f;
     mTextScaleX = 1.f;
-    mBlinkOn  = false;
     mRestartMarquee = true;
     mCaretPos = 0;
     mCaretRect.set(0,0,0,0);
@@ -494,6 +493,8 @@ void TextView::initView(){
     mMinMode = LINES;
     mDeferScroll = -1;
     mMaxLength= -1;
+    mBlinkOn  = false;
+    mIncludePad = true;
     mSingleLine = false;
     mMarqueeRepeatLimit =3;
     mLastLayoutDirection = -1;
@@ -728,7 +729,11 @@ void TextView::setPaddingRelative(int start, int top, int end, int bottom){
 void TextView::setFirstBaselineToTopHeight(int firstBaselineToTopHeight){
     const Cairo::FontExtents& fontMetrics = mLayout->getFontExtents();//MetricsInt();
     const int fontMetricsTop = fontMetrics.ascent;
-
+    /*if (getIncludeFontPadding()) {
+        fontMetricsTop = fontMetrics.top;
+    } else {
+        fontMetricsTop = fontMetrics.ascent;
+    }*/
     // TODO: Decide if we want to ignore density ratio (i.e. when the user changes font size
     // in settings). At the moment, we don't.
 
