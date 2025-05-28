@@ -2423,7 +2423,7 @@ int TextView::getCompoundDrawablePadding()const{
 
 int TextView::getCompoundPaddingLeft(){
     Drawables* dr = mDrawables;
-    if (dr == nullptr || dr->mShowing[Drawables::LEFT] == nullptr) {
+    if ((dr == nullptr) || (dr->mShowing[Drawables::LEFT] == nullptr)) {
         return mPaddingLeft;
     } else {
         return mPaddingLeft + dr->mDrawablePadding + dr->mDrawableSizeLeft;
@@ -2432,7 +2432,7 @@ int TextView::getCompoundPaddingLeft(){
 
 int TextView::getCompoundPaddingRight(){
     Drawables* dr = mDrawables;
-    if (dr == nullptr || dr->mShowing[Drawables::RIGHT] == nullptr) {
+    if ((dr == nullptr) || (dr->mShowing[Drawables::RIGHT] == nullptr)) {
         return mPaddingRight;
     } else {
         return mPaddingRight + dr->mDrawablePadding + dr->mDrawableSizeRight;
@@ -2450,7 +2450,7 @@ int TextView::getCompoundPaddingTop(){
 
 int TextView::getCompoundPaddingBottom(){
     Drawables* dr = mDrawables;
-    if (dr == nullptr || dr->mShowing[Drawables::BOTTOM] == nullptr) {
+    if ((dr == nullptr) || (dr->mShowing[Drawables::BOTTOM] == nullptr)) {
         return mPaddingBottom;
     } else {
         return mPaddingBottom + dr->mDrawablePadding + dr->mDrawableSizeBottom;
@@ -2505,7 +2505,32 @@ int TextView::getExtendedPaddingTop(){
 }
 
 int TextView::getExtendedPaddingBottom(){
-    return getCompoundPaddingBottom();
+    if(mMaxMode !=LINES){
+        return getCompoundPaddingBottom();
+    }
+
+    //if (mLayout == nullptr)assumeLayout();
+    if (mLayout->getLineCount() <= mMaximum) {
+        return getCompoundPaddingBottom();
+    }
+
+    int top = getCompoundPaddingTop();
+    int bottom = getCompoundPaddingBottom();
+    int viewht = getHeight() - top - bottom;
+    int layoutht = mLayout->getLineTop(mMaximum);
+
+    if (layoutht >= viewht) {
+        return bottom;
+    }
+
+    const int gravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
+    if (gravity == Gravity::TOP) {
+        return bottom + viewht - layoutht;
+    } else if (gravity == Gravity::BOTTOM) {
+        return bottom;
+    } else { // (gravity == Gravity::CENTER_VERTICAL)
+        return bottom + (viewht - layoutht) / 2;
+    }
 }
 
 void TextView::setCompoundDrawableTintList(const ColorStateList* tint){
