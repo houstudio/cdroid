@@ -238,10 +238,6 @@ public:
         };
     }
 
-    ~Marquee(){
-        stop();
-    }
-
     void tick() {
         if (mStatus != MARQUEE_RUNNING) {
             return;
@@ -728,12 +724,12 @@ void TextView::setPaddingRelative(int start, int top, int end, int bottom){
 
 void TextView::setFirstBaselineToTopHeight(int firstBaselineToTopHeight){
     const Cairo::FontExtents& fontMetrics = mLayout->getFontExtents();//MetricsInt();
-    const int fontMetricsTop = fontMetrics.ascent;
-    /*if (getIncludeFontPadding()) {
-        fontMetricsTop = fontMetrics.top;
+    int fontMetricsTop;
+    if (getIncludeFontPadding()) {
+        fontMetricsTop = fontMetrics.max_y_advance;
     } else {
         fontMetricsTop = fontMetrics.ascent;
-    }*/
+    }
     // TODO: Decide if we want to ignore density ratio (i.e. when the user changes font size
     // in settings). At the moment, we don't.
 
@@ -744,8 +740,13 @@ void TextView::setFirstBaselineToTopHeight(int firstBaselineToTopHeight){
 }
 
 void TextView::setLastBaselineToBottomHeight(int lastBaselineToBottomHeight){
-    const Cairo::FontExtents& fontMetrics = mLayout->getFontExtents();//FontMetricsInt();
-    const int fontMetricsBottom = fontMetrics.descent;
+    const Cairo::FontExtents& fontMetrics = mLayout->getFontExtents();
+    int fontMetricsBottom;
+    if (getIncludeFontPadding()) {
+        fontMetricsBottom = fontMetrics.descent;//bottom;
+    } else {
+        fontMetricsBottom = fontMetrics.descent;
+    }
 
     // TODO: Decide if we want to ignore density ratio (i.e. when the user changes font size
     // in settings). At the moment, we don't.
