@@ -954,8 +954,8 @@ public:
     Insets getOpticalInsets();
     void resetPaddingToInitialValues();
     void setOpticalInsets(const Insets& insets);
-    void setPadding(int left, int top, int right, int bottom);
-    void setPaddingRelative(int start,int top,int end,int bottom);
+    virtual void setPadding(int left, int top, int right, int bottom);
+    virtual void setPaddingRelative(int start,int top,int end,int bottom);
     bool isPaddingResolved()const;
     void setTooltipText(const std::string& tooltipText);
     std::string getTooltipText()const;

@@ -10,6 +10,7 @@ private:
     std::vector<int>mLines;
     Cairo::RefPtr<Cairo::Context>mContext;
     Typeface *mTypeface;
+    Cairo::FontExtents mFontExtents;
     int mWidth;
     float mLineHeight;
     int mLineCount;
@@ -98,6 +99,7 @@ public:
     virtual int getEllipsisStart(int line)const;
     virtual int getEllipsisCount(int line)const;
 
+    const Cairo::FontExtents& getFontExtents()const;
     int getLineBaseline(int line)const;
     int getLineAscent(int line)const;
     int getLineBottom(int line)const;
