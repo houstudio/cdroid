@@ -1471,8 +1471,13 @@ int TextView::getLineHeight()const{
     //return mLayout->getLineBottom(0)-mLayout->getLineTop(0);
 }
 
-void TextView::setLineHeight(int h){
-    setLineSpacing(h-getLineHeight(),1.f);
+void TextView::setLineHeight(int lineHeight){
+    const int fontHeight = mLayout->getFontExtents().height;
+    // Make sure we don't setLineSpacing if it's not needed to avoid unnecessary redraw.
+    if(lineHeight!=fontHeight){
+        // Set lineSpacingExtra by the difference of lineSpacing with lineHeight
+        setLineSpacing(lineHeight - fontHeight,1.f);
+    }
 }
 
 bool TextView::isAutoSizeEnabled() const{
