@@ -238,6 +238,10 @@ public:
         };
     }
 
+    ~Marquee(){
+        stop();
+    }
+
     void tick() {
         if (mStatus != MARQUEE_RUNNING) {
             return;
@@ -262,11 +266,13 @@ public:
     }
 
     void stop() {
-        mStatus = MARQUEE_STOPPED;
-        mChoreographer->removeFrameCallback(mStartCallback);
-        mChoreographer->removeFrameCallback(mRestartCallback);
-        mChoreographer->removeFrameCallback(mTickCallback);
-        resetScroll();
+        if(mStatus!=MARQUEE_STOPPED){
+            mStatus = MARQUEE_STOPPED;
+            mChoreographer->removeFrameCallback(mStartCallback);
+            mChoreographer->removeFrameCallback(mRestartCallback);
+            mChoreographer->removeFrameCallback(mTickCallback);
+            resetScroll();
+        }
     }
 
     void start(int repeatLimit) {
