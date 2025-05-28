@@ -1467,7 +1467,8 @@ int TextView::getBaselineOffset(){
 }
 
 int TextView::getLineHeight()const{
-    return mLayout->getLineBottom(0)-mLayout->getLineTop(0);
+    return std::round(mLayout->getFontExtents().height * mSpacingMult + mSpacingAdd);
+    //return mLayout->getLineBottom(0)-mLayout->getLineTop(0);
 }
 
 void TextView::setLineHeight(int h){
