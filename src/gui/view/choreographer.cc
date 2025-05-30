@@ -333,8 +333,7 @@ void Choreographer::CallbackQueue::addCallbackLocked(int64_t dueTime,void* actio
 int Choreographer::CallbackQueue::removeCallbacksLocked(void* action, void* token) {
     CallbackRecord* predecessor = nullptr;
     int count = 0;
-    for (CallbackRecord* callback = mHead; callback != nullptr;) {
-        CallbackRecord* next = callback->next;
+    for (CallbackRecord* callback = mHead; callback != nullptr ; callback = callback->next) {
 #if 0
         if ( ((((long)token) == FRAME_CALLBACK_TOKEN) && (callback->frameCallback==*(FrameCallback*)action) )
              ||( ((long)token!=FRAME_CALLBACK_TOKEN) && (action == nullptr || callback->action == *(Runnable*)action)
@@ -343,16 +342,15 @@ int Choreographer::CallbackQueue::removeCallbacksLocked(void* action, void* toke
         if(callback->compare(action,token)){
 #endif
             if (predecessor != nullptr) {
-                predecessor->next = next;
+                predecessor->next = callback->next;
             } else {
-                mHead = next;
+                mHead = callback->next;
             }
             count++;
             mChoreographer->recycleCallbackLocked(callback);
         } else {
             predecessor = callback;
         }
-        callback = next;
     }
     LOGV_IF(count,"removed %d Actions",count);
     return count;
