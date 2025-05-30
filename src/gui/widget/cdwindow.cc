@@ -705,6 +705,7 @@ void Window::doLayout(){
         view->measure(widthSpec, heightSpec);
         view->layout (lp->leftMargin,lp->topMargin,view->getMeasuredWidth(),view->getMeasuredHeight());
     }
+    getViewTreeObserver()->dispatchOnGlobalLayout();
     mAttachInfo->mTreeObserver->dispatchOnGlobalLayout();
     mPrivateFlags&=~PFLAG_FORCE_LAYOUT;
     mInLayout = false;
