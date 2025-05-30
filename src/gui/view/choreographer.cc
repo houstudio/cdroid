@@ -269,6 +269,16 @@ void Choreographer::CallbackRecord::run(int64_t frameTimeNanos) {
     }
 }
 
+bool  Choreographer::CallbackRecord::compare(void*vaction,void*vtoken)const{
+    if((long)this->token==FRAME_CALLBACK_TOKEN){
+        return ( (vaction==nullptr) || (this->frameCallback==*(FrameCallback*)vaction))
+            && ( (vtoken==nullptr) || (this->token==vtoken) );
+    }else {
+        return ( (vaction==nullptr) || (this->action==*(Runnable*)vaction) )
+            && ( (vtoken==nullptr) || (this->token==vtoken) );
+    }
+}
+
 Choreographer::CallbackQueue::CallbackQueue(Choreographer*choreographer){
     mHead = nullptr;
     mChoreographer = choreographer;
@@ -325,9 +335,13 @@ int Choreographer::CallbackQueue::removeCallbacksLocked(void* action, void* toke
     int count = 0;
     for (CallbackRecord* callback = mHead; callback != nullptr;) {
         CallbackRecord* next = callback->next;
+#if 0
         if ( ((((long)token) == FRAME_CALLBACK_TOKEN) && (callback->frameCallback==*(FrameCallback*)action) )
              ||( ((long)token!=FRAME_CALLBACK_TOKEN) && (action == nullptr || callback->action == *(Runnable*)action)
                      && (token == nullptr || callback->token == token) )) {
+#else
+        if(callback->compare(action,token)){
+#endif
             if (predecessor != nullptr) {
                 predecessor->next = next;
             } else {

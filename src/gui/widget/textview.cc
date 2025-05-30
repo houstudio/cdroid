@@ -266,13 +266,11 @@ public:
     }
 
     void stop() {
-        if(mStatus!=MARQUEE_STOPPED){
-            mStatus = MARQUEE_STOPPED;
-            mChoreographer->removeFrameCallback(mStartCallback);
-            mChoreographer->removeFrameCallback(mRestartCallback);
-            mChoreographer->removeFrameCallback(mTickCallback);
-            resetScroll();
-        }
+        mStatus = MARQUEE_STOPPED;
+        mChoreographer->removeFrameCallback(mStartCallback);
+        mChoreographer->removeFrameCallback(mRestartCallback);
+        mChoreographer->removeFrameCallback(mTickCallback);
+        resetScroll();
     }
 
     void start(int repeatLimit) {

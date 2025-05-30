@@ -26,6 +26,7 @@ private:
     public:
         CallbackRecord();
         void run(int64_t frameTimeNanos);
+        bool compare(void*action,void*token)const;
     };
     class CallbackQueue{
     public:
