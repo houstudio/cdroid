@@ -266,11 +266,13 @@ public:
     }
 
     void stop() {
-        mStatus = MARQUEE_STOPPED;
-        mChoreographer->removeFrameCallback(mStartCallback);
-        mChoreographer->removeFrameCallback(mRestartCallback);
-        mChoreographer->removeFrameCallback(mTickCallback);
-        resetScroll();
+        if(mStatus!=MARQUEE_STOPPED){
+            mStatus = MARQUEE_STOPPED;
+            mChoreographer->removeFrameCallback(mStartCallback);
+            mChoreographer->removeFrameCallback(mRestartCallback);
+            mChoreographer->removeFrameCallback(mTickCallback);
+            resetScroll();
+        }
     }
 
     void start(int repeatLimit) {
@@ -484,7 +486,6 @@ void TextView::initView(){
     mSpacingMult= 1.0;
     mSpacingAdd = 0.f;
     mTextScaleX = 1.f;
-    mBlinkOn  = false;
     mRestartMarquee = true;
     mCaretPos = 0;
     mCaretRect.set(0,0,0,0);
@@ -494,6 +495,8 @@ void TextView::initView(){
     mMinMode = LINES;
     mDeferScroll = -1;
     mMaxLength= -1;
+    mBlinkOn  = false;
+    mIncludePad = true;
     mSingleLine = false;
     mMarqueeRepeatLimit =3;
     mLastLayoutDirection = -1;
@@ -727,8 +730,12 @@ void TextView::setPaddingRelative(int start, int top, int end, int bottom){
 
 void TextView::setFirstBaselineToTopHeight(int firstBaselineToTopHeight){
     const Cairo::FontExtents& fontMetrics = mLayout->getFontExtents();//MetricsInt();
-    const int fontMetricsTop = fontMetrics.ascent;
-
+    int fontMetricsTop;
+    if (getIncludeFontPadding()) {
+        fontMetricsTop = fontMetrics.max_y_advance;
+    } else {
+        fontMetricsTop = fontMetrics.ascent;
+    }
     // TODO: Decide if we want to ignore density ratio (i.e. when the user changes font size
     // in settings). At the moment, we don't.
 
@@ -739,8 +746,13 @@ void TextView::setFirstBaselineToTopHeight(int firstBaselineToTopHeight){
 }
 
 void TextView::setLastBaselineToBottomHeight(int lastBaselineToBottomHeight){
-    const Cairo::FontExtents& fontMetrics = mLayout->getFontExtents();//FontMetricsInt();
-    const int fontMetricsBottom = fontMetrics.descent;
+    const Cairo::FontExtents& fontMetrics = mLayout->getFontExtents();
+    int fontMetricsBottom;
+    if (getIncludeFontPadding()) {
+        fontMetricsBottom = fontMetrics.descent;//bottom;
+    } else {
+        fontMetricsBottom = fontMetrics.descent;
+    }
 
     // TODO: Decide if we want to ignore density ratio (i.e. when the user changes font size
     // in settings). At the moment, we don't.
@@ -2423,7 +2435,7 @@ int TextView::getCompoundDrawablePadding()const{
 
 int TextView::getCompoundPaddingLeft(){
     Drawables* dr = mDrawables;
-    if (dr == nullptr || dr->mShowing[Drawables::LEFT] == nullptr) {
+    if ((dr == nullptr) || (dr->mShowing[Drawables::LEFT] == nullptr)) {
         return mPaddingLeft;
     } else {
         return mPaddingLeft + dr->mDrawablePadding + dr->mDrawableSizeLeft;
@@ -2432,7 +2444,7 @@ int TextView::getCompoundPaddingLeft(){
 
 int TextView::getCompoundPaddingRight(){
     Drawables* dr = mDrawables;
-    if (dr == nullptr || dr->mShowing[Drawables::RIGHT] == nullptr) {
+    if ((dr == nullptr) || (dr->mShowing[Drawables::RIGHT] == nullptr)) {
         return mPaddingRight;
     } else {
         return mPaddingRight + dr->mDrawablePadding + dr->mDrawableSizeRight;
@@ -2450,7 +2462,7 @@ int TextView::getCompoundPaddingTop(){
 
 int TextView::getCompoundPaddingBottom(){
     Drawables* dr = mDrawables;
-    if (dr == nullptr || dr->mShowing[Drawables::BOTTOM] == nullptr) {
+    if ((dr == nullptr) || (dr->mShowing[Drawables::BOTTOM] == nullptr)) {
         return mPaddingBottom;
     } else {
         return mPaddingBottom + dr->mDrawablePadding + dr->mDrawableSizeBottom;
@@ -2505,7 +2517,32 @@ int TextView::getExtendedPaddingTop(){
 }
 
 int TextView::getExtendedPaddingBottom(){
-    return getCompoundPaddingBottom();
+    if(mMaxMode !=LINES){
+        return getCompoundPaddingBottom();
+    }
+
+    //if (mLayout == nullptr)assumeLayout();
+    if (mLayout->getLineCount() <= mMaximum) {
+        return getCompoundPaddingBottom();
+    }
+
+    int top = getCompoundPaddingTop();
+    int bottom = getCompoundPaddingBottom();
+    int viewht = getHeight() - top - bottom;
+    int layoutht = mLayout->getLineTop(mMaximum);
+
+    if (layoutht >= viewht) {
+        return bottom;
+    }
+
+    const int gravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
+    if (gravity == Gravity::TOP) {
+        return bottom + viewht - layoutht;
+    } else if (gravity == Gravity::BOTTOM) {
+        return bottom;
+    } else { // (gravity == Gravity::CENTER_VERTICAL)
+        return bottom + (viewht - layoutht) / 2;
+    }
 }
 
 void TextView::setCompoundDrawableTintList(const ColorStateList* tint){
