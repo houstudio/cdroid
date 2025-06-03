@@ -457,6 +457,7 @@ void PopupWindow::invokePopup(WindowManager::LayoutParams* p){
     setLayoutDirectionFromAnchor();
     WindowManager::getInstance().moveWindow(mDecorView,p->x,p->y);
     LOGD("invokePopup(%d,%d)",p->x,p->y);
+    mDecorView->setLayoutParams(p);
     //mWindowManager->addView(mDecorView, p);
     /*if (mEnterTransition != nullptr) {
         mDecorView->requestEnterTransition(mEnterTransition);

@@ -37,7 +37,7 @@ protected:
     OverlayViewGroup* mOverlayViewGroup;
 public:
     ViewOverlay(Context* context, View* hostView);
-    ~ViewOverlay();
+    virtual ~ViewOverlay();
     ViewGroup* getOverlayView()const;
     void add(Drawable* drawable);
     void remove(Drawable* drawable);

@@ -3,6 +3,7 @@
 #include <widget/dropdownlistview.h>
 #include <widget/forwardinglistener.h>
 #include <app/alertdialog.h>
+#include <app/dialoginterface.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 #define MAX_ITEMS_MEASURED  15
@@ -256,6 +257,7 @@ View* Spinner::makeView(int position, bool addChild) {
     setUpChild(child, addChild);
     return child;
 }
+
 void Spinner::setUpChild(View* child, bool addChild) {
     // Respect layout params that are already in the view. Otherwise
     // make some up...
@@ -289,6 +291,24 @@ void Spinner::setUpChild(View* child, bool addChild) {
     child->layout(childLeft, childTop,width,height );
 
     if (!addChild)removeViewInLayout(child);
+}
+
+bool Spinner::performClick() {
+    bool handled = AbsSpinner::performClick();
+
+    if (!handled) {
+        handled = true;
+
+        if (!mPopup->isShowing()) {
+            mPopup->show(getTextDirection(), getTextAlignment());
+        }
+    }
+    return handled;
+}
+
+void Spinner::onClick(DialogInterface& dialog, int which) {
+    setSelection(which);
+    dialog.dismiss();
 }
 
 int Spinner::measureContentWidth(Adapter* adapter, Drawable* background){
@@ -347,11 +367,12 @@ PointerIcon* Spinner::onResolvePointerIcon(MotionEvent& event, int pointerIndex)
 /////////////////////////////////SpinnerPopup//////////////////////////////////////////
 Spinner::DropdownPopup::DropdownPopup(Context*context,Spinner*sp)
   :ListPopupWindow(context,AttributeSet(context,"")){
-    mSpinner=sp;
-    mAdapter=nullptr;
+    mSpinner = sp;
+    mAdapter = nullptr;
     setAnchorView(mSpinner);
     setModal(true);
     setPromptPosition(POSITION_PROMPT_ABOVE);
+
     setOnItemClickListener([this](AdapterView& parent, View& v, int position, long id) {
          mSpinner->setSelection(position);
          if (mSpinner->mOnItemClickListener != nullptr) {
@@ -359,6 +380,17 @@ Spinner::DropdownPopup::DropdownPopup(Context*context,Spinner*sp)
          }
          dismiss();
     });
+
+    mLayoutListener =[this](){
+        if (!mSpinner->isVisibleToUser()) {
+            dismiss();
+        } else {
+            computeContentWidth();
+            // Use super.show here to update; we don't want to move the selected
+            // position or adjust other things that would be reset otherwise.
+            ListPopupWindow::show();
+        }
+    };
 }
 
 Spinner::DropdownPopup::~DropdownPopup(){
@@ -491,63 +523,52 @@ void Spinner::DropdownPopup::show(int textDirection, int textAlignment) {
     // TODO: This might be appropriate to push all the way down to PopupWindow,
     // but it may have other side effects to investigate first. (Text editing handles, etc.)
     ViewTreeObserver* vto = mSpinner->getViewTreeObserver();
-    /*if (vto != nullptr) {
-        OnGlobalLayoutListener layoutListener = new OnGlobalLayoutListener() {
-        @Override
-        public void onGlobalLayout() {
-            if (!Spinner.this.isVisibleToUser()) {
-                dismiss();
-            } else {
-                computeContentWidth();
-                // Use super.show here to update; we don't want to move the selected
-                // position or adjust other things that would be reset otherwise.
-                DropdownPopup.super.show();
-                        }
-            }
-        };
-        vto->addOnGlobalLayoutListener(layoutListener);
-        setOnDismissListener(new OnDismissListener() {
-            @Override public void onDismiss() {
-                ViewTreeObserver* vto = getViewTreeObserver();
-                if (vto != null) {
-                    vto->removeOnGlobalLayoutListener(layoutListener);
-                }
+    if (vto != nullptr) {
+        vto->addOnGlobalLayoutListener(mLayoutListener);
+        //OnDismissListener dl;
+        setOnDismissListener([this] {
+            ViewTreeObserver* vto = mSpinner->getViewTreeObserver();
+            if (vto != nullptr) {
+                vto->removeOnGlobalLayoutListener(mLayoutListener);
             }
         });
-    }*/
+    }
 }
 //int SpinnerPopup::measureContentWidth(Adapter*,Drawable*){}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 Spinner::DialogPopup::DialogPopup(Spinner*spinner){
-    mSpinner=spinner;
+    mSpinner = spinner;
 }
 
 Spinner::DialogPopup::~DialogPopup(){
 }
 
 void Spinner::DialogPopup::setAdapter(Adapter*adapter){
-    mListAdapter=adapter;
+    mListAdapter = adapter;
 }
 
 void Spinner::DialogPopup::show(int textDirection, int textAlignment){
     if (mListAdapter == nullptr) {
         return;
     }
+    DialogInterface::OnClickListener onDialogClick = std::bind(&Spinner::DialogPopup::onClick,this,std::placeholders::_1,std::placeholders::_2);
     mPopup =AlertDialog::Builder(mSpinner->getPopupContext())
         .setTitle(mPrompt)
-        .setSingleChoiceItems(mListAdapter,mSpinner->getSelectedItemPosition(),[this](DialogInterface& dialog,int which){
-             LOGD("Selection=%d",which);
-             mSpinner->setSelection(which);
-             /*if (mSpinner->mOnItemClickListener != nullptr) {
-                 mSpinner->performItemClick(mSpinner, which, mListAdapter->getItemId(which));
-             }*/
-             dismiss();
-        }).show();
+        .setSingleChoiceItems(mListAdapter,mSpinner->getSelectedItemPosition(),onDialogClick).show();
 
     ListView* listView = mPopup->getListView();
     listView->setTextDirection(textDirection);
     listView->setTextAlignment(textAlignment);
+    //mPopup->show();
+}
+
+void Spinner::DialogPopup::onClick(DialogInterface& dialog, int which) {
+    mSpinner->setSelection(which);
+    if (mSpinner->mOnItemClickListener != nullptr) {
+        mSpinner->performItemClick(*mSpinner/*nullptr*/, which, mListAdapter->getItemId(which));
+    }
+    dismiss();
 }
 
 void Spinner::DialogPopup::dismiss(){

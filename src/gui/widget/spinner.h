@@ -5,7 +5,8 @@
 #include <widget/listpopupwindow.h>
 #include <widget/forwardinglistener.h>
 namespace cdroid{
-
+class Dialog;
+class DialogInterface;
 class Spinner:public AbsSpinner{
 private:
     class SpinnerPopup {
@@ -40,11 +41,12 @@ private:
         Spinner *mSpinner; 
         Adapter *mListAdapter;
         std::string mPrompt;
+        void onClick(DialogInterface& dialog, int which);
     public:
         DialogPopup(Spinner*spinner);
         ~DialogPopup()override;
         void setAdapter(Adapter* adapter)override;
-        void show(int textDirection, int textAlignment)override; 
+        void show(int textDirection, int textAlignment)override;
         void dismiss()override;
         bool isShowing()override;
         void setPromptText(const std::string& hintText)override;
@@ -64,6 +66,7 @@ private:
         std::string mHintText;
         Spinner *mSpinner;
         Adapter *mAdapter;
+        ViewTreeObserver::OnGlobalLayoutListener mLayoutListener;
     public:
         DropdownPopup(Context*context,Spinner*spinner);
         ~DropdownPopup()override;
@@ -131,6 +134,8 @@ public:
     int getBaseline()override;
     void show(int textDirection, int textAlignment);
     bool onTouchEvent(MotionEvent& event)override;
+    bool performClick()override;
+    void onClick(DialogInterface& dialog, int which);
     PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
 };
 
