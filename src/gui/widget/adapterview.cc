@@ -533,15 +533,13 @@ bool AdapterView::isScrollableForAccessibility() {
 }
 
 bool AdapterView::performItemClick(View& view, int position, long id){
-    bool result=false;
+    view.sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_CLICKED);
     if (mOnItemClickListener != nullptr) {
         playSoundEffect(SoundEffectConstants::CLICK);
         mOnItemClickListener(*this,view, position, id);
-        result = true;
+        return true;
     }
-
-    view.sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_CLICKED);
-    return result;
+    return false;
 }
 
 
