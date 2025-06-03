@@ -36,7 +36,7 @@ ViewGroupOverlay::ViewGroupOverlay(Context* context, View* hostView)
 }
 
 void ViewGroupOverlay::add(View*view){
-    mOverlayViewGroup->addView(view);
+    mOverlayViewGroup->add(view);
 }
 
 void ViewGroupOverlay::remove(View*view){
@@ -50,6 +50,9 @@ ViewOverlay::OverlayViewGroup::OverlayViewGroup(Context*context,View* hostView):
 }
 
 ViewOverlay::OverlayViewGroup::~OverlayViewGroup(){
+    for(Drawable*dr:mDrawables){
+        delete dr;
+    }
     mDrawables.clear();
 }
 
@@ -74,6 +77,7 @@ void ViewOverlay::OverlayViewGroup::remove(Drawable* drawable){
         invalidate(drawable->getBounds());
         drawable->setCallback(nullptr);
         mDrawables.erase(it);
+        delete drawable;
     }
 }
 
@@ -105,9 +109,10 @@ void ViewOverlay::OverlayViewGroup::add(View* child) {
             parent->getLayoutTransition()->cancel(LayoutTransition::DISAPPEARING);
         }
         // fail-safe if view is still attached for any reason
-        if (child->getParent() != nullptr) {
+        /*if (child->getParent() != nullptr) {
             //child->assignParent(nullptr);
-        }
+            //child->mParent has been setted to nullptr in parent->removeView(child)
+        }*/
     }
     ViewGroup::addView(child);
 }
@@ -137,6 +142,7 @@ void ViewOverlay::OverlayViewGroup::clear() {
     removeAllViews();
     for (Drawable* drawable : mDrawables) {
         drawable->setCallback(nullptr);
+        delete drawable;
     }
     mDrawables.clear();
 }
