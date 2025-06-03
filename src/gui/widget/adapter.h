@@ -52,10 +52,7 @@ private:
 typedef Adapter ListAdapter,SpinnerAdapter,BaseAdapter;
 template<class T>
 class ArrayAdapter:public Adapter{
-public:
-    typedef std::function<void(TextView&,T&)>onSetTextListener;
 private:
-    onSetTextListener onSetText;
     std::vector<T> mObjects;
 protected:
     Context* mContext;
@@ -69,21 +66,18 @@ private:
         //Otherwise, find the TextView field within the layout
         TextView* text = (mFieldId==0)?(TextView*)view:(TextView*)view->findViewById(mFieldId);
         T& item = getItemAt(position);
-        if(text&&onSetText)onSetText(*text,item);
         return view;
     }
 public:
     ArrayAdapter():Adapter(){
         mContext = nullptr;
-        onSetText= nullptr;
         mFieldId = 0;
     }
-    ArrayAdapter(Context*context,const std::string&resource,int textViewResourceId,onSetTextListener setfun=nullptr){
+    ArrayAdapter(Context*context,const std::string&resource,int textViewResourceId/*,onSetTextListener setfun=nullptr*/){
         mContext = context;
         mResource= resource;
         mDropDownResource = resource;
         mFieldId = textViewResourceId;
-        onSetText= setfun;
     }
     void setDropDownViewResource(const std::string&resource){
         mDropDownResource = resource;
