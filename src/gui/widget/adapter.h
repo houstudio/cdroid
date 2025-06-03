@@ -60,10 +60,11 @@ private:
 protected:
     Context* mContext;
     std::string mResource;
+    std::string mDropDownResource;
     int  mFieldId;
 private:
      View* createViewFromResource(int position,View* convertView,ViewGroup* parent,const std::string& resource) {
-        View*view =convertView?convertView:LayoutInflater::from(mContext)->inflate(resource,nullptr, false);
+        View*view = convertView?convertView:LayoutInflater::from(mContext)->inflate(resource,nullptr, false);
         //If no custom field is assigned, assume the whole resource is a TextView
         //Otherwise, find the TextView field within the layout
         TextView* text = (mFieldId==0)?(TextView*)view:(TextView*)view->findViewById(mFieldId);
@@ -73,15 +74,19 @@ private:
     }
 public:
     ArrayAdapter():Adapter(){
-        mContext=nullptr;
-        onSetText=nullptr;
-        mFieldId=0;
+        mContext = nullptr;
+        onSetText= nullptr;
+        mFieldId = 0;
     }
     ArrayAdapter(Context*context,const std::string&resource,int textViewResourceId,onSetTextListener setfun=nullptr){
-        mContext=context;
-        mResource=resource;
-        mFieldId=textViewResourceId;
-        onSetText=setfun;
+        mContext = context;
+        mResource= resource;
+        mDropDownResource = resource;
+        mFieldId = textViewResourceId;
+        onSetText= setfun;
+    }
+    void setDropDownViewResource(const std::string&resource){
+        mDropDownResource = resource;
     }
     void addAll(const std::vector<T>&items){
         mObjects=items;
@@ -106,7 +111,7 @@ public:
         if(mNotifyOnChange)notifyDataSetChanged();
     }
     void remove(T& obj){
-        auto it=std::find(mObjects.begin(),mObjects.end(),obj);
+        auto it = std::find(mObjects.begin(),mObjects.end(),obj);
         if(it!=mObjects.end()){
             mObjects.erase(it);
             if(mNotifyOnChange)notifyDataSetChanged();
@@ -122,6 +127,9 @@ public:
     }
     View*getView(int position, View* convertView, ViewGroup* parent)override{
         return mContext==nullptr?nullptr:createViewFromResource(position, convertView, parent, mResource);
+    }
+    View*getDropDownView(int position, View* convertView, ViewGroup* parent)override{
+        return createViewFromResource(position, convertView, parent, mDropDownResource);
     }
 };
 
