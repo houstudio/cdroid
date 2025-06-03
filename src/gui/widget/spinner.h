@@ -116,6 +116,7 @@ protected:
 public:
     Spinner(int w,int h,int mode=0);
     Spinner(Context*ctx,const AttributeSet&atts);
+    ~Spinner()override;
     Context* getPopupContext()const;
     int measureContentWidth(Adapter* adapter, Drawable* background);
     void setPopupBackgroundDrawable(Drawable* background);

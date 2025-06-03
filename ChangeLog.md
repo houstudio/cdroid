@@ -1,9 +1,11 @@
-# **V3.9.x
+# **V3.9.8
   - add BaseBundle,Bundle
   - add BitmapDrawable::isStateful
   - add porting/android
+  - fix Spinner,try it now:)
   - fix ViewPage2
   - fix Assets's parser
+  - fix ViewOverlay's memleaks
   - fix ViewPager's crash issue while Adapter.getItemPosition return NONE
 # **V3.8.6
   - XmlPullParser is more compatible with android.
@@ -44,8 +46,8 @@
   - Add Accessibility api entries
   - Some Bug fixes
 # **V3.0.0
-  - Add CoordniatorLayout
-  - Windows port working
+  - add CoordniatorLayout
+  - add Win32 porting
   - add some losting fucntions
   - add allwinner tina's porting
 # **V2.1.0**

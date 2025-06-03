@@ -72,6 +72,11 @@ Spinner::Spinner(Context*ctx,const AttributeSet&atts)
     } 
 }
 
+Spinner::~Spinner(){
+    delete mPopup;
+    delete mForwardingListener;
+}
+
 Context* Spinner::getPopupContext()const{
     return mPopupContext;
 }
