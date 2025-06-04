@@ -21,7 +21,7 @@ CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):TextVie
         mCheckMarkTintList = a.getColorStateList("checkMarkTint");
         mHasCheckMarkTint = (mCheckMarkTintList!=nullptr);
     }
-
+    mChecked = false;
     mCheckMarkGravity = a.getGravity("checkMarkGravity", Gravity::END);
 
     const bool checked = a.getBoolean("checked", false);

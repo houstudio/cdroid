@@ -62,6 +62,8 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mFlingRunnable = new FlingRunnable(this);
 
     mSelector  = nullptr;
+    mCheckStates = nullptr;
+    mCheckedIdStates = nullptr;
     mDirection = 0;
     mCacheColorHint = 0;
     mWidthMeasureSpec = MeasureSpec::UNSPECIFIED;
@@ -123,6 +125,8 @@ AbsListView::~AbsListView() {
         mVelocityTracker->recycle();
         mVelocityTracker = nullptr;
     }
+    delete mCheckStates;
+    delete mCheckedIdStates;
     delete mSelector;
     delete mFastScroll;
     delete mRecycler;
@@ -136,6 +140,7 @@ AbsListView::~AbsListView() {
     delete mPendingCheckForKeyLongPress;
     delete mPerformClick;
     delete mFlingRunnable;
+
 }
 
 View* AbsListView::getAccessibilityFocusedChild(View* focusedView) {
@@ -161,6 +166,9 @@ void AbsListView::setScrollIndicatorViews(View* up, View* down) {
 void AbsListView::setAdapter(Adapter*adapter) {
     if (adapter != nullptr) {
         mAdapterHasStableIds =adapter->hasStableIds();
+        if ((mChoiceMode != CHOICE_MODE_NONE) && mAdapterHasStableIds && (mCheckedIdStates == nullptr)) {
+            mCheckedIdStates = new LongSparseArray<int>();
+        }
     }
     clearChoices();
 }
@@ -539,32 +547,32 @@ int AbsListView::getCheckedItemCount()const {
 
 bool AbsListView::isItemChecked(int position)const {
     if (mChoiceMode != CHOICE_MODE_NONE) {
-        return mCheckStates.get(position);
+        return mCheckStates->get(position);
     }
     return false;
 }
 
 int AbsListView::getCheckedItemPosition()const {
-    if (mChoiceMode == CHOICE_MODE_SINGLE && mCheckStates.size() == 1) {
-        return mCheckStates.keyAt(0);
+    if ((mChoiceMode == CHOICE_MODE_SINGLE) && (mCheckStates != nullptr) &&(mCheckStates->size() == 1)) {
+        return mCheckStates->keyAt(0);
     }
     return INVALID_POSITION;
 }
 
 int AbsListView::getCheckedItemPositions(SparseBooleanArray&array) {
     if (mChoiceMode != CHOICE_MODE_NONE) {
-        return mCheckStates.size();
+        return mCheckStates->size();
     }
     return 0;
 }
 
 int AbsListView::getCheckedItemIds(std::vector<long>&ids)const {
-    if (mChoiceMode == CHOICE_MODE_NONE || mCheckedIdStates.size() == 0 || mAdapter == nullptr) {
+    if ((mChoiceMode == CHOICE_MODE_NONE) || (mCheckedIdStates == nullptr) || (mAdapter == nullptr)) {
         return 0;
     }
-    const int count = mCheckedIdStates.size();
+    const int count = mCheckedIdStates->size();
     for (int i = 0; i < count; i++) {
-        ids.push_back(mCheckedIdStates.keyAt(i));
+        ids.push_back(mCheckedIdStates->keyAt(i));
     }
     return ids.size();
 }
@@ -652,13 +660,13 @@ void AbsListView::setItemChecked(int position, bool value) {
 
     bool itemCheckChanged;
     if (mChoiceMode == CHOICE_MODE_MULTIPLE || mChoiceMode == CHOICE_MODE_MULTIPLE_MODAL) {
-        const bool oldValue = mCheckStates.get(position);
-        mCheckStates.put(position,value);
-        if (mCheckedIdStates.size() && mAdapter->hasStableIds()) {
+        const bool oldValue = mCheckStates->get(position);
+        mCheckStates->put(position,value);
+        if ((mCheckedIdStates!=nullptr) && mAdapter->hasStableIds()) {
             if (value) {
-                mCheckedIdStates.put(mAdapter->getItemId(position), position);
+                mCheckedIdStates->put(mAdapter->getItemId(position), position);
             } else {
-                mCheckedIdStates.remove(mAdapter->getItemId(position));
+                mCheckedIdStates->remove(mAdapter->getItemId(position));
             }
         }
         itemCheckChanged = oldValue != value;
@@ -675,24 +683,24 @@ void AbsListView::setItemChecked(int position, bool value) {
             //mMultiChoiceModeCallback.onItemCheckedStateChanged
         }
     } else {
-        const bool updateIds = mCheckedIdStates.size() && mAdapter->hasStableIds();
+        const bool updateIds = (mCheckedIdStates!=nullptr) && mAdapter->hasStableIds();
         // Clear all values if we're checking something, or unchecking the currently selected item
         itemCheckChanged = isItemChecked(position) != value;
         if (value || isItemChecked(position)) {
-            mCheckStates.clear();
+            mCheckStates->clear();
             if (updateIds) {
-                mCheckedIdStates.clear();
+                mCheckedIdStates->clear();
             }
         }
         // this may end up selecting the value we just cleared but this way
         // we ensure length of mCheckStates is 1, a fact getCheckedItemPosition relies on
         if (value) {
-            mCheckStates.put(position, true);
+            mCheckStates->put(position, true);
             if (updateIds) {
-                mCheckedIdStates.put(mAdapter->getItemId(position), position);
+                mCheckedIdStates->put(mAdapter->getItemId(position), position);
             }
             mCheckedItemCount = 1;
-        } else if (mCheckStates.size() == 0 || !mCheckStates.valueAt(0)) {
+        } else if ((mCheckStates->size() == 0) || !mCheckStates->valueAt(0)) {
             mCheckedItemCount = 0;
         }
     }
@@ -724,12 +732,12 @@ void AbsListView::setChoiceMode(int choiceMode) {
         mChoiceActionMode = null;
     }*/
     if (mChoiceMode != CHOICE_MODE_NONE) {
-        /*if (mCheckStates == null) {
-            mCheckStates = new SparseboolArray(0);
+        if (mCheckStates == nullptr) {
+            mCheckStates = new SparseBooleanArray;
         }
-        if (mCheckedIdStates == null && mAdapter != null && mAdapter.hasStableIds()) {
-            mCheckedIdStates = new LongSparseArray<Integer>(0);
-        }*/
+        if ((mCheckedIdStates == nullptr) && (mAdapter != nullptr) && mAdapter->hasStableIds()) {
+            mCheckedIdStates = new LongSparseArray<int>;
+        }
         // Modal multi-choice mode only has choices when the mode is active. Clear them.
         if (mChoiceMode == CHOICE_MODE_MULTIPLE_MODAL) {
             clearChoices();
@@ -764,8 +772,8 @@ void AbsListView::resetList() {
 }
 
 void AbsListView::clearChoices() {
-    mCheckStates.clear();
-    mCheckedIdStates.clear();
+    if(mCheckStates)mCheckStates->clear();
+    if(mCheckedIdStates)mCheckedIdStates->clear();
     mCheckedItemCount = 0;
 }
 
@@ -1237,12 +1245,12 @@ void AbsListView::setItemViewLayoutParams(View* child, int position) {
 
 void AbsListView::confirmCheckedPositionsById() {
     // Clear out the positional check states, we'll rebuild it below from IDs.
-    mCheckStates.clear();
+    mCheckStates->clear();
 
     bool checkedCountChanged = false;
-    for (int checkedIndex = 0; checkedIndex < mCheckedIdStates.size(); checkedIndex++) {
-        const long id = mCheckedIdStates.keyAt(checkedIndex);
-        const int lastPos = mCheckedIdStates.valueAt(checkedIndex);
+    for (int checkedIndex = 0; checkedIndex < mCheckedIdStates->size(); checkedIndex++) {
+        const long id = mCheckedIdStates->keyAt(checkedIndex);
+        const int lastPos = mCheckedIdStates->valueAt(checkedIndex);
 
         const long lastPosId = mAdapter->getItemId(lastPos);
         if (id != lastPosId) {
@@ -1254,14 +1262,14 @@ void AbsListView::confirmCheckedPositionsById() {
                 const long searchId = mAdapter->getItemId(searchPos);
                 if (id == searchId) {
                     found = true;
-                    mCheckStates.put(searchPos, true);
-                    mCheckedIdStates.put(checkedIndex, searchPos);
+                    mCheckStates->put(searchPos, true);
+                    mCheckedIdStates->put(checkedIndex, searchPos);
                     break;
                 }
             }
 
             if (!found) {
-                mCheckedIdStates.remove(id);//delete(id);
+                mCheckedIdStates->remove(id);//delete(id);
                 checkedIndex--;
                 mCheckedItemCount--;
                 checkedCountChanged = true;
@@ -1271,7 +1279,7 @@ void AbsListView::confirmCheckedPositionsById() {
                 }
             }
         } else {
-            mCheckStates.put(lastPos, true);
+            mCheckStates->put(lastPos, true);
         }
     }
 
@@ -1476,7 +1484,7 @@ void AbsListView::handleDataChanged() {
     const int lastHandledItemCount = mLastHandledItemCount;
     mLastHandledItemCount = mItemCount;
 
-    if (mChoiceMode != CHOICE_MODE_NONE && mAdapter  && mAdapter->hasStableIds()) {
+    if ((mChoiceMode != CHOICE_MODE_NONE) && (mAdapter!=nullptr)  && mAdapter->hasStableIds()) {
         confirmCheckedPositionsById();
     }
     // TODO: In the future we can recycle these views based on stable ID instead.
@@ -2231,8 +2239,7 @@ void AbsListView::positionPopup() {
     // TODO: And the gravity should be defined in the theme as well
     int bottomGap = screenHeight - xy[1] - getHeight() + (int) (mDensityScale * 20);
     if (!mPopup->isShowing()) {
-        mPopup->showAtLocation(this, Gravity::BOTTOM | Gravity::CENTER_HORIZONTAL,
-                               xy[0], bottomGap);
+        mPopup->showAtLocation(this, Gravity::BOTTOM|Gravity::CENTER_HORIZONTAL,xy[0], bottomGap);
     } else {
         mPopup->update(xy[0], bottomGap, -1, -1);
     }
@@ -2245,11 +2252,11 @@ void AbsListView::updateOnScreenCheckedViews() {
         View* child = getChildAt(i);
         int position = firstPos + i;
         if (dynamic_cast<Checkable*>(child)) {
-            const bool checked=mCheckStates.get(position);
-            dynamic_cast<Checkable*>(child)->setChecked(mCheckStates.get(position));
-            LOGV("setChecked %p[%d] ->%d",child,position,checked);
+            const bool checked = mCheckStates->get(position,false);
+            dynamic_cast<Checkable*>(child)->setChecked(mCheckStates->get(position));
+            LOGV("setChecked %p[%d] ->%d/%d",child,position,checked,mCheckStates->size());
         } else {
-            child->setActivated(mCheckStates.get(position));
+            child->setActivated(mCheckStates->get(position));
         }
     }
 }
@@ -2266,13 +2273,13 @@ bool AbsListView::performItemClick(View& view, int position, long id) {
 
         if ((mChoiceMode == CHOICE_MODE_MULTIPLE) ||
                 (mChoiceMode == CHOICE_MODE_MULTIPLE_MODAL && mChoiceActionMode != nullptr)) {
-            const bool checked = !mCheckStates.get(position, false);
-            mCheckStates.put(position, checked);
-            if (mCheckedIdStates.size() && mAdapter->hasStableIds()) {
+            const bool checked = !mCheckStates->get(position, false);
+            mCheckStates->put(position, checked);
+            if ( (mCheckedIdStates!=nullptr) && mAdapter->hasStableIds()) {
                 if (checked) {
-                    mCheckedIdStates.put(mAdapter->getItemId(position), position);
+                    mCheckedIdStates->put(mAdapter->getItemId(position), position);
                 } else {
-                    mCheckedIdStates.remove(mAdapter->getItemId(position));
+                    mCheckedIdStates->remove(mAdapter->getItemId(position));
                 }
             }
             if (checked) {
@@ -2287,16 +2294,16 @@ bool AbsListView::performItemClick(View& view, int position, long id) {
             }
             checkedStateChanged = true;
         } else if (mChoiceMode == CHOICE_MODE_SINGLE) {
-            const bool checked = !mCheckStates.get(position, false);
+            const bool checked = !mCheckStates->get(position, false);
             if (checked) {
-                mCheckStates.clear();
-                mCheckStates.put(position, true);
-                if (mCheckedIdStates.size() && mAdapter->hasStableIds()) {
-                    mCheckedIdStates.clear();
-                    mCheckedIdStates.put(mAdapter->getItemId(position), position);
+                mCheckStates->clear();
+                mCheckStates->put(position, true);
+                if ((mCheckedIdStates!=nullptr) && mAdapter->hasStableIds()) {
+                    mCheckedIdStates->clear();
+                    mCheckedIdStates->put(mAdapter->getItemId(position), position);
                 }
                 mCheckedItemCount = 1;
-            } else if (mCheckStates.size() == 0 || !mCheckStates.valueAt(0)) {
+            } else if ((mCheckStates!=nullptr) || !mCheckStates->valueAt(0)) {
                 mCheckedItemCount = 0;
             }
             checkedStateChanged = true;
@@ -2306,7 +2313,6 @@ bool AbsListView::performItemClick(View& view, int position, long id) {
             updateOnScreenCheckedViews();
         }
     }
-
     if (dispatchItemClick) {
         handled |= AdapterView::performItemClick(view, position, id);
     }

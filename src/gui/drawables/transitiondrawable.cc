@@ -111,7 +111,7 @@ void TransitionDrawable::draw(Canvas&canvas){
 
     if (done) {// the setAlpha() calls below trigger invalidation and redraw. If we're done, just draw
                // the appropriate drawable[s] and return
-        if (!mCrossFade || mAlpha == 0) array[0]->mDrawable->draw(canvas);
+        if (!mCrossFade || (mAlpha == 0)) array[0]->mDrawable->draw(canvas);
         if (mAlpha == 0xFF)  array[1]->mDrawable->draw(canvas);
         return;
     }
