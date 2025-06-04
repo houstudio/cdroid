@@ -689,7 +689,7 @@ public:
         mParams=param;
         LV=lv;
     }
-    View*getView(int position, View* convertView, ViewGroup* parent){
+    View*getView(int position, View* convertView, ViewGroup* parent)override{
         View* view=ArrayAdapter<std::string>::getView(position, convertView, parent);
         if (mParams->mCheckedItems.size()&& mParams->mCheckedItems[position]){
             LV->setItemChecked(position, true);

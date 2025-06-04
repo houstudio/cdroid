@@ -128,7 +128,7 @@ protected:
     bool hasDecorView()const;
     void detachFromAnchor();
     WindowManager::LayoutParams* getDecorViewLayoutParams();
-    WindowManager::LayoutParams createPopupLayoutParams(long token);
+    WindowManager::LayoutParams* createPopupLayoutParams(long token);
     void attachToAnchor(View* anchor, int xoff, int yoff, int gravity);
     
     bool isLayoutInScreenEnabled()const;

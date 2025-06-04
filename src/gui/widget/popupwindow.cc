@@ -162,7 +162,7 @@ void PopupWindow::setContentView(View* contentView) {
 
     mContentView = contentView;
 
-    if (mContext == nullptr && mContentView != nullptr) {
+    if ((mContext == nullptr) && (mContentView != nullptr)) {
         mContext = mContentView->getContext();
     }
 
@@ -178,7 +178,7 @@ void PopupWindow::setContentView(View* contentView) {
         // Attach popup window in decor frame of parent window by default for
         // {@link Build.VERSION_CODES.LOLLIPOP_MR1} or greater. Keep current
         // behavior of not attaching to decor frame for older SDKs.
-        setAttachedInDecor(true);//mContext.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.LOLLIPOP_MR1);
+        setAttachedInDecor(true);//mContext.getApplicationInfo().targetSdkVersion >= Build::VERSION_CODES::LOLLIPOP_MR1);
     }
 }
 
@@ -332,12 +332,12 @@ void PopupWindow::showAtLocation(View* parent, int gravity, int x, int y){
     mIsDropdown = false;
     mGravity = gravity;
 
-    WindowManager::LayoutParams p=createPopupLayoutParams(0);
-    preparePopup(&p);
+    WindowManager::LayoutParams* p=createPopupLayoutParams(0);
+    preparePopup(p);
 
-    p.x = x;
-    p.y = y;
-    invokePopup(&p);
+    p->x = x;
+    p->y = y;
+    invokePopup(p);
 }
 
 void PopupWindow::showAsDropDown(View* anchor){
@@ -360,16 +360,16 @@ void PopupWindow::showAsDropDown(View* anchor, int xoff, int yoff,int gravity){
     mIsShowing = true;
     mIsDropdown = true;
 
-    WindowManager::LayoutParams p=createPopupLayoutParams(0);//anchor.getApplicationWindowToken());
-    p.x = xoff;
-    p.y = yoff;
-    preparePopup(&p);
+    WindowManager::LayoutParams* p = createPopupLayoutParams(0);//anchor.getApplicationWindowToken());
+    p->x = xoff;
+    p->y = yoff;
+    preparePopup(p);
 
-    bool aboveAnchor = findDropDownPosition(anchor,&p, xoff, yoff,
-           p.width, p.height, gravity, mAllowScrollingAnchorParent);
+    const bool aboveAnchor = findDropDownPosition(anchor,p, xoff, yoff,
+           p->width, p->height, gravity, mAllowScrollingAnchorParent);
     updateAboveAnchor(aboveAnchor);
-    //p.accessibilityIdOfAnchor = (anchor) ? anchor->getAccessibilityViewId() : -1;
-    invokePopup(&p);
+    //p->accessibilityIdOfAnchor = (anchor) ? anchor->getAccessibilityViewId() : -1;
+    invokePopup(p);
 }
 
 void PopupWindow::preparePopup(WindowManager::LayoutParams*p){
@@ -457,6 +457,7 @@ void PopupWindow::invokePopup(WindowManager::LayoutParams* p){
     setLayoutDirectionFromAnchor();
     WindowManager::getInstance().moveWindow(mDecorView,p->x,p->y);
     LOGD("invokePopup(%d,%d)",p->x,p->y);
+    mDecorView->setLayoutParams(p);
     //mWindowManager->addView(mDecorView, p);
     /*if (mEnterTransition != nullptr) {
         mDecorView->requestEnterTransition(mEnterTransition);
@@ -489,44 +490,44 @@ int PopupWindow::getMaxAvailableHeight(View* anchor){
     return getMaxAvailableHeight(anchor, 0,false);
 }
 
-WindowManager::LayoutParams PopupWindow::createPopupLayoutParams(long token){
-    WindowManager::LayoutParams p;// = new WindowManager.LayoutParams();
-    p.x = p.y = 0;
-    p.width = p.height = 0;
+WindowManager::LayoutParams* PopupWindow::createPopupLayoutParams(long token){
+    WindowManager::LayoutParams* p = new WindowManager::LayoutParams();
+    p->x = p->y = 0;
+    p->width = p->height = 0;
     // These gravity settings put the view at the top left corner of the
     // screen. The view is then positioned to the appropriate location by
     // setting the x and y offsets to match the anchor's bottom-left
     // corner.
-    p.gravity = computeGravity();
-    p.flags = computeFlags(p.flags);
-    p.type = mWindowLayoutType;
+    p->gravity = computeGravity();
+    p->flags = computeFlags(p->flags);
+    p->type = mWindowLayoutType;
     //p.token = token;
     //p.softInputMode = mSoftInputMode;
     //p.windowAnimations = computeAnimationResource();
 
     if (mBackground != nullptr) {
-        p.format = mBackground->getOpacity();
+        p->format = mBackground->getOpacity();
     } else {
-        p.format = PixelFormat::TRANSLUCENT;
+        p->format = PixelFormat::TRANSLUCENT;
     }
 
     if (mHeightMode < 0) {
-        p.height = mLastHeight = mHeightMode;
+        p->height = mLastHeight = mHeightMode;
     } else {
-        p.height = mLastHeight = mHeight;
+        p->height = mLastHeight = mHeight;
     }
 
     if (mWidthMode < 0) {
-        p.width = mLastWidth = mWidthMode;
+        p->width = mLastWidth = mWidthMode;
     } else {
-        p.width = mLastWidth = mWidth;
+        p->width = mLastWidth = mWidth;
     }
 
-    //p.privateFlags = PRIVATE_FLAG_WILL_NOT_REPLACE_ON_RELAUNCH
+    //p->privateFlags = PRIVATE_FLAG_WILL_NOT_REPLACE_ON_RELAUNCH
     //        | PRIVATE_FLAG_LAYOUT_CHILD_WINDOW_IN_PARENT_FRAME;
 
     // Used for debugging.
-    //p.setTitle("PopupWindow:" + Integer.toHexString(hashCode()));
+    //p->setTitle("PopupWindow:" + Integer.toHexString(hashCode()));
 
     return p;
 }
