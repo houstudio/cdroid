@@ -4,7 +4,7 @@
 #include <widget/checkable.h>
 namespace cdroid{
 
-class CheckedTextView:public TextView,Checkable{
+class CheckedTextView:public TextView,public Checkable{
 private:
     bool mChecked;
 
@@ -28,6 +28,7 @@ private:
     bool isCheckMarkAtStart();
 protected:
     ~CheckedTextView();
+    void doSetChecked(bool checked);
     bool verifyDrawable(Drawable* who)const override;
     void internalSetPadding(int left, int top, int right, int bottom)override;
     void onDetachedFromWindowInternal()override;
@@ -37,9 +38,11 @@ protected:
     void drawableHotspotChanged(float x, float y)override;
 public:
     CheckedTextView(Context* context,const AttributeSet& attrs);
+#ifndef FUNCTION_AS_CHECKABLE
     void toggle();
     bool isChecked()const;
     void setChecked(bool checked);
+#endif
     Drawable* getCheckMarkDrawable()const;
     void setCheckMarkDrawable(const std::string&resId);
     void setCheckMarkDrawable(Drawable* d);
