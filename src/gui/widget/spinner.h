@@ -102,6 +102,7 @@ private:
     int  mGravity;
     Context*mPopupContext;
     ForwardingListener* mForwardingListener;
+    SpinnerAdapter* mTempAdapter;
     bool mDisableChildrenWhenDisabled;
     void setUpChild(View* child, bool addChild);
     View* makeView(int position, bool addChild);

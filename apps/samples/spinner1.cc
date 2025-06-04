@@ -20,9 +20,12 @@ private:
     int mType;
 public:
     MyAdapter(int tp=0):ArrayAdapter(){
-        mType=tp;
+        mType = tp;
     }
     View*getView(int position, View* convertView, ViewGroup* parent)override{
+        return getDropDownView(position,convertView,parent);
+    }
+    View*getDropDownView(int position, View* convertView, ViewGroup* parent)override{
         View*tv=(View*)convertView;
         if(convertView==nullptr){
             if(mType==0)tv=new TextView("",300,36);
