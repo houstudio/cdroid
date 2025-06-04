@@ -1,12 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
 <view class="com.android.internal.app.AlertController$RecycleListView"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/select_dialog_listview"
+    android:id="@id/select_dialog_listview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="5px"
     android:cacheColorHint="@null"
     android:divider="?attr/listDividerAlertDialog"
     android:scrollbars="vertical"
     android:overScrollMode="ifContentScrolls"
-    android:textAlignment="viewStart"/>
+    android:textAlignment="viewStart"
+    android:clipToPadding="false"
+    android:paddingBottomNoButtons="@dimen/dialog_list_padding_bottom_no_buttons"
+    android:paddingTopNoTitle="@dimen/dialog_list_padding_top_no_title" />

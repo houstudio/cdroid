@@ -2264,7 +2264,7 @@ bool AbsListView::performItemClick(View& view, int position, long id) {
         handled = true;
         bool checkedStateChanged = false;
 
-        if (mChoiceMode == CHOICE_MODE_MULTIPLE ||
+        if ((mChoiceMode == CHOICE_MODE_MULTIPLE) ||
                 (mChoiceMode == CHOICE_MODE_MULTIPLE_MODAL && mChoiceActionMode != nullptr)) {
             const bool checked = !mCheckStates.get(position, false);
             mCheckStates.put(position, checked);
