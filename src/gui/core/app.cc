@@ -10,10 +10,8 @@
 
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
-#define ARGS_NOEXCEPT 1
 #include <core/app.h>
-#include <core/cla.h>
-#include <core/args.h>
+#include <core/cxxopts.h>
 #include <core/build.h>
 #include <core/atexit.h>
 #include <core/inputeventsource.h>
@@ -30,43 +28,35 @@ namespace cdroid{
 
 App*App::mInst=nullptr;
 
-App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions){
+App::App(int argc,const char*argv[]){
     int rotation;
     LogParseModules(argc,argv);
     mQuitFlag = false;
     mExitCode = 0;
     mInst = this;
     
-    args::ArgumentParser parser(argc?argv[0]:"");
-    args::Flag debug(parser, "debug", "enable debug mode", {'d', "debug"});
-    args::Flag fps(parser,"fps","show fps info",{"fps"});
-    args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
-    args::ValueFlag <int> alpha(parser,"alpha",  "UI layer global alpha[0,255]",{'a',"alpha"});
-    args::ValueFlag <int> framedelay(parser,"framedelay","animation frame delay",{'f',"framedelay"});
-    args::ValueFlag <int> density(parser,"density","UI Density",{'D',"density"});
-    args::ValueFlag <int> rotate(parser,"rotate", "display rotate",{'R',"rotate"});
-    args::ValueFlag <std::string> logo(parser,"logo" , "show logo",{'l',"logo"});
-    args::ValueFlag <std::string> monkey(parser,"monkey","events playback path",{'m',"monkey"});
-    args::ValueFlag <std::string> record(parser,"record","events record path",{'r',"record"});
-    args::ValueFlag <std::string> datadir(parser,"data","data directory",{'D',"data"});
-    
-    //cla.addArguments(ARGS,sizeof(ARGS)/sizeof(CLA::Argument));
-    cla.addArguments(extoptions.data(),extoptions.size());
-    cla.setSwitchChars("-");
-    const int rc = cla.parse(argc,argv);
-    try{
-        if(argc&&argv)parser.ParseCLI(argc,argv);
-#ifndef ARGS_NOEXCEPT
-    }catch(args::Help){
-        std::cout << parser;
-    }catch(args::ParseError&e){
-        std::cerr << e.what() << std::endl;
-        std::cerr << parser;
-#endif
-    }catch(...){}
+    cxxopts::Options options("cdroid","cdroid application");
+    options.add_options()
+        ("d,debug","enable debuig mode")
+        ("h,help","print helps")
+        ("fps", "show fps info")
+        ("a,alpha","UI layer global alpha[0,255]",cxxopts::value<int>()->default_value("255"))
+        ("f,framedelay","animation frame delay",cxxopts::value<int>())
+        ("density","UI Density",cxxopts::value<int>())
+        ("R,rotate","display rotate(90*n)",cxxopts::value<int>()->default_value("0"))
+        ("l,logo","show logo",cxxopts::value<std::string>())
+        ("m,monkey","events playback path",cxxopts::value<std::string>())
+        ("r,record","events record path",cxxopts::value<std::string>())
+        ("data","data directory",cxxopts::value<std::string>());
 
-    if(help){
-        std::cout<<parser<<std::endl;
+    options.allow_unrecognised_options();
+    auto& result = cla;
+    try{
+        cla = options.parse(argc,argv);
+    }catch(std::exception&e){
+    }catch(...){}
+    if(result.count("help")){
+        std::cout<<options.help()<<std::endl;
         exit(EXIT_SUCCESS);
         LogSetModuleLevel(nullptr,LOG_FATAL);
         mQuitFlag = true;
@@ -92,18 +82,18 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
 
     Looper::prepareMainLooper();
     GraphDevice& graph =GraphDevice::getInstance();
-    if(rotate){
-        const int rotation = (rotate.Get()/90)%4;
+    if(result.count("rotate")){
+        const int rotation = (result["rotate"].as<int>()/90)%4;
         WindowManager::getInstance().setDisplayRotation(0,rotation);
         graph.setRotation(rotation);
     }
-    if(logo) graph.setLogo(logo.Get());
-    graph.showFPS(fps).init();
-    View::VIEW_DEBUG = debug;
+    if(result.count("logo")) graph.setLogo(result["logo"].as<std::string>());
+    graph.showFPS(result.count("fps")).init();
+    View::VIEW_DEBUG = result.count("debug");
     DisplayMetrics::DENSITY_DEVICE = DisplayMetrics::getDeviceDensity();
-    if(alpha) setOpacity(alpha.Get());
-    if(density) DisplayMetrics::DENSITY_DEVICE = density.Get();//getArgAsInt("density",DisplayMetrics::getDeviceDensity());
-    if(framedelay)Choreographer::setFrameDelay(framedelay.Get());
+    if(result.count("alpha")) setOpacity(result["alpha"].as<int>());
+    if(result.count("density")) DisplayMetrics::DENSITY_DEVICE = result["density"].as<int>();//getArgAsInt("density",DisplayMetrics::getDeviceDensity());
+    if(result.count("framedelay"))Choreographer::setFrameDelay(result["framedelay"].as<int>());
     Typeface::loadPreinstalledSystemFontMap();
     Typeface::loadFaceFromResource(this);
 
@@ -114,8 +104,8 @@ App::App(int argc,const char*argv[],const std::vector<CLA::Argument>&extoptions)
 
     InputEventSource*inputsource=&InputEventSource::getInstance();//(getArg("record",""));
     addEventHandler(inputsource);
-    if(monkey){
-        inputsource->playback(monkey.Get());
+    if(result.count("monkey")){
+        inputsource->playback(result["monkey"].as<std::string>());
     }
 }
 
@@ -147,47 +137,60 @@ App& App::getInstance(){
 
 const std::string App::getArg(const std::string&key,const std::string&def)const{
     std::string value = def;
-    cla.find(key,value);
+    if(cla.count(key)){
+        value = cla[key].as<std::string>();
+    }
     return value;
 }
 
 bool App::hasArg(const std::string&key)const{
-    return cla.find(key);
+    return cla.count(key)!=0;
 }
 
 bool App::hasSwitch(const std::string&key)const{
-    return cla.findSwitch(key);
+    return cla.count(key)!=0;
 }
 
 void App::setArg(const std::string&key,const std::string&value){
-    cla.setArgument(key,value);
+    //cla.setArgument(key,value);
 }
 
 int App::getArgAsInt(const std::string&key,int def)const{
     int value = def;
-    cla.find(key,value);
+    if(cla.count(key)){
+        value = cla[key].as<int>();
+    }
     return value;
 }
 
 float App::getArgAsFloat(const std::string&key,float def)const{
     float value = def;
-    cla.find(key,value);
+    if(cla.count(key)){
+        value =cla[key].as<float>();
+    }
     return value;
 }
 
 double App::getArgAsDouble(const std::string&key,double def)const{
     double value = def;
-    cla.find(key,value);
+    if(cla.count(key)){
+        value = cla[key].as<double>();
+    }
     return value;
 }
 
 size_t App::getParamCount()const{
-    return cla.getParamCount();
+    return cla.arguments().size();//getParamCount();
 }
 
 std::string App::getParam(int idx,const std::string&def)const{
     std::string value = def;
-    cla.getParam(idx,value);
+    //cla.getParam(idx,value);
+    const auto& args = cla.arguments();
+    if((idx<args.size())&&(idx>=0)){
+        const std::string  key = args[idx].key();
+        value = cla[key].as<std::string>();
+    }
     return value;
 }
 

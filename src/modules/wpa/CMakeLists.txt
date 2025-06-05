@@ -60,6 +60,7 @@ include_directories(wpa_ctrl PUBLIC
    ${CDROID_INCLUDE_DIRS}
    ${CDROID_DEPINCLUDES}
    ${CMAKE_BINARY_DIR}/include
+   ${CMAKE_BINARY_DIR}/include/gui
    ${CMAKE_BINARY_DIR}/include/porting)
 target_compile_options(wpa_ctrl PUBLIC -Wall -Wextra -Wno-variadic-macros)
 
