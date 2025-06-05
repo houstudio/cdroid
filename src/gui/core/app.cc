@@ -26,28 +26,29 @@ extern "C" unsigned long  GetModuleFileNameA(void* hModule, char* lpFilename, un
 
 namespace cdroid{
 
-App*App::mInst=nullptr;
+App*App::mInst = nullptr;
 
 App::App(int argc,const char*argv[]){
-    int rotation;
+    int alpha=255,rotation=0,density=0,frameDelay=0;
+    bool debug=false,showFPS=false,help=false;
+    std::string logo,monkey,record,datapath;
     LogParseModules(argc,argv);
     mQuitFlag = false;
     mExitCode = 0;
     mInst = this;
-    
     cxxopts::Options options("cdroid","cdroid application");
     options.add_options()
-        ("d,debug","enable debuig mode")
-        ("h,help","print helps")
-        ("fps", "show fps info")
-        ("a,alpha","UI layer global alpha[0,255]",cxxopts::value<int>()->default_value("255"))
-        ("f,framedelay","animation frame delay",cxxopts::value<int>())
-        ("density","UI Density",cxxopts::value<int>())
-        ("R,rotate","display rotate(90*n)",cxxopts::value<int>()->default_value("0"))
-        ("l,logo","show logo",cxxopts::value<std::string>())
-        ("m,monkey","events playback path",cxxopts::value<std::string>())
-        ("r,record","events record path",cxxopts::value<std::string>())
-        ("data","data directory",cxxopts::value<std::string>());
+        ("d,debug","enable debuig mode",cxxopts::value<bool>(debug))
+        ("h,help","print helps",cxxopts::value<bool>(help))
+        ("fps", "show fps info",cxxopts::value<bool>(showFPS))
+        ("a,alpha","UI layer global alpha[0,255]",cxxopts::value<int>(alpha)->default_value("255"))
+        ("f,framedelay","animation frame delay",cxxopts::value<int>(frameDelay))
+        ("density","UI Density",cxxopts::value<int>(density))
+        ("R,rotate","display rotate(90*n)",cxxopts::value<int>(rotation)->default_value("0"))
+        ("l,logo","show logo",cxxopts::value<std::string>(logo))
+        ("m,monkey","events playback path",cxxopts::value<std::string>(monkey))
+        ("r,record","events record path",cxxopts::value<std::string>(record))
+        ("data","data directory",cxxopts::value<std::string>(datapath));
 
     Looper::prepareMainLooper();
     options.allow_unrecognised_options();
@@ -56,8 +57,9 @@ App::App(int argc,const char*argv[]){
         result = options.parse(argc,argv);
         mArgsResult = std::make_unique<cxxopts::ParseResult>(result);
     }catch(std::exception&e){
-    }catch(...){}
-    if(mArgsResult->count("help")){
+        LOGE("%s",e.what());
+    }
+    if(help){
         std::cout<<options.help()<<std::endl;
         exit(EXIT_SUCCESS);
         LogSetModuleLevel(nullptr,LOG_FATAL);
@@ -80,22 +82,21 @@ App::App(int argc,const char*argv[]){
 
     LOGI("cdroid %s on %s [%s] Build:%d Commit:%s",Build::VERSION::Release.c_str(),Build::VERSION::BASE_OS.c_str(),
             Build::VERSION::CODENAME.c_str(),Build::VERSION::BuildNumber,Build::VERSION::CommitID.c_str());
-    LOGI("https://www.gitee.com/houstudio/cdroid\n");
-    LOGI("App [%s] started c++=%d",mName.c_str(),__cplusplus);
+    LOGI("https://www.gitee.com/houstudio/cdroid");
 
     GraphDevice& graph =GraphDevice::getInstance();
-    if(result.count("rotate")){
-        const int rotation = (result["rotate"].as<int>()/90)%4;
+    if(rotation){
+        rotation = (rotation/90)%4;
         WindowManager::getInstance().setDisplayRotation(0,rotation);
         graph.setRotation(rotation);
     }
-    if(result.count("logo")) graph.setLogo(result["logo"].as<std::string>());
-    graph.showFPS(result.count("fps")).init();
+    if(!logo.empty()) graph.setLogo(logo);
+    graph.showFPS(showFPS).init();
     View::VIEW_DEBUG = result.count("debug");
     DisplayMetrics::DENSITY_DEVICE = DisplayMetrics::getDeviceDensity();
-    if(result.count("alpha")) setOpacity(result["alpha"].as<int>());
-    if(result.count("density")) DisplayMetrics::DENSITY_DEVICE = result["density"].as<int>();//getArgAsInt("density",DisplayMetrics::getDeviceDensity());
-    if(result.count("framedelay"))Choreographer::setFrameDelay(result["framedelay"].as<int>());
+    if(alpha!=255) setOpacity(alpha);
+    if(density) DisplayMetrics::DENSITY_DEVICE = density;
+    if(frameDelay) Choreographer::setFrameDelay(frameDelay);
     Typeface::loadPreinstalledSystemFontMap();
     Typeface::loadFaceFromResource(this);
 
@@ -106,8 +107,8 @@ App::App(int argc,const char*argv[]){
 
     InputEventSource*inputsource=&InputEventSource::getInstance();//(getArg("record",""));
     addEventHandler(inputsource);
-    if(result.count("monkey")){
-        inputsource->playback(result["monkey"].as<std::string>());
+    if(!monkey.empty()){
+        inputsource->playback(monkey);
     }
 }
 

@@ -12,18 +12,18 @@ int main(int argc,const char*argv[]){
         LOGD("click button %d",which);
     };
     AlertDialog*dlg;
+    int dialogType,nItems;
     cxxopts::Options options("main","application");
     options.add_options()
-        ("dialog","dialog type",cxxopts::value<int>()->default_value("0"))
-        ("items","item count",cxxopts::value<int>()->default_value("10"));
+        ("dialog","dialog type",cxxopts::value<int>(dialogType)->default_value("0"))
+        ("items","item count",cxxopts::value<int>(nItems)->default_value("10"));
     options.allow_unrecognised_options();
     auto result = options.parse(argc,argv);
     std::vector<std::string>list;
-    const int itemCount = result["items"].as<int>();
-    for(int i=0;i<itemCount;i++)
+    for(int i=0;i<nItems;i++)
         list.push_back(std::string("item")+std::to_string(i));
-    LOGD("dialog=%d items=%d args=%d",result["dialog"].as<int>(),itemCount,app.getParamCount());
-    switch(result["dialog"].as<int>()){
+    LOGD("dialog=%d items=%d args=%d",dialogType,nItems,app.getParamCount());
+    switch(dialogType){
     case 0:
          dlg=AlertDialog::Builder(&app)
            .setPositiveButton("OK",f)
