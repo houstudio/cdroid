@@ -36,17 +36,16 @@ bool Spinner::SpinnerForwardingListener::onForwardingStarted(){
 }
 
 Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
-    mPopupContext = mContext;
     mGravity = Gravity::CENTER;
     mDropDownWidth =0;
     mDisableChildrenWhenDisabled = true;
+    mTempAdapter= nullptr;
     mPopup = new DropdownPopup(mContext,this);
     mForwardingListener = new SpinnerForwardingListener(this,(DropdownPopup*)mPopup); 
 }
 
 Spinner::Spinner(Context*ctx,const AttributeSet&atts)
   :AbsSpinner(ctx,atts){
-    mPopupContext = ctx;
     mForwardingListener = nullptr;
     mGravity = atts.getGravity("gravity",Gravity::CENTER);
     mDisableChildrenWhenDisabled = atts.getBoolean("disableChildrenWhenDisabled",false);
@@ -54,6 +53,7 @@ Spinner::Spinner(Context*ctx,const AttributeSet&atts)
         {"dialog",(int)MODE_DIALOG},{"dropdown",(int)MODE_DROPDOWN}
     },MODE_DIALOG);
 
+    Drawable*dr;
     DropdownPopup* popup;
     switch(mode){
     case MODE_DIALOG:
@@ -63,13 +63,21 @@ Spinner::Spinner(Context*ctx,const AttributeSet&atts)
     case MODE_DROPDOWN:
          popup = new DropdownPopup(ctx,this);
          mDropDownWidth = atts.getLayoutDimension("dropDownWidth",LayoutParams::WRAP_CONTENT);
-         Drawable*d = mPopupContext->getDrawable(atts.getString("popupBackground"));
-         if(d)popup->setBackgroundDrawable(d);
+         dr = atts.getDrawable("dropDownSelector");
+         if(dr)popup->setListSelector(dr);
+         dr = mContext->getDrawable(atts.getString("popupBackground"));
+         if(dr)popup->setBackgroundDrawable(dr);
          popup->setPromptText(atts.getString("propmt"));
          mPopup = popup;
          mForwardingListener = new SpinnerForwardingListener(this,popup); 
          break;
     } 
+    // Base constructor can call setAdapter before we initialize mPopup.
+    // Finish setting things up if this happened.
+    if (mTempAdapter != nullptr) {
+        setAdapter(mTempAdapter);
+        mTempAdapter = nullptr;
+    }
 }
 
 Spinner::~Spinner(){
@@ -78,7 +86,7 @@ Spinner::~Spinner(){
 }
 
 Context* Spinner::getPopupContext()const{
-    return mPopupContext;
+    return mContext;
 }
 
 void Spinner::setPopupBackgroundDrawable(Drawable* background){
@@ -166,8 +174,8 @@ void Spinner::onLayout(bool changed, int x, int y, int w, int h) {
 }
 
 void Spinner::layout(int delta, bool animate){
-    int childrenLeft = mSpinnerPadding.left;
-    int childrenWidth = getWidth() - mSpinnerPadding.left - mSpinnerPadding.width;
+    const int childrenLeft = mSpinnerPadding.left;
+    const int childrenWidth = getWidth() - mSpinnerPadding.left - mSpinnerPadding.width;
 
     if (mDataChanged) {
         handleDataChanged();
@@ -193,10 +201,10 @@ void Spinner::layout(int delta, bool animate){
 
     if (mAdapter != nullptr) {
         View* sel = makeView(mSelectedPosition, true);
-        int width = sel->getMeasuredWidth();
+        const int width = sel->getMeasuredWidth();
         int selectedOffset = childrenLeft;
-        int layoutDirection = getLayoutDirection();
-        int absoluteGravity = Gravity::getAbsoluteGravity(mGravity, layoutDirection);
+        const int layoutDirection = getLayoutDirection();
+        const int absoluteGravity = Gravity::getAbsoluteGravity(mGravity, layoutDirection);
         switch (absoluteGravity & Gravity::HORIZONTAL_GRAVITY_MASK) {
         case Gravity::CENTER_HORIZONTAL:
             selectedOffset = childrenLeft + (childrenWidth / 2) - (width / 2);
@@ -220,11 +228,83 @@ void Spinner::layout(int delta, bool animate){
     setNextSelectedPositionInt(mSelectedPosition);
 }
 
+namespace{
+    class DropDownAdapter:public Adapter {
+    private:
+        SpinnerAdapter* mAdapter;
+    public:
+        DropDownAdapter(SpinnerAdapter* adapter,Context*ctx) {
+            mAdapter = adapter;
+        }
+
+        int getCount() const override{
+            return (mAdapter == nullptr) ? 0 : mAdapter->getCount();
+        }
+
+        void* getItem(int position) const override{
+            return (mAdapter == nullptr) ? nullptr : mAdapter->getItem(position);
+        }
+
+        long getItemId(int position) const override{
+            return (mAdapter == nullptr) ? -1 : mAdapter->getItemId(position);
+        }
+
+        View* getView(int position, View* convertView, ViewGroup* parent) override{
+            return getDropDownView(position, convertView, parent);
+        }
+
+        View* getDropDownView(int position, View* convertView, ViewGroup* parent) override{
+            return (mAdapter == nullptr) ? nullptr : mAdapter->getDropDownView(position, convertView, parent);
+        }
+
+        bool hasStableIds() const override{
+            return (mAdapter != nullptr) && mAdapter->hasStableIds();
+        }
+
+        void registerDataSetObserver(DataSetObserver* observer) override{
+            if (mAdapter != nullptr) {
+                mAdapter->registerDataSetObserver(observer);
+            }
+        }
+
+        void unregisterDataSetObserver(DataSetObserver* observer) override{
+            if (mAdapter != nullptr) {
+                mAdapter->unregisterDataSetObserver(observer);
+            }
+        }
+
+        bool areAllItemsEnabled() const override{
+            return (mAdapter==nullptr)||mAdapter->areAllItemsEnabled();
+        }
+
+        bool isEnabled(int position) const override {
+            return (mAdapter==nullptr)||mAdapter->isEnabled(position);
+        }
+
+        int getItemViewType(int position) const override{
+            return 0;
+        }
+
+        int getViewTypeCount() const override{
+            return 1;
+        }
+
+        bool isEmpty() const override{
+            return getCount() == 0;
+        }
+    };
+}
+
 void Spinner::setAdapter(Adapter*adapter){
+    // The super constructor may call setAdapter before we're prepared.
+    // Postpone doing anything until we've finished construction.
+    if (mPopup == nullptr) {
+        mTempAdapter = adapter;
+        return;
+    }
     AbsSpinner::setAdapter(adapter);
     mRecycler->clear();
-    Context* popupContext = mPopupContext == nullptr ? mContext : mPopupContext;
-    mPopup->setAdapter(adapter);//new DropDownAdapter(adapter, popupContext.getTheme()))
+    mPopup->setAdapter(new DropDownAdapter(adapter,mContext));
 }
 
 int Spinner::getBaseline(){
@@ -238,7 +318,7 @@ int Spinner::getBaseline(){
     }
 
     if (child != nullptr) {
-        int childBaseline = child->getBaseline();
+        const int childBaseline = child->getBaseline();
         return childBaseline >= 0 ? child->getTop() + childBaseline : -1;
     } else {
         return -1;
@@ -267,7 +347,7 @@ void Spinner::setUpChild(View* child, bool addChild) {
     // Respect layout params that are already in the view. Otherwise
     // make some up...
     ViewGroup::LayoutParams* lp = child->getLayoutParams();
-    if (lp == nullptr)  lp = generateDefaultLayoutParams();
+    if (lp == nullptr) lp = generateDefaultLayoutParams();
 
     addViewInLayout(child, 0, lp);
 
@@ -277,9 +357,9 @@ void Spinner::setUpChild(View* child, bool addChild) {
     }
 
     // Get measure specs
-    int childHeightSpec = ViewGroup::getChildMeasureSpec(mHeightMeasureSpec,
+    const int childHeightSpec = ViewGroup::getChildMeasureSpec(mHeightMeasureSpec,
             mSpinnerPadding.top + mSpinnerPadding.height, lp->height);
-    int childWidthSpec = ViewGroup::getChildMeasureSpec(mWidthMeasureSpec,
+    const int childWidthSpec = ViewGroup::getChildMeasureSpec(mWidthMeasureSpec,
             mSpinnerPadding.left + mSpinnerPadding.width, lp->width);
 
     // Measure child
@@ -287,10 +367,10 @@ void Spinner::setUpChild(View* child, bool addChild) {
 
     int childLeft;
     // Position vertically based on gravity setting
-    int childTop = mSpinnerPadding.top  + ((getMeasuredHeight() - mSpinnerPadding.height -
+    const int childTop = mSpinnerPadding.top  + ((getMeasuredHeight() - mSpinnerPadding.height -
                     mSpinnerPadding.top - child->getMeasuredHeight()) / 2);
-    int height =child->getMeasuredHeight();
-    int width = child->getMeasuredWidth();
+    const int height= child->getMeasuredHeight();
+    const int width = child->getMeasuredWidth();
     childLeft = 0;
 
     child->layout(childLeft, childTop,width,height );
@@ -322,14 +402,14 @@ int Spinner::measureContentWidth(Adapter* adapter, Drawable* background){
     int width = 0;
     View* itemView = nullptr;
     int itemType = 0;
-    int widthMeasureSpec =MeasureSpec::makeSafeMeasureSpec(getMeasuredWidth(), MeasureSpec::UNSPECIFIED);
-    int heightMeasureSpec = MeasureSpec::makeSafeMeasureSpec(getMeasuredHeight(), MeasureSpec::UNSPECIFIED);
+    const int widthMeasureSpec =MeasureSpec::makeSafeMeasureSpec(getMeasuredWidth(), MeasureSpec::UNSPECIFIED);
+    const int heightMeasureSpec = MeasureSpec::makeSafeMeasureSpec(getMeasuredHeight(), MeasureSpec::UNSPECIFIED);
 
     // Make sure the number of items we'll measure is capped. If it's a huge data set
     // with wildly varying sizes, oh well.
     int start = std::max(0, getSelectedItemPosition());
-    int end = std::min(adapter->getCount(), start + MAX_ITEMS_MEASURED);
-    int count = end - start;
+    const int end = std::min(adapter->getCount(), start + MAX_ITEMS_MEASURED);
+    const int count = end - start;
     start = std::max(0, start - (MAX_ITEMS_MEASURED - count));
     for (int i = start; i < end; i++) {
         int positionType = adapter->getItemViewType(i);
@@ -399,6 +479,7 @@ Spinner::DropdownPopup::DropdownPopup(Context*context,Spinner*sp)
 }
 
 Spinner::DropdownPopup::~DropdownPopup(){
+    delete mAdapter;
 }
 
 void Spinner::DropdownPopup::setAdapter(Adapter* adapter){
@@ -435,9 +516,9 @@ void Spinner::DropdownPopup::computeContentWidth() {
         mTempRect.left = mTempRect.width = 0;
     }
 
-    int spinnerPaddingLeft = mSpinner->getPaddingLeft();
-    int spinnerPaddingRight= mSpinner->getPaddingRight();
-    int spinnerWidth = mSpinner->getWidth();
+    const int spinnerPaddingLeft = mSpinner->getPaddingLeft();
+    const int spinnerPaddingRight= mSpinner->getPaddingRight();
+    const int spinnerWidth = mSpinner->getWidth();
 
     if (mSpinner->mDropDownWidth  == LayoutParams::WRAP_CONTENT) {
         int contentWidth =  mSpinner->measureContentWidth(mSpinner->getAdapter(), mSpinner->getBackground());
@@ -489,7 +570,7 @@ Drawable* Spinner::DropdownPopup::getBackground(){
 void Spinner::DropdownPopup::setContentWidth(int width){
     Drawable* popupBackground = getBackground();
     if (popupBackground ) {
-	Rect rect;
+        Rect rect;
         popupBackground->getPadding(rect);
         mSpinner->mDropDownWidth = rect.left + rect.width + width;
     } else {
@@ -547,6 +628,7 @@ Spinner::DialogPopup::DialogPopup(Spinner*spinner){
 }
 
 Spinner::DialogPopup::~DialogPopup(){
+    delete mListAdapter;
 }
 
 void Spinner::DialogPopup::setAdapter(Adapter*adapter){

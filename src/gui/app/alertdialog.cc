@@ -172,7 +172,7 @@ AlertDialog::Builder& AlertDialog::Builder::setItems(const std::string& itemsId,
 }
 
 AlertDialog::Builder& AlertDialog::Builder::setItems(const std::vector<std::string>&items, DialogInterface::OnClickListener listener){
-    P->mItems =items;
+    P->mItems = items;
     P->mOnClickListener = listener;
     return *this;
 }
@@ -194,7 +194,7 @@ AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::strin
 
 AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::vector<std::string>&items, 
       const std::vector<bool>&checkedItems, DialogInterface::OnMultiChoiceClickListener listener){
-    P->mItems=items;
+    P->mItems = items;
     P->mOnCheckboxClickListener = listener;
     P->mCheckedItems = checkedItems;
     P->mIsMultiChoice = true;

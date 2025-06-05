@@ -7,6 +7,7 @@ namespace cdroid{
 //it will cause listview's setItemCheck crashed in  ListView::setupChild
 class Checkable{
 public:
+    virtual ~Checkable()=default;
 #ifdef FUNCTION_AS_CHECKABLE
     CallbackBase <void,bool> setChecked;
     CallbackBase <bool> isChecked;

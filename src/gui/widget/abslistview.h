@@ -255,8 +255,8 @@ protected:
     int mLayoutMode;
     RecycleBin*mRecycler;
     AdapterDataSetObserver*mDataSetObserver;
-    SparseBooleanArray mCheckStates;
-    LongSparseArray<int> mCheckedIdStates;
+    SparseBooleanArray* mCheckStates;
+    LongSparseArray<int>* mCheckedIdStates;
     Drawable* mSelector;
     int mMotionPosition;
     int mMotionViewOriginalTop;

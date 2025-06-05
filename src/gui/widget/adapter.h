@@ -56,16 +56,19 @@ private:
     std::vector<T> mObjects;
 protected:
     Context* mContext;
+    int  mFieldId;
     std::string mResource;
     std::string mDropDownResource;
-    int  mFieldId;
 private:
      View* createViewFromResource(int position,View* convertView,ViewGroup* parent,const std::string& resource) {
-        View*view = convertView?convertView:LayoutInflater::from(mContext)->inflate(resource,nullptr, false);
-        //If no custom field is assigned, assume the whole resource is a TextView
-        //Otherwise, find the TextView field within the layout
-        TextView* text = (mFieldId==0)?(TextView*)view:(TextView*)view->findViewById(mFieldId);
-        T& item = getItemAt(position);
+        View*view = convertView;
+        if((view==nullptr)&&!resource.empty()){
+            view = LayoutInflater::from(mContext)->inflate(resource,nullptr, false);
+            //If no custom field is assigned, assume the whole resource is a TextView
+            //Otherwise, find the TextView field within the layout
+            TextView* text = (mFieldId==0)?(TextView*)view:(TextView*)view->findViewById(mFieldId);
+            T& item = getItemAt(position);
+        }
         return view;
     }
 public:
@@ -120,7 +123,7 @@ public:
         if(mNotifyOnChange)notifyDataSetChanged();
     }
     View*getView(int position, View* convertView, ViewGroup* parent)override{
-        return mContext==nullptr?nullptr:createViewFromResource(position, convertView, parent, mResource);
+        return createViewFromResource(position, convertView, parent, mResource);
     }
     View*getDropDownView(int position, View* convertView, ViewGroup* parent)override{
         return createViewFromResource(position, convertView, parent, mDropDownResource);

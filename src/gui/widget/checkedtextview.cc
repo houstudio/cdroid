@@ -21,12 +21,21 @@ CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):TextVie
         mCheckMarkTintList = a.getColorStateList("checkMarkTint");
         mHasCheckMarkTint = (mCheckMarkTintList!=nullptr);
     }
-
+    mChecked = false;
     mCheckMarkGravity = a.getGravity("checkMarkGravity", Gravity::END);
 
     const bool checked = a.getBoolean("checked", false);
     setChecked(checked);
     applyCheckMarkTint();
+#ifdef FUNCTION_AS_CHECKABLE
+    isChecked = [this]()->bool{
+        return mChecked;
+    };
+    toggle = [this](){
+        doSetChecked(!mChecked);
+    };
+    setChecked = std::bind(&CheckedTextView::doSetChecked,this,std::placeholders::_1);
+#endif
 }
 
 CheckedTextView::~CheckedTextView(){
@@ -34,6 +43,7 @@ CheckedTextView::~CheckedTextView(){
     delete mCheckMarkTintList;
 }
 
+#ifndef FUNCTION_AS_CHECKABLE
 void CheckedTextView::toggle() {
     setChecked(!mChecked);
 }
@@ -43,6 +53,10 @@ bool CheckedTextView::isChecked()const{
 }
 
 void CheckedTextView::setChecked(bool checked) {
+    doSetChecked(checked);
+}
+#endif
+void CheckedTextView::doSetChecked(bool checked) {
     if (mChecked != checked) {
         mChecked = checked;
         refreshDrawableState();

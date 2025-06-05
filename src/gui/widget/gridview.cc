@@ -1118,11 +1118,11 @@ void GridView::setupChild(View* child, int position, int y, bool flowDown, int c
         child->setPressed(isPressed);
     }
 
-    if (mChoiceMode != CHOICE_MODE_NONE && mCheckStates.size()) {
+    if ((mChoiceMode != CHOICE_MODE_NONE) && (mCheckStates!=nullptr)) {
         if (dynamic_cast<Checkable*>(child)) {
-            ((Checkable*) child)->setChecked(mCheckStates.get(position));
+            ((Checkable*) child)->setChecked(mCheckStates->get(position));
         } else {
-            child->setActivated(mCheckStates.get(position));
+            child->setActivated(mCheckStates->get(position));
         }
     }
 
