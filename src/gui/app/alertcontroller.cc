@@ -691,7 +691,7 @@ public:
     }
     View*getView(int position, View* convertView, ViewGroup* parent)override{
         View* view=ArrayAdapter<std::string>::getView(position, convertView, parent);
-        if (mParams->mCheckedItems.size()&& mParams->mCheckedItems[position]){
+        if ( (position<mParams->mCheckedItems.size()) && mParams->mCheckedItems[position]){
             LV->setItemChecked(position, true);
         }
         TextView*tv=(TextView*)view->findViewById(mFieldId);

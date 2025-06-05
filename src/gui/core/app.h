@@ -7,7 +7,11 @@
 #include <core/looper.h>
 #include <core/context.h>
 #include <core/assets.h>
-#include <core/cxxopts.h>
+
+namespace cxxopts{
+    class ParseResult;
+}
+namespace args = cxxopts;
 namespace cdroid{
 
 class App:public Assets{
@@ -15,7 +19,7 @@ private:
     bool mQuitFlag;
     int mExitCode;
 protected:
-    cxxopts::ParseResult cla;
+    std::unique_ptr<args::ParseResult> mArgsResult;
     static App*mInst;
     void onInit();
 public:
@@ -41,5 +45,5 @@ public:
      virtual void exit(int code=0);
 };
 
-}//namespace
-#endif
+}/*end ofnamespace*/
+#endif/*__APPLICATION_H__*/

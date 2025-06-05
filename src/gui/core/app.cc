@@ -50,12 +50,13 @@ App::App(int argc,const char*argv[]){
         ("data","data directory",cxxopts::value<std::string>());
 
     options.allow_unrecognised_options();
-    auto& result = cla;
+    args::ParseResult result;
     try{
-        cla = options.parse(argc,argv);
+        result = options.parse(argc,argv);
+        mArgsResult = std::make_unique<args::ParseResult>(result);
     }catch(std::exception&e){
     }catch(...){}
-    if(result.count("help")){
+    if(mArgsResult->count("help")){
         std::cout<<options.help()<<std::endl;
         exit(EXIT_SUCCESS);
         LogSetModuleLevel(nullptr,LOG_FATAL);
@@ -137,59 +138,59 @@ App& App::getInstance(){
 
 const std::string App::getArg(const std::string&key,const std::string&def)const{
     std::string value = def;
-    if(cla.count(key)){
-        value = cla[key].as<std::string>();
+    if(mArgsResult->count(key)){
+        value = (*mArgsResult)[key].as<std::string>();
     }
     return value;
 }
 
 bool App::hasArg(const std::string&key)const{
-    return cla.count(key)!=0;
+    return mArgsResult->count(key)!=0;
 }
 
 bool App::hasSwitch(const std::string&key)const{
-    return cla.count(key)!=0;
+    return mArgsResult->count(key)!=0;
 }
 
 void App::setArg(const std::string&key,const std::string&value){
-    //cla.setArgument(key,value);
+    //mArgsResult.setArgument(key,value);
 }
 
 int App::getArgAsInt(const std::string&key,int def)const{
     int value = def;
-    if(cla.count(key)){
-        value = cla[key].as<int>();
+    if(mArgsResult->count(key)){
+        value = (*mArgsResult)[key].as<int>();
     }
     return value;
 }
 
 float App::getArgAsFloat(const std::string&key,float def)const{
     float value = def;
-    if(cla.count(key)){
-        value =cla[key].as<float>();
+    if(mArgsResult->count(key)){
+        value = (*mArgsResult)[key].as<float>();
     }
     return value;
 }
 
 double App::getArgAsDouble(const std::string&key,double def)const{
     double value = def;
-    if(cla.count(key)){
-        value = cla[key].as<double>();
+    if(mArgsResult->count(key)){
+        value = (*mArgsResult)[key].as<double>();
     }
     return value;
 }
 
 size_t App::getParamCount()const{
-    return cla.arguments().size();//getParamCount();
+    return mArgsResult->arguments().size();//getParamCount();
 }
 
 std::string App::getParam(int idx,const std::string&def)const{
     std::string value = def;
-    //cla.getParam(idx,value);
-    const auto& args = cla.arguments();
+    //mArgsResult.getParam(idx,value);
+    const auto& args = mArgsResult->arguments();
     if((idx<args.size())&&(idx>=0)){
         const std::string  key = args[idx].key();
-        value = cla[key].as<std::string>();
+        value = (*mArgsResult)[key].as<std::string>();
     }
     return value;
 }
