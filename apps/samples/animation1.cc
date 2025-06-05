@@ -1,6 +1,6 @@
 #include <cdroid.h>
 #include <cdlog.h>
-#include <getopt.h>
+#include <core/cxxopts.h>
 
 class TestView:public View{
 private:

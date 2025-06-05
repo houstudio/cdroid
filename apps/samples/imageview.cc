@@ -1,6 +1,7 @@
 #include <cdroid.h>
 #include <cdlog.h>
 #include <fstream>
+#include <core/cxxopts.h>
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);

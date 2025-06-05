@@ -11,7 +11,6 @@
 namespace cxxopts{
     class ParseResult;
 }
-namespace args = cxxopts;
 namespace cdroid{
 
 class App:public Assets{
@@ -19,7 +18,7 @@ private:
     bool mQuitFlag;
     int mExitCode;
 protected:
-    std::unique_ptr<args::ParseResult> mArgsResult;
+    std::unique_ptr<cxxopts::ParseResult> mArgsResult;
     static App*mInst;
     void onInit();
 public:

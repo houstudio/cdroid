@@ -2,6 +2,7 @@
 #include <string>
 #include <cdlog.h>
 #include <iostream>
+#include <core/cxxopts.h>
 #include <curl/curl.h>
 #include <curldownload.h>
 class MyAdapter:public ArrayAdapter<std::string>{

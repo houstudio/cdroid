@@ -49,11 +49,12 @@ App::App(int argc,const char*argv[]){
         ("r,record","events record path",cxxopts::value<std::string>())
         ("data","data directory",cxxopts::value<std::string>());
 
+    Looper::prepareMainLooper();
     options.allow_unrecognised_options();
-    args::ParseResult result;
+    cxxopts::ParseResult result;
     try{
         result = options.parse(argc,argv);
-        mArgsResult = std::make_unique<args::ParseResult>(result);
+        mArgsResult = std::make_unique<cxxopts::ParseResult>(result);
     }catch(std::exception&e){
     }catch(...){}
     if(mArgsResult->count("help")){
@@ -61,6 +62,7 @@ App::App(int argc,const char*argv[]){
         exit(EXIT_SUCCESS);
         LogSetModuleLevel(nullptr,LOG_FATAL);
         mQuitFlag = true;
+        return;
     }
     Typeface::setContext(this);
     onInit();
@@ -81,7 +83,6 @@ App::App(int argc,const char*argv[]){
     LOGI("https://www.gitee.com/houstudio/cdroid\n");
     LOGI("App [%s] started c++=%d",mName.c_str(),__cplusplus);
 
-    Looper::prepareMainLooper();
     GraphDevice& graph =GraphDevice::getInstance();
     if(result.count("rotate")){
         const int rotation = (result["rotate"].as<int>()/90)%4;

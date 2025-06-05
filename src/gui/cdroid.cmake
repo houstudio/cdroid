@@ -32,7 +32,7 @@ list(APPEND CDROID_SOURCES
     core/porterduff.cc
     core/preferences.cc
     core/process.cc
-    core/wifimanager.cc
+    #core/wifimanager.cc
     core/scheduler.cc
     core/systemclock.cc
     core/textutils.cc

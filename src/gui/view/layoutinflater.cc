@@ -118,7 +118,10 @@ View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root, bool attach
         //Empty
     }
 
-    if(type!=XmlPullParser::START_TAG)throw std::logic_error("No start tag found");
+    if(type!=XmlPullParser::START_TAG){
+        LOGE("No start tag found");
+        return nullptr;
+    }
     const std::string name = parser.getName();
     if(name.compare(TAG_MERGE)==0){
         rInflate(parser,root,mContext,attrs,false);

@@ -1,4 +1,5 @@
 #include <cdroid.h>
+#include <core/cxxopts.h>
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
