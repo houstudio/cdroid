@@ -7,7 +7,6 @@
 #include <mutex>
 #include <unordered_map>
 #include <core/sparsearray.h>
-class RtAudio;
 namespace cdroid{
 class Context;
 class SoundPool {
