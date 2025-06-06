@@ -8,7 +8,6 @@ list(APPEND CDROID_SOURCES
     #core/bundle.cc
     core/calendar.cc
     core/canvas.cc
-    core/cla.cc
     core/color.cc
     core/display.cc
     core/displaymetrics.cc
@@ -33,6 +32,7 @@ list(APPEND CDROID_SOURCES
     core/porterduff.cc
     core/preferences.cc
     core/process.cc
+    #core/wifimanager.cc
     core/scheduler.cc
     core/systemclock.cc
     core/textutils.cc

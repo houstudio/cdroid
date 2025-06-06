@@ -1,25 +1,29 @@
 #include <cdroid.h>
 #include <cdlog.h>
 #include <getopt.h>
+#include <core/cxxopts.h>
 #include <app/alertdialog.h>
-
-std::vector<CLA::Argument> app_options={
-    {CLA::EntryType::Option, "d", "dialog"  ,"dialog type",CLA::ValueType::Int,   (int)CLA::EntryFlags::Optional},
-    {CLA::EntryType::Option, "", "items"  , "item count",CLA::ValueType::Int,   (int)CLA::EntryFlags::Optional}
-};
 
 int main(int argc,const char*argv[]){
     setenv("LANG","zh.CN",1);
-    App app(argc,argv,app_options);
+    App app(argc,argv);
+
     auto f=[](DialogInterface& dlg,int which){
         LOGD("click button %d",which);
     };
     AlertDialog*dlg;
+    int dialogType,nItems;
+    cxxopts::Options options("main","application");
+    options.add_options()
+        ("dialog","dialog type",cxxopts::value<int>(dialogType)->default_value("0"))
+        ("items","item count",cxxopts::value<int>(nItems)->default_value("10"));
+    options.allow_unrecognised_options();
+    auto result = options.parse(argc,argv);
     std::vector<std::string>list;
-    const int itemCount=app.getArgAsInt("items",10);
-    for(int i=0;i<itemCount;i++)
+    for(int i=0;i<nItems;i++)
         list.push_back(std::string("item")+std::to_string(i));
-    switch(app.getArgAsInt(std::string("dialog"),0)){
+    LOGD("dialog=%d items=%d args=%d",dialogType,nItems,app.getParamCount());
+    switch(dialogType){
     case 0:
          dlg=AlertDialog::Builder(&app)
            .setPositiveButton("OK",f)

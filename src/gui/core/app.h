@@ -7,9 +7,10 @@
 #include <core/looper.h>
 #include <core/context.h>
 #include <core/assets.h>
-#include <core/cla.h>
-struct option;
 
+namespace cxxopts{
+    class ParseResult;
+}
 namespace cdroid{
 
 class App:public Assets{
@@ -17,11 +18,11 @@ private:
     bool mQuitFlag;
     int mExitCode;
 protected:
-    CLA cla;
+    std::unique_ptr<cxxopts::ParseResult> mArgsResult;
     static App*mInst;
     void onInit();
 public:
-     App(int argc=0,const char*argv[]=NULL,const std::vector<CLA::Argument>&extoptions={});
+     App(int argc=0,const char*argv[]=NULL);
      ~App();
      static App&getInstance();
      const std::string getDataPath()const;
@@ -43,5 +44,5 @@ public:
      virtual void exit(int code=0);
 };
 
-}//namespace
-#endif
+}/*end ofnamespace*/
+#endif/*__APPLICATION_H__*/

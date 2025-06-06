@@ -1,6 +1,6 @@
 #include <cdroid.h>
 #include <cdlog.h>
-#include <getopt.h>
+#include <core/cxxopts.h>
 
 class TestView:public View{
 private:
@@ -40,20 +40,21 @@ public:
     }
 };
 
-std::vector<CLA::Argument> appargs={
-   {CLA::EntryType::Switch, "", "type"  , "animation type ",CLA::ValueType::None,   (int)CLA::EntryFlags::Optional}
-};
 int main(int argc,const char*argv[]){
-
-    App app(argc,argv,appargs);
-    Window*w=new Window(0,0,800,600);
+    App app(argc,argv);
+    cxxopts::Options options("main","application");
+    options.add_options()("T,type","dialog type",cxxopts::value<int>()->default_value("1"));
+    Window*w = new Window(0,0,800,600);
     ViewGroup*grp=new MyGroup(400,400);
     //grp->setId(10).setRotation(45);
     w->addView(grp).setBackgroundColor(0xFFFF0000);
     w->setBackgroundColor(0xFF111111);
-    View*tv=nullptr;
-    switch(app.getArgAsInt("type",1)){
-    default: //pass throught
+    View*tv = nullptr;
+    options.allow_unrecognised_options();
+    auto result = options.parse(argc,argv);
+    LOGD("type=%d",result["type"].as<int>());
+    switch(result["type"].as<int>()){
+    default://pass throught
     case 0:  tv=new TextView("TestButton",160,60); break;
     case 1:  tv=new TestView("TestButton",160,60); break;
     case 2:  tv=new ImageView(160,160);
@@ -63,14 +64,7 @@ int main(int argc,const char*argv[]){
     tv->setId(100);
     grp->addView(tv).setPos(50,50).setBackgroundColor(0xFF444444);
     float rotation=15.f;
-    Runnable r;
-    r=([&]() {
-        grp->setRotation(rotation); 
-        tv->setRotation(rotation);
-        rotation+=5;
-        w->postDelayed(r,300);
-    });
-    w->postDelayed(r,1000);
+    tv->animate().setDuration(5000).translationX(360).start();
     return app.exec();
 }
 

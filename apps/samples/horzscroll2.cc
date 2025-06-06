@@ -1,14 +1,14 @@
 #include <cdroid.h>
-
-static std::vector<CLA::Argument> ARGS={
-   {CLA::EntryType::Switch, "s", "scroll",  "scroll always", CLA::ValueType::None, (int)CLA::EntryFlags::Optional}
-};
+#include <core/cxxopts.h>
 
 int main(int argc,const char*argv[]){
-    App app(argc,argv,ARGS);
-    Window*w=new Window(0,0,-1,-1);
+    App app(argc,argv);
+    cxxopts::Options options("main","application");
+    options.add_options()("scroll","scroll",cxxopts::value<int>()->default_value("1"));
+    auto result = options.parse(argc,argv);
+    Window*w = new Window(0,0,-1,-1);
     HorizontalScrollView* hs=new HorizontalScrollView(-1,-1);
-    hs->setOverScrollMode(app.hasSwitch("scroll")?View::OVER_SCROLL_ALWAYS:View::OVER_SCROLL_NEVER);
+    hs->setOverScrollMode(result.count("scroll")?View::OVER_SCROLL_ALWAYS:View::OVER_SCROLL_NEVER);
     hs->setHorizontalFadingEdgeEnabled(true);
     hs->setFadingEdgeLength(200);
     hs->setHorizontalScrollBarEnabled(true);

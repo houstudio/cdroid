@@ -2,6 +2,7 @@
 #include <string>
 #include <cdlog.h>
 #include <iostream>
+#include <core/cxxopts.h>
 #include <curl/curl.h>
 #include <curldownload.h>
 class MyAdapter:public ArrayAdapter<std::string>{
@@ -29,27 +30,29 @@ const char*urls[]={
     nullptr
 };
 
-const std::vector<CLA::Argument> ARGS={
-   {CLA::EntryType::Option, "u", "url",  "url to download", CLA::ValueType::String, (int)CLA::EntryFlags::Optional},
-   {CLA::EntryType::Option, "", "loop",  "loops to download", CLA::ValueType::Int, (int)CLA::EntryFlags::Optional},
-};
-
 int main(int argc,const char*argv[]){
-    App app(argc,argv,ARGS);
-    Window*w=new Window(0,0,-1,-1);
-     MyAdapter*adapter=new MyAdapter();
+    App app(argc,argv);
+    cxxopts::Options options("main","application");
+    options.add_options()
+        ("u,url","url to download",cxxopts::value<std::string>())
+        ("loop","download test loops",cxxopts::value<int>()) ;
+    auto result = options.parse(argc,argv);
+    Window*w = new Window(0,0,-1,-1);
+    MyAdapter*adapter=new MyAdapter();
     ListView*lv=(ListView*)&w->addView(new ListView(460,500)).setId(100);
     adapter->setNotifyOnChange(true);
     lv->setAdapter(adapter);
     for(int i=0;i<56;i++) adapter->add("");
     CurlDownloader dld(Looper::getForThread());
-    std::string url = app.getArg("url");
-    LOGI_IF(!url.empty(),"downloading %s...",url.c_str());
-    if(!url.empty()){
-       CurlDownloader::ConnectionData* cnn=new CurlDownloader::ConnectionData(url);
-       dld.addConnection(cnn);
+    if(result.count("url")){
+        std::string url = result["url"].as<std::string>();
+        LOGI_IF(!url.empty(),"downloading %s...",url.c_str());
+        if(!url.empty()){
+           CurlDownloader::ConnectionData* cnn=new CurlDownloader::ConnectionData(url);
+           dld.addConnection(cnn);
+        }
     }
-    const int loops =app.getArgAsInt("loop",url.empty()?1:0);
+    const int loops = result["loop"].as<int>();
     for(int j=0;j<loops;j++){
        for(int i=0;urls[i];i++){
           CurlDownloader::ConnectionData* cnn=new CurlDownloader::ConnectionData(urls[i]);

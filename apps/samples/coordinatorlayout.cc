@@ -23,7 +23,7 @@ public:
                                        View& target, int axes, int type) {
         const bool ret =dynamic_cast<NestedScrollView*>(&target) && (axes & View::SCROLL_AXIS_VERTICAL) != 0;
         LOGD("res=%d axes=%d/%d",ret,axes,View::SCROLL_AXIS_VERTICAL);
-	return ret;
+        return ret;
     }
 
     void onNestedPreScroll(CoordinatorLayout& coordinatorLayout,View& child,View& target,
@@ -33,7 +33,7 @@ public:
     }
 };
 
-REGISTER_CLASS(YourCustomBehavior,cdroid::CoordinatorLayout::Behavior);
+//REGISTER_CLASS(YourCustomBehavior,cdroid::CoordinatorLayout::Behavior);
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
