@@ -927,8 +927,7 @@ bool GradientDrawable::ensureValidRect() {
                     Color c = gradientColors[i];
                     stops.push_back({0,c.red(),c.green(),c.blue(),(c.alpha()*mAlpha)/255.f});
                 }
-                RefPtr<SweepGradient>pat = SweepGradient::create(x0, y0,RADIUS,M_PI/2.f,stops);
-                mFillPaint = pat;
+                mFillPaint = SweepGradient::create(x0, y0,RADIUS,M_PI*2.0,stops);
             } else if(st.mGradient == BITMAP_PATTERN){
                 //mFillPaint = SurfacePattern::create(st.mImagePattern);
             }
