@@ -199,7 +199,7 @@ void Outline::setConvexPath(const Path& convexPath) {
     }*/
 
     if (!convexPath.is_convex()) {
-        throw std::runtime_error("path must be convex");
+        LOGE("path must be convex");
     }
 
     if (mPath == nullptr) {

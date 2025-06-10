@@ -296,10 +296,12 @@ void GradientDrawable::updateLocalState() {
         mFillPaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),(c.alpha()*mAlpha)/255.f);
     }
     mPadding = state->mPadding;
-    if(state->mStrokeColors!=nullptr) {
-        setStroke(state->mStrokeWidth,state->mStrokeColors,state->mStrokeDashWidth,state->mStrokeDashGap);
-    }else{
-        setStroke(state->mStrokeWidth,state->mStrokeColor,state->mStrokeDashWidth,state->mStrokeDashGap);
+    if(state->mStrokeWidth>0){
+        if(state->mStrokeColors!=nullptr) {
+            setStroke(state->mStrokeWidth,state->mStrokeColors,state->mStrokeDashWidth,state->mStrokeDashGap);
+        }else{
+            setStroke(state->mStrokeWidth,state->mStrokeColor,state->mStrokeDashWidth,state->mStrokeDashGap);
+        }
     }
     state->computeOpacity();
 }
@@ -1061,7 +1063,7 @@ void GradientDrawable::draw(Canvas&canvas) {
         if(st->mRadiusArray.size())radii = st->mRadiusArray;
         if(st->mRadius > 0.0f)radii.assign(8,rad);
         if(radii.size())
-            drawRoundedRect(canvas,mRect,radii[0],radii[1],radii[2],radii[3]);
+            drawRoundedRect(canvas,mRect,radii[0],radii[2],radii[4],radii[6]);
         else
             canvas.rectangle(int(mRect.left),int(mRect.top),int(mRect.width),int(mRect.height));
         break;
