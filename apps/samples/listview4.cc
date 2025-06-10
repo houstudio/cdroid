@@ -46,7 +46,7 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,-1,-1);
     MyAdapter*adapter=new MyAdapter();
     ListView*lv=(ListView*)&w->addView(new ListView(460,500));
-    lv->setPos(10,10);
+    lv->layout(10,10,460,500);
     lv->setDivider(new ColorDrawable(0x66008800));
     lv->setVerticalScrollBarEnabled(true);
     lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
@@ -69,14 +69,14 @@ int main(int argc,const char*argv[]){
         lv->addHeaderView(createHeader(888888),nullptr,false);
 	adapter->notifyDataSetChanged();
     });
-    w->addView(add).setPos(480,10);
+    w->addView(add).layout(480,10,200,60);
     Button*del=new Button("Remove Header",200,60);
     del->setOnClickListener([lv,adapter](View&){
 	View*header=lv->findViewById(888888);
         lv->removeHeaderView(header);
         adapter->notifyDataSetChanged();
     });
-    w->addView(del).setPos(480,80);
+    w->addView(del).layout(480,80,200,60);
     app.exec();
     return 0;
 };

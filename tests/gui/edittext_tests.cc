@@ -18,7 +18,7 @@ TEST_F(EDITTEXT,edit){
     for(int i=0;i<sizeof(format)/sizeof(format[0]);i++){
         EditText*g=new EditText("Hello world!",600,32);
         g->setGravity(format[i]|Gravity::CENTER_VERTICAL);
-        w->addView(g).setPos(10,35*i+10);
+        w->addView(g).layout(10,35*i+10,600,32);
     }
     app.exec();
 }
@@ -30,7 +30,7 @@ TEST_F(EDITTEXT,multiline){
     edt->setSingleLine(false);
     edt->setTextColor(0xFFFFFFFF);
     edt->setBackground(new ColorDrawable(0xFF111111));
-    w->addView(edt).setSize(600,200);
+    w->addView(edt);
     app.exec();
 }
 
@@ -47,7 +47,7 @@ TEST_F(EDITTEXT,hebrew){
     edt->setSingleLine(false);
     edt->setTextColor(0xFFFFFFFF);
     edt->setBackground(new ColorDrawable(0xFF111111));
-    w->addView(edt).setSize(600,200);
+    w->addView(edt);
     app.exec();
 
 }
@@ -60,6 +60,6 @@ TEST_F(EDITTEXT,hindi){//印地语
     edt->setSingleLine(false);
     edt->setTextColor(0xFFFFFFFF);
     edt->setBackground(new ColorDrawable(0xFF111111));
-    w->addView(edt).setSize(600,200);
+    w->addView(edt);
     app.exec();
 }

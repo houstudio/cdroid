@@ -68,7 +68,7 @@ HomeWindow::HomeWindow():Window(0,0,-1,-1){
    LOGD("anim=%p",anim);
    /*anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
         const float t=anim.getAnimatedValue().get<float>();
-        this->setPos(0,this->getHeight()*(t));
+        this->layout(0,this->getHeight()*(t),getWidth(),getHeight());
         this->setAlpha(1.f-t);this->setAlpha(t);
    }));
    anim->start();*/
@@ -88,9 +88,9 @@ void HomeWindow::onWashOptionClick(View&v){
 	       anim->removeAllUpdateListeners();
                anim->addUpdateListener(ValueAnimator::AnimatorUpdateListener([w,this](ValueAnimator&anim){
                     const float t=anim.getAnimatedValue().get<float>();
-                    w->setPos(0*w->getWidth()*t,w->getHeight()*(t));
-		    w->setAlpha(1.f-t);this->setAlpha(t);
-		    LOGV("top=%d ",w->getLeft(),w->getTop());
+                    w->layout(0*w->getWidth()*t,w->getHeight()*(t),w->getWidth(),w->getHeight());
+                    w->setAlpha(1.f-t);this->setAlpha(t);
+                    LOGV("top=%d ",w->getLeft(),w->getTop());
                }));
                anim->start();
 	   }break;

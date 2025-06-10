@@ -20,8 +20,8 @@ int main(int argc,const char*argv[]){
     pb2->setMirrorForRtl(true);
     pb2->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
     pb->setSecondaryProgress(15);
-    w->addView(pb).setPos(50,50);
-    w->addView(pb2).setPos(50,100);
+    w->addView(pb).layout(50,50,600,40);
+    w->addView(pb2).layout(50,100,600,40);
 
     Runnable progress;
     progress=[w,pb,pb2,&progress](){
@@ -36,7 +36,7 @@ int main(int argc,const char*argv[]){
     d=ctx->getDrawable("cdroid:drawable/progress_large");
     pb3->setIndeterminateDrawable(d);
     LOGI("Indeterminate drawable=%p",d);
-    w->addView(pb3).setId(104).setPos(680,60);
+    w->addView(pb3).setId(104).layout(680,60,72,72);
     pb3->setIndeterminate(true);
     pb3->setProgressDrawable(new ColorDrawable(0xFF112233));
 
@@ -49,7 +49,7 @@ int main(int argc,const char*argv[]){
     bd->setTileModeXY(TileMode::MIRROR,TileMode::MIRROR);
     ad->addFrame(bd,1000);
     ad->addFrame(ctx->getDrawable("cdroid:drawable/progress_horizontal"),1000);
-    w->addView(pb4).setId(105).setPos(600,300);
+    w->addView(pb4).setId(105).layout(600,300,256,256);
     pb4->setIndeterminateDrawable(ad);
     pb4->setIndeterminate(true);
     //pb4->setProgressDrawable(new ColorDrawable(0xFF111111));
@@ -59,7 +59,7 @@ int main(int argc,const char*argv[]){
     pb5->setIndeterminate(true);
     pb5->setProgress(40);
     //pb5->setProgressDrawable(new ColorDrawable(0xFF111111));   
-    w->addView(pb5).setId(105).setPos(50,150);
+    w->addView(pb5).setId(105).layout(50,150,600,20);
 //////////////////////////////////////////////////////////
     SeekBar*sb = new SeekBar(800,50);
     SeekBar*sb2= new SeekBar(800,50);
@@ -80,14 +80,15 @@ int main(int argc,const char*argv[]){
     sb->setTickMark(d);
     sb2->setTickMark(d->getConstantState()->newDrawable());
     sb2->setMirrorForRtl(true);
-    w->addView(sb).setId(200).setPos(10,180).setKeyboardNavigationCluster(true);
-    w->addView(sb2).setId(201).setPos(10,234).setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+    w->addView(sb).setId(200).layout(10,180,800,50);
+    w->addView(sb2).setId(201).layout(10,234,800,50);
+    sb2->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
 
     ShapeDrawable* shapeDrawable = new ShapeDrawable();
     shapeDrawable->setShape(new OvalShape());
     shapeDrawable->getShape()->setSolidColor(0xFF4488aa);
     pb5 =new ProgressBar(200,200);
-    w->addView(pb5).setPos(50,300);
+    w->addView(pb5).layout(50,300,200,200);
     pb5->setProgressDrawable(shapeDrawable);
     pb5->setProgress(35);
     return app.exec();

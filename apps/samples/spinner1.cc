@@ -57,7 +57,8 @@ int main(int argc,const char*argv[]){
     spinner->setId(100);
     linear->addView(new TextView("Hello world!",200,40));
     LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);
-    linear->addView(spinner,lp).setPos(100,100).setBackgroundColor(0xFF222222);
+    linear->addView(spinner,lp).layout(100,100,300,40);
+    spinner->setBackgroundColor(0xFF222222);
     spinner->requestFocus();
     spinner->requestLayout();
     spinner->setSelection(0);

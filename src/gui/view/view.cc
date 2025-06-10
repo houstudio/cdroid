@@ -4520,18 +4520,6 @@ bool View::setFrame(int left,int top,int width,int height){
     return changed;
 }
 
-View& View::setPos(int x,int y){
-    setFrame(x,y,getWidth(),getHeight());
-    return *this;
-}
-
-View& View::setSize(int w,int h){
-    if( (getWidth()!=w)|| (getHeight()!=h) ){
-        setFrame(mLeft,mTop,w,h);
-    }
-    return *this;
-}
-
 const Rect View::getClientRect()const{
     return Rect::Make(0,0,getWidth(),getHeight());
 }

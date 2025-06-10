@@ -421,16 +421,15 @@ void Window::draw(){
     GraphDevice::getInstance().flip();
 }
 
-View& Window::setPos(int x,int y){
+void Window::setPos(int x,int y){
     const bool changed =(x!=mLeft)||(mTop!=y);
     if( changed && isAttachedToWindow()){
         WindowManager::getInstance().moveWindow(this,x,y);
-        ViewGroup::setPos(x,y);
+        ViewGroup::layout(x,y,getWidth(),getHeight());
         mAttachInfo->mWindowLeft= x;
         mAttachInfo->mWindowTop = y;
     }
     GraphDevice::getInstance().flip();
-    return *this;
 }
 
 View& Window::setAlpha(float alpha){

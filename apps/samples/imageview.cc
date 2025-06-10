@@ -17,14 +17,14 @@ int main(int argc,const char*argv[]){
         std::string url = result["url"].as<std::string>();
         btn->setImageResource(url);
     }
-    w->addView(btn).setPos(220,100); 
+    w->addView(btn).layout(220,100,200,200); 
     ImageView*img=new ImageView(200,200);
     Drawable*dr=app.getDrawable("cdroid:mipmap/bottom_bar");//drawable/btn_radio.xml");
     img->setImageDrawable(dr);
     img->setCornerRadii(20);
     img->setScaleType(ScaleType::FIT_XY);
     img->setBackgroundColor(0xFF112233);
-    w->addView(img).setPos(0,100);
+    w->addView(img).layout(0,100,200,200);
     w->requestLayout();	
     return app.exec();
 }

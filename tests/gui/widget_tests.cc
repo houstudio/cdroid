@@ -73,7 +73,7 @@ TEST_F(WIDGET,ImageView){
    ImageView*iv=new ImageView(400,400);
    Drawable*d=new BitmapDrawable(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/light2.jpg");
    iv->setImageDrawable(d);
-   w->addView(iv).setPos(100,100);
+   w->addView(iv).layout(100,100,400,400);
    app.exec();
 }
 
@@ -91,7 +91,7 @@ TEST_F(WIDGET,EditText){
     e=new EditText("How to call customized WPF Window in VSTO ribbon?"
 "For example, I made customized WPF window by designing the styles. And then I would like to use it in my Presentation addin."
 " I can run the WPF window directly, but cannot call it from Ribbon. Thanks very much!",600,100);
-    w->addView(e).setPos(10,20);
+    w->addView(e).layout(10,20,600,100);
     e->setSingleLine(false);
     e->setBreakStrategy(0);
     e->setBackgroundColor(0xFF222222);
@@ -104,7 +104,7 @@ TEST_F(WIDGET,EditText){
         e->setText(sss[i*2]);
         e->setInputType(EditText::TYPE_ANY);
         e->setPattern(sss[i*2+1]);     
-        w->addView(e).setPos(10,y);
+        w->addView(e).layout(10,y,680,((i==0)?100:50)+i*5);
         y+=e->getHeight()+1;
         e->setEditMode(i!=2?EditText::INSERT:EditText::REPLACE);
     }
@@ -178,6 +178,6 @@ TEST_F(WIDGET,Keyboard){
     kbv->setBackgroundColor(0xFFEEEEEE);
     Keyboard*kbd=new Keyboard(&app,"cdroid:xml/qwerty.xml",800,200);
     kbv->setKeyboard(kbd);
-    w->addView(kbv).setPos(20,10);
+    w->addView(kbv).layout(20,10,800,300);
     app.exec();
 }

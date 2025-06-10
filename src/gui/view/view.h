@@ -925,8 +925,6 @@ public:
     const Rect getDrawingRect()const;
     int64_t getDrawingTime()const;
     virtual void getFocusedRect(Rect&r);
-    virtual View& setPos(int x,int y);
-    virtual View& setSize(int x,int y);
     void getDrawingRect(Rect& outRect)const;
     bool getGlobalVisibleRect(Rect& r,Point*globalOffet);
     bool getLocalVisibleRect(Rect&r);

@@ -140,9 +140,9 @@ TetrisWindow::TetrisWindow(int x,int y,int w,int h):Window(x,y,w,h){
     });
     mLevelSelector->setSelection(0);*/
     int cx=mTopLeft+AREA_COL*BLOCK_SIZE+MARGIN*5;
-    addView(mLevelSelector).setPos(cx,300);
+    addView(mLevelSelector).layout(cx,300,300,30);
     mStartButton=new Button("Start",300,30);
-    addView(mStartButton).setPos(cx,350);
+    addView(mStartButton).layout(cx,350,300,30);
     mStartButton->setOnClickListener([this](View&v){
         mGameIsOver=0;
         StartGame();
