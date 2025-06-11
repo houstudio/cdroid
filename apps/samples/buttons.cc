@@ -36,7 +36,7 @@ int main(int argc,const char*argv[]){
     btn->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
     btn->setOnClickListener([](View&v){LOGD(" Button Clicked ");});
     btn->setOnLongClickListener([](View&v)->bool{LOGD(" Button LongClicked ");return true;});
-    w->addView(btn).setId(100).setPos(50,60);
+    w->addView(btn).setId(100).layout(50,60,120,60);
 
     ShapeDrawable*sd=new ShapeDrawable();
     sd->setShape(new ArcShape(0,360));
@@ -46,7 +46,7 @@ int main(int argc,const char*argv[]){
     btn->setMinimumHeight(64);
     btn->setBackground(rp);
     btn->setClickable(true);
-    w->addView(btn).setId(101).setPos(200,60);
+    w->addView(btn).setId(101).layout(200,60,300,64);
 
     btn=new ToggleButton(120,40);
     d=ctx->getDrawable("cdroid:drawable/btn_toggle_bg.xml");
@@ -54,33 +54,34 @@ int main(int argc,const char*argv[]){
     btn->setTextColor(ctx->getColorStateList("cdroid:color/textview"));
     ((ToggleButton*)btn)->setTextOn("ON");
     ((ToggleButton*)btn)->setTextOff("Off");
-    w->addView(btn).setId(101).setPos(200,150).setClickable(true);
+    w->addView(btn).setId(101).layout(200,150,120,40);
+    btn->setClickable(true);
 
     chk=new CheckBox("CheckME",200,60);
     d=ctx->getDrawable("cdroid:drawable/btn_check.xml");
     chk->setButtonDrawable(d);
     chk->setChecked(true);
-    w->addView(chk).setPos(350,150);
+    w->addView(chk).layout(350,150,200,60);
 	
     /*AnalogClock*clk=new AnalogClock(300,300);
     d=ctx->getDrawable("cdroid:drawable/analog.xml");
     clk->setClockDrawable(d,AnalogClock::DIAL);
     d=ctx->getDrawable("cdroid:drawable/analog_second.xml");
     clk->setClockDrawable(d,AnalogClock::SECOND);
-    w->addView(clk).setPos(600,300);*/
+    w->addView(clk).layout(600,300,300,300);*/
 
 #if 1 
     chk=new RadioButton("Radio",120,60);
     Drawable*dr=ctx->getDrawable("cdroid:drawable/btn_radio.xml");
     chk->setButtonDrawable(dr);
     chk->setChecked(true);
-    w->addView(chk).setPos(600,150);
+    w->addView(chk).layout(600,150,120,60);
 	
     EditText*edt=new EditText("Edit Me!",200,60);
     d=ctx->getDrawable("cdroid:drawable/edit_text.xml");//editbox_background.xml");
     edt->setBackground(d);
     edt->setTextColor(ctx->getColorStateList("cdroid:color/textview.xml"));
-    w->addView(edt).setId(102).setPos(800,60).setKeyboardNavigationCluster(true);
+    w->addView(edt).setId(102).layout(800,60,200,60);
 #endif
 ///////////////////////////////////////////////////////////
 #if 1
@@ -90,7 +91,7 @@ int main(int argc,const char*argv[]){
     pb->setProgressDrawable(d);
     pb->setProgress(34);
     pb->setSecondaryProgress(15);
-    w->addView(pb).setPos(50,150);
+    w->addView(pb).layout(50,150,500,40);
 
 #endif
 #if 1
@@ -99,7 +100,7 @@ int main(int argc,const char*argv[]){
     d=ctx->getDrawable("cdroid:drawable/progress_large.xml");
     pb2->setIndeterminateDrawable(d);
     LOGD("Indeterminate drawable=%p",d);
-    w->addView(pb2).setId(104).setPos(50,450);
+    w->addView(pb2).setId(104).layout(50,450,72,72);
     pb2->setProgressDrawable(new ColorDrawable(0xFF112233));
     pb2->setIndeterminate(true);
 #endif
@@ -118,8 +119,8 @@ int main(int argc,const char*argv[]){
     d=ctx->getDrawable("cdroid:drawable/seekbar_tick_mark.xml");
     sb->setTickMark(d);
     sb2->setTickMark(d->getConstantState()->newDrawable());
-    w->addView(sb).setId(200).setPos(150,250).setKeyboardNavigationCluster(true);
-    w->addView(sb2).setId(201).setPos(150,300);
+    w->addView(sb).setId(200).layout(150,250,800,30);
+    w->addView(sb2).setId(201).layout(150,300,800,30);
 
 #endif
     return app.exec();

@@ -31,11 +31,11 @@ int main(int argc,const char*argv[]){
     edit->setInputType(EditText::TYPE_ANY);
     edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
     edit->setBackgroundColor(0x80FF0000);
-    w->addView(edit).setPos(100,300);
+    w->addView(edit).layout(100,300,640,200);
     edit->setTextSize(60);
     Chronometer*ch=new Chronometer(200,40);
     ch->setFormat("Time:MM:SS");
-    w->addView(ch).setPos(0,400);
+    w->addView(ch).layout(0,400,200,40);
     ch->setCountDown(true);
     ch->setBase(SystemClock::elapsedRealtime() + 120 * 1000);
     ch->start();

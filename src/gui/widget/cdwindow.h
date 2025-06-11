@@ -102,7 +102,7 @@ public:
     void draw();
     virtual void setText(const std::string&);
     const std::string getText()const;
-    virtual View& setPos(int x,int y)override;
+    void setPos(int x,int y);
     bool ensureTouchMode(bool inTouchMode)override;
     View& setAlpha(float a);
     void sendToBack();

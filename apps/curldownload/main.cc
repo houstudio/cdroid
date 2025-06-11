@@ -32,9 +32,10 @@ const char*urls[]={
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
+    std::string url;
     cxxopts::Options options("main","application");
     options.add_options()
-        ("u,url","url to download",cxxopts::value<std::string>())
+        ("u,url","url to download",cxxopts::value<std::string>(url))
         ("loop","download test loops",cxxopts::value<int>()) ;
     auto result = options.parse(argc,argv);
     Window*w = new Window(0,0,-1,-1);
@@ -44,8 +45,7 @@ int main(int argc,const char*argv[]){
     lv->setAdapter(adapter);
     for(int i=0;i<56;i++) adapter->add("");
     CurlDownloader dld(Looper::getForThread());
-    if(result.count("url")){
-        std::string url = result["url"].as<std::string>();
+    if(!url.empty()){
         LOGI_IF(!url.empty(),"downloading %s...",url.c_str());
         if(!url.empty()){
            CurlDownloader::ConnectionData* cnn=new CurlDownloader::ConnectionData(url);

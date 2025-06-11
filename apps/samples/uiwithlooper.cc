@@ -16,7 +16,7 @@ int main(int argc,const char*argv[]){
     edit->setInputType(EditText::TYPE_ANY);
     edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
     edit->setBackgroundColor(0xFFFF0000);
-    w->addView(edit).setPos(100,300);
+    w->addView(edit).layout(100,300,680,200);
     edit->setTextSize(60);
 
     std::thread th([](){

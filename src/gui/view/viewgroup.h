@@ -332,7 +332,6 @@ public:
     void offsetRectIntoDescendantCoords(const View* descendant, Rect& rect)const;
     void offsetRectBetweenParentAndChild(const View* descendant, Rect& rect,bool offsetFromChildToParent, bool clipToBounds)const;
     void offsetChildrenTopAndBottom(int offset);
-    void offsetChildrenLeftAndRight(int offset);
     virtual bool getChildVisibleRect(View*child,Rect&r,Point*offset);
     bool gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>&region)override;
 

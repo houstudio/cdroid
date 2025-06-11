@@ -86,7 +86,7 @@ int main(int argc,const char*argv[]){
     gv->setSelection(0);
     w->requestLayout();
     Button *btn=new Button("Columns[2]",200,40);
-    w->addView(btn).setPos(100,645);
+    w->addView(btn).layout(100,645,200,40);
     btn->setFocusable(true);
     btn->requestFocus();
     btn->setOnClickListener([&](View&v){

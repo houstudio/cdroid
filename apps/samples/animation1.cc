@@ -62,7 +62,8 @@ int main(int argc,const char*argv[]){
              break;
     }
     tv->setId(100);
-    grp->addView(tv).setPos(50,50).setBackgroundColor(0xFF444444);
+    grp->addView(tv).layout(50,50,160,60);
+    tv->setBackgroundColor(0xFF444444);
     float rotation=15.f;
     tv->animate().setDuration(5000).translationX(360).start();
     return app.exec();

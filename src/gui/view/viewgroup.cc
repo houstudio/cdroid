@@ -2740,15 +2740,19 @@ void ViewGroup::offsetRectBetweenParentAndChild(const View* descendant,Rect&rect
 }
 
 void ViewGroup::offsetChildrenTopAndBottom(int offset){
+    bool bInvalidate = false;
     for (auto v:mChildren) {
-        v->setPos(v->mLeft,v->mTop + offset);
+        v->mTop +=offset;
+        v->mBottom+=offset;
+        if(v->mRenderNode!=nullptr){
+            bInvalidate = true;
+            v->mRenderNode->offsetTopAndBottom(offset);
+        }
     }
-}
-
-void ViewGroup::offsetChildrenLeftAndRight(int offset){
-    for (auto v:mChildren) {
-        v->setPos(v->mLeft + offset,v->mTop);
+    if (bInvalidate) {
+        invalidateViewProperty(false, false);
     }
+    notifySubtreeAccessibilityStateChangedIfNeeded();
 }
 
 bool ViewGroup::getChildVisibleRect(View*child,Rect&r,Point*offset){

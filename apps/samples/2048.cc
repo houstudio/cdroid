@@ -21,7 +21,7 @@ class GameWindow :public Window {
     GameWindow(int x,int y,int w,int h):Window(x,y,w,h) {
         /*tfscore=new TextView("0",200,40);
         tfscore->setTextSize(30);
-        addView(tfscore).setPos(800,50);*/
+        addView(tfscore).layout(800,50,200,40);*/
     }
     void getColor(uint8_t value, char *color, size_t length);
     void initBoard(uint16_t size);

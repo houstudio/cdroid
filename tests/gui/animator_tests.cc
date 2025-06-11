@@ -135,7 +135,8 @@ TEST_F(ANIMATOR,translate){
         PropertyValuesHolder*xp=anim.getValues(0);
         PropertyValuesHolder*yp=anim.getValues(1);
         PropertyValuesHolder*cp=anim.getValues(2);
-        tv->setPos(GET_VARIANT(xp->getAnimatedValue(),int),GET_VARIANT(yp->getAnimatedValue(),int));
+        tv->setLeft(GET_VARIANT(xp->getAnimatedValue(),int));
+        tv->setTop(GET_VARIANT(yp->getAnimatedValue(),int));
         tv->setBackgroundColor(GET_VARIANT(cp->getAnimatedValue(),int32_t));
     }));
 
