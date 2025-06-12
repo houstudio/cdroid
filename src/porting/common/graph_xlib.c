@@ -31,11 +31,16 @@ static GFXRect screenMargin= {0}; //{60,0,60,0};
       InjectABS(time,EV_ABS,ABS_MT_POSITION_Y,y);\
       InjectABS(time,EV_ABS,SYN_MT_REPORT,0);\
       InjectABS(time,EV_SYN,SYN_REPORT,0);}
-#else
-   #define SENDMOUSE(time,x,y)  {\
+
+/*   #define SENDMOUSE(time,x,y)  {\
       InjectABS(time,EV_ABS,ABS_X,x);\
       InjectABS(time,EV_ABS,ABS_Y,y);\
-      InjectABS(time,EV_SYN,SYN_REPORT,0);}
+      InjectABS(time,EV_SYN,SYN_REPORT,0);}*/
+#else
+   #define SENDMOUSE(time,x,y)  {\
+      InjectREL(time,EV_REL,REL_X,x);\
+      InjectREL(time,EV_REL,REL_Y,y);\
+      InjectREL(time,EV_SYN,SYN_REPORT,0);}
 #endif
 static void InjectKey(int type,int code,int value) {
     INPUTEVENT i= {0};

@@ -581,7 +581,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
 }
 
 int TouchDevice::isValidEvent(int type,int code,int value){
-    return (type==EV_KEY)||(type==EV_ABS)||(type==EV_SYN)||true;
+    return (type==EV_ABS)||(type==EV_SYN)||(type==EV_KEY);
 }
 
 int TouchDevice::getActionByBits(int& pointIndex){
@@ -755,12 +755,45 @@ MouseDevice::MouseDevice(int fd):TouchDevice(fd){
 }
 
 int MouseDevice::isValidEvent(int type,int code,int value){
-    return (type==EV_KEY)||(type==EV_REL)||(type==EV_SYN)||true;
+    return (type==EV_REL)||(type==EV_SYN)||(type==EV_KEY);
 }
 
 int MouseDevice::putEvent(long sec,long usec,int type,int code,int value){
     if(!isValidEvent(type,code,value))return -1;
-    return TouchDevice::putEvent(sec,usec,type,code,value);
+    switch(type){
+    case EV_KEY:
+        switch(code){
+        case BTN_TOUCH :
+        case BTN_STYLUS:
+            mActionButton = MotionEvent::BUTTON_PRIMARY;
+            if(value)mCurrBits.markBit(0);else mCurrBits.clearBit(0);
+            mAxisFlags |= 0x80000000;
+            if(value){
+                mMoveTime = mDownTime = sec * 1000 + usec/1000;
+                mButtonState = MotionEvent::BUTTON_PRIMARY;
+            }else{
+                mMoveTime = sec * 1000 + usec/1000;
+                mButtonState &= ~MotionEvent::BUTTON_PRIMARY;
+            }
+            break;
+        case BTN_0:
+        case BTN_STYLUS2:
+            mActionButton = MotionEvent::BUTTON_SECONDARY;
+            if(value)
+                mButtonState = MotionEvent::BUTTON_SECONDARY;
+            else
+                mButtonState &= ~MotionEvent::BUTTON_SECONDARY;
+            break;
+        }break;
+    case EV_REL:
+        if( (code >= REL_X) && (code <= REL_Z) ){
+            setAxisValue(code,value,true);
+        }break;
+    case EV_SYN:
+
+    default:break;
+    }
+    return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
