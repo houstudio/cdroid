@@ -19,6 +19,8 @@
   #include <core/eventcodes.h>   
 #endif
 
+#define USE_TRACKINGID_AS_POINTERID 0
+
 using namespace std;
 namespace cdroid{
 
@@ -312,7 +314,8 @@ KeyDevice::KeyDevice(int fd)
 }
 
 int KeyDevice::isValidEvent(int type,int code,int value){
-    return (type==EV_KEY)||(type==EV_SYN);
+    return (type==EV_KEY)||(type==EV_MSC)||(type==EV_LED)||
+        (type==EV_REP)||(type==EV_SYN);
 }
 
 int KeyDevice::putEvent(long sec,long nsec,int type,int code,int value){
@@ -581,7 +584,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
 }
 
 int TouchDevice::isValidEvent(int type,int code,int value){
-    return (type==EV_ABS)||(type==EV_SYN)||(type==EV_KEY);
+    return (type==EV_ABS)||(type==EV_SYN)||(type==EV_KEY)||(type==EV_MSC);
 }
 
 int TouchDevice::getActionByBits(int& pointIndex){
