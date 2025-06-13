@@ -141,9 +141,6 @@ private:
     OnGestureListener mListener;
     OnDoubleTapListener mDoubleTapListener;
     OnContextClickListener mContextClickListener;
-    Runnable mPressRunnable;
-    Runnable mLongPressRunnable;
-    Runnable mTapRunnable;
 
     bool mStillDown;
     bool mDeferConfirmSingleTap;

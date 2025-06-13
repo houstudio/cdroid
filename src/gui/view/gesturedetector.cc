@@ -1,5 +1,4 @@
 #include <core/handler.h>
-#include <view/choreographer.h>
 #include <view/viewconfiguration.h>
 #include <view/gesturedetector.h>
 namespace cdroid{
@@ -104,26 +103,9 @@ void GestureDetector::init(Context* context) {
     mTouchSlopSquare = touchSlop * touchSlop;
     mDoubleTapTouchSlopSquare = doubleTapTouchSlop * doubleTapTouchSlop;
     mDoubleTapSlopSquare = doubleTapSlop * doubleTapSlop;
+
     if(InputEventConsistencyVerifier::isInstrumentationEnabled())
          mInputEventConsistencyVerifier = new InputEventConsistencyVerifier((Object*)this, 0) ;
-    mPressRunnable = [this](){
-        if(mListener.onShowPress)mListener.onShowPress(*mCurrentDownEvent);
-    };
-    mLongPressRunnable=[this](){
-        //recordGestureClassification(msg.arg1);
-        dispatchLongPress();
-    };
-    mTapRunnable=[this](){
-        if (mDoubleTapListener.onSingleTapConfirmed != nullptr) {
-            if (!mStillDown) {
-                recordGestureClassification(TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__SINGLE_TAP);
-                mDoubleTapListener.onSingleTapConfirmed(*mCurrentDownEvent);
-            } else {
-                mDeferConfirmSingleTap = true;
-            }
-        }
-
-    };
 }
 
 void GestureDetector::setOnDoubleTapListener(const OnDoubleTapListener& onDoubleTapListener) {
@@ -215,9 +197,8 @@ bool GestureDetector::onTouchEvent(MotionEvent& ev) {
 
     case MotionEvent::ACTION_DOWN:
         if (mDoubleTapListener.onDoubleTap||mDoubleTapListener.onSingleTapConfirmed||mDoubleTapListener.onDoubleTapEvent) {
-            //bool hadTapMessage mHandler->hasMessages(TAP);
-            //if (hadTapMessage) mHandler->removeMessages(TAP);
-            const int hadTapMessage = Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&mTapRunnable,this);
+            bool hadTapMessage = mHandler->hasMessages(TAP);
+            if (hadTapMessage) mHandler->removeMessages(TAP);
             if (mCurrentDownEvent && mPreviousUpEvent && hadTapMessage
                     && isConsideredDoubleTap(*mCurrentDownEvent,*mPreviousUpEvent, ev)) {
                 // This is a second tap
@@ -229,8 +210,7 @@ bool GestureDetector::onTouchEvent(MotionEvent& ev) {
                 handled |= (mDoubleTapListener.onDoubleTapEvent?mDoubleTapListener.onDoubleTapEvent(ev):false);
             } else {
                 // This is a first tap
-                //mHandler->sendEmptyMessageDelayed(TAP, DOUBLE_TAP_TIMEOUT);
-                Choreographer::getInstance().postCallbackDelayed(Choreographer::CALLBACK_ANIMATION,mTapRunnable,this,DOUBLE_TAP_TIMEOUT);
+                mHandler->sendEmptyMessageDelayed(TAP, DOUBLE_TAP_TIMEOUT);
             }
         }
 
@@ -248,22 +228,18 @@ bool GestureDetector::onTouchEvent(MotionEvent& ev) {
         mHasRecordedClassification = false;
 
         if (mIsLongpressEnabled) {
-            //mHandler->removeMessages(LONG_PRESS);
-            //mHandler->sendMessageAtTime(mHandler->obtainMessage(LONG_PRESS, TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__LONG_PRESS, 0 /* arg2 */),
-            //        mCurrentDownEvent->getDownTime() + ViewConfiguration::getLongPressTimeout());
-            Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&mLongPressRunnable,this);
-            Choreographer::getInstance().postCallbackDelayed(Choreographer::CALLBACK_ANIMATION,mLongPressRunnable,this,ViewConfiguration::getLongPressTimeout());
+            mHandler->removeMessages(LONG_PRESS);
+            mHandler->sendMessageAtTime(mHandler->obtainMessage(LONG_PRESS, TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__LONG_PRESS, 0 /* arg2 */),
+                    mCurrentDownEvent->getDownTime() + ViewConfiguration::getLongPressTimeout());
         }
-        //mHandler->sendEmptyMessageAtTime(SHOW_PRESS, mCurrentDownEvent->getDownTime() + TAP_TIMEOUT);
-        Choreographer::getInstance().postCallbackDelayed(Choreographer::CALLBACK_ANIMATION,mPressRunnable,this,TAP_TIMEOUT);
+        mHandler->sendEmptyMessageAtTime(SHOW_PRESS, mCurrentDownEvent->getDownTime() + TAP_TIMEOUT);
         handled |= (mListener.onDown?mListener.onDown(ev):false);
         break;
 
     case MotionEvent::ACTION_MOVE:
         if ((mInLongPress==false) && (mInContextClick==false)){
             const int motionClassification = ev.getClassification();
-            //const bool hasPendingLongPress = mHandler->hasMessages(LONG_PRESS);
-            const int hasPendingLongPress = Choreographer::getInstance().hasCallbacks(Choreographer::CALLBACK_ANIMATION,&mLongPressRunnable,this);
+            const bool hasPendingLongPress = mHandler->hasMessages(LONG_PRESS);
             const float scrollX = mLastFocusX - focusX;
             const float scrollY = mLastFocusY - focusY;
             if (mIsDoubleTapping) {
@@ -287,12 +263,9 @@ bool GestureDetector::onTouchEvent(MotionEvent& ev) {
                         // will happen in response to user input. To prevent this,
                         // reschedule long press with a modified timeout.
                         const long longPressTimeout = ViewConfiguration::getLongPressTimeout();
-                        //mHandler->removeMessages(LONG_PRESS);
-                        //mHandler->sendMessageAtTime(mHandler->obtainMessage(LONG_PRESS,TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__LONG_PRESS,0 /* arg2 */),
-                        //        ev.getDownTime() + (long) (longPressTimeout * mAmbiguousGestureMultiplier));
-                        Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&mLongPressRunnable,this);
-                        Choreographer::getInstance().postCallbackDelayed(Choreographer::CALLBACK_ANIMATION,mLongPressRunnable,
-                                this,(longPressTimeout * mAmbiguousGestureMultiplier));
+                        mHandler->removeMessages(LONG_PRESS);
+                        mHandler->sendMessageAtTime(mHandler->obtainMessage(LONG_PRESS,TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__LONG_PRESS,0 /* arg2 */),
+                                ev.getDownTime() + (long) (longPressTimeout * mAmbiguousGestureMultiplier));
                     }
                     // Inhibit default scroll. If a gesture is ambiguous, we prevent scroll
                     // until the gesture is resolved.
@@ -307,10 +280,9 @@ bool GestureDetector::onTouchEvent(MotionEvent& ev) {
                     mLastFocusX = focusX;
                     mLastFocusY = focusY;
                     mAlwaysInTapRegion = false;
-                    //mHandler->removeMessages(TAP);
-                    //mHandler->removeMessages(SHOW_PRESS);
-                    //mHandler->removeMessages(LONG_PRESS);
-                    Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,nullptr,this);
+                    mHandler->removeMessages(TAP);
+                    mHandler->removeMessages(SHOW_PRESS);
+                    mHandler->removeMessages(LONG_PRESS);
                 }
                 int doubleTapSlopSquare = isGeneratedGesture ? 0 : mDoubleTapTouchSlopSquare;
                 if (distance > doubleTapSlopSquare) {
@@ -323,10 +295,8 @@ bool GestureDetector::onTouchEvent(MotionEvent& ev) {
                 mLastFocusY = focusY;
             }
             if ((motionClassification == MotionEvent::CLASSIFICATION_DEEP_PRESS) && hasPendingLongPress) {
-                //mHandler->removeMessages(LONG_PRESS);
-                //mHandler->sendMessage(mHandler->obtainMessage(LONG_PRESS,TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__DEEP_PRESS,0 /* arg2 */));
-                Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&mLongPressRunnable,this);
-                Choreographer::getInstance().postCallback(Choreographer::CALLBACK_ANIMATION,mLongPressRunnable,this);
+                mHandler->removeMessages(LONG_PRESS);
+                mHandler->sendMessage(mHandler->obtainMessage(LONG_PRESS,TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__DEEP_PRESS,0 /* arg2 */));
             }
         }
         break;
@@ -339,8 +309,7 @@ bool GestureDetector::onTouchEvent(MotionEvent& ev) {
                 recordGestureClassification(TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__DOUBLE_TAP);
                 handled |= (mDoubleTapListener.onDoubleTapEvent?mDoubleTapListener.onDoubleTapEvent(ev):false);
             } else if (mInLongPress) {
-                //mHandler->removeMessages(TAP);
-                Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&mTapRunnable,this);
+                mHandler->removeMessages(TAP);
                 mInLongPress = false;
             } else if (mAlwaysInTapRegion && !mIgnoreNextUpEvent) {
                 recordGestureClassification(TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__SINGLE_TAP);
@@ -375,9 +344,7 @@ bool GestureDetector::onTouchEvent(MotionEvent& ev) {
         mIsDoubleTapping = false;
         mDeferConfirmSingleTap = false;
         mIgnoreNextUpEvent = false;
-        //mHandler->removeMessages(SHOW_PRESS); mHandler->removeMessages(LONG_PRESS);
-        Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&mPressRunnable,this);
-        Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&mLongPressRunnable,this);
+        mHandler->removeMessages(SHOW_PRESS); mHandler->removeMessages(LONG_PRESS);
         break;
 
     case MotionEvent::ACTION_CANCEL:
@@ -404,9 +371,7 @@ bool GestureDetector::onGenericMotionEvent(MotionEvent& ev) {
                 || actionButton == MotionEvent::BUTTON_SECONDARY)) {
             if (mContextClickListener(ev)) {
                 mInContextClick = true;
-                //mHandler->removeMessages(LONG_PRESS); mHandler->removeMessages(TAP);
-                Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&mPressRunnable,this);
-                Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&mTapRunnable,this);
+                mHandler->removeMessages(LONG_PRESS); mHandler->removeMessages(TAP);
                 return true;
             }
         }
@@ -424,10 +389,9 @@ bool GestureDetector::onGenericMotionEvent(MotionEvent& ev) {
 }
 
 void GestureDetector::cancel() {
-    //mHandler->removeMessages(SHOW_PRESS);
-    //mHandler->removeMessages(LONG_PRESS);
-    //mHandler->removeMessages(TAP);
-    Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,nullptr,this);
+    mHandler->removeMessages(SHOW_PRESS);
+    mHandler->removeMessages(LONG_PRESS);
+    mHandler->removeMessages(TAP);
     mVelocityTracker->recycle();
     mVelocityTracker = nullptr;
     mIsDoubleTapping = false;
@@ -441,10 +405,9 @@ void GestureDetector::cancel() {
 }
 
 void GestureDetector::cancelTaps() {
-    //mHandler->removeMessages(SHOW_PRESS);
-    //mHandler->removeMessages(LONG_PRESS);
-    //mHandler->removeMessages(TAP);
-    Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,nullptr,this);
+    mHandler->removeMessages(SHOW_PRESS);
+    mHandler->removeMessages(LONG_PRESS);
+    mHandler->removeMessages(TAP);
     mIsDoubleTapping = false;
     mAlwaysInTapRegion = false;
     mAlwaysInBiggerTapRegion = false;
@@ -472,8 +435,7 @@ bool GestureDetector::isConsideredDoubleTap(MotionEvent& firstDown, MotionEvent&
 }
 
 void GestureDetector::dispatchLongPress() {
-    //mHandler->removeMessages(TAP);
-    Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&mTapRunnable,this);
+    mHandler->removeMessages(TAP);
     mDeferConfirmSingleTap = false;
     mInLongPress = true;
     if(mListener.onLongPress)

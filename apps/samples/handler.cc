@@ -37,6 +37,10 @@ int main(int argc,const char*argv[]){
         }
     });
 
+    handler->sendEmptyMessage(3456);
+    bool rc =handler->hasMessages(3456);
+    handler->removeMessages(3456);
+    rc= handler->hasMessages(3456);
     std::thread th2([&](){
         int what=0;
         while(1){
