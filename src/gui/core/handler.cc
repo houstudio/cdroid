@@ -31,8 +31,12 @@ void Handler::handleMessage(Message& msg) {
 void Handler::handleIdle(){
 }
 
+bool Handler::hasMessages(int what){
+   return mLooper->hasMessages(this,what,nullptr);
+}
+
 bool Handler::hasMessages(int what,void*object){
-    return false;
+    return mLooper->hasMessages(this,what,object);
 }
 
 void Handler::removeMessages(int what){

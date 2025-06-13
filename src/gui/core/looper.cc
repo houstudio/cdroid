@@ -657,6 +657,17 @@ void Looper::removeEventHandler(const EventHandler*handler){
     }
 }
 
+bool Looper::hasMessages(const MessageHandler* handler,int what,void*obj){
+    std::lock_guard<std::recursive_mutex> _l(mLock);
+    for( auto it = mMessageEnvelopes.begin();it != mMessageEnvelopes.end();it++){
+        const Message&m = it->message;
+        if((it->handler==handler)&&(m.what==what)&&((m.obj==obj)||(obj==nullptr))){
+           return true;
+        }
+    }
+    return false;
+}
+
 void Looper::removeMessages(const MessageHandler* handler) {
 #if DEBUG_CALLBACKS
     LOGD("%p  removeMessages - handler=%p", this, handler);
