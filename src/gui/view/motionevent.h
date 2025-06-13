@@ -6,7 +6,6 @@
 #include <limits>
 #include <cmath>
 
-#define USE_TRACKINGID_AS_POINTERID 0
 namespace cdroid{
 
 #if defined(_MSC_VER)  // MSVC
