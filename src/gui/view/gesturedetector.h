@@ -5,7 +5,9 @@
 #include <view/velocitytracker.h>
 #include <view/viewconfiguration.h>
 #include <view/inputeventconsistencyverifier.h>
+
 namespace cdroid{
+class Handler;
 class GestureDetector {
 public:
     /**
@@ -125,12 +127,17 @@ private:
     float mAmbiguousGestureMultiplier;
     int mMinimumFlingVelocity;
     int mMaximumFlingVelocity;
-
+    class GestureHandler;
     static constexpr int LONGPRESS_TIMEOUT = ViewConfiguration::getLongPressTimeout();
     static constexpr int TAP_TIMEOUT = ViewConfiguration::getTapTimeout();
     static constexpr int DOUBLE_TAP_TIMEOUT = ViewConfiguration::getDoubleTapTimeout();
     static constexpr int DOUBLE_TAP_MIN_TIME = ViewConfiguration::getDoubleTapMinTime();
+    // constants for Message.what used by GestureHandler below
+    static constexpr int SHOW_PRESS = 1;
+    static constexpr int LONG_PRESS = 2;
+    static constexpr int TAP = 3;
 
+    Handler* mHandler;
     OnGestureListener mListener;
     OnDoubleTapListener mDoubleTapListener;
     OnContextClickListener mContextClickListener;
@@ -171,7 +178,8 @@ private:
     void recordGestureClassification(int classification);
 public:
     GestureDetector(Context* context,const OnGestureListener& listener);
-    ~GestureDetector();
+    GestureDetector(Context* context,const OnGestureListener& listener,Handler*);
+    virtual ~GestureDetector();
     void setOnDoubleTapListener(const OnDoubleTapListener& onDoubleTapListener);
     void setContextClickListener(const OnContextClickListener& onContextClickListener);
     void setIsLongpressEnabled(bool isLongpressEnabled);

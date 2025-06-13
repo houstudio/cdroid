@@ -67,7 +67,7 @@ MenuItem* Menu::add(int groupId, int itemId, int order,const std::string&title){
    itm->mItemId=itemId;
    itm->mOrder=order;
    mMenuItems.push_back(itm);
-   return *itm;
+   return itm;
 }
 
 SubMenu* Menu::addSubMenu(const std::string&title){
@@ -75,9 +75,9 @@ SubMenu* Menu::addSubMenu(const std::string&title){
 }
 
 SubMenu* Menu::addSubMenu(int groupId,int itemId,int order,const std::string& title){
-   MenuItem&itm=add(groupId,itemId,order,title);
-   itm.mSubMenu=new SubMenu();
-   return *itm.mSubMenu;
+   MenuItem* itm = add(groupId,itemId,order,title);
+   itm->mSubMenu = new SubMenu();
+   return itm->mSubMenu;
 }
 
 void Menu::removeItem(int id){

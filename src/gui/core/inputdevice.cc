@@ -350,6 +350,9 @@ int KeyDevice::putEvent(long sec,long nsec,int type,int code,int value){
     case EV_SYN:
         LOGV("fd[%d].SYN value=%d code=%d",getId(),value,code);
         break;
+    case EV_LED:
+        LOGD("LED %d,%d",type,code);break;
+    case EV_MSC:
     default:LOGD("event type %x source=%x",type,getSources());break;
     }
     return 0;

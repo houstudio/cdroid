@@ -11,36 +11,70 @@ namespace cdroid{
 #define TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__SCROLL     10004
 #define TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__UNKNOWN_CLASSIFICATION 19999
 
-GestureDetector::GestureDetector(Context* context,const OnGestureListener& listener) {
-    /*if (handler != nullptr) {
-        mHandler = new GestureHandler(handler);
-    } else {
-        mHandler = new GestureHandler();
-    }*/
-    mListener = listener;
-    /*if (dynamic_cast<const OnDoubleTapListener*>(&listener)) {
-        setOnDoubleTapListener((const OnDoubleTapListener&) listener);
+class GestureDetector::GestureHandler:public Handler {
+private:
+    GestureDetector*mGD;
+public:
+    GestureHandler(GestureDetector*gd):Handler(),mGD(gd){
     }
-    if (dynamic_cast<const OnContextClickListener*>(&listener)) {
-        setContextClickListener((const OnContextClickListener&) listener);
-    }*/
+
+    GestureHandler(GestureDetector*gd,Handler* handler):Handler(handler->getLooper(),nullptr),mGD(gd) {
+    }
+
+    void handleMessage(Message& msg) override{
+        switch (msg.what) {
+        case SHOW_PRESS:
+            mGD->mListener.onShowPress(*mGD->mCurrentDownEvent);
+            break;
+        case LONG_PRESS:
+            mGD->dispatchLongPress();
+            break;
+        case TAP:
+            // If the user's finger is still down, do not count it as a tap
+            if (mGD->mDoubleTapListener.onSingleTapConfirmed != nullptr) {
+                if (!mGD->mStillDown) {
+                    mGD->mDoubleTapListener.onSingleTapConfirmed(*mGD->mCurrentDownEvent);
+                } else {
+                    mGD->mDeferConfirmSingleTap = true;
+                }
+            }
+            break;
+        default:
+            LOGD("Unknown message %d" ,msg); //never
+        }
+    }
+};
+
+GestureDetector::GestureDetector(Context* context,const OnGestureListener& listener)
+    :GestureDetector(context,listener,nullptr){
+}
+
+GestureDetector::GestureDetector(Context* context,const OnGestureListener& listener,Handler*handler) {
+    if (handler != nullptr) {
+        mHandler = new GestureHandler(this,handler);
+    } else {
+        mHandler = new GestureHandler(this);
+    }
+    mListener = listener;
     init(context);
 }
 
-GestureDetector::~GestureDetector(){
-   delete mInputEventConsistencyVerifier;
+GestureDetector::~GestureDetector() {
+    delete mHandler;
+    delete mInputEventConsistencyVerifier;
 }
 
 void GestureDetector::init(Context* context) {
     mIsLongpressEnabled = true;
-    mVelocityTracker = nullptr;
-    mVelocityTracker = nullptr;
+    mVelocityTracker  = nullptr;
+    mVelocityTracker  = nullptr;
     mCurrentDownEvent = nullptr;
     mPreviousUpEvent  = nullptr;
     mCurrentMotionEvent= nullptr;
     mInputEventConsistencyVerifier = nullptr;
-    mStillDown = false;
-    mInLongPress = mInContextClick = false;
+    mStillDown   = false;
+    mInLongPress = false;
+    mInContextClick  = false;
     mIsDoubleTapping = false;
     mAlwaysInTapRegion = false;
     mAlwaysInBiggerTapRegion =false;
@@ -463,4 +497,7 @@ void GestureDetector::recordGestureClassification(int classification) {
                                mCurrentMotionEvent.getRawY() - mCurrentDownEvent.getRawY()));*/
     mHasRecordedClassification = true;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 }/*endof namespace*/
