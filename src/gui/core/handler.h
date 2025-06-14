@@ -23,6 +23,7 @@ public:
     Looper* getLooper();
     void dispatchMessage(Message& msg)override;
 
+    bool hasMessages(int what);
     bool hasMessages(int what,void*object);
     void removeMessages(int what);
     void removeMessages(int what,void*object);

@@ -170,6 +170,7 @@ public:
     void sendMessage(const MessageHandler* handler, const Message& message);
     void sendMessageDelayed(nsecs_t uptimeDelay, const MessageHandler* handler,const Message& message);
     void sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,const Message& message);
+    bool hasMessages(const MessageHandler* handler,int what,void*obj);
     void removeMessages(const MessageHandler* handler);
     void removeMessages(const MessageHandler* handler, int what);
     void removeCallbacks(const MessageHandler* handler,const Runnable& r);

@@ -13,7 +13,7 @@ int main(int argc,const char*argv[]){
     Window*w= new Window(0,0,-1,-1);
     TextView*tv=new TextView("Hello world!",600,40);
     ProgressBar*pb = new ProgressBar(600,40);
-    Handler*handler=new MyHandler();
+    Handler*handler= new MyHandler();
     tv->setTextColor(0xFFFFFFFF);
     tv->setBackgroundColor(0xFF334455);
     tv->setTextSize(32);
@@ -22,6 +22,7 @@ int main(int argc,const char*argv[]){
     ll->addView(tv);
     ll->addView(pb);
     w->addView(ll);
+
     std::thread th([&]{
         Runnable r;
         r=[&](){
@@ -35,6 +36,11 @@ int main(int argc,const char*argv[]){
            usleep(10000);
         }
     });
+
+    handler->sendEmptyMessage(3456);
+    bool rc =handler->hasMessages(3456);
+    handler->removeMessages(3456);
+    rc= handler->hasMessages(3456);
     std::thread th2([&](){
         int what=0;
         while(1){
