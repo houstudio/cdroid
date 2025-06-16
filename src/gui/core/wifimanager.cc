@@ -17,7 +17,7 @@ std::string WifiManager::executeCommand(const std::string& command) {
     return process.readAllStandardOutput();
 }
 
-WifiManager::WifiState WifiManager::getWifiState() {
+int WifiManager::getWifiState() {
     std::string result = executeCommand("wpa_cli status");
     if (result.find("wpa_state=COMPLETED") != std::string::npos) {
         return WIFI_STATE_ENABLED;

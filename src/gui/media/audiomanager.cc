@@ -8,9 +8,7 @@
 #include <media/audiomanager.h>
 #include <view/soundeffectconstants.h>
 #include <porting/cdlog.h>
-#if ENABLE(AUDIO)
-#include <rtaudio/RtAudio.h>
-#endif
+
 namespace cdroid{
 
 static std::unique_ptr<AudioManager>mInst;

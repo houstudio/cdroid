@@ -5,9 +5,8 @@
 #include <fstream>
 #include <cstring>
 #include <sstream>
-#if ENABLE(AUDIO)
 #include <rtaudio/RtAudio.h>
-#endif
+
 namespace cdroid{
 
 struct SoundPool::Channel{

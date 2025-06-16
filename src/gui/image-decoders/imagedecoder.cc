@@ -210,7 +210,7 @@ static int registerBuildinCodesc(){
     return 0;
 }
 
-Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int width,int height){
+std::unique_ptr<ImageDecoder>ImageDecoder::getDecoder(std::istream&istm){
     constexpr unsigned lengthOfLongestSignature = 14; /* To wit: "RIFF????WEBPVP"*/
     uint8_t contents[lengthOfLongestSignature];
     std::unique_ptr<ImageDecoder>decoder;
@@ -228,46 +228,61 @@ Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int
         if(f.verifier(contents,lengthOfLongestSignature)){
             float scale = 1.f;
             decoder = f.factory(istm);
-            if((width>0)&&(height>0))
-                scale = std::min(float(width)/decoder->getWidth(),float(height)/decoder->getHeight());
-            else if(width>0)
-                scale = std::min(scale,float(width)/decoder->getWidth());
-            else if(height>0)
-                scale = std::max(scale,float(height)/decoder->getHeight());
-            return decoder->decode(scale);
+            return decoder;
         }
     }
     return nullptr;
 }
 
+Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int width,int height){
+    float scale = 1.f;
+    std::unique_ptr<ImageDecoder>decoder = getDecoder(istm);
+    if(decoder == nullptr)
+        return nullptr;
+    if((width > 0) && (height > 0))
+        scale = std::min(float(width)/decoder->getWidth(),float(height)/decoder->getHeight());
+    else if(width > 0)
+        scale = std::min(scale,float(width)/decoder->getWidth());
+    else if(height > 0)
+        scale = std::max(scale,float(height)/decoder->getHeight());
+    return decoder->decode(scale);
+}
+
 Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std::string&resourceId,int width,int height){
     std::unique_ptr<ImageDecoder>decoder;
     std::unique_ptr<std::istream>istm = ctx ? ctx->getInputStream(resourceId) : std::make_unique<std::ifstream>(resourceId);
-    if((istm==nullptr)||(!*istm))return nullptr;
+    if((istm == nullptr)||(!*istm))
+        return nullptr;
     return loadImage(*istm,width,height);
 }
 
 Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){
-    Drawable*d = nullptr;
-    Cairo::RefPtr<Cairo::ImageSurface> image = loadImage(ctx,resourceId);
+    std::unique_ptr<std::istream> istm = ctx ? ctx->getInputStream(resourceId) : std::make_unique<std::ifstream>(resourceId);
+    std::unique_ptr<ImageDecoder> decoder = ((istm==nullptr)||(!*istm))?nullptr:getDecoder(*istm);
+    Cairo::RefPtr<Cairo::ImageSurface> image = decoder?decoder->decode(1.0):nullptr;
 
-    if(image){
+    if(image && decoder && (decoder->getFrameCount()==1)){
+        Drawable*d = nullptr;
         if(TextUtils::endWith(resourceId,".9.png"))
             d = new NinePatchDrawable(image);
         else if(TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg"))
             d = new BitmapDrawable(image);
-        if(d) {
+        if(d != nullptr) {
             d->getConstantState()->mResource=resourceId;
             return d;
         }
     }
 
-    if(TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")
-            ||TextUtils::endWith(resourceId,".apng")||TextUtils::endWith(resourceId,".png")){
-	    d = new AnimatedImageDrawable(ctx,resourceId);
-        d->getConstantState()->mResource=resourceId;
+    if( ((istm!=nullptr)&&(*istm)) && (TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")
+            ||TextUtils::endWith(resourceId,".apng")||TextUtils::endWith(resourceId,".png"))){
+	    Drawable* d = new AnimatedImageDrawable(ctx,resourceId);
+        LOGD_IF(d==nullptr,"%s load failed!",resourceId.c_str());
+        if(d != nullptr){
+            d->getConstantState()->mResource=resourceId;
+            return d;
+        }
     }
-    return d;
+    return nullptr;
 }
 
 }/*endof namespace*/
