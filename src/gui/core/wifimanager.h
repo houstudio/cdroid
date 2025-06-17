@@ -10,6 +10,11 @@ namespace cdroid {
 
 class WifiManager {
 public:
+    static constexpr int WIFI_STATE_DISABLING=0;
+    static constexpr int WIFI_STATE_DISABLED =1;
+    static constexpr int WIFI_STATE_ENABLING =2;
+    static constexpr int WIFI_STATE_ENABLED  =3;
+    static constexpr int WIFI_STATE_UNKNOWN  =4;
     struct WifiNetwork {
         std::string ssid;
         std::string bssid;
@@ -24,19 +29,11 @@ public:
         int signalLevel;
     };
 
-    enum WifiState {
-        WIFI_STATE_DISABLED,
-        WIFI_STATE_DISABLING,
-        WIFI_STATE_ENABLED,
-        WIFI_STATE_ENABLING,
-        WIFI_STATE_UNKNOWN
-    };
-
     WifiManager();
     ~WifiManager();
 
     // Wi-Fi State Management
-    WifiState getWifiState();
+    int getWifiState();
     bool setWifiEnabled(bool enabled);
 
     // Scanning
@@ -55,11 +52,11 @@ public:
     bool disableNetwork(int networkId);
 
     // Listener for Wi-Fi state changes
-    void setWifiStateChangeListener(const std::function<void(WifiState)>& listener);
+    void setWifiStateChangeListener(const std::function<void(int)>& listener);
 
 private:
     std::mutex mutex_;
-    std::function<void(WifiState)> wifiStateChangeListener_;
+    std::function<void(int)> wifiStateChangeListener_;
     std::string executeCommand(const std::string& command);
 };
 

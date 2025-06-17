@@ -87,6 +87,8 @@ FrameSequence* FrameSequence::create(cdroid::Context*ctx,const std::string&resid
         stream = ctx->getInputStream(resid);
     else
         stream = std::make_unique<std::ifstream>(resid);
+    if((stream==nullptr)||(!*stream))
+        return nullptr;
     stream->read((char*)header,mHeaderBytesRequired);
     stream->seekg(int(-mHeaderBytesRequired),std::ios::cur);
     for(auto& f:mFactories){

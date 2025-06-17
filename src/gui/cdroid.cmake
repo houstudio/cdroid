@@ -45,12 +45,13 @@ list(APPEND CDROID_SOURCES
     core/windowmanager.cc
     core/ziparchive.cc
 )
-
-list(APPEND CDROID_SOURCES
-    media/audiomanager.cc
-    media/soundpool.cc
-    )
-
+if(ENABLE_AUDIO)
+    list(APPEND CDROID_SOURCES
+        media/audiomanager.cc
+        media/soundpool.cc
+        media/audiorecord.cc
+        )
+endif()
 if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message("Building on Windows with MSVC compiler")
     #list(APPEND CDROID_SOURCES core/wepoll.cc)

@@ -18,7 +18,7 @@ WiFiScanner::WiFiScanner(Looper*looper,const std::string& ctrlPath)
     }
 
     ctrlFd_ = wpa_ctrl_get_fd(ctrl_);
-    looper->addFd(ctrlFd_,0,Looper::EVENT_INPUT,FDCallback,this);
+    looper->addFd(ctrlFd_,0,Looper::EVENT_INPUT|Looper::EVENT_OUTPUT,FDCallback,this);
 }
 
 WiFiScanner::~WiFiScanner() {
@@ -32,17 +32,20 @@ int WiFiScanner::FDCallback(int fd, int events, void* data){
     WiFiScanner*thiz=(WiFiScanner*)data;
     if((fd==thiz->ctrlFd_)&&(events&Looper::EVENT_INPUT)){
         char buffer[256];
-        size_t len = sizeof(buffer);
-        int ret;
+        int ret,rcvBytes=0;
         std::ostringstream oss;
         do{
+            size_t len = sizeof(buffer)-1;
             ret = wpa_ctrl_recv(thiz->ctrl_,buffer,&len);
-            if(ret>0){
+            if(ret>=0){
                 buffer[len]=0;
+                rcvBytes += len;
                 oss<<buffer;
             }
-        }while(ret>0);
-    }
+        }while(ret>=0);
+        return rcvBytes;
+    }else{}
+    return 1;//return 0 will caused fd removed by Looper
 }
 
 bool WiFiScanner::startScan() {
