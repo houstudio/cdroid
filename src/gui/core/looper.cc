@@ -653,7 +653,7 @@ void Looper::removeEventHandler(const EventHandler*handler){
     for(auto it = mEventHandlers.begin();it != mEventHandlers.end();it++){
         if( (*it) ==handler){
             (*it)->mFlags |=1;//set removed flags,removed in doEventHandlers
-            mEventHandlers.erase(it);
+            //mEventHandlers.erase(it);
             break;
         }
     }
