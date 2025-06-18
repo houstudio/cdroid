@@ -23,7 +23,9 @@ public:
     void handleMessage(Message& msg) override{
         switch (msg.what) {
         case SHOW_PRESS:
-            mGD->mListener.onShowPress(*mGD->mCurrentDownEvent);
+            if(mGD->mListener.onShowPress){
+                mGD->mListener.onShowPress(*mGD->mCurrentDownEvent);
+            }
             break;
         case LONG_PRESS:
             mGD->dispatchLongPress();

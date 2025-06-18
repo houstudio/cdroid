@@ -638,6 +638,7 @@ void Looper::addHandler(MessageHandler*handler){
 void Looper::removeHandler(MessageHandler*handler){
     for(auto it = mHandlers.begin();it != mHandlers.end();it++){
         if( (*it) == handler){
+            mHandlers.erase(it);
             handler->mFlags |= 1;//set Erase Flags.removed in doEventHandlers
             break;
         }
@@ -652,6 +653,7 @@ void Looper::removeEventHandler(const EventHandler*handler){
     for(auto it = mEventHandlers.begin();it != mEventHandlers.end();it++){
         if( (*it) ==handler){
             (*it)->mFlags |=1;//set removed flags,removed in doEventHandlers
+            mEventHandlers.erase(it);
             break;
         }
     }
