@@ -661,11 +661,12 @@ Cairo::RefPtr<cdroid::Path> GradientDrawable::buildRing(GradientState* st) {
 }
 
 void GradientDrawable::setColor(int argb) {
-    Color c(argb);
-    mGradientState->mSolidColor=argb;//setSolidColors(ColorStateList::valueOf(argb));
-    LOGD_IF(mGradientState->mShape==OVAL||argb==0,"%p solidcolor=%x colos=%p",this,argb,mGradientState->mSolidColors);
-    mFillPaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
-    invalidateSelf();
+    if(mGradientState->mSolidColor!=argb){
+        Color c(argb);
+        mGradientState->mSolidColor = argb;//setSolidColors(ColorStateList::valueOf(argb));
+        mFillPaint = SolidPattern::create_rgba(c.red(),c.green(),c.blue(),c.alpha());
+        invalidateSelf();
+    }
 }
 
 void GradientDrawable::setColor(const ColorStateList* colorStateList) {
