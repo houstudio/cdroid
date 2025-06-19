@@ -1,5 +1,3 @@
-#ifndef __INPUT_EVENT_LABE_H__
-#define __INPUT_EVENT_LABE_H__
 #include <private/inputeventlabels.h>
 
 #define DEFINE_KEY(key)   { #key, KeyEvent::KEYCODE_##key }
@@ -434,4 +432,3 @@ int32_t getLedByLabel(const char* label) {
 }
 
 }/*endof namespace*/
-#endif

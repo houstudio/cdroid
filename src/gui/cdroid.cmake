@@ -1,4 +1,8 @@
 list(APPEND CDROID_SOURCES
+    private/inputeventlabels.cc
+)
+
+list(APPEND CDROID_SOURCES
     core/app.cc
     core/assets.cc
     core/atexit.cc
