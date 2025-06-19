@@ -46,6 +46,7 @@ Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
 
 Spinner::Spinner(Context*ctx,const AttributeSet&atts)
   :AbsSpinner(ctx,atts){
+    mTempAdapter = nullptr;
     mForwardingListener = nullptr;
     mGravity = atts.getGravity("gravity",Gravity::CENTER);
     mDisableChildrenWhenDisabled = atts.getBoolean("disableChildrenWhenDisabled",false);

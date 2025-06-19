@@ -195,7 +195,7 @@ void AbsSeekBar::setThumb(Drawable*thumb){
     // This way, calling setThumb again with the same bitmap will result in
     // it recalcuating mThumbOffset (if for example it the bounds of the
     // drawable changed)
-    if (mThumb != nullptr && thumb != mThumb) {
+    if ((mThumb != nullptr) && (thumb != mThumb)) {
         mThumb->setCallback(nullptr);
         needUpdate = true;
 
@@ -208,9 +208,9 @@ void AbsSeekBar::setThumb(Drawable*thumb){
         // Assuming the thumb drawable is symmetric, set the thumb offset
         // such that the thumb will hang halfway off either edge of the
         // progress bar.
-	if(getProgressOrientation()==HORIZONTAL)
+        if(getProgressOrientation()==HORIZONTAL)
             mThumbOffset = thumb->getIntrinsicWidth() / 2;
-	else
+        else
             mThumbOffset = thumb->getIntrinsicHeight() / 2;
         // If we're updating get the new states
         if (needUpdate && (thumb->getIntrinsicWidth() != mThumb->getIntrinsicWidth()
@@ -221,7 +221,7 @@ void AbsSeekBar::setThumb(Drawable*thumb){
     delete mThumb;
     mThumb = thumb;
     applyThumbTint();
-    invalidate(true);
+    invalidate();
 
     if (needUpdate||thumb) {
         updateThumbAndTrackPos(getWidth(), getHeight());
@@ -235,7 +235,7 @@ void AbsSeekBar::setThumb(Drawable*thumb){
 }
 
 void AbsSeekBar::applyThumbTint(){
-    if (mThumb != nullptr && (mHasThumbTint || mHasThumbTintMode)) {
+    if ((mThumb != nullptr) && (mHasThumbTint || mHasThumbTintMode)) {
         mThumb = mThumb->mutate();//mutate not tested, this will caused crash 
 
         if (mHasThumbTint)mThumb->setTintList(mThumbTintList);
@@ -266,9 +266,9 @@ void AbsSeekBar::setTickMark(Drawable* tickMark){
         if (tickMark->isStateful()) {
             tickMark->setState(getDrawableState());
         }
-        //applyTickMarkTint();
+        applyTickMarkTint();
     }
-    invalidate(true);
+    invalidate();
 }
 
 Drawable* AbsSeekBar::getTickMark()const{
@@ -326,15 +326,15 @@ void AbsSeekBar::updateThumbAndTrackPos(int w, int h) {
     }
 
     if (track) {
-	if(getProgressOrientation()==HORIZONTAL){
+        if(getProgressOrientation()==HORIZONTAL){
             trackWidth = w - mPaddingRight - mPaddingLeft;
             track->setBounds(0, trackOffset, trackWidth, trackHeight);
             LOGV("%p:%d bounds=(%d,%d,%d,%d) %d",this,mID,0, trackOffset, trackWidth, trackHeight,mMaxHeight);
-	}else{
+	    }else{
             trackHeight = h - mPaddingTop - mPaddingBottom;
             track->setBounds(trackOffset,0, trackWidth, trackHeight);
             LOGV("%p:%d bounds=(%d,%d,%d,%d) %d",this,mID,trackOffset,0,trackWidth, trackHeight,mMaxWidth);
-	}
+	    }
     }
 }
 
