@@ -459,7 +459,11 @@ void  AbsSeekBar::drawTickMarks(Canvas&canvas){
         const int halfH = h >= 0 ? h / 2 : 1;
         mTickMark->setBounds(-halfW, -halfH, halfW, halfH);
 
-        float spacing = (getProgressOrientation()==HORIZONTAL?getWidth():getHeight())/ (float) count;
+        float spacing = 0;
+        if(getProgressOrientation()==HORIZONTAL)
+            spacing = float(getWidth()-mPaddingLeft-mPaddingRight)/count;
+        else
+            spacing = float(getHeight()-mPaddingTop-mPaddingBottom)/count;
         canvas.save();
         if(getProgressOrientation()==HORIZONTAL)
             canvas.translate(0, getHeight() / 2);
