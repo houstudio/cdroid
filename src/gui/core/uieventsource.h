@@ -20,7 +20,7 @@ private:
     int handleRunnables();
 public:
     UIEventSource(View*,std::function<void()>run);
-    ~UIEventSource();
+    ~UIEventSource()override;
     bool processEvents();
     int checkEvents()override;
     int handleEvents()override;
