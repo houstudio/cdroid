@@ -466,9 +466,10 @@ void  AbsSeekBar::drawTickMarks(Canvas&canvas){
             spacing = float(getHeight()-mPaddingTop-mPaddingBottom)/count;
         canvas.save();
         if(getProgressOrientation()==HORIZONTAL)
-            canvas.translate(0, getHeight() / 2);
-        else
-            canvas.translate(getWidth()/2,0);
+            canvas.translate(mPaddingLeft, getHeight() / 2);
+        else{
+            canvas.translate(getWidth()/2,mPaddingTop);
+        }
         for (int i = 0; i <= count; i++) {
             mTickMark->draw(canvas);
             if(getProgressOrientation()==HORIZONTAL)
