@@ -526,6 +526,17 @@ const std::string MotionEvent::actionToString(int action){
     }
 }
 
+const std::string MotionEvent::axisToString(int axis){
+    return lookupLabelByValue(axis,AXES);
+}
+
+int MotionEvent::axisFromString(const std::string&symbolicName){
+    if(symbolicName.compare(0,5,"AXIS_")==0){
+        const int axis = lookupValueByLabel(symbolicName.c_str()+5,AXES);
+        if(axis>=0)return axis;
+    }
+    return -1;
+}
 
 static void transformPoint(const float matrix[9], float x, float y, float *outX, float *outY) {
     // Apply perspective transform like Skia.

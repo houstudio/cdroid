@@ -117,7 +117,7 @@ bool WifiManager::disableNetwork(int networkId) {
     return result.find("OK") != std::string::npos;
 }
 
-void WifiManager::setWifiStateChangeListener(const std::function<void(WifiState)>& listener) {
+void WifiManager::setWifiStateChangeListener(const std::function<void(int)>& listener) {
     std::lock_guard<std::mutex> lock(mutex_);
     wifiStateChangeListener_ = listener;
 }

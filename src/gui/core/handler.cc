@@ -17,6 +17,7 @@ Handler::Handler(Looper*looper,Callback callback):
 
 Handler::~Handler(){
     mLooper->removeMessages(this);
+    mLooper->removeHandler(this);
 }
 
 Message Handler::getPostMessage(const Runnable& r){

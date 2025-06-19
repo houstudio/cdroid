@@ -338,6 +338,8 @@ public:
             mFlags&=~FLAG_TARGET_ACCESSIBILITY_FOCUS;
     }
     static const std::string actionToString(int action);
+    static const std::string axisToString(int axis);
+    static int axisFromString(const std::string&symbolicName);
     void toStream(std::ostream& os)const override;
 };
 }/*endof namespace*/
