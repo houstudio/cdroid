@@ -23,7 +23,6 @@ AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,att
     const bool useDisabledAlpha = attrs.getBoolean("useDisabledAlpha", true);
     mDisabledAlpha = useDisabledAlpha?attrs.getFloat("disabledAlpha", 0.5f):1.f;
     mSplitTrack = attrs.getBoolean("splitTrack",false);
-    const bool useDisableAlphs = attrs.getBoolean("useDisableAlpha",true);
     mThumbExclusionMaxSize = ctx->getDimension("cdroid:dimen/seekbar_thumb_exclusion_max_size");
 
     applyThumbTint();
