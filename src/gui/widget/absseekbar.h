@@ -12,6 +12,8 @@ private:
     bool mIsDragging;
     bool mHasTickMarkTint = false;
     bool mHasTickMarkTintMode = false;
+    ColorStateList*mThumbTintList;
+    ColorStateList*mTickMarkTintList;
 
     float mDisabledAlpha;
     float mTouchDownX;
@@ -21,7 +23,6 @@ private:
     int  mTickMarkTintMode;
     int  mThumbExclusionMaxSize;
     Rect mThumbRect;
-    ColorStateList* mTickMarkTintList;
     std::vector<Rect>mUserGestureExclusionRects;
     std::vector<Rect>mGestureExclusionRects;
     void initSeekBar();

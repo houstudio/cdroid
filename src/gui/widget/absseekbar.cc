@@ -15,6 +15,8 @@ AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,att
 
     setThumb(attrs.getDrawable("thumb"));
     setTickMark(attrs.getDrawable("tickMark"));
+    mThumbTintList = attrs.getColorStateList("thumbTint");
+    mTickMarkTintList = attrs.getColorStateList("tickMarkTint");
     const int thumbOffset = attrs.getDimensionPixelOffset("thumbOffset",getThumbOffset());
     setThumbOffset(thumbOffset);
 
@@ -45,6 +47,8 @@ void AbsSeekBar::initSeekBar(){
     mTouchDownX = 0.f;
     mHasThumbTint = false;
     mHasThumbTintMode = false;
+    mTickMarkTintList = nullptr;
+    mThumbTintList = nullptr;
     mDisabledAlpha = 1.f;
     mTouchProgressOffset =0.f;
     mTouchThumbOffset = 0.f;
@@ -235,7 +239,7 @@ void AbsSeekBar::applyThumbTint(){
     if (mThumb != nullptr && (mHasThumbTint || mHasThumbTintMode)) {
         mThumb = mThumb->mutate();//mutate not tested, this will caused crash 
 
-        //if (mHasThumbTint)mThumb->setTintList(mThumbTintList);
+        if (mHasThumbTint)mThumb->setTintList(mThumbTintList);
 
         //if (mHasThumbTintMode) mThumb->setTintMode(mThumbTintMode);
 
