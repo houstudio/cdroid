@@ -32,9 +32,8 @@ Switch::Switch(Context* context,const AttributeSet& a)
 
     mUseFallbackLineSpacing = true;//context.getApplicationInfo().targetSdkVersion >= VERSION_CODES.P;
 
-    ColorStateList*thumbTint = a.getColorStateList("thumbTint");
-    if (thumbTint!=nullptr) {
-        mThumbTintList = thumbTint;//context->getColorStateList(thumbTint);
+    mThumbTintList = a.getColorStateList("thumbTint");
+    if (mThumbTintList!=nullptr) {
         mHasThumbTint = true;
     }
     /*BlendMode thumbTintMode = Drawable.parseBlendMode( a.getInt(com.android.internal.R.styleable.Switch_thumbTintMode, -1),null);
@@ -46,9 +45,8 @@ Switch::Switch(Context* context,const AttributeSet& a)
         applyThumbTint();
     }
 
-    ColorStateList* trackTintList = a.getColorStateList("trackTint");
-    if (trackTintList) {
-        mTrackTintList = trackTintList;
+    mTrackTintList = a.getColorStateList("trackTint");
+    if (mTrackTintList!=nullptr) {
         mHasTrackTint = true;
     }
     /*BlendMode trackTintMode = Drawable.parseBlendMode(a.getInt(com.android.internal.R.styleable.Switch_trackTintMode, -1), null);

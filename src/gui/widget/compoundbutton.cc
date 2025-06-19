@@ -11,6 +11,8 @@ CompoundButton::CompoundButton(Context*ctx,const AttributeSet& attrs)
     initCompoundButton();
     setButtonDrawable(attrs.getString("button"));
     setChecked(attrs.getBoolean("checked"));
+    mButtonTintList = attrs.getColorStateList("buttonTint");
+    applyButtonTint();
 }
 
 CompoundButton::CompoundButton(const std::string&txt,int width,int height)

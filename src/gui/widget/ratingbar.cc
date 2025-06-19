@@ -14,7 +14,9 @@ RatingBar::RatingBar(int w,int h):AbsSeekBar(w,h){
 
 RatingBar::RatingBar(Context*ctx,const AttributeSet&atts)
     :AbsSeekBar(ctx,atts){
+    mNumStars = 5;
     mIsUserSeekable = true;
+    mProgressOnStartTracking =0;
 
     setIsIndicator(atts.getBoolean("isIndicator",!mIsUserSeekable));
     const int numStars  = atts.getInt("numStars",mNumStars);
