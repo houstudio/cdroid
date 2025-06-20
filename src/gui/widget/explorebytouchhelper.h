@@ -429,7 +429,7 @@ protected:
      *            null
      * @return true if the action was performed
      */
-    virtual bool onPerformActionForVirtualView(int virtualViewId, int action, Bundle arguments)=0;
+    virtual bool onPerformActionForVirtualView(int virtualViewId, int action, Bundle* arguments)=0;
 };
 
 /**

@@ -10,7 +10,7 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
 public:
     DayPickerViewPager(Context* context,const AttributeSet& attrs);
-    View*findViewByPredicateTraversal(std::function<bool(View*)>predicate,View* childToSkip)override;
+    View*findViewByPredicateTraversal(const Predicate<View*>&predicate,View* childToSkip)override;
 };
 }//endof namespace
 #endif

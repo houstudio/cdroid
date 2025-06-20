@@ -165,7 +165,7 @@ protected:
     void getVisibleVirtualViews(std::vector<int>& virtualViewIds)override;
     void onPopulateEventForVirtualView(int virtualViewId, AccessibilityEvent& event)override;
     void onPopulateNodeForVirtualView(int virtualViewId, AccessibilityNodeInfo& node)override;
-    bool onPerformActionForVirtualView(int virtualViewId, int action, Bundle arguments)override;
+    bool onPerformActionForVirtualView(int virtualViewId, int action, Bundle* arguments)override;
 public:
     MonthViewTouchHelper(View* host);
 };

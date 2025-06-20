@@ -452,7 +452,7 @@ void AbsSeekBar::drawThumb(Canvas&canvas) {
 
 void  AbsSeekBar::drawTickMarks(Canvas&canvas){
     const int count = getMax() - getMin();
-    if ((count > 1)&& mTickMark) {
+    if ((count > 1) && mTickMark) {
         const int w = mTickMark->getIntrinsicWidth();
         const int h = mTickMark->getIntrinsicHeight();
         const int halfW = w >= 0 ? w / 2 : 1;

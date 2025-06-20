@@ -41,7 +41,6 @@ SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
     mDesiredDaySelectorRadius=atts.getDimensionPixelSize("day_selector_radius");
 
     // Set up accessibility components.
-    mTouchHelper = new MonthViewTouchHelper(this);
     setAccessibilityDelegate(mTouchHelper);
     setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
 
@@ -73,6 +72,7 @@ void SimpleMonthView::initMonthView(){
     mDayTextSize = 18;
     mMonthTextSize=24;
     mDayOfWeekTextSize=18;
+    mTouchHelper = new MonthViewTouchHelper(this);
 }
 
 void SimpleMonthView::updateMonthYearLabel(){
@@ -129,6 +129,7 @@ void SimpleMonthView::setMonthTextColor(const ColorStateList* monthTextColor){
 }
 
 void SimpleMonthView::setDayOfWeekTextColor(const ColorStateList* dayOfWeekTextColor){
+    //const int enabledColor = dayOfWeekTextColor->getColorForState(ENABLED_STATE_SET, 0);
     mDayOfWeekTextColor = dayOfWeekTextColor;
     invalidate();
 }
@@ -835,7 +836,7 @@ void SimpleMonthView::MonthViewTouchHelper::onPopulateNodeForVirtualView(int vir
 
 }
 
-bool SimpleMonthView::MonthViewTouchHelper::onPerformActionForVirtualView(int virtualViewId, int action,Bundle arguments) {
+bool SimpleMonthView::MonthViewTouchHelper::onPerformActionForVirtualView(int virtualViewId, int action,Bundle* arguments) {
     switch (action) {
         case AccessibilityNodeInfo::ACTION_CLICK:
             return mSMV->onDayClicked(virtualViewId);

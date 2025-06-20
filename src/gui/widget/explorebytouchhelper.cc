@@ -238,7 +238,7 @@ AccessibilityNodeInfo* ExploreByTouchHelper::createNodeForChild(int virtualViewI
     mTempScreenRect = new Rect();
 }*/
 
-bool ExploreByTouchHelper::performAction(int virtualViewId, int action, Bundle arguments) {
+bool ExploreByTouchHelper::performAction(int virtualViewId, int action, Bundle* arguments) {
     switch (virtualViewId) {
         case HOST_ID:
             return performActionForHost(action, arguments);
@@ -247,11 +247,11 @@ bool ExploreByTouchHelper::performAction(int virtualViewId, int action, Bundle a
     }
 }
 
-bool ExploreByTouchHelper::performActionForHost(int action, Bundle arguments) {
+bool ExploreByTouchHelper::performActionForHost(int action, Bundle* arguments) {
     return mView->performAccessibilityAction(action, arguments);
 }
 
-bool ExploreByTouchHelper::performActionForChild(int virtualViewId, int action, Bundle arguments) {
+bool ExploreByTouchHelper::performActionForChild(int virtualViewId, int action, Bundle* arguments) {
     switch (action) {
     case AccessibilityNodeInfo::ACTION_ACCESSIBILITY_FOCUS:
     case AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS:
