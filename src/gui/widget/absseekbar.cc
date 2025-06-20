@@ -15,13 +15,14 @@ AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,att
 
     setThumb(attrs.getDrawable("thumb"));
     setTickMark(attrs.getDrawable("tickMark"));
+    mThumbTintList = attrs.getColorStateList("thumbTint");
+    mTickMarkTintList = attrs.getColorStateList("tickMarkTint");
     const int thumbOffset = attrs.getDimensionPixelOffset("thumbOffset",getThumbOffset());
     setThumbOffset(thumbOffset);
 
     const bool useDisabledAlpha = attrs.getBoolean("useDisabledAlpha", true);
     mDisabledAlpha = useDisabledAlpha?attrs.getFloat("disabledAlpha", 0.5f):1.f;
     mSplitTrack = attrs.getBoolean("splitTrack",false);
-    const bool useDisableAlphs = attrs.getBoolean("useDisableAlpha",true);
     mThumbExclusionMaxSize = ctx->getDimension("cdroid:dimen/seekbar_thumb_exclusion_max_size");
 
     applyThumbTint();
@@ -45,6 +46,8 @@ void AbsSeekBar::initSeekBar(){
     mTouchDownX = 0.f;
     mHasThumbTint = false;
     mHasThumbTintMode = false;
+    mTickMarkTintList = nullptr;
+    mThumbTintList = nullptr;
     mDisabledAlpha = 1.f;
     mTouchProgressOffset =0.f;
     mTouchThumbOffset = 0.f;
@@ -192,7 +195,7 @@ void AbsSeekBar::setThumb(Drawable*thumb){
     // This way, calling setThumb again with the same bitmap will result in
     // it recalcuating mThumbOffset (if for example it the bounds of the
     // drawable changed)
-    if (mThumb != nullptr && thumb != mThumb) {
+    if ((mThumb != nullptr) && (thumb != mThumb)) {
         mThumb->setCallback(nullptr);
         needUpdate = true;
 
@@ -205,9 +208,9 @@ void AbsSeekBar::setThumb(Drawable*thumb){
         // Assuming the thumb drawable is symmetric, set the thumb offset
         // such that the thumb will hang halfway off either edge of the
         // progress bar.
-	if(getProgressOrientation()==HORIZONTAL)
+        if(getProgressOrientation()==HORIZONTAL)
             mThumbOffset = thumb->getIntrinsicWidth() / 2;
-	else
+        else
             mThumbOffset = thumb->getIntrinsicHeight() / 2;
         // If we're updating get the new states
         if (needUpdate && (thumb->getIntrinsicWidth() != mThumb->getIntrinsicWidth()
@@ -218,7 +221,7 @@ void AbsSeekBar::setThumb(Drawable*thumb){
     delete mThumb;
     mThumb = thumb;
     applyThumbTint();
-    invalidate(true);
+    invalidate();
 
     if (needUpdate||thumb) {
         updateThumbAndTrackPos(getWidth(), getHeight());
@@ -232,10 +235,10 @@ void AbsSeekBar::setThumb(Drawable*thumb){
 }
 
 void AbsSeekBar::applyThumbTint(){
-    if (mThumb != nullptr && (mHasThumbTint || mHasThumbTintMode)) {
+    if ((mThumb != nullptr) && (mHasThumbTint || mHasThumbTintMode)) {
         mThumb = mThumb->mutate();//mutate not tested, this will caused crash 
 
-        //if (mHasThumbTint)mThumb->setTintList(mThumbTintList);
+        if (mHasThumbTint)mThumb->setTintList(mThumbTintList);
 
         //if (mHasThumbTintMode) mThumb->setTintMode(mThumbTintMode);
 
@@ -263,9 +266,9 @@ void AbsSeekBar::setTickMark(Drawable* tickMark){
         if (tickMark->isStateful()) {
             tickMark->setState(getDrawableState());
         }
-        //applyTickMarkTint();
+        applyTickMarkTint();
     }
-    invalidate(true);
+    invalidate();
 }
 
 Drawable* AbsSeekBar::getTickMark()const{
@@ -323,15 +326,15 @@ void AbsSeekBar::updateThumbAndTrackPos(int w, int h) {
     }
 
     if (track) {
-	if(getProgressOrientation()==HORIZONTAL){
+        if(getProgressOrientation()==HORIZONTAL){
             trackWidth = w - mPaddingRight - mPaddingLeft;
             track->setBounds(0, trackOffset, trackWidth, trackHeight);
             LOGV("%p:%d bounds=(%d,%d,%d,%d) %d",this,mID,0, trackOffset, trackWidth, trackHeight,mMaxHeight);
-	}else{
+	    }else{
             trackHeight = h - mPaddingTop - mPaddingBottom;
             track->setBounds(trackOffset,0, trackWidth, trackHeight);
             LOGV("%p:%d bounds=(%d,%d,%d,%d) %d",this,mID,trackOffset,0,trackWidth, trackHeight,mMaxWidth);
-	}
+	    }
     }
 }
 
@@ -449,25 +452,30 @@ void AbsSeekBar::drawThumb(Canvas&canvas) {
 
 void  AbsSeekBar::drawTickMarks(Canvas&canvas){
     const int count = getMax() - getMin();
-    if ((count > 1)&& mTickMark) {
+    if ((count > 1) && mTickMark) {
         const int w = mTickMark->getIntrinsicWidth();
         const int h = mTickMark->getIntrinsicHeight();
         const int halfW = w >= 0 ? w / 2 : 1;
         const int halfH = h >= 0 ? h / 2 : 1;
-        mTickMark->setBounds(-halfW, -halfH, halfW, halfH);
+        mTickMark->setBounds(-halfW, -halfH, halfW*2, halfH*2);
 
-        float spacing = (getProgressOrientation()==HORIZONTAL?getWidth():getHeight())/ (float) count;
+        float spacing = 0;
+        if(getProgressOrientation()==HORIZONTAL)
+            spacing = float(getWidth()-mPaddingLeft-mPaddingRight)/count;
+        else
+            spacing = float(getHeight()-mPaddingTop-mPaddingBottom)/count;
         canvas.save();
         if(getProgressOrientation()==HORIZONTAL)
-            canvas.translate(0, getHeight() / 2);
-        else
-            canvas.translate(getWidth()/2,0);
+            canvas.translate(mPaddingLeft, getHeight() / 2);
+        else{
+            canvas.translate(getWidth()/2,mPaddingTop);
+        }
         for (int i = 0; i <= count; i++) {
             mTickMark->draw(canvas);
-	    if(getProgressOrientation()==HORIZONTAL)
-            canvas.translate(spacing, 0);
-	    else
-            canvas.translate(0, spacing);
+            if(getProgressOrientation()==HORIZONTAL)
+                canvas.translate(spacing, 0);
+            else
+                canvas.translate(0, spacing);
         }
         canvas.restore();
     }

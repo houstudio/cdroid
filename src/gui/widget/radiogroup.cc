@@ -44,12 +44,12 @@ void RadioGroup::onRadioChecked(CompoundButton&c,bool checked){
 
 void RadioGroup::onChildViewAdded(ViewGroup& parent, View* child){
     if((&parent==this)&&dynamic_cast<RadioButton*>(child)){
-	int id = child->getId();
-	if(id==View::NO_ID){
-	    id = child->generateViewId();
-	    child->setId(id);
-	}
-	((RadioButton*)child)->setOnCheckedChangeWidgetListener(mChildOnCheckedChangeListener);
+	    int id = child->getId();
+	    if(id==View::NO_ID){
+	        id = child->generateViewId();
+	        child->setId(id);
+	    }
+	    ((RadioButton*)child)->setOnCheckedChangeWidgetListener(mChildOnCheckedChangeListener);
         if(mOnHierarchyChangeListener.onChildViewAdded)
             mOnHierarchyChangeListener.onChildViewAdded(parent, child);
     }

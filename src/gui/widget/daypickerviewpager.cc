@@ -92,8 +92,8 @@ void DayPickerViewPager::onMeasure(int widthMeasureSpec, int heightMeasureSpec) 
     mMatchParentChildren.clear();
 }
 
-View*DayPickerViewPager::findViewByPredicateTraversal(std::function<bool(View*)>predicate,View* childToSkip){
-    if (predicate(this)){//.test(this)) {
+View*DayPickerViewPager::findViewByPredicateTraversal(const Predicate<View*>&predicate,View* childToSkip){
+    if (predicate.test(this)) {
         return (View*)this;
     }
 

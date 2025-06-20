@@ -503,7 +503,7 @@ void MotionEvent::scale(float scaleFactor) {
     }
 }
 
-const std::string MotionEvent::actionToString(int action){
+std::string MotionEvent::actionToString(int action){
     switch (action) {
     case ACTION_DOWN   :return "ACTION_DOWN";
     case ACTION_UP     :return "ACTION_UP";
@@ -526,8 +526,80 @@ const std::string MotionEvent::actionToString(int action){
     }
 }
 
-const std::string MotionEvent::axisToString(int axis){
+std::string MotionEvent::axisToString(int axis){
     return lookupLabelByValue(axis,AXES);
+}
+
+static const char*BUTTON_SYMBOLIC_NAMES[]{
+        "BUTTON_PRIMARY",
+        "BUTTON_SECONDARY",
+        "BUTTON_TERTIARY",
+        "BUTTON_BACK",
+        "BUTTON_FORWARD",
+        "BUTTON_STYLUS_PRIMARY",
+        "BUTTON_STYLUS_SECONDARY",
+        "0x00000080",
+        "0x00000100",
+        "0x00000200",
+        "0x00000400",
+        "0x00000800",
+        "0x00001000",
+        "0x00002000",
+        "0x00004000",
+        "0x00008000",
+        "0x00010000",
+        "0x00020000",
+        "0x00040000",
+        "0x00080000",
+        "0x00100000",
+        "0x00200000",
+        "0x00400000",
+        "0x00800000",
+        "0x01000000",
+        "0x02000000",
+        "0x04000000",
+        "0x08000000",
+        "0x10000000",
+        "0x20000000",
+        "0x40000000",
+        "0x80000000",
+};
+
+std::string MotionEvent::buttonStateToString(int buttonState){
+    if (buttonState == 0) {
+        return "0";
+    }
+    std::ostringstream result;
+    int i = 0,bitsSet=0;
+    while (buttonState != 0) {
+        bool isSet = (buttonState & 1) != 0;
+        buttonState >>= 1; // unsigned shift!
+        if (isSet) {
+            const char* name = BUTTON_SYMBOLIC_NAMES[i];
+            if (bitsSet==0){
+                if (buttonState == 0) {
+                    return name;
+                }
+                result << name;
+            } else {
+                result<<'|'<<name;
+            }
+            bitsSet++;
+        }
+        i += 1;
+    }
+    return result.str();
+}
+
+std::string MotionEvent::toolTypeToString(int toolType){
+    switch(toolType){
+    case TOOL_TYPE_UNKNOWN: return "TOOL_TYPE_UNKNOWN";
+    case TOOL_TYPE_FINGER : return "TOOL_TYPE_FINGER";
+    case TOOL_TYPE_STYLUS : return "TOOL_TYPE_STYLUS";
+    case TOOL_TYPE_MOUSE  : return "TOOL_TYPE_MOUSE";
+    case TOOL_TYPE_ERASER : return "TOOL_TYPE_ERASER";
+    default: return std::to_string(toolType);
+    }
 }
 
 int MotionEvent::axisFromString(const std::string&symbolicName){

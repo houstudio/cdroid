@@ -159,6 +159,13 @@ public:
         CLASSIFICATION_MULTI_FINGER_SWIPE = 4,
         CLASSIFICATION_PINCH = 5,
     };
+    enum{
+        TOOL_TYPE_UNKNOWN = 0,
+        TOOL_TYPE_FINGER = 1,
+        TOOL_TYPE_STYLUS = 2,
+        TOOL_TYPE_MOUSE = 3,
+        TOOL_TYPE_ERASER = 4
+    };
 private:
     static constexpr float INVALID_CURSOR_POSITION = NAN;//std::numeric_limits<float>::quiet_NaN();
     static constexpr int HISTORY_CURRENT = 0x80000000;
@@ -337,9 +344,11 @@ public:
         else
             mFlags&=~FLAG_TARGET_ACCESSIBILITY_FOCUS;
     }
-    static const std::string actionToString(int action);
-    static const std::string axisToString(int axis);
+    static std::string actionToString(int action);
+    static std::string axisToString(int axis);
     static int axisFromString(const std::string&symbolicName);
+    static std::string buttonStateToString(int buttonState);
+    static std::string toolTypeToString(int toolType);
     void toStream(std::ostream& os)const override;
 };
 }/*endof namespace*/
