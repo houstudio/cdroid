@@ -119,7 +119,7 @@ public:
     virtual bool willChangeTransformationMatrix()const;
     virtual bool willChangeBounds()const;
     virtual int getExtensionEdges()const;
-    void setAnimationListener(AnimationListener listener);
+    void setAnimationListener(const AnimationListener& listener);
     virtual long computeDurationHint();
     virtual bool getTransformation(int64_t currentTime, Transformation& outTransformation);
     virtual bool getTransformation(int64_t currentTime, Transformation& outTransformation, float scale);

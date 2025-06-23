@@ -8026,7 +8026,7 @@ bool View::onGenericMotionEvent(MotionEvent& event){
 }
 
 bool View::onHoverEvent(MotionEvent& event){
-    /*if (mTouchDelegate != null && dispatchTouchExplorationHoverEvent(event)) {
+    /*if (mTouchDelegate != nullptr && dispatchTouchExplorationHoverEvent(event)) {
          return true;
     }*/
 

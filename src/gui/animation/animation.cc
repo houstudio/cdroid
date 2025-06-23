@@ -306,7 +306,7 @@ bool Animation::willChangeBounds()const{
 int Animation::getExtensionEdges()const{
     return 0;
 }
-void Animation::setAnimationListener(AnimationListener listener) {
+void Animation::setAnimationListener(const AnimationListener& listener) {
     mListener = listener;
 }
 
