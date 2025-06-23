@@ -4,48 +4,21 @@ namespace cdroid{
 
 ExtendAnimation::ExtendAnimation(Context* context,const AttributeSet& attrs)
     :Animation(context, attrs){
-#if 0
-    Description d = Description.parseValue(a.peekValue(
-            com.android.internal.R.styleable.ExtendAnimation_fromExtendLeft), context);
-    mFromLeftType = d.type;
-    mFromLeftValue = d.value;
+    mFromLeftValue = getPivotType(attrs.getString("fromExtendLeft"), mFromLeftType);
 
-    d = Description.parseValue(a.peekValue(
-            com.android.internal.R.styleable.ExtendAnimation_fromExtendTop), context);
-    mFromTopType = d.type;
-    mFromTopValue = d.value;
+    mFromTopValue  = getPivotType(attrs.getString("fromExtendTop") , mFromTopType);
 
-    d = Description.parseValue(a.peekValue(
-            com.android.internal.R.styleable.ExtendAnimation_fromExtendRight), context);
-    mFromRightType = d.type;
-    mFromRightValue = d.value;
+    mFromRightValue= getPivotType(attrs.getString("fromExtendRight"),mFromRightType);
 
-    d = Description.parseValue(a.peekValue(
-            com.android.internal.R.styleable.ExtendAnimation_fromExtendBottom), context);
-    mFromBottomType = d.type;
-    mFromBottomValue = d.value;
+    mFromBottomValue=getPivotType(attrs.getString("fromExtendBottom"),mFromBottomType);
 
+    mToLeftValue = getPivotType(attrs.getString("toExtendLeft"), mToLeftType);
 
-    d = Description.parseValue(a.peekValue(
-            com.android.internal.R.styleable.ExtendAnimation_toExtendLeft), context);
-    mToLeftType = d.type;
-    mToLeftValue = d.value;
+    mToTopValue  = getPivotType(attrs.getString("toExtendTop") , mToTopType);
 
-    d = Description.parseValue(a.peekValue(
-            com.android.internal.R.styleable.ExtendAnimation_toExtendTop), context);
-    mToTopType = d.type;
-    mToTopValue = d.value;
+    mToRightValue= getPivotType(attrs.getString("toExtendRight"),mToRightType);
 
-    d = Description.parseValue(a.peekValue(
-            com.android.internal.R.styleable.ExtendAnimation_toExtendRight), context);
-    mToRightType = d.type;
-    mToRightValue = d.value;
-
-    d = Description.parseValue(a.peekValue(
-            com.android.internal.R.styleable.ExtendAnimation_toExtendBottom), context);
-    mToBottomType = d.type;
-    mToBottomValue = d.value;
-#endif
+    mToBottomValue=getPivotType(attrs.getString("toExtendBottom"),mToBottomType);
 }
 
 /**
@@ -56,14 +29,14 @@ ExtendAnimation::ExtendAnimation(Context* context,const AttributeSet& attrs)
  */
 ExtendAnimation::ExtendAnimation(const Insets& fromInsets,const Insets& toInsets) {
     mFromLeftValue = -fromInsets.left;
-    mFromTopValue = -fromInsets.top;
-    mFromRightValue = -fromInsets.right;
-    mFromBottomValue = -fromInsets.bottom;
+    mFromTopValue  = -fromInsets.top;
+    mFromRightValue= -fromInsets.right;
+    mFromBottomValue= -fromInsets.bottom;
 
     mToLeftValue = -toInsets.left;
-    mToTopValue = -toInsets.top;
+    mToTopValue  = -toInsets.top;
     mToRightValue = -toInsets.right;
-    mToBottomValue = -toInsets.bottom;
+    mToBottomValue= -toInsets.bottom;
 }
 
 /**
