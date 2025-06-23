@@ -11,7 +11,7 @@ class Context;
 class TimeInterpolator{
 public:
     virtual float getInterpolation(float input)=0;
-    virtual ~TimeInterpolator(){}
+    virtual ~TimeInterpolator()=default;
 };
 
 class Interpolator:public TimeInterpolator{
@@ -118,16 +118,21 @@ private:
     std::vector<float>mY;
 private:
     //https://www.androidos.net.cn/android/9.0.0_r8/xref/frameworks/base/core/java/android/view/animation/PathInterpolator.java
-    PathInterpolator(float controlX, float controlY);
-    PathInterpolator(float controlX1, float controlY1, float controlX2, float controlY2);
     void initQuad(float controlX, float controlY);
     void initCubic(float x1, float y1, float x2, float y2);
     void initPath(cdroid::Path&path);
 public:
+    PathInterpolator(float controlX, float controlY);
+    PathInterpolator(float controlX1, float controlY1, float controlX2, float controlY2);
     PathInterpolator(cdroid::Path&path);
     PathInterpolator(Context*,const AttributeSet&);
     ~PathInterpolator()override;
     float getInterpolation(float t)override;
+};
+
+class BackGestureInterpolator:public PathInterpolator{
+public:
+    BackGestureInterpolator();
 };
 
 class LookupTableInterpolator:public BaseInterpolator{

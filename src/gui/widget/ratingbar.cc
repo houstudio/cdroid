@@ -54,7 +54,7 @@ bool RatingBar::isIndicator()const{
 }
 
 void RatingBar::setNumStars(int numStars){
-    if (numStars <= 0||numStars==mNumStars) 
+    if ((numStars <= 0)||(numStars==mNumStars))
         return;
 
     mNumStars = numStars;
@@ -89,9 +89,9 @@ float RatingBar::getStepSize()const{
 
 float RatingBar::getProgressPerStar()const{
     if (mNumStars > 0) {
-        return 1.f * getMax() / mNumStars;
+        return float(getMax()) / mNumStars;
     } else {
-        return 1.;
+        return 1.f;
     }
 }
 
