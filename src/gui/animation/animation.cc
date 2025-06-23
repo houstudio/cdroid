@@ -60,6 +60,16 @@ Animation::Animation(Context* context, const AttributeSet& attrs){
 Animation::~Animation(){
 }
 
+Animation::Description Animation::Description::parseValue(const std::string&v){
+    Description d;
+    const float ret=std::strtof(v.c_str(),nullptr);
+    if(v.find("%p")!=std::string::npos)d.type = RELATIVE_TO_PARENT;
+    else if(v.find("%")!=std::string::npos)d.type= RELATIVE_TO_SELF;
+    else d.type = ABSOLUTE;
+    d.value =  (d.type==ABSOLUTE)?ret:(ret/100.f);
+    return d;
+}
+
 float Animation::getPivotType(const std::string&v,int &type){
     const float ret=std::strtof(v.c_str(),nullptr);
     if(v.find("%p")!=std::string::npos)type = RELATIVE_TO_PARENT;

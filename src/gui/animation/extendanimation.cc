@@ -4,21 +4,37 @@ namespace cdroid{
 
 ExtendAnimation::ExtendAnimation(Context* context,const AttributeSet& attrs)
     :Animation(context, attrs){
-    mFromLeftValue = getPivotType(attrs.getString("fromExtendLeft"), mFromLeftType);
+    Description d = Description::parseValue(attrs.getString("fromExtendLeft"));
+    mFromLeftType = d.type;
+    mFromLeftValue= d.value;
 
-    mFromTopValue  = getPivotType(attrs.getString("fromExtendTop") , mFromTopType);
+    d = Description::parseValue(attrs.getString("fromExtendTop"));
+    mFromTopType = d.type;
+    mFromTopValue= d.value;
 
-    mFromRightValue= getPivotType(attrs.getString("fromExtendRight"),mFromRightType);
+    d = Description::parseValue(attrs.getString("fromExtendRight"));
+    mFromRightType = d.type;
+    mFromRightValue= d.value;
 
-    mFromBottomValue=getPivotType(attrs.getString("fromExtendBottom"),mFromBottomType);
+    d = Description::parseValue(attrs.getString("fromExtendBottom"));
+    mFromBottomType = d.type;
+    mFromBottomValue= d.value;
 
-    mToLeftValue = getPivotType(attrs.getString("toExtendLeft"), mToLeftType);
+    d = Description::parseValue(attrs.getString("toExtendLeft"));
+    mToLeftType = d.type;
+    mToLeftValue= d.value;
 
-    mToTopValue  = getPivotType(attrs.getString("toExtendTop") , mToTopType);
+    d = Description::parseValue(attrs.getString("toExtendTop"));
+    mToTopType = d.type;
+    mToTopValue= d.value;
 
-    mToRightValue= getPivotType(attrs.getString("toExtendRight"),mToRightType);
+    d = Description::parseValue(attrs.getString("toExtendRight"));
+    mToRightType = d.type;
+    mToRightValue= d.value;
 
-    mToBottomValue=getPivotType(attrs.getString("toExtendBottom"),mToBottomType);
+    d = Description::parseValue(attrs.getString("toExtendBottom"));
+    mToBottomType = d.type;
+    mToBottomValue= d.value;
 }
 
 /**

@@ -40,7 +40,6 @@ private:
     void fireAnimationStart();
     void fireAnimationRepeat();
     void fireAnimationEnd();
-
 protected:
     bool mEnded = false;
     bool mStarted = false;
@@ -59,6 +58,12 @@ protected:
     AnimationListener mListener;
     Rect mPreviousRegion ;
     Rect mRegion;
+    class Description{
+    public:
+        int type;
+        float value;
+        static Description parseValue(const std::string&);
+    };
     Transformation mTransformation;
     Transformation mPreviousTransformation;
 protected:
