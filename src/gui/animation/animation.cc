@@ -293,6 +293,9 @@ bool Animation::willChangeBounds()const{
     return true;
 }
 
+int Animation::getExtensionEdges()const{
+    return 0;
+}
 void Animation::setAnimationListener(AnimationListener listener) {
     mListener = listener;
 }

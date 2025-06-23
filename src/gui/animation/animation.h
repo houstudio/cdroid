@@ -113,6 +113,7 @@ public:
     bool getShowWallpaper()const;
     virtual bool willChangeTransformationMatrix()const;
     virtual bool willChangeBounds()const;
+    virtual int getExtensionEdges()const;
     void setAnimationListener(AnimationListener listener);
     virtual long computeDurationHint();
     virtual bool getTransformation(int64_t currentTime, Transformation& outTransformation);

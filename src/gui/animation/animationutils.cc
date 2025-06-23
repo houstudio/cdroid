@@ -45,6 +45,8 @@ Animation* AnimationUtils::createAnimationFromXml(Context* c, XmlPullParser& par
             anim = new TranslateAnimation(c, attrs);
         } else if (name.compare("cliprect")==0) {
             anim = new ClipRectAnimation(c, attrs);
+        } else if(name.compare("extend")==0){
+            anim = new ExtendAnimation(c,attrs);
         } else {
             LOGW("Unknown animation name:%s",name.c_str());
         }
