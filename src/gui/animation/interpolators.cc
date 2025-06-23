@@ -197,7 +197,7 @@ void PathInterpolator::initPath(cdroid::Path&path){
     if (pointComponents[1] != 0 || pointComponents[2] != 0
             || pointComponents[pointComponents.size() - 2] != 1
             || pointComponents[pointComponents.size() - 1] != 1) {
-        throw std::logic_error("The Path must start at (0,0) and end at (1,1)");
+        throw std::invalid_argument("The Path must start at (0,0) and end at (1,1)");
     }
 
     mX.resize(numPoints);
@@ -210,10 +210,10 @@ void PathInterpolator::initPath(cdroid::Path&path){
         float x = pointComponents[componentIndex++];
         float y = pointComponents[componentIndex++];
         if (fraction == prevFraction && x != prevX) {
-            throw std::logic_error("The Path cannot have discontinuity in the X axis.");
+            throw std::invalid_argument("The Path cannot have discontinuity in the X axis.");
         }
         if (x < prevX) {
-            throw std::logic_error("The Path cannot loop back on itself.");
+            throw std::invalid_argument("The Path cannot loop back on itself.");
         }
         mX[i] = x;
         mY[i] = y;
@@ -253,6 +253,10 @@ float PathInterpolator::getInterpolation(float t) {
     return startY + (fraction * (endY - startY));
 }
 
+BackGestureInterpolator::BackGestureInterpolator()
+    :PathInterpolator(0.1f,0.1f,0.f,1.f){
+}
+//////////////////////////////////////////////////////////////////////////////////////////////
 
 LookupTableInterpolator::LookupTableInterpolator(const std::vector<float>& values) {
     mValues = values;
