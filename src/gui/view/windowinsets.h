@@ -4,6 +4,21 @@
 namespace cdroid{
 class DisplayCutout;
 class WindowInsets {
+public:
+    class Side {
+    public:
+        static constexpr int LEFT = 1 << 0;
+        static constexpr int TOP = 1 << 1;
+        static constexpr int RIGHT = 1 << 2;
+        static constexpr int BOTTOM = 1 << 3;
+    private:
+        Side() {
+        }
+    public:
+        static int all() {
+            return LEFT | TOP | RIGHT | BOTTOM;
+        }
+    };
 private:
     Rect mSystemWindowInsets;
     Rect mWindowDecorInsets;

@@ -81,23 +81,33 @@ void Transformation::setAlpha(float alpha) {
     mAlpha = alpha;
 }
 
-void Transformation::setClipRect(Rect r) {
-    setClipRect(r.left, r.top, r.width, r.height);
-}
-void Transformation::setClipRect(int l, int t, int w, int h) {
-    mClipRect.set(l, t, w, h);
-    mHasClipRect = true;
-}
-Rect Transformation::getClipRect()const{
-    return mClipRect;
-}
-bool Transformation::hasClipRect()const {
-    return mHasClipRect;
-}
-
 float Transformation::getAlpha()const {
     return mAlpha;
 }
 
+void Transformation::setClipRect(const Rect& r) {
+    setClipRect(r.left, r.top, r.width, r.height);
+}
+
+void Transformation::setClipRect(int l, int t, int w, int h) {
+    mClipRect.set(l, t, w, h);
+    mHasClipRect = true;
+}
+
+Rect Transformation::getClipRect()const{
+    return mClipRect;
+}
+
+bool Transformation::hasClipRect()const {
+    return mHasClipRect;
+}
+
+void Transformation::setInsets(int left, int top, int right, int bottom) {
+    mInsets = Insets::of(left, top, right, bottom);
+}
+
+const Insets& Transformation::getInsets()const{
+    return mInsets;
+}
 }
 

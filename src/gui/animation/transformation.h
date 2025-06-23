@@ -1,6 +1,7 @@
 #ifndef __TRANSFORMATION_H__
 #define __TRANSFORMATION_H__
 #include <core/rect.h>
+#include <core/insets.h>
 #include <cairomm/matrix.h>
 #include <animation/interpolators.h>
 #include <core/attributeset.h>
@@ -20,6 +21,7 @@ protected:
     int mTransformationType;
     bool mHasClipRect;
     Rect mClipRect ;
+    Insets mInsets;
 public:
     Transformation();
     void operator=(const Transformation&);
@@ -32,11 +34,13 @@ public:
     const Matrix& getMatrix()const;
     Matrix& getMatrix();
     void setAlpha(/*from=0.0, to=1.0)*/float alpha);
-    void setClipRect(Rect r);
+    float getAlpha()const;
+    void setClipRect(const Rect& r);
     void setClipRect(int l, int t, int w, int h);
     Rect getClipRect()const;
     bool hasClipRect()const;
-    float getAlpha()const;
+    void setInsets(int left,int top,int right,int bottom);
+    const Insets&getInsets()const;
 };
 
 }//endof namespace
