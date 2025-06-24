@@ -15,15 +15,37 @@ ClipRectAnimation::ClipRectAnimation(const ClipRectAnimation&o):Animation(o){
 
 ClipRectAnimation::ClipRectAnimation(Context* context, const AttributeSet& attrs)
 :Animation(context,attrs){
-    mFromLeftValue  = getPivotType(attrs.getString("fromLeft"),mFromLeftType);
-    mFromTopValue   = getPivotType(attrs.getString("fromTop"),mFromTopType);
-    mFromRightValue = getPivotType(attrs.getString("fromRight"),mFromRightType);
-    mFromBottomValue= getPivotType(attrs.getString("fromBottom"),mFromBottomType);
+    Description d = Description::parseValue(attrs.getString("fromLeft"));
+    mFromLeftType = d.type;
+    mFromLeftValue= d.value;
 
-    mToLeftValue  = getPivotType(attrs.getString("toLeft"),mToLeftType);
-    mToTopValue   = getPivotType(attrs.getString("toTop"),mToTopType);
-    mToRightValue = getPivotType(attrs.getString("toRight"),mToRightType);
-    mToBottomValue= getPivotType(attrs.getString("tpBottom"),mToBottomType);
+    d = Description::parseValue(attrs.getString("fromTop"));
+    mFromTopType =d.type;
+    mFromTopValue= d.value;
+
+    d = Description::parseValue(attrs.getString("fromRight"));
+    mFromRightType = d.type;
+    mFromRightValue = d.value;
+
+    d = Description::parseValue(attrs.getString("fromBottom"));
+    mFromBottomType = d.type;
+    mFromBottomValue= d.value;
+
+    d = Description::parseValue(attrs.getString("toLeft"));
+    mToLeftType = d.type;
+    mToLeftValue= d.value;
+
+    d = Description::parseValue(attrs.getString("toTop"));
+    mToTopType = d.type;
+    mToTopValue= d.value;
+
+    d = Description::parseValue(attrs.getString("toRight"));
+    mToRightType = d.type;
+    mToRightValue= d.value;
+
+    d = Description::parseValue(attrs.getString("tpBottom"));
+    mToBottomType = d.type;
+    mToBottomValue= d.value;
 }
 
 ClipRectAnimation::ClipRectAnimation(const Rect& fromClip,const Rect& toClip)

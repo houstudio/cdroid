@@ -26,12 +26,19 @@ ScaleAnimation::ScaleAnimation(const ScaleAnimation&o):Animation(o){
 
 ScaleAnimation::ScaleAnimation(Context* context,const AttributeSet& attrs)
     :Animation(context,attrs){
-    mFromX= attrs.getFloat("fromXScale",.0f);
-    mToX  = attrs.getFloat("toXScale",.0f);
-    mFromY= attrs.getFloat("fromYScale",.0f);
-    mToY  = attrs.getFloat("toYScale",.0f);
-    mPivotXValue = getPivotType(attrs.getString("pivotX"),mPivotXType);
-    mPivotYValue = getPivotType(attrs.getString("pivotY"),mPivotYType);
+    mFromX= attrs.getFloat("fromXScale",0.f);
+    mToX  = attrs.getFloat("toXScale",0.f);
+    mFromY= attrs.getFloat("fromYScale",0.f);
+    mToY  = attrs.getFloat("toYScale",0.f);
+
+    Description d = Description::parseValue(attrs.getString("pivotX"));
+    mPivotXType = d.type;
+    mPivotXValue= d.value;
+
+    d = Description::parseValue(attrs.getString("pivotY"));
+    mPivotYType = d.type;
+    mPivotYValue= d.value;
+
     initializePivotPoint();
 }
 

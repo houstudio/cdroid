@@ -15,8 +15,14 @@ RotateAnimation::RotateAnimation(const RotateAnimation&o){
 RotateAnimation::RotateAnimation(Context* context,const AttributeSet& attrs){
     mFromDegrees = attrs.getFloat("fromDegrees", 0.0f);
     mToDegrees   = attrs.getFloat("toDegrees", 0.0f);
-    mPivotXValue = getPivotType(attrs.getString("pivotX"),mPivotXType);
-    mPivotYValue = getPivotType(attrs.getString("pivotY"),mPivotYType);
+
+    Description d = Description::parseValue(attrs.getString("pivotX"));
+    mPivotXType = d.type;
+    mPivotXValue = d.value;
+
+    d = Description::parseValue(attrs.getString("pivotY"));
+    mPivotYType = d.type;
+    mPivotYValue = d.value;
 
     initializePivotPoint();
 }

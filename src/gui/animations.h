@@ -5,6 +5,7 @@
 #include <animation/scaleanimation.h>
 #include <animation/translateanimation.h>
 #include <animation/cliprectanimation.h>
+#include <animation/extendanimation.h>
 #include <animation/animationset.h>
 #include <animation/layoutanimationcontroller.h>
 #include <animation/gridlayoutanimationcontroller.h>

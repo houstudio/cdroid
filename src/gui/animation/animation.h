@@ -40,7 +40,6 @@ private:
     void fireAnimationStart();
     void fireAnimationRepeat();
     void fireAnimationEnd();
-
 protected:
     bool mEnded = false;
     bool mStarted = false;
@@ -59,6 +58,12 @@ protected:
     AnimationListener mListener;
     Rect mPreviousRegion ;
     Rect mRegion;
+    class Description{
+    public:
+        int type;
+        float value;
+        static Description parseValue(const std::string&);
+    };
     Transformation mTransformation;
     Transformation mPreviousTransformation;
 protected:
@@ -113,7 +118,8 @@ public:
     bool getShowWallpaper()const;
     virtual bool willChangeTransformationMatrix()const;
     virtual bool willChangeBounds()const;
-    void setAnimationListener(AnimationListener listener);
+    virtual int getExtensionEdges()const;
+    void setAnimationListener(const AnimationListener& listener);
     virtual long computeDurationHint();
     virtual bool getTransformation(int64_t currentTime, Transformation& outTransformation);
     virtual bool getTransformation(int64_t currentTime, Transformation& outTransformation, float scale);
