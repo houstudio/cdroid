@@ -21,8 +21,8 @@ AnimationSet::AnimationSet(const AnimationSet&o)
 AnimationSet::AnimationSet(Context* context,const AttributeSet& attrs)
  :Animation(context, attrs){
 
-    setFlag(PROPERTY_SHARE_INTERPOLATOR_MASK, attrs.getBoolean("shareInterpolator", true));
     init();
+    setFlag(PROPERTY_SHARE_INTERPOLATOR_MASK, attrs.getBoolean("shareInterpolator", true));
 
     if (attrs.hasAttribute("duration")) {
         mFlags |= PROPERTY_DURATION_MASK;
@@ -42,8 +42,8 @@ AnimationSet::AnimationSet(Context* context,const AttributeSet& attrs)
 }
 
 AnimationSet::AnimationSet(bool shareInterpolator){
-    setFlag(PROPERTY_SHARE_INTERPOLATOR_MASK, shareInterpolator);
     init();
+    setFlag(PROPERTY_SHARE_INTERPOLATOR_MASK, shareInterpolator);
 }
 
 AnimationSet::~AnimationSet(){
@@ -151,7 +151,7 @@ void AnimationSet::setStartTime(int64_t startTimeMillis){
 }
 
 int64_t AnimationSet::getStartTime()const{
-    int64_t startTime = LLONG_MAX;//Long.MAX_VALUE;
+    int64_t startTime = LLONG_MAX;
     for (Animation*a:mAnimations){
         startTime = std::min(startTime, a->getStartTime());
     }
@@ -200,7 +200,7 @@ void AnimationSet::initializeInvalidateRegion(int left, int top, int right, int 
 
         for (int i = count - 1; i >= 0; --i) {
             Animation* a = mAnimations.at(i);
-            if (!a->isFillEnabled() || a->getFillBefore() || a->getStartOffset() == 0) {
+            if (!a->isFillEnabled() || a->getFillBefore() || (a->getStartOffset() == 0)) {
                 temp.clear();
                 Interpolator* interpolator = a->mInterpolator;
                 a->applyTransformation(interpolator ? interpolator->getInterpolation(0.0f) : 0.0f, temp);

@@ -979,7 +979,7 @@ void AnimatorSet::createDependencyGraph(){
     mTotalDuration = mEvents.at(mEvents.size() - 1)->getTime();
 }
 
-bool AnimatorSet::AnimationEventCompare(AnimationEvent* e1, AnimationEvent* e2){
+bool AnimatorSet::AnimationEventCompare(const AnimationEvent* e1, const AnimationEvent* e2){
     const auto t1 = e1->getTime();
     const auto t2 = e2->getTime();
     //LOGD("t1=%lld t2=%lld events=%d/%d",t1,t2,e1->mEvent,e2->mEvent);

@@ -42,9 +42,10 @@ void Transformation::set(const Transformation& t) {
     mTransformationType = t.getTransformationType();
 }
 
-void Transformation::compose(Transformation t) {
+void Transformation::compose(const Transformation& t) {
+    Matrix tm = t.getMatrix();
     mAlpha *= t.getAlpha();
-    mMatrix.multiply(mMatrix,t.getMatrix());//preConcat(t.getMatrix());
+    mMatrix.multiply(mMatrix,tm);//preConcat(t.getMatrix());
     if (t.mHasClipRect) {
         Rect bounds = t.getClipRect();
         if (mHasClipRect) {
@@ -56,9 +57,10 @@ void Transformation::compose(Transformation t) {
     }
 }
 
-void Transformation::postCompose(Transformation t) {
+void Transformation::postCompose(const Transformation& t) {
+    Matrix tm = t.getMatrix();
     mAlpha *= t.getAlpha();
-    mMatrix.multiply(mMatrix,t.getMatrix());//postConcat(t.getMatrix());
+    mMatrix.multiply(mMatrix,tm);//postConcat(t.getMatrix());
     if (t.mHasClipRect) {
         Rect bounds = t.getClipRect();
         if (mHasClipRect) {
@@ -73,6 +75,7 @@ void Transformation::postCompose(Transformation t) {
 Matrix& Transformation::getMatrix(){
     return mMatrix;
 }
+
 const Matrix& Transformation::getMatrix()const{
     return mMatrix;
 }
