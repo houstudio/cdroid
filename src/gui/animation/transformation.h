@@ -29,11 +29,11 @@ public:
     int getTransformationType()const;
     void setTransformationType(int transformationType);
     void set(const Transformation& t);
-    void compose(Transformation t);
-    void postCompose(Transformation t);
+    void compose(const Transformation& t);
+    void postCompose(const Transformation& t);
     const Matrix& getMatrix()const;
     Matrix& getMatrix();
-    void setAlpha(/*from=0.0, to=1.0)*/float alpha);
+    void setAlpha(float alpha);
     float getAlpha()const;
     void setClipRect(const Rect& r);
     void setClipRect(int l, int t, int w, int h);

@@ -508,7 +508,8 @@ void ProgressBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool animate){
     if(mRefreshProgressRunnable==nullptr){
         mRefreshProgressRunnable = [this](){
-            for(auto rd:mRefreshData){
+            for(size_t i=0;i<mRefreshData.size();i++){
+                auto rd= mRefreshData.at(i);
                 doRefreshProgress(rd->id, rd->progress, rd->fromUser, true, rd->animate);
                 rd->recycle();
             }
