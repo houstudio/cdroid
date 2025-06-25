@@ -27,3 +27,4 @@
 #include <drawables/drawableinflater.h>
 #include <drawables/animatedvectordrawable.h>
 #include <drawables/animatedstatelistdrawable.h>
+#include <drawables/adaptiveicondrawable.h>
