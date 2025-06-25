@@ -115,6 +115,7 @@ public:
     virtual void setHotspot(float x,float y);
     virtual void setHotspotBounds(int left,int top,int width,int height);
     virtual void getHotspotBounds(Rect&outRect)const;
+    virtual bool isProjected()const;
     virtual bool getPadding(Rect&padding);
     virtual Insets getOpticalInsets();
     virtual void getOutline(Outline&);
