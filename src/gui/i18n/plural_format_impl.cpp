@@ -17,7 +17,7 @@
 #include <cmath>
 #include "str_util.h"
 
-using namespace OHOS::I18N;
+using namespace cdroid::i18n;
 
 PluralFormatImpl::PluralFormatImpl(LocaleInfo &locale, I18nStatus &status)
 {

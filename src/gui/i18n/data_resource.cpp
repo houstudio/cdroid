@@ -22,7 +22,7 @@
 #include "i18n_memory_adapter.h"
 #include "str_util.h"
 
-using namespace OHOS::I18N;
+using namespace cdroid::i18n;
 using namespace std;
 
 #ifdef I18N_PRODUCT

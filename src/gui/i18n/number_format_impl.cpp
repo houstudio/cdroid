@@ -18,7 +18,7 @@
 #include "number_data.h"
 #include "str_util.h"
 
-using namespace OHOS::I18N;
+using namespace cdroid::i18n;
 
 std::string NumberFormatImpl::ConvertSignAndNum(const char *content, int len, NumberData *data, StyleData &style) const
 {

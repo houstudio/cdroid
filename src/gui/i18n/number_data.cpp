@@ -17,7 +17,7 @@
 #include "str_util.h"
 #include "number_data.h"
 
-using namespace OHOS::I18N;
+using namespace cdroid::i18n;
 
 StyleData::StyleData(const StyleData &data)
 {

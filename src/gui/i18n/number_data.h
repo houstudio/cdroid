@@ -28,8 +28,8 @@
 #include "types.h"
 #include "data_resource.h"
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 struct StyleData {
     int decLen = 0;
     int intLen = 0;
@@ -103,6 +103,6 @@ enum EPercentLocation {
     LEFT = 1,
     RIGHT = 2
 };
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 #endif

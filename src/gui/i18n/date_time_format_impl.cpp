@@ -18,7 +18,7 @@
 #include "date_time_data.h"
 #include "i18n_pattern.h"
 
-using namespace OHOS::I18N;
+using namespace cdroid::i18n;
 using namespace std;
 
 /**

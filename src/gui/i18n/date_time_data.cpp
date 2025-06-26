@@ -17,7 +17,7 @@
 #include <cstring>
 #include "str_util.h"
 
-using namespace OHOS::I18N;
+using namespace cdroid::i18n;
 
 using namespace std;
 

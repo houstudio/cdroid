@@ -23,8 +23,8 @@
 #include "plural_format.h"
 #include "types.h"
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 class MeasureFormatImpl {
 public:
     MeasureFormatImpl(LocaleInfo &localeinfo, I18nStatus &status);
@@ -60,6 +60,6 @@ private:
     int formattedInteger = 0;
     double formattedDouble = 0;
 };
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 #endif

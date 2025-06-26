@@ -18,7 +18,7 @@
 #include "types.h"
 #include "locale_info.h"
 
-using namespace OHOS::I18N;
+using namespace cdroid::i18n;
 
 const std::set<std::string> LocaleInfo::SCRIPTS = {
     "Hans", "Latn", "Hant", "Qaag", "Cyrl", "Deva", "Guru"

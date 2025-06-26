@@ -21,8 +21,8 @@
 #include "data_resource.h"
 #include "number_data.h"
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 class NumberFormatImpl {
 public:
     NumberFormatImpl(LocaleInfo &locale, int &status);
@@ -52,6 +52,6 @@ private:
     static constexpr int NUMBER_MAX = 50;
     static constexpr int NO_SET = -1;
 };
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 #endif

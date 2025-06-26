@@ -17,7 +17,7 @@
 #define PLURALFORMAT_H
 
 /**
-* @addtogroup I18N
+* @addtogroup i18n
 * @{
 *
 * @brief Provides APIs related to internationalization (i18n), with which you can
@@ -40,8 +40,8 @@
 #include "locale_info.h"
 #include "plural_format_impl.h"
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 /**
 * Obtains plural rules.
 *
@@ -95,7 +95,7 @@ private:
     PluralFormatImpl *impl = nullptr;
     LocaleInfo mLocale;
 };
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 
 #endif

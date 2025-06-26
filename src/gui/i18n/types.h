@@ -40,8 +40,8 @@
 
 #include <string>
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 /**
 * @brief Enumerates formatting statuses.
 *
@@ -203,7 +203,7 @@ enum MeasureFormatType {
     /* Full */
     MEASURE_FULL,
 };
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 /** @} */
 #endif

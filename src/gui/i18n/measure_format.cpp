@@ -15,7 +15,7 @@
 
 #include "measure_format.h"
 
-using namespace OHOS::I18N;
+using namespace cdroid::i18n;
 
 MeasureFormat::MeasureFormat(LocaleInfo &localeinfo, I18nStatus &status)
 {

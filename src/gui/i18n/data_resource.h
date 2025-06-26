@@ -59,8 +59,8 @@
 #define MAX_MEASURE_FORMAT_LENGTH 128
 #define MEASURE_UNIT_SEP '|'
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 enum LocaleDataType {
     RESOURCE = 0,
     FALLBACK_RESOURCE,
@@ -147,5 +147,5 @@ private:
     uint32_t loaded[DataResourceType::RESOURCE_TYPE_END] = { 0 };
 };
 } // namespace I18N
-} // namespace OHOS
+} // namespace cdroid
 #endif

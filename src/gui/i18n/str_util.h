@@ -21,8 +21,8 @@
 
 #define I18N_STRING_LENGTH_MAX 512
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 int ReplaceAndCountOff(std::string &content, const int index, const char *sign, const int off);
 
 void ArrayCopy(std::string *target, const int targetSize, const std::string *source, const int sourceSize);
@@ -40,6 +40,6 @@ void Split(const std::string &src, std::string *dst, const int32_t size, const c
 bool CompareLocaleItem(const char *src, const char *dst);
 
 std::string Parse(const char *str, int32_t count);
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 #endif

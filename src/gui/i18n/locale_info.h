@@ -17,7 +17,7 @@
 #define LOCINFO_H
 
 /**
-* @addtogroup I18N
+* @addtogroup i18n
 * @{
 *
 * @brief Provides functions related to internationalization (i18n), with which you can format date, time and numbers.
@@ -48,8 +48,8 @@
 #include <set>
 #include "types.h"
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 class LocaleInfo {
 public:
     /**
@@ -245,7 +245,7 @@ enum EMask {
     LANG_SECOND_BEGIN = 18,
     LANG_FIRST_BEGIN = 25
 };
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 /** @} */
 #endif

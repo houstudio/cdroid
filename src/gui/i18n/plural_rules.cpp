@@ -15,7 +15,7 @@
 
 #include "plural_rules.h"
 
-using namespace OHOS::I18N;
+using namespace cdroid::i18n;
 
 PluralRules::PluralRules(std::string *rules, const int rulesLength, const int *ruleSize, const int sizesLength)
 {

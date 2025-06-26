@@ -17,7 +17,7 @@
 #include <cstring>
 #include "data_resource.h"
 
-using namespace OHOS::I18N;
+using namespace cdroid::i18n;
 
 static constexpr uint8_t FIRST_DAY_OF_WEEK_INDEX = 0;
 static constexpr uint8_t MINIMAL_DAYS_INFIRST_WEEK_INDEX = 1;

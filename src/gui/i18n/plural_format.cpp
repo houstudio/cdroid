@@ -16,7 +16,7 @@
 #include "plural_format.h"
 #include "plural_format_impl.h"
 
-using namespace OHOS::I18N;
+using namespace cdroid::i18n;
 
 PluralFormat::PluralFormat(LocaleInfo &locale, I18nStatus &status)
 {

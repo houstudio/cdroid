@@ -16,7 +16,7 @@
 #ifndef MEASUREFORMAT_H
 #define MEASUREFORMAT_H
 /**
- * @addtogroup I18N
+ * @addtogroup i18n
  * @{
  *
  * @brief Provides functions related to internationalization (i18n), with which you can format measure.
@@ -52,8 +52,8 @@
 #include "string.h"
 #include "types.h"
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 class MeasureFormat {
 public:
     /**
@@ -124,7 +124,7 @@ private:
     MeasureFormatImpl *measureFormatImpl = nullptr;
     LocaleInfo locale;
 };
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 /** @} */
 #endif

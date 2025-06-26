@@ -27,8 +27,8 @@
 #define AM_SIZE 2
 #define SEP_HOUR_SIZE 2
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 class DateTimeData {
 public:
     DateTimeData(const char *amPmMarkers, const char *configs, const int size);
@@ -63,6 +63,6 @@ private:
     char defaultHour = 'H';
     const int CONFIG_MIN_SIZE = 2;
 };
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 #endif

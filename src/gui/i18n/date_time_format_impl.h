@@ -43,8 +43,8 @@
 #define MINUTE_IN_MILLIS 60000
 #define HOUR_IN_MILLIS 3600000
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 struct ElapsedTime {
     int32_t hours;
     int32_t minutes;
@@ -98,6 +98,6 @@ private:
     std::string fPattern = "";
     LocaleInfo fLocale;
 };
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 #endif

@@ -19,8 +19,8 @@
 #include "types.h"
 #include "locale_info.h"
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 class PluralRules {
 public:
     PluralRules(std::string *rules, const int rulesLength, const int *rulesSize, const int sizesLength);
@@ -38,7 +38,7 @@ public:
     std::string mOtherRule = "";
     int mOtherRuleSize = 0;
 };
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 
 #endif

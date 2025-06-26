@@ -47,8 +47,8 @@
 #define PATTERN_TYPE_SHIFT 16
 #define PATTERN_INDEX_MASK 0x0000ffff
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 enum PatternType {
     PATTERN_TYPE_BEGIN = 0,
     TIME_PATTERN = PATTERN_TYPE_BEGIN,
@@ -190,6 +190,6 @@ std::string GetStringFromElapsedPattern(const ElapsedPatternType &type, const Da
         }
     }
 }
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 #endif

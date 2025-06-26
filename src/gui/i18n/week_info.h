@@ -18,8 +18,8 @@
 
 #include "locale_info.h"
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 class WeekInfo {
 public:
     /**
@@ -71,6 +71,6 @@ private:
     uint8_t firstDayOfWeekend;
     uint8_t lastDayOfWeekend;
 };
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 #endif

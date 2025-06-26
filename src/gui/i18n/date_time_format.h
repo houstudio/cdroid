@@ -17,7 +17,7 @@
 #define DATE_TIME_FORMAT_H
 
 /**
-* @addtogroup I18N
+* @addtogroup i18n
 * @{
 *
 * @brief Provides functions related to internationalization (i18n), with which you can format date, time and numbers.
@@ -59,8 +59,8 @@
 #include "number_format.h"
 #include "time.h"
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 class DateTimeFormat {
 public:
     /**
@@ -190,7 +190,7 @@ private:
     LocaleInfo locale;
     AvailableDateTimeFormatPattern requestPattern;
 };
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 /** @} */
 #endif

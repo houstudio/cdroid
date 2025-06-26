@@ -21,8 +21,8 @@
 #include "plural_rules.h"
 #include "types.h"
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 class PluralFormatImpl {
 public:
     PluralFormatImpl(LocaleInfo &locale, I18nStatus &status);
@@ -68,7 +68,7 @@ private:
     const int MAX_FRACTION_NUMBERS = 6;
     const int DECIMALISM = 10;
 };
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
 
 #endif

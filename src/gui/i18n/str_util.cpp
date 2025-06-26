@@ -17,8 +17,8 @@
 #include "i18n_memory_adapter.h"
 #include "types.h"
 
-namespace OHOS {
-namespace I18N {
+namespace cdroid {
+namespace i18n {
 static int g_i18nMaxMalloc = 4096;
 
 int ReplaceAndCountOff(std::string &content, const int index, const char *sign, const int off)
@@ -166,5 +166,5 @@ std::string Parse(const char *str, int32_t count)
     }
     return std::string(str + ind, last - ind);
 }
-} // namespace I18N
-} // namespace OHOS
+} // namespace i18n
+} // namespace cdroid
