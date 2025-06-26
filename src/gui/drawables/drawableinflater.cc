@@ -57,6 +57,7 @@ static const std::unordered_map<std::string,std::function<Drawable*()>>drawableP
     {"animated-image" , [](){return new AnimatedImageDrawable();}},
     {"animated-vector", [](){return new AnimatedVectorDrawable();}},
     {"animated-selector", [](){return new AnimatedStateListDrawable();}},
+    {"adaptive-icon",[]{return new AdaptiveIconDrawable();}},
     {"selector" , [](){return new StateListDrawable();}},
     {"level-list",[](){return new LevelListDrawable();}},
     {"layer-list",[](){return new LayerDrawable();}},

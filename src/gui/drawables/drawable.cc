@@ -109,6 +109,10 @@ void Drawable::getHotspotBounds(Rect&outRect)const{
     outRect = mBounds;
 }
 
+bool Drawable::isProjected()const{
+    return false;
+}
+
 std::shared_ptr<Drawable::ConstantState>Drawable::getConstantState() {
     return nullptr;
 }
