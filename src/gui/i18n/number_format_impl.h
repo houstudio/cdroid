@@ -17,7 +17,6 @@
 #define NUMBERFORMAT_IMPL_H
 
 #include "types.h"
-#include "securec.h"
 #include "locale_info.h"
 #include "data_resource.h"
 #include "number_data.h"

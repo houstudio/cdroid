@@ -21,7 +21,6 @@
 #include "locale_info.h"
 #include "number_format.h"
 #include "plural_format.h"
-#include "securec.h"
 #include "types.h"
 
 namespace OHOS {

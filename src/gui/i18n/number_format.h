@@ -50,7 +50,6 @@
 */
 
 #include "types.h"
-#include "securec.h"
 #include "number_format_impl.h"
 #include "locale_info.h"
 

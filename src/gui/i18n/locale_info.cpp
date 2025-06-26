@@ -14,7 +14,6 @@
  */
 
 #include "i18n_memory_adapter.h"
-#include "securec.h"
 #include "str_util.h"
 #include "types.h"
 #include "locale_info.h"

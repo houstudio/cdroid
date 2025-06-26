@@ -20,7 +20,6 @@
 #include <log.h>
 #endif
 #include "i18n_memory_adapter.h"
-#include "securec.h"
 #include "str_util.h"
 
 using namespace OHOS::I18N;

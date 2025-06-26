@@ -15,7 +15,6 @@
 
 #include "str_util.h"
 #include "i18n_memory_adapter.h"
-#include "securec.h"
 #include "types.h"
 
 namespace OHOS {
