@@ -8,6 +8,7 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
 endif()
 file(GLOB_RECURSE SRCS_WIDGETEX RELATIVE "${PROJECT_SOURCE_DIR}" "widgetEx/*")
+aux_source_directory(i18n SRCS_I18N)
 aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm  SRCS_CAIROMM)
 aux_source_directory(animation SRCS_ANIMATION)
@@ -18,6 +19,7 @@ add_subdirectory(image-decoders)
 aux_source_directory(image-decoders SRCS_IMAGEDECODERS)
 include_directories(
     ${PROJECT_SOURCE_DIR}/
+    ${PROJECT_SOURCE_DIR}/i18n
     ${PROJECT_SOURCE_DIR}/private
     ${PROJECT_SOURCE_DIR}/core
     ${PROJECT_SOURCE_DIR}/view
@@ -56,6 +58,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 set(SOURCES_GUI
+    ${SRCS_I18N}
     ${SRCS_CAIROMM}
     ${CDROID_SOURCES}
     ${SRCS_DRAWABLES}
