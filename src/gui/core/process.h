@@ -7,7 +7,6 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
-#include <condition_variable>
 #include <stdexcept>
 #include <unistd.h>
 #include <sys/types.h>
