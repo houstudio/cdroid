@@ -190,7 +190,7 @@ void BitmapDrawable::setAutoMirrored(bool mirrored){
     }
 }
 
-bool BitmapDrawable::isAutoMirrored(){
+bool BitmapDrawable::isAutoMirrored()const{
     return mBitmapState->mAutoMirrored;
 }
 

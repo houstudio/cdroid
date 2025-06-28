@@ -108,7 +108,7 @@ public:
 
     void setAutoMirrored(bool mirrored) override;
 
-    bool isAutoMirrored();
+    bool isAutoMirrored()const override;
 
     void jumpToCurrentState() override;
 

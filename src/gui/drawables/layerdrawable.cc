@@ -940,7 +940,7 @@ void LayerDrawable::setAutoMirrored(bool mirrored){
     }
 }
 
-bool LayerDrawable::isAutoMirrored(){
+bool LayerDrawable::isAutoMirrored()const{
     return mLayerState->mAutoMirrored;
 }
 

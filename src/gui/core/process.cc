@@ -1,5 +1,6 @@
 #include <core/process.h>
 #include <core/looper.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 Process::Process()
     : pid_(-1), state_(NotRunning), exitCode_(-1) {

@@ -126,7 +126,7 @@ public:
     virtual int getAlpha()const{return 0xFF;}
     virtual std::shared_ptr<ConstantState>getConstantState();
     virtual void setAutoMirrored(bool mirrored);
-    virtual bool isAutoMirrored();
+    virtual bool isAutoMirrored()const;
     virtual bool canApplyTheme(){return false;}
     virtual void jumpToCurrentState();
 

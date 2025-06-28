@@ -474,7 +474,7 @@ void VectorDrawable::setAutoMirrored(bool mirrored) {
     }
 }
 
-bool VectorDrawable::isAutoMirrored(){
+bool VectorDrawable::isAutoMirrored()const{
     return mVectorState->mAutoMirrored;
 }
 

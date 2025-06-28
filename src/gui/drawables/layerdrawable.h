@@ -128,7 +128,7 @@ public:
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
     void setAutoMirrored(bool mirrored)override;
-    bool isAutoMirrored()override;
+    bool isAutoMirrored()const override;
     void jumpToCurrentState()override;
 
     int addLayer(Drawable* dr); 
