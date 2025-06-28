@@ -30,9 +30,10 @@ ListPopupWindow::ListPopupWindow(Context*context,const AttributeSet&atts){
 }
 
 ListPopupWindow::~ListPopupWindow(){
-    //delete mHandler;
+    delete mHandler;
     delete mPopup;
-    delete mObserver; 
+    delete mObserver;
+    delete mDropDownListHighlight;
 }
 
 void ListPopupWindow::initPopupWindow(){
@@ -120,7 +121,10 @@ int ListPopupWindow::getSoftInputMode() {
 }
 
 void ListPopupWindow::setListSelector(Drawable* selector) {
-     mDropDownListHighlight = selector;
+    if(selector!=mDropDownListHighlight){
+        delete mDropDownListHighlight;
+        mDropDownListHighlight = selector;
+    }
 }
 
 Drawable* ListPopupWindow::getBackground() {

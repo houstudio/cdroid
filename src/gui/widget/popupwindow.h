@@ -27,9 +27,6 @@ private:
 private:
     static constexpr int DEFAULT_ANCHORED_GRAVITY = Gravity::TOP | Gravity::START;
     static constexpr int ANIMATION_STYLE_DEFAULT = -1;
-    int mTmpDrawingLocation[2];
-    int mTmpScreenLocation[2];
-    int mTmpAppLocation[2];
     Context* mContext;
     View* mParentRootView;
     bool mIsShowing;

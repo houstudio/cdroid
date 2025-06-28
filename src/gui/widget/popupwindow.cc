@@ -57,7 +57,10 @@ PopupWindow::PopupWindow(int width, int height):PopupWindow(nullptr,width,height
 }
 
 PopupWindow::~PopupWindow(){
-    LOGV("destroy PopupWindow %p",this);
+    LOGD("destroy PopupWindow %p",this);
+    delete mBackground;
+    delete mAboveAnchorBackgroundDrawable;
+    delete mBelowAnchorBackgroundDrawable;
 }
 
 void PopupWindow::init(){
@@ -756,7 +759,7 @@ int PopupWindow::getMaxAvailableHeight(View* anchor, int yOffset,bool ignoreBott
         displayFrame = visibleDisplayFrame;
     }
 
-    int anchorPos[2];// = mTmpDrawingLocation;
+    int anchorPos[2];
     anchor->getLocationOnScreen(anchorPos);
 
     int bottomEdge = displayFrame.bottom();
