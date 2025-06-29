@@ -89,7 +89,7 @@ public:
     static VectorDrawable* create(Context*,const std::string&resId);
     int getChangingConfigurations()const override;
     void setAutoMirrored(bool mirrored) override;
-    bool isAutoMirrored() override;
+    bool isAutoMirrored() const override;
     long getNativeTree();
     void setAntiAlias(bool aa);
     void inflate(XmlPullParser&,const AttributeSet&)override;

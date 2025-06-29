@@ -1,4 +1,5 @@
 #include <core/wifissid.h>
+#include <sstream>
 namespace cdroid{
 
 WifiSsid::WifiSsid() {

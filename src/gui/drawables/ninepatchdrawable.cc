@@ -167,7 +167,7 @@ bool NinePatchDrawable::needsMirroring() {
     return isAutoMirrored() && (getLayoutDirection() == LayoutDirection::RTL);
 }
 
-bool NinePatchDrawable::isAutoMirrored(){
+bool NinePatchDrawable::isAutoMirrored()const{
     return mNinePatchState->mAutoMirrored;
 }
 

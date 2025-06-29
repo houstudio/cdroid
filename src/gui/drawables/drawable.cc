@@ -120,7 +120,7 @@ std::shared_ptr<Drawable::ConstantState>Drawable::getConstantState() {
 void Drawable::setAutoMirrored(bool mirrored) {
 }
 
-bool Drawable::isAutoMirrored() {
+bool Drawable::isAutoMirrored() const{
     return false;
 }
 

@@ -82,7 +82,7 @@ public:
     void setTileModeY(int);
     void setTileModeXY(int,int);
     void setAutoMirrored(bool mirrored)override;
-    bool isAutoMirrored()override;
+    bool isAutoMirrored()const override;
     void setTintList(const ColorStateList*lst)override;
     void setTintMode(int mode)override;
     int getTintMode()const;

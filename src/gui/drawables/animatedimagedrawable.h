@@ -63,7 +63,7 @@ public:
     int getAlpha()const override;
     int getOpacity()override;
     void setAutoMirrored(bool)override;
-    bool isAutoMirrored()const;
+    bool isAutoMirrored()const override;
     bool onLayoutDirectionChanged(int layoutDirection)override;
     void draw(Canvas& canvas)override;
     bool isRunning()override;

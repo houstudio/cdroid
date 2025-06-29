@@ -57,7 +57,7 @@ public:
     void setTintList(const ColorStateList* tint)override;
     void setTintMode(int mode)override;
     void setAutoMirrored(bool mirrored)override;
-    bool isAutoMirrored()override;
+    bool isAutoMirrored()const override;
     void setFilterBitmap(bool filter)override;
     bool isFilterBitmap()const override;
     int getIntrinsicWidth() override;

@@ -576,7 +576,7 @@ void DrawableContainer::setAutoMirrored(bool mirrored){
     }
 }
 
-bool DrawableContainer::isAutoMirrored(){
+bool DrawableContainer::isAutoMirrored()const{
     return mDrawableContainerState->mAutoMirrored;
 }
 

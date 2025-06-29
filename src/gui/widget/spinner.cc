@@ -4,8 +4,8 @@
 #include <widget/forwardinglistener.h>
 #include <app/alertdialog.h>
 #include <app/dialoginterface.h>
-#include <cdtypes.h>
-#include <cdlog.h>
+#include <porting/cdtypes.h>
+#include <porting/cdlog.h>
 #define MAX_ITEMS_MEASURED  15
 namespace cdroid{
 

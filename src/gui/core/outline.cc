@@ -1,4 +1,5 @@
 #include <core/outline.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 
 Outline::Outline() {

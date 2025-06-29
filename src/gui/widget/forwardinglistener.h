@@ -38,6 +38,7 @@ protected:
     virtual ShowableListMenu getPopup()=0;
 public:
     ForwardingListener(View* src);
+    virtual ~ForwardingListener()=default;
     bool onTouch(View& v, MotionEvent& event);
     void onViewAttachedToWindow(View& v);
     void onViewDetachedFromWindow(View& v);

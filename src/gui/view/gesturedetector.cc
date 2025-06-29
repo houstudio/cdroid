@@ -1,6 +1,7 @@
 #include <core/handler.h>
 #include <view/viewconfiguration.h>
 #include <view/gesturedetector.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 
 #define TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__SINGLE_TAP 10000

@@ -488,7 +488,7 @@ void AdaptiveIconDrawable::setAutoMirrored(bool mirrored) {
     }
 }
 
-bool AdaptiveIconDrawable::isAutoMirrored() {
+bool AdaptiveIconDrawable::isAutoMirrored() const{
     return mLayerState->mAutoMirrored;
 }
 
