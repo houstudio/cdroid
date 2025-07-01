@@ -523,4 +523,33 @@ Uri* Uri::unmarshalling(Parcel& parcel)
     return new Uri(Str16ToStr8(parcel.ReadString16()));
 }
 #endif
+
+static int hexCharToInt(char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    } else if (c >= 'A' && c <= 'F') {
+        return c - 'A' + 10;
+    } else if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+    }
+    return 0;
+}
+
+std::string Uri::decode(const std::string&encoded){
+    std::ostringstream decoded;
+    for (size_t i = 0; i < encoded.length(); ++i) {
+        if (encoded[i] == '%' && i + 2 < encoded.length()) {
+            // 处理百分号编码的字符
+            int high = hexCharToInt(encoded[i + 1]);
+            int low = hexCharToInt(encoded[i + 2]);
+            decoded << static_cast<char>((high << 4) | low);
+            i += 2;
+        } else {
+            // 普通字符直接添加
+            decoded << encoded[i];
+        }
+    }
+    return decoded.str();
+}
+
 } // namespace cdroid

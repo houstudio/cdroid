@@ -160,7 +160,7 @@ public:
      * @return the uri object address.
      */
     //static Uri* Unmarshalling(Parcel& parcel);
-
+    static std::string decode(const std::string&);
 private:
     bool checkScheme();
     std::string parseScheme();

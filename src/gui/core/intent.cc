@@ -1,8 +1,10 @@
 #include <core/intent.h>
+#include <core/uri.h>
 #include <sstream>
 namespace cdroid{
 
 Intent::Intent() {
+    mData=nullptr;
 }
 
 Intent::Intent(const Intent& o):Intent(o,COPY_MODE_ALL){
@@ -13,13 +15,11 @@ Intent::Intent(const Intent& o, int copyMode) {
     mData = o.mData;
     mType = o.mType;
     mPackage = o.mPackage;
-    /*mComponent = o.mComponent;
+    //mComponent = o.mComponent;
 
-    if (o.mCategories != nullptr) {
-        mCategories = new ArraySet<>(o.mCategories);
-    }
+    mCategories = o.mCategories;
 
-    if (copyMode != COPY_MODE_FILTER) {
+    /*if (copyMode != COPY_MODE_FILTER) {
         mFlags = o.mFlags;
         mContentUserHint = o.mContentUserHint;
         mLaunchToken = o.mLaunchToken;
@@ -51,6 +51,7 @@ Intent* Intent::cloneFilter() {
 }
 
 Intent::Intent(const std::string& action) {
+    mData = nullptr;
     setAction(action);
 }
 
@@ -76,6 +77,9 @@ Intent* Intent::makeMainActivity(ComponentName mainActivity) {
     return intent;
 }*/
 
+Intent::~Intent(){
+    delete mData;
+}
 
 Intent* Intent::makeMainSelectorActivity(const std::string& selectorAction,const std::string& selectorCategory) {
     Intent* intent = new Intent(ACTION_MAIN);
@@ -101,11 +105,7 @@ Intent* Intent::parseUri(const std::string& uri,int flags) {
     if ((flags&(URI_INTENT_SCHEME|URI_ANDROID_APP_SCHEME)) != 0) {
         if (!uri.compare(0,7,"intent:") && !androidApp) {
             Intent* intent = new Intent(ACTION_VIEW);
-            /*try {
-                intent->setData(Uri.parse(uri));
-            } catch (std::exception& e) {
-                LOGE(e.message());
-            }*/
+            intent->setData(new Uri(uri));
             return intent;
         }
     }
@@ -114,7 +114,7 @@ Intent* Intent::parseUri(const std::string& uri,int flags) {
     // simple case
     if (i == std::string::npos) {
         if (!androidApp) {
-            return new Intent(ACTION_VIEW);//#, Uri::parse(uri));
+            return new Intent(ACTION_VIEW, new Uri(uri));
         }
 
     // old format Intent URI
@@ -147,7 +147,7 @@ Intent* Intent::parseUri(const std::string& uri,int flags) {
         int eq = uri.find('=', i);
         if (eq < 0) eq = i-1;
         int semi = uri.find(';', i);
-        std::string value = "";//eq < semi ? Uri::decode(uri.substr(eq + 1, semi)) : "";
+        std::string value = eq < semi ? Uri::decode(uri.substr(eq + 1, semi)) : "";
 
         // action
         if (uri.compare(i,7,"action=")==0) {
@@ -395,7 +395,7 @@ Intent* Intent::getIntentOld(const std::string& uri, int flags) {
                 try {
                     switch (type) {
                         case 'S':
-                            //intent->mExtras->putString(key, Uri.decode(value));
+                            intent->mExtras->putString(key, Uri::decode(value));
                             break;
                         case 'B':
                             intent->mExtras->putBoolean(key, value.size()&&(value[0]=='T'||value[0]=='t'));//Boolean.parseBoolean(value));
@@ -404,7 +404,7 @@ Intent* Intent::getIntentOld(const std::string& uri, int flags) {
                             intent->mExtras->putByte(key, static_cast<int8_t>(std::stoi(value)));//Byte.parseByte(value));
                             break;
                         case 'c':
-                            //intent->mExtras->putChar(key, Uri.decode(value).charAt(0));
+                            //intent->mExtras->putChar(key, Uri::decode(value).at(0));
                             break;
                         case 'd':
                             intent->mExtras->putDouble(key, std::stod(value));//Double.parseDouble(value));
@@ -436,9 +436,9 @@ Intent* Intent::getIntentOld(const std::string& uri, int flags) {
         }
 
         if (isIntentFragment) {
-            //intent->mData = Uri::parse(uri.substr(0, intentFragmentStart));
+            intent->mData = new Uri(uri.substr(0, intentFragmentStart));
         } else {
-            //intent->mData = Uri::parse(uri);
+            intent->mData = new Uri(uri);
         }
 
         if (intent->mAction.empty()) {
@@ -907,11 +907,11 @@ Uri* Intent::getData() const{
 }
 
 std::string Intent::getDataString() const{
-    return "";//mData != nullptr ? mData->toString() : "";
+    return mData != nullptr ? mData->toString() : "";
 }
 
 std::string Intent::getScheme() const{
-    return "";//mData != nullptr ? mData->getScheme() : "";
+    return mData != nullptr ? mData->getScheme() : "";
 }
 
 std::string Intent::getType() const{
@@ -927,7 +927,7 @@ std::string Intent::resolveType(Context* context) {
         return mType;
     }
     if (mData != nullptr) {
-        if ("content".equals(mData.getScheme())) {
+        if ("content".equals(mData->getScheme())) {
             return resolver.getType(mData);
         }
     }
