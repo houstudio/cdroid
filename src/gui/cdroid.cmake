@@ -24,6 +24,7 @@ list(APPEND CDROID_SOURCES
     core/inputmethodmanager.cc
     core/insets.cc
     core/intent.cc
+    core/uri.cc
     core/iostreams.cc
     core/keyboard.cc
     core/keycharactermap.cc
