@@ -38,8 +38,7 @@ namespace {
     const size_t POS_INC_AGAIN = 3;
 }; // namespace
 
-Uri::Uri(const std::string& uriString)
-{
+Uri::Uri(const std::string& uriString){
     cachedSsi_ = NOT_FOUND;
     cachedFsi_ = NOT_FOUND;
     port_ = NOT_CALCULATED;
@@ -67,8 +66,7 @@ Uri::Uri(const std::string& uriString)
 Uri::~Uri()
 {}
 
-bool Uri::checkScheme()
-{
+bool Uri::checkScheme(){
     scheme_ = parseScheme();
     if (scheme_.empty()) {
         return true;
@@ -85,8 +83,7 @@ bool Uri::checkScheme()
     return true;
 }
 
-std::string Uri::getScheme()
-{
+std::string Uri::getScheme(){
     if (uriString_.empty()) {
         return EMPTY;
     }
@@ -97,14 +94,12 @@ std::string Uri::getScheme()
     return scheme_;
 }
 
-std::string Uri::parseScheme()
-{
+std::string Uri::parseScheme(){
     size_t ssi = findSchemeSeparator();
     return (ssi == NOT_FOUND) ? EMPTY : uriString_.substr(0, ssi);
 }
 
-std::string Uri::getSchemeSpecificPart()
-{
+std::string Uri::getSchemeSpecificPart(){
     if (uriString_.empty()) {
         return EMPTY;
     }
@@ -112,8 +107,7 @@ std::string Uri::getSchemeSpecificPart()
     return (ssp_ == NOT_CACHED) ? (ssp_ = parseSsp()) : ssp_;
 }
 
-std::string Uri::parseSsp()
-{
+std::string Uri::parseSsp(){
     size_t ssi = findSchemeSeparator();
     size_t fsi = findFragmentSeparator();
 
@@ -129,8 +123,7 @@ std::string Uri::parseSsp()
     return ssp;
 }
 
-std::string Uri::getAuthority()
-{
+std::string Uri::getAuthority(){
     if (uriString_.empty()) {
         return EMPTY;
     }
@@ -141,8 +134,7 @@ std::string Uri::getAuthority()
     return authority_;
 }
 
-std::string Uri::parseAuthority()
-{
+std::string Uri::parseAuthority(){
     size_t ssi = findSchemeSeparator();
     if (ssi == NOT_FOUND) {
         return EMPTY;
@@ -172,8 +164,7 @@ std::string Uri::parseAuthority()
     }
 }
 
-std::string Uri::getUserInfo()
-{
+std::string Uri::getUserInfo(){
     if (uriString_.empty()) {
         return EMPTY;
     }
@@ -184,8 +175,7 @@ std::string Uri::getUserInfo()
     return userInfo_;
 }
 
-std::string Uri::parseUserInfo()
-{
+std::string Uri::parseUserInfo(){
     std::string authority = getAuthority();
     if (authority.empty()) {
         return EMPTY;
@@ -195,8 +185,7 @@ std::string Uri::parseUserInfo()
     return (end == NOT_FOUND) ? EMPTY : authority.substr(0, end);
 }
 
-std::string Uri::getHost()
-{
+std::string Uri::getHost(){
     if (uriString_.empty()) {
         return EMPTY;
     }
@@ -207,8 +196,7 @@ std::string Uri::getHost()
     return host_;
 }
 
-std::string Uri::parseHost()
-{
+std::string Uri::parseHost(){
     std::string authority = getAuthority();
     if (authority.empty()) {
         return EMPTY;
@@ -228,8 +216,7 @@ std::string Uri::parseHost()
     return host;
 }
 
-int Uri::getPort()
-{
+int Uri::getPort(){
     if (uriString_.empty()) {
         return PORT_NONE;
     }
@@ -240,8 +227,7 @@ int Uri::getPort()
     return port_;
 }
 
-static bool StrToInt(const std::string& str, int& value)
-{
+static bool StrToInt(const std::string& str, int& value){
     if (str.empty() || (!isdigit(str.front()) && (str.front() != '-'))) {
         return false;
     }
@@ -258,8 +244,7 @@ static bool StrToInt(const std::string& str, int& value)
     return true;
 }
 
-int Uri::parsePort()
-{
+int Uri::parsePort(){
     std::string authority = getAuthority();
     if (authority.empty()) {
         return PORT_NONE;
@@ -280,8 +265,7 @@ int Uri::parsePort()
     return StrToInt(portString, value) ? value : PORT_NONE;
 }
 
-std::string Uri::getQuery()
-{
+std::string Uri::getQuery(){
     if (uriString_.empty()) {
         return EMPTY;
     }
@@ -292,8 +276,7 @@ std::string Uri::getQuery()
     return query_;
 }
 
-std::string Uri::parseQuery()
-{
+std::string Uri::parseQuery(){
     size_t ssi = findSchemeSeparator();
     if (ssi == NOT_FOUND) {
         ssi = 0;
@@ -317,8 +300,7 @@ std::string Uri::parseQuery()
     return uriString_.substr(start, fsi - start);
 }
 
-std::string Uri::getPath()
-{
+std::string Uri::getPath(){
     if (uriString_.empty()) {
         return EMPTY;
     }
@@ -329,8 +311,7 @@ std::string Uri::getPath()
     return path_;
 }
 
-void Uri::getPathSegments(std::vector<std::string>& segments)
-{
+void Uri::getPathSegments(std::vector<std::string>& segments){
     if (uriString_.empty()) {
         return;
     }
@@ -352,8 +333,7 @@ void Uri::getPathSegments(std::vector<std::string>& segments)
     }
 }
 
-std::string Uri::parsePath()
-{
+std::string Uri::parsePath(){
     size_t ssi = findSchemeSeparator();
     // If the URI is absolute.
     if (ssi != NOT_FOUND) {
@@ -375,8 +355,7 @@ std::string Uri::parsePath()
     return parsePath(ssi);
 }
 
-std::string Uri::parsePath(size_t ssi)
-{
+std::string Uri::parsePath(size_t ssi){
     size_t length = uriString_.length();
 
     // Find start of path.
@@ -414,8 +393,7 @@ std::string Uri::parsePath(size_t ssi)
     return uriString_.substr(pathStart, pathEnd - pathStart);
 }
 
-std::string Uri::getFragment()
-{
+std::string Uri::getFragment(){
     if (uriString_.empty()) {
         return EMPTY;
     }
@@ -426,30 +404,26 @@ std::string Uri::getFragment()
     return fragment_;
 }
 
-std::string Uri::parseFragment()
-{
+std::string Uri::parseFragment(){
     size_t fsi = findFragmentSeparator();
     return (fsi == NOT_FOUND) ? EMPTY : uriString_.substr(fsi + 1);
 }
 
-size_t Uri::findSchemeSeparator()
-{
+size_t Uri::findSchemeSeparator(){
     if (cachedSsi_ == NOT_FOUND) {
         cachedSsi_ = uriString_.find_first_of(SCHEME_SEPARATOR);
     }
     return cachedSsi_;
 }
 
-size_t Uri::findFragmentSeparator()
-{
+size_t Uri::findFragmentSeparator(){
     if (cachedFsi_ == NOT_FOUND) {
         cachedFsi_ = uriString_.find_first_of(SCHEME_FRAGMENT, findSchemeSeparator());
     }
     return cachedFsi_;
 }
 
-bool Uri::isHierarchical()
-{
+bool Uri::isHierarchical(){
     if (uriString_.empty()) {
         return false;
     }
@@ -469,8 +443,7 @@ bool Uri::isHierarchical()
     return (uriString_.at(ssi + 1) == LEFT_SEPARATOR);
 }
 
-bool Uri::isAbsolute()
-{
+bool Uri::isAbsolute(){
     if (uriString_.empty()) {
         return false;
     }
@@ -478,8 +451,7 @@ bool Uri::isAbsolute()
     return !isRelative();
 }
 
-bool Uri::isRelative()
-{
+bool Uri::isRelative(){
     if (uriString_.empty()) {
         return false;
     }
@@ -488,28 +460,24 @@ bool Uri::isRelative()
     return findSchemeSeparator() == NOT_FOUND;
 }
 
-bool Uri::equals(const Uri& other) const
-{
+bool Uri::equals(const Uri& other) const{
     return uriString_ == other.toString();
 }
 
-int Uri::compareTo(const Uri& other) const
-{
+int Uri::compareTo(const Uri& other) const{
     return uriString_.compare(other.toString());
 }
 
-std::string Uri::toString() const
-{
+std::string Uri::toString() const{
     return uriString_;
 }
 
-bool Uri::operator==(const Uri& other) const
-{
+bool Uri::operator==(const Uri& other) const{
     return uriString_ == other.toString();
 }
+
 #if 0
-bool Uri::marshalling(Parcel& parcel) const
-{
+bool Uri::marshalling(Parcel& parcel) const{
     if (isAsciiString(uriString_)) {
         return parcel.WriteString16(Str8ToStr16(uriString_));
     }
@@ -518,8 +486,7 @@ bool Uri::marshalling(Parcel& parcel) const
     return false;
 }
 
-Uri* Uri::unmarshalling(Parcel& parcel)
-{
+Uri* Uri::unmarshalling(Parcel& parcel){
     return new Uri(Str16ToStr8(parcel.ReadString16()));
 }
 #endif
@@ -539,13 +506,11 @@ std::string Uri::decode(const std::string&encoded){
     std::ostringstream decoded;
     for (size_t i = 0; i < encoded.length(); ++i) {
         if (encoded[i] == '%' && i + 2 < encoded.length()) {
-            // 处理百分号编码的字符
             int high = hexCharToInt(encoded[i + 1]);
             int low = hexCharToInt(encoded[i + 2]);
             decoded << static_cast<char>((high << 4) | low);
             i += 2;
         } else {
-            // 普通字符直接添加
             decoded << encoded[i];
         }
     }

@@ -279,13 +279,9 @@ Intent* Intent::parseUri(const std::string& uri,int flags) {
             }
         }
 
-        /*if (data.length() > 0) {
-            try {
-                intent->mData = Uri::parse(data);
-            } catch (std::exception& e) {
-                LOGE("%s",e.what());//throw new URISyntaxException(uri, e.getMessage());
-            }
-        }*/
+        if (data.length() > 0) {
+            intent->mData = new Uri(data);
+        }
     }
 
     return intent;
@@ -447,7 +443,7 @@ Intent* Intent::getIntentOld(const std::string& uri, int flags) {
         }
 
     } else {
-        intent = new Intent(ACTION_VIEW);//, Uri.parse(uri));
+        intent = new Intent(ACTION_VIEW, new Uri(uri));
     }
 
     return intent;
@@ -1593,7 +1589,7 @@ int Intent::fillIn(const Intent& other, int flags) {
     if (other.mCategories.size()
             && (mCategories.empty() || (flags&FILL_IN_CATEGORIES) != 0)) {
         if (other.mCategories.size()) {
-            mCategories=other.mCategories;// = new ArraySet<String>(other.mCategories);
+            mCategories=other.mCategories;
         }
         changes |= FILL_IN_CATEGORIES;
     }
@@ -1734,7 +1730,7 @@ std::string Intent::toString() {
     std::ostringstream b;
 
     b<<"Intent { ";
-    //toShortString(b, true, true, true, false);
+    toShortString(b, true, true, true, false);
     b<<" }";
 
     return b.str();
@@ -1744,7 +1740,7 @@ std::string Intent::toInsecureString() {
     std::ostringstream b;
 
     b<<"Intent { ";
-    //toShortString(b, false, true, true, false);
+    toShortString(b, false, true, true, false);
     b<<" }";
 
     return b.str();
@@ -1754,7 +1750,7 @@ std::string Intent::toInsecureStringWithClip() {
     std::ostringstream b;
 
     b<<"Intent { ";
-    //toShortString(b, false, true, true, true);
+    toShortString(b, false, true, true, true);
     b<<" }";
 
     return b.str();
@@ -1778,9 +1774,9 @@ void Intent::toShortString(std::ostringstream& b, bool secure, bool comp, bool e
         }
         first = false;
         b<<"cat=[";
-        for (int i=0; i<mCategories.size(); i++) {
-            if (i > 0) b<<',';
-            //b<<mCategories.at(i);
+        for (auto it=mCategories.begin();it!=mCategories.end();it++){
+            if (it !=mCategories.begin()) b<<',';
+            b<<*it;
         }
         b<<"]";
     }
@@ -1943,7 +1939,7 @@ std::string Intent::toUri(int flags) {
         uri<<mPackage;
         std::string scheme;
         if (mData != nullptr) {
-            //scheme = mData->getScheme();
+            scheme = mData->getScheme();
             if (!scheme.empty()) {
                 uri<<'/'<<scheme;
                 std::string authority;// = mData->getEncodedAuthority();
@@ -1969,7 +1965,7 @@ std::string Intent::toUri(int flags) {
     }
     std::string scheme;
     if (mData != nullptr) {
-        std::string data;// = mData->toString();
+        std::string data = mData->toString();
         if ((flags&URI_INTENT_SCHEME) != 0) {
             size_t N = data.length();
             for (size_t i=0; i<N; i++) {
