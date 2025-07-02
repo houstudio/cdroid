@@ -161,6 +161,8 @@ public:
      */
     //static Uri* Unmarshalling(Parcel& parcel);
     static std::string decode(const std::string&);
+    static std::string encode(const std::string& s);
+    static std::string encode(const std::string& s,const std::string&allow);
 private:
     bool checkScheme();
     std::string parseScheme();
