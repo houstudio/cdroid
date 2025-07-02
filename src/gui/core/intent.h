@@ -162,14 +162,11 @@ protected:
     Intent(Parcel& in);
 public:
     Intent();
-
     Intent(const Intent& o);
-
     Intent* cloneFilter();
-
     Intent(const std::string& action);
-
     Intent(const std::string& action, Uri* uri);
+    ~Intent();
 
     //Intent(Context* packageContext, Class<?> cls);
     //Intent(const std::string& action, Uri& uri,Context* packageContext, Class<?> cls);
