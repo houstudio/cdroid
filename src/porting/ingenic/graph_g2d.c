@@ -194,15 +194,15 @@ int32_t GFXCreateSurface(int dispid,HANDLE*surface,uint32_t width,uint32_t heigh
         size_t mem_len=((dev->fix.smem_start) -((dev->fix.smem_start) & ~(getpagesize() - 1)));
         buffer_size=surf->height*dev->fix.line_length;
         setfbinfo(surf);
-	surf->kbuffer=dev->fix.smem_start;
+        surf->kbuffer=dev->fix.smem_start;
         surf->buffer=(char*)mmap( NULL,buffer_size,PROT_READ | PROT_WRITE, MAP_SHARED,dev->fb, 0 );
         surf->pitch=dev->fix.line_length;
-	surf->frame=ingenic_2d_alloc_frame_by_user(g2d,width,height,INGENIC_2D_ARGB8888,surf->kbuffer,surf->buffer,buffer_size);
+        surf->frame=ingenic_2d_alloc_frame_by_user(g2d,width,height,INGENIC_2D_ARGB8888,surf->kbuffer,surf->buffer,buffer_size);
     } else {
         surf->buffer=(char*)malloc(buffer_size);
-	surf->frame = ingenic_2d_alloc_frame(g2d,width,height,INGENIC_2D_ARGB8888);
-	surf->buffer= surf->frame->addr[0];
-	surf->kbuffer=surf->frame->phyaddr[0];
+        surf->frame = ingenic_2d_alloc_frame(g2d,width,height,INGENIC_2D_ARGB8888);
+        surf->buffer= surf->frame->addr[0];
+        surf->kbuffer=surf->frame->phyaddr[0];
     }
     surf->ishw=hwsurface;
     LOGV("surface=%x buf=%p/%p size=%dx%d hw=%d",surf,surf->kbuffer,surf->buffer,width,height,hwsurface);
@@ -271,8 +271,8 @@ int32_t GFXDestroySurface(HANDLE surface) {
     if(surf->ishw)
         munmap(surf->buffer,surf->pitch*surf->height);
     else {
-	if(surf->buffer)free(surf->buffer);
-	if(surf->frame)ingenic_2d_free_frame(g2d,surf->frame);
+        if(surf->buffer)free(surf->buffer);
+        if(surf->frame)ingenic_2d_free_frame(g2d,surf->frame);
     }
     free(surf);
     return 0;
