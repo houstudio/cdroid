@@ -113,6 +113,7 @@ RecyclerView::~RecyclerView(){
         mVelocityTracker->recycle();
     delete mChildHelper;
     delete mState;
+    delete mLayout;
     delete mAdapterHelper;
     delete mViewInfoStore;
     delete mViewFlinger;
@@ -617,7 +618,7 @@ void RecyclerView::setLayoutManager(LayoutManager* layout) {
             mLayout->dispatchDetachedFromWindow(*this, *mRecycler);
         }
         mLayout->setRecyclerView(nullptr);
-        mLayout = nullptr;
+        delete mLayout;
     } else {
         mRecycler->clear();
     }
