@@ -27,7 +27,7 @@ protected:
     float calculateSpeedPerPixel(const DisplayMetrics& displayMetrics) const;
 public:
     LinearSmoothScroller(Context* context);
-    ~LinearSmoothScroller();
+    ~LinearSmoothScroller()override;
     void onStart()override;
     void onTargetFound(View* targetView, RecyclerView::State& state, Action& action)override;
     void onSeekTargetStep(int dx, int dy, RecyclerView::State& state, Action& action)override;
