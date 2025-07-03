@@ -4526,7 +4526,15 @@ const Rect View::getClientRect()const{
 }
 
 void View::getHitRect(Rect& outRect){
-    outRect.set(mLeft,mTop,getWidth(),getHeight());
+    if(hasIdentityMatrix()||mAttachInfo==nullptr){
+        outRect.set(mLeft,mTop,getWidth(),getHeight());
+    }else{
+        RectF tmpRect;
+        tmpRect.set(0,0,getWidth(),getHeight());
+        getMatrix().transform_rectangle((Rectangle&)tmpRect);
+        outRect.set(int(tmpRect.left+mLeft),int(tmpRect.top+mTop),
+                int(tmpRect.width),int(tmpRect.height));
+    }
 }
 
 bool View::pointInView(int localX,int localY, int slop) {
