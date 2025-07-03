@@ -2993,7 +2993,8 @@ void View::onDrawForeground(Canvas& canvas){
                 selfBounds.set(0, 0, getWidth(), getHeight());
             } else {
                 selfBounds.set(getPaddingLeft(), getPaddingTop(),
-                    getWidth() - getPaddingRight(), getHeight() - getPaddingBottom());
+                    getWidth() - getPaddingRight() - getPaddingLeft(),
+                    getHeight() - getPaddingBottom() - getPaddingTop());
             }
 
             const int ld = getLayoutDirection();
