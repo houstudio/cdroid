@@ -371,7 +371,7 @@ void AdaptiveIconDrawable::invalidateDrawable(Drawable& who) {
     }
 }
 
-void AdaptiveIconDrawable::scheduleDrawable(Drawable& who, Runnable& what, long when){
+void AdaptiveIconDrawable::scheduleDrawable(Drawable& who, Runnable& what, int64_t when){
     scheduleSelf(what, when);
 }
 

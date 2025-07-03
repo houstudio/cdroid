@@ -517,4 +517,82 @@ std::string Uri::decode(const std::string&encoded){
     return decoded.str();
 }
 
+static bool isAllowed(char c,const std::string& allow) {
+    return (c >= 'A' && c <= 'Z')
+            || (c >= 'a' && c <= 'z')
+            || (c >= '0' && c <= '9')
+            || std::string("_-!.~'()*").find(c) != std::string::npos
+            || (allow.size() && allow.find(c) != std::string::npos);
+}
+
+std::string Uri::encode(const std::string& s){
+    return encode(s,"");
+}
+
+std::string Uri::encode(const std::string& s,const std::string&allow) {
+    // Lazily-initialized buffers.
+    std::ostringstream encoded;
+
+    size_t oldLength = s.length();
+
+    // This loop alternates between copying over allowed characters and
+    // encoding in chunks. This results in fewer method calls and
+    // allocations than encoding one character at a time.
+    int current = 0;
+    while (current < oldLength) {
+        // Start in "copying" mode where we copy over allowed chars.
+
+        // Find the next character which needs to be encoded.
+        int nextToEncode = current;
+        while (nextToEncode < oldLength
+                && isAllowed(s.at(nextToEncode), allow)) {
+            nextToEncode++;
+        }
+
+        // If there's nothing more to encode...
+        if (nextToEncode == oldLength) {
+            if (current == 0) {
+                // We didn't need to encode anything!
+                return s;
+            } else {
+                // Presumably, we've already done some encoding.
+                encoded<<s.substr(current,oldLength);//append(s, current, oldLength);
+                return encoded.str();
+            }
+        }
+
+        //if (encoded == null) encoded = new StringBuilder();
+
+        if (nextToEncode > current) {
+            // Append allowed characters leading up to this point.
+            encoded<<s.substr(current,nextToEncode);//append(s, current, nextToEncode);
+        } else {
+            // assert nextToEncode == current
+        }
+
+        // Switch to "encoding" mode.
+
+        // Find the next allowed character.
+        current = nextToEncode;
+        int nextAllowed = current + 1;
+        while (nextAllowed < oldLength
+                && !isAllowed(s.at(nextAllowed), allow)) {
+            nextAllowed++;
+        }
+        static const char*HEX_DIGITS = "0123456789ABCDEF";
+        // Convert the substring to bytes and encode the bytes as
+        // '%'-escaped octets.
+        
+        for (int i = current,j=0; j<nextAllowed; i++,j++) {
+            encoded<<'%';
+            encoded<<HEX_DIGITS[(s[i] & 0xf0) >> 4];
+            encoded<<HEX_DIGITS[s[i] & 0xf];
+        }
+
+        current = nextAllowed;
+    }
+
+    // Encoded could still be null at this point if s is empty.
+    return encoded.str().empty() ? s : encoded.str();
+}
 } // namespace cdroid
