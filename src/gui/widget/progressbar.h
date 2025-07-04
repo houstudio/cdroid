@@ -58,7 +58,7 @@ protected:
     int mMaxHeight;
     int mProgress;
     int mSecondaryProgress;
-    int  indeterminatePos;
+    int indeterminatePos;
     int mSampleWidth;
     bool mIndeterminate;
     bool mMirrorForRtl;
