@@ -52,8 +52,6 @@ public:
     }
 };
 
-//std::unique_ptr<Pools::SimplePool<RefreshData>>RefreshData::sPool=std::make_unique<Pools::SimplePool<RefreshData>>((int)RefreshData::POOL_MAX);
-
 DECLARE_WIDGET(ProgressBar)
 
 ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
