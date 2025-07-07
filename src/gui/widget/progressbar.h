@@ -1,6 +1,7 @@
 #ifndef __PROGRESS_BAR_H__
 #define __PROGRESS_BAR_H__
 #include <view/view.h>
+#include <core/sparsearray.h>
 #include <animation/objectanimator.h>
 #include <animation/alphaanimation.h>
 
@@ -22,7 +23,7 @@ private:
     bool mHasAnimation;
     bool mInDrawing;
     bool mRefreshIsPosted;
-    std::vector<class RefreshData*>mRefreshData;
+    SparseArray<class RefreshData*>mRefreshData;
     Runnable mRefreshProgressRunnable;
     Runnable mAccessibilityEventSender;
     Animator::AnimatorListener mAnimtorListener;
