@@ -47,7 +47,7 @@ GridLayout::LayoutParams::LayoutParams(const MarginLayoutParams& params)
 GridLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& attrs)
     :MarginLayoutParams(context,attrs){
 
-    const int gravity = attrs.getInt("layout_gravity", Gravity::NO_GRAVITY);
+    const int gravity = attrs.getGravity("layout_gravity", Gravity::NO_GRAVITY);
  
     const int column = attrs.getInt("layout_column", DEFAULT_COLUMN);
     const int colSpan = attrs.getInt("layout_columnSpan", DEFAULT_SPAN_SIZE);
