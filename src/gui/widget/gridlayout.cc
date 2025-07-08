@@ -1213,7 +1213,7 @@ void GridLayout::Axis::logError(const std::string& axisName, std::vector<Arc>&ar
     std::vector<Arc> culprits; 
     std::vector<Arc> removed;
     for (int c = 0; c < arcs.size(); c++) {
-        Arc arc = arcs[c];
+        Arc& arc = arcs[c];
         if (culprits0[c]) {
             culprits.push_back(arc);
         }
@@ -1251,7 +1251,7 @@ bool GridLayout::Axis::solve(std::vector<int>&a){
 bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,bool modifyOnError){
     std::string axisName = horizontal ? "horizontal" : "vertical";
     int N = getCount() + 1; // The number of vertices is the number of columns/rows + 1.
-    std::vector<bool>* originalCulprits = nullptr;
+    std::shared_ptr<std::vector<bool>> originalCulprits = nullptr;
 
     for (int p = 0; p < arcs.size(); p++) {
         init(locations);
@@ -1266,23 +1266,15 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
                 if (originalCulprits != nullptr) {
                     logError(axisName, arcs, *originalCulprits);
                 }
-                if(originalCulprits != nullptr){
-                    delete originalCulprits;
-                }
                 return true;
             }
         }
 
         if (!modifyOnError){
-            if(originalCulprits != nullptr){
-                delete originalCulprits;
-            }
             return false; 
         }// cannot solve with these constraints
 
-        std::vector<bool>* culprits = new std::vector<bool>;
-        culprits->resize(arcs.size());
-        for(int i=0;i<arcs.size();i++)culprits->push_back(false);
+        std::shared_ptr<std::vector<bool>> culprits = std::make_shared<std::vector<bool>>(arcs.size(),false);
         for (int i = 0; i < N; i++) {
             for (int j = 0, length = arcs.size(); j < length; j++) {
                 culprits->at(j) =culprits->at(j)| relax(locations, arcs[j]);
@@ -1304,11 +1296,7 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
                 break;
             }
         }
-        if (p != 0 ){
-            delete culprits;
-        }
     }
-    delete originalCulprits;
     return true;
 }
 
