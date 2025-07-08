@@ -1080,7 +1080,7 @@ void GridLayout::Axis::computeGroupBounds(){
     }
 }
 
-int  GridLayout::Axis::size(std::vector<int>&locations){
+int  GridLayout::Axis::size(const std::vector<int>&locations){
     return locations[getCount()];
 }
 
@@ -1240,6 +1240,10 @@ bool GridLayout::Axis::relax(std::vector<int>&locations, GridLayout::Arc& entry)
     return false;
 }
 
+void GridLayout::Axis::init(std::vector<int>& locations) {
+    std::fill(locations.begin(),locations.end(), 0);
+}
+
 bool GridLayout::Axis::solve(std::vector<int>&a){
     return solve(getArcs(),a);
 }
@@ -1250,7 +1254,7 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
     std::vector<bool>* originalCulprits = nullptr;
 
     for (int p = 0; p < arcs.size(); p++) {
-        for(int k=0;k<locations.size();k++)locations[k]=0;//init(locations);
+        init(locations);
 
         // We take one extra pass over traditional Bellman-Ford (and omit their final step)
         for (int i = 0; i < N; i++) {
@@ -1275,8 +1279,6 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
             }
             return false; 
         }// cannot solve with these constraints
-
-        
 
         std::vector<bool>* culprits = new std::vector<bool>;
         culprits->resize(arcs.size());

@@ -179,6 +179,7 @@ public:
         bool hasWeights();
         void logError(const std::string& axisName, std::vector<Arc>&arcs, std::vector<bool>& culprits0);
         bool relax(std::vector<int>&locations, Arc& entry);
+        void init(std::vector<int>& locations);
         PackedMap<Interval,MutableInt*>createLinks(bool min);
         void computeLinks(PackedMap<Interval,MutableInt*>&links,bool min);
         PackedMap<Interval,MutableInt*>& getForwardLinks();
@@ -188,7 +189,7 @@ public:
         void shareOutDelta(int totalDelta, float totalWeight);
         void solveAndDistributeSpace(std::vector<int>&a);
         void computeLocations(std::vector<int>&a);
-        int  size(std::vector<int>&);
+        int  size(const std::vector<int>&);
         void setParentConstraints(int min,int max);
         int  getMeasure(int min, int max);
         PackedMap<Spec,Bounds>createGroupBounds();

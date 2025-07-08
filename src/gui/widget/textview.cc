@@ -1470,9 +1470,9 @@ int TextView::getBaseline(){
 int TextView::getBaselineOffset(){
     int voffset = 0;
     if((mGravity&Gravity::VERTICAL_GRAVITY_MASK)!=Gravity::TOP)
-	voffset = getVerticalOffset(true);
+        voffset = getVerticalOffset(true);
     if(isLayoutModeOptical((View*)mParent))
-	voffset -= getOpticalInsets().top;
+        voffset -= getOpticalInsets().top;
     return getExtendedPaddingTop()+voffset;
 }
 
