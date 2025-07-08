@@ -38,31 +38,19 @@ public:
 };
 
 class RefreshData{
-private:
-    static constexpr int POOL_MAX = 24;
-    static std::unique_ptr<Pools::SimplePool<RefreshData>>sPool;
 public:
-    int id;
     int progress;
+    bool changed;
     bool fromUser;
     bool animate;
-    static RefreshData*obtain(int id, int progress, bool fromUser, bool animate){
-        RefreshData* rd = sPool->acquire();
-        if (rd == nullptr) {
-            rd = new RefreshData();
-        }
-        rd->id = id;
-        rd->progress = progress;
-        rd->fromUser = fromUser;
-        rd->animate = animate;
-        return rd;
-    }
-    void recycle(){
-        sPool->release(this);
+    RefreshData(){}
+    RefreshData(int progress, bool fromUser, bool animate){
+        this->changed = true;
+        this->progress= progress;
+        this->fromUser= fromUser;
+        this->animate = animate;
     }
 };
-
-std::unique_ptr<Pools::SimplePool<RefreshData>>RefreshData::sPool=std::make_unique<Pools::SimplePool<RefreshData>>((int)RefreshData::POOL_MAX);
 
 DECLARE_WIDGET(ProgressBar)
 
@@ -171,7 +159,12 @@ ProgressBar::ProgressBar(int width, int height):View(width,height){
 ProgressBar::~ProgressBar(){
     if(mProgressDrawable)mProgressDrawable->setCallback(nullptr);
     if(mIndeterminateDrawable)mIndeterminateDrawable->setCallback(nullptr);
-    for(auto rd:mRefreshData)rd->recycle();
+    //for(auto rd:mRefreshData)rd->recycle();
+    for(int i=0;i<mRefreshData.size();i++){
+        const int id = mRefreshData.keyAt(i);
+         auto rd = mRefreshData.get(id);
+         delete rd;
+    }
     delete mProgressDrawable;
     delete mIndeterminateDrawable;
     delete mLastProgressAnimator;
@@ -401,10 +394,11 @@ void ProgressBar::onAttachedToWindow(){
     if (mIndeterminate){
         startAnimation();
     }
-    for (auto rd:mRefreshData) {
-        doRefreshProgress(rd->id, rd->progress, rd->fromUser, true, rd->animate);
+    for(int i=0;i< mRefreshData.size();i++){
+        const int id =  mRefreshData.keyAt(i);
+        auto rd= mRefreshData.get(id);
+        doRefreshProgress(id, rd->progress, rd->fromUser, true, rd->animate);
     }
-    mRefreshData.clear();
     mAttached = true;
 }
 
@@ -419,8 +413,6 @@ void ProgressBar::onDetachedFromWindow(){
     if(mAccessibilityEventSender){
         removeCallbacks(mAccessibilityEventSender);
     }
-    for(auto rd:mRefreshData)rd->recycle();
-    mRefreshData.clear();
     View::onDetachedFromWindow();
     if(mCurrentDrawable)unscheduleDrawable(*mCurrentDrawable);
     if(mProgressDrawable)unscheduleDrawable(*mProgressDrawable);
@@ -509,16 +501,23 @@ void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool anima
     if(mRefreshProgressRunnable==nullptr){
         mRefreshProgressRunnable = [this](){
             for(size_t i=0;i<mRefreshData.size();i++){
-                auto rd= mRefreshData.at(i);
-                doRefreshProgress(rd->id, rd->progress, rd->fromUser, true, rd->animate);
-                rd->recycle();
+                const int id =  mRefreshData.keyAt(i);
+                auto rd= mRefreshData.get(id);
+                doRefreshProgress(id, rd->progress, rd->fromUser, true, rd->animate);
+                rd->changed = false;
             }
-            mRefreshData.clear();
             mRefreshIsPosted = false;
         };
     }
-    RefreshData* rd = RefreshData::obtain(id, progress, fromUser, animate);
-    mRefreshData.push_back(rd);
+    RefreshData* rd=mRefreshData.get(id,nullptr);
+    if(rd==nullptr){
+        rd= new RefreshData;
+        mRefreshData.put(id,rd);
+    }
+    rd->changed = (rd->progress!=progress);
+    rd->progress= progress;
+    rd->fromUser= fromUser;
+    rd->animate = animate;
     if(mAttached && (!mRefreshIsPosted)){
         post(mRefreshProgressRunnable);
         mRefreshIsPosted = true;
