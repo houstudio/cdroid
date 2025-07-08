@@ -1464,6 +1464,7 @@ int TextView::getLineBounds(int line, Rect&bounds) {
 int TextView::getBaseline(){
     if(mLayout == nullptr)
         return View::getBaseline();
+    mLayout->relayout(false);
     return getBaselineOffset() + mLayout->getLineBaseline(0);
 }
 

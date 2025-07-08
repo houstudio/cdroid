@@ -957,7 +957,7 @@ public:
         if (view->getVisibility() == View::GONE) {
             return 0;
         }
-        int baseline = view->getBaseline();
+        const int baseline = view->getBaseline();
         return baseline == -1 ? GridLayout::UNDEFINED : baseline;
     }
     GridLayout::Bounds*getBounds()override{
