@@ -51,15 +51,15 @@ public:
     };
     class Alignment{
     public:
-        virtual int getGravityOffset(View*view,int dellDelta)=0;
-        virtual int getAlignmentValue(View*v,int viewSize,int mOrientationde)=0;
-        int getSizeInCell(View*v,int viewSize,int cellSize){
+        virtual int getGravityOffset(View*view,int dellDelta)const=0;
+        virtual int getAlignmentValue(View*v,int viewSize,int mOrientationde)const=0;
+        int getSizeInCell(View*v,int viewSize,int cellSize)const{
             return viewSize;
         }
-        virtual Bounds* getBounds();
+        virtual Bounds* getBounds()const;
         int hashCode()const;
     };
-    static Alignment*UNDEFINED_ALIGNMENT,*LEADING,*TRAILING,*TOP,*BOTTOM,*START,*END,*BASELINE,*LEFT,*RIGHT,*CENTER,*FILL;
+    static const Alignment*UNDEFINED_ALIGNMENT,*LEADING,*TRAILING,*TOP,*BOTTOM,*START,*END,*BASELINE,*LEFT,*RIGHT,*CENTER,*FILL;
     class Bounds{
     public:
         int before;
@@ -69,7 +69,7 @@ public:
         virtual void reset();
         virtual void include(int before,int after);
         virtual int size(bool min);
-        virtual int getOffset(GridLayout*gl,View*v,Alignment*,int size,bool horizontal);
+        virtual int getOffset(GridLayout*gl,View*v,const Alignment*,int size,bool horizontal);
         void include(GridLayout* gl,View* c,Spec* spec,Axis* axis, int size);
     };
     class Spec{
@@ -79,24 +79,24 @@ public:
     public:
         bool startDefined;
         Interval span;
-        Alignment*alignment;
+        const Alignment*alignment;
         float weight;
         Spec();
-        Spec(bool startDefined, const Interval& span, Alignment* alignment, float weight);
-        Spec(bool startDefined, int start, int size, Alignment* alignment, float weight);
+        Spec(bool startDefined, const Interval& span,const Alignment* alignment, float weight);
+        Spec(bool startDefined, int start, int size,const Alignment* alignment, float weight);
         bool operator<(const Spec &l1) const;
-        Alignment* getAbsoluteAlignment(bool);
+        const Alignment* getAbsoluteAlignment(bool);
         Spec copyWriteSpan(Interval span);
-        Spec copyWriteAlignment(Alignment* alignment);
+        Spec copyWriteAlignment(const Alignment* alignment);
         int getFlexibility();
         int hashCode()const;
     };
-    static Spec spec(int start, int size, Alignment* alignment, float weight);
-    static Spec spec(int start, Alignment* alignment, float weight);
+    static Spec spec(int start, int size,const Alignment* alignment, float weight);
+    static Spec spec(int start,const Alignment* alignment, float weight);
     static Spec spec(int start, int size,float weight);
     static Spec spec(int start, float weight);
-    static Spec spec(int start, int size, Alignment* alignment);
-    static Spec spec(int start, Alignment* alignment);
+    static Spec spec(int start, int size,const Alignment* alignment);
+    static Spec spec(int start,const Alignment* alignment);
     static Spec spec(int start, int size);
     static Spec spec(int start);
     template<class K,class V>
@@ -298,7 +298,7 @@ private:
     int getMeasurement(View* c, bool horizontal);
 protected:
     static int max2(const std::vector<int>& a, int valueIfEmpty);
-    static Alignment* getAlignment(int gravity, bool horizontal);
+    static const Alignment* getAlignment(int gravity, bool horizontal);
     static int adjust(int measureSpec, int delta);
     static bool canStretch(int flexibility);
     int getMeasurementIncludingMargin(View* c, bool horizontal);
