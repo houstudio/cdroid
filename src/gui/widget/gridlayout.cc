@@ -47,7 +47,7 @@ GridLayout::LayoutParams::LayoutParams(const MarginLayoutParams& params)
 GridLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& attrs)
     :MarginLayoutParams(context,attrs){
 
-    const int gravity = attrs.getInt("layout_gravity", Gravity::NO_GRAVITY);
+    const int gravity = attrs.getGravity("layout_gravity", Gravity::NO_GRAVITY);
  
     const int column = attrs.getInt("layout_column", DEFAULT_COLUMN);
     const int colSpan = attrs.getInt("layout_columnSpan", DEFAULT_SPAN_SIZE);
@@ -198,7 +198,7 @@ int GridLayout::max2(const std::vector<int>& array, int valueIfEmpty) {
     return result;
 }
 
-GridLayout::Alignment* GridLayout::getAlignment(int gravity, bool horizontal){
+const GridLayout::Alignment* GridLayout::getAlignment(int gravity, bool horizontal){
     const int mask = horizontal ? Gravity::HORIZONTAL_GRAVITY_MASK : Gravity::VERTICAL_GRAVITY_MASK;
     const int shift = horizontal ? Gravity::AXIS_X_SHIFT : Gravity::AXIS_Y_SHIFT;
     const int flags = (gravity & mask) >> shift;
@@ -654,8 +654,8 @@ void GridLayout::onLayout(bool changed, int left, int top, int w, int h){
         const int pWidth = getMeasurement(c, true);
         const int pHeight = getMeasurement(c, false);
 
-        Alignment* hAlign = columnSpec.getAbsoluteAlignment(true);
-        Alignment* vAlign = rowSpec.getAbsoluteAlignment(false);
+        const Alignment* hAlign = columnSpec.getAbsoluteAlignment(true);
+        const Alignment* vAlign = rowSpec.getAbsoluteAlignment(false);
 
         Bounds& boundsX = mHorizontalAxis->getGroupBounds().getValue(i);
         Bounds& boundsY = mVerticalAxis->getGroupBounds().getValue(i);
@@ -733,7 +733,7 @@ GridLayout::Arc::Arc(const GridLayout::Interval& span,const GridLayout::MutableI
 
 //--------------------------------------------------------------------------
 
-GridLayout::Bounds *GridLayout::Alignment::getBounds(){
+GridLayout::Bounds *GridLayout::Alignment::getBounds()const{
     return new Bounds();
 }
 
@@ -766,14 +766,14 @@ int GridLayout::Bounds::size(bool min){
     return before + after;
 }
 
-int GridLayout::Bounds::getOffset(GridLayout*gl,View*c,GridLayout::Alignment*a,int size,bool horizontal){
+int GridLayout::Bounds::getOffset(GridLayout*gl,View*c,const GridLayout::Alignment*a,int size,bool horizontal){
     return before - a->getAlignmentValue(c, size, gl->getLayoutMode());
 }
 
 void GridLayout::Bounds::include(GridLayout* gl, View* c,Spec* spec, Axis* axis, int size) {
     this->flexibility &= spec->getFlexibility();
     bool horizontal = axis->horizontal;
-    Alignment* alignment = spec->getAbsoluteAlignment(axis->horizontal);
+    const Alignment* alignment = spec->getAbsoluteAlignment(axis->horizontal);
     // todo test this works correctly when the returned value is UNDEFINED
     int before = alignment->getAlignmentValue(c, size, gl->getLayoutMode());
     include(before, size - before);
@@ -786,14 +786,14 @@ GridLayout::Spec::Spec(){
     alignment =GridLayout::UNDEFINED_ALIGNMENT;
 }
 
-GridLayout::Spec::Spec(bool startDefined,const Interval& span, Alignment* alignment, float weight){
+GridLayout::Spec::Spec(bool startDefined,const Interval& span,const Alignment* alignment, float weight){
     this->startDefined = startDefined;
     this->span = span;
     this->alignment = alignment;
     this->weight = weight;
 }
 
-GridLayout::Spec::Spec(bool startDefined, int start, int size, Alignment* alignment, float weight){
+GridLayout::Spec::Spec(bool startDefined, int start, int size,const Alignment* alignment, float weight){
     this->startDefined = startDefined;
     this->span = Interval(start,start+size);
     this->alignment = alignment;
@@ -810,11 +810,11 @@ bool GridLayout::Spec::operator<(const Spec &l1) const{
     return hashCode()<l1.hashCode();
 }
 
-GridLayout::Alignment* GridLayout::Spec::getAbsoluteAlignment(bool horizontal){
+const GridLayout::Alignment* GridLayout::Spec::getAbsoluteAlignment(bool horizontal){
     if (alignment != GridLayout::UNDEFINED_ALIGNMENT) {
         return alignment;
     }
-    if (weight == .0f) {
+    if (weight == 0.f) {
         return horizontal ? GridLayout::START : GridLayout::BASELINE;
     }
     return GridLayout::FILL;
@@ -824,7 +824,7 @@ GridLayout::Spec GridLayout::Spec::copyWriteSpan(Interval span){
     return Spec(startDefined, span, alignment, weight);
 }
 
-GridLayout::Spec GridLayout::Spec::copyWriteAlignment(Alignment* alignment){
+GridLayout::Spec GridLayout::Spec::copyWriteAlignment(const Alignment* alignment){
     return Spec(startDefined, span, alignment, weight);
 }
 
@@ -832,11 +832,11 @@ int GridLayout::Spec::getFlexibility() {
     return (alignment == GridLayout::UNDEFINED_ALIGNMENT && weight == 0) ? GridLayout::INFLEXIBLE : GridLayout::CAN_STRETCH;
 }
 
-GridLayout::Spec GridLayout::spec(int start, int size, Alignment* alignment, float weight){
+GridLayout::Spec GridLayout::spec(int start, int size,const Alignment* alignment, float weight){
     return Spec(start != UNDEFINED, start, size, alignment, weight);
 }
 
-GridLayout::Spec GridLayout::spec(int start, Alignment* alignment, float weight){
+GridLayout::Spec GridLayout::spec(int start,const Alignment* alignment, float weight){
     return spec(start, 1, alignment, weight);
 }
 
@@ -847,11 +847,12 @@ GridLayout::Spec GridLayout::spec(int start, int size,float weight){
 GridLayout::Spec GridLayout::spec(int start, float weight){
     return spec(start, 1, weight);
 }
-GridLayout::Spec GridLayout::spec(int start, int size, Alignment* alignment){
+
+GridLayout::Spec GridLayout::spec(int start, int size,const Alignment* alignment){
     return spec(start, size, alignment, Spec::DEFAULT_WEIGHT);
 }
 
-GridLayout::Spec GridLayout::spec(int start, Alignment* alignment){
+GridLayout::Spec GridLayout::spec(int start,const Alignment* alignment){
     return spec(start, 1, alignment);
 }
 
@@ -867,44 +868,40 @@ GridLayout::Spec GridLayout::spec(int start){
 
 class UndefinedAlignment:public GridLayout::Alignment{
 public:
-    int getGravityOffset(View* view, int cellDelta) {
+    int getGravityOffset(View* view, int cellDelta) const override{
         return GridLayout::UNDEFINED;
     }
-    int getAlignmentValue(View* view, int viewSize, int mode) {
+    int getAlignmentValue(View* view, int viewSize, int mode) const override{
         return GridLayout::UNDEFINED;
     }
 };
-
-GridLayout::Alignment*GridLayout::UNDEFINED_ALIGNMENT=new UndefinedAlignment();
 
 class LeadingAlignment:public GridLayout::Alignment{
 public:
-    int getGravityOffset(View* view, int cellDelta) {
+    int getGravityOffset(View* view, int cellDelta) const override{
         return 0;
     }
-    int getAlignmentValue(View* view, int viewSize, int mode) {
+    int getAlignmentValue(View* view, int viewSize, int mode) const override{
         return 0;
     }
 };
 
-GridLayout::Alignment*GridLayout::LEADING=new LeadingAlignment();
-
 class TrailingAlignment:public GridLayout::Alignment{
 public:
-    int getGravityOffset(View* view, int cellDelta) {
+    int getGravityOffset(View* view, int cellDelta) const override{
         return cellDelta;
     }
-    int getAlignmentValue(View* view, int viewSize, int mode) {
+    int getAlignmentValue(View* view, int viewSize, int mode) const override{
         return viewSize;
     }
 };
 
 class CenterAlignment:public GridLayout::Alignment{
 public:
-    int getGravityOffset(View* view, int cellDelta) {
+    int getGravityOffset(View* view, int cellDelta) const override{
         return cellDelta>>1;
     }
-    int getAlignmentValue(View* view, int viewSize, int mode) {
+    int getAlignmentValue(View* view, int viewSize, int mode) const override{
         return viewSize>>1;
     }
 };
@@ -917,11 +914,11 @@ public:
         ltr = l2r;
         rtl = r2l;
     }
-    int getGravityOffset(View* view, int cellDelta) {
+    int getGravityOffset(View* view, int cellDelta) const override{
         return (!view->isLayoutRtl() ? ltr : rtl)->getGravityOffset(view, cellDelta);
     }
 
-    int getAlignmentValue(View* view, int viewSize, int mode) {
+    int getAlignmentValue(View* view, int viewSize, int mode) const override{
         return (!view->isLayoutRtl() ? ltr : rtl)->getAlignmentValue(view, viewSize, mode);
     }
 };
@@ -945,32 +942,32 @@ protected:
             return std::max(Bounds::size(min), mSize);
         }
 
-        int getOffset(GridLayout* gl, View* c, Alignment* a, int size, bool hrz)override{
+        int getOffset(GridLayout* gl, View* c,const Alignment* a, int size, bool hrz)override{
             return std::max(0, Bounds::getOffset(gl, c, a, size, hrz));
         }
     };
 public:
-    int getGravityOffset(View* view, int cellDelta)override{ 
+    int getGravityOffset(View* view, int cellDelta)const override{ 
         return 0; // baseline gravity is top
     }
-    int getAlignmentValue(View* view, int viewSize, int mode) override{
+    int getAlignmentValue(View* view, int viewSize, int mode)const override{
         if (view->getVisibility() == View::GONE) {
             return 0;
         }
-        int baseline = view->getBaseline();
+        const int baseline = view->getBaseline();
         return baseline == -1 ? GridLayout::UNDEFINED : baseline;
     }
-    GridLayout::Bounds*getBounds()override{
+    GridLayout::Bounds*getBounds()const{
         return new BaseBounds();
     }
 };
 
 class FillAlignment:public GridLayout::Alignment{
 public:
-    int getGravityOffset(View* view, int cellDelta) {
+    int getGravityOffset(View* view, int cellDelta) const override{
         return 0;
     }
-    int getAlignmentValue(View* view, int viewSize, int mode) {
+    int getAlignmentValue(View* view, int viewSize, int mode) const override{
         return GridLayout::UNDEFINED;
     }
     int getSizeInCell(View* view, int viewSize, int cellSize) {
@@ -978,16 +975,29 @@ public:
     }
 };
 
-GridLayout::Alignment*GridLayout::BASELINE = new BaselineAlignment();
-GridLayout::Alignment*GridLayout::TRAILING = new TrailingAlignment();
-GridLayout::Alignment*GridLayout::TOP   = GridLayout::LEADING;
-GridLayout::Alignment*GridLayout::BOTTOM= GridLayout::TRAILING;
-GridLayout::Alignment*GridLayout::START = GridLayout::LEADING;
-GridLayout::Alignment*GridLayout::END   = GridLayout::TRAILING;;
-GridLayout::Alignment*GridLayout::LEFT  = new SwitchAlignment(GridLayout::START,GridLayout::END);
-GridLayout::Alignment*GridLayout::RIGHT = new SwitchAlignment(GridLayout::END,GridLayout::START);
-GridLayout::Alignment*GridLayout::CENTER= new CenterAlignment();
-GridLayout::Alignment*GridLayout::FILL  = new FillAlignment();
+namespace {
+    BaselineAlignment __BASELINE__;
+    LeadingAlignment __LEADING__;
+    TrailingAlignment __TRAILING__;
+    SwitchAlignment __LEFT__(&__LEADING__,&__TRAILING__);//GridLayout::START,GridLayout::END);
+    SwitchAlignment __RIGHT__(&__TRAILING__,&__LEADING__);//GridLayout::END,GridLayout::START);
+    CenterAlignment __CENTER__;
+    FillAlignment __FILL__;
+    UndefinedAlignment __UNDEFINED_ALIGNMENT__;
+}
+
+const GridLayout::Alignment*GridLayout::BASELINE = &__BASELINE__;//new BaselineAlignment();
+const GridLayout::Alignment*GridLayout::LEADING = &__LEADING__;
+const GridLayout::Alignment*GridLayout::TRAILING = &__TRAILING__;//new TrailingAlignment();
+const GridLayout::Alignment*GridLayout::TOP   = &__LEADING__;
+const GridLayout::Alignment*GridLayout::BOTTOM= &__TRAILING__;
+const GridLayout::Alignment*GridLayout::START = &__LEADING__;
+const GridLayout::Alignment*GridLayout::END   = &__TRAILING__;
+const GridLayout::Alignment*GridLayout::LEFT  = &__LEFT__;//new SwitchAlignment(GridLayout::START,GridLayout::END);
+const GridLayout::Alignment*GridLayout::RIGHT = &__RIGHT__;//new SwitchAlignment(GridLayout::END,GridLayout::START);
+const GridLayout::Alignment*GridLayout::CENTER= &__CENTER__;//new CenterAlignment();
+const GridLayout::Alignment*GridLayout::FILL  = &__FILL__;//new FillAlignment();
+const GridLayout::Alignment*GridLayout::UNDEFINED_ALIGNMENT=&__UNDEFINED_ALIGNMENT__;
 
 //--------------------------------------------------------------------------
 
@@ -1080,7 +1090,7 @@ void GridLayout::Axis::computeGroupBounds(){
     }
 }
 
-int  GridLayout::Axis::size(std::vector<int>&locations){
+int  GridLayout::Axis::size(const std::vector<int>&locations){
     return locations[getCount()];
 }
 
@@ -1213,7 +1223,7 @@ void GridLayout::Axis::logError(const std::string& axisName, std::vector<Arc>&ar
     std::vector<Arc> culprits; 
     std::vector<Arc> removed;
     for (int c = 0; c < arcs.size(); c++) {
-        Arc arc = arcs[c];
+        Arc& arc = arcs[c];
         if (culprits0[c]) {
             culprits.push_back(arc);
         }
@@ -1240,6 +1250,10 @@ bool GridLayout::Axis::relax(std::vector<int>&locations, GridLayout::Arc& entry)
     return false;
 }
 
+void GridLayout::Axis::init(std::vector<int>& locations) {
+    std::fill(locations.begin(),locations.end(), 0);
+}
+
 bool GridLayout::Axis::solve(std::vector<int>&a){
     return solve(getArcs(),a);
 }
@@ -1247,10 +1261,10 @@ bool GridLayout::Axis::solve(std::vector<int>&a){
 bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,bool modifyOnError){
     std::string axisName = horizontal ? "horizontal" : "vertical";
     int N = getCount() + 1; // The number of vertices is the number of columns/rows + 1.
-    std::vector<bool>* originalCulprits = nullptr;
+    std::shared_ptr<std::vector<bool>> originalCulprits = nullptr;
 
     for (int p = 0; p < arcs.size(); p++) {
-        for(int k=0;k<locations.size();k++)locations[k]=0;//init(locations);
+        init(locations);
 
         // We take one extra pass over traditional Bellman-Ford (and omit their final step)
         for (int i = 0; i < N; i++) {
@@ -1262,25 +1276,15 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
                 if (originalCulprits != nullptr) {
                     logError(axisName, arcs, *originalCulprits);
                 }
-                if(originalCulprits != nullptr){
-                    delete originalCulprits;
-                }
                 return true;
             }
         }
 
         if (!modifyOnError){
-            if(originalCulprits != nullptr){
-                delete originalCulprits;
-            }
             return false; 
         }// cannot solve with these constraints
 
-        
-
-        std::vector<bool>* culprits = new std::vector<bool>;
-        culprits->resize(arcs.size());
-        for(int i=0;i<arcs.size();i++)culprits->push_back(false);
+        std::shared_ptr<std::vector<bool>> culprits = std::make_shared<std::vector<bool>>(arcs.size(),false);
         for (int i = 0; i < N; i++) {
             for (int j = 0, length = arcs.size(); j < length; j++) {
                 culprits->at(j) =culprits->at(j)| relax(locations, arcs[j]);
@@ -1302,11 +1306,7 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
                 break;
             }
         }
-        if (p != 0 ){
-            delete culprits;
-        }
     }
-    delete originalCulprits;
     return true;
 }
 

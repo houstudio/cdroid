@@ -38,7 +38,7 @@ private:
     friend GapWorker;
     friend RecyclerView;
     int mExistingUpdateTypes;
-    Pools::SimplePool<UpdateOp>* mUpdateOpPool;// = new Pools.SimplePool<UpdateOp>(UpdateOp.POOL_SIZE)
+    Pools::SimplePool<UpdateOp>* mUpdateOpPool;
 private:
     void applyMove(UpdateOp* op);
     void applyRemove(UpdateOp* op);

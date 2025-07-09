@@ -1,6 +1,6 @@
 #include <widgetEx/recyclerview/carousellayoutmanager.h>
 #include <widgetEx/recyclerview/linearsmoothscroller.h>
-
+#include <core/mathutils.h>
 /*REF:
 *https://gitee.com/Cserfox/Awesome-RecyclerView-LayoutManager
 *https://github.com/Azoft/CarouselLayoutManager
@@ -153,15 +153,10 @@ void CarouselLayoutManager::smoothScrollToPosition(RecyclerView& recyclerView, R
     startSmoothScroll(linearSmoothScroller);
 }
 
-template<typename T>
-T signum(T x) {
-    return (T(0) < x) - (x < T(0));
-}
-
 bool CarouselLayoutManager::computeScrollVectorForPosition(int targetPosition,PointF&pt) {
     const float directionDistance = getScrollDirection(targetPosition);
     //noinspection NumericCastThatLosesPrecision
-    const int direction = (int) -signum(directionDistance);
+    const int direction = (int) -MathUtils::signum(directionDistance);
     pt.x = pt.y = 0;
     if (HORIZONTAL == mOrientation) {
         pt.x = direction;
@@ -178,7 +173,7 @@ float CarouselLayoutManager::getScrollDirection(int targetPosition) const{
         float t1 = currentScrollPosition - targetPosition;
         float t2 = std::abs(t1) - mItemsCount;
         if (std::abs(t1) > std::abs(t2)) {
-            return signum(t1) * t2;
+            return MathUtils::signum(t1) * t2;
         } else {
             return t1;
         }
@@ -545,7 +540,7 @@ int CarouselLayoutManager::getCardOffsetByPositionDiff(float itemPositionDiff) {
         dimenDiff = (getWidthNoPadding() - mDecoratedChildWidth) / 2;
     }
     //noinspection NumericCastThatLosesPrecision
-    return (int) std::round(signum(itemPositionDiff) * dimenDiff * smoothPosition);
+    return (int) std::round(MathUtils::signum(itemPositionDiff) * dimenDiff * smoothPosition);
 }
 
 /**

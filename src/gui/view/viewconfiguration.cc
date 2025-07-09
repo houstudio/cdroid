@@ -13,6 +13,8 @@ ViewConfiguration::ViewConfiguration(){
     mFadingEdgeLength = FADING_EDGE_LENGTH;
     mMinimumFlingVelocity = MINIMUM_FLING_VELOCITY;
     mMaximumFlingVelocity = MAXIMUM_FLING_VELOCITY;
+    mMinimumRotaryEncoderFlingVelocity = MINIMUM_FLING_VELOCITY;
+    mMaximumRotaryEncoderFlingVelocity = MAXIMUM_FLING_VELOCITY;
     mScrollbarSize = SCROLL_BAR_SIZE;
     mTouchSlop = TOUCH_SLOP;
     mHoverSlop = TOUCH_SLOP / 2;
@@ -209,6 +211,18 @@ int ViewConfiguration::getScaledMinimumFlingVelocity() {
  * @return Maximum velocity to initiate a fling, as measured in pixels per second.
  */
 int ViewConfiguration::getScaledMaximumFlingVelocity() {
+    return mMaximumFlingVelocity;
+}
+
+int ViewConfiguration::getScaledMinimumFlingVelocity(int inputDeviceId, int axis, int source) {
+    if (!isInputDeviceInfoValid(inputDeviceId, axis, source)) return NO_FLING_MIN_VELOCITY;
+    if (source == InputDevice::SOURCE_ROTARY_ENCODER) return mMinimumRotaryEncoderFlingVelocity;
+    return mMinimumFlingVelocity;
+}
+
+int ViewConfiguration::getScaledMaximumFlingVelocity(int inputDeviceId, int axis, int source){
+    if (!isInputDeviceInfoValid(inputDeviceId, axis, source)) return NO_FLING_MAX_VELOCITY;
+    if (source == InputDevice::SOURCE_ROTARY_ENCODER) return mMaximumRotaryEncoderFlingVelocity;
     return mMaximumFlingVelocity;
 }
 
