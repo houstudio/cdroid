@@ -5,6 +5,9 @@
 #include <string.h>
 #include <limits.h>
 #include <float.h>
+#if (__cplusplus >= 201703L)&&__has_include(<execution>)
+#include <execution>
+#endif
 
 namespace cdroid{
 
@@ -147,7 +150,11 @@ void KeyboardView::onClick(View&v){
 std::string KeyboardView::adjustCase(const std::string& label){
     if( mKeyboard->isShifted() && (label.size()<3) && islower(label[0]) ){
         std::string ups=label;
+#if (__cplusplus >= 201703L)&&__has_include(<execution>)
+        std::transform(std::execution::par, ups.begin(), ups.end(), ups.begin(), tolower);
+#else
         std::transform(ups.begin(),ups.end(),ups.begin(),tolower);
+#endif
         return ups;
     }
     return label;

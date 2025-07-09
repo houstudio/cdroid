@@ -1,4 +1,6 @@
 # **V3.9.8
+  - fix TextView::getBaseline
+  - fix GridLayout::LayoutParams's layout_gravity
   - add BaseBundle,Bundle
   - add BitmapDrawable::isStateful
   - add porting/android
