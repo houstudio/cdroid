@@ -258,8 +258,19 @@ int main(int argc, char* argv[])
 		res = hid_read(handle, buf, sizeof(buf));
 		if (res == 0) {
 			printf("waiting...\n");
-		}
-		if (res < 0) {
+		}else if(res>0){
+            // 按键状态，buf[0]的低三位分别对应左键、右键、中键
+            unsigned char buttons = buf[0];
+            int left_click = buttons & 0x01;
+            int right_click = (buttons & 0x02) >> 1;
+            int middle_click = (buttons & 0x04) >> 2;
+
+            // 鼠标相对移动量，buf[1]为X轴，buf[2]为Y轴
+            signed char dx = buf[1];
+            signed char dy = buf[2];
+
+            printf("左键: %d, 右键: %d, 中键: %d, X移动: %d, Y移动: %d\n", left_click, right_click, middle_click, dx, dy);
+        }else if (res < 0) {
 			printf("Unable to read(): %ls\n", hid_error(handle));
 			break;
 		}

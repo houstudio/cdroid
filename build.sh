@@ -10,27 +10,27 @@ declare -A TOOLCHAINS #key/value dict ,key is platform,value is toolchain,key mu
 #VCPKGROOT=/opt/vcpkg
 VCPKGROOT=${HOME}/vcpkg
 
-TOOLCHAINS["SIGMA"]=${TOPDIR}/cmake/ssd202-mtitoolchain.cmake
-TOOLCHAINS["ALI3528"]=${TOPDIR}/cmake/ali3528-mtitoolchain.cmake
-TOOLCHAINS["RISCVD211"]=${TOPDIR}/cmake/riscv64-d211-toolchain.cmake
-TOOLCHAINS["R818"]=${TOPDIR}/cmake/r818-toolchain.cmake
-TOOLCHAINS["D211"]=${TOPDIR}/cmake/riscv64-d211-toolchain.cmake
-TOOLCHAINS["HI3536"]=${TOPDIR}/cmake/hisiv500-toolchain.cmake
-TOOLCHAINS["INGENIC"]=${TOPDIR}/cmake/ingenic-x2600-toolchain.cmake
-TOOLCHAINS["TINAT113"]=${TOPDIR}/cmake/tinat113-toolchain.cmake
-TOOLCHAINS["RK3506"]=${TOPDIR}/cmake/rk3506-toolchain.cmake
+TOOLCHAINS["SIGMA"]=${VCPKGROOT}/scripts/toolchains/ssd202-mtitoolchain.cmake
+TOOLCHAINS["ALI3528"]=${VCPKGROOT}/scripts/toolchains/ali3528-mtitoolchain.cmake
+TOOLCHAINS["R818"]=${VCPKGROOT}/scripts/toolchains/r818-toolchain.cmake
+TOOLCHAINS["D211"]=${VCPKGROOT}/scripts/toolchains/riscv64-d211-toolchain.cmake
+TOOLCHAINS["HI3536"]=${VCPKGROOT}/scripts/toolchains/hisiv500-toolchain.cmake
+TOOLCHAINS["INGENIC"]=${VCPKGROOT}/scripts/toolchains/ingenic-x2600-toolchain.cmake
+TOOLCHAINS["TINAT113"]=${VCPKGROOT}/scripts/toolchains/tinat113-toolchain.cmake
+TOOLCHAINS["RK3506"]=${VCPKGROOT}/scripts/toolchains/rk3506-toolchain.cmake
+TOOLCHAINS["SSD2351"]=${VCPKGROOT}/scripts/toolchains/ssd2351-toolchain.cmake
 TOOLCHAINS["ANDROID"]=${VCPKGROOT}/scripts/buildsystems/vcpkg.cmake
 declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg,key must be uppercase
 
 DEPLIBS["X64"]=${VCPKGROOT}/installed/x64-linux-dynamic
 DEPLIBS["SIGMA"]=${VCPKGROOT}/installed/sigma-linux-dynamic
-DEPLIBS["RISCVD211"]=${VCPKGROOT}/installed/riscv64-linux-dynamic
 DEPLIBS["R818"]=${VCPKGROOT}/installed/r818-linux
 DEPLIBS["D211"]=${VCPKGROOT}/installed/riscv64-d211-linux
 DEPLIBS["HI3536"]=${VCPKGROOT}/installed/hisi3536-linux
 DEPLIBS["INGENIC"]=${VCPKGROOT}/installed/ingenic-linux
 DEPLIBS["TINAT113"]=${VCPKGROOT}/installed/tinat113-linux-dynamic
 DEPLIBS["RK3506"]=${VCPKGROOT}/installed/rk3506-linux-dynamic
+DEPLIBS["SSD2351"]=${VCPKGROOT}/installed/ssd2351-linux-dynamic
 DEPLIBS["WIN32"]=${VCPKGROOT}/installed/x64-windows:${VCPKGROOT}/installed/x64-windows-release
 DEPLIBS["ANDROID"]=${VCPKGROOT}/installed/arm64-android
 

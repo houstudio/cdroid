@@ -1197,7 +1197,7 @@ class STROKE_COLOR:public Property{
 public:
     STROKE_COLOR():Property("strokeColor",COLOR_TYPE) {}
     void set(void*object, const AnimateValue& value) override{
-        ((VectorDrawable::VFullPath*)object)->setStrokeColor(GET_VARIANT(value,uint32_t));
+        ((VectorDrawable::VFullPath*)object)->setStrokeColor(uint32_t(GET_VARIANT(value,int32_t)));
     }
 
     AnimateValue get(void*object) override{

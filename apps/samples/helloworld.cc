@@ -41,6 +41,10 @@ int main(int argc,const char*argv[]){
     ch->start();
     LOGD("window.xy=(%.f,%.f) LT=(%d,%d)",w->getX(),w->getY(),w->getLeft(),w->getTop());
     #endif
+    Preferences pref;
+    const std::string ss=R"(<sections> <section name="secname"> <item name="item1"/></section> </sections>)";
+    pref.load(ss);
+    LOGD("secname=%d",pref.hasSection("secname"));
 #if 0
     LayerDrawable*ld=(LayerDrawable*)app.getDrawable("cdroid:drawable/analog.xml");
     clk->setBackgroundDrawable(ld);

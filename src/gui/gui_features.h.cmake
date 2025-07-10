@@ -11,6 +11,7 @@
 #cmakedefine ENABLE_BARCODE 1
 #cmakedefine ENABLE_QRCODE 1
 
+#cmakedefine ENABLE_I18N   1
 #cmakedefine ENABLE_GIF   1     
 #cmakedefine ENABLE_JPEG  1
 #cmakedefine ENABLE_WEBP  1
