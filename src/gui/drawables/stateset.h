@@ -22,6 +22,11 @@ public:
         VIEW_STATE_CHECKABLE      =1<<8 , 
         VIEW_STATE_DRAG_CAN_ACCEPT=1<<9 ,
         VIEW_STATE_DRAG_HOVERED   =1<<10,
+
+        VIEW_STATE_SINGLE         =1<<11,
+        VIEW_STATE_FIRST          =1<<12,
+        VIEW_STATE_MIDDLE         =1<<13,
+        VIEW_STATE_LAST           =1<<14
     };
     enum{
         WINDOW_FOCUSED = 1 ,
@@ -34,7 +39,12 @@ public:
         CHECKED        = 8 ,
         CHECKABLE      = 9 ,
         DRAG_ACCPETABLE= 10,
-        DRAG_HOVERED   = 11
+        DRAG_HOVERED   = 11,
+
+        SINGLE    = 12,
+        FIRST     = 13,
+        MIDDLE    = 14,
+        LAST      = 15
     };
     static const std::vector<int>NOTHING;
     static const std::vector<int>WILD_CARD;

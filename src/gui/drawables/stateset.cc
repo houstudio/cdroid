@@ -9,6 +9,7 @@ const std::vector<int>StateSet::ENABLED_STATE_SET = {ENABLED};
 const std::vector<int>StateSet::FOCUSED_STATE_SET = {FOCUSED};
 const std::vector<int>StateSet::SELECTED_STATE_SET= {SELECTED};
 const std::vector<int>StateSet::CHECKED_STATE_SET = {CHECKED};
+
 std::vector<int>StateSet::VIEW_STATE_IDS={
     WINDOW_FOCUSED , VIEW_STATE_WINDOW_FOCUSED,
     SELECTED       , VIEW_STATE_SELECTED ,
@@ -20,7 +21,12 @@ std::vector<int>StateSet::VIEW_STATE_IDS={
     CHECKED        , VIEW_STATE_CHECKED  ,
     CHECKABLE      , VIEW_STATE_CHECKABLE,
     DRAG_ACCPETABLE, VIEW_STATE_DRAG_CAN_ACCEPT,
-    DRAG_HOVERED   , VIEW_STATE_DRAG_HOVERED
+    DRAG_HOVERED   , VIEW_STATE_DRAG_HOVERED,
+
+    SINGLE         , VIEW_STATE_SINGLE,
+    FIRST          , VIEW_STATE_FIRST,
+    MIDDLE         , VIEW_STATE_MIDDLE,
+    LAST           , VIEW_STATE_LAST
 };
 
 void StateSet::trimStateSet(std::vector<int>&states,int newsize){
@@ -129,6 +135,11 @@ int StateSet::parseState(std::vector<int>&states,const AttributeSet&atts){
     appendState(states,atts.getString("state_window_focused") , WINDOW_FOCUSED);
     appendState(states,atts.getString("state_drag_hoved") , DRAG_HOVERED);
     appendState(states,atts.getString("state_drag_acceptable") , DRAG_ACCPETABLE);
+
+    appendState(states,atts.getString("state_single") , SINGLE);
+    appendState(states,atts.getString("state_first") , FIRST);
+    appendState(states,atts.getString("state_middle") , MIDDLE);
+    appendState(states,atts.getString("state_last") , LAST);
     return states.size();
 }
 
