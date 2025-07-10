@@ -37,7 +37,6 @@ private:
     int parseItem(XmlPullParser&,const AttributeSet&);
     int parseTransition(XmlPullParser&,const AttributeSet&);
 protected:
-    AnimatedStateListDrawable(Context*,const AttributeSet&);
     bool onStateChange(const std::vector<int>&stateSet)override;
     void setConstantState(std::shared_ptr<DrawableContainerState> state)override;
     std::shared_ptr<DrawableContainerState>cloneConstantState()override;

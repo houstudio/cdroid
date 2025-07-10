@@ -425,7 +425,7 @@ bool DrawableContainer::getPadding(Rect&padding){
     bool result;
     if (mDrawableContainerState->getConstantPadding(r)){//r!=null) {
        padding=r;
-       result = (r.left>0) ||(r.top>0)||(r.width>0)||(r.height>0);
+       result = (r.left|r.top|r.width|r.height)!=0;
     } else {
        if (mCurrDrawable != nullptr) {
            result = mCurrDrawable->getPadding(padding);
@@ -435,8 +435,8 @@ bool DrawableContainer::getPadding(Rect&padding){
     }
     if (needsMirroring()) {
         const int left = padding.left;
-        const int right = padding.top;
-        padding.left = right;
+        const int right= padding.top;
+        padding.left= right;
         padding.top = left;
     }
     return result;
