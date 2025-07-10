@@ -4604,7 +4604,13 @@ std::vector<int>View::onCreateDrawableState(int extraSpace){
     //LOGV("**** %p:%d isFocused=%d enabled=%d pressed=%d activated=%d",this,getId(),isFocused(),isEnabled(),isPressed(),isActivated());
     
     if(mPrivateFlags & PFLAG_HOVERED ) viewStateIndex |= StateSet::VIEW_STATE_HOVERED;
-
+    const int privateFlags2 = mPrivateFlags2;
+    if ((privateFlags2 & PFLAG2_DRAG_CAN_ACCEPT) != 0) {
+        viewStateIndex |= StateSet::VIEW_STATE_DRAG_CAN_ACCEPT;
+    }
+    if ((privateFlags2 & PFLAG2_DRAG_HOVERED) != 0) {
+        viewStateIndex |= StateSet::VIEW_STATE_DRAG_HOVERED;
+    }
     return StateSet::get(viewStateIndex);
 }
 

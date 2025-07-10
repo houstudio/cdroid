@@ -40,9 +40,9 @@ void AdapterHelper::preProcess() {
         UpdateOp* op = mPendingUpdates.at(i);
         switch (op->cmd) {
         case UpdateOp::ADD:    applyAdd(op);   break;
-	case UpdateOp::REMOVE: applyRemove(op);break;
-	case UpdateOp::UPDATE: applyUpdate(op);break;
-	case UpdateOp::MOVE:   applyMove(op);  break;
+        case UpdateOp::REMOVE: applyRemove(op);break;
+        case UpdateOp::UPDATE: applyUpdate(op);break;
+        case UpdateOp::MOVE:   applyMove(op);  break;
         }
         if (mOnItemProcessedCallback != nullptr) {
             mOnItemProcessedCallback();//.run();
@@ -73,7 +73,7 @@ void AdapterHelper::applyRemove(UpdateOp* op) {
     int type = -1;
     for (int position = op->positionStart; position < tmpEnd; position++) {
         bool typeChanged = false;
-	RecyclerView::ViewHolder* vh = mCallback.findViewHolder(position);
+        RecyclerView::ViewHolder* vh = mCallback.findViewHolder(position);
         if (vh != nullptr || canFindInPreLayout(position)) {
             // If a ViewHolder exists or this is a newly added item, we can defer this update
             // to post layout stage.
