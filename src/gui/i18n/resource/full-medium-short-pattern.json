@@ -1,0 +1,1082 @@
+{
+  "am":   [
+    "EEEE፣ d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "ar":   [
+    "EEEE، d MMMM، y",
+    "dd‏/MM‏/y",
+    "d‏/M‏/y"
+  ],
+  "ar-XB":   [
+    "EEEE، d MMMM y",
+    "dd‏/MM‏/y",
+    "d‏/M‏/y"
+  ],
+  "as":   [
+    "EEEE, d MMMM, y",
+    "dd-MM-y",
+    "d-M-y"
+  ],
+  "as-Latn":   [
+    "EEEE, d MMMM, y",
+    "dd-MM-y",
+    "d-M-y"
+  ],
+  "az":   [
+    "d MMMM y, EEEE",
+    "d MMM y",
+    "dd.MM.yy"
+  ],
+  "az-Cyrl":   [
+    "d MMMM y, EEEE",
+    "d MMM y",
+    "dd.MM.yy"
+  ],
+  "az-Latn":   [
+    "d MMMM y, EEEE",
+    "d MMM y",
+    "dd.MM.yy"
+  ],
+  "be":   [
+    "EEEE, d MMMM y 'г'.",
+    "d.MM.y",
+    "d.MM.yy"
+  ],
+  "bg":   [
+    "EEEE, d MMMM y 'г'.",
+    "d.MM.y 'г'.",
+    "d.MM.yy 'г'."
+  ],
+  "bn":   [
+    "EEEE, d MMMM, y",
+    "d MMM, y",
+    "d/M/yy"
+  ],
+  "bn-Latn":   [
+    "EEEE, d MMMM, y",
+    "d MMM, y",
+    "d/M/yy"
+  ],
+  "bo":   [
+    "སྤྱི་ལོ་y MMMMའི་ཚེས་d EEEE",
+    "y ལོའི་MMMཚེས་d",
+    "y/M/d"
+  ],
+  "bs":   [
+    "EEEE, d. MMMM y.",
+    "d. MMM. y.",
+    "d. M. y."
+  ],
+  "bs-Cyrl":   [
+    "EEEE, dd. MMMM y.",
+    "dd.MM.y.",
+    "d.M.yy."
+  ],
+  "bs-Latn":   [
+    "EEEE, d. MMMM y.",
+    "d. MMM. y.",
+    "d. M. y."
+  ],
+  "ca":   [
+    "EEEE, d MMMM 'de' y",
+    "d MMM y",
+    "d/M/yy"
+  ],
+  "cs":   [
+    "EEEE d. MMMM y",
+    "d. M. y",
+    "dd.MM.yy"
+  ],
+  "da":   [
+    "EEEE 'den' d. MMMM y",
+    "d. MMM y",
+    "dd.MM.y"
+  ],
+  "de":   [
+    "EEEE, d. MMMM y",
+    "dd.MM.y",
+    "dd.MM.yy"
+  ],
+  "el":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "d/M/yy"
+  ],
+  "en-AG":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-AI":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-AT":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-AU":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "d/M/yy"
+  ],
+  "en-BB":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-BE":   [
+    "EEEE, d MMMM y",
+    "dd MMM y",
+    "dd/MM/yy"
+  ],
+  "en-BM":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-BS":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-BW":   [
+    "EEEE, dd MMMM y",
+    "dd MMM y",
+    "dd/MM/yy"
+  ],
+  "en-BZ":   [
+    "EEEE, dd MMMM y",
+    "dd-MMM-y",
+    "dd/MM/yy"
+  ],
+  "en-CA":   [
+    "EEEE, MMMM d, y",
+    "MMM d, y",
+    "y-MM-dd"
+  ],
+  "en-CC":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-CH":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-CK":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-CM":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-CX":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-CY":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-DE":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-DG":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-DK":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-DM":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-ER":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-FI":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-FJ":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-FK":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-FM":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-GB":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-GD":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-GG":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-GH":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-GI":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-GM":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-GY":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-HK":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "d/M/y"
+  ],
+  "en-IE":   [
+    "EEEE d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-IL":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-IM":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-IN":   [
+    "EEEE, d MMMM, y",
+    "dd-MMM-y",
+    "dd/MM/yy"
+  ],
+  "en-IO":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-JE":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-JM":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-KE":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-KI":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-KN":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-KY":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-LC":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-LR":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-LS":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-MG":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-MO":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-MS":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-MT":   [
+    "EEEE, d MMMM y",
+    "dd MMM y",
+    "dd/MM/y"
+  ],
+  "en-MU":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-MW":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-MY":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-NA":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-NF":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-NG":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-NL":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-NR":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-NU":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-NZ":   [
+    "EEEE, d MMMM y",
+    "d/MM/y",
+    "d/MM/yy"
+  ],
+  "en-PG":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-PH":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-PK":   [
+    "EEEE, d MMMM y",
+    "dd-MMM-y",
+    "dd/MM/y"
+  ],
+  "en-PN":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-PW":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-Qaag":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-RW":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-SB":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-SC":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-SD":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-SE":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "y-MM-dd"
+  ],
+  "en-SG":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "d/M/yy"
+  ],
+  "en-SH":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-SI":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-SL":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-SS":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-SX":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-SZ":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-TC":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-TK":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-TO":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-TT":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-TV":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-TZ":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-UG":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-US":   [
+    "EEEE, MMMM d, y",
+    "MMM d, y",
+    "M/d/yy"
+  ],
+  "en-VC":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-VG":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-VU":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-WS":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-ZA":   [
+    "EEEE, dd MMMM y",
+    "dd MMM y",
+    "y/MM/dd"
+  ],
+  "en-ZM":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "en-ZW":   [
+    "EEEE, dd MMMM y",
+    "dd MMM y",
+    "d/M/y"
+  ],
+  "es":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "d MMM y",
+    "d/M/yy"
+  ],
+  "es-BO":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "d MMM 'de' y",
+    "d/M/yy"
+  ],
+  "es-CL":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "dd-MM-y",
+    "dd-MM-yy"
+  ],
+  "es-CO":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "d/MM/y",
+    "d/MM/yy"
+  ],
+  "es-GT":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "d/MM/y",
+    "d/MM/yy"
+  ],
+  "es-MX":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "d MMM y",
+    "dd/MM/yy"
+  ],
+  "es-PA":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "MM/dd/y",
+    "MM/dd/yy"
+  ],
+  "es-PE":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "d MMM y",
+    "d/MM/yy"
+  ],
+  "es-PR":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "MM/dd/y",
+    "MM/dd/yy"
+  ],
+  "es-US":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "d MMM y",
+    "d/M/y"
+  ],
+  "et":   [
+    "EEEE, d. MMMM y",
+    "d. MMM y",
+    "dd.MM.yy"
+  ],
+  "eu":   [
+    "y('e')'ko' MMMM'ren' d'a', EEEE",
+    "y MMM d'a'",
+    "yy/M/d"
+  ],
+  "fa":   [
+    "EEEE d MMMM y",
+    "d MMM y",
+    "y/M/d"
+  ],
+  "fa-Latn":   [
+    "EEEE d MMMM y",
+    "d MMM y",
+    "y/M/d"
+  ],
+  "fi":   [
+    "cccc d. MMMM y",
+    "d.M.y",
+    "d.M.y"
+  ],
+  "fr":   [
+    "EEEE d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "fr-BE":   [
+    "EEEE d MMMM y",
+    "d MMM y",
+    "d/MM/yy"
+  ],
+  "fr-CA":   [
+    "EEEE d MMMM y",
+    "d MMM y",
+    "yy-MM-dd"
+  ],
+  "fr-CH":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd.MM.yy"
+  ],
+  "gl":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "d MMM y",
+    "dd/MM/yy"
+  ],
+  "gu":   [
+    "EEEE, d MMMM, y",
+    "d MMM, y",
+    "d/M/yy"
+  ],
+  "hi":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "d/M/yy"
+  ],
+  "hr":   [
+    "EEEE, d. MMMM y.",
+    "d. MMM y.",
+    "dd. MM. y."
+  ],
+  "hr-BA":   [
+    "EEEE, d. MMMM y.",
+    "d. MMM y.",
+    "d. M. yy."
+  ],
+  "hu":   [
+    "y. MMMM d., EEEE",
+    "y. MMM d.",
+    "y. MM. dd."
+  ],
+  "in":   [
+    "EEEE, dd MMMM y",
+    "d MMM y",
+    "dd/MM/yy"
+  ],
+  "it":   [
+    "EEEE d MMMM y",
+    "d MMM y",
+    "dd/MM/yy"
+  ],
+  "it-CH":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd.MM.yy"
+  ],
+  "iw":   [
+    "EEEE, d בMMMM y",
+    "d בMMM y",
+    "d.M.y"
+  ],
+  "ja":   [
+    "y年M月d日EEEE",
+    "y/MM/dd",
+    "y/MM/dd"
+  ],
+  "jv":   [
+    "EEEE, d MMMM, y",
+    "d MMM, y",
+    "d/M/y"
+  ],
+  "jv-Latn":   [
+    "EEEE, d MMMM, y",
+    "d MMM, y",
+    "d/M/y"
+  ],
+  "ka":   [
+    "EEEE, d MMMM, y",
+    "d MMM, y",
+    "dd.MM.yy"
+  ],
+  "kk":   [
+    "y 'ж'. d MMMM, EEEE",
+    "y 'ж'. d MMM",
+    "dd.MM.yy"
+  ],
+  "km":   [
+    "EEEE ទីd MMMM ឆ្នាំy",
+    "d MMM y",
+    "d/M/yy"
+  ],
+  "kn":   [
+    "d MMMM y, EEEE",
+    "d MMM y",
+    "d/M/yy"
+  ],
+  "ko":   [
+    "y년 M월 d일 EEEE",
+    "y. M. d.",
+    "yy. M. d."
+  ],
+  "lo":   [
+    "EEEE ທີ d MMMM y",
+    "d MMM y",
+    "d/M/y"
+  ],
+  "lt":   [
+    "y 'm'. MMMM d 'd'., EEEE",
+    "y-MM-dd",
+    "y-MM-dd"
+  ],
+  "lv":   [
+    "EEEE, y. 'gada' d. MMMM",
+    "y. 'gada' d. MMM",
+    "dd.MM.yy"
+  ],
+  "mai":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "d/M/y"
+  ],
+  "mai-Deva":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "d/M/y"
+  ],
+  "mi":   [
+    "EEEE, 'te' d 'o' MMMM, y",
+    "d 'o' MMM, y",
+    "d/M/y"
+  ],
+  "mk":   [
+    "EEEE, d MMMM y",
+    "d.M.y",
+    "d.M.yy"
+  ],
+  "ml":   [
+    "y, MMMM d, EEEE",
+    "y, MMM d",
+    "d/M/yy"
+  ],
+  "mn":   [
+    "EEEE, y 'оны' MMMM d 'өдөр'",
+    "y MMM d",
+    "y-MM-dd"
+  ],
+  "mr":   [
+    "EEEE, d MMMM, y",
+    "d MMM, y",
+    "d/M/yy"
+  ],
+  "ms":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "d/MM/yy"
+  ],
+  "ms-BN":   [
+    "dd MMMM y",
+    "d MMM y",
+    "d/MM/yy"
+  ],
+  "my":   [
+    "EEEEနေ့၊ y ခုနှစ် MMMMလ d ရက်",
+    "y ခုနှစ် MMMလ d ရက်",
+    "yy/MM/dd"
+  ],
+  "my-Qaag":   [
+    "EEEEေန႔၊ y ခုႏွစ္ MMMMလ d ရက္",
+    "y ခုႏွစ္ MMMလ d ရက္",
+    "yy/MM/dd"
+  ],
+  "nb":   [
+    "EEEE d. MMMM y",
+    "d. MMM y",
+    "dd.MM.y"
+  ],
+  "ne":   [
+    "y MMMM d, EEEE",
+    "y MMM d",
+    "y-MM-dd"
+  ],
+  "nl":   [
+    "EEEE d MMMM y",
+    "d MMM y",
+    "dd-MM-y"
+  ],
+  "nl-BE":   [
+    "EEEE d MMMM y",
+    "d MMM y",
+    "d/MM/y"
+  ],
+  "or":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "d-M-yy"
+  ],
+  "pa":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "d/M/yy"
+  ],
+  "pa-Guru":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "d/M/yy"
+  ],
+  "pa-PK":   [
+    "EEEE, dd MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "pl":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd.MM.y"
+  ],
+  "pt":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "d 'de' MMM 'de' y",
+    "dd/MM/y"
+  ],
+  "pt-AO":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "dd/MM/y",
+    "dd/MM/yy"
+  ],
+  "pt-CV":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "dd/MM/y",
+    "dd/MM/yy"
+  ],
+  "pt-GW":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "dd/MM/y",
+    "dd/MM/yy"
+  ],
+  "pt-MO":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "dd/MM/y",
+    "dd/MM/yy"
+  ],
+  "pt-MZ":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "dd/MM/y",
+    "dd/MM/yy"
+  ],
+  "pt-PT":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "dd/MM/y",
+    "dd/MM/yy"
+  ],
+  "pt-ST":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "dd/MM/y",
+    "dd/MM/yy"
+  ],
+  "pt-TL":   [
+    "EEEE, d 'de' MMMM 'de' y",
+    "dd/MM/y",
+    "dd/MM/yy"
+  ],
+  "ro":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd.MM.y"
+  ],
+  "ru":   [
+    "EEEE, d MMMM y 'г'.",
+    "d MMM y 'г'.",
+    "dd.MM.y"
+  ],
+  "si":   [
+    "y MMMM d, EEEE",
+    "y MMM d",
+    "y-MM-dd"
+  ],
+  "sk":   [
+    "EEEE, d. MMMM y",
+    "d. M. y",
+    "d. M. y"
+  ],
+  "sl":   [
+    "EEEE, dd. MMMM y",
+    "d. MMM y",
+    "d. M. yy"
+  ],
+  "sr":   [
+    "EEEE, dd. MMMM y.",
+    "dd.MM.y.",
+    "d.M.yy."
+  ],
+  "sr-Cyrl":   [
+    "EEEE, dd. MMMM y.",
+    "dd.MM.y.",
+    "d.M.yy."
+  ],
+  "sr-Latn":   [
+    "EEEE, dd. MMMM y.",
+    "dd.MM.y.",
+    "d.M.yy."
+  ],
+  "sv":   [
+    "EEEE d MMMM y",
+    "d MMM y",
+    "y-MM-dd"
+  ],
+  "sw":   [
+    "EEEE, d MMMM y",
+    "d MMM y",
+    "dd/MM/y"
+  ],
+  "ta":   [
+    "EEEE, d MMMM, y",
+    "d MMM, y",
+    "d/M/yy"
+  ],
+  "te":   [
+    "EEEE, d MMMM, y",
+    "d MMM, y",
+    "dd-MM-yy"
+  ],
+  "th":   [
+    "EEEEที่ d MMMM G y",
+    "d MMM y",
+    "d/M/yy"
+  ],
+  "tr":   [
+    "d MMMM y EEEE",
+    "d MMM y",
+    "d.MM.y"
+  ],
+  "ug":   [
+    "y، d-MMMM، EEEE",
+    "y، d-MMM",
+    "M/d/y"
+  ],
+  "uk":   [
+    "EEEE, d MMMM y 'р'.",
+    "d MMM y 'р'.",
+    "dd.MM.yy"
+  ],
+  "ur":   [
+    "EEEE، d MMMM، y",
+    "d MMM، y",
+    "y/M/d"
+  ],
+  "ur-Latn":   [
+    "EEEE، d MMMM، y",
+    "d MMM، y",
+    "y/M/d"
+  ],
+  "uz":   [
+    "EEEE, d-MMMM, y",
+    "d-MMM, y",
+    "dd/MM/yy"
+  ],
+  "uz-AF":   [
+    "y MMMM d, EEEE",
+    "y MMM d",
+    "y-MM-dd"
+  ],
+  "uz-Cyrl":   [
+    "EEEE, dd MMMM, y",
+    "d MMM, y",
+    "dd/MM/yy"
+  ],
+  "uz-Latn":   [
+    "EEEE, d-MMMM, y",
+    "d-MMM, y",
+    "dd/MM/yy"
+  ],
+  "vi":   [
+    "EEEE, 'ngày' dd MMMM 'năm' y",
+    "dd 'tháng' M 'năm' y",
+    "dd/MM/y"
+  ],
+  "zh":   [
+    "y年M月d日EEEE",
+    "y年M月d日",
+    "y/M/d"
+  ],
+  "zh-Hans":   [
+    "y年M月d日EEEE",
+    "y年M月d日",
+    "y/M/d"
+  ],
+  "zh-Hans-HK":   [
+    "y年M月d日EEEE",
+    "y年M月d日",
+    "d/M/yy"
+  ],
+  "zh-Hans-MO":   [
+    "y年M月d日EEEE",
+    "y年M月d日",
+    "d/M/yy"
+  ],
+  "zh-Hans-SG":   [
+    "y年M月d日EEEE",
+    "y年M月d日",
+    "dd/MM/yy"
+  ],
+  "zh-Hant":   [
+    "y年M月d日 EEEE",
+    "y年M月d日",
+    "y/M/d"
+  ],
+  "zh-Hant-HK":   [
+    "y年M月d日 EEEE",
+    "y年M月d日",
+    "d/M/y"
+  ],
+  "zh-Hant-MO":   [
+    "y年M月d日 EEEE",
+    "y年M月d日",
+    "d/M/y"
+  ]
+}
