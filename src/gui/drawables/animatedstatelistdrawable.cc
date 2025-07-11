@@ -14,14 +14,6 @@ AnimatedStateListDrawable::AnimatedStateListDrawable():StateListDrawable(){
     jumpToCurrentState();
 }
 
-AnimatedStateListDrawable::AnimatedStateListDrawable(Context*ctx,const AttributeSet&atts)
-   :AnimatedStateListDrawable(){
-    mState->setConstantSize(atts.getBoolean("constantSize"));
-    mState->setVariablePadding(atts.getBoolean("variablePadding"));
-    mState->setEnterFadeDuration(atts.getInt("enterFadeDuration"));
-    mState->setExitFadeDuration(atts.getInt("exitFadeDuration"));
-}
-
 AnimatedStateListDrawable::AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListDrawable::AnimatedStateListState> state)
   :StateListDrawable(state){
     std::shared_ptr<AnimatedStateListState> newState = std::make_shared<AnimatedStateListState>(state.get(), this);

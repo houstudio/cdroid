@@ -1,0 +1,777 @@
+{
+  "ar-IL":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "ar-KM":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "ar-MA":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "as":   [
+    "a h:mm:ss",
+    "HH:mm:ss",
+    "a h:mm:ss"
+  ],
+  "as-Latn":   [
+    "a h:mm:ss",
+    "HH:mm:ss",
+    "a h:mm:ss"
+  ],
+  "az":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "az-Cyrl":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "az-Latn":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "be":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "bg":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "H:mm:ss"
+  ],
+  "bo":   [
+    "ah:mm:ss",
+    "HH:mm:ss",
+    "ah:mm:ss"
+  ],
+  "bs":   [
+    "hh:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "bs-Cyrl":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "bs-Latn":   [
+    "hh:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "ca":   [
+    "h.mm.ss a",
+    "H.mm.ss",
+    "H.mm.ss"
+  ],
+  "cs":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "H:mm:ss"
+  ],
+  "da":   [
+    "h.mm.ss a",
+    "HH.mm.ss",
+    "HH.mm.ss"
+  ],
+  "de":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-AI":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-AT":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-BE":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-BI":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-BW":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-BZ":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-CC":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-CH":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-CK":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-CM":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-CX":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-DE":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-DG":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-DK":   [
+    "h.mm.ss a",
+    "HH.mm.ss",
+    "HH.mm.ss"
+  ],
+  "en-FI":   [
+    "h.mm.ss a",
+    "H.mm.ss",
+    "H.mm.ss"
+  ],
+  "en-FK":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-GB":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-GG":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-GI":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-IL":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "H:mm:ss"
+  ],
+  "en-IM":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-IO":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-JE":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-KE":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-MG":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-MS":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-MT":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-MU":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-NF":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-NG":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-NL":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-NR":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-NU":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-PN":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-Qaag":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-RW":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-SC":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-SE":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-SH":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-SI":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-SX":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-TK":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-TV":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-TZ":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-UG":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "en-US":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "H:mm:ss"
+  ],
+  "es-AR":   [
+    "hh:mm:ss",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "es-BO":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "es-BR":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "es-BZ":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "es-CL":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "es-CO":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es-CR":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es-CU":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "es-DO":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es-EC":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "es-GT":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es-HN":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es-MX":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es-NI":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es-PA":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es-PE":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es-PH":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es-PR":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es-PY":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "es-SV":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es-US":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "es-UY":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "es-VE":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "et":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "eu":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "fa":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "H:mm:ss"
+  ],
+  "fa-AF":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "fa-Latn":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "H:mm:ss"
+  ],
+  "fi":   [
+    "h.mm.ss a",
+    "H.mm.ss",
+    "H.mm.ss"
+  ],
+  "fr":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "fr-CM":   [
+    "h:mm:ss",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "fr-DJ":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "fr-DZ":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "fr-MR":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "fr-SY":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "fr-TD":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "fr-TN":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "fr-VU":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "gl":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "hr":   [
+    "hh:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "hu":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "H:mm:ss"
+  ],
+  "in":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "it":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "iw":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "H:mm:ss"
+  ],
+  "ja":   [
+    "aK:mm:ss",
+    "H:mm:ss",
+    "H:mm:ss"
+  ],
+  "jv":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "jv-Latn":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "ka":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "kk":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "ko":   [
+    "a h:mm:ss",
+    "HH:mm:ss",
+    "a h:mm:ss"
+  ],
+  "lo":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "H:mm:ss"
+  ],
+  "lt":   [
+    "hh:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "lv":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "mk":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "mn":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "mr":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "h:mm:ss a"
+  ],
+  "my":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "my-Qaag":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "nb":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "ne":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "ne-IN":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "nl":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "pl":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "pt":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "pt-MO":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "ro":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "ru":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "si":   [
+    "a h.mm.ss",
+    "HH.mm.ss",
+    "a h.mm.ss"
+  ],
+  "sk":   [
+    "h:mm:ss a",
+    "H:mm:ss",
+    "H:mm:ss"
+  ],
+  "sl":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "sr":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "sr-Cyrl":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "sr-Latn":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "sv":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "sv-FI":   [
+    "h.mm.ss a",
+    "HH.mm.ss",
+    "HH.mm.ss"
+  ],
+  "sw":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "ta":   [
+    "a h:mm:ss",
+    "HH:mm:ss",
+    "a h:mm:ss"
+  ],
+  "ta-LK":   [
+    "a h:mm:ss",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "th":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "tr":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "tr-CY":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "h:mm:ss a"
+  ],
+  "ug":   [
+    "a h:mm:ss",
+    "HH:mm:ss",
+    "a h:mm:ss"
+  ],
+  "uk":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "uz":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "uz-Cyrl":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "uz-Latn":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "vi":   [
+    "h:mm:ss a",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ],
+  "zh":   [
+    "ah:mm:ss",
+    "HH:mm:ss",
+    "ah:mm:ss"
+  ],
+  "zh-Hans":   [
+    "ah:mm:ss",
+    "HH:mm:ss",
+    "ah:mm:ss"
+  ],
+  "zh-Hant":   [
+    "ah:mm:ss",
+    "HH:mm:ss",
+    "HH:mm:ss"
+  ]
+}
