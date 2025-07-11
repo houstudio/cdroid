@@ -11,7 +11,6 @@ set(DECODER_SRCS
     gifframesequence.cc
     pngframesequence.cc
     webpframesequence.cc
-    #pngchunks.cc
 )
 
 include_directories(
