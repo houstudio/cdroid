@@ -23,7 +23,7 @@ GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet& attr
 
     init();
     mGestureStrokeWidth = attrs.getFloat("gestureStrokeWidth", mGestureStrokeWidth);
-    mInvalidateExtraBorder = std::max(1, ((int) mGestureStrokeWidth) - 1);
+    mInvalidateExtraBorder = std::max(1, int(mGestureStrokeWidth - 1));
     mCertainGestureColor = attrs.getColor("gestureColor",mCertainGestureColor);
     mUncertainGestureColor = attrs.getColor("uncertainGestureColor",mUncertainGestureColor);
     mFadeDuration = attrs.getInt("fadeDuration", (int) mFadeDuration);
@@ -96,8 +96,7 @@ float GestureOverlayView::getGestureStrokeWidth() const{
 
 void GestureOverlayView::setGestureStrokeWidth(float gestureStrokeWidth) {
     mGestureStrokeWidth = gestureStrokeWidth;
-    mInvalidateExtraBorder = std::max(1, int(gestureStrokeWidth) - 1);
-    //mGesturePaint.setStrokeWidth(gestureStrokeWidth);
+    mInvalidateExtraBorder = std::max(1, int(gestureStrokeWidth - 1));
 }
 
 int GestureOverlayView::getGestureStrokeType() const{
@@ -357,7 +356,7 @@ void GestureOverlayView::cancelGesture() {
     mPreviousWasGesturing = false;
     mStrokeBuffer.clear();
 
-    std::vector<OnGesturingListener>& otherListeners = mOnGesturingListeners;
+    std::vector<OnGesturingListener> otherListeners = mOnGesturingListeners;
     count = otherListeners.size();
     for (int i = 0; i < count; i++) {
         otherListeners.at(i).onGesturingEnded(*this);
@@ -464,7 +463,7 @@ void GestureOverlayView::touchDown(MotionEvent& event) {
     mCurveEndY = y;
 
     // pass the event to handlers
-    std::vector<OnGestureListener>& listeners = mOnGestureListeners;
+    std::vector<OnGestureListener> listeners = mOnGestureListeners;
     const int count = listeners.size();
     for (int i = 0; i < count; i++) {
         listeners.at(i).onGestureStarted(*this, event);
@@ -528,7 +527,7 @@ Rect GestureOverlayView::touchMove(MotionEvent& event) {
                     mIsGesturing = true;
                     setCurrentColor(mCertainGestureColor);
 
-                    std::vector<OnGesturingListener>& listeners = mOnGesturingListeners;
+                    std::vector<OnGesturingListener> listeners = mOnGesturingListeners;
                     const int count = listeners.size();
                     for (int i = 0; i < count; i++) {
                         listeners.at(i).onGesturingStarted(*this);
@@ -539,7 +538,7 @@ Rect GestureOverlayView::touchMove(MotionEvent& event) {
         }
 
         // pass the event to handlers
-        std::vector<OnGestureListener>& listeners = mOnGestureListeners;
+        std::vector<OnGestureListener> listeners = mOnGestureListeners;
         const int count = listeners.size();
         for (int i = 0; i < count; i++) {
             listeners.at(i).onGesture(*this, event);
@@ -559,7 +558,7 @@ void GestureOverlayView::touchUp(MotionEvent& event, bool cancel) {
 
         if (!cancel) {
             // pass the event to handlers
-            std::vector<OnGestureListener>& listeners = mOnGestureListeners;
+            std::vector<OnGestureListener> listeners = mOnGestureListeners;
             const int count = listeners.size();
             for (int i = 0; i < count; i++) {
                 listeners.at(i).onGestureEnded(*this, event);
@@ -579,7 +578,7 @@ void GestureOverlayView::touchUp(MotionEvent& event, bool cancel) {
     mPreviousWasGesturing = mIsGesturing;
     mIsGesturing = false;
 
-    std::vector<OnGesturingListener>& listeners = mOnGesturingListeners;
+    std::vector<OnGesturingListener> listeners = mOnGesturingListeners;
     const int count = listeners.size();
     for (int i = 0; i < count; i++) {
         listeners.at(i).onGesturingEnded(*this);
@@ -588,7 +587,7 @@ void GestureOverlayView::touchUp(MotionEvent& event, bool cancel) {
 
 void GestureOverlayView::cancelGesture(MotionEvent& event) {
     // pass the event to handlers
-    std::vector<OnGestureListener>& listeners = mOnGestureListeners;
+    std::vector<OnGestureListener> listeners = mOnGestureListeners;
     const int count = listeners.size();
     for (int i = 0; i < count; i++) {
         listeners.at(i).onGestureCancelled(*this, event);
@@ -598,7 +597,7 @@ void GestureOverlayView::cancelGesture(MotionEvent& event) {
 }
 
 void GestureOverlayView::fireOnGesturePerformed() {
-    std::vector<OnGesturePerformedListener>& actionListeners = mOnGesturePerformedListeners;
+    std::vector<OnGesturePerformedListener> actionListeners = mOnGesturePerformedListeners;
     const int count = actionListeners.size();
     for (int i = 0; i < count; i++) {
         actionListeners.at(i).onGesturePerformed(*this, *mCurrentGesture);
