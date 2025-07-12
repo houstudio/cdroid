@@ -25,7 +25,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/address"
-	android:text="@string/webview"/> 
+        android:text="@string/webview"/> 
+    <LinearLayout 
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
     <AnalogClock
         android:layout_width="320dp"
         android:layout_height="320dp"
@@ -33,4 +36,10 @@
         android:hand_hour="@mipmap/hour"
         android:hand_minute="@mipmap/minute"
         android:hand_second="@mipmap/second"/>
+    <GestureOverlayView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#112233"
+        />
+     </LinearLayout>
 </LinearLayout>

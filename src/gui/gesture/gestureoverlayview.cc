@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <gesture/gestureoverlayview.h>
 namespace cdroid{
-
+DECLARE_WIDGET(GestureOverlayView)
 GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet& attrs)
   :FrameLayout(context, attrs){
 
