@@ -19,7 +19,7 @@
 #include <color.h>
 #include <cdlog.h>
 
-using namespace cdroid;
+namespace cdroid{
 
 RoundScrollbarRenderer::RoundScrollbarRenderer(View*parent) {
     // Paints for the round scrollbar.
@@ -163,3 +163,4 @@ float RoundScrollbarRenderer::dpToPx(float dp) {
     return dp * ((float) mParent->getContext()->getDisplayMetrics().densityDpi)
             / DisplayMetrics::DENSITY_DEFAULT;
 }
+}/*endof namespace*/

@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef __RADIOGROUP_H__
 #define __RADIOGROUP_H__
 #include <widget/linearlayout.h>
@@ -7,14 +24,7 @@ namespace cdroid{
 
 class RadioGroup: public LinearLayout{
 public:
-    class LayoutParams:public LinearLayout::LayoutParams{
-    public:
-        LayoutParams(Context*c,const AttributeSet&);
-        LayoutParams(int w,int h);
-        LayoutParams(int w, int h, float initWeight);
-        LayoutParams(const ViewGroup::LayoutParams& p);
-        LayoutParams(const MarginLayoutParams& source);
-    };
+    class LayoutParams;
 private:
     int mCheckedId;
     bool mInitialCheckedId;
@@ -44,6 +54,14 @@ public:
     void check(int id);
     void clearCheck();
 };
-}//namepace
+class RadioGroup::LayoutParams:public LinearLayout::LayoutParams{
+public:
+    LayoutParams(Context*c,const AttributeSet&);
+    LayoutParams(int w,int h);
+    LayoutParams(int w, int h, float initWeight);
+    LayoutParams(const ViewGroup::LayoutParams& p);
+    LayoutParams(const MarginLayoutParams& source);
+};
+}/*endof namepace*/
 
 #endif

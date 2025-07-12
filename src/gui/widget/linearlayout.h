@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef UI_LIBUI_LINEARLAYOUT_H_
 #define UI_LIBUI_LINEARLAYOUT_H_
 
@@ -15,17 +32,7 @@ public:
         SHOW_DIVIDER_MIDDLE=2,
         SHOW_DIVIDER_END=4
     };
-    class LayoutParams:public ViewGroup::MarginLayoutParams{
-    public:
-        float weight;
-        int gravity = -1;
-        LayoutParams(Context* c,const AttributeSet&attrs);
-        LayoutParams(int width, int height);
-        LayoutParams(int width, int height, float weight);
-        LayoutParams(const LayoutParams& p);
-        LayoutParams(const MarginLayoutParams&source);
-        LayoutParams(const ViewGroup::LayoutParams&source);
-    };
+    class LayoutParams;
 private:
     static constexpr int VERTICAL_GRAVITY_COUNT = 4;
     static constexpr int INDEX_CENTER_VERTICAL = 0;
@@ -115,5 +122,17 @@ public:
     virtual ~LinearLayout();
 };
 
-}  // namespace cdroid
+class LinearLayout::LayoutParams:public ViewGroup::MarginLayoutParams{
+public:
+    float weight;
+    int gravity = -1;
+    LayoutParams(Context* c,const AttributeSet&attrs);
+    LayoutParams(int width, int height);
+    LayoutParams(int width, int height, float weight);
+    LayoutParams(const LayoutParams& p);
+    LayoutParams(const MarginLayoutParams&source);
+    LayoutParams(const ViewGroup::LayoutParams&source);
+};
+
+}/*namespace cdroid*/
 #endif 
