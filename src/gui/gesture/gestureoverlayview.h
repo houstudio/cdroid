@@ -148,7 +148,7 @@ public:
     Gesture* getGesture()const;
     void setGesture(Gesture* gesture);
     Path getGesturePath();
-    Path getGesturePath(Path path);
+    Path getGesturePath(Path& path);
     bool isGestureVisible()const;
     void setGestureVisible(bool visible);
     long getFadeOffset()const;

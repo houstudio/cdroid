@@ -15,7 +15,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#if 0
 #include <gesture/gestureoverlayview.h>
 namespace cdroid{
 
@@ -36,7 +35,6 @@ GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet& attr
     mInterceptEvents = attrs.getBoolean("eventsInterceptionEnabled", mInterceptEvents);
     mFadeEnabled = attrs.getBoolean("fadeEnabled", mFadeEnabled);
     mOrientation = attrs.getInt("orientation", mOrientation);
-
 }
 
 void GestureOverlayView::init() {
@@ -45,7 +43,21 @@ void GestureOverlayView::init() {
     mInterpolator = AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
     mCurrentColor = mCertainGestureColor;
     mFadeDuration = 150;
-    mFadeOffset = 420;
+    mFadeOffset  = 420;
+    mFadingAlpha = 1.0f;
+    mIsGesturing = false;
+    mFadeEnabled = true;
+    mIsFadingOut = false;
+    mInterceptEvents= true;
+    mGestureVisible = true;
+    mPreviousWasGesturing = false;
+    mGestureStrokeType = GESTURE_STROKE_TYPE_SINGLE;
+    mCertainGestureColor = 0xFFFFFF00;
+    mUncertainGestureColor = 0x48FFFF00;
+    mInvalidateExtraBorder = 10;
+    mGestureStrokeWidth=12.f;
+    mGestureStrokeLengthThreshold = 50.0f;
+    mGestureStrokeSquarenessTreshold = 0.275f;
     mCurrentGesture = nullptr;
     setPaintAlpha(255);
 }
@@ -148,13 +160,13 @@ void GestureOverlayView::setGesture(Gesture* gesture) {
     setCurrentColor(mCertainGestureColor);
     mCurrentGesture = gesture;
 
-    Path path = mCurrentGesture->toPath();
+    Path* path = mCurrentGesture->toPath();
     RectF bounds;
-    path.computeBounds(bounds, true);
+    path->compute_bounds(bounds,true);//computeBounds(bounds, true);
 
     // TODO: The path should also be scaled to fit inside this view
-    mPath.rewind();
-    mPath.addPath(path, -bounds.left + (getWidth() - bounds.width) / 2.0f,
+    mPath.reset();//rewind();
+    mPath.append_path(*path, -bounds.left + (getWidth() - bounds.width) / 2.0f,
             -bounds.top + (getHeight() - bounds.height) / 2.0f);
 
     mResetGesture = true;
@@ -166,8 +178,9 @@ Path GestureOverlayView::getGesturePath() {
     return mPath;
 }
 
-Path GestureOverlayView::getGesturePath(Path path) {
-    path.set(mPath);
+Path GestureOverlayView::getGesturePath(Path& path) {
+    path.reset();//
+    path.append_path(mPath);
     return path;
 }
 
@@ -209,7 +222,9 @@ void GestureOverlayView::addOnGesturePerformedListener(const OnGesturePerformedL
 }
 
 void GestureOverlayView::removeOnGesturePerformedListener(const OnGesturePerformedListener& listener) {
-    mOnGesturePerformedListeners.remove(listener);
+    auto it = std::find(mOnGesturePerformedListeners.begin(),mOnGesturePerformedListeners.end(),listener);
+    if(it!=mOnGesturePerformedListeners.end())
+        mOnGesturePerformedListeners.erase(it);
     if (mOnGesturePerformedListeners.size() <= 0) {
         mHandleGestureActions = false;
     }
@@ -257,7 +272,9 @@ void GestureOverlayView::draw(Canvas& canvas) {
         canvas.set_line_width(mGestureStrokeWidth);
         canvas.set_line_cap(Cairo::Context::LineCap::ROUND);
         canvas.set_line_join(Cairo::Context::LineJoin::ROUND);
-        canvas.drawPath(mPath, mGesturePaint);
+        //canvas.drawPath(mPath, mGesturePaint);
+        mPath.append_to_context(&canvas);
+        canvas.stroke();
     }
 }
 
@@ -293,7 +310,7 @@ void GestureOverlayView::clear(bool animated, bool fireActionPerformed, bool imm
 
         if (immediate) {
             mCurrentGesture = nullptr;
-            mPath.rewind();
+            mPath.reset();//rewind();
             invalidate();
         } else if (fireActionPerformed) {
             postDelayed(mFadingOut, mFadeOffset);
@@ -302,7 +319,7 @@ void GestureOverlayView::clear(bool animated, bool fireActionPerformed, bool imm
             postDelayed(mFadingOut, mFadeOffset);
         } else {
             mCurrentGesture = nullptr;
-            mPath.rewind();
+            mPath.reset();//rewind();
             invalidate();
         }
     }
@@ -313,7 +330,7 @@ void GestureOverlayView::cancelClearAnimation() {
     mIsFadingOut = false;
     mFadingHasStarted = false;
     removeCallbacks(mFadingOut);
-    mPath.rewind();
+    mPath.reset();//rewind();
     mCurrentGesture = nullptr;
 }
 
@@ -418,7 +435,7 @@ void GestureOverlayView::touchDown(MotionEvent& event) {
         if (mHandleGestureActions) setCurrentColor(mUncertainGestureColor);
         mResetGesture = false;
         mCurrentGesture = nullptr;
-        mPath.rewind();
+        mPath.reset();//rewind();
     } else if (mCurrentGesture == nullptr || mCurrentGesture->getStrokesCount() == 0) {
         if (mHandleGestureActions) setCurrentColor(mUncertainGestureColor);
     }
@@ -438,7 +455,7 @@ void GestureOverlayView::touchDown(MotionEvent& event) {
     }
 
     mStrokeBuffer.push_back(GesturePoint(x, y, event.getEventTime()));
-    mPath.moveTo(x, y);
+    mPath.move_to(x, y);
 
     const int border = mInvalidateExtraBorder;
     mInvalidRect.set(int(x - border), int(y - border), int(x + border), int(y + border));
@@ -477,7 +494,7 @@ Rect GestureOverlayView::touchMove(MotionEvent& event) {
         float cX = mCurveEndX = (x + previousX) / 2;
         float cY = mCurveEndY = (y + previousY) / 2;
 
-        mPath.quadTo(previousX, previousY, cX, cY);
+        mPath.quad_to(previousX, previousY, cX, cY);
 
         // union with the control point of the new curve
         areaToRefresh.Union((int) previousX - border, (int) previousY - border,
@@ -601,7 +618,7 @@ void GestureOverlayView::FadeOutProc(){
             mPreviousWasGesturing = false;
             mIsFadingOut = false;
             mFadingHasStarted = false;
-            mPath.rewind();
+            mPath.reset();//rewind();
             mCurrentGesture = nullptr;
             setPaintAlpha(255);
         } else {
@@ -617,7 +634,7 @@ void GestureOverlayView::FadeOutProc(){
         fireOnGesturePerformed();
 
         mFadingHasStarted = false;
-        mPath.rewind();
+        mPath.reset();//rewind();
         mCurrentGesture = nullptr;
         mPreviousWasGesturing = false;
         setPaintAlpha(255);
@@ -626,4 +643,3 @@ void GestureOverlayView::FadeOutProc(){
     invalidate();
 }
 }/*endof namespace*/
-#endif

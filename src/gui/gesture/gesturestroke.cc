@@ -30,6 +30,7 @@ GestureStroke::GestureStroke(const std::vector<GesturePoint>& points) {
     RectF bx{0,0,0,0};
     float len = 0;
     int index = 0;
+    mCachedPath = nullptr;
 
     for (int i = 0; i < count; i++) {
         const GesturePoint p = points.at(i);
@@ -53,6 +54,10 @@ GestureStroke::GestureStroke(const std::vector<GesturePoint>& points) {
     length = len;
 }
 
+GestureStroke::~GestureStroke(){
+    delete mCachedPath;
+}
+
 /**
  * A faster constructor specially for cloning a stroke.
  */
@@ -60,6 +65,7 @@ GestureStroke::GestureStroke(const RectF& bbx, float len,const std::vector<float
     boundingBox = bbx;//new RectF(bbx.left, bbx.top, bbx.width, bbx.height);
     length = len;
     points = pts;
+    mCachedPath = nullptr;
     timestamps = times;
 }
 
@@ -81,10 +87,10 @@ static void quad_to(Canvas&c,double x1, double y1, double x2, double y2){
  * @param canvas
  */
 void GestureStroke::draw(Canvas& canvas) {
-    /*if (mCachedPath == nullptr) {
-        makePath();LOGD("TODO");
+    if (mCachedPath == nullptr) {
+        makePath();
     }
-    canvas.drawPath(mCachedPath);*/
+    //canvas.drawPath(*mCachedPath);
     std::vector<float>& localPoints = points;
     const int count = (int)localPoints.size();
 
@@ -106,9 +112,9 @@ void GestureStroke::draw(Canvas& canvas) {
     }
 }
 
-cdroid::Path GestureStroke::getPath() {
-    if (1/*mCachedPath == null*/) {
-        makePath();LOGD("TODO");
+cdroid::Path* GestureStroke::getPath() {
+    if (mCachedPath == nullptr) {
+        makePath();
     }
 
     return mCachedPath;
@@ -118,21 +124,22 @@ void GestureStroke::makePath() {
     std::vector<float>& localPoints = points;
     const int count = (int)localPoints.size();
 
-    Path path;
+    Path* path=nullptr;
 
     float mX = 0, mY = 0;
 
     for (int i = 0; i < count; i += 2) {
         float x = localPoints[i];
         float y = localPoints[i + 1];
-        if (i==0/*path == null*/) {
-            path.move_to(x, y);
+        if (path == nullptr) {
+            path = new Path;
+            path->move_to(x, y);
             mX = x;  mY = y;
         } else {
             float dx = std::abs(x - mX);
             float dy = std::abs(y - mY);
             if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-                path.quad_to(mX, mY, (x + mX) / 2, (y + mY) / 2);
+                path->quad_to(mX, mY, (x + mX) / 2, (y + mY) / 2);
                 mX = x;  mY = y;
             }
         }
@@ -224,8 +231,7 @@ GestureStroke* GestureStroke::deserialize(std::istream& in){
  * Invalidates the cached path that is used to render the stroke.
  */
 void GestureStroke::clearPath() {
-    LOGD("TODO");
-    //if (mCachedPath != nullptr) mCachedPath.reset();//rewind();
+    if (mCachedPath != nullptr) mCachedPath->reset();//rewind();
 }
 
 /**
