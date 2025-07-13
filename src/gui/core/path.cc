@@ -379,6 +379,36 @@ void Path::append_path(const Path&other){
     mCTX->append_path(*path);
 }
 
+void Path::append_path(const Path&path,double dx,double dy){
+    mCTX->save();
+    mCTX->translate(dx, dy);
+    cairo_path_t *dtPath = cairo_copy_path(mCTX->cobj());
+    for (int i = 0; i < dtPath->num_data; i += dtPath->data[i].header.length) {
+        cairo_path_data_t *data = &dtPath->data[i];
+        switch (data->header.type) {
+            case CAIRO_PATH_MOVE_TO:
+                mCTX->move_to(data[1].point.x, data[1].point.y);
+                break;
+            case CAIRO_PATH_LINE_TO:
+                mCTX->line_to(data[1].point.x, data[1].point.y);
+                break;
+            case CAIRO_PATH_CURVE_TO:
+                mCTX->curve_to(data[1].point.x, data[1].point.y,
+                               data[2].point.x, data[2].point.y,
+                               data[3].point.x, data[3].point.y);
+                break;
+            case CAIRO_PATH_CLOSE_PATH:
+                mCTX->close_path();
+                break;
+            default:
+                fprintf(stderr, "Unknown path type\n");
+                break;
+        }
+    }
+    cairo_path_destroy(dtPath);
+    mCTX->restore();
+}
+
 void Path::compute_bounds(RectF&bounds, bool include_stroke){
     double x1, y1, x2, y2;
     if (include_stroke) {
@@ -556,6 +586,7 @@ void Path::approximate(std::vector<float>&approximation,float acceptableError){
         numVerbs++;
         last_point.set(data[ptCount-1].point.x,data[ptCount-1].point.y);
     }
+    cairo_path_destroy(crPath);
     if (segmentPoints.empty()) {
         if (numVerbs == 1) {
             auto pt = crPath->data[0].point;

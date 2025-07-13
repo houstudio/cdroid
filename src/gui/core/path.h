@@ -57,6 +57,7 @@ public:
     void begin_new_sub_path();
     void close_path();
     void append_path(const Path&);
+    void append_path(const Path&path,double dx,double dy);
     void compute_bounds(RectF&, bool include_stroke);
     bool is_convex()const;
     void approximate(std::vector<float>&,float acceptableError);

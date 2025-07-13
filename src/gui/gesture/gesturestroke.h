@@ -33,7 +33,7 @@ public:
     std::vector<float> points;
 private:
     std::vector<int64_t> timestamps;
-    cdroid::Path mCachedPath;
+    cdroid::Path* mCachedPath;
     GestureStroke(const RectF& bbx, float len,const std::vector<float>& pts,const std::vector<int64_t>&times);
     void makePath(); 
 public:
@@ -43,14 +43,14 @@ public:
      * @param points
      */
     GestureStroke(const std::vector<GesturePoint>& points);
-
+    virtual ~GestureStroke();
     /**
      * Draws the stroke with a given canvas and paint.
      *
      * @param canvas
      */
     void draw(Canvas& canvas);
-    cdroid::Path getPath();
+    cdroid::Path* getPath();
     /**
      * Converts the stroke to a Path of a given number of points.
      *
