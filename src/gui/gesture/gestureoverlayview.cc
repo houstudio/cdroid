@@ -50,7 +50,9 @@ void GestureOverlayView::init() {
     mIsFadingOut = false;
     mInterceptEvents= true;
     mGestureVisible = true;
+    mFadingHasStarted = false;
     mPreviousWasGesturing = false;
+    mHandleGestureActions = false;
     mGestureStrokeType = GESTURE_STROKE_TYPE_SINGLE;
     mCertainGestureColor = 0xFFFFFF00;
     mUncertainGestureColor = 0x48FFFF00;
@@ -471,7 +473,7 @@ void GestureOverlayView::touchDown(MotionEvent& event) {
 }
 
 Rect GestureOverlayView::touchMove(MotionEvent& event) {
-    Rect areaToRefresh;
+    Rect areaToRefresh={0,0,0,0};
 
     const float x = event.getX();
     const float y = event.getY();
