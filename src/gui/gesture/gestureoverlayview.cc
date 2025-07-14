@@ -54,6 +54,7 @@ void GestureOverlayView::init() {
     mInterceptEvents= true;
     mGestureVisible = true;
     mFadingHasStarted = false;
+    mResetMultipleStrokes = false;
     mPreviousWasGesturing = false;
     mHandleGestureActions = false;
     mGestureStrokeType = GESTURE_STROKE_TYPE_SINGLE;
@@ -629,6 +630,7 @@ void GestureOverlayView::FadeOutProc(){
             mIsFadingOut = false;
             mFadingHasStarted = false;
             mPath.reset();//rewind();
+            delete mCurrentGesture;
             mCurrentGesture = nullptr;
             setPaintAlpha(255);
         } else {

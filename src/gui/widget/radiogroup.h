@@ -33,8 +33,8 @@ private:
     CompoundButton::OnCheckedChangeListener mOnCheckedChangeListener;
     ViewGroup::OnHierarchyChangeListener mOnHierarchyChangeListener;
     void init();
-    void onChildViewAdded(ViewGroup& parent, View* child);
-    void onChildViewRemoved(ViewGroup& parent, View* child);
+    void onChildViewAdded(View& parent, View* child);
+    void onChildViewRemoved(View& parent, View* child);
     void setCheckedId(int id);
     void setCheckedStateForView(int viewId, bool checked);
     void onRadioChecked(CompoundButton&c,bool checked);

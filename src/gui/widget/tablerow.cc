@@ -54,12 +54,17 @@ TableRow::TableRow(Context* context,const AttributeSet& attrs)
 }
 
 void TableRow::initTableRow() {
-    /*OnHierarchyChangeListener oldListener = mOnHierarchyChangeListener;
-    mChildrenTracker = new ChildrenTracker();
-    if (oldListener != null) {
-        mChildrenTracker.setOnHierarchyChangeListener(oldListener);
+    OnHierarchyChangeListener oldListener = mOnHierarchyChangeListener;
+    mChildrenTracker.onChildViewAdded  = std::bind(&TableRow::onChildViewAdded,this,std::placeholders::_1,std::placeholders::_2);
+    mChildrenTracker.onChildViewRemoved= std::bind(&TableRow::onChildViewRemoved,this,std::placeholders::_1,std::placeholders::_2);
+    if (oldListener.onChildViewAdded||oldListener.onChildViewRemoved) {
+        mExtHCL = oldListener;
     }
-    super.setOnHierarchyChangeListener(mChildrenTracker);*/
+    ViewGroup::setOnHierarchyChangeListener(mChildrenTracker);
+}
+
+void TableRow::setOnHierarchyChangeListener(const OnHierarchyChangeListener& listener) {
+    mExtHCL = listener;
 }
 
 void TableRow::setColumnCollapsed(int columnIndex, bool collapsed) {
@@ -120,6 +125,24 @@ void TableRow::mapIndexAndColumns() {
         }
 
         mNumColumns = virtualCount;
+    }
+}
+
+void TableRow::onChildViewAdded(View& parent, View* child) {
+    // dirties the index to column map
+    mColumnToChildIndex.clear();// = null;
+
+    if (mExtHCL.onChildViewAdded != nullptr) {
+        mExtHCL.onChildViewAdded(parent, child);
+    }
+}
+
+void TableRow::onChildViewRemoved(View& parent, View* child) {
+    // dirties the index to column map
+    mColumnToChildIndex.clear();// = null;
+
+    if (mExtHCL.onChildViewRemoved != nullptr) {
+        mExtHCL.onChildViewRemoved(parent, child);
     }
 }
 

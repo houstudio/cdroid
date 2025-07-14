@@ -42,7 +42,7 @@ void RadioGroup::onRadioChecked(CompoundButton&c,bool checked){
     setCheckedId(c.getId());
 }
 
-void RadioGroup::onChildViewAdded(ViewGroup& parent, View* child){
+void RadioGroup::onChildViewAdded(View& parent, View* child){
     if((&parent==this)&&dynamic_cast<RadioButton*>(child)){
 	    int id = child->getId();
 	    if(id==View::NO_ID){
@@ -55,7 +55,7 @@ void RadioGroup::onChildViewAdded(ViewGroup& parent, View* child){
     }
 }
 
-void RadioGroup::onChildViewRemoved(ViewGroup& parent, View* child){
+void RadioGroup::onChildViewRemoved(View& parent, View* child){
     if((&parent==this)&&dynamic_cast<RadioButton*>(child)){
 	    ((RadioButton*)child)->setOnCheckedChangeWidgetListener(nullptr);
     }

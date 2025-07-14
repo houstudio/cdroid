@@ -56,12 +56,12 @@ void CoordinatorLayout::initView() {
     mNestedScrollingParentHelper = new NestedScrollingParentHelper(this);
     setupForInsets();
     OnHierarchyChangeListener hcl;
-    hcl.onChildViewAdded = [this](ViewGroup&parent,View*child) {
+    hcl.onChildViewAdded = [this](View&parent,View*child) {
             if (mOnHierarchyChangeListener.onChildViewAdded) {
                 mOnHierarchyChangeListener.onChildViewAdded(parent, child);
             }
         };
-    hcl.onChildViewRemoved = [this](ViewGroup& parent, View* child) {
+    hcl.onChildViewRemoved = [this](View& parent, View* child) {
             onChildViewsChanged(EVENT_VIEW_REMOVED);
             if (mOnHierarchyChangeListener.onChildViewRemoved) {
                 mOnHierarchyChangeListener.onChildViewRemoved(parent, child);

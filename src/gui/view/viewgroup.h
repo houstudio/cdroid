@@ -82,8 +82,8 @@ public:
     typedef cdroid::LayoutParams LayoutParams;
     typedef cdroid::MarginLayoutParams MarginLayoutParams;
     typedef struct{
-        std::function<void(ViewGroup&/*parent*/,View* /*child*/)>onChildViewAdded;
-        std::function<void(ViewGroup&/*parent*/,View* /*child*/)>onChildViewRemoved;
+        std::function<void(View&/*parent*/,View* /*child*/)>onChildViewAdded;
+        std::function<void(View&/*parent*/,View* /*child*/)>onChildViewRemoved;
     }OnHierarchyChangeListener;
     DECLARE_UIEVENT(void,OnAnimationFinished);
 private:

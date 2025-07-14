@@ -31,9 +31,12 @@ private:
     std::vector<int>mColumnWidths;
     std::vector<int>mConstrainedColumnWidths;
 	std::unordered_map<int,int>mColumnToChildIndex;
-
+    OnHierarchyChangeListener mChildrenTracker;
+    OnHierarchyChangeListener mExtHCL;
     void initTableRow();
     void mapIndexAndColumns();
+    void onChildViewAdded(View& parent, View* child);
+    void onChildViewRemoved(View& parent, View* child);
 protected:
     void onLayout(bool changed, int l, int t, int w, int h)override;
     int measureNullChild(int childIndex)override;
@@ -52,6 +55,7 @@ protected:
 public:
     TableRow(int w,int h);
     TableRow(Context* context,const AttributeSet&attrs);
+    void setOnHierarchyChangeListener(const OnHierarchyChangeListener& listener);
     void setColumnCollapsed(int columnIndex, bool collapsed);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     View* getVirtualChildAt(int i) override;
