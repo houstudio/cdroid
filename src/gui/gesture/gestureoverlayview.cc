@@ -50,6 +50,7 @@ void GestureOverlayView::init() {
     mIsGesturing = false;
     mFadeEnabled = true;
     mIsFadingOut = false;
+    mResetGesture= false;
     mInterceptEvents= true;
     mGestureVisible = true;
     mFadingHasStarted = false;
