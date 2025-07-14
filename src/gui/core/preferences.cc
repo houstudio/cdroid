@@ -39,8 +39,9 @@ Preferences::~Preferences(){
 
 void Preferences::load(const std::string&fname){
     std::ifstream fin(fname);
-    if(fin.is_open()){
-        load(fin);
+    if(fname.find("<")==std::string::npos){
+        /*< cant used in filename,but must be used in xml content*/
+        if(fin.is_open())load(fin);
     }else{
         std::istringstream istm(fname);
         load(istm);
