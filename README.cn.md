@@ -38,9 +38,9 @@
 |YearPickerView |                   |                    |               |               |
 
 # **Supported Layouts:**
-| FrameLayout |  LinearLayout  | RelativeLayout | TableRow |
-|-------------|----------------|----------------|----------|
-| TableLayout | AbsoluteLayout |  GridLayout    |          |
+| FrameLayout |  LinearLayout  | RelativeLayout |     TableRow     |
+|-------------|----------------|----------------|------------------|
+| TableLayout | AbsoluteLayout |  GridLayout    |GestureOverlayView|
 
 # **Supported Drawables:**
 |   ColorDrawable   |  BitmapDrawable  |    NinepatchDrawable     |  InsetDrawable  |
