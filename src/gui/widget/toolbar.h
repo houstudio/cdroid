@@ -37,6 +37,7 @@ private:
     ImageButton* mNavButtonView;
     ImageView* mLogoView;
 
+    Context* mPopupContext;
     Drawable* mCollapseIcon;
     std::string mCollapseDescription;
     ImageButton* mCollapseButtonView;
@@ -115,6 +116,7 @@ protected:
     bool isChildOrHidden(View* child);
 public:
     ToolBar(Context*,const AttributeSet&);
+    ~ToolBar()override;
     void setTitleMargin(int start, int top, int end, int bottom);
     int getTitleMarginStart()const;
     void setTitleMarginStart(int margin);
