@@ -12,7 +12,7 @@ namespace cdroid{
 typedef View ActionMenuView;
 class Menu;
 class MenuInflater;
-class ToolBar:public ViewGroup{
+class Toolbar:public ViewGroup{
 public:
     class LayoutParams:public ActionBar::LayoutParams{
     public:
@@ -76,7 +76,7 @@ private:
     Runnable mShowOverflowMenuRunnable;
     MenuItem::OnMenuItemClickListener mOnMenuItemClickListener;
 private:
-    void initToolBar();
+    void initToolbar();
     void ensureLogoView();
     void ensureNavButtonView();
     void ensureCollapseButtonView();
@@ -115,8 +115,8 @@ protected:
     void addChildrenForExpandedActionView();
     bool isChildOrHidden(View* child);
 public:
-    ToolBar(Context*,const AttributeSet&);
-    ~ToolBar()override;
+    Toolbar(Context*,const AttributeSet&);
+    ~Toolbar()override;
     void setTitleMargin(int start, int top, int end, int bottom);
     int getTitleMarginStart()const;
     void setTitleMarginStart(int margin);

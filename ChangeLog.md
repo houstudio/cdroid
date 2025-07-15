@@ -1,4 +1,5 @@
-# **V3.9.8
+# **V4.0.8
+  - GestureOverlayView OK.
   - fix TextView::getBaseline
   - fix GridLayout::LayoutParams's layout_gravity
   - add BaseBundle,Bundle
