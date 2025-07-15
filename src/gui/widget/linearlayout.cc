@@ -87,16 +87,13 @@ void LinearLayout::initView(){
     mAllowInconsistentMeasurement= false;//version <= Build::VERSION_CODES::M;
 }
 
-static const std::unordered_map<std::string,int>orientationkvs={
-    {"horizontal",LinearLayout::HORIZONTAL},
-    {"vertical",LinearLayout::VERTICAL}//
-};
-
 LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
   :ViewGroup(context,attrs){
     initView();
 
-    int index = attrs.getInt("orientation",orientationkvs,-1);
+    int index = attrs.getInt("orientation",std::unordered_map<std::string,int>{
+             {"horizontal",LinearLayout::HORIZONTAL},
+             {"vertical",LinearLayout::VERTICAL} },-1);
     if(index>=0)setOrientation(index);
     index = attrs.getGravity("gravity",-1);
     if(index>=0)setGravity(index);

@@ -28,7 +28,9 @@ GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet& attr
     mUncertainGestureColor = attrs.getColor("uncertainGestureColor",mUncertainGestureColor);
     mFadeDuration = attrs.getInt("fadeDuration", (int) mFadeDuration);
     mFadeOffset = attrs.getInt("fadeOffset", (int) mFadeOffset);
-    mGestureStrokeType = attrs.getInt("gestureStrokeType", mGestureStrokeType);
+    mGestureStrokeType = attrs.getInt("gestureStrokeType",std::unordered_map<std::string,int>{
+            {"single",(int)GESTURE_STROKE_TYPE_SINGLE},
+            {"multiple",(int)GESTURE_STROKE_TYPE_MULTIPLE}}, mGestureStrokeType);
     mGestureStrokeLengthThreshold = attrs.getFloat("gestureStrokeLengthThreshold",  mGestureStrokeLengthThreshold);
     mGestureStrokeAngleThreshold = attrs.getFloat("gestureStrokeAngleThreshold", mGestureStrokeAngleThreshold);
     mGestureStrokeSquarenessTreshold = attrs.getFloat("gestureStrokeSquarenessThreshold", mGestureStrokeSquarenessTreshold);
@@ -48,9 +50,11 @@ void GestureOverlayView::init() {
     mIsGesturing = false;
     mFadeEnabled = true;
     mIsFadingOut = false;
+    mResetGesture= false;
     mInterceptEvents= true;
     mGestureVisible = true;
     mFadingHasStarted = false;
+    mResetMultipleStrokes = false;
     mPreviousWasGesturing = false;
     mHandleGestureActions = false;
     mGestureStrokeType = GESTURE_STROKE_TYPE_SINGLE;
@@ -62,6 +66,10 @@ void GestureOverlayView::init() {
     mGestureStrokeSquarenessTreshold = 0.275f;
     mCurrentGesture = nullptr;
     setPaintAlpha(255);
+}
+
+GestureOverlayView::~GestureOverlayView(){
+    delete mCurrentGesture;
 }
 
 const std::vector<GesturePoint>& GestureOverlayView::getCurrentStroke() const{
@@ -310,6 +318,7 @@ void GestureOverlayView::clear(bool animated, bool fireActionPerformed, bool imm
         mFadingHasStarted = false;
 
         if (immediate) {
+            delete mCurrentGesture;
             mCurrentGesture = nullptr;
             mPath.reset();//rewind();
             invalidate();
@@ -319,6 +328,7 @@ void GestureOverlayView::clear(bool animated, bool fireActionPerformed, bool imm
             mResetMultipleStrokes = true;
             postDelayed(mFadingOut, mFadeOffset);
         } else {
+            delete mCurrentGesture;
             mCurrentGesture = nullptr;
             mPath.reset();//rewind();
             invalidate();
@@ -346,8 +356,8 @@ void GestureOverlayView::cancelGesture() {
     MotionEvent* event = MotionEvent::obtain(now, now, MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
 
     std::vector<OnGestureListener>& listeners = mOnGestureListeners;
-    int count = listeners.size();
-    for (int i = 0; i < count; i++) {
+    size_t count = listeners.size();
+    for (size_t i = 0; i < count; i++) {
         listeners.at(i).onGestureCancelled(*this, *event);
     }
 
@@ -360,7 +370,7 @@ void GestureOverlayView::cancelGesture() {
 
     std::vector<OnGesturingListener> otherListeners = mOnGesturingListeners;
     count = otherListeners.size();
-    for (int i = 0; i < count; i++) {
+    for (size_t i = 0; i < count; i++) {
         otherListeners.at(i).onGesturingEnded(*this);
     }
 }
@@ -435,9 +445,10 @@ void GestureOverlayView::touchDown(MotionEvent& event) {
     if (mGestureStrokeType == GESTURE_STROKE_TYPE_SINGLE || mResetGesture) {
         if (mHandleGestureActions) setCurrentColor(mUncertainGestureColor);
         mResetGesture = false;
+        delete mCurrentGesture;
         mCurrentGesture = nullptr;
         mPath.reset();//rewind();
-    } else if (mCurrentGesture == nullptr || mCurrentGesture->getStrokesCount() == 0) {
+    } else if ((mCurrentGesture == nullptr) || (mCurrentGesture->getStrokesCount() == 0)) {
         if (mHandleGestureActions) setCurrentColor(mUncertainGestureColor);
     }
 
@@ -466,8 +477,8 @@ void GestureOverlayView::touchDown(MotionEvent& event) {
 
     // pass the event to handlers
     std::vector<OnGestureListener> listeners = mOnGestureListeners;
-    const int count = listeners.size();
-    for (int i = 0; i < count; i++) {
+    const size_t count = listeners.size();
+    for (size_t i = 0; i < count; i++) {
         listeners.at(i).onGestureStarted(*this, event);
     }
 }
@@ -530,8 +541,8 @@ Rect GestureOverlayView::touchMove(MotionEvent& event) {
                     setCurrentColor(mCertainGestureColor);
 
                     std::vector<OnGesturingListener> listeners = mOnGesturingListeners;
-                    const int count = listeners.size();
-                    for (int i = 0; i < count; i++) {
+                    const size_t count = listeners.size();
+                    for (size_t i = 0; i < count; i++) {
                         listeners.at(i).onGesturingStarted(*this);
                     }
                 }
@@ -541,8 +552,8 @@ Rect GestureOverlayView::touchMove(MotionEvent& event) {
 
         // pass the event to handlers
         std::vector<OnGestureListener> listeners = mOnGestureListeners;
-        const int count = listeners.size();
-        for (int i = 0; i < count; i++) {
+        const size_t count = listeners.size();
+        for (size_t i = 0; i < count; i++) {
             listeners.at(i).onGesture(*this, event);
         }
     }
@@ -561,8 +572,8 @@ void GestureOverlayView::touchUp(MotionEvent& event, bool cancel) {
         if (!cancel) {
             // pass the event to handlers
             std::vector<OnGestureListener> listeners = mOnGestureListeners;
-            const int count = listeners.size();
-            for (int i = 0; i < count; i++) {
+            const size_t count = listeners.size();
+            for (size_t i = 0; i < count; i++) {
                 listeners.at(i).onGestureEnded(*this, event);
             }
 
@@ -581,8 +592,8 @@ void GestureOverlayView::touchUp(MotionEvent& event, bool cancel) {
     mIsGesturing = false;
 
     std::vector<OnGesturingListener> listeners = mOnGesturingListeners;
-    const int count = listeners.size();
-    for (int i = 0; i < count; i++) {
+    const size_t count = listeners.size();
+    for (size_t i = 0; i < count; i++) {
         listeners.at(i).onGesturingEnded(*this);
     }
 }
@@ -590,11 +601,10 @@ void GestureOverlayView::touchUp(MotionEvent& event, bool cancel) {
 void GestureOverlayView::cancelGesture(MotionEvent& event) {
     // pass the event to handlers
     std::vector<OnGestureListener> listeners = mOnGestureListeners;
-    const int count = listeners.size();
-    for (int i = 0; i < count; i++) {
+    const size_t count = listeners.size();
+    for (size_t i = 0; i < count; i++) {
         listeners.at(i).onGestureCancelled(*this, event);
     }
-
     clear(false);
 }
 
@@ -608,7 +618,7 @@ void GestureOverlayView::fireOnGesturePerformed() {
 
 void GestureOverlayView::FadeOutProc(){
     if (mIsFadingOut) {
-        const long now = AnimationUtils::currentAnimationTimeMillis();
+        const int64_t now = AnimationUtils::currentAnimationTimeMillis();
         const long duration = now - mFadingStart;
 
         if (duration > mFadeDuration) {
@@ -620,6 +630,7 @@ void GestureOverlayView::FadeOutProc(){
             mIsFadingOut = false;
             mFadingHasStarted = false;
             mPath.reset();//rewind();
+            delete mCurrentGesture;
             mCurrentGesture = nullptr;
             setPaintAlpha(255);
         } else {
@@ -636,6 +647,7 @@ void GestureOverlayView::FadeOutProc(){
 
         mFadingHasStarted = false;
         mPath.reset();//rewind();
+        delete mCurrentGesture;
         mCurrentGesture = nullptr;
         mPreviousWasGesturing = false;
         setPaintAlpha(255);

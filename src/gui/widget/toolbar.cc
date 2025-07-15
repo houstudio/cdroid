@@ -1,14 +1,117 @@
 #include <widget/toolbar.h>
 namespace cdroid{
 
-//DECLARE_WIDGET(ToolBar)
+DECLARE_WIDGET(ToolBar)
 
 ToolBar::ToolBar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
     initToolBar();
+    mNavButtonStyle;
+    mGravity = atts.getGravity("gravity",mGravity);
+    mButtonGravity = atts.getGravity("buttonGravity",Gravity::TOP);
+    mTitleMarginStart = mTitleMarginEnd = mTitleMarginTop = mTitleMarginBottom =
+              atts.getDimensionPixelOffset("titleMargin", 0);
+    const int marginStart = atts.getDimensionPixelOffset("titleMarginStart", -1);
+    if (marginStart >= 0) {
+        mTitleMarginStart = marginStart;
+    }
+
+    const int marginEnd = atts.getDimensionPixelOffset("titleMarginEnd", -1);
+    if (marginEnd >= 0) {
+        mTitleMarginEnd = marginEnd;
+    }
+
+    const int marginTop = atts.getDimensionPixelOffset("titleMarginTop", -1);
+    if (marginTop >= 0) {
+        mTitleMarginTop = marginTop;
+    }
+
+    const int marginBottom = atts.getDimensionPixelOffset("titleMarginBottom", -1);
+    if (marginBottom >= 0) {
+        mTitleMarginBottom = marginBottom;
+    }
+
+    mMaxButtonHeight = atts.getDimensionPixelSize("maxButtonHeight", -1);
+
+    const int contentInsetStart= atts.getDimensionPixelOffset("contentInsetStart",RtlSpacingHelper::UNDEFINED);
+    const int contentInsetEnd  = atts.getDimensionPixelOffset("contentInsetEnd", RtlSpacingHelper::UNDEFINED);
+    const int contentInsetLeft = atts.getDimensionPixelSize("contentInsetLeft", 0);
+    const int contentInsetRight= atts.getDimensionPixelSize("contentInsetRight", 0);
+
+    ensureContentInsets();
+    mContentInsets->setAbsolute(contentInsetLeft, contentInsetRight);
+
+    if (contentInsetStart != RtlSpacingHelper::UNDEFINED ||
+            contentInsetEnd != RtlSpacingHelper::UNDEFINED) {
+        mContentInsets->setRelative(contentInsetStart, contentInsetEnd);
+    }
+
+    mContentInsetStartWithNavigation = atts.getDimensionPixelOffset("contentInsetStartWithNavigation", RtlSpacingHelper::UNDEFINED);
+    mContentInsetEndWithActions = atts.getDimensionPixelOffset("contentInsetEndWithActions", RtlSpacingHelper::UNDEFINED);
+
+    mCollapseIcon = atts.getDrawable("collapseIcon");
+    mCollapseDescription = atts.getString("collapseContentDescription");
+
+    std::string title = atts.getString("title");
+    if (!title.empty()){
+        setTitle(title);
+    }
+
+    std::string subtitle = atts.getString("subtitle");
+    if (!subtitle.empty()) {
+        setSubtitle(subtitle);
+    }
+
+    // Set the default context, since setPopupTheme() may be a no-op.
+    mPopupContext = mContext;
+    //setPopupTheme(atts.getResourceId(R.styleable.Toolbar_popupTheme, 0));
+
+    Drawable* navIcon = atts.getDrawable("navigationIcon");
+    if (navIcon != nullptr) {
+        setNavigationIcon(navIcon);
+    }
+
+    std::string navDesc = atts.getString("navigationContentDescription");
+    if (!navDesc.empty()) {
+        setNavigationContentDescription(navDesc);
+    }
+
+    Drawable* logo = atts.getDrawable("logo");
+    if (logo != nullptr) {
+        setLogo(logo);
+    }
+
+    std::string logoDesc = atts.getString("logoDescription");
+    if (!logoDesc.empty()) {
+        setLogoDescription(logoDesc);
+    }
+
+    if (atts.hasAttribute("titleTextColor")) {
+        setTitleTextColor(atts.getColor("titleTextColor", 0xffffffff));
+    }
+
+    if (atts.hasAttribute("subtitleTextColor")) {
+        setSubtitleTextColor(atts.getColor("subtitleTextColor", 0xffffffff));
+    }
 }
 
 void ToolBar::initToolBar(){
+    mGravity = Gravity::START | Gravity::CENTER_VERTICAL;
+    mMenuView = nullptr;
+    mTitleTextView = nullptr;
+    mSubtitleTextView = nullptr;
+    mNavButtonView = nullptr;
+    mLogoView = nullptr;
 
+    mCollapseIcon = nullptr;
+    mCollapseButtonView = nullptr;;
+    mExpandedActionView = nullptr;
+    mPopupContext  = nullptr;
+    mContentInsets = nullptr;
+}
+
+ToolBar::~ToolBar(){
+    delete mCollapseIcon;
+    delete mContentInsets;
 }
 
 void ToolBar::onAttachedToWindow(){
@@ -220,7 +323,20 @@ void ToolBar::setNavigationContentDescription(const std::string&content){
         mNavButtonView->setContentDescription(content);
 }
 
-void ToolBar::setNavigationIcon(Drawable*){
+void ToolBar::setNavigationIcon(Drawable*icon){
+    if (icon != nullptr) {
+        ensureNavButtonView();
+        if (!isChildOrHidden(mNavButtonView)) {
+            addSystemView(mNavButtonView, true);
+        }
+    } else if (mNavButtonView != nullptr && isChildOrHidden(mNavButtonView)) {
+        removeView(mNavButtonView);
+        auto itr = std::find(mHiddenViews.begin(),mHiddenViews.end(),mNavButtonView);
+        mHiddenViews.erase(itr);//remove(mNavButtonView);
+    }
+    if (mNavButtonView != nullptr) {
+        mNavButtonView->setImageDrawable(icon);
+    }
 }
 
 Drawable*ToolBar::getNavigationIcon()const{
@@ -977,7 +1093,8 @@ void ToolBar::addChildrenForExpandedActionView() {
 }
 
 bool ToolBar::isChildOrHidden(View* child) {
-    return child->getParent() == this;// || mHiddenViews.contains(child);
+    auto itr = std::find(mHiddenViews.begin(),mHiddenViews.end(),child);
+    return (child->getParent() == this) || (itr!=mHiddenViews.end());
 }
 
 void ToolBar::setCollapsible(bool collapsible) {

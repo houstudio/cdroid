@@ -53,7 +53,7 @@ AbsoluteLayout::AbsoluteLayout(Context* context,const AttributeSet& attrs)
 }
 
 void AbsoluteLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
-     int count = getChildCount();
+    int count = getChildCount();
 
     int maxHeight = 0;
     int maxWidth = 0;

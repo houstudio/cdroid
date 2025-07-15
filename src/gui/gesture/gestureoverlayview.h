@@ -51,7 +51,7 @@ private:
 
     long mFadeDuration = 150;
     long mFadeOffset = 420;
-    long mFadingStart;
+    int64_t mFadingStart;
     bool mFadingHasStarted;
     bool mFadeEnabled = true;
     bool mFireActionPerformed;
@@ -123,6 +123,7 @@ protected:
     void onDetachedFromWindow()override;
 public:
     GestureOverlayView(Context* context,const AttributeSet& attrs);
+    ~GestureOverlayView()override;
     const std::vector<GesturePoint>& getCurrentStroke() const;
 
     int getOrientation() const;

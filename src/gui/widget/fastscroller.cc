@@ -74,7 +74,7 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
         mOverlay->add(mSecondaryText);
     }
     ViewGroup::OnHierarchyChangeListener hls;
-    hls.onChildViewRemoved=[](ViewGroup&container,View *view){
+    hls.onChildViewRemoved=[](View&container,View *view){
         delete view;
     };
     mOverlay->getOverlayView()->setOnHierarchyChangeListener(hls);

@@ -6,8 +6,8 @@ DECLARE_WIDGET(TableRow)
 
 TableRow::LayoutParams::LayoutParams()
     :LinearLayout::LayoutParams(MATCH_PARENT, WRAP_CONTENT){
-    column = -1;
-    span = 1;
+    column= -1;
+    span  = 1;
 }
 
 TableRow::LayoutParams::LayoutParams(int column):LayoutParams(){
@@ -16,30 +16,33 @@ TableRow::LayoutParams::LayoutParams(int column):LayoutParams(){
 
 TableRow::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     :LinearLayout::LayoutParams(c,attrs){
-    column=-1;
-    span=1;
+    column= attrs.getInt("layout_column",-1);
+    span  = attrs.getInt("layout_span",1);
+    if(span<1)span=1;
 }
 
 TableRow::LayoutParams::LayoutParams(int w, int h)
     :LinearLayout::LayoutParams(w,h){
-    column=-1;
-    span=1;
+    column= -1;
+    span  = 1;
 }
 
 TableRow::LayoutParams::LayoutParams(int w, int h, float initWeight)
     :LinearLayout::LayoutParams(w,h,initWeight){
-    column=-1;
-    span=1;
+    column= -1;
+    span  = 1;
 }
 
-TableRow::LayoutParams::LayoutParams(const LayoutParams& p)
+TableRow::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& p)
     :LinearLayout::LayoutParams(p){
-    column=-1;
-    span=1;
+    column= -1;
+    span  = 1;
 }
 
 TableRow::LayoutParams::LayoutParams(const MarginLayoutParams& source)
     :LinearLayout::LayoutParams(source){
+    column= -1;
+    span  = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,12 +57,17 @@ TableRow::TableRow(Context* context,const AttributeSet& attrs)
 }
 
 void TableRow::initTableRow() {
-    /*OnHierarchyChangeListener oldListener = mOnHierarchyChangeListener;
-    mChildrenTracker = new ChildrenTracker();
-    if (oldListener != null) {
-        mChildrenTracker.setOnHierarchyChangeListener(oldListener);
+    OnHierarchyChangeListener oldListener = mOnHierarchyChangeListener;
+    mChildrenTracker.onChildViewAdded  = std::bind(&TableRow::onChildViewAdded,this,std::placeholders::_1,std::placeholders::_2);
+    mChildrenTracker.onChildViewRemoved= std::bind(&TableRow::onChildViewRemoved,this,std::placeholders::_1,std::placeholders::_2);
+    if (oldListener.onChildViewAdded||oldListener.onChildViewRemoved) {
+        mExtHCL = oldListener;
     }
-    super.setOnHierarchyChangeListener(mChildrenTracker);*/
+    ViewGroup::setOnHierarchyChangeListener(mChildrenTracker);
+}
+
+void TableRow::setOnHierarchyChangeListener(const OnHierarchyChangeListener& listener) {
+    mExtHCL = listener;
 }
 
 void TableRow::setColumnCollapsed(int columnIndex, bool collapsed) {
@@ -83,8 +91,7 @@ View* TableRow::getVirtualChildAt(int i){
     if (mColumnToChildIndex.size()==0) {
         mapIndexAndColumns();
     }
-    auto it=mColumnToChildIndex.find(i);
-    int deflectedIndex = it==mColumnToChildIndex.end()?-1:it->second;
+    const int deflectedIndex = mColumnToChildIndex.get(i,-1);
     if (deflectedIndex != -1) {
         return getChildAt(deflectedIndex);
     }
@@ -115,11 +122,29 @@ void TableRow::mapIndexAndColumns() {
             }
 
             for (int j = 0; j < layoutParams->span; j++) {
-                mColumnToChildIndex[virtualCount++]= i;
+                mColumnToChildIndex.put(virtualCount++,i);
             }
         }
 
         mNumColumns = virtualCount;
+    }
+}
+
+void TableRow::onChildViewAdded(View& parent, View* child) {
+    // dirties the index to column map
+    mColumnToChildIndex.clear();// = null;
+
+    if (mExtHCL.onChildViewAdded != nullptr) {
+        mExtHCL.onChildViewAdded(parent, child);
+    }
+}
+
+void TableRow::onChildViewRemoved(View& parent, View* child) {
+    // dirties the index to column map
+    mColumnToChildIndex.clear();// = null;
+
+    if (mExtHCL.onChildViewRemoved != nullptr) {
+        mExtHCL.onChildViewRemoved(parent, child);
     }
 }
 
@@ -135,13 +160,13 @@ void TableRow::measureChildBeforeLayout(View* child, int childIndex,int widthMea
         int measureMode = MeasureSpec::EXACTLY;
         int columnWidth = 0;
 
-        int span = lp->span;
+        const int span = lp->span;
         for (int i = 0; i < span; i++) {
             columnWidth += mConstrainedColumnWidths[childIndex + i];
         }
 
-        int gravity = lp->gravity;
-        bool isHorizontalGravity = Gravity::isHorizontal(gravity);
+        const int gravity = lp->gravity;
+        const bool isHorizontalGravity = Gravity::isHorizontal(gravity);
 
         if (isHorizontalGravity) {
             measureMode = MeasureSpec::AT_MOST;
@@ -150,20 +175,20 @@ void TableRow::measureChildBeforeLayout(View* child, int childIndex,int widthMea
         // no need to care about padding here,
         // ViewGroup.getChildMeasureSpec() would get rid of it anyway
         // because of the EXACTLY measure spec we use
-        int childWidthMeasureSpec = MeasureSpec::makeMeasureSpec(
+        const int childWidthMeasureSpec = MeasureSpec::makeMeasureSpec(
                     std::max(0, columnWidth - lp->leftMargin - lp->rightMargin), measureMode);
-        int childHeightMeasureSpec = getChildMeasureSpec(heightMeasureSpec,
+        const int childHeightMeasureSpec = getChildMeasureSpec(heightMeasureSpec,
                     mPaddingTop + mPaddingBottom + lp->topMargin +
                     lp->bottomMargin + totalHeight, lp->height);
 
         child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
 
         if (isHorizontalGravity) {
-            int childWidth = child->getMeasuredWidth();
+            const int childWidth = child->getMeasuredWidth();
             lp->mOffset[LayoutParams::LOCATION_NEXT] = columnWidth - childWidth;
 
-            int layoutDirection = getLayoutDirection();
-            int absoluteGravity = Gravity::getAbsoluteGravity(gravity, layoutDirection);
+            const int layoutDirection = getLayoutDirection();
+            const int absoluteGravity = Gravity::getAbsoluteGravity(gravity, layoutDirection);
             switch (absoluteGravity & Gravity::HORIZONTAL_GRAVITY_MASK) {
             case Gravity::LEFT:
                 // don't offset on X axis
