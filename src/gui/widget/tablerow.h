@@ -7,30 +7,13 @@ namespace cdroid{
 
 class TableRow:public LinearLayout{
 public:
-    class LayoutParams:public LinearLayout::LayoutParams{
-    public:
-	    int span;
-	    int column;
-	    int mOffset [2];
-	    enum{
-		    LOCATION=0,
-		    LOCATION_NEXT=1
-	    };
-	    LayoutParams();
-	    LayoutParams(int column);
-        LayoutParams(Context* c,const AttributeSet&attrs);
-	    LayoutParams(int w, int h);
-	    LayoutParams(int w, int h, float initWeight);
-	    LayoutParams(const LayoutParams& p);
-	    LayoutParams(const MarginLayoutParams& source);
-    };
-
+    class LayoutParams;
 private:
     friend class TableLayout;
     int mNumColumns;
     std::vector<int>mColumnWidths;
     std::vector<int>mConstrainedColumnWidths;
-	std::unordered_map<int,int>mColumnToChildIndex;
+	SparseIntArray mColumnToChildIndex;
     OnHierarchyChangeListener mChildrenTracker;
     OnHierarchyChangeListener mExtHCL;
     void initTableRow();
@@ -62,6 +45,24 @@ public:
     int getVirtualChildCount()override;
     std::string getAccessibilityClassName()const override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+};
+
+class TableRow::LayoutParams:public LinearLayout::LayoutParams{
+public:
+    int span;
+    int column;
+    int mOffset [2];
+    enum{
+	    LOCATION=0,
+	    LOCATION_NEXT=1
+    };
+    LayoutParams();
+    LayoutParams(int column);
+    LayoutParams(Context* c,const AttributeSet&attrs);
+    LayoutParams(int w, int h);
+    LayoutParams(int w, int h, float initWeight);
+    LayoutParams(const ViewGroup::LayoutParams& p);
+    LayoutParams(const MarginLayoutParams& source);
 };
 }
 #endif

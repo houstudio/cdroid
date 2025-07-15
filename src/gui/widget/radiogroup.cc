@@ -15,8 +15,15 @@ RadioGroup::RadioGroup(int w,int h):LinearLayout(w,h){
 RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
     :LinearLayout(context,attrs){
     init();
-    mCheckedId = attrs.getResourceId("id",View::NO_ID);
-    mInitialCheckedId = (mCheckedId!=View::NO_ID);
+    const int value = attrs.getResourceId("checkedButton",View::NO_ID);
+    if(value!=View::NO_ID){
+        mCheckedId = value;
+        mInitialCheckedId = value;
+    }
+    const int index = attrs.getInt("orientation",std::unordered_map<std::string,int>{
+             {"horizontal",HORIZONTAL},
+             {"vertical",VERTICAL} },VERTICAL);
+    setOrientation(index);
 }
 
 LayoutParams* RadioGroup::generateLayoutParams(const AttributeSet& attrs)const {
@@ -75,7 +82,7 @@ void RadioGroup::init(){
 
 void RadioGroup::setOnHierarchyChangeListener(const ViewGroup::OnHierarchyChangeListener& listener) {
         // the user listener is delegated to our pass-through listener
-     mOnHierarchyChangeListener = listener;
+    mOnHierarchyChangeListener = listener;
 }
 
 void RadioGroup::setOnCheckedChangeListener(CompoundButton::OnCheckedChangeListener listener){
@@ -152,11 +159,11 @@ View& RadioGroup::addView(View* child, int index,ViewGroup::LayoutParams* params
 
 //////////////////////////////////////////////////////////////////////////////////
 RadioGroup::LayoutParams::LayoutParams(Context*c,const AttributeSet&attrs)
-:LinearLayout::LayoutParams(c,attrs){
+    :LinearLayout::LayoutParams(c,attrs){
 }
 
 RadioGroup::LayoutParams::LayoutParams(int w,int h)
-:LinearLayout::LayoutParams(w,h){
+    :LinearLayout::LayoutParams(w,h){
 }
 
 RadioGroup::LayoutParams::LayoutParams(int w, int h, float initWeight)
