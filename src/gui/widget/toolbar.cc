@@ -749,7 +749,7 @@ void ToolBar::onLayout(bool changed, int l, int t, int w, int h){
     }
 
     int contentInsetLeft = getCurrentContentInsetLeft();
-    int contentInsetRight = getCurrentContentInsetRight();
+    int contentInsetRight= getCurrentContentInsetRight();
     collapsingMargins[0] = std::max(0, contentInsetLeft - left);
     collapsingMargins[1] = std::max(0, contentInsetRight - (width - paddingRight - right));
     left  = std::max(left, contentInsetLeft);
