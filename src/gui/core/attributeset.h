@@ -37,6 +37,7 @@ public:
     AttributeSet();
     AttributeSet(const AttributeSet&);
     AttributeSet(Context*ctx,const std::string&package);
+    virtual ~AttributeSet()=default;
     Context*getContext()const;
     void setContext(Context*,const std::string&package);
     bool add(const std::string&,const std::string&value);
