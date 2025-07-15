@@ -5,7 +5,10 @@ DECLARE_WIDGET(ToolBar)
 
 ToolBar::ToolBar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
     initToolBar();
-    mNavButtonStyle;
+    
+    mTitleTextAppearance = atts.getResourceId("titleTextAppearance", 0);
+    mSubtitleTextAppearance = atts.getResourceId("subtitleTextAppearance", 0);
+    mNavButtonStyle= atts.getString("navigationButtonStyle");
     mGravity = atts.getGravity("gravity",mGravity);
     mButtonGravity = atts.getGravity("buttonGravity",Gravity::TOP);
     mTitleMarginStart = mTitleMarginEnd = mTitleMarginTop = mTitleMarginBottom =
@@ -110,7 +113,6 @@ void ToolBar::initToolBar(){
 }
 
 ToolBar::~ToolBar(){
-    delete mCollapseIcon;
     delete mContentInsets;
 }
 
@@ -245,8 +247,8 @@ void ToolBar::setTitle(const std::string&title){
             mTitleTextView = new TextView(context,AttributeSet());
             mTitleTextView->setSingleLine(true);
             //mTitleTextView->setEllipsize(TextUtils.TruncateAt.END);
-            if (mTitleTextAppearance != 0) {
-                //mTitleTextView->setTextAppearance(mTitleTextAppearance);
+            if (!mTitleTextAppearance.empty()) {
+                mTitleTextView->setTextAppearance(mTitleTextAppearance);
             }
             if (mTitleTextColor != 0) {
                  mTitleTextView->setTextColor(mTitleTextColor);
@@ -276,8 +278,8 @@ void ToolBar::setSubtitle(const std::string&subtitle){
             mSubtitleTextView = new TextView(mContext,AttributeSet());
             mSubtitleTextView->setSingleLine(true);
             //mSubtitleTextView->setEllipsize(TextUtils.TruncateAt.END);
-            if (mSubtitleTextAppearance != 0) {
-                //mSubtitleTextView->setTextAppearance(mSubtitleTextAppearance);
+            if (!mSubtitleTextAppearance.empty()) {
+                mSubtitleTextView->setTextAppearance(mSubtitleTextAppearance);
             }
             if (mSubtitleTextColor != 0) {
                 mSubtitleTextView->setTextColor(mSubtitleTextColor);

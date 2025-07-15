@@ -45,9 +45,9 @@ private:
 
     int mPopupTheme;
 
-    int mTitleTextAppearance;
-    int mSubtitleTextAppearance;
-    int mNavButtonStyle;
+    std::string mTitleTextAppearance;
+    std::string mSubtitleTextAppearance;
+    std::string mNavButtonStyle;
 
     int mButtonGravity;
 
