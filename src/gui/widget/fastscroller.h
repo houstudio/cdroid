@@ -21,7 +21,7 @@
 #include <widget/textview.h>
 #include <widget/abslistview.h>
 #include <animation/animationset.h>
-#include <view/viewoverlay.h>
+#include <view/viewgroupoverlay.h>
 
 namespace cdroid{
 

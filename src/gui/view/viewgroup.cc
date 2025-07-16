@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <view/viewgroup.h>
-#include <view/viewoverlay.h>
+#include <view/viewgroupoverlay.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <animation/layouttransition.h>
 #include <animation/layoutanimationcontroller.h>
