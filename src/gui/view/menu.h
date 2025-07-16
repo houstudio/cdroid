@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef __MENU_H__
 #define __MENU_H__
 #include <string>
@@ -106,9 +123,9 @@ protected:
     void *owner;/*menu owner/container*/
 public:
     Menu();
-    ~Menu();
-    MenuItem* add(const std::string&title);
-    MenuItem* add(int groupId, int itemId, int order,const std::string&title);
+    virtual ~Menu();
+    virtual MenuItem* add(const std::string&title);
+    virtual MenuItem* add(int groupId, int itemId, int order,const std::string&title);
     SubMenu* addSubMenu(const std::string&title);
     SubMenu* addSubMenu(int groupId,int itemId,int order,const std::string& title);
     void popup(int x,int y);
@@ -128,139 +145,5 @@ public:
     void setQwertyMode(bool isQwerty);
      void setGroupDividerEnabled(bool groupDividerEnabled);
 };
-
-class MenuItem{
-public:
-    /*
-     * These should be kept in sync with attrs.xml enum constants for showAsAction
-     */
-    /** Never show this item as a button in an Action Bar. */
-    static constexpr int SHOW_AS_ACTION_NEVER = 0;
-    /** Show this item as a button in an Action Bar if the system decides there is room for it. */
-    static constexpr int SHOW_AS_ACTION_IF_ROOM = 1;
-    /**
-     * Always show this item as a button in an Action Bar.
-     * Use sparingly! If too many items are set to always show in the Action Bar it can
-     * crowd the Action Bar and degrade the user experience on devices with smaller screens.
-     * A good rule of thumb is to have no more than 2 items set to always show at a time.
-     */
-    static constexpr int SHOW_AS_ACTION_ALWAYS = 2;
-
-    /**
-     * When this item is in the action bar, always show it with a text label even if
-     * it also has an icon specified.
-     */
-    static constexpr int SHOW_AS_ACTION_WITH_TEXT = 4;
-
-    /**
-     * This item's action view collapses to a normal menu item.
-     * When expanded, the action view temporarily takes over
-     * a larger segment of its container.
-     */
-    static constexpr int SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW = 8;
-public:
-    DECLARE_UIEVENT(void,OnMenuItemClickListener,MenuItem&);
-    struct OnActionExpandListener{
-        CallbackBase<bool,MenuItem&>onMenuItemActionExpand;
-        CallbackBase<bool,MenuItem&>onMenuItemActionCollapse;
-    };
-protected:
-    std::string mTitle;
-    std::string mTooltip;
-    int mItemId;
-    int mGroupId;
-    int mOrder;
-    bool mCheckable;
-    bool mChecked;
-    bool mVisible;
-    bool mEnabled;
-    Cairo::RefPtr<Cairo::ImageSurface>mIcon;
-    SubMenu*mSubMenu;
-    friend class Menu;
-public:
-    MenuItem();
-    MenuItem& setEnabled(bool v);
-    MenuItem& setVisible(bool v);
-    MenuItem& setTitle(const std::string&);
-    std::string getTitle()const{return mTitle;}
-    MenuItem& setTooltipText(const std::string&tips);
-    std::string getTooltipText()const{return mTooltip;}
-    SubMenu* getSubMenu()const;
-    bool hasSubMenu()const;
-
-    bool isEnabled()const{return mEnabled;}
-    bool isVisible()const{return mVisible;}
-    bool isCheckable()const{return mCheckable;}
-    bool isChecked()const{return mChecked;}
-    int getGroupId()const{return mGroupId;}
-    int getItemId()const{return mItemId;}
-    int getOrder()const{return mOrder;}
-};
-
-class SubMenu:public Menu{
-public:
-    SubMenu& setHeaderTitle(const std::string&);
-    SubMenu& setHeaderIcon(const std::string&iconRes);
-    SubMenu& setHeaderIcon(Drawable*);
-    SubMenu& setHeaderView(View*);
-    void clearHeader();
-    SubMenu& setIcon(const std::string&iconRes);
-    SubMenu& setIcon(Drawable*);
-    MenuItem*getItem()const;
-};
-
-class ContextMenu:public Menu {
-public:
-
-    /**
-     * Sets the context menu header's title to the title given in <var>title</var>.
-     *
-     * @param title The character sequence used for the title.
-     * @return This ContextMenu so additional setters can be called.
-     */
-    virtual ContextMenu& setHeaderTitle(const std::string& title)=0;
-
-    /**
-     * Sets the context menu header's icon to the icon given in <var>iconRes</var>
-     * resource id.
-     *
-     * @param iconRes The resource identifier used for the icon.
-     * @return This ContextMenu so additional setters can be called.
-     */
-    virtual ContextMenu& setHeaderIcon(const std::string& iconRes)=0;
-
-    /**
-     * Sets the context menu header's icon to the icon given in <var>icon</var>
-     * {@link Drawable}.
-     *
-     * @param icon The {@link Drawable} used for the icon.
-     * @return This ContextMenu so additional setters can be called.
-     */
-    virtual ContextMenu& setHeaderIcon(Drawable* icon)=0;
-
-    /**
-     * Sets the header of the context menu to the {@link View} given in
-     * <var>view</var>. This replaces the header title and icon (and those
-     * replace this).
-     *
-     * @param view The {@link View} used for the header.
-     * @return This ContextMenu so additional setters can be called.
-     */
-    virtual ContextMenu& setHeaderView(View* view)=0;
-
-    /**
-     * Clears the header of the context menu.
-     */
-    virtual void clearHeader()=0;
-
-    /**
-     * Additional information regarding the creation of the context menu.  For example,
-     * {@link AdapterView}s use this to pass the exact item position within the adapter
-     * that initiated the context menu.
-     */
-    struct ContextMenuInfo {
-    };
-};
-}
-
+}/*endof namespace*/
 #endif
