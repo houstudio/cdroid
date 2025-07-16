@@ -77,6 +77,7 @@ void LinearLayout::initView(){
     mGravity     = Gravity::START | Gravity::TOP;
     mTotalLength = 0;
     mDividerPadding = 0;
+    mBaselineChildTop = 0;
     mDivider = nullptr;
     mShowDividers= SHOW_DIVIDER_NONE;
     mDividerWidth= mDividerHeight = 0;

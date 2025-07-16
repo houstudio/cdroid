@@ -1,11 +1,14 @@
 #include <widget/toolbar.h>
 namespace cdroid{
 
-DECLARE_WIDGET(ToolBar)
+DECLARE_WIDGET(Toolbar)
 
-ToolBar::ToolBar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
-    initToolBar();
-    mNavButtonStyle;
+Toolbar::Toolbar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
+    initToolbar();
+    
+    mTitleTextAppearance = atts.getResourceId("titleTextAppearance", 0);
+    mSubtitleTextAppearance = atts.getResourceId("subtitleTextAppearance", 0);
+    mNavButtonStyle= atts.getString("navigationButtonStyle");
     mGravity = atts.getGravity("gravity",mGravity);
     mButtonGravity = atts.getGravity("buttonGravity",Gravity::TOP);
     mTitleMarginStart = mTitleMarginEnd = mTitleMarginTop = mTitleMarginBottom =
@@ -94,7 +97,7 @@ ToolBar::ToolBar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
     }
 }
 
-void ToolBar::initToolBar(){
+void Toolbar::initToolbar(){
     mGravity = Gravity::START | Gravity::CENTER_VERTICAL;
     mMenuView = nullptr;
     mTitleTextView = nullptr;
@@ -109,12 +112,11 @@ void ToolBar::initToolBar(){
     mContentInsets = nullptr;
 }
 
-ToolBar::~ToolBar(){
-    delete mCollapseIcon;
+Toolbar::~Toolbar(){
     delete mContentInsets;
 }
 
-void ToolBar::onAttachedToWindow(){
+void Toolbar::onAttachedToWindow(){
     ViewGroup::onAttachedToWindow();
 
     // If the container is a cluster, unmark itself as a cluster to avoid having nested
@@ -132,7 +134,7 @@ void ToolBar::onAttachedToWindow(){
     }
 }
 
-void ToolBar::setTitleMargin(int start, int top, int end, int bottom){
+void Toolbar::setTitleMargin(int start, int top, int end, int bottom){
     mTitleMarginStart = start;
     mTitleMarginTop = top;
     mTitleMarginEnd = end;
@@ -141,53 +143,53 @@ void ToolBar::setTitleMargin(int start, int top, int end, int bottom){
     requestLayout();
 }
 
-int ToolBar::getTitleMarginStart()const{
+int Toolbar::getTitleMarginStart()const{
     return mTitleMarginStart;
 }
 
-void ToolBar::setTitleMarginStart(int margin) {
+void Toolbar::setTitleMarginStart(int margin) {
     mTitleMarginStart = margin;
 
     requestLayout();
 }
 
-int ToolBar::getTitleMarginTop()const {
+int Toolbar::getTitleMarginTop()const {
     return mTitleMarginTop;
 }
 
-void ToolBar::setTitleMarginTop(int margin) {
+void Toolbar::setTitleMarginTop(int margin) {
     mTitleMarginTop = margin;
 
     requestLayout();
 }
 
 
-int ToolBar::getTitleMarginEnd()const{
+int Toolbar::getTitleMarginEnd()const{
     return mTitleMarginEnd;
 }
 
 
-void ToolBar::setTitleMarginEnd(int margin) {
+void Toolbar::setTitleMarginEnd(int margin) {
     mTitleMarginEnd = margin;
 
     requestLayout();
 }
 
 
-int ToolBar::getTitleMarginBottom() const{
+int Toolbar::getTitleMarginBottom() const{
     return mTitleMarginBottom;
 }
 
-void ToolBar::setTitleMarginBottom(int margin) {
+void Toolbar::setTitleMarginBottom(int margin) {
     mTitleMarginBottom = margin;
     requestLayout();
 }
 
-void ToolBar::setLogo(const std::string& resId){
+void Toolbar::setLogo(const std::string& resId){
     setLogo(getContext()->getDrawable(resId));
 }
 
-void ToolBar::setLogo(Drawable* drawable){
+void Toolbar::setLogo(Drawable* drawable){
     if (drawable) {
         ensureLogoView();
         if (!isChildOrHidden(mLogoView)) {
@@ -203,11 +205,11 @@ void ToolBar::setLogo(Drawable* drawable){
     }
 }
 
-Drawable* ToolBar::getLogo()const{
+Drawable* Toolbar::getLogo()const{
     return mLogoView != nullptr ? mLogoView->getDrawable() : nullptr;
 }
 
-void ToolBar::setLogoDescription(const std::string& description){
+void Toolbar::setLogoDescription(const std::string& description){
     if (!description.empty()) {
         ensureLogoView();
     }
@@ -216,37 +218,37 @@ void ToolBar::setLogoDescription(const std::string& description){
     }    
 }
 
-std::string ToolBar::getLogoDescription()const{
+std::string Toolbar::getLogoDescription()const{
     return mLogoView ? mLogoView->getContentDescription() : "";
 }
 
-void ToolBar::ensureLogoView() {
+void Toolbar::ensureLogoView() {
     if (mLogoView == nullptr) {
         mLogoView = new ImageView(getContext(),AttributeSet());
     }
 }
 
-bool ToolBar::hasExpandedActionView()const{
+bool Toolbar::hasExpandedActionView()const{
    return false;//mExpandedMenuPresenter && mExpandedMenuPresenter.mCurrentExpandedItem;
 }
 
-void ToolBar::collapseActionView(){
+void Toolbar::collapseActionView(){
 
 }
 
-std::string ToolBar::getTitle()const{
+std::string Toolbar::getTitle()const{
     return mTitleText;
 }
 
-void ToolBar::setTitle(const std::string&title){
+void Toolbar::setTitle(const std::string&title){
     if (!title.empty()) {
         if (mTitleTextView == nullptr) {
             Context* context = getContext();
-            mTitleTextView = new TextView(context,AttributeSet());
+            mTitleTextView = new TextView(context,AttributeSet(mContext,"cdroid"));
             mTitleTextView->setSingleLine(true);
-            //mTitleTextView->setEllipsize(TextUtils.TruncateAt.END);
-            if (mTitleTextAppearance != 0) {
-                //mTitleTextView->setTextAppearance(mTitleTextAppearance);
+            mTitleTextView->setEllipsize(Layout::ELLIPSIS_END);
+            if (!mTitleTextAppearance.empty()) {
+                mTitleTextView->setTextAppearance(mTitleTextAppearance);
             }
             if (mTitleTextColor != 0) {
                  mTitleTextView->setTextColor(mTitleTextColor);
@@ -266,18 +268,18 @@ void ToolBar::setTitle(const std::string&title){
     mTitleText=title;
 }
 
-std::string ToolBar::getSubtitle()const{
+std::string Toolbar::getSubtitle()const{
     return mSubtitleText;
 }
 
-void ToolBar::setSubtitle(const std::string&subtitle){
+void Toolbar::setSubtitle(const std::string&subtitle){
     if (!subtitle.empty()) {
         if (mSubtitleTextView == nullptr) {
-            mSubtitleTextView = new TextView(mContext,AttributeSet());
+            mSubtitleTextView = new TextView(mContext,AttributeSet(mContext,"cdroid"));
             mSubtitleTextView->setSingleLine(true);
-            //mSubtitleTextView->setEllipsize(TextUtils.TruncateAt.END);
-            if (mSubtitleTextAppearance != 0) {
-                //mSubtitleTextView->setTextAppearance(mSubtitleTextAppearance);
+            mSubtitleTextView->setEllipsize(Layout::ELLIPSIS_END);
+            if (!mSubtitleTextAppearance.empty()) {
+                mSubtitleTextView->setTextAppearance(mSubtitleTextAppearance);
             }
             if (mSubtitleTextColor != 0) {
                 mSubtitleTextView->setTextColor(mSubtitleTextColor);
@@ -298,32 +300,32 @@ void ToolBar::setSubtitle(const std::string&subtitle){
     mSubtitleText = subtitle;
 }
 
-void ToolBar::setTitleTextColor(int color){
+void Toolbar::setTitleTextColor(int color){
     mTitleTextColor = color;
     if (mTitleTextView != nullptr) {
          mTitleTextView->setTextColor(color);
     }
 }
 
-void ToolBar::setSubtitleTextColor(int color){
+void Toolbar::setSubtitleTextColor(int color){
     mSubtitleTextColor = color;
     if (mSubtitleTextView != nullptr) {
          mSubtitleTextView->setTextColor(color);
     }
 }
 
-std::string ToolBar::getNavigationContentDescription()const{
+std::string Toolbar::getNavigationContentDescription()const{
     return mNavButtonView?mNavButtonView->getContentDescription():"";
 }
 
-void ToolBar::setNavigationContentDescription(const std::string&content){
+void Toolbar::setNavigationContentDescription(const std::string&content){
     if(content.length())
         ensureNavButtonView();
     if(mNavButtonView)
         mNavButtonView->setContentDescription(content);
 }
 
-void ToolBar::setNavigationIcon(Drawable*icon){
+void Toolbar::setNavigationIcon(Drawable*icon){
     if (icon != nullptr) {
         ensureNavButtonView();
         if (!isChildOrHidden(mNavButtonView)) {
@@ -339,55 +341,55 @@ void ToolBar::setNavigationIcon(Drawable*icon){
     }
 }
 
-Drawable*ToolBar::getNavigationIcon()const{
+Drawable*Toolbar::getNavigationIcon()const{
     return mNavButtonView?mNavButtonView->getDrawable():nullptr;
 }
 
-void ToolBar::setNavigationOnClickListener(View::OnClickListener ls){
+void Toolbar::setNavigationOnClickListener(View::OnClickListener ls){
     ensureNavButtonView();
     mNavButtonView->setOnClickListener(ls);  
 }
 
-View*ToolBar::getNavigationView()const{
+View*Toolbar::getNavigationView()const{
     return mNavButtonView;
 }
 
-void ToolBar::setOnMenuItemClickListener(MenuItem::OnMenuItemClickListener listener){
+void Toolbar::setOnMenuItemClickListener(MenuItem::OnMenuItemClickListener listener){
     mOnMenuItemClickListener = listener;
 }
 
-void ToolBar::setContentInsetsRelative(int contentInsetStart, int contentInsetEnd) {
+void Toolbar::setContentInsetsRelative(int contentInsetStart, int contentInsetEnd) {
     ensureContentInsets();
     mContentInsets->setRelative(contentInsetStart, contentInsetEnd);
 }
 
-int ToolBar::getContentInsetStart()const{
+int Toolbar::getContentInsetStart()const{
     return mContentInsets ? mContentInsets->getStart() : 0; 
 }
 
-int ToolBar::getContentInsetEnd()const{
+int Toolbar::getContentInsetEnd()const{
     return mContentInsets ? mContentInsets->getEnd() : 0;
 }
 
-void ToolBar::setContentInsetsAbsolute(int contentInsetLeft, int contentInsetRight){
+void Toolbar::setContentInsetsAbsolute(int contentInsetLeft, int contentInsetRight){
      ensureContentInsets();
      mContentInsets->setAbsolute(contentInsetLeft, contentInsetRight);
 }
 
-int ToolBar::getContentInsetLeft()const{
+int Toolbar::getContentInsetLeft()const{
     return mContentInsets ? mContentInsets->getLeft() : 0;
 }
 
-int ToolBar::getContentInsetRight()const{
+int Toolbar::getContentInsetRight()const{
     return mContentInsets ? mContentInsets->getRight() : 0;
 }
 
-int ToolBar::getContentInsetStartWithNavigation()const{
+int Toolbar::getContentInsetStartWithNavigation()const{
     return mContentInsetStartWithNavigation != RtlSpacingHelper::UNDEFINED
               ? mContentInsetStartWithNavigation : getContentInsetStart();
 }
 
-void ToolBar::setContentInsetStartWithNavigation(int insetStartWithNavigation){
+void Toolbar::setContentInsetStartWithNavigation(int insetStartWithNavigation){
     if (insetStartWithNavigation < 0) {
         insetStartWithNavigation = RtlSpacingHelper::UNDEFINED;
     }
@@ -399,13 +401,13 @@ void ToolBar::setContentInsetStartWithNavigation(int insetStartWithNavigation){
     }
 }
 
-int ToolBar::getContentInsetEndWithActions()const{
+int Toolbar::getContentInsetEndWithActions()const{
     return mContentInsetEndWithActions != RtlSpacingHelper::UNDEFINED
                 ? mContentInsetEndWithActions
                 : getContentInsetEnd();
 }
 
-void ToolBar::setContentInsetEndWithActions(int insetEndWithActions){
+void Toolbar::setContentInsetEndWithActions(int insetEndWithActions){
     if (insetEndWithActions < 0) {
         insetEndWithActions = RtlSpacingHelper::UNDEFINED;
     }
@@ -417,12 +419,12 @@ void ToolBar::setContentInsetEndWithActions(int insetEndWithActions){
     }
 }
 
-int ToolBar::getCurrentContentInsetStart()const{
+int Toolbar::getCurrentContentInsetStart()const{
     return getNavigationIcon() ? std::max(getContentInsetStart(), std::max(mContentInsetStartWithNavigation, 0))
               : getContentInsetStart();
 }
 
-int ToolBar::getCurrentContentInsetEnd()const{
+int Toolbar::getCurrentContentInsetEnd()const{
      bool hasActions = false;
      if (mMenuView != nullptr) {
          //MenuBuilder mb = mMenuView->peekMenu();
@@ -433,30 +435,32 @@ int ToolBar::getCurrentContentInsetEnd()const{
           : getContentInsetEnd();
 }
 
-int ToolBar::getCurrentContentInsetLeft()const{
+int Toolbar::getCurrentContentInsetLeft()const{
     return isLayoutRtl()
                 ? getCurrentContentInsetEnd()
                 : getCurrentContentInsetStart();
 }
 
-int ToolBar::getCurrentContentInsetRight()const{
+int Toolbar::getCurrentContentInsetRight()const{
     return isLayoutRtl()
             ? getCurrentContentInsetStart()
             : getCurrentContentInsetEnd();
 }
 
-void ToolBar::ensureNavButtonView(){
+void Toolbar::ensureNavButtonView(){
     if (mNavButtonView == nullptr) {
-        mNavButtonView = new ImageButton(getContext(),AttributeSet());// null, 0, mNavButtonStyle);
+        AttributeSet attrs = mContext->obtainStyledAttributes(mNavButtonStyle);
+        mNavButtonView = new ImageButton(getContext(),attrs);
         LayoutParams* lp = (LayoutParams*)generateDefaultLayoutParams();
         lp->gravity = Gravity::START | (mButtonGravity & Gravity::VERTICAL_GRAVITY_MASK);
         mNavButtonView->setLayoutParams(lp);
     }
 }
 
-void ToolBar::ensureCollapseButtonView(){
+void Toolbar::ensureCollapseButtonView(){
     if (mCollapseButtonView == nullptr) {
-        mCollapseButtonView = new ImageButton(getContext(),AttributeSet());// null, 0, mNavButtonStyle);
+        AttributeSet attrs = mContext->obtainStyledAttributes(mNavButtonStyle);
+        mCollapseButtonView = new ImageButton(getContext(),attrs);
         mCollapseButtonView->setImageDrawable(mCollapseIcon);
         mCollapseButtonView->setContentDescription(mCollapseDescription);
         LayoutParams* lp = (LayoutParams*)generateDefaultLayoutParams();
@@ -469,7 +473,7 @@ void ToolBar::ensureCollapseButtonView(){
     }
 }
 
-void ToolBar::addSystemView(View* v, bool allowHide){
+void Toolbar::addSystemView(View* v, bool allowHide){
     ViewGroup::LayoutParams* vlp = v->getLayoutParams();
     LayoutParams* lp = nullptr;
     if (vlp == nullptr) {
@@ -477,28 +481,28 @@ void ToolBar::addSystemView(View* v, bool allowHide){
     } else if (!checkLayoutParams(vlp)) {
         lp = (LayoutParams*)generateLayoutParams(vlp);
     } else {
-        lp = (LayoutParams*) vlp;
+        lp = (LayoutParams*)vlp;
     }
     lp->mViewType = LayoutParams::SYSTEM;
     if (allowHide && mExpandedActionView) {
         v->setLayoutParams(lp);
         mHiddenViews.push_back(v);
     } else {
-        addView(v, lp);
+        addView(v,lp);
     }
 }
 
-void ToolBar::postShowOverflowMenu(){
+void Toolbar::postShowOverflowMenu(){
     removeCallbacks(mShowOverflowMenuRunnable);
     post(mShowOverflowMenuRunnable);
 }
 
-void ToolBar::onDetachedFromWindow(){
+void Toolbar::onDetachedFromWindow(){
     ViewGroup::onDetachedFromWindow();
     removeCallbacks(mShowOverflowMenuRunnable);
 }
 
-bool ToolBar::onTouchEvent(MotionEvent&ev){
+bool Toolbar::onTouchEvent(MotionEvent&ev){
     int action = ev.getActionMasked();
     if (action == MotionEvent::ACTION_DOWN) {
         mEatingTouch = false;
@@ -518,14 +522,14 @@ bool ToolBar::onTouchEvent(MotionEvent&ev){
     return true;
 }
 
-void ToolBar::onSetLayoutParams(View* child, ViewGroup::LayoutParams* lp){
+void Toolbar::onSetLayoutParams(View* child, ViewGroup::LayoutParams* lp){
     if(checkLayoutParams(lp))
         child->setLayoutParams(generateLayoutParams(lp));
 }
 
-void ToolBar::measureChildConstrained(View* child, int parentWidthSpec, int widthUsed,
+void Toolbar::measureChildConstrained(View* child, int parentWidthSpec, int widthUsed,
         int parentHeightSpec, int heightUsed, int heightConstraint){
-    MarginLayoutParams* lp = (MarginLayoutParams*) child->getLayoutParams();
+    const MarginLayoutParams* lp = (const MarginLayoutParams*) child->getLayoutParams();
 
     int childWidthSpec = getChildMeasureSpec(parentWidthSpec,
             mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin
@@ -544,9 +548,9 @@ void ToolBar::measureChildConstrained(View* child, int parentWidthSpec, int widt
     child->measure(childWidthSpec, childHeightSpec);
 }
 
-int ToolBar::measureChildCollapseMargins(View* child,int parentWidthMeasureSpec,int widthUsed,
+int Toolbar::measureChildCollapseMargins(View* child,int parentWidthMeasureSpec,int widthUsed,
         int parentHeightMeasureSpec, int heightUsed, int*collapsingMargins){
-    MarginLayoutParams* lp = (MarginLayoutParams*) child->getLayoutParams();
+    const MarginLayoutParams* lp = (const MarginLayoutParams*) child->getLayoutParams();
 
     const int leftDiff = lp->leftMargin - collapsingMargins[0];
     const int rightDiff = lp->rightMargin - collapsingMargins[1];
@@ -566,7 +570,7 @@ int ToolBar::measureChildCollapseMargins(View* child,int parentWidthMeasureSpec,
     return child->getMeasuredWidth() + hMargins;
 }
 
-bool ToolBar::shouldCollapse(){
+bool Toolbar::shouldCollapse(){
     if (!mCollapsible) return false;
     int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
@@ -579,7 +583,7 @@ bool ToolBar::shouldCollapse(){
     return true;
 }
 
-void ToolBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
+void Toolbar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int width = 0;
     int height = 0;
     int childState = 0;
@@ -599,69 +603,57 @@ void ToolBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
     int navWidth = 0;
     if (shouldLayout(mNavButtonView)) {
-        measureChildConstrained(mNavButtonView, widthMeasureSpec, width, heightMeasureSpec, 0,
-                mMaxButtonHeight);
+        measureChildConstrained(mNavButtonView, widthMeasureSpec, width, heightMeasureSpec, 0, mMaxButtonHeight);
         navWidth = mNavButtonView->getMeasuredWidth() + getHorizontalMargins(mNavButtonView);
-        height = std::max(height, mNavButtonView->getMeasuredHeight() +
-                getVerticalMargins(mNavButtonView));
+        height = std::max(height, mNavButtonView->getMeasuredHeight() + getVerticalMargins(mNavButtonView));
         childState = combineMeasuredStates(childState, mNavButtonView->getMeasuredState());
     }
 
     if (shouldLayout(mCollapseButtonView)) {
-        measureChildConstrained(mCollapseButtonView, widthMeasureSpec, width,
-                heightMeasureSpec, 0, mMaxButtonHeight);
-        navWidth = mCollapseButtonView->getMeasuredWidth() +
-                getHorizontalMargins(mCollapseButtonView);
-        height = std::max(height, mCollapseButtonView->getMeasuredHeight() +
-                getVerticalMargins(mCollapseButtonView));
+        measureChildConstrained(mCollapseButtonView, widthMeasureSpec, width, heightMeasureSpec, 0, mMaxButtonHeight);
+        navWidth = mCollapseButtonView->getMeasuredWidth() + getHorizontalMargins(mCollapseButtonView);
+        height = std::max(height, mCollapseButtonView->getMeasuredHeight() + getVerticalMargins(mCollapseButtonView));
         childState = combineMeasuredStates(childState, mCollapseButtonView->getMeasuredState());
     }
 
-    int contentInsetStart = getCurrentContentInsetStart();
+    const int contentInsetStart = getCurrentContentInsetStart();
     width += std::max(contentInsetStart, navWidth);
     collapsingMargins[marginStartIndex] = std::max(0, contentInsetStart - navWidth);
 
     int menuWidth = 0;
     if (shouldLayout(mMenuView)) {
-        measureChildConstrained(mMenuView, widthMeasureSpec, width, heightMeasureSpec, 0,
-                mMaxButtonHeight);
+        measureChildConstrained(mMenuView, widthMeasureSpec, width, heightMeasureSpec, 0, mMaxButtonHeight);
         menuWidth = mMenuView->getMeasuredWidth() + getHorizontalMargins(mMenuView);
-        height = std::max(height, mMenuView->getMeasuredHeight() +
-                getVerticalMargins(mMenuView));
+        height = std::max(height, mMenuView->getMeasuredHeight() + getVerticalMargins(mMenuView));
         childState = combineMeasuredStates(childState, mMenuView->getMeasuredState());
     }
 
-    int contentInsetEnd = getCurrentContentInsetEnd();
+    const int contentInsetEnd = getCurrentContentInsetEnd();
     width += std::max(contentInsetEnd, menuWidth);
     collapsingMargins[marginEndIndex] = std::max(0, contentInsetEnd - menuWidth);
 
     if (shouldLayout(mExpandedActionView)) {
-        width += measureChildCollapseMargins(mExpandedActionView, widthMeasureSpec, width,
-                heightMeasureSpec, 0, collapsingMargins);
-        height = std::max(height, mExpandedActionView->getMeasuredHeight() +
-                getVerticalMargins(mExpandedActionView));
+        width += measureChildCollapseMargins(mExpandedActionView, widthMeasureSpec, width, heightMeasureSpec, 0, collapsingMargins);
+        height = std::max(height, mExpandedActionView->getMeasuredHeight() + getVerticalMargins(mExpandedActionView));
         childState = combineMeasuredStates(childState, mExpandedActionView->getMeasuredState());
     }
 
     if (shouldLayout(mLogoView)) {
-        width += measureChildCollapseMargins(mLogoView, widthMeasureSpec, width,
-                heightMeasureSpec, 0, collapsingMargins);
-        height = std::max(height, mLogoView->getMeasuredHeight() +
-                getVerticalMargins(mLogoView));
+        width += measureChildCollapseMargins(mLogoView, widthMeasureSpec, width, heightMeasureSpec, 0, collapsingMargins);
+        height = std::max(height, mLogoView->getMeasuredHeight() + getVerticalMargins(mLogoView));
         childState = combineMeasuredStates(childState, mLogoView->getMeasuredState());
     }
 
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
         LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
-        if (lp->mViewType != LayoutParams::CUSTOM || !shouldLayout(child)) {
+        if ((lp->mViewType != LayoutParams::CUSTOM) || !shouldLayout(child)) {
             // We already got all system views above. Skip them and GONE views.
             continue;
         }
 
-        width += measureChildCollapseMargins(child, widthMeasureSpec, width,
-                heightMeasureSpec, 0, collapsingMargins);
+        width += measureChildCollapseMargins(child, widthMeasureSpec, width, heightMeasureSpec, 0, collapsingMargins);
         height = std::max(height, child->getMeasuredHeight() + getVerticalMargins(child));
         childState = combineMeasuredStates(childState, child->getMeasuredState());
     }
@@ -671,20 +663,17 @@ void ToolBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int titleVertMargins = mTitleMarginTop + mTitleMarginBottom;
     int titleHorizMargins = mTitleMarginStart + mTitleMarginEnd;
     if (shouldLayout(mTitleTextView)) {
-        titleWidth = measureChildCollapseMargins(mTitleTextView, widthMeasureSpec,
-                width + titleHorizMargins, heightMeasureSpec, titleVertMargins,
-                collapsingMargins);
+        titleWidth = measureChildCollapseMargins(mTitleTextView, widthMeasureSpec, width + titleHorizMargins,
+                heightMeasureSpec, titleVertMargins, collapsingMargins);
         titleWidth = mTitleTextView->getMeasuredWidth() + getHorizontalMargins(mTitleTextView);
         titleHeight = mTitleTextView->getMeasuredHeight() + getVerticalMargins(mTitleTextView);
         childState = combineMeasuredStates(childState, mTitleTextView->getMeasuredState());
     }
     if (shouldLayout(mSubtitleTextView)) {
         titleWidth = std::max(titleWidth, measureChildCollapseMargins(mSubtitleTextView,
-                widthMeasureSpec, width + titleHorizMargins,
-                heightMeasureSpec, titleHeight + titleVertMargins,
-                collapsingMargins));
-        titleHeight += mSubtitleTextView->getMeasuredHeight() +
-                getVerticalMargins(mSubtitleTextView);
+                widthMeasureSpec, width + titleHorizMargins, heightMeasureSpec,
+                titleHeight + titleVertMargins, collapsingMargins));
+        titleHeight += mSubtitleTextView->getMeasuredHeight() + getVerticalMargins(mSubtitleTextView);
         childState = combineMeasuredStates(childState, mSubtitleTextView->getMeasuredState());
     }
 
@@ -696,17 +685,15 @@ void ToolBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     width += getPaddingLeft() + getPaddingRight();
     height += getPaddingTop() + getPaddingBottom();
 
-    int measuredWidth = resolveSizeAndState(
-            std::max(width, getSuggestedMinimumWidth()),
+    const int measuredWidth = resolveSizeAndState(std::max(width, getSuggestedMinimumWidth()),
             widthMeasureSpec, childState & MEASURED_STATE_MASK);
-    int measuredHeight = resolveSizeAndState(
-            std::max(height, getSuggestedMinimumHeight()),
+    const int measuredHeight = resolveSizeAndState( std::max(height, getSuggestedMinimumHeight()),
             heightMeasureSpec, childState << MEASURED_HEIGHT_STATE_SHIFT);
 
     setMeasuredDimension(measuredWidth, shouldCollapse() ? 0 : measuredHeight);
 }
 
-void ToolBar::onLayout(bool changed, int l, int t, int w, int h){
+void Toolbar::onLayout(bool changed, int l, int t, int w, int h){
     const bool isRtl = getLayoutDirection() == LAYOUT_DIRECTION_RTL;
     int width = getWidth();
     int height = getHeight();
@@ -717,8 +704,7 @@ void ToolBar::onLayout(bool changed, int l, int t, int w, int h){
     int left = paddingLeft;
     int right = width - paddingRight;
 
-    int collapsingMargins[2];// = mTempMargins;
-    collapsingMargins[0] = collapsingMargins[1] = 0;
+    int collapsingMargins[2]={0,0};
 
     // Align views within the minimum toolbar height, if set.
     int minHeight = getMinimumHeight();
@@ -749,7 +735,7 @@ void ToolBar::onLayout(bool changed, int l, int t, int w, int h){
     }
 
     int contentInsetLeft = getCurrentContentInsetLeft();
-    int contentInsetRight = getCurrentContentInsetRight();
+    int contentInsetRight= getCurrentContentInsetRight();
     collapsingMargins[0] = std::max(0, contentInsetLeft - left);
     collapsingMargins[1] = std::max(0, contentInsetRight - (width - paddingRight - right));
     left  = std::max(left, contentInsetLeft);
@@ -770,8 +756,8 @@ void ToolBar::onLayout(bool changed, int l, int t, int w, int h){
         }
     }
 
-    bool layoutTitle = shouldLayout(mTitleTextView);
-    bool layoutSubtitle = shouldLayout(mSubtitleTextView);
+    const bool layoutTitle = shouldLayout(mTitleTextView);
+    const bool layoutSubtitle = shouldLayout(mSubtitleTextView);
     int titleHeight = 0;
     if (layoutTitle) {
         LayoutParams* lp = (LayoutParams*) mTitleTextView->getLayoutParams();
@@ -873,13 +859,13 @@ void ToolBar::onLayout(bool changed, int l, int t, int w, int h){
     // such that absolute layout direction can be used below.
     std::vector<View*>mTempViews;
     addCustomViewsWithGravity(mTempViews, Gravity::LEFT);
-    size_t leftViewsCount = mTempViews.size();
+    const size_t leftViewsCount = mTempViews.size();
     for (int i = 0; i < leftViewsCount; i++) {
         left = layoutChildLeft(mTempViews.at(i), left, collapsingMargins,alignmentHeight);
     }
 
     addCustomViewsWithGravity(mTempViews, Gravity::RIGHT);
-    size_t rightViewsCount = mTempViews.size();
+    const size_t rightViewsCount = mTempViews.size();
     for (int i = 0; i < rightViewsCount; i++) {
         right = layoutChildRight(mTempViews.at(i), right, collapsingMargins,alignmentHeight);
     }
@@ -897,7 +883,7 @@ void ToolBar::onLayout(bool changed, int l, int t, int w, int h){
     } else if (centerRight > right) {
         centerLeft -= centerRight - right;
     }
-    size_t centerViewsCount = mTempViews.size();
+    const size_t centerViewsCount = mTempViews.size();
     for (int i = 0; i < centerViewsCount; i++) {
         centerLeft = layoutChildLeft(mTempViews.at(i), centerLeft, collapsingMargins,alignmentHeight);
     }
@@ -905,7 +891,7 @@ void ToolBar::onLayout(bool changed, int l, int t, int w, int h){
     mTempViews.clear();
 }
 
-int ToolBar::getViewListMeasuredWidth(const std::vector<View*>& views, int*collapsingMargins){
+int Toolbar::getViewListMeasuredWidth(const std::vector<View*>& views, int*collapsingMargins){
     int collapseLeft = collapsingMargins[0];
     int collapseRight = collapsingMargins[1];
     int width = 0;
@@ -924,7 +910,7 @@ int ToolBar::getViewListMeasuredWidth(const std::vector<View*>& views, int*colla
    return width;
 }
 
-int ToolBar::layoutChildLeft(View* child, int left, int*collapsingMargins,int alignmentHeight){
+int Toolbar::layoutChildLeft(View* child, int left, int*collapsingMargins,int alignmentHeight){
     const LayoutParams* lp = (const LayoutParams*) child->getLayoutParams();
     const int l = lp->leftMargin - collapsingMargins[0];
     left += std::max(0, l);
@@ -936,7 +922,7 @@ int ToolBar::layoutChildLeft(View* child, int left, int*collapsingMargins,int al
     return left;
 }
 
-int ToolBar::layoutChildRight(View* child, int right, int*collapsingMargins,int alignmentHeight){
+int Toolbar::layoutChildRight(View* child, int right, int*collapsingMargins,int alignmentHeight){
     const LayoutParams* lp = (const LayoutParams*) child->getLayoutParams();
     const int r = lp->rightMargin - collapsingMargins[1];
     right -= std::max(0, r);
@@ -948,7 +934,7 @@ int ToolBar::layoutChildRight(View* child, int right, int*collapsingMargins,int 
     return right;
 }
 
-int ToolBar::getChildTop(View* child, int alignmentHeight){
+int Toolbar::getChildTop(View* child, int alignmentHeight){
     const LayoutParams* lp = (const LayoutParams*) child->getLayoutParams();
     int childHeight = child->getMeasuredHeight();
     int alignmentOffset = alignmentHeight > 0 ? (childHeight - alignmentHeight) / 2 : 0;
@@ -973,7 +959,7 @@ int ToolBar::getChildTop(View* child, int alignmentHeight){
     }
 }
 
-int ToolBar::getChildVerticalGravity(int gravity){
+int Toolbar::getChildVerticalGravity(int gravity){
     const int vgrav = gravity & Gravity::VERTICAL_GRAVITY_MASK;
     switch (vgrav) {
     case Gravity::TOP:
@@ -985,7 +971,7 @@ int ToolBar::getChildVerticalGravity(int gravity){
     }
 }
 
-void ToolBar::addCustomViewsWithGravity(std::vector<View*>& views, int gravity){
+void Toolbar::addCustomViewsWithGravity(std::vector<View*>& views, int gravity){
     const bool isRtl = getLayoutDirection() == LAYOUT_DIRECTION_RTL;
     const int childCount = getChildCount();
     int absGrav = Gravity::getAbsoluteGravity(gravity, getLayoutDirection());
@@ -1013,7 +999,7 @@ void ToolBar::addCustomViewsWithGravity(std::vector<View*>& views, int gravity){
     }
 }
 
-int ToolBar::getChildHorizontalGravity(int gravity){
+int Toolbar::getChildHorizontalGravity(int gravity){
     const int ld = getLayoutDirection();
     const int absGrav = Gravity::getAbsoluteGravity(gravity, ld);
     const int hGrav = absGrav & Gravity::HORIZONTAL_GRAVITY_MASK;
@@ -1027,25 +1013,25 @@ int ToolBar::getChildHorizontalGravity(int gravity){
     }
 }
 
-bool ToolBar::shouldLayout(View* view){
+bool Toolbar::shouldLayout(View* view){
     return view && view->getParent() == this && view->getVisibility() != View::GONE;
 }
 
-int ToolBar::getHorizontalMargins(View* v){
+int Toolbar::getHorizontalMargins(View* v){
     MarginLayoutParams* mlp = (MarginLayoutParams*) v->getLayoutParams();
     return mlp->getMarginStart() + mlp->getMarginEnd();
 }
 
-int ToolBar::getVerticalMargins(View* v){
+int Toolbar::getVerticalMargins(View* v){
     const MarginLayoutParams* mlp = (const MarginLayoutParams*) v->getLayoutParams();
     return mlp->topMargin + mlp->bottomMargin;
 }
 
-ViewGroup::LayoutParams* ToolBar::generateLayoutParams(const AttributeSet& attrs)const{
+ViewGroup::LayoutParams* Toolbar::generateLayoutParams(const AttributeSet& attrs)const{
     return new LayoutParams(getContext(), attrs);
 }
 
-ViewGroup::LayoutParams* ToolBar::generateLayoutParams(const ViewGroup::LayoutParams* p)const{
+ViewGroup::LayoutParams* Toolbar::generateLayoutParams(const ViewGroup::LayoutParams* p)const{
     if (dynamic_cast<const LayoutParams*>(p)) {
          return new LayoutParams((const LayoutParams)*p);
     } else if (dynamic_cast<const ActionBar::LayoutParams*>(p)) {
@@ -1058,20 +1044,20 @@ ViewGroup::LayoutParams* ToolBar::generateLayoutParams(const ViewGroup::LayoutPa
 }
 
 
-ViewGroup::LayoutParams* ToolBar::generateDefaultLayoutParams()const{
+ViewGroup::LayoutParams* Toolbar::generateDefaultLayoutParams()const{
     return new LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
 }
 
-bool ToolBar::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
+bool Toolbar::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
      return ViewGroup::checkLayoutParams(p) && dynamic_cast<const LayoutParams*>(p);
 }
 
-bool ToolBar::isCustomView(View* child) {
+bool Toolbar::isCustomView(View* child) {
     return ((LayoutParams*) child->getLayoutParams())->mViewType == LayoutParams::CUSTOM;
 }
 
-void ToolBar::removeChildrenForExpandedActionView() {
-    int childCount = getChildCount();
+void Toolbar::removeChildrenForExpandedActionView() {
+    const int childCount = getChildCount();
     // Go backwards since we're removing from the list
     for (int i = childCount - 1; i >= 0; i--) {
         View* child = getChildAt(i);
@@ -1083,7 +1069,7 @@ void ToolBar::removeChildrenForExpandedActionView() {
     }
 }
 
-void ToolBar::addChildrenForExpandedActionView() {
+void Toolbar::addChildrenForExpandedActionView() {
     const int count = (int)mHiddenViews.size();
     // Re-add in reverse order since we removed in reverse order
     for (int i = count - 1; i >= 0; i--) {
@@ -1092,17 +1078,17 @@ void ToolBar::addChildrenForExpandedActionView() {
     mHiddenViews.clear();
 }
 
-bool ToolBar::isChildOrHidden(View* child) {
+bool Toolbar::isChildOrHidden(View* child) {
     auto itr = std::find(mHiddenViews.begin(),mHiddenViews.end(),child);
     return (child->getParent() == this) || (itr!=mHiddenViews.end());
 }
 
-void ToolBar::setCollapsible(bool collapsible) {
+void Toolbar::setCollapsible(bool collapsible) {
     mCollapsible = collapsible;
     requestLayout();
 }
 
-/*void ToolBar::setMenuCallbacks(MenuPresenter.Callback pcb, MenuBuilder.Callback mcb){
+/*void Toolbar::setMenuCallbacks(MenuPresenter.Callback pcb, MenuBuilder.Callback mcb){
     mActionMenuPresenterCallback = pcb;
     mMenuBuilderCallback = mcb;
     if (mMenuView != null) {
@@ -1110,48 +1096,48 @@ void ToolBar::setCollapsible(bool collapsible) {
     }
 }*/
 
-void ToolBar::ensureContentInsets() {
+void Toolbar::ensureContentInsets() {
     if (mContentInsets == nullptr) {
         mContentInsets = new RtlSpacingHelper();
     }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-ToolBar::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
+Toolbar::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
    :ActionBar::LayoutParams(c, attrs){
 }
 
-ToolBar::LayoutParams::LayoutParams(int width, int height)
+Toolbar::LayoutParams::LayoutParams(int width, int height)
    :ActionBar::LayoutParams(width, height){
     this->gravity = Gravity::CENTER_VERTICAL | Gravity::START;
 }
 
-ToolBar::LayoutParams::LayoutParams(int width, int height, int gravity)
+Toolbar::LayoutParams::LayoutParams(int width, int height, int gravity)
   :ActionBar::LayoutParams(width, height){
     this->gravity = gravity;
 }
 
-ToolBar::LayoutParams::LayoutParams(int gravity)
+Toolbar::LayoutParams::LayoutParams(int gravity)
    :LayoutParams(WRAP_CONTENT, MATCH_PARENT, gravity){
 }
 
-ToolBar::LayoutParams::LayoutParams(const LayoutParams& source)
+Toolbar::LayoutParams::LayoutParams(const LayoutParams& source)
    :ActionBar::LayoutParams(source){
     mViewType = source.mViewType;
 }
 
-ToolBar::LayoutParams::LayoutParams(const ActionBar::LayoutParams& source)
+Toolbar::LayoutParams::LayoutParams(const ActionBar::LayoutParams& source)
   :ActionBar::LayoutParams(source){
 }
 
-ToolBar::LayoutParams::LayoutParams(const MarginLayoutParams& source)
+Toolbar::LayoutParams::LayoutParams(const MarginLayoutParams& source)
   :ActionBar::LayoutParams(source){
     // ActionBar.LayoutParams doesn't have a MarginLayoutParams constructor.
     // Fake it here and copy over the relevant data.
     copyMarginsFrom(source);
 }
 
-ToolBar::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)
+Toolbar::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)
   :ActionBar::LayoutParams(source){
 }
 

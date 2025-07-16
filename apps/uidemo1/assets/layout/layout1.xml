@@ -17,9 +17,38 @@
         <EditText android:id="@+id/TextUrl" 
             android:layout_width="match_parent"
             android:layout_height="wrap_content" 
-	    android:hint="@string/address"
+	        android:hint="@string/address"
             android:layout_alignTop="@id/BtnGo" 
             android:layout_toLeftOf="@id/BtnGo"/>
+        <android.support.v7.widget.Toolbar
+           android:id="@+id/toolbar"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+            android:background="#112233"
+            android:title="Title"
+            android:titleTextColor="#ffffff"
+            android:subtitle="sub title"
+            android:subtitleTextColor="#ffeedd"
+            android:layout_below="@id/TextUrl">
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="标题"
+                android:textColor="#ffffff"
+                android:textSize="22sp" />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@mipmap/light_on"
+                />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@mipmap/light_off"
+                />
+        </android.support.v7.widget.Toolbar>
     </RelativeLayout>
     <TextView android:id="@+id/WebView01" 
         android:layout_width="match_parent"
@@ -40,6 +69,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#112233"
-        />
+        android:gestureStrokeType="multiple"
+        >
+        <EditText android:id="@+id/WebView01"
+        android:layout_width="match_parent"
+        android:layout_height="math_parent"/>
+</GestureOverlayView>
      </LinearLayout>
 </LinearLayout>
