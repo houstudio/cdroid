@@ -17,7 +17,8 @@
  *********************************************************************************/
 #include <view/motionevent.h>
 #include <private/inputeventlabels.h>
-#include <inputdevice.h>
+#include <core/inputdevice.h>
+#include <core/mathutils.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
@@ -396,12 +397,6 @@ const PointerCoords& MotionEvent::getRawPointerCoords(size_t pointerIndex) const
     return mSamplePointerCoords[getHistorySize() * getPointerCount() + pointerIndex];
 }
 
-static float clamp(float value, float low, float high) {
-    if (value < low) return low;
-    else if (value > high)return high;
-    return value;
-}
-
 MotionEvent* MotionEvent::clampNoHistory(float left, float top, float right, float bottom){
     MotionEvent*ev = obtain();
     const size_t pointerCount = getPointerCount();
@@ -412,8 +407,8 @@ MotionEvent* MotionEvent::clampNoHistory(float left, float top, float right, flo
     for (size_t i = 0; i < pointerCount; i++) {
         pp[i] = mPointerProperties[i];//nativeGetPointerProperties(mNativePtr,i,pp[i]);
         getPointerCoords(i,pc[i]);//nativeGetPointerCoords(mNativePtr,i,HISTORY_CURRENT,pc[i]);
-        pc[i].setAxisValue(AXIS_X,clamp(pc[i].getX(), left, right));
-        pc[i].setAxisValue(AXIS_Y,clamp(pc[i].getY(), top, bottom));
+        pc[i].setAxisValue(AXIS_X,MathUtils::clamp(pc[i].getX(), left, right));
+        pc[i].setAxisValue(AXIS_Y,MathUtils::clamp(pc[i].getY(), top, bottom));
     }
     return ev;
 }

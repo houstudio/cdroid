@@ -55,14 +55,8 @@ public:
    }
 
    template<typename T>
-   static T clamp(T value, T min, T max) {
-       if (value < min) {
-           return min;
-       } else if (value > max) {
-           return max;
-       } else {
-           return value;
-       }
+   static T clamp(T v, T lo, T hi) {
+       return (v < lo) ? lo : (hi < v) ? hi : v;
    }
 };
 }

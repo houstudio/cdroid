@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <view/velocitytracker.h>
+#include <core/mathutils.h>
 #include <math.h>
 #include <string.h>
 #include <cdtypes.h>
@@ -339,11 +340,6 @@ bool VelocityTrackerImpl::getVelocity(int32_t axis,int32_t pointerId,float*out){
     return false;
 }
 
-template< class T >
-constexpr const T& clamp( const T& v, const T& lo, const T& hi ) {
-    return (v < lo) ? lo : (hi < v) ? hi : v;
-}
-
 VelocityTracker::ComputedVelocity VelocityTrackerImpl::getComputedVelocity(int32_t units, float maxVelocity){
     VelocityTracker::ComputedVelocity computedVelocity;
     for (const auto& axis : mConfiguredStrategies) {
@@ -352,7 +348,7 @@ VelocityTracker::ComputedVelocity VelocityTrackerImpl::getComputedVelocity(int32
             uint32_t id = copyIdBits.clearFirstMarkedBit();
             float velocity;
             if (getVelocity(axis.first, id,&velocity)) {
-                const float adjustedVelocity = clamp(velocity * units / 1000, -maxVelocity, maxVelocity);
+                const float adjustedVelocity = MathUtils::clamp(velocity * units / 1000.f, -maxVelocity, maxVelocity);
                 computedVelocity.addVelocity(axis.first, id, adjustedVelocity);
             }
         }
