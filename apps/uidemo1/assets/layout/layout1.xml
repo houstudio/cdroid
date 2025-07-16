@@ -28,6 +28,9 @@
             android:title="Title"
             android:titleTextColor="#ffffff"
             android:subtitle="sub title"
+			android:logo="mipmap/dev_sync"
+			android:collapseIcon="@mipmap/dev_sync"
+			android:navigationIcon="@mipmap/icon_back"
             android:subtitleTextColor="#ffeedd"
             android:layout_below="@id/TextUrl">
             <TextView

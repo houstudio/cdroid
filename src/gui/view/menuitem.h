@@ -121,7 +121,7 @@ public:
 
     virtual bool isChecked()=0;
 
-    virtual MenuItem setVisible(bool visible)=0;
+    virtual MenuItem& setVisible(bool visible)=0;
 
     virtual bool isVisible()=0;
 
