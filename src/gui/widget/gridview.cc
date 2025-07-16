@@ -516,8 +516,8 @@ View* GridView::fillFromSelection(int selectedTop, int childrenTop, int children
 
     View* sel,*referenceView;
 
-    int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength, rowStart);
-    int bottomSelectionPixel = getBottomSelectionPixel(childrenBottom, fadingEdgeLength,
+    const int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength, rowStart);
+    const int bottomSelectionPixel = getBottomSelectionPixel(childrenBottom, fadingEdgeLength,
                                numColumns, rowStart);
 
     sel = makeRow(mStackFromBottom ? rowEnd : rowStart, selectedTop, true);
@@ -618,8 +618,8 @@ View* GridView::moveSelection(int delta, int childrenTop, int childrenBottom) {
 
     int rowDelta = rowStart - oldRowStart;
 
-    int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength, rowStart);
-    int bottomSelectionPixel = getBottomSelectionPixel(childrenBottom, fadingEdgeLength,
+    const int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength, rowStart);
+    const int bottomSelectionPixel = getBottomSelectionPixel(childrenBottom, fadingEdgeLength,
                                numColumns, rowStart);
 
     // Possibly changed again in fillUp if we add rows above this one.
@@ -630,7 +630,7 @@ View* GridView::moveSelection(int delta, int childrenTop, int childrenBottom) {
     if (rowDelta > 0) {
         /* Case 1: Scrolling down. */
 
-        int oldBottom = mReferenceViewInSelectedRow? mReferenceViewInSelectedRow->getBottom():0;
+        const int oldBottom = mReferenceViewInSelectedRow? mReferenceViewInSelectedRow->getBottom():0;
 
         sel = makeRow(mStackFromBottom ? rowEnd : rowStart, oldBottom + verticalSpacing, true);
         referenceView = mReferenceView;
@@ -638,7 +638,7 @@ View* GridView::moveSelection(int delta, int childrenTop, int childrenBottom) {
         adjustForBottomFadingEdge(referenceView, topSelectionPixel, bottomSelectionPixel);
     } else if (rowDelta < 0) {
         /* Case 2: Scrolling up. */
-        int oldTop = mReferenceViewInSelectedRow?mReferenceViewInSelectedRow->getTop():0;
+        const int oldTop = mReferenceViewInSelectedRow?mReferenceViewInSelectedRow->getTop():0;
 
         sel = makeRow(mStackFromBottom ? rowEnd : rowStart, oldTop - verticalSpacing, false);
         referenceView = mReferenceView;
@@ -646,7 +646,7 @@ View* GridView::moveSelection(int delta, int childrenTop, int childrenBottom) {
         adjustForTopFadingEdge(referenceView, topSelectionPixel, bottomSelectionPixel);
     } else {
         /*Keep selection where it was */
-        int oldTop = mReferenceViewInSelectedRow ?mReferenceViewInSelectedRow->getTop():0;
+        const int oldTop = mReferenceViewInSelectedRow ?mReferenceViewInSelectedRow->getTop():0;
 
         sel = makeRow(mStackFromBottom ? rowEnd : rowStart, oldTop, true);
         referenceView = mReferenceView;
@@ -873,7 +873,7 @@ void GridView::layoutChildren() {
     default:
         // Remember the previously selected view
         index = mSelectedPosition - mFirstPosition;
-        if (index >= 0 && index < childCount) {
+        if ((index >= 0) && (index < childCount)) {
             oldSel = getChildAt(index);
         }
 
@@ -881,7 +881,7 @@ void GridView::layoutChildren() {
         oldFirst = getChildAt(0);
     }
 
-    bool dataChanged = mDataChanged;
+    const bool dataChanged = mDataChanged;
     if (dataChanged) {
         handleDataChanged();
     }
@@ -973,7 +973,7 @@ void GridView::layoutChildren() {
                                        INVALID_POSITION : 0);
                 sel = fillFromTop(childrenTop);
             } else {
-                int last = mItemCount - 1;
+                const int last = mItemCount - 1;
                 setSelectedPositionInt(mAdapter == nullptr || isInTouchMode() ?
                                        INVALID_POSITION : last);
                 sel = fillFromBottom(last, childrenBottom);
@@ -1089,8 +1089,8 @@ void GridView::setupChild(View* child, int position, int y, bool flowDown, int c
                           bool selected, bool isAttachedToWindow, int where) {
     const bool isSelected = selected && shouldShowSelector();
     const bool updateChildSelected = isSelected != child->isSelected();
-    const bool isPressed = mTouchMode > TOUCH_MODE_DOWN && mTouchMode < TOUCH_MODE_SCROLL
-                           && mMotionPosition == position;
+    const bool isPressed = (mTouchMode > TOUCH_MODE_DOWN) && (mTouchMode < TOUCH_MODE_SCROLL)
+                           && (mMotionPosition == position);
     const bool updateChildPressed = isPressed != child->isPressed();
     const bool needToMeasure = !isAttachedToWindow || updateChildSelected
                                || child->isLayoutRequested();
@@ -1142,22 +1142,21 @@ void GridView::setupChild(View* child, int position, int y, bool flowDown, int c
     }
 
     if (needToMeasure) {
-        int childHeightSpec = ViewGroup::getChildMeasureSpec(MeasureSpec::makeMeasureSpec(0, MeasureSpec::UNSPECIFIED), 0, p->height);
-
-        int childWidthSpec = ViewGroup::getChildMeasureSpec(MeasureSpec::makeMeasureSpec(mColumnWidth, MeasureSpec::EXACTLY), 0, p->width);
+        const int childHeightSpec = ViewGroup::getChildMeasureSpec(MeasureSpec::makeMeasureSpec(0, MeasureSpec::UNSPECIFIED), 0, p->height);
+        const int childWidthSpec = ViewGroup::getChildMeasureSpec(MeasureSpec::makeMeasureSpec(mColumnWidth, MeasureSpec::EXACTLY), 0, p->width);
         child->measure(childWidthSpec, childHeightSpec);
     } else {
         cleanupLayoutState(child);
     }
 
-    int w = child->getMeasuredWidth();
-    int h = child->getMeasuredHeight();
+    const int w = child->getMeasuredWidth();
+    const int h = child->getMeasuredHeight();
 
     int childLeft;
     int childTop = flowDown ? y : y - h;
 
-    int layoutDirection = getLayoutDirection();
-    int absoluteGravity = Gravity::getAbsoluteGravity(mGravity, layoutDirection);
+    const int layoutDirection = getLayoutDirection();
+    const int absoluteGravity = Gravity::getAbsoluteGravity(mGravity, layoutDirection);
     switch (absoluteGravity & Gravity::HORIZONTAL_GRAVITY_MASK) {
     case Gravity::LEFT:
         childLeft = childrenLeft;
@@ -1197,15 +1196,15 @@ void GridView::setSelection(int position) {
 }
 
 void GridView::setSelectionInt(int position) {
-    int previousSelectedPosition = mNextSelectedPosition;
+    const int previousSelectedPosition = mNextSelectedPosition;
 
     if (mPositionScroller) mPositionScroller->stop();
 
     setNextSelectedPositionInt(position);
     layoutChildren();
 
-    int next = mStackFromBottom ? mItemCount - 1  - mNextSelectedPosition : mNextSelectedPosition;
-    int previous = mStackFromBottom ? mItemCount - 1 - previousSelectedPosition : previousSelectedPosition;
+    const int next = mStackFromBottom ? mItemCount - 1  - mNextSelectedPosition : mNextSelectedPosition;
+    const int previous = mStackFromBottom ? mItemCount - 1 - previousSelectedPosition : previousSelectedPosition;
 
     int nextRow = next / mNumColumns;
     int previousRow = previous / mNumColumns;
@@ -1219,12 +1218,12 @@ bool GridView::dispatchKeyEvent(KeyEvent& event) {
     bool handled = AbsListView::dispatchKeyEvent(event);
     if (!handled) {// If we didn't handle it...
         View* focused = getFocusedChild();
-        if (focused && event.getAction() == KeyEvent::ACTION_DOWN) {
+        if (focused && (event.getAction() == KeyEvent::ACTION_DOWN)) {
             // ... and our focused child didn't handle it
             // ... give it to ourselves so we can scroll if necessary
             handled = onKeyDown(event.getKeyCode(), event);
         }
-        handled=commonKey(event.getKeyCode(), 1,event);
+        handled = commonKey(event.getKeyCode(), 1,event);
     }
     return handled;
 }
@@ -1251,7 +1250,7 @@ bool GridView::commonKey(int keyCode, int count, KeyEvent& event) {
     }
 
     bool handled = false;
-    int action = event.getAction();
+    const int action = event.getAction();
     if (KeyEvent::isConfirmKey(keyCode)
             && event.hasNoModifiers() && action != KeyEvent::ACTION_UP) {
         handled = resurrectSelectionIfNeeded();
@@ -1418,14 +1417,14 @@ bool GridView::arrowScroll(int direction) {
         break;
     }
 
-    const bool isLayoutRtl = false;//isLayoutRtl();
-    if (selectedPosition > startOfRowPos && ((direction == FOCUS_LEFT && !isLayoutRtl) ||
-            (direction == FOCUS_RIGHT && isLayoutRtl))) {
+    const bool islayoutRtl = isLayoutRtl();
+    if (selectedPosition > startOfRowPos && ((direction == FOCUS_LEFT && !islayoutRtl) ||
+            (direction == FOCUS_RIGHT && islayoutRtl))) {
         mLayoutMode = LAYOUT_MOVE_SELECTION;
         setSelectionInt(std::max(0, selectedPosition - 1));
         moved = true;
-    } else if (selectedPosition < endOfRowPos && ((direction == FOCUS_LEFT && isLayoutRtl) ||
-               (direction == FOCUS_RIGHT && !isLayoutRtl))) {
+    } else if (selectedPosition < endOfRowPos && ((direction == FOCUS_LEFT && islayoutRtl) ||
+               (direction == FOCUS_RIGHT && !islayoutRtl))) {
         mLayoutMode = LAYOUT_MOVE_SELECTION;
         setSelectionInt(std::min(selectedPosition + 1, mItemCount - 1));
         moved = true;
