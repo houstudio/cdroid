@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <view/viewoverlay.h>
+#include <view/viewgroupoverlay.h>
 #include <cdlog.h>
 namespace cdroid{
 
@@ -45,6 +46,20 @@ void ViewOverlay::clear() {
 
 bool ViewOverlay::isEmpty()const{
     return mOverlayViewGroup->isEmpty();
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+
+ViewGroupOverlay::ViewGroupOverlay(Context* context, View* hostView)
+    :ViewOverlay(context,hostView){
+}
+
+void ViewGroupOverlay::add(View*view){
+    mOverlayViewGroup->add(view);
+}
+
+void ViewGroupOverlay::remove(View*view){
+    mOverlayViewGroup->remove(view);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
