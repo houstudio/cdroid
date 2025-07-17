@@ -38,9 +38,9 @@ private:
     int mGroup;
     int mCategoryOrder;
     int mOrdering;
-    CharSequence mTitle;
-    CharSequence mTitleCondensed;
-    Intent mIntent;
+    std::string mTitle;
+    std::string mTitleCondensed;
+    Intent* mIntent;
     char mShortcutNumericChar;
     int mShortcutNumericModifiers = KeyEvent::META_CTRL_ON;
     char mShortcutAlphabeticChar;
@@ -50,7 +50,7 @@ private:
     int mIconResId = NO_ICON;
 
     ColorStateList* mIconTintList = nullptr;
-    PorterDuff.Mode mIconTintMode = nullptr;
+    int mIconTintMode;
     bool mHasIconTint = false;
     bool mHasIconTintMode = false;
     bool mNeedToApplyIconTint = false;
@@ -76,9 +76,8 @@ private:
 
     std::string mContentDescription;
     std::string mTooltipText;
-
 private:
-    static void appendModifier(StringBuilder sb, int mask, int modifier, const std::string& label);
+    static void appendModifier(std::string& sb, int mask, int modifier, const std::string& label);
     Drawable* applyIconTintIfNecessary(Drawable* icon);
 public:
     MenuItemImpl(MenuBuilder* menu, int group, int id, int categoryOrder, int ordering,
@@ -136,8 +135,8 @@ public:
     MenuItem& setIconTintList(const ColorStateList* iconTintList);
     ColorStateList* getIconTintList();
 
-    MenuItem& setIconTintMode(PorterDuff.Mode iconTintMode);
-    PorterDuff.Mode getIconTintMode();
+    MenuItem& setIconTintMode(int iconTintMode);
+    int getIconTintMode();
 
     bool isCheckable() const override;
     MenuItem& setCheckable(bool checkable)override;
@@ -193,8 +192,7 @@ public:
     bool hasCollapsibleActionView();
     void setActionViewExpanded(bool isExpanded);
 
-    bool isActionViewExpanded() {
-    urn mIsActionViewExpanded;
+    bool isActionViewExpanded();
     
     MenuItem& setContentDescription(const std::string&contentDescription);
     std::string getContentDescription();

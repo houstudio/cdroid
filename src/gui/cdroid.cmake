@@ -98,6 +98,7 @@ list(APPEND CDROID_SOURCES
     view/scalegesturedetector.cc
     view/windowinsets.cc
     view/menuitem.cc
+    #view/menuinflater.cc
     #view/menuitemimpl.cc
     #view/diffrentialmotionflingcontroller.cc
     view/hapticscrollfeedbackprovider.cc

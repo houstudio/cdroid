@@ -232,11 +232,10 @@ std::string MenuItemImpl::getShortcutLabel() {
 
     final Resources res = mMenu.getContext().getResources();
 
-    StringBuilder sb = new StringBuilder();
+    std::string sb;
     if (ViewConfiguration.get(mMenu->getContext()).hasPermanentMenuKey()) {
         // Only prepend "Menu+" if there is a hardware menu key.
-        sb.append(res.getString(
-            com.android.internal.R.string.prepend_shortcut_label));
+        sb.append(res.getString(com.android.internal.R.string.prepend_shortcut_label));
     }
 
     const int modifiers =
@@ -279,7 +278,7 @@ std::string MenuItemImpl::getShortcutLabel() {
     return sb.toString();
 }
 
-void MenuItemImpl::appendModifier(StringBuilder sb, int mask, int modifier, String label) {
+void MenuItemImpl::appendModifier(std::string& sb, int mask, int modifier, String label) {
     if ((mask & modifier) == modifier) {
         sb.append(label);
     }

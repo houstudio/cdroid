@@ -55,7 +55,7 @@ public:
 
     virtual MenuItem& setTitleCondensed(const std::string& title)=0;
 
-    virtual std::string& getTitleCondensed();
+    virtual std::string getTitleCondensed();
 
     virtual MenuItem& setIcon(Drawable* icon);
 
