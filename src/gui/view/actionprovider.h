@@ -1,8 +1,11 @@
 #ifndef __ACTION_PROVIDER_H__
 #define __ACTION_PROVIDER_H__
+#include <functional>
 namespace cdroid{
+class View;
 class Context;
 class MenuItem;
+class SubMenu;
 class ActionProvider {
 public:
     /**

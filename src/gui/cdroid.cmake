@@ -97,6 +97,7 @@ list(APPEND CDROID_SOURCES
     view/gesturedetector.cc
     view/scalegesturedetector.cc
     view/windowinsets.cc
+    view/actionprovider.cc
     view/menuitem.cc
     #view/menuinflater.cc
     #view/menuitemimpl.cc
