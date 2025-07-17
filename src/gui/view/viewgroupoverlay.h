@@ -15,50 +15,44 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#ifndef __MATH_UTILS_H__
-#define __MATH_UTILS_H__
-#include <math.h>
+#ifndef __VIEWGROUP_OVERLAY_H__
+#define __VIEWGROUP_OVERLAY_H__
+#include <view/viewoverlay.h>
 namespace cdroid{
-
-class MathUtils{
+class ViewGroupOverlay:public ViewOverlay{
 public:
-    template<typename T>
-    static T constrain(T value, T min, T max) {
-        if (value > max) {
-            return max;
-        } else if (value < min) {
-            return min;
-        } else {
-            return value;
-        }
-   }
-
-   template<typename T>
-   static int numberOfTrailingZeros(T value) {
-       if (value == 0) return sizeof(T)*8;
-       int count = 0;
-       while ((value & 1) == 0) {
-           value >>= 1;
-           count++;
-       }
-       return count;
-   }
-
-   template <typename T>
-   static int signum(T val) {
-       return (T(0) < val) - (val < T(0));
-   }
-
-   template <typename T>
-   static T lerp(T start, T stop, T amount) {
-       return start + (stop - start) * amount;
-   }
-
-   template<typename T>
-   static T clamp(T v, T lo, T hi) {
-       return (v < lo) ? lo : (hi < v) ? hi : v;
-   }
+    ViewGroupOverlay(Context* context, View* hostView)
+        :ViewOverlay(context,hostView){}
+    void add(View*view){
+        mOverlayViewGroup->add(view);
+    }
+    void remove(View*view){
+        mOverlayViewGroup->remove(view);
+    }
 };
-}
-#endif
-
+}/*endof namespace*/
+#endif/*__VIEWGROUP_OVERLAY_H__*/
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      

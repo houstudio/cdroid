@@ -43,7 +43,6 @@ private:
     float mMaxScrollDiff = 0;
     float mPreviousCurrentScroll = 0;
     float mCurrentScrollDiff = 0;
-    static float clamp(float val, float min, float max);
     static int applyAlpha(int color, float alpha);
     void setThumbColor(int thumbColor);
     void setTrackColor(int trackColor);

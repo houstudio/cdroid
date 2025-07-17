@@ -16,13 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <view/viewgroup.h>
-#include <view/viewoverlay.h>
+#include <view/viewgroupoverlay.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <animation/layouttransition.h>
 #include <animation/layoutanimationcontroller.h>
-#include <cdlog.h>
-#include <focusfinder.h>
-#include <systemclock.h>
+#include <porting/cdlog.h>
+#include <view/focusfinder.h>
+#include <core/systemclock.h>
 
 #define CHILD_LEFT_INDEX 0
 #define CHILD_TOP_INDEX  1
@@ -245,7 +245,7 @@ void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){
     if (mFirstTouchTarget==nullptr)return;
  
     const auto now = SystemClock::uptimeMillis();
-    bool syntheticEvent = (event==nullptr);
+    const bool syntheticEvent = (event==nullptr);
     if(event==nullptr){
         event = MotionEvent::obtain(now, now,MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
         event->setAction(MotionEvent::ACTION_CANCEL);
@@ -637,7 +637,7 @@ bool ViewGroup::dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& e
 
     // Let our children have a shot in populating the event.
     ChildListForAccessibility* children = ChildListForAccessibility::obtain(this, true);
-    int childCount = children->getChildCount();
+    const int childCount = children->getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = children->getChildAt(i);
         if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
@@ -803,7 +803,7 @@ void ViewGroup::removeFromArray(int start, int count){
 }
 
 void ViewGroup::detachAllViewsFromParent(){
-    int count = mChildren.size();
+    const int count = mChildren.size();
     if (count <= 0) {
         return;
     }
@@ -833,7 +833,7 @@ void ViewGroup::addTransientView(View*view,int index){
     if (index < 0) {
         return;
     }
-    int oldSize = mTransientIndices.size();
+    const int oldSize = mTransientIndices.size();
     if (oldSize > 0) {
         int insertionIndex;
         for (insertionIndex = 0; insertionIndex < oldSize; ++insertionIndex) {
@@ -853,7 +853,7 @@ void ViewGroup::addTransientView(View*view,int index){
 }
 
 void ViewGroup::removeTransientView(View*view){
-    int size = mTransientViews.size();
+    const int size = mTransientViews.size();
     for (int i = 0; i < size; ++i) {
         if (view == mTransientViews.at(i)) {
             mTransientViews.erase(mTransientViews.begin()+i);
@@ -906,7 +906,7 @@ void ViewGroup::startViewTransition(View* view){
 }
 
 void ViewGroup::endViewTransition(View* view){
-    auto it= std::find(mTransitioningViews.begin(),mTransitioningViews.end(),view);
+    auto it = std::find(mTransitioningViews.begin(),mTransitioningViews.end(),view);
     if(it!=mTransitioningViews.end())mTransitioningViews.erase(it);
 
     it= std::find(mDisappearingChildren.begin(),mDisappearingChildren.end(),view);
@@ -925,7 +925,7 @@ void ViewGroup::endViewTransition(View* view){
 }
 
 void ViewGroup::finishAnimatingView(View* view, Animation* animation) {
-    auto it=std::find(mDisappearingChildren.begin(),mDisappearingChildren.end(),view);
+    auto it = std::find(mDisappearingChildren.begin(),mDisappearingChildren.end(),view);
     if (it!=mDisappearingChildren.end()) {
         mDisappearingChildren.erase(it);
         if (view->mAttachInfo) view->dispatchDetachedFromWindow();
@@ -1089,14 +1089,14 @@ bool ViewGroup::isChildrenDrawnWithCacheEnabled()const{
     return (mGroupFlags & FLAG_CHILDREN_DRAWN_WITH_CACHE) == FLAG_CHILDREN_DRAWN_WITH_CACHE;
 }
 
-void ViewGroup::setChildrenDrawnWithCacheEnabled(bool enabled){
-    setBooleanFlag(FLAG_CHILDREN_DRAWN_WITH_CACHE, enabled);
+void ViewGroup::setChildrenDrawnWithCacheEnabled(bool _enabled){
+    setBooleanFlag(FLAG_CHILDREN_DRAWN_WITH_CACHE, _enabled);
 }
 
-void ViewGroup::setChildrenDrawingCacheEnabled(bool enabled){
-    if (enabled || ((mPersistentDrawingCache & PERSISTENT_ALL_CACHES) != PERSISTENT_ALL_CACHES)) {
+void ViewGroup::setChildrenDrawingCacheEnabled(bool _enabled){
+    if (_enabled || ((mPersistentDrawingCache & PERSISTENT_ALL_CACHES) != PERSISTENT_ALL_CACHES)) {
         for (auto c:mChildren) {
-            c->setDrawingCacheEnabled(enabled);
+            c->setDrawingCacheEnabled(_enabled);
         }
     }
 }
@@ -1208,7 +1208,7 @@ void ViewGroup::dispatchDrawableHotspotChanged(float x,float y){
         const bool nonActivationable = !child->isClickable()&&!child->isLongClickable();
         const bool duplicateState    = (child->mViewFlags & DUPLICATE_PARENT_STATE)!=0;
         if( nonActivationable||duplicateState){
-            float point[2]={x,y};
+            float point[2] = {x,y};
             transformPointToViewLocal(point,*child);
             child->drawableHotspotChanged(point[0],point[1]);
         }
@@ -1572,7 +1572,7 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
         mTransition->addChild(this,child);
     }
     if (!checkLayoutParams(params)) {
-        LayoutParams*olp =params;
+        const LayoutParams*olp =params;
         params = generateLayoutParams(params);
         if(child->mLayoutParams!=olp){
             delete olp;//params is unbinded ,must be destroied!
@@ -1817,7 +1817,7 @@ void ViewGroup::removeAllViewsInLayout() {
         dispatchViewRemoved(view);
 
         view->mParent = nullptr;
-        mChildren[i] = nullptr;//cant delete mChilden[i]
+        mChildren[i] = nullptr;/*can't delete mChilden[i]*/
     }
 
     mChildren.clear();
@@ -2435,7 +2435,7 @@ bool ViewGroup::hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const{
     }
 
     // Determine whether we have a focused descendant.
-    int descendantFocusability = getDescendantFocusability();
+    const int descendantFocusability = getDescendantFocusability();
     if (descendantFocusability != FOCUS_BLOCK_DESCENDANTS) {
         return hasFocusableChild(dispatchExplicit);
     }
@@ -2490,7 +2490,7 @@ bool ViewGroup::onRequestFocusInDescendants(int direction,Rect* previouslyFocuse
     int index;
     int increment;
     int end;
-    int count = mChildren.size();
+    const int count = mChildren.size();
     if ((direction & FOCUS_FORWARD) != 0) {
         index = 0;
         increment = 1;
@@ -2798,7 +2798,7 @@ bool ViewGroup::getChildVisibleRect(View*child,Rect&r,Point*offset,bool forcePar
         rectIsVisible = rect.intersect(0, 0, width, height);
     }
 
-    if ((forceParentCheck || rectIsVisible)  && (mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
+    if ((forceParentCheck || rectIsVisible)  && ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK)) {
         // Clip to padding.
         rectIsVisible = rect.intersect(mPaddingLeft, mPaddingTop,  
 			width - mPaddingRight-mPaddingLeft, 
@@ -2960,7 +2960,7 @@ void ViewGroup::resolveDrawables() {
 
 void ViewGroup::resolveLayoutParams() {
     View::resolveLayoutParams();
-    int count = getChildCount();
+    const int count = getChildCount();
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         child->resolveLayoutParams();
@@ -2970,7 +2970,7 @@ void ViewGroup::resolveLayoutParams() {
 void ViewGroup::resetResolvedTextDirection(){
     View::resetResolvedTextDirection();
 
-    int count = getChildCount();
+    const int count = getChildCount();
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         if (child->isTextDirectionInherited()) {
@@ -2981,7 +2981,7 @@ void ViewGroup::resetResolvedTextDirection(){
 
 void ViewGroup::resetResolvedTextAlignment(){
     View::resetResolvedTextAlignment();
-    int count = getChildCount();
+    const int count = getChildCount();
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         if (child->isTextAlignmentInherited()) {
@@ -2993,7 +2993,7 @@ void ViewGroup::resetResolvedTextAlignment(){
 void ViewGroup::resetResolvedLayoutDirection() {
     View::resetResolvedLayoutDirection();
 
-    int count = getChildCount();
+    const int count = getChildCount();
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         if (child->isLayoutDirectionInherited()) {
@@ -3476,7 +3476,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
             resetTouchState();
         }
         // Check for interception.
-        bool intercepted=false;
+        bool intercepted = false;
         if((actionMasked == MotionEvent::ACTION_DOWN)||mFirstTouchTarget){
             const bool disallowIntercept = (mGroupFlags & FLAG_DISALLOW_INTERCEPT) != 0;
             if (!disallowIntercept) {
@@ -3491,7 +3491,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
              ev.setTargetAccessibilityFocus(false);
         }
         // Check for cancelation.
-        const  bool canceled = resetCancelNextUpFlag(this)|| actionMasked == MotionEvent::ACTION_CANCEL;
+        const bool canceled = resetCancelNextUpFlag(this)|| actionMasked == MotionEvent::ACTION_CANCEL;
 
         const bool split = (mGroupFlags & FLAG_SPLIT_MOTION_EVENTS) != 0;
         TouchTarget* newTouchTarget = nullptr;
@@ -3611,8 +3611,8 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
             || (actionMasked == MotionEvent::ACTION_HOVER_MOVE) ) {
             resetTouchState();
         } else if (split && (actionMasked == MotionEvent::ACTION_POINTER_UP) ) {
-            int actionIndex = ev.getActionIndex();
-            int idBitsToRemove = 1 << ev.getPointerId(actionIndex);
+            const int actionIndex = ev.getActionIndex();
+            const int idBitsToRemove = 1 << ev.getPointerId(actionIndex);
             removePointersFromTouchTargets(idBitsToRemove);
         } 
     }
@@ -3623,7 +3623,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
 
 bool ViewGroup::dispatchHoverEvent(MotionEvent&event){
     bool handled = false;
-    int action = event.getAction();
+    const int action = event.getAction();
     // First check whether the view group wants to intercept the hover event.
     bool interceptHover = onInterceptHoverEvent(event);
     event.setAction(action); // restore action in case it was changed
@@ -3847,7 +3847,7 @@ void ViewGroup::dispatchDetachedFromWindow(){
     mLayoutCalledWhileSuppressed = false;
 
     // Tear down our drag tracking
-    mChildrenInterestedInDrag.clear();// = null;
+    mChildrenInterestedInDrag.clear();
     mIsInterestedInDrag = false;
     if (mCurrentDragStartEvent != nullptr) {
         mCurrentDragStartEvent->recycle();
@@ -4016,7 +4016,7 @@ bool ViewGroup::performKeyboardGroupNavigation(int direction){
         return true;
     }
     View*old=focused;
-    View* cluster = focused == nullptr ? keyboardNavigationClusterSearch(nullptr, direction)
+    View* cluster = (focused == nullptr) ? keyboardNavigationClusterSearch(nullptr, direction)
                     : focused->keyboardNavigationClusterSearch(nullptr, direction);
 
     LOGD("Focus changed %p:%d-->%p:%d",old,old?old->mID:-2,focused,focused?focused->mID:-2);
@@ -4054,7 +4054,7 @@ void ViewGroup::drawableStateChanged(){
     if ((mGroupFlags & FLAG_NOTIFY_CHILDREN_ON_DRAWABLE_STATE_CHANGE) != 0) {
         if ((mGroupFlags & FLAG_ADD_STATES_FROM_CHILDREN) != 0) {
             LOGE("addStateFromChildren cannot be enabled if a"
-                        " child has duplicateParentState set to true");
+                 " child has duplicateParentState set to true");
         }
         for (auto child:mChildren){
             if ((child->mViewFlags & DUPLICATE_PARENT_STATE) != 0) {
@@ -4079,7 +4079,7 @@ std::vector<int> ViewGroup::onCreateDrawableState(int extraSpace){
     const int N = getChildCount();
     for (int i = 0; i < N; i++) {
         std::vector<int> childState = getChildAt(i)->getDrawableState();
-        state = mergeDrawableStates(state, childState);
+        mergeDrawableStates(state, childState);
     }
     return state;
 }

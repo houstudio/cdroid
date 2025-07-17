@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <view/roundscrollbarrenderer.h>
-#include <color.h>
-#include <cdlog.h>
-
+#include <core/color.h>
+#include <porting/cdlog.h>
+#include <core/mathutils.h>
 namespace cdroid{
 
 RoundScrollbarRenderer::RoundScrollbarRenderer(View*parent) {
@@ -82,11 +82,11 @@ void RoundScrollbarRenderer::drawRoundScrollbars(Canvas&canvas, float alpha,cons
 
     // Normalize the sweep angle for the scroll bar.
     float sweepAngle = (linearThumbLength / maxScroll) * SCROLLBAR_ANGLE_RANGE;
-    sweepAngle = clamp(sweepAngle, MIN_SCROLLBAR_ANGLE_SWIPE, MAX_SCROLLBAR_ANGLE_SWIPE);
+    sweepAngle = MathUtils::clamp(sweepAngle, MIN_SCROLLBAR_ANGLE_SWIPE, MAX_SCROLLBAR_ANGLE_SWIPE);
     // Normalize the start angle so that it falls on the track.
     float startAngle = (currentScroll * (SCROLLBAR_ANGLE_RANGE - sweepAngle))
             / (maxScroll - linearThumbLength) - SCROLLBAR_ANGLE_RANGE / 2.f;
-    startAngle = clamp(startAngle, -SCROLLBAR_ANGLE_RANGE / 2.f, SCROLLBAR_ANGLE_RANGE / 2.f - sweepAngle);
+    startAngle = MathUtils::clamp(startAngle, -SCROLLBAR_ANGLE_RANGE / 2.f, SCROLLBAR_ANGLE_RANGE / 2.f - sweepAngle);
 
     // Draw the track and the scroll bar.
     mRect = bounds;
@@ -134,16 +134,6 @@ void RoundScrollbarRenderer::getRoundVerticalScrollBarBounds(Rect& bounds) {
     bounds.top = mParent->getScrollY() + (int) padding;
     bounds.width =  width - static_cast<int>(padding*2.f);
     bounds.height = height- static_cast<int>( padding*2.f);
-}
-
-float RoundScrollbarRenderer::clamp(float val, float min, float max) {
-    if (val < min) {
-        return min;
-    } else if (val > max) {
-        return max;
-    } else {
-        return val;
-    }
 }
 
 int RoundScrollbarRenderer::applyAlpha(int color, float alpha) {
