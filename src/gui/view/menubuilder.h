@@ -2,13 +2,16 @@
 #define __MENU_BUILDER_H__
 #include <view/menu.h>
 namespace cdroid{
+class MenuItemImpl;
+class MenuPresenter;
+class SubMenuBuilder;
 class MenuBuilder:public Menu {
 private:
-    static final String PRESENTER_KEY = "android:menu:presenters";
-    static final String ACTION_VIEW_STATES_KEY = "android:menu:actionviewstates";
-    static final String EXPANDED_ACTION_VIEW_ID = "android:menu:expandedactionview";
-
-    static final int[]  sCategoryToOrder = new int[] {
+    static constexpr const char* PRESENTER_KEY = "android:menu:presenters";
+    static constexpr const char* ACTION_VIEW_STATES_KEY = "android:menu:actionviewstates";
+    static constexpr const char* EXPANDED_ACTION_VIEW_ID = "android:menu:expandedactionview";
+#if 0
+    static int[]  sCategoryToOrder = new int[] {
         1, /* No category */
         4, /* CONTAINER */
         5, /* SYSTEM */
@@ -16,33 +19,16 @@ private:
         2, /* ALTERNATIVE */
         0, /* SELECTED_ALTERNATIVE */
     };
+#endif
+    friend MenuItemImpl;
+    friend SubMenuBuilder;
 public:
-    /**
-     * Called by menu to notify of close and selection changes.
-     */
     struct Callback {
-        /**
-         * Called when a menu item is selected.
-         * @param menu The menu that is the parent of the item
-         * @param item The menu item that is selected
-         * @return whether the menu item selection was handled
-         */
-        public bool onMenuItemSelected(MenuBuilder menu, MenuItem item);
-
-        /**
-         * Called when the mode of the menu changes (for example, from icon to expanded).
-         *
-         * @param menu the menu that has changed modes
-         */
-        public void onMenuModeChange(MenuBuilder menu);
+        std::function<bool(MenuBuilder&,MenuItem&)> onMenuItemSelected;
+        std::function<void(MenuBuilder&)> onMenuModeChange;
     };
 
-    /**
-     * Called by menu items to execute their associated action
-     */
-    public interface ItemInvoker {
-        public bool invokeItem(MenuItemImpl item);
-    };
+    typedef std::function<bool(MenuItemImpl&)>ItemInvoker;
 private:
     Context* mContext;
 
@@ -92,16 +78,8 @@ private:
      */
     ContextMenuInfo* mCurrentMenuInfo;
 
-    /**
-     * Contains the state of the View hierarchy for all menu views when the menu
-     * was frozen.
-     */
     SparseArray<Parcelable> mFrozenViewStates;
 
-    /**
-     * Whether or not the items (or any one item's shown state) has changed since it was last
-     * fetched from {@link #getVisibleItems()}
-     */
     bool mIsVisibleItemsStale;
     bool mIsActionItemsStale;
     bool mPreventDispatchingItemsChanged = false;
@@ -110,15 +88,28 @@ private:
     bool mIsClosing = false;
     bool mGroupDividerEnabled = false;
 
-    ArrayList<MenuItemImpl> mTempShortcutItemList = new ArrayList<MenuItemImpl>();
+    std::vector<MenuItemImpl*> mTempShortcutItemList;
 
-    CopyOnWriteArrayList<WeakReference<MenuPresenter>> mPresenters =
-            new CopyOnWriteArrayList<WeakReference<MenuPresenter>>();
-
-    /**
-     * Currently expanded menu item; must be collapsed when we clear.
-     */
+    std::vector<MenuPresenter*> mPresenters;
     MenuItemImpl* mExpandedItem;
+private:
+    void dispatchPresenterUpdate(bool cleared);
+    bool dispatchSubMenuSelected(SubMenuBuilder& subMenu,MenuPresenter& preferredPresenter);
+    void dispatchSaveInstanceState(Bundle outState);
+    void dispatchRestoreInstanceState(Bundle state);
+    /**
+     * Adds an item to the menu.  The other add methods funnel to this.
+     */
+    MenuItem* addInternal(int group, int id, int categoryOrder, const std::string& title);
+
+    // Layoutlib overrides this method to return its custom implementation of MenuItemImpl
+    MenuItemImpl* createNewMenuItem(int group, int id, int categoryOrder, int ordering,
+            const std::string&title, int defaultShowAsAction);
+    void removeItemAtInt(int index, bool updateChildrenOnMenuViews);
+    static int getOrdering(int categoryOrder);
+    void setShortcutsVisibleInner(bool shortcutsVisible);
+    static int findInsertIndex(const std::vector<MenuItemImpl*>& items, int ordering);
+    void setHeaderInternal(int titleRes, const std::string& title,int iconRes, Drawable* icon,View view);
 
 protected:
     /** Header title for menu types that have a header (context and submenus) */
@@ -127,392 +118,159 @@ protected:
     Drawable* mHeaderIcon;
     /** Header custom view for menu types that have a header and support custom views (context) */
     View* mHeaderView;
-public:
-    public MenuBuilder(Context* context);
-
-    public MenuBuilder setDefaultShowAsAction(int defaultShowAsAction);
-
-    /**
-     * Add a presenter to this menu. This will only hold a WeakReference;
-     * you do not need to explicitly remove a presenter, but you can using
-     * {@link #removeMenuPresenter(MenuPresenter)}.
-     *
-     * @param presenter The presenter to add
-     */
-    public void addMenuPresenter(MenuPresenter presenter);
-
-    /**
-     * Add a presenter to this menu that uses an alternate context for
-     * inflating menu items. This will only hold a WeakReference; you do not
-     * need to explicitly remove a presenter, but you can using
-     * {@link #removeMenuPresenter(MenuPresenter)}.
-     *
-     * @param presenter The presenter to add
-     * @param menuContext The context used to inflate menu items
-     */
-    public void addMenuPresenter(MenuPresenter presenter, Context menuContext);
-
-    /**
-     * Remove a presenter from this menu. That presenter will no longer
-     * receive notifications of updates to this menu's data.
-     *
-     * @param presenter The presenter to remove
-     */
-    public void removeMenuPresenter(MenuPresenter presenter);
-
-    private void dispatchPresenterUpdate(bool cleared);
-
-    private bool dispatchSubMenuSelected(SubMenuBuilder subMenu,MenuPresenter preferredPresenter);
-
-    private void dispatchSaveInstanceState(Bundle outState);
-
-    private void dispatchRestoreInstanceState(Bundle state);
-
-    public void savePresenterStates(Bundle outState);
-    public void restorePresenterStates(Bundle state);
-
-    public void saveActionViewStates(Bundle outStates);
-    public void restoreActionViewStates(Bundle states);
-
-    protected String getActionViewStatesKey() {
+protected:
+    virtual std::string getActionViewStatesKey() {
         return ACTION_VIEW_STATES_KEY;
     }
 
-    public void setCallback(Callback cb) {
+    void setExclusiveItemChecked(MenuItem& item);
+    MenuBuilder& setHeaderTitleInt(const std::string& title);
+    MenuBuilder& setHeaderTitleInt(int titleRes);
+    MenuBuilder& setHeaderIconInt(Drawable* icon);
+    MenuBuilder& setHeaderIconInt(const std::string& iconRes);
+    virtual MenuBuilder& setHeaderViewInt(View* view);
+
+    virtual bool isQwertyMode() {
+        return mQwertyMode;
+    }
+
+    virtual bool dispatchMenuItemSelected(MenuBuilder& menu, MenuItem& item);
+    void findItemsWithShortcutForKey(std::vector<MenuItemImpl*>& items, int keyCode, KeyEvent& event);
+    MenuItemImpl* findItemWithShortcutForKey(int keyCode, KeyEvent& event);
+
+    void onItemVisibleChanged(MenuItemImpl& item);
+    void onItemActionRequestChanged(MenuItemImpl& item);
+
+public:
+    MenuBuilder(Context* context);
+    MenuBuilder& setDefaultShowAsAction(int defaultShowAsAction);
+
+    void addMenuPresenter(MenuPresenter* presenter);
+    void addMenuPresenter(MenuPresenter* presenter, Context* menuContext);
+    void removeMenuPresenter(MenuPresenter* presenter);
+
+    void savePresenterStates(Bundle outState);
+    void restorePresenterStates(Bundle state);
+
+    void saveActionViewStates(Bundle outStates);
+    void restoreActionViewStates(Bundle states);
+
+    virtual void setCallback(Callback cb) {
         mCallback = cb;
     }
 
-    /**
-     * Adds an item to the menu.  The other add methods funnel to this.
-     */
-    private MenuItem addInternal(int group, int id, int categoryOrder, const std::string& title);
-
-    // Layoutlib overrides this method to return its custom implementation of MenuItemImpl
-    private MenuItemImpl createNewMenuItem(int group, int id, int categoryOrder, int ordering,
-            CharSequence title, int defaultShowAsAction);
-
-    public MenuItem add(CharSequence title) {
+    MenuItem* add(const std::string& title) {
         return addInternal(0, 0, 0, title);
     }
 
-    public MenuItem add(int titleRes);
-    public MenuItem add(int group, int id, int categoryOrder, const std::string& title);
-    public MenuItem add(int group, int id, int categoryOrder, int title);
-    public SubMenu addSubMenu(CharSequence title);
-    public SubMenu addSubMenu(int titleRes);
+    MenuItem* add(int group, int id, int categoryOrder, const std::string& title);
+    SubMenu* addSubMenu(const std::string& title);
+    SubMenu* addSubMenu(int group, int id, int categoryOrder, const std::string& title);
 
-    public SubMenu addSubMenu(int group, int id, int categoryOrder, const std::string& title);
-    public SubMenu addSubMenu(int group, int id, int categoryOrder, int title);
-
-    public void setGroupDividerEnabled(bool groupDividerEnabled) {
+    virtual void setGroupDividerEnabled(bool groupDividerEnabled) {
         mGroupDividerEnabled = groupDividerEnabled;
     }
 
-    public bool isGroupDividerEnabled() {
+    virtual bool isGroupDividerEnabled() {
         return mGroupDividerEnabled;
     }
 
-    public int addIntentOptions(int group, int id, int categoryOrder, ComponentName caller,
-            Intent[] specifics, Intent intent, int flags, MenuItem[] outSpecificItems);
+    //int addIntentOptions(int group, int id, int categoryOrder, ComponentName caller,
+    //        Intent[] specifics, Intent intent, int flags, std::vector<MenuItem*>& outSpecificItems);
 
-    public void removeItem(int id) {
+    void removeItem(int id) {
         removeItemAtInt(findItemIndex(id), true);
     }
-
-    public void removeGroup(int group);
-
-    /**
-     * Remove the item at the given index and optionally forces menu views to
-     * update.
-     *
-     * @param index The index of the item to be removed. If this index is
-     *            invalid an exception is thrown.
-     * @param updateChildrenOnMenuViews Whether to force update on menu views.
-     *            Please make sure you eventually call this after your batch of
-     *            removals.
-     */
-    private void removeItemAtInt(int index, bool updateChildrenOnMenuViews);
-
-    public void removeItemAt(int index) {
+    void removeGroup(int group);
+    void removeItemAt(int index) {
         removeItemAtInt(index, true);
     }
 
-    public void clearAll();
-    public void clear();
+    void clearAll();
+    void clear();
 
-    void setExclusiveItemChecked(MenuItem item);
+    void setGroupCheckable(int group, bool checkable, bool exclusive);
+    void setGroupVisible(int group, bool visible);
+    void setGroupEnabled(int group, bool enabled);
 
-    public void setGroupCheckable(int group, bool checkable, bool exclusive);
+    bool hasVisibleItems();
 
-    public void setGroupVisible(int group, bool visible);
+    MenuItem* findItem(int id);
+    int findItemIndex(int id);
+    int findGroupIndex(int group);
+    int findGroupIndex(int group, int start);
 
-    public void setGroupEnabled(int group, bool enabled);
-
-    public bool hasVisibleItems();
-
-    public MenuItem findItem(int id);
-    public int findItemIndex(int id);
-
-    public int findGroupIndex(int group);
-    
-    public int findGroupIndex(int group, int start);
-
-    public int size() {
+    int size() {
         return mItems.size();
     }
 
     /** {@inheritDoc} */
-    public MenuItem getItem(int index) {
-        return mItems.get(index);
+    MenuItem* getItem(int index) {
+        return mItems.at(index);
     }
 
-    public bool isShortcutKey(int keyCode, KeyEvent& event) {
-        return findItemWithShortcutForKey(keyCode, event) != null;
+    bool isShortcutKey(int keyCode, KeyEvent& event) {
+        return findItemWithShortcutForKey(keyCode, event) != nullptr;
     }
 
-    public void setQwertyMode(bool isQwerty);
+    virtual void setQwertyMode(bool isQwerty);
 
-    /**
-     * Returns the ordering across all items. This will grab the category from
-     * the upper bits, find out how to order the category with respect to other
-     * categories, and combine it with the lower bits.
-     *
-     * @param categoryOrder The category order for a particular item (if it has
-     *            not been or/add with a category, the default category is
-     *            assumed).
-     * @return An ordering integer that can be used to order this item across
-     *         all the items (even from other categories).
-     */
-    private static int getOrdering(int categoryOrder);
-
-    /**
-     * @return whether the menu shortcuts are in qwerty mode or not
-     */
-    bool isQwertyMode() {
-        return mQwertyMode;
-    }
-
-    /**
-     * Sets whether the shortcuts should be visible on menus.  Devices without hardware
-     * key input will never make shortcuts visible even if this method is passed 'true'.
-     *
-     * @param shortcutsVisible Whether shortcuts should be visible (if true and a
-     *            menu item does not have a shortcut defined, that item will
-     *            still NOT show a shortcut)
-     */
-    public void setShortcutsVisible(bool shortcutsVisible);
-
-    private void setShortcutsVisibleInner(bool shortcutsVisible);
-
-    /**
-     * @return Whether shortcuts should be visible on menus.
-     */
-    public bool isShortcutsVisible() {
+    virtual void setShortcutsVisible(bool shortcutsVisible);
+    virtual bool isShortcutsVisible() {
         return mShortcutsVisible;
     }
 
-    public Context* getContext() {
+    Context* getContext() {
         return mContext;
     }
 
-    bool dispatchMenuItemSelected(MenuBuilder menu, MenuItem item);
-    /**
-     * Dispatch a mode change event to this menu's callback.
-     */
-    public void changeMenuMode();
+    void changeMenuMode();
 
-    private static int findInsertIndex(ArrayList<MenuItemImpl> items, int ordering);
+    bool performShortcut(int keyCode, KeyEvent& event, int flags);
 
-    public bool performShortcut(int keyCode, KeyEvent& event, int flags);
+    bool performIdentifierAction(int id, int flags);
+    bool performItemAction(MenuItem& item, int flags);
+    bool performItemAction(MenuItem& item, MenuPresenter& preferredPresenter, int flags);
 
-    /*
-     * This function will return all the menu and sub-menu items that can
-     * be directly (the shortcut directly corresponds) and indirectly
-     * (the ALT-enabled char corresponds to the shortcut) associated
-     * with the keyCode.
-     */
-    void findItemsWithShortcutForKey(List<MenuItemImpl> items, int keyCode, KeyEvent& event);
-    /*
-     * We want to return the menu item associated with the key, but if there is no
-     * ambiguity (i.e. there is only one menu item corresponding to the key) we want
-     * to return it even if it's not an exact match; this allow the user to
-     * _not_ use the ALT key for example, making the use of shortcuts slightly more
-     * user-friendly. An example is on the G1, '!' and '1' are on the same key, and
-     * in Gmail, Menu+1 will trigger Menu+! (the actual shortcut).
-     *
-     * On the other hand, if two (or more) shortcuts corresponds to the same key,
-     * we have to only return the exact match.
-     */
-    MenuItemImpl findItemWithShortcutForKey(int keyCode, KeyEvent& event);
-
-    public bool performIdentifierAction(int id, int flags);
-    public bool performItemAction(MenuItem item, int flags);
-    public bool performItemAction(MenuItem item, MenuPresenter preferredPresenter, int flags);
-
-    /**
-     * Closes the menu.
-     *
-     * @param closeAllMenus {@code true} if all displayed menus and submenus
-     *                      should be completely closed (as when a menu item is
-     *                      selected) or {@code false} if only this menu should
-     *                      be closed
-     */
-    public final void close(bool closeAllMenus);
-
-    /** {@inheritDoc} */
-    public void close() {
+    void close(bool closeAllMenus);
+    void close() {
         close(true /* closeAllMenus */);
     }
 
-    /**
-     * Called when an item is added or removed.
-     *
-     * @param structureChanged true if the menu structure changed,
-     *                         false if only item properties changed.
-     *                         (Visibility is a structural property since it affects layout.)
-     */
-    public void onItemsChanged(bool structureChanged);
+    void onItemsChanged(bool structureChanged);
+    void stopDispatchingItemsChanged();
+    void startDispatchingItemsChanged();
+    std::vector<MenuItemImpl*> getVisibleItems();
 
-    /**
-     * Stop dispatching item changed events to presenters until
-     * {@link #startDispatchingItemsChanged()} is called. Useful when
-     * many menu operations are going to be performed as a batch.
-     */
-    public void stopDispatchingItemsChanged();
+    void flagActionItems();
 
-    public void startDispatchingItemsChanged();
+    std::vector<MenuItemImpl*> getActionItems();
 
-    /**
-     * Called by {@link MenuItemImpl} when its visible flag is changed.
-     * @param item The item that has gone through a visibility change.
-     */
-    void onItemVisibleChanged(MenuItemImpl item);
+    std::vector<MenuItemImpl*> getNonActionItems();
 
-    /**
-     * Called by {@link MenuItemImpl} when its action request status is changed.
-     * @param item The item that has gone through a change in action request status.
-     */
-    void onItemActionRequestChanged(MenuItemImpl item);
+    void clearHeader();
 
-    public std::vector<MenuItemImpl*> getVisibleItems();
-
-    /**
-     * This method determines which menu items get to be 'action items' that will appear
-     * in an action bar and which items should be 'overflow items' in a secondary menu.
-     * The rules are as follows:
-     *
-     * <p>Items are considered for inclusion in the order specified within the menu.
-     * There is a limit of mMaxActionItems as a total count, optionally including the overflow
-     * menu button itself. This is a soft limit; if an item shares a group ID with an item
-     * previously included as an action item, the new item will stay with its group and become
-     * an action item itself even if it breaks the max item count limit. This is done to
-     * limit the conceptual complexity of the items presented within an action bar. Only a few
-     * unrelated concepts should be presented to the user in this space, and groups are treated
-     * as a single concept.
-     *
-     * <p>There is also a hard limit of consumed measurable space: mActionWidthLimit. This
-     * limit may be broken by a single item that exceeds the remaining space, but no further
-     * items may be added. If an item that is part of a group cannot fit within the remaining
-     * measured width, the entire group will be demoted to overflow. This is done to ensure room
-     * for navigation and other affordances in the action bar as well as reduce general UI clutter.
-     *
-     * <p>The space freed by demoting a full group cannot be consumed by future menu items.
-     * Once items begin to overflow, all future items become overflow items as well. This is
-     * to avoid inadvertent reordering that may break the app's intended design.
-     */
-    public void flagActionItems();
-
-    public std::vector<MenuItemImpl*> getActionItems();
-
-    public std::vector<MenuItemImpl*> getNonActionItems();
-
-    public void clearHeader();
-
-    private void setHeaderInternal(final int titleRes, final CharSequence title, final int iconRes,
-            Drawable* icon, final View view);
-
-    /**
-     * Sets the header's title. This replaces the header view. Called by the
-     * builder-style methods of subclasses.
-     *
-     * @param title The new title.
-     * @return This MenuBuilder so additional setters can be called.
-     */
-    protected MenuBuilder setHeaderTitleInt(const std::string& title);
-
-    /**
-     * Sets the header's title. This replaces the header view. Called by the
-     * builder-style methods of subclasses.
-     *
-     * @param titleRes The new title (as a resource ID).
-     * @return This MenuBuilder so additional setters can be called.
-     */
-    protected MenuBuilder setHeaderTitleInt(int titleRes);
-
-    /**
-     * Sets the header's icon. This replaces the header view. Called by the
-     * builder-style methods of subclasses.
-     *
-     * @param icon The new icon.
-     * @return This MenuBuilder so additional setters can be called.
-     */
-    protected MenuBuilder setHeaderIconInt(Drawable* icon);
-
-    /**
-     * Sets the header's icon. This replaces the header view. Called by the
-     * builder-style methods of subclasses.
-     *
-     * @param iconRes The new icon (as a resource ID).
-     * @return This MenuBuilder so additional setters can be called.
-     */
-    protected MenuBuilder setHeaderIconInt(int iconRes);
-
-    /**
-     * Sets the header's view. This replaces the title and icon. Called by the
-     * builder-style methods of subclasses.
-     *
-     * @param view The new view.
-     * @return This MenuBuilder so additional setters can be called.
-     */
-    protected MenuBuilder setHeaderViewInt(View view);
-
-    public std::string getHeaderTitle() {
+    std::string getHeaderTitle() {
         return mHeaderTitle;
     }
 
-    public Drawable* getHeaderIcon() {
+    Drawable* getHeaderIcon() {
         return mHeaderIcon;
     }
 
-    public View getHeaderView() {
+    View* getHeaderView() {
         return mHeaderView;
     }
 
-    /**
-     * Gets the root menu (if this is a submenu, find its root menu).
-     * @return The root menu.
-     */
-    public MenuBuilder getRootMenu() {
+    virtual MenuBuilder* getRootMenu() {
         return this;
     }
 
-    /**
-     * Sets the current menu info that is set on all items added to this menu
-     * (until this is called again with different menu info, in which case that
-     * one will be added to all subsequent item additions).
-     *
-     * @param menuInfo The extra menu information to add.
-     */
-    public void setCurrentMenuInfo(ContextMenuInfo* menuInfo) {
+    void setCurrentMenuInfo(ContextMenuInfo* menuInfo) {
         mCurrentMenuInfo = menuInfo;
     }
 
-    /**
-     * Sets the optional icon visible.
-     * @param visible true for visible, false for hidden.
-     */
-    @Override
-    public void setOptionalIconsVisible(bool visible) {
+    virtual void setOptionalIconsVisible(bool visible){
         mOptionalIconsVisible = visible;
     }
 
@@ -520,11 +278,10 @@ public:
         return mOptionalIconsVisible;
     }
 
-    public bool expandItemActionView(MenuItemImpl item);
+    virtual bool expandItemActionView(MenuItemImpl& item);
+    virtual bool collapseItemActionView(MenuItemImpl& item);
 
-    public bool collapseItemActionView(MenuItemImpl item);
-
-    public MenuItemImpl getExpandedItem() {
+    MenuItemImpl* getExpandedItem() {
         return mExpandedItem;
     }
 };

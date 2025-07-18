@@ -18,12 +18,13 @@
 #include <view/view.h>
 #include <view/menu.h>
 #include <view/menuitemimpl.h>
+#include <view/submenubuilder.h>
 #include <view/actionprovider.h>
 #include <widget/linearlayout.h>
 
 namespace cdroid{
-class MenuBuilder:public Menu{};
-class SubMenuBuilder:public MenuBuilder{};
+//class MenuBuilder:public Menu{};
+//class SubMenuBuilder:public MenuBuilder{};
 /**
  * Instantiates this menu item.
  *
@@ -59,7 +60,7 @@ bool MenuItemImpl::invoke() {
         return true;
     }
 
-    if (mMenu->dispatchMenuItemSelected(mMenu, this)) {
+    if (mMenu->dispatchMenuItemSelected(*mMenu, *this)) {
         return true;
     }
 
@@ -70,7 +71,7 @@ bool MenuItemImpl::invoke() {
 
     if (mIntent != nullptr) {
         try {
-            mMenu->getContext().startActivity(mIntent);
+            //mMenu->getContext().startActivity(mIntent);
             return true;
         } catch (std::exception& e) {
             LOGE("Can't find activity to handle intent; ignoring %s", e.what());
@@ -134,7 +135,7 @@ MenuItem& MenuItemImpl::setCallback(Runnable callback) {
     return *this;
 }
 
-char MenuItemImpl::getAlphabeticShortcut(){
+int MenuItemImpl::getAlphabeticShortcut(){
     return mShortcutAlphabeticChar;
 }
 
@@ -142,23 +143,23 @@ int MenuItemImpl::getAlphabeticModifiers(){
     return mShortcutAlphabeticModifiers;
 }
 
-MenuItem& MenuItemImpl::setAlphabeticShortcut(char alphaChar){
+MenuItem& MenuItemImpl::setAlphabeticShortcut(int alphaChar){
     if (mShortcutAlphabeticChar == alphaChar) return *this;
 
-    mShortcutAlphabeticChar = Character.toLowerCase(alphaChar);
+    mShortcutAlphabeticChar = std::tolower(alphaChar);
 
     mMenu->onItemsChanged(false);
 
     return *this;
 }
 
-MenuItem MenuItemImpl::setAlphabeticShortcut(char alphaChar, int alphaModifiers){
+MenuItem& MenuItemImpl::setAlphabeticShortcut(int alphaChar, int alphaModifiers){
     if (mShortcutAlphabeticChar == alphaChar &&
             mShortcutAlphabeticModifiers == alphaModifiers) {
         return *this;
     }
 
-    mShortcutAlphabeticChar = Character.toLowerCase(alphaChar);
+    mShortcutAlphabeticChar = std::tolower(alphaChar);
     mShortcutAlphabeticModifiers = KeyEvent::normalizeMetaState(alphaModifiers);
 
     mMenu->onItemsChanged(false);
@@ -166,7 +167,7 @@ MenuItem MenuItemImpl::setAlphabeticShortcut(char alphaChar, int alphaModifiers)
     return *this;
 }
 
-char MenuItemImpl::getNumericShortcut() {
+int MenuItemImpl::getNumericShortcut() {
     return mShortcutNumericChar;
 }
 
@@ -174,7 +175,7 @@ int MenuItemImpl::getNumericModifiers() {
     return mShortcutNumericModifiers;
 }
 
-MenuItem& MenuItemImpl::setNumericShortcut(char numericChar) {
+MenuItem& MenuItemImpl::setNumericShortcut(int numericChar) {
     if (mShortcutNumericChar == numericChar) return *this;
 
     mShortcutNumericChar = numericChar;
@@ -184,7 +185,7 @@ MenuItem& MenuItemImpl::setNumericShortcut(char numericChar) {
     return *this;
 }
 
-MenuItem& MenuItemImpl::setNumericShortcut(char numericChar, int numericModifiers){
+MenuItem& MenuItemImpl::setNumericShortcut(int numericChar, int numericModifiers){
     if (mShortcutNumericChar == numericChar && mShortcutNumericModifiers == numericModifiers) {
         return *this;
     }
@@ -197,20 +198,20 @@ MenuItem& MenuItemImpl::setNumericShortcut(char numericChar, int numericModifier
     return *this;
 }
 
-MenuItem& MenuItemImpl::setShortcut(char numericChar, char alphaChar){
+MenuItem& MenuItemImpl::setShortcut(int numericChar, int alphaChar){
     mShortcutNumericChar = numericChar;
-    mShortcutAlphabeticChar = Character.toLowerCase(alphaChar);
+    mShortcutAlphabeticChar = std::tolower(alphaChar);
 
     mMenu->onItemsChanged(false);
 
     return *this;
 }
 
-MenuItem& MenuItemImpl::setShortcut(char numericChar, char alphaChar, int numericModifiers,
+MenuItem& MenuItemImpl::setShortcut(int numericChar, int alphaChar, int numericModifiers,
         int alphaModifiers) {
     mShortcutNumericChar = numericChar;
     mShortcutNumericModifiers = KeyEvent::normalizeMetaState(numericModifiers);
-    mShortcutAlphabeticChar = Character.toLowerCase(alphaChar);
+    mShortcutAlphabeticChar = std::tolower(alphaChar);
     mShortcutAlphabeticModifiers = KeyEvent::normalizeMetaState(alphaModifiers);
 
     mMenu->onItemsChanged(false);
@@ -221,7 +222,7 @@ MenuItem& MenuItemImpl::setShortcut(char numericChar, char alphaChar, int numeri
 /**
  * @return The active shortcut (based on QWERTY-mode of the menu).
  */
-char MenuItemImpl::getShortcut() {
+int MenuItemImpl::getShortcut() {
     return (mMenu->isQwertyMode() ? mShortcutAlphabeticChar : mShortcutNumericChar);
 }
 
@@ -232,7 +233,7 @@ char MenuItemImpl::getShortcut() {
  */
 std::string MenuItemImpl::getShortcutLabel() {
 
-    char shortcut = getShortcut();
+    int shortcut = getShortcut();
     if (shortcut == 0) {
         return "";
     }
@@ -302,7 +303,7 @@ bool MenuItemImpl::shouldShowShortcut() {
 }
 
 SubMenu* MenuItemImpl::getSubMenu() {
-    return mSubMenu;
+    return (SubMenu*)mSubMenu;
 }
 
 bool MenuItemImpl::hasSubMenu() {
@@ -327,7 +328,7 @@ std::string MenuItemImpl::getTitle() {
  *         prefers
  */
 std::string MenuItemImpl::getTitleForItemView(MenuView::ItemView* itemView) {
-    return ((itemView != nullptr) && itemView.prefersCondensedTitle())
+    return ((itemView != nullptr) && itemView->prefersCondensedTitle())
             ? getTitleCondensed()
             : getTitle();
 }
@@ -366,9 +367,9 @@ Drawable* MenuItemImpl::getIcon() {
         return applyIconTintIfNecessary(mIconDrawable);
     }
 
-    if (mIconResId != NO_ICON) {
+    if (!mIconResId.empty()) {
         Drawable* icon =  mMenu->getContext()->getDrawable(mIconResId);
-        mIconResId = NO_ICON;
+        mIconResId.clear();
         mIconDrawable = icon;
         return applyIconTintIfNecessary(icon);
     }
@@ -385,7 +386,7 @@ MenuItem& MenuItemImpl::setIcon(Drawable* icon) {
     return *this;
 }
 
-MenuItem& MenuItemImpl::setIcon(int iconResId) {
+MenuItem& MenuItemImpl::setIcon(const std::string& iconResId) {
     mIconDrawable = nullptr;
     mIconResId = iconResId;
     mNeedToApplyIconTint = true;
@@ -406,7 +407,7 @@ MenuItem& MenuItemImpl::setIconTintList(const ColorStateList* iconTintList) {
     return *this;
 }
 
-ColorStateList* MenuItemImpl::getIconTintList() {
+const ColorStateList* MenuItemImpl::getIconTintList() {
     return mIconTintList;
 }
 
@@ -472,7 +473,7 @@ MenuItem& MenuItemImpl::setChecked(bool checked) {
     if ((mFlags & EXCLUSIVE) != 0) {
         // Call the method on the Menu since it knows about the others in this
         // exclusive checkable group
-        mMenu->setExclusiveItemChecked(this);
+        mMenu->setExclusiveItemChecked(*this);
     } else {
         setCheckedInt(checked);
     }
@@ -514,7 +515,7 @@ MenuItem& MenuItemImpl::setVisible(bool shown) {
     // Try to set the shown state to the given state. If the shown state was changed
     // (i.e. the previous state isn't the same as given state), notify the parent menu that
     // the shown state has changed for this item
-    if (setVisibleInt(shown)) mMenu->onItemVisibleChanged(this);
+    if (setVisibleInt(shown)) mMenu->onItemVisibleChanged(*this);
 
     return *this;
 }
@@ -533,7 +534,7 @@ ContextMenuInfo* MenuItemImpl::getMenuInfo() {
 }
 
 void MenuItemImpl::actionFormatChanged() {
-    mMenu->onItemActionRequestChanged(this);
+    mMenu->onItemActionRequestChanged(*this);
 }
 
 /**
@@ -581,11 +582,11 @@ void MenuItemImpl::setShowAsAction(int actionEnum) {
 
     default:
         // Mutually exclusive options selected!
-        throw new IllegalArgumentException("SHOW_AS_ACTION_ALWAYS, SHOW_AS_ACTION_IF_ROOM,"
-                + " and SHOW_AS_ACTION_NEVER are mutually exclusive.");
+        throw std::invalid_argument("SHOW_AS_ACTION_ALWAYS, SHOW_AS_ACTION_IF_ROOM,"
+                " and SHOW_AS_ACTION_NEVER are mutually exclusive.");
     }
     mShowAsAction = actionEnum;
-    mMenu->onItemActionRequestChanged(this);
+    mMenu->onItemActionRequestChanged(*this);
 }
 
 MenuItem& MenuItemImpl::setActionView(View* view) {
@@ -594,7 +595,7 @@ MenuItem& MenuItemImpl::setActionView(View* view) {
     if (view != nullptr && view->getId() == View::NO_ID && mId > 0) {
         view->setId(mId);
     }
-    mMenu->onItemActionRequestChanged(this);
+    mMenu->onItemActionRequestChanged(*this);
     return *this;
 }
 
@@ -649,7 +650,7 @@ bool MenuItemImpl::expandActionView() {
 
     if ((mOnActionExpandListener.onMenuItemActionExpand == nullptr) ||
             mOnActionExpandListener.onMenuItemActionExpand(*this)) {
-        return mMenu->expandItemActionView(this);
+        return mMenu->expandItemActionView(*this);
     }
 
     return false;

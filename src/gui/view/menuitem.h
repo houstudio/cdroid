@@ -59,13 +59,13 @@ public:
 
     virtual MenuItem& setIcon(Drawable* icon);
 
-    virtual MenuItem& setIcon(int iconRes);
+    virtual MenuItem& setIcon(const std::string& iconRes);
 
     virtual Drawable* getIcon();
 
     virtual MenuItem& setIconTintList(const ColorStateList* tint);
 
-    virtual ColorStateList* getIconTintList();
+    virtual const ColorStateList* getIconTintList();
 
     virtual MenuItem& setIconTintMode(int tintMode);
 
@@ -75,23 +75,23 @@ public:
 
     virtual Intent* getIntent()=0;
 
-    virtual MenuItem& setShortcut(char numericChar, char alphaChar);
+    virtual MenuItem& setShortcut(int numericChar, int alphaChar);
 
-    virtual MenuItem& setShortcut(char numericChar, char alphaChar, int numericModifiers, int alphaModifiers);
+    virtual MenuItem& setShortcut(int numericChar, int alphaChar, int numericModifiers, int alphaModifiers);
 
-    virtual MenuItem& setNumericShortcut(char numericChar);
+    virtual MenuItem& setNumericShortcut(int numericChar);
 
-    virtual MenuItem& setNumericShortcut(char numericChar, int numericModifiers);
+    virtual MenuItem& setNumericShortcut(int numericChar, int numericModifiers);
 
-    virtual char getNumericShortcut();
+    virtual int getNumericShortcut();
 
     virtual int getNumericModifiers();
 
-    virtual MenuItem& setAlphabeticShortcut(char alphaChar);
+    virtual MenuItem& setAlphabeticShortcut(int alphaChar);
 
-    virtual MenuItem& setAlphabeticShortcut(char alphaChar, int alphaModifiers);
+    virtual MenuItem& setAlphabeticShortcut(int alphaChar, int alphaModifiers);
 
-    virtual char getAlphabeticShortcut();
+    virtual int getAlphabeticShortcut();
 
     virtual int getAlphabeticModifiers();
 

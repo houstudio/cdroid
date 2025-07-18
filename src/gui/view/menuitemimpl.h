@@ -42,19 +42,20 @@ private:
     std::string mTitle;
     std::string mTitleCondensed;
     Intent* mIntent;
-    char mShortcutNumericChar;
+    int mShortcutNumericChar;
     int mShortcutNumericModifiers = KeyEvent::META_CTRL_ON;
-    char mShortcutAlphabeticChar;
+    int mShortcutAlphabeticChar;
     int mShortcutAlphabeticModifiers = KeyEvent::META_CTRL_ON;
 
     Drawable* mIconDrawable;
-    int mIconResId = NO_ICON;
+    std::string mIconResId;
 
-    ColorStateList* mIconTintList = nullptr;
+    const ColorStateList* mIconTintList;
     int mIconTintMode;
     bool mHasIconTint = false;
     bool mHasIconTintMode = false;
     bool mNeedToApplyIconTint = false;
+    bool mIsActionViewExpanded = false;
 
     /** The menu to which this item belongs */
     MenuBuilder* mMenu;
@@ -71,7 +72,6 @@ private:
     View* mActionView;
     ActionProvider* mActionProvider;
     OnActionExpandListener mOnActionExpandListener;
-    bool mIsActionViewExpanded = false;
 
     ContextMenuInfo* mMenuInfo;
 
@@ -100,21 +100,21 @@ public:
     Runnable getCallback();
     MenuItem& setCallback(Runnable callback);
 
-    char getAlphabeticShortcut() override;
+    int getAlphabeticShortcut() override;
     int getAlphabeticModifiers() override;
 
-    MenuItem& setAlphabeticShortcut(char alphaChar);
-    MenuItem& setAlphabeticShortcut(char alphaChar, int alphaModifiers);
+    MenuItem& setAlphabeticShortcut(int alphaChar);
+    MenuItem& setAlphabeticShortcut(int alphaChar, int alphaModifiers);
 
-    char getNumericShortcut();
+    int getNumericShortcut();
     int getNumericModifiers();
 
-    MenuItem& setNumericShortcut(char numericChar) override;
-    MenuItem& setNumericShortcut(char numericChar, int numericModifiers) override;
-    MenuItem& setShortcut(char numericChar, char alphaChar) override;
-    MenuItem& setShortcut(char numericChar, char alphaChar, int numericModifiers,int alphaModifiers) override;
+    MenuItem& setNumericShortcut(int numericChar) override;
+    MenuItem& setNumericShortcut(int numericChar, int numericModifiers) override;
+    MenuItem& setShortcut(int numericChar, int alphaChar) override;
+    MenuItem& setShortcut(int numericChar, int alphaChar, int numericModifiers,int alphaModifiers) override;
 
-    char getShortcut();
+    int getShortcut();
     std::string getShortcutLabel();
     bool shouldShowShortcut();
 
@@ -131,10 +131,10 @@ public:
 
     Drawable* getIcon();
     MenuItem& setIcon(Drawable* icon);
-    MenuItem& setIcon(int iconResId);
+    MenuItem& setIcon(const std::string& iconResId)override;
 
     MenuItem& setIconTintList(const ColorStateList* iconTintList);
-    ColorStateList* getIconTintList();
+    const ColorStateList* getIconTintList();
 
     MenuItem& setIconTintMode(int iconTintMode);
     int getIconTintMode();

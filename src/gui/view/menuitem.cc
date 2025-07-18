@@ -6,7 +6,7 @@ MenuItem& MenuItem::setIconTintList(const ColorStateList* tint){
     return *this;
 }
 
-ColorStateList* MenuItem::getIconTintList() {
+const ColorStateList* MenuItem::getIconTintList() {
     return nullptr;
 }
 
@@ -26,11 +26,11 @@ Intent* MenuItem::getIntent(){
     return nullptr;
 }
 
-MenuItem& MenuItem::setShortcut(char numericChar, char alphaChar){
+MenuItem& MenuItem::setShortcut(int numericChar, int alphaChar){
     return *this;
 }
 
-MenuItem& MenuItem::setShortcut(char numericChar, char alphaChar, int numericModifiers, int alphaModifiers) {
+MenuItem& MenuItem::setShortcut(int numericChar, int alphaChar, int numericModifiers, int alphaModifiers) {
     if ((alphaModifiers & Menu::SUPPORTED_MODIFIERS_MASK) == KeyEvent::META_CTRL_ON
             && (numericModifiers & Menu::SUPPORTED_MODIFIERS_MASK) == KeyEvent::META_CTRL_ON) {
         return setShortcut(numericChar, alphaChar);
@@ -39,9 +39,11 @@ MenuItem& MenuItem::setShortcut(char numericChar, char alphaChar, int numericMod
     }
 }
 
-MenuItem& setNumericShortcut(char numericChar);
+MenuItem& MenuItem::setNumericShortcut(int numericChar){
+    return *this;
+}
 
-MenuItem& MenuItem::setNumericShortcut(char numericChar, int numericModifiers) {
+MenuItem& MenuItem::setNumericShortcut(int numericChar, int numericModifiers) {
     if ((numericModifiers & Menu::SUPPORTED_MODIFIERS_MASK) == KeyEvent::META_CTRL_ON) {
         return setNumericShortcut(numericChar);
     } else {
@@ -49,7 +51,7 @@ MenuItem& MenuItem::setNumericShortcut(char numericChar, int numericModifiers) {
     }
 }
 
-char MenuItem::getNumericShortcut(){
+int MenuItem::getNumericShortcut(){
     return 0;
 }
 
@@ -57,11 +59,11 @@ int MenuItem::getNumericModifiers() {
     return KeyEvent::META_CTRL_ON;
 }
 
-MenuItem& MenuItem::setAlphabeticShortcut(char alphaChar){
+MenuItem& MenuItem::setAlphabeticShortcut(int alphaChar){
     return *this;
 }
 
-MenuItem& MenuItem::setAlphabeticShortcut(char alphaChar, int alphaModifiers) {
+MenuItem& MenuItem::setAlphabeticShortcut(int alphaChar, int alphaModifiers) {
     if ((alphaModifiers & Menu::SUPPORTED_MODIFIERS_MASK) == KeyEvent::META_CTRL_ON) {
         return setAlphabeticShortcut(alphaChar);
     } else {
@@ -69,7 +71,7 @@ MenuItem& MenuItem::setAlphabeticShortcut(char alphaChar, int alphaModifiers) {
     }
 }
 
-char MenuItem::getAlphabeticShortcut(){
+int MenuItem::getAlphabeticShortcut(){
     return 0;
 }
 
