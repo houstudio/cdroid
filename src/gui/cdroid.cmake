@@ -97,7 +97,10 @@ list(APPEND CDROID_SOURCES
     view/gesturedetector.cc
     view/scalegesturedetector.cc
     view/windowinsets.cc
-    #view/menu.cc
+    view/actionprovider.cc
+    view/menuitem.cc
+    #view/menuinflater.cc
+    #view/menuitemimpl.cc
     #view/diffrentialmotionflingcontroller.cc
     view/hapticscrollfeedbackprovider.cc
     view/accessibility/accessibilityevent.cc

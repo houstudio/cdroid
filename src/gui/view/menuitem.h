@@ -17,7 +17,12 @@
  *********************************************************************************/
 #ifndef __MENU_ITEM_H__
 #define __MENU_ITEM_H__
+#include <string>
+#include <functional>
 namespace cdroid{
+class Drawable;
+class View;
+class SubMenu;
 class Intent;
 class ColorStateList;
 class ActionProvider;
@@ -50,7 +55,7 @@ public:
 
     virtual MenuItem& setTitleCondensed(const std::string& title)=0;
 
-    virtual std::string& getTitleCondensed();
+    virtual std::string getTitleCondensed();
 
     virtual MenuItem& setIcon(Drawable* icon);
 
@@ -58,13 +63,13 @@ public:
 
     virtual Drawable* getIcon();
 
-    virtual MenuItem& setIconTintList(ColorStateList* tint) { return *this; }
+    virtual MenuItem& setIconTintList(const ColorStateList* tint);
 
-    virtual ColorStateList* getIconTintList() { return nullptr; }
+    virtual ColorStateList* getIconTintList();
 
-    virtual MenuItem& setIconTintMode(int tintMode) { return *this; }
+    virtual MenuItem& setIconTintMode(int tintMode);
 
-    int getIconTintMode() { return 0; }
+    virtual int getIconTintMode();
 
     virtual MenuItem& setIntent(Intent* intent);
 
@@ -72,46 +77,23 @@ public:
 
     virtual MenuItem& setShortcut(char numericChar, char alphaChar);
 
-    virtual MenuItem& setShortcut(char numericChar, char alphaChar, int numericModifiers, int alphaModifiers) {
-        if ((alphaModifiers & Menu::SUPPORTED_MODIFIERS_MASK) == KeyEvent::META_CTRL_ON
-                && (numericModifiers & Menu::SUPPORTED_MODIFIERS_MASK) == KeyEvent::META_CTRL_ON) {
-            return setShortcut(numericChar, alphaChar);
-        } else {
-            return *this;
-        }
-    }
+    virtual MenuItem& setShortcut(char numericChar, char alphaChar, int numericModifiers, int alphaModifiers);
 
     virtual MenuItem& setNumericShortcut(char numericChar);
 
-    virtual MenuItem& setNumericShortcut(char numericChar, int numericModifiers) {
-        if ((numericModifiers & Menu::SUPPORTED_MODIFIERS_MASK) == KeyEvent::META_CTRL_ON) {
-            return setNumericShortcut(numericChar);
-        } else {
-            return *this;
-        }
-    }
+    virtual MenuItem& setNumericShortcut(char numericChar, int numericModifiers);
 
     virtual char getNumericShortcut();
 
-    virtual int getNumericModifiers() {
-        return KeyEvent::META_CTRL_ON;
-    }
+    virtual int getNumericModifiers();
 
     virtual MenuItem& setAlphabeticShortcut(char alphaChar);
 
-    virtual MenuItem& setAlphabeticShortcut(char alphaChar, int alphaModifiers) {
-        if ((alphaModifiers & Menu::SUPPORTED_MODIFIERS_MASK) == KeyEvent::META_CTRL_ON) {
-            return setAlphabeticShortcut(alphaChar);
-        } else {
-            return *this;
-        }
-    }
+    virtual MenuItem& setAlphabeticShortcut(char alphaChar, int alphaModifiers);
 
     virtual char getAlphabeticShortcut();
 
-    virtual int getAlphabeticModifiers() {
-        return KeyEvent::META_CTRL_ON;
-    }
+    virtual int getAlphabeticModifiers();
 
     virtual MenuItem& setCheckable(bool checkable)=0;
 
@@ -159,29 +141,17 @@ public:
 
     virtual MenuItem& setOnActionExpandListener(OnActionExpandListener listener);
 
-    virtual MenuItem& setContentDescription(const std::string& contentDescription) {
-        return *this;
-    }
+    virtual MenuItem& setContentDescription(const std::string& contentDescription);
 
-    virtual std::string getContentDescription() {
-        return std::string();
-    }
+    virtual std::string getContentDescription();
 
-    virtual MenuItem& setTooltipText(const std::string& tooltipText) {
-        return *this;
-    }
+    virtual MenuItem& setTooltipText(const std::string& tooltipText);
 
-    virtual std::string getTooltipText() {
-        return std::string();
-    }
+    virtual std::string getTooltipText();
 
-    virtual bool requiresActionButton() {
-        return false;
-    }
+    virtual bool requiresActionButton();
 
-    virtual bool requiresOverflow() {
-        return true;
-    }
+    virtual bool requiresOverflow();
 };
 }/*endof namespace*/
 #endif/*__MENU_ITEM_H__*/

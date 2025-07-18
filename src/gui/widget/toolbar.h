@@ -132,6 +132,7 @@ protected:
     void removeChildrenForExpandedActionView();
     void addChildrenForExpandedActionView();
     bool isChildOrHidden(View* child);
+    Context*getPopupContext();
 public:
     Toolbar(Context*,const AttributeSet&);
     ~Toolbar()override;

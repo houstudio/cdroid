@@ -23,8 +23,8 @@ DECLARE_WIDGET(Toolbar)
 Toolbar::Toolbar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
     initToolbar();
     
-    mTitleTextAppearance = atts.getResourceId("titleTextAppearance", 0);
-    mSubtitleTextAppearance = atts.getResourceId("subtitleTextAppearance", 0);
+    mTitleTextAppearance = atts.getString("titleTextAppearance");
+    mSubtitleTextAppearance = atts.getString("subtitleTextAppearance");
     mNavButtonStyle= atts.getString("navigationButtonStyle");
     mGravity = atts.getGravity("gravity",mGravity);
     mButtonGravity = atts.getGravity("buttonGravity",Gravity::TOP);
@@ -1119,6 +1119,13 @@ void Toolbar::ensureContentInsets() {
     }
 }
 
+/*ActionMenuPresenter Toolbar::getOuterActionMenuPresenter() {
+     return mOuterActionMenuPresenter;
+}*/
+
+Context* Toolbar::getPopupContext() {
+     return mPopupContext;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////
 Toolbar::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
    :ActionBar::LayoutParams(c, attrs){

@@ -21,14 +21,9 @@
 namespace cdroid{
 class ViewGroupOverlay:public ViewOverlay{
 public:
-    ViewGroupOverlay(Context* context, View* hostView)
-        :ViewOverlay(context,hostView){}
-    void add(View*view){
-        mOverlayViewGroup->add(view);
-    }
-    void remove(View*view){
-        mOverlayViewGroup->remove(view);
-    }
+    ViewGroupOverlay(Context* context, View* hostView);
+    void add(View*view);
+    void remove(View*view);
 };
 }/*endof namespace*/
 #endif/*__VIEWGROUP_OVERLAY_H__*/
