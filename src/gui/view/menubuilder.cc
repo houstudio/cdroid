@@ -1,4 +1,3 @@
-#if 10
 #include <core/bundle.h>
 #include <core/context.h>
 #include <view/keyevent.h>
@@ -594,12 +593,11 @@ bool MenuBuilder::performItemAction(MenuItem* item, MenuPresenter* preferredPres
         if (!itemImpl->hasSubMenu()) {
             itemImpl->setSubMenu(new SubMenuBuilder(getContext(), this, itemImpl));
         }
-
-        //SubMenuBuilder* subMenu = (SubMenuBuilder*)itemImpl->getSubMenu();
+        SubMenuBuilder* subMenu = (SubMenuBuilder*)itemImpl->getSubMenu();
         if (providerHasSubMenu) {
-            //provider->onPrepareSubMenu(*subMenu);
+            provider->onPrepareSubMenu(*subMenu);
         }
-        //invoked |= dispatchSubMenuSelected(subMenu, preferredPresenter);
+        invoked |= dispatchSubMenuSelected(subMenu, preferredPresenter);
         if (!invoked) close(true /* closeAllMenus */);
     } else {
         if ((flags & FLAG_PERFORM_NO_CLOSE) == 0) {
@@ -860,4 +858,3 @@ MenuItemImpl* MenuBuilder::getExpandedItem() {
     return mExpandedItem;
 }
 }/*endof namespace*/
-#endif

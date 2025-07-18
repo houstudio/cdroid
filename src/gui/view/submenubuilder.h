@@ -5,7 +5,7 @@
 #include <view/menubuilder.h>
 namespace cdroid{
 class MenuItemImpl;
-class SubMenuBuilder:virtual public MenuBuilder,virtual public SubMenu {
+class SubMenuBuilder:public MenuBuilder,public SubMenu {
 private:
     MenuBuilder* mParentMenu;
     MenuItemImpl* mItem;

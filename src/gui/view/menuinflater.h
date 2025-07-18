@@ -20,8 +20,8 @@ private:
     void* mRealOwner;
 private:
     void parseMenu(XmlPullParser& parser, AttributeSet& attrs, Menu* menu);
-    void registerMenu(MenuItem& item,AttributeSet& set);
-    void registerMenu(SubMenu& subMenu,AttributeSet& set);
+    void registerMenu(MenuItem* item,const AttributeSet& set);
+    void registerMenu(SubMenu* subMenu,const AttributeSet& set);
     Object* getRealOwner();
     Object* findRealOwner(Object owner);
 public:
@@ -74,7 +74,7 @@ private:
     int itemCategoryOrder;
     std::string itemTitle;
     std::string itemTitleCondensed;
-    int itemIconResId;
+    std::string itemIconResId;
     ColorStateList* itemIconTintList;
     int mItemIconBlendMode;
     char itemAlphabeticShortcut;
@@ -87,7 +87,7 @@ private:
     bool itemEnabled;
 
     int itemShowAsAction;
-    int itemActionViewLayout;
+    std::string itemActionViewLayout;
     std::string itemActionViewClassName;
     std::string itemActionProviderClassName;
 
