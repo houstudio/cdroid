@@ -106,8 +106,8 @@ public:
     MenuItem& setAlphabeticShortcut(int alphaChar);
     MenuItem& setAlphabeticShortcut(int alphaChar, int alphaModifiers);
 
-    int getNumericShortcut();
-    int getNumericModifiers();
+    int getNumericShortcut()const override;
+    int getNumericModifiers()const override;
 
     MenuItem& setNumericShortcut(int numericChar) override;
     MenuItem& setNumericShortcut(int numericChar, int numericModifiers) override;

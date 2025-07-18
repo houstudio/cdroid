@@ -23,20 +23,7 @@
 #include <widget/linearlayout.h>
 
 namespace cdroid{
-//class MenuBuilder:public Menu{};
-//class SubMenuBuilder:public MenuBuilder{};
-/**
- * Instantiates this menu item.
- *
- * @param menu
- * @param group Item ordering grouping control. The item will be added after
- *            all other items whose order is <= this number, and before any
- *            that are larger than it. This can also be used to define
- *            groups of items for batch state changes. Normally use 0.
- * @param id Unique item ID. Use 0 if you do not need a unique ID.
- * @param categoryOrder The ordering for this item.
- * @param title The text to display for the item.
- */
+
 MenuItemImpl::MenuItemImpl(MenuBuilder* menu, int group, int id, int categoryOrder, int ordering,
         const std::string& title, int showAsAction) {
 
@@ -49,11 +36,6 @@ MenuItemImpl::MenuItemImpl(MenuBuilder* menu, int group, int id, int categoryOrd
     mShowAsAction = showAsAction;
 }
 
-/**
- * Invokes the item by calling various listeners or callbacks.
- *
- * @return true if the invocation was handled, false otherwise
- */
 bool MenuItemImpl::invoke() {
     if (mClickListener != nullptr &&
         mClickListener(*this)){//.onMenuItemClick(*this)) {
@@ -167,11 +149,11 @@ MenuItem& MenuItemImpl::setAlphabeticShortcut(int alphaChar, int alphaModifiers)
     return *this;
 }
 
-int MenuItemImpl::getNumericShortcut() {
+int MenuItemImpl::getNumericShortcut() const{
     return mShortcutNumericChar;
 }
 
-int MenuItemImpl::getNumericModifiers() {
+int MenuItemImpl::getNumericModifiers() const{
     return mShortcutNumericModifiers;
 }
 

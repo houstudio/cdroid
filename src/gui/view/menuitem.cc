@@ -51,11 +51,11 @@ MenuItem& MenuItem::setNumericShortcut(int numericChar, int numericModifiers) {
     }
 }
 
-int MenuItem::getNumericShortcut(){
+int MenuItem::getNumericShortcut() const{
     return 0;
 }
 
-int MenuItem::getNumericModifiers() {
+int MenuItem::getNumericModifiers() const{
     return KeyEvent::META_CTRL_ON;
 }
 

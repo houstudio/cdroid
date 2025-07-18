@@ -83,9 +83,9 @@ public:
 
     virtual MenuItem& setNumericShortcut(int numericChar, int numericModifiers);
 
-    virtual int getNumericShortcut();
+    virtual int getNumericShortcut()const;
 
-    virtual int getNumericModifiers();
+    virtual int getNumericModifiers()const;
 
     virtual MenuItem& setAlphabeticShortcut(int alphaChar);
 
