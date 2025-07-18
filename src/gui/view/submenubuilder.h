@@ -19,7 +19,7 @@ public:
         mParentMenu->setQwertyMode(isQwerty);
     }
 
-    bool isQwertyMode() override{
+    bool isQwertyMode() const override{
         return mParentMenu->isQwertyMode();
     }
 
@@ -78,11 +78,11 @@ public:
         return (SubMenu&) MenuBuilder::setHeaderViewInt(view);
     }
 
-    bool expandItemActionView(MenuItemImpl& item) override{
+    bool expandItemActionView(MenuItemImpl* item) override{
         return mParentMenu->expandItemActionView(item);
     }
 
-    bool collapseItemActionView(MenuItemImpl& item) override{
+    bool collapseItemActionView(MenuItemImpl* item) override{
         return mParentMenu->collapseItemActionView(item);
     }
 

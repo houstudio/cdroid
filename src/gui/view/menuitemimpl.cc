@@ -632,7 +632,7 @@ bool MenuItemImpl::expandActionView() {
 
     if ((mOnActionExpandListener.onMenuItemActionExpand == nullptr) ||
             mOnActionExpandListener.onMenuItemActionExpand(*this)) {
-        return mMenu->expandItemActionView(*this);
+        return mMenu->expandItemActionView(this);
     }
 
     return false;
@@ -649,7 +649,7 @@ bool MenuItemImpl::collapseActionView() {
 
     if ((mOnActionExpandListener.onMenuItemActionCollapse == nullptr) ||
             mOnActionExpandListener.onMenuItemActionCollapse(*this)) {
-        return mMenu->collapseItemActionView(*this);
+        return mMenu->collapseItemActionView(this);
     }
 
     return false;

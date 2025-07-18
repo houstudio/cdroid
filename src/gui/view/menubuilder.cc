@@ -1,10 +1,20 @@
+#if 10
+#include <core/bundle.h>
+#include <core/context.h>
+#include <view/keyevent.h>
+#include <view/menuitemimpl.h>
 #include <view/menubuilder.h>
+#include <view/submenubuilder.h>
+#include <view/menupresenter.h>
+#include <view/actionprovider.h>
+#include <view/viewconfiguration.h>
 namespace cdroid{
 
 MenuBuilder::MenuBuilder(Context* context) {
     mContext = context;
     mIsVisibleItemsStale = true;
     mIsActionItemsStale = true;
+    mDefaultShowAsAction = MenuItem::SHOW_AS_ACTION_NEVER;
     setShortcutsVisibleInner(true);
 }
 
@@ -23,7 +33,7 @@ void MenuBuilder::addMenuPresenter(MenuPresenter* presenter, Context* menuContex
     mIsActionItemsStale = true;
 }
 
-void MenuBuilder::removeMenuPresenter(MenuPresenter presenter) {
+void MenuBuilder::removeMenuPresenter(MenuPresenter* presenter) {
     for (auto it=mPresenters.begin();it!=mPresenters.end();){
         MenuPresenter* item=*it;
         if (item == nullptr || item == presenter) {
@@ -47,13 +57,12 @@ void MenuBuilder::dispatchPresenterUpdate(bool cleared) {
     startDispatchingItemsChanged();
 }
 
-bool MenuBuilder::dispatchSubMenuSelected(SubMenuBuilder subMenu,MenuPresenter preferredPresenter) {
+bool MenuBuilder::dispatchSubMenuSelected(SubMenuBuilder* subMenu,MenuPresenter* preferredPresenter) {
     if (mPresenters.empty()) return false;
-
     bool result = false;
     // Try the preferred presenter first.
     if (preferredPresenter != nullptr) {
-        result = preferredPresenter.onSubMenuSelected(subMenu);
+        result = preferredPresenter->onSubMenuSelected(*subMenu);
     }
 
     for (auto  it = mPresenters.begin();it!=mPresenters.end();) {
@@ -61,13 +70,13 @@ bool MenuBuilder::dispatchSubMenuSelected(SubMenuBuilder subMenu,MenuPresenter p
         if (presenter == nullptr) {
             it = mPresenters.erase(it);
         } else if (!result) {
-            result = presenter->onSubMenuSelected(subMenu);
+            result = presenter->onSubMenuSelected(*subMenu);
             it++;
         }
     }
     return result;
 }
-
+#if 0
 void MenuBuilder::dispatchSaveInstanceState(Bundle outState) {
     if (mPresenters.empty()) return;
 
@@ -172,7 +181,7 @@ void MenuBuilder::restoreActionViewStates(Bundle states) {
         }
     }
 }
-
+#endif
 std::string MenuBuilder::getActionViewStatesKey() {
     return ACTION_VIEW_STATES_KEY;
 }
@@ -188,13 +197,12 @@ MenuItem* MenuBuilder::addInternal(int group, int id, int categoryOrder,const st
         // Pass along the current menu info
         item->setMenuInfo(mCurrentMenuInfo);
     }
-    mItems.push_back(findInsertIndex(mItems, ordering), item);
+    mItems.insert(mItems.begin()+findInsertIndex(mItems, ordering), item);
     onItemsChanged(true);
     return item;
 }
 
-MenuItemImpl* MenuBuilder::createNewMenuItem(int group, int id, int categoryOrder, int ordering,
-        CharSequence title, int defaultShowAsAction) {
+MenuItemImpl* MenuBuilder::createNewMenuItem(int group, int id, int categoryOrder, int ordering, const std::string& title, int defaultShowAsAction) {
     return new MenuItemImpl(this, group, id, categoryOrder, ordering, title,
             defaultShowAsAction);
 }
@@ -226,7 +234,7 @@ bool MenuBuilder::isGroupDividerEnabled() {
     return mGroupDividerEnabled;
 }
 
-int MenuBuilder::addIntentOptions(int group, int id, int categoryOrder, ComponentName caller,
+/*int MenuBuilder::addIntentOptions(int group, int id, int categoryOrder, ComponentName caller,
         Intent[] specifics, Intent intent, int flags, MenuItem[] outSpecificItems) {
     PackageManager pm = mContext.getPackageManager();
     final List<ResolveInfo> lri = pm.queryIntentActivityOptions(caller, specifics, intent, 0);
@@ -248,7 +256,7 @@ int MenuBuilder::addIntentOptions(int group, int id, int categoryOrder, Componen
         }
     }
     return N;
-}
+}*/
 
 void MenuBuilder::removeItem(int id) {
     removeItemAtInt(findItemIndex(id), true);
@@ -270,7 +278,7 @@ void MenuBuilder::removeGroup(int group) {
 
 void MenuBuilder::removeItemAtInt(int index, bool updateChildrenOnMenuViews) {
     if ((index < 0) || (index >= mItems.size())) return;
-    mItems.remove(index);
+    mItems.erase(mItems.begin()+index);
     if (updateChildrenOnMenuViews) onItemsChanged(true);
 }
 
@@ -289,14 +297,14 @@ void MenuBuilder::clearAll() {
 }
 
 void MenuBuilder::clear() {
-    if (mExpandedItem != null) {
+    if (mExpandedItem != nullptr) {
         collapseItemActionView(mExpandedItem);
     }
     mItems.clear();
     onItemsChanged(true);
 }
 
-void MenuBuilder::setExclusiveItemChecked(MenuItem item) {
+void MenuBuilder::setExclusiveItemChecked(MenuItem& item) {
     const int group = item.getGroupId();
     const int N = mItems.size();
     for (int i = 0; i < N; i++) {
@@ -305,7 +313,7 @@ void MenuBuilder::setExclusiveItemChecked(MenuItem item) {
             if (!curItem->isExclusiveCheckable()) continue;
             if (!curItem->isCheckable()) continue;
             // Check the item meant to be checked, uncheck the others (that are in the group)
-            curItem->setCheckedInt(curItem == item);
+            curItem->setCheckedInt(curItem == &item);
         }
     }
 }
@@ -347,8 +355,8 @@ void MenuBuilder::setGroupEnabled(int group, bool enabled) {
 }
 
 bool MenuBuilder::hasVisibleItems() {
-    const int size = size();
-    for (int i = 0; i < size; i++) {
+    const int _size = size();
+    for (int i = 0; i < _size; i++) {
         MenuItemImpl* item = mItems.at(i);
         if (item->isVisible()) {
             return true;
@@ -358,8 +366,8 @@ bool MenuBuilder::hasVisibleItems() {
 }
 
 MenuItem* MenuBuilder::findItem(int id) {
-    const int size = size();
-    for (int i = 0; i < size; i++) {
+    const int _size = size();
+    for (int i = 0; i < _size; i++) {
         MenuItemImpl* item = mItems.at(i);
         if (item->getItemId() == id) {
             return item;
@@ -375,8 +383,8 @@ MenuItem* MenuBuilder::findItem(int id) {
 }
 
 int MenuBuilder::findItemIndex(int id) {
-    const int size = size();
-    for (int i = 0; i < size; i++) {
+    const int _size = size();
+    for (int i = 0; i < _size; i++) {
         MenuItemImpl* item = mItems.at(i);
         if (item->getItemId() == id) {
             return i;
@@ -390,9 +398,9 @@ int MenuBuilder::findGroupIndex(int group) {
 }
 
 int MenuBuilder::findGroupIndex(int group, int start) {
-    const int size = size();
+    const int _size = size();
     if (start < 0) start = 0;
-    for (int i = start; i < size; i++) {
+    for (int i = start; i < _size; i++) {
         MenuItemImpl* item = mItems.at(i);
         if (item->getGroupId() == group) {
             return i;
@@ -401,16 +409,16 @@ int MenuBuilder::findGroupIndex(int group, int start) {
     return -1;
 }
 
-int MenuBuilder::size() {
+int MenuBuilder::size() const{
     return mItems.size();
 }
 
-MenuItem MenuBuilder::getItem(int index) {
+MenuItem* MenuBuilder::getItem(int index) {
     return mItems.at(index);
 }
 
 bool MenuBuilder::isShortcutKey(int keyCode,const KeyEvent& event) {
-    return findItemWithShortcutForKey(keyCode, event) != null;
+    return findItemWithShortcutForKey(keyCode, event) != nullptr;
 }
 
 void MenuBuilder::setQwertyMode(bool isQwerty) {
@@ -418,9 +426,18 @@ void MenuBuilder::setQwertyMode(bool isQwerty) {
     onItemsChanged(false);
 }
 
+static const int sCategoryToOrder[]={
+    1, /* No category */
+    4, /* CONTAINER */
+    5, /* SYSTEM */
+    3, /* SECONDARY */
+    2, /* ALTERNATIVE */
+    0, /* SELECTED_ALTERNATIVE */
+};
+
 int MenuBuilder::getOrdering(int categoryOrder) {
     const int index = (categoryOrder & CATEGORY_MASK) >> CATEGORY_SHIFT;
-    if (index < 0 || index >= sCategoryToOrder.length) {
+    if (index < 0 || index >= sizeof(sCategoryToOrder)/sizeof(sCategoryToOrder[0])) {
         throw std::invalid_argument("order does not contain a valid category.");
     }
     return (sCategoryToOrder[index] << CATEGORY_SHIFT) | (categoryOrder & USER_MASK);
@@ -438,8 +455,8 @@ void MenuBuilder::setShortcutsVisible(bool shortcutsVisible) {
 
 void MenuBuilder::setShortcutsVisibleInner(bool shortcutsVisible) {
     mShortcutsVisible = shortcutsVisible
-            && mResources.getConfiguration().keyboard != Configuration.KEYBOARD_NOKEYS
-            && ViewConfiguration.get(mContext).shouldShowMenuShortcutsWhenKeyboardPresent();
+            //&& mResources.getConfiguration().keyboard != Configuration.KEYBOARD_NOKEYS
+            && ViewConfiguration::get(mContext).shouldShowMenuShortcutsWhenKeyboardPresent();
 }
 
 bool MenuBuilder::isShortcutsVisible() {
@@ -450,13 +467,13 @@ Context* MenuBuilder::getContext() {
     return mContext;
 }
 
-bool MenuBuilder::dispatchMenuItemSelected(MenuBuilder menu, MenuItem item) {
-    return mCallback != null && mCallback.onMenuItemSelected(menu, item);
+bool MenuBuilder::dispatchMenuItemSelected(MenuBuilder& menu, MenuItem& item) {
+    return mCallback.onMenuItemSelected != nullptr && mCallback.onMenuItemSelected(menu, item);
 }
 
 void MenuBuilder::changeMenuMode() {
-    if (mCallback != null) {
-        mCallback.onMenuModeChange(this);
+    if (mCallback.onMenuModeChange != nullptr) {
+        mCallback.onMenuModeChange(*this);
     }
 }
 
@@ -470,7 +487,7 @@ int MenuBuilder::findInsertIndex(const std::vector<MenuItemImpl*>& items, int or
     return 0;
 }
 
-bool MenuBuilder::performShortcut(int keyCode,const KeyEvent& event, int flags) {
+bool MenuBuilder::performShortcut(int keyCode,KeyEvent& event, int flags) {
     MenuItemImpl* item = findItemWithShortcutForKey(keyCode, event);
     bool handled = false;
     if (item != nullptr) {
@@ -482,10 +499,11 @@ bool MenuBuilder::performShortcut(int keyCode,const KeyEvent& event, int flags) 
     return handled;
 }
 
-void MenuBuilder::findItemsWithShortcutForKey(List<MenuItemImpl*>& items, int keyCode,const KeyEvent& event) {
+void MenuBuilder::findItemsWithShortcutForKey(std::vector<MenuItemImpl*>& items, int keyCode,const KeyEvent& event) {
     const bool qwerty = isQwertyMode();
     const int modifierState = event.getModifiers();
-    final KeyCharacterMap.KeyData possibleChars = new KeyCharacterMap.KeyData();
+#if 0
+    KeyCharacterMap.KeyData possibleChars = new KeyCharacterMap.KeyData();
     // Get the chars associated with the keyCode (i.e using any chording combo)
     const bool isKeyCodeMapped = event.getKeyData(possibleChars);
     // The delete key is not mapped to '\b' so we treat it specially
@@ -507,10 +525,11 @@ void MenuBuilder::findItemsWithShortcutForKey(List<MenuItemImpl*>& items, int ke
         if (isModifiersExactMatch && (shortcutChar != 0) &&
               (shortcutChar == possibleChars.meta[0]|| shortcutChar == possibleChars.meta[2]
                   || (qwerty && shortcutChar == '\b' && keyCode == KeyEvent::KEYCODE_DEL)) &&
-              item.isEnabled()) {
-            items.add(item);
+              item->isEnabled()) {
+            items.push_back(item);
         }
     }
+#endif
 }
 
 MenuItemImpl* MenuBuilder::findItemWithShortcutForKey(int keyCode,const KeyEvent& event) {
@@ -522,9 +541,9 @@ MenuItemImpl* MenuBuilder::findItemWithShortcutForKey(int keyCode,const KeyEvent
     if (items.empty()) {
         return nullptr;
     }
-
+#if 0
     const int metaState = event.getMetaState();
-    final KeyCharacterMap.KeyData possibleChars = new KeyCharacterMap.KeyData();
+    KeyCharacterMap.KeyData possibleChars = new KeyCharacterMap.KeyData();
     // Get the chars associated with the keyCode (i.e using any chording combo)
     event.getKeyData(possibleChars);
 
@@ -546,6 +565,7 @@ MenuItemImpl* MenuBuilder::findItemWithShortcutForKey(int keyCode,const KeyEvent
             return item;
         }
     }
+#endif
     return nullptr;
 }
 
@@ -554,13 +574,13 @@ bool MenuBuilder::performIdentifierAction(int id, int flags) {
     return performItemAction(findItem(id), flags);
 }
 
-bool MenuBuilder::performItemAction(MenuItem item, int flags) {
+bool MenuBuilder::performItemAction(MenuItem* item, int flags) {
     return performItemAction(item, nullptr, flags);
 }
 
-bool MenuBuilder::performItemAction(MenuItem item, MenuPresenter preferredPresenter, int flags) {
+bool MenuBuilder::performItemAction(MenuItem* item, MenuPresenter* preferredPresenter, int flags) {
     MenuItemImpl* itemImpl = (MenuItemImpl*) item;
-    if (itemImpl == nullptr || !itemImpl.isEnabled()) {
+    if (itemImpl == nullptr || !itemImpl->isEnabled()) {
         return false;
     }
 
@@ -568,10 +588,8 @@ bool MenuBuilder::performItemAction(MenuItem item, MenuPresenter preferredPresen
     ActionProvider* provider = item->getActionProvider();
     const bool providerHasSubMenu = provider != nullptr && provider->hasSubMenu();
     if (itemImpl->hasCollapsibleActionView()) {
-        invoked |= itemImpl.expandActionView();
-        if (invoked) {
-            close(true /* closeAllMenus */);
-        }
+        invoked |= itemImpl->expandActionView();
+        if (invoked) close(true /* closeAllMenus */);
     } else if (itemImpl->hasSubMenu() || providerHasSubMenu) {
         if (!itemImpl->hasSubMenu()) {
             itemImpl->setSubMenu(new SubMenuBuilder(getContext(), this, itemImpl));
@@ -579,12 +597,10 @@ bool MenuBuilder::performItemAction(MenuItem item, MenuPresenter preferredPresen
 
         SubMenuBuilder* subMenu = (SubMenuBuilder*) itemImpl->getSubMenu();
         if (providerHasSubMenu) {
-            provider->onPrepareSubMenu(subMenu);
+            provider->onPrepareSubMenu(*subMenu);
         }
         invoked |= dispatchSubMenuSelected(subMenu, preferredPresenter);
-        if (!invoked) {
-            close(true /* closeAllMenus */);
-        }
+        if (!invoked) close(true /* closeAllMenus */);
     } else {
         if ((flags & FLAG_PERFORM_NO_CLOSE) == 0) {
             close(true /* closeAllMenus */);
@@ -602,7 +618,7 @@ void MenuBuilder::close(bool closeAllMenus) {
             it = mPresenters.erase(it);
         } else {
             it++;
-            presenter->onCloseMenu(this, closeAllMenus);
+            presenter->onCloseMenu(*this, closeAllMenus);
         }
     }
     mIsClosing = false;
@@ -639,13 +655,13 @@ void MenuBuilder::startDispatchingItemsChanged() {
     }
 }
 
-void MenuBuilder::onItemVisibleChanged(MenuItemImpl item) {
+void MenuBuilder::onItemVisibleChanged(MenuItemImpl& item) {
     // Notify of items being changed
     mIsVisibleItemsStale = true;
     onItemsChanged(true);
 }
 
-void MenuBuilder::onItemActionRequestChanged(MenuItemImpl item) {
+void MenuBuilder::onItemActionRequestChanged(MenuItemImpl& item) {
     // Notify of items being changed
     mIsActionItemsStale = true;
     onItemsChanged(true);
@@ -698,8 +714,9 @@ void MenuBuilder::flagActionItems() {
         // Nobody flagged anything, everything is a non-action item.
         // (This happens during a first pass with no action-item presenters.)
         mActionItems.clear();
-        mNonActionItems.clear();
-        mNonActionItems.addAll(getVisibleItems());
+        //mNonActionItems.clear();
+        //mNonActionItems.addAll(getVisibleItems());
+        mNonActionItems=getVisibleItems();
     }
     mIsActionItemsStale = false;
 }
@@ -716,25 +733,25 @@ std::vector<MenuItemImpl*> MenuBuilder::getNonActionItems() {
 
 void MenuBuilder::clearHeader() {
     mHeaderIcon = nullptr;
-    mHeaderTitle = nullptr;
+    mHeaderTitle.clear();
     mHeaderView = nullptr;
     onItemsChanged(false);
 }
 
-void MenuBuilder::setHeaderInternal(int titleRes, const std::string& title, final int iconRes,Drawable* icon, final View* view) {
+void MenuBuilder::setHeaderInternal(const std::string& titleRes, const std::string& title, const std::string& iconRes,Drawable* icon, View* view) {
     if (view != nullptr) {
         mHeaderView = view;
         // If using a custom view, then the title and icon aren't used
-        mHeaderTitle = null;
+        mHeaderTitle.clear();
         mHeaderIcon = nullptr;
     } else {
-        if (titleRes > 0) {
-            mHeaderTitle = r.getText(titleRes);
-        } else if (title != null) {
+        if (!titleRes.empty()) {
+            //mHeaderTitle = r.getText(titleRes);
+        } else if (!title.empty()) {
             mHeaderTitle = title;
         }
-        if (iconRes > 0) {
-            mHeaderIcon = getContext().getDrawable(iconRes);
+        if (!iconRes.empty()) {
+            mHeaderIcon = getContext()->getDrawable(iconRes);
         } else if (icon != nullptr) {
             mHeaderIcon = icon;
         }
@@ -747,27 +764,27 @@ void MenuBuilder::setHeaderInternal(int titleRes, const std::string& title, fina
 }
 
 MenuBuilder& MenuBuilder::setHeaderTitleInt(const std::string& title) {
-    setHeaderInternal(0, title, 0, null, null);
+    setHeaderInternal("", title, "", nullptr, nullptr);
     return *this;
 }
 
-MenuBuilder& MenuBuilder::setHeaderTitleInt(int titleRes) {
-    setHeaderInternal(titleRes, null, 0, null, null);
+/*MenuBuilder& MenuBuilder::setHeaderTitleInt(const std::string& titleRes) {
+    setHeaderInternal(titleRes, nullptr, "", nullptr, nullptr);
     return *this;
-}
+}*/
 
 MenuBuilder& MenuBuilder::setHeaderIconInt(Drawable* icon) {
-    setHeaderInternal(0, null, 0, icon, null);
+    setHeaderInternal("", nullptr, "", icon, nullptr);
     return *this;
 }
 
-MenuBuilder& MenuBuilder::setHeaderIconInt(int iconRes) {
-    setHeaderInternal(0, null, iconRes, null, null);
+MenuBuilder& MenuBuilder::setHeaderIconInt(const std::string& iconRes) {
+    setHeaderInternal("", nullptr, iconRes, nullptr, nullptr);
     return *this;
 }
 
 MenuBuilder& MenuBuilder::setHeaderViewInt(View* view) {
-    setHeaderInternal(0, null, 0, null, view);
+    setHeaderInternal("", nullptr, "", nullptr, view);
     return *this;
 }
 
@@ -807,7 +824,7 @@ bool MenuBuilder::expandItemActionView(MenuItemImpl* item) {
         MenuPresenter* presenter = *it;
         if (presenter == nullptr) {
             it = mPresenters.erase(it);
-        } else if ((expanded = presenter->expandItemActionView(this, item))) {
+        } else if ((expanded = presenter->expandItemActionView(*this, *item))) {
             break;
         }else{
             it++;
@@ -818,7 +835,7 @@ bool MenuBuilder::expandItemActionView(MenuItemImpl* item) {
     return expanded;
 }
 
-bool collapseItemActionView(MenuItemImpl* item) {
+bool MenuBuilder::collapseItemActionView(MenuItemImpl* item) {
     if (mPresenters.empty() || mExpandedItem != item) return false;
 
     bool collapsed = false;
@@ -828,7 +845,7 @@ bool collapseItemActionView(MenuItemImpl* item) {
         MenuPresenter* presenter = *it;
         if (presenter == nullptr) {
             it = mPresenters.erase(it);
-        } else if ((collapsed = presenter.collapseItemActionView(this, item))) {
+        } else if ((collapsed = presenter->collapseItemActionView(*this, *item))) {
             break;
         }else{
             it++;
@@ -843,3 +860,4 @@ MenuItemImpl* MenuBuilder::getExpandedItem() {
     return mExpandedItem;
 }
 }/*endof namespace*/
+#endif

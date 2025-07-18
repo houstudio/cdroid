@@ -2,24 +2,18 @@
 #define __MENU_BUILDER_H__
 #include <view/menu.h>
 namespace cdroid{
+class Context;
+class Bundle;
+class Parcelable;
 class MenuItemImpl;
 class MenuPresenter;
 class SubMenuBuilder;
+class ContextMenuInfo;
 class MenuBuilder:public Menu {
 private:
     static constexpr const char* PRESENTER_KEY = "android:menu:presenters";
     static constexpr const char* ACTION_VIEW_STATES_KEY = "android:menu:actionviewstates";
     static constexpr const char* EXPANDED_ACTION_VIEW_ID = "android:menu:expandedactionview";
-#if 0
-    static int[]  sCategoryToOrder = new int[] {
-        1, /* No category */
-        4, /* CONTAINER */
-        5, /* SYSTEM */
-        3, /* SECONDARY */
-        2, /* ALTERNATIVE */
-        0, /* SELECTED_ALTERNATIVE */
-    };
-#endif
     friend MenuItemImpl;
     friend SubMenuBuilder;
 public:
@@ -69,7 +63,7 @@ private:
     /**
      * Default value for how added items should show in the action list.
      */
-    int mDefaultShowAsAction = MenuItem::SHOW_AS_ACTION_NEVER;
+    int mDefaultShowAsAction;
 
     /**
      * Current use case is Context Menus: As Views populate the context menu, each one has
@@ -78,7 +72,7 @@ private:
      */
     ContextMenuInfo* mCurrentMenuInfo;
 
-    SparseArray<Parcelable> mFrozenViewStates;
+    SparseArray<Parcelable*> mFrozenViewStates;
 
     bool mIsVisibleItemsStale;
     bool mIsActionItemsStale;
@@ -94,9 +88,9 @@ private:
     MenuItemImpl* mExpandedItem;
 private:
     void dispatchPresenterUpdate(bool cleared);
-    bool dispatchSubMenuSelected(SubMenuBuilder& subMenu,MenuPresenter& preferredPresenter);
-    void dispatchSaveInstanceState(Bundle outState);
-    void dispatchRestoreInstanceState(Bundle state);
+    bool dispatchSubMenuSelected(SubMenuBuilder* subMenu,MenuPresenter* preferredPresenter);
+    void dispatchSaveInstanceState(Bundle& outState);
+    void dispatchRestoreInstanceState(Bundle& state);
     /**
      * Adds an item to the menu.  The other add methods funnel to this.
      */
@@ -109,8 +103,7 @@ private:
     static int getOrdering(int categoryOrder);
     void setShortcutsVisibleInner(bool shortcutsVisible);
     static int findInsertIndex(const std::vector<MenuItemImpl*>& items, int ordering);
-    void setHeaderInternal(int titleRes, const std::string& title,int iconRes, Drawable* icon,View view);
-
+    void setHeaderInternal(const std::string& titleRes, const std::string& title,const std::string& iconRes, Drawable* icon,View* view);
 protected:
     /** Header title for menu types that have a header (context and submenus) */
     std::string mHeaderTitle;
@@ -119,24 +112,19 @@ protected:
     /** Header custom view for menu types that have a header and support custom views (context) */
     View* mHeaderView;
 protected:
-    virtual std::string getActionViewStatesKey() {
-        return ACTION_VIEW_STATES_KEY;
-    }
+    virtual std::string getActionViewStatesKey();
 
     void setExclusiveItemChecked(MenuItem& item);
     MenuBuilder& setHeaderTitleInt(const std::string& title);
-    MenuBuilder& setHeaderTitleInt(int titleRes);
     MenuBuilder& setHeaderIconInt(Drawable* icon);
     MenuBuilder& setHeaderIconInt(const std::string& iconRes);
     virtual MenuBuilder& setHeaderViewInt(View* view);
 
-    virtual bool isQwertyMode() {
-        return mQwertyMode;
-    }
+    virtual bool isQwertyMode() const;
 
     virtual bool dispatchMenuItemSelected(MenuBuilder& menu, MenuItem& item);
-    void findItemsWithShortcutForKey(std::vector<MenuItemImpl*>& items, int keyCode, KeyEvent& event);
-    MenuItemImpl* findItemWithShortcutForKey(int keyCode, KeyEvent& event);
+    void findItemsWithShortcutForKey(std::vector<MenuItemImpl*>& items, int keyCode,const KeyEvent& event);
+    MenuItemImpl* findItemWithShortcutForKey(int keyCode,const KeyEvent& event);
 
     void onItemVisibleChanged(MenuItemImpl& item);
     void onItemActionRequestChanged(MenuItemImpl& item);
@@ -149,42 +137,29 @@ public:
     void addMenuPresenter(MenuPresenter* presenter, Context* menuContext);
     void removeMenuPresenter(MenuPresenter* presenter);
 
-    void savePresenterStates(Bundle outState);
-    void restorePresenterStates(Bundle state);
+    void savePresenterStates(Bundle& outState);
+    void restorePresenterStates(Bundle& state);
 
-    void saveActionViewStates(Bundle outStates);
-    void restoreActionViewStates(Bundle states);
+    void saveActionViewStates(Bundle& outStates);
+    void restoreActionViewStates(Bundle& states);
 
-    virtual void setCallback(Callback cb) {
-        mCallback = cb;
-    }
+    virtual void setCallback(Callback cb);
 
-    MenuItem* add(const std::string& title) {
-        return addInternal(0, 0, 0, title);
-    }
-
+    MenuItem* add(const std::string& title);
     MenuItem* add(int group, int id, int categoryOrder, const std::string& title);
     SubMenu* addSubMenu(const std::string& title);
     SubMenu* addSubMenu(int group, int id, int categoryOrder, const std::string& title);
 
-    virtual void setGroupDividerEnabled(bool groupDividerEnabled) {
-        mGroupDividerEnabled = groupDividerEnabled;
-    }
+    virtual void setGroupDividerEnabled(bool groupDividerEnabled);
 
-    virtual bool isGroupDividerEnabled() {
-        return mGroupDividerEnabled;
-    }
+    virtual bool isGroupDividerEnabled();
 
     //int addIntentOptions(int group, int id, int categoryOrder, ComponentName caller,
     //        Intent[] specifics, Intent intent, int flags, std::vector<MenuItem*>& outSpecificItems);
 
-    void removeItem(int id) {
-        removeItemAtInt(findItemIndex(id), true);
-    }
+    void removeItem(int id);
     void removeGroup(int group);
-    void removeItemAt(int index) {
-        removeItemAtInt(index, true);
-    }
+    void removeItemAt(int index);
 
     void clearAll();
     void clear();
@@ -200,42 +175,29 @@ public:
     int findGroupIndex(int group);
     int findGroupIndex(int group, int start);
 
-    int size() {
-        return mItems.size();
-    }
+    int size() const;
 
-    /** {@inheritDoc} */
-    MenuItem* getItem(int index) {
-        return mItems.at(index);
-    }
+    MenuItem* getItem(int index);
 
-    bool isShortcutKey(int keyCode, KeyEvent& event) {
-        return findItemWithShortcutForKey(keyCode, event) != nullptr;
-    }
+    bool isShortcutKey(int keyCode,const KeyEvent& event);
 
     virtual void setQwertyMode(bool isQwerty);
 
     virtual void setShortcutsVisible(bool shortcutsVisible);
-    virtual bool isShortcutsVisible() {
-        return mShortcutsVisible;
-    }
+    virtual bool isShortcutsVisible();
 
-    Context* getContext() {
-        return mContext;
-    }
+    Context* getContext();
 
     void changeMenuMode();
 
-    bool performShortcut(int keyCode, KeyEvent& event, int flags);
+    bool performShortcut(int keyCode,KeyEvent& event, int flags);
 
     bool performIdentifierAction(int id, int flags);
-    bool performItemAction(MenuItem& item, int flags);
-    bool performItemAction(MenuItem& item, MenuPresenter& preferredPresenter, int flags);
+    bool performItemAction(MenuItem* item, int flags);
+    bool performItemAction(MenuItem* item, MenuPresenter* preferredPresenter, int flags);
 
     void close(bool closeAllMenus);
-    void close() {
-        close(true /* closeAllMenus */);
-    }
+    void close();
 
     void onItemsChanged(bool structureChanged);
     void stopDispatchingItemsChanged();
@@ -250,40 +212,23 @@ public:
 
     void clearHeader();
 
-    std::string getHeaderTitle() {
-        return mHeaderTitle;
-    }
+    std::string getHeaderTitle();
 
-    Drawable* getHeaderIcon() {
-        return mHeaderIcon;
-    }
+    Drawable* getHeaderIcon();
 
-    View* getHeaderView() {
-        return mHeaderView;
-    }
+    View* getHeaderView();
 
-    virtual MenuBuilder* getRootMenu() {
-        return this;
-    }
+    virtual MenuBuilder* getRootMenu();
 
-    void setCurrentMenuInfo(ContextMenuInfo* menuInfo) {
-        mCurrentMenuInfo = menuInfo;
-    }
+    void setCurrentMenuInfo(ContextMenuInfo* menuInfo);
 
-    virtual void setOptionalIconsVisible(bool visible){
-        mOptionalIconsVisible = visible;
-    }
+    virtual void setOptionalIconsVisible(bool visible);
+    bool getOptionalIconsVisible();
 
-    bool getOptionalIconsVisible() {
-        return mOptionalIconsVisible;
-    }
+    virtual bool expandItemActionView(MenuItemImpl* item);
+    virtual bool collapseItemActionView(MenuItemImpl* item);
 
-    virtual bool expandItemActionView(MenuItemImpl& item);
-    virtual bool collapseItemActionView(MenuItemImpl& item);
-
-    MenuItemImpl* getExpandedItem() {
-        return mExpandedItem;
-    }
+    MenuItemImpl* getExpandedItem();
 };
 }/*endof namespace*/
 #endif/*__MENU_BUILDER_H__*/

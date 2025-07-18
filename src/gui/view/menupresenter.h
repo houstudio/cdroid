@@ -1,6 +1,8 @@
 #ifndef __MENU_PRESENTER_H__
 #define __MENU_PRESENTER_H__
+#include <functional>
 namespace cdroid{
+class ViewGroup;
 class MenuPresenter {
 public:
     /**
@@ -12,7 +14,7 @@ public:
          * @param menu
          * @param allMenusAreClosing
          */
-        void onCloseMenu(MenuBuilder menu, bool allMenusAreClosing);
+        std::function<void(MenuBuilder&/*menu*/,bool/*allMenusAreClosing*/)> onCloseMenu;;
 
         /**
          * Called when a submenu opens. Useful for notifying the application
@@ -23,7 +25,7 @@ public:
          * @return true if the Callback will handle presenting the submenu, false if
          *         the presenter should attempt to do so.
          */
-        bool onOpenSubMenu(MenuBuilder subMenu);
+        std::function<bool(MenuBuilder&/*subMenu*/)> onOpenSubMenu;
     };
 
     /**
@@ -60,7 +62,7 @@ public:
      * related to this specific presentation.
      * @param cb Callback that will be notified of future events
      */
-    virtual void setCallback(Callback cb)=0;
+    virtual void setCallback(const Callback& cb)=0;
 
     /**
      * Called by Menu implementations to indicate that a submenu item
@@ -70,7 +72,7 @@ public:
      * @param subMenu SubMenu being opened
      * @return true if the the event was handled, false otherwise.
      */
-    virtual bool onSubMenuSelected(SubMenuBuilder* subMenu)=0;
+    virtual bool onSubMenuSelected(SubMenuBuilder& subMenu)=0;
 
     /**
      * Called by Menu implementations to indicate that a menu or submenu is
@@ -82,7 +84,7 @@ public:
      *                           submenus are closing, {@code false} if only
      *                           the specified menu is closing
      */
-    virtual void onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)=0;
+    virtual void onCloseMenu(MenuBuilder& menu, bool allMenusAreClosing)=0;
 
     /**
      * Called by Menu implementations to flag items that will be shown as actions.
@@ -97,7 +99,7 @@ public:
      * @param item Item to be expanded
      * @return true if this presenter expanded the action view, false otherwise.
      */
-    virtual bool expandItemActionView(MenuBuilder menu, MenuItemImpl item)=0;
+    virtual bool expandItemActionView(MenuBuilder& menu, MenuItemImpl& item)=0;
 
     /**
      * Called when a menu item with a collapsable action view should collapse its action view.
@@ -106,7 +108,7 @@ public:
      * @param item Item to be collapsed
      * @return true if this presenter collapsed the action view, false otherwise.
      */
-    virtual bool collapseItemActionView(MenuBuilder menu, MenuItemImpl item)=0;
+    virtual bool collapseItemActionView(MenuBuilder& menu, MenuItemImpl& item)=0;
 
     /**
      * Returns an ID for determining how to save/restore instance state.

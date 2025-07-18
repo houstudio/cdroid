@@ -122,28 +122,27 @@ protected:
     std::vector<MenuItem*>mMenuItems;
     void *owner;/*menu owner/container*/
 public:
-    Menu();
-    virtual ~Menu();
-    virtual MenuItem* add(const std::string&title);
-    virtual MenuItem* add(int groupId, int itemId, int order,const std::string&title);
-    SubMenu* addSubMenu(const std::string&title);
-    SubMenu* addSubMenu(int groupId,int itemId,int order,const std::string& title);
+    virtual ~Menu()=default;
+    virtual MenuItem* add(const std::string&title)=0;
+    virtual MenuItem* add(int groupId, int itemId, int order,const std::string&title)=0;
+    virtual SubMenu* addSubMenu(const std::string&title)=0;
+    virtual SubMenu* addSubMenu(int groupId,int itemId,int order,const std::string& title)=0;
     void popup(int x,int y);
-    void close();
-    void removeItem(int id);
-    void removeGroup(int groupId);
-    void clear();
-    void setGroupCheckable(int group, bool checkable, bool exclusive);
-    void setGroupEnabled(int group, bool enabled);
-    bool hasVisibleItems()const;
-    MenuItem*findItem(int id)const;
-    int size()const;
+    virtual void close()=0;
+    virtual void removeItem(int id)=0;
+    virtual void removeGroup(int groupId)=0;
+    virtual void clear()=0;
+    virtual void setGroupCheckable(int group, bool checkable, bool exclusive)=0;
+    virtual void setGroupEnabled(int group, bool enabled)=0;
+    virtual bool hasVisibleItems()const=0;
+    virtual MenuItem*findItem(int id)const=0;
+    virtual int size()const=0;
     virtual MenuItem* getItem(int index)const;
-    bool performShortcut(int keyCode, KeyEvent& event, int flags);
-    bool isShortcutKey(int keyCode, KeyEvent& event);
-    bool performIdentifierAction(int id, int flags);
-    void setQwertyMode(bool isQwerty);
-     void setGroupDividerEnabled(bool groupDividerEnabled);
+    virtual bool performShortcut(int keyCode, KeyEvent& event, int flags)=0;
+    virtual bool isShortcutKey(int keyCode,const KeyEvent& event)=0;
+    virtual bool performIdentifierAction(int id, int flags)=0;
+    virtual void setQwertyMode(bool isQwerty)=0;
+    virtual void setGroupDividerEnabled(bool groupDividerEnabled);
 };
 }/*endof namespace*/
 #endif
