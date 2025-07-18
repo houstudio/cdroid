@@ -24,29 +24,31 @@ void MenuBuilder::addMenuPresenter(MenuPresenter* presenter, Context* menuContex
 }
 
 void MenuBuilder::removeMenuPresenter(MenuPresenter presenter) {
-    for (MenuPresenter* item : mPresenters) {
+    for (auto it=mPresenters.begin();it!=mPresenters.end();){
+        MenuPresenter* item=*it;
         if (item == nullptr || item == presenter) {
-            mPresenters.remove(ref);
-        }
+            it=mPresenters.erase(it);
+        }else it++;
     }
 }
 
 void MenuBuilder::dispatchPresenterUpdate(bool cleared) {
     if (mPresenters.empty()) return;
     stopDispatchingItemsChanged();
-    for (WeakReference<MenuPresenter> ref : mPresenters) {
-        MenuPresenter* presenter = ref.get();
+    for (auto it = mPresenters.begin();it!=mPresenters.end();) {
+        MenuPresenter* presenter =*it;
         if (presenter == nullptr) {
-            mPresenters.remove(ref);
+            it = mPresenters.erase(it);
         } else {
-            presenter.updateMenuView(cleared);
+            presenter->updateMenuView(cleared);
+            it++;
         }
     }
     startDispatchingItemsChanged();
 }
 
 bool MenuBuilder::dispatchSubMenuSelected(SubMenuBuilder subMenu,MenuPresenter preferredPresenter) {
-    if (mPresenters.isEmpty()) return false;
+    if (mPresenters.empty()) return false;
 
     bool result = false;
     // Try the preferred presenter first.
@@ -54,30 +56,32 @@ bool MenuBuilder::dispatchSubMenuSelected(SubMenuBuilder subMenu,MenuPresenter p
         result = preferredPresenter.onSubMenuSelected(subMenu);
     }
 
-    for (WeakReference<MenuPresenter> ref : mPresenters) {
-        MenuPresenter* presenter = ref.get();
+    for (auto  it = mPresenters.begin();it!=mPresenters.end();) {
+        MenuPresenter* presenter = *it;
         if (presenter == nullptr) {
-            mPresenters.remove(ref);
+            it = mPresenters.erase(it);
         } else if (!result) {
             result = presenter->onSubMenuSelected(subMenu);
+            it++;
         }
     }
     return result;
 }
 
 void MenuBuilder::dispatchSaveInstanceState(Bundle outState) {
-    if (mPresenters.isEmpty()) return;
+    if (mPresenters.empty()) return;
 
     SparseArray<Parcelable> presenterStates = new SparseArray<Parcelable>();
-    for (WeakReference<MenuPresenter> ref : mPresenters) {
-        final MenuPresenter presenter = ref.get();
-        if (presenter == null) {
-            mPresenters.remove(ref);
+    for (auto it = mPresenters.begin();it!=mPresenters.end();) {
+        MenuPresenter* presenter = *it;
+        if (presenter == nullptr) {
+            it = mPresenters.erase(it);
         } else {
             const int id = presenter.getId();
+            it++;
             if (id > 0) {
-                final Parcelable state = presenter.onSaveInstanceState();
-                if (state != null) {
+                Parcelable state = presenter.onSaveInstanceState();
+                if (state != nullptr) {
                     presenterStates.put(id, state);
                 }
             }
@@ -89,17 +93,18 @@ void MenuBuilder::dispatchSaveInstanceState(Bundle outState) {
 void MenuBuilder::dispatchRestoreInstanceState(Bundle state) {
     SparseArray<Parcelable> presenterStates = state.getSparseParcelableArray(PRESENTER_KEY);
 
-    if (presenterStates == null || mPresenters.isEmpty()) return;
-    for (WeakReference<MenuPresenter> ref : mPresenters) {
-        MenuPresenter* presenter = ref.get();
+    if (presenterStates == null || mPresenters.iempty()) return;
+    for (auto it = mPresenters.begin();it!=mPresenters.end();) {
+        MenuPresenter* presenter = *it;
         if (presenter == null) {
-            mPresenters.remove(ref);
+            it = mPresenters.erase(it);
         } else {
             const int id = presenter->getId();
+            it++;
             if (id > 0) {
                 Parcelable parcel = presenterStates.get(id);
-                if (parcel != null) {
-                    presenter.onRestoreInstanceState(parcel);
+                if (parcel != nullptr) {
+                    presenter->onRestoreInstanceState(parcel);
                 }
             }
         }
@@ -131,8 +136,8 @@ void MenuBuilder::saveActionViewStates(Bundle outStates) {
             }
         }
         if (item.hasSubMenu()) {
-            final SubMenuBuilder subMenu = (SubMenuBuilder) item.getSubMenu();
-            subMenu.saveActionViewStates(outStates);
+            SubMenuBuilder* subMenu = (SubMenuBuilder*) item->getSubMenu();
+            subMenu->saveActionViewStates(outStates);
         }
     }
     if (viewStates != null) {
@@ -153,9 +158,9 @@ void MenuBuilder::restoreActionViewStates(Bundle states) {
         if (v != nullptr && v->getId() != View::NO_ID) {
             v->restoreHierarchyState(viewStates);
         }
-        if (item.hasSubMenu()) {
-            final SubMenuBuilder subMenu = (SubMenuBuilder) item.getSubMenu();
-            subMenu.restoreActionViewStates(states);
+        if (item->hasSubMenu()) {
+            SubMenuBuilder* subMenu = (SubMenuBuilder*) item->getSubMenu();
+            subMenu->restoreActionViewStates(states);
         }
     }
 
@@ -492,8 +497,8 @@ void MenuBuilder::findItemsWithShortcutForKey(List<MenuItemImpl*>& items, int ke
     const int N = mItems.size();
     for (int i = 0; i < N; i++) {
         MenuItemImpl* item = mItems.at(i);
-        if (item.hasSubMenu()) {
-            ((MenuBuilder)item.getSubMenu()).findItemsWithShortcutForKey(items, keyCode, event);
+        if (item->hasSubMenu()) {
+            ((MenuBuilder*)item->getSubMenu())->findItemsWithShortcutForKey(items, keyCode, event);
         }
         const int shortcutChar =  qwerty ? item->getAlphabeticShortcut() : item->getNumericShortcut();
         const int shortcutModifiers = qwerty ? item->getAlphabeticModifiers() : item->getNumericModifiers();
@@ -514,7 +519,7 @@ MenuItemImpl* MenuBuilder::findItemWithShortcutForKey(int keyCode,const KeyEvent
     items.clear();
     findItemsWithShortcutForKey(items, keyCode, event);
 
-    if (items.isEmpty()) {
+    if (items.empty()) {
         return nullptr;
     }
 
@@ -536,10 +541,8 @@ MenuItemImpl* MenuBuilder::findItemWithShortcutForKey(int keyCode,const KeyEvent
         const int shortcutChar = qwerty ? item->getAlphabeticShortcut() :item->getNumericShortcut();
         if ((shortcutChar == possibleChars.meta[0] &&
                 (metaState & KeyEvent::META_ALT_ON) == 0)
-            || (shortcutChar == possibleChars.meta[2] &&
-                (metaState & KeyEvent::META_ALT_ON) != 0)
-            || (qwerty && shortcutChar == '\b' &&
-                keyCode == KeyEvent::KEYCODE_DEL)) {
+            || (shortcutChar == possibleChars.meta[2] && (metaState & KeyEvent::META_ALT_ON) != 0)
+            || (qwerty && shortcutChar == '\b' && keyCode == KeyEvent::KEYCODE_DEL)) {
             return item;
         }
     }
@@ -561,7 +564,7 @@ bool MenuBuilder::performItemAction(MenuItem item, MenuPresenter preferredPresen
         return false;
     }
 
-    bool invoked = itemImpl.invoke();
+    bool invoked = itemImpl->invoke();
     ActionProvider* provider = item->getActionProvider();
     const bool providerHasSubMenu = provider != nullptr && provider->hasSubMenu();
     if (itemImpl->hasCollapsibleActionView()) {
@@ -593,12 +596,13 @@ bool MenuBuilder::performItemAction(MenuItem item, MenuPresenter preferredPresen
 void MenuBuilder::close(bool closeAllMenus) {
     if (mIsClosing) return;
     mIsClosing = true;
-    for (WeakReference<MenuPresenter> ref : mPresenters) {
-        MenuPresenter* presenter = ref.get();
-        if (presenter == null) {
-            mPresenters.remove(ref);
+    for (auto it = mPresenters.begin();it!=mPresenters.end();) {
+        MenuPresenter* presenter = *it;
+        if (presenter == nullptr) {
+            it = mPresenters.erase(it);
         } else {
-            presenter.onCloseMenu(this, closeAllMenus);
+            it++;
+            presenter->onCloseMenu(this, closeAllMenus);
         }
     }
     mIsClosing = false;
@@ -669,24 +673,25 @@ void MenuBuilder::flagActionItems() {
 
     // Presenters flag action items as needed.
     bool flagged = false;
-    for (WeakReference<MenuPresenter> ref : mPresenters) {
-        MenuPresenter* presenter = ref.get();
-        if (presenter == null) {
-            mPresenters.remove(ref);
+    for (auto it = mPresenters.begin();it!=mPresenters.end();) {
+        MenuPresenter* presenter = *it;
+        if (presenter == nullptr) {
+            it = mPresenters.erase(it);
         } else {
-            flagged |= presenter.flagActionItems();
+            it++;
+            flagged |= presenter->flagActionItems();
         }
     }
     if (flagged) {
         mActionItems.clear();
         mNonActionItems.clear();
-        final int itemsSize = visibleItems.size();
+        const int itemsSize = visibleItems.size();
         for (int i = 0; i < itemsSize; i++) {
-            MenuItemImpl item = visibleItems.get(i);
-            if (item.isActionButton()) {
-                mActionItems.add(item);
+            MenuItemImpl* item = visibleItems.at(i);
+            if (item->isActionButton()) {
+                mActionItems.push_back(item);
             } else {
-                mNonActionItems.add(item);
+                mNonActionItems.push_back(item);
             }
         }
     } else {
@@ -796,14 +801,16 @@ bool MenuBuilder::getOptionalIconsVisible() {
 
 bool MenuBuilder::expandItemActionView(MenuItemImpl* item) {
     bool expanded = false;
-    if (mPresenters.isEmpty()) return false;
+    if (mPresenters.empty()) return false;
     stopDispatchingItemsChanged();
-    for (WeakReference<MenuPresenter> ref : mPresenters) {
-        MenuPresenter* presenter = ref.get();
-        if (presenter == null) {
-            mPresenters.remove(ref);
-        } else if ((expanded = presenter.expandItemActionView(this, item))) {
+    for (auto it = mPresenters.begin();it!=mPresenters.end();) {
+        MenuPresenter* presenter = *it;
+        if (presenter == nullptr) {
+            it = mPresenters.erase(it);
+        } else if ((expanded = presenter->expandItemActionView(this, item))) {
             break;
+        }else{
+            it++;
         }
     }
     startDispatchingItemsChanged();
@@ -812,17 +819,19 @@ bool MenuBuilder::expandItemActionView(MenuItemImpl* item) {
 }
 
 bool collapseItemActionView(MenuItemImpl* item) {
-    if (mPresenters.isEmpty() || mExpandedItem != item) return false;
+    if (mPresenters.empty() || mExpandedItem != item) return false;
 
     bool collapsed = false;
 
     stopDispatchingItemsChanged();
-    for (WeakReference<MenuPresenter> ref : mPresenters) {
-        MenuPresenter* presenter = ref.get();
+    for (auto it = mPresenters.begin();it!=mPresenters.end();) {
+        MenuPresenter* presenter = *it;
         if (presenter == nullptr) {
-            mPresenters.remove(ref);
+            it = mPresenters.erase(it);
         } else if ((collapsed = presenter.collapseItemActionView(this, item))) {
             break;
+        }else{
+            it++;
         }
     }
     startDispatchingItemsChanged();
