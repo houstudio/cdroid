@@ -20,7 +20,6 @@
 #include <string>
 #include <core/callbackbase.h>
 #include <view/keyevent.h>
-#include <cairomm/surface.h>
 namespace cdroid{
 class View;
 class SubMenu;

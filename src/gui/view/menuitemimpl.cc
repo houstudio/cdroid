@@ -15,8 +15,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <view/view.h>
+#include <view/menu.h>
 #include <view/menuitemimpl.h>
+#include <view/actionprovider.h>
+#include <widget/linearlayout.h>
+
 namespace cdroid{
+class MenuBuilder:public Menu{};
+class SubMenuBuilder:public MenuBuilder{};
 /**
  * Instantiates this menu item.
  *
@@ -48,7 +55,7 @@ MenuItemImpl::MenuItemImpl(MenuBuilder* menu, int group, int id, int categoryOrd
  */
 bool MenuItemImpl::invoke() {
     if (mClickListener != nullptr &&
-        mClickListener.onMenuItemClick(*this)) {
+        mClickListener(*this)){//.onMenuItemClick(*this)) {
         return true;
     }
 
@@ -57,7 +64,7 @@ bool MenuItemImpl::invoke() {
     }
 
     if (mItemCallback != nullptr) {
-        mItemCallback.run();
+        mItemCallback();
         return true;
     }
 
@@ -65,8 +72,8 @@ bool MenuItemImpl::invoke() {
         try {
             mMenu->getContext().startActivity(mIntent);
             return true;
-        } catch (ActivityNotFoundException e) {
-            LOGE("Can't find activity to handle intent; ignoring", e);
+        } catch (std::exception& e) {
+            LOGE("Can't find activity to handle intent; ignoring %s", e.what());
         }
     }
 
@@ -77,7 +84,7 @@ bool MenuItemImpl::invoke() {
     return false;
 }
 
-bool MenuItemImpl::isEnabled() {
+bool MenuItemImpl::isEnabled() const{
     return (mFlags & ENABLED) != 0;
 }
 
@@ -90,7 +97,7 @@ MenuItem& MenuItemImpl::setEnabled(bool enabled) {
 
     mMenu->onItemsChanged(false);
 
-    return &this;
+    return *this;
 }
 
 int MenuItemImpl::getGroupId(){
@@ -113,7 +120,7 @@ Intent* MenuItemImpl::getIntent() {
     return mIntent;
 }
 
-public MenuItem& setIntent(Intent intent) {
+MenuItem& MenuItemImpl::setIntent(Intent* intent) {
     mIntent = intent;
     return *this;
 }
@@ -152,7 +159,7 @@ MenuItem MenuItemImpl::setAlphabeticShortcut(char alphaChar, int alphaModifiers)
     }
 
     mShortcutAlphabeticChar = Character.toLowerCase(alphaChar);
-    mShortcutAlphabeticModifiers = KeyEvent.normalizeMetaState(alphaModifiers);
+    mShortcutAlphabeticModifiers = KeyEvent::normalizeMetaState(alphaModifiers);
 
     mMenu->onItemsChanged(false);
 
@@ -172,7 +179,7 @@ MenuItem& MenuItemImpl::setNumericShortcut(char numericChar) {
 
     mShortcutNumericChar = numericChar;
 
-    mMenu.onItemsChanged(false);
+    mMenu->onItemsChanged(false);
 
     return *this;
 }
@@ -183,14 +190,14 @@ MenuItem& MenuItemImpl::setNumericShortcut(char numericChar, int numericModifier
     }
 
     mShortcutNumericChar = numericChar;
-    mShortcutNumericModifiers = KeyEvent.normalizeMetaState(numericModifiers);
+    mShortcutNumericModifiers = KeyEvent::normalizeMetaState(numericModifiers);
 
     mMenu->onItemsChanged(false);
 
     return *this;
 }
 
-public MenuItem& setShortcut(char numericChar, char alphaChar) override{
+MenuItem& MenuItemImpl::setShortcut(char numericChar, char alphaChar){
     mShortcutNumericChar = numericChar;
     mShortcutAlphabeticChar = Character.toLowerCase(alphaChar);
 
@@ -202,13 +209,13 @@ public MenuItem& setShortcut(char numericChar, char alphaChar) override{
 MenuItem& MenuItemImpl::setShortcut(char numericChar, char alphaChar, int numericModifiers,
         int alphaModifiers) {
     mShortcutNumericChar = numericChar;
-    mShortcutNumericModifiers = KeyEvent.normalizeMetaState(numericModifiers);
+    mShortcutNumericModifiers = KeyEvent::normalizeMetaState(numericModifiers);
     mShortcutAlphabeticChar = Character.toLowerCase(alphaChar);
-    mShortcutAlphabeticModifiers = KeyEvent.normalizeMetaState(alphaModifiers);
+    mShortcutAlphabeticModifiers = KeyEvent::normalizeMetaState(alphaModifiers);
 
     mMenu->onItemsChanged(false);
 
-    return &this;
+    return *this;
 }
 
 /**
@@ -230,9 +237,9 @@ std::string MenuItemImpl::getShortcutLabel() {
         return "";
     }
 
-    final Resources res = mMenu.getContext().getResources();
-
     std::string sb;
+#if 0
+    final Resources res = mMenu.getContext().getResources();
     if (ViewConfiguration.get(mMenu->getContext()).hasPermanentMenuKey()) {
         // Only prepend "Menu+" if there is a hardware menu key.
         sb.append(res.getString(com.android.internal.R.string.prepend_shortcut_label));
@@ -274,11 +281,11 @@ std::string MenuItemImpl::getShortcutLabel() {
             sb.append(shortcut);
             break;
     }
-
-    return sb.toString();
+#endif
+    return sb;
 }
 
-void MenuItemImpl::appendModifier(std::string& sb, int mask, int modifier, String label) {
+void MenuItemImpl::appendModifier(std::string& sb, int mask, int modifier,const std::string& label) {
     if ((mask & modifier) == modifier) {
         sb.append(label);
     }
@@ -302,10 +309,10 @@ bool MenuItemImpl::hasSubMenu() {
     return mSubMenu != nullptr;
 }
 
-void setSubMenu(SubMenuBuilder subMenu) {
+void  MenuItemImpl::setSubMenu(SubMenuBuilder* subMenu) {
     mSubMenu = subMenu;
 
-    subMenu.setHeaderTitle(getTitle());
+    subMenu->setHeaderTitle(getTitle());
 }
 
 std::string MenuItemImpl::getTitle() {
@@ -338,16 +345,16 @@ MenuItem& MenuItemImpl::setTitle(const std::string& title) {
 }
 
 std::string MenuItemImpl::getTitleCondensed() {
-    return mTitleCondensed != nullptr ? mTitleCondensed : mTitle;
+    return !mTitleCondensed.empty() ? mTitleCondensed : mTitle;
 }
 
 MenuItem& MenuItemImpl::setTitleCondensed(const std::string& title) {
     mTitleCondensed = title;
 
     // Could use getTitle() in the loop below, but just cache what it would do here
-    if (title == null) {
+    /*if (title.empty()) {
         title = mTitle;
-    }
+    }*/
 
     mMenu->onItemsChanged(false);
 
@@ -373,7 +380,7 @@ MenuItem& MenuItemImpl::setIcon(Drawable* icon) {
     mIconResId = NO_ICON;
     mIconDrawable = icon;
     mNeedToApplyIconTint = true;
-    mMenu.onItemsChanged(false);
+    mMenu->onItemsChanged(false);
 
     return *this;
 }
@@ -384,7 +391,7 @@ MenuItem& MenuItemImpl::setIcon(int iconResId) {
     mNeedToApplyIconTint = true;
 
     // If we have a view, we need to push the Drawable to them
-    mMenu.onItemsChanged(false);
+    mMenu->onItemsChanged(false);
 
     return *this;
 }
@@ -403,17 +410,17 @@ ColorStateList* MenuItemImpl::getIconTintList() {
     return mIconTintList;
 }
 
-MenuItem& MenuItemImpl::setIconTintMode(PorterDuff.Mode iconTintMode) {
+MenuItem& MenuItemImpl::setIconTintMode(int iconTintMode) {
     mIconTintMode = iconTintMode;
     mHasIconTintMode = true;
     mNeedToApplyIconTint = true;
 
-    mMenu.onItemsChanged(false);
+    mMenu->onItemsChanged(false);
 
-    return this;
+    return *this;
 }
 
-public PorterDuff.Mode getIconTintMode() {
+int MenuItemImpl::getIconTintMode() {
     return mIconTintMode;
 }
 
@@ -435,7 +442,7 @@ Drawable* MenuItemImpl::applyIconTintIfNecessary(Drawable* icon) {
     return icon;
 }
 
-bool MenuItemImpl::isCheckable() {
+bool MenuItemImpl::isCheckable() const{
     return (mFlags & CHECKABLE) == CHECKABLE;
 }
 
@@ -453,11 +460,11 @@ void MenuItemImpl::setExclusiveCheckable(bool exclusive) {
     mFlags = (mFlags & ~EXCLUSIVE) | (exclusive ? EXCLUSIVE : 0);
 }
 
-bool MenuItemImpl::isExclusiveCheckable() {
+bool MenuItemImpl::isExclusiveCheckable() const{
     return (mFlags & EXCLUSIVE) != 0;
 }
 
-bool MenuItemImpl::isChecked() {
+bool MenuItemImpl::isChecked() const{
     return (mFlags & CHECKED) == CHECKED;
 }
 
@@ -512,7 +519,7 @@ MenuItem& MenuItemImpl::setVisible(bool shown) {
     return *this;
 }
 
-MenuItem& MenuItemImpl::setOnMenuItemClickListener(MenuItem::OnMenuItemClickListener clickListener) {
+MenuItem& MenuItemImpl::setOnMenuItemClickListener(const MenuItem::OnMenuItemClickListener& clickListener) {
     mClickListener = clickListener;
     return *this;
 }
@@ -591,10 +598,11 @@ MenuItem& MenuItemImpl::setActionView(View* view) {
     return *this;
 }
 
-MenuItem& MenuItemImpl::setActionView(int resId) {
+MenuItem& MenuItemImpl::setActionView(const std::string& resId) {
     Context* context = mMenu->getContext();
     LayoutInflater* inflater = LayoutInflater::from(context);
-    setActionView(inflater->inflate(resId, new LinearLayout(context), false));
+    LinearLayout*ll = new LinearLayout(context,AttributeSet(context,"cdroid"));
+    setActionView(inflater->inflate(resId, ll, false));
     return *this;
 }
 
@@ -621,16 +629,15 @@ MenuItem& MenuItemImpl::setActionProvider(ActionProvider* actionProvider) {
     mActionProvider = actionProvider;
     mMenu->onItemsChanged(true); // Measurement can be changed
     if (mActionProvider != nullptr) {
-        mActionProvider->setVisibilityListener(new ActionProvider.VisibilityListener() {
-            @Override public void onActionProviderVisibilityChanged(bool isVisible) {
-                mMenu->onItemVisibleChanged(MenuItemImpl.this);
-            }
-        });
+        ActionProvider::VisibilityListener ls=[this](bool isVisible){
+            mMenu->onItemVisibleChanged(*this);
+        };
+        mActionProvider->setVisibilityListener(ls);
     }
     return *this;
 }
 
-MenuItem* MenuItemImpl::setShowAsActionFlags(int actionEnum) {
+MenuItem& MenuItemImpl::setShowAsActionFlags(int actionEnum) {
     setShowAsAction(actionEnum);
     return *this;
 }
@@ -640,9 +647,9 @@ bool MenuItemImpl::expandActionView() {
         return false;
     }
 
-    if ((mOnActionExpandListener == nullptr) ||
+    if ((mOnActionExpandListener.onMenuItemActionExpand == nullptr) ||
             mOnActionExpandListener.onMenuItemActionExpand(*this)) {
-        return mMenu.expandItemActionView(this);
+        return mMenu->expandItemActionView(this);
     }
 
     return false;
@@ -657,7 +664,7 @@ bool MenuItemImpl::collapseActionView() {
         return true;
     }
 
-    if ((mOnActionExpandListener == nullptr) ||
+    if ((mOnActionExpandListener.onMenuItemActionCollapse == nullptr) ||
             mOnActionExpandListener.onMenuItemActionCollapse(*this)) {
         return mMenu->collapseItemActionView(*this);
     }

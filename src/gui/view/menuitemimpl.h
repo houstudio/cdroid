@@ -18,6 +18,7 @@
 #ifndef __MENUITEM_IMPL_H__
 #define __MENUITEM_IMPL_H__
 #include <view/menuitem.h>
+#include <view/menuview.h>
 namespace cdroid{
 class MenuBuilder;
 class SubMenuBuilder;
@@ -85,13 +86,13 @@ public:
 
     bool invoke();
 
-    bool isEnabled()override;
+    bool isEnabled()const override;
     MenuItem& setEnabled(bool enabled)override;
 
     int getGroupId() override;
     int getItemId() override;
     int getOrder() override;
-    int getOrdering() override;
+    int getOrdering();
 
     Intent* getIntent()override;
     MenuItem& setIntent(Intent* intent);
@@ -102,8 +103,8 @@ public:
     char getAlphabeticShortcut() override;
     int getAlphabeticModifiers() override;
 
-    MenuItem& setAlphabeticShortcut(char alphaChar) override;
-    MenuItem& setAlphabeticShortcut(char alphaChar, int alphaModifiers)override;
+    MenuItem& setAlphabeticShortcut(char alphaChar);
+    MenuItem& setAlphabeticShortcut(char alphaChar, int alphaModifiers);
 
     char getNumericShortcut();
     int getNumericModifiers();
@@ -119,7 +120,7 @@ public:
 
     SubMenu* getSubMenu()override;
     bool hasSubMenu()override;
-    void setSubMenu(SubMenuBuilder* subMenu)override;
+    void setSubMenu(SubMenuBuilder* subMenu);
 
     std::string getTitle();
     std::string getTitleForItemView(MenuView::ItemView* itemView);
@@ -141,12 +142,12 @@ public:
     bool isCheckable() const override;
     MenuItem& setCheckable(bool checkable)override;
 
-    void setExclusiveCheckable(bool exclusive) override;
-    bool isExclusiveCheckable() override;
+    void setExclusiveCheckable(bool exclusive);
+    bool isExclusiveCheckable()const;
 
     bool isChecked() const override;
     MenuItem& setChecked(bool checked)override;
-    void setCheckedInt(bool checked)override;
+    void setCheckedInt(bool checked);
 
     bool isVisible()override;
     bool setVisibleInt(bool shown);
@@ -175,7 +176,7 @@ public:
     void setShowAsAction(int actionEnum);
 
     MenuItem& setActionView(View* view);
-    MenuItem& setActionView(int resId);
+    MenuItem& setActionView(const std::string& resId);
 
     View* getActionView();
 

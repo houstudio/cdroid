@@ -39,8 +39,8 @@ public:
     using  OnMenuItemClickListener= std::function<bool(MenuItem&)>;
 
     struct OnActionExpandListener {
-        bool onMenuItemActionExpand(MenuItem& item);
-        bool onMenuItemActionCollapse(MenuItem& item);
+        std::function<bool(MenuItem&)> onMenuItemActionExpand;
+        std::function<bool(MenuItem&)> onMenuItemActionCollapse;
     };
     virtual ~MenuItem()=default;
     virtual int getItemId()=0;
@@ -73,7 +73,7 @@ public:
 
     virtual MenuItem& setIntent(Intent* intent);
 
-    Intent* getIntent();
+    virtual Intent* getIntent()=0;
 
     virtual MenuItem& setShortcut(char numericChar, char alphaChar);
 
@@ -97,11 +97,11 @@ public:
 
     virtual MenuItem& setCheckable(bool checkable)=0;
 
-    virtual bool isCheckable()=0;
+    virtual bool isCheckable()const=0;
 
     virtual MenuItem& setChecked(bool checked)=0;
 
-    virtual bool isChecked()=0;
+    virtual bool isChecked()const=0;
 
     virtual MenuItem& setVisible(bool visible)=0;
 
@@ -109,7 +109,7 @@ public:
 
     virtual MenuItem& setEnabled(bool enabled)=0;
 
-    virtual bool isEnabled()=0;
+    virtual bool isEnabled()const =0;
 
     virtual bool hasSubMenu()=0;
                                                
