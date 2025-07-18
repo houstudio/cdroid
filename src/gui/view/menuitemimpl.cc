@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <view/view.h>
 #include <view/menu.h>
+#include <view/submenu.h>
 #include <view/menuitemimpl.h>
 #include <view/submenubuilder.h>
 #include <view/actionprovider.h>
@@ -471,7 +472,7 @@ void MenuItemImpl::setCheckedInt(bool checked) {
     }
 }
 
-bool MenuItemImpl::isVisible() {
+bool MenuItemImpl::isVisible() const{
     if (mActionProvider != nullptr && mActionProvider->overridesItemVisibility()) {
         return (mFlags & HIDDEN) == 0 && mActionProvider->isVisible();
     }

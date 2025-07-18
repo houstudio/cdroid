@@ -9,7 +9,7 @@ class MenuItemImpl;
 class MenuPresenter;
 class SubMenuBuilder;
 class ContextMenuInfo;
-class MenuBuilder:public Menu {
+class MenuBuilder:virtual public Menu {
 private:
     static constexpr const char* PRESENTER_KEY = "android:menu:presenters";
     static constexpr const char* ACTION_VIEW_STATES_KEY = "android:menu:actionviewstates";
@@ -83,7 +83,6 @@ private:
     bool mGroupDividerEnabled = false;
 
     std::vector<MenuItemImpl*> mTempShortcutItemList;
-
     std::vector<MenuPresenter*> mPresenters;
     MenuItemImpl* mExpandedItem;
 private:
@@ -145,10 +144,10 @@ public:
 
     virtual void setCallback(Callback cb);
 
-    MenuItem* add(const std::string& title);
-    MenuItem* add(int group, int id, int categoryOrder, const std::string& title);
-    SubMenu* addSubMenu(const std::string& title);
-    SubMenu* addSubMenu(int group, int id, int categoryOrder, const std::string& title);
+    MenuItem* add(const std::string& title)override;
+    MenuItem* add(int group, int id, int categoryOrder, const std::string& title)override;
+    SubMenu* addSubMenu(const std::string& title)override;
+    SubMenu* addSubMenu(int group, int id, int categoryOrder, const std::string& title)override;
 
     virtual void setGroupDividerEnabled(bool groupDividerEnabled);
 
@@ -157,20 +156,20 @@ public:
     //int addIntentOptions(int group, int id, int categoryOrder, ComponentName caller,
     //        Intent[] specifics, Intent intent, int flags, std::vector<MenuItem*>& outSpecificItems);
 
-    void removeItem(int id);
-    void removeGroup(int group);
+    void removeItem(int id)override;
+    void removeGroup(int group)override;
     void removeItemAt(int index);
 
     void clearAll();
-    void clear();
+    void clear()override;
 
-    void setGroupCheckable(int group, bool checkable, bool exclusive);
+    void setGroupCheckable(int group, bool checkable, bool exclusive)override;
     void setGroupVisible(int group, bool visible);
-    void setGroupEnabled(int group, bool enabled);
+    void setGroupEnabled(int group, bool enabled)override;
 
-    bool hasVisibleItems();
+    bool hasVisibleItems()const override;
 
-    MenuItem* findItem(int id);
+    MenuItem* findItem(int id)const;
     int findItemIndex(int id);
     int findGroupIndex(int group);
     int findGroupIndex(int group, int start);
@@ -179,7 +178,7 @@ public:
 
     MenuItem* getItem(int index);
 
-    bool isShortcutKey(int keyCode,const KeyEvent& event);
+    bool isShortcutKey(int keyCode,const KeyEvent& event)override;
 
     virtual void setQwertyMode(bool isQwerty);
 
@@ -190,9 +189,9 @@ public:
 
     void changeMenuMode();
 
-    bool performShortcut(int keyCode,KeyEvent& event, int flags);
+    bool performShortcut(int keyCode,KeyEvent& event, int flags)override;
 
-    bool performIdentifierAction(int id, int flags);
+    bool performIdentifierAction(int id, int flags)override;
     bool performItemAction(MenuItem* item, int flags);
     bool performItemAction(MenuItem* item, MenuPresenter* preferredPresenter, int flags);
 

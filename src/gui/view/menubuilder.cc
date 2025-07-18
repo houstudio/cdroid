@@ -354,7 +354,7 @@ void MenuBuilder::setGroupEnabled(int group, bool enabled) {
     }
 }
 
-bool MenuBuilder::hasVisibleItems() {
+bool MenuBuilder::hasVisibleItems() const{
     const int _size = size();
     for (int i = 0; i < _size; i++) {
         MenuItemImpl* item = mItems.at(i);
@@ -365,7 +365,7 @@ bool MenuBuilder::hasVisibleItems() {
     return false;
 }
 
-MenuItem* MenuBuilder::findItem(int id) {
+MenuItem* MenuBuilder::findItem(int id) const{
     const int _size = size();
     for (int i = 0; i < _size; i++) {
         MenuItemImpl* item = mItems.at(i);
@@ -595,11 +595,11 @@ bool MenuBuilder::performItemAction(MenuItem* item, MenuPresenter* preferredPres
             itemImpl->setSubMenu(new SubMenuBuilder(getContext(), this, itemImpl));
         }
 
-        SubMenuBuilder* subMenu = (SubMenuBuilder*) itemImpl->getSubMenu();
+        //SubMenuBuilder* subMenu = (SubMenuBuilder*)itemImpl->getSubMenu();
         if (providerHasSubMenu) {
-            provider->onPrepareSubMenu(*subMenu);
+            //provider->onPrepareSubMenu(*subMenu);
         }
-        invoked |= dispatchSubMenuSelected(subMenu, preferredPresenter);
+        //invoked |= dispatchSubMenuSelected(subMenu, preferredPresenter);
         if (!invoked) close(true /* closeAllMenus */);
     } else {
         if ((flags & FLAG_PERFORM_NO_CLOSE) == 0) {

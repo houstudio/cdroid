@@ -78,40 +78,88 @@ int MenuItem::getAlphabeticShortcut(){
 int MenuItem::getAlphabeticModifiers() {
     return KeyEvent::META_CTRL_ON;
 }
-#if 0
-MenuItem& MenuItem::setCheckable(bool checkable);
-bool isCheckable();
-MenuItem& setChecked(bool checked);
-bool isChecked();
 
-MenuItem setVisible(bool visible);
-bool isVisible();
+MenuItem& MenuItem::setCheckable(bool checkable){
+    return *this;
+}
 
-MenuItem& setEnabled(bool enabled);
-bool isEnabled();
+bool MenuItem::isCheckable()const{
+    return false;
+}
+MenuItem& MenuItem::setChecked(bool checked){
+    return *this;
+}
+bool MenuItem::isChecked()const{
+    return false;
+}
 
-bool hasSubMenu();
-SubMenu* getSubMenu();
+MenuItem& MenuItem::setVisible(bool visible){
+    return *this;
+}
+bool MenuItem::isVisible()const{
+    return true;
+}
 
-MenuItem& setOnMenuItemClickListener(const OnMenuItemClickListener& menuItemClickListener);
-ContextMenuInfo* getMenuInfo();
+MenuItem& MenuItem::setEnabled(bool enabled){
+    return *this;
+}
+bool MenuItem::isEnabled()const{
+    return true;
+}
 
-void setShowAsAction(int actionEnum);
+bool MenuItem::hasSubMenu(){
+    return false;
+}
 
-MenuItem& setShowAsActionFlags(int actionEnum);
-MenuItem& setActionView(View* view);
-MenuItem& setActionView(const std::string& resId);
-View* getActionView();
+SubMenu* MenuItem::getSubMenu(){
+    return nullptr;
+};
 
-MenuItem& setActionProvider(ActionProvider* actionProvider);
-ActionProvider* getActionProvider();
+MenuItem& MenuItem::setOnMenuItemClickListener(const OnMenuItemClickListener& menuItemClickListener){
+    return *this;
+}
 
-bool expandActionView();
-bool collapseActionView();
-bool isActionViewExpanded();
+ContextMenuInfo* MenuItem::getMenuInfo(){
+    return nullptr;
+}
 
-MenuItem& setOnActionExpandListener(OnActionExpandListener listener);
-#endif
+void MenuItem::setShowAsAction(int actionEnum){
+}
+
+MenuItem& MenuItem::setShowAsActionFlags(int actionEnum){
+    return *this;
+}
+
+MenuItem& MenuItem::setActionView(View* view){
+    return *this;
+}
+MenuItem& MenuItem::setActionView(const std::string& resId){
+    return *this;
+}
+View* MenuItem::getActionView(){
+    return nullptr;
+}
+
+MenuItem& MenuItem::setActionProvider(ActionProvider* actionProvider){
+   return *this;
+}
+ActionProvider* MenuItem::getActionProvider(){
+   return nullptr;
+}
+
+bool MenuItem::expandActionView(){
+    return false;
+}
+bool MenuItem::collapseActionView(){
+    return false;
+}
+bool MenuItem::isActionViewExpanded(){
+    return false;
+}
+
+MenuItem& MenuItem::setOnActionExpandListener(OnActionExpandListener listener){
+    return *this;
+}
 
 MenuItem& MenuItem::setContentDescription(const std::string& contentDescription) {
     return *this;

@@ -149,7 +149,7 @@ public:
     MenuItem& setChecked(bool checked)override;
     void setCheckedInt(bool checked);
 
-    bool isVisible()override;
+    bool isVisible()const override;
     bool setVisibleInt(bool shown);
     MenuItem& setVisible(bool shown)override;
 

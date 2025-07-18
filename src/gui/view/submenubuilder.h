@@ -5,7 +5,7 @@
 #include <view/menubuilder.h>
 namespace cdroid{
 class MenuItemImpl;
-class SubMenuBuilder:public MenuBuilder,public SubMenu {
+class SubMenuBuilder:virtual public MenuBuilder,virtual public SubMenu {
 private:
     MenuBuilder* mParentMenu;
     MenuItemImpl* mItem;
@@ -57,9 +57,9 @@ public:
         return *this;
     }
 
-    SubMenu* setIcon(const std::string& iconRes) {
+    SubMenu& setIcon(const std::string& iconRes) override{
         mItem->setIcon(iconRes);
-        return this;
+        return *this;
     }
 
     SubMenu& setHeaderIcon(Drawable* icon) {

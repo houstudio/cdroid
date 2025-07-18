@@ -19,7 +19,7 @@
 #define __SUBMENU_H__
 #include <view/menu.h>
 namespace cdroid{
-class SubMenu:public Menu {
+class SubMenu:virtual public Menu {
 public:
 
     /**
@@ -28,7 +28,7 @@ public:
      * @param title The character sequence used for the title.
      * @return This SubMenu so additional setters can be called.
      */
-    SubMenu& setHeaderTitle(const std::string& title);
+    virtual SubMenu& setHeaderTitle(const std::string& title)=0;
 
     /**
      * Sets the submenu header's icon to the icon given in <var>iconRes</var>
@@ -37,7 +37,7 @@ public:
      * @param iconRes The resource identifier used for the icon.
      * @return This SubMenu so additional setters can be called.
      */
-    SubMenu& setHeaderIcon(const std::string&iconRes);
+    virtual SubMenu& setHeaderIcon(const std::string&iconRes)=0;
 
     /**
      * Sets the submenu header's icon to the icon given in <var>icon</var>
@@ -46,7 +46,7 @@ public:
      * @param icon The {@link Drawable} used for the icon.
      * @return This SubMenu so additional setters can be called.
      */
-    SubMenu& setHeaderIcon(Drawable* icon);
+    virtual SubMenu& setHeaderIcon(Drawable* icon)=0;
 
     /**
      * Sets the header of the submenu to the {@link View} given in
@@ -56,12 +56,12 @@ public:
      * @param view The {@link View} used for the header.
      * @return This SubMenu so additional setters can be called.
      */
-    SubMenu& setHeaderView(View* view);
+    virtual SubMenu& setHeaderView(View* view)=0;
 
     /**
      * Clears the header of the submenu.
      */
-    void clearHeader();
+    //virtual void clearHeader()=0;
 
     /**
      * Change the icon associated with this submenu's item in its parent menu.
@@ -70,7 +70,7 @@ public:
      * @param iconRes The new icon (as a resource ID) to be displayed.
      * @return This SubMenu so additional setters can be called.
      */
-    SubMenu& setIcon(const std::string& iconRes);
+    virtual SubMenu& setIcon(const std::string& iconRes)=0;
 
     /**
      * Change the icon associated with this submenu's item in its parent menu.
@@ -79,7 +79,7 @@ public:
      * @param icon The new icon (as a Drawable) to be displayed.
      * @return This SubMenu so additional setters can be called.
      */
-    SubMenu& setIcon(Drawable* icon);
+    virtual SubMenu& setIcon(Drawable* icon)=0;
 
     /**
      * Gets the {@link MenuItem} that represents this submenu in the parent
@@ -87,7 +87,7 @@ public:
      *
      * @return The {@link MenuItem} that launches the submenu when invoked.
      */
-    MenuItem* getItem();
+    virtual MenuItem* getItem()=0;
 };
 }/*endof namespace*/
 #endif/*__SUBMENU_H__*/

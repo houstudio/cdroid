@@ -55,13 +55,13 @@ public:
 
     virtual MenuItem& setTitleCondensed(const std::string& title)=0;
 
-    virtual std::string getTitleCondensed();
+    virtual std::string getTitleCondensed()=0;
 
-    virtual MenuItem& setIcon(Drawable* icon);
+    virtual MenuItem& setIcon(Drawable* icon)=0;
 
-    virtual MenuItem& setIcon(const std::string& iconRes);
+    virtual MenuItem& setIcon(const std::string& iconRes)=0;
 
-    virtual Drawable* getIcon();
+    virtual Drawable* getIcon()=0;
 
     virtual MenuItem& setIconTintList(const ColorStateList* tint);
 
@@ -105,15 +105,15 @@ public:
 
     virtual MenuItem& setVisible(bool visible)=0;
 
-    virtual bool isVisible()=0;
+    virtual bool isVisible()const=0;
 
     virtual MenuItem& setEnabled(bool enabled)=0;
 
     virtual bool isEnabled()const =0;
 
-    virtual bool hasSubMenu()=0;
+    virtual bool hasSubMenu();
                                                
-    virtual SubMenu* getSubMenu()=0;
+    virtual SubMenu* getSubMenu();
 
     virtual MenuItem& setOnMenuItemClickListener(const OnMenuItemClickListener& menuItemClickListener)=0;
 

@@ -132,17 +132,20 @@ public:
     virtual void removeItem(int id)=0;
     virtual void removeGroup(int groupId)=0;
     virtual void clear()=0;
+    virtual void clearHeader()=0;
     virtual void setGroupCheckable(int group, bool checkable, bool exclusive)=0;
+    virtual void setGroupVisible(int group, bool visible)=0;
+    virtual void setOptionalIconsVisible(bool visible){};
     virtual void setGroupEnabled(int group, bool enabled)=0;
     virtual bool hasVisibleItems()const=0;
     virtual MenuItem*findItem(int id)const=0;
     virtual int size()const=0;
-    virtual MenuItem* getItem(int index)const;
+    virtual MenuItem* getItem(int index)=0;
     virtual bool performShortcut(int keyCode, KeyEvent& event, int flags)=0;
     virtual bool isShortcutKey(int keyCode,const KeyEvent& event)=0;
     virtual bool performIdentifierAction(int id, int flags)=0;
     virtual void setQwertyMode(bool isQwerty)=0;
-    virtual void setGroupDividerEnabled(bool groupDividerEnabled);
+    virtual void setGroupDividerEnabled(bool groupDividerEnabled)=0;
 };
 }/*endof namespace*/
 #endif
