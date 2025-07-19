@@ -99,8 +99,9 @@ list(APPEND CDROID_SOURCES
     view/windowinsets.cc
     view/actionprovider.cc
     view/menuitem.cc
+    view/menuitemimpl.cc
+    view/menubuilder.cc
     #view/menuinflater.cc
-    #view/menuitemimpl.cc
     #view/diffrentialmotionflingcontroller.cc
     view/hapticscrollfeedbackprovider.cc
     view/accessibility/accessibilityevent.cc

@@ -18,9 +18,9 @@
 #ifndef __MENUITEM_IMPL_H__
 #define __MENUITEM_IMPL_H__
 #include <view/menuitem.h>
+#include <view/menuview.h>
+#include <view/menubuilder.h>
 namespace cdroid{
-class MenuBuilder;
-class SubMenuBuilder;
 class MenuItemImpl:public MenuItem {
 private:
     static constexpr int SHOW_AS_ACTION_MASK = SHOW_AS_ACTION_NEVER |
@@ -41,19 +41,20 @@ private:
     std::string mTitle;
     std::string mTitleCondensed;
     Intent* mIntent;
-    char mShortcutNumericChar;
+    int mShortcutNumericChar;
     int mShortcutNumericModifiers = KeyEvent::META_CTRL_ON;
-    char mShortcutAlphabeticChar;
+    int mShortcutAlphabeticChar;
     int mShortcutAlphabeticModifiers = KeyEvent::META_CTRL_ON;
 
     Drawable* mIconDrawable;
-    int mIconResId = NO_ICON;
+    std::string mIconResId;
 
-    ColorStateList* mIconTintList = nullptr;
+    const ColorStateList* mIconTintList;
     int mIconTintMode;
     bool mHasIconTint = false;
     bool mHasIconTintMode = false;
     bool mNeedToApplyIconTint = false;
+    bool mIsActionViewExpanded = false;
 
     /** The menu to which this item belongs */
     MenuBuilder* mMenu;
@@ -70,7 +71,6 @@ private:
     View* mActionView;
     ActionProvider* mActionProvider;
     OnActionExpandListener mOnActionExpandListener;
-    bool mIsActionViewExpanded = false;
 
     ContextMenuInfo* mMenuInfo;
 
@@ -85,13 +85,13 @@ public:
 
     bool invoke();
 
-    bool isEnabled()override;
+    bool isEnabled()const override;
     MenuItem& setEnabled(bool enabled)override;
 
     int getGroupId() override;
     int getItemId() override;
     int getOrder() override;
-    int getOrdering() override;
+    int getOrdering();
 
     Intent* getIntent()override;
     MenuItem& setIntent(Intent* intent);
@@ -99,27 +99,27 @@ public:
     Runnable getCallback();
     MenuItem& setCallback(Runnable callback);
 
-    char getAlphabeticShortcut() override;
+    int getAlphabeticShortcut() override;
     int getAlphabeticModifiers() override;
 
-    MenuItem& setAlphabeticShortcut(char alphaChar) override;
-    MenuItem& setAlphabeticShortcut(char alphaChar, int alphaModifiers)override;
+    MenuItem& setAlphabeticShortcut(int alphaChar);
+    MenuItem& setAlphabeticShortcut(int alphaChar, int alphaModifiers);
 
-    char getNumericShortcut();
-    int getNumericModifiers();
+    int getNumericShortcut()const override;
+    int getNumericModifiers()const override;
 
-    MenuItem& setNumericShortcut(char numericChar) override;
-    MenuItem& setNumericShortcut(char numericChar, int numericModifiers) override;
-    MenuItem& setShortcut(char numericChar, char alphaChar) override;
-    MenuItem& setShortcut(char numericChar, char alphaChar, int numericModifiers,int alphaModifiers) override;
+    MenuItem& setNumericShortcut(int numericChar) override;
+    MenuItem& setNumericShortcut(int numericChar, int numericModifiers) override;
+    MenuItem& setShortcut(int numericChar, int alphaChar) override;
+    MenuItem& setShortcut(int numericChar, int alphaChar, int numericModifiers,int alphaModifiers) override;
 
-    char getShortcut();
+    int getShortcut();
     std::string getShortcutLabel();
     bool shouldShowShortcut();
 
     SubMenu* getSubMenu()override;
     bool hasSubMenu()override;
-    void setSubMenu(SubMenuBuilder* subMenu)override;
+    void setSubMenu(SubMenuBuilder* subMenu);
 
     std::string getTitle();
     std::string getTitleForItemView(MenuView::ItemView* itemView);
@@ -130,10 +130,10 @@ public:
 
     Drawable* getIcon();
     MenuItem& setIcon(Drawable* icon);
-    MenuItem& setIcon(int iconResId);
+    MenuItem& setIcon(const std::string& iconResId)override;
 
     MenuItem& setIconTintList(const ColorStateList* iconTintList);
-    ColorStateList* getIconTintList();
+    const ColorStateList* getIconTintList();
 
     MenuItem& setIconTintMode(int iconTintMode);
     int getIconTintMode();
@@ -141,14 +141,14 @@ public:
     bool isCheckable() const override;
     MenuItem& setCheckable(bool checkable)override;
 
-    void setExclusiveCheckable(bool exclusive) override;
-    bool isExclusiveCheckable() override;
+    void setExclusiveCheckable(bool exclusive);
+    bool isExclusiveCheckable()const;
 
     bool isChecked() const override;
     MenuItem& setChecked(bool checked)override;
-    void setCheckedInt(bool checked)override;
+    void setCheckedInt(bool checked);
 
-    bool isVisible()override;
+    bool isVisible()const override;
     bool setVisibleInt(bool shown);
     MenuItem& setVisible(bool shown)override;
 
@@ -175,7 +175,7 @@ public:
     void setShowAsAction(int actionEnum);
 
     MenuItem& setActionView(View* view);
-    MenuItem& setActionView(int resId);
+    MenuItem& setActionView(const std::string& resId);
 
     View* getActionView();
 

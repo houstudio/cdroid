@@ -39,8 +39,8 @@ public:
     using  OnMenuItemClickListener= std::function<bool(MenuItem&)>;
 
     struct OnActionExpandListener {
-        bool onMenuItemActionExpand(MenuItem& item);
-        bool onMenuItemActionCollapse(MenuItem& item);
+        std::function<bool(MenuItem&)> onMenuItemActionExpand;
+        std::function<bool(MenuItem&)> onMenuItemActionCollapse;
     };
     virtual ~MenuItem()=default;
     virtual int getItemId()=0;
@@ -55,17 +55,17 @@ public:
 
     virtual MenuItem& setTitleCondensed(const std::string& title)=0;
 
-    virtual std::string getTitleCondensed();
+    virtual std::string getTitleCondensed()=0;
 
-    virtual MenuItem& setIcon(Drawable* icon);
+    virtual MenuItem& setIcon(Drawable* icon)=0;
 
-    virtual MenuItem& setIcon(int iconRes);
+    virtual MenuItem& setIcon(const std::string& iconRes)=0;
 
-    virtual Drawable* getIcon();
+    virtual Drawable* getIcon()=0;
 
     virtual MenuItem& setIconTintList(const ColorStateList* tint);
 
-    virtual ColorStateList* getIconTintList();
+    virtual const ColorStateList* getIconTintList();
 
     virtual MenuItem& setIconTintMode(int tintMode);
 
@@ -73,47 +73,47 @@ public:
 
     virtual MenuItem& setIntent(Intent* intent);
 
-    Intent* getIntent();
+    virtual Intent* getIntent()=0;
 
-    virtual MenuItem& setShortcut(char numericChar, char alphaChar);
+    virtual MenuItem& setShortcut(int numericChar, int alphaChar);
 
-    virtual MenuItem& setShortcut(char numericChar, char alphaChar, int numericModifiers, int alphaModifiers);
+    virtual MenuItem& setShortcut(int numericChar, int alphaChar, int numericModifiers, int alphaModifiers);
 
-    virtual MenuItem& setNumericShortcut(char numericChar);
+    virtual MenuItem& setNumericShortcut(int numericChar);
 
-    virtual MenuItem& setNumericShortcut(char numericChar, int numericModifiers);
+    virtual MenuItem& setNumericShortcut(int numericChar, int numericModifiers);
 
-    virtual char getNumericShortcut();
+    virtual int getNumericShortcut()const;
 
-    virtual int getNumericModifiers();
+    virtual int getNumericModifiers()const;
 
-    virtual MenuItem& setAlphabeticShortcut(char alphaChar);
+    virtual MenuItem& setAlphabeticShortcut(int alphaChar);
 
-    virtual MenuItem& setAlphabeticShortcut(char alphaChar, int alphaModifiers);
+    virtual MenuItem& setAlphabeticShortcut(int alphaChar, int alphaModifiers);
 
-    virtual char getAlphabeticShortcut();
+    virtual int getAlphabeticShortcut();
 
     virtual int getAlphabeticModifiers();
 
     virtual MenuItem& setCheckable(bool checkable)=0;
 
-    virtual bool isCheckable()=0;
+    virtual bool isCheckable()const=0;
 
     virtual MenuItem& setChecked(bool checked)=0;
 
-    virtual bool isChecked()=0;
+    virtual bool isChecked()const=0;
 
     virtual MenuItem& setVisible(bool visible)=0;
 
-    virtual bool isVisible()=0;
+    virtual bool isVisible()const=0;
 
     virtual MenuItem& setEnabled(bool enabled)=0;
 
-    virtual bool isEnabled()=0;
+    virtual bool isEnabled()const =0;
 
-    virtual bool hasSubMenu()=0;
+    virtual bool hasSubMenu();
                                                
-    virtual SubMenu* getSubMenu()=0;
+    virtual SubMenu* getSubMenu();
 
     virtual MenuItem& setOnMenuItemClickListener(const OnMenuItemClickListener& menuItemClickListener)=0;
 

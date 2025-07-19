@@ -1105,7 +1105,7 @@ void Toolbar::setCollapsible(bool collapsible) {
     requestLayout();
 }
 
-/*void Toolbar::setMenuCallbacks(MenuPresenter.Callback pcb, MenuBuilder.Callback mcb){
+/*void Toolbar::setMenuCallbacks(MenuPresenter::Callback pcb, MenuBuilder::Callback mcb){
     mActionMenuPresenterCallback = pcb;
     mMenuBuilderCallback = mcb;
     if (mMenuView != null) {
@@ -1126,7 +1126,9 @@ void Toolbar::ensureContentInsets() {
 Context* Toolbar::getPopupContext() {
      return mPopupContext;
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////
+
 Toolbar::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
    :ActionBar::LayoutParams(c, attrs){
 }
@@ -1156,7 +1158,7 @@ Toolbar::LayoutParams::LayoutParams(const ActionBar::LayoutParams& source)
 
 Toolbar::LayoutParams::LayoutParams(const MarginLayoutParams& source)
   :ActionBar::LayoutParams(source){
-    // ActionBar.LayoutParams doesn't have a MarginLayoutParams constructor.
+    // ActionBar::LayoutParams doesn't have a MarginLayoutParams constructor.
     // Fake it here and copy over the relevant data.
     copyMarginsFrom(source);
 }

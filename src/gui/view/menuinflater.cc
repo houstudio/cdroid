@@ -109,7 +109,7 @@ void MenuInflater::parseMenu(XmlPullParser& parser, AttributeSet& attrs, Menu* m
  * Nothing is needed outside of LayoutLib. However, it should not be deleted because it
  * appears to do nothing.
  */
-void MenuInflater::registerMenu(MenuItem& item,AttributeSet& set) {
+void MenuInflater::registerMenu(MenuItem* item,const AttributeSet& set) {
 }
 
 /**
@@ -117,7 +117,7 @@ void MenuInflater::registerMenu(MenuItem& item,AttributeSet& set) {
  * Nothing is needed outside of LayoutLib. However, it should not be deleted because it
  * appears to do nothing.
  */
-void MenuInflater::registerMenu(SubMenu& subMenu,AttributeSet& set) {
+void MenuInflater::registerMenu(SubMenu* subMenu,const AttributeSet& set) {
 }
 
 Context* MenuInflater::getContext() {
@@ -218,9 +218,9 @@ void MenuInflater::MenuState::readItem(const AttributeSet& attrs) {
     const int category = attrs.getInt("menuCategory", groupCategory);
     const int order = attrs.getInt("orderInCategory", groupOrder);
     itemCategoryOrder = (category & Menu::CATEGORY_MASK) | (order & Menu::USER_MASK);
-    itemTitle = attrs.getText("title");
-    itemTitleCondensed = attrs.getText("titleCondensed");
-    itemIconResId = attrs.getResourceId("icon", 0);
+    itemTitle = attrs.getString("title");//getText
+    itemTitleCondensed = attrs.getString("titleCondensed");//getText
+    itemIconResId = attrs.getString("icon");
     if (attrs.hasAttribute("iconTintMode")) {
         mItemIconBlendMode = Drawable::parseBlendMode(attrs.getInt("iconTintMode", -1), mItemIconBlendMode);
     } else {
@@ -238,7 +238,7 @@ void MenuInflater::MenuState::readItem(const AttributeSet& attrs) {
     itemAlphabeticModifiers = attrs.getInt("alphabeticModifiers", KeyEvent::META_CTRL_ON);
     itemNumericShortcut = getShortcut(attrs.getString("numericShortcut"));
     itemNumericModifiers = attrs.getInt("numericModifiers", KeyEvent::META_CTRL_ON);
-    if (attrs.hasValue("checkable")) {
+    if (attrs.hasAttribute("checkable")) {
         // Item has attribute checkable, use it
         itemCheckable = attrs.getBoolean("checkable", false) ? 1 : 0;
     } else {
@@ -251,15 +251,13 @@ void MenuInflater::MenuState::readItem(const AttributeSet& attrs) {
     itemEnabled = attrs.getBoolean("enabled", groupEnabled);
     itemShowAsAction = attrs.getInt("showAsAction", -1);
     itemListenerMethodName = attrs.getString("onClick");
-    itemActionViewLayout = attrs.getResourceId("actionLayout", 0);
+    itemActionViewLayout = attrs.getString("actionLayout");
     itemActionViewClassName = attrs.getString("actionViewClass");
     itemActionProviderClassName = attrs.getString("actionProviderClass");
 
     const bool hasActionProvider = !itemActionProviderClassName.empty();
-    if (hasActionProvider && itemActionViewLayout == 0 && itemActionViewClassName.empty()) {
-        itemActionProvider = newInstance(itemActionProviderClassName,
-                    ACTION_PROVIDER_CONSTRUCTOR_SIGNATURE,
-                    mActionProviderConstructorArguments);
+    if (hasActionProvider && itemActionViewLayout.empty() && itemActionViewClassName.empty()) {
+        //itemActionProvider = newInstance(itemActionProviderClassName,ACTION_PROVIDER_CONSTRUCTOR_SIGNATURE,mActionProviderConstructorArguments);
     } else {
         if (hasActionProvider) {
             LOGW("Ignoring attribute 'actionProviderClass'. Action view already specified.");
@@ -267,8 +265,8 @@ void MenuInflater::MenuState::readItem(const AttributeSet& attrs) {
         itemActionProvider = nullptr;
     }
 
-    itemContentDescription = attrs.getText("contentDescription");
-    itemTooltipText = attrs.getText("tooltipText");
+    itemContentDescription = attrs.getString("contentDescription");//getText
+    itemTooltipText = attrs.getString("tooltipText");//getText
 
     itemAdded = false;
 }
@@ -308,8 +306,7 @@ void MenuInflater::MenuState::setItem(MenuItem* item) {
             throw new IllegalStateException("The android:onClick attribute cannot "
                     + "be used within a restricted context");
         }*/
-        item->setOnMenuItemClickListener(
-                new InflatedOnMenuItemClickListener(getRealOwner(), itemListenerMethodName));
+        item->setOnMenuItemClickListener(new InflatedOnMenuItemClickListener(getRealOwner(), itemListenerMethodName));
     }
 
     if (dynamic_cast<MenuItemImpl*>(item)) {
@@ -321,12 +318,11 @@ void MenuInflater::MenuState::setItem(MenuItem* item) {
 
     bool actionViewSpecified = false;
     if (!itemActionViewClassName.empty()) {
-        View* actionView = (View*) newInstance(itemActionViewClassName,
-                ACTION_VIEW_CONSTRUCTOR_SIGNATURE, mActionViewConstructorArguments);
+        View* actionView = (View*) newInstance(itemActionViewClassName,ACTION_VIEW_CONSTRUCTOR_SIGNATURE, mActionViewConstructorArguments);
         item->setActionView(actionView);
         actionViewSpecified = true;
     }
-    if (itemActionViewLayout > 0) {
+    if (!itemActionViewLayout.empty()) {
         if (!actionViewSpecified) {
             item->setActionView(itemActionViewLayout);
             actionViewSpecified = true;

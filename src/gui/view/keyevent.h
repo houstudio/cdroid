@@ -150,6 +150,9 @@ public:
     }
     inline int32_t getScanCode() const { return mScanCode; }
     inline int32_t getMetaState() const { return mMetaState; }
+    int getModifiers()const{
+        return normalizeMetaState(mMetaState) & META_MODIFIER_MASK;
+    }
     int getRepeatCount()const {return mRepeatCount;}
     inline nsecs_t getDownTime() const { return mDownTime; }
     bool hasNoModifiers()const;

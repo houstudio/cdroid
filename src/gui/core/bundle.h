@@ -2,6 +2,7 @@
 #define __BUNDLE_H__
 #include <core/basebundle.h>
 namespace cdroid{
-using Bundle = BaseBundle;
+class Bundle:public BaseBundle{
+};
 }
 #endif
