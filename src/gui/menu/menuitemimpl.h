@@ -17,9 +17,9 @@
  *********************************************************************************/
 #ifndef __MENUITEM_IMPL_H__
 #define __MENUITEM_IMPL_H__
-#include <view/menuitem.h>
-#include <view/menuview.h>
-#include <view/menubuilder.h>
+#include <menu/menuitem.h>
+#include <menu/menuview.h>
+#include <menu/menubuilder.h>
 namespace cdroid{
 class MenuItemImpl:public MenuItem {
 private:

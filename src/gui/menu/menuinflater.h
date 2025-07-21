@@ -1,6 +1,6 @@
 #ifndef __MENU_INFLATER_H__
 #define __MENU_INFLATER_H__
-#include <view/menu.h>
+#include <menu/menu.h>
 namespace cdroid{ 
 class Context;
 class XmlPullParser;
@@ -23,7 +23,7 @@ private:
     void registerMenu(MenuItem* item,const AttributeSet& set);
     void registerMenu(SubMenu* subMenu,const AttributeSet& set);
     Object* getRealOwner();
-    Object* findRealOwner(Object owner);
+    Object* findRealOwner(Object* owner);
 public:
     MenuInflater(Context* context);
     /**

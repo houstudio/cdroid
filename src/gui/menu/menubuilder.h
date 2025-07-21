@@ -1,6 +1,6 @@
 #ifndef __MENU_BUILDER_H__
 #define __MENU_BUILDER_H__
-#include <view/menu.h>
+#include <menu/menu.h>
 namespace cdroid{
 class Context;
 class Bundle;
@@ -142,7 +142,7 @@ public:
     void saveActionViewStates(Bundle& outStates);
     void restoreActionViewStates(Bundle& states);
 
-    virtual void setCallback(Callback cb);
+    virtual void setCallback(const Callback& cb);
 
     MenuItem* add(const std::string& title)override;
     MenuItem* add(int group, int id, int categoryOrder, const std::string& title)override;

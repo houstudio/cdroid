@@ -21,8 +21,8 @@
 #include <widget/imageview.h>
 #include <widget/imagebutton.h>
 #include <view/viewgroup.h>
-#include <view/menu.h>
-#include <view/menuitem.h>
+#include <menu/menu.h>
+#include <menu/menuitem.h>
 #include <widget/actionbar.h>
 #include <widget/rtlspacinghelper.h>
 

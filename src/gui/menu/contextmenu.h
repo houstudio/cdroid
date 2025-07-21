@@ -17,7 +17,7 @@
  *********************************************************************************/
 #ifndef __CONTEXT_MENU_H__
 #define __CONTEXT_MENU_H__
-#include <view/menu.h>
+#include <menu/menu.h>
 namespace cdroid{
 class ContextMenu:public Menu {
 public:

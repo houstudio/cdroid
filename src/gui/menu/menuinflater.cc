@@ -1,9 +1,10 @@
-#include <view/menuinflater.h>
+#include <drawables/drawable.h>
+#include <menu/menuinflater.h>
 #include <core/attributeset.h>
-#include <xmlpullparser.h>
-#include <view/menuitem.h>
-#include <view/submenu.h>
-#include <view/menuitemimpl.h>
+#include <core/xmlpullparser.h>
+#include <menu/menuitem.h>
+#include <menu/submenu.h>
+#include <menu/menuitemimpl.h>
 #include <view/actionprovider.h>
 namespace cdroid{ 
 MenuInflater::MenuInflater(Context* context) {
@@ -14,7 +15,7 @@ MenuInflater::MenuInflater(Context* context) {
 
 MenuInflater::MenuInflater(Context* context, Object realOwner) {
     mContext = context;
-    mRealOwner = realOwner;
+    //mRealOwner = realOwner;
     //mActionViewConstructorArguments = new Object[] {context};
     //mActionProviderConstructorArguments = mActionViewConstructorArguments;
 }
@@ -159,20 +160,20 @@ Context* MenuInflater::getContext() {
     }
 }*/
 
-Object MenuInflater::getRealOwner() {
-    if (mRealOwner == null) {
-        mRealOwner = findRealOwner(mContext);
+Object* MenuInflater::getRealOwner() {
+    if (mRealOwner == nullptr) {
+        mRealOwner = findRealOwner((Object*)mContext);
     }
-    return mRealOwner;
+    return (Object*)mRealOwner;
 }
 
-Object MenuInflater::findRealOwner(Object owner) {
-    if (owner instanceof Activity) {
+Object* MenuInflater::findRealOwner(Object* owner) {
+    /*if (owner instanceof Activity) {
         return owner;
     }
     if (owner instanceof ContextWrapper) {
         return findRealOwner(((ContextWrapper) owner).getBaseContext());
-    }
+    }*/
     return owner;
 }
 
@@ -222,7 +223,7 @@ void MenuInflater::MenuState::readItem(const AttributeSet& attrs) {
     itemTitleCondensed = attrs.getString("titleCondensed");//getText
     itemIconResId = attrs.getString("icon");
     if (attrs.hasAttribute("iconTintMode")) {
-        mItemIconBlendMode = Drawable::parseBlendMode(attrs.getInt("iconTintMode", -1), mItemIconBlendMode);
+        //mItemIconBlendMode = Drawable::parseBlendMode(attrs.getInt("iconTintMode", -1), mItemIconBlendMode);
     } else {
         // Reset to null so that it's not carried over to the next item
         mItemIconBlendMode = -1;
@@ -294,7 +295,7 @@ void MenuInflater::MenuState::setItem(MenuItem* item) {
     }
 
     if (mItemIconBlendMode != -1) {
-        item->setIconTintBlendMode(mItemIconBlendMode);
+        //item->setIconTintBlendMode(mItemIconBlendMode);
     }
 
     if (itemIconTintList != nullptr) {
@@ -306,7 +307,7 @@ void MenuInflater::MenuState::setItem(MenuItem* item) {
             throw new IllegalStateException("The android:onClick attribute cannot "
                     + "be used within a restricted context");
         }*/
-        item->setOnMenuItemClickListener(new InflatedOnMenuItemClickListener(getRealOwner(), itemListenerMethodName));
+        //item->setOnMenuItemClickListener(new InflatedOnMenuItemClickListener(getRealOwner(), itemListenerMethodName));
     }
 
     if (dynamic_cast<MenuItemImpl*>(item)) {
@@ -318,7 +319,7 @@ void MenuInflater::MenuState::setItem(MenuItem* item) {
 
     bool actionViewSpecified = false;
     if (!itemActionViewClassName.empty()) {
-        View* actionView = (View*) newInstance(itemActionViewClassName,ACTION_VIEW_CONSTRUCTOR_SIGNATURE, mActionViewConstructorArguments);
+        View* actionView = nullptr;//(View*) newInstance(itemActionViewClassName,ACTION_VIEW_CONSTRUCTOR_SIGNATURE, mActionViewConstructorArguments);
         item->setActionView(actionView);
         actionViewSpecified = true;
     }
@@ -357,4 +358,3 @@ bool MenuInflater::MenuState::hasAddedItem() const{
 }
 
 }/*endof namespace*/
-

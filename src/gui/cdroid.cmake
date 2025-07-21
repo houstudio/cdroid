@@ -98,10 +98,6 @@ list(APPEND CDROID_SOURCES
     view/scalegesturedetector.cc
     view/windowinsets.cc
     view/actionprovider.cc
-    view/menuitem.cc
-    view/menuitemimpl.cc
-    view/menubuilder.cc
-    #view/menuinflater.cc
     #view/diffrentialmotionflingcontroller.cc
     view/hapticscrollfeedbackprovider.cc
     view/accessibility/accessibilityevent.cc
@@ -110,7 +106,20 @@ list(APPEND CDROID_SOURCES
     view/accessibility/accessibilitynodeinfo.cc
     view/accessibility/accessibilitymanager.cc
 )
-
+list(APPEND CDROID_SOURCES
+    menu/basemenupresenter.cc
+    menu/iconmenuitemview.cc
+    menu/iconmenuview.cc
+    menu/listmenupresenter.cc
+    menu/menudialoghelper.cc
+    menu/menuitem.cc
+    menu/expandedmenuview.cc
+    menu/iconmenupresenter.cc
+    menu/listmenuitemview.cc
+    menu/menubuilder.cc
+    menu/menuinflater.cc
+    menu/menuitemimpl.cc
+)
 if(ENABLE_GESTURE)
     list(APPEND CDROID_SOURCES
         gesture/gesture.cc

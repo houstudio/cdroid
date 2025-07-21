@@ -771,15 +771,19 @@ int TextView::getLastBaselineToBottomHeight(){
     return getPaddingBottom() - mLayout->getFontExtents().descent;
 }
 
-void TextView::setTextAppearance(const std::string&appearance){
+void TextView::setTextAppearance(Context*context,const std::string&appearance){
     TextAppearanceAttributes attributes;
     if(appearance.empty()==false){
-        AttributeSet attrs = mContext->obtainStyledAttributes(appearance);
+        AttributeSet attrs = context->obtainStyledAttributes(appearance);
         if(attrs.getAttributeCount()){
             attributes.readTextAppearance(mContext,attrs);
             applyTextAppearance(&attributes);
         }
     }
+}
+
+void TextView::setTextAppearance(const std::string&appearance){
+    setTextAppearance(mContext,appearance);
 }
 
 void TextView::setTextSizeInternal(int unit, float size, bool shouldRequestLayout){
@@ -2745,7 +2749,7 @@ float TextView::getHorizontalFadingEdgeStrength(float position1, float position2
     return diff / horizontalFadingEdgeLength;
 }
 
-bool TextView::isMarqueeFadeEnabled(){
+bool TextView::isMarqueeFadeEnabled()const{
     return mEllipsize == Layout::ELLIPSIS_MARQUEE && mMarqueeFadeMode != MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS;
 }
 
@@ -2802,6 +2806,12 @@ void TextView::startStopMarquee(bool start){
             stopMarquee();
         }
     }
+}
+
+void TextView::onTextChanged(const std::wstring& text, int start, int lengthBefore, int lengthAfter){
+}
+
+void TextView::onSelectionChanged(int selStart, int selEnd){
 }
 
 bool TextView::setFrame(int l, int t, int w, int h) {

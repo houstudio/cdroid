@@ -17,7 +17,7 @@
  *********************************************************************************/
 #ifndef __SUBMENU_H__
 #define __SUBMENU_H__
-#include <view/menu.h>
+#include <menu/menu.h>
 namespace cdroid{
 class SubMenu:virtual public Menu {
 public:
