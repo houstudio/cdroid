@@ -1,6 +1,7 @@
 #ifndef __MENU_VIEW_H__
 #define __MENU_VIEW_H__
 namespace cdroid{
+class Drawable;
 class MenuBuilder;
 class MenuItemImpl;
 class MenuView {

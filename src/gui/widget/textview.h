@@ -150,10 +150,7 @@ private:
     void prepareDrawableForDisplay(Drawable*d);
 
     bool isAutoSizeEnabled()const;
-    bool isMarqueeFadeEnabled();
-    bool canMarquee();
-    void startMarquee();
-    void stopMarquee();
+    bool isMarqueeFadeEnabled()const;
     void startStopMarquee(bool start);
     float getHorizontalFadingEdgeStrength(float position1, float position2);
     void applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines);
@@ -191,6 +188,11 @@ protected:
     int getTopPaddingOffset()override;
     int getBottomPaddingOffset()override;
     int getRightPaddingOffset()override;
+    bool canMarquee();
+    void startMarquee();
+    void stopMarquee();
+    virtual void onTextChanged(const std::wstring& text, int start, int lengthBefore, int lengthAfter);
+    virtual void onSelectionChanged(int selStart, int selEnd);
     virtual void onDraw(Canvas& canvas) override;
     virtual int getHorizontalOffsetForDrawables()const;
     void onSizeChanged(int w,int h,int ow,int oh)override;
@@ -221,6 +223,7 @@ public:
     virtual void setText(const std::string&txt);
     const std::string getText()const;
     void  setTextAppearance(const std::string&);
+    void  setTextAppearance(Context*,const std::string&);
     View& setHint(const std::string&txt)override;
     bool bringPointIntoView(int offset);
     bool moveCursorToVisibleOffset();

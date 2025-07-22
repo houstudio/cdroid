@@ -1,10 +1,9 @@
 #ifndef __SUBMENU_BUILDER_H__
 #define __SUBMENU_BUILDER_H__
-#include <view/submenu.h>
-#include <view/menuitem.h>
-#include <view/menubuilder.h>
+#include <menu/submenu.h>
+#include <menu/menuitemimpl.h>
+#include <menu/menubuilder.h>
 namespace cdroid{
-class MenuItemImpl;
 class SubMenuBuilder:public MenuBuilder,public SubMenu {
 private:
     MenuBuilder* mParentMenu;
@@ -39,7 +38,7 @@ public:
         return mItem;
     }
 
-    void setCallback(Callback callback) override{
+    void setCallback(const Callback& callback) override{
         mParentMenu->setCallback(callback);
     }
 

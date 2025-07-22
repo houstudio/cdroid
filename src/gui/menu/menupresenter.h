@@ -1,8 +1,11 @@
 #ifndef __MENU_PRESENTER_H__
 #define __MENU_PRESENTER_H__
 #include <functional>
+#include <view/viewgroup.h>
 namespace cdroid{
-class ViewGroup;
+class MenuView;
+class MenuBuilder;
+class SubMenuBuilder;
 class MenuPresenter {
 public:
     /**
@@ -14,7 +17,7 @@ public:
          * @param menu
          * @param allMenusAreClosing
          */
-        std::function<void(MenuBuilder&/*menu*/,bool/*allMenusAreClosing*/)> onCloseMenu;;
+        std::function<void(MenuBuilder&/*menu*/,bool/*allMenusAreClosing*/)> onCloseMenu;
 
         /**
          * Called when a submenu opens. Useful for notifying the application
@@ -122,13 +125,13 @@ public:
      * method of the presenter sharing the same ID later.
      * @return The saved instance state
      */
-    virtual Parcelable onSaveInstanceState()=0;
+    virtual Parcelable* onSaveInstanceState()=0;
 
     /**
      * Supplies the previously saved instance state to be restored.
      * @param state The previously saved instance state
      */
-    virtual void onRestoreInstanceState(Parcelable state)=0;
+    virtual void onRestoreInstanceState(Parcelable& state)=0;
 };
 }/*endof namespace*/
 #endif/*__MENU_PRESENTER_H__*/

@@ -1,5 +1,5 @@
-#include <view/menuitem.h>
 #include <view/view.h>
+#include <menu/menuitem.h>
 namespace cdroid{
 
 MenuItem& MenuItem::setIconTintList(const ColorStateList* tint){
@@ -86,9 +86,11 @@ MenuItem& MenuItem::setCheckable(bool checkable){
 bool MenuItem::isCheckable()const{
     return false;
 }
+
 MenuItem& MenuItem::setChecked(bool checked){
     return *this;
 }
+
 bool MenuItem::isChecked()const{
     return false;
 }
@@ -96,6 +98,7 @@ bool MenuItem::isChecked()const{
 MenuItem& MenuItem::setVisible(bool visible){
     return *this;
 }
+
 bool MenuItem::isVisible()const{
     return true;
 }
@@ -103,6 +106,7 @@ bool MenuItem::isVisible()const{
 MenuItem& MenuItem::setEnabled(bool enabled){
     return *this;
 }
+
 bool MenuItem::isEnabled()const{
     return true;
 }
@@ -113,7 +117,7 @@ bool MenuItem::hasSubMenu(){
 
 SubMenu* MenuItem::getSubMenu(){
     return nullptr;
-};
+}
 
 MenuItem& MenuItem::setOnMenuItemClickListener(const OnMenuItemClickListener& menuItemClickListener){
     return *this;
@@ -133,9 +137,11 @@ MenuItem& MenuItem::setShowAsActionFlags(int actionEnum){
 MenuItem& MenuItem::setActionView(View* view){
     return *this;
 }
+
 MenuItem& MenuItem::setActionView(const std::string& resId){
     return *this;
 }
+
 View* MenuItem::getActionView(){
     return nullptr;
 }
@@ -150,9 +156,11 @@ ActionProvider* MenuItem::getActionProvider(){
 bool MenuItem::expandActionView(){
     return false;
 }
+
 bool MenuItem::collapseActionView(){
     return false;
 }
+
 bool MenuItem::isActionViewExpanded(){
     return false;
 }

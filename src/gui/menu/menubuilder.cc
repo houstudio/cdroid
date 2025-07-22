@@ -1,10 +1,10 @@
 #include <core/bundle.h>
 #include <core/context.h>
 #include <view/keyevent.h>
-#include <view/menuitemimpl.h>
-#include <view/menubuilder.h>
-#include <view/submenubuilder.h>
-#include <view/menupresenter.h>
+#include <menu/menuitemimpl.h>
+#include <menu/menubuilder.h>
+#include <menu/submenubuilder.h>
+#include <menu/menupresenter.h>
 #include <view/actionprovider.h>
 #include <view/viewconfiguration.h>
 namespace cdroid{
@@ -185,7 +185,7 @@ std::string MenuBuilder::getActionViewStatesKey() {
     return ACTION_VIEW_STATES_KEY;
 }
 
-void MenuBuilder::setCallback(Callback cb) {
+void MenuBuilder::setCallback(const Callback& cb) {
     mCallback = cb;
 }
 

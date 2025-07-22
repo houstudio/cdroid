@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <view/view.h>
-#include <view/menu.h>
-#include <view/submenu.h>
-#include <view/menuitemimpl.h>
-#include <view/submenubuilder.h>
+#include <menu/menu.h>
+#include <menu/submenu.h>
+#include <menu/menuitemimpl.h>
+#include <menu/submenubuilder.h>
 #include <view/actionprovider.h>
 #include <widget/linearlayout.h>
 

@@ -34,8 +34,8 @@
 #include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <view/abssavedstate.h>
-#include <view/menu.h>
-#include <view/contextmenu.h>
+#include <menu/menu.h>
+#include <menu/contextmenu.h>
 #include <view/gravity.h>
 #include <view/pointericon.h>
 #include <view/rendernode.h>
