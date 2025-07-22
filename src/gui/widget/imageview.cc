@@ -686,13 +686,12 @@ void ImageView::onVisibilityAggregated(bool isVisible) {
     }
 }
 
-View& ImageView::setVisibility(int visibility) {
+void ImageView::setVisibility(int visibility) {
     View::setVisibility(visibility);
     // Only do this for old apps pre-Nougat; new apps use onVisibilityAggregated
     if (mDrawable/* && sCompatDrawableVisibilityDispatch*/) {
         mDrawable->setVisible(visibility == VISIBLE, false);
     }
-    return *this;
 }
 
 void ImageView::onAttachedToWindow() {

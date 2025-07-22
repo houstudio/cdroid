@@ -142,7 +142,7 @@ void RadioGroup::onFinishInflate() {
     }
 }
 
-View& RadioGroup::addView(View* child, int index,ViewGroup::LayoutParams* params){
+void RadioGroup::addView(View* child, int index,ViewGroup::LayoutParams* params){
     if (dynamic_cast<RadioButton*>(child)) {
         RadioButton* button = (RadioButton*) child;
         if (button->isChecked()) {
@@ -154,7 +154,7 @@ View& RadioGroup::addView(View* child, int index,ViewGroup::LayoutParams* params
             setCheckedId(button->getId());
         }
     }
-    return LinearLayout::addView(child, index, params);
+    LinearLayout::addView(child, index, params);
 }
 
 //////////////////////////////////////////////////////////////////////////////////

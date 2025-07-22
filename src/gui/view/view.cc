@@ -2075,9 +2075,8 @@ int View::getScrollBarSize()const{
                 mScrollCache->scrollBarSize;
 }
 
-View& View::setScrollBarSize(int scrollBarSize){
+void View::setScrollBarSize(int scrollBarSize){
     getScrollCache()->scrollBarSize = scrollBarSize;
-    return *this;
 }
 
 void View::setScrollBarStyle(int style) {
@@ -2171,7 +2170,7 @@ bool View::isHorizontalScrollBarEnabled()const{
     return (mViewFlags & SCROLLBARS_HORIZONTAL) == SCROLLBARS_HORIZONTAL;
 }
 
-View& View::setHorizontalScrollBarEnabled(bool horizontalScrollBarEnabled){
+void View::setHorizontalScrollBarEnabled(bool horizontalScrollBarEnabled){
     getScrollCache();
     if (isHorizontalScrollBarEnabled() != horizontalScrollBarEnabled) {
         mViewFlags ^= SCROLLBARS_HORIZONTAL;
@@ -2179,7 +2178,6 @@ View& View::setHorizontalScrollBarEnabled(bool horizontalScrollBarEnabled){
         resolvePadding();
         awakenScrollBars(0,false);
     }
-    return *this;
 }
 
 bool View::isScrollContainer()const{
@@ -2226,7 +2224,7 @@ bool View::isVerticalScrollBarEnabled()const{
     return (mViewFlags & SCROLLBARS_VERTICAL) == SCROLLBARS_VERTICAL;
 }
 
-View& View::setVerticalScrollBarEnabled(bool verticalScrollBarEnabled){
+void View::setVerticalScrollBarEnabled(bool verticalScrollBarEnabled){
     getScrollCache();
     if (isVerticalScrollBarEnabled() != verticalScrollBarEnabled) {
         mViewFlags ^= SCROLLBARS_VERTICAL;
@@ -2234,7 +2232,6 @@ View& View::setVerticalScrollBarEnabled(bool verticalScrollBarEnabled){
         resolvePadding();
         awakenScrollBars(0,false);
     }
-    return *this;
 }
 
 
@@ -2394,13 +2391,12 @@ int View::getVerticalScrollbarPosition()const{
     return mVerticalScrollbarPosition;
 }
 
-View& View::setVerticalScrollbarPosition(int position){
+void View::setVerticalScrollbarPosition(int position){
     if (mVerticalScrollbarPosition != position) {
         mVerticalScrollbarPosition = position;
         computeOpaqueFlags();
         resolvePadding();
     }
-    return *this;
 }
 
 int View::computeHorizontalScrollRange(){
@@ -3506,12 +3502,11 @@ void View::getFocusedRect(Rect&r){
     r.set(mLeft,mTop,mRight-mLeft,mBottom-mTop);
 }
 
-View& View::setId(int id){
+void View::setId(int id){
     mID = id;
     if((mID==View::NO_ID) && (mLabelForId!=View::NO_ID)){
         mID = generateViewId();
     }
-    return *this;
 }
 
 int View::getId() const{
@@ -3522,7 +3517,7 @@ int View::getLabelFor()const{
     return mLabelForId;
 }
 
-View& View::setLabelFor(int id) {
+void View::setLabelFor(int id) {
     if (mLabelForId != id) {
         mLabelForId = id;
         if ((mLabelForId != View::NO_ID) && (mID == View::NO_ID)) {
@@ -3530,27 +3525,24 @@ View& View::setLabelFor(int id) {
         }
         notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
     }
-    return *this;
 }
 
-View& View::setAccessibilityTraversalBefore(int beforeId){
+void View::setAccessibilityTraversalBefore(int beforeId){
     if (mAccessibilityTraversalBeforeId != beforeId) {
         mAccessibilityTraversalBeforeId = beforeId;
         notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
     }
-    return *this;
 }
 
 int View::getAccessibilityTraversalBefore()const{
     return mAccessibilityTraversalBeforeId;
 }
 
-View& View::setAccessibilityTraversalAfter(int afterId){
+void View::setAccessibilityTraversalAfter(int afterId){
     if (mAccessibilityTraversalAfterId != afterId) {
         mAccessibilityTraversalAfterId = afterId;
         notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
     }
-    return *this;
 }
 
 int View::getAccessibilityTraversalAfter()const{
@@ -3581,54 +3573,48 @@ int View::getNextFocusLeftId()const{
     return mNextFocusLeftId;
 }
 
-View& View::setNextFocusLeftId(int id){
+void View::setNextFocusLeftId(int id){
     mNextFocusLeftId = id;
-    return *this;
 }
 
 int View::getNextFocusRightId()const{
    return mNextFocusRightId;
 }
 
-View& View::setNextFocusRightId(int id){
+void View::setNextFocusRightId(int id){
     mNextFocusRightId = id;
-    return *this;
 }
 
 int View::getNextFocusUpId()const{
     return mNextFocusUpId;
 }
 
-View& View::setNextFocusUpId(int id){
+void View::setNextFocusUpId(int id){
     mNextFocusUpId = id;
-    return *this;
 }
 
 int View::getNextFocusDownId()const{
     return mNextFocusDownId;
 }
 
-View& View::setNextFocusDownId(int id){
+void View::setNextFocusDownId(int id){
     mNextFocusDownId = id;
-    return *this;
 }
 
 int View::getNextFocusForwardId()const{
     return mNextFocusForwardId;
 }
 
-View& View::setNextFocusForwardId(int id){
+void View::setNextFocusForwardId(int id){
     mNextFocusForwardId = id;
-    return *this;
 }
 
 int View::getNextClusterForwardId()const {
     return mNextClusterForwardId;
 }
 
-View& View::setNextClusterForwardId(int nextClusterForwardId){
+void View::setNextClusterForwardId(int nextClusterForwardId){
     mNextClusterForwardId = nextClusterForwardId;
-    return *this;
 }
 
 PointerIcon* View::onResolvePointerIcon(MotionEvent& event, int pointerIndex) {
@@ -3640,13 +3626,12 @@ PointerIcon* View::onResolvePointerIcon(MotionEvent& event, int pointerIndex) {
     return mPointerIcon;
 }
 
-View& View::setPointerIcon(PointerIcon* pointerIcon) {
+void View::setPointerIcon(PointerIcon* pointerIcon) {
     mPointerIcon = pointerIcon;
     if (mAttachInfo == nullptr || mAttachInfo->mHandlingPointerEvent) {
-        return *this;
+        return;
     }
     //mAttachInfo->mSession.updatePointerIcon(mAttachInfo.mWindow);
-    return *this;
 }
 
 PointerIcon* View::getPointerIcon() {
@@ -3728,10 +3713,9 @@ void View::setKeyedTag(int key,void* tag){
     mKeyedTags->put(key,tag);
 }
 
-View& View::setHint(const std::string&hint){
+void View::setHint(const std::string&hint){
     mHint = hint;
     invalidate(true);
-    return *this;
 }
 
 const std::string&View::getHint()const{
@@ -4441,7 +4425,7 @@ bool View::willNotDraw()const{
     return (mViewFlags & DRAW_MASK) == WILL_NOT_DRAW;
 }
 
-View& View::setLayoutDirection(int layoutDirection){
+void View::setLayoutDirection(int layoutDirection){
     if (getRawLayoutDirection() != layoutDirection) {
         // Reset the current layout direction and the resolved one
         mPrivateFlags2 &= ~PFLAG2_LAYOUT_DIRECTION_MASK;
@@ -4454,7 +4438,6 @@ View& View::setLayoutDirection(int layoutDirection){
         requestLayout();
         invalidate(true);
     }
-    return *this;
 }
 
 int View::getLayoutDirection()const{
@@ -4684,14 +4667,14 @@ Drawable*View::getBackground()const{
     return mBackground;
 }
 
-View& View::setBackgroundResource(const std::string&resid){
+void View::setBackgroundResource(const std::string&resid){
     Drawable*d=getContext()->getDrawable(resid);
     return setBackground(d);
 }
 
-View& View::setBackground(Drawable*background){
+void View::setBackground(Drawable*background){
     computeOpaqueFlags();
-    if(background==mBackground) return*this;
+    if(background==mBackground)return;
 
     bool bRequestLayout = false;
     if(mBackground!=nullptr){
@@ -4760,7 +4743,6 @@ View& View::setBackground(Drawable*background){
     mBackgroundSizeChanged = true;
     invalidate(true);
     invalidateOutline();
-    return *this;
 }
 
 void View::applyBackgroundTint() {
@@ -4781,15 +4763,14 @@ void View::applyBackgroundTint() {
     }
 }
 
-View& View::setBackgroundColor(int color){
+void View::setBackgroundColor(int color){
     if(dynamic_cast<ColorDrawable*>(mBackground)){
         ((ColorDrawable*)mBackground->mutate())->setColor(color);
     }else
         setBackground(new ColorDrawable(color));
-    return *this;
 }
 
-View& View::setBackgroundTintList(const ColorStateList* tint){
+void View::setBackgroundTintList(const ColorStateList* tint){
     if (mBackgroundTint == nullptr) {
         mBackgroundTint = new TintInfo();
     }
@@ -4798,14 +4779,13 @@ View& View::setBackgroundTintList(const ColorStateList* tint){
         mBackgroundTint->mHasTintList = (tint!=nullptr);
         applyBackgroundTint();
     }
-    return *this;
 }
 
 const ColorStateList* View::getBackgroundTintList()const{
     return mBackgroundTint != nullptr ? mBackgroundTint->mTintList : nullptr;
 }
 
-View& View::setBackgroundTintMode(int tintMode) {
+void View::setBackgroundTintMode(int tintMode) {
     if (mBackgroundTint == nullptr) {
         mBackgroundTint = new TintInfo();
     }
@@ -4813,7 +4793,6 @@ View& View::setBackgroundTintMode(int tintMode) {
     mBackgroundTint->mHasTintMode = true;
 
     applyBackgroundTint();
-    return *this;
 }
 
 int View::getBackgroundTintMode() const{
@@ -4873,18 +4852,18 @@ Drawable* View::getForeground()const{
     return mForegroundInfo != nullptr ? mForegroundInfo->mDrawable : nullptr;
 }
 
-View& View::setForeground(Drawable* foreground){
+void View::setForeground(Drawable* foreground){
     if (mForegroundInfo == nullptr) {
         if (foreground == nullptr) {
             // Nothing to do.
-            return *this;
+            return;
         }
         mForegroundInfo = new ForegroundInfo();
     }
 
     if (foreground == mForegroundInfo->mDrawable) {
         // Nothing to do
-        return *this;
+        return;
     }
 
     if (mForegroundInfo->mDrawable != nullptr) {
@@ -4916,7 +4895,6 @@ View& View::setForeground(Drawable* foreground){
     }
     requestLayout();
     invalidate(true);
-    return *this;
 }
 
 void View::notifyEnterOrExitForAutoFillIfNeeded(bool enter) {
@@ -4942,12 +4920,11 @@ void View::notifyEnterOrExitForAutoFillIfNeeded(bool enter) {
     }
 }
 
-View& View::setAccessibilityPaneTitle(const std::string& accessibilityPaneTitle) {
+void View::setAccessibilityPaneTitle(const std::string& accessibilityPaneTitle) {
     if (accessibilityPaneTitle!=mAccessibilityPaneTitle) {
         mAccessibilityPaneTitle = accessibilityPaneTitle;
         notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_PANE_TITLE);
     }
-    return *this;
 }
 
 /**
@@ -4977,7 +4954,7 @@ int View::getForegroundGravity()const{
     return mForegroundInfo ? mForegroundInfo->mGravity : Gravity::START | Gravity::TOP;
 }
 
-View& View::setForegroundGravity(int gravity){
+void View::setForegroundGravity(int gravity){
     if (mForegroundInfo == nullptr) {
         mForegroundInfo = new ForegroundInfo();
     }
@@ -4994,10 +4971,9 @@ View& View::setForegroundGravity(int gravity){
         mForegroundInfo->mGravity = gravity;
         requestLayout();
     }
-    return *this;
 }
 
-View& View::setForegroundTintList(const ColorStateList* tint){
+void View::setForegroundTintList(const ColorStateList* tint){
     if (mForegroundInfo == nullptr) {
         mForegroundInfo = new ForegroundInfo();
     }
@@ -5009,10 +4985,9 @@ View& View::setForegroundTintList(const ColorStateList* tint){
         mForegroundInfo->mTintInfo->mHasTintList = (tint!=nullptr);
         applyForegroundTint();
     }
-    return *this;
 }
 
-View& View::setForegroundTintMode(int tintMode){
+void View::setForegroundTintMode(int tintMode){
     if (mForegroundInfo == nullptr) {
         mForegroundInfo = new ForegroundInfo();
     }
@@ -5023,10 +4998,9 @@ View& View::setForegroundTintMode(int tintMode){
     mForegroundInfo->mTintInfo->mHasTintMode = true;
 
     applyForegroundTint();
-    return *this;
 }
 
-View& View::setForegroundTintBlendMode(int blendMode) {
+void View::setForegroundTintBlendMode(int blendMode) {
     if (mForegroundInfo == nullptr) {
         mForegroundInfo = new ForegroundInfo();
     }
@@ -5037,7 +5011,6 @@ View& View::setForegroundTintBlendMode(int blendMode) {
     mForegroundInfo->mTintInfo->mHasTintMode = true;
 
     applyForegroundTint();
-    return *this;
 }
 
 const ColorStateList* View::getForegroundTintList(){
@@ -5113,13 +5086,13 @@ bool View::canTakeFocus()const{
             && (/*sCanFocusZeroSized ||*/ !isLayoutValid() || hasSize());
 }
 
-View& View::setFlags(int flags,int mask) {
+void View::setFlags(int flags,int mask) {
     const bool accessibilityEnabled = AccessibilityManager::getInstance(mContext).isEnabled();
     const bool oldIncludeForAccessibility = accessibilityEnabled && includeForAccessibility();
     int old = mViewFlags;
     mViewFlags = (mViewFlags & ~mask) | (flags & mask);
     int changed = mViewFlags ^ old;
-    if(changed==0)return *this;
+    if(changed==0)return;
 
     int privateFlags = mPrivateFlags;
     bool shouldNotifyFocusableAvailable = false;
@@ -5311,13 +5284,11 @@ View& View::setFlags(int flags,int mask) {
             notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
         }
     }
-    return *this;
 }
 
-View& View::clearFlag(int flag) {
+void View::clearFlag(int flag) {
     mViewFlags&=(~flag);
     invalidate(true);
-    return *this;
 }
 
 bool View::hasFlag(int flag) const {
@@ -5439,9 +5410,8 @@ void View::setFocusedByDefault(bool isFocusedByDefault){
     }
 }
 
-View& View::setVisibility(int visibility) {
+void View::setVisibility(int visibility) {
     setFlags(visibility, VISIBILITY_MASK);
-    return *this;
 }
 
 int View::getVisibility() const {
@@ -5598,15 +5568,14 @@ void View::makeOptionalFitsSystemWindows(){
     setFlags(OPTIONAL_FITS_SYSTEM_WINDOWS,OPTIONAL_FITS_SYSTEM_WINDOWS);
 }
 
-View& View::setEnabled(bool enable) {
-    if( enable == isEnabled() ) return *this;
+void View::setEnabled(bool enable) {
+    if( enable == isEnabled() ) return;
     setFlags(enable?ENABLED:DISABLED,ENABLED_MASK);
     refreshDrawableState();
     invalidate(true);
     if (!enable) {
         cancelPendingInputEvents();
     }
-    return *this;
 }
 
 bool View::isEnabled() const {
@@ -6405,7 +6374,7 @@ bool View::requestRectangleOnScreen(Rect& rectangle, bool immediate){
     return scrolled;
 }
 
-View& View::clearAccessibilityFocus(){
+void View::clearAccessibilityFocus(){
     clearAccessibilityFocusNoCallbacks(0);
 
     // Clear the global reference of accessibility focus if this view or
@@ -6419,7 +6388,6 @@ View& View::clearAccessibilityFocus(){
             viewRootImpl->setAccessibilityFocus(nullptr, nullptr);
         }
     }
-    return *this;
 }
 
 void View::sendAccessibilityHoverEvent(int eventType){
@@ -6447,7 +6415,7 @@ void View::sendAccessibilityHoverEvent(int eventType){
     }
 }
 
-View& View::clearAccessibilityFocusNoCallbacks(int action){
+void View::clearAccessibilityFocusNoCallbacks(int action){
     if ((mPrivateFlags2 & PFLAG2_ACCESSIBILITY_FOCUSED) != 0) {
         mPrivateFlags2 &= ~PFLAG2_ACCESSIBILITY_FOCUSED;
         invalidate();
@@ -6462,7 +6430,6 @@ View& View::clearAccessibilityFocusNoCallbacks(int action){
             }
         }
     }
-    return *this;
 }
 
 void View::sendAccessibilityEvent(int eventType){
@@ -7206,9 +7173,8 @@ bool View::isScreenReaderFocusable() const{
     return (mPrivateFlags3 & PFLAG3_SCREEN_READER_FOCUSABLE) != 0;
 }
 
-View& View::setScreenReaderFocusable(bool screenReaderFocusable) {
+void View::setScreenReaderFocusable(bool screenReaderFocusable) {
     updatePflags3AndNotifyA11yIfChanged(PFLAG3_SCREEN_READER_FOCUSABLE, screenReaderFocusable);
-    return *this;
 }
 
 void View::updatePflags3AndNotifyA11yIfChanged(int mask, bool newValue) {
@@ -7229,16 +7195,15 @@ bool View::isAccessibilityHeading() const{
     return (mPrivateFlags3 & PFLAG3_ACCESSIBILITY_HEADING) != 0;
 }
 
-View& View::setAccessibilityHeading(bool isHeading) {
+void View::setAccessibilityHeading(bool isHeading) {
     updatePflags3AndNotifyA11yIfChanged(PFLAG3_ACCESSIBILITY_HEADING, isHeading);
-    return *this;
 }
 
 bool View::isSaveFromParentEnable()const{
     return (mViewFlags & PARENT_SAVE_DISABLED_MASK) != PARENT_SAVE_DISABLED;
 }
 
-View& View::setSaveFromParentEnabled(bool _Enabled){
+void View::setSaveFromParentEnabled(bool _Enabled){
     return setFlags(_Enabled ? 0 : PARENT_SAVE_DISABLED, PARENT_SAVE_DISABLED_MASK);
 }
 
@@ -7559,9 +7524,8 @@ void View::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
                 getDefaultSize(getSuggestedMinimumHeight(), heightMeasureSpec));
 }
 
-View& View::setLeftTopRightBottom(int left, int top, int right, int bottom) {
+void View::setLeftTopRightBottom(int left, int top, int right, int bottom) {
     setFrame(left, top, right-left, bottom-top);
-    return *this;
 }
 
 void View::sizeChange(int newWidth,int newHeight,int oldWidth,int oldHeight){
@@ -7814,11 +7778,10 @@ bool View::getFilterTouchesWhenObscured() const{
     return (mViewFlags & FILTER_TOUCHES_WHEN_OBSCURED) != 0;
 }
 
-View& View::setFilterTouchesWhenObscured(bool enabled) {
+void View::setFilterTouchesWhenObscured(bool enabled) {
     setFlags(enabled ? FILTER_TOUCHES_WHEN_OBSCURED : 0,
             FILTER_TOUCHES_WHEN_OBSCURED);
     //calculateAccessibilityDataSensitive();
-    return *this;
 }
 
 bool View::onFilterTouchEventForSecurity(MotionEvent& event){

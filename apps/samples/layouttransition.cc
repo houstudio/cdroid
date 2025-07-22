@@ -15,17 +15,24 @@ int main(int argc,const char*argv[]){
     ll->setOrientation(LinearLayout::VERTICAL);
     w->addView(ll);
     Button *btnAdd= new Button("Add",100,40);
-    ll->addView(btnAdd).setBackgroundColor(0xFF112233).setPadding(0,10,0,10);
+    ll->addView(btnAdd);
+    btnAdd->setBackgroundColor(0xFF112233);
+    btnAdd->setPadding(0,10,0,10);
     static int cnt=1;
     btnAdd->setOnClickListener([&](View&){
-	Button*btn=new Button(std::string("Button")+std::to_string(cnt++),100,40);
-	btn->setId(10000+cnt).setHasTransientState(true);
-	ll->addView(btn).setBackgroundColor(0xFF182800|(cnt*8)|(cnt*7<<8)).setPadding(0,10,0,10);
+        Button*btn=new Button(std::string("Button")+std::to_string(cnt++),100,40);
+        btn->setId(10000+cnt);
+        btn->setHasTransientState(true);
+        ll->addView(btn);
+        btn->setBackgroundColor(0xFF182800|(cnt*8)|(cnt*7<<8));
+        btn->setPadding(0,10,0,10);
     });
     Button* btnDel= new Button("Del",100,40);
-    ll->addView(btnDel).setBackgroundColor(0xFF332211).setPadding(0,10,0,10);
+    ll->addView(btnDel);
+    btnDel->setBackgroundColor(0xFF332211);
+    btnDel->setPadding(0,10,0,10);
     btnDel->setOnClickListener([&](View&){
-	ll->removeViewAt(2);
+	    ll->removeViewAt(2);
     });
     ll->setLayoutTransition(new LayoutTransition());
     return app.exec();

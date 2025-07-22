@@ -146,7 +146,7 @@ public:
     int getDropDownHorizontalOffset();
     void setDropDownWidth(int pixels);
     int getDropDownWidth()const;
-    View& setEnabled(bool enabled)override;
+    void setEnabled(bool enabled)override;
     void setGravity(int gravity);
     int getGravity()const;
     void setAdapter(Adapter*adapter)override;

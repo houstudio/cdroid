@@ -147,7 +147,7 @@ int Spinner::getDropDownWidth()const{
     return mDropDownWidth;
 }
 
-View& Spinner::setEnabled(bool enabled) {
+void Spinner::setEnabled(bool enabled) {
     AbsSpinner::setEnabled(enabled);
     if (mDisableChildrenWhenDisabled) {
         int count = getChildCount();
@@ -155,7 +155,6 @@ View& Spinner::setEnabled(bool enabled) {
             getChildAt(i)->setEnabled(enabled);
         }
     }
-    return *this;
 }
 
 void Spinner::setGravity(int gravity) {

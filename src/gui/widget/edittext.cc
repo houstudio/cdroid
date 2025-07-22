@@ -139,10 +139,9 @@ void EditText::setEditMode(EDITMODE mode){
     mEditMode=mode;
 }
 
-View& EditText::setHint(const std::string&txt){
+void EditText::setHint(const std::string&txt){
     View::setHint(txt);
     if(getText().empty())invalidate(true);
-    return *this;
 }
 
 void EditText::onFocusChanged(bool focus,int direction,Rect*prevfocusrect){

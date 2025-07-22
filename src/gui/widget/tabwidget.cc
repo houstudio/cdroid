@@ -233,7 +233,7 @@ void TabWidget::focusCurrentTab(int index) {
     }
 }
 
-View& TabWidget::setEnabled(bool enabled){
+void TabWidget::setEnabled(bool enabled){
     LinearLayout::setEnabled(enabled);
 
     int count = getTabCount();
@@ -241,7 +241,6 @@ View& TabWidget::setEnabled(bool enabled){
         View* child = getChildTabViewAt(i);
         child->setEnabled(enabled);
     }
-    return *this;
 }
 
 void TabWidget::onClickChild(View&v,int idx){
@@ -250,7 +249,7 @@ void TabWidget::onClickChild(View&v,int idx){
     LOGD("clicked tab %p:%d",&v,idx);
 }
 
-View& TabWidget::addView(View* child) {
+void TabWidget::addView(View* child) {
     if (child->getLayoutParams() == nullptr) {
         LinearLayout::LayoutParams* lp = new LayoutParams(0, LayoutParams::MATCH_PARENT, 1.0f);
         lp->setMargins(0, 0, 0, 0);
@@ -270,7 +269,6 @@ View& TabWidget::addView(View* child) {
     // TODO: detect this via geometry with a tabwidget listener rather
     // than potentially interfere with the view's listener
     child->setOnClickListener(std::bind(&TabWidget::onClickChild,this,std::placeholders::_1,getTabCount() - 1));
-    return *this;
 }
 
 void TabWidget::removeAllViews() {

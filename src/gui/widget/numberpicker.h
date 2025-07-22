@@ -218,7 +218,7 @@ public:
     bool dispatchHoverEvent(MotionEvent& event)override;
     bool dispatchKeyEvent(KeyEvent& event)override;
     void computeScroll()override;
-    View& setEnabled(bool enabled)override;
+    void setEnabled(bool enabled)override;
     void scrollBy(int x, int y)override;
     void setOnClickListener(const OnClickListener& onClickListener)override;
     void setOnValueChangedListener(const OnValueChangeListener& onValueChangedListener);

@@ -99,7 +99,7 @@ void ViewAnimator::showOnly(int childIndex) {
     showOnly(childIndex, animate);
 }
 
-View& ViewAnimator::addView(View* child, int index, ViewGroup::LayoutParams* params) {
+void ViewAnimator::addView(View* child, int index, ViewGroup::LayoutParams* params) {
     FrameLayout::addView(child, index, params);
     if (getChildCount() == 1) {
         child->setVisibility(View::VISIBLE);
@@ -110,7 +110,6 @@ View& ViewAnimator::addView(View* child, int index, ViewGroup::LayoutParams* par
         // Added item above current one, increment the index of the displayed child
         setDisplayedChild(mWhichChild + 1);
     }
-    return *child;
 }
 
 void ViewAnimator::removeAllViews() {

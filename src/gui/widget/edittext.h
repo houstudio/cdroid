@@ -39,7 +39,7 @@ public:
     void setLabelColor(int color);
     void replace(size_t start,size_t len,const std::string&txt);
     void setPattern(const std::string&pattern);
-    View& setHint(const std::string&txt)override;
+    void setHint(const std::string&txt)override;
     int getPasswordChar()const;
     void setPasswordChar(int ch);
     void setInputType(INPUTTYPE tp);

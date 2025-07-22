@@ -8,7 +8,8 @@ int main(int argc,const char*argv[]){
    Window*w=new Window(0,0,-1,-1);
    w->setBackgroundColor(0xFFFF0000);
    Button*btn=new Button("scan",200,200);
-   w->addView(btn).setBackgroundColor(0xFF223344);
+   w->addView(btn);
+   btn->setBackgroundColor(0xFF223344);
    cdroid::WpaClientSocket wpa;
    wpa.bind("/tmp/wifi/run/wpa_supplicant/wlan0");
    wpa.start();

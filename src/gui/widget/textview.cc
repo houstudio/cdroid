@@ -846,11 +846,10 @@ const std::string TextView::getText()const{
     return mLayout->getString();
 }
 
-View& TextView::setHint(const std::string& hint){
+void TextView::setHint(const std::string& hint){
     View::setHint(hint);
     mHintLayout->setText(hint);
     checkForRelayout();
-    return *this;
 }
 
 std::wstring& TextView::getEditable(){

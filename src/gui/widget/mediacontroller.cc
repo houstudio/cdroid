@@ -359,7 +359,7 @@ void MediaController::doPauseResume() {
     updatePausePlay();
 }
 
-View& MediaController::setEnabled(bool enabled) {
+void MediaController::setEnabled(bool enabled) {
     if (mPauseButton) mPauseButton->setEnabled(enabled);
     if (mFfwdButton) mFfwdButton->setEnabled(enabled);
     if (mRewButton) mRewButton->setEnabled(enabled);
@@ -367,7 +367,7 @@ View& MediaController::setEnabled(bool enabled) {
     if (mPrevButton) mPrevButton->setEnabled(enabled && mPrevListener != nullptr);
     if (mProgress) mProgress->setEnabled(enabled);
     disableUnsupportedButtons();
-    return FrameLayout::setEnabled(enabled);
+    FrameLayout::setEnabled(enabled);
 }
 
 void MediaController::installPrevNextListeners() {

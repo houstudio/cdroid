@@ -7,7 +7,7 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,1280,720);
     GridLayout*gl=new GridLayout(800,640);
-    w->addView(gl).setId(100);
+    w->addView(gl);
     gl->setRowCount(3);
     gl->setColumnCount(3);
     for(int i=0;i<8;i++){

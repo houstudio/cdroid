@@ -17,7 +17,8 @@ TEST_F(FOCUS,NOFOCUS){
     Window*w=new Window(0,0,800,600);
     for(int i=0;i<6;i++){
         TextView*tv=new TextView("TextView_"+std::to_string(i),200,50);
-        w->addView(tv).layout(10,i*55,200,50);
+        w->addView(tv);
+        tv->layout(10,i*55,200,50);
     }
     std::vector<View*>focus;
     w->addFocusables(focus,(int)View::FOCUS_LEFT,(int)View::FOCUSABLES_ALL);
@@ -34,7 +35,7 @@ TEST_F(FOCUS,ALLFOCUS){
     Window*w=new Window(100,100,800,600);
     for(int i=0;i<6;i++){
         EditText*tv=new EditText("EditText_"+std::to_string(i),200,50);
-        w->addView(tv).layout(10,i*55,200,50);
+        w->addView(tv);tv->layout(10,i*55,200,50);
     }
     std::vector<View*>focus;
     w->addFocusables(focus,(int)View::FOCUS_LEFT,(int)View::FOCUSABLES_ALL);
@@ -51,7 +52,8 @@ TEST_F(FOCUS,HALFFOCUS){
         if(i%2==0)tv=new EditText("EditText_"+std::to_string(i),200,50);
         else tv=new TextView("TextView_"+std::to_string(i),200,50);
         tv->setFocusable(i%2==0);
-        w->addView(tv).layout(10,i*55,200,50);
+        w->addView(tv);
+        tv->layout(10,i*55,200,50);
     }
     std::vector<View*>focus;
     w->addFocusables(focus,(int)View::FOCUS_LEFT,(int)View::FOCUSABLES_ALL);
@@ -71,7 +73,8 @@ TEST_F(FOCUS,GROUP){
         tv=new EditText("EditText_"+std::to_string(i),200,50);
         l[i%2]->addView(tv);
         tv=new TextView("TextView_"+std::to_string(i),200,50);
-        l[i%2]->addView(tv).setFocusable(false);
+        l[i%2]->addView(tv);
+        tv->setFocusable(false);
     }
     w->addView(l[0]);
     w->addView(l[1]);
@@ -91,10 +94,12 @@ TEST_F(FOCUS,NAV_1_LAYER){
         View*tv;
         if(i%2==0){
             tv=new EditText("EditText_"+std::to_string(i),200,50);
-            w->addView(tv).setId(100+i/2).layout(10,i*55,200,50);
+            w->addView(tv);tv->setId(100+i/2);
+            tv->layout(10,i*55,200,50);
         }else{ 
             tv=new TextView("TextView_"+std::to_string(i),200,50);
-            w->addView(tv).setId(200+i/2).layout(10,i*55,200,50);
+            w->addView(tv);tv->setId(200+i/2);
+            tv->layout(10,i*55,200,50);
             tv->setFocusable(false);;
         }
     }
@@ -120,17 +125,20 @@ TEST_F(FOCUS,NAV_2_LAYER){
         View*tv;
         LinearLayout*pl=l[0];
         tv=new EditText("EditText_"+std::to_string(i),200,50);
-        pl->addView(tv).setId(100-1+pl->getChildCount());
+        pl->addView(tv);
+        tv->setId(100-1+pl->getChildCount());
         tv=new TextView("TextView_"+std::to_string(i),200,50);
-        pl->addView(tv).setFocusable(false);
+        pl->addView(tv);tv->setFocusable(false);
     }
     for(int i=0;i<3;i++){
         View*tv;
         LinearLayout*pl=l[1];
         tv=new EditText("EditText_"+std::to_string(i),200,50);
-        pl->addView(tv).setId(200-1+pl->getChildCount());
+        pl->addView(tv);
+        tv->setId(200-1+pl->getChildCount());
         tv=new TextView("TextView_"+std::to_string(i),200,50);
-        pl->addView(tv).setFocusable(false);
+        pl->addView(tv);
+        tv->setFocusable(false);
     }
     w->addView(l[0]);
     w->addView(l[1]);

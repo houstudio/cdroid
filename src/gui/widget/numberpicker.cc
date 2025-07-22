@@ -690,10 +690,9 @@ void NumberPicker::computeScroll() {
     }
 }
 
-View& NumberPicker::setEnabled(bool enabled) {
+void NumberPicker::setEnabled(bool enabled) {
     ViewGroup::setEnabled(enabled);
     mInputText->setEnabled(enabled);
-    return *this;
 }
 
 void NumberPicker::scrollBy(int x, int y){

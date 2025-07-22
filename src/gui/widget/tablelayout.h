@@ -78,10 +78,10 @@ public:
     bool isColumnShrinkable(int columnIndex)const;
     void setColumnShrinkable(int columnIndex, bool isShrinkable);
 
-    View& addView(View* child)override;
-    View& addView(View*child, int index)override;
-    View& addView(View* child, ViewGroup::LayoutParams* params)override;
-    View& addView(View* child, int index, ViewGroup::LayoutParams* params)override;
+    void addView(View* child)override;
+    void addView(View*child, int index)override;
+    void addView(View* child, ViewGroup::LayoutParams* params)override;
+    void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
 
     std::string getAccessibilityClassName()const override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;

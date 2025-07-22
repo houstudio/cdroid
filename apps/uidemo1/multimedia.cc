@@ -53,7 +53,8 @@ public:
             } 
             lv->setAdapter(adapter1);
             lv->setBackgroundColor(0xFF000000|(0xFF<<position*8));
-            container->addView(lv).setId(12345);
+            container->addView(lv);
+            lv->setId(12345);
             lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
                 FileAdapter*adp=(FileAdapter*)lv.getAdapter();
                 FileItem f=adp->getItemAt(pos);
@@ -89,7 +90,8 @@ public:
             gv->setAdapter(adapter2);
             gv->setHorizontalSpacing(2); 
             gv->setVerticalSpacing(2);
-            container->addView(gv).setId(12345);
+            container->addView(gv);
+            gv->setId(12345);
             adapter2->loadFiles("/");
             adapter2->notifyDataSetChanged();
             return gv;

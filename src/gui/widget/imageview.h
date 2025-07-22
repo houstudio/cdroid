@@ -127,7 +127,7 @@ public:
     void setImageAlpha(int alpha);
     int getImageAlpha()const;
     bool isOpaque()const override;
-    View& setVisibility(int visibility)override;
+    void setVisibility(int visibility)override;
     void setImageLevel(int level);
     void setSelected(bool selected)override;
     void setCornerRadii(int radius);

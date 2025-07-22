@@ -47,7 +47,8 @@ int main(int argc,const char*argv[]){
     Window*w = new Window(0,0,800,600);
     ViewGroup*grp=new MyGroup(400,400);
     //grp->setId(10).setRotation(45);
-    w->addView(grp).setBackgroundColor(0xFFFF0000);
+    w->addView(grp);
+    grp->setBackgroundColor(0xFFFF0000);
     w->setBackgroundColor(0xFF111111);
     View*tv = nullptr;
     options.allow_unrecognised_options();
@@ -62,7 +63,8 @@ int main(int argc,const char*argv[]){
              break;
     }
     tv->setId(100);
-    grp->addView(tv).layout(50,50,160,60);
+    grp->addView(tv);
+    tv->layout(50,50,160,60);
     tv->setBackgroundColor(0xFF444444);
     float rotation=15.f;
     tv->animate().setDuration(5000).translationX(360).start();

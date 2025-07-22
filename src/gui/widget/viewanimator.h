@@ -40,7 +40,7 @@ public:
     int getDisplayedChild()const;
     void showNext();
     void showPrevious();
-    View& addView(View* child, int index,ViewGroup::LayoutParams* params)override;
+    void addView(View* child, int index,ViewGroup::LayoutParams* params)override;
     void removeAllViews()override;
     void removeView(View* view)override;
     void removeViewAt(int index)override;

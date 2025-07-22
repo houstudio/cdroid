@@ -78,7 +78,8 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
     MyAdapter*adapter=new MyAdapter();
-    ListView*lv=(ListView*)&w->addView(new ListView(460,500));
+    ListView*lv=new ListView(460,500);
+    w->addView(lv);
     lv->layout(10,10,460,500);
     lv->setDivider(new ColorDrawable(0x66008800));
     lv->setVerticalScrollBarEnabled(true);

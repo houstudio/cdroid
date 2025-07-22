@@ -18,7 +18,8 @@ TEST_F(EDITTEXT,edit){
     for(int i=0;i<sizeof(format)/sizeof(format[0]);i++){
         EditText*g=new EditText("Hello world!",600,32);
         g->setGravity(format[i]|Gravity::CENTER_VERTICAL);
-        w->addView(g).layout(10,35*i+10,600,32);
+        w->addView(g);
+        g->layout(10,35*i+10,600,32);
     }
     app.exec();
 }

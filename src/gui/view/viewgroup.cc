@@ -1510,11 +1510,11 @@ bool ViewGroup::isViewDescendantOf(View* child, View* parent) {
     return isViewDescendantOf((View*) theParent, parent);
 }
 
-View& ViewGroup::addView(View* view){
+void ViewGroup::addView(View* view){
     return addView(view,-1);
 }
 
-View& ViewGroup::addView(View* child, int index){
+void ViewGroup::addView(View* child, int index){
     LayoutParams* params = child->getLayoutParams();
     if (params == nullptr) {
         params = generateDefaultLayoutParams();
@@ -1523,14 +1523,14 @@ View& ViewGroup::addView(View* child, int index){
     return addView(child, index, params);
 }
 
-View& ViewGroup::addView(View* child, int width, int height){
+void ViewGroup::addView(View* child, int width, int height){
     LayoutParams* params = generateDefaultLayoutParams();
     params->width = width;
     params->height = height;
     return addView(child, -1, params);
 }
 
-View& ViewGroup::addView(View* child, LayoutParams* params){
+void ViewGroup::addView(View* child, LayoutParams* params){
     return addView(child, -1, params);
 }
 
@@ -1541,12 +1541,12 @@ void ViewGroup::removeView(View* view){
     }
 }
 
-View&ViewGroup::addView(View* child, int index,LayoutParams* params){
+void ViewGroup::addView(View* child, int index,LayoutParams* params){
     if(child==nullptr)
          throw std::runtime_error("Cannot add a null child view to a ViewGroup");
     requestLayout();
     invalidate(true);
-    return addViewInner(child, index, params, false);
+    addViewInner(child, index, params, false);
 }
 
 void ViewGroup::addInArray(View* child, int index){
@@ -1560,7 +1560,7 @@ void ViewGroup::cleanupLayoutState(View* child)const{
     child->mPrivateFlags &= ~PFLAG_FORCE_LAYOUT;
 }
 
-View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool preventRequestLayout){
+void ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool preventRequestLayout){
     if(mTransition){
         mTransition->cancel(LayoutTransition::DISAPPEARING);
     }
@@ -1642,7 +1642,6 @@ View& ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool p
         setDefaultFocus(child);
     }
     touchAccessibilityNodeProviderIfNeeded(child);
-    return *child;
 }
 
 void ViewGroup::touchAccessibilityNodeProviderIfNeeded(View* child) {

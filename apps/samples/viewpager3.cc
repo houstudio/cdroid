@@ -23,7 +23,8 @@ public:
         ImageView*iv=new  ImageView(200,200);
         ViewPager::LayoutParams*lp=new ViewPager::LayoutParams();
         lp->gravity=Gravity::CENTER;
-        container->addView(iv).setId(position);
+        container->addView(iv);
+        iv->setId(position);
         //iv->setScaleType(FIT_XY);
         RefPtr<Cairo::ImageSurface>img;
         if(imgs.find(position)==imgs.end()){

@@ -445,12 +445,11 @@ bool AbsListView::isFastScrollEnabled()const {
     }
 }
 
-View& AbsListView::setVerticalScrollbarPosition(int position) {
+void AbsListView::setVerticalScrollbarPosition(int position) {
     AdapterView::setVerticalScrollbarPosition(position);
     if (mFastScroll) {
         mFastScroll->setScrollbarPosition(position);
     }
-    return *this;
 }
 
 void AbsListView::setScrollBarStyle(int style) {

@@ -40,7 +40,9 @@ int main(int argc,const char*argv[]){
     auto result = options.parse(argc,argv);
     Window*w = new Window(0,0,-1,-1);
     MyAdapter*adapter=new MyAdapter();
-    ListView*lv=(ListView*)&w->addView(new ListView(460,500)).setId(100);
+    ListView*lv = new ListView(460,500);
+    w->addView(lv);
+    lv->setId(100);
     adapter->setNotifyOnChange(true);
     lv->setAdapter(adapter);
     for(int i=0;i<56;i++) adapter->add("");

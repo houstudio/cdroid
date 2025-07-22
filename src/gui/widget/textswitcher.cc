@@ -30,10 +30,10 @@ TextSwitcher::TextSwitcher(Context*ctx,const AttributeSet&atts)
     :ViewSwitcher(ctx,atts){
 }
 
-View& TextSwitcher::addView(View* child, int index, ViewGroup::LayoutParams* params){
+void TextSwitcher::addView(View* child, int index, ViewGroup::LayoutParams* params){
     if(dynamic_cast<TextView*>(child)==nullptr)
        throw std::runtime_error("TextSwitcher children must be instances of TextView");
-    return ViewSwitcher::addView(child,index,params);
+    ViewSwitcher::addView(child,index,params);
 }
 
 void TextSwitcher::setText(const std::string&text){

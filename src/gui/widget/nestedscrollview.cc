@@ -259,35 +259,35 @@ void NestedScrollView::initScrollView() {
 }
 
 
-View& NestedScrollView::addView(View* child) {
+void NestedScrollView::addView(View* child) {
     if (getChildCount() > 0) {
         throw std::runtime_error("ScrollView can host only one direct child");
     }
-    return FrameLayout::addView(child);
+    FrameLayout::addView(child);
 }
 
 
-View& NestedScrollView::addView(View* child, int index) {
+void NestedScrollView::addView(View* child, int index) {
     if (getChildCount() > 0) {
         throw std::runtime_error("ScrollView can host only one direct child");
     }
-    return FrameLayout::addView(child, index);
+    FrameLayout::addView(child, index);
 }
 
 
-View& NestedScrollView::addView(View* child, ViewGroup::LayoutParams* params) {
+void NestedScrollView::addView(View* child, ViewGroup::LayoutParams* params) {
     if (getChildCount() > 0) {
         throw std::runtime_error("ScrollView can host only one direct child");
     }
-    return FrameLayout::addView(child, params);
+    FrameLayout::addView(child, params);
 }
 
 
-View& NestedScrollView::addView(View* child, int index, ViewGroup::LayoutParams* params) {
+void NestedScrollView::addView(View* child, int index, ViewGroup::LayoutParams* params) {
     if (getChildCount() > 0) {
         throw std::runtime_error("ScrollView can host only one direct child");
     }
-    return FrameLayout::addView(child, index, params);
+    FrameLayout::addView(child, index, params);
 }
 
 /**

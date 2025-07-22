@@ -1,4 +1,5 @@
-# **V4.0.8
+# **V4.x.x
+  - Toolbar
   - GestureOverlayView OK.
   - fix TextView::getBaseline
   - fix GridLayout::LayoutParams's layout_gravity

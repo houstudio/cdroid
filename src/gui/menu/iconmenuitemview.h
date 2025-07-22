@@ -43,7 +43,7 @@ public:
 
     MenuItemImpl* getItemData()override;
 
-    View& setVisibility(int v)override;
+    void setVisibility(int v)override;
     void setIconMenuView(IconMenuView* iconMenuView);
     IconMenuView::LayoutParams* getTextAppropriateLayoutParams();
     void setCheckable(bool checkable);

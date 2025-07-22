@@ -196,28 +196,24 @@ void TableLayout::trackCollapsedColumns(View* child){
     }
 }
 
-View& TableLayout::addView(View* child){
+void TableLayout::addView(View* child){
     LinearLayout::addView(child);
     requestRowsLayout();
-    return *child;
 }
 
-View& TableLayout::addView(View*child, int index){
+void TableLayout::addView(View*child, int index){
     LinearLayout::addView(child,index);
     requestRowsLayout();
-    return *child;
 }
 
-View& TableLayout::addView(View* child, ViewGroup::LayoutParams* params){
+void TableLayout::addView(View* child, ViewGroup::LayoutParams* params){
     LinearLayout::addView(child,params);
     requestRowsLayout();
-    return *child;
 }
 
-View& TableLayout::addView(View* child, int index, ViewGroup::LayoutParams* params){
+void TableLayout::addView(View* child, int index, ViewGroup::LayoutParams* params){
     LinearLayout::addView(child,index,params);
     requestRowsLayout();
-    return *child;
 }
 
 void TableLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){

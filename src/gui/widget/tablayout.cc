@@ -510,29 +510,28 @@ void TabLayout::addTabView(TabLayout::Tab* tab){
     mTabStrip->addView(tabView, tab->getPosition(), createLayoutParamsForTabs());
 }
 
-View& TabLayout::addView(View* child){
-    return addViewInternal(child,nullptr);
+void TabLayout::addView(View* child){
+    addViewInternal(child,nullptr);
 }
 
-View& TabLayout::addView(View* child, int index){
-    return addViewInternal(child,nullptr);
+void TabLayout::addView(View* child, int index){
+    addViewInternal(child,nullptr);
 }
 
-View& TabLayout::addView(View* child, ViewGroup::LayoutParams* params){
-    return addViewInternal(child,params);
+void TabLayout::addView(View* child, ViewGroup::LayoutParams* params){
+    addViewInternal(child,params);
 }
 
-View& TabLayout::addView(View* child, int index, ViewGroup::LayoutParams* params){
-    return addViewInternal(child,params);
+void TabLayout::addView(View* child, int index, ViewGroup::LayoutParams* params){
+    addViewInternal(child,params);
 }
 
-View& TabLayout::addViewInternal(View* child,ViewGroup::LayoutParams*params){
+void TabLayout::addViewInternal(View* child,ViewGroup::LayoutParams*params){
     delete params;//addTabFromItemView will create an other LayoutParams 
     if (dynamic_cast<TabItem*>(child)){
         child->setId(getTabCount()); 
         addTabFromItemView((TabItem*) child);
     }else LOGE("Only TabItem instances can be added to TabLayout");
-    return *child;
 }
 
 LinearLayout::LayoutParams* TabLayout::createLayoutParamsForTabs(){

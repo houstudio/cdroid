@@ -32,7 +32,7 @@ void ViewStub::draw(Canvas& canvas) {
 void ViewStub::dispatchDraw(Canvas& canvas) {
 }
 
-View& ViewStub::setVisibility(int visibility){
+void ViewStub::setVisibility(int visibility){
     if (mInflatedViewRef != nullptr) {
         View* view = mInflatedViewRef;
         if (view) {
@@ -46,7 +46,6 @@ View& ViewStub::setVisibility(int visibility){
             inflate();
         }
     }
-    return *this;
 }
 
 View* ViewStub::inflateViewNoAdd(ViewGroup* parent) {

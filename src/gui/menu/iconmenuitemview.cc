@@ -145,14 +145,13 @@ MenuItemImpl* IconMenuItemView::getItemData() {
     return mItemData;
 }
 
-View& IconMenuItemView::setVisibility(int v) {
+void IconMenuItemView::setVisibility(int v) {
     TextView::setVisibility(v);
 
     if (mIconMenuView != nullptr) {
         // On visibility change, mark the IconMenuView to refresh itself eventually
         mIconMenuView->markStaleChildren();
     }
-    return *this;
 }
 
 void IconMenuItemView::setIconMenuView(IconMenuView* iconMenuView) {

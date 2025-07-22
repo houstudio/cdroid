@@ -81,9 +81,8 @@ Adapter*AdapterView::getAdapter(){
     return mAdapter;
 }
 
-View& AdapterView::addView(View* child, int index, LayoutParams* params){
+void AdapterView::addView(View* child, int index, LayoutParams* params){
     LOGI("addView(View*,...)is not supported in AdapterView");
-    return *this;
 }
 
 void AdapterView::removeView(View* child){

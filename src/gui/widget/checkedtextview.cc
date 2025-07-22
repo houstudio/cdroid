@@ -139,13 +139,12 @@ void CheckedTextView::applyCheckMarkTint() {
     }
 }
 
-View& CheckedTextView::setVisibility(int visibility) {
+void CheckedTextView::setVisibility(int visibility) {
     TextView::setVisibility(visibility);
 
     if (mCheckMarkDrawable) {
         mCheckMarkDrawable->setVisible(visibility == VISIBLE, false);
     }
-    return *this;
 }
 
 void CheckedTextView::jumpDrawablesToCurrentState() {

@@ -48,7 +48,7 @@ public:
     void setCheckMarkDrawable(Drawable* d);
     void setCheckMarkTintList(const ColorStateList*tint);
     const ColorStateList* getCheckMarkTintList()const;
-    View& setVisibility(int visibility)override;     
+    void setVisibility(int visibility)override;
     void jumpDrawablesToCurrentState()override;
     void onRtlPropertiesChanged(int layoutDirection)override;
 

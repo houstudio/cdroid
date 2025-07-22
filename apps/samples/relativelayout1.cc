@@ -42,7 +42,8 @@ int main(int argc,const char*argv[]){
     lp->addRule(RelativeLayout::CENTER_HORIZONTAL);
     lp->addRule(RelativeLayout::CENTER_VERTICAL);
     tvcent->setBackgroundColor(0xFF00FF00);
-    layout->addView(tvcent,lp).setId(1000);
+    layout->addView(tvcent,lp);
+    tvcent->setId(1000);
 
 
     TextView*tvleft=new TextView("ParentLeft",0,0);

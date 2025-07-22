@@ -30,7 +30,8 @@ int main(int argc,const char*argv[]){
 	np1->setOnValueChangedListener([](NumberPicker&np,int prev,int value){
             LOGI("numberpicker:%p value %d->%d",&np,prev,value);
         });
-        layout->addView(np1,new LinearLayout::LayoutParams(-1,-1,0.3f)).setId(100+i);
+        layout->addView(np1,new LinearLayout::LayoutParams(-1,-1,0.3f));
+        np1->setId(100+i);
     }
     w->addView(layout,new LinearLayout::LayoutParams(-1,-1));
     layout->requestLayout();
