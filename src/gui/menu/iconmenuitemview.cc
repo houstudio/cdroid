@@ -1,6 +1,7 @@
 #include <menu/iconmenuitemview.h>
 #include <menu/menuitemimpl.h>
 namespace cdroid{
+std::string IconMenuItemView::sPrependShortcutLabel;
 
 IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet& attrs)
     :TextView(context, attrs){

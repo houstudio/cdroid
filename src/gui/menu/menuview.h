@@ -53,7 +53,7 @@ public:
      * Sets the enabled state of the item view.
      * @param enabled Whether the item view should be enabled.
      */
-    virtual void setEnabled(bool enabled)=0;
+    virtual void setEnabled(bool enabled){};
 
     /**
      * Displays the checkbox for the item view.  This does not ensure the item view will be

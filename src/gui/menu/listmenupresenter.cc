@@ -124,7 +124,7 @@ void ListMenuPresenter::setId(int id) {
     mId = id;
 }
 
-int ListMenuPresenter::getId() {
+int ListMenuPresenter::getId() const{
     return mId;
 }
 
@@ -155,6 +155,10 @@ int ListMenuPresenter::MenuAdapter::getCount() const{
         return count;
     }
     return count - 1;
+}
+
+MenuBuilder*ListMenuPresenter::MenuAdapter::getAdapterMenu(){
+    return nullptr;
 }
 
 void* ListMenuPresenter::MenuAdapter::getItem(int position)const{

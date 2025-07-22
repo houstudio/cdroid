@@ -170,6 +170,7 @@ list(APPEND CDROID_SOURCES
     widget/analogclock.cc
     widget/numberpicker.cc
     widget/popupwindow.cc
+    widget/menupopupwindow.cc
     widget/candidateview.cc
     widget/keyboardview.cc
 )

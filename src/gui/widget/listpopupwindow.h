@@ -51,11 +51,12 @@ private:
     Rect mEpicenterBounds;
     bool mModal;
     uint8_t mOverlapAnchor;/*0xFF unset 1:true,0:false*/
-    PopupWindow*mPopup;
     Runnable mResizePopupRunnable;
     Runnable mShowDropDownRunnable;
     Runnable mHideSelector;
     View::OnTouchListener mTouchInterceptor;
+protected:
+    PopupWindow*mPopup;
 private:
     void initPopupWindow();
     void removePromptView();

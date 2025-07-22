@@ -24,6 +24,7 @@
 namespace cdroid{
 class View;
 class ViewGroup;
+class MenuInflater;
 class LayoutInflater{
 public:
     typedef std::function<View*(Context*ctx, const AttributeSet&attrs)>ViewInflater;
@@ -55,6 +56,7 @@ private:
     void parseViewTag(XmlPullParser&parser, View*parent,const AttributeSet& attrs);
     void parseInclude(XmlPullParser&parser, Context*,View*prent,const AttributeSet& attrs);
 protected:
+    friend MenuInflater;
     View* createView(const std::string& name, const std::string& prefix,const AttributeSet& attrs);
     View* createViewFromTag(View* parent,const std::string& name, Context* context,AttributeSet& attrs,bool ignoreThemeAttr);
     void rInflateChildren(XmlPullParser& parser, View* parent,AttributeSet& attrs,bool finishInflate);

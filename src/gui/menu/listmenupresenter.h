@@ -10,6 +10,7 @@ class ListMenuPresenter:public MenuPresenter{//, AdapterView.OnItemClickListener
 protected:
     class MenuAdapter;
     friend MenuAdapter;
+    friend class MenuPopupWindow;
     Context* mContext;
     LayoutInflater* mInflater;
     MenuBuilder* mMenu;
@@ -53,7 +54,7 @@ public:
     void restoreHierarchyState(Bundle& inState);
 
     void setId(int id);
-    int getId() override;
+    int getId()const override;
 
     Parcelable* onSaveInstanceState() override;
     void onRestoreInstanceState(Parcelable& state)override;
@@ -65,6 +66,7 @@ private:
 public:
     MenuAdapter(ListMenuPresenter*presenter);
     int getCount()const override;
+    MenuBuilder*getAdapterMenu();
     void* getItem(int position)const override;
     long getItemId(int position)const override;
     View* getView(int position, View* convertView, ViewGroup* parent)override;
