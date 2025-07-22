@@ -47,7 +47,7 @@ void IconMenuItemView::initialize(MenuItemImpl* itemData, int menuType) {
     initialize(itemData->getTitleForItemView(this), itemData->getIcon());
 
     setVisibility(itemData->isVisible() ? View::VISIBLE : View::GONE);
-    MenuView::ItemView::setEnabled(itemData->isEnabled());
+    setEnabled(itemData->isEnabled());
 }
 
 void IconMenuItemView::setItemData(MenuItemImpl* data) {
@@ -143,6 +143,10 @@ void IconMenuItemView::setItemInvoker(const MenuBuilder::ItemInvoker& itemInvoke
 
 MenuItemImpl* IconMenuItemView::getItemData() {
     return mItemData;
+}
+
+void IconMenuItemView::setEnabled(bool v){
+    TextView::setEnabled(v);
 }
 
 void IconMenuItemView::setVisibility(int v) {

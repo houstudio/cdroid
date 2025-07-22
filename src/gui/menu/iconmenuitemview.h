@@ -42,7 +42,7 @@ public:
     void setItemInvoker(const MenuBuilder::ItemInvoker& itemInvoker);
 
     MenuItemImpl* getItemData()override;
-
+    void setEnabled(bool)override;
     void setVisibility(int v)override;
     void setIconMenuView(IconMenuView* iconMenuView);
     IconMenuView::LayoutParams* getTextAppropriateLayoutParams();
