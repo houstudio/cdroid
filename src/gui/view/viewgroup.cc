@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <view/viewgroup.h>
-#include <view/viewgroupoverlay.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <animation/layouttransition.h>
 #include <animation/layoutanimationcontroller.h>
@@ -1231,12 +1230,12 @@ int ViewGroup::indexOfChild(View* child)const{
     return -1;
 }
 
-ViewOverlay* ViewGroup::getOverlay() {
+ViewGroupOverlay* ViewGroup::getOverlay() {
     if (mOverlay == nullptr) {
         mOverlay = new ViewGroupOverlay(mContext, this);
         mOverlay->getOverlayView()->setFrame(mLeft,mTop,mRight-mLeft,mBottom-mTop);
     }
-    return mOverlay;
+    return (ViewGroupOverlay*)mOverlay;
 }
 
 int ViewGroup::getChildDrawingOrder(int count,int i){

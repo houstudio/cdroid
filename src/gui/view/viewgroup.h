@@ -19,6 +19,7 @@
 #define __CDROID_GROUPVIEW_H__
 
 #include <view/view.h>
+#include <view/viewgroupoverlay.h>
 #include <widget/scroller.h>
 #include <animations.h>
 
@@ -301,7 +302,7 @@ public:
     void setDescendantFocusability(int);
     int  getLayoutMode();
     void setLayoutMode(int layoutMode);
-    ViewOverlay*getOverlay()override;
+    ViewGroupOverlay*getOverlay()override;
     virtual void recomputeViewAttributes(View* child);
     virtual void bringChildToFront(View*);
     bool getClipChildren()const;
