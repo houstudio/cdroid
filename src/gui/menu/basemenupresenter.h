@@ -61,9 +61,8 @@ public:
 
     virtual bool shouldIncludeItem(int childIndex, MenuItemImpl* item);
 
-    void onCloseMenu(MenuBuilder& menu, bool allMenusAreClosing);
-
-    bool onSubMenuSelected(SubMenuBuilder& menu);
+    void onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)override;
+    bool onSubMenuSelected(SubMenuBuilder* menu)override;
     bool flagActionItems();
 
     bool expandItemActionView(MenuBuilder& menu, MenuItemImpl& item);

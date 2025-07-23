@@ -450,7 +450,7 @@ TEST_F(DRAWABLE,inflateshape){
     int64_t t2=SystemClock::uptimeMillis();
     d->draw(*ctx);
     ASSERT_NE((void*)nullptr,dynamic_cast<ShapeDrawable*>(d));
-    printf("Usedtime=%lld\r\n",t2-t1);
+    printf("Usedtime=%ld\r\n",t2-t1);
 }
 TEST_F(DRAWABLE,inflateclip){
     const char*text="<clip><shape xmlns:cdroid=\"http://schemas.android.com/apk/res/android\" \
@@ -473,7 +473,7 @@ TEST_F(DRAWABLE,inflateclip){
         usleep(1000);
     }
     ASSERT_NE((void*)nullptr,dynamic_cast<ClipDrawable*>(d));
-    printf("Usedtime=%lld  clip=%p child=%p\r\n",t2-t1,dynamic_cast<ClipDrawable*>(d),((ClipDrawable*)d)->getDrawable());
+    printf("Usedtime=%ld  clip=%p child=%p\r\n",t2-t1,dynamic_cast<ClipDrawable*>(d),((ClipDrawable*)d)->getDrawable());
 }
 TEST_F(DRAWABLE,inflatelayer){
    const char*text="<layer-list xmlns:cdroid=\"http://schemas.android.com/apk/res/android\"> \

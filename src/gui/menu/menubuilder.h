@@ -177,7 +177,7 @@ public:
 
     int size() const;
 
-    MenuItem* getItem(int index);
+    virtual MenuItem* getItem(int index);
 
     bool isShortcutKey(int keyCode,const KeyEvent& event)override;
 

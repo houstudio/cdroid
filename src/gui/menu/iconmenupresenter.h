@@ -26,7 +26,7 @@ public:
 
     bool shouldIncludeItem(int childIndex, MenuItemImpl* item)override;
 
-    bool onSubMenuSelected(SubMenuBuilder& subMenu)override;
+    bool onSubMenuSelected(SubMenuBuilder* subMenu)override;
 
     void updateMenuView(bool cleared)override;
 

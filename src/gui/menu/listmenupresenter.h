@@ -37,8 +37,8 @@ public:
 
     void setCallback(const Callback& cb)override;
 
-    bool onSubMenuSelected(SubMenuBuilder& subMenu)override;
-    void onCloseMenu(MenuBuilder& menu, bool allMenusAreClosing)override;
+    bool onSubMenuSelected(SubMenuBuilder* subMenu)override;
+    void onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)override;
 
     int getItemIndexOffset();
     void setItemIndexOffset(int offset);

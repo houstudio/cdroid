@@ -273,7 +273,7 @@ int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t he
     } else {
         if(surf->kbuffer==0){
             surf->buffer = (char*)malloc(buffer_size);
-	}
+        }
     }
     surf->ishw=hwsurface;
     LOGD("surface=%x buf=%p/%p size=%dx%d hw=%d",surf,surf->kbuffer,surf->buffer,width,height,hwsurface);
