@@ -129,7 +129,6 @@ public:
     virtual void removeItem(int id)=0;
     virtual void removeGroup(int groupId)=0;
     virtual void clear()=0;
-    //virtual void clearHeader()=0;
     virtual void setGroupCheckable(int group, bool checkable, bool exclusive)=0;
     virtual void setGroupVisible(int group, bool visible)=0;
     virtual void setOptionalIconsVisible(bool visible){};

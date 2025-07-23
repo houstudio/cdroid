@@ -1,5 +1,6 @@
 #if 0
 #include <menu/menuview.h>
+#include <menu/menubuilder.h>
 #include <menu/submenubuilder.h>
 #include <menu/actionmenuview.h>
 #include <menu/actionmenuitemview.h>
@@ -352,7 +353,7 @@ bool ActionMenuPresenter::onSubMenuSelected(SubMenuBuilder* subMenu) {
 
     SubMenuBuilder* topSubMenu = subMenu;
     while (topSubMenu->getParentMenu() != mMenu) {
-        topSubMenu = (SubMenuBuilder*)(topSubMenu->getParentMenu());
+        topSubMenu = (SubMenuBuilder*)topSubMenu->getParentMenu();
     }
     View* anchor = findViewForItem(topSubMenu->getInvokerItem());
     if (anchor == nullptr) {

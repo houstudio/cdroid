@@ -3,6 +3,7 @@
 #include <widget/imagebutton.h>
 #include <menu/menupopuphelper.h>
 #include <menu/basemenupresenter.h>
+#include <menu/menubuilder.h>
 namespace cdroid{
 class ActionMenuView;
 class ActionMenuItemView;
