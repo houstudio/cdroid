@@ -367,7 +367,7 @@ public:
     void setFastScrollEnabled(bool);
     bool isFastScrollEnabled()const;
     int  getVerticalScrollbarWidth()const override;
-    View& setVerticalScrollbarPosition(int position)override;
+    void setVerticalScrollbarPosition(int position)override;
     void setFastScrollStyle(const std::string& styleid);
     void setFastScrollAlwaysVisible(bool alwaysShow);
     bool isFastScrollAlwaysVisible()const;

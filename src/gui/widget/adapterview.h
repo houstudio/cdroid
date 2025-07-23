@@ -123,7 +123,7 @@ public:
     View* getEmptyView();
     void *getItemAtPosition(int position);
     long getItemIdAtPosition(int position);
-    View&addView(View*,int,LayoutParams*)override;
+    void addView(View*,int,LayoutParams*)override;
     void removeView(View* child)override;
     void removeViewAt(int index)override;
     void removeAllViews()override;

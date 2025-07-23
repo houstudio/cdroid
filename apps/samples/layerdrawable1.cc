@@ -23,10 +23,12 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,800,600);
 
     View*v1=createClockView("cdroid:mipmap/watch.png",1,"cdroid:mipmap/clock_dial.png");
-    w->addView(v1).layout(20,20,320,320);
+    w->addView(v1);
+    v1->layout(20,20,320,320);
 
     View*v2=createClockView("cdroid:mipmap/clock_dial.png",2,"cdroid:mipmap/clock_hand_hour.png","cdroid:mipmap/clock_hand_minute.png");
-    w->addView(v2).layout(400,20,320,320);
+    w->addView(v2);
+    v2->layout(400,20,320,320);
 
     int level=0;
     Runnable clock;clock=[&](){

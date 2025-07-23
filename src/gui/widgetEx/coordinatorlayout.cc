@@ -155,14 +155,13 @@ void CoordinatorLayout::drawableStateChanged() {
     return ViewGroup::verifyDrawable(who) || (who == mStatusBarBackground);
 }
 
-View& CoordinatorLayout::setVisibility(int visibility) {
+void CoordinatorLayout::setVisibility(int visibility) {
     ViewGroup::setVisibility(visibility);
 
     const bool visible = visibility == VISIBLE;
     if (mStatusBarBackground && mStatusBarBackground->isVisible() != visible) {
         mStatusBarBackground->setVisible(visible, false);
     }
-    return *this;
 }
 
 void CoordinatorLayout::setStatusBarBackgroundResource(const std::string& resId) {

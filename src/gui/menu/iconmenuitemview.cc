@@ -1,6 +1,7 @@
 #include <menu/iconmenuitemview.h>
 #include <menu/menuitemimpl.h>
 namespace cdroid{
+std::string IconMenuItemView::sPrependShortcutLabel;
 
 IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet& attrs)
     :TextView(context, attrs){
@@ -46,7 +47,7 @@ void IconMenuItemView::initialize(MenuItemImpl* itemData, int menuType) {
     initialize(itemData->getTitleForItemView(this), itemData->getIcon());
 
     setVisibility(itemData->isVisible() ? View::VISIBLE : View::GONE);
-    MenuView::ItemView::setEnabled(itemData->isEnabled());
+    setEnabled(itemData->isEnabled());
 }
 
 void IconMenuItemView::setItemData(MenuItemImpl* data) {
@@ -144,14 +145,17 @@ MenuItemImpl* IconMenuItemView::getItemData() {
     return mItemData;
 }
 
-View& IconMenuItemView::setVisibility(int v) {
+void IconMenuItemView::setEnabled(bool v){
+    TextView::setEnabled(v);
+}
+
+void IconMenuItemView::setVisibility(int v) {
     TextView::setVisibility(v);
 
     if (mIconMenuView != nullptr) {
         // On visibility change, mark the IconMenuView to refresh itself eventually
         mIconMenuView->markStaleChildren();
     }
-    return *this;
 }
 
 void IconMenuItemView::setIconMenuView(IconMenuView* iconMenuView) {

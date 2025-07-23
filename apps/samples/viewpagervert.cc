@@ -87,7 +87,8 @@ int main(int argc,const char*argv[]){
     pager->setOffscreenPageLimit(8);
     pager->setAdapter(gpAdapter);
     pager->addOnPageChangeListener(*w);
-    w->addView(pager).layout(0,40,800,560);
+    w->addView(pager);
+    pager->layout(0,40,800,560);
     gpAdapter->notifyDataSetChanged();
     pager->setCurrentItem(0);
     w->requestLayout();

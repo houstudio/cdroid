@@ -23,7 +23,7 @@ void IconMenuPresenter::bindItemView(MenuItemImpl* item, MenuView::ItemView* ite
     view->initialize(item->getTitleForItemView(view), item->getIcon());
 
     view->setVisibility(item->isVisible() ? View::VISIBLE : View::GONE);
-    ((MenuView::ItemView*)view)->setEnabled(view->isEnabled());
+    view->setEnabled(view->isEnabled());
     view->setLayoutParams(view->getTextAppropriateLayoutParams());
 }
 

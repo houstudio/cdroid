@@ -65,13 +65,13 @@ int main(int argc,const char*argv[]){
     }
     cl->addView(scroller,new CoordinatorLayout::LayoutParams(
 			    LayoutParams::MATCH_PARENT,
-			    LayoutParams::WRAP_CONTENT)).setId(100);
+			    LayoutParams::WRAP_CONTENT));
     TextView*tv=new TextView("Hello world",100,32);
     tlp=new CoordinatorLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
     tlp->setBehavior(new YourCustomBehavior());
     tlp->gravity = Gravity::BOTTOM|Gravity::END;
-    cl->addView(tv,tlp).setId(101);
-    w->addView(cl).setId(1);
+    cl->addView(tv,tlp);
+    w->addView(cl);
     w->requestLayout();
     return app.exec();
 }

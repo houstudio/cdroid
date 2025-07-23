@@ -19,6 +19,7 @@
 #define __MENU_H__
 #include <string>
 #include <vector>
+#include <functional>
 #include <core/callbackbase.h>
 #include <view/keyevent.h>
 namespace cdroid{

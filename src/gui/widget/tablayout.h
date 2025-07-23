@@ -246,7 +246,7 @@ protected:
 
     void setPagerAdapter(PagerAdapter* adapter,bool addObserver);
     void populateFromPagerAdapter();
-    View& addViewInternal(View* child,ViewGroup::LayoutParams*);
+    void addViewInternal(View* child,ViewGroup::LayoutParams*);
     LinearLayout::LayoutParams* createLayoutParamsForTabs();
     void updateTabViewLayoutParams(LinearLayout::LayoutParams* lp);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
@@ -296,10 +296,10 @@ public:
     void setupWithViewPager(ViewPager* viewPager, bool autoRefresh);
     bool shouldDelayChildPressedState()override;
 
-    View& addView(View* child) override;
-    View& addView(View* child, int index)override;
-    View& addView(View* child, ViewGroup::LayoutParams* params)override;
-    View& addView(View* child, int index, ViewGroup::LayoutParams* params)override;
+    void addView(View* child) override;
+    void addView(View* child, int index)override;
+    void addView(View* child, ViewGroup::LayoutParams* params)override;
+    void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
 
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };

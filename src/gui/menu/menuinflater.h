@@ -19,7 +19,7 @@ private:
     Context* mContext;
     void* mRealOwner;
 private:
-    void parseMenu(XmlPullParser& parser, AttributeSet& attrs, Menu* menu);
+    void parseMenu(XmlPullParser& parser,const AttributeSet& attrs, Menu* menu);
     void registerMenu(MenuItem* item,const AttributeSet& set);
     void registerMenu(SubMenu* subMenu,const AttributeSet& set);
     Object* getRealOwner();
@@ -58,17 +58,13 @@ class MenuInflater::MenuState {
 private:
     friend MenuInflater;
     Menu* menu;
-    /*
-     * Group state is set on items as they are added, allowing an item to
-     * override its group state. (As opposed to set on items at the group end tag.)
-     */
+    Context*mContext;
     int groupId;
     int groupCategory;
     int groupOrder;
     int groupCheckable;
     bool groupVisible;
     bool groupEnabled;
-
     bool itemAdded;
     int itemId;
     int itemCategoryOrder;
@@ -77,9 +73,9 @@ private:
     std::string itemIconResId;
     ColorStateList* itemIconTintList;
     int mItemIconBlendMode;
-    char itemAlphabeticShortcut;
     int itemAlphabeticModifiers;
-    char itemNumericShortcut;
+    int itemAlphabeticShortcut;
+    int itemNumericShortcut;
     int itemNumericModifiers;
     int itemCheckable;
     bool itemChecked;
@@ -90,7 +86,6 @@ private:
     std::string itemActionViewLayout;
     std::string itemActionViewClassName;
     std::string itemActionProviderClassName;
-
     std::string itemListenerMethodName;
 
     ActionProvider* itemActionProvider;
@@ -110,22 +105,14 @@ private:
     char getShortcut(const std::string& shortcutString);
     void setItem(MenuItem* item);
 public:
-    MenuState(Menu* menu);
+    MenuState(Menu* menu,Context*ctx);
     virtual ~MenuState();
     void resetGroup();
 
-    /**
-     * Called when the parser is pointing to a group tag.
-     */
     void readGroup(const AttributeSet& attrs);
-
-    /**
-     * Called when the parser is pointing to an item tag.
-     */
     void readItem(const AttributeSet& attrs);
 
     MenuItem* addItem();
-
     SubMenu* addSubMenuItem();
 
     bool hasAddedItem() const;

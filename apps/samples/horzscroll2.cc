@@ -26,13 +26,14 @@ int main(int argc,const char*argv[]){
         lp->setMarginsRelative(20,0,20,0);
         tv->setTextAlignment(View::TEXT_ALIGNMENT_GRAVITY);
         tv->setGravity(Gravity::CENTER);
-        layout->addView(tv,lp).setId(1000+i);
+        layout->addView(tv,lp);tv->setId(1000+i);
         tv->setOnClickListener([](View&v){
             LOGD("You clicked Button %d",v.getId());
         });
     }
-    hs->addView(layout,new FrameLayout::LayoutParams(LayoutParams::WRAP_CONTENT,-1)).setId(100);
-    w->addView(hs).setId(10);
+    hs->addView(layout,new FrameLayout::LayoutParams(LayoutParams::WRAP_CONTENT,-1));
+    layout->setId(100);
+    w->addView(hs);
     layout->requestLayout();
     w->requestLayout();
     w->setId(1);

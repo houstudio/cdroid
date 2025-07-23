@@ -242,7 +242,7 @@ public:
     void setPageMarginDrawable(const std::string&resId);
     void smoothScrollTo(int x, int y);
     void smoothScrollTo(int x, int y, int velocity);
-    View& addView(View* child, int index, ViewGroup::LayoutParams* params)override;
+    void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
     void removeView(View* view)override;
     void* getCurrent()const;
     void computeScroll()override;

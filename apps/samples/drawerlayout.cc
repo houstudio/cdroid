@@ -35,7 +35,7 @@ int main(int argc,const char*argv[]){
     TextView*tv=new TextView("TextView",40,40);
     content->setBackgroundColor(0xFFFF0000);
     tv->setTextSize(60);
-    content->addView(tv).setId(100);
+    content->addView(tv);
 
     ShapeDrawable*sd=new ShapeDrawable();
     sd->setShape(new ArcShape(0,360));
@@ -87,7 +87,7 @@ int main(int argc,const char*argv[]){
     lv->setDivider(new ColorDrawable(0x80224422));
     lv->setDividerHeight(1);
 
-    dl->addView(left,1,lp).setId(100);
+    dl->addView(left,1,lp);
 
     /*right slider*/ 
     LinearLayout*right=new LinearLayout(300,720);

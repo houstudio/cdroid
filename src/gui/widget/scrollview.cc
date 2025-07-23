@@ -125,33 +125,32 @@ void ScrollView::initScrollView() {
     mScrollDuration = 400;
 }
 
-View& ScrollView::addView(View* child) {
+void ScrollView::addView(View* child) {
     if (getChildCount() > 0) {
         LOGE("ScrollView can host only one direct child");
     }
-    return FrameLayout::addView(child);
+    FrameLayout::addView(child);
 }
 
-View& ScrollView::addView(View* child, int index) {
+void ScrollView::addView(View* child, int index) {
     if (getChildCount() > 0) {
         LOGE("ScrollView can host only one direct child");
     }
-    return FrameLayout::addView(child, index);
+    FrameLayout::addView(child, index);
 }
 
-View& ScrollView::addView(View* child, ViewGroup::LayoutParams* params) {
+void ScrollView::addView(View* child, ViewGroup::LayoutParams* params) {
     if (getChildCount() > 0) {
         LOGE("ScrollView can host only one direct child");
     }
-    return FrameLayout::addView(child, params);
+    FrameLayout::addView(child, params);
 }
 
-View& ScrollView::addView(View* child, int index, ViewGroup::LayoutParams* params) {
+void ScrollView::addView(View* child, int index, ViewGroup::LayoutParams* params) {
     if (getChildCount() > 0) {
         LOGE("ScrollView can host only one direct child");
     }
-
-    return FrameLayout::addView(child, index, params);
+    FrameLayout::addView(child, index, params);
 }
 
 bool ScrollView::canScroll() {

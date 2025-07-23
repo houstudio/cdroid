@@ -34,7 +34,8 @@ int main(int argc,const char*argv[]){
     scroller->setSmoothScrollingEnabled(true);
     scroller->setVerticalScrollBarEnabled(true);
     scroller->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
-    w->addView(scroller).setId(100);
+    w->addView(scroller);
+    scroller->setId(100);
 
     LinearLayout*layout=new LinearLayout(-1,-1);
     layout->setOrientation(LinearLayout::VERTICAL);

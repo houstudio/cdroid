@@ -1235,7 +1235,7 @@ bool DrawerLayout::onKeyUp(int keyCode, KeyEvent& event) {
     return ViewGroup::onKeyUp(keyCode, event);
 }
 
-View& DrawerLayout::addView(View* child, int index, ViewGroup::LayoutParams* params) {
+void DrawerLayout::addView(View* child, int index, ViewGroup::LayoutParams* params) {
     ViewGroup::addView(child, index, params);
 
     View* openDrawer = findOpenDrawer();
@@ -1254,7 +1254,6 @@ View& DrawerLayout::addView(View* child, int index, ViewGroup::LayoutParams* par
     if (!CAN_HIDE_DESCENDANTS) {
         //setAccessibilityDelegate(child, mChildAccessibilityDelegate);
     }
-    return *child;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////

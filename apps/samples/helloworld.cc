@@ -4,6 +4,7 @@
 #include <widget/chronometer.h>
 #include <core/bundle.h>
 #include <core/process.h>
+//#include <mgl2/mgl.h>
 int main(int argc,const char*argv[]){
 #if defined(__linux__)||defined(__unix__)
     setenv("LANG","zh_CN.UTF-8",1);
@@ -31,11 +32,13 @@ int main(int argc,const char*argv[]){
     edit->setInputType(EditText::TYPE_ANY);
     edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
     edit->setBackgroundColor(0x80FF0000);
-    w->addView(edit).layout(100,300,640,200);
+    w->addView(edit);
+    edit->layout(100,300,640,200);
     edit->setTextSize(60);
     Chronometer*ch=new Chronometer(200,40);
     ch->setFormat("Time:MM:SS");
-    w->addView(ch).layout(0,400,200,40);
+    w->addView(ch);
+    ch->layout(0,400,200,40);
     ch->setCountDown(true);
     ch->setBase(SystemClock::elapsedRealtime() + 120 * 1000);
     ch->start();

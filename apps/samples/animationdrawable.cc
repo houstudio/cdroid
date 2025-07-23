@@ -16,7 +16,8 @@ int main(int argc,const char*argv[]){
     bd->setTileModeXY(TileMode::MIRROR,TileMode::MIRROR);
     ad->addFrame(bd,1000);
     ad->addFrame(ctx->getDrawable("cdroid:drawable/progress_horizontal.xml"),1000);
-    w->addView(pb4).setId(105).layout(800,10,256,256);
+    w->addView(pb4);
+    pb4->layout(800,10,256,256);
     pb4->setIndeterminateDrawable(ad);
     pb4->setIndeterminate(true);
     //pb4->setProgressDrawable(new ColorDrawable(0xFF111111));
@@ -25,6 +26,7 @@ int main(int argc,const char*argv[]){
     pb5->setIndeterminate(true);
     pb5->setProgress(40);
     //pb5->setProgressDrawable(new ColorDrawable(0xFF111111));   
-    w->addView(pb5).setId(105).layout(50,150,600,20);
+    w->addView(pb5);
+    pb5->layout(50,150,600,20);
     return app.exec();
 }

@@ -73,7 +73,8 @@ TEST_F(WIDGET,ImageView){
    ImageView*iv=new ImageView(400,400);
    Drawable*d=new BitmapDrawable(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/light2.jpg");
    iv->setImageDrawable(d);
-   w->addView(iv).layout(100,100,400,400);
+   w->addView(iv);
+   iv->layout(100,100,400,400);
    app.exec();
 }
 
@@ -91,7 +92,8 @@ TEST_F(WIDGET,EditText){
     e=new EditText("How to call customized WPF Window in VSTO ribbon?"
 "For example, I made customized WPF window by designing the styles. And then I would like to use it in my Presentation addin."
 " I can run the WPF window directly, but cannot call it from Ribbon. Thanks very much!",600,100);
-    w->addView(e).layout(10,20,600,100);
+    w->addView(e);
+    e->layout(10,20,600,100);
     e->setSingleLine(false);
     e->setBreakStrategy(0);
     e->setBackgroundColor(0xFF222222);
@@ -104,7 +106,8 @@ TEST_F(WIDGET,EditText){
         e->setText(sss[i*2]);
         e->setInputType(EditText::TYPE_ANY);
         e->setPattern(sss[i*2+1]);     
-        w->addView(e).layout(10,y,680,((i==0)?100:50)+i*5);
+        w->addView(e);
+        e->layout(10,y,680,((i==0)?100:50)+i*5);
         y+=e->getHeight()+1;
         e->setEditMode(i!=2?EditText::INSERT:EditText::REPLACE);
     }
@@ -118,13 +121,19 @@ TEST_F(WIDGET,ProgressBar){
     ProgressBar*pb;
     LinearLayout*ll=new LinearLayout(800,600);
     pb=new ProgressBar(800,20);
-    ll->addView(pb).setId(100);
+    ll->addView(pb);pb->setId(100);
     pb->setProgress(30);
-    ll->addView(new ProgressBar(30,200)).setId(101);
+    
+    pb = new ProgressBar(30,200);
+    ll->addView(pb);
+    pb->setId(101);
+    
     pb=new ProgressBar(800,20);
     ll->addView(pb);
     pb->setIndeterminate(true);
-    w->addView(new ProgressBar(200,200)).setId(102);
+
+    pb=new ProgressBar(200,200);
+    w->addView(pb);pb->setId(102);
     pb=new ProgressBar(200,200);
     ll->addView(pb);
     pb->setIndeterminate(true);
@@ -178,6 +187,7 @@ TEST_F(WIDGET,Keyboard){
     kbv->setBackgroundColor(0xFFEEEEEE);
     Keyboard*kbd=new Keyboard(&app,"cdroid:xml/qwerty.xml",800,200);
     kbv->setKeyboard(kbd);
-    w->addView(kbv).layout(20,10,800,300);
+    w->addView(kbv);
+    kbv->layout(20,10,800,300);
     app.exec();
 }

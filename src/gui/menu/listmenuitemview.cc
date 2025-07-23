@@ -51,7 +51,7 @@ void ListMenuItemView::initialize(MenuItemImpl* itemData, int menuType) {
     setCheckable(itemData->isCheckable());
     setShortcut(itemData->shouldShowShortcut(), itemData->getShortcut());
     setIcon(itemData->getIcon());
-    MenuView::ItemView::setEnabled(itemData->isEnabled());
+    setEnabled(itemData->isEnabled());
     setSubMenuArrowVisible(itemData->hasSubMenu());
     setContentDescription(itemData->getContentDescription());
 }
@@ -84,6 +84,10 @@ void ListMenuItemView::setTitle(const std::string& title) {
 
 MenuItemImpl* ListMenuItemView::getItemData() {
     return mItemData;
+}
+
+void ListMenuItemView::setEnabled(bool v){
+    LinearLayout::setEnabled(v);
 }
 
 void ListMenuItemView::setCheckable(bool checkable) {

@@ -50,8 +50,8 @@ public:
     void dispatchDraw(Canvas& canvas)override;
     void setCurrentTab(int index);
     void focusCurrentTab(int index);
-    View& setEnabled(bool enabled)override;
-    View& addView(View* child)override;
+    void setEnabled(bool enabled)override;
+    void addView(View* child)override;
     void removeAllViews()override;
     PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
     void setTabSelectionListener(OnTabSelectionChanged listener);

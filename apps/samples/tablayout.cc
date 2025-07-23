@@ -7,7 +7,8 @@ public:
 #if ENABLE(DAYTIME_WIDGETS)
         SimpleMonthView*sm=new  SimpleMonthView(1280,560);
         sm->setMonthParams(23,Calendar::MAY+position,2021,-1,1,31);
-        container->addView(sm).setId(100+position);
+        container->addView(sm);
+        sm->setId(100+position);
         return sm;
 #else
         return new TextView("TextView",0,0);
@@ -43,8 +44,10 @@ int main(int argc,const char*argv[]){
     tab->setSelectedTabIndicatorHeight(4); 
     tab->setTabIndicatorGravity(Gravity::BOTTOM);//TOP/BOTTOM/CENTER_VERTICAL/FILL_VERTICAL
     tab->setupWithViewPager(pager);
-    layout->addView(tab).setId(1);
-    layout->addView(pager).setId(10);
+    layout->addView(tab);
+    tab->setId(1);
+    layout->addView(pager);
+    pager->setId(10);
     tab->setTabTextColors(0xFFFF0000,0xFF00FF00);
     w->addView(layout);
     w->requestLayout();

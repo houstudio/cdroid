@@ -818,7 +818,7 @@ void ViewPager::calculatePageOffsets(ItemInfo* curItem, int curIndex, ItemInfo* 
     mNeedCalculatePageOffsets = false;
 }
 
-View& ViewPager::addView(View* child, int index, ViewGroup::LayoutParams* params){
+void ViewPager::addView(View* child, int index, ViewGroup::LayoutParams* params){
     if (!checkLayoutParams(params)) {
         ViewGroup::LayoutParams*olp = params;
         params = generateLayoutParams(params);
@@ -845,7 +845,6 @@ View& ViewPager::addView(View* child, int index, ViewGroup::LayoutParams* params
             child->setDrawingCacheEnabled(false);
         }
     }    
-    return *child;
 }
 
 

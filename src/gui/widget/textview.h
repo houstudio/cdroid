@@ -224,7 +224,7 @@ public:
     const std::string getText()const;
     void  setTextAppearance(const std::string&);
     void  setTextAppearance(Context*,const std::string&);
-    View& setHint(const std::string&txt)override;
+    void setHint(const std::string&txt)override;
     bool bringPointIntoView(int offset);
     bool moveCursorToVisibleOffset();
     void computeScroll()override;

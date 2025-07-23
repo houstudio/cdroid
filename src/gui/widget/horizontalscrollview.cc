@@ -120,28 +120,24 @@ void HorizontalScrollView::initScrollView() {
     mScrollDuration = 400;
 }
 
-View& HorizontalScrollView::addView(View* child){
+void HorizontalScrollView::addView(View* child){
     if(getChildCount()==0)
         FrameLayout::addView(child);
-    return *this;
 }
 
-View& HorizontalScrollView::addView(View* child, int index){
+void HorizontalScrollView::addView(View* child, int index){
     if(getChildCount()==0)
         FrameLayout::addView(child,index);
-    return *this;
 }
 
-View& HorizontalScrollView::addView(View* child, ViewGroup::LayoutParams* params){
+void HorizontalScrollView::addView(View* child, ViewGroup::LayoutParams* params){
     if(getChildCount()==0)
         FrameLayout::addView(child,params);
-    return *this;
 } 
 
-View& HorizontalScrollView::addView(View* child, int index,ViewGroup::LayoutParams* params){
+void HorizontalScrollView::addView(View* child, int index,ViewGroup::LayoutParams* params){
     if(getChildCount()==0)
         FrameLayout::addView(child,index,params);
-    return *this;
 }
 
 bool HorizontalScrollView::canScroll() {

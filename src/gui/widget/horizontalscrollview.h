@@ -98,10 +98,10 @@ public:
     int getLeftEdgeEffectColor()const;
     int getRightEdgeEffectColor()const;
     int getMaxScrollAmount();
-    View& addView(View* child)override;
-    View& addView(View* child, int index)override;
-    View& addView(View* child, ViewGroup::LayoutParams* params)override;
-    View& addView(View* child, int index,ViewGroup::LayoutParams* params)override;
+    void addView(View* child)override;
+    void addView(View* child, int index)override;
+    void addView(View* child, ViewGroup::LayoutParams* params)override;
+    void addView(View* child, int index,ViewGroup::LayoutParams* params)override;
     bool isFillViewport()const;
     void setFillViewport(bool fillViewport);
     bool isSmoothScrollingEnabled()const;

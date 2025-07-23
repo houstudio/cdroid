@@ -86,7 +86,7 @@ public:
     bool onTouchEvent(MotionEvent& event)override;
     bool onTrackballEvent(MotionEvent& ev)override;
     bool dispatchKeyEvent(KeyEvent& event)override;
-    View& setEnabled(bool enabled)override;
+    void setEnabled(bool enabled)override;
     void setPrevNextListeners(OnClickListener next,OnClickListener prev);
 };
 }/*endof namespace*/

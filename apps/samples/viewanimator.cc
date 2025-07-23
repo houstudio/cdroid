@@ -21,20 +21,25 @@ int main(int argc,const char*argv[]){
     root->setOrientation(LinearLayout::HORIZONTAL);
     root->setBackgroundColor(0xFF221133);
     left->setOrientation(LinearLayout::VERTICAL);
-    root->addView(left,new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::MATCH_PARENT,1)).setId(1000);
+    root->addView(left,new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::MATCH_PARENT,1));
+    left->setId(1000);
     left->setBackgroundColor(0xFF202020);
-    root->addView(right,new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::MATCH_PARENT,4)).setId(2000);
+    root->addView(right,new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::MATCH_PARENT,4));
+    right->setId(2000);
     root->setWeightSum(5);
     right->setBackgroundColor(0xFF112233);
-    w->addView(root).setId(100);
+    w->addView(root);root->setId(100);
 
     Button*btn=new Button("Alpha",100,32);
-    left->addView(btn).setId(1).setOnClickListener(onClick);
+    left->addView(btn);btn->setId(1);
+    btn->setOnClickListener(onClick);
     btn=new Button("Translate",100,32);
-    left->addView(btn).setId(2).setOnClickListener(onClick);
+    left->addView(btn);btn->setId(2);
+    btn->setOnClickListener(onClick);
 
     btn = new Button("Hello world!",200,200);
-    right->addView(btn,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT)).setId(0x12345);
+    right->addView(btn,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT));
+    btn->setId(0x12345);
     w->requestLayout();
     app.exec();
 }

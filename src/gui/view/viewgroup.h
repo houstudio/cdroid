@@ -163,7 +163,7 @@ private:
 
     void bindLayoutAnimation(View* child);
     void notifyAnimationListener();
-    View&addViewInner(View* child, int index,LayoutParams* params,bool preventRequestLayout);
+    void addViewInner(View* child, int index,LayoutParams* params,bool preventRequestLayout);
     void addDisappearingView(View* v);
     bool updateLocalSystemUiVisibility(int localValue, int localChanges)override;
     PointerIcon* dispatchResolvePointerIcon(MotionEvent& event, int pointerIndex,View* child);
@@ -353,11 +353,11 @@ public:
     bool isLayoutModeOptical()const;
     void cleanupLayoutState(View* child)const;
 
-    virtual View& addView(View* view);
-    virtual View& addView(View* child, int index);
-    virtual View& addView(View* child, LayoutParams* params);
-    virtual View& addView(View* child, int index, LayoutParams* params);
-    View& addView(View* child, int width, int height);
+    virtual void addView(View* view);
+    virtual void addView(View* child, int index);
+    virtual void addView(View* child, LayoutParams* params);
+    virtual void addView(View* child, int index, LayoutParams* params);
+    void addView(View* child, int width, int height);
     bool addViewInLayout(View* child, int index,LayoutParams* params);
     bool addViewInLayout(View* child, int index,LayoutParams* params,bool preventRequestLayout);
     void addTransientView(View*view,int index);

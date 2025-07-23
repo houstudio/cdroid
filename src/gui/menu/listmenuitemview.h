@@ -49,7 +49,7 @@ public:
     void setTitle(const std::string& title);
 
     MenuItemImpl* getItemData();
-
+    void setEnabled(bool)override;
     void setCheckable(bool checkable);
 
     void setChecked(bool checked);

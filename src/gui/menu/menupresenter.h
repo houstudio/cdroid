@@ -117,7 +117,7 @@ public:
      * Returns an ID for determining how to save/restore instance state.
      * @return a valid ID value.
      */
-    virtual int getId()=0;
+    virtual int getId()const =0;
 
     /**
      * Returns a Parcelable describing the current state of the presenter.

@@ -136,10 +136,10 @@ public:
     int getNestedScrollAxes()override;
     bool shouldDelayChildPressedState()override;
     int getMaxScrollAmount();
-    View& addView(View* child)override;
-    View& addView(View* child, int index)override;
-    View& addView(View* child, ViewGroup::LayoutParams* params)override;
-    View& addView(View* child, int index, ViewGroup::LayoutParams* params)override;
+    void addView(View* child)override;
+    void addView(View* child, int index)override;
+    void addView(View* child, ViewGroup::LayoutParams* params)override;
+    void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
     void setOnScrollChangeListener(OnScrollChangeListener l);
     bool isFillViewport();
     void setFillViewport(bool fillViewport);

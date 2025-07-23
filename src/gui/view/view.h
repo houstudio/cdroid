@@ -760,13 +760,13 @@ protected:
     Cairo::RefPtr<Cairo::ImageSurface>getDrawingCache(bool autoScale);
     virtual bool hasWindowFocus()const;
 
-    View& setLeftTopRightBottom(int left, int top, int right, int bottom);
+    void setLeftTopRightBottom(int left, int top, int right, int bottom);
     virtual bool setFrame(int x,int y,int w,int h);
     virtual void resetResolvedDrawables();
     virtual bool verifyDrawable(Drawable*)const;
     virtual void drawableStateChanged();
     virtual std::vector<int> onCreateDrawableState(int);
-    virtual View& setFlags(int flag,int mask);
+    virtual void setFlags(int flag,int mask);
     virtual bool hasFlag(int flag) const;
     bool fitSystemWindows(Rect& insets);
     void applyInsets(const Rect& insets);
@@ -822,10 +822,10 @@ protected:
     virtual void onCancelPendingInputEvents();
     bool canReceivePointerEvents()const;
     bool getFilterTouchesWhenObscured()const;
-    View& setFilterTouchesWhenObscured(bool enabled);
+    void setFilterTouchesWhenObscured(bool enabled);
     bool onFilterTouchEventForSecurity(MotionEvent& event);
     bool isSaveFromParentEnable()const;
-    View& setSaveFromParentEnabled(bool);
+    void setSaveFromParentEnabled(bool);
     virtual bool dispatchHoverEvent(MotionEvent&event);
     virtual bool dispatchTrackballEvent(MotionEvent& event);
     virtual bool dispatchCapturedPointerEvent(MotionEvent& event);
@@ -1007,15 +1007,15 @@ public:
     bool isLayoutDirectionResolved()const;
     int getLayoutDirection()const;
     virtual bool isOpaque()const;
-    virtual View& setLayoutDirection(int layoutDirection);
+    virtual void setLayoutDirection(int layoutDirection);
     bool isLayoutRtl()const;
     bool isFocusableInTouchMode()const;
     virtual void setFocusable(int focusable);
     virtual void setFocusableInTouchMode(bool focusableInTouchMode);
     bool isScreenReaderFocusable()const;
-    View& setScreenReaderFocusable(bool screenReaderFocusable);
+    void setScreenReaderFocusable(bool screenReaderFocusable);
     bool isAccessibilityHeading() const;
-    View& setAccessibilityHeading(bool isHeading);
+    void setAccessibilityHeading(bool isHeading);
     virtual void drawableHotspotChanged(float x, float y);
     virtual void dispatchDrawableHotspotChanged(float x,float y);
     void refreshDrawableState();
@@ -1025,26 +1025,26 @@ public:
     void setKeepScreenOn(bool);
 
     int getNextFocusLeftId()const;
-    View& setNextFocusLeftId(int id);
+    void setNextFocusLeftId(int id);
     int getNextFocusRightId()const;
-    View& setNextFocusRightId(int id);
+    void setNextFocusRightId(int id);
     int getNextFocusUpId()const;
-    View& setNextFocusUpId(int id);
+    void setNextFocusUpId(int id);
     int getNextFocusDownId()const;
-    View& setNextFocusDownId(int id);
+    void setNextFocusDownId(int id);
     int getNextFocusForwardId()const;
-    View& setNextFocusForwardId(int id);
+    void setNextFocusForwardId(int id);
     int getNextClusterForwardId()const;
-    View& setNextClusterForwardId(int);
+    void setNextClusterForwardId(int);
 
     int getScrollBarSize()const;
-    View& setScrollBarSize(int scrollBarSize);
+    void setScrollBarSize(int scrollBarSize);
     virtual void setScrollBarStyle(int style);
     int  getScrollBarStyle()const;
     bool isHorizontalScrollBarEnabled()const;
-    View& setHorizontalScrollBarEnabled(bool);
+    void setHorizontalScrollBarEnabled(bool);
     bool isVerticalScrollBarEnabled()const;
-    View& setVerticalScrollBarEnabled(bool);
+    void setVerticalScrollBarEnabled(bool);
     virtual int getHorizontalScrollbarHeight()const;
     virtual int getVerticalScrollbarWidth()const;
     virtual int getVerticalScrollbarPosition()const;
@@ -1055,7 +1055,7 @@ public:
     bool isVerticalFadingEdgeEnabled()const;
     void setVerticalFadingEdgeEnabled(bool verticalFadingEdgeEnabled);
 
-    virtual View& setVerticalScrollbarPosition(int position);
+    virtual void setVerticalScrollbarPosition(int position);
     void setVerticalScrollbarThumbDrawable(Drawable* drawable);
     void setVerticalScrollbarTrackDrawable(Drawable* drawable);
     void setHorizontalScrollbarThumbDrawable(Drawable* drawable);
@@ -1127,23 +1127,23 @@ public:
 
     //foreground/background
     Drawable* getForeground()const;
-    View& setForeground(Drawable* foreground);
+    void setForeground(Drawable* foreground);
     bool isForegroundInsidePadding()const;
     int getForegroundGravity()const;
-    View& setForegroundGravity(int gravity);
-    View& setForegroundTintList(const ColorStateList* tint);
-    View& setForegroundTintMode(int tintMode);
-    View& setForegroundTintBlendMode(int blendMode);
+    void setForegroundGravity(int gravity);
+    void setForegroundTintList(const ColorStateList* tint);
+    void setForegroundTintMode(int tintMode);
+    void setForegroundTintBlendMode(int blendMode);
     const ColorStateList* getForegroundTintList();
     virtual void onResolveDrawables(int layoutDirection);
 
     virtual void jumpDrawablesToCurrentState();
     Drawable*getBackground()const;
-    virtual View& setBackground(Drawable*background);
-    View& setBackgroundColor(int color);
-    View& setBackgroundResource(const std::string&resid);
-    View& setBackgroundTintList(const ColorStateList* tint);
-    View& setBackgroundTintMode(int tintMode);
+    virtual void setBackground(Drawable*background);
+    void setBackgroundColor(int color);
+    void setBackgroundResource(const std::string&resid);
+    void setBackgroundTintList(const ColorStateList* tint);
+    void setBackgroundTintMode(int tintMode);
     int getBackgroundTintMode() const;
     const ColorStateList* getBackgroundTintList()const;
     virtual int getSolidColor()const;
@@ -1174,16 +1174,16 @@ public:
 
     static int generateViewId();
     static bool isViewIdGenerated(int id);
-    View& setId(int id);
+    void setId(int id);
     int  getId()const;
-    View& setLabelFor(int);
+    void setLabelFor(int);
     int  getLabelFor()const;
     int  getAccessibilityViewId();
     int getAutofillViewId();
     int getAccessibilityWindowId()const;
-    View& setAccessibilityTraversalBefore(int beforeId);
+    void setAccessibilityTraversalBefore(int beforeId);
     int getAccessibilityTraversalBefore()const;
-    View& setAccessibilityTraversalAfter(int afterId);
+    void setAccessibilityTraversalAfter(int afterId);
     int getAccessibilityTraversalAfter()const;
     int  getAutoFillViewId();
     void setTag(void*);
@@ -1191,7 +1191,7 @@ public:
     void setTag(int key,void*tag);
     void*getTag(int key)const;
     void setTagInternal(int key, void* tag);
-    virtual View& setHint(const std::string&hint);
+    virtual void setHint(const std::string&hint);
     const std::string&getHint()const;
     void setContentDescription(const std::string&);
     virtual std::string getContentDescription()const;
@@ -1246,7 +1246,7 @@ public:
     virtual bool onCapturedPointerEvent(MotionEvent& event);
     void setOnCapturedPointerListener(OnCapturedPointerListener l);
     virtual PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex);
-    View& setPointerIcon(PointerIcon* pointerIcon);
+    void setPointerIcon(PointerIcon* pointerIcon);
     PointerIcon*getPointerIcon();
     int getImportantForAutofill()const;
     void setImportantForAutofill(int mode);
@@ -1254,10 +1254,10 @@ public:
     bool canNotifyAutofillEnterExitEvent();
 
     // Attribute
-    virtual View& clearFlag(int flag);
+    virtual void clearFlag(int flag);
     bool isAccessibilityFocused()const;
     void notifyEnterOrExitForAutoFillIfNeeded(bool enter);
-    View& setAccessibilityPaneTitle(const std::string& accessibilityPaneTitle);
+    void setAccessibilityPaneTitle(const std::string& accessibilityPaneTitle);
     std::string getAccessibilityPaneTitle() const;
     virtual std::string getAccessibilityClassName() const;
     virtual void sendAccessibilityEvent(int eventType);
@@ -1278,15 +1278,15 @@ public:
     bool isVisibleToUserForAutofill(int virtualId)const;
     bool isVisibleToUser();
     bool requestAccessibilityFocus();
-    View& clearAccessibilityFocus();
-    View& clearAccessibilityFocusNoCallbacks(int action);
+    void clearAccessibilityFocus();
+    void clearAccessibilityFocusNoCallbacks(int action);
     bool isAccessibilityFocusedViewOrHost();
     virtual bool isFocused()const;
     virtual bool isInEditMode()const;
     bool isFocusedByDefault()const;
     void setFocusedByDefault(bool isFocusedByDefault);
     // Enable & Visible
-    virtual View& setVisibility(int visable);
+    virtual void setVisibility(int visable);
     virtual int getVisibility() const;
     bool isAggregatedVisible()const;
     int  getWindowVisibility()const;
@@ -1304,7 +1304,7 @@ public:
     void requestFitSystemWindows();
     void requestApplyInsets();
     void makeOptionalFitsSystemWindows();
-    virtual View& setEnabled(bool enable);
+    virtual void setEnabled(bool enable);
     virtual bool isEnabled() const;
     virtual void setSelected(bool);
     bool isSelected()const;

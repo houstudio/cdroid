@@ -6,6 +6,8 @@
 #include <menu/submenu.h>
 #include <menu/menuitemimpl.h>
 #include <view/actionprovider.h>
+#include <view/layoutinflater.h>
+
 namespace cdroid{ 
 MenuInflater::MenuInflater(Context* context) {
     mContext = context;
@@ -26,12 +28,13 @@ void MenuInflater::inflate(const std::string&menuRes, Menu* menu) {
     parseMenu(parser, attrs, menu);
 }
 
-void MenuInflater::parseMenu(XmlPullParser& parser, AttributeSet& attrs, Menu* menu){
-    MenuState* menuState = new MenuState(menu);
+void MenuInflater::parseMenu(XmlPullParser& parser,const AttributeSet& attrs, Menu* menu){
+    MenuState* menuState = new MenuState(menu,mContext);
 
     int eventType = parser.getEventType();
-    std::string tagName;
     bool lookingForEndOfUnknownTag = false;
+    bool reachedEndOfMenu = false;
+    std::string tagName;
     std::string unknownTagName;
 
     // This loop will skip to the menu start tag
@@ -48,7 +51,6 @@ void MenuInflater::parseMenu(XmlPullParser& parser, AttributeSet& attrs, Menu* m
         eventType = parser.next();
     } while (eventType != XmlPullParser::END_DOCUMENT);
 
-    bool reachedEndOfMenu = false;
     while (!reachedEndOfMenu) {
         switch (eventType) {
         case XmlPullParser::START_TAG:
@@ -179,8 +181,9 @@ Object* MenuInflater::findRealOwner(Object* owner) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-MenuInflater::MenuState::MenuState(Menu* menu) {
+MenuInflater::MenuState::MenuState(Menu* menu,Context*ctx) {
     this->menu = menu;
+    this->mContext = ctx;
     resetGroup();
 }
 
@@ -320,6 +323,8 @@ void MenuInflater::MenuState::setItem(MenuItem* item) {
     bool actionViewSpecified = false;
     if (!itemActionViewClassName.empty()) {
         View* actionView = nullptr;//(View*) newInstance(itemActionViewClassName,ACTION_VIEW_CONSTRUCTOR_SIGNATURE, mActionViewConstructorArguments);
+        AttributeSet atts(mContext,"");
+        actionView = LayoutInflater::from(mContext)->createViewFromTag(nullptr,itemActionViewClassName,mContext,atts,true);
         item->setActionView(actionView);
         actionViewSpecified = true;
     }

@@ -113,7 +113,7 @@ public:
     void onDetachedFromWindow()override;
     void setStatusBarBackground(Drawable* bg);
     Drawable* getStatusBarBackground()const;
-    View& setVisibility(int visibility) override;
+    void setVisibility(int visibility) override;
     void setStatusBarBackgroundResource(const std::string& resId);
     void setStatusBarBackgroundColor(int color);
     WindowInsets getLastWindowInsets();

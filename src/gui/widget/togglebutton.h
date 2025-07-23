@@ -37,7 +37,7 @@ public:
     void setTextOn(const std::string& textOn);
     const std::string getTextOff()const;
     void setTextOff(const std::string& textOff);
-    View& setBackground(Drawable* d)override;
+    void setBackground(Drawable* d)override;
     std::string getAccessibilityName()const;
 };
 }

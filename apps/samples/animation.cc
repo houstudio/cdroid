@@ -31,7 +31,8 @@ int main(int argc,const char*argv[]){
   
     MyAdapter*adapter=new MyAdapter();
     w->setBackgroundColor(0xFF111111);
-    ListView*lv=(ListView*)&w->addView(new ListView(320,480));
+    ListView*lv=new ListView(320,480);
+    w->addView(lv);
     lv->layout(150,100,320,480);
     lv->setId(1000);
     for(int i=0;i<56;i++){
@@ -49,7 +50,8 @@ int main(int argc,const char*argv[]){
     //lv->setRotation(30);
 
     TextView*tv=new TextView("HelloWorld",200,40);
-    w->addView(tv).layout(600,400,200,40);
+    w->addView(tv);
+    tv->layout(600,400,200,40);
     tv->setBackgroundColor(0xFF00FF00);
     float rotation=.0f;
     Runnable r;

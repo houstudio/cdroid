@@ -35,7 +35,9 @@ int main(int argc,const char*argv[]){
     anim->setDuration(500);
     w->setId(10);
     LayoutAnimationController*lac = new LayoutAnimationController(anim,0.02);
-    ListView*lv=(ListView*)&w->addView(new ListView(460,500)).setId(100);
+    ListView*lv = new ListView(460,500);
+    w->addView(lv);
+    lv->setId(100);
     lv->layout(10,10,460,500);
     adapter->setNotifyOnChange(true);
     lv->setAdapter(adapter);
@@ -63,9 +65,12 @@ int main(int argc,const char*argv[]){
 ////////////////////////////////////////////////////////////////////////////////////////
 
     MyAdapter*adapter2=new MyAdapter(1);
-    ListView*lv2=(ListView*)&w->addView(new ListView(500,500)).setId(200);
+    ListView*lv2 = new ListView(500,500);
+    w->addView(lv2);
+    lv2->setId(200);
     ToggleButton *toggle=new ToggleButton(300,40);
-    w->addView(toggle).layout(500,520,300,40);
+    w->addView(toggle);
+    toggle->layout(500,520,300,40);
     lv2->layout(500,10,500,500);
     lv2->setAdapter(adapter2);
     for(int i=0;i<56;i++)  adapter2->add("");

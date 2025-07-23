@@ -57,7 +57,7 @@ HomeWindow::HomeWindow():Window(0,0,-1,-1){
 	TextView*txt=new TextView(texts[i],100,100);
 	txt->setGravity(Gravity::BOTTOM|Gravity::CENTER_HORIZONTAL);
 	txt->setTextSize(36);
-	ll->addView(txt,lp).setId(100+i);
+	ll->addView(txt,lp);txt->setId(100+i);
 	txt->setBackgroundResource(res[i]);
 	txt->setOnClickListener(std::bind(&HomeWindow::onWashOptionClick,this,std::placeholders::_1));
    }

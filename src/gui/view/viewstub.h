@@ -20,7 +20,7 @@ public:
     int getInflatedId()const;
     const std::string& getLayoutResource()const;
     void draw(Canvas&)override;
-    View& setVisibility(int visibility)override;
+    void setVisibility(int visibility)override;
     View*inflate();
     void setOnInflateListener(OnInflateListener inflateListener);
 };

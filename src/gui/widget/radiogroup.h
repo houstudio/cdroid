@@ -46,7 +46,7 @@ public:
     RadioGroup(int w,int h);
     RadioGroup(Context* context,const AttributeSet& attrs);
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
-    View& addView(View* child, int index,ViewGroup::LayoutParams* params)override;
+    void addView(View* child, int index,ViewGroup::LayoutParams* params)override;
     int getCheckedRadioButtonId()const;
     std::string getAccessibilityClassName()const override;
     void setOnHierarchyChangeListener(const ViewGroup::OnHierarchyChangeListener& listener)override;

@@ -42,8 +42,8 @@ public:
     void setItemInvoker(const MenuBuilder::ItemInvoker& itemInvoker);
 
     MenuItemImpl* getItemData()override;
-
-    View& setVisibility(int v)override;
+    void setEnabled(bool)override;
+    void setVisibility(int v)override;
     void setIconMenuView(IconMenuView* iconMenuView);
     IconMenuView::LayoutParams* getTextAppropriateLayoutParams();
     void setCheckable(bool checkable);

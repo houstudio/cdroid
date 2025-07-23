@@ -250,7 +250,7 @@ public:
     void addFocusables(std::vector<View*>&views, int direction, int focusableMode)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;
-    View& addView(View* child, int index, ViewGroup::LayoutParams* params)override;
+    void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
 };
 
 }//endof namespace

@@ -56,7 +56,8 @@ int main(int argc,const char*argv[]){
     pager->setAdapter(gpAdapter);
     pager->addOnPageChangeListener(*w);
     pager->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
-    w->addView(pager).layout(0,40,800,560);
+    w->addView(pager);
+    pager->layout(0,40,800,560);
     gpAdapter->notifyDataSetChanged();
     pager->setCurrentItem(0);
     w->requestLayout();

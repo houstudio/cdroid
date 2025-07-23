@@ -584,10 +584,9 @@ void ViewPager2::requestTransform() {
     mPageTransformerAdapter->onPageScrolled(position, positionOffset, positionOffsetPx);
 }
 
-View& ViewPager2::setLayoutDirection(int layoutDirection) {
+void ViewPager2::setLayoutDirection(int layoutDirection) {
     ViewGroup::setLayoutDirection(layoutDirection);
     mAccessibilityProvider->onSetLayoutDirection();
-    return *this;
 }
 
 void ViewPager2::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info) {

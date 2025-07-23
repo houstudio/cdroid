@@ -133,7 +133,7 @@ public:
     void unregisterOnPageChangeCallback(const ViewPager2::OnPageChangeCallback& callback);
     void setPageTransformer(PageTransformer* transformer);
     void requestTransform();
-    View&setLayoutDirection(int layoutDirection)override;
+    void setLayoutDirection(int layoutDirection)override;
     void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info)override;
     bool performAccessibilityAction(int action, Bundle* arguments)override;
 

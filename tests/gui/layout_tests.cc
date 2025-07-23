@@ -34,7 +34,8 @@ TEST_F(LAYOUT,linear){
     //lp->setMarginsRelative(10,0,10,0);
     lp->gravity=Gravity::TOP;
     ll->setBackground(new ColorDrawable(0xFFFFFFFF));
-    ll->addView(btn,lp).setBackgroundColor(0xFFFF0000);
+    ll->addView(btn,lp);
+    btn->setBackgroundColor(0xFFFF0000);
     btn->setTextSize(30);
     btn->setTextColor(0xFFFFFF00);
 
@@ -43,7 +44,8 @@ TEST_F(LAYOUT,linear){
     btn=new Button("Cancel",0,0);
     btn->setTextColor(0xFF0088FF);
     btn->setTextSize(30);
-    ll->addView(btn,lp).setBackgroundColor(0xFF00FF00);
+    ll->addView(btn,lp);
+    btn->setBackgroundColor(0xFF00FF00);
 #endif
 #if 10
     ProgressBar*pb2=new ProgressBar(72,72);

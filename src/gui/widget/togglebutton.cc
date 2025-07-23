@@ -86,10 +86,9 @@ void ToggleButton::updateReferenceToIndicatorDrawable(Drawable* backgroundDrawab
     }
 }
 
-View& ToggleButton::setBackground(Drawable* d){
+void ToggleButton::setBackground(Drawable* d){
     CompoundButton::setBackground(d);
     updateReferenceToIndicatorDrawable(d);
-    return *this;
 }
 
 std::string ToggleButton::getAccessibilityName()const{

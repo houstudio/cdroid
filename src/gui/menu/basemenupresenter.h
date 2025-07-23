@@ -69,7 +69,7 @@ public:
     bool expandItemActionView(MenuBuilder& menu, MenuItemImpl& item);
     bool collapseItemActionView(MenuBuilder& menu, MenuItemImpl& item);
 
-    int getId() const;
+    int getId() const override;
     void setId(int id);
 };
 }/*endof namespace*/
