@@ -60,6 +60,7 @@ private:
     void initView();
     bool isShowingDividers()const;
     bool allViewsAreGoneBefore(int childIndex);
+    bool allViewsAreGoneAfter(int childIndex);
     View* getLastNonGoneChild();
     void forceUniformWidth(int count, int heightMeasureSpec);
     void forceUniformHeight(int count, int widthMeasureSpec);
@@ -73,7 +74,8 @@ protected:
     virtual int getLocationOffset(View* child);
     virtual int getNextLocationOffset(View* child);
     virtual int measureNullChild(int childIndex){return 0;}
-    bool hasDividerBeforeChildAt(int childIndex);
+    virtual bool hasDividerBeforeChildAt(int childIndex);
+    virtual bool hasDividerAfterChildAt(int childIndex);
 
     ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
