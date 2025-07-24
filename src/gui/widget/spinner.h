@@ -155,6 +155,7 @@ public:
     bool onTouchEvent(MotionEvent& event)override;
     bool performClick()override;
     void onClick(DialogInterface& dialog, int which);
+    void onClick(int which);
     PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
 };
 

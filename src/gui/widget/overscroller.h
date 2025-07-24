@@ -24,7 +24,49 @@ namespace cdroid{
 
 class OverScroller{
 private:
-class SplineOverScroller{
+    static constexpr int DEFAULT_DURATION = 250;
+    static constexpr int SCROLL_MODE = 0;
+    static constexpr int FLING_MODE = 1;
+    class SplineOverScroller;
+    int mMode;
+    SplineOverScroller * mScrollerX;
+    SplineOverScroller * mScrollerY;
+
+    Interpolator* mInterpolator;
+    bool mFlywheel;
+public:
+    OverScroller(Context* context);
+    OverScroller(Context* context, Interpolator* interpolator, bool flywheel=true);
+    ~OverScroller();
+    void setInterpolator(Interpolator* interpolator);
+    void setFriction(float friction);
+    bool isFinished()const;
+    void forceFinished(bool finished);
+    int getCurrX()const;
+    int getCurrY()const;
+    float getCurrVelocity()const;
+    int getStartX()const;
+    int getStartY()const;
+    int getFinalX()const;
+    int getFinalY()const;
+    bool computeScrollOffset();
+    void startScroll(int startX, int startY, int dx, int dy);
+    void startScroll(int startX, int startY, int dx, int dy, int duration);
+    bool springBack(int startX, int startY, int minX, int maxX, int minY, int maxY);
+    void fling(int startX, int startY, int velocityX, int velocityY,
+            int minX, int maxX, int minY, int maxY);
+    void fling(int startX, int startY, int velocityX, int velocityY,
+            int minX, int maxX, int minY, int maxY, int overX, int overY);
+    void notifyHorizontalEdgeReached(int startX, int finalX, int overX);
+    void notifyVerticalEdgeReached(int startY, int finalY, int overY);
+    bool isOverScrolled()const;
+    void abortAnimation();
+    int timePassed()const;
+    bool isScrollingInDirection(float xvel, float yvel)const;
+    double getSplineFlingDistance(int velocity)const;
+};
+
+class OverScroller::SplineOverScroller{
 private://constexprs  
     // Constant gravity value, used in the deceleration phase.
     static constexpr float GRAVITY = 2000.0f;
@@ -85,7 +127,7 @@ private:
 public:
     SplineOverScroller(Context* context);
     void setFriction(float friction);
-    void updateScroll(float q);
+    void updateScroll(float q,float q2);
     void startScroll(int start, int distance, int duration);
     void finish();
     void setFinalPosition(int position);
@@ -96,47 +138,5 @@ public:
     bool continueWhenFinished();
     bool update();
 };
-private:
-    static constexpr int DEFAULT_DURATION = 250;
-    static constexpr int SCROLL_MODE = 0;
-    static constexpr int FLING_MODE = 1;
-    int mMode;
-    SplineOverScroller * mScrollerX;
-    SplineOverScroller * mScrollerY;
-
-    Interpolator* mInterpolator;
-    bool mFlywheel;
-public:
-    OverScroller(Context* context);
-    OverScroller(Context* context, Interpolator* interpolator, bool flywheel=true);
-    ~OverScroller();
-    void setInterpolator(Interpolator* interpolator);
-    void setFriction(float friction);
-    bool isFinished()const;
-    void forceFinished(bool finished);
-    int getCurrX()const;
-    int getCurrY()const;
-    float getCurrVelocity()const;
-    int getStartX()const;
-    int getStartY()const;
-    int getFinalX()const;
-    int getFinalY()const;
-    bool computeScrollOffset();
-    void startScroll(int startX, int startY, int dx, int dy);
-    void startScroll(int startX, int startY, int dx, int dy, int duration);
-    bool springBack(int startX, int startY, int minX, int maxX, int minY, int maxY);
-    void fling(int startX, int startY, int velocityX, int velocityY,
-            int minX, int maxX, int minY, int maxY);
-    void fling(int startX, int startY, int velocityX, int velocityY,
-            int minX, int maxX, int minY, int maxY, int overX, int overY);
-    void notifyHorizontalEdgeReached(int startX, int finalX, int overX);
-    void notifyVerticalEdgeReached(int startY, int finalY, int overY);
-    bool isOverScrolled()const;
-    void abortAnimation();
-    int timePassed()const;
-    bool isScrollingInDirection(float xvel, float yvel)const;
-    double getSplineFlingDistance(int velocity)const;
-};
-
 }//endnamespace
 #endif

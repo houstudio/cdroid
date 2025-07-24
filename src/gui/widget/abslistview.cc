@@ -4134,7 +4134,7 @@ void AbsListView::PositionScroller::doScroll() {
 
         const int position = mTargetPos;
         const int lastPos = firstPos + childCount - 1;
-        if(childCount==0) return;
+        if(childCount<=0) return;
         // Account for the visible "portion" of the first / last child when we estimate
         // how many screens we should travel to reach our target
         const View* firstChild = mLV->getChildAt(0);
