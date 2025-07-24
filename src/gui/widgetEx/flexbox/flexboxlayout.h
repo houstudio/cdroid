@@ -10,7 +10,7 @@
 #include <widgetEx/flexbox/flexboxhelper.h>
 #include <widgetEx/flexbox/flexcontainer.h>
 namespace cdroid{
-class FlexboxLayout:public ViewGroup{//virtual public FlexContainer {
+class FlexboxLayout:public ViewGroup{
 public:
     static constexpr int NOT_SET = -1;
     static constexpr int SHOW_DIVIDER_NONE = 0;
@@ -48,7 +48,7 @@ private:
     SparseIntArray mOrderCache;
 
     FlexboxHelper* mFlexboxHelper;
-
+    FlexContainer* mFlexContainer;
     std::vector<FlexLine> mFlexLines;
     FlexboxHelper::FlexLinesResult* mFlexLinesResult;
 private:
@@ -78,10 +78,11 @@ public:
     class LayoutParams;
     FlexboxLayout(Context* context,const AttributeSet& attrs);
     ~FlexboxLayout()override;
-    View& addView(View* child, int index,ViewGroup::LayoutParams* params)override;
+    void addView(View* child, int index,ViewGroup::LayoutParams* params)override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
     
     ////////////////////////////////////////////////////////////////////////////////////////////
+    //FlexContainer's impl.
     int getFlexItemCount();// override;
     View* getFlexItemAt(int index);// override;
     View* getReorderedChildAt(int index);
