@@ -152,7 +152,8 @@ private:
     float dampStretchVector(float normalizedVec)const;
 public:
     EdgeEffect(Context* context);
-    ~EdgeEffect();
+    EdgeEffect(Context* context,const AttributeSet& attrs);
+    virtual ~EdgeEffect();
     void setSize(int width, int height);
     bool isFinished()const;
     void finish();

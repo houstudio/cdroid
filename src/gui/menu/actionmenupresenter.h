@@ -225,12 +225,7 @@ public:
     static constexpr int FADE_IN = 1;
     static constexpr int FADE_OUT = 2;
 public:
-    ItemAnimationInfo(int id, MenuItemLayoutInfo* info, Animator* anim, int animType) {
-        this->id = id;
-        menuItemLayoutInfo = info;
-        animator = anim;
-        this->animType = animType;
-    }
+    ItemAnimationInfo(int id, MenuItemLayoutInfo* info, Animator* anim, int animType);
 };
 }/*endof namespace*/
 #endif/*__ACTION_MENU_PRESENTER_H__*/

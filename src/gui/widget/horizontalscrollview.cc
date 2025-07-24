@@ -20,8 +20,6 @@
 #include <systemclock.h>
 #include <cdlog.h>
 
-#define INVALID_POINTER (-1)
-
 namespace cdroid{
 
 DECLARE_WIDGET2(HorizontalScrollView,"cdroid:attr/horizontalScrollViewStyle")
@@ -341,8 +339,7 @@ bool HorizontalScrollView::onInterceptTouchEvent(MotionEvent& ev){
         /*If being flinged and user touches the screen, initiate drag;
         * otherwise don't.  mScroller.isFinished should be false when
         * being flinged. */
-        mIsBeingDragged = !mScroller->isFinished()||!mEdgeGlowLeft->isFinished()
-		||!mEdgeGlowRight->isFinished();
+        mIsBeingDragged = !mScroller->isFinished()||!mEdgeGlowLeft->isFinished()||!mEdgeGlowRight->isFinished();
         if(shouldDisplayEdgeEffects()){
             if (!mEdgeGlowLeft->isFinished()) {
                 mEdgeGlowLeft->onPullDistance(0.f, 1.f - ev.getY() / getHeight());
@@ -444,11 +441,11 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
             const float displacement = ev.getY(activePointerIndex)/getHeight();
             if (canOverscroll && shouldDisplayEdgeEffects()) {
                 int consumed = 0;
-                if (deltaX < 0 && mEdgeGlowRight->getDistance() != .0f) {
+                if ((deltaX < 0) && (mEdgeGlowRight->getDistance() != 0.f)) {
                     consumed = std::round(getWidth()
                           * mEdgeGlowRight->onPullDistance((float) deltaX / getWidth(),
                             displacement));
-                } else if (deltaX > 0 && mEdgeGlowLeft->getDistance() != .0f) {
+                } else if ((deltaX > 0) && (mEdgeGlowLeft->getDistance() != 0.f)) {
                     consumed = std::round(-getWidth()
                            * mEdgeGlowLeft->onPullDistance((float) -deltaX / getWidth(),
                              1.f - displacement));
@@ -459,7 +456,7 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
             // calls onScrollChanged if applicable.
             overScrollBy(deltaX, 0, mScrollX, 0, range, 0, mOverscrollDistance, 0, true);
 
-            if (canOverscroll && (deltaX!=0) && shouldDisplayEdgeEffects()) {
+            if (canOverscroll && (deltaX!=0.f)) {
                 const int pulledToX = oldX + deltaX;
                 if (pulledToX < 0) {
                     mEdgeGlowLeft->onPullDistance((float) -deltaX / getWidth(),1.f - displacement);
@@ -562,18 +559,36 @@ bool HorizontalScrollView::onGenericMotionEvent(MotionEvent& event){
 
             int delta = std::round(axisValue * mHorizontalScrollFactor);
             if (delta != 0) {
-                int range = getScrollRange();
+                const int range = getScrollRange();
                 int oldScrollX = mScrollX;
                 int newScrollX = oldScrollX + delta;
+                const int overscrollMode = getOverScrollMode();
+                bool canOverscroll = !event.isFromSource(InputDevice::SOURCE_MOUSE)
+                                && (overscrollMode == OVER_SCROLL_ALWAYS
+                                || (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0));
+                bool absorbed = false;
                 if (newScrollX < 0) {
+                    if(canOverscroll){
+                        mEdgeGlowLeft->onPullDistance(-(float) newScrollX / getWidth(),0.5f);
+                        mEdgeGlowLeft->onRelease();
+                        invalidate();
+                        absorbed = true;
+                    }
                     newScrollX = 0;
                 } else if (newScrollX > range) {
+                    if(canOverscroll){
+                        mEdgeGlowRight->onPullDistance((float) (newScrollX - range) / getWidth(), 0.5f);
+                        mEdgeGlowRight->onRelease();
+                        invalidate();
+                        absorbed = true;
+                    }
                     newScrollX = range;
                 }
                 if (newScrollX != oldScrollX) {
                     FrameLayout::scrollTo(newScrollX, mScrollY);
                     return true;
                 }
+                if(absorbed)return true;
             }
         }
      }
@@ -903,7 +918,7 @@ void HorizontalScrollView::computeScroll(){
         const int x = mScroller->getCurrX();
         const int y = mScroller->getCurrY();
         const int deltaX = consumeFlingInStretch(x-oldX);
-        if (oldX != x || oldY != y) {
+        if ((oldX != x) || (oldY != y)) {
             const int range = getScrollRange();
             const int overscrollMode = getOverScrollMode();
             const bool canOverscroll = overscrollMode == OVER_SCROLL_ALWAYS ||
@@ -912,7 +927,7 @@ void HorizontalScrollView::computeScroll(){
             overScrollBy(x - oldX, y - oldY, oldX, oldY, range, 0, mOverflingDistance, 0, false);
             onScrollChanged(mScrollX, mScrollY, oldX, oldY);
 
-            if (canOverscroll && deltaX !=0) {
+            if (canOverscroll && (deltaX !=0)) {
                 if (x < 0 && oldX >= 0) {
                     mEdgeGlowLeft->onAbsorb((int) mScroller->getCurrVelocity());
                 } else if (x > range && oldX <= range) {
@@ -924,6 +939,10 @@ void HorizontalScrollView::computeScroll(){
         if (!awakenScrollBars()) {
             postInvalidateOnAnimation();
         }
+        // For variable refresh rate project to track the current velocity of this View
+        /*if (viewVelocityApi()) {
+            setFrameContentVelocity(Math.abs(mScroller.getCurrVelocity()));
+        }*/
     }
 }
 
@@ -1164,17 +1183,32 @@ void HorizontalScrollView::fling(int velocityX){
     if (getChildCount() > 0) {
         const int width = getWidth() - mPaddingRight - mPaddingLeft;
         const int right = getChildAt(0)->getWidth() - mPaddingLeft;
-
-	const int maxScroll =std::max(0,right-width);
-	if(mScrollX==0 && !mEdgeGlowLeft->isFinished()){
-	    if(shouldDisplayEdgeEffects())
-		mEdgeGlowLeft->onAbsorb(-velocityX);
-	}else if(mScrollX==maxScroll && mEdgeGlowRight->isFinished()){
-	    if(shouldDisplayEdgeEffects())
-		mEdgeGlowRight->onAbsorb(velocityX);
-	}else{
+        const int maxScroll =std::max(0,right-width);
+        bool shouldFling = false;
+        if(mScrollX==0 && !mEdgeGlowLeft->isFinished()){
+            if (shouldAbsorb(mEdgeGlowLeft, -velocityX)) {
+                mEdgeGlowLeft->onAbsorb(-velocityX);
+            } else {
+                shouldFling = true;
+            }
+        }else if(mScrollX==maxScroll && mEdgeGlowRight->isFinished()){
+            if (shouldAbsorb(mEdgeGlowRight, velocityX)) {
+                mEdgeGlowRight->onAbsorb(velocityX);
+            } else {
+                shouldFling = true;
+            }
+            if(shouldDisplayEdgeEffects())
+            mEdgeGlowRight->onAbsorb(velocityX);
+        }else{
+            shouldFling = false;
+        }
+        if(shouldFling){
             mScroller->fling(mScrollX, mScrollY, velocityX, 0, 0,std::max(0, right - width), 0, 0, width/2, 0);
 
+            // For variable refresh rate project to track the current velocity of this View
+            /*if (viewVelocityApi()) {
+                setFrameContentVelocity(Math.abs(mScroller.getCurrVelocity()));
+            }*/
             const bool movingRight = velocityX > 0;
 
             View* currentFocused = findFocus();
@@ -1187,6 +1221,18 @@ void HorizontalScrollView::fling(int velocityX){
         }
         postInvalidateOnAnimation();
     }
+}
+
+bool HorizontalScrollView::shouldAbsorb(EdgeEffect* edgeEffect, int velocity) {
+    if (velocity > 0) {
+        return true;
+    }
+    float distance = edgeEffect->getDistance() * getWidth();
+
+    // This is flinging without the spring, so let's see if it will fling past the overscroll
+    float flingDistance = (float) mScroller->getSplineFlingDistance(-velocity);
+
+    return flingDistance < distance;
 }
 
 static int clamp(int n, int my, int child) {
@@ -1217,9 +1263,9 @@ bool HorizontalScrollView::shouldDisplayEdgeEffects()const{
 void HorizontalScrollView::draw(Canvas& canvas){
     FrameLayout::draw(canvas);
     if (shouldDisplayEdgeEffects()){
-        int scrollX = mScrollX;
+        const int scrollX = mScrollX;
         if (!mEdgeGlowLeft->isFinished()) {
-            int height = getHeight() - mPaddingTop - mPaddingBottom;
+            const int height = getHeight() - mPaddingTop - mPaddingBottom;
 
             canvas.save();
             canvas.rotate_degrees(270);
@@ -1231,8 +1277,8 @@ void HorizontalScrollView::draw(Canvas& canvas){
             canvas.restore();
         }
         if (!mEdgeGlowRight->isFinished()) {
-            int width = getWidth();
-            int height = getHeight() - mPaddingTop - mPaddingBottom;
+            const int width = getWidth();
+            const int height = getHeight() - mPaddingTop - mPaddingBottom;
 
             canvas.save();
             canvas.rotate_degrees(90);
@@ -1245,6 +1291,5 @@ void HorizontalScrollView::draw(Canvas& canvas){
         }
     }
 }
-
 
 }//namespace 

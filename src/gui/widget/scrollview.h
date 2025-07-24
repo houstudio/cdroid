@@ -20,11 +20,11 @@
 #include <widget/framelayout.h>
 #include <widget/overscroller.h>
 #include <widget/edgeeffect.h>
-
 namespace cdroid{
-
+class HapticScrollFeedbackProvider;
 class ScrollView:public FrameLayout{
 private:
+    static constexpr int INVALID_POINTER=-1;
     int64_t mLastScroll;
     int mLastMotionY;
     bool mIsLayoutDirty=true;
@@ -45,11 +45,11 @@ private:
     EdgeEffect* mEdgeGlowTop;
     EdgeEffect* mEdgeGlowBottom;
     float mVerticalScrollFactor;
-    int mActivePointerId =-1/*INVALID_POINTER */;
+    int mActivePointerId = INVALID_POINTER;
     int mScrollOffset[2] ;
     int mScrollConsumed[2];
     int mNestedYOffset;
-    Rect mTempRect;
+    HapticScrollFeedbackProvider* mHapticScrollFeedbackProvider;
 
     void initScrollView();
     bool canScroll();
@@ -63,16 +63,15 @@ private:
     void doScrollY(int delta);
     void smoothScrollBy(int dx, int dy);
     int consumeFlingInStretch(int unconsumed);
-    void scrollToChild(View* child);
     bool scrollToChildRect(Rect& rect, bool immediate);
     bool shouldDisplayEdgeEffects()const;
     static bool isViewDescendantOf(View* child, View* parent);
     static int clamp(int n, int my, int child);
     void flingWithNestedDispatch(int velocityY);
+    bool shouldAbsorb(EdgeEffect* edgeEffect, int velocity);
     void endDrag();
 protected:
     static constexpr float MAX_SCROLL_FACTOR = 0.5f;
-    static constexpr int INVALID_POINTER = -1;
     static constexpr int ANIMATED_SCROLL_GAP = 250;
     static constexpr float FLING_DESTRETCH_FACTOR = 4.f;
     float getTopFadingEdgeStrength()override;
@@ -88,6 +87,7 @@ protected:
     int computeVerticalScrollOffset()override;
     void initOrResetVelocityTracker();
     void initVelocityTrackerIfNotExists();
+    void initHapticScrollFeedbackProviderIfNotExists();
     void recycleVelocityTracker();
     void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec)override;
     void measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,

@@ -51,7 +51,7 @@ public:
                 mParentMenu->dispatchMenuItemSelected(menu, item);
     }
 
-    SubMenu& setIcon(Drawable* icon) {
+    SubMenu& setIcon(Drawable* icon) override{
         mItem->setIcon(icon);
         return *this;
     }
@@ -61,19 +61,19 @@ public:
         return *this;
     }
 
-    SubMenu& setHeaderIcon(Drawable* icon) {
+    SubMenu& setHeaderIcon(Drawable* icon) override{
         return (SubMenu&) MenuBuilder::setHeaderIconInt(icon);
     }
 
-    SubMenu& setHeaderIcon(const std::string& iconRes) {
+    SubMenu& setHeaderIcon(const std::string& iconRes) override{
         return (SubMenu&) MenuBuilder::setHeaderIconInt(iconRes);
     }
 
-    SubMenu& setHeaderTitle(const std::string& title) {
+    SubMenu& setHeaderTitle(const std::string& title) override{
         return (SubMenu&) MenuBuilder::setHeaderTitleInt(title);
     }
 
-    SubMenu& setHeaderView(View* view){
+    SubMenu& setHeaderView(View* view)override{
         return (SubMenu&) MenuBuilder::setHeaderViewInt(view);
     }
     void clearHeader()override{}

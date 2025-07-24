@@ -353,7 +353,7 @@ bool ActionMenuPresenter::onSubMenuSelected(SubMenuBuilder* subMenu) {
 
     SubMenuBuilder* topSubMenu = subMenu;
     while (topSubMenu->getParentMenu() != mMenu) {
-        topSubMenu = (SubMenuBuilder*)topSubMenu->getParentMenu();
+        //topSubMenu = (SubMenuBuilder*)topSubMenu->getParentMenu();
     }
     View* anchor = findViewForItem(topSubMenu->getInvokerItem());
     if (anchor == nullptr) {
@@ -778,48 +778,38 @@ class OverflowMenuButton extends ImageButton implements ActionMenuView.ActionMen
     }
 };
 
-class OverflowPopup extends MenuPopupHelper {
-    public OverflowPopup(Context context, MenuBuilder menu, View anchorView,
-            bool overflowOnly) {
-        super(context, menu, anchorView, overflowOnly,
-                com.android.internal.R.attr.actionOverflowMenuStyle);
-        setGravity(Gravity.END);
-        setPresenterCallback(mPopupPresenterCallback);
+ActionMenuPresenter::OverflowPopup::OverflowPopup(Context* context, MenuBuilder* menu, View* anchorView,bool overflowOnly)
+    :MenuPopupHelper(context, menu, anchorView, overflowOnly/*"com.android.internal.R.attr.actionOverflowMenuStyle*/){
+    setGravity(Gravity.END);
+    setPresenterCallback(mPopupPresenterCallback);
+}
+
+void ActionMenuPresenter::OverflowPopup::onDismiss() {
+    if (mMenu != null) {
+        mMenu.close();
     }
+    mOverflowPopup = null;
 
-    @Override
-    protected void onDismiss() {
-        if (mMenu != null) {
-            mMenu.close();
-        }
-        mOverflowPopup = null;
+    super.onDismiss();
+}
 
-        super.onDismiss();
+ActionMenuPresenter::ActionButtonSubmenu::ActionButtonSubmenu(Context* context, SubMenuBuilder* subMenu, View* anchorView)
+    :MenuPopupHelper(context, subMenu, anchorView, false/*,com.android.internal.R.attr.actionOverflowMenuStyle*/){
+
+    MenuItemImpl* item = (MenuItemImpl*) subMenu->getItem();
+    if (!item->isActionButton()) {
+        // Give a reasonable anchor to nested submenus.
+        setAnchorView(mOverflowButton == nullptr ? (View*) mMenuView : mOverflowButton);
     }
-};
+    setPresenterCallback(mPopupPresenterCallback);
+}
 
-class ActionButtonSubmenu extends MenuPopupHelper {
-    public ActionButtonSubmenu(Context context, SubMenuBuilder subMenu, View anchorView) {
-        super(context, subMenu, anchorView, false,
-                com.android.internal.R.attr.actionOverflowMenuStyle);
+void ActionMenuPresenter::ActionButtonSubmenu::onDismiss() {
+    mActionButtonPopup = null;
+    mOpenSubMenuId = 0;
 
-        MenuItemImpl item = (MenuItemImpl) subMenu.getItem();
-        if (!item.isActionButton()) {
-            // Give a reasonable anchor to nested submenus.
-            setAnchorView(mOverflowButton == null ? (View) mMenuView : mOverflowButton);
-        }
-
-        setPresenterCallback(mPopupPresenterCallback);
-    }
-
-    @Override
-    protected void onDismiss() {
-        mActionButtonPopup = null;
-        mOpenSubMenuId = 0;
-
-        super.onDismiss();
-    }
-};
+    super.onDismiss();
+}
 
 class PopupPresenterCallback implements Callback {
 
@@ -869,41 +859,24 @@ class ActionMenuPopupCallback extends ActionMenuItemView.PopupCallback {
         return mActionButtonPopup != null ? mActionButtonPopup.getPopup() : null;
     }
 };
-
-static class MenuItemLayoutInfo {
-    View* view;
-    int left;
-    int top;
-
-    MenuItemLayoutInfo(View view, bool preLayout) {
-        left = view.getLeft();
-        top = view.getTop();
-        if (preLayout) {
-            // We track translation for pre-layout because a view might be mid-animation
-            // and we need this information to know where to animate from
-            left += view.getTranslationX();
-            top += view.getTranslationY();
-        }
-        this.view = view;
-    }
-};
-
-static class ItemAnimationInfo {
-    int id;
-    MenuItemLayoutInfo menuItemLayoutInfo;
-    Animator* animator;
-    int animType;
-    static constexpr int MOVE = 0;
-    static constexpr int FADE_IN = 1;
-    static constexpr int FADE_OUT = 2;
-
-    ItemAnimationInfo(int id, MenuItemLayoutInfo info, Animator anim, int animType) {
-        this.id = id;
-        menuItemLayoutInfo = info;
-        animator = anim;
-        this.animType = animType;
-    }
-};
 #endif
+ActionMenuPresenter::MenuItemLayoutInfo::MenuItemLayoutInfo(View* view, bool preLayout) {
+    left = view->getLeft();
+    top = view->getTop();
+    if (preLayout) {
+        // We track translation for pre-layout because a view might be mid-animation
+        // and we need this information to know where to animate from
+        left += view->getTranslationX();
+        top += view->getTranslationY();
+    }
+    this->view = view;
+}
+
+ActionMenuPresenter::ItemAnimationInfo::ItemAnimationInfo(int id, MenuItemLayoutInfo* info, Animator* anim, int animType) {
+    this->id = id;
+    menuItemLayoutInfo = info;
+    animator = anim;
+    this->animType = animType;
+}
 }/*endof namespace*/
 #endif

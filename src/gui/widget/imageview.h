@@ -134,6 +134,7 @@ public:
     void setCornerRadii(int topLeftRadius,int topRightRadius,int bottomRightRadius,int bottomLeftRadius);
     void setImageState(const std::vector<int>&state, bool merge);
     void drawableHotspotChanged(float x, float y)override;
+    void animateTransform(const Cairo::Matrix* matrix);
 };
 
 }

@@ -19,7 +19,8 @@
 #include <widget/R.h>
 #include <view/focusfinder.h>
 #include <view/accessibility/accessibilitynodeinfo.h>
-#include <cdlog.h>
+#include <view/hapticscrollfeedbackprovider.h>
+#include <porting/cdlog.h>
 namespace cdroid {
 
 DECLARE_WIDGET2(ScrollView,"cdroid:attr/scrollViewStyle")
@@ -40,6 +41,7 @@ ScrollView::ScrollView(Context*context,const AttributeSet&atts)
 
 ScrollView::~ScrollView(){
     recycleVelocityTracker();
+    delete mHapticScrollFeedbackProvider;
     delete mScroller;
     delete mEdgeGlowTop;
     delete mEdgeGlowBottom;
@@ -123,6 +125,7 @@ void ScrollView::initScrollView() {
     mScrollOffset [0]  = mScrollOffset [1] = 0;
     mScrollConsumed[0] = mScrollConsumed[1]= 0;
     mScrollDuration = 400;
+    mHapticScrollFeedbackProvider = nullptr;
 }
 
 void ScrollView::addView(View* child) {
@@ -213,7 +216,8 @@ bool ScrollView::dispatchKeyEvent(KeyEvent& event) {
 
 bool ScrollView::executeKeyEvent(KeyEvent& event) {
     if (!canScroll()) {
-        if (isFocused() && event.getKeyCode() !=KeyEvent::KEYCODE_BACK) {
+        if (isFocused() && (event.getKeyCode() !=KeyEvent::KEYCODE_BACK)
+                &&(event.getKeyCode() != KeyEvent::KEYCODE_ESCAPE) ) {
             View* currentFocused = findFocus();
             if (currentFocused == this) currentFocused = nullptr;
             View* nextFocused = FocusFinder::getInstance().findNextFocus(this, currentFocused, View::FOCUS_DOWN);
@@ -243,6 +247,18 @@ bool ScrollView::executeKeyEvent(KeyEvent& event) {
         case KeyEvent::KEYCODE_SPACE:
             pageScroll(event.isShiftPressed() ? View::FOCUS_UP : View::FOCUS_DOWN);
             break;
+        case KeyEvent::KEYCODE_MOVE_HOME:
+            handled = fullScroll(View::FOCUS_UP);
+            break;
+        case KeyEvent::KEYCODE_MOVE_END:
+            handled = fullScroll(View::FOCUS_DOWN);
+            break;
+        case KeyEvent::KEYCODE_PAGE_UP:
+            handled = pageScroll(View::FOCUS_UP);
+            break;
+        case KeyEvent::KEYCODE_PAGE_DOWN:
+            handled = pageScroll(View::FOCUS_DOWN);
+            break;
         }
     }
     return handled;
@@ -270,6 +286,12 @@ void ScrollView::initOrResetVelocityTracker() {
 void ScrollView::initVelocityTrackerIfNotExists() {
     if (mVelocityTracker == nullptr) {
         mVelocityTracker = VelocityTracker::obtain();
+    }
+}
+
+void ScrollView::initHapticScrollFeedbackProviderIfNotExists() {
+    if (mHapticScrollFeedbackProvider == nullptr) {
+        mHapticScrollFeedbackProvider = new HapticScrollFeedbackProvider(this);
     }
 }
 
@@ -362,7 +384,7 @@ bool ScrollView::onInterceptTouchEvent(MotionEvent& ev) {
         mScroller->computeScrollOffset();
         mIsBeingDragged = !mScroller->isFinished()|| !mEdgeGlowBottom->isFinished()
                    || !mEdgeGlowTop->isFinished();
-	// Catch the edge effect if it is active.
+        // Catch the edge effect if it is active.
         if (!mEdgeGlowTop->isFinished()) {
              mEdgeGlowTop->onPullDistance(0.f, ev.getX() / getWidth());
         }
@@ -463,6 +485,8 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
                 deltaY += mTouchSlop;
             }
         }
+        bool hitTopLimit = false;
+        bool hitBottomLimit= false;
         if (mIsBeingDragged) {
             // Scroll to follow the motion event
             mLastMotionY = y - mScrollOffset[1];
@@ -470,8 +494,8 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
             const int oldY = mScrollY;
             const int range = getScrollRange();
             const int overscrollMode = getOverScrollMode();
-            const bool canOverscroll = overscrollMode == OVER_SCROLL_ALWAYS ||
-                                 (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
+            const bool canOverscroll = (overscrollMode == OVER_SCROLL_ALWAYS) ||
+                        (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
 
             const float displacement =ev.getX(activePointerIndex)/getWidth();
             if(canOverscroll){
@@ -479,7 +503,7 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
                 if (deltaY < 0 && mEdgeGlowBottom->getDistance() != 0.f) {
                     consumed = std::round(getHeight()
                                * mEdgeGlowBottom->onPullDistance((float) deltaY / getHeight(),
-                               1 - displacement));
+                               1.f - displacement));
                 } else if (deltaY > 0 && mEdgeGlowTop->getDistance() != 0.f) {
                      consumed = std::round(-getHeight()
                                * mEdgeGlowTop->onPullDistance((float) -deltaY / getHeight(),
@@ -501,18 +525,33 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
                 mLastMotionY -= mScrollOffset[1];
                 vtev->offsetLocation(0, mScrollOffset[1]);
                 mNestedYOffset += mScrollOffset[1];
-            } else if (canOverscroll) {
+            } else if (canOverscroll && deltaY!=0.f) {
                 const int pulledToY = oldY + deltaY;
                 if (pulledToY < 0) {
                     mEdgeGlowTop->onPullDistance((float) -deltaY / getHeight(),displacement);
                     if (!mEdgeGlowBottom->isFinished()) mEdgeGlowBottom->onRelease();
+                    hitTopLimit = true;
                 } else if (pulledToY > range) {
                     mEdgeGlowBottom->onPullDistance((float) deltaY / getHeight(),1.f-displacement);
                     if(!mEdgeGlowTop->isFinished()) mEdgeGlowTop->onRelease();
+                    hitBottomLimit =true;
                 }
                 if (shouldDisplayEdgeEffects() && (!mEdgeGlowTop->isFinished() || !mEdgeGlowBottom->isFinished())) {
                     postInvalidateOnAnimation();
                 }
+            }
+        }
+        // TODO: b/360198915 - Add unit tests.
+        if (true/*enableScrollFeedbackForTouch()*/) {
+            if (hitTopLimit || hitBottomLimit) {
+                initHapticScrollFeedbackProviderIfNotExists();
+                mHapticScrollFeedbackProvider->onScrollLimit(vtev->getDeviceId(),
+                        vtev->getSource(), MotionEvent::AXIS_Y,
+                        /* isStart= */ hitTopLimit);
+            } else if (std::abs(deltaY) != 0) {
+                initHapticScrollFeedbackProviderIfNotExists();
+                mHapticScrollFeedbackProvider->onScrollProgress(vtev->getDeviceId(),
+                        vtev->getSource(), MotionEvent::AXIS_Y, deltaY);
             }
         }
     } break;
@@ -529,6 +568,7 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
             }
             mActivePointerId = INVALID_POINTER;
             endDrag();
+            velocityTracker->clear();
         }
         break;
     case MotionEvent::ACTION_CANCEL:
@@ -566,7 +606,7 @@ void ScrollView::onSecondaryPointerUp(MotionEvent& ev) {
         // This was our active pointer going up. Choose a new
         // active pointer and adjust accordingly.
         // TODO: Make this decision more intelligent.
-        int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+        const int newPointerIndex = pointerIndex == 0 ? 1 : 0;
         mLastMotionY = (int) ev.getY(newPointerIndex);
         mActivePointerId = ev.getPointerId(newPointerIndex);
         if (mVelocityTracker) mVelocityTracker->clear();
@@ -574,19 +614,24 @@ void ScrollView::onSecondaryPointerUp(MotionEvent& ev) {
 }
 
 bool ScrollView::onGenericMotionEvent(MotionEvent& event) {
-    int  delta;
-    float axisValue ;
+    int  delta,axis;
+    float axisValue;
     switch (event.getAction()) {
     case MotionEvent::ACTION_SCROLL:
         if (event.isFromSource(InputDevice::SOURCE_CLASS_POINTER)) {
-            axisValue = event.getAxisValue((int)MotionEvent::AXIS_VSCROLL,0);
+            axis = MotionEvent::AXIS_VSCROLL;
         } else if (event.isFromSource(InputDevice::SOURCE_ROTARY_ENCODER)) {
-            axisValue = event.getAxisValue((int)MotionEvent::AXIS_SCROLL,0);
+            axis = MotionEvent::AXIS_SCROLL;
         } else {
-            axisValue = 0;
+            axis = -1;
         }
+        axisValue = (axis==-1)?0:event.getAxisValue(axis,0);
         delta = std::round(axisValue * mVerticalScrollFactor);
         if (delta != 0) {
+            // Tracks whether or not we should attempt fling for this event.
+            // Fling should not be attempted if the view is already at the limit of scroll,
+            // since it conflicts with EdgeEffect.
+            bool hitLimit = false;
             const int range = getScrollRange();
             const int oldScrollY = mScrollY;
             int newScrollY = oldScrollY - delta;
@@ -603,6 +648,7 @@ bool ScrollView::onGenericMotionEvent(MotionEvent& event) {
                     absorbed = true;
                 }
                 newScrollY = 0;
+                hitLimit = true;
             } else if (newScrollY > range) {
                 if (canOverscroll) {
                     mEdgeGlowBottom->onPullDistance(
@@ -614,10 +660,22 @@ bool ScrollView::onGenericMotionEvent(MotionEvent& event) {
                 newScrollY = range;
             }
             if (newScrollY != oldScrollY) {
-		FrameLayout::scrollTo(mScrollX, newScrollY);
+                FrameLayout::scrollTo(mScrollX,mScrollY);
+                if(hitLimit){
+                    initHapticScrollFeedbackProviderIfNotExists();
+                    mHapticScrollFeedbackProvider->onScrollLimit(
+                        event.getDeviceId(), event.getSource(), axis,
+                        /* isStart= */ newScrollY == 0);
+                }else{
+                    initHapticScrollFeedbackProviderIfNotExists();
+                    mHapticScrollFeedbackProvider->onScrollProgress(
+                        event.getDeviceId(), event.getSource(), axis, delta);
+                    //initDifferentialFlingHelperIfNotExists();
+                    //mDifferentialMotionFlingHelper->onMotionEvent(event, axis);
+                }
                 return true;
             }
-	    if(absorbed) return true;
+            if(absorbed) return true;
         }
         break;
     }
@@ -770,7 +828,7 @@ View* ScrollView::findFocusableViewInBounds(bool topFocus, int top, int bottom) 
 bool ScrollView::pageScroll(int direction) {
     const bool down = direction == View::FOCUS_DOWN;
     const int height = getHeight();
-
+    Rect mTempRect;
     if (down) {
         mTempRect.top = getScrollY() + height;
         const int count = getChildCount();
@@ -792,8 +850,9 @@ bool ScrollView::pageScroll(int direction) {
 }
 
 bool ScrollView::fullScroll(int direction) {
-    bool down = direction == View::FOCUS_DOWN;
-    int height = getHeight();
+    const bool down = direction == View::FOCUS_DOWN;
+    const int height = getHeight();
+    Rect mTempRect;
 
     mTempRect.top = 0;
     mTempRect.height = height;
@@ -841,6 +900,7 @@ bool ScrollView::arrowScroll(int direction) {
     const int maxJump = getMaxScrollAmount();
 
     if (nextFocused != nullptr && isWithinDeltaOfScreen(nextFocused, maxJump, getHeight())) {
+        Rect mTempRect;
         nextFocused->getDrawingRect(mTempRect);
         offsetDescendantRectToMyCoords(nextFocused, mTempRect);
         int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
@@ -887,6 +947,7 @@ bool ScrollView::isOffScreen(const View* descendant) {
 }
 
 bool ScrollView::isWithinDeltaOfScreen(const View* descendant, int delta, int height) {
+    Rect mTempRect;
     descendant->getDrawingRect(mTempRect);
     offsetDescendantRectToMyCoords(descendant, mTempRect);
     return (mTempRect.bottom() + delta) >= getScrollY()
@@ -990,7 +1051,7 @@ void ScrollView::computeScroll() {
         const int y = mScroller->getCurrY();
         const int deltaY = consumeFlingInStretch(y - oldY);
 
-        if (oldX != x || deltaY != 0) {
+        if ( (oldX != x) || (deltaY != 0) ) {
             const int range = getScrollRange();
             const int overscrollMode = getOverScrollMode();
             const bool canOverscroll = overscrollMode == OVER_SCROLL_ALWAYS ||
@@ -999,8 +1060,8 @@ void ScrollView::computeScroll() {
             overScrollBy(x - oldX, deltaY, oldX, oldY, 0, range, 0, mOverflingDistance, false);
             onScrollChanged(mScrollX, mScrollY, oldX, oldY);
 
-            if (canOverscroll && deltaY != 0) {
-                if (y < 0 && oldY >= 0) {
+            if (canOverscroll && (deltaY != 0)) {
+                if ((y < 0) && (oldY >= 0)) {
                     mEdgeGlowTop->onAbsorb((int) mScroller->getCurrVelocity());
                 } else if (y > range && oldY <= range) {
                     mEdgeGlowBottom->onAbsorb((int) mScroller->getCurrVelocity());
@@ -1012,25 +1073,16 @@ void ScrollView::computeScroll() {
             // Keep on drawing until the animation has finished.
             postInvalidateOnAnimation();
         }
+        // For variable refresh rate project to track the current velocity of this View
+        /*if (viewVelocityApi()) {
+            setFrameContentVelocity(Math.abs(mScroller.getCurrVelocity()));
+        }*/
     }/* else {
         if (mFlingStrictSpan != nullptr) {
             mFlingStrictSpan->finish();
             mFlingStrictSpan = nullptr;
         }
     }*/
-}
-
-void ScrollView::scrollToChild(View* child) {
-    child->getDrawingRect(mTempRect);
-
-    /* Offset from child's local coordinates to ScrollView coordinates */
-    offsetDescendantRectToMyCoords(child, mTempRect);
-
-    int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
-
-    if (scrollDelta != 0) {
-        scrollBy(0, scrollDelta);
-    }
 }
 
 void ScrollView::setOverScrollMode(int mode){
@@ -1106,6 +1158,7 @@ int ScrollView::consumeFlingInStretch(int unconsumed) {
 void ScrollView::scrollToDescendant(View* child) {
     if(child == nullptr) return;
     if (!mIsLayoutDirty) {
+        Rect mTempRect;
         child->getDrawingRect(mTempRect);
         /* Offset from child's local coordinates to ScrollView coordinates */
         offsetDescendantRectToMyCoords(child, mTempRect);
@@ -1193,7 +1246,7 @@ int ScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
 void ScrollView::requestChildFocus(View* child, View* focused){
     if (focused != nullptr && focused->getRevealOnFocusHint()) {
         if (!mIsLayoutDirty) {
-            scrollToDescendant(focused);//scrollToChild(focused);
+            scrollToDescendant(focused);
         } else {
             // The child may not be laid out yet, we can't compute the scroll yet
             mChildToScrollTo = focused;
@@ -1238,8 +1291,8 @@ void ScrollView::onLayout(bool changed, int l, int t, int w, int h){
     FrameLayout::onLayout(changed, l, t, w, h);
     mIsLayoutDirty = false;
     // Give a child focus if it needs it
-    if (mChildToScrollTo != nullptr && isViewDescendantOf(mChildToScrollTo, this)) {
-        scrollToChild(mChildToScrollTo);
+    if ((mChildToScrollTo != nullptr) && isViewDescendantOf(mChildToScrollTo, this)) {
+        scrollToDescendant(mChildToScrollTo);
     }
     mChildToScrollTo = nullptr;
 
@@ -1279,6 +1332,10 @@ void ScrollView::fling(int velocityY) {
         mScroller->fling(mScrollX, mScrollY, 0, velocityY, 0, 0, 0,
                          std::max(0, bottom - height), 0, height/2);
 
+        // For variable refresh rate project to track the current velocity of this View
+        /*if (viewVelocityApi()) {
+            setFrameContentVelocity(std::abs(mScroller->getCurrVelocity()));
+        }*/
         /*if (mFlingStrictSpan == null) {
             mFlingStrictSpan = StrictMode.enterCriticalSpan("ScrollView-fling");
         }*/
@@ -1291,11 +1348,36 @@ void ScrollView::flingWithNestedDispatch(int velocityY) {
     const bool canFling = (mScrollY > 0 || velocityY > 0) &&
         (mScrollY < getScrollRange() || velocityY < 0);
     if (!dispatchNestedPreFling(0, velocityY)) {
-        dispatchNestedFling(0, velocityY, canFling);
+        const bool consumed = dispatchNestedFling(0, velocityY, canFling);
         if (canFling) {
             fling(velocityY);
+        }else if(!consumed){
+            if (!mEdgeGlowTop->isFinished()) {
+                if (shouldAbsorb(mEdgeGlowTop, -velocityY)) {
+                    mEdgeGlowTop->onAbsorb(-velocityY);
+                } else {
+                    fling(velocityY);
+                }
+            } else if (!mEdgeGlowBottom->isFinished()) {
+                if (shouldAbsorb(mEdgeGlowBottom, velocityY)) {
+                    mEdgeGlowBottom->onAbsorb(velocityY);
+                } else {
+                    fling(velocityY);
+                }
+            }
         }
     }
+}
+
+bool ScrollView::shouldAbsorb(EdgeEffect* edgeEffect, int velocity) {
+    if (velocity > 0) {
+        return true;
+    }
+    float distance = edgeEffect->getDistance() * getHeight();
+    // This is flinging without the spring, so let's see if it will fling past the overscroll
+    float flingDistance = (float) mScroller->getSplineFlingDistance(-velocity);
+
+    return flingDistance < distance;
 }
 
 void ScrollView::endDrag() {

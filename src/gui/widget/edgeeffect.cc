@@ -50,6 +50,11 @@ EdgeEffect::EdgeEffect(Context* context){
     mVelocity = 0.f;
 }
 
+EdgeEffect::EdgeEffect(Context* context,const AttributeSet& attrs)
+    :EdgeEffect(context){
+    mColor = attrs.getColor("colorEdgeEffect", 0xff666666);
+}
+
 EdgeEffect::~EdgeEffect(){
     delete mInterpolator;
 }
