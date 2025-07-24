@@ -502,15 +502,15 @@ void AbsListView::setCacheColorHint(int color) {
     }
 }
 
-ViewGroup::LayoutParams*AbsListView::generateDefaultLayoutParams()const {
+AbsListView::LayoutParams*AbsListView::generateDefaultLayoutParams()const {
     return new AbsListView::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT, 0);
 }
 
-ViewGroup::LayoutParams*AbsListView::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
+AbsListView::LayoutParams*AbsListView::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
     return new AbsListView::LayoutParams(*p);
 }
 
-ViewGroup::LayoutParams* AbsListView::generateLayoutParams(const AttributeSet& attrs)const {
+AbsListView::LayoutParams* AbsListView::generateLayoutParams(const AttributeSet& attrs)const {
     return new AbsListView::LayoutParams(getContext(), attrs);
 }
 

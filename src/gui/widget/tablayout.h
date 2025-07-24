@@ -301,7 +301,7 @@ public:
     void addView(View* child, ViewGroup::LayoutParams* params)override;
     void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
 
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    FrameLayout::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };
 
 }/*endof namespace*/

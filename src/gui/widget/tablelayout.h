@@ -55,9 +55,9 @@ protected:
             int totalWidth,int heightMeasureSpec, int totalHeight)override;
     void measureVertical(int widthMeasureSpec, int heightMeasureSpec)override;
 
-    ViewGroup::LayoutParams* generateDefaultLayoutParams() const override;
+    LayoutParams* generateDefaultLayoutParams() const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p) const override;
-    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
 public:
     TableLayout(int w,int h);
     TableLayout(Context*,const AttributeSet&atts);
@@ -84,7 +84,7 @@ public:
     void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
 
     std::string getAccessibilityClassName()const override;
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };
 }
 #endif

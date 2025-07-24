@@ -126,8 +126,8 @@ protected:
     void onSetLayoutParams(View* child, ViewGroup::LayoutParams* lp);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int l, int t, int w, int h)override;
-    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
-    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
+    LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    LayoutParams* generateDefaultLayoutParams()const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     void removeChildrenForExpandedActionView();
     void addChildrenForExpandedActionView();
@@ -184,7 +184,7 @@ public:
     int getCurrentContentInsetLeft()const;
     int getCurrentContentInsetRight()const;
     bool onTouchEvent(MotionEvent&)override;
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
     void setCollapsible(bool);
     //void setMenuCallbacks(MenuPresenter.Callback pcb, MenuBuilder.Callback mcb);
 };

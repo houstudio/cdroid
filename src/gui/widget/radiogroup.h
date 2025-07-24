@@ -43,12 +43,12 @@ private:
     bool isVisibleWithText(RadioButton* button)const;
 protected:
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
-    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
+    LinearLayout::LayoutParams* generateDefaultLayoutParams()const override;
     void onFinishInflate()override;
 public:
     RadioGroup(int w,int h);
     RadioGroup(Context* context,const AttributeSet& attrs);
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    LinearLayout::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
     void addView(View* child, int index,ViewGroup::LayoutParams* params)override;
     int getCheckedRadioButtonId()const;
     std::string getAccessibilityClassName()const override;

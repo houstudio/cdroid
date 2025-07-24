@@ -90,11 +90,11 @@ void AbsoluteLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         resolveSizeAndState(maxHeight, heightMeasureSpec, 0));
 }
 
-ViewGroup::LayoutParams* AbsoluteLayout::generateDefaultLayoutParams()const{
+AbsoluteLayout::LayoutParams* AbsoluteLayout::generateDefaultLayoutParams()const{
     return new AbsoluteLayout::LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT, 0, 0);
 }
 
-ViewGroup::LayoutParams* AbsoluteLayout::generateLayoutParams(const AttributeSet& attrs)const {
+AbsoluteLayout::LayoutParams* AbsoluteLayout::generateLayoutParams(const AttributeSet& attrs)const {
     return new AbsoluteLayout::LayoutParams(getContext(),attrs);
 }
 
@@ -102,7 +102,7 @@ bool AbsoluteLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const {
     return dynamic_cast<const AbsoluteLayout::LayoutParams*>(p);
 }
 
-ViewGroup::LayoutParams* AbsoluteLayout::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
+AbsoluteLayout::LayoutParams* AbsoluteLayout::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
     return new AbsoluteLayout::LayoutParams(*p);
 }
 

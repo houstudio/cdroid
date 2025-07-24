@@ -269,11 +269,11 @@ void TableRow::setColumnsWidthConstraints(const std::vector<int>& columnWidths) 
     mConstrainedColumnWidths = columnWidths;
 }
 
-ViewGroup::LayoutParams* TableRow::generateLayoutParams(const AttributeSet& attrs)const {
+TableRow::LayoutParams* TableRow::generateLayoutParams(const AttributeSet& attrs)const {
     return new LayoutParams(getContext(), attrs);
 }
 
-ViewGroup::LayoutParams* TableRow::generateDefaultLayoutParams()const {
+TableRow::LayoutParams* TableRow::generateDefaultLayoutParams()const {
     return new LayoutParams();
 }
 
@@ -281,7 +281,7 @@ bool TableRow::checkLayoutParams(const ViewGroup::LayoutParams* p)const {
     return dynamic_cast<const LayoutParams*>(p);
 }
 
-ViewGroup::LayoutParams*TableRow::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
+TableRow::LayoutParams*TableRow::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
     return new LayoutParams(*p);
 }
 

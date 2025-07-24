@@ -26,7 +26,7 @@ RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
     setOrientation(index);
 }
 
-LayoutParams* RadioGroup::generateLayoutParams(const AttributeSet& attrs)const {
+LinearLayout::LayoutParams* RadioGroup::generateLayoutParams(const AttributeSet& attrs)const {
     return new LayoutParams(getContext(), attrs);
 }
 
@@ -34,7 +34,7 @@ bool RadioGroup::checkLayoutParams(const ViewGroup::LayoutParams* p)const {
     return dynamic_cast<const LayoutParams*>(p);
 }
 
-ViewGroup::LayoutParams* RadioGroup::generateDefaultLayoutParams()const {
+LinearLayout::LayoutParams* RadioGroup::generateDefaultLayoutParams()const {
     return new LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
 }
 

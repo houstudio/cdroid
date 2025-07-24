@@ -205,7 +205,7 @@ int LinearLayout::getShowDividers()const{
    return mShowDividers;
 }
 
-LayoutParams* LinearLayout::generateDefaultLayoutParams()const{
+LinearLayout::LayoutParams* LinearLayout::generateDefaultLayoutParams()const{
     if (mOrientation == HORIZONTAL) {
         return new LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
     } else if (mOrientation == VERTICAL) {
@@ -214,7 +214,7 @@ LayoutParams* LinearLayout::generateDefaultLayoutParams()const{
     return nullptr;
 }
 
-ViewGroup::LayoutParams* LinearLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
+LinearLayout::LayoutParams* LinearLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
     if (sPreserveMarginParamsInLayoutParamConversion) {
         if (dynamic_cast<const LayoutParams*>(lp)) {
             return new LayoutParams((const LayoutParams&)*lp);
@@ -225,7 +225,7 @@ ViewGroup::LayoutParams* LinearLayout::generateLayoutParams(const ViewGroup::Lay
     return new LayoutParams(*lp);
 }
 
-ViewGroup::LayoutParams* LinearLayout::generateLayoutParams(const AttributeSet&atts)const{
+LinearLayout::LayoutParams* LinearLayout::generateLayoutParams(const AttributeSet&atts)const{
     return new LayoutParams(getContext(),atts); 
 }
 

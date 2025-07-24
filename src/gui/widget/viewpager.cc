@@ -2090,11 +2090,11 @@ bool ViewPager::onRequestFocusInDescendants(int direction,Rect* previouslyFocuse
     return false;
 }
 
-ViewGroup::LayoutParams* ViewPager::generateDefaultLayoutParams(){
+ViewPager::LayoutParams* ViewPager::generateDefaultLayoutParams(){
     return new LayoutParams();
 }
 
-ViewGroup::LayoutParams* ViewPager::generateLayoutParams(ViewGroup::LayoutParams* p){
+ViewPager::LayoutParams* ViewPager::generateLayoutParams(ViewGroup::LayoutParams* p){
     return generateDefaultLayoutParams();
 }
 
@@ -2102,7 +2102,7 @@ bool ViewPager::checkLayoutParams(ViewGroup::LayoutParams* p){
     return dynamic_cast<LayoutParams*>(p) && ViewGroup::checkLayoutParams(p);
 }
 
-ViewGroup::LayoutParams* ViewPager::generateLayoutParams(const AttributeSet& attrs){
+ViewPager::LayoutParams* ViewPager::generateLayoutParams(const AttributeSet& attrs){
     return new LayoutParams(getContext(),attrs);
 }
 

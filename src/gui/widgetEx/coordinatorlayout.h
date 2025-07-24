@@ -340,7 +340,6 @@ public:
     void setBehavior(Behavior* behavior);
 };
 
-
 #if 0
 class CoordinatorLayout::SavedState extends AbsSavedState {
     SparseArray<Parcelable> behaviorStates;

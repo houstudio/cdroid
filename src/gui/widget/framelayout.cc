@@ -59,11 +59,11 @@ void FrameLayout::setForegroundGravity(int foregroundGravity){
     }
 }
 
-ViewGroup::LayoutParams* FrameLayout::generateDefaultLayoutParams()const {
+FrameLayout::LayoutParams* FrameLayout::generateDefaultLayoutParams()const {
     return new FrameLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::MATCH_PARENT);
 }
 
-ViewGroup::LayoutParams* FrameLayout::generateLayoutParams(const AttributeSet& attrs)const {
+FrameLayout::LayoutParams* FrameLayout::generateLayoutParams(const AttributeSet& attrs)const {
     return new FrameLayout::LayoutParams(getContext(), attrs);
 }
 
@@ -71,7 +71,7 @@ bool FrameLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
     return dynamic_cast<const FrameLayout::LayoutParams*>(p);
 }
 
-ViewGroup::LayoutParams* FrameLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const {
+FrameLayout::LayoutParams* FrameLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const {
     if (sPreserveMarginParamsInLayoutParamConversion) {
         if (dynamic_cast<const LayoutParams*>(lp)) {
             return new FrameLayout::LayoutParams(*(LayoutParams*) lp);

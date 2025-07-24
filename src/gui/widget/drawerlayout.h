@@ -199,10 +199,10 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int l, int t, int r, int b)override;
     bool drawChild(Canvas& canvas, View* child, int64_t drawingTime)override;
-    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
-    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    LayoutParams* generateDefaultLayoutParams()const override;
+    LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
     ~DrawerLayout()override;
 public:
     DrawerLayout(int w,int h);

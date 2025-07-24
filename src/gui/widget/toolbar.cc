@@ -1044,11 +1044,11 @@ int Toolbar::getVerticalMargins(View* v){
     return mlp->topMargin + mlp->bottomMargin;
 }
 
-ViewGroup::LayoutParams* Toolbar::generateLayoutParams(const AttributeSet& attrs)const{
+Toolbar::LayoutParams* Toolbar::generateLayoutParams(const AttributeSet& attrs)const{
     return new LayoutParams(getContext(), attrs);
 }
 
-ViewGroup::LayoutParams* Toolbar::generateLayoutParams(const ViewGroup::LayoutParams* p)const{
+Toolbar::LayoutParams* Toolbar::generateLayoutParams(const ViewGroup::LayoutParams* p)const{
     if (dynamic_cast<const LayoutParams*>(p)) {
          return new LayoutParams((const LayoutParams)*p);
     } else if (dynamic_cast<const ActionBar::LayoutParams*>(p)) {
@@ -1060,8 +1060,7 @@ ViewGroup::LayoutParams* Toolbar::generateLayoutParams(const ViewGroup::LayoutPa
     }
 }
 
-
-ViewGroup::LayoutParams* Toolbar::generateDefaultLayoutParams()const{
+Toolbar::LayoutParams* Toolbar::generateDefaultLayoutParams()const{
     return new LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
 }
 

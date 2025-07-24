@@ -335,8 +335,8 @@ protected:
     bool handleScrollBarDragging(MotionEvent& event)override;
     bool performLongPress(View* child,int longPressPosition,long longPressId);
     bool performLongPress(View* child,int longPressPosition,long longPressId,int x,int y);
-    ViewGroup::LayoutParams*generateDefaultLayoutParams()const override;
-    ViewGroup::LayoutParams*generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    LayoutParams*generateDefaultLayoutParams()const override;
+    LayoutParams*generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     void onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocusedRect)override;
     void onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY)override;
@@ -425,7 +425,7 @@ public:
     void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
     void addTouchables(std::vector<View*>& views)override;
     View* getSelectedView()override;
-    ViewGroup::LayoutParams*generateLayoutParams(const AttributeSet& attrs)const override;
+    LayoutParams*generateLayoutParams(const AttributeSet& attrs)const override;
     void setSelectionFromTop(int position, int y);
     int getCacheColorHint()const;
     virtual void setCacheColorHint(int color);
