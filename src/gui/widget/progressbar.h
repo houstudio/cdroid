@@ -122,6 +122,15 @@ public:
     void setSecondaryProgress(int secondaryProgress);
     int getSecondaryProgress()const;
 
+    void setMinWidth(int minWidth);
+    int  getMinWidth() const;
+    void setMaxWidth(int maxWidth);
+    int getMaxWidth() const;
+    void setMinHeight(int minHeight);
+    int getMinHeight() const;
+    void setMaxHeight(int maxHeight);
+    int getMaxHeight() const;
+
     void incrementProgressBy(int diff);
     void incrementSecondaryProgressBy(int diff);
     bool isIndeterminate()const;

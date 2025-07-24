@@ -188,6 +188,42 @@ ProgressBar::~ProgressBar(){
     delete mTransformation;
 }
 
+void ProgressBar::setMinWidth(int minWidth) {
+    mMinWidth = minWidth;
+    requestLayout();
+}
+
+int ProgressBar::getMinWidth() const{
+    return mMinWidth;
+}
+
+void ProgressBar::setMaxWidth(int maxWidth) {
+    mMaxWidth = maxWidth;
+    requestLayout();
+}
+
+int ProgressBar::getMaxWidth() const{
+    return mMaxWidth;
+}
+
+void ProgressBar::setMinHeight(int minHeight) {
+    mMinHeight = minHeight;
+    requestLayout();
+}
+
+int ProgressBar::getMinHeight() const{
+    return mMinHeight;
+}
+
+void ProgressBar::setMaxHeight(int maxHeight) {
+    mMaxHeight = maxHeight;
+    requestLayout();
+}
+
+int ProgressBar::getMaxHeight() const{
+    return mMaxHeight;
+}
+
 bool ProgressBar::needsTileify(Drawable* dr){
     if (dynamic_cast<LayerDrawable*>(dr)) {
         LayerDrawable* orig = (LayerDrawable*) dr;

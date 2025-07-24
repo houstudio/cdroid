@@ -1033,7 +1033,31 @@ void  NumberPicker::setDisplayedValues(const std::vector<std::string>&displayedV
     if(mDisplayedDrawableCount)
         mDisplayedDrawableSize = drsize/mDisplayedDrawableCount;
 }
+/**
+ * Set the height for the divider that separates the currently selected value from the others.
+ * @param height The height to be set
+ */
+void NumberPicker::setSelectionDividerHeight(int height) {
+    mSelectionDividerHeight = height;
+    invalidate();
+}
 
+/**
+ * Retrieve the height for the divider that separates the currently selected value from the
+ * others.
+ * @return The height of the divider
+ */
+int NumberPicker::getSelectionDividerHeight()const{
+    return mSelectionDividerHeight;
+}
+
+float NumberPicker::getTopFadingEdgeStrength(){
+    return TOP_AND_BOTTOM_FADING_EDGE_STRENGTH;
+}
+
+float NumberPicker::getBottomFadingEdgeStrength(){
+    return TOP_AND_BOTTOM_FADING_EDGE_STRENGTH;
+}
 
 void NumberPicker::drawableStateChanged() {
     ViewGroup::drawableStateChanged();
