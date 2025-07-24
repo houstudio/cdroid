@@ -44,15 +44,15 @@ void IconMenuPresenter::addItemView(View* itemView, int childIndex) {
     BaseMenuPresenter::addItemView(itemView, childIndex);
 }
 
-bool IconMenuPresenter::onSubMenuSelected(SubMenuBuilder& subMenu) {
-    if (!subMenu.hasVisibleItems()) return false;
+bool IconMenuPresenter::onSubMenuSelected(SubMenuBuilder* subMenu) {
+    if (!subMenu->hasVisibleItems()) return false;
 
     // The window manager will give us a token.
-    MenuDialogHelper* helper=new MenuDialogHelper(&subMenu);
+    MenuDialogHelper* helper=new MenuDialogHelper(subMenu);
     helper->setPresenterCallback(mSubMenuPresenterCallback);
     helper->show(/*nullptr*/);
     mOpenSubMenu = helper;
-    mOpenSubMenuId = subMenu.getItem()->getItemId();
+    mOpenSubMenuId = subMenu->getInvokerItem()->getItemId();
     BaseMenuPresenter::onSubMenuSelected(subMenu);
     return true;
 }
@@ -105,7 +105,7 @@ void IconMenuPresenter::restoreHierarchyState(Bundle& inState) {
     if (subMenuId > 0 && mMenu != nullptr) {
         MenuItem* item = mMenu->findItem(subMenuId);
         if (item != nullptr) {
-            onSubMenuSelected(*(SubMenuBuilder*) item->getSubMenu());
+            onSubMenuSelected((SubMenuBuilder*)item->getSubMenu());
         }
     }
 }

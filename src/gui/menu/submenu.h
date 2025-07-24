@@ -61,7 +61,7 @@ public:
     /**
      * Clears the header of the submenu.
      */
-    //virtual void clearHeader()=0;
+    virtual void clearHeader()=0;
 
     /**
      * Change the icon associated with this submenu's item in its parent menu.
@@ -87,7 +87,7 @@ public:
      *
      * @return The {@link MenuItem} that launches the submenu when invoked.
      */
-    virtual MenuItem* getItem()=0;
+    virtual MenuItem* getInvokerItem()=0;
 };
 }/*endof namespace*/
 #endif/*__SUBMENU_H__*/

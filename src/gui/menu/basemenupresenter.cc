@@ -104,13 +104,13 @@ bool BaseMenuPresenter::shouldIncludeItem(int childIndex, MenuItemImpl* item) {
     return true;
 }
 
-void BaseMenuPresenter::onCloseMenu(MenuBuilder& menu, bool allMenusAreClosing) {
+void BaseMenuPresenter::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing) {
     if (mCallback.onCloseMenu != nullptr) {
-        mCallback.onCloseMenu(menu, allMenusAreClosing);
+        mCallback.onCloseMenu(*menu, allMenusAreClosing);
     }
 }
 
-bool BaseMenuPresenter::onSubMenuSelected(SubMenuBuilder& menu) {
+bool BaseMenuPresenter::onSubMenuSelected(SubMenuBuilder* menu) {
     if (mCallback.onOpenSubMenu != nullptr) {
         return mCallback.onOpenSubMenu((MenuBuilder&)menu);
     }

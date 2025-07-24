@@ -61,7 +61,7 @@ bool MenuBuilder::dispatchSubMenuSelected(SubMenuBuilder* subMenu,MenuPresenter*
     bool result = false;
     // Try the preferred presenter first.
     if (preferredPresenter != nullptr) {
-        result = preferredPresenter->onSubMenuSelected(*subMenu);
+        result = preferredPresenter->onSubMenuSelected(subMenu);
     }
 
     for (auto  it = mPresenters.begin();it!=mPresenters.end();) {
@@ -69,7 +69,7 @@ bool MenuBuilder::dispatchSubMenuSelected(SubMenuBuilder* subMenu,MenuPresenter*
         if (presenter == nullptr) {
             it = mPresenters.erase(it);
         } else if (!result) {
-            result = presenter->onSubMenuSelected(*subMenu);
+            result = presenter->onSubMenuSelected(subMenu);
             it++;
         }
     }
@@ -616,7 +616,7 @@ void MenuBuilder::close(bool closeAllMenus) {
             it = mPresenters.erase(it);
         } else {
             it++;
-            presenter->onCloseMenu(*this, closeAllMenus);
+            presenter->onCloseMenu(this, closeAllMenus);
         }
     }
     mIsClosing = false;

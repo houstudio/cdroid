@@ -150,7 +150,7 @@ public:
     SubMenu* addSubMenu(const std::string& title)override;
     SubMenu* addSubMenu(int group, int id, int categoryOrder, const std::string& title)override;
 
-    virtual void setGroupDividerEnabled(bool groupDividerEnabled);
+    void setGroupDividerEnabled(bool groupDividerEnabled)override;
 
     virtual bool isGroupDividerEnabled();
 
@@ -170,18 +170,18 @@ public:
 
     bool hasVisibleItems()const override;
 
-    MenuItem* findItem(int id)const;
+    MenuItem* findItem(int id)const override;
     int findItemIndex(int id);
     int findGroupIndex(int group);
     int findGroupIndex(int group, int start);
 
-    int size() const;
+    int size() const override;
 
-    MenuItem* getItem(int index);
+    MenuItem* getItem(int index)override;
 
     bool isShortcutKey(int keyCode,const KeyEvent& event)override;
 
-    virtual void setQwertyMode(bool isQwerty);
+    void setQwertyMode(bool isQwerty)override;
 
     virtual void setShortcutsVisible(bool shortcutsVisible);
     virtual bool isShortcutsVisible();
@@ -197,7 +197,7 @@ public:
     bool performItemAction(MenuItem* item, MenuPresenter* preferredPresenter, int flags);
 
     void close(bool closeAllMenus);
-    void close();
+    void close()override;
 
     void onItemsChanged(bool structureChanged);
     void stopDispatchingItemsChanged();

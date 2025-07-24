@@ -103,7 +103,7 @@ void MenuDialogHelper::dismiss() {
 }
 
 void MenuDialogHelper::onDismiss(DialogInterface& dialog) {
-    mPresenter->onCloseMenu(*mMenu, true);
+    mPresenter->onCloseMenu(mMenu, true);
 }
 
 void MenuDialogHelper::onCloseMenu(MenuBuilder& menu, bool allMenusAreClosing) {

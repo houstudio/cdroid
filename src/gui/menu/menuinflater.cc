@@ -354,7 +354,7 @@ MenuItem* MenuInflater::MenuState::addItem() {
 SubMenu* MenuInflater::MenuState::addSubMenuItem() {
     itemAdded = true;
     SubMenu* subMenu = menu->addSubMenu(groupId, itemId, itemCategoryOrder, itemTitle);
-    setItem(subMenu->getItem());
+    setItem(subMenu->getInvokerItem());
     return subMenu;
 }
 
@@ -363,3 +363,4 @@ bool MenuInflater::MenuState::hasAddedItem() const{
 }
 
 }/*endof namespace*/
+#include <menu/actionmenupresenter.cc>

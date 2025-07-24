@@ -34,7 +34,7 @@ public:
         return mParentMenu;
     }
 
-    MenuItem* getItem() {
+    MenuItem* getInvokerItem()override {
         return mItem;
     }
 
@@ -76,7 +76,7 @@ public:
     SubMenu& setHeaderView(View* view){
         return (SubMenu&) MenuBuilder::setHeaderViewInt(view);
     }
-
+    void clearHeader()override{}
     bool expandItemActionView(MenuItemImpl* item) override{
         return mParentMenu->expandItemActionView(item);
     }

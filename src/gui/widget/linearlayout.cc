@@ -456,6 +456,17 @@ bool LinearLayout::allViewsAreGoneBefore(int childIndex){
     return true;
 }
 
+bool LinearLayout::allViewsAreGoneAfter(int childIndex) {
+    const int count = getVirtualChildCount();
+    for (int i = childIndex + 1; i < count; i++) {
+        View* child = getVirtualChildAt(i);
+        if (child != nullptr && child->getVisibility() != GONE) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool LinearLayout::hasDividerBeforeChildAt(int childIndex){
     if (childIndex == getVirtualChildCount()) {
         // Check whether the end divider should draw.
@@ -468,6 +479,18 @@ bool LinearLayout::hasDividerBeforeChildAt(int childIndex){
     } else {
         return (mShowDividers & SHOW_DIVIDER_MIDDLE) != 0;
     }
+}
+
+bool LinearLayout::hasDividerAfterChildAt(int childIndex) {
+    if (mShowDividers == SHOW_DIVIDER_NONE) {
+        // Short-circuit to save iteration over child views.
+        return false;
+    }
+    if (allViewsAreGoneAfter(childIndex)) {
+        // This is the last view that's not gone, check if end divider is enabled.
+        return (mShowDividers & SHOW_DIVIDER_END) != 0;
+    }
+    return (mShowDividers & SHOW_DIVIDER_MIDDLE) != 0;
 }
 
 void LinearLayout::forceUniformHeight(int count, int widthMeasureSpec) {
@@ -1364,8 +1387,13 @@ void LinearLayout::layoutHorizontal(int left, int top, int width, int height){
                 childTop = paddingTop;
                 break;
             }
-
-            if (hasDividerBeforeChildAt(childIndex)) {
+            if(bLayoutRtl){
+                // Because rtl rendering occurs in the reverse direction, we need to check
+                // after the child rather than before (since after=left in this context)
+                if (hasDividerAfterChildAt(childIndex)) {
+                    childLeft += mDividerWidth;
+                }
+            }else if (hasDividerBeforeChildAt(childIndex)) {
                 childLeft += mDividerWidth;
             }
 

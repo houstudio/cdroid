@@ -75,7 +75,7 @@ public:
      * @param subMenu SubMenu being opened
      * @return true if the the event was handled, false otherwise.
      */
-    virtual bool onSubMenuSelected(SubMenuBuilder& subMenu)=0;
+    virtual bool onSubMenuSelected(SubMenuBuilder* subMenu)=0;
 
     /**
      * Called by Menu implementations to indicate that a menu or submenu is
@@ -87,7 +87,7 @@ public:
      *                           submenus are closing, {@code false} if only
      *                           the specified menu is closing
      */
-    virtual void onCloseMenu(MenuBuilder& menu, bool allMenusAreClosing)=0;
+    virtual void onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)=0;
 
     /**
      * Called by Menu implementations to flag items that will be shown as actions.

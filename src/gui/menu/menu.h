@@ -119,21 +119,16 @@ public:
      * the prepared state.
      */
     static constexpr int FLAG_ALWAYS_PERFORM_CLOSE = 0x0002;
-protected:
-    std::vector<MenuItem*>mMenuItems;
-    void *owner;/*menu owner/container*/
 public:
     virtual ~Menu()=default;
     virtual MenuItem* add(const std::string&title)=0;
     virtual MenuItem* add(int groupId, int itemId, int order,const std::string&title)=0;
     virtual SubMenu* addSubMenu(const std::string&title)=0;
     virtual SubMenu* addSubMenu(int groupId,int itemId,int order,const std::string& title)=0;
-    void popup(int x,int y);
     virtual void close()=0;
     virtual void removeItem(int id)=0;
     virtual void removeGroup(int groupId)=0;
     virtual void clear()=0;
-    virtual void clearHeader()=0;
     virtual void setGroupCheckable(int group, bool checkable, bool exclusive)=0;
     virtual void setGroupVisible(int group, bool visible)=0;
     virtual void setOptionalIconsVisible(bool visible){};

@@ -61,20 +61,20 @@ void ListMenuPresenter::setCallback(const Callback& cb) {
     mCallback = cb;
 }
 
-bool ListMenuPresenter::onSubMenuSelected(SubMenuBuilder& subMenu) {
-    if (!subMenu.hasVisibleItems()) return false;
+bool ListMenuPresenter::onSubMenuSelected(SubMenuBuilder* subMenu) {
+    if (!subMenu->hasVisibleItems()) return false;
 
     // The window manager will give us a token.
     //new MenuDialogHelper(subMenu).show(nullptr);
     if (mCallback.onOpenSubMenu != nullptr) {
-        mCallback.onOpenSubMenu(subMenu);
+        mCallback.onOpenSubMenu(*subMenu);
     }
     return true;
 }
 
-void ListMenuPresenter::onCloseMenu(MenuBuilder& menu, bool allMenusAreClosing) {
+void ListMenuPresenter::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing) {
     if (mCallback.onCloseMenu != nullptr) {
-        mCallback.onCloseMenu(menu, allMenusAreClosing);
+        mCallback.onCloseMenu(*menu, allMenusAreClosing);
     }
 }
 
