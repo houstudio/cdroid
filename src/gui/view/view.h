@@ -17,6 +17,9 @@
  *********************************************************************************/
 #ifndef __CDROID_VIEW_H__
 #define __CDROID_VIEW_H__
+#include <memory>
+#include <vector>
+#include <functional>
 #include <gui_features.h>
 #include <core/inputdevice.h>
 #include <core/canvas.h>
@@ -59,9 +62,6 @@
 #include <animation/animation.h>
 #include <animation/statelistanimator.h>
 #include <animation/animatorinflater.h>
-#include <memory>
-#include <vector>
-#include <functional>
 #include <core/rect.h>
 #include <drawables.h>
 #include <cdlog.h>
@@ -76,6 +76,7 @@ class Window;
 class UIEventSource;
 class HandlerActionQueue;
 class LayoutInflater;
+class ScrollBarDrawable;
 class HapticScrollFeedbackProvider;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 private:

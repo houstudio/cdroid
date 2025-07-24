@@ -39,6 +39,7 @@ public:
     ViewFlipper(int w,int h);
     ViewFlipper(Context* context,const AttributeSet& attrs);
     void setFlipInterval(int milliseconds);
+    int  getFlipInterval()const;
     void startFlipping();
     void stopFlipping();
     bool isFlipping()const;

@@ -143,6 +143,7 @@ list(APPEND CDROID_SOURCES
     widget/rtlspacinghelper.cc
     widget/viewdraghelper.cc
     widget/nestedscrollinghelper.cc
+    widget/scrollbardrawable.cc
     widget/cdwindow.cc
 )
 

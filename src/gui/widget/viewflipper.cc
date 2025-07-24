@@ -43,6 +43,10 @@ void ViewFlipper::setFlipInterval(int milliseconds) {
     mFlipInterval = milliseconds;
 }
 
+int ViewFlipper::getFlipInterval()const{
+    return mFlipInterval;
+}
+
 void ViewFlipper::startFlipping() {
     mStarted = true;
     updateRunning(true);

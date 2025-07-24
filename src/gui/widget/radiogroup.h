@@ -32,12 +32,15 @@ private:
     CompoundButton::OnCheckedChangeListener mChildOnCheckedChangeListener;
     CompoundButton::OnCheckedChangeListener mOnCheckedChangeListener;
     ViewGroup::OnHierarchyChangeListener mOnHierarchyChangeListener;
+private:
     void init();
     void onChildViewAdded(View& parent, View* child);
     void onChildViewRemoved(View& parent, View* child);
     void setCheckedId(int id);
     void setCheckedStateForView(int viewId, bool checked);
     void onRadioChecked(CompoundButton&c,bool checked);
+    int getVisibleChildWithTextCount()const;
+    bool isVisibleWithText(RadioButton* button)const;
 protected:
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
@@ -53,6 +56,8 @@ public:
     void setOnCheckedChangeListener(CompoundButton::OnCheckedChangeListener listener);
     void check(int id);
     void clearCheck();
+    void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info)override;
+    int getIndexWithinVisibleButtons(View* child)const;
 };
 class RadioGroup::LayoutParams:public LinearLayout::LayoutParams{
 public:

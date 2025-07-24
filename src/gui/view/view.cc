@@ -29,6 +29,7 @@
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/focusfinder.h>
 #include <widget/R.h>
+#include <widget/scrollbardrawable.h>
 #include <widget/edgeeffect.h>
 #include <animation/animationutils.h>
 #include <core/systemclock.h>

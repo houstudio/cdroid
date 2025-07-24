@@ -15,13 +15,14 @@ public:
             if(itemType==0) tv=new TextView("",600,20);
             else tv=new CheckBox("",600,20);
             tv->setPadding(20,0,0,0);
+            tv->setSingleLine(true);
         }
         if(itemType==1)tv->setLayoutDirection(position<10?View::LAYOUT_DIRECTION_RTL:View::LAYOUT_DIRECTION_LTR);
         tv->setId(position);
         tv->setText("position :"+std::to_string(position));
         tv->setTextColor(0xFFFFFFFF);
         tv->setBackgroundColor(0x80002222);
-        tv->setTextSize(40);
+        tv->setTextSize(24);
         return tv;
     }
 };
