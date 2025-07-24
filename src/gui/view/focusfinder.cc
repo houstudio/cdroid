@@ -220,9 +220,16 @@ View* FocusFinder::findNextFocusInRelativeDirection(std::vector<View*>& focusabl
     mUserSpecifiedFocusComparator.recycle();*/
 
     const int count = (int)focusables.size();
+    if(count<2){
+        return nullptr;
+    }
+    bool looped[1];
     switch (direction) {
-    case View::FOCUS_FORWARD : return getNextFocusable(focused, focusables, count);
-    case View::FOCUS_BACKWARD: return getPreviousFocusable(focused, focusables, count);
+    case View::FOCUS_FORWARD : return getNextFocusable(focused, focusables, count,looped);
+    case View::FOCUS_BACKWARD: return getPreviousFocusable(focused, focusables, count,looped);
+    }
+    if (root != nullptr && root->mAttachInfo != nullptr && root == root->getRootView()) {
+        root->mAttachInfo->mNextFocusLooped = looped[0];
     }
     return focusables.at(count - 1);
 }
@@ -272,7 +279,10 @@ View* FocusFinder::findNextFocusInAbsoluteDirection(std::vector<View*>&focusable
     return closest;
 }
 
-View* FocusFinder::getNextFocusable(View* focused,std::vector<View*>& focusables, int count) {
+View* FocusFinder::getNextFocusable(View* focused,std::vector<View*>& focusables, int count,bool* outLooped) {
+    if(count<2){
+        return nullptr;
+    }
     if (focused != nullptr) {
         std::vector<View*>ss={focused};
         auto itr = std::find_end(focusables.begin(),focusables.end(),ss.begin(),ss.end());
@@ -280,19 +290,21 @@ View* FocusFinder::getNextFocusable(View* focused,std::vector<View*>& focusables
             return *(itr+1);
         }
     }
+    outLooped[0] = true;
     if (!focusables.empty()) {
         return focusables.at(0);
     }
     return nullptr;
 }
 
-View* FocusFinder::getPreviousFocusable(View* focused,std::vector<View*>& focusables, int count) {
+View* FocusFinder::getPreviousFocusable(View* focused,std::vector<View*>& focusables, int count,bool*outLooped) {
     if (focused != nullptr) {
         auto position = std::find(focusables.begin(),focusables.end(),focused);
         if (position!=focusables.end()) {
             return *position;
         }
     }
+    outLooped[0] = true;
     if (!focusables.empty()) {
         return focusables.at(count - 1);
     }

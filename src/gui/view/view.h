@@ -73,6 +73,7 @@ class DragEvent;
 class ViewGroup;
 class ViewOverlay;
 class Window;
+class FocusFinder;
 class UIEventSource;
 class HandlerActionQueue;
 class LayoutInflater;
@@ -508,6 +509,7 @@ public:
 private:
     friend ViewGroup;
     friend Window;
+    friend FocusFinder;
     friend LayoutInflater;
     friend ViewPropertyAnimator;
     class TooltipInfo;
@@ -1573,6 +1575,7 @@ public:
     bool mKeepScreenOn;
     bool mHasSystemUiListeners;
     bool mDebugLayout;
+    bool mNextFocusLooped;
     UIEventSource*mEventSource;
     std::function<void(int)>mPlaySoundEffect;
     std::function<bool(int,bool)>mPerformHapticFeedback;

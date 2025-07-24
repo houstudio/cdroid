@@ -31,8 +31,8 @@ private:
     void setFocusBottomRight(ViewGroup* root,Rect& focusedRect)const;
     void setFocusTopLeft(ViewGroup* root, Rect& focusedRect)const;
     bool isTouchCandidate(int x, int y,const Rect& destRect, int direction)const;
-    static View* getNextFocusable(View* focused,std::vector<View*>& focusables, int count);
-    static View* getPreviousFocusable(View* focused, std::vector<View*>& focusables, int count);
+    static View* getNextFocusable(View* focused,std::vector<View*>& focusables, int count,bool*outLooped);
+    static View* getPreviousFocusable(View* focused, std::vector<View*>& focusables, int count,bool*outLooped);
     static View* getNextKeyboardNavigationCluster(View* root,View* currentCluster,std::vector<View*>& clusters,int count);
     static View* getPreviousKeyboardNavigationCluster(View* root,View* currentCluster,std::vector<View*>& clusters,int count);
     static bool isValidId(int id) {return id != 0 && id !=-1/* View.NO_ID*/; }
