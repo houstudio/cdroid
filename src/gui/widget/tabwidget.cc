@@ -246,7 +246,6 @@ void TabWidget::setEnabled(bool enabled){
 void TabWidget::onClickChild(View&v,int idx){
     if(mSelectionChangedListener)
         mSelectionChangedListener(idx,true);
-    LOGD("clicked tab %p:%d",&v,idx);
 }
 
 void TabWidget::addView(View* child) {
@@ -260,9 +259,9 @@ void TabWidget::addView(View* child) {
     child->setFocusable(true);
     child->setClickable(true);
 
-    /*if (child->getPointerIcon() == nullptr) {
-        child->setPointerIcon(PointerIcon.getSystemIcon(getContext(), PointerIcon.TYPE_HAND));
-    }*/
+    if (child->getPointerIcon() == nullptr) {
+        child->setPointerIcon(PointerIcon::getSystemIcon(getContext(), PointerIcon::TYPE_HAND));
+    }
 
     LinearLayout::addView(child);
 

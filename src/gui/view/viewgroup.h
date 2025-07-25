@@ -303,6 +303,7 @@ public:
     int  getLayoutMode();
     void setLayoutMode(int layoutMode);
     ViewGroupOverlay*getOverlay()override;
+    int getChildDrawingOrder(int drawingPosition);
     virtual void recomputeViewAttributes(View* child);
     virtual void bringChildToFront(View*);
     bool getClipChildren()const;
