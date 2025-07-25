@@ -1,3 +1,20 @@
+/*********************************************************************************
++ * Copyright (C) [2019] [houzh@msn.com]
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
++ *********************************************************************************/
 #include <widget/adapterviewanimator.h>
 #include <animation/animatorinflater.h>
 namespace cdroid{
@@ -10,14 +27,19 @@ AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet& at
     std::string res = attrs.getString("inAnimation");
     if(res.empty())
         setInAnimation(getDefaultInAnimation());
+    else
+        setInAnimation(context,res);
     res = attrs.getString("outAnimation");
 
     if(res.empty())
         setOutAnimation(getDefaultOutAnimation());
+    else
+        setOutAnimation(context,res);
 
     const bool flag = attrs.getBoolean("animateFirstView",true);
     setAnimateFirstView(flag);
     mLoopViews = attrs.getBoolean("loopViews",false);
+    initViewAnimator();
 }
 
 AdapterViewAnimator::~AdapterViewAnimator(){
