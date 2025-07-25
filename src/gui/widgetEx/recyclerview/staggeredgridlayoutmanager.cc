@@ -1742,7 +1742,7 @@ int StaggeredGridLayoutManager::findLastReferenceChildPosition(int itemCount) {
     return 0;
 }
 
-RecyclerView::LayoutParams* StaggeredGridLayoutManager::generateDefaultLayoutParams()const{
+StaggeredGridLayoutManager::LayoutParams* StaggeredGridLayoutManager::generateDefaultLayoutParams()const{
     if (mOrientation == HORIZONTAL) {
         return new LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::MATCH_PARENT);
     } else {
@@ -1750,11 +1750,11 @@ RecyclerView::LayoutParams* StaggeredGridLayoutManager::generateDefaultLayoutPar
     }
 }
 
-RecyclerView::LayoutParams* StaggeredGridLayoutManager::generateLayoutParams(Context* c,const AttributeSet& attrs)const{
+StaggeredGridLayoutManager::LayoutParams* StaggeredGridLayoutManager::generateLayoutParams(Context* c,const AttributeSet& attrs)const{
     return new LayoutParams(c, attrs);
 }
 
-RecyclerView::LayoutParams* StaggeredGridLayoutManager::generateLayoutParams(const ViewGroup::LayoutParams& lp)const{
+StaggeredGridLayoutManager::LayoutParams* StaggeredGridLayoutManager::generateLayoutParams(const ViewGroup::LayoutParams& lp)const{
     if (dynamic_cast<const ViewGroup::MarginLayoutParams*>(&lp)) {
         return new LayoutParams((const ViewGroup::MarginLayoutParams&) lp);
     }

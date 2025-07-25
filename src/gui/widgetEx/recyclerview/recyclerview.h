@@ -80,7 +80,6 @@ public:
     class LayoutManager;
     class RecycledViewPool;
     class EdgeEffectFactory;
-    class LayoutParams;
     class AdapterDataObserver;
     class ItemDecoration;
     class OnItemTouchListener;
@@ -156,6 +155,29 @@ public:
         virtual bool canReuseUpdatedViewHolder(ViewHolder& viewHolder,std::vector<Object*>& payloads);
         void dispatchAnimationsFinished();/*final*/
         ItemHolderInfo* obtainHolderInfo();
+    };
+    class LayoutParams:public ViewGroup::MarginLayoutParams{
+    protected:
+        friend RecyclerView;
+        RecyclerView::ViewHolder* mViewHolder;
+        Rect mDecorInsets;
+        bool mInsetsDirty = true;
+        bool mPendingInvalidate = false;
+    public:
+        LayoutParams(Context* c,const AttributeSet& attrs);
+        LayoutParams(int width, int height);
+        LayoutParams(const ViewGroup::MarginLayoutParams& source);
+        LayoutParams(const ViewGroup::LayoutParams& source);
+        LayoutParams(const LayoutParams& source);
+        bool viewNeedsUpdate();
+        bool isViewInvalid();
+        bool isItemRemoved();
+        bool isItemChanged();
+        //[[deprecated("getViewPosition is deprecated use getViewAdapterPosition PLS.")]]
+        int getViewLayoutPosition();
+        //[[deprecated("getViewAdapterPosition is deprecated use getBindingAdapterPosition PLS.")]]
+        int getAbsoluteAdapterPosition();
+        int getBindingAdapterPosition();
     };
 public:/*public classes*/
     class OnScrollListener:public EventSet{
@@ -373,8 +395,8 @@ protected:
     void markItemDecorInsetsDirty();
 
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
-    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
-    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    LayoutParams* generateDefaultLayoutParams()const override;
+    LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
 
     void saveOldPositions();
     void clearOldPositions();
@@ -494,7 +516,7 @@ public:
     void requestLayout()override;
     void draw(Canvas& c)override;
     void onDraw(Canvas& c)override;
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
     bool isAnimating();
     void invalidateItemDecorations();
     bool getPreserveFocusAfterLayout()const;
@@ -861,41 +883,6 @@ public:
     virtual bool performAccessibilityAction(Recycler& recycler, State& state,int action, Bundle* args);
     virtual bool performAccessibilityActionForItem(Recycler& recycler,State& state, View& view, int action, Bundle* args);
     static Properties getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes);
-};
-
-class RecyclerView::LayoutParams:public ViewGroup::MarginLayoutParams{
-protected:
-    friend RecyclerView;
-    RecyclerView::ViewHolder* mViewHolder;
-    Rect mDecorInsets;
-    bool mInsetsDirty = true;
-    bool mPendingInvalidate = false;
-public:
-    LayoutParams(Context* c,const AttributeSet& attrs);
-    LayoutParams(int width, int height);
-    LayoutParams(const ViewGroup::MarginLayoutParams& source);
-    LayoutParams(const ViewGroup::LayoutParams& source);
-    LayoutParams(const LayoutParams& source);
-    bool viewNeedsUpdate();
-    bool isViewInvalid();
-    bool isItemRemoved();
-    bool isItemChanged();
-    /**
-     * @deprecated use {@link #getViewLayoutPosition()} or {@link #getViewAdapterPosition()}
-     */
-    //[[deprecated("getViewPosition is deprecated use getViewAdapterPosition PLS.")]]
-    //int getViewPosition();
-    int getViewLayoutPosition();
-    /**
-     * @deprecated This method is confusing when nested adapters are used.
-     * If you are calling from the context of an {@link Adapter},
-     * use {@link #getBindingAdapterPosition()}. If you need the position that
-     * {@link RecyclerView} sees, use {@link #getAbsoluteAdapterPosition()}.
-     */
-    //[[deprecated("getViewAdapterPosition is deprecated use getBindingAdapterPosition PLS.")]]
-    //int getViewAdapterPosition();
-    int getAbsoluteAdapterPosition();
-    int getBindingAdapterPosition();
 };
 
 class RecyclerView::EdgeEffectFactory {

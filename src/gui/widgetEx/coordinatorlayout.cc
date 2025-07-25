@@ -1273,11 +1273,11 @@ bool CoordinatorLayout::doViewsOverlap(View& first, View& second) {
     return false;
 }
 
-LayoutParams* CoordinatorLayout::generateLayoutParams(const AttributeSet& attrs)const {
+CoordinatorLayout::LayoutParams* CoordinatorLayout::generateLayoutParams(const AttributeSet& attrs)const {
     return new LayoutParams(getContext(), attrs);
 }
 
-LayoutParams* CoordinatorLayout::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
+CoordinatorLayout::LayoutParams* CoordinatorLayout::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
     if (dynamic_cast<const LayoutParams*>(p)) {
         return new LayoutParams((const LayoutParams&)*p);
     } else if (dynamic_cast<const MarginLayoutParams*>(p)) {
@@ -1286,7 +1286,7 @@ LayoutParams* CoordinatorLayout::generateLayoutParams(const ViewGroup::LayoutPar
     return new LayoutParams(*p);
 }
 
-LayoutParams* CoordinatorLayout::generateDefaultLayoutParams()const {
+CoordinatorLayout::LayoutParams* CoordinatorLayout::generateDefaultLayoutParams()const {
     return new LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
 }
 
