@@ -1,7 +1,26 @@
-#if 0
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <widget/imageview.h>
 #include <widget/stackview.h>
 namespace cdroid{
+
+DECLARE_WIDGET(StackView);
+
 StackView::StackView(Context* context,const  AttributeSet& attrs)
     :AdapterViewAnimator(context, attrs){
 
@@ -284,7 +303,7 @@ void StackView::updateChildTransforms() {
 /////////////////////////////////////////////////////////////////////////////////////////
 //private static class StackFrame:public FrameLayout {
 
-StackView::StackFrame::StackFrame(Context* context):FrameLayout(context){
+StackView::StackFrame::StackFrame(Context* context):FrameLayout(context,AttributeSet(context,"")){
 }
 
 void StackView::StackFrame::setTransformAnimator(ObjectAnimator* oa) {
@@ -330,7 +349,7 @@ void StackView::applyTransformForChildAtIndex(View* child, int relativeIndex) {
 void StackView::dispatchDraw(Canvas& canvas) {
     bool expandClipRegion = false;
 
-    canvas.getClipBounds(stackInvalidateRect);
+    //canvas.getClipBounds(stackInvalidateRect);
     const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child =  getChildAt(i);
@@ -349,7 +368,7 @@ void StackView::dispatchDraw(Canvas& canvas) {
     // We only expand the clip bounds if necessary.
     if (expandClipRegion) {
         canvas.save();
-        canvas.clipRectUnion(stackInvalidateRect);
+        //canvas.clipRectUnion(stackInvalidateRect);
         AdapterViewAnimator::dispatchDraw(canvas);
         canvas.restore();
     } else {
@@ -1050,7 +1069,7 @@ bool StackView::goBackward() {
 }
 
 bool StackView::performAccessibilityActionInternal(int action, Bundle& arguments) {
-    if (AdapterViewAnimator::performAccessibilityActionInternal(action, arguments)) {
+    if (AdapterViewAnimator::performAccessibilityActionInternal(action, &arguments)) {
         return true;
     }
     if (!isEnabled()) {
@@ -1080,6 +1099,7 @@ bool StackView::performAccessibilityActionInternal(int action, Bundle& arguments
     }
     return false;
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////
 
 StackView::LayoutParams::LayoutParams(View* view)
@@ -1156,29 +1176,38 @@ void StackView::LayoutParams::setOffsets(int newHorizontalOffset, int newVertica
         int right = std::max(mView->getRight() + horizontalOffsetDelta, mView->getRight());
         int top = std::min(mView->getTop() + verticalOffsetDelta, mView->getTop());
         int bottom = std::max(mView->getBottom() + verticalOffsetDelta, mView->getBottom());
-
+#if 0
         invalidateRectf.set(left, top, right-left, bottom-top);
 
         float xoffset = -invalidateRectf.left;
         float yoffset = -invalidateRectf.top;
         invalidateRectf.offset(xoffset, yoffset);
-        mView->getMatrix().mapRect(invalidateRectf);
+        mView->getMatrix().transform_rectangle(invalidateRectf);
         invalidateRectf.offset(-xoffset, -yoffset);
 
         invalidateRect.set((int) std::floor(invalidateRectf.left),
                 (int) std::floor(invalidateRectf.top),
                 (int) std::ceil(invalidateRectf.width),
                 (int) std::ceil(invalidateRectf.height));
-
+#else
+        Rect rctmp={left, top, right-left, bottom-top};
+        int xoffset=-rctmp.left;
+        int yoffset=-rctmp.top;
+        rctmp.offset(xoffset,yoffset);
+        mView->getMatrix().transform_rectangle((Cairo::RectangleInt&)rctmp);
+        rctmp.offset(-xoffset,-xoffset);
+        invalidateRect = rctmp;
+#endif
         invalidateGlobalRegion(mView, invalidateRect);
     }
 }
-/////////////////////////////////////////////////////////////////////////////////////////////
-//private static class HolographicHelper {
-StackView::HolographicHelper::HolographicHelper(Context* context) {
-    /*mDensity = context.getResources().getDisplayMetrics().density;
 
-    mHolographicPaint.setFilterBitmap(true);
+/////////////////////////////////////////////////////////////////////////////////////////////
+/*static class HolographicHelper*/
+StackView::HolographicHelper::HolographicHelper(Context* context) {
+    mDensity = context->getDisplayMetrics().density;
+
+    /*mHolographicPaint.setFilterBitmap(true);
     mHolographicPaint.setMaskFilter(TableMaskFilter.CreateClipTable(0, 30));
     mErasePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
     mErasePaint.setFilterBitmap(true);
@@ -1209,7 +1238,7 @@ Bitmap StackView::HolographicHelper::createOutline(View* v, int type, int color)
 
     /*Bitmap bitmap = Bitmap.createBitmap(v.getResources().getDisplayMetrics(),
             v.getMeasuredWidth(), v.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-    mCanvas.setBitmap(bitmap);*/
+    mCanvas->setBitmap(bitmap);*/
 
     float rotationX = v->getRotationX();
     float rotation = v->getRotation();
@@ -1219,27 +1248,26 @@ Bitmap StackView::HolographicHelper::createOutline(View* v, int type, int color)
     v->setRotation(0);
     v->setTranslationY(0);
     v->setTranslationX(0);
-    v->draw(mCanvas);
+    v->draw(*mCanvas);
     v->setRotationX(rotationX);
     v->setRotation(rotation);
     v->setTranslationY(translationY);
     v->setTranslationX(translationX);
 
-    drawOutline(mCanvas, bitmap);
-    mCanvas->setBitmap(nullptr);
-    return bitmap;
+    //drawOutline(*mCanvas, bitmap);
+    //mCanvas->setBitmap(nullptr);
+    return nullptr;//bitmap;
 }
 
 void StackView::HolographicHelper::drawOutline(Canvas& dest, Bitmap src) {
     int xy[2];
     /*Bitmap mask = src.extractAlpha(mBlurPaint, xy);
-    mMaskCanvas.setBitmap(mask);
-    mMaskCanvas.drawBitmap(src, -xy[0], -xy[1], mErasePaint);
+    mMaskCanvas->setBitmap(mask);
+    mMaskCanvas->drawBitmap(src, -xy[0], -xy[1], mErasePaint);
     dest.drawColor(0, PorterDuff.Mode.CLEAR);
     dest.setMatrix(mIdentityMatrix);
     dest.drawBitmap(mask, xy[0], xy[1], mHolographicPaint);
-    mMaskCanvas.setBitmap(null);
+    mMaskCanvas->setBitmap(null);
     mask.recycle();*/
 }
 }/*endof namespace*/
-#endif
