@@ -322,9 +322,9 @@ protected:
     void onSetLayoutParams(View* child,const ViewGroup::LayoutParams* layoutParams)override;
     LayoutParams* getLayoutParams(View* c);
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
-    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet&atts)const override;
-    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    LayoutParams* generateDefaultLayoutParams()const override;
+    LayoutParams* generateLayoutParams(const AttributeSet&atts)const override;
+    LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
     void onDebugDrawMargins(Canvas& canvas)override;
     void onDebugDraw(Canvas& canvas)override;
     void onChildVisibilityChanged(View* child, int oldVisibility, int newVisibility)override;

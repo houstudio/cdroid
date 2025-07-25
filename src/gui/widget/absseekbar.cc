@@ -443,6 +443,16 @@ void AbsSeekBar::updateGestureExclusionRects(){
 }
 
 void AbsSeekBar::growRectTo(Rect& r, int minimumSize){
+    const int dy = minimumSize - r.height;
+    if (dy > 0) {
+        r.top -= (dy + 1) / 2;
+        r.width += dy;
+    }
+    const int dx = minimumSize - r.width;
+    if (dx > 0) {
+        r.left -= (dx + 1) / 2;
+        r.width += dx;
+    }
 }
 
 void AbsSeekBar::onResolveDrawables(int layoutDirection){
@@ -654,7 +664,7 @@ bool AbsSeekBar::onTouchEvent(MotionEvent& event){
 
     switch (event.getAction()) {
     case MotionEvent::ACTION_DOWN:
-        if(mThumb){
+        if(mThumb!=nullptr){
             const int availableWidth = getWidth() - mPaddingLeft - mPaddingRight;
             const int availableHeight = getHeight() - mPaddingTop - mPaddingBottom;
 	        if(getProgressOrientation()==HORIZONTAL){

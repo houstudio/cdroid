@@ -1,7 +1,7 @@
 #include <widget/radiogroup.h>
 #include <widget/radiobutton.h>
-#include <cdlog.h>
-
+#include <porting/cdlog.h>
+#include <core/textutils.h>
 
 namespace cdroid{
 
@@ -26,7 +26,7 @@ RadioGroup::RadioGroup(Context* context,const AttributeSet& attrs)
     setOrientation(index);
 }
 
-LayoutParams* RadioGroup::generateLayoutParams(const AttributeSet& attrs)const {
+LinearLayout::LayoutParams* RadioGroup::generateLayoutParams(const AttributeSet& attrs)const {
     return new LayoutParams(getContext(), attrs);
 }
 
@@ -34,7 +34,7 @@ bool RadioGroup::checkLayoutParams(const ViewGroup::LayoutParams* p)const {
     return dynamic_cast<const LayoutParams*>(p);
 }
 
-ViewGroup::LayoutParams* RadioGroup::generateDefaultLayoutParams()const {
+LinearLayout::LayoutParams* RadioGroup::generateDefaultLayoutParams()const {
     return new LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
 }
 
@@ -155,6 +155,55 @@ void RadioGroup::addView(View* child, int index,ViewGroup::LayoutParams* params)
         }
     }
     LinearLayout::addView(child, index, params);
+}
+
+void RadioGroup::onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info) {
+    LinearLayout::onInitializeAccessibilityNodeInfo(info);
+    if (getOrientation() == HORIZONTAL) {
+        info.setCollectionInfo(AccessibilityNodeInfo::CollectionInfo::obtain(1,
+                getVisibleChildWithTextCount(), false,
+                AccessibilityNodeInfo::CollectionInfo::SELECTION_MODE_SINGLE));
+    } else {
+        info.setCollectionInfo(
+                AccessibilityNodeInfo::CollectionInfo::obtain(getVisibleChildWithTextCount(),
+                1, false,
+                AccessibilityNodeInfo::CollectionInfo::SELECTION_MODE_SINGLE));
+    }
+}
+
+int RadioGroup::getVisibleChildWithTextCount() const{
+    int count = 0;
+    for (int i = 0; i < getChildCount(); i++) {
+        if (dynamic_cast<RadioButton*>(getChildAt(i))) {
+            if (isVisibleWithText((RadioButton*) getChildAt(i))) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+int RadioGroup::getIndexWithinVisibleButtons(View* child) const{
+    if (dynamic_cast<RadioButton*>(child)==nullptr) {
+        return -1;
+    }
+    int index = 0;
+    for (int i = 0; i < getChildCount(); i++) {
+        if (dynamic_cast<RadioButton*>(getChildAt(i))) {
+            RadioButton* button = (RadioButton*) getChildAt(i);
+            if (button == child) {
+                return index;
+            }
+            if (isVisibleWithText(button)) {
+                index++;
+            }
+        }
+    }
+    return -1;
+}
+
+ bool RadioGroup::isVisibleWithText(RadioButton* button) const{
+    return button->getVisibility() == VISIBLE && !TextUtils::isEmpty(button->getText());
 }
 
 //////////////////////////////////////////////////////////////////////////////////

@@ -32,7 +32,18 @@ public:
         SHOW_DIVIDER_MIDDLE=2,
         SHOW_DIVIDER_END=4
     };
-    class LayoutParams;
+    class LayoutParams:public ViewGroup::MarginLayoutParams{
+    public:
+        float weight;
+        int gravity = -1;
+        LayoutParams(Context* c,const AttributeSet&attrs);
+        LayoutParams(int width, int height);
+        LayoutParams(int width, int height, float weight);
+        LayoutParams(const LayoutParams& p);
+        LayoutParams(const MarginLayoutParams&source);
+        LayoutParams(const ViewGroup::LayoutParams&source);
+    };
+
 private:
     static constexpr int VERTICAL_GRAVITY_COUNT = 4;
     static constexpr int INDEX_CENTER_VERTICAL = 0;
@@ -77,9 +88,9 @@ protected:
     virtual bool hasDividerBeforeChildAt(int childIndex);
     virtual bool hasDividerAfterChildAt(int childIndex);
 
-    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
+    LayoutParams* generateDefaultLayoutParams()const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
-    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
+    LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
 
     void onLayout(bool changed, int l, int t, int w, int h)override;
     void layoutVertical(int left, int top, int width, int height);
@@ -95,7 +106,7 @@ public:
     LinearLayout(int w,int h);
     LinearLayout(int x,int y,int w,int h);
     LinearLayout(Context* context,const AttributeSet& attrs);
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet&)const override;
+    LayoutParams* generateLayoutParams(const AttributeSet&)const override;
     void setShowDividers(int showDividers);
     int getShowDividers()const;
     Drawable*getDividerDrawable();
@@ -122,18 +133,6 @@ public:
     void onRtlPropertiesChanged(int layoutDirection) override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     virtual ~LinearLayout();
-};
-
-class LinearLayout::LayoutParams:public ViewGroup::MarginLayoutParams{
-public:
-    float weight;
-    int gravity = -1;
-    LayoutParams(Context* c,const AttributeSet&attrs);
-    LayoutParams(int width, int height);
-    LayoutParams(int width, int height, float weight);
-    LayoutParams(const LayoutParams& p);
-    LayoutParams(const MarginLayoutParams&source);
-    LayoutParams(const ViewGroup::LayoutParams&source);
 };
 
 }/*namespace cdroid*/

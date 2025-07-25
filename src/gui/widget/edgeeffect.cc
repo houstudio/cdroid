@@ -50,6 +50,11 @@ EdgeEffect::EdgeEffect(Context* context){
     mVelocity = 0.f;
 }
 
+EdgeEffect::EdgeEffect(Context* context,const AttributeSet& attrs)
+    :EdgeEffect(context){
+    mColor = attrs.getColor("colorEdgeEffect", 0xff666666);
+}
+
 EdgeEffect::~EdgeEffect(){
     delete mInterpolator;
 }
@@ -136,8 +141,9 @@ void EdgeEffect::onPull(float deltaDistance, float displacement){
 
     mGlowAlphaFinish = mGlowAlpha;
     mGlowScaleYFinish = mGlowScaleY;
-    if(edgeEffectBehavior ==TYPE_STRETCH && mDistance ==0)
+    if((edgeEffectBehavior ==TYPE_STRETCH) && (mDistance ==0.f)){
         mState = STATE_IDLE;
+    }
 }
 
 float EdgeEffect::onPullDistance(float deltaDistance, float displacement) {
@@ -249,7 +255,7 @@ bool EdgeEffect::draw(Canvas& canvas){
         mVelocity = 0;
     } 
     bool oneLastFrame = false;
-    if ((mState == STATE_RECEDE) && (mDistance ==0) && (mVelocity == 0)) {
+    if ((mState == STATE_RECEDE) && (mDistance ==0.f) && (mVelocity == 0.f)) {
         mState = STATE_IDLE;
         oneLastFrame = true;
     }

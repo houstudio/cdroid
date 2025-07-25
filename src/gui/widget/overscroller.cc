@@ -97,7 +97,11 @@ double OverScroller::SplineOverScroller::getSplineDeceleration(int velocity) con
 void OverScroller::SplineOverScroller::setFriction(float friction) {
     mFlingFriction = friction;
 }
-void OverScroller::SplineOverScroller::updateScroll(float q) {
+void OverScroller::SplineOverScroller::updateScroll(float q,float q2) {
+    int distance = mFinal - mStart;
+    mCurrentPosition = mStart + std::round(q * distance);
+    // q2 is 1ms before q1
+    mCurrVelocity = 1000.f * (q - q2) * distance;
     mCurrentPosition = mStart + round(q * (mFinal - mStart));
 }
 
@@ -111,6 +115,7 @@ void OverScroller::SplineOverScroller::finish() {
 
 void OverScroller::SplineOverScroller::setFinalPosition(int position) {
     mFinal = position;
+    mSplineDistance = mFinal - mStart;
     mFinished = false;
 }
 
@@ -142,7 +147,7 @@ void OverScroller::SplineOverScroller::adjustDuration(int start, int oldFinal, i
 
 void OverScroller::SplineOverScroller::extendDuration(int extend) {
     int elapsedTime = (int) (SystemClock::uptimeMillis() - mStartTime);
-    mDuration = elapsedTime + extend;
+    mDuration = mSplineDuration = elapsedTime + extend;
     mFinished = false;
 }
 
@@ -448,9 +453,10 @@ bool OverScroller::computeScrollOffset() {
            const int64_t elapsedTime = SystemClock::uptimeMillis() - mScrollerX->mStartTime;
            const int duration = mScrollerX->mDuration;
            if (elapsedTime < duration) {
-               float q = mInterpolator->getInterpolation(float(elapsedTime) / duration);
-               mScrollerX->updateScroll(q);
-               mScrollerY->updateScroll(q);
+               const float q = mInterpolator->getInterpolation(float(elapsedTime) / duration);
+               const float q2 = mInterpolator->getInterpolation((elapsedTime - 1) / (float) duration);
+               mScrollerX->updateScroll(q,q2);
+               mScrollerY->updateScroll(q,q2);
            } else {
                abortAnimation();
            }

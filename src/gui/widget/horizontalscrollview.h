@@ -25,6 +25,7 @@ namespace cdroid{
 
 class HorizontalScrollView:public FrameLayout{
 private:
+    static constexpr int INVALID_POINTER = -1;
     int64_t mLastScroll;
     OverScroller* mScroller;
     VelocityTracker* mVelocityTracker;
@@ -73,6 +74,7 @@ private:
     bool scrollToChildRect(Rect rect, bool immediate);
     bool isViewDescendantOf(View* child, View* parent);
     bool shouldDisplayEdgeEffects()const;
+    bool shouldAbsorb(EdgeEffect* edgeEffect, int velocity);
 protected:
     float getLeftFadingEdgeStrength()override;
     float getRightFadingEdgeStrength()override;

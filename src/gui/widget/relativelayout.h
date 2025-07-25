@@ -159,21 +159,22 @@ private://function
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int l, int t, int w, int h)override;
-    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
+    LayoutParams* generateDefaultLayoutParams()const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
-    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
+    LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
 public:
     RelativeLayout(int w,int h);
     RelativeLayout(Context* context,const AttributeSet& attrs);
     ~RelativeLayout()override;
-    bool shouldDelayChildPressedState()override; 
+    bool shouldDelayChildPressedState()override;
+    int getIgnoreGravity()const;
     int getGravity()const;
     void setGravity(int);
     void setHorizontalGravity(int horizontalGravity);
     void setVerticalGravity(int verticalGravity);
     int getBaseline()override;
     void requestLayout()override;
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 
     bool dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event)override;
     std::string getAccessibilityClassName()const override;

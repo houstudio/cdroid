@@ -805,7 +805,7 @@ int TabLayout::getTabMinWidth() {
     return mMode == MODE_SCROLLABLE ? mScrollableTabMinWidth : 0;
 }
 
-ViewGroup::LayoutParams* TabLayout::generateLayoutParams(const AttributeSet& attrs)const{
+FrameLayout::LayoutParams* TabLayout::generateLayoutParams(const AttributeSet& attrs)const{
     return generateDefaultLayoutParams();
 }
 

@@ -26,7 +26,63 @@ namespace cdroid{
 class CoordinatorLayout:public ViewGroup{// implements NestedScrollingParent2 {
 public:
     class Behavior;
-    class LayoutParams;
+    class LayoutParams:public ViewGroup::MarginLayoutParams {
+    private:
+        bool mDidBlockInteraction;
+        bool mDidAcceptNestedScrollTouch;
+        bool mDidAcceptNestedScrollNonTouch;
+        bool mDidChangeAfterNestedScroll;
+    protected:
+        Behavior* mBehavior;
+        friend class CoordinatorLayout;
+        bool mBehaviorResolved = false;
+    public: 
+        int gravity = Gravity::NO_GRAVITY;
+        int anchorGravity = Gravity::NO_GRAVITY;
+        int keyline = -1;
+        int mAnchorId = View::NO_ID;
+        int insetEdge = Gravity::NO_GRAVITY;
+        int dodgeInsetEdges = Gravity::NO_GRAVITY;
+     public:
+        int mInsetOffsetX;
+        int mInsetOffsetY;
+        View* mAnchorView;
+        View* mAnchorDirectChild;
+        Rect mLastChildRect;
+        void* mBehaviorTag;
+    private:
+        void init();
+        void resolveAnchorView(View* forChild, CoordinatorLayout& parent);
+        bool verifyAnchorView(View* forChild, CoordinatorLayout& parent);
+        bool shouldDodge(View* other, int layoutDirection);
+    protected:
+        void setLastChildRect(const Rect& r);
+        Rect getLastChildRect()const;
+        bool checkAnchorChanged()const;
+        bool didBlockInteraction();
+        bool isBlockingInteractionBelow(CoordinatorLayout& parent, View* child);
+        void resetTouchBehaviorTracking();
+        void resetNestedScroll(int type);
+        void setNestedScrollAccepted(int type, bool accept);
+        bool isNestedScrollAccepted(int type);
+        bool getChangedAfterNestedScroll();
+        void setChangedAfterNestedScroll(bool changed);
+        void resetChangedAfterNestedScroll();
+        bool dependsOn(CoordinatorLayout& parent, View* child, View* dependency);
+        void invalidateAnchor();
+        View* findAnchorView(CoordinatorLayout& parent, View* forChild);
+    public: 
+        LayoutParams(int width, int height);
+        ~LayoutParams();
+        LayoutParams(Context* context, const AttributeSet& attrs);
+        LayoutParams(const LayoutParams& p);
+        LayoutParams(const MarginLayoutParams& p);
+        LayoutParams(const ViewGroup::LayoutParams& p);
+        int getAnchorId()const;
+        void setAnchorId(int id);   
+        Behavior* getBehavior()const;
+        void setBehavior(Behavior* behavior);
+    };
 private:
     static constexpr int TYPE_ON_INTERCEPT = 0;
     static constexpr int TYPE_ON_TOUCH = 1;
@@ -98,8 +154,8 @@ protected:
     void addPreDrawListener();
     void removePreDrawListener();
     void offsetChildToAnchor(View* child, int layoutDirection);
-    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
-    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
+    LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    LayoutParams* generateDefaultLayoutParams()const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
 
     void onRestoreInstanceState(Parcelable& state)override;
@@ -139,7 +195,7 @@ public:
     bool isPointInChildBounds(View& child, int x, int y);
 
     bool doViewsOverlap(View& first, View& second);
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 
     bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes)override;
     bool onStartNestedScroll(View* child, View* target, int axes, int type)override;
@@ -278,68 +334,6 @@ public:
         return false;
     }
 };
-
-/**
- * Parameters describing the desired layout for a child of a {@link CoordinatorLayout}.
- */
-class CoordinatorLayout::LayoutParams:public ViewGroup::MarginLayoutParams {
-private:
-    bool mDidBlockInteraction;
-    bool mDidAcceptNestedScrollTouch;
-    bool mDidAcceptNestedScrollNonTouch;
-    bool mDidChangeAfterNestedScroll;
-protected:
-    Behavior* mBehavior;
-    friend class CoordinatorLayout;
-    bool mBehaviorResolved = false;
-public: 
-    int gravity = Gravity::NO_GRAVITY;
-    int anchorGravity = Gravity::NO_GRAVITY;
-    int keyline = -1;
-    int mAnchorId = View::NO_ID;
-    int insetEdge = Gravity::NO_GRAVITY;
-    int dodgeInsetEdges = Gravity::NO_GRAVITY;
- public:
-    int mInsetOffsetX;
-    int mInsetOffsetY;
-    View* mAnchorView;
-    View* mAnchorDirectChild;
-    Rect mLastChildRect;
-    void* mBehaviorTag;
-private:
-    void init();
-    void resolveAnchorView(View* forChild, CoordinatorLayout& parent);
-    bool verifyAnchorView(View* forChild, CoordinatorLayout& parent);
-    bool shouldDodge(View* other, int layoutDirection);
-protected:
-    void setLastChildRect(const Rect& r);
-    Rect getLastChildRect()const;
-    bool checkAnchorChanged()const;
-    bool didBlockInteraction();
-    bool isBlockingInteractionBelow(CoordinatorLayout& parent, View* child);
-    void resetTouchBehaviorTracking();
-    void resetNestedScroll(int type);
-    void setNestedScrollAccepted(int type, bool accept);
-    bool isNestedScrollAccepted(int type);
-    bool getChangedAfterNestedScroll();
-    void setChangedAfterNestedScroll(bool changed);
-    void resetChangedAfterNestedScroll();
-    bool dependsOn(CoordinatorLayout& parent, View* child, View* dependency);
-    void invalidateAnchor();
-    View* findAnchorView(CoordinatorLayout& parent, View* forChild);
-public: 
-    LayoutParams(int width, int height);
-    ~LayoutParams();
-    LayoutParams(Context* context, const AttributeSet& attrs);
-    LayoutParams(const LayoutParams& p);
-    LayoutParams(const MarginLayoutParams& p);
-    LayoutParams(const ViewGroup::LayoutParams& p);
-    int getAnchorId()const;
-    void setAnchorId(int id);   
-    Behavior* getBehavior()const;
-    void setBehavior(Behavior* behavior);
-};
-
 
 #if 0
 class CoordinatorLayout::SavedState extends AbsSavedState {

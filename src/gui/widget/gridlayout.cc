@@ -432,15 +432,15 @@ bool GridLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
     return true;
 }
 
-ViewGroup::LayoutParams* GridLayout::generateDefaultLayoutParams()const{
+GridLayout::LayoutParams* GridLayout::generateDefaultLayoutParams()const{
     return new LayoutParams();
 }
 
-ViewGroup::LayoutParams* GridLayout::generateLayoutParams(const AttributeSet&atts)const{
+GridLayout::LayoutParams* GridLayout::generateLayoutParams(const AttributeSet&atts)const{
     return new LayoutParams(getContext(),atts);
 }
 
-ViewGroup::LayoutParams* GridLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
+GridLayout::LayoutParams* GridLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
     if (sPreserveMarginParamsInLayoutParamConversion){
         if (dynamic_cast<const LayoutParams*>(lp)) {
             return new LayoutParams((const LayoutParams&)*lp);

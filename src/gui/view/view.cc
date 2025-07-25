@@ -29,6 +29,7 @@
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/focusfinder.h>
 #include <widget/R.h>
+#include <widget/scrollbardrawable.h>
 #include <widget/edgeeffect.h>
 #include <animation/animationutils.h>
 #include <core/systemclock.h>
@@ -9640,6 +9641,7 @@ View::AttachInfo::AttachInfo(Context*ctx){
     mApplicationScale = 1.0f;
     mScalingRequired  = false;
     mIgnoreDirtyState = false;
+    mNextFocusLooped  = false;
     mUse32BitDrawingCache = false;
     mAccessibilityFetchFlags= 0;
     mAlwaysConsumeSystemBars= false;

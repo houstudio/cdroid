@@ -365,11 +365,11 @@ std::string TableLayout::getAccessibilityClassName()const{
     return "TableLayout";
 }
 
-ViewGroup::LayoutParams* TableLayout::generateLayoutParams(const AttributeSet& attrs)const {
+TableLayout::LayoutParams* TableLayout::generateLayoutParams(const AttributeSet& attrs)const {
     return new LayoutParams(getContext(), attrs);
 }
 
-ViewGroup::LayoutParams* TableLayout::generateDefaultLayoutParams()const {
+TableLayout::LayoutParams* TableLayout::generateDefaultLayoutParams()const {
     return new LayoutParams();
 }
 
@@ -377,7 +377,7 @@ bool TableLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
     return dynamic_cast<const LayoutParams*>(p);
 }
 
-ViewGroup::LayoutParams* TableLayout::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
+TableLayout::LayoutParams* TableLayout::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
     return new LayoutParams(*p);
 }
 

@@ -1132,11 +1132,11 @@ bool DrawerLayout::hasPeekingDrawer() {
     return false;
 }
 
-ViewGroup::LayoutParams* DrawerLayout::generateDefaultLayoutParams()const {
+DrawerLayout::LayoutParams* DrawerLayout::generateDefaultLayoutParams()const {
     return new LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::MATCH_PARENT);
 }
 
-ViewGroup::LayoutParams* DrawerLayout::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
+DrawerLayout::LayoutParams* DrawerLayout::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
     return dynamic_cast<const LayoutParams*>(p)
             ? new LayoutParams((const LayoutParams&)*p)
             : dynamic_cast<const ViewGroup::MarginLayoutParams*>(p)
@@ -1148,7 +1148,7 @@ bool DrawerLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const {
     return dynamic_cast<const LayoutParams*>(p) && ViewGroup::checkLayoutParams(p);
 }
 
-ViewGroup::LayoutParams* DrawerLayout::generateLayoutParams(const AttributeSet& attrs)const {
+DrawerLayout::LayoutParams* DrawerLayout::generateLayoutParams(const AttributeSet& attrs)const {
     return new LayoutParams(getContext(), attrs);
 }
 

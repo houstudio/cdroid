@@ -1,4 +1,5 @@
 #include <widgetEx/flexbox/flexboxlayout.h>
+//REF:https://github.com/google/flexbox-layout/tree/main
 namespace cdroid{
 
 DECLARE_WIDGET(FlexboxLayout)
@@ -77,6 +78,7 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGro
 FlexboxLayout::~FlexboxLayout(){
     delete mFlexLinesResult;
     delete mFlexboxHelper;
+    delete mFlexContainer;
     if(mDividerDrawableHorizontal==mDividerDrawableVertical){
         delete mDividerDrawableHorizontal;
     }else{
@@ -85,6 +87,73 @@ FlexboxLayout::~FlexboxLayout(){
     }
 }
 
+namespace{
+class FLContainer:public FlexContainer{
+private:
+    FlexboxLayout*mFBL;
+public:
+    FLContainer(FlexboxLayout*fbl){mFBL=fbl;}
+    int getFlexItemCount()override{ return mFBL->getFlexItemCount();}
+    View* getFlexItemAt(int index)override{return mFBL->getFlexItemAt(index);}
+    View* getReorderedFlexItemAt(int index)override{return mFBL->getReorderedFlexItemAt(index);}
+
+    void addView(View* view)override{addView(view,-1);}
+    void addView(View* view, int index)override{((ViewGroup*)mFBL)->addView(view,index);}
+    void removeAllViews()override{mFBL->removeAllViews();}
+    void removeViewAt(int index)override{mFBL->removeViewAt(index);}
+    int getFlexDirection()override{return mFBL->getFlexDirection();}
+    void setFlexDirection(int flexDirection)override{mFBL->setFlexDirection(flexDirection);}
+    int getFlexWrap()override{return mFBL->getFlexWrap();}
+    void setFlexWrap(int flexWrap)override{ mFBL->setFlexWrap(flexWrap);}
+    int getJustifyContent()override{return mFBL->getJustifyContent();}
+    void setJustifyContent(int justifyContent)override{mFBL->setJustifyContent(justifyContent);}
+
+    int getAlignContent()override{return mFBL->getAlignContent();}
+    void setAlignContent(int alignContent)override{mFBL->setAlignContent(alignContent);}
+
+    int getAlignItems()override{return mFBL->getAlignItems();}
+    void setAlignItems(int alignItems)override{mFBL->setAlignItems(alignItems);}
+    std::vector<FlexLine> getFlexLines()override{return mFBL->getFlexLines();}
+
+    bool isMainAxisDirectionHorizontal()override{return mFBL->isMainAxisDirectionHorizontal();}
+
+    int getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine)override{
+        return mFBL->getDecorationLengthMainAxis(view,index,indexInFlexLine);
+    }
+    int getDecorationLengthCrossAxis(View* view)override{
+        return mFBL->getDecorationLengthCrossAxis(view);
+    }
+
+    int getPaddingTop()override{return mFBL->getPaddingTop();}
+    int getPaddingLeft()override{return mFBL->getPaddingLeft();}
+    int getPaddingRight()override{return mFBL->getPaddingRight();}
+    int getPaddingBottom()override{return mFBL->getPaddingBottom();}
+    int getPaddingStart()override{return mFBL->getPaddingStart();}
+    int getPaddingEnd()override{return mFBL->getPaddingEnd();}
+
+    int getChildWidthMeasureSpec(int widthSpec, int padding, int childDimension){
+        return mFBL->getChildWidthMeasureSpec(widthSpec,padding,childDimension);
+    }
+    int getChildHeightMeasureSpec(int heightSpec, int padding, int childDimension)override{
+        return mFBL->getChildHeightMeasureSpec(heightSpec,padding,childDimension);
+    }
+
+    int getLargestMainSize()override{return mFBL->getLargestMainSize();}
+    int getSumOfCrossSize()override{return mFBL->getSumOfCrossSize();}
+
+    void onNewFlexItemAdded(View* view, int index, int indexInFlexLine, FlexLine& flexLine)override{
+        mFBL->onNewFlexItemAdded(view,index,indexInFlexLine,flexLine);
+    }
+    void onNewFlexLineAdded(FlexLine& flexLine)override{mFBL->onNewFlexLineAdded(flexLine);}
+    void setFlexLines(const std::vector<FlexLine>& flexLines)override{mFBL->setFlexLines(flexLines);}
+
+    int getMaxLine()override{return mFBL->getMaxLine();}
+    void setMaxLine(int maxLine)override{mFBL->setMaxLine(maxLine);}
+
+    std::vector<FlexLine> getFlexLinesInternal()override{return mFBL->getFlexLinesInternal();}
+    void updateViewCache(int position, View* view)override{mFBL->updateViewCache(position,view);}
+};
+}
 void FlexboxLayout::init(){
     mFlexDirection= FlexDirection::ROW;
     mFlexWrap = FlexWrap::NOWRAP;
@@ -98,7 +167,8 @@ void FlexboxLayout::init(){
     mDividerVerticalWidth = 0;
     mDividerHorizontalHeight = 0;
     mFlexLinesResult = new FlexboxHelper::FlexLinesResult;
-    mFlexboxHelper = nullptr;//mFlexboxHelper(this);
+    mFlexContainer = new FLContainer(this);
+    mFlexboxHelper = new FlexboxHelper(mFlexContainer);
     mDividerDrawableHorizontal = nullptr;
     mDividerDrawableVertical = nullptr;
 }
@@ -143,13 +213,13 @@ View* FlexboxLayout::getReorderedFlexItemAt(int index) {
     return getReorderedChildAt(index);
 }
 
-View& FlexboxLayout::addView(View* child, int index, ViewGroup::LayoutParams* params) {
+void FlexboxLayout::addView(View* child, int index, ViewGroup::LayoutParams* params) {
     // Create an array for the reordered indices before the View is added in the parent
     // ViewGroup since otherwise reordered indices won't be in effect before the
     // FlexboxLayout's onMeasure is called.
     // Because requestLayout is requested in the super.addView method.
     mReorderedIndices = mFlexboxHelper->createReorderedIndices(child, index, params, mOrderCache);
-    return ViewGroup::addView(child, index, params);
+    ViewGroup::addView(child, index, params);
 }
 
 void FlexboxLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec) {

@@ -214,8 +214,8 @@ protected:
     void onPageScrolled(int position, float offset, int offsetPixels);
     void draw(Canvas& canvas)override;
     void onDraw(Canvas& canvas)override;
-    ViewGroup::LayoutParams* generateDefaultLayoutParams();
-    ViewGroup::LayoutParams* generateLayoutParams(ViewGroup::LayoutParams* p);
+    LayoutParams* generateDefaultLayoutParams();
+    LayoutParams* generateLayoutParams(ViewGroup::LayoutParams* p);
     bool checkLayoutParams(ViewGroup::LayoutParams* p);
 public:
     ViewPager(int w,int h);
@@ -254,7 +254,7 @@ public:
     bool canScrollHorizontally(int direction)override;
     void addFocusables(std::vector<View*>& views, int direction, int focusableMode)override;
     void addTouchables(std::vector<View*>& views)override;
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs);
+    LayoutParams* generateLayoutParams(const AttributeSet& attrs);
     void onRtlPropertiesChanged(int layoutDirection)override;
 
     bool beginFakeDrag();

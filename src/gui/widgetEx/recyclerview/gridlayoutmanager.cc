@@ -583,7 +583,7 @@ void GridLayoutManager::onItemsMoved(RecyclerView& recyclerView, int from, int t
     mSpanSizeLookup->invalidateSpanIndexCache();
 }
 
-RecyclerView::LayoutParams* GridLayoutManager::generateDefaultLayoutParams()const {
+GridLayoutManager::LayoutParams* GridLayoutManager::generateDefaultLayoutParams()const {
     if (mOrientation == HORIZONTAL) {
         return new LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::MATCH_PARENT);
     } else {
@@ -591,11 +591,11 @@ RecyclerView::LayoutParams* GridLayoutManager::generateDefaultLayoutParams()cons
     }
 }
 
-RecyclerView::LayoutParams* GridLayoutManager::generateLayoutParams(Context* c,const AttributeSet& attrs)const{
+GridLayoutManager::LayoutParams* GridLayoutManager::generateLayoutParams(Context* c,const AttributeSet& attrs)const{
     return new LayoutParams(c, attrs);
 }
 
-RecyclerView::LayoutParams* GridLayoutManager::generateLayoutParams(const ViewGroup::LayoutParams& lp)const{
+GridLayoutManager::LayoutParams* GridLayoutManager::generateLayoutParams(const ViewGroup::LayoutParams& lp)const{
     if (dynamic_cast<const ViewGroup::MarginLayoutParams*>(&lp)) {
         return new LayoutParams((ViewGroup::MarginLayoutParams&) lp);
     } else {

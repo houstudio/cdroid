@@ -851,6 +851,22 @@ void ImageView::setCornerRadii(int topLeftRadius,int topRightRadius,int bottomRi
     invalidate();
 }
 
+void ImageView::animateTransform(const Cairo::Matrix* matrix) {
+    if (mDrawable == nullptr) {
+        return;
+    }
+    if (matrix == nullptr) {
+        const int vwidth = getWidth() - mPaddingLeft - mPaddingRight;
+        const int vheight = getHeight() - mPaddingTop - mPaddingBottom;
+        mDrawable->setBounds(0, 0, vwidth, vheight);
+        mDrawMatrix = identity_matrix();
+    } else {
+        mDrawable->setBounds(0, 0, mDrawableWidth, mDrawableHeight);
+        mDrawMatrix = *matrix;
+    }
+    invalidate();
+}
+
 void ImageView::onDraw(Canvas& canvas) {
     if (mDrawable == nullptr||mDrawableWidth == 0 || mDrawableHeight == 0) return;
  
@@ -859,7 +875,7 @@ void ImageView::onDraw(Canvas& canvas) {
     const int width = getWidth();
     const int height= getHeight();
     if(mRadii[0]||mRadii[1]||mRadii[2]||mRadii[3]){
-	canvas.begin_new_sub_path();
+        canvas.begin_new_sub_path();
         canvas.arc( width - mRadii[1], mRadii[1], mRadii[1], -90 * degrees, 0 * degrees);
         canvas.arc( width - mRadii[2], height - mRadii[2], mRadii[2], 0 * degrees, 90 * degrees);
         canvas.arc( mRadii[3], height - mRadii[3], mRadii[3], 90 * degrees, 180 * degrees);

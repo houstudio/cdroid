@@ -7,7 +7,23 @@ namespace cdroid{
 
 class TableRow:public LinearLayout{
 public:
-    class LayoutParams;
+    class LayoutParams:public LinearLayout::LayoutParams{
+    public:
+        int span;
+        int column;
+        int mOffset [2];
+        enum{
+            LOCATION=0,
+            LOCATION_NEXT=1
+        };
+        LayoutParams();
+        LayoutParams(int column);
+        LayoutParams(Context* c,const AttributeSet&attrs);
+        LayoutParams(int w, int h);
+        LayoutParams(int w, int h, float initWeight);
+        LayoutParams(const ViewGroup::LayoutParams& p);
+        LayoutParams(const MarginLayoutParams& source);
+    };
 private:
     friend class TableLayout;
     int mNumColumns;
@@ -32,9 +48,9 @@ protected:
     std::vector<int>getColumnsWidths(int widthMeasureSpec, int heightMeasureSpec);
     void setColumnsWidthConstraints(const std::vector<int>& columnWidths);
 
-    ViewGroup::LayoutParams* generateDefaultLayoutParams() const override;
+    LayoutParams* generateDefaultLayoutParams() const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
-    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
 public:
     TableRow(int w,int h);
     TableRow(Context* context,const AttributeSet&attrs);
@@ -44,25 +60,8 @@ public:
     View* getVirtualChildAt(int i) override;
     int getVirtualChildCount()override;
     std::string getAccessibilityClassName()const override;
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };
 
-class TableRow::LayoutParams:public LinearLayout::LayoutParams{
-public:
-    int span;
-    int column;
-    int mOffset [2];
-    enum{
-	    LOCATION=0,
-	    LOCATION_NEXT=1
-    };
-    LayoutParams();
-    LayoutParams(int column);
-    LayoutParams(Context* c,const AttributeSet&attrs);
-    LayoutParams(int w, int h);
-    LayoutParams(int w, int h, float initWeight);
-    LayoutParams(const ViewGroup::LayoutParams& p);
-    LayoutParams(const MarginLayoutParams& source);
-};
 }
 #endif

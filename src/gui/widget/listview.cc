@@ -2294,10 +2294,12 @@ int ListView::distanceToView(View* descendant) {
 }
 
 void ListView::scrollListItemsBy(int amount) {
+    const int oldX = mScrollX;
+    const int oldY = mScrollY;
     offsetChildrenTopAndBottom(amount);
 
-    int listBottom = mBottom-mTop - mListPadding.height;
-    int listTop = mListPadding.top;
+    const int listBottom = mBottom-mTop - mListPadding.height;
+    const int listTop = mListPadding.top;
 
     if (amount < 0) {
         // shifted items up
@@ -2365,6 +2367,7 @@ void ListView::scrollListItemsBy(int amount) {
     mRecycler->fullyDetachScrapViews();
     removeUnusedFixedViews(mHeaderViewInfos);
     removeUnusedFixedViews(mFooterViewInfos);
+    onScrollChanged(mScrollX,mScrollY,oldX,oldY);
 }
 
 View* ListView::addViewAbove(View* theView, int position) {

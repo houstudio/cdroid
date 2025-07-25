@@ -63,6 +63,10 @@ bool RelativeLayout::shouldDelayChildPressedState(){
     return false;
 }
 
+int RelativeLayout::getIgnoreGravity()const{
+    return mIgnoreGravity;
+}
+
 int RelativeLayout::getGravity()const{
     return mGravity;
 }
@@ -753,19 +757,19 @@ void RelativeLayout::onLayout(bool changed, int l, int t, int w, int h) {
     }
 }
 
-ViewGroup::LayoutParams* RelativeLayout::generateLayoutParams(const AttributeSet& attrs)const{
+RelativeLayout::LayoutParams* RelativeLayout::generateLayoutParams(const AttributeSet& attrs)const{
     return new RelativeLayout::LayoutParams(getContext(), attrs);
 }
 
-ViewGroup::LayoutParams* RelativeLayout::generateDefaultLayoutParams()const{
-    return new ViewGroup::LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+RelativeLayout::LayoutParams* RelativeLayout::generateDefaultLayoutParams()const{
+    return new LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
 }
 
 bool RelativeLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
     return dynamic_cast<const RelativeLayout::LayoutParams*>(p);
 }
 
-ViewGroup::LayoutParams* RelativeLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
+RelativeLayout::LayoutParams* RelativeLayout::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
     if (sPreserveMarginParamsInLayoutParamConversion) {
         if (dynamic_cast<const LayoutParams*>(lp)) {
             return new LayoutParams((const LayoutParams&)*lp);

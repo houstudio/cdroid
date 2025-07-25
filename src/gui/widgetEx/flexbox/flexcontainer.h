@@ -6,11 +6,9 @@ namespace cdroid{
 class FlexContainer {
 public:
     static constexpr int NOT_SET = -1;
-
+    virtual ~FlexContainer()=default;
     virtual int getFlexItemCount()=0;
-
     virtual View* getFlexItemAt(int index)=0;
-
     virtual View* getReorderedFlexItemAt(int index)=0;
 
     virtual void addView(View* view)=0;

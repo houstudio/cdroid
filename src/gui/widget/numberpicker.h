@@ -198,6 +198,8 @@ protected:
     int computeVerticalScrollOffset()override;
     int computeVerticalScrollRange()override;
     int computeVerticalScrollExtent()override;
+    float getTopFadingEdgeStrength()override;
+    float getBottomFadingEdgeStrength()override;
     void drawableStateChanged()override;
     void onDraw(Canvas&canvas)override;
 public:
@@ -257,6 +259,8 @@ public:
     void setWrapSelectorWheel(bool);
     void setOnLongPressUpdateInterval(long);
 
+    void setSelectionDividerHeight(int height);
+    int getSelectionDividerHeight()const;
     void jumpDrawablesToCurrentState()override;
     void onResolveDrawables(int layoutDirection)override;
     void setTextColor(int color);

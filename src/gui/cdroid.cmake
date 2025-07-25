@@ -54,6 +54,7 @@ list(APPEND CDROID_SOURCES
     core/wifimanager.cc
     core/wifissid.cc
     )
+
 if(ENABLE_AUDIO)
     list(APPEND CDROID_SOURCES
         media/audiomanager.cc
@@ -61,6 +62,7 @@ if(ENABLE_AUDIO)
         media/audiorecord.cc
         )
 endif()
+
 if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message("Building on Windows with MSVC compiler")
     #list(APPEND CDROID_SOURCES core/wepoll.cc)
@@ -106,20 +108,25 @@ list(APPEND CDROID_SOURCES
     view/accessibility/accessibilitynodeinfo.cc
     view/accessibility/accessibilitymanager.cc
 )
-list(APPEND CDROID_SOURCES
-    menu/basemenupresenter.cc
-    menu/iconmenuitemview.cc
-    menu/iconmenuview.cc
-    menu/listmenupresenter.cc
-    menu/menudialoghelper.cc
-    menu/menuitem.cc
-    menu/expandedmenuview.cc
-    menu/iconmenupresenter.cc
-    menu/listmenuitemview.cc
-    menu/menubuilder.cc
-    menu/menuinflater.cc
-    menu/menuitemimpl.cc
-)
+
+if(ENABLE_MENU)
+    list(APPEND CDROID_SOURCES
+        menu/basemenupresenter.cc
+        menu/iconmenuitemview.cc
+        menu/iconmenuview.cc
+        menu/listmenupresenter.cc
+        menu/menudialoghelper.cc
+        menu/menuitem.cc
+        menu/expandedmenuview.cc
+        menu/iconmenupresenter.cc
+        menu/listmenuitemview.cc
+        menu/menubuilder.cc
+        menu/menuinflater.cc
+        menu/menuitemimpl.cc
+        widget/menupopupwindow.cc
+    )
+endif(ENABLE_MENU)
+
 if(ENABLE_GESTURE)
     list(APPEND CDROID_SOURCES
         gesture/gesture.cc
@@ -143,6 +150,7 @@ list(APPEND CDROID_SOURCES
     widget/rtlspacinghelper.cc
     widget/viewdraghelper.cc
     widget/nestedscrollinghelper.cc
+    widget/scrollbardrawable.cc
     widget/cdwindow.cc
 )
 
@@ -170,7 +178,6 @@ list(APPEND CDROID_SOURCES
     widget/analogclock.cc
     widget/numberpicker.cc
     widget/popupwindow.cc
-    widget/menupopupwindow.cc
     widget/candidateview.cc
     widget/keyboardview.cc
 )

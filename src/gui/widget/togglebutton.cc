@@ -42,7 +42,7 @@ const std::string ToggleButton::getTextOn()const{
 }
 
 void ToggleButton::setTextOn(const std::string& textOn){
-    mTextOn=textOn;
+    mTextOn = textOn;
     syncTextState();
 }
 
@@ -53,6 +53,10 @@ const std::string ToggleButton::getTextOff()const{
 void ToggleButton::setTextOff(const std::string& textOff){
     mTextOff=textOff;
     syncTextState();
+}
+
+float ToggleButton::getDisabledAlpha() const{
+    return mDisabledAlpha;
 }
 
 void ToggleButton::doSetChecked(bool checked) {

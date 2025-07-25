@@ -3260,17 +3260,17 @@ bool RecyclerView::checkLayoutParams(const ViewGroup::LayoutParams* p)const {
     return dynamic_cast<const LayoutParams*>(p) && mLayout->checkLayoutParams((const LayoutParams*) p);
 }
 
-ViewGroup::LayoutParams* RecyclerView::generateDefaultLayoutParams()const {
+RecyclerView::LayoutParams* RecyclerView::generateDefaultLayoutParams()const {
     LOGE_IF(mLayout == nullptr,"RecyclerView has no LayoutManager");
-    return(ViewGroup::LayoutParams*)mLayout->generateDefaultLayoutParams();
+    return mLayout->generateDefaultLayoutParams();
 }
 
-ViewGroup::LayoutParams* RecyclerView::generateLayoutParams(const AttributeSet& attrs)const {
+RecyclerView::LayoutParams* RecyclerView::generateLayoutParams(const AttributeSet& attrs)const {
     LOGE_IF(mLayout == nullptr,"RecyclerView has no LayoutManager");
     return mLayout->generateLayoutParams(getContext(), attrs);
 }
 
-ViewGroup::LayoutParams* RecyclerView::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
+RecyclerView::LayoutParams* RecyclerView::generateLayoutParams(const ViewGroup::LayoutParams* p)const {
     LOGE_IF(mLayout == nullptr,"RecyclerView has no LayoutManager");
     return mLayout->generateLayoutParams(*p);
 }

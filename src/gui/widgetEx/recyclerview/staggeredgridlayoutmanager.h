@@ -37,9 +37,24 @@ public:
     class AnchorInfo;
     class FullSpanItem;
     class LazySpanLookup;
-    class LayoutParams;
     class Span;
     class BitSet;
+    class LayoutParams:public RecyclerView::LayoutParams {
+    public:
+        static constexpr int INVALID_SPAN_ID = -1;
+        // Package scope to be able to access from tests.
+        Span* mSpan;
+        bool mFullSpan=false;
+    public:
+        LayoutParams(Context* c, const AttributeSet& attrs);
+        LayoutParams(int width, int height);
+        LayoutParams(const ViewGroup::MarginLayoutParams& source);
+        LayoutParams(const ViewGroup::LayoutParams& source);
+        LayoutParams(const RecyclerView::LayoutParams& source);
+        void setFullSpan(bool fullSpan);
+        bool isFullSpan();
+        int getSpanIndex();
+    };
 private:
     int mSpanCount = -1;
     int mOrientation;
@@ -183,30 +198,13 @@ public:
     void scrollToPositionWithOffset(int position, int offset);
     void collectAdjacentPrefetchPositions(int dx, int dy, RecyclerView::State& state,
           LayoutPrefetchRegistry& layoutPrefetchRegistry)override;
-    RecyclerView::LayoutParams* generateDefaultLayoutParams()const override;
-    RecyclerView::LayoutParams* generateLayoutParams(Context* c,const AttributeSet& attrs)const override;
-    RecyclerView::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams& lp)const override;
+    LayoutParams* generateDefaultLayoutParams()const override;
+    LayoutParams* generateLayoutParams(Context* c,const AttributeSet& attrs)const override;
+    LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams& lp)const override;
     bool checkLayoutParams(const RecyclerView::LayoutParams* lp)const override;
     int getOrientation()const;
     View* onFocusSearchFailed(View* focused, int direction, RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
 };/*StaggeredGridLayoutManager*/
-
-class StaggeredGridLayoutManager::LayoutParams:public RecyclerView::LayoutParams {
-public:
-    static constexpr int INVALID_SPAN_ID = -1;
-    // Package scope to be able to access from tests.
-    Span* mSpan;
-    bool mFullSpan=false;
-public:
-    LayoutParams(Context* c, const AttributeSet& attrs);
-    LayoutParams(int width, int height);
-    LayoutParams(const ViewGroup::MarginLayoutParams& source);
-    LayoutParams(const ViewGroup::LayoutParams& source);
-    LayoutParams(const RecyclerView::LayoutParams& source);
-    void setFullSpan(bool fullSpan);
-    bool isFullSpan();
-    int getSpanIndex();
-};
 
 // Package scoped to access from tests.
 class StaggeredGridLayoutManager::Span {

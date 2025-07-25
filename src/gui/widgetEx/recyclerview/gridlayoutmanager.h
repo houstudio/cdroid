@@ -28,7 +28,22 @@ public:
     static constexpr int DEFAULT_SPAN_COUNT = -1;
     class SpanSizeLookup;
     class DefaultSpanSizeLookup;
-    class LayoutParams;
+    class LayoutParams:public RecyclerView::LayoutParams {
+    public:
+        static constexpr int INVALID_SPAN_ID = -1;
+    protected:
+        int mSpanIndex = INVALID_SPAN_ID;
+        int mSpanSize = 0;
+        friend GridLayoutManager;
+    public:
+        LayoutParams(Context* c,const AttributeSet& attrs);
+        LayoutParams(int width, int height);
+        LayoutParams(const ViewGroup::MarginLayoutParams& source);
+        LayoutParams(const ViewGroup::LayoutParams& source);
+        LayoutParams(const RecyclerView::LayoutParams& source);
+        int getSpanIndex()const;
+        int getSpanSize()const;
+    };
 private:
     int  mPositionTargetedByScrollInDirection = INVALID_POSITION;
 protected:
@@ -110,9 +125,9 @@ public:
     void onItemsRemoved(RecyclerView& recyclerView, int positionStart, int itemCount)override;
     void onItemsUpdated(RecyclerView& recyclerView, int positionStart, int itemCount,Object* payload)override;
     void onItemsMoved(RecyclerView& recyclerView, int from, int to, int itemCount)override;
-    RecyclerView::LayoutParams* generateDefaultLayoutParams()const override;
-    RecyclerView::LayoutParams* generateLayoutParams(Context* c,const AttributeSet& attrs)const override;
-    RecyclerView::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams& lp)const override;
+    LayoutParams* generateDefaultLayoutParams()const override;
+    LayoutParams* generateLayoutParams(Context* c,const AttributeSet& attrs)const override;
+    LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams& lp)const override;
 
     bool checkLayoutParams(const RecyclerView::LayoutParams* lp)const override;
     void setSpanSizeLookup(SpanSizeLookup* spanSizeLookup);
@@ -166,21 +181,5 @@ public:
     int getSpanIndex(int position, int spanCount)override;
 };
 
-class GridLayoutManager::LayoutParams:public RecyclerView::LayoutParams {
-public:
-    static constexpr int INVALID_SPAN_ID = -1;
-protected:
-    int mSpanIndex = INVALID_SPAN_ID;
-    int mSpanSize = 0;
-    friend GridLayoutManager;
-public:
-    LayoutParams(Context* c,const AttributeSet& attrs);
-    LayoutParams(int width, int height);
-    LayoutParams(const ViewGroup::MarginLayoutParams& source);
-    LayoutParams(const ViewGroup::LayoutParams& source);
-    LayoutParams(const RecyclerView::LayoutParams& source);
-    int getSpanIndex()const;
-    int getSpanSize()const;
-};
 }/*endof namespace*/
 #endif/*__GRID_LAYOUT_MANAGER_H__*/

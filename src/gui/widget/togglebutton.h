@@ -37,6 +37,7 @@ public:
     void setTextOn(const std::string& textOn);
     const std::string getTextOff()const;
     void setTextOff(const std::string& textOff);
+    float getDisabledAlpha() const;
     void setBackground(Drawable* d)override;
     std::string getAccessibilityName()const;
 };

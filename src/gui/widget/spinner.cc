@@ -413,6 +413,13 @@ void Spinner::onClick(DialogInterface& dialog, int which) {
     dialog.dismiss();
 }
 
+void Spinner::onClick(int which) {
+    setSelection(which);
+    if (mPopup != nullptr && mPopup->isShowing()) {
+        mPopup->dismiss();
+    }
+}
+
 int Spinner::measureContentWidth(Adapter* adapter, Drawable* background){
     if (adapter == nullptr) return 0;
 

@@ -28,6 +28,7 @@
 #cmakedefine ENABLE_LITEHTML  1
 #cmakedefine ENABLE_AUDIO  1
 #cmakedefine ENABLE_LCMS   1
+#cmakedefine ENABLE_MENU   1
 #cmakedefine HAVE_EPOLL 1
 #cmakedefine HAVE_POLL  1
 #cmakedefine HAVE_EVENTFD 1

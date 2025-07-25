@@ -10,12 +10,12 @@
 
 namespace cdroid{
 
-#define OVERSCROLL_LIMIT_DIVISOR 3
-#define CHECK_POSITION_SEARCH_DISTANCE 20
-
+class HapticScrollFeedbackProvider;
 class AbsListView:public AdapterView,Filter::FilterListener{
 private:
     static constexpr float FLING_DESTRETCH_FACTOR = 4.f;
+    static constexpr int OVERSCROLL_LIMIT_DIVISOR = 3;
+    static constexpr int CHECK_POSITION_SEARCH_DISTANCE=20;
 public:
     friend RecycleBin;
     static constexpr int CHOICE_MODE_NONE=0;
@@ -173,6 +173,7 @@ private:
     void setItemViewLayoutParams(View* child, int position);
     void initOrResetVelocityTracker();
     void initVelocityTrackerIfNotExists();
+    void initHapticScrollFeedbackProviderIfNotExists();
     void recycleVelocityTracker();
     bool canScrollUp()const;
     bool canScrollDown()const;
@@ -181,6 +182,7 @@ private:
     void onTouchUp(MotionEvent& ev);
     void onTouchDown(MotionEvent& ev);
     void onTouchMove(MotionEvent&,MotionEvent&);
+    void stopEdgeGlowRecede(float);
     bool shouldAbsorb(EdgeEffect* edgeEffect, int velocity);
     int consumeFlingInStretch(int unconsumed);
     bool shouldDisplayEdgeEffects()const;
@@ -197,6 +199,7 @@ private:
     bool doesTouchStopStretch();
     void invalidateTopGlow();
     void invalidateBottomGlow();
+    void invalidateEdgeEffects();
     void finishGlows();
     void createScrollingCache();
     void clearScrollingCache();
@@ -268,6 +271,7 @@ protected:
     int mMotionCorrection;
     int mTouchMode;
     VelocityTracker* mVelocityTracker;
+    HapticScrollFeedbackProvider*mHapticScrollFeedbackProvider;
     class ActionMode*mChoiceActionMode;
     MultiChoiceModeListener mMultiChoiceModeCallback;
     virtual void resetList();
@@ -331,8 +335,8 @@ protected:
     bool handleScrollBarDragging(MotionEvent& event)override;
     bool performLongPress(View* child,int longPressPosition,long longPressId);
     bool performLongPress(View* child,int longPressPosition,long longPressId,int x,int y);
-    ViewGroup::LayoutParams*generateDefaultLayoutParams()const override;
-    ViewGroup::LayoutParams*generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    LayoutParams*generateDefaultLayoutParams()const override;
+    LayoutParams*generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     void onFocusChanged(bool gainFocus, int direction,Rect* previouslyFocusedRect)override;
     void onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY)override;
@@ -421,7 +425,7 @@ public:
     void requestDisallowInterceptTouchEvent(bool disallowIntercept)override;
     void addTouchables(std::vector<View*>& views)override;
     View* getSelectedView()override;
-    ViewGroup::LayoutParams*generateLayoutParams(const AttributeSet& attrs)const override;
+    LayoutParams*generateLayoutParams(const AttributeSet& attrs)const override;
     void setSelectionFromTop(int position, int y);
     int getCacheColorHint()const;
     virtual void setCacheColorHint(int color);
