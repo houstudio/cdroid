@@ -1653,7 +1653,7 @@ LayoutParams* ViewGroup::generateLayoutParams(const AttributeSet& attrs)const{
     return new LayoutParams(getContext(), attrs);
 }
 
-LayoutParams*ViewGroup::generateLayoutParams(const LayoutParams* p)const{
+LayoutParams* ViewGroup::generateLayoutParams(const LayoutParams* p)const{
     return (LayoutParams*)p;
 }
 
