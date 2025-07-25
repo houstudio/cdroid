@@ -38,8 +38,8 @@ public:
     ~ViewAnimator();
     void setDisplayedChild(int whichChild);
     int getDisplayedChild()const;
-    void showNext();
-    void showPrevious();
+    virtual void showNext();
+    virtual void showPrevious();
     void addView(View* child, int index,ViewGroup::LayoutParams* params)override;
     void removeAllViews()override;
     void removeView(View* view)override;

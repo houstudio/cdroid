@@ -96,8 +96,8 @@ public:
     ~AdapterViewAnimator()override;
     void setDisplayedChild(int whichChild);
     int getDisplayedChild();
-    void showNext();
-    void showPrevious();
+    virtual void showNext();
+    virtual void showPrevious();
     bool onTouchEvent(MotionEvent& ev)override;
     View* getCurrentView();
     ObjectAnimator* getInAnimation();
