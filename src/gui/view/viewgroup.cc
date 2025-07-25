@@ -1429,6 +1429,10 @@ View* ViewGroup::getAndVerifyPreorderedView(const std::vector<View*>& preordered
     return child;
 }
 
+void ViewGroup::setStaticTransformationsEnabled(bool enabled){
+    setBooleanFlag(FLAG_SUPPORT_STATIC_TRANSFORMATIONS, enabled);
+}
+
 bool ViewGroup::getChildStaticTransformation(View* child, Transformation* t){
     return false;
 }

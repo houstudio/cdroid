@@ -107,7 +107,7 @@ int ViewConfiguration::getThumbOffset(int size, int thumbLength, int extent, int
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-int ViewConfiguration::getScaledScrollBarSize() {
+int ViewConfiguration::getScaledScrollBarSize() const{
     return mScrollbarSize;
 }
 
@@ -115,14 +115,14 @@ int ViewConfiguration::getScaledScrollBarSize() {
  * @return the minimum size of the scrollbar thumb's touch target in pixels
  * @hide
  */
-int ViewConfiguration::getScaledMinScrollbarTouchTarget() {
+int ViewConfiguration::getScaledMinScrollbarTouchTarget() const{
     return mMinScrollbarTouchTarget;
 }
 
 /**
  * @return the length of the fading edges in pixels
  */
-int ViewConfiguration::getScaledFadingEdgeLength() {
+int ViewConfiguration::getScaledFadingEdgeLength() const{
     return mFadingEdgeLength;
 }
 
@@ -130,7 +130,7 @@ int ViewConfiguration::getScaledFadingEdgeLength() {
  * @return Inset in pixels to look for touchable content when the user touches the edge of the
  *         screen
  */
-int ViewConfiguration::getScaledEdgeSlop() {
+int ViewConfiguration::getScaledEdgeSlop() const{
     return mEdgeSlop;
 }
 
@@ -138,7 +138,7 @@ int ViewConfiguration::getScaledEdgeSlop() {
 /**
  * @return Distance in pixels a touch can wander before we think the user is scrolling
  */
-int ViewConfiguration::getScaledTouchSlop() {
+int ViewConfiguration::getScaledTouchSlop() const{
     return mTouchSlop;
 }
 
@@ -146,7 +146,7 @@ int ViewConfiguration::getScaledTouchSlop() {
  * @return Distance in pixels a hover can wander while it is still considered "stationary".
  *
  */
-int ViewConfiguration::getScaledHoverSlop() {
+int ViewConfiguration::getScaledHoverSlop() const{
     return mHoverSlop;
 }
 
@@ -155,7 +155,7 @@ int ViewConfiguration::getScaledHoverSlop() {
  * potential double tap event
  * @hide
  */
-int ViewConfiguration::getScaledDoubleTapTouchSlop() {
+int ViewConfiguration::getScaledDoubleTapTouchSlop() const{
     return mDoubleTapTouchSlop;
 }
 
@@ -163,7 +163,7 @@ int ViewConfiguration::getScaledDoubleTapTouchSlop() {
  * @return Distance in pixels a touch can wander before we think the user is scrolling a full
  * page
  */
-int ViewConfiguration::getScaledPagingTouchSlop() {
+int ViewConfiguration::getScaledPagingTouchSlop() const{
     return mPagingTouchSlop;
 }
 
@@ -172,7 +172,7 @@ int ViewConfiguration::getScaledPagingTouchSlop() {
  * @return Distance in pixels between the first touch and second touch to still be
  *         considered a double tap
  */
-int ViewConfiguration::getScaledDoubleTapSlop() {
+int ViewConfiguration::getScaledDoubleTapSlop() const{
     return mDoubleTapSlop;
 }
 
@@ -185,7 +185,7 @@ int ViewConfiguration::getScaledDoubleTapSlop() {
  *
  * @hide
  */
-long ViewConfiguration::getSendRecurringAccessibilityEventsInterval() {
+long ViewConfiguration::getSendRecurringAccessibilityEventsInterval(){
     return SEND_RECURRING_ACCESSIBILITY_EVENTS_INTERVAL_MILLIS;
 }
 
@@ -194,7 +194,7 @@ long ViewConfiguration::getSendRecurringAccessibilityEventsInterval() {
  * @return Distance in pixels a touch must be outside the bounds of a window for it
  * to be counted as outside the window for purposes of dismissing that window.
  */
-int ViewConfiguration::getScaledWindowTouchSlop() {
+int ViewConfiguration::getScaledWindowTouchSlop() const{
     return mWindowTouchSlop;
 }
 
@@ -202,7 +202,7 @@ int ViewConfiguration::getScaledWindowTouchSlop() {
 /**
  * @return Minimum velocity to initiate a fling, as measured in pixels per second.
  */
-int ViewConfiguration::getScaledMinimumFlingVelocity() {
+int ViewConfiguration::getScaledMinimumFlingVelocity() const{
     return mMinimumFlingVelocity;
 }
 
@@ -210,7 +210,7 @@ int ViewConfiguration::getScaledMinimumFlingVelocity() {
 /**
  * @return Maximum velocity to initiate a fling, as measured in pixels per second.
  */
-int ViewConfiguration::getScaledMaximumFlingVelocity() {
+int ViewConfiguration::getScaledMaximumFlingVelocity() const{
     return mMaximumFlingVelocity;
 }
 

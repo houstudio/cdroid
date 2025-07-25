@@ -31,7 +31,7 @@ private:
     void initViewAnimator(Context* context,const AttributeSet& attrs);
 protected:
     void showOnly(int childIndex);
-    void showOnly(int childIndex, bool animate);
+    virtual void showOnly(int childIndex, bool animate);
 public:
     ViewAnimator(int w,int h);
     ViewAnimator(Context* context,const AttributeSet& attrs);

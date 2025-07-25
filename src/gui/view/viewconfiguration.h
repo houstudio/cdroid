@@ -213,12 +213,12 @@ public:
     static int getThumbLength(int size, int thickness, int extent, int range);
     static int getThumbOffset(int size, int thumbLength, int extent, int range, int offset);
 
-    int getScaledScrollBarSize();
+    int getScaledScrollBarSize()const;
     /**
      * @return the minimum size of the scrollbar thumb's touch target in pixels
      * @hide
      */
-    int getScaledMinScrollbarTouchTarget();
+    int getScaledMinScrollbarTouchTarget()const;
     /**
      * @return Duration of the fade when scrollbars fade away in milliseconds
      */
@@ -231,7 +231,7 @@ public:
     /**
      * @return the length of the fading edges in pixels
      */
-    int getScaledFadingEdgeLength();
+    int getScaledFadingEdgeLength()const;
     /**
      * @return the duration in milliseconds of the pressed state in child
      * components.
@@ -302,19 +302,19 @@ public:
      * @return Inset in pixels to look for touchable content when the user touches the edge of the
      *         screen
      */
-    int getScaledEdgeSlop();
+    int getScaledEdgeSlop()const;
     
-    static constexpr int getTouchSlop() { return TOUCH_SLOP; }
+    static constexpr int getTouchSlop(){ return TOUCH_SLOP; }
     /**
      * @return Distance in pixels a touch can wander before we think the user is scrolling
      */
-    int getScaledTouchSlop();
+    int getScaledTouchSlop()const;
 
     /**
      * @return Distance in pixels a hover can wander while it is still considered "stationary".
      *
      */
-    int getScaledHoverSlop();
+    int getScaledHoverSlop()const;
 
     static constexpr int getDoubleTapTouchSlop(){return DOUBLE_TAP_SLOP;}
     /**
@@ -322,20 +322,20 @@ public:
      * potential double tap event
      * @hide
      */
-    int getScaledDoubleTapTouchSlop();
+    int getScaledDoubleTapTouchSlop()const;
 
     /**
      * @return Distance in pixels a touch can wander before we think the user is scrolling a full
      * page
      */
-    int getScaledPagingTouchSlop();
+    int getScaledPagingTouchSlop()const;
 
     static constexpr int getDoubleTapSlop(){return DOUBLE_TAP_SLOP;}
     /**
      * @return Distance in pixels between the first touch and second touch to still be
      *         considered a double tap
      */
-    int getScaledDoubleTapSlop();
+    int getScaledDoubleTapSlop()const;
     /**
      * Interval for dispatching a recurring accessibility event in milliseconds.
      * This interval guarantees that a recurring event will be send at most once
@@ -352,19 +352,19 @@ public:
      * @return Distance in pixels a touch must be outside the bounds of a window for it
      * to be counted as outside the window for purposes of dismissing that window.
      */
-    int getScaledWindowTouchSlop();
+    int getScaledWindowTouchSlop()const;
 
     static constexpr int getMinimumFlingVelocity() {return MINIMUM_FLING_VELOCITY;}
     /**
      * @return Minimum velocity to initiate a fling, as measured in pixels per second.
      */
-    int getScaledMinimumFlingVelocity();
+    int getScaledMinimumFlingVelocity()const;
 
     static constexpr int getMaximumFlingVelocity() { return MAXIMUM_FLING_VELOCITY;}
     /**
      * @return Maximum velocity to initiate a fling, as measured in pixels per second.
      */
-    int getScaledMaximumFlingVelocity();
+    int getScaledMaximumFlingVelocity()const;
     int getScaledMinimumFlingVelocity(int inputDeviceId, int axis, int source);
     int getScaledMaximumFlingVelocity(int inputDeviceId, int axis, int source);
    /**

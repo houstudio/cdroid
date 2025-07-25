@@ -83,10 +83,10 @@ protected:
     int getWindowSize();
     LayoutParams* createOrReuseLayoutParams(View* v);
     void refreshChildren();
-    FrameLayout* getFrameForChild();
-    void showOnly(int childIndex, bool animate);
-    void showTapFeedback(View* v);
-    void hideTapFeedback(View* v);
+    virtual FrameLayout* getFrameForChild();
+    virtual void showOnly(int childIndex, bool animate);
+    virtual void showTapFeedback(View* v);
+    virtual void hideTapFeedback(View* v);
     void cancelHandleClick();
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void checkForAndHandleDataChanged();
@@ -113,7 +113,7 @@ public:
     void setSelection(int position)override;
     View* getSelectedView()override;
     void deferNotifyDataSetChanged();
-    void advance();
+    virtual void advance();
 };
 
 }//namepace

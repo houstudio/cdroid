@@ -279,6 +279,7 @@ protected:
     virtual int getChildDrawingOrder(int childCount, int i);
     std::vector<View*> buildOrderedChildList();
 
+    void setStaticTransformationsEnabled(bool enabled);
     virtual bool getChildStaticTransformation(View* child, Transformation* t);
     Transformation* getChildTransformation();
     void finishAnimatingView(View* view, Animation* animation);
