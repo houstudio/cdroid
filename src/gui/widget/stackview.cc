@@ -21,6 +21,7 @@ namespace cdroid{
 
 DECLARE_WIDGET(StackView);
 
+StackView::HolographicHelper* StackView::sHolographicHelper;
 StackView::StackView(Context* context,const  AttributeSet& attrs)
     :AdapterViewAnimator(context, attrs){
 
