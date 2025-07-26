@@ -23,10 +23,10 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(DayPickerView);
+
 DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
     :ViewGroup(context, attrs){
-
-    //mAccessibilityManager = (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
 
     Calendar tempDate;
     const int firstDayOfWeek = attrs.getInt("firstDayOfWeek", tempDate.getFirstDayOfWeek());
@@ -58,14 +58,15 @@ DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
     }
 
     mPrevButton = (ImageButton*)findViewById(R::id::prev);
-    auto mOnClickListener =std::bind(&DayPickerView::onButtonClick,this,std::placeholders::_1);
-    mPrevButton->setOnClickListener(mOnClickListener);
+    auto clickListener =std::bind(&DayPickerView::onButtonClick,this,std::placeholders::_1);
+    mPrevButton->setOnClickListener(clickListener);
 
     mNextButton = (ImageButton*)findViewById(R::id::next);
-    mNextButton->setOnClickListener(mOnClickListener);
+    mNextButton->setOnClickListener(clickListener);
 
     mViewPager = (ViewPager*)findViewById(R::id::day_picker_view_pager);
     mViewPager->setAdapter(mAdapter);
+
     ViewPager::OnPageChangeListener pcl;
     pcl.onPageScrolled=[this](int position, float positionOffset, int positionOffsetPixels){
         const float alpha = std::abs(0.5f - positionOffset) * 2.0f;
@@ -114,6 +115,10 @@ DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
             mOnDaySelectedListener(*this, day);
         }
     };
+}
+
+DayPickerView::~DayPickerView(){
+    delete mAdapter;
 }
 
 void DayPickerView::onButtonClick(View&v){
