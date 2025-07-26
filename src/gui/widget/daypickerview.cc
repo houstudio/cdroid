@@ -66,7 +66,16 @@ DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
 
     mViewPager = (ViewPager*)findViewById(R::id::day_picker_view_pager);
     mViewPager->setAdapter(mAdapter);
-    //mViewPager->setOnPageChangeListener(mOnPageChangedListener);
+    ViewPager::OnPageChangeListener pcl;
+    pcl.onPageScrolled=[this](int position, float positionOffset, int positionOffsetPixels){
+        const float alpha = std::abs(0.5f - positionOffset) * 2.0f;
+        mPrevButton->setAlpha(alpha);
+        mNextButton->setAlpha(alpha);
+    };
+    pcl.onPageSelected=[this](int position) {
+        updateButtonVisibility(position);
+    };
+    mViewPager->addOnPageChangeListener(pcl);
 
     // Proxy the month text color into the previous and next buttons.
     if (!monthTextAppearanceResId.empty()) {
@@ -99,17 +108,12 @@ DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
     setMinDate(minDateMillis);
     setMaxDate(maxDateMillis);
     setDate(setDateMillis, false);
-#if 0
     // Proxy selection callbacks to our own listener.
-    mAdapter->setOnDaySelectedListener(new DayPickerPagerAdapter.OnDaySelectedListener() {
-        @Override
-        public void onDaySelected(DayPickerPagerAdapter adapter, Calendar day) {
-            if (mOnDaySelectedListener != null) {
-                mOnDaySelectedListener.onDaySelected(DayPickerView.this, day);
-            }
+    DayPickerPagerAdapter::OnDaySelectedListener  dsl=[this](DayPickerPagerAdapter& adapter, Calendar& day){
+        if (mOnDaySelectedListener != nullptr) {
+            mOnDaySelectedListener(*this, day);
         }
-    });
-#endif
+    };
 }
 
 void DayPickerView::onButtonClick(View&v){
@@ -271,9 +275,6 @@ int64_t DayPickerView::getMaxDate() {
     return mMaxDate.getTimeInMillis();
 }
 
-/**
- * Handles changes to date range.
- */
 void DayPickerView::onRangeChanged() {
     mAdapter->setRange(mMinDate, mMaxDate);
 
@@ -284,12 +285,7 @@ void DayPickerView::onRangeChanged() {
     updateButtonVisibility(mViewPager->getCurrentItem());
 }
 
-/**
- * Sets the listener to call when the user selects a day.
- *
- * @param listener The listener to call.
- */
-void DayPickerView::setOnDaySelectedListener(OnDaySelectedListener listener) {
+void DayPickerView::setOnDaySelectedListener(const OnDaySelectedListener& listener) {
     mOnDaySelectedListener = listener;
 }
 

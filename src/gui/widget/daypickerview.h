@@ -76,7 +76,7 @@ public:
     void setMaxDate(int64_t timeInMillis);
     int64_t getMaxDate();
     void onRangeChanged();
-    void setOnDaySelectedListener(OnDaySelectedListener listener);
+    void setOnDaySelectedListener(const OnDaySelectedListener& listener);
     int getMostVisiblePosition();
     void setPosition(int position);
 
