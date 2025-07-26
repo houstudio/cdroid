@@ -106,7 +106,7 @@ TEST_F(CANVAS,rotate1){
    auto end=SystemClock::uptimeMillis();
    c.restore();
    c.dump2png("rotate0.png");
-   printf("used time=%lld\r\n",end-start);
+   printf("used time=%ld\r\n",end-start);
 
    c.translate(640,640);
    c.rotate_degrees(90);
@@ -119,7 +119,7 @@ TEST_F(CANVAS,rotate1){
    }
    end=SystemClock::uptimeMillis();
    c.dump2png("rotate90.png");
-   printf("used time=%lld\r\n",end-start);
+   printf("used time=%ld\r\n",end-start);
 }
 TEST_F(CANVAS,rotate2){
    Canvas c(1280,1280);
@@ -140,7 +140,7 @@ TEST_F(CANVAS,rotate2){
    auto end=SystemClock::uptimeMillis();
    c.restore();
    c.dump2png("img0.png");
-   printf("used time=%lld\r\n",end-start);
+   printf("used time=%ld\r\n",end-start);
 
    c.translate(640,640);
    c.set_source(img,0,0);
@@ -154,6 +154,6 @@ TEST_F(CANVAS,rotate2){
    }
    end=SystemClock::uptimeMillis();
    c.dump2png("img90.png");
-   printf("used time=%lld\r\n",end-start);
+   printf("used time=%ld\r\n",end-start);
 }
 
