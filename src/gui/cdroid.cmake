@@ -232,6 +232,7 @@ if(ENABLE_DAYTIME_WIDGETS)
         widget/explorebytouchhelper.cc
         widget/calendarview.cc
         widget/calendarviewlegacydelegate.cc
+        widget/calendarviewmaterialdelegate.cc
     )
 endif(ENABLE_DAYTIME_WIDGETS)
 
