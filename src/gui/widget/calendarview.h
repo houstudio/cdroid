@@ -85,6 +85,7 @@ public:
 
 class CalendarView::CalendarViewDelegate{
 public:
+    virtual ~CalendarViewDelegate()=default;
     virtual void setShownWeekCount(int count)=0;
     virtual int getShownWeekCount()const =0;
 
