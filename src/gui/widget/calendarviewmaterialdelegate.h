@@ -47,7 +47,7 @@ public:
         mDayPickerView->setDayOfWeekTextAppearance(resId);
     }
 
-    const std::string getWeekDayTextAppearance() override{
+    std::string getWeekDayTextAppearance() const override{
         return mDayPickerView->getDayOfWeekTextAppearance();
     }
 
@@ -55,7 +55,7 @@ public:
         mDayPickerView->setDayTextAppearance(resId);
     }
 
-    const std::string getDateTextAppearance() override{
+    std::string getDateTextAppearance() const override{
         return mDayPickerView->getDayTextAppearance();
     }
 
@@ -79,7 +79,7 @@ public:
         mDayPickerView->setFirstDayOfWeek(firstDayOfWeek);
     }
 
-    int getFirstDayOfWeek() override{
+    int getFirstDayOfWeek() const override{
         return mDayPickerView->getFirstDayOfWeek();
     }
 
@@ -91,7 +91,7 @@ public:
         mDayPickerView->setDate(date, animate);
     }
 
-    int64_t getDate() {
+    int64_t getDate(){
         return mDayPickerView->getDate();
     }
 

@@ -17,53 +17,41 @@
  *********************************************************************************/
 #include <widget/calendarviewlegacydelegate.h>
 #include <widget/listview.h>
+#include <widget/calendarview.h>
 #include <core/systemclock.h>
 #include <widget/R.h>
 namespace cdroid{
 
 CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet& attrs)
     :CalendarView::AbstractCalendarViewDelegate(delegator,context){
-#if 0
-    final TypedArray a = context.obtainStyledAttributes(attrs,
-            R.styleable.CalendarView, defStyleAttr, defStyleRes);
-    mShowWeekNumber = a.getBoolean(R.styleable.CalendarView_showWeekNumber,
-            DEFAULT_SHOW_WEEK_NUMBER);
-    mFirstDayOfWeek = a.getInt(R.styleable.CalendarView_firstDayOfWeek,
-            Calendar.getInstance().getFirstDayOfWeek());
-    const std::string minDate = a.getString(R.styleable.CalendarView_minDate);
-    if (!CalendarView.parseDate(minDate, mMinDate)) {
-        CalendarView.parseDate(DEFAULT_MIN_DATE, mMinDate);
+
+    mShowWeekNumber = attrs.getBoolean("showWeekNumber",DEFAULT_SHOW_WEEK_NUMBER);
+    Calendar cal;
+    mFirstDayOfWeek = attrs.getInt("firstDayOfWeek",cal.getFirstDayOfWeek());
+    const std::string minDate = attrs.getString("minDate");
+    if (!CalendarView::parseDate(minDate, mMinDate)) {
+        CalendarView::parseDate(DEFAULT_MIN_DATE, mMinDate);
     }
-    const std::string maxDate = a.getString(R.styleable.CalendarView_maxDate);
-    if (!CalendarView.parseDate(maxDate, mMaxDate)) {
-        CalendarView.parseDate(DEFAULT_MAX_DATE, mMaxDate);
+    const std::string maxDate = attrs.getString("maxDate");
+    if (!CalendarView::parseDate(maxDate, mMaxDate)) {
+        CalendarView::parseDate(DEFAULT_MAX_DATE, mMaxDate);
     }
     if (mMaxDate.before(mMinDate)) {
-        throw new IllegalArgumentException("Max date cannot be before min date.");
+        throw std::invalid_argument("Max date cannot be before min date.");
     }
-    mShownWeekCount = a.getInt(R.styleable.CalendarView_shownWeekCount,
-            DEFAULT_SHOWN_WEEK_COUNT);
-    mSelectedWeekBackgroundColor = a.getColor(
-            R.styleable.CalendarView_selectedWeekBackgroundColor, 0);
-    mFocusedMonthDateColor = a.getColor(
-            R.styleable.CalendarView_focusedMonthDateColor, 0);
-    mUnfocusedMonthDateColor = a.getColor(
-            R.styleable.CalendarView_unfocusedMonthDateColor, 0);
-    mWeekSeparatorLineColor = a.getColor(
-            R.styleable.CalendarView_weekSeparatorLineColor, 0);
-    mWeekNumberColor = a.getColor(R.styleable.CalendarView_weekNumberColor, 0);
-    mSelectedDateVerticalBar = a.getDrawable(
-            R.styleable.CalendarView_selectedDateVerticalBar);
+    mShownWeekCount = attrs.getInt("shownWeekCount", DEFAULT_SHOWN_WEEK_COUNT);
+    mSelectedWeekBackgroundColor = attrs.getColor("selectedWeekBackgroundColor", 0);
+    mFocusedMonthDateColor = attrs.getColor("focusedMonthDateColor", 0);
+    mUnfocusedMonthDateColor = attrs.getColor("unfocusedMonthDateColor", 0);
+    mWeekSeparatorLineColor = attrs.getColor("weekSeparatorLineColor", 0);
+    mWeekNumberColor = attrs.getColor("weekNumberColor", 0);
+    mSelectedDateVerticalBar = attrs.getDrawable("selectedDateVerticalBar");
 
-    mDateTextAppearanceResId = a.getResourceId(
-            R.styleable.CalendarView_dateTextAppearance, R.style.TextAppearance_Small);
+    mDateTextAppearanceResId = attrs.getString("dateTextAppearance", "cdroid:attr/TextAppearance_Small");
     updateDateTextSize();
 
-    mWeekDayTextAppearanceResId = a.getResourceId(
-            R.styleable.CalendarView_weekDayTextAppearance,
-            DEFAULT_WEEK_DAY_TEXT_APPEARANCE_RES_ID);
-    a.recycle();
-
+    mWeekDayTextAppearanceResId = attrs.getString("weekDayTextAppearance");//,DEFAULT_WEEK_DAY_TEXT_APPEARANCE_RES_ID);
+#if 0
     DisplayMetrics displayMetrics = mDelegator.getResources().getDisplayMetrics();
     mWeekMinVisibleHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
             UNSCALED_WEEK_MIN_VISIBLE_HEIGHT, displayMetrics);
@@ -108,7 +96,7 @@ void CalendarViewLegacyDelegate::setShownWeekCount(int count) {
     }
 }
 
-int CalendarViewLegacyDelegate::getShownWeekCount() {
+int CalendarViewLegacyDelegate::getShownWeekCount() const{
     return mShownWeekCount;
 }
 
@@ -125,7 +113,7 @@ void CalendarViewLegacyDelegate::setSelectedWeekBackgroundColor(int color) {
     }
 }
 
-int CalendarViewLegacyDelegate::getSelectedWeekBackgroundColor() {
+int CalendarViewLegacyDelegate::getSelectedWeekBackgroundColor() const{
     return mSelectedWeekBackgroundColor;
 }
 
@@ -142,7 +130,7 @@ void CalendarViewLegacyDelegate::setFocusedMonthDateColor(int color) {
     }
 }
 
-int CalendarViewLegacyDelegate::getFocusedMonthDateColor() {
+int CalendarViewLegacyDelegate::getFocusedMonthDateColor() const{
     return mFocusedMonthDateColor;
 }
 
@@ -159,7 +147,7 @@ void CalendarViewLegacyDelegate::setUnfocusedMonthDateColor(int color) {
     }
 }
 
-int CalendarViewLegacyDelegate::getUnfocusedMonthDateColor() {
+int CalendarViewLegacyDelegate::getUnfocusedMonthDateColor() const{
     return mUnfocusedMonthDateColor;
 }
 
@@ -172,7 +160,7 @@ void CalendarViewLegacyDelegate::setWeekNumberColor(int color) {
     }
 }
 
-int CalendarViewLegacyDelegate::getWeekNumberColor() {
+int CalendarViewLegacyDelegate::getWeekNumberColor() const{
     return mWeekNumberColor;
 }
 
@@ -183,7 +171,7 @@ void CalendarViewLegacyDelegate::setWeekSeparatorLineColor(int color) {
     }
 }
 
-int CalendarViewLegacyDelegate::getWeekSeparatorLineColor() {
+int CalendarViewLegacyDelegate::getWeekSeparatorLineColor() const{
     return mWeekSeparatorLineColor;
 }
 
@@ -205,7 +193,7 @@ void CalendarViewLegacyDelegate::setSelectedDateVerticalBar(Drawable* drawable) 
     }
 }
 
-Drawable* CalendarViewLegacyDelegate::getSelectedDateVerticalBar() {
+Drawable* CalendarViewLegacyDelegate::getSelectedDateVerticalBar() const{
     return mSelectedDateVerticalBar;
 }
 
@@ -216,7 +204,7 @@ void CalendarViewLegacyDelegate::setWeekDayTextAppearance(const std::string& res
     }
 }
 
-const std::string CalendarViewLegacyDelegate::getWeekDayTextAppearance() {
+std::string CalendarViewLegacyDelegate::getWeekDayTextAppearance() const{
     return mWeekDayTextAppearanceResId;
 }
 
@@ -228,7 +216,7 @@ void CalendarViewLegacyDelegate::setDateTextAppearance(const std::string& resour
     }
 }
 
-const std::string CalendarViewLegacyDelegate::getDateTextAppearance() {
+std::string CalendarViewLegacyDelegate::getDateTextAppearance() const{
     return mDateTextAppearanceResId;
 }
 
@@ -259,7 +247,7 @@ void CalendarViewLegacyDelegate::setMinDate(int64_t minDate) {
     }
 }
 
-int64_t CalendarViewLegacyDelegate::getMinDate() {
+int64_t CalendarViewLegacyDelegate::getMinDate(){
     return mMinDate.getTimeInMillis();
 }
 
@@ -283,7 +271,7 @@ void CalendarViewLegacyDelegate::setMaxDate(int64_t maxDate) {
     }
 }
 
-int64_t CalendarViewLegacyDelegate::getMaxDate() {
+int64_t CalendarViewLegacyDelegate::getMaxDate(){
     return mMaxDate.getTimeInMillis();
 }
 
@@ -296,7 +284,7 @@ void CalendarViewLegacyDelegate::setShowWeekNumber(bool showWeekNumber) {
     setUpHeader();
 }
 
-bool CalendarViewLegacyDelegate::getShowWeekNumber() {
+bool CalendarViewLegacyDelegate::getShowWeekNumber() const{
     return mShowWeekNumber;
 }
 
@@ -310,7 +298,7 @@ void CalendarViewLegacyDelegate::setFirstDayOfWeek(int firstDayOfWeek) {
     setUpHeader();
 }
 
-int CalendarViewLegacyDelegate::getFirstDayOfWeek() {
+int CalendarViewLegacyDelegate::getFirstDayOfWeek() const{
     return mFirstDayOfWeek;
 }
 
@@ -326,7 +314,7 @@ void CalendarViewLegacyDelegate::setDate(long date, bool animate, bool center) {
     goTo(mTempDate, animate, true, center);
 }
 
-int64_t CalendarViewLegacyDelegate::getDate() {
+int64_t CalendarViewLegacyDelegate::getDate(){
     return mAdapter->mSelectedDate.getTimeInMillis();
 }
 
@@ -375,11 +363,8 @@ void setCurrentLocale(Locale locale) {
 }
 
 void CalendarViewLegacyDelegate::updateDateTextSize() {
-    TypedArray dateTextAppearance = mDelegator->getContext()->obtainStyledAttributes(
-            mDateTextAppearanceResId, R.styleable.TextAppearance);
-    mDateTextSize = dateTextAppearance.getDimensionPixelSize(
-            R.styleable.TextAppearance_textSize, DEFAULT_DATE_TEXT_SIZE);
-    dateTextAppearance.recycle();
+    AttributeSet attr = mDelegator->getContext()->obtainStyledAttributes(mDateTextAppearanceResId, R.styleable.TextAppearance);
+    mDateTextSize = attr.getDimensionPixelSize("textSize", DEFAULT_DATE_TEXT_SIZE);
 }
 
 void CalendarViewLegacyDelegate::invalidateAllWeekViews() {

@@ -68,22 +68,16 @@ private:
      * before acting on it.
      */
     static constexpr int SCROLL_CHANGE_DELAY = 40;
-
     static constexpr int DEFAULT_SHOWN_WEEK_COUNT = 6;
-
     static constexpr int DEFAULT_DATE_TEXT_SIZE = 14;
 
     static constexpr int UNSCALED_SELECTED_DATE_VERTICAL_BAR_WIDTH = 6;
-
     static constexpr int UNSCALED_WEEK_MIN_VISIBLE_HEIGHT = 12;
-
     static constexpr int UNSCALED_LIST_SCROLL_TOP_OFFSET = 2;
-
     static constexpr int UNSCALED_BOTTOM_BUFFER = 20;
-
     static constexpr int UNSCALED_WEEK_SEPARATOR_LINE_WIDTH = 1;
 
-    static constexpr int DEFAULT_WEEK_DAY_TEXT_APPEARANCE_RES_ID = -1;
+    //static constexpr int DEFAULT_WEEK_DAY_TEXT_APPEARANCE_RES_ID = -1;
 private:
     class WeeksAdapter;
     class WeekView;
@@ -242,67 +236,67 @@ public:
     CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet& attrs);
 
     void setShownWeekCount(int count) override;
-    int getShownWeekCount() override;
+    int getShownWeekCount() const override;
 
     void setSelectedWeekBackgroundColor(int color) override;
 
-    int getSelectedWeekBackgroundColor() override;
+    int getSelectedWeekBackgroundColor() const override;
 
     void setFocusedMonthDateColor(int color) override;
 
-    int getFocusedMonthDateColor() override;
+    int getFocusedMonthDateColor() const override;
 
     void setUnfocusedMonthDateColor(int color) override;
 
-    int getUnfocusedMonthDateColor() override;
+    int getUnfocusedMonthDateColor() const override;
 
     void setWeekNumberColor(int color) override;
 
-    int getWeekNumberColor() override;
+    int getWeekNumberColor() const override;
 
     void setWeekSeparatorLineColor(int color) override;
 
-    int getWeekSeparatorLineColor() override;
+    int getWeekSeparatorLineColor() const override;
 
     void setSelectedDateVerticalBar(const std::string& resourceId) override;
 
     void setSelectedDateVerticalBar(Drawable* drawable) override;
 
-    Drawable* getSelectedDateVerticalBar() override;
+    Drawable* getSelectedDateVerticalBar() const override;
 
     void setWeekDayTextAppearance(const std::string& resourceId) override;
 
-    const std::string getWeekDayTextAppearance() override;
+    std::string getWeekDayTextAppearance() const override;
 
     void setDateTextAppearance(const std::string& resourceId) override;
 
-    const std::string getDateTextAppearance() override;
+    std::string getDateTextAppearance()const override;
 
     void setMinDate(int64_t minDate) override;
 
-    int64_t getMinDate() override;
+    int64_t getMinDate()override;
 
     void setMaxDate(int64_t maxDate) override;
 
-    int64_t getMaxDate();
+    int64_t getMaxDate()override;
 
     void setShowWeekNumber(bool showWeekNumber) override;
 
-    bool getShowWeekNumber() override;
+    bool getShowWeekNumber()const override;
 
     void setFirstDayOfWeek(int firstDayOfWeek) override;
 
-    int getFirstDayOfWeek() override;
+    int getFirstDayOfWeek()const override;
 
     void setDate(int64_t date) override;
 
     void setDate(int64_t date, bool animate, bool center)override;
 
-    int64_t getDate() override;
+    int64_t getDate()override;
 
     void setOnDateChangeListener(const CalendarView::OnDateChangeListener& listener) override;
 
-    bool getBoundsForDate(int64_t date, Rect& outBounds) override;
+    bool getBoundsForDate(int64_t date, Rect& outBounds)override;
 
     void onConfigurationChanged(int newConfig) override;
 private:
@@ -325,7 +319,7 @@ private:
      * @param oldCalendar The old calendar.
      * @param locale The locale.
      */
-    static Calendar getCalendarForLocale(Calendar& oldCalendar, Locale locale);
+    //static Calendar getCalendarForLocale(Calendar& oldCalendar, Locale locale);
 
     /**
      * @return True if the <code>firstDate</code> is the same as the <code>
