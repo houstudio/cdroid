@@ -63,6 +63,7 @@ public:
         target->pointerIdBits = pointerIdBits;
         return target;
     }
+    bool isRecycled()const{return child==nullptr;}
     void recycle(){
         if (sRecycledCount < MAX_RECYCLED) {
             next = sRecycleBin;
@@ -261,30 +262,26 @@ void ViewGroup::cancelAndClearTouchTargets(MotionEvent* event){
 
 bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
        View* child, int desiredPointerIdBits){
-    bool handled;
-
-    // Canceling motions is a special case.  We don't need to perform any transformations
-    // or filtering.  The important part is the action, not the contents.
+    bool handled = false;
     const int oldAction = event.getAction();
-    if (cancel || (oldAction == MotionEvent::ACTION_CANCEL) ) {
+
+    if(cancel){
         event.setAction(MotionEvent::ACTION_CANCEL);
-        if (child == nullptr) {
-            handled = View::dispatchTouchEvent(event);
-        } else {
-            handled = child->dispatchTouchEvent(event);
-        }
-        event.setAction(oldAction);
-        return handled;
     }
 
     // Calculate the number of pointers to deliver.
     const int oldPointerIdBits = event.getPointerIdBits();
-    const int newPointerIdBits = oldPointerIdBits & desiredPointerIdBits;
+    int newPointerIdBits = oldPointerIdBits & desiredPointerIdBits;
 
     // If for some reason we ended up in an inconsistent state where it looks like we
-    // might produce a motion event with no pointers in it, then drop the event.
+    // might produce a non-cancel motion event with no pointers in it, then drop the event.
+    // Make sure that we don't drop any cancel events.
     if (newPointerIdBits == 0) {
-        return false;
+        if (event.getAction() != MotionEvent::ACTION_CANCEL) {
+            goto DONE;//return false;
+        } else {
+            newPointerIdBits = oldPointerIdBits;
+        }
     }
 
     // If the number of pointers is the same and we don't need to perform any fancy
@@ -303,7 +300,7 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
                 handled = child->dispatchTouchEvent(event);
                 event.offsetLocation(-offsetX, -offsetY);
             }
-            return handled;
+            goto DONE;//return handled;
         }
         transformedEvent = MotionEvent::obtain(event);
     } else {
@@ -326,6 +323,8 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
     }
     // Done. 
     transformedEvent->recycle();
+DONE:
+    event.setAction(oldAction);
     return handled;
 }
 
@@ -832,6 +831,8 @@ void ViewGroup::addTransientView(View*view,int index){
     if (index < 0) {
         return;
     }
+
+    LOGE_IF(view->mParent != nullptr,"The specified view already has a parent ",view->mParent);
     const int oldSize = mTransientIndices.size();
     if (oldSize > 0) {
         int insertionIndex;
@@ -847,7 +848,9 @@ void ViewGroup::addTransientView(View*view,int index){
         mTransientViews.push_back(view);
     }
     view->mParent = this;
-    view->dispatchAttachedToWindow(mAttachInfo, (mViewFlags&VISIBILITY_MASK));
+    if(mAttachInfo!=nullptr){
+        view->dispatchAttachedToWindow(mAttachInfo, (mViewFlags&VISIBILITY_MASK));
+    }
     invalidate(true);
 }
 
@@ -1242,6 +1245,10 @@ int ViewGroup::getChildDrawingOrder(int count,int i){
     return i;
 }
 
+int ViewGroup::getChildDrawingOrder(int drawingPosition){
+    return getChildDrawingOrder(getChildCount(), drawingPosition);
+}
+
 bool ViewGroup::hasChildWithZ()const{
     for (auto child:mChildren) {
         if (child->getZ() != 0) return true;
@@ -1420,6 +1427,10 @@ View* ViewGroup::getAndVerifyPreorderedView(const std::vector<View*>& preordered
         child = children[childIndex];
     }
     return child;
+}
+
+void ViewGroup::setStaticTransformationsEnabled(bool enabled){
+    setBooleanFlag(FLAG_SUPPORT_STATIC_TRANSFORMATIONS, enabled);
 }
 
 bool ViewGroup::getChildStaticTransformation(View* child, Transformation* t){
@@ -2242,11 +2253,6 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
     
     const bool drawAnimation = (child->mPrivateFlags & PFLAG_DRAW_ANIMATION) != 0;
 
-    const bool isOpaque = child->isOpaque() && !drawAnimation 
-                 && (child->getAnimation() == nullptr) && child->hasIdentityMatrix();//&& childMatrix.isIdentity();
-
-    int opaqueFlag = isOpaque ? PFLAG_DIRTY_OPAQUE : PFLAG_DIRTY;
-
     int location[2] = {child->mLeft,child->mTop};
 
     if (child->mLayerType != LAYER_TYPE_NONE){
@@ -2287,12 +2293,9 @@ void ViewGroup::invalidateChild(View*child,Rect&dirty){
 
         // If the parent is dirty opaque or not dirty, mark it dirty with the opaque
         // flag coming from the child that initiated the invalidate
-        if (view) {
-            if ((view->mViewFlags & FADING_EDGE_MASK) != 0 && view->getSolidColor() == 0) {
-                  opaqueFlag = PFLAG_DIRTY;
-            }
+        if (view!=nullptr) {
             if ((view->mPrivateFlags & PFLAG_DIRTY_MASK) != PFLAG_DIRTY) {
-                view->mPrivateFlags = (view->mPrivateFlags & ~PFLAG_DIRTY_MASK) | opaqueFlag;
+                view->mPrivateFlags = (view->mPrivateFlags & ~PFLAG_DIRTY_MASK) | PFLAG_DIRTY;
             }
         }
 
@@ -3335,7 +3338,7 @@ bool ViewGroup::onInterceptTouchEvent(MotionEvent& ev){
     if( ev.isFromSource(InputDevice::SOURCE_MOUSE)
         && (ev.getAction() == MotionEvent::ACTION_DOWN)
         && ev.isButtonPressed(MotionEvent::BUTTON_PRIMARY)
-        && isOnScrollbarThumb(ev.getX(), ev.getY()) )
+        && isOnScrollbarThumb(ev.getXDispatchLocation(0), ev.getYDispatchLocation(0)) )
         return true;
     return false; 
 }
@@ -3490,8 +3493,8 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
         }
         // Check for cancelation.
         const bool canceled = resetCancelNextUpFlag(this)|| actionMasked == MotionEvent::ACTION_CANCEL;
-
-        const bool split = (mGroupFlags & FLAG_SPLIT_MOTION_EVENTS) != 0;
+        const bool isMouseEvent = ev.getSource() == InputDevice::SOURCE_MOUSE;
+        const bool split = (mGroupFlags & FLAG_SPLIT_MOTION_EVENTS)&& (!isMouseEvent);
         TouchTarget* newTouchTarget = nullptr;
         bool alreadyDispatchedToNewTouchTarget = false;
 
@@ -3594,7 +3597,9 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
                     if (cancelChild) {
                        if (predecessor == nullptr) mFirstTouchTarget = next;
                        else  predecessor->next = next;
-                       target->recycle();
+                       if(!target->isRecycled()){
+                           target->recycle();
+                       }
                        target = next;
                        continue;
                     }

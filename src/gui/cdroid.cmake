@@ -257,6 +257,8 @@ list(APPEND CDROID_SOURCES
     widget/textswitcher.cc
     widget/imageswitcher.cc
     widget/adapterviewanimator.cc
+    widget/adapterviewflipper.cc
+    widget/stackview.cc
 )
 
 if(ENABLE_DIALOGS OR ENABLE_SPINNER)

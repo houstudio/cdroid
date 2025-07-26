@@ -1,3 +1,20 @@
+/*********************************************************************************
++ * Copyright (C) [2019] [houzh@msn.com]
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
++ *********************************************************************************/
 #include <widget/adapterviewanimator.h>
 #include <animation/animatorinflater.h>
 namespace cdroid{
@@ -10,14 +27,19 @@ AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet& at
     std::string res = attrs.getString("inAnimation");
     if(res.empty())
         setInAnimation(getDefaultInAnimation());
+    else
+        setInAnimation(context,res);
     res = attrs.getString("outAnimation");
 
     if(res.empty())
         setOutAnimation(getDefaultOutAnimation());
+    else
+        setOutAnimation(context,res);
 
     const bool flag = attrs.getBoolean("animateFirstView",true);
     setAnimateFirstView(flag);
     mLoopViews = attrs.getBoolean("loopViews",false);
+    initViewAnimator();
 }
 
 AdapterViewAnimator::~AdapterViewAnimator(){
@@ -189,9 +211,9 @@ LayoutParams* AdapterViewAnimator::createOrReuseLayoutParams(View* v) {
 void AdapterViewAnimator::refreshChildren() {
     if (mAdapter == nullptr) return;
     for (int i = mCurrentWindowStart; i <= mCurrentWindowEnd; i++) {
-        int index = modulo(i, getWindowSize());
+        const int index = modulo(i, getWindowSize());
 
-        int adapterCount = getCount();
+        const int adapterCount = getCount();
         // get the fresh child from the adapter
         View* updatedChild = mAdapter->getView(modulo(i, adapterCount), nullptr, this);
 
@@ -246,8 +268,8 @@ void AdapterViewAnimator::showOnly(int childIndex, bool animate) {
         newWindowStart = newWindowStartUnbounded;
         newWindowEnd = newWindowEndUnbounded;
     }
-    int rangeStart = modulo(newWindowStart, getWindowSize());
-    int rangeEnd = modulo(newWindowEnd, getWindowSize());
+    const int rangeStart = modulo(newWindowStart, getWindowSize());
+    const int rangeEnd = modulo(newWindowEnd, getWindowSize());
 
     bool wrap = false;
     if (rangeStart > rangeEnd) {
@@ -371,9 +393,9 @@ void AdapterViewAnimator::cancelHandleClick() {
 }
 
 bool AdapterViewAnimator::onTouchEvent(MotionEvent& ev){
-    int action = ev.getAction();
+    const int action = ev.getAction();
     bool handled = false;
-    View*v =nullptr;
+    View* v = nullptr;
     switch (action) {
     case MotionEvent::ACTION_DOWN:
         if ((v=getCurrentView())!=nullptr) {
@@ -429,10 +451,10 @@ void AdapterViewAnimator::measureChildren() {
 void AdapterViewAnimator::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     int widthSpecSize = MeasureSpec::getSize(widthMeasureSpec);
     int heightSpecSize = MeasureSpec::getSize(heightMeasureSpec);
-    int widthSpecMode = MeasureSpec::getMode(widthMeasureSpec);
-    int heightSpecMode = MeasureSpec::getMode(heightMeasureSpec);
+    const int widthSpecMode = MeasureSpec::getMode(widthMeasureSpec);
+    const int heightSpecMode = MeasureSpec::getMode(heightMeasureSpec);
 
-    bool haveChildRefSize = (mReferenceChildWidth != -1 && mReferenceChildHeight != -1);
+    const bool haveChildRefSize = (mReferenceChildWidth != -1 && mReferenceChildHeight != -1);
 
     // We need to deal with the case where our parent hasn't told us how
     // big we should be. In this case we try to use the desired size of the first
@@ -442,7 +464,7 @@ void AdapterViewAnimator::onMeasure(int widthMeasureSpec, int heightMeasureSpec)
                 mPaddingBottom : 0;
     } else if (heightSpecMode == MeasureSpec::AT_MOST) {
         if (haveChildRefSize) {
-            int height = mReferenceChildHeight + mPaddingTop + mPaddingBottom;
+            const int height = mReferenceChildHeight + mPaddingTop + mPaddingBottom;
             if (height > heightSpecSize) {
                 heightSpecSize |= MEASURED_STATE_TOO_SMALL;
             } else {
@@ -456,7 +478,7 @@ void AdapterViewAnimator::onMeasure(int widthMeasureSpec, int heightMeasureSpec)
                 mPaddingRight : 0;
     } else if (heightSpecMode == MeasureSpec::AT_MOST) {
         if (haveChildRefSize) {
-            int width = mReferenceChildWidth + mPaddingLeft + mPaddingRight;
+            const int width = mReferenceChildWidth + mPaddingLeft + mPaddingRight;
             if (width > widthSpecSize) {
                 widthSpecSize |= MEASURED_STATE_TOO_SMALL;
             } else {
@@ -470,7 +492,7 @@ void AdapterViewAnimator::onMeasure(int widthMeasureSpec, int heightMeasureSpec)
 }
 
 void AdapterViewAnimator::checkForAndHandleDataChanged() {
-    bool dataChanged = mDataChanged;
+    const bool dataChanged = mDataChanged;
     if (dataChanged) {
         post([this](){
             handleDataChanged();

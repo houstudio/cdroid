@@ -279,6 +279,7 @@ protected:
     virtual int getChildDrawingOrder(int childCount, int i);
     std::vector<View*> buildOrderedChildList();
 
+    void setStaticTransformationsEnabled(bool enabled);
     virtual bool getChildStaticTransformation(View* child, Transformation* t);
     Transformation* getChildTransformation();
     void finishAnimatingView(View* view, Animation* animation);
@@ -303,6 +304,7 @@ public:
     int  getLayoutMode();
     void setLayoutMode(int layoutMode);
     ViewGroupOverlay*getOverlay()override;
+    int getChildDrawingOrder(int drawingPosition);
     virtual void recomputeViewAttributes(View* child);
     virtual void bringChildToFront(View*);
     bool getClipChildren()const;

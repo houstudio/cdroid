@@ -31,15 +31,15 @@ private:
     void initViewAnimator(Context* context,const AttributeSet& attrs);
 protected:
     void showOnly(int childIndex);
-    void showOnly(int childIndex, bool animate);
+    virtual void showOnly(int childIndex, bool animate);
 public:
     ViewAnimator(int w,int h);
     ViewAnimator(Context* context,const AttributeSet& attrs);
     ~ViewAnimator();
     void setDisplayedChild(int whichChild);
     int getDisplayedChild()const;
-    void showNext();
-    void showPrevious();
+    virtual void showNext();
+    virtual void showPrevious();
     void addView(View* child, int index,ViewGroup::LayoutParams* params)override;
     void removeAllViews()override;
     void removeView(View* view)override;

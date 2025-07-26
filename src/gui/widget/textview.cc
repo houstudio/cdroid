@@ -558,7 +558,7 @@ bool TextView::onPreDraw() {
          * it already was before the text changed.  I'm not sure
          * of a good way to tell from here if it was.
          */
-        if (curs < 0 && (mGravity & Gravity.VERTICAL_GRAVITY_MASK) == Gravity.BOTTOM) {
+        if (curs < 0 && (mGravity & Gravity::VERTICAL_GRAVITY_MASK) == Gravity::BOTTOM) {
             curs = mText.length();
         }
 
