@@ -49,6 +49,7 @@ private:
     class DayPickerPagerAdapter* mAdapter;
     OnDaySelectedListener mOnDaySelectedListener;
 private:
+    void onButtonClick(View&v);
     void updateButtonVisibility(int position);
     void setDate(int64_t timeInMillis, bool animate, bool setSelected);
     int getDiffMonths(Calendar& start, Calendar& end);

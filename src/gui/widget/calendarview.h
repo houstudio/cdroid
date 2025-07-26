@@ -132,7 +132,7 @@ public:
 
     virtual bool getBoundsForDate(int64_t date, Rect& outBounds)=0;
 
-    virtual void setOnDateChangeListener(const OnDateChangeListener& listener);
+    virtual void setOnDateChangeListener(const OnDateChangeListener& listener)=0;
 
     virtual void onConfigurationChanged(int newConfig)=0;
 };

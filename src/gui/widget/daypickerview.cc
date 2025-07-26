@@ -17,9 +17,114 @@
  *********************************************************************************/
 #include <widget/daypickerview.h>
 #include <widget/simplemonthview.h>
+#include <widget/calendarview.h>
+#include <widget/R.h>
 #include <core/mathutils.h>
 
 namespace cdroid{
+
+DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
+    :ViewGroup(context, attrs){
+
+    //mAccessibilityManager = (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
+
+    Calendar tempDate;
+    const int firstDayOfWeek = attrs.getInt("firstDayOfWeek", tempDate.getFirstDayOfWeek());
+
+    const std::string minDate = attrs.getString("minDate");
+    const std::string maxDate = attrs.getString("maxDate");
+
+    std::string monthTextAppearanceResId = attrs.getString("monthTextAppearance");//R.style.TextAppearance_Material_Widget_Calendar_Month);
+    std::string dayOfWeekTextAppearanceResId = attrs.getString("weekDayTextAppearance");//R.style.TextAppearance_Material_Widget_Calendar_DayOfWeek);
+    std::string dayTextAppearanceResId = attrs.getString("dateTextAppearance");//,R.style.TextAppearance_Material_Widget_Calendar_Day);
+
+    const ColorStateList* daySelectorColor = attrs.getColorStateList("daySelectorColor");
+
+    // Set up adapter.
+    mAdapter = new DayPickerPagerAdapter(context,"cdroid:layout/date_picker_month_item_material", R::id::month_view);
+    mAdapter->setMonthTextAppearance(monthTextAppearanceResId);
+    mAdapter->setDayOfWeekTextAppearance(dayOfWeekTextAppearanceResId);
+    mAdapter->setDayTextAppearance(dayTextAppearanceResId);
+    mAdapter->setDaySelectorColor(daySelectorColor);
+
+    LayoutInflater* inflater = LayoutInflater::from(context);
+    ViewGroup* content = (ViewGroup*) inflater->inflate("cdroid:layout/day_picker_content_material", this, false);
+
+    // Transfer all children from content to here.
+    while (content->getChildCount() > 0) {
+        View* child = content->getChildAt(0);
+        content->removeViewAt(0);
+        addView(child);
+    }
+
+    mPrevButton = (ImageButton*)findViewById(R::id::prev);
+    auto mOnClickListener =std::bind(&DayPickerView::onButtonClick,this,std::placeholders::_1);
+    mPrevButton->setOnClickListener(mOnClickListener);
+
+    mNextButton = (ImageButton*)findViewById(R::id::next);
+    mNextButton->setOnClickListener(mOnClickListener);
+
+    mViewPager = (ViewPager*)findViewById(R::id::day_picker_view_pager);
+    mViewPager->setAdapter(mAdapter);
+    //mViewPager->setOnPageChangeListener(mOnPageChangedListener);
+
+    // Proxy the month text color into the previous and next buttons.
+    if (!monthTextAppearanceResId.empty()) {
+        auto ta = mContext->obtainStyledAttributes("cdroid:attr/textColor");
+        const ColorStateList* monthColor = ta.getColorStateList(0);
+        if (monthColor != nullptr) {
+            mPrevButton->setImageTintList(monthColor);
+            mNextButton->setImageTintList(monthColor);
+        }
+    }
+
+    // Set up min and max dates.
+    if (!CalendarView::parseDate(minDate, tempDate)) {
+        tempDate.set(DEFAULT_START_YEAR, Calendar::JANUARY, 1);
+    }
+    const int64_t minDateMillis = tempDate.getTimeInMillis();
+
+    if (!CalendarView::parseDate(maxDate, tempDate)) {
+        tempDate.set(DEFAULT_END_YEAR, Calendar::DECEMBER, 31);
+    }
+    const int64_t maxDateMillis = tempDate.getTimeInMillis();
+
+    if (maxDateMillis < minDateMillis) {
+        throw std::invalid_argument("maxDate must be >= minDate");
+    }
+
+    const int64_t setDateMillis = MathUtils::constrain(SystemClock::currentTimeMillis(), minDateMillis, maxDateMillis);
+
+    setFirstDayOfWeek(firstDayOfWeek);
+    setMinDate(minDateMillis);
+    setMaxDate(maxDateMillis);
+    setDate(setDateMillis, false);
+#if 0
+    // Proxy selection callbacks to our own listener.
+    mAdapter->setOnDaySelectedListener(new DayPickerPagerAdapter.OnDaySelectedListener() {
+        @Override
+        public void onDaySelected(DayPickerPagerAdapter adapter, Calendar day) {
+            if (mOnDaySelectedListener != null) {
+                mOnDaySelectedListener.onDaySelected(DayPickerView.this, day);
+            }
+        }
+    });
+#endif
+}
+
+void DayPickerView::onButtonClick(View&v){
+    int direction;
+    if (&v == mPrevButton) {
+        direction = -1;
+    } else if (&v == mNextButton) {
+        direction = 1;
+    } else {
+        return;
+    }
+    const bool animate = true;//!mAccessibilityManager.isEnabled();
+    const int nextItem = mViewPager->getCurrentItem() + direction;
+    mViewPager->setCurrentItem(nextItem, animate);
+}
 
 void DayPickerView::updateButtonVisibility(int position) {
     bool hasPrev = position > 0;
