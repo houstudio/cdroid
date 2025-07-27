@@ -17,65 +17,53 @@
  *********************************************************************************/
 #include <widget/calendarviewlegacydelegate.h>
 #include <widget/listview.h>
+#include <widget/calendarview.h>
 #include <core/systemclock.h>
 #include <widget/R.h>
 namespace cdroid{
 
 CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet& attrs)
     :CalendarView::AbstractCalendarViewDelegate(delegator,context){
-#if 0
-    final TypedArray a = context.obtainStyledAttributes(attrs,
-            R.styleable.CalendarView, defStyleAttr, defStyleRes);
-    mShowWeekNumber = a.getBoolean(R.styleable.CalendarView_showWeekNumber,
-            DEFAULT_SHOW_WEEK_NUMBER);
-    mFirstDayOfWeek = a.getInt(R.styleable.CalendarView_firstDayOfWeek,
-            Calendar.getInstance().getFirstDayOfWeek());
-    const std::string minDate = a.getString(R.styleable.CalendarView_minDate);
-    if (!CalendarView.parseDate(minDate, mMinDate)) {
-        CalendarView.parseDate(DEFAULT_MIN_DATE, mMinDate);
+    mDelegator = delegator;
+    mScrollStateChangedRunnable = new ScrollStateRunnable(this);
+    mShowWeekNumber= attrs.getBoolean("showWeekNumber",DEFAULT_SHOW_WEEK_NUMBER);
+    Calendar cal;
+    mFirstDayOfWeek= attrs.getInt("firstDayOfWeek",cal.getFirstDayOfWeek());
+    const std::string minDate = attrs.getString("minDate");
+    if (!CalendarView::parseDate(minDate, mMinDate)) {
+        CalendarView::parseDate(DEFAULT_MIN_DATE, mMinDate);
     }
-    const std::string maxDate = a.getString(R.styleable.CalendarView_maxDate);
-    if (!CalendarView.parseDate(maxDate, mMaxDate)) {
-        CalendarView.parseDate(DEFAULT_MAX_DATE, mMaxDate);
+    const std::string maxDate = attrs.getString("maxDate");
+    if (!CalendarView::parseDate(maxDate, mMaxDate)) {
+        CalendarView::parseDate(DEFAULT_MAX_DATE, mMaxDate);
     }
     if (mMaxDate.before(mMinDate)) {
-        throw new IllegalArgumentException("Max date cannot be before min date.");
+        throw std::invalid_argument("Max date cannot be before min date.");
     }
-    mShownWeekCount = a.getInt(R.styleable.CalendarView_shownWeekCount,
-            DEFAULT_SHOWN_WEEK_COUNT);
-    mSelectedWeekBackgroundColor = a.getColor(
-            R.styleable.CalendarView_selectedWeekBackgroundColor, 0);
-    mFocusedMonthDateColor = a.getColor(
-            R.styleable.CalendarView_focusedMonthDateColor, 0);
-    mUnfocusedMonthDateColor = a.getColor(
-            R.styleable.CalendarView_unfocusedMonthDateColor, 0);
-    mWeekSeparatorLineColor = a.getColor(
-            R.styleable.CalendarView_weekSeparatorLineColor, 0);
-    mWeekNumberColor = a.getColor(R.styleable.CalendarView_weekNumberColor, 0);
-    mSelectedDateVerticalBar = a.getDrawable(
-            R.styleable.CalendarView_selectedDateVerticalBar);
+    mShownWeekCount = attrs.getInt("shownWeekCount", DEFAULT_SHOWN_WEEK_COUNT);
+    mSelectedWeekBackgroundColor = attrs.getColor("selectedWeekBackgroundColor", 0);
+    mFocusedMonthDateColor = attrs.getColor("focusedMonthDateColor", 0);
+    mUnfocusedMonthDateColor = attrs.getColor("unfocusedMonthDateColor", 0);
+    mWeekSeparatorLineColor = attrs.getColor("weekSeparatorLineColor", 0);
+    mWeekNumberColor = attrs.getColor("weekNumberColor", 0);
+    mSelectedDateVerticalBar = attrs.getDrawable("selectedDateVerticalBar");
 
-    mDateTextAppearanceResId = a.getResourceId(
-            R.styleable.CalendarView_dateTextAppearance, R.style.TextAppearance_Small);
+    mDateTextAppearanceResId = attrs.getString("dateTextAppearance", "cdroid:attr/TextAppearance_Small");
     updateDateTextSize();
 
-    mWeekDayTextAppearanceResId = a.getResourceId(
-            R.styleable.CalendarView_weekDayTextAppearance,
-            DEFAULT_WEEK_DAY_TEXT_APPEARANCE_RES_ID);
-    a.recycle();
+    mWeekDayTextAppearanceResId = attrs.getString("weekDayTextAppearance");//,DEFAULT_WEEK_DAY_TEXT_APPEARANCE_RES_ID);
 
-    DisplayMetrics displayMetrics = mDelegator.getResources().getDisplayMetrics();
-    mWeekMinVisibleHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-            UNSCALED_WEEK_MIN_VISIBLE_HEIGHT, displayMetrics);
-    mListScrollTopOffset = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-            UNSCALED_LIST_SCROLL_TOP_OFFSET, displayMetrics);
-    mBottomBuffer = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-            UNSCALED_BOTTOM_BUFFER, displayMetrics);
-    mSelectedDateVerticalBarWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-            UNSCALED_SELECTED_DATE_VERTICAL_BAR_WIDTH, displayMetrics);
-    mWeekSeparatorLineWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-            UNSCALED_WEEK_SEPARATOR_LINE_WIDTH, displayMetrics);
-#endif
+    DisplayMetrics displayMetrics = mDelegator->getContext()->getDisplayMetrics();
+    mWeekMinVisibleHeight = UNSCALED_WEEK_MIN_VISIBLE_HEIGHT;
+    //(int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,UNSCALED_WEEK_MIN_VISIBLE_HEIGHT, displayMetrics);
+    mListScrollTopOffset = UNSCALED_LIST_SCROLL_TOP_OFFSET;
+    //(int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, UNSCALED_LIST_SCROLL_TOP_OFFSET, displayMetrics);
+    mBottomBuffer = UNSCALED_BOTTOM_BUFFER;//(int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, UNSCALED_BOTTOM_BUFFER, displayMetrics);
+    mSelectedDateVerticalBarWidth = UNSCALED_SELECTED_DATE_VERTICAL_BAR_WIDTH;
+    //(int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, UNSCALED_SELECTED_DATE_VERTICAL_BAR_WIDTH, displayMetrics);
+    mWeekSeparatorLineWidth = UNSCALED_WEEK_SEPARATOR_LINE_WIDTH;
+    // (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, UNSCALED_WEEK_SEPARATOR_LINE_WIDTH, displayMetrics);
+
     LayoutInflater* layoutInflater = LayoutInflater::from(mContext);
     View* content = layoutInflater->inflate("cdroid:layout/calendar_view", nullptr, false);
     mDelegator->addView(content);
@@ -101,6 +89,10 @@ CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, 
     mDelegator->invalidate();
 }
 
+CalendarViewLegacyDelegate::~CalendarViewLegacyDelegate(){
+    delete mScrollStateChangedRunnable;
+}
+
 void CalendarViewLegacyDelegate::setShownWeekCount(int count) {
     if (mShownWeekCount != count) {
         mShownWeekCount = count;
@@ -108,7 +100,7 @@ void CalendarViewLegacyDelegate::setShownWeekCount(int count) {
     }
 }
 
-int CalendarViewLegacyDelegate::getShownWeekCount() {
+int CalendarViewLegacyDelegate::getShownWeekCount() const{
     return mShownWeekCount;
 }
 
@@ -125,7 +117,7 @@ void CalendarViewLegacyDelegate::setSelectedWeekBackgroundColor(int color) {
     }
 }
 
-int CalendarViewLegacyDelegate::getSelectedWeekBackgroundColor() {
+int CalendarViewLegacyDelegate::getSelectedWeekBackgroundColor() const{
     return mSelectedWeekBackgroundColor;
 }
 
@@ -142,7 +134,7 @@ void CalendarViewLegacyDelegate::setFocusedMonthDateColor(int color) {
     }
 }
 
-int CalendarViewLegacyDelegate::getFocusedMonthDateColor() {
+int CalendarViewLegacyDelegate::getFocusedMonthDateColor() const{
     return mFocusedMonthDateColor;
 }
 
@@ -159,7 +151,7 @@ void CalendarViewLegacyDelegate::setUnfocusedMonthDateColor(int color) {
     }
 }
 
-int CalendarViewLegacyDelegate::getUnfocusedMonthDateColor() {
+int CalendarViewLegacyDelegate::getUnfocusedMonthDateColor() const{
     return mUnfocusedMonthDateColor;
 }
 
@@ -172,7 +164,7 @@ void CalendarViewLegacyDelegate::setWeekNumberColor(int color) {
     }
 }
 
-int CalendarViewLegacyDelegate::getWeekNumberColor() {
+int CalendarViewLegacyDelegate::getWeekNumberColor() const{
     return mWeekNumberColor;
 }
 
@@ -183,7 +175,7 @@ void CalendarViewLegacyDelegate::setWeekSeparatorLineColor(int color) {
     }
 }
 
-int CalendarViewLegacyDelegate::getWeekSeparatorLineColor() {
+int CalendarViewLegacyDelegate::getWeekSeparatorLineColor() const{
     return mWeekSeparatorLineColor;
 }
 
@@ -205,7 +197,7 @@ void CalendarViewLegacyDelegate::setSelectedDateVerticalBar(Drawable* drawable) 
     }
 }
 
-Drawable* CalendarViewLegacyDelegate::getSelectedDateVerticalBar() {
+Drawable* CalendarViewLegacyDelegate::getSelectedDateVerticalBar() const{
     return mSelectedDateVerticalBar;
 }
 
@@ -216,7 +208,7 @@ void CalendarViewLegacyDelegate::setWeekDayTextAppearance(const std::string& res
     }
 }
 
-const std::string CalendarViewLegacyDelegate::getWeekDayTextAppearance() {
+std::string CalendarViewLegacyDelegate::getWeekDayTextAppearance() const{
     return mWeekDayTextAppearanceResId;
 }
 
@@ -228,7 +220,7 @@ void CalendarViewLegacyDelegate::setDateTextAppearance(const std::string& resour
     }
 }
 
-const std::string CalendarViewLegacyDelegate::getDateTextAppearance() {
+std::string CalendarViewLegacyDelegate::getDateTextAppearance() const{
     return mDateTextAppearanceResId;
 }
 
@@ -259,7 +251,7 @@ void CalendarViewLegacyDelegate::setMinDate(int64_t minDate) {
     }
 }
 
-int64_t CalendarViewLegacyDelegate::getMinDate() {
+int64_t CalendarViewLegacyDelegate::getMinDate(){
     return mMinDate.getTimeInMillis();
 }
 
@@ -283,7 +275,7 @@ void CalendarViewLegacyDelegate::setMaxDate(int64_t maxDate) {
     }
 }
 
-int64_t CalendarViewLegacyDelegate::getMaxDate() {
+int64_t CalendarViewLegacyDelegate::getMaxDate(){
     return mMaxDate.getTimeInMillis();
 }
 
@@ -296,7 +288,7 @@ void CalendarViewLegacyDelegate::setShowWeekNumber(bool showWeekNumber) {
     setUpHeader();
 }
 
-bool CalendarViewLegacyDelegate::getShowWeekNumber() {
+bool CalendarViewLegacyDelegate::getShowWeekNumber() const{
     return mShowWeekNumber;
 }
 
@@ -310,7 +302,7 @@ void CalendarViewLegacyDelegate::setFirstDayOfWeek(int firstDayOfWeek) {
     setUpHeader();
 }
 
-int CalendarViewLegacyDelegate::getFirstDayOfWeek() {
+int CalendarViewLegacyDelegate::getFirstDayOfWeek() const{
     return mFirstDayOfWeek;
 }
 
@@ -326,7 +318,7 @@ void CalendarViewLegacyDelegate::setDate(long date, bool animate, bool center) {
     goTo(mTempDate, animate, true, center);
 }
 
-int64_t CalendarViewLegacyDelegate::getDate() {
+int64_t CalendarViewLegacyDelegate::getDate(){
     return mAdapter->mSelectedDate.getTimeInMillis();
 }
 
@@ -357,29 +349,21 @@ bool CalendarViewLegacyDelegate::getBoundsForDate(int64_t date, Rect& outBounds)
 }
 
 void CalendarViewLegacyDelegate::onConfigurationChanged(int newConfig) {
-    setCurrentLocale(newConfig.locale);
+    //setCurrentLocale(newConfig.locale);
 }
 
-/**
- * Sets the current locale.
- *
- * @param locale The current locale.
- */
-void setCurrentLocale(Locale locale) {
+/*void CalendarViewLegacyDelegate::setCurrentLocale(Locale locale) {
     super.setCurrentLocale(locale);
 
     mTempDate = getCalendarForLocale(mTempDate, locale);
     mFirstDayOfMonth = getCalendarForLocale(mFirstDayOfMonth, locale);
     mMinDate = getCalendarForLocale(mMinDate, locale);
     mMaxDate = getCalendarForLocale(mMaxDate, locale);
-}
+}*/
 
 void CalendarViewLegacyDelegate::updateDateTextSize() {
-    TypedArray dateTextAppearance = mDelegator->getContext()->obtainStyledAttributes(
-            mDateTextAppearanceResId, R.styleable.TextAppearance);
-    mDateTextSize = dateTextAppearance.getDimensionPixelSize(
-            R.styleable.TextAppearance_textSize, DEFAULT_DATE_TEXT_SIZE);
-    dateTextAppearance.recycle();
+    AttributeSet attr = mDelegator->getContext()->obtainStyledAttributes(mDateTextAppearanceResId);//, "cdroid:attr/TextAppearance");
+    mDateTextSize = attr.getDimensionPixelSize("textSize", DEFAULT_DATE_TEXT_SIZE);
 }
 
 void CalendarViewLegacyDelegate::invalidateAllWeekViews() {
@@ -389,14 +373,8 @@ void CalendarViewLegacyDelegate::invalidateAllWeekViews() {
         view->invalidate();
     }
 }
-
-/**
- * Gets a calendar for locale bootstrapped with the value of a given calendar.
- *
- * @param oldCalendar The old calendar.
- * @param locale The locale.
- */
-Calendar CalendarViewLegacyDelegate::getCalendarForLocale(Calendar& oldCalendar, Locale locale) {
+#if 0
+Calendar CalendarViewLegacyDelegate::getCalendarForLocale(Calendar& oldCalendar, Locale& locale) {
     /*if (oldCalendar == null) {
         return Calendar.getInstance(locale);
     } else */{
@@ -406,19 +384,12 @@ Calendar CalendarViewLegacyDelegate::getCalendarForLocale(Calendar& oldCalendar,
         return newCalendar;
     }
 }
-
-/**
- * @return True if the <code>firstDate</code> is the same as the <code>
- * secondDate</code>.
- */
+#endif
 bool CalendarViewLegacyDelegate::isSameDate(Calendar& firstDate, Calendar& secondDate) {
     return (firstDate.get(Calendar::DAY_OF_YEAR) == secondDate.get(Calendar::DAY_OF_YEAR)
             && firstDate.get(Calendar::YEAR) == secondDate.get(Calendar::YEAR));
 }
 
-/**
- * Creates a new adapter if necessary and sets up its parameters.
- */
 void CalendarViewLegacyDelegate::setUpAdapter() {
     if (mAdapter == nullptr) {
         mAdapter = new WeeksAdapter(this,mContext);
@@ -441,9 +412,6 @@ void CalendarViewLegacyDelegate::setUpAdapter() {
     mAdapter->notifyDataSetChanged();
 }
 
-/**
- * Sets up the strings to be used by the header.
- */
 void CalendarViewLegacyDelegate::setUpHeader() {
     //mDayNamesShort = new String[mDaysPerWeek];
     //mDayNamesLong = new String[mDaysPerWeek];
@@ -477,9 +445,6 @@ void CalendarViewLegacyDelegate::setUpHeader() {
     mDayNamesHeader->invalidate();
 }
 
-/**
- * Sets all the required fields for the list view.
- */
 void CalendarViewLegacyDelegate::setUpListView() {
     // Configure the listview
     mListView->setDivider(nullptr);
@@ -498,23 +463,6 @@ void CalendarViewLegacyDelegate::setUpListView() {
     mListView->setVelocityScale(mVelocityScale);
 }
 
-/**
- * This moves to the specified time in the view. If the time is not already
- * in range it will move the list so that the first of the month containing
- * the time is at the top of the view. If the new time is already in view
- * the list will not be scrolled unless forceScroll is true. This time may
- * optionally be highlighted as selected as well.
- *
- * @param date The time to move to.
- * @param animate Whether to scroll to the given time or just redraw at the
- *            new location.
- * @param setSelected Whether to set the given time as selected.
- * @param forceScroll Whether to recenter even if the time is already
- *            visible.
- *
- * @throws IllegalArgumentException if the provided date is before the
- *         range start or after the range end.
- */
 void CalendarViewLegacyDelegate::goTo(Calendar& date, bool animate, bool setSelected, bool forceScroll) {
     if (date.before(mMinDate) || date.after(mMaxDate)) {
         FATAL("timeInMillis must be between the values of getMinDate() and getMaxDate()");
@@ -566,18 +514,10 @@ void CalendarViewLegacyDelegate::goTo(Calendar& date, bool animate, bool setSele
     }
 }
 
-/**
- * Called when a <code>view</code> transitions to a new <code>scrollState
- * </code>.
- */
 void CalendarViewLegacyDelegate::onScrollStateChanged(AbsListView& view, int scrollState) {
-    mScrollStateChangedRunnable.doScrollStateChange(view, scrollState);
+    mScrollStateChangedRunnable->doScrollStateChange(&view,scrollState);
 }
 
-/**
- * Updates the title and selected month if the <code>view</code> has moved to a new
- * month.
- */
 void CalendarViewLegacyDelegate::onScroll(AbsListView& view, int firstVisibleItem, int visibleItemCount,int totalItemCount) {
     WeekView* child = (WeekView*) view.getChildAt(0);
     if (child == nullptr) {
@@ -642,12 +582,6 @@ void CalendarViewLegacyDelegate::onScroll(AbsListView& view, int firstVisibleIte
     mPreviousScrollState = mCurrentScrollState;
 }
 
-/**
- * Sets the month displayed at the top of this view based on time. Override
- * to add custom events when the title is changed.
- *
- * @param calendar A day in the new focus month.
- */
 void CalendarViewLegacyDelegate::setMonthDisplayed(Calendar& calendar) {
     mCurrentMonthDisplayed = calendar.get(Calendar::MONTH);
     mAdapter->setFocusMonth(mCurrentMonthDisplayed);
@@ -658,79 +592,53 @@ void CalendarViewLegacyDelegate::setMonthDisplayed(Calendar& calendar) {
     mMonthName->invalidate();
 }
 
-/**
- * @return Returns the number of weeks between the current <code>date</code>
- *         and the <code>mMinDate</code>.
- */
 int CalendarViewLegacyDelegate::getWeeksSinceMinDate(Calendar& date) {
     if (date.before(mMinDate)) {
         FATAL("fromDate:  + mMinDate.getTime()  does not precede toDate: + date.getTime()");
     }
-    long endTimeMillis = date.getTimeInMillis()
-            + date.getTimeZone().getOffset(date.getTimeInMillis());
-    long startTimeMillis = mMinDate.getTimeInMillis()
-            + mMinDate.getTimeZone().getOffset(mMinDate.getTimeInMillis());
-    long dayOffsetMillis = (mMinDate.get(Calendar::DAY_OF_WEEK) - mFirstDayOfWeek)
-            * MILLIS_IN_DAY;
+    int64_t endTimeMillis = date.getTimeInMillis() ;//+ date.getTimeZone().getOffset(date.getTimeInMillis());
+    int64_t startTimeMillis = mMinDate.getTimeInMillis() ;//+ mMinDate.getTimeZone().getOffset(mMinDate.getTimeInMillis());
+    int64_t dayOffsetMillis = (mMinDate.get(Calendar::DAY_OF_WEEK) - mFirstDayOfWeek) * MILLIS_IN_DAY;
     return (int) ((endTimeMillis - startTimeMillis + dayOffsetMillis) / MILLIS_IN_WEEK);
 }
-#if 0
-/**
- * Command responsible for acting upon scroll state changes.
- */
-private class ScrollStateRunnable implements Runnable {
-    private AbsListView mView;
+/////////////////////////////////////////////////////////////////////
 
-    private int mNewState;
+CalendarViewLegacyDelegate::ScrollStateRunnable::ScrollStateRunnable(CalendarViewLegacyDelegate*delegator){
+    mDelegate = delegator;
+    mRunnable  = std::bind(&ScrollStateRunnable::run,this);
+}
 
-    /**
-     * Sets up the runnable with a short delay in case the scroll state
-     * immediately changes again.
-     *
-     * @param view The list view that changed state
-     * @param scrollState The new state it changed to
-     */
-    public void doScrollStateChange(AbsListView view, int scrollState) {
-        mView = view;
-        mNewState = scrollState;
-        mDelegator->removeCallbacks(this);
-        mDelegator->postDelayed(this, SCROLL_CHANGE_DELAY);
-    }
+void CalendarViewLegacyDelegate::ScrollStateRunnable::doScrollStateChange(AbsListView* view, int scrollState) {
+    mView = view;
+    mNewState = scrollState;
+    mDelegate->mDelegator->removeCallbacks(mRunnable);
+    mDelegate->mDelegator->postDelayed(mRunnable, SCROLL_CHANGE_DELAY);
+}
 
-    public void run() {
-        mCurrentScrollState = mNewState;
-        // Fix the position after a scroll or a fling ends
-        if (mNewState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE
-                && mPreviousScrollState != AbsListView.OnScrollListener.SCROLL_STATE_IDLE) {
-            View child = mView.getChildAt(0);
-            if (child == null) {
-                // The view is no longer visible, just return
-                return;
-            }
-            int dist = child.getBottom() - mListScrollTopOffset;
-            if (dist > mListScrollTopOffset) {
-                if (mIsScrollingUp) {
-                    mView.smoothScrollBy(dist - child.getHeight(),
-                            ADJUSTMENT_SCROLL_DURATION);
-                } else {
-                    mView.smoothScrollBy(dist, ADJUSTMENT_SCROLL_DURATION);
-                }
+void CalendarViewLegacyDelegate::ScrollStateRunnable::run() {
+    mDelegate->mCurrentScrollState = mNewState;
+    // Fix the position after a scroll or a fling ends
+    if (mNewState == AbsListView::OnScrollListener::SCROLL_STATE_IDLE
+            && mDelegate->mPreviousScrollState != AbsListView::OnScrollListener::SCROLL_STATE_IDLE) {
+        View* child = mView->getChildAt(0);
+        if (child == nullptr) {
+            // The view is no longer visible, just return
+            return;
+        }
+        const int dist = child->getBottom() - mDelegate->mListScrollTopOffset;
+        if (dist > mDelegate->mListScrollTopOffset) {
+            if (mDelegate->mIsScrollingUp) {
+                mView->smoothScrollBy(dist - child->getHeight(), ADJUSTMENT_SCROLL_DURATION);
+            } else {
+                mView->smoothScrollBy(dist, ADJUSTMENT_SCROLL_DURATION);
             }
         }
-        mPreviousScrollState = mNewState;
     }
+    mDelegate->mPreviousScrollState = mNewState;
 }
-#endif
 
-///////////////////////////////////////////////////////////////////////////////////////////
-/**
- * <p>
- * This is a specialized adapter for creating a list of weeks with
- * selectable days. It can be configured to display the week number, start
- * the week on a given day, show a reduced number of days, or display an
- * arbitrary number of weeks at a time.
- * </p>
- */
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 CalendarViewLegacyDelegate::WeeksAdapter::WeeksAdapter(CalendarViewLegacyDelegate*cv,Context* context)
     :BaseAdapter(){
     mCV = cv;
@@ -741,9 +649,6 @@ CalendarViewLegacyDelegate::WeeksAdapter::WeeksAdapter(CalendarViewLegacyDelegat
     init();
 }
 
-    /**
-     * Set up the gesture detector and selected time
-     */
 void CalendarViewLegacyDelegate::WeeksAdapter::init() {
     mSelectedWeek = mCV->getWeeksSinceMinDate(mSelectedDate);
     mTotalWeekCount = mCV->getWeeksSinceMinDate(mCV->mMaxDate);
@@ -754,11 +659,6 @@ void CalendarViewLegacyDelegate::WeeksAdapter::init() {
     notifyDataSetChanged();
 }
 
-/**
- * Updates the selected day and related parameters.
- *
- * @param selectedDay The time to highlight
- */
 void CalendarViewLegacyDelegate::WeeksAdapter::setSelectedDay(Calendar& selectedDay) {
     if (selectedDay.get(Calendar::DAY_OF_YEAR) == mSelectedDate.get(Calendar::DAY_OF_YEAR)
             && selectedDay.get(Calendar::YEAR) == mSelectedDate.get(Calendar::YEAR)) {
@@ -770,9 +670,6 @@ void CalendarViewLegacyDelegate::WeeksAdapter::setSelectedDay(Calendar& selected
     notifyDataSetChanged();
 }
 
-/**
- * @return The selected day of month.
- */
 Calendar CalendarViewLegacyDelegate::WeeksAdapter::getSelectedDay() {
     return mSelectedDate;
 }
@@ -810,11 +707,6 @@ View* CalendarViewLegacyDelegate::WeeksAdapter::getView(int position, View* conv
     return weekView;
 }
 
-/**
- * Changes which month is in focus and updates the view.
- *
- * @param month The month to show as in focus [0-11]
- */
 void CalendarViewLegacyDelegate::WeeksAdapter::setFocusMonth(int month) {
     if (mFocusedMonth == month) {
         return;
@@ -842,26 +734,12 @@ bool CalendarViewLegacyDelegate::WeeksAdapter::onTouch(View& v, MotionEvent& eve
     return false;
 }
 
-/**
- * Maintains the same hour/min/sec but moves the day to the tapped day.
- *
- * @param day The day that was tapped
- */
 void CalendarViewLegacyDelegate::WeeksAdapter::onDateTapped(Calendar& day) {
     setSelectedDay(day);
     mCV->setMonthDisplayed(day);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * <p>
- * This is a dynamic view for drawing a single week. It can be configured to
- * display the week number, start the week on a given day, or show a reduced
- * number of days. It is intended for use as a single view within a
- * ListView. See {@link WeeksAdapter} for usage.
- * </p>
- */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 CalendarViewLegacyDelegate::WeekView::WeekView(CalendarViewLegacyDelegate*cv,Context* context,const AttributeSet&attrs)
     :View(context,attrs),mCV(cv){
@@ -869,17 +747,6 @@ CalendarViewLegacyDelegate::WeekView::WeekView(CalendarViewLegacyDelegate*cv,Con
     initializePaints();
 }
 
-/**
- * Initializes this week view.
- *
- * @param weekNumber The number of the week this view represents. The
- *            week number is a zero based index of the weeks since
- *            {@link android.widget.CalendarView#getMinDate()}.
- * @param selectedWeekDay The selected day of the week from 0 to 6, -1 if no
- *            selected day.
- * @param focusedMonth The month that is currently in focus i.e.
- *            highlighted.
- */
 void CalendarViewLegacyDelegate::WeekView::init(int weekNumber, int selectedWeekDay, int focusedMonth) {
     mSelectedDay = selectedWeekDay;
     mHasSelectedDay = mSelectedDay != -1;
@@ -933,9 +800,6 @@ void CalendarViewLegacyDelegate::WeekView::init(int weekNumber, int selectedWeek
     updateSelectionPositions();
 }
 
-/**
- * Initialize the paint instances.
- */
 void CalendarViewLegacyDelegate::WeekView::initializePaints() {
     /*mDrawPaint.setFakeBoldText(false);
     mDrawPaint.setAntiAlias(true);
@@ -1064,9 +928,9 @@ void CalendarViewLegacyDelegate::WeekView::drawBackground(Canvas& canvas) {
     recTop = mCV->mWeekSeparatorLineWidth;
     recBottom = mHeight;
 
-    const bool IsLayoutRtl = isLayoutRtl();
+    const bool bIsLayoutRtl = isLayoutRtl();
 
-    if (IsLayoutRtl) {
+    if (bIsLayoutRtl) {
         recLeft = 0;
         recRight = mSelectedLeft - 2;
     } else {
@@ -1075,24 +939,19 @@ void CalendarViewLegacyDelegate::WeekView::drawBackground(Canvas& canvas) {
     }
     canvas.rectangle(recLeft,recTop,recRight-recLeft,recBottom-recTop);
 
-    if (IsLayoutRtl) {
+    if (bIsLayoutRtl) {
         recLeft = mSelectedRight + 3;
         recRight = mCV->mShowWeekNumber ? mWidth - mWidth / mNumCells : mWidth;
     } else {
         recLeft = mSelectedRight + 3;
         recRight = mWidth;
     }
-    canvas.rectangle(recLeft,recTop,recRight-recLeft,recBottom-recTop);//, mDrawPaint);
+    canvas.rectangle(recLeft,recTop,recRight-recLeft,recBottom-recTop);
 }
 
-/**
- * Draws the week and month day numbers for this week.
- *
- * @param canvas The canvas to draw on
- */
 void CalendarViewLegacyDelegate::WeekView::drawWeekNumbersAndDates(Canvas& canvas) {
-    //const float textHeight = mDrawPaint.getTextSize();
-    //const int y = (int) ((mHeight + textHeight) / 2) - mCV->mWeekSeparatorLineWidth;
+    const float textHeight = mCV->mDateTextSize+2;//mDrawPaint.getTextSize();
+    const int y = (int) ((mHeight + textHeight) / 2) - mCV->mWeekSeparatorLineWidth;
     const int nDays = mNumCells;
     const int divisor = 2 * nDays;
 
@@ -1128,11 +987,6 @@ void CalendarViewLegacyDelegate::WeekView::drawWeekNumbersAndDates(Canvas& canva
     }
 }
 
-/**
- * Draws a horizontal line for separating the weeks.
- *
- * @param canvas The canvas to draw on.
- */
 void CalendarViewLegacyDelegate::WeekView::drawWeekSeparators(Canvas& canvas) {
     // If it is the topmost fully visible child do not draw separator line
     int firstFullyVisiblePosition = mCV->mListView->getFirstVisiblePosition();
@@ -1157,11 +1011,6 @@ void CalendarViewLegacyDelegate::WeekView::drawWeekSeparators(Canvas& canvas) {
     canvas.stroke();
 }
 
-/**
- * Draws the selected date bars if this week has a selected day.
- *
- * @param canvas The canvas to draw on
- */
 void CalendarViewLegacyDelegate::WeekView::drawSelectedDateVerticalBars(Canvas& canvas) {
     if (!mHasSelectedDay) {
         return;
@@ -1185,9 +1034,6 @@ void CalendarViewLegacyDelegate::WeekView::onSizeChanged(int w, int h, int oldw,
     updateSelectionPositions();
 }
 
-/**
- * This calculates the positions for the selected day lines.
- */
 void CalendarViewLegacyDelegate::WeekView::updateSelectionPositions() {
     if (mHasSelectedDay) {
         const bool IsLayoutRtl = isLayoutRtl();
@@ -1214,6 +1060,5 @@ void CalendarViewLegacyDelegate::WeekView::onMeasure(int widthMeasureSpec, int h
             - mListView->getPaddingBottom()) / mCV->mShownWeekCount;
     setMeasuredDimension(MeasureSpec::getSize(widthMeasureSpec), mHeight);
 }
-
 }/*endof namespace*/
 

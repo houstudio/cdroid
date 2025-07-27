@@ -124,7 +124,7 @@ void Calendar::setTimeZone(int zone){
     areAllFieldsSet = areFieldsSet = false;
 }
 
-int Calendar::getTimeZone(){
+int Calendar::getTimeZone()const{
     return zone;
 }
 

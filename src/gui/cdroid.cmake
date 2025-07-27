@@ -231,7 +231,8 @@ if(ENABLE_DAYTIME_WIDGETS)
         widget/simplemonthview.cc
         widget/explorebytouchhelper.cc
         widget/calendarview.cc
-        #widget/calendarviewlegacydelegate.cc
+        widget/calendarviewlegacydelegate.cc
+        widget/calendarviewmaterialdelegate.cc
     )
 endif(ENABLE_DAYTIME_WIDGETS)
 

@@ -156,7 +156,7 @@ public:
     /*return the current time as UTC seconds from the epoch*/
     int64_t getTime();
     void setTimeZone(int zone);
-    int getTimeZone();
+    int getTimeZone()const;
     void set(int year, int month, int date);
     void set(int year, int month, int date, int hourOfDay, int minute,int second=0,int millis=0);
     void clear(int field);

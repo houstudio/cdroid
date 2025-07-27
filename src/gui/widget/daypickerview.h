@@ -49,6 +49,7 @@ private:
     class DayPickerPagerAdapter* mAdapter;
     OnDaySelectedListener mOnDaySelectedListener;
 private:
+    void onButtonClick(View&v);
     void updateButtonVisibility(int position);
     void setDate(int64_t timeInMillis, bool animate, bool setSelected);
     int getDiffMonths(Calendar& start, Calendar& end);
@@ -60,6 +61,7 @@ protected:
 
 public:
     DayPickerView(Context* context,const AttributeSet&atts);
+    ~DayPickerView()override;
     void setDayOfWeekTextAppearance(const std::string& resId);
     const std::string getDayOfWeekTextAppearance();
     void  setDayTextAppearance(const std::string& resId);
@@ -75,7 +77,7 @@ public:
     void setMaxDate(int64_t timeInMillis);
     int64_t getMaxDate();
     void onRangeChanged();
-    void setOnDaySelectedListener(OnDaySelectedListener listener);
+    void setOnDaySelectedListener(const OnDaySelectedListener& listener);
     int getMostVisiblePosition();
     void setPosition(int position);
 
