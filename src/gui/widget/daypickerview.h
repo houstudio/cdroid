@@ -84,5 +84,4 @@ public:
 };
 
 }//endof namespace
-
-#endif
+#endif/*__DAY_PICKER_VIEW_H__*/

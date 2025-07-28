@@ -827,8 +827,6 @@ protected:
     bool getFilterTouchesWhenObscured()const;
     void setFilterTouchesWhenObscured(bool enabled);
     bool onFilterTouchEventForSecurity(MotionEvent& event);
-    bool isSaveFromParentEnable()const;
-    void setSaveFromParentEnabled(bool);
     virtual bool dispatchHoverEvent(MotionEvent&event);
     virtual bool dispatchTrackballEvent(MotionEvent& event);
     virtual bool dispatchCapturedPointerEvent(MotionEvent& event);
@@ -1012,6 +1010,8 @@ public:
     virtual bool isOpaque()const;
     virtual void setLayoutDirection(int layoutDirection);
     bool isLayoutRtl()const;
+    bool isSaveFromParentEnable()const;
+    void setSaveFromParentEnabled(bool);
     bool isFocusableInTouchMode()const;
     virtual void setFocusable(int focusable);
     virtual void setFocusableInTouchMode(bool focusableInTouchMode);
