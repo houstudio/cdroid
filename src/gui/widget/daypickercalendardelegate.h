@@ -45,7 +45,7 @@ private:
     int multiplyAlphaComponent(int color, float alphaMod);
     void onYearChanged(YearPickerView& view, int year);
     void onCurrentDateChanged()override;
-    void setCurrentView(final int viewIndex);
+    void setCurrentView(int viewIndex);
     void setDate(int year, int month, int dayOfMonth);
     void onDateChanged(bool fromUser, bool callbackToClient);
     static int getDaysInMonth(int month, int year);
@@ -78,7 +78,7 @@ public:
     void setSpinnersShown(bool shown) override;
     bool getSpinnersShown() override;
 
-    void onConfigurationChanged(Configuration newConfig)override;
+    //void onConfigurationChanged(Configuration newConfig)override;
 
     Parcelable* onSaveInstanceState(Parcelable& superState)override;
     void onRestoreInstanceState(Parcelable& state)override;

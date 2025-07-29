@@ -31,12 +31,24 @@ DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePickeri* delegator, C
     // Set up header views.
     ViewGroup* header = mContainer->findViewById(R::id::date_picker_header);
     mHeaderYear = header->findViewById(R.id.date_picker_header_year);
-    mHeaderYear->setOnClickListener(mOnHeaderClickListener);
+    OnClickListener headerClickListener =[this](View&V) {
+        tryVibrate();
+        switch (v.getId()) {
+            case R::id::date_picker_header_year:
+                setCurrentView(VIEW_YEAR);
+                break;
+            case R::id::date_picker_header_date:
+                setCurrentView(VIEW_MONTH_DAY);
+                break;
+        }
+    };
+
+    mHeaderYear->setOnClickListener(headerClickListener);
     //mHeaderYear->setAccessibilityDelegate(new ClickActionDelegate(context, R.string.select_year));
     mHeaderYear->setAccessibilityLiveRegion(View::ACCESSIBILITY_LIVE_REGION_POLITE);
 
     mHeaderMonthDay = header->findViewById(R::id::date_picker_header_date);
-    mHeaderMonthDay->setOnClickListener(mOnHeaderClickListener);
+    mHeaderMonthDay->setOnClickListener(headerClickListener);
     //mHeaderMonthDay->setAccessibilityDelegate(new ClickActionDelegate(context, R.string.select_day));
     mHeaderMonthDay->setAccessibilityLiveRegion(View::ACCESSIBILITY_LIVE_REGION_POLITE);
 
@@ -176,20 +188,6 @@ void DatePickerCalendarDelegate::onYearChanged(YearPickerView& view, int year) {
     // Switch focus back to the year text.
     mHeaderYear->requestFocus();
 }
-
-
-final OnClickListener mOnHeaderClickListener = v -> {
-    tryVibrate();
-
-    switch (v.getId()) {
-        case R::id::date_picker_header_year:
-            setCurrentView(VIEW_YEAR);
-            break;
-        case R::id::date_picker_header_date:
-            setCurrentView(VIEW_MONTH_DAY);
-            break;
-    }
-};
 
 void DatePickerCalendarDelegate::onLocaleChanged(Locale locale) {
     TextView* headerYear = mHeaderYear;
@@ -399,9 +397,9 @@ bool DatePickerCalendarDelegate::getSpinnersShown() {
     return false;
 }
 
-void DatePickerCalendarDelegate::onConfigurationChanged(Configuration newConfig) {
+/*void DatePickerCalendarDelegate::onConfigurationChanged(Configuration newConfig) {
     setCurrentLocale(newConfig.locale);
-}
+}*/
 
 Parcelable* DatePickerCalendarDelegate::onSaveInstanceState(Parcelable& superState) {
     const int year = mCurrentDate.get(Calendar::YEAR);
