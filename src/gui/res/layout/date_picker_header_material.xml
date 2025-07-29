@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/date_picker_header"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="?attr/dialogPreferredPadding"
+        android:paddingEnd="?attr/dialogPreferredPadding"
+        android:paddingTop="16dp"
+        android:paddingBottom="18dp"
+        android:orientation="vertical"
+        android:clipToPadding="false"
+        android:clipChildren="false">
+
+        <TextView
+            android:id="@+id/date_picker_header_year"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:includeFontPadding="false"
+            android:layout_marginStart="-8dp"
+            android:layout_marginEnd="-8dp"
+            android:layout_marginTop="-8dp"
+            android:layout_marginBottom="-8dp"
+            android:padding="8dp"
+            android:background="?attr/selectableItemBackground"
+            android:textAppearance="@style/TextAppearance.Material.DatePicker.YearLabel"
+            android:pointerIcon="hand"
+            android:nextFocusForward="@+id/prev" />
+
+        <TextView
+            android:id="@+id/date_picker_header_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.Material.DatePicker.DateLabel"
+            android:includeFontPadding="false"
+            android:gravity="start"
+            android:maxLines="@integer/date_picker_header_max_lines_material"
+            android:pointerIcon="hand"
+            android:ellipsize="none" />
+    </LinearLayout>
+</LinearLayout>
