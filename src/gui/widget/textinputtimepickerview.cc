@@ -5,6 +5,7 @@
 #include <widget/textinputtimepickerview.h>
 namespace cdroid {
 
+DECLARE_WIDGET(TextInputTimePickerView);
 TextInputTimePickerView::TextInputTimePickerView(Context* context,const AttributeSet& attrs)
     :RelativeLayout(context, attrs){
 

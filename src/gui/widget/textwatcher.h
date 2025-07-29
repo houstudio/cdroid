@@ -3,7 +3,7 @@
 #include <core/callbackbase.h>
 
 namespace cdroid{
-
+class TextView;
 class TextWatcher:virtual public EventSet{
 public:
     /**
@@ -37,7 +37,7 @@ public:
      * to mark your place and then look up from here where the span
      * ended up.
      */
-    std::function<void(const std::wstring&)>afterTextChanged;
+    std::function<void(TextView&,const std::wstring&)>afterTextChanged;
 };
 
 }
