@@ -665,14 +665,16 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
 
 void TextView::addTextChangedListener(const TextWatcher& watcher){
     auto it = std::find(mListeners.begin(),mListeners.end(),watcher);
-    if(it==mListeners.end())
+    if(it==mListeners.end()){
         mListeners.push_back(watcher);
+    }
 }
 
 void TextView::removeTextChangedListener(const TextWatcher& watcher){
     auto it = std::find(mListeners.begin(),mListeners.end(),watcher);
-    if( it !=mListeners.end())
-	mListeners.erase(it);
+    if( it !=mListeners.end()){
+	    mListeners.erase(it);
+    }
 }
 
 void TextView::sendBeforeTextChanged(const std::wstring& text, int start, int before, int after){
@@ -683,7 +685,9 @@ void TextView::sendBeforeTextChanged(const std::wstring& text, int start, int be
 
 void TextView::sendAfterTextChanged(std::wstring& text){
     for (auto l:mListeners) {
-        if(l.afterTextChanged) l.afterTextChanged(text);
+        if(l.afterTextChanged){
+            l.afterTextChanged(*this,text);
+        }
     }
 
     // Always notify AutoFillManager - it will return right away if autofill is disabled.
@@ -692,7 +696,9 @@ void TextView::sendAfterTextChanged(std::wstring& text){
 }
 void TextView::sendOnTextChanged(const std::wstring& text, int start, int before, int after){
     for(auto l:mListeners){
-        if(l.onTextChanged) l.onTextChanged(text, start, before, after);
+        if(l.onTextChanged){
+            l.onTextChanged(text, start, before, after);
+        }
     }
     //if (mEditor != null) mEditor.sendOnTextChanged(start, before, after);
 }

@@ -40,9 +40,9 @@ public:
         mInflater = LayoutInflater::from(context);
     }
 
-    void setRange(int minDate,int maxDate/*Calendar minDate, Calendar maxDate*/) {
-        int minYear = minDate;//minDate.get(Calendar.YEAR);
-        int count = maxDate;//maxDate.get(Calendar.YEAR) - minYear + 1;
+    void setRange(Calendar& minDate, Calendar& maxDate) {
+        const int minYear = minDate.get(Calendar::YEAR);
+        const int count = maxDate.get(Calendar::YEAR) - minYear + 1;
 
         if (mMinYear != minYear || mCount != count) {
             mMinYear = minYear;
@@ -157,7 +157,7 @@ void YearPickerView::setSelectionCentered(int position) {
     setSelectionFromTop(position, offset);
 }
 
-void YearPickerView::setRange(int min,int max/*Calendar min, Calendar max*/) {
+void YearPickerView::setRange(Calendar& min, Calendar& max) {
     mAdapter->setRange(min, max);
 }
 

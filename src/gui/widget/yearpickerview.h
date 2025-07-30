@@ -17,6 +17,7 @@
  *********************************************************************************/
 #ifndef __YEARPICKERVIEW_H__
 #define __YEARPICKERVIEW_H__
+#include <core/calendar.h>
 #include <widget/listview.h>
 
 namespace cdroid{
@@ -35,10 +36,10 @@ public:
     void setOnYearSelectedListener(OnYearSelectedListener listener);
     void setYear(int year);
     void setSelectionCentered(int position);
-    void setRange(int min,int max/*Calendar min, Calendar max*/);
+    void setRange(Calendar& min, Calendar& max);
     int getFirstPositionOffset();
 };
     
 }//namespace
 
-#endif
+#endif/*__YEARPICKERVIEW_H__*/
