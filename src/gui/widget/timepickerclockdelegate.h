@@ -16,8 +16,8 @@ private:
     static constexpr int FROM_INPUT_PICKER = 2;
 
     // Index used by RadialPickerLayout
-    static constexpr int HOUR_INDEX = RadialTimePickerView.HOURS;
-    static constexpr int MINUTE_INDEX = RadialTimePickerView.MINUTES;
+    static constexpr int HOUR_INDEX  = 0;//RadialTimePickerView.HOURS;
+    static constexpr int MINUTE_INDEX= 1;// RadialTimePickerView.MINUTES;
 
     //static final int[] ATTRS_TEXT_COLOR = new int[] {R.attr.textColor};
     //static final int[] ATTRS_DISABLED_ALPHA = new int[] {R.attr.disabledAlpha};

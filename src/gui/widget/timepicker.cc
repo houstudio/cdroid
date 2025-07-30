@@ -57,6 +57,10 @@ TimePicker::TimePicker(Context* context,const AttributeSet& attrs)
     });*/
 }
 
+TimePicker::~TimePicker(){
+    delete mDelegate;
+}
+
 int TimePicker::getMode() const{
     return mMode;
 }

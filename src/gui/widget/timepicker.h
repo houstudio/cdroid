@@ -117,7 +117,7 @@ class TimePicker::AbstractTimePickerDelegate:public TimePicker::TimePickerDelega
 protected:
     TimePicker* mDelegator;
     Context* mContext;
-    Locale mLocale;
+    //Locale mLocale;
 
     OnTimeChangedListener mOnTimeChangedListener;
     OnTimeChangedListener mAutoFillChangeListener;
