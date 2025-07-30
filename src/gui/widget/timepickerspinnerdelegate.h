@@ -1,14 +1,15 @@
 #ifndef __TIMEPICKER_SPINNER_DELEGATE_H__
 #define __TIMEPICKER_SPINNER_DELEGATE_H__
+#include <core/calendar.h>
 #include <widget/button.h>
-#include <widget/edittextr.h>
-#include <widget/timerpicker.h>
+#include <widget/edittext.h>
+#include <widget/timepicker.h>
 #include <widget/numberpicker.h>
 namespace cdroid{
 class TimePickerSpinnerDelegate:public TimePicker::AbstractTimePickerDelegate {
 private:
     static constexpr bool DEFAULT_ENABLED_STATE = true;
-    constexpr int HOURS_IN_HALF_DAY = 12;
+    static constexpr int HOURS_IN_HALF_DAY = 12;
 
     NumberPicker* mHourSpinner;
     NumberPicker* mMinuteSpinner;
@@ -24,7 +25,7 @@ private:
     // accommodates these two cases to be backwards compatible.
     Button* mAmPmButton;
 
-    srd::vector<std::string> mAmPmStrings;
+    std::vector<std::string> mAmPmStrings;
 
     Calendar mTempCalendar;
 
@@ -71,12 +72,10 @@ public:
     bool dispatchPopulateAccessibilityEvent(AccessibilityEvent& event)override;
 
     void onPopulateAccessibilityEvent(AccessibilityEvent& event)override;
+
     View* getHourView() override;
-
     View* getMinuteView() override;
-
     View* getAmView() override;
-
     View* getPmView()override;
 };
 }/*endof namespace*/
