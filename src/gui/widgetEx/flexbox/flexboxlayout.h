@@ -34,15 +34,12 @@ private:
 
     /** The drawable to be drawn for the horizontal dividers. */
     Drawable* mDividerDrawableHorizontal;
-
-    /** The drawable to be drawn for the vertical dividers. */
     Drawable* mDividerDrawableVertical;
 
     int mShowDividerHorizontal;
     int mShowDividerVertical;
 
     int mDividerHorizontalHeight;
-
     int mDividerVerticalWidth;
     std::vector<int> mReorderedIndices;
     SparseIntArray mOrderCache;

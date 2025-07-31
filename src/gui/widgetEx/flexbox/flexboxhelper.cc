@@ -21,7 +21,7 @@ std::vector<int> FlexboxHelper::createReorderedIndices(View* viewBeforeAdded, in
         orderForViewToBeAdded.order = FlexItem::ORDER_DEFAULT;
     }
 
-    if (indexForViewBeforeAdded == -1 || indexForViewBeforeAdded == childCount) {
+    if ((indexForViewBeforeAdded == -1) || (indexForViewBeforeAdded == childCount)) {
         orderForViewToBeAdded.index = childCount;
     } else if (indexForViewBeforeAdded < mFlexContainer->getFlexItemCount()) {
         orderForViewToBeAdded.index = indexForViewBeforeAdded;
@@ -77,9 +77,9 @@ bool FlexboxHelper::isOrderChangedFromLastMeasurement(const SparseIntArray& orde
 
 std::vector<int> FlexboxHelper::sortOrdersIntoReorderedIndices(int childCount, std::vector<Order>& orders,SparseIntArray& orderCache) {
     std::sort(orders.begin(),orders.end(),[](const Order& a, const Order&b ){
-              if(a.order!=b.order)return a.order-b.order;
-              return a.index-b.index;
-        });
+        if(a.order!=b.order)return a.order-b.order;
+        return a.index-b.index;
+    });
     orderCache.clear();
     std::vector<int>reorderedIndices(childCount);
     int i = 0;
@@ -124,10 +124,10 @@ void FlexboxHelper::calculateVerticalFlexLinesToIndex(FlexLinesResult* result, i
 void FlexboxHelper::calculateFlexLines(FlexLinesResult* result, int mainMeasureSpec,
         int crossMeasureSpec, int needsCalcAmount, int fromIndex, int toIndex,std::vector<FlexLine>* existingLines) {
 
-    bool isMainHorizontal = mFlexContainer->isMainAxisDirectionHorizontal();
+    const bool isMainHorizontal = mFlexContainer->isMainAxisDirectionHorizontal();
 
-    int mainMode = View::MeasureSpec::getMode(mainMeasureSpec);
-    int mainSize = View::MeasureSpec::getSize(mainMeasureSpec);
+    const int mainMode = View::MeasureSpec::getMode(mainMeasureSpec);
+    const int mainSize = View::MeasureSpec::getSize(mainMeasureSpec);
 
     int childState = 0;
 
@@ -195,25 +195,20 @@ void FlexboxHelper::calculateFlexLines(FlexLinesResult* result, int mainMeasureS
         int childCrossMeasureSpec;
         if (isMainHorizontal) {
             childMainMeasureSpec = mFlexContainer->getChildWidthMeasureSpec(mainMeasureSpec,
-                    mainPaddingStart + mainPaddingEnd +
-                            getFlexItemMarginStartMain(flexItem, true) +
+                    mainPaddingStart + mainPaddingEnd + getFlexItemMarginStartMain(flexItem, true) +
                             getFlexItemMarginEndMain(flexItem, true), childMainSize);
             childCrossMeasureSpec = mFlexContainer->getChildHeightMeasureSpec(crossMeasureSpec,
-                    crossPaddingStart + crossPaddingEnd +
-                            getFlexItemMarginStartCross(flexItem, true) +
-                            getFlexItemMarginEndCross(flexItem, true) + sumCrossSize,
-                    getFlexItemSizeCross(flexItem, true));
+                    crossPaddingStart + crossPaddingEnd + getFlexItemMarginStartCross(flexItem, true) +
+                            getFlexItemMarginEndCross(flexItem, true) + sumCrossSize, getFlexItemSizeCross(flexItem, true));
             child->measure(childMainMeasureSpec, childCrossMeasureSpec);
             updateMeasureCache(i, childMainMeasureSpec, childCrossMeasureSpec, child);
         } else {
             childCrossMeasureSpec = mFlexContainer->getChildWidthMeasureSpec(crossMeasureSpec,
-                    crossPaddingStart + crossPaddingEnd +
-                            getFlexItemMarginStartCross(flexItem, false) +
+                    crossPaddingStart + crossPaddingEnd + getFlexItemMarginStartCross(flexItem, false) +
                             getFlexItemMarginEndCross(flexItem, false) + sumCrossSize,
                     getFlexItemSizeCross(flexItem, false));
             childMainMeasureSpec = mFlexContainer->getChildHeightMeasureSpec(mainMeasureSpec,
-                    mainPaddingStart + mainPaddingEnd +
-                            getFlexItemMarginStartMain(flexItem, false) +
+                    mainPaddingStart + mainPaddingEnd + getFlexItemMarginStartMain(flexItem, false) +
                             getFlexItemMarginEndMain(flexItem, false), childMainSize);
             child->measure(childCrossMeasureSpec, childMainMeasureSpec);
             updateMeasureCache(i, childCrossMeasureSpec, childMainMeasureSpec, child);
@@ -249,8 +244,7 @@ void FlexboxHelper::calculateFlexLines(FlexLinesResult* result, int mainMeasureS
                     // so far into account. In that case, the height of the child needs to be
                     // measured again note that we don't need to judge if the wrapping occurs
                     // because it doesn't change the size along the main axis.
-                    childCrossMeasureSpec = mFlexContainer->getChildHeightMeasureSpec(
-                            crossMeasureSpec,
+                    childCrossMeasureSpec = mFlexContainer->getChildHeightMeasureSpec( crossMeasureSpec,
                             mFlexContainer->getPaddingTop() + mFlexContainer->getPaddingBottom()
                                     + flexItem->getMarginTop() + flexItem->getMarginBottom() + sumCrossSize, flexItem->getHeight());
                     child->measure(childMainMeasureSpec, childCrossMeasureSpec);
@@ -506,8 +500,8 @@ void FlexboxHelper::checkSizeConstraints(View* view, int index) {
         childHeight = flexItem->getMaxHeight();
     }
     if (needsMeasure) {
-        int widthSpec = View::MeasureSpec::makeMeasureSpec(childWidth, View::MeasureSpec::EXACTLY);
-        int heightSpec = View::MeasureSpec::makeMeasureSpec(childHeight, View::MeasureSpec::EXACTLY);
+        const int widthSpec = View::MeasureSpec::makeMeasureSpec(childWidth, View::MeasureSpec::EXACTLY);
+        const int heightSpec = View::MeasureSpec::makeMeasureSpec(childHeight, View::MeasureSpec::EXACTLY);
         view->measure(widthSpec, heightSpec);
         updateMeasureCache(index, widthSpec, heightSpec, view);
         mFlexContainer->updateViewCache(index, view);
@@ -631,8 +625,7 @@ void FlexboxHelper::expandFlexItems(int widthMeasureSpec, int heightMeasureSpec,
                 childMeasuredHeight = extractHigherInt(mMeasuredSizeCache[index]);
             }
             if (!mChildrenFrozen[index] && flexItem->getFlexGrow() > 0.f) {
-                float rawCalculatedWidth = childMeasuredWidth
-                        + unitSpace * flexItem->getFlexGrow();
+                float rawCalculatedWidth = childMeasuredWidth + unitSpace * flexItem->getFlexGrow();
                 if (i == flexLine.mItemCount - 1) {
                     rawCalculatedWidth += accumulatedRoundError;
                     accumulatedRoundError = 0;
@@ -659,9 +652,9 @@ void FlexboxHelper::expandFlexItems(int widthMeasureSpec, int heightMeasureSpec,
                         accumulatedRoundError += 1.0;
                     }
                 }
-                int childHeightMeasureSpec = getChildHeightMeasureSpecInternal(
+                const int childHeightMeasureSpec = getChildHeightMeasureSpecInternal(
                         heightMeasureSpec, flexItem, flexLine.mSumCrossSizeBefore);
-                int childWidthMeasureSpec = View::MeasureSpec::makeMeasureSpec(newWidth,
+                const int childWidthMeasureSpec = View::MeasureSpec::makeMeasureSpec(newWidth,
                         View::MeasureSpec::EXACTLY);
                 child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
                 childMeasuredWidth = child->getMeasuredWidth();
@@ -693,8 +686,7 @@ void FlexboxHelper::expandFlexItems(int widthMeasureSpec, int heightMeasureSpec,
                 childMeasuredWidth = extractLowerInt(mMeasuredSizeCache[index]);
             }
             if (!mChildrenFrozen[index] && flexItem->getFlexGrow() > 0.f) {
-                float rawCalculatedHeight = childMeasuredHeight
-                        + unitSpace * flexItem->getFlexGrow();
+                float rawCalculatedHeight = childMeasuredHeight + unitSpace * flexItem->getFlexGrow();
                 if (i == flexLine.mItemCount - 1) {
                     rawCalculatedHeight += accumulatedRoundError;
                     accumulatedRoundError = 0;
@@ -721,9 +713,9 @@ void FlexboxHelper::expandFlexItems(int widthMeasureSpec, int heightMeasureSpec,
                         accumulatedRoundError += 1.0;
                     }
                 }
-                int childWidthMeasureSpec = getChildWidthMeasureSpecInternal(widthMeasureSpec,
+                const int childWidthMeasureSpec = getChildWidthMeasureSpecInternal(widthMeasureSpec,
                         flexItem, flexLine.mSumCrossSizeBefore);
-                int childHeightMeasureSpec = View::MeasureSpec::makeMeasureSpec(newHeight,
+                const int childHeightMeasureSpec = View::MeasureSpec::makeMeasureSpec(newHeight,
                         View::MeasureSpec::EXACTLY);
                 child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
                 childMeasuredWidth = child->getMeasuredWidth();
@@ -825,9 +817,9 @@ void FlexboxHelper::shrinkFlexItems(int widthMeasureSpec, int heightMeasureSpec,
                         accumulatedRoundError += 1;
                     }
                 }
-                int childHeightMeasureSpec = getChildHeightMeasureSpecInternal(
+                const int childHeightMeasureSpec = getChildHeightMeasureSpecInternal(
                         heightMeasureSpec, flexItem, flexLine.mSumCrossSizeBefore);
-                int childWidthMeasureSpec = View::MeasureSpec::makeMeasureSpec(newWidth, View::MeasureSpec::EXACTLY);
+                const int childWidthMeasureSpec = View::MeasureSpec::makeMeasureSpec(newWidth, View::MeasureSpec::EXACTLY);
                 child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
 
                 childMeasuredWidth = child->getMeasuredWidth();
@@ -880,8 +872,8 @@ void FlexboxHelper::shrinkFlexItems(int widthMeasureSpec, int heightMeasureSpec,
                         accumulatedRoundError += 1;
                     }
                 }
-                int childWidthMeasureSpec = getChildWidthMeasureSpecInternal(widthMeasureSpec,flexItem, flexLine.mSumCrossSizeBefore);
-                int childHeightMeasureSpec = View::MeasureSpec::makeMeasureSpec(newHeight, View::MeasureSpec::EXACTLY);
+                const int childWidthMeasureSpec = getChildWidthMeasureSpecInternal(widthMeasureSpec,flexItem, flexLine.mSumCrossSizeBefore);
+                const int childHeightMeasureSpec = View::MeasureSpec::makeMeasureSpec(newHeight, View::MeasureSpec::EXACTLY);
                 child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
 
                 childMeasuredWidth = child->getMeasuredWidth();
@@ -911,7 +903,7 @@ int FlexboxHelper::getChildWidthMeasureSpecInternal(int widthMeasureSpec,FlexIte
             mFlexContainer->getPaddingLeft() + mFlexContainer->getPaddingRight() +
                     flexItem->getMarginLeft() + flexItem->getMarginRight() + padding,
             flexItem->getWidth());
-    int childWidth = View::MeasureSpec::getSize(childWidthMeasureSpec);
+    const int childWidth = View::MeasureSpec::getSize(childWidthMeasureSpec);
     if (childWidth > flexItem->getMaxWidth()) {
         childWidthMeasureSpec = View::MeasureSpec::makeMeasureSpec(flexItem->getMaxWidth(),
                 View::MeasureSpec::getMode(childWidthMeasureSpec));
@@ -927,7 +919,7 @@ int FlexboxHelper::getChildHeightMeasureSpecInternal(int heightMeasureSpec,FlexI
             mFlexContainer->getPaddingTop() + mFlexContainer->getPaddingBottom()
                     + flexItem->getMarginTop() + flexItem->getMarginBottom() + padding,
             flexItem->getHeight());
-    int childHeight = View::MeasureSpec::getSize(childHeightMeasureSpec);
+    const int childHeight = View::MeasureSpec::getSize(childHeightMeasureSpec);
     if (childHeight > flexItem->getMaxHeight()) {
         childHeightMeasureSpec = View::MeasureSpec::makeMeasureSpec(flexItem->getMaxHeight(),
                 View::MeasureSpec::getMode(childHeightMeasureSpec));

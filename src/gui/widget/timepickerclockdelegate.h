@@ -1,4 +1,12 @@
+#ifndef __TIMEPICKER_CLOCK_DELEGATE_H__
+#define __TIMEPICKER_CLOCK_DELEGATE_H__
+#include <core/calendar.h>
+#include <widget/imagebutton.h>
+#include <widget/radiobutton.h>
+#include <widget/numberictextview.h>
 namespace cdroid{
+class RadialTimePickerView;
+class TextInputTimePickerView;
 class TimePickerClockDelegate:public TimePicker::AbstractTimePickerDelegate {
 private:
     static constexpr long DELAY_COMMIT_MILLIS = 2000;
@@ -8,11 +16,11 @@ private:
     static constexpr int FROM_INPUT_PICKER = 2;
 
     // Index used by RadialPickerLayout
-    static constexpr int HOUR_INDEX = RadialTimePickerView.HOURS;
-    static constexpr int MINUTE_INDEX = RadialTimePickerView.MINUTES;
+    static constexpr int HOUR_INDEX  = 0;//RadialTimePickerView.HOURS;
+    static constexpr int MINUTE_INDEX= 1;// RadialTimePickerView.MINUTES;
 
-    static final int[] ATTRS_TEXT_COLOR = new int[] {R.attr.textColor};
-    static final int[] ATTRS_DISABLED_ALPHA = new int[] {R.attr.disabledAlpha};
+    //static final int[] ATTRS_TEXT_COLOR = new int[] {R.attr.textColor};
+    //static final int[] ATTRS_DISABLED_ALPHA = new int[] {R.attr.disabledAlpha};
 
     static constexpr int AM = 0;
     static constexpr int PM = 1;
@@ -42,10 +50,10 @@ private:
     std::string mSelectHours;
     std::string mSelectMinutes;
 
-    bool mIsEnabled = true;
-    bool mAllowAutoAdvance;
     int mCurrentHour;
     int mCurrentMinute;
+    bool mIsEnabled = true;
+    bool mAllowAutoAdvance;
     bool mIs24Hour;
 
     // The portrait layout puts AM/PM at the right by default.
@@ -56,36 +64,45 @@ private:
     // Localization data.
     bool mHourFormatShowLeadingZero;
     bool mHourFormatStartsAtZero;
+    Runnable mCommitHour;
+    Runnable mCommitMinute;
+private:
+    void toggleRadialPickerMode();
+    static void ensureMinimumTextWidth(TextView* v);
+    void updateHourFormat();
+    ColorStateList* applyLegacyColorFixes(ColorStateList* color);
+    int  multiplyAlphaComponent(int color, float alphaMod);
+    void initialize(int hourOfDay, int minute, bool is24HourView, int index);
+    void updateUI(int index);
+    void updateTextInputPicker();
+    void updateRadialPicker(int index);
+    void updateHeaderAmPm();
+    void setAmPmStart(bool isAmPmAtStart);
+    void setHourInternal(int hour, int source, bool announce,bool notify);
+    void setMinuteInternal(int minute,int source, bool notify);
+    int getCurrentItemShowing();
+    void onTimeChanged();
+    void tryVibrate();
+    void updateAmPmLabelStates(int amOrPm);
+    int getLocalizedHour(int hourOfDay);
+    void updateHeaderHour(int hourOfDay, bool announce);
+    void updateHeaderMinute(int minuteOfHour, bool announce);
+    void updateHeaderSeparator();
+    static std::string getHourMinSeparatorFromPattern(const std::string& dateTimePattern);
+    static int lastIndexOfAny(const std::string& str, const std::string& any);
+    void setCurrentItemShowing(int index, bool animateCircle);
+    void setAmOrPm(int amOrPm);
 public:
-    public TimePickerClockDelegate(TimePicker* delegator, Context* context,const AttributeSet& attrs);
+    TimePickerClockDelegate(TimePicker* delegator, Context* context,const AttributeSet& attrs);
 
-    private void toggleRadialPickerMode();
 
-    @Override
-    public bool validateInput() {
-        return mTextInputPickerView->validateInput();
-    }
+    bool validateInput() override;
 
-    /**
-     * Ensures that a TextView is wide enough to contain its text without
-     * wrapping or clipping. Measures the specified view and sets the minimum
-     * width to the view's desired width.
-     *
-     * @param v the text view to measure
-     */
-    private static void ensureMinimumTextWidth(TextView* v);
-    private void updateHourFormat();
 
-    static final CharSequence obtainVerbatim(String text) {
-        return new SpannableStringBuilder().append(text,
-                new TtsSpan.VerbatimBuilder(text).build(), 0);
-    }
+    static std::string obtainVerbatim(const std::string& text);
 
-    private ColorStateList* applyLegacyColorFixes(ColorStateList* color);
 
-    private int multiplyAlphaComponent(int color, float alphaMod);
-
-    private static class ClickActionDelegate extends AccessibilityDelegate {
+    /*private static class ClickActionDelegate extends AccessibilityDelegate {
         private final AccessibilityAction mClickAction;
 
         public ClickActionDelegate(Context context, int resId) {
@@ -99,118 +116,38 @@ public:
 
             info.addAction(mClickAction);
         }
-    }
+    }*/
 
-    private void initialize(int hourOfDay, int minute, bool is24HourView, int index);
 
-    private void updateUI(int index);
+    void setDate(int hour, int minute) override;
 
-    private void updateTextInputPicker() {
-        mTextInputPickerView.updateTextInputValues(getLocalizedHour(mCurrentHour), mCurrentMinute,
-                mCurrentHour < 12 ? AM : PM, mIs24Hour, mHourFormatStartsAtZero);
-    }
+    void setHour(int hour) override;
+    int getHour() override;
 
-    private void updateRadialPicker(int index) {
-        mRadialTimePickerView.initialize(mCurrentHour, mCurrentMinute, mIs24Hour);
-        setCurrentItemShowing(index, false);
-    }
+    void setMinute(int minute) override;
+    int getMinute() override;
 
-    private void updateHeaderAmPm();
+    void setIs24Hour(bool is24Hour);
 
-    private void setAmPmStart(bool isAmPmAtStart);
+    bool is24Hour() override;
 
-    public void setDate(int hour, int minute) override;
+    void setEnabled(bool enabled) override;
+    bool isEnabled() const;
 
-    public void setHour(int hour) override;
+    int getBaseline() override;
 
-    private void setHourInternal(int hour, int source, bool announce,bool notify);
+    Parcelable* onSaveInstanceState(Parcelable& superState) override;
+    void onRestoreInstanceState(Parcelable& state) override;
+    bool dispatchPopulateAccessibilityEvent(AccessibilityEvent& event) override;
 
-    /**
-     * @return the current hour in the range (0-23)
-     */
-    @Override
-    public int getHour() override;
+    void onPopulateAccessibilityEvent(AccessibilityEvent& event)override;
 
-    @Override
-    public void setMinute(int minute) override{
-        setMinuteInternal(minute, FROM_EXTERNAL_API, true);
-    }
+    View* getHourView() override;
+    View* getMinuteView() override;
+    View* getAmView() override;
+    View* getPmView() override;
 
-    private void setMinuteInternal(int minute, @ChangeSource int source, bool notify) override;
-    @Override
-    public int getMinute() override;
-
-    public void setIs24Hour(bool is24Hour);
-
-    @Override
-    public bool is24Hour() override;
-
-    public void setEnabled(bool enabled) override;
-
-    @Override
-    public bool isEnabled() const{
-        return mIsEnabled;
-    }
-
-    @Override
-    public int getBaseline() {
-        // does not support baseline alignment
-        return -1;
-    }
-
-    public Parcelable onSaveInstanceState(Parcelable superState) override;
-    public void onRestoreInstanceState(Parcelable state) override;
-    public bool dispatchPopulateAccessibilityEvent(AccessibilityEvent& event) override;
-
-    public void onPopulateAccessibilityEvent(AccessibilityEvent& event)override;
-
-    public View* getHourView() override{
-        return mHourView;
-    }
-
-    public View* getMinuteView() override;
-
-    public View* getAmView() override;
-
-    public View* getPmView() override;
-
-    private int getCurrentItemShowing() {
-        return mRadialTimePickerView.getCurrentItemShowing();
-    }
-
-    private void onTimeChanged();
-
-    private void tryVibrate();
-
-    private void updateAmPmLabelStates(int amOrPm);
-
-    private int getLocalizedHour(int hourOfDay);
-
-    private void updateHeaderHour(int hourOfDay, bool announce) {
-        final int localizedHour = getLocalizedHour(hourOfDay);
-        mHourView.setValue(localizedHour);
-    }
-
-    private void updateHeaderMinute(int minuteOfHour, bool announce) {
-        mMinuteView.setValue(minuteOfHour);
-    }
-
-    private void updateHeaderSeparator() {
-        final String bestDateTimePattern = DateFormat.getBestDateTimePattern(mLocale,
-                (mIs24Hour) ? "Hm" : "hm");
-        final String separatorText = getHourMinSeparatorFromPattern(bestDateTimePattern);
-        mSeparatorView.setText(separatorText);
-        mTextInputPickerView.updateSeparator(separatorText);
-    }
-
-    private static String getHourMinSeparatorFromPattern(String dateTimePattern);
-
-    static private int lastIndexOfAny(String str, char[] any);
-
-    private void setCurrentItemShowing(int index, bool animateCircle);
-
-    private void setAmOrPm(int amOrPm);
-
+#if 0
     private final OnValueSelectedListener mOnValueSelectedListener = new OnValueSelectedListener() {
         @Override
         public void onValueSelected(int pickerType, int newValue, bool autoAdvance) {
@@ -290,20 +227,6 @@ public:
                     view.postDelayed(commitCallback, DELAY_COMMIT_MILLIS);
                 }
             }
-        }
-    };
-
-    private final Runnable mCommitHour = new Runnable() {
-        @Override
-        public void run() {
-            setHour(mHourView.getValue());
-        }
-    };
-
-    private final Runnable mCommitMinute = new Runnable() {
-        @Override
-        public void run() {
-            setMinute(mMinuteView.getValue());
         }
     };
 
@@ -411,4 +334,7 @@ public:
             return bestChild;
         }
     }
-}
+#endif
+};
+}/*endof namespace*/
+#endif/*__TIMEPICKER_CLOCK_DELEGATE_H__*/

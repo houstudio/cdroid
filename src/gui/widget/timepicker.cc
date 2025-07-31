@@ -15,19 +15,22 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-# if 0
+# if 10
+#include <core/mathutils.h>
 #include <widget/timepicker.h>
+#include <widget/timepickerclockdelegate.h>
+#include <widget/timepickerspinnerdelegate.h>
 namespace cdroid{
 TimePicker::TimePicker(Context* context,const AttributeSet& attrs)
-    :FrameLayout(context, attrs, defStyleAttr, defStyleRes){
+    :FrameLayout(context, attrs){
 
     // DatePicker is important by default, unless app developer overrode attribute.
     if (getImportantForAutofill() == IMPORTANT_FOR_AUTOFILL_AUTO) {
         setImportantForAutofill(IMPORTANT_FOR_AUTOFILL_YES);
     }
 
-    const bool isDialogMode = a.getBoolean("dialogMode", false);
-    const int requestedMode = a.getInt("timePickerMode", MODE_SPINNER);
+    const bool isDialogMode = attrs.getBoolean("dialogMode", false);
+    const int requestedMode = attrs.getInt("timePickerMode", MODE_SPINNER);
 
     if (requestedMode == MODE_CLOCK && isDialogMode) {
         // You want MODE_CLOCK? YOU CAN'T HANDLE MODE_CLOCK! Well, maybe
@@ -46,20 +49,24 @@ TimePicker::TimePicker(Context* context,const AttributeSet& attrs)
         mDelegate = new TimePickerSpinnerDelegate( this, context, attrs);
         break;
     }
-    mDelegate->setAutoFillChangeListener((v, h, m) -> {
+    /*mDelegate->setAutoFillChangeListener((v, h, m) -> {
         final AutofillManager afm = context.getSystemService(AutofillManager.class);
         if (afm != null) {
             afm.notifyValueChanged(this);
         }
-    });
+    });*/
 }
 
-int TimePicker::getMode() {
+TimePicker::~TimePicker(){
+    delete mDelegate;
+}
+
+int TimePicker::getMode() const{
     return mMode;
 }
 
 void TimePicker::setHour(int hour) {
-    mDelegate->setHour(MathUtils.constrain(hour, 0, 23));
+    mDelegate->setHour(MathUtils::constrain(hour, 0, 23));
 }
 
 int TimePicker::getHour() {
@@ -67,18 +74,18 @@ int TimePicker::getHour() {
 }
 
 void TimePicker::setMinute(int minute) {
-    mDelegate->setMinute(MathUtils.constrain(minute, 0, 59));
+    mDelegate->setMinute(MathUtils::constrain(minute, 0, 59));
 }
 
 int TimePicker::getMinute() {
     return mDelegate->getMinute();
 }
 
-void TimePicker::setIs24HourView(boolis24HourView) {
+void TimePicker::setIs24HourView(bool is24HourView) {
     mDelegate->setIs24Hour(is24HourView);
 }
 
-bool TimePicker::is24HourView() {
+bool TimePicker::is24HourView() const{
     return mDelegate->is24Hour();
 }
 
@@ -104,17 +111,17 @@ bool TimePicker::validateInput() {
 }
 
 Parcelable* TimePicker::onSaveInstanceState() {
-    Parcelable superState = super.onSaveInstanceState();
-    return mDelegate.onSaveInstanceState(superState);
+    Parcelable* superState = FrameLayout::onSaveInstanceState();
+    return mDelegate->onSaveInstanceState(*superState);
 }
 
 void TimePicker::onRestoreInstanceState(Parcelable& state) {
-    BaseSavedState ss = (BaseSavedState) state;
-    FrameLayout::onRestoreInstanceState(ss.getSuperState());
+    BaseSavedState& ss = (BaseSavedState&) state;
+    FrameLayout::onRestoreInstanceState(*ss.getSuperState());
     mDelegate->onRestoreInstanceState(ss);
 }
 
-std::string TimePicker::getAccessibilityClassName() {
+std::string TimePicker::getAccessibilityClassName() const{
     return "TimePicker";
 }
 
@@ -138,149 +145,112 @@ View* TimePicker::getPmView() {
     return mDelegate->getPmView();
 }
 
-String[] TimePicker::getAmPmStrings(Context context) {
-    final Locale locale = context.getResources().getConfiguration().locale;
-    DateFormatSymbols dfs = DateFormat.getIcuDateFormatSymbols(locale);
-    String[] amPm = dfs.getAmPmStrings();
-    String[] narrowAmPm = dfs.getAmpmNarrowStrings();
+std::vector<std::string> TimePicker::getAmPmStrings(Context* context) {
+    //Locale locale = context.getResources().getConfiguration().locale;
+    //DateFormatSymbols dfs = DateFormat.getIcuDateFormatSymbols(locale);
+    std::vector<std::string> amPm;// = dfs.getAmPmStrings();
+    std::vector<std::string> narrowAmPm;// = dfs.getAmpmNarrowStrings();
 
-    final String[] result = new String[2];
-    result[0] = amPm[0].length() > 4 ? narrowAmPm[0] : amPm[0];
-    result[1] = amPm[1].length() > 4 ? narrowAmPm[1] : amPm[1];
+    std::vector<std::string> result;
+    result.push_back(amPm[0].length() > 4 ? narrowAmPm[0] : amPm[0]);
+    result.push_back(amPm[1].length() > 4 ? narrowAmPm[1] : amPm[1]);
     return result;
 }
 
 /**
  * An abstract class which can be used as a start for TimePicker implementations
  */
-class AbstractTimePickerDelegate:public TimePickerDelegate {
-    protected final TimePicker mDelegator;
-    protected final Context mContext;
-    protected final Locale mLocale;
+TimePicker::AbstractTimePickerDelegate::AbstractTimePickerDelegate(TimePicker* delegator, Context* context) {
+    mDelegator = delegator;
+    mContext = context;
+    //mLocale = context.getResources().getConfiguration().locale;
+}
 
-    protected OnTimeChangedListener mOnTimeChangedListener;
-    protected OnTimeChangedListener mAutoFillChangeListener;
+void TimePicker::AbstractTimePickerDelegate::setOnTimeChangedListener(const OnTimeChangedListener& callback) {
+    mOnTimeChangedListener = callback;
+}
+#if 0
+void TimePicker::AbstractTimePickerDelegate::setAutoFillChangeListener(const OnTimeChangedListener& callback) {
+    mAutoFillChangeListener = callback;
+}
 
-    // The value that was passed to autofill() - it must be stored because it getAutofillValue()
-    // must return the exact same value that was autofilled, otherwise the widget will not be
-    // properly highlighted after autofill().
-    private long mAutofilledValue;
-
-    public AbstractTimePickerDelegate(TimePicker* delegator, Context* context) {
-        mDelegator = delegator;
-        mContext = context;
-        mLocale = context.getResources().getConfiguration().locale;
+void TimePicker::AbstractTimePickerDelegate::autofill(AutofillValue value) {
+    if (value == null || !value.isDate()) {
+        LOGW("%d could not be autofilled into ",value,this);
+        return;
     }
 
-    @Override
-    public void setOnTimeChangedListener(const OnTimeChangedListener& callback) {
-        mOnTimeChangedListener = callback;
+    final long time = value.getDateValue();
+
+    final Calendar cal = Calendar.getInstance(mLocale);
+    cal.setTimeInMillis(time);
+    setDate(cal.get(Calendar::HOUR_OF_DAY), cal.get(Calendar::MINUTE));
+
+    // Must set mAutofilledValue *after* calling subclass method to make sure the value
+    // returned by getAutofillValue() matches it.
+    mAutofilledValue = time;
+}
+
+AutofillValue TimePicker::AbstractTimePickerDelegate::getAutofillValue() {
+    if (mAutofilledValue != 0) {
+        return AutofillValue.forDate(mAutofilledValue);
     }
 
-    @Override
-    public void setAutoFillChangeListener(const OnTimeChangedListener& callback) {
-        mAutoFillChangeListener = callback;
-    }
+    final Calendar cal = Calendar.getInstance(mLocale);
+    cal.set(Calendar::HOUR_OF_DAY, getHour());
+    cal.set(Calendar::MINUTE, getMinute());
+    return AutofillValue.forDate(cal.getTimeInMillis());
+}
 
-    @Override
-    public final void autofill(AutofillValue value) {
-        if (value == null || !value.isDate()) {
-            Log.w(LOG_TAG, value + " could not be autofilled into " + this);
-            return;
-        }
+void TimePicker::AbstractTimePickerDelegate::resetAutofilledValue() {
+    mAutofilledValue = 0;
+}
+#endif
 
-        final long time = value.getDateValue();
+TimePicker::AbstractTimePickerDelegate::SavedState::SavedState(Parcelable* superState, int hour, int minute, bool is24HourMode)
+    :SavedState(superState, hour, minute, is24HourMode, 0){
+}
 
-        final Calendar cal = Calendar.getInstance(mLocale);
-        cal.setTimeInMillis(time);
-        setDate(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+TimePicker::AbstractTimePickerDelegate::SavedState::SavedState(Parcelable* superState, int hour, int minute, bool is24HourMode,
+        int currentItemShowing):BaseSavedState(superState){
+    mHour = hour;
+    mMinute = minute;
+    mIs24HourMode = is24HourMode;
+    mCurrentItemShowing = currentItemShowing;
+}
 
-        // Must set mAutofilledValue *after* calling subclass method to make sure the value
-        // returned by getAutofillValue() matches it.
-        mAutofilledValue = time;
-    }
+TimePicker::AbstractTimePickerDelegate::SavedState::SavedState(Parcel& in)
+    :BaseSavedState(in){
+    mHour = in.readInt();
+    mMinute = in.readInt();
+    mIs24HourMode = (in.readInt() == 1);
+    mCurrentItemShowing = in.readInt();
+}
 
-    @Override
-    public final AutofillValue getAutofillValue() {
-        if (mAutofilledValue != 0) {
-            return AutofillValue.forDate(mAutofilledValue);
-        }
+int TimePicker::AbstractTimePickerDelegate::SavedState::getHour() const{
+    return mHour;
+}
 
-        final Calendar cal = Calendar.getInstance(mLocale);
-        cal.set(Calendar.HOUR_OF_DAY, getHour());
-        cal.set(Calendar.MINUTE, getMinute());
-        return AutofillValue.forDate(cal.getTimeInMillis());
-    }
+int TimePicker::AbstractTimePickerDelegate::SavedState::getMinute() const{
+    return mMinute;
+}
 
-    protected void resetAutofilledValue() {
-        mAutofilledValue = 0;
-    }
+bool TimePicker::AbstractTimePickerDelegate::SavedState::is24HourMode() const{
+    return mIs24HourMode;
+}
 
-    protected static class SavedState extends View.BaseSavedState {
-        private final int mHour;
-        private final int mMinute;
-        private final bool mIs24HourMode;
-        private final int mCurrentItemShowing;
+int TimePicker::AbstractTimePickerDelegate::SavedState::getCurrentItemShowing() const{
+    return mCurrentItemShowing;
+}
 
-        public SavedState(Parcelable superState, int hour, int minute, bool is24HourMode) {
-            this(superState, hour, minute, is24HourMode, 0);
-        }
-
-        public SavedState(Parcelable superState, int hour, int minute, bool is24HourMode,
-                int currentItemShowing) {
-            super(superState);
-            mHour = hour;
-            mMinute = minute;
-            mIs24HourMode = is24HourMode;
-            mCurrentItemShowing = currentItemShowing;
-        }
-
-        private SavedState(Parcel in) {
-            super(in);
-            mHour = in.readInt();
-            mMinute = in.readInt();
-            mIs24HourMode = (in.readInt() == 1);
-            mCurrentItemShowing = in.readInt();
-        }
-
-        public int getHour() {
-            return mHour;
-        }
-
-        public int getMinute() {
-            return mMinute;
-        }
-
-        public bool is24HourMode() {
-            return mIs24HourMode;
-        }
-
-        public int getCurrentItemShowing() {
-            return mCurrentItemShowing;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            super.writeToParcel(dest, flags);
-            dest.writeInt(mHour);
-            dest.writeInt(mMinute);
-            dest.writeInt(mIs24HourMode ? 1 : 0);
-            dest.writeInt(mCurrentItemShowing);
-        }
-
-        @SuppressWarnings({"unused", "hiding"})
-        public static final @android.annotation.NonNull Creator<SavedState> CREATOR = new Creator<SavedState>() {
-            public SavedState createFromParcel(Parcel in) {
-                return new SavedState(in);
-            }
-
-            public SavedState[] newArray(int size) {
-                return new SavedState[size];
-            }
-        };
-    }
-};
-
+void TimePicker::AbstractTimePickerDelegate::SavedState::writeToParcel(Parcel& dest, int flags) {
+    BaseSavedState::writeToParcel(dest, flags);
+    dest.writeInt(mHour);
+    dest.writeInt(mMinute);
+    dest.writeInt(mIs24HourMode ? 1 : 0);
+    dest.writeInt(mCurrentItemShowing);
+}
+#if 0
 void TimePicker::dispatchProvideAutofillStructure(ViewStructure structure, int flags) {
     // This view is self-sufficient for autofill, so it needs to call
     // onProvideAutoFillStructure() to fill itself, but it does not need to call
@@ -291,7 +261,6 @@ void TimePicker::dispatchProvideAutofillStructure(ViewStructure structure, int f
 
 void TimePicker::autofill(AutofillValue value) {
     if (!isEnabled()) return;
-
     mDelegate->autofill(value);
 }
 
@@ -302,6 +271,7 @@ int TimePicker::getAutofillType() {
 AutofillValue TimePicker::getAutofillValue() {
     return isEnabled() ? mDelegate->getAutofillValue() : null;
 }
+#endif
 }
 #endif
 

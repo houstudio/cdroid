@@ -244,7 +244,7 @@ InputEvent*InputEventSource::parseEvent(const char*line){
             0/*flags*/, 0/*source*/,0/*displayid*/);
         return k;
     }else {/*(tokenCount>=4)MotionEvent*/
-        int tkIdx = tokenCount>4?1:0;
+        const int tkIdx = tokenCount>4?1:0;
         const int pointer =(tokenCount>4) ? atoi(tokens[0]) : 0;
         const int action = atoi(tokens[tkIdx]);
         const int x = atoi(tokens[tkIdx+1]);

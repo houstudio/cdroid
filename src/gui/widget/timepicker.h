@@ -37,93 +37,36 @@ protected:
 public:
     TimePicker(Context* context,const AttributeSet& attrs);
     ~TimePicker()override;
-    int getMode() const{
-        return mMode;
-    }
+    int getMode() const;
 
-    void setHour(int hour) {
-        mDelegate->setHour(MathUtils.constrain(hour, 0, 23));
-    }
+    void setHour(int hour);
+    int getHour();
 
-    int getHour() {
-        return mDelegate->getHour();
-    }
+    void setMinute(int minute);
+    int getMinute();
 
-    void setMinute(int minute) {
-        mDelegate->setMinute(MathUtils.constrain(minute, 0, 59));
-    }
+    void setIs24HourView(bool is24HourView);
+    bool is24HourView()const;
 
-    int getMinute() {
-        return mDelegate->getMinute();
-    }
+    void setOnTimeChangedListener(const OnTimeChangedListener& onTimeChangedListener);
 
-    void setIs24HourView(bool is24HourView) {
-        if (is24HourView == null) {
-            return;
-        }
-        mDelegate->setIs24Hour(is24HourView);
-    }
+    void setEnabled(bool enabled) override;
+    bool isEnabled()const override;
 
-    bool is24HourView() {
-        return mDelegate->is24Hour();
-    }
+    int getBaseline() override;
 
-    void setOnTimeChangedListener(const OnTimeChangedListener& onTimeChangedListener) {
-        mDelegate->setOnTimeChangedListener(onTimeChangedListener);
-    }
+    bool validateInput();
 
-    void setEnabled(bool enabled) override{
-        super.setEnabled(enabled);
-        mDelegate->setEnabled(enabled);
-    }
+    std::string getAccessibilityClassName()const override;
 
-    bool isEnabled() override{
-        return mDelegate->isEnabled();
-    }
+    bool dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event) override;
 
-    int getBaseline() override{
-        return mDelegate->getBaseline();
-    }
+    View* getHourView();
+    View* getMinuteView();
+    View* getAmView();
+    View* getPmView();
 
-    bool validateInput() {
-        return mDelegate->validateInput();
-    }
-
-    std::string getAccessibilityClassName() override{
-        return TimePicker.class.getName();
-    }
-
-    bool dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event) override{
-        return mDelegate->dispatchPopulateAccessibilityEvent(event);
-    }
-
-    View* getHourView() {
-        return mDelegate->getHourView();
-    }
-
-    View* getMinuteView() {
-        return mDelegate->getMinuteView();
-    }
-
-    View* getAmView() {
-        return mDelegate->getAmView();
-    }
-
-    View* getPmView() {
-        return mDelegate->getPmView();
-    }
-
-    static String[] getAmPmStrings(Context context) {
-        final Locale locale = context.getResources().getConfiguration().locale;
-        DateFormatSymbols dfs = DateFormat.getIcuDateFormatSymbols(locale);
-        String[] amPm = dfs.getAmPmStrings();
-        String[] narrowAmPm = dfs.getAmpmNarrowStrings();
-
-        final String[] result = new String[2];
-        result[0] = amPm[0].length() > 4 ? narrowAmPm[0] : amPm[0];
-        result[1] = amPm[1].length() > 4 ? narrowAmPm[1] : amPm[1];
-        return result;
-    }
+    static std::vector<std::string> getAmPmStrings(Context* context);
 
     /*void dispatchProvideAutofillStructure(ViewStructure structure, int flags) override;
     void autofill(AutofillValue value) override;
@@ -131,7 +74,7 @@ public:
     AutofillValue getAutofillValue() override;*/
 };
 
-class TimerPicker::TimePickerDelegate {
+class TimePicker::TimePickerDelegate {
 public:
     virtual ~TimePickerDelegate()=default;
     virtual void setHour(int hour)=0;
@@ -170,11 +113,11 @@ public:
     virtual View* getPmView()=0;
 };
 
-class TimerPicker::AbstractTimePickerDelegate:public TimerPicker::TimePickerDelegate {
+class TimePicker::AbstractTimePickerDelegate:public TimePicker::TimePickerDelegate {
 protected:
     TimePicker* mDelegator;
     Context* mContext;
-    Locale mLocale;
+    //Locale mLocale;
 
     OnTimeChangedListener mOnTimeChangedListener;
     OnTimeChangedListener mAutoFillChangeListener;
@@ -188,34 +131,26 @@ public:
 
     void setOnTimeChangedListener(const OnTimeChangedListener& callback) override;
 
-    void setAutoFillChangeListener(const OnTimeChangedListener& callback) override;
-
+    //void setAutoFillChangeListener(const OnTimeChangedListener& callback) override;
     //void autofill(AutofillValue value) override;
     //AutofillValue getAutofillValue() override;
     //void resetAutofilledValue() { mAutofilledValue = 0; }override
 
-    class SavedState:public View:BaseSavedState {
+    class SavedState:public View::BaseSavedState {
     private:
         int mHour;
         int mMinute;
         int mCurrentItemShowing;
         bool mIs24HourMode;
     public:
-        SavedState(Parcelable superState, int hour, int minute, bool is24HourMode);
-
-        SavedState(Parcelable superState, int hour, int minute, bool is24HourMode,
-            int currentItemShowing);
-
-         SavedState(Parcel in);
-
-        int getHour();
-
-        int getMinute();
-
-        bool is24HourMode();
-
-        int getCurrentItemShowing();
-        void writeToParcel(Parcel dest, int flags);
+        SavedState(Parcelable* superState, int hour, int minute, bool is24HourMode);
+        SavedState(Parcelable* superState, int hour, int minute, bool is24HourMode,int currentItemShowing);
+        SavedState(Parcel& in);
+        int getHour()const;
+        int getMinute()const;
+        bool is24HourMode()const;
+        int getCurrentItemShowing()const;
+        void writeToParcel(Parcel& dest, int flags);
     };
 };
 

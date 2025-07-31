@@ -987,7 +987,7 @@ int FlexboxLayout::getDecorationLengthMainAxis(View* view, int index, int indexI
     return decorationLength;
 }
 
-int getDecorationLengthCrossAxis(View* view) {
+int FlexboxLayout::getDecorationLengthCrossAxis(View* view) {
     // Decoration along the cross axis for an individual view is not supported in the
     // FlexboxLayout.
     return 0;
@@ -1197,17 +1197,7 @@ bool FlexboxLayout::hasEndDividerAfterFlexLine(int flexLineIndex) {
 
 }
 
-/*public static class LayoutParams extends ViewGroup.MarginLayoutParams implements FlexItem {
-    private int mOrder = FlexItem.ORDER_DEFAULT;
-    private float mFlexGrow = FlexItem.FLEX_GROW_DEFAULT;
-    private float mFlexShrink = FlexItem.FLEX_SHRINK_DEFAULT;
-    private int mAlignSelf = AlignSelf.AUTO;
-    private float mFlexBasisPercent = FlexItem.FLEX_BASIS_PERCENT_DEFAULT;
-    private int mMinWidth = NOT_SET;
-    private int mMinHeight = NOT_SET;
-    private int mMaxWidth = MAX_SIZE;
-    private int mMaxHeight = MAX_SIZE;
-    private bool mWrapBefore;*/
+/*public static class LayoutParams extends ViewGroup.MarginLayoutParams implements FlexItem*/
 
 FlexboxLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& attrs)
     :ViewGroup::MarginLayoutParams(context,attrs){
@@ -1224,9 +1214,9 @@ FlexboxLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& a
             {"stretch" , (int)AlignSelf::STRETCH},
         }, (int)AlignSelf::AUTO);
     mFlexBasisPercent = attrs.getFraction("layout_flexBasisPercent", 1, 1,(float)FLEX_BASIS_PERCENT_DEFAULT);
-    mMinWidth = attrs.getDimensionPixelSize("layout_minWidth", (int)NOT_SET);
+    mMinWidth = attrs.getDimensionPixelSize("layout_minWidth"  ,(int)NOT_SET);
     mMinHeight = attrs.getDimensionPixelSize("layout_minHeight",(int)NOT_SET);
-    mMaxWidth  = attrs.getDimensionPixelSize("layout_maxWidth",(int)MAX_SIZE);
+    mMaxWidth  = attrs.getDimensionPixelSize("layout_maxWidth" ,(int)MAX_SIZE);
     mMaxHeight = attrs.getDimensionPixelSize("layout_maxHeight",(int)MAX_SIZE);
     mWrapBefore= attrs.getBoolean("layout_wrapBefore", false);
 }
