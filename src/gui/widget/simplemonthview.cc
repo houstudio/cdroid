@@ -43,8 +43,8 @@ SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
 
     // Compute the largest day selector radius that's still within the clip
     // bounds and desired selector radius.
-    int maxSelectorWidth = cellWidth / 2 + 0;//std::min(paddingLeft, paddingRight);
-    int maxSelectorHeight = mDayHeight / 2 + 0;//paddingBottom;
+    const int maxSelectorWidth = cellWidth / 2 + 0;//std::min(paddingLeft, paddingRight);
+    const int maxSelectorHeight = mDayHeight / 2 + 0;//paddingBottom;
     mDaySelectorRadius = std::min(mDesiredDaySelectorRadius,std::min(maxSelectorWidth, maxSelectorHeight));
 }
 
@@ -93,7 +93,7 @@ void SimpleMonthView::initMonthView(){
 }
 
 void SimpleMonthView::updateMonthYearLabel(){
-    mMonthYearLabel=std::to_string(mYear)+"/"+std::to_string(mMonth+(1-Calendar::JANUARY));//mCalendar.get(Calendar::YEAR));
+    mMonthYearLabel = std::to_string(mYear)+"/"+std::to_string(mMonth+(1-Calendar::JANUARY));//mCalendar.get(Calendar::YEAR));
 }
 
 void SimpleMonthView::updateDayOfWeekLabels(){
@@ -157,7 +157,7 @@ void SimpleMonthView::setDayTextColor(const ColorStateList* dayTextColor){
 }
 
 void SimpleMonthView::setDaySelectorColor(const ColorStateList* dayBackgroundColor){
-    //mHighlightTextColor = dayBackgroundColor;
+    mDaySelectorColor = dayBackgroundColor;
     invalidate();
 }
 
@@ -551,18 +551,18 @@ bool SimpleMonthView::isValidDayOfMonth(int day)const{
     return day >= 1 && day <= mDaysInMonth;
 }
 
-bool SimpleMonthView::isValidDayOfWeek(int day) {
+bool SimpleMonthView::isValidDayOfWeek(int day){
     return day >= Calendar::SUNDAY && day <= Calendar::SATURDAY;
 }
 
-bool SimpleMonthView::isValidMonth(int month) {
+bool SimpleMonthView::isValidMonth(int month){
     return month >= Calendar::JANUARY && month <= Calendar::DECEMBER;
 }
 
 void SimpleMonthView::setSelectedDay(int dayOfMonth) {
     mActivatedDay = dayOfMonth;
     // Invalidate cached accessibility information.
-    //mTouchHelper.invalidateRoot();
+    mTouchHelper->invalidateRoot();
     invalidate();
 }
 
@@ -576,7 +576,7 @@ void SimpleMonthView::setFirstDayOfWeek(int weekStart) {
     updateDayOfWeekLabels();
 
     // Invalidate cached accessibility information.
-    //mTouchHelper.invalidateRoot();
+    mTouchHelper->invalidateRoot();
     invalidate();
 }
 
@@ -615,7 +615,7 @@ void SimpleMonthView::setMonthParams(int selectedDay, int month, int year, int w
     updateDayOfWeekLabels();
 
     // Invalidate cached accessibility information.
-    //mTouchHelper.invalidateRoot();
+    mTouchHelper->invalidateRoot();
     invalidate();
 }
 
@@ -691,10 +691,10 @@ void SimpleMonthView::onLayout(bool changed, int left, int top, int w, int h){
                                   std::min(maxSelectorWidth, maxSelectorHeight));
 
     // Invalidate cached accessibility information.
-    //mTouchHelper.invalidateRoot();
+    mTouchHelper->invalidateRoot();
 }
 
-int SimpleMonthView::findDayOffset(){
+int SimpleMonthView::findDayOffset()const{
     const int offset = mDayOfWeekStart - mWeekStart;
     if (mDayOfWeekStart < mWeekStart) {
         return offset + DAYS_IN_WEEK;
@@ -767,7 +767,7 @@ bool SimpleMonthView::onDayClicked(int day){
         mOnDayClickListener(*this, date);
     }
     // This is a no-op if accessibility is turned off.
-    //mTouchHelper.sendEventForVirtualView(day, AccessibilityEvent.TYPE_VIEW_CLICKED);
+    mTouchHelper->sendEventForVirtualView(day, AccessibilityEvent::TYPE_VIEW_CLICKED);
     return true;
 }
 
