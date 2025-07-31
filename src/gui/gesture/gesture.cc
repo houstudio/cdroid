@@ -41,7 +41,7 @@ Gesture* Gesture::clone() {
     const int count = (int)mStrokes.size();
     for (int i = 0; i < count; i++) {
         GestureStroke* stroke = mStrokes.at(i);
-        LOGD("TODO");//gesture->mStrokes.push_back((GestureStroke*)stroke->clone());
+        gesture->mStrokes.push_back(new GestureStroke(*stroke));
     }
     return gesture;
 }
@@ -70,7 +70,7 @@ void Gesture::addStroke(GestureStroke* stroke) {
     RectF sb= stroke->boundingBox;
     mStrokes.push_back(stroke);
     mBoundingBox.Union(stroke->boundingBox);
-    LOGD("Gesture %p(%.f,%.f,%.f,%.f) add Stroke %p(%.f,%.f,%.f,%.f)==>(%.f,%.f,%.f,%.f)",this,stroke,
+    LOGV("Gesture %p(%.f,%.f,%.f,%.f) add Stroke %p(%.f,%.f,%.f,%.f)==>(%.f,%.f,%.f,%.f)",this,stroke,
             ob.left,ob.top,ob.width,ob.height,sb.left,sb.top,sb.width,sb.height,
             mBoundingBox.left,mBoundingBox.top,mBoundingBox.width,mBoundingBox.height);
 }

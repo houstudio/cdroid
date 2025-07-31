@@ -37,11 +37,7 @@ private:
     GestureStroke(const RectF& bbx, float len,const std::vector<float>& pts,const std::vector<int64_t>&times);
     void makePath(); 
 public:
-    /**
-     * A constructor that constructs a gesture stroke from a list of gesture points.
-     *
-     * @param points
-     */
+    GestureStroke(const GestureStroke&);
     GestureStroke(const std::vector<GesturePoint>& points);
     virtual ~GestureStroke();
     /**
