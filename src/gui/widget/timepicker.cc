@@ -42,11 +42,11 @@ TimePicker::TimePicker(Context* context,const AttributeSet& attrs)
 
     switch (mMode) {
     case MODE_CLOCK:
-        mDelegate = new TimePickerClockDelegate(this, context, attrs);
+        //mDelegate = new TimePickerClockDelegate(this, context, attrs);
         break;
     case MODE_SPINNER:
     default:
-        mDelegate = new TimePickerSpinnerDelegate( this, context, attrs);
+        //mDelegate = new TimePickerSpinnerDelegate( this, context, attrs);
         break;
     }
     /*mDelegate->setAutoFillChangeListener((v, h, m) -> {

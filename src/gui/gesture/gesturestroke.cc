@@ -54,6 +54,14 @@ GestureStroke::GestureStroke(const std::vector<GesturePoint>& points) {
     length = len;
 }
 
+GestureStroke::GestureStroke(const GestureStroke&other){
+    mCachedPath = nullptr;
+    points = other.points;
+    length = other.length;
+    timestamps = other.timestamps;
+    boundingBox= other.boundingBox;
+}
+
 GestureStroke::~GestureStroke(){
     delete mCachedPath;
 }

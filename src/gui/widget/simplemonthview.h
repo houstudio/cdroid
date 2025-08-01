@@ -47,6 +47,7 @@ private:
     const ColorStateList* mDayTextColor;
     const ColorStateList* mMonthTextColor;
     const ColorStateList* mDayOfWeekTextColor;
+    const ColorStateList* mDaySelectorColor;
     int mDesiredMonthHeight;
     int mDesiredDayOfWeekHeight;
     int mDesiredDayHeight;
@@ -114,7 +115,7 @@ private:
     static int getDaysInMonth(int month, int year);
 
     bool sameDay(int day, Calendar& today);
-    int findDayOffset();
+    int findDayOffset()const;
     int getDayAtLocation(int x, int y);
     bool onDayClicked(int day);
 protected:
@@ -126,7 +127,7 @@ protected:
 public:
     SimpleMonthView(int,int);
     SimpleMonthView(Context*,const AttributeSet&atts);
-    ~SimpleMonthView();
+    ~SimpleMonthView()override;
     int getMonthHeight()const;
     int getCellWidth()const;
      

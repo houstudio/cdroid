@@ -382,7 +382,8 @@ void Path::append_path(const Path&other){
 void Path::append_path(const Path&path,double dx,double dy){
     mCTX->save();
     mCTX->translate(dx, dy);
-    cairo_path_t *dtPath = cairo_copy_path(mCTX->cobj());
+    cairo_path_t *dtPath = cairo_copy_path(path.mCTX->cobj());
+    mCTX->begin_new_sub_path();
     for (int i = 0; i < dtPath->num_data; i += dtPath->data[i].header.length) {
         cairo_path_data_t *data = &dtPath->data[i];
         switch (data->header.type) {
