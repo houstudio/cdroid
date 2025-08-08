@@ -497,8 +497,13 @@ int TouchDevice::ABS2AXIS(int absaxis){
 
     case ABS_MT_PRESSURE:
     case ABS_PRESSURE: return MotionEvent::AXIS_PRESSURE;
-    case ABS_TOOL_WIDTH:
-    case ABS_MT_TOUCH_MAJOR: return MotionEvent::AXIS_SIZE;
+    case ABS_TOOL_WIDTH:/*AXIS_TOUCH_MAJOR*/
+    case ABS_MT_WIDTH_MAJOR:/*AXIS_TOUCH_MAJOR*/
+    case ABS_MT_TOUCH_MAJOR:return MotionEvent::AXIS_TOUCH_MAJOR;
+    case ABS_MT_WIDTH_MINOR:/*AXIS_TOUCH_MINOR*/
+    case ABS_MT_TOUCH_MINOR:return MotionEvent::AXIS_TOUCH_MINOR;
+    case ABS_MT_TOOL_X:return MotionEvent::AXIS_TOOL_MAJOR;
+    case ABS_MT_TOOL_Y:return MotionEvent::AXIS_TOOL_MINOR;
     case ABS_WHEEL:/*REL_WHEEL*/ return MotionEvent::AXIS_WHEEL;
     default:return  -1; 
     }
@@ -549,7 +554,8 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
         tmp = std::max(mPressureMax - mPressureMin,1);
         mCoord.setAxisValue(axis,float(value - mPressureMin)/tmp);
         break;
-    default:/*MotionEvent::AXIS_Z:*/ break;
+    default:
+        mCoord.setAxisValue(axis,value);break;
     }/*endof switch(axis)*/
 
     if( (raw_axis>=ABS_MT_SLOT) && (raw_axis<=ABS_CNT) )
