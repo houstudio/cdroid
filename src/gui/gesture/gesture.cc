@@ -46,25 +46,14 @@ Gesture* Gesture::clone() {
     return gesture;
 }
 
-/**
- * @return all the strokes of the gesture
- */
 const std::vector<GestureStroke*>& Gesture::getStrokes() const{
     return mStrokes;
 }
 
-/**
- * @return the number of strokes included by this gesture
- */
 int Gesture::getStrokesCount()const {
     return (int)mStrokes.size();
 }
 
-/**
- * Adds a stroke to the gesture.
- *
- * @param stroke
- */
 void Gesture::addStroke(GestureStroke* stroke) {
     RectF ob= mBoundingBox;
     RectF sb= stroke->boundingBox;
@@ -91,9 +80,6 @@ float Gesture::getLength() const{
     return len;
 }
 
-/**
- * @return the bounding box of the gesture
- */
 RectF Gesture::getBoundingBox()const {
     return mBoundingBox;
 }
@@ -108,9 +94,8 @@ cdroid::Path* Gesture::toPath(Path* path) {
     const std::vector<GestureStroke*> strokes = mStrokes;
     const int count = (int)strokes.size();
 
-    LOGD("TODO");
     for (int i = 0; i < count; i++) {
-        //path->addPath(strokes.at(i)->getPath());
+        path->append_path(*strokes.at(i)->getPath());
     }
 
     return path;
@@ -125,40 +110,21 @@ cdroid::Path* Gesture::toPath(Path* path, int width, int height, int edge, int n
 
     const std::vector<GestureStroke*>& strokes = mStrokes;
     const int count = (int)strokes.size();
-    LOGD("TODO");
     for (int i = 0; i < count; i++) {
-        //path->addPath(strokes.at(i)->toPath(width - 2 * edge, height - 2 * edge, numSample));
+        path->append_path(*strokes.at(i)->toPath(width - 2 * edge, height - 2 * edge, numSample));
     }
 
     return path;
 }
 
-/**
- * Sets the id of the gesture.
- *
- * @param id
- */
 void Gesture::setID(long id) {
     mGestureID = id;
 }
 
-/**
- * @return the id of the gesture
- */
 long Gesture::getID() const{
     return mGestureID;
 }
 
-/**
- * Creates a bitmap of the gesture with a transparent background.
- *
- * @param width width of the target bitmap
- * @param height height of the target bitmap
- * @param edge the edge
- * @param numSample
- * @param color
- * @return the bitmap
- */
 Bitmap Gesture::toBitmap(int width, int height, int edge, int numSample, int color) {
     Bitmap bitmap = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,width, height);
     Canvas canvas(bitmap);
@@ -176,15 +142,6 @@ Bitmap Gesture::toBitmap(int width, int height, int edge, int numSample, int col
     return bitmap;
 }
 
-/**
- * Creates a bitmap of the gesture with a transparent background.
- *
- * @param width
- * @param height
- * @param inset
- * @param color
- * @return the bitmap
- */
 Bitmap Gesture::toBitmap(int width, int height, int inset, int color) {
     Bitmap bitmap = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,width, height);
     Canvas canvas(bitmap);
@@ -243,6 +200,7 @@ Gesture* Gesture::deserialize(std::istream& in){
 
     return gesture;
 }
+
 #if 0
 public static final @android.annotation.NonNull Parcelable.Creator<Gesture> CREATOR = new Parcelable.Creator<Gesture>() {
     public Gesture createFromParcel(Parcel in) {
