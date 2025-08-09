@@ -36,8 +36,6 @@
   #include <core/eventcodes.h>   
 #endif
 
-#define USE_TRACKINGID_AS_POINTERID 0
-
 using namespace std;
 namespace cdroid{
 
@@ -566,25 +564,22 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     case ABS_X:
     case ABS_Y:
     case ABS_Z:
-        mSlotID = 0 ; mTrackID = 0;
+        mSlotID = 0 ;
+        mTrackID = 0;
         mProp.id= 0;
+        /*Single Touch has only one finger,so slotid trackid always be zero*/
         mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
         break;
     case ABS_MT_POSITION_X:
     case ABS_MT_POSITION_Y:
         //mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH_MT;
-	break;
+        break;
     case ABS_MT_SLOT:
         mTypeB = true;
         mSlotID= value;
         slot = mTrack2Slot.indexOfValue(value);
         if(slot>=0){
-#if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
-            mTrackID = mTrack2Slot.keyAt(slot);
-            mProp.id = mTrackID;
-#else
             mProp.id = slot;
-#endif
         }
         break;
     case ABS_MT_TRACKING_ID:
@@ -596,16 +591,12 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
             if( mTypeB==false ) mSlotID = index;
             slot = index;
             LOGV("Slot=%d TRACKID=%d %08x,%08x",mSlotID,value,mLastBits.value,mCurrBits.value);
-        }else if((value==-1)&&mTypeB){//for TypeB
+        }else if( (value==-1) && mTypeB){//for TypeB
             const uint32_t pointerIndex = mTrack2Slot.indexOfValue(mSlotID);
             LOGV("clearbits %d %08x,%08x",pointerIndex,mLastBits.value,mCurrBits.value);
             mCurrBits.clearBit(pointerIndex);
         }
-#if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
-        mProp.id = mTrackID;
-#else
         mProp.id = slot;
-#endif
         break;
     default:break;
     }
@@ -721,13 +712,9 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         if(code == SYN_REPORT) mAxisFlags = 0;
 #endif
 
-#if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
-        slot = mTrack2Slot.indexOfKey(mProp.id);
-#else
         slot = mProp.id;
         if( mProp.id==-1 )// && ((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) )
             mProp.id = 0;
-#endif
         slot = slot>=0?slot:0;
         mPointerProps [slot] = mProp;
         mPointerCoords[slot] = mCoord;
