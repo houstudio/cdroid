@@ -98,9 +98,9 @@ int32_t InputInit() {
 #define SET_BIT(array,bit)    ((array)[(bit)/8] |= (1<<((bit)%8)))
 
 int32_t InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
-    int rc1,rc2,rcc,version,clock=1/*EV_CLK_MONO*/;
+    int rc1,rc2,rcc,version=-1,clock=1/*EV_CLK_MONO*/;
     memset(devinfo,0,sizeof(INPUTDEVICEINFO));
-    struct input_id id;
+    struct input_id id={0,0};
     rc1=ioctl(device, EVIOCGNAME(sizeof(devinfo->name) - 1),devinfo->name);
     rc2=ioctl(device, EVIOCGID, &id);
     rc2=ioctl(device,EVIOCGVERSION,&version);
