@@ -369,10 +369,6 @@ void GraphDevice::composeSurfaces(){
     }/*endif for wSurfaces.size*/
     GFXFlip(mPrimarySurface); 
     mLastComposeTime = SystemClock::uptimeMillis();
-    if( (View::mViewCount!=mLastViewCount) && View::VIEW_DEBUG){
-        LOGD("Total ViewCount %d",View::mViewCount);
-        mLastViewCount = View::mViewCount;
-    }
     mPendingCompose = 0;
 }
 }//end namespace

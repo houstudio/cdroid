@@ -35,7 +35,6 @@ private:
     int mFormat;
     int mComposing;
     int mPendingCompose;
-    int mLastViewCount;
     int mRotation;
     bool mQuitFlag;
     bool mShowFPS;
