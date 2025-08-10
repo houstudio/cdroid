@@ -218,7 +218,7 @@ public:
     inline bool hasMic() const { return mHasMic; }
     inline uint32_t getSources() const { return mSources; }
 
-    const MotionRange* getMotionRange(int32_t axis, uint32_t source) const;
+    MotionRange* getMotionRange(int32_t axis, uint32_t source);
 
     void addSource(uint32_t source);
     void addMotionRange(int32_t axis,uint32_t source,float min, float max,float flat,float fuzz,float resolution);

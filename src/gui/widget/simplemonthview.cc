@@ -170,8 +170,8 @@ void SimpleMonthView::setOnDayClickListener(OnDayClickListener listener){
 }
 
 bool SimpleMonthView::onTouchEvent(MotionEvent& event){
-    int x = (int) (event.getX() + 0.5f);
-    int y = (int) (event.getY() + 0.5f);
+    const int x = int(event.getX() + 0.5f);
+    const int y = int(event.getY() + 0.5f);
 
     const int action = event.getAction();
     int touchedItem,clickedDay;
@@ -301,7 +301,7 @@ void SimpleMonthView::onFocusChanged(bool gainFocus,int direction,Rect* previous
         // If we've gained focus through arrow keys, we should find the day closest
         // to the focus rect. If we've gained focus through forward/back, we should
         // focus on the selected day if there is one.
-        int offset = findDayOffset();
+        const int offset = findDayOffset();
         switch(direction) {
         case View::FOCUS_RIGHT: {
             int row = findClosestRow(previouslyFocusedRect);
@@ -365,8 +365,8 @@ int SimpleMonthView::findClosestColumn(const Rect*previouslyFocusedRect){
     } else if (mCellWidth == 0) {
         return 0; // There hasn't been a layout, so we can just choose the first column
     } else {
-        int centerX = previouslyFocusedRect->centerX() - mPaddingLeft;
-        int columnFromLeft = MathUtils::constrain(centerX / mCellWidth, 0, DAYS_IN_WEEK - 1);
+        const int centerX = previouslyFocusedRect->centerX() - mPaddingLeft;
+        const int columnFromLeft = MathUtils::constrain(centerX / mCellWidth, 0, DAYS_IN_WEEK - 1);
         return isLayoutRtl() ? DAYS_IN_WEEK - columnFromLeft - 1: columnFromLeft;
     }
 }
@@ -404,13 +404,13 @@ void SimpleMonthView::ensureFocusedDay(){
     mHighlightedDay = 1;
 }
 
-bool SimpleMonthView::isFirstDayOfWeek(int day){
+bool SimpleMonthView::isFirstDayOfWeek(int day)const{
     int offset = findDayOffset();
     return (offset + day - 1) % DAYS_IN_WEEK == 0;
 }
 
-bool SimpleMonthView::isLastDayOfWeek(int day) {
-    int offset = findDayOffset();
+bool SimpleMonthView::isLastDayOfWeek(int day)const{
+    const int offset = findDayOffset();
     return (offset + day) % DAYS_IN_WEEK == 0;
 }
 
@@ -446,8 +446,9 @@ void SimpleMonthView::drawDaysOfWeek(Canvas& canvas){
 
     // Text is vertically centered within the day of week height.
     //const int rowCenter = headerHeight + rowHeight / 2;
-    
-    canvas.set_color(0xFFFFFFFF);
+    const int color = mDayTextColor==nullptr?0xFFFFFFFF:
+        mDayTextColor->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),0);
+    canvas.set_color(color);
     canvas.move_to(0,headerHeight);
     canvas.line_to(mRight-mLeft,headerHeight);
     canvas.stroke();
@@ -463,7 +464,7 @@ void SimpleMonthView::drawDaysOfWeek(Canvas& canvas){
         } else {
             colCenterRtl = colCenter;
         }
-
+        int stateMask =0;
         std::string label = mDayOfWeekLabels[col];
         canvas.draw_text(rctxt,label,Gravity::CENTER);
         rctxt.offset(mCellWidth,0);
@@ -498,8 +499,8 @@ void SimpleMonthView::drawDays(Canvas& canvas){
             stateMask |= StateSet::VIEW_STATE_ENABLED;
         }
 
-        const bool isDayActivated = mActivatedDay == day;
-        const bool isDayHighlighted = mHighlightedDay == day;
+        const bool isDayActivated = (mActivatedDay == day);
+        const bool isDayHighlighted = (mHighlightedDay == day);
         canvas.set_color(0x8000FF00);
         if (isDayActivated) {
             stateMask |= StateSet::VIEW_STATE_ACTIVATED;

@@ -101,8 +101,8 @@ private:
     int findClosestRow(const Rect* previouslyFocusedRect);
     int findClosestColumn(const Rect*previouslyFocusedRect);
     void ensureFocusedDay();
-    bool isFirstDayOfWeek(int day);
-    bool isLastDayOfWeek(int day);
+    bool isFirstDayOfWeek(int day)const;
+    bool isLastDayOfWeek(int day)const;
 
     void drawMonth(Canvas& canvas);
     void drawDaysOfWeek(Canvas& canvas);

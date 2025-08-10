@@ -36,8 +36,6 @@
   #include <core/eventcodes.h>   
 #endif
 
-#define USE_TRACKINGID_AS_POINTERID 0
-
 using namespace std;
 namespace cdroid{
 
@@ -381,20 +379,20 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mAxisFlags = 0;
     mCorrectedDeviceClasses = mDeviceClasses;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
-    std::vector<InputDeviceInfo::MotionRange>&mr = mDeviceInfo.getMotionRanges();
-    for(int i=0;i<mr.size();i++){
-        InputDeviceInfo::MotionRange&range=mr.at(i);
+    std::vector<InputDeviceInfo::MotionRange>&axesRange = mDeviceInfo.getMotionRanges();
+    for(int i=0;i<axesRange.size();i++){
+        InputDeviceInfo::MotionRange&range=axesRange.at(i);
         const int axis = ABS2AXIS(range.axis);
         if(axis>=0)range.axis = axis;
-        range = mr.at(i);
+        range = axesRange.at(i);
     }
-    const InputDeviceInfo::MotionRange*rangeX = mDeviceInfo.getMotionRange(MotionEvent::AXIS_X,0);
+    InputDeviceInfo::MotionRange*rangeX = mDeviceInfo.getMotionRange(MotionEvent::AXIS_X,0);
     Display display =  WindowManager::getInstance().getDefaultDisplay();
     mTPWidth  = ISRANGEVALID(rangeX) ? (rangeX->max-rangeX->min) : mScreenWidth;
     mMinX = ISRANGEVALID(rangeX) ? rangeX->min : 0;
     mMaxX = ISRANGEVALID(rangeX) ? rangeX->max : mScreenWidth;
 
-    const InputDeviceInfo::MotionRange*rangeY = mDeviceInfo.getMotionRange(MotionEvent::AXIS_Y,0);
+    InputDeviceInfo::MotionRange*rangeY = mDeviceInfo.getMotionRange(MotionEvent::AXIS_Y,0);
     mTPHeight = ISRANGEVALID(rangeY) ? (rangeY->max-rangeY->min) : mScreenHeight;
     mMinY = ISRANGEVALID(rangeY) ? rangeY->min : 0;
     mMaxY = ISRANGEVALID(rangeY) ? rangeY->max : mScreenHeight;
@@ -410,6 +408,8 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
         mMaxX = mPrefs.getInt(section,"maxX",mMaxX);
         mMinY = mPrefs.getInt(section,"minY",mMinY);
         mMaxY = mPrefs.getInt(section,"maxY",mMaxY);
+        if(rangeX){rangeX->min=mMinX;rangeX->max=mMaxX;}
+        if(rangeY){rangeY->min=mMinY;rangeY->max=mMaxY;}
         mInvertX = mPrefs.getBool(section,"invertX",false);
         mInvertY = mPrefs.getBool(section,"invertY",false);
         mSwitchXY= mPrefs.getBool(section,"switchXY",false);
@@ -564,25 +564,22 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     case ABS_X:
     case ABS_Y:
     case ABS_Z:
-        mSlotID = 0 ; mTrackID = 0;
+        mSlotID = 0 ;
+        mTrackID = 0;
         mProp.id= 0;
+        /*Single Touch has only one finger,so slotid trackid always be zero*/
         mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
         break;
     case ABS_MT_POSITION_X:
     case ABS_MT_POSITION_Y:
         //mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH_MT;
-	break;
+        break;
     case ABS_MT_SLOT:
         mTypeB = true;
         mSlotID= value;
         slot = mTrack2Slot.indexOfValue(value);
         if(slot>=0){
-#if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
-            mTrackID = mTrack2Slot.keyAt(slot);
-            mProp.id = mTrackID;
-#else
             mProp.id = slot;
-#endif
         }
         break;
     case ABS_MT_TRACKING_ID:
@@ -594,16 +591,12 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
             if( mTypeB==false ) mSlotID = index;
             slot = index;
             LOGV("Slot=%d TRACKID=%d %08x,%08x",mSlotID,value,mLastBits.value,mCurrBits.value);
-        }else if((value==-1)&&mTypeB){//for TypeB
+        }else if( (value==-1) && mTypeB){//for TypeB
             const uint32_t pointerIndex = mTrack2Slot.indexOfValue(mSlotID);
             LOGV("clearbits %d %08x,%08x",pointerIndex,mLastBits.value,mCurrBits.value);
             mCurrBits.clearBit(pointerIndex);
         }
-#if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
-        mProp.id = mTrackID;
-#else
         mProp.id = slot;
-#endif
         break;
     default:break;
     }
@@ -660,7 +653,13 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         case BTN_TOUCH :
         case BTN_STYLUS:
             mActionButton = MotionEvent::BUTTON_PRIMARY;
-            if(value)mCurrBits.markBit(0);else mCurrBits.clearBit(0);
+            if(value){
+                LOGE_IF(mCurrBits.count(),"BTN_TOUCH has maked as down");
+                mCurrBits.markBit(0);
+            }else {
+                LOGE_IF(mCurrBits.isEmpty(),"BTN_TOUCH has maked as up");
+                mCurrBits.clearBit(0);
+            }
             mAxisFlags |= 0x80000000;
             if(value){
                 mMoveTime = mDownTime = sec * 1000 + usec/1000;
@@ -713,13 +712,9 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         if(code == SYN_REPORT) mAxisFlags = 0;
 #endif
 
-#if defined(USE_TRACKINGID_AS_POINTERID)&&USE_TRACKINGID_AS_POINTERID
-        slot = mTrack2Slot.indexOfKey(mProp.id);
-#else
         slot = mProp.id;
         if( mProp.id==-1 )// && ((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) )
             mProp.id = 0;
-#endif
         slot = slot>=0?slot:0;
         mPointerProps [slot] = mProp;
         mPointerCoords[slot] = mCoord;
@@ -862,15 +857,15 @@ void InputDeviceInfo::initialize(int32_t id, int32_t generation, int32_t control
     mMotionRanges.clear();
 }
 
-const InputDeviceInfo::MotionRange* InputDeviceInfo::getMotionRange(int32_t axis, uint32_t source) const {
+InputDeviceInfo::MotionRange* InputDeviceInfo::getMotionRange(int32_t axis, uint32_t source){
     const size_t numRanges = mMotionRanges.size();
     for (size_t i = 0; i < numRanges; i++) {
-        const MotionRange* range = mMotionRanges.data()+i;
+        MotionRange* range = mMotionRanges.data()+i;
         if (range->axis == axis && range->source == source) {
             return range;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 void InputDeviceInfo::addSource(uint32_t source) {
