@@ -200,24 +200,6 @@ static inline bool IsColorBlack(Cairo::RefPtr<ImageSurface>img,int i,int j) {
     return (r < 128 && g < 128 && b < 128);
 }
 
-int NinePatch::analyzeEdge(Cairo::RefPtr<ImageSurface>img, int fixedIndex, int start, int end, bool isBottom) {
-    uint8_t *data=(uint8_t*)img->get_data();
-    const int delta=end>start?1:-1;
-    
-    for (int i = start; i < end; i+=delta) {
-        uint32_t* pixel;
-        if (isBottom) {
-            pixel = (uint32_t*)(data+img->get_stride()*i+fixedIndex*4);
-        } else {
-            pixel = (uint32_t*)(data+img->get_stride()*fixedIndex+i*4);
-        }
-        if (*pixel!=0) {
-            return i;
-        }
-    }
-    return 0;
-}
-
 int NinePatch::getCornerRadius(Cairo::RefPtr<ImageSurface> bitmap,int start,int step) {
     const int width = bitmap->get_width();
     const int height = bitmap->get_height();
@@ -233,7 +215,7 @@ int NinePatch::getCornerRadius(Cairo::RefPtr<ImageSurface> bitmap,int start,int 
     return cornerRadius;
 }
 
-Insets NinePatch::getOpticalInsets(Cairo::RefPtr<ImageSurface>bitmap) {
+Insets NinePatch::getOpticalInsets(Cairo::RefPtr<ImageSurface>bitmap) const{
     Insets insets;
     const int width = bitmap->get_width();
     const int height= bitmap->get_height();

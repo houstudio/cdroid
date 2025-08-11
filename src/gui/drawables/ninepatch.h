@@ -41,9 +41,8 @@ private:
     void getResizeArea();
     void getFactor(int width, int height, double& factorX, double& factorY);
     void updateCachedImage(int width, int height,Cairo::Context*);
-    int analyzeEdge(Cairo::RefPtr<Cairo::ImageSurface>img, int fixedIndex, int start, int end, bool isBottom);
     int getCornerRadius(Cairo::RefPtr<Cairo::ImageSurface> bitmap,int start,int step);
-    Insets getOpticalInsets(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
+    Insets getOpticalInsets(Cairo::RefPtr<Cairo::ImageSurface>bitmap)const;
 public:
     NinePatch(Cairo::RefPtr<Cairo::ImageSurface> image);
     NinePatch(cdroid::Context*ctx,const std::string&resid);
