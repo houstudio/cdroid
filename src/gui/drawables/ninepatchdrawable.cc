@@ -33,6 +33,7 @@ NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
     mMutated = false;
     mFilterBitmap = false;
     mTintFilter = nullptr;
+    mTargetDensity=160;
     mOutlineRadius=0.f;
     mPadding.setEmpty();
     computeBitmapSize();
@@ -40,21 +41,11 @@ NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
 
 NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid):NinePatchDrawable(){
     mNinePatchState->setBitmap(ctx,resid);
-    mAlpha = 255;
-    mOutlineRadius=0.f;
-    mMutated = false;
-    mFilterBitmap = false;
-    mTintFilter = nullptr;
     computeBitmapSize();
 }
 
 NinePatchDrawable::NinePatchDrawable(RefPtr<ImageSurface>bmp):NinePatchDrawable(){
     mNinePatchState->setBitmap(bmp);
-    mAlpha = 255;
-    mOutlineRadius=0.f;
-    mMutated = false;
-    mFilterBitmap = false;
-    mTintFilter = nullptr;
     computeBitmapSize();
 }
 
@@ -68,7 +59,7 @@ void NinePatchDrawable::computeBitmapSize(){
     const RefPtr<ImageSurface> ninePatch = mNinePatchState->mNinePatch->mImage;
 
     const int sourceDensity =160;// ninePatch.getDensity();
-    const int targetDensity =160;// mTargetDensity;
+    const int targetDensity = mTargetDensity;
 
     const Insets sourceOpticalInsets = mNinePatchState->mOpticalInsets;
     if (sourceOpticalInsets != Insets::NONE) {
@@ -141,7 +132,56 @@ void NinePatchDrawable::getOutline(Outline& outline) {
     if (bounds.empty()) {
         return;
     }
-    LOGD("TODO");
+    // Improve getOutline implementation to mimic Android NinePatchDrawable behavior:
+    // 1. Prefer NinePatch's outlineRect/outlineRadius if available
+    // 2. Otherwise, fallback to opticalInsets
+    // 3. If neither is available, fallback to Drawable::getOutline
+
+    // 1. Prefer NinePatch outlineRect/outlineRadius
+    if (mNinePatchState && mNinePatchState->mNinePatch) {
+        Rect outlineRect = mNinePatchState->mNinePatch->getOutlineRect();
+        float outlineRadius = mNinePatchState->mNinePatch->getOutlineRadius();
+        if (!outlineRect.empty()) {
+            //must be scaled by density
+            const int sourceDensity = 160;
+            const int targetDensity = mTargetDensity ? mTargetDensity : 160;
+            Rect scaledOutlineRect;
+            scaledOutlineRect.left   = Drawable::scaleFromDensity(outlineRect.left,   sourceDensity, targetDensity, false);
+            scaledOutlineRect.top    = Drawable::scaleFromDensity(outlineRect.top,    sourceDensity, targetDensity, false);
+            scaledOutlineRect.width  = Drawable::scaleFromDensity(outlineRect.width,  sourceDensity, targetDensity, false);
+            scaledOutlineRect.height = Drawable::scaleFromDensity(outlineRect.height, sourceDensity, targetDensity, false);
+            const float scaledRadius = Drawable::scaleFromDensity(outlineRadius, sourceDensity, targetDensity, true);
+
+            outline.setRoundRect(
+                bounds.left + scaledOutlineRect.left,
+                bounds.top + scaledOutlineRect.top,
+                bounds.width-scaledOutlineRect.left-scaledOutlineRect.width,
+                bounds.height-scaledOutlineRect.top-scaledOutlineRect.height,
+                scaledRadius
+            );
+            outline.setAlpha(getAlpha() / 255.0f);
+            return;
+        }
+    }
+
+    // 2. Otherwise, fallback to opticalInsets
+    if (mNinePatchState != nullptr) {
+        Insets insets = mNinePatchState->mOpticalInsets;
+        if (insets != Insets::NONE) {
+            outline.setRoundRect(
+                bounds.left + insets.left,
+                bounds.top + insets.top,
+                bounds.width - insets.left - insets.right,
+                bounds.height - insets.top - insets.bottom,
+                mOutlineRadius
+            );
+            outline.setAlpha(getAlpha() / 255.0f);
+            return;
+        }
+    }
+
+    // 3. If neither is available, fallback to Drawable::getOutline
+    Drawable::getOutline(outline);
     if (mNinePatchState != nullptr/*&& mOutlineInsets != nullptr*/) {
         //NinePatch.InsetStruct insets =mNinePatchState.mNinePatch.getBitmap().getNinePatchInsets();
         Insets insets = mNinePatchState->mOpticalInsets;
@@ -155,7 +195,6 @@ void NinePatchDrawable::getOutline(Outline& outline) {
             return;
         }
     }
-    Drawable::getOutline(outline);
 }
 
 int NinePatchDrawable::getAlpha()const{

@@ -57,6 +57,8 @@ public:
     Rect getPadding()const;
     Rect getOpticalInsets()const;
     int getRadius()const;
+    Rect getOutlineRect() const;
+    int getOutlineRadius() const;
 };
 }/*endof namespace*/
 #endif

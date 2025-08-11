@@ -209,7 +209,6 @@ int NinePatch::analyzeEdge(Cairo::RefPtr<ImageSurface>img, int fixedIndex, int s
         } else {
             pixel = (uint32_t*)(data+img->get_stride()*fixedIndex+i*4);
         }
-
         if (*pixel!=0) {
             return i;
         }
@@ -220,33 +219,34 @@ int NinePatch::analyzeEdge(Cairo::RefPtr<ImageSurface>img, int fixedIndex, int s
 int NinePatch::getCornerRadius(Cairo::RefPtr<ImageSurface> bitmap,int start,int step) {
     const int width = bitmap->get_width();
     const int height = bitmap->get_height();
-
     int cornerRadius = 0;
-
     const int end=std::min(width, height);
     for (int i = start; i < end; i+=step) {
         uint32_t* pixel = (uint32_t*)(bitmap->get_data()+bitmap->get_stride()*i+ i*4);
-
         if (*pixel != 0) {
             break;
         }
         cornerRadius++;
     }
-
     return cornerRadius;
 }
 
 Rect NinePatch::getOpticalInsets(Cairo::RefPtr<ImageSurface>bitmap) {
-    Rect insets;
-    int width = bitmap->get_width();
-    int height = bitmap->get_height();
-    //TODO insets is TODO
-    insets.width = 0;//analyzeEdge(bitmap, width - 2, 1, height-2, false); // 右侧
-    insets.height = 0;//analyzeEdge(bitmap, height - 2, 1, width-2, true); // 底部
+    Rect insets={0,0,0,0};
+    const int width = bitmap->get_width();
+    const int height = bitmap->get_height();
 
-    insets.left = 0;
-    insets.top = 0;
+    // Left: scan from left edge (x=0) down (y=1..height-2)
+    insets.left = analyzeEdge(bitmap, 0, 1, height - 1, false);
 
+    // Top: scan from top edge (y=0) right (x=1..width-2)
+    insets.top = analyzeEdge(bitmap, 0, 1, width - 1, true);
+
+    // Right: scan from right edge (x=width-1) down (y=1..height-2)
+    insets.width = analyzeEdge(bitmap, width - 1, 1, height - 1, false);
+
+    // Bottom: scan from bottom edge (y=height-1) right (x=1..width-2)
+    insets.height = analyzeEdge(bitmap, width - 1, 1, width - 1, true);
     return insets;
 }
 
@@ -443,4 +443,17 @@ void NinePatch::updateCachedImage(int width, int height,Cairo::Context*painterIn
          Rect{x1 + offsetX, y1 + offsetY, widthResize, heightResize}, painter);
 }
 
+Rect NinePatch::getOutlineRect() const {
+    // 如果有专用的 mOutlineRect，优先返回
+    // return mOutlineRect;
+    // 否则用内容区或 padding 作为 fallback
+    if (!mContentArea.empty())
+        return mContentArea;
+    else
+        return getPadding();
+}
+
+int NinePatch::getOutlineRadius() const {
+    return mRadius;
+}
 }/*endof namespace*/

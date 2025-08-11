@@ -202,7 +202,7 @@ void LogMessage::messageSave(const char* format, ...) {
         va_end(arglist);
         if (nbrcharacters <= 0) {
             stream_ << '"' << format << '"';
-        } else if (nbrcharacters > kMaxMessageSize) {
+        } else if (nbrcharacters >= kMaxMessageSize) {
             stream_  << message << kTruncatedWarningText;
         } else {
             stream_ << message;
