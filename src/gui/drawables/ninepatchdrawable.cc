@@ -330,8 +330,7 @@ void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
                      ": <nine-patch> requires a valid 9-patch source image");
             }
         }
-        opticalInsets = state->mNinePatch->getOpticalInsets();
-        state->mOpticalInsets = Insets::of(opticalInsets);
+        state->mOpticalInsets = state->mNinePatch->getOpticalInsets();
     }
 
     state->mAutoMirrored = a.getBoolean("autoMirrored", state->mAutoMirrored);

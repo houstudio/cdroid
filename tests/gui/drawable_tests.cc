@@ -33,6 +33,7 @@ public:
         auto surface=Cairo::ImageSurface::create(mBuffer,Cairo::Surface::Format::ARGB32,mScreenWidth,mScreenHeight,mPitch);
         printf("mPrimarySurface=%p@%p size=%dx%dx%d\r\n",mPrimarySurface,&mBuffer,mScreenWidth,mScreenHeight,mPitch);
 
+        rm=new Assets("cdroid.pak");
         ctx=new Canvas(surface);//GraphDevice::getInstance().createContext(800,600);
         sImage=ImageSurface::create(Surface::Format::ARGB32,400,400);
         RefPtr<Gradient>pat=LinearGradient::create(0,0,400,400);
@@ -125,19 +126,21 @@ TEST_F(DRAWABLE,bitmapalpha){
 }
 
 TEST_F(DRAWABLE,ninepatch1){
-    auto img = ImageDecoder::loadImage(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/paopao1.9.png");
-    NinePatchDrawable *d=new NinePatchDrawable(img);
+    NinePatchDrawable *d = (NinePatchDrawable*)rm->getDrawable("@mipmap/btn_default_transparent_normal.9.png");
+    Outline outline,outline2;
+    d->setBounds(0,0,d->getIntrinsicWidth(),d->getIntrinsicHeight());
+    d->getOutline(outline);
     d->setBounds(50,50,600,200);
+    d->getOutline(outline2);
     d->draw(*ctx);
     delete d;
 }
 
 TEST_F(DRAWABLE,ninepatch2){
-    auto img = ImageDecoder::loadImage(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/btn_normal.9.png");//paopao1.9.png");
+    NinePatchDrawable*d = (NinePatchDrawable*)rm->getDrawable("@mipmap/btn_default_transparent_normal.9.png");
     ctx->set_source_rgb(.4,.4,.0);
     ctx->rectangle(0,0,700,300);
     ctx->fill();
-    NinePatchDrawable *d=new NinePatchDrawable(img);
     d->setBounds(50,50,600,200);
     d->draw(*ctx);
     delete d;

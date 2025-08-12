@@ -18,7 +18,7 @@
 #ifndef __NINE_PATCH_H__
 #define __NINE_PATCH_H__
 #include <core/canvas.h>
-
+#include <core/insets.h>
 namespace cdroid{
 class Context;
 class NinePatch {
@@ -29,7 +29,7 @@ private:
     int mRadius;
     Rect mContentArea;
     Rect mPadding;
-    Rect mOpticalInsets;
+    Insets mOpticalInsets;
     float mAlpha;
     std::vector<std::pair< int, int >>mResizeDistancesY;
     std::vector<std::pair< int, int >>mResizeDistancesX;
@@ -41,9 +41,8 @@ private:
     void getResizeArea();
     void getFactor(int width, int height, double& factorX, double& factorY);
     void updateCachedImage(int width, int height,Cairo::Context*);
-    int analyzeEdge(Cairo::RefPtr<Cairo::ImageSurface>img, int fixedIndex, int start, int end, bool isBottom);
     int getCornerRadius(Cairo::RefPtr<Cairo::ImageSurface> bitmap,int start,int step);
-    Rect getOpticalInsets(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
+    Insets getOpticalInsets(Cairo::RefPtr<Cairo::ImageSurface>bitmap)const;
 public:
     NinePatch(Cairo::RefPtr<Cairo::ImageSurface> image);
     NinePatch(cdroid::Context*ctx,const std::string&resid);
@@ -55,7 +54,7 @@ public:
     void setImageSize(int width, int height);
     Rect getContentArea(int  widht, int  height);
     Rect getPadding()const;
-    Rect getOpticalInsets()const;
+    Insets getOpticalInsets()const;
     int getRadius()const;
     Rect getOutlineRect() const;
     int getOutlineRadius() const;

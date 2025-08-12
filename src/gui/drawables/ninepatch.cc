@@ -148,7 +148,7 @@ Rect NinePatch::getPadding()const{
     return mPadding;
 }
 
-Rect NinePatch::getOpticalInsets()const{
+Insets NinePatch::getOpticalInsets()const{
     return mOpticalInsets;
 }
 
@@ -200,22 +200,6 @@ static inline bool IsColorBlack(Cairo::RefPtr<ImageSurface>img,int i,int j) {
     return (r < 128 && g < 128 && b < 128);
 }
 
-int NinePatch::analyzeEdge(Cairo::RefPtr<ImageSurface>img, int fixedIndex, int start, int end, bool isBottom) {
-    uint8_t *data=(uint8_t*)img->get_data();
-    for (int i = start; i < end; i++) {
-        uint32_t* pixel;
-        if (isBottom) {
-            pixel = (uint32_t*)(data+img->get_stride()*i+fixedIndex*4);
-        } else {
-            pixel = (uint32_t*)(data+img->get_stride()*fixedIndex+i*4);
-        }
-        if (*pixel!=0) {
-            return i;
-        }
-    }
-    return 0;
-}
-
 int NinePatch::getCornerRadius(Cairo::RefPtr<ImageSurface> bitmap,int start,int step) {
     const int width = bitmap->get_width();
     const int height = bitmap->get_height();
@@ -231,22 +215,75 @@ int NinePatch::getCornerRadius(Cairo::RefPtr<ImageSurface> bitmap,int start,int 
     return cornerRadius;
 }
 
-Rect NinePatch::getOpticalInsets(Cairo::RefPtr<ImageSurface>bitmap) {
-    Rect insets={0,0,0,0};
+Insets NinePatch::getOpticalInsets(Cairo::RefPtr<ImageSurface>bitmap) const{
+    Insets insets;
     const int width = bitmap->get_width();
-    const int height = bitmap->get_height();
+    const int height= bitmap->get_height();
+    const int stride= bitmap->get_stride();
+    uint8_t* data = bitmap->get_data();
+    for (int x = 1; x < width-1; ++x) {/*LEFT*/
+        bool opaqueFound = false;
+        for (int y = 1; y < height-1; ++y) {
+            uint32_t* pixel = reinterpret_cast<uint32_t*>(data + y * stride + x * 4);
+            uint8_t alpha = (*pixel >> 24) & 0xFF;
+            if (alpha != 0) {
+                opaqueFound = true;
+                break;
+            }
+        }
+        if (opaqueFound) {
+            insets.left = x-1;
+            break;
+        }
+    }
 
-    // Left: scan from left edge (x=0) down (y=1..height-2)
-    insets.left = analyzeEdge(bitmap, 0, 1, height - 1, false);
+    for (int x = width - 2; x >= 1; --x) {/*RIGHT*/
+        bool opaqueFound = false;
+        for (int y = 0; y < height; ++y) {
+            uint32_t* pixel = reinterpret_cast<uint32_t*>(data + y * stride + x * 4);
+            uint8_t alpha = (*pixel >> 24) & 0xFF;
+            if (alpha != 0) {
+                opaqueFound = true;
+                break;
+            }
+        }
+        if (opaqueFound) {
+            insets.right = width - 2 - x;
+            break;
+        }
+    }
 
-    // Top: scan from top edge (y=0) right (x=1..width-2)
-    insets.top = analyzeEdge(bitmap, 0, 1, width - 1, true);
+    for (int y = 1; y < height-1; ++y) {/*TOP*/
+        bool opaqueFound = false;
+        for (int x = 1; x < width-1; ++x) {
+            uint32_t* pixel = reinterpret_cast<uint32_t*>(data + y * stride + x * 4);
+            uint8_t alpha = (*pixel >> 24) & 0xFF;
+            if (alpha != 0) {
+                opaqueFound = true;
+                break;
+            }
+        }
+        if (opaqueFound) {
+            insets.top = y-1;
+            break;
+        }
+    }
 
-    // Right: scan from right edge (x=width-1) down (y=1..height-2)
-    insets.width = analyzeEdge(bitmap, width - 1, 1, height - 1, false);
-
-    // Bottom: scan from bottom edge (y=height-1) right (x=1..width-2)
-    insets.height = analyzeEdge(bitmap, width - 1, 1, width - 1, true);
+    for (int y = height - 2; y >= 1; --y) {/*BOTTOM*/
+        bool opaqueFound = false;
+        for (int x = 0; x < width; ++x) {
+            uint32_t* pixel = reinterpret_cast<uint32_t*>(data + y * stride + x * 4);
+            uint8_t alpha = (*pixel >> 24) & 0xFF;
+            if (alpha != 0) {
+                opaqueFound = true;
+                break;
+            }
+        }
+        if (opaqueFound) {
+            insets.bottom = height - 2 - y;
+            break;
+        }
+    }
     return insets;
 }
 
@@ -254,7 +291,7 @@ Rect NinePatch::getContentArea() {
     int  j = mImage->get_height() - 1;
     int  left = 0 ,  right = 0;
 
-    for(int  i = 0; i < mImage->get_width() ; i++) {
+    for(int  i = 1; i < mImage->get_width()-1 ; i++) {
         if (IsColorBlack(mImage,i, j) && left == 0) {
             left = i;
         } else {
@@ -268,7 +305,7 @@ Rect NinePatch::getContentArea() {
 
     int  i = mImage->get_width() - 1;
     int  top =0 ,  bot = 0;
-    for(int  j = 0; j < mImage->get_height() ; j++) {
+    for(int  j = 1; j < mImage->get_height()-1 ; j++) {
         if (IsColorBlack(mImage,i, j)&& top == 0) {
             top = j;
         } else {
