@@ -18,6 +18,8 @@
 
 #ifndef __TIME_PICKER_H__
 #define __TIME_PICKER_H__
+#include <string>
+#include <vector>
 #include <widget/framelayout.h>
 namespace cdroid{
 class TimePicker:public FrameLayout {

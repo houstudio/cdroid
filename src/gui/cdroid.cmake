@@ -226,13 +226,16 @@ if(ENABLE_DAYTIME_WIDGETS)
     list(APPEND CDROID_SOURCES
         widget/numberictextview.cc
         widget/yearpickerview.cc
-        widget/textinputtimepickerview.cc
         widget/datepicker.cc
         widget/daypickerview.cc
         widget/daypickerviewpager.cc
         widget/daypickerpageradapter.cc
         widget/daypickerspinnerdelegate.cc
         widget/daypickercalendardelegate.cc
+        #widget/textinputtimepickerview.cc
+        widget/timepicker.cc
+        widget/timepickerclockdelegate.cc
+        widget/timepickerspinnerdelegate.cc
         widget/simplemonthview.cc
         widget/explorebytouchhelper.cc
         widget/calendarview.cc
