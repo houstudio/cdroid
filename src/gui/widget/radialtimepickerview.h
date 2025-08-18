@@ -26,13 +26,13 @@ private:
 
     static constexpr int ANIM_DURATION_NORMAL = 500;
     static constexpr int ANIM_DURATION_TOUCH = 60;
-    static constexpr int SNAP_PREFER_30S_MAP[361];
+    //static constexpr int SNAP_PREFER_30S_MAP[361];
     static constexpr int NUM_POSITIONS = 12;
 
     /** "Something is wrong" color used when a color attribute is missing. */
     static constexpr int MISSING_COLOR = Color::MAGENTA;
 private:
-    final String[] mHours12Texts = new String[12];
+    /*final String[] mHours12Texts = new String[12];
     final String[] mOuterHours24Texts = new String[12];
     final String[] mInnerHours24Texts = new String[12];
     final String[] mMinutesTexts = new String[12];
@@ -40,7 +40,7 @@ private:
     final Paint[] mPaint = new Paint[2];
     final Paint mPaintCenter = new Paint();
     final Paint[] mPaintSelector = new Paint[3];
-    final Paint mPaintBackground = new Paint();
+    final Paint mPaintBackground = new Paint();*/
 
     Typeface* mTypeface;
 

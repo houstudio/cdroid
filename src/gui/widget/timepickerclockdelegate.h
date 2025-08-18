@@ -93,6 +93,8 @@ private:
     static int lastIndexOfAny(const std::string& str, const std::string& any);
     void setCurrentItemShowing(int index, bool animateCircle);
     void setAmOrPm(int amOrPm);
+    void onViewClick(View& v);
+    void onViewFocusChange(View& v, bool focused);
 public:
     TimePickerClockDelegate(TimePicker* delegator, Context* context,const AttributeSet& attrs);
 
