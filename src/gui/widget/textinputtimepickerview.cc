@@ -3,6 +3,8 @@
 #include <core/textutils.h>
 #include <core/mathutils.h>
 #include <widget/textinputtimepickerview.h>
+#include <widget/timepicker.h>
+#include <widget/timepickerclockdelegate.h>
 namespace cdroid {
 
 DECLARE_WIDGET(TextInputTimePickerView);
@@ -49,26 +51,27 @@ TextInputTimePickerView::TextInputTimePickerView(Context* context,const Attribut
             parseAndSetMinuteInternal(editable.toString());
         }
     });
-
+    */
     mAmPmSpinner = (Spinner*)findViewById(R::id::am_pm_spinner);
-    final String[] amPmStrings = TimePicker.getAmPmStrings(context);
-    ArrayAdapter<CharSequence> adapter = new ArrayAdapter<CharSequence>(context, R.layout.simple_spinner_dropdown_item);
+    std::vector<std::string> amPmStrings = TimePicker::getAmPmStrings(context);
+    ArrayAdapter<std::string>* adapter = new ArrayAdapter<std::string>(context, "@cdroid:layout/simple_spinner_dropdown_item",0);
     adapter->add(TimePickerClockDelegate::obtainVerbatim(amPmStrings[0]));
     adapter->add(TimePickerClockDelegate::obtainVerbatim(amPmStrings[1]));
     mAmPmSpinner->setAdapter(adapter);
-    mAmPmSpinner->setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-        @Override
-        public void onItemSelected(AdapterView& adapterView, View& view, int position, long id) {
-            if (position == 0) {
-                mListener.onValueChanged(AMPM, AM);
-            } else {
-                mListener.onValueChanged(AMPM, PM);
-            }
+    mAdapter = adapter;
+    AdapterView::OnItemSelectedListener sl;
+    sl.onItemSelected=[this](AdapterView& adapterView, View& view, int position, long id){
+        if (position == 0) {
+            mListener/*.onValueChanged*/(AMPM, AM);
+        } else {
+            mListener/*.onValueChanged*/(AMPM, PM);
         }
+    };
+    mAmPmSpinner->setOnItemSelectedListener(sl);
+}
 
-        @Override
-        public void onNothingSelected(AdapterView& adapterView) {}
-    });*/
+TextInputTimePickerView::~TextInputTimePickerView(){
+    delete mAdapter;
 }
 
 void TextInputTimePickerView::setListener(const OnValueTypedListener& listener) {

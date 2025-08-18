@@ -23,13 +23,13 @@ private:
     TextView* mErrorLabel;
     TextView* mHourLabel;
     TextView* mMinuteLabel;
-
+    Adapter* mAdapter;
     bool mIs24Hour;
     bool mHourFormatStartsAtZero;
-    OnValueTypedListener mListener;
-
     bool mErrorShowing;
     bool mTimeSet;
+    OnValueTypedListener mListener;
+
 private:
     void setError(bool enabled);
 
@@ -41,7 +41,7 @@ private:
     int getHourOfDayFromLocalizedHour(int localizedHour);
 public:
     TextInputTimePickerView(Context* context,const AttributeSet& attrs);
-
+    ~TextInputTimePickerView()override;
     void setListener(const OnValueTypedListener& listener);
 
     void setHourFormat(int maxCharLength);

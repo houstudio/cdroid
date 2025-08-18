@@ -60,7 +60,7 @@ public:
     int getMinute() override;
 
     void setIs24Hour(bool is24Hour);
-    bool is24Hour() override;
+    bool is24Hour()override;
 
     void setEnabled(bool enabled) override;
     bool isEnabled() const override;

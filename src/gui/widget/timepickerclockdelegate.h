@@ -3,6 +3,7 @@
 #include <core/calendar.h>
 #include <widget/imagebutton.h>
 #include <widget/radiobutton.h>
+#include <widget/timepicker.h>
 #include <widget/numberictextview.h>
 namespace cdroid{
 class RadialTimePickerView;

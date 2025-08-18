@@ -15,7 +15,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-# if 10
 #include <core/mathutils.h>
 #include <widget/timepicker.h>
 #include <widget/timepickerclockdelegate.h>
@@ -272,6 +271,5 @@ AutofillValue TimePicker::getAutofillValue() {
     return isEnabled() ? mDelegate->getAutofillValue() : null;
 }
 #endif
-}
-#endif
+}/*endof namespace*/
 

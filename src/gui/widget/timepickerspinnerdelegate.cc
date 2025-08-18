@@ -1,4 +1,5 @@
 #if 0
+#include <widget/R.h>
 #include <widget/timepickerspinnerdelegate.h>
 namespace cdroid{
 
@@ -6,36 +7,32 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
     :AbstractTimePickerDelegate(delegator, context){
 
     // process style attributes
-    final TypedArray a = mContext.obtainStyledAttributes(
-            attrs, R.styleable.TimePicker, defStyleAttr, defStyleRes);
-    final int layoutResourceId = a.getString("legacyLayout", R.layout.time_picker_legacy);
-    a.recycle();
+    //final TypedArray a = mContext.obtainStyledAttributes(attrs, R.styleable.TimePicker, defStyleAttr, defStyleRes);
+    const std::string layoutResourceId = attrs.getString("legacyLayout", "cdroid:layout/time_picker_legacy");
 
-    final LayoutInflater inflater = LayoutInflater.from(mContext);
-    final View view = inflater.inflate(layoutResourceId, mDelegator, true);
+    LayoutInflater* inflater = LayoutInflater::from(mContext);
+    View* view = inflater->inflate(layoutResourceId, mDelegator, true);
     view->setSaveFromParentEnabled(false);
 
     // hour
-    mHourSpinner = delegator.findViewById(R.id.hour);
-    mHourSpinner.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-        public void onValueChange(NumberPicker spinner, int oldVal, int newVal) {
-            updateInputState();
-            if (!is24Hour()) {
-                if ((oldVal == HOURS_IN_HALF_DAY - 1 && newVal == HOURS_IN_HALF_DAY) ||
-                        (oldVal == HOURS_IN_HALF_DAY && newVal == HOURS_IN_HALF_DAY - 1)) {
-                    mIsAm = !mIsAm;
-                    updateAmPmControl();
-                }
+    mHourSpinner = delegator->findViewById(R::id::hour);
+    mHourSpinner->setOnValueChangedListener([this](NumberPicker& spinner, int oldVal, int newVal) {
+        updateInputState();
+        if (!is24Hour()) {
+            if ((oldVal == HOURS_IN_HALF_DAY - 1 && newVal == HOURS_IN_HALF_DAY) ||
+                    (oldVal == HOURS_IN_HALF_DAY && newVal == HOURS_IN_HALF_DAY - 1)) {
+                mIsAm = !mIsAm;
+                updateAmPmControl();
             }
-            onTimeChanged();
         }
+        onTimeChanged();
     });
-    mHourSpinnerInput = mHourSpinner->findViewById(R::id::numberpicker_input);
+    mHourSpinnerInput = (EditText*)mHourSpinner->findViewById(R::id::numberpicker_input);
     //mHourSpinnerInput->setImeOptions(EditorInfo.IME_ACTION_NEXT);
 
     // divider (only for the new widget style)
     mDivider = mDelegator->findViewById(R::id::divider);
-    if (mDivider != null) {
+    if (mDivider != nullptr) {
         setDividerText();
     }
 
@@ -44,49 +41,45 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
     mMinuteSpinner->setMinValue(0);
     mMinuteSpinner->setMaxValue(59);
     mMinuteSpinner->setOnLongPressUpdateInterval(100);
-    mMinuteSpinner->setFormatter(NumberPicker.getTwoDigitFormatter());
-    mMinuteSpinner->setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-        public void onValueChange(NumberPicker spinner, int oldVal, int newVal) {
-            updateInputState();
-            int minValue = mMinuteSpinner->getMinValue();
-            int maxValue = mMinuteSpinner->getMaxValue();
-            if (oldVal == maxValue && newVal == minValue) {
-                int newHour = mHourSpinner->getValue() + 1;
-                if (!is24Hour() && newHour == HOURS_IN_HALF_DAY) {
-                    mIsAm = !mIsAm;
-                    updateAmPmControl();
-                }
-                mHourSpinner->setValue(newHour);
-            } else if (oldVal == minValue && newVal == maxValue) {
-                int newHour = mHourSpinner->getValue() - 1;
-                if (!is24Hour() && newHour == HOURS_IN_HALF_DAY - 1) {
-                    mIsAm = !mIsAm;
-                    updateAmPmControl();
-                }
-                mHourSpinner->setValue(newHour);
+    //mMinuteSpinner->setFormatter(NumberPicker::getTwoDigitFormatter());
+    mMinuteSpinner->setOnValueChangedListener([this](NumberPicker& spinner, int oldVal, int newVal) {
+        updateInputState();
+        int minValue = mMinuteSpinner->getMinValue();
+        int maxValue = mMinuteSpinner->getMaxValue();
+        if (oldVal == maxValue && newVal == minValue) {
+            int newHour = mHourSpinner->getValue() + 1;
+            if (!is24Hour() && newHour == HOURS_IN_HALF_DAY) {
+                mIsAm = !mIsAm;
+                updateAmPmControl();
             }
-            onTimeChanged();
+            mHourSpinner->setValue(newHour);
+        } else if (oldVal == minValue && newVal == maxValue) {
+            const int newHour = mHourSpinner->getValue() - 1;
+            if (!is24Hour() && newHour == HOURS_IN_HALF_DAY - 1) {
+                mIsAm = !mIsAm;
+                updateAmPmControl();
+            }
+            mHourSpinner->setValue(newHour);
         }
+        onTimeChanged();
     });
-    mMinuteSpinnerInput = mMinuteSpinner->findViewById(R::id::numberpicker_input);
-    mMinuteSpinnerInput->setImeOptions(EditorInfo.IME_ACTION_NEXT);
+    mMinuteSpinnerInput = (EditText*)mMinuteSpinner->findViewById(R::id::numberpicker_input);
+    //mMinuteSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_NEXT);
 
     // Get the localized am/pm strings and use them in the spinner.
-    mAmPmStrings = TimePicker.getAmPmStrings(context);
+    mAmPmStrings = TimePicker::getAmPmStrings(context);
 
     // am/pm
     View* amPmView = mDelegator->findViewById(R::id::amPm);
-    if (amPmView instanceof Button) {
+    if (dynamic_cast<Button*>(amPmView)) {
         mAmPmSpinner = nullptr;
         mAmPmSpinnerInput = nullptr;
         mAmPmButton = (Button*) amPmView;
-        mAmPmButton->setOnClickListener(new View.OnClickListener() {
-            public void onClick(View button) {
-                button.requestFocus();
-                mIsAm = !mIsAm;
-                updateAmPmControl();
-                onTimeChanged();
-            }
+        mAmPmButton->setOnClickListener([this](View& button) {
+            button.requestFocus();
+            mIsAm = !mIsAm;
+            updateAmPmControl();
+            onTimeChanged();
         });
     } else {
         mAmPmButton = nullptr;
@@ -94,17 +87,15 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
         mAmPmSpinner->setMinValue(0);
         mAmPmSpinner->setMaxValue(1);
         mAmPmSpinner->setDisplayedValues(mAmPmStrings);
-        mAmPmSpinner->setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                updateInputState();
-                picker.requestFocus();
-                mIsAm = !mIsAm;
-                updateAmPmControl();
-                onTimeChanged();
-            }
+        mAmPmSpinner->setOnValueChangedListener([this](NumberPicker& picker, int oldVal, int newVal) {
+            updateInputState();
+            picker.requestFocus();
+            mIsAm = !mIsAm;
+            updateAmPmControl();
+            onTimeChanged();
         });
-        mAmPmSpinnerInput = mAmPmSpinner->findViewById(R::id::numberpicker_input);
-        mAmPmSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_DONE);
+        mAmPmSpinnerInput = (EditText*)mAmPmSpinner->findViewById(R::id::numberpicker_input);
+        //mAmPmSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_DONE);
     }
 
     if (isAmPmAtStart()) {
@@ -114,13 +105,12 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
         amPmParent->addView(amPmView, 0);
         // Swap layout margins if needed. They may be not symmetrical (Old Standard Theme
         // for example and not for Holo Theme)
-        ViewGroup::MarginLayoutParams* lp =
-                (ViewGroup::MarginLayoutParams*) amPmView->getLayoutParams();
+        ViewGroup::MarginLayoutParams* lp = (ViewGroup::MarginLayoutParams*) amPmView->getLayoutParams();
         const int startMargin = lp->getMarginStart();
         const int endMargin = lp->getMarginEnd();
         if (startMargin != endMargin) {
-            lp.setMarginStart(endMargin);
-            lp.setMarginEnd(startMargin);
+            lp->setMarginStart(endMargin);
+            lp->setMarginEnd(startMargin);
         }
     }
 
@@ -132,9 +122,9 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
     updateAmPmControl();
 
     // set to current time
-    mTempCalendar = Calendar.getInstance(mLocale);
-    setHour(mTempCalendar.get(Calendar.HOUR_OF_DAY));
-    setMinute(mTempCalendar.get(Calendar.MINUTE));
+    mTempCalendar;// = Calendar::getInstance(mLocale);
+    setHour(mTempCalendar.get(Calendar::HOUR_OF_DAY));
+    setMinute(mTempCalendar.get(Calendar::MINUTE));
 
     if (!isEnabled()) {
         setEnabled(false);
@@ -156,13 +146,13 @@ bool TimePickerSpinnerDelegate::validateInput() {
 void TimePickerSpinnerDelegate::getHourFormatData() {
     std::string bestDateTimePattern = DateFormat.getBestDateTimePattern(mLocale,
             (mIs24HourView) ? "Hm" : "hm");
-    final int lengthPattern = bestDateTimePattern.length();
+    const int lengthPattern = bestDateTimePattern.length();
     mHourWithTwoDigit = false;
     char hourFormat = '\0';
     // Check if the returned pattern is single or double 'H', 'h', 'K', 'k'. We also save
     // the hour format that we found.
     for (int i = 0; i < lengthPattern; i++) {
-        final char c = bestDateTimePattern.charAt(i);
+        const char c = bestDateTimePattern.charAt(i);
         if (c == 'H' || c == 'h' || c == 'K' || c == 'k') {
             mHourFormat = c;
             if (i + 1 < lengthPattern && c == bestDateTimePattern.charAt(i + 1)) {
@@ -174,7 +164,7 @@ void TimePickerSpinnerDelegate::getHourFormatData() {
 }
 
 bool TimePickerSpinnerDelegate::isAmPmAtStart() {
-    final String bestDateTimePattern = DateFormat.getBestDateTimePattern(mLocale,
+    const std::string bestDateTimePattern = DateFormat.getBestDateTimePattern(mLocale,
             "hm" /* skeleton */);
 
     return bestDateTimePattern.startsWith("a");
@@ -193,11 +183,11 @@ void TimePickerSpinnerDelegate::setDividerText() {
         // Default case
         separatorText = ":";
     } else {
-        int minuteIndex = bestDateTimePattern.indexOf('m', hourIndex + 1);
+        const int minuteIndex = bestDateTimePattern.indexOf('m', hourIndex + 1);
         if  (minuteIndex == -1) {
             separatorText = Character.toString(bestDateTimePattern.charAt(hourIndex + 1));
         } else {
-            separatorText = bestDateTimePattern.substring(hourIndex + 1, minuteIndex);
+            separatorText = bestDateTimePattern.substr(hourIndex + 1, minuteIndex);
         }
     }
     mDivider->setText(separatorText);
@@ -219,7 +209,7 @@ void TimePickerSpinnerDelegate::setCurrentHour(int currentHour, bool notifyTimeC
     if (currentHour == getHour()) {
         return;
     }
-    resetAutofilledValue();
+    //resetAutofilledValue();
     if (!is24Hour()) {
         // convert [0,23] ordinal to wall clock display
         if (currentHour >= HOURS_IN_HALF_DAY) {
@@ -260,7 +250,7 @@ void TimePickerSpinnerDelegate::setCurrentMinute(int minute, bool notifyTimeChan
     if (minute == getMinute()) {
         return;
     }
-    resetAutofilledValue();
+    //resetAutofilledValue();
     mMinuteSpinner->setValue(minute);
     if (notifyTimeChanged) {
         onTimeChanged();
@@ -337,8 +327,8 @@ void TimePickerSpinnerDelegate::onPopulateAccessibilityEvent(AccessibilityEvent&
     } else {
         flags |= DateUtils.FORMAT_12HOUR;
     }
-    mTempCalendar.set(Calendar.HOUR_OF_DAY, getHour());
-    mTempCalendar.set(Calendar.MINUTE, getMinute());
+    mTempCalendar.set(Calendar::HOUR_OF_DAY, getHour());
+    mTempCalendar.set(Calendar::MINUTE, getMinute());
     String selectedDateUtterance = DateUtils.formatDateTime(mContext,
             mTempCalendar.getTimeInMillis(), flags);
     event.getText().add(selectedDateUtterance);
@@ -404,11 +394,10 @@ void TimePickerSpinnerDelegate::updateAmPmControl() {
 void TimePickerSpinnerDelegate::onTimeChanged() {
     mDelegator->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
     if (mOnTimeChangedListener != nullptr) {
-        mOnTimeChangedListener.onTimeChanged(mDelegator, getHour(),
-                getMinute());
+        mOnTimeChangedListener/*.onTimeChanged*/(*mDelegator, getHour(), getMinute());
     }
     if (mAutoFillChangeListener != nullptr) {
-        mAutoFillChangeListener.onTimeChanged(mDelegator, getHour(), getMinute());
+        mAutoFillChangeListener/*.onTimeChanged*/(*mDelegator, getHour(), getMinute());
     }
 }
 
@@ -432,41 +421,41 @@ void TimePickerSpinnerDelegate::updateHourControl() {
             mHourSpinner->setMaxValue(12);
         }
     }
-    mHourSpinner->setFormatter(mHourWithTwoDigit ? NumberPicker.getTwoDigitFormatter() : null);
+    mHourSpinner->setFormatter(mHourWithTwoDigit ? NumberPicker::getTwoDigitFormatter() : nullptr);
 }
 
 void TimePickerSpinnerDelegate::updateMinuteControl() {
     if (is24Hour()) {
-        mMinuteSpinnerInput->setImeOptions(EditorInfo.IME_ACTION_DONE);
+        //mMinuteSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_DONE);
     } else {
-        mMinuteSpinnerInput->setImeOptions(EditorInfo.IME_ACTION_NEXT);
+        //mMinuteSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_NEXT);
     }
 }
 
 void TimePickerSpinnerDelegate::setContentDescriptions() {
     // Minute
-    trySetContentDescription(mMinuteSpinner, R.id.increment,
+    trySetContentDescription(mMinuteSpinner, R::id::increment,
             R.string.time_picker_increment_minute_button);
-    trySetContentDescription(mMinuteSpinner, R.id.decrement,
+    trySetContentDescription(mMinuteSpinner, R::id::decrement,
             R.string.time_picker_decrement_minute_button);
     // Hour
-    trySetContentDescription(mHourSpinner, R.id.increment,
+    trySetContentDescription(mHourSpinner, R::id::increment,
             R.string.time_picker_increment_hour_button);
-    trySetContentDescription(mHourSpinner, R.id.decrement,
+    trySetContentDescription(mHourSpinner, R::id::decrement,
             R.string.time_picker_decrement_hour_button);
     // AM/PM
-    if (mAmPmSpinner != null) {
-        trySetContentDescription(mAmPmSpinner, R.id.increment,
+    if (mAmPmSpinner != nullptr) {
+        trySetContentDescription(mAmPmSpinner, R::id::increment,
                 R.string.time_picker_increment_set_pm_button);
-        trySetContentDescription(mAmPmSpinner, R.id.decrement,
+        trySetContentDescription(mAmPmSpinner, R::id::decrement,
                 R.string.time_picker_decrement_set_am_button);
     }
 }
 
 void TimePickerSpinnerDelegate::trySetContentDescription(View* root, int viewId, int contDescResId) {
-    View target = root->findViewById(viewId);
+    View* target = root->findViewById(viewId);
     if (target != nullptr) {
-        target.setContentDescription(mContext.getString(contDescResId));
+        target->setContentDescription(mContext.getString(contDescResId));
     }
 }
 }/*endof namespace*/
