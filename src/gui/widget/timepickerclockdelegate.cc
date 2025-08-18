@@ -1,8 +1,8 @@
-#if 0
+#if 10
 #include <widget/R.h>
-#include <widget/textinputtimepickerview.h>
 #include <widget/relativelayout.h>
-#include <widget/radialtimepickerview.h>
+#include <widget/textinputtimepickerview.h>
+//#include <widget/radialtimepickerview.h>
 #include <widget/timepickerclockdelegate.h>
 namespace cdroid{
 //class TimePickerClockDelegate extends TimePicker.AbstractTimePickerDelegate {
@@ -12,8 +12,7 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     // process style attributes
     final TypedArray a = mContext.obtainStyledAttributes(attrs,
             R.styleable.TimePicker, defStyleAttr, defStyleRes);
-    final LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(
-            Context.LAYOUT_INFLATER_SERVICE);
+    LayoutInflater* inflater = LayoutInflater::from(mContext);
     final Resources res = mContext.getResources();
 
     mSelectHours = res.getString(R.string.select_hours);
@@ -21,8 +20,8 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
 
     std::string layoutResourceId = a.getResourceId(R.styleable.TimePicker_internalLayout,
             R.layout.time_picker_material);
-    View* mainView = inflater.inflate(layoutResourceId, delegator);
-    mainView.setSaveFromParentEnabled(false);
+    View* mainView = inflater->inflate(layoutResourceId, delegator);
+    mainView->setSaveFromParentEnabled(false);
     mRadialTimePickerHeader = mainView->findViewById(R::id::time_header);
     mRadialTimePickerHeader->setOnTouchListener(new NearestTouchDelegate());
 
