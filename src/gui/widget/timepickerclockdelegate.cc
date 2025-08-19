@@ -1,3 +1,8 @@
+#if 0
+#include <widget/R.h>
+#include <widget/relativelayout.h>
+#include <widget/textinputtimepickerview.h>
+//#include <widget/radialtimepickerview.h>
 #include <widget/timepickerclockdelegate.h>
 namespace cdroid{
 //class TimePickerClockDelegate extends TimePicker.AbstractTimePickerDelegate {
@@ -7,29 +12,30 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     // process style attributes
     final TypedArray a = mContext.obtainStyledAttributes(attrs,
             R.styleable.TimePicker, defStyleAttr, defStyleRes);
-    final LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(
-            Context.LAYOUT_INFLATER_SERVICE);
+    LayoutInflater* inflater = LayoutInflater::from(mContext);
     final Resources res = mContext.getResources();
 
     mSelectHours = res.getString(R.string.select_hours);
     mSelectMinutes = res.getString(R.string.select_minutes);
 
-    final int layoutResourceId = a.getResourceId(R.styleable.TimePicker_internalLayout,
+    std::string layoutResourceId = a.getResourceId(R.styleable.TimePicker_internalLayout,
             R.layout.time_picker_material);
-    final View mainView = inflater.inflate(layoutResourceId, delegator);
-    mainView.setSaveFromParentEnabled(false);
+    View* mainView = inflater->inflate(layoutResourceId, delegator);
+    mainView->setSaveFromParentEnabled(false);
     mRadialTimePickerHeader = mainView->findViewById(R::id::time_header);
     mRadialTimePickerHeader->setOnTouchListener(new NearestTouchDelegate());
 
     // Set up hour/minute labels.
     mHourView = (NumericTextView*) mainView->findViewById(R::id::hours);
+    mClickListener = std::bind(&TimePickerClockDelegate::onViewClick,this,std::placeholders::_1);
+    mFocusListener =  std::bind(&TimePickerClockDelegate::onViewFocusChange,this,std::placeholders::_1,std::placeholders::_2);
     mHourView->setOnClickListener(mClickListener);
     mHourView->setOnFocusChangeListener(mFocusListener);
     mHourView->setOnDigitEnteredListener(mDigitEnteredListener);
     //mHourView->setAccessibilityDelegate(new ClickActionDelegate(context, R.string.select_hours));
     mHourView->setAccessibilityLiveRegion(View::ACCESSIBILITY_LIVE_REGION_POLITE);
-    mSeparatorView = (TextView) mainView->findViewById(R::id::separator);
-    mMinuteView = (NumericTextView) mainView->findViewById(R::id::minutes);
+    mSeparatorView = (TextView*) mainView->findViewById(R::id::separator);
+    mMinuteView = (NumericTextView*) mainView->findViewById(R::id::minutes);
     mMinuteView->setOnClickListener(mClickListener);
     mMinuteView->setOnFocusChangeListener(mFocusListener);
     mMinuteView->setOnDigitEnteredListener(mDigitEnteredListener);
@@ -41,8 +47,8 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     mAmPmLayout = mainView->findViewById(R::id::ampm_layout);
     mAmPmLayout->setOnTouchListener(new NearestTouchDelegate());
 
-    final String[] amPmStrings = TimePicker::getAmPmStrings(context);
-    mAmLabel = (RadioButton) mAmPmLayout->findViewById(R::id::am_label);
+    std::vector<std::string> amPmStrings = TimePicker::getAmPmStrings(context);
+    mAmLabel = (RadioButton*) mAmPmLayout->findViewById(R::id::am_label);
     mAmLabel->setText(obtainVerbatim(amPmStrings[0]));
     mAmLabel->setOnClickListener(mClickListener);
     ensureMinimumTextWidth(mAmLabel);
@@ -55,14 +61,14 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     // For the sake of backwards compatibility, attempt to extract the text
     // color from the header time text appearance. If it's set, we'll let
     // that override the "real" header text color.
-    ColorStateList headerTextColor = null;
+    ColorStateList* headerTextColor = nullptr;
 
-    final int timeHeaderTextAppearance = a.getResourceId(
+    const std::string timeHeaderTextAppearance = a.getResourceId(
             R.styleable.TimePicker_headerTimeTextAppearance, 0);
-    if (timeHeaderTextAppearance != 0) {
+    if (!timeHeaderTextAppearance.empty()) {
         final TypedArray textAppearance = mContext.obtainStyledAttributes(null,
                 ATTRS_TEXT_COLOR, 0, timeHeaderTextAppearance);
-        final ColorStateList legacyHeaderTextColor = textAppearance.getColorStateList(0);
+        ColorStateList* legacyHeaderTextColor = textAppearance.getColorStateList(0);
         headerTextColor = applyLegacyColorFixes(legacyHeaderTextColor);
         textAppearance.recycle();
     }
@@ -83,27 +89,24 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
 
     // Set up header background, if available.
     if (a.hasValueOrEmpty(R.styleable.TimePicker_headerBackground)) {
-        mRadialTimePickerHeader.setBackground(a.getDrawable(
+        mRadialTimePickerHeader->setBackground(a.getDrawable(
                 R.styleable.TimePicker_headerBackground));
-        mTextInputPickerHeader.setBackground(a.getDrawable(
+        mTextInputPickerHeader->setBackground(a.getDrawable(
                 R.styleable.TimePicker_headerBackground));
     }
 
     a.recycle();
 
-    mRadialTimePickerView = (RadialTimePickerView*) mainView->findViewById(R.id.radial_picker);
+    mRadialTimePickerView = (RadialTimePickerView*) mainView->findViewById(R::id::radial_picker);
     mRadialTimePickerView->applyAttributes(attrs, defStyleAttr, defStyleRes);
     mRadialTimePickerView->setOnValueSelectedListener(mOnValueSelectedListener);
 
-    mTextInputPickerView = (TextInputTimePickerView*) mainView->findViewById(R.id.input_mode);
+    mTextInputPickerView = (TextInputTimePickerView*) mainView->findViewById(R::id::input_mode);
     mTextInputPickerView->setListener(mOnValueTypedListener);
 
     mRadialTimePickerModeButton = (ImageButton*) mainView->findViewById(R::id::toggle_mode);
-    mRadialTimePickerModeButton->setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            toggleRadialPickerMode();
-        }
+    mRadialTimePickerModeButton->setOnClickListener([this](View&v) {
+         toggleRadialPickerMode();
     });
     mRadialTimePickerModeEnabledDescription = context.getResources().getString(
             R.string.time_picker_radial_mode_description);
@@ -121,7 +124,7 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     initialize(currentHour, currentMinute, mIs24Hour, HOUR_INDEX);
 
     mCommitHour =[this](){setHour(mHourView->getValue());};
-    mCommitMinute=[this](){setMinute(mMinuteView.getValue());};
+    mCommitMinute=[this](){setMinute(mMinuteView->getValue());};
 }
 
 void TimePickerClockDelegate::toggleRadialPickerMode() {
@@ -130,22 +133,20 @@ void TimePickerClockDelegate::toggleRadialPickerMode() {
         mRadialTimePickerHeader->setVisibility(View::GONE);
         mTextInputPickerHeader->setVisibility(View::VISIBLE);
         mTextInputPickerView->setVisibility(View::VISIBLE);
-        mRadialTimePickerModeButton->setImageResource(R.drawable.btn_clock_material);
-        mRadialTimePickerModeButton->setContentDescription(
-                mRadialTimePickerModeEnabledDescription);
+        mRadialTimePickerModeButton->setImageResource("cdroid:drawable/btn_clock_material");
+        mRadialTimePickerModeButton->setContentDescription(mRadialTimePickerModeEnabledDescription);
         mRadialPickerModeEnabled = false;
     } else {
         mRadialTimePickerView->setVisibility(View::VISIBLE);
         mRadialTimePickerHeader->setVisibility(View::VISIBLE);
         mTextInputPickerHeader->setVisibility(View::GONE);
         mTextInputPickerView->setVisibility(View::GONE);
-        mRadialTimePickerModeButton->setImageResource(R.drawable.btn_keyboard_key_material);
-        mRadialTimePickerModeButton->setContentDescription(
-                mTextInputPickerModeEnabledDescription);
+        mRadialTimePickerModeButton->setImageResource("cdroid:drawable/btn_keyboard_key_material");
+        mRadialTimePickerModeButton->setContentDescription(mTextInputPickerModeEnabledDescription);
         updateTextInputPicker();
         InputMethodManager imm = mContext.getSystemService(InputMethodManager.class);
         if (imm != null) {
-            imm.hideSoftInputFromWindow(mDelegator.getWindowToken(), 0);
+            imm.hideSoftInputFromWindow(mDelegator->getWindowToken(), 0);
         }
         mRadialPickerModeEnabled = true;
     }
@@ -166,17 +167,16 @@ void TimePickerClockDelegate::ensureMinimumTextWidth(TextView* v) {
 }
 
 void TimePickerClockDelegate::updateHourFormat() {
-    final String bestDateTimePattern = DateFormat.getBestDateTimePattern(
-            mLocale, mIs24Hour ? "Hm" : "hm");
-    final int lengthPattern = bestDateTimePattern.length();
+    const std::string bestDateTimePattern = DateFormat.getBestDateTimePattern(mLocale, mIs24Hour ? "Hm" : "hm");
+    const int lengthPattern = bestDateTimePattern.length();
     bool showLeadingZero = false;
     char hourFormat = '\0';
 
     for (int i = 0; i < lengthPattern; i++) {
-        final char c = bestDateTimePattern.charAt(i);
+        const char c = bestDateTimePattern.at(i);
         if (c == 'H' || c == 'h' || c == 'K' || c == 'k') {
             hourFormat = c;
-            if (i + 1 < lengthPattern && c == bestDateTimePattern.charAt(i + 1)) {
+            if (i + 1 < lengthPattern && c == bestDateTimePattern.at(i + 1)) {
                 showLeadingZero = true;
             }
             break;
@@ -200,36 +200,34 @@ void TimePickerClockDelegate::updateHourFormat() {
     mTextInputPickerView->setHourFormat(maxCharLength * 2);
 }
 
-CharSequence TimePickerClockDelegate::obtainVerbatim(String text) {
+std::string TimePickerClockDelegate::obtainVerbatim(const std::string& text) {
     return new SpannableStringBuilder().append(text,
             new TtsSpan.VerbatimBuilder(text).build(), 0);
 }
 
 ColorStateList* TimePickerClockDelegate::applyLegacyColorFixes(ColorStateList* color) {
-    if (color == null || color.hasState(R.attr.state_activated)) {
+    if (color == nullptr || color->hasState(StateSet::VIEW_STATE_ACTIVATED)){//R.attr.state_activated)) {
         return color;
     }
 
-    final int activatedColor;
-    final int defaultColor;
-    if (color.hasState(R.attr.state_selected)) {
-        activatedColor = color.getColorForState(StateSet.get(
-                StateSet::VIEW_STATE_ENABLED | StateSet::VIEW_STATE_SELECTED), 0);
-        defaultColor = color.getColorForState(StateSet::get(
-                StateSet::VIEW_STATE_ENABLED), 0);
+    int activatedColor;
+    int defaultColor;
+    if (color->hasState(StateSet::VIEW_STATE_SELECTED)){//R.attr.state_selected)) {
+        activatedColor = color->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED | StateSet::VIEW_STATE_SELECTED), 0);
+        defaultColor = color->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED), 0);
     } else {
-        activatedColor = color.getDefaultColor();
+        activatedColor = color->getDefaultColor();
 
         // Generate a non-activated color using the disabled alpha.
-        final TypedArray ta = mContext.obtainStyledAttributes(ATTRS_DISABLED_ALPHA);
-        final float disabledAlpha = ta.getFloat(0, 0.30f);
+        TypedArray ta = mContext->obtainStyledAttributes(ATTRS_DISABLED_ALPHA);
+        const float disabledAlpha = ta.getFloat(0, 0.30f);
         ta.recycle();
         defaultColor = multiplyAlphaComponent(activatedColor, disabledAlpha);
     }
 
     if (activatedColor == 0 || defaultColor == 0) {
         // We somehow failed to obtain the colors.
-        return null;
+        return nullptr;
     }
 
     final int[][] stateSet = new int[][] {{ R.attr.state_activated }, {}};
@@ -293,7 +291,7 @@ void TimePickerClockDelegate::updateHeaderAmPm() {
         mAmPmLayout->setVisibility(View::GONE);
     } else {
         // Find the location of AM/PM based on locale information.
-        final String dateTimePattern = DateFormat.getBestDateTimePattern(mLocale, "hm");
+        const std::string dateTimePattern = DateFormat.getBestDateTimePattern(mLocale, "hm");
         const bool isAmPmAtStart = dateTimePattern.startsWith("a");
         setAmPmStart(isAmPmAtStart);
         updateAmPmLabelStates(mCurrentHour < 12 ? AM : PM);
@@ -304,7 +302,7 @@ void TimePickerClockDelegate::setAmPmStart(bool isAmPmAtStart) {
     RelativeLayout::LayoutParams* params = (RelativeLayout::LayoutParams*) mAmPmLayout->getLayoutParams();
     if (params->getRule(RelativeLayout::RIGHT_OF) != 0
             || params->getRule(RelativeLayout::LEFT_OF) != 0) {
-        const int margin = (int) (mContext.getResources().getDisplayMetrics().density * 8);
+        const int margin = (int) (mContext->getDisplayMetrics().density * 8);
         // Horizontal mode, with AM/PM appearing to left/right of hours and minutes.
         bool isAmPmAtLeft;
         if (TextUtils.getLayoutDirectionFromLocale(mLocale) == View::LAYOUT_DIRECTION_LTR) {
@@ -317,7 +315,7 @@ void TimePickerClockDelegate::setAmPmStart(bool isAmPmAtStart) {
             params->removeRule(RelativeLayout::RIGHT_OF);
             params->addRule(RelativeLayout::LEFT_OF, mHourView->getId());
         } else {
-            params->removeRule(RelativeLayout.LEFT_OF);
+            params->removeRule(RelativeLayout::LEFT_OF);
             params->addRule(RelativeLayout::RIGHT_OF, mMinuteView->getId());
         }
 
@@ -378,7 +376,7 @@ void TimePickerClockDelegate::setHourInternal(int hour, int source, bool announc
         return;
     }
 
-    resetAutofilledValue();
+    //resetAutofilledValue();
     mCurrentHour = hour;
     updateHeaderHour(hour, announce);
     updateHeaderAmPm();
@@ -391,7 +389,7 @@ void TimePickerClockDelegate::setHourInternal(int hour, int source, bool announc
         updateTextInputPicker();
     }
 
-    mDelegator.invalidate();
+    mDelegator->invalidate();
     if (notify) {
         onTimeChanged();
     }
@@ -403,28 +401,29 @@ int TimePickerClockDelegate::getHour() {
         return currentHour;
     }
 
-    if (mRadialTimePickerView.getAmOrPm() == PM) {
+    if (mRadialTimePickerView->getAmOrPm() == PM) {
         return (currentHour % HOURS_IN_HALF_DAY) + HOURS_IN_HALF_DAY;
     } else {
         return currentHour % HOURS_IN_HALF_DAY;
     }
+    return currentHour;/*make gcc happy*/
 }
 
 void TimePickerClockDelegate::setMinute(int minute) {
     setMinuteInternal(minute, FROM_EXTERNAL_API, true);
 }
 
-void TimePickerClockDelegate::setMinuteInternal(int minute, @ChangeSource int source, bool notify) {
+void TimePickerClockDelegate::setMinuteInternal(int minute,int source, bool notify) {
     if (mCurrentMinute == minute) {
         return;
     }
 
-    resetAutofilledValue();
+    //resetAutofilledValue();
     mCurrentMinute = minute;
     updateHeaderMinute(minute, true);
 
     if (source != FROM_RADIAL_PICKER) {
-        mRadialTimePickerView.setCurrentMinute(minute);
+        mRadialTimePickerView->setCurrentMinute(minute);
     }
     if (source != FROM_INPUT_PICKER) {
         updateTextInputPicker();
@@ -450,7 +449,7 @@ void TimePickerClockDelegate::setIs24Hour(bool is24Hour) {
     }
 }
 
-bool TimePickerClockDelegate::is24Hour() const{
+bool TimePickerClockDelegate::is24Hour(){
     return mIs24Hour;
 }
 
@@ -478,11 +477,11 @@ Parcelable* TimePickerClockDelegate::onSaveInstanceState(Parcelable& superState)
 }
 
 void TimePickerClockDelegate::onRestoreInstanceState(Parcelable& state) {
-    if (state instanceof SavedState) {
-        final SavedState ss = (SavedState) state;
+    /*if (dynamic_cast<SavedState*>(&state)) {
+        SavedState& ss = (SavedState&) state;
         initialize(ss.getHour(), ss.getMinute(), ss.is24HourMode(), ss.getCurrentItemShowing());
         mRadialTimePickerView->invalidate();
-    }
+    }*/
 }
 
 bool TimePickerClockDelegate::dispatchPopulateAccessibilityEvent(AccessibilityEvent& event) {
@@ -501,10 +500,8 @@ void TimePickerClockDelegate::onPopulateAccessibilityEvent(AccessibilityEvent& e
     mTempCalendar.set(Calendar::HOUR_OF_DAY, getHour());
     mTempCalendar.set(Calendar::MINUTE, getMinute());
 
-    final String selectedTime = DateUtils.formatDateTime(mContext,
-            mTempCalendar.getTimeInMillis(), flags);
-    final String selectionMode = mRadialTimePickerView.getCurrentItemShowing() == HOUR_INDEX ?
-            mSelectHours : mSelectMinutes;
+    const std::string selectedTime = DateUtils.formatDateTime(mContext, mTempCalendar.getTimeInMillis(), flags);
+    const std::string selectionMode = mRadialTimePickerView->getCurrentItemShowing() == HOUR_INDEX ? mSelectHours : mSelectMinutes;
     event.getText().add(selectedTime + " " + selectionMode);
 }
 
@@ -530,11 +527,11 @@ int TimePickerClockDelegate::getCurrentItemShowing() {
 
 void TimePickerClockDelegate::onTimeChanged() {
     mDelegator->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
-    if (mOnTimeChangedListener != null) {
-        mOnTimeChangedListener.onTimeChanged(*mDelegator, getHour(), getMinute());
+    if (mOnTimeChangedListener != nullptr) {
+        mOnTimeChangedListener/*.onTimeChanged*/(*mDelegator, getHour(), getMinute());
     }
-    if (mAutoFillChangeListener != null) {
-        mAutoFillChangeListener.onTimeChanged(*mDelegator, getHour(), getMinute());
+    if (mAutoFillChangeListener != nullptr) {
+        mAutoFillChangeListener/*.onTimeChanged*/(*mDelegator, getHour(), getMinute());
     }
 }
 
@@ -576,18 +573,17 @@ void TimePickerClockDelegate::updateHeaderMinute(int minuteOfHour, bool announce
 }
 
 void TimePickerClockDelegate::updateHeaderSeparator() {
-    final String bestDateTimePattern = DateFormat.getBestDateTimePattern(mLocale,
-            (mIs24Hour) ? "Hm" : "hm");
-    final String separatorText = getHourMinSeparatorFromPattern(bestDateTimePattern);
+    const std::string bestDateTimePattern = DateFormat.getBestDateTimePattern(mLocale,(mIs24Hour) ? "Hm" : "hm");
+    const std::string separatorText = getHourMinSeparatorFromPattern(bestDateTimePattern);
     mSeparatorView->setText(separatorText);
     mTextInputPickerView->updateSeparator(separatorText);
 }
 
-String TimePickerClockDelegate::getHourMinSeparatorFromPattern(String dateTimePattern) {
-    final String defaultSeparator = ":";
+std::string TimePickerClockDelegate::getHourMinSeparatorFromPattern(const std::string& dateTimePattern) {
+    const std::string defaultSeparator = ":";
     bool foundHourPattern = false;
     for (int i = 0; i < dateTimePattern.length(); i++) {
-        switch (dateTimePattern.charAt(i)) {
+        switch (dateTimePattern.at(i)) {
         // See http://www.unicode.org/reports/tr35/tr35-dates.html for hour formats.
         case 'H':
         case 'h':
@@ -609,17 +605,17 @@ String TimePickerClockDelegate::getHourMinSeparatorFromPattern(String dateTimePa
             if (!foundHourPattern) {
                 continue;
             }
-            return Character.toString(dateTimePattern.charAt(i));
+            return Character.toString(dateTimePattern.at(i));
         }
     }
     return defaultSeparator;
 }
 
-int TimePickerClockDelegate::lastIndexOfAny(String str, const std::string& any) {
-    const int lengthAny = any.length（）;
+int TimePickerClockDelegate::lastIndexOfAny(const std::string& str, const std::string& any) {
+    const int lengthAny = any.length();
     if (lengthAny > 0) {
         for (int i = str.length() - 1; i >= 0; i--) {
-            char c = str.charAt(i);
+            char c = str.at(i);
             for (int j = 0; j < lengthAny; j++) {
                 if (c == any[j]) {
                     return i;
@@ -643,28 +639,27 @@ void TimePickerClockDelegate::setAmOrPm(int amOrPm) {
     if (mRadialTimePickerView->setAmOrPm(amOrPm)) {
         mCurrentHour = getHour();
         updateTextInputPicker();
-        if (mOnTimeChangedListener != null) {
-            mOnTimeChangedListener.onTimeChanged(mDelegator, getHour(), getMinute());
+        if (mOnTimeChangedListener != nullptr) {
+            mOnTimeChangedListener/*.onTimeChanged*/(*mDelegator, getHour(), getMinute());
         }
     }
 }
-
+#if 0
 private final OnValueSelectedListener mOnValueSelectedListener = new OnValueSelectedListener() {
-    @Override
     public void onValueSelected(int pickerType, int newValue, bool autoAdvance) {
         bool valueChanged = false;
         switch (pickerType) {
-        case RadialTimePickerView.HOURS:
+        case RadialTimePickerView::HOURS:
             if (getHour() != newValue) {
                 valueChanged = true;
             }
-            final bool isTransition = mAllowAutoAdvance && autoAdvance;
+            const bool isTransition = mAllowAutoAdvance && autoAdvance;
             setHourInternal(newValue, FROM_RADIAL_PICKER, !isTransition, true);
             if (isTransition) {
                 setCurrentItemShowing(MINUTE_INDEX, true);
             }
             break;
-        case RadialTimePickerView.MINUTES:
+        case RadialTimePickerView::MINUTES:
             if (getMinute() != newValue) {
                 valueChanged = true;
             }
@@ -672,23 +667,22 @@ private final OnValueSelectedListener mOnValueSelectedListener = new OnValueSele
             break;
         }
 
-        if (mOnTimeChangedListener != null && valueChanged) {
-            mOnTimeChangedListener.onTimeChanged(mDelegator, getHour(), getMinute());
+        if (mOnTimeChangedListener != nullptr && valueChanged) {
+            mOnTimeChangedListener/*.onTimeChanged*/(mDelegator, getHour(), getMinute());
         }
     }
 };
 
 private final OnValueTypedListener mOnValueTypedListener = new OnValueTypedListener() {
-    @Override
     public void onValueChanged(int pickerType, int newValue) {
         switch (pickerType) {
-        case TextInputTimePickerView.HOURS:
+        case TextInputTimePickerView::HOURS:
             setHourInternal(newValue, FROM_INPUT_PICKER, false, true);
             break;
-        case TextInputTimePickerView.MINUTES:
+        case TextInputTimePickerView::MINUTES:
             setMinuteInternal(newValue, FROM_INPUT_PICKER, true);
             break;
-        case TextInputTimePickerView.AMPM:
+        case TextInputTimePickerView::AMPM:
             setAmOrPm(newValue);
             break;
         }
@@ -696,9 +690,7 @@ private final OnValueTypedListener mOnValueTypedListener = new OnValueTypedListe
 };
 
 private final OnValueChangedListener mDigitEnteredListener = new OnValueChangedListener() {
-    @Override
-    public void onValueChanged(NumericTextView view, int value,
-            bool isValid, bool isFinished) {
+    public void onValueChanged(NumericTextView& view, int value,bool isValid, bool isFinished) {
         Runnable commitCallback;
         View nextFocusTarget;
         if (view == mHourView) {
@@ -730,36 +722,13 @@ private final OnValueChangedListener mDigitEnteredListener = new OnValueChangedL
         }
     }
 };
-
-private final View.OnFocusChangeListener mFocusListener = new View.OnFocusChangeListener() {
-    @Override
-    public void onFocusChange(View& v, bool focused) {
-        if (focused) {
-            switch (v.getId()) {
-            case R::id::am_label: setAmOrPm(AM); break;
-            case R::id::pm_label: setAmOrPm(PM); break;
-            case R::id::hours:
-                setCurrentItemShowing(HOUR_INDEX, true);
-                break;
-            case R::id::minutes:
-                setCurrentItemShowing(MINUTE_INDEX, true);
-                break;
-            default:
-                // Failed to handle this click, don't vibrate.
-                return;
-            }
-            tryVibrate();
-        }
-    }
-};
-
-private final View.OnClickListener mClickListener = new View.OnClickListener() {
-    @Override
-    public void onClick(View v) {
-        int amOrPm;
+#endif
+//private final View::OnFocusChangeListener mFocusListener = new View.OnFocusChangeListener()
+void TimePickerClockDelegate::onViewFocusChange(View& v, bool focused) {
+    if (focused) {
         switch (v.getId()) {
-        case R::id::am_label: setAmOrPm(AM);  break;
-        case R::id::pm_label: setAmOrPm(PM);  break;
+        case R::id::am_label: setAmOrPm(AM); break;
+        case R::id::pm_label: setAmOrPm(PM); break;
         case R::id::hours:
             setCurrentItemShowing(HOUR_INDEX, true);
             break;
@@ -772,12 +741,30 @@ private final View.OnClickListener mClickListener = new View.OnClickListener() {
         }
         tryVibrate();
     }
-};
+}
 
-private static class NearestTouchDelegate implements View.OnTouchListener {
+//private final View::OnClickListener mClickListener = new View.OnClickListener() {
+void TimePickerClockDelegate::onViewClick(View& v) {
+    int amOrPm;
+    switch (v.getId()) {
+    case R::id::am_label: setAmOrPm(AM);  break;
+    case R::id::pm_label: setAmOrPm(PM);  break;
+    case R::id::hours:
+        setCurrentItemShowing(HOUR_INDEX, true);
+        break;
+    case R::id::minutes:
+        setCurrentItemShowing(MINUTE_INDEX, true);
+        break;
+    default:
+        // Failed to handle this click, don't vibrate.
+        return;
+    }
+    tryVibrate();
+}
+
+class NearestTouchDelegate implements View.OnTouchListener {
         private View mInitialTouchTarget;
 
-        @Override
         public bool onTouch(View& view, MotionEvent& motionEvent) {
             const int actionMasked = motionEvent.getActionMasked();
             if (actionMasked == MotionEvent::ACTION_DOWN) {
@@ -825,5 +812,6 @@ private static class NearestTouchDelegate implements View.OnTouchListener {
 
         return bestChild;
     }
-}
-}
+};
+}/*endof namespace*/
+#endif

@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef __TEXTINPUT_TIMEPICKER_VIEW_H__
 #define __TEXTINPUT_TIMEPICKER_VIEW_H__
 
@@ -23,13 +40,13 @@ private:
     TextView* mErrorLabel;
     TextView* mHourLabel;
     TextView* mMinuteLabel;
-
+    Adapter* mAdapter;
     bool mIs24Hour;
     bool mHourFormatStartsAtZero;
-    OnValueTypedListener mListener;
-
     bool mErrorShowing;
     bool mTimeSet;
+    OnValueTypedListener mListener;
+
 private:
     void setError(bool enabled);
 
@@ -41,7 +58,7 @@ private:
     int getHourOfDayFromLocalizedHour(int localizedHour);
 public:
     TextInputTimePickerView(Context* context,const AttributeSet& attrs);
-
+    ~TextInputTimePickerView()override;
     void setListener(const OnValueTypedListener& listener);
 
     void setHourFormat(int maxCharLength);

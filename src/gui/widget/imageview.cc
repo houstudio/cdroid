@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <widget/imageview.h>
 #include <core/textutils.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
 using namespace Cairo;
 namespace cdroid{
 
@@ -116,8 +116,8 @@ void ImageView::resolveUri(){
 
 int ImageView::resolveAdjustedSize(int desiredSize, int maxSize,int measureSpec){
     int result = desiredSize;
-    int specMode = MeasureSpec::getMode(measureSpec);
-    int specSize = MeasureSpec::getSize(measureSpec);
+    const int specMode = MeasureSpec::getMode(measureSpec);
+    const int specSize = MeasureSpec::getSize(measureSpec);
     switch (specMode) {
     case MeasureSpec::UNSPECIFIED:
         /* Parent says we can be as big as we want. Just don't be larger
@@ -255,8 +255,9 @@ void ImageView::setScaleType(int st){
 }
 
 static bool operator==(const Cairo::Matrix& m1, const Cairo::Matrix& m2) {
-    return (m1.xx == m2.xx && m1.yx == m2.yx && m1.xy == m2.xy && m1.yy == m2.yy && m1.x0 == m2.x0 && m1.y0 == m2.y0);
+    return (m1.xx == m2.xx )&& (m1.yx == m2.yx) && (m1.xy == m2.xy) && (m1.yy == m2.yy) && (m1.x0 == m2.x0) && (m1.y0 == m2.y0);
 }
+
 static bool operator!=(const Cairo::Matrix& m1, const Cairo::Matrix& m2) {
     return (m1.xx != m2.xx) || (m1.yx != m2.yx) || (m1.xy != m2.xy) || (m1.yy == m2.yy) || (m1.x0 == m2.x0) ||( m1.y0 == m2.y0);
 }
@@ -277,9 +278,9 @@ void ImageView::setImageMatrix(const Cairo::Matrix& matrix) {
     }
 #else
     if(/*!IsIdentity(mMatrix) &&*/ (mMatrix!=matrix)){
-	mMatrix =matrix;
-	configureBounds();
-	invalidate();
+        mMatrix = matrix;
+        configureBounds();
+        invalidate();
     }
 #endif
 }
@@ -295,7 +296,7 @@ bool ImageView::getCropToPadding()const{
 void ImageView::setCropToPadding(bool cropToPadding){
     if (mCropToPadding != cropToPadding) {
         mCropToPadding = cropToPadding;
-        //requestLayout();
+        requestLayout();
         invalidate(true);
     }
 }
@@ -311,6 +312,7 @@ void ImageView::setMaxHeight(int maxHeight){
 int ImageView::getMaxWidth()const{
     return mMaxWidth;
 }
+
 int ImageView::getMaxHeight()const{
     return mMaxWidth;
 }
@@ -355,6 +357,7 @@ void ImageView::setBaselineAlignBottom(bool aligned) {
         requestLayout();
     }
 }
+
 bool ImageView::getBaselineAlignBottom()const{
     return mBaselineAlignBottom;
 }
@@ -383,27 +386,28 @@ std::vector<int> ImageView::onCreateDrawableState(int extraSpace){
         return mergeDrawableStates(sts, mState);
     }
 }
+
 //ref: https://github.com/google/skia/blob/master/src/core/SkMatrix.cpp
 //SkMatrix::setRectToRect(const SkRect& src, const SkRect& dst, ScaleToFit align)
 //ScaleToFit { kFill_ScaleToFit, kStart_ScaleToFit, kCenter_ScaleToFit, kEnd_ScaleToFit, }
-static void SetRect2Rect(Matrix&m,const Rect&src,const Rect&dst,int align){
+static void setRect2Rect(Matrix&m,const Rect&src,const Rect&dst,int align){
     float tx, sx = (float)dst.width/ src.width;
     float ty, sy = (float)dst.height / src.height;
     bool  xLarger = false;
     if (align != FIT_XY){//kFill_ScaleToFit) {
         if (sx > sy) {  xLarger = true;  sx = sy; }
-	 else { sy = sx;  }
+        else { sy = sx;  }
     }
     tx = dst.left - src.left * sx;
     ty = dst.top - src.top * sy;
     if (align ==FIT_CENTER||align==FIT_END){// kCenter_ScaleToFit || align == kEnd_ScaleToFit) {
         float diff;
         if (xLarger) diff = dst.width - src.width * sy;
-        else   diff = dst.height - src.height * sy;
+        else diff = dst.height - src.height * sy;
         if (align == FIT_CENTER/*kCenter_ScaleToFit*/) diff*=0.5;//diff = SkScalarHalf(diff);
 
         if (xLarger) tx += diff;
-        else  ty += diff;
+        else ty += diff;
     }
     m.translate(tx,ty);//this->setScaleTranslate(sx, sy, tx, ty);
     m.scale(sx,sy);
@@ -426,7 +430,7 @@ void ImageView::configureBounds(){
     
     const bool fits = (dwidth < 0 || vwidth == dwidth) && (dheight < 0 || vheight == dheight);
 
-    if (dwidth <= 0 || dheight <= 0 || ScaleType::FIT_XY == mScaleType) {
+    if ((dwidth <= 0) || (dheight <= 0) || (ScaleType::FIT_XY == mScaleType)) {
         /* If the drawable has no intrinsic size, or we're told to
            scaletofit, then we just fill our entire view.*/
         mDrawable->setBounds(0, 0, vwidth, vheight);
@@ -448,7 +452,7 @@ void ImageView::configureBounds(){
         } else if (ScaleType::CENTER == mScaleType) {
             // Center bitmap in view, no scaling.
             mDrawMatrix = mMatrix;
-            mDrawMatrix.translate(round((vwidth - dwidth) * 0.5f),  round((vheight - dheight) * 0.5f));
+            mDrawMatrix.translate(std::round((vwidth - dwidth) * 0.5f),  std::round((vheight - dheight) * 0.5f));
         } else if (ScaleType::CENTER_CROP == mScaleType) {
             float scale , dx = 0, dy = 0;
             mDrawMatrix = mMatrix;
@@ -472,8 +476,8 @@ void ImageView::configureBounds(){
                 scale = std::min((float) vwidth / (float) dwidth, (float) vheight / (float) dheight);
             }
 
-            dx = round((vwidth - dwidth * scale) * 0.5f);
-            dy = round((vheight- dheight * scale) * 0.5f);
+            dx = std::round((vwidth - dwidth * scale) * 0.5f);
+            dy = std::round((vheight- dheight * scale) * 0.5f);
 
             mDrawMatrix.translate(dx, dy);
             mDrawMatrix.scale(scale, scale);
@@ -482,8 +486,7 @@ void ImageView::configureBounds(){
             Rect src = {0, 0, dwidth, dheight};
             Rect dst = {0, 0, vwidth, vheight};
             mDrawMatrix = mMatrix;
-            SetRect2Rect(mDrawMatrix,src,dst,mScaleType);
-            //mDrawMatrix.setRectToRect(mTempSrc, mTempDst, scaleTypeToScaleToFit(mScaleType));
+            setRect2Rect(mDrawMatrix,src,dst,mScaleType);
         }
     }
     LOGV("%p:%d ScaleType=%d DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",this,mID,mScaleType,
@@ -492,8 +495,7 @@ void ImageView::configureBounds(){
 
 void ImageView::drawableStateChanged(){
     View::drawableStateChanged();
-    if(mDrawable && mDrawable->isStateful() 
-        && mDrawable->setState(getDrawableState())){
+    if(mDrawable && mDrawable->isStateful() && mDrawable->setState(getDrawableState())){
         invalidateDrawable(*mDrawable);
     }
 }
@@ -538,7 +540,7 @@ void ImageView::setImageDrawable(Drawable*drawable){
 
         updateDrawable(drawable);
 
-        if (oldWidth != mDrawableWidth || oldHeight != mDrawableHeight) {
+        if ((oldWidth != mDrawableWidth) || (oldHeight != mDrawableHeight)) {
             requestLayout();
         }
         invalidate(true);
@@ -553,7 +555,6 @@ void ImageView::setImageLevel(int level){
     }
 }
 
-
 void ImageView::setImageResource(const std::string& resId) {
     // The resource configuration may have changed, so we should always
     // try to load the resource even if the resId hasn't changed.
@@ -564,7 +565,7 @@ void ImageView::setImageResource(const std::string& resId) {
     mResource = resId;
     resolveUri();
 
-    if (oldWidth != mDrawableWidth || oldHeight != mDrawableHeight) {
+    if ((oldWidth != mDrawableWidth) || (oldHeight != mDrawableHeight)) {
         requestLayout();
     }
     invalidate(true);
@@ -638,14 +639,15 @@ ColorFilter* ImageView::getColorFilter(){
 void ImageView::setImageAlpha(int alpha){
     mAlpha = alpha & 0xFF;
 }
+
 int  ImageView::getImageAlpha()const{
     return mAlpha;
 }
 
 bool ImageView::isOpaque() const{
     return View::isOpaque() || mDrawable /*&& mXfermode == null*/
-            && mDrawable->getOpacity() == PixelFormat::OPAQUE
-            && mAlpha * mViewAlphaScale >> 8 == 255
+            && (mDrawable->getOpacity() == PixelFormat::OPAQUE)
+            && (mAlpha * mViewAlphaScale >> 8 == 255)
             && isFilledByImage();
 }
 
@@ -666,13 +668,13 @@ bool ImageView::isFilledByImage() const{
     Rect bounds = mDrawable->getBounds();
     Matrix matrix = mDrawMatrix;
     if (IsIdentity(mDrawMatrix)) {
-        return bounds.left <= 0 && bounds.top <= 0 && bounds.width >= getWidth()
-                && bounds.height >= getHeight();
+        return (bounds.left <= 0) && (bounds.top <= 0) && (bounds.width >= getWidth())
+                && (bounds.height >= getHeight());
     } else if (isRectilinear(matrix)){//matrix.rectStaysRect()) {
         Rect boundsDst = bounds;
         matrix.transform_rectangle((Cairo::RectangleInt&)boundsDst);
-        return boundsDst.left <= 0 && boundsDst.top <= 0 && boundsDst.width >= getWidth()
-                && boundsDst.height >= getHeight();
+        return (boundsDst.left <= 0) && (boundsDst.top <= 0) && (boundsDst.width >= getWidth())
+                && (boundsDst.height >= getHeight());
     }
     // If the matrix doesn't map to a rectangle, assume the worst.
     return false;
@@ -868,7 +870,7 @@ void ImageView::animateTransform(const Cairo::Matrix* matrix) {
 }
 
 void ImageView::onDraw(Canvas& canvas) {
-    if (mDrawable == nullptr||mDrawableWidth == 0 || mDrawableHeight == 0) return;
+    if ((mDrawable == nullptr)||(mDrawableWidth == 0) || (mDrawableHeight == 0)) return;
  
     const double degrees = M_PI / 180.f;
 

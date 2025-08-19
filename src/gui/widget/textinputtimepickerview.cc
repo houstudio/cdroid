@@ -1,7 +1,26 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <iomanip>
 #include <widget/R.h>
 #include <core/textutils.h>
 #include <core/mathutils.h>
+#include <widget/timepicker.h>
+#include <widget/timepickerclockdelegate.h>
 #include <widget/textinputtimepickerview.h>
 namespace cdroid {
 
@@ -49,26 +68,27 @@ TextInputTimePickerView::TextInputTimePickerView(Context* context,const Attribut
             parseAndSetMinuteInternal(editable.toString());
         }
     });
-
+    */
     mAmPmSpinner = (Spinner*)findViewById(R::id::am_pm_spinner);
-    final String[] amPmStrings = TimePicker.getAmPmStrings(context);
-    ArrayAdapter<CharSequence> adapter = new ArrayAdapter<CharSequence>(context, R.layout.simple_spinner_dropdown_item);
+    std::vector<std::string> amPmStrings = TimePicker::getAmPmStrings(context);
+    ArrayAdapter<std::string>* adapter = new ArrayAdapter<std::string>(context, "@cdroid:layout/simple_spinner_dropdown_item",0);
     adapter->add(TimePickerClockDelegate::obtainVerbatim(amPmStrings[0]));
     adapter->add(TimePickerClockDelegate::obtainVerbatim(amPmStrings[1]));
     mAmPmSpinner->setAdapter(adapter);
-    mAmPmSpinner->setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-        @Override
-        public void onItemSelected(AdapterView& adapterView, View& view, int position, long id) {
-            if (position == 0) {
-                mListener.onValueChanged(AMPM, AM);
-            } else {
-                mListener.onValueChanged(AMPM, PM);
-            }
+    mAdapter = adapter;
+    AdapterView::OnItemSelectedListener sl;
+    sl.onItemSelected=[this](AdapterView& adapterView, View& view, int position, long id){
+        if (position == 0) {
+            mListener/*.onValueChanged*/(AMPM, AM);
+        } else {
+            mListener/*.onValueChanged*/(AMPM, PM);
         }
+    };
+    mAmPmSpinner->setOnItemSelectedListener(sl);
+}
 
-        @Override
-        public void onNothingSelected(AdapterView& adapterView) {}
-    });*/
+TextInputTimePickerView::~TextInputTimePickerView(){
+    delete mAdapter;
 }
 
 void TextInputTimePickerView::setListener(const OnValueTypedListener& listener) {
