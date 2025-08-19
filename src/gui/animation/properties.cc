@@ -313,7 +313,7 @@ public:
 
 class SCROLL_X:public Property{
 public:
-    SCROLL_X():Property("scrollX",FLOAT_TYPE){}
+    SCROLL_X():Property("scrollX",INT_TYPE){}
     AnimateValue get(void* object) override{
         return ((View*)object)->getScrollX();
     }
@@ -325,7 +325,7 @@ public:
 
 class SCROLL_Y:public Property{
 public:
-    SCROLL_Y():Property("scrollY",FLOAT_TYPE){}
+    SCROLL_Y():Property("scrollY",INT_TYPE){}
     AnimateValue get(void* object) override{
         return ((View*)object)->getScrollY();
     }
