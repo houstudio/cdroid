@@ -1,8 +1,12 @@
+#include <widget/R.h>
+#include <widget/menupopupwindow.h>
+#include <menu/menupopuphelper.h>
+#include <menu/submenubuilder.h>
 #include <menu/standardmenupopup.h>
 namespace cdroid{
-class StandardMenuPopup:public MenuPopup implements OnDismissListener, OnItemClickListener,
+/*class StandardMenuPopup:public MenuPopup implements OnDismissListener, OnItemClickListener,
         MenuPresenter, OnKeyListener {
-/*private static final int ITEM_LAYOUT = com.android.internal.R.layout.popup_menu_item_layout;
+private static final int ITEM_LAYOUT = com.android.internal.R.layout.popup_menu_item_layout;
 private static final int ITEM_LAYOUT_MATERIAL =com.android.internal.R.layout.popup_menu_item_layout_material;
 
 private final OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
@@ -48,8 +52,7 @@ StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* 
     mPopupStyleAttr = popupStyleAttr;
     mPopupStyleRes = popupStyleRes;
 
-    final Resources res = context.getResources();
-    mPopupMaxWidth = std::max(res.getDisplayMetrics().widthPixels / 2,
+    mPopupMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,
             res.getDimensionPixelSize(com.android.internal.R.dimen.config_prefDialogWidth));
 
     mAnchorView = anchorView;
@@ -57,7 +60,7 @@ StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* 
     mPopup = new MenuPopupWindow(mContext, nullptr, mPopupStyleAttr, mPopupStyleRes);
 
     // Present the menu using our context, not the menu builder's context.
-    menu.addMenuPresenter(this, context);
+    menu->addMenuPresenter(this, context);
 }
 
 void StandardMenuPopup::setForceShowIcon(bool forceShow) {
@@ -73,41 +76,45 @@ bool StandardMenuPopup::tryShow() {
         return true;
     }
 
-    if (mWasDismissed || mAnchorView == nullptr) {
+    if (mWasDismissed || (mAnchorView == nullptr)) {
         return false;
     }
 
     mShownAnchorView = mAnchorView;
 
-    mPopup.setOnDismissListener(this);
-    mPopup.setOnItemClickListener(this);
-    mPopup.setAdapter(mAdapter);
-    mPopup.setModal(true);
+    mPopup->setOnDismissListener([this](){OnDismiss();});
+    mPopup->setOnItemClickListener([this](AdapterView&parent, View& view, int position, long id){
+        onItemClick(parent,view,position,id);
+    });
+    mPopup->setAdapter(mAdapter);
+    mPopup->setModal(true);
 
     View* anchor = mShownAnchorView;
-    const bool addGlobalListener = mTreeObserver == null;
-    mTreeObserver = anchor.getViewTreeObserver(); // Refresh to latest
+    const bool addGlobalListener = mTreeObserver == nullptr;
+    mTreeObserver = anchor->getViewTreeObserver(); // Refresh to latest
     if (addGlobalListener) {
-        mTreeObserver.addOnGlobalLayoutListener(mGlobalLayoutListener);
+        mTreeObserver->addOnGlobalLayoutListener(mGlobalLayoutListener);
     }
-    anchor.addOnAttachStateChangeListener(mAttachStateChangeListener);
-    mPopup.setAnchorView(anchor);
-    mPopup.setDropDownGravity(mDropDownGravity);
+    anchor->addOnAttachStateChangeListener(mAttachStateChangeListener);
+    mPopup->setAnchorView(anchor);
+    mPopup->setDropDownGravity(mDropDownGravity);
 
     if (!mHasContentWidth) {
-        mContentWidth = measureIndividualMenuWidth(mAdapter, null, mContext, mPopupMaxWidth);
+        mContentWidth = measureIndividualMenuWidth(mAdapter, nullptr, mContext, mPopupMaxWidth);
         mHasContentWidth = true;
     }
 
-    mPopup.setContentWidth(mContentWidth);
-    mPopup.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
-    mPopup.setEpicenterBounds(getEpicenterBounds());
-    mPopup.show();
+    mPopup->setContentWidth(mContentWidth);
+    mPopup->setInputMethodMode(PopupWindow::INPUT_METHOD_NOT_NEEDED);
+    mPopup->setEpicenterBounds(getEpicenterBounds());
+    mPopup->show();
 
-    ListView* listView = mPopup.getListView();
-    listView->setOnKeyListener(this);
+    ListView* listView = mPopup->getListView();
+    listView->setOnKeyListener([this](View& v, int keyCode, KeyEvent&event){
+        return onKey(v,keyCode,event);
+    });
 
-    if (mShowTitle && mMenu->getHeaderTitle() != null) {
+    if (mShowTitle && mMenu->getHeaderTitle().size()){// != null) {
         FrameLayout* titleItemView =(FrameLayout*) LayoutInflater::from(mContext)->inflate(
                         com.android.internal.R.layout.popup_menu_header_item_layout,
                         listView, false);
@@ -116,7 +123,7 @@ bool StandardMenuPopup::tryShow() {
             titleView->setText(mMenu->getHeaderTitle());
         }
         titleItemView->setEnabled(false);
-        listView->addHeaderView(titleItemView, null, false);
+        listView->addHeaderView(titleItemView, nullptr, false);
 
         // Update to show the title.
         mPopup->show();
@@ -126,13 +133,13 @@ bool StandardMenuPopup::tryShow() {
 
 void StandardMenuPopup::show() {
     if (!tryShow()) {
-        throw new IllegalStateException("StandardMenuPopup cannot be used without an anchor");
+        throw std::runtime_error("StandardMenuPopup cannot be used without an anchor");
     }
 }
 
 void StandardMenuPopup::dismiss() {
     if (isShowing()) {
-        mPopup.dismiss();
+        mPopup->dismiss();
     }
 }
 
@@ -141,22 +148,22 @@ void StandardMenuPopup::addMenu(MenuBuilder* menu) {
 }
 
 bool StandardMenuPopup::isShowing() {
-    return !mWasDismissed && mPopup.isShowing();
+    return !mWasDismissed && mPopup->isShowing();
 }
 
 void StandardMenuPopup::onDismiss() {
     mWasDismissed = true;
-    mMenu.close();
+    mMenu->close();
 
-    if (mTreeObserver != null) {
-        if (!mTreeObserver.isAlive()) mTreeObserver = mShownAnchorView.getViewTreeObserver();
-        mTreeObserver.removeGlobalOnLayoutListener(mGlobalLayoutListener);
-        mTreeObserver = null;
+    if (mTreeObserver != nullptr) {
+        if (!mTreeObserver->isAlive()) mTreeObserver = mShownAnchorView->getViewTreeObserver();
+        mTreeObserver->removeGlobalOnLayoutListener(mGlobalLayoutListener);
+        mTreeObserver = nullptr;
     }
-    mShownAnchorView.removeOnAttachStateChangeListener(mAttachStateChangeListener);
+    mShownAnchorView->removeOnAttachStateChangeListener(mAttachStateChangeListener);
 
-    if (mOnDismissListener != null) {
-        mOnDismissListener.onDismiss();
+    if (mOnDismissListener != nullptr) {
+        mOnDismissListener/*.onDismiss*/();
     }
 }
 
@@ -168,39 +175,39 @@ void StandardMenuPopup::updateMenuView(bool cleared) {
     }
 }
 
-void StandardMenuPopup::setCallback(Callback cb) {
+void StandardMenuPopup::setCallback(const Callback& cb) {
     mPresenterCallback = cb;
 }
 
-bool StandardMenuPopup::onSubMenuSelected(SubMenuBuilder subMenu) {
-    if (subMenu.hasVisibleItems()) {
-        final MenuPopupHelper subPopup = new MenuPopupHelper(mContext, subMenu,
+bool StandardMenuPopup::onSubMenuSelected(SubMenuBuilder* subMenu) {
+    if (subMenu->hasVisibleItems()) {
+        MenuPopupHelper* subPopup = new MenuPopupHelper(mContext, subMenu,
                 mShownAnchorView, mOverflowOnly, mPopupStyleAttr, mPopupStyleRes);
-        subPopup.setPresenterCallback(mPresenterCallback);
-        subPopup.setForceShowIcon(MenuPopup.shouldPreserveIconSpacing(subMenu));
+        subPopup->setPresenterCallback(mPresenterCallback);
+        subPopup->setForceShowIcon(MenuPopup::shouldPreserveIconSpacing(subMenu));
 
         // Pass responsibility for handling onDismiss to the submenu.
-        subPopup.setOnDismissListener(mOnDismissListener);
-        mOnDismissListener = null;
+        subPopup->setOnDismissListener(mOnDismissListener);
+        mOnDismissListener = nullptr;
 
         // Close this menu popup to make room for the submenu popup.
-        mMenu.close(false /* closeAllMenus */);
+        mMenu->close(false /* closeAllMenus */);
 
         // Show the new sub-menu popup at the same location as this popup.
-        int horizontalOffset = mPopup.getHorizontalOffset();
-        const int verticalOffset = mPopup.getVerticalOffset();
+        int horizontalOffset = mPopup->getHorizontalOffset();
+        const int verticalOffset = mPopup->getVerticalOffset();
 
         // As xOffset of parent menu popup is subtracted with Anchor width for Gravity.RIGHT,
         // So, again to display sub-menu popup in same xOffset, add the Anchor width.
         const int hgrav = Gravity::getAbsoluteGravity(mDropDownGravity,
             mAnchorView->getLayoutDirection()) & Gravity::HORIZONTAL_GRAVITY_MASK;
         if (hgrav == Gravity::RIGHT) {
-          horizontalOffset += mAnchorView.getWidth();
+          horizontalOffset += mAnchorView->getWidth();
         }
 
-        if (subPopup.tryShow(horizontalOffset, verticalOffset)) {
-            if (mPresenterCallback != null) {
-                mPresenterCallback.onOpenSubMenu(subMenu);
+        if (subPopup->tryShow(horizontalOffset, verticalOffset)) {
+            if (mPresenterCallback.onOpenSubMenu != nullptr) {
+                mPresenterCallback.onOpenSubMenu(*subMenu);
             }
             return true;
         }
@@ -208,13 +215,13 @@ bool StandardMenuPopup::onSubMenuSelected(SubMenuBuilder subMenu) {
     return false;
 }
 
-void StandardMenuPopup::onCloseMenu(MenuBuilder menu, bool allMenusAreClosing) {
+void StandardMenuPopup::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing) {
     // Only care about the (sub)menu we're presenting.
     if (menu != mMenu) return;
 
     dismiss();
     if (mPresenterCallback.onCloseMenu != nullptr) {
-        mPresenterCallback.onCloseMenu(menu, allMenusAreClosing);
+        mPresenterCallback.onCloseMenu(*menu, allMenusAreClosing);
     }
 }
 
@@ -226,7 +233,7 @@ Parcelable* StandardMenuPopup::onSaveInstanceState() {
     return nullptr;
 }
 
-void StandardMenuPopup::onRestoreInstanceState(Parcelable state) {
+void StandardMenuPopup::onRestoreInstanceState(Parcelable& state) {
 }
 
 void StandardMenuPopup::setAnchorView(View* anchor) {
@@ -241,7 +248,7 @@ bool StandardMenuPopup::onKey(View& v, int keyCode, KeyEvent& event) {
     return false;
 }
 
-void StandardMenuPopup::setOnDismissListener(OnDismissListener listener) {
+void StandardMenuPopup::setOnDismissListener(const PopupWindow::OnDismissListener& listener) {
     mOnDismissListener = listener;
 }
 

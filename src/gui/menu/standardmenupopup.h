@@ -1,6 +1,10 @@
 #ifndef __STANDARD_MENU_POPUP_H__
 #define __STANDARD_MENU_POPUP_H__
+#include <view/view.h>
+#include <widget/listview.h>
+#include <menu/menupopup.h>
 namespace cdroid{
+class MenuPopupWindow;
 class StandardMenuPopup:public MenuPopup{//implements OnDismissListener, OnItemClickListener,MenuPresenter, OnKeyListener {
 private:
     Context* mContext;
@@ -16,7 +20,7 @@ private:
     View* mAnchorView;
     View* mShownAnchorView;
     Callback mPresenterCallback;
-    ViewTreeObserver mTreeObserver;
+    ViewTreeObserver* mTreeObserver;
 
     /** Whether the popup has been dismissed. Once dismissed, it cannot be opened again. */
     bool mWasDismissed;
@@ -42,24 +46,24 @@ public:
     void addMenu(MenuBuilder* menu) override;
 
     bool isShowing() override;
-    void onDismiss()override;
+    virtual void onDismiss();
 
     void updateMenuView(bool cleared) override;
-    void setCallback(Callback cb) override;
+    void setCallback(const Callback& cb) override;
 
-    bool onSubMenuSelected(SubMenuBuilder subMenu)override;
-    void onCloseMenu(MenuBuilder menu, bool allMenusAreClosing)override;
+    bool onSubMenuSelected(SubMenuBuilder* subMenu)override;
+    void onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)override;
 
     bool flagActionItems()override;
 
     Parcelable* onSaveInstanceState() override;
-    void onRestoreInstanceState(Parcelable state)override;
+    void onRestoreInstanceState(Parcelable& state)override;
 
     void setAnchorView(View* anchor) override;
 
-    bool onKey(View& v, int keyCode, KeyEvent& event) override;
-
-    void setOnDismissListener(OnDismissListener listener) override;
+    virtual bool onKey(View& v, int keyCode, KeyEvent& event);
+    virtual void onItemClick(AdapterView&parent, View& view, int position, long id);
+    void setOnDismissListener(const PopupWindow::OnDismissListener& listener) override;
 
     ListView* getListView() override;
 

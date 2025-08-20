@@ -78,9 +78,9 @@ public:
     int getId()const override;
 
     void onItemClick(AdapterView&parent, View& view, int position, long id);
-    void show();
-    void dismiss();
-    bool isShowing();
+    virtual void show();
+    virtual void dismiss();
+    virtual bool isShowing();
 };
 }/*endof namespace*/
 #endif/*__MENU_POP_H__*/
