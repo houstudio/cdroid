@@ -1,4 +1,24 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
+#include <menu/menuitem.h>
+#include <menu/menuview.h>
 #include <menu/menupopup.h>
+#include <widget/headerviewlistadapter.h>
 namespace cdroid{
 //class MenuPopup implements ShowableListMenu, MenuPresenter,
 //    AdapterView.OnItemClickListener {
@@ -11,12 +31,12 @@ Rect MenuPopup::getEpicenterBounds() const{
     return mEpicenterBounds;
 }
 
-void MenuPopup::initForMenu(Context* context, MenuBuilder* menu) override{
+void MenuPopup::initForMenu(Context* context, MenuBuilder* menu){
     // Don't need to do anything; we added as a presenter in the constructor.
 }
 
 MenuView* MenuPopup::getMenuView(ViewGroup* root) {
-    throw new UnsupportedOperationException("MenuPopups manage their own views");
+    throw /*new UnsupportedOperationException*/("MenuPopups manage their own views");
 }
 
 bool MenuPopup::expandItemActionView(MenuBuilder& menu, MenuItemImpl& item){
@@ -37,7 +57,17 @@ void MenuPopup::onItemClick(AdapterView& parent, View& view, int position, long 
 
     // Use the position from the outer adapter so that if a header view was added, we don't get
     // an off-by-1 error in position.
-    wrappedAdapter->mAdapterMenu->performItemAction((MenuItem*) outerAdapter->getItem(position), 0);
+    FATAL("TODO");//wrappedAdapter->mAdapterMenu->performItemAction((MenuItem*) outerAdapter->getItem(position), 0);
+}
+
+void MenuPopup::show(){
+}
+
+void MenuPopup::dismiss(){
+}
+
+bool MenuPopup::isShowing(){
+    return false;
 }
 
 int MenuPopup::measureIndividualMenuWidth(ListAdapter* adapter, ViewGroup* parent,
@@ -49,7 +79,7 @@ int MenuPopup::measureIndividualMenuWidth(ListAdapter* adapter, ViewGroup* paren
 
     const int widthMeasureSpec = MeasureSpec::makeMeasureSpec(0, MeasureSpec::UNSPECIFIED);
     const int heightMeasureSpec = MeasureSpec::makeMeasureSpec(0, MeasureSpec::UNSPECIFIED);
-    const int count = adapter.getCount();
+    const int count = adapter->getCount();
     for (int i = 0; i < count; i++) {
         const int positionType = adapter->getItemViewType(i);
         if (positionType != itemType) {
@@ -58,7 +88,7 @@ int MenuPopup::measureIndividualMenuWidth(ListAdapter* adapter, ViewGroup* paren
         }
 
         if (parent == nullptr) {
-            parent = new FrameLayout(context);
+            parent = new FrameLayout(context,AttributeSet(context,"cdroid"));
         }
 
         itemView = adapter->getView(i, itemView, parent);
@@ -82,9 +112,9 @@ MenuAdapter* MenuPopup::toMenuAdapter(ListAdapter* adapter) {
     return (MenuAdapter*) adapter;
 }
 
-bool MenuPopup::shouldPreserveIconSpacing(MenuBuilder menu) {
+bool MenuPopup::shouldPreserveIconSpacing(MenuBuilder* menu) {
   bool preserveIconSpacing = false;
-  const int count = menu.size();
+  const int count = menu->size();
   for (int i = 0; i < count; i++) {
       MenuItem* childItem = menu->getItem(i);
       if (childItem->isVisible() && childItem->getIcon() != nullptr) {

@@ -1,4 +1,4 @@
-#if 0
+#if 10
 #include <menu/menuview.h>
 #include <menu/menubuilder.h>
 #include <menu/submenubuilder.h>
@@ -44,7 +44,7 @@ void ActionMenuPresenter::initForMenu(Context* context, MenuBuilder* menu) {
     int width = mWidthLimit;
     if (mReserveOverflow) {
         if (mOverflowButton == nullptr) {
-            mOverflowButton = new OverflowMenuButton(mSystemContext);
+            mOverflowButton = new OverflowMenuButton(this,mSystemContext);
             if (mPendingOverflowIconSet) {
                 mOverflowButton->setImageDrawable(mPendingOverflowIcon);
                 mPendingOverflowIcon = nullptr;
@@ -305,9 +305,9 @@ void ActionMenuPresenter::updateMenuView(bool cleared) {
         for (int i = 0; i < count; i++) {
             ActionProvider* provider = actionItems.at(i)->getActionProvider();
             if (provider != nullptr) {
-                provider->setSubUiVisibilityListener([this](bool isVisible){
+                /*provider->setSubUiVisibilityListener([this](bool isVisible){
                     onSubUiVisibilityChanged(isVisible);
-                });//this);
+                });//this);*/
             }
         }
     }
@@ -326,7 +326,7 @@ void ActionMenuPresenter::updateMenuView(bool cleared) {
 
     if (hasOverflow) {
         if (mOverflowButton == nullptr) {
-            mOverflowButton = new OverflowMenuButton(mSystemContext);
+            mOverflowButton = new OverflowMenuButton(this,mSystemContext);
         }
         ViewGroup* parent = (ViewGroup*) mOverflowButton->getParent();
         if ((void*)parent != (void*)mMenuView) {
@@ -376,7 +376,7 @@ bool ActionMenuPresenter::onSubMenuSelected(SubMenuBuilder* subMenu) {
         }
     }
 
-    mActionButtonPopup = new ActionButtonSubmenu(mContext, subMenu, anchor);
+    mActionButtonPopup = new ActionButtonSubmenu(mContext, subMenu, anchor,this);
     mActionButtonPopup->setForceShowIcon(preserveIconSpacing);
     mActionButtonPopup->show();
 
@@ -406,7 +406,7 @@ View* ActionMenuPresenter::findViewForItem(MenuItem* item) {
 bool ActionMenuPresenter::showOverflowMenu() {
     if (mReserveOverflow && !isOverflowMenuShowing() && mMenu != nullptr && mMenuView != nullptr &&
             mPostedOpenRunnable == nullptr && !mMenu->getNonActionItems().empty()) {
-        OverflowPopup* popup = new OverflowPopup(mContext, mMenu, mOverflowButton, true);
+        OverflowPopup* popup = new OverflowPopup(mContext, mMenu, mOverflowButton, this,true);
         mPostedOpenRunnable = [this,popup](){//new OpenOverflowRunnable(popup);
             if (mMenu != nullptr) {
                 mMenu->changeMenuMode();
@@ -655,8 +655,8 @@ void ActionMenuPresenter::setMenuView(ActionMenuView* menuView) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-#if 0
-static class SavedState implements Parcelable {
+
+/*static class SavedState implements Parcelable {
     public int openSubMenuId;
 
     SavedState() {
@@ -686,131 +686,118 @@ static class SavedState implements Parcelable {
             return new SavedState[size];
         }
     };
-};
+};*/
 
-class OverflowMenuButton extends ImageButton implements ActionMenuView.ActionMenuChildView {
-    public OverflowMenuButton(Context context) {
-        super(context, null, com.android.internal.R.attr.actionOverflowButtonStyle);
+//class OverflowMenuButton extends ImageButton implements ActionMenuView.ActionMenuChildView
+ActionMenuPresenter::OverflowMenuButton::OverflowMenuButton(ActionMenuPresenter*p,Context* context)
+    :ImageButton(context,AttributeSet(context,"cdroid")){//, com.android.internal.R.attr.actionOverflowButtonStyle){
 
-        setClickable(true);
-        setFocusable(true);
-        setVisibility(VISIBLE);
-        setEnabled(true);
-
-        setOnTouchListener(new ForwardingListener(this) {
-            @Override
-            public ShowableListMenu getPopup() {
-                if (mOverflowPopup == null) {
-                    return null;
-                }
-
-                return mOverflowPopup.getPopup();
+    mPresenter = p;
+    setClickable(true);
+    setFocusable(true);
+    setVisibility(VISIBLE);
+    setEnabled(true);
+    /*setOnTouchListener(new ForwardingListener(this) {
+        public ShowableListMenu getPopup() {
+            if (mOverflowPopup == nullptr) {
+                return null;
             }
-
-            @Override
-            public bool onForwardingStarted() {
-                showOverflowMenu();
-                return true;
-            }
-
-            @Override
-            public bool onForwardingStopped() {
-                // Displaying the popup occurs asynchronously, so wait for
-                // the runnable to finish before deciding whether to stop
-                // forwarding.
-                if (mPostedOpenRunnable != null) {
-                    return false;
-                }
-
-                hideOverflowMenu();
-                return true;
-            }
-        });
-    };
-
-    @Override
-    public bool performClick() {
-        if (super.performClick()) {
+            return mOverflowPopup->getPopup();
+        }
+        public bool onForwardingStarted() {
+            showOverflowMenu();
             return true;
         }
 
-        playSoundEffect(SoundEffectConstants.CLICK);
-        showOverflowMenu();
+        public bool onForwardingStopped() {
+            // Displaying the popup occurs asynchronously, so wait for
+            // the runnable to finish before deciding whether to stop forwarding.
+            if (mPostedOpenRunnable != nullptr) {
+                return false;
+            }
+            hideOverflowMenu();
+            return true;
+        }
+    });*/
+};
+
+bool ActionMenuPresenter::OverflowMenuButton::performClick() {
+    if (ImageButton::performClick()) {
         return true;
     }
 
-    @Override
-    public bool needsDividerBefore() {
-        return false;
+    playSoundEffect(SoundEffectConstants::CLICK);
+    mPresenter->showOverflowMenu();
+    return true;
+}
+
+bool ActionMenuPresenter::OverflowMenuButton::needsDividerBefore() {
+    return false;
+}
+
+bool ActionMenuPresenter::OverflowMenuButton::needsDividerAfter() {
+    return false;
+}
+
+void ActionMenuPresenter::OverflowMenuButton::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
+    ImageButton::onInitializeAccessibilityNodeInfoInternal(info);
+    info.setCanOpenPopup(true);
+}
+
+bool ActionMenuPresenter::OverflowMenuButton::setFrame(int l, int t, int r, int b) {
+    const bool changed = ImageButton::setFrame(l, t, r, b);
+
+    // Set up the hotspot bounds to square and centered on the image.
+    Drawable* d = getDrawable();
+    Drawable* bg = getBackground();
+    if (d != nullptr && bg != nullptr) {
+        const int width = getWidth();
+        const int height = getHeight();
+        const int halfEdge = std::max(width, height) / 2;
+        const int offsetX = getPaddingLeft() - getPaddingRight();
+        const int offsetY = getPaddingTop() - getPaddingBottom();
+        const int centerX = (width + offsetX) / 2;
+        const int centerY = (height + offsetY) / 2;
+        bg->setHotspotBounds(centerX - halfEdge, centerY - halfEdge,
+                centerX + halfEdge, centerY + halfEdge);
     }
 
-    @Override
-    public bool needsDividerAfter() {
-        return false;
-    }
+    return changed;
+}
 
-    @Override
-    public void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo info) {
-        super.onInitializeAccessibilityNodeInfoInternal(info);
-        info.setCanOpenPopup(true);
-    }
-
-    @Override
-    protected bool setFrame(int l, int t, int r, int b) {
-        final bool changed = super.setFrame(l, t, r, b);
-
-        // Set up the hotspot bounds to square and centered on the image.
-        final Drawable d = getDrawable();
-        final Drawable bg = getBackground();
-        if (d != null && bg != null) {
-            final int width = getWidth();
-            final int height = getHeight();
-            final int halfEdge = Math.max(width, height) / 2;
-            final int offsetX = getPaddingLeft() - getPaddingRight();
-            final int offsetY = getPaddingTop() - getPaddingBottom();
-            final int centerX = (width + offsetX) / 2;
-            final int centerY = (height + offsetY) / 2;
-            bg.setHotspotBounds(centerX - halfEdge, centerY - halfEdge,
-                    centerX + halfEdge, centerY + halfEdge);
-        }
-
-        return changed;
-    }
-};
-
-ActionMenuPresenter::OverflowPopup::OverflowPopup(Context* context, MenuBuilder* menu, View* anchorView,bool overflowOnly)
-    :MenuPopupHelper(context, menu, anchorView, overflowOnly/*"com.android.internal.R.attr.actionOverflowMenuStyle*/){
-    setGravity(Gravity.END);
-    setPresenterCallback(mPopupPresenterCallback);
+ActionMenuPresenter::OverflowPopup::OverflowPopup(Context* context, MenuBuilder* menu, View* anchorView,ActionMenuPresenter*p,bool overflowOnly)
+    :MenuPopupHelper(context, menu, anchorView, overflowOnly,0/*"com.android.internal.R.attr.actionOverflowMenuStyle*/){
+    setGravity(Gravity::END);
+    mPresenter = p;
+    setPresenterCallback(mPresenter->mPopupPresenterCallback);
 }
 
 void ActionMenuPresenter::OverflowPopup::onDismiss() {
-    if (mMenu != null) {
-        mMenu.close();
+    if (mPresenter->mMenu != nullptr) {
+        mPresenter->mMenu->close();
     }
-    mOverflowPopup = null;
-
-    super.onDismiss();
+    mPresenter->mOverflowPopup = nullptr;
+    MenuPopupHelper::onDismiss();
 }
 
-ActionMenuPresenter::ActionButtonSubmenu::ActionButtonSubmenu(Context* context, SubMenuBuilder* subMenu, View* anchorView)
-    :MenuPopupHelper(context, subMenu, anchorView, false/*,com.android.internal.R.attr.actionOverflowMenuStyle*/){
-
-    MenuItemImpl* item = (MenuItemImpl*) subMenu->getItem();
+ActionMenuPresenter::ActionButtonSubmenu::ActionButtonSubmenu(Context* context, SubMenuBuilder* subMenu, View* anchorView,ActionMenuPresenter*p)
+    :MenuPopupHelper(context, subMenu, anchorView, false,0/*,com.android.internal.R.attr.actionOverflowMenuStyle*/){
+    mPresenter= p;
+    MenuItemImpl* item = nullptr;//TODO (MenuItemImpl*) subMenu->getItem();
     if (!item->isActionButton()) {
         // Give a reasonable anchor to nested submenus.
-        setAnchorView(mOverflowButton == nullptr ? (View*) mMenuView : mOverflowButton);
+        setAnchorView(mPresenter->mOverflowButton == nullptr ? (View*) mPresenter->mMenuView : mPresenter->mOverflowButton);
     }
-    setPresenterCallback(mPopupPresenterCallback);
+    setPresenterCallback(mPresenter->mPopupPresenterCallback);
 }
 
 void ActionMenuPresenter::ActionButtonSubmenu::onDismiss() {
-    mActionButtonPopup = null;
-    mOpenSubMenuId = 0;
+    mPresenter->mActionButtonPopup = nullptr;
+    mPresenter->mOpenSubMenuId = 0;
 
-    super.onDismiss();
+    MenuPopupHelper::onDismiss();
 }
-
+#if 0
 class PopupPresenterCallback implements Callback {
 
     @Override

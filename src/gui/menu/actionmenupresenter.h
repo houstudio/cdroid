@@ -1,14 +1,13 @@
 #ifndef __ACTION_MENU_PRESENTER_H__
 #define __ACTION_MENU_PRESENTER_H__
-#include <widget/imagebutton.h>
 #include <menu/menupopuphelper.h>
 #include <menu/basemenupresenter.h>
 #include <menu/menubuilder.h>
+#include <widget/imagebutton.h>
 namespace cdroid{
 class ActionMenuView;
 class ActionMenuItemView;
-class ActionMenuPresenter:public BaseMenuPresenter{
-        //implements ActionProvider.SubUiVisibilityListener {
+class ActionMenuPresenter:public BaseMenuPresenter{//implements ActionProvider.SubUiVisibilityListener {
 private:
     static constexpr int ITEM_ANIMATION_DURATION = 150;
     static constexpr bool ACTIONBAR_ANIMATIONS_ENABLED = false;
@@ -39,7 +38,6 @@ private:
 
     OverflowPopup* mOverflowPopup;
     ActionButtonSubmenu* mActionButtonPopup;
-
 
     Runnable mPostedOpenRunnable;
     //ActionMenuPopupCallback mPopupCallback;
@@ -89,10 +87,6 @@ public:
 
     bool onSubMenuSelected(SubMenuBuilder* subMenu)override;
 
-    /**
-     * Display the overflow menu if one is present.
-     * @return true if the overflow menu was shown, false otherwise.
-     */
     bool showOverflowMenu();
     bool hideOverflowMenu();
 
@@ -108,16 +102,9 @@ public:
      */
     bool hideSubMenus();
 
-    /**
-     * @return true if the overflow menu is currently showing
-     */
     bool isOverflowMenuShowing()const;
-
     bool isOverflowMenuShowPending()const;
 
-    /**
-     * @return true if space has been reserved in the action menu for an overflow item.
-     */
     bool isOverflowReserved() const;
 
     bool flagActionItems();
@@ -152,35 +139,35 @@ public:
 };*/
 
 class ActionMenuPresenter::OverflowMenuButton:public ImageButton,ActionMenuView::ActionMenuChildView {
+private:
+    ActionMenuPresenter*mPresenter;
 protected:
     bool setFrame(int l, int t, int r, int b)override;
 public:
-    OverflowMenuButton(Context* context);
+    OverflowMenuButton(ActionMenuPresenter*p,Context* context);
 
     bool performClick() override;
-
-    bool needsDividerBefore() override{
-        return false;
-    }
-
-    bool needsDividerAfter() override{
-        return false;
-    }
+    bool needsDividerBefore() override;
+    bool needsDividerAfter() override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info);
 };
 
 class ActionMenuPresenter::OverflowPopup:public MenuPopupHelper {
+private:
+    ActionMenuPresenter*mPresenter;
 protected:
     void onDismiss() override;
 public:
-    OverflowPopup(Context* context, MenuBuilder* menu, View* anchorView,bool overflowOnly);
+    OverflowPopup(Context* context, MenuBuilder* menu, View* anchorView,ActionMenuPresenter*p,bool overflowOnly);
 };
 
 class ActionMenuPresenter::ActionButtonSubmenu:public MenuPopupHelper {
+private:
+    ActionMenuPresenter*mPresenter;
 protected:
     void onDismiss()override;
 public:
-    ActionButtonSubmenu(Context* context, SubMenuBuilder* subMenu, View* anchorView);
+    ActionButtonSubmenu(Context* context, SubMenuBuilder* subMenu, View* anchorView,ActionMenuPresenter*p);
 };
 
 /*class ActionMenuPresenter::PopupPresenterCallback:public MenuPresenter::Callback {

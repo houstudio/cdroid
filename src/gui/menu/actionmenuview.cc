@@ -1,24 +1,26 @@
+#include <core/bitset.h>
 #include <menu/actionmenuview.h>
+#include <menu/actionmenuitemview.h>
+#include <menu/actionmenupresenter.h>
 namespace cdroid{
-class ActionMenuView :public LinearLayout,MenuView{//MenuBuilder.ItemInvoker, MenuView {
 
 ActionMenuView::ActionMenuView(Context* context,const AttributeSet& attrs)
   :LinearLayout(context, attrs){
     setBaselineAligned(false);
-    final float density = context.getResources().getDisplayMetrics().density;
-    mMinCellSize = (int) (MIN_CELL_SIZE * density);
-    mGeneratedItemPadding = (int) (GENERATED_ITEM_PADDING * density);
+    const float density = context->getDisplayMetrics().density;
+    mMinCellSize = int(MIN_CELL_SIZE * density);
+    mGeneratedItemPadding = int(GENERATED_ITEM_PADDING * density);
     mPopupContext = context;
     mPopupTheme = 0;
 }
 
-void ActionMenuView::setPopupTheme(@StyleRes int resId) {
+void ActionMenuView::setPopupTheme(int resId) {
     if (mPopupTheme != resId) {
         mPopupTheme = resId;
         if (resId == 0) {
             mPopupContext = mContext;
         } else {
-            mPopupContext = new ContextThemeWrapper(mContext, resId);
+            mPopupContext = mContext;//new ContextThemeWrapper(mContext, resId);
         }
     }
 }
@@ -27,12 +29,12 @@ int ActionMenuView::getPopupTheme() {
     return mPopupTheme;
 }
 
-void ActionMenuView::setPresenter(ActionMenuPresenter presenter) {
+void ActionMenuView::setPresenter(ActionMenuPresenter* presenter) {
     mPresenter = presenter;
-    mPresenter.setMenuView(this);
+    mPresenter->setMenuView(this);
 }
 
-void ActionMenuView::onConfigurationChanged(Configuration newConfig) {
+/*void ActionMenuView::onConfigurationChanged(Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
 
     if (mPresenter != null) {
@@ -43,15 +45,15 @@ void ActionMenuView::onConfigurationChanged(Configuration newConfig) {
             mPresenter.showOverflowMenu();
         }
     }
-}
+}*/
 
-void ActionMenuView::setOnMenuItemClickListener(OnMenuItemClickListener listener) {
+void ActionMenuView::setOnMenuItemClickListener(const OnMenuItemClickListener& listener) {
     mOnMenuItemClickListener = listener;
 }
 
 void ActionMenuView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     // If we've been given an exact size to match, apply special formatting during layout.
-    final bool wasFormatted = mFormatItems;
+    const bool wasFormatted = mFormatItems;
     mFormatItems = MeasureSpec::getMode(widthMeasureSpec) == MeasureSpec::EXACTLY;
 
     if (wasFormatted != mFormatItems) {
@@ -114,20 +116,20 @@ void ActionMenuView::onMeasureExactFormat(int widthMeasureSpec, int heightMeasur
     bool hasOverflow = false;
 
     // This is used as a bitfield to locate the smallest items present. Assumes childCount < 64.
-    long smallestItemsAt = 0;
+    int64_t smallestItemsAt = 0;
 
     const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
         if (child->getVisibility() == GONE) continue;
 
-        const bool isGeneratedItem = child instanceof ActionMenuItemView;
+        const bool isGeneratedItem = dynamic_cast<ActionMenuItemView*>(child);
         visibleItemCount++;
 
         if (isGeneratedItem) {
             // Reset padding for generated menu item views; it may change below
             // and views are recycled.
-            child.setPadding(mGeneratedItemPadding, 0, mGeneratedItemPadding, 0);
+            child->setPadding(mGeneratedItemPadding, 0, mGeneratedItemPadding, 0);
         }
 
         LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
@@ -219,7 +221,7 @@ void ActionMenuView::onMeasureExactFormat(int widthMeasureSpec, int heightMeasur
     const bool singleItem = !hasOverflow && visibleItemCount == 1;
     if (cellsRemaining > 0 && smallestItemsAt != 0 &&
             (cellsRemaining < visibleItemCount - 1 || singleItem || maxCellsUsed > 1)) {
-        float expandCount = Long.bitCount(smallestItemsAt);
+        float expandCount = BitSet64::count(smallestItemsAt);
 
         if (!singleItem) {
             // The items at the far edges may only expand by half in order to pin to either side.
@@ -260,7 +262,7 @@ void ActionMenuView::onMeasureExactFormat(int widthMeasureSpec, int heightMeasur
                 // and let it center within its space. We still want to pin
                 // against the edges.
                 if (i != 0) {
-                    lp.leftMargin = extraPixels / 2;
+                    lp->leftMargin = extraPixels / 2;
                 }
                 if (i != childCount - 1) {
                     lp->rightMargin = extraPixels / 2;
@@ -292,7 +294,7 @@ void ActionMenuView::onMeasureExactFormat(int widthMeasureSpec, int heightMeasur
     setMeasuredDimension(widthSize, heightSize);
 }
 
-int ActionMenuView::measureChildForCells(View child, int cellSize, int cellsRemaining,
+int ActionMenuView::measureChildForCells(View* child, int cellSize, int cellsRemaining,
         int parentHeightMeasureSpec, int parentHeightPadding) {
     LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
 
@@ -300,8 +302,8 @@ int ActionMenuView::measureChildForCells(View child, int cellSize, int cellsRema
     const int childHeightMode = MeasureSpec::getMode(parentHeightMeasureSpec);
     const int childHeightSpec = MeasureSpec::makeMeasureSpec(childHeightSize, childHeightMode);
 
-    const ActionMenuItemView* itemView = child instanceof ActionMenuItemView ?
-            (ActionMenuItemView*) child : null;
+    const ActionMenuItemView* itemView = dynamic_cast<ActionMenuItemView*>(child) ?
+            (ActionMenuItemView*) child : nullptr;
     const bool hasText = itemView != nullptr && itemView->hasText();
 
     int cellsUsed = 0;
@@ -326,21 +328,21 @@ int ActionMenuView::measureChildForCells(View child, int cellSize, int cellsRema
     return cellsUsed;
 }
 
-void ActionMenuView::onLayout(bool changed, int left, int top, int right, int bottom) {
+void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, int layoutHeight) {
     if (!mFormatItems) {
-        super.onLayout(changed, left, top, right, bottom);
+        LinearLayout::onLayout(changed, left, top, layoutWidth, layoutHeight);
         return;
     }
 
     const int childCount = getChildCount();
-    const int midVertical = (bottom - top) / 2;
+    const int midVertical = layoutHeight / 2;
     const int dividerWidth = getDividerWidth();
     int overflowWidth = 0;
     int nonOverflowWidth = 0;
     int nonOverflowCount = 0;
-    int widthRemaining = right - left - getPaddingRight() - getPaddingLeft();
+    int widthRemaining = layoutWidth - getPaddingRight() - getPaddingLeft();
     bool hasOverflow = false;
-    const bool isLayoutRtl = isLayoutRtl();
+    const bool bLayoutRtl = isLayoutRtl();
     for (int i = 0; i < childCount; i++) {
         View* v = getChildAt(i);
         if (v->getVisibility() == GONE) {
@@ -357,7 +359,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int right, int bo
             int height = v->getMeasuredHeight();
             int r;
             int l;
-            if (isLayoutRtl) {
+            if (bLayoutRtl) {
                 l = getPaddingLeft() + p->leftMargin;
                 r = l + overflowWidth;
             } else {
@@ -386,7 +388,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int right, int bo
         View* v = getChildAt(0);
         const int width = v->getMeasuredWidth();
         const int height = v->getMeasuredHeight();
-        const int midHorizontal = (right - left) / 2;
+        const int midHorizontal = layoutWidth / 2;
         const int l = midHorizontal - width / 2;
         const int t = midVertical - height / 2;
         v->layout(l, t, width, height);
@@ -396,7 +398,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int right, int bo
     const int spacerCount = nonOverflowCount - (hasOverflow ? 0 : 1);
     const int spacerSize = std::max(0, spacerCount > 0 ? widthRemaining / spacerCount : 0);
 
-    if (isLayoutRtl) {
+    if (bLayoutRtl) {
         int startRight = getWidth() - getPaddingRight();
         for (int i = 0; i < childCount; i++) {
             View* v = getChildAt(i);
@@ -410,7 +412,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int right, int bo
             int height = v->getMeasuredHeight();
             int t = midVertical - height / 2;
             v->layout(startRight - width, t, width, height);
-            startRight -= width + lp.leftMargin + spacerSize;
+            startRight -= width + lp->leftMargin + spacerSize;
         }
     } else {
         int startLeft = getPaddingLeft();
@@ -436,14 +438,14 @@ void ActionMenuView::onDetachedFromWindow() {
     dismissPopupMenus();
 }
 
-void ActionMenuView::setOverflowIcon(Drawable icon) {
+void ActionMenuView::setOverflowIcon(Drawable* icon) {
     getMenu();
-    mPresenter.setOverflowIcon(icon);
+    mPresenter->setOverflowIcon(icon);
 }
 
 Drawable* ActionMenuView::getOverflowIcon() {
     getMenu();
-    return mPresenter.getOverflowIcon();
+    return mPresenter->getOverflowIcon();
 }
 
 bool ActionMenuView::isOverflowReserved() {
@@ -454,22 +456,21 @@ void ActionMenuView::setOverflowReserved(bool reserveOverflow) {
     mReserveOverflow = reserveOverflow;
 }
 
-LayoutParams* ActionMenuView::generateDefaultLayoutParams() const{
-    LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT,
-            LayoutParams.WRAP_CONTENT);
-    params.gravity = Gravity.CENTER_VERTICAL;
+ActionMenuView::LayoutParams* ActionMenuView::generateDefaultLayoutParams() const{
+    LayoutParams* params = new LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);
+    params->gravity = Gravity::CENTER_VERTICAL;
     return params;
 }
 
-LayoutParams* ActionMenuView::generateLayoutParams(const AttributeSet& attrs) const{
+ActionMenuView::LayoutParams* ActionMenuView::generateLayoutParams(const AttributeSet& attrs) const{
     return new LayoutParams(getContext(), attrs);
 }
 
-LayoutParams* ActionMenuView::generateLayoutParams(const ViewGroup::LayoutParams* p) const{
-    if (p != null) {
-        LayoutParams* result = dynamic_cast<LayoutParams*>(p)
-                ? new LayoutParams((LayoutParams*) p)
-                : new LayoutParams(p);
+ActionMenuView::LayoutParams* ActionMenuView::generateLayoutParams(const ViewGroup::LayoutParams* p) const{
+    if (p != nullptr) {
+        LayoutParams* result = dynamic_cast<const LayoutParams*>(p)
+                ? new LayoutParams((const LayoutParams&)* p)
+                : new LayoutParams(*p);
         if (result->gravity <= Gravity::NO_GRAVITY) {
             result->gravity = Gravity::CENTER_VERTICAL;
         }
@@ -479,24 +480,24 @@ LayoutParams* ActionMenuView::generateLayoutParams(const ViewGroup::LayoutParams
 }
 
 bool ActionMenuView::checkLayoutParams(const ViewGroup::LayoutParams* p) const{
-    return (p != nullptr) &&dynamic_cast<LayoutParams*>(p);
+    return (p != nullptr) &&dynamic_cast<const LayoutParams*>(p);
 }
 
-LayoutParams* ActionMenuView::generateOverflowButtonLayoutParams() const{
+ActionMenuView::LayoutParams* ActionMenuView::generateOverflowButtonLayoutParams() const{
     LayoutParams* result = generateDefaultLayoutParams();
-    result.isOverflowButton = true;
+    result->isOverflowButton = true;
     return result;
 }
 
-bool ActionMenuView::invokeItem(MenuItemImpl item) {
-    return mMenu.performItemAction(item, 0);
+bool ActionMenuView::invokeItem(MenuItemImpl& item) {
+    return mMenu->performItemAction((MenuItem*)&item, 0);
 }
 
 int ActionMenuView::getWindowAnimations() {
     return 0;
 }
 
-void ActionMenuView::initialize(@Nullable MenuBuilder menu) {
+void ActionMenuView::initialize(MenuBuilder* menu) {
     mMenu = menu;
 }
 
@@ -504,13 +505,25 @@ Menu* ActionMenuView::getMenu() {
     if (mMenu == nullptr) {
         Context* context = getContext();
         mMenu = new MenuBuilder(context);
-        mMenu->setCallback(new MenuBuilderCallback());
+        MenuBuilder::Callback menuCallback;
+        menuCallback.onMenuItemSelected=[this](MenuBuilder& menu, MenuItem& item){
+            return  (mOnMenuItemClickListener!=nullptr)&&mOnMenuItemClickListener(item);
+        };
+        menuCallback.onMenuModeChange=[this](MenuBuilder& menu){
+             if(mMenuBuilderCallback.onMenuModeChange){
+                 mMenuBuilderCallback.onMenuModeChange(menu);
+             }
+        };
+        mMenu->setCallback(menuCallback);
         mPresenter = new ActionMenuPresenter(context);
         mPresenter->setReserveOverflow(true);
-        mPresenter->setCallback(mActionMenuPresenterCallback != nullptr
-                ? mActionMenuPresenterCallback : new ActionMenuPresenterCallback());
-        mMenu.addMenuPresenter(mPresenter, mPopupContext);
-        mPresenter.setMenuView(this);
+        if((mActionMenuPresenterCallback.onOpenSubMenu==nullptr)&&(mActionMenuPresenterCallback.onCloseMenu==nullptr)){
+            mActionMenuPresenterCallback.onCloseMenu=[](MenuBuilder& menu,bool){};
+            mActionMenuPresenterCallback.onOpenSubMenu=[](MenuBuilder&){return false;};
+        }
+        mPresenter->setCallback(mActionMenuPresenterCallback);
+        mMenu->addMenuPresenter(mPresenter, mPopupContext);
+        mPresenter->setMenuView(this);
     }
 
     return mMenu;
@@ -526,24 +539,24 @@ MenuBuilder* ActionMenuView::peekMenu() {
 }
 
 bool ActionMenuView::showOverflowMenu() {
-    return mPresenter != nullptr && mPresenter.showOverflowMenu();
+    return mPresenter != nullptr && mPresenter->showOverflowMenu();
 }
 
 bool ActionMenuView::hideOverflowMenu() {
-    return mPresenter != nullptr && mPresenter.hideOverflowMenu();
+    return mPresenter != nullptr && mPresenter->hideOverflowMenu();
 }
 
 bool ActionMenuView::isOverflowMenuShowing() {
-    return mPresenter != nullptr && mPresenter.isOverflowMenuShowing();
+    return mPresenter != nullptr && mPresenter->isOverflowMenuShowing();
 }
 
 bool ActionMenuView::isOverflowMenuShowPending() {
-    return mPresenter != nullptr && mPresenter.isOverflowMenuShowPending();
+    return mPresenter != nullptr && mPresenter->isOverflowMenuShowPending();
 }
 
 void ActionMenuView::dismissPopupMenus() {
     if (mPresenter != nullptr) {
-        mPresenter.dismissPopupMenus();
+        mPresenter->dismissPopupMenus();
     }
 }
 
@@ -572,6 +585,7 @@ void ActionMenuView::setExpandedActionViewsExclusive(bool exclusive) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
+#if 0
 /**
  * Interface responsible for receiving menu item click events if the items themselves
  * do not have individual item click listeners.
@@ -613,24 +627,23 @@ private class ActionMenuPresenterCallback implements ActionMenuPresenter.Callbac
     }
 }
 
-/** @hide */
 public interface ActionMenuChildView {
     public bool needsDividerBefore();
     public bool needsDividerAfter();
 }
-
+#endif
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 //public static class LayoutParams:public LinearLayout::LayoutParams {
 ActionMenuView::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs):LinearLayout::LayoutParams(c, attrs){
 }
 
-ActionMenuView::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& other)LinearLayout::LayoutParams(other){
+ActionMenuView::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& other):LinearLayout::LayoutParams(other){
 }
 
 ActionMenuView::LayoutParams::LayoutParams(const LayoutParams& other)
     :LinearLayout::LayoutParams((LinearLayout::LayoutParams&) other){
-    isOverflowButton = other->isOverflowButton;
+    isOverflowButton = other.isOverflowButton;
 }
 
 ActionMenuView::LayoutParams::LayoutParams(int width, int height):LinearLayout::LayoutParams(width, height){

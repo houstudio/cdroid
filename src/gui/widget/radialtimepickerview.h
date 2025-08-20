@@ -1,6 +1,7 @@
 #ifndef __RADIAL_TIMEPICKER_VIEW_H__
 #define __RADIAL_TIMEPICKER_VIEW_H__
 #include <view/view.h>
+#include <core/typeface.h>
 #include <widget/explorebytouchhelper.h>
 namespace cdroid{
 
@@ -41,7 +42,10 @@ private:
     final Paint mPaintCenter = new Paint();
     final Paint[] mPaintSelector = new Paint[3];
     final Paint mPaintBackground = new Paint();*/
-
+    int mCenterColor;
+    int mBackgroundColor;
+    class RadialPickerTouchHelper;
+    class Hours2Minutes;
     Typeface* mTypeface;
 
     ColorStateList* mTextColor[3];
@@ -58,7 +62,7 @@ private:
 
     RadialPickerTouchHelper* mTouchHelper;
 
-    Path mSelectorPath = new Path();
+    Path* mSelectorPath;
 
     bool mIs24HourMode;
     bool mShowHours;
@@ -86,9 +90,9 @@ private:
     int mHalfwayDist;
     int mAmOrPm;
 
-    String[] mOuterTextHours;
-    String[] mInnerTextHours;
-    String[] mMinutesText;
+    std::vector<std::string> mOuterTextHours;
+    std::vector<std::string> mInnerTextHours;
+    std::vector<std::string> mMinutesText;
 
     float mDisabledAlpha;
 
@@ -97,27 +101,31 @@ private:
     static int snapPrefer30s(int degrees);
     static int snapOnly30s(int degrees, int forceHigherOrLower);
     void setCurrentHourInternal(int hour, bool callback, bool autoAdvance);
-    int getMinuteForDegrees(int degrees);
-    int getDegreesForMinute(int minute);
+    void setCurrentMinuteInternal(int minute, bool callback);
+    int getMinuteForDegrees(int degrees)const;
+    int getDegreesForMinute(int minute)const;
+    int getHourForDegrees(int degrees, bool innerCircle)const;
+    int getDegreesForHour(int hour);
+    bool getInnerCircleForHour(int hour);
     void initHoursAndMinutesText();
     void initData();
     void showPicker(bool hours, bool animate);
     void animatePicker(bool hoursToMinutes, long duration);
     void drawCircleBackground(Canvas& canvas);
-    void drawHours(Canvas& canvas, Path selectorPath, float alphaMod);
+    void drawHours(Canvas& canvas, Path& selectorPath, float alphaMod);
     void drawHoursClipped(Canvas& canvas, int hoursAlpha, bool showActivated);
-    void drawMinutes(Canvas& canvas, Path selectorPath, float alphaMod);
+    void drawMinutes(Canvas& canvas, Path& selectorPath, float alphaMod);
     void drawMinutesClipped(Canvas& canvas, int minutesAlpha, bool showActivated);
     void drawCenter(Canvas& canvas, float alphaMod);
     int getMultipliedAlpha(int argb, int alpha)const;
-    void drawSelector(Canvas& canvas, Path selectorPath);
+    void drawSelector(Canvas& canvas, Path* selectorPath);
     void calculatePositionsHours();
     void calculatePositionsMinutes();
     static void calculatePositions(Paint paint, float radius, float xCenter, float yCenter,
-    float textSize, float[] x, float[] y);
-    void drawTextElements(Canvas canvas, float textSize, Typeface typeface,
-    ColorStateList textColor, String[] texts, float[] textX, float[] textY, Paint paint,
-    int alpha, bool showActivated, int activatedDegrees, bool activatedOnly);
+        float textSize, float* x, float* y);
+    void drawTextElements(Canvas& canvas, float textSize, Typeface* typeface,
+        ColorStateList* textColor,const std::vector<std::string>& texts, float* textX, float* textY,// Paint paint,
+        int alpha, bool showActivated, int activatedDegrees, bool activatedOnly);
     int getDegreesFromXY(float x, float y, bool constrainOutside);
     bool getInnerCircleFromXY(float x, float y);
     bool handleTouchInput(float x, float y, bool forceSelection, bool autoAdvance);
@@ -126,17 +134,18 @@ protected:
     void onDraw(Canvas& canvas)override;
 public:
     RadialTimePickerView(Context* context,const AttributeSet& attrs);
-
+    ~RadialTimePickerView()override;
     void applyAttributes(const AttributeSet& attrs);
     void initialize(int hour, int minute, bool is24HourMode);
 
     void setCurrentItemShowing(int item, bool animate);
     int getCurrentItemShowing()const;
 
-    void setOnValueSelectedListener(OnValueSelectedListener listener);
+    void setOnValueSelectedListener(const OnValueSelectedListener& listener);
 
     void setCurrentHour(int hour);
     int getCurrentHour()const;
+    void setCurrentMinute(int minute);
     int getCurrentMinute()const;
 
     bool setAmOrPm(int amOrPm);
@@ -171,12 +180,12 @@ private:
 private:
     void adjustPicker(int step);
     int getCircularDiff(int first, int second, int max);
-    int getVirtualViewIdAfter(int type, int value)
+    int getVirtualViewIdAfter(int type, int value);
     int hour12To24(int hour12, int amOrPm);
     int hour24To12(int hour24);
-    void getBoundsForVirtualView(int virtualViewId, Rect bounds);
+    void getBoundsForVirtualView(int virtualViewId, Rect& bounds);
 
-    CharSequence getVirtualViewDescription(int type, int value);
+    std::string getVirtualViewDescription(int type, int value);
 
     bool isVirtualViewSelected(int type, int value);
 
@@ -185,14 +194,14 @@ private:
     int getValueFromId(int id)const;
 protected:
     int getVirtualViewAt(float x, float y)override;
-    void getVisibleVirtualViews(IntArray virtualViewIds)override;
+    void getVisibleVirtualViews(std::vector<int>& virtualViewIds)override;
     void onPopulateEventForVirtualView(int virtualViewId, AccessibilityEvent& event)override;
     void onPopulateNodeForVirtualView(int virtualViewId, AccessibilityNodeInfo& node)override;
-    bool onPerformActionForVirtualView(int virtualViewId, int action,Bundle arguments)override;
+    bool onPerformActionForVirtualView(int virtualViewId, int action,Bundle* arguments)override;
 public:
-    RadialPickerTouchHelper();
-    void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfo info)override;
-    bool performAccessibilityAction(View host, int action, Bundle arguments)override;
+    RadialPickerTouchHelper(RadialTimePickerView*);
+    void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info)override;
+    bool performAccessibilityAction(View& host, int action, Bundle* arguments)override;
 };
 }/*endof namespace*/
 #endif/*__RADIAL_TIMEPICKER_VIEW_H__*/

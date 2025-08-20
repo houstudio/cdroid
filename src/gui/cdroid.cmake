@@ -116,13 +116,18 @@ if(ENABLE_MENU)
         menu/iconmenuview.cc
         menu/listmenupresenter.cc
         menu/menudialoghelper.cc
+        menu/menupopuphelper.cc
         menu/menuitem.cc
         menu/expandedmenuview.cc
         menu/iconmenupresenter.cc
         menu/listmenuitemview.cc
+        menu/actionmenuview.cc
+        menu/actionmenuitemview.cc
+        menu/actionmenupresenter.cc
         menu/menubuilder.cc
         menu/menuinflater.cc
         menu/menuitemimpl.cc
+        menu/menupopup.cc
         widget/menupopupwindow.cc
     )
 endif(ENABLE_MENU)
@@ -185,6 +190,7 @@ list(APPEND CDROID_SOURCES
 list(APPEND CDROID_SOURCES
     widget/adapter.cc
     widget/headerviewlistadapter.cc
+    widget/autoscrollhelper.cc
     widget/adapterview.cc
     widget/filterable.cc
     widget/abslistview.cc
@@ -197,7 +203,6 @@ if(ENABLE_SPINNER)
         widget/absspinner.cc
         widget/spinner.cc #spinner need AlertDialog
         widget/forwardinglistener.cc
-        widget/autoscrollhelper.cc
         widget/listpopupwindow.cc
         widget/dropdownlistview.cc
     )
@@ -232,6 +237,7 @@ if(ENABLE_DAYTIME_WIDGETS)
         widget/daypickerpageradapter.cc
         widget/daypickerspinnerdelegate.cc
         widget/daypickercalendardelegate.cc
+        widget/radialtimepickerview.cc
         #widget/textinputtimepickerview.cc
         widget/timepicker.cc
         widget/timepickerclockdelegate.cc

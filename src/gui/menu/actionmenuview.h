@@ -1,6 +1,7 @@
 #ifndef __ACTION_MENU_VIEW_H__
 #define __ACTION_MENU_VIEW_H__
 #include <menu/menuview.h>
+#include <menu/menubuilder.h>
 #include <menu/menupresenter.h>
 #include <widget/linearlayout.h>
 namespace cdroid{
@@ -59,7 +60,7 @@ protected:
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     bool hasDividerBeforeChildAt(int childIndex)override;
 public:
-    ActionMenuView(Context* context, AttributeSet& attrs);
+    ActionMenuView(Context* context,const AttributeSet& attrs);
 
     void setPopupTheme(int resId);
     int getPopupTheme();
@@ -81,7 +82,7 @@ public:
     void setOverflowReserved(bool reserveOverflow);
 
     LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
-    LayoutParams* generateOverflowButtonLayoutParams();
+    LayoutParams* generateOverflowButtonLayoutParams()const;
 
     virtual bool invokeItem(MenuItemImpl& item);
 
@@ -104,33 +105,6 @@ public:
     bool dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event)override;
 
     void setExpandedActionViewsExclusive(bool exclusive);
-#if 0
-    private class MenuBuilderCallback implements MenuBuilder::Callback {
-        @Override
-        public bool onMenuItemSelected(MenuBuilder menu, MenuItem item) {
-            return mOnMenuItemClickListener != null &&
-                    mOnMenuItemClickListener.onMenuItemClick(item);
-        }
-
-        @Override
-        public void onMenuModeChange(MenuBuilder menu) {
-            if (mMenuBuilderCallback != null) {
-                mMenuBuilderCallback.onMenuModeChange(menu);
-            }
-        }
-    };
-
-    private class ActionMenuPresenterCallback implements ActionMenuPresenter::Callback {
-        @Override
-        public void onCloseMenu(MenuBuilder menu, bool allMenusAreClosing) {
-        }
-
-        @Override
-        public bool onOpenSubMenu(MenuBuilder subMenu) {
-            return false;
-        }
-    };
-#endif
 };/*endof ActionMenuView*/
 }/*endof namespace*/
 #endif/*__ACTION_MENU_VIEW_H__*/
