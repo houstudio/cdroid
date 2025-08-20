@@ -799,7 +799,7 @@ void ActionMenuPresenter::OverflowPopup::onDismiss() {
 ActionMenuPresenter::ActionButtonSubmenu::ActionButtonSubmenu(Context* context, SubMenuBuilder* subMenu, View* anchorView,ActionMenuPresenter*p)
     :MenuPopupHelper(context, subMenu, anchorView, false,0/*,com.android.internal.R.attr.actionOverflowMenuStyle*/){
     mPresenter= p;
-    MenuItemImpl* item = nullptr;//TODO (MenuItemImpl*) subMenu->getItem();
+    MenuItemImpl* item = (MenuItemImpl*) subMenu->getInvokerItem();//(MenuItemImpl*) subMenu->getItem();
     if (!item->isActionButton()) {
         // Give a reasonable anchor to nested submenus.
         setAnchorView(mPresenter->mOverflowButton == nullptr ? (View*) mPresenter->mMenuView : mPresenter->mOverflowButton);
@@ -834,25 +834,6 @@ class PopupPresenterCallback implements Callback {
         if (cb != null) {
             cb.onCloseMenu(menu, allMenusAreClosing);
         }
-    }
-};
-
-class OpenOverflowRunnable implements Runnable {
-    private OverflowPopup mPopup;
-
-    public OpenOverflowRunnable(OverflowPopup popup) {
-        mPopup = popup;
-    }
-
-    public void run() {
-        if (mMenu != null) {
-            mMenu.changeMenuMode();
-        }
-        final View menuView = (View) mMenuView;
-        if (menuView != null && menuView.getWindowToken() != null && mPopup.tryShow()) {
-            mOverflowPopup = mPopup;
-        }
-        mPostedOpenRunnable = null;
     }
 };
 
