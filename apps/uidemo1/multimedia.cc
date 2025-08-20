@@ -1,15 +1,13 @@
 #include <cdroid.h>
-//#include <porting/cdtypes.h>
 #include <porting/cdlog.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-//#include <strings.h>
-//#include <unistd.h>
 #include <dirent.h>
 #include <fstream>
 #include <string.h>
 #include <core/textutils.h>
 #include <fileadapter.h>
+#include <widget/toolbar.h>
 #include <R.h>
 class FileTypeAdapter:public PagerAdapter{
 private:
@@ -35,7 +33,13 @@ public:
             if(btn)btn->setOnClickListener([](View&v){
                  Window*w=new Window(0,0,400,400);
                  w->setBackgroundColor(0x80FF0000);
-            }); 
+            });
+            Toolbar*tb=(Toolbar*)v->findViewById(uidemo1::R::id::toolbar);
+            if(tb){
+                tb->setNavigationOnClickListener([](View&){
+                    LOGD("Navigation Clicked");
+                });
+            }
             return v;
             }break;
         case 0:

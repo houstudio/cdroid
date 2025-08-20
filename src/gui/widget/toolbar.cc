@@ -15,7 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <core/textutils.h>
 #include <widget/toolbar.h>
+#include <gui_features.h>
+
+#ifdef ENABLE_MENU
+   #undef ENABLE_MENU
+#endif
 namespace cdroid{
 
 DECLARE_WIDGET(Toolbar)
@@ -202,6 +208,94 @@ void Toolbar::setTitleMarginBottom(int margin) {
     requestLayout();
 }
 
+void Toolbar::onRtlPropertiesChanged(int layoutDirection){
+    ViewGroup::onRtlPropertiesChanged(layoutDirection);
+    ensureContentInsets();
+    mContentInsets->setDirection(layoutDirection == LAYOUT_DIRECTION_RTL);
+}
+
+bool Toolbar::canShowOverflowMenu()const{
+    return (getVisibility() == VISIBLE) && (mMenuView != nullptr);// && mMenuView->isOverflowReserved();
+}
+
+bool Toolbar::isOverflowMenuShowing()const{
+    return mMenuView != nullptr;//&& mMenuView->isOverflowMenuShowing();
+}
+
+bool Toolbar::isOverflowMenuShowPending()const{
+    return mMenuView != nullptr;//&& mMenuView->isOverflowMenuShowPending();
+}
+
+bool Toolbar::showOverflowMenu(){
+    return mMenuView != nullptr;//&& mMenuView->showOverflowMenu();
+}
+
+bool Toolbar::hideOverflowMenu(){
+    return mMenuView != nullptr;//&& mMenuView->hideOverflowMenu();
+}
+
+void Toolbar::setMenu(MenuBuilder* menu, ActionMenuPresenter& outerPresenter){
+    if (menu == nullptr && mMenuView == nullptr) {
+        return;
+    }
+
+#if 0
+    ensureMenuView();
+    MenuBuilder* oldMenu = mMenuView->peekMenu();
+    if (oldMenu == menu) {
+        return;
+    }
+
+    if (oldMenu != nullptr) {
+        oldMenu->removeMenuPresenter(mOuterActionMenuPresenter);
+        oldMenu->removeMenuPresenter(mExpandedMenuPresenter);
+    }
+
+    if (mExpandedMenuPresenter == nullptr) {
+        mExpandedMenuPresenter = new ExpandedActionViewMenuPresenter();
+    }
+
+    outerPresenter.setExpandedActionViewsExclusive(true);
+    if (menu != nullptr) {
+        menu->addMenuPresenter(outerPresenter, mPopupContext);
+        menu->addMenuPresenter(mExpandedMenuPresenter, mPopupContext);
+    } else {
+        outerPresenter.initForMenu(mPopupContext, nullptr);
+        mExpandedMenuPresenter.initForMenu(mPopupContext, nullptr);
+        outerPresenter.updateMenuView(true);
+        mExpandedMenuPresenter.updateMenuView(true);
+    }
+    mMenuView->setPopupTheme(mPopupTheme);
+    mMenuView->setPresenter(outerPresenter);
+    mOuterActionMenuPresenter = outerPresenter;
+#endif
+}
+
+void Toolbar::dismisssPopupMenus(){
+    if(mMenuView){
+        //mMenuView->dismissPopupMenus();
+    }
+}
+
+bool Toolbar::isTitleTruncated()const{
+    if (mTitleTextView == nullptr) {
+        return false;
+    }
+
+    Layout* titleLayout = mTitleTextView->getLayout();
+    if (titleLayout == nullptr) {
+        return false;
+    }
+
+    const int lineCount = titleLayout->getLineCount();
+    for (int i = 0; i < lineCount; i++) {
+        if (titleLayout->getEllipsisCount(i) > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void Toolbar::setLogo(const std::string& resId){
     setLogo(getContext()->getDrawable(resId));
 }
@@ -246,11 +340,16 @@ void Toolbar::ensureLogoView() {
 }
 
 bool Toolbar::hasExpandedActionView()const{
-   return false;//mExpandedMenuPresenter && mExpandedMenuPresenter.mCurrentExpandedItem;
+   return false;//mExpandedMenuPresenter && mExpandedMenuPresenter->mCurrentExpandedItem;
 }
 
 void Toolbar::collapseActionView(){
-
+    MenuItemImpl* item = nullptr;
+    //if(mExpandedMenuPresenter)
+    //  item = mExpandedMenuPresenter->mCurrentExpandedItem;
+    if (item != nullptr) {
+        item->collapseActionView();
+    }
 }
 
 std::string Toolbar::getTitle()const{
@@ -331,8 +430,69 @@ void Toolbar::setSubtitleTextColor(int color){
     }
 }
 
+View*Toolbar::getNavigationView()const{
+    return mNavButtonView;
+}
+
 std::string Toolbar::getNavigationContentDescription()const{
     return mNavButtonView?mNavButtonView->getContentDescription():"";
+}
+
+std::string Toolbar::getCollapseContentDescription()const{
+    return mCollapseButtonView != nullptr ? mCollapseButtonView->getContentDescription() : std::string();
+}
+
+void Toolbar::setCollapseContentDescription(const std::string&description){
+    if (!TextUtils::isEmpty(description)) {
+        ensureCollapseButtonView();
+    }
+    if (mCollapseButtonView != nullptr) {
+        mCollapseButtonView->setContentDescription(description);
+    }
+}
+
+Drawable* Toolbar::getCollapseIcon() const{
+    return mCollapseButtonView != nullptr ? mCollapseButtonView->getDrawable() : nullptr;
+}
+
+void Toolbar::setCollapseIcon(Drawable* icon){
+    if (icon != nullptr) {
+        ensureCollapseButtonView();
+        mCollapseButtonView->setImageDrawable(icon);
+    } else if (mCollapseButtonView != nullptr) {
+        mCollapseButtonView->setImageDrawable(mCollapseIcon);
+    }
+}
+
+Menu*Toolbar::getMenu() {
+    ensureMenu();
+#if ENABLE(MENU)
+    return mMenuView->getMenu();
+#else
+    return nullptr;
+#endif
+}
+
+void Toolbar::setOverflowIcon(Drawable* icon) {
+    ensureMenu();
+#if ENABLE(MENU)
+    mMenuView->setOverflowIcon(icon);
+#endif
+}
+
+Drawable* Toolbar::getOverflowIcon(){
+    ensureMenu();
+#if ENABLE(MENU)
+    return mMenuView->getOverflowIcon();
+#else
+    return nullptr;
+#endif
+}
+
+void Toolbar::ensureMenu(){
+}
+
+void Toolbar::ensureMenuView(){
 }
 
 void Toolbar::setNavigationContentDescription(const std::string&content){
@@ -362,16 +522,12 @@ Drawable*Toolbar::getNavigationIcon()const{
     return mNavButtonView?mNavButtonView->getDrawable():nullptr;
 }
 
-void Toolbar::setNavigationOnClickListener(View::OnClickListener ls){
+void Toolbar::setNavigationOnClickListener(const View::OnClickListener& ls){
     ensureNavButtonView();
     mNavButtonView->setOnClickListener(ls);  
 }
 
-View*Toolbar::getNavigationView()const{
-    return mNavButtonView;
-}
-
-void Toolbar::setOnMenuItemClickListener(MenuItem::OnMenuItemClickListener listener){
+void Toolbar::setOnMenuItemClickListener(const MenuItem::OnMenuItemClickListener& listener){
     mOnMenuItemClickListener = listener;
 }
 
@@ -1094,7 +1250,7 @@ void Toolbar::addChildrenForExpandedActionView() {
     mHiddenViews.clear();
 }
 
-bool Toolbar::isChildOrHidden(View* child) {
+bool Toolbar::isChildOrHidden(View* child) const{
     auto itr = std::find(mHiddenViews.begin(),mHiddenViews.end(),child);
     return (child->getParent() == this) || (itr!=mHiddenViews.end());
 }
@@ -1104,13 +1260,13 @@ void Toolbar::setCollapsible(bool collapsible) {
     requestLayout();
 }
 
-/*void Toolbar::setMenuCallbacks(MenuPresenter::Callback pcb, MenuBuilder::Callback mcb){
+void Toolbar::setMenuCallbacks(const MenuPresenter::Callback& pcb,const MenuBuilder::Callback& mcb){
     mActionMenuPresenterCallback = pcb;
     mMenuBuilderCallback = mcb;
-    if (mMenuView != null) {
-        mMenuView.setMenuCallbacks(pcb, mcb);
+    if (mMenuView != nullptr) {
+        //mMenuView->setMenuCallbacks(pcb, mcb);
     }
-}*/
+}
 
 void Toolbar::ensureContentInsets() {
     if (mContentInsets == nullptr) {
