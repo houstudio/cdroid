@@ -1,107 +1,94 @@
+#include <widget/R.h>
 #include <menu/cascadingmenupopup.h>
+#include <menu/submenubuilder.h>
+#include <widget/menupopupwindow.h>
 namespace cdroid{
-#if 0
-class CascadingMenuPopup extends MenuPopup implements MenuPresenter, OnKeyListener,
-        PopupWindow.OnDismissListener {
-    private final OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
-        @Override
-        public void onGlobalLayout() {
-            // Only move the popup if it's showing and non-modal. We don't want
-            // to be moving around the only interactive window, since there's a
-            // good chance the user is interacting with it.
-            if (isShowing() && mShowingMenus.size() > 0
-                    && !mShowingMenus.get(0).window.isModal()) {
-                final View anchor = mShownAnchorView;
-                if (anchor == null || !anchor.isShown()) {
-                    dismiss();
-                } else {
-                    // Recompute window sizes and positions.
-                    for (CascadingMenuInfo info : mShowingMenus) {
-                        info.window.show();
-                    }
-                }
+//class CascadingMenuPopup extends MenuPopup implements MenuPresenter, OnKeyListener,PopupWindow.OnDismissListener {
+//private final OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
+void CascadingMenuPopup::onGlobalLayout() {
+    // Only move the popup if it's showing and non-modal. We don't want
+    // to be moving around the only interactive window, since there's a
+    // good chance the user is interacting with it.
+    if (isShowing() && mShowingMenus.size() > 0
+            && !mShowingMenus.at(0)->window->isModal()) {
+        View* anchor = mShownAnchorView;
+        if (anchor == nullptr || !anchor->isShown()) {
+            dismiss();
+        } else {
+            // Recompute window sizes and positions.
+            for (CascadingMenuInfo* info : mShowingMenus) {
+                info->window->show();
             }
         }
-    };
+    }
+}
 
-    private final OnAttachStateChangeListener mAttachStateChangeListener =
-            new OnAttachStateChangeListener() {
-                @Override
-                public void onViewAttachedToWindow(View v) {
-                }
+//OnAttachStateChangeListener mAttachStateChangeListener =new OnAttachStateChangeListener() {
+void CascadingMenuPopup::onViewAttachedToWindow(View* v) {
+}
 
-                @Override
-                public void onViewDetachedFromWindow(View v) {
-                    if (mTreeObserver != null) {
-                        if (!mTreeObserver.isAlive()) {
-                            mTreeObserver = v.getViewTreeObserver();
-                        }
-                        mTreeObserver.removeGlobalOnLayoutListener(mGlobalLayoutListener);
-                    }
-                    v.removeOnAttachStateChangeListener(this);
-                }
-            };
+void CascadingMenuPopup::onViewDetachedFromWindow(View* v) {
+    if (mTreeObserver != nullptr) {
+        if (!mTreeObserver->isAlive()) {
+            mTreeObserver = v->getViewTreeObserver();
+        }
+        mTreeObserver->removeGlobalOnLayoutListener(mGlobalLayoutListener);
+    }
+    v->removeOnAttachStateChangeListener(this);
+}
 
-    private final MenuItemHoverListener mMenuItemHoverListener = new MenuItemHoverListener() {
-        @Override
-        public void onItemHoverExit(@NonNull MenuBuilder menu, @NonNull MenuItem item) {
-            // If the mouse moves between two windows, hover enter/exit pairs
-            // may be received out of order. So, instead of canceling all
-            // pending runnables, only cancel runnables for the host menu.
-            mSubMenuHoverHandler.removeCallbacksAndMessages(menu);
+//MenuItemHoverListener mMenuItemHoverListener = new MenuItemHoverListener() {
+void CascadingMenuPopup::onItemHoverExit(MenuBuilder& menu,MenuItem& item) {
+    // If the mouse moves between two windows, hover enter/exit pairs
+    // may be received out of order. So, instead of canceling all
+    // pending runnables, only cancel runnables for the host menu.
+    mSubMenuHoverHandler->removeCallbacksAndMessages(menu);
+}
+
+void CascadingMenuPopup::onItemHoverEnter(MenuBuilder& menu,MenuItem& item) {
+    // Something new was hovered, cancel all scheduled runnables.
+    mSubMenuHoverHandler->removeCallbacksAndMessages(nullptr);
+
+    // Find the position of the hovered menu within the added menus.
+    int menuIndex = -1;
+    for (int i = 0, count = mShowingMenus.size(); i < count; i++) {
+        if (&menu == mShowingMenus.at(i)->menu) {
+            menuIndex = i;
+            break;
+        }
+    }
+
+    if (menuIndex == -1) {
+        return;
+    }
+
+    CascadingMenuInfo* nextInfo;
+    const int nextIndex = menuIndex + 1;
+    if (nextIndex < mShowingMenus.size()) {
+        nextInfo = mShowingMenus.at(nextIndex);
+    } else {
+        nextInfo = nullptr;
+    }
+
+    Runnable runnable([menu,&item,nextInfo,this](){
+        // Close any other submenus that might be open at the
+        // current or a deeper level.
+        if (nextInfo != nullptr) {
+            // Disable exit animations to prevent overlapping
+            // fading out submenus.
+            mShouldCloseImmediately = true;
+            nextInfo->menu->close(false /* closeAllMenus */);
+            mShouldCloseImmediately = false;
         }
 
-        @Override
-        public void onItemHoverEnter(
-                @NonNull final MenuBuilder menu, @NonNull final MenuItem item) {
-            // Something new was hovered, cancel all scheduled runnables.
-            mSubMenuHoverHandler.removeCallbacksAndMessages(null);
-
-            // Find the position of the hovered menu within the added menus.
-            int menuIndex = -1;
-            for (int i = 0, count = mShowingMenus.size(); i < count; i++) {
-                if (menu == mShowingMenus.get(i).menu) {
-                    menuIndex = i;
-                    break;
-                }
-            }
-
-            if (menuIndex == -1) {
-                return;
-            }
-
-            final CascadingMenuInfo nextInfo;
-            final int nextIndex = menuIndex + 1;
-            if (nextIndex < mShowingMenus.size()) {
-                nextInfo = mShowingMenus.get(nextIndex);
-            } else {
-                nextInfo = null;
-            }
-
-            final Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    // Close any other submenus that might be open at the
-                    // current or a deeper level.
-                    if (nextInfo != null) {
-                        // Disable exit animations to prevent overlapping
-                        // fading out submenus.
-                        mShouldCloseImmediately = true;
-                        nextInfo.menu.close(false /* closeAllMenus */);
-                        mShouldCloseImmediately = false;
-                    }
-
-                    // Then open the selected submenu, if there is one.
-                    if (item.isEnabled() && item.hasSubMenu()) {
-                        menu.performItemAction(item, 0);
-                    }
-                }
-            };
-            final long uptimeMillis = SystemClock.uptimeMillis() + SUBMENU_TIMEOUT_MS;
-            mSubMenuHoverHandler.postAtTime(runnable, menu, uptimeMillis);
+        // Then open the selected submenu, if there is one.
+        if (item.isEnabled() && item.hasSubMenu()) {
+            menu.performItemAction(item, 0);
         }
-    };
-#endif
+    });
+    const int64_t uptimeMillis = SystemClock::uptimeMillis() + SUBMENU_TIMEOUT_MS;
+    mSubMenuHoverHandler->postAtTime(runnable, menu, uptimeMillis);
+}
 
 CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
         int popupStyleAttr, int popupStyleRes, bool overflowOnly) {
@@ -114,9 +101,9 @@ CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
     mForceShowIcon = false;
     mLastPosition = getInitialMenuPosition();
 
-    final Resources res = context.getResources();
-    mMenuMaxWidth = Math.max(res.getDisplayMetrics().widthPixels / 2,
-            res.getDimensionPixelSize(com.android.internal.R.dimen.config_prefDialogWidth));
+    //final Resources res = context.getResources();
+    mMenuMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,
+            0);//res.getDimensionPixelSize(com.android.internal.R.dimen.config_prefDialogWidth));
 
     mSubMenuHoverHandler = new Handler();
 
@@ -128,38 +115,37 @@ void CascadingMenuPopup::setForceShowIcon(bool forceShow) {
 }
 
 MenuPopupWindow* CascadingMenuPopup::createPopupWindow() {
-    MenuPopupWindow popupWindow = new MenuPopupWindow(
-            mContext, null, mPopupStyleAttr, mPopupStyleRes);
-    popupWindow.setHoverListener(mMenuItemHoverListener);
-    popupWindow.setOnItemClickListener(this);
-    popupWindow.setOnDismissListener(this);
-    popupWindow.setAnchorView(mAnchorView);
-    popupWindow.setDropDownGravity(mDropDownGravity);
-    popupWindow.setModal(true);
-    popupWindow.setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
+    MenuPopupWindow* popupWindow = new MenuPopupWindow(mContext, nullptr, mPopupStyleAttr, mPopupStyleRes);
+    popupWindow->setHoverListener(mMenuItemHoverListener);
+    popupWindow->setOnItemClickListener(this);
+    popupWindow->setOnDismissListener(this);
+    popupWindow->setAnchorView(mAnchorView);
+    popupWindow->setDropDownGravity(mDropDownGravity);
+    popupWindow->setModal(true);
+    popupWindow->setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
     return popupWindow;
 }
 
-CascadingMenuPopup::void show() {
+void CascadingMenuPopup::show() {
     if (isShowing()) {
         return;
     }
 
     // Display all pending menus.
-    for (MenuBuilder menu : mPendingMenus) {
+    for (MenuBuilder* menu : mPendingMenus) {
         showMenu(menu);
     }
     mPendingMenus.clear();
 
     mShownAnchorView = mAnchorView;
 
-    if (mShownAnchorView != null) {
-        final boolean addGlobalListener = mTreeObserver == null;
-        mTreeObserver = mShownAnchorView.getViewTreeObserver(); // Refresh to latest
+    if (mShownAnchorView != nullptr) {
+        const bool addGlobalListener = mTreeObserver == nullptr;
+        mTreeObserver = mShownAnchorView->getViewTreeObserver(); // Refresh to latest
         if (addGlobalListener) {
-            mTreeObserver.addOnGlobalLayoutListener(mGlobalLayoutListener);
+            mTreeObserver->addOnGlobalLayoutListener(mGlobalLayoutListener);
         }
-        mShownAnchorView.addOnAttachStateChangeListener(mAttachStateChangeListener);
+        mShownAnchorView->addOnAttachStateChangeListener(mAttachStateChangeListener);
     }
 }
 
@@ -168,20 +154,19 @@ void CascadingMenuPopup::dismiss() {
     // exception, as #onDismiss may clear mPopupWindows while we are
     // iterating. Remove from the last added menu so that the callbacks
     // are received in order from foreground to background.
-    final int length = mShowingMenus.size();
+    const int length = mShowingMenus.size();
     if (length > 0) {
-        final CascadingMenuInfo[] addedMenus =
-                mShowingMenus.toArray(new CascadingMenuInfo[length]);
+        auto& addedMenus =mShowingMenus;// mShowingMenus.toArray(new CascadingMenuInfo[length]);
         for (int i = length - 1; i >= 0; i--) {
-            final CascadingMenuInfo info = addedMenus[i];
-            if (info.window.isShowing()) {
-                info.window.dismiss();
+            CascadingMenuInfo* info = addedMenus[i];
+            if (info->window->isShowing()) {
+                info->window->dismiss();
             }
         }
     }
 }
 
-bool CascadingMenuPopup::onKey(View& v, int keyCode, KeyEventi& event) {
+bool CascadingMenuPopup::onKey(View& v, int keyCode, KeyEvent& event) {
     if (event.getAction() == KeyEvent::ACTION_UP && keyCode == KeyEvent::KEYCODE_MENU) {
         dismiss();
         return true;
@@ -196,7 +181,7 @@ int CascadingMenuPopup::getInitialMenuPosition() {
 }
 
 int CascadingMenuPopup::getNextMenuPosition(int nextMenuWidth) {
-    ListView* lastListView = mShowingMenus->get(mShowingMenus.size() - 1)->getListView();
+    ListView* lastListView = mShowingMenus.at(mShowingMenus.size() - 1)->getListView();
 
     int screenLocation[2];
     lastListView->getLocationOnScreen(screenLocation);
@@ -206,12 +191,12 @@ int CascadingMenuPopup::getNextMenuPosition(int nextMenuWidth) {
 
     if (mLastPosition == HORIZ_POSITION_RIGHT) {
         const int right = screenLocation[0] + lastListView->getWidth() + nextMenuWidth;
-        if (right > displayFrame.right) {
+        if (right > displayFrame.right()) {
             return HORIZ_POSITION_LEFT;
         }
         return HORIZ_POSITION_RIGHT;
     } else { // LEFT
-        final int left = screenLocation[0] - nextMenuWidth;
+        const int left = screenLocation[0] - nextMenuWidth;
         if (left < 0) {
             return HORIZ_POSITION_RIGHT;
         }
@@ -225,11 +210,11 @@ void CascadingMenuPopup::addMenu(MenuBuilder* menu) {
     if (isShowing()) {
         showMenu(menu);
     } else {
-        mPendingMenus.add(menu);
+        mPendingMenus.push_back(menu);
     }
 }
 
-void CascadingMenuPopup::showMenu(MenuBuilder menu) {
+void CascadingMenuPopup::showMenu(MenuBuilder* menu) {
     LayoutInflater* inflater = LayoutInflater::from(mContext);
     MenuAdapter* adapter = new MenuAdapter(menu, inflater, mOverflowOnly, mItemLayout);
 
@@ -239,166 +224,168 @@ void CascadingMenuPopup::showMenu(MenuBuilder menu) {
     // (3) This is the top level menu and icon spacing isn't forced. Do not add spacing.
     if (!isShowing() && mForceShowIcon) {
       // Case 1
-      adapter.setForceShowIcon(true);
+      adapter->setForceShowIcon(true);
     } else if (isShowing()) {
       // Case 2
-      adapter.setForceShowIcon(MenuPopup.shouldPreserveIconSpacing(menu));
+      adapter->setForceShowIcon(MenuPopup::shouldPreserveIconSpacing(menu));
     }
     // Case 3: Else, don't allow spacing for icons (default behavior; do nothing).
 
-    final int menuWidth = measureIndividualMenuWidth(adapter, null, mContext, mMenuMaxWidth);
-    final MenuPopupWindow popupWindow = createPopupWindow();
-    popupWindow.setAdapter(adapter);
-    popupWindow.setContentWidth(menuWidth);
-    popupWindow.setDropDownGravity(mDropDownGravity);
+    const int menuWidth = measureIndividualMenuWidth(adapter, nullptr, mContext, mMenuMaxWidth);
+    MenuPopupWindow* popupWindow = createPopupWindow();
+    popupWindow->setAdapter(adapter);
+    popupWindow->setContentWidth(menuWidth);
+    popupWindow->setDropDownGravity(mDropDownGravity);
 
-    final CascadingMenuInfo parentInfo;
-    final View parentView;
+    CascadingMenuInfo* parentInfo;
+    View* parentView;
     if (mShowingMenus.size() > 0) {
-        parentInfo = mShowingMenus.get(mShowingMenus.size() - 1);
+        parentInfo = mShowingMenus.at(mShowingMenus.size() - 1);
         parentView = findParentViewForSubmenu(parentInfo, menu);
     } else {
-        parentInfo = null;
-        parentView = null;
+        parentInfo = nullptr;
+        parentView = nullptr;
     }
 
-    if (parentView != null) {
+    if (parentView != nullptr) {
         // This menu is a cascading submenu anchored to a parent view.
-        popupWindow.setAnchorView(parentView);
-        popupWindow.setTouchModal(false);
-        popupWindow.setEnterTransition(null);
+        popupWindow->setAnchorView(parentView);
+        popupWindow->setTouchModal(false);
+        popupWindow->setEnterTransition(nullptr);
 
-        final @HorizPosition int nextMenuPosition = getNextMenuPosition(menuWidth);
-        final boolean showOnRight = nextMenuPosition == HORIZ_POSITION_RIGHT;
+        const int nextMenuPosition = getNextMenuPosition(menuWidth);
+        const bool showOnRight = nextMenuPosition == HORIZ_POSITION_RIGHT;
         mLastPosition = nextMenuPosition;
 
         // Compute the horizontal offset to display the submenu to the right or to the left
         // of the parent item.
         // By now, mDropDownGravity is the resolved absolute gravity, so
         // this should work in both LTR and RTL.
-        final int x;
-        if ((mDropDownGravity & Gravity.RIGHT) == Gravity.RIGHT) {
+        int x;
+        if ((mDropDownGravity & Gravity::RIGHT) == Gravity::RIGHT) {
             if (showOnRight) {
                 x = menuWidth;
             } else {
-                x = -parentView.getWidth();
+                x = -parentView->getWidth();
             }
         } else {
             if (showOnRight) {
-                x = parentView.getWidth();
+                x = parentView->getWidth();
             } else {
                 x = -menuWidth;
             }
         }
-        popupWindow.setHorizontalOffset(x);
+        popupWindow->setHorizontalOffset(x);
 
         // Align with the top edge of the parent view (or the bottom edge when the submenu is
         // flipped vertically).
-        popupWindow.setOverlapAnchor(true);
-        popupWindow.setVerticalOffset(0);
+        popupWindow->setOverlapAnchor(true);
+        popupWindow->setVerticalOffset(0);
     } else {
         if (mHasXOffset) {
-            popupWindow.setHorizontalOffset(mXOffset);
+            popupWindow->setHorizontalOffset(mXOffset);
         }
         if (mHasYOffset) {
-            popupWindow.setVerticalOffset(mYOffset);
+            popupWindow->setVerticalOffset(mYOffset);
         }
-        final Rect epicenterBounds = getEpicenterBounds();
-        popupWindow.setEpicenterBounds(epicenterBounds);
+        Rect epicenterBounds = getEpicenterBounds();
+        popupWindow->setEpicenterBounds(epicenterBounds);
     }
 
 
-    final CascadingMenuInfo menuInfo = new CascadingMenuInfo(popupWindow, menu, mLastPosition);
-    mShowingMenus.add(menuInfo);
+    CascadingMenuInfo* menuInfo = new CascadingMenuInfo(popupWindow, menu, mLastPosition);
+    mShowingMenus.push_back(menuInfo);
 
-    popupWindow.show();
+    popupWindow->show();
 
-    final ListView listView = popupWindow.getListView();
-    listView.setOnKeyListener(this);
+    ListView* listView = popupWindow->getListView();
+    listView->setOnKeyListener([this](View&v,int keyCode,KeyEvent&event){
+        return onKey(v,keyCode,event);
+    });
 
     // If this is the root menu, show the title if requested.
-    if (parentInfo == null && mShowTitle && menu.getHeaderTitle() != null) {
-        final FrameLayout titleItemView = (FrameLayout) inflater.inflate(
-                R.layout.popup_menu_header_item_layout, listView, false);
-        final TextView titleView = (TextView) titleItemView.findViewById(R.id.title);
-        titleItemView.setEnabled(false);
-        titleView.setText(menu.getHeaderTitle());
-        listView.addHeaderView(titleItemView, null, false);
+    if (parentInfo == nullptr && mShowTitle && menu->getHeaderTitle() != null) {
+        FrameLayout* titleItemView = (FrameLayout*) inflater->inflate(
+            "cdroid:layout/popup_menu_header_item_layout", listView, false);
+        TextView* titleView = (TextView*) titleItemView->findViewById(R::id::title);
+        titleItemView->setEnabled(false);
+        titleView->setText(menu->getHeaderTitle());
+        listView->addHeaderView(titleItemView, nullptr, false);
 
         // Show again to update the title.
-        popupWindow.show();
+        popupWindow->show();
     }
 }
 
 MenuItem* CascadingMenuPopup::findMenuItemForSubmenu(MenuBuilder* parent, MenuBuilder* submenu) {
-    for (int i = 0, count = parent.size(); i < count; i++) {
-        final MenuItem item = parent.getItem(i);
-        if (item.hasSubMenu() && submenu == item.getSubMenu()) {
+    for (int i = 0, count = parent->size(); i < count; i++) {
+        MenuItem* item = parent->getItem(i);
+        if (item->hasSubMenu() && submenu == item->getSubMenu()) {
             return item;
         }
     }
 
-    return null;
+    return nullptr;
 }
 
 View* CascadingMenuPopup::findParentViewForSubmenu(CascadingMenuInfo* parentInfo, MenuBuilder* submenu) {
-    final MenuItem owner = findMenuItemForSubmenu(parentInfo.menu, submenu);
-    if (owner == null) {
+    MenuItem* owner = findMenuItemForSubmenu(parentInfo->menu, submenu);
+    if (owner == nullptr) {
         // Couldn't find the submenu owner.
-        return null;
+        return nullptr;
     }
 
     // The adapter may be wrapped. Adjust the index if necessary.
-    final int headersCount;
-    final MenuAdapter menuAdapter;
-    final ListView listView = parentInfo.getListView();
-    final ListAdapter listAdapter = listView.getAdapter();
-    if (listAdapter instanceof HeaderViewListAdapter) {
-        final HeaderViewListAdapter headerAdapter = (HeaderViewListAdapter) listAdapter;
-        headersCount = headerAdapter.getHeadersCount();
-        menuAdapter = (MenuAdapter) headerAdapter.getWrappedAdapter();
+    int headersCount;
+    MenuAdapter* menuAdapter;
+    ListView* listView = parentInfo->getListView();
+    ListAdapter* listAdapter = listView->getAdapter();
+    if (dynamic_cast<HeaderViewListAdapter*>(listAdapter)) {
+        HeaderViewListAdapter* headerAdapter = (HeaderViewListAdapter*) listAdapter;
+        headersCount = headerAdapter->getHeadersCount();
+        menuAdapter = (MenuAdapter*) headerAdapter->getWrappedAdapter();
     } else {
         headersCount = 0;
-        menuAdapter = (MenuAdapter) listAdapter;
+        menuAdapter = (MenuAdapter*) listAdapter;
     }
 
     // Find the index within the menu adapter's data set of the menu item.
-    int ownerPosition = AbsListView.INVALID_POSITION;
-    for (int i = 0, count = menuAdapter.getCount(); i < count; i++) {
-        if (owner == menuAdapter.getItem(i)) {
+    int ownerPosition = AbsListView::INVALID_POSITION;
+    for (int i = 0, count = menuAdapter->getCount(); i < count; i++) {
+        if (owner == menuAdapter->getItem(i)) {
             ownerPosition = i;
             break;
         }
     }
-    if (ownerPosition == AbsListView.INVALID_POSITION) {
+    if (ownerPosition == AbsListView::INVALID_POSITION) {
         // Couldn't find the owner within the menu adapter.
-        return null;
+        return nullptr;
     }
 
     // Adjust the index for the adapter used to display views.
     ownerPosition += headersCount;
 
     // Adjust the index for the visible views.
-    final int ownerViewPosition = ownerPosition - listView.getFirstVisiblePosition();
-    if (ownerViewPosition < 0 || ownerViewPosition >= listView.getChildCount()) {
+    const int ownerViewPosition = ownerPosition - listView->getFirstVisiblePosition();
+    if (ownerViewPosition < 0 || ownerViewPosition >= listView->getChildCount()) {
         // Not visible on screen.
-        return null;
+        return nullptr;
     }
 
-    return listView.getChildAt(ownerViewPosition);
+    return listView->getChildAt(ownerViewPosition);
 }
 
 bool CascadingMenuPopup::isShowing() {
-    return mShowingMenus.size() > 0 && mShowingMenus.get(0).window.isShowing();
+    return mShowingMenus.size() > 0 && mShowingMenus.at(0)->window->isShowing();
 }
 
 void CascadingMenuPopup::onDismiss() {
     // The dismiss listener doesn't pass the calling window, so walk
     // through the stack to figure out which one was just dismissed.
-    CascadingMenuInfo dismissedInfo = null;
+    CascadingMenuInfo* dismissedInfo = nullptr;
     for (int i = 0, count = mShowingMenus.size(); i < count; i++) {
-        final CascadingMenuInfo info = mShowingMenus.get(i);
-        if (!info.window.isShowing()) {
+        CascadingMenuInfo* info = mShowingMenus.at(i);
+        if (!info->window->isShowing()) {
             dismissedInfo = info;
             break;
         }
@@ -406,14 +393,14 @@ void CascadingMenuPopup::onDismiss() {
 
     // Close all menus starting from the dismissed menu, passing false
     // since we are manually closing only a subset of windows.
-    if (dismissedInfo != null) {
-        dismissedInfo.menu.close(false);
+    if (dismissedInfo != nullptr) {
+        dismissedInfo->menu->close(false);
     }
 }
 
 void CascadingMenuPopup::updateMenuView(bool cleared) {
-    for (CascadingMenuInfo info : mShowingMenus) {
-        toMenuAdapter(info.getListView().getAdapter()).notifyDataSetChanged();
+    for (CascadingMenuInfo* info : mShowingMenus) {
+        toMenuAdapter(info->getListView()->getAdapter())->notifyDataSetChanged();
     }
 }
 
@@ -423,19 +410,19 @@ void CascadingMenuPopup::setCallback(const Callback& cb) {
 
 bool CascadingMenuPopup::onSubMenuSelected(SubMenuBuilder* subMenu) {
     // Don't allow double-opening of the same submenu.
-    for (CascadingMenuInfo info : mShowingMenus) {
-        if (subMenu == info.menu) {
+    for (CascadingMenuInfo* info : mShowingMenus) {
+        if (subMenu == info->menu) {
             // Just re-focus that one.
-            info.getListView().requestFocus();
+            info->getListView()->requestFocus();
             return true;
         }
     }
 
-    if (subMenu.hasVisibleItems()) {
+    if (subMenu->hasVisibleItems()) {
         addMenu(subMenu);
 
-        if (mPresenterCallback != null) {
-            mPresenterCallback.onOpenSubMenu(subMenu);
+        if (mPresenterCallback.onOpenSubMenu != nullptr) {
+            mPresenterCallback.onOpenSubMenu(*subMenu);
         }
         return true;
     }
@@ -444,8 +431,8 @@ bool CascadingMenuPopup::onSubMenuSelected(SubMenuBuilder* subMenu) {
 
 int CascadingMenuPopup::findIndexOfAddedMenu(MenuBuilder* menu) {
     for (int i = 0, count = mShowingMenus.size(); i < count; i++) {
-        final CascadingMenuInfo info  = mShowingMenus.get(i);
-        if (menu == info.menu) {
+        CascadingMenuInfo* info  = mShowingMenus.at(i);
+        if (menu == info->menu) {
             return i;
         }
     }
@@ -453,32 +440,32 @@ int CascadingMenuPopup::findIndexOfAddedMenu(MenuBuilder* menu) {
     return -1;
 }
 
-void CascadingMenuPopup::onCloseMenu(MenuBuilder menu, bool allMenusAreClosing) {
-    final int menuIndex = findIndexOfAddedMenu(menu);
+void CascadingMenuPopup::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing) {
+    const int menuIndex = findIndexOfAddedMenu(menu);
     if (menuIndex < 0) {
         return;
     }
 
     // Recursively close descendant menus.
-    final int nextMenuIndex = menuIndex + 1;
+    const int nextMenuIndex = menuIndex + 1;
     if (nextMenuIndex < mShowingMenus.size()) {
-        final CascadingMenuInfo childInfo = mShowingMenus.get(nextMenuIndex);
-        childInfo.menu.close(false /* closeAllMenus */);
+        CascadingMenuInfo* childInfo = mShowingMenus.at(nextMenuIndex);
+        childInfo->menu->close(false /* closeAllMenus */);
     }
 
     // Close the target menu.
-    final CascadingMenuInfo info = mShowingMenus.remove(menuIndex);
-    info.menu.removeMenuPresenter(this);
+    CascadingMenuInfo* info = mShowingMenus.remove(menuIndex);
+    info->menu->removeMenuPresenter(this);
     if (mShouldCloseImmediately) {
         // Disable all exit animations.
-        info.window.setExitTransition(null);
-        info.window.setAnimationStyle(0);
+        info->window->setExitTransition(nullptr);
+        info->window->setAnimationStyle(0);
     }
-    info.window.dismiss();
+    info->window->dismiss();
 
-    final int count = mShowingMenus.size();
+    const int count = mShowingMenus.size();
     if (count > 0) {
-        mLastPosition = mShowingMenus.get(count - 1).position;
+        mLastPosition = mShowingMenus.at(count - 1)->position;
     } else {
         mLastPosition = getInitialMenuPosition();
     }
@@ -487,27 +474,27 @@ void CascadingMenuPopup::onCloseMenu(MenuBuilder menu, bool allMenusAreClosing) 
         // This was the last window. Clean up.
         dismiss();
 
-        if (mPresenterCallback != null) {
-            mPresenterCallback.onCloseMenu(menu, true);
+        if (mPresenterCallback.onCloseMenu != nullptr) {
+            mPresenterCallback.onCloseMenu(*menu, true);
         }
 
-        if (mTreeObserver != null) {
-            if (mTreeObserver.isAlive()) {
-                mTreeObserver.removeGlobalOnLayoutListener(mGlobalLayoutListener);
+        if (mTreeObserver != nullptr) {
+            if (mTreeObserver->isAlive()) {
+                mTreeObserver->removeGlobalOnLayoutListener(mGlobalLayoutListener);
             }
-            mTreeObserver = null;
+            mTreeObserver = nullptr;
         }
-        mShownAnchorView.removeOnAttachStateChangeListener(mAttachStateChangeListener);
+        mShownAnchorView->removeOnAttachStateChangeListener(mAttachStateChangeListener);
 
         // If every [sub]menu was dismissed, that means the whole thing was
         // dismissed, so notify the owner.
-        mOnDismissListener.onDismiss();
+        mOnDismissListener();//.onDismiss();
     } else if (allMenusAreClosing) {
         // Close all menus starting from the root. This will recursively
         // close any remaining menus, so we don't need to propagate the
         // "closeAllMenus" flag. The last window will clean up.
-        final CascadingMenuInfo rootInfo = mShowingMenus.get(0);
-        rootInfo.menu.close(false /* closeAllMenus */);
+        CascadingMenuInfo* rootInfo = mShowingMenus.at(0);
+        rootInfo->menu->close(false /* closeAllMenus */);
     }
 }
 
@@ -525,8 +512,8 @@ void CascadingMenuPopup::onRestoreInstanceState(Parcelable& state) {
 void CascadingMenuPopup::setGravity(int dropDownGravity) {
     if (mRawDropDownGravity != dropDownGravity) {
         mRawDropDownGravity = dropDownGravity;
-        mDropDownGravity = Gravity.getAbsoluteGravity(
-                dropDownGravity, mAnchorView.getLayoutDirection());
+        mDropDownGravity = Gravity::getAbsoluteGravity(
+                dropDownGravity, mAnchorView->getLayoutDirection());
     }
 }
 
@@ -535,17 +522,17 @@ void CascadingMenuPopup::setAnchorView(View* anchor) {
         mAnchorView = anchor;
 
         // Gravity resolution may have changed, update from raw gravity.
-        mDropDownGravity = Gravity.getAbsoluteGravity(
-                mRawDropDownGravity, mAnchorView.getLayoutDirection());
+        mDropDownGravity = Gravity::getAbsoluteGravity(
+                mRawDropDownGravity, mAnchorView->getLayoutDirection());
     }
 }
 
-void CascadingMenuPopup::setOnDismissListener(const OnDismissListener& listener) {
+void CascadingMenuPopup::setOnDismissListener(const PopupWindow::OnDismissListener& listener) {
     mOnDismissListener = listener;
 }
 
 ListView* CascadingMenuPopup::getListView() {
-    return mShowingMenus.isEmpty() ? null : mShowingMenus.get(mShowingMenus.size() - 1).getListView();
+    return mShowingMenus.empty() ? nullptr : mShowingMenus.at(mShowingMenus.size() - 1)->getListView();
 }
 
 void CascadingMenuPopup::setHorizontalOffset(int x) {
@@ -563,15 +550,15 @@ void CascadingMenuPopup::setShowTitle(bool showTitle) {
 }
 
 ///private static class CascadingMenuInfo {
-CascadingMenuPopup::CascadingMenuInfo::CascadingMenuInfo(@NonNull MenuPopupWindow window, @NonNull MenuBuilder menu,
+CascadingMenuPopup::CascadingMenuInfo::CascadingMenuInfo(MenuPopupWindow* window, MenuBuilder* menu,
         int position) {
-    this.window = window;
-    this.menu = menu;
-    this.position = position;
+    this->window = window;
+    this->menu = menu;
+    this->position = position;
 }
 
 ListView* CascadingMenuPopup::CascadingMenuInfo::getListView() {
-    return window.getListView();
+    return window->getListView();
 }
 }/*endof namespace*/
 

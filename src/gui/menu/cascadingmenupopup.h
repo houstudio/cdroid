@@ -1,8 +1,10 @@
 #ifndef __CASCADING_MENU_POPUP_H__
 #define __CASCADING_MENU_POPUP_H__
-#include <view/view.h>
+#include <widget/listview.h>
+#include <widget/popupwindow.h>
 #include <menu/menupopup.h>
 namespace cdroid{
+class MenuPopupWindow;
 class CascadingMenuPopup:public MenuPopup{// implements MenuPresenter, OnKeyListener,PopupWindow.OnDismissListener {
 private:
     static constexpr int HORIZ_POSITION_LEFT = 0;
@@ -18,8 +20,8 @@ private:
     Handler* mSubMenuHoverHandler;
     std::vector<MenuBuilder*> mPendingMenus;
     std::vector<CascadingMenuInfo*> mShowingMenus;
-
-    OnAttachStateChangeListener mAttachStateChangeListener;
+    ViewTreeObserver::OnGlobalLayoutListener mGlobalLayoutListener;
+    View::OnAttachStateChangeListener mAttachStateChangeListener;
     MenuItemHoverListener mMenuItemHoverListener;
 
     int mRawDropDownGravity = Gravity::NO_GRAVITY;
@@ -41,6 +43,11 @@ private:
     /** Whether popup menus should disable exit animations when closing. */
     bool mShouldCloseImmediately;
 private:
+    void onGlobalLayout();
+    void onViewAttachedToWindow(View*);
+    void onViewDetachedFromWindow(View*);
+    void onItemHoverExit(MenuBuilder& menu,MenuItem& item);
+    void onItemHoverEnter(MenuBuilder& menu,MenuItem& item);
     MenuPopupWindow* createPopupWindow();
     int getInitialMenuPosition();
     int getNextMenuPosition(int nextMenuWidth);
@@ -56,25 +63,23 @@ public:
     void show() override;
 
     void dismiss() override;
-    bool onKey(View& v, int keyCode, KeyEvent& event) override;
+    bool onKey(View& v, int keyCode, KeyEvent& event);
 
     void addMenu(MenuBuilder* menu)override;
 
     bool isShowing() override;
 
-    void onDismiss() override;
+    void onDismiss();
 
     void updateMenuView(bool cleared)override;
 
     void setCallback(const Callback& cb) override;
     bool onSubMenuSelected(SubMenuBuilder* subMenu)override;
-
-    void onCloseMenu(MenuBuilder menu, bool allMenusAreClosing)override;
+    void onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)override;
 
     bool flagActionItems()override;
 
-    Parcelable onSaveInstanceState()override;
-
+    Parcelable* onSaveInstanceState()override;
     void onRestoreInstanceState(Parcelable& state)override;
 
     void setGravity(int dropDownGravity)override;
@@ -86,9 +91,7 @@ public:
     ListView* getListView()override;
 
     void setHorizontalOffset(int x)override;
-
     void setVerticalOffset(int y)override;
-
     void setShowTitle(bool showTitle) override;
 };
 class CascadingMenuPopup::CascadingMenuInfo {
@@ -97,14 +100,8 @@ public:
     MenuBuilder* menu;
     int position;
 public:
-    CascadingMenuInfo(MenuPopupWindow* window,MenuBuilder* menu,int position) {
-        this->window = window;
-        this->menu = menu;
-        this->position = position;
-    }
-    ListView* getListView() {
-        return window->getListView();
-    }
+    CascadingMenuInfo(MenuPopupWindow* window,MenuBuilder* menu,int position);
+    ListView* getListView();
 };
 }/*endof namespace*/
 #endif/*__CASCADING_MENU_POPUP_H__*/
