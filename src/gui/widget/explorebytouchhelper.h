@@ -48,9 +48,6 @@ private:
     /** System accessibility manager, used to check state and send events. */
     AccessibilityManager* mManager;
 
-    /** View whose internal structure is exposed through this helper. */
-    View* mView;
-
     /** Context of the host view. **/
     Context* mContext;
 
@@ -62,6 +59,9 @@ private:
 
     /** Virtual view id for the currently hovered logical item. */
     int mHoveredVirtualViewId = INVALID_ID;
+protected:
+    /** View whose internal structure is exposed through this helper. */
+    View* mView;
 public:
     /**
      * Factory method to create a new {@link ExploreByTouchHelper}.

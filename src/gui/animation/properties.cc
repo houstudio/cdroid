@@ -76,7 +76,7 @@ public:
         return cd->getColor();
     }
     void set(void* object,const AnimateValue& value)override{
-        LOGV("%p color=%.3f",object,GET_VARIANT(value,float));
+        LOGV("%p color=%.3f",object,GET_VARIANT(value,int));
         cd->mutate()->setColor(GET_VARIANT(value,int));
     }
 };
@@ -313,7 +313,7 @@ public:
 
 class SCROLL_X:public Property{
 public:
-    SCROLL_X():Property("scrollX",FLOAT_TYPE){}
+    SCROLL_X():Property("scrollX",INT_TYPE){}
     AnimateValue get(void* object) override{
         return ((View*)object)->getScrollX();
     }
@@ -325,7 +325,7 @@ public:
 
 class SCROLL_Y:public Property{
 public:
-    SCROLL_Y():Property("scrollY",FLOAT_TYPE){}
+    SCROLL_Y():Property("scrollY",INT_TYPE){}
     AnimateValue get(void* object) override{
         return ((View*)object)->getScrollY();
     }
@@ -338,6 +338,7 @@ public:
 static std::unordered_map<std::string,std::shared_ptr<Property>>props={
     {"alpha",std::make_shared<ALPHA>()},
     {"bottom",std::make_shared<BOTTOM>()},
+    {"backgroundColor",std::make_shared<BACKGROUND_COLOR>()},
     {"elevation",std::make_shared<ELEVATION>()},
     {"left",std::make_shared<LEFT>()},
     {"pivotX",std::make_shared<PIVOT_X>()},
