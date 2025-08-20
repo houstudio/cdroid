@@ -19,9 +19,6 @@
 #include <widget/toolbar.h>
 #include <gui_features.h>
 
-#ifdef ENABLE_MENU
-   #undef ENABLE_MENU
-#endif
 namespace cdroid{
 
 DECLARE_WIDGET(Toolbar)
@@ -238,7 +235,7 @@ void Toolbar::setMenu(MenuBuilder* menu, ActionMenuPresenter& outerPresenter){
     if (menu == nullptr && mMenuView == nullptr) {
         return;
     }
-
+    LOGE("TODO");
 #if 0
     ensureMenuView();
     MenuBuilder* oldMenu = mMenuView->peekMenu();
@@ -273,7 +270,7 @@ void Toolbar::setMenu(MenuBuilder* menu, ActionMenuPresenter& outerPresenter){
 
 void Toolbar::dismisssPopupMenus(){
     if(mMenuView){
-        //mMenuView->dismissPopupMenus();
+        mMenuView->dismissPopupMenus();
     }
 }
 
@@ -600,8 +597,8 @@ int Toolbar::getCurrentContentInsetStart()const{
 int Toolbar::getCurrentContentInsetEnd()const{
      bool hasActions = false;
      if (mMenuView != nullptr) {
-         //MenuBuilder mb = mMenuView->peekMenu();
-         //hasActions = mb != nullptr && mb.hasVisibleItems();
+         MenuBuilder* mb = mMenuView->peekMenu();
+         hasActions = mb != nullptr && mb->hasVisibleItems();
      }
      return hasActions
           ? std::max(getContentInsetEnd(), std::max(mContentInsetEndWithActions, 0))
@@ -676,7 +673,7 @@ void Toolbar::onDetachedFromWindow(){
 }
 
 bool Toolbar::onTouchEvent(MotionEvent&ev){
-    int action = ev.getActionMasked();
+    const int action = ev.getActionMasked();
     if (action == MotionEvent::ACTION_DOWN) {
         mEatingTouch = false;
     }
@@ -688,7 +685,7 @@ bool Toolbar::onTouchEvent(MotionEvent&ev){
         }
     }
 
-    if (action == MotionEvent::ACTION_UP || action == MotionEvent::ACTION_CANCEL) {
+    if ((action == MotionEvent::ACTION_UP) || (action == MotionEvent::ACTION_CANCEL)) {
         mEatingTouch = false;
     }
 
@@ -745,7 +742,7 @@ int Toolbar::measureChildCollapseMargins(View* child,int parentWidthMeasureSpec,
 
 bool Toolbar::shouldCollapse(){
     if (!mCollapsible) return false;
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
         if (shouldLayout(child) && child->getMeasuredWidth() > 0 &&
@@ -1264,7 +1261,7 @@ void Toolbar::setMenuCallbacks(const MenuPresenter::Callback& pcb,const MenuBuil
     mActionMenuPresenterCallback = pcb;
     mMenuBuilderCallback = mcb;
     if (mMenuView != nullptr) {
-        //mMenuView->setMenuCallbacks(pcb, mcb);
+        mMenuView->setMenuCallbacks(pcb, mcb);
     }
 }
 
