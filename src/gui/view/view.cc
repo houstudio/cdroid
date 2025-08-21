@@ -9507,7 +9507,7 @@ void View::rebuildOutline() {
         //mRenderNode.setOutline(outline);
     }
 }
-LayoutParams*View::getLayoutParams()    {
+LayoutParams*View::getLayoutParams()const {
     return mLayoutParams;
 }
 

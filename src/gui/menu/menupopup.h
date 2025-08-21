@@ -1,9 +1,31 @@
-#ifndef __MENU_POP_H__
-#define __MENU_POP_H__
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
+#ifndef __MENU_POPUP_H__
+#define __MENU_POPUP_H__
+#include <menu/menubuilder.h>
+#include <menu/menupresenter.h>
+#include <widget/adapterview.h>
 #include <widget/popupwindow.h>
 namespace cdroid{
-class MenuPopup implements ShowableListMenu, MenuPresenter,
-        AdapterView.OnItemClickListener {
+class MenuView;
+class MenuAdapter;
+class MenuPopup:public MenuPresenter{//implements ShowableListMenu, MenuPresenter,
+        //AdapterView::OnItemClickListener {
 private:
     Rect mEpicenterBounds;
 protected:
@@ -14,11 +36,11 @@ protected:
 public:
     virtual void setForceShowIcon(bool forceShow)=0;
 
-    virtual void addMenu(MenuBuilder menu)=0;
+    virtual void addMenu(MenuBuilder* menu)=0;
 
     virtual void setGravity(int dropDownGravity)=0;
 
-    virtual void setAnchorView(View anchor)=0;
+    virtual void setAnchorView(View* anchor)=0;
 
     virtual void setHorizontalOffset(int x)=0;
     virtual void setVerticalOffset(int y)=0;
@@ -45,7 +67,7 @@ public:
      *
      * @param listener Listener that will be notified when the popup is dismissed.
      */
-    void setOnDismissListener(const PopupWindow::OnDismissListener& listener)=0;
+    virtual void setOnDismissListener(const PopupWindow::OnDismissListener& listener)=0;
 
     void initForMenu(Context* context, MenuBuilder* menu) override;
     MenuView* getMenuView(ViewGroup* root);
@@ -56,6 +78,9 @@ public:
     int getId()const override;
 
     void onItemClick(AdapterView&parent, View& view, int position, long id);
+    virtual void show();
+    virtual void dismiss();
+    virtual bool isShowing();
 };
 }/*endof namespace*/
 #endif/*__MENU_POP_H__*/

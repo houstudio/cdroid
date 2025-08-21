@@ -1506,7 +1506,7 @@ public:
     ViewOutlineProvider getOutlineProvider()const;
     void invalidateOutline();
     ViewPropertyAnimator& animate();
-    LayoutParams*getLayoutParams();
+    LayoutParams*getLayoutParams()const;
     int getRawLayoutDirection()const;
     bool isLayoutDirectionInherited()const;
     void setLayoutParams(LayoutParams*lp);

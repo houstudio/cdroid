@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef __BASE_MENU_PRESENTER_H__
 #define __BASE_MENU_PRESENTER_H__
 #include <menu/menuview.h>
@@ -24,39 +41,14 @@ public:
 
     void initForMenu(Context* context, MenuBuilder* menu)override;
     MenuView* getMenuView(ViewGroup* root)override;
-    /**
-     * Reuses item views when it can
-     */
     void updateMenuView(bool cleared);
     void setCallback(const Callback& cb)override;
     Callback getCallback();
 
-    /**
-     * Create a new item view that can be re-bound to other item data later.
-     *
-     * @return The new item view
-     */
     MenuView::ItemView* createItemView(ViewGroup* parent);
 
-    /**
-     * Prepare an item view for use. See AdapterView for the basic idea at work here.
-     * This may require creating a new item view, but well-behaved implementations will
-     * re-use the view passed as convertView if present. The returned view will be populated
-     * with data from the item parameter.
-     *
-     * @param item Item to present
-     * @param convertView Existing view to reuse
-     * @param parent Intended parent view - use for inflation.
-     * @return View that presents the requested menu item
-     */
     virtual View* getItemView(MenuItemImpl* item, View* convertView, ViewGroup* parent);
 
-    /**
-     * Bind item data to an existing item view.
-     *
-     * @param item Item to bind
-     * @param itemView View to populate with item data
-     */
     virtual void bindItemView(MenuItemImpl* item, MenuView::ItemView* itemView)=0;
 
     virtual bool shouldIncludeItem(int childIndex, MenuItemImpl* item);

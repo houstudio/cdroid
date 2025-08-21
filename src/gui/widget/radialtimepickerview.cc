@@ -1,12 +1,15 @@
+#if 0
+#include <core/calendar.h>
+#include <core/mathutils.h>
 #include <widget/radialtimepickerview.h>
 namespace cdroid{
-
+#define NUM_POSITIONS 12
 static int HOURS_NUMBERS[] = {12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 static int HOURS_NUMBERS_24[] = {0, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
 static int MINUTES_NUMBERS[] = {0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55};
 static int SNAP_PREFER_30S_MAP[361];
-static float COS_30[NUM_POSITIONS];
-static float SIN_30[NUM_POSITIONS];
+static float COS_30[NUM_POSITIONS]={0.f};
+static float SIN_30[NUM_POSITIONS]={0.f};
 static void preparePrefer30sMap() {
     int snappedOutputDegrees = 0;
     int count = 1;
@@ -29,9 +32,10 @@ static void preparePrefer30sMap() {
         }
     }
 }
-static std::once_flag sInit;
-std::call_once(sInit[](){
+
+static void staticInit(){
     // Prepare mapping to snap touchable degrees to selectable degrees.
+    if(COS_30[0]!=0.f)return;
     preparePrefer30sMap();    
     const double increment = 2.0 * M_PI / NUM_POSITIONS;
     double angle = M_PI / 2.0;
@@ -40,26 +44,33 @@ std::call_once(sInit[](){
         SIN_30[i] = (float) std::sin(angle);
         angle += increment;
     }
-});
+};
 
-private FloatProperty<RadialTimePickerView> HOURS_TO_MINUTES =
+class RadialTimePickerView::Hours2Minutes:public Property{
+public:
+    Hours2Minutes():Property("hoursToMinutes",FLOAT_TYPE){}
+    AnimateValue get(void* object) override{
+        return ((RadialTimePickerView*)object)->mHoursToMinutes;
+    }
+    void set(void* object,const AnimateValue& value)override{
+        LOGV("%p scaleY=%d",GET_VARIANT(value,int));
+        ((RadialTimePickerView*)object)->mHoursToMinutes=(GET_VARIANT(value,int));
+    }
+};
+
+/*private FloatProperty<RadialTimePickerView> HOURS_TO_MINUTES =
     new FloatProperty<RadialTimePickerView>("hoursToMinutes") {
-        @Override
         public Float get(RadialTimePickerView radialTimePickerView) {
             return radialTimePickerView.mHoursToMinutes;
         }
 
-        @Override
         public void setValue(RadialTimePickerView object, float value) {
             object.mHoursToMinutes = value;
             object.invalidate();
         }
-    };
+};*/
 
 int RadialTimePickerView::snapPrefer30s(int degrees) {
-    if (SNAP_PREFER_30S_MAP == null) {
-        return -1;
-    }
     return SNAP_PREFER_30S_MAP[degrees];
 }
 
@@ -87,7 +98,7 @@ int RadialTimePickerView::snapOnly30s(int degrees, int forceHigherOrLower) {
 
 RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet& attrs)
     :View(context, attrs){
-
+    staticInit();
     applyAttributes(attrs, defStyleAttr, defStyleRes);
 
     // Pull disabled alpha from theme.
@@ -117,7 +128,7 @@ RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet& 
     mPaintSelector[SELECTOR_LINE].setAntiAlias(true);
     mPaintSelector[SELECTOR_LINE].setStrokeWidth(2);
 
-    mPaintBackground.setAntiAlias(true);
+    //mPaintBackground.setAntiAlias(true);
 
     final Resources res = getResources();
     mSelectorRadius = res.getDimensionPixelSize(R.dimen.timepicker_selector_radius);
@@ -139,7 +150,7 @@ RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet& 
     mAmOrPm = AM;
 
     // Set up accessibility components.
-    mTouchHelper = new RadialPickerTouchHelper();
+    mTouchHelper = new RadialPickerTouchHelper(this);
     setAccessibilityDelegate(mTouchHelper);
 
     if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
@@ -160,6 +171,10 @@ RadialTimePickerView::RadialTimePickerView(Context* context,const AttributeSet& 
     setHapticFeedbackEnabled(true);
 }
 
+RadialTimePickerView::~RadialTimePickerView(){
+    delete mTouchHelper;
+}
+
 void RadialTimePickerView::applyAttributes(const AttributeSet& attrs) {
     Context* context = getContext();
     final TypedArray a = getContext().obtainStyledAttributes(attrs,
@@ -171,35 +186,36 @@ void RadialTimePickerView::applyAttributes(const AttributeSet& attrs) {
             R.styleable.TimePicker_numbersTextColor);
     ColorStateList* numbersInnerTextColor = a.getColorStateList(
             R.styleable.TimePicker_numbersInnerTextColor);
-    mTextColor[HOURS] = numbersTextColor == null ?
-            ColorStateList.valueOf(MISSING_COLOR) : numbersTextColor;
-    mTextColor[HOURS_INNER] = numbersInnerTextColor == null ?
-            ColorStateList.valueOf(MISSING_COLOR) : numbersInnerTextColor;
+    mTextColor[HOURS] = numbersTextColor == nullptr ?
+            ColorStateList::valueOf(MISSING_COLOR) : numbersTextColor;
+    mTextColor[HOURS_INNER] = numbersInnerTextColor == nullptr ?
+            ColorStateList::valueOf(MISSING_COLOR) : numbersInnerTextColor;
     mTextColor[MINUTES] = mTextColor[HOURS];
 
     // Set up various colors derived from the selector "activated" state.
     ColorStateList* selectorColors = a.getColorStateList(
             R.styleable.TimePicker_numbersSelectorColor);
     int selectorActivatedColor;
-    if (selectorColors != null) {
-        std::vector<int> stateSetEnabledActivated = StateSet.get(
-                StateSet.VIEW_STATE_ENABLED | StateSet.VIEW_STATE_ACTIVATED);
-        selectorActivatedColor = selectorColors.getColorForState(
+    if (selectorColors != nullptr) {
+        std::vector<int> stateSetEnabledActivated = StateSet::get(
+                StateSet::VIEW_STATE_ENABLED | StateSet::VIEW_STATE_ACTIVATED);
+        selectorActivatedColor = selectorColors->getColorForState(
                 stateSetEnabledActivated, 0);
     }  else {
         selectorActivatedColor = MISSING_COLOR;
     }
 
-    mPaintCenter.setColor(selectorActivatedColor);
+    mCenterColor = selectorActivatedColor;//mPaintCenter.setColor(selectorActivatedColor);
 
     std::vector<int> stateSetActivated = StateSet::get(
             StateSet::VIEW_STATE_ENABLED | StateSet::VIEW_STATE_ACTIVATED);
 
     mSelectorColor = selectorActivatedColor;
-    mSelectorDotColor = mTextColor[HOURS].getColorForState(stateSetActivated, 0);
+    mSelectorDotColor = mTextColor[HOURS]->getColorForState(stateSetActivated, 0);
 
-    mPaintBackground.setColor(a.getColor(R.styleable.TimePicker_numbersBackgroundColor,
-            context.getColor(R.color.timepicker_default_numbers_background_color_material)));
+    //mPaintBackground.setColor(a.getColor(R.styleable.TimePicker_numbersBackgroundColor,
+    //        context.getColor(R.color.timepicker_default_numbers_background_color_material)));
+    mBackgroundColor = attrs.getColor("numbersBackgroundColor",0);
 }
 
 void RadialTimePickerView::initialize(int hour, int minute, bool is24HourMode) {
@@ -220,7 +236,7 @@ void RadialTimePickerView::setCurrentItemShowing(int item, bool animate) {
     }
 }
 
-int RadialTimePickerView::getCurrentItemShowing() {
+int RadialTimePickerView::getCurrentItemShowing() const{
     return mShowHours ? HOURS : MINUTES;
 }
 
@@ -244,22 +260,22 @@ void RadialTimePickerView::setCurrentHourInternal(int hour, bool callback, bool 
         mIsOnInnerCircle = isOnInnerCircle;
 
         initData();
-        mTouchHelper.invalidateRoot();
+        mTouchHelper->invalidateRoot();
     }
 
     invalidate();
 
-    if (callback && mListener != null) {
-        mListener.onValueSelected(HOURS, hour, autoAdvance);
+    if (callback && mListener != nullptr) {
+        mListener/*.onValueSelected*/(HOURS, hour, autoAdvance);
     }
 }
 
-int RadialTimePickerView::getCurrentHour() {
+int RadialTimePickerView::getCurrentHour() const{
     return getHourForDegrees(mSelectionDegrees[HOURS], mIsOnInnerCircle);
 }
 
-int RadialTimePickerView::getHourForDegrees(int degrees, bool innerCircle) {
-    const int hour = (degrees / DEGREES_FOR_ONE_HOUR) % 12;
+int RadialTimePickerView::getHourForDegrees(int degrees, bool innerCircle) const{
+    int hour = (degrees / DEGREES_FOR_ONE_HOUR) % 12;
     if (mIs24HourMode) {
         // Convert the 12-hour value into 24-hour time based on where the
         // selector is positioned.
@@ -301,8 +317,8 @@ void RadialTimePickerView::setCurrentMinuteInternal(int minute, bool callback) {
 
     invalidate();
 
-    if (callback && mListener != null) {
-        mListener.onValueSelected(MINUTES, minute, false);
+    if (callback && mListener != nullptr) {
+        mListener/*.onValueSelected*/(MINUTES, minute, false);
     }
 }
 
@@ -326,7 +342,7 @@ bool RadialTimePickerView::setAmOrPm(int amOrPm) {
 
     mAmOrPm = amOrPm;
     invalidate();
-    mTouchHelper.invalidateRoot();
+    mTouchHelper->invalidateRoot();
     return true;
 }
 
@@ -388,10 +404,10 @@ void RadialTimePickerView::onDraw(Canvas& canvas) {
 
     drawCircleBackground(canvas);
 
-    Path selectorPath = mSelectorPath;
+    Path* selectorPath = mSelectorPath;
     drawSelector(canvas, selectorPath);
-    drawHours(canvas, selectorPath, alphaMod);
-    drawMinutes(canvas, selectorPath, alphaMod);
+    drawHours(canvas, *selectorPath, alphaMod);
+    drawMinutes(canvas, *selectorPath, alphaMod);
     drawCenter(canvas, alphaMod);
 }
 
@@ -406,55 +422,59 @@ void RadialTimePickerView::showPicker(bool hours, bool animate) {
         animatePicker(hours, ANIM_DURATION_NORMAL);
     } else {
         // If we have a pending or running animator, cancel it.
-        if (mHoursToMinutesAnimator != null && mHoursToMinutesAnimator.isStarted()) {
-            mHoursToMinutesAnimator.cancel();
-            mHoursToMinutesAnimator = null;
+        if (mHoursToMinutesAnimator != nullptr && mHoursToMinutesAnimator->isStarted()) {
+            mHoursToMinutesAnimator->cancel();
+            mHoursToMinutesAnimator = nullptr;
         }
         mHoursToMinutes = hours ? 0.0f : 1.0f;
     }
 
     initData();
     invalidate();
-    mTouchHelper.invalidateRoot();
+    mTouchHelper->invalidateRoot();
 }
 
 void RadialTimePickerView::animatePicker(bool hoursToMinutes, long duration) {
     const float target = hoursToMinutes ? HOURS : MINUTES;
     if (mHoursToMinutes == target) {
         // If we have a pending or running animator, cancel it.
-        if (mHoursToMinutesAnimator != null && mHoursToMinutesAnimator.isStarted()) {
-            mHoursToMinutesAnimator.cancel();
-            mHoursToMinutesAnimator = null;
+        if (mHoursToMinutesAnimator != nullptr && mHoursToMinutesAnimator->isStarted()) {
+            mHoursToMinutesAnimator->cancel();
+            mHoursToMinutesAnimator = nullptr;
         }
 
         // We're already showing the correct picker.
         return;
     }
 
-    mHoursToMinutesAnimator = ObjectAnimator.ofFloat(this, HOURS_TO_MINUTES, target);
-    mHoursToMinutesAnimator.setAutoCancel(true);
-    mHoursToMinutesAnimator.setDuration(duration);
-    mHoursToMinutesAnimator.start();
+    mHoursToMinutesAnimator = ObjectAnimator::ofFloat(this, HOURS_TO_MINUTES, target);
+    mHoursToMinutesAnimator->setAutoCancel(true);
+    mHoursToMinutesAnimator->setDuration(duration);
+    mHoursToMinutesAnimator->start();
 }
 
 void RadialTimePickerView::drawCircleBackground(Canvas& canvas) {
-    canvas.drawCircle(mXCenter, mYCenter, mCircleRadius, mPaintBackground);
+    //canvas.drawCircle(mXCenter, mYCenter, mCircleRadius, mPaintBackground);
+    Color c(mBackgroundColor);
+    canvas.set_source_rgba(c.red(),c.green(),c.blue(),c.alpha());
+    canvas.arc(mXCenter, mYCenter, mCircleRadius,0,M_PI*2.0);
+    canvas.fill();
 }
 
-void RadialTimePickerView::drawHours(Canvas& canvas, Path selectorPath, float alphaMod) {
-    const int hoursAlpha = (int) (255f * (1f - mHoursToMinutes) * alphaMod + 0.5f);
+void RadialTimePickerView::drawHours(Canvas& canvas, Path& selectorPath, float alphaMod) {
+    const int hoursAlpha = int(255.f * (1.f - mHoursToMinutes) * alphaMod + 0.5f);
     if (hoursAlpha > 0) {
         // Exclude the selector region, then draw inner/outer hours with no
         // activated states.
-        canvas.save(Canvas.CLIP_SAVE_FLAG);
-        canvas.clipPath(selectorPath, Region.Op.DIFFERENCE);
+        canvas.save();//Canvas.CLIP_SAVE_FLAG);
+        //canvas.clipPath(selectorPath, Region.Op.DIFFERENCE);
         drawHoursClipped(canvas, hoursAlpha, false);
         canvas.restore();
 
         // Intersect the selector region, then draw minutes with only
         // activated states.
-        canvas.save(Canvas.CLIP_SAVE_FLAG);
-        canvas.clipPath(selectorPath, Region.Op.INTERSECT);
+        canvas.save();//Canvas.CLIP_SAVE_FLAG);
+        //canvas.clipPath(selectorPath, Region.Op.INTERSECT);
         drawHoursClipped(canvas, hoursAlpha, true);
         canvas.restore();
     }
@@ -463,31 +483,31 @@ void RadialTimePickerView::drawHours(Canvas& canvas, Path selectorPath, float al
 void RadialTimePickerView::drawHoursClipped(Canvas& canvas, int hoursAlpha, bool showActivated) {
     // Draw outer hours.
     drawTextElements(canvas, mTextSize[HOURS], mTypeface, mTextColor[HOURS], mOuterTextHours,
-            mOuterTextX[HOURS], mOuterTextY[HOURS], mPaint[HOURS], hoursAlpha,
+            mOuterTextX[HOURS], mOuterTextY[HOURS], /*mPaint[HOURS],*/ hoursAlpha,
             showActivated && !mIsOnInnerCircle, mSelectionDegrees[HOURS], showActivated);
 
     // Draw inner hours (13-00) for 24-hour time.
-    if (mIs24HourMode && mInnerTextHours != null) {
+    if (mIs24HourMode && mInnerTextHours.size()) {
         drawTextElements(canvas, mTextSize[HOURS_INNER], mTypeface, mTextColor[HOURS_INNER],
-                mInnerTextHours, mInnerTextX, mInnerTextY, mPaint[HOURS], hoursAlpha,
+                mInnerTextHours, mInnerTextX, mInnerTextY, /*mPaint[HOURS],*/ hoursAlpha,
                 showActivated && mIsOnInnerCircle, mSelectionDegrees[HOURS], showActivated);
     }
 }
 
-void RadialTimePickerView::drawMinutes(Canvas& canvas, Path selectorPath, float alphaMod) {
-    const int minutesAlpha = (int) (255f * mHoursToMinutes * alphaMod + 0.5f);
+void RadialTimePickerView::drawMinutes(Canvas& canvas, Path& selectorPath, float alphaMod) {
+    const int minutesAlpha = int(255.f * mHoursToMinutes * alphaMod + 0.5f);
     if (minutesAlpha > 0) {
         // Exclude the selector region, then draw minutes with no
         // activated states.
-        canvas.save(Canvas.CLIP_SAVE_FLAG);
-        canvas.clipPath(selectorPath, Region.Op.DIFFERENCE);
+        canvas.save();//Canvas.CLIP_SAVE_FLAG);
+        //canvas.clipPath(selectorPath, Region.Op.DIFFERENCE);
         drawMinutesClipped(canvas, minutesAlpha, false);
         canvas.restore();
 
         // Intersect the selector region, then draw minutes with only
         // activated states.
-        canvas.save(Canvas.CLIP_SAVE_FLAG);
-        canvas.clipPath(selectorPath, Region.Op.INTERSECT);
+        canvas.save();//Canvas.CLIP_SAVE_FLAG);
+        //canvas.clipPath(selectorPath, Region.Op.INTERSECT);
         drawMinutesClipped(canvas, minutesAlpha, true);
         canvas.restore();
     }
@@ -495,20 +515,24 @@ void RadialTimePickerView::drawMinutes(Canvas& canvas, Path selectorPath, float 
 
 void RadialTimePickerView::drawMinutesClipped(Canvas& canvas, int minutesAlpha, bool showActivated) {
     drawTextElements(canvas, mTextSize[MINUTES], mTypeface, mTextColor[MINUTES], mMinutesText,
-            mOuterTextX[MINUTES], mOuterTextY[MINUTES], mPaint[MINUTES], minutesAlpha,
+            mOuterTextX[MINUTES], mOuterTextY[MINUTES], /*mPaint[MINUTES],*/ minutesAlpha,
             showActivated, mSelectionDegrees[MINUTES], showActivated);
 }
 
 void RadialTimePickerView::drawCenter(Canvas& canvas, float alphaMod) {
-    mPaintCenter.setAlpha((int) (255 * alphaMod + 0.5f));
-    canvas.drawCircle(mXCenter, mYCenter, mCenterDotRadius, mPaintCenter);
+    Color c(mCenterColor);
+    c.setAlpha(uint8_t(255.f * alphaMod + 0.5f));
+    canvas.set_source_rgba(c.red(),c.green(),c.blue(),c.alpha());
+    canvas.arc(mXCenter, mYCenter, mCenterDotRadius,0,M_PI*2.0);
+    canvas.fill();
+    //canvas.drawCircle(mXCenter, mYCenter, mCenterDotRadius, mPaintCenter);
 }
 
-private int getMultipliedAlpha(int argb, int alpha) {
-    return (int) (Color.alpha(argb) * (alpha / 255.0) + 0.5);
+static int getMultipliedAlpha(int argb, int alpha) {
+    return int(Color::alpha(argb) * (alpha / 255.0) + 0.5);
 }
 
-void RadialTimePickerView::drawSelector(Canvas& canvas, Path selectorPath) {
+void RadialTimePickerView::drawSelector(Canvas& canvas, Path* selectorPath) {
     // Determine the current length, angle, and dot scaling factor.
     const int hoursIndex = mIsOnInnerCircle ? HOURS_INNER : HOURS;
     const int hoursInset = mTextInset[hoursIndex];
@@ -522,26 +546,26 @@ void RadialTimePickerView::drawSelector(Canvas& canvas, Path selectorPath) {
 
     // Calculate the current radius at which to place the selection circle.
     const int selRadius = mSelectorRadius;
-    const float selLength = mCircleRadius - MathUtils::lerp(hoursInset, minutesInset, mHoursToMinutes);
-    const double selAngleRad = Math.toRadians(MathUtils::lerpDeg(hoursAngleDeg, minutesAngleDeg, mHoursToMinutes));
+    const float selLength = mCircleRadius - MathUtils::lerp((float)hoursInset, (float)minutesInset, mHoursToMinutes);
+    const double selAngleRad = (MathUtils::lerpDeg(hoursAngleDeg, minutesAngleDeg, mHoursToMinutes))*M_PI/180.0;
     const float selCenterX = mXCenter + selLength * (float) std::sin(selAngleRad);
-    coinst float selCenterY = mYCenter - selLength * (float) std::cos(selAngleRad);
+    const float selCenterY = mYCenter - selLength * (float) std::cos(selAngleRad);
 
     // Draw the selection circle.
-    final Paint paint = mPaintSelector[SELECTOR_CIRCLE];
+    Paint paint = mPaintSelector[SELECTOR_CIRCLE];
     paint.setColor(mSelectorColor);
     canvas.drawCircle(selCenterX, selCenterY, selRadius, paint);
 
     // If needed, set up the clip path for later.
-    if (selectorPath != null) {
-        selectorPath.reset();
-        selectorPath.addCircle(selCenterX, selCenterY, selRadius, Path.Direction.CCW);
+    if (selectorPath != nullptr) {
+        selectorPath->reset();
+        selectorPath->addCircle(selCenterX, selCenterY, selRadius, Path.Direction.CCW);
     }
 
     // Draw the dot if we're between two items.
     const float dotScale = MathUtils::lerp(hoursDotScale, minutesDotScale, mHoursToMinutes);
     if (dotScale > 0) {
-        final Paint dotPaint = mPaintSelector[SELECTOR_DOT];
+        Paint dotPaint = mPaintSelector[SELECTOR_DOT];
         dotPaint.setColor(mSelectorDotColor);
         canvas.drawCircle(selCenterX, selCenterY, mSelectorDotRadius * dotScale, dotPaint);
     }
@@ -551,15 +575,15 @@ void RadialTimePickerView::drawSelector(Canvas& canvas, Path selectorPath) {
     const double sin = std::sin(selAngleRad);
     const double cos = std::cos(selAngleRad);
     const float lineLength = selLength - selRadius;
-    const int centerX = mXCenter + (int) (mCenterDotRadius * sin);
-    const int centerY = mYCenter - (int) (mCenterDotRadius * cos);
-    const float linePointX = centerX + (int) (lineLength * sin);
-    const float linePointY = centerY - (int) (lineLength * cos);
+    const int centerX = mXCenter + int(mCenterDotRadius * sin);
+    const int centerY = mYCenter - int(mCenterDotRadius * cos);
+    const float linePointX = centerX + int(lineLength * sin);
+    const float linePointY = centerY - int(lineLength * cos);
 
     // Draw the line.
-    final Paint linePaint = mPaintSelector[SELECTOR_LINE];
-    linePaint.setColor(mSelectorColor);
-    linePaint.setStrokeWidth(mSelectorStroke);
+    Paint* linePaint = mPaintSelector[SELECTOR_LINE];
+    linePaint->setColor(mSelectorColor);
+    linePaint->setStrokeWidth(mSelectorStroke);
     canvas.drawLine(mXCenter, mYCenter, linePointX, linePointY, linePaint);
 }
 
@@ -589,7 +613,7 @@ void RadialTimePickerView::calculatePositionsMinutes() {
 }
 
 void RadialTimePickerView::calculatePositions(Paint paint, float radius, float xCenter, float yCenter,
-        float textSize, float[] x, float[] y) {
+        float textSize, float* x, float* y) {
     // Adjust yCenter to account for the text's baseline.
     paint.setTextSize(textSize);
     yCenter -= (paint.descent() + paint.ascent()) / 2;
@@ -600,11 +624,11 @@ void RadialTimePickerView::calculatePositions(Paint paint, float radius, float x
     }
 }
 
-void RadialTimePickerView::drawTextElements(Canvas& canvas, float textSize, Typeface typeface,
-        ColorStateList textColor, String[] texts, float[] textX, float[] textY, Paint paint,
+void RadialTimePickerView::drawTextElements(Canvas& canvas, float textSize, Typeface* typeface,
+        ColorStateList* textColor, std::vector<std::string>& texts, float* textX, float* textY,// Paint paint,
         int alpha, bool showActivated, int activatedDegrees, bool activatedOnly) {
-    paint.setTextSize(textSize);
-    paint.setTypeface(typeface);
+    canvas.set_font_size(textSize);//paint.setTextSize(textSize);
+    canvas.set_font(typeface->getFontFace()->get_font_face());//paint.setTypeface(typeface);
 
     // The activated index can touch a range of elements.
     const float activatedIndex = activatedDegrees / (360.0f / NUM_POSITIONS);
@@ -620,10 +644,9 @@ void RadialTimePickerView::drawTextElements(Canvas& canvas, float textSize, Type
         const int stateMask = StateSet::VIEW_STATE_ENABLED
                 | (showActivated && activated ? StateSet::VIEW_STATE_ACTIVATED : 0);
         const int color = textColor.getColorForState(StateSet::get(stateMask), 0);
-        paint.setColor(color);
-        paint.setAlpha(getMultipliedAlpha(color, alpha));
-
-        canvas.drawText(texts[i], textX[i], textY[i], paint);
+        canvas.set_color(color);//paint.setColor(color);
+        //paint.setAlpha(getMultipliedAlpha(color, alpha));
+        canvas.drawText(texts[i], textX[i], textY[i]);//, paint);
     }
 }
 
@@ -643,13 +666,13 @@ int RadialTimePickerView::getDegreesFromXY(float x, float y, bool constrainOutsi
 
     const double dX = x - mXCenter;
     const double dY = y - mYCenter;
-    const double distFromCenter = Math.sqrt(dX * dX + dY * dY);
+    const double distFromCenter = std::sqrt(dX * dX + dY * dY);
     if (distFromCenter < innerBound || constrainOutside && distFromCenter > outerBound) {
         return -1;
     }
 
     // Convert to degrees.
-    const int degrees = (int) (std::toDegrees(std::atan2(dY, dX) + M_PI / 2) + 0.5);
+    const int degrees = int((std::atan2(dY, dX) + M_PI / 2.0)*180.0/M_PI + 0.5);
     if (degrees < 0) {
         return degrees + 360;
     } else {
@@ -730,8 +753,8 @@ bool RadialTimePickerView::handleTouchInput(float x, float y, bool forceSelectio
 
     if (valueChanged || forceSelection || autoAdvance) {
         // Fire the listener even if we just need to auto-advance.
-        if (mListener != null) {
-            mListener.onValueSelected(type, newValue, autoAdvance);
+        if (mListener != nullptr) {
+            mListener/*.onValueSelected*/(type, newValue, autoAdvance);
         }
 
         // Only provide feedback if the value actually changed.
@@ -747,7 +770,7 @@ bool RadialTimePickerView::handleTouchInput(float x, float y, bool forceSelectio
 
 bool RadialTimePickerView::dispatchHoverEvent(MotionEvent& event) {
     // First right-of-refusal goes the touch exploration helper.
-    if (mTouchHelper.dispatchHoverEvent(event)) {
+    if (mTouchHelper->dispatchHoverEvent(event)) {
         return true;
     }
     return View::dispatchHoverEvent(event);
@@ -762,42 +785,41 @@ PointerIcon* RadialTimePickerView::onResolvePointerIcon(MotionEvent& event, int 
     if (!isEnabled()) {
         return nullptr;
     }
-    if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
+    /*if (event.isFromSource(InputDevice::SOURCE_MOUSE)) {
         const int degrees = getDegreesFromXY(event.getX(), event.getY(), false);
         if (degrees != -1) {
             const int pointerIcon = enableArrowIconOnHoverWhenClickable()
                     ? PointerIcon::TYPE_ARROW : PointerIcon::TYPE_HAND;
             return PointerIcon::getSystemIcon(getContext(), pointerIcon);
         }
-    }
+    }*/
     return View::onResolvePointerIcon(event, pointerIndex);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-RadialTimePickerView::RadialPickerTouchHelper::RadialPickerTouchHelper() {
-    super(RadialTimePickerView.this);
+RadialTimePickerView::RadialPickerTouchHelper::RadialPickerTouchHelper(RadialTimePickerView*v)
+    :ExploreByTouchHelper(v){
 }
 
-void RadialTimePickerView::RadialPickerTouchHelper::onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfo info) {
-    super.onInitializeAccessibilityNodeInfo(host, info);
-
-    info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD);
-    info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD);
+void RadialTimePickerView::RadialPickerTouchHelper::onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info) {
+    ExploreByTouchHelper::onInitializeAccessibilityNodeInfo(host, info);
+    info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD.getId());
+    info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD.getId());
 }
 
-bool RadialTimePickerView::RadialPickerTouchHelper::performAccessibilityAction(View host, int action, Bundle arguments) {
-    if (super.performAccessibilityAction(host, action, arguments)) {
+bool RadialTimePickerView::RadialPickerTouchHelper::performAccessibilityAction(View& host, int action, Bundle* arguments) {
+    if (ExploreByTouchHelper::performAccessibilityAction(host, action, arguments)) {
         return true;
     }
 
     switch (action) {
-        case AccessibilityNodeInfo.ACTION_SCROLL_FORWARD:
-            adjustPicker(1);
-            return true;
-        case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD:
-            adjustPicker(-1);
-            return true;
+    case AccessibilityNodeInfo::ACTION_SCROLL_FORWARD:
+        adjustPicker(1);
+        return true;
+    case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD:
+        adjustPicker(-1);
+        return true;
     }
 
     return false;
@@ -806,11 +828,12 @@ bool RadialTimePickerView::RadialPickerTouchHelper::performAccessibilityAction(V
 void RadialTimePickerView::RadialPickerTouchHelper::adjustPicker(int step) {
     int stepSize,initialStep;
     int maxValue,minValue;
-    if (mShowHours) {
+    RadialTimePickerView*pkv=(RadialTimePickerView*)mView;
+    if (pkv->mShowHours) {
         stepSize = 1;
 
-        const int currentHour24 = getCurrentHour();
-        if (mIs24HourMode) {
+        const int currentHour24 = pkv->getCurrentHour();
+        if (pkv->mIs24HourMode) {
             initialStep = currentHour24;
             minValue = 0;
             maxValue = 23;
@@ -821,34 +844,35 @@ void RadialTimePickerView::RadialPickerTouchHelper::adjustPicker(int step) {
         }
     } else {
         stepSize = 5;
-        initialStep = getCurrentMinute() / stepSize;
+        initialStep = pkv->getCurrentMinute() / stepSize;
         minValue = 0;
         maxValue = 55;
     }
 
     const int nextValue = (initialStep + step) * stepSize;
-    const int clampedValue = MathUtils.constrain(nextValue, minValue, maxValue);
-    if (mShowHours) {
-        setCurrentHour(clampedValue);
+    const int clampedValue = MathUtils::constrain(nextValue, minValue, maxValue);
+    if (pkv->mShowHours) {
+        pkv->setCurrentHour(clampedValue);
     } else {
-        setCurrentMinute(clampedValue);
+        pkv->setCurrentMinute(clampedValue);
     }
 }
 
 int RadialTimePickerView::RadialPickerTouchHelper::getVirtualViewAt(float x, float y) {
     int id;
-    const int degrees = getDegreesFromXY(x, y, true);
+    RadialTimePickerView*pkv=(RadialTimePickerView*)mView;
+    const int degrees = pkv->getDegreesFromXY(x, y, true);
     if (degrees != -1) {
         const int snapDegrees = snapOnly30s(degrees, 0) % 360;
-        if (mShowHours) {
-            const bool isOnInnerCircle = getInnerCircleFromXY(x, y);
-            const int hour24 = getHourForDegrees(snapDegrees, isOnInnerCircle);
-            const int hour = mIs24HourMode ? hour24 : hour24To12(hour24);
+        if (pkv->mShowHours) {
+            const bool isOnInnerCircle = pkv->getInnerCircleFromXY(x, y);
+            const int hour24 = pkv->getHourForDegrees(snapDegrees, isOnInnerCircle);
+            const int hour = pkv->mIs24HourMode ? hour24 : hour24To12(hour24);
             id = makeId(TYPE_HOUR, hour);
         } else {
-            const int current = getCurrentMinute();
-            const int touched = getMinuteForDegrees(degrees);
-            const int snapped = getMinuteForDegrees(snapDegrees);
+            const int current = pkv->getCurrentMinute();
+            const int touched = pkv->getMinuteForDegrees(degrees);
+            const int snapped = pkv->getMinuteForDegrees(snapDegrees);
 
             // If the touched minute is closer to the current minute
             // than it is to the snapped minute, return current.
@@ -875,43 +899,44 @@ int RadialTimePickerView::RadialPickerTouchHelper::getCircularDiff(int first, in
     return (diff > midpoint) ? (max - diff) : diff;
 }
 
-void RadialTimePickerView::RadialPickerTouchHelper::getVisibleVirtualViews(IntArray virtualViewIds) {
-    if (mShowHours) {
-        const int min = mIs24HourMode ? 0 : 1;
-        const int max = mIs24HourMode ? 23 : 12;
+void RadialTimePickerView::RadialPickerTouchHelper::getVisibleVirtualViews(std::vector<int>& virtualViewIds) {
+    RadialTimePickerView*pkv=(RadialTimePickerView*)mView;
+    if (pkv->mShowHours) {
+        const int min = pkv->mIs24HourMode ? 0 : 1;
+        const int max = pkv->mIs24HourMode ? 23 : 12;
         for (int i = min; i <= max ; i++) {
-            virtualViewIds.add(makeId(TYPE_HOUR, i));
+            virtualViewIds.push_back(makeId(TYPE_HOUR, i));
         }
     } else {
-        const int current = getCurrentMinute();
+        const int current = pkv->getCurrentMinute();
         for (int i = 0; i < MINUTES_IN_CIRCLE; i += MINUTE_INCREMENT) {
-            virtualViewIds.add(makeId(TYPE_MINUTE, i));
+            virtualViewIds.push_back(makeId(TYPE_MINUTE, i));
 
             // If the current minute falls between two increments,
             // insert an extra node for it.
             if (current > i && current < i + MINUTE_INCREMENT) {
-                virtualViewIds.add(makeId(TYPE_MINUTE, current));
+                virtualViewIds.push_back(makeId(TYPE_MINUTE, current));
             }
         }
     }
 }
 
 void RadialTimePickerView::RadialPickerTouchHelper::onPopulateEventForVirtualView(int virtualViewId, AccessibilityEvent& event) {
-    event.setClassName(getClass().getName());
+    event.setClassName("RadialTimePickerView");//getClass().getName());
 
     const int type = getTypeFromId(virtualViewId);
     const int value = getValueFromId(virtualViewId);
-    CharSequence description = getVirtualViewDescription(type, value);
+    std::string description = getVirtualViewDescription(type, value);
     event.setContentDescription(description);
 }
 
 void RadialTimePickerView::RadialPickerTouchHelper::onPopulateNodeForVirtualView(int virtualViewId, AccessibilityNodeInfo& node) {
-    node.setClassName(getClass().getName());
-    node.addAction(AccessibilityAction.ACTION_CLICK);
+    node.setClassName("RadialTimePickerView");//getClass().getName());
+    node.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK.getId());
 
     const int type = getTypeFromId(virtualViewId);
     const int value = getValueFromId(virtualViewId);
-    const CharSequence description = getVirtualViewDescription(type, value);
+    const std::string description = getVirtualViewDescription(type, value);
     node.setContentDescription(description);
 
     getBoundsForVirtualView(virtualViewId, mTempRect);
@@ -922,19 +947,19 @@ void RadialTimePickerView::RadialPickerTouchHelper::onPopulateNodeForVirtualView
 
     const int nextId = getVirtualViewIdAfter(type, value);
     if (nextId != INVALID_ID) {
-        node.setTraversalBefore(RadialTimePickerView.this, nextId);
+        node.setTraversalBefore((RadialTimePickerView*)mView, nextId);
     }
 }
 
 int RadialTimePickerView::RadialPickerTouchHelper::getVirtualViewIdAfter(int type, int value) {
     if (type == TYPE_HOUR) {
         const int nextValue = value + 1;
-        const int max = mIs24HourMode ? 23 : 12;
+        const int max = ((RadialTimePickerView*)mView)->mIs24HourMode ? 23 : 12;
         if (nextValue <= max) {
             return makeId(type, nextValue);
         }
     } else if (type == TYPE_MINUTE) {
-        const int current = getCurrentMinute();
+        const int current = ((RadialTimePickerView*)mView)->getCurrentMinute();
         const int snapValue = value - (value % MINUTE_INCREMENT);
         const int nextValue = snapValue + MINUTE_INCREMENT;
         if (value < current && nextValue > current) {
@@ -947,16 +972,17 @@ int RadialTimePickerView::RadialPickerTouchHelper::getVirtualViewIdAfter(int typ
     return INVALID_ID;
 }
 
-bool RadialTimePickerView::RadialPickerTouchHelper::onPerformActionForVirtualView(int virtualViewId, int action,Bundle arguments) {
-    if (action == AccessibilityNodeInfo.ACTION_CLICK) {
+bool RadialTimePickerView::RadialPickerTouchHelper::onPerformActionForVirtualView(int virtualViewId, int action,Bundle* arguments) {
+    if (action == AccessibilityNodeInfo::ACTION_CLICK) {
         const int type = getTypeFromId(virtualViewId);
         const int value = getValueFromId(virtualViewId);
+        RadialTimePickerView*pkv=(RadialTimePickerView*)mView;
         if (type == TYPE_HOUR) {
-            const int hour = mIs24HourMode ? value : hour12To24(value, mAmOrPm);
-            setCurrentHour(hour);
+            const int hour = pkv->mIs24HourMode ? value : hour12To24(value, pkv->mAmOrPm);
+            pkv->setCurrentHour(hour);
             return true;
         } else if (type == TYPE_MINUTE) {
-            setCurrentMinute(value);
+            pkv->setCurrentMinute(value);
             return true;
         }
     }
@@ -991,21 +1017,22 @@ void RadialTimePickerView::RadialPickerTouchHelper::getBoundsForVirtualView(int 
     const int value = getValueFromId(virtualViewId);
     float centerRadius;
     float degrees;
+    RadialTimePickerView*pkv=(RadialTimePickerView*)mView;
     if (type == TYPE_HOUR) {
-        const bool innerCircle = getInnerCircleForHour(value);
+        const bool innerCircle = pkv->getInnerCircleForHour(value);
         if (innerCircle) {
-            centerRadius = mCircleRadius - mTextInset[HOURS_INNER];
-            radius = mSelectorRadius;
+            centerRadius = pkv->mCircleRadius - pkv->mTextInset[HOURS_INNER];
+            radius = pkv->mSelectorRadius;
         } else {
-            centerRadius = mCircleRadius - mTextInset[HOURS];
-            radius = mSelectorRadius;
+            centerRadius = pkv->mCircleRadius - pkv->mTextInset[HOURS];
+            radius = pkv->mSelectorRadius;
         }
 
-        degrees = getDegreesForHour(value);
+        degrees = pkv->getDegreesForHour(value);
     } else if (type == TYPE_MINUTE) {
-        centerRadius = mCircleRadius - mTextInset[MINUTES];
-        degrees = getDegreesForMinute(value);
-        radius = mSelectorRadius;
+        centerRadius = pkv->mCircleRadius - pkv->mTextInset[MINUTES];
+        degrees = pkv->getDegreesForMinute(value);
+        radius = pkv->mSelectorRadius;
     } else {
         // This should never happen.
         centerRadius = 0;
@@ -1013,30 +1040,29 @@ void RadialTimePickerView::RadialPickerTouchHelper::getBoundsForVirtualView(int 
         radius = 0;
     }
 
-    const double radians = Math.toRadians(degrees);
-    const float xCenter = mXCenter + centerRadius * (float) Math.sin(radians);
-    const float yCenter = mYCenter - centerRadius * (float) Math.cos(radians);
+    const double radians = degrees*M_PI/180.f;//Math.toRadians(degrees);
+    const float xCenter = pkv->mXCenter + centerRadius * (float) std::sin(radians);
+    const float yCenter = pkv->mYCenter - centerRadius * (float) std::cos(radians);
 
-    bounds.set((int) (xCenter - radius), (int) (yCenter - radius),
-            (int) (xCenter + radius), (int) (yCenter + radius));
+    bounds.set(int(xCenter - radius), int(yCenter - radius), int(2.f*radius), int(2.f*radius));
 }
 
 std::string RadialTimePickerView::RadialPickerTouchHelper::getVirtualViewDescription(int type, int value) {
-    CharSequence description;
+    std::string description;
     if (type == TYPE_HOUR || type == TYPE_MINUTE) {
-        description = Integer.toString(value);
+        description = std::to_string(value);
     } else {
-        description = null;
+        //description = null;
     }
     return description;
 }
 
 bool RadialTimePickerView::RadialPickerTouchHelper::isVirtualViewSelected(int type, int value) {
-    bool selected;
+    bool selected =false;
     if (type == TYPE_HOUR) {
-        selected = getCurrentHour() == value;
+        selected = ((RadialTimePickerView*)mView)->getCurrentHour() == value;
     } else if (type == TYPE_MINUTE) {
-        selected = getCurrentMinute() == value;
+        selected = ((RadialTimePickerView*)mView)->getCurrentMinute() == value;
     } else {
         selected = false;
     }
@@ -1048,11 +1074,11 @@ int RadialTimePickerView::RadialPickerTouchHelper::makeId(int type, int value) c
 }
 
 int RadialTimePickerView::RadialPickerTouchHelper::getTypeFromId(int id) const{
-    return id >>> SHIFT_TYPE & MASK_TYPE;
+    return (id >> SHIFT_TYPE) & MASK_TYPE;
 }
 
 int RadialTimePickerView::RadialPickerTouchHelper::getValueFromId(int id) const{
-    return id >>> SHIFT_VALUE & MASK_VALUE;
+    return (id >> SHIFT_VALUE) & MASK_VALUE;
 }
 }/*endof namespace*/
-
+#endif

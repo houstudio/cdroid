@@ -23,11 +23,15 @@
 #include <view/viewgroup.h>
 #include <menu/menu.h>
 #include <menu/menuitem.h>
+#include <menu/menuitemimpl.h>
+#include <menu/menupresenter.h>
+#include <menu/actionmenuitemview.h>
+#include <menu/actionmenupresenter.h>
 #include <widget/actionbar.h>
 #include <widget/rtlspacinghelper.h>
 
 namespace cdroid{
-typedef View ActionMenuView;
+class ActionMenuView;
 class Menu;
 class MenuInflater;
 class Toolbar:public ViewGroup{
@@ -93,6 +97,11 @@ private:
     bool mCollapsible;
     Runnable mShowOverflowMenuRunnable;
     MenuItem::OnMenuItemClickListener mOnMenuItemClickListener;
+    //ToolbarWidgetWrapper mWrapper;
+    //ActionMenuPresenter mOuterActionMenuPresenter;
+    //ExpandedActionViewMenuPresenter mExpandedMenuPresenter;
+    MenuPresenter::Callback mActionMenuPresenterCallback;
+    MenuBuilder::Callback mMenuBuilderCallback;
 private:
     void initToolbar();
     void ensureLogoView();
@@ -131,7 +140,7 @@ protected:
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     void removeChildrenForExpandedActionView();
     void addChildrenForExpandedActionView();
-    bool isChildOrHidden(View* child);
+    bool isChildOrHidden(View* child)const;
     Context*getPopupContext();
 public:
     Toolbar(Context*,const AttributeSet&);
@@ -145,6 +154,15 @@ public:
     void setTitleMarginEnd(int margin);
     int getTitleMarginBottom()const;
     void setTitleMarginBottom(int margin);
+    void onRtlPropertiesChanged(int layoutDirection);
+    bool canShowOverflowMenu()const;
+    bool isOverflowMenuShowing()const;
+    bool isOverflowMenuShowPending()const;
+    bool showOverflowMenu();
+    bool hideOverflowMenu();
+    void setMenu(MenuBuilder* menu, ActionMenuPresenter& outerPresenter);
+    void dismisssPopupMenus();
+    bool isTitleTruncated()const;
     void setLogo(const std::string& resId);
     void setLogo(Drawable* drawable);
     Drawable* getLogo()const;
@@ -158,17 +176,21 @@ public:
     void setSubtitle(const std::string&);
     void setTitleTextColor(int);
     void setSubtitleTextColor(int);
+    View*getNavigationView()const;
     std::string getNavigationContentDescription()const;
+    std::string getCollapseContentDescription()const;
+    void setCollapseContentDescription(const std::string&);
+    Drawable* getCollapseIcon() const;
+    void setCollapseIcon(Drawable* icon);
+    Drawable* getOverflowIcon();
+    void setOverflowIcon(Drawable* icon);
     void setNavigationContentDescription(const std::string&);
     void setNavigationIcon(Drawable*);
     Drawable*getNavigationIcon()const;
-    void setNavigationOnClickListener(View::OnClickListener);
-    View*getNavigationView()const;
+    void setNavigationOnClickListener(const View::OnClickListener&);
     Menu*getMenu();
-    void setOverflowIcon(Drawable*);
-    Drawable*getOverflowIcon();
     void inflateMenu(const std::string&);
-    void setOnMenuItemClickListener(MenuItem::OnMenuItemClickListener listener);
+    void setOnMenuItemClickListener(const MenuItem::OnMenuItemClickListener& listener);
     void setContentInsetsRelative(int contentInsetStart, int contentInsetEnd);
     int getContentInsetStart()const;
     int getContentInsetEnd()const;
@@ -186,7 +208,7 @@ public:
     bool onTouchEvent(MotionEvent&)override;
     LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
     void setCollapsible(bool);
-    //void setMenuCallbacks(MenuPresenter.Callback pcb, MenuBuilder.Callback mcb);
+    void setMenuCallbacks(const MenuPresenter::Callback& pcb,const MenuBuilder::Callback& mcb);
 };
 }/*endof namespace*/
 #endif

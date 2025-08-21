@@ -9,7 +9,7 @@
 #if defined(__Linux__)||defined(__unix__)
 #include <unistd.h>
 #include <cxxabi.h>
-#if defined(__clang__) || defined(__APPLE__)
+#if defined(__clang__)||defined(__APPLE__)
 #include <sys/ucontext.h>
 #else
 #include <ucontext.h>

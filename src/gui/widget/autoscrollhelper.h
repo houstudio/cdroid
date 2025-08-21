@@ -50,7 +50,6 @@ private:
         float mTargetVelocityY;
 
         int64_t mStartTime;
-
         int64_t mDeltaTime;
         int mDeltaX;
         int mDeltaY;

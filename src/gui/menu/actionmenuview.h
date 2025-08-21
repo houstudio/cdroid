@@ -1,6 +1,7 @@
 #ifndef __ACTION_MENU_VIEW_H__
 #define __ACTION_MENU_VIEW_H__
 #include <menu/menuview.h>
+#include <menu/menubuilder.h>
 #include <menu/menupresenter.h>
 #include <widget/linearlayout.h>
 namespace cdroid{
@@ -9,7 +10,22 @@ class ActionMenuView :public LinearLayout,public MenuView{//MenuBuilder.ItemInvo
 public:
     static constexpr int MIN_CELL_SIZE = 56; // dips
     static constexpr int GENERATED_ITEM_PADDING = 4; // dips
-    class LayoutParams;
+
+    class LayoutParams:public LinearLayout::LayoutParams {
+    public:
+        bool isOverflowButton;
+        bool expandable;
+        bool preventEdgeOffset;
+        bool expanded;
+        int cellsUsed;
+        int extraPixels;
+        LayoutParams(Context* c,const AttributeSet& attrs);
+        LayoutParams(const ViewGroup::LayoutParams& other);
+        LayoutParams(const LayoutParams& other);
+        LayoutParams(int width, int height);
+        LayoutParams(int width, int height, bool isOverflowButton);
+    };
+
     struct ActionMenuChildView {
         virtual bool needsDividerBefore()=0;
         virtual bool needsDividerAfter()=0;
@@ -39,12 +55,12 @@ private:
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int left, int top, int right, int bottom);
-    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
-    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
+    LayoutParams* generateDefaultLayoutParams()const override;
+    LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     bool hasDividerBeforeChildAt(int childIndex)override;
 public:
-    ActionMenuView(Context* context, AttributeSet& attrs);
+    ActionMenuView(Context* context,const AttributeSet& attrs);
 
     void setPopupTheme(int resId);
     int getPopupTheme();
@@ -65,8 +81,8 @@ public:
     bool isOverflowReserved();
     void setOverflowReserved(bool reserveOverflow);
 
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
-    LayoutParams* generateOverflowButtonLayoutParams();
+    LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
+    LayoutParams* generateOverflowButtonLayoutParams()const;
 
     virtual bool invokeItem(MenuItemImpl& item);
 
@@ -86,63 +102,9 @@ public:
 
     void dismissPopupMenus();
 
-    bool dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event);
+    bool dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event)override;
 
     void setExpandedActionViewsExclusive(bool exclusive);
-#if 0
-    private class MenuBuilderCallback implements MenuBuilder.Callback {
-        @Override
-        public bool onMenuItemSelected(MenuBuilder menu, MenuItem item) {
-            return mOnMenuItemClickListener != null &&
-                    mOnMenuItemClickListener.onMenuItemClick(item);
-        }
-
-        @Override
-        public void onMenuModeChange(MenuBuilder menu) {
-            if (mMenuBuilderCallback != null) {
-                mMenuBuilderCallback.onMenuModeChange(menu);
-            }
-        }
-    };
-
-    private class ActionMenuPresenterCallback implements ActionMenuPresenter.Callback {
-        @Override
-        public void onCloseMenu(MenuBuilder menu, bool allMenusAreClosing) {
-        }
-
-        @Override
-        public bool onOpenSubMenu(MenuBuilder subMenu) {
-            return false;
-        }
-    };
-#endif
 };/*endof ActionMenuView*/
-class ActionMenuView::LayoutParams:public LinearLayout::LayoutParams {
-public:
-    bool isOverflowButton;
-    bool expandable;
-    bool preventEdgeOffset;
-    bool expanded;
-    int cellsUsed;
-    int extraPixels;
-    LayoutParams(Context* c,const AttributeSet& attrs):LinearLayout::LayoutParams(c, attrs){
-    }
-
-    LayoutParams(const ViewGroup::LayoutParams& other):LinearLayout::LayoutParams(other){
-    }
-
-    LayoutParams(const LayoutParams& other)
-        :LinearLayout::LayoutParams((const LinearLayout::LayoutParams&) other){
-        isOverflowButton = other.isOverflowButton;
-    }
-
-    LayoutParams(int width, int height):LinearLayout::LayoutParams(width, height){
-        isOverflowButton = false;
-    }
-
-    LayoutParams(int width, int height, bool isOverflowButton):LinearLayout::LayoutParams(width, height){
-        this->isOverflowButton = isOverflowButton;
-    }
-};
 }/*endof namespace*/
 #endif/*__ACTION_MENU_VIEW_H__*/

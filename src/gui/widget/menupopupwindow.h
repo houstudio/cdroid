@@ -19,14 +19,9 @@ public:
 
     void setHoverListener(const MenuItemHoverListener& hoverListener);
 
-    /**
-     * Set whether this window is touch modal or if outside touches will be sent to
-     * other windows behind it.
-     */
     void setTouchModal(bool touchModal);
 
     void onItemHoverEnter(MenuBuilder& menu,MenuItem& item);
-
     void onItemHoverExit(MenuBuilder& menu, MenuItem& item);
 
     class MenuDropDownListView:public DropDownListView {
