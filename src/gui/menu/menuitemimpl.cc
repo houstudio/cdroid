@@ -533,7 +533,7 @@ bool MenuItemImpl::shouldShowIcon() {
     return mMenu->getOptionalIconsVisible();
 }
 
-bool MenuItemImpl::isActionButton() {
+bool MenuItemImpl::isActionButton() const{
     return (mFlags & IS_ACTION) == IS_ACTION;
 }
 

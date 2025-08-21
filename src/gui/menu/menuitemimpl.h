@@ -161,7 +161,7 @@ public:
 
     bool shouldShowIcon();
 
-    bool isActionButton();
+    bool isActionButton()const;
 
     bool requestsActionButton();
     bool requiresActionButton();
