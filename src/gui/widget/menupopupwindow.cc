@@ -15,13 +15,13 @@ DropDownListView* MenuPopupWindow::createDropDownListView(Context* context, bool
     return view;
 }
 
-/*void MenuPopupWindow::setEnterTransition(Transition enterTransition) {
+void MenuPopupWindow::setEnterTransition(Transition* enterTransition) {
     mPopup->setEnterTransition(enterTransition);
 }
 
-void MenuPopupWindow::setExitTransition(Transition exitTransition) {
+void MenuPopupWindow::setExitTransition(Transition* exitTransition) {
     mPopup->setExitTransition(exitTransition);
-}*/
+}
 
 void MenuPopupWindow::setHoverListener(const MenuItemHoverListener& hoverListener) {
     mHoverListener = hoverListener;

@@ -30,6 +30,7 @@ private:
 private:
     void handleCallback(Message& message);
     Message getPostMessage(const Runnable& r);
+    Message getPostMessage(const Runnable& r,void*token);
 public:
     Handler();
     Handler(Callback callback);
@@ -58,6 +59,7 @@ public:
     Message obtainMessage(int what,int arg1,int arg2,void*obj);
     bool hasCallbacks(const Runnable& r);
     void removeCallbacks(const Runnable& r);
+    void removeCallbacksAndMessages(void*token);
     bool post(const Runnable& r);
     bool postAtTime(const Runnable& r, int64_t uptimeMillis);
     bool postDelayed(const Runnable& r, long delayMillis);

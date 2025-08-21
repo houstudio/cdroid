@@ -122,6 +122,22 @@ void PopupWindow::init(){
     };
 }
 
+void PopupWindow::setEnterTransition(Transition* enterTransition) {
+    mEnterTransition = enterTransition;
+}
+
+Transition* PopupWindow::getEnterTransition()const{
+    return mEnterTransition;
+}
+
+void PopupWindow::setExitTransition(Transition* exitTransition) {
+    mExitTransition = exitTransition;
+}
+
+Transition* PopupWindow::getExitTransition()const{
+    return mExitTransition;
+}
+
 void PopupWindow::setEpicenterBounds(const Rect& bounds) {
     mEpicenterBounds = bounds;
 }

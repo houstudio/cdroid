@@ -1,4 +1,22 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <widget/R.h>
+#include <menu/menuadapter.h>
 #include <menu/cascadingmenupopup.h>
 #include <menu/submenubuilder.h>
 #include <widget/menupopupwindow.h>
@@ -34,7 +52,7 @@ void CascadingMenuPopup::onViewDetachedFromWindow(View* v) {
         }
         mTreeObserver->removeGlobalOnLayoutListener(mGlobalLayoutListener);
     }
-    v->removeOnAttachStateChangeListener(this);
+    v->removeOnAttachStateChangeListener(mAttachStateChangeListener);
 }
 
 //MenuItemHoverListener mMenuItemHoverListener = new MenuItemHoverListener() {
@@ -42,7 +60,7 @@ void CascadingMenuPopup::onItemHoverExit(MenuBuilder& menu,MenuItem& item) {
     // If the mouse moves between two windows, hover enter/exit pairs
     // may be received out of order. So, instead of canceling all
     // pending runnables, only cancel runnables for the host menu.
-    mSubMenuHoverHandler->removeCallbacksAndMessages(menu);
+    mSubMenuHoverHandler->removeCallbacksAndMessages(&menu);
 }
 
 void CascadingMenuPopup::onItemHoverEnter(MenuBuilder& menu,MenuItem& item) {
@@ -70,7 +88,7 @@ void CascadingMenuPopup::onItemHoverEnter(MenuBuilder& menu,MenuItem& item) {
         nextInfo = nullptr;
     }
 
-    Runnable runnable([menu,&item,nextInfo,this](){
+    Runnable runnable([&menu,&item,nextInfo,this](){
         // Close any other submenus that might be open at the
         // current or a deeper level.
         if (nextInfo != nullptr) {
@@ -83,11 +101,11 @@ void CascadingMenuPopup::onItemHoverEnter(MenuBuilder& menu,MenuItem& item) {
 
         // Then open the selected submenu, if there is one.
         if (item.isEnabled() && item.hasSubMenu()) {
-            menu.performItemAction(item, 0);
+            menu.performItemAction(&item, 0);
         }
     });
     const int64_t uptimeMillis = SystemClock::uptimeMillis() + SUBMENU_TIMEOUT_MS;
-    mSubMenuHoverHandler->postAtTime(runnable, menu, uptimeMillis);
+    LOGE("TODO");//mSubMenuHoverHandler->postAtTime(runnable,menu, uptimeMillis);
 }
 
 CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
@@ -107,7 +125,7 @@ CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
 
     mSubMenuHoverHandler = new Handler();
 
-    mItemLayout = com.android.internal.R.layout.cascading_menu_item_layout_material;
+    mItemLayout = "cdroid:layout/cascading_menu_item_layout_material";//com.android.internal.R.layout.cascading_menu_item_layout_material;
 }
 
 void CascadingMenuPopup::setForceShowIcon(bool forceShow) {
@@ -115,14 +133,16 @@ void CascadingMenuPopup::setForceShowIcon(bool forceShow) {
 }
 
 MenuPopupWindow* CascadingMenuPopup::createPopupWindow() {
-    MenuPopupWindow* popupWindow = new MenuPopupWindow(mContext, nullptr, mPopupStyleAttr, mPopupStyleRes);
+    MenuPopupWindow* popupWindow = new MenuPopupWindow(mContext,AttributeSet(mContext,"cdroid"));// nullptr, mPopupStyleAttr, mPopupStyleRes);
     popupWindow->setHoverListener(mMenuItemHoverListener);
-    popupWindow->setOnItemClickListener(this);
-    popupWindow->setOnDismissListener(this);
+    popupWindow->setOnItemClickListener([this](AdapterView&parent, View& view, int position, long id){
+        onItemClick(parent,view,position,id);
+    });
+    popupWindow->setOnDismissListener([this](){onDismiss();});
     popupWindow->setAnchorView(mAnchorView);
     popupWindow->setDropDownGravity(mDropDownGravity);
     popupWindow->setModal(true);
-    popupWindow->setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
+    popupWindow->setInputMethodMode(PopupWindow::INPUT_METHOD_NOT_NEEDED);
     return popupWindow;
 }
 
@@ -304,7 +324,7 @@ void CascadingMenuPopup::showMenu(MenuBuilder* menu) {
     });
 
     // If this is the root menu, show the title if requested.
-    if (parentInfo == nullptr && mShowTitle && menu->getHeaderTitle() != null) {
+    if (parentInfo == nullptr && mShowTitle && menu->getHeaderTitle().size()) {
         FrameLayout* titleItemView = (FrameLayout*) inflater->inflate(
             "cdroid:layout/popup_menu_header_item_layout", listView, false);
         TextView* titleView = (TextView*) titleItemView->findViewById(R::id::title);
@@ -320,7 +340,7 @@ void CascadingMenuPopup::showMenu(MenuBuilder* menu) {
 MenuItem* CascadingMenuPopup::findMenuItemForSubmenu(MenuBuilder* parent, MenuBuilder* submenu) {
     for (int i = 0, count = parent->size(); i < count; i++) {
         MenuItem* item = parent->getItem(i);
-        if (item->hasSubMenu() && submenu == item->getSubMenu()) {
+        if (item->hasSubMenu() && submenu == (MenuBuilder*)item->getSubMenu()) {
             return item;
         }
     }
@@ -398,6 +418,9 @@ void CascadingMenuPopup::onDismiss() {
     }
 }
 
+void CascadingMenuPopup::onItemClick(AdapterView&parent, View& view, int position, long id){
+}
+
 void CascadingMenuPopup::updateMenuView(bool cleared) {
     for (CascadingMenuInfo* info : mShowingMenus) {
         toMenuAdapter(info->getListView()->getAdapter())->notifyDataSetChanged();
@@ -454,7 +477,8 @@ void CascadingMenuPopup::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)
     }
 
     // Close the target menu.
-    CascadingMenuInfo* info = mShowingMenus.remove(menuIndex);
+    CascadingMenuInfo* info = mShowingMenus.at(menuIndex);
+    mShowingMenus.erase(mShowingMenus.begin()+menuIndex);
     info->menu->removeMenuPresenter(this);
     if (mShouldCloseImmediately) {
         // Disable all exit animations.

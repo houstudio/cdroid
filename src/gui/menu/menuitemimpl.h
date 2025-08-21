@@ -88,9 +88,9 @@ public:
     bool isEnabled()const override;
     MenuItem& setEnabled(bool enabled)override;
 
-    int getGroupId() override;
-    int getItemId() override;
-    int getOrder() override;
+    int getGroupId()const override;
+    int getItemId()const override;
+    int getOrder()const override;
     int getOrdering();
 
     Intent* getIntent()override;

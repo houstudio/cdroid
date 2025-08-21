@@ -21,6 +21,7 @@
 #include <widget/cdwindow.h>
 #include <core/windowmanager.h>
 namespace cdroid{
+class Transition;
 class PopupWindow{
 public:
     static constexpr int INPUT_METHOD_FROM_FOCUSABLE = 0;
@@ -89,8 +90,8 @@ private:
     Drawable* mAboveAnchorBackgroundDrawable;
     Drawable* mBelowAnchorBackgroundDrawable;
 
-    //Transition* mEnterTransition;
-    //Transition* mExitTransition;
+    Transition* mEnterTransition;
+    Transition* mExitTransition;
     Rect mEpicenterBounds;
 
     bool mAboveAnchor;
@@ -157,6 +158,10 @@ public:
     PopupWindow(View* contentView, int width, int height,bool focusable=false);
     PopupWindow(int width, int height);
     virtual ~PopupWindow();
+    void setEnterTransition(Transition*enterTransition);
+    Transition* getEnterTransition()const;
+    void setExitTransition(Transition* exitTransition);
+    Transition* getExitTransition()const;
     void setEpicenterBounds(const Rect& bounds);
     Drawable* getBackground();
     void  setBackgroundDrawable(Drawable* background);

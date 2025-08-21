@@ -1,9 +1,27 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef __CASCADING_MENU_POPUP_H__
 #define __CASCADING_MENU_POPUP_H__
 #include <widget/listview.h>
 #include <widget/popupwindow.h>
 #include <menu/menupopup.h>
 namespace cdroid{
+class MenuAdapter;
 class MenuPopupWindow;
 class CascadingMenuPopup:public MenuPopup{// implements MenuPresenter, OnKeyListener,PopupWindow.OnDismissListener {
 private:
@@ -38,7 +56,7 @@ private:
     Callback mPresenterCallback;
     ViewTreeObserver* mTreeObserver;
     PopupWindow::OnDismissListener mOnDismissListener;
-    int mItemLayout;
+    std::string mItemLayout;
 
     /** Whether popup menus should disable exit animations when closing. */
     bool mShouldCloseImmediately;
@@ -70,7 +88,7 @@ public:
     bool isShowing() override;
 
     void onDismiss();
-
+    virtual void onItemClick(AdapterView&parent, View& view, int position, long id);
     void updateMenuView(bool cleared)override;
 
     void setCallback(const Callback& cb) override;
@@ -88,7 +106,7 @@ public:
 
     void setOnDismissListener(const PopupWindow::OnDismissListener& listener)override;
 
-    ListView* getListView()override;
+    ListView* getListView();
 
     void setHorizontalOffset(int x)override;
     void setVerticalOffset(int y)override;

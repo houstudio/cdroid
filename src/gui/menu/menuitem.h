@@ -43,11 +43,11 @@ public:
         std::function<bool(MenuItem&)> onMenuItemActionCollapse;
     };
     virtual ~MenuItem()=default;
-    virtual int getItemId()=0;
+    virtual int getItemId()const=0;
 
-    virtual int getGroupId()=0;
+    virtual int getGroupId()const=0;
 
-    virtual int getOrder()=0;
+    virtual int getOrder()const=0;
 
     virtual MenuItem& setTitle(const std::string& title)=0;
 

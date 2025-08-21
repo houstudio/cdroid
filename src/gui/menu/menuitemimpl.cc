@@ -84,15 +84,15 @@ MenuItem& MenuItemImpl::setEnabled(bool enabled) {
     return *this;
 }
 
-int MenuItemImpl::getGroupId(){
+int MenuItemImpl::getGroupId()const{
     return mGroup;
 }
 
-int MenuItemImpl::getItemId(){
+int MenuItemImpl::getItemId()const{
     return mId;
 }
 
-int MenuItemImpl::getOrder(){
+int MenuItemImpl::getOrder()const{
     return mCategoryOrder;
 }
 

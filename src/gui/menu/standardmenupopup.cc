@@ -1,46 +1,52 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <widget/R.h>
 #include <widget/menupopupwindow.h>
+#include <menu/menuadapter.h>
 #include <menu/menupopuphelper.h>
 #include <menu/submenubuilder.h>
 #include <menu/standardmenupopup.h>
 namespace cdroid{
-/*class StandardMenuPopup:public MenuPopup implements OnDismissListener, OnItemClickListener,
-        MenuPresenter, OnKeyListener {
-private static final int ITEM_LAYOUT = com.android.internal.R.layout.popup_menu_item_layout;
-private static final int ITEM_LAYOUT_MATERIAL =com.android.internal.R.layout.popup_menu_item_layout_material;
+//private static final int ITEM_LAYOUT = com.android.internal.R.layout.popup_menu_item_layout;
+static constexpr const char* ITEM_LAYOUT_MATERIAL ="cdroid:layout/popup_menu_item_layout_material";
 
-private final OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
-    @Override
-    public void onGlobalLayout() {
-        // Only move the popup if it's showing and non-modal. We don't want
-        // to be moving around the only interactive window, since there's a
-        // good chance the user is interacting with it.
-        if (isShowing() && !mPopup.isModal()) {
-            final View anchor = mShownAnchorView;
-            if (anchor == null || !anchor.isShown()) {
-                dismiss();
-            } else {
-                // Recompute window size and position
-                mPopup.show();
-            }
+void StandardMenuPopup::onGlobalLayout() {
+    // Only move the popup if it's showing and non-modal. We don't want
+    // to be moving around the only interactive window, since there's a
+    // good chance the user is interacting with it.
+    if (isShowing() && !mPopup->isModal()) {
+        View* anchor = mShownAnchorView;
+        if ((anchor == nullptr) || !anchor->isShown()) {
+            dismiss();
+        } else {
+            // Recompute window size and position
+            mPopup->show();
         }
     }
-};
-private final OnAttachStateChangeListener mAttachStateChangeListener =
-        new OnAttachStateChangeListener() {
-    @Override
-    public void onViewAttachedToWindow(View v) {
-    }
+}
 
-    @Override
-    public void onViewDetachedFromWindow(View v) {
-        if (mTreeObserver != null) {
-            if (!mTreeObserver.isAlive()) mTreeObserver = v.getViewTreeObserver();
-            mTreeObserver.removeGlobalOnLayoutListener(mGlobalLayoutListener);
-        }
-        v.removeOnAttachStateChangeListener(this);
+void StandardMenuPopup::onViewDetachedFromWindow(View* v) {
+    if (mTreeObserver != nullptr) {
+        if (!mTreeObserver->isAlive()) mTreeObserver = v->getViewTreeObserver();
+        mTreeObserver->removeGlobalOnLayoutListener(mGlobalLayoutListener);
     }
-};*/
+    v->removeOnAttachStateChangeListener(mAttachStateChangeListener);//this);
+}
 
 StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* anchorView, int popupStyleAttr,
         int popupStyleRes, bool overflowOnly) {
@@ -52,12 +58,11 @@ StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* 
     mPopupStyleAttr = popupStyleAttr;
     mPopupStyleRes = popupStyleRes;
 
-    mPopupMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,
-            res.getDimensionPixelSize(com.android.internal.R.dimen.config_prefDialogWidth));
+    mPopupMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,0);//res.getDimensionPixelSize(com.android.internal.R.dimen.config_prefDialogWidth));
 
     mAnchorView = anchorView;
 
-    mPopup = new MenuPopupWindow(mContext, nullptr, mPopupStyleAttr, mPopupStyleRes);
+    mPopup = new MenuPopupWindow(mContext,AttributeSet(mContext,"cdroid"));// nullptr, mPopupStyleAttr, mPopupStyleRes);
 
     // Present the menu using our context, not the menu builder's context.
     menu->addMenuPresenter(this, context);
@@ -82,7 +87,7 @@ bool StandardMenuPopup::tryShow() {
 
     mShownAnchorView = mAnchorView;
 
-    mPopup->setOnDismissListener([this](){OnDismiss();});
+    mPopup->setOnDismissListener([this](){onDismiss();});
     mPopup->setOnItemClickListener([this](AdapterView&parent, View& view, int position, long id){
         onItemClick(parent,view,position,id);
     });
@@ -116,8 +121,7 @@ bool StandardMenuPopup::tryShow() {
 
     if (mShowTitle && mMenu->getHeaderTitle().size()){// != null) {
         FrameLayout* titleItemView =(FrameLayout*) LayoutInflater::from(mContext)->inflate(
-                        com.android.internal.R.layout.popup_menu_header_item_layout,
-                        listView, false);
+                        "cdroid:layout/popup_menu_header_item_layout",listView, false);
         TextView* titleView = (TextView*) titleItemView->findViewById(cdroid::R::id::title);
         if (titleView != nullptr) {
             titleView->setText(mMenu->getHeaderTitle());
@@ -246,6 +250,9 @@ bool StandardMenuPopup::onKey(View& v, int keyCode, KeyEvent& event) {
         return true;
     }
     return false;
+}
+
+void StandardMenuPopup::onItemClick(AdapterView&parent, View& view, int position, long id){
 }
 
 void StandardMenuPopup::setOnDismissListener(const PopupWindow::OnDismissListener& listener) {

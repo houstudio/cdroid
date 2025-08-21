@@ -43,6 +43,14 @@ Message Handler::getPostMessage(const Runnable& r){
     return m;
 }
 
+Message Handler::getPostMessage(const Runnable& r,void*token){
+    Message m =obtainMessage();
+    m.obj=token;
+    m.callback = r;
+    return m;
+
+}
+
 void Handler::handleMessage(Message& msg) {
 }
 
@@ -71,6 +79,11 @@ bool Handler::hasCallbacks(const Runnable& r){
 
 void Handler::removeCallbacks(const Runnable& r){
     mLooper->removeCallbacks(this,r);
+}
+
+void Handler::removeCallbacksAndMessages(void*token){
+    LOGE("TODO");
+    //mLooper->removeMessages(this,token);
 }
 
 Looper* Handler::getLooper(){

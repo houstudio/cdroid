@@ -69,7 +69,7 @@ public:
         return mShortcutAlphabeticModifiers;
     }
 
-    int getGroupId() override{
+    int getGroupId()const override{
         return mGroup;
     }
 
@@ -81,7 +81,7 @@ public:
         return mIntent;
     }
 
-    int getItemId() override{
+    int getItemId()const override{
         return mId;
     }
 
@@ -97,7 +97,7 @@ public:
         return mShortcutNumericModifiers;
     }
 
-    int getOrder() override{
+    int getOrder()const override{
         return mOrdering;
     }
 
