@@ -53,6 +53,7 @@ public:
         LayoutParams(const ViewGroup::LayoutParams& source);
     };
 private:
+    class ExpandedActionViewMenuPresenter;
     ActionMenuView* mMenuView;
     TextView* mTitleTextView;
     TextView* mSubtitleTextView;
@@ -98,8 +99,8 @@ private:
     Runnable mShowOverflowMenuRunnable;
     MenuItem::OnMenuItemClickListener mOnMenuItemClickListener;
     //ToolbarWidgetWrapper mWrapper;
-    //ActionMenuPresenter mOuterActionMenuPresenter;
-    //ExpandedActionViewMenuPresenter mExpandedMenuPresenter;
+    ActionMenuPresenter* mOuterActionMenuPresenter;
+    ExpandedActionViewMenuPresenter* mExpandedMenuPresenter;
     MenuPresenter::Callback mActionMenuPresenterCallback;
     MenuBuilder::Callback mMenuBuilderCallback;
 private:
@@ -141,6 +142,7 @@ protected:
     void removeChildrenForExpandedActionView();
     void addChildrenForExpandedActionView();
     bool isChildOrHidden(View* child)const;
+    ActionMenuPresenter* getOuterActionMenuPresenter();
     Context*getPopupContext();
 public:
     Toolbar(Context*,const AttributeSet&);
@@ -209,6 +211,32 @@ public:
     LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
     void setCollapsible(bool);
     void setMenuCallbacks(const MenuPresenter::Callback& pcb,const MenuBuilder::Callback& mcb);
+};
+class Toolbar::ExpandedActionViewMenuPresenter:public MenuPresenter {
+private:
+    friend Toolbar;
+    MenuBuilder* mMenu;
+    Toolbar*mToolbar;
+    MenuItemImpl* mCurrentExpandedItem;
+public:
+    ExpandedActionViewMenuPresenter(Toolbar*tb);
+    void initForMenu(Context* context,MenuBuilder* menu)override;
+    MenuView* getMenuView(ViewGroup* root)override;
+    void updateMenuView(bool cleared)override;
+
+    void setCallback(const Callback& cb)override;
+    bool onSubMenuSelected(SubMenuBuilder* subMenu)override;
+    void onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)override;
+
+    bool flagActionItems()override;
+
+    bool expandItemActionView(MenuBuilder& menu, MenuItemImpl& item)override;
+    bool collapseItemActionView(MenuBuilder& menu, MenuItemImpl& item)override;
+
+    int getId()const override;
+
+    Parcelable* onSaveInstanceState()override;
+    void onRestoreInstanceState(Parcelable& state)override;
 };
 }/*endof namespace*/
 #endif

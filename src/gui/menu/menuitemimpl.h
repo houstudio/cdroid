@@ -177,7 +177,7 @@ public:
     MenuItem& setActionView(View* view);
     MenuItem& setActionView(const std::string& resId);
 
-    View* getActionView();
+    View* getActionView()override;
 
     ActionProvider* getActionProvider();
     MenuItem& setActionProvider(ActionProvider* actionProvider);

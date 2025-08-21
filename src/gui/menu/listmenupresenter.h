@@ -64,8 +64,8 @@ public:
 
     bool flagActionItems() override;
 
-    bool expandItemActionView(MenuBuilder& menu, MenuItemImpl& item);
-    bool collapseItemActionView(MenuBuilder& menu, MenuItemImpl& item);
+    bool expandItemActionView(MenuBuilder& menu, MenuItemImpl& item)override;
+    bool collapseItemActionView(MenuBuilder& menu, MenuItemImpl& item)override;
 
     void saveHierarchyState(Bundle& outState);
     void restoreHierarchyState(Bundle& inState);
