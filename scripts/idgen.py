@@ -76,7 +76,7 @@ class IDGenerater(object):
     def __init__(self,idstart,namespace):
         self.idstart=idstart
         self.namespace=namespace
-        self.processDirs=['layout','drawable','navigation','values']
+        self.processDirs=['layout','drawable','navigation','values','menu']
         self.parser = xml.sax.make_parser()
         self.parser.setFeature(xml.sax.handler.feature_namespaces, 0)
         self.Handler = CDROIDHandler(namespace)

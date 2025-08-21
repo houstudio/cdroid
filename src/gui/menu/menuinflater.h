@@ -49,7 +49,7 @@ public:
      * @see Activity#getMenuInflater()
      * @hide
      */
-    MenuInflater(Context* context, Object realOwner);
+    MenuInflater(Context* context, void* realOwner);
 
     /**
      * Inflate a menu hierarchy from the specified XML resource. Throws
@@ -73,6 +73,15 @@ public:
  */
 class MenuInflater::MenuState {
 private:
+    static constexpr int defaultGroupId = NO_ID;
+    static constexpr int defaultItemId = NO_ID;
+    static constexpr int defaultItemCategory = 0;
+    static constexpr int defaultItemOrder = 0;
+    static constexpr int defaultItemCheckable = 0;
+    static constexpr bool defaultItemChecked = false;
+    static constexpr bool defaultItemVisible = true;
+    static constexpr bool defaultItemEnabled = true;
+private:
     friend MenuInflater;
     Menu* menu;
     Context*mContext;
@@ -83,6 +92,9 @@ private:
     bool groupVisible;
     bool groupEnabled;
     bool itemAdded;
+    bool itemChecked;
+    bool itemVisible;
+    bool itemEnabled;
     int itemId;
     int itemCategoryOrder;
     std::string itemTitle;
@@ -95,29 +107,15 @@ private:
     int itemNumericShortcut;
     int itemNumericModifiers;
     int itemCheckable;
-    bool itemChecked;
-    bool itemVisible;
-    bool itemEnabled;
-
     int itemShowAsAction;
     std::string itemActionViewLayout;
     std::string itemActionViewClassName;
     std::string itemActionProviderClassName;
     std::string itemListenerMethodName;
-
-    ActionProvider* itemActionProvider;
-
     std::string itemContentDescription;
     std::string itemTooltipText;
 
-    static constexpr int defaultGroupId = NO_ID;
-    static constexpr int defaultItemId = NO_ID;
-    static constexpr int defaultItemCategory = 0;
-    static constexpr int defaultItemOrder = 0;
-    static constexpr int defaultItemCheckable = 0;
-    static constexpr bool defaultItemChecked = false;
-    static constexpr bool defaultItemVisible = true;
-    static constexpr bool defaultItemEnabled = true;
+    ActionProvider* itemActionProvider;
 private:
     char getShortcut(const std::string& shortcutString);
     void setItem(MenuItem* item);
@@ -135,4 +133,4 @@ public:
     bool hasAddedItem() const;
 };
 }/*endof namespace*/
-#endif 
+#endif/*__MENU_INFLATER_H__*/
