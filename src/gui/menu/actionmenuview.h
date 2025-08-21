@@ -39,15 +39,15 @@ private:
 
     /** Theme resource against which to inflate popup menus. */
     int mPopupTheme;
-
-    bool mReserveOverflow;
-    ActionMenuPresenter* mPresenter;
-    MenuPresenter::Callback mActionMenuPresenterCallback;
-    MenuBuilder::Callback mMenuBuilderCallback;
-    bool mFormatItems;
     int mFormatItemsWidth;
     int mMinCellSize;
     int mGeneratedItemPadding;
+
+    bool mReserveOverflow;
+    bool mFormatItems;
+    ActionMenuPresenter* mPresenter;
+    MenuPresenter::Callback mActionMenuPresenterCallback;
+    MenuBuilder::Callback mMenuBuilderCallback;
 
     OnMenuItemClickListener mOnMenuItemClickListener;
 private:
@@ -61,7 +61,7 @@ protected:
     bool hasDividerBeforeChildAt(int childIndex)override;
 public:
     ActionMenuView(Context* context,const AttributeSet& attrs);
-
+    ~ActionMenuView()override;
     void setPopupTheme(int resId);
     int getPopupTheme();
     void setPresenter(ActionMenuPresenter* presenter);

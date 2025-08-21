@@ -104,7 +104,7 @@ void MenuInflater::parseMenu(XmlPullParser& parser,const AttributeSet& attrs, Me
                 // Add the item if it hasn't been added (if the item was
                 // a submenu, it would have been added already)
                 if (!menuState->hasAddedItem()) {
-                    if (menuState->itemActionProvider != nullptr &&
+                    if ((menuState->itemActionProvider != nullptr) &&
                             menuState->itemActionProvider->hasSubMenu()) {
                         registerMenu(menuState->addSubMenuItem(), attrs);
                     } else {

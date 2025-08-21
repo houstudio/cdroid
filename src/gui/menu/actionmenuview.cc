@@ -12,6 +12,12 @@ ActionMenuView::ActionMenuView(Context* context,const AttributeSet& attrs)
     mGeneratedItemPadding = int(GENERATED_ITEM_PADDING * density);
     mPopupContext = context;
     mPopupTheme = 0;
+    mMenu = nullptr;
+    mPresenter = nullptr;
+    mFormatItems = false;
+}
+
+ActionMenuView::~ActionMenuView(){
 }
 
 void ActionMenuView::setPopupTheme(int resId) {
@@ -507,7 +513,7 @@ Menu* ActionMenuView::getMenu() {
         mMenu = new MenuBuilder(context);
         MenuBuilder::Callback menuCallback;
         menuCallback.onMenuItemSelected=[this](MenuBuilder& menu, MenuItem& item){
-            return  (mOnMenuItemClickListener!=nullptr)&&mOnMenuItemClickListener(item);
+            return (mOnMenuItemClickListener!=nullptr)&&mOnMenuItemClickListener(item);
         };
         menuCallback.onMenuModeChange=[this](MenuBuilder& menu){
              if(mMenuBuilderCallback.onMenuModeChange){

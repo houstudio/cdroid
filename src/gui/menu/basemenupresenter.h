@@ -48,7 +48,6 @@ public:
     MenuView::ItemView* createItemView(ViewGroup* parent);
 
     virtual View* getItemView(MenuItemImpl* item, View* convertView, ViewGroup* parent);
-
     virtual void bindItemView(MenuItemImpl* item, MenuView::ItemView* itemView)=0;
 
     virtual bool shouldIncludeItem(int childIndex, MenuItemImpl* item);

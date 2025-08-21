@@ -120,17 +120,22 @@ Toolbar::Toolbar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
 
 void Toolbar::initToolbar(){
     mGravity = Gravity::START | Gravity::CENTER_VERTICAL;
+    mCollapsible = false;
+    mTitleTextColor = 0xFFFFFFFF;
+    mSubtitleTextColor =0xFFFFFFFF;
     mMenuView = nullptr;
     mTitleTextView = nullptr;
     mSubtitleTextView = nullptr;
     mNavButtonView = nullptr;
     mLogoView = nullptr;
 
-    mCollapseIcon = nullptr;
-    mCollapseButtonView = nullptr;;
-    mExpandedActionView = nullptr;
     mPopupContext  = nullptr;
     mContentInsets = nullptr;
+    mCollapseIcon = nullptr;
+    mCollapseButtonView = nullptr;
+    mExpandedActionView = nullptr;
+    mExpandedMenuPresenter = nullptr;
+    mOuterActionMenuPresenter = nullptr;
 }
 
 Toolbar::~Toolbar(){
@@ -233,7 +238,7 @@ bool Toolbar::hideOverflowMenu(){
 }
 
 void Toolbar::setMenu(MenuBuilder* menu, ActionMenuPresenter& outerPresenter){
-    if (menu == nullptr && mMenuView == nullptr) {
+    if ((menu == nullptr) && (mMenuView == nullptr)) {
         return;
     }
     ensureMenuView();
@@ -1341,6 +1346,8 @@ Toolbar::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)
 ////////////////////////////////////////////////////////////////////////////////////////////////
 Toolbar::ExpandedActionViewMenuPresenter::ExpandedActionViewMenuPresenter(Toolbar*tb)
     :MenuPresenter(),mToolbar(tb){
+    mMenu = nullptr;
+    mCurrentExpandedItem = nullptr;
 }
 
 void Toolbar::ExpandedActionViewMenuPresenter::initForMenu(Context* context,MenuBuilder* menu) {
