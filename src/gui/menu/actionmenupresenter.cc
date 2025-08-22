@@ -316,7 +316,7 @@ void ActionMenuPresenter::setupItemAnimations() {
 }
 
 void ActionMenuPresenter::updateMenuView(bool cleared) {
-    ViewGroup* menuViewParent = (ViewGroup*) ((View*) mMenuView)->getParent();
+    ViewGroup* menuViewParent = ((ViewGroup*) mMenuView)->getParent();
     if (menuViewParent != nullptr && ACTIONBAR_ANIMATIONS_ENABLED) {
         setupItemAnimations();
     }

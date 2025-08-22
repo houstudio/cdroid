@@ -24,6 +24,7 @@ class MenuItemImpl;
 class MenuView {
 public:
     class ItemView;
+    virtual ~MenuView()=default;
     /**
      * Initializes the menu to the given menu. This should be called after the
      * view is inflated.
@@ -44,6 +45,7 @@ public:
  */
 class MenuView::ItemView {
 public:
+    virtual ~ItemView()=default;
     /**
      * Initializes with the provided MenuItemData.  This should be called after the view is
      * inflated.

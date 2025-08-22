@@ -4,6 +4,7 @@
 #include <menu/actionmenupresenter.h>
 namespace cdroid{
 
+DECLARE_WIDGET(ActionMenuView)
 ActionMenuView::ActionMenuView(Context* context,const AttributeSet& attrs)
   :LinearLayout(context, attrs){
     setBaselineAligned(false);
