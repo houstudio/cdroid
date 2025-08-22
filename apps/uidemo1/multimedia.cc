@@ -10,6 +10,7 @@
 #include <widget/toolbar.h>
 #include <menu/menuinflater.h>
 #include <R.h>
+#include <gui_features.h>
 class FileTypeAdapter:public PagerAdapter{
 private:
     FileAdapter*adapter1 = nullptr;
@@ -36,6 +37,7 @@ public:
                  w->setBackgroundColor(0x80FF0000);
             });
             Toolbar*tb=(Toolbar*)v->findViewById(uidemo1::R::id::toolbar);
+#if ENABLE(MENU)
             if(tb){
                 Menu* menu = tb->getMenu();
                 MenuInflater inflater(container->getContext());
@@ -48,6 +50,7 @@ public:
                     return true;
                 });
             }
+#endif
             return v;
             }break;
         case 0:

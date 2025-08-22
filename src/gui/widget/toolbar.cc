@@ -209,23 +209,43 @@ void Toolbar::onRtlPropertiesChanged(int layoutDirection){
 }
 
 bool Toolbar::canShowOverflowMenu()const{
+#if ENABLE(MENU)
     return (getVisibility() == VISIBLE) && (mMenuView != nullptr) && mMenuView->isOverflowReserved();
+#else
+    return false;
+#endif
 }
 
 bool Toolbar::isOverflowMenuShowing()const{
+#if ENABLE(MENU)
     return (mMenuView != nullptr) && mMenuView->isOverflowMenuShowing();
+#else
+    return false;
+#endif
 }
 
 bool Toolbar::isOverflowMenuShowPending()const{
+#if ENABLE(MENU)
     return (mMenuView != nullptr) && mMenuView->isOverflowMenuShowPending();
+#else
+    return false;
+#endif
 }
 
 bool Toolbar::showOverflowMenu(){
+#if ENABLE(MENU)
     return (mMenuView != nullptr) && mMenuView->showOverflowMenu();
+#else
+    return false;
+#endif
 }
 
 bool Toolbar::hideOverflowMenu(){
+#if ENABLE(MENU)
     return (mMenuView != nullptr) && mMenuView->hideOverflowMenu();
+#else
+    return false;
+#endif
 }
 
 void Toolbar::setMenu(MenuBuilder* menu, ActionMenuPresenter& outerPresenter){
@@ -233,6 +253,7 @@ void Toolbar::setMenu(MenuBuilder* menu, ActionMenuPresenter& outerPresenter){
         return;
     }
     ensureMenuView();
+#if ENABLE(MENU)
     MenuBuilder* oldMenu = mMenuView->peekMenu();
     if (oldMenu == menu) {
         return;
@@ -260,12 +281,15 @@ void Toolbar::setMenu(MenuBuilder* menu, ActionMenuPresenter& outerPresenter){
     mMenuView->setPopupTheme(mPopupTheme);
     mMenuView->setPresenter(&outerPresenter);
     mOuterActionMenuPresenter = &outerPresenter;
+#endif
 }
 
 void Toolbar::dismisssPopupMenus(){
+#if ENABLE(MENU)
     if(mMenuView){
         mMenuView->dismissPopupMenus();
     }
+#endif
 }
 
 bool Toolbar::isTitleTruncated()const{
@@ -331,15 +355,21 @@ void Toolbar::ensureLogoView() {
 }
 
 bool Toolbar::hasExpandedActionView()const{
+#if ENABLE(MENU)
    return mExpandedMenuPresenter && mExpandedMenuPresenter->mCurrentExpandedItem;
+#else
+   return false;
+#endif
 }
 
 void Toolbar::collapseActionView(){
+#if ENABLE(MENU)
     MenuItemImpl* item = (mExpandedMenuPresenter==nullptr)?nullptr
         : mExpandedMenuPresenter->mCurrentExpandedItem;
     if (item != nullptr) {
         item->collapseActionView();
     }
+#endif
 }
 
 std::string Toolbar::getTitle()const{
@@ -480,6 +510,7 @@ Drawable* Toolbar::getOverflowIcon(){
 
 void Toolbar::ensureMenu(){
     ensureMenuView();
+#if  ENABLE(MENU)
     if (mMenuView->peekMenu() == nullptr) {
         // Initialize a new menu for the first time.
         MenuBuilder* menu = dynamic_cast<MenuBuilder*>(mMenuView->getMenu());
@@ -489,10 +520,12 @@ void Toolbar::ensureMenu(){
         mMenuView->setExpandedActionViewsExclusive(true);
         menu->addMenuPresenter(mExpandedMenuPresenter, mPopupContext);
     }
+#endif
 }
 
 void Toolbar::ensureMenuView(){
     if (mMenuView == nullptr) {
+#if ENABLE(MENU)
         mMenuView = new ActionMenuView(getContext(),AttributeSet(getContext(),"cdroid"));
         mMenuView->setPopupTheme(mPopupTheme);
         mMenuView->setOnMenuItemClickListener([this](MenuItem&item){
@@ -502,6 +535,7 @@ void Toolbar::ensureMenuView(){
         LayoutParams* lp = generateDefaultLayoutParams();
         lp->gravity = Gravity::END | (mButtonGravity & Gravity::VERTICAL_GRAVITY_MASK);
         mMenuView->setLayoutParams(lp);
+#endif
         addSystemView(mMenuView, false);
     }
 }
@@ -610,10 +644,12 @@ int Toolbar::getCurrentContentInsetStart()const{
 
 int Toolbar::getCurrentContentInsetEnd()const{
      bool hasActions = false;
+#if ENABLE(MENU)
      if (mMenuView != nullptr) {
          MenuBuilder* mb = mMenuView->peekMenu();
          hasActions = (mb != nullptr) && mb->hasVisibleItems();
      }
+#endif
      return hasActions
           ? std::max(getContentInsetEnd(), std::max(mContentInsetEndWithActions, 0))
           : getContentInsetEnd();
@@ -1270,9 +1306,11 @@ void Toolbar::setCollapsible(bool collapsible) {
 void Toolbar::setMenuCallbacks(const MenuPresenter::Callback& pcb,const MenuBuilder::Callback& mcb){
     mActionMenuPresenterCallback = pcb;
     mMenuBuilderCallback = mcb;
+#if ENABLE(MENU)
     if (mMenuView != nullptr) {
         mMenuView->setMenuCallbacks(pcb, mcb);
     }
+#endif
 }
 
 void Toolbar::ensureContentInsets() {
@@ -1330,6 +1368,7 @@ Toolbar::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
+#if ENABLE(MENU)
 Toolbar::ExpandedActionViewMenuPresenter::ExpandedActionViewMenuPresenter(Toolbar*tb)
     :MenuPresenter(),mToolbar(tb){
     mMenu = nullptr;
@@ -1439,4 +1478,5 @@ Parcelable* Toolbar::ExpandedActionViewMenuPresenter::onSaveInstanceState() {
 
 void Toolbar::ExpandedActionViewMenuPresenter::onRestoreInstanceState(Parcelable& state) {
 }
+#endif/*ENABLE(MENU)*/
 }//namespace
