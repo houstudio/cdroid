@@ -128,6 +128,9 @@ if(ENABLE_MENU)
         menu/menuinflater.cc
         menu/menuitemimpl.cc
         menu/menupopup.cc
+        menu/menuadapter.cc
+        menu/standardmenupopup.cc
+        menu/cascadingmenupopup.cc
         widget/menupopupwindow.cc
     )
 endif(ENABLE_MENU)

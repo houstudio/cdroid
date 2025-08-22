@@ -19,6 +19,7 @@
 #include <menu/menubuilder.h>
 namespace cdroid{
 
+DECLARE_WIDGET(ExpandedMenuView)
 ExpandedMenuView::ExpandedMenuView(Context* context,const AttributeSet& attrs)
     :ListView(context, attrs){
 

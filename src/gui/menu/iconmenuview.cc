@@ -19,6 +19,8 @@
 #include <menu/iconmenuview.h>
 #include <menu/iconmenuitemview.h>
 namespace cdroid{
+
+DECLARE_WIDGET(IconMenuView)
 IconMenuView::IconMenuView(Context* context,const AttributeSet& attrs)
   :ViewGroup(context, attrs){
 

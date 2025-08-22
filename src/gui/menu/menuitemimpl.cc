@@ -27,7 +27,12 @@ namespace cdroid{
 
 MenuItemImpl::MenuItemImpl(MenuBuilder* menu, int group, int id, int categoryOrder, int ordering,
         const std::string& title, int showAsAction) {
-
+    mSubMenu = nullptr;
+    mMenuInfo = nullptr;
+    mActionView = nullptr;
+    mIconDrawable = nullptr;
+    mIconTintList = nullptr;
+    mActionProvider = nullptr;
     mMenu = menu;
     mId = id;
     mGroup = group;
@@ -35,11 +40,12 @@ MenuItemImpl::MenuItemImpl(MenuBuilder* menu, int group, int id, int categoryOrd
     mOrdering = ordering;
     mTitle = title;
     mShowAsAction = showAsAction;
+    mShortcutNumericChar = 0;
+    mShortcutAlphabeticChar = 0;
 }
 
 bool MenuItemImpl::invoke() {
-    if (mClickListener != nullptr &&
-        mClickListener(*this)){//.onMenuItemClick(*this)) {
+    if ((mClickListener != nullptr) && mClickListener(*this)){//.onMenuItemClick(*this)) {
         return true;
     }
 
@@ -84,15 +90,15 @@ MenuItem& MenuItemImpl::setEnabled(bool enabled) {
     return *this;
 }
 
-int MenuItemImpl::getGroupId(){
+int MenuItemImpl::getGroupId()const{
     return mGroup;
 }
 
-int MenuItemImpl::getItemId(){
+int MenuItemImpl::getItemId()const{
     return mId;
 }
 
-int MenuItemImpl::getOrder(){
+int MenuItemImpl::getOrder()const{
     return mCategoryOrder;
 }
 
@@ -527,7 +533,7 @@ bool MenuItemImpl::shouldShowIcon() {
     return mMenu->getOptionalIconsVisible();
 }
 
-bool MenuItemImpl::isActionButton() {
+bool MenuItemImpl::isActionButton() const{
     return (mFlags & IS_ACTION) == IS_ACTION;
 }
 

@@ -25,6 +25,15 @@ namespace cdroid{
 
 ActionMenuPresenter::ActionMenuPresenter(Context* context)
     :BaseMenuPresenter(context, "cdroid:layout/action_menu_layout","cdroid:layout/action_menu_item_layout"){
+    mMaxItemsSet = 0;
+    mWidthLimitSet = 0;
+    mStrictWidthLimit = 0;
+    mPendingOverflowIconSet = false;
+    mOverflowButton = nullptr;
+    mOverflowPopup = nullptr;
+    mActionButtonPopup = nullptr;
+    mPendingOverflowIcon = nullptr;
+
     mItemAnimationPreDrawListener=[this]()->bool{
         computeMenuItemAnimationInfo(false);
          ((View*) mMenuView)->getViewTreeObserver()->removeOnPreDrawListener(mItemAnimationPreDrawListener);
@@ -307,7 +316,7 @@ void ActionMenuPresenter::setupItemAnimations() {
 }
 
 void ActionMenuPresenter::updateMenuView(bool cleared) {
-    ViewGroup* menuViewParent = (ViewGroup*) ((View*) mMenuView)->getParent();
+    ViewGroup* menuViewParent = ((ViewGroup*) mMenuView)->getParent();
     if (menuViewParent != nullptr && ACTIONBAR_ANIMATIONS_ENABLED) {
         setupItemAnimations();
     }
@@ -420,8 +429,8 @@ View* ActionMenuPresenter::findViewForItem(MenuItem* item) {
  * @return true if the overflow menu was shown, false otherwise.
  */
 bool ActionMenuPresenter::showOverflowMenu() {
-    if (mReserveOverflow && !isOverflowMenuShowing() && mMenu != nullptr && mMenuView != nullptr &&
-            mPostedOpenRunnable == nullptr && !mMenu->getNonActionItems().empty()) {
+    if (mReserveOverflow && !isOverflowMenuShowing() && (mMenu != nullptr) && (mMenuView != nullptr) &&
+            (mPostedOpenRunnable == nullptr) && !mMenu->getNonActionItems().empty()) {
         OverflowPopup* popup = new OverflowPopup(mContext, mMenu, mOverflowButton, this,true);
         mPostedOpenRunnable = [this,popup](){//new OpenOverflowRunnable(popup);
             if (mMenu != nullptr) {

@@ -70,7 +70,7 @@ function(Translate pofile transtopath)
       #po2json translate   pofile to string_xx.json
       COMMAND ${Python_EXECUTABLE}  ${CMAKE_SOURCE_DIR}/scripts/po2json.py ${pofile}
       # convert xls (after your custom finished translate) to string_xx.json for pak 
-      #COMMAND python  ${CMAKE_SOURCE_DIR}/src/tools/po2json.py ${CMAKE_CURRENT_BINARY_DIR}/newglee.po.xls
+      #COMMAND python  ${CMAKE_SOURCE_DIR}/scripts/po2json.py ${CMAKE_CURRENT_BINARY_DIR}/newglee.po.xls
       COMMAND cp  ${PROJECT_BINARY_DIR}/string*.json ${PROJECT_SOURCE_DIR}/assets/strings
       BYPRODUCTS ntvplus
       WORKING_DIRECTORY ${PROJECT_BINARY_DIR}

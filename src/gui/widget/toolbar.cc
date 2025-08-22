@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <core/textutils.h>
 #include <widget/toolbar.h>
+#include <menu/actionmenupresenter.h>
 #include <gui_features.h>
 
 namespace cdroid{
@@ -119,17 +120,22 @@ Toolbar::Toolbar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
 
 void Toolbar::initToolbar(){
     mGravity = Gravity::START | Gravity::CENTER_VERTICAL;
+    mCollapsible = false;
+    mTitleTextColor = 0xFFFFFFFF;
+    mSubtitleTextColor =0xFFFFFFFF;
     mMenuView = nullptr;
     mTitleTextView = nullptr;
     mSubtitleTextView = nullptr;
     mNavButtonView = nullptr;
     mLogoView = nullptr;
 
-    mCollapseIcon = nullptr;
-    mCollapseButtonView = nullptr;;
-    mExpandedActionView = nullptr;
     mPopupContext  = nullptr;
     mContentInsets = nullptr;
+    mCollapseIcon = nullptr;
+    mCollapseButtonView = nullptr;
+    mExpandedActionView = nullptr;
+    mExpandedMenuPresenter = nullptr;
+    mOuterActionMenuPresenter = nullptr;
 }
 
 Toolbar::~Toolbar(){
@@ -212,31 +218,29 @@ void Toolbar::onRtlPropertiesChanged(int layoutDirection){
 }
 
 bool Toolbar::canShowOverflowMenu()const{
-    return (getVisibility() == VISIBLE) && (mMenuView != nullptr);// && mMenuView->isOverflowReserved();
+    return (getVisibility() == VISIBLE) && (mMenuView != nullptr) && mMenuView->isOverflowReserved();
 }
 
 bool Toolbar::isOverflowMenuShowing()const{
-    return mMenuView != nullptr;//&& mMenuView->isOverflowMenuShowing();
+    return (mMenuView != nullptr) && mMenuView->isOverflowMenuShowing();
 }
 
 bool Toolbar::isOverflowMenuShowPending()const{
-    return mMenuView != nullptr;//&& mMenuView->isOverflowMenuShowPending();
+    return (mMenuView != nullptr) && mMenuView->isOverflowMenuShowPending();
 }
 
 bool Toolbar::showOverflowMenu(){
-    return mMenuView != nullptr;//&& mMenuView->showOverflowMenu();
+    return (mMenuView != nullptr) && mMenuView->showOverflowMenu();
 }
 
 bool Toolbar::hideOverflowMenu(){
-    return mMenuView != nullptr;//&& mMenuView->hideOverflowMenu();
+    return (mMenuView != nullptr) && mMenuView->hideOverflowMenu();
 }
 
 void Toolbar::setMenu(MenuBuilder* menu, ActionMenuPresenter& outerPresenter){
-    if (menu == nullptr && mMenuView == nullptr) {
+    if ((menu == nullptr) && (mMenuView == nullptr)) {
         return;
     }
-    LOGE("TODO");
-#if 0
     ensureMenuView();
     MenuBuilder* oldMenu = mMenuView->peekMenu();
     if (oldMenu == menu) {
@@ -249,23 +253,22 @@ void Toolbar::setMenu(MenuBuilder* menu, ActionMenuPresenter& outerPresenter){
     }
 
     if (mExpandedMenuPresenter == nullptr) {
-        mExpandedMenuPresenter = new ExpandedActionViewMenuPresenter();
+        mExpandedMenuPresenter = new ExpandedActionViewMenuPresenter(this);
     }
 
     outerPresenter.setExpandedActionViewsExclusive(true);
     if (menu != nullptr) {
-        menu->addMenuPresenter(outerPresenter, mPopupContext);
+        menu->addMenuPresenter(&outerPresenter, mPopupContext);
         menu->addMenuPresenter(mExpandedMenuPresenter, mPopupContext);
     } else {
         outerPresenter.initForMenu(mPopupContext, nullptr);
-        mExpandedMenuPresenter.initForMenu(mPopupContext, nullptr);
+        mExpandedMenuPresenter->initForMenu(mPopupContext, nullptr);
         outerPresenter.updateMenuView(true);
-        mExpandedMenuPresenter.updateMenuView(true);
+        mExpandedMenuPresenter->updateMenuView(true);
     }
     mMenuView->setPopupTheme(mPopupTheme);
-    mMenuView->setPresenter(outerPresenter);
-    mOuterActionMenuPresenter = outerPresenter;
-#endif
+    mMenuView->setPresenter(&outerPresenter);
+    mOuterActionMenuPresenter = &outerPresenter;
 }
 
 void Toolbar::dismisssPopupMenus(){
@@ -337,13 +340,12 @@ void Toolbar::ensureLogoView() {
 }
 
 bool Toolbar::hasExpandedActionView()const{
-   return false;//mExpandedMenuPresenter && mExpandedMenuPresenter->mCurrentExpandedItem;
+   return mExpandedMenuPresenter && mExpandedMenuPresenter->mCurrentExpandedItem;
 }
 
 void Toolbar::collapseActionView(){
-    MenuItemImpl* item = nullptr;
-    //if(mExpandedMenuPresenter)
-    //  item = mExpandedMenuPresenter->mCurrentExpandedItem;
+    MenuItemImpl* item = (mExpandedMenuPresenter==nullptr)?nullptr
+        : mExpandedMenuPresenter->mCurrentExpandedItem;
     if (item != nullptr) {
         item->collapseActionView();
     }
@@ -487,9 +489,31 @@ Drawable* Toolbar::getOverflowIcon(){
 }
 
 void Toolbar::ensureMenu(){
+    ensureMenuView();
+    if (mMenuView->peekMenu() == nullptr) {
+        // Initialize a new menu for the first time.
+        MenuBuilder* menu = dynamic_cast<MenuBuilder*>(mMenuView->getMenu());
+        if (mExpandedMenuPresenter == nullptr) {
+            mExpandedMenuPresenter = new ExpandedActionViewMenuPresenter(this);
+        }
+        mMenuView->setExpandedActionViewsExclusive(true);
+        menu->addMenuPresenter(mExpandedMenuPresenter, mPopupContext);
+    }
 }
 
 void Toolbar::ensureMenuView(){
+    if (mMenuView == nullptr) {
+        mMenuView = new ActionMenuView(getContext(),AttributeSet(getContext(),"cdroid"));
+        mMenuView->setPopupTheme(mPopupTheme);
+        mMenuView->setOnMenuItemClickListener([this](MenuItem&item){
+            return (mOnMenuItemClickListener!=nullptr)&&mOnMenuItemClickListener(item);
+        });//mMenuViewItemClickListener);
+        mMenuView->setMenuCallbacks(mActionMenuPresenterCallback, mMenuBuilderCallback);
+        LayoutParams* lp = generateDefaultLayoutParams();
+        lp->gravity = Gravity::END | (mButtonGravity & Gravity::VERTICAL_GRAVITY_MASK);
+        mMenuView->setLayoutParams(lp);
+        addSystemView(mMenuView, false);
+    }
 }
 
 void Toolbar::setNavigationContentDescription(const std::string&content){
@@ -598,7 +622,7 @@ int Toolbar::getCurrentContentInsetEnd()const{
      bool hasActions = false;
      if (mMenuView != nullptr) {
          MenuBuilder* mb = mMenuView->peekMenu();
-         hasActions = mb != nullptr && mb->hasVisibleItems();
+         hasActions = (mb != nullptr) && mb->hasVisibleItems();
      }
      return hasActions
           ? std::max(getContentInsetEnd(), std::max(mContentInsetEndWithActions, 0))
@@ -758,7 +782,7 @@ void Toolbar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int height = 0;
     int childState = 0;
 
-    int collapsingMargins[2];// = mTempMargins;
+    int collapsingMargins[2];
     int marginStartIndex;
     int marginEndIndex;
     if (isLayoutRtl()) {
@@ -1271,9 +1295,9 @@ void Toolbar::ensureContentInsets() {
     }
 }
 
-/*ActionMenuPresenter Toolbar::getOuterActionMenuPresenter() {
+ActionMenuPresenter* Toolbar::getOuterActionMenuPresenter() {
      return mOuterActionMenuPresenter;
-}*/
+}
 
 Context* Toolbar::getPopupContext() {
      return mPopupContext;
@@ -1319,4 +1343,114 @@ Toolbar::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)
   :ActionBar::LayoutParams(source){
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+Toolbar::ExpandedActionViewMenuPresenter::ExpandedActionViewMenuPresenter(Toolbar*tb)
+    :MenuPresenter(),mToolbar(tb){
+    mMenu = nullptr;
+    mCurrentExpandedItem = nullptr;
+}
+
+void Toolbar::ExpandedActionViewMenuPresenter::initForMenu(Context* context,MenuBuilder* menu) {
+    // Clear the expanded action view when menus change.
+    if (mMenu != nullptr && mCurrentExpandedItem != nullptr) {
+        mMenu->collapseItemActionView(mCurrentExpandedItem);
+    }
+    mMenu = menu;
+}
+
+MenuView* Toolbar::ExpandedActionViewMenuPresenter::getMenuView(ViewGroup* root) {
+    return nullptr;
+}
+
+void Toolbar::ExpandedActionViewMenuPresenter::updateMenuView(bool cleared) {
+    // Make sure the expanded item we have is still there.
+    if (mCurrentExpandedItem != nullptr) {
+        bool found = false;
+
+        if (mMenu != nullptr) {
+            const int count = mMenu->size();
+            for (int i = 0; i < count; i++) {
+                MenuItem* item = mMenu->getItem(i);
+                if (item == mCurrentExpandedItem) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+        if (!found) {
+            // The item we had expanded disappeared. Collapse.
+            collapseItemActionView(*mMenu, *mCurrentExpandedItem);
+        }
+    }
+}
+
+void Toolbar::ExpandedActionViewMenuPresenter::setCallback(const Callback& cb) {
+}
+
+bool Toolbar::ExpandedActionViewMenuPresenter::onSubMenuSelected(SubMenuBuilder* subMenu) {
+    return false;
+}
+
+void Toolbar::ExpandedActionViewMenuPresenter::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing) {
+}
+
+bool Toolbar::ExpandedActionViewMenuPresenter::flagActionItems() {
+    return false;
+}
+
+bool Toolbar::ExpandedActionViewMenuPresenter::expandItemActionView(MenuBuilder& menu, MenuItemImpl& item) {
+    mToolbar->ensureCollapseButtonView();
+    if (mToolbar->mCollapseButtonView->getParent() != mToolbar) {
+        mToolbar->addView(mToolbar->mCollapseButtonView);
+    }
+    mToolbar->mExpandedActionView = item.getActionView();
+    mCurrentExpandedItem = &item;
+    if ( mToolbar->mExpandedActionView->getParent() != mToolbar) {
+        LayoutParams* lp = mToolbar->generateDefaultLayoutParams();
+        lp->gravity = Gravity::START | (mToolbar->mButtonGravity & Gravity::VERTICAL_GRAVITY_MASK);
+        lp->mViewType = LayoutParams::EXPANDED;
+        mToolbar->mExpandedActionView->setLayoutParams(lp);
+        mToolbar->addView(mToolbar->mExpandedActionView);
+    }
+
+    mToolbar->removeChildrenForExpandedActionView();
+    mToolbar->requestLayout();
+    item.setActionViewExpanded(true);
+
+    /*if (mToolbar->mExpandedActionView instanceof CollapsibleActionView) {
+        ((CollapsibleActionView) mExpandedActionView).onActionViewExpanded();
+    }*/
+
+    return true;
+}
+
+bool Toolbar::ExpandedActionViewMenuPresenter::collapseItemActionView(MenuBuilder& menu, MenuItemImpl& item) {
+    // Do this before detaching the actionview from the hierarchy, in case
+    // it needs to dismiss the soft keyboard, etc.
+    /*if (mToolbar->mExpandedActionView instanceof CollapsibleActionView) {
+        ((CollapsibleActionView) mExpandedActionView).onActionViewCollapsed();
+    }*/
+
+    mToolbar->removeView(mToolbar->mExpandedActionView);
+    mToolbar->removeView(mToolbar->mCollapseButtonView);
+    mToolbar->mExpandedActionView = nullptr;
+
+    mToolbar->addChildrenForExpandedActionView();
+    mCurrentExpandedItem = nullptr;
+    mToolbar->requestLayout();
+    item.setActionViewExpanded(false);
+    return true;
+}
+
+int Toolbar::ExpandedActionViewMenuPresenter::getId() const{
+    return 0;
+}
+
+Parcelable* Toolbar::ExpandedActionViewMenuPresenter::onSaveInstanceState() {
+    return nullptr;
+}
+
+void Toolbar::ExpandedActionViewMenuPresenter::onRestoreInstanceState(Parcelable& state) {
+}
 }//namespace

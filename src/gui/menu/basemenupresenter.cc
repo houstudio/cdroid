@@ -20,6 +20,10 @@
 namespace cdroid{ 
 BaseMenuPresenter::BaseMenuPresenter(Context* context,const std::string& menuLayoutRes,const std::string& itemLayoutRes){
     mSystemContext = context;
+    mMenu = nullptr;
+    mInflater = nullptr;
+    mMenuView = nullptr;
+    mSystemInflater = nullptr;
     mSystemInflater = LayoutInflater::from(context);
     mMenuLayoutRes = menuLayoutRes;
     mItemLayoutRes = itemLayoutRes;
@@ -41,9 +45,6 @@ MenuView* BaseMenuPresenter::getMenuView(ViewGroup* root) {
     return mMenuView;
 }
 
-/**
- * Reuses item views when it can
- */
 void BaseMenuPresenter::updateMenuView(bool cleared) {
     ViewGroup* parent = (ViewGroup*) mMenuView;
     if (parent == nullptr) return;

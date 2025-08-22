@@ -88,9 +88,9 @@ public:
     bool isEnabled()const override;
     MenuItem& setEnabled(bool enabled)override;
 
-    int getGroupId() override;
-    int getItemId() override;
-    int getOrder() override;
+    int getGroupId()const override;
+    int getItemId()const override;
+    int getOrder()const override;
     int getOrdering();
 
     Intent* getIntent()override;
@@ -161,7 +161,7 @@ public:
 
     bool shouldShowIcon();
 
-    bool isActionButton();
+    bool isActionButton()const;
 
     bool requestsActionButton();
     bool requiresActionButton();
@@ -177,7 +177,7 @@ public:
     MenuItem& setActionView(View* view);
     MenuItem& setActionView(const std::string& resId);
 
-    View* getActionView();
+    View* getActionView()override;
 
     ActionProvider* getActionProvider();
     MenuItem& setActionProvider(ActionProvider* actionProvider);

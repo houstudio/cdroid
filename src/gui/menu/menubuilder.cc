@@ -28,6 +28,7 @@ namespace cdroid{
 
 MenuBuilder::MenuBuilder(Context* context) {
     mContext = context;
+    mCurrentMenuInfo = nullptr;
     mIsVisibleItemsStale = true;
     mIsActionItemsStale = true;
     mDefaultShowAsAction = MenuItem::SHOW_AS_ACTION_NEVER;
@@ -219,8 +220,7 @@ MenuItem* MenuBuilder::addInternal(int group, int id, int categoryOrder,const st
 }
 
 MenuItemImpl* MenuBuilder::createNewMenuItem(int group, int id, int categoryOrder, int ordering, const std::string& title, int defaultShowAsAction) {
-    return new MenuItemImpl(this, group, id, categoryOrder, ordering, title,
-            defaultShowAsAction);
+    return new MenuItemImpl(this, group, id, categoryOrder, ordering, title, defaultShowAsAction);
 }
 
 MenuItem* MenuBuilder::add(const std::string& title) {

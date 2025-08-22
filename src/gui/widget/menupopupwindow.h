@@ -4,7 +4,7 @@
 #include <widget/dropdownlistview.h>
 #include <menu/menubuilder.h>
 namespace cdroid{
-
+class Transition;
 class MenuPopupWindow:public ListPopupWindow{// implements MenuItemHoverListener {
 private:
     MenuItemHoverListener mHoverListener;
@@ -14,8 +14,8 @@ public:
 
     DropDownListView* createDropDownListView(Context* context, bool hijackFocus);
 
-    //void setEnterTransition(Transition enterTransition);
-    //void setExitTransition(Transition exitTransition);
+    void setEnterTransition(Transition* enterTransition);
+    void setExitTransition(Transition* exitTransition);
 
     void setHoverListener(const MenuItemHoverListener& hoverListener);
 

@@ -6,9 +6,8 @@
 namespace cdroid{
 
 IconMenuPresenter::IconMenuPresenter(Context* context)
-    :BaseMenuPresenter(context,"",""){
-            //com.android.internal.R.layout.icon_menu_layout,
-            //com.android.internal.R.layout.icon_menu_item_layout);
+    :BaseMenuPresenter(context,"cdroid:layout/icon_menu_layout",
+            "cdroid:layout/icon_menu_item_layout"){
 }
 
 void IconMenuPresenter::initForMenu(Context* context,MenuBuilder* menu){

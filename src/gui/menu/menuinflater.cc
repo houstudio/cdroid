@@ -32,9 +32,9 @@ MenuInflater::MenuInflater(Context* context) {
     //mActionProviderConstructorArguments = mActionViewConstructorArguments;
 }
 
-MenuInflater::MenuInflater(Context* context, Object realOwner) {
+MenuInflater::MenuInflater(Context* context, void* realOwner) {
     mContext = context;
-    //mRealOwner = realOwner;
+    mRealOwner = realOwner;
     //mActionViewConstructorArguments = new Object[] {context};
     //mActionProviderConstructorArguments = mActionViewConstructorArguments;
 }
@@ -104,7 +104,7 @@ void MenuInflater::parseMenu(XmlPullParser& parser,const AttributeSet& attrs, Me
                 // Add the item if it hasn't been added (if the item was
                 // a submenu, it would have been added already)
                 if (!menuState->hasAddedItem()) {
-                    if (menuState->itemActionProvider != nullptr &&
+                    if ((menuState->itemActionProvider != nullptr) &&
                             menuState->itemActionProvider->hasSubMenu()) {
                         registerMenu(menuState->addSubMenuItem(), attrs);
                     } else {
@@ -280,9 +280,7 @@ void MenuInflater::MenuState::readItem(const AttributeSet& attrs) {
     if (hasActionProvider && itemActionViewLayout.empty() && itemActionViewClassName.empty()) {
         //itemActionProvider = newInstance(itemActionProviderClassName,ACTION_PROVIDER_CONSTRUCTOR_SIGNATURE,mActionProviderConstructorArguments);
     } else {
-        if (hasActionProvider) {
-            LOGW("Ignoring attribute 'actionProviderClass'. Action view already specified.");
-        }
+        LOGW_IF(hasActionProvider,"Ignoring attribute 'actionProviderClass'. Action view already specified.");
         itemActionProvider = nullptr;
     }
 
@@ -324,8 +322,7 @@ void MenuInflater::MenuState::setItem(MenuItem* item) {
 
     if (!itemListenerMethodName.empty()) {
         /*if (mContext.isRestricted()) {
-            throw new IllegalStateException("The android:onClick attribute cannot "
-                    + "be used within a restricted context");
+            throw new IllegalStateException("The android:onClick attribute cannot be used within a restricted context");
         }*/
         //item->setOnMenuItemClickListener(new InflatedOnMenuItemClickListener(getRealOwner(), itemListenerMethodName));
     }
@@ -339,9 +336,9 @@ void MenuInflater::MenuState::setItem(MenuItem* item) {
 
     bool actionViewSpecified = false;
     if (!itemActionViewClassName.empty()) {
-        View* actionView = nullptr;//(View*) newInstance(itemActionViewClassName,ACTION_VIEW_CONSTRUCTOR_SIGNATURE, mActionViewConstructorArguments);
-        AttributeSet atts(mContext,"");
-        actionView = LayoutInflater::from(mContext)->createViewFromTag(nullptr,itemActionViewClassName,mContext,atts,true);
+        AttributeSet atts(mContext,"cdroid");
+        View* actionView = LayoutInflater::from(mContext)->createViewFromTag(nullptr,itemActionViewClassName,mContext,atts,true);
+            //(View*) newInstance(itemActionViewClassName,ACTION_VIEW_CONSTRUCTOR_SIGNATURE, mActionViewConstructorArguments);
         item->setActionView(actionView);
         actionViewSpecified = true;
     }

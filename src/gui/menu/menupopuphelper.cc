@@ -17,6 +17,8 @@
  *********************************************************************************/
 #include <menu/menupopup.h>
 #include <menu/menupopuphelper.h>
+#include <menu/standardmenupopup.h>
+#include <menu/cascadingmenupopup.h>
 namespace cdroid{
 
 MenuPopupHelper::MenuPopupHelper(Context* context, MenuBuilder* menu)
@@ -122,12 +124,11 @@ MenuPopup* MenuPopupHelper::createPopup() {
     const bool enableCascadingSubmenus = smallestWidth >= minSmallestWidthCascading;
 
     MenuPopup* popup=nullptr;
-    /*if (enableCascadingSubmenus) {
+    if (enableCascadingSubmenus) {
         popup = new CascadingMenuPopup(mContext, mAnchorView, mPopupStyleAttr,mPopupStyleRes, mOverflowOnly);
     } else {
         popup = new StandardMenuPopup(mContext, mMenu, mAnchorView, mPopupStyleAttr, mPopupStyleRes, mOverflowOnly);
-    }*/
-    LOGE("TODO CascadingMenuPopup/StandardMenuPopup");
+    }
     // Assign immutable properties.
     popup->addMenu(mMenu);
     popup->setOnDismissListener([this](){
