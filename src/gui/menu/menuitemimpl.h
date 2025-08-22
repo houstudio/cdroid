@@ -129,7 +129,7 @@ public:
     MenuItem& setTitleCondensed(const std::string& title);
 
     Drawable* getIcon();
-    MenuItem& setIcon(Drawable* icon);
+    MenuItem& setIcon(Drawable* icon)override;
     MenuItem& setIcon(const std::string& iconResId)override;
 
     MenuItem& setIconTintList(const ColorStateList* iconTintList);
@@ -179,7 +179,7 @@ public:
 
     View* getActionView()override;
 
-    ActionProvider* getActionProvider();
+    ActionProvider* getActionProvider()override;
     MenuItem& setActionProvider(ActionProvider* actionProvider);
 
     MenuItem& setShowAsActionFlags(int actionEnum);

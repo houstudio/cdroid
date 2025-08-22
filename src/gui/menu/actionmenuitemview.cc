@@ -19,6 +19,8 @@
 #include <menu/menuitemimpl.h>
 #include <menu/actionmenuitemview.h>
 namespace cdroid{
+
+DECLARE_WIDGET(ActionMenuItemView)
 ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet& attrs)
     :TextView(context, attrs){//, defStyleAttr, defStyleRes){
     mAllowTextWithIcon = shouldAllowTextWithIcon();
@@ -73,7 +75,7 @@ void ActionMenuItemView::initialize(MenuItemImpl* itemData, int menuType) {
     setId(itemData->getItemId());
 
     setVisibility(itemData->isVisible() ? VISIBLE : GONE);
-    LOGE("TODO");//setEnabled(itemData->isEnabled());
+    setEnabled(itemData->isEnabled());
 
     if (itemData->hasSubMenu()) {
         if (mForwardingListener == nullptr) {
@@ -101,10 +103,10 @@ void ActionMenuItemView::setItemInvoker(const MenuBuilder::ItemInvoker& invoker)
 }
 
 void ActionMenuItemView::setPopupCallback(const PopupCallback& popupCallback) {
-    LOGE("TODO");//mPopupCallback = popupCallback;
+    mPopupCallback = popupCallback;
 }
 
-bool ActionMenuItemView::prefersCondensedTitle() const{
+bool ActionMenuItemView::prefersCondensedTitle()const{
     return true;
 }
 
@@ -114,6 +116,10 @@ void ActionMenuItemView::setCheckable(bool checkable) {
 
 void ActionMenuItemView::setChecked(bool checked) {
     // TODO Support checkable action items
+}
+
+void ActionMenuItemView::setEnabled(bool enabled){
+    TextView::setEnabled(enabled);
 }
 
 void ActionMenuItemView::setExpandedFormat(bool expandedFormat) {
@@ -127,8 +133,7 @@ void ActionMenuItemView::setExpandedFormat(bool expandedFormat) {
 
 void ActionMenuItemView::updateTextButtonVisibility() {
     bool visible = !TextUtils::isEmpty(mTitle);
-    visible &= mIcon == nullptr ||
-            (mItemData->showsTextAsAction() && (mAllowTextWithIcon || mExpandedFormat));
+    visible &= (mIcon == nullptr) || (mItemData->showsTextAsAction() && (mAllowTextWithIcon || mExpandedFormat));
 
     setText(visible ? mTitle : std::string());
 
@@ -181,7 +186,6 @@ void ActionMenuItemView::setShortcut(bool showShortcut, int shortcutKey) {
 
 void ActionMenuItemView::setTitle(const std::string& title) {
     mTitle = title;
-
     updateTextButtonVisibility();
 }
 
@@ -232,8 +236,7 @@ void ActionMenuItemView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) 
 
     if (widthMode != MeasureSpec::EXACTLY && mMinWidth > 0 && oldMeasuredWidth < targetWidth) {
         // Remeasure at exactly the minimum width.
-        TextView::onMeasure(MeasureSpec::makeMeasureSpec(targetWidth, MeasureSpec::EXACTLY),
-                heightMeasureSpec);
+        TextView::onMeasure(MeasureSpec::makeMeasureSpec(targetWidth, MeasureSpec::EXACTLY), heightMeasureSpec);
     }
 
     if (!textVisible && mIcon != nullptr) {

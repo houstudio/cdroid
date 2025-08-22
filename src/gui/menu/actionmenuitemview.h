@@ -37,7 +37,7 @@ private:
     Drawable* mIcon;
     MenuBuilder::ItemInvoker mItemInvoker;
     ForwardingListener* mForwardingListener;
-    PopupCallback* mPopupCallback;
+    PopupCallback mPopupCallback;
 
     bool mAllowTextWithIcon;
     bool mExpandedFormat;
@@ -68,15 +68,15 @@ public:
 
     void setPopupCallback(const PopupCallback& popupCallback);
 
-    bool prefersCondensedTitle()const;
+    bool prefersCondensedTitle()const override;
 
     void setCheckable(bool checkable);
 
     void setChecked(bool checked);
-
+    void setEnabled(bool)override;
     void setExpandedFormat(bool expandedFormat);
 
-    void setIcon(Drawable* icon);
+    void setIcon(Drawable* icon)override;
     bool hasText()const;
 
     void setShortcut(bool showShortcut, int shortcutKey);

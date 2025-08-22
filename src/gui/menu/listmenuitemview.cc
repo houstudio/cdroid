@@ -23,6 +23,8 @@
 #include <widget/radiobutton.h>
 #include <widget/R.h>
 namespace cdroid{
+
+DECLARE_WIDGET(ListMenuItemView)
 ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet& attrs)
     :LinearLayout(context, attrs){
 
@@ -92,7 +94,6 @@ void ListMenuItemView::setForceShowIcon(bool forceShow) {
 void ListMenuItemView::setTitle(const std::string& title) {
     if (!title.empty()) {
         mTitleView->setText(title);
-
         if (mTitleView->getVisibility() != VISIBLE) mTitleView->setVisibility(VISIBLE);
     } else {
         if (mTitleView->getVisibility() != GONE) mTitleView->setVisibility(GONE);
@@ -241,7 +242,7 @@ void ListMenuItemView::insertCheckBox() {
     addContentView(mCheckBox);
 }
 
-bool ListMenuItemView::prefersCondensedTitle() {
+bool ListMenuItemView::prefersCondensedTitle()const {
     return false;
 }
 

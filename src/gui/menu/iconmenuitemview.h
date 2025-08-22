@@ -55,7 +55,7 @@ public:
     void setItemData(MenuItemImpl* data);
     bool performClick()override;
     void setTitle(const std::string& title);
-    void setIcon(Drawable* icon);
+    void setIcon(Drawable* icon)override;
     void setItemInvoker(const MenuBuilder::ItemInvoker& itemInvoker);
 
     MenuItemImpl* getItemData()override;
@@ -65,8 +65,8 @@ public:
     IconMenuView::LayoutParams* getTextAppropriateLayoutParams();
     void setCheckable(bool checkable);
     void setChecked(bool checked);
-    void setShortcut(bool showShortcut, char shortcutKey);
-    bool prefersCondensedTitle();
+    void setShortcut(bool showShortcut, int shortcutKey)override;
+    bool prefersCondensedTitle()const override;
     bool showsIcon();
 };
 }/*endof namespace*/

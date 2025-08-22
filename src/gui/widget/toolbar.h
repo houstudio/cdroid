@@ -114,20 +114,20 @@ private:
     void ensureMenuView();
     MenuInflater*getMenuInflater();
     void measureChildConstrained(View* child, int parentWidthSpec, int widthUsed,
-         int parentHeightSpec, int heightUsed, int heightConstraint);
+         int parentHeightSpec, int heightUsed, int heightConstraint)const;
     int measureChildCollapseMargins(View* child,int parentWidthMeasureSpec, int widthUsed,
-          int parentHeightMeasureSpec, int heightUsed, int*collapsingMargins);
-    int getViewListMeasuredWidth(const std::vector<View*>& views, int*collapsingMargins);
+         int parentHeightMeasureSpec, int heightUsed, int*collapsingMargins)const;
+    int getViewListMeasuredWidth(const std::vector<View*>& views, int*collapsingMargins)const;
     int layoutChildLeft(View* child, int left, int*collapsingMargins,int alignmentHeight);
     int layoutChildRight(View* child, int right, int*collapsingMargins,int alignmentHeight);
     int getChildTop(View* child, int alignmentHeight);
-    int getChildVerticalGravity(int gravity);
+    int getChildVerticalGravity(int gravity)const;
     void addCustomViewsWithGravity(std::vector<View*>& views, int gravity);
-    int getChildHorizontalGravity(int gravity);
-    bool shouldCollapse();
-    bool shouldLayout(View* view);
-    int getHorizontalMargins(View* v);
-    int getVerticalMargins(View* v);
+    int getChildHorizontalGravity(int gravity)const;
+    bool shouldCollapse()const;
+    bool shouldLayout(View* view)const;
+    int getHorizontalMargins(View* v)const;
+    int getVerticalMargins(View* v)const;
     static bool isCustomView(View*);
     void ensureContentInsets();
 protected:

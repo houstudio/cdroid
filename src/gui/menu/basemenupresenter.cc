@@ -46,7 +46,7 @@ MenuView* BaseMenuPresenter::getMenuView(ViewGroup* root) {
 }
 
 void BaseMenuPresenter::updateMenuView(bool cleared) {
-    ViewGroup* parent = (ViewGroup*) mMenuView;
+    ViewGroup* parent = dynamic_cast<ViewGroup*>(mMenuView);
     if (parent == nullptr) return;
 
     int childIndex = 0;
@@ -73,7 +73,6 @@ void BaseMenuPresenter::updateMenuView(bool cleared) {
             }
         }
     }
-
     // Remove leftover views.
     while (childIndex < parent->getChildCount()) {
         if (!filterLeftoverView(parent, childIndex)) {

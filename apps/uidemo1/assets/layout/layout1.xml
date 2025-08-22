@@ -21,38 +21,19 @@
             android:layout_alignTop="@id/BtnGo" 
             android:layout_toLeftOf="@id/BtnGo"/>
         <android.support.v7.widget.Toolbar
-           android:id="@+id/toolbar"
-           android:layout_width="match_parent"
-           android:layout_height="wrap_content"
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:background="#112233"
             android:title="Title"
             android:titleTextAppearance="?android:attr/textAppearanceLarge"
             android:titleTextColor="#ffffff"
             android:subtitle="sub title,very long text!"
             android:subtitleTextAppearance="@android:attr/textAppearanceSmall"
-			android:logo="mipmap/dev_sync"
 			android:collapseIcon="@mipmap/dev_sync"
 			android:navigationIcon="@mipmap/icon_back"
             android:subtitleTextColor="#ffeedd"
             android:layout_below="@id/TextUrl">
-            <TextView
-                android:id="@+id/title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="标题"
-                android:textColor="#ffffff"
-                android:textSize="22sp" />
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@mipmap/light_on"
-                />
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@mipmap/light_off"
-                />
         </android.support.v7.widget.Toolbar>
     </RelativeLayout>
     <TextView android:id="@+id/WebView01" 

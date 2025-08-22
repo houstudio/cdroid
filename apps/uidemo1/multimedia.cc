@@ -8,6 +8,7 @@
 #include <core/textutils.h>
 #include <fileadapter.h>
 #include <widget/toolbar.h>
+#include <menu/menuinflater.h>
 #include <R.h>
 class FileTypeAdapter:public PagerAdapter{
 private:
@@ -36,8 +37,15 @@ public:
             });
             Toolbar*tb=(Toolbar*)v->findViewById(uidemo1::R::id::toolbar);
             if(tb){
+                Menu* menu = tb->getMenu();
+                MenuInflater inflater(container->getContext());
+                inflater.inflate("cdroid:menu/webview_copy", menu);
                 tb->setNavigationOnClickListener([](View&){
                     LOGD("Navigation Clicked");
+                });
+                tb->setOnMenuItemClickListener([](MenuItem&item){
+                    LOGD("ClickMenuItem %d",item.getItemId());
+                    return true;
                 });
             }
             return v;

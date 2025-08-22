@@ -71,11 +71,11 @@ public:
 
     void setChecked(bool checked);
 
-    void setShortcut(bool showShortcut, int shortcutKey);
+    void setShortcut(bool showShortcut, int shortcutKey)override;
 
     void setIcon(Drawable* icon);
 
-    bool prefersCondensedTitle();
+    bool prefersCondensedTitle()const override;
 
     bool showsIcon();
 
