@@ -37,13 +37,13 @@ ActionMenuPresenter::ActionMenuPresenter(Context* context)
 
     mItemAnimationPreDrawListener=[this]()->bool{
         computeMenuItemAnimationInfo(false);
-         ((View*) mMenuView)->getViewTreeObserver()->removeOnPreDrawListener(mItemAnimationPreDrawListener);
+         ((ActionMenuView*)mMenuView)->getViewTreeObserver()->removeOnPreDrawListener(mItemAnimationPreDrawListener);
          runItemAnimations();
          return true;
     };
     mAttachStateChangeListener.onViewAttachedToWindow=[](View&){};
     mAttachStateChangeListener.onViewDetachedFromWindow=[this](View&){
-        ((View*) mMenuView)->getViewTreeObserver()->removeOnPreDrawListener( mItemAnimationPreDrawListener);
+        ((ActionMenuView*)mMenuView)->getViewTreeObserver()->removeOnPreDrawListener( mItemAnimationPreDrawListener);
         mPreLayoutItems.clear();
         mPostLayoutItems.clear();
     };

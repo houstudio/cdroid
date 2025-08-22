@@ -270,7 +270,13 @@ void MenuInflater::MenuState::readItem(const AttributeSet& attrs) {
     itemChecked = attrs.getBoolean("checked", defaultItemChecked);
     itemVisible = attrs.getBoolean("visible", groupVisible);
     itemEnabled = attrs.getBoolean("enabled", groupEnabled);
-    itemShowAsAction = attrs.getInt("showAsAction", -1);
+    itemShowAsAction = attrs.getInt("showAsAction",std::unordered_map<std::string,int>{
+            {"always",(int)MenuItem::SHOW_AS_ACTION_ALWAYS},
+            {"ifRoom",(int)MenuItem::SHOW_AS_ACTION_IF_ROOM},
+            {"never" ,(int)MenuItem::SHOW_AS_ACTION_NEVER},
+            {"withText",(int)MenuItem::SHOW_AS_ACTION_WITH_TEXT},
+            {"collapseActionView",(int)MenuItem::SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW}
+        },-1);
     itemListenerMethodName = attrs.getString("onClick");
     itemActionViewLayout = attrs.getString("actionLayout");
     itemActionViewClassName = attrs.getString("actionViewClass");

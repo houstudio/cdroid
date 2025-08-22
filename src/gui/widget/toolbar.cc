@@ -112,6 +112,7 @@ Toolbar::Toolbar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
 
 void Toolbar::initToolbar(){
     mGravity = Gravity::START | Gravity::CENTER_VERTICAL;
+    mPopupTheme = 0;
     mCollapsible = false;
     mTitleTextColor = 0xFFFFFFFF;
     mSubtitleTextColor =0xFFFFFFFF;

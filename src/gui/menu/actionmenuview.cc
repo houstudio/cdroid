@@ -19,6 +19,7 @@ ActionMenuView::ActionMenuView(Context* context,const AttributeSet& attrs)
 }
 
 ActionMenuView::~ActionMenuView(){
+    delete mMenu;
 }
 
 void ActionMenuView::setPopupTheme(int resId) {
@@ -289,8 +290,7 @@ void ActionMenuView::onMeasureExactFormat(int widthMeasureSpec, int heightMeasur
             if (!lp->expanded) continue;
 
             const int width = lp->cellsUsed * cellSize + lp->extraPixels;
-            child->measure(MeasureSpec::makeMeasureSpec(width, MeasureSpec::EXACTLY),
-                    itemHeightSpec);
+            child->measure(MeasureSpec::makeMeasureSpec(width, MeasureSpec::EXACTLY),itemHeightSpec);
         }
     }
 
@@ -325,8 +325,7 @@ int ActionMenuView::measureChildForCells(View* child, int cellSize, int cellsRem
         if (hasText && cellsUsed < 2) cellsUsed = 2;
     }
 
-    const bool expandable = !lp->isOverflowButton && hasText;
-    lp->expandable = expandable;
+    lp->expandable = !lp->isOverflowButton && hasText;
 
     lp->cellsUsed = cellsUsed;
     const int targetWidth = cellsUsed * cellSize;
@@ -362,8 +361,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
             }
 
             int height = v->getMeasuredHeight();
-            int r;
-            int l;
+            int r,l;
             if (bLayoutRtl) {
                 l = getPaddingLeft() + p->leftMargin;
                 r = l + overflowWidth;
@@ -388,7 +386,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
         }
     }
 
-    if (childCount == 1 && !hasOverflow) {
+    if ((childCount == 1) && !hasOverflow) {
         // Center a single child
         View* v = getChildAt(0);
         const int width = v->getMeasuredWidth();
@@ -408,7 +406,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
         for (int i = 0; i < childCount; i++) {
             View* v = getChildAt(i);
             LayoutParams* lp = (LayoutParams*) v->getLayoutParams();
-            if (v->getVisibility() == GONE || lp->isOverflowButton) {
+            if ((v->getVisibility() == GONE) || lp->isOverflowButton) {
                 continue;
             }
 
@@ -424,7 +422,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
         for (int i = 0; i < childCount; i++) {
             View* v = getChildAt(i);
             LayoutParams* lp = (LayoutParams*) v->getLayoutParams();
-            if (v->getVisibility() == GONE || lp->isOverflowButton) {
+            if ((v->getVisibility() == GONE) || lp->isOverflowButton) {
                 continue;
             }
 

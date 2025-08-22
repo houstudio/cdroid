@@ -23,14 +23,15 @@ namespace cdroid{
 DECLARE_WIDGET(ActionMenuItemView)
 ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet& attrs)
     :TextView(context, attrs){//, defStyleAttr, defStyleRes){
+    mIcon = nullptr;
+    mItemData = nullptr;
+    mForwardingListener = nullptr;
     mAllowTextWithIcon = shouldAllowTextWithIcon();
     mMinWidth = attrs.getDimensionPixelSize("minWidth", 0);
 
     const float density = context->getDisplayMetrics().density;
     mMaxIconSize = (int) (MAX_ICON_SIZE * density + 0.5f);
-
     setOnClickListener([this](View&v){onClick(v);});
-
     mSavedPaddingLeft = -1;
     //setSaveEnabled(false);
 }

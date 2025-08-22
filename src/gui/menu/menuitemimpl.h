@@ -99,8 +99,8 @@ public:
     Runnable getCallback();
     MenuItem& setCallback(Runnable callback);
 
-    int getAlphabeticShortcut() override;
-    int getAlphabeticModifiers() override;
+    int getAlphabeticShortcut()const override;
+    int getAlphabeticModifiers()const override;
 
     MenuItem& setAlphabeticShortcut(int alphaChar);
     MenuItem& setAlphabeticShortcut(int alphaChar, int alphaModifiers);
@@ -118,7 +118,7 @@ public:
     bool shouldShowShortcut();
 
     SubMenu* getSubMenu()override;
-    bool hasSubMenu()override;
+    bool hasSubMenu()const override;
     void setSubMenu(SubMenuBuilder* subMenu);
 
     std::string getTitle();

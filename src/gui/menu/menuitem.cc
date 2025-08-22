@@ -88,11 +88,11 @@ MenuItem& MenuItem::setAlphabeticShortcut(int alphaChar, int alphaModifiers) {
     }
 }
 
-int MenuItem::getAlphabeticShortcut(){
+int MenuItem::getAlphabeticShortcut()const{
     return 0;
 }
 
-int MenuItem::getAlphabeticModifiers() {
+int MenuItem::getAlphabeticModifiers()const {
     return KeyEvent::META_CTRL_ON;
 }
 
@@ -128,7 +128,7 @@ bool MenuItem::isEnabled()const{
     return true;
 }
 
-bool MenuItem::hasSubMenu(){
+bool MenuItem::hasSubMenu()const{
     return false;
 }
 
