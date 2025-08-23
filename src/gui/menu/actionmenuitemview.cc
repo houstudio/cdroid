@@ -36,6 +36,10 @@ ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet& attr
     //setSaveEnabled(false);
 }
 
+ActionMenuItemView::~ActionMenuItemView(){
+    delete mForwardingListener;
+}
+
 /*void ActionMenuItemView::onConfigurationChanged(Configuration newConfig) {
     TextView::onConfigurationChanged(newConfig);
 
@@ -255,32 +259,26 @@ void ActionMenuItemView::onRestoreInstanceState(Parcelable& state) {
     //TextView::onRestoreInstanceState(nullptr);
 }
 
-/*private class ActionMenuItemForwardingListener extends ForwardingListener {
-    public ActionMenuItemForwardingListener() {
-        super(ActionMenuItemView.this);
-    }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ActionMenuItemView::ActionMenuItemForwardingListener::ActionMenuItemForwardingListener(View*v):ForwardingListener(v){
+}
 
-    @Override
-    public ShowableListMenu getPopup() {
-        if (mPopupCallback != null) {
-            return mPopupCallback.getPopup();
-        }
-        return null;
+ShowableListMenu ActionMenuItemView::ActionMenuItemForwardingListener::getPopup(){
+    if (((ActionMenuItemView*)mSrc)->mPopupCallback != nullptr) {
+        return ((ActionMenuItemView*)mSrc)->mPopupCallback();//.getPopup();
     }
+    return ShowableListMenu();
+}
 
-    @Override
-    protected bool onForwardingStarted() {
-        // Call the invoker, then check if the expected popup is showing.
-        if (mItemInvoker != null && mItemInvoker.invokeItem(mItemData)) {
-            final ShowableListMenu popup = getPopup();
-            return popup != null && popup.isShowing();
-        }
-        return false;
+bool ActionMenuItemView::ActionMenuItemForwardingListener::onForwardingStarted(){
+    // Call the invoker, then check if the expected popup is showing.
+    ActionMenuItemView*iv=(ActionMenuItemView*)mSrc;
+    if (iv->mItemInvoker != nullptr && iv->mItemInvoker(*iv->mItemData)) {
+        ShowableListMenu popup = getPopup();
+        return popup.isShowing && popup.isShowing();
     }
-};*/
+    return false;
+}
 
-/*public static abstract class PopupCallback {
-    public abstract ShowableListMenu getPopup();
-}*/
 }/*endof namespace*/
 

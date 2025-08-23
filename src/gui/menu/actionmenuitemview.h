@@ -25,13 +25,19 @@ namespace cdroid{
 class ActionMenuItemView:public TextView,public MenuView::ItemView,public ActionMenuView::ActionMenuChildView{
         //implements MenuView.ItemView, View.OnClickListener, ActionMenuView.ActionMenuChildView {
 public:
-    DECLARE_UIEVENT(ShowableListMenu*,PopupCallback);
+    DECLARE_UIEVENT(ShowableListMenu,PopupCallback);
     /*class PopupCallback {
         virtual ShowableListMenu* getPopup()=0;
     };*/
 private:
     static constexpr int MAX_ICON_SIZE = 32; // dp
-    class ActionMenuItemForwardingListener;
+    class ActionMenuItemForwardingListener:public ForwardingListener {
+    public:
+        ActionMenuItemForwardingListener(View*);
+        ShowableListMenu getPopup() override;
+        bool onForwardingStarted() override;
+    };
+    friend ActionMenuItemForwardingListener;
     MenuItemImpl* mItemData;
     std::string mTitle;
     Drawable* mIcon;
@@ -51,6 +57,7 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
 public:
     ActionMenuItemView(Context* context,const AttributeSet& attrs);
+    ~ActionMenuItemView()override;
     //void onConfigurationChanged(Configuration newConfig) override;
 
     std::string getAccessibilityClassName() const;
@@ -94,14 +101,6 @@ public:
 
     void onRestoreInstanceState(Parcelable& state)override;
 };/*endof ActionMenuItemView*/
-#if 0
-class ActionMenuItemView::ActionMenuItemForwardingListener:public ForwardingListener {
-public:
-    ActionMenuItemForwardingListener();
-    ShowableListMenu* getPopup() override;
-    bool onForwardingStarted() override;
-};
-#endif
 }/*endof namespace*/
 #endif/*__ACTION_MENUITEM_VIEW_H__*/
 
