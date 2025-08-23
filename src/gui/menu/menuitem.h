@@ -69,7 +69,7 @@ public:
 
     virtual MenuItem& setIconTintMode(int tintMode);
 
-    virtual int getIconTintMode();
+    virtual int getIconTintMode()const;
 
     virtual MenuItem& setIntent(Intent* intent);
 
@@ -139,7 +139,7 @@ public:
 
     virtual bool isActionViewExpanded()const=0;
 
-    virtual MenuItem& setOnActionExpandListener(OnActionExpandListener listener);
+    virtual MenuItem& setOnActionExpandListener(const OnActionExpandListener& listener);
 
     virtual MenuItem& setContentDescription(const std::string& contentDescription);
 

@@ -187,7 +187,7 @@ public:
     bool expandActionView();
     bool collapseActionView();
 
-    MenuItem& setOnActionExpandListener(OnActionExpandListener listener);
+    MenuItem& setOnActionExpandListener(const OnActionExpandListener& listener)override;
 
     bool hasCollapsibleActionView();
     void setActionViewExpanded(bool isExpanded);

@@ -118,6 +118,7 @@ if(ENABLE_MENU)
         menu/menudialoghelper.cc
         menu/menupopuphelper.cc
         menu/menuitem.cc
+        menu/actionmenuitem.cc
         menu/expandedmenuview.cc
         menu/iconmenupresenter.cc
         menu/listmenuitemview.cc
@@ -125,9 +126,11 @@ if(ENABLE_MENU)
         menu/actionmenuitemview.cc
         menu/actionmenupresenter.cc
         menu/menubuilder.cc
+        menu/contextmenubuilder.cc
         menu/menuinflater.cc
         menu/menuitemimpl.cc
         menu/menupopup.cc
+        menu/actionmenu.cc
         menu/menuadapter.cc
         menu/standardmenupopup.cc
         menu/cascadingmenupopup.cc

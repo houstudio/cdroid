@@ -31,7 +31,7 @@ MenuItem& MenuItem::setIconTintMode(int tintMode) {
     return *this;
 }
 
-int MenuItem::getIconTintMode() {
+int MenuItem::getIconTintMode()const {
     return 0;
 }
 
@@ -182,7 +182,7 @@ bool MenuItem::isActionViewExpanded()const{
     return false;
 }
 
-MenuItem& MenuItem::setOnActionExpandListener(OnActionExpandListener listener){
+MenuItem& MenuItem::setOnActionExpandListener(const OnActionExpandListener& listener){
     return *this;
 }
 

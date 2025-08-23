@@ -608,7 +608,7 @@ bool MenuItemImpl::collapseActionView() {
     return false;
 }
 
-MenuItem& MenuItemImpl::setOnActionExpandListener(OnActionExpandListener listener) {
+MenuItem& MenuItemImpl::setOnActionExpandListener(const OnActionExpandListener& listener) {
     mOnActionExpandListener = listener;
     return *this;
 }
