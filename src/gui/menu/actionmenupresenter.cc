@@ -715,6 +715,28 @@ void ActionMenuPresenter::setMenuView(ActionMenuView* menuView) {
 };*/
 
 //class OverflowMenuButton extends ImageButton implements ActionMenuView.ActionMenuChildView
+class ActionMenuPresenter::OverflowMenuButtonForwardingListener:public ForwardingListener{
+private:
+    ActionMenuPresenter*mPresenter;
+    OverflowMenuButton*mBtn;
+public:
+    OverflowMenuButtonForwardingListener(OverflowMenuButton*v,ActionMenuPresenter*p):ForwardingListener(v),mPresenter(p){
+    }
+    ShowableListMenu getPopup()override{
+        ShowableListMenu lm;
+        return lm;//mPresenter->mOverflowPopup->getPopup();
+    }
+    bool onForwardingStarted()override{
+        mPresenter->showOverflowMenu();
+        return true;
+    }
+    bool onForwardingStopped()override{
+        if(mPresenter->mPostedOpenRunnable!=nullptr)return false;
+        mPresenter->hideOverflowMenu();
+        return true;
+    }
+};
+
 ActionMenuPresenter::OverflowMenuButton::OverflowMenuButton(ActionMenuPresenter*p,Context* context)
     :ImageButton(context,AttributeSet(context,"cdroid")){//, com.android.internal.R.attr.actionOverflowButtonStyle){
 
@@ -723,35 +745,17 @@ ActionMenuPresenter::OverflowMenuButton::OverflowMenuButton(ActionMenuPresenter*
     setFocusable(true);
     setVisibility(VISIBLE);
     setEnabled(true);
-    /*setOnTouchListener(new ForwardingListener(this) {
-        public ShowableListMenu getPopup() {
-            if (mOverflowPopup == nullptr) {
-                return null;
-            }
-            return mOverflowPopup->getPopup();
-        }
-        public bool onForwardingStarted() {
-            showOverflowMenu();
-            return true;
-        }
-
-        public bool onForwardingStopped() {
-            // Displaying the popup occurs asynchronously, so wait for
-            // the runnable to finish before deciding whether to stop forwarding.
-            if (mPostedOpenRunnable != nullptr) {
-                return false;
-            }
-            hideOverflowMenu();
-            return true;
-        }
-    });*/
+    mForwardListener = new OverflowMenuButtonForwardingListener(this,p);
 };
+
+ActionMenuPresenter::OverflowMenuButton::~OverflowMenuButton(){
+    delete mForwardListener;
+}
 
 bool ActionMenuPresenter::OverflowMenuButton::performClick() {
     if (ImageButton::performClick()) {
         return true;
     }
-
     playSoundEffect(SoundEffectConstants::CLICK);
     mPresenter->showOverflowMenu();
     return true;
@@ -770,13 +774,13 @@ void ActionMenuPresenter::OverflowMenuButton::onInitializeAccessibilityNodeInfoI
     info.setCanOpenPopup(true);
 }
 
-bool ActionMenuPresenter::OverflowMenuButton::setFrame(int l, int t, int r, int b) {
-    const bool changed = ImageButton::setFrame(l, t, r, b);
+bool ActionMenuPresenter::OverflowMenuButton::setFrame(int l, int t, int w, int h) {
+    const bool changed = ImageButton::setFrame(l, t, w, h);
 
     // Set up the hotspot bounds to square and centered on the image.
     Drawable* d = getDrawable();
     Drawable* bg = getBackground();
-    if (d != nullptr && bg != nullptr) {
+    if ((d != nullptr) && (bg != nullptr)) {
         const int width = getWidth();
         const int height = getHeight();
         const int halfEdge = std::max(width, height) / 2;
@@ -785,9 +789,8 @@ bool ActionMenuPresenter::OverflowMenuButton::setFrame(int l, int t, int r, int 
         const int centerX = (width + offsetX) / 2;
         const int centerY = (height + offsetY) / 2;
         bg->setHotspotBounds(centerX - halfEdge, centerY - halfEdge,
-                centerX + halfEdge, centerY + halfEdge);
+                2*halfEdge, 2*halfEdge);
     }
-
     return changed;
 }
 

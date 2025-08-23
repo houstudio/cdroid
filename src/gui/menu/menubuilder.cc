@@ -40,6 +40,13 @@ MenuBuilder::MenuBuilder(Context* context) {
     setShortcutsVisibleInner(true);
 }
 
+MenuBuilder::~MenuBuilder(){
+    for(auto item:mItems){
+        delete item;
+    }
+    mItems.clear();
+}
+
 MenuBuilder& MenuBuilder::setDefaultShowAsAction(int defaultShowAsAction) {
     mDefaultShowAsAction = defaultShowAsAction;
     return *this;

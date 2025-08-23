@@ -34,6 +34,7 @@ private:
     class ActionButtonSubmenu;
     class ItemAnimationInfo;
     class MenuItemLayoutInfo;
+    class OverflowMenuButtonForwardingListener;
 
     OverflowMenuButton* mOverflowButton;
     Drawable* mPendingOverflowIcon;
@@ -158,11 +159,12 @@ public:
 class ActionMenuPresenter::OverflowMenuButton:public ImageButton,ActionMenuView::ActionMenuChildView {
 private:
     ActionMenuPresenter*mPresenter;
+    ForwardingListener*mForwardListener;
 protected:
     bool setFrame(int l, int t, int r, int b)override;
 public:
     OverflowMenuButton(ActionMenuPresenter*p,Context* context);
-
+    ~OverflowMenuButton()override;
     bool performClick() override;
     bool needsDividerBefore() override;
     bool needsDividerAfter() override;

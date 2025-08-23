@@ -134,7 +134,9 @@ void Toolbar::initToolbar(){
 Toolbar::~Toolbar(){
     if(mCollapseButtonView==nullptr)
         delete mCollapseIcon;
+    delete mMenuView;
     delete mContentInsets;
+    delete mExpandedMenuPresenter;
 }
 
 void Toolbar::onAttachedToWindow(){

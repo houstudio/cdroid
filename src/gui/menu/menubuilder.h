@@ -149,7 +149,7 @@ protected:
 public:
     MenuBuilder(Context* context);
     MenuBuilder& setDefaultShowAsAction(int defaultShowAsAction);
-
+    ~MenuBuilder()override;
     void addMenuPresenter(MenuPresenter* presenter);
     void addMenuPresenter(MenuPresenter* presenter, Context* menuContext);
     void removeMenuPresenter(MenuPresenter* presenter);

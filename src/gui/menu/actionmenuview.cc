@@ -371,7 +371,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
             }
             int t = midVertical - (height / 2);
             int b = t + height;
-            v->layout(l, t, r, b);
+            v->layout(l, t, overflowWidth, height);
 
             widthRemaining -= overflowWidth;
             hasOverflow = true;

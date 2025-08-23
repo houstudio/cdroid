@@ -46,7 +46,7 @@ void MenuInflater::inflate(const std::string&menuRes, Menu* menu) {
 }
 
 void MenuInflater::parseMenu(XmlPullParser& parser,const AttributeSet& attrs, Menu* menu){
-    MenuState* menuState = new MenuState(menu,mContext);
+    std::unique_ptr<MenuState> menuState = std::make_unique<MenuState>(menu,mContext);
 
     int eventType = parser.getEventType();
     bool lookingForEndOfUnknownTag = false;
