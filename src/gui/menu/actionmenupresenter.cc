@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <view/actionprovider.h>
 #include <menu/menuview.h>
 #include <menu/menubuilder.h>
 #include <menu/submenubuilder.h>
@@ -36,13 +37,13 @@ ActionMenuPresenter::ActionMenuPresenter(Context* context)
 
     mItemAnimationPreDrawListener=[this]()->bool{
         computeMenuItemAnimationInfo(false);
-         ((View*) mMenuView)->getViewTreeObserver()->removeOnPreDrawListener(mItemAnimationPreDrawListener);
+         ((ActionMenuView*)mMenuView)->getViewTreeObserver()->removeOnPreDrawListener(mItemAnimationPreDrawListener);
          runItemAnimations();
          return true;
     };
     mAttachStateChangeListener.onViewAttachedToWindow=[](View&){};
     mAttachStateChangeListener.onViewDetachedFromWindow=[this](View&){
-        ((View*) mMenuView)->getViewTreeObserver()->removeOnPreDrawListener( mItemAnimationPreDrawListener);
+        ((ActionMenuView*)mMenuView)->getViewTreeObserver()->removeOnPreDrawListener( mItemAnimationPreDrawListener);
         mPreLayoutItems.clear();
         mPostLayoutItems.clear();
     };
@@ -316,13 +317,14 @@ void ActionMenuPresenter::setupItemAnimations() {
 }
 
 void ActionMenuPresenter::updateMenuView(bool cleared) {
-    ViewGroup* menuViewParent = ((ViewGroup*) mMenuView)->getParent();
-    if (menuViewParent != nullptr && ACTIONBAR_ANIMATIONS_ENABLED) {
+    ViewGroup* menuViewSelf = (ActionMenuView*)mMenuView;
+    ViewGroup* menuViewParent = menuViewSelf->getParent();
+    if ((menuViewParent != nullptr) && ACTIONBAR_ANIMATIONS_ENABLED) {
         setupItemAnimations();
     }
     BaseMenuPresenter::updateMenuView(cleared);
 
-    ((View*) mMenuView)->requestLayout();
+    menuViewSelf->requestLayout();
 
     if (mMenu != nullptr) {
         std::vector<MenuItemImpl*> actionItems = mMenu->getActionItems();
@@ -330,7 +332,7 @@ void ActionMenuPresenter::updateMenuView(bool cleared) {
         for (int i = 0; i < count; i++) {
             ActionProvider* provider = actionItems.at(i)->getActionProvider();
             if (provider != nullptr) {
-                /*provider->setSubUiVisibilityListener([this](bool isVisible){
+                provider->setSubUiVisibilityListener([this](bool isVisible){
                     onSubUiVisibilityChanged(isVisible);
                 });//this);*/
             }
@@ -354,14 +356,14 @@ void ActionMenuPresenter::updateMenuView(bool cleared) {
             mOverflowButton = new OverflowMenuButton(this,mSystemContext);
         }
         ViewGroup* parent = (ViewGroup*) mOverflowButton->getParent();
-        if ((void*)parent != (void*)mMenuView) {
+        if ((void*)parent != menuViewSelf) {
             if (parent != nullptr) {
                 parent->removeView(mOverflowButton);
             }
             ActionMenuView* menuView = (ActionMenuView*) mMenuView;
             menuView->addView(mOverflowButton, menuView->generateOverflowButtonLayoutParams());
         }
-    } else if ((mOverflowButton != nullptr) && mOverflowButton->getParent() == (void*)mMenuView) {
+    } else if ((mOverflowButton != nullptr) && mOverflowButton->getParent() == menuViewSelf) {
         ((ViewGroup*) mMenuView)->removeView(mOverflowButton);
     }
 
@@ -538,7 +540,7 @@ bool ActionMenuPresenter::flagActionItems() {
 
     // Reserve a spot for the overflow item if needed.
     if (mReserveOverflow &&
-            (hasOverflow || requiredItems + requestedItems > maxActions)) {
+            (hasOverflow || (requiredItems + requestedItems > maxActions))) {
         maxActions--;
     }
     maxActions -= requiredItems;

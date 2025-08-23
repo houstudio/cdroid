@@ -31,6 +31,11 @@ MenuBuilder::MenuBuilder(Context* context) {
     mCurrentMenuInfo = nullptr;
     mIsVisibleItemsStale = true;
     mIsActionItemsStale = true;
+    mIsClosing = false;
+    mGroupDividerEnabled  = false;
+    mOptionalIconsVisible = false;
+    mPreventDispatchingItemsChanged = false;
+    mItemsChangedWhileDispatchPrevented = false;
     mDefaultShowAsAction = MenuItem::SHOW_AS_ACTION_NEVER;
     setShortcutsVisibleInner(true);
 }
@@ -53,9 +58,11 @@ void MenuBuilder::addMenuPresenter(MenuPresenter* presenter, Context* menuContex
 void MenuBuilder::removeMenuPresenter(MenuPresenter* presenter) {
     for (auto it=mPresenters.begin();it!=mPresenters.end();){
         MenuPresenter* item=*it;
-        if (item == nullptr || item == presenter) {
-            it=mPresenters.erase(it);
-        }else it++;
+        if ((item == nullptr) || (item == presenter)) {
+            it = mPresenters.erase(it);
+        }else {
+            it++;
+        }
     }
 }
 
@@ -729,8 +736,7 @@ void MenuBuilder::flagActionItems() {
         // Nobody flagged anything, everything is a non-action item.
         // (This happens during a first pass with no action-item presenters.)
         mActionItems.clear();
-        //mNonActionItems.clear();
-        //mNonActionItems.addAll(getVisibleItems());
+        mNonActionItems.clear();
         mNonActionItems=getVisibleItems();
     }
     mIsActionItemsStale = false;
@@ -851,7 +857,7 @@ bool MenuBuilder::expandItemActionView(MenuItemImpl* item) {
 }
 
 bool MenuBuilder::collapseItemActionView(MenuItemImpl* item) {
-    if (mPresenters.empty() || mExpandedItem != item) return false;
+    if (mPresenters.empty() || (mExpandedItem != item)) return false;
 
     bool collapsed = false;
 

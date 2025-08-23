@@ -94,7 +94,7 @@ public:
      * shortcutKey should be ignored).
      * @param shortcutKey The shortcut key that should be shown on the ItemView.
      */
-    virtual void setShortcut(bool showShortcut, char shortcutKey)=0;
+    virtual void setShortcut(bool showShortcut, int shortcutKey)=0;
 
     /**
      * Set the icon of this item view.
@@ -110,7 +110,7 @@ public:
      * @return Whether this item view prefers displaying the condensed
      *         title.
      */
-    virtual bool prefersCondensedTitle()=0;
+    virtual bool prefersCondensedTitle()const=0;
 
     /**
      * Whether this item view shows an icon.

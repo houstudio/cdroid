@@ -84,9 +84,7 @@ MenuItem& MenuItemImpl::setEnabled(bool enabled) {
     } else {
         mFlags &= ~ENABLED;
     }
-
     mMenu->onItemsChanged(false);
-
     return *this;
 }
 
@@ -124,11 +122,11 @@ MenuItem& MenuItemImpl::setCallback(Runnable callback) {
     return *this;
 }
 
-int MenuItemImpl::getAlphabeticShortcut(){
+int MenuItemImpl::getAlphabeticShortcut()const{
     return mShortcutAlphabeticChar;
 }
 
-int MenuItemImpl::getAlphabeticModifiers(){
+int MenuItemImpl::getAlphabeticModifiers()const{
     return mShortcutAlphabeticModifiers;
 }
 
@@ -136,7 +134,6 @@ MenuItem& MenuItemImpl::setAlphabeticShortcut(int alphaChar){
     if (mShortcutAlphabeticChar == alphaChar) return *this;
 
     mShortcutAlphabeticChar = std::tolower(alphaChar);
-
     mMenu->onItemsChanged(false);
 
     return *this;
@@ -150,7 +147,6 @@ MenuItem& MenuItemImpl::setAlphabeticShortcut(int alphaChar, int alphaModifiers)
 
     mShortcutAlphabeticChar = std::tolower(alphaChar);
     mShortcutAlphabeticModifiers = KeyEvent::normalizeMetaState(alphaModifiers);
-
     mMenu->onItemsChanged(false);
 
     return *this;
@@ -168,7 +164,6 @@ MenuItem& MenuItemImpl::setNumericShortcut(int numericChar) {
     if (mShortcutNumericChar == numericChar) return *this;
 
     mShortcutNumericChar = numericChar;
-
     mMenu->onItemsChanged(false);
 
     return *this;
@@ -181,7 +176,6 @@ MenuItem& MenuItemImpl::setNumericShortcut(int numericChar, int numericModifiers
 
     mShortcutNumericChar = numericChar;
     mShortcutNumericModifiers = KeyEvent::normalizeMetaState(numericModifiers);
-
     mMenu->onItemsChanged(false);
 
     return *this;
@@ -190,7 +184,6 @@ MenuItem& MenuItemImpl::setNumericShortcut(int numericChar, int numericModifiers
 MenuItem& MenuItemImpl::setShortcut(int numericChar, int alphaChar){
     mShortcutNumericChar = numericChar;
     mShortcutAlphabeticChar = std::tolower(alphaChar);
-
     mMenu->onItemsChanged(false);
 
     return *this;
@@ -202,7 +195,6 @@ MenuItem& MenuItemImpl::setShortcut(int numericChar, int alphaChar, int numericM
     mShortcutNumericModifiers = KeyEvent::normalizeMetaState(numericModifiers);
     mShortcutAlphabeticChar = std::tolower(alphaChar);
     mShortcutAlphabeticModifiers = KeyEvent::normalizeMetaState(alphaModifiers);
-
     mMenu->onItemsChanged(false);
 
     return *this;
@@ -251,22 +243,18 @@ std::string MenuItemImpl::getShortcutLabel() {
         com.android.internal.R.string.menu_function_shortcut_label));
 
     switch (shortcut) {
-
         case '\n':
             sb.append(res.getString(
                 com.android.internal.R.string.menu_enter_shortcut_label));
             break;
-
         case '\b':
             sb.append(res.getString(
                 com.android.internal.R.string.menu_delete_shortcut_label));
             break;
-
         case ' ':
             sb.append(res.getString(
                 com.android.internal.R.string.menu_space_shortcut_label));
             break;
-
         default:
             sb.append(shortcut);
             break;
@@ -295,13 +283,12 @@ SubMenu* MenuItemImpl::getSubMenu() {
     return (SubMenu*)mSubMenu;
 }
 
-bool MenuItemImpl::hasSubMenu() {
+bool MenuItemImpl::hasSubMenu() const{
     return mSubMenu != nullptr;
 }
 
 void  MenuItemImpl::setSubMenu(SubMenuBuilder* subMenu) {
     mSubMenu = subMenu;
-
     subMenu->setHeaderTitle(getTitle());
 }
 
@@ -324,13 +311,10 @@ std::string MenuItemImpl::getTitleForItemView(MenuView::ItemView* itemView) {
 
 MenuItem& MenuItemImpl::setTitle(const std::string& title) {
     mTitle = title;
-
     mMenu->onItemsChanged(false);
-
     if (mSubMenu != nullptr) {
         mSubMenu->setHeaderTitle(title);
     }
-
     return *this;
 }
 
@@ -340,14 +324,8 @@ std::string MenuItemImpl::getTitleCondensed() {
 
 MenuItem& MenuItemImpl::setTitleCondensed(const std::string& title) {
     mTitleCondensed = title;
-
     // Could use getTitle() in the loop below, but just cache what it would do here
-    /*if (title.empty()) {
-        title = mTitle;
-    }*/
-
     mMenu->onItemsChanged(false);
-
     return *this;
 }
 
@@ -390,7 +368,6 @@ MenuItem& MenuItemImpl::setIconTintList(const ColorStateList* iconTintList) {
     mIconTintList = iconTintList;
     mHasIconTint = true;
     mNeedToApplyIconTint = true;
-
     mMenu->onItemsChanged(false);
 
     return *this;
@@ -404,7 +381,6 @@ MenuItem& MenuItemImpl::setIconTintMode(int iconTintMode) {
     mIconTintMode = iconTintMode;
     mHasIconTintMode = true;
     mNeedToApplyIconTint = true;
-
     mMenu->onItemsChanged(false);
 
     return *this;
@@ -417,15 +393,12 @@ int MenuItemImpl::getIconTintMode() {
 Drawable* MenuItemImpl::applyIconTintIfNecessary(Drawable* icon) {
     if (icon != nullptr && mNeedToApplyIconTint && (mHasIconTint || mHasIconTintMode)) {
         icon = icon->mutate();
-
         if (mHasIconTint) {
             icon->setTintList(mIconTintList);
         }
-
         if (mHasIconTintMode) {
             icon->setTintMode(mIconTintMode);
         }
-
         mNeedToApplyIconTint = false;
     }
 
@@ -442,7 +415,6 @@ MenuItem& MenuItemImpl::setCheckable(bool checkable) {
     if (oldFlags != mFlags) {
         mMenu->onItemsChanged(false);
     }
-
     return *this;
 }
 
@@ -466,7 +438,6 @@ MenuItem& MenuItemImpl::setChecked(bool checked) {
     } else {
         setCheckedInt(checked);
     }
-
     return *this;
 }
 
@@ -700,9 +671,7 @@ std::string MenuItemImpl::getContentDescription() {
 
 MenuItem& MenuItemImpl::setTooltipText(const std::string& tooltipText) {
     mTooltipText = tooltipText;
-
     mMenu->onItemsChanged(false);
-
     return *this;
 }
 

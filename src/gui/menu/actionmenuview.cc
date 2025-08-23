@@ -19,6 +19,7 @@ ActionMenuView::ActionMenuView(Context* context,const AttributeSet& attrs)
 }
 
 ActionMenuView::~ActionMenuView(){
+    delete mMenu;
 }
 
 void ActionMenuView::setPopupTheme(int resId) {
@@ -70,13 +71,13 @@ void ActionMenuView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     // Special formatting can change whether items can fit as action buttons.
     // Kick the menu and update presenters when this changes.
     const int widthSize = MeasureSpec::getSize(widthMeasureSpec);
-    if (mFormatItems && mMenu != nullptr && widthSize != mFormatItemsWidth) {
+    if (mFormatItems && (mMenu != nullptr) && (widthSize != mFormatItemsWidth)) {
         mFormatItemsWidth = widthSize;
         mMenu->onItemsChanged(true);
     }
 
     const int childCount = getChildCount();
-    if (mFormatItems && childCount > 0) {
+    if (mFormatItems && (childCount > 0)) {
         onMeasureExactFormat(widthMeasureSpec, heightMeasureSpec);
     } else {
         // Previous measurement at exact format may have set margins - reset them.
@@ -165,7 +166,7 @@ void ActionMenuView::onMeasureExactFormat(int widthMeasureSpec, int heightMeasur
 
     // When we have overflow and a single expanded (text) item, we want to try centering it
     // visually in the available space even though overflow consumes some of it.
-    const bool centerSingleExpandedItem = hasOverflow && visibleItemCount == 2;
+    const bool centerSingleExpandedItem = hasOverflow && (visibleItemCount == 2);
 
     // Divide space for remaining cells if we have items that can expand.
     // Try distributing whole leftover cells to smaller items first.
@@ -210,7 +211,7 @@ void ActionMenuView::onMeasureExactFormat(int widthMeasureSpec, int heightMeasur
                 continue;
             }
 
-            if (centerSingleExpandedItem && lp->preventEdgeOffset && cellsRemaining == 1) {
+            if (centerSingleExpandedItem && lp->preventEdgeOffset && (cellsRemaining == 1)) {
                 // Add padding to this item such that it centers.
                 child->setPadding(mGeneratedItemPadding + cellSize, 0, mGeneratedItemPadding, 0);
             }
@@ -225,9 +226,9 @@ void ActionMenuView::onMeasureExactFormat(int widthMeasureSpec, int heightMeasur
     // Divide any space left that wouldn't divide along cell boundaries
     // evenly among the smallest items
 
-    const bool singleItem = !hasOverflow && visibleItemCount == 1;
-    if (cellsRemaining > 0 && smallestItemsAt != 0 &&
-            (cellsRemaining < visibleItemCount - 1 || singleItem || maxCellsUsed > 1)) {
+    const bool singleItem = !hasOverflow && (visibleItemCount == 1);
+    if ((cellsRemaining > 0) && (smallestItemsAt != 0) &&
+            ((cellsRemaining < visibleItemCount - 1) || singleItem || (maxCellsUsed > 1))) {
         float expandCount = BitSet64::count(smallestItemsAt);
 
         if (!singleItem) {
@@ -289,8 +290,7 @@ void ActionMenuView::onMeasureExactFormat(int widthMeasureSpec, int heightMeasur
             if (!lp->expanded) continue;
 
             const int width = lp->cellsUsed * cellSize + lp->extraPixels;
-            child->measure(MeasureSpec::makeMeasureSpec(width, MeasureSpec::EXACTLY),
-                    itemHeightSpec);
+            child->measure(MeasureSpec::makeMeasureSpec(width, MeasureSpec::EXACTLY),itemHeightSpec);
         }
     }
 
@@ -311,7 +311,7 @@ int ActionMenuView::measureChildForCells(View* child, int cellSize, int cellsRem
 
     const ActionMenuItemView* itemView = dynamic_cast<ActionMenuItemView*>(child) ?
             (ActionMenuItemView*) child : nullptr;
-    const bool hasText = itemView != nullptr && itemView->hasText();
+    const bool hasText = (itemView != nullptr) && itemView->hasText();
 
     int cellsUsed = 0;
     if (cellsRemaining > 0 && (!hasText || cellsRemaining >= 2)) {
@@ -325,13 +325,11 @@ int ActionMenuView::measureChildForCells(View* child, int cellSize, int cellsRem
         if (hasText && cellsUsed < 2) cellsUsed = 2;
     }
 
-    const bool expandable = !lp->isOverflowButton && hasText;
-    lp->expandable = expandable;
+    lp->expandable = !lp->isOverflowButton && hasText;
 
     lp->cellsUsed = cellsUsed;
     const int targetWidth = cellsUsed * cellSize;
-    child->measure(MeasureSpec::makeMeasureSpec(targetWidth, MeasureSpec::EXACTLY),
-            childHeightSpec);
+    child->measure(MeasureSpec::makeMeasureSpec(targetWidth, MeasureSpec::EXACTLY), childHeightSpec);
     return cellsUsed;
 }
 
@@ -340,7 +338,6 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
         LinearLayout::onLayout(changed, left, top, layoutWidth, layoutHeight);
         return;
     }
-
     const int childCount = getChildCount();
     const int midVertical = layoutHeight / 2;
     const int dividerWidth = getDividerWidth();
@@ -364,8 +361,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
             }
 
             int height = v->getMeasuredHeight();
-            int r;
-            int l;
+            int r,l;
             if (bLayoutRtl) {
                 l = getPaddingLeft() + p->leftMargin;
                 r = l + overflowWidth;
@@ -390,7 +386,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
         }
     }
 
-    if (childCount == 1 && !hasOverflow) {
+    if ((childCount == 1) && !hasOverflow) {
         // Center a single child
         View* v = getChildAt(0);
         const int width = v->getMeasuredWidth();
@@ -410,7 +406,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
         for (int i = 0; i < childCount; i++) {
             View* v = getChildAt(i);
             LayoutParams* lp = (LayoutParams*) v->getLayoutParams();
-            if (v->getVisibility() == GONE || lp->isOverflowButton) {
+            if ((v->getVisibility() == GONE) || lp->isOverflowButton) {
                 continue;
             }
 
@@ -426,7 +422,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
         for (int i = 0; i < childCount; i++) {
             View* v = getChildAt(i);
             LayoutParams* lp = (LayoutParams*) v->getLayoutParams();
-            if (v->getVisibility() == GONE || lp->isOverflowButton) {
+            if ((v->getVisibility() == GONE) || lp->isOverflowButton) {
                 continue;
             }
 
@@ -546,19 +542,19 @@ MenuBuilder* ActionMenuView::peekMenu() {
 }
 
 bool ActionMenuView::showOverflowMenu() {
-    return mPresenter != nullptr && mPresenter->showOverflowMenu();
+    return (mPresenter != nullptr) && mPresenter->showOverflowMenu();
 }
 
 bool ActionMenuView::hideOverflowMenu() {
-    return mPresenter != nullptr && mPresenter->hideOverflowMenu();
+    return (mPresenter != nullptr) && mPresenter->hideOverflowMenu();
 }
 
 bool ActionMenuView::isOverflowMenuShowing() {
-    return mPresenter != nullptr && mPresenter->isOverflowMenuShowing();
+    return (mPresenter != nullptr) && mPresenter->isOverflowMenuShowing();
 }
 
 bool ActionMenuView::isOverflowMenuShowPending() {
-    return mPresenter != nullptr && mPresenter->isOverflowMenuShowPending();
+    return (mPresenter != nullptr) && mPresenter->isOverflowMenuShowPending();
 }
 
 void ActionMenuView::dismissPopupMenus() {

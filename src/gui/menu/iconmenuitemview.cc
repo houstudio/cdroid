@@ -18,8 +18,9 @@
 #include <menu/iconmenuitemview.h>
 #include <menu/menuitemimpl.h>
 namespace cdroid{
-std::string IconMenuItemView::sPrependShortcutLabel;
 
+DECLARE_WIDGET(IconMenuItemView)
+std::string IconMenuItemView::sPrependShortcutLabel;
 IconMenuItemView::IconMenuItemView(Context* context,const AttributeSet& attrs)
     :TextView(context, attrs){
 
@@ -239,7 +240,7 @@ void IconMenuItemView::setCheckable(bool checkable) {
 void IconMenuItemView::setChecked(bool checked) {
 }
 
-void IconMenuItemView::setShortcut(bool showShortcut, char shortcutKey) {
+void IconMenuItemView::setShortcut(bool showShortcut, int shortcutKey) {
 
     if (mShortcutCaptionMode) {
         /*
@@ -251,7 +252,7 @@ void IconMenuItemView::setShortcut(bool showShortcut, char shortcutKey) {
     }
 }
 
-bool IconMenuItemView::prefersCondensedTitle() {
+bool IconMenuItemView::prefersCondensedTitle() const{
     return true;
 }
 

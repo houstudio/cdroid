@@ -91,9 +91,9 @@ public:
 
     virtual MenuItem& setAlphabeticShortcut(int alphaChar, int alphaModifiers);
 
-    virtual int getAlphabeticShortcut();
+    virtual int getAlphabeticShortcut()const;
 
-    virtual int getAlphabeticModifiers();
+    virtual int getAlphabeticModifiers()const;
 
     virtual MenuItem& setCheckable(bool checkable)=0;
 
@@ -111,7 +111,7 @@ public:
 
     virtual bool isEnabled()const =0;
 
-    virtual bool hasSubMenu();
+    virtual bool hasSubMenu()const;
                                                
     virtual SubMenu* getSubMenu();
 

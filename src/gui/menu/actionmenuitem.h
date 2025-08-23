@@ -65,7 +65,7 @@ public:
         return mShortcutAlphabeticChar;
     }
 
-    int getAlphabeticModifiers() override{
+    int getAlphabeticModifiers()const override{
         return mShortcutAlphabeticModifiers;
     }
 
@@ -113,7 +113,7 @@ public:
         return !mTitleCondensed.empty() ? mTitleCondensed : mTitle;
     }
 
-    bool hasSubMenu() override{
+    bool hasSubMenu()const override{
         return false;
     }
 

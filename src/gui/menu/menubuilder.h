@@ -94,8 +94,8 @@ private:
 
     bool mIsVisibleItemsStale;
     bool mIsActionItemsStale;
-    bool mPreventDispatchingItemsChanged = false;
-    bool mItemsChangedWhileDispatchPrevented = false;
+    bool mPreventDispatchingItemsChanged;
+    bool mItemsChangedWhileDispatchPrevented;
     bool mOptionalIconsVisible = false;
     bool mIsClosing = false;
     bool mGroupDividerEnabled = false;

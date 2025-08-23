@@ -99,8 +99,8 @@ public:
     Runnable getCallback();
     MenuItem& setCallback(Runnable callback);
 
-    int getAlphabeticShortcut() override;
-    int getAlphabeticModifiers() override;
+    int getAlphabeticShortcut()const override;
+    int getAlphabeticModifiers()const override;
 
     MenuItem& setAlphabeticShortcut(int alphaChar);
     MenuItem& setAlphabeticShortcut(int alphaChar, int alphaModifiers);
@@ -118,7 +118,7 @@ public:
     bool shouldShowShortcut();
 
     SubMenu* getSubMenu()override;
-    bool hasSubMenu()override;
+    bool hasSubMenu()const override;
     void setSubMenu(SubMenuBuilder* subMenu);
 
     std::string getTitle();
@@ -129,7 +129,7 @@ public:
     MenuItem& setTitleCondensed(const std::string& title);
 
     Drawable* getIcon();
-    MenuItem& setIcon(Drawable* icon);
+    MenuItem& setIcon(Drawable* icon)override;
     MenuItem& setIcon(const std::string& iconResId)override;
 
     MenuItem& setIconTintList(const ColorStateList* iconTintList);
@@ -179,7 +179,7 @@ public:
 
     View* getActionView()override;
 
-    ActionProvider* getActionProvider();
+    ActionProvider* getActionProvider()override;
     MenuItem& setActionProvider(ActionProvider* actionProvider);
 
     MenuItem& setShowAsActionFlags(int actionEnum);
