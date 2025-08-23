@@ -1,6 +1,6 @@
 #ifndef __ACTION_MENUITEM_H__
 #define __ACTION_MENUITEM_H__
-#include <view/menuitem.h>
+#include <menu/menuitem.h>
 namespace cdroid{
 class ActionMenuItem:public MenuItem {
 private:
@@ -61,7 +61,7 @@ public:
         mTitle = title;
     }
 
-    int getAlphabeticShortcut() override{
+    int getAlphabeticShortcut()const override{
         return mShortcutAlphabeticChar;
     }
 
@@ -129,7 +129,7 @@ public:
         return (mFlags & ENABLED) != 0;
     }
 
-    bool isVisible() override{
+    bool isVisible()const override{
         return (mFlags & HIDDEN) == 0;
     }
 
@@ -149,7 +149,7 @@ public:
         return *this;
     }
 
-    ActionMenuItem& setExclusiveCheckable(bool exclusive) override{
+    ActionMenuItem& setExclusiveCheckable(bool exclusive) {
         mFlags = (mFlags & ~EXCLUSIVE) | (exclusive ? EXCLUSIVE : 0);
         return *this;
     }
@@ -172,7 +172,7 @@ public:
     }
 
     MenuItem& setIcon(const std::string& iconRes) override{
-        mIconResId = iconRes;
+        //mIconResId = iconRes;
         mIconDrawable = mContext->getDrawable(iconRes);
         applyIconTint();
         return *this;
@@ -216,7 +216,7 @@ public:
         return *this;
     }
 
-    MenuItem& setOnMenuItemClickListener(OnMenuItemClickListener menuItemClickListener) override{
+    MenuItem& setOnMenuItemClickListener(const OnMenuItemClickListener& menuItemClickListener) override{
         mClickListener = menuItemClickListener;
         return *this;
     }
@@ -240,11 +240,6 @@ public:
         return *this;
     }
 
-    MenuItem& setTitle(int title) override{
-        //mTitle = mContext.getResources().getString(title);
-        return *this;
-    }
-
     MenuItem& setTitleCondensed(const std::string& title) override{
         mTitleCondensed = title;
         return *this;
@@ -255,7 +250,7 @@ public:
         return *this;
     }
 
-    bool invoke() override{
+    bool invoke(){
         if (mClickListener != nullptr && mClickListener(*this)) {
             return true;
         }
@@ -278,7 +273,7 @@ public:
         return nullptr;
     }
 
-    MenuItem& setActionView(int resId) override{
+    MenuItem& setActionView(const std::string& resId) override{
         throw std::logic_error("UnsupportedOperationException");
     }
 
@@ -303,7 +298,7 @@ public:
         return false;
     }
 
-    bool isActionViewExpanded() override{
+    bool isActionViewExpanded()const override{
         return false;
     }
 

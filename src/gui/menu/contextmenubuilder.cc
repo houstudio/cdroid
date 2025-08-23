@@ -1,83 +1,85 @@
-public class ContextMenuBuilder:public MenuBuilder,public ContextMenu {
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
+#include <menu/menuitemimpl.h>
+#include <menu/menupopuphelper.h>
+#include <menu/menudialoghelper.h>
+#include <menu/contextmenubuilder.h>
+namespace cdroid{
 
-    @UnsupportedAppUsage
-    public ContextMenuBuilder(Context context) {
-        super(context);
-    }
-
-    public ContextMenu setHeaderIcon(Drawable icon) {
-        return (ContextMenu) super.setHeaderIconInt(icon);
-    }
-
-    public ContextMenu setHeaderIcon(int iconRes) {
-        return (ContextMenu) super.setHeaderIconInt(iconRes);
-    }
-
-    public ContextMenu setHeaderTitle(CharSequence title) {
-        return (ContextMenu) super.setHeaderTitleInt(title);
-    }
-
-    public ContextMenu setHeaderTitle(int titleRes) {
-        return (ContextMenu) super.setHeaderTitleInt(titleRes);
-    }
-
-    public ContextMenu setHeaderView(View view) {
-        return (ContextMenu) super.setHeaderViewInt(view);
-    }
-
-    /**
-     * Shows this context menu, allowing the optional original view (and its
-     * ancestors) to add items.
-     *
-     * @param originalView Optional, the original view that triggered the
-     *        context menu.
-     * @param token Optional, the window token that should be set on the context
-     *        menu's window.
-     * @return If the context menu was shown, the {@link MenuDialogHelper} for
-     *         dismissing it. Otherwise, null.
-     */
-    public MenuDialogHelper showDialog(View originalView, IBinder token) {
-        if (originalView != null) {
-            // Let relevant views and their populate context listeners populate
-            // the context menu
-            originalView.createContextMenu(this);
-        }
-
-        if (getVisibleItems().size() > 0) {
-            EventLog.writeEvent(50001, 1);
-
-            MenuDialogHelper helper = new MenuDialogHelper(this);
-            helper.show(token);
-
-            return helper;
-        }
-
-        return null;
-    }
-
-    public MenuPopupHelper showPopup(Context context, View originalView, float x, float y) {
-        if (originalView != null) {
-            // Let relevant views and their populate context listeners populate
-            // the context menu
-            originalView.createContextMenu(this);
-        }
-
-        if (getVisibleItems().size() > 0) {
-            EventLog.writeEvent(50001, 1);
-
-            int location[] = new int[2];
-            originalView.getLocationOnScreen(location);
-
-            final MenuPopupHelper helper = new MenuPopupHelper(
-                    context,
-                    this,
-                    originalView,
-                    false /* overflowOnly */,
-                    com.android.internal.R.attr.contextPopupMenuStyle);
-            helper.show(Math.round(x), Math.round(y));
-            return helper;
-        }
-
-        return null;
-    }
+ContextMenuBuilder::ContextMenuBuilder(Context*context)
+    :MenuBuilder(context){
 }
+
+ContextMenu& ContextMenuBuilder::setHeaderIcon(Drawable* icon) {
+    return (ContextMenu&) MenuBuilder::setHeaderIconInt(icon);
+}
+
+/*ContextMenu& ContextMenuBuilder::setHeaderIcon(int iconRes) {
+    return (ContextMenu&) MenuBuilder::setHeaderIconInt(iconRes);
+}*/
+
+ContextMenu& ContextMenuBuilder::setHeaderTitle(const std::string& title) {
+    return (ContextMenu&) MenuBuilder::setHeaderTitleInt(title);
+}
+
+/*ContextMenu& ContextMenuBuilder::setHeaderTitle(int titleRes) {
+    return (ContextMenu&) MenuBuilder::setHeaderTitleInt(titleRes);
+}*/
+
+ContextMenu& ContextMenuBuilder::setHeaderView(View* view) {
+    return (ContextMenu&) MenuBuilder::setHeaderViewInt(view);
+}
+
+MenuDialogHelper* ContextMenuBuilder::showDialog(View* originalView/*, IBinder token*/) {
+    if (originalView != nullptr) {
+        // Let relevant views and their populate context listeners populate
+        // the context menu
+        originalView->createContextMenu(*this);
+    }
+
+    if (getVisibleItems().size() > 0) {
+        MenuDialogHelper*helper = new MenuDialogHelper(this);
+        helper->show(/*token*/);
+        return helper;
+    }
+
+    return nullptr;
+}
+
+MenuPopupHelper* ContextMenuBuilder::showPopup(Context* context, View* originalView, float x, float y) {
+    if (originalView != nullptr) {
+        // Let relevant views and their populate context listeners populate
+        // the context menu
+        originalView->createContextMenu(*this);
+    }
+
+    if (getVisibleItems().size() > 0) {
+
+        int location[2];
+        originalView->getLocationOnScreen(location);
+
+        MenuPopupHelper* helper = new MenuPopupHelper(
+                context, this, originalView, false /* overflowOnly */,
+                0,0);//com.android.internal.R.attr.contextPopupMenuStyle);
+        helper->show(std::round(x), std::round(y));
+        return helper;
+    }
+
+    return nullptr;
+}
+}/*endof namespace*/

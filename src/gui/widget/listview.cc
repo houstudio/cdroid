@@ -1207,7 +1207,7 @@ void ListView::layoutChildren() {
          * selectable, it won't regain focus so instead we call FocusSelector
          * to directly request focus on the view after it is visible.
          */
-        if (sel == nullptr && mFocusSelector != nullptr) {
+        if ((sel == nullptr) && (mFocusSelector != nullptr)) {
             if(mFocusSelector->setupFocusIfValid(selectedPosition))
                 post(*mFocusSelector);
         }
@@ -1273,7 +1273,7 @@ void ListView::layoutChildren() {
         }
         mSelectedTop = sel->getTop();
     } else {
-        const bool inTouchMode = mTouchMode == TOUCH_MODE_TAP || mTouchMode == TOUCH_MODE_DONE_WAITING;
+        const bool inTouchMode = (mTouchMode == TOUCH_MODE_TAP) || (mTouchMode == TOUCH_MODE_DONE_WAITING);
         if (inTouchMode) {
             // If the user's finger is down, select the motion position.
             View* child = getChildAt(mMotionPosition - mFirstPosition);
@@ -1366,7 +1366,7 @@ void ListView::removeUnusedFixedViews(std::vector<FixedViewInfo*>& infoList) {
         FixedViewInfo* fixedViewInfo = infoList[i];
         View* view = fixedViewInfo->view;
         LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
-        if (view->getParent() == nullptr && lp != nullptr && lp->recycledHeaderFooter) {
+        if ((view->getParent() == nullptr) && (lp != nullptr) && lp->recycledHeaderFooter) {
             removeDetachedView(view, false);
             lp->recycledHeaderFooter = false;
         }
@@ -1412,8 +1412,8 @@ void ListView::setupChild(View* child, int position, int y, bool flowDown, int c
                           bool selected, bool isAttachedToWindow) {
 
     const bool isSelected = selected && shouldShowSelector();
-    const bool updateChildSelected = isSelected != child->isSelected();
-    const bool isPressed = mTouchMode > TOUCH_MODE_DOWN && mTouchMode < TOUCH_MODE_SCROLL && mMotionPosition == position;
+    const bool updateChildSelected = (isSelected != child->isSelected());
+    const bool isPressed = (mTouchMode > TOUCH_MODE_DOWN) && (mTouchMode < TOUCH_MODE_SCROLL) && (mMotionPosition == position);
     const bool updateChildPressed = isPressed != child->isPressed();
     const bool needToMeasure = !isAttachedToWindow || updateChildSelected || child->isLayoutRequested();
 
@@ -1869,15 +1869,15 @@ int ListView::nextSelectedPositionForDirection(View* selectedView, int selectedP
     if (direction == View::FOCUS_DOWN) {
         int listBottom = getHeight() - mListPadding.height;
         if (selectedView && selectedView->getBottom() <= listBottom) {
-            nextSelected = selectedPos != INVALID_POSITION && selectedPos >= mFirstPosition ?
-                           selectedPos + 1 :mFirstPosition;
+            nextSelected = (selectedPos != INVALID_POSITION) && (selectedPos >= mFirstPosition) ?
+                           (selectedPos + 1) :mFirstPosition;
         } else {
             return INVALID_POSITION;
         }
     } else {
         int listTop = mListPadding.top;
         if (selectedView && selectedView->getTop() >= listTop) {
-            int lastPos = mFirstPosition + getChildCount() - 1;
+            const int lastPos = mFirstPosition + getChildCount() - 1;
             nextSelected = selectedPos != INVALID_POSITION && selectedPos <= lastPos ?
                            selectedPos - 1 :lastPos;
         } else {
@@ -2030,7 +2030,7 @@ void ListView::measureAndAdjustDown(View* child, int childIndex, int numChildren
 void ListView::measureItem(View* child) {
     ViewGroup::LayoutParams* lp = child->getLayoutParams();
     if (lp == nullptr) {
-        lp = generateDefaultLayoutParams();//new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
+        lp = generateDefaultLayoutParams();
     }
     int childWidthSpec,childHeightSpec;
     childWidthSpec = getChildMeasureSpec(mWidthMeasureSpec,
