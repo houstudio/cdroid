@@ -549,11 +549,11 @@ bool ActionMenuView::hideOverflowMenu() {
     return (mPresenter != nullptr) && mPresenter->hideOverflowMenu();
 }
 
-bool ActionMenuView::isOverflowMenuShowing() {
+bool ActionMenuView::isOverflowMenuShowing() const{
     return (mPresenter != nullptr) && mPresenter->isOverflowMenuShowing();
 }
 
-bool ActionMenuView::isOverflowMenuShowPending() {
+bool ActionMenuView::isOverflowMenuShowPending() const{
     return (mPresenter != nullptr) && mPresenter->isOverflowMenuShowPending();
 }
 

@@ -1383,7 +1383,7 @@ void Toolbar::ExpandedActionViewMenuPresenter::initForMenu(Context* context,Menu
     mMenu = menu;
 }
 
-MenuView* Toolbar::ExpandedActionViewMenuPresenter::getMenuView(ViewGroup* root) {
+ViewGroup* Toolbar::ExpandedActionViewMenuPresenter::getMenuView(ViewGroup* root) {
     return nullptr;
 }
 

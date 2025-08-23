@@ -36,7 +36,7 @@ void BaseMenuPresenter::initForMenu(Context* context,MenuBuilder* menu) {
     mMenu = menu;
 }
 
-MenuView* BaseMenuPresenter::getMenuView(ViewGroup* root) {
+ViewGroup* BaseMenuPresenter::getMenuView(ViewGroup* root) {
     if (mMenuView == nullptr) {
         mContainer = (ViewGroup*)mSystemInflater->inflate(mMenuLayoutRes, root, false);
         mMenuView = (MenuView*)mContainer;
@@ -44,7 +44,7 @@ MenuView* BaseMenuPresenter::getMenuView(ViewGroup* root) {
         updateMenuView(true);
     }
 
-    return mMenuView;
+    return mContainer;//MenuView;
 }
 
 void BaseMenuPresenter::updateMenuView(bool cleared) {

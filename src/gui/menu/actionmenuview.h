@@ -97,8 +97,8 @@ public:
     bool showOverflowMenu();
     bool hideOverflowMenu();
 
-    bool isOverflowMenuShowing();
-    bool isOverflowMenuShowPending();
+    bool isOverflowMenuShowing()const;
+    bool isOverflowMenuShowPending()const;
 
     void dismissPopupMenus();
 

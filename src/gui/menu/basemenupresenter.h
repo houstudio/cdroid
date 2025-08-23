@@ -41,7 +41,7 @@ public:
     BaseMenuPresenter(Context* context,const std::string& menuLayoutRes,const std::string& itemLayoutRes);
 
     void initForMenu(Context* context, MenuBuilder* menu)override;
-    MenuView* getMenuView(ViewGroup* root)override;
+    ViewGroup* getMenuView(ViewGroup* root)override;
     void updateMenuView(bool cleared);
     void setCallback(const Callback& cb)override;
     Callback getCallback();

@@ -50,7 +50,7 @@ public:
      * @param root Intended parent of the MenuView.
      * @return A freshly created MenuView.
      */
-    virtual MenuView* getMenuView(ViewGroup* root)=0;
+    virtual ViewGroup* getMenuView(ViewGroup* root)=0;
 
     /**
      * Update the menu UI in response to a change. Called by

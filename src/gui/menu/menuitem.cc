@@ -178,7 +178,7 @@ bool MenuItem::collapseActionView(){
     return false;
 }
 
-bool MenuItem::isActionViewExpanded(){
+bool MenuItem::isActionViewExpanded()const{
     return false;
 }
 

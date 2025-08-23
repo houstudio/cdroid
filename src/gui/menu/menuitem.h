@@ -137,7 +137,7 @@ public:
 
     virtual bool collapseActionView()=0;
 
-    virtual bool isActionViewExpanded()=0;
+    virtual bool isActionViewExpanded()const=0;
 
     virtual MenuItem& setOnActionExpandListener(OnActionExpandListener listener);
 

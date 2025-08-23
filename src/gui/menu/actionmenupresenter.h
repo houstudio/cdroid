@@ -90,7 +90,7 @@ public:
     void setOverflowIcon(Drawable* icon);
     Drawable* getOverflowIcon();
 
-    MenuView* getMenuView(ViewGroup* root) override;
+    ViewGroup* getMenuView(ViewGroup* root) override;
 
     View* getItemView(MenuItemImpl* item, View* convertView, ViewGroup* parent)override;
 

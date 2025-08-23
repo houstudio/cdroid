@@ -136,16 +136,15 @@ Drawable* ActionMenuPresenter::getOverflowIcon() {
     return nullptr;
 }
 
-MenuView* ActionMenuPresenter::getMenuView(ViewGroup* root) {
-    MenuView* oldMenuView = mMenuView;
-    MenuView* result = BaseMenuPresenter::getMenuView(root);
-    View::OnAttachStateChangeListener mAttachStateChangeListener;
+ViewGroup* ActionMenuPresenter::getMenuView(ViewGroup* root) {
+    ViewGroup* oldMenuView = mContainer;mMenuView;
+    ViewGroup* result = BaseMenuPresenter::getMenuView(root);
     if (oldMenuView != result) {
         ((ActionMenuView*) result)->setPresenter(this);
         if (oldMenuView != nullptr) {
-            ((View*) oldMenuView)->removeOnAttachStateChangeListener(mAttachStateChangeListener);
+            oldMenuView->removeOnAttachStateChangeListener(mAttachStateChangeListener);
         }
-        ((View*)result)->addOnAttachStateChangeListener(mAttachStateChangeListener);
+        result->addOnAttachStateChangeListener(mAttachStateChangeListener);
     }
     return result;
 }

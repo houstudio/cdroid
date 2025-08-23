@@ -70,7 +70,7 @@ public:
     virtual void setOnDismissListener(const PopupWindow::OnDismissListener& listener)=0;
 
     void initForMenu(Context* context, MenuBuilder* menu) override;
-    MenuView* getMenuView(ViewGroup* root)override;
+    ViewGroup* getMenuView(ViewGroup* root)override;
 
     bool expandItemActionView(MenuBuilder& menu, MenuItemImpl& item) override;
     bool collapseItemActionView(MenuBuilder& menu, MenuItemImpl& item) override;
