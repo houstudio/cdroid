@@ -165,8 +165,8 @@ View* ActionMenuPresenter::getItemView(MenuItemImpl* item, View* convertView, Vi
     return actionView;
 }
 
-void ActionMenuPresenter::bindItemView(MenuItemImpl* item, MenuView::ItemView* itemView) {
-    itemView->initialize(item, 0);
+void ActionMenuPresenter::bindItemView(MenuItemImpl* item, View* itemView) {
+    ((ActionMenuItemView*)itemView)->initialize(item, 0);
 
     ActionMenuView* menuView = (ActionMenuView*) mMenuView;
     ActionMenuItemView* actionItemView = (ActionMenuItemView*) itemView;

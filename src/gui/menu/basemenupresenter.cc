@@ -104,19 +104,19 @@ MenuPresenter::Callback BaseMenuPresenter::getCallback() {
     return mCallback;
 }
 
-MenuView::ItemView* BaseMenuPresenter::createItemView(ViewGroup* parent) {
-    return (MenuView::ItemView*) mSystemInflater->inflate(mItemLayoutRes, parent, false);
+View* BaseMenuPresenter::createItemView(ViewGroup* parent) {
+    return mSystemInflater->inflate(mItemLayoutRes, parent, false);
 }
 
 View* BaseMenuPresenter::getItemView(MenuItemImpl* item, View* convertView, ViewGroup* parent) {
-    MenuView::ItemView* itemView;
+    View* itemView;
     if (dynamic_cast<MenuView::ItemView*>(convertView)) {
-        itemView = (MenuView::ItemView*) convertView;
+        itemView = convertView;
     } else {
         itemView = createItemView(parent);
     }
     bindItemView(item, itemView);
-    return (View*) itemView;
+    return (View*)itemView;
 }
 
 bool BaseMenuPresenter::shouldIncludeItem(int childIndex, MenuItemImpl* item) {

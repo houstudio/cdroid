@@ -46,10 +46,10 @@ public:
     void setCallback(const Callback& cb)override;
     Callback getCallback();
 
-    MenuView::ItemView* createItemView(ViewGroup* parent);
+    View* createItemView(ViewGroup* parent);
 
     virtual View* getItemView(MenuItemImpl* item, View* convertView, ViewGroup* parent);
-    virtual void bindItemView(MenuItemImpl* item, MenuView::ItemView* itemView)=0;
+    virtual void bindItemView(MenuItemImpl* item, View* itemView)=0;
 
     virtual bool shouldIncludeItem(int childIndex, MenuItemImpl* item);
 
