@@ -57,7 +57,7 @@ public:
 
     void setPadding(int l, int t, int r, int b) override;
 
-    MenuItemImpl* getItemData();
+    MenuItemImpl* getItemData()override;
 
     void initialize(MenuItemImpl* itemData, int menuType) override;
     bool onTouchEvent(MotionEvent& e) override;
@@ -89,8 +89,8 @@ public:
 
     bool showsIcon();
 
-    bool needsDividerBefore();
-    bool needsDividerAfter();
+    bool needsDividerBefore()override;
+    bool needsDividerAfter()override;
 
     void onRestoreInstanceState(Parcelable& state)override;
 };/*endof ActionMenuItemView*/

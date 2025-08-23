@@ -182,7 +182,7 @@ bool ActionMenuPresenter::shouldIncludeItem(int childIndex, MenuItemImpl* item) 
 }
 
 void ActionMenuPresenter::computeMenuItemAnimationInfo(bool preLayout) {
-    ViewGroup* menuView = (ViewGroup*) mMenuView;
+    ViewGroup* menuView = mContainer;//(ViewGroup*) mMenuView;
     const int count = menuView->getChildCount();
     auto& items = preLayout ? mPreLayoutItems : mPostLayoutItems;
     for (int i = 0; i < count; ++i) {
@@ -258,7 +258,7 @@ void ActionMenuPresenter::runItemAnimations() {
             }
             ObjectAnimator* anim = ObjectAnimator::ofFloat((void*)menuItemLayoutInfoPre->view, "alpha"/*View::ALPHA*/, {oldAlpha, 0.f});
             // Re-using the view from pre-layout assumes no view recycling
-            ((ViewGroup*) mMenuView)->getOverlay()->add(menuItemLayoutInfoPre->view);
+            /*((ViewGroup*) mMenuView)*/mContainer->getOverlay()->add(menuItemLayoutInfoPre->view);
             anim->setDuration(ITEM_ANIMATION_DURATION);
             anim->start();
             ItemAnimationInfo* info = new ItemAnimationInfo(id, menuItemLayoutInfoPre, anim, ItemAnimationInfo::FADE_OUT);
@@ -271,7 +271,7 @@ void ActionMenuPresenter::runItemAnimations() {
                         break;
                     }
                 }
-                ((ViewGroup*) mMenuView)->getOverlay()->remove(menuItemLayoutInfoPre->view);
+                /*((ViewGroup*) mMenuView)*/mContainer->getOverlay()->remove(menuItemLayoutInfoPre->view);
             };
             anim->addListener(als);
         }
@@ -313,18 +313,17 @@ void ActionMenuPresenter::runItemAnimations() {
 
 void ActionMenuPresenter::setupItemAnimations() {
     computeMenuItemAnimationInfo(true);
-    ((View*) mMenuView)->getViewTreeObserver()->addOnPreDrawListener(mItemAnimationPreDrawListener);
+    /*((View*) mMenuView)*/mContainer->getViewTreeObserver()->addOnPreDrawListener(mItemAnimationPreDrawListener);
 }
 
 void ActionMenuPresenter::updateMenuView(bool cleared) {
-    ViewGroup* menuViewSelf = (ActionMenuView*)mMenuView;
-    ViewGroup* menuViewParent = menuViewSelf->getParent();
+    ViewGroup* menuViewParent = mContainer->getParent();
     if ((menuViewParent != nullptr) && ACTIONBAR_ANIMATIONS_ENABLED) {
         setupItemAnimations();
     }
     BaseMenuPresenter::updateMenuView(cleared);
 
-    menuViewSelf->requestLayout();
+    mContainer->requestLayout();
 
     if (mMenu != nullptr) {
         std::vector<MenuItemImpl*> actionItems = mMenu->getActionItems();
@@ -356,14 +355,14 @@ void ActionMenuPresenter::updateMenuView(bool cleared) {
             mOverflowButton = new OverflowMenuButton(this,mSystemContext);
         }
         ViewGroup* parent = (ViewGroup*) mOverflowButton->getParent();
-        if ((void*)parent != menuViewSelf) {
+        if (parent != mContainer) {
             if (parent != nullptr) {
                 parent->removeView(mOverflowButton);
             }
             ActionMenuView* menuView = (ActionMenuView*) mMenuView;
             menuView->addView(mOverflowButton, menuView->generateOverflowButtonLayoutParams());
         }
-    } else if ((mOverflowButton != nullptr) && mOverflowButton->getParent() == menuViewSelf) {
+    } else if ((mOverflowButton != nullptr) && mOverflowButton->getParent() == mContainer) {
         ((ViewGroup*) mMenuView)->removeView(mOverflowButton);
     }
 
@@ -412,7 +411,7 @@ bool ActionMenuPresenter::onSubMenuSelected(SubMenuBuilder* subMenu) {
 }
 
 View* ActionMenuPresenter::findViewForItem(MenuItem* item) {
-    ViewGroup* parent = (ViewGroup*) mMenuView;
+    ViewGroup* parent = mContainer;//(ViewGroup*) mMenuView;
     if (parent == nullptr) return nullptr;
 
     const int count = parent->getChildCount();
@@ -445,7 +444,7 @@ bool ActionMenuPresenter::showOverflowMenu() {
             mPostedOpenRunnable = nullptr;
         };
         // Post this for later; we might still need a layout for the anchor to be right.
-        ((View*) mMenuView)->post(mPostedOpenRunnable);
+        /*((View*) mMenuView)*/mContainer->post(mPostedOpenRunnable);
 
         // ActionMenuPresenter uses null as a callback argument here
         // to indicate overflow is opening.
@@ -463,7 +462,7 @@ bool ActionMenuPresenter::showOverflowMenu() {
  */
 bool ActionMenuPresenter::hideOverflowMenu() {
     if ((mPostedOpenRunnable != nullptr) && (mMenuView != nullptr)) {
-        ((View*) mMenuView)->removeCallbacks(mPostedOpenRunnable);
+        /*((View*) mMenuView)*/mContainer->removeCallbacks(mPostedOpenRunnable);
         mPostedOpenRunnable = nullptr;
         return true;
     }
@@ -516,7 +515,7 @@ bool ActionMenuPresenter::flagActionItems() {
     int maxActions = mMaxItems;
     int widthLimit = mActionItemWidthLimit;
     const int querySpec = MeasureSpec::makeMeasureSpec(0, MeasureSpec::UNSPECIFIED);
-    ViewGroup* parent = (ViewGroup*) mMenuView;
+    ViewGroup* parent = mContainer;//(ViewGroup*) mMenuView;
 
     int requiredItems = 0;
     int requestedItems = 0;
@@ -672,9 +671,10 @@ void ActionMenuPresenter::onSubUiVisibilityChanged(bool isVisible) {
 void ActionMenuPresenter::setMenuView(ActionMenuView* menuView) {
     if (menuView != mMenuView) {
         if (mMenuView != nullptr) {
-            ((View*) mMenuView)->removeOnAttachStateChangeListener(mAttachStateChangeListener);
+            /*((View*) mMenuView)*/mContainer->removeOnAttachStateChangeListener(mAttachStateChangeListener);
         }
         mMenuView = menuView;
+        mContainer=dynamic_cast<ViewGroup*>(menuView);
         menuView->initialize(mMenu);
         menuView->addOnAttachStateChangeListener(mAttachStateChangeListener);
     }
@@ -813,7 +813,7 @@ ActionMenuPresenter::ActionButtonSubmenu::ActionButtonSubmenu(Context* context, 
     MenuItemImpl* item = (MenuItemImpl*) subMenu->getInvokerItem();//(MenuItemImpl*) subMenu->getItem();
     if (!item->isActionButton()) {
         // Give a reasonable anchor to nested submenus.
-        setAnchorView(mPresenter->mOverflowButton == nullptr ? (View*) mPresenter->mMenuView : mPresenter->mOverflowButton);
+        setAnchorView(mPresenter->mOverflowButton == nullptr ? (View*)mPresenter->mContainer/*mMenuView*/ : mPresenter->mOverflowButton);
     }
     setPresenterCallback(mPresenter->mPopupPresenterCallback);
 }

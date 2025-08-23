@@ -131,7 +131,7 @@ public:
     virtual void clear()=0;
     virtual void setGroupCheckable(int group, bool checkable, bool exclusive)=0;
     virtual void setGroupVisible(int group, bool visible)=0;
-    virtual void setOptionalIconsVisible(bool visible){};
+    virtual void setOptionalIconsVisible(bool visible)=0;
     virtual void setGroupEnabled(int group, bool enabled)=0;
     virtual bool hasVisibleItems()const=0;
     virtual MenuItem*findItem(int id)const=0;

@@ -239,7 +239,7 @@ public:
 
     void setCurrentMenuInfo(ContextMenuInfo* menuInfo);
 
-    virtual void setOptionalIconsVisible(bool visible);
+    void setOptionalIconsVisible(bool visible)override;
     bool getOptionalIconsVisible();
 
     virtual bool expandItemActionView(MenuItemImpl* item);

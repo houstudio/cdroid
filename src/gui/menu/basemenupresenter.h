@@ -32,7 +32,8 @@ protected:
     LayoutInflater* mSystemInflater;
     LayoutInflater* mInflater;
     Callback mCallback;
-    MenuView* mMenuView;
+    MenuView * mMenuView;
+    ViewGroup* mContainer;
 protected:
     virtual void addItemView(View* itemView, int childIndex);
     virtual bool filterLeftoverView(ViewGroup* parent, int childIndex);

@@ -21,8 +21,9 @@ namespace cdroid{
 BaseMenuPresenter::BaseMenuPresenter(Context* context,const std::string& menuLayoutRes,const std::string& itemLayoutRes){
     mSystemContext = context;
     mMenu = nullptr;
-    mInflater = nullptr;
     mMenuView = nullptr;
+    mContainer= nullptr;
+    mInflater = nullptr;
     mSystemInflater = nullptr;
     mSystemInflater = LayoutInflater::from(context);
     mMenuLayoutRes = menuLayoutRes;
@@ -37,7 +38,8 @@ void BaseMenuPresenter::initForMenu(Context* context,MenuBuilder* menu) {
 
 MenuView* BaseMenuPresenter::getMenuView(ViewGroup* root) {
     if (mMenuView == nullptr) {
-        mMenuView = (MenuView*) mSystemInflater->inflate(mMenuLayoutRes, root, false);
+        mContainer = (ViewGroup*)mSystemInflater->inflate(mMenuLayoutRes, root, false);
+        mMenuView = (MenuView*)mContainer;
         mMenuView->initialize(mMenu);
         updateMenuView(true);
     }
@@ -46,7 +48,7 @@ MenuView* BaseMenuPresenter::getMenuView(ViewGroup* root) {
 }
 
 void BaseMenuPresenter::updateMenuView(bool cleared) {
-    ViewGroup* parent = dynamic_cast<ViewGroup*>(mMenuView);
+    ViewGroup* parent = mContainer;//dynamic_cast<ViewGroup*>(mMenuView);
     if (parent == nullptr) return;
 
     int childIndex = 0;
@@ -58,8 +60,8 @@ void BaseMenuPresenter::updateMenuView(bool cleared) {
             MenuItemImpl* item = visibleItems.at(i);
             if (shouldIncludeItem(childIndex, item)) {
                 View* convertView = parent->getChildAt(childIndex);
-                MenuItemImpl* oldItem = dynamic_cast<MenuView::ItemView*>(convertView) ?
-                        ((MenuView::ItemView*) convertView)->getItemData() : nullptr;
+                MenuView::ItemView*menuItemView = dynamic_cast<MenuView::ItemView*>(convertView);
+                MenuItemImpl* oldItem = menuItemView ? menuItemView->getItemData() : nullptr;
                 View* itemView = getItemView(item, convertView, parent);
                 if (item != oldItem) {
                     // Don't let old states linger with new data.
@@ -86,7 +88,7 @@ void BaseMenuPresenter::addItemView(View* itemView, int childIndex) {
     if (currentParent != nullptr) {
         currentParent->removeView(itemView);
     }
-    ((ViewGroup*) mMenuView)->addView(itemView, childIndex);
+    mContainer->addView(itemView, childIndex);//((ViewGroup*) mMenuView)->
 }
 
 bool BaseMenuPresenter::filterLeftoverView(ViewGroup* parent, int childIndex) {
