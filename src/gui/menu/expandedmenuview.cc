@@ -25,9 +25,9 @@ ExpandedMenuView::ExpandedMenuView(Context* context,const AttributeSet& attrs)
 
     //TypedArray a = context.obtainStyledAttributes(attrs, com.android.internal.R.styleable.MenuView, 0, 0);
     //mAnimations = attrs.getResourceId(com.android.internal.R.styleable.MenuView_windowAnimationStyle, 0);
-    auto onItemClock = std::bind(&ExpandedMenuView::onItemClick,this,std::placeholders::_1,
-            std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
-    setOnItemClickListener(onItemClock);
+    setOnItemClickListener([this](AdapterView& parent, View& v, int position, long id){
+        onItemClick(parent,v,position,id);
+    });
 }
 
 void ExpandedMenuView::initialize(MenuBuilder* menu) {

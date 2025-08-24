@@ -56,9 +56,9 @@ ViewGroup* ListMenuPresenter::getMenuView(ViewGroup* root) {
             mAdapter = new MenuAdapter(this);
         }
         mMenuView->setAdapter(mAdapter);
-        auto onClick = std::bind(&ListMenuPresenter::onItemClick,this, std::placeholders::_1,
-                std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
-        mMenuView->setOnItemClickListener(onClick);
+        mMenuView->setOnItemClickListener([this](AdapterView& parent, View& view, int position, long id){
+            onItemClick(parent,view,position,id);
+        });
     }
     return mMenuView;
 }
