@@ -1,7 +1,26 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef __ACTION_MENUITEM_H__
 #define __ACTION_MENUITEM_H__
-#include <view/menuitem.h>
+#include <menu/menuitem.h>
 namespace cdroid{
+class Intent;
+class Context;
 class ActionMenuItem:public MenuItem {
 private:
     static constexpr int NO_ICON = 0;
@@ -23,7 +42,6 @@ private:
     int mShortcutNumericModifiers = KeyEvent::META_CTRL_ON;
     int mShortcutAlphabeticChar;
     int mShortcutAlphabeticModifiers = KeyEvent::META_CTRL_ON;
-    int mIconResId = NO_ICON;
     int mFlags = ENABLED;
     int mIconTintMode;
     Drawable* mIconDrawable;
@@ -34,301 +52,99 @@ private:
     Context* mContext;
     OnMenuItemClickListener mClickListener;
 
+    std::string mIconResId;
     std::string mContentDescription;
     std::string mTooltipText;
 private:
-    void applyIconTint() {
-        if (mIconDrawable != nullptr && (mHasIconTint || mHasIconTintMode)) {
-            mIconDrawable = mIconDrawable->mutate();
-
-            if (mHasIconTint) {
-                mIconDrawable->setTintList(mIconTintList);
-            }
-
-            if (mHasIconTintMode) {
-                mIconDrawable->setTintMode(mIconTintMode);
-            }
-        }
-    }
-
+    void applyIconTint();
 public:
-    ActionMenuItem(Context* context, int group, int id, int categoryOrder, int ordering,const std::string& title) {
-        mContext = context;
-        mId = id;
-        mGroup = group;
-        mCategoryOrder = categoryOrder;
-        mOrdering = ordering;
-        mTitle = title;
-    }
+    ActionMenuItem(Context* context, int group, int id, int categoryOrder, int ordering,const std::string& title);
 
-    int getAlphabeticShortcut() override{
-        return mShortcutAlphabeticChar;
-    }
+    int getAlphabeticShortcut()const override;
+    int getAlphabeticModifiers()const override;
 
-    int getAlphabeticModifiers()const override{
-        return mShortcutAlphabeticModifiers;
-    }
+    int getGroupId()const override;
+    Drawable* getIcon() override;
+    Intent* getIntent() override;
+    int getItemId()const override;
+    ContextMenuInfo* getMenuInfo() override;
+    int getNumericShortcut() const override;
 
-    int getGroupId()const override{
-        return mGroup;
-    }
+    int getNumericModifiers() const override;
 
-    Drawable* getIcon() override{
-        return mIconDrawable;
-    }
+    int getOrder()const override;
 
-    Intent* getIntent() override{
-        return mIntent;
-    }
+    SubMenu* getSubMenu() override;
 
-    int getItemId()const override{
-        return mId;
-    }
+    std::string getTitle() override;
 
-    ContextMenuInfo* getMenuInfo() override{
-        return nullptr;
-    }
+    std::string getTitleCondensed() override;
 
-    int getNumericShortcut() const override{
-        return mShortcutNumericChar;
-    }
+    bool hasSubMenu()const override;
 
-    int getNumericModifiers() const override{
-        return mShortcutNumericModifiers;
-    }
+    bool isCheckable() const override;
 
-    int getOrder()const override{
-        return mOrdering;
-    }
+    bool isChecked() const override;
+    bool isEnabled() const override;
+    bool isVisible()const override;
+    MenuItem& setAlphabeticShortcut(int alphaChar) override;
 
-    SubMenu* getSubMenu() override{
-        return nullptr;
-    }
+    MenuItem& setAlphabeticShortcut(int alphachar, int alphaModifiers) override;
+    MenuItem& setCheckable(bool checkable) override;
+    ActionMenuItem& setExclusiveCheckable(bool exclusive);
+    MenuItem& setChecked(bool checked);
 
-    std::string getTitle() override{
-        return mTitle;
-    }
+    MenuItem& setEnabled(bool enabled) override;
 
-    std::string getTitleCondensed() override{
-        return !mTitleCondensed.empty() ? mTitleCondensed : mTitle;
-    }
+    MenuItem& setIcon(Drawable* icon) override;
 
-    bool hasSubMenu()const override{
-        return false;
-    }
+    MenuItem& setIcon(const std::string& iconRes) override;
 
-    bool isCheckable() const override{
-        return (mFlags & CHECKABLE) != 0;
-    }
+    MenuItem& setIconTintList(const ColorStateList* iconTintList) override;
+    const ColorStateList* getIconTintList() override;
+    MenuItem& setIconTintMode(int iconTintMode) override;
+    int getIconTintMode()const override;
 
-    bool isChecked() const override{
-        return (mFlags & CHECKED) != 0;
-    }
+    MenuItem& setIntent(Intent* intent) override;
 
-    bool isEnabled() const override{
-        return (mFlags & ENABLED) != 0;
-    }
+    MenuItem& setNumericShortcut(int numericChar) override;
+    MenuItem& setNumericShortcut(int numericChar, int numericModifiers) override;
 
-    bool isVisible() override{
-        return (mFlags & HIDDEN) == 0;
-    }
+    MenuItem& setOnMenuItemClickListener(const OnMenuItemClickListener& menuItemClickListener) override;
 
-    MenuItem& setAlphabeticShortcut(int alphaChar) override{
-        mShortcutAlphabeticChar = std::tolower(alphaChar);
-        return *this;
-    }
+    MenuItem& setShortcut(int numericChar, int alphaChar) override;
+    MenuItem& setShortcut(int numericChar, int alphaChar, int numericModifiers, int alphaModifiers) override;
 
-    MenuItem& setAlphabeticShortcut(int alphachar, int alphaModifiers) override{
-        mShortcutAlphabeticChar = std::tolower(alphachar);
-        mShortcutAlphabeticModifiers = KeyEvent::normalizeMetaState(alphaModifiers);
-        return *this;
-    }
+    MenuItem& setTitle(const std::string& title) override;
 
-    MenuItem& setCheckable(bool checkable) override{
-        mFlags = (mFlags & ~CHECKABLE) | (checkable ? CHECKABLE : 0);
-        return *this;
-    }
+    MenuItem& setTitleCondensed(const std::string& title) override;
 
-    ActionMenuItem& setExclusiveCheckable(bool exclusive) override{
-        mFlags = (mFlags & ~EXCLUSIVE) | (exclusive ? EXCLUSIVE : 0);
-        return *this;
-    }
+    MenuItem& setVisible(bool visible) override;
 
-    MenuItem& setChecked(bool checked) {
-        mFlags = (mFlags & ~CHECKED) | (checked ? CHECKED : 0);
-        return *this;
-    }
+    bool invoke();
 
-    MenuItem& setEnabled(bool enabled) override{
-        mFlags = (mFlags & ~ENABLED) | (enabled ? ENABLED : 0);
-        return *this;
-    }
+    void setShowAsAction(int show) override;
 
-    MenuItem& setIcon(Drawable* icon) override{
-        mIconDrawable = icon;
-        mIconResId = NO_ICON;
-        applyIconTint();
-        return *this;
-    }
+    MenuItem& setActionView(View* actionView) override;
+    View* getActionView() override;
 
-    MenuItem& setIcon(const std::string& iconRes) override{
-        mIconResId = iconRes;
-        mIconDrawable = mContext->getDrawable(iconRes);
-        applyIconTint();
-        return *this;
-    }
+    MenuItem& setActionView(const std::string& resId) override;
+    ActionProvider* getActionProvider() override;
+    MenuItem& setActionProvider(ActionProvider* actionProvider) override;
 
-    MenuItem& setIconTintList(const ColorStateList* iconTintList) override{
-        mIconTintList = iconTintList;
-        mHasIconTint = true;
-        applyIconTint();
-        return *this;
-    }
+    MenuItem& setShowAsActionFlags(int actionEnum) override;
+    bool expandActionView() override;
 
-    const ColorStateList* getIconTintList() override{
-        return mIconTintList;
-    }
+    bool collapseActionView() override;
+    bool isActionViewExpanded()const override;
 
-    MenuItem& setIconTintMode(int iconTintMode) override{
-        mIconTintMode = iconTintMode;
-        mHasIconTintMode = true;
-        applyIconTint();
-        return *this;
-    }
+    MenuItem& setOnActionExpandListener(const OnActionExpandListener& listener) override;
 
-    int getIconTintMode() override{
-        return mIconTintMode;
-    }
+    MenuItem& setContentDescription(const std::string& contentDescription) override;
+    std::string getContentDescription() override;
 
-    MenuItem& setIntent(Intent* intent) override{
-        mIntent = intent;
-        return *this;
-    }
-
-    MenuItem& setNumericShortcut(int numericChar) override{
-        mShortcutNumericChar = numericChar;
-        return *this;
-    }
-
-    MenuItem& setNumericShortcut(int numericChar, int numericModifiers) override{
-        mShortcutNumericChar = numericChar;
-        mShortcutNumericModifiers = KeyEvent::normalizeMetaState(numericModifiers);
-        return *this;
-    }
-
-    MenuItem& setOnMenuItemClickListener(OnMenuItemClickListener menuItemClickListener) override{
-        mClickListener = menuItemClickListener;
-        return *this;
-    }
-
-    MenuItem& setShortcut(int numericChar, int alphaChar) override{
-        mShortcutNumericChar = numericChar;
-        mShortcutAlphabeticChar = std::tolower(alphaChar);
-        return *this;
-    }
-
-    MenuItem& setShortcut(int numericChar, int alphaChar, int numericModifiers, int alphaModifiers) override{
-        mShortcutNumericChar = numericChar;
-        mShortcutNumericModifiers = KeyEvent::normalizeMetaState(numericModifiers);
-        mShortcutAlphabeticChar = std::tolower(alphaChar);
-        mShortcutAlphabeticModifiers = KeyEvent::normalizeMetaState(alphaModifiers);
-        return *this;
-    }
-
-    MenuItem& setTitle(const std::string& title) override{
-        mTitle = title;
-        return *this;
-    }
-
-    MenuItem& setTitle(int title) override{
-        //mTitle = mContext.getResources().getString(title);
-        return *this;
-    }
-
-    MenuItem& setTitleCondensed(const std::string& title) override{
-        mTitleCondensed = title;
-        return *this;
-    }
-
-    MenuItem& setVisible(bool visible) override{
-        mFlags = (mFlags & HIDDEN) | (visible ? 0 : HIDDEN);
-        return *this;
-    }
-
-    bool invoke() override{
-        if (mClickListener != nullptr && mClickListener(*this)) {
-            return true;
-        }
-        if (mIntent != nullptr) {
-            //mContext->startActivity(mIntent);
-            return true;
-        }
-        return false;
-    }
-
-    void setShowAsAction(int show) override{
-        // Do nothing. ActionMenuItems always show as action buttons.
-    }
-
-    MenuItem& setActionView(View* actionView) override{
-        throw std::logic_error("UnsupportedOperationException");
-    }
-
-    View* getActionView() override{
-        return nullptr;
-    }
-
-    MenuItem& setActionView(int resId) override{
-        throw std::logic_error("UnsupportedOperationException");
-    }
-
-    ActionProvider* getActionProvider() override{
-        return nullptr;
-    }
-
-    MenuItem& setActionProvider(ActionProvider* actionProvider) override{
-        throw std::logic_error("UnsupportedOperationException");
-    }
-
-    MenuItem& setShowAsActionFlags(int actionEnum) override{
-        setShowAsAction(actionEnum);
-        return *this;
-    }
-
-    bool expandActionView() override{
-        return false;
-    }
-
-    bool collapseActionView() override{
-        return false;
-    }
-
-    bool isActionViewExpanded() override{
-        return false;
-    }
-
-    MenuItem& setOnActionExpandListener(OnActionExpandListener listener) override{
-        // No need to save the listener; ActionMenuItem does not support collapsing items.
-        return *this;
-    }
-
-    MenuItem& setContentDescription(const std::string& contentDescription) override{
-        mContentDescription = contentDescription;
-        return *this;
-    }
-
-    std::string getContentDescription() override{
-        return mContentDescription;
-    }
-
-    MenuItem& setTooltipText(const std::string& tooltipText) override{
-        mTooltipText = tooltipText;
-        return *this;
-    }
-
-    std::string getTooltipText() override{
-        return mTooltipText;
-    }
+    MenuItem& setTooltipText(const std::string& tooltipText) override;
+    std::string getTooltipText() override;
 };
 }/*endof namespace*/
 #endif/*__ACTION_MENUITEM_H__*/

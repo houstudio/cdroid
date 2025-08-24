@@ -32,13 +32,13 @@ DECLARE_WIDGET2(Spinner,"cdroid:attr/spinnerStyle")
 
 Spinner::SpinnerForwardingListener::SpinnerForwardingListener(View*v,Spinner::DropdownPopup*d)
 :ForwardingListener(v){
-    mSpinner =(Spinner*)v;
     mDropDown = d;
 }
 
 ShowableListMenu Spinner::SpinnerForwardingListener::getPopup(){
     ShowableListMenu sm;
-    sm.show =[this](){mDropDown->show(mSpinner->getTextDirection(),mSpinner->getTextAlignment());};
+    sm.show =[this](){mDropDown->show(((Spinner*)mSrc)->getTextDirection(),
+            ((Spinner*)mSrc)->getTextAlignment());};
     sm.dismiss=[this](){mDropDown->dismiss();};
     sm.isShowing=[this]()->bool{return mDropDown->isShowing();};
     sm.getListView=[this]()->ListView*{return nullptr;};
@@ -47,7 +47,8 @@ ShowableListMenu Spinner::SpinnerForwardingListener::getPopup(){
 
 bool Spinner::SpinnerForwardingListener::onForwardingStarted(){
     if(!mDropDown->isShowing()){
-        mDropDown->show(mSpinner->getTextDirection(),mSpinner->getTextAlignment());
+        Spinner*spin=(Spinner*)mSrc;
+        mDropDown->show(spin->getTextDirection(),spin->getTextAlignment());
     }
     return true;
 }

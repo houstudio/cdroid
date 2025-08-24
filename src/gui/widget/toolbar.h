@@ -221,7 +221,7 @@ private:
 public:
     ExpandedActionViewMenuPresenter(Toolbar*tb);
     void initForMenu(Context* context,MenuBuilder* menu)override;
-    MenuView* getMenuView(ViewGroup* root)override;
+    ViewGroup* getMenuView(ViewGroup* root)override;
     void updateMenuView(bool cleared)override;
 
     void setCallback(const Callback& cb)override;

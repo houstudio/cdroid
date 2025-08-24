@@ -105,7 +105,6 @@ private:
     };
     class SpinnerForwardingListener:public ForwardingListener{
     private:
-        Spinner* mSpinner;
         DropdownPopup*mDropDown;
     public:
         SpinnerForwardingListener(View*view,DropdownPopup*d);

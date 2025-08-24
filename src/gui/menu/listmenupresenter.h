@@ -47,7 +47,7 @@ public:
 
     void initForMenu(Context* context,MenuBuilder* menu)override;
 
-    MenuView* getMenuView(ViewGroup* root)override;
+    ViewGroup* getMenuView(ViewGroup* root)override;
 
     ListAdapter* getAdapter();
     void updateMenuView(bool cleared)override;

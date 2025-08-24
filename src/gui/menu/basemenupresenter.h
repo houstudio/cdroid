@@ -32,7 +32,8 @@ protected:
     LayoutInflater* mSystemInflater;
     LayoutInflater* mInflater;
     Callback mCallback;
-    MenuView* mMenuView;
+    MenuView * mMenuView;
+    ViewGroup* mContainer;
 protected:
     virtual void addItemView(View* itemView, int childIndex);
     virtual bool filterLeftoverView(ViewGroup* parent, int childIndex);
@@ -40,15 +41,15 @@ public:
     BaseMenuPresenter(Context* context,const std::string& menuLayoutRes,const std::string& itemLayoutRes);
 
     void initForMenu(Context* context, MenuBuilder* menu)override;
-    MenuView* getMenuView(ViewGroup* root)override;
+    ViewGroup* getMenuView(ViewGroup* root)override;
     void updateMenuView(bool cleared);
     void setCallback(const Callback& cb)override;
     Callback getCallback();
 
-    MenuView::ItemView* createItemView(ViewGroup* parent);
+    View* createItemView(ViewGroup* parent);
 
     virtual View* getItemView(MenuItemImpl* item, View* convertView, ViewGroup* parent);
-    virtual void bindItemView(MenuItemImpl* item, MenuView::ItemView* itemView)=0;
+    virtual void bindItemView(MenuItemImpl* item, View* itemView)=0;
 
     virtual bool shouldIncludeItem(int childIndex, MenuItemImpl* item);
 

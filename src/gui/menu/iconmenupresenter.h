@@ -22,7 +22,7 @@ public:
 
     void initForMenu(Context* context,MenuBuilder* menu)override;
 
-    void bindItemView(MenuItemImpl* item, MenuView::ItemView* itemView)override;
+    void bindItemView(MenuItemImpl* item, View* itemView)override;
 
     bool shouldIncludeItem(int childIndex, MenuItemImpl* item)override;
 

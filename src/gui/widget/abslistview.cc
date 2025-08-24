@@ -638,7 +638,7 @@ void AbsListView::positionSelectorLikeTouch(int position, View* sel, float x, fl
 }
 
 void AbsListView::positionSelectorLikeFocus(int position, View* sel) {
-    if (mSelector != nullptr && mSelectorPosition != position && position != INVALID_POSITION) {
+    if ((mSelector != nullptr) && (mSelectorPosition != position) && (position != INVALID_POSITION)) {
         const Rect& bounds = mSelectorRect;
         const float x = (bounds.left + bounds.width)/2;
         const float y = (bounds.top  + bounds.height)/2;
@@ -1534,7 +1534,6 @@ void AbsListView::handleDataChanged() {
                     // adjusting if the available range changed) and return.
                     mLayoutMode = LAYOUT_SYNC;
                     mSyncPosition = std::min(std::max(0, mSyncPosition), count - 1);
-
                     return;
                 } else {
                     // See if we can find a position in the new data with the same
@@ -1546,7 +1545,6 @@ void AbsListView::handleDataChanged() {
                         if (selectablePos == newPos) {
                             // Same row id is selected
                             mSyncPosition = newPos;
-
                             if (mSyncHeight == getHeight()) {
                                 // If we are at the same height as when we saved state, try
                                 // to restore the scroll position too.
@@ -1556,7 +1554,6 @@ void AbsListView::handleDataChanged() {
                                 // don't try to restore the exact position
                                 mLayoutMode = LAYOUT_SET_SELECTION;
                             }
-
                             // Restore selection
                             setNextSelectedPositionInt(newPos);
                             return;
@@ -1568,7 +1565,6 @@ void AbsListView::handleDataChanged() {
                 // Leave mSyncPosition as it is -- just pin to available range
                 mLayoutMode = LAYOUT_SYNC;
                 mSyncPosition = std::min(std::max(0, mSyncPosition), count - 1);
-
                 return;
             }
         }
@@ -1660,8 +1656,8 @@ int AbsListView::getDistance(const Rect& source,const Rect& dest, int direction)
         throw "direction must be one of {FOCUS_UP, FOCUS_DOWN, FOCUS_LEFT, FOCUS_RIGHT, "
         "FOCUS_FORWARD, FOCUS_BACKWARD}.";
     }
-    int deltaX = dX - sX;
-    int deltaY = dY - sY;
+    const int deltaX = dX - sX;
+    const int deltaY = dY - sY;
     return deltaY * deltaY + deltaX * deltaX;
 }
 
@@ -2163,7 +2159,6 @@ void AbsListView::onDetachedFromWindow() {
         removeCallbacks(mTouchModeReset);
         mTouchModeReset();
     }
-
     mIsDetaching = false;
 }
 
@@ -3208,32 +3203,20 @@ void AbsListView::setEdgeEffectColor(int color) {
     setBottomEdgeEffectColor(color);
 }
 
-/**
- * Sets the bottom edge effect color.
- */
 void AbsListView::setBottomEdgeEffectColor( int color) {
     mEdgeGlowBottom->setColor(color);
     invalidateBottomGlow();
 }
 
-/**
- * Sets the top edge effect color.
- */
 void AbsListView::setTopEdgeEffectColor(int color) {
     mEdgeGlowTop->setColor(color);
     invalidateTopGlow();
 }
 
-/**
- * Returns the top edge effect color.
- */
 int AbsListView::getTopEdgeEffectColor()const {
     return mEdgeGlowTop->getColor();
 }
 
-/**
- * @return The bottom edge effect color.
- */
 int AbsListView::getBottomEdgeEffectColor()const {
     return mEdgeGlowBottom->getColor();
 }
@@ -4016,7 +3999,7 @@ void AbsListView::PositionScroller::doScroll() {
         const int lastViewTop = lastView->getTop();
         const int lastViewPixelsShowing = listHeight - lastViewTop;
         const int extraScroll = (lastPos < childCount - 1) ?
-                                std::max(mLV->mListPadding.height, mExtraScroll) : mLV->mListPadding.height;
+                    std::max(mLV->mListPadding.height, mExtraScroll) : mLV->mListPadding.height;
 
         const int scrollBy = lastViewHeight - lastViewPixelsShowing + extraScroll;
         mLV->smoothScrollBy(scrollBy, mScrollDuration, true, lastPos < mTargetPos);
@@ -4078,7 +4061,7 @@ void AbsListView::PositionScroller::doScroll() {
         }
         const int firstViewTop = firstView->getTop();
         const int extraScroll = firstPos > 0 ?
-                                std::max(mExtraScroll, mLV->mListPadding.top) : mLV->mListPadding.top;
+                    std::max(mExtraScroll, mLV->mListPadding.top) : mLV->mListPadding.top;
 
         mLV->smoothScrollBy(firstViewTop - extraScroll, mScrollDuration, true,
                             firstPos > mTargetPos);
@@ -4142,10 +4125,9 @@ void AbsListView::PositionScroller::doScroll() {
         const View* lastChild = mLV->getChildAt(childCount - 1);
         const int lastChildHeight = lastChild->getHeight();
         const float firstPositionVisiblePart = (firstChildHeight == 0.0f) ? 1.0f
-                                         : (float) (firstChildHeight + firstChild->getTop()) / firstChildHeight;
+                    : (float) (firstChildHeight + firstChild->getTop()) / firstChildHeight;
         const float lastPositionVisiblePart = (lastChildHeight == 0.0f) ? 1.0f
-                                        : (float) (lastChildHeight + mLV->getHeight() - lastChild->getBottom())
-                                        / lastChildHeight;
+                    : (float) (lastChildHeight + mLV->getHeight() - lastChild->getBottom()) / lastChildHeight;
 
         float viewTravelCount = 0;
         if (position < firstPos) {

@@ -35,7 +35,7 @@ void MenuPopup::initForMenu(Context* context, MenuBuilder* menu){
     // Don't need to do anything; we added as a presenter in the constructor.
 }
 
-MenuView* MenuPopup::getMenuView(ViewGroup* root) {
+ViewGroup* MenuPopup::getMenuView(ViewGroup* root) {
     throw /*new UnsupportedOperationException*/("MenuPopups manage their own views");
 }
 

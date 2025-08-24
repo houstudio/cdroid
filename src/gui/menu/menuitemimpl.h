@@ -91,7 +91,7 @@ public:
     int getGroupId()const override;
     int getItemId()const override;
     int getOrder()const override;
-    int getOrdering();
+    int getOrdering()const;
 
     Intent* getIntent()override;
     MenuItem& setIntent(Intent* intent);
@@ -113,7 +113,7 @@ public:
     MenuItem& setShortcut(int numericChar, int alphaChar) override;
     MenuItem& setShortcut(int numericChar, int alphaChar, int numericModifiers,int alphaModifiers) override;
 
-    int getShortcut();
+    int getShortcut()const;
     std::string getShortcutLabel();
     bool shouldShowShortcut();
 
@@ -136,7 +136,7 @@ public:
     const ColorStateList* getIconTintList();
 
     MenuItem& setIconTintMode(int iconTintMode);
-    int getIconTintMode();
+    int getIconTintMode()const;
 
     bool isCheckable() const override;
     MenuItem& setCheckable(bool checkable)override;
@@ -159,7 +159,7 @@ public:
 
     void actionFormatChanged();
 
-    bool shouldShowIcon();
+    bool shouldShowIcon()const;
 
     bool isActionButton()const;
 
@@ -187,12 +187,12 @@ public:
     bool expandActionView();
     bool collapseActionView();
 
-    MenuItem& setOnActionExpandListener(OnActionExpandListener listener);
+    MenuItem& setOnActionExpandListener(const OnActionExpandListener& listener)override;
 
     bool hasCollapsibleActionView();
     void setActionViewExpanded(bool isExpanded);
 
-    bool isActionViewExpanded();
+    bool isActionViewExpanded()const;
     
     MenuItem& setContentDescription(const std::string&contentDescription);
     std::string getContentDescription();

@@ -15,7 +15,7 @@ void IconMenuPresenter::initForMenu(Context* context,MenuBuilder* menu){
     mMaxItems = -1;
 }
 
-void IconMenuPresenter::bindItemView(MenuItemImpl* item, MenuView::ItemView* itemView) {
+void IconMenuPresenter::bindItemView(MenuItemImpl* item,View* itemView) {
     IconMenuItemView* view = (IconMenuItemView*) itemView;
     view->setItemData(item);
 

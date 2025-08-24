@@ -134,7 +134,9 @@ void Toolbar::initToolbar(){
 Toolbar::~Toolbar(){
     if(mCollapseButtonView==nullptr)
         delete mCollapseIcon;
+    delete mMenuView;
     delete mContentInsets;
+    delete mExpandedMenuPresenter;
 }
 
 void Toolbar::onAttachedToWindow(){
@@ -1383,7 +1385,7 @@ void Toolbar::ExpandedActionViewMenuPresenter::initForMenu(Context* context,Menu
     mMenu = menu;
 }
 
-MenuView* Toolbar::ExpandedActionViewMenuPresenter::getMenuView(ViewGroup* root) {
+ViewGroup* Toolbar::ExpandedActionViewMenuPresenter::getMenuView(ViewGroup* root) {
     return nullptr;
 }
 

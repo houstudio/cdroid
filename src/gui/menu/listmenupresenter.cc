@@ -49,7 +49,7 @@ void ListMenuPresenter::initForMenu(Context* context,MenuBuilder* menu) {
     }
 }
 
-MenuView* ListMenuPresenter::getMenuView(ViewGroup* root) {
+ViewGroup* ListMenuPresenter::getMenuView(ViewGroup* root) {
     if (mMenuView == nullptr) {
         mMenuView = (ExpandedMenuView*) mInflater->inflate("cdrroid:layout/expanded_menu_layout", root, false);
         if (mAdapter == nullptr) {

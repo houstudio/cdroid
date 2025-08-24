@@ -371,7 +371,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
             }
             int t = midVertical - (height / 2);
             int b = t + height;
-            v->layout(l, t, r, b);
+            v->layout(l, t, overflowWidth, height);
 
             widthRemaining -= overflowWidth;
             hasOverflow = true;
@@ -549,11 +549,11 @@ bool ActionMenuView::hideOverflowMenu() {
     return (mPresenter != nullptr) && mPresenter->hideOverflowMenu();
 }
 
-bool ActionMenuView::isOverflowMenuShowing() {
+bool ActionMenuView::isOverflowMenuShowing() const{
     return (mPresenter != nullptr) && mPresenter->isOverflowMenuShowing();
 }
 
-bool ActionMenuView::isOverflowMenuShowPending() {
+bool ActionMenuView::isOverflowMenuShowPending() const{
     return (mPresenter != nullptr) && mPresenter->isOverflowMenuShowPending();
 }
 
@@ -571,10 +571,10 @@ bool ActionMenuView::hasDividerBeforeChildAt(int childIndex) {
     View* child = getChildAt(childIndex);
     bool result = false;
     if ((childIndex < getChildCount()) && dynamic_cast<ActionMenuChildView*>(childBefore)) {
-        result |= ((ActionMenuChildView*) childBefore)->needsDividerAfter();
+        result |= ((ActionMenuItemView*) childBefore)->needsDividerAfter();
     }
     if ((childIndex > 0) && dynamic_cast<ActionMenuChildView*>(child)) {
-        result |= ((ActionMenuChildView*) child)->needsDividerBefore();
+        result |= ((ActionMenuItemView*) child)->needsDividerBefore();
     }
     return result;
 }
@@ -589,30 +589,12 @@ void ActionMenuView::setExpandedActionViewsExclusive(bool exclusive) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 #if 0
-/**
- * Interface responsible for receiving menu item click events if the items themselves
- * do not have individual item click listeners.
- */
-public interface OnMenuItemClickListener {
-    /**
-     * This method will be invoked when a menu item is clicked if the item itself did
-     * not already handle the event.
-     *
-     * @param item {@link MenuItem} that was clicked
-     * @return <code>true</code> if the event was handled, <code>false</code> otherwise.
-     */
-    public bool onMenuItemClick(MenuItem item);
-}
-
 private class MenuBuilderCallback implements MenuBuilder.Callback {
-    @Override
-    public bool onMenuItemSelected(MenuBuilder menu, MenuItem item) {
+    public bool onMenuItemSelected(MenuBuilder menu, MenuItem item)override{
         return mOnMenuItemClickListener != null &&
                 mOnMenuItemClickListener.onMenuItemClick(item);
     }
-
-    @Override
-    public void onMenuModeChange(MenuBuilder menu) {
+    public void onMenuModeChange(MenuBuilder menu)override{
         if (mMenuBuilderCallback != null) {
             mMenuBuilderCallback.onMenuModeChange(menu);
         }
@@ -620,19 +602,11 @@ private class MenuBuilderCallback implements MenuBuilder.Callback {
 }
 
 private class ActionMenuPresenterCallback implements ActionMenuPresenter.Callback {
-    @Override
-    public void onCloseMenu(MenuBuilder menu, bool allMenusAreClosing) {
+    public void onCloseMenu(MenuBuilder menu, bool allMenusAreClosing)override {
     }
-
-    @Override
-    public bool onOpenSubMenu(MenuBuilder subMenu) {
+    public bool onOpenSubMenu(MenuBuilder subMenu)override{
         return false;
     }
-}
-
-public interface ActionMenuChildView {
-    public bool needsDividerBefore();
-    public bool needsDividerAfter();
 }
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////////
