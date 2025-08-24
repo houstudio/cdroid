@@ -41,7 +41,7 @@ public:
     typedef std::function<void (AdapterView& parent,View& view, int position, long id)>OnItemClickListener;
     typedef std::function<bool (AdapterView& parent,View& view, int position, long id)>OnItemLongClickListener;
     
-    class AdapterContextMenuInfo:public ContextMenu::ContextMenuInfo {
+    class AdapterContextMenuInfo:public ContextMenuInfo {
     public: 
         AdapterContextMenuInfo(View* targetView, int position, long id);
         /**

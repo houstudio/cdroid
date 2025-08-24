@@ -1442,7 +1442,9 @@ bool AbsListView::performLongPress(View* child,int longPressPosition,long longPr
             handled = AdapterView::showContextMenuForChild(this);
         }
     }
-    if (handled) performHapticFeedback(HapticFeedbackConstants::LONG_PRESS);
+    if (handled){
+        performHapticFeedback(HapticFeedbackConstants::LONG_PRESS);
+    }
     return handled;
 }
 
@@ -2334,9 +2336,13 @@ bool AbsListView::performItemClick(View& view, int position, long id) {
     return handled;
 }
 
-ContextMenu::ContextMenuInfo* AbsListView::createContextMenuInfo(View* view, int position, long id){
+ContextMenuInfo* AbsListView::createContextMenuInfo(View* view, int position, long id){
     LOGD("the AdapterContextMenuInfo's memory maybe losted");
     return  new AdapterContextMenuInfo(view, position, id);;
+}
+
+ContextMenuInfo*AbsListView::getContextMenuInfo(){
+    return mContextMenuInfo;
 }
 
 bool AbsListView::showContextMenu(){

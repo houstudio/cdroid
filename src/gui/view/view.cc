@@ -28,6 +28,7 @@
 #include <view/accessibility/accessibilitywindowinfo.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/focusfinder.h>
+#include <menu/menubuilder.h>
 #include <widget/R.h>
 #include <widget/scrollbardrawable.h>
 #include <widget/edgeeffect.h>
@@ -2744,14 +2745,7 @@ void View::setOnContextClickListener(const OnContextClickListener& l) {
     getListenerInfo()->mOnContextClickListener = l;
 }
 
-/**
- * Register a callback to be invoked when the context menu for this view is
- * being built. If this view is not long clickable, it becomes long clickable.
- *
- * @param l The callback that will run
- *
- */
-void View::setOnCreateContextMenuListener(OnCreateContextMenuListener l) {
+void View::setOnCreateContextMenuListener(const OnCreateContextMenuListener& l) {
     if (!isLongClickable()) {
         setLongClickable(true);
     }
@@ -7692,27 +7686,27 @@ bool View::onCheckIsTextEditor(){
 }
 
 void View::createContextMenu(ContextMenu& menu) {
-    ContextMenu::ContextMenuInfo* menuInfo = getContextMenuInfo();
-
+    ContextMenuInfo* menuInfo = getContextMenuInfo();
+#if ENABLE(MENU)
     // Sets the current menu info so all items added to menu will have
     // my extra info set.
-    //((MenuBuilder)menu).setCurrentMenuInfo(menuInfo);
-
+    ((MenuBuilder&)menu).setCurrentMenuInfo(menuInfo);
+#endif
     onCreateContextMenu(menu);
     if (mListenerInfo && mListenerInfo->mOnCreateContextMenuListener) {
         mListenerInfo->mOnCreateContextMenuListener(menu, *this, menuInfo);
     }
-
+#if ENABLE(MENU)
     // Clear the extra information so subsequent items that aren't mine don't
     // have my extra info.
-    //((MenuBuilder)menu).setCurrentMenuInfo(nullptr);
-
+    ((MenuBuilder&)menu).setCurrentMenuInfo(nullptr);
+#endif
     if (mParent != nullptr) {
         mParent->createContextMenu(menu);
     }
 }
 
-ContextMenu::ContextMenuInfo* View::getContextMenuInfo() {
+ContextMenuInfo* View::getContextMenuInfo() {
     return nullptr;
 }
 

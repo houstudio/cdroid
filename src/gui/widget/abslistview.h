@@ -142,7 +142,7 @@ private:
     bool mFiltered;
     int mScrollOffset[2] ;
     int mScrollConsumed[2];
-    ContextMenu::ContextMenuInfo* mContextMenuInfo;
+    ContextMenuInfo* mContextMenuInfo;
     class FastScroller* mFastScroll;
     std::vector<int>mSelectorState;
     int mLastScrollState;
@@ -326,7 +326,8 @@ protected:
     virtual void fillGap(bool down)=0;
     int findClosestMotionRow(int y);
     
-    ContextMenu::ContextMenuInfo*createContextMenuInfo(View* view, int position, long id);
+    ContextMenuInfo*createContextMenuInfo(View* view, int position, long id);
+    ContextMenuInfo*getContextMenuInfo()override;
     void positionSelectorLikeTouch(int position, View* sel, float x, float y);
     void positionSelectorLikeFocus(int position, View* sel);
     void keyPressed();

@@ -494,7 +494,7 @@ public:
     DECLARE_UIEVENT(bool,OnLongClickListener,View&);
     DECLARE_UIEVENT(bool,OnDragListener,View&,DragEvent&);
     DECLARE_UIEVENT(bool,OnContextClickListener,View&);
-    DECLARE_UIEVENT(void,OnCreateContextMenuListener,ContextMenu&,View&,ContextMenu::ContextMenuInfo*);
+    DECLARE_UIEVENT(void,OnCreateContextMenuListener,ContextMenu&,View&,ContextMenuInfo*);
     DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);
     DECLARE_UIEVENT(void,OnScrollChangeListener,View& v, int, int, int, int);
     DECLARE_UIEVENT(void,OnSystemUiVisibilityChangeListener,int);
@@ -853,7 +853,7 @@ protected:
     virtual int getSuggestedMinimumWidth();
     virtual int getSuggestedMinimumHeight();
     void setMeasuredDimension(int measuredWidth, int measuredHeight);
-    virtual ContextMenu::ContextMenuInfo* getContextMenuInfo();
+    virtual ContextMenuInfo* getContextMenuInfo();
     virtual void onCreateContextMenu(ContextMenu& menu);
     virtual bool handleScrollBarDragging(MotionEvent& event);
     bool performButtonActionOnTouchDown(MotionEvent&);
@@ -1097,7 +1097,7 @@ public:
     virtual void setOnClickListener(const OnClickListener& l);
     virtual void setOnLongClickListener(const OnLongClickListener& l);
     void setOnContextClickListener(const OnContextClickListener& l);
-    void setOnCreateContextMenuListener(OnCreateContextMenuListener l);
+    void setOnCreateContextMenuListener(const OnCreateContextMenuListener& l);
     virtual void setOnFocusChangeListener(const OnFocusChangeListener& listtener); 
     virtual void setOnScrollChangeListener(const OnScrollChangeListener& l);
     void  addOnLayoutChangeListener(const OnLayoutChangeListener& listener);

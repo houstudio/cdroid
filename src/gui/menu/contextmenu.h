@@ -63,13 +63,10 @@ public:
      */
     virtual void clearHeader()=0;
 
-    /**
-     * Additional information regarding the creation of the context menu.  For example,
-     * {@link AdapterView}s use this to pass the exact item position within the adapter
-     * that initiated the context menu.
-     */
-    struct ContextMenuInfo {
-    };
+};
+class ContextMenuInfo {
+public:
+    virtual ~ContextMenuInfo()=default;
 };
 }/*endof namespace*/
 #endif/*__CONTEXT_MENU_H__*/
