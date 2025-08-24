@@ -306,11 +306,11 @@ int CalendarViewLegacyDelegate::getFirstDayOfWeek() const{
     return mFirstDayOfWeek;
 }
 
-void CalendarViewLegacyDelegate::setDate(long date) {
+void CalendarViewLegacyDelegate::setDate(int64_t date) {
     setDate(date, false, false);
 }
 
-void CalendarViewLegacyDelegate::setDate(long date, bool animate, bool center) {
+void CalendarViewLegacyDelegate::setDate(int64_t date, bool animate, bool center) {
     mTempDate.setTimeInMillis(date);
     if (isSameDate(mTempDate, mAdapter->mSelectedDate)) {
         return;
