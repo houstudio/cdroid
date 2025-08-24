@@ -20,6 +20,7 @@
 #include <widget/listview.h>
 #include <widget/popupwindow.h>
 #include <menu/menupopup.h>
+#include <menu/menuitemhoverlistener.h>
 namespace cdroid{
 class MenuAdapter;
 class MenuPopupWindow;
