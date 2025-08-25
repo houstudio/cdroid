@@ -20,6 +20,7 @@
 #include <widget/listview.h>
 #include <menu/menubuilder.h>
 #include <menu/menupopuphelper.h>
+#include <widget/forwardinglistener.h>
 namespace cdroid{
 
 class PopupMenu{
@@ -27,7 +28,16 @@ public:
     DECLARE_UIEVENT(bool,OnMenuItemClickListener,MenuItem&);
     DECLARE_UIEVENT(void,OnDismissListener,PopupMenu&);
 private:
-    class MenuForwardingListener;
+    class MenuForwardingListener:public ForwardingListener{
+    private:
+        PopupMenu*mPopupMenu;
+    public:
+        MenuForwardingListener(PopupMenu*pm,View*v);
+        bool onForwardingStarted()override;
+        bool onForwardingStopped()override;
+        ShowableListMenu getPopup()override;
+    };
+
     Context* mContext;
     MenuBuilder* mMenu;
     View* mAnchor;

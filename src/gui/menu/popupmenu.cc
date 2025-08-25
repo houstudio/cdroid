@@ -18,11 +18,16 @@
 #include <menu/popupmenu.h>
 #include <menu/menupopup.h>
 #include <menu/menuinflater.h>
-#include <widget/forwardinglistener.h>
 namespace cdroid{
     
 PopupMenu::PopupMenu(Context* context, View* anchor)
     :PopupMenu(context, anchor, Gravity::NO_GRAVITY){
+}
+
+PopupMenu::~PopupMenu(){
+    delete mMenu;
+    delete mPopup;
+    delete mMenuForwardingListener;
 }
 
 PopupMenu::PopupMenu(Context* context, View* anchor, int gravity)
@@ -92,30 +97,6 @@ int PopupMenu::getGravity() const{
     return mPopup->getGravity();
 }
 
-class PopupMenu::MenuForwardingListener:public ForwardingListener{
-private:
-    PopupMenu*mPopupMenu;
-public:
-    MenuForwardingListener(PopupMenu*pm,View*v):ForwardingListener(v),mPopupMenu(pm){}
-    bool onForwardingStarted()override{
-        mPopupMenu->show();
-        return true;
-    }
-    bool onForwardingStopped()override{
-        mPopupMenu->dismiss();
-        return true;
-    }
-    ShowableListMenu getPopup()override{
-        ShowableListMenu lm;
-        auto p = mPopupMenu->mPopup;
-        lm.show=[p](){p->show();};
-        lm.dismiss=[p](){p->dismiss();};
-        lm.isShowing=[p](){return p->isShowing();};
-        lm.getListView=[this](){return mPopupMenu->getMenuListView();};
-        return lm;
-    }
-};
-
 View::OnTouchListener PopupMenu::getDragToOpenListener() {
     if (mMenuForwardingListener == nullptr) {
         mMenuForwardingListener = new MenuForwardingListener(this,mAnchor);
@@ -182,4 +163,29 @@ ListView* PopupMenu::getMenuListView() {
     }
     return mPopup->getPopup()->getListView();
 }
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+PopupMenu::MenuForwardingListener::MenuForwardingListener(PopupMenu*pm,View*v)
+    :ForwardingListener(v),mPopupMenu(pm){
+}
+
+bool PopupMenu::MenuForwardingListener::onForwardingStarted(){
+    mPopupMenu->show();
+    return true;
+}
+bool PopupMenu::MenuForwardingListener::onForwardingStopped(){
+    mPopupMenu->dismiss();
+    return true;
+}
+ShowableListMenu PopupMenu::MenuForwardingListener::getPopup(){
+    ShowableListMenu lm;
+    auto p = mPopupMenu->mPopup;
+    lm.show=[p](){p->show();};
+    lm.dismiss=[p](){p->dismiss();};
+    lm.isShowing=[p](){return p->isShowing();};
+    lm.getListView=[this](){return mPopupMenu->getMenuListView();};
+    return lm;
+}
+
 }/*endof namespace*/
