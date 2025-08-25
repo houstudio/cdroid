@@ -1380,6 +1380,9 @@ Toolbar::ExpandedActionViewMenuPresenter::ExpandedActionViewMenuPresenter(Toolba
     mCurrentExpandedItem = nullptr;
 }
 
+Toolbar::ExpandedActionViewMenuPresenter::~ExpandedActionViewMenuPresenter(){
+}
+
 void Toolbar::ExpandedActionViewMenuPresenter::initForMenu(Context* context,MenuBuilder* menu) {
     // Clear the expanded action view when menus change.
     if ((mMenu != nullptr) && (mCurrentExpandedItem != nullptr)) {

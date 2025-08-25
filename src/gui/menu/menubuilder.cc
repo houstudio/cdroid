@@ -641,12 +641,11 @@ bool MenuBuilder::performItemAction(MenuItem* item, MenuPresenter* preferredPres
 void MenuBuilder::close(bool closeAllMenus) {
     if (mIsClosing) return;
     mIsClosing = true;
-    for (auto it = mPresenters.begin();it!=mPresenters.end();) {
-        MenuPresenter* presenter = *it;
+    for (int i = 0;i<mPresenters.size();i++) {
+        MenuPresenter* presenter = mPresenters.at(i);
         if (presenter == nullptr) {
-            it = mPresenters.erase(it);
+            mPresenters.erase(mPresenters.begin()+i);
         } else {
-            it++;
             presenter->onCloseMenu(this, closeAllMenus);
         }
     }

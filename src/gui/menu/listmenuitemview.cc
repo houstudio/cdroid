@@ -36,6 +36,7 @@ ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet& attrs)
     mIconView = nullptr;
     mCheckBox = nullptr;
     mRadioButton = nullptr;
+    mInflater = nullptr;
     mSubMenuArrow = attrs.getDrawable("subMenuArrow");
 
     /*final TypedArray b = context.getTheme()
@@ -230,7 +231,7 @@ void ListMenuItemView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
 void ListMenuItemView::insertIconView() {
     LayoutInflater* inflater = getInflater();
-    mIconView = (ImageView*) inflater->inflate("cdroid:layout/list_menu_item_icon", this, false);
+    mIconView = (ImageView*) inflater->inflate("android:layout/list_menu_item_icon", this, false);
     addContentView(mIconView, 0);
 }
 

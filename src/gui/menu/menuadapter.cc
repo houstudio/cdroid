@@ -26,6 +26,8 @@ MenuAdapter::MenuAdapter(MenuBuilder* menu, LayoutInflater* inflater, bool overf
     mOverflowOnly = overflowOnly;
     mInflater = inflater;
     mAdapterMenu = menu;
+    mExpandedIndex = -1;
+    mForceShowIcon = false;
     mItemLayoutRes = itemLayoutRes;
     findExpandedIndex();
 }
@@ -53,7 +55,7 @@ MenuBuilder* MenuAdapter::getAdapterMenu() const{
 
 void* MenuAdapter::getItem(int position)const{
     auto items = mOverflowOnly ?mAdapterMenu->getNonActionItems() : mAdapterMenu->getVisibleItems();
-    if (mExpandedIndex >= 0 && position >= mExpandedIndex) {
+    if ((mExpandedIndex >= 0) && (position >= mExpandedIndex)) {
         position++;
     }
     if( (position>=0) && (position<items.size()) ){
@@ -75,7 +77,7 @@ View* MenuAdapter::getView(int position, View* convertView, ViewGroup* parent) {
 
     const int currGroupId = ((MenuItemImpl*)getItem(position))->getGroupId();
     const MenuItemImpl*menuItem =(MenuItemImpl*)getItem(position - 1);
-    const int prevGroupId =  position - 1 >= 0 ? menuItem->getGroupId() : currGroupId;
+    const int prevGroupId =  (position - 1 >= 0) ? menuItem->getGroupId() : currGroupId;
     // Show a divider if adjacent items are in different groups.
     ((ListMenuItemView*) convertView)->setGroupDividerEnabled(mAdapterMenu->isGroupDividerEnabled()
                     && (currGroupId != prevGroupId));
@@ -84,7 +86,7 @@ View* MenuAdapter::getView(int position, View* convertView, ViewGroup* parent) {
     if (mForceShowIcon) {
         ((ListMenuItemView*) convertView)->setForceShowIcon(true);
     }
-    itemView->initialize((MenuItemImpl*)getItem(position), 0);
+    ((ListMenuItemView*)convertView)->initialize((MenuItemImpl*)getItem(position), 0);
     return convertView;
 }
 

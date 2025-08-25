@@ -8,6 +8,7 @@ class MenuBuilder;
 class SubMenuBuilder;
 class MenuPresenter {
 public:
+    virtual ~MenuPresenter()=default;
     /**
      * Called by menu implementation to notify another component of open/close events.
      */

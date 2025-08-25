@@ -128,6 +128,10 @@ CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
     mItemLayout = "cdroid:layout/cascading_menu_item_layout_material";//com.android.internal.R.layout.cascading_menu_item_layout_material;
 }
 
+CascadingMenuPopup::~CascadingMenuPopup(){
+    delete mSubMenuHoverHandler;
+}
+
 void CascadingMenuPopup::setForceShowIcon(bool forceShow) {
     mForceShowIcon = forceShow;
 }
