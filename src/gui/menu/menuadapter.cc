@@ -52,12 +52,14 @@ MenuBuilder* MenuAdapter::getAdapterMenu() const{
 }
 
 void* MenuAdapter::getItem(int position)const{
-    auto items = mOverflowOnly ?
-            mAdapterMenu->getNonActionItems() : mAdapterMenu->getVisibleItems();
+    auto items = mOverflowOnly ?mAdapterMenu->getNonActionItems() : mAdapterMenu->getVisibleItems();
     if (mExpandedIndex >= 0 && position >= mExpandedIndex) {
         position++;
     }
-    return items.at(position);
+    if( (position>=0) && (position<items.size()) ){
+        return items.at(position);
+    }
+    return nullptr;
 }
 
 long MenuAdapter::getItemId(int position) {
