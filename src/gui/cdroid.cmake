@@ -130,6 +130,7 @@ if(ENABLE_MENU)
         menu/menuinflater.cc
         menu/menuitemimpl.cc
         menu/menupopup.cc
+        menu/popupmenu.cc
         menu/actionmenu.cc
         menu/menuadapter.cc
         menu/standardmenupopup.cc
