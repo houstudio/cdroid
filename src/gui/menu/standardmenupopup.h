@@ -83,7 +83,6 @@ public:
     void setAnchorView(View* anchor) override;
 
     virtual bool onKey(View& v, int keyCode, KeyEvent& event);
-    virtual void onItemClick(AdapterView&parent, View& view, int position, long id);
     void setOnDismissListener(const PopupWindow::OnDismissListener& listener) override;
 
     ListView* getListView()const override;

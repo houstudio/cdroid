@@ -252,9 +252,6 @@ bool StandardMenuPopup::onKey(View& v, int keyCode, KeyEvent& event) {
     return false;
 }
 
-void StandardMenuPopup::onItemClick(AdapterView&parent, View& view, int position, long id){
-}
-
 void StandardMenuPopup::setOnDismissListener(const PopupWindow::OnDismissListener& listener) {
     mOnDismissListener = listener;
 }

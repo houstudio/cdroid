@@ -29,7 +29,7 @@ ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet& attrs)
     :LinearLayout(context, attrs){
 
     mBackground = attrs.getDrawable("itemBackground");
-    mTextAppearance = attrs.getResourceId("itemTextAppearance");
+    mTextAppearance = attrs.getString("itemTextAppearance");
     mPreserveIconSpacing = attrs.getBoolean("preserveIconSpacing", false);
     mTextAppearanceContext = context;
     mItemData = nullptr;

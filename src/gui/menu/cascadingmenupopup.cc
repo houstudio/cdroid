@@ -422,9 +422,6 @@ void CascadingMenuPopup::onDismiss() {
     }
 }
 
-void CascadingMenuPopup::onItemClick(AdapterView&parent, View& view, int position, long id){
-}
-
 void CascadingMenuPopup::updateMenuView(bool cleared) {
     for (CascadingMenuInfo* info : mShowingMenus) {
         toMenuAdapter(info->getListView()->getAdapter())->notifyDataSetChanged();

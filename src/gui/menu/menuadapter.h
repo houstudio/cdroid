@@ -20,6 +20,7 @@
 #include <widget/adapter.h>
 namespace cdroid{
 class MenuBuilder;
+class MenuPopup;
 class MenuAdapter:public BaseAdapter {
 private:
     int mExpandedIndex = -1;
@@ -28,6 +29,7 @@ private:
     LayoutInflater* mInflater;
     std::string mItemLayoutRes;
 protected:
+    friend MenuPopup;
     MenuBuilder* mAdapterMenu;
 public:
     MenuAdapter(MenuBuilder* menu, LayoutInflater* inflater, bool overflowOnly,const std::string& itemLayoutRes);

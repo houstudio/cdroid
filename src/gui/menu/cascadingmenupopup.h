@@ -89,7 +89,6 @@ public:
     bool isShowing() override;
 
     void onDismiss();
-    virtual void onItemClick(AdapterView&parent, View& view, int position, long id);
     void updateMenuView(bool cleared)override;
 
     void setCallback(const Callback& cb) override;

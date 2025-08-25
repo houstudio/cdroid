@@ -79,8 +79,8 @@ View* MenuAdapter::getView(int position, View* convertView, ViewGroup* parent) {
     const MenuItemImpl*menuItem =(MenuItemImpl*)getItem(position - 1);
     const int prevGroupId =  (position - 1 >= 0) ? menuItem->getGroupId() : currGroupId;
     // Show a divider if adjacent items are in different groups.
-    ((ListMenuItemView*) convertView)->setGroupDividerEnabled(mAdapterMenu->isGroupDividerEnabled()
-                    && (currGroupId != prevGroupId));
+    ((ListMenuItemView*) convertView)->setGroupDividerEnabled(
+        mAdapterMenu->isGroupDividerEnabled() && (currGroupId != prevGroupId));
 
     MenuView::ItemView* itemView = (MenuView::ItemView*) convertView;
     if (mForceShowIcon) {
