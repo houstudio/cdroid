@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <view/actionprovider.h>
 #include <menu/menuview.h>
+#include <menu/menupopup.h>
 #include <menu/menubuilder.h>
 #include <menu/submenubuilder.h>
 #include <menu/actionmenuview.h>
@@ -172,7 +173,17 @@ void ActionMenuPresenter::bindItemView(MenuItemImpl* item, View* itemView) {
     auto invoker=[this](MenuItemImpl&item)->bool{return ((ActionMenuView*)mMenuView)->invokeItem(item);};
     actionItemView->setItemInvoker(invoker);//menuView);
     //mPopupCallback=[this](){ return mActionButtonPopup != nullptr ? mActionButtonPopup->getPopup() : nullptr; }
-    //if (mPopupCallback == nullptr) mPopupCallback = new ActionMenuPopupCallback();
+    if (mPopupCallback == nullptr) mPopupCallback = [this]()->ShowableListMenu{
+        ShowableListMenu lm={};
+        if(mActionButtonPopup != nullptr){
+            auto p=mActionButtonPopup->getPopup();
+            lm.show=[p](){p->show();};
+            lm.dismiss=[p](){p->dismiss();};
+            lm.isShowing=[p](){return p->isShowing();};
+            lm.getListView=[p](){return p->getListView();};
+        }
+        return lm;
+    };
     actionItemView->setPopupCallback(mPopupCallback);
 }
 
@@ -257,7 +268,7 @@ void ActionMenuPresenter::runItemAnimations() {
             }
             ObjectAnimator* anim = ObjectAnimator::ofFloat((void*)menuItemLayoutInfoPre->view, "alpha"/*View::ALPHA*/, {oldAlpha, 0.f});
             // Re-using the view from pre-layout assumes no view recycling
-            /*((ViewGroup*) mMenuView)*/mContainer->getOverlay()->add(menuItemLayoutInfoPre->view);
+            /*(mMenuView)*/mContainer->getOverlay()->add(menuItemLayoutInfoPre->view);
             anim->setDuration(ITEM_ANIMATION_DURATION);
             anim->start();
             ItemAnimationInfo* info = new ItemAnimationInfo(id, menuItemLayoutInfoPre, anim, ItemAnimationInfo::FADE_OUT);
@@ -270,7 +281,7 @@ void ActionMenuPresenter::runItemAnimations() {
                         break;
                     }
                 }
-                /*((ViewGroup*) mMenuView)*/mContainer->getOverlay()->remove(menuItemLayoutInfoPre->view);
+                /*(MenuView*)*/mContainer->getOverlay()->remove(menuItemLayoutInfoPre->view);
             };
             anim->addListener(als);
         }
