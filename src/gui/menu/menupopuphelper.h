@@ -31,7 +31,6 @@ private:
     int mPopupStyleAttr;
     int mPopupStyleRes;
 
-    // Mutable cached popup menu properties.
     View* mAnchorView;
     int mDropDownGravity = Gravity::START;
     bool mForceShowIcon;

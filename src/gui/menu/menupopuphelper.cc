@@ -45,6 +45,7 @@ MenuPopupHelper::MenuPopupHelper(Context* context,MenuBuilder* menu, View* ancho
 }
 
 MenuPopupHelper::~MenuPopupHelper(){
+    delete mPopup;
 }
 
 void MenuPopupHelper::setOnDismissListener(const PopupWindow::OnDismissListener& listener) {
@@ -123,7 +124,7 @@ MenuPopup* MenuPopupHelper::createPopup() {
     const int minSmallestWidthCascading = 64;//mContext->getDimensionPixelSize("android:dimen/cascading_menus_min_smallest_width");
     const bool enableCascadingSubmenus = smallestWidth >= minSmallestWidthCascading;
 
-    MenuPopup* popup=nullptr;
+    MenuPopup* popup = nullptr;
     if (enableCascadingSubmenus) {
         popup = new CascadingMenuPopup(mContext, mAnchorView, mPopupStyleAttr,mPopupStyleRes, mOverflowOnly);
     } else {

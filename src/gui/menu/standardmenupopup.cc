@@ -259,7 +259,7 @@ void StandardMenuPopup::setOnDismissListener(const PopupWindow::OnDismissListene
     mOnDismissListener = listener;
 }
 
-ListView* StandardMenuPopup::getListView() {
+ListView* StandardMenuPopup::getListView() const{
     return mPopup->getListView();
 }
 

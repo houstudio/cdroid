@@ -28,6 +28,7 @@
 #include <view/accessibility/accessibilitywindowinfo.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/focusfinder.h>
+#include <menu/menubuilder.h>
 #include <widget/R.h>
 #include <widget/scrollbardrawable.h>
 #include <widget/edgeeffect.h>
@@ -2744,14 +2745,7 @@ void View::setOnContextClickListener(const OnContextClickListener& l) {
     getListenerInfo()->mOnContextClickListener = l;
 }
 
-/**
- * Register a callback to be invoked when the context menu for this view is
- * being built. If this view is not long clickable, it becomes long clickable.
- *
- * @param l The callback that will run
- *
- */
-void View::setOnCreateContextMenuListener(OnCreateContextMenuListener l) {
+void View::setOnCreateContextMenuListener(const OnCreateContextMenuListener& l) {
     if (!isLongClickable()) {
         setLongClickable(true);
     }
@@ -3273,11 +3267,11 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
     // Sets the flag as early as possible to allow draw() implementations
     // to call invalidate() successfully when doing animations
     mPrivateFlags |= PFLAG_DRAWN;
-    double cx1,cy1,cx2,cy2;
+    double cx1 , cy1 , cx2 , cy2;
     canvas.get_clip_extents(cx1,cy1,cx2,cy2);
     Rect rcc=Rect::MakeLTRB(static_cast<int>(cx1),static_cast<int>(cy1),static_cast<int>(cx2),static_cast<int>(cy2));
     if (!concatMatrix && (parentFlags & (ViewGroup::FLAG_SUPPORT_STATIC_TRANSFORMATIONS |
-                    ViewGroup::FLAG_CLIP_CHILDREN)) == ViewGroup::FLAG_CLIP_CHILDREN &&
+            ViewGroup::FLAG_CLIP_CHILDREN)) == ViewGroup::FLAG_CLIP_CHILDREN &&
             (false ==rcc.intersect(mLeft, mTop, mRight-mLeft, mBottom-mTop)) &&
             //canvas.quickReject(mLeft, mTop, mRight, mBottom, Canvas.EdgeType.BW) &&
             (mPrivateFlags & PFLAG_DRAW_ANIMATION) == 0) {
@@ -3317,8 +3311,7 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
             drawingWithRenderNode = false;
         }
     }
-    int sx = 0;
-    int sy = 0;
+    int sx = 0 , sy = 0;
     if (!drawingWithRenderNode) {
         computeScroll();
         sx = mScrollX;
@@ -7692,27 +7685,27 @@ bool View::onCheckIsTextEditor(){
 }
 
 void View::createContextMenu(ContextMenu& menu) {
-    ContextMenu::ContextMenuInfo* menuInfo = getContextMenuInfo();
-
+    ContextMenuInfo* menuInfo = getContextMenuInfo();
+#if ENABLE(MENU)
     // Sets the current menu info so all items added to menu will have
     // my extra info set.
-    //((MenuBuilder)menu).setCurrentMenuInfo(menuInfo);
-
+    ((MenuBuilder&)menu).setCurrentMenuInfo(menuInfo);
+#endif
     onCreateContextMenu(menu);
     if (mListenerInfo && mListenerInfo->mOnCreateContextMenuListener) {
         mListenerInfo->mOnCreateContextMenuListener(menu, *this, menuInfo);
     }
-
+#if ENABLE(MENU)
     // Clear the extra information so subsequent items that aren't mine don't
     // have my extra info.
-    //((MenuBuilder)menu).setCurrentMenuInfo(nullptr);
-
+    ((MenuBuilder&)menu).setCurrentMenuInfo(nullptr);
+#endif
     if (mParent != nullptr) {
         mParent->createContextMenu(menu);
     }
 }
 
-ContextMenu::ContextMenuInfo* View::getContextMenuInfo() {
+ContextMenuInfo* View::getContextMenuInfo() {
     return nullptr;
 }
 

@@ -3,6 +3,7 @@
 #include <widget/listpopupwindow.h>
 #include <widget/dropdownlistview.h>
 #include <menu/menubuilder.h>
+#include <menu/menuitemhoverlistener.h>
 namespace cdroid{
 class Transition;
 class MenuPopupWindow:public ListPopupWindow{// implements MenuItemHoverListener {

@@ -54,7 +54,7 @@ private:
     void setDate(int64_t timeInMillis, bool animate, bool setSelected);
     int getDiffMonths(Calendar& start, Calendar& end);
     int getPositionFromDay(int64_t timeInMillis);
-    Calendar getTempCalendarForTime(long timeInMillis);
+    Calendar getTempCalendarForTime(int64_t timeInMillis);
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int left, int top, int width, int height)override;

@@ -34,12 +34,15 @@ void MenuDialogHelper::show() {
     mPresenter = new ListMenuPresenter(builder->getContext(),"android:layout/list_menu_item_layout");
 
     MenuPresenter::Callback mpc;
-    mpc.onCloseMenu=std::bind(&MenuDialogHelper::onCloseMenu,this,std::placeholders::_1,std::placeholders::_2);
-    mpc.onOpenSubMenu=std::bind(&MenuDialogHelper::onOpenSubMenu,this,std::placeholders::_1);
+    mpc.onCloseMenu=[this](MenuBuilder& menu, bool allMenusAreClosing){
+        onCloseMenu(menu,allMenusAreClosing);
+    };
+    mpc.onOpenSubMenu =[this](MenuBuilder& menu){
+        return onOpenSubMenu(menu);
+    };
     mPresenter->setCallback(mpc);
     mMenu->addMenuPresenter(mPresenter);
-    DialogInterface::OnClickListener onClick=std::bind(&MenuDialogHelper::onClick,this,std::placeholders::_1,std::placeholders::_2);
-    builder->setAdapter(mPresenter->getAdapter(), onClick);
+    builder->setAdapter(mPresenter->getAdapter(),[this](DialogInterface& dialog, int which){onClick(dialog,which);});
 
     // Set the title
     View* headerView = menu->getHeaderView();
@@ -52,15 +55,15 @@ void MenuDialogHelper::show() {
     }
 
     // Set the key listener
-    DialogInterface::OnKeyListener onKey=std::bind(&MenuDialogHelper::onKey,this,
-            std::placeholders::_1, std::placeholders::_2,std::placeholders::_3);
-    builder->setOnKeyListener(onKey);
+    builder->setOnKeyListener([this](DialogInterface& dialog, int keyCode, KeyEvent& event){
+            return onKey(dialog,keyCode,event);
+        });
 
     // Show the menu
     mDialog = builder->create();
-    DialogInterface::OnDismissListener onDismiss = std::bind(&MenuDialogHelper::onDismiss,this,
-            std::placeholders::_1);
-    mDialog->setOnDismissListener(onDismiss);
+    mDialog->setOnDismissListener([this](DialogInterface& dialog){
+            onDismiss(dialog);
+        });
 #if 0
     WindowManager.LayoutParams lp = mDialog.getWindow().getAttributes();
     lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG;

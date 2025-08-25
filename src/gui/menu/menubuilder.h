@@ -248,26 +248,5 @@ public:
     MenuItemImpl* getExpandedItem();
 };
 
-struct MenuItemHoverListener {
-    /**
-     * Called when hover exits a menu item.
-     * <p>
-     * If hover is moving to another item, this method will be called before
-     * {@link #onItemHoverEnter(MenuBuilder, MenuItem)} for the newly-hovered item.
-     *
-     * @param menu the item's parent menu
-     * @param item the hovered menu item
-     */
-    std::function<void(MenuBuilder& /*menu*/,MenuItem&/*item*/)> onItemHoverExit;
-
-    /**
-     * Called when hover enters a menu item.
-     *
-     * @param menu the item's parent menu
-     * @param item the hovered menu item
-     */
-    std::function<void(MenuBuilder& /*menu*/,MenuItem&/*item*/)> onItemHoverEnter;;
-};
-
 }/*endof namespace*/
 #endif/*__MENU_BUILDER_H__*/

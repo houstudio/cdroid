@@ -109,7 +109,6 @@ int ActionMenu::findItemIndex(int id) {
             return i;
         }
     }
-
     return -1;
 }
 
@@ -159,7 +158,6 @@ bool ActionMenu::performIdentifierAction(int id, int flags) {
     if (index < 0) {
         return false;
     }
-
     return mItems.at(index)->invoke();
 }
 
@@ -168,7 +166,6 @@ bool ActionMenu::performShortcut(int keyCode, KeyEvent& event, int flags) {
     if (item == nullptr) {
         return false;
     }
-
     return item->invoke();
 }
 
@@ -230,4 +227,5 @@ void ActionMenu::setQwertyMode(bool isQwerty) {
 int ActionMenu::size()const {
     return mItems.size();
 }
+
 }/*endof namespace*/

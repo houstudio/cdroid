@@ -20,6 +20,7 @@
 #include <widget/listview.h>
 #include <widget/popupwindow.h>
 #include <menu/menupopup.h>
+#include <menu/menuitemhoverlistener.h>
 namespace cdroid{
 class MenuAdapter;
 class MenuPopupWindow;
@@ -106,7 +107,7 @@ public:
 
     void setOnDismissListener(const PopupWindow::OnDismissListener& listener)override;
 
-    ListView* getListView();
+    ListView* getListView()const override;
 
     void setHorizontalOffset(int x)override;
     void setVerticalOffset(int y)override;

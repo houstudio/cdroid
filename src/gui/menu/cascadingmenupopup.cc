@@ -555,7 +555,7 @@ void CascadingMenuPopup::setOnDismissListener(const PopupWindow::OnDismissListen
     mOnDismissListener = listener;
 }
 
-ListView* CascadingMenuPopup::getListView() {
+ListView* CascadingMenuPopup::getListView() const{
     return mShowingMenus.empty() ? nullptr : mShowingMenus.at(mShowingMenus.size() - 1)->getListView();
 }
 

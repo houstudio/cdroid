@@ -112,7 +112,7 @@ public:
     int getSelectedItemPosition();
     long getSelectedItemId();
     View* getSelectedView();
-    ListView* getListView();
+    ListView* getListView()const;
     DropDownListView* createDropDownListView(Context* context, bool hijackFocus);
     void setListItemExpandMax(int max);
     bool onKeyDown(int keyCode,KeyEvent& event);
