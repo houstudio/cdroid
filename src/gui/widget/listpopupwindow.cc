@@ -460,7 +460,7 @@ View* ListPopupWindow::getSelectedView() {
     return mDropDownList->getSelectedView();
 }
 
-ListView* ListPopupWindow::getListView() {
+ListView* ListPopupWindow::getListView() const{
     return mDropDownList;
 }
 

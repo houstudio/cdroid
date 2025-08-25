@@ -19,7 +19,7 @@
 #define __MENU_POPUP_H__
 #include <menu/menubuilder.h>
 #include <menu/menupresenter.h>
-#include <widget/adapterview.h>
+#include <widget/listview.h>
 #include <widget/popupwindow.h>
 namespace cdroid{
 class MenuView;
@@ -81,6 +81,7 @@ public:
     virtual void show();
     virtual void dismiss();
     virtual bool isShowing();
+    virtual ListView*getListView()const=0;
 };
 }/*endof namespace*/
 #endif/*__MENU_POP_H__*/

@@ -107,7 +107,7 @@ public:
 
     void setOnDismissListener(const PopupWindow::OnDismissListener& listener)override;
 
-    ListView* getListView();
+    ListView* getListView()const override;
 
     void setHorizontalOffset(int x)override;
     void setVerticalOffset(int y)override;
