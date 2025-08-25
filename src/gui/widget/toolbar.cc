@@ -67,6 +67,9 @@ Toolbar::Toolbar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
     mCollapseIcon = atts.getDrawable("collapseIcon");
     mCollapseDescription = atts.getString("collapseContentDescription");
 
+    Drawable*overflowIcon=atts.getDrawable("overflowIcon");
+    setOverflowIcon(overflowIcon);
+
     std::string title = atts.getString("title");
     if (!title.empty()){
         setTitle(title);

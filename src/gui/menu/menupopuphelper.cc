@@ -38,6 +38,7 @@ MenuPopupHelper::MenuPopupHelper(Context* context,MenuBuilder* menu, View* ancho
         bool overflowOnly,int popupStyleAttr, int popupStyleRes) {
     mContext = context;
     mMenu = menu;
+    mPopup= nullptr;
     mAnchorView = anchorView;
     mOverflowOnly = overflowOnly;
     mPopupStyleAttr = popupStyleAttr;
