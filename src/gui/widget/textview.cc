@@ -340,6 +340,7 @@ public:
 };
 
 TextAppearanceAttributes::TextAppearanceAttributes(){
+    mTextColor = 0xFF000000;
     mTextColors    = nullptr;
     mTextColorHints= nullptr;
     mTextColorLinks= nullptr;
