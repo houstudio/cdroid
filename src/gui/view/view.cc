@@ -2843,7 +2843,7 @@ bool View::isDrawingCacheEnabled()const{
 }
 
 
-bool View::isPaddingOffsetRequired() {
+bool View::isPaddingOffsetRequired() const{
     return false;
 }
 

@@ -745,7 +745,7 @@ protected:
 
     int getWindowAttachCount()const;
     void recomputePadding();
-    virtual bool isPaddingOffsetRequired();
+    virtual bool isPaddingOffsetRequired()const;
     virtual int getLeftPaddingOffset();
     virtual int getRightPaddingOffset();
     virtual int getTopPaddingOffset();

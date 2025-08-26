@@ -836,7 +836,7 @@ void Switch::onDraw(Canvas& canvas) {
     canvas.restore();
 }
 
-int Switch::getCompoundPaddingLeft() {
+int Switch::getCompoundPaddingLeft() const{
     if (!isLayoutRtl()) {
         return CompoundButton::getCompoundPaddingLeft();
     }
@@ -847,7 +847,7 @@ int Switch::getCompoundPaddingLeft() {
     return padding;
 }
 
-int Switch::getCompoundPaddingRight() {
+int Switch::getCompoundPaddingRight() const{
     if (isLayoutRtl()) {
         return CompoundButton::getCompoundPaddingRight();
     }
