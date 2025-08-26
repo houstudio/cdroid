@@ -63,6 +63,8 @@ private:
     int  buildDropDown();
 public:
     ListPopupWindow(Context*context,const AttributeSet&atts);
+    ListPopupWindow(Context* context,const AttributeSet& attrs, const std::string&defStyleAttr);
+    ListPopupWindow(Context* context,const AttributeSet& attrs, const std::string&defStyleAttr, const std::string&defStyleRes);
     virtual ~ListPopupWindow();
     void setAdapter(Adapter*adapter);
     void setPromptPosition(int position);

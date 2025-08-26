@@ -19,10 +19,19 @@
 #include <cdlog.h>
 namespace cdroid{
 
-PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs){
+PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs)
+    :PopupWindow(context,attrs,"android:attr/popupWindowStyle"){
+}
+
+PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, const std::string& defStyleAttr)
+    :PopupWindow(context,attrs,defStyleAttr,""){
+}
+
+PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, const std::string& defStyleAttr, const std::string& defStyleRes){
+
     init();
     mContext = context;
-    AttributeSet attpop= context->obtainStyledAttributes("cdroid:attr/popupWindowStyle");
+    AttributeSet attpop= context->obtainStyledAttributes(defStyleAttr);
     Drawable* bg = attrs.getDrawable("popupBackground");
     mElevation = attrs.getFloat/*Dimension*/("popupElevation", 0);
     mOverlapAnchor = attrs.getBoolean("overlapAnchor", false);

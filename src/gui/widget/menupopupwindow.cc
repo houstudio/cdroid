@@ -5,8 +5,9 @@
 #include <menu/listmenupresenter.h>
 namespace cdroid{
 
-MenuPopupWindow::MenuPopupWindow(Context* context,const AttributeSet& attrs)
-    :ListPopupWindow(context, attrs){
+MenuPopupWindow::MenuPopupWindow(Context* context,const AttributeSet& attrs,
+        const std::string&defStyleAttr,const std::string&defStyleRes)
+    :ListPopupWindow(context, attrs,defStyleAttr,defStyleRes){
 }
 
 DropDownListView* MenuPopupWindow::createDropDownListView(Context* context, bool hijackFocus){

@@ -29,8 +29,8 @@ private:
     MenuBuilder* mMenu;
     MenuAdapter* mAdapter;
     int mPopupMaxWidth;
-    int mPopupStyleAttr;
-    int mPopupStyleRes;
+    std::string mPopupStyleAttr;
+    std::string mPopupStyleRes;
 
     MenuPopupWindow* mPopup;
     PopupWindow::OnDismissListener mOnDismissListener;
@@ -55,8 +55,8 @@ private:
     void onViewDetachedFromWindow(View* v);
     bool tryShow();
 public:
-    StandardMenuPopup(Context* context, MenuBuilder* menu, View* anchorView, int popupStyleAttr,
-            int popupStyleRes, bool overflowOnly);
+    StandardMenuPopup(Context* context, MenuBuilder* menu, View* anchorView,
+            const std::string& popupStyleAttr,const std::string& popupStyleRes, bool overflowOnly);
 
     void setForceShowIcon(bool forceShow) override;
 

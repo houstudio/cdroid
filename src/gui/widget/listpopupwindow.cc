@@ -38,12 +38,20 @@ public:
     }
 };
 
-ListPopupWindow::ListPopupWindow(Context*context,const AttributeSet&atts){
+ListPopupWindow::ListPopupWindow(Context*context,const AttributeSet&atts)
+    :ListPopupWindow(context,atts,"android:attr/listPopupWindowStyle",""){
+}
+
+ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, const std::string&defStyleAttr)
+    :ListPopupWindow(context,atts,defStyleAttr,""){
+}
+
+ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, const std::string&defStyleAttr, const std::string&defStyleRes){
     mContext = context;
     initPopupWindow();
     mDropDownHorizontalOffset = atts.getDimensionPixelOffset("dropDownHorizontalOffet",0);
     mDropDownVerticalOffset   = atts.getDimensionPixelOffset("dropDownVerticalOffet",0);
-    mPopup = new PopupWindow(mContext,atts);
+    mPopup = new PopupWindow(mContext,atts,defStyleAttr,defStyleRes);
 }
 
 ListPopupWindow::~ListPopupWindow(){

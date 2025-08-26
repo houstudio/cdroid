@@ -109,7 +109,7 @@ void CascadingMenuPopup::onItemHoverEnter(MenuBuilder& menu,MenuItem& item) {
 }
 
 CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
-        int popupStyleAttr, int popupStyleRes, bool overflowOnly) {
+        const std::string& popupStyleAttr, const std::string& popupStyleRes, bool overflowOnly) {
     mContext = context;//Preconditions.checkNotNull(context);
     mAnchorView = anchor;//Preconditions.checkNotNull(anchor);
     mPopupStyleAttr = popupStyleAttr;
@@ -137,7 +137,7 @@ void CascadingMenuPopup::setForceShowIcon(bool forceShow) {
 }
 
 MenuPopupWindow* CascadingMenuPopup::createPopupWindow() {
-    MenuPopupWindow* popupWindow = new MenuPopupWindow(mContext,AttributeSet(mContext,"cdroid"));// nullptr, mPopupStyleAttr, mPopupStyleRes);
+    MenuPopupWindow* popupWindow = new MenuPopupWindow(mContext,AttributeSet(mContext,"cdroid"), mPopupStyleAttr, mPopupStyleRes);
     popupWindow->setHoverListener(mMenuItemHoverListener);
     popupWindow->setOnItemClickListener([this](AdapterView&parent, View& view, int position, long id){
         onItemClick(parent,view,position,id);
@@ -328,7 +328,7 @@ void CascadingMenuPopup::showMenu(MenuBuilder* menu) {
     });
 
     // If this is the root menu, show the title if requested.
-    if (parentInfo == nullptr && mShowTitle && menu->getHeaderTitle().size()) {
+    if ((parentInfo == nullptr) && mShowTitle && menu->getHeaderTitle().size()) {
         FrameLayout* titleItemView = (FrameLayout*) inflater->inflate(
             "cdroid:layout/popup_menu_header_item_layout", listView, false);
         TextView* titleView = (TextView*) titleItemView->findViewById(R::id::title);
@@ -484,7 +484,7 @@ void CascadingMenuPopup::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)
     if (mShouldCloseImmediately) {
         // Disable all exit animations.
         info->window->setExitTransition(nullptr);
-        info->window->setAnimationStyle(0);
+        info->window->setAnimationStyle("");
     }
     info->window->dismiss();
 

@@ -22,26 +22,26 @@
 namespace cdroid{
 
 MenuPopupHelper::MenuPopupHelper(Context* context, MenuBuilder* menu)
-    :MenuPopupHelper(context, menu, nullptr, false, 0,0){//com.android.internal.R.attr.popupMenuStyle, 0){
+    :MenuPopupHelper(context, menu, nullptr, false,"android:attr/popupMenuStyle",""){
 }
 
 MenuPopupHelper::MenuPopupHelper(Context* context, MenuBuilder* menu, View* anchorView)
-    :MenuPopupHelper(context, menu, anchorView, false, 0,0){//com.android.internal.R.attr.popupMenuStyle, 0){
+    :MenuPopupHelper(context, menu, anchorView, false, "android:attr/popupMenuStyle",""){
 }
 
 MenuPopupHelper::MenuPopupHelper(Context* context, MenuBuilder* menu, View* anchorView,
-        bool overflowOnly,int popupStyleAttr)
-    :MenuPopupHelper(context, menu, anchorView, overflowOnly, popupStyleAttr, 0){
+        bool overflowOnly,const std::string& popupStyleAttr)
+    :MenuPopupHelper(context, menu, anchorView, overflowOnly, popupStyleAttr,""){
 }
 
-MenuPopupHelper::MenuPopupHelper(Context* context,MenuBuilder* menu, View* anchorView,
-        bool overflowOnly,int popupStyleAttr, int popupStyleRes) {
+MenuPopupHelper::MenuPopupHelper(Context* context,MenuBuilder* menu, View* anchorView, bool overflowOnly,
+        const std::string& popupStyleAttr, const std::string& popupStyleRes) {
     mContext = context;
     mMenu = menu;
     mPopup= nullptr;
     mAnchorView = anchorView;
     mOverflowOnly = overflowOnly;
-    mPopupStyleAttr = popupStyleAttr;
+    mPopupStyleAttr= popupStyleAttr;
     mPopupStyleRes = popupStyleRes;
 }
 

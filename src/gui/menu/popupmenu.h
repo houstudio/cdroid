@@ -49,7 +49,6 @@ private:
     View::OnTouchListener mDragListener;
 public:
     PopupMenu(Context* context, View* anchor);
-    virtual ~PopupMenu();
     PopupMenu(Context* context, View* anchor, int gravity);
 
     /**
@@ -69,7 +68,8 @@ public:
      *        popupStyleAttr is 0 or can not be found in the theme. Can be 0
      *        to not look for defaults.
      */
-    PopupMenu(Context* context, View* anchor, int gravity, int popupStyleAttr,int popupStyleRes);
+    PopupMenu(Context* context, View* anchor, int gravity, const std::string& popupStyleAttr,const std::string& popupStyleRes);
+    virtual ~PopupMenu();
 
     /**
      * Sets the gravity used to align the popup window to its anchor view.
