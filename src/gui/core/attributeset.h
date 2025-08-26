@@ -46,6 +46,7 @@ public:
     int set(const char*atts[],int size=0);
     static std::string normalize(const std::string&pkg,const std::string&property);
     int inherit(const AttributeSet&other);
+    int Override(const AttributeSet&other);
     const std::string getAttributeValue(const std::string&key)const;
     bool getBoolean(const std::string&key,bool def=false)const;
     int getInt(const std::string&key,int def=0)const;

@@ -32,9 +32,10 @@ PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, const std::
     init();
     mContext = context;
     AttributeSet attpop= context->obtainStyledAttributes(defStyleAttr);
-    Drawable* bg = attrs.getDrawable("popupBackground");
-    mElevation = attrs.getFloat/*Dimension*/("popupElevation", 0);
-    mOverlapAnchor = attrs.getBoolean("overlapAnchor", false);
+    attpop.Override(attrs);
+    Drawable* bg = attpop.getDrawable("popupBackground");
+    mElevation = attpop.getFloat/*Dimension*/("popupElevation", 0);
+    mOverlapAnchor = attpop.getBoolean("overlapAnchor", false);
 #if 0 
     // Preserve default behavior from Gingerbread. If the animation is
     // undefined or explicitly specifies the Gingerbread animation style,
