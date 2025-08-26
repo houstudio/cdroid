@@ -61,7 +61,7 @@ void ListPopupWindow::initPopupWindow(){
     mListItemExpandMaximum = INT_MAX;
     mDropDownHorizontalOffset = 0;
     mDropDownVerticalOffset = 0;
-    mDropDownList   = nullptr;
+    mDropDownList = nullptr;
     mPromptView = nullptr;
     mDropDownAnchorView = nullptr;
     mDropDownListHighlight = nullptr;
@@ -356,7 +356,7 @@ void ListPopupWindow::dismiss() {
     mPopup->dismiss();
     removePromptView();
     mPopup->setContentView(nullptr);
-    mDropDownList->setAdapter(nullptr);
+    //mDropDownList->setAdapter(nullptr);
     //delete mDropDownList;
     mDropDownList = nullptr;
     mHandler->removeCallbacks(mResizePopupRunnable);

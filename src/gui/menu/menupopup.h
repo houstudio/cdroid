@@ -77,7 +77,7 @@ public:
 
     int getId()const override;
 
-    void onItemClick(AdapterView&parent, View& view, int position, long id);
+    virtual void onItemClick(AdapterView&parent, View& view, int position, long id);
     virtual void show();
     virtual void dismiss();
     virtual bool isShowing();

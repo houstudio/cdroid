@@ -67,6 +67,9 @@ Toolbar::Toolbar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
     mCollapseIcon = atts.getDrawable("collapseIcon");
     mCollapseDescription = atts.getString("collapseContentDescription");
 
+    Drawable*overflowIcon=atts.getDrawable("overflowIcon");
+    setOverflowIcon(overflowIcon);
+
     std::string title = atts.getString("title");
     if (!title.empty()){
         setTitle(title);
@@ -1375,6 +1378,9 @@ Toolbar::ExpandedActionViewMenuPresenter::ExpandedActionViewMenuPresenter(Toolba
     :MenuPresenter(),mToolbar(tb){
     mMenu = nullptr;
     mCurrentExpandedItem = nullptr;
+}
+
+Toolbar::ExpandedActionViewMenuPresenter::~ExpandedActionViewMenuPresenter(){
 }
 
 void Toolbar::ExpandedActionViewMenuPresenter::initForMenu(Context* context,MenuBuilder* menu) {

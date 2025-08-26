@@ -76,7 +76,7 @@ private:
     int findIndexOfAddedMenu(MenuBuilder* menu);
 public:
     CascadingMenuPopup(Context* context,View* anchor, int popupStyleAttr, int popupStyleRes, bool overflowOnly);
-
+    ~CascadingMenuPopup()override;
     void setForceShowIcon(bool forceShow)override;
 
     void show() override;
@@ -89,7 +89,6 @@ public:
     bool isShowing() override;
 
     void onDismiss();
-    virtual void onItemClick(AdapterView&parent, View& view, int position, long id);
     void updateMenuView(bool cleared)override;
 
     void setCallback(const Callback& cb) override;

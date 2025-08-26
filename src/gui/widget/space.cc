@@ -19,6 +19,7 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(Space)
 Space::Space(int w,int h):View(w,h){
     if (getVisibility() == VISIBLE) {
         setVisibility(INVISIBLE);

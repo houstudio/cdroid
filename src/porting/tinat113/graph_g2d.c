@@ -190,7 +190,7 @@ int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
         fill.dst_image_h.laddr[1] = (uintptr_t) 0;
         fill.dst_image_h.laddr[2] = (uintptr_t) 0;
         fill.dst_image_h.use_phy_addr = 1;
-	ioctl(dev->g2d, G2D_CMD_FILLRECT_H, (uintptr_t)(&fill));
+        ioctl(dev->g2d, G2D_CMD_FILLRECT_H, (uintptr_t)(&fill));
     }
     return E_OK;
 }
@@ -330,8 +330,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
 #else
         pixman_image_t *src_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, nsrc->width, nsrc->height, nsrc->buffer, nsrc->pitch);
         pixman_image_t *dst_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, ndst->width, ndst->height, ndst->buffer, ndst->pitch);
-        pixman_image_composite(PIXMAN_OP_SRC, src_image,NULL/*mask*/, dst_image,
-                       rs.x, rs.y, 0, 0, dx, dy, rs.w, rs.h);
+        pixman_image_composite(PIXMAN_OP_SRC, src_image,NULL/*mask*/, dst_image,rs.x, rs.y, 0, 0, dx, dy, rs.w, rs.h);
         pixman_image_unref(src_image);
         pixman_image_unref(dst_image);	
 #endif
@@ -339,11 +338,11 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         g2d_blt_h blt;
         bzero(&blt,sizeof(blt));
         blt.flag_h = G2D_BLT_NONE|G2D_ROT_0;
-        blt.src_image_h.width = nsrc->pitch;
+        blt.src_image_h.width = nsrc->width;
         blt.src_image_h.height = nsrc->height;
         blt.src_image_h.laddr[0]=(uintptr_t)((nsrc->kbuffer||nsrc->ishw)?nsrc->kbuffer:nsrc->buffer);
         blt.src_image_h.clip_rect.x = rs.x;
-        blt.src_image_h.clip_rect,y = rs.y;
+        blt.src_image_h.clip_rect.y = rs.y;
         blt.src_image_h.clip_rect.w= rs.w;
         blt.src_image_h.clip_rect.h = rs.h;
         blt.src_image_h.format =G2D_FORMAT_ARGB8888;
@@ -357,7 +356,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         blt.dst_image_h.clip_rect.y = dy;
         blt.dst_image_h.clip_rect.w= rs.w;
         blt.dst_image_h.clip_rect.h = rs.h;
-        blt.dst_image_h.width = ndst->pitch;
+        blt.dst_image_h.width = ndst->width;
         blt.dst_image_h.height = ndst->height;
         blt.dst_image_h.mode = G2D_GLOBAL_ALPHA;
         blt.dst_image_h.laddr[0]=(uintptr_t)((ndst->kbuffer||ndst->ishw)?ndst->kbuffer:ndst->buffer);

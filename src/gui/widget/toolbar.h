@@ -220,6 +220,7 @@ private:
     MenuItemImpl* mCurrentExpandedItem;
 public:
     ExpandedActionViewMenuPresenter(Toolbar*tb);
+    ~ExpandedActionViewMenuPresenter()override;
     void initForMenu(Context* context,MenuBuilder* menu)override;
     ViewGroup* getMenuView(ViewGroup* root)override;
     void updateMenuView(bool cleared)override;

@@ -29,9 +29,14 @@ ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet& attrs)
     :LinearLayout(context, attrs){
 
     mBackground = attrs.getDrawable("itemBackground");
-    mTextAppearance = attrs.getResourceId("itemTextAppearance");
+    mTextAppearance = attrs.getString("itemTextAppearance");
     mPreserveIconSpacing = attrs.getBoolean("preserveIconSpacing", false);
     mTextAppearanceContext = context;
+    mItemData = nullptr;
+    mIconView = nullptr;
+    mCheckBox = nullptr;
+    mRadioButton = nullptr;
+    mInflater = nullptr;
     mSubMenuArrow = attrs.getDrawable("subMenuArrow");
 
     /*final TypedArray b = context.getTheme()
@@ -109,7 +114,7 @@ void ListMenuItemView::setEnabled(bool v){
 }
 
 void ListMenuItemView::setCheckable(bool checkable) {
-    if (!checkable && mRadioButton == nullptr && mCheckBox == nullptr) {
+    if (!checkable && (mRadioButton == nullptr) && (mCheckBox == nullptr)) {
         return;
     }
 
@@ -193,7 +198,7 @@ void ListMenuItemView::setIcon(Drawable* icon) {
         return;
     }
 
-    if (mIconView == nullptr && icon == nullptr && !mPreserveIconSpacing) {
+    if ((mIconView == nullptr) && (icon == nullptr) && !mPreserveIconSpacing) {
         return;
     }
 
@@ -201,7 +206,7 @@ void ListMenuItemView::setIcon(Drawable* icon) {
         insertIconView();
     }
 
-    if (icon != nullptr || mPreserveIconSpacing) {
+    if ((icon != nullptr) || mPreserveIconSpacing) {
         mIconView->setImageDrawable(showIcon ? icon : nullptr);
 
         if (mIconView->getVisibility() != VISIBLE) {
@@ -213,7 +218,7 @@ void ListMenuItemView::setIcon(Drawable* icon) {
 }
 
 void ListMenuItemView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    if (mIconView != nullptr && mPreserveIconSpacing) {
+    if ((mIconView != nullptr) && mPreserveIconSpacing) {
         // Enforce minimum icon spacing
         ViewGroup::LayoutParams* lp = getLayoutParams();
         LayoutParams* iconLp = (LayoutParams*) mIconView->getLayoutParams();
@@ -226,7 +231,7 @@ void ListMenuItemView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
 void ListMenuItemView::insertIconView() {
     LayoutInflater* inflater = getInflater();
-    mIconView = (ImageView*) inflater->inflate("cdroid:layout/list_menu_item_icon", this, false);
+    mIconView = (ImageView*) inflater->inflate("android:layout/list_menu_item_icon", this, false);
     addContentView(mIconView, 0);
 }
 
@@ -260,7 +265,7 @@ LayoutInflater* ListMenuItemView::getInflater() {
 void ListMenuItemView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
     LinearLayout::onInitializeAccessibilityNodeInfoInternal(info);
 
-    if (mItemData != nullptr && mItemData->hasSubMenu()) {
+    if ((mItemData != nullptr) && mItemData->hasSubMenu()) {
         info.setCanOpenPopup(true);
     }
 }
@@ -275,7 +280,7 @@ void ListMenuItemView::setGroupDividerEnabled(bool groupDividerEnabled) {
 }
 
 void ListMenuItemView::adjustListItemSelectionBounds(Rect& rect) {
-    if (mGroupDivider != nullptr && mGroupDivider->getVisibility() == View::VISIBLE) {
+    if ((mGroupDivider != nullptr) && (mGroupDivider->getVisibility() == View::VISIBLE)) {
         // groupDivider is a part of MenuItemListView.
         // If ListMenuItem with divider enabled is hovered/clicked, divider also gets selected.
         // Clipping the selector bounds from the top divider portion when divider is enabled,
@@ -284,4 +289,4 @@ void ListMenuItemView::adjustListItemSelectionBounds(Rect& rect) {
         rect.top += mGroupDivider->getHeight() + lp->topMargin + lp->bottomMargin;
     }
 }
-}
+}/*endof namespace*/

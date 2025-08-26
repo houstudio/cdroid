@@ -18,6 +18,7 @@
 #include <menu/menuitem.h>
 #include <menu/menuview.h>
 #include <menu/menupopup.h>
+#include <menu/menuadapter.h>
 #include <widget/headerviewlistadapter.h>
 namespace cdroid{
 //class MenuPopup implements ShowableListMenu, MenuPresenter,
@@ -57,7 +58,8 @@ void MenuPopup::onItemClick(AdapterView& parent, View& view, int position, long 
 
     // Use the position from the outer adapter so that if a header view was added, we don't get
     // an off-by-1 error in position.
-    FATAL("TODO");//wrappedAdapter->mAdapterMenu->performItemAction((MenuItem*) outerAdapter->getItem(position), 0);
+    LOGD("position %d id=%d",position,id);
+    wrappedAdapter->mAdapterMenu->performItemAction((MenuItem*) outerAdapter->getItem(position), 0);
 }
 
 void MenuPopup::show(){
