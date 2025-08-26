@@ -108,8 +108,7 @@ void ActionMenuView::onMeasureExactFormat(int widthMeasureSpec, int heightMeasur
     const int cellCount = widthSize / mMinCellSize;
     const int cellSizeRemaining = widthSize % mMinCellSize;
 
-    if (cellCount == 0) {
-        // Give up, nothing fits.
+    if (cellCount == 0) {// Give up, nothing fits.
         setMeasuredDimension(widthSize, 0);
         return;
     }
@@ -370,9 +369,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
                 l = r - overflowWidth;
             }
             const int t = midVertical - (height / 2);
-            //const int b = t + height;
             v->layout(l, t, overflowWidth, height);
-
             widthRemaining -= overflowWidth;
             hasOverflow = true;
         } else {
