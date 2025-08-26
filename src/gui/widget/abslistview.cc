@@ -32,6 +32,7 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mFastScrollAlwaysVisible = false;
     setScrollingCacheEnabled(true);
     mListPadding.set(0,0,0,0);
+    mSelectorRect.set(0,0,0,0);
     mVelocityTracker = nullptr;
     mPositionScroller= nullptr;
     mFastScroll = nullptr;

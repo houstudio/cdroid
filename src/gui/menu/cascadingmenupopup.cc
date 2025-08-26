@@ -80,7 +80,7 @@ void CascadingMenuPopup::onItemHoverEnter(MenuBuilder& menu,MenuItem& item) {
         return;
     }
 
-    CascadingMenuInfo* nextInfo;
+    CascadingMenuInfo* nextInfo=nullptr;
     const int nextIndex = menuIndex + 1;
     if (nextIndex < mShowingMenus.size()) {
         nextInfo = mShowingMenus.at(nextIndex);
@@ -121,7 +121,7 @@ CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
 
     //final Resources res = context.getResources();
     mMenuMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,
-            0);//res.getDimensionPixelSize(com.android.internal.R.dimen.config_prefDialogWidth));
+            context->getDimensionPixelSize("android:dimen/config_prefDialogWidth"));
 
     mSubMenuHoverHandler = new Handler();
 

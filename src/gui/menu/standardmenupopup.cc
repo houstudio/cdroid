@@ -58,7 +58,7 @@ StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* 
     mPopupStyleAttr = popupStyleAttr;
     mPopupStyleRes = popupStyleRes;
 
-    mPopupMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,0);//res.getDimensionPixelSize(com.android.internal.R.dimen.config_prefDialogWidth));
+    mPopupMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,context->getDimensionPixelSize("cdroid:dimen/config_prefDialogWidth"));
 
     mAnchorView = anchorView;
 
