@@ -35,7 +35,6 @@ private:
     int mMenuMaxWidth;
     std::string mPopupStyleAttr;
     std::string mPopupStyleRes;
-    bool mOverflowOnly;
     Handler* mSubMenuHoverHandler;
     std::vector<MenuBuilder*> mPendingMenus;
     std::vector<CascadingMenuInfo*> mShowingMenus;
@@ -48,10 +47,11 @@ private:
     View* mAnchorView;
     View* mShownAnchorView;
     int mLastPosition;
-    bool mHasXOffset;
-    bool mHasYOffset;
     int mXOffset;
     int mYOffset;
+    bool mOverflowOnly;
+    bool mHasXOffset;
+    bool mHasYOffset;
     bool mForceShowIcon;
     bool mShowTitle;
     Callback mPresenterCallback;
