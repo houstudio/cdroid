@@ -612,7 +612,7 @@ void Spinner::DropdownPopup::show(int textDirection, int textAlignment) {
 
     computeContentWidth();
 
-    //setInputMethodMode(ListPopupWindow::INPUT_METHOD_NOT_NEEDED);
+    setInputMethodMode(PopupWindow::INPUT_METHOD_NOT_NEEDED);
     ListPopupWindow::show();
     ListView* listView = getListView();
 

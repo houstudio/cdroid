@@ -52,6 +52,14 @@ ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, cons
     mDropDownHorizontalOffset = atts.getDimensionPixelOffset("dropDownHorizontalOffet",0);
     mDropDownVerticalOffset   = atts.getDimensionPixelOffset("dropDownVerticalOffet",0);
     mPopup = new PopupWindow(mContext,atts,defStyleAttr,defStyleRes);
+    mResizePopupRunnable =[this](){
+        if ((mDropDownList != nullptr) && mDropDownList->isAttachedToWindow()
+                && (mDropDownList->getCount() > mDropDownList->getChildCount())
+                && (mDropDownList->getChildCount() <= mListItemExpandMaximum)) {
+            mPopup->setInputMethodMode(PopupWindow::INPUT_METHOD_NOT_NEEDED);
+            show();
+        }
+    };
 }
 
 ListPopupWindow::~ListPopupWindow(){
@@ -365,7 +373,7 @@ void ListPopupWindow::dismiss() {
     removePromptView();
     mPopup->setContentView(nullptr);
     //mDropDownList->setAdapter(nullptr);
-    //delete mDropDownList;
+    //delete mDropDownList;/*delete will caused crash; not delete will cause memleak*/
     mDropDownList = nullptr;
     mHandler->removeCallbacks(mResizePopupRunnable);
 }
@@ -504,8 +512,7 @@ bool ListPopupWindow::onKeyDown(int keyCode,KeyEvent& event){
 
             if (adapter != nullptr) {
                 allEnabled = adapter->areAllItemsEnabled();
-                firstItem = allEnabled ? 0 :
-                       mDropDownList->lookForSelectablePosition(0, true);
+                firstItem = allEnabled ? 0 : mDropDownList->lookForSelectablePosition(0, true);
                 lastItem = allEnabled ? adapter->getCount() - 1 :
                        mDropDownList->lookForSelectablePosition(adapter->getCount() - 1, false);
             }
