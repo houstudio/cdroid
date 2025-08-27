@@ -24,7 +24,7 @@
 #include <widget/R.h>
 namespace cdroid{
 
-DECLARE_WIDGET(ListMenuItemView)
+DECLARE_WIDGET2(ListMenuItemView,"cdroid:attr/listMenuViewStyle")
 ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet& attrs)
     :LinearLayout(context, attrs){
 

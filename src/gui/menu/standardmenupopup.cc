@@ -48,8 +48,8 @@ void StandardMenuPopup::onViewDetachedFromWindow(View* v) {
     v->removeOnAttachStateChangeListener(mAttachStateChangeListener);//this);
 }
 
-StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* anchorView, int popupStyleAttr,
-        int popupStyleRes, bool overflowOnly) {
+StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* anchorView,
+        const std::string& popupStyleAttr,const std::string& popupStyleRes, bool overflowOnly) {
     mContext = context;//Objects.requireNonNull(context);
     mMenu = menu;
     mOverflowOnly = overflowOnly;
@@ -58,11 +58,11 @@ StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* 
     mPopupStyleAttr = popupStyleAttr;
     mPopupStyleRes = popupStyleRes;
 
-    mPopupMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,0);//res.getDimensionPixelSize(com.android.internal.R.dimen.config_prefDialogWidth));
+    mPopupMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,context->getDimensionPixelSize("cdroid:dimen/config_prefDialogWidth"));
 
     mAnchorView = anchorView;
 
-    mPopup = new MenuPopupWindow(mContext,AttributeSet(mContext,"cdroid"));// nullptr, mPopupStyleAttr, mPopupStyleRes);
+    mPopup = new MenuPopupWindow(mContext,AttributeSet(mContext,"cdroid"), mPopupStyleAttr, mPopupStyleRes);
 
     // Present the menu using our context, not the menu builder's context.
     menu->addMenuPresenter(this, context);

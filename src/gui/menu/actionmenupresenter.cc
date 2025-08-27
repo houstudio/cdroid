@@ -28,10 +28,13 @@ namespace cdroid{
 ActionMenuPresenter::ActionMenuPresenter(Context* context)
     :BaseMenuPresenter(context, "cdroid:layout/action_menu_layout","cdroid:layout/action_menu_item_layout"){
     mMaxItemsSet = 0;
-    mWidthLimitSet = 0;
-    mStrictWidthLimit = 0;
+    mMinCellSize = 0;
+    mOpenSubMenuId = 0;
+    mWidthLimitSet = false;
+    mStrictWidthLimit= false;
+    mReserveOverflow = false;
     mPendingOverflowIconSet = false;
-    mOverflowButton = nullptr;
+    mOverflowButton= nullptr;
     mOverflowPopup = nullptr;
     mActionButtonPopup = nullptr;
     mPendingOverflowIcon = nullptr;
@@ -138,7 +141,7 @@ Drawable* ActionMenuPresenter::getOverflowIcon() {
 }
 
 ViewGroup* ActionMenuPresenter::getMenuView(ViewGroup* root) {
-    ViewGroup* oldMenuView = mContainer;mMenuView;
+    ViewGroup* oldMenuView = mContainer;//mMenuView;
     ViewGroup* result = BaseMenuPresenter::getMenuView(root);
     if (oldMenuView != result) {
         ((ActionMenuView*) result)->setPresenter(this);
@@ -198,7 +201,7 @@ void ActionMenuPresenter::computeMenuItemAnimationInfo(bool preLayout) {
     for (int i = 0; i < count; ++i) {
         View* child = menuView->getChildAt(i);
         const int id = child->getId();
-        if (id > 0 && child->getWidth() != 0 && child->getHeight() != 0) {
+        if ((id > 0) && (child->getWidth() != 0) && (child->getHeight() != 0)) {
             MenuItemLayoutInfo* info = new MenuItemLayoutInfo(child, preLayout);
             items.put(id, info);
         }
@@ -369,14 +372,14 @@ void ActionMenuPresenter::updateMenuView(bool cleared) {
             if (parent != nullptr) {
                 parent->removeView(mOverflowButton);
             }
-            ActionMenuView* menuView = (ActionMenuView*) mMenuView;
+            ActionMenuView* menuView = (ActionMenuView*) mContainer;
             menuView->addView(mOverflowButton, menuView->generateOverflowButtonLayoutParams());
         }
-    } else if ((mOverflowButton != nullptr) && mOverflowButton->getParent() == mContainer) {
-        ((ViewGroup*) mMenuView)->removeView(mOverflowButton);
+    } else if ((mOverflowButton != nullptr) && (mOverflowButton->getParent() == mContainer)) {
+        mContainer->removeView(mOverflowButton);
     }
 
-    ((ActionMenuView*) mMenuView)->setOverflowReserved(mReserveOverflow);
+    ((ActionMenuView*) mContainer)->setOverflowReserved(mReserveOverflow);
 }
 
 bool ActionMenuPresenter::filterLeftoverView(ViewGroup* parent, int childIndex) {
@@ -389,6 +392,7 @@ bool ActionMenuPresenter::onSubMenuSelected(SubMenuBuilder* subMenu) {
 
     SubMenuBuilder* topSubMenu = subMenu;
     while (topSubMenu->getParentMenu() != mMenu) {
+        LOGD("TODO");
         //topSubMenu = (SubMenuBuilder*)topSubMenu->getParentMenu();
     }
     View* anchor = findViewForItem(topSubMenu->getInvokerItem());
@@ -749,7 +753,7 @@ public:
 };
 
 ActionMenuPresenter::OverflowMenuButton::OverflowMenuButton(ActionMenuPresenter*p,Context* context)
-    :ImageButton(context,AttributeSet(context,"cdroid")){//, com.android.internal.R.attr.actionOverflowButtonStyle){
+    :ImageButton(context,context->obtainStyledAttributes("android:attr/actionOverflowButtonStyle")){
 
     mPresenter = p;
     setClickable(true);
@@ -806,7 +810,7 @@ bool ActionMenuPresenter::OverflowMenuButton::setFrame(int l, int t, int w, int 
 }
 
 ActionMenuPresenter::OverflowPopup::OverflowPopup(Context* context, MenuBuilder* menu, View* anchorView,ActionMenuPresenter*p,bool overflowOnly)
-    :MenuPopupHelper(context, menu, anchorView, overflowOnly,0/*"com.android.internal.R.attr.actionOverflowMenuStyle*/){
+    :MenuPopupHelper(context, menu, anchorView, overflowOnly,"android:attr/actionOverflowMenuStyle"){
     setGravity(Gravity::END);
     mPresenter = p;
     setPresenterCallback(mPresenter->mPopupPresenterCallback);
@@ -821,7 +825,7 @@ void ActionMenuPresenter::OverflowPopup::onDismiss() {
 }
 
 ActionMenuPresenter::ActionButtonSubmenu::ActionButtonSubmenu(Context* context, SubMenuBuilder* subMenu, View* anchorView,ActionMenuPresenter*p)
-    :MenuPopupHelper(context, subMenu, anchorView, false,0/*,com.android.internal.R.attr.actionOverflowMenuStyle*/){
+    :MenuPopupHelper(context, subMenu, anchorView, false,"android:attr/actionOverflowMenuStyle"){
     mPresenter= p;
     MenuItemImpl* item = (MenuItemImpl*) subMenu->getInvokerItem();//(MenuItemImpl*) subMenu->getItem();
     if (!item->isActionButton()) {

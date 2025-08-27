@@ -518,6 +518,17 @@
         <item name="textOn">@string/capital_on</item>
         <item name="textOff">@string/capital_off</item>
     </style>
+
+    <style name="Widget.Magnifier">
+        <item name="magnifierWidth">100dp</item>
+        <item name="magnifierHeight">48dp</item>
+        <item name="magnifierZoom">1.25</item>
+        <item name="magnifierElevation">4dp</item>
+        <item name="magnifierVerticalOffset">-42dp</item>
+        <item name="magnifierHorizontalOffset">0dp</item>
+        <item name="magnifierColorOverlay">#0EFFFFFF</item>
+    </style>
+
     <style name="Widget.FastScroll">
         <item name="thumbDrawable">?attr/fastScrollThumbDrawable</item>
         <item name="trackDrawable">?attr/fastScrollTrackDrawable</item>
@@ -711,15 +722,164 @@
         <item name="textColor">@color/suggestion_highlight_text</item>
     </style>
 
+    <!-- Preference Styles -->
+
+    <!-- Other Misc Styles -->
+
     <!-- Style you can use with a container (typically a horizontal
-         LinearLayout) to get the standard "button bar" background and
-         spacing. @hide -->
+         LinearLayout) to get the standard "button bar" background and spacing. @hide -->
     <style name="ButtonBar">
         <item name="paddingTop">5dip</item>
         <item name="paddingStart">4dip</item>
         <item name="paddingEnd">4dip</item>
         <item name="paddingBottom">1dip</item>
         <item name="background">@mipmap/bottom_bar</item>
+    </style>
+    <style name="SegmentedButton">
+        <item name="background">@drawable/btn_default</item>
+        <item name="divider">?attr/dividerVertical</item>
+        <item name="showDividers">middle</item>
+    </style>
+<!-- Style for the small popup windows that contain text selection anchors. -->
+    <style name="Widget.TextSelectHandle">
+        <item name="popupAnimationStyle">@style/Animation.TextSelectHandle</item>
+    </style>
+
+    <!-- Style for animating text selection handles. -->
+    <style name="Animation.TextSelectHandle">
+        <item name="windowEnterAnimation">@anim/fast_fade_in</item>
+        <item name="windowExitAnimation">@anim/fast_fade_out</item>
+    </style>
+
+    <style name="Widget.ActionBar">
+        <item name="background">@drawable/action_bar_background</item>
+        <item name="displayOptions">useLogo|showHome|showTitle</item>
+        <item name="divider">@drawable/action_bar_divider</item>
+        <item name="height">?attr/actionBarSize</item>
+        <item name="paddingStart">0dip</item>
+        <item name="paddingTop">0dip</item>
+        <item name="paddingEnd">0dip</item>
+        <item name="paddingBottom">0dip</item>
+        <item name="titleTextStyle">@style/TextAppearance.Widget.ActionBar.Title</item>
+        <item name="subtitleTextStyle">@style/TextAppearance.Widget.ActionBar.Subtitle</item>
+        <item name="progressBarStyle">@style/Widget.ProgressBar.Horizontal</item>
+        <item name="indeterminateProgressStyle">@style/Widget.ProgressBar.Small</item>
+        <item name="homeLayout">@layout/action_bar_home</item>
+    </style>
+
+    <style name="Widget.ActionMode">
+        <item name="background">?attr/actionModeBackground</item>
+        <item name="backgroundSplit">?attr/actionModeSplitBackground</item>
+        <item name="height">?attr/actionBarSize</item>
+        <item name="titleTextStyle">@style/TextAppearance.Widget.ActionMode.Title</item>
+        <item name="subtitleTextStyle">@style/TextAppearance.Widget.ActionMode.Subtitle</item>
+    </style>
+
+    <style name="Widget.Toolbar">
+        <item name="titleTextAppearance">@style/TextAppearance.Widget.Toolbar.Title</item>
+        <item name="subtitleTextAppearance">@style/TextAppearance.Widget.Toolbar.Subtitle</item>
+        <item name="minHeight">?attr/actionBarSize</item>
+        <item name="titleMargin">4dp</item>
+        <item name="maxButtonHeight">@dimen/action_bar_default_height_material</item>
+        <item name="buttonGravity">top</item>
+        <item name="navigationButtonStyle">@style/Widget.Toolbar.Button.Navigation</item>
+        <item name="collapseIcon">?attr/homeAsUpIndicator</item>
+        <item name="collapseContentDescription">@string/toolbar_collapse_description</item>
+        <item name="contentInsetStart">16dp</item>
+        <item name="contentInsetStartWithNavigation">@dimen/action_bar_content_inset_with_nav</item>
+        <item name="touchscreenBlocksFocus">true</item>
+        <item name="keyboardNavigationCluster">true</item>
+    </style>
+
+    <style name="Widget.Toolbar.Button.Navigation" parent="Widget">
+        <item name="background">?attr/selectableItemBackground</item>
+        <item name="minWidth">56dp</item>
+        <item name="scaleType">center</item>
+    </style>
+
+    <style name="TextAppearance.Widget.ActionBar.Title" parent="TextAppearance.Medium">
+    </style>
+
+    <style name="TextAppearance.Widget.ActionBar.Subtitle" parent="TextAppearance.Small">
+    </style>
+
+    <style name="TextAppearance.Widget.ActionMode.Title" parent="TextAppearance.Medium">
+    </style>
+
+    <style name="TextAppearance.Widget.ActionMode.Subtitle" parent="TextAppearance.Small">
+        <item name="textColor">?attr/textColorSecondary</item>
+    </style>
+
+    <style name="TextAppearance.Widget.Toolbar.Title"
+           parent="TextAppearance.Widget.ActionBar.Title">
+    </style>
+
+    <style name="TextAppearance.Widget.Toolbar.Subtitle"
+           parent="TextAppearance.Widget.ActionBar.Subtitle">
+    </style>
+
+    <style name="Widget.ActionButton">
+        <item name="background">?attr/actionBarItemBackground</item>
+        <item name="paddingStart">12dip</item>
+        <item name="paddingEnd">12dip</item>
+        <item name="minWidth">@dimen/action_button_min_width</item>
+        <item name="minHeight">?attr/actionBarSize</item>
+        <item name="gravity">center</item>
+        <item name="maxLines">2</item>
+    </style>
+
+    <style name="Widget.ActionButton.Overflow">
+        <item name="src">@mipmap/ic_menu_more</item>
+        <item name="contentDescription">@string/action_menu_overflow_description</item>
+        <item name="tooltipText">@string/action_menu_overflow_description</item>
+    </style>
+
+    <style name="Widget.ActionButton.CloseMode">
+        <!-- Should match Widget.Toolbar.Button.Navigation minWidth. -->
+        <item name="minWidth">56dp</item>
+    </style>
+
+    <style name="Widget.ActionBar.TabView" parent="Widget">
+        <item name="gravity">center_horizontal</item>
+        <item name="background">@drawable/minitab_lt</item>
+        <item name="paddingStart">4dip</item>
+        <item name="paddingEnd">4dip</item>
+    </style>
+
+    <style name="Widget.ActionBar.TabBar" parent="Widget">
+    </style>
+
+    <style name="Widget.ActionBar.TabText" parent="Widget">
+        <item name="textAppearance">@style/TextAppearance.Widget.TextView.PopupMenu</item>
+        <item name="textColor">?attr/textColorPrimaryInverse</item>
+        <item name="textSize">18sp</item>
+    </style>
+
+    <style name="Widget.ListPopupWindow">
+        <item name="dropDownSelector">@drawable/list_selector_background</item>
+        <item name="popupBackground">@drawable/spinner_dropdown_background</item>
+        <item name="dropDownVerticalOffset">-10dip</item>
+        <item name="dropDownHorizontalOffset">0dip</item>
+        <item name="dropDownWidth">wrap_content</item>
+    </style>
+
+    <style name="Widget.PopupMenu" parent="Widget.ListPopupWindow">
+    </style>
+
+    <style name="TextAppearance.Widget.PopupMenu">
+        <item name="textColor">@color/primary_text_light</item>
+        <item name="textColorHint">@color/hint_foreground_light</item>
+        <item name="textColorHighlight">@color/highlighted_text_light</item>
+        <item name="textColorLink">@color/link_text_light</item>
+    </style>
+
+    <style name="TextAppearance.Widget.PopupMenu.Large">
+        <item name="textSize">22sp</item>
+    </style>
+
+    <style name="TextAppearance.Widget.PopupMenu.Small">
+        <item name="textSize">14sp</item>
+        <item name="textColor">@color/secondary_text_light</item>
     </style>
     <style name="view_Configuration">
 	<item name="config_scrollbarSize">4dip</item>

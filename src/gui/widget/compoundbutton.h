@@ -58,8 +58,8 @@ public:
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
-    int getCompoundPaddingLeft()override;
-    int getCompoundPaddingRight()override;
+    int getCompoundPaddingLeft()const override;
+    int getCompoundPaddingRight()const override;
     //inerited from Checkable
 #ifndef FUNCTION_AS_CHECKABLE
     void setChecked(bool checked)override;

@@ -115,14 +115,38 @@ int AttributeSet::inherit(const AttributeSet&other){
     const bool isSamePackage = (mPackage.compare(other.mPackage)==0);
     for(auto it = other.mAttrs->begin(); it != other.mAttrs->end() ; it++){
         if(mAttrs->find(it->first)==mAttrs->end()){
-            if(isSamePackage)
+            if(isSamePackage){
                 mAttrs->insert({it->first.c_str(),it->second});
-            else
+            }else{
                 mAttrs->insert({it->first,normalize(other.mPackage,it->second)});
+            }
             inheritedCount++;
         }
     }
     return inheritedCount;
+}
+
+int AttributeSet::Override(const AttributeSet&other){
+    int overrideCount = 0;
+    const bool isSamePackage = (mPackage.compare(other.mPackage)==0);
+    for(auto it = other.mAttrs->begin(); it != other.mAttrs->end() ; it++){
+        auto thisIter = mAttrs->find(it->first);
+        if(thisIter==mAttrs->end()){
+            if(isSamePackage){
+                mAttrs->insert({it->first.c_str(),it->second});
+            }else{
+                mAttrs->insert({it->first,normalize(other.mPackage,it->second)});
+            }
+            overrideCount++;
+        }else{
+            if(isSamePackage){
+                thisIter->second=it->second;
+            }else{
+                thisIter->second=normalize(other.mPackage,it->second);
+            }
+        }
+    }
+    return overrideCount;
 }
 
 bool AttributeSet::add(const std::string&key,const std::string&value){

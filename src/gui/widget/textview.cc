@@ -58,7 +58,7 @@ TextView::Drawables::~Drawables(){
 }
 
 bool TextView::Drawables::hasMetadata()const{
-    return mDrawablePadding != 0 || mHasTintMode || (mTintList!=nullptr);
+    return (mDrawablePadding != 0) || mHasTintMode || (mTintList!=nullptr);
 }
 
 bool TextView::Drawables::resolveWithLayoutDirection(int layoutDirection){
@@ -115,12 +115,12 @@ bool TextView::Drawables::resolveWithLayoutDirection(int layoutDirection){
 
     applyErrorDrawableIfNeeded(layoutDirection);
 
-    return mShowing[Drawables::LEFT] != previousLeft
-            || mShowing[Drawables::RIGHT] != previousRight;
+    return (mShowing[Drawables::LEFT] != previousLeft)
+            || (mShowing[Drawables::RIGHT] != previousRight);
 }
 
 void TextView::Drawables::setErrorDrawable(Drawable* dr, TextView* tv) {
-    if (mDrawableError != dr && mDrawableError != nullptr) {
+    if ((mDrawableError != dr) && (mDrawableError != nullptr)) {
         mDrawableError->setCallback(nullptr);
     }
     mDrawableError = dr;
@@ -320,26 +320,27 @@ public:
     int mTextSize = 0;
     std::string mFontFamily;
     Typeface* mFontTypeface;
-    bool mFontFamilyExplicit = false;
     int mTypefaceIndex = -1;
-    int mTextStyle  = 0;
+    int mTextStyle=0;
     int mStyleIndex = -1;
     int mFontWeight = -1;
-    bool mAllCaps = false;
     int mShadowColor = 0;
+    float mLetterSpacing = 0;
     float mShadowDx = 0, mShadowDy = 0, mShadowRadius = 0;
+    bool mFontFamilyExplicit = false;
+    bool mAllCaps = false;
     bool mHasElegant = false;
     bool mElegant = false;
     bool mHasFallbackLineSpacing = false;
     bool mFallbackLineSpacing = false;
     bool mHasLetterSpacing = false;
-    float mLetterSpacing = 0;
 public:
     TextAppearanceAttributes();
     void readTextAppearance(Context*ctx,const AttributeSet&atts);
 };
 
 TextAppearanceAttributes::TextAppearanceAttributes(){
+    mTextColor = 0xFF000000;
     mTextColors    = nullptr;
     mTextColorHints= nullptr;
     mTextColorLinks= nullptr;
@@ -636,7 +637,7 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
 
     if (attr->mTextSize != 0) setRawTextSize(attr->mTextSize, true /* shouldRequestLayout */);
 
-    if (attr->mTypefaceIndex != -1 && !attr->mFontFamilyExplicit) {
+    if ((attr->mTypefaceIndex != -1) && !attr->mFontFamilyExplicit) {
         attr->mFontFamily.clear();
     }
     setTypefaceFromAttrs(attr->mFontTypeface, attr->mFontFamily,
@@ -813,7 +814,7 @@ float TextView::getTextScaleX()const{
 }
 
 void TextView::setTextScaleX(float size){
-    if((size!=mTextScaleX)&&(size>FLT_EPSILON)){
+    if( (size!=mTextScaleX) && (size>FLT_EPSILON) ){
         mTextScaleX = size;
         mUserSetTextScaleX = true;
         if(mLayout){
@@ -836,7 +837,7 @@ int TextView::getHorizontalOffsetForDrawables()const{
 }
 
 void TextView::setText(const std::string&txt){
-    if(mLayout->setText(txt)){// && (getVisibility()==View::VISIBLE)){
+    if(mLayout->setText(txt) && (getVisibility()==View::VISIBLE) ){
         std::wstring&ws=getEditable();
         if(mCaretPos<ws.length())
             mCaretPos = int(ws.length()-1);
@@ -894,15 +895,15 @@ bool TextView::moveCaret2Line(int line){
 }
 
 void TextView::setWidth(int pixels) {
-    mMaxWidth = mMinWidth = pixels;
-    mMaxWidthMode = mMinWidthMode = PIXELS;
+    mMaxWidth = (mMinWidth = pixels);
+    mMaxWidthMode = (mMinWidthMode = PIXELS);
 
     requestLayout();
     invalidate();
 }
 
 void TextView::setLineSpacing(float add, float mult) {
-    if (mSpacingAdd != add || mSpacingMult != mult) {
+    if ((mSpacingAdd != add) || (mSpacingMult != mult)) {
         mSpacingAdd = add;
         mSpacingMult = mult;
         if ( mLayout ) {
@@ -1385,7 +1386,7 @@ void TextView::setSelected(bool selected){
 
     View::setSelected(selected);
 
-    if (selected != wasSelected && mEllipsize == Layout::ELLIPSIS_MARQUEE) {
+    if ((selected != wasSelected) && (mEllipsize == Layout::ELLIPSIS_MARQUEE)) {
         if (selected) {
             startMarquee();
         } else {
@@ -1454,7 +1455,7 @@ void TextView::setMaxWidth(int maxPixels){
 }
 
 int TextView::getMaxWidth()const{
-    return mMaxWidthMode == PIXELS ? mMaxWidth : -1;
+    return (mMaxWidthMode == PIXELS) ? mMaxWidth : -1;
 }
 
 int TextView::getLineCount()const{
@@ -1626,11 +1627,11 @@ void TextView::setMaxLines(int maxLines){
 }
 
 int TextView::getMaxLines()const{
-    return mMaxMode == LINES ? mMaximum : -1;
+    return (mMaxMode == LINES) ? mMaximum : -1;
 }
 
 int TextView::getMaxHeight()const{
-    return mMaxMode == PIXELS ? mMaximum : -1;
+    return (mMaxMode == PIXELS) ? mMaximum : -1;
 }
 
 void TextView::setMaxHeight(int maxPixels){
@@ -1650,7 +1651,7 @@ void TextView::setMinLines(int minLines) {
 }
 
 int TextView::getMinLines() const{
-    return mMinMode == LINES ? mMinimum : -1;
+    return (mMinMode == LINES) ? mMinimum : -1;
 }
 
 void TextView::setLines(int lines){
@@ -1688,8 +1689,8 @@ bool TextView::compressText(float width) {
 }
 
 int TextView::desired(Layout*layout){
-    int N=layout->getLineCount();
-    int max=0;
+    int max = 0;
+    const int N = layout->getLineCount();
     const std::wstring& text=layout->getText();
     for (int i = 0; i < N - 1; i++) {
         if (text[layout->getLineEnd(i) - 1]!= '\n') {
@@ -1794,7 +1795,7 @@ void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right
         dr->mDrawableSizeStart= dr->mDrawableHeightStart = 0;
         dr->mDrawableSizeEnd  = dr->mDrawableHeightEnd = 0;
     }
-    const bool drawables = left != nullptr || top != nullptr || right != nullptr || bottom != nullptr;
+    const bool drawables = (left != nullptr) || (top != nullptr) || (right != nullptr) || (bottom != nullptr);
     if (!drawables) {
         // Clearing drawables...  can we free the data structure?
         if (dr != nullptr) {
@@ -1819,31 +1820,31 @@ void TextView::setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right
 
         mDrawables->mOverride = false;
 
-        if (dr->mShowing[Drawables::LEFT] != left && dr->mShowing[Drawables::LEFT] != nullptr) {
+        if ((dr->mShowing[Drawables::LEFT] != left) && (dr->mShowing[Drawables::LEFT] != nullptr)) {
             dr->mShowing[Drawables::LEFT]->setCallback(nullptr);
             delete dr->mShowing[Drawables::LEFT];
         }
         dr->mShowing[Drawables::LEFT] = left;
 
-        if (dr->mShowing[Drawables::TOP] != top && dr->mShowing[Drawables::TOP] != nullptr) {
+        if ((dr->mShowing[Drawables::TOP] != top) && (dr->mShowing[Drawables::TOP] != nullptr)) {
             dr->mShowing[Drawables::TOP]->setCallback(nullptr);
             delete dr->mShowing[Drawables::TOP];
         }
         dr->mShowing[Drawables::TOP] = top;
 
-        if (dr->mShowing[Drawables::RIGHT] != right && dr->mShowing[Drawables::RIGHT] != nullptr) {
+        if ((dr->mShowing[Drawables::RIGHT] != right) && (dr->mShowing[Drawables::RIGHT] != nullptr)) {
             dr->mShowing[Drawables::RIGHT]->setCallback(nullptr);
             delete dr->mShowing[Drawables::RIGHT];
         }
         dr->mShowing[Drawables::RIGHT] = right;
 
-	if (dr->mShowing[Drawables::BOTTOM] != bottom && dr->mShowing[Drawables::BOTTOM] != nullptr) {
+        if ((dr->mShowing[Drawables::BOTTOM] != bottom) && (dr->mShowing[Drawables::BOTTOM] != nullptr)) {
             dr->mShowing[Drawables::BOTTOM]->setCallback(nullptr);
             delete dr->mShowing[Drawables::BOTTOM];
         }
         dr->mShowing[Drawables::BOTTOM] = bottom;
 
-	Rect compoundRect = dr->mCompoundRect;
+        Rect compoundRect = dr->mCompoundRect;
         std::vector<int>state = getDrawableState();
         if (left != nullptr) {
             left->setState(state);
@@ -1990,13 +1991,13 @@ void TextView::resetResolvedDrawables(){
 
 void TextView::setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
        int typefaceIndex,int style,int weight){
-    if (typeface == nullptr && familyName.empty()==false) {
+    if ((typeface == nullptr) && (familyName.empty()==false)) {
          // Lookup normal Typeface from system font map.
          Typeface* normalTypeface = Typeface::create(familyName, Typeface::NORMAL);
          resolveStyleAndSetTypeface(normalTypeface, style, weight);
      } else if (typeface != nullptr) {
          resolveStyleAndSetTypeface(typeface, style, weight);
-     } else {  // both typeface and familyName is null.
+     } else {// both typeface and familyName is null.
          switch (typefaceIndex) {
          case SANS:  resolveStyleAndSetTypeface(Typeface::SANS_SERIF, style, weight); break;
          case SERIF: resolveStyleAndSetTypeface(Typeface::SERIF, style, weight); break;
@@ -2052,7 +2053,7 @@ void TextView::setTypeface(Typeface* tf){
             tf = Typeface::create(tf, newWeight, italic);
         }
     }
-    if (tf&&mLayout&&(tf!=mLayout->getTypeface())){
+    if ( tf && mLayout && (tf!=mLayout->getTypeface()) ){
         if (mLayout != nullptr) {
             //nullLayouts();
             mLayout->setTypeface(tf);
@@ -2062,7 +2063,7 @@ void TextView::setTypeface(Typeface* tf){
     }
 }
 
-Typeface*TextView::getTypeface(){
+Typeface*TextView::getTypeface()const{
     return mOriginalTypeface;
 }
 
@@ -2120,8 +2121,8 @@ void TextView::drawableStateChanged(){
     if (mDrawables) {
         const std::vector<int>& state = getDrawableState();
         for (int i=0;i<4;i++){
-            Drawable* dr=mDrawables->mShowing[i];
-            if (dr != nullptr && dr->isStateful() && dr->setState(state)) {
+            Drawable* dr = mDrawables->mShowing[i];
+            if ((dr != nullptr) && dr->isStateful() && dr->setState(state)) {
                 invalidateDrawable(*dr);
             }
         }
@@ -2130,14 +2131,14 @@ void TextView::drawableStateChanged(){
 
 void TextView::drawableHotspotChanged(float x,float y){
     View::drawableHotspotChanged(x,y);
-    for(int i=0;mDrawables&&(i<4);i++){
-        Drawable* dr=mDrawables->mShowing[i];
+    for(int i = 0;mDrawables&&(i<4);i++){
+        Drawable* dr = mDrawables->mShowing[i];
         if(dr)dr->setHotspot(x,y);
     }
 }
 
-bool TextView::isPaddingOffsetRequired() {
-    return mShadowRadius != 0 || mDrawables != nullptr;
+bool TextView::isPaddingOffsetRequired() const{
+    return (mShadowRadius != 0) || mDrawables != nullptr;
 }
 
 int TextView::getLeftPaddingOffset() {
@@ -2406,7 +2407,7 @@ void TextView::applyCompoundDrawableTint(){
     const std::vector<int>state = getDrawableState();
 
     for (int i=0;i<4;i++){
-        Drawable* dr=mDrawables->mShowing[i];
+        Drawable* dr = mDrawables->mShowing[i];
         if (dr == nullptr)continue;
 
         if (dr == mDrawables->mDrawableError) {
@@ -2443,7 +2444,7 @@ int TextView::getCompoundDrawablePadding()const{
     return mDrawables?mDrawables->mDrawablePadding:0;
 }
 
-int TextView::getCompoundPaddingLeft(){
+int TextView::getCompoundPaddingLeft()const{
     Drawables* dr = mDrawables;
     if ((dr == nullptr) || (dr->mShowing[Drawables::LEFT] == nullptr)) {
         return mPaddingLeft;
@@ -2452,7 +2453,7 @@ int TextView::getCompoundPaddingLeft(){
     }
 }
 
-int TextView::getCompoundPaddingRight(){
+int TextView::getCompoundPaddingRight()const{
     Drawables* dr = mDrawables;
     if ((dr == nullptr) || (dr->mShowing[Drawables::RIGHT] == nullptr)) {
         return mPaddingRight;
@@ -2461,16 +2462,16 @@ int TextView::getCompoundPaddingRight(){
     }
 }
 
-int TextView::getCompoundPaddingTop(){
+int TextView::getCompoundPaddingTop()const{
     Drawables* dr = mDrawables;
-    if (dr == nullptr || dr->mShowing[Drawables::TOP] == nullptr) {
+    if ((dr == nullptr) || (dr->mShowing[Drawables::TOP] == nullptr)) {
         return mPaddingTop;
     } else {
         return mPaddingTop + dr->mDrawablePadding + dr->mDrawableSizeTop;
     }
 }
 
-int TextView::getCompoundPaddingBottom(){
+int TextView::getCompoundPaddingBottom()const{
     Drawables* dr = mDrawables;
     if ((dr == nullptr) || (dr->mShowing[Drawables::BOTTOM] == nullptr)) {
         return mPaddingBottom;
@@ -2497,7 +2498,7 @@ int TextView::getCompoundPaddingEnd(){
     }
 }
 
-int TextView::getExtendedPaddingTop(){
+int TextView::getExtendedPaddingTop()const{
     if (mMaxMode != LINES) {
         return getCompoundPaddingTop();
     }
@@ -2526,7 +2527,7 @@ int TextView::getExtendedPaddingTop(){
     }
 }
 
-int TextView::getExtendedPaddingBottom(){
+int TextView::getExtendedPaddingBottom()const{
     if(mMaxMode !=LINES){
         return getCompoundPaddingBottom();
     }
@@ -2565,7 +2566,7 @@ void TextView::setCompoundDrawableTintList(const ColorStateList* tint){
     }
 }
 
-const ColorStateList* TextView::getCompoundDrawableTintList(){
+const ColorStateList* TextView::getCompoundDrawableTintList()const{
     return mDrawables ? mDrawables->mTintList : nullptr;
 }
 
@@ -2579,7 +2580,7 @@ void TextView::setCompoundDrawableTintMode(int tintMode){
     applyCompoundDrawableTint();
 }
 
-int TextView::getCompoundDrawableTintMode(){
+int TextView::getCompoundDrawableTintMode()const{
     return mDrawables ? mDrawables->mTintMode : -1;
 }
 
@@ -2755,14 +2756,14 @@ float TextView::getHorizontalFadingEdgeStrength(float position1, float position2
 }
 
 bool TextView::isMarqueeFadeEnabled()const{
-    return mEllipsize == Layout::ELLIPSIS_MARQUEE && mMarqueeFadeMode != MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS;
+    return (mEllipsize == Layout::ELLIPSIS_MARQUEE) && (mMarqueeFadeMode != MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS);
 }
 
-bool TextView::canMarquee(){
-    int width = mRight-mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight();
-    return width > 0 && (mLayout->getLineWidth(0) > width);
-        /*|| (mMarqueeFadeMode != MARQUEE_FADE_NORMAL && mSavedMarqueeModeLayout != nullptr
-                    && mSavedMarqueeModeLayout->getLineWidth(0) > width));*/
+bool TextView::canMarquee()const{
+    const int width = mRight-mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight();
+    return (width > 0) && ((mLayout->getLineWidth(0) > width) 
+            || (mMarqueeFadeMode != MARQUEE_FADE_NORMAL && mSavedMarqueeModeLayout != nullptr
+                    && mSavedMarqueeModeLayout->getLineWidth(0) > width));
 }
 
 void TextView::startMarquee(){
@@ -2770,8 +2771,8 @@ void TextView::startMarquee(){
     if (compressText(getWidth() - getCompoundPaddingLeft() - getCompoundPaddingRight())) {
         return;
     }
-    if ((mMarquee == nullptr || mMarquee->isStopped()) && (isFocused() || isSelected())
-                && getLineCount() == 1 && canMarquee()) {
+    if (((mMarquee == nullptr) || mMarquee->isStopped()) && (isFocused() || isSelected())
+                && (getLineCount() == 1) && canMarquee()) {
         if (mMarqueeFadeMode == MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS) {
             mMarqueeFadeMode = MARQUEE_FADE_SWITCH_SHOW_FADE;
             Layout* tmp = mLayout;
@@ -2942,8 +2943,8 @@ void TextView::onDraw(Canvas& canvas) {
     const int absoluteGravity = Gravity::getAbsoluteGravity(mGravity, layoutDirection);
 
     if (isMarqueeFadeEnabled()) {
-        if (!mSingleLine && getLineCount() == 1 && canMarquee()
-            && (absoluteGravity & Gravity::HORIZONTAL_GRAVITY_MASK) != Gravity::LEFT) {
+        if (!mSingleLine && (getLineCount() == 1) && canMarquee()
+            && ((absoluteGravity & Gravity::HORIZONTAL_GRAVITY_MASK) != Gravity::LEFT)) {
             const int width = mRight-mLeft;
             const int padding = getCompoundPaddingLeft() + getCompoundPaddingRight();
             const float dx = layout->getLineRight(0) - (width - padding);

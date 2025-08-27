@@ -527,7 +527,7 @@ Drawable* Assets::getDrawable(const std::string&resid) {
     return d;
 }
 
-int Assets::getDimension(const std::string&refid){
+int Assets::getDimension(const std::string&refid)const{
     std::string pkg,name = refid;
     parseResource(name,nullptr,&pkg);
     name = AttributeSet::normalize(pkg,name);
@@ -537,11 +537,31 @@ int Assets::getDimension(const std::string&refid){
     throw std::runtime_error("Resource not found:" + refid);
 }
 
-bool Assets::getBoolean(const std::string&refid){
+int Assets::getDimensionPixelSize(const std::string&refid,int def)const{
+    std::string pkg,name = refid;
+    parseResource(name,nullptr,&pkg);
+    name = AttributeSet::normalize(pkg,name);
+    auto it = mDimensions.find(name);
+    char*p = nullptr;
+    std::string value;
+    if(it != mDimensions.end())value =it->second;
+    def = std::strtol(value.c_str(),&p,10);
+    if(*p){
+        const DisplayMetrics& dm=getDisplayMetrics();
+        if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)
+            def = (dm.density * def /*+0.5f*/);
+        if(strncmp(p,"sp",2)==0)
+            def = int(dm.scaledDensity * def /*+0.5f*/);
+    }
+    return def;
+
+}
+
+bool Assets::getBoolean(const std::string&refid)const{
     return getDimension(refid);
 }
 
-float Assets::getFloat(const std::string&refid){
+float Assets::getFloat(const std::string&refid)const{
     const int32_t iv=getDimension(refid);
     return *((float*)&iv);
 }
@@ -629,19 +649,23 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
     AttributeSet atts;
     std::string pkg,name = resname;
     size_t pos = name.find("attr/");
-    while(pos!=std::string::npos) {
-        std::string key;
-        name = name.replace(pos,4,"style");
+    if(pos!=std::string::npos){
+        do {
+            std::string key;
+            if((pos=name.find('?'))!=std::string::npos)
+                name.erase(pos,1);
+            if((pos =name.find('/'))!=std::string::npos)
+                name=name.substr(pos+1);
+            key = name;
+            name= mTheme.getString(key);
+            atts.add(key,name);
+            if((pos=name.find('@'))!=std::string::npos)
+                name.erase(pos,1);
+            pos = name.find("attr");
+        }while(pos!=std::string::npos);
+    }else{
         if((pos=name.find('?'))!=std::string::npos)
             name.erase(pos,1);
-        if((pos =name.find('/'))!=std::string::npos)
-            name=name.substr(pos+1);
-        key = name;
-        name= mTheme.getString(key);
-        atts.add(key,name);
-        if((pos=name.find('@'))!=std::string::npos)
-            name.erase(pos,1);
-        pos = name.find("attr");
     }
     name = parseResource(name,nullptr,&pkg);
     auto it = mStyles.find(name);
@@ -651,7 +675,10 @@ AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
     atts.setContext(this,pkg);
     std::string parent = atts.getString("parent");
     if(parent.length()) {
-        parent = parseResource(parent,nullptr,&pkg);
+        if(parent.find('/')==std::string::npos)
+            parent = std::string("style/")+parent;
+        if(parent.find(':')==std::string::npos)
+            parent = pkg+":"+parent;
         AttributeSet parentAtts = obtainStyledAttributes(parent);
         atts.inherit(parentAtts);
     }

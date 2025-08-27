@@ -33,8 +33,8 @@ private:
 private:
     Context* mContext;
     int mMenuMaxWidth;
-    int mPopupStyleAttr;
-    int mPopupStyleRes;
+    std::string mPopupStyleAttr;
+    std::string mPopupStyleRes;
     bool mOverflowOnly;
     Handler* mSubMenuHoverHandler;
     std::vector<MenuBuilder*> mPendingMenus;
@@ -75,19 +75,16 @@ private:
     View* findParentViewForSubmenu(CascadingMenuInfo* parentInfo, MenuBuilder* submenu);
     int findIndexOfAddedMenu(MenuBuilder* menu);
 public:
-    CascadingMenuPopup(Context* context,View* anchor, int popupStyleAttr, int popupStyleRes, bool overflowOnly);
+    CascadingMenuPopup(Context* context,View* anchor, const std::string& popupStyleAttr, const std::string& popupStyleRes, bool overflowOnly);
     ~CascadingMenuPopup()override;
     void setForceShowIcon(bool forceShow)override;
 
     void show() override;
-
     void dismiss() override;
-    bool onKey(View& v, int keyCode, KeyEvent& event);
-
+    bool isShowing() override;
     void addMenu(MenuBuilder* menu)override;
 
-    bool isShowing() override;
-
+    bool onKey(View& v, int keyCode, KeyEvent& event);
     void onDismiss();
     void updateMenuView(bool cleared)override;
 
@@ -101,7 +98,6 @@ public:
     void onRestoreInstanceState(Parcelable& state)override;
 
     void setGravity(int dropDownGravity)override;
-
     void setAnchorView(View* anchor)override;
 
     void setOnDismissListener(const PopupWindow::OnDismissListener& listener)override;

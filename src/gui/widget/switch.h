@@ -149,8 +149,8 @@ public:
     std::string getButtonStateDescription();//override;
     void draw(Canvas&)override;
 
-    int getCompoundPaddingLeft()override;
-    int getCompoundPaddingRight()override;
+    int getCompoundPaddingLeft()const override;
+    int getCompoundPaddingRight()const override;
     void drawableHotspotChanged(float x, float y)override;
     void jumpDrawablesToCurrentState()override;
 };

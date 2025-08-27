@@ -239,7 +239,7 @@ void CompoundButton::setOnCheckedChangeWidgetListener(OnCheckedChangeListener li
     mOnCheckedChangeWidgetListener = listener;
 }
 
-int CompoundButton::getCompoundPaddingLeft() {
+int CompoundButton::getCompoundPaddingLeft() const{
     int padding = Button::getCompoundPaddingLeft();
     if ((false==isLayoutRtl()) && mButtonDrawable) {
         padding += mButtonDrawable->getIntrinsicWidth();
@@ -247,7 +247,7 @@ int CompoundButton::getCompoundPaddingLeft() {
     return padding;
 }
 
-int CompoundButton::getCompoundPaddingRight() {
+int CompoundButton::getCompoundPaddingRight() const{
     int padding = Button::getCompoundPaddingRight();
     if (isLayoutRtl() && mButtonDrawable) {
         padding += mButtonDrawable->getIntrinsicWidth();

@@ -2843,7 +2843,7 @@ bool View::isDrawingCacheEnabled()const{
 }
 
 
-bool View::isPaddingOffsetRequired() {
+bool View::isPaddingOffsetRequired() const{
     return false;
 }
 
@@ -4503,7 +4503,7 @@ const Rect View::getClientRect()const{
 }
 
 void View::getHitRect(Rect& outRect){
-    if(hasIdentityMatrix()||mAttachInfo==nullptr){
+    if(hasIdentityMatrix()||(mAttachInfo==nullptr)){
         outRect.set(mLeft,mTop,getWidth(),getHeight());
     }else{
         RectF tmpRect;

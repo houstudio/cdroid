@@ -31,7 +31,7 @@ PopupMenu::~PopupMenu(){
 }
 
 PopupMenu::PopupMenu(Context* context, View* anchor, int gravity)
-    :PopupMenu(context, anchor, gravity, 0/*R.attr.popupMenuStyle*/, 0){
+    :PopupMenu(context, anchor, gravity,"android:attr/popupMenuStyle", ""){
 }
 
 /**
@@ -51,7 +51,7 @@ PopupMenu::PopupMenu(Context* context, View* anchor, int gravity)
  *        popupStyleAttr is 0 or can not be found in the theme. Can be 0
  *        to not look for defaults.
  */
-PopupMenu::PopupMenu(Context* context, View* anchor, int gravity, int popupStyleAttr,int popupStyleRes) {
+PopupMenu::PopupMenu(Context* context, View* anchor, int gravity, const std::string& popupStyleAttr,const std::string& popupStyleRes) {
     mContext = context;
     mAnchor = anchor;
     mMenuForwardingListener = nullptr;

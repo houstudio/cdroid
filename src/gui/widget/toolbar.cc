@@ -67,9 +67,6 @@ Toolbar::Toolbar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
     mCollapseIcon = atts.getDrawable("collapseIcon");
     mCollapseDescription = atts.getString("collapseContentDescription");
 
-    Drawable*overflowIcon=atts.getDrawable("overflowIcon");
-    setOverflowIcon(overflowIcon);
-
     std::string title = atts.getString("title");
     if (!title.empty()){
         setTitle(title);
@@ -990,13 +987,13 @@ void Toolbar::onLayout(bool changed, int l, int t, int w, int h){
     }
 
     if (layoutTitle || layoutSubtitle) {
-        int titleTop=0,space=0,spaceAbove=0;
+        int titleTop = 0,space = 0,spaceAbove = 0;
         View* topChild = layoutTitle ? mTitleTextView : mSubtitleTextView;
         View* bottomChild = layoutSubtitle ? mSubtitleTextView : mTitleTextView;
         LayoutParams* toplp = (LayoutParams*) topChild->getLayoutParams();
         LayoutParams* bottomlp = (LayoutParams*) bottomChild->getLayoutParams();
-        const bool titleHasWidth = layoutTitle && mTitleTextView->getMeasuredWidth() > 0
-                    || layoutSubtitle && mSubtitleTextView->getMeasuredWidth() > 0;
+        const bool titleHasWidth = layoutTitle && (mTitleTextView->getMeasuredWidth() > 0)
+                    || layoutSubtitle && (mSubtitleTextView->getMeasuredWidth() > 0);
         
         switch (mGravity & Gravity::VERTICAL_GRAVITY_MASK) {
         case Gravity::TOP:
@@ -1020,7 +1017,7 @@ void Toolbar::onLayout(bool changed, int l, int t, int w, int h){
             titleTop = height - paddingBottom - bottomlp->bottomMargin - mTitleMarginBottom -titleHeight;
             break;
         }
-        if (isRtl) {
+        if (isRtl) {/*RTL*/
             int rd = (titleHasWidth ? mTitleMarginStart : 0) - collapsingMargins[1];
             right -= std::max(0, rd);
             collapsingMargins[1] = std::max(0, -rd);
@@ -1028,25 +1025,25 @@ void Toolbar::onLayout(bool changed, int l, int t, int w, int h){
             int subtitleRight = right;
             if (layoutTitle) {
                 LayoutParams* lp = (LayoutParams*) mTitleTextView->getLayoutParams();
-                int titleLeft = titleRight - mTitleTextView->getMeasuredWidth();
-                int titleBottom = titleTop + mTitleTextView->getMeasuredHeight();
-                mTitleTextView->layout(titleLeft, titleTop, titleRight, titleBottom);
-                titleRight = titleLeft - mTitleMarginEnd;
-                titleTop = titleBottom + lp->bottomMargin;
+                const int titleWidth =  mTitleTextView->getMeasuredWidth();
+                const int titleHeight= mTitleTextView->getMeasuredHeight();
+                mTitleTextView->layout(titleRight -titleWidth, titleTop, titleWidth,titleHeight);
+                titleRight = titleRight-titleWidth - mTitleMarginEnd;
+                titleTop = titleTop + titleHeight + lp->bottomMargin;
             }
             if (layoutSubtitle) {
                 LayoutParams* lp = (LayoutParams*) mSubtitleTextView->getLayoutParams();
                 titleTop += lp->topMargin;
-                int subtitleLeft = subtitleRight - mSubtitleTextView->getMeasuredWidth();
-                int subtitleBottom = titleTop + mSubtitleTextView->getMeasuredHeight();
-                mSubtitleTextView->layout(subtitleLeft, titleTop, subtitleRight, subtitleBottom);
+                const int subtitleWidth = mSubtitleTextView->getMeasuredWidth();
+                const int subtitleHeight= mSubtitleTextView->getMeasuredHeight();
+                mSubtitleTextView->layout(subtitleRight - subtitleWidth, titleTop, subtitleWidth, subtitleHeight);
                 subtitleRight = subtitleRight - mTitleMarginEnd;
-                titleTop = subtitleBottom + lp->bottomMargin;
+                titleTop = titleTop + subtitleHeight + lp->bottomMargin;
             }
             if (titleHasWidth) {
                 right = std::min(titleRight, subtitleRight);
             }
-        } else {
+        } else {/*LTR*/
             int ld = (titleHasWidth ? mTitleMarginStart : 0) - collapsingMargins[0];
             left += std::max(0, ld);
             collapsingMargins[0] = std::max(0, -ld);
@@ -1055,20 +1052,20 @@ void Toolbar::onLayout(bool changed, int l, int t, int w, int h){
 
             if (layoutTitle) {
                 LayoutParams* lp = (LayoutParams*) mTitleTextView->getLayoutParams();
-                int titleRight = titleLeft + mTitleTextView->getMeasuredWidth();
-                int titleBottom = titleTop + mTitleTextView->getMeasuredHeight();
-                mTitleTextView->layout(titleLeft, titleTop, titleRight, titleBottom);
-                titleLeft = titleRight + mTitleMarginEnd;
-                titleTop = titleBottom + lp->bottomMargin;
+                const int titleWidth = mTitleTextView->getMeasuredWidth();
+                const int titleHeight= mTitleTextView->getMeasuredHeight();
+                mTitleTextView->layout(titleLeft, titleTop, titleWidth,titleHeight);
+                titleLeft = titleLeft + titleWidth + mTitleMarginEnd;
+                titleTop = titleTop + titleHeight + lp->bottomMargin;
             }
             if (layoutSubtitle) {
                 LayoutParams* lp = (LayoutParams*) mSubtitleTextView->getLayoutParams();
                 titleTop += lp->topMargin;
-                int subtitleRight = subtitleLeft + mSubtitleTextView->getMeasuredWidth();
-                int subtitleBottom = titleTop + mSubtitleTextView->getMeasuredHeight();
-                mSubtitleTextView->layout(subtitleLeft, titleTop, subtitleRight, subtitleBottom);
-                subtitleLeft = subtitleRight + mTitleMarginEnd;
-                titleTop = subtitleBottom + lp->bottomMargin;
+                const int subtitleWidth = mSubtitleTextView->getMeasuredWidth();
+                const int subtitleHeight= mSubtitleTextView->getMeasuredHeight();
+                mSubtitleTextView->layout(subtitleLeft, titleTop, subtitleWidth, subtitleHeight);
+                subtitleLeft = subtitleLeft + subtitleWidth + mTitleMarginEnd;
+                titleTop = titleTop + subtitleHeight + lp->bottomMargin;
             }
             if (titleHasWidth) {
                 left = std::max(titleLeft, subtitleLeft);
@@ -1158,9 +1155,9 @@ int Toolbar::layoutChildRight(View* child, int right, int*collapsingMargins,int 
 int Toolbar::getChildTop(View* child, int alignmentHeight){
     const LayoutParams* lp = (const LayoutParams*) child->getLayoutParams();
     int childHeight = child->getMeasuredHeight();
-    int alignmentOffset = alignmentHeight > 0 ? (childHeight - alignmentHeight) / 2 : 0;
+    int alignmentOffset = (alignmentHeight > 0) ? (childHeight - alignmentHeight) / 2 : 0;
     switch (getChildVerticalGravity(lp->gravity)) {
-    case Gravity::TOP:   return getPaddingTop() - alignmentOffset;
+    case Gravity::TOP: return getPaddingTop() - alignmentOffset;
 
     case Gravity::BOTTOM:
         return getHeight() - getPaddingBottom() - childHeight - lp->bottomMargin - alignmentOffset;

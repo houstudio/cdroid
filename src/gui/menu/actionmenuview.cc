@@ -108,8 +108,7 @@ void ActionMenuView::onMeasureExactFormat(int widthMeasureSpec, int heightMeasur
     const int cellCount = widthSize / mMinCellSize;
     const int cellSizeRemaining = widthSize % mMinCellSize;
 
-    if (cellCount == 0) {
-        // Give up, nothing fits.
+    if (cellCount == 0) {// Give up, nothing fits.
         setMeasuredDimension(widthSize, 0);
         return;
     }
@@ -339,8 +338,8 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
         return;
     }
     const int childCount = getChildCount();
-    const int midVertical = layoutHeight / 2;
-    const int dividerWidth = getDividerWidth();
+    const int midVertical = top + layoutHeight / 2;
+    const int dividerWidth= getDividerWidth();
     int overflowWidth = 0;
     int nonOverflowWidth = 0;
     int nonOverflowCount = 0;
@@ -360,7 +359,7 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
                 overflowWidth += dividerWidth;
             }
 
-            int height = v->getMeasuredHeight();
+            const int height = v->getMeasuredHeight();
             int r,l;
             if (bLayoutRtl) {
                 l = getPaddingLeft() + p->leftMargin;
@@ -369,10 +368,8 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
                 r = getWidth() - getPaddingRight() - p->rightMargin;
                 l = r - overflowWidth;
             }
-            int t = midVertical - (height / 2);
-            int b = t + height;
+            const int t = midVertical - (height / 2);
             v->layout(l, t, overflowWidth, height);
-
             widthRemaining -= overflowWidth;
             hasOverflow = true;
         } else {
@@ -386,12 +383,11 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
         }
     }
 
-    if ((childCount == 1) && !hasOverflow) {
-        // Center a single child
+    if ((childCount == 1) && !hasOverflow) {// Center a single child
         View* v = getChildAt(0);
         const int width = v->getMeasuredWidth();
-        const int height = v->getMeasuredHeight();
-        const int midHorizontal = layoutWidth / 2;
+        const int height= v->getMeasuredHeight();
+        const int midHorizontal = left + layoutWidth / 2;
         const int l = midHorizontal - width / 2;
         const int t = midVertical - height / 2;
         v->layout(l, t, width, height);
@@ -411,9 +407,9 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
             }
 
             startRight -= lp->rightMargin;
-            int width = v->getMeasuredWidth();
-            int height = v->getMeasuredHeight();
-            int t = midVertical - height / 2;
+            const int width = v->getMeasuredWidth();
+            const int height = v->getMeasuredHeight();
+            const int t = midVertical - height / 2;
             v->layout(startRight - width, t, width, height);
             startRight -= width + lp->leftMargin + spacerSize;
         }
@@ -427,9 +423,9 @@ void ActionMenuView::onLayout(bool changed, int left, int top, int layoutWidth, 
             }
 
             startLeft += lp->leftMargin;
-            int width = v->getMeasuredWidth();
-            int height = v->getMeasuredHeight();
-            int t = midVertical - height / 2;
+            const int width = v->getMeasuredWidth();
+            const int height = v->getMeasuredHeight();
+            const int t = midVertical - height / 2;
             v->layout(startLeft, t, width, height);
             startLeft += width + lp->rightMargin + spacerSize;
         }
@@ -613,22 +609,44 @@ private class ActionMenuPresenterCallback implements ActionMenuPresenter.Callbac
 
 //public static class LayoutParams:public LinearLayout::LayoutParams {
 ActionMenuView::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs):LinearLayout::LayoutParams(c, attrs){
+    isOverflowButton = false;
+    expandable = false;
+    preventEdgeOffset =false;
+    expanded = 0;
+    cellsUsed =0;
+    extraPixels=0;
 }
 
 ActionMenuView::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& other):LinearLayout::LayoutParams(other){
+    isOverflowButton = false;
 }
 
 ActionMenuView::LayoutParams::LayoutParams(const LayoutParams& other)
     :LinearLayout::LayoutParams((LinearLayout::LayoutParams&) other){
     isOverflowButton = other.isOverflowButton;
+    expandable = other.expandable;
+    preventEdgeOffset =other.preventEdgeOffset;
+    expanded = other.expanded;
+    cellsUsed = other.cellsUsed;
+    extraPixels=other.extraPixels;
 }
 
 ActionMenuView::LayoutParams::LayoutParams(int width, int height):LinearLayout::LayoutParams(width, height){
     isOverflowButton = false;
+    expandable = false;
+    preventEdgeOffset =false;
+    expanded = 0;
+    cellsUsed =0;
+    extraPixels=0;
 }
 
 ActionMenuView::LayoutParams::LayoutParams(int width, int height, bool isOverflowButton):LinearLayout::LayoutParams(width, height){
     this->isOverflowButton = isOverflowButton;
+    expandable = false;
+    preventEdgeOffset =false;
+    expanded = 0;
+    cellsUsed =0;
+    extraPixels=0;
 }
 
 }/*endof namespace*/

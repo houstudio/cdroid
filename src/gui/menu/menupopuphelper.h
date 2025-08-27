@@ -28,12 +28,12 @@ private:
     // Immutable cached popup menu properties.
     MenuBuilder* mMenu;
     bool mOverflowOnly;
-    int mPopupStyleAttr;
-    int mPopupStyleRes;
+    bool mForceShowIcon;
+    int mDropDownGravity = Gravity::START;
+    std::string mPopupStyleAttr;
+    std::string mPopupStyleRes;
 
     View* mAnchorView;
-    int mDropDownGravity = Gravity::START;
-    bool mForceShowIcon;
     MenuPresenter::Callback mPresenterCallback;
 
     MenuPopup* mPopup;
@@ -55,10 +55,10 @@ public:
     MenuPopupHelper(Context* context, MenuBuilder* menu);
     MenuPopupHelper(Context* context, MenuBuilder* menu, View* anchorView);
     MenuPopupHelper(Context* context, MenuBuilder* menu,
-        View* anchorView, bool overflowOnly,int popupStyleAttr);
+            View* anchorView, bool overflowOnly,const std::string& popupStyleAttr);
 
-    MenuPopupHelper(Context* context,MenuBuilder* menu, View* anchorView,
-        bool overflowOnly,int popupStyleAttr,int popupStyleRes);
+    MenuPopupHelper(Context* context,MenuBuilder* menu, View* anchorView, bool overflowOnly,
+            const std::string& popupStyleAttr,const std::string& popupStyleRes);
     ~MenuPopupHelper()override;
     void setOnDismissListener(const PopupWindow::OnDismissListener& listener);
 
