@@ -1398,8 +1398,6 @@ void LinearLayout::layoutHorizontal(int left, int top, int width, int height){
 
             childLeft += lp->leftMargin;
             setChildFrame(child, childLeft + getLocationOffset(child), childTop, childWidth, childHeight);
-            LOGD("%p:%d pos=(%d,%d,%d,%d)",child,child->getId(),
-                    childLeft + getLocationOffset(child), childTop,childWidth,childHeight);
             childLeft += childWidth + lp->rightMargin +getNextLocationOffset(child);
 
             i += getChildrenSkipCount(child, childIndex);

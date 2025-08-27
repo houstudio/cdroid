@@ -373,7 +373,7 @@ void ListPopupWindow::dismiss() {
     removePromptView();
     mPopup->setContentView(nullptr);
     //mDropDownList->setAdapter(nullptr);
-    LOG("TODO:delete mDropDownList;delete will caused crash; not delete will cause memleak");
+    LOGD("TODO:delete mDropDownList;delete will caused crash; not delete will cause memleak");
     //mDropDownList = nullptr;
     mHandler->removeCallbacks(mResizePopupRunnable);
 }
