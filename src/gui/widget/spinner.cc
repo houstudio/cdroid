@@ -58,7 +58,7 @@ Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
     mDropDownWidth =0;
     mDisableChildrenWhenDisabled = true;
     mTempAdapter= nullptr;
-    mPopup = new DropdownPopup(mContext,this);
+    mPopup = new DropdownPopup(mContext,this,"cdroid:attr/spinnerStyle");
     mForwardingListener = new SpinnerForwardingListener(this,(DropdownPopup*)mPopup); 
 }
 
@@ -80,7 +80,7 @@ Spinner::Spinner(Context*ctx,const AttributeSet&atts)
          mPopup->setPromptText(atts.getString("propmt"));
          break;
     case MODE_DROPDOWN:
-         popup = new DropdownPopup(ctx,this);
+         popup = new DropdownPopup(ctx,this,"cdroid:attr/spinnerStyle");
          mDropDownWidth = atts.getLayoutDimension("dropDownWidth",LayoutParams::WRAP_CONTENT);
          dr = atts.getDrawable("dropDownSelector");
          if(dr)popup->setListSelector(dr);
@@ -416,7 +416,7 @@ void Spinner::onClick(DialogInterface& dialog, int which) {
 
 void Spinner::onClick(int which) {
     setSelection(which);
-    if (mPopup != nullptr && mPopup->isShowing()) {
+    if ((mPopup != nullptr) && mPopup->isShowing()) {
         mPopup->dismiss();
     }
 }
@@ -475,8 +475,8 @@ PointerIcon* Spinner::onResolvePointerIcon(MotionEvent& event, int pointerIndex)
 }
 
 /////////////////////////////////SpinnerPopup//////////////////////////////////////////
-Spinner::DropdownPopup::DropdownPopup(Context*context,Spinner*sp)
-  :ListPopupWindow(context,AttributeSet(context,"")){
+Spinner::DropdownPopup::DropdownPopup(Context*context,Spinner*sp,const std::string&defStyleAttr)
+  :ListPopupWindow(context,AttributeSet(context,""),defStyleAttr){
     mSpinner = sp;
     mAdapter = nullptr;
     setAnchorView(mSpinner);

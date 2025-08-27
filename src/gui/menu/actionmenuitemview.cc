@@ -25,6 +25,7 @@ ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet& attr
     :TextView(context, attrs){//, defStyleAttr, defStyleRes){
     mIcon = nullptr;
     mItemData = nullptr;
+    mExpandedFormat = false;
     mForwardingListener = nullptr;
     mAllowTextWithIcon = shouldAllowTextWithIcon();
     mMinWidth = attrs.getDimensionPixelSize("minWidth", 0);
@@ -59,7 +60,7 @@ bool ActionMenuItemView::shouldAllowTextWithIcon() {
     return  width >= 480 || (width >= 640 && height >= 480)
             || configuration.orientation == Configuration.ORIENTATION_LANDSCAPE;
 #else
-    return true;
+    return false;
 #endif
 }
 
@@ -84,7 +85,7 @@ void ActionMenuItemView::initialize(MenuItemImpl* itemData, int menuType) {
 
     if (itemData->hasSubMenu()) {
         if (mForwardingListener == nullptr) {
-            //mForwardingListener = new ActionMenuItemForwardingListener();
+            mForwardingListener = new ActionMenuItemForwardingListener(this);
         }
     }
 }
@@ -239,12 +240,12 @@ void ActionMenuItemView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) 
     const int targetWidth = widthMode == MeasureSpec::AT_MOST ? std::min(widthSize, mMinWidth)
             : mMinWidth;
 
-    if (widthMode != MeasureSpec::EXACTLY && mMinWidth > 0 && oldMeasuredWidth < targetWidth) {
+    if ((widthMode != MeasureSpec::EXACTLY) && (mMinWidth > 0) && (oldMeasuredWidth < targetWidth)) {
         // Remeasure at exactly the minimum width.
         TextView::onMeasure(MeasureSpec::makeMeasureSpec(targetWidth, MeasureSpec::EXACTLY), heightMeasureSpec);
     }
 
-    if (!textVisible && mIcon != nullptr) {
+    if (!textVisible && (mIcon != nullptr)) {
         // TextView won't center compound drawables in both dimensions without
         // a little coercion. Pad in to center the icon after we've measured.
         const int w = getMeasuredWidth();
@@ -272,8 +273,8 @@ ShowableListMenu ActionMenuItemView::ActionMenuItemForwardingListener::getPopup(
 
 bool ActionMenuItemView::ActionMenuItemForwardingListener::onForwardingStarted(){
     // Call the invoker, then check if the expected popup is showing.
-    ActionMenuItemView*iv=(ActionMenuItemView*)mSrc;
-    if (iv->mItemInvoker != nullptr && iv->mItemInvoker(*iv->mItemData)) {
+    ActionMenuItemView*iv = (ActionMenuItemView*)mSrc;
+    if ((iv->mItemInvoker != nullptr) && iv->mItemInvoker(*iv->mItemData)) {
         ShowableListMenu popup = getPopup();
         return popup.isShowing && popup.isShowing();
     }

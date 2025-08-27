@@ -509,7 +509,7 @@ void MenuItemImpl::setIsActionButton(bool isActionButton) {
     }
 }
 
-bool MenuItemImpl::showsTextAsAction() {
+bool MenuItemImpl::showsTextAsAction() const{
     return (mShowAsAction & SHOW_AS_ACTION_WITH_TEXT) == SHOW_AS_ACTION_WITH_TEXT;
 }
 

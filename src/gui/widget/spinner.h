@@ -85,7 +85,7 @@ private:
         Adapter *mAdapter;
         ViewTreeObserver::OnGlobalLayoutListener mLayoutListener;
     public:
-        DropdownPopup(Context*context,Spinner*spinner);
+        DropdownPopup(Context*context,Spinner*spinner,const std::string&defStyleAttr);
         ~DropdownPopup()override;
         void setAdapter(Adapter* adapter)override;
         void show(int textDirection, int textAlignment)override; 

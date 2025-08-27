@@ -15,20 +15,21 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/dropdownlistview.h>
 #include <widget/textview.h>
+#include <widget/dropdownlistview.h>
 
 namespace cdroid{
 
-DropDownListView::DropDownListView(Context*context,bool hijackfocus):ListView(context,AttributeSet(context,"")){
+DropDownListView::DropDownListView(Context*context,bool hijackfocus)
+    :ListView(context,context->obtainStyledAttributes("cdroid:attr/dropDownListViewStyle")){
     mScrollHelper = nullptr;
     mHijackFocus = hijackfocus;
     mDrawsInPressedState = false;
-    mResolveHoverRunnable = nullptr;LOGD("DropDownListView created: %p",this);
+    mResolveHoverRunnable = nullptr;
 }
 
 DropDownListView::~DropDownListView(){
-    LOGD("DropDownListView destroyed %p",this);delete mScrollHelper;
+    delete mScrollHelper;
     removeCallbacks(mResolveHoverRunnable);
 }
 

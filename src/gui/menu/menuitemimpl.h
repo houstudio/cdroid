@@ -170,7 +170,7 @@ public:
 
     void setIsActionButton(bool isActionButton);
 
-    bool showsTextAsAction();
+    bool showsTextAsAction()const;
 
     void setShowAsAction(int actionEnum);
 
