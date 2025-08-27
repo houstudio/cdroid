@@ -37,6 +37,7 @@ ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet& attrs)
     mCheckBox = nullptr;
     mRadioButton = nullptr;
     mInflater = nullptr;
+    mForceShowIcon = false;
     mSubMenuArrow = attrs.getDrawable("subMenuArrow");
 
     /*final TypedArray b = context.getTheme()

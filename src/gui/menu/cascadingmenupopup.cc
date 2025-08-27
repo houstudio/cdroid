@@ -115,7 +115,8 @@ CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
     mPopupStyleAttr = popupStyleAttr;
     mPopupStyleRes = popupStyleRes;
     mOverflowOnly = overflowOnly;
-
+    mHasXOffset = false;
+    mHasYOffset = false;
     mForceShowIcon = false;
     mLastPosition = getInitialMenuPosition();
 

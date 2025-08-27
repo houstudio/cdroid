@@ -93,7 +93,7 @@ protected:
 public:
     HorizontalScrollView(int w,int h);
     HorizontalScrollView(Context*ctx,const AttributeSet&atts);
-    ~HorizontalScrollView();
+    ~HorizontalScrollView()override;
     void setEdgeEffectColor(int color);
     void setLeftEdgeEffectColor(int color);
     void setRightEdgeEffectColor(int color);
