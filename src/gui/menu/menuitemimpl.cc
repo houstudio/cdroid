@@ -44,6 +44,9 @@ MenuItemImpl::MenuItemImpl(MenuBuilder* menu, int group, int id, int categoryOrd
     mShortcutAlphabeticChar = 0;
 }
 
+MenuItemImpl::~MenuItemImpl(){
+}
+
 bool MenuItemImpl::invoke() {
     if ((mClickListener != nullptr) && mClickListener/*onMenuItemClick*/(*this)){
         return true;
@@ -528,7 +531,7 @@ void MenuItemImpl::setShowAsAction(int actionEnum) {
 MenuItem& MenuItemImpl::setActionView(View* view) {
     mActionView = view;
     mActionProvider = nullptr;
-    if (view != nullptr && view->getId() == View::NO_ID && mId > 0) {
+    if ((view != nullptr) && (view->getId() == View::NO_ID) && (mId > 0)) {
         view->setId(mId);
     }
     mMenu->onItemActionRequestChanged(*this);

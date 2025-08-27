@@ -17,22 +17,22 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         state_window_focused="false" state_enabled="true"
-        drawable="@drawable/btn_dropdown_normal" />
+        drawable="@mipmap/btn_dropdown_normal" />
     <item
         state_window_focused="false" state_enabled="false"
-        drawable="@drawable/btn_dropdown_disabled" />
+        drawable="@mipmap/btn_dropdown_disabled" />
     <item
         state_pressed="true"
-        drawable="@drawable/btn_dropdown_pressed" />
+        drawable="@mipmap/btn_dropdown_pressed" />
     <item
         state_focused="true" state_enabled="true"
-        drawable="@drawable/btn_dropdown_selected" />
+        drawable="@mipmap/btn_dropdown_selected" />
     <item
         state_enabled="true"
-        drawable="@drawable/btn_dropdown_normal" />
+        drawable="@mipmap/btn_dropdown_normal" />
     <item
         state_focused="true"
-        drawable="@drawable/btn_dropdown_disabled_focused" />
+        drawable="@mipmap/btn_dropdown_disabled_focused" />
     <item
-        drawable="@drawable/btn_dropdown_disabled" />
+        drawable="@mipmap/btn_dropdown_disabled" />
 </selector>

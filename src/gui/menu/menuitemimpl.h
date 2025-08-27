@@ -82,7 +82,7 @@ private:
 public:
     MenuItemImpl(MenuBuilder* menu, int group, int id, int categoryOrder, int ordering,
             const std::string& title, int showAsAction);
-
+    ~MenuItemImpl()override;
     bool invoke();
 
     bool isEnabled()const override;
