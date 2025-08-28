@@ -37,11 +37,19 @@ Spinner::SpinnerForwardingListener::SpinnerForwardingListener(View*v,Spinner::Dr
 
 ShowableListMenu Spinner::SpinnerForwardingListener::getPopup(){
     ShowableListMenu sm;
-    sm.show =[this](){mDropDown->show(((Spinner*)mSrc)->getTextDirection(),
-            ((Spinner*)mSrc)->getTextAlignment());};
-    sm.dismiss=[this](){mDropDown->dismiss();};
-    sm.isShowing=[this]()->bool{return mDropDown->isShowing();};
-    sm.getListView=[this]()->ListView*{return nullptr;};
+    sm.show =[this](){
+        mDropDown->show(((Spinner*)mSrc)->getTextDirection(),
+        ((Spinner*)mSrc)->getTextAlignment());
+    };
+    sm.dismiss=[this](){
+        mDropDown->dismiss();
+    };
+    sm.isShowing=[this](){
+        return mDropDown->isShowing();
+    };
+    sm.getListView=[this]()->ListView*{
+        return mDropDown->getListView();
+    };
     return sm;
 }
 
@@ -616,7 +624,7 @@ void Spinner::DropdownPopup::show(int textDirection, int textAlignment) {
     ListPopupWindow::show();
     ListView* listView = getListView();
 
-    LOGV("====mDropDownWidth=%d listView=%p",mSpinner->mDropDownWidth,listView);
+    LOGD("====mDropDownWidth=%d listView=%p",mSpinner->mDropDownWidth,listView);
     if(listView==nullptr)return;
 
     listView->setChoiceMode(ListView::CHOICE_MODE_SINGLE);

@@ -912,12 +912,6 @@ void PopupWindow::dismissImmediate(View* decorView, ViewGroup* contentHolder, Vi
 
     if (contentHolder != nullptr) {
         ViewGroup*vg=dynamic_cast<ViewGroup*>(contentView);
-        if(vg){
-            while(vg->getChildCount()){
-                View*v= vg->getChildAt(0);
-                delete v;
-            }
-        }
         contentHolder->removeView(contentView);
     }
 
