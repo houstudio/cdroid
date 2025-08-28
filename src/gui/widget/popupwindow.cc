@@ -188,7 +188,7 @@ void PopupWindow::setBackgroundDrawable(Drawable* background) {
     }
 }
 
-float PopupWindow::getElevation() {
+float PopupWindow::getElevation() const{
     return mElevation;
 }
 
@@ -228,11 +228,11 @@ void PopupWindow::setContentView(View* contentView) {
     }
 }
 
-void PopupWindow::setTouchInterceptor(View::OnTouchListener l) {
+void PopupWindow::setTouchInterceptor(const View::OnTouchListener& l) {
     mTouchInterceptor = l;
 }
 
-bool PopupWindow::isFocusable() {
+bool PopupWindow::isFocusable() const{
     return mFocusable;
 }
 
@@ -240,12 +240,28 @@ void PopupWindow::setFocusable(bool focusable) {
     mFocusable = focusable;
 }
 
-int PopupWindow::getInputMethodMode(){
+int PopupWindow::getInputMethodMode()const{
     return mInputMethodMode;
 }
 
 void PopupWindow::setInputMethodMode(int mode) {
     mInputMethodMode = mode;
+}
+
+void PopupWindow::setSoftInputMode(int mode){
+    mSoftInputMode = mode;
+}
+
+int PopupWindow::getSoftInputMode()const{
+    return mSoftInputMode;
+}
+
+bool PopupWindow::isTouchable()const{
+    return mTouchable;
+}
+
+void PopupWindow::setTouchable(bool touchable){
+    mTouchable = touchable;
 }
 
 bool PopupWindow::isOutsideTouchable()const{
@@ -256,7 +272,7 @@ void PopupWindow::setOutsideTouchable(bool touchable){
     mOutsideTouchable = touchable;
 }
 
-bool PopupWindow::isClippingEnabled(){
+bool PopupWindow::isClippingEnabled()const{
     return mClippingEnabled;
 }
 
@@ -264,7 +280,7 @@ void PopupWindow::setClippingEnabled(bool enabled){
     mClippingEnabled = enabled;
 }
 
-bool PopupWindow::isClippedToScreen(){
+bool PopupWindow::isClippedToScreen()const{
     return mClipToScreen;
 }
 
@@ -272,7 +288,7 @@ void PopupWindow::setIsClippedToScreen(bool enabled){
     mClipToScreen = enabled;
 }
 
-bool PopupWindow::isSplitTouchEnabled(){
+bool PopupWindow::isSplitTouchEnabled()const{
     return mSplitTouchEnabled == 1;
 }
 
@@ -289,7 +305,7 @@ void PopupWindow::setLayoutInScreenEnabled(bool enabled){
     mLayoutInScreen = enabled;
 }
 
-bool PopupWindow::isLaidOutInScreen(){
+bool PopupWindow::isLaidOutInScreen()const{
     return mLayoutInScreen;
 }
 
@@ -318,11 +334,11 @@ void PopupWindow::setWindowLayoutType(int layoutType){
     mWindowLayoutType = layoutType;
 }
 
-int PopupWindow::getWindowLayoutType(){
+int PopupWindow::getWindowLayoutType()const{
     return mWindowLayoutType;
 }
 
-bool PopupWindow::isTouchModal(){
+bool PopupWindow::isTouchModal()const{
     return !mNotTouchModal;
 }
 
@@ -342,7 +358,7 @@ void PopupWindow::setShowing(bool isShowing) {
      mIsShowing = isShowing;
 }
 
-bool PopupWindow::isShowing(){
+bool PopupWindow::isShowing()const{
     return mIsShowing;
 }
 
@@ -354,7 +370,7 @@ void PopupWindow::setHeight(int height){
     mHeight = height;
 }
 
-int PopupWindow::getHeight(){
+int PopupWindow::getHeight()const{
     return mHeight;
 }
 
@@ -362,7 +378,7 @@ void PopupWindow::setWidth(int width){
     mWidth = width;
 }
 
-int PopupWindow::getWidth(){
+int PopupWindow::getWidth()const{
     return mHeight;
 }
 
@@ -520,7 +536,7 @@ void PopupWindow::setLayoutDirectionFromAnchor() {
     }
 }
 
-bool PopupWindow::isAboveAnchor() {
+bool PopupWindow::isAboveAnchor() const{
     return mAboveAnchor;
 }
 

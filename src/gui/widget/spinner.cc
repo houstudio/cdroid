@@ -574,9 +574,8 @@ void Spinner::DropdownPopup::computeContentWidth() {
     setHorizontalOffset(hOffset);
 }
 
-int Spinner::DropdownPopup::getVerticalOffset(){
+int Spinner::DropdownPopup::getVerticalOffset()const{
     int p=ListPopupWindow::getVerticalOffset();
-    LOGD("VerticalOffset=%d",p);
     return p;
 }
 
@@ -584,7 +583,7 @@ void Spinner::DropdownPopup::setVerticalOffset(int px){
     ListPopupWindow::setVerticalOffset(px);
 }
 
-int Spinner::DropdownPopup::getHorizontalOffset(){
+int Spinner::DropdownPopup::getHorizontalOffset()const{
     return ListPopupWindow::getHorizontalOffset();
 }
 
@@ -709,7 +708,7 @@ const std::string Spinner::DialogPopup::getHintText(){
     return mPrompt;
 }
 
-int Spinner::DialogPopup::getVerticalOffset(){
+int Spinner::DialogPopup::getVerticalOffset()const{
     return 0;
 }
 
@@ -717,7 +716,7 @@ void Spinner::DialogPopup::setVerticalOffset(int px){
     LOGE("Cannot set vertical offset for MODE_DIALOG, ignoring");
 }
 
-int Spinner::DialogPopup::getHorizontalOffset(){
+int Spinner::DialogPopup::getHorizontalOffset()const{
     return 0;
 }
 

@@ -140,14 +140,14 @@ private:
     bool mTextFilterEnabled;
     bool mPopupHidden;
     bool mFiltered;
+    bool mIsChildViewEnabled;
+    bool mForceTranscriptScroll;
     int mScrollOffset[2] ;
     int mScrollConsumed[2];
     ContextMenuInfo* mContextMenuInfo;
     class FastScroller* mFastScroll;
     std::vector<int>mSelectorState;
     int mLastScrollState;
-    bool mIsChildViewEnabled;
-    bool mForceTranscriptScroll;
     int mLastAccessibilityScrollEventFromIndex;
     int mLastAccessibilityScrollEventToIndex;
     ListItemAccessibilityDelegate* mAccessibilityDelegate;
@@ -167,6 +167,7 @@ private:
     PopupWindow*mPopup;
     class EditText* mTextFilter;
     OnScrollListener mOnScrollListener;
+private:
     void initAbsListView(const AttributeSet&atts);
     void useDefaultSelector();
     std::vector<int>getDrawableStateForSelector();
@@ -196,7 +197,7 @@ private:
     void setFastScrollerAlwaysVisibleUiThread(bool alwaysShow);
     int  releaseGlow(int deltaY, int x);
     bool isGlowActive()const;
-    bool doesTouchStopStretch();
+    bool doesTouchStopStretch()const;
     void invalidateTopGlow();
     void invalidateBottomGlow();
     void invalidateEdgeEffects();
