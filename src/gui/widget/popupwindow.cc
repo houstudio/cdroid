@@ -69,6 +69,7 @@ PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, const std::
 
 PopupWindow::PopupWindow(View* contentView, int width, int height, bool focusable) {
     init();
+    LOGD("contentView=%p",contentView);
     if (contentView) {
         mContext = contentView->getContext();
         //mWindowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
@@ -383,7 +384,7 @@ int PopupWindow::getWidth()const{
 }
 
 void PopupWindow::showAtLocation(View* parent, int gravity, int x, int y){
-    if (isShowing() || mContentView == nullptr) {
+    if (isShowing() || (mContentView == nullptr)) {
         return;
     }
     //TransitionManager.endTransitions(mDecorView);
@@ -448,6 +449,7 @@ void PopupWindow::preparePopup(WindowManager::LayoutParams*p){
     }
 
     mDecorView = createDecorView(mBackgroundView);
+    LOGD("createDecorView %p",mDecorView);
     mDecorView->setIsRootNamespace(true);
 
     // The background owner should be elevated so that it casts a shadow.
@@ -464,7 +466,7 @@ void PopupWindow::preparePopup(WindowManager::LayoutParams*p){
 PopupWindow::PopupBackgroundView* PopupWindow::createBackgroundView(View* contentView) {
     ViewGroup::LayoutParams* layoutParams = mContentView->getLayoutParams();
     int height;
-    if (layoutParams && layoutParams->height == LayoutParams::WRAP_CONTENT) {
+    if (layoutParams && (layoutParams->height == LayoutParams::WRAP_CONTENT)) {
         height = LayoutParams::WRAP_CONTENT;
     } else {
         height = LayoutParams::MATCH_PARENT;
@@ -541,7 +543,7 @@ bool PopupWindow::isAboveAnchor() const{
 }
 
 int PopupWindow::computeGravity() {
-    int gravity = mGravity == Gravity::NO_GRAVITY ?  Gravity::START | Gravity::TOP : mGravity;
+    int gravity = (mGravity == Gravity::NO_GRAVITY) ?  Gravity::START | Gravity::TOP : mGravity;
     if (mIsDropdown && (mClipToScreen || mClippingEnabled)) {
         gravity |= Gravity::DISPLAY_CLIP_VERTICAL;
     }
@@ -602,10 +604,10 @@ int PopupWindow::computeFlags(int curFlags){
 bool PopupWindow::tryFitVertical(WindowManager::LayoutParams* outParams, int yOffset, int height,
         int anchorHeight, int drawingLocationY, int screenLocationY, int displayFrameTop,
         int displayFrameBottom, bool allowResize){
-    int winOffsetY = screenLocationY - drawingLocationY;
-    int anchorTopInScreen = outParams->y + winOffsetY;
-    int spaceBelow = displayFrameBottom - anchorTopInScreen;
-    if (anchorTopInScreen >= displayFrameTop && height <= spaceBelow) {
+    const int winOffsetY = screenLocationY - drawingLocationY;
+    const int anchorTopInScreen = outParams->y + winOffsetY;
+    const int spaceBelow = displayFrameBottom - anchorTopInScreen;
+    if ((anchorTopInScreen >= displayFrameTop) && (height <= spaceBelow)) {
         return true;
     }
 
@@ -632,7 +634,7 @@ bool PopupWindow::positionInDisplayVertical(WindowManager::LayoutParams* outPara
         int drawingLocationY, int screenLocationY, int displayFrameTop, int displayFrameBottom,
         bool canResize){
     bool fitsInDisplay = true;
-    int winOffsetY = screenLocationY - drawingLocationY;
+    const int winOffsetY = screenLocationY - drawingLocationY;
     outParams->y += winOffsetY;
     outParams->height = height;
 
@@ -647,8 +649,8 @@ bool PopupWindow::positionInDisplayVertical(WindowManager::LayoutParams* outPara
         // it's still too large.
         outParams->y = displayFrameTop;
 
-        int displayFrameHeight = displayFrameBottom - displayFrameTop;
-        if (canResize && height > displayFrameHeight) {
+        const int displayFrameHeight = displayFrameBottom - displayFrameTop;
+        if (canResize && (height > displayFrameHeight)) {
             outParams->height = displayFrameHeight;
         } else {
             fitsInDisplay = false;
@@ -661,10 +663,10 @@ bool PopupWindow::positionInDisplayVertical(WindowManager::LayoutParams* outPara
 bool PopupWindow::tryFitHorizontal(WindowManager::LayoutParams* outParams, int xOffset, int width,
         int anchorWidth, int drawingLocationX, int screenLocationX, int displayFrameLeft,
         int displayFrameRight, bool allowResize){
-    int winOffsetX = screenLocationX - drawingLocationX;
-    int anchorLeftInScreen = outParams->x + winOffsetX;
-    int spaceRight = displayFrameRight - anchorLeftInScreen;
-    if (anchorLeftInScreen >= displayFrameLeft && width <= spaceRight) {
+    const int winOffsetX = screenLocationX - drawingLocationX;
+    const int anchorLeftInScreen = outParams->x + winOffsetX;
+    const int spaceRight = displayFrameRight - anchorLeftInScreen;
+    if ((anchorLeftInScreen >= displayFrameLeft) && (width <= spaceRight)) {
         return true;
     }
 
@@ -680,7 +682,7 @@ bool PopupWindow::positionInDisplayHorizontal(WindowManager::LayoutParams* outPa
         bool canResize){
     bool fitsInDisplay = true; 
     // Use screen coordinates for comparison against display frame.
-    int winOffsetX = screenLocationX - drawingLocationX;
+    const int winOffsetX = screenLocationX - drawingLocationX;
     outParams->x += winOffsetX;
 
     int right = outParams->x + width;
@@ -694,7 +696,7 @@ bool PopupWindow::positionInDisplayHorizontal(WindowManager::LayoutParams* outPa
         // still too large.
         outParams->x = displayFrameLeft;
 
-        int displayFrameWidth = displayFrameRight - displayFrameLeft;
+        const int displayFrameWidth = displayFrameRight - displayFrameLeft;
         if (canResize && width > displayFrameWidth) {
             outParams->width = displayFrameWidth;
         } else {
@@ -822,7 +824,7 @@ int PopupWindow::getMaxAvailableHeight(View* anchor, int yOffset,bool ignoreBott
     int anchorPos[2];
     anchor->getLocationOnScreen(anchorPos);
 
-    int bottomEdge = displayFrame.bottom();
+    const int bottomEdge = displayFrame.bottom();
 
     int distanceToBottom;
     if (mOverlapAnchor) {
@@ -830,7 +832,7 @@ int PopupWindow::getMaxAvailableHeight(View* anchor, int yOffset,bool ignoreBott
     } else {
         distanceToBottom = bottomEdge - (anchorPos[1] + anchor->getHeight()) - yOffset;
     }
-    int distanceToTop = anchorPos[1] - displayFrame.top + yOffset;
+    const int distanceToTop = anchorPos[1] - displayFrame.top + yOffset;
 
     // anchorPos[1] is distance from anchor to top of screen
     int returnedHeight = std::max(distanceToBottom, distanceToTop);
@@ -934,6 +936,7 @@ void PopupWindow::dismissImmediate(View* decorView, ViewGroup* contentHolder, Vi
     // This needs to stay until after all transitions have ended since we
     // need the reference to cancel transitions in preparePopup().
     ((Window*)(mDecorView))->close();
+    LOGD("close mDecorView %p which its contentView=%p",mDecorView,contentView);
     mDecorView = nullptr;
     mBackgroundView = nullptr;
     mIsTransitioningToDismiss = false;

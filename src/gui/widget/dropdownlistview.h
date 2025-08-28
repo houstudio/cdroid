@@ -23,7 +23,6 @@ namespace cdroid{
 
 class DropDownListView:public ListView{
 private:
-    class ResolveHoverRunnable;
     bool mListSelectionHidden;
     bool mHijackFocus;
     bool mDrawsInPressedState;
@@ -33,12 +32,12 @@ private:
     void setPressedItem(View* child, int position, float x, float y);
 protected:
     void drawableStateChanged()override;
-    bool touchModeDrawsInPressedState()override;
+    bool touchModeDrawsInPressedState()const override;
     View* obtainView(int position, bool* isScrap)override;
 public:
     DropDownListView(Context*,bool hijackfocus);
     ~DropDownListView()override;
-    bool shouldShowSelector()override;
+    bool shouldShowSelector()const override;
     bool onTouchEvent(MotionEvent& ev)override;
     bool onHoverEvent(MotionEvent& ev)override;
     bool onForwardedEvent(MotionEvent& event, int activePointerId);
@@ -49,15 +48,5 @@ public:
     bool hasFocus()const override;
 };
 
-class DropDownListView::ResolveHoverRunnable{
-private:
-    DropDownListView*mDLV;
-    Runnable mRunnable;
-public:
-    ResolveHoverRunnable(DropDownListView*v);
-    void run();
-    void cancel();
-    void post();
-};
 }//endof namespace
 #endif

@@ -30,25 +30,25 @@ void AdapterView::initAdapterView(){
     mFirstPosition=0;
     mIsVertical = true;
     mOldItemCount= mItemCount =0;
-    mSelectedPosition=INVALID_POSITION;
+    mSelectedPosition = INVALID_POSITION;
     mNextSelectedPosition = INVALID_POSITION;
     mOldSelectedPosition = INVALID_POSITION;
     mOldSelectedRowId = INVALID_ROW_ID;
     mSelectedRowId=INVALID_ROW_ID;
-    mEmptyView=nullptr;
-    mDesiredFocusableState =FOCUSABLE_AUTO;
-    mOnItemSelectedListener={nullptr,nullptr};
-    mOnItemClickListener=nullptr;
-    mOnItemLongClickListener=nullptr;
-    mNeedSync =false;
-    mDataChanged=false;
-    mInLayout =false;
-    mAdapter=nullptr;
+    mDesiredFocusableState = FOCUSABLE_AUTO;
+    mOnItemSelectedListener ={};
+    mNeedSync = false;
+    mDataChanged= false;
+    mInLayout = false;
+    mAdapter = nullptr;
+    mEmptyView = nullptr;
+    mSelectionNotifier =nullptr;
+    mOnItemClickListener = nullptr;
+    mOnItemLongClickListener = nullptr;
+    mPendingSelectionNotifier =nullptr;
     setClickable(true);
     mBlockLayoutRequests = false;
     mDesiredFocusableInTouchModeState = false;
-    mPendingSelectionNotifier =nullptr;
-    mSelectionNotifier =nullptr;
 
     // If not explicitly specified this view is important for accessibility.
     if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
@@ -192,13 +192,13 @@ void AdapterView::handleDataChanged(){
 }
 
 int AdapterView::findSyncPosition(){
-    int count = mItemCount;
+    const int count = mItemCount;
 
     if (count == 0) {
         return INVALID_POSITION;
     }
 
-    long idToMatch = mSyncRowId;
+    const long idToMatch = mSyncRowId;
     int seed = mSyncPosition;
 
     // If there isn't a selection don't hunt for it
@@ -235,8 +235,8 @@ int AdapterView::findSyncPosition(){
             return seed;
         }
 
-        bool hitLast = last == count - 1;
-        bool hitFirst = first == 0;
+        const bool hitLast = last == count - 1;
+        const bool hitFirst = first == 0;
 
         if (hitLast && hitFirst) {
             // Looked at everything
@@ -278,11 +278,11 @@ int AdapterView::getPositionForView(View* view){
     return INVALID_POSITION;
 }
 
-int AdapterView::getFirstVisiblePosition() {
+int AdapterView::getFirstVisiblePosition() const{
     return mFirstPosition;
 }
 
-int AdapterView::getLastVisiblePosition(){
+int AdapterView::getLastVisiblePosition() const{
     return mFirstPosition + getChildCount() - 1;
 }
 
@@ -305,15 +305,15 @@ void* AdapterView::getItemAtPosition(int position){
 }
 
 long AdapterView::getItemIdAtPosition(int position){
-    Adapter*adapter=getAdapter();
+    Adapter*adapter = getAdapter();
     return (adapter==nullptr||(position<0))?INVALID_ROW_ID:adapter->getItemId(position);
 }
 
-int AdapterView::getSelectedItemPosition() {
+int AdapterView::getSelectedItemPosition() const{
     return mNextSelectedPosition;
 }
 
-long AdapterView::getSelectedItemId() {
+long AdapterView::getSelectedItemId() const{
     return mNextSelectedRowId;
 }
 

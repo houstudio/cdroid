@@ -1079,7 +1079,7 @@ void AbsListView::getFocusedRect(Rect& r) {
     }
 }
 
-bool AbsListView::touchModeDrawsInPressedState() {
+bool AbsListView::touchModeDrawsInPressedState() const{
     switch (mTouchMode) {
     case TOUCH_MODE_TAP:
     case TOUCH_MODE_DONE_WAITING:
@@ -1122,7 +1122,7 @@ void AbsListView::handleBoundsChange() {
     }
 }
 
-bool AbsListView::shouldShowSelector() {
+bool AbsListView::shouldShowSelector() const{
     return (isFocused() && !isInTouchMode()) || (touchModeDrawsInPressedState() && isPressed());
 }
 

@@ -287,8 +287,8 @@ protected:
     void internalSetPadding(int left, int top, int width, int height)override;
     void onSizeChanged(int w, int h, int oldw, int oldh)override;
     void handleBoundsChange();
-    virtual bool touchModeDrawsInPressedState();
-    virtual bool shouldShowSelector();
+    virtual bool touchModeDrawsInPressedState()const;
+    virtual bool shouldShowSelector()const;
     void updateSelectorState();
     void drawableStateChanged()override;
     virtual void layoutChildren();

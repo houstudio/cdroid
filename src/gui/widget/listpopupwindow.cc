@@ -281,7 +281,7 @@ void ListPopupWindow::postShow(){
 }
 
 void ListPopupWindow::show() {
-     int height = buildDropDown();
+     const int height = buildDropDown();
 
      const bool noInputMethod = isInputMethodNotNeeded();
      mPopup->setWindowLayoutType(mDropDownWindowLayoutType);
@@ -378,7 +378,7 @@ void ListPopupWindow::dismiss() {
     mPopup->setContentView(nullptr);
     //mDropDownList->setAdapter(nullptr);
     LOGD("TODO:delete mDropDownList %p;delete will caused crash; not delete will cause memleak",mDropDownList);
-    //delete mDropDownList;
+    //delete mDropDownList;/*this seems owned by PopupWindow::PopupDecorView::mBackgroundView*/
     mDropDownList = nullptr;
     mHandler->removeCallbacks(mResizePopupRunnable);
 }
@@ -744,10 +744,10 @@ int ListPopupWindow::buildDropDown() {
 
     // Add padding only if the list has items in it, that way we don't show
     // the popup if it is not needed.
-    int listContent = mDropDownList->measureHeightOfChildren(childWidthSpec,
+    const int listContent = mDropDownList->measureHeightOfChildren(childWidthSpec,
             0, DropDownListView::NO_POSITION, maxHeight - otherHeights, -1);
     if (listContent > 0) {
-        int listPadding = mDropDownList->getPaddingTop()
+        const int listPadding = mDropDownList->getPaddingTop()
                 + mDropDownList->getPaddingBottom();
         otherHeights += padding + listPadding;
     }
