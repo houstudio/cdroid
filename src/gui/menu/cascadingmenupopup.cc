@@ -115,8 +115,11 @@ CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
     mPopupStyleAttr = popupStyleAttr;
     mPopupStyleRes = popupStyleRes;
     mOverflowOnly = overflowOnly;
-
+    mHasXOffset = false;
+    mHasYOffset = false;
+    mShowTitle  = false;
     mForceShowIcon = false;
+    mShouldCloseImmediately = false;
     mLastPosition = getInitialMenuPosition();
 
     //final Resources res = context.getResources();

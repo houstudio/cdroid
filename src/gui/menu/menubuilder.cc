@@ -28,6 +28,7 @@ namespace cdroid{
 
 MenuBuilder::MenuBuilder(Context* context) {
     mContext = context;
+    mExpandedItem = nullptr;
     mCurrentMenuInfo = nullptr;
     mIsVisibleItemsStale = true;
     mIsActionItemsStale = true;

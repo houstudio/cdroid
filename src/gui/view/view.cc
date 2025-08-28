@@ -9635,6 +9635,7 @@ View::AttachInfo::AttachInfo(Context*ctx){
     mScalingRequired  = false;
     mIgnoreDirtyState = false;
     mNextFocusLooped  = false;
+    mViewScrollChanged= false;
     mUse32BitDrawingCache = false;
     mAccessibilityFetchFlags= 0;
     mAlwaysConsumeSystemBars= false;

@@ -61,8 +61,11 @@ void AbsSpinner::initAbsSpinner() {
     mSelectionTopPadding=0;
     mSelectionRightPadding=0;
     mSelectionBottomPadding=0;
+    mHeightMeasureSpec=0;
+    mWidthMeasureSpec =0;
     setFocusable(true);
     setWillNotDraw(false);
+    mSpinnerPadding.setEmpty();
     mRecycler=new RecycleBin(this);
 }
 

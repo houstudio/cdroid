@@ -28,7 +28,7 @@ PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, const std::
 }
 
 PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, const std::string& defStyleAttr, const std::string& defStyleRes){
-
+    LOGD("create PopupWindow %p",this);
     init();
     mContext = context;
     AttributeSet attpop= context->obtainStyledAttributes(defStyleAttr);
@@ -424,8 +424,9 @@ void PopupWindow::preparePopup(WindowManager::LayoutParams*p){
     // When a background is available, we embed the content view within
     // another view that owns the background drawable.
     if (mBackground) {
+        Drawable* bg = mBackground->getConstantState()->newDrawable();
         mBackgroundView = createBackgroundView(mContentView);
-        mBackgroundView->setBackground(mBackground);
+        mBackgroundView->setBackground(bg);//mBackground);
     } else {
         mBackgroundView = mContentView;
     }
@@ -911,12 +912,6 @@ void PopupWindow::dismissImmediate(View* decorView, ViewGroup* contentHolder, Vi
 
     if (contentHolder != nullptr) {
         ViewGroup*vg=dynamic_cast<ViewGroup*>(contentView);
-        if(vg){
-            while(vg->getChildCount()){
-                View*v= vg->getChildAt(0);
-                delete v;
-            }
-        }
         contentHolder->removeView(contentView);
     }
 

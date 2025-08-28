@@ -45,7 +45,8 @@ void AdapterView::initAdapterView(){
     mInLayout =false;
     mAdapter=nullptr;
     setClickable(true);
-    mBlockLayoutRequests=false;
+    mBlockLayoutRequests = false;
+    mDesiredFocusableInTouchModeState = false;
     mPendingSelectionNotifier =nullptr;
     mSelectionNotifier =nullptr;
 
@@ -388,8 +389,8 @@ void AdapterView::checkSelectionChanged() {
 
 void AdapterView::checkFocus() {
     Adapter*adapter=getAdapter();
-    bool empty = adapter==nullptr||adapter->getCount() == 0;
-    bool focusable = !empty || isInFilterMode();
+    const bool empty = (adapter==nullptr)||(adapter->getCount() == 0);
+    const bool focusable = !empty || isInFilterMode();
     // The order in which we set focusable in touch mode/focusable may matter
     // for the client, see View.setFocusableInTouchMode() comments for more
     // details

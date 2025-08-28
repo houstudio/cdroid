@@ -1752,11 +1752,9 @@ void ViewGroup::measureChildWithMargins(View* child,int parentWidthMeasureSpec, 
     const MarginLayoutParams* lp = (const MarginLayoutParams*) child->getLayoutParams();
 
     const int childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec,
-        mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin
-                + widthUsed, lp->width);
+            mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin + widthUsed, lp->width);
     const int childHeightMeasureSpec = getChildMeasureSpec(parentHeightMeasureSpec,
-        mPaddingTop + mPaddingBottom + lp->topMargin + lp->bottomMargin
-        + heightUsed, lp->height);
+            mPaddingTop + mPaddingBottom + lp->topMargin + lp->bottomMargin + heightUsed, lp->height);
     child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
 }
 

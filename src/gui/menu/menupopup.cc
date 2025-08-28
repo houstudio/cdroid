@@ -89,9 +89,9 @@ int MenuPopup::measureIndividualMenuWidth(ListAdapter* adapter, ViewGroup* paren
             itemView = nullptr;
         }
 
-        if (parent == nullptr) {
-            parent = new FrameLayout(context,AttributeSet(context,"cdroid"));
-        }
+        /*if (parent == nullptr) {//The android code here will caused memleak in cdroid
+            //parent = new FrameLayout(context,AttributeSet(context,"cdroid"));
+        }*/
 
         itemView = adapter->getView(i, itemView, parent);
         itemView->measure(widthMeasureSpec, heightMeasureSpec);

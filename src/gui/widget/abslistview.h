@@ -9,8 +9,7 @@
 #include <widget/filterable.h>
 
 namespace cdroid{
-
-class HapticScrollFeedbackProvider;
+class ListPopupWindow;
 class AbsListView:public AdapterView,Filter::FilterListener{
 private:
     static constexpr float FLING_DESTRETCH_FACTOR = 4.f;
@@ -18,6 +17,7 @@ private:
     static constexpr int CHECK_POSITION_SEARCH_DISTANCE=20;
 public:
     friend RecycleBin;
+    friend ListPopupWindow;
     static constexpr int CHOICE_MODE_NONE=0;
     static constexpr int CHOICE_MODE_SINGLE=1;
     static constexpr int CHOICE_MODE_MULTIPLE=2;

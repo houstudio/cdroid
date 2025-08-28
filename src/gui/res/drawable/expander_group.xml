@@ -16,23 +16,8 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        state_window_focused="false" state_enabled="true"
-        drawable="@mipmap/btn_dropdown_normal" />
+        android:state_expanded="true"
+        android:drawable="@mipmap/expander_ic_maximized" />
     <item
-        state_window_focused="false" state_enabled="false"
-        drawable="@mipmap/btn_dropdown_disabled" />
-    <item
-        state_pressed="true"
-        drawable="@mipmap/btn_dropdown_pressed" />
-    <item
-        state_focused="true" state_enabled="true"
-        drawable="@mipmap/btn_dropdown_selected" />
-    <item
-        state_enabled="true"
-        drawable="@mipmap/btn_dropdown_normal" />
-    <item
-        state_focused="true"
-        drawable="@mipmap/btn_dropdown_disabled_focused" />
-    <item
-        drawable="@mipmap/btn_dropdown_disabled" />
+        android:drawable="@mipmap/expander_ic_minimized" />
 </selector>

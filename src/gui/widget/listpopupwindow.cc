@@ -52,6 +52,14 @@ ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, cons
     mDropDownHorizontalOffset = atts.getDimensionPixelOffset("dropDownHorizontalOffet",0);
     mDropDownVerticalOffset   = atts.getDimensionPixelOffset("dropDownVerticalOffet",0);
     mPopup = new PopupWindow(mContext,atts,defStyleAttr,defStyleRes);
+    mResizePopupRunnable =[this](){
+        if ((mDropDownList != nullptr) && mDropDownList->isAttachedToWindow()
+                && (mDropDownList->getCount() > mDropDownList->getChildCount())
+                && (mDropDownList->getChildCount() <= mListItemExpandMaximum)) {
+            mPopup->setInputMethodMode(PopupWindow::INPUT_METHOD_NOT_NEEDED);
+            show();
+        }
+    };
 }
 
 ListPopupWindow::~ListPopupWindow(){
@@ -231,8 +239,8 @@ int ListPopupWindow::getHeight() {
 
 
 void ListPopupWindow::setHeight(int height) {
-    if (height < 0 && LayoutParams::WRAP_CONTENT != height
-            && LayoutParams::MATCH_PARENT != height) {
+    if ((height < 0) && (LayoutParams::WRAP_CONTENT != height)
+            && (LayoutParams::MATCH_PARENT != height)) {
         throw "Invalid height. Must be a positive value, MATCH_PARENT, or WRAP_CONTENT.";
     }
     mDropDownHeight = height;
@@ -243,18 +251,18 @@ void ListPopupWindow::setWindowLayoutType(int layoutType) {
 }
 
 
-void ListPopupWindow::setOnItemClickListener(AdapterView::OnItemClickListener clickListener) {
+void ListPopupWindow::setOnItemClickListener(const AdapterView::OnItemClickListener& clickListener) {
     mItemClickListener = clickListener;
 }
 
 
-void ListPopupWindow::setOnItemSelectedListener(AdapterView::OnItemSelectedListener selectedListener) {
+void ListPopupWindow::setOnItemSelectedListener(const AdapterView::OnItemSelectedListener& selectedListener) {
     mItemSelectedListener = selectedListener;
 }
 
 
 void ListPopupWindow::setPromptView( View* prompt) {
-    bool showing = isShowing();
+    const bool showing = isShowing();
     if (showing) {
         removePromptView();
     }
@@ -271,7 +279,7 @@ void ListPopupWindow::postShow(){
 void ListPopupWindow::show() {
      int height = buildDropDown();
 
-     bool noInputMethod = false;//isInputMethodNotNeeded();
+     const bool noInputMethod = isInputMethodNotNeeded();
      mPopup->setWindowLayoutType(mDropDownWindowLayoutType);
 
      if (mPopup->isShowing()) {
@@ -365,12 +373,13 @@ void ListPopupWindow::dismiss() {
     removePromptView();
     mPopup->setContentView(nullptr);
     //mDropDownList->setAdapter(nullptr);
-    //delete mDropDownList;
+    LOGD("TODO:delete mDropDownList %p;delete will caused crash; not delete will cause memleak",mDropDownList);
+    delete mDropDownList;
     mDropDownList = nullptr;
     mHandler->removeCallbacks(mResizePopupRunnable);
 }
 
-void ListPopupWindow::setOnDismissListener(PopupWindow::OnDismissListener listener) {
+void ListPopupWindow::setOnDismissListener(const PopupWindow::OnDismissListener& listener) {
      mPopup->setOnDismissListener(listener);
 }
 
@@ -392,7 +401,7 @@ int ListPopupWindow::getInputMethodMode() {
 
 void ListPopupWindow::setSelection(int position) {
     DropDownListView* list = mDropDownList;
-    if (isShowing() && list != nullptr) {
+    if (isShowing() && (list != nullptr)) {
         list->setListSelectionHidden(false);
         list->setSelection(position);
 
@@ -408,7 +417,7 @@ void ListPopupWindow::clearListSelection() {
     if (list != nullptr) {
         // WARNING: Please read the comment where mListSelectionHidden is declared
         list->setListSelectionHidden(true);
-        //list.hideSelector();
+        list->hideSelector();
         list->requestLayout();
     }
 }
@@ -419,8 +428,8 @@ bool ListPopupWindow::isShowing() {
 }
 
 
-bool ListPopupWindow::isInputMethodNotNeeded() {
-    return false;//mPopup->getInputMethodMode() == INPUT_METHOD_NOT_NEEDED;
+bool ListPopupWindow::isInputMethodNotNeeded() const{
+    return mPopup->getInputMethodMode() == PopupWindow::INPUT_METHOD_NOT_NEEDED;
 }
 
 bool ListPopupWindow::performItemClick(int position) {
@@ -504,8 +513,7 @@ bool ListPopupWindow::onKeyDown(int keyCode,KeyEvent& event){
 
             if (adapter != nullptr) {
                 allEnabled = adapter->areAllItemsEnabled();
-                firstItem = allEnabled ? 0 :
-                       mDropDownList->lookForSelectablePosition(0, true);
+                firstItem = allEnabled ? 0 : mDropDownList->lookForSelectablePosition(0, true);
                 lastItem = allEnabled ? adapter->getCount() - 1 :
                        mDropDownList->lookForSelectablePosition(adapter->getCount() - 1, false);
             }
@@ -519,8 +527,7 @@ bool ListPopupWindow::onKeyDown(int keyCode,KeyEvent& event){
                 show();
                 return true;
             } else {
-                // WARNING: Please read the comment where mListSelectionHidden
-                //          is declared
+                // WARNING: Please read the comment where mListSelectionHidden is declared
                 mDropDownList->setListSelectionHidden(false);
             } 
 
@@ -531,10 +538,9 @@ bool ListPopupWindow::onKeyDown(int keyCode,KeyEvent& event){
                 // If it handled the key event, then the user is
                 // navigating in the list, so we should put it in front.
                 mPopup->setInputMethodMode(PopupWindow::INPUT_METHOD_NOT_NEEDED);
-                // Here's a little trick we need to do to make sure that
-                // the list view is actually showing its focus indicator,
-                // by ensuring it has focus and getting its window out
-                // of touch mode.
+                // Here's a little trick we need to do to make sure that the list
+                // view is actually showing its focus indicator,by ensuring it has
+                // focus and getting its window out of touch mode.
                 mDropDownList->requestFocusFromTouch();
                 show();
 
@@ -565,8 +571,8 @@ bool ListPopupWindow::onKeyDown(int keyCode,KeyEvent& event){
 }
 
 bool ListPopupWindow::onKeyUp(int keyCode,KeyEvent& event) {
-    if (isShowing() && mDropDownList->getSelectedItemPosition() >= 0) {
-        bool consumed = mDropDownList->onKeyUp(keyCode, event);
+    if (isShowing() && (mDropDownList->getSelectedItemPosition() >= 0)) {
+        const bool consumed = mDropDownList->onKeyUp(keyCode, event);
         if (consumed && KeyEvent::isConfirmKey(keyCode)) {
             // if the list accepts the key events and the key event was a click, the text view
             // gets the selected item from the drop down as its content
@@ -618,7 +624,8 @@ int ListPopupWindow::buildDropDown() {
         mDropDownList->setOnItemSelectedListener(listener);
         mDropDownList->setOnScrollListener(mScrollListener);
 
-        if (mItemSelectedListener.onItemSelected != nullptr||mItemSelectedListener.onNothingSelected!=nullptr) {
+        if ((mItemSelectedListener.onItemSelected != nullptr)
+                ||(mItemSelectedListener.onNothingSelected!=nullptr)) {
             mDropDownList->setOnItemSelectedListener(mItemSelectedListener);
         }
 
@@ -708,7 +715,7 @@ int ListPopupWindow::buildDropDown() {
             mPopup->getInputMethodMode() == PopupWindow::INPUT_METHOD_NOT_NEEDED;
     int maxHeight = mPopup->getMaxAvailableHeight(getAnchorView(), mDropDownVerticalOffset,
             ignoreBottomDecorations);
-    if (mDropDownAlwaysVisible || mDropDownHeight == LayoutParams::MATCH_PARENT) {
+    if (mDropDownAlwaysVisible || (mDropDownHeight == LayoutParams::MATCH_PARENT)) {
         return maxHeight + padding;
     }
 
