@@ -27,10 +27,10 @@ void CascadingMenuPopup::onGlobalLayout() {
     // Only move the popup if it's showing and non-modal. We don't want
     // to be moving around the only interactive window, since there's a
     // good chance the user is interacting with it.
-    if (isShowing() && mShowingMenus.size() > 0
+    if (isShowing() && (mShowingMenus.size() > 0)
             && !mShowingMenus.at(0)->window->isModal()) {
         View* anchor = mShownAnchorView;
-        if (anchor == nullptr || !anchor->isShown()) {
+        if ((anchor == nullptr) || !anchor->isShown()) {
             dismiss();
         } else {
             // Recompute window sizes and positions.
@@ -194,7 +194,7 @@ void CascadingMenuPopup::dismiss() {
 }
 
 bool CascadingMenuPopup::onKey(View& v, int keyCode, KeyEvent& event) {
-    if (event.getAction() == KeyEvent::ACTION_UP && keyCode == KeyEvent::KEYCODE_MENU) {
+    if ((event.getAction() == KeyEvent::ACTION_UP) && (keyCode == KeyEvent::KEYCODE_MENU)) {
         dismiss();
         return true;
     }
@@ -203,7 +203,7 @@ bool CascadingMenuPopup::onKey(View& v, int keyCode, KeyEvent& event) {
 
 int CascadingMenuPopup::getInitialMenuPosition() {
     const int layoutDirection = mAnchorView->getLayoutDirection();
-    return layoutDirection == View::LAYOUT_DIRECTION_RTL ? HORIZ_POSITION_LEFT :
+    return (layoutDirection == View::LAYOUT_DIRECTION_RTL) ? HORIZ_POSITION_LEFT :
             HORIZ_POSITION_RIGHT;
 }
 
@@ -281,7 +281,7 @@ void CascadingMenuPopup::showMenu(MenuBuilder* menu) {
         popupWindow->setEnterTransition(nullptr);
 
         const int nextMenuPosition = getNextMenuPosition(menuWidth);
-        const bool showOnRight = nextMenuPosition == HORIZ_POSITION_RIGHT;
+        const bool showOnRight = (nextMenuPosition == HORIZ_POSITION_RIGHT);
         mLastPosition = nextMenuPosition;
 
         // Compute the horizontal offset to display the submenu to the right or to the left
@@ -403,7 +403,7 @@ View* CascadingMenuPopup::findParentViewForSubmenu(CascadingMenuInfo* parentInfo
 }
 
 bool CascadingMenuPopup::isShowing() {
-    return mShowingMenus.size() > 0 && mShowingMenus.at(0)->window->isShowing();
+    return (mShowingMenus.size() > 0) && mShowingMenus.at(0)->window->isShowing();
 }
 
 void CascadingMenuPopup::onDismiss() {

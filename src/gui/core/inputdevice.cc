@@ -889,14 +889,34 @@ void InputDeviceInfo::addMotionRange(const MotionRange& range) {
     mMotionRanges.push_back(range);
 }
 
+static const char*sensorName[]={
+    "Unknown",//0
+    "Accelerometer",//ACCELEROMETER = 1, ASENSOR_TYPE_ACCELEROMETER
+    "Magnetic",//MAGNETIC_FIELD = 2, ASENSOR_TYPE_MAGNETIC_FIELD
+    "Orientation",//ORIENTATION = 3,
+    "Gyroscope",//GYROSCOPE = 4, //ASENSOR_TYPE_GYROSCOPE
+    "Light",//LIGHT = 5,//ASENSOR_TYPE_LIGHT
+    "Pressure",//PRESSURE = 6,//ASENSOR_TYPE_PRESSURE
+    "Tempperature",//TEMPERATURE = 7,
+    "Proximity",//PROXIMITY = 8,//ASENSOR_TYPE_PROXIMITY,
+    "Gravity",//GRAVITY = 9,//ASENSOR_TYPE_GRAVITY
+    "LinearAcceration",//LINEAR_ACCELERATION = 10,
+    "Rotation",//ROTATION_VECTOR = 11,//ASENSOR_TYPE_ROTATION_VECTOR,
+    "RelativeHumidity",//RELATIVE_HUMIDITY = 12,//ASENSOR_TYPE_RELATIVE_HUMIDITY,
+    "AmbientTemperature",//AMBIENT_TEMPERATURE = 13,//ASENSOR_TYPE_AMBIENT_TEMPERATURE,
+    "MagneticFieldUncalibrated",//MAGNETIC_FIELD_UNCALIBRATED = 14,//ASENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED,
+    "GameRotationVector",//"GAME_ROTATION_VECTOR = 15,//ASENSOR_TYPE_GAME_ROTATION_VECTOR,
+    "GyroscopeUncalibrated",//GYROSCOPE_UNCALIBRATED = 16,//ASENSOR_TYPE_GYROSCOPE_UNCALIBRATED,
+    "SignificantMotion"//,SIGNIFICANT_MOTION = 17,//AS
+};
+
 void InputDeviceInfo::addSensorInfo(const InputDeviceSensorInfo& info) {
-    auto it = mSensors.find(info.type);
+    auto it = mSensors.find(int(info.type));
     if (it != mSensors.end()) {
-        //LOGW("Sensor type %s already exists, will be replaced by new sensor added.",
-        //      ftl::enum_string(info.type).c_str());
+        LOGW("Sensor type %s already exists, will be replaced by new sensor added.",sensorName[int(info.type)]);
         it->second = info;
     }else{
-        mSensors.insert({info.type, info});
+        mSensors.insert({int(info.type), info});
     }
 }
 

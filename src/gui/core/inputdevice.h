@@ -259,7 +259,7 @@ private:
     bool mHasButtonUnderPad;
     bool mHasSensor;
     std::vector<MotionRange> mMotionRanges;
-    std::unordered_map<InputDeviceSensorType, InputDeviceSensorInfo> mSensors;
+    std::unordered_map<int32_t/*InputDeviceSensorType*/, InputDeviceSensorInfo> mSensors;
     /* Map from light ID to light info */
     std::unordered_map<int32_t, InputDeviceLightInfo> mLights;
     /* Map from battery ID to battery info */

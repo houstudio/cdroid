@@ -29,11 +29,12 @@ DropDownListView::DropDownListView(Context*context,bool hijackfocus)
 }
 
 DropDownListView::~DropDownListView(){
+    LOGD("destroy %p",this);
     delete mScrollHelper;
     removeCallbacks(mResolveHoverRunnable);
 }
 
-bool DropDownListView::shouldShowSelector(){
+bool DropDownListView::shouldShowSelector()const{
     return isHovered() || ListView::shouldShowSelector();
 }
 
@@ -47,7 +48,7 @@ bool DropDownListView::onTouchEvent(MotionEvent& ev){
 
 bool DropDownListView::onHoverEvent(MotionEvent& ev){
     const int action = ev.getActionMasked();
-    if (action == MotionEvent::ACTION_HOVER_EXIT && mResolveHoverRunnable == nullptr) {
+    if ((action == MotionEvent::ACTION_HOVER_EXIT) && (mResolveHoverRunnable == nullptr)) {
         // This may be transitioning to TOUCH_DOWN. Postpone drawable state
         // updates until either the next frame or the next touch event.
         mResolveHoverRunnable = [this](){
@@ -60,9 +61,9 @@ bool DropDownListView::onHoverEvent(MotionEvent& ev){
     // Allow the super class to handle hover state management first.
     bool handled = ListView::onHoverEvent(ev);
 
-    if (action == MotionEvent::ACTION_HOVER_ENTER || action == MotionEvent::ACTION_HOVER_MOVE) {
+    if ((action == MotionEvent::ACTION_HOVER_ENTER) || (action == MotionEvent::ACTION_HOVER_MOVE)) {
         const int position = pointToPosition((int) ev.getX(), (int) ev.getY());
-        if (position != INVALID_POSITION && position != mSelectedPosition) {
+        if ((position != INVALID_POSITION) && (position != mSelectedPosition)) {
             View* hoveredItem = getChildAt(position - getFirstVisiblePosition());
             if (hoveredItem->isEnabled()) {
                 // Force a focus so that the proper selector state gets
@@ -186,8 +187,8 @@ void DropDownListView::setPressedItem(View* child, int position, float x, float 
     mMotionPosition = position;
 
     // Offset for child coordinates.
-    float childX = x - child->getLeft();
-    float childY = y - child->getTop();
+    const float childX = x - child->getLeft();
+    const float childY = y - child->getTop();
     child->drawableHotspotChanged(childX, childY);
     if (!child->isPressed()) {
         child->setPressed(true);
@@ -202,7 +203,7 @@ void DropDownListView::setPressedItem(View* child, int position, float x, float 
     refreshDrawableState();
 }
 
-bool DropDownListView::touchModeDrawsInPressedState() {
+bool DropDownListView::touchModeDrawsInPressedState() const{
     return mDrawsInPressedState || ListView::touchModeDrawsInPressedState();
 }
 
@@ -231,25 +232,4 @@ bool DropDownListView::hasFocus()const{
     return mHijackFocus || ListView::hasFocus();
 }
 
-////////////////////////////////////////////////////////////////////////////////////
-DropDownListView::ResolveHoverRunnable::ResolveHoverRunnable(DropDownListView*v){
-    mDLV = v;
-    mRunnable = std::bind(&ResolveHoverRunnable::run,this);
-}
-
-void DropDownListView::ResolveHoverRunnable::run() {
-    // Resolved hover event as standard hover exit.
-    //mResolveHoverRunnable = null;
-    mDLV->drawableStateChanged();
-}
-
-void DropDownListView::ResolveHoverRunnable::cancel() {
-    //mResolveHoverRunnable = null;
-    mDLV->removeCallbacks(mRunnable);
-}
-
-void DropDownListView::ResolveHoverRunnable::post() {
-    mDLV->post(mRunnable);
-}
-
-}
+}/*endof namespace*/

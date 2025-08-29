@@ -70,15 +70,16 @@ ListPopupWindow::~ListPopupWindow(){
 }
 
 void ListPopupWindow::initPopupWindow(){
-    mObserver = nullptr;
     mOverlapAnchor = 0xFF;
     mDropDownAlwaysVisible  = false;
     mForceIgnoreOutsideTouch= false;
     mListItemExpandMaximum = INT_MAX;
-    mDropDownHorizontalOffset = 0;
     mDropDownVerticalOffset = 0;
-    mDropDownList = nullptr;
+    mDropDownHorizontalOffset = 0;
+    mPopup = nullptr;
+    mObserver = nullptr;
     mPromptView = nullptr;
+    mDropDownList = nullptr;
     mDropDownAnchorView = nullptr;
     mDropDownListHighlight = nullptr;
     mDropDownWidth  = LayoutParams::WRAP_CONTENT;
@@ -86,15 +87,18 @@ void ListPopupWindow::initPopupWindow(){
     mDropDownGravity= Gravity::NO_GRAVITY;
     mPromptPosition = POSITION_PROMPT_ABOVE;
     mHandler = new Handler();
-    mPopup = nullptr;
+
     mHideSelector = [this](){
         clearListSelection();
     };
+    mScrollListener.onScroll = [](AbsListView& view, int firstVisibleItem, int visibleItemCount,int totalItemCount){
+    };
+
     mTouchInterceptor = [this] (View& v, MotionEvent& event){
         const int action = event.getAction();
         const int x = (int) event.getX();
         const int y = (int) event.getY();
-        if (action == MotionEvent::ACTION_DOWN && mPopup && mPopup->isShowing() &&
+        if ((action == MotionEvent::ACTION_DOWN) && mPopup && mPopup->isShowing() &&
             (x >= 0 && x < mPopup->getWidth() && y >= 0 && y < mPopup->getHeight())) {
                 mHandler->postDelayed(mResizePopupRunnable, EXPAND_LIST_TIMEOUT);
         } else if (action == MotionEvent::ACTION_UP) {
@@ -120,7 +124,7 @@ void ListPopupWindow::setPromptPosition(int position) {
     mPromptPosition = position;
 }
 
-int ListPopupWindow::getPromptPosition(){
+int ListPopupWindow::getPromptPosition()const{
     return mPromptPosition;
 }
 
@@ -129,7 +133,7 @@ void ListPopupWindow::setModal(bool modal) {
      mPopup->setFocusable(modal);
 }
 
-bool ListPopupWindow::isModal(){
+bool ListPopupWindow::isModal()const{
     return mModal;
 }
 
@@ -141,16 +145,16 @@ void ListPopupWindow::setDropDownAlwaysVisible(bool dropDownAlwaysVisible) {
     mDropDownAlwaysVisible = dropDownAlwaysVisible;
 }
 
-bool ListPopupWindow::isDropDownAlwaysVisible() {
+bool ListPopupWindow::isDropDownAlwaysVisible()const{
     return mDropDownAlwaysVisible;
 }
 
 void ListPopupWindow::setSoftInputMode(int mode) {
-    //mPopup->setSoftInputMode(mode);
+    mPopup->setSoftInputMode(mode);
 }
 
-int ListPopupWindow::getSoftInputMode() {
-    return 0;//mPopup->getSoftInputMode();
+int ListPopupWindow::getSoftInputMode() const{
+    return mPopup->getSoftInputMode();
 }
 
 void ListPopupWindow::setListSelector(Drawable* selector) {
@@ -186,7 +190,7 @@ void ListPopupWindow::setAnchorView(View* anchor) {
 }
 
 
-int ListPopupWindow::getHorizontalOffset() {
+int ListPopupWindow::getHorizontalOffset() const{
     return mDropDownHorizontalOffset;
 }
 
@@ -195,7 +199,7 @@ void ListPopupWindow::setHorizontalOffset(int offset) {
     mDropDownHorizontalOffset = offset;
 }
 
-int ListPopupWindow::getVerticalOffset() {
+int ListPopupWindow::getVerticalOffset() const{
     return mDropDownVerticalOffset;
 }
 
@@ -212,7 +216,7 @@ void ListPopupWindow::setDropDownGravity(int gravity) {
     mDropDownGravity = gravity;
 }
 
-int ListPopupWindow::getWidth() {
+int ListPopupWindow::getWidth() const{
     return mDropDownWidth;
 }
 
@@ -233,7 +237,7 @@ void ListPopupWindow::setContentWidth(int width) {
     }
 }
 
-int ListPopupWindow::getHeight() {
+int ListPopupWindow::getHeight() const{
     return mDropDownHeight;
 }
 
@@ -277,7 +281,7 @@ void ListPopupWindow::postShow(){
 }
 
 void ListPopupWindow::show() {
-     int height = buildDropDown();
+     const int height = buildDropDown();
 
      const bool noInputMethod = isInputMethodNotNeeded();
      mPopup->setWindowLayoutType(mDropDownWindowLayoutType);
@@ -374,7 +378,7 @@ void ListPopupWindow::dismiss() {
     mPopup->setContentView(nullptr);
     //mDropDownList->setAdapter(nullptr);
     LOGD("TODO:delete mDropDownList %p;delete will caused crash; not delete will cause memleak",mDropDownList);
-    delete mDropDownList;
+    //delete mDropDownList;/*this seems owned by PopupWindow::PopupDecorView::mBackgroundView*/
     mDropDownList = nullptr;
     mHandler->removeCallbacks(mResizePopupRunnable);
 }
@@ -395,7 +399,7 @@ void ListPopupWindow::setInputMethodMode(int mode) {
 }
 
 
-int ListPopupWindow::getInputMethodMode() {
+int ListPopupWindow::getInputMethodMode()const {
     return mPopup->getInputMethodMode();
 }
 
@@ -423,7 +427,7 @@ void ListPopupWindow::clearListSelection() {
 }
 
 
-bool ListPopupWindow::isShowing() {
+bool ListPopupWindow::isShowing() const{
     return mPopup->isShowing();
 }
 
@@ -740,10 +744,10 @@ int ListPopupWindow::buildDropDown() {
 
     // Add padding only if the list has items in it, that way we don't show
     // the popup if it is not needed.
-    int listContent = mDropDownList->measureHeightOfChildren(childWidthSpec,
+    const int listContent = mDropDownList->measureHeightOfChildren(childWidthSpec,
             0, DropDownListView::NO_POSITION, maxHeight - otherHeights, -1);
     if (listContent > 0) {
-        int listPadding = mDropDownList->getPaddingTop()
+        const int listPadding = mDropDownList->getPaddingTop()
                 + mDropDownList->getPaddingBottom();
         otherHeights += padding + listPadding;
     }

@@ -40,9 +40,9 @@ private:
          * of the choice being made. @param hintText Hint text to set.*/
         virtual void setPromptText(const std::string& hintText)=0;
         virtual const std::string getHintText()=0;
-        virtual int getVerticalOffset()=0;
+        virtual int getVerticalOffset()const=0;
         virtual void setVerticalOffset(int px)=0;
-        virtual int getHorizontalOffset()=0;
+        virtual int getHorizontalOffset()const=0;
         virtual void setHorizontalOffset(int px)=0;
         virtual void setBackgroundDrawable(Drawable* bg)=0;
         virtual Drawable* getBackground()=0;
@@ -68,9 +68,9 @@ private:
         bool isShowing()override;
         void setPromptText(const std::string& hintText)override;
         const std::string getHintText()override;
-        int getVerticalOffset()override;
+        int getVerticalOffset()const override;
         void setVerticalOffset(int px)override;
-        int getHorizontalOffset()override;
+        int getHorizontalOffset()const override;
         void setHorizontalOffset(int px)override;
         void setBackgroundDrawable(Drawable* bg)override;
         Drawable* getBackground()override;
@@ -93,9 +93,9 @@ private:
         bool isShowing()override;
         void setPromptText(const std::string& hintText)override;
         const std::string getHintText()override;
-        int getVerticalOffset()override;
+        int getVerticalOffset()const override;
         void setVerticalOffset(int px)override;
-        int getHorizontalOffset()override;
+        int getHorizontalOffset()const override;
         void setHorizontalOffset(int px)override;
         void setBackgroundDrawable(Drawable* bg)override;
         Drawable* getBackground()override;

@@ -352,13 +352,13 @@ please see themes_device_defaults.xml.
         <item name="actionBarPopupTheme">@null</item>
         <item name="actionBarTheme">@null</item>
 
-        <item name="actionModeCutDrawable">@drawable/ic_menu_cut_holo_dark</item>
-        <item name="actionModeCopyDrawable">@drawable/ic_menu_copy_holo_dark</item>
-        <item name="actionModePasteDrawable">@drawable/ic_menu_paste_holo_dark</item>
-        <item name="actionModeSelectAllDrawable">@drawable/ic_menu_selectall_holo_dark</item>
-        <item name="actionModeShareDrawable">@drawable/ic_menu_share_holo_dark</item>
-        <item name="actionModeFindDrawable">@drawable/ic_menu_find_holo_dark</item>
-        <item name="actionModeWebSearchDrawable">@drawable/ic_menu_search_holo_dark</item>
+        <item name="actionModeCutDrawable">@mipmap/ic_menu_cut_holo_dark</item>
+        <item name="actionModeCopyDrawable">@mipmap/ic_menu_copy_holo_dark</item>
+        <item name="actionModePasteDrawable">@mipmap/ic_menu_paste_holo_dark</item>
+        <item name="actionModeSelectAllDrawable">@mipmap/ic_menu_selectall_holo_dark</item>
+        <item name="actionModeShareDrawable">@mipmap/ic_menu_share_holo_dark</item>
+        <item name="actionModeFindDrawable">@mipmap/ic_menu_find_holo_dark</item>
+        <item name="actionModeWebSearchDrawable">@mipmap/ic_menu_search_holo_dark</item>
 
         <item name="dividerVertical">?attr/listDivider</item>
         <item name="dividerHorizontal">?attr/listDivider</item>

@@ -349,13 +349,13 @@ please see themes_device_defaults.xml.
         <item name="actionBarTheme">@style/ThemeOverlay.Material.ActionBar</item>
         <item name="actionBarItemBackground">@drawable/action_bar_item_background_material</item>
 
-        <item name="actionModeCutDrawable">@drawable/ic_menu_cut_material</item>
-        <item name="actionModeCopyDrawable">@drawable/ic_menu_copy_material</item>
-        <item name="actionModePasteDrawable">@drawable/ic_menu_paste_material</item>
-        <item name="actionModeSelectAllDrawable">@drawable/ic_menu_selectall_material</item>
-        <item name="actionModeShareDrawable">@drawable/ic_menu_share_material</item>
-        <item name="actionModeFindDrawable">@drawable/ic_menu_find_material</item>
-        <item name="actionModeWebSearchDrawable">@drawable/ic_menu_search_material</item>
+        <item name="actionModeCutDrawable">@mipmap/ic_menu_cut_material</item>
+        <item name="actionModeCopyDrawable">@mipmap/ic_menu_copy_material</item>
+        <item name="actionModePasteDrawable">@mipmap/ic_menu_paste_material</item>
+        <item name="actionModeSelectAllDrawable">@mipmap/ic_menu_selectall_material</item>
+        <item name="actionModeShareDrawable">@mipmap/ic_menu_share_material</item>
+        <item name="actionModeFindDrawable">@mipmap/ic_menu_find_material</item>
+        <item name="actionModeWebSearchDrawable">@mipmap/ic_menu_search_material</item>
 
         <item name="toolbarStyle">@style/Widget.Material.Toolbar</item>
 

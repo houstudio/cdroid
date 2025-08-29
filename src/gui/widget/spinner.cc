@@ -574,9 +574,8 @@ void Spinner::DropdownPopup::computeContentWidth() {
     setHorizontalOffset(hOffset);
 }
 
-int Spinner::DropdownPopup::getVerticalOffset(){
+int Spinner::DropdownPopup::getVerticalOffset()const{
     int p=ListPopupWindow::getVerticalOffset();
-    LOGD("VerticalOffset=%d",p);
     return p;
 }
 
@@ -584,7 +583,7 @@ void Spinner::DropdownPopup::setVerticalOffset(int px){
     ListPopupWindow::setVerticalOffset(px);
 }
 
-int Spinner::DropdownPopup::getHorizontalOffset(){
+int Spinner::DropdownPopup::getHorizontalOffset()const{
     return ListPopupWindow::getHorizontalOffset();
 }
 
@@ -624,7 +623,7 @@ void Spinner::DropdownPopup::show(int textDirection, int textAlignment) {
     ListPopupWindow::show();
     ListView* listView = getListView();
 
-    LOGD("====mDropDownWidth=%d listView=%p",mSpinner->mDropDownWidth,listView);
+    LOGD("mDropDownWidth=%d listView=%p",mSpinner->mDropDownWidth,listView);
     if(listView==nullptr)return;
 
     listView->setChoiceMode(ListView::CHOICE_MODE_SINGLE);
@@ -653,7 +652,6 @@ void Spinner::DropdownPopup::show(int textDirection, int textAlignment) {
         });
     }
 }
-//int SpinnerPopup::measureContentWidth(Adapter*,Drawable*){}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 Spinner::DialogPopup::DialogPopup(Spinner*spinner){
@@ -672,7 +670,9 @@ void Spinner::DialogPopup::show(int textDirection, int textAlignment){
     if (mListAdapter == nullptr) {
         return;
     }
-    DialogInterface::OnClickListener onDialogClick = std::bind(&Spinner::DialogPopup::onClick,this,std::placeholders::_1,std::placeholders::_2);
+    DialogInterface::OnClickListener onDialogClick = [this](DialogInterface& dialog, int which){
+        onClick(dialog,which);
+    };
     mPopup =AlertDialog::Builder(mSpinner->getPopupContext())
         .setTitle(mPrompt)
         .setSingleChoiceItems(mListAdapter,mSpinner->getSelectedItemPosition(),onDialogClick).show();
@@ -680,7 +680,7 @@ void Spinner::DialogPopup::show(int textDirection, int textAlignment){
     ListView* listView = mPopup->getListView();
     listView->setTextDirection(textDirection);
     listView->setTextAlignment(textAlignment);
-    //mPopup->show();
+    mPopup->show();
 }
 
 void Spinner::DialogPopup::onClick(DialogInterface& dialog, int which) {
@@ -709,7 +709,7 @@ const std::string Spinner::DialogPopup::getHintText(){
     return mPrompt;
 }
 
-int Spinner::DialogPopup::getVerticalOffset(){
+int Spinner::DialogPopup::getVerticalOffset()const{
     return 0;
 }
 
@@ -717,7 +717,7 @@ void Spinner::DialogPopup::setVerticalOffset(int px){
     LOGE("Cannot set vertical offset for MODE_DIALOG, ignoring");
 }
 
-int Spinner::DialogPopup::getHorizontalOffset(){
+int Spinner::DialogPopup::getHorizontalOffset()const{
     return 0;
 }
 

@@ -21,7 +21,7 @@
 
     <!-- Do not translate. These are all of the drawable resources that should be preloaded by
          the zygote process before it starts forking application processes. -->
-    <array name="preloaded_drawables">
+    <!--array name="preloaded_drawables">
         <item>@drawable/ab_share_pack_material</item>
         <item>@drawable/ab_solid_shadow_material</item>
         <item>@drawable/action_bar_item_background_material</item>
@@ -136,7 +136,7 @@
         <item>@drawable/text_select_handle_middle_material</item>
         <item>@drawable/text_select_handle_right_material</item>
         <item>@drawable/toast_frame</item>
-    </array>
+    </array-->
 
     <!-- Do not translate. These are all of the color state list resources that should be
          preloaded by the zygote process before it starts forking application processes. -->
@@ -186,10 +186,10 @@
        <item>@color/search_url_text_material_light</item>
     </array>
 
-   <array name="preloaded_freeform_multi_window_drawables">
+   <!--array name="preloaded_freeform_multi_window_drawables">
       <item>@drawable/decor_maximize_button_dark</item>
       <item>@drawable/decor_maximize_button_light</item>
-   </array>
+   </array-->
 
     <!-- Used in LocalePicker -->
     <string-array translatable="false" name="special_locale_codes">
@@ -215,24 +215,24 @@
         <item>中文 (繁體)</item>
     </string-array>
 
-    <array name="sim_colors">
+    <!--array name="sim_colors">
         <item>@color/Teal_700</item>
         <item>@color/Blue_700</item>
         <item>@color/Indigo_700</item>
         <item>@color/Purple_700</item>
         <item>@color/Pink_700</item>
         <item>@color/Red_700</item>
-    </array>
+    </array-->
 
     <!-- Used in ResolverTargetActionsDialogFragment -->
-    <string-array name="resolver_target_actions_pin">
+    <!--string-array name="resolver_target_actions_pin">
         <item>@string/pin_target</item>
         <item>@string/app_info</item>
-    </string-array>
+    </string-array-->
 
-    <string-array name="resolver_target_actions_unpin">
+    <!--string-array name="resolver_target_actions_unpin">
         <item>@string/unpin_target</item>
         <item>@string/app_info</item>
-    </string-array>
+    </string-array-->
 
 </resources>

@@ -542,16 +542,8 @@ int Assets::getDimensionPixelSize(const std::string&refid,int def)const{
     parseResource(name,nullptr,&pkg);
     name = AttributeSet::normalize(pkg,name);
     auto it = mDimensions.find(name);
-    char*p = nullptr;
-    std::string value;
-    if(it != mDimensions.end())value =it->second;
-    def = std::strtol(value.c_str(),&p,10);
-    if(*p){
-        const DisplayMetrics& dm=getDisplayMetrics();
-        if(strncmp(p,"dp",2)==0||strncmp(p,"dip",3)==0)
-            def = (dm.density * def /*+0.5f*/);
-        if(strncmp(p,"sp",2)==0)
-            def = int(dm.scaledDensity * def /*+0.5f*/);
+    if(it != mDimensions.end()){
+        return it->second;
     }
     return def;
 
