@@ -186,7 +186,7 @@ void CandidateView::clear() {
     invalidate(true);
 }
 
-void CandidateView::setPredictListener(CandidateView::OnPredictChange ls){
+void CandidateView::setPredictListener(const OnPredictChange& ls){
     mOnPredict = ls;
 }
 

@@ -2812,23 +2812,23 @@ void View::setOnScrollChangeListener(const OnScrollChangeListener& l){
     getListenerInfo()->mOnScrollChangeListener=l;
 }
 
-void View::setOnKeyListener(OnKeyListener l){
+void View::setOnKeyListener(const OnKeyListener& l){
     getListenerInfo()->mOnKeyListener = l;
 }
 
-void View::setOnTouchListener(OnTouchListener l){
+void View::setOnTouchListener(const OnTouchListener& l){
     getListenerInfo()->mOnTouchListener = l;
 }
 
-void View::setOnGenericMotionListener(OnGenericMotionListener l){
+void View::setOnGenericMotionListener(const OnGenericMotionListener& l){
     getListenerInfo()->mOnGenericMotionListener = l;
 }
 
-void View::setOnHoverListener(OnHoverListener l){
+void View::setOnHoverListener(const OnHoverListener& l){
     getListenerInfo()->mOnHoverListener = l;
 }
 
-void View::setOnDragListener(OnDragListener l){
+void View::setOnDragListener(const OnDragListener& l){
     getListenerInfo()->mOnDragListener=l;
 }
 
@@ -3666,7 +3666,7 @@ bool View::onCapturedPointerEvent(MotionEvent& event){
     return false;
 }
 
-void View::setOnCapturedPointerListener(OnCapturedPointerListener l){
+void View::setOnCapturedPointerListener(const OnCapturedPointerListener& l){
     getListenerInfo()->mOnCapturedPointerListener = l;
 }
 
@@ -7644,7 +7644,7 @@ bool View::hasUnhandledKeyListener()const{
     return mListenerInfo && mListenerInfo->mUnhandledKeyListeners.size();
 }
 
-void View::addOnUnhandledKeyEventListener(OnUnhandledKeyEventListener listener) {
+void View::addOnUnhandledKeyEventListener(const OnUnhandledKeyEventListener& listener) {
     std::vector<OnUnhandledKeyEventListener>& listeners = getListenerInfo()->mUnhandledKeyListeners;
     listeners.push_back(listener);
     if (listeners.size() == 1 && mParent) {
@@ -7652,7 +7652,7 @@ void View::addOnUnhandledKeyEventListener(OnUnhandledKeyEventListener listener) 
     }
 }
 
-void View::removeOnUnhandledKeyEventListener(OnUnhandledKeyEventListener listener) {
+void View::removeOnUnhandledKeyEventListener(const OnUnhandledKeyEventListener& listener) {
     if (mListenerInfo && mListenerInfo->mUnhandledKeyListeners.size()) {
         std::vector<OnUnhandledKeyEventListener>& listeners=mListenerInfo->mUnhandledKeyListeners;
         auto it=std::find(listeners.begin(),listeners.end(),listener);
@@ -8907,7 +8907,7 @@ void View::dispatchWindowSystemUiVisiblityChanged(int visible){
     onWindowSystemUiVisibilityChanged(visible);
 }
 
-void View::setOnSystemUiVisibilityChangeListener(OnSystemUiVisibilityChangeListener l){
+void View::setOnSystemUiVisibilityChangeListener(const OnSystemUiVisibilityChangeListener& l){
     getListenerInfo()->mOnSystemUiVisibilityChangeListener = l;
     if (mParent && mAttachInfo && !mAttachInfo->mRecomputeGlobalAttributes) {
         mParent->recomputeViewAttributes(this);
@@ -9702,7 +9702,6 @@ void View::CheckForLongPress::rememberPressedState(){
 }
 
 void View::CheckForLongPress::run(){
-    LOGD("View::CheckForLongPress %p:%d",mView,mView->mID);
     if( (mOriginalPressedState == mView->isPressed()) && mView->mParent
         && (mOriginalWindowAttachCount == mView->mWindowAttachCount)){
         if(mView->performLongClick(mX,mY)){

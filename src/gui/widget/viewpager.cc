@@ -205,11 +205,11 @@ PagerAdapter* ViewPager::getAdapter() {
     return mAdapter;
 }
 
-void ViewPager::addOnAdapterChangeListener(OnAdapterChangeListener listener){
+void ViewPager::addOnAdapterChangeListener(const OnAdapterChangeListener& listener){
     mAdapterChangeListeners.push_back(listener);
 }
 
-void ViewPager::removeOnAdapterChangeListener(OnAdapterChangeListener listener){
+void ViewPager::removeOnAdapterChangeListener(const OnAdapterChangeListener& listener){
 }
 
 int ViewPager::getClientWidth() {

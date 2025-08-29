@@ -49,7 +49,7 @@ RatingBar::RatingBar(Context*ctx,const AttributeSet&atts)
     mTouchProgressOffset = 0.6f;
 }
 
-void RatingBar::setOnRatingBarChangeListener(OnRatingBarChangeListener listener){
+void RatingBar::setOnRatingBarChangeListener(const OnRatingBarChangeListener& listener){
     mOnRatingBarChangeListener=listener;
 }
 

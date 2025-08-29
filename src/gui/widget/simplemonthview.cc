@@ -165,7 +165,7 @@ void SimpleMonthView::setDayHighlightColor(const ColorStateList* dayHighlightCol
 
 }
 
-void SimpleMonthView::setOnDayClickListener(OnDayClickListener listener){
+void SimpleMonthView::setOnDayClickListener(const OnDayClickListener& listener){
     mOnDayClickListener = listener;
 }
 

@@ -140,7 +140,7 @@ public:
     void setDayTextColor(const ColorStateList* dayTextColor);
     void setDaySelectorColor(const ColorStateList* dayBackgroundColor);
     void setDayHighlightColor(const ColorStateList* dayHighlightColor);
-    void setOnDayClickListener(OnDayClickListener listener);
+    void setOnDayClickListener(const OnDayClickListener& listener);
     bool onTouchEvent(MotionEvent& event)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     void getFocusedRect(Rect& r)override;

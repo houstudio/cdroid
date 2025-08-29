@@ -942,7 +942,7 @@ void PopupWindow::dismissImmediate(View* decorView, ViewGroup* contentHolder, Vi
     mIsTransitioningToDismiss = false;
 }
 
-void PopupWindow::setOnDismissListener(OnDismissListener onDismissListener) {
+void PopupWindow::setOnDismissListener(const OnDismissListener& onDismissListener) {
     mOnDismissListener = onDismissListener;
 }
 

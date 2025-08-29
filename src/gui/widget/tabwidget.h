@@ -71,7 +71,7 @@ public:
     void addView(View* child)override;
     void removeAllViews()override;
     PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
-    void setTabSelectionListener(OnTabSelectionChanged listener);
+    void setTabSelectionListener(const OnTabSelectionChanged& listener);
     void onFocusChange(View* v, bool hasFocus);
 };
     

@@ -63,7 +63,7 @@ public:
     void setSuggestions(const std::vector<std::string>&suggestions, 
 		    bool completions,bool typedWordValid);
     void clear();
-    void setPredictListener(OnPredictChange ls);
+    void setPredictListener(const OnPredictChange& ls);
     bool onTouchEvent(MotionEvent& me)override;
     void takeSuggestionAt(float x);
 };

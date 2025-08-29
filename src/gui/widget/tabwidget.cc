@@ -298,7 +298,7 @@ PointerIcon* TabWidget::onResolvePointerIcon(MotionEvent& event, int pointerInde
     return LinearLayout::onResolvePointerIcon(event, pointerIndex);
 }
 
-void TabWidget::setTabSelectionListener(OnTabSelectionChanged listener) {
+void TabWidget::setTabSelectionListener(const OnTabSelectionChanged& listener) {
     mSelectionChangedListener = listener;
 }
 

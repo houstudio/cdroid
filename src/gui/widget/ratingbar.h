@@ -40,7 +40,7 @@ protected:
 public:
     RatingBar(int w,int h);
     RatingBar(Context*ctx,const AttributeSet&atts);
-    void setOnRatingBarChangeListener(OnRatingBarChangeListener listener);
+    void setOnRatingBarChangeListener(const OnRatingBarChangeListener& listener);
     OnRatingBarChangeListener getOnRatingBarChangeListener();
     void setIsIndicator(bool isIndicator);
     bool isIndicator()const;

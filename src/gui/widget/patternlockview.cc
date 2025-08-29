@@ -441,11 +441,11 @@ void PatternLockView::setEnableHapticFeedback(bool enableHapticFeedback) {
     mEnableHapticFeedback = enableHapticFeedback;
 }
 
-void PatternLockView::addPatternLockListener(PatternLockViewListener patternListener) {
+void PatternLockView::addPatternLockListener(const PatternLockViewListener& patternListener) {
     //mPatternListeners.add(patternListener);
 }
 
-void PatternLockView::removePatternLockListener(PatternLockViewListener patternListener) {
+void PatternLockView::removePatternLockListener(const PatternLockViewListener& patternListener) {
     //mPatternListeners.remove(patternListener);
 }
 

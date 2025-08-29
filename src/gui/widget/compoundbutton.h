@@ -66,9 +66,9 @@ public:
     bool isChecked()const override;
     void toggle()override;
 #endif
-    void setOnCheckedChangeListener(OnCheckedChangeListener listener);
+    void setOnCheckedChangeListener(const OnCheckedChangeListener& listener);
     /*OnCheckedChangeWidgetListener internal use(for radiogroup...)*/
-    void setOnCheckedChangeWidgetListener(OnCheckedChangeListener listener);
+    void setOnCheckedChangeWidgetListener(const OnCheckedChangeListener& listener);
     void drawableHotspotChanged(float x,float y)override;
 };
 

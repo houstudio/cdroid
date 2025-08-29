@@ -375,7 +375,7 @@ public:
     void scheduleLayoutAnimation();
     void setLayoutAnimation(LayoutAnimationController*);
     LayoutAnimationController* getLayoutAnimation();
-    void setLayoutAnimationListener(Animation::AnimationListener animationListener);
+    void setLayoutAnimationListener(const Animation::AnimationListener& animationListener);
     virtual void requestTransitionStart(LayoutTransition* transition);
     bool resolveRtlPropertiesIfNeeded()override;
     bool resolveLayoutDirection()override;

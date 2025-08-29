@@ -215,7 +215,7 @@ public:
     int getMaxAvailableHeight(View* anchor);
     int getMaxAvailableHeight(View* anchor, int yOffset,bool ignoreBottomDecorations);
     void dismiss();
-    void setOnDismissListener(OnDismissListener onDismissListener);
+    void setOnDismissListener(const OnDismissListener& onDismissListener);
     void update();
     void update(int width, int height);
     void update(int x, int y, int width, int height,bool force=false);

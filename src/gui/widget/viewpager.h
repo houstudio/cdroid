@@ -223,8 +223,8 @@ public:
     ~ViewPager();
     void setAdapter(PagerAdapter* adapter);
     PagerAdapter* getAdapter();
-    void addOnAdapterChangeListener(OnAdapterChangeListener listener);
-    void removeOnAdapterChangeListener(OnAdapterChangeListener listener);
+    void addOnAdapterChangeListener(const OnAdapterChangeListener& listener);
+    void removeOnAdapterChangeListener(const OnAdapterChangeListener& listener);
 
     void addOnPageChangeListener(const OnPageChangeListener& listener);
     void removeOnPageChangeListener(const OnPageChangeListener& listener);

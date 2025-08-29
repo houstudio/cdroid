@@ -138,7 +138,7 @@ YearPickerView::YearPickerView(Context*ctx,const AttributeSet&attrs):ListView(ct
     });
 }
 
-void YearPickerView::setOnYearSelectedListener(OnYearSelectedListener listener) {
+void YearPickerView::setOnYearSelectedListener(const OnYearSelectedListener& listener) {
     mOnYearSelectedListener = listener;
 }
 

@@ -243,7 +243,7 @@ void AbsListView::invokeOnItemScrollListener() {
     onScrollChanged(0,0,0,0);
 }
 
-void AbsListView::setOnScrollListener(OnScrollListener l) {
+void AbsListView::setOnScrollListener(const OnScrollListener& l) {
     mOnScrollListener = l;
     invokeOnItemScrollListener();
 }
@@ -757,7 +757,7 @@ void AbsListView::setChoiceMode(int choiceMode) {
     }
 }
 
-void AbsListView::setMultiChoiceModeListener(MultiChoiceModeListener listener) {
+void AbsListView::setMultiChoiceModeListener(const MultiChoiceModeListener& listener) {
     mMultiChoiceModeCallback=listener;
 }
 

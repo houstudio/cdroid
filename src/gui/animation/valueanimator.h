@@ -124,8 +124,8 @@ public:
     int  getRepeatCount()const;
     void setRepeatMode(int value);
     int  getRepeatMode()const;
-    void addUpdateListener(AnimatorUpdateListener listener);
-    void removeUpdateListener(AnimatorUpdateListener listener);
+    void addUpdateListener(const AnimatorUpdateListener& listener);
+    void removeUpdateListener(const AnimatorUpdateListener& listener);
     void removeAllUpdateListeners();
     void setInterpolator(TimeInterpolator* value)override;
     TimeInterpolator* getInterpolator()override;
