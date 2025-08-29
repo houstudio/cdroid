@@ -483,7 +483,7 @@ PopupWindow::PopupBackgroundView* PopupWindow::createBackgroundView(View* conten
 PopupWindow::PopupDecorView* PopupWindow::createDecorView(View* contentView){
     ViewGroup::LayoutParams* layoutParams = mContentView->getLayoutParams();
     int height;
-    if (layoutParams  && layoutParams->height == LayoutParams::WRAP_CONTENT) {
+    if (layoutParams  && (layoutParams->height == LayoutParams::WRAP_CONTENT)) {
         height = LayoutParams::WRAP_CONTENT;
     } else {
         height = LayoutParams::MATCH_PARENT;

@@ -27,10 +27,10 @@ void CascadingMenuPopup::onGlobalLayout() {
     // Only move the popup if it's showing and non-modal. We don't want
     // to be moving around the only interactive window, since there's a
     // good chance the user is interacting with it.
-    if (isShowing() && mShowingMenus.size() > 0
+    if (isShowing() && (mShowingMenus.size() > 0)
             && !mShowingMenus.at(0)->window->isModal()) {
         View* anchor = mShownAnchorView;
-        if (anchor == nullptr || !anchor->isShown()) {
+        if ((anchor == nullptr) || !anchor->isShown()) {
             dismiss();
         } else {
             // Recompute window sizes and positions.
