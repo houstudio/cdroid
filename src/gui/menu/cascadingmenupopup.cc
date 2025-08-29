@@ -42,17 +42,17 @@ void CascadingMenuPopup::onGlobalLayout() {
 }
 
 //OnAttachStateChangeListener mAttachStateChangeListener =new OnAttachStateChangeListener() {
-void CascadingMenuPopup::onViewAttachedToWindow(View* v) {
+void CascadingMenuPopup::onViewAttachedToWindow(View& v) {
 }
 
-void CascadingMenuPopup::onViewDetachedFromWindow(View* v) {
+void CascadingMenuPopup::onViewDetachedFromWindow(View& v) {
     if (mTreeObserver != nullptr) {
         if (!mTreeObserver->isAlive()) {
-            mTreeObserver = v->getViewTreeObserver();
+            mTreeObserver = v.getViewTreeObserver();
         }
         mTreeObserver->removeGlobalOnLayoutListener(mGlobalLayoutListener);
     }
-    v->removeOnAttachStateChangeListener(mAttachStateChangeListener);
+    v.removeOnAttachStateChangeListener(mAttachStateChangeListener);
 }
 
 //MenuItemHoverListener mMenuItemHoverListener = new MenuItemHoverListener() {
@@ -121,6 +121,13 @@ CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
     mForceShowIcon = false;
     mShouldCloseImmediately = false;
     mLastPosition = getInitialMenuPosition();
+
+    mAttachStateChangeListener.onViewDetachedFromWindow=[this](View&v){
+        onViewDetachedFromWindow(v);
+    };
+    mGlobalLayoutListener=[this](){
+        onGlobalLayout();
+    };
 
     //final Resources res = context.getResources();
     mMenuMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,

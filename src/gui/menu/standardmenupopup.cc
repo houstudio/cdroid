@@ -40,12 +40,12 @@ void StandardMenuPopup::onGlobalLayout() {
     }
 }
 
-void StandardMenuPopup::onViewDetachedFromWindow(View* v) {
+void StandardMenuPopup::onViewDetachedFromWindow(View& v) {
     if (mTreeObserver != nullptr) {
-        if (!mTreeObserver->isAlive()) mTreeObserver = v->getViewTreeObserver();
+        if (!mTreeObserver->isAlive()) mTreeObserver = v.getViewTreeObserver();
         mTreeObserver->removeGlobalOnLayoutListener(mGlobalLayoutListener);
     }
-    v->removeOnAttachStateChangeListener(mAttachStateChangeListener);//this);
+    v.removeOnAttachStateChangeListener(mAttachStateChangeListener);//this);
 }
 
 StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* anchorView,
@@ -55,13 +55,17 @@ StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* 
     mOverflowOnly = overflowOnly;
     LayoutInflater* inflater = LayoutInflater::from(context);
     mAdapter = new MenuAdapter(menu, inflater, mOverflowOnly, ITEM_LAYOUT_MATERIAL);
-    mPopupStyleAttr = popupStyleAttr;
+    mPopupStyleAttr= popupStyleAttr;
     mPopupStyleRes = popupStyleRes;
 
+    mAttachStateChangeListener.onViewDetachedFromWindow=[this](View&v){
+        onViewDetachedFromWindow(v);
+    };
+    mGlobalLayoutListener=[this](){
+        onGlobalLayout();
+    };
     mPopupMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,context->getDimensionPixelSize("cdroid:dimen/config_prefDialogWidth"));
-
     mAnchorView = anchorView;
-
     mPopup = new MenuPopupWindow(mContext,AttributeSet(mContext,"cdroid"), mPopupStyleAttr, mPopupStyleRes);
 
     // Present the menu using our context, not the menu builder's context.
@@ -95,7 +99,7 @@ bool StandardMenuPopup::tryShow() {
     mPopup->setModal(true);
 
     View* anchor = mShownAnchorView;
-    const bool addGlobalListener = mTreeObserver == nullptr;
+    const bool addGlobalListener = (mTreeObserver == nullptr);
     mTreeObserver = anchor->getViewTreeObserver(); // Refresh to latest
     if (addGlobalListener) {
         mTreeObserver->addOnGlobalLayoutListener(mGlobalLayoutListener);

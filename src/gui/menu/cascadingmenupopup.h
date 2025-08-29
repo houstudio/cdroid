@@ -63,8 +63,8 @@ private:
     bool mShouldCloseImmediately;
 private:
     void onGlobalLayout();
-    void onViewAttachedToWindow(View*);
-    void onViewDetachedFromWindow(View*);
+    void onViewAttachedToWindow(View&);
+    void onViewDetachedFromWindow(View&);
     void onItemHoverExit(MenuBuilder& menu,MenuItem& item);
     void onItemHoverEnter(MenuBuilder& menu,MenuItem& item);
     MenuPopupWindow* createPopupWindow();
