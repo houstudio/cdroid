@@ -122,7 +122,7 @@ MenuPopup* MenuPopupHelper::createPopup() {
     Rect maxWindowBounds = {0,0,400,640};//windowManager.getMaximumWindowMetrics().getBounds();
 
     const int smallestWidth = std::min(maxWindowBounds.width, maxWindowBounds.height);
-    const int minSmallestWidthCascading = 64;//mContext->getDimensionPixelSize("android:dimen/cascading_menus_min_smallest_width");
+    const int minSmallestWidthCascading = mContext->getDimensionPixelSize("android:dimen/cascading_menus_min_smallest_width");
     const bool enableCascadingSubmenus = smallestWidth >= minSmallestWidthCascading;
 
     MenuPopup* popup = nullptr;
