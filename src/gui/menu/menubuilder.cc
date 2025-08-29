@@ -33,6 +33,7 @@ MenuBuilder::MenuBuilder(Context* context) {
     mIsVisibleItemsStale = true;
     mIsActionItemsStale = true;
     mIsClosing = false;
+    mQwertyMode= false;
     mGroupDividerEnabled  = false;
     mOptionalIconsVisible = false;
     mPreventDispatchingItemsChanged = false;

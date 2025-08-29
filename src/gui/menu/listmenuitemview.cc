@@ -147,7 +147,7 @@ void ListMenuItemView::setCheckable(bool checkable) {
         }
 
         // Make sure the other compound button isn't visible
-        if (otherCompoundButton != nullptr && otherCompoundButton->getVisibility() != GONE) {
+        if ((otherCompoundButton != nullptr) && (otherCompoundButton->getVisibility() != GONE)) {
             otherCompoundButton->setVisibility(GONE);
         }
     } else {

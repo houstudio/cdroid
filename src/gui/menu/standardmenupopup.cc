@@ -52,7 +52,10 @@ StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* 
         const std::string& popupStyleAttr,const std::string& popupStyleRes, bool overflowOnly) {
     mContext = context;//Objects.requireNonNull(context);
     mMenu = menu;
+    mWasDismissed = false;
+    mHasContentWidth = false;
     mOverflowOnly = overflowOnly;
+    mTreeObserver = nullptr;
     LayoutInflater* inflater = LayoutInflater::from(context);
     mAdapter = new MenuAdapter(menu, inflater, mOverflowOnly, ITEM_LAYOUT_MATERIAL);
     mPopupStyleAttr= popupStyleAttr;

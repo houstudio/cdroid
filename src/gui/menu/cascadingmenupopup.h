@@ -68,7 +68,7 @@ private:
     void onItemHoverExit(MenuBuilder& menu,MenuItem& item);
     void onItemHoverEnter(MenuBuilder& menu,MenuItem& item);
     MenuPopupWindow* createPopupWindow();
-    int getInitialMenuPosition();
+    int getInitialMenuPosition()const;
     int getNextMenuPosition(int nextMenuWidth);
     void showMenu(MenuBuilder* menu);
     MenuItem* findMenuItemForSubmenu(MenuBuilder* parent, MenuBuilder* submenu);

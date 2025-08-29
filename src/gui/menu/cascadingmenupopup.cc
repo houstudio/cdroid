@@ -21,8 +21,7 @@
 #include <menu/submenubuilder.h>
 #include <widget/menupopupwindow.h>
 namespace cdroid{
-//class CascadingMenuPopup extends MenuPopup implements MenuPresenter, OnKeyListener,PopupWindow.OnDismissListener {
-//private final OnGlobalLayoutListener mGlobalLayoutListener = new OnGlobalLayoutListener() {
+
 void CascadingMenuPopup::onGlobalLayout() {
     // Only move the popup if it's showing and non-modal. We don't want
     // to be moving around the only interactive window, since there's a
@@ -41,7 +40,6 @@ void CascadingMenuPopup::onGlobalLayout() {
     }
 }
 
-//OnAttachStateChangeListener mAttachStateChangeListener =new OnAttachStateChangeListener() {
 void CascadingMenuPopup::onViewAttachedToWindow(View& v) {
 }
 
@@ -174,7 +172,7 @@ void CascadingMenuPopup::show() {
     mShownAnchorView = mAnchorView;
 
     if (mShownAnchorView != nullptr) {
-        const bool addGlobalListener = mTreeObserver == nullptr;
+        const bool addGlobalListener = (mTreeObserver == nullptr);
         mTreeObserver = mShownAnchorView->getViewTreeObserver(); // Refresh to latest
         if (addGlobalListener) {
             mTreeObserver->addOnGlobalLayoutListener(mGlobalLayoutListener);
@@ -208,7 +206,7 @@ bool CascadingMenuPopup::onKey(View& v, int keyCode, KeyEvent& event) {
     return false;
 }
 
-int CascadingMenuPopup::getInitialMenuPosition() {
+int CascadingMenuPopup::getInitialMenuPosition()const {
     const int layoutDirection = mAnchorView->getLayoutDirection();
     return (layoutDirection == View::LAYOUT_DIRECTION_RTL) ? HORIZ_POSITION_LEFT :
             HORIZ_POSITION_RIGHT;
