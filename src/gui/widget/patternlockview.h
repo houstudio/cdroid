@@ -223,8 +223,8 @@ public:
     void setTactileFeedbackEnabled(bool tactileFeedbackEnabled);
     void setInputEnabled(bool inputEnabled);
     void setEnableHapticFeedback(bool enableHapticFeedback);
-    void addPatternLockListener(PatternLockViewListener patternListener);
-    void removePatternLockListener(PatternLockViewListener patternListener);
+    void addPatternLockListener(const PatternLockViewListener& patternListener);
+    void removePatternLockListener(const PatternLockViewListener& patternListener);
     void clearPattern();    
 };
 

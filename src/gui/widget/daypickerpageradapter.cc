@@ -108,7 +108,7 @@ void DayPickerPagerAdapter::setSelectedDay(Calendar* day) {
     mSelectedDay = day;
 }
 
-void DayPickerPagerAdapter::setOnDaySelectedListener(OnDaySelectedListener listener) {
+void DayPickerPagerAdapter::setOnDaySelectedListener(const OnDaySelectedListener& listener) {
     mOnDaySelectedListener = listener;
 }
 

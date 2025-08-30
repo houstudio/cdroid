@@ -1,4 +1,179 @@
 <resources>
+   
+    <!-- Base style for animations.  This style specifies no animations. -->
+    <style name="Animation"/>
+
+    <!-- Standard animations for a full-screen window or activity. -->
+    <style name="Animation.Activity">
+        <item name="activityOpenEnterAnimation">@anim/activity_open_enter</item>
+        <item name="activityOpenExitAnimation">@anim/activity_open_exit</item>
+        <item name="activityCloseEnterAnimation">@anim/activity_close_enter</item>
+        <item name="activityCloseExitAnimation">@anim/activity_close_exit</item>
+        <item name="dreamActivityCloseExitAnimation">@anim/dream_activity_close_exit</item>
+        <item name="dreamActivityOpenEnterAnimation">@anim/dream_activity_open_enter</item>
+        <item name="dreamActivityOpenExitAnimation">@anim/dream_activity_open_exit</item>
+        <item name="taskOpenEnterAnimation">@anim/task_open_enter</item>
+        <item name="taskOpenExitAnimation">@anim/task_open_exit</item>
+        <item name="launchTaskBehindTargetAnimation">@anim/launch_task_behind_target</item>
+        <item name="launchTaskBehindSourceAnimation">@anim/launch_task_behind_source</item>
+        <item name="taskCloseEnterAnimation">@anim/task_close_enter</item>
+        <item name="taskCloseExitAnimation">@anim/task_close_exit</item>
+        <item name="taskToFrontEnterAnimation">@anim/task_open_enter</item>
+        <item name="taskToFrontExitAnimation">@anim/task_open_exit</item>
+        <item name="taskToBackEnterAnimation">@anim/task_close_enter</item>
+        <item name="taskToBackExitAnimation">@anim/task_close_exit</item>
+        <item name="wallpaperOpenEnterAnimation">@anim/wallpaper_open_enter</item>
+        <item name="wallpaperOpenExitAnimation">@anim/wallpaper_open_exit</item>
+        <item name="wallpaperCloseEnterAnimation">@anim/wallpaper_close_enter</item>
+        <item name="wallpaperCloseExitAnimation">@anim/wallpaper_close_exit</item>
+        <item name="wallpaperIntraOpenEnterAnimation">@anim/wallpaper_intra_open_enter</item>
+        <item name="wallpaperIntraOpenExitAnimation">@anim/wallpaper_intra_open_exit</item>
+        <item name="wallpaperIntraCloseEnterAnimation">@anim/wallpaper_intra_close_enter</item>
+        <item name="wallpaperIntraCloseExitAnimation">@anim/wallpaper_intra_close_exit</item>
+        <item name="fragmentOpenEnterAnimation">@animator/fragment_open_enter</item>
+        <item name="fragmentOpenExitAnimation">@animator/fragment_open_exit</item>
+        <item name="fragmentCloseEnterAnimation">@animator/fragment_close_enter</item>
+        <item name="fragmentCloseExitAnimation">@animator/fragment_close_exit</item>
+        <item name="fragmentFadeEnterAnimation">@animator/fragment_fade_enter</item>
+        <item name="fragmentFadeExitAnimation">@animator/fragment_fade_exit</item>
+    </style>
+
+    <!-- Standard animations for a non-full-screen window or activity. -->
+    <style name="Animation.Dialog">
+        <item name="windowEnterAnimation">@anim/dialog_enter</item>
+        <item name="windowExitAnimation">@anim/dialog_exit</item>
+    </style>
+
+    <!-- Standard animations for a translucent window or activity.  This
+         style is <em>not</em> used by default for the translucent theme
+         (since translucent activities are a special case that have no
+         clear UI paradigm), but you can make your own specialized theme
+         with this animation style if you would like to have the standard
+         platform transition animation. -->
+    <style name="Animation.Translucent">
+        <item name="windowEnterAnimation">@anim/translucent_enter</item>
+        <item name="windowExitAnimation">@anim/translucent_exit</item>
+    </style>
+
+    <!-- Standard animations for a non-full-screen window or activity. -->
+    <style name="Animation.LockScreen">
+        <item name="windowEnterAnimation">@anim/lock_screen_enter</item>
+        <item name="windowExitAnimation">@anim/lock_screen_exit</item>
+    </style>
+
+    <style name="Animation.OptionsPanel">
+        <item name="windowEnterAnimation">@anim/options_panel_enter</item>
+        <item name="windowExitAnimation">@anim/options_panel_exit</item>
+    </style>
+
+    <style name="Animation.SubMenuPanel">
+        <item name="windowEnterAnimation">@anim/submenu_enter</item>
+        <item name="windowExitAnimation">@anim/submenu_exit</item>
+    </style>
+
+    <style name="Animation.TypingFilter">
+        <item name="windowEnterAnimation">@anim/grow_fade_in_center</item>
+        <item name="windowExitAnimation">@anim/shrink_fade_out_center</item>
+    </style>
+
+    <style name="Animation.TypingFilterRestore">
+        <item name="windowEnterAnimation">@null</item>
+        <item name="windowExitAnimation">@anim/shrink_fade_out_center</item>
+    </style>
+
+    <style name="Animation.Toast">
+        <item name="windowEnterAnimation">@anim/toast_enter</item>
+        <item name="windowExitAnimation">@anim/toast_exit</item>
+    </style>
+
+    <style name="Animation.Tooltip">
+        <item name="windowEnterAnimation">@anim/tooltip_enter</item>
+        <item name="windowExitAnimation">@anim/tooltip_exit</item>
+    </style>
+
+    <style name="Animation.DropDownDown">
+        <item name="windowEnterAnimation">@anim/grow_fade_in</item>
+        <item name="windowExitAnimation">@anim/shrink_fade_out</item>
+    </style>
+
+    <style name="Animation.DropDownUp">
+        <item name="windowEnterAnimation">@anim/grow_fade_in_from_bottom</item>
+        <item name="windowExitAnimation">@anim/shrink_fade_out_from_bottom</item>
+    </style>
+
+    <!-- Window animations that are applied to input method overlay windows. -->
+    <style name="Animation.InputMethod">
+        <item name="windowEnterAnimation">@anim/input_method_enter</item>
+        <item name="windowExitAnimation">@anim/input_method_exit</item>
+    </style>
+
+    <!-- Window animations that are applied to voice activity windows. -->
+    <style name="Animation.VoiceActivity">
+        <item name="windowEnterAnimation">@anim/voice_activity_open_enter</item>
+        <item name="windowExitAnimation">@anim/voice_activity_close_exit</item>
+    </style>
+
+    <!-- Window animations that are applied to voice interaction overlay windows. -->
+    <style name="Animation.VoiceInteractionSession">
+        <item name="windowEnterAnimation">@anim/voice_layer_enter</item>
+        <item name="windowExitAnimation">@anim/voice_layer_exit</item>
+    </style>
+
+    <!-- Special optional fancy IM animations. @hide -->
+    <style name="Animation.InputMethodFancy">
+        <item name="windowEnterAnimation">@anim/input_method_fancy_enter</item>
+        <item name="windowExitAnimation">@anim/input_method_fancy_exit</item>
+    </style>
+
+    <!-- Window animations that are applied to the search bar overlay window.
+	Previously used, but currently unused.
+         {@hide Pending API council approval} -->
+    <style name="Animation.SearchBar">
+        <item name="windowEnterAnimation">@anim/search_bar_enter</item>
+        <item name="windowExitAnimation">@anim/search_bar_exit</item>
+    </style>
+
+    <!-- Window animations that are applied to the zoom buttons overlay window. -->
+    <style name="Animation.ZoomButtons">
+        <item name="windowEnterAnimation">@anim/fade_in</item>
+        <item name="windowExitAnimation">@anim/fade_out</item>
+    </style>
+
+    <!-- Standard animations for wallpapers. -->
+    <style name="Animation.Wallpaper">
+        <item name="windowEnterAnimation">@anim/wallpaper_enter</item>
+        <item name="windowExitAnimation">@anim/wallpaper_exit</item>
+    </style>
+
+    <!-- A special animation we can use for recent applications,
+         for devices that can support it (do alpha transformations). -->
+    <style name="Animation.RecentApplications">
+        <item name="windowEnterAnimation">@anim/recents_fade_in</item>
+        <item name="windowShowAnimation">@anim/recents_fade_in</item>
+        <item name="windowExitAnimation">@anim/recents_fade_out</item>
+        <item name="windowHideAnimation">@anim/recents_fade_out</item>
+    </style>
+
+    <!-- A special animation value used internally for popup windows. -->
+    <style name="Animation.PopupWindow"/>
+
+    <!-- Window animations used for action mode UI in overlay mode. -->
+    <style name="Animation.PopupWindow.ActionMode">
+        <item name="windowEnterAnimation">@anim/fade_in</item>
+        <item name="windowExitAnimation">@anim/fade_out</item>
+    </style>
+
+    <!-- Window animations used for volume panel. -->
+    <style name="Animation.VolumePanel">
+        <item name="windowEnterAnimation">@null</item>
+        <item name="windowExitAnimation">@anim/fade_out</item>
+    </style>
+
+    <!-- Window animations used for immersive mode confirmation. -->
+    <style name="Animation.ImmersiveModeConfirmation">
+        <item name="windowEnterAnimation">@null</item>
+        <item name="windowExitAnimation">@anim/fast_fade_out</item>
+    </style>
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">

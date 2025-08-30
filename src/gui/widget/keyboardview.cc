@@ -61,7 +61,7 @@ KeyboardView::~KeyboardView(){
     delete mKeyboard;
 }
 
-void KeyboardView::setOnKeyboardActionListener(OnKeyboardActionListener listener){
+void KeyboardView::setOnKeyboardActionListener(const OnKeyboardActionListener& listener){
     mKeyboardActionListener=listener;
 }
 

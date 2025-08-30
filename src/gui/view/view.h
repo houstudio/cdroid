@@ -988,7 +988,7 @@ public:
     int getWindowSystemUiVisibility()const;
     virtual void onWindowSystemUiVisibilityChanged(int visible);
     virtual void dispatchWindowSystemUiVisiblityChanged(int visible);
-    void setOnSystemUiVisibilityChangeListener(OnSystemUiVisibilityChangeListener l);
+    void setOnSystemUiVisibilityChangeListener(const OnSystemUiVisibilityChangeListener& l);
     virtual void dispatchSystemUiVisibilityChanged(int visibility);
     void setDisabledSystemUiVisibility(int flags);
 
@@ -1121,11 +1121,11 @@ public:
     void startActivityForResult(Intent intent, int requestCode);
     virtual bool dispatchActivityResult(const std::string& who, int requestCode, int resultCode, Intent data);
     virtual void onActivityResult(int requestCode, int resultCode, Intent data);
-    void setOnKeyListener(OnKeyListener l);
-    void setOnTouchListener(OnTouchListener l);
-    void setOnGenericMotionListener(OnGenericMotionListener l);
-    void setOnHoverListener(OnHoverListener l);
-    void setOnDragListener(OnDragListener l);
+    void setOnKeyListener(const OnKeyListener& l);
+    void setOnTouchListener(const OnTouchListener& l);
+    void setOnGenericMotionListener(const OnGenericMotionListener& l);
+    void setOnHoverListener(const OnHoverListener& l);
+    void setOnDragListener(const OnDragListener& l);
     // Foreground color
 
     //foreground/background
@@ -1247,7 +1247,7 @@ public:
     virtual void onPointerCaptureChange(bool hasCapture);
     virtual void dispatchPointerCaptureChanged(bool hasCapture);
     virtual bool onCapturedPointerEvent(MotionEvent& event);
-    void setOnCapturedPointerListener(OnCapturedPointerListener l);
+    void setOnCapturedPointerListener(const OnCapturedPointerListener& l);
     virtual PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex);
     void setPointerIcon(PointerIcon* pointerIcon);
     PointerIcon*getPointerIcon();
@@ -1411,8 +1411,8 @@ public:
     virtual bool onCheckIsTextEditor();
     virtual bool onUnhandledKeyEvent(KeyEvent& event);
     virtual bool hasUnhandledKeyListener()const;
-    void addOnUnhandledKeyEventListener(OnUnhandledKeyEventListener listener);
-    void removeOnUnhandledKeyEventListener(OnUnhandledKeyEventListener listener);
+    void addOnUnhandledKeyEventListener(const OnUnhandledKeyEventListener& listener);
+    void removeOnUnhandledKeyEventListener(const OnUnhandledKeyEventListener& listener);
 
     virtual void createContextMenu(ContextMenu& menu);
     virtual int  commitText(const std::wstring&);

@@ -180,7 +180,7 @@ public:
     KeyboardView(int w,int h);
     KeyboardView(Context*context,const AttributeSet&atts);
     ~KeyboardView();
-    void setOnKeyboardActionListener(OnKeyboardActionListener listener);
+    void setOnKeyboardActionListener(const OnKeyboardActionListener& listener);
     Keyboard*getKeyboard();
     void setKeyboard(Keyboard*k);
     bool setShifted(bool shifted);

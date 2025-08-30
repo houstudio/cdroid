@@ -367,11 +367,11 @@ int ValueAnimator::getRepeatMode()const{
     return mRepeatMode;
 }
 
-void ValueAnimator::addUpdateListener(AnimatorUpdateListener listener){
+void ValueAnimator::addUpdateListener(const AnimatorUpdateListener& listener){
     mUpdateListeners.push_back(listener);
 }
 
-void ValueAnimator::removeUpdateListener(AnimatorUpdateListener listener){
+void ValueAnimator::removeUpdateListener(const AnimatorUpdateListener& listener){
     for(auto it = mUpdateListeners.begin();it!=mUpdateListeners.end();it++){
         if( (*it) == listener){
              mUpdateListeners.erase(it);

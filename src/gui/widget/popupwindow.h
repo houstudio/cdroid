@@ -60,13 +60,13 @@ private:
     /** The contents of the popup. May be identical to the background view. */
     View* mContentView;
 
-    bool mFocusable;
     int mInputMethodMode = INPUT_METHOD_FROM_FOCUSABLE;
     int mSoftInputMode;//= WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED;
+    int mSplitTouchEnabled;
+    bool mFocusable;
     bool mTouchable;
     bool mOutsideTouchable;
     bool mClippingEnabled;
-    int mSplitTouchEnabled;
     bool mLayoutInScreen;
     bool mClipToScreen;
     bool mAllowScrollingAnchorParent;
@@ -94,11 +94,9 @@ private:
     Transition* mExitTransition;
     Rect mEpicenterBounds;
 
-    bool mAboveAnchor;
     int mWindowLayoutType ;//= WindowManager.LayoutParams.TYPE_APPLICATION_PANEL;
 
     OnDismissListener mOnDismissListener;
-    bool mIgnoreCheekPress = false;
 
     int mAnimationStyle = ANIMATION_STYLE_DEFAULT;
     int mGravity;
@@ -108,12 +106,14 @@ private:
     View::OnAttachStateChangeListener mOnAnchorRootDetachedListener;
     ViewTreeObserver::OnScrollChangedListener mOnScrollChangedListener;
     View::OnLayoutChangeListener mOnLayoutChangeListener;
-    bool mIsAnchorRootAttached;
     int mAnchorXoff;
     int mAnchorYoff;
     int mAnchoredGravity;
-    bool mOverlapAnchor;
 
+    bool mAboveAnchor;
+    bool mIgnoreCheekPress = false;
+    bool mOverlapAnchor;
+    bool mIsAnchorRootAttached;
     bool mPopupViewInitialLayoutDirectionInherited;
 private:
     void init();
@@ -215,7 +215,7 @@ public:
     int getMaxAvailableHeight(View* anchor);
     int getMaxAvailableHeight(View* anchor, int yOffset,bool ignoreBottomDecorations);
     void dismiss();
-    void setOnDismissListener(OnDismissListener onDismissListener);
+    void setOnDismissListener(const OnDismissListener& onDismissListener);
     void update();
     void update(int width, int height);
     void update(int x, int y, int width, int height,bool force=false);

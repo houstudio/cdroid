@@ -543,22 +543,22 @@ please see themes_device_defaults.xml.
         <item name="progressBarStyleInverse">@style/Widget.ProgressBar</item>
         <item name="progressBarStyleSmallInverse">@style/Widget.ProgressBar.Small</item>
         <item name="progressBarStyleLargeInverse">@style/Widget.ProgressBar.Large</item>
-        <item name="actionModeCutDrawable">@drawable/ic_menu_cut_holo_light</item>
-        <item name="actionModeCopyDrawable">@drawable/ic_menu_copy_holo_light</item>
-        <item name="actionModePasteDrawable">@drawable/ic_menu_paste_holo_light</item>
-        <item name="actionModeSelectAllDrawable">@drawable/ic_menu_selectall_holo_light</item>
-        <item name="actionModeShareDrawable">@drawable/ic_menu_share_holo_light</item>
-        <item name="actionModeFindDrawable">@drawable/ic_menu_find_holo_light</item>
-        <item name="actionModeWebSearchDrawable">@drawable/ic_menu_search_holo_light</item>
-        <item name="actionModeBackground">@drawable/cab_background_top_holo_light</item>
-        <item name="actionModeSplitBackground">@drawable/cab_background_bottom_holo_light</item>
+        <item name="actionModeCutDrawable">@mipmap/ic_menu_cut_holo_light</item>
+        <item name="actionModeCopyDrawable">@mipmap/ic_menu_copy_holo_light</item>
+        <item name="actionModePasteDrawable">@mipmap/ic_menu_paste_holo_light</item>
+        <item name="actionModeSelectAllDrawable">@mipmap/ic_menu_selectall_holo_light</item>
+        <item name="actionModeShareDrawable">@mipmap/ic_menu_share_holo_light</item>
+        <item name="actionModeFindDrawable">@mipmap/ic_menu_find_holo_light</item>
+        <item name="actionModeWebSearchDrawable">@mipmap/ic_menu_search_holo_light</item>
+        <item name="actionModeBackground">@mipmsp/cab_background_top_holo_light</item>
+        <item name="actionModeSplitBackground">@mipmap/cab_background_bottom_holo_light</item>
 
         <item name="searchViewStyle">@style/Widget.Holo.Light.SearchView</item>
         <item name="detailsElementBackground">@drawable/panel_bg_holo_light</item>
 
         <item name="mediaRouteButtonStyle">@style/Widget.DeviceDefault.Light.MediaRouteButton</item>
-        <item name="findOnPageNextDrawable">@drawable/ic_find_next_holo_light</item>
-        <item name="findOnPagePreviousDrawable">@drawable/ic_find_previous_holo_light</item>
+        <item name="findOnPageNextDrawable">@mipmap/ic_find_next_holo_light</item>
+        <item name="findOnPagePreviousDrawable">@mipmap/ic_find_previous_holo_light</item>
 
         <!-- Floating toolbar styles -->
         <item name="floatingToolbarCloseDrawable">@drawable/ic_ab_back_material_light</item>

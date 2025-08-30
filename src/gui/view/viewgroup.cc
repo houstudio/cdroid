@@ -2878,7 +2878,7 @@ LayoutAnimationController*ViewGroup::getLayoutAnimation() {
     return mLayoutAnimationController;
 }
 
-void ViewGroup::setLayoutAnimationListener(Animation::AnimationListener animationListener){
+void ViewGroup::setLayoutAnimationListener(const Animation::AnimationListener& animationListener){
     mAnimationListener = animationListener;
 }
 

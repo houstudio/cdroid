@@ -154,8 +154,8 @@ public:
     void hideChild(ViewGroup* parent, View* child);
     void hideChild(ViewGroup* parent, View* child, int newVisibility);
     void showChild(ViewGroup* parent, View* child, int oldVisibility);
-    void addTransitionListener(TransitionListener& listener);
-    void removeTransitionListener(TransitionListener& listener);
+    void addTransitionListener(const TransitionListener& listener);
+    void removeTransitionListener(const TransitionListener& listener);
 };
 
 }

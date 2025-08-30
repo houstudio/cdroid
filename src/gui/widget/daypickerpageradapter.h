@@ -68,7 +68,7 @@ public:
     int getFirstDayOfWeek()const;
     bool getBoundsForDate(Calendar& day, Rect& outBounds);
     void setSelectedDay(Calendar* day);
-    void setOnDaySelectedListener(OnDaySelectedListener listener);
+    void setOnDaySelectedListener(const OnDaySelectedListener& listener);
     void setCalendarTextColor(const ColorStateList* calendarTextColor);
     void setDaySelectorColor(const ColorStateList* selectorColor);
 

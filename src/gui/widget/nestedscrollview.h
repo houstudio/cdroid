@@ -140,10 +140,10 @@ public:
     void addView(View* child, int index)override;
     void addView(View* child, ViewGroup::LayoutParams* params)override;
     void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
-    void setOnScrollChangeListener(OnScrollChangeListener l);
-    bool isFillViewport();
+    void setOnScrollChangeListener(const OnScrollChangeListener& l);
+    bool isFillViewport()const;
     void setFillViewport(bool fillViewport);
-    bool isSmoothScrollingEnabled();
+    bool isSmoothScrollingEnabled()const;
     void setSmoothScrollingEnabled(bool smoothScrollingEnabled);
     bool dispatchKeyEvent(KeyEvent& event)override;
     bool executeKeyEvent(KeyEvent& event);

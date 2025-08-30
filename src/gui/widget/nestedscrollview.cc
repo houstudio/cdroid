@@ -299,7 +299,7 @@ void NestedScrollView::addView(View* child, int index, ViewGroup::LayoutParams* 
  * @see android.view.View#getScrollX()
  * @see android.view.View#getScrollY()
  */
-void NestedScrollView::setOnScrollChangeListener(NestedScrollView::OnScrollChangeListener l) {
+void NestedScrollView::setOnScrollChangeListener(const OnScrollChangeListener& l) {
     mOnScrollChangeListener = l;
 }
 
@@ -323,7 +323,7 @@ bool NestedScrollView::canScroll() {
  *
  * @attr name android:fillViewport
  */
-bool NestedScrollView::isFillViewport() {
+bool NestedScrollView::isFillViewport() const{
     return mFillViewport;
 }
 
@@ -345,7 +345,7 @@ void NestedScrollView::setFillViewport(bool fillViewport) {
 /**
  * @return Whether arrow scrolling will animate its transition.
  */
-bool NestedScrollView::isSmoothScrollingEnabled() {
+bool NestedScrollView::isSmoothScrollingEnabled() const{
     return mSmoothScrollingEnabled;
 }
 

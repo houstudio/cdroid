@@ -357,8 +357,8 @@ public:
     void setItemChecked(int position, bool value);
     int getChoiceMode()const;
     void setChoiceMode(int choiceMode);
-    void setMultiChoiceModeListener(MultiChoiceModeListener listener);
-    void setOnScrollListener(OnScrollListener);
+    void setMultiChoiceModeListener(const MultiChoiceModeListener& listener);
+    void setOnScrollListener(const OnScrollListener&);
     bool isScrollingCacheEnabled()const;
     void setScrollingCacheEnabled(bool enabled);
 

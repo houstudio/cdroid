@@ -52,7 +52,7 @@ private:
     int mDropDownGravity = Gravity::NO_GRAVITY;
 private:
     void onGlobalLayout();
-    void onViewDetachedFromWindow(View* v);
+    void onViewDetachedFromWindow(View& v);
     bool tryShow();
 public:
     StandardMenuPopup(Context* context, MenuBuilder* menu, View* anchorView,

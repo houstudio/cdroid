@@ -231,11 +231,11 @@ void CompoundButton::doSetChecked(bool checked){
     }    
 }
 
-void CompoundButton::setOnCheckedChangeListener(OnCheckedChangeListener listener) {
+void CompoundButton::setOnCheckedChangeListener(const OnCheckedChangeListener& listener) {
     mOnCheckedChangeListener = listener;
 }
 
-void CompoundButton::setOnCheckedChangeWidgetListener(OnCheckedChangeListener listener) {
+void CompoundButton::setOnCheckedChangeWidgetListener(const OnCheckedChangeListener& listener) {
     mOnCheckedChangeWidgetListener = listener;
 }
 

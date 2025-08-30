@@ -672,8 +672,8 @@ int ListPopupWindow::buildDropDown() {
                 widthMode = MeasureSpec::UNSPECIFIED;
                 widthSize = 0;
             }
-            int widthSpec = MeasureSpec::makeMeasureSpec(widthSize, widthMode);
-            int heightSpec = MeasureSpec::UNSPECIFIED;
+            const int widthSpec = MeasureSpec::makeMeasureSpec(widthSize, widthMode);
+            const int heightSpec = MeasureSpec::UNSPECIFIED;
             hintView->measure(widthSpec, heightSpec);
 
             hintParams = (LinearLayout::LayoutParams*) hintView->getLayoutParams();
@@ -715,9 +715,9 @@ int ListPopupWindow::buildDropDown() {
     }
 
     // Max height available on the screen for a popup.
-    bool ignoreBottomDecorations =
+    const bool ignoreBottomDecorations =
             mPopup->getInputMethodMode() == PopupWindow::INPUT_METHOD_NOT_NEEDED;
-    int maxHeight = mPopup->getMaxAvailableHeight(getAnchorView(), mDropDownVerticalOffset,
+    const int maxHeight = mPopup->getMaxAvailableHeight(getAnchorView(), mDropDownVerticalOffset,
             ignoreBottomDecorations);
     if (mDropDownAlwaysVisible || (mDropDownHeight == LayoutParams::MATCH_PARENT)) {
         return maxHeight + padding;

@@ -32,7 +32,7 @@ please see styles_device_defaults.xml.
     <!-- Preference styles -->
     <eat-comment/>
 
-    <style name="Preference.Material">
+    <!--style name="Preference.Material">
         <item name="layout">@layout/preference_material</item>
     </style>
 
@@ -62,7 +62,6 @@ please see styles_device_defaults.xml.
 
     <style name="Preference.Material.Category">
         <item name="layout">@layout/preference_category_material</item>
-        <!-- The title should not dim if the category is disabled, instead only the preference children should dim. -->
         <item name="shouldDisableView">false</item>
         <item name="selectable">false</item>
     </style>
@@ -112,14 +111,11 @@ please see styles_device_defaults.xml.
         <item name="showDefault">true</item>
     </style>
 
-    <!-- No margins or background by default. Could be different for x-large screens -->
     <style name="PreferencePanel.Material">
         <item name="layout_marginStart">0dip</item>
         <item name="layout_marginEnd">0dip</item>
     </style>
 
-    <!-- The attributes are overridden here because the x-large or large resources may have
-         changed the margins and background in the parent PreferencePanel style. -->
     <style name="PreferencePanel.Material.Dialog">
         <item name="layout_marginStart">0dip</item>
         <item name="layout_marginEnd">0dip</item>
@@ -146,7 +142,7 @@ please see styles_device_defaults.xml.
         <item name="paddingEnd">@dimen/preference_fragment_padding_side_material</item>
         <item name="paddingTop">@dimen/preference_fragment_padding_vertical_material</item>
         <item name="paddingBottom">@dimen/preference_fragment_padding_vertical_material</item>
-    </style>
+    </style-->
 
     <!-- Begin Material theme styles -->
 

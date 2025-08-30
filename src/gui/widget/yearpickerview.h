@@ -33,7 +33,7 @@ private:
 public:
     YearPickerView(int w,int h);
     YearPickerView(Context* context, const AttributeSet& attrs);
-    void setOnYearSelectedListener(OnYearSelectedListener listener);
+    void setOnYearSelectedListener(const OnYearSelectedListener& listener);
     void setYear(int year);
     void setSelectionCentered(int position);
     void setRange(Calendar& min, Calendar& max);
