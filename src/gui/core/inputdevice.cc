@@ -911,12 +911,13 @@ static const char*sensorName[]={
 };
 
 void InputDeviceInfo::addSensorInfo(const InputDeviceSensorInfo& info) {
-    auto it = mSensors.find(int(info.type));
+    auto it = mSensors.find(static_cast<int>(info.type));
     if (it != mSensors.end()) {
-        LOGW("Sensor type %s already exists, will be replaced by new sensor added.",sensorName[int(info.type)]);
+        LOGW("Sensor type %s already exists, will be replaced by new sensor added.",
+                sensorName[static_cast<int>(info.type)]);
         it->second = info;
     }else{
-        mSensors.insert({int(info.type), info});
+        mSensors.insert({static_cast<int>(info.type), info});
     }
 }
 
