@@ -132,8 +132,9 @@ void Toolbar::initToolbar(){
 }
 
 Toolbar::~Toolbar(){
-    if(mCollapseButtonView==nullptr)
+    if(mCollapseButtonView==nullptr){
         delete mCollapseIcon;
+    }
     delete mMenuView;
     delete mContentInsets;
     delete mExpandedMenuPresenter;
@@ -334,7 +335,7 @@ void Toolbar::setLogo(Drawable* drawable){
 }
 
 Drawable* Toolbar::getLogo()const{
-    return mLogoView != nullptr ? mLogoView->getDrawable() : nullptr;
+    return (mLogoView != nullptr) ? mLogoView->getDrawable() : nullptr;
 }
 
 void Toolbar::setLogoDescription(const std::string& description){
@@ -460,7 +461,7 @@ std::string Toolbar::getNavigationContentDescription()const{
 }
 
 std::string Toolbar::getCollapseContentDescription()const{
-    return mCollapseButtonView != nullptr ? mCollapseButtonView->getContentDescription() : std::string();
+    return (mCollapseButtonView != nullptr) ? mCollapseButtonView->getContentDescription() : std::string();
 }
 
 void Toolbar::setCollapseContentDescription(const std::string&description){
@@ -473,7 +474,7 @@ void Toolbar::setCollapseContentDescription(const std::string&description){
 }
 
 Drawable* Toolbar::getCollapseIcon() const{
-    return mCollapseButtonView != nullptr ? mCollapseButtonView->getDrawable() : nullptr;
+    return (mCollapseButtonView != nullptr) ? mCollapseButtonView->getDrawable() : nullptr;
 }
 
 void Toolbar::setCollapseIcon(Drawable* icon){
@@ -555,7 +556,7 @@ void Toolbar::setNavigationIcon(Drawable*icon){
         if (!isChildOrHidden(mNavButtonView)) {
             addSystemView(mNavButtonView, true);
         }
-    } else if (mNavButtonView != nullptr && isChildOrHidden(mNavButtonView)) {
+    } else if ((mNavButtonView != nullptr) && isChildOrHidden(mNavButtonView)) {
         removeView(mNavButtonView);
         auto itr = std::find(mHiddenViews.begin(),mHiddenViews.end(),mNavButtonView);
         mHiddenViews.erase(itr);//mHiddenViews.remove(mNavButtonView);
@@ -605,7 +606,7 @@ int Toolbar::getContentInsetRight()const{
 }
 
 int Toolbar::getContentInsetStartWithNavigation()const{
-    return mContentInsetStartWithNavigation != RtlSpacingHelper::UNDEFINED
+    return (mContentInsetStartWithNavigation != RtlSpacingHelper::UNDEFINED)
               ? mContentInsetStartWithNavigation : getContentInsetStart();
 }
 
@@ -622,7 +623,7 @@ void Toolbar::setContentInsetStartWithNavigation(int insetStartWithNavigation){
 }
 
 int Toolbar::getContentInsetEndWithActions()const{
-    return mContentInsetEndWithActions != RtlSpacingHelper::UNDEFINED
+    return (mContentInsetEndWithActions != RtlSpacingHelper::UNDEFINED)
                 ? mContentInsetEndWithActions
                 : getContentInsetEnd();
 }
@@ -732,7 +733,7 @@ bool Toolbar::onTouchEvent(MotionEvent&ev){
 
     if (!mEatingTouch) {
         const bool handled = ViewGroup::onTouchEvent(ev);
-        if (action == MotionEvent::ACTION_DOWN && !handled) {
+        if ((action == MotionEvent::ACTION_DOWN) && !handled) {
             mEatingTouch = true;
         }
     }
