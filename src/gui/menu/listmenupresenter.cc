@@ -51,7 +51,7 @@ void ListMenuPresenter::initForMenu(Context* context,MenuBuilder* menu) {
 
 ViewGroup* ListMenuPresenter::getMenuView(ViewGroup* root) {
     if (mMenuView == nullptr) {
-        mMenuView = (ExpandedMenuView*) mInflater->inflate("cdrroid:layout/expanded_menu_layout", root, false);
+        mMenuView = (ExpandedMenuView*) mInflater->inflate("cdroid:layout/expanded_menu_layout", root, false);
         if (mAdapter == nullptr) {
             mAdapter = new MenuAdapter(this);
         }
