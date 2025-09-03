@@ -176,8 +176,10 @@ int Layout::getLineCount()const{
 }
 
 void Layout::setTextDirection(int dir){
-    mTextDirection = dir;
-    mLayout++;
+    if(mTextDirection!= dir){
+        mTextDirection = dir;
+        mLayout++;
+    }
 }
 
 int Layout::getTextDirection()const{

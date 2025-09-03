@@ -1,20 +1,12 @@
-#include <gtest/gtest.h>
+#include <guienvironment.h>
 #include <cdroid.h>
 #include <signal.h>
 #include <cdlog.h>
 
-class GUIEnvironment: public testing::Environment{
-  public:
-    void SetUp(){
-       printf("GUIEnvironment Setup\r\n");
-    }
-    void TearDown(){
-       printf("GUIEnvironment TearDown\r\n");
-    }
-};
-
+GUIEnvironment*GUIEnvironment::mInst=nullptr;
 int main(int argc,char*argv[])
 {
+    ::testing::AddGlobalTestEnvironment(new GUIEnvironment(argc, (const char**)argv));
     LogParseModules(argc,(const char**)argv);
     testing::InitGoogleTest(&argc,argv);
     return RUN_ALL_TESTS();

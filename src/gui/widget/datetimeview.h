@@ -25,7 +25,7 @@ private:
     static constexpr int SHOW_TIME = 0;
     static constexpr int SHOW_MONTH_DAY_YEAR = 1;
 private:
-    long mTimeMillis;
+    int64_t mTimeMillis;
     // The LocalDateTime equivalent of mTimeMillis but truncated to minute, i.e. no seconds / nanos.
     //LocalDateTime mLocalTime;
 
