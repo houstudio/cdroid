@@ -71,7 +71,12 @@ App::App(int argc,const char*argv[]){
     options.allow_unrecognised_options();
     cxxopts::ParseResult result;
     try{
-        result = options.parse(argc,argv);
+        if(argv==nullptr){
+            const char*dummy[]={"",nullptr};
+            result = options.parse(1,dummy);
+        }else{
+            result = options.parse(argc,argv);
+        }
         mArgsResult = std::make_unique<cxxopts::ParseResult>(result);
     }catch(std::exception&e){
         LOGE("%s",e.what());

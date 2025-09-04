@@ -6,17 +6,21 @@
 #include <widget/gridlayout.h>
 #include <widget/radiogroup.h>
 #include <drawables/drawableinflater.h>
+#include <guienvironment.h>
 class LAYOUT:public testing::Test{
-
-   public :
-   virtual void SetUp(){
-   }
-   virtual void TearDown(){
-   }
+public:
+    int argc;
+    const char**argv;
+    virtual void SetUp(){
+        argc = GUIEnvironment::getInstance()->getArgc();
+        argv = GUIEnvironment::getInstance()->getArgv();
+    }
+    virtual void TearDown(){
+    }
 };
 
 TEST_F(LAYOUT,linear){
-    App app;
+    App app(argc,argv);
     Window*w=new Window(0,0,800,600);
     LinearLayout*ll=new LinearLayout(800,80);
     ShapeDrawable*sd=new ShapeDrawable();
@@ -66,7 +70,7 @@ TEST_F(LAYOUT,linear){
     app.exec();
 }
 TEST_F(LAYOUT,radiogroup){
-    App app;
+    App app(argc,argv);
     const char*captions[]={"News","Sport","Reading","Walking","I saw A brown fox jump over a lazy dog!"};
     Window*w=new Window(0,0,800,600);
     AttributeSet attrs;
@@ -88,7 +92,7 @@ TEST_F(LAYOUT,radiogroup){
     app.exec();
 }
 TEST_F(LAYOUT,frame){
-    App app;
+    App app(argc,argv);
     Window*w=new Window(100,100,800,600);
     FrameLayout*frame=new FrameLayout(800,600);
     FrameLayout::LayoutParams*lp=new FrameLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT,Gravity::CENTER);
@@ -113,7 +117,7 @@ TEST_F(LAYOUT,frame){
 }
 
 TEST_F(LAYOUT,absolute){
-    App app;
+    App app(argc,argv);
     Window*w=new Window(100,100,800,600);
     AbsoluteLayout*ll=new AbsoluteLayout(800,600);
     AbsoluteLayout::LayoutParams*lp=new AbsoluteLayout::LayoutParams(300,50,100,100);
@@ -134,7 +138,7 @@ TEST_F(LAYOUT,absolute){
 }
 
 TEST_F(LAYOUT,tablerow){
-    App app;
+    App app(argc,argv);
     const char*captions[]={"OK","Cancel","Ignore"};
     Window*w=new Window(0,0,800,600);
     TableRow*row=new TableRow(800,80);
@@ -154,7 +158,7 @@ TEST_F(LAYOUT,tablerow){
 }
 
 TEST_F(LAYOUT,table){
-    App app;
+    App app(argc,argv);
     const char*captions[]={"OK","Cancel","Ignore"};
     Window*w=new Window(0,0,800,600);
     TableLayout*tbl=new TableLayout(800,320);
@@ -182,7 +186,7 @@ TEST_F(LAYOUT,table){
 }
 
 TEST_F(LAYOUT,grid){
-    App app;
+    App app(argc,argv);
     const char*captions[]={"OK","Cancel","Ignore","Hello world!","Sina News"};
     Window*w=new Window(0,0,800,600);
     GridLayout*grd=new GridLayout(800,400);
