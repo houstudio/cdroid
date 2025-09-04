@@ -127,7 +127,7 @@ MenuPopup* MenuPopupHelper::createPopup() {
     const bool enableCascadingSubmenus = (smallestWidth >= minSmallestWidthCascading);
 
     MenuPopup* popup = nullptr;
-    if (enableCascadingSubmenus) {
+    if (enableCascadingSubmenus||1) {
         popup = new CascadingMenuPopup(mContext, mAnchorView, mPopupStyleAttr,mPopupStyleRes, mOverflowOnly);
     } else {
         popup = new StandardMenuPopup(mContext, mMenu, mAnchorView, mPopupStyleAttr, mPopupStyleRes, mOverflowOnly);

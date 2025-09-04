@@ -354,6 +354,10 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
         }else{
             mTopDividerTop = (getHeight() - mDividerDistance)/2 - mDividerThickness;
             mBottomDividerBottom = mTopDividerTop + dividerDistence;
+
+            mTopSelectionDividerTop = (getHeight()-mSelectionDividersDistance)/2-mSelectionDividerHeight;
+            mBottomSelectionDividerBottom = mTopSelectionDividerTop + 2 * mSelectionDividerHeight
+                    + mSelectionDividersDistance;
         }
     }
 }

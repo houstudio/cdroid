@@ -9613,7 +9613,7 @@ std::vector<View::AttachInfo::InvalidateInfo*>View::AttachInfo::InvalidateInfo::
 View::AttachInfo::InvalidateInfo*View::AttachInfo::InvalidateInfo::obtain(){
     AttachInfo::InvalidateInfo*ret = nullptr;
     if(sPool.empty()){
-	ret = new AttachInfo::InvalidateInfo();
+        ret = new AttachInfo::InvalidateInfo();
     }else{
         ret = sPool.back();
         sPool.pop_back();
@@ -9866,7 +9866,7 @@ const std::string View::MeasureSpec::toString(int measureSpec) {
     if (mode == UNSPECIFIED)  sb<<"UNSPECIFIED ";
     else if (mode == EXACTLY) sb<<"EXACTLY ";
     else if (mode == AT_MOST) sb<<"AT_MOST ";
-    else     sb<<mode<<" ";
+    else sb<<mode<<" ";
     sb<<size;
     return sb.str();
 }

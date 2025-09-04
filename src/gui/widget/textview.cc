@@ -2849,7 +2849,9 @@ void TextView::onDraw(Canvas& canvas) {
     const int hspace = getWidth() - compoundPaddingRight - compoundPaddingLeft;
     Drawables* dr = mDrawables;
     mLayout->setWidth(hspace);
+    mLayout->setTextDirection(getTextDirection());
     mHintLayout->setWidth(hspace);
+    mHintLayout->setTextDirection(getTextDirection());
     mHintLayout->setAlignment(getLayoutAlignment());
     mLayout->setAlignment(getLayoutAlignment());
     mLayout->relayout();
