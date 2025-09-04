@@ -1,15 +1,18 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-
+#include <guienvironment.h>
 using namespace cdroid;
 
 class ASSETS:public testing::Test{
-
-   public :
-   virtual void SetUp(){
-   }
-   virtual void TearDown(){
-   }
+public:
+    int argc;
+    const char**argv;
+    virtual void SetUp(){
+        argc = GUIEnvironment::getInstance()->getArgc();
+        argv = GUIEnvironment::getInstance()->getArgv();
+    }
+    virtual void TearDown(){
+    }
 };
 
 TEST_F(ASSETS,string){
@@ -43,7 +46,7 @@ TEST_F(ASSETS,color){
     cl->dump();
 }
 TEST_F(ASSETS,drawable){
-    App app;
+    App app(argc,argv);
     ColorDrawable* cl = (ColorDrawable*)app.getDrawable("@cdroid:color/black");
     ASSERT_TRUE(cl!=NULL);
     LOGD("COLOR=%x",(uint32_t)cl->getColor());
@@ -56,14 +59,14 @@ TEST_F(ASSETS,drawable){
 }
 
 TEST_F(ASSETS,animation_list){
-    App app;
+    App app(argc,argv);
     AnimationDrawable*ad=(AnimationDrawable*)app.getDrawable("@cdroid:drawable/progress_indeterminate_horizontal");
     ASSERT_EQ(ad->getChildCount(),3);
     for(int i=0;i<ad->getChildCount();i++) ASSERT_NE(dynamic_cast<BitmapDrawable*>(ad->getChild(i)),nullptr);
 }
 
 TEST_F(ASSETS,state_layerlist){
-    App app;
+    App app(argc,argv);
     StateListDrawable* st = (StateListDrawable*)app.getDrawable("@cdroid:drawable/list_selector_background");
     ASSERT_NE(st,nullptr);
     ASSERT_EQ(st->getChildCount(),6);
@@ -87,7 +90,7 @@ TEST_F(ASSETS,state_layerlist){
 }
 
 TEST_F(ASSETS,animated_selector){
-    App app;
+    App app(argc,argv);
     AnimatedStateListDrawable* asd = (AnimatedStateListDrawable*)app.getDrawable("@cdroid:drawable/switch_thumb_material_anim");
     ASSERT_NE(asd,nullptr);
     ASSERT_EQ(asd->getChildCount(),5);
@@ -113,7 +116,7 @@ TEST_F(ASSETS,animated_selector){
     app.exec();
 }
 TEST_F(ASSETS,animatedselector){
-    App app;
+    App app(argc,argv);
     AnimatedStateListDrawable* asd = (AnimatedStateListDrawable*)app.getDrawable("@cdroid:drawable/switch_thumb_material_anim_test");
     ASSERT_NE(asd,nullptr);
     ASSERT_EQ(asd->getChildCount(),3);

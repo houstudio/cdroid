@@ -4,16 +4,20 @@
 #include <animation/objectanimator.h>
 #include <guienvironment.h>
 class ANIMATOR:public testing::Test{
-
-   public :
+public:
+    int argc;
+    const char**argv;
+public :
    virtual void SetUp(){
+       argc = GUIEnvironment::getInstance()->getArgc();
+       argv = GUIEnvironment::getInstance()->getArgv();
    }
    virtual void TearDown(){
    }
 };
 
 TEST_F(ANIMATOR,callback){
-    App app(GUIEnvironment::getInstance()->getArgc(),GUIEnvironment::getInstance()->getArgv());
+    App app(argc,argv);
     ValueAnimator *anim=new ValueAnimator();
     anim->getAnimationHandler().addAnimationFrameCallback(anim,100);
     anim->getAnimationHandler().removeCallback(anim);
@@ -55,7 +59,7 @@ TEST_F(ANIMATOR,ofFloat){
 }
 
 TEST_F(ANIMATOR,start){
-    App app(GUIEnvironment::getInstance()->getArgc(),GUIEnvironment::getInstance()->getArgv());
+    App app(argc,argv);
     FloatPropertyValuesHolder fprop;
     fprop.setValues(std::vector<float>({0,100}));
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
@@ -68,7 +72,7 @@ TEST_F(ANIMATOR,start){
     app.exec();
 }
 TEST_F(ANIMATOR,startDelay){
-    App app(GUIEnvironment::getInstance()->getArgc(),GUIEnvironment::getInstance()->getArgv());
+    App app(argc,argv);
     FloatPropertyValuesHolder fprop;
     fprop.setValues(std::vector<float>({0,100}));
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
@@ -99,7 +103,7 @@ TEST_F(ANIMATOR,ofProperty){
 }
 
 TEST_F(ANIMATOR,loopdrivered){
-    App app(GUIEnvironment::getInstance()->getArgc(),GUIEnvironment::getInstance()->getArgv());
+    App app(argc,argv);
     IntPropertyValuesHolder iprop;
     iprop.setValues(std::vector<int>({0,100}));
 
@@ -113,7 +117,7 @@ TEST_F(ANIMATOR,loopdrivered){
 }
 
 TEST_F(ANIMATOR,translate){
-    App app(GUIEnvironment::getInstance()->getArgc(),GUIEnvironment::getInstance()->getArgv());
+    App app(argc,argv);
     Window*w=new Window(0,0,800,600);
     TextView*tv=new TextView("Hello World!",120,30);
     tv->setBackgroundColor(0xFF111111);
@@ -145,7 +149,7 @@ TEST_F(ANIMATOR,translate){
     app.exec();
 }
 TEST_F(ANIMATOR,scale){
-    App app(GUIEnvironment::getInstance()->getArgc(),GUIEnvironment::getInstance()->getArgv());
+    App app(argc,argv);
     Window*w=new Window(0,0,800,600);
     TextView*tv=new TextView("Hello World!",120,30);
     tv->setBackgroundColor(0xFF111111);

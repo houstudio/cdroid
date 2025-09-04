@@ -8499,8 +8499,10 @@ bool View::post(Runnable& what){
 }
 
 bool View::postDelayed(Runnable& what,long delay){
-    if(mAttachInfo)mAttachInfo->mEventSource->postDelayed(what,delay);
-    else getRunQueue()->postDelayed(what,delay);
+    if(mAttachInfo){
+        return mAttachInfo->mEventSource->postDelayed(what,delay);
+    }
+    getRunQueue()->postDelayed(what,delay);
     return true;
 }
 
