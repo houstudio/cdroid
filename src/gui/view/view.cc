@@ -4592,15 +4592,20 @@ std::vector<int>View::onCreateDrawableState(int extraSpace){
 }
 
 std::vector<int>& View::mergeDrawableStates(std::vector<int>&baseState,const std::vector<int>&additionalState) {
-    const size_t M = additionalState.size();
-    for(size_t j=0;j<M;j++)
-        baseState.push_back(additionalState[j]);
+    const int N = baseState.size();
+    int i = N - 1;
+    while ((i >= 0) && (baseState[i] == 0)) {
+        i--;
+    }
+    const int insertPos = i + 1;
+    baseState.resize(insertPos + additionalState.size());
+    std::copy(additionalState.begin(), additionalState.end(), baseState.begin() + insertPos);
     return baseState;
 }
 
 void View::drawableStateChanged(){
     bool changed = false;
-    const std::vector<int>state=getDrawableState(); 
+    const std::vector<int>state = getDrawableState();
 
     Drawable*d = mBackground;
     if(d && d->isStateful())
@@ -4611,12 +4616,12 @@ void View::drawableStateChanged(){
         changed|= d->setState(state);
     }
 
-    d=mForegroundInfo?mForegroundInfo->mDrawable:nullptr;
+    d = mForegroundInfo ? mForegroundInfo->mDrawable:nullptr;
     if(d && d->isStateful())
         changed|= d->setState(state);
 
     if(mScrollCache){
-        d= mScrollCache->scrollBar;
+        d = mScrollCache->scrollBar;
         if(d && d->isStateful()){
             changed |= d->setState(state) && mScrollCache->state!=ScrollabilityCache::OFF;
         } 
