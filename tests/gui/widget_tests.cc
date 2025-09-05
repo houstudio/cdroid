@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
 #include <widget/keyboardview.h>
+#include <guienvironment.h>
 #include <cdlog.h>
 
 #define ID_OK 10
@@ -9,12 +10,15 @@
 #define ID_TIPINFO 30
 
 class WIDGET:public testing::Test{
-
-   public :
-   virtual void SetUp(){
-   }
-   virtual void TearDown(){
-   }
+public:
+    int argc;
+    const char**argv;
+    virtual void SetUp(){
+        argc = GUIEnvironment::getInstance()->getArgc();
+        argv = GUIEnvironment::getInstance()->getArgv();
+    }
+    virtual void TearDown(){
+    }
 };
 static void onClick(View&v){
     std::string txt="You clicked:";
@@ -35,7 +39,7 @@ TEST_F(WIDGET,View){
     ASSERT_EQ(v.getTextAlignment(),(int)View::TEXT_ALIGNMENT_VIEW_END);
 }
 TEST_F(WIDGET,TextView){
-    App app;
+    App app(argc,argv);
     Window*w=new Window(0,0,1280,720);
     const char*strings[]={"LEFT","CENTER","RIGHT","LEFT|TOP","CENTER|TOP","RIGHT|TOP"};
     TextView*t1=new TextView("",400,200);
@@ -46,7 +50,7 @@ TEST_F(WIDGET,TextView){
 }
 
 TEST_F(WIDGET,Button){
-   App app;
+   App app(argc,argv);
    Window*w=new Window(100,100,800,600);
    LinearLayout*layout=new LinearLayout(800,600);
    Button*btn1=new Button("OK",100,30);
@@ -68,7 +72,7 @@ TEST_F(WIDGET,Button){
 }
 
 TEST_F(WIDGET,ImageView){
-   App app;
+   App app(argc,argv);
    Window*w=new Window(100,100,800,600);
    ImageView*iv=new ImageView(400,400);
    Drawable*d=new BitmapDrawable(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/light2.jpg");
@@ -86,7 +90,7 @@ TEST_F(WIDGET,EditText){
          "आज सुबह एक ट्रैफिक जैम था","""^[A-Za-z]+$",
          "0.0.0.0","^((25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))\\.){3}(25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))$"//"\\d+\\.\\d+\\.\\d+\\.\\d+",
     };
-    App app;
+    App app(argc,argv);
     Window*w=new Window(100,100,800,600);
     EditText *e;
     e=new EditText("How to call customized WPF Window in VSTO ribbon?"
@@ -115,7 +119,7 @@ TEST_F(WIDGET,EditText){
 }
 
 TEST_F(WIDGET,ProgressBar){
-    App app;
+    App app(argc,argv);
     int pos=0;
     Window*w=new Window(100,100,800,600);
     ProgressBar*pb;
@@ -153,7 +157,7 @@ TEST_F(WIDGET,ProgressBar){
 }
 
 TEST_F(WIDGET,SeekBar){
-    App app;
+    App app(argc,argv);
     Window*w=new Window(100,100,800,600);
     SeekBar*sb=new SeekBar(400,40);
     w->addView(sb);
@@ -168,20 +172,20 @@ static const char*texts[]={
 
 
 TEST_F(WIDGET,Selector){
-    App app;
+    App app(argc,argv);
     Window*w=new Window(100,100,800,620);
 
     app.exec();
 }
 
 TEST_F(WIDGET,ListView){
-    App app;
+    App app(argc,argv);
     Window*w=new Window(100,100,800,620);
     app.exec();
 }
 
 TEST_F(WIDGET,Keyboard){
-    App app;
+    App app(argc,argv);
     Window*w=new Window(100,100,800,400);
     KeyboardView*kbv=new KeyboardView(800,300);
     kbv->setBackgroundColor(0xFFEEEEEE);

@@ -901,16 +901,13 @@ void View::internalSetPadding(int left, int top, int right, int bottom){
                     ? 0 : getVerticalScrollbarWidth();
             switch (mVerticalScrollbarPosition) {
             case SCROLLBAR_POSITION_DEFAULT:
-                 if (isLayoutRtl()) {
-                     left += offset;
-                 } else {
-                     right += offset;
-                 }
+                 if (isLayoutRtl()) left += offset;
+                 else right += offset;
                  break;
-             case SCROLLBAR_POSITION_RIGHT:
+            case SCROLLBAR_POSITION_RIGHT:
                  right += offset;
                  break;
-             case SCROLLBAR_POSITION_LEFT:
+            case SCROLLBAR_POSITION_LEFT:
                  left += offset;
                  break;
             }
@@ -1356,7 +1353,7 @@ void View::onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY
 
 }
 
-int View::getVerticalFadingEdgeLength(){
+int View::getVerticalFadingEdgeLength()const{
     if (isVerticalFadingEdgeEnabled()) {
         ScrollabilityCache* cache = mScrollCache;
         if (cache != nullptr) {
@@ -1366,7 +1363,7 @@ int View::getVerticalFadingEdgeLength(){
     return 0;
 }
 
-int View::getHorizontalFadingEdgeLength(){
+int View::getHorizontalFadingEdgeLength()const{
     if (isHorizontalFadingEdgeEnabled()) {
         ScrollabilityCache* cache = mScrollCache;
         if (cache != nullptr) {
@@ -2107,12 +2104,12 @@ void View::setScrollbarFadingEnabled(bool fadeScrollbars) {
     }
 }
 
-bool View::isScrollbarFadingEnabled() {
+bool View::isScrollbarFadingEnabled() const{
     return mScrollCache  && mScrollCache->fadeScrollBars;
 }
 
-int View::getScrollBarDefaultDelayBeforeFade() {
-    return mScrollCache == nullptr ? ViewConfiguration::getScrollDefaultDelay() :
+int View::getScrollBarDefaultDelayBeforeFade()const{
+    return (mScrollCache == nullptr) ? ViewConfiguration::getScrollDefaultDelay() :
             mScrollCache->scrollBarDefaultDelayBeforeFade;
 }
 
@@ -2120,7 +2117,7 @@ void View::setScrollBarDefaultDelayBeforeFade(int scrollBarDefaultDelayBeforeFad
     getScrollCache()->scrollBarDefaultDelayBeforeFade = scrollBarDefaultDelayBeforeFade;
 }
 
-int View::getScrollBarFadeDuration() {
+int View::getScrollBarFadeDuration()const{
     return mScrollCache == nullptr ? ViewConfiguration::getScrollBarFadeDuration() :
             mScrollCache->scrollBarFadeDuration;
 }
@@ -2235,7 +2232,6 @@ void View::setVerticalScrollBarEnabled(bool verticalScrollBarEnabled){
         awakenScrollBars(0,false);
     }
 }
-
 
 void View::getVerticalScrollBarBounds(Rect*bounds,Rect*touchBounds){
     if (mRoundScrollbarRenderer == nullptr) {
@@ -4592,15 +4588,20 @@ std::vector<int>View::onCreateDrawableState(int extraSpace){
 }
 
 std::vector<int>& View::mergeDrawableStates(std::vector<int>&baseState,const std::vector<int>&additionalState) {
-    const size_t M = additionalState.size();
-    for(size_t j=0;j<M;j++)
-        baseState.push_back(additionalState[j]);
+    const int N = baseState.size();
+    int i = N - 1;
+    while ((i >= 0) && (baseState[i] == 0)) {
+        i--;
+    }
+    const int insertPos = i + 1;
+    baseState.resize(insertPos + additionalState.size());
+    std::copy(additionalState.begin(), additionalState.end(), baseState.begin() + insertPos);
     return baseState;
 }
 
 void View::drawableStateChanged(){
     bool changed = false;
-    const std::vector<int>state=getDrawableState(); 
+    const std::vector<int>state = getDrawableState();
 
     Drawable*d = mBackground;
     if(d && d->isStateful())
@@ -4611,12 +4612,12 @@ void View::drawableStateChanged(){
         changed|= d->setState(state);
     }
 
-    d=mForegroundInfo?mForegroundInfo->mDrawable:nullptr;
+    d = mForegroundInfo ? mForegroundInfo->mDrawable:nullptr;
     if(d && d->isStateful())
         changed|= d->setState(state);
 
     if(mScrollCache){
-        d= mScrollCache->scrollBar;
+        d = mScrollCache->scrollBar;
         if(d && d->isStateful()){
             changed |= d->setState(state) && mScrollCache->state!=ScrollabilityCache::OFF;
         } 
@@ -5320,10 +5321,10 @@ void View::doRotaryLimitForScrollHaptics(MotionEvent& rotaryEvent) {
 }
 
 void View::processScrollEventForRotaryEncoderHaptics() {
-    /*if ((mPrivateFlags4 |= PFLAG4_ROTARY_HAPTICS_WAITING_FOR_SCROLL_EVENT) != 0) {
+    if ((mPrivateFlags4 |= PFLAG4_ROTARY_HAPTICS_WAITING_FOR_SCROLL_EVENT) != 0) {
         mPrivateFlags4 |= PFLAG4_ROTARY_HAPTICS_SCROLL_SINCE_LAST_ROTARY_INPUT;
         mPrivateFlags4 &= ~PFLAG4_ROTARY_HAPTICS_WAITING_FOR_SCROLL_EVENT;
-    }*/
+    }
 }
 
 void View::onAttachedToWindow(){
@@ -5431,13 +5432,15 @@ bool View::isShown()const{
     return true;
 }
 
-class Finally {
-public:
-    Finally(std::function<void()> func) : action(func) {}
-    ~Finally() { action(); }
-private:
-    std::function<void()> action;
-};
+namespace {
+    class Finally {
+    private:
+        std::function<void()> action;
+    public:
+        Finally(std::function<void()> func) : action(func) {}
+        ~Finally() { action(); }
+    };
+}
 
 bool View::fitSystemWindows(Rect& insets) {
     if ((mPrivateFlags3 & PFLAG3_APPLYING_INSETS) == 0) {
@@ -5452,10 +5455,9 @@ bool View::fitSystemWindows(Rect& insets) {
         // apply insets path and take things from there.
         Finally fin([this]() {mPrivateFlags3 &= ~PFLAG3_FITTING_SYSTEM_WINDOWS; });
         mPrivateFlags3 |= PFLAG3_FITTING_SYSTEM_WINDOWS;
-	WindowInsets winsets(insets);
+        WindowInsets winsets(insets);
         return dispatchApplyWindowInsets(winsets).isConsumed();
-    }
-    else {
+    } else {
         // We're being called from the newer apply insets path.
         // Perform the standard fallback behavior.
         return fitSystemWindowsInt(insets);
@@ -5466,7 +5468,7 @@ bool View::fitSystemWindowsInt(Rect& insets) {
         mUserPaddingStart = UNDEFINED_PADDING;
         mUserPaddingEnd = UNDEFINED_PADDING;
         Rect localInsets;
-        bool res = computeFitSystemWindows(insets, localInsets);
+        const bool res = computeFitSystemWindows(insets, localInsets);
         mUserPaddingLeftInitial = localInsets.left;
         mUserPaddingRightInitial = localInsets.width;
         internalSetPadding(localInsets.left, localInsets.top,
@@ -8494,8 +8496,10 @@ bool View::post(Runnable& what){
 }
 
 bool View::postDelayed(Runnable& what,long delay){
-    if(mAttachInfo)mAttachInfo->mEventSource->postDelayed(what,delay);
-    else getRunQueue()->postDelayed(what,delay);
+    if(mAttachInfo){
+        return mAttachInfo->mEventSource->postDelayed(what,delay);
+    }
+    getRunQueue()->postDelayed(what,delay);
     return true;
 }
 
