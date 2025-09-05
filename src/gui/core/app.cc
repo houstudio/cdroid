@@ -70,9 +70,17 @@ App::App(int argc,const char*argv[]){
     Looper::prepareMainLooper();
     options.allow_unrecognised_options();
     cxxopts::ParseResult result;
+    std::string name;
+#if defined(__linux__)||defined(__unix__)
+    name= std::string(argc?argv[0]:__progname);
+#elif (defined(_WIN32)||defined(_WIN64))
+    char progName[260];
+    GetModuleFileNameA(nullptr,progName,sizeof(progName));
+    name = progName;
+#endif
     try{
         if(argv==nullptr){
-            const char*dummy[]={"",nullptr};
+            const char*dummy[]={name.c_str(),nullptr};
             result = options.parse(1,dummy);
         }else{
             result = options.parse(argc,argv);
@@ -90,13 +98,7 @@ App::App(int argc,const char*argv[]){
     }
     Typeface::setContext(this);
     onInit();
-#if defined(__linux__)||defined(__unix__)
-    setName(std::string(argc?argv[0]:__progname));
-#elif (defined(_WIN32)||defined(_WIN64))
-    char progName[260];
-    GetModuleFileNameA(nullptr,progName,sizeof(progName));
-    setName(std::string(argc?argv[0]:progName));
-#endif
+    setName(name);
     LOGI("\033[1;35m          ┏━┓┏┓╋╋╋┏┓┏┓");
     LOGI("\033[1;35m          ┃┏╋┛┣┳┳━╋╋┛┃");
     LOGI("\033[1;35m          ┃┗┫╋┃┏┫╋┃┃╋┃");
