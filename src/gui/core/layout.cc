@@ -649,11 +649,17 @@ static const std::string processBidi(const std::wstring&logstr){
 #if ENABLE(FRIBIDI)
     const size_t wsize = logstr.length();
     FriBidiCharType base_dir = FRIBIDI_TYPE_ON;
-    FriBidiChar * visstr = new FriBidiChar[wsize] ;
+    auto visstr = std::make_unique<FriBidiChar[]>(wsize);
+    auto bidi_types = std::make_unique<FriBidiCharType[]>(wsize);
 
-    fribidi_log2vis((const FriBidiChar*)logstr.c_str(),logstr.length(),&base_dir,visstr,nullptr,nullptr,nullptr);
-    std::wstring biditxt((const wchar_t*)visstr,wsize);
-    delete [] visstr;
+    fribidi_get_bidi_types((const FriBidiChar*)logstr.c_str(), wsize, bidi_types.get());
+    for (int i = 0; i < wsize; i++) {
+        if (FRIBIDI_IS_STRONG(bidi_types[i])) {
+            //LOGV("->Strong character[%d]: %s\n",i,FRIBIDI_IS_RTL(bidi_types[i]) ? "RTL" : "LTR");
+        }
+    }
+    fribidi_log2vis((const FriBidiChar*)logstr.c_str(),logstr.length(),&base_dir,visstr.get(),nullptr,nullptr,nullptr);
+    std::wstring biditxt((const wchar_t*)visstr.get(),wsize);
     return TextUtils::unicode2utf8(biditxt); 
 #else
     return TextUtils::unicode2utf8(logstr);
