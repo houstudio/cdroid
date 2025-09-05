@@ -1068,10 +1068,10 @@ public:
     Drawable* getHorizontalScrollbarThumbDrawable()const;
     Drawable* getHorizontalScrollbarTrackDrawable()const;
     void setScrollbarFadingEnabled(bool fadeScrollbars);
-    bool isScrollbarFadingEnabled();
-    int  getScrollBarDefaultDelayBeforeFade();
+    bool isScrollbarFadingEnabled()const;
+    int  getScrollBarDefaultDelayBeforeFade()const;
     void setScrollBarDefaultDelayBeforeFade(int scrollBarDefaultDelayBeforeFade);
-    int  getScrollBarFadeDuration();
+    int  getScrollBarFadeDuration()const;
     void setScrollBarFadeDuration(int scrollBarFadeDuration);
 
     int getScrollIndicators()const;
@@ -1210,8 +1210,8 @@ public:
     int getScrollY()const;
     int getOverScrollMode()const;
     virtual void setOverScrollMode(int overScrollMode);
-    int getVerticalFadingEdgeLength();
-    int getHorizontalFadingEdgeLength();
+    int getVerticalFadingEdgeLength()const;
+    int getHorizontalFadingEdgeLength()const;
     void setFadingEdgeLength(int length);
     int getFadingEdgeLength() const;
     void transformFromViewToWindowSpace(int*);
