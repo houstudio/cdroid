@@ -313,7 +313,7 @@ public:
         
     static constexpr int LONG_CLICKABLE = 0x200000;
     static constexpr int DUPLICATE_PARENT_STATE = 0x400000;
-    static constexpr int CONTEXT_CLICKABLE = 0x200000;
+    static constexpr int CONTEXT_CLICKABLE = 0x800000;
         
     /*The scrollbar style to display the scrollbars at the edge of the view,
      * increasing the padding of the view. The scrollbars will only overlap the
