@@ -580,7 +580,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
             mProp.id = slot;
         }
         break;
-    case ABS_MT_TRACKING_ID:
+    case ABS_MT_TRACKING_ID:/*For TypeB ABS_MT_TRACKING_ID must reported after ABS_MT_SLOT*/
         slot = mTrack2Slot.indexOfKey(mTrackID = value);
         if( (slot ==-1) && (value!=-1) ){
             const int index = mTrack2Slot.size();
@@ -706,9 +706,8 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
 #endif
 
         slot = mProp.id;
-        if( mProp.id==-1 )
-            mProp.id = 0;
-        slot = slot>=0?slot:0;
+        if( (mProp.id==-1)||((mTrackID==-1)&&(mSlotID==-1)))
+            slot = mProp.id = 0;
         mPointerProps [slot] = mProp;
         mPointerCoords[slot] = mCoord;
         if( code == SYN_MT_REPORT ) break;
