@@ -312,8 +312,8 @@ public:
     static constexpr int DRAWING_CACHE_QUALITY_MASK = 0x00180000;
         
     static constexpr int LONG_CLICKABLE = 0x200000;
-    static constexpr int DUPLICATE_PARENT_STATE = 0x10000;
-    static constexpr int CONTEXT_CLICKABLE = 0x20000;
+    static constexpr int DUPLICATE_PARENT_STATE = 0x400000;
+    static constexpr int CONTEXT_CLICKABLE = 0x800000;
         
     /*The scrollbar style to display the scrollbars at the edge of the view,
      * increasing the padding of the view. The scrollbars will only overlap the
@@ -410,15 +410,6 @@ public:
     static constexpr int STATUS_BAR_DISABLE_CLOCK = 0x00800000;
     static constexpr int STATUS_BAR_DISABLE_RECENT= 0x01000000;
     static constexpr int STATUS_BAR_DISABLE_SEARCH= 0x02000000;
-    static constexpr int STATUS_BAR_TRANSIENT = 0x04000000;
-    static constexpr int NAVIGATION_BAR_TRANSIENT = 0x08000000;
-    static constexpr int STATUS_BAR_UNHIDE = 0x10000000;
-    static constexpr int NAVIGATION_BAR_UNHIDE  = 0x20000000;
-    static constexpr int STATUS_BAR_TRANSLUCENT = 0x40000000;
-    static constexpr int NAVIGATION_BAR_TRANSLUCENT = 0x80000000;
-    static constexpr int NAVIGATION_BAR_TRANSPARENT = 0x00008000;
-    static constexpr int STATUS_BAR_TRANSPARENT = 0x00000008;
-    static constexpr int SYSTEM_UI_TRANSPARENT = NAVIGATION_BAR_TRANSPARENT | STATUS_BAR_TRANSPARENT;
     static constexpr int PUBLIC_STATUS_BAR_VISIBILITY_MASK = 0x00003FF7;
     static constexpr int SYSTEM_UI_CLEARABLE_FLAGS = SYSTEM_UI_FLAG_LOW_PROFILE |
               SYSTEM_UI_FLAG_HIDE_NAVIGATION | SYSTEM_UI_FLAG_FULLSCREEN;

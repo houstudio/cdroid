@@ -512,7 +512,7 @@ void TextView::initView(){
     mHintLayout = new Layout(mLayout->getFontSize(),1);
     mLayout->setMultiline(!mSingleLine);
     mHintLayout->setMultiline(!mSingleLine);
-    mGravity = Gravity::NO_GRAVITY;
+    mGravity = Gravity::START|Gravity::TOP;
     mTextColor = mHintTextColor = mLinkTextColor =nullptr;
     mHighlightColor= 0x6633B5E5;
     mShadowRadius = .0;
