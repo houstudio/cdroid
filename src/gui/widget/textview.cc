@@ -1722,7 +1722,7 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         mHintLayout->relayout();
         txtWidth = mLayout->getMaxLineWidth();//desired(mLayout);
         txtHeight= mLayout->getHeight();
-        width = txtWidth+getPaddingLeft() + getPaddingRight();
+        width = txtWidth;
         Drawables* dr = mDrawables;
         if (dr != nullptr) {
             width = std::max(width, dr->mDrawableWidthTop);
