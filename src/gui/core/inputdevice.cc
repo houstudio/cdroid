@@ -607,7 +607,7 @@ int TouchDevice::isValidEvent(int type,int code,int value){
 int TouchDevice::getActionByBits(int& pointIndex){
     const uint32_t diffBits = mLastBits.value^mCurrBits.value;
     pointIndex = diffBits?BitSet32::firstMarkedBit(diffBits):mTrack2Slot.indexOfValue(mSlotID);
-    if(((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0))
+    if(((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)||(mSlotID==-1))
         pointIndex = 0;
     if(((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)){
         if(mLastAction==MotionEvent::ACTION_UP)
@@ -644,7 +644,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
     int slot,pointerCount,pointerIndex,action;
     MotionEvent*lastEvent;
     if(!isValidEvent(type,code,value))return -1;
-    LOGV("%lu:%04u %d,%d,%d",sec,usec,type,code,value);
+    //LOGV("%lu:%04u %d,%d,%d",sec,usec,type,code,value);
     switch(type){
     case EV_KEY:
         switch(code){
