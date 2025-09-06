@@ -604,11 +604,11 @@ int TouchDevice::isValidEvent(int type,int code,int value){
     return (type==EV_ABS)||(type==EV_SYN)||(type==EV_KEY)||(type==EV_MSC);
 }
 
-int TouchDevice::getActionByBits(int& pointIndex){
+int TouchDevice::getActionByBits(int& pointerIndex){
     const uint32_t diffBits = mLastBits.value^mCurrBits.value;
-    pointIndex = diffBits?BitSet32::firstMarkedBit(diffBits):mTrack2Slot.indexOfValue(mSlotID);
+    pointerIndex = diffBits?BitSet32::firstMarkedBit(diffBits):mTrack2Slot.indexOfValue(mSlotID);
     if(((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)||(mSlotID==-1))
-        pointIndex = 0;
+        pointerIndex = 0;
     if(((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)){
         if(mLastAction==MotionEvent::ACTION_UP)
             return MotionEvent::ACTION_DOWN;

@@ -131,10 +131,13 @@ TEST_F(INPUTDEVICE,ST2){
    ASSERT_EQ(OutEvents[0]->getY(0),mts[2].value);
 
    ASSERT_EQ(OutEvents[1]->getAction(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[1]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[1]->getPointerId(0),0);
    ASSERT_EQ(OutEvents[1]->getX(0),mts[1].value);
    ASSERT_EQ(OutEvents[1]->getY(0),mts[5].value);
 
    ASSERT_EQ(OutEvents[2]->getAction(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[2]->getPointerId(0),0);
    ASSERT_EQ(OutEvents[2]->getX(0),mts[7].value);
    ASSERT_EQ(OutEvents[2]->getY(0),mts[8].value);
 
@@ -194,6 +197,8 @@ TEST_F(INPUTDEVICE,MTASST){//some wrong MT device ,can working:)
    ASSERT_EQ(OutEvents[0]->getY(),mts[2].value);
 
    ASSERT_EQ(OutEvents[1]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[1]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[1]->getPointerId(0),0);
    ASSERT_EQ(OutEvents[1]->getX(),mts[5].value);
    ASSERT_EQ(OutEvents[1]->getY(),mts[6].value);
 
@@ -254,6 +259,7 @@ TEST_F(INPUTDEVICE,MTASST2){//some wrong MT device ,can working:)
    ASSERT_EQ(OutEvents[0]->getY(),mts[2].value);
 
    ASSERT_EQ(OutEvents[1]->getAction(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[1]->getPointerId(0),0);
    ASSERT_EQ(OutEvents[1]->getActionIndex(),0);
    ASSERT_EQ(OutEvents[1]->getX(),mts[5].value);
    ASSERT_EQ(OutEvents[1]->getY(),mts[6].value);
@@ -307,6 +313,7 @@ TEST_F(INPUTDEVICE,MTASST3){//some wrong MT device ,can working:)
 
    ASSERT_EQ(OutEvents[1]->getActionMasked(),MotionEvent::ACTION_MOVE);
    ASSERT_EQ(OutEvents[1]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[1]->getPointerId(0),0);
    ASSERT_EQ(OutEvents[1]->getX(),mts[5].value);
    ASSERT_EQ(OutEvents[1]->getY(),mts[6].value);
 
