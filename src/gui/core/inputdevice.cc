@@ -564,9 +564,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     case ABS_X:
     case ABS_Y:
     case ABS_Z:
-        mSlotID = 0 ;
-        mTrackID = 0;
-        mProp.id= 0;
+        mSlotID = mTrackID= 0;mProp.clear();
         /*Single Touch has only one finger,so slotid trackid always be zero*/
         mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
         break;
@@ -689,7 +687,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         }
         }break;
     case EV_ABS:
-        if ( ((code>>=ABS_X)&&(code<=ABS_Z)) || ((code >= ABS_MT_SLOT) && (code <= ABS_MT_TOOL_Y))) {
+        if ( ((code>=ABS_X) && (code<=ABS_Z)) || ((code >= ABS_MT_SLOT) && (code <= ABS_MT_TOOL_Y))) {
             setAxisValue(code, value, false);
         }break;
     case EV_REL:
@@ -718,7 +716,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         slot = slot>=0?slot:0;
         mPointerProps [slot] = mProp;
         mPointerCoords[slot] = mCoord;
-        if( code == SYN_MT_REPORT )break;
+        if( code == SYN_MT_REPORT ) break;
         action = getActionByBits(pointerIndex);
         mMoveTime = (sec * 1000LL + usec/1000);
         lastEvent = (mEvents.size() > 1) ? (MotionEvent*)mEvents.back() : nullptr;
