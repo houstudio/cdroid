@@ -650,19 +650,14 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         switch(code){
         case BTN_TOUCH :
         case BTN_STYLUS:
+            mAxisFlags |= 0x80000000;
             mActionButton = MotionEvent::BUTTON_PRIMARY;
             if(value){
-                LOGE_IF(mCurrBits.count(),"BTN_TOUCH has maked as down");
                 mCurrBits.markBit(0);
-            }else {
-                LOGE_IF(mCurrBits.isEmpty(),"BTN_TOUCH has maked as up");
-                mCurrBits.clearBit(0);
-            }
-            mAxisFlags |= 0x80000000;
-            if(value){
                 mMoveTime = mDownTime = sec * 1000 + usec/1000;
                 mButtonState = MotionEvent::BUTTON_PRIMARY;
-            }else{
+            }else {
+                mCurrBits.clearBit(0);
                 mMoveTime = sec * 1000 + usec/1000;
                 mButtonState &= ~MotionEvent::BUTTON_PRIMARY;
             }
@@ -711,7 +706,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
 #endif
 
         slot = mProp.id;
-        if( mProp.id==-1 )// && ((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) )
+        if( mProp.id==-1 )
             mProp.id = 0;
         slot = slot>=0?slot:0;
         mPointerProps [slot] = mProp;
