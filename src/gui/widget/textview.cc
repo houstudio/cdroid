@@ -922,12 +922,6 @@ float TextView::getLineSpacingExtra()const{
     return mSpacingAdd;
 }
 
-void TextView::onSizeChanged(int w,int h,int ow,int oh){
-    View::onSizeChanged(w,h,ow,oh);
-    //mLayout->setWidth(w-mPaddingLeft-mPaddingRight);
-    //mHintLayout->setWidth(w-mPaddingLeft-mPaddingRight);
-}
-
 void TextView::checkForRelayout() {
     // If we have a fixed width, we can just swap in a new text layout
     // if the text height stays the same or if the view height is fixed.

@@ -195,7 +195,6 @@ protected:
     virtual void onSelectionChanged(int selStart, int selEnd);
     virtual void onDraw(Canvas& canvas) override;
     virtual int getHorizontalOffsetForDrawables()const;
-    void onSizeChanged(int w,int h,int ow,int oh)override;
     void onLayout(bool changed, int left, int top, int w, int h)override;
     void onFocusChanged(bool focused, int direction, Rect* previouslyFocusedRect)override;
     void onWindowFocusChanged(bool hasWindowFocus)override;
