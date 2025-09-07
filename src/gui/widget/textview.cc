@@ -922,12 +922,6 @@ float TextView::getLineSpacingExtra()const{
     return mSpacingAdd;
 }
 
-void TextView::onSizeChanged(int w,int h,int ow,int oh){
-    View::onSizeChanged(w,h,ow,oh);
-    //mLayout->setWidth(w-mPaddingLeft-mPaddingRight);
-    //mHintLayout->setWidth(w-mPaddingLeft-mPaddingRight);
-}
-
 void TextView::checkForRelayout() {
     // If we have a fixed width, we can just swap in a new text layout
     // if the text height stays the same or if the view height is fixed.
@@ -1728,7 +1722,7 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         mHintLayout->relayout();
         txtWidth = mLayout->getMaxLineWidth();//desired(mLayout);
         txtHeight= mLayout->getHeight();
-        width = txtWidth+getPaddingLeft() + getPaddingRight();
+        width = txtWidth;
         Drawables* dr = mDrawables;
         if (dr != nullptr) {
             width = std::max(width, dr->mDrawableWidthTop);

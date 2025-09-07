@@ -819,7 +819,7 @@ int View::getPaddingEnd() {
 }
 
 bool View::isPaddingRelative()const{
-    return (mUserPaddingStart != UNDEFINED_PADDING || mUserPaddingEnd != UNDEFINED_PADDING);
+    return (mUserPaddingStart != UNDEFINED_PADDING) || (mUserPaddingEnd != UNDEFINED_PADDING);
 }
 
 Insets View::computeOpticalInsets() {
@@ -8852,15 +8852,15 @@ void View::performHapticFeedbackForInputDevice(int feedbackConstant, int inputDe
     }
 
     const int privFlags = computeHapticFeedbackPrivateFlags();
-    /*mAttachInfo.mRootCallbacks.performHapticFeedbackForInputDevice(
+    /*mAttachInfo->mRootCallbacks.performHapticFeedbackForInputDevice(
             feedbackConstant, inputDeviceId, inputSource, flags, privFlags);*/
 }
 
 bool View::isPerformHapticFeedbackSuppressed(int feedbackConstant, int flags) {
-    /*if (feedbackConstant == HapticFeedbackConstants::NO_HAPTICS
-            || (mAttachInfo == nullptr) || mAttachInfo->mSession == nullptr) {
+    if (feedbackConstant == HapticFeedbackConstants::NO_HAPTICS
+            || (mAttachInfo == nullptr) /*|| (mAttachInfo->mSession == nullptr)*/) {
         return true;
-    }*/
+    }
     //noinspection SimplifiableIfStatement
     if ((flags & HapticFeedbackConstants::FLAG_IGNORE_VIEW_SETTING) == 0
             && !isHapticFeedbackEnabled()) {
@@ -8871,10 +8871,10 @@ bool View::isPerformHapticFeedbackSuppressed(int feedbackConstant, int flags) {
 
 int View::computeHapticFeedbackPrivateFlags() {
     int privFlags = 0;
-    /*if (mAttachInfo.mViewRootImpl != nullptr
-            && mAttachInfo.mViewRootImpl.mWindowAttributes.type == TYPE_INPUT_METHOD) {
+    if (mAttachInfo->mRootView != nullptr
+            /*&& mAttachInfo.mRootView.mWindowAttributes.type == TYPE_INPUT_METHOD*/) {
         privFlags = HapticFeedbackConstants::PRIVATE_FLAG_APPLY_INPUT_METHOD_SETTINGS;
-    }*/
+    }
     return privFlags;
 }
 

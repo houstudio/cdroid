@@ -131,10 +131,13 @@ TEST_F(INPUTDEVICE,ST2){
    ASSERT_EQ(OutEvents[0]->getY(0),mts[2].value);
 
    ASSERT_EQ(OutEvents[1]->getAction(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[1]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[1]->getPointerId(0),0);
    ASSERT_EQ(OutEvents[1]->getX(0),mts[1].value);
    ASSERT_EQ(OutEvents[1]->getY(0),mts[5].value);
 
    ASSERT_EQ(OutEvents[2]->getAction(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[2]->getPointerId(0),0);
    ASSERT_EQ(OutEvents[2]->getX(0),mts[7].value);
    ASSERT_EQ(OutEvents[2]->getY(0),mts[8].value);
 
@@ -155,7 +158,7 @@ TEST_F(INPUTDEVICE,ST2){
 TEST_F(INPUTDEVICE,MTASST){//some wrong MT device ,can working:)
    TouchDevice d(INJECTDEV_TOUCH);
    MTEvent mts[]={
-      {EV_ABS,ABS_MT_TRACKING_ID,0x40},//0
+      {EV_ABS,ABS_MT_TRACKING_ID+1000,0x40},//0
       {EV_ABS,ABS_MT_POSITION_X ,20},
       {EV_ABS,ABS_MT_POSITION_Y ,30},
       {EV_KEY,BTN_TOUCH,1},
@@ -169,7 +172,7 @@ TEST_F(INPUTDEVICE,MTASST){//some wrong MT device ,can working:)
       {EV_ABS,ABS_MT_POSITION_Y ,34},
       {EV_SYN,SYN_REPORT,0},
 
-      {EV_ABS,ABS_MT_TRACKING_ID,-1},//11
+      {EV_ABS,ABS_MT_TRACKING_ID+1000,-1},//11
       {EV_KEY,BTN_TOUCH,0},
       {EV_SYN,SYN_REPORT,0},
 
@@ -193,11 +196,13 @@ TEST_F(INPUTDEVICE,MTASST){//some wrong MT device ,can working:)
    ASSERT_EQ(OutEvents[0]->getX(),mts[1].value);
    ASSERT_EQ(OutEvents[0]->getY(),mts[2].value);
 
-   ASSERT_EQ(OutEvents[1]->getAction(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[1]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[1]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[1]->getPointerId(0),0);
    ASSERT_EQ(OutEvents[1]->getX(),mts[5].value);
    ASSERT_EQ(OutEvents[1]->getY(),mts[6].value);
 
-   ASSERT_EQ(OutEvents[2]->getAction(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[2]->getActionMasked(),MotionEvent::ACTION_MOVE);
    ASSERT_EQ(OutEvents[2]->getX(),mts[8].value);
    ASSERT_EQ(OutEvents[2]->getY(),mts[9].value);
 
@@ -208,7 +213,7 @@ TEST_F(INPUTDEVICE,MTASST){//some wrong MT device ,can working:)
    ASSERT_EQ(OutEvents[4]->getAction(),MotionEvent::ACTION_DOWN);
    ASSERT_EQ(OutEvents[4]->getPointerCount(),1);
    
-   ASSERT_EQ(OutEvents[5]->getAction(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[5]->getActionMasked(),MotionEvent::ACTION_MOVE);
    ASSERT_EQ(OutEvents[5]->getPointerCount(),1);
 
    ASSERT_EQ(OutEvents[6]->getAction(),MotionEvent::ACTION_UP);
@@ -254,14 +259,70 @@ TEST_F(INPUTDEVICE,MTASST2){//some wrong MT device ,can working:)
    ASSERT_EQ(OutEvents[0]->getY(),mts[2].value);
 
    ASSERT_EQ(OutEvents[1]->getAction(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[1]->getPointerId(0),0);
+   ASSERT_EQ(OutEvents[1]->getActionIndex(),0);
    ASSERT_EQ(OutEvents[1]->getX(),mts[5].value);
    ASSERT_EQ(OutEvents[1]->getY(),mts[6].value);
 
    ASSERT_EQ(OutEvents[2]->getAction(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[2]->getActionIndex(),0);
    ASSERT_EQ(OutEvents[2]->getX(),mts[8].value);
    ASSERT_EQ(OutEvents[2]->getY(),mts[9].value);
 
    ASSERT_EQ(OutEvents[3]->getAction(),MotionEvent::ACTION_UP);
+   ASSERT_EQ(OutEvents[3]->getX(),mts[8].value);
+   ASSERT_EQ(OutEvents[3]->getY(),mts[9].value);
+}
+
+TEST_F(INPUTDEVICE,MTASST3){//some wrong MT device ,can working:)
+   TouchDevice d(INJECTDEV_TOUCH);
+   MTEvent mts[]={
+      {EV_ABS,ABS_MT_PRESSURE,0x40},//0
+      {EV_ABS,ABS_MT_POSITION_X ,20},
+      {EV_ABS,ABS_MT_POSITION_Y ,30},
+      {EV_KEY,BTN_TOUCH,1},
+      {EV_SYN,SYN_REPORT,0},
+
+      {EV_ABS,ABS_MT_POSITION_X ,22},//5
+      {EV_ABS,ABS_MT_POSITION_Y ,33},
+      {EV_SYN,SYN_REPORT,0},
+
+      {EV_ABS,ABS_MT_POSITION_X ,24},//8
+      {EV_ABS,ABS_MT_POSITION_Y ,34},
+      {EV_SYN,SYN_REPORT,0},
+
+      {EV_ABS,ABS_MT_PRESSURE,0x34},//11
+      {EV_KEY,BTN_TOUCH,0},
+      {EV_SYN,SYN_REPORT,0},
+
+      {EV_KEY,BTN_TOUCH,1},//14
+      {EV_ABS,ABS_MT_POSITION_X,10},
+      {EV_ABS,ABS_MT_POSITION_Y,20},
+      {EV_SYN,SYN_REPORT,0},
+
+      {EV_KEY,BTN_TOUCH,0},//18
+      {EV_ABS,ABS_MT_POSITION_X,16},
+      {EV_ABS,ABS_MT_POSITION_Y,26},
+      {EV_SYN,SYN_REPORT,0}
+   };
+   EventCount = sendEvents(d,mts,sizeof(mts)/sizeof(MTEvent),OutEvents);
+   ASSERT_EQ(EventCount,6);
+   ASSERT_EQ(OutEvents[0]->getActionMasked(),MotionEvent::ACTION_DOWN);
+   ASSERT_EQ(OutEvents[0]->getX(),mts[1].value);
+   ASSERT_EQ(OutEvents[0]->getY(),mts[2].value);
+
+   ASSERT_EQ(OutEvents[1]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[1]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[1]->getPointerId(0),0);
+   ASSERT_EQ(OutEvents[1]->getX(),mts[5].value);
+   ASSERT_EQ(OutEvents[1]->getY(),mts[6].value);
+
+   ASSERT_EQ(OutEvents[2]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[2]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[2]->getX(),mts[8].value);
+   ASSERT_EQ(OutEvents[2]->getY(),mts[9].value);
+
+   ASSERT_EQ(OutEvents[3]->getActionMasked(),MotionEvent::ACTION_UP);
    ASSERT_EQ(OutEvents[3]->getX(),mts[8].value);
    ASSERT_EQ(OutEvents[3]->getY(),mts[9].value);
 }
@@ -353,8 +414,8 @@ TEST_F(INPUTDEVICE,MTA){//TypeA Events
    ASSERT_EQ(OutEvents[1]->getPointerId(1),POINTERID(mts[9].value,1));
    ASSERT_EQ(OutEvents[1]->getX(0),mts[6].value);//20
    ASSERT_EQ(OutEvents[1]->getY(0),mts[7].value);//30
-   ASSERT_EQ(OutEvents[1]->getX(1),mts[10].value);//20
-   ASSERT_EQ(OutEvents[1]->getY(1),mts[11].value);//30
+   ASSERT_EQ(OutEvents[1]->getX(1),mts[10].value);//120
+   ASSERT_EQ(OutEvents[1]->getY(1),mts[11].value);//130
 
    ASSERT_EQ(OutEvents[2]->getActionMasked(),MotionEvent::ACTION_POINTER_DOWN);
    ASSERT_EQ(OutEvents[2]->getActionIndex(),2);

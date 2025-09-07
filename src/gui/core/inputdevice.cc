@@ -564,9 +564,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     case ABS_X:
     case ABS_Y:
     case ABS_Z:
-        mSlotID = 0 ;
-        mTrackID = 0;
-        mProp.id= 0;
+        mSlotID = mTrackID= 0;mProp.clear();
         /*Single Touch has only one finger,so slotid trackid always be zero*/
         mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
         break;
@@ -582,7 +580,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
             mProp.id = slot;
         }
         break;
-    case ABS_MT_TRACKING_ID:
+    case ABS_MT_TRACKING_ID:/*For TypeB ABS_MT_TRACKING_ID must reported after ABS_MT_SLOT*/
         slot = mTrack2Slot.indexOfKey(mTrackID = value);
         if( (slot ==-1) && (value!=-1) ){
             const int index = mTrack2Slot.size();
@@ -606,11 +604,11 @@ int TouchDevice::isValidEvent(int type,int code,int value){
     return (type==EV_ABS)||(type==EV_SYN)||(type==EV_KEY)||(type==EV_MSC);
 }
 
-int TouchDevice::getActionByBits(int& pointIndex){
+int TouchDevice::getActionByBits(int& pointerIndex){
     const uint32_t diffBits = mLastBits.value^mCurrBits.value;
-    pointIndex = diffBits?BitSet32::firstMarkedBit(diffBits):mTrack2Slot.indexOfValue(mSlotID);
-    if(((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0))
-        pointIndex = 0;
+    pointerIndex = diffBits?BitSet32::firstMarkedBit(diffBits):mTrack2Slot.indexOfValue(mSlotID);
+    if(((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)||(mSlotID==-1))
+        pointerIndex = 0;
     if(((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)){
         if(mLastAction==MotionEvent::ACTION_UP)
             return MotionEvent::ACTION_DOWN;
@@ -646,25 +644,20 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
     int slot,pointerCount,pointerIndex,action;
     MotionEvent*lastEvent;
     if(!isValidEvent(type,code,value))return -1;
-    LOGV("%lu:%04u %d,%d,%d",sec,usec,type,code,value);
+    //LOGV("%lu:%04u %d,%d,%d",sec,usec,type,code,value);
     switch(type){
     case EV_KEY:
         switch(code){
         case BTN_TOUCH :
         case BTN_STYLUS:
+            mAxisFlags |= 0x80000000;
             mActionButton = MotionEvent::BUTTON_PRIMARY;
             if(value){
-                LOGE_IF(mCurrBits.count(),"BTN_TOUCH has maked as down");
                 mCurrBits.markBit(0);
-            }else {
-                LOGE_IF(mCurrBits.isEmpty(),"BTN_TOUCH has maked as up");
-                mCurrBits.clearBit(0);
-            }
-            mAxisFlags |= 0x80000000;
-            if(value){
                 mMoveTime = mDownTime = sec * 1000 + usec/1000;
                 mButtonState = MotionEvent::BUTTON_PRIMARY;
-            }else{
+            }else {
+                mCurrBits.clearBit(0);
                 mMoveTime = sec * 1000 + usec/1000;
                 mButtonState &= ~MotionEvent::BUTTON_PRIMARY;
             }
@@ -689,7 +682,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         }
         }break;
     case EV_ABS:
-        if ( ((code>>=ABS_X)&&(code<=ABS_Z)) || ((code >= ABS_MT_SLOT) && (code <= ABS_MT_TOOL_Y))) {
+        if ( ((code>=ABS_X) && (code<=ABS_Z)) || ((code >= ABS_MT_SLOT) && (code <= ABS_MT_TOOL_Y))) {
             setAxisValue(code, value, false);
         }break;
     case EV_REL:
@@ -713,12 +706,11 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
 #endif
 
         slot = mProp.id;
-        if( mProp.id==-1 )// && ((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0) )
-            mProp.id = 0;
-        slot = slot>=0?slot:0;
+        if( (mProp.id==-1)||((mTrackID==-1)&&(mSlotID==-1)))
+            slot = mProp.id = 0;
         mPointerProps [slot] = mProp;
         mPointerCoords[slot] = mCoord;
-        if( code == SYN_MT_REPORT )break;
+        if( code == SYN_MT_REPORT ) break;
         action = getActionByBits(pointerIndex);
         mMoveTime = (sec * 1000LL + usec/1000);
         lastEvent = (mEvents.size() > 1) ? (MotionEvent*)mEvents.back() : nullptr;
