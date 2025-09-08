@@ -27,10 +27,12 @@ endif()
 list(APPEND RK3506_INCLUDE_DIRS ../common)
 list(APPEND RK3506_INCLUDE_DIRS ../include)
 find_package(Pixman)
+find_package(DRM)
 include_directories(./
     ../common
     ../include
     ./include
+    ${DRM_INCLUDE_DIRS}
     ${PIXMAN_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
@@ -39,7 +41,7 @@ include_directories(./
 set(PREFIX ${CMAKE_INSTALL_PREFIX})
 
 add_library(tvhal-fb SHARED ${RK3506_SRCS} ../common/graph_fb.c)
-# add_library(tvhal-drm SHARED ${RK3506_SRCS} ../common/graph_drm.c)
+add_library(tvhal-drm SHARED ${RK3506_SRCS} ../common/graph_drm.cc)
 add_library(tvhal SHARED ${RK3506_SRCS} ../common/graph_fb.c)
 target_link_libraries(tvhal ${RK3506_LIBS} ${PIXMAN_LIBRARIES} dl)
 install (TARGETS tvhal DESTINATION lib)
