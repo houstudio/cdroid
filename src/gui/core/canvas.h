@@ -20,8 +20,9 @@
 #include <cdtypes.h>
 #include <cdgraph.h>
 #include <cmath>
-#include <cairomm/context.h>
 #include <cairomm/region.h>
+#include <cairomm/context.h>
+#include <cairomm/fontoptions.h>
 #include <core/graphdevice.h>
 #include <core/color.h>
 namespace cdroid{
