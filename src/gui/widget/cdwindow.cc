@@ -476,6 +476,12 @@ RefPtr<Canvas>Window::getCanvas(){
         canvas = make_refptr_for_instance<Canvas>(new Canvas(canvasWidth,canvasHeight));
         mAttachInfo->mCanvas = canvas;
         Cairo::Matrix matrix = Cairo::identity_matrix();
+        Cairo::FontOptions options;
+        canvas->get_font_options(options);
+        options.set_hint_style(Cairo::FontOptions::HintStyle::MEDIUM);
+        options.set_hint_metrics(Cairo::FontOptions::HintMetrics::OFF);
+        canvas->set_font_options(options);
+
         LOGV("rotation=%d window.size=%dx%d canvas.size=%dx%d antialias=%",rotation*90,getWidth(),getHeight(),
              canvasWidth,canvasHeight,canvas->get_antialias());
         switch(rotation){
