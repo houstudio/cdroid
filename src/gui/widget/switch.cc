@@ -491,11 +491,13 @@ bool Switch::hitThumb(float x, float y) {
     const int thumbLeft = mSwitchLeft + thumbOffset - mTouchSlop;
     const int thumbRight = thumbLeft + mThumbWidth + mTempRect.left + mTempRect.width + mTouchSlop;
     const int thumbBottom = mSwitchBottom + mTouchSlop;
-    return x > thumbLeft && x < thumbRight && y > thumbTop && y < thumbBottom;
+    return (x > thumbLeft) && (x < thumbRight) && (y > thumbTop) && (y < thumbBottom);
 }
 
 void Switch::onDetachedFromWindow(){
     CompoundButton::onDetachedFromWindow();
+    cancelPositionAnimator();
+    /*ValueAnimator.cancel()/end() will call endAnimation,and destroy it in it's endCallback*/
     if(mThumbDrawable)unscheduleDrawable(*mThumbDrawable);
     if(mTrackDrawable)unscheduleDrawable(*mTrackDrawable);
 }
