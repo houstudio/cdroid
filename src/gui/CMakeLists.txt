@@ -51,6 +51,7 @@ check_function_exists(poll HAVE_POLL)
 check_function_exists(eventfd HAVE_EVENTFD)
 check_include_file("rtaudio/RtAudio.h" HAVE_RTAUDIO_H)
 
+configure_file(core/build.h.cmake ${PROJECT_SOURCE_DIR}/core/build.h)
 configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -119,7 +120,6 @@ if(litehtml_FOUND)
    add_subdirectory(widget/html)
 endif()
 
-configure_file(cdroid.pc.in cdroid.pc @ONLY)
 install(TARGETS cdroid  DESTINATION lib)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc
 	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)

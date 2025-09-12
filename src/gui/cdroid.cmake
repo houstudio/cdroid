@@ -8,7 +8,6 @@ list(APPEND CDROID_SOURCES
     core/atexit.cc
     core/attributeset.cc
     #core/basebundle.cc
-    core/build.cc
     #core/bundle.cc
     core/calendar.cc
     core/canvas.cc
