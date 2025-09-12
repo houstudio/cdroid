@@ -272,7 +272,7 @@ int InputMethodManager::setKeyCharacterMap(const std::string&filename){
     return kcm?0:-1;
 }
 
-InputMethodManager&InputMethodManager::getInstance(){
+InputMethodManager& InputMethodManager::getInstance(){
     if(mInst == nullptr){
         mInst = new InputMethodManager();
         if(mInst->setKeyCharacterMap("Generic.kcm"))
@@ -288,6 +288,10 @@ InputMethodManager&InputMethodManager::getInstance(){
 #endif
     }
     return *mInst;
+}
+
+InputMethodManager* InputMethodManager::peekInstance(){
+    return mInst;
 }
 
 int InputMethodManager::getCharacter(int keycode,int metaState)const{

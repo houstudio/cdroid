@@ -1672,7 +1672,7 @@ void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
     }
     needGlobalAttributesUpdate(false);
 
-    //notifyEnterOrExitForAutoFillIfNeeded(true);
+    notifyEnterOrExitForAutoFillIfNeeded(true);
 }
 
 void View::dispatchDetachedFromWindow(){
@@ -1687,8 +1687,10 @@ void View::dispatchDetachedFromWindow(){
     }
     onDetachedFromWindow();
     onDetachedFromWindowInternal();
-    InputMethodManager&imm=InputMethodManager::getInstance();
-    imm.onViewDetachedFromWindow(this);
+    InputMethodManager*imm = InputMethodManager::peekInstance();
+    if(imm){
+        imm->onViewDetachedFromWindow(this);
+    }
 
     if(mListenerInfo){
         for(auto l:mListenerInfo->mOnAttachStateChangeListeners){
@@ -1709,8 +1711,10 @@ void View::dispatchDetachedFromWindow(){
         /*reset will caused crash on remove views in some case*/
     }
     mAttachInfo = nullptr;
-    if(mOverlay)
+    if(mOverlay){
         mOverlay->getOverlayView()->dispatchDetachedFromWindow();
+    }
+    notifyEnterOrExitForAutoFillIfNeeded(false);
 }
 
 void View::onDetachedFromWindowInternal() {
@@ -4820,17 +4824,17 @@ void View::onFocusChanged(bool gainFocus,int direct,Rect*previouslyFocusedRect){
     }
      // Here we check whether we still need the default focus highlight, and switch it on/off.
     switchDefaultFocusHighlight();
-    InputMethodManager& imm = InputMethodManager::getInstance();
+    InputMethodManager* imm = InputMethodManager::peekInstance();
     if (!gainFocus) {
         if (isPressed()) {
             setPressed(false);
         }
-        if (mAttachInfo && mAttachInfo->mHasWindowFocus) {
-            imm.focusOut(this);
+        if ((imm!=nullptr)&&mAttachInfo && mAttachInfo->mHasWindowFocus) {
+            imm->focusOut(this);
         }
         onFocusLost();
-    } else if ( mAttachInfo && mAttachInfo->mHasWindowFocus) {
-        imm.focusIn(this);
+    } else if ((imm!=nullptr)&& mAttachInfo && mAttachInfo->mHasWindowFocus) {
+        imm->focusIn(this);
     }
 
     invalidate();
@@ -5334,13 +5338,12 @@ void View::onAttachedToWindow(){
     // rebuild, since Outline not maintained while View is detached
     rebuildOutline();
     if(isFocused()){
-        InputMethodManager&imm=InputMethodManager::getInstance();
-        imm.focusIn((View*)this);
+        InputMethodManager*imm = InputMethodManager::peekInstance();
+        if(imm!=nullptr)imm->focusIn((View*)this);
     } 
 }
 
 void View::onDetachedFromWindow(){
-    InputMethodManager::getInstance().onViewDetachedFromWindow((View*)this); 
 }
 
 void View::setDuplicateParentStateEnabled(bool enabled){
@@ -5687,20 +5690,20 @@ void View::dispatchWindowFocusChanged(bool hasFocus){
 }
 
 void View::onWindowFocusChanged(bool hasWindowFocus){
-    InputMethodManager& imm = InputMethodManager::getInstance();
+    InputMethodManager* imm = InputMethodManager::peekInstance();
     if (!hasWindowFocus) {
        if (isPressed()) {
            setPressed(false);
        }
        mPrivateFlags3 &= ~PFLAG3_FINGER_DOWN;
-       if ((mPrivateFlags & PFLAG_FOCUSED) != 0) {
-           imm.focusOut(this);
+       if ((imm!=nullptr)&&(mPrivateFlags & PFLAG_FOCUSED) != 0) {
+           imm->focusOut(this);
        }
        removeLongPressCallback();
        removeTapCallback();
        onFocusLost();
-    } else if ((mPrivateFlags & PFLAG_FOCUSED) != 0) {
-        imm.focusIn(this);
+    } else if ((imm!=nullptr)&&(mPrivateFlags & PFLAG_FOCUSED) != 0) {
+        imm->focusIn(this);
     }
     refreshDrawableState();
 

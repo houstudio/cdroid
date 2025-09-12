@@ -25,7 +25,7 @@ class Layout{
 private:
     std::wstring mText;
     std::vector<int>mLines;
-    Cairo::RefPtr<Cairo::Context>mContext;
+    Cairo::RefPtr<Cairo::ScaledFont>mScaledFont;
     Typeface *mTypeface;
     Cairo::FontExtents mFontExtents;
     int mWidth;
@@ -48,6 +48,7 @@ private:
     int mLayout;        //mLayout>0 need relayout
     Rect mCaretRect;
     void pushLineData(int start,int ytop,int descent,int width);
+    void resetScaledFont();
     double measureSize(const std::string&text,Cairo::TextExtents&te,Cairo::FontExtents*fe=nullptr)const;
     double measureSize(const std::wstring&text,Cairo::TextExtents&te,Cairo::FontExtents*fe=nullptr)const;
     void calculateEllipsis(int line,int linewidth);

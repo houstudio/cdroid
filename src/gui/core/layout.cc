@@ -38,11 +38,8 @@ namespace cdroid{
 #define COLUMNS_NORMAL  4
 #define COLUMNS_ELLIPSIZE 6
 
-static unsigned char sData[4];
-static RefPtr<ImageSurface>sImage = ImageSurface::create(sData,Surface::Format::ARGB32,1,1,4);
-
 Layout::Layout(int fontSize,int width)
-       :mContext(nullptr),mTypeface(nullptr){
+       :mTypeface(nullptr){
     mFontSize= fontSize;
     mWidth  = width;
     mLineCount = 0;
@@ -61,10 +58,9 @@ Layout::Layout(int fontSize,int width)
     mSelectionStart =-1;
     mSelectionEnd = -1;
     mText.clear();
-    mContext  = Cairo::Context::create(sImage);
     if(Typeface::DEFAULT == nullptr)
 	    Typeface::loadPreinstalledSystemFontMap();
-    mTypeface = Typeface::DEFAULT;
+    setTypeface(Typeface::DEFAULT);
 }
 
 Layout::Layout(const Layout&l):Layout(l.mFontSize,l.mWidth){
@@ -104,16 +100,30 @@ Typeface*Layout::getTypeface()const{
 }
 
 void Layout::setTypeface(Typeface*tf){
-    mTypeface = tf ;
-    mContext->set_font_face(mTypeface->getFontFace()->get_font_face());
+    if(mTypeface!=tf){
+        mTypeface = tf ;
+        resetScaledFont();
+    }
+}
+
+void Layout::resetScaledFont(){
+    Cairo::Matrix font_mtx = Cairo::identity_matrix();
+    font_mtx.scale(mFontSize, mFontSize);
+
+    Cairo::FontOptions options;
+    Cairo::Matrix ctm = Cairo::identity_matrix();
+    auto face = mTypeface->getFontFace()->get_font_face();
+    mTypeface->getFontFace()->get_font_options(options);
+    options.set_hint_style(Cairo::FontOptions::HintStyle::MEDIUM);
+    options.set_hint_metrics(Cairo::FontOptions::HintMetrics::OFF);
+    mScaledFont = Cairo::ScaledFont::create(face, font_mtx, ctm, options);
 }
 
 void Layout::setFontSize(float size){
     if(mFontSize!=size){
         mFontSize=size;
         mLayout++;
-        mContext->set_font_size(mFontSize);
-        mContext->get_font_extents(mFontExtents);
+        resetScaledFont();
     }
 }
 
@@ -142,19 +152,15 @@ void Layout::setEllipsis(int ellipsis){
 }
 
 double Layout::measureSize(const std::string&text,TextExtents&te,FontExtents*fe)const{
-    mContext->set_font_face(mTypeface->getFontFace()->get_font_face());
-    mContext->set_font_size(mFontSize);
-    mContext->get_text_extents(text,te);
-    if(fe)mContext->get_font_extents(*fe);
+    mScaledFont->get_text_extents(text,te);
+    if(fe)mScaledFont->get_extents(*fe);
     return te.x_advance;
 }
 
 double Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe)const{
     std::string utext = TextUtils::unicode2utf8(text);
-    mContext->set_font_face(mTypeface->getFontFace()->get_font_face());
-    mContext->set_font_size(mFontSize);
-    mContext->get_text_extents(utext,te);
-    if(fe)mContext->get_font_extents(*fe);
+    mScaledFont->get_text_extents(utext,te);
+    if(fe) mScaledFont->get_extents(*fe);
     return te.x_advance;
 }
 
