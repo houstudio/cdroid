@@ -40,6 +40,7 @@ protected:
     void commitText(const std::wstring&text,int newcursorPos);
 public:
     static InputMethodManager&getInstance();
+    static InputMethodManager*peekInstance();
     int registeMethod(const std::string&name,InputMethod*);
     std::vector<std::string>getInputMethods(std::vector<InputMethod*>*methods);
     int getInputMethodCount()const;
