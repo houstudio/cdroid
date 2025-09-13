@@ -1885,15 +1885,15 @@ void View::onVisibilityAggregated(bool isVisible) {
     }
 
     Drawable*dr = mBackground;
-    if (dr && isVisible != dr->isVisible()) {
+    if (dr && (isVisible != dr->isVisible())) {
         dr->setVisible(isVisible, false);
     }
     dr = mDefaultFocusHighlight;
-    if (dr && isVisible != dr->isVisible()) {
+    if (dr && (isVisible != dr->isVisible())) {
         dr->setVisible(isVisible, false);
     }
     dr = mForegroundInfo ? mForegroundInfo->mDrawable : nullptr;
-    if (dr && isVisible != dr->isVisible()) {
+    if (dr && (isVisible != dr->isVisible())) {
         dr->setVisible(isVisible, false);
     }
     if (!TextUtils::isEmpty(getAccessibilityPaneTitle())) {
@@ -1914,10 +1914,9 @@ void View::onVisibilityAggregated(bool isVisible) {
     }
 }
 
-bool View::dispatchNestedScroll(int dxConsumed, int dyConsumed,
-    int dxUnconsumed, int dyUnconsumed,int* offsetInWindow){
+bool View::dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed,int* offsetInWindow){
     if (isNestedScrollingEnabled() && mNestedScrollingParent) {
-        if (dxConsumed != 0 || dyConsumed != 0 || dxUnconsumed != 0 || dyUnconsumed != 0) {
+        if ((dxConsumed != 0) || (dyConsumed != 0) || (dxUnconsumed != 0) || (dyUnconsumed != 0)) {
             int startX = 0;
             int startY = 0;
             if (offsetInWindow) {
@@ -1926,8 +1925,7 @@ bool View::dispatchNestedScroll(int dxConsumed, int dyConsumed,
                 startY = offsetInWindow[1];
             }
 
-            mNestedScrollingParent->onNestedScroll(this, dxConsumed, dyConsumed,
-                    dxUnconsumed, dyUnconsumed);
+            mNestedScrollingParent->onNestedScroll(this, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed);
 
             if (offsetInWindow) {
                 getLocationInWindow(offsetInWindow);
@@ -1945,9 +1943,9 @@ bool View::dispatchNestedScroll(int dxConsumed, int dyConsumed,
 }
 
 bool View::dispatchNestedPreScroll(int dx, int dy,int* consumed,int* offsetInWindow){
-    if (!isNestedScrollingEnabled() || mNestedScrollingParent==nullptr) 
+    if (!isNestedScrollingEnabled() || (mNestedScrollingParent==nullptr))
         return false;
-    if (dx != 0 || dy != 0) {
+    if ((dx != 0) || (dy != 0)) {
         int startX = 0;
         int startY = 0;
         int mTempNestedScrollConsumed[2];
@@ -1969,7 +1967,7 @@ bool View::dispatchNestedPreScroll(int dx, int dy,int* consumed,int* offsetInWin
             offsetInWindow[0] -= startX;
             offsetInWindow[1] -= startY;
         }
-        return consumed[0] != 0 || consumed[1] != 0;
+        return (consumed[0] != 0) || (consumed[1] != 0);
     } else if (offsetInWindow) {
         offsetInWindow[0] = 0;
         offsetInWindow[1] = 0;
@@ -1978,14 +1976,14 @@ bool View::dispatchNestedPreScroll(int dx, int dy,int* consumed,int* offsetInWin
 }
 
 bool View::dispatchNestedFling(float velocityX, float velocityY, bool consumed) {
-    if (isNestedScrollingEnabled() && mNestedScrollingParent != nullptr) {
+    if (isNestedScrollingEnabled() && (mNestedScrollingParent != nullptr)) {
         return mNestedScrollingParent->onNestedFling(this, velocityX, velocityY, consumed);
     }
     return false;
 }
 
 bool View::dispatchNestedPreFling(float velocityX, float velocityY) {
-    if (isNestedScrollingEnabled() && mNestedScrollingParent != nullptr) {
+    if (isNestedScrollingEnabled() && (mNestedScrollingParent != nullptr)) {
         return mNestedScrollingParent->onNestedPreFling(this, velocityX, velocityY);
     }
     return false;

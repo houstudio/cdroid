@@ -10,6 +10,7 @@ apps/*
 !.gitmodules
 *~
 src/gui/gui_features.h
+src/gui/core/build.h
 deps
 appdevops*
 src/tools/po2json.py

@@ -104,8 +104,8 @@ App::App(int argc,const char*argv[]){
     LOGI("\033[1;35m          ┃┗┫╋┃┏┫╋┃┃╋┃");
     LOGI("\033[1;35m          ┗━┻━┻┛┗━┻┻━┛");
 
-    LOGI("cdroid %s on %s [%s] Build:%d Commit:%s",Build::VERSION::Release.c_str(),Build::VERSION::BASE_OS.c_str(),
-            Build::VERSION::CODENAME.c_str(),Build::VERSION::BuildNumber,Build::VERSION::CommitID.c_str());
+    LOGI("cdroid %s on %s [%s] Build:%d Commit:%s",Build::VERSION::Release,Build::VERSION::BASE_OS,
+            Build::VERSION::CODENAME,Build::VERSION::BuildNumber,Build::VERSION::CommitID);
     LOGI("https://www.gitee.com/houstudio/cdroid");
 
     GraphDevice& graph =GraphDevice::getInstance();
