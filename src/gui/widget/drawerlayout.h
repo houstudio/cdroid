@@ -171,6 +171,7 @@ private:
     static const std::string gravityToString(int gravity);
     bool isInBoundsOfChild(float x, float y, View* child);
     bool dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child);
+    MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child);
     void updateChildrenImportantForAccessibility(View* drawerView, bool isDrawerOpen);
     void resolveShadowDrawables();
     Drawable* resolveLeftShadow();
@@ -196,6 +197,8 @@ protected:
     View* findVisibleDrawer();
     void cancelChildViewTouch();
 
+    void onDetachedFromWindow()override;
+    void onAttachedToWindow()override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int l, int t, int r, int b)override;
     bool drawChild(Canvas& canvas, View* child, int64_t drawingTime)override;
