@@ -514,7 +514,9 @@ int Typeface::loadFaceFromResource(cdroid::Context*context) {
         for(int face_index=0;face_index<face->num_faces;face_index++){
             FcPattern* pat = FcFreeTypeQueryFace(face,nullptr,face_index,nullptr);
             FcPatternAddFTFace(pat, FC_FT_FACE,face);
+            FcPatternAddString(pat, FC_FILE,(const FcChar8*)fontUrl.c_str());
             err = FcPatternGetFTFace (pat, FC_FT_FACE,0, &font_face);
+
             Typeface* typeface = new Typeface(*pat);
             LOGD("@%s [%s] face[%d]=%p/%p=%d",fontUrl.c_str(),
                  typeface->getFamily().c_str(),face_index,face,font_face,err);
