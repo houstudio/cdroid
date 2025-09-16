@@ -85,7 +85,32 @@ float DrawerLayout::getDrawerElevation()const{
 }
 
 void DrawerLayout::setDrawerShadow(Drawable* shadowDrawable,int gravity){
+    /*
+     * TODO Someone someday might want to set more complex drawables here.
+     * They're probably nuts, but we might want to consider registering callbacks,
+     * setting states, etc. properly.
+     */
+    if (SET_DRAWER_SHADOW_FROM_ELEVATION) {
+        // No op. Drawer shadow will come from setting an elevation on the drawer.
+        return;
+    }
+    if ((gravity & Gravity::START) == Gravity::START) {
+        mShadowStart = shadowDrawable;
+    } else if ((gravity & Gravity::END) == Gravity::END) {
+        mShadowEnd = shadowDrawable;
+    } else if ((gravity & Gravity::LEFT) == Gravity::LEFT) {
+        mShadowLeft = shadowDrawable;
+    } else if ((gravity & Gravity::RIGHT) == Gravity::RIGHT) {
+        mShadowRight = shadowDrawable;
+    } else {
+        return;
+    }
+    resolveShadowDrawables();
+    invalidate();
+}
 
+void DrawerLayout::setDrawerShadow(const std::string&resId,int gravity) {
+    setDrawerShadow(mContext->getDrawable(resId), gravity);
 }
 
 void DrawerLayout::setScrimColor(int color) {
@@ -731,15 +756,15 @@ void DrawerLayout::onDraw(Canvas& c) {
 #if 0
     if (mDrawStatusBarBackground && mStatusBarBackground != nullptr) {
         const int inset;
-        if (Build.VERSION.SDK_INT >= 21) {
+        if (Build::VERSION::SDK_INT >= 21) {
             inset = mLastInsets != null
                     ? ((WindowInsets) mLastInsets).getSystemWindowInsetTop() : 0;
         } else {
             inset = 0;
         }
         if (inset > 0) {
-            mStatusBarBackground.setBounds(0, 0, getWidth(), inset);
-            mStatusBarBackground.draw(c);
+            mStatusBarBackground->setBounds(0, 0, getWidth(), inset);
+            mStatusBarBackground->draw(c);
         }
     }
 #endif
