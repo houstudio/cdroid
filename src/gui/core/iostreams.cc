@@ -88,7 +88,8 @@ std::streambuf::pos_type  ZipStreamBuf::seekoff(std::streambuf::off_type off, st
             }
             break;
         case std::ios_base::end:
-            size = zip_fseek((zip_file_t*)zipfile, 0, SEEK_END);
+            zip_fseek((zip_file_t*)zipfile, 0, SEEK_END);
+            size = zip_ftell((zip_file_t*)zipfile);
             zip_fseek((zip_file_t*)zipfile, size + off, SEEK_SET);
             // Reset buffer
             setg(buffer, buffer, buffer);
