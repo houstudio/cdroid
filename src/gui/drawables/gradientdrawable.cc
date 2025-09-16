@@ -32,6 +32,7 @@ GradientDrawable::GradientState::GradientState() {
     mUseLevel = false;
     mUseLevelForShape = true;
     mDensity = DisplayMetrics::DENSITY_DEFAULT;
+    mTintMode = DEFAULT_TINT_MODE;
 }
 
 GradientDrawable::GradientState::GradientState(Orientation orientation, const std::vector<int>&gradientColors)
@@ -267,10 +268,15 @@ GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state) {
     mAlpha = 255;
     mPath = std::make_shared<cdroid::Path>();
     updateLocalState();
+    mTintFilter = nullptr;
 }
 
 GradientDrawable::GradientDrawable(Orientation orientation,const std::vector<int>&colors)
     :GradientDrawable(std::make_shared<GradientState>(orientation,colors)) {
+}
+
+GradientDrawable::~GradientDrawable(){
+    delete mTintFilter;
 }
 
 std::shared_ptr<Drawable::ConstantState>GradientDrawable::getConstantState() {
@@ -304,6 +310,7 @@ void GradientDrawable::updateLocalState() {
         }
     }
     state->computeOpacity();
+    mTintFilter = updateTintFilter(mTintFilter, state->mTint, state->mTintMode);
 }
 
 void GradientDrawable::getOutline(Outline& outline) {
@@ -794,6 +801,13 @@ ColorFilter*GradientDrawable::getColorFilter(){
 
 void GradientDrawable::setTintList(const ColorStateList*tint){
     mGradientState->mTint = tint;
+    mTintFilter= updateTintFilter(mTintFilter,tint,mGradientState->mTintMode);
+    invalidateSelf();
+}
+
+void GradientDrawable::setTintMode( int tintMode){
+    mGradientState->mTintMode = tintMode;
+    mTintFilter= updateTintFilter(mTintFilter,mGradientState->mTint,tintMode);
     invalidateSelf();
 }
 
@@ -1056,6 +1070,12 @@ void GradientDrawable::draw(Canvas&canvas) {
     if( (mFillPaint==nullptr) && (st->mImagePattern==nullptr) && (haveStroke==false) )return;
     
     canvas.save();
+    if(mTintFilter){
+        const Rect&r =mBounds;
+        canvas.rectangle(r.left,r.top,r.width,r.height);
+        canvas.clip();
+        canvas.push_group();
+    }
     if(mFillPaint)
         mFillPaint->set_dither(ditherMode);
     switch (st->mShape) {
@@ -1129,6 +1149,11 @@ void GradientDrawable::draw(Canvas&canvas) {
             canvas.stroke();
         }
     }
+    if(mTintFilter){
+        mTintFilter->apply(canvas,mBounds);
+        canvas.pop_group_to_source();
+        canvas.paint();
+    }
     canvas.restore();
 }
 
@@ -1171,7 +1196,7 @@ void GradientDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
 
     const int tintMode = atts.getInt("tintMode", -1);
     if (tintMode != -1) {
-        //state->mBlendMode = Drawable::parseBlendMode(tintMode, BlendMode.SRC_IN);
+        //state->mBlendMode = Drawable::parseBlendMode(tintMode, BlendMode::SRC_IN);
     }
 
     ColorStateList* tint = atts.getColorStateList("tint");

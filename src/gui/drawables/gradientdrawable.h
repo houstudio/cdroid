@@ -122,6 +122,7 @@ private:
     Cairo::RefPtr<cdroid::Path>mRingPath;
     RectF mRect;
     Rect mPadding;
+    PorterDuffColorFilter*mTintFilter;
     std::shared_ptr<GradientState>mGradientState;
     std::vector<double>mDashArray;
     double mStrokeWidth;
@@ -152,6 +153,7 @@ protected:
 public:
     GradientDrawable();
     GradientDrawable(Orientation orientation,const std::vector<int>&colors);
+    ~GradientDrawable()override;
     static bool isOpaque(int color){return ((color>>24)&0xFF)==0xFF;}
     bool getPadding(Rect& padding)override;
     void setCornerRadii(const std::vector<float>& radii);
@@ -205,6 +207,7 @@ public:
     void setColorFilter(ColorFilter*)override;
     ColorFilter*getColorFilter()override;
     void setTintList(const ColorStateList*tint)override;
+    void setTintMode(int tintMode)override;
     int getOpacity()const;
     void getGradientCenter(float&x,float&y)const;
     std::shared_ptr<ConstantState>getConstantState()override;
