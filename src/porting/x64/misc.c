@@ -1,5 +1,6 @@
 #include <cdmisc.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 int SYSInit(){
     return 0;
