@@ -119,33 +119,33 @@ private:
     };
 private:
     float mDrawerElevation;
-
-    int mMinDrawerMargin;
-
-    int mScrimColor = DEFAULT_SCRIM_COLOR;
     float mScrimOpacity;
+    float mInitialMotionX;
+    float mInitialMotionY;
+
+
+    int mDrawerState;
+    int mMinDrawerMargin;
+    int mScrimColor = DEFAULT_SCRIM_COLOR;
 
     ViewDragHelper*   mLeftDragger;
     ViewDragHelper*   mRightDragger;
     ViewDragCallback* mLeftCallback;
     ViewDragCallback* mRightCallback;
-    int mDrawerState;
+
     bool mInLayout;
     bool mFirstLayout = true;
+    bool mDisallowInterceptRequested;
+    bool mChildrenCanceledTouch;
+
 
     int mLockModeLeft  = LOCK_MODE_UNDEFINED;
     int mLockModeRight = LOCK_MODE_UNDEFINED;
     int mLockModeStart = LOCK_MODE_UNDEFINED;
     int mLockModeEnd   = LOCK_MODE_UNDEFINED;
 
-    bool mDisallowInterceptRequested;
-    bool mChildrenCanceledTouch;
-
     //DrawerListener mListener;
     std::vector<DrawerListener> mListeners;
-
-    float mInitialMotionX;
-    float mInitialMotionY;
 
     Drawable* mStatusBarBackground;
     Drawable* mShadowLeftResolved;
@@ -253,6 +253,6 @@ public:
     void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
 };
 
-}//endof namespace
-#endif
+}/*endof namespace*/
+#endif/*__DRAWER_LAYOUT_H__*/
 
