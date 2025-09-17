@@ -54,11 +54,12 @@ protected:
 public:
     MenuPopupHelper(Context* context, MenuBuilder* menu);
     MenuPopupHelper(Context* context, MenuBuilder* menu, View* anchorView);
+
     MenuPopupHelper(Context* context, MenuBuilder* menu,
             View* anchorView, bool overflowOnly,const std::string& popupStyleAttr);
-
     MenuPopupHelper(Context* context,MenuBuilder* menu, View* anchorView, bool overflowOnly,
             const std::string& popupStyleAttr,const std::string& popupStyleRes);
+
     ~MenuPopupHelper()override;
     void setOnDismissListener(const PopupWindow::OnDismissListener& listener);
 

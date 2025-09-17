@@ -173,6 +173,7 @@ private:
     bool dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child);
     MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child);
     void updateChildrenImportantForAccessibility(View* drawerView, bool isDrawerOpen);
+    void updateChildAccessibilityAction(View* child);
     void resolveShadowDrawables();
     Drawable* resolveLeftShadow();
     Drawable* resolveRightShadow();
