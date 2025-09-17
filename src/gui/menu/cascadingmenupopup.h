@@ -115,6 +115,7 @@ public:
     int position;
 public:
     CascadingMenuInfo(MenuPopupWindow* window,MenuBuilder* menu,int position);
+    ~CascadingMenuInfo();
     ListView* getListView();
 };
 }/*endof namespace*/
