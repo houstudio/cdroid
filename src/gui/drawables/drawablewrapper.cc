@@ -263,6 +263,7 @@ void DrawableWrapper::draw(Canvas&canvas){
 }
 
 void DrawableWrapper::inflate(XmlPullParser&parser,const AttributeSet&atts){
+    Drawable::inflate(parser,atts);
     auto state = mState;
     if (state == nullptr) {
         return;

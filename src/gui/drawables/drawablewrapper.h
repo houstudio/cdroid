@@ -39,7 +39,7 @@ protected:
         int getChangingConfigurations()const override;
         virtual bool canConstantState()const;
     };
-private:
+protected:
     bool mMutated;
     Drawable*mDrawable;
     std::shared_ptr<DrawableWrapperState>mState;
