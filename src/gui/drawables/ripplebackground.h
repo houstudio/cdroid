@@ -60,5 +60,5 @@ public:
     void jumpToFinal();
 };
 
-}
-#endif
+}/*endof namespace*/
+#endif/*__RIPPLE_COMPONENT_H__*/

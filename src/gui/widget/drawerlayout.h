@@ -119,33 +119,33 @@ private:
     };
 private:
     float mDrawerElevation;
-
-    int mMinDrawerMargin;
-
-    int mScrimColor = DEFAULT_SCRIM_COLOR;
     float mScrimOpacity;
+    float mInitialMotionX;
+    float mInitialMotionY;
+
+
+    int mDrawerState;
+    int mMinDrawerMargin;
+    int mScrimColor = DEFAULT_SCRIM_COLOR;
 
     ViewDragHelper*   mLeftDragger;
     ViewDragHelper*   mRightDragger;
     ViewDragCallback* mLeftCallback;
     ViewDragCallback* mRightCallback;
-    int mDrawerState;
+
     bool mInLayout;
     bool mFirstLayout = true;
+    bool mDisallowInterceptRequested;
+    bool mChildrenCanceledTouch;
+
 
     int mLockModeLeft  = LOCK_MODE_UNDEFINED;
     int mLockModeRight = LOCK_MODE_UNDEFINED;
     int mLockModeStart = LOCK_MODE_UNDEFINED;
     int mLockModeEnd   = LOCK_MODE_UNDEFINED;
 
-    bool mDisallowInterceptRequested;
-    bool mChildrenCanceledTouch;
-
     //DrawerListener mListener;
     std::vector<DrawerListener> mListeners;
-
-    float mInitialMotionX;
-    float mInitialMotionY;
 
     Drawable* mStatusBarBackground;
     Drawable* mShadowLeftResolved;
@@ -171,6 +171,7 @@ private:
     static const std::string gravityToString(int gravity);
     bool isInBoundsOfChild(float x, float y, View* child);
     bool dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child);
+    MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child);
     void updateChildrenImportantForAccessibility(View* drawerView, bool isDrawerOpen);
     void resolveShadowDrawables();
     Drawable* resolveLeftShadow();
@@ -196,6 +197,8 @@ protected:
     View* findVisibleDrawer();
     void cancelChildViewTouch();
 
+    void onDetachedFromWindow()override;
+    void onAttachedToWindow()override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int l, int t, int r, int b)override;
     bool drawChild(Canvas& canvas, View* child, int64_t drawingTime)override;
@@ -253,6 +256,6 @@ public:
     void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
 };
 
-}//endof namespace
-#endif
+}/*endof namespace*/
+#endif/*__DRAWER_LAYOUT_H__*/
 

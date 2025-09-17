@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <core/build.h>
 #include <widget/drawerlayout.h>
 #include <porting/cdlog.h>
 namespace cdroid{
@@ -85,7 +86,32 @@ float DrawerLayout::getDrawerElevation()const{
 }
 
 void DrawerLayout::setDrawerShadow(Drawable* shadowDrawable,int gravity){
+    /*
+     * TODO Someone someday might want to set more complex drawables here.
+     * They're probably nuts, but we might want to consider registering callbacks,
+     * setting states, etc. properly.
+     */
+    if (SET_DRAWER_SHADOW_FROM_ELEVATION) {
+        // No op. Drawer shadow will come from setting an elevation on the drawer.
+        return;
+    }
+    if ((gravity & Gravity::START) == Gravity::START) {
+        mShadowStart = shadowDrawable;
+    } else if ((gravity & Gravity::END) == Gravity::END) {
+        mShadowEnd = shadowDrawable;
+    } else if ((gravity & Gravity::LEFT) == Gravity::LEFT) {
+        mShadowLeft = shadowDrawable;
+    } else if ((gravity & Gravity::RIGHT) == Gravity::RIGHT) {
+        mShadowRight = shadowDrawable;
+    } else {
+        return;
+    }
+    resolveShadowDrawables();
+    invalidate();
+}
 
+void DrawerLayout::setDrawerShadow(const std::string&resId,int gravity) {
+    setDrawerShadow(mContext->getDrawable(resId), gravity);
 }
 
 void DrawerLayout::setScrimColor(int color) {
@@ -236,6 +262,24 @@ bool DrawerLayout::dispatchTransformedGenericPointerEvent(MotionEvent& event, Vi
    return handled;
 }
 
+/**
+* Copied from ViewGroup#getTransformedMotionEvent(MotionEvent, View) then  modified in order to
+* make calls that are otherwise too visibility restricted to make.
+*/
+MotionEvent* DrawerLayout::getTransformedMotionEvent(MotionEvent& event, View* child) {
+    const float offsetX = getScrollX() - child->getLeft();
+    const float offsetY = getScrollY() - child->getTop();
+    MotionEvent* transformedEvent = MotionEvent::obtain(event);
+    transformedEvent->offsetLocation(offsetX, offsetY);
+    Matrix childMatrix = child->getMatrix();
+    if (!child->hasIdentityMatrix()){//!childMatrix.isIdentity()) {
+        mChildInvertedMatrix = childMatrix;
+        mChildInvertedMatrix.invert();//childMatrix.invert(mChildInvertedMatrix);
+        transformedEvent->transform(mChildInvertedMatrix);
+    }
+    return transformedEvent;
+}
+
 void DrawerLayout::updateDrawerState(int forGravity,int activeState, View* activeDrawer) {
     int leftState = mLeftDragger->getViewDragState();
     int rightState = mRightDragger->getViewDragState();
@@ -289,12 +333,12 @@ void DrawerLayout::dispatchOnDrawerClosed(View* drawerView) {
         // Only send WINDOW_STATE_CHANGE if the host has window focus. This
         // may change if support for multiple foreground windows (e.g. IME)
         // improves.
-        /*if (hasWindowFocus()) {
-            View rootView = getRootView();
-            if (rootView != null) {
-                rootView.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED);
+        if (hasWindowFocus()) {
+            View* rootView = getRootView();
+            if (rootView != nullptr) {
+                rootView->sendAccessibilityEvent(AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED);
             }
-        }*/
+        }
     }
 }
 
@@ -313,9 +357,9 @@ void DrawerLayout::dispatchOnDrawerOpened(View* drawerView) {
         updateChildrenImportantForAccessibility(drawerView, true);
 
         // Only send WINDOW_STATE_CHANGE if the host has window focus.
-        /*if (hasWindowFocus()) {
-            sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED);
-        }*/
+        if (hasWindowFocus()) {
+            sendAccessibilityEvent(AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED);
+        }
     }
 }
 
@@ -326,9 +370,9 @@ void DrawerLayout::updateChildrenImportantForAccessibility(View* drawerView, boo
         if ((!isDrawerOpen && !isDrawerView(child)) || (isDrawerOpen && child == drawerView)) {
             // Drawer is closed and this is a content view or this is an
             // open drawer view, so it should be visible.
-            //ViewCompat.setImportantForAccessibility(child, ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_YES);
+            child->setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
         } else {
-            //ViewCompat.setImportantForAccessibility(child, ViewCompat.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+            child->setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
         }
     }
 }
@@ -370,7 +414,7 @@ bool DrawerLayout::checkDrawerViewAbsoluteGravity(View* drawerView, int checkFor
 }
 
 View* DrawerLayout::findOpenDrawer() {
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
         LayoutParams* childLp = (LayoutParams*) child->getLayoutParams();
@@ -382,11 +426,11 @@ View* DrawerLayout::findOpenDrawer() {
 }
 
 void DrawerLayout::moveDrawerToOffset(View* drawerView, float slideOffset) {
-    float oldOffset = getDrawerViewOffset(drawerView);
-    int width = drawerView->getWidth();
-    int oldPos = (int) (width * oldOffset);
-    int newPos = (int) (width * slideOffset);
-    int dx = newPos - oldPos;
+    const float oldOffset = getDrawerViewOffset(drawerView);
+    const int width = drawerView->getWidth();
+    const int oldPos = (int) (width * oldOffset);
+    const int newPos = (int) (width * slideOffset);
+    const int dx = newPos - oldPos;
 
     drawerView->offsetLeftAndRight(
             checkDrawerViewAbsoluteGravity(drawerView, Gravity::LEFT) ? dx : -dx);
@@ -420,6 +464,15 @@ View* DrawerLayout::findDrawerWithGravity(int gravity) {
     return nullptr;
 }
 
+void DrawerLayout::onDetachedFromWindow() {
+    ViewGroup::onDetachedFromWindow();
+    mFirstLayout = true;
+}
+
+void DrawerLayout::onAttachedToWindow() {
+    ViewGroup::onAttachedToWindow();
+    mFirstLayout = true;
+}
 
 void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     int widthMode = MeasureSpec::getMode(widthMeasureSpec);
@@ -427,7 +480,7 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     int widthSize = MeasureSpec::getSize(widthMeasureSpec);
     int heightSize= MeasureSpec::getSize(heightMeasureSpec);
 
-    if (widthMode != MeasureSpec::EXACTLY || heightMode != MeasureSpec::EXACTLY) {
+    if ((widthMode != MeasureSpec::EXACTLY) || (heightMode != MeasureSpec::EXACTLY)) {
         if (isInEditMode()) {
             // Don't crash the layout editor. Consume all of the space if specified
             // or pick a magic number from thin air otherwise.
@@ -452,7 +505,7 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
     setMeasuredDimension(widthSize, heightSize);
 
-    bool applyInsets = false;//mLastInsets != null && ViewCompat.getFitsSystemWindows(this);
+    bool applyInsets = false;//mLastInsets != null && getFitsSystemWindows();
     int layoutDirection = getLayoutDirection();
 
     // Only one drawer is permitted along each vertical edge (left / right). These two booleans
@@ -470,37 +523,33 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
 #if 0
         if (applyInsets) {
-            int cgrav = Gravity::getAbsoluteGravity(lp->gravity, layoutDirection);
-            if (ViewCompat.getFitsSystemWindows(child)) {
+            const int cgrav = Gravity::getAbsoluteGravity(lp->gravity, layoutDirection);
+            if (child->getFitsSystemWindows()) {
                 if (Build::VERSION::SDK_INT >= 21) {
                     WindowInsets wi = (WindowInsets) mLastInsets;
                     if (cgrav == Gravity::LEFT) {
                         wi = wi.replaceSystemWindowInsets(wi.getSystemWindowInsetLeft(),
-                                wi.getSystemWindowInsetTop(), 0,
-                                wi.getSystemWindowInsetBottom());
-                    } else if (cgrav == Gravity.RIGHT) {
+                                wi.getSystemWindowInsetTop(), 0, wi.getSystemWindowInsetBottom());
+                    } else if (cgrav == Gravity::RIGHT) {
                         wi = wi.replaceSystemWindowInsets(0, wi.getSystemWindowInsetTop(),
-                                wi.getSystemWindowInsetRight(),
-                                wi.getSystemWindowInsetBottom());
+                                wi.getSystemWindowInsetRight(), wi.getSystemWindowInsetBottom());
                     }
                     child->dispatchApplyWindowInsets(wi);
                 }
             } else {
                 if (Build::VERSION::SDK_INT >= 21) {
                     WindowInsets wi = (WindowInsets) mLastInsets;
-                    if (cgrav == Gravity.LEFT) {
+                    if (cgrav == Gravity::LEFT) {
                         wi = wi.replaceSystemWindowInsets(wi.getSystemWindowInsetLeft(),
-                                wi.getSystemWindowInsetTop(), 0,
-                                wi.getSystemWindowInsetBottom());
-                    } else if (cgrav == Gravity.RIGHT) {
+                                wi.getSystemWindowInsetTop(), 0, wi.getSystemWindowInsetBottom());
+                    } else if (cgrav == Gravity::RIGHT) {
                         wi = wi.replaceSystemWindowInsets(0, wi.getSystemWindowInsetTop(),
-                                wi.getSystemWindowInsetRight(),
-                                wi.getSystemWindowInsetBottom());
+                                wi.getSystemWindowInsetRight(), wi.getSystemWindowInsetBottom());
                     }
-                    lp.leftMargin = wi.getSystemWindowInsetLeft();
-                    lp.topMargin = wi.getSystemWindowInsetTop();
-                    lp.rightMargin = wi.getSystemWindowInsetRight();
-                    lp.bottomMargin = wi.getSystemWindowInsetBottom();
+                    lp->leftMargin = wi.getSystemWindowInsetLeft();
+                    lp->topMargin = wi.getSystemWindowInsetTop();
+                    lp->rightMargin = wi.getSystemWindowInsetRight();
+                    lp->bottomMargin = wi.getSystemWindowInsetBottom();
                 }
             }
         }
@@ -601,7 +650,7 @@ bool DrawerLayout::mirror(Drawable* drawable, int layoutDirection) {
 
 void DrawerLayout::onLayout(bool changed, int l, int t, int width, int height) {
     mInLayout = true;
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
 
@@ -675,7 +724,7 @@ void DrawerLayout::requestLayout() {
 
 
 void DrawerLayout::computeScroll() {
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     float scrimOpacity = 0;
     for (int i = 0; i < childCount; i++) {
         float onscreen = ((LayoutParams*) getChildAt(i)->getLayoutParams())->onScreen;
@@ -730,16 +779,16 @@ void DrawerLayout::onDraw(Canvas& c) {
     ViewGroup::onDraw(c);
 #if 0
     if (mDrawStatusBarBackground && mStatusBarBackground != nullptr) {
-        const int inset;
-        if (Build.VERSION.SDK_INT >= 21) {
-            inset = mLastInsets != null
+        int inset = 0;
+        if (Build::VERSION::SDK_INT >= 21) {
+            inset = mLastInsets != nullptr
                     ? ((WindowInsets) mLastInsets).getSystemWindowInsetTop() : 0;
         } else {
             inset = 0;
         }
         if (inset > 0) {
-            mStatusBarBackground.setBounds(0, 0, getWidth(), inset);
-            mStatusBarBackground.draw(c);
+            mStatusBarBackground->setBounds(0, 0, getWidth(), inset);
+            mStatusBarBackground->draw(c);
         }
     }
 #endif
@@ -752,7 +801,7 @@ bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
 
     canvas.save();
     if (drawingContent) {
-        int childCount = getChildCount();
+        const int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
             View* v = getChildAt(i);
             if (v == child || v->getVisibility() != VISIBLE
@@ -775,28 +824,28 @@ bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
     bool result = ViewGroup::drawChild(canvas, child, drawingTime);
     canvas.restore();
 
-    if (mScrimOpacity > 0 && drawingContent) {
-        int baseAlpha = (mScrimColor & 0xff000000) >> 24;
-        int imag = (int) (baseAlpha * mScrimOpacity);
-        int color = imag << 24 | (mScrimColor & 0xffffff);
+    if ((mScrimOpacity > 0) && drawingContent) {
+        const int baseAlpha = (mScrimColor & 0xff000000) >> 24;
+        const int imag = (int) (baseAlpha * mScrimOpacity);
+        const int color = imag << 24 | (mScrimColor & 0xffffff);
         canvas.set_color(color);
 
         canvas.rectangle(clipLeft, 0, clipRight, getHeight());
         canvas.fill();
     } else if (mShadowLeftResolved && checkDrawerViewAbsoluteGravity(child, Gravity::LEFT)) {
-        int shadowWidth = mShadowLeftResolved->getIntrinsicWidth();
-        int childRight  = child->getRight();
-        int drawerPeekDistance = mLeftDragger->getEdgeSize();
-        float alpha = std::max(.0f, std::min((float) childRight / drawerPeekDistance, 1.f));
+        const int shadowWidth = mShadowLeftResolved->getIntrinsicWidth();
+        const int childRight  = child->getRight();
+        const int drawerPeekDistance = mLeftDragger->getEdgeSize();
+        const float alpha = std::max(.0f, std::min((float) childRight / drawerPeekDistance, 1.f));
         mShadowLeftResolved->setBounds(childRight, child->getTop(),shadowWidth, child->getHeight());
         mShadowLeftResolved->setAlpha((int) (0xff * alpha));
         mShadowLeftResolved->draw(canvas);
     } else if (mShadowRightResolved && checkDrawerViewAbsoluteGravity(child, Gravity::RIGHT)) {
-        int shadowWidth = mShadowRightResolved->getIntrinsicWidth();
-        int childLeft = child->getLeft();
-        int showing   = getWidth() - childLeft;
-        int drawerPeekDistance = mRightDragger->getEdgeSize();
-        float alpha =  std::max(.0f, std::min((float) showing / drawerPeekDistance, 1.f));
+        const int shadowWidth = mShadowRightResolved->getIntrinsicWidth();
+        const int childLeft = child->getLeft();
+        const int showing   = getWidth() - childLeft;
+        const int drawerPeekDistance = mRightDragger->getEdgeSize();
+        const float alpha =  std::max(.0f, std::min((float) showing / drawerPeekDistance, 1.f));
         mShadowRightResolved->setBounds(childLeft - shadowWidth, child->getTop(),
                 shadowWidth, child->getWidth());
         mShadowRightResolved->setAlpha((int) (0xff * alpha));
@@ -824,10 +873,10 @@ bool DrawerLayout::isDrawerView(View* child)const{
 }
 
 bool DrawerLayout::onInterceptTouchEvent(MotionEvent& ev) {
-    int action = ev.getActionMasked();
+    const int action = ev.getActionMasked();
    
     // "|" used deliberately here; both methods should be invoked.
-    bool interceptForDrag = mLeftDragger->shouldInterceptTouchEvent(ev)
+    const bool interceptForDrag = mLeftDragger->shouldInterceptTouchEvent(ev)
             | mRightDragger->shouldInterceptTouchEvent(ev);
    
     bool interceptForTap = false;
@@ -867,17 +916,15 @@ bool DrawerLayout::dispatchGenericMotionEvent(MotionEvent& event) {
     // If this is not a pointer event, or if this is an hover exit, or we are not displaying
     // that the content view can't be interacted with, then don't override and do anything
     // special.
-#if 0
     if ((event.getSource() & InputDevice::SOURCE_CLASS_POINTER) == 0
             || event.getAction() == MotionEvent::ACTION_HOVER_EXIT
             || mScrimOpacity <= 0) {
         return ViewGroup::dispatchGenericMotionEvent(event);
     }
-#endif
-    int childrenCount = getChildCount();
+    const int childrenCount = getChildCount();
     if (childrenCount != 0) {
-        float x = event.getX();
-        float y = event.getY();
+        const float x = event.getX();
+        const float y = event.getY();
    
         // Walk through children from top to bottom.
         for (int i = childrenCount - 1; i >= 0; i--) {
@@ -1096,9 +1143,7 @@ bool DrawerLayout::isDrawerOpen(View* drawer) {
     LayoutParams* drawerLp = (LayoutParams*) drawer->getLayoutParams();
     return (drawerLp->openState & LayoutParams::FLAG_IS_OPENED) == 1;
 }
-    
 
-    
 bool DrawerLayout::isDrawerOpen(int drawerGravity) {
     View* drawerView = findDrawerWithGravity(drawerGravity);
     if (drawerView != nullptr) {
@@ -1122,7 +1167,7 @@ bool DrawerLayout::isDrawerVisible(int drawerGravity) {
 }
     
 bool DrawerLayout::hasPeekingDrawer() {
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         LayoutParams* lp = (LayoutParams*) getChildAt(i)->getLayoutParams();
         if (lp->isPeeking) {
@@ -1159,7 +1204,7 @@ void DrawerLayout::addFocusables(std::vector<View*>& views, int direction, int f
 
     // Only the views in the open drawers are focusables. Add normal child views when
     // no drawers are opened.
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     bool bIsDrawerOpen = false;
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
@@ -1174,7 +1219,7 @@ void DrawerLayout::addFocusables(std::vector<View*>& views, int direction, int f
     }
 
     if (!bIsDrawerOpen) {
-        size_t nonDrawerViewsCount = mNonDrawerViews.size();
+        const size_t nonDrawerViewsCount = mNonDrawerViews.size();
         for (int i = 0; i < nonDrawerViewsCount; ++i) {
             View* child = mNonDrawerViews.at(i);
             if (child->getVisibility() == View::VISIBLE) {
@@ -1191,7 +1236,7 @@ bool DrawerLayout::hasVisibleDrawer() {
 }
 
 View* DrawerLayout::findVisibleDrawer() {
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
         if (isDrawerView(child) && isDrawerVisible(child)) {
@@ -1207,7 +1252,7 @@ void DrawerLayout::cancelChildViewTouch() {
         auto now = SystemClock::uptimeMillis();
         MotionEvent* cancelEvent = MotionEvent::obtain(now, now,
                 MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
-        int childCount = getChildCount();
+        const int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
             getChildAt(i)->dispatchTouchEvent(*cancelEvent);
         }
@@ -1242,17 +1287,17 @@ void DrawerLayout::addView(View* child, int index, ViewGroup::LayoutParams* para
     if (openDrawer != nullptr || isDrawerView(child)) {
        // A drawer is already open or the new view is a drawer, so the
        // new view should start out hidden.
-       //setImportantForAccessibility(child,View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+       child->setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
     } else {
         // Otherwise this is a content view and no drawer is open, so the
         // new view should start out visible.
-        //setImportantForAccessibility(child,View.IMPORTANT_FOR_ACCESSIBILITY_YES);
+        child->setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
 
     // We only need a delegate here if the framework doesn't understand
     // NO_HIDE_DESCENDANTS importance.
     if (!CAN_HIDE_DESCENDANTS) {
-        //setAccessibilityDelegate(child, mChildAccessibilityDelegate);
+        //child->setAccessibilityDelegate(mChildAccessibilityDelegate);
     }
 }
 
@@ -1308,7 +1353,7 @@ void DrawerLayout::ViewDragCallback::onViewCaptured(View& capturedChild, int act
 }
 
 void DrawerLayout::ViewDragCallback::closeOtherDrawer() {
-     int otherGrav = mAbsGravity == Gravity::LEFT ? Gravity::RIGHT : Gravity::LEFT;
+     const int otherGrav = mAbsGravity == Gravity::LEFT ? Gravity::RIGHT : Gravity::LEFT;
      View* toClose = mDL->findDrawerWithGravity(otherGrav);
      if (toClose) {
          mDL->closeDrawer(toClose);

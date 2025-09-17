@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <drawables/gradientdrawable.h>
 #include <image-decoders/imagedecoder.h>
 #include <cfloat>
@@ -32,6 +49,7 @@ GradientDrawable::GradientState::GradientState() {
     mUseLevel = false;
     mUseLevelForShape = true;
     mDensity = DisplayMetrics::DENSITY_DEFAULT;
+    mTintMode = DEFAULT_TINT_MODE;
 }
 
 GradientDrawable::GradientState::GradientState(Orientation orientation, const std::vector<int>&gradientColors)
@@ -267,10 +285,15 @@ GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state) {
     mAlpha = 255;
     mPath = std::make_shared<cdroid::Path>();
     updateLocalState();
+    mTintFilter = nullptr;
 }
 
 GradientDrawable::GradientDrawable(Orientation orientation,const std::vector<int>&colors)
     :GradientDrawable(std::make_shared<GradientState>(orientation,colors)) {
+}
+
+GradientDrawable::~GradientDrawable(){
+    delete mTintFilter;
 }
 
 std::shared_ptr<Drawable::ConstantState>GradientDrawable::getConstantState() {
@@ -304,6 +327,7 @@ void GradientDrawable::updateLocalState() {
         }
     }
     state->computeOpacity();
+    mTintFilter = updateTintFilter(mTintFilter, state->mTint, state->mTintMode);
 }
 
 void GradientDrawable::getOutline(Outline& outline) {
@@ -794,6 +818,13 @@ ColorFilter*GradientDrawable::getColorFilter(){
 
 void GradientDrawable::setTintList(const ColorStateList*tint){
     mGradientState->mTint = tint;
+    mTintFilter= updateTintFilter(mTintFilter,tint,mGradientState->mTintMode);
+    invalidateSelf();
+}
+
+void GradientDrawable::setTintMode( int tintMode){
+    mGradientState->mTintMode = tintMode;
+    mTintFilter= updateTintFilter(mTintFilter,mGradientState->mTint,tintMode);
     invalidateSelf();
 }
 
@@ -1056,6 +1087,12 @@ void GradientDrawable::draw(Canvas&canvas) {
     if( (mFillPaint==nullptr) && (st->mImagePattern==nullptr) && (haveStroke==false) )return;
     
     canvas.save();
+    if(mTintFilter){
+        const Rect&r =mBounds;
+        canvas.rectangle(r.left,r.top,r.width,r.height);
+        canvas.clip();
+        canvas.push_group();
+    }
     if(mFillPaint)
         mFillPaint->set_dither(ditherMode);
     switch (st->mShape) {
@@ -1129,6 +1166,11 @@ void GradientDrawable::draw(Canvas&canvas) {
             canvas.stroke();
         }
     }
+    if(mTintFilter){
+        mTintFilter->apply(canvas,mBounds);
+        canvas.pop_group_to_source();
+        canvas.paint();
+    }
     canvas.restore();
 }
 
@@ -1171,7 +1213,7 @@ void GradientDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
 
     const int tintMode = atts.getInt("tintMode", -1);
     if (tintMode != -1) {
-        //state->mBlendMode = Drawable::parseBlendMode(tintMode, BlendMode.SRC_IN);
+        //state->mBlendMode = Drawable::parseBlendMode(tintMode, BlendMode::SRC_IN);
     }
 
     ColorStateList* tint = atts.getColorStateList("tint");

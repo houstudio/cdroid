@@ -24,13 +24,9 @@
 #include <cairomm/matrix.h>
 #include <core/context.h>
 #include <core/atexit.h>
+#include <fontconfig/fcfreetype.h>
 
 namespace cdroid {
-extern "C" {
-    FcPattern *FcFreeTypeQueryFace (const FT_Face  face,const FcChar8  *file,
-                                    unsigned int id, FcBlanks *blanks);
-    int FcPatternGetFTFace(const FcPattern*,const char*,int,FT_Face*);
-}
 
 Typeface* Typeface::MONOSPACE;
 Typeface* Typeface::SANS_SERIF;
@@ -514,24 +510,21 @@ int Typeface::loadFaceFromResource(cdroid::Context*context) {
 #ifdef CAIRO_HAS_FT_FONT
         FT_Face font_face;
         Cairo::RefPtr<Cairo::FtFontFace> ftface = Cairo::FtFontFace::create(face,0);//FT_LOAD_NO_SCALE:1 FT_LOAD_DEFAULT:0;
-#if 1
-        FcPattern* pat = FcFreeTypeQueryFace(face,nullptr,0,nullptr);
-        err = FcPatternGetFTFace (pat, FC_FT_FACE, 0, &font_face);
-        Typeface* typeface = new Typeface(*pat);
+        LOGD_IF(face->num_faces>1,"Face.num_faces=%d",face->num_faces);
+        for(int face_index=0;face_index<face->num_faces;face_index++){
+            FcPattern* pat = FcFreeTypeQueryFace(face,nullptr,face_index,nullptr);
+            FcPatternAddFTFace(pat, FC_FT_FACE,face);
+            FcPatternAddString(pat, FC_FILE,(const FcChar8*)fontUrl.c_str());
+            err = FcPatternGetFTFace (pat, FC_FT_FACE,0, &font_face);
+
+            Typeface* typeface = new Typeface(*pat);
+            LOGD("@%s [%s] face[%d]=%p/%p=%d",fontUrl.c_str(),
+                 typeface->getFamily().c_str(),face_index,face,font_face,err);
+            sSystemFontMap->insert({fontUrl,typeface});
+            sSystemFontMap->insert({typeface->getFamily(),typeface});
+            FcPatternDestroy(pat);
+        }
         FT_Done_Face(face);
-#else
-        FcPattern*pat = nullptr;
-        scale = 1.5f/64.f;//(double)face->max_advance_height/face->units_per_EM/64.f;
-        Cairo::Matrix matrix;// = Cairo::scaling_matrix(scale,scale);//identity_matrix();
-        Cairo::Matrix ctm;// = Cairo::identity_matrix();
-        Cairo::RefPtr<Cairo::FtScaledFont>scaledFont = Cairo::FtScaledFont::create(ftface,matrix,ctm);
-        Typeface* typeface = new Typeface(scaledFont);
-        typeface->fetchProps(face);
-#endif
-        LOGD("Open fontResource %s=%d family=%s pat=%p face=%p/%p=%d",fontUrl.c_str(),
-             err,typeface->getFamily().c_str(),pat,face,font_face,err);
-        sSystemFontMap->insert({fontUrl,typeface});
-        sSystemFontMap->insert({typeface->getFamily(),typeface});
 #endif
     }
     LOGI("%d font loaded from resource",fonts.size());

@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-NGL_MODULE(NGLMP);
-
 typedef struct {
     void*hplayer;
     MP_CALLBACK cbk;
