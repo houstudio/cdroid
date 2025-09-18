@@ -15,5 +15,5 @@
 -->
 
 <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
-    android:src="@drawable/ic_menu_find_mtrl_alpha"
+    android:src="@mipmap/ic_menu_find_mtrl_alpha"
     android:tint="?attr/colorControlNormal" />
