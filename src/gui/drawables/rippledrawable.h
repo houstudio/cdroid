@@ -39,7 +39,7 @@ private:
         std::vector<int>mTouchThemeAttrs;
         int mMaxRadius;
         int mRippleStyle=FORCE_PATTERNED_STYLE?STYLE_PATTERNED:STYLE_SOLID;
-        ColorStateList*mColor;
+        const ColorStateList*mColor;
         RippleState(LayerState* orig, RippleDrawable* owner);
         ~RippleState();
         void onDensityChanged(int sourceDensity, int targetDensity)override;
