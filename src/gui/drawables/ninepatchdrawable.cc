@@ -325,8 +325,9 @@ void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
             state->mNinePatch = std::make_shared<NinePatch>(bitmap);
             state->mPadding = state->mNinePatch->getPadding();
             mOutlineRadius = state->mNinePatch->getRadius();
-            if(state->mPadding.empty()){
-                LOGE("<nine-patch> requires a valid 9-patch source image");
+            const Rect& r=state->mPadding;
+            if((r.left==0)&&(r.top==0)&&(r.width==0)&&(r.height==0)){
+                LOGE("<nine-patch>%s requires a valid 9-patch source image",srcResId.c_str());
             }
         }
         state->mOpticalInsets = state->mNinePatch->getOpticalInsets();
