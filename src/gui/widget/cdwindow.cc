@@ -397,7 +397,7 @@ bool Window::leaveTouchMode() {
 }
 
 void Window::draw(){
-    if(mVisibleRgn&&mVisibleRgn->get_num_rectangles()==0){
+    if( mVisibleRgn && (mVisibleRgn->get_num_rectangles()==0) ){
         return;
     }
     RefPtr<Canvas>canvas = getCanvas();

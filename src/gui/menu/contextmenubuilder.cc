@@ -75,7 +75,7 @@ MenuPopupHelper* ContextMenuBuilder::showPopup(Context* context, View* originalV
 
         MenuPopupHelper* helper = new MenuPopupHelper(
                 context, this, originalView, false /* overflowOnly */,
-                0,0);//com.android.internal.R.attr.contextPopupMenuStyle);
+                "android:attr/contextPopupMenuStyle");
         helper->show(std::round(x), std::round(y));
         return helper;
     }

@@ -377,6 +377,13 @@ void DrawerLayout::updateChildrenImportantForAccessibility(View* drawerView, boo
     }
 }
 
+void DrawerLayout::updateChildAccessibilityAction(View* child) {
+    /*child->removeAccessibilityAction(ACTION_DISMISS.getId());
+    if (isDrawerOpen(child)  && getDrawerLockMode(child) != LOCK_MODE_LOCKED_OPEN) {
+        child->replaceAccessibilityAction(ACTION_DISMISS, nullptr, mActionDismiss);
+    }*/
+}
+
 void DrawerLayout::dispatchOnDrawerSlide(View* drawerView, float slideOffset) {
     // Notify the listeners. Do that from the end of the list so that if a listener
     // removes itself as the result of being called, it won't mess up with our iteration
@@ -1027,11 +1034,9 @@ void DrawerLayout::closeDrawers(bool peekingOnly) {
         const int childWidth = child->getWidth();
    
         if (checkDrawerViewAbsoluteGravity(child, Gravity::LEFT)) {
-            needsInvalidate |= mLeftDragger->smoothSlideViewTo(child,
-                    -childWidth, child->getTop());
+            needsInvalidate |= mLeftDragger->smoothSlideViewTo(child,-childWidth, child->getTop());
         } else {
-            needsInvalidate |= mRightDragger->smoothSlideViewTo(child,
-                    getWidth(), child->getTop());
+            needsInvalidate |= mRightDragger->smoothSlideViewTo(child,getWidth(), child->getTop());
         }
    
         lp->isPeeking = false;

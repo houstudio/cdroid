@@ -48,6 +48,7 @@ private:
     std::shared_ptr<InsetState>mState;
     InsetDrawable(std::shared_ptr<InsetState>state);
     void getInsets(Rect& out);
+    void verifyRequiredAttributes();
     void updateStateFromTypedArray(const AttributeSet&atts);
 protected:
     void onBoundsChange(const Rect&)override;

@@ -276,7 +276,7 @@ void GraphDevice::computeVisibleRegion(std::vector<Window*>&windows,std::vector<
             newrgn->subtract((const RectangleInt&)r);
         }
         newrgn->translate(-rcw.left,-rcw.top);
-	(*w)->mVisibleRgn = newrgn;
+        (*w)->mVisibleRgn = newrgn;
         regions.push_back(newrgn);
     }
 }
@@ -367,7 +367,7 @@ void GraphDevice::composeSurfaces(){
         }
         rgn->subtract(rgn);
     }/*endif for wSurfaces.size*/
-    GFXFlip(mPrimarySurface); 
+    GFXFlip(mPrimarySurface);
     mLastComposeTime = SystemClock::uptimeMillis();
     mPendingCompose = 0;
 }

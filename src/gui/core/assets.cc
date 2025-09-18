@@ -272,7 +272,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         return 0;
     });
     if(name.compare("cdroid")==0)
-        setTheme("cdroid:style/Theme");
+        setTheme("cdroid:style/Theme.Material");
     for(auto c:pending.colors){
         auto it = mColors.find(c.second);
         LOGD_IF(it==mColors.end(),"%s-->%s [X]",c.first.c_str(),c.second.c_str());

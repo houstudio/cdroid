@@ -26,7 +26,7 @@ RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner
     mMaxRadius = RADIUS_AUTO;
     if(dynamic_cast<RippleState*>(orig)){
         RippleState* origs = (RippleState*) orig;
-        if(mColor) mColor = new ColorStateList(*origs->mColor);
+        mColor = origs->mColor;
         mMaxRadius = origs->mMaxRadius;
         if (orig->mDensity != mDensity) {
             applyDensityScaling(orig->mDensity, mDensity);
@@ -35,7 +35,6 @@ RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner
 }
 
 RippleDrawable::RippleState::~RippleState(){
-    delete mColor;
 }
 
 void RippleDrawable::RippleState::onDensityChanged(int sourceDensity, int targetDensity){
@@ -231,14 +230,10 @@ bool RippleDrawable::hasFocusStateSpecified()const{
 }
 
 void RippleDrawable::setColor(const ColorStateList* color){
-    if(color==nullptr){
-        delete mState->mColor;
-        mState->mColor = nullptr;
-    }else{
-        if(mState->mColor)*mState->mColor = *color;
-        else mState->mColor=new ColorStateList(*color);
+    if(mState->mColor!=color){
+        mState->mColor = color;
+        invalidateSelf(false);
     }
-    invalidateSelf(false);
 }
 
 void RippleDrawable::setRadius(int radius) {
@@ -423,7 +418,9 @@ void RippleDrawable::drawBackgroundAndRipples(Canvas& canvas) {
     const float x = (float)mHotspotBounds.centerX();
     const float y = (float)mHotspotBounds.centerY();
     canvas.translate(x, y);
-    int color=mState->mColor->getColorForState(getState(),0xFF888888);
+    int color = Color::MAGENTA;
+    if(mState->mColor)
+        color = mState->mColor->getColorForState(getState(),0xFF888888);
     canvas.set_color(color);
 
     if (mBackground  && mBackground->isVisible()) {

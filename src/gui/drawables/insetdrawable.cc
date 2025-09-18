@@ -55,8 +55,8 @@ InsetDrawable*InsetDrawable::InsetState::newDrawable(){
     return new InsetDrawable(std::dynamic_pointer_cast<InsetState>(shared_from_this()));
 }
 
-InsetDrawable::InsetDrawable(){
-    mState = std::make_shared<InsetState>();
+InsetDrawable::InsetDrawable():DrawableWrapper(std::make_shared<InsetState>()){
+    mState = std::dynamic_pointer_cast<InsetState>(DrawableWrapper::mState);
 }
 
 InsetDrawable::InsetDrawable(std::shared_ptr<InsetState>state):DrawableWrapper(state){
@@ -167,6 +167,15 @@ void InsetDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     // Inset attribute may be overridden by more specific attributes.
     updateStateFromTypedArray(atts);
     DrawableWrapper::inflate(parser,atts);
+    verifyRequiredAttributes();
+}
+
+void InsetDrawable::verifyRequiredAttributes(){
+    // If we're not waiting on a theme, verify required attributes.
+    if (getDrawable() == nullptr /*&& (mState.mThemeAttrs == null
+            || mState.mThemeAttrs[R.styleable.InsetDrawable_drawable] == 0)*/) {
+        LOGE("<inset> tag requires a 'drawable' attribute or child tag defining a drawable");
+    }
 }
 
 void InsetDrawable::updateStateFromTypedArray(const AttributeSet&atts){

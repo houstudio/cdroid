@@ -283,9 +283,9 @@ GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state) {
     mGradientRadius = 0.5f;
     mStrokeWidth =-1;
     mAlpha = 255;
+    mTintFilter = nullptr;
     mPath = std::make_shared<cdroid::Path>();
     updateLocalState();
-    mTintFilter = nullptr;
 }
 
 GradientDrawable::GradientDrawable(Orientation orientation,const std::vector<int>&colors)

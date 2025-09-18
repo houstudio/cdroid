@@ -188,6 +188,9 @@ void Switch::setSwitchTypeface(Typeface* tf, int style){
         //mTextPaint.setFakeBoldText((need & Typeface.BOLD) != 0);
         //mTextPaint.setTextSkewX((need & Typeface.ITALIC) != 0 ? -0.25f : 0);
     } else {
+        if (tf == nullptr) {
+            tf = Typeface::defaultFromStyle(style);
+        }
         //mTextPaint.setFakeBoldText(false);
         //mTextPaint.setTextSkewX(0);
         setSwitchTypeface(tf);

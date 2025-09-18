@@ -137,6 +137,9 @@ CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
 }
 
 CascadingMenuPopup::~CascadingMenuPopup(){
+    for (CascadingMenuInfo* info : mShowingMenus){
+        delete info;
+    }
     delete mSubMenuHoverHandler;
 }
 
@@ -588,6 +591,11 @@ CascadingMenuPopup::CascadingMenuInfo::CascadingMenuInfo(MenuPopupWindow* window
     this->window = window;
     this->menu = menu;
     this->position = position;
+    LOGD("%p window=%p",this,window);
+}
+
+CascadingMenuPopup::CascadingMenuInfo::~CascadingMenuInfo(){
+    LOGD("%p window=%p",this,window);
 }
 
 ListView* CascadingMenuPopup::CascadingMenuInfo::getListView() {

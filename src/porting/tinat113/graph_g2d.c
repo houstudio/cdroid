@@ -168,8 +168,8 @@ int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
         long copied=0;
         for(y=1; y<rec.h; y++) {
             fb+=(ngs->pitch>>2);
-	    memcpy(fb,fbtop,cpw);
-	    copied+=ngs->pitch;
+            memcpy(fb,fbtop,cpw);
+            copied+=ngs->pitch;
         }
     }else{
         g2d_fillrect_h fill;
