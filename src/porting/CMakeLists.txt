@@ -5,7 +5,7 @@ if( CMAKE_SYSTEM_NAME MATCHES "Linux" )
     add_definitions(-DLINUX=1)
 endif()
 
-message("CDROID_CHIPSET=${CDROID_CHIPSET}  USE_RFB_GRAPH=${USE_RFB_GRAPH}")
+message("CDROID_CHIPSET=${CDROID_CHIPSET}")
 
 add_subdirectory(${CDROID_CHIPSET})
 
