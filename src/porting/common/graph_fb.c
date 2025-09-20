@@ -89,7 +89,7 @@ int32_t GFXInit() {
         devSurfaces[i].used=0;
         kbuffStart+=screenSize;
         buffStart+=screenSize;
-	LOGI("surface %d buf=%p/%p",i,kbuffStart,buffStart);
+        LOGI("surface %d buf=%p/%p",i,kbuffStart,buffStart);
     }
     dev->var.yoffset=0;//set first screen memory for display
     int rc = ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var);

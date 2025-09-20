@@ -709,7 +709,7 @@ please see styles_device_defaults.xml.
     </style>
 
     <style name="Widget.Material.NumberPicker" parent="Widget.NumberPicker">
-        <item name="internalLayout">@layout/number_picker_material</item>
+        <item name="internalLayout">@layout/number_picker</item>
         <item name="solidColor">@color/transparent</item>
         <item name="selectionDivider">@drawable/number_picker_divider_material</item>
         <item name="selectionDividerHeight">2dp</item>

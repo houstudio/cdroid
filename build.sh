@@ -7,8 +7,8 @@ eval set -- "${ARGS}"
 TOPDIR=$(dirname "$(readlink -f "$0")")
 declare -A TOOLCHAINS #key/value dict ,key is platform,value is toolchain,key must be uppercase
 
-#VCPKGROOT=/opt/vcpkg
-VCPKGROOT=${HOME}/vcpkg
+VCPKGROOT=/opt/vcpkg
+#VCPKGROOT=${HOME}/vcpkg
 
 TOOLCHAINS["SIGMA"]=${VCPKGROOT}/scripts/toolchains/ssd202-mtitoolchain.cmake
 TOOLCHAINS["ALI3528"]=${VCPKGROOT}/scripts/toolchains/ali3528-mtitoolchain.cmake
@@ -19,6 +19,7 @@ TOOLCHAINS["INGENIC"]=${VCPKGROOT}/scripts/toolchains/ingenic-x2600-toolchain.cm
 TOOLCHAINS["TINAT113"]=${VCPKGROOT}/scripts/toolchains/tinat113-toolchain.cmake
 TOOLCHAINS["RK3506"]=${VCPKGROOT}/scripts/toolchains/rk3506-toolchain.cmake
 TOOLCHAINS["SSD2351"]=${VCPKGROOT}/scripts/toolchains/ssd2351-toolchain.cmake
+TOOLCHAINS["RK1126"]=${VCPKGROOT}/scripts/toolchains/rk1126-toolchain.cmake
 TOOLCHAINS["ANDROID"]=${VCPKGROOT}/scripts/buildsystems/vcpkg.cmake
 declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg,key must be uppercase
 
@@ -31,6 +32,7 @@ DEPLIBS["INGENIC"]=${VCPKGROOT}/installed/ingenic-linux
 DEPLIBS["TINAT113"]=${VCPKGROOT}/installed/tinat113-linux-dynamic
 DEPLIBS["RK3506"]=${VCPKGROOT}/installed/rk3506-linux-dynamic
 DEPLIBS["SSD2351"]=${VCPKGROOT}/installed/ssd2351-linux-dynamic
+DEPLIBS["RK1126"]=${VCPKGROOT}/installed/rk1126-linux-dynamic
 DEPLIBS["WIN32"]=${VCPKGROOT}/installed/x64-windows:${VCPKGROOT}/installed/x64-windows-release
 DEPLIBS["ANDROID"]=${VCPKGROOT}/installed/arm64-android
 
