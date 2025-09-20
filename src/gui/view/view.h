@@ -1121,7 +1121,7 @@ public:
 
     //foreground/background
     Drawable* getForeground()const;
-    void setForeground(Drawable* foreground);
+    virtual void setForeground(Drawable* foreground);
     bool isForegroundInsidePadding()const;
     int getForegroundGravity()const;
     void setForegroundGravity(int gravity);
