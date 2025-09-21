@@ -57,6 +57,7 @@ Layout::Layout(int fontSize,int width)
     mEditable = false;
     mSelectionStart =-1;
     mSelectionEnd = -1;
+    mTextDirection= 0;
     mText.clear();
     if(Typeface::DEFAULT == nullptr)
 	    Typeface::loadPreinstalledSystemFontMap();
@@ -79,6 +80,7 @@ Layout::Layout(const Layout&l):Layout(l.mFontSize,l.mWidth){
     mEditable = l.mEditable;
     mText = l.mText;
     mLines= l.mLines;
+    mTextDirection = l.mTextDirection;
     mSelectionStart = l.mSelectionStart;
     mSelectionEnd = l.mSelectionEnd;
     setTypeface(l.mTypeface);

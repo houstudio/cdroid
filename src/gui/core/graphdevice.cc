@@ -328,8 +328,9 @@ void GraphDevice::composeSurfaces(){
     });
     computeVisibleRegion(wins,winVisibleRgns);
     bool fpsBlited = false;
+    int commitedRects = 0;
     mPrimaryContext->set_operator(Cairo::Context::Operator::SOURCE);
-    for(int i=0;i< wSurfaces.size();i++){
+    for(int i = 0;i < wSurfaces.size();i++){
         Rect rcw = wBounds[i];
         GFXHANDLE hdlSurface  = wSurfaces[i]->mHandle;
         Cairo::RefPtr<Cairo::Region> rgn = wins[i]->mPendingRgn;
@@ -349,7 +350,8 @@ void GraphDevice::composeSurfaces(){
             if(hdlSurface)GFXBlit(mPrimarySurface , dx , dy , hdlSurface,(const GFXRect*)&rd);
             else mPrimaryContext->rectangle(rcw.left + rc.x , rcw.top + rc.y , rc.width , rc.height);
         }
-        if(mShowFPS && (i==wSurfaces.size()-1) && mPrimaryContext){
+        commitedRects +=rgn->get_num_rectangles();
+        if(mShowFPS && (i == wSurfaces.size()-1) && mPrimaryContext){
             Rect recFPS = mRectBanner;
             recFPS.offset(-rcw.left,-rcw.top);
             int dx =0,dy =0;
@@ -367,7 +369,7 @@ void GraphDevice::composeSurfaces(){
         }
         rgn->subtract(rgn);
     }/*endif for wSurfaces.size*/
-    GFXFlip(mPrimarySurface);
+    if(commitedRects)GFXFlip(mPrimarySurface);
     mLastComposeTime = SystemClock::uptimeMillis();
     mPendingCompose = 0;
 }
