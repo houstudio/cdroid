@@ -168,6 +168,9 @@ protected:
     bool onLevelChange(int level)override;
     bool onStateChange(const std::vector<int>& stateSet)override;
 public:
+    static void drawRoundedRect(Canvas& cr,const RectF&rect, double topLeftRadius,
+            double topRightRadius, double bottomRightRadius, double bottomLeftRadius);
+public:
     GradientDrawable();
     GradientDrawable(Orientation orientation,const std::vector<int>&colors);
     ~GradientDrawable()override;

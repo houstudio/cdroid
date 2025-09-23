@@ -1134,7 +1134,7 @@ public:
     virtual void jumpDrawablesToCurrentState();
     Drawable*getBackground()const;
     virtual void setBackground(Drawable*background);
-    void setBackgroundColor(int color);
+    virtual void setBackgroundColor(int color);
     void setBackgroundResource(const std::string&resid);
     void setBackgroundTintList(const ColorStateList* tint);
     void setBackgroundTintMode(int tintMode);

@@ -1,0 +1,18 @@
+if (ENABLE_WEAR_WIDGETS)
+SET(WEAR_SOURCES
+    widgetEx/wear/arclayout.cc
+    widgetEx/wear/boxinsetlayout.cc
+    widgetEx/wear/roundeddrawable.cc
+    widgetEx/wear/progressdrawable.cc
+    widgetEx/wear/backbuttondismisscontroller.cc
+    widgetEx/wear/circularprogresslayoutcontroller.cc
+    widgetEx/wear/circularprogressdrawable.cc
+    widgetEx/wear/circularprogresslayout.cc
+    widgetEx/wear/wearablerecyclerview.cc
+    widgetEx/wear/dismissableframelayout.cc
+    widgetEx/wear/swipedismisscontroller.cc
+    widgetEx/wear/swipedismisscontroller.cc
+    #widgetEx/wear/curvinglayoutcallback.cc
+    widgetEx/wear/wearablelinearlayoutmanager.cc
+)
+endif(ENABLE_WEAR_WIDGETS)

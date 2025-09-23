@@ -1018,8 +1018,9 @@ void GradientDrawable::getPatternAlpha(int& strokeAlpha,int& fillApha){
 static double min3(double a,double b,double c){
     return std::min(a,std::min(b,c));
 }
-static void drawRoundedRect(Canvas& cr,const RectF&rect,
-                double topLeftRadius, double topRightRadius, double bottomRightRadius, double bottomLeftRadius) {
+
+void GradientDrawable::drawRoundedRect(Canvas& cr,const RectF&rect,double topLeftRadius,
+        double topRightRadius, double bottomRightRadius, double bottomLeftRadius) {
     const double x = rect.left;
 	const double y = rect.top;
 	const double width = rect.width;

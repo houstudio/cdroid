@@ -181,6 +181,14 @@ public:
     static const NeverDestroyed<FastOutLinearInInterpolator>gFastOutLinearInInterpolator;
     FastOutLinearInInterpolator();
 };
+
+class BezierSCurveInterpolator:public TimeInterpolator {
+public:
+    static const NeverDestroyed<BezierSCurveInterpolator>gBezierSCurveInterpolator;
+public:
+    BezierSCurveInterpolator();
+    float getInterpolation(float input)override;
+};
 }//namespace 
 
 #endif

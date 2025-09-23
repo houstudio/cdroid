@@ -58,6 +58,14 @@ public:
    static T clamp(T v, T lo, T hi) {
        return (v < lo) ? lo : (hi < v) ? hi : v;
    }
+
+   static double toRadians(double degrees) {
+       return degrees * (M_PI / 180.0);
+   }
+
+   static double toDegrees(double radians) {
+       return radians * (180.0 / M_PI);
+   }
 };
 }
 #endif
