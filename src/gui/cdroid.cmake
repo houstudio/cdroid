@@ -36,6 +36,7 @@ list(APPEND CDROID_SOURCES
     core/porterduff.cc
     core/preferences.cc
     core/process.cc
+    core/countdowntimer.cc
     core/scheduler.cc
     core/systemclock.cc
     core/textutils.cc
@@ -291,67 +292,14 @@ if(ENABLE_DIALOGS OR ENABLE_SPINNER)
     )
 endif(ENABLE_DIALOGS)
 
-if(ENABLE_RECYCLERVIEW)
-    list(APPEND CDROID_SOURCES
-        widgetEx/recyclerview/viewinfostore.cc
-        widgetEx/recyclerview/viewboundscheck.cc
-        widgetEx/recyclerview/snaphelper.cc
-        widgetEx/recyclerview/simpleitemanimator.cc
-        widgetEx/recyclerview/scrollbarhelper.cc
-        widgetEx/recyclerview/recyclerview.cc
-        widgetEx/recyclerview/pagersnaphelper.cc
-        widgetEx/recyclerview/orientationhelper.cc
-        widgetEx/recyclerview/opreorderer.cc
-        widgetEx/recyclerview/linearsnaphelper.cc
-        widgetEx/recyclerview/linearsmoothscroller.cc
-        widgetEx/recyclerview/linearlayoutmanager.cc
-        widgetEx/recyclerview/itemtouchuiutil.cc
-        widgetEx/recyclerview/itemtouchhelper.cc
-        widgetEx/recyclerview/gridlayoutmanager.cc
-        widgetEx/recyclerview/fastscroller.cc
-        widgetEx/recyclerview/divideritemdecoration.cc
-        widgetEx/recyclerview/defaultitemanimator.cc
-        widgetEx/recyclerview/childhelper.cc
-        widgetEx/recyclerview/staggeredgridlayoutmanager.cc
-        widgetEx/recyclerview/recyclerviewaccessibilitydelegate.cc
-        widgetEx/recyclerview/gapworker.cc
-        #widgetEx/recyclerview/carousellayoutmanager.cc
-        widgetEx/recyclerview/adapterhelper.cc
-        widgetEx/viewgrouputils.cc
-        widgetEx/coordinatorlayout.cc
-    )
-endif(ENABLE_RECYCLERVIEW)
-if(ENABLE_FLEXBOXLAYOUT)
-    list(APPEND CDROID_SOURCES
-        widgetEx/flexbox/flexboxlayout.cc
-        widgetEx/flexbox/flexboxhelper.cc
-    )
-endif(ENABLE_FLEXBOXLAYOUT)
-list(APPEND CDROID_SOURCES
-    widgetEx/viewpager2.cc
-    widgetEx/scrolleventadapter.cc
-    widgetEx/plotview.cc
-    widgetEx/fakedrag.cc
-    #widgetEx/mathglview.cc
-)
+include(widgetEx/widgetex.cmake)
+list(APPEND CDROID_SOURCES ${WIDGETEX_SOURCES})
+
 if(ENABLE_TRANSITION)
     list(APPEND CDROID_SOURCES
         transition/scene.cc
     )
 endif()
-if(ENABLE_LOTTIE)
-    list(APPEND CDROID_SOURCES widgetEx/rlottieview.cc)
-endif(ENABLE_LOTTIE)
-
-if(ENABLE_QRCODE)
-    list(APPEND CDROID_SOURCES
-        widgetEx/qrcodegen.cc
-        widgetEx/qrcodeview.cc)
-endif(ENABLE_QRCODE)
-
-if(ENABLE_BARCODE)
-    list(APPEND CDROID_SOURCES widgetEx/barcodeview.cc)
-endif(ENABLE_BARCODE)
 
 if(ENABLE_NAVIGATION)
     list(APPEND CDROID_SOURCES
@@ -369,3 +317,8 @@ if(ENABLE_NAVIGATION)
         navigation/simplenavigatorprovider.cc
     )
 endif(ENABLE_NAVIGATION)
+
+if(ENABLE_WEAR OR TRUE)
+    include(widgetEx/wear/wear.cmake)
+    list(APPEND CDROID_SOURCES ${WEAR_SOURCES})
+endif()

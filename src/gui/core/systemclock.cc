@@ -68,7 +68,7 @@ int64_t SystemClock::currentTimeSeconds(){
 }
 
 int64_t SystemClock::elapsedRealtime(){
-    return currentTimeMillis();
+    return uptimeMillis();
 }
 
 }
