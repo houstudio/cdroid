@@ -509,6 +509,20 @@ int TouchDevice::ABS2AXIS(int absaxis){
     }
 }
 
+static int toMotionToolType(int value){
+    switch(value){
+    case BTN_TOOL_RUBBER: return MotionEvent::TOOL_TYPE_ERASER;
+    case BTN_TOOL_PEN   :
+    case BTN_TOOL_BRUSH :
+    case BTN_TOOL_AIRBRUSH:
+    case BTN_TOOL_PENCIL: return MotionEvent::TOOL_TYPE_STYLUS;
+    case BTN_TOOL_FINGER: return MotionEvent::TOOL_TYPE_FINGER;
+    case BTN_TOOL_MOUSE : return MotionEvent::TOOL_TYPE_MOUSE;
+    case BTN_TOOL_LENS  : return MotionEvent::TOOL_TYPE_UNKNOWN;
+    default  :return MotionEvent::TOOL_TYPE_UNKNOWN;
+    }
+}
+
 /*Android use 0->PointerCount as PointerID
  *other PointerID will caused many crashes */
 
@@ -596,6 +610,8 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
         }
         mProp.id = slot;
         break;
+    case ABS_MT_TOOL_TYPE:
+        mProp.toolType = toMotionToolType(value);
     default:break;
     }
 }
@@ -758,9 +774,12 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         mProp.clear();
         if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)&&(mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mTypeB==false) ){
             mCoord.clear();
-            mCurrBits.clear(); //only typeA
+            mCurrBits.clear();//only typeA
             mTrack2Slot.clear();
-            for(int i = 0;i < pointerCount;i++){mPointerCoords[i].clear();mPointerCoords[i].clear();};
+            for(int i = 0;i < pointerCount;i++){
+                mPointerProps[i].clear();
+                mPointerCoords[i].clear();
+            };
         }
         break;/*caseof EV_SYN*/
     }
