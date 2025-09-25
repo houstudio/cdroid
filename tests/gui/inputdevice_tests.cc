@@ -1066,3 +1066,253 @@ TEST_F(INPUTDEVICE,MTB4){//Type B Events,test SLOT not start from 0
    ASSERT_EQ(OutEvents[6]->getY(0),mts[36].value);
 
 }
+
+
+TEST_F(INPUTDEVICE, MTB5) {
+    TouchDevice d(INJECTDEV_TOUCH);
+    MTEvent mts[] = {
+        {EV_ABS, ABS_MT_TRACKING_ID, 7},        // 0 - 开始跟踪触点ID 7
+        {EV_ABS, ABS_MT_POSITION_X, 0x11f},     // 1 - X坐标 287
+        {EV_ABS, ABS_MT_POSITION_Y, 0x35e},     // 2 - Y坐标 862
+        {EV_ABS, ABS_MT_TOUCH_MAJOR, 0x3f},     // 3 - 触摸大小 63
+        {EV_KEY, BTN_TOUCH, 1},                 // 4 - 触摸按下
+        {EV_SYN, SYN_REPORT, 0},                // 5 - 同步报告
+        
+        {EV_ABS, ABS_MT_POSITION_Y, 0x364},     // 6 - Y坐标 868
+        {EV_SYN, SYN_REPORT, 0},                // 7 - 同步报告
+        
+        {EV_ABS, ABS_MT_POSITION_Y, 0x36b},     // 8 - Y坐标 875
+        {EV_SYN, SYN_REPORT, 0},                // 9 - 同步报告
+        
+        {EV_ABS, ABS_MT_POSITION_Y, 0x373},     // 10 - Y坐标 883
+        {EV_SYN, SYN_REPORT, 0},                // 11 - 同步报告
+        
+        {EV_ABS, ABS_MT_POSITION_X, 0x11e},     // 12 - X坐标 286
+        {EV_ABS, ABS_MT_POSITION_Y, 0x375},     // 13 - Y坐标 885
+        {EV_SYN, SYN_REPORT, 0},                // 14 - 同步报告
+        
+        {EV_ABS, ABS_MT_POSITION_Y, 0x377},     // 15 - Y坐标 887
+        {EV_SYN, SYN_REPORT, 0},                // 16 - 同步报告
+        
+        {EV_ABS, ABS_MT_POSITION_Y, 0x378},     // 17 - Y坐标 888
+        {EV_SYN, SYN_REPORT, 0},                // 18 - 同步报告
+        
+        {EV_ABS, ABS_MT_POSITION_Y, 0x379},     // 19 - Y坐标 889
+        {EV_SYN, SYN_REPORT, 0},                // 20 - 同步报告
+        
+        {EV_ABS, ABS_MT_POSITION_X, 0x11d},     // 21 - X坐标 285
+        {EV_ABS, ABS_MT_POSITION_Y, 0x37a},     // 22 - Y坐标 890
+        {EV_ABS, ABS_MT_TOUCH_MAJOR, 0x40},     // 23 - 触摸大小 64
+        {EV_SYN, SYN_REPORT, 0},                // 24 - 同步报告
+        
+        {EV_ABS, ABS_MT_TOUCH_MAJOR, 0x41},     // 25 - 触摸大小 65
+        {EV_SYN, SYN_REPORT, 0},                // 26 - 同步报告
+        
+        {EV_ABS, ABS_MT_POSITION_Y, 0x37b},     // 27 - Y坐标 891
+        {EV_SYN, SYN_REPORT, 0},                // 28 - 同步报告
+        
+        {EV_ABS, ABS_MT_TRACKING_ID, -1},       // 31 - 结束跟踪 (0xffffffff)
+        {EV_KEY, BTN_TOUCH, 0},                 // 32 - 触摸抬起
+        {EV_SYN, SYN_REPORT, 0},                // 33 - 同步报告
+
+    };
+    
+    EventCount = sendEvents(d, mts, sizeof(mts)/sizeof(MTEvent), OutEvents);
+    
+    // 根据原始数据，应该有多个MOVE事件
+    ASSERT_EQ(EventCount, 12); // DOWN + 8个MOVE + UP
+    
+    // 检查DOWN事件
+    ASSERT_EQ(OutEvents[0]->getAction(), MotionEvent::ACTION_DOWN);
+    ASSERT_EQ(OutEvents[0]->getPointerId(0), 0);
+    ASSERT_EQ(OutEvents[0]->getPointerCount(), 1);
+    ASSERT_EQ(OutEvents[0]->getX(0), 0x11f); // 287
+    ASSERT_EQ(OutEvents[0]->getY(0), 0x35e); // 862
+    
+    // 检查MOVE事件序列
+    ASSERT_EQ(OutEvents[1]->getAction(), MotionEvent::ACTION_MOVE);
+    ASSERT_EQ(OutEvents[1]->getX(0), 0x11f); // X保持不变
+    ASSERT_EQ(OutEvents[1]->getY(0), 0x364); // Y: 868
+    
+    ASSERT_EQ(OutEvents[2]->getAction(), MotionEvent::ACTION_MOVE);
+    ASSERT_EQ(OutEvents[2]->getX(0), 0x11f); // X保持不变
+    ASSERT_EQ(OutEvents[2]->getY(0), 0x36b); // Y: 875
+    
+    ASSERT_EQ(OutEvents[3]->getAction(), MotionEvent::ACTION_MOVE);
+    ASSERT_EQ(OutEvents[3]->getX(0), 0x11f); // X保持不变
+    ASSERT_EQ(OutEvents[3]->getY(0), 0x373); // Y: 883
+    
+    ASSERT_EQ(OutEvents[4]->getAction(), MotionEvent::ACTION_MOVE);
+    ASSERT_EQ(OutEvents[4]->getX(0), 0x11e); // X: 286
+    ASSERT_EQ(OutEvents[4]->getY(0), 0x375); // Y: 885
+    
+    ASSERT_EQ(OutEvents[5]->getAction(), MotionEvent::ACTION_MOVE);
+    ASSERT_EQ(OutEvents[5]->getX(0), 0x11e); // X保持不变
+    ASSERT_EQ(OutEvents[5]->getY(0), 0x377); // Y: 887
+    
+    ASSERT_EQ(OutEvents[6]->getAction(), MotionEvent::ACTION_MOVE);
+    ASSERT_EQ(OutEvents[6]->getX(0), 0x11e); // X保持不变
+    ASSERT_EQ(OutEvents[6]->getY(0), 0x378); // Y: 888
+    
+    ASSERT_EQ(OutEvents[7]->getAction(), MotionEvent::ACTION_MOVE);
+    ASSERT_EQ(OutEvents[7]->getX(0), 0x11e); // X保持不变
+    ASSERT_EQ(OutEvents[7]->getY(0), 0x379); // Y: 889
+    
+    ASSERT_EQ(OutEvents[8]->getAction(), MotionEvent::ACTION_MOVE);
+    ASSERT_EQ(OutEvents[8]->getX(0), 0x11d); // X: 285
+    ASSERT_EQ(OutEvents[8]->getY(0), 0x37a); // Y: 890
+
+    ASSERT_EQ(OutEvents[9]->getAction(), MotionEvent::ACTION_MOVE);
+    ASSERT_EQ(OutEvents[9]->getX(0), 0x11d); // X: 285
+    ASSERT_EQ(OutEvents[9]->getY(0), 0x37a); // Y: 890
+
+    ASSERT_EQ(OutEvents[10]->getAction(), MotionEvent::ACTION_MOVE);
+    ASSERT_EQ(OutEvents[10]->getX(0), 0x11d); // X: 285
+    ASSERT_EQ(OutEvents[10]->getY(0), 0x37b); // Y: 891
+    
+    // 检查UP事件
+    ASSERT_EQ(OutEvents[11]->getAction(), MotionEvent::ACTION_UP);
+    ASSERT_EQ(OutEvents[11]->getX(0), 0x11d); // 285
+    ASSERT_EQ(OutEvents[11]->getY(0), 0x37b); // 891
+}
+
+
+TEST_F(INPUTDEVICE, MTB6) {
+   TouchDevice d(INJECTDEV_TOUCH);
+   MTEvent mts[] = {
+      // 第一个触点按下 (Slot 0)
+      {EV_ABS, ABS_MT_TRACKING_ID, 0x123},    // 0 - 触点1 ID
+      {EV_ABS, ABS_MT_POSITION_X, 0x7c},      // 1 - 触点1 X: 124
+      {EV_ABS, ABS_MT_POSITION_Y, 0x2a2},     // 2 - 触点1 Y: 674
+      {EV_ABS, ABS_MT_TOUCH_MAJOR, 0x37},     // 3 - 触点1 触摸大小
+      {EV_KEY, BTN_TOUCH, 1},                 // 4 - 触摸按下
+      {EV_SYN, SYN_REPORT, 0},                // 5 - 同步报告
+      
+      // 第二个触点按下 (切换到Slot 1)
+      {EV_ABS, ABS_MT_SLOT, 1},               // 6 - 切换到触点2
+      {EV_ABS, ABS_MT_TRACKING_ID, 0x124},    // 7 - 触点2 ID
+      {EV_ABS, ABS_MT_POSITION_X, 0xae},      // 8 - 触点2 X: 174
+      {EV_ABS, ABS_MT_POSITION_Y, 0x4c7},     // 9 - 触点2 Y: 1223
+      {EV_ABS, ABS_MT_TOUCH_MAJOR, 0x53},     // 10 - 触点2 触摸大小
+      {EV_SYN, SYN_REPORT, 0},                // 11 - 同步报告
+      
+      //  第1次移动
+      {EV_ABS, ABS_MT_POSITION_X, 200},       // 12 - 触点2 X: 200
+      {EV_ABS, ABS_MT_POSITION_Y, 1300},      // 13 - 触点2 Y: 1300
+      {EV_SYN, SYN_REPORT, 0},                // 14 - 同步报告
+      
+      // 第2次移动
+      {EV_ABS, ABS_MT_POSITION_X, 120},       // 15 - 触点2 X: 120
+      {EV_ABS, ABS_MT_POSITION_Y, 1500},      // 16 - 触点2 Y: 1500
+      {EV_SYN, SYN_REPORT, 0},                // 17 - 同步报告
+      
+      // 第3次移动
+      {EV_ABS, ABS_MT_SLOT, 0},               // 18 - 切换到触点1
+      {EV_ABS, ABS_MT_POSITION_X, 50},        // 19 - 触点2 X: 50
+      {EV_ABS, ABS_MT_POSITION_Y, 500},       // 20 - 触点2 Y: 500
+      {EV_SYN, SYN_REPORT, 0},                // 21 - 同步报告
+      
+      // 第4次移动
+      {EV_ABS, ABS_MT_POSITION_X, 60},        // 22 - 触点2 X: 60
+      {EV_ABS, ABS_MT_POSITION_Y, 600},       // 23 - 触点2 Y: 600
+      {EV_SYN, SYN_REPORT, 0},                // 24 - 同步报告
+      
+      // 第5次移动
+      {EV_ABS, ABS_MT_SLOT, 1},               // 25 - 切换到触点2
+      {EV_ABS, ABS_MT_POSITION_X, 300},       // 26 - 触点2 X: 300
+      {EV_ABS, ABS_MT_POSITION_Y, 1200},      // 27 - 触点2 Y: 1200
+      {EV_SYN, SYN_REPORT, 0},                // 28 - 同步报告
+
+      {EV_ABS, ABS_MT_TRACKING_ID, -1},       // 29 - 结束跟踪 (0xffffffff)
+      {EV_SYN, SYN_REPORT, 0},                // 30 - 同步报告
+      
+      {EV_ABS, ABS_MT_SLOT, 0},               // 31
+      {EV_ABS, ABS_MT_TRACKING_ID, -1},       // 32 - 结束跟踪 (0xffffffff)
+      {EV_KEY, BTN_TOUCH, 0},                 // 33 - 触摸抬起
+      {EV_SYN, SYN_REPORT, 0},                // 34 - 同步报告
+
+   };
+   
+   EventCount = sendEvents(d, mts, sizeof(mts)/sizeof(MTEvent), OutEvents);
+   
+   // 验证多点触控事件处理
+   ASSERT_EQ(EventCount, 9);
+
+   // 第一个触点按下事件
+   ASSERT_EQ(OutEvents[0]->getActionMasked(),MotionEvent::ACTION_DOWN);
+   ASSERT_EQ(OutEvents[0]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[0]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[0]->getX(0),mts[1].value);  // 触点1 X: 124
+   ASSERT_EQ(OutEvents[0]->getY(0),mts[2].value);  // 触点1 Y: 674
+   
+   // 第二个触点按下事件（应该触发ACTION_POINTER_DOWN）
+   ASSERT_EQ(OutEvents[1]->getActionMasked(), MotionEvent::ACTION_POINTER_DOWN);
+   ASSERT_EQ(OutEvents[1]->getActionIndex(), 1);
+   ASSERT_EQ(OutEvents[1]->getPointerCount(), 2);
+   ASSERT_EQ(OutEvents[1]->getX(0), mts[1].value);   
+   ASSERT_EQ(OutEvents[1]->getY(0), mts[2].value);   
+   ASSERT_EQ(OutEvents[1]->getX(1), mts[8].value);   // 触点2 X: 174
+   ASSERT_EQ(OutEvents[1]->getY(1), mts[9].value);   // 触点2 Y: 1223
+   
+   // 验证移动事件 1
+   ASSERT_EQ(OutEvents[2]->getActionMasked(), MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[2]->getActionIndex(), 1);
+   ASSERT_EQ(OutEvents[2]->getPointerCount(), 2);
+   ASSERT_EQ(OutEvents[2]->getX(0), mts[1].value);    // 触点1 X: 124
+   ASSERT_EQ(OutEvents[2]->getY(0), mts[2].value);    // 触点1 Y: 674
+   ASSERT_EQ(OutEvents[2]->getX(1), mts[12].value);   // 触点2 X: 200
+   ASSERT_EQ(OutEvents[2]->getY(1), mts[13].value);   // 触点2 Y: 1300
+
+   // 验证移动事件 2
+   ASSERT_EQ(OutEvents[3]->getActionMasked(), MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[3]->getActionIndex(), 1);
+   ASSERT_EQ(OutEvents[3]->getPointerCount(), 2);
+   ASSERT_EQ(OutEvents[3]->getX(0), mts[1].value);    // 触点1 X: 124
+   ASSERT_EQ(OutEvents[3]->getY(0), mts[2].value);    // 触点1 Y: 674
+   ASSERT_EQ(OutEvents[3]->getX(1), mts[15].value);   // 触点2 X: 120
+   ASSERT_EQ(OutEvents[3]->getY(1), mts[16].value);   // 触点2 Y: 1500
+
+   // 验证移动事件 3
+   ASSERT_EQ(OutEvents[4]->getActionMasked(), MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[4]->getActionIndex(), 0);
+   ASSERT_EQ(OutEvents[4]->getPointerCount(), 2);
+   ASSERT_EQ(OutEvents[4]->getX(0), mts[19].value);   // 触点1 X: 50
+   ASSERT_EQ(OutEvents[4]->getY(0), mts[20].value);   // 触点1 Y: 500
+   ASSERT_EQ(OutEvents[4]->getX(1), mts[15].value);   // 触点2 X: 120
+   ASSERT_EQ(OutEvents[4]->getY(1), mts[16].value);   // 触点2 Y: 1500
+
+   // 验证移动事件 4
+   ASSERT_EQ(OutEvents[5]->getActionMasked(), MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[5]->getActionIndex(), 0);
+   ASSERT_EQ(OutEvents[5]->getPointerCount(), 2);
+   ASSERT_EQ(OutEvents[5]->getX(0), mts[22].value);   // 触点1 X: 60
+   ASSERT_EQ(OutEvents[5]->getY(0), mts[23].value);   // 触点1 Y: 600
+   ASSERT_EQ(OutEvents[5]->getX(1), mts[15].value);   // 触点2 X: 120
+   ASSERT_EQ(OutEvents[5]->getY(1), mts[16].value);   // 触点2 Y: 1500
+
+   // 验证移动事件 5
+   ASSERT_EQ(OutEvents[6]->getActionMasked(), MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[6]->getActionIndex(), 1);
+   ASSERT_EQ(OutEvents[6]->getPointerCount(), 2);
+   ASSERT_EQ(OutEvents[6]->getX(0), mts[22].value);   // 触点1 X: 60
+   ASSERT_EQ(OutEvents[6]->getY(0), mts[23].value);   // 触点1 Y: 600
+   ASSERT_EQ(OutEvents[6]->getX(1), mts[26].value);   // 触点2 X: 300
+   ASSERT_EQ(OutEvents[6]->getY(1), mts[27].value);   // 触点2 Y: 1200
+   
+   // 验证第二个触点抬起事件
+   ASSERT_EQ(OutEvents[7]->getActionMasked(),MotionEvent::ACTION_POINTER_UP);
+   ASSERT_EQ(OutEvents[7]->getActionIndex(), 1);
+   ASSERT_EQ(OutEvents[7]->getPointerCount(), 2);
+   ASSERT_EQ(OutEvents[7]->getX(0), mts[22].value);   // 触点1 X: 60
+   ASSERT_EQ(OutEvents[7]->getY(0), mts[23].value);   // 触点1 Y: 600
+   ASSERT_EQ(OutEvents[7]->getX(1), mts[26].value);   // 触点2 X: 300
+   ASSERT_EQ(OutEvents[7]->getY(1), mts[27].value);   // 触点2 Y: 1200
+
+   // 验证第二个触点抬起事件
+   ASSERT_EQ(OutEvents[8]->getActionMasked(),MotionEvent::ACTION_UP);
+   ASSERT_EQ(OutEvents[8]->getActionIndex(), 0);
+   ASSERT_EQ(OutEvents[8]->getPointerCount(), 1);
+   ASSERT_EQ(OutEvents[8]->getX(0), mts[22].value);   // 触点1 X: 60
+   ASSERT_EQ(OutEvents[8]->getY(0), mts[23].value);   // 触点1 Y: 600
+
+}

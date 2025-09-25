@@ -222,13 +222,13 @@ MotionEvent* MotionEvent::obtain(nsecs_t downTime, nsecs_t eventTime, int action
 
 MotionEvent* MotionEvent::obtain(const MotionEvent& other) {
     MotionEvent* ev = obtain();
-    ev->copyFrom(&other,true);
+    ev->copyFrom(other,true);
     return ev;
 }
 
-MotionEvent* MotionEvent::obtainNoHistory(MotionEvent& other){
+MotionEvent* MotionEvent::obtainNoHistory(const MotionEvent& other){
     MotionEvent* ev = obtain();
-    ev->copyFrom(&other,false);
+    ev->copyFrom(other,false);
     return ev;
 }
 
@@ -278,41 +278,41 @@ void MotionEvent::initialize(
 }
 
 MotionEvent::MotionEvent(const MotionEvent&other){
-    copyFrom(&other,false);
+    copyFrom(other,false);
 }
 
-void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
-    InputEvent::initialize(other->mDeviceId, other->mSource);
-    mAction = other->mAction;
-    mActionButton = other->mActionButton;
-    mFlags = other->mFlags;
-    mEdgeFlags = other->mEdgeFlags;
-    mMetaState = other->mMetaState;
-    mButtonState = other->mButtonState;
-    mClassification=other->mClassification;
-    mXOffset = other->mXOffset;
-    mYOffset = other->mYOffset;
-    mXPrecision = other->mXPrecision;
-    mYPrecision = other->mYPrecision;
-    mDownTime = other->mDownTime;
-    mEventTime= other->mEventTime;
-    mSource = other->mSource;
-    mDisplayId = other->mDisplayId;
-    mPointerProperties = other->mPointerProperties;
+void MotionEvent::copyFrom(const MotionEvent& other, bool keepHistory) {
+    InputEvent::initialize(other.mDeviceId, other.mSource);
+    mAction = other.mAction;
+    mActionButton = other.mActionButton;
+    mFlags = other.mFlags;
+    mEdgeFlags = other.mEdgeFlags;
+    mMetaState = other.mMetaState;
+    mButtonState = other.mButtonState;
+    mClassification=other.mClassification;
+    mXOffset = other.mXOffset;
+    mYOffset = other.mYOffset;
+    mXPrecision = other.mXPrecision;
+    mYPrecision = other.mYPrecision;
+    mDownTime = other.mDownTime;
+    mEventTime= other.mEventTime;
+    mSource = other.mSource;
+    mDisplayId = other.mDisplayId;
+    mPointerProperties = other.mPointerProperties;
 
     if (keepHistory) {
-        mSampleEventTimes = other->mSampleEventTimes;
-        mSamplePointerCoords = other->mSamplePointerCoords;
+        mSampleEventTimes = other.mSampleEventTimes;
+        mSamplePointerCoords = other.mSamplePointerCoords;
     } else {
         mSampleEventTimes.clear();
-        mSampleEventTimes.push_back(other->getEventTime());
+        mSampleEventTimes.push_back(other.getEventTime());
         mSamplePointerCoords.clear();
-        const size_t pointerCount = other->getPointerCount();
-        const size_t historySize = other->getHistorySize();
+        const size_t pointerCount = other.getPointerCount();
+        const size_t historySize = other.getHistorySize();
 
         mSamplePointerCoords.resize(pointerCount);
         for(int i=0;i<pointerCount;i++)
-            mSamplePointerCoords.push_back(other->mSamplePointerCoords.at(historySize*pointerCount+i));
+            mSamplePointerCoords.push_back(other.mSamplePointerCoords.at(historySize*pointerCount+i));
     }
 }
 
@@ -742,7 +742,7 @@ void MotionEvent::addBatch(nsecs_t eventTime,const std::vector<PointerCoords>& p
      setMetaState(metaState|getMetaState());
 }
 
-bool MotionEvent::addBatch(MotionEvent& event){
+bool MotionEvent::addBatch(const MotionEvent& event){
     const int action = getActionMasked();//nativeGetAction(mNativePtr);
     if ((action != ACTION_MOVE) && (action != ACTION_HOVER_MOVE)) {
         return false;

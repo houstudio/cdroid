@@ -225,9 +225,9 @@ public:
 
     static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action, float x, float y, int metaState);
     static MotionEvent* obtain(const MotionEvent& other);
-    static MotionEvent* obtainNoHistory(MotionEvent& other);
+    static MotionEvent* obtainNoHistory(const MotionEvent& other);
     static bool isTouchEvent(int32_t source, int32_t action);
-    void copyFrom(const MotionEvent* other, bool keepHistory);
+    void copyFrom(const MotionEvent& other, bool keepHistory);
     MotionEvent*split(int idBits);
     void setSource(int)override;
     int getType()const override{return INPUT_EVENT_TYPE_MOTION;}
@@ -319,7 +319,7 @@ public:
     void transform(const Cairo::Matrix & matrix);
     void addBatch(nsecs_t eventTime, float x, float y, float pressure, float size, int metaState);
     void addBatch(nsecs_t eventTime,const std::vector<PointerCoords>& pointerCoords, int metaState);
-    bool addBatch(MotionEvent& event);
+    bool addBatch(const MotionEvent& event);
     inline int32_t getPointerId(size_t pointerIndex) const {
         return mPointerProperties[pointerIndex].id;
     }
