@@ -251,10 +251,10 @@ private:
     int32_t mControllerNumber;
     InputDeviceIdentifier mIdentifier;
     std::string mAlias;
-    bool mIsExternal;
-    bool mHasMic;
     uint32_t mSources;
     int32_t mKeyboardType;
+    bool mIsExternal;
+    bool mHasMic;
     bool mHasVibrator;
     bool mHasButtonUnderPad;
     bool mHasSensor;
@@ -349,7 +349,6 @@ protected:
     int mKeyboardType;
     int32_t mScreenWidth;
     int32_t mScreenHeight;
-    uint32_t mAxisFlags;
     uint32_t mCorrectedDeviceClasses;
     int32_t mLastAction;
     int32_t mScreenRotation;

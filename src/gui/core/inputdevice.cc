@@ -84,7 +84,7 @@ InputDevice::InputDevice(int fdev){
 
     mSeqID = 0;
     mDeviceClasses= 0;
-    mAxisFlags =0;
+    //mAxisFlags =0;
     mScreenRotation =0;
     mLastAction=-1;
     mLastEventTime = 0;
@@ -376,7 +376,7 @@ int KeyDevice::putEvent(long sec,long nsec,int type,int code,int value){
 TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mTypeB = false;
     mTrackID = mSlotID = -1;
-    mAxisFlags = 0;
+    mProp.id =0;
     mCorrectedDeviceClasses = mDeviceClasses;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
     std::vector<InputDeviceInfo::MotionRange>&axesRange = mDeviceInfo.getMotionRanges();
@@ -504,6 +504,12 @@ int TouchDevice::ABS2AXIS(int absaxis){
     case ABS_MT_TOUCH_MINOR:return MotionEvent::AXIS_TOUCH_MINOR;
     case ABS_MT_TOOL_X:return MotionEvent::AXIS_TOOL_MAJOR;
     case ABS_MT_TOOL_Y:return MotionEvent::AXIS_TOOL_MINOR;
+    case ABS_MT_ORIENTATION:return MotionEvent::AXIS_ORIENTATION;
+    //case ABS_TILT_X: return MotionEvent::AXIS_TILT_X;
+    //case ABS_TILT_Y: return MotionEvent::AXIS_TILT_Y;
+    case ABS_VOLUME: return MotionEvent::AXIS_VSCROLL;
+    case ABS_HAT0X : return MotionEvent::AXIS_HSCROLL;
+    case ABS_HAT0Y : return MotionEvent::AXIS_VSCROLL;
     case ABS_WHEEL:/*REL_WHEEL*/ return MotionEvent::AXIS_WHEEL;
     default:return  -1; 
     }
@@ -572,8 +578,8 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
         mCoord.setAxisValue(axis,value);break;
     }/*endof switch(axis)*/
 
-    if( (raw_axis>=ABS_MT_SLOT) && (raw_axis<=ABS_CNT) )
-        mAxisFlags |= 1 << (raw_axis - ABS_MT_SLOT);
+    //if( (raw_axis>=ABS_MT_SLOT) && (raw_axis<=ABS_CNT) )
+    //    mAxisFlags |= 1 << (raw_axis - ABS_MT_SLOT);
     switch(raw_axis){
     case ABS_X:
     case ABS_Y:
@@ -603,7 +609,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
             if( mTypeB==false ) mSlotID = index;
             slot = index;
             LOGV("Slot=%d TRACKID=%d %08x,%08x",mSlotID,value,mLastBits.value,mCurrBits.value);
-        }else if( (value==-1) && mTypeB){//for TypeB
+        }else if( (value==-1) /*&& mTypeB*/){//for TypeB
             const uint32_t pointerIndex = mTrack2Slot.indexOfValue(mSlotID);
             LOGV("clearbits %d %08x,%08x",pointerIndex,mLastBits.value,mCurrBits.value);
             mCurrBits.clearBit(pointerIndex);
@@ -625,10 +631,10 @@ int TouchDevice::getActionByBits(int& pointerIndex){
     pointerIndex = diffBits?BitSet32::firstMarkedBit(diffBits):mTrack2Slot.indexOfValue(mSlotID);
     if(((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)||(mSlotID==-1))
         pointerIndex = 0;
-    if(((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)){
+    /*if(((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)){
         if(mLastAction==MotionEvent::ACTION_UP)
             return MotionEvent::ACTION_DOWN;
-    }
+    }*/
     if(mLastBits.count()==mCurrBits.count()){
         return MotionEvent::ACTION_MOVE;
     }else if(mLastBits.count()<mCurrBits.count()){
@@ -666,7 +672,6 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         switch(code){
         case BTN_TOUCH :
         case BTN_STYLUS:
-            mAxisFlags |= 0x80000000;
             mActionButton = MotionEvent::BUTTON_PRIMARY;
             if(value){
                 mCurrBits.markBit(0);
@@ -689,16 +694,17 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         case BTN_TOOL_FINGER:break;
         case BTN_TOOL_PEN:break;
         case BTN_TOOL_RUBBER:break;
-        default:if((code<BTN_MOUSE)||(code>BTN_GEAR_UP)){
-            KeyEvent*keyEvent = KeyEvent::obtain(mDownTime,(1000LL*sec+usec/1000),
+        default:
+            if((code<BTN_MOUSE)||(code>BTN_GEAR_UP)){
+                KeyEvent*keyEvent = KeyEvent::obtain(mDownTime,(1000LL*sec+usec/1000),
                     (value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/, code/*KeyCode*/,0/*repeat*/,
                     0/*metaState*/,getId()/*deviceId*/,code/*scancode*/,0/*flags*/,getSources(),0/*displayid*/);
-            LOGD("RECV KEY %d %s",code,(value?"down":"up"));
-            mEvents.push_back(keyEvent);
-        }
+                LOGD("RECV KEY %d %s",code,(value?"down":"up"));
+                mEvents.push_back(keyEvent);
+            }
         }break;
     case EV_ABS:
-        if ( ((code>=ABS_X) && (code<=ABS_Z)) || ((code >= ABS_MT_SLOT) && (code <= ABS_MT_TOOL_Y))) {
+        if (((code>=ABS_X) && (code<=ABS_Z)) || ((code >= ABS_MT_SLOT) && (code <= ABS_MT_TOOL_Y))) {
             setAxisValue(code, value, false);
         }break;
     case EV_REL:
@@ -706,7 +712,8 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
             setAxisValue(code,value,true);
         }break;
     case EV_SYN:
-        if( (code != SYN_REPORT) && (code != SYN_MT_REPORT) )break;
+        if((code != SYN_REPORT) && (code != SYN_MT_REPORT))break;
+#define DISABLE_MTASST
 #ifndef DISABLE_MTASST
     #define HASMTFLAG(f) (mAxisFlags&(1<<((f)-ABS_MT_SLOT)))
     #define HASTRACKORSLOT (HASMTFLAG(ABS_MT_TRACKING_ID)||HASMTFLAG(ABS_MT_SLOT))
@@ -771,8 +778,9 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         }
 
         mLastBits.value = mCurrBits.value;
-        mProp.clear();
-        if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)&&(mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mTypeB==false) ){
+        //mProp.clear();
+        if(/*(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)
+                &&*/ (mCurrBits.count()>1) && (mTypeB==false)){
             mCoord.clear();
             mCurrBits.clear();//only typeA
             mTrack2Slot.clear();
@@ -804,7 +812,6 @@ int MouseDevice::putEvent(long sec,long usec,int type,int code,int value){
         case BTN_STYLUS:
             mActionButton = MotionEvent::BUTTON_PRIMARY;
             if(value)mCurrBits.markBit(0);else mCurrBits.clearBit(0);
-            mAxisFlags |= 0x80000000;
             if(value){
                 mMoveTime = mDownTime = sec * 1000 + usec/1000;
                 mButtonState = MotionEvent::BUTTON_PRIMARY;
