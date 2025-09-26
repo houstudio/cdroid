@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+*/
 #ifndef __DYNAMIC_ANIMATION_H__
 #define __DYNAMIC_ANIMATION_H__
 #include <cfloat>
@@ -21,7 +38,7 @@ public:
 
     using OnAnimationEndListener = CallbackBase<void,DynamicAnimation&,bool/*canceled*/,float/*value*/,float/*velocity*/>;
     using OnAnimationUpdateListener = CallbackBase<void,DynamicAnimation&,float/*value*/,float/*velocity*/>;
-public:
+
     // Internal state for value/velocity pair.
     class MassState {
     public:
@@ -43,11 +60,14 @@ public:
     static const FloatProperty& ALPHA;
     static const FloatProperty& SCROLL_X;
     static const FloatProperty& SCROLL_Y;
-
+protected:
     // Internal tracking for velocity.
     float mVelocity = 0;
     // Internal tracking for value.
     float mValue = UNSET;
+    // Min and max values that defines the range of the animation values.
+    float mMaxValue = FLT_MAX;
+    float mMinValue = -mMaxValue;
 
     // Tracks whether start value is set. If not, the animation will obtain the value at the time
     // of starting through the getter and use that as the starting value of the animation.
@@ -57,13 +77,8 @@ public:
 
     // Target to be animated.
     void* mTarget;
-
     // View property id.
-    FloatProperty* mProperty;
-
-    // Min and max values that defines the range of the animation values.
-    float mMaxValue = FLT_MAX;
-    float mMinValue = -mMaxValue;
+    const FloatProperty* mProperty;
 private:
     // Last frame time. Always gets reset to -1  at the end of the animation.
     int64_t mLastFrameTime = 0;
@@ -79,7 +94,7 @@ private:
 public:
     DynamicAnimation(FloatValueHolder* floatValueHolder);
 
-    DynamicAnimation(void* object, FloatProperty* property);
+    DynamicAnimation(void* object,const FloatProperty* property);
 
     DynamicAnimation& setStartValue(float startValue);
     virtual DynamicAnimation& setStartVelocity(float startVelocity);

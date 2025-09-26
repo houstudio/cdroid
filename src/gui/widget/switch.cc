@@ -72,9 +72,9 @@ Switch::Switch(Context* context,const AttributeSet& a)
     setChecked(isChecked());
 }
 
-class THUMB_POS:public Property{
+class THUMB_POS:public FloatProperty{
 public:
-    THUMB_POS():Property("thumbPos"){}
+    THUMB_POS():FloatProperty("thumbPos"){}
     void set(void*object,const AnimateValue&value)const override {
         float fv = GET_VARIANT(value,float);
         ((Switch*)object)->setThumbPosition(fv);

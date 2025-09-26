@@ -1,16 +1,25 @@
 
 include(core/core.cmake)
 include(view/view.cmake)
+include(animation/animations.cmake)
+include(drawables/drawables.cmake)
 include(widget/widget.cmake)
+include(menu/menu.cmake)
 include(widgetEx/widgetex.cmake)
+include(widgetEx/wear/wear.cmake)
 
 list(APPEND CDROID_SOURCES
     private/inputeventlabels.cc
+    ${CORE_SOURCES}
+    ${VIEW_SOURCES}
+    ${ANIMATION_SOURCES}
+    ${DRAWABLE_SOURCES}
+    ${WIDGET_SOURCES}
+    ${MENU_SOURCES}
+    ${WIDGETEX_SOURCES}
+    ${WEAR_SOURCES}
 )
-list(APPEND CDROID_SOURCES ${CORE_SOURCES})
-list(APPEND CDROID_SOURCES ${VIEW_SOURCES})
-list(APPEND CDROID_SOURCES ${WIDGET_SOURCES})
-list(APPEND CDROID_SOURCES ${WIDGETEX_SOURCES})
+
 if(ENABLE_AUDIO)
     list(APPEND CDROID_SOURCES
         media/audiomanager.cc
@@ -18,36 +27,6 @@ if(ENABLE_AUDIO)
         media/audiorecord.cc
         )
 endif()
-
-if(ENABLE_MENU)
-    list(APPEND CDROID_SOURCES
-        menu/basemenupresenter.cc
-        menu/iconmenuitemview.cc
-        menu/iconmenuview.cc
-        menu/listmenupresenter.cc
-        menu/menudialoghelper.cc
-        menu/menupopuphelper.cc
-        menu/menuitem.cc
-        menu/actionmenuitem.cc
-        menu/expandedmenuview.cc
-        menu/iconmenupresenter.cc
-        menu/listmenuitemview.cc
-        menu/actionmenuview.cc
-        menu/actionmenuitemview.cc
-        menu/actionmenupresenter.cc
-        menu/menubuilder.cc
-        menu/contextmenubuilder.cc
-        menu/menuinflater.cc
-        menu/menuitemimpl.cc
-        menu/menupopup.cc
-        menu/popupmenu.cc
-        menu/actionmenu.cc
-        menu/menuadapter.cc
-        menu/standardmenupopup.cc
-        menu/cascadingmenupopup.cc
-        widget/menupopupwindow.cc
-    )
-endif(ENABLE_MENU)
 
 if(ENABLE_GESTURE)
     list(APPEND CDROID_SOURCES
@@ -97,7 +76,3 @@ if(ENABLE_NAVIGATION)
     )
 endif(ENABLE_NAVIGATION)
 
-if(ENABLE_WEAR OR TRUE)
-    include(widgetEx/wear/wear.cmake)
-    list(APPEND CDROID_SOURCES ${WEAR_SOURCES})
-endif()

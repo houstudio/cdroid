@@ -9989,4 +9989,34 @@ AccessibilityNodeInfo* View::AccessibilityDelegate::createAccessibilityNodeInfo(
     return host.createAccessibilityNodeInfoInternal();
 }
 
+#define VIEW_PROPERTY(PROPNAME, METHOD, PROJ)               \
+namespace {                                                 \
+class prop_##PROJ : public FloatProperty {                  \
+public:                                                     \
+    prop_##PROJ() : FloatProperty(PROPNAME) {}              \
+    void set(void* obj,const AnimateValue& v)const override \
+    { ((View*)obj)->set##METHOD(GET_VARIANT(v,float)); }    \
+    AnimateValue get(void* obj)const override               \
+    { return ((View*)obj)->get##METHOD(); }                 \
+};                                                          \
+static  prop_##PROJ INST_##PROJ;        \
+}                                       \
+const FloatProperty& View::PROJ =INST_##PROJ;
+
+VIEW_PROPERTY("translationX",TranslationX, TRANSLATION_X);
+VIEW_PROPERTY("translationY",TranslationY, TRANSLATION_Y);
+VIEW_PROPERTY("translationZ",TranslationZ, TRANSLATION_Z);
+
+VIEW_PROPERTY("scaleX",ScaleX, SCALE_X);
+VIEW_PROPERTY("scaleY",ScaleY, SCALE_Y);
+
+VIEW_PROPERTY("rotation",Rotation, ROTATION);
+VIEW_PROPERTY("rotationX",RotationX, ROTATION_X);
+VIEW_PROPERTY("rotationY",RotationY, ROTATION_Y);
+
+VIEW_PROPERTY("x",X, X);
+VIEW_PROPERTY("y",Y, Y);
+VIEW_PROPERTY("z",Z, Z);
+VIEW_PROPERTY("alpha",Alpha, ALPHA);
+
 }//endof namespace

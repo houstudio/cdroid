@@ -330,9 +330,9 @@ Drawable* ProgressBar::tileifyIndeterminate(Drawable* drawable){
     return drawable;
 }
 
-class VISUAL_PROGRESS:public Property{
+class VISUAL_PROGRESS:public FloatProperty{
 public:
-    VISUAL_PROGRESS():Property("visual_progress"){}
+    VISUAL_PROGRESS():FloatProperty("visual_progress"){}
     void set(void*object,const AnimateValue&value)const override {
         float fv = GET_VARIANT(value,float);
         ((ProgressBar*)object)->setVisualProgress(R::id::progress, fv);

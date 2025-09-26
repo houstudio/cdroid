@@ -48,39 +48,6 @@ const std::string Property::getName()const{
 
 ////////////////////////////////////////////////////////////////////////////
 
-#define VIEW_PROPERTY(PROPNAME, METHOD, PROJ)               \
-namespace {                                                 \
-class prop_##PROJ : public Property {                       \
-public:                                                     \
-    prop_##PROJ() : Property(PROPNAME,FLOAT_TYPE) {}        \
-    void set(void* obj,const AnimateValue& v)const override \
-    { ((View*)obj)->set##METHOD(GET_VARIANT(v,float)); }    \
-    AnimateValue get(void* obj)const override               \
-    { return ((View*)obj)->get##METHOD(); }                 \
-};                                                          \
-}  \
-const Property& View::PROJ =         \
-    []()->Property&{                 \
-        static prop_##PROJ instance; \
-        return instance;             \
-    }();
-
-VIEW_PROPERTY("translationX",TranslationX, TRANSLATION_X);
-VIEW_PROPERTY("translationY",TranslationY, TRANSLATION_Y);
-VIEW_PROPERTY("translationZ",TranslationZ, TRANSLATION_Z);
-
-VIEW_PROPERTY("scaleX",ScaleX, SCALE_X);
-VIEW_PROPERTY("scaleY",ScaleY, SCALE_Y);
-
-VIEW_PROPERTY("rotation",Rotation, ROTATION);
-VIEW_PROPERTY("rotationX",RotationX, ROTATION_X);
-VIEW_PROPERTY("rotationY",RotationY, ROTATION_Y);
-
-VIEW_PROPERTY("x",X, X);
-VIEW_PROPERTY("y",Y, Y);
-VIEW_PROPERTY("z",Z, Z);
-VIEW_PROPERTY("alpha",Alpha, ALPHA);
-
 #define DEFINE_FLOATPROPERTY(PROPNAME, METHOD, PROJ)        \
 namespace {                                                 \
 class prop_##PROJ : public Property {                       \

@@ -3,6 +3,7 @@ SET(WEAR_SOURCES
     widgetEx/wear/arclayout.cc
     widgetEx/wear/boxinsetlayout.cc
     widgetEx/wear/roundeddrawable.cc
+    widgetEx/wear/scrollmanager.cc
     widgetEx/wear/progressdrawable.cc
     widgetEx/wear/backbuttondismisscontroller.cc
     widgetEx/wear/circularprogresslayoutcontroller.cc
@@ -12,7 +13,9 @@ SET(WEAR_SOURCES
     widgetEx/wear/dismissableframelayout.cc
     widgetEx/wear/swipedismisscontroller.cc
     widgetEx/wear/swipedismisscontroller.cc
-    #widgetEx/wear/curvinglayoutcallback.cc
+    widgetEx/wear/curvinglayoutcallback.cc
+    widgetEx/wear/swipedismissframelayout.cc
+    widgetEx/wear/swipedismisstransitionhelper.cc
     widgetEx/wear/wearablelinearlayoutmanager.cc
 )
 endif(ENABLE_WEAR_WIDGETS)

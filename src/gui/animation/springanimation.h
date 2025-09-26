@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+*/
 #ifndef __SPRING_ANIMATION_H__
 #define __SPRING_ANIMATION_H__
 #include <animation/springforce.h>
@@ -34,7 +51,7 @@ public:
      * @param property the property to be animated
      * @param <K> the class on which the Property is declared
      */
-    SpringAnimation(void* object, FloatProperty* property);
+    SpringAnimation(void* object,const FloatProperty* property);
 
     /**
      * This creates a SpringAnimation that animates the property of the given object. A Spring will
@@ -46,7 +63,7 @@ public:
      * @param finalPosition the final position of the spring to be created.
      * @param <K> the class on which the Property is declared
      */
-    SpringAnimation(void* object, FloatProperty*property,float finalPosition);
+    SpringAnimation(void* object,const FloatProperty*property,float finalPosition);
 
     SpringForce* getSpring() const;
     SpringAnimation& setSpring(SpringForce* force);

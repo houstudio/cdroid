@@ -1,0 +1,30 @@
+if(ENABLE_MENU)
+    list(APPEND MENU_SOURCES
+        menu/basemenupresenter.cc
+        menu/iconmenuitemview.cc
+        menu/iconmenuview.cc
+        menu/listmenupresenter.cc
+        menu/menudialoghelper.cc
+        menu/menupopuphelper.cc
+        menu/menuitem.cc
+        menu/actionmenuitem.cc
+        menu/expandedmenuview.cc
+        menu/iconmenupresenter.cc
+        menu/listmenuitemview.cc
+        menu/actionmenuview.cc
+        menu/actionmenuitemview.cc
+        menu/actionmenupresenter.cc
+        menu/menubuilder.cc
+        menu/contextmenubuilder.cc
+        menu/menuinflater.cc
+        menu/menuitemimpl.cc
+        menu/menupopup.cc
+        menu/popupmenu.cc
+        menu/actionmenu.cc
+        menu/menuadapter.cc
+        menu/standardmenupopup.cc
+        menu/cascadingmenupopup.cc
+        widget/menupopupwindow.cc
+    )
+endif(ENABLE_MENU)
+

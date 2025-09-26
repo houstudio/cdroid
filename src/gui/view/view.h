@@ -1515,18 +1515,18 @@ public:
     virtual void resolveLayoutParams();
     void layout(int l, int t, int r, int b);
 public:
-    static const Property& ALPHA;
-    static const Property& TRANSLATION_X;
-    static const Property& TRANSLATION_Y;
-    static const Property& TRANSLATION_Z;
-    static const Property& X;
-    static const Property& Y;
-    static const Property& Z;
-    static const Property& ROTATION;
-    static const Property& ROTATION_X;
-    static const Property& ROTATION_Y;
-    static const Property& SCALE_X;
-    static const Property& SCALE_Y;
+    static const FloatProperty& ALPHA;
+    static const FloatProperty& TRANSLATION_X;
+    static const FloatProperty& TRANSLATION_Y;
+    static const FloatProperty& TRANSLATION_Z;
+    static const FloatProperty& X;
+    static const FloatProperty& Y;
+    static const FloatProperty& Z;
+    static const FloatProperty& ROTATION;
+    static const FloatProperty& ROTATION_X;
+    static const FloatProperty& ROTATION_Y;
+    static const FloatProperty& SCALE_X;
+    static const FloatProperty& SCALE_Y;
 };
 
 class View::AttachInfo{

@@ -101,23 +101,22 @@ private:
         Message message;
     };
     
-    bool mAllowNonCallbacks; // immutable
-
     int  mWakeEventFd;// immutable
     std::recursive_mutex mLock;
 
     std::list<MessageEnvelope> mMessageEnvelopes; // guarded by mLock
-    bool mSendingMessage; // guarded by mLock
     std::list<MessageHandler*>mHandlers;
     std::list<EventHandler*> mEventHandlers;
 
     // Whether we are currently waiting for work.  Not protected by a lock,
     // any use of it is racy anyway.
     bool mPolling;
+    bool mSendingMessage; // guarded by mLock
+    bool mAllowNonCallbacks; // immutable
+    bool mEpollRebuildRequired; // guarded by mLock
 
     class IOEventProcessor* mEpoll;
     //int  mEpollFd;// guarded by mLock but only modified on the looper thread
-    bool mEpollRebuildRequired; // guarded by mLock
 
     // Locked list of file descriptor monitoring requests.
     std::unordered_map<SequenceNumber, Request> mRequests; //guarded by mLock

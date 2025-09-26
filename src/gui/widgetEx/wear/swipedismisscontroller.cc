@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+*/
 #include <widgetEx/wear/swipedismisscontroller.h>
 #include <widgetEx/wear/backbuttondismisscontroller.h>
 #include <widgetEx/wear/swipedismisstransitionhelper.h>
@@ -41,7 +58,7 @@ bool SwipeDismissController::onInterceptTouchEvent(MotionEvent& ev) {
     // Offset because the view is translated during swipe, match X with raw X. Active touch
     // coordinates are mostly used by the velocity tracker, so offset it to match the raw
     // coordinates which is what is primarily used elsewhere.
-    float offsetX = ev.getRawX(0) - ev.getX();
+    float offsetX = ev.getRawX() - ev.getX();
     float offsetY = 0.0f, dx = 0, x = 0,y = 0;
     int actionIndex = -1;
     int pointerIndex= -1;
@@ -51,8 +68,8 @@ bool SwipeDismissController::onInterceptTouchEvent(MotionEvent& ev) {
     switch (ev.getActionMasked()) {
     case MotionEvent::ACTION_DOWN:
         resetSwipeDetectMembers();
-        mDownX = ev.getRawX(0);
-        mDownY = ev.getRawY(0);
+        mDownX = ev.getRawX();
+        mDownY = ev.getRawY();
         mActiveTouchId = ev.getPointerId(0);
         mSwipeDismissTransitionHelper->obtainVelocityTracker();
         mSwipeDismissTransitionHelper->getVelocityTracker()->addMovement(ev);
@@ -88,7 +105,7 @@ bool SwipeDismissController::onInterceptTouchEvent(MotionEvent& ev) {
             mDiscardIntercept = true;
             break;
         }
-        dx = ev.getRawX(0) - mDownX;
+        dx = ev.getRawX() - mDownX;
         x = ev.getX(pointerIndex);
         y = ev.getY(pointerIndex);
 
@@ -127,7 +144,7 @@ bool SwipeDismissController::onTouchEvent(MotionEvent& ev) {
     // Offset because the view is translated during swipe, match X with raw X. Active touch
     // coordinates are mostly used by the velocity tracker, so offset it to match the raw
     // coordinates which is what is primarily used elsewhere.
-    float offsetX = ev.getRawX(0) - ev.getX();
+    float offsetX = ev.getRawX() - ev.getX();
     float offsetY = 0.0f;
     ev.offsetLocation(offsetX, offsetY);
     switch (ev.getActionMasked()) {
@@ -147,10 +164,10 @@ bool SwipeDismissController::onTouchEvent(MotionEvent& ev) {
         break;
     case MotionEvent::ACTION_MOVE:
         mSwipeDismissTransitionHelper->getVelocityTracker()->addMovement(ev);
-        mLastX = ev.getRawX(0);
+        mLastX = ev.getX();//RawX(0);
         updateSwiping(ev);
         if (mSwiping) {
-            mSwipeDismissTransitionHelper->onSwipeProgressChanged(ev.getRawX(0) - mDownX, ev);
+            mSwipeDismissTransitionHelper->onSwipeProgressChanged(ev.getX()/*RawX(0)*/ - mDownX, ev);
             break;
         }
     }
@@ -174,8 +191,8 @@ void SwipeDismissController::resetSwipeDetectMembers() {
 
 void SwipeDismissController::updateSwiping(MotionEvent& ev) {
     if (!mSwiping) {
-        const float deltaX = ev.getRawX(0) - mDownX;
-        const float deltaY = ev.getRawY(0) - mDownY;
+        const float deltaX = ev.getRawX() - mDownX;
+        const float deltaY = ev.getRawY() - mDownY;
         if (isPotentialSwipe(deltaX, deltaY)) {
             mSwiping = (deltaX > mSlop * 2) && (std::abs(deltaY) < std::abs(deltaX));
         } else {
@@ -185,7 +202,7 @@ void SwipeDismissController::updateSwiping(MotionEvent& ev) {
 }
 
 void SwipeDismissController::updateDismiss(MotionEvent& ev) {
-    float deltaX = ev.getRawX(0) - mDownX;
+    float deltaX = ev.getX()/*RawX(0)*/ - mDownX;
     // Don't add the motion event as an UP event would clear the velocity tracker
     VelocityTracker* velocityTracker = mSwipeDismissTransitionHelper->getVelocityTracker();
     velocityTracker->computeCurrentVelocity(VELOCITY_UNIT);
@@ -199,7 +216,7 @@ void SwipeDismissController::updateDismiss(MotionEvent& ev) {
 
     if (!mDismissed) {
         if ((deltaX > (mLayout->getWidth() * mDismissMinDragWidthRatio)
-                && ev.getRawX(0) >= mLastX)
+                && ev.getX()/*RawX(0)*/ >= mLastX)
                 || (xVelocity >= mMinFlingVelocity
                 && xVelocity > std::abs(yVelocity)))  {
             mDismissed = true;

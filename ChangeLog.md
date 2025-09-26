@@ -5,6 +5,7 @@
   - fix GridLayout::LayoutParams's layout_gravity
   - add BaseBundle,Bundle
   - add BitmapDrawable::isStateful
+  - add DynamicAnimation,SpringAnimation,FlingAnimation
   - add porting/android
   - fix Spinner,try it now:)
   - fix ViewPage2
