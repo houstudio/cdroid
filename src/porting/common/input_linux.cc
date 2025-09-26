@@ -98,13 +98,15 @@ int32_t InputInit() {
 #define SET_BIT(array,bit)    ((array)[(bit)/8] |= (1<<((bit)%8)))
 
 int32_t InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
-    int rc1,rc2,rcc,version=-1,clock=1/*EV_CLK_MONO*/;
+    int rc1,rc2,rcc,version=-1;
+    int clock = CLOCK_MONOTONIC;/*CLOCK_REALTIME=0,CLOCK_MONOTONIC=1 time.h*/
     memset(devinfo,0,sizeof(INPUTDEVICEINFO));
     struct input_id id={0,0};
     rc1=ioctl(device, EVIOCGNAME(sizeof(devinfo->name) - 1),devinfo->name);
     rc2=ioctl(device, EVIOCGID, &id);
     rc2=ioctl(device,EVIOCGVERSION,&version);
-    rcc=ioctl(device,EVIOCSCLOCKID,&clock);
+    /*if your kernel's CONFIG_INPUT_PROC_CLOCK is realtime and no RTC,the clock must be setted as CLOCK_MONOTONIC*/
+    /*rcc=ioctl(device,EVIOCSCLOCKID,&clock);*/
     rc2=ioctl(device,EVIOCGUNIQ(sizeof(devinfo->uniqueId)),devinfo->uniqueId);
     LOGD("device[%s]%d  vid:%d pid:%d ver:%d id:%s clockset=%d",devinfo->name,device,id.vendor,id.product,version,devinfo->uniqueId,rcc);
 

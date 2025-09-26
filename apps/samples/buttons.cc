@@ -1,12 +1,14 @@
 #include <cdroid.h>
 #include <cdlog.h>
 #include <fstream>
+#include <animation/springanimation.h>
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     cdroid::Context*ctx=&app;
     Window*w=new Window(0,0,-1,-1);
     w->setId(1);
+    w->setBackgroundColor(0xFFFF3344);
     Drawable*d=nullptr;
     StateListDrawable*sld;
     CompoundButton*chk;
@@ -14,7 +16,8 @@ int main(int argc,const char*argv[]){
     LOG(DEBUG)<<"Test Stream(DEBUG)";
 #if 10
     Button *btn=new Button("Button",120,60);
-    d=ctx->getDrawable("cdroid:drawable/btn_default.xml");
+    //d=ctx->getDrawable("cdroid:drawable/btn_default.xml");
+    d=ctx->getDrawable("cdroid:mipmap/textfield_default_mtrl_alpha");
     sld=dynamic_cast<StateListDrawable*>(d);
     w->setBackgroundColor(0xFF101112);
     btn->setOnTouchListener([&argc](View&v,MotionEvent&e){
@@ -29,8 +32,29 @@ int main(int argc,const char*argv[]){
         aset->start();
         return false;
     });
-    
-    LOGD("%p statecount=%d",sld,sld->getStateCount());
+    SpringAnimation spa(btn,(FloatProperty*)&SpringAnimation::SCALE_X,0.3);
+    spa.getSpring()
+        ->setStiffness(400.0f)
+        .setDampingRatio(0.5f);
+    DynamicAnimation::OnAnimationUpdateListener upls([&](DynamicAnimation& animation, float value, float velocity) {
+        printf("[UPDATE] frame value=%.2f  velocity=%.2f\n", value, velocity);
+    }); 
+    spa.addUpdateListener(upls);
+
+    /*spa.addListener(std::make_shared<AnimatorListenerAdapter>(
+        [&](Animator* animation) {                                          // onAnimationStart
+            printf("[START] 弹簧动画开始\n");
+        },
+        nullptr,                                                            // onAnimationRepeat (无)
+        [&](Animator* animation) {                                         // onAnimationEnd
+            printf("[END]   弹簧动画正常结束\n");
+        },
+        [&](Animator* animation) {                                         // onAnimationCancel
+            printf("[CANCEL]弹簧动画被手动取消\n");
+        }
+    ));*/
+    spa.start();
+    LOGD_IF(sld,"%p statecount=%d",sld,sld->getStateCount());
     btn->setBackground(d);
     btn->setBackgroundTintList(ctx->getColorStateList("cdroid:color/textview"));
     btn->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);

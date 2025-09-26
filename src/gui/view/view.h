@@ -1514,6 +1514,19 @@ public:
     void forceLayout();
     virtual void resolveLayoutParams();
     void layout(int l, int t, int r, int b);
+public:
+    static const Property& ALPHA;
+    static const Property& TRANSLATION_X;
+    static const Property& TRANSLATION_Y;
+    static const Property& TRANSLATION_Z;
+    static const Property& X;
+    static const Property& Y;
+    static const Property& Z;
+    static const Property& ROTATION;
+    static const Property& ROTATION_X;
+    static const Property& ROTATION_Y;
+    static const Property& SCALE_X;
+    static const Property& SCALE_Y;
 };
 
 class View::AttachInfo{
