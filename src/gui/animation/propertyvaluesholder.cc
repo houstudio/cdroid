@@ -36,7 +36,7 @@ PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
     mEvaluator= o.mEvaluator;
 }
 
-PropertyValuesHolder::PropertyValuesHolder(Property*property){
+PropertyValuesHolder::PropertyValuesHolder(const Property*property){
     mProperty = property;
     mValueType= property->getType();
     mEvaluator= evaluator;
@@ -67,7 +67,7 @@ void PropertyValuesHolder::setProperty(Property*p){
     mValueType= p?p->getType():Property::UNDEFINED;
 }
 
-Property*PropertyValuesHolder::getProperty()const{
+const Property*PropertyValuesHolder::getProperty()const{
     return mProperty;
 }
 
@@ -272,7 +272,7 @@ PropertyValuesHolder* PropertyValuesHolder::ofInt(const std::string&name,const s
     return pvh;
 }
 
-PropertyValuesHolder* PropertyValuesHolder::ofInt(Property*prop,const std::vector<int>&values){
+PropertyValuesHolder* PropertyValuesHolder::ofInt(const Property*prop,const std::vector<int>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
     pvh->setValues(values);
     return pvh;
@@ -284,7 +284,7 @@ PropertyValuesHolder* PropertyValuesHolder::ofFloat(const std::string&name,const
     return pvh;
 }
 
-PropertyValuesHolder* PropertyValuesHolder::ofFloat(Property*prop,const std::vector<float>&values){
+PropertyValuesHolder* PropertyValuesHolder::ofFloat(const Property*prop,const std::vector<float>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
     pvh->setValues(values);
     return pvh;
@@ -296,7 +296,7 @@ PropertyValuesHolder*PropertyValuesHolder::ofObject(const std::string&propertyNa
     return pvh;
 }
 
-PropertyValuesHolder*PropertyValuesHolder::ofObject(Property*prop,const std::vector<PathParser::PathData>&values){
+PropertyValuesHolder*PropertyValuesHolder::ofObject(const Property*prop,const std::vector<PathParser::PathData>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
     pvh->setValues(values);
     return pvh;

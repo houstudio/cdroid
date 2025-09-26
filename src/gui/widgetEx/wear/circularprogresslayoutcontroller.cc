@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
+#include <core/countdowntimer.h>
 #include <widgetEx/wear/circularprogressdrawable.h>
 #include <widgetEx/wear/circularprogresslayoutcontroller.h>
 namespace cdroid{
@@ -22,9 +23,7 @@ namespace cdroid{
 CircularProgressLayoutController::CircularProgressLayoutController(CircularProgressLayout* layout) {
     mLayout = layout;
     mIsTimerRunning = false;
-    mIsIndeterminate=false;
-    mTotalTime = 0;
-    mInterval = 0;
+    mIsIndeterminate= false;
 }
 
 CircularProgressLayout::OnTimerFinishedListener CircularProgressLayoutController::getOnTimerFinishedListener() const{
@@ -59,22 +58,30 @@ void CircularProgressLayoutController::setIndeterminate(bool indeterminate) {
     }
 }
 
-void CircularProgressLayoutController::startTimer(long totalTime, long updateInterval) {
+void CircularProgressLayoutController::startTimer(int64_t totalTime, long updateInterval) {
     reset();
     mIsTimerRunning = true;
-    mTotalTime= totalTime;
-    mInterval = updateInterval;
-    mMillisUntilFinished = mTotalTime;
-    //mTimer = new CircularProgressTimer(totalTime, updateInterval);
-    //mTimer.start();
-    mRunnable = std::bind(&CircularProgressLayoutController::onRunnableProc,this);
-    mLayout->postDelayed(mRunnable,mInterval);
+    mTimer = std::make_unique<CountDownTimer>(totalTime, updateInterval);
+    CountDownTimer::TimerListener tls;
+    tls.onTick=[this,totalTime](int64_t millisUntilFinished){
+        mLayout->getProgressDrawable()
+                ->setStartEndTrim(0.f, 1.f - (float) millisUntilFinished / (float) totalTime);
+        mLayout->invalidate();
+    };
+    tls.onFinish=[this](){
+        mLayout->getProgressDrawable()->setStartEndTrim(0.f, 1.f);
+        if (mOnTimerFinishedListener != nullptr) {
+            mOnTimerFinishedListener/*.onTimerFinished*/(*mLayout);
+        }
+        mIsTimerRunning = false;
+    };
+    mTimer->setTimerListener(tls);
+    mTimer->start();
 }
 
 void CircularProgressLayoutController::stopTimer() {
     if (mIsTimerRunning) {
-        //mTimer.cancel();
-        mLayout->removeCallbacks(mRunnable);
+        mTimer->cancel();
         mIsTimerRunning = false;
         mLayout->getProgressDrawable()->setStartEndTrim(0.0f, 0.0f); // Reset the progress
     }
@@ -86,27 +93,4 @@ void CircularProgressLayoutController::reset() {
     mLayout->getProgressDrawable()->setStartEndTrim(0.0f, 0.0f); // Reset the progress
 }
 
-void CircularProgressLayoutController::onRunnableProc(){
-    mMillisUntilFinished -= mInterval;
-    onTick(mMillisUntilFinished);
-    if(mMillisUntilFinished<mInterval){
-        onFinish();
-    }else{
-        mLayout->postDelayed(mRunnable,mInterval);
-    }
-}
-
-void CircularProgressLayoutController::onTick(long millisUntilFinished) {
-    mLayout->getProgressDrawable()
-            ->setStartEndTrim(0.0f, 1.0f - (float) millisUntilFinished / (float) mTotalTime);
-    mLayout->invalidate();
-}
-
-void CircularProgressLayoutController::onFinish() {
-    mLayout->getProgressDrawable()->setStartEndTrim(0.0f, 1.0f);
-    if (mOnTimerFinishedListener != nullptr) {
-        mOnTimerFinishedListener/*->onTimerFinished*/(*mLayout);
-    }
-    mIsTimerRunning = false;
-}
 }/*endof namespace*/

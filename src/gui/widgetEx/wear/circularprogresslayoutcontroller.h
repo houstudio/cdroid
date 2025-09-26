@@ -17,16 +17,13 @@
 */
 #ifndef __CIRCULAR_PROGRESS_LAYOUT_CONTROLLER_H__
 #define __CIRCULAR_PROGRESS_LAYOUT_CONTROLLER_H__
+#include <core/countdowntimer.h>
 #include <widgetEx/wear/circularprogresslayout.h>
 namespace cdroid{
 class CircularProgressLayoutController {
-
+private:
     CircularProgressLayout* mLayout;
-    //CountDownTimer mTimer;
-    Runnable mRunnable;
-    long mTotalTime;
-    long mInterval;
-    long mMillisUntilFinished;
+    std::unique_ptr<CountDownTimer>mTimer;
 
     bool mIsIndeterminate;
     bool mIsTimerRunning;
@@ -51,7 +48,7 @@ public:
     /** Sets if the progress should be shown as an indeterminate spinner. */
     void setIndeterminate(bool indeterminate);
 
-    void startTimer(long totalTime, long updateInterval);
+    void startTimer(int64_t totalTime, long updateInterval);
     void stopTimer();
 
     void reset();

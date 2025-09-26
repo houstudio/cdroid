@@ -65,7 +65,6 @@ CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeS
             context->getColor("cdroid:color/circular_progress_layout_background_color")));
 
     setIndeterminate(attrs.getBoolean("indeterminate", false));
-
 }
 
 CircularProgressLayout::~CircularProgressLayout(){

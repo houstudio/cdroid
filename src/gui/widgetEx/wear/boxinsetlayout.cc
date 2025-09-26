@@ -245,15 +245,15 @@ void BoxInsetLayout::measureChild(int widthMeasureSpec, int heightMeasureSpec, i
 
     const int maxAllowedWidth = getMeasuredWidth() - totalWidthMargin;
     const int maxAllowedHeight = getMeasuredHeight() - totalHeightMargin;
-    if (child->getMeasuredWidth() > maxAllowedWidth
-            || child->getMeasuredHeight() > maxAllowedHeight) {
+    if ((child->getMeasuredWidth() > maxAllowedWidth)
+            || (child->getMeasuredHeight() > maxAllowedHeight)) {
         child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
     }
 }
 
 int BoxInsetLayout::calculateChildLeftMargin(const LayoutParams* lp, int horizontalGravity, int desiredMinInset) const{
     if (mIsRound && ((lp->boxedEdges & LayoutParams::BOX_LEFT) != 0)) {
-        if (lp->width == LayoutParams::MATCH_PARENT || horizontalGravity == Gravity::LEFT) {
+        if ((lp->width == LayoutParams::MATCH_PARENT) || (horizontalGravity == Gravity::LEFT)) {
             return lp->leftMargin + desiredMinInset;
         }
     }
