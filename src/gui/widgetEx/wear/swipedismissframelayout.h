@@ -45,7 +45,7 @@ public:
     bool isSwipeable() const;
 
     void setDismissMinDragWidthRatio(float ratio);
-    float getDismissMinDragWidthRatio();
+    float getDismissMinDragWidthRatio()const;
 
 };
 }/*endof namespace*/

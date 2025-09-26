@@ -21,6 +21,7 @@
 #include <widgetEx/wear/circularprogresslayoutcontroller.h>
 #include <cairomm/context.h>
 namespace cdroid{
+
 DECLARE_WIDGET(CircularProgressLayout)
 
 CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeSet& attrs)

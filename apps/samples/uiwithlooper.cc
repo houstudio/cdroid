@@ -1,6 +1,7 @@
 #include <cdroid.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
 #include <widget/candidateview.h>
+#include <core/countdowntimer.h>
 #include <thread>
 
 int main(int argc,const char*argv[]){
@@ -26,5 +27,11 @@ int main(int argc,const char*argv[]){
 	while(1)looper->pollOnce(10);
     });
     th.detach();
+    CountDownTimer td(60000,1000);
+    CountDownTimer::TimerListener tl;
+    tl.onTick=[](int64_t nn){std::cout<<nn<<std::endl;};
+    tl.onFinish=[](){std::cout<<"Finished"<<std::endl;};
+    td.setTimerListener(tl);
+    td.start();
     return app.exec();
 }

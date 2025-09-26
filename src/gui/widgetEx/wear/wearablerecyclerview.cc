@@ -19,6 +19,8 @@
 
 namespace cdroid{
 
+DECLARE_WIDGET(WearableRecyclerView);
+
 WearableRecyclerView::WearableRecyclerView(int w,int h)
     :RecyclerView(w,h){
     mScrollManager = new ScrollManager();

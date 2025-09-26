@@ -18,6 +18,8 @@
 #include <widgetEx/wear/swipedismissframelayout.h>
 namespace cdroid{
 
+DECLARE_WIDGET(SwipeDismissFrameLayout);
+
 SwipeDismissFrameLayout::SwipeDismissFrameLayout(Context* context,const AttributeSet& attrs)
     :DismissibleFrameLayout(context, attrs){
 }
@@ -26,7 +28,6 @@ void SwipeDismissFrameLayout::addCallback(const SwipeDismissFrameLayout::Callbac
     /*if (callback == null) {
         throw new NullPointerException("addCallback called with null callback");
     }*/
-
     mCallbacksCompat.push_back(callback);
 }
 
@@ -57,7 +58,7 @@ void SwipeDismissFrameLayout::setDismissMinDragWidthRatio(float ratio) {
     }
 }
 
-float SwipeDismissFrameLayout::getDismissMinDragWidthRatio() {
+float SwipeDismissFrameLayout::getDismissMinDragWidthRatio() const{
     if (isSwipeable()) {
         return getSwipeDismissController()->getDismissMinDragWidthRatio();
     }

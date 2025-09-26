@@ -18,6 +18,8 @@
 #include <widgetEx/wear/boxinsetlayout.h>
 namespace cdroid{
 
+DECLARE_WIDGET(BoxInsetLayout);
+
 BoxInsetLayout::BoxInsetLayout(Context* context,const AttributeSet& attrs)
     :ViewGroup(context, attrs){
     // make sure we have a foreground padding object
