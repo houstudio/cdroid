@@ -257,7 +257,7 @@ void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const st
             PropertyValuesHolder* pvh = holders[i];
             const std::string propertyName = pvh->getPropertyName();
             void* targetNameObj = vectorDrawable->getTargetByName(targetName);
-            Property* property = nullptr;
+            const Property* property = nullptr;
             /*if (dynamic_cast<VectorDrawable::VObject*>(targetNameObj)) {
                 property = ((VectorDrawable::VObject*) targetNameObj)->getProperty(propertyName);
             }*/if (targetNameObj==vectorDrawable->getConstantState().get()){
@@ -269,7 +269,7 @@ void AnimatedVectorDrawable::updateAnimatorProperty(Animator* animator, const st
             if (property != nullptr) {
                 LOGV("pvh=%p %s.%s",pvh,targetName.c_str(),propertyName.c_str());
                 if (containsSameValueType(pvh, property)) {
-                    pvh->setProperty(property);
+                    pvh->setProperty((Property*)property);
                 } else if (!ignoreInvalidAnim) {
                     LOGE("Wrong valueType for Property:%s .  Expected type: %d . Actual type defined in resources:%d",
                             propertyName.c_str(),property->getType(),pvh->getValueType());
