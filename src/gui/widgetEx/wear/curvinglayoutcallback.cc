@@ -44,18 +44,18 @@ void CurvingLayoutCallback::onLayoutFinished(View& child, RecyclerView& parent) 
         mAnchorOffsetXY[0] = mXCurveOffset;
         mAnchorOffsetXY[1] = child.getHeight() / 2.0f;
         adjustAnchorOffsetXY(child, mAnchorOffsetXY);
-        float minCenter = -(float) child.getHeight() / 2;
-        float maxCenter = mLayoutHeight + (float) child.getHeight() / 2;
-        float range = maxCenter - minCenter;
-        float verticalAnchor = (float) child.getTop() + mAnchorOffsetXY[1];
-        float mYScrollProgress = (verticalAnchor + std::abs(minCenter)) / range;
+        const float minCenter = -(float) child.getHeight() / 2;
+        const float maxCenter = mLayoutHeight + (float) child.getHeight() / 2;
+        const float range = maxCenter - minCenter;
+        const float verticalAnchor = (float) child.getTop() + mAnchorOffsetXY[1];
+        const float mYScrollProgress = (verticalAnchor + std::abs(minCenter)) / range;
 
         mPathMeasure->getPosTan(mYScrollProgress * mPathLength, (PointD*)mPathPoints, (PointD*)mPathTangent);
 
-        const bool topClusterRisk = std::abs(mPathPoints[1] - mCurveBottom) < EPSILON
-                        && minCenter < mPathPoints[1];
-        const bool bottomClusterRisk = std::abs(mPathPoints[1] - mCurveTop) < EPSILON
-                        && maxCenter > mPathPoints[1];
+        const bool topClusterRisk = (std::abs(mPathPoints[1] - mCurveBottom) < EPSILON)
+                        && (minCenter < mPathPoints[1]);
+        const bool bottomClusterRisk = (std::abs(mPathPoints[1] - mCurveTop) < EPSILON)
+                        && (maxCenter > mPathPoints[1]);
         // Continue offsetting the child along the straight-line part of the curve, if it
         // has not gone off the screen when it reached the end of the original curve.
         if (topClusterRisk || bottomClusterRisk) {
@@ -64,9 +64,9 @@ void CurvingLayoutCallback::onLayoutFinished(View& child, RecyclerView& parent) 
         }
 
         // Offset the View to match the provided anchor point.
-        int newLeft = (int) (mPathPoints[0] - mAnchorOffsetXY[0]);
+        const int newLeft = (int) (mPathPoints[0] - mAnchorOffsetXY[0]);
         child.offsetLeftAndRight(newLeft - child.getLeft());
-        float verticalTranslation = mPathPoints[1] - verticalAnchor;
+        const float verticalTranslation = mPathPoints[1] - verticalAnchor;
         child.setTranslationY(verticalTranslation);
     } else {
         child.setTranslationY(0);
@@ -106,15 +106,13 @@ void CurvingLayoutCallback::maybeSetUpCircularInitialLayout(int width, int heigh
         mCurvePath->move_to(0.5f * width, mCurveBottom);
         mCurvePath->line_to(0.34f * width, 0.075f * height);
         mCurvePath->curve_to(//cubic_to(
-                0.22f * width, 0.17f * height, 0.13f * width, 0.32f * height, 0.13f * width,
-                height / 2);
+            0.22f * width, 0.17f * height,
+            0.13f * width, 0.32f * height,
+            0.13f * width, height / 2);
         mCurvePath->curve_to(//cubic_to(
-                0.13f * width,
-                0.68f * height,
-                0.22f * width,
-                0.83f * height,
-                0.34f * width,
-                0.925f * height);
+            0.13f * width, 0.68f * height,
+            0.22f * width, 0.83f * height,
+            0.34f * width, 0.925f * height);
         mCurvePath->line_to(width / 2, mCurveTop);
         mPathMeasure->setPath(mCurvePath);//, false);
         mPathLength = mPathMeasure->getLength();

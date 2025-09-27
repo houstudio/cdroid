@@ -23,7 +23,12 @@ RoundedDrawable::RoundedDrawable() {
     mTmpBounds.setEmpty();
     mTmpBoundsF.setEmpty();
     mAlpha = 0xFF;
+    mDrawable = nullptr;
     mBackgroundColor = Color::TRANSPARENT;
+}
+
+RoundedDrawable::~RoundedDrawable(){
+    delete mDrawable;
 }
 
 void RoundedDrawable::inflate(XmlPullParser& parser, const AttributeSet& attrs/*, Theme theme*/){
@@ -37,6 +42,7 @@ void RoundedDrawable::setDrawable(Drawable* drawable) {
     if (mDrawable==drawable) {
         return;
     }
+    delete mDrawable;
     mDrawable = drawable;
     invalidateSelf();
 }

@@ -23,9 +23,7 @@ class ObjectAnimator;
 class ProgressDrawable:public Drawable {
 private:
     static constexpr int MAX_LEVEL = 10000;
-
     static constexpr int NUMBER_OF_SEGMENTS = 5;
-
     static constexpr int LEVELS_PER_SEGMENT = MAX_LEVEL / NUMBER_OF_SEGMENTS;
     static constexpr float STARTING_ANGLE = -90.f;
     static constexpr long ANIMATION_DURATION = 6000;
@@ -47,6 +45,7 @@ protected:
     bool onLevelChange(int level)override;;
 public:
     ProgressDrawable();
+    ~ProgressDrawable()override;
 
     void setRingColor(int color);
 

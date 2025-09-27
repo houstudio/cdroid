@@ -58,7 +58,6 @@ public:
 
     SwipeDismissController* getSwipeDismissController() const;
 
-
     void requestDisallowInterceptTouchEvent(bool disallowIntercept) override;
     bool onInterceptTouchEvent(MotionEvent& ev) override;
 

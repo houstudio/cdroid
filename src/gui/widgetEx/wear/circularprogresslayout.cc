@@ -68,7 +68,7 @@ CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeS
 }
 
 CircularProgressLayout::~CircularProgressLayout(){
-    delete mProgressDrawable;
+    /*mProgressDrawable is owned by View's Background,do not delete it*/
     delete mController;
 }
 
@@ -116,14 +116,14 @@ bool CircularProgressLayout::isIndeterminate() const{
     return mController->isIndeterminate();
 }
 
-void CircularProgressLayout::setTotalTime(long totalTime) {
+void CircularProgressLayout::setTotalTime(int64_t totalTime) {
     if (totalTime <= 0) {
         throw std::invalid_argument("Total time should be greater than zero.");
     }
     mTotalTime = totalTime;
 }
 
-long CircularProgressLayout::getTotalTime() const{
+int64_t CircularProgressLayout::getTotalTime() const{
     return mTotalTime;
 }
 

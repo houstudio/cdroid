@@ -30,7 +30,7 @@ private:
     CircularProgressLayoutController* mController;
 
     float mStartingRotation = DEFAULT_ROTATION;
-    long mTotalTime;
+    int64_t mTotalTime;
 private:
     std::vector<int> getColorListFromResources(const std::string& arrayResId);
 protected:

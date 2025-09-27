@@ -32,6 +32,7 @@ CircularProgressDrawable::CircularProgressDrawable(Context* context) {
 
 CircularProgressDrawable::~CircularProgressDrawable(){
     delete mRing;
+    delete mAnimator;
 }
 
 void CircularProgressDrawable::setSizeParameters(float centerRadius, float strokeWidth, float arrowWidth,
