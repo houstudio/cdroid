@@ -24,28 +24,15 @@ namespace cdroid{
 
 DECLARE_WIDGET(CircularProgressLayout)
 
+CircularProgressLayout::CircularProgressLayout(int w,int h)
+    :FrameLayout(w,h){
+    initCircularProgressLayout();
+}
+
 CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeSet& attrs)
     :FrameLayout(context, attrs){
 
-    mProgressDrawable = new CircularProgressDrawable(context);
-    mProgressDrawable->setProgressRotation(DEFAULT_ROTATION);
-    mProgressDrawable->setStrokeCap(static_cast<int>(Cairo::Context::LineCap::BUTT));
-    setBackground(mProgressDrawable);
-
-    OnHierarchyChangeListener hcl;
-    hcl.onChildViewAdded=[](View&parent,View*child){
-        // Ensure that child view is aligned in center
-        LayoutParams* params = (LayoutParams*) child->getLayoutParams();
-        params->gravity = Gravity::CENTER;
-        child->setLayoutParams(params);
-    };
-    hcl.onChildViewRemoved=[](View&parent,View*child){
-    };
-    // If a child view is added, make it center aligned so it fits in the progress drawable.
-    setOnHierarchyChangeListener(hcl);
-
-    mController = new CircularProgressLayoutController(this);
-
+    initCircularProgressLayout();
     //Resources r = context.getResources();
     /*TypedArray a = r.obtainAttributes(attrs, R.styleable.CircularProgressLayout);
 
@@ -65,6 +52,27 @@ CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeS
             context->getColor("cdroid:color/circular_progress_layout_background_color")));
 
     setIndeterminate(attrs.getBoolean("indeterminate", false));
+}
+
+void CircularProgressLayout::initCircularProgressLayout(){
+    mProgressDrawable = new CircularProgressDrawable(mContext);
+    mProgressDrawable->setProgressRotation(DEFAULT_ROTATION);
+    mProgressDrawable->setStrokeCap(static_cast<int>(Cairo::Context::LineCap::BUTT));
+    setBackground(mProgressDrawable);
+
+    OnHierarchyChangeListener hcl;
+    hcl.onChildViewAdded=[](View&parent,View*child){
+        // Ensure that child view is aligned in center
+        LayoutParams* params = (LayoutParams*) child->getLayoutParams();
+        params->gravity = Gravity::CENTER;
+        child->setLayoutParams(params);
+    };
+    hcl.onChildViewRemoved=[](View&parent,View*child){
+    };
+    // If a child view is added, make it center aligned so it fits in the progress drawable.
+    setOnHierarchyChangeListener(hcl);
+
+    mController = new CircularProgressLayoutController(this);
 }
 
 CircularProgressLayout::~CircularProgressLayout(){

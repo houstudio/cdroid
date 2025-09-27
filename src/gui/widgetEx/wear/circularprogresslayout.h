@@ -18,8 +18,8 @@
 #ifndef __CIRCUAR_PROGRESS_LAYOUT_H__
 #define __CIRCUAR_PROGRESS_LAYOUT_H__
 #include <widget/framelayout.h>
+#include <widgetEx/wear/circularprogressdrawable.h>
 namespace cdroid{
-class CircularProgressDrawable;
 class CircularProgressLayoutController;
 class CircularProgressLayout:public FrameLayout {
 private:
@@ -32,13 +32,14 @@ private:
     float mStartingRotation = DEFAULT_ROTATION;
     int64_t mTotalTime;
 private:
+    void initCircularProgressLayout();
     std::vector<int> getColorListFromResources(const std::string& arrayResId);
 protected:
     void onLayout(bool changed, int left, int top, int width, int heigt) override;
     void onDetachedFromWindow() override;
 public:
     DECLARE_UIEVENT(void,OnTimerFinishedListener,CircularProgressLayout&);
-
+    CircularProgressLayout(int w,int h);
     CircularProgressLayout(Context* context,const AttributeSet& attrs);
     ~CircularProgressLayout()override;
 
